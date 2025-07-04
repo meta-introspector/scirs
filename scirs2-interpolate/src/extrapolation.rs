@@ -1725,6 +1725,7 @@ impl<T: Float + std::fmt::Display> Extrapolator<T> {
 /// # Returns
 ///
 /// A new `Extrapolator` configured for linear extrapolation
+#[allow(dead_code)]
 pub fn make_linear_extrapolator<T: Float + std::fmt::Display>(
     lower_bound: T,
     upper_bound: T,
@@ -1755,6 +1756,7 @@ pub fn make_linear_extrapolator<T: Float + std::fmt::Display>(
 /// # Returns
 ///
 /// A new `Extrapolator` configured for periodic extrapolation
+#[allow(dead_code)]
 pub fn make_periodic_extrapolator<T: Float + std::fmt::Display>(
     lower_bound: T,
     upper_bound: T,
@@ -1787,6 +1789,7 @@ pub fn make_periodic_extrapolator<T: Float + std::fmt::Display>(
 /// # Returns
 ///
 /// A new `Extrapolator` configured for reflection extrapolation
+#[allow(dead_code)]
 pub fn make_reflection_extrapolator<T: Float + std::fmt::Display>(
     lower_bound: T,
     upper_bound: T,
@@ -1818,6 +1821,7 @@ pub fn make_reflection_extrapolator<T: Float + std::fmt::Display>(
 ///
 /// A new `Extrapolator` configured for cubic extrapolation
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn make_cubic_extrapolator<T: Float + std::fmt::Display>(
     lower_bound: T,
     upper_bound: T,
@@ -1857,6 +1861,7 @@ pub fn make_cubic_extrapolator<T: Float + std::fmt::Display>(
 ///
 /// A new `Extrapolator` configured for exponential extrapolation
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn make_exponential_extrapolator<T: Float + std::fmt::Display>(
     lower_bound: T,
     upper_bound: T,
@@ -1882,6 +1887,7 @@ pub fn make_exponential_extrapolator<T: Float + std::fmt::Display>(
 }
 
 /// Convenience function to create a confidence-based extrapolator
+#[allow(dead_code)]
 pub fn make_confidence_extrapolator<
     T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign,
 >(
@@ -1900,6 +1906,7 @@ pub fn make_confidence_extrapolator<
 }
 
 /// Convenience function to create an ensemble extrapolator
+#[allow(dead_code)]
 pub fn make_ensemble_extrapolator<
     T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign,
 >(
@@ -1917,6 +1924,7 @@ pub fn make_ensemble_extrapolator<
 }
 
 /// Convenience function to create an adaptive extrapolator
+#[allow(dead_code)]
 pub fn make_adaptive_extrapolator<
     T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign,
 >(
@@ -1935,6 +1943,7 @@ pub fn make_adaptive_extrapolator<
 }
 
 /// Convenience function to create an autoregressive extrapolator
+#[allow(dead_code)]
 pub fn make_autoregressive_extrapolator<
     T: Float + std::fmt::Display + std::default::Default + std::ops::AddAssign,
 >(
@@ -2026,17 +2035,17 @@ mod tests {
         // Test mapping points outside domain
         match extrapolator.extrapolate(-0.3) {
             Err(InterpolateError::MappedPoint(x)) => assert_abs_diff_eq!(x, 0.7),
-            _ => panic!("Expected MappedPoint error"),
+            result => assert!(false, "Expected MappedPoint error, got: {:?}", result),
         }
 
         match extrapolator.extrapolate(1.4) {
             Err(InterpolateError::MappedPoint(x)) => assert_abs_diff_eq!(x, 0.4),
-            _ => panic!("Expected MappedPoint error"),
+            result => assert!(false, "Expected MappedPoint error, got: {:?}", result),
         }
 
         match extrapolator.extrapolate(3.7) {
             Err(InterpolateError::MappedPoint(x)) => assert_abs_diff_eq!(x, 0.7),
-            _ => panic!("Expected MappedPoint error"),
+            result => assert!(false, "Expected MappedPoint error, got: {:?}", result),
         }
     }
 
@@ -2050,24 +2059,24 @@ mod tests {
         // Test reflection below lower bound
         match extrapolator.extrapolate(-0.3) {
             Err(InterpolateError::MappedPoint(x)) => assert_abs_diff_eq!(x, 0.3),
-            _ => panic!("Expected MappedPoint error"),
+            result => assert!(false, "Expected MappedPoint error, got: {:?}", result),
         }
 
         // Test reflection above upper bound
         match extrapolator.extrapolate(1.3) {
             Err(InterpolateError::MappedPoint(x)) => assert_abs_diff_eq!(x, 0.7),
-            _ => panic!("Expected MappedPoint error"),
+            result => assert!(false, "Expected MappedPoint error, got: {:?}", result),
         }
 
         // Test multiple reflections
         match extrapolator.extrapolate(-1.3) {
             Err(InterpolateError::MappedPoint(x)) => assert_abs_diff_eq!(x, 0.7),
-            _ => panic!("Expected MappedPoint error"),
+            result => assert!(false, "Expected MappedPoint error, got: {:?}", result),
         }
 
         match extrapolator.extrapolate(2.3) {
             Err(InterpolateError::MappedPoint(x)) => assert_abs_diff_eq!(x, 0.3),
-            _ => panic!("Expected MappedPoint error"),
+            result => assert!(false, "Expected MappedPoint error, got: {:?}", result),
         }
     }
 
@@ -2169,6 +2178,7 @@ mod tests {
 
 /// Physics-informed extrapolation respecting conservation laws
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn make_physics_informed_extrapolator<
     T: Float + FromPrimitive + std::fmt::Display + std::default::Default + std::ops::AddAssign,
 >(
@@ -2230,6 +2240,7 @@ pub enum PhysicsLaw {
 
 /// Boundary condition preserving extrapolation
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn make_boundary_preserving_extrapolator<
     T: Float + FromPrimitive + std::fmt::Display + std::default::Default + std::ops::AddAssign,
 >(
@@ -2296,6 +2307,7 @@ pub enum BoundaryType {
 
 /// Adaptive extrapolation that selects method based on local data characteristics
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn make_smart_adaptive_extrapolator<
     T: Float + FromPrimitive + std::fmt::Display + std::default::Default + std::ops::AddAssign,
 >(

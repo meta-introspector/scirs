@@ -133,6 +133,7 @@ impl BenchmarkResult {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("=== Ultra-Performance Benchmark for scirs2-ndimage ===\n");
 
@@ -202,6 +203,7 @@ fn main() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_benchmark_image(height: usize, width: usize) -> Array2<f64> {
     Array2::from_shape_fn((height, width), |(i, j)| {
         let x = i as f64 / height as f64;
@@ -222,6 +224,7 @@ fn create_benchmark_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn benchmark_wavelet_pyramid(
     image: &Array2<f64>,
     config: &BenchmarkConfig,
@@ -258,6 +261,7 @@ fn benchmark_wavelet_pyramid(
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn benchmark_lbp(
     image: &Array2<f64>,
     config: &BenchmarkConfig,
@@ -297,6 +301,7 @@ fn benchmark_lbp(
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn benchmark_edge_detection(
     image: &Array2<f64>,
     config: &BenchmarkConfig,
@@ -355,11 +360,13 @@ fn benchmark_edge_detection(
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn benchmark_standard_sobel(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
     sobel(&image.view(), None, None, None)
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn benchmark_standard_canny(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
     canny(
         image.view(),
@@ -370,6 +377,7 @@ fn benchmark_standard_canny(image: &Array2<f64>) -> NdimageResult<Array2<f64>> {
     )
 }
 
+#[allow(dead_code)]
 fn display_benchmark_summary(results: &[BenchmarkResult]) {
     // Group results by operation type
     use std::collections::HashMap;
@@ -458,6 +466,7 @@ fn display_benchmark_summary(results: &[BenchmarkResult]) {
 }
 
 #[cfg(not(feature = "simd"))]
+#[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("Ultra-performance benchmark requires SIMD features");
     println!(

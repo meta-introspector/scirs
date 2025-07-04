@@ -98,6 +98,7 @@ pub enum NonlinearityFunction {
 /// # Returns
 ///
 /// * Tuple containing (whitened signals, whitening matrix)
+#[allow(dead_code)]
 pub fn whiten_signals(signals: &Array2<f64>) -> SignalResult<(Array2<f64>, Array2<f64>)> {
     let (n_signals, n_samples) = signals.dim();
 
@@ -141,6 +142,7 @@ pub fn whiten_signals(signals: &Array2<f64>) -> SignalResult<(Array2<f64>, Array
 /// # Returns
 ///
 /// * Tuple containing (sorted sources, sorted mixing matrix)
+#[allow(dead_code)]
 pub fn sort_components(
     sources: &Array2<f64>,
     mixing: &Array2<f64>,
@@ -185,6 +187,7 @@ pub fn sort_components(
 /// # Returns
 ///
 /// * Correlation matrix
+#[allow(dead_code)]
 pub fn calculate_correlation_matrix(signals: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let (n_signals, n_samples) = signals.dim();
 
@@ -219,6 +222,7 @@ pub fn calculate_correlation_matrix(signals: &Array2<f64>) -> SignalResult<Array
 /// # Returns
 ///
 /// * Matrix of pairwise mutual information values
+#[allow(dead_code)]
 pub fn calculate_mutual_information(
     signals: &Array2<f64>,
     n_bins: usize,
@@ -298,6 +302,7 @@ pub fn calculate_mutual_information(
 /// # Returns
 ///
 /// * Estimated number of sources
+#[allow(dead_code)]
 pub fn estimate_source_count(signals: &Array2<f64>, threshold: f64) -> SignalResult<usize> {
     let (n_signals, n_samples) = signals.dim();
 

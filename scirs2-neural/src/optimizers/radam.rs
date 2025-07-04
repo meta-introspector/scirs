@@ -96,23 +96,39 @@ impl<F: Float + ScalarOperand + Debug> RAdam<F> {
     /// Sets the beta2 parameter
     pub fn set_beta2(&mut self, beta2: F) -> &mut Self {
         self.beta2 = beta2;
+        self
+    }
+
     /// Gets the epsilon parameter
     pub fn get_epsilon(&self) -> F {
         self.epsilon
+    }
+
     /// Sets the epsilon parameter
     pub fn set_epsilon(&mut self, epsilon: F) -> &mut Self {
         self.epsilon = epsilon;
+        self
+    }
+
     /// Gets the weight decay parameter
     pub fn get_weight_decay(&self) -> F {
         self.weight_decay
+    }
+
     /// Sets the weight decay parameter
     pub fn set_weight_decay(&mut self, weight_decay: F) -> &mut Self {
         self.weight_decay = weight_decay;
+        self
+    }
+
     /// Resets the internal state of the optimizer
     pub fn reset(&mut self) {
         self.m.clear();
         self.v.clear();
         self.t = 0;
+    }
+}
+
 impl<F: Float + ScalarOperand + Debug> Optimizer<F> for RAdam<F> {
     fn update(
         &mut self,
@@ -132,6 +148,8 @@ impl<F: Float + ScalarOperand + Debug> Optimizer<F> for RAdam<F> {
         if self.m.len() != params.len() {
             self.m = params.iter().map(|p| Array::zeros(p.raw_dim())).collect();
             self.v = params.iter().map(|p| Array::zeros(p.raw_dim())).collect();
+        }
+
         // Prepare common terms
         let one_minus_beta1 = F::one() - self.beta1;
         let one_minus_beta2 = F::one() - self.beta2;
@@ -139,9 +157,13 @@ impl<F: Float + ScalarOperand + Debug> Optimizer<F> for RAdam<F> {
         let beta2_pow_t = self.beta2.powi(self.t as i32);
         let bias_correction1 = F::one() - beta1_pow_t;
         // RAdam-specific calculations
+        let _two = F::from(2.0).ok_or_else(|| {
             NeuralError::InvalidArgument("Failed to convert 2.0 to floating point type".to_string())
-        let four = F::from(4.0).ok_or_else(|| {
+        })?;
+        let _four = F::from(4.0).ok_or_else(|| {
             NeuralError::InvalidArgument("Failed to convert 4.0 to floating point type".to_string())
+        })?;
+        #[allow(dead_code)]
         let _five = F::from(5.0).ok_or_else(|| {
             NeuralError::InvalidArgument("Failed to convert 5.0 to floating point type".to_string())
         })?; // Unused but keep for reference
@@ -149,8 +171,10 @@ impl<F: Float + ScalarOperand + Debug> Optimizer<F> for RAdam<F> {
         // All calculations in f64 first
         let rho_inf_f64 = self.rho_inf.to_f64().ok_or_else(|| {
             NeuralError::ComputationError("Failed to convert rho_inf to f64".to_string())
+        })?;
         let beta2_pow_t_f64 = beta2_pow_t.to_f64().ok_or_else(|| {
             NeuralError::ComputationError("Failed to convert beta2_pow_t to f64".to_string())
+        })?;
         let t_f64 = self.t as f64;
         let rho_t_f64 = rho_inf_f64 - 2.0 * t_f64 * beta2_pow_t_f64 / (1.0 - beta2_pow_t_f64);
         // Convert to F type

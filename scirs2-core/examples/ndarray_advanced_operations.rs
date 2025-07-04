@@ -5,11 +5,13 @@ use scirs2_core::ndarray_ext::manipulation::{
     argmax, argmin, flip_2d, gradient, meshgrid, pad_2d, repeat_2d, roll_2d, tile_2d, unique,
 };
 
+#[allow(dead_code)]
 fn print_section(title: &str) {
     println!("\n{title}");
     println!("{}", "=".repeat(title.len()));
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("SciRS2-Core Advanced Array Operations Example");
     println!("=============================================\n");

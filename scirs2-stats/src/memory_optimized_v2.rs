@@ -93,6 +93,7 @@ impl<F: Float> MemoryPool<F> {
 /// Zero-copy mean calculation using views
 ///
 /// This function avoids allocations by working directly with array views
+#[allow(dead_code)]
 pub fn mean_zero_copy<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast,
@@ -121,6 +122,7 @@ where
 /// Cache-friendly variance computation
 ///
 /// Processes data in cache-sized blocks for better performance
+#[allow(dead_code)]
 pub fn variance_cache_aware<F, D>(
     x: &ArrayBase<D, Ix1>,
     ddof: usize,

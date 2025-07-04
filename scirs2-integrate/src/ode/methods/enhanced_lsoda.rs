@@ -152,6 +152,7 @@ impl<F: IntegrateFloat> EnhancedLsodaState<F> {
 ///
 /// The method automatically switches between Adams methods (explicit, non-stiff)
 /// and BDF methods (implicit, stiff) based on detected stiffness characteristics.
+#[allow(dead_code)]
 pub fn enhanced_lsoda_method<F, Func>(
     f: Func,
     t_span: [F; 2],
@@ -333,6 +334,7 @@ where
 }
 
 /// Enhanced Adams method (predictor-corrector) for non-stiff regions
+#[allow(dead_code)]
 fn enhanced_adams_step<F, Func>(
     state: &mut EnhancedLsodaState<F>,
     f: &Func,
@@ -636,6 +638,7 @@ where
 }
 
 /// Enhanced BDF method for stiff regions
+#[allow(dead_code)]
 fn enhanced_bdf_step<F, Func>(
     state: &mut EnhancedLsodaState<F>,
     f: &Func,

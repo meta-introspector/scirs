@@ -107,6 +107,7 @@ pub struct ScalarOptimizeResult {
 /// println!("Bounded minimum at x = {}", result.x);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[allow(dead_code)]
 pub fn minimize_scalar<F>(
     fun: F,
     bounds: Option<(f64, f64)>,
@@ -134,6 +135,7 @@ where
 }
 
 /// Brent's method for scalar minimization
+#[allow(dead_code)]
 fn minimize_scalar_brent<F>(fun: F, options: Options) -> Result<ScalarOptimizeResult, OptimizeError>
 where
     F: Fn(f64) -> f64,
@@ -278,6 +280,7 @@ where
 }
 
 /// Bounded Brent method for scalar minimization
+#[allow(dead_code)]
 fn minimize_scalar_bounded<F>(
     fun: F,
     xmin: f64,
@@ -423,6 +426,7 @@ where
 }
 
 /// Golden section search for scalar minimization
+#[allow(dead_code)]
 fn minimize_scalar_golden<F>(
     fun: F,
     options: Options,
@@ -493,6 +497,7 @@ where
 }
 
 /// Bracket a minimum given two initial points
+#[allow(dead_code)]
 fn bracket_minimum<F>(fun: &F, xa: f64, xb: f64) -> Result<(f64, f64, f64), OptimizeError>
 where
     F: Fn(f64) -> f64,

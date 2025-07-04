@@ -46,6 +46,7 @@ use std::fmt::Debug;
 /// let j0_large = j0(100.0f64);
 /// assert!(j0_large.abs() < 0.1); // Should be a small oscillating value
 /// ```
+#[allow(dead_code)]
 pub fn j0<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // Special cases
     if x == F::zero() {
@@ -105,6 +106,7 @@ pub fn j0<F: Float + FromPrimitive + Debug>(x: F) -> F {
 
 /// Enhanced asymptotic approximation for J0 with very large arguments.
 /// Provides better accuracy compared to the standard formula.
+#[allow(dead_code)]
 fn enhanced_asymptotic_j0<F: Float + FromPrimitive>(x: F) -> F {
     let abs_x = x.abs();
     let theta = abs_x - F::from(constants::f64::PI_4).unwrap();
@@ -168,6 +170,7 @@ fn enhanced_asymptotic_j0<F: Float + FromPrimitive>(x: F) -> F {
 /// // Just check it's positive and finite
 /// assert!(j1_2 > 0.0 && j1_2.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn j1<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // Special cases
     if x == F::zero() {
@@ -234,6 +237,7 @@ pub fn j1<F: Float + FromPrimitive + Debug>(x: F) -> F {
 
 /// Enhanced asymptotic approximation for J1 with very large arguments.
 /// Provides better accuracy compared to the standard formula.
+#[allow(dead_code)]
 fn enhanced_asymptotic_j1<F: Float + FromPrimitive>(x: F) -> F {
     let theta = x - F::from(3.0 * constants::f64::PI_4).unwrap();
 
@@ -297,6 +301,7 @@ fn enhanced_asymptotic_j1<F: Float + FromPrimitive>(x: F) -> F {
 /// // J₁(x) comparison
 /// assert!((jn(1, x) - j1(x)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     // Special cases
     if n < 0 {
@@ -431,6 +436,7 @@ pub fn jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// // Just check it's positive and finite
 /// assert!(j_half > 0.0 && j_half.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn jv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -> F {
     // Special cases
     if x == F::zero() {
@@ -571,6 +577,7 @@ pub fn jv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
 
 /// Enhanced asymptotic approximation for Jv with very large arguments.
 /// Provides better accuracy compared to the standard formula.
+#[allow(dead_code)]
 fn enhanced_asymptotic_jv<F: Float + FromPrimitive>(v: F, x: F) -> F {
     let abs_x = x.abs();
     let v_f64 = v.to_f64().unwrap();
@@ -652,6 +659,7 @@ fn enhanced_asymptotic_jv<F: Float + FromPrimitive>(v: F, x: F) -> F {
 /// # Returns
 ///
 /// * The natural logarithm of n!
+#[allow(dead_code)]
 fn log_factorial<F: Float + FromPrimitive>(n: i32) -> F {
     if n <= 1 {
         return F::zero();
@@ -667,6 +675,7 @@ fn log_factorial<F: Float + FromPrimitive>(n: i32) -> F {
 
 /// Enhanced asymptotic approximation for Jn with very large arguments.
 /// Provides better accuracy compared to the standard formula.
+#[allow(dead_code)]
 fn enhanced_asymptotic_jn<F: Float + FromPrimitive>(n: i32, x: F) -> F {
     let abs_x = x.abs();
     let n_f = F::from(n).unwrap();
@@ -724,6 +733,7 @@ fn enhanced_asymptotic_jn<F: Float + FromPrimitive>(n: i32, x: F) -> F {
 /// let result = j0e(x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn j0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
     // Therefore j0e(x) = j0(x) for real x
@@ -755,6 +765,7 @@ pub fn j0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let result = j1e(x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn j1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
     // Therefore j1e(x) = j1(x) for real x
@@ -787,6 +798,7 @@ pub fn j1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let result = jne(5, x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn jne<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
     // Therefore jne(n, x) = jn(n, x) for real x
@@ -819,6 +831,7 @@ pub fn jne<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// let result = jve(0.5, x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn jve<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -> F {
     // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
     // Therefore jve(v, x) = jv(v, x) for real x
@@ -826,6 +839,7 @@ pub fn jve<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -
 }
 
 // Helper function to return maximum of two values.
+#[allow(dead_code)]
 fn max<T: PartialOrd>(a: T, b: T) -> T {
     if a > b {
         a

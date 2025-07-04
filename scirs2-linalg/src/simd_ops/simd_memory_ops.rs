@@ -9,15 +9,14 @@
 //! - Runtime performance profiling and adaptive optimization
 
 use crate::error::{LinalgError, LinalgResult};
-use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis, s};
+use ndarray::{Array2, ArrayView2, ArrayViewMut2};
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
-use std::ptr;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
 /// Advanced memory access pattern analyzer for predictive prefetching
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MemoryAccessPatternAnalyzer {
     /// Track sequential access patterns
     sequential_access_count: AtomicU64,
@@ -26,6 +25,7 @@ pub struct MemoryAccessPatternAnalyzer {
     /// Track stride access patterns
     stride_access_patterns: Vec<(usize, u64)>, // (stride, frequency)
     /// Cache miss predictions
+    #[allow(dead_code)]
     predicted_miss_rate: f64,
 }
 
@@ -38,12 +38,12 @@ impl MemoryAccessPatternAnalyzer {
             predicted_miss_rate: 0.05, // Conservative 5% miss rate estimate
         }
     }
-    
+
     /// Analyze access pattern and recommend prefetch strategy
     pub fn analyze_and_recommend_prefetch(&self, matrix_dims: (usize, usize)) -> PrefetchStrategy {
         let (m, n) = matrix_dims;
         let total_elements = m * n;
-        
+
         // For large matrices, use aggressive prefetching
         if total_elements > 1_000_000 {
             PrefetchStrategy::Aggressive {
@@ -62,25 +62,28 @@ impl MemoryAccessPatternAnalyzer {
             }
         }
     }
-    
+
     /// Update access pattern statistics
     pub fn record_access_pattern(&mut self, access_type: AccessType) {
         match access_type {
             AccessType::Sequential => {
                 self.sequential_access_count.fetch_add(1, Ordering::Relaxed);
-            },
+            }
             AccessType::Random => {
                 self.random_access_count.fetch_add(1, Ordering::Relaxed);
-            },
+            }
             AccessType::Strided(stride) => {
                 // Find existing stride pattern or create new one
-                if let Some(pattern) = self.stride_access_patterns.iter_mut()
-                    .find(|(s, _)| *s == stride) {
+                if let Some(pattern) = self
+                    .stride_access_patterns
+                    .iter_mut()
+                    .find(|(s, _)| *s == stride)
+                {
                     pattern.1 += 1;
                 } else {
                     self.stride_access_patterns.push((stride, 1));
                 }
-            },
+            }
         }
     }
 }
@@ -89,24 +92,33 @@ impl MemoryAccessPatternAnalyzer {
 #[derive(Debug, Clone, Copy)]
 pub enum AccessType {
     Sequential,
-    Random, 
+    Random,
     Strided(usize),
 }
 
 /// Prefetch strategies based on access patterns
 #[derive(Debug, Clone, Copy)]
 pub enum PrefetchStrategy {
-    Conservative { prefetch_distance: usize, prefetch_hint: PrefetchHint },
-    Moderate { prefetch_distance: usize, prefetch_hint: PrefetchHint },
-    Aggressive { prefetch_distance: usize, prefetch_hint: PrefetchHint },
+    Conservative {
+        prefetch_distance: usize,
+        prefetch_hint: PrefetchHint,
+    },
+    Moderate {
+        prefetch_distance: usize,
+        prefetch_hint: PrefetchHint,
+    },
+    Aggressive {
+        prefetch_distance: usize,
+        prefetch_hint: PrefetchHint,
+    },
 }
 
 /// Cache prefetch hints for different cache levels
 #[derive(Debug, Clone, Copy)]
 pub enum PrefetchHint {
-    T0, // Prefetch to all cache levels
-    T1, // Prefetch to L2 and L3
-    T2, // Prefetch to L3 only
+    T0,  // Prefetch to all cache levels
+    T1,  // Prefetch to L2 and L3
+    T2,  // Prefetch to L3 only
     NTA, // Non-temporal access (bypass cache)
 }
 
@@ -119,6 +131,7 @@ pub struct CacheAwareMatrixOperations {
     /// L3 cache size in bytes
     l3_cache_size: usize,
     /// Cache line size in bytes
+    #[allow(dead_code)]
     cache_line_size: usize,
     /// Memory access pattern analyzer
     pattern_analyzer: MemoryAccessPatternAnalyzer,
@@ -127,28 +140,28 @@ pub struct CacheAwareMatrixOperations {
 impl CacheAwareMatrixOperations {
     pub fn new() -> Self {
         Self {
-            l1_cache_size: 32 * 1024,      // 32KB L1
-            l2_cache_size: 512 * 1024,     // 512KB L2
+            l1_cache_size: 32 * 1024,       // 32KB L1
+            l2_cache_size: 512 * 1024,      // 512KB L2
             l3_cache_size: 8 * 1024 * 1024, // 8MB L3
-            cache_line_size: 64,           // 64 bytes per cache line
+            cache_line_size: 64,            // 64 bytes per cache line
             pattern_analyzer: MemoryAccessPatternAnalyzer::new(),
         }
     }
-    
+
     /// Calculate optimal block sizes for current cache hierarchy
     pub fn calculate_optimal_block_sizes(&self, element_size: usize) -> CacheBlockSizes {
         // L1 cache blocking: aim to keep working set in L1
         let l1_elements = (self.l1_cache_size / 3) / element_size; // Divide by 3 for A, B, C blocks
         let l1_block_size = (l1_elements as f64).sqrt() as usize;
-        
+
         // L2 cache blocking: intermediate level
         let l2_elements = (self.l2_cache_size / 3) / element_size;
         let l2_block_size = (l2_elements as f64).sqrt() as usize;
-        
+
         // L3 cache blocking: largest blocks
         let l3_elements = (self.l3_cache_size / 3) / element_size;
         let l3_block_size = (l3_elements as f64).sqrt() as usize;
-        
+
         CacheBlockSizes {
             l1_block_m: l1_block_size.min(256),
             l1_block_n: l1_block_size.min(256),
@@ -161,7 +174,7 @@ impl CacheAwareMatrixOperations {
             l3_block_k: l3_block_size.min(4096),
         }
     }
-    
+
     /// Cache-aware matrix multiplication with intelligent prefetching
     pub fn cache_aware_gemm_f32(
         &mut self,
@@ -171,22 +184,22 @@ impl CacheAwareMatrixOperations {
     ) -> LinalgResult<()> {
         let (m, k) = a.dim();
         let (_, n) = b.dim();
-        
+
         if k != b.nrows() || m != c.nrows() || n != c.ncols() {
             return Err(LinalgError::ShapeError(
-                "Matrix dimensions incompatible for multiplication".to_string()
+                "Matrix dimensions incompatible for multiplication".to_string(),
             ));
         }
-        
+
         let block_sizes = self.calculate_optimal_block_sizes(std::mem::size_of::<f32>());
         let prefetch_strategy = self.pattern_analyzer.analyze_and_recommend_prefetch((m, n));
-        
+
         // Three-level cache blocking for optimal cache utilization
         self.three_level_blocked_gemm(a, b, c, &block_sizes, &prefetch_strategy)?;
-        
+
         Ok(())
     }
-    
+
     /// Three-level cache blocking implementation
     fn three_level_blocked_gemm(
         &mut self,
@@ -198,7 +211,7 @@ impl CacheAwareMatrixOperations {
     ) -> LinalgResult<()> {
         let (m, k) = a.dim();
         let (_, n) = b.dim();
-        
+
         // L3 blocking (outermost)
         for ii in (0..m).step_by(block_sizes.l3_block_m) {
             for jj in (0..n).step_by(block_sizes.l3_block_n) {
@@ -206,7 +219,7 @@ impl CacheAwareMatrixOperations {
                     let i_end = (ii + block_sizes.l3_block_m).min(m);
                     let j_end = (jj + block_sizes.l3_block_n).min(n);
                     let k_end = (kk + block_sizes.l3_block_k).min(k);
-                    
+
                     // L2 blocking (middle)
                     for i2 in (ii..i_end).step_by(block_sizes.l2_block_m) {
                         for j2 in (jj..j_end).step_by(block_sizes.l2_block_n) {
@@ -214,11 +227,18 @@ impl CacheAwareMatrixOperations {
                                 let i2_end = (i2 + block_sizes.l2_block_m).min(i_end);
                                 let j2_end = (j2 + block_sizes.l2_block_n).min(j_end);
                                 let k2_end = (k2 + block_sizes.l2_block_k).min(k_end);
-                                
+
                                 // L1 blocking (innermost) with prefetching
                                 self.l1_blocked_gemm_with_prefetch(
-                                    a, b, c,
-                                    i2, i2_end, j2, j2_end, k2, k2_end,
+                                    a,
+                                    b,
+                                    c,
+                                    i2,
+                                    i2_end,
+                                    j2,
+                                    j2_end,
+                                    k2,
+                                    k2_end,
                                     block_sizes,
                                     prefetch_strategy,
                                 )?;
@@ -228,19 +248,22 @@ impl CacheAwareMatrixOperations {
                 }
             }
         }
-        
+
         Ok(())
     }
-    
+
     /// L1 cache blocking with intelligent prefetching
     fn l1_blocked_gemm_with_prefetch(
         &mut self,
         a: &ArrayView2<f32>,
         b: &ArrayView2<f32>,
         c: &mut ArrayViewMut2<f32>,
-        i_start: usize, i_end: usize,
-        j_start: usize, j_end: usize,
-        k_start: usize, k_end: usize,
+        i_start: usize,
+        i_end: usize,
+        j_start: usize,
+        j_end: usize,
+        k_start: usize,
+        k_end: usize,
         block_sizes: &CacheBlockSizes,
         prefetch_strategy: &PrefetchStrategy,
     ) -> LinalgResult<()> {
@@ -250,33 +273,34 @@ impl CacheAwareMatrixOperations {
                     let i_block_end = (i + block_sizes.l1_block_m).min(i_end);
                     let j_block_end = (j + block_sizes.l1_block_n).min(j_end);
                     let k_block_end = (k_iter + block_sizes.l1_block_k).min(k_end);
-                    
+
                     // Perform prefetching based on strategy
                     self.intelligent_prefetch(a, b, c, i, j, k_iter, prefetch_strategy);
-                    
+
                     // Inner computation kernel
                     for ii in i..i_block_end {
                         for jj in j..j_block_end {
                             let mut sum = 0.0f32;
-                            
+
                             // Vectorizable inner loop
                             for kk in k_iter..k_block_end {
                                 sum += a[[ii, kk]] * b[[kk, jj]];
                             }
-                            
+
                             c[[ii, jj]] += sum;
                         }
                     }
                 }
             }
         }
-        
+
         // Record access pattern for future optimization
-        self.pattern_analyzer.record_access_pattern(AccessType::Sequential);
-        
+        self.pattern_analyzer
+            .record_access_pattern(AccessType::Sequential);
+
         Ok(())
     }
-    
+
     /// Intelligent prefetching based on access patterns and cache strategy
     fn intelligent_prefetch(
         &self,
@@ -289,49 +313,59 @@ impl CacheAwareMatrixOperations {
         strategy: &PrefetchStrategy,
     ) {
         let (prefetch_distance, hint) = match strategy {
-            PrefetchStrategy::Conservative { prefetch_distance, prefetch_hint } => 
-                (*prefetch_distance, *prefetch_hint),
-            PrefetchStrategy::Moderate { prefetch_distance, prefetch_hint } => 
-                (*prefetch_distance, *prefetch_hint),
-            PrefetchStrategy::Aggressive { prefetch_distance, prefetch_hint } => 
-                (*prefetch_distance, *prefetch_hint),
+            PrefetchStrategy::Conservative {
+                prefetch_distance,
+                prefetch_hint,
+            } => (*prefetch_distance, *prefetch_hint),
+            PrefetchStrategy::Moderate {
+                prefetch_distance,
+                prefetch_hint,
+            } => (*prefetch_distance, *prefetch_hint),
+            PrefetchStrategy::Aggressive {
+                prefetch_distance,
+                prefetch_hint,
+            } => (*prefetch_distance, *prefetch_hint),
         };
-        
+
         #[cfg(target_arch = "x86_64")]
         unsafe {
-            let cache_hint = match hint {
-                PrefetchHint::T0 => 3,
-                PrefetchHint::T1 => 2,
-                PrefetchHint::T2 => 1,
-                PrefetchHint::NTA => 0,
-            };
-            
+            macro_rules! prefetch_with_hint {
+                ($ptr:expr, $hint:expr) => {
+                    match $hint {
+                        PrefetchHint::T0 => _mm_prefetch($ptr as *const i8, 3),
+                        PrefetchHint::T1 => _mm_prefetch($ptr as *const i8, 2),
+                        PrefetchHint::T2 => _mm_prefetch($ptr as *const i8, 1),
+                        PrefetchHint::NTA => _mm_prefetch($ptr as *const i8, 0),
+                    }
+                };
+            }
+
             // Prefetch future A matrix rows
             if i + prefetch_distance < a.nrows() {
                 let a_ptr = &a[[i + prefetch_distance, k]] as *const f32;
-                _mm_prefetch(a_ptr as *const i8, cache_hint);
+                prefetch_with_hint!(a_ptr, hint);
             }
-            
+
             // Prefetch future B matrix columns
             if j + prefetch_distance < b.ncols() {
                 let b_ptr = &b[[k, j + prefetch_distance]] as *const f32;
-                _mm_prefetch(b_ptr as *const i8, cache_hint);
+                prefetch_with_hint!(b_ptr, hint);
             }
-            
+
             // Prefetch future C matrix elements
             if i + prefetch_distance < c.nrows() && j + prefetch_distance < c.ncols() {
                 let c_ptr = &c[[i + prefetch_distance, j + prefetch_distance]] as *const f32;
-                _mm_prefetch(c_ptr as *const i8, cache_hint);
+                prefetch_with_hint!(c_ptr, hint);
             }
         }
-        
+
         #[cfg(not(target_arch = "x86_64"))]
         {
             // No-op on non-x86_64 platforms
             let _ = (a, b, c, i, j, k, strategy);
         }
     }
-    
+
     /// Cache-aware matrix transpose with optimal memory access patterns
     pub fn cache_aware_transpose_f32(
         &mut self,
@@ -339,18 +373,18 @@ impl CacheAwareMatrixOperations {
     ) -> LinalgResult<Array2<f32>> {
         let (rows, cols) = input.dim();
         let mut result = Array2::zeros((cols, rows));
-        
+
         // Calculate optimal block size for cache-friendly transpose
         let element_size = std::mem::size_of::<f32>();
         let optimal_block_size = ((self.l1_cache_size / 2) / element_size).min(64);
         let block_size = (optimal_block_size as f64).sqrt() as usize;
-        
+
         // Blocked transpose to improve cache locality
         for i in (0..rows).step_by(block_size) {
             for j in (0..cols).step_by(block_size) {
                 let i_end = (i + block_size).min(rows);
                 let j_end = (j + block_size).min(cols);
-                
+
                 // Transpose block
                 for ii in i..i_end {
                     for jj in j..j_end {
@@ -359,9 +393,10 @@ impl CacheAwareMatrixOperations {
                 }
             }
         }
-        
-        self.pattern_analyzer.record_access_pattern(AccessType::Strided(rows));
-        
+
+        self.pattern_analyzer
+            .record_access_pattern(AccessType::Strided(rows));
+
         Ok(result)
     }
 }
@@ -387,6 +422,7 @@ pub struct RuntimePerformanceProfiler {
     /// Cache miss rate estimates
     cache_miss_rates: Vec<f64>,
     /// Optimization effectiveness scores
+    #[allow(dead_code)]
     optimization_scores: Vec<f64>,
     /// Current profiling session start time
     session_start: Option<Instant>,
@@ -401,33 +437,34 @@ impl RuntimePerformanceProfiler {
             session_start: None,
         }
     }
-    
+
     /// Start profiling session
     pub fn start_session(&mut self, operation_name: &str) {
         self.session_start = Some(Instant::now());
-        self.timing_history.push((operation_name.to_string(), Duration::ZERO));
+        self.timing_history
+            .push((operation_name.to_string(), Duration::ZERO));
     }
-    
+
     /// End profiling session and record performance
     pub fn end_session(&mut self) -> Option<Duration> {
         if let Some(start_time) = self.session_start.take() {
             let duration = start_time.elapsed();
-            
+
             // Update the last timing entry
             if let Some(last_entry) = self.timing_history.last_mut() {
                 last_entry.1 = duration;
             }
-            
+
             Some(duration)
         } else {
             None
         }
     }
-    
+
     /// Analyze performance and recommend optimizations
     pub fn analyze_and_recommend(&self) -> Vec<OptimizationRecommendation> {
         let mut recommendations = Vec::new();
-        
+
         // Analyze timing patterns
         if let Some(avg_time) = self.calculate_average_operation_time() {
             if avg_time > Duration::from_millis(100) {
@@ -437,7 +474,7 @@ impl RuntimePerformanceProfiler {
                 recommendations.push(OptimizationRecommendation::DecreaseBlockSize);
             }
         }
-        
+
         // Analyze cache performance
         if let Some(avg_miss_rate) = self.calculate_average_cache_miss_rate() {
             if avg_miss_rate > 0.1 {
@@ -445,27 +482,31 @@ impl RuntimePerformanceProfiler {
                 recommendations.push(OptimizationRecommendation::IncreaseBlockSize);
             }
         }
-        
+
         recommendations
     }
-    
+
     fn calculate_average_operation_time(&self) -> Option<Duration> {
         if self.timing_history.is_empty() {
             return None;
         }
-        
-        let total_nanos: u64 = self.timing_history.iter()
+
+        let total_nanos: u64 = self
+            .timing_history
+            .iter()
             .map(|(_, duration)| duration.as_nanos() as u64)
             .sum();
-        
-        Some(Duration::from_nanos(total_nanos / self.timing_history.len() as u64))
+
+        Some(Duration::from_nanos(
+            total_nanos / self.timing_history.len() as u64,
+        ))
     }
-    
+
     fn calculate_average_cache_miss_rate(&self) -> Option<f64> {
         if self.cache_miss_rates.is_empty() {
             return None;
         }
-        
+
         Some(self.cache_miss_rates.iter().sum::<f64>() / self.cache_miss_rates.len() as f64)
     }
 }
@@ -515,7 +556,7 @@ impl BranchOptimizer {
             if_false
         }
     }
-    
+
     /// Optimize unlikely branches (e.g., error conditions)
     #[allow(dead_code)]
     #[inline(always)]
@@ -528,7 +569,7 @@ impl BranchOptimizer {
             if_false
         }
     }
-    
+
     /// Prefetch-guided loop unrolling for predictable access patterns
     #[allow(dead_code)]
     pub fn unrolled_loop_with_prefetch<F>(
@@ -540,7 +581,7 @@ impl BranchOptimizer {
         F: FnMut(usize),
     {
         let mut i = start;
-        
+
         // Main unrolled loop
         while i + unroll_factor <= end {
             for offset in 0..unroll_factor {
@@ -548,7 +589,7 @@ impl BranchOptimizer {
             }
             i += unroll_factor;
         }
-        
+
         // Handle remaining iterations
         while i < end {
             operation(i);
@@ -558,7 +599,7 @@ impl BranchOptimizer {
 }
 
 /// ULTRATHINK ENHANCEMENT: Adaptive Vectorization Engine with CPU Feature Detection
-/// 
+///
 /// This system provides runtime detection of CPU capabilities and automatic
 /// selection of optimal vectorization strategies for maximum performance.
 pub struct AdaptiveVectorizationEngine {
@@ -598,14 +639,14 @@ impl AdaptiveVectorizationEngine {
     /// Create new adaptive vectorization engine with CPU feature detection
     pub fn new() -> Self {
         let cpu_features = Self::detect_cpu_features();
-        
+
         Self {
             cpu_features,
             strategy_performance: std::collections::HashMap::new(),
             auto_tuning_enabled: true,
         }
     }
-    
+
     /// Detect CPU features at runtime
     #[allow(dead_code)]
     fn detect_cpu_features() -> CpuFeatures {
@@ -632,12 +673,12 @@ impl AdaptiveVectorizationEngine {
             }
         }
     }
-    
+
     /// Select optimal vectorization strategy based on matrix size and CPU features
     pub fn select_optimal_strategy(&self, matrix_size: (usize, usize)) -> VectorizationStrategy {
         let (rows, cols) = matrix_size;
         let total_elements = rows * cols;
-        
+
         // For very large matrices, prefer the most advanced vectorization available
         if total_elements > 100_000 {
             if self.cpu_features.avx512 {
@@ -648,7 +689,7 @@ impl AdaptiveVectorizationEngine {
                 return VectorizationStrategy::AVX;
             }
         }
-        
+
         // For medium matrices, balance between complexity and performance
         if total_elements > 10_000 {
             if self.cpu_features.avx2 {
@@ -659,7 +700,7 @@ impl AdaptiveVectorizationEngine {
                 return VectorizationStrategy::SSE42;
             }
         }
-        
+
         // For small matrices, use simpler vectorization or scalar
         if self.cpu_features.sse42 && total_elements > 1_000 {
             VectorizationStrategy::SSE42
@@ -667,7 +708,7 @@ impl AdaptiveVectorizationEngine {
             VectorizationStrategy::Scalar
         }
     }
-    
+
     /// Adaptive matrix multiplication with optimal vectorization
     #[allow(dead_code)]
     pub fn adaptive_matrix_multiply_f32(
@@ -676,7 +717,7 @@ impl AdaptiveVectorizationEngine {
         b: &ArrayView2<f32>,
     ) -> LinalgResult<Array2<f32>> {
         let start_time = Instant::now();
-        
+
         let strategy = self.select_optimal_strategy((a.nrows(), a.ncols()));
         let result = match strategy {
             VectorizationStrategy::AVX512 => self.matrix_multiply_avx512_f32(a, b),
@@ -685,16 +726,16 @@ impl AdaptiveVectorizationEngine {
             VectorizationStrategy::SSE42 => self.matrix_multiply_sse42_f32(a, b),
             VectorizationStrategy::Scalar => self.matrix_multiply_scalar_f32(a, b),
         };
-        
+
         // Record performance for auto-tuning
         if self.auto_tuning_enabled {
             let duration = start_time.elapsed().as_secs_f64();
             self.strategy_performance.insert(strategy, duration);
         }
-        
+
         result
     }
-    
+
     /// AVX512 optimized matrix multiplication (placeholder implementation)
     #[allow(dead_code)]
     fn matrix_multiply_avx512_f32(
@@ -705,7 +746,7 @@ impl AdaptiveVectorizationEngine {
         // For now, fall back to AVX2 as AVX512 requires more complex implementation
         self.matrix_multiply_avx2_f32(a, b)
     }
-    
+
     /// AVX2 optimized matrix multiplication
     #[allow(dead_code)]
     fn matrix_multiply_avx2_f32(
@@ -718,21 +759,21 @@ impl AdaptiveVectorizationEngine {
                 "Matrix dimensions incompatible for multiplication".to_string(),
             ));
         }
-        
+
         let (m, k) = a.dim();
         let n = b.ncols();
         let mut result = Array2::zeros((m, n));
-        
+
         // Use blocked algorithm for better cache performance
         const BLOCK_SIZE: usize = 64;
-        
+
         for i in (0..m).step_by(BLOCK_SIZE) {
             for j in (0..n).step_by(BLOCK_SIZE) {
                 for kk in (0..k).step_by(BLOCK_SIZE) {
                     let i_end = (i + BLOCK_SIZE).min(m);
                     let j_end = (j + BLOCK_SIZE).min(n);
                     let k_end = (kk + BLOCK_SIZE).min(k);
-                    
+
                     // Block multiplication with vectorization
                     for ii in i..i_end {
                         for jj in (j..j_end).step_by(8) {
@@ -748,10 +789,10 @@ impl AdaptiveVectorizationEngine {
                 }
             }
         }
-        
+
         Ok(result)
     }
-    
+
     /// AVX optimized matrix multiplication
     #[allow(dead_code)]
     fn matrix_multiply_avx_f32(
@@ -762,7 +803,7 @@ impl AdaptiveVectorizationEngine {
         // Simplified implementation - in practice would use AVX intrinsics
         self.matrix_multiply_scalar_f32(a, b)
     }
-    
+
     /// SSE4.2 optimized matrix multiplication
     #[allow(dead_code)]
     fn matrix_multiply_sse42_f32(
@@ -773,7 +814,7 @@ impl AdaptiveVectorizationEngine {
         // Simplified implementation - in practice would use SSE intrinsics
         self.matrix_multiply_scalar_f32(a, b)
     }
-    
+
     /// Scalar fallback matrix multiplication
     fn matrix_multiply_scalar_f32(
         &self,
@@ -785,11 +826,11 @@ impl AdaptiveVectorizationEngine {
                 "Matrix dimensions incompatible for multiplication".to_string(),
             ));
         }
-        
+
         let (m, k) = a.dim();
         let n = b.ncols();
         let mut result = Array2::zeros((m, n));
-        
+
         for i in 0..m {
             for j in 0..n {
                 for kk in 0..k {
@@ -797,16 +838,16 @@ impl AdaptiveVectorizationEngine {
                 }
             }
         }
-        
+
         Ok(result)
     }
-    
+
     /// Get performance report for different strategies
     #[allow(dead_code)]
     pub fn get_performance_report(&self) -> std::collections::HashMap<VectorizationStrategy, f64> {
         self.strategy_performance.clone()
     }
-    
+
     /// Enable or disable auto-tuning
     #[allow(dead_code)]
     pub fn set_auto_tuning(&mut self, enabled: bool) {
@@ -829,104 +870,111 @@ mod tests {
     #[test]
     fn test_cache_aware_matrix_operations() {
         let mut cache_ops = CacheAwareMatrixOperations::new();
-        
+
         let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let b = array![[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]];
         let mut c = Array2::zeros((2, 2));
-        
+
         let result = cache_ops.cache_aware_gemm_f32(&a.view(), &b.view(), &mut c.view_mut());
         assert!(result.is_ok());
-        
+
         // Expected: [[58, 64], [139, 154]]
         assert_abs_diff_eq!(c[[0, 0]], 58.0, epsilon = 1e-6);
         assert_abs_diff_eq!(c[[0, 1]], 64.0, epsilon = 1e-6);
         assert_abs_diff_eq!(c[[1, 0]], 139.0, epsilon = 1e-6);
         assert_abs_diff_eq!(c[[1, 1]], 154.0, epsilon = 1e-6);
     }
-    
+
     #[test]
     fn test_cache_aware_transpose() {
         let mut cache_ops = CacheAwareMatrixOperations::new();
-        
+
         let input = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let result = cache_ops.cache_aware_transpose_f32(&input.view()).unwrap();
-        
+
         let expected = array![[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]];
-        
+
         for (actual, expected) in result.iter().zip(expected.iter()) {
             assert_abs_diff_eq!(*actual, *expected, epsilon = 1e-10);
         }
     }
-    
+
     #[test]
     fn test_memory_access_pattern_analyzer() {
         let analyzer = MemoryAccessPatternAnalyzer::new();
-        
+
         let strategy = analyzer.analyze_and_recommend_prefetch((1000, 1000));
         match strategy {
-            PrefetchStrategy::Aggressive { prefetch_distance, .. } => {
+            PrefetchStrategy::Aggressive {
+                prefetch_distance, ..
+            } => {
                 assert!(prefetch_distance > 0);
-            },
-            _ => {},
+            }
+            _ => {}
         }
     }
-    
+
     #[test]
     fn test_runtime_performance_profiler() {
         let mut profiler = RuntimePerformanceProfiler::new();
-        
+
         profiler.start_session("test_operation");
         std::thread::sleep(Duration::from_millis(1));
         let duration = profiler.end_session();
-        
+
         assert!(duration.is_some());
         assert!(duration.unwrap() >= Duration::from_millis(1));
-        
+
         let recommendations = profiler.analyze_and_recommend();
         // Should provide some recommendations based on timing
         assert!(!recommendations.is_empty() || profiler.timing_history.len() < 2);
     }
-    
+
     #[test]
     fn test_branch_optimizer() {
         let result1 = BranchOptimizer::likely_branch(true, 42, 0);
         assert_eq!(result1, 42);
-        
+
         let result2 = BranchOptimizer::unlikely_branch(false, 0, 42);
         assert_eq!(result2, 42);
     }
-    
+
     #[test]
     fn test_adaptive_vectorization_engine() {
         let mut engine = AdaptiveVectorizationEngine::new();
-        
+
         // Test CPU feature detection
         let features = &engine.cpu_features;
         assert!(features.cache_line_size > 0);
-        
+
         // Test strategy selection for different matrix sizes
         let small_strategy = engine.select_optimal_strategy((10, 10));
         let medium_strategy = engine.select_optimal_strategy((100, 100));
         let large_strategy = engine.select_optimal_strategy((1000, 1000));
-        
+
         // Verify strategies are appropriate for size
-        assert!(matches!(small_strategy, VectorizationStrategy::Scalar | VectorizationStrategy::SSE42));
+        assert!(matches!(
+            small_strategy,
+            VectorizationStrategy::Scalar | VectorizationStrategy::SSE42
+        ));
         println!("Small matrix strategy: {:?}", small_strategy);
         println!("Medium matrix strategy: {:?}", medium_strategy);
         println!("Large matrix strategy: {:?}", large_strategy);
-        
+
         // Test matrix multiplication with small matrices
         let a = array![[1.0f32, 2.0], [3.0, 4.0]];
         let b = array![[5.0f32, 6.0], [7.0, 8.0]];
-        
-        let result = engine.adaptive_matrix_multiply_f32(&a.view(), &b.view()).unwrap();
-        
+
+        let result = engine
+            .adaptive_matrix_multiply_f32(&a.view(), &b.view())
+            .unwrap();
+
         // Verify result correctness
         let expected = array![[19.0f32, 22.0], [43.0, 50.0]];
         for (actual, expected) in result.iter().zip(expected.iter()) {
             assert_abs_diff_eq!(*actual, *expected, epsilon = 1e-10);
         }
-        
+
         // Test auto-tuning functionality
         engine.set_auto_tuning(false);
         let performance_report = engine.get_performance_report();

@@ -8,6 +8,7 @@ use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
 
+#[allow(dead_code)]
 fn main() -> SignalResult<()> {
     println!("Signal Interpolation Examples");
 
@@ -30,6 +31,7 @@ fn main() -> SignalResult<()> {
 }
 
 /// Generate a sine wave signal with some missing values
+#[allow(dead_code)]
 fn generate_test_signal(n_samples: usize, missing_rate: f64) -> Array1<f64> {
     let mut signal = Array1::zeros(n_samples);
     let x = Array1::linspace(0.0, 10.0, n_samples);
@@ -51,6 +53,7 @@ fn generate_test_signal(n_samples: usize, missing_rate: f64) -> Array1<f64> {
 }
 
 /// Export signal data to CSV for visualization
+#[allow(dead_code)]
 fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
     let mut file = File::create(file_name).map_err(|e| SignalError::Compute(e.to_string()))?;
 
@@ -86,6 +89,7 @@ fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
 }
 
 /// Export 2D data to CSV for visualization
+#[allow(dead_code)]
 fn export_2d_to_csv(file_name: &str, data: &Array2<f64>) -> SignalResult<()> {
     let mut file = File::create(file_name).map_err(|e| SignalError::Compute(e.to_string()))?;
     let (n_rows, n_cols) = data.dim();
@@ -109,6 +113,7 @@ fn export_2d_to_csv(file_name: &str, data: &Array2<f64>) -> SignalResult<()> {
 }
 
 /// Example of interpolating a simple signal with missing values
+#[allow(dead_code)]
 fn interpolate_simple_signal() -> SignalResult<()> {
     println!("Interpolating a Simple Signal");
 
@@ -191,6 +196,7 @@ fn interpolate_simple_signal() -> SignalResult<()> {
 }
 
 /// Example of comparing different interpolation methods
+#[allow(dead_code)]
 fn compare_interpolation_methods() -> SignalResult<()> {
     println!("Comparing Interpolation Methods");
 
@@ -313,6 +319,7 @@ fn compare_interpolation_methods() -> SignalResult<()> {
 }
 
 /// Example of interpolating a bandlimited signal
+#[allow(dead_code)]
 fn interpolate_bandlimited_signal() -> SignalResult<()> {
     println!("Interpolating a Bandlimited Signal");
 
@@ -449,6 +456,7 @@ fn interpolate_bandlimited_signal() -> SignalResult<()> {
 }
 
 /// Example of interpolating a 2D dataset (image)
+#[allow(dead_code)]
 fn interpolate_2d_data() -> SignalResult<()> {
     println!("Interpolating 2D Data (Image)");
 
@@ -566,6 +574,7 @@ fn interpolate_2d_data() -> SignalResult<()> {
 }
 
 /// Example of automatic method selection for interpolation
+#[allow(dead_code)]
 fn auto_interpolation_example() -> SignalResult<()> {
     println!("Automatic Method Selection for Interpolation");
 

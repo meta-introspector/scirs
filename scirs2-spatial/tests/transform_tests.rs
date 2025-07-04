@@ -5,6 +5,7 @@ use std::f64::consts::PI;
 use scirs2_spatial::transform::{Rotation, RotationSpline, Slerp};
 
 #[test]
+#[allow(dead_code)]
 fn test_rotation_basic() {
     // Create a rotation from various representations
     let rot_identity = Rotation::identity();
@@ -44,6 +45,7 @@ fn test_rotation_basic() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_rotation_euler_conventions() {
     let test_conventions = ["xyz", "zyx", "xyx", "xzx", "yxy", "yzy", "zxz", "zyz"];
 
@@ -82,6 +84,7 @@ fn test_rotation_euler_conventions() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_slerp_basic() {
     // Create two rotations
     let rot1 = Rotation::identity();
@@ -122,6 +125,7 @@ fn test_slerp_basic() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_rotation_spline_slerp() {
     // Create a rotation spline
     let rotations = vec![
@@ -205,6 +209,7 @@ fn test_rotation_spline_slerp() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_rotation_spline_cubic() {
     // Create a rotation spline
     let rotations = vec![
@@ -281,6 +286,7 @@ fn test_rotation_spline_cubic() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_rotation_spline_angular_velocity() {
     // Create a simple rotation spline (rotation around Z-axis)
     let rotations = vec![
@@ -331,6 +337,7 @@ fn test_rotation_spline_angular_velocity() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_rotation_spline_angular_acceleration() {
     // Create a rotation spline
     let rotations = vec![

@@ -4,6 +4,7 @@ use scirs2_text::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Token Filtering Demo");
     println!("===================\n");

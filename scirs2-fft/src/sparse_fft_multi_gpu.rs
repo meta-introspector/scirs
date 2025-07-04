@@ -703,6 +703,7 @@ impl MultiGPUSparseFFT {
 }
 
 /// Convenience function for multi-GPU sparse FFT with default configuration
+#[allow(dead_code)]
 pub fn multi_gpu_sparse_fft<T>(
     signal: &[T],
     k: usize,

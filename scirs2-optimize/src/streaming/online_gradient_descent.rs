@@ -14,7 +14,8 @@ use super::{
 };
 use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::CoreResult;
+// Unused import
+// use scirs2_core::error::CoreResult;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::time::{Duration, Instant};
@@ -907,6 +908,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for UltraAdvancedDistribu
 }
 
 /// Convenience function for distributed linear regression
+#[allow(dead_code)]
 pub fn distributed_online_linear_regression(
     node_id: usize,
     n_features: usize,
@@ -921,6 +923,7 @@ pub fn distributed_online_linear_regression(
 }
 
 /// Convenience function for distributed logistic regression
+#[allow(dead_code)]
 pub fn distributed_online_logistic_regression(
     node_id: usize,
     n_features: usize,
@@ -935,6 +938,7 @@ pub fn distributed_online_logistic_regression(
 }
 
 /// Legacy convenience functions for backward compatibility
+#[allow(dead_code)]
 pub fn online_linear_regression(
     n_features: usize,
     config: Option<StreamingConfig>,
@@ -942,6 +946,7 @@ pub fn online_linear_regression(
     distributed_online_linear_regression(0, n_features, 1, config)
 }
 
+#[allow(dead_code)]
 pub fn online_logistic_regression(
     n_features: usize,
     config: Option<StreamingConfig>,

@@ -1,6 +1,7 @@
 // Test ultrathink mode compilation
 // This tests basic syntax and imports
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing advanced mode compilation");
     
@@ -10,6 +11,7 @@ fn main() {
     println!("Ultrathink mode compilation test completed");
 }
 
+#[allow(dead_code)]
 fn test_neural_architecture_search() {
     println!("Testing Neural Architecture Search compilation");
     

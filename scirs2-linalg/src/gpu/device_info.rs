@@ -110,6 +110,7 @@ impl ExtendedDeviceInfo {
     }
 }
 
+#[allow(dead_code)]
 fn estimate_cuda_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
     let capabilities = DeviceCapabilities {
         supports_fp64: info.supports_fp64,
@@ -136,6 +137,7 @@ fn estimate_cuda_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerfo
     (capabilities, performance)
 }
 
+#[allow(dead_code)]
 fn estimate_opencl_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
     let capabilities = DeviceCapabilities {
         supports_fp64: info.supports_fp64,
@@ -161,6 +163,7 @@ fn estimate_opencl_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
     (capabilities, performance)
 }
 
+#[allow(dead_code)]
 fn estimate_rocm_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
     let capabilities = DeviceCapabilities {
         supports_fp64: info.supports_fp64,
@@ -186,6 +189,7 @@ fn estimate_rocm_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerfo
     (capabilities, performance)
 }
 
+#[allow(dead_code)]
 fn estimate_vulkan_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
     // Similar to OpenCL but more conservative
     let capabilities = DeviceCapabilities {
@@ -212,6 +216,7 @@ fn estimate_vulkan_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
     (capabilities, performance)
 }
 
+#[allow(dead_code)]
 fn estimate_metal_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
     let capabilities = DeviceCapabilities {
         supports_fp64: info.supports_fp64,
@@ -237,6 +242,7 @@ fn estimate_metal_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerf
     (capabilities, performance)
 }
 
+#[allow(dead_code)]
 fn estimate_oneapi_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
     let capabilities = DeviceCapabilities {
         supports_fp64: info.supports_fp64,
@@ -262,6 +268,7 @@ fn estimate_oneapi_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
     (capabilities, performance)
 }
 
+#[allow(dead_code)]
 fn estimate_webgpu_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePerformance) {
     let capabilities = DeviceCapabilities {
         supports_fp64: false, // WebGPU typically doesn't support fp64
@@ -288,6 +295,7 @@ fn estimate_webgpu_specs(info: &GpuDeviceInfo) -> (DeviceCapabilities, DevicePer
 }
 
 /// Benchmark a device to get actual performance characteristics
+#[allow(dead_code)]
 pub fn benchmark_device_performance(
     device_info: &GpuDeviceInfo,
 ) -> LinalgResult<DevicePerformance> {

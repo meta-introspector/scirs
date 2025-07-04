@@ -292,6 +292,7 @@ impl Bounds {
 }
 
 /// Main minimize function for unconstrained optimization
+#[allow(dead_code)]
 pub fn minimize<F, S>(
     fun: F,
     x0: &[f64],
@@ -333,6 +334,7 @@ where
 }
 
 /// Wrapper function for truncated Newton method
+#[allow(dead_code)]
 fn truncated_newton_wrapper<F, S>(
     mut fun: F,
     x0: Array1<f64>,
@@ -375,6 +377,7 @@ where
 }
 
 /// Wrapper function for trust-region Newton method
+#[allow(dead_code)]
 fn trust_region_newton_wrapper<F, S>(
     mut fun: F,
     x0: Array1<f64>,

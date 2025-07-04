@@ -6,7 +6,7 @@
 //! are maintained across the entire ecosystem.
 
 use crate::error::StatsResult;
-use crate::ultrathink_numerical_stability::create_numerical_stability_analyzer;
+use crate::numerical_stability_enhancements::create_exhaustive_numerical_stability_tester;
 use crate::ultrathink_unified_processor::{
     create_ultrathink_processor, OptimizationMode, UltrathinkProcessorConfig,
 };
@@ -107,7 +107,7 @@ pub enum CompatibilityRating {
 
 /// Cross-platform ultrathink validator
 pub struct CrossPlatformValidator {
-    stability_analyzer: crate::ultrathink_numerical_stability::UltrathinkNumericalStabilityAnalyzer,
+    stability_analyzer: crate::numerical_stability_enhancements::UltraThinkNumericalStabilityTester,
     test_configurations: Vec<UltrathinkProcessorConfig>,
     reference_results: HashMap<String, Array1<f64>>,
 }
@@ -154,7 +154,7 @@ impl CrossPlatformValidator {
         ];
 
         Self {
-            stability_analyzer: create_numerical_stability_analyzer(),
+            stability_analyzer: create_exhaustive_numerical_stability_tester(),
             test_configurations,
             reference_results: HashMap::new(),
         }
@@ -307,8 +307,12 @@ impl CrossPlatformValidator {
                 let test_name = format!("simd_test_size_{}_align_{}", size, alignment);
 
                 let start_time = Instant::now();
-                let simd_result =
-                    crate::ultrathink_simd_optimizations::ultra_batch_statistics(&data.view());
+                let optimizer = crate::advanced_simd_stats::UltraThinkSimdOptimizer::new(
+                    crate::advanced_simd_stats::UltraThinkSimdConfig::default(),
+                );
+                let data_arrays = vec![data.view()];
+                let operations = vec![crate::advanced_simd_stats::BatchOperation::Mean];
+                let simd_result = optimizer.ultra_batch_statistics(&data_arrays, &operations);
                 let execution_time = start_time.elapsed();
 
                 // Also compute reference result
@@ -667,12 +671,14 @@ impl CrossPlatformValidator {
 }
 
 /// Create a configured cross-platform validator
+#[allow(dead_code)]
 pub fn create_cross_platform_validator() -> CrossPlatformValidator {
     CrossPlatformValidator::new()
 }
 
 // Helper functions for data generation and testing
 
+#[allow(dead_code)]
 fn generate_normal_data(n: usize) -> Array1<f64> {
     Array1::from_shape_fn(n, |i| {
         let u1 = (i as f64 + 1.0) / (n as f64 + 2.0);
@@ -681,10 +687,12 @@ fn generate_normal_data(n: usize) -> Array1<f64> {
     })
 }
 
+#[allow(dead_code)]
 fn generate_uniform_data(n: usize) -> Array1<f64> {
     Array1::from_shape_fn(n, |i| (i as f64) / (n as f64))
 }
 
+#[allow(dead_code)]
 fn generate_skewed_data(n: usize) -> Array1<f64> {
     Array1::from_shape_fn(n, |i| {
         let x = (i as f64) / (n as f64);
@@ -692,6 +700,7 @@ fn generate_skewed_data(n: usize) -> Array1<f64> {
     })
 }
 
+#[allow(dead_code)]
 fn generate_outlier_data(n: usize) -> Array1<f64> {
     let mut data = generate_normal_data(n);
     // Add outliers at 5% of positions
@@ -701,46 +710,56 @@ fn generate_outlier_data(n: usize) -> Array1<f64> {
     data
 }
 
+#[allow(dead_code)]
 fn generate_aligned_data(size: usize, _alignment: usize) -> Array1<f64> {
     // Generate data with specific memory alignment for SIMD testing
     Array1::from_shape_fn(size, |i| (i as f64).sin())
 }
 
+#[allow(dead_code)]
 fn generate_large_dataset(size: usize) -> Array1<f64> {
     Array1::from_shape_fn(size, |i| (i as f64 * 0.001).sin() + (i as f64 * 0.01).cos())
 }
 
+#[allow(dead_code)]
 fn generate_near_zero_data(n: usize) -> Array1<f64> {
     generate_normal_data(n).mapv(|x| x * 1e-15)
 }
 
+#[allow(dead_code)]
 fn generate_large_values_data(n: usize) -> Array1<f64> {
     generate_normal_data(n).mapv(|x| x * 1e15)
 }
 
+#[allow(dead_code)]
 fn generate_mixed_scale_data(n: usize) -> Array1<f64> {
     Array1::from_shape_fn(n, |i| if i % 10 == 0 { 1e12 } else { 1e-12 })
 }
 
+#[allow(dead_code)]
 fn generate_cancellation_data(n: usize) -> Array1<f64> {
     // Data designed to cause catastrophic cancellation
     let base = 1e8;
     Array1::from_shape_fn(n, |i| base + (i as f64 * 1e-8))
 }
 
+#[allow(dead_code)]
 fn generate_performance_test_data(size: usize) -> Array1<f64> {
     Array1::from_shape_fn(size, |i| (i as f64).sin())
 }
 
+#[allow(dead_code)]
 fn estimate_memory_usage(data_size: usize) -> usize {
     data_size * std::mem::size_of::<f64>() * 2 // Rough estimate
 }
 
+#[allow(dead_code)]
 fn calculate_memory_efficiency(peak_usage: usize, data_size: usize) -> f64 {
     let theoretical_minimum = data_size * std::mem::size_of::<f64>();
     theoretical_minimum as f64 / peak_usage as f64
 }
 
+#[allow(dead_code)]
 fn estimate_expected_throughput(data_size: usize) -> f64 {
     // Very rough estimate - should be calibrated per platform
     match data_size {
@@ -751,49 +770,63 @@ fn estimate_expected_throughput(data_size: usize) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn estimate_expected_parallel_throughput(data_size: usize, thread_count: usize) -> f64 {
     estimate_expected_throughput(data_size) * (thread_count as f64 * 0.8) // 80% parallel efficiency
 }
 
+#[allow(dead_code)]
 fn time_scalar_operation(data: &Array1<f64>) -> std::time::Duration {
     let start = Instant::now();
     let _result = data.iter().sum::<f64>() / data.len() as f64;
     start.elapsed()
 }
 
+#[allow(dead_code)]
 fn time_simd_operation(data: &Array1<f64>) -> std::time::Duration {
     let start = Instant::now();
-    let _result = crate::ultrathink_simd_optimizations::ultra_batch_statistics(&data.view());
+    let optimizer = crate::advanced_simd_stats::UltraThinkSimdOptimizer::new(
+        crate::advanced_simd_stats::UltraThinkSimdConfig::default(),
+    );
+    let data_arrays = vec![data.view()];
+    let operations = vec![crate::advanced_simd_stats::BatchOperation::Mean];
+    let _result = optimizer.ultra_batch_statistics(&data_arrays, &operations);
     start.elapsed()
 }
 
+#[allow(dead_code)]
 fn time_single_thread_operation(data: &Array1<f64>) -> std::time::Duration {
     let start = Instant::now();
     let _result = data.mean();
     start.elapsed()
 }
 
+#[allow(dead_code)]
 fn time_multi_thread_operation(data: &Array1<f64>) -> std::time::Duration {
     let start = Instant::now();
     let _result = crate::parallel_stats::mean_parallel(&data.view(), None);
     start.elapsed()
 }
 
+#[allow(dead_code)]
 fn estimate_memory_bandwidth() -> f64 {
     // Simplified memory bandwidth estimation
     10.0 // GB/s - should be measured properly
 }
 
+#[allow(dead_code)]
 fn measure_cache_efficiency(_data: &Array1<f64>) -> f64 {
     // Simplified cache efficiency measurement
     0.85 // Should be measured properly
 }
 
+#[allow(dead_code)]
 fn detect_thermal_throttling() -> bool {
     // Simplified thermal throttling detection
     false // Should check actual CPU frequency scaling
 }
 
+#[allow(dead_code)]
 fn get_compilation_flags() -> Vec<String> {
     // Return compilation flags if available
     vec!["O3".to_string(), "native".to_string()]

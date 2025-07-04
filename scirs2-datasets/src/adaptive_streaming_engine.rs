@@ -944,11 +944,13 @@ impl StreamQualityMonitor {
 }
 
 /// Convenience function to create a new adaptive streaming engine
+#[allow(dead_code)]
 pub fn create_adaptive_engine() -> AdaptiveStreamingEngine {
     AdaptiveStreamingEngine::new(AdaptiveStreamConfig::default())
 }
 
 /// Convenience function to create a streaming engine with custom config
+#[allow(dead_code)]
 pub fn create_adaptive_engine_with_config(config: AdaptiveStreamConfig) -> AdaptiveStreamingEngine {
     AdaptiveStreamingEngine::new(config)
 }

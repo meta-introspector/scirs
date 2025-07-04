@@ -69,6 +69,7 @@ pub struct EigDecomposition<F: Float> {
 /// // Check that P*A = L*U
 /// // (implementation dependent, so not shown here)
 /// ```
+#[allow(dead_code)]
 pub fn lu_factor<F>(a: &ArrayView2<F>) -> LinalgResult<LUDecomposition<F>>
 where
     F: Float + NumAssign,
@@ -168,6 +169,7 @@ where
 /// // Check that A = Q*R
 /// // (implementation dependent, so not shown here)
 /// ```
+#[allow(dead_code)]
 pub fn qr_factor<F>(a: &ArrayView2<F>) -> LinalgResult<QRDecomposition<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -275,6 +277,7 @@ where
 /// // Check that A = U*diag(S)*V^T
 /// // (implementation dependent, so not shown here)
 /// ```
+#[allow(dead_code)]
 pub fn svd<F>(a: &ArrayView2<F>, full_matrices: bool) -> LinalgResult<SVDDecomposition<F>>
 where
     F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
@@ -470,6 +473,7 @@ where
 }
 
 /// Modified Gram-Schmidt orthogonalization for better numerical stability
+#[allow(dead_code)]
 fn modified_gram_schmidt<F>(matrix: &mut Array2<F>)
 where
     F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
@@ -497,6 +501,7 @@ where
 }
 
 /// Extend a matrix to form a complete orthogonal basis
+#[allow(dead_code)]
 fn extend_to_orthogonal_basis<F>(matrix: Array2<F>, target_size: usize) -> Array2<F>
 where
     F: Float + NumAssign + ndarray::ScalarOperand + std::iter::Sum + Send + Sync + 'static,
@@ -567,6 +572,7 @@ where
 /// // Check that A*V = V*diag(eigenvalues)
 /// // (implementation dependent, so not shown here)
 /// ```
+#[allow(dead_code)]
 pub fn eig<F>(a: &ArrayView2<F>) -> LinalgResult<EigDecomposition<F>>
 where
     F: Float + NumAssign,
@@ -629,6 +635,7 @@ where
 /// // Check that A = L*L^T
 /// // (implementation dependent, so not shown here)
 /// ```
+#[allow(dead_code)]
 pub fn cholesky<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign,

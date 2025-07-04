@@ -9,6 +9,7 @@ use scirs2_spatial::set_distance::{
 };
 
 /// Print distance and description
+#[allow(dead_code)]
 fn print_distance(name: &str, dist: f64, description: &str) {
     println!("{name: <25} : {dist:.6}");
     println!("{: <25}   {}", "", description);
@@ -16,6 +17,7 @@ fn print_distance(name: &str, dist: f64, description: &str) {
 }
 
 /// Create a nice visual representation of the point sets
+#[allow(dead_code)]
 fn visualize_sets(set1: &ArrayView2<f64>, set2: &ArrayView2<f64>) {
     let size = 10;
     let mut grid = vec![vec![' '; size]; size];
@@ -61,6 +63,7 @@ fn visualize_sets(set1: &ArrayView2<f64>, set2: &ArrayView2<f64>) {
     println!();
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Set-Based Distance Metrics Examples");
     println!("==================================");

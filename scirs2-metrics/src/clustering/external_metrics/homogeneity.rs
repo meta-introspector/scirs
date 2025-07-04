@@ -41,6 +41,7 @@ use crate::error::{MetricsError, Result};
 /// let (homogeneity, completeness, v_measure) =
 ///     homogeneity_completeness_v_measure(&labels_true, &labels_pred, 1.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn homogeneity_completeness_v_measure<T, U, S1, S2, D1, D2>(
     labels_true: &ArrayBase<S1, D1>,
     labels_pred: &ArrayBase<S2, D2>,
@@ -80,20 +81,20 @@ where
     // Compute contingency matrix (using strings for label values to handle different types)
     let mut contingency: HashMap<(String, String), usize> = HashMap::new();
     for (lt, lp) in labels_true.iter().zip(labels_pred.iter()) {
-        let key = (format!("{:?}", lt), format!("{:?}", lp));
+        let key = (format!("{lt:?}"), format!("{lp:?}"));
         *contingency.entry(key).or_insert(0) += 1;
     }
 
     // Count labels
     let mut true_counts: HashMap<String, usize> = HashMap::new();
     for lt in labels_true.iter() {
-        let key = format!("{:?}", lt);
+        let key = format!("{lt:?}");
         *true_counts.entry(key).or_insert(0) += 1;
     }
 
     let mut pred_counts: HashMap<String, usize> = HashMap::new();
     for lp in labels_pred.iter() {
-        let key = format!("{:?}", lp);
+        let key = format!("{lp:?}");
         *pred_counts.entry(key).or_insert(0) += 1;
     }
 

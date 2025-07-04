@@ -7,6 +7,7 @@ use ndarray::{Array1, Array2};
 use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("RBF Parallel Interpolation Demo");
     println!("================================");

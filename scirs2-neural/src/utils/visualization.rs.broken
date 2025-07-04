@@ -41,6 +41,8 @@ impl Default for PlotOptions {
             show_legend: true,
         }
     }
+}
+
 /// Simple ASCII plotting function for training metrics visualization
 ///
 /// # Arguments
@@ -49,6 +51,7 @@ impl Default for PlotOptions {
 /// * `options` - Optional plot options
 /// # Returns
 /// * `Result<String>` - The ASCII plot as a string
+#[allow(dead_code)]
 pub fn ascii_plot<F: num_traits::Float + std::fmt::Display + std::fmt::Debug>(
     data: &HashMap<String, Vec<F>>,
     title: Option<&str>,
@@ -59,6 +62,8 @@ pub fn ascii_plot<F: num_traits::Float + std::fmt::Display + std::fmt::Debug>(
     let height = options.height;
     if data.is_empty() {
         return Err(NeuralError::ValidationError("No data to plot".to_string()));
+    }
+    
     // Find the global min and max for y-axis scaling
     let mut min_y = F::infinity();
     let mut max_y = F::neg_infinity();
@@ -66,18 +71,27 @@ pub fn ascii_plot<F: num_traits::Float + std::fmt::Display + std::fmt::Debug>(
     for values in data.values() {
         if values.is_empty() {
             continue;
+        }
         max_len = max_len.max(values.len());
         for &v in values {
             if v.is_finite() {
                 min_y = min_y.min(v);
                 max_y = max_y.max(v);
             }
+        }
+    }
+    
     if max_len == 0 {
         return Err(NeuralError::ValidationError(
             "All data series are empty".to_string(),
         ));
+    }
+    
     if !min_y.is_finite() || !max_y.is_finite() {
+        return Err(NeuralError::ValidationError(
             "Data contains non-finite values".to_string(),
+        ));
+    }
     // Add a small margin to the y-range
     let y_range = max_y - min_y;
     let margin = y_range * F::from(0.05).unwrap();
@@ -87,6 +101,8 @@ pub fn ascii_plot<F: num_traits::Float + std::fmt::Display + std::fmt::Debug>(
     if (max_y - min_y).abs() < F::epsilon() {
         min_y = min_y - F::from(0.5).unwrap();
         max_y = max_y + F::from(0.5).unwrap();
+    }
+    
     // Create the plot canvas
     let mut plot = vec![vec![options.background_char; width]; height];
     // Draw grid if enabled
@@ -98,11 +114,18 @@ pub fn ascii_plot<F: num_traits::Float + std::fmt::Display + std::fmt::Debug>(
                 {
                     *cell = '·';
                 }
+            }
+        }
+    }
+    
     // Draw axes
     for row in plot.iter_mut().take(height) {
         row[0] = '│';
+    }
+    
     for x in 0..width {
         plot[height - 1][x] = '─';
+    }
     plot[height - 1][0] = '└';
     // Plot each series with different symbols
     let symbols = ['●', '■', '▲', '◆', '★', '✖', '◎'];
@@ -175,6 +198,7 @@ pub fn ascii_plot<F: num_traits::Float + std::fmt::Display + std::fmt::Debug>(
 /// * `history` - Map of metric names to values
 /// * `filepath` - Path to save the CSV file
 /// * `Result<()>` - Result of the operation
+#[allow(dead_code)]
 pub fn export_history_to_csv<F: std::fmt::Display>(
     history: &HashMap<String, Vec<F>>,
     filepath: impl AsRef<Path>,
@@ -248,6 +272,7 @@ impl<F: num_traits::Float> LearningRateSchedule<F> {
         Array1::from_shape_fn(num_epochs, |i| self.get_learning_rate(i))
 /// Analyze training history to find potential issues
 /// * `Vec<String>` - List of potential issues and suggestions
+#[allow(dead_code)]
 pub fn analyze_training_history<F: num_traits::Float + std::fmt::Display>(
 ) -> Vec<String> {
     let mut issues = Vec::new();

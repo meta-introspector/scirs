@@ -8,6 +8,7 @@ use scirs2_linalg::quantization::simd::{simd_quantized_matmul, simd_quantized_ma
 use scirs2_linalg::quantization::{quantize_matrix, quantize_vector, QuantizationMethod};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("SIMD-Accelerated Quantized Matrix Operations Example");
     println!("===================================================\n");
@@ -85,6 +86,7 @@ fn main() {
     benchmark_quantization_methods(&a, &b);
 }
 
+#[allow(dead_code)]
 fn generate_random_matrix(rows: usize, cols: usize) -> Array2<f32> {
     let mut matrix = Array2::zeros((rows, cols));
 
@@ -97,6 +99,7 @@ fn generate_random_matrix(rows: usize, cols: usize) -> Array2<f32> {
     matrix
 }
 
+#[allow(dead_code)]
 fn generate_random_vector(length: usize) -> Array1<f32> {
     let mut vector = Array1::zeros(length);
 
@@ -107,6 +110,7 @@ fn generate_random_vector(length: usize) -> Array1<f32> {
     vector
 }
 
+#[allow(dead_code)]
 fn benchmark_quantization_methods(a: &Array2<f32>, b: &Array2<f32>) {
     // Define quantization methods to test
     let methods = [

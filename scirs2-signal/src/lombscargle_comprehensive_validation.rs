@@ -211,6 +211,7 @@ impl Default for LombScargleValidationConfig {
 /// # Returns
 ///
 /// * Enhanced validation results with ultrathink features
+#[allow(dead_code)]
 pub fn validate_lombscargle_ultrathink(
     config: &LombScargleValidationConfig,
     tolerance: f64,
@@ -240,6 +241,7 @@ pub fn validate_lombscargle_ultrathink(
 /// # Returns
 ///
 /// * Comprehensive validation results
+#[allow(dead_code)]
 pub fn validate_lombscargle_comprehensive(
     config: &LombScargleValidationConfig,
 ) -> SignalResult<LombScargleValidationResult> {
@@ -298,6 +300,7 @@ pub fn validate_lombscargle_comprehensive(
 }
 
 /// Validate accuracy across different signal types
+#[allow(dead_code)]
 fn validate_lombscargle_accuracy(
     config: &LombScargleValidationConfig,
 ) -> SignalResult<LombScargleAccuracyMetrics> {
@@ -393,6 +396,7 @@ fn validate_lombscargle_accuracy(
 }
 
 /// Test numerical stability with various edge cases
+#[allow(dead_code)]
 fn test_lombscargle_stability(
     config: &LombScargleValidationConfig,
 ) -> SignalResult<LombScargleStabilityMetrics> {
@@ -506,6 +510,7 @@ fn test_lombscargle_stability(
 }
 
 /// Benchmark performance characteristics
+#[allow(dead_code)]
 fn benchmark_lombscargle_performance(
     config: &LombScargleValidationConfig,
 ) -> SignalResult<LombScarglePerformanceMetrics> {
@@ -562,6 +567,7 @@ fn benchmark_lombscargle_performance(
 }
 
 /// Validate statistical significance calculations
+#[allow(dead_code)]
 fn validate_statistical_significance(
     config: &LombScargleValidationConfig,
 ) -> SignalResult<StatisticalValidationMetrics> {
@@ -606,6 +612,7 @@ fn validate_statistical_significance(
 }
 
 /// Cross-validate different implementation aspects
+#[allow(dead_code)]
 fn cross_validate_lombscargle_methods(
     config: &LombScargleValidationConfig,
 ) -> SignalResult<LombScargleCrossValidation> {
@@ -635,6 +642,7 @@ fn cross_validate_lombscargle_methods(
 // Helper functions for validation
 
 /// Generate test signal for Lomb-Scargle validation
+#[allow(dead_code)]
 fn generate_lombscargle_test_signal(
     config: &TestSignalConfig,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
@@ -644,8 +652,8 @@ fn generate_lombscargle_test_signal(
     let mut times = Vec::with_capacity(config.n);
     for i in 0..config.n {
         let regular_time = (i as f64 / (config.n - 1) as f64) * config.time_span;
-        let noise =
-            (rng.gen_range(-1.0..1.0) * config.irregularity * config.time_span / config.n as f64);
+        let noise = (rng.random_range(-1.0..1.0) * config.irregularity * config.time_span
+            / config.n as f64);
         times.push(regular_time + noise);
     }
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -677,6 +685,7 @@ fn generate_lombscargle_test_signal(
 }
 
 /// Generate test data with specified parameters
+#[allow(dead_code)]
 fn generate_lombscargle_test_data(
     n: usize,
     irregularity: f64,
@@ -703,6 +712,7 @@ fn generate_lombscargle_test_data(
 }
 
 /// Generate single sinusoid signal
+#[allow(dead_code)]
 fn generate_single_sinusoid(
     times: &[f64],
     frequencies: &[f64],
@@ -715,11 +725,12 @@ fn generate_single_sinusoid(
 
     times
         .iter()
-        .map(|&t| amp * (2.0 * PI * freq * t).sin() + noise_level * rng.gen_range(-1.0..1.0))
+        .map(|&t| amp * (2.0 * PI * freq * t).sin() + noise_level * rng.random_range(-1.0..1.0))
         .collect()
 }
 
 /// Generate multiple sinusoids signal
+#[allow(dead_code)]
 fn generate_multiple_sinusoids(
     times: &[f64],
     frequencies: &[f64],
@@ -736,21 +747,23 @@ fn generate_multiple_sinusoids(
                 let amp = amplitudes.get(i).copied().unwrap_or(1.0);
                 signal += amp * (2.0 * PI * freq * t).sin();
             }
-            signal + noise_level * rng.gen_range(-1.0..1.0)
+            signal + noise_level * rng.random_range(-1.0..1.0)
         })
         .collect()
 }
 
 /// Generate pure noise signal
+#[allow(dead_code)]
 fn generate_pure_noise(times: &[f64], noise_level: f64) -> Vec<f64> {
     let mut rng = rand::rng();
     times
         .iter()
-        .map(|_| noise_level * rng.gen_range(-1.0..1.0))
+        .map(|_| noise_level * rng.random_range(-1.0..1.0))
         .collect()
 }
 
 /// Analyze single frequency detection accuracy
+#[allow(dead_code)]
 fn analyze_single_frequency_detection(freqs: &[f64], power: &[f64], true_freq: &f64) -> f64 {
     // Find peak in periodogram
     let max_idx = power
@@ -765,6 +778,7 @@ fn analyze_single_frequency_detection(freqs: &[f64], power: &[f64], true_freq: &
 }
 
 /// Analyze multiple frequency detection accuracy
+#[allow(dead_code)]
 fn analyze_multiple_frequency_detection(freqs: &[f64], power: &[f64], true_freqs: &[f64]) -> f64 {
     // Simple implementation - find peaks and match to true frequencies
     let mut total_error = 0.0;
@@ -786,6 +800,7 @@ fn analyze_multiple_frequency_detection(freqs: &[f64], power: &[f64], true_freqs
 }
 
 /// Simple peak detection
+#[allow(dead_code)]
 fn find_peaks(data: &[f64], threshold: f64) -> Vec<usize> {
     let mut peaks = Vec::new();
     let max_val = data.iter().cloned().fold(0.0, f64::max);
@@ -801,6 +816,7 @@ fn find_peaks(data: &[f64], threshold: f64) -> Vec<usize> {
 }
 
 /// Analyze noise floor characteristics
+#[allow(dead_code)]
 fn analyze_noise_floor(freqs: &[f64], power: &[f64]) -> f64 {
     // For pure noise, expect relatively flat spectrum
     let mean_power = power.iter().sum::<f64>() / power.len() as f64;
@@ -812,6 +828,7 @@ fn analyze_noise_floor(freqs: &[f64], power: &[f64]) -> f64 {
 }
 
 /// Analyze detection rates (false positives/negatives)
+#[allow(dead_code)]
 fn analyze_detection_rates(
     freqs: &[f64],
     power: &[f64],
@@ -844,65 +861,78 @@ fn analyze_detection_rates(
 
 // Additional helper functions (stubs for complex implementations)
 
+#[allow(dead_code)]
 fn estimate_lombscargle_frequency_resolution(_config: &TestSignalConfig) -> SignalResult<f64> {
     Ok(0.01) // Placeholder implementation
 }
 
+#[allow(dead_code)]
 fn generate_highly_irregular_data(n: usize, time_span: f64) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     let mut rng = rand::rng();
     let mut times = Vec::new();
     let mut signal = Vec::new();
 
     for _ in 0..n {
-        times.push(rng.gen_range(0.0..time_span));
-        signal.push(rng.gen_range(-1.0..1.0));
+        times.push(rng.random_range(0.0..time_span));
+        signal.push(rng.random_range(-1.0..1.0));
     }
 
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
     Ok((times, signal))
 }
 
+#[allow(dead_code)]
 fn test_lombscargle_precision() -> SignalResult<bool> {
     // Test if precision is maintained across operations
     Ok(true) // Placeholder
 }
 
+#[allow(dead_code)]
 fn estimate_lombscargle_memory_efficiency(_sizes: &[usize]) -> f64 {
     0.8 // Placeholder
 }
 
+#[allow(dead_code)]
 fn test_frequency_grid_optimization() -> SignalResult<f64> {
     Ok(0.9) // Placeholder
 }
 
+#[allow(dead_code)]
 fn test_false_alarm_probability(_significance_level: f64, _n_trials: usize) -> SignalResult<f64> {
     Ok(0.05) // Placeholder
 }
 
+#[allow(dead_code)]
 fn test_statistical_power(_config: &TestSignalConfig, _n_trials: usize) -> SignalResult<f64> {
     Ok(0.85) // Placeholder
 }
 
+#[allow(dead_code)]
 fn test_bootstrap_validation(_config: &LombScargleValidationConfig) -> SignalResult<f64> {
     Ok(0.9) // Placeholder
 }
 
+#[allow(dead_code)]
 fn test_chi_squared_compatibility(_config: &LombScargleValidationConfig) -> SignalResult<f64> {
     Ok(0.95) // Placeholder
 }
 
+#[allow(dead_code)]
 fn test_analytical_agreement(_times: &[f64], _signal: &[f64]) -> SignalResult<f64> {
     Ok(0.98) // Placeholder
 }
 
+#[allow(dead_code)]
 fn test_normalization_methods(_times: &[f64], _signal: &[f64]) -> SignalResult<f64> {
     Ok(0.95) // Placeholder
 }
 
+#[allow(dead_code)]
 fn test_autofreq_methods(_times: &[f64], _signal: &[f64]) -> SignalResult<f64> {
     Ok(0.9) // Placeholder
 }
 
+#[allow(dead_code)]
 fn calculate_lombscargle_score(
     accuracy: &LombScargleAccuracyMetrics,
     stability: &LombScargleStabilityMetrics,
@@ -958,6 +988,7 @@ fn calculate_lombscargle_score(
 /// - Clustered sampling with gaps
 /// - Exponentially varying intervals
 /// - Multi-scale temporal structures
+#[allow(dead_code)]
 fn enhance_with_advanced_sampling_tests(
     result: &mut LombScargleValidationResult,
     config: &LombScargleValidationConfig,
@@ -1102,6 +1133,7 @@ fn enhance_with_advanced_sampling_tests(
 /// - Large datasets (>10k points)
 /// - High-frequency resolution requirements
 /// - Multiple concurrent analyses
+#[allow(dead_code)]
 fn enhance_with_memory_efficiency_tests(
     result: &mut LombScargleValidationResult,
     config: &LombScargleValidationConfig,
@@ -1195,6 +1227,7 @@ fn enhance_with_memory_efficiency_tests(
 /// - Performance comparison with/without SIMD
 /// - Numerical accuracy of SIMD operations
 /// - Platform-specific optimizations
+#[allow(dead_code)]
 fn enhance_with_simd_performance_validation(
     result: &mut LombScargleValidationResult,
     config: &LombScargleValidationConfig,
@@ -1271,6 +1304,7 @@ fn enhance_with_simd_performance_validation(
 /// - Astronomical time series (variable stars, exoplanets)
 /// - Biomedical signals (heart rate variability, EEG)
 /// - Geophysical data (seismic, climate)
+#[allow(dead_code)]
 fn enhance_with_real_world_signal_validation(
     result: &mut LombScargleValidationResult,
     config: &LombScargleValidationConfig,
@@ -1296,8 +1330,8 @@ fn enhance_with_real_world_signal_validation(
 
                 // Variable star with 2.3-day period plus noise
                 let period = 2.3;
-                let magnitude =
-                    12.0 - 0.5 * (2.0 * PI * time / period).sin() + 0.1 * rng.gen_range(-1.0..1.0);
+                let magnitude = 12.0 - 0.5 * (2.0 * PI * time / period).sin()
+                    + 0.1 * rng.random_range(-1.0..1.0);
                 star_magnitudes.push(magnitude);
             }
         }
@@ -1344,7 +1378,7 @@ fn enhance_with_real_world_signal_validation(
 
     // Test 2: Simulated heart rate variability
     let hrv_times: Vec<f64> = (0..300)
-        .map(|i| i as f64 * 1.0 + 0.1 * rng.gen_range(-0.5..0.5))
+        .map(|i| i as f64 * 1.0 + 0.1 * rng.random_range(-0.5..0.5))
         .collect();
     let hrv_signal: Vec<f64> = hrv_times
         .iter()
@@ -1352,7 +1386,7 @@ fn enhance_with_real_world_signal_validation(
             // Respiratory sinus arrhythmia (~0.25 Hz) + LF component (~0.1 Hz)
             60.0 + 5.0 * (2.0 * PI * 0.25 * t).sin()
                 + 3.0 * (2.0 * PI * 0.1 * t).sin()
-                + 1.0 * rng.gen_range(-1.0..1.0)
+                + 1.0 * rng.random_range(-1.0..1.0)
         })
         .collect();
 
@@ -1412,6 +1446,7 @@ fn enhance_with_real_world_signal_validation(
 /// - Monte Carlo significance testing
 /// - Robustness to outliers
 /// - Non-Gaussian noise handling
+#[allow(dead_code)]
 fn enhance_with_statistical_robustness_tests(
     result: &mut LombScargleValidationResult,
     config: &LombScargleValidationConfig,
@@ -1431,7 +1466,7 @@ fn enhance_with_statistical_robustness_tests(
         // Bootstrap trials
         let signal: Vec<f64> = times
             .iter()
-            .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.3 * rng.gen_range(-1.0..1.0))
+            .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.3 * rng.random_range(-1.0..1.0))
             .collect();
 
         match lombscargle(
@@ -1531,8 +1566,8 @@ fn enhance_with_statistical_robustness_tests(
         .map(|&t| {
             let signal = (2.0 * PI * 0.08 * t).sin();
             // Laplacian noise (exponential distribution - uniform)
-            let u1 = rng.gen_range(0.0..1.0);
-            let u2 = rng.gen_range(0.0..1.0);
+            let u1 = rng.random_range(0.0..1.0);
+            let u2 = rng.random_range(0.0..1.0);
             let laplacian_noise = if u1 < 0.5 {
                 -(-2.0 * u2.ln()).sqrt()
             } else {
@@ -1577,6 +1612,7 @@ fn enhance_with_statistical_robustness_tests(
 }
 
 /// Calculate enhanced overall score for ultrathink validation
+#[allow(dead_code)]
 fn calculate_enhanced_lombscargle_score(result: &LombScargleValidationResult) -> f64 {
     let mut score = 100.0;
 

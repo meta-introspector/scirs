@@ -596,6 +596,7 @@ impl<'a, F: Float> Iterator for CentralPerturbedInputIterator<'a, F> {
 }
 
 /// Compute gradient using finite differences with specified scheme
+#[allow(dead_code)]
 pub fn compute_finite_difference_gradient<'a, F: Float, Func>(
     function: Func,
     input: &Tensor<'a, F>,
@@ -616,6 +617,7 @@ where
 }
 
 /// Quick central difference gradient computation
+#[allow(dead_code)]
 pub fn central_difference_gradient<'a, F: Float, Func>(
     function: Func,
     input: &Tensor<'a, F>,

@@ -587,8 +587,7 @@ impl OrdinalEncoder {
                     transformed[[i, j]] = ordinal_value;
                 } else if self.handle_unknown == "error" {
                     return Err(TransformError::InvalidInput(format!(
-                        "Found unknown category {} in feature {}",
-                        value, j
+                        "Found unknown category {value} in feature {j}"
                     )));
                 } else {
                     // handle_unknown == "use_encoded_value"

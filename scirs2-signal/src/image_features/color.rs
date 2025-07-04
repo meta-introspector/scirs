@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 
 /// Extract color-specific features from a color image
+#[allow(dead_code)]
 pub fn extract_color_features<T>(
     image: &ndarray::Array3<T>,
     features: &mut HashMap<String, f64>,

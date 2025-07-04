@@ -42,6 +42,7 @@ use ndarray::Array2;
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn fast_corners(
     img: &DynamicImage,
     threshold: f32,
@@ -166,6 +167,7 @@ pub fn fast_corners(
 }
 
 /// Check if there are N consecutive pixels that are all brighter or darker
+#[allow(dead_code)]
 fn check_consecutive_pixels(
     pixels: &[f32; 16],
     center: f32,
@@ -218,6 +220,7 @@ fn check_consecutive_pixels(
 }
 
 /// Compute corner score based on the sum of absolute differences
+#[allow(dead_code)]
 fn compute_corner_score(pixels: &[f32; 16], center: f32, threshold: f32) -> f32 {
     let mut score = 0.0;
 
@@ -232,6 +235,7 @@ fn compute_corner_score(pixels: &[f32; 16], center: f32, threshold: f32) -> f32 
 }
 
 /// Apply non-maximum suppression to corner scores
+#[allow(dead_code)]
 fn apply_non_max_suppression(corners: &Array2<f32>, window_size: usize) -> Array2<f32> {
     let (height, width) = corners.dim();
     let mut result = Array2::zeros((height, width));
@@ -283,6 +287,7 @@ fn apply_non_max_suppression(corners: &Array2<f32>, window_size: usize) -> Array
 /// # Returns
 ///
 /// * Result containing corner points
+#[allow(dead_code)]
 pub fn fast_corners_simple(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
     fast_corners(img, threshold, 9, true)
 }

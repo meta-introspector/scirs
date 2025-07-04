@@ -155,6 +155,7 @@ struct Uniforms {
 var<workgroup> sdata: array<f32, 256>;
 
 @compute @workgroup_size(256)
+#[allow(dead_code)]
 fn std_dev_reduce_sum(
     @builtin(global_invocation_id) global_id: vec3<u32>,
     @builtin(local_invocation_id) local_id: vec3<u32>,
@@ -191,6 +192,7 @@ fn std_dev_reduce_sum(
 }
 
 @compute @workgroup_size(256)
+#[allow(dead_code)]
 fn std_dev_reduce_variance(
     @builtin(global_invocation_id) global_id: vec3<u32>,
     @builtin(local_invocation_id) local_id: vec3<u32>,
@@ -229,6 +231,7 @@ fn std_dev_reduce_variance(
 }
 
 @compute @workgroup_size(1)
+#[allow(dead_code)]
 fn std_dev_reduce_finalize(
     @builtin(global_invocation_id) global_id: vec3<u32>
 ) {

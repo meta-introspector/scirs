@@ -8,6 +8,7 @@ use scirs2_graph::{
     TimeInterval,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Temporal Graph Demo ===\n");
 

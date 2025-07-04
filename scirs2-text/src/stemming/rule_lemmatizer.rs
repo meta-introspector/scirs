@@ -148,7 +148,7 @@ impl RuleLemmatizer {
             },
             // Double consonant + ing (running -> run)
             LemmaRule {
-                pattern: "([bcdfghjklmnpqrstvwxyz])\\1ing$".to_string(),
+                pattern: r"([bcdfghjklmnpqrstvwxyz])\1ing$".to_string(),
                 replacement: "$1".to_string(),
                 conditions: RuleCondition {
                     min_length: 6,
@@ -242,7 +242,7 @@ impl RuleLemmatizer {
             },
             // General 's' rule (cats -> cat), but not for words ending in 'ness'
             LemmaRule {
-                pattern: "(?<!nes)s$".to_string(),
+                pattern: "s$".to_string(),
                 replacement: "".to_string(),
                 conditions: RuleCondition {
                     min_length: 3,
@@ -266,7 +266,7 @@ impl RuleLemmatizer {
             },
             // Double consonant + er (bigger -> big)
             LemmaRule {
-                pattern: "([bcdfghjklmnpqrstvwxyz])\\1er$".to_string(),
+                pattern: r"([bcdfghjklmnpqrstvwxyz])\1er$".to_string(),
                 replacement: "$1".to_string(),
                 conditions: RuleCondition {
                     min_length: 5,
@@ -286,7 +286,7 @@ impl RuleLemmatizer {
             },
             // Double consonant + est (biggest -> big)
             LemmaRule {
-                pattern: "([bcdfghjklmnpqrstvwxyz])\\1est$".to_string(),
+                pattern: r"([bcdfghjklmnpqrstvwxyz])\1est$".to_string(),
                 replacement: "$1".to_string(),
                 conditions: RuleCondition {
                     min_length: 6,
@@ -717,6 +717,11 @@ impl RuleLemmatizer {
 
         // Check if word contains vowels if required
         if rule.conditions.requires_vowel && !VOWELS.is_match(word) {
+            return false;
+        }
+
+        // Special check for 's' removal rule: don't apply to words ending in 'ness'
+        if rule.pattern == "s$" && word.ends_with("ness") {
             return false;
         }
 

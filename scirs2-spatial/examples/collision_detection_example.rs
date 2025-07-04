@@ -9,6 +9,7 @@
 // No imports needed
 use scirs2_spatial::collision::*;
 
+#[allow(dead_code)]
 fn main() {
     println!("Collision Detection Examples");
     println!("===========================\n");
@@ -23,6 +24,7 @@ fn main() {
     run_continuous_examples();
 }
 
+#[allow(dead_code)]
 fn run_2d_examples() {
     println!("2D Collision Detection");
     println!("---------------------");
@@ -112,6 +114,7 @@ fn run_2d_examples() {
     println!("\n");
 }
 
+#[allow(dead_code)]
 fn run_3d_examples() {
     println!("3D Collision Detection");
     println!("---------------------");
@@ -222,6 +225,7 @@ fn run_3d_examples() {
     println!("\n");
 }
 
+#[allow(dead_code)]
 fn run_continuous_examples() {
     println!("Continuous Collision Detection");
     println!("-----------------------------");

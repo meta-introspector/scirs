@@ -9,6 +9,7 @@ use crate::registration::{
 };
 
 /// Affine registration using point matches
+#[allow(dead_code)]
 pub fn register_affine_points(
     source_points: &[(f64, f64)],
     target_points: &[(f64, f64)],
@@ -66,6 +67,7 @@ pub fn register_affine_points(
 }
 
 /// Affine registration with iterative refinement
+#[allow(dead_code)]
 pub fn register_affine_iterative(
     source_points: &[(f64, f64)],
     target_points: &[(f64, f64)],

@@ -15,6 +15,7 @@ use scirs2_graph::{
 use std::collections::{HashMap, HashSet};
 
 #[test]
+#[allow(dead_code)]
 fn test_modularity_calculation_accuracy() {
     // Test case 1: Simple graph with known modularity
     let mut graph = Graph::new();
@@ -63,6 +64,7 @@ fn test_modularity_calculation_accuracy() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_louvain_algorithm_accuracy() {
     // Test case: Two clear communities connected by a single bridge
     let mut graph = Graph::new();
@@ -128,6 +130,7 @@ fn test_louvain_algorithm_accuracy() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_modularity_optimization_consistency() {
     // Test that different optimization algorithms produce reasonable results
     let graph = create_test_graph_with_communities(50, 2);
@@ -171,6 +174,7 @@ fn test_modularity_optimization_consistency() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_parallel_vs_sequential_consistency() {
     // Test that parallel and sequential algorithms produce similar results
     let graph = create_test_graph_with_communities(100, 3);
@@ -207,6 +211,7 @@ fn test_parallel_vs_sequential_consistency() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_community_result_api_consistency() {
     // Test that the standardized CommunityResult API works consistently
     let graph = create_test_graph_with_communities(20, 2);
@@ -263,6 +268,7 @@ fn test_community_result_api_consistency() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_edge_cases() {
     // Test case 1: Empty graph
     let empty_graph = Graph::new();
@@ -323,6 +329,7 @@ fn test_edge_cases() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_modularity_bounds() {
     // Test that modularity is within expected bounds
     let graphs = vec![
@@ -359,6 +366,7 @@ fn test_modularity_bounds() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_algorithm_convergence() {
     // Test that iterative algorithms converge to stable solutions
     let graph = create_test_graph_with_communities(30, 2);
@@ -386,6 +394,7 @@ fn test_algorithm_convergence() {
 }
 
 /// Helper function to create a test graph with known community structure
+#[allow(dead_code)]
 fn create_test_graph_with_communities(
     nodes_per_community: usize,
     num_communities: usize,
@@ -425,6 +434,7 @@ fn create_test_graph_with_communities(
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_known_benchmark_graphs() {
     // Test on Zachary's Karate Club-like structure (simplified version)
     let karate_club = create_karate_club_graph();
@@ -447,6 +457,7 @@ fn test_known_benchmark_graphs() {
 }
 
 /// Create a simplified version of Zachary's Karate Club network
+#[allow(dead_code)]
 fn create_karate_club_graph() -> Graph<usize, f64> {
     let mut graph = Graph::new();
 

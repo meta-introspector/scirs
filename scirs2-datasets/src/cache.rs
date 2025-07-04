@@ -24,6 +24,7 @@ const DEFAULT_MAX_CACHE_SIZE: u64 = 500 * 1024 * 1024;
 const CACHE_DIR_ENV: &str = "SCIRS2_CACHE_DIR";
 
 /// Compute SHA256 hash of a file
+#[allow(dead_code)]
 pub fn sha256_hash_file(path: &Path) -> std::result::Result<String, String> {
     use sha2::{Digest, Sha256};
 
@@ -61,6 +62,7 @@ pub struct RegistryEntry {
 ///    - macOS: `~/Library/Caches/scirs2-datasets`
 ///    - Linux/Unix: `~/.cache/scirs2-datasets` (respects XDG_CACHE_HOME)
 /// 3. Fallback to `~/.scirs2-datasets` if platform-specific directory fails
+#[allow(dead_code)]
 pub fn get_cache_dir() -> Result<PathBuf> {
     // Check environment variable first
     if let Ok(cache_dir) = std::env::var(CACHE_DIR_ENV) {
@@ -85,6 +87,7 @@ pub fn get_cache_dir() -> Result<PathBuf> {
 }
 
 /// Get platform-specific cache directory
+#[allow(dead_code)]
 fn get_platform_cache_dir() -> Option<PathBuf> {
     #[cfg(target_os = "windows")]
     {
@@ -106,6 +109,7 @@ fn get_platform_cache_dir() -> Option<PathBuf> {
 }
 
 /// Ensure a directory exists, creating it if necessary
+#[allow(dead_code)]
 fn ensure_directory_exists(dir: &Path) -> Result<()> {
     if !dir.exists() {
         fs::create_dir_all(dir).map_err(|e| {
@@ -132,6 +136,7 @@ fn ensure_directory_exists(dir: &Path) -> Result<()> {
 ///
 /// * `Ok(PathBuf)` - Path to the cached file
 /// * `Err(String)` - Error message if fetching fails
+#[allow(dead_code)]
 pub fn fetch_data(
     filename: &str,
     registry_entry: Option<&RegistryEntry>,
@@ -634,6 +639,7 @@ impl DatasetCache {
 
 /// Downloads data from a URL and returns it as bytes, using the cache when possible
 #[cfg(feature = "download")]
+#[allow(dead_code)]
 pub fn download_data(url: &str, force_download: bool) -> Result<Vec<u8>> {
     let cache = DatasetCache::default();
     let cache_key = DatasetCache::hash_filename(url);
@@ -681,6 +687,7 @@ pub fn download_data(url: &str, force_download: bool) -> Result<Vec<u8>> {
 /// # Returns
 ///
 /// * An error indicating that the download feature is not enabled
+#[allow(dead_code)]
 pub fn download_data(_url: &str, _force_download: bool) -> Result<Vec<u8>> {
     Err(DatasetsError::Other(
         "Download feature is not enabled. Recompile with --features download".to_string(),
@@ -1022,6 +1029,7 @@ impl CacheFileInfo {
 }
 
 /// Format bytes as human-readable string
+#[allow(dead_code)]
 fn format_bytes(bytes: u64) -> String {
     let size = bytes as f64;
     if size < 1024.0 {
@@ -1572,6 +1580,7 @@ impl BatchOperations {
 }
 
 /// Simple glob pattern matching for filenames
+#[allow(dead_code)]
 fn matches_glob_pattern(filename: &str, pattern: &str) -> bool {
     if pattern == "*" {
         return true;

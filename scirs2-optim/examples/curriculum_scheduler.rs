@@ -15,6 +15,7 @@ use std::error::Error;
 type TrainingLog = Vec<(usize, f64, f64)>;
 
 /// Generates a synthetic regression dataset with varying difficulty levels
+#[allow(dead_code)]
 fn generate_dataset(
     difficulty: usize,
     n_samples: usize,
@@ -54,6 +55,7 @@ fn generate_dataset(
 }
 
 /// Compute mean squared error for regression
+#[allow(dead_code)]
 fn compute_mse(predictions: &Array1<f64>, targets: &Array1<f64>) -> f64 {
     let errors = predictions - targets;
     let squared_errors = errors.mapv(|x| x * x);
@@ -61,6 +63,7 @@ fn compute_mse(predictions: &Array1<f64>, targets: &Array1<f64>) -> f64 {
 }
 
 /// Trains a model on a curriculum of tasks with increasing difficulty
+#[allow(dead_code)]
 fn train_with_curriculum(
     curriculum_scheduler: &mut CurriculumScheduler<f64>,
     epochs_per_stage: usize,
@@ -164,6 +167,7 @@ fn train_with_curriculum(
 
 // Import necessary traits
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Curriculum Learning Scheduler Example");
     println!("====================================");

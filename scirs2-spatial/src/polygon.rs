@@ -68,6 +68,7 @@ use num_traits::Float;
 /// let outside = point_in_polygon(&[1.5, 0.5], &polygon.view());
 /// assert!(!outside);
 /// ```
+#[allow(dead_code)]
 pub fn point_in_polygon<T: Float>(point: &[T], polygon: &ArrayView2<T>) -> bool {
     let x = point[0];
     let y = point[1];
@@ -148,6 +149,7 @@ pub fn point_in_polygon<T: Float>(point: &[T], polygon: &ArrayView2<T>) -> bool 
 /// let not_on_boundary = point_on_boundary(&[0.5, 0.5], &polygon.view(), 1e-10);
 /// assert!(!not_on_boundary);
 /// ```
+#[allow(dead_code)]
 pub fn point_on_boundary<T: Float>(point: &[T], polygon: &ArrayView2<T>, epsilon: T) -> bool {
     let x = point[0];
     let y = point[1];
@@ -236,6 +238,7 @@ pub fn point_on_boundary<T: Float>(point: &[T], polygon: &ArrayView2<T>, epsilon
 /// let area: f64 = polygon_area(&square.view());
 /// assert!((area - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn polygon_area<T: Float>(polygon: &ArrayView2<T>) -> T {
     let n = polygon.shape()[0];
 
@@ -287,6 +290,7 @@ pub fn polygon_area<T: Float>(polygon: &ArrayView2<T>) -> T {
 /// assert!((centroid[0] - 0.5).abs() < 1e-10);
 /// assert!((centroid[1] - 0.5).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn polygon_centroid<T: Float>(polygon: &ArrayView2<T>) -> Vec<T> {
     let n = polygon.shape()[0];
 
@@ -386,6 +390,7 @@ pub fn polygon_centroid<T: Float>(polygon: &ArrayView2<T>) -> Vec<T> {
 /// let contains = polygon_contains_polygon(&outer.view(), &inner.view());
 /// assert!(contains);
 /// ```
+#[allow(dead_code)]
 pub fn polygon_contains_polygon<T: Float>(
     polygon_a: &ArrayView2<T>,
     polygon_b: &ArrayView2<T>,
@@ -459,6 +464,7 @@ pub fn polygon_contains_polygon<T: Float>(
 /// # Returns
 ///
 /// * `true` if the segments intersect, `false` otherwise
+#[allow(dead_code)]
 fn segments_intersect<T: Float>(a1: &[T], a2: &[T], b1: &[T], b2: &[T]) -> bool {
     // Function to compute orientation of triplet (p, q, r)
     // Returns:
@@ -526,6 +532,7 @@ fn segments_intersect<T: Float>(a1: &[T], a2: &[T], b1: &[T], b2: &[T]) -> bool 
 /// # Returns
 ///
 /// * `true` if the segments overlap, `false` otherwise
+#[allow(dead_code)]
 fn segments_overlap<T: Float>(a1: &[T], a2: &[T], b1: &[T], b2: &[T], epsilon: T) -> bool {
     // Check if the segments are collinear
     let cross = (a2[0] - a1[0]) * (b2[1] - b1[1]) - (a2[1] - a1[1]) * (b2[0] - b1[0]);
@@ -578,6 +585,7 @@ fn segments_overlap<T: Float>(a1: &[T], a2: &[T], b1: &[T], b2: &[T], epsilon: T
 /// assert!(is_simple_polygon(&simple.view()));
 /// assert!(!is_simple_polygon(&complex.view()));
 /// ```
+#[allow(dead_code)]
 pub fn is_simple_polygon<T: Float>(polygon: &ArrayView2<T>) -> bool {
     let n = polygon.shape()[0];
 
@@ -643,6 +651,7 @@ pub fn is_simple_polygon<T: Float>(polygon: &ArrayView2<T>) -> bool {
 /// // The hull should have only 4 points (the corners)
 /// assert_eq!(hull.shape()[0], 4);
 /// ```
+#[allow(dead_code)]
 pub fn convex_hull_graham<T: Float + std::fmt::Debug>(points: &ArrayView2<T>) -> Array2<T> {
     let n = points.shape()[0];
 
@@ -784,6 +793,7 @@ pub fn convex_hull_graham<T: Float + std::fmt::Debug>(points: &ArrayView2<T>) ->
 /// // Should remove the intermediate point at (1.0, 0.1) since it's close to the line
 /// assert!(simplified.shape()[0] < complex_polygon.shape()[0]);
 /// ```
+#[allow(dead_code)]
 pub fn douglas_peucker_simplify<T: Float + std::fmt::Debug>(
     polygon: &ArrayView2<T>,
     tolerance: T,
@@ -823,6 +833,7 @@ pub fn douglas_peucker_simplify<T: Float + std::fmt::Debug>(
 }
 
 /// Recursive helper function for Douglas-Peucker algorithm
+#[allow(dead_code)]
 fn douglas_peucker_recursive<T: Float>(
     polygon: &ArrayView2<T>,
     start: usize,
@@ -860,6 +871,7 @@ fn douglas_peucker_recursive<T: Float>(
 }
 
 /// Calculate the perpendicular distance from a point to a line segment
+#[allow(dead_code)]
 fn perpendicular_distance<T: Float>(point: &[T; 2], line_start: &[T; 2], line_end: &[T; 2]) -> T {
     let dx = line_end[0] - line_start[0];
     let dy = line_end[1] - line_start[1];
@@ -915,6 +927,7 @@ fn perpendicular_distance<T: Float>(point: &[T; 2], line_start: &[T; 2], line_en
 /// // Should remove vertices that form very small triangles
 /// assert!(simplified.shape()[0] <= polygon.shape()[0]);
 /// ```
+#[allow(dead_code)]
 pub fn visvalingam_whyatt_simplify<T: Float + std::fmt::Debug>(
     polygon: &ArrayView2<T>,
     min_area: T,
@@ -979,6 +992,7 @@ pub fn visvalingam_whyatt_simplify<T: Float + std::fmt::Debug>(
 }
 
 /// Calculate the area of triangle formed by vertex i and its active neighbors
+#[allow(dead_code)]
 fn calculate_triangle_area<T: Float>(
     polygon: &ArrayView2<T>,
     vertex_idx: usize,
@@ -1002,6 +1016,7 @@ fn calculate_triangle_area<T: Float>(
 }
 
 /// Calculate the area of a triangle given three points
+#[allow(dead_code)]
 fn triangle_area<T: Float>(p1: &[T; 2], p2: &[T; 2], p3: &[T; 2]) -> T {
     ((p1[0] * (p2[1] - p3[1]) + p2[0] * (p3[1] - p1[1]) + p3[0] * (p1[1] - p2[1]))
         / (T::one() + T::one()))
@@ -1009,6 +1024,7 @@ fn triangle_area<T: Float>(p1: &[T; 2], p2: &[T; 2], p3: &[T; 2]) -> T {
 }
 
 /// Find the previous active vertex (wrapping around)
+#[allow(dead_code)]
 fn find_previous_active(current: usize, active: &[bool], n: usize) -> Option<usize> {
     for i in 1..n {
         let idx = (current + n - i) % n;
@@ -1020,6 +1036,7 @@ fn find_previous_active(current: usize, active: &[bool], n: usize) -> Option<usi
 }
 
 /// Find the next active vertex (wrapping around)
+#[allow(dead_code)]
 fn find_next_active(current: usize, active: &[bool], n: usize) -> Option<usize> {
     for i in 1..n {
         let idx = (current + i) % n;
@@ -1031,11 +1048,13 @@ fn find_next_active(current: usize, active: &[bool], n: usize) -> Option<usize> 
 }
 
 /// Count the number of active vertices
+#[allow(dead_code)]
 fn count_active(active: &[bool]) -> usize {
     active.iter().filter(|&&x| x).count()
 }
 
 /// Update the area for a specific vertex in the vertices list
+#[allow(dead_code)]
 fn update_vertex_area<T: Float + std::fmt::Debug>(
     polygon: &ArrayView2<T>,
     vertex_idx: usize,

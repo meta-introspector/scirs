@@ -1,6 +1,7 @@
 use scirs2_text::{LancasterStemmer, PorterStemmer, SimpleLemmatizer, SnowballStemmer, Stemmer};
 use std::error::Error;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Stemming Algorithms Comparison Demo");
     println!("-----------------------------------");

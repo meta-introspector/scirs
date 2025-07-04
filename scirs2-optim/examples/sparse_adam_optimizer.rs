@@ -8,6 +8,7 @@ use ndarray::Array1;
 use scirs2_optim::optimizers::{Adam, Optimizer, SparseAdam, SparseGradient};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("SparseAdam Optimizer Example");
     println!("===========================\n");
@@ -90,6 +91,7 @@ fn main() {
 /// - x_train: Training inputs with sparse features
 /// - y_train: Training targets
 /// - true_weights: The true weights used to generate the data
+#[allow(dead_code)]
 fn generate_sparse_data(
     n_samples: usize,
     n_features: usize,
@@ -189,6 +191,7 @@ impl SparseInput {
 }
 
 /// Train model using standard Adam optimizer
+#[allow(dead_code)]
 fn train_with_adam(
     x_train: &[SparseInput],
     y_train: &Array1<f64>,
@@ -253,6 +256,7 @@ fn train_with_adam(
 }
 
 /// Train model using SparseAdam optimizer
+#[allow(dead_code)]
 fn train_with_sparse_adam(
     x_train: &[SparseInput],
     y_train: &Array1<f64>,
@@ -339,6 +343,7 @@ fn train_with_sparse_adam(
 }
 
 /// Generate a random value in the given range
+#[allow(dead_code)]
 fn rand_value(min: f64, max: f64) -> f64 {
     min + (max - min) * rand::random::<f64>()
 }

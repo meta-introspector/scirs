@@ -23,6 +23,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 /// # Returns
 ///
 /// Solution vector x where M·x = b, or error if the system cannot be solved
+#[allow(dead_code)]
 pub fn solve_mass_system<F>(
     mass: &MassMatrix<F>,
     t: F,
@@ -52,6 +53,7 @@ where
 /// Solve a linear system M·x = b with explicit matrix
 ///
 /// Helper function to solve linear systems with mass matrices
+#[allow(dead_code)]
 fn solve_matrix_system<F>(matrix: ArrayView2<F>, b: ArrayView1<F>) -> IntegrateResult<Array1<F>>
 where
     F: IntegrateFloat,
@@ -78,6 +80,7 @@ where
 /// # Returns
 ///
 /// Result of M·v, or error if the operation cannot be performed
+#[allow(dead_code)]
 pub fn apply_mass<F>(
     mass: &MassMatrix<F>,
     t: F,
@@ -193,6 +196,7 @@ impl<F: IntegrateFloat> LUDecomposition<F> {
 /// Check if a mass matrix is compatible with an ODE state
 ///
 /// Verifies that the mass matrix dimensions match the state vector dimensions
+#[allow(dead_code)]
 pub fn check_mass_compatibility<F>(
     mass: &MassMatrix<F>,
     t: F,
@@ -243,6 +247,7 @@ where
 /// # Returns
 ///
 /// A function representing the transformed ODE: g(t,y) where y' = g(t,y)
+#[allow(dead_code)]
 pub fn transform_to_standard_form<F, Func>(
     f: Func,
     mass: &MassMatrix<F>,
@@ -266,6 +271,7 @@ where
 ///
 /// Uses condition number estimation to check if a matrix is
 /// close to singular, which would cause problems for ODE solvers
+#[allow(dead_code)]
 pub fn is_singular<F>(matrix: ArrayView2<F>, threshold: Option<F>) -> bool
 where
     F: IntegrateFloat,
@@ -295,6 +301,7 @@ where
 }
 
 /// Compute determinant for small matrices (up to 3x3)
+#[allow(dead_code)]
 fn compute_determinant<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
     let (n, _) = matrix.dim();
 
@@ -313,6 +320,7 @@ fn compute_determinant<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
 }
 
 /// Estimate condition number using iterative methods
+#[allow(dead_code)]
 fn estimate_condition_number<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
     let _n = matrix.nrows();
 
@@ -332,6 +340,7 @@ fn estimate_condition_number<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
 }
 
 /// Estimate largest eigenvalue of A^T * A using power iteration
+#[allow(dead_code)]
 fn estimate_largest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
     let n = matrix.nrows();
     let max_iterations = 10;
@@ -380,6 +389,7 @@ fn estimate_largest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) ->
 }
 
 /// Estimate smallest eigenvalue of A^T * A using simplified approach
+#[allow(dead_code)]
 fn estimate_smallest_eigenvalue_ata<F: IntegrateFloat>(matrix: &ArrayView2<F>) -> F {
     let n = matrix.nrows();
 

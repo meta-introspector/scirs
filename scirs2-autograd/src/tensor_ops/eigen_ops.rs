@@ -231,6 +231,7 @@ impl<F: Float + ScalarOperand + FromPrimitive> Op<F> for EigenvaluesOp {
 }
 
 // Helper functions
+#[allow(dead_code)]
 fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
     let n = matrix.shape()[0];
     for i in 0..n {
@@ -243,6 +244,7 @@ fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
     true
 }
 
+#[allow(dead_code)]
 fn compute_symmetric_eigen<F: Float + ScalarOperand + FromPrimitive>(
     matrix: &ndarray::ArrayView2<F>,
 ) -> Result<(Array1<F>, Array2<F>), OpError> {
@@ -334,6 +336,7 @@ fn compute_symmetric_eigen<F: Float + ScalarOperand + FromPrimitive>(
     Ok((eigenvalues, v))
 }
 
+#[allow(dead_code)]
 fn compute_general_eigen<F: Float + ScalarOperand + FromPrimitive>(
     matrix: &ndarray::ArrayView2<F>,
 ) -> Result<(Array1<F>, Array2<F>), OpError> {
@@ -460,6 +463,7 @@ fn compute_general_eigen<F: Float + ScalarOperand + FromPrimitive>(
 }
 
 // Helper function to check if a matrix is nearly symmetric
+#[allow(dead_code)]
 fn is_nearly_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>, tol: F) -> bool {
     let n = matrix.shape()[0];
     for i in 0..n {
@@ -473,6 +477,7 @@ fn is_nearly_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>, tol: F)
 }
 
 // Helper function to compute QR decomposition
+#[allow(dead_code)]
 fn compute_qr_decomposition<F: Float + ScalarOperand + FromPrimitive>(
     a: &Array2<F>,
 ) -> Result<(Array2<F>, Array2<F>), OpError> {
@@ -562,6 +567,7 @@ fn compute_qr_decomposition<F: Float + ScalarOperand + FromPrimitive>(
     Ok((q, r))
 }
 
+#[allow(dead_code)]
 fn compute_eigenvalues_only<F: Float + ScalarOperand + FromPrimitive>(
     matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array1<F>, OpError> {
@@ -575,6 +581,7 @@ fn compute_eigenvalues_only<F: Float + ScalarOperand + FromPrimitive>(
     Ok(values)
 }
 
+#[allow(dead_code)]
 fn eigendecomposition_gradient<F: Float + ScalarOperand + FromPrimitive>(
     eigenvalues: &ndarray::ArrayView1<F>,
     eigenvectors: &ndarray::ArrayView2<F>,
@@ -742,6 +749,7 @@ impl<F: Float + ScalarOperand + FromPrimitive> Op<F> for EigenExtractOp {
 // Public API functions
 
 /// Compute eigenvalues and eigenvectors of a square matrix
+#[allow(dead_code)]
 pub fn eigen<'g, F: Float + ScalarOperand + FromPrimitive>(
     matrix: &Tensor<'g, F>,
 ) -> (Tensor<'g, F>, Tensor<'g, F>) {
@@ -761,6 +769,7 @@ pub fn eigen<'g, F: Float + ScalarOperand + FromPrimitive>(
 }
 
 /// Compute only the eigenvalues of a square matrix
+#[allow(dead_code)]
 pub fn eigenvalues<'g, F: Float + ScalarOperand + FromPrimitive>(
     matrix: &Tensor<'g, F>,
 ) -> Tensor<'g, F> {

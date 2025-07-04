@@ -12,6 +12,7 @@ use scirs2_io::image::{
 };
 use std::fs;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("=== Image EXIF Metadata Example ===\n");
 
@@ -30,6 +31,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_sample_images() -> Result<()> {
     println!("1. Creating Sample Images");
     println!("-------------------------");
@@ -72,6 +74,7 @@ fn create_sample_images() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_exif_reading() -> Result<()> {
     println!("2. Reading EXIF Metadata");
     println!("------------------------");
@@ -144,6 +147,7 @@ fn demonstrate_exif_reading() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn show_metadata_structure() -> Result<()> {
     println!("3. Understanding Metadata Structure");
     println!("-----------------------------------");
@@ -200,6 +204,7 @@ fn show_metadata_structure() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn cleanup_files() -> Result<()> {
     println!("4. Cleaning Up");
     println!("--------------");

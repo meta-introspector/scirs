@@ -133,6 +133,7 @@ impl StreamingGradient {
 }
 
 /// Memory-efficient L-BFGS implementation with bounded history
+#[allow(dead_code)]
 pub fn minimize_memory_efficient_lbfgs<F, S>(
     mut fun: F,
     x0: Array1<f64>,
@@ -350,6 +351,7 @@ where
 }
 
 /// Memory-efficient L-BFGS direction computation
+#[allow(dead_code)]
 fn compute_lbfgs_direction_memory_efficient(
     g: &Array1<f64>,
     s_history: &VecDeque<Array1<f64>>,
@@ -400,6 +402,7 @@ fn compute_lbfgs_direction_memory_efficient(
 }
 
 /// Get array from memory pool or create new one
+#[allow(dead_code)]
 fn get_array_from_pool<F>(
     memory_pool: &mut Option<MemoryPool>,
     size: usize,
@@ -423,6 +426,7 @@ where
 }
 
 /// Return array to memory pool
+#[allow(dead_code)]
 fn return_array_to_pool(memory_pool: &mut Option<MemoryPool>, array: Array1<f64>) {
     if let Some(pool) = memory_pool {
         pool.return_array(array);
@@ -431,6 +435,7 @@ fn return_array_to_pool(memory_pool: &mut Option<MemoryPool>, array: Array1<f64>
 }
 
 /// Compute dot product in chunks to reduce memory usage
+#[allow(dead_code)]
 fn chunked_dot_product(a: &Array1<f64>, b: &Array1<f64>, chunk_size: usize) -> f64 {
     let n = a.len();
     let mut result = 0.0;
@@ -446,6 +451,7 @@ fn chunked_dot_product(a: &Array1<f64>, b: &Array1<f64>, chunk_size: usize) -> f
 }
 
 /// Compute array norm in chunks to reduce memory usage
+#[allow(dead_code)]
 fn array_norm_chunked(array: &Array1<f64>, chunk_size: usize) -> f64 {
     let n = array.len();
     let mut sum_sq = 0.0;
@@ -460,6 +466,7 @@ fn array_norm_chunked(array: &Array1<f64>, chunk_size: usize) -> f64 {
 }
 
 /// Estimate memory usage for given problem size and history
+#[allow(dead_code)]
 fn estimate_memory_usage(n: usize, max_history: usize) -> usize {
     // Size of f64 in bytes
     const F64_SIZE: usize = std::mem::size_of::<f64>();
@@ -477,6 +484,7 @@ fn estimate_memory_usage(n: usize, max_history: usize) -> usize {
 }
 
 /// Create a memory-efficient optimizer with automatic parameter selection
+#[allow(dead_code)]
 pub fn create_memory_efficient_optimizer(
     problem_size: usize,
     available_memory_mb: usize,

@@ -2,6 +2,7 @@ use ndarray::Array2;
 use scirs2_fft::{hfft2, ihfft2};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     // Create a simple 2D signal - a cosine pattern
     let n = 8;

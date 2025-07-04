@@ -9,6 +9,7 @@ use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
 // Helper function to measure execution time
+#[allow(dead_code)]
 fn time_execution<F, T>(f: F) -> (T, Duration)
 where
     F: FnOnce() -> T,
@@ -19,6 +20,7 @@ where
     (result, elapsed)
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Integration Methods Comparison\n");
 

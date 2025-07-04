@@ -16,8 +16,7 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::check_finite;
 
-#[cfg(test)]
-use std::f64::consts::PI;
+// use std::f64::consts::PI;
 
 /// Ultra-advanced denoising result with comprehensive analysis
 #[derive(Debug, Clone)]
@@ -143,7 +142,7 @@ pub struct ConvergenceInfo {
 }
 
 /// Configuration for ultra-advanced denoising
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct UltraAdvancedDenoisingConfig {
     /// Primary denoising method
     pub method: UltraAdvancedMethod,
@@ -162,7 +161,7 @@ pub struct UltraAdvancedDenoisingConfig {
 }
 
 /// Ultra-advanced denoising methods
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum UltraAdvancedMethod {
     /// Adaptive neural network-inspired denoising
     AdaptiveNeuralNet,
@@ -185,7 +184,7 @@ pub enum UltraAdvancedMethod {
 }
 
 /// Multi-scale processing configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MultiScaleConfig {
     pub num_scales: usize,
     pub scale_factor: f64,
@@ -194,7 +193,7 @@ pub struct MultiScaleConfig {
 }
 
 /// Boundary handling for multi-scale processing
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum BoundaryHandling {
     Zero,
     Reflect,
@@ -204,7 +203,7 @@ pub enum BoundaryHandling {
 }
 
 /// Scale weighting strategies
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum ScaleWeighting {
     Uniform,
     FrequencyAdaptive,
@@ -214,7 +213,7 @@ pub enum ScaleWeighting {
 }
 
 /// SIMD optimization configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct SimdOptimizationConfig {
     pub enable_simd: bool,
     pub vectorization_width: Option<usize>,
@@ -223,7 +222,7 @@ pub struct SimdOptimizationConfig {
 }
 
 /// Real-time processing configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RealTimeConfig {
     pub max_latency_ms: f64,
     pub buffer_size: usize,
@@ -232,7 +231,7 @@ pub struct RealTimeConfig {
 }
 
 /// Quality optimization configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct QualityOptimizationConfig {
     pub perceptual_weighting: bool,
     pub preserve_transients: bool,
@@ -241,7 +240,7 @@ pub struct QualityOptimizationConfig {
 }
 
 /// Memory usage configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MemoryConfig {
     pub max_memory_mb: f64,
     pub use_streaming: bool,
@@ -250,7 +249,7 @@ pub struct MemoryConfig {
 }
 
 /// Memory optimization levels
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum MemoryOptimizationLevel {
     None,
     Basic,
@@ -333,7 +332,7 @@ impl Default for UltraAdvancedDenoisingConfig {
 /// });
 ///
 /// let noisy_signal: Array1<f64> = clean_signal.mapv(|x| {
-///     x + 0.2 * rng.gen_range(-1.0..1.0)
+///     x + 0.2 * rng.random_range(-1.0..1.0)
 /// });
 ///
 /// let config = UltraAdvancedDenoisingConfig {
@@ -346,6 +345,7 @@ impl Default for UltraAdvancedDenoisingConfig {
 /// assert!(result.quality_metrics.snr_improvement_db > 5.0);
 /// assert!(result.processing_stats.simd_speedup >= 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn ultra_advanced_denoise(
     noisy_signal: &Array1<f64>,
     config: &UltraAdvancedDenoisingConfig,
@@ -441,6 +441,7 @@ pub fn ultra_advanced_denoise(
 /// # Returns
 ///
 /// * Denoised signal chunk with updated context
+#[allow(dead_code)]
 pub fn ultra_advanced_denoise_realtime(
     signal_chunk: &Array1<f64>,
     context: &mut RealTimeDenoisingContext,
@@ -498,6 +499,7 @@ pub fn ultra_advanced_denoise_realtime(
 /// # Returns
 ///
 /// * Batch denoising results with comprehensive statistics
+#[allow(dead_code)]
 pub fn ultra_advanced_denoise_batch(
     signals: &[Array1<f64>],
     config: &UltraAdvancedDenoisingConfig,
@@ -556,6 +558,7 @@ pub fn ultra_advanced_denoise_batch(
 // Core denoising algorithm implementations
 
 /// Adaptive neural network-inspired denoising
+#[allow(dead_code)]
 fn adaptive_neural_net_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
@@ -612,6 +615,7 @@ fn adaptive_neural_net_denoise(
 }
 
 /// Variational denoising with energy minimization
+#[allow(dead_code)]
 fn variational_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
@@ -638,6 +642,7 @@ fn variational_denoise(
 }
 
 /// Attention-based denoising using transformer-inspired mechanisms
+#[allow(dead_code)]
 fn attention_based_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
@@ -664,6 +669,7 @@ fn attention_based_denoise(
 
 // Additional denoising method implementations (simplified for brevity)
 
+#[allow(dead_code)]
 fn residual_learning_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
@@ -683,6 +689,7 @@ fn residual_learning_denoise(
     })
 }
 
+#[allow(dead_code)]
 fn multiscale_dictionary_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
@@ -702,6 +709,7 @@ fn multiscale_dictionary_denoise(
     })
 }
 
+#[allow(dead_code)]
 fn learned_sparse_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
@@ -721,6 +729,7 @@ fn learned_sparse_denoise(
     })
 }
 
+#[allow(dead_code)]
 fn hybrid_wavelet_neural_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
@@ -740,6 +749,7 @@ fn hybrid_wavelet_neural_denoise(
     })
 }
 
+#[allow(dead_code)]
 fn adaptive_basis_pursuit_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
@@ -759,6 +769,7 @@ fn adaptive_basis_pursuit_denoise(
     })
 }
 
+#[allow(dead_code)]
 fn ensemble_consensus_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
@@ -887,6 +898,7 @@ impl BatchProcessor {
 
 // Implementation of helper functions (simplified for brevity)
 
+#[allow(dead_code)]
 fn validate_input_signal(
     signal: &Array1<f64>,
     config: &UltraAdvancedDenoisingConfig,
@@ -900,6 +912,7 @@ fn validate_input_signal(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn analyze_noise_multiscale(
     signal: &Array1<f64>,
     config: &MultiScaleConfig,
@@ -936,10 +949,12 @@ fn analyze_noise_multiscale(
     })
 }
 
+#[allow(dead_code)]
 fn initialize_adaptive_weights(n: usize, noise_model: &AdaptiveNoiseModel) -> Array2<f64> {
     Array2::ones((n, n)) * 0.01
 }
 
+#[allow(dead_code)]
 fn update_adaptive_weights(
     weights: &mut Array2<f64>,
     biases: &mut Array1<f64>,
@@ -951,10 +966,12 @@ fn update_adaptive_weights(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compute_residual_norm(old_signal: &Array1<f64>, new_signal: &Array1<f64>) -> f64 {
     (old_signal - new_signal).mapv(|x| x * x).sum().sqrt()
 }
 
+#[allow(dead_code)]
 fn compute_confidence_map(
     denoised: &Array1<f64>,
     noise_estimate: &Array1<f64>,
@@ -964,6 +981,7 @@ fn compute_confidence_map(
     Ok(Array1::ones(denoised.len()) * 0.9)
 }
 
+#[allow(dead_code)]
 fn apply_variational_optimization(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
@@ -973,6 +991,7 @@ fn apply_variational_optimization(
     Ok(signal.clone())
 }
 
+#[allow(dead_code)]
 fn apply_attention_mechanism(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
@@ -982,6 +1001,7 @@ fn apply_attention_mechanism(
     Ok(signal.clone())
 }
 
+#[allow(dead_code)]
 fn compute_denoising_quality_metrics(
     noisy_signal: &Array1<f64>,
     denoised_signal: &Array1<f64>,
@@ -1004,6 +1024,7 @@ fn compute_denoising_quality_metrics(
     })
 }
 
+#[allow(dead_code)]
 fn estimate_computational_complexity(
     signal_length: usize,
     config: &UltraAdvancedDenoisingConfig,
@@ -1012,6 +1033,7 @@ fn estimate_computational_complexity(
     signal_length as f64 * (signal_length as f64).log2()
 }
 
+#[allow(dead_code)]
 fn calculate_optimal_chunk_size(
     signals: &[Array1<f64>],
     config: &UltraAdvancedDenoisingConfig,
@@ -1020,6 +1042,7 @@ fn calculate_optimal_chunk_size(
     10.min(signals.len())
 }
 
+#[allow(dead_code)]
 fn compute_batch_statistics(results: &[UltraAdvancedDenoisingResult]) -> BatchStatistics {
     let avg_snr = results
         .iter()
@@ -1108,8 +1131,8 @@ impl RealTimeDenoisingContext {
     }
 }
 
-#[cfg(test)]
 mod tests {
+    #[allow(unused_imports)]
     use super::*;
 
     #[test]
@@ -1122,7 +1145,8 @@ mod tests {
         // Add noise
         use rand::prelude::*;
         let mut rng = rand::rng();
-        let noisy_signal: Array1<f64> = clean_signal.mapv(|x| x + 0.1 * rng.gen_range(-1.0..1.0));
+        let noisy_signal: Array1<f64> =
+            clean_signal.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
 
         let config = UltraAdvancedDenoisingConfig::default();
         let result = ultra_advanced_denoise(&noisy_signal, &config);

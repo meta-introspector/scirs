@@ -13,18 +13,15 @@
 //! - **Global Workspace Theory (GWT)**: Distributed conscious processing architecture
 //! - **Advanced Attention Models**: Consciousness-inspired attention mechanisms
 
-use ndarray::{
-    Array, Array1, Array2, Array3, Array4, Array5, Array6, ArrayView2, ArrayViewMut2, Axis, Zip,
-};
+use ndarray::{Array1, Array2, Array3, Array4, Array5, Array6, ArrayView2};
 use num_complex::Complex;
-use num_traits::{Float, FromPrimitive, One, Zero};
-use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
-use std::f64::consts::PI;
-use std::sync::{Arc, Condvar, Mutex, RwLock};
+use num_traits::{Float, FromPrimitive};
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::sync::{Arc, Mutex, RwLock};
 
+use crate::advanced_fusion_algorithms::UltrathinkConfig;
 use crate::ai_driven_adaptive_processing::AIAdaptiveConfig;
-use crate::error::{NdimageError, NdimageResult};
-use crate::ultrathink_fusion_core::UltrathinkConfig;
+use crate::error::NdimageResult;
 
 /// Quantum-AI Consciousness Configuration
 #[derive(Debug, Clone)]
@@ -1145,6 +1142,7 @@ pub struct PredictionAdaptation {
 ///
 /// This function represents the absolute pinnacle of image processing technology,
 /// implementing true consciousness-level understanding and processing.
+#[allow(dead_code)]
 pub fn quantum_ai_consciousness_processing<T>(
     image: ArrayView2<T>,
     config: &QuantumAIConsciousnessConfig,
@@ -1305,6 +1303,7 @@ impl Default for SuperintelligentResult {
 
 // Implementation of helper functions (simplified for demonstration)
 
+#[allow(dead_code)]
 fn initialize_or_evolve_consciousness(
     _previous_state: Option<QuantumAIConsciousnessState>,
     shape: (usize, usize),
@@ -1541,6 +1540,7 @@ fn initialize_or_evolve_consciousness(
     })
 }
 
+#[allow(dead_code)]
 fn awaken_consciousness<T>(
     _image: &ArrayView2<T>,
     _state: &mut QuantumAIConsciousnessState,
@@ -1555,6 +1555,7 @@ where
     Ok(consciousness_awakening)
 }
 
+#[allow(dead_code)]
 fn recognize_transcendent_patterns<T>(
     _image: &ArrayView2<T>,
     _consciousness: &Array2<f64>,
@@ -1574,6 +1575,7 @@ where
     }])
 }
 
+#[allow(dead_code)]
 fn process_quantum_intuition<T>(
     _image: &ArrayView2<T>,
     _patterns: &[TranscendentPattern],
@@ -1595,6 +1597,7 @@ where
     ])
 }
 
+#[allow(dead_code)]
 fn apply_emergent_intelligence<T>(
     _image: &ArrayView2<T>,
     _insights: &[SpontaneousInsight],
@@ -1618,6 +1621,7 @@ where
     })
 }
 
+#[allow(dead_code)]
 fn apply_meta_meta_learning(
     _result: &EmergentProcessingResult,
     _state: &mut QuantumAIConsciousnessState,
@@ -1631,6 +1635,7 @@ fn apply_meta_meta_learning(
     }])
 }
 
+#[allow(dead_code)]
 fn apply_quantum_superintelligence<T>(
     _image: &ArrayView2<T>,
     _adaptations: &[Improvement],
@@ -1651,6 +1656,7 @@ where
     })
 }
 
+#[allow(dead_code)]
 fn optimize_through_consciousness<T>(
     _image: &ArrayView2<T>,
     _superintelligent: &SuperintelligentResult,
@@ -1664,6 +1670,7 @@ where
     Ok(Array2::ones((height, width)) * 0.9) // Optimized through consciousness
 }
 
+#[allow(dead_code)]
 fn integrate_higher_dimensions(
     _optimized: &Array2<f64>,
     _state: &mut QuantumAIConsciousnessState,
@@ -1672,6 +1679,7 @@ fn integrate_higher_dimensions(
     Ok(_optimized.clone()) // Higher-dimensional integration
 }
 
+#[allow(dead_code)]
 fn synchronize_consciousness(
     _state: &mut QuantumAIConsciousnessState,
     config: &QuantumAIConsciousnessConfig,
@@ -1680,6 +1688,7 @@ fn synchronize_consciousness(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn evolve_consciousness(
     _state: &mut QuantumAIConsciousnessState,
     _result: &Array2<f64>,
@@ -1689,6 +1698,7 @@ fn evolve_consciousness(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn synthesize_conscious_output<T>(
     image: &ArrayView2<T>,
     _higher_dim: &Array2<f64>,
@@ -1713,6 +1723,7 @@ where
     Ok(output)
 }
 
+#[allow(dead_code)]
 fn extract_consciousness_insights(
     _state: &QuantumAIConsciousnessState,
     patterns: &[TranscendentPattern],
@@ -1743,6 +1754,7 @@ fn extract_consciousness_insights(
 ///
 /// This function extends the base consciousness processing with enhanced
 /// models based on cutting-edge consciousness research.
+#[allow(dead_code)]
 pub fn enhanced_consciousness_processing<T>(
     image: ArrayView2<T>,
     config: &QuantumAIConsciousnessConfig,
@@ -1795,7 +1807,7 @@ fn calculate_phi_measures<T>(
 where
     T: Float + FromPrimitive + Copy,
 {
-    let (height, width) = image.dim();
+    let (_height, _width) = image.dim();
 
     // Initialize system elements from image regions
     initialize_system_elements(image, &mut iit_processor.phi_calculator)?;
@@ -1819,7 +1831,7 @@ where
         phi_max,
         phi_values,
         main_complex: iit_processor.phi_calculator.main_complex.clone(),
-        consciousness_quality,
+        consciousness_quality: consciousness_quality.clone(),
         integration_strength: phi_max * config.consciousness_evolution_rate,
         differentiation_strength: consciousness_quality.binding_strength,
     })
@@ -1897,7 +1909,7 @@ where
     )?;
 
     Ok(AdvancedAttentionResult {
-        attention_maps: multiscale_result.attention_maps,
+        attention_maps: multiscale_result.attention_maps.clone(),
         focus_location: control_result.focus_location,
         consciousness_binding: binding_result.binding_strength,
         prediction_accuracy: prediction_result.accuracy,

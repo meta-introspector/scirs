@@ -1,6 +1,7 @@
 use ndarray::array;
 use scirs2_linalg::eigh;
 
+#[allow(dead_code)]
 fn main() {
     let symmetric_matrix = array![[4.0, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]];
 

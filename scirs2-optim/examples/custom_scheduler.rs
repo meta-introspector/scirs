@@ -7,16 +7,19 @@ use scirs2_optim::{
 use std::error::Error;
 
 /// Simple quadratic loss function for demonstration
+#[allow(dead_code)]
 fn quadratic_loss(x: &Array1<f64>) -> f64 {
     x.iter().map(|&xi| xi * xi).sum()
 }
 
 /// Compute gradient of quadratic loss
+#[allow(dead_code)]
 fn quadratic_gradient(x: &Array1<f64>) -> Array1<f64> {
     x * 2.0
 }
 
 /// Test a scheduler and print its learning rate schedule
+#[allow(dead_code)]
 fn test_scheduler<S: LearningRateScheduler<f64>>(
     name: &str,
     mut scheduler: S,
@@ -63,6 +66,7 @@ fn test_scheduler<S: LearningRateScheduler<f64>>(
     Ok(params)
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     // Initial parameters
     let initial_params = Array1::from_vec(vec![5.0, -3.0, 2.0, -4.0]);

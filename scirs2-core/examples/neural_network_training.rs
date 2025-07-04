@@ -22,6 +22,7 @@ use scirs2_core::array_protocol::{
     NdarrayWrapper,
 };
 
+#[allow(dead_code)]
 fn main() {
     // Initialize the array protocol system
     array_protocol::init();
@@ -274,6 +275,7 @@ fn main() {
 }
 
 // Helper function to get model from trainer
+#[allow(dead_code)]
 fn get_model_from_trainer(_trainer: &Trainer) -> Sequential {
     // In a real implementation, we would have a method on Trainer to access the model
     // This is just a workaround for the example
@@ -285,6 +287,7 @@ fn get_model_from_trainer(_trainer: &Trainer) -> Sequential {
 }
 
 // Create a simple model similar to the one used in the example
+#[allow(dead_code)]
 fn create_simple_model() -> Sequential {
     let mut model = Sequential::new("SimpleClassifier", Vec::new());
 

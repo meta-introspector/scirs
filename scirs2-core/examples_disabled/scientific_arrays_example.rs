@@ -5,6 +5,7 @@ use scirs2_core::array::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<(), ArrayError> {
     println!("Scientific Arrays Example");
     println!("========================\n");

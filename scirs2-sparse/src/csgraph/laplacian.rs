@@ -67,6 +67,7 @@ impl LaplacianType {
 /// // Compute standard Laplacian
 /// let (laplacian, _) = laplacian(&graph, false, false, true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn laplacian<T, S>(
     graph: &S,
     normed: bool,
@@ -100,6 +101,7 @@ where
 /// # Returns
 ///
 /// A tuple containing the Laplacian matrix and optional degree array
+#[allow(dead_code)]
 pub fn compute_laplacian_matrix<T, S>(
     graph: &S,
     laplacian_type: LaplacianType,
@@ -152,6 +154,7 @@ where
 }
 
 /// Compute out-degrees for all vertices
+#[allow(dead_code)]
 fn compute_out_degrees<T, S>(graph: &S) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
@@ -170,6 +173,7 @@ where
 }
 
 /// Compute in-degrees for all vertices
+#[allow(dead_code)]
 fn compute_in_degrees<T, S>(graph: &S) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
@@ -188,6 +192,7 @@ where
 }
 
 /// Compute the standard Laplacian matrix: L = D - A
+#[allow(dead_code)]
 fn compute_standard_laplacian<T>(
     row_indices: &[usize],
     col_indices: &[usize],
@@ -230,6 +235,7 @@ where
 }
 
 /// Compute the normalized Laplacian matrix: L = D^(-1/2) * (D - A) * D^(-1/2)
+#[allow(dead_code)]
 fn compute_normalized_laplacian<T>(
     row_indices: &[usize],
     col_indices: &[usize],
@@ -283,6 +289,7 @@ where
 }
 
 /// Compute the random walk Laplacian matrix: L = D^(-1) * (D - A)
+#[allow(dead_code)]
 fn compute_random_walk_laplacian<T>(
     row_indices: &[usize],
     col_indices: &[usize],
@@ -356,6 +363,7 @@ where
 ///
 /// let degrees = degree_matrix(&graph, true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn degree_matrix<T, S>(graph: &S, use_out_degree: bool) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
@@ -387,6 +395,7 @@ where
 /// This function computes the second smallest eigenvalue of the Laplacian matrix
 /// using sparse eigenvalue solvers. The smallest eigenvalue is always 0 for
 /// connected graphs, so we find the k=2 smallest eigenvalues and return the second one.
+#[allow(dead_code)]
 pub fn algebraic_connectivity<T, S>(graph: &S, normalized: bool) -> SparseResult<T>
 where
     T: Float
@@ -514,6 +523,7 @@ where
 /// # Returns
 ///
 /// True if the matrix is a valid Laplacian, false otherwise
+#[allow(dead_code)]
 pub fn is_laplacian<T, S>(matrix: &S, tol: T) -> SparseResult<bool>
 where
     T: Float + Debug + Copy + 'static,

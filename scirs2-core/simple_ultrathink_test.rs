@@ -1,6 +1,7 @@
 //! Simple ultrathink mode test that doesn't require external dependencies
 //! This just verifies that basic Rust functionality is working
 
+#[allow(dead_code)]
 fn main() {
     println!("🚀 Simple Ultrathink Mode Test");
     println!("==============================");
@@ -18,6 +19,7 @@ fn main() {
     println!("📋 Ready for full advanced mode deployment");
 }
 
+#[allow(dead_code)]
 fn test_basic_functionality() {
     println!("\n1. Testing Basic Functionality:");
     
@@ -39,6 +41,7 @@ fn test_basic_functionality() {
     println!("   ✓ Functional programming: Sum of squares = {}", sum);
 }
 
+#[allow(dead_code)]
 fn test_data_structures() {
     println!("\n2. Testing Data Structures:");
     
@@ -64,6 +67,7 @@ fn test_data_structures() {
     println!("   ✓ Option/Result types: {:?}, {:?}", maybe_value, result);
 }
 
+#[allow(dead_code)]
 fn test_algorithmic_concepts() {
     println!("\n3. Testing Algorithmic Concepts:");
     
@@ -77,6 +81,7 @@ fn test_algorithmic_concepts() {
     simulate_neural_architecture();
 }
 
+#[allow(dead_code)]
 fn simulate_clustering() {
     println!("   🧠 AI-Driven Algorithm Selection:");
     let algorithms = vec!["kmeans", "dbscan", "hierarchical", "spectral"];
@@ -88,6 +93,7 @@ fn simulate_clustering() {
     println!("      ✓ Algorithm selection simulation complete");
 }
 
+#[allow(dead_code)]
 fn simulate_optimization() {
     println!("   ⚛️  Quantum-Neuromorphic Fusion:");
     
@@ -105,6 +111,7 @@ fn simulate_optimization() {
     println!("      ✓ Quantum-neuromorphic optimization simulation complete");
 }
 
+#[allow(dead_code)]
 fn simulate_neural_architecture() {
     println!("   📈 Meta-Learning Optimization:");
     

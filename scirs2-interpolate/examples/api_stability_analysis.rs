@@ -9,6 +9,7 @@ use scirs2_interpolate::api_stabilization_enhanced::{
 };
 use scirs2_interpolate::InterpolateResult;
 
+#[allow(dead_code)]
 fn main() -> InterpolateResult<()> {
     println!("=== SciRS2 Interpolate API Stability Analysis ===\n");
 

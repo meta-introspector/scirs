@@ -33,6 +33,7 @@ use std::fmt::Debug;
 /// println!("Approximation: {:?}", approx);
 /// println!("Detail: {:?}", detail);
 /// ```
+#[allow(dead_code)]
 pub fn dwt_decompose<T>(
     data: &[T],
     wavelet: Wavelet,
@@ -132,6 +133,7 @@ where
 /// // Basic test - reconstruction should succeed
 /// assert!(reconstructed.len() > 0);
 /// ```
+#[allow(dead_code)]
 pub fn dwt_reconstruct(approx: &[f64], detail: &[f64], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
     if approx.is_empty() || detail.is_empty() {
         return Err(SignalError::ValueError(

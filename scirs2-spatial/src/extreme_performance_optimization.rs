@@ -1587,6 +1587,7 @@ impl SelfOptimizingAlgorithm {
 }
 
 /// Create an extreme performance optimizer with all optimizations enabled
+#[allow(dead_code)]
 pub fn create_ultimate_optimizer() -> ExtremeOptimizer {
     ExtremeOptimizer::new()
         .with_extreme_simd(true)

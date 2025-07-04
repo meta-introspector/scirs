@@ -10,6 +10,7 @@ use scirs2_linalg::prelude::*;
 use scirs2_linalg::specialized::TridiagonalMatrix;
 use scirs2_linalg::structured::{CirculantMatrix, ToeplitzMatrix};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Advanced Linear Algebra Tutorial ===\n");
 

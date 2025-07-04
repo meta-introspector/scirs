@@ -215,6 +215,7 @@ impl Default for PerformanceConfig {
 }
 
 /// Run performance-optimized 2D wavelet decomposition
+#[allow(dead_code)]
 pub fn optimized_dwt2d_decompose(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -296,6 +297,7 @@ enum ProcessingStrategy {
 }
 
 /// Determine optimal processing strategy based on input characteristics
+#[allow(dead_code)]
 fn determine_optimal_strategy(
     image: &Array2<f64>,
     _wavelet: &Wavelet,
@@ -324,6 +326,7 @@ fn determine_optimal_strategy(
 }
 
 /// Validate image dimensions and properties
+#[allow(dead_code)]
 fn validate_image_dimensions(image: &Array2<f64>) -> SignalResult<()> {
     let (height, width) = image.dim();
 
@@ -355,6 +358,7 @@ fn validate_image_dimensions(image: &Array2<f64>) -> SignalResult<()> {
 }
 
 /// SIMD-optimized decomposition implementation
+#[allow(dead_code)]
 fn simd_optimized_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -404,6 +408,7 @@ fn simd_optimized_decomposition(
 }
 
 /// SIMD-optimized row transform
+#[allow(dead_code)]
 fn simd_row_transform(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -425,6 +430,7 @@ fn simd_row_transform(
 }
 
 /// SIMD-optimized column transform
+#[allow(dead_code)]
 fn simd_column_transform(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -468,6 +474,7 @@ fn simd_column_transform(
 }
 
 /// SIMD-optimized 1D transform
+#[allow(dead_code)]
 fn simd_1d_transform(
     signal: ndarray::ArrayView1<f64>,
     filters: &WaveletFilters,
@@ -502,6 +509,7 @@ fn simd_1d_transform(
 }
 
 /// Parallel-optimized decomposition implementation
+#[allow(dead_code)]
 fn parallel_optimized_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -540,6 +548,7 @@ fn parallel_optimized_decomposition(
 }
 
 /// Tiled-optimized decomposition implementation
+#[allow(dead_code)]
 fn tiled_optimized_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -555,6 +564,7 @@ fn tiled_optimized_decomposition(
 }
 
 /// Streaming-optimized decomposition implementation
+#[allow(dead_code)]
 fn streaming_optimized_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -567,6 +577,7 @@ fn streaming_optimized_decomposition(
 }
 
 /// Hybrid-optimized decomposition implementation
+#[allow(dead_code)]
 fn hybrid_optimized_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -592,6 +603,7 @@ fn hybrid_optimized_decomposition(
 }
 
 /// Fallback to standard decomposition
+#[allow(dead_code)]
 fn fallback_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -668,6 +680,7 @@ impl MemoryTracker {
 }
 
 /// Assess decomposition quality
+#[allow(dead_code)]
 fn assess_decomposition_quality(
     original: &Array2<f64>,
     subbands: &[Array2<f64>],
@@ -709,6 +722,7 @@ fn assess_decomposition_quality(
 }
 
 /// Calculate coefficient statistics
+#[allow(dead_code)]
 fn calculate_coefficient_stats(coeffs: &[f64]) -> CoefficientStatistics {
     if coeffs.is_empty() {
         return CoefficientStatistics {
@@ -759,6 +773,7 @@ fn calculate_coefficient_stats(coeffs: &[f64]) -> CoefficientStatistics {
 }
 
 /// Calculate Mean Squared Error between two images
+#[allow(dead_code)]
 fn calculate_mse(img1: &Array2<f64>, img2: &Array2<f64>) -> f64 {
     if img1.dim() != img2.dim() {
         return f64::INFINITY;
@@ -774,6 +789,7 @@ fn calculate_mse(img1: &Array2<f64>, img2: &Array2<f64>) -> f64 {
 }
 
 /// Reconstruct image from subbands (simplified)
+#[allow(dead_code)]
 fn reconstruct_from_subbands(
     subbands: &[Array2<f64>],
     wavelet: &Wavelet,
@@ -788,6 +804,7 @@ fn reconstruct_from_subbands(
 }
 
 /// Generate performance optimization report
+#[allow(dead_code)]
 pub fn generate_performance_report(result: &OptimizedDwt2dResult) -> String {
     let mut report = String::new();
 

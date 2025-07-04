@@ -4,7 +4,7 @@
 //! including policy gradient methods, actor-critic algorithms, and trust region methods.
 
 use crate::error::{OptimError, Result};
-use ndarray::{Array1, Array2, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::HashMap;
 

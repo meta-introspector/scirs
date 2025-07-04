@@ -100,6 +100,7 @@ pub trait PlottingBackend {
 ///
 /// let backend = backends::default_backend();
 /// ```
+#[allow(dead_code)]
 pub fn default_backend() -> impl PlottingBackend {
     #[cfg(feature = "plotly_backend")]
     {
@@ -163,6 +164,7 @@ pub fn default_backend() -> impl PlottingBackend {
 /// let backend = backends::default_interactive_backend();
 /// ```
 #[cfg(feature = "plotly_backend")]
+#[allow(dead_code)]
 pub fn default_interactive_backend() -> PlotlyInteractiveBackend {
     PlotlyInteractiveBackend::new()
 }
@@ -180,6 +182,7 @@ pub fn default_interactive_backend() -> PlotlyInteractiveBackend {
 /// # Returns
 ///
 /// * `VisualizationData` - The enhanced visualization data
+#[allow(dead_code)]
 pub fn enhance_visualization(
     data: &VisualizationData,
     metadata: &VisualizationMetadata,

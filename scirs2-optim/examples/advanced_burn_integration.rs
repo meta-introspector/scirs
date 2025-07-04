@@ -877,6 +877,7 @@ pub struct BurnTrainingResults {
 }
 
 /// Generate synthetic classification data
+#[allow(dead_code)]
 pub fn generate_classification_data(
     n_samples: usize,
     n_features: usize,
@@ -925,6 +926,7 @@ pub fn generate_classification_data(
     (input, targets)
 }
 
+#[allow(dead_code)]
 fn main() -> OptimResult<()> {
     println!("🔥 Advanced Burn Integration with scirs2-optim");
     println!("===============================================");

@@ -9,6 +9,7 @@
 //! ```
 
 #[cfg(not(feature = "high-precision"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'high-precision' feature to be enabled.");
     println!(
@@ -17,6 +18,7 @@ fn main() {
 }
 
 #[cfg(feature = "high-precision")]
+#[allow(dead_code)]
 fn main() {
     use scirs2_special::{
         bessel_j_ap, bessel_y_ap, cleanup_cache, erf_ap, erfc_ap, gamma_ap, log_gamma_ap, to_f64,

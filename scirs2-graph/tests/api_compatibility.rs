@@ -11,6 +11,7 @@ use std::collections::HashMap;
 
 /// Test core graph types remain stable
 #[test]
+#[allow(dead_code)]
 fn test_core_graph_types_stable() {
     // Core graph construction should remain stable
     let graph = Graph::<usize, f64>::new();
@@ -28,6 +29,7 @@ fn test_core_graph_types_stable() {
 
 /// Test core algorithm signatures remain stable
 #[test]
+#[allow(dead_code)]
 fn test_traversal_algorithms_stable() {
     let mut graph = Graph::new();
     graph.add_node(0).unwrap();
@@ -42,6 +44,7 @@ fn test_traversal_algorithms_stable() {
 
 /// Test shortest path algorithms remain stable
 #[test]
+#[allow(dead_code)]
 fn test_shortest_path_algorithms_stable() {
     let mut graph = Graph::new();
     graph.add_node(0).unwrap();
@@ -56,6 +59,7 @@ fn test_shortest_path_algorithms_stable() {
 
 /// Test connectivity algorithms remain stable
 #[test]
+#[allow(dead_code)]
 fn test_connectivity_algorithms_stable() {
     let mut graph = Graph::new();
     for i in 0..5 {
@@ -73,6 +77,7 @@ fn test_connectivity_algorithms_stable() {
 
 /// Test centrality algorithms remain stable
 #[test]
+#[allow(dead_code)]
 fn test_centrality_algorithms_stable() {
     let mut graph = Graph::new();
     for i in 0..4 {
@@ -94,6 +99,7 @@ fn test_centrality_algorithms_stable() {
 
 /// Test community detection result types remain stable
 #[test]
+#[allow(dead_code)]
 fn test_community_detection_stable() {
     let mut graph = Graph::new();
     for i in 0..6 {
@@ -118,6 +124,7 @@ fn test_community_detection_stable() {
 
 /// Test graph generators remain stable
 #[test]
+#[allow(dead_code)]
 fn test_graph_generators_stable() {
     use rand::rngs::StdRng;
     use rand::SeedableRng;
@@ -136,6 +143,7 @@ fn test_graph_generators_stable() {
 
 /// Test graph measures remain stable
 #[test]
+#[allow(dead_code)]
 fn test_graph_measures_stable() {
     let mut graph = Graph::new();
     for i in 0..5 {
@@ -158,6 +166,7 @@ fn test_graph_measures_stable() {
 
 /// Test error types remain stable
 #[test]
+#[allow(dead_code)]
 fn test_error_types_stable() {
     // Error type should maintain its structure
     let error = GraphError::node_not_found(42);
@@ -169,6 +178,7 @@ fn test_error_types_stable() {
 
 /// Test graph I/O remains stable
 #[test]
+#[allow(dead_code)]
 fn test_io_stability() {
     use std::io::Cursor;
 
@@ -185,6 +195,7 @@ fn test_io_stability() {
 
 /// Test attribute system remains stable  
 #[test]
+#[allow(dead_code)]
 fn test_attribute_system_stable() {
     let mut graph = AttributedGraph::<usize, f64>::new();
 
@@ -200,6 +211,7 @@ fn test_attribute_system_stable() {
 
 /// Test weighted operations remain stable
 #[test]
+#[allow(dead_code)]
 fn test_weighted_operations_stable() {
     let mut graph = Graph::new();
     graph.add_node(0).unwrap();
@@ -213,6 +225,7 @@ fn test_weighted_operations_stable() {
 
 /// Test result type compatibility
 #[test]
+#[allow(dead_code)]
 fn test_result_types_stable() {
     // Result types should maintain their structure
     let _community_result = CommunityResult {
@@ -236,6 +249,7 @@ fn test_result_types_stable() {
 /// Test that deprecated functions still work but issue warnings
 #[test]
 #[allow(deprecated)]
+#[allow(dead_code)]
 fn test_deprecated_functions_compatibility() {
     let graph = complete_graph(5);
 
@@ -248,6 +262,7 @@ fn test_deprecated_functions_compatibility() {
 /// Test parallel feature compatibility
 #[cfg(feature = "parallel")]
 #[test]
+#[allow(dead_code)]
 fn test_parallel_api_stable() {
     let graph = complete_graph(100);
 
@@ -259,6 +274,7 @@ fn test_parallel_api_stable() {
 /// Test experimental features are properly gated
 #[cfg(feature = "experimental")]
 #[test]
+#[allow(dead_code)]
 fn test_experimental_features_gated() {
     let graph1 = complete_graph(5);
     let graph2 = cycle_graph(5);
@@ -270,6 +286,7 @@ fn test_experimental_features_gated() {
 
 /// Test ultrathink API stability (experimental but stable interface)
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_api_stable() {
     let graph = complete_graph(10);
 
@@ -283,6 +300,7 @@ fn test_ultrathink_api_stable() {
 /// Compile-time API signature verification
 /// This test ensures function signatures haven't changed
 #[test]
+#[allow(dead_code)]
 fn test_compile_time_signatures() {
     // This test will fail to compile if signatures change
     fn verify_bfs_signature() -> fn(&Graph<usize, f64>, &usize) -> Result<Vec<usize>> {

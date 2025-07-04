@@ -399,6 +399,7 @@ pub enum OperationType {
 }
 
 /// Helper function for precision conversion
+#[allow(dead_code)]
 fn convert_tensor_precision<'a, F1: Float, F2: Float>(
     tensor: &Tensor<'a, F1>,
 ) -> Result<Tensor<'a, F2>, IntegrationError> {
@@ -453,6 +454,7 @@ fn convert_tensor_precision<'a, F1: Float, F2: Float>(
 
 /// Utility functions for common operations
 /// Create a standardized operation context
+#[allow(dead_code)]
 pub fn create_operation_context<'a, F: Float>(
     source: &str,
     target: &str,
@@ -463,6 +465,7 @@ pub fn create_operation_context<'a, F: Float>(
 }
 
 /// Execute a cross-module operation with error handling
+#[allow(dead_code)]
 pub fn execute_cross_module_operation<'a, F: Float>(
     context: &'a OperationContext<'a, F>,
 ) -> Result<SciRS2Data<'a, F>, IntegrationError> {
@@ -470,6 +473,7 @@ pub fn execute_cross_module_operation<'a, F: Float>(
 }
 
 /// Validate data for cross-module compatibility
+#[allow(dead_code)]
 pub fn validate_cross_module_data<F: Float>(
     data: &SciRS2Data<'_, F>,
 ) -> Result<(), IntegrationError> {
@@ -477,6 +481,7 @@ pub fn validate_cross_module_data<F: Float>(
 }
 
 /// Create module adapter with default configuration
+#[allow(dead_code)]
 pub fn create_module_adapter<F: Float>(module_info: ModuleInfo) -> ModuleAdapter<F> {
     ModuleAdapter::new(module_info, IntegrationConfig::default())
 }

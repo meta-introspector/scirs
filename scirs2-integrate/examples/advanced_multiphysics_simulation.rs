@@ -754,6 +754,7 @@ impl SimulationResults {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Advanced Multi-Physics Simulation Example");
     println!("==========================================");

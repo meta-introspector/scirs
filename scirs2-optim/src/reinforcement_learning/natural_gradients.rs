@@ -5,7 +5,7 @@
 
 use super::{PolicyNetwork, RLOptimizationMetrics, RLOptimizerConfig, TrajectoryBatch};
 use crate::error::Result;
-use ndarray::{Array1, Array2, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 
 /// Natural gradient configuration

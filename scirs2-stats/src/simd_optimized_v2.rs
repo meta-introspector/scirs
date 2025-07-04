@@ -50,6 +50,7 @@ impl Default for SimdConfig {
 ///
 /// This implementation avoids temporary arrays and processes data in chunks
 /// for better cache efficiency.
+#[allow(dead_code)]
 pub fn mean_simd_optimized<F, D>(
     x: &ArrayBase<D, Ix1>,
     config: Option<SimdConfig>,
@@ -80,6 +81,7 @@ where
 /// Optimized variance calculation using single-pass SIMD algorithm
 ///
 /// Uses Welford's online algorithm adapted for SIMD processing
+#[allow(dead_code)]
 pub fn variance_simd_optimized<F, D>(
     x: &ArrayBase<D, Ix1>,
     ddof: usize,
@@ -113,6 +115,7 @@ where
 /// Compute all basic statistics in a single SIMD pass
 ///
 /// Returns (mean, variance, min, max, skewness, kurtosis)
+#[allow(dead_code)]
 pub fn stats_simd_single_pass<F, D>(
     x: &ArrayBase<D, Ix1>,
     config: Option<SimdConfig>,
@@ -237,6 +240,7 @@ where
 }
 
 /// Helper function for chunked SIMD sum
+#[allow(dead_code)]
 fn chunked_simd_sum<F, D>(x: &ArrayBase<D, Ix1>, _config: &SimdConfig) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -266,6 +270,7 @@ where
 }
 
 /// Helper function for chunked SIMD sum of squared deviations
+#[allow(dead_code)]
 fn chunked_simd_sum_squared_deviations<F, D>(
     x: &ArrayBase<D, Ix1>,
     mean: F,
@@ -303,6 +308,7 @@ where
 }
 
 /// Scalar Welford's algorithm for variance (fallback)
+#[allow(dead_code)]
 fn variance_scalar_welford<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
@@ -324,6 +330,7 @@ where
 }
 
 /// Scalar single-pass statistics (fallback)
+#[allow(dead_code)]
 fn stats_scalar_single_pass<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F, F, F, F)>
 where
     F: Float + NumCast,

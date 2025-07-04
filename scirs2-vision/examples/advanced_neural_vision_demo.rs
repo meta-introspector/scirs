@@ -31,6 +31,7 @@ use scirs2_vision::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 Advanced Neural Vision Processing Demo");
     println!("==========================================");
@@ -66,6 +67,7 @@ fn main() -> Result<()> {
 }
 
 /// Neural feature detection using SuperPoint-like architecture
+#[allow(dead_code)]
 fn neural_feature_detection_demo(image: &Array2<f32>) -> Result<()> {
     println!("\n🧠 Neural Feature Detection (SuperPoint)");
     println!("-----------------------------------------");
@@ -119,6 +121,7 @@ fn neural_feature_detection_demo(image: &Array2<f32>) -> Result<()> {
 }
 
 /// HDR image processing with multiple tone mapping methods
+#[allow(dead_code)]
 fn hdr_processing_demo(hdr_images: &[Array2<f32>]) -> Result<()> {
     println!("\n🌈 HDR Image Processing");
     println!("-----------------------");
@@ -160,6 +163,7 @@ fn hdr_processing_demo(hdr_images: &[Array2<f32>]) -> Result<()> {
 }
 
 /// Super-resolution with multiple AI algorithms
+#[allow(dead_code)]
 fn super_resolution_demo(image: &Array2<f32>) -> Result<()> {
     println!("\n⬆️  Super-Resolution Enhancement");
     println!("-------------------------------");
@@ -200,6 +204,7 @@ fn super_resolution_demo(image: &Array2<f32>) -> Result<()> {
 }
 
 /// Advanced denoising with state-of-the-art methods
+#[allow(dead_code)]
 fn advanced_denoising_demo(image: &Array2<f32>) -> Result<()> {
     println!("\n🔧 Advanced Denoising");
     println!("---------------------");
@@ -242,6 +247,7 @@ fn advanced_denoising_demo(image: &Array2<f32>) -> Result<()> {
 }
 
 /// Multi-object tracking with DeepSORT
+#[allow(dead_code)]
 fn multi_object_tracking_demo() -> Result<()> {
     println!("\n🎯 Multi-Object Tracking (DeepSORT)");
     println!("-----------------------------------");
@@ -286,6 +292,7 @@ fn multi_object_tracking_demo() -> Result<()> {
 }
 
 /// Attention-based feature matching using transformer architecture
+#[allow(dead_code)]
 fn attention_matching_demo(image: &Array2<f32>) -> Result<()> {
     println!("\n🔍 Attention-Based Feature Matching");
     println!("-----------------------------------");
@@ -331,6 +338,7 @@ fn attention_matching_demo(image: &Array2<f32>) -> Result<()> {
 }
 
 /// Learned SIFT with neural enhancements
+#[allow(dead_code)]
 fn learned_sift_demo(image: &Array2<f32>) -> Result<()> {
     println!("\n🎓 Learned SIFT Features");
     println!("------------------------");
@@ -385,6 +393,7 @@ fn learned_sift_demo(image: &Array2<f32>) -> Result<()> {
 
 // Utility functions for demo
 
+#[allow(dead_code)]
 fn create_test_images() -> Result<(Array2<f32>, Vec<Array2<f32>>)> {
     let width = 640;
     let height = 480;
@@ -413,6 +422,7 @@ fn create_test_images() -> Result<(Array2<f32>, Vec<Array2<f32>>)> {
     Ok((test_image, hdr_images))
 }
 
+#[allow(dead_code)]
 fn resize_image(image: &Array2<f32>, target_size: (usize, usize)) -> Result<Array2<f32>> {
     let (src_height, src_width) = image.dim();
     let (dst_height, dst_width) = target_size;
@@ -433,6 +443,7 @@ fn resize_image(image: &Array2<f32>, target_size: (usize, usize)) -> Result<Arra
     Ok(resized)
 }
 
+#[allow(dead_code)]
 fn downsample_image(image: &Array2<f32>, factor: usize) -> Result<Array2<f32>> {
     let (height, width) = image.dim();
     let new_height = height / factor;
@@ -449,6 +460,7 @@ fn downsample_image(image: &Array2<f32>, factor: usize) -> Result<Array2<f32>> {
     Ok(downsampled)
 }
 
+#[allow(dead_code)]
 fn add_gaussian_noise(image: &Array2<f32>, noise_std: f32) -> Result<Array2<f32>> {
     let mut noisy = image.clone();
 
@@ -460,6 +472,7 @@ fn add_gaussian_noise(image: &Array2<f32>, noise_std: f32) -> Result<Array2<f32>
     Ok(noisy)
 }
 
+#[allow(dead_code)]
 fn compute_psnr(reference: &Array2<f32>, test: &Array2<f32>) -> Result<f32> {
     if reference.shape() != test.shape() {
         // Resize test image to match reference
@@ -485,6 +498,7 @@ fn compute_psnr(reference: &Array2<f32>, test: &Array2<f32>) -> Result<f32> {
     }
 }
 
+#[allow(dead_code)]
 fn create_detection_sequences() -> Vec<Vec<Detection>> {
     let mut sequences = Vec::new();
 
@@ -524,6 +538,7 @@ fn create_detection_sequences() -> Vec<Vec<Detection>> {
 
 use scirs2_vision::feature::KeyPoint;
 
+#[allow(dead_code)]
 fn generate_synthetic_features(
     image: &Array2<f32>,
     num_features: usize,
@@ -553,6 +568,7 @@ fn generate_synthetic_features(
     Ok((keypoints, descriptors))
 }
 
+#[allow(dead_code)]
 fn filter_geometric_matches(
     matches: &[(usize, usize)],
     keypoints1: &[KeyPoint],

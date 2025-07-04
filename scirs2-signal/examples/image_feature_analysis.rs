@@ -6,6 +6,7 @@ use rand::Rng;
 use scirs2_signal::image_features::{extract_image_features, ImageFeatureOptions};
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() {
     println!("Image Feature Analysis Example");
     println!("=============================\n");
@@ -33,6 +34,7 @@ fn main() {
 }
 
 // Generate a synthetic dataset of images for different classes
+#[allow(dead_code)]
 fn generate_synthetic_dataset(count: usize, size: usize) -> (Vec<Array2<f64>>, Vec<usize>) {
     let mut images = Vec::with_capacity(count);
     let mut labels = Vec::with_capacity(count);
@@ -116,6 +118,7 @@ fn generate_synthetic_dataset(count: usize, size: usize) -> (Vec<Array2<f64>>, V
 }
 
 // Extract features from a dataset of images
+#[allow(dead_code)]
 fn extract_features_from_dataset(
     images: &[Array2<f64>],
     options: &ImageFeatureOptions,
@@ -148,6 +151,7 @@ fn extract_features_from_dataset(
 }
 
 // Analyze which features are most important for classification
+#[allow(dead_code)]
 fn analyze_feature_importance(features: &[HashMap<String, f64>], labels: &[usize]) {
     if features.is_empty() || labels.is_empty() || features.len() != labels.len() {
         println!("Invalid data for feature importance analysis");
@@ -252,6 +256,7 @@ fn analyze_feature_importance(features: &[HashMap<String, f64>], labels: &[usize
 }
 
 // Demonstrate texture-based image segmentation
+#[allow(dead_code)]
 fn texture_based_segmentation() {
     // Create a synthetic image with different texture regions
     let size = 64;
@@ -593,6 +598,7 @@ fn texture_based_segmentation() {
 }
 
 // Demonstrate region-based feature extraction
+#[allow(dead_code)]
 fn region_based_analysis() {
     println!("Creating a synthetic image with different regions...");
 

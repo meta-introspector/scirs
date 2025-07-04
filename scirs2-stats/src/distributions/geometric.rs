@@ -464,6 +464,7 @@ impl<F: Float + NumCast> Geometric<F> {
 /// let pmf_at_2 = g.pmf(2.0);
 /// assert!((pmf_at_2 - 0.147).abs() < 1e-3);
 /// ```
+#[allow(dead_code)]
 pub fn geom<F>(p: F) -> StatsResult<Geometric<F>>
 where
     F: Float + NumCast,

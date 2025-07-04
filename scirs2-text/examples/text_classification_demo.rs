@@ -4,6 +4,7 @@ use scirs2_text::{
     TextClassificationMetrics, TextClassificationPipeline, TextDataset, TextFeatureSelector,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Text Classification Demo");
     println!("=======================\n");

@@ -2,6 +2,7 @@ use ndarray::array;
 use scirs2_linalg::eigh;
 
 #[test]
+#[allow(dead_code)]
 fn test_3x3_eigenvalue_precision() {
     let symmetric_matrix = array![[4.0, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]];
 

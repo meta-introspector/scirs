@@ -18,6 +18,7 @@ use std::collections::HashMap;
 use std::process::Command;
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SciRS2 vs Scikit-Learn Performance Benchmarks");
     println!("================================================\n");
@@ -52,6 +53,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn analyze_toy_dataset_performance(suites: &[BenchmarkSuite]) {
     if let Some(toy_suite) = suites.iter().find(|s| s.name == "Toy Datasets") {
         println!("\n📊 TOY DATASET LOADING ANALYSIS");
@@ -105,6 +107,7 @@ fn analyze_toy_dataset_performance(suites: &[BenchmarkSuite]) {
     }
 }
 
+#[allow(dead_code)]
 fn analyze_data_generation_performance(suites: &[BenchmarkSuite]) {
     if let Some(gen_suite) = suites.iter().find(|s| s.name == "Data Generation") {
         println!("\n🔬 DATA GENERATION ANALYSIS");
@@ -133,6 +136,7 @@ fn analyze_data_generation_performance(suites: &[BenchmarkSuite]) {
     }
 }
 
+#[allow(dead_code)]
 fn analyze_generation_type(
     gen_type: &str,
     results: &[&scirs2_datasets::benchmarks::BenchmarkResult],
@@ -173,6 +177,7 @@ fn analyze_generation_type(
     }
 }
 
+#[allow(dead_code)]
 fn analyze_scaling_performance(suite: &BenchmarkSuite) {
     println!("\n  📈 SCALING ANALYSIS:");
 
@@ -420,6 +425,7 @@ fn run_sklearn_generation_comparison() {
     }
 }
 
+#[allow(dead_code)]
 fn generate_performance_report(suites: &[BenchmarkSuite]) {
     println!("\n📋 PERFORMANCE SUMMARY REPORT");
     println!("=".repeat(60));
@@ -489,6 +495,7 @@ fn generate_performance_report(suites: &[BenchmarkSuite]) {
     println!("    • Add caching for frequently accessed datasets");
 }
 
+#[allow(dead_code)]
 fn format_duration(duration: Duration) -> String {
     if duration.as_secs() > 0 {
         format!("{:.2}s", duration.as_secs_f64())

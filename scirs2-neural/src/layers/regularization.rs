@@ -173,14 +173,12 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F>
         0
     fn layer_description(&self) -> String {
         let l1_str = match self.l1_factor {
-            Some(l1) => format!("{:?}", l1),
+            Some(l1) => format!("{l1:?}"),
             None => "None".to_string(),
         let l2_str = match self.l2_factor {
-            Some(l2) => format!("{:?}", l2),
+            Some(l2) => format!("{l2:?}"),
         format!(
-            "type:ActivityRegularization, l1:{}, l2:{}, name:{}",
-            l1_str,
-            l2_str,
+            "type:ActivityRegularization, l1:{l1_str}, l2:{l2_str}, name:{}",
             self.name.as_ref().map_or("None", |s| s)
         )
 /// L1 Activity Regularization layer

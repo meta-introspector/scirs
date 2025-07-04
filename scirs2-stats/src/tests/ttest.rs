@@ -4,7 +4,7 @@
 //! two-sample (independent), and paired sample t-tests with various options.
 //! Following SciPy's stats module.
 
-use crate::distributions::t;
+use crate::distributions;
 use crate::error::{StatsError, StatsResult};
 use crate::{mean, std};
 use ndarray::{Array1, ArrayView1};
@@ -70,6 +70,7 @@ pub struct TTestResult<F: Float + std::fmt::Display> {
 /// let less = ttest_1samp(&data.view(), null_mean, Alternative::Less, "omit").unwrap();
 /// println!("Less: t = {}, p = {}", less.statistic, less.pvalue);
 /// ```
+#[allow(dead_code)]
 pub fn ttest_1samp<F>(
     a: &ArrayView1<F>,
     popmean: F,
@@ -133,7 +134,7 @@ where
     let df = F::from(data.len() - 1).unwrap();
 
     // Create a Student's t-distribution with df degrees of freedom
-    let t_dist = t(df, F::zero(), F::one())?;
+    let t_dist = distributions::t(df, F::zero(), F::one())?;
 
     // Calculate the p-value based on the alternative hypothesis
     let p_value = match alternative {
@@ -188,6 +189,7 @@ where
 /// let result = ttest_ind(&group1.view(), &group2.view(), false, Alternative::Greater, "omit").unwrap();
 /// println!("Welch's t = {}, p = {}, df = {}", result.statistic, result.pvalue, result.df);
 /// ```
+#[allow(dead_code)]
 pub fn ttest_ind<F>(
     a: &ArrayView1<F>,
     b: &ArrayView1<F>,
@@ -293,7 +295,7 @@ where
     }
 
     // Create a Student's t-distribution with df degrees of freedom
-    let t_dist = t(df, F::zero(), F::one())?;
+    let t_dist = distributions::t(df, F::zero(), F::one())?;
 
     // Calculate the p-value based on the alternative hypothesis
     let p_value = match alternative {
@@ -357,6 +359,7 @@ where
 /// let result = ttest_rel(&before.view(), &after.view(), Alternative::Greater, "omit").unwrap();
 /// println!("One-sided (before > after): t = {}, p = {}", result.statistic, result.pvalue);
 /// ```
+#[allow(dead_code)]
 pub fn ttest_rel<F>(
     a: &ArrayView1<F>,
     b: &ArrayView1<F>,
@@ -510,6 +513,7 @@ where
 /// println!("t = {}, p = {}, df = {}", result.statistic, result.pvalue, result.df);
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn ttest_ind_from_stats<F>(
     mean1: F,
     std1: F,
@@ -591,7 +595,7 @@ where
     }
 
     // Create a Student's t-distribution with df degrees of freedom
-    let t_dist = t(df, F::zero(), F::one())?;
+    let t_dist = distributions::t(df, F::zero(), F::one())?;
 
     // Calculate the p-value based on the alternative hypothesis
     let p_value = match alternative {

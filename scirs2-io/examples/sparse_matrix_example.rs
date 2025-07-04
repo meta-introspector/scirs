@@ -14,6 +14,7 @@ use std::f64::consts::PI;
 use std::time::Instant;
 use tempfile::tempdir;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🗃️  Comprehensive Sparse Matrix Example");
     println!("======================================");
@@ -47,6 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_sparse_creation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Demonstrating Sparse Matrix Creation...");
 
@@ -105,6 +107,7 @@ fn demonstrate_sparse_creation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_format_conversion() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔄 Demonstrating Format Conversion...");
 
@@ -175,6 +178,7 @@ fn demonstrate_format_conversion() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_matrix_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧮 Demonstrating Matrix Operations...");
 
@@ -251,6 +255,7 @@ fn demonstrate_matrix_operations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_io_integration() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n💾 Demonstrating I/O Integration...");
 
@@ -306,6 +311,7 @@ fn demonstrate_io_integration() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_performance_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Demonstrating Performance Analysis...");
 
@@ -383,6 +389,7 @@ fn demonstrate_performance_analysis() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_large_sparse_matrices() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🏗️  Demonstrating Large Sparse Matrix Handling...");
 

@@ -47,6 +47,7 @@ pub enum ADFRegression {
 }
 
 /// Perform Augmented Dickey-Fuller test
+#[allow(dead_code)]
 pub fn adf_test<S, F>(
     data: &ArrayBase<S, Ix1>,
     max_lag: Option<usize>,
@@ -147,6 +148,7 @@ pub enum KPSSType {
 }
 
 /// Perform KPSS test
+#[allow(dead_code)]
 pub fn kpss_test<S, F>(
     data: &ArrayBase<S, Ix1>,
     test_type: KPSSType,
@@ -229,6 +231,7 @@ pub struct PPTest<F> {
 }
 
 /// Perform Phillips-Perron test
+#[allow(dead_code)]
 pub fn pp_test<S, F>(
     data: &ArrayBase<S, Ix1>,
     regression: ADFRegression,
@@ -301,6 +304,7 @@ where
 // Helper functions
 
 /// Calculate first difference
+#[allow(dead_code)]
 fn difference<S, F>(data: &ArrayBase<S, Ix1>) -> Array1<F>
 where
     S: Data<Elem = F>,
@@ -315,6 +319,7 @@ where
 }
 
 /// Lag a series
+#[allow(dead_code)]
 fn lag<S, F>(data: &ArrayBase<S, Ix1>, k: usize) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
@@ -335,6 +340,7 @@ where
 }
 
 /// Build regression matrix for ADF test
+#[allow(dead_code)]
 fn build_regression_matrix<S, F>(
     y_diff: &ArrayBase<S, Ix1>,
     y_lag1: &ArrayBase<S, Ix1>,
@@ -402,6 +408,7 @@ where
 }
 
 /// Simple OLS regression using pseudoinverse
+#[allow(dead_code)]
 fn ols_regression<F>(x: &ndarray::Array2<F>, y: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + ScalarOperand,
@@ -429,6 +436,7 @@ where
 }
 
 /// Select lag using AIC
+#[allow(dead_code)]
 fn select_lag_aic<S, F>(
     data: &ArrayBase<S, Ix1>,
     max_lag: usize,
@@ -470,6 +478,7 @@ where
 }
 
 /// Detrend with constant only
+#[allow(dead_code)]
 fn detrend_constant<S, F>(data: &ArrayBase<S, Ix1>) -> Result<(Array1<F>, F)>
 where
     S: Data<Elem = F>,
@@ -481,6 +490,7 @@ where
 }
 
 /// Detrend with linear trend
+#[allow(dead_code)]
 fn detrend_linear<S, F>(data: &ArrayBase<S, Ix1>) -> Result<(Array1<F>, Array1<F>)>
 where
     S: Data<Elem = F>,
@@ -505,6 +515,7 @@ where
 }
 
 /// Newey-West variance estimator
+#[allow(dead_code)]
 fn newey_west_variance<S, F>(residuals: &ArrayBase<S, Ix1>, lags: usize) -> Result<F>
 where
     S: Data<Elem = F>,
@@ -526,6 +537,7 @@ where
 }
 
 /// Get ADF critical values (simplified)
+#[allow(dead_code)]
 fn get_adf_critical_values<F>(_n: usize, regression: ADFRegression) -> Result<CriticalValues<F>>
 where
     F: Float + FromPrimitive,
@@ -553,6 +565,7 @@ where
 }
 
 /// Calculate ADF p-value (simplified)
+#[allow(dead_code)]
 fn calculate_adf_pvalue<F>(test_stat: F, n: usize, regression: ADFRegression) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -573,6 +586,7 @@ where
 }
 
 /// Get KPSS critical values
+#[allow(dead_code)]
 fn get_kpss_critical_values<F>(test_type: KPSSType) -> Result<CriticalValues<F>>
 where
     F: Float + FromPrimitive,
@@ -594,6 +608,7 @@ where
 }
 
 /// Calculate KPSS p-value (simplified)
+#[allow(dead_code)]
 fn calculate_kpss_pvalue<F>(test_stat: F, test_type: KPSSType) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -612,6 +627,7 @@ where
 }
 
 /// Simple matrix inversion using Gauss-Jordan elimination
+#[allow(dead_code)]
 fn matrix_inverse<F>(a: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + ScalarOperand,

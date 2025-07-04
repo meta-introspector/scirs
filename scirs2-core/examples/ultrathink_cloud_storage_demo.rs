@@ -16,7 +16,8 @@
 //! - Performance monitoring and analytics
 //! - Cost optimization strategies
 
-use scirs2_core::cloud_storage_backend::{
+use scirs2_core::error::{CoreError, CoreResult, ErrorContext};
+use scirs2_core::ultrathink_cloud_storage::{
     CloudCredentials, CloudProviderConfig, CloudProviderId, CloudProviderType,
     CloudStorageProvider, CostEstimate, CostOperation, CredentialType, DataStream, DeleteRequest,
     DeleteResponse, DownloadOptions, DownloadRequest, DownloadResponse, EncryptionAlgorithm,
@@ -25,7 +26,6 @@ use scirs2_core::cloud_storage_backend::{
     RetryStrategy, StreamOptions, StreamRequest, TransferPerformance, UltrathinkCloudConfig,
     UltrathinkCloudStorageCoordinator, UploadOptions, UploadRequest, UploadResponse,
 };
-use scirs2_core::error::{CoreError, CoreResult, ErrorContext};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -191,7 +191,7 @@ impl CloudStorageProvider for MockS3Provider {
             response_time: Duration::from_millis(50),
             error_rate: 0.001,
             available_regions: vec!["us-east-1".to_string(), "us-west-2".to_string()],
-            service_limits: scirs2_core::advanced_cloud_storage::ServiceLimits {
+            service_limits: scirs2_core::ultrathink_cloud_storage::ServiceLimits {
                 max_object_size: 5 * 1024 * 1024 * 1024 * 1024, // 5TB
                 max_request_rate: 3500,
                 max_bandwidth_mbps: 1000.0,
@@ -348,7 +348,7 @@ impl CloudStorageProvider for MockGCSProvider {
             response_time: Duration::from_millis(40),
             error_rate: 0.0005,
             available_regions: vec!["us-central1".to_string(), "europe-west1".to_string()],
-            service_limits: scirs2_core::advanced_cloud_storage::ServiceLimits {
+            service_limits: scirs2_core::ultrathink_cloud_storage::ServiceLimits {
                 max_object_size: 5 * 1024 * 1024 * 1024 * 1024, // 5TB
                 max_request_rate: 5000,
                 max_bandwidth_mbps: 1200.0,
@@ -534,14 +534,14 @@ impl UltrathinkCloudStorageDemo {
                 enable_encryption_in_transit: true,
                 enable_encryption_at_rest: true,
                 encryption_algorithm: EncryptionAlgorithm::AES256,
-                key_management: scirs2_core::advanced_cloud_storage::KeyManagement {
+                key_management: scirs2_core::ultrathink_cloud_storage::KeyManagement {
                     kms_provider: Some("AWS KMS".to_string()),
                     key_id: Some("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012".to_string()),
                     client_side_encryption: false,
                     key_rotation_interval_days: Some(30),
                 },
                 enable_signature_verification: true,
-                certificate_validation: scirs2_core::advanced_cloud_storage::CertificateValidation {
+                certificate_validation: scirs2_core::ultrathink_cloud_storage::CertificateValidation {
                     validate_chain: true,
                     validate_hostname: true,
                     custom_ca_certs: vec![],
@@ -587,7 +587,7 @@ impl UltrathinkCloudStorageDemo {
                 enable_encryption_in_transit: true,
                 enable_encryption_at_rest: true,
                 encryption_algorithm: EncryptionAlgorithm::AES256,
-                key_management: scirs2_core::advanced_cloud_storage::KeyManagement {
+                key_management: scirs2_core::ultrathink_cloud_storage::KeyManagement {
                     kms_provider: Some("Google Cloud KMS".to_string()),
                     key_id: Some(
                         "projects/my-project/locations/global/keyRings/my-ring/cryptoKeys/my-key"
@@ -598,7 +598,7 @@ impl UltrathinkCloudStorageDemo {
                 },
                 enable_signature_verification: true,
                 certificate_validation:
-                    scirs2_core::advanced_cloud_storage::CertificateValidation {
+                    scirs2_core::ultrathink_cloud_storage::CertificateValidation {
                         validate_chain: true,
                         validate_hostname: true,
                         custom_ca_certs: vec![],
@@ -639,7 +639,7 @@ impl UltrathinkCloudStorageDemo {
                 metadata.insert("type".to_string(), "scientific-data".to_string());
                 metadata
             },
-            storage_class: Some(scirs2_core::advanced_cloud_storage::StorageClass::Standard),
+            storage_class: Some(scirs2_core::ultrathink_cloud_storage::StorageClass::Standard),
             encryption: None,
             access_control: None,
             options: UploadOptions {
@@ -647,7 +647,7 @@ impl UltrathinkCloudStorageDemo {
                 chunk_size_mb: 8,
                 enable_compression: true,
                 compression_algorithm: Some(
-                    scirs2_core::advanced_cloud_storage::CompressionAlgorithm::Zstd,
+                    scirs2_core::ultrathink_cloud_storage::CompressionAlgorithm::Zstd,
                 ),
                 enable_checksums: true,
                 progress_callback_interval: Some(Duration::from_millis(500)),
@@ -719,7 +719,7 @@ impl UltrathinkCloudStorageDemo {
                 prefetch_size_mb: 128,
                 enable_adaptive_buffering: true,
                 enable_compression: true,
-                direction: scirs2_core::cloud_storage_backend::StreamDirection::Read,
+                direction: scirs2_core::ultrathink_cloud_storage::StreamDirection::Read,
             },
         };
 
@@ -784,7 +784,7 @@ impl UltrathinkCloudStorageDemo {
             data: test_data.clone(),
             content_type: Some("application/octet-stream".to_string()),
             metadata: HashMap::new(),
-            storage_class: Some(scirs2_core::advanced_cloud_storage::StorageClass::Standard),
+            storage_class: Some(scirs2_core::ultrathink_cloud_storage::StorageClass::Standard),
             encryption: None,
             access_control: None,
             options: UploadOptions {
@@ -792,7 +792,7 @@ impl UltrathinkCloudStorageDemo {
                 chunk_size_mb: 5,
                 enable_compression: true,
                 compression_algorithm: Some(
-                    scirs2_core::advanced_cloud_storage::CompressionAlgorithm::Gzip,
+                    scirs2_core::ultrathink_cloud_storage::CompressionAlgorithm::Gzip,
                 ),
                 enable_checksums: true,
                 progress_callback_interval: None,
@@ -877,7 +877,7 @@ impl UltrathinkCloudStorageDemo {
                 data: test_data,
                 content_type: Some("application/octet-stream".to_string()),
                 metadata: HashMap::new(),
-                storage_class: Some(scirs2_core::advanced_cloud_storage::StorageClass::Standard),
+                storage_class: Some(scirs2_core::ultrathink_cloud_storage::StorageClass::Standard),
                 encryption: None,
                 access_control: None,
                 options: UploadOptions {
@@ -885,7 +885,7 @@ impl UltrathinkCloudStorageDemo {
                     chunk_size_mb: 8,
                     enable_compression: true,
                     compression_algorithm: Some(
-                        scirs2_core::advanced_cloud_storage::CompressionAlgorithm::Adaptive,
+                        scirs2_core::ultrathink_cloud_storage::CompressionAlgorithm::Adaptive,
                     ),
                     enable_checksums: true,
                     progress_callback_interval: None,
@@ -930,7 +930,7 @@ impl UltrathinkCloudStorageDemo {
         println!("==========================");
 
         // Simulate cost analysis for different operations
-        let cost_operations = vec![
+        let cost_operations = [
             CostOperation {
                 operation_type: OperationType::Upload,
                 data_size_bytes: 1024 * 1024 * 1024, // 1GB
@@ -950,7 +950,7 @@ impl UltrathinkCloudStorageDemo {
                 data_size_bytes: 5 * 1024 * 1024 * 1024, // 5GB
                 request_count: 5000,
                 storage_duration_hours: None,
-                transfer_type: Some(scirs2_core::advanced_cloud_storage::TransferType::Outbound),
+                transfer_type: Some(scirs2_core::ultrathink_cloud_storage::TransferType::Outbound),
             },
         ];
 
@@ -1105,6 +1105,7 @@ impl UltrathinkCloudStorageDemo {
 }
 
 /// Generate test data with scientific computing patterns
+#[allow(dead_code)]
 fn generate_test_data(size: usize) -> Vec<u8> {
     let mut data = Vec::with_capacity(size);
 
@@ -1122,6 +1123,7 @@ fn generate_test_data(size: usize) -> Vec<u8> {
     data
 }
 
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     println!("🌟 Welcome to SciRS2 Ultrathink Cloud Storage!");
     println!("===============================================");

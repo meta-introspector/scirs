@@ -366,6 +366,7 @@ impl<F: Float + NumCast + Debug> Beta<F> {
 }
 
 // Calculate the beta function B(a,b) = Γ(a)Γ(b)/Γ(a+b)
+#[allow(dead_code)]
 fn beta_function<F: Float + NumCast>(a: F, b: F) -> F {
     let ga = gamma_fn(a);
     let gb = gamma_fn(b);
@@ -376,6 +377,7 @@ fn beta_function<F: Float + NumCast>(a: F, b: F) -> F {
 
 // Helper function to calculate the gamma function for a value
 // Uses the Lanczos approximation for gamma function
+#[allow(dead_code)]
 fn gamma_fn<F: Float + NumCast>(x: F) -> F {
     // Lanczos coefficients
     let p = [
@@ -415,6 +417,7 @@ fn gamma_fn<F: Float + NumCast>(x: F) -> F {
 }
 
 // Initial guess for beta distribution quantile function
+#[allow(dead_code)]
 fn initial_beta_quantile_guess<F: Float + NumCast>(p: F, alpha: F, beta: F) -> F {
     let zero = F::zero();
     let one = F::one();
@@ -467,6 +470,7 @@ fn initial_beta_quantile_guess<F: Float + NumCast>(p: F, alpha: F, beta: F) -> F
 }
 
 // Regularized incomplete beta function I_x(a,b)
+#[allow(dead_code)]
 fn regularized_incomplete_beta<F: Float + NumCast>(x: F, a: F, b: F) -> F {
     if x <= F::zero() {
         return F::zero();
@@ -548,6 +552,7 @@ fn regularized_incomplete_beta<F: Float + NumCast>(x: F, a: F, b: F) -> F {
 }
 
 // Simple approximation for the standard normal quantile function
+#[allow(dead_code)]
 fn normal_quantile_approx<F: Float + NumCast>(p: F) -> F {
     let half = F::from(0.5).unwrap();
 
@@ -579,6 +584,7 @@ fn normal_quantile_approx<F: Float + NumCast>(p: F) -> F {
 }
 
 // Helper function to calculate 1-p with higher precision
+#[allow(dead_code)]
 fn one_minus_p<F: Float>(p: F) -> F {
     if p < F::from(0.5).unwrap() {
         F::one() - p

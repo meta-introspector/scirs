@@ -35,6 +35,7 @@ use crate::solve::solve_multiple;
 /// let c = block_diag(&[&a.view(), &b.view()]).unwrap();
 /// // c is a 4x4 matrix with a in the top-left and b in the bottom-right
 /// ```
+#[allow(dead_code)]
 pub fn block_diag<F>(arrays: &[&ArrayView2<F>]) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -99,6 +100,7 @@ where
 /// let result = special::expm(&a.view(), None);
 /// assert!(result.is_ok());
 /// ```
+#[allow(dead_code)]
 pub fn expm<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync,
@@ -127,6 +129,7 @@ where
 /// let result = logm(&a.view());
 /// assert!(result.is_ok());
 /// ```
+#[allow(dead_code)]
 pub fn logm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -155,6 +158,7 @@ where
 /// let result = special::sqrtm(&a.view());
 /// assert!(result.is_ok());
 /// ```
+#[allow(dead_code)]
 pub fn sqrtm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -195,6 +199,7 @@ where
 /// assert!((sign_a[[0, 0]] - 1.0).abs() < 1e-8);
 /// assert!((sign_a[[1, 1]] - 1.0).abs() < 1e-8);
 /// ```
+#[allow(dead_code)]
 pub fn signm<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,

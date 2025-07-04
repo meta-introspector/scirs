@@ -5,6 +5,7 @@ use ndarray_rand::RandomExt;
 use scirs2_linalg::prelude::*;
 use std::hint::black_box;
 
+#[allow(dead_code)]
 fn bench_matmul_optimizations(c: &mut Criterion) {
     let sizes = [64, 128, 256, 512, 1024];
     let mut group = c.benchmark_group("matmul_optimizations");
@@ -50,6 +51,7 @@ fn bench_matmul_optimizations(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_inplace_operations(c: &mut Criterion) {
     let sizes = [128, 256, 512, 1024, 2048];
     let mut group = c.benchmark_group("inplace_operations");
@@ -97,6 +99,7 @@ fn bench_inplace_operations(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_transpose_optimizations(c: &mut Criterion) {
     let sizes = [128, 256, 512, 1024, 2048];
     let mut group = c.benchmark_group("transpose_optimizations");
@@ -122,6 +125,7 @@ fn bench_transpose_optimizations(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_parallel_vs_serial(c: &mut Criterion) {
     let sizes = [256, 512, 1024, 2048];
     let mut group = c.benchmark_group("parallel_vs_serial");

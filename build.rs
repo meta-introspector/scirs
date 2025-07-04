@@ -3,6 +3,7 @@
 
 use std::env;
 
+#[allow(dead_code)]
 fn main() {
     // Check if we're in a CI environment
     let is_ci = env::var("CI").is_ok() || env::var("GITHUB_ACTIONS").is_ok();

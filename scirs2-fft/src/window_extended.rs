@@ -39,6 +39,7 @@ pub enum ExtendedWindow {
 }
 
 /// Generate an extended window function
+#[allow(dead_code)]
 pub fn get_extended_window(window: ExtendedWindow, n: usize) -> FFTResult<Array1<f64>> {
     let mut w = Array1::zeros(n);
 
@@ -82,6 +83,7 @@ pub fn get_extended_window(window: ExtendedWindow, n: usize) -> FFTResult<Array1
 }
 
 /// Generate Chebyshev window
+#[allow(dead_code)]
 fn generate_chebyshev_window(w: &mut Array1<f64>, attenuation_db: f64) -> FFTResult<()> {
     let n = w.len();
     if attenuation_db <= 0.0 {
@@ -103,6 +105,7 @@ fn generate_chebyshev_window(w: &mut Array1<f64>, attenuation_db: f64) -> FFTRes
 }
 
 /// Generate Slepian (DPSS) window
+#[allow(dead_code)]
 fn generate_slepian_window(w: &mut Array1<f64>, width: f64) -> FFTResult<()> {
     let n = w.len();
     if width <= 0.0 || width >= 0.5 {
@@ -128,6 +131,7 @@ fn generate_slepian_window(w: &mut Array1<f64>, width: f64) -> FFTResult<()> {
 }
 
 /// Generate Lanczos window
+#[allow(dead_code)]
 fn generate_lanczos_window(w: &mut Array1<f64>) {
     let n = w.len();
     for i in 0..n {
@@ -141,6 +145,7 @@ fn generate_lanczos_window(w: &mut Array1<f64>) {
 }
 
 /// Generate Planck-taper window
+#[allow(dead_code)]
 fn generate_planck_taper_window(w: &mut Array1<f64>, epsilon: f64) -> FFTResult<()> {
     let n = w.len();
     if epsilon <= 0.0 || epsilon >= 0.5 {
@@ -164,6 +169,7 @@ fn generate_planck_taper_window(w: &mut Array1<f64>, epsilon: f64) -> FFTResult<
 }
 
 /// Generate Dolph-Chebyshev window
+#[allow(dead_code)]
 fn generate_dolph_chebyshev_window(w: &mut Array1<f64>, attenuation_db: f64) -> FFTResult<()> {
     // This is similar to Chebyshev but with different normalization
     generate_chebyshev_window(w, attenuation_db)?;
@@ -177,6 +183,7 @@ fn generate_dolph_chebyshev_window(w: &mut Array1<f64>, attenuation_db: f64) -> 
 }
 
 /// Generate Poisson window
+#[allow(dead_code)]
 fn generate_poisson_window(w: &mut Array1<f64>, alpha: f64) {
     let n = w.len();
     let half_n = n as f64 / 2.0;
@@ -188,6 +195,7 @@ fn generate_poisson_window(w: &mut Array1<f64>, alpha: f64) {
 }
 
 /// Generate Hann-Poisson window
+#[allow(dead_code)]
 fn generate_hann_poisson_window(w: &mut Array1<f64>, alpha: f64) {
     let n = w.len();
 
@@ -199,6 +207,7 @@ fn generate_hann_poisson_window(w: &mut Array1<f64>, alpha: f64) {
 }
 
 /// Generate Cauchy window
+#[allow(dead_code)]
 fn generate_cauchy_window(w: &mut Array1<f64>, alpha: f64) {
     let n = w.len();
     let center = (n - 1) as f64 / 2.0;
@@ -210,6 +219,7 @@ fn generate_cauchy_window(w: &mut Array1<f64>, alpha: f64) {
 }
 
 /// Generate Ultraspherical window
+#[allow(dead_code)]
 fn generate_ultraspherical_window(w: &mut Array1<f64>, mu: f64, x0: f64) -> FFTResult<()> {
     let n = w.len();
     if x0 <= 0.0 || x0 >= 1.0 {
@@ -232,6 +242,7 @@ fn generate_ultraspherical_window(w: &mut Array1<f64>, mu: f64, x0: f64) -> FFTR
 }
 
 /// Generate Taylor window
+#[allow(dead_code)]
 fn generate_taylor_window(
     w: &mut Array1<f64>,
     n_sidelobes: usize,
@@ -284,6 +295,7 @@ pub struct WindowProperties {
 }
 
 /// Analyze properties of a window function
+#[allow(dead_code)]
 pub fn analyze_window(
     window: &Array1<f64>,
     sample_rate: Option<f64>,
@@ -360,6 +372,7 @@ pub fn analyze_window(
 }
 
 /// Create a window visualization plot data
+#[allow(dead_code)]
 pub fn visualize_window(
     window: &Array1<f64>,
 ) -> FFTResult<(Array1<f64>, Array1<f64>, Array2<f64>)> {
@@ -397,6 +410,7 @@ pub fn visualize_window(
 }
 
 /// Compare multiple windows
+#[allow(dead_code)]
 pub fn compare_windows(
     windows: &[(String, Array1<f64>)],
 ) -> FFTResult<Vec<(String, WindowProperties)>> {

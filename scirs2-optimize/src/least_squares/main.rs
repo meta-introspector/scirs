@@ -155,6 +155,7 @@ impl Default for Options {
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn least_squares<F, J, D, S1, S2>(
     residuals: F,
     x0: &ArrayBase<S1, Ix1>,
@@ -181,6 +182,7 @@ where
 }
 
 /// Implements the Levenberg-Marquardt algorithm for least squares problems
+#[allow(dead_code)]
 fn least_squares_lm<F, J, D, S1, S2>(
     residuals: F,
     x0: &ArrayBase<S1, Ix1>,
@@ -384,6 +386,7 @@ where
 
 /// Simple linear system solver using Gaussian elimination
 /// For a real implementation, use a more robust approach
+#[allow(dead_code)]
 fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
     use scirs2_linalg::solve;
 
@@ -391,6 +394,7 @@ fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
 }
 
 /// Implements the Trust Region Reflective algorithm for least squares problems
+#[allow(dead_code)]
 fn least_squares_trf<F, J, D, S1, S2>(
     residuals: F,
     x0: &ArrayBase<S1, Ix1>,
@@ -575,6 +579,7 @@ where
 }
 
 /// Compute a trust-region step using the dogleg method
+#[allow(dead_code)]
 fn compute_trust_region_step(
     jt_j: &Array2<f64>,
     g: &Array1<f64>,
@@ -662,6 +667,7 @@ fn compute_trust_region_step(
 }
 
 /// Implements the Dogbox algorithm for bound-constrained least squares problems
+#[allow(dead_code)]
 fn least_squares_dogbox<F, J, D, S1, S2>(
     residuals: F,
     x0: &ArrayBase<S1, Ix1>,
@@ -899,6 +905,7 @@ where
 
 /// Compute dogbox step considering bounds and active constraints
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn compute_dogbox_step(
     jt_j: &Array2<f64>,
     g: &Array1<f64>,
@@ -997,6 +1004,7 @@ fn compute_dogbox_step(
 }
 
 /// Ensure step respects bounds and trust region
+#[allow(dead_code)]
 fn bound_step(
     step: &Array1<f64>,
     x: &Array1<f64>,

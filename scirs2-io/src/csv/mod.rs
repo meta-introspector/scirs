@@ -81,6 +81,7 @@ impl Default for CsvReaderConfig {
 /// };
 /// let (_, data) = read_csv("data.csv", Some(config)).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn read_csv<P: AsRef<Path>>(
     path: P,
     config: Option<CsvReaderConfig>,
@@ -174,6 +175,7 @@ pub fn read_csv<P: AsRef<Path>>(
 }
 
 /// Parse a CSV line into fields
+#[allow(dead_code)]
 fn parse_csv_line(line: &str, config: &CsvReaderConfig) -> Vec<String> {
     let mut fields = Vec::new();
     let mut field = String::new();
@@ -237,6 +239,7 @@ fn parse_csv_line(line: &str, config: &CsvReaderConfig) -> Vec<String> {
 /// let (headers, data) = read_csv_numeric("data.csv", None).unwrap();
 /// println!("Numeric data shape: {:?}", data.shape());
 /// ```
+#[allow(dead_code)]
 pub fn read_csv_numeric<P: AsRef<Path>>(
     path: P,
     config: Option<CsvReaderConfig>,
@@ -416,6 +419,7 @@ impl std::fmt::Display for DataValue {
 }
 
 /// Automatically detect column types from data
+#[allow(dead_code)]
 pub fn detect_column_types(data: &Array2<String>) -> Vec<ColumnType> {
     let (rows, cols) = (data.shape()[0], data.shape()[1]);
 
@@ -524,6 +528,7 @@ pub fn detect_column_types(data: &Array2<String>) -> Vec<ColumnType> {
 }
 
 /// Parse a complex number from string like "3+4i", "-1-2i"
+#[allow(dead_code)]
 fn parse_complex(s: &str) -> Option<Complex64> {
     // Common complex number formats:
     // 1. "a+bi" or "a-bi" - standard form
@@ -597,6 +602,7 @@ fn parse_complex(s: &str) -> Option<Complex64> {
 }
 
 /// Convert a string to a specified type with missing value handling
+#[allow(dead_code)]
 fn convert_value(
     value: &str,
     col_type: ColumnType,
@@ -725,6 +731,7 @@ fn convert_value(
 /// };
 /// write_csv("output_custom.csv", &data, Some(&headers), Some(config)).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn write_csv<P: AsRef<Path>, T: std::fmt::Display>(
     path: P,
     data: &Array2<T>,
@@ -784,6 +791,7 @@ pub fn write_csv<P: AsRef<Path>, T: std::fmt::Display>(
 }
 
 /// Format a row as a CSV line
+#[allow(dead_code)]
 fn format_csv_line(fields: &[String], config: &CsvWriterConfig) -> String {
     let mut result = String::new();
 
@@ -858,6 +866,7 @@ fn format_csv_line(fields: &[String], config: &CsvWriterConfig) -> String {
 /// };
 /// let (headers, data) = read_csv_typed("data.csv", None, None, Some(missing_opts)).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn read_csv_typed<P: AsRef<Path>>(
     path: P,
     config: Option<CsvReaderConfig>,
@@ -936,6 +945,7 @@ pub fn read_csv_typed<P: AsRef<Path>>(
 ///
 /// println!("Total rows processed: {}", total_rows);
 /// ```
+#[allow(dead_code)]
 pub fn read_csv_chunked<P, F>(
     path: P,
     config: Option<CsvReaderConfig>,
@@ -1021,6 +1031,7 @@ where
 }
 
 /// Helper function to process a chunk of data
+#[allow(dead_code)]
 fn process_chunk<F>(
     headers: &[String],
     buffer: &mut Vec<Vec<String>>,
@@ -1086,6 +1097,7 @@ where
 ///
 /// write_csv_typed("typed_data.csv", &data, Some(&headers), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn write_csv_typed<P: AsRef<Path>>(
     path: P,
     data: &[Vec<DataValue>],
@@ -1194,6 +1206,7 @@ pub fn write_csv_typed<P: AsRef<Path>>(
 ///
 /// write_csv_columns("columns.csv", &columns, Some(&headers), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn write_csv_columns<P: AsRef<Path>, T: std::fmt::Display + Clone>(
     path: P,
     columns: &[Array1<T>],
@@ -1444,6 +1457,7 @@ impl<R: BufRead> StreamingCsvReader<R> {
 }
 
 /// Create a streaming CSV reader from a file path
+#[allow(dead_code)]
 pub fn streaming_reader_from_file<P: AsRef<Path>>(
     path: P,
     config: StreamingCsvConfig,
@@ -1471,6 +1485,7 @@ pub struct StreamingStats {
 }
 
 /// Process a CSV file in streaming mode with a custom function
+#[allow(dead_code)]
 pub fn process_csv_streaming<P: AsRef<Path>, F, R>(
     path: P,
     config: StreamingCsvConfig,
@@ -1522,6 +1537,7 @@ where
 }
 
 /// Process a CSV file in parallel streaming mode
+#[allow(dead_code)]
 pub fn process_csv_streaming_parallel<P: AsRef<Path>, F, R>(
     path: P,
     config: StreamingCsvConfig,
@@ -1598,6 +1614,7 @@ where
 }
 
 /// Convert CSV chunks to numeric data in streaming mode
+#[allow(dead_code)]
 pub fn read_csv_numeric_streaming<P: AsRef<Path>>(
     path: P,
     config: StreamingCsvConfig,
@@ -1635,6 +1652,7 @@ pub fn read_csv_numeric_streaming<P: AsRef<Path>>(
 }
 
 /// Aggregate statistics across CSV chunks
+#[allow(dead_code)]
 pub fn aggregate_csv_statistics<P: AsRef<Path>>(
     path: P,
     config: StreamingCsvConfig,

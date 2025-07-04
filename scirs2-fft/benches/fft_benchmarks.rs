@@ -10,6 +10,7 @@ use scirs2_fft::{fft, fft2, fftn, frft, ifft, irfft, rfft};
 use std::f64::consts::PI;
 
 /// Benchmark basic 1D FFT operations
+#[allow(dead_code)]
 fn bench_fft_1d(c: &mut Criterion) {
     let mut group = c.benchmark_group("FFT-1D");
 
@@ -56,6 +57,7 @@ fn bench_fft_1d(c: &mut Criterion) {
 }
 
 /// Benchmark 2D FFT operations
+#[allow(dead_code)]
 fn bench_fft_2d(c: &mut Criterion) {
     let mut group = c.benchmark_group("FFT-2D");
 
@@ -97,6 +99,7 @@ fn bench_fft_2d(c: &mut Criterion) {
 }
 
 /// Benchmark Fractional Fourier Transform
+#[allow(dead_code)]
 fn bench_frft(c: &mut Criterion) {
     let mut group = c.benchmark_group("FrFT");
 
@@ -123,6 +126,7 @@ fn bench_frft(c: &mut Criterion) {
 }
 
 /// Benchmark memory-efficient FFT operations
+#[allow(dead_code)]
 fn bench_memory_efficient(c: &mut Criterion) {
     // Memory efficient FFT mode is used inline below
 

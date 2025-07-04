@@ -9,6 +9,7 @@ use scirs2_stats::{
     property_based_validation::*, scipy_benchmark_framework::*,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SciRS2 Comprehensive Validation Framework Demo");
     println!("================================================\n");

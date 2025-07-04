@@ -5,7 +5,7 @@
 
 use ndarray::{Array1, Array2, ArrayView2};
 use num_traits::{Float, NumAssign};
-use rand::Rng;
+use rand::{self, Rng};
 use std::iter::Sum;
 
 use crate::error::{LinalgError, LinalgResult};
@@ -42,6 +42,7 @@ use crate::norm::vector_norm;
 /// assert!((eigenvalues[0] - 4.618).abs() < 1e-1);
 /// assert!((eigenvalues[1] - 2.382).abs() < 1e-1);
 /// ```
+#[allow(dead_code)]
 pub fn largest_k_eigh<F>(
     a: &ArrayView2<F>,
     k: usize,
@@ -152,6 +153,7 @@ where
 /// assert!((eigenvalues[0] - 2.0).abs() < 1e-1);
 /// assert!((eigenvalues[1] - 2.382).abs() < 1e-1);
 /// ```
+#[allow(dead_code)]
 pub fn smallest_k_eigh<F>(
     a: &ArrayView2<F>,
     k: usize,
@@ -249,6 +251,7 @@ where
 /// # Returns
 ///
 /// * Tuple (eigenvalue, eigenvector)
+#[allow(dead_code)]
 fn power_iteration_with_convergence<F>(
     a: &ArrayView2<F>,
     max_iter: usize,

@@ -97,6 +97,7 @@ where
 // =============================================================================
 
 /// Calculate temporal pattern features
+#[allow(dead_code)]
 pub fn calculate_temporal_pattern_features<F>(
     ts: &Array1<F>,
     motif_length: Option<usize>,
@@ -154,6 +155,7 @@ where
 /// # Returns
 ///
 /// * Vector of discovered motifs with their locations and frequencies
+#[allow(dead_code)]
 pub fn discover_motifs<F>(
     ts: &Array1<F>,
     motif_length: usize,
@@ -279,6 +281,7 @@ where
 /// # Returns
 ///
 /// * Array of discord scores for each position
+#[allow(dead_code)]
 pub fn calculate_discord_scores<F>(
     ts: &Array1<F>,
     discord_length: usize,
@@ -342,6 +345,7 @@ where
 /// # Returns
 ///
 /// * Vector of SAX symbols
+#[allow(dead_code)]
 pub fn time_series_to_sax<F>(
     ts: &Array1<F>,
     word_length: usize,
@@ -428,6 +432,7 @@ where
 /// # Returns
 ///
 /// * Vector of discovered shapelets
+#[allow(dead_code)]
 pub fn extract_shapelets<F>(
     ts_class1: &[Array1<F>],
     ts_class2: &[Array1<F>],
@@ -482,6 +487,7 @@ where
 // =============================================================================
 
 /// Calculate information gain for a shapelet candidate
+#[allow(dead_code)]
 fn calculate_shapelet_information_gain<F>(
     shapelet: &Array1<F>,
     ts_class1: &[Array1<F>],
@@ -563,6 +569,7 @@ where
 }
 
 /// Find minimum distance from a time series to a shapelet
+#[allow(dead_code)]
 fn find_min_distance_to_shapelet<F>(ts: &Array1<F>, shapelet: &Array1<F>) -> F
 where
     F: Float + FromPrimitive,
@@ -593,6 +600,7 @@ where
 }
 
 /// Calculate distance matrix for time series subsequences
+#[allow(dead_code)]
 pub fn calculate_distance_matrix<F>(ts: &Array1<F>, subsequence_length: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -619,6 +627,7 @@ where
 }
 
 /// Find nearest neighbors for each subsequence
+#[allow(dead_code)]
 pub fn find_nearest_neighbors<F>(distance_matrix: &Array2<F>, k: usize) -> Result<Vec<Vec<usize>>>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -648,6 +657,7 @@ where
 }
 
 /// Calculate local intrinsic dimensionality for each subsequence
+#[allow(dead_code)]
 pub fn calculate_local_intrinsic_dimensionality<F>(
     distance_matrix: &Array2<F>,
     k: usize,

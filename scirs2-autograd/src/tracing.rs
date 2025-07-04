@@ -764,6 +764,7 @@ pub enum TracingError {
 
 /// Global API functions
 /// Initialize the global tracer
+#[allow(dead_code)]
 pub fn init_tracer() -> Arc<Mutex<ExecutionTracer>> {
     GLOBAL_TRACER
         .get_or_init(|| Arc::new(Mutex::new(ExecutionTracer::new())))
@@ -771,6 +772,7 @@ pub fn init_tracer() -> Arc<Mutex<ExecutionTracer>> {
 }
 
 /// Configure global tracing
+#[allow(dead_code)]
 pub fn configure_tracing(config: TracingConfig) -> Result<(), TracingError> {
     let tracer = init_tracer();
     let mut tracer_guard = tracer
@@ -781,6 +783,7 @@ pub fn configure_tracing(config: TracingConfig) -> Result<(), TracingError> {
 }
 
 /// Start a new trace session
+#[allow(dead_code)]
 pub fn start_trace_session(name: &str) -> Result<TraceSessionId, TracingError> {
     let tracer = init_tracer();
     let mut tracer_guard = tracer
@@ -790,6 +793,7 @@ pub fn start_trace_session(name: &str) -> Result<TraceSessionId, TracingError> {
 }
 
 /// End the current trace session
+#[allow(dead_code)]
 pub fn end_trace_session() -> Result<Option<TraceRecord>, TracingError> {
     let tracer = init_tracer();
     let mut tracer_guard = tracer
@@ -799,6 +803,7 @@ pub fn end_trace_session() -> Result<Option<TraceRecord>, TracingError> {
 }
 
 /// Record an operation execution
+#[allow(dead_code)]
 pub fn trace_operation<F: Float>(
     op_name: &str,
     inputs: &[&Tensor<F>],
@@ -814,6 +819,7 @@ pub fn trace_operation<F: Float>(
 }
 
 /// Get performance analysis
+#[allow(dead_code)]
 pub fn get_performance_analysis() -> Result<PerformanceAnalysis, TracingError> {
     let tracer = init_tracer();
     let tracer_guard = tracer
@@ -823,6 +829,7 @@ pub fn get_performance_analysis() -> Result<PerformanceAnalysis, TracingError> {
 }
 
 /// Export traces to a file
+#[allow(dead_code)]
 pub fn export_traces(format: ExportFormat) -> Result<String, TracingError> {
     let tracer = init_tracer();
     let tracer_guard = tracer
@@ -832,6 +839,7 @@ pub fn export_traces(format: ExportFormat) -> Result<String, TracingError> {
 }
 
 /// Enable or disable tracing globally
+#[allow(dead_code)]
 pub fn set_tracing_enabled(enabled: bool) -> Result<(), TracingError> {
     let config = TracingConfig {
         trace_operations: enabled,

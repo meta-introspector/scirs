@@ -24,6 +24,7 @@ use std::time::Duration;
 use scirs2_ndimage::filters::{bilateral_filter_simd_f32, bilateral_filter_simd_f64};
 
 /// Benchmark generic filter with different functions
+#[allow(dead_code)]
 fn bench_generic_filter(c: &mut Criterion) {
     let mut group = c.benchmark_group("generic_filter");
     group.measurement_time(Duration::from_secs(10));
@@ -94,6 +95,7 @@ fn bench_generic_filter(c: &mut Criterion) {
 }
 
 /// Benchmark standard filters for comparison
+#[allow(dead_code)]
 fn bench_standard_filters(c: &mut Criterion) {
     let mut group = c.benchmark_group("standard_filters");
     group.measurement_time(Duration::from_secs(10));
@@ -125,6 +127,7 @@ fn bench_standard_filters(c: &mut Criterion) {
 }
 
 /// Benchmark bilateral filter with and without SIMD
+#[allow(dead_code)]
 fn bench_bilateral_filter(c: &mut Criterion) {
     let mut group = c.benchmark_group("bilateral_filter");
     group.measurement_time(Duration::from_secs(10));
@@ -153,6 +156,7 @@ fn bench_bilateral_filter(c: &mut Criterion) {
 }
 
 /// Benchmark different border modes
+#[allow(dead_code)]
 fn bench_border_modes(c: &mut Criterion) {
     let mut group = c.benchmark_group("border_modes");
     group.measurement_time(Duration::from_secs(10));
@@ -190,6 +194,7 @@ fn bench_border_modes(c: &mut Criterion) {
 }
 
 /// Benchmark different dimensionalities
+#[allow(dead_code)]
 fn bench_dimensionalities(c: &mut Criterion) {
     let mut group = c.benchmark_group("dimensionalities");
     group.measurement_time(Duration::from_secs(10));
@@ -243,6 +248,7 @@ fn bench_dimensionalities(c: &mut Criterion) {
 }
 
 /// Benchmark edge detection filters: optimized vs standard
+#[allow(dead_code)]
 fn bench_edge_detection(c: &mut Criterion) {
     let mut group = c.benchmark_group("edge_detection");
     group.measurement_time(Duration::from_secs(10));
@@ -321,6 +327,7 @@ fn bench_edge_detection(c: &mut Criterion) {
 }
 
 /// Benchmark performance characteristics and scaling behavior
+#[allow(dead_code)]
 fn bench_performance_characteristics(c: &mut Criterion) {
     let mut group = c.benchmark_group("performance_characteristics");
     group.measurement_time(Duration::from_secs(10));
@@ -356,6 +363,7 @@ fn bench_performance_characteristics(c: &mut Criterion) {
 }
 
 /// Benchmark memory vs computation trade-offs
+#[allow(dead_code)]
 fn bench_memory_computation_tradeoffs(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_computation_tradeoffs");
     group.measurement_time(Duration::from_secs(8));
@@ -389,6 +397,7 @@ fn bench_memory_computation_tradeoffs(c: &mut Criterion) {
 }
 
 /// Benchmark different data type performance
+#[allow(dead_code)]
 fn bench_data_type_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("data_type_performance");
     group.measurement_time(Duration::from_secs(8));
@@ -419,6 +428,7 @@ fn bench_data_type_performance(c: &mut Criterion) {
 }
 
 /// Benchmark cache efficiency with different access patterns
+#[allow(dead_code)]
 fn bench_cache_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("cache_efficiency");
     group.measurement_time(Duration::from_secs(8));
@@ -449,6 +459,7 @@ fn bench_cache_efficiency(c: &mut Criterion) {
 
 /// Benchmark parallel vs sequential performance
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn bench_parallel_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_performance");
     group.measurement_time(Duration::from_secs(10));

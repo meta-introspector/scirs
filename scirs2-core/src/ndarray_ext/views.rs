@@ -39,6 +39,7 @@ pub enum Order {
 /// assert_eq!(view[[1, 0]], 9);
 /// assert_eq!(view[[1, 1]], 11);
 /// ```
+#[allow(dead_code)]
 pub fn strided_view<D, T>(
     array: ArrayView<T, D>,
     step: &[usize],
@@ -112,6 +113,7 @@ where
 /// let b = as_layout(a.view(), Order::F);
 /// assert_eq!(b.shape(), &[2, 2]);
 /// ```
+#[allow(dead_code)]
 pub fn as_layout<D, T>(array: ArrayView<T, D>, order: Order) -> Array<T, D>
 where
     D: Dimension,
@@ -153,6 +155,7 @@ where
 /// assert_eq!(b[[0, 1]], 2);
 /// assert_eq!(b[[1, 0]], 1);
 /// ```
+#[allow(dead_code)]
 pub fn broadcast_to<D1, D2, T>(
     array: ArrayView<T, D1>,
     shape: D2,

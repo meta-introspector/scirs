@@ -173,6 +173,7 @@ where
 }
 
 /// Update learning rate according to schedule
+#[allow(dead_code)]
 pub fn update_learning_rate(
     initial_lr: f64,
     epoch: usize,
@@ -203,6 +204,7 @@ pub fn update_learning_rate(
 }
 
 /// Clip gradients to prevent exploding gradients
+#[allow(dead_code)]
 pub fn clip_gradients(gradient: &mut Array1<f64>, max_norm: f64) {
     let grad_norm = gradient.mapv(|x| x * x).sum().sqrt();
     if grad_norm > max_norm {
@@ -212,6 +214,7 @@ pub fn clip_gradients(gradient: &mut Array1<f64>, max_norm: f64) {
 }
 
 /// Generate random batch indices
+#[allow(dead_code)]
 pub fn generate_batch_indices(num_samples: usize, batch_size: usize, shuffle: bool) -> Vec<usize> {
     let mut indices: Vec<usize> = (0..num_samples).collect();
 
@@ -225,6 +228,7 @@ pub fn generate_batch_indices(num_samples: usize, batch_size: usize, shuffle: bo
 }
 
 /// Main stochastic optimization function
+#[allow(dead_code)]
 pub fn minimize_stochastic<F>(
     method: StochasticMethod,
     grad_func: F,
@@ -311,6 +315,7 @@ where
 }
 
 /// Create stochastic options optimized for specific problem types
+#[allow(dead_code)]
 pub fn create_stochastic_options_for_problem(
     problem_type: &str,
     dataset_size: usize,

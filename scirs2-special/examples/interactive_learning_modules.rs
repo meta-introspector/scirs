@@ -71,6 +71,7 @@ impl LearningProgress {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎓 Interactive Learning Modules for Special Functions");
     println!("=====================================================\n");
@@ -103,6 +104,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_main_menu(progress: &LearningProgress) {
     println!("📚 Choose a learning module:");
     println!("1. 🌟 Fundamentals of Special Functions");
@@ -128,6 +130,7 @@ fn display_main_menu(progress: &LearningProgress) {
     println!();
 }
 
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> io::Result<String> {
     print!("{}", prompt);
     io::stdout().flush()?;
@@ -136,6 +139,7 @@ fn get_user_input(prompt: &str) -> io::Result<String> {
     Ok(input.trim().to_string())
 }
 
+#[allow(dead_code)]
 fn fundamentals_module(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌟 FUNDAMENTALS OF SPECIAL FUNCTIONS");
     println!("====================================\n");
@@ -217,6 +221,7 @@ fn fundamentals_module(progress: &mut LearningProgress) -> Result<(), Box<dyn st
     Ok(())
 }
 
+#[allow(dead_code)]
 fn gamma_function_deep_dive(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -319,6 +324,7 @@ fn gamma_function_deep_dive(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bessel_functions_masterclass(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -388,6 +394,7 @@ fn bessel_functions_masterclass(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn probability_and_statistics_module(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -441,6 +448,7 @@ fn probability_and_statistics_module(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn physics_applications_module(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -478,6 +486,7 @@ fn physics_applications_module(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn engineering_problems_module(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -515,6 +524,7 @@ fn engineering_problems_module(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn advanced_topics_module(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -560,6 +570,7 @@ fn advanced_topics_module(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn custom_challenge_mode(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -598,11 +609,13 @@ fn custom_challenge_mode(
 
 // Implementation of supporting functions
 
+#[allow(dead_code)]
 fn pause_for_user() {
     println!("\nPress Enter to continue...");
     let _ = io::stdin().read_line(&mut String::new());
 }
 
+#[allow(dead_code)]
 fn fundamentals_quiz() -> Result<f64, Box<dyn std::error::Error>> {
     println!("\n🧠 Fundamentals Quiz");
     println!("===================\n");
@@ -676,6 +689,7 @@ fn fundamentals_quiz() -> Result<f64, Box<dyn std::error::Error>> {
     Ok(score)
 }
 
+#[allow(dead_code)]
 fn series_approximation_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧮 Interactive Series Demonstration");
     println!("===================================\n");
@@ -712,10 +726,12 @@ fn series_approximation_demo() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn factorial(n: u32) -> u64 {
     (1..=n as u64).product()
 }
 
+#[allow(dead_code)]
 fn series_convergence_exercise(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -754,6 +770,7 @@ fn series_convergence_exercise(
 // Additional quiz and demo functions would be implemented similarly...
 // For brevity, I'll implement a few key ones:
 
+#[allow(dead_code)]
 fn gamma_related_functions_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("Exploring gamma-related functions at x = 2.5:");
     let x = 2.5;
@@ -770,6 +787,7 @@ fn gamma_related_functions_demo() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn gamma_function_quiz() -> Result<f64, Box<dyn std::error::Error>> {
     println!("\n🧠 Gamma Function Quiz");
     println!("=====================\n");
@@ -821,6 +839,7 @@ fn gamma_function_quiz() -> Result<f64, Box<dyn std::error::Error>> {
     Ok(score)
 }
 
+#[allow(dead_code)]
 fn stirling_approximation_exercise(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -846,6 +865,7 @@ fn stirling_approximation_exercise(
 }
 
 // Implement stubs for remaining functions to make the code compile
+#[allow(dead_code)]
 fn bessel_oscillation_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("Demonstrating Bessel function oscillations...");
     // Implementation would show oscillatory behavior
@@ -853,6 +873,7 @@ fn bessel_oscillation_demo() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn vibrating_membrane_problem(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -862,6 +883,7 @@ fn vibrating_membrane_problem(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn cylindrical_heat_conduction_problem(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -871,23 +893,27 @@ fn cylindrical_heat_conduction_problem(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bessel_functions_quiz() -> Result<f64, Box<dyn std::error::Error>> {
     println!("Bessel Functions Quiz - simplified version");
     Ok(0.85) // Placeholder score
 }
 
+#[allow(dead_code)]
 fn probability_calculator_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("Probability calculator demonstration...");
     pause_for_user();
     Ok(())
 }
 
+#[allow(dead_code)]
 fn gamma_distribution_family_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("Gamma distribution family demonstration...");
     pause_for_user();
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bayesian_analysis_workshop(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -897,12 +923,14 @@ fn bayesian_analysis_workshop(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn statistics_quiz() -> Result<f64, Box<dyn std::error::Error>> {
     println!("Statistics Quiz - simplified version");
     Ok(0.80) // Placeholder score
 }
 
 // Stub implementations for remaining functions
+#[allow(dead_code)]
 fn quantum_mechanics_hydrogen_atom(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -912,6 +940,7 @@ fn quantum_mechanics_hydrogen_atom(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn electromagnetic_multipoles(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -921,6 +950,7 @@ fn electromagnetic_multipoles(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn statistical_mechanics_distributions(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -930,11 +960,13 @@ fn statistical_mechanics_distributions(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn physics_quiz() -> Result<f64, Box<dyn std::error::Error>> {
     println!("Physics Quiz - simplified version");
     Ok(0.90) // Placeholder score
 }
 
+#[allow(dead_code)]
 fn signal_processing_filters(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -944,6 +976,7 @@ fn signal_processing_filters(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn control_systems_analysis(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -953,6 +986,7 @@ fn control_systems_analysis(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn structural_vibration_analysis(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -962,17 +996,20 @@ fn structural_vibration_analysis(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn engineering_quiz() -> Result<f64, Box<dyn std::error::Error>> {
     println!("Engineering Quiz - simplified version");
     Ok(0.88) // Placeholder score
 }
 
+#[allow(dead_code)]
 fn research_frontiers_overview() -> Result<(), Box<dyn std::error::Error>> {
     println!("Current research frontiers overview...");
     pause_for_user();
     Ok(())
 }
 
+#[allow(dead_code)]
 fn computational_challenges_workshop(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -982,6 +1019,7 @@ fn computational_challenges_workshop(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn interdisciplinary_applications(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -991,11 +1029,13 @@ fn interdisciplinary_applications(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn advanced_topics_quiz() -> Result<f64, Box<dyn std::error::Error>> {
     println!("Advanced Topics Quiz - simplified version");
     Ok(0.85) // Placeholder score
 }
 
+#[allow(dead_code)]
 fn beginner_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
     println!("Beginner challenge...");
     progress.complete_exercise("Beginner Challenge");
@@ -1003,6 +1043,7 @@ fn beginner_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn intermediate_challenge(
     progress: &mut LearningProgress,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1012,6 +1053,7 @@ fn intermediate_challenge(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn advanced_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
     println!("Advanced challenge...");
     progress.complete_exercise("Advanced Challenge");
@@ -1019,6 +1061,7 @@ fn advanced_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn random_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
     println!("Random challenge...");
     progress.complete_exercise("Random Challenge");
@@ -1026,6 +1069,7 @@ fn random_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std::
     Ok(())
 }
 
+#[allow(dead_code)]
 fn ultimate_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std::error::Error>> {
     println!("Ultimate challenge...");
     progress.complete_exercise("Ultimate Challenge");
@@ -1033,6 +1077,7 @@ fn ultimate_challenge(progress: &mut LearningProgress) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn show_challenge_statistics(progress: &LearningProgress) {
     println!("\n📊 Challenge Statistics");
     println!("=======================");

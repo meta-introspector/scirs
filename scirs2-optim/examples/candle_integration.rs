@@ -103,6 +103,7 @@ impl CandleOptimizerBridge {
 }
 
 /// Training loop implementation
+#[allow(dead_code)]
 fn train_model() -> CandleResult<()> {
     println!("🚀 Starting Candle + SciRS2 Integration Example");
 
@@ -168,6 +169,7 @@ fn train_model() -> CandleResult<()> {
 }
 
 /// Advanced example with custom loss function and regularization
+#[allow(dead_code)]
 fn advanced_training_example() -> CandleResult<()> {
     println!("\n🔬 Advanced Training Example with Custom Components");
 
@@ -271,6 +273,7 @@ fn advanced_training_example() -> CandleResult<()> {
 }
 
 /// Transfer learning example
+#[allow(dead_code)]
 fn transfer_learning_example() -> CandleResult<()> {
     println!("\n🔄 Transfer Learning Example");
 
@@ -305,6 +308,7 @@ fn transfer_learning_example() -> CandleResult<()> {
 }
 
 /// Benchmark comparison with pure Candle optimizers
+#[allow(dead_code)]
 fn benchmark_comparison() -> CandleResult<()> {
     println!("\n⚡ Performance Benchmark: SciRS2 vs Pure Candle");
 
@@ -347,6 +351,7 @@ fn benchmark_comparison() -> CandleResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> CandleResult<()> {
     println!("🎯 Candle + SciRS2 Optimization Integration Examples\n");
 

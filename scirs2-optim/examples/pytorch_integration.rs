@@ -201,6 +201,7 @@ impl PyTorchSciRS2Optimizer {
 
 /// Training example with PyTorch model
 #[pyfunction]
+#[allow(dead_code)]
 fn train_pytorch_model(py: Python) -> PyResult<()> {
     println!("🚀 PyTorch + SciRS2 Training Example");
 
@@ -294,6 +295,7 @@ model, criterion, x, y
 
 /// Advanced training example with multiple optimizers
 #[pyfunction]
+#[allow(dead_code)]
 fn advanced_pytorch_training(py: Python) -> PyResult<()> {
     println!("\n🔬 Advanced PyTorch Training with Multiple Optimizers");
 
@@ -363,6 +365,7 @@ model
 
 /// Transfer learning example
 #[pyfunction]
+#[allow(dead_code)]
 fn transfer_learning_example(py: Python) -> PyResult<()> {
     println!("\n🔄 Transfer Learning with SciRS2 Optimizers");
 
@@ -414,6 +417,7 @@ model
 
 /// Benchmark different optimizers
 #[pyfunction]
+#[allow(dead_code)]
 fn benchmark_optimizers(py: Python) -> PyResult<()> {
     println!("\n⚡ Optimizer Performance Benchmark");
 
@@ -439,6 +443,7 @@ fn benchmark_optimizers(py: Python) -> PyResult<()> {
 
 /// Example with gradient accumulation
 #[pyfunction]
+#[allow(dead_code)]
 fn gradient_accumulation_example(py: Python) -> PyResult<()> {
     println!("\n🔄 Gradient Accumulation Example");
 
@@ -500,6 +505,7 @@ model, criterion
 
 /// Python module definition
 #[pymodule]
+#[allow(dead_code)]
 fn pytorch_scirs2(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyTorchSciRS2Optimizer>()?;
     m.add_function(wrap_pyfunction!(train_pytorch_model, m)?)?;
@@ -511,6 +517,7 @@ fn pytorch_scirs2(_py: Python, m: &PyModule) -> PyResult<()> {
 }
 
 /// Main function for standalone execution
+#[allow(dead_code)]
 fn main() -> PyResult<()> {
     Python::with_gil(|py| {
         println!("🎯 PyTorch + SciRS2 Integration Examples\n");

@@ -1186,6 +1186,7 @@ impl Sequential {
 }
 
 /// Example function to create a simple CNN model.
+#[allow(dead_code)]
 pub fn create_simple_cnn(input_shape: (usize, usize, usize), num_classes: usize) -> Sequential {
     let (height, width, channels) = input_shape;
 

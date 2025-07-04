@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::f32::consts::PI;
 
 // Generate a spiral dataset for multi-class classification
+#[allow(dead_code)]
 fn generate_spiral_dataset(
     n_samples: usize,
     n_classes: usize,
@@ -41,6 +42,7 @@ fn generate_spiral_dataset(
     (x, y)
 }
 // Create a simple classification model
+#[allow(dead_code)]
 fn create_classification_model(
     input_dim: usize,
     hidden_dim: usize,
@@ -58,6 +60,7 @@ fn create_classification_model(
     model.add_layer(dense3);
     Ok(model)
 // Convert one-hot encoded predictions to class indices
+#[allow(dead_code)]
 fn predictions_to_classes(
     predictions: &ndarray::ArrayBase<ndarray::OwnedRepr<f32>, ndarray::Dim<ndarray::IxDynImpl>>,
 ) -> Array1<usize> {
@@ -79,6 +82,7 @@ fn predictions_to_classes(
         classes[i] = max_idx;
     classes
 // Helper to convert class indices to one-hot encoded vectors
+#[allow(dead_code)]
 fn one_hot_encode(y: &Array1<usize>, n_classes: usize) -> Array2<f32> {
     let n_samples = y.len();
     let mut one_hot = Array2::zeros((n_samples, n_classes));
@@ -86,6 +90,7 @@ fn one_hot_encode(y: &Array1<usize>, n_classes: usize) -> Array2<f32> {
         if class_idx < n_classes {
             one_hot[[i, class_idx]] = 1.0;
     one_hot
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Neural Network Confusion Matrix Visualization");
     println!("==============================================\n");

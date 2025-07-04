@@ -6,6 +6,7 @@ use rand::prelude::*;
 use rand::rngs::StdRng;
 
 // Simplified test for bounds behavior
+#[allow(dead_code)]
 fn test_bounds_enforcement() {
     println!("Testing Basin-hopping bounds enforcement...");
     
@@ -46,6 +47,7 @@ fn test_bounds_enforcement() {
     println!("✓ Bounds are properly enforced during perturbation");
 }
 
+#[allow(dead_code)]
 fn main() {
     test_bounds_enforcement();
 }

@@ -92,6 +92,7 @@ impl AutoPadConfig {
 }
 
 /// Automatically pad a 1D array for optimal FFT performance
+#[allow(dead_code)]
 pub fn auto_pad_1d<T>(x: &Array1<T>, config: &AutoPadConfig) -> FFTResult<Array1<T>>
 where
     T: Clone + Zero,
@@ -234,6 +235,7 @@ where
 }
 
 /// Automatically pad a complex array for optimal FFT performance
+#[allow(dead_code)]
 pub fn auto_pad_complex(
     x: &Array1<Complex<f64>>,
     config: &AutoPadConfig,
@@ -322,6 +324,7 @@ pub fn auto_pad_complex(
 }
 
 /// Remove padding from a 1D array after FFT
+#[allow(dead_code)]
 pub fn remove_padding_1d<T>(
     padded: &Array1<T>,
     original_size: usize,
@@ -348,6 +351,7 @@ where
 }
 
 /// Automatic padding for N-dimensional arrays
+#[allow(dead_code)]
 pub fn auto_pad_nd<S, D>(
     x: &ArrayBase<S, D>,
     config: &AutoPadConfig,

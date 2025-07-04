@@ -20,6 +20,7 @@ use std::f64::consts::{E, PI};
 use std::io::{self, Write};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔬 Comprehensive Validation and Performance Framework");
     println!("=====================================================");
@@ -30,6 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_validation_suite() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Starting comprehensive validation suite...\n");
 
@@ -64,6 +66,7 @@ fn run_validation_suite() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn validate_gamma_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧮 GAMMA FUNCTION FAMILY VALIDATION");
     println!("====================================\n");
@@ -143,6 +146,7 @@ fn validate_gamma_functions() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn validate_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌊 BESSEL FUNCTION FAMILY VALIDATION");
     println!("=====================================\n");
@@ -230,6 +234,7 @@ fn validate_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn validate_error_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("📈 ERROR FUNCTION FAMILY VALIDATION");
     println!("====================================\n");
@@ -307,6 +312,7 @@ fn validate_error_functions() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn validate_orthogonal_polynomials() -> Result<(), Box<dyn std::error::Error>> {
     println!("📐 ORTHOGONAL POLYNOMIALS VALIDATION");
     println!("====================================\n");
@@ -377,6 +383,7 @@ fn validate_orthogonal_polynomials() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn validate_elliptic_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("🥧 ELLIPTIC FUNCTION VALIDATION");
     println!("================================\n");
@@ -431,6 +438,7 @@ fn validate_elliptic_functions() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn validate_hypergeometric_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 HYPERGEOMETRIC FUNCTION VALIDATION");
     println!("======================================\n");
@@ -478,6 +486,7 @@ fn validate_hypergeometric_functions() -> Result<(), Box<dyn std::error::Error>>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn validate_zeta_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("ζ ZETA FUNCTION VALIDATION");
     println!("==========================\n");
@@ -552,6 +561,7 @@ fn validate_zeta_functions() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn validate_information_theory_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 INFORMATION THEORY VALIDATION");
     println!("=================================\n");
@@ -603,6 +613,7 @@ fn validate_information_theory_functions() -> Result<(), Box<dyn std::error::Err
     Ok(())
 }
 
+#[allow(dead_code)]
 fn performance_benchmark_suite() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ PERFORMANCE BENCHMARK SUITE");
     println!("==============================\n");
@@ -615,6 +626,7 @@ fn performance_benchmark_suite() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn benchmark_scalar_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("Scalar Function Performance:");
     println!("Function       Iterations   Time (μs)   Rate (Mops/s)");
@@ -666,6 +678,7 @@ fn benchmark_scalar_functions() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn benchmark_array_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("Array Operation Performance:");
 
@@ -705,6 +718,7 @@ fn benchmark_array_operations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn benchmark_simd_operations() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "simd")]
     {
@@ -747,6 +761,7 @@ fn benchmark_simd_operations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn benchmark_parallel_operations() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "parallel")]
     {
@@ -788,6 +803,7 @@ fn benchmark_parallel_operations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn extreme_parameter_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔥 EXTREME PARAMETER VALIDATION");
     println!("================================\n");
@@ -857,6 +873,7 @@ fn extreme_parameter_validation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn complex_plane_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔮 COMPLEX PLANE VALIDATION");
     println!("============================\n");
@@ -911,6 +928,7 @@ fn complex_plane_validation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn educational_demonstrations() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎓 EDUCATIONAL DEMONSTRATIONS");
     println!("==============================\n");
@@ -971,6 +989,7 @@ fn educational_demonstrations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn generate_validation_report() -> Result<(), Box<dyn std::error::Error>> {
     use std::fs::File;
     use std::io::Write as IoWrite;
@@ -1037,10 +1056,12 @@ fn generate_validation_report() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper functions for validation
+#[allow(dead_code)]
 fn stirling_approximation(z: f64) -> f64 {
     (z - 0.5) * z.ln() - z + 0.5 * (2.0 * PI).ln() + 1.0 / (12.0 * z)
 }
 
+#[allow(dead_code)]
 fn compute_bessel_orthogonality_integral(nu: i32, alpha1: f64, alpha2: f64) -> f64 {
     // Simplified numerical integration
     let n_points = 1000;
@@ -1065,6 +1086,7 @@ fn compute_bessel_orthogonality_integral(nu: i32, alpha1: f64, alpha2: f64) -> f
     sum
 }
 
+#[allow(dead_code)]
 fn legendre_orthogonality_integral(m: usize, n: usize) -> f64 {
     // Simplified numerical integration over [-1, 1]
     let n_points = 1000;
@@ -1081,6 +1103,7 @@ fn legendre_orthogonality_integral(m: usize, n: usize) -> f64 {
     sum
 }
 
+#[allow(dead_code)]
 fn hyp2f1(a: f64, b: f64, c: f64, z: f64) -> f64 {
     // Simplified implementation for validation
     if z.abs() < 0.5 {
@@ -1104,11 +1127,13 @@ fn hyp2f1(a: f64, b: f64, c: f64, z: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn elliptic_k(k: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // Simplified implementation
     Ok(PI / 2.0 * hyp2f1(0.5, 0.5, 1.0, k * k))
 }
 
+#[allow(dead_code)]
 fn elliptic_e(k: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // Simplified implementation
     Ok(PI / 2.0 * hyp2f1(-0.5, 0.5, 1.0, k * k))
@@ -1121,17 +1146,20 @@ fn factorial(n: usize) -> usize {
 
 // Placeholder implementations for missing functions
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn gamma_f32_simd(data: &[f32]) -> Vec<f32> {
     // This would use actual SIMD implementation
     data.iter().map(|&x| gamma(x as f64) as f32).collect()
 }
 
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn gamma_f64_parallel(data: &[f64]) -> Vec<f64> {
     // This would use actual parallel implementation
     data.iter().map(|&x| gamma(x)).collect()
 }
 
+#[allow(dead_code)]
 fn entropy(p: &[f64]) -> Result<f64, Box<dyn std::error::Error>> {
     let mut h = 0.0;
     for &prob in p {
@@ -1142,6 +1170,7 @@ fn entropy(p: &[f64]) -> Result<f64, Box<dyn std::error::Error>> {
     Ok(h)
 }
 
+#[allow(dead_code)]
 fn kl_divergence(p: &[f64], q: &[f64]) -> Result<f64, Box<dyn std::error::Error>> {
     if p.len() != q.len() {
         return Err("Probability vectors must have same length".into());

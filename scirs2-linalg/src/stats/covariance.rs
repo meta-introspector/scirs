@@ -20,6 +20,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// # Returns
 ///
 /// * Covariance matrix with shape (n_features, n_features)
+#[allow(dead_code)]
 pub fn covariance_matrix<F>(data: &ArrayView2<F>, ddof: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + Zero + num_traits::FromPrimitive + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -80,6 +81,7 @@ where
 /// # Returns
 ///
 /// * Correlation matrix with shape (n_features, n_features)
+#[allow(dead_code)]
 pub fn correlation_matrix<F>(data: &ArrayView2<F>, ddof: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + Zero + num_traits::FromPrimitive + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -131,6 +133,7 @@ where
 /// # Returns
 ///
 /// * Mahalanobis distance (scalar)
+#[allow(dead_code)]
 pub fn mahalanobis_distance<F>(
     x: &ArrayView1<F>,
     mean: &ArrayView1<F>,

@@ -735,6 +735,7 @@ pub enum SpectralStabilityAssessment {
 
 /// Public API functions
 /// Compute forward stability for a function
+#[allow(dead_code)]
 pub fn compute_forward_stability<'a, F: Float, Func>(
     function: &Func,
     input: &'a Tensor<'a, F>,
@@ -748,6 +749,7 @@ where
 }
 
 /// Compute backward stability for a function
+#[allow(dead_code)]
 pub fn compute_backward_stability<'a, F: Float, Func>(
     function: &Func,
     input: &'a Tensor<'a, F>,
@@ -761,6 +763,7 @@ where
 }
 
 /// Quick stability assessment
+#[allow(dead_code)]
 pub fn quick_stability_check<'a, F: Float, Func>(
     function: &Func,
     input: &'a Tensor<'a, F>,

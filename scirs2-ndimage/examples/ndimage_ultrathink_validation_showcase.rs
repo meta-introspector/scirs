@@ -23,6 +23,7 @@ use scirs2_ndimage::{
 };
 
 /// Comprehensive ultrathink validation demonstration
+#[allow(dead_code)]
 pub fn demonstrate_ultrathink_capabilities() -> NdimageResult<()> {
     println!("🚀 Ultrathink Mode Validation Showcase");
     println!("======================================");
@@ -108,6 +109,7 @@ pub fn demonstrate_ultrathink_capabilities() -> NdimageResult<()> {
 }
 
 /// Create a sample test image for validation
+#[allow(dead_code)]
 fn create_test_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
 
@@ -131,6 +133,7 @@ fn create_test_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 /// Create comprehensive ultrathink configuration
+#[allow(dead_code)]
 fn create_ultrathink_config() -> UltrathinkConfig {
     use scirs2_ndimage::{
         neuromorphic_computing::NeuromorphicConfig, quantum_inspired::QuantumConfig,
@@ -159,6 +162,7 @@ fn create_ultrathink_config() -> UltrathinkConfig {
 }
 
 /// Advanced validation with performance metrics
+#[allow(dead_code)]
 pub fn advanced_performance_validation() -> NdimageResult<()> {
     println!("\n🔬 Advanced Performance Validation");
     println!("==================================");
@@ -196,6 +200,7 @@ pub fn advanced_performance_validation() -> NdimageResult<()> {
 }
 
 /// Main demonstration function
+#[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("🎯 SciRS2 NDImage Ultrathink Mode Validation");
     println!("===========================================");

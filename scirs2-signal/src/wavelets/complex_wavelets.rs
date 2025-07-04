@@ -27,6 +27,7 @@ use std::f64::consts::PI;
 /// // Generate a Morlet wavelet with 100 points, central frequency 5.0, and scaling 1.0
 /// let wavelet = morlet(100, 5.0, 1.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn morlet(points: usize, w: f64, s: f64) -> SignalResult<Vec<Complex64>> {
     if points == 0 {
         return Err(SignalError::ValueError(
@@ -88,6 +89,7 @@ pub fn morlet(points: usize, w: f64, s: f64) -> SignalResult<Vec<Complex64>> {
 /// // bandwidth 1.0, symmetry 0.0 (symmetric), and scaling 1.0
 /// let wavelet = complex_morlet(100, 5.0, 1.0, 0.0, 1.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn complex_morlet(
     points: usize,
     center_frequency: f64,
@@ -175,6 +177,7 @@ pub fn complex_morlet(
 /// // Generate a Paul wavelet with 100 points, order 4, and scaling 1.0
 /// let wavelet = paul(100, 4, 1.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn paul(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex64>> {
     if points == 0 {
         return Err(SignalError::ValueError(
@@ -247,6 +250,7 @@ pub fn paul(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex
 /// // Generate a Complex Gaussian wavelet with 100 points, order 1, and scaling 1.0
 /// let wavelet = complex_gaussian(100, 1, 1.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn complex_gaussian(points: usize, order: usize, scale: f64) -> SignalResult<Vec<Complex64>> {
     if points == 0 {
         return Err(SignalError::ValueError(
@@ -333,6 +337,7 @@ pub fn complex_gaussian(points: usize, order: usize, scale: f64) -> SignalResult
 /// // Generate a Shannon wavelet with 100 points, center frequency 1.0, bandwidth 0.5, and scaling 1.0
 /// let wavelet = shannon(100, 1.0, 0.5, 1.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn shannon(
     points: usize,
     center_frequency: f64,
@@ -420,6 +425,7 @@ pub fn shannon(
 /// // bandwidth 0.5, order 3, and scaling 1.0
 /// let wavelet = fbsp(100, 1.0, 0.5, 3, 1.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn fbsp(
     points: usize,
     center_frequency: f64,

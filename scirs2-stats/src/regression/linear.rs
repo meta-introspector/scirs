@@ -49,6 +49,7 @@ use scirs2_linalg::{lstsq, svd};
 /// assert!((coeffs[2] - 3.0f64).abs() < 1e-10f64);  // x2 coefficient
 /// assert_eq!(rank, 2);  // Rank (dimensions or independent vectors)
 /// ```
+#[allow(dead_code)]
 pub fn multilinear_regression<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
@@ -184,6 +185,7 @@ where
 /// // Perfect fit should have R^2 = 1.0
 /// assert!((results.r_squared - 1.0f64).abs() < 1e-8f64);
 /// ```
+#[allow(dead_code)]
 pub fn linear_regression<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
@@ -366,6 +368,7 @@ where
 /// assert!(intercept.abs() < 1e-10);
 /// assert!((r - 1.0f64).abs() < 1e-10);  // Perfect correlation
 /// ```
+#[allow(dead_code)]
 pub fn linregress<F>(x: &ArrayView1<F>, y: &ArrayView1<F>) -> StatsResult<(F, F, F, F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Debug + 'static,
@@ -477,6 +480,7 @@ where
 /// assert!((params[1] - 2.0f64).abs() < 1e-6);  // slope
 /// assert!(params[0].abs() < 1e-6);  // intercept (should be close to 0)
 /// ```
+#[allow(dead_code)]
 pub fn odr<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,

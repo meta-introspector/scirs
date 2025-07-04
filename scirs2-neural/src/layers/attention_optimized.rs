@@ -14,6 +14,7 @@ use std::fmt::Debug;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 /// Optimized forward pass implementation for MultiHeadAttention
 /// This replaces the inefficient nested loops with proper matrix operations
+#[allow(dead_code)]
 pub fn optimized_attention_forward<F>(
     input: &Array<F, IxDyn>,
     w_query: &Array<F, IxDyn>,

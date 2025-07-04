@@ -25,6 +25,7 @@ use scirs2_integrate::ode::{
 use std::fs::File;
 use std::io::Write;
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     // Brusselator model parameters
     let a = 1.0; // Parameter A
@@ -233,6 +234,7 @@ fn main() -> IntegrateResult<()> {
 }
 
 /// Save the results to a CSV file for plotting
+#[allow(dead_code)]
 fn save_results_to_csv(
     result: &scirs2_integrate::ode::ODEResultWithEvents<f64>,
 ) -> IntegrateResult<()> {

@@ -809,11 +809,13 @@ impl NumaTopology {
 }
 
 /// Convenience functions
+#[allow(dead_code)]
 pub fn adaptive_mean_f64(data: &ArrayView1<f64>) -> StatsResult<f64> {
     let mut processor = AdaptiveParallelProcessor::<f64>::new();
     processor.adaptive_mean(data)
 }
 
+#[allow(dead_code)]
 pub fn adaptive_variance_f64(data: &ArrayView1<f64>, ddof: usize) -> StatsResult<f64> {
     let mut processor = AdaptiveParallelProcessor::<f64>::new();
     processor.adaptive_variance(data, ddof)

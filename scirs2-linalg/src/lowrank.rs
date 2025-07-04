@@ -69,6 +69,7 @@ type CURResult<F> = LinalgResult<(Array2<F>, Array2<F>, Array2<F>, Vec<usize>, V
 ///
 /// - Halko, Martinsson, and Tropp (2011), "Finding structure with randomness:
 ///   Probabilistic algorithms for constructing approximate matrix decompositions"
+#[allow(dead_code)]
 pub fn randomized_svd<F>(
     a: &ArrayView2<F>,
     k: usize,
@@ -165,6 +166,7 @@ where
 /// # Returns
 ///
 /// * Tuple (U, S, Vt) where each component contains only the top k components
+#[allow(dead_code)]
 pub fn truncated_svd<F>(
     a: &ArrayView2<F>,
     k: usize,
@@ -218,6 +220,7 @@ where
 ///   - components: Principal component vectors (n_components × n_features)
 ///   - explained_variance: Variance explained by each component
 ///   - explained_variance_ratio: Fraction of total variance explained by each component
+#[allow(dead_code)]
 pub fn pca<F>(
     data: &ArrayView2<F>,
     n_components: usize,
@@ -297,6 +300,7 @@ where
 /// # Returns
 ///
 /// * Tuple (W, H) where A ≈ W * H
+#[allow(dead_code)]
 pub fn nmf<F>(
     a: &ArrayView2<F>,
     k: usize,
@@ -459,6 +463,7 @@ where
 ///
 /// - Mahoney and Drineas (2009), "CUR matrix decompositions for improved data analysis"
 /// - Drineas et al. (2008), "Relative-error CUR matrix decompositions"
+#[allow(dead_code)]
 pub fn cur_decomposition<F>(
     a: &ArrayView2<F>,
     k: usize,

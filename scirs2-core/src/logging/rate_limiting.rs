@@ -252,8 +252,7 @@ impl RateLimiterState {
             self.suppressed_count += 1;
             RateLimitDecision::Suppress {
                 reason: format!(
-                    "Fixed window limit exceeded ({} events in {:?})",
-                    max_events, window_duration
+                    "Fixed window limit exceeded ({max_events} events in {window_duration:?})"
                 ),
                 retry_after: Some(window_start + window_duration),
             }
@@ -282,8 +281,7 @@ impl RateLimiterState {
                 .map(|&oldest| oldest + window_duration);
             RateLimitDecision::Suppress {
                 reason: format!(
-                    "Sliding window limit exceeded ({} events in {:?})",
-                    max_events, window_duration
+                    "Sliding window limit exceeded ({max_events} events in {window_duration:?})"
                 ),
                 retry_after,
             }
@@ -309,7 +307,7 @@ impl RateLimiterState {
             // Calculate when next token will be available
             let time_to_token = Duration::from_secs_f64((1.0 - self.tokens) / refill_rate);
             RateLimitDecision::Suppress {
-                reason: format!("Token bucket empty (refill rate: {:.2}/sec)", refill_rate),
+                reason: format!("Token bucket empty (refill rate: {refill_rate:.2}/sec)"),
                 retry_after: Some(now + time_to_token),
             }
         }
@@ -374,8 +372,7 @@ impl RateLimiterState {
             self.suppressed_count += 1;
             RateLimitDecision::Suppress {
                 reason: format!(
-                    "Adaptive limit exceeded (load: {:.2}, limit: {})",
-                    current_load, adjusted_max_events
+                    "Adaptive limit exceeded (load: {current_load:.2}, limit: {adjusted_max_events})"
                 ),
                 retry_after: self.event_times.first().map(|&oldest| oldest + base_window),
             }
@@ -695,6 +692,7 @@ impl Default for SmartRateLimiter {
 static GLOBAL_RATE_LIMITER: Lazy<SmartRateLimiter> = Lazy::new(SmartRateLimiter::default);
 
 /// Get the global rate limiter
+#[allow(dead_code)]
 pub fn global_rate_limiter() -> &'static SmartRateLimiter {
     &GLOBAL_RATE_LIMITER
 }

@@ -3407,8 +3407,8 @@ mod tests {
 
     #[test]
     fn test_aggregation_strategies() {
-        let values = vec![1.0, 2.0, 3.0, 4.0];
-        let weights = vec![1, 2, 3, 4];
+        let values = [1.0, 2.0, 3.0, 4.0];
+        let weights = [1, 2, 3, 4];
 
         // Test mean aggregation
         let mean = values.iter().sum::<f64>() / values.len() as f64;

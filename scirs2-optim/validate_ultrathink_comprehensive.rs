@@ -756,6 +756,7 @@ impl UltrathinkValidator {
     }
 }
 
+#[allow(dead_code)]
 fn main() {
     let matches = Command::new("advanced-comprehensive-validator")
         .version("0.1.0")

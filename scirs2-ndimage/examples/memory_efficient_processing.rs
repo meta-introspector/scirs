@@ -15,6 +15,7 @@ use scirs2_ndimage::{
 };
 use std::path::Path;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Memory-Efficient Image Processing Example ===\n");
 
@@ -37,6 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Example 1: Automatic memory management based on image size
+#[allow(dead_code)]
 fn example_1_auto_memory_management() -> Result<(), Box<dyn std::error::Error>> {
     println!("Example 1: Automatic Memory Management");
     println!("--------------------------------------");
@@ -82,6 +84,7 @@ fn example_1_auto_memory_management() -> Result<(), Box<dyn std::error::Error>> 
 }
 
 /// Example 2: Using memory-mapped arrays for very large images
+#[allow(dead_code)]
 fn example_2_memory_mapped_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("Example 2: Memory-Mapped Array Processing");
     println!("-----------------------------------------");
@@ -124,6 +127,7 @@ fn example_2_memory_mapped_processing() -> Result<(), Box<dyn std::error::Error>
 }
 
 /// Example 3: Chunked processing with custom configuration
+#[allow(dead_code)]
 fn example_3_chunked_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("Example 3: Custom Chunked Processing");
     println!("------------------------------------");
@@ -168,6 +172,7 @@ fn example_3_chunked_processing() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Example 4: Processing image sequences efficiently
+#[allow(dead_code)]
 fn example_4_image_sequence_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("Example 4: Image Sequence Processing");
     println!("------------------------------------");
@@ -220,6 +225,7 @@ fn example_4_image_sequence_processing() -> Result<(), Box<dyn std::error::Error
 }
 
 /// Example 5: Complex filter pipeline with memory optimization
+#[allow(dead_code)]
 fn example_5_filter_pipeline() -> Result<(), Box<dyn std::error::Error>> {
     println!("Example 5: Memory-Optimized Filter Pipeline");
     println!("-------------------------------------------");
@@ -280,6 +286,7 @@ fn example_5_filter_pipeline() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Helper function to display memory usage
+#[allow(dead_code)]
 fn print_memory_stats(label: &str, size_bytes: usize) {
     let size_mb = size_bytes as f64 / (1024.0 * 1024.0);
     println!("{}: {:.2} MB", label, size_mb);

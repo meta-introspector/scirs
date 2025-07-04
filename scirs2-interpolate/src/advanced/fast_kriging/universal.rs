@@ -21,6 +21,7 @@ use super::covariance::{
 };
 
 /// Create basis functions for the trend model
+#[allow(dead_code)]
 pub fn create_basis_functions<F: Float + FromPrimitive>(
     points: &ArrayView2<F>,
     trend_fn: TrendFunction,
@@ -110,6 +111,7 @@ pub fn create_basis_functions<F: Float + FromPrimitive>(
 }
 
 /// Compute trend coefficients using least squares
+#[allow(dead_code)]
 pub fn compute_trend_coefficients<F: Float + FromPrimitive + 'static>(
     _points: &Array2<F>,
     values: &Array1<F>,

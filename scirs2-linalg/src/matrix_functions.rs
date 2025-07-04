@@ -40,6 +40,7 @@ use crate::validation::validate_decomposition;
 /// // Exact values would be:
 /// // [[cos(1), sin(1)], [-sin(1), cos(1)]]
 /// ```
+#[allow(dead_code)]
 pub fn expm<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -277,6 +278,7 @@ where
 /// assert!((log_a[[1, 0]]).abs() < 1e-10);
 /// assert!((log_a[[1, 1]] - 2.0_f64.ln()).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn logm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -285,6 +287,7 @@ where
 }
 
 /// Internal implementation of matrix logarithm computation.
+#[allow(dead_code)]
 fn logm_impl<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -632,6 +635,7 @@ where
 /// assert!((log_a[[0, 0]]).abs() < 1e-10);
 /// assert!((log_a[[1, 1]] - 2.0_f64.ln()).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn logm_parallel<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -654,6 +658,7 @@ where
 }
 
 /// Internal implementation of parallel matrix logarithm computation.
+#[allow(dead_code)]
 fn logm_impl_parallel<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -962,6 +967,7 @@ where
 /// assert!((sqrt_a[[1, 0]] - 0.0).abs() < 1e-10);
 /// assert!((sqrt_a[[1, 1]] - 3.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn sqrtm<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -970,6 +976,7 @@ where
 }
 
 /// Internal implementation of matrix square root computation.
+#[allow(dead_code)]
 fn sqrtm_impl<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -1115,6 +1122,7 @@ where
 /// assert!((sqrt_a[[0, 0]] - 2.0).abs() < 1e-10);
 /// assert!((sqrt_a[[1, 1]] - 3.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn sqrtm_parallel<F>(
     a: &ArrayView2<F>,
     max_iter: usize,
@@ -1142,6 +1150,7 @@ where
 }
 
 /// Internal implementation of parallel matrix square root computation using Denman-Beavers iteration.
+#[allow(dead_code)]
 fn sqrtm_impl_parallel<F>(a: &ArrayView2<F>, max_iter: usize, tol: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -1304,6 +1313,7 @@ where
 /// assert!((cos_a[[0, 0]] - 1.0).abs() < 1e-10);
 /// assert!((cos_a[[1, 1]] - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn cosm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -1404,6 +1414,7 @@ where
 /// assert!((sin_a[[0, 0]]).abs() < 1e-10);
 /// assert!((sin_a[[1, 1]]).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn sinm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -1508,6 +1519,7 @@ where
 /// assert!((tan_a[[0, 0]]).abs() < 1e-10);
 /// assert!((tan_a[[1, 1]]).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn tanm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -1569,6 +1581,7 @@ where
 /// assert!((a_squared[[1, 0]] - 15.0).abs() < 1e-10);
 /// assert!((a_squared[[1, 1]] - 22.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn matrix_power<F>(a: &ArrayView2<F>, p: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + 'static + Send + Sync + ndarray::ScalarOperand,
@@ -1746,6 +1759,7 @@ where
 /// let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
 /// let softmax_a = softmax(&a.view(), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn softmax<F>(a: &ArrayView2<F>, axis: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -1847,6 +1861,7 @@ where
 /// let a = array![[1.0_f64, -2.0], [0.0, 3.0]];
 /// let sigmoid_a = sigmoid(&a.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn sigmoid<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -1891,6 +1906,7 @@ where
 /// let a = array![[4.0_f64, 0.0], [0.0, 9.0]];
 /// let sqrt_a = fractional_matrix_power(&a.view(), 0.5, "eigen").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn fractional_matrix_power<F>(a: &ArrayView2<F>, p: F, method: &str) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,
@@ -1970,6 +1986,7 @@ where
 /// # Returns
 ///
 /// * f(A) computed using SPD-optimized algorithms
+#[allow(dead_code)]
 pub fn spd_matrix_function<F>(
     a: &ArrayView2<F>,
     func: &str,
@@ -2090,11 +2107,13 @@ where
 // Helper functions for advanced matrix functions
 
 /// Check if a float is close to an integer
+#[allow(dead_code)]
 fn is_integer<F: Float>(x: F) -> bool {
     (x - x.round()).abs() < F::from(1e-10).unwrap()
 }
 
 /// Compute power of upper triangular matrix using specialized algorithm
+#[allow(dead_code)]
 fn upper_triangular_power<F>(t: &Array2<F>, p: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -2133,6 +2152,7 @@ where
 }
 
 /// Padé approximation for fractional powers
+#[allow(dead_code)]
 fn pade_fractional_power<F>(a: &ArrayView2<F>, p: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -2147,6 +2167,7 @@ where
 }
 
 /// Compute inverse of triangular matrix
+#[allow(dead_code)]
 fn triangular_inverse<F>(l: &Array2<F>, lower: bool) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -2480,6 +2501,7 @@ mod tests {
 /// assert!((cosh_a[[0, 0]] - 1.0).abs() < 1e-10);
 /// assert!((cosh_a[[1, 1]] - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn coshm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -2535,6 +2557,7 @@ where
 /// assert!((sinh_a[[0, 0]]).abs() < 1e-10);
 /// assert!((sinh_a[[1, 1]]).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn sinhm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -2590,6 +2613,7 @@ where
 /// assert!((tanh_a[[0, 0]]).abs() < 1e-10);
 /// assert!((tanh_a[[1, 1]]).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn tanhm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -2637,6 +2661,7 @@ where
 /// assert!((sign_a[[0, 0]] - 1.0).abs() < 1e-10);
 /// assert!((sign_a[[1, 1]] + 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn signm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -2705,6 +2730,7 @@ where
 /// # Returns
 ///
 /// * Matrix inverse cosine of a
+#[allow(dead_code)]
 pub fn acosm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -2761,6 +2787,7 @@ where
 /// # Returns
 ///
 /// * Matrix inverse sine of a
+#[allow(dead_code)]
 pub fn asinm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -2843,6 +2870,7 @@ where
 /// # Returns
 ///
 /// * Matrix inverse tangent of a
+#[allow(dead_code)]
 pub fn atanm<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -2924,6 +2952,7 @@ where
 /// let rho = spectral_radius(&a.view(), None).unwrap();
 /// // rho should be approximately 2.0
 /// ```
+#[allow(dead_code)]
 pub fn spectral_radius<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<F>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,
@@ -2982,6 +3011,7 @@ where
 /// let kappa = spectral_condition_number(&a.view(), None).unwrap();
 /// // kappa should be approximately 1e12
 /// ```
+#[allow(dead_code)]
 pub fn spectral_condition_number<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<F>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,
@@ -3039,6 +3069,7 @@ where
 /// let (u, h) = polar_decomposition(&a.view(), None).unwrap();
 /// // A = U * H and U is orthogonal, H is positive semidefinite
 /// ```
+#[allow(dead_code)]
 pub fn polar_decomposition<F>(
     a: &ArrayView2<F>,
     workers: Option<usize>,
@@ -3105,6 +3136,7 @@ where
 /// let g = geometric_mean_spd(&a.view(), &b.view(), None).unwrap();
 /// // G should be approximately [[2.0, 0.0], [0.0, 2.0]]
 /// ```
+#[allow(dead_code)]
 pub fn geometric_mean_spd<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -3206,6 +3238,7 @@ where
 /// let a = array![[1.0_f64, 0.0], [0.0, 1e-12]]; // Ill-conditioned
 /// let a_reg = tikhonov_regularization(&a.view(), 1e-6, false).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn tikhonov_regularization<F>(
     a: &ArrayView2<F>,
     lambda: F,
@@ -3266,6 +3299,7 @@ where
 /// let norm = nuclear_norm(&a.view(), None).unwrap();
 /// // Should be 3.0 + 1.0 = 4.0
 /// ```
+#[allow(dead_code)]
 pub fn nuclear_norm<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<F>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + 'static + Send + Sync,

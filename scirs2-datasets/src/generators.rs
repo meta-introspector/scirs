@@ -16,6 +16,7 @@ use crate::gpu::GpuBackend as LocalGpuBackend;
 use std::f64::consts::PI;
 
 /// Generate a random classification dataset with clusters
+#[allow(dead_code)]
 pub fn make_classification(
     n_samples: usize,
     n_features: usize,
@@ -151,6 +152,7 @@ pub fn make_classification(
 }
 
 /// Generate a random regression dataset
+#[allow(dead_code)]
 pub fn make_regression(
     n_samples: usize,
     n_features: usize,
@@ -251,6 +253,7 @@ pub fn make_regression(
 }
 
 /// Generate a random time series dataset
+#[allow(dead_code)]
 pub fn make_time_series(
     n_samples: usize,
     n_features: usize,
@@ -353,6 +356,7 @@ pub fn make_time_series(
 }
 
 /// Generate a random blobs dataset for clustering
+#[allow(dead_code)]
 pub fn make_blobs(
     n_samples: usize,
     n_features: usize,
@@ -451,6 +455,7 @@ pub fn make_blobs(
 }
 
 /// Generate a spiral dataset for non-linear classification
+#[allow(dead_code)]
 pub fn make_spirals(
     n_samples: usize,
     n_spirals: usize,
@@ -538,6 +543,7 @@ pub fn make_spirals(
 }
 
 /// Generate a moons dataset for non-linear classification
+#[allow(dead_code)]
 pub fn make_moons(n_samples: usize, noise: f64, random_seed: Option<u64>) -> Result<Dataset> {
     // Validate input parameters
     if n_samples == 0 {
@@ -623,6 +629,7 @@ pub fn make_moons(n_samples: usize, noise: f64, random_seed: Option<u64>) -> Res
 }
 
 /// Generate a circles dataset for non-linear classification
+#[allow(dead_code)]
 pub fn make_circles(
     n_samples: usize,
     factor: f64,
@@ -720,6 +727,7 @@ pub fn make_circles(
 }
 
 /// Generate a Swiss roll dataset for dimensionality reduction
+#[allow(dead_code)]
 pub fn make_swiss_roll(n_samples: usize, noise: f64, random_seed: Option<u64>) -> Result<Dataset> {
     // Validate input parameters
     if n_samples == 0 {
@@ -787,6 +795,8 @@ pub fn make_swiss_roll(n_samples: usize, noise: f64, random_seed: Option<u64>) -
 }
 
 /// Generate anisotropic (elongated) clusters
+#[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn make_anisotropic_blobs(
     n_samples: usize,
     n_features: usize,
@@ -917,6 +927,8 @@ pub fn make_anisotropic_blobs(
 }
 
 /// Generate hierarchical clusters (clusters within clusters)
+#[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn make_hierarchical_clusters(
     n_samples: usize,
     n_features: usize,
@@ -1073,6 +1085,7 @@ pub enum OutlierType {
 }
 
 /// Inject missing data into a dataset with realistic patterns
+#[allow(dead_code)]
 pub fn inject_missing_data(
     data: &mut Array2<f64>,
     missing_rate: f64,
@@ -1163,6 +1176,7 @@ pub fn inject_missing_data(
 }
 
 /// Inject outliers into a dataset
+#[allow(dead_code)]
 pub fn inject_outliers(
     data: &mut Array2<f64>,
     outlier_rate: f64,
@@ -1292,6 +1306,7 @@ pub fn inject_outliers(
 }
 
 /// Add realistic noise patterns to time series data
+#[allow(dead_code)]
 pub fn add_time_series_noise(
     data: &mut Array2<f64>,
     noise_types: &[(&str, f64)], // (noise_type, strength)
@@ -1387,6 +1402,7 @@ pub fn add_time_series_noise(
 }
 
 /// Generate a dataset with controlled corruption patterns
+#[allow(dead_code)]
 pub fn make_corrupted_dataset(
     base_dataset: &Dataset,
     missing_rate: f64,
@@ -1522,6 +1538,7 @@ impl GpuConfig {
 }
 
 /// GPU-accelerated classification dataset generation
+#[allow(dead_code)]
 pub fn make_classification_gpu(
     n_samples: usize,
     n_features: usize,
@@ -1556,6 +1573,7 @@ pub fn make_classification_gpu(
 }
 
 /// Internal GPU implementation for classification data generation
+#[allow(dead_code)]
 fn make_classification_gpu_impl(
     n_samples: usize,
     n_features: usize,
@@ -1746,6 +1764,7 @@ fn generate_classification_chunk_gpu(
 
 /// GPU-optimized classification data generation using buffer operations
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn generate_classification_gpu_optimized(
     _gpu_context: &GpuContext,
     centroids: &[f64],
@@ -1816,6 +1835,7 @@ fn generate_classification_gpu_optimized(
 }
 
 /// GPU-accelerated regression dataset generation
+#[allow(dead_code)]
 pub fn make_regression_gpu(
     n_samples: usize,
     n_features: usize,
@@ -1841,6 +1861,7 @@ pub fn make_regression_gpu(
 }
 
 /// Internal GPU implementation for regression data generation
+#[allow(dead_code)]
 fn make_regression_gpu_impl(
     n_samples: usize,
     n_features: usize,
@@ -1994,6 +2015,7 @@ fn generate_regression_chunk_gpu(
 
 /// GPU-optimized regression data generation using buffer operations and matrix multiplication
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn generate_regression_gpu_optimized(
     _gpu_context: &GpuContext,
     data: &[f64],
@@ -2036,6 +2058,7 @@ fn generate_regression_gpu_optimized(
 }
 
 /// GPU-accelerated blob generation
+#[allow(dead_code)]
 pub fn make_blobs_gpu(
     n_samples: usize,
     n_features: usize,
@@ -2061,6 +2084,7 @@ pub fn make_blobs_gpu(
 }
 
 /// Internal GPU implementation for blob generation
+#[allow(dead_code)]
 fn make_blobs_gpu_impl(
     n_samples: usize,
     n_features: usize,
@@ -2177,6 +2201,7 @@ fn make_blobs_gpu_impl(
 }
 
 /// GPU-optimized blob center generation using parallel kernels
+#[allow(dead_code)]
 fn generate_blobs_center_gpu(
     _gpu_context: &GpuContext,
     centers: &Array2<f64>,
@@ -2327,6 +2352,7 @@ fn generate_blobs_center_gpu(
 }
 
 /// Check if GPU is available for acceleration
+#[allow(dead_code)]
 pub fn gpu_is_available() -> bool {
     // Try to create a GPU context to check availability
     match GpuContext::new(crate::gpu::GpuConfig::default()) {
@@ -2336,12 +2362,14 @@ pub fn gpu_is_available() -> bool {
 }
 
 /// Get GPU device information
+#[allow(dead_code)]
 pub fn get_gpu_info() -> Result<Vec<GpuDeviceInfo>> {
     crate::gpu::list_gpu_devices()
         .map_err(|e| DatasetsError::Other(format!("Failed to get GPU info: {e}")))
 }
 
 /// Benchmark GPU vs CPU performance for data generation
+#[allow(dead_code)]
 pub fn benchmark_gpu_vs_cpu(
     n_samples: usize,
     n_features: usize,
@@ -2378,6 +2406,7 @@ pub fn benchmark_gpu_vs_cpu(
 // Advanced manifold learning datasets
 
 /// Generate a dataset with an S-curve manifold embedded in 3D space
+#[allow(dead_code)]
 pub fn make_s_curve(n_samples: usize, noise: f64, random_seed: Option<u64>) -> Result<Dataset> {
     if n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
@@ -2426,6 +2455,7 @@ pub fn make_s_curve(n_samples: usize, noise: f64, random_seed: Option<u64>) -> R
 }
 
 /// Generate a dataset sampling from a Swiss roll manifold
+#[allow(dead_code)]
 pub fn make_swiss_roll_advanced(
     n_samples: usize,
     noise: f64,
@@ -2496,6 +2526,7 @@ pub fn make_swiss_roll_advanced(
 }
 
 /// Generate a dataset from a severed sphere (broken manifold)
+#[allow(dead_code)]
 pub fn make_severed_sphere(
     n_samples: usize,
     noise: f64,
@@ -2558,6 +2589,7 @@ pub fn make_severed_sphere(
 }
 
 /// Generate a dataset from a twin peaks manifold (two connected peaks)
+#[allow(dead_code)]
 pub fn make_twin_peaks(n_samples: usize, noise: f64, random_seed: Option<u64>) -> Result<Dataset> {
     if n_samples == 0 {
         return Err(DatasetsError::InvalidFormat(
@@ -2618,6 +2650,7 @@ pub fn make_twin_peaks(n_samples: usize, noise: f64, random_seed: Option<u64>) -
 }
 
 /// Generate a dataset from a helix manifold in 3D space
+#[allow(dead_code)]
 pub fn make_helix(
     n_samples: usize,
     n_turns: f64,
@@ -2677,6 +2710,7 @@ pub fn make_helix(
 }
 
 /// Generate a dataset from an intersecting manifolds (two intersecting planes)
+#[allow(dead_code)]
 pub fn make_intersecting_manifolds(
     n_samples: usize,
     noise: f64,
@@ -2749,6 +2783,7 @@ pub fn make_intersecting_manifolds(
 }
 
 /// Generate a dataset from a torus manifold in 3D space
+#[allow(dead_code)]
 pub fn make_torus(
     n_samples: usize,
     major_radius: f64,
@@ -2912,6 +2947,7 @@ impl ManifoldConfig {
 }
 
 /// Generate a manifold dataset based on configuration
+#[allow(dead_code)]
 pub fn make_manifold(config: ManifoldConfig) -> Result<Dataset> {
     match config.manifold_type {
         ManifoldType::SCurve => make_s_curve(config.n_samples, config.noise, config.random_seed),

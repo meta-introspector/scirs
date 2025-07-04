@@ -18,6 +18,7 @@ use super::types::{Constraint, ConstraintType};
 /// Solve the constrained interpolation problem
 ///
 /// Solves A*c = y subject to G*c >= h
+#[allow(dead_code)]
 fn solve_constrained_interpolation<T>(
     design_matrix: &ArrayView2<T>,
     y: &ArrayView1<T>,
@@ -57,6 +58,7 @@ where
 /// Solve the constrained least squares problem
 ///
 /// Solves min ||A*c - y||^2 subject to G*c >= h
+#[allow(dead_code)]
 fn solve_constrained_least_squares<T>(
     design_matrix: &ArrayView2<T>,
     y: &ArrayView1<T>,
@@ -273,6 +275,7 @@ where
 /// Solve the constrained penalized problem
 ///
 /// Solves min ||A*c - y||^2 + λ*c'P*c subject to G*c >= h
+#[allow(dead_code)]
 fn solve_constrained_penalized<T>(
     design_matrix: &ArrayView2<T>,
     y: &ArrayView1<T>,
@@ -407,6 +410,7 @@ where
 }
 
 /// Main entry point for solving constrained systems
+#[allow(dead_code)]
 pub fn solve_constrained_system<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -452,6 +456,7 @@ where
 }
 
 /// Main entry point for solving penalized systems
+#[allow(dead_code)]
 pub fn solve_penalized_system<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -503,6 +508,7 @@ where
 }
 
 /// Create a standard second derivative penalty matrix
+#[allow(dead_code)]
 fn create_penalty_matrix<T>(n: usize, degree: usize) -> InterpolateResult<Array2<T>>
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::SubAssign,
@@ -539,6 +545,7 @@ where
 }
 
 /// Generate constraint matrices from constraint specifications
+#[allow(dead_code)]
 pub fn generate_constraint_matrices<T>(
     x: &ArrayView1<T>,
     knots: &ArrayView1<T>,

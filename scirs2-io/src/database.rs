@@ -5,6 +5,7 @@
 
 #![allow(dead_code)]
 #![allow(missing_docs)]
+#![allow(clippy::too_many_arguments)]
 
 use crate::error::{IoError, Result};
 use crate::metadata::Metadata;

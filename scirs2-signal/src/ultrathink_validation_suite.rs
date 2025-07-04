@@ -16,13 +16,13 @@
 //! - Memory efficiency testing
 //! - SciPy reference comparison
 
-use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1};
+use crate::error::{SignalResult};
+// use ndarray::{Array1, Array2, ArrayView1};
 use rand::prelude::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive};
+// use scirs2_core::simd_ops::SimdUnifiedOps;
+// use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
-use std::f64::consts::PI;
+// use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Ultra-comprehensive validation configuration for "ultrathink mode"
@@ -568,6 +568,7 @@ pub struct ConditionAnalysisResult {
 /// # Returns
 ///
 /// * Comprehensive validation results with detailed analysis
+#[allow(dead_code)]
 pub fn run_ultrathink_validation(
     config: &UltrathinkValidationConfig,
 ) -> SignalResult<UltrathinkValidationResult> {
@@ -1010,6 +1011,7 @@ pub fn run_ultrathink_validation(
 
 // Helper functions for running specific validation components
 
+#[allow(dead_code)]
 fn run_enhanced_multitaper_validation(
     _config: &UltrathinkValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -1055,6 +1057,7 @@ fn run_enhanced_multitaper_validation(
     })
 }
 
+#[allow(dead_code)]
 fn run_enhanced_lombscargle_validation(
     _config: &UltrathinkValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -1084,6 +1087,7 @@ fn run_enhanced_lombscargle_validation(
     })
 }
 
+#[allow(dead_code)]
 fn run_enhanced_parametric_validation(
     _config: &UltrathinkValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -1132,6 +1136,7 @@ fn run_enhanced_parametric_validation(
     })
 }
 
+#[allow(dead_code)]
 fn run_enhanced_wavelet2d_validation(
     _config: &UltrathinkValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -1160,6 +1165,7 @@ fn run_enhanced_wavelet2d_validation(
     })
 }
 
+#[allow(dead_code)]
 fn run_enhanced_wavelet_packet_validation(
     _config: &UltrathinkValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -1187,6 +1193,7 @@ fn run_enhanced_wavelet_packet_validation(
     })
 }
 
+#[allow(dead_code)]
 fn run_enhanced_simd_validation(
     _config: &UltrathinkValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -1203,6 +1210,7 @@ fn run_enhanced_simd_validation(
     })
 }
 
+#[allow(dead_code)]
 fn run_enhanced_parallel_validation(
     _config: &UltrathinkValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -1225,6 +1233,7 @@ fn run_enhanced_parallel_validation(
 }
 
 /// Generate a comprehensive validation report in human-readable format
+#[allow(dead_code)]
 pub fn generate_ultrathink_report(results: &UltrathinkValidationResult) -> String {
     let mut report = String::new();
 
@@ -1375,6 +1384,7 @@ pub fn generate_ultrathink_report(results: &UltrathinkValidationResult) -> Strin
 
 #[allow(dead_code)]
 /// Quick validation mode for development testing
+#[allow(dead_code)]
 pub fn run_quick_ultrathink_validation() -> SignalResult<UltrathinkValidationResult> {
     let config = UltrathinkValidationConfig {
         exhaustive: false,
@@ -1389,6 +1399,7 @@ pub fn run_quick_ultrathink_validation() -> SignalResult<UltrathinkValidationRes
 
 #[allow(dead_code)]
 /// Full validation mode for production testing
+#[allow(dead_code)]
 pub fn run_full_ultrathink_validation() -> SignalResult<UltrathinkValidationResult> {
     let config = UltrathinkValidationConfig::default();
     run_ultrathink_validation(&config)

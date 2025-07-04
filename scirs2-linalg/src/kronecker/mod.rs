@@ -9,6 +9,7 @@ use num_traits::{Float, NumAssign};
 use std::iter::Sum;
 
 // Helper function to convert ndarray::ShapeError to LinalgError
+#[allow(dead_code)]
 fn shape_err_to_linalg(err: ndarray::ShapeError) -> crate::error::LinalgError {
     crate::error::LinalgError::ShapeError(err.to_string())
 }
@@ -51,6 +52,7 @@ use crate::norm::matrix_norm;
 /// //  [0.3, 0.6, 0.4, 0.8],
 /// //  [0.9, 1.2, 1.2, 1.6]]
 /// ```
+#[allow(dead_code)]
 pub fn kron<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -105,6 +107,7 @@ where
 ///
 /// // This should equal (A ⊗ B) * x
 /// ```
+#[allow(dead_code)]
 pub fn kron_matvec<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -185,6 +188,7 @@ where
 ///
 /// // This should equal (A ⊗ B) * X
 /// ```
+#[allow(dead_code)]
 pub fn kron_matmul<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -267,6 +271,7 @@ where
 ///
 /// // a_approx and b_approx should be close to the original a and b
 /// ```
+#[allow(dead_code)]
 pub fn kron_factorize<F>(
     m: &ArrayView2<F>,
     m_rows: usize,
@@ -406,6 +411,7 @@ where
 ///
 /// // The Kronecker product a_cov ⊗ s_cov approximates the Fisher Information Matrix
 /// ```
+#[allow(dead_code)]
 pub fn kfac_factorization<F>(
     input_acts: &ArrayView2<F>,
     output_grads: &ArrayView2<F>,
@@ -530,6 +536,7 @@ where
 ///     0.01
 /// ).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn kfac_update<F>(
     weights: &ArrayView2<F>,
     gradients: &ArrayView2<F>,
@@ -1090,6 +1097,7 @@ pub struct BlockFisherMemoryInfo {
 /// # Returns
 ///
 /// * Updated weights and updated K-FAC state
+#[allow(dead_code)]
 pub fn advanced_kfac_step<F>(
     weights: &ArrayView2<F>,
     gradients: &ArrayView2<F>,
@@ -1140,6 +1148,7 @@ where
 }
 
 /// Compute stable matrix inverse with enhanced regularization
+#[allow(dead_code)]
 fn stable_matrix_inverse<F>(matrix: &ArrayView2<F>, damping: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + ScalarOperand + Send + Sync,

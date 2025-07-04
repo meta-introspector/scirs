@@ -1,7 +1,7 @@
 //! Coordinate-based interpolation functions
 
-use ndarray::{Array, Array1, Array2, ArrayView, Axis, Dimension, Ix1, IxDyn, Shape};
-use num_traits::{Float, FromPrimitive, NumCast, One, Zero};
+use ndarray::{Array, Dimension, IxDyn};
+use num_traits::{Float, FromPrimitive, One, Zero};
 use std::fmt::Debug;
 
 use super::{BoundaryMode, InterpolationOrder};
@@ -26,6 +26,7 @@ use crate::interpolation::spline::spline_filter;
 /// # Returns
 ///
 /// * `Result<Array<T, IxDyn>>` - Interpolated values at the coordinates
+#[allow(dead_code)]
 pub fn map_coordinates<T, D>(
     input: &Array<T, D>,
     coordinates: &Array<T, IxDyn>,
@@ -118,6 +119,7 @@ where
 }
 
 /// Convert flat index to multi-dimensional indices
+#[allow(dead_code)]
 fn unravel_index(flat_index: usize, shape: &[usize]) -> Vec<usize> {
     let mut indices = vec![0; shape.len()];
     let mut remaining = flat_index;
@@ -132,6 +134,7 @@ fn unravel_index(flat_index: usize, shape: &[usize]) -> Vec<usize> {
 }
 
 /// Interpolate at specific coordinates using spline interpolation
+#[allow(dead_code)]
 fn interpolate_at_coordinates<T>(
     input: &Array<T, IxDyn>,
     coordinates: &[T],
@@ -158,6 +161,7 @@ where
 }
 
 /// Nearest neighbor interpolation
+#[allow(dead_code)]
 fn interpolate_nearest<T>(
     input: &Array<T, IxDyn>,
     coordinates: &[T],
@@ -176,6 +180,7 @@ where
 }
 
 /// Linear interpolation
+#[allow(dead_code)]
 fn interpolate_linear<T>(
     input: &Array<T, IxDyn>,
     coordinates: &[T],
@@ -220,6 +225,7 @@ where
 }
 
 /// Spline interpolation (orders 2-5)
+#[allow(dead_code)]
 fn interpolate_spline<T>(
     input: &Array<T, IxDyn>,
     coordinates: &[T],
@@ -237,6 +243,7 @@ where
 }
 
 /// Get value at specific integer indices with boundary handling
+#[allow(dead_code)]
 fn get_value_at_indices<T>(
     input: &Array<T, IxDyn>,
     indices: &[isize],
@@ -329,6 +336,7 @@ where
 /// # Returns
 ///
 /// * `Result<T>` - Value at the given indices
+#[allow(dead_code)]
 pub fn value_at_coordinates<T, D>(input: &Array<T, D>, indices: &[usize]) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug,
@@ -392,6 +400,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, ndarray::Ix1>>` - Interpolated values at the points
+#[allow(dead_code)]
 pub fn interpn<T, D>(
     input: &Array<T, D>,
     points: &[Array<T, ndarray::Ix1>],

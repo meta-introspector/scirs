@@ -114,6 +114,7 @@ const _DEFAULT_TOLERANCE: f64 = 1e-12;
 ///
 /// Implements the more accurate continued fraction expansion based on the recurrence
 /// relations for the coefficients in the series expansion of spheroidal functions.
+#[allow(dead_code)]
 fn pro_cv_continued_fraction(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
     let n_f64 = n as f64;
     let m_f64 = m as f64;
@@ -178,6 +179,7 @@ fn pro_cv_continued_fraction(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 ///
 /// This function evaluates the infinite determinant that defines the characteristic values
 /// and its derivative with respect to λ, truncated to a finite size for computation.
+#[allow(dead_code)]
 fn compute_characteristic_determinant(
     m: i32,
     n: i32,
@@ -247,6 +249,7 @@ fn compute_characteristic_determinant(
 }
 
 /// Computes characteristic values using asymptotic expansion for large c values
+#[allow(dead_code)]
 fn pro_cv_asymptotic(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
     let n_f64 = n as f64;
     let m_f64 = m as f64;
@@ -351,6 +354,7 @@ fn pro_cv_asymptotic(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// - Accuracy degrades for very large |c| (> 100) or high quantum numbers
 /// - The continued fraction method may require careful monitoring for convergence
 /// - For production applications with extreme parameters, consider using arbitrary precision arithmetic
+#[allow(dead_code)]
 pub fn pro_cv(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
     // Enhanced parameter validation for numerical stability
     if m < 0 || n < m {
@@ -468,6 +472,7 @@ pub fn pro_cv(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// assert_eq!(values[0], 0.0); // n=0: n(n+1) = 0
 /// assert_eq!(values[1], 2.0); // n=1: n(n+1) = 2
 /// ```
+#[allow(dead_code)]
 pub fn pro_cv_seq(m: i32, n: i32, c: f64) -> SpecialResult<Vec<f64>> {
     // Parameter validation
     if m < 0 || n < m {
@@ -502,6 +507,7 @@ pub fn pro_cv_seq(m: i32, n: i32, c: f64) -> SpecialResult<Vec<f64>> {
 ///
 /// For oblate spheroidal functions, the parameter c appears with different signs
 /// in the recurrence relations compared to prolate functions.
+#[allow(dead_code)]
 fn obl_cv_continued_fraction(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
     let n_f64 = n as f64;
     let m_f64 = m as f64;
@@ -565,6 +571,7 @@ fn obl_cv_continued_fraction(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// Computes the oblate characteristic determinant and its derivative
 ///
 /// Similar to the prolate case but with sign changes in the recurrence relations
+#[allow(dead_code)]
 fn compute_oblate_characteristic_determinant(
     m: i32,
     n: i32,
@@ -627,6 +634,7 @@ fn compute_oblate_characteristic_determinant(
 }
 
 /// Computes oblate characteristic values using asymptotic expansion for large c values
+#[allow(dead_code)]
 fn obl_cv_asymptotic(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
     let n_f64 = n as f64;
     let m_f64 = m as f64;
@@ -674,6 +682,7 @@ fn obl_cv_asymptotic(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// # }
 /// # test().unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn obl_cv(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
     // Parameter validation
     if m < 0 || n < m {
@@ -758,6 +767,7 @@ pub fn obl_cv(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 /// # }
 /// # test().unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn obl_cv_seq(m: i32, n: i32, c: f64) -> SpecialResult<Vec<f64>> {
     // Parameter validation
     if m < 0 || n < m {
@@ -820,6 +830,7 @@ pub fn obl_cv_seq(m: i32, n: i32, c: f64) -> SpecialResult<Vec<f64>> {
 /// let (_, s_prime) = pro_ang1(1, 1, 0.5, 0.3).unwrap();
 /// assert!(s_prime.is_finite()); // Derivative should be finite
 /// ```
+#[allow(dead_code)]
 pub fn pro_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // Parameter validation
     if m < 0 || n < m {
@@ -965,6 +976,7 @@ pub fn pro_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// - May require careful scaling to avoid overflow
 /// - Derivative computation uses numerical differentiation for robustness
 /// - Accuracy decreases near ξ = 1 for high m values
+#[allow(dead_code)]
 pub fn pro_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // Parameter validation
     if m < 0 || n < m {
@@ -1114,6 +1126,7 @@ pub fn pro_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// let (_, q_der) = pro_rad2(1, 2, 0.8, 1.8).unwrap();
 /// assert!(q_der.is_finite()); // Derivative should be well-defined
 /// ```
+#[allow(dead_code)]
 pub fn pro_rad2(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // Parameter validation
     if m < 0 || n < m {
@@ -1257,6 +1270,7 @@ pub fn pro_rad2(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// let (t_val_obl, _) = obl_ang1(1, 2, 2.0, 0.3).unwrap();
 /// assert!(t_val_obl.is_finite()); // Should be well-defined
 /// ```
+#[allow(dead_code)]
 pub fn obl_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // Parameter validation
     if m < 0 || n < m {
@@ -1364,6 +1378,7 @@ pub fn obl_ang1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// let (r_higher, _) = obl_rad1(2, 3, 1.0, 1.8).unwrap();
 /// assert!(r_higher.is_finite()); // Should be well-defined
 /// ```
+#[allow(dead_code)]
 pub fn obl_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // Parameter validation
     if m < 0 || n < m {
@@ -1607,6 +1622,7 @@ pub fn obl_rad1(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// let (q_higher, _) = obl_rad2(1, 2, 0.8, 1.6).unwrap();
 /// assert!(q_higher.is_finite()); // Should be well-defined
 /// ```
+#[allow(dead_code)]
 pub fn obl_rad2(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // Parameter validation
     if m < 0 || n < m {
@@ -1831,6 +1847,7 @@ pub fn obl_rad2(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
 ///
 /// This function implements a more accurate perturbation expansion for small c values,
 /// including higher-order terms and analytical derivative computation.
+#[allow(dead_code)]
 fn compute_prolate_angular_perturbation(
     m: i32,
     n: i32,
@@ -1896,6 +1913,7 @@ fn compute_prolate_angular_perturbation(
 ///
 /// This implements the full series expansion using Legendre function basis:
 /// S_mn(c,η) = Σ_k d_k^{mn}(c) P_k^m(η)
+#[allow(dead_code)]
 fn compute_prolate_angular_series(m: i32, n: i32, c: f64, x: f64) -> SpecialResult<(f64, f64)> {
     let lambda = pro_cv(m, n, c)?;
 
@@ -1961,6 +1979,7 @@ fn compute_prolate_angular_series(m: i32, n: i32, c: f64, x: f64) -> SpecialResu
 ///
 /// Uses the recurrence relation: d/dx P_n^m(x) = [n*x*P_n^m(x) - (n+m)*P_{n-1}^m(x)] / (x^2 - 1)
 /// For x = ±1, uses alternative formulas to avoid singularities.
+#[allow(dead_code)]
 fn compute_legendre_assoc_derivative(n: usize, m: i32, x: f64) -> f64 {
     if n == 0 {
         return 0.0;
@@ -2030,6 +2049,7 @@ fn compute_legendre_assoc_derivative(n: usize, m: i32, x: f64) -> f64 {
 /// # Returns
 ///
 /// * `SpecialResult<(f64, f64)>` - (Q_n^m(x), dQ_n^m(x)/dx)
+#[allow(dead_code)]
 fn legendre_associated_second_kind(n: i32, m: i32, x: f64) -> SpecialResult<(f64, f64)> {
     // Parameter validation
     if n < 0 || m.abs() > n {
@@ -2061,6 +2081,7 @@ fn legendre_associated_second_kind(n: i32, m: i32, x: f64) -> SpecialResult<(f64
 }
 
 /// Compute Q_n^0(x) using recurrence relations and analytical expressions
+#[allow(dead_code)]
 fn legendre_second_kind_m0(n: i32, x: f64) -> SpecialResult<(f64, f64)> {
     if n == 0 {
         let q_0 = 0.5 * ((x + 1.0) / (x - 1.0)).ln();
@@ -2100,6 +2121,7 @@ fn legendre_second_kind_m0(n: i32, x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Compute Q_n^m(x) for general m using the relationship with P_n^m and Q_n^0
+#[allow(dead_code)]
 fn legendre_second_kind_general(n: i32, m: i32, x: f64) -> SpecialResult<(f64, f64)> {
     let m_abs = m.abs();
 
@@ -2155,6 +2177,7 @@ fn legendre_second_kind_general(n: i32, m: i32, x: f64) -> SpecialResult<(f64, f
 ///
 /// Solves the characteristic equation using the three-term recurrence relation
 /// and matrix eigenvalue methods for better accuracy
+#[allow(dead_code)]
 fn solve_spheroidal_eigenvalue_improved(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
     // For small c, use perturbation theory
     if c.abs() < 0.1 {
@@ -2167,6 +2190,7 @@ fn solve_spheroidal_eigenvalue_improved(m: i32, n: i32, c: f64) -> SpecialResult
 }
 
 /// Solve eigenvalue using perturbation theory for small c
+#[allow(dead_code)]
 fn solve_eigenvalue_perturbation(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
     let _m_f = m as f64;
     let n_f = n as f64;
@@ -2190,6 +2214,7 @@ fn solve_eigenvalue_perturbation(m: i32, n: i32, c: f64) -> SpecialResult<f64> {
 }
 
 /// Solve eigenvalue using matrix methods for the three-term recurrence
+#[allow(dead_code)]
 fn solve_eigenvalue_matrix_method(
     m: i32,
     n: i32,

@@ -7,6 +7,7 @@ use crate::unconstrained::{Bounds, Options};
 use ndarray::{Array1, ArrayView1};
 
 /// Implements the Conjugate Gradient method for unconstrained optimization with optional bounds support
+#[allow(dead_code)]
 pub fn minimize_conjugate_gradient<F, S>(
     mut fun: F,
     x0: Array1<f64>,
@@ -171,6 +172,7 @@ where
 }
 
 /// Project search direction to respect bounds
+#[allow(dead_code)]
 fn project_search_direction(p: &mut Array1<f64>, x: &Array1<f64>, bounds: &Bounds) {
     for i in 0..p.len() {
         // For dimensions at the bound, zero out search direction if it would go outside bounds
@@ -188,6 +190,7 @@ fn project_search_direction(p: &mut Array1<f64>, x: &Array1<f64>, bounds: &Bound
 }
 
 /// Helper function for line search in Conjugate Gradient method with optional bounds support
+#[allow(dead_code)]
 fn line_search_cg<F, S>(
     fun: &mut F,
     x: &Array1<f64>,
@@ -261,6 +264,7 @@ where
 }
 
 /// Compute bounds for line search parameter
+#[allow(dead_code)]
 pub fn compute_line_bounds(
     x: &Array1<f64>,
     direction: &Array1<f64>,

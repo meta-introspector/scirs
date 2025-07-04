@@ -285,6 +285,7 @@ impl<
 ///
 /// # Returns
 /// A new Natural Neighbor interpolator
+#[allow(dead_code)]
 pub fn make_natural_neighbor_interpolator<
     F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static + std::cmp::PartialOrd,
 >(
@@ -303,6 +304,7 @@ pub fn make_natural_neighbor_interpolator<
 ///
 /// # Returns
 /// A new Natural Neighbor interpolator using Sibson's method
+#[allow(dead_code)]
 pub fn make_sibson_interpolator<
     F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static + std::cmp::PartialOrd,
 >(
@@ -320,6 +322,7 @@ pub fn make_sibson_interpolator<
 ///
 /// # Returns
 /// A new Natural Neighbor interpolator using the non-Sibsonian (Laplace) method
+#[allow(dead_code)]
 pub fn make_laplace_interpolator<
     F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static + std::cmp::PartialOrd,
 >(

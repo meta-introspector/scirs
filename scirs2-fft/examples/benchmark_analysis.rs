@@ -21,6 +21,7 @@ struct BenchmarkData {
 }
 
 /// Parse benchmark results from files
+#[allow(dead_code)]
 fn parse_benchmark_results() -> Result<Vec<BenchmarkData>, Box<dyn Error>> {
     let mut results = Vec::new();
 
@@ -45,6 +46,7 @@ fn parse_benchmark_results() -> Result<Vec<BenchmarkData>, Box<dyn Error>> {
 }
 
 /// Create performance comparison plot
+#[allow(dead_code)]
 fn create_performance_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut plot = Plot::new();
 
@@ -93,6 +95,7 @@ fn create_performance_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>>
 }
 
 /// Create memory usage plot
+#[allow(dead_code)]
 fn create_memory_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut plot = Plot::new();
 
@@ -143,6 +146,7 @@ fn create_memory_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
 }
 
 /// Create accuracy comparison plot
+#[allow(dead_code)]
 fn create_accuracy_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut plot = Plot::new();
 
@@ -193,6 +197,7 @@ fn create_accuracy_plot(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
 }
 
 /// Create comparison table
+#[allow(dead_code)]
 fn create_comparison_table(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>> {
     let mut html = String::from(
         r#"
@@ -262,6 +267,7 @@ fn create_comparison_table(data: &[BenchmarkData]) -> Result<(), Box<dyn Error>>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     // Create results directory
     fs::create_dir_all("benchmark_results")?;

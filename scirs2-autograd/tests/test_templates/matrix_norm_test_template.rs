@@ -8,6 +8,7 @@ use crate::{
 use scirs2_autograd as ag;
 
 // Utility function for comparing matrices with tolerance
+#[allow(dead_code)]
 fn assert_matrix_close<F: ag::Float>(
     actual: &Array2<F>, 
     expected: &Array2<F>, 
@@ -27,6 +28,7 @@ fn assert_matrix_close<F: ag::Float>(
 }
 
 // Finite difference gradient verification
+#[allow(dead_code)]
 fn verify_norm_gradient_finite_diff<F: ag::Float>(
     norm_fn: impl Fn(ag::Tensor<F>) -> ag::Tensor<F>,
     matrix: Array2<F>,

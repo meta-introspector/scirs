@@ -2,6 +2,7 @@ use ag::tensor_ops as T;
 use ndarray::array;
 use scirs2_autograd as ag;
 
+#[allow(dead_code)]
 fn main() {
     ag::run::<f64, _, _>(|ctx| {
         println!("=== Debug Norm Gradient Test ===");

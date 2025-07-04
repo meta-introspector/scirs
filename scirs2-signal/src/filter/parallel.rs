@@ -27,6 +27,7 @@ use std::fmt::Debug;
 /// # Returns
 ///
 /// * Zero-phase filtered signal
+#[allow(dead_code)]
 pub fn parallel_filtfilt<T>(
     b: &[f64],
     a: &[f64],
@@ -86,6 +87,7 @@ where
 /// # Returns
 ///
 /// * Convolution result
+#[allow(dead_code)]
 pub fn parallel_convolve<T, U>(
     a: &[T],
     v: &[U],
@@ -119,6 +121,7 @@ where
 }
 
 /// Overlap-save method for parallel filtering
+#[allow(dead_code)]
 fn parallel_filter_overlap_save(
     b: &[f64],
     a: &[f64],
@@ -181,6 +184,7 @@ fn parallel_filter_overlap_save(
 }
 
 /// Direct filtering implementation (for chunks)
+#[allow(dead_code)]
 fn filter_direct(b: &[f64], a: &[f64], x: &[f64]) -> SignalResult<Vec<f64>> {
     let n = x.len();
     let nb = b.len();
@@ -212,6 +216,7 @@ fn filter_direct(b: &[f64], a: &[f64], x: &[f64]) -> SignalResult<Vec<f64>> {
 }
 
 /// Overlap-save convolution for parallel processing
+#[allow(dead_code)]
 fn parallel_convolve_overlap_save(
     a: &Array1<f64>,
     v: &Array1<f64>,
@@ -293,6 +298,7 @@ fn parallel_convolve_overlap_save(
 }
 
 /// Direct convolution for small signals
+#[allow(dead_code)]
 fn parallel_convolve_direct(
     a: &Array1<f64>,
     v: &Array1<f64>,
@@ -355,6 +361,7 @@ fn parallel_convolve_direct(
 /// # Returns
 ///
 /// * Filtered 2D array
+#[allow(dead_code)]
 pub fn parallel_convolve2d(
     image: &Array2<f64>,
     kernel: &Array2<f64>,
@@ -447,6 +454,7 @@ pub fn parallel_convolve2d(
 }
 
 /// Pad image for boundary handling
+#[allow(dead_code)]
 fn pad_image(
     image: &Array2<f64>,
     pad_rows: usize,
@@ -524,6 +532,7 @@ fn pad_image(
 /// # Returns
 ///
 /// * Filtered data
+#[allow(dead_code)]
 pub fn parallel_savgol_filter(
     data: &Array1<f64>,
     window_length: usize,
@@ -558,6 +567,7 @@ pub fn parallel_savgol_filter(
 ///
 /// * Array of filtered signals
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn parallel_batch_filter(
     b: &[f64],
     a: &[f64],
@@ -665,6 +675,7 @@ pub fn parallel_decimate_filter(
 /// # Returns
 ///
 /// * Vector of filtered outputs, one for each filter
+#[allow(dead_code)]
 pub fn parallel_fir_filter_bank(
     signal: &[f64],
     filter_bank: &[Vec<f64>],
@@ -716,6 +727,7 @@ pub fn parallel_fir_filter_bank(
 /// # Returns
 ///
 /// * Vector of filtered outputs, one for each filter
+#[allow(dead_code)]
 pub fn parallel_iir_filter_bank(
     signal: &[f64],
     numerators: &[Vec<f64>],
@@ -768,6 +780,7 @@ pub fn parallel_iir_filter_bank(
 /// # Returns
 ///
 /// * Tuple of (filtered output, final filter coefficients, error signal)
+#[allow(dead_code)]
 pub fn parallel_adaptive_lms_filter(
     signal: &[f64],
     desired: &[f64],
@@ -847,6 +860,7 @@ pub fn parallel_adaptive_lms_filter(
 /// # Returns
 ///
 /// * Wavelet coefficients organized by level and type (approximation/detail)
+#[allow(dead_code)]
 pub fn parallel_wavelet_filter_bank(
     signal: &[f64],
     wavelet_filters: &(Vec<f64>, Vec<f64>), // (lowpass, highpass)
@@ -929,6 +943,7 @@ pub fn parallel_wavelet_filter_bank(
 /// # Returns
 ///
 /// * Filtered and decimated output
+#[allow(dead_code)]
 pub fn parallel_polyphase_filter(
     signal: &[f64],
     polyphase_filters: &[Vec<f64>],
@@ -1008,6 +1023,7 @@ pub fn parallel_polyphase_filter(
 /// # Returns
 ///
 /// * Filtered signal
+#[allow(dead_code)]
 pub fn parallel_fft_filter(
     signal: &[f64],
     impulse_response: &[f64],
@@ -1141,6 +1157,7 @@ impl Default for ParallelFilterConfig {
 /// # Returns
 ///
 /// * Filtered signal
+#[allow(dead_code)]
 pub fn parallel_filter_advanced(
     signal: &[f64],
     filter_type: &ParallelFilterType,
@@ -1216,6 +1233,7 @@ pub enum ParallelFilterType {
 /// # Returns
 ///
 /// * Median filtered signal
+#[allow(dead_code)]
 pub fn parallel_median_filter(
     signal: &[f64],
     kernel_size: usize,
@@ -1299,6 +1317,7 @@ pub fn parallel_median_filter(
 /// # Returns
 ///
 /// * Morphologically filtered signal
+#[allow(dead_code)]
 pub fn parallel_morphological_filter(
     signal: &[f64],
     structuring_element: &[f64],
@@ -1385,6 +1404,7 @@ pub enum MorphologicalOperation {
 }
 
 /// Apply erosion operation at a specific index
+#[allow(dead_code)]
 fn apply_erosion(signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 {
     let half_se = se_len / 2;
     let mut min_val = f64::INFINITY;
@@ -1406,6 +1426,7 @@ fn apply_erosion(signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 {
 }
 
 /// Apply dilation operation at a specific index
+#[allow(dead_code)]
 fn apply_dilation(signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 {
     let half_se = se_len / 2;
     let mut max_val = f64::NEG_INFINITY;
@@ -1441,6 +1462,7 @@ fn apply_dilation(signal: &[f64], idx: usize, se: &[f64], se_len: usize) -> f64 
 /// # Returns
 ///
 /// * Rank-order filtered signal
+#[allow(dead_code)]
 pub fn parallel_rank_order_filter(
     signal: &[f64],
     window_size: usize,
@@ -1529,6 +1551,7 @@ pub fn parallel_rank_order_filter(
 /// # Returns
 ///
 /// * Bilateral filtered signal
+#[allow(dead_code)]
 pub fn parallel_bilateral_filter(
     signal: &[f64],
     window_size: usize,
@@ -1636,6 +1659,7 @@ pub fn parallel_bilateral_filter(
 /// # Returns
 ///
 /// * CIC filtered and decimated signal
+#[allow(dead_code)]
 pub fn parallel_cic_filter(
     signal: &[f64],
     decimation_factor: usize,
@@ -1757,6 +1781,7 @@ pub fn parallel_cic_filter(
 /// # Returns
 ///
 /// * Filtered signal
+#[allow(dead_code)]
 pub fn parallel_lfilter<T>(
     b: &[f64],
     a: &[f64],
@@ -1835,6 +1860,7 @@ where
 ///
 /// Converts a filter to minimum phase using parallel processing for the
 /// spectral factorization and root finding operations.
+#[allow(dead_code)]
 pub fn parallel_minimum_phase(
     b: &[f64],
     discrete_time: bool,
@@ -1891,6 +1917,7 @@ pub fn parallel_minimum_phase(
 ///
 /// Computes the group delay of a filter at specified frequencies using
 /// parallel processing for improved performance.
+#[allow(dead_code)]
 pub fn parallel_group_delay(
     b: &[f64],
     a: &[f64],
@@ -1933,6 +1960,7 @@ pub fn parallel_group_delay(
 ///
 /// Creates a matched filter for the given template with parallel processing
 /// for correlation computation.
+#[allow(dead_code)]
 pub fn parallel_matched_filter(
     template: &[f64],
     signal: &[f64],
@@ -1991,6 +2019,7 @@ pub fn parallel_matched_filter(
 
 // Helper functions for parallel implementations
 
+#[allow(dead_code)]
 fn sequential_lfilter(b: &[f64], a: &[f64], x: &[f64]) -> SignalResult<Vec<f64>> {
     let n = x.len();
     let mut y = vec![0.0; n];
@@ -2022,6 +2051,7 @@ fn sequential_lfilter(b: &[f64], a: &[f64], x: &[f64]) -> SignalResult<Vec<f64>>
     Ok(y)
 }
 
+#[allow(dead_code)]
 fn sequential_minimum_phase(b: &[f64], discrete_time: bool) -> SignalResult<Vec<f64>> {
     // Simplified minimum phase conversion
     let mut result = b.to_vec();
@@ -2034,6 +2064,7 @@ fn sequential_minimum_phase(b: &[f64], discrete_time: bool) -> SignalResult<Vec<
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn sequential_group_delay(b: &[f64], a: &[f64], w: &[f64]) -> SignalResult<Vec<f64>> {
     let mut delays = Vec::with_capacity(w.len());
 
@@ -2045,6 +2076,7 @@ fn sequential_group_delay(b: &[f64], a: &[f64], w: &[f64]) -> SignalResult<Vec<f
     Ok(delays)
 }
 
+#[allow(dead_code)]
 fn compute_group_delay_at_frequency(b: &[f64], a: &[f64], w: f64) -> SignalResult<f64> {
     // Compute group delay using derivative of phase
     let exp_jw = Complex64::new(0.0, -w).exp();
@@ -2075,6 +2107,7 @@ fn compute_group_delay_at_frequency(b: &[f64], a: &[f64], w: f64) -> SignalResul
     Ok(group_delay)
 }
 
+#[allow(dead_code)]
 fn sequential_matched_filter(
     template: &[f64],
     signal: &[f64],
@@ -2106,6 +2139,7 @@ fn sequential_matched_filter(
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn parallel_find_polynomial_roots(
     coeffs: &[f64],
     chunk_size: usize,
@@ -2126,6 +2160,7 @@ fn parallel_find_polynomial_roots(
     Ok(roots)
 }
 
+#[allow(dead_code)]
 fn parallel_reconstruct_polynomial(
     roots: &[Complex64],
     chunk_size: usize,
@@ -2153,6 +2188,7 @@ fn parallel_reconstruct_polynomial(
     Ok(coeffs)
 }
 
+#[allow(dead_code)]
 fn compute_matched_filter_chunk(
     template: &[f64],
     chunk: &[f64],

@@ -278,6 +278,7 @@ where
 /// # Returns
 ///
 /// * Result containing a type-erased ConfusionMatrixVisualizer that implements MetricVisualizer
+#[allow(dead_code)]
 pub fn confusion_matrix_visualization(
     matrix: Array2<f64>,
     labels: Option<Vec<String>>,
@@ -387,6 +388,7 @@ pub fn confusion_matrix_visualization(
 /// # Returns
 ///
 /// * Result containing a box of dyn MetricVisualizer
+#[allow(dead_code)]
 pub fn confusion_matrix_from_labels<'a, T, S>(
     y_true: &'a ArrayBase<S, Ix2>,
     y_pred: &'a ArrayBase<S, Ix2>,

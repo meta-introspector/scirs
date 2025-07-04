@@ -1,9 +1,9 @@
 //! Weight initialization strategies for neural networks
 
 use crate::error::{NeuralError, Result};
-use rand::rng;
 use ndarray::{Array, Dimension, IxDyn};
 use num_traits::Float;
+use rand::rng;
 use rand::Rng;
 use std::fmt::Debug;
 /// Initialization strategies for neural network weights
@@ -57,13 +57,13 @@ impl Initializer {
             Initializer::Ones => {
                 let ones: Vec<F> = (0..size).map(|_| F::one()).collect();
                 Array::from_shape_vec(shape, ones).map_err(|e| {
-                    NeuralError::InvalidArchitecture(format!("Failed to create array: {}", e))
+                    NeuralError::InvalidArchitecture(format!("Failed to create array: {e}"))
                 })
             }
             Initializer::Uniform { min, max } => {
                 let values: Vec<F> = (0..size)
                     .map(|_| {
-                        let val = rng.gen_range(*min..*max);
+                        let val = rng.random_range(*min..*max);
                         F::from(val).ok_or_else(|| {
                             NeuralError::InvalidArchitecture(
                                 "Failed to convert random value".to_string(),
@@ -72,15 +72,15 @@ impl Initializer {
                     })
                     .collect::<Result<Vec<F>>>()?;
                 Array::from_shape_vec(shape, values).map_err(|e| {
-                    NeuralError::InvalidArchitecture(format!("Failed to create array: {}", e))
+                    NeuralError::InvalidArchitecture(format!("Failed to create array: {e}"))
                 })
             }
             Initializer::Normal { mean, std } => {
                 let values: Vec<F> = (0..(size / 2 + 1))
                     .flat_map(|_| {
                         // Box-Muller transform to generate normal distribution
-                        let u1 = rng.gen_range(0.0..1.0);
-                        let u2 = rng.gen_range(0.0..1.0);
+                        let u1 = rng.random_range(0.0..1.0);
+                        let u2 = rng.random_range(0.0..1.0);
                         let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                         let z1 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).sin();
                         let val0 = mean + std * z0;
@@ -93,19 +93,19 @@ impl Initializer {
                     .take(size)
                     .collect();
                 Array::from_shape_vec(shape, values).map_err(|e| {
-                    NeuralError::InvalidArchitecture(format!("Failed to create array: {}", e))
+                    NeuralError::InvalidArchitecture(format!("Failed to create array: {e}"))
                 })
             }
             Initializer::Xavier => {
                 let limit = (6.0 / (fan_in + fan_out) as f64).sqrt();
                 let values: Vec<F> = (0..size)
                     .map(|_| {
-                        let val = rng.gen_range(-limit..limit);
+                        let val = rng.random_range(-limit..limit);
                         F::from(val).unwrap_or(F::zero())
                     })
                     .collect();
                 Array::from_shape_vec(shape, values).map_err(|e| {
-                    NeuralError::InvalidArchitecture(format!("Failed to create array: {}", e))
+                    NeuralError::InvalidArchitecture(format!("Failed to create array: {e}"))
                 })
             }
             Initializer::He => {
@@ -113,8 +113,8 @@ impl Initializer {
                 let values: Vec<F> = (0..(size / 2 + 1))
                     .flat_map(|_| {
                         // Box-Muller transform for He initialization
-                        let u1 = rng.gen_range(0.0..1.0);
-                        let u2 = rng.gen_range(0.0..1.0);
+                        let u1 = rng.random_range(0.0..1.0);
+                        let u2 = rng.random_range(0.0..1.0);
                         let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                         let z1 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).sin();
                         let val0 = std * z0;
@@ -127,7 +127,7 @@ impl Initializer {
                     .take(size)
                     .collect();
                 Array::from_shape_vec(shape, values).map_err(|e| {
-                    NeuralError::InvalidArchitecture(format!("Failed to create array: {}", e))
+                    NeuralError::InvalidArchitecture(format!("Failed to create array: {e}"))
                 })
             }
             Initializer::LeCun => {
@@ -135,8 +135,8 @@ impl Initializer {
                 let values: Vec<F> = (0..(size / 2 + 1))
                     .flat_map(|_| {
                         // Box-Muller transform for LeCun initialization
-                        let u1 = rng.gen_range(0.0..1.0);
-                        let u2 = rng.gen_range(0.0..1.0);
+                        let u1 = rng.random_range(0.0..1.0);
+                        let u2 = rng.random_range(0.0..1.0);
                         let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
                         let z1 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).sin();
                         let val0 = std * z0;
@@ -149,11 +149,12 @@ impl Initializer {
                     .take(size)
                     .collect();
                 Array::from_shape_vec(shape, values).map_err(|e| {
-                    NeuralError::InvalidArchitecture(format!("Failed to create array: {}", e))
+                    NeuralError::InvalidArchitecture(format!("Failed to create array: {e}"))
                 })
             }
         }
     }
+}
 /// Xavier/Glorot uniform initialization
 ///
 /// # Arguments

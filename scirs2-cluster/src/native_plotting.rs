@@ -1310,6 +1310,7 @@ impl InteractiveController {
 // This provides the core structure for native plotting capabilities
 
 /// Convenience function to create native ultrathink visualization
+#[allow(dead_code)]
 pub fn create_native_ultrathink_plot(
     data: &ArrayView2<f64>,
     result: &UltrathinkClusteringResult,
@@ -1321,6 +1322,7 @@ pub fn create_native_ultrathink_plot(
 }
 
 /// Export native visualization to file
+#[allow(dead_code)]
 pub fn export_native_visualization(
     output: &NativeVisualizationOutput,
     filename: &str,

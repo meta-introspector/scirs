@@ -135,6 +135,7 @@ impl<F: IntegrateFloat> ForwardAD<F> {
 }
 
 /// Compute gradient using forward mode AD (convenience function)
+#[allow(dead_code)]
 pub fn forward_gradient<F, Func>(f: Func, x: ArrayView1<F>) -> IntegrateResult<Array1<F>>
 where
     F: IntegrateFloat,
@@ -145,6 +146,7 @@ where
 }
 
 /// Compute Jacobian using forward mode AD (convenience function)
+#[allow(dead_code)]
 pub fn forward_jacobian<F, Func>(f: Func, x: ArrayView1<F>) -> IntegrateResult<Array2<F>>
 where
     F: IntegrateFloat,
@@ -155,6 +157,7 @@ where
 }
 
 /// Example: Rosenbrock function gradient
+#[allow(dead_code)]
 pub fn example_rosenbrock_gradient<F: IntegrateFloat>() -> IntegrateResult<()> {
     // Rosenbrock function: f(x,y) = (1-x)^2 + 100*(y-x^2)^2
     let rosenbrock = |x: &[Dual<F>]| {

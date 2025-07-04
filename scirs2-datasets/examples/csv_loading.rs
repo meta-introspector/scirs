@@ -1,5 +1,6 @@
 use scirs2_datasets::loaders::load_csv_legacy;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load a CSV file with headers and target column
     let dataset = load_csv_legacy(

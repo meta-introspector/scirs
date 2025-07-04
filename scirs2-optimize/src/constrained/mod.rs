@@ -244,6 +244,7 @@ impl<F> Constraint<F> {
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn minimize_constrained<F, S>(
     func: F,
     x0: &ArrayBase<S, Ix1>,

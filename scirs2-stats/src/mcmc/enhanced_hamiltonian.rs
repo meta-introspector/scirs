@@ -7,17 +7,18 @@
 //! - GPU-accelerated HMC (when available)
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2};
-use num_traits::{Float, One, Zero};
+use ndarray::{Array1, Array2, ScalarOperand};
+use num_traits::{Float, NumAssign};
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use std::fmt::Display;
 use std::marker::PhantomData;
 
 /// Enhanced target distribution trait with automatic differentiation support
 pub trait EnhancedDifferentiableTarget<F>: Send + Sync
 where
-    F: Float + Copy,
+    F: Float + Copy + ScalarOperand + NumAssign + Display + Send + Sync,
 {
     /// Compute log probability density
     fn log_density(&self, x: &Array1<F>) -> F;
@@ -193,7 +194,15 @@ pub struct HMCStatistics {
 impl<T, F> EnhancedHamiltonianMonteCarlo<T, F>
 where
     T: EnhancedDifferentiableTarget<F>,
-    F: Float + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + ScalarOperand
+        + NumAssign
+        + Display
+        + 'static,
 {
     /// Create new enhanced HMC sampler
     pub fn new(target: T, initial: Array1<F>, config: EnhancedHMCConfig) -> StatsResult<Self> {
@@ -273,7 +282,7 @@ where
         // Metropolis acceptance
         let log_alpha = -(final_hamiltonian - initial_hamiltonian);
         let alpha = log_alpha.exp().min(F::one());
-        let u: f64 = rng.gen();
+        let u: f64 = rng.random();
 
         self.stats.n_proposals += 1;
 
@@ -311,10 +320,8 @@ where
         // Initial half step for momentum
         let gradient = self.target.gradient(&position);
         if self.config.use_simd && position.len() >= 4 {
-            momentum = F::simd_add(
-                &momentum.view(),
-                &F::simd_mul_scalar(&gradient.view(), self.step_size * F::from(0.5).unwrap()),
-            );
+            let scaled_gradient = gradient.mapv(|g| g * self.step_size * F::from(0.5).unwrap());
+            momentum = F::simd_add(&momentum.view(), &scaled_gradient.view());
         } else {
             momentum = momentum + gradient.mapv(|g| g * self.step_size * F::from(0.5).unwrap());
         }
@@ -324,10 +331,8 @@ where
             // Full step for position
             let momentum_update = self.mass_inv.dot(&momentum);
             if self.config.use_simd && position.len() >= 4 {
-                position = F::simd_add(
-                    &position.view(),
-                    &F::simd_mul_scalar(&momentum_update.view(), self.step_size),
-                );
+                let scaled_momentum = momentum_update.mapv(|m| m * self.step_size);
+                position = F::simd_add(&position.view(), &scaled_momentum.view());
             } else {
                 position = position + momentum_update.mapv(|m| m * self.step_size);
             }
@@ -336,10 +341,8 @@ where
             if self.config.num_leapfrog_steps > 1 {
                 let gradient = self.target.gradient(&position);
                 if self.config.use_simd && position.len() >= 4 {
-                    momentum = F::simd_add(
-                        &momentum.view(),
-                        &F::simd_mul_scalar(&gradient.view(), self.step_size),
-                    );
+                    let scaled_gradient = gradient.mapv(|g| g * self.step_size);
+                    momentum = F::simd_add(&momentum.view(), &scaled_gradient.view());
                 } else {
                     momentum = momentum + gradient.mapv(|g| g * self.step_size);
                 }
@@ -349,10 +352,8 @@ where
         // Final half step for momentum
         let gradient = self.target.gradient(&position);
         if self.config.use_simd && position.len() >= 4 {
-            momentum = F::simd_add(
-                &momentum.view(),
-                &F::simd_mul_scalar(&gradient.view(), self.step_size * F::from(0.5).unwrap()),
-            );
+            let scaled_gradient = gradient.mapv(|g| g * self.step_size * F::from(0.5).unwrap());
+            momentum = F::simd_add(&momentum.view(), &scaled_gradient.view());
         } else {
             momentum = momentum + gradient.mapv(|g| g * self.step_size * F::from(0.5).unwrap());
         }
@@ -558,7 +559,7 @@ where
             .fold(Array1::zeros(self.position.len()), |acc, x| acc + x)
             / F::from(n.saturating_sub(1).max(1)).unwrap();
 
-        Ok(variance.mapv(|v| v.max(F::from(1e-6).unwrap()))) // Ensure positive variance
+        Ok(variance.mapv(|v: F| v.max(F::from(1e-6).unwrap()))) // Ensure positive variance
     }
 
     /// Compute sample covariance from buffer
@@ -620,6 +621,7 @@ where
 }
 
 /// Convenience function for enhanced HMC sampling
+#[allow(dead_code)]
 pub fn enhanced_hmc_sample<T, F, R>(
     target: T,
     initial: Array1<F>,
@@ -629,7 +631,15 @@ pub fn enhanced_hmc_sample<T, F, R>(
 ) -> StatsResult<Array2<F>>
 where
     T: EnhancedDifferentiableTarget<F>,
-    F: Float + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + ScalarOperand
+        + NumAssign
+        + Display
+        + 'static,
     R: Rng + ?Sized,
 {
     let config = config.unwrap_or_default();

@@ -45,6 +45,7 @@ impl Default for ActiveContourParams {
 }
 
 /// Compute gradient vector flow (GVF) field for edge map
+#[allow(dead_code)]
 fn gradient_vector_flow<T>(
     edge_map: &ArrayView2<T>,
     mu: f64,
@@ -91,6 +92,7 @@ where
 }
 
 /// Compute gradient of an image
+#[allow(dead_code)]
 fn compute_gradient<T>(image: &ArrayView2<T>) -> NdimageResult<(Array2<f64>, Array2<f64>)>
 where
     T: Float + FromPrimitive,
@@ -124,6 +126,7 @@ where
 ///
 /// # Returns
 /// Final contour points after evolution
+#[allow(dead_code)]
 pub fn active_contour<T>(
     image: &ArrayView2<T>,
     initial_contour: &ArrayView2<f64>,
@@ -261,6 +264,7 @@ where
 }
 
 /// Generate initial circular contour
+#[allow(dead_code)]
 pub fn create_circle_contour(center: (f64, f64), radius: f64, num_points: usize) -> Array2<f64> {
     let mut contour = Array2::zeros((num_points, 2));
 
@@ -274,6 +278,7 @@ pub fn create_circle_contour(center: (f64, f64), radius: f64, num_points: usize)
 }
 
 /// Generate initial elliptical contour
+#[allow(dead_code)]
 pub fn create_ellipse_contour(
     center: (f64, f64),
     semi_major: f64,
@@ -299,6 +304,7 @@ pub fn create_ellipse_contour(
 }
 
 /// Extract contour from segmentation mask
+#[allow(dead_code)]
 pub fn mask_to_contour(mask: &ArrayView2<bool>) -> Vec<(f64, f64)> {
     let (height, width) = mask.dim();
     let mut contour_points = Vec::new();
@@ -342,6 +348,7 @@ pub fn mask_to_contour(mask: &ArrayView2<bool>) -> Vec<(f64, f64)> {
 }
 
 /// Order contour points to form a continuous path
+#[allow(dead_code)]
 fn order_contour_points(points: &mut Vec<(f64, f64)>) {
     if points.is_empty() {
         return;
@@ -373,6 +380,7 @@ fn order_contour_points(points: &mut Vec<(f64, f64)>) {
 }
 
 /// Smooth a contour using B-spline interpolation
+#[allow(dead_code)]
 pub fn smooth_contour(
     contour: &ArrayView2<f64>,
     smoothing_factor: f64,

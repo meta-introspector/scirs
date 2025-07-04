@@ -3,6 +3,7 @@
 use scirs2_signal::window::{dpss, dpss_windows, get_window};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("DPSS (Slepian) Windows Example");
     println!("==============================\n");

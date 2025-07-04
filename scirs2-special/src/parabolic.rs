@@ -37,6 +37,7 @@ use crate::gamma::{gamma, gammaln};
 /// let (d, dp) = pbdv(1.0, 0.5).unwrap();
 /// println!("D_1(0.5) = {}, D_1'(0.5) = {}", d, dp);
 /// ```
+#[allow(dead_code)]
 pub fn pbdv(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
     if v.is_nan() || x.is_nan() {
         return Err(SpecialError::DomainError("NaN input to pbdv".to_string()));
@@ -66,6 +67,7 @@ pub fn pbdv(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Implementation of D_0(x) for v = 0
+#[allow(dead_code)]
 fn pbdv_0(x: f64) -> SpecialResult<(f64, f64)> {
     // D_0(x) = e^(-x²/4)
     let x2 = x * x;
@@ -77,6 +79,7 @@ fn pbdv_0(x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Implementation of D_1(x) for v = 1
+#[allow(dead_code)]
 fn pbdv_1(x: f64) -> SpecialResult<(f64, f64)> {
     // D_1(x) = x * e^(-x²/4)
     let x2 = x * x;
@@ -89,6 +92,7 @@ fn pbdv_1(x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Implementation of D_2(x) for v = 2
+#[allow(dead_code)]
 fn pbdv_2(x: f64) -> SpecialResult<(f64, f64)> {
     // D_2(x) = (x² - 2) * e^(-x²/4)
     let x2 = x * x;
@@ -101,6 +105,7 @@ fn pbdv_2(x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Implementation of D_{-1}(x) for v = -1
+#[allow(dead_code)]
 fn pbdv_m1(x: f64) -> SpecialResult<(f64, f64)> {
     // D_{-1}(x) = (√(π/2) * e^(x²/4) * [1 - erf(x/√2)]) - x*e^(-x²/4)/2
     let x2 = x * x;
@@ -120,6 +125,7 @@ fn pbdv_m1(x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Implementation of D_{-2}(x) for v = -2
+#[allow(dead_code)]
 fn pbdv_m2(x: f64) -> SpecialResult<(f64, f64)> {
     // D_{-2}(x) can be calculated using recurrence relations with D_{-1} and D_0
     let (d_m1, _) = pbdv_m1(x)?;
@@ -132,6 +138,7 @@ fn pbdv_m2(x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Implementation of D_v(x) for integer v using recurrence relations
+#[allow(dead_code)]
 fn pbdv_integer(v: i32, x: f64) -> SpecialResult<(f64, f64)> {
     if v >= 0 {
         // Forward recurrence for positive v
@@ -179,6 +186,7 @@ fn pbdv_integer(v: i32, x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// General implementation of D_v(x) for any v using series expansions
+#[allow(dead_code)]
 fn pbdv_general(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // For small |x|, use power series
     if x.abs() < 5.0 {
@@ -200,6 +208,7 @@ fn pbdv_general(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Power series implementation for D_v(x) with enhanced numerical stability
+#[allow(dead_code)]
 fn pbdv_series(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // Special case for x = 0
     if x == 0.0 {
@@ -381,6 +390,7 @@ fn pbdv_series(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Asymptotic expansion for D_v(x) for large positive x with enhanced numerical stability
+#[allow(dead_code)]
 fn pbdv_asymptotic_pos(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // For extremely large x
     if x > 100.0 && v > 0.0 {
@@ -498,6 +508,7 @@ fn pbdv_asymptotic_pos(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Asymptotic expansion for D_v(x) for large negative x
+#[allow(dead_code)]
 fn pbdv_asymptotic_neg(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // For large negative x, use relationship with V_v(x)
     let (v_val, vp_val) = pbvv(v, -x)?;
@@ -538,6 +549,7 @@ fn pbdv_asymptotic_neg(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// let (v, vp) = pbvv(1.0, 0.5).unwrap();
 /// println!("V_1(0.5) = {}, V_1'(0.5) = {}", v, vp);
 /// ```
+#[allow(dead_code)]
 pub fn pbvv(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
     if v.is_nan() || x.is_nan() {
         return Err(SpecialError::DomainError("NaN input to pbvv".to_string()));
@@ -554,6 +566,7 @@ pub fn pbvv(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Implementation of V_v(x) for integer v
+#[allow(dead_code)]
 fn pbvv_integer(v: i32, x: f64) -> SpecialResult<(f64, f64)> {
     // For integer v, V_v can be expressed in terms of D_v and D_{-v-1}
     let (d_v, d_v_prime) = pbdv(v as f64, x)?;
@@ -588,6 +601,7 @@ fn pbvv_integer(v: i32, x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// General implementation of V_v(x) using series or asymptotic forms
+#[allow(dead_code)]
 fn pbvv_general(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // For small |x|, use series expansion
     if x.abs() < 5.0 {
@@ -604,6 +618,7 @@ fn pbvv_general(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Series implementation for V_v(x) with enhanced numerical stability
+#[allow(dead_code)]
 fn pbvv_series(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // Special case for x = 0
     if x == 0.0 {
@@ -810,6 +825,7 @@ fn pbvv_series(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Asymptotic expansion for V_v(x) with enhanced numerical stability
+#[allow(dead_code)]
 fn pbvv_asymptotic(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
     // For extremely large |x|
     if x.abs() > 100.0 {
@@ -981,6 +997,7 @@ fn pbvv_asymptotic(v: f64, x: f64) -> SpecialResult<(f64, f64)> {
 /// println!("D_0(0.5) = {}, D_1(0.5) = {}, D_2(0.5) = {}, D_3(0.5) = {}",
 ///         d_values[0], d_values[1], d_values[2], d_values[3]);
 /// ```
+#[allow(dead_code)]
 pub fn pbdv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
     if x.is_nan() {
         return Err(SpecialError::DomainError(
@@ -1040,6 +1057,7 @@ pub fn pbdv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
 /// println!("V_0(0.5) = {}, V_1(0.5) = {}, V_2(0.5) = {}, V_3(0.5) = {}",
 ///         v_values[0], v_values[1], v_values[2], v_values[3]);
 /// ```
+#[allow(dead_code)]
 pub fn pbvv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
     if x.is_nan() {
         return Err(SpecialError::DomainError(
@@ -1084,6 +1102,7 @@ pub fn pbvv_seq(vmax: usize, x: f64) -> SpecialResult<(Vec<f64>, Vec<f64>)> {
 /// let (w, wp) = pbwa(1.0, 0.5).unwrap();
 /// println!("W(1.0, 0.5) = {}, W'(1.0, 0.5) = {}", w, wp);
 /// ```
+#[allow(dead_code)]
 pub fn pbwa(a: f64, x: f64) -> SpecialResult<(f64, f64)> {
     if a.is_nan() || x.is_nan() {
         return Err(SpecialError::DomainError("NaN input to pbwa".to_string()));
@@ -1095,6 +1114,7 @@ pub fn pbwa(a: f64, x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 // Helper function to calculate factorial with overflow protection
+#[allow(dead_code)]
 fn factorial(n: usize) -> f64 {
     if n <= 1 {
         return 1.0;
@@ -1125,6 +1145,7 @@ fn factorial(n: usize) -> f64 {
 }
 
 // Helper function to approximate error function with improved accuracy and stability
+#[allow(dead_code)]
 fn erf_approx(x: f64) -> f64 {
     // Special cases
     if x == 0.0 {
@@ -1186,6 +1207,7 @@ fn erf_approx(x: f64) -> f64 {
 }
 
 // Log factorial function for use with very large factorials
+#[allow(dead_code)]
 fn log_factorial(n: usize) -> f64 {
     if n <= 1 {
         return 0.0; // log(1) = 0

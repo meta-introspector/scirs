@@ -7,8 +7,6 @@
 use wasm_bindgen::prelude::*;
 
 #[cfg(feature = "wasm")]
-use js_sys::Array;
-
 #[cfg(feature = "wasm")]
 use web_sys::console;
 
@@ -17,20 +15,17 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "wasm")]
 use crate::{
-    anomaly::{detect_anomalies, AnomalyMethod, AnomalyOptions},
-    arima_models::{ArimaConfig, ArimaModel, ArimaSelectionOptions, SarimaParams},
-    decomposition::{stl_decomposition, STLOptions},
-    error::Result,
+    anomaly::{AnomalyMethod, AnomalyOptions},
+    arima_models::{ArimaConfig, ArimaModel},
+    decomposition::STLOptions,
     forecasting::neural::NeuralForecaster,
     utils::*,
 };
 
 #[cfg(feature = "wasm")]
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 
 #[cfg(feature = "wasm")]
-use std::collections::HashMap;
-
 // Utility macro for error handling in WASM
 #[cfg(feature = "wasm")]
 macro_rules! js_error {
@@ -74,7 +69,10 @@ impl TimeSeriesData {
 
     /// Create time series with timestamps
     #[wasm_bindgen]
-    pub fn with_timestamps(values: &[f64], timestamps: &[f64]) -> Result<TimeSeriesData, JsValue> {
+    pub fn with_timestamps(
+        values: &[f64],
+        timestamps: &[f64],
+    ) -> std::result::Result<TimeSeriesData, JsValue> {
         if values.len() != timestamps.len() {
             return Err(js_error!("Values and timestamps must have the same length"));
         }
@@ -117,6 +115,7 @@ impl TimeSeriesData {
 pub struct WasmARIMA {
     model: Option<ArimaModel<f64>>,
     config: ArimaConfig,
+    data: Option<Array1<f64>>,
 }
 
 #[cfg(feature = "wasm")]
@@ -125,15 +124,20 @@ impl WasmARIMA {
     /// Create a new ARIMA model
     #[wasm_bindgen(constructor)]
     pub fn new(p: usize, d: usize, q: usize) -> WasmARIMA {
-        let config = SarimaParams {
-            pdq: (p, d, q),
-            seasonal_pdq: (0, 0, 0),
+        let config = ArimaConfig {
+            p,
+            d,
+            q,
+            seasonal_p: 0,
+            seasonal_d: 0,
+            seasonal_q: 0,
             seasonal_period: 1,
         };
 
         WasmARIMA {
             model: None,
             config,
+            data: None,
         }
     }
 
@@ -161,41 +165,37 @@ impl WasmARIMA {
         WasmARIMA {
             model: None,
             config,
+            data: None,
         }
     }
 
     /// Fit the ARIMA model to time series data
     #[wasm_bindgen]
-    pub fn fit(&mut self, data: &TimeSeriesData) -> Result<(), JsValue> {
+    pub fn fit(&mut self, data: &TimeSeriesData) -> std::result::Result<(), JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let mut model = js_result!(ArimaModel::new(self.config.p, self.config.d, self.config.q))?;
         js_result!(model.fit(&arr))?;
         self.model = Some(model);
+        self.data = Some(arr);
         Ok(())
     }
 
     /// Generate forecasts
     #[wasm_bindgen]
-    pub fn forecast(&self, steps: usize) -> Result<Vec<f64>, JsValue> {
-        match &self.model {
-            Some(model) => {
-                let forecasts = js_result!(model.forecast(steps))?;
+    pub fn forecast(&self, steps: usize) -> std::result::Result<Vec<f64>, JsValue> {
+        match (&self.model, &self.data) {
+            (Some(model), Some(data)) => {
+                let forecasts = js_result!(model.forecast(steps, data))?;
                 Ok(forecasts.to_vec())
             }
-            None => Err(js_error!("Model not fitted. Call fit() first.")),
+            _ => Err(js_error!("Model not fitted. Call fit() first.")),
         }
     }
 
     /// Get model parameters
     #[wasm_bindgen]
-    pub fn get_params(&self) -> Result<JsValue, JsValue> {
-        match &self.model {
-            Some(model) => {
-                let params = js_result!(model.get_params())?;
-                Ok(serde_wasm_bindgen::to_value(&params)?)
-            }
-            None => Err(js_error!("Model not fitted. Call fit() first.")),
-        }
+    pub fn get_params(&self) -> std::result::Result<JsValue, JsValue> {
+        Ok(serde_wasm_bindgen::to_value(&self.config)?)
     }
 }
 
@@ -225,7 +225,7 @@ impl WasmAnomalyDetector {
         &self,
         data: &TimeSeriesData,
         multiplier: f64,
-    ) -> Result<Vec<usize>, JsValue> {
+    ) -> std::result::Result<Vec<usize>, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let anomalies = js_result!(self.detector.detect_iqr(&arr, multiplier))?;
         Ok(anomalies)
@@ -237,7 +237,7 @@ impl WasmAnomalyDetector {
         &self,
         data: &TimeSeriesData,
         threshold: f64,
-    ) -> Result<Vec<usize>, JsValue> {
+    ) -> std::result::Result<Vec<usize>, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let anomalies = js_result!(self.detector.detect_zscore(&arr, threshold))?;
         Ok(anomalies)
@@ -249,7 +249,7 @@ impl WasmAnomalyDetector {
         &self,
         data: &TimeSeriesData,
         contamination: f64,
-    ) -> Result<Vec<usize>, JsValue> {
+    ) -> std::result::Result<Vec<usize>, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let anomalies = js_result!(self.detector.detect_isolation_forest(&arr, contamination))?;
         Ok(anomalies)
@@ -284,7 +284,7 @@ impl WasmSTLDecomposition {
 
     /// Perform STL decomposition
     #[wasm_bindgen]
-    pub fn decompose(&self, data: &TimeSeriesData) -> Result<JsValue, JsValue> {
+    pub fn decompose(&self, data: &TimeSeriesData) -> std::result::Result<JsValue, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let result = js_result!(self.decomposition.decompose(&arr))?;
 
@@ -302,7 +302,7 @@ impl WasmSTLDecomposition {
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub struct WasmNeuralForecaster {
-    forecaster: Option<NeuralForecaster>,
+    forecaster: Option<Box<dyn NeuralForecaster<f64>>>,
 }
 
 #[cfg(feature = "wasm")]
@@ -323,7 +323,7 @@ impl WasmNeuralForecaster {
         data: &TimeSeriesData,
         epochs: usize,
         learning_rate: f64,
-    ) -> Result<(), JsValue> {
+    ) -> std::result::Result<(), JsValue> {
         if let Some(forecaster) = &mut self.forecaster {
             let arr = Array1::from_vec(data.values.clone());
             js_result!(forecaster.train(&arr, epochs, learning_rate))?;
@@ -335,7 +335,7 @@ impl WasmNeuralForecaster {
 
     /// Generate forecasts using the neural model
     #[wasm_bindgen]
-    pub fn forecast(&self, input: &[f64], steps: usize) -> Result<Vec<f64>, JsValue> {
+    pub fn forecast(&self, input: &[f64], steps: usize) -> std::result::Result<Vec<f64>, JsValue> {
         if let Some(forecaster) = &self.forecaster {
             let input_arr = Array1::from_vec(input.to_vec());
             let forecasts = js_result!(forecaster.forecast(&input_arr, steps))?;
@@ -356,7 +356,7 @@ pub struct WasmUtils;
 impl WasmUtils {
     /// Calculate basic statistics for time series
     #[wasm_bindgen]
-    pub fn calculate_stats(data: &TimeSeriesData) -> Result<JsValue, JsValue> {
+    pub fn calculate_stats(data: &TimeSeriesData) -> std::result::Result<JsValue, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let stats = js_result!(calculate_basic_stats(&arr))?;
         Ok(serde_wasm_bindgen::to_value(&stats)?)
@@ -364,7 +364,7 @@ impl WasmUtils {
 
     /// Check if time series is stationary
     #[wasm_bindgen]
-    pub fn is_stationary(data: &TimeSeriesData) -> Result<bool, JsValue> {
+    pub fn is_stationary(data: &TimeSeriesData) -> std::result::Result<bool, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let stationary = js_result!(is_stationary(&arr))?;
         Ok(stationary)
@@ -372,7 +372,10 @@ impl WasmUtils {
 
     /// Apply differencing to make time series stationary
     #[wasm_bindgen]
-    pub fn difference(data: &TimeSeriesData, periods: usize) -> Result<Vec<f64>, JsValue> {
+    pub fn difference(
+        data: &TimeSeriesData,
+        periods: usize,
+    ) -> std::result::Result<Vec<f64>, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let differenced = js_result!(difference_series(&arr, periods))?;
         Ok(differenced.to_vec())
@@ -380,7 +383,10 @@ impl WasmUtils {
 
     /// Apply seasonal differencing
     #[wasm_bindgen]
-    pub fn seasonal_difference(data: &TimeSeriesData, periods: usize) -> Result<Vec<f64>, JsValue> {
+    pub fn seasonal_difference(
+        data: &TimeSeriesData,
+        periods: usize,
+    ) -> std::result::Result<Vec<f64>, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
         let differenced = js_result!(seasonal_difference_series(&arr, periods))?;
         Ok(differenced.to_vec())
@@ -390,6 +396,7 @@ impl WasmUtils {
 /// Initialize WASM module
 #[cfg(feature = "wasm")]
 #[wasm_bindgen(start)]
+#[allow(dead_code)]
 pub fn init() {
     console_error_panic_hook::set_once();
     console::log_1(&"SciRS2 Time Series Analysis WASM module initialized".into());
@@ -404,6 +411,7 @@ extern "C" {
 }
 
 #[cfg(feature = "wasm")]
+#[allow(unused_macros)]
 macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
@@ -428,7 +436,7 @@ impl WasmAutoARIMA {
         max_seasonal_d: Option<usize>,
         max_seasonal_q: Option<usize>,
         seasonal_period: Option<usize>,
-    ) -> Result<WasmARIMA, JsValue> {
+    ) -> std::result::Result<WasmARIMA, JsValue> {
         let arr = Array1::from_vec(data.values.clone());
 
         let max_sp = max_seasonal_p.unwrap_or(0);
@@ -460,30 +468,35 @@ impl WasmAutoARIMA {
 // Export main functions for easier access
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
+#[allow(dead_code)]
 pub fn create_time_series(values: &[f64]) -> TimeSeriesData {
     TimeSeriesData::new(values)
 }
 
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
+#[allow(dead_code)]
 pub fn create_arima_model(p: usize, d: usize, q: usize) -> WasmARIMA {
     WasmARIMA::new(p, d, q)
 }
 
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
+#[allow(dead_code)]
 pub fn create_anomaly_detector() -> WasmAnomalyDetector {
     WasmAnomalyDetector::new()
 }
 
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
+#[allow(dead_code)]
 pub fn create_stl_decomposition(period: usize) -> WasmSTLDecomposition {
     WasmSTLDecomposition::new(period)
 }
 
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
+#[allow(dead_code)]
 pub fn create_neural_forecaster(
     input_size: usize,
     hidden_size: usize,

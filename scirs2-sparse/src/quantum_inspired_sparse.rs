@@ -202,6 +202,7 @@ impl QuantumSparseProcessor {
     }
 
     /// Quantum-inspired sparse matrix-vector multiplication
+    #[allow(clippy::too_many_arguments)]
     pub fn quantum_spmv<T>(
         &mut self,
         rows: usize,

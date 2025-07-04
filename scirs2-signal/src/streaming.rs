@@ -43,17 +43,18 @@
 //! ```
 
 use crate::error::{SignalError, SignalResult};
-use crate::filter::sosfilt_zi;
+// TODO: sosfilt_zi function not implemented yet
+// use crate::filter::sosfilt_zi;
 use crate::streaming_stft::{StreamingStft, StreamingStftConfig};
 use crate::window::get_window;
 use ndarray::{Array1, Array2, ArrayView1, Axis};
+use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::VecDeque;
-#[cfg(test)]
+
 use std::f64::consts::PI;
-use num_complex::Complex64;
 
 /// Configuration for streaming signal processor
 #[derive(Debug, Clone)]
@@ -181,8 +182,8 @@ impl Default for AdaptiveProcessingConfig {
             noise_gate_threshold: -60.0, // dB
             enable_agc: false,
             agc_target_level: -20.0, // dB
-            agc_attack_time: 0.01,    // seconds
-            agc_release_time: 0.1,    // seconds
+            agc_attack_time: 0.01,   // seconds
+            agc_release_time: 0.1,   // seconds
         }
     }
 }
@@ -336,9 +337,11 @@ impl StreamingProcessor {
             .collect();
 
         // Initialize AGC state
-        let attack_coeff = (-1.0 / (config.adaptive_config.agc_attack_time * config.sample_rate)).exp();
-        let release_coeff = (-1.0 / (config.adaptive_config.agc_release_time * config.sample_rate)).exp();
-        
+        let attack_coeff =
+            (-1.0 / (config.adaptive_config.agc_attack_time * config.sample_rate)).exp();
+        let release_coeff =
+            (-1.0 / (config.adaptive_config.agc_release_time * config.sample_rate)).exp();
+
         let agc_state = AgcState {
             gain: 1.0,
             envelope: 0.0,
@@ -404,7 +407,7 @@ impl StreamingProcessor {
         for (i, &sample) in input.iter().enumerate() {
             if i < self.input_buffers.len() {
                 self.input_buffers[i].push_back(sample);
-                
+
                 // Maintain buffer size
                 while self.input_buffers[i].len() > self.config.max_latency_samples {
                     self.input_buffers[i].pop_front();
@@ -445,7 +448,10 @@ impl StreamingProcessor {
     }
 
     /// Process multi-channel input
-    pub fn process_multichannel(&mut self, input: &Array2<f64>) -> SignalResult<Vec<StreamingResult>> {
+    pub fn process_multichannel(
+        &mut self,
+        input: &Array2<f64>,
+    ) -> SignalResult<Vec<StreamingResult>> {
         if input.ncols() != self.config.num_channels {
             return Err(SignalError::ValueError(format!(
                 "Input channels {} does not match config channels {}",
@@ -487,22 +493,22 @@ impl StreamingProcessor {
 
         for (i, &sample) in input.iter().enumerate() {
             let abs_sample = sample.abs();
-            
+
             // Update envelope
             if abs_sample > self.agc_state.envelope {
-                self.agc_state.envelope = self.agc_state.envelope * self.agc_state.attack_coeff + 
-                    abs_sample * (1.0 - self.agc_state.attack_coeff);
+                self.agc_state.envelope = self.agc_state.envelope * self.agc_state.attack_coeff
+                    + abs_sample * (1.0 - self.agc_state.attack_coeff);
             } else {
-                self.agc_state.envelope = self.agc_state.envelope * self.agc_state.release_coeff + 
-                    abs_sample * (1.0 - self.agc_state.release_coeff);
+                self.agc_state.envelope = self.agc_state.envelope * self.agc_state.release_coeff
+                    + abs_sample * (1.0 - self.agc_state.release_coeff);
             }
-            
+
             // Calculate gain
             if self.agc_state.envelope > 1e-10 {
                 let desired_gain = target_linear / self.agc_state.envelope;
                 self.agc_state.gain = self.agc_state.gain * 0.99 + desired_gain * 0.01;
             }
-            
+
             // Apply gain with limiting
             output[i] = (sample * self.agc_state.gain).max(-1.0).min(1.0);
         }
@@ -516,25 +522,34 @@ impl StreamingProcessor {
 
         for (i, &sample) in input.iter().enumerate() {
             let abs_sample = sample.abs();
-            
+
             // Update envelope
-            self.noise_gate_state.envelope = self.noise_gate_state.envelope * 0.999 + abs_sample * 0.001;
-            
+            self.noise_gate_state.envelope =
+                self.noise_gate_state.envelope * 0.999 + abs_sample * 0.001;
+
             // Gate decision
             if self.noise_gate_state.envelope > self.noise_gate_state.threshold_linear {
                 self.noise_gate_state.is_open = true;
-            } else if self.noise_gate_state.envelope < self.noise_gate_state.threshold_linear * 0.5 {
+            } else if self.noise_gate_state.envelope < self.noise_gate_state.threshold_linear * 0.5
+            {
                 self.noise_gate_state.is_open = false;
             }
-            
-            output[i] = if self.noise_gate_state.is_open { sample } else { 0.0 };
+
+            output[i] = if self.noise_gate_state.is_open {
+                sample
+            } else {
+                0.0
+            };
         }
 
         Ok(output)
     }
 
     /// Compute spectral analysis
-    fn compute_spectral_analysis(&mut self, input: &Array1<f64>) -> SignalResult<Option<SpectralResult>> {
+    fn compute_spectral_analysis(
+        &mut self,
+        input: &Array1<f64>,
+    ) -> SignalResult<Option<SpectralResult>> {
         if self.stft_processors.is_empty() {
             return Ok(None);
         }
@@ -545,7 +560,8 @@ impl StreamingProcessor {
         if let Some(spectrum) = spectrum_opt {
             let n_freq = spectrum.len();
             let fs = self.config.sample_rate;
-            let frequencies = Array1::from_shape_fn(n_freq, |i| i as f64 * fs / (2.0 * (n_freq - 1) as f64));
+            let frequencies =
+                Array1::from_shape_fn(n_freq, |i| i as f64 * fs / (2.0 * (n_freq - 1) as f64));
 
             // Compute magnitude spectrum
             let magnitude = spectrum.mapv(|c| c.norm());
@@ -553,14 +569,14 @@ impl StreamingProcessor {
             // Compute PSD with smoothing
             let psd = if self.config.spectral_config.compute_psd {
                 let current_psd = magnitude.mapv(|m| m * m);
-                
+
                 let smoothed_psd = if let Some(ref prev_psd) = self.previous_psd {
                     let alpha = self.config.spectral_config.psd_smoothing;
                     prev_psd * alpha + &current_psd * (1.0 - alpha)
                 } else {
                     current_psd.clone()
                 };
-                
+
                 self.previous_psd = Some(smoothed_psd.clone());
                 Some(smoothed_psd)
             } else {
@@ -586,7 +602,11 @@ impl StreamingProcessor {
     }
 
     /// Compute band powers
-    fn compute_band_powers(&self, magnitude: &Array1<f64>, frequencies: &Array1<f64>) -> SignalResult<Vec<f64>> {
+    fn compute_band_powers(
+        &self,
+        magnitude: &Array1<f64>,
+        frequencies: &Array1<f64>,
+    ) -> SignalResult<Vec<f64>> {
         let mut band_powers = Vec::new();
 
         for &(low_freq, high_freq) in &self.config.spectral_config.frequency_bands {
@@ -608,7 +628,8 @@ impl StreamingProcessor {
 
     /// Find dominant frequency
     fn find_dominant_frequency(&self, magnitude: &Array1<f64>, frequencies: &Array1<f64>) -> f64 {
-        let max_idx = magnitude.iter()
+        let max_idx = magnitude
+            .iter()
             .enumerate()
             .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(idx, _)| idx)
@@ -618,11 +639,15 @@ impl StreamingProcessor {
     }
 
     /// Extract signal features
-    fn extract_features(&mut self, input: &Array1<f64>, spectral: &Option<SpectralResult>) -> SignalResult<SignalFeatures> {
+    fn extract_features(
+        &mut self,
+        input: &Array1<f64>,
+        spectral: &Option<SpectralResult>,
+    ) -> SignalResult<SignalFeatures> {
         // Add to feature buffer
         for &sample in input.iter() {
             self.feature_buffers[0].push_back(sample);
-            
+
             while self.feature_buffers[0].len() > self.config.feature_config.time_window_length {
                 self.feature_buffers[0].pop_front();
             }
@@ -637,7 +662,7 @@ impl StreamingProcessor {
         let zero_crossing_rate = self.compute_zero_crossing_rate(&buffer_array);
 
         // Spectral features
-        let (spectral_centroid, spectral_bandwidth, spectral_rolloff, spectral_flux, mfcc) = 
+        let (spectral_centroid, spectral_bandwidth, spectral_rolloff, spectral_flux, mfcc) =
             if let Some(ref spec) = spectral {
                 self.compute_spectral_features(spec)?
             } else {
@@ -670,8 +695,9 @@ impl StreamingProcessor {
         let threshold = self.config.feature_config.zcr_threshold;
 
         for i in 1..signal.len() {
-            if (signal[i] > threshold && signal[i-1] < -threshold) ||
-               (signal[i] < -threshold && signal[i-1] > threshold) {
+            if (signal[i] > threshold && signal[i - 1] < -threshold)
+                || (signal[i] < -threshold && signal[i - 1] > threshold)
+            {
                 crossings += 1;
             }
         }
@@ -680,7 +706,10 @@ impl StreamingProcessor {
     }
 
     /// Compute spectral features
-    fn compute_spectral_features(&mut self, spectral: &SpectralResult) -> SignalResult<(f64, f64, f64, f64, Array1<f64>)> {
+    fn compute_spectral_features(
+        &mut self,
+        spectral: &SpectralResult,
+    ) -> SignalResult<(f64, f64, f64, f64, Array1<f64>)> {
         let magnitude = if let Some(ref spectrum) = spectral.spectrum {
             spectrum.mapv(|c| c.norm())
         } else {
@@ -692,20 +721,24 @@ impl StreamingProcessor {
         // Spectral centroid
         let total_magnitude: f64 = magnitude.sum();
         let spectral_centroid = if total_magnitude > 1e-10 {
-            frequencies.iter()
+            frequencies
+                .iter()
                 .zip(magnitude.iter())
                 .map(|(f, m)| f * m)
-                .sum::<f64>() / total_magnitude
+                .sum::<f64>()
+                / total_magnitude
         } else {
             0.0
         };
 
         // Spectral bandwidth
         let spectral_bandwidth = if total_magnitude > 1e-10 {
-            let variance = frequencies.iter()
+            let variance = frequencies
+                .iter()
                 .zip(magnitude.iter())
                 .map(|(f, m)| (f - spectral_centroid).powi(2) * m)
-                .sum::<f64>() / total_magnitude;
+                .sum::<f64>()
+                / total_magnitude;
             variance.sqrt()
         } else {
             0.0
@@ -727,7 +760,8 @@ impl StreamingProcessor {
 
         // Spectral flux
         let spectral_flux = if let Some(ref prev_spectrum) = self.previous_spectrum {
-            magnitude.iter()
+            magnitude
+                .iter()
                 .zip(prev_spectrum.iter())
                 .map(|(curr, prev)| (curr - prev).powi(2))
                 .sum::<f64>()
@@ -745,21 +779,31 @@ impl StreamingProcessor {
             Array1::zeros(13)
         };
 
-        Ok((spectral_centroid, spectral_bandwidth, spectral_rolloff, spectral_flux, mfcc))
+        Ok((
+            spectral_centroid,
+            spectral_bandwidth,
+            spectral_rolloff,
+            spectral_flux,
+            mfcc,
+        ))
     }
 
     /// Compute MFCC features
-    fn compute_mfcc(&self, magnitude: &Array1<f64>, mel_filters: &Array2<f64>) -> SignalResult<Array1<f64>> {
+    fn compute_mfcc(
+        &self,
+        magnitude: &Array1<f64>,
+        mel_filters: &Array2<f64>,
+    ) -> SignalResult<Array1<f64>> {
         // Apply mel filter bank
         let mel_spectrum = mel_filters.dot(magnitude);
-        
+
         // Log compression
         let log_mel = mel_spectrum.mapv(|x| (x + 1e-10).ln());
-        
+
         // DCT (simplified version)
         let mut mfcc = Array1::zeros(13);
         let n_mel = log_mel.len();
-        
+
         for k in 0..13 {
             let mut sum = 0.0;
             for n in 0..n_mel {
@@ -774,9 +818,12 @@ impl StreamingProcessor {
     /// Compute band energy ratios
     fn compute_band_energy_ratios(&self, band_powers: &[f64]) -> Vec<f64> {
         let total_power: f64 = band_powers.iter().sum();
-        
+
         if total_power > 1e-10 {
-            band_powers.iter().map(|&power| power / total_power).collect()
+            band_powers
+                .iter()
+                .map(|&power| power / total_power)
+                .collect()
         } else {
             vec![0.0; band_powers.len()]
         }
@@ -784,14 +831,14 @@ impl StreamingProcessor {
 
     /// Calculate current latency
     fn calculate_current_latency(&self) -> usize {
-        let buffer_latency = self.input_buffers.get(0)
-            .map(|buf| buf.len())
-            .unwrap_or(0);
-        
-        let stft_latency = self.stft_processors.get(0)
+        let buffer_latency = self.input_buffers.get(0).map(|buf| buf.len()).unwrap_or(0);
+
+        let stft_latency = self
+            .stft_processors
+            .get(0)
             .map(|stft| stft.get_latency_samples())
             .unwrap_or(0);
-        
+
         buffer_latency + stft_latency
     }
 
@@ -800,32 +847,32 @@ impl StreamingProcessor {
         let samples_per_second = self.config.sample_rate;
         let frame_time = self.config.buffer_size as f64 / samples_per_second;
         let processing_time_seconds = processing_time.as_secs_f64();
-        
+
         (processing_time_seconds / frame_time).min(1.0)
     }
 
     /// Estimate memory usage
     fn estimate_memory_usage(&self) -> usize {
         let mut usage = 0;
-        
+
         // Input buffers
         for buffer in &self.input_buffers {
             usage += buffer.len() * std::mem::size_of::<f64>();
         }
-        
+
         // Feature buffers
         for buffer in &self.feature_buffers {
             usage += buffer.len() * std::mem::size_of::<f64>();
         }
-        
+
         // STFT processors (estimate)
         usage += self.stft_processors.len() * 4096; // Rough estimate
-        
+
         // MEL filter bank
         if let Some(ref mel_filters) = self.mel_filter_bank {
             usage += mel_filters.len() * std::mem::size_of::<f64>();
         }
-        
+
         usage
     }
 
@@ -844,24 +891,24 @@ impl StreamingProcessor {
         for buffer in &mut self.input_buffers {
             buffer.clear();
         }
-        
+
         for buffer in &mut self.feature_buffers {
             buffer.clear();
         }
-        
+
         for stft in &mut self.stft_processors {
             stft.reset();
         }
-        
+
         self.previous_psd = None;
         self.previous_spectrum = None;
-        
+
         self.agc_state.gain = 1.0;
         self.agc_state.envelope = 0.0;
-        
+
         self.noise_gate_state.is_open = true;
         self.noise_gate_state.envelope = 0.0;
-        
+
         self.stats = ProcessingStatistics {
             samples_processed: 0,
             frames_processed: 0,
@@ -873,30 +920,36 @@ impl StreamingProcessor {
 }
 
 /// Create MEL filter bank
-fn create_mel_filter_bank(n_fft: usize, sample_rate: f64, n_mels: usize) -> SignalResult<Array2<f64>> {
+#[allow(dead_code)]
+fn create_mel_filter_bank(
+    n_fft: usize,
+    sample_rate: f64,
+    n_mels: usize,
+) -> SignalResult<Array2<f64>> {
     let mel_low = hz_to_mel(0.0);
     let mel_high = hz_to_mel(sample_rate / 2.0);
-    
+
     // Mel points
     let mel_points: Vec<f64> = (0..=n_mels + 1)
         .map(|i| mel_low + (mel_high - mel_low) * i as f64 / (n_mels + 1) as f64)
         .collect();
-    
+
     // Convert back to Hz
     let hz_points: Vec<f64> = mel_points.iter().map(|&mel| mel_to_hz(mel)).collect();
-    
+
     // Convert to FFT bin numbers
-    let bin_points: Vec<usize> = hz_points.iter()
+    let bin_points: Vec<usize> = hz_points
+        .iter()
         .map(|&hz| ((hz * n_fft as f64) / sample_rate).round() as usize)
         .collect();
-    
+
     let mut filter_bank = Array2::zeros((n_mels, n_fft));
-    
+
     for m in 0..n_mels {
         let left = bin_points[m];
         let center = bin_points[m + 1];
         let right = bin_points[m + 2];
-        
+
         // Triangular filter
         for k in left..=right {
             if k < n_fft {
@@ -908,32 +961,33 @@ fn create_mel_filter_bank(n_fft: usize, sample_rate: f64, n_mels: usize) -> Sign
             }
         }
     }
-    
+
     Ok(filter_bank)
 }
 
 /// Convert Hz to Mel scale
+#[allow(dead_code)]
 fn hz_to_mel(hz: f64) -> f64 {
     2595.0 * (1.0 + hz / 700.0).log10()
 }
 
 /// Convert Mel to Hz scale
+#[allow(dead_code)]
 fn mel_to_hz(mel: f64) -> f64 {
     700.0 * (10.0_f64.powf(mel / 2595.0) - 1.0)
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(test)]
-use std::f64::consts::PI;
-use num_complex::Complex64;
+    use num_complex::Complex64;
+
+    use std::f64::consts::PI;
 
     #[test]
     fn test_streaming_processor_creation() {
         let config = StreamingConfig::default();
         let processor = StreamingProcessor::new(config).unwrap();
-        
+
         assert_eq!(processor.config.buffer_size, 512);
         assert_eq!(processor.config.num_channels, 1);
     }
@@ -946,19 +1000,19 @@ use num_complex::Complex64;
             enable_feature_extraction: true,
             ..Default::default()
         };
-        
+
         let mut processor = StreamingProcessor::new(config).unwrap();
-        
+
         // Generate test signal
         let fs = 1000.0;
         let freq = 100.0;
         let input: Vec<f64> = (0..256)
             .map(|i| (2.0 * PI * freq * i as f64 / fs).sin())
             .collect();
-        
+
         let input_array = Array1::from(input);
         let result = processor.process_frame(&input_array).unwrap();
-        
+
         assert_eq!(result.output.len(), 256);
         assert!(result.features.rms > 0.0);
         assert!(result.features.peak > 0.0);
@@ -978,17 +1032,17 @@ use num_complex::Complex64;
             enable_feature_extraction: false,
             ..Default::default()
         };
-        
+
         let mut processor = StreamingProcessor::new(config).unwrap();
-        
+
         // Test with loud signal
         let loud_input = Array1::from_vec(vec![0.9; 128]);
         let result1 = processor.process_frame(&loud_input).unwrap();
-        
+
         // Test with quiet signal
         let quiet_input = Array1::from_vec(vec![0.1; 128]);
         let result2 = processor.process_frame(&quiet_input).unwrap();
-        
+
         // AGC should adjust levels
         assert!(result1.output.iter().all(|&x| x.abs() <= 1.0));
         assert!(result2.output.iter().all(|&x| x.abs() <= 1.0));
@@ -1002,9 +1056,9 @@ use num_complex::Complex64;
             enable_feature_extraction: true,
             ..Default::default()
         };
-        
+
         let mut processor = StreamingProcessor::new(config).unwrap();
-        
+
         // Generate complex test signal
         let fs = 1000.0;
         let input: Vec<f64> = (0..512)
@@ -1013,10 +1067,10 @@ use num_complex::Complex64;
                 (2.0 * PI * 100.0 * t).sin() + 0.5 * (2.0 * PI * 200.0 * t).sin()
             })
             .collect();
-        
+
         let input_array = Array1::from(input);
         let result = processor.process_frame(&input_array).unwrap();
-        
+
         assert!(result.features.spectral_centroid > 0.0);
         assert!(result.features.spectral_bandwidth > 0.0);
         assert_eq!(result.features.mfcc.len(), 13);
@@ -1029,13 +1083,11 @@ use num_complex::Complex64;
             num_channels: 2,
             ..Default::default()
         };
-        
+
         let mut processor = StreamingProcessor::new(config).unwrap();
-        
-        let input = Array2::from_shape_fn((256, 2), |(i, ch)| {
-            (i as f64 + ch as f64).sin()
-        });
-        
+
+        let input = Array2::from_shape_fn((256, 2), |(i, ch)| (i as f64 + ch as f64).sin());
+
         let results = processor.process_multichannel(&input).unwrap();
         assert_eq!(results.len(), 2);
     }
@@ -1044,12 +1096,12 @@ use num_complex::Complex64;
     fn test_processor_reset() {
         let config = StreamingConfig::default();
         let mut processor = StreamingProcessor::new(config).unwrap();
-        
+
         let input = Array1::from_vec(vec![0.5; 512]);
         let _ = processor.process_frame(&input).unwrap();
-        
+
         assert!(processor.stats.samples_processed > 0);
-        
+
         processor.reset();
         assert_eq!(processor.stats.samples_processed, 0);
     }
@@ -1059,7 +1111,7 @@ use num_complex::Complex64;
         let filter_bank = create_mel_filter_bank(257, 8000.0, 13).unwrap();
         assert_eq!(filter_bank.nrows(), 13);
         assert_eq!(filter_bank.ncols(), 257);
-        
+
         // Check that filters sum to reasonable values
         for row in filter_bank.rows() {
             let sum: f64 = row.sum();
@@ -1072,7 +1124,7 @@ use num_complex::Complex64;
         let hz = 1000.0;
         let mel = hz_to_mel(hz);
         let hz_back = mel_to_hz(mel);
-        
+
         assert!((hz - hz_back).abs() < 1e-6);
     }
 }

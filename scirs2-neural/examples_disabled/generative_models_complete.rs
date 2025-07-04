@@ -382,6 +382,7 @@ impl GenerativeMetrics {
                 total_variance += variance;
         total_variance / sample_size as f32
 /// Training function for VAE
+#[allow(dead_code)]
 fn train_vae_model() -> StdResult<()> {
     println!("🎨 Starting VAE Training");
     let mut rng = SmallRng::seed_from_u64(42);
@@ -466,6 +467,7 @@ fn train_vae_model() -> StdResult<()> {
     println!("\n🎉 VAE training completed!");
     Ok(())
 /// Training function for simple GAN
+#[allow(dead_code)]
 fn train_gan_model() -> StdResult<()> {
     println!("⚔️ Starting GAN Training");
     // Create models
@@ -529,6 +531,7 @@ fn train_gan_model() -> StdResult<()> {
             let generated = generator.forward(&sample_noise_dyn)?;
             println!("📊 Generated {} samples", generated.shape()[0]);
     println!("\n🎉 GAN training completed!");
+#[allow(dead_code)]
 fn main() -> StdResult<()> {
     println!("🎨 Generative Models Complete Example");
     println!("=====================================");

@@ -489,6 +489,7 @@ impl LossFunction {
                         0.0
                 })
 /// Example of a network with BatchNorm
+#[allow(dead_code)]
 fn example_batchnorm() -> Result<()> {
     println!("Batch Normalization Example\n");
     // Create a simple dataset
@@ -526,6 +527,7 @@ fn example_batchnorm() -> Result<()> {
     println!("Output std: {:.6}", std_channels(&eval_output));
     Ok(())
 /// Example of layer normalization
+#[allow(dead_code)]
 fn example_layernorm() -> Result<()> {
     println!("\nLayer Normalization Example\n");
     let features = 64;
@@ -543,6 +545,7 @@ fn example_layernorm() -> Result<()> {
     let _grad_input = ln.backward(&grad_output);
     ln.update_parameters(0.01);
 /// Example of group normalization
+#[allow(dead_code)]
 fn example_groupnorm() -> Result<()> {
     println!("\nGroup Normalization Example\n");
     let channels = 16; // Must be divisible by num_groups
@@ -555,6 +558,7 @@ fn example_groupnorm() -> Result<()> {
     let _grad_input = gn.backward(&grad_output);
     gn.update_parameters(0.01);
 /// Example of normalization in a simple network for MNIST-like dataset
+#[allow(dead_code)]
 fn compare_normalization_methods() -> Result<()> {
     println!("\nComparing Normalization Methods for MNIST-like Dataset\n");
     // Create a synthetic dataset
@@ -619,6 +623,7 @@ fn compare_normalization_methods() -> Result<()> {
         println!("Training accuracy: {:.2}%", train_acc * 100.0);
         println!("Validation accuracy: {:.2}%", val_acc * 100.0);
 /// Create a simple network with optional normalization layers
+#[allow(dead_code)]
 fn create_network(
     use_batchnorm: bool,
     use_layernorm: bool,
@@ -646,6 +651,7 @@ fn create_network(
         ActivationFunction::Sigmoid,
     layers
 /// Train a network for a number of epochs
+#[allow(dead_code)]
 fn train_network(
     network: &mut Vec<Box<dyn Layer<Array2<f32>>>>,
     x_train: &Array2<f32>,
@@ -704,6 +710,7 @@ fn train_network(
         losses.push((epoch_loss, val_loss));
     Ok(losses)
 /// Evaluate loss on a dataset
+#[allow(dead_code)]
 fn evaluate_loss(
     x: &Array2<f32>,
     y: &Array2<f32>,
@@ -716,6 +723,7 @@ fn evaluate_loss(
     let loss = loss_fn.compute(&output, y);
     Ok(loss)
 /// Evaluate accuracy on a dataset
+#[allow(dead_code)]
 fn evaluate(
     // Compute accuracy
     let mut correct = 0;
@@ -738,6 +746,7 @@ fn evaluate(
             correct += 1;
     Ok(correct as f32 / n_samples as f32)
 /// Calculate mean across channels for a 4D array
+#[allow(dead_code)]
 fn mean_channels(x: &Array4<f32>) -> f32 {
     let batch_size = x.shape()[0];
     let channels = x.shape()[1];
@@ -750,6 +759,7 @@ fn mean_channels(x: &Array4<f32>) -> f32 {
                     sum += x[[b, c, h, w]];
     sum / (batch_size * channels * height * width) as f32
 /// Calculate standard deviation across channels for a 4D array
+#[allow(dead_code)]
 fn std_channels(x: &Array4<f32>) -> f32 {
     let mean = mean_channels(x);
     let mut sum_squared_diff = 0.0;
@@ -758,15 +768,18 @@ fn std_channels(x: &Array4<f32>) -> f32 {
     let variance = sum_squared_diff / (batch_size * channels * height * width) as f32;
     variance.sqrt()
 /// Calculate mean across batch dimension for a 2D array
+#[allow(dead_code)]
 fn mean_batch(x: &Array2<f32>) -> f32 {
     x.sum() / x.len() as f32
 /// Calculate standard deviation across batch dimension for a 2D array
+#[allow(dead_code)]
 fn std_batch(x: &Array2<f32>) -> f32 {
     let mean = mean_batch(x);
     for v in x.iter() {
         let diff = *v - mean;
         sum_squared_diff += diff * diff;
     let variance = sum_squared_diff / x.len() as f32;
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Normalization Layers Example");
     println!("============================\n");

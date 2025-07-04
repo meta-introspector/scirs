@@ -7,6 +7,7 @@
 use ndarray::{Array1, Array2, ArrayView1};
 use num_complex::Complex;
 use num_traits::{Float, NumAssign, Zero, One};
+use rand;
 use std::fmt::Debug;
 use std::ops::{Add, Sub, Mul};
 
@@ -32,6 +33,7 @@ type SparseEigenResult<T> = LinalgResult<(Array1<Complex<T>>, Array2<Complex<T>>
 /// # Returns
 ///
 /// Tuple of (eigenvalues, eigenvectors) where eigenvalues are sorted by magnitude
+#[allow(dead_code)]
 pub fn sparse_arnoldi_eigen<T>(
     matrix: &SparseMatrixView<T>,
     k: usize,
@@ -173,6 +175,7 @@ where
 /// # Returns
 ///
 /// Tuple of (eigenvalues, eigenvectors) sorted according to the `which` parameter
+#[allow(dead_code)]
 pub fn sparse_lanczos_eigen<T>(
     matrix: &SparseMatrixView<T>,
     k: usize,
@@ -344,6 +347,7 @@ where
 }
 
 /// Check convergence of Arnoldi iteration
+#[allow(dead_code)]
 fn check_arnoldi_convergence<T>(h: &Array2<T>, j: usize, tolerance: T) -> bool
 where
     T: Float + Copy,
@@ -358,6 +362,7 @@ where
 }
 
 /// Check convergence of Lanczos iteration
+#[allow(dead_code)]
 fn check_lanczos_convergence<T>(alpha: &Array1<T>, beta: &Array1<T>, j: usize, tolerance: T) -> bool
 where
     T: Float + Copy,
@@ -372,6 +377,7 @@ where
 }
 
 /// Compute eigenvalues of a small Hessenberg matrix
+#[allow(dead_code)]
 fn compute_hessenberg_eigenvalues<T>(h: &Array2<T>) -> LinalgResult<(Array1<Complex<T>>, Array2<Complex<T>>)>
 where
     T: Float + NumAssign + Clone + Copy + Debug + ndarray::ScalarOperand,
@@ -391,6 +397,7 @@ where
 }
 
 /// Solve eigenvalue problem for tridiagonal matrix
+#[allow(dead_code)]
 fn solve_tridiagonal_eigen<T>(t: &Array2<T>) -> LinalgResult<(Array1<T>, Array2<T>)>
 where
     T: Float + NumAssign + Clone + Copy + Debug + ndarray::ScalarOperand,
@@ -400,6 +407,7 @@ where
 }
 
 /// Simple QR algorithm for small complex matrices
+#[allow(dead_code)]
 fn qr_algorithm_complex<T>(a: &mut Array2<Complex<T>>) -> LinalgResult<(Array1<Complex<T>>, Array2<Complex<T>>)>
 where
     T: Float + NumAssign + Clone + Copy + Debug + ndarray::ScalarOperand,
@@ -429,6 +437,7 @@ where
 /// # Returns
 ///
 /// Eigenvalues and eigenvectors within the specified range
+#[allow(dead_code)]
 pub fn sparse_eirandom_range<T>(
     matrix: &SparseMatrixView<T>,
     range: (T, T),

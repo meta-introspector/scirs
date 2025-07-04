@@ -27,6 +27,7 @@ use crate::hierarchy::disjoint_set::DisjointSet;
 /// # Returns
 ///
 /// * `Result<Array1<usize>>` - Cluster assignments
+#[allow(dead_code)]
 pub fn extract_clusters_multi_criteria<F: Float + FromPrimitive + Debug + PartialOrd>(
     linkage_matrix: ArrayView2<F>,
     max_clusters: Option<usize>,
@@ -104,6 +105,7 @@ pub fn extract_clusters_multi_criteria<F: Float + FromPrimitive + Debug + Partia
 }
 
 /// Calculate inconsistency for a specific merge
+#[allow(dead_code)]
 fn calculate_merge_inconsistency<F: Float + FromPrimitive + Debug + PartialOrd>(
     linkage_matrix: ArrayView2<F>,
     merge_idx: usize,
@@ -162,6 +164,7 @@ fn calculate_merge_inconsistency<F: Float + FromPrimitive + Debug + PartialOrd>(
 /// # Returns
 ///
 /// * `Result<usize>` - Estimated optimal number of clusters
+#[allow(dead_code)]
 pub fn estimate_optimal_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
     linkage_matrix: ArrayView2<F>,
     data: Option<ArrayView2<F>>,
@@ -213,6 +216,7 @@ pub fn estimate_optimal_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
 }
 
 /// Estimate optimal clusters using the elbow method
+#[allow(dead_code)]
 fn estimate_clusters_elbow_method<F: Float + FromPrimitive + Debug + PartialOrd>(
     linkage_matrix: ArrayView2<F>,
     max_clusters: usize,
@@ -238,6 +242,7 @@ fn estimate_clusters_elbow_method<F: Float + FromPrimitive + Debug + PartialOrd>
 }
 
 /// Estimate optimal clusters using distance gap analysis
+#[allow(dead_code)]
 fn estimate_clusters_distance_gap<F: Float + FromPrimitive + Debug + PartialOrd>(
     linkage_matrix: ArrayView2<F>,
     max_clusters: usize,
@@ -267,6 +272,7 @@ fn estimate_clusters_distance_gap<F: Float + FromPrimitive + Debug + PartialOrd>
 }
 
 /// Estimate optimal clusters using silhouette analysis
+#[allow(dead_code)]
 fn estimate_clusters_silhouette<F: Float + FromPrimitive + Debug + PartialOrd>(
     linkage_matrix: ArrayView2<F>,
     data: ArrayView2<F>,
@@ -293,6 +299,7 @@ fn estimate_clusters_silhouette<F: Float + FromPrimitive + Debug + PartialOrd>(
 }
 
 /// Extract clusters by specifying the number of clusters
+#[allow(dead_code)]
 fn extract_clusters_by_count<F: Float + FromPrimitive + Debug + PartialOrd>(
     linkage_matrix: ArrayView2<F>,
     n_clusters: usize,
@@ -368,6 +375,7 @@ fn extract_clusters_by_count<F: Float + FromPrimitive + Debug + PartialOrd>(
 }
 
 /// Calculate WCSS approximation using linkage matrix
+#[allow(dead_code)]
 fn calculate_wcss_approximation<F: Float + FromPrimitive + Debug + PartialOrd>(
     linkage_matrix: ArrayView2<F>,
     _clusters: &Array1<usize>,
@@ -388,6 +396,7 @@ fn calculate_wcss_approximation<F: Float + FromPrimitive + Debug + PartialOrd>(
 }
 
 /// Find elbow point in a series of values
+#[allow(dead_code)]
 fn find_elbow_point<F: Float + FromPrimitive + Debug + PartialOrd>(values: &[F]) -> usize {
     if values.len() < 3 {
         return 0;
@@ -410,6 +419,7 @@ fn find_elbow_point<F: Float + FromPrimitive + Debug + PartialOrd>(values: &[F])
 }
 
 /// Calculate silhouette score for cluster assignments
+#[allow(dead_code)]
 fn calculate_silhouette_score<F: Float + FromPrimitive + Debug + PartialOrd>(
     data: ArrayView2<F>,
     clusters: &Array1<usize>,
@@ -490,6 +500,7 @@ fn calculate_silhouette_score<F: Float + FromPrimitive + Debug + PartialOrd>(
 }
 
 /// Calculate Euclidean distance between two points
+#[allow(dead_code)]
 fn euclidean_distance<F: Float + FromPrimitive>(point1: ArrayView1<F>, point2: ArrayView1<F>) -> F {
     let mut sum = F::zero();
     for (a, b) in point1.iter().zip(point2.iter()) {
@@ -513,6 +524,7 @@ fn euclidean_distance<F: Float + FromPrimitive>(point1: ArrayView1<F>, point2: A
 /// # Returns
 ///
 /// * `Result<Array1<usize>>` - Pruned cluster assignments
+#[allow(dead_code)]
 pub fn prune_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
     clusters: &Array1<usize>,
     data: ArrayView2<F>,

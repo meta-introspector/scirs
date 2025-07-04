@@ -325,6 +325,7 @@ impl KernelRegistry {
 ///     );
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn register_module_kernel(id: KernelId, source: KernelSource) {
     let registry = KernelRegistry::global();
     let mut registry = registry.lock().unwrap();
@@ -333,6 +334,7 @@ pub fn register_module_kernel(id: KernelId, source: KernelSource) {
 
 /// Get a compiled kernel for the current device
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 pub fn get_kernel(id: &KernelId, device: &GpuDevice) -> Result<Arc<GpuKernel>, GpuError> {
     let registry = KernelRegistry::global();
     let mut registry = registry.lock().unwrap();
@@ -340,6 +342,7 @@ pub fn get_kernel(id: &KernelId, device: &GpuDevice) -> Result<Arc<GpuKernel>, G
 }
 
 /// Check if a kernel is registered
+#[allow(dead_code)]
 pub fn has_kernel(id: &KernelId) -> bool {
     let registry = KernelRegistry::global();
     let registry = registry.lock().unwrap();
@@ -347,6 +350,7 @@ pub fn has_kernel(id: &KernelId) -> bool {
 }
 
 /// List all registered kernels
+#[allow(dead_code)]
 pub fn list_kernels() -> Vec<KernelId> {
     let registry = KernelRegistry::global();
     let registry = registry.lock().unwrap();

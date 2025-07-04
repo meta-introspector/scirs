@@ -1438,6 +1438,7 @@ impl Default for CompressionSettings {
 }
 
 /// Convenience function to create a multi-GPU communicator with default settings
+#[allow(dead_code)]
 pub fn create_multi_gpu_communicator(
     world_size: usize,
     local_rank: i32,

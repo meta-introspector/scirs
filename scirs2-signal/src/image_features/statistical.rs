@@ -6,6 +6,7 @@ use ndarray::Array2;
 use std::collections::HashMap;
 
 /// Extract basic intensity features from an image
+#[allow(dead_code)]
 pub fn extract_intensity_features(
     image: &Array2<f64>,
     features: &mut HashMap<String, f64>,

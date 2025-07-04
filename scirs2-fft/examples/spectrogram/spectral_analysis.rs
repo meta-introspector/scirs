@@ -9,6 +9,7 @@ use scirs2_fft::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Spectral Analysis Example");
     println!("-----------------------\n");

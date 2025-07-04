@@ -349,6 +349,7 @@ impl<'ns, 'env, F: Float> VariableSlot<'ns, 'env, F> {
     }
 }
 
+#[allow(dead_code)]
 fn register_variable<F: Float, D: ndarray::Dimension, S: Into<String>>(
     v: ndarray::Array<F, D>,
     namespace_id: &'static str,
@@ -401,6 +402,7 @@ impl<F: Float> VariableNamespaceMut<'_, F> {
     }
 }
 
+#[allow(dead_code)]
 fn iter<F: Float>(
     ns: &impl NamespaceTrait<F>,
 ) -> impl Iterator<Item = (&str, &RefCell<NdArray<F>>)> {
@@ -424,6 +426,7 @@ impl<'ns, 'env, F: Float> VariableNamespaceMut<'env, F> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_env_iter() {
     use crate::ndarray_ext;
 
@@ -443,6 +446,7 @@ fn test_env_iter() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_namespace_iter() {
     use crate::ndarray_ext;
 
@@ -776,6 +780,7 @@ impl<'g, F: Float> Graph<F> {
 }
 
 #[allow(unused)]
+#[allow(dead_code)]
 fn compile_common_usages() {
     use crate::prelude::*;
     use crate::tensor_ops as T;
@@ -802,6 +807,7 @@ fn compile_common_usages() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn save_and_load() {
     use crate::ndarray_ext;
     use std::collections::HashMap;
@@ -854,6 +860,7 @@ fn save_and_load() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn save_and_init() {
     // Temporarily disable this test as it uses mutable rng without declaring it as mut
     use crate::ndarray_ext;

@@ -7,6 +7,7 @@ use scirs2_fft::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("Sparse FFT Reconstruction Example");
     println!("=================================\n");
@@ -122,6 +123,7 @@ fn main() {
 }
 
 // Helper function to create a sparse signal
+#[allow(dead_code)]
 fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
     let mut signal = vec![0.0; n];
 
@@ -136,6 +138,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 }
 
 // Helper function to compute error between original and reconstructed signals
+#[allow(dead_code)]
 fn compute_error(original: &[f64], reconstructed: &[Complex64]) -> f64 {
     if original.len() != reconstructed.len() {
         // Handle simple case for high-resolution where lengths don't match
@@ -170,6 +173,7 @@ fn compute_error(original: &[f64], reconstructed: &[Complex64]) -> f64 {
 }
 
 // Create visualization plots
+#[allow(dead_code)]
 fn create_plots(
     noisy_signal: &[f64],
     basic_recon: &[Complex64],

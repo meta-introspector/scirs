@@ -264,11 +264,7 @@ pub struct ComponentStatsDiff {
 impl SnapshotDiff {
     /// Create a new snapshot diff by comparing two snapshots
     pub fn new(first: &MemorySnapshot, second: &MemorySnapshot) -> Self {
-        let elapsed_ms = if second.timestamp > first.timestamp {
-            second.timestamp - first.timestamp
-        } else {
-            0
-        } * 1000;
+        let elapsed_ms = second.timestamp.saturating_sub(first.timestamp) * 1000;
 
         let current_usage_delta =
             second.report.total_current_usage as isize - first.report.total_current_usage as isize;
@@ -673,11 +669,13 @@ static GLOBAL_SNAPSHOT_MANAGER: once_cell::sync::Lazy<std::sync::Mutex<SnapshotM
     once_cell::sync::Lazy::new(|| std::sync::Mutex::new(SnapshotManager::new()));
 
 /// Get the global snapshot manager instance
+#[allow(dead_code)]
 pub fn global_snapshot_manager() -> &'static std::sync::Mutex<SnapshotManager> {
     &GLOBAL_SNAPSHOT_MANAGER
 }
 
 /// Take a snapshot using the global snapshot manager
+#[allow(dead_code)]
 pub fn take_snapshot(id: impl Into<String>, description: impl Into<String>) -> MemorySnapshot {
     let mut manager = match global_snapshot_manager().lock() {
         Ok(guard) => guard,
@@ -691,6 +689,7 @@ pub fn take_snapshot(id: impl Into<String>, description: impl Into<String>) -> M
 }
 
 /// Compare two snapshots using the global snapshot manager
+#[allow(dead_code)]
 pub fn compare_snapshots(first_id: &str, second_id: &str) -> Option<SnapshotDiff> {
     let manager = match global_snapshot_manager().lock() {
         Ok(guard) => guard,
@@ -703,6 +702,7 @@ pub fn compare_snapshots(first_id: &str, second_id: &str) -> Option<SnapshotDiff
 }
 
 /// Save all snapshots to a directory using the global snapshot manager
+#[allow(dead_code)]
 pub fn save_snapshots(dir: impl AsRef<Path>) -> io::Result<()> {
     let manager = match global_snapshot_manager().lock() {
         Ok(guard) => guard,
@@ -715,6 +715,7 @@ pub fn save_snapshots(dir: impl AsRef<Path>) -> io::Result<()> {
 }
 
 /// Load all snapshots from a directory using the global snapshot manager
+#[allow(dead_code)]
 pub fn load_snapshots(dir: impl AsRef<Path>) -> io::Result<()> {
     let mut manager = match global_snapshot_manager().lock() {
         Ok(guard) => guard,
@@ -727,6 +728,7 @@ pub fn load_snapshots(dir: impl AsRef<Path>) -> io::Result<()> {
 }
 
 /// Clear all snapshots using the global snapshot manager
+#[allow(dead_code)]
 pub fn clear_snapshots() {
     let mut manager = match global_snapshot_manager().lock() {
         Ok(guard) => guard,

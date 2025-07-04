@@ -354,6 +354,7 @@ impl<F: Float> Op<F> for EfficientConcatOp {
 }
 
 /// Helper function to copy slice data efficiently
+#[allow(dead_code)]
 fn copy_slice_data<F: Float>(
     output: &mut Array<F, IxDyn>,
     input: &NdArrayView<F>,
@@ -378,6 +379,7 @@ fn copy_slice_data<F: Float>(
 // Public API functions
 
 /// Efficient reshape operation with optional zero-copy optimization
+#[allow(dead_code)]
 pub fn efficient_reshape<'g, F: Float>(
     tensor: &Tensor<'g, F>,
     _new_shape: &Tensor<'g, F>,
@@ -397,6 +399,7 @@ pub fn efficient_reshape<'g, F: Float>(
 }
 
 /// Efficient reshape with explicit shape values
+#[allow(dead_code)]
 pub fn efficient_reshape_with_shape<'g, F: Float>(
     tensor: &Tensor<'g, F>,
     new_shape: &[usize],
@@ -412,6 +415,7 @@ pub fn efficient_reshape_with_shape<'g, F: Float>(
 }
 
 /// Efficient slice operation
+#[allow(dead_code)]
 pub fn efficient_slice<'g, F: Float>(
     tensor: &Tensor<'g, F>,
     slices: &[SliceRange],
@@ -426,6 +430,7 @@ pub fn efficient_slice<'g, F: Float>(
 }
 
 /// Efficient concatenation of multiple tensors
+#[allow(dead_code)]
 pub fn efficient_concat<'g, F: Float>(tensors: &[&Tensor<'g, F>], axis: usize) -> Tensor<'g, F> {
     if tensors.is_empty() {
         panic!("Cannot concatenate empty tensor list");
@@ -445,6 +450,7 @@ pub fn efficient_concat<'g, F: Float>(tensors: &[&Tensor<'g, F>], axis: usize) -
 }
 
 /// Efficient transpose operation with cache-friendly memory access
+#[allow(dead_code)]
 pub fn efficient_transpose<'g, F: Float>(
     tensor: &Tensor<'g, F>,
     _axes: Option<&[usize]>,
@@ -465,11 +471,13 @@ pub fn efficient_transpose<'g, F: Float>(
 }
 
 /// Clear the reshape operation cache
+#[allow(dead_code)]
 pub fn clear_reshape_cache() {
     RESHAPE_CACHE.lock().unwrap().clear();
 }
 
 /// Get statistics about the reshape cache
+#[allow(dead_code)]
 pub fn get_reshape_cache_stats() -> (usize, usize) {
     let cache = RESHAPE_CACHE.lock().unwrap();
     (cache.cache.len(), cache.max_size)

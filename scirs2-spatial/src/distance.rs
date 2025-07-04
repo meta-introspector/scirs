@@ -369,6 +369,7 @@ impl<T: Float + Send + Sync> Distance<T> for MinkowskiDistance<T> {
 /// let dist = euclidean(point1, point2);
 /// assert!((dist - 5.196152f64).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn euclidean<T: Float + Send + Sync>(point1: &[T], point2: &[T]) -> T {
     let metric = EuclideanDistance::<T>::new();
     metric.distance(point1, point2)
@@ -396,6 +397,7 @@ pub fn euclidean<T: Float + Send + Sync>(point1: &[T], point2: &[T]) -> T {
 /// let dist = sqeuclidean(point1, point2);
 /// assert!((dist - 27.0f64).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn sqeuclidean<T: Float>(point1: &[T], point2: &[T]) -> T {
     if point1.len() != point2.len() {
         return T::nan();
@@ -431,6 +433,7 @@ pub fn sqeuclidean<T: Float>(point1: &[T], point2: &[T]) -> T {
 /// let dist = manhattan(point1, point2);
 /// assert!((dist - 9.0f64).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn manhattan<T: Float + Send + Sync>(point1: &[T], point2: &[T]) -> T {
     let metric = ManhattanDistance::<T>::new();
     metric.distance(point1, point2)
@@ -458,6 +461,7 @@ pub fn manhattan<T: Float + Send + Sync>(point1: &[T], point2: &[T]) -> T {
 /// let dist = chebyshev(point1, point2);
 /// assert!((dist - 3.0f64).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn chebyshev<T: Float + Send + Sync>(point1: &[T], point2: &[T]) -> T {
     let metric = ChebyshevDistance::<T>::new();
     metric.distance(point1, point2)
@@ -486,6 +490,7 @@ pub fn chebyshev<T: Float + Send + Sync>(point1: &[T], point2: &[T]) -> T {
 /// let dist = minkowski(point1, point2, 3.0);
 /// assert!((dist - 4.3267f64).abs() < 1e-4);
 /// ```
+#[allow(dead_code)]
 pub fn minkowski<T: Float + Send + Sync>(point1: &[T], point2: &[T], p: T) -> T {
     let metric = MinkowskiDistance::new(p);
     metric.distance(point1, point2)
@@ -513,6 +518,7 @@ pub fn minkowski<T: Float + Send + Sync>(point1: &[T], point2: &[T], p: T) -> T 
 /// let dist = canberra(point1, point2);
 /// assert!((dist - 1.5f64).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn canberra<T: Float>(point1: &[T], point2: &[T]) -> T {
     if point1.len() != point2.len() {
         return T::nan();
@@ -565,6 +571,7 @@ pub fn canberra<T: Float>(point1: &[T], point2: &[T]) -> T {
 /// let dist = cosine(point1, point2);
 /// assert!((dist - 1.0f64).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn cosine<T: Float>(point1: &[T], point2: &[T]) -> T {
     if point1.len() != point2.len() {
         return T::nan();
@@ -609,6 +616,7 @@ pub fn cosine<T: Float>(point1: &[T], point2: &[T]) -> T {
 /// let dist = correlation(point1, point2);
 /// assert!((dist - 2.0f64).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn correlation<T: Float>(point1: &[T], point2: &[T]) -> T {
     if point1.len() != point2.len() {
         return T::nan();
@@ -695,6 +703,7 @@ pub fn correlation<T: Float>(point1: &[T], point2: &[T]) -> T {
 /// let dist = mahalanobis(u, v, &vi);
 /// println!("Mahalanobis distance: {}", dist);
 /// ```
+#[allow(dead_code)]
 pub fn mahalanobis<T: Float>(point1: &[T], point2: &[T], vi: &Array2<T>) -> T {
     if point1.len() != point2.len() || vi.ncols() != point1.len() || vi.nrows() != point1.len() {
         return T::nan();
@@ -750,6 +759,7 @@ pub fn mahalanobis<T: Float>(point1: &[T], point2: &[T], vi: &Array2<T>) -> T {
 /// let dist = seuclidean(u, v, variance);
 /// println!("Standardized Euclidean distance: {}", dist);
 /// ```
+#[allow(dead_code)]
 pub fn seuclidean<T: Float>(point1: &[T], point2: &[T], variance: &[T]) -> T {
     if point1.len() != point2.len() || point1.len() != variance.len() {
         return T::nan();
@@ -794,6 +804,7 @@ pub fn seuclidean<T: Float>(point1: &[T], point2: &[T], variance: &[T]) -> T {
 /// let dist = braycurtis(u, v);
 /// println!("Bray-Curtis distance: {}", dist);
 /// ```
+#[allow(dead_code)]
 pub fn braycurtis<T: Float>(point1: &[T], point2: &[T]) -> T {
     if point1.len() != point2.len() {
         return T::nan();
@@ -814,6 +825,7 @@ pub fn braycurtis<T: Float>(point1: &[T], point2: &[T]) -> T {
     }
 }
 
+#[allow(dead_code)]
 pub fn jaccard<T: Float>(point1: &[T], point2: &[T]) -> T {
     if point1.len() != point2.len() {
         return T::nan();
@@ -869,6 +881,7 @@ pub fn jaccard<T: Float>(point1: &[T], point2: &[T]) -> T {
 /// assert!((dist_matrix[(0, 2)] - 1.0f64).abs() < 1e-6);
 /// assert!((dist_matrix[(1, 2)] - std::f64::consts::SQRT_2).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn pdist<T, F>(x: &Array2<T>, metric: F) -> Array2<T>
 where
     T: Float + std::fmt::Debug,
@@ -920,6 +933,7 @@ where
 /// assert!((dist_matrix[(1, 0)] - 1.0f64).abs() < 1e-6);
 /// assert!((dist_matrix[(1, 1)] - 1.0f64).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn cdist<T, F>(x_a: &Array2<T>, x_b: &Array2<T>, metric: F) -> SpatialResult<Array2<T>>
 where
     T: Float + std::fmt::Debug,
@@ -959,6 +973,7 @@ where
 /// # Returns
 ///
 /// * true if the matrix is valid, false otherwise
+#[allow(dead_code)]
 pub fn is_valid_condensed_distance_matrix<T: Float>(distances: &[T]) -> bool {
     // Check if length is a valid size for a condensed distance matrix
     let n = (1.0 + (1.0 + 8.0 * distances.len() as f64).sqrt()) / 2.0;
@@ -989,6 +1004,7 @@ pub fn is_valid_condensed_distance_matrix<T: Float>(distances: &[T]) -> bool {
 /// # Errors
 ///
 /// * Returns `SpatialError::ValueError` if the input is not a valid condensed distance matrix
+#[allow(dead_code)]
 pub fn squareform<T: Float>(distances: &[T]) -> SpatialResult<Array2<T>> {
     if !is_valid_condensed_distance_matrix(distances) {
         return Err(SpatialError::ValueError(
@@ -1027,6 +1043,7 @@ pub fn squareform<T: Float>(distances: &[T]) -> SpatialResult<Array2<T>> {
 ///
 /// * Returns `SpatialError::ValueError` if the input is not a square matrix
 /// * Returns `SpatialError::ValueError` if the input is not symmetric
+#[allow(dead_code)]
 pub fn squareform_to_condensed<T: Float>(distances: &Array2<T>) -> SpatialResult<Vec<T>> {
     let n = distances.nrows();
     if n != distances.ncols() {
@@ -1085,6 +1102,7 @@ pub fn squareform_to_condensed<T: Float>(distances: &Array2<T>) -> SpatialResult
 /// let dist: f64 = dice(u, v);
 /// println!("Dice distance: {}", dist);
 /// ```
+#[allow(dead_code)]
 pub fn dice<T: Float>(point1: &[bool], point2: &[bool]) -> T {
     if point1.len() != point2.len() {
         return T::nan();
@@ -1140,6 +1158,7 @@ pub fn dice<T: Float>(point1: &[bool], point2: &[bool]) -> T {
 /// let dist: f64 = kulsinski(u, v);
 /// println!("Kulsinski distance: {}", dist);
 /// ```
+#[allow(dead_code)]
 pub fn kulsinski<T: Float>(point1: &[bool], point2: &[bool]) -> T {
     if point1.len() != point2.len() {
         return T::nan();
@@ -1196,6 +1215,7 @@ pub fn kulsinski<T: Float>(point1: &[bool], point2: &[bool]) -> T {
 /// let dist: f64 = rogerstanimoto(u, v);
 /// println!("Rogers-Tanimoto distance: {}", dist);
 /// ```
+#[allow(dead_code)]
 pub fn rogerstanimoto<T: Float>(point1: &[bool], point2: &[bool]) -> T {
     if point1.len() != point2.len() {
         return T::nan();
@@ -1256,6 +1276,7 @@ pub fn rogerstanimoto<T: Float>(point1: &[bool], point2: &[bool]) -> T {
 /// let dist: f64 = russellrao(u, v);
 /// println!("Russell-Rao distance: {}", dist);
 /// ```
+#[allow(dead_code)]
 pub fn russellrao<T: Float>(point1: &[bool], point2: &[bool]) -> T {
     if point1.len() != point2.len() {
         return T::nan();
@@ -1306,6 +1327,7 @@ pub fn russellrao<T: Float>(point1: &[bool], point2: &[bool]) -> T {
 /// let dist: f64 = sokalmichener(u, v);
 /// println!("Sokal-Michener distance: {}", dist);
 /// ```
+#[allow(dead_code)]
 pub fn sokalmichener<T: Float>(point1: &[bool], point2: &[bool]) -> T {
     // This is the same as Rogers-Tanimoto
     rogerstanimoto(point1, point2)
@@ -1337,6 +1359,7 @@ pub fn sokalmichener<T: Float>(point1: &[bool], point2: &[bool]) -> T {
 /// let dist: f64 = sokalsneath(u, v);
 /// println!("Sokal-Sneath distance: {}", dist);
 /// ```
+#[allow(dead_code)]
 pub fn sokalsneath<T: Float>(point1: &[bool], point2: &[bool]) -> T {
     if point1.len() != point2.len() {
         return T::nan();
@@ -1394,6 +1417,7 @@ pub fn sokalsneath<T: Float>(point1: &[bool], point2: &[bool]) -> T {
 /// let dist: f64 = yule(u, v);
 /// println!("Yule distance: {}", dist);
 /// ```
+#[allow(dead_code)]
 pub fn yule<T: Float>(point1: &[bool], point2: &[bool]) -> T {
     if point1.len() != point2.len() {
         return T::nan();

@@ -1,6 +1,7 @@
 use ndarray::{array, Array2};
 use scirs2_stats::distributions::multivariate::inverse_wishart::InverseWishart;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Inverse Wishart Distribution Example");
     println!("-----------------------------------");

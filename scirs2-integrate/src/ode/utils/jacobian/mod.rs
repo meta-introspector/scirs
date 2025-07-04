@@ -43,6 +43,7 @@ pub enum JacobianStrategy {
 }
 
 /// Compute Jacobian using finite differences (for compatibility)
+#[allow(dead_code)]
 pub fn compute_jacobian<F, Func>(f: &Func, t: F, y: &Array1<F>) -> IntegrateResult<Array2<F>>
 where
     F: IntegrateFloat,

@@ -15,6 +15,7 @@ use scirs2_cluster::launch_interactive_visualization;
 
 use scirs2_cluster::VisualizationConfig;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Native Plotting Demo for scirs2-cluster");
     println!("======================================");
@@ -150,6 +151,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Generate sample data with 3 well-separated clusters
+#[allow(dead_code)]
 fn generate_sample_data() -> Vec<f64> {
     use rand::prelude::*;
     use rand_distr::Normal;

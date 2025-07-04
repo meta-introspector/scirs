@@ -2,6 +2,7 @@ use ndarray::{Array, IxDyn};
 use scirs2_neural::layers::Layer;
 use scirs2_neural::models::{BertConfig, BertModel};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("BERT Model Example");
     // Create a small BERT model for demonstration

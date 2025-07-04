@@ -733,7 +733,12 @@ impl UltraParallelStatsProcessor {
 
                 correlation_work.push(WorkUnit {
                     id: work_id,
-                    data: (col_i.into_raw_vec(), col_j.into_raw_vec(), i, j),
+                    data: (
+                        col_i.into_raw_vec_and_offset().0,
+                        col_j.into_raw_vec_and_offset().0,
+                        i,
+                        j,
+                    ),
                     cost: (n_rows as f64).sqrt(), // Correlation cost is roughly O(sqrt(n))
                     dependencies: Vec::new(),
                     priority: WorkPriority::Normal,
@@ -744,7 +749,7 @@ impl UltraParallelStatsProcessor {
         }
 
         // Execute parallel correlation computations
-        let correlation_results = self.execute_correlation_work(&correlation_work)?;
+        let correlation_results = self.execute_correlation_work(correlation_work.as_slice())?;
 
         // Assemble correlation matrix
         let mut result_matrix = Array2::zeros((n_cols, n_cols));
@@ -897,7 +902,7 @@ impl UltraParallelStatsProcessor {
         &self,
         data: &ArrayView1<F>,
         mean_val: F,
-        ddof: usize,
+        _ddof: usize,
         strategy: &OptimizationStrategy,
     ) -> StatsResult<Vec<WorkUnit<Vec<f64>>>>
     where
@@ -977,10 +982,13 @@ impl UltraParallelStatsProcessor {
     }
 
     /// Execute correlation work units
-    fn execute_correlation_work(
+    fn execute_correlation_work<F>(
         &self,
-        work_units: &[WorkUnit<(Vec<f64>, Vec<f64>, usize, usize)>],
-    ) -> StatsResult<Vec<((usize, usize), f64)>> {
+        work_units: &[WorkUnit<(Vec<F>, Vec<F>, usize, usize)>],
+    ) -> StatsResult<Vec<((usize, usize), F)>>
+    where
+        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum,
+    {
         let num_work_units = work_units.len();
         let results = Arc::new(Mutex::new(Vec::with_capacity(num_work_units)));
         let work_units = Arc::new(work_units.to_vec());
@@ -996,7 +1004,7 @@ impl UltraParallelStatsProcessor {
                         let (ref x, ref y, i, j) = work_unit.data;
 
                         // Compute Pearson correlation
-                        let correlation = self.compute_correlation(x, y).unwrap_or(0.0);
+                        let correlation = self.compute_correlation(x, y).unwrap_or(F::zero());
 
                         if let Ok(mut results) = results.lock() {
                             results.push(((i, j), correlation));
@@ -1015,23 +1023,26 @@ impl UltraParallelStatsProcessor {
     }
 
     /// Compute Pearson correlation between two vectors
-    fn compute_correlation(&self, x: &[f64], y: &[f64]) -> StatsResult<f64> {
+    fn compute_correlation<F>(&self, x: &[F], y: &[F]) -> StatsResult<F>
+    where
+        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum,
+    {
         if x.len() != y.len() || x.is_empty() {
-            return Ok(0.0);
+            return Ok(F::zero());
         }
 
-        let n = x.len() as f64;
-        let sum_x: f64 = x.iter().sum();
-        let sum_y: f64 = y.iter().sum();
-        let sum_xx: f64 = x.iter().map(|&xi| xi * xi).sum();
-        let sum_yy: f64 = y.iter().map(|&yi| yi * yi).sum();
-        let sum_xy: f64 = x.iter().zip(y).map(|(&xi, &yi)| xi * yi).sum();
+        let n = F::from(x.len()).unwrap();
+        let sum_x: F = x.iter().cloned().sum();
+        let sum_y: F = y.iter().cloned().sum();
+        let sum_xx: F = x.iter().map(|&xi| xi * xi).sum();
+        let sum_yy: F = y.iter().map(|&yi| yi * yi).sum();
+        let sum_xy: F = x.iter().zip(y).map(|(&xi, &yi)| xi * yi).sum();
 
         let numerator = n * sum_xy - sum_x * sum_y;
         let denominator = ((n * sum_xx - sum_x * sum_x) * (n * sum_yy - sum_y * sum_y)).sqrt();
 
-        if denominator == 0.0 {
-            Ok(0.0)
+        if denominator == F::zero() {
+            Ok(F::zero())
         } else {
             Ok(numerator / denominator)
         }
@@ -1104,13 +1115,16 @@ impl UltraParallelStatsProcessor {
     }
 
     /// Calculate matrix operation execution metrics
-    fn calculate_matrix_execution_metrics(
+    fn calculate_matrix_execution_metrics<F>(
         &self,
         total_time: Duration,
-        work_units: &[WorkUnit<(Vec<f64>, Vec<f64>, usize, usize)>],
-    ) -> StatsResult<ParallelExecutionMetrics> {
+        work_units: &[WorkUnit<(Vec<F>, Vec<F>, usize, usize)>],
+    ) -> StatsResult<ParallelExecutionMetrics>
+    where
+        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum,
+    {
         let threads_used = work_units.len();
-        let total_work: f64 = work_units.iter().map(|wu| wu.cost).sum();
+        let _total_work: f64 = work_units.iter().map(|wu| wu.cost).sum();
         let load_balance_efficiency = 0.85; // Estimate for matrix operations
 
         Ok(ParallelExecutionMetrics {
@@ -1254,10 +1268,12 @@ impl UltraParallelStatsProcessor {
 }
 
 /// Convenience functions for ultra-parallel operations
+#[allow(dead_code)]
 pub fn create_ultra_parallel_processor() -> StatsResult<UltraParallelStatsProcessor> {
     UltraParallelStatsProcessor::default()
 }
 
+#[allow(dead_code)]
 pub fn mean_ultra_parallel<F>(data: ArrayView1<F>) -> StatsResult<UltraParallelResult<F>>
 where
     F: Float + NumCast + Send + Sync + Zero + std::iter::Sum,
@@ -1266,6 +1282,7 @@ where
     processor.mean_ultra_parallel(data)
 }
 
+#[allow(dead_code)]
 pub fn variance_ultra_parallel<F>(
     data: ArrayView1<F>,
     ddof: usize,

@@ -68,6 +68,7 @@ pub struct SeedPoint {
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn region_growing(
     img: &DynamicImage,
     seeds: &[SeedPoint],
@@ -114,6 +115,7 @@ pub fn region_growing(
 }
 
 /// Grow a single region from a seed point
+#[allow(dead_code)]
 fn grow_region(
     img: &GrayImage,
     labels: &mut Array2<u32>,
@@ -152,6 +154,7 @@ fn grow_region(
 }
 
 /// Auto-generate seeds and perform region growing
+#[allow(dead_code)]
 fn auto_seeded_region_growing(
     img: &GrayImage,
     labels: &mut Array2<u32>,
@@ -178,6 +181,7 @@ fn auto_seeded_region_growing(
 }
 
 /// Get neighbor offsets based on connectivity
+#[allow(dead_code)]
 fn get_neighbors(connectivity: u8) -> Vec<(i32, i32)> {
     match connectivity {
         4 => vec![(-1, 0), (1, 0), (0, -1), (0, 1)],
@@ -196,6 +200,7 @@ fn get_neighbors(connectivity: u8) -> Vec<(i32, i32)> {
 }
 
 /// Remove regions smaller than minimum size
+#[allow(dead_code)]
 fn remove_small_regions(labels: &mut Array2<u32>, min_size: usize) {
     let (height, width) = labels.dim();
 
@@ -227,6 +232,7 @@ fn remove_small_regions(labels: &mut Array2<u32>, min_size: usize) {
 /// Region growing with adaptive threshold
 ///
 /// The threshold is adapted based on local statistics
+#[allow(dead_code)]
 pub fn adaptive_region_growing(
     img: &DynamicImage,
     seeds: &[SeedPoint],
@@ -273,6 +279,7 @@ pub fn adaptive_region_growing(
 }
 
 /// Grow region with adaptive threshold
+#[allow(dead_code)]
 fn grow_region_adaptive(
     img: &GrayImage,
     labels: &mut Array2<u32>,
@@ -322,6 +329,7 @@ fn grow_region_adaptive(
 }
 
 /// Compute local mean and standard deviation
+#[allow(dead_code)]
 fn compute_local_stats(img: &GrayImage, window_size: usize) -> Result<(Array2<f32>, Array2<f32>)> {
     let (width, height) = img.dimensions();
     let mut local_mean = Array2::zeros((height as usize, width as usize));
@@ -357,6 +365,7 @@ fn compute_local_stats(img: &GrayImage, window_size: usize) -> Result<(Array2<f3
 }
 
 /// Convert labels to color image for visualization
+#[allow(dead_code)]
 pub fn region_labels_to_color(labels: &Array2<u32>) -> RgbImage {
     let (height, width) = labels.dim();
     let mut result = RgbImage::new(width as u32, height as u32);
@@ -402,6 +411,7 @@ pub fn region_labels_to_color(labels: &Array2<u32>) -> RgbImage {
 }
 
 /// Convert HSV to RGB
+#[allow(dead_code)]
 fn hsv_to_rgb(h: f32, s: f32, v: f32) -> (f32, f32, f32) {
     let c = v * s;
     let x = c * (1.0 - ((h * 6.0) % 2.0 - 1.0).abs());

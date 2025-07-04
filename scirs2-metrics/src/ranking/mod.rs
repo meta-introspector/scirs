@@ -122,6 +122,7 @@ pub mod label;
 /// let mrr = mean_reciprocal_rank(&y_true, &y_score).unwrap();
 /// assert!((mrr - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn mean_reciprocal_rank<T, S, R>(
     y_true: &[ArrayBase<S, Ix1>],
     y_score: &[ArrayBase<R, Ix1>],
@@ -190,6 +191,7 @@ where
 }
 
 /// Helper function to calculate Discounted Cumulative Gain (DCG) for a single query
+#[allow(dead_code)]
 fn dcg<T>(relevance_scores: &[T], k: Option<usize>) -> f64
 where
     T: Real + Clone,
@@ -243,6 +245,7 @@ where
 /// // NDCG at k=5 (all results)
 /// let ndcg = ndcg_score(&y_true, &y_score, Some(5)).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn ndcg_score<T, S, R>(
     y_true: &[ArrayBase<S, Ix1>],
     y_score: &[ArrayBase<R, Ix1>],
@@ -321,6 +324,7 @@ where
 }
 
 /// Helper function to calculate Average Precision for a single query
+#[allow(dead_code)]
 fn average_precision<T>(y_true_sorted: &[T], k: Option<usize>) -> f64
 where
     T: Real + Clone,
@@ -388,6 +392,7 @@ where
 /// // MAP at k=5 (all results)
 /// let map = mean_average_precision(&y_true, &y_score, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn mean_average_precision<T, S, R>(
     y_true: &[ArrayBase<S, Ix1>],
     y_score: &[ArrayBase<R, Ix1>],
@@ -482,6 +487,7 @@ where
 /// // Precision at k=3
 /// let prec = precision_at_k(&y_true, &y_score, 3).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn precision_at_k<T, S, R>(
     y_true: &[ArrayBase<S, Ix1>],
     y_score: &[ArrayBase<R, Ix1>],
@@ -588,6 +594,7 @@ where
 /// // Recall at k=3
 /// let rec = recall_at_k(&y_true, &y_score, 3).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn recall_at_k<T, S, R>(
     y_true: &[ArrayBase<S, Ix1>],
     y_score: &[ArrayBase<R, Ix1>],
@@ -697,6 +704,7 @@ where
 /// let tau = kendalls_tau(&x, &y).unwrap();
 /// assert!((tau + 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn kendalls_tau<T, S, R>(x: &ArrayBase<S, Ix1>, y: &ArrayBase<R, Ix1>) -> Result<f64>
 where
     T: Real + PartialOrd + Clone,
@@ -786,6 +794,7 @@ where
 /// let rho = spearmans_rho(&x, &y).unwrap();
 /// assert!((rho + 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn spearmans_rho<T, S, R>(x: &ArrayBase<S, Ix1>, y: &ArrayBase<R, Ix1>) -> Result<f64>
 where
     T: Real + PartialOrd + Clone,
@@ -827,6 +836,7 @@ where
 
 /// Helper function to convert values to ranks.
 /// Handles ties by assigning average rank.
+#[allow(dead_code)]
 fn rank_data<T, S>(x: &ArrayBase<S, Ix1>) -> Result<Vec<f64>>
 where
     T: Real + PartialOrd + Clone,
@@ -912,6 +922,7 @@ where
 /// // MAP@3 - consider only top 3 ranked items
 /// let map_k = map_at_k(&y_true, &y_score, 3).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn map_at_k<T, S, R>(
     y_true: &[ArrayBase<S, Ix1>],
     y_score: &[ArrayBase<R, Ix1>],
@@ -969,6 +980,7 @@ where
 /// // CTR at k=3
 /// let ctr = click_through_rate(&y_true, &y_score, 3).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn click_through_rate<T, S, R>(
     y_true: &[ArrayBase<S, Ix1>],
     y_score: &[ArrayBase<R, Ix1>],

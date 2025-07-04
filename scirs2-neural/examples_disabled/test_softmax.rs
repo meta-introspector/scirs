@@ -1,6 +1,7 @@
 use ndarray::{arr1, arr2};
 use scirs2_neural::activations::{Activation, Softmax};
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing softmax implementation...\n");
     // Test case 1: Simple 1D array

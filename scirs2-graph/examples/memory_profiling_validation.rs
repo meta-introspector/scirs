@@ -16,6 +16,7 @@ use std::collections::HashMap;
 use std::thread;
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔍 SciRS2-Graph Memory Profiling Validation");
     println!("=".repeat(50));
@@ -48,6 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn basic_memory_profiling() -> Result<(), Box<dyn std::error::Error>> {
     let sizes = vec![1_000, 5_000, 10_000];
     let edge_probability = 0.01;
@@ -72,6 +74,7 @@ fn basic_memory_profiling() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn representation_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let n = 5_000;
     let edge_probability = 0.005; // Sparse graph
@@ -128,6 +131,7 @@ fn representation_comparison() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn fragmentation_analysis() -> Result<(), Box<dyn std::error::Error>> {
     // Create graphs with different degree distributions
     let graphs = vec![
@@ -158,6 +162,7 @@ fn fragmentation_analysis() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn optimization_suggestions() -> Result<(), Box<dyn std::error::Error>> {
     // Create a graph with poor memory characteristics
     let mut graph = Graph::new();
@@ -198,6 +203,7 @@ fn optimization_suggestions() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn real_time_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     println!("Starting real-time memory monitoring...");
 
@@ -226,6 +232,7 @@ fn real_time_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn optimized_builder_test() -> Result<(), Box<dyn std::error::Error>> {
     let n = 10_000;
     let expected_edges = 50_000;
@@ -288,6 +295,7 @@ fn optimized_builder_test() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn format_bytes(bytes: usize) -> String {
     if bytes < 1024 {
         format!("{} B", bytes)

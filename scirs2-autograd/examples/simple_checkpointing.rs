@@ -6,6 +6,7 @@ use std::time::Instant;
 // It creates a small linear chain of operations and shows how checkpointing
 // affects memory usage and computation time
 
+#[allow(dead_code)]
 fn main() {
     println!("Simple Gradient Checkpointing Example");
     println!("===================================");

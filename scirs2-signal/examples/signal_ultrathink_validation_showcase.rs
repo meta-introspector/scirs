@@ -21,6 +21,7 @@ use scirs2_signal::multitaper::{
 use std::f64::consts::PI;
 
 /// Demonstrate enhanced multitaper validation features
+#[allow(dead_code)]
 fn showcase_multitaper_enhancements() -> SignalResult<()> {
     println!("=== Enhanced Multitaper Spectral Estimation Validation ===\n");
 
@@ -134,6 +135,7 @@ fn showcase_multitaper_enhancements() -> SignalResult<()> {
 }
 
 /// Demonstrate enhanced Lomb-Scargle validation features  
+#[allow(dead_code)]
 fn showcase_lombscargle_enhancements() -> SignalResult<()> {
     println!("\n=== Enhanced Lomb-Scargle Periodogram Validation ===\n");
 
@@ -362,6 +364,7 @@ fn showcase_lombscargle_enhancements() -> SignalResult<()> {
 }
 
 /// Display summary of validation enhancements
+#[allow(dead_code)]
 fn display_validation_summary() {
     println!("\n=== Ultrathink Mode Validation Enhancement Summary ===\n");
 
@@ -406,6 +409,7 @@ fn display_validation_summary() {
     println!("  • Performance scaling validation");
 }
 
+#[allow(dead_code)]
 fn main() -> SignalResult<()> {
     println!("🔬 Ultrathink Mode Enhanced Validation Showcase");
     println!("===============================================");

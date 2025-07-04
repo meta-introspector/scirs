@@ -187,19 +187,6 @@ impl CacheBuilder {
 /// // Retrieve a value
 /// let value = cache.get(&"key".to_string());
 /// ```
-pub fn memoize_example() {
-    // Create a TTL cache
-    let mut cache = TTLSizedCache::<String, String>::new(100, 60);
-
-    // Cache a value
-    cache.insert("key".to_string(), "value".to_string());
-
-    // Retrieve a value
-    let value = cache.get(&"key".to_string());
-
-    println!("Value from cache: {value:?}");
-}
-
 /// Compute Fibonacci numbers with memoization
 ///
 /// This function demonstrates the use of memoization for computing
@@ -214,6 +201,7 @@ pub fn memoize_example() {
 /// * The nth Fibonacci number
 #[cached]
 #[must_use]
+#[allow(dead_code)]
 pub fn fibonacci(n: u64) -> u64 {
     match n {
         0 => 0,

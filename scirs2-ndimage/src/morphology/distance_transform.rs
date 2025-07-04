@@ -53,6 +53,7 @@ pub enum DistanceMetric {
 ///
 /// This function implements the Felzenszwalb & Huttenlocher separable algorithm
 /// that reduces complexity from O(n²) to O(n) per dimension.
+#[allow(dead_code)]
 fn distance_transform_edt_optimized<D>(
     input: &Array<bool, D>,
     sampling: &[f64],
@@ -125,6 +126,7 @@ where
 ///
 /// This function processes the distance transform one dimension at a time,
 /// using the envelope of parabolas method for O(n) complexity per dimension.
+#[allow(dead_code)]
 fn felzenszwalb_1d_edt<D>(
     dist_sq: &mut Array<f64, D>,
     indices: Option<&mut Array<i32, IxDyn>>,
@@ -202,6 +204,7 @@ fn felzenszwalb_1d_edt<D>(
 }
 
 /// Core 1D distance transform algorithm using envelope of parabolas
+#[allow(dead_code)]
 fn felzenszwalb_1d_line(
     input: &[f64],
     input_indices: Option<&[i32]>,
@@ -268,6 +271,7 @@ fn felzenszwalb_1d_line(
 }
 
 /// Calculate intersection point between two parabolas
+#[allow(dead_code)]
 fn intersection_point(p: usize, q: usize, f: &[f64], sampling_sq: f64) -> f64 {
     if f[p].is_infinite() && f[q].is_infinite() {
         return 0.0;
@@ -384,6 +388,7 @@ fn increment_indices(indices: &mut [usize], shape: &[usize], skip_dim: usize) ->
 }
 
 /// Brute force implementation for fallback and reference
+#[allow(dead_code)]
 fn distance_transform_edt_brute_force<D>(
     input: &Array<bool, D>,
     sampling: &[f64],
@@ -513,6 +518,7 @@ where
 /// let input_dyn = input.clone().into_dimensionality::<IxDyn>()?;
 /// let (distances, _) = distance_transform_edt(&input_dyn, None, true, false)?;
 /// ```
+#[allow(dead_code)]
 pub fn distance_transform_edt<D>(
     input: &Array<bool, D>,
     sampling: Option<&[f64]>,
@@ -593,6 +599,7 @@ where
 /// let input_dyn = input.clone().into_dimensionality::<IxDyn>()?;
 /// let (distances, _) = distance_transform_cdt(&input_dyn, "cityblock", true, false)?;
 /// ```
+#[allow(dead_code)]
 pub fn distance_transform_cdt<D>(
     input: &Array<bool, D>,
     metric: &str,
@@ -756,6 +763,7 @@ where
 /// let input_dyn = input.clone().into_dimensionality::<IxDyn>()?;
 /// let (distances, _) = distance_transform_bf(&input_dyn, "euclidean", None, true, false)?;
 /// ```
+#[allow(dead_code)]
 pub fn distance_transform_bf<D>(
     input: &Array<bool, D>,
     metric: &str,

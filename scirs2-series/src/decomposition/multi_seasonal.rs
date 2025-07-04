@@ -87,6 +87,7 @@ impl Default for MultiSeasonalConfig {
 /// let config = MultiSeasonalConfig::default();
 /// let result = decompose_multi_seasonal(&ts, &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn decompose_multi_seasonal<F>(
     ts: &Array1<F>,
     config: &MultiSeasonalConfig,
@@ -204,6 +205,7 @@ where
 }
 
 /// Detects seasonal periods automatically using multiple methods
+#[allow(dead_code)]
 fn detect_seasonal_periods<F>(ts: &Array1<F>, config: &MultiSeasonalConfig) -> Result<Vec<usize>>
 where
     F: Float + FromPrimitive + Debug,
@@ -269,6 +271,7 @@ where
 }
 
 /// Detects periods using autocorrelation function
+#[allow(dead_code)]
 fn detect_periods_acf<F>(ts: &Array1<F>, min_period: usize, max_period: usize) -> Result<Vec<usize>>
 where
     F: Float + FromPrimitive + Debug,
@@ -290,6 +293,7 @@ where
 }
 
 /// Detects periods using periodogram analysis
+#[allow(dead_code)]
 fn detect_periods_periodogram<F>(
     ts: &Array1<F>,
     min_period: usize,
@@ -326,6 +330,7 @@ where
 }
 
 /// Detects multiple peaks in autocorrelation function
+#[allow(dead_code)]
 fn detect_multiple_acf_peaks<F>(
     ts: &Array1<F>,
     min_period: usize,
@@ -377,6 +382,7 @@ where
 }
 
 /// Calculates seasonal strength for a given period
+#[allow(dead_code)]
 fn calculate_seasonal_strength<F>(
     ts: &Array1<F>,
     period: usize,
@@ -441,6 +447,7 @@ where
 }
 
 /// Extracts trend component considering multiple seasonal patterns
+#[allow(dead_code)]
 fn extract_multi_seasonal_trend<F>(
     ts: &Array1<F>,
     periods: &[usize],
@@ -471,6 +478,7 @@ where
 }
 
 /// Extracts seasonal components for each period
+#[allow(dead_code)]
 fn extract_seasonal_components<F>(
     detrended: &Array1<F>,
     periods: &[usize],
@@ -544,6 +552,7 @@ where
 }
 
 /// Combines multiple seasonal components into a single seasonal component
+#[allow(dead_code)]
 fn combine_seasonal_components<F>(
     seasonal_components: &[Array1<F>],
     model: DecompositionModel,
@@ -576,6 +585,7 @@ where
 }
 
 /// Calculates robust mean using median
+#[allow(dead_code)]
 fn robust_mean<F>(values: &[F]) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -597,6 +607,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn calculate_l2_norm<F>(arr: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,

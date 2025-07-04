@@ -11,6 +11,7 @@ use scirs2_signal::filter_banks::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Filter Bank Design and Analysis Example ===\n");
 

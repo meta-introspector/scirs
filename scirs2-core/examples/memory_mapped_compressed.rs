@@ -6,6 +6,7 @@ use std::io::Write;
 use std::time::Instant;
 use tempfile::tempdir;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Compressed Memory-Mapped Array Example");
     println!("======================================\n");

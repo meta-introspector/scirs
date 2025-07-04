@@ -6,6 +6,7 @@
 use scirs2_datasets::{BatchOperations, CacheManager};
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Batch Operations Demonstration ===\n");
 
@@ -49,6 +50,7 @@ fn main() {
     println!("\n=== Batch Operations Demo Complete ===========");
 }
 
+#[allow(dead_code)]
 fn setup_sample_cache_data(batch_ops: &BatchOperations) {
     println!("Creating sample cached datasets...");
 
@@ -72,6 +74,7 @@ fn setup_sample_cache_data(batch_ops: &BatchOperations) {
     }
 }
 
+#[allow(dead_code)]
 fn demonstrate_cache_statistics(batch_ops: &BatchOperations) {
     match batch_ops.get_cache_statistics() {
         Ok(result) => {
@@ -95,6 +98,7 @@ fn demonstrate_cache_statistics(batch_ops: &BatchOperations) {
     }
 }
 
+#[allow(dead_code)]
 fn demonstrate_batch_processing(batch_ops: &BatchOperations) {
     println!("Processing multiple cached files in batch...");
 
@@ -152,6 +156,7 @@ fn demonstrate_batch_processing(batch_ops: &BatchOperations) {
     println!("   {}", result.summary());
 }
 
+#[allow(dead_code)]
 fn demonstrate_selective_cleanup(batch_ops: &BatchOperations) {
     println!("Demonstrating selective cache cleanup...");
 
@@ -201,6 +206,7 @@ fn demonstrate_selective_cleanup(batch_ops: &BatchOperations) {
     }
 }
 
+#[allow(dead_code)]
 fn show_final_cache_state(batch_ops: &BatchOperations) {
     println!("Final cache contents:");
 
@@ -225,6 +231,7 @@ fn show_final_cache_state(batch_ops: &BatchOperations) {
     }
 }
 
+#[allow(dead_code)]
 fn demonstrate_performance_features() {
     println!("Performance and configuration options:");
 
@@ -256,6 +263,7 @@ fn demonstrate_performance_features() {
 
 // Helper functions for creating sample data
 
+#[allow(dead_code)]
 fn create_csv_data() -> Vec<u8> {
     "sepal_length,sepal_width,petal_length,petal_width,species\n\
      5.1,3.5,1.4,0.2,setosa\n\
@@ -265,15 +273,18 @@ fn create_csv_data() -> Vec<u8> {
         .to_vec()
 }
 
+#[allow(dead_code)]
 fn create_json_data() -> Vec<u8> {
     r#"{"experiment_id": "001", "results": {"accuracy": 0.95, "precision": 0.92}, "timestamp": "2024-01-01T12:00:00Z"}"#
         .as_bytes().to_vec()
 }
 
+#[allow(dead_code)]
 fn create_binary_data(size: usize) -> Vec<u8> {
     (0..size).map(|i| (i % 256) as u8).collect()
 }
 
+#[allow(dead_code)]
 fn create_text_data() -> Vec<u8> {
     "Experimental Results Summary\n\
      ============================\n\
@@ -284,6 +295,7 @@ fn create_text_data() -> Vec<u8> {
         .to_vec()
 }
 
+#[allow(dead_code)]
 fn detect_content_type(name: &str, data: &[u8]) -> String {
     if name.ends_with(".csv") {
         "text/csv".to_string()
@@ -298,6 +310,7 @@ fn detect_content_type(name: &str, data: &[u8]) -> String {
     }
 }
 
+#[allow(dead_code)]
 fn format_bytes(bytes: u64) -> String {
     let size = bytes as f64;
     if size < 1024.0 {

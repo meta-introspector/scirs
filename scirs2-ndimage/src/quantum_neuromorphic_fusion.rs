@@ -18,15 +18,15 @@
 //! - **Quantum Error Correction for Classical Systems**: Quantum ECC integrated with classical processing
 //! - **Quantum-Classical Meta-Learning**: Hybrid learning across quantum and classical domains
 
-use ndarray::{s, Array, Array1, Array2, Array3, Array4, ArrayView2, ArrayViewMut2, Axis, Zip};
+use ndarray::{s, Array1, Array2, Array3, Array4, ArrayView2};
 use num_complex::Complex;
-use num_traits::{Float, FromPrimitive, One, Zero};
+use num_traits::{Float, FromPrimitive, Zero};
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::neuromorphic_computing::{Event, NeuromorphicConfig, SpikingNeuron};
-use crate::quantum_inspired::{QuantumConfig, QuantumState};
+use crate::neuromorphic_computing::{NeuromorphicConfig, SpikingNeuron};
+use crate::quantum_inspired::QuantumConfig;
 
 /// Configuration for quantum-neuromorphic fusion algorithms
 #[derive(Debug, Clone)]
@@ -104,6 +104,7 @@ impl Default for QuantumSpikingNeuron {
 /// The algorithm leverages quantum coherence to maintain multiple neural states
 /// simultaneously while preserving biological spike-timing dependent plasticity.
 /// Quantum entanglement enables instantaneous correlation across spatial distances.
+#[allow(dead_code)]
 pub fn quantum_spiking_neural_network<T>(
     image: ArrayView2<T>,
     network_layers: &[usize],
@@ -157,6 +158,7 @@ where
 ///
 /// Uses bio-inspired quantum entanglement to process spatial correlations
 /// with biological timing constraints and energy efficiency.
+#[allow(dead_code)]
 pub fn neuromorphic_quantum_entanglement<T>(
     image: ArrayView2<T>,
     config: &QuantumNeuromorphicConfig,
@@ -218,6 +220,7 @@ where
 ///
 /// Implements a liquid state machine that operates in quantum superposition
 /// while maintaining biological energy constraints and temporal dynamics.
+#[allow(dead_code)]
 pub fn bio_quantum_reservoir_computing<T>(
     image_sequence: &[ArrayView2<T>],
     reservoir_size: usize,
@@ -271,6 +274,7 @@ where
 ///
 /// Implements self-organizing quantum-biological systems that maintain
 /// optimal quantum coherence while preserving biological homeostasis.
+#[allow(dead_code)]
 pub fn quantum_homeostatic_adaptation<T>(
     image: ArrayView2<T>,
     config: &QuantumNeuromorphicConfig,
@@ -331,6 +335,7 @@ where
 ///
 /// Implements quantum analogs of biological sleep processes for optimizing
 /// quantum states and consolidating learned patterns.
+#[allow(dead_code)]
 pub fn quantum_memory_consolidation<T>(
     learned_patterns: &[Array2<T>],
     config: &QuantumNeuromorphicConfig,
@@ -393,6 +398,7 @@ where
 ///
 /// Bio-inspired quantum attention that selectively amplifies relevant features
 /// while suppressing noise through quantum interference.
+#[allow(dead_code)]
 pub fn quantum_attention_mechanism<T>(
     image: ArrayView2<T>,
     attention_queries: &[Array2<T>],
@@ -456,6 +462,7 @@ where
 
 // Helper functions for quantum-neuromorphic fusion
 
+#[allow(dead_code)]
 fn initialize_quantum_snn(
     layers: &[usize],
     height: usize,
@@ -478,6 +485,7 @@ fn initialize_quantum_snn(
     Ok(network)
 }
 
+#[allow(dead_code)]
 fn initialize_quantum_neuron_states(
     neuron: &mut QuantumSpikingNeuron,
     config: &QuantumNeuromorphicConfig,
@@ -495,6 +503,7 @@ fn initialize_quantum_neuron_states(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn image_to_quantum_spike_trains<T>(
     image: &ArrayView2<T>,
     time_steps: usize,
@@ -530,6 +539,7 @@ where
     Ok(quantum_spike_trains)
 }
 
+#[allow(dead_code)]
 fn quantum_neuromorphic_forward_pass(
     network: &mut [Array2<QuantumSpikingNeuron>],
     input_states: &ndarray::ArrayView3<Complex<f64>>,
@@ -582,6 +592,7 @@ fn quantum_neuromorphic_forward_pass(
     Ok(output_states)
 }
 
+#[allow(dead_code)]
 fn apply_quantum_stdp_learning(
     network: &mut [Array2<QuantumSpikingNeuron>],
     config: &QuantumNeuromorphicConfig,
@@ -622,6 +633,7 @@ fn apply_quantum_stdp_learning(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn quantum_network_memory_consolidation(
     network: &mut [Array2<QuantumSpikingNeuron>],
     config: &QuantumNeuromorphicConfig,
@@ -661,6 +673,7 @@ fn quantum_network_memory_consolidation(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn quantum_states_to_image<T>(
     quantum_states: ndarray::ArrayView4<Complex<f64>>,
     config: &QuantumNeuromorphicConfig,
@@ -704,6 +717,7 @@ where
 
 // Additional helper functions (implementing remaining functions for completeness)
 
+#[allow(dead_code)]
 fn update_classical_neuron_dynamics(
     neuron: &mut SpikingNeuron,
     config: &QuantumNeuromorphicConfig,
@@ -735,6 +749,7 @@ fn update_classical_neuron_dynamics(
 // Placeholder implementations for remaining complex functions
 // (In a real implementation, these would be fully developed)
 
+#[allow(dead_code)]
 fn initialize_bio_quantum_entanglement(
     _network: &mut Array2<QuantumSpikingNeuron>,
     _config: &QuantumNeuromorphicConfig,
@@ -743,6 +758,7 @@ fn initialize_bio_quantum_entanglement(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn pixel_to_quantum_state(
     _pixel_value: f64,
     _config: &QuantumNeuromorphicConfig,
@@ -751,6 +767,7 @@ fn pixel_to_quantum_state(
     Ok(Array1::zeros(4))
 }
 
+#[allow(dead_code)]
 fn update_bio_quantum_amplitudes(
     _neuron: &mut QuantumSpikingNeuron,
     _quantum_input: &Array1<Complex<f64>>,
@@ -760,6 +777,7 @@ fn update_bio_quantum_amplitudes(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn process_entangled_correlations(
     _neuron: &QuantumSpikingNeuron,
     _network: &Array2<QuantumSpikingNeuron>,
@@ -770,6 +788,7 @@ fn process_entangled_correlations(
     Ok(Complex::new(0.0, 0.0))
 }
 
+#[allow(dead_code)]
 fn apply_neuromorphic_quantum_dynamics(
     _neuron: &mut QuantumSpikingNeuron,
     _entangled_response: Complex<f64>,
@@ -779,6 +798,7 @@ fn apply_neuromorphic_quantum_dynamics(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn quantum_state_to_classical_output(
     _neuron: &QuantumSpikingNeuron,
     _config: &QuantumNeuromorphicConfig,
@@ -787,6 +807,7 @@ fn quantum_state_to_classical_output(
     Ok(0.0)
 }
 
+#[allow(dead_code)]
 fn initialize_bio_quantum_reservoir(
     _reservoir_size: usize,
     _config: &QuantumNeuromorphicConfig,
@@ -795,6 +816,7 @@ fn initialize_bio_quantum_reservoir(
     Ok(Array1::from_elem(100, QuantumSpikingNeuron::default()))
 }
 
+#[allow(dead_code)]
 fn image_to_bio_quantum_currents<T>(
     _image: &ArrayView2<T>,
     _config: &QuantumNeuromorphicConfig,
@@ -806,6 +828,7 @@ where
     Ok(Array2::zeros((1, 1)))
 }
 
+#[allow(dead_code)]
 fn update_bio_quantum_reservoir_dynamics(
     _reservoir: &mut Array1<QuantumSpikingNeuron>,
     _currents: &Array2<Complex<f64>>,
@@ -816,6 +839,7 @@ fn update_bio_quantum_reservoir_dynamics(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn capture_bio_quantum_reservoir_state(
     _reservoir: &Array1<QuantumSpikingNeuron>,
     _config: &QuantumNeuromorphicConfig,
@@ -824,6 +848,7 @@ fn capture_bio_quantum_reservoir_state(
     Ok(Array1::zeros(100))
 }
 
+#[allow(dead_code)]
 fn apply_biological_quantum_decoherence(
     _reservoir: &mut Array1<QuantumSpikingNeuron>,
     _config: &QuantumNeuromorphicConfig,
@@ -833,6 +858,7 @@ fn apply_biological_quantum_decoherence(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bio_quantum_readout_with_attention<T>(
     _states: &[Array1<Complex<f64>>],
     _output_shape: (usize, usize),
@@ -846,6 +872,7 @@ where
     Ok(Array2::zeros((height, width)))
 }
 
+#[allow(dead_code)]
 fn extract_neighborhood<T>(
     _image: &ArrayView2<T>,
     _center: (usize, usize),
@@ -858,6 +885,7 @@ where
     Ok(Array2::zeros((3, 3)))
 }
 
+#[allow(dead_code)]
 fn neighborhood_to_quantum_states(
     _neighborhood: &Array2<f64>,
     _config: &QuantumNeuromorphicConfig,
@@ -866,6 +894,7 @@ fn neighborhood_to_quantum_states(
     Ok(Array2::zeros((3, 3)))
 }
 
+#[allow(dead_code)]
 fn apply_quantum_homeostatic_processing(
     _neuron: &mut QuantumSpikingNeuron,
     _quantum_neighborhood: &Array2<Complex<f64>>,
@@ -876,6 +905,7 @@ fn apply_quantum_homeostatic_processing(
     Ok(Complex::new(0.0, 0.0))
 }
 
+#[allow(dead_code)]
 fn quantum_to_classical_with_homeostasis(
     _quantum_output: Complex<f64>,
     _neuron: &QuantumSpikingNeuron,
@@ -885,6 +915,7 @@ fn quantum_to_classical_with_homeostasis(
     Ok(0.0)
 }
 
+#[allow(dead_code)]
 fn update_quantum_homeostatic_parameters(
     _neuron: &mut QuantumSpikingNeuron,
     _classical_output: f64,
@@ -895,6 +926,7 @@ fn update_quantum_homeostatic_parameters(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn regulate_global_quantum_coherence(
     _network: &mut Array2<QuantumSpikingNeuron>,
     _config: &QuantumNeuromorphicConfig,
@@ -904,6 +936,7 @@ fn regulate_global_quantum_coherence(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn pattern_to_quantum_trace<T>(
     _pattern: &Array2<T>,
     _config: &QuantumNeuromorphicConfig,
@@ -915,6 +948,7 @@ where
     Ok(Array2::zeros((1, 1)))
 }
 
+#[allow(dead_code)]
 fn slow_wave_quantum_consolidation(
     _traces: &[Array2<Complex<f64>>],
     _config: &QuantumNeuromorphicConfig,
@@ -923,6 +957,7 @@ fn slow_wave_quantum_consolidation(
     Ok(Array2::zeros((1, 1)))
 }
 
+#[allow(dead_code)]
 fn rem_quantum_consolidation(
     _traces: &[Array2<Complex<f64>>],
     _config: &QuantumNeuromorphicConfig,
@@ -932,6 +967,7 @@ fn rem_quantum_consolidation(
     Ok(Array2::zeros((1, 1)))
 }
 
+#[allow(dead_code)]
 fn apply_sleep_quantum_decoherence(
     _memory: &mut Array2<Complex<f64>>,
     _config: &QuantumNeuromorphicConfig,
@@ -941,6 +977,7 @@ fn apply_sleep_quantum_decoherence(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_quantum_attention_query<T>(
     _query: &Array2<T>,
     _config: &QuantumNeuromorphicConfig,
@@ -952,6 +989,7 @@ where
     Ok(Array2::zeros((1, 1)))
 }
 
+#[allow(dead_code)]
 fn compute_quantum_attention(
     _pixel_value: f64,
     _quantum_query: &Array2<Complex<f64>>,
@@ -962,6 +1000,7 @@ fn compute_quantum_attention(
     Ok(Complex::new(0.0, 0.0))
 }
 
+#[allow(dead_code)]
 fn apply_bio_attention_gate(
     _attention_amplitude: Complex<f64>,
     _attention_gates: &Array2<f64>,
@@ -1136,6 +1175,7 @@ impl Default for ConsciousnessConfig {
 /// # Theory
 /// Based on Global Workspace Theory by Bernard Baars, this algorithm simulates
 /// the global broadcasting of information that characterizes conscious awareness.
+#[allow(dead_code)]
 pub fn consciousness_inspired_global_workspace<T>(
     image: ArrayView2<T>,
     config: &QuantumNeuromorphicConfig,
@@ -1234,6 +1274,7 @@ where
 /// # Theory
 /// Based on Integrated Information Theory by Giulio Tononi, this measures
 /// how much information is generated by a system above and beyond its parts.
+#[allow(dead_code)]
 pub fn integrated_information_processing<T>(
     image: ArrayView2<T>,
     config: &QuantumNeuromorphicConfig,
@@ -1318,6 +1359,7 @@ pub struct PredictiveCodingResult<T> {
     pub precision_weights: Array2<f64>,
 }
 
+#[allow(dead_code)]
 pub fn predictive_coding_hierarchy<T>(
     image: ArrayView2<T>,
     hierarchy_sizes: &[usize],
@@ -1418,6 +1460,7 @@ pub struct MetaCognitiveState {
     pub self_awareness_index: f64,
 }
 
+#[allow(dead_code)]
 pub fn meta_cognitive_monitoring<T>(
     image: ArrayView2<T>,
     processing_history: &[Array2<f64>],
@@ -1504,6 +1547,7 @@ where
 ///
 /// Implements temporal binding mechanisms that create conscious moments
 /// by integrating information across specific time windows.
+#[allow(dead_code)]
 pub fn temporal_binding_consciousness<T>(
     image_sequence: &[ArrayView2<T>],
     config: &QuantumNeuromorphicConfig,
@@ -1557,6 +1601,7 @@ where
 
 // Helper functions for consciousness-inspired algorithms
 
+#[allow(dead_code)]
 fn unconscious_perceptual_processing<T>(
     pixel_value: f64,
     image: &ArrayView2<T>,
@@ -1604,11 +1649,12 @@ where
     Ok(activation)
 }
 
+#[allow(dead_code)]
 fn attention_schema_processing(
     _pixel_value: f64,
     perceptual_module: &Array2<f64>,
     position: (usize, usize),
-    _config: &ConsciousnessConfig,
+    config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let (y, x) = position;
     let (height, width) = perceptual_module.dim();
@@ -1639,6 +1685,7 @@ fn attention_schema_processing(
     Ok(attention_activation)
 }
 
+#[allow(dead_code)]
 fn memory_trace_activation(
     pixel_value: f64,
     perceptual_activation: f64,
@@ -1651,6 +1698,7 @@ fn memory_trace_activation(
     Ok(memory_trace.min(1.0))
 }
 
+#[allow(dead_code)]
 fn calculate_coalition_strength(
     perceptual: f64,
     attention: f64,
@@ -1662,6 +1710,7 @@ fn calculate_coalition_strength(
     Ok(coalition.min(1.0))
 }
 
+#[allow(dead_code)]
 fn global_broadcast_influence(
     perceptual_module: &mut Array2<f64>,
     attention_module: &mut Array2<f64>,
@@ -1690,18 +1739,20 @@ fn global_broadcast_influence(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn integrate_conscious_response(
     workspace_activation: f64,
     perceptual: f64,
     attention: f64,
     memory: f64,
-    config: &ConsciousnessConfig,
+    _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     // Conscious integration of all information sources
     let integrated = workspace_activation * (perceptual + attention + memory) / 3.0;
     Ok(integrated.min(1.0))
 }
 
+#[allow(dead_code)]
 fn encode_pixel_to_quantum_states(
     pixel_value: f64,
     config: &QuantumNeuromorphicConfig,
@@ -1724,9 +1775,10 @@ fn encode_pixel_to_quantum_states(
     Ok(quantum_states)
 }
 
+#[allow(dead_code)]
 fn calculate_effective_information(
     system: &Array3<f64>,
-    config: &ConsciousnessConfig,
+    _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let (height, width, states) = system.dim();
 
@@ -1747,6 +1799,7 @@ fn calculate_effective_information(
     Ok(total_entropy / (height * width * states) as f64)
 }
 
+#[allow(dead_code)]
 fn generate_bipartitions(
     network: &Array3<f64>,
     partition_size: usize,
@@ -1784,11 +1837,12 @@ fn generate_bipartitions(
     Ok(bipartitions)
 }
 
+#[allow(dead_code)]
 fn apply_phi_weighted_processing(
     output: &mut Array2<f64>,
     network: &Array3<f64>,
     phi_weight: f64,
-    config: &ConsciousnessConfig,
+    _config: &ConsciousnessConfig,
 ) -> NdimageResult<()> {
     let (height, width, states) = network.dim();
 
@@ -1805,14 +1859,16 @@ fn apply_phi_weighted_processing(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn calculate_num_bipartitions(n: usize) -> usize {
     // Simplified calculation
     (2_usize.pow(n as u32) - 2) / 2
 }
 
+#[allow(dead_code)]
 fn generate_sensory_predictions(
     representation: &Array2<f64>,
-    config: &ConsciousnessConfig,
+    _config: &ConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>> {
     let (height, width) = representation.dim();
     let mut predictions = Array2::zeros((height, width));
@@ -1838,11 +1894,12 @@ fn generate_sensory_predictions(
     Ok(predictions)
 }
 
+#[allow(dead_code)]
 fn generate_hierarchical_predictions(
     higher_level: &Array2<f64>,
     current_level: &Array2<f64>,
-    level_size: usize,
-    config: &ConsciousnessConfig,
+    _level_size: usize,
+    _config: &ConsciousnessConfig,
 ) -> NdimageResult<Array2<f64>> {
     // Generate predictions from higher-level representations
     let (height, width) = current_level.dim();
@@ -1859,16 +1916,18 @@ fn generate_hierarchical_predictions(
     Ok(predictions)
 }
 
+#[allow(dead_code)]
 fn calculate_prediction_error(
     actual: &Array2<f64>,
     predicted: &Array2<f64>,
-    config: &ConsciousnessConfig,
+    _config: &ConsciousnessConfig,
 ) -> NdimageResult<f64> {
     let diff = actual - predicted;
     let squared_error = diff.mapv(|x| x * x);
     Ok(squared_error.mean().unwrap_or(0.0))
 }
 
+#[allow(dead_code)]
 fn update_representation_with_error(
     current: &Array2<f64>,
     prediction: &Array2<f64>,
@@ -1881,6 +1940,7 @@ fn update_representation_with_error(
     Ok(updated)
 }
 
+#[allow(dead_code)]
 fn refine_prediction_top_down(
     higher_prediction: &Array2<f64>,
     level_prediction: &Array2<f64>,
@@ -1893,6 +1953,7 @@ fn refine_prediction_top_down(
     Ok(refined)
 }
 
+#[allow(dead_code)]
 fn calculate_precision_weights(
     errors: &[f64],
     _config: &ConsciousnessConfig,
@@ -1908,6 +1969,7 @@ fn calculate_precision_weights(
     Ok(weights)
 }
 
+#[allow(dead_code)]
 fn calculate_processing_confidence(
     _pixel_value: f64,
     history: &[Array2<f64>],
@@ -1940,6 +2002,7 @@ fn calculate_processing_confidence(
     Ok(confidence)
 }
 
+#[allow(dead_code)]
 fn calculate_processing_effort(
     history: &[Array2<f64>],
     position: (usize, usize),
@@ -1967,6 +2030,7 @@ fn calculate_processing_effort(
     Ok(total_change / (history.len() - 1) as f64)
 }
 
+#[allow(dead_code)]
 fn calculate_error_monitoring_signal(
     pixel_value: f64,
     history: &[Array2<f64>],
@@ -1996,6 +2060,7 @@ fn calculate_error_monitoring_signal(
     Ok(mean_deviation.min(1.0))
 }
 
+#[allow(dead_code)]
 fn integrate_metacognitive_signals(
     confidence: f64,
     effort: f64,
@@ -2007,6 +2072,7 @@ fn integrate_metacognitive_signals(
     Ok(metacognitive_value.min(1.0))
 }
 
+#[allow(dead_code)]
 fn calculate_self_awareness_index(
     confidence: f64,
     effort: f64,
@@ -2018,6 +2084,7 @@ fn calculate_self_awareness_index(
     Ok(self_awareness * config.metacognitive_sensitivity)
 }
 
+#[allow(dead_code)]
 fn image_to_temporal_representation<T>(
     image: &ArrayView2<T>,
     timestamp: usize,
@@ -2046,6 +2113,7 @@ where
     Ok(temporal_rep)
 }
 
+#[allow(dead_code)]
 fn create_consciousness_moment(
     binding_window: &VecDeque<Array3<f64>>,
     _config: &ConsciousnessConfig,
@@ -2081,6 +2149,7 @@ fn create_consciousness_moment(
     Ok(consciousness_moment)
 }
 
+#[allow(dead_code)]
 fn integrate_consciousness_moments<T>(
     moments: &[Array2<f64>],
     output_shape: (usize, usize),
@@ -2948,6 +3017,7 @@ pub enum AdaptationAction {
 ///
 /// This function implements sophisticated quantum-classical hybrid processing
 /// for enhanced image processing capabilities.
+#[allow(dead_code)]
 pub fn advanced_quantum_classical_hybrid_processing<T>(
     image: ArrayView2<T>,
     config: &QuantumNeuromorphicConfig,

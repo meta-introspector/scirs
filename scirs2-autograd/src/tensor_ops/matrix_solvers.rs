@@ -483,6 +483,7 @@ impl<F: Float> Op<F> for CholeskySolveOp {
 // Helper functions
 
 /// Solve Sylvester equation AX + XB = C using Bartels-Stewart algorithm
+#[allow(dead_code)]
 fn solve_sylvester_internal<F: Float + ndarray::ScalarOperand>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -566,6 +567,7 @@ fn solve_sylvester_internal<F: Float + ndarray::ScalarOperand>(
 }
 
 /// Solve Lyapunov equation AX + XA^T = Q
+#[allow(dead_code)]
 fn solve_lyapunov_internal<F: Float + ndarray::ScalarOperand>(
     a: &ArrayView2<F>,
     q: &ArrayView2<F>,
@@ -577,6 +579,7 @@ fn solve_lyapunov_internal<F: Float + ndarray::ScalarOperand>(
 }
 
 /// Helper to solve linear system
+#[allow(dead_code)]
 fn solve_linear_system<F: Float>(
     a: &ArrayView2<F>,
     b: &ndarray::ArrayView1<F>,
@@ -637,6 +640,7 @@ fn solve_linear_system<F: Float>(
 }
 
 /// Solve AX = B for matrix B
+#[allow(dead_code)]
 fn solve_matrix_equation_right<F: Float>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -659,6 +663,7 @@ fn solve_matrix_equation_right<F: Float>(
 }
 
 /// Compute Cholesky decomposition
+#[allow(dead_code)]
 fn compute_cholesky<F: Float>(matrix: &ArrayView2<F>) -> Result<Array2<F>, OpError> {
     let n = matrix.shape()[0];
     let mut l = Array2::<F>::zeros((n, n));
@@ -691,6 +696,7 @@ fn compute_cholesky<F: Float>(matrix: &ArrayView2<F>) -> Result<Array2<F>, OpErr
 }
 
 /// Solve LLᵀx = b using Cholesky decomposition (1D case)
+#[allow(dead_code)]
 fn solve_cholesky_1d<F: Float>(
     l: &ArrayView2<F>,
     b: &ndarray::ArrayView1<F>,
@@ -723,6 +729,7 @@ fn solve_cholesky_1d<F: Float>(
 }
 
 /// Solve LLᵀX = B using Cholesky decomposition (2D case)
+#[allow(dead_code)]
 fn solve_cholesky_2d<F: Float>(l: &ArrayView2<F>, b: &ArrayView2<F>) -> Result<Array2<F>, OpError> {
     let n = l.shape()[0];
     let m = b.shape()[1];
@@ -742,6 +749,7 @@ fn solve_cholesky_2d<F: Float>(l: &ArrayView2<F>, b: &ArrayView2<F>) -> Result<A
 }
 
 /// Compute outer product gradient
+#[allow(dead_code)]
 fn compute_outer_product_gradient<F: Float>(
     a: &ndarray::ArrayViewD<F>,
     b: &ndarray::ArrayViewD<F>,
@@ -816,6 +824,7 @@ fn compute_outer_product_gradient<F: Float>(
 // Public API functions
 
 /// Solve Sylvester equation AX + XB = C
+#[allow(dead_code)]
 pub fn solve_sylvester<'g, F: Float + ndarray::ScalarOperand>(
     a: &Tensor<'g, F>,
     b: &Tensor<'g, F>,
@@ -833,6 +842,7 @@ pub fn solve_sylvester<'g, F: Float + ndarray::ScalarOperand>(
 }
 
 /// Solve Lyapunov equation AX + XA^T = Q
+#[allow(dead_code)]
 pub fn solve_lyapunov<'g, F: Float + ndarray::ScalarOperand>(
     a: &Tensor<'g, F>,
     q: &Tensor<'g, F>,
@@ -848,6 +858,7 @@ pub fn solve_lyapunov<'g, F: Float + ndarray::ScalarOperand>(
 }
 
 /// Solve linear system AX = B using Cholesky decomposition for positive definite A
+#[allow(dead_code)]
 pub fn cholesky_solve<'g, F: Float>(a: &Tensor<'g, F>, b: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = a.graph();
     let b_shape = crate::tensor_ops::shape(b);

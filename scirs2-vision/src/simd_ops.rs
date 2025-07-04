@@ -38,6 +38,7 @@ use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 ///
 /// Uses SIMD operations for the inner convolution loop, providing
 /// significant speedup for large images. Memory pool reduces allocations by 90%.
+#[allow(dead_code)]
 pub fn simd_convolve_2d(image: &ArrayView2<f32>, kernel: &ArrayView2<f32>) -> Result<Array2<f32>> {
     let (height, width) = image.dim();
     let (k_height, k_width) = kernel.dim();
@@ -102,6 +103,7 @@ pub fn simd_convolve_2d(image: &ArrayView2<f32>, kernel: &ArrayView2<f32>) -> Re
 /// # Performance
 ///
 /// 2-4x faster than scalar implementation for large images.
+#[allow(dead_code)]
 pub fn simd_sobel_gradients(
     image: &ArrayView2<f32>,
 ) -> Result<(Array2<f32>, Array2<f32>, Array2<f32>)> {
@@ -158,6 +160,7 @@ pub fn simd_sobel_gradients(
 ///
 /// Uses separable convolution (horizontal then vertical) with SIMD
 /// for 3-5x speedup over naive implementation.
+#[allow(dead_code)]
 pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<f32>> {
     let (height, width) = image.dim();
 
@@ -300,6 +303,7 @@ pub fn simd_gaussian_blur(image: &ArrayView2<f32>, sigma: f32) -> Result<Array2<
 /// # Performance
 ///
 /// 2-3x faster than scalar implementation.
+#[allow(dead_code)]
 pub fn simd_normalize_image(image: &ArrayView2<f32>) -> Result<Array2<f32>> {
     let (height, width) = image.dim();
     let mut output = Array2::zeros((height, width));
@@ -348,6 +352,7 @@ pub fn simd_normalize_image(image: &ArrayView2<f32>) -> Result<Array2<f32>> {
 /// # Returns
 ///
 /// * Equalized image
+#[allow(dead_code)]
 pub fn simd_histogram_equalization(
     image: &ArrayView2<f32>,
     num_bins: usize,
@@ -390,6 +395,7 @@ pub fn simd_histogram_equalization(
 }
 
 /// Check SIMD availability for vision operations
+#[allow(dead_code)]
 pub fn check_simd_support() -> PlatformCapabilities {
     PlatformCapabilities::detect()
 }
@@ -443,6 +449,7 @@ impl SimdPerformanceStats {
 /// # Performance
 ///
 /// Optimized for L1/L2 cache efficiency on modern CPUs.
+#[allow(dead_code)]
 pub fn simd_convolve_2d_blocked(
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
@@ -514,6 +521,7 @@ pub fn simd_convolve_2d_blocked(
 /// # Performance
 ///
 /// 4-8x speedup on multi-core systems compared to single-threaded SIMD.
+#[allow(dead_code)]
 pub fn simd_convolve_2d_parallel(
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
@@ -602,6 +610,7 @@ pub fn simd_convolve_2d_parallel(
 /// # Performance
 ///
 /// 3-5x faster than computing each statistic separately.
+#[allow(dead_code)]
 pub fn simd_image_statistics(image: &ArrayView2<f32>) -> (f32, f32, f32, f32) {
     let (height, width) = image.dim();
     let total_pixels = (height * width) as f32;
@@ -681,11 +690,13 @@ impl SimdMemoryPool {
 }
 
 /// Get a temporary buffer from the memory pool
+#[allow(dead_code)]
 pub fn get_temp_buffer(size: usize) -> Vec<f32> {
     SIMD_MEMORY_POOL.with(|pool| pool.borrow_mut().get_buffer(size))
 }
 
 /// Return a buffer to the memory pool
+#[allow(dead_code)]
 pub fn return_temp_buffer(buffer: Vec<f32>) {
     SIMD_MEMORY_POOL.with(|pool| pool.borrow_mut().return_buffer(buffer));
 }
@@ -709,6 +720,7 @@ pub fn return_temp_buffer(buffer: Vec<f32>) {
 ///
 /// 3-5x faster than scalar implementation with superior quality.
 /// Memory usage optimized to reduce allocations by 80%.
+#[allow(dead_code)]
 pub fn simd_resize_lanczos_ultra(
     image: &ArrayView2<f32>,
     new_height: usize,
@@ -865,6 +877,7 @@ pub fn simd_resize_lanczos_ultra(
 }
 
 /// Optimized Lanczos interpolation kernel with lookup table
+#[allow(dead_code)]
 fn lanczos_kernel_ultra(x: f32, a: f32) -> f32 {
     if x.abs() < 1e-6 {
         1.0
@@ -891,6 +904,7 @@ fn lanczos_kernel_ultra(x: f32, a: f32) -> f32 {
 ///
 /// Up to 10x faster than naive implementation using cache-aware blocked algorithms.
 /// Optimized for matrices common in vision transformers (768x768, 1024x256, etc.).
+#[allow(dead_code)]
 pub fn simd_matmul_attention_ultra(
     a: &ArrayView2<f32>,
     b: &ArrayView2<f32>,
@@ -937,6 +951,7 @@ pub fn simd_matmul_attention_ultra(
 }
 
 /// Highly optimized micro-kernel for matrix multiplication
+#[allow(dead_code)]
 fn ultra_matmul_micro_kernel(
     a: &ArrayView2<f32>,
     b: &ArrayView2<f32>,
@@ -1007,6 +1022,7 @@ fn ultra_matmul_micro_kernel(
 ///
 /// 6-8x faster than scalar implementation for large response maps.
 /// Optimized for real-time video processing applications.
+#[allow(dead_code)]
 pub fn simd_non_maximum_suppression_ultra(
     response: &ArrayView2<f32>,
     threshold: f32,
@@ -1101,6 +1117,7 @@ pub fn simd_non_maximum_suppression_ultra(
 /// # Performance
 ///
 /// Up to 8x speedup through algorithm selection and SIMD optimization.
+#[allow(dead_code)]
 pub fn simd_convolve_adaptive_ultra(
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
@@ -1126,6 +1143,7 @@ pub fn simd_convolve_adaptive_ultra(
 }
 
 /// Specialized 3x3 convolution with maximum SIMD utilization
+#[allow(dead_code)]
 fn simd_convolve_3x3_specialized(
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
@@ -1170,6 +1188,7 @@ fn simd_convolve_3x3_specialized(
 }
 
 /// Specialized 5x5 convolution with blocked processing
+#[allow(dead_code)]
 fn simd_convolve_5x5_specialized(
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
@@ -1179,6 +1198,7 @@ fn simd_convolve_5x5_specialized(
 }
 
 /// Specialized 7x7 convolution with separable filter optimization
+#[allow(dead_code)]
 fn simd_convolve_7x7_specialized(
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
@@ -1189,6 +1209,7 @@ fn simd_convolve_7x7_specialized(
 }
 
 /// Optimized small kernel convolution
+#[allow(dead_code)]
 fn simd_convolve_small_kernel(
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
@@ -1197,6 +1218,7 @@ fn simd_convolve_small_kernel(
 }
 
 /// FFT-based convolution for large kernels
+#[allow(dead_code)]
 fn simd_convolve_large_kernel_fft(
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
@@ -1219,6 +1241,7 @@ fn simd_convolve_large_kernel_fft(
 /// # Performance
 ///
 /// 5-10x faster than naive matching through SIMD and algorithmic optimizations.
+#[allow(dead_code)]
 pub fn simd_feature_matching_ultra(
     descriptors1: &ArrayView2<f32>,
     descriptors2: &ArrayView2<f32>,

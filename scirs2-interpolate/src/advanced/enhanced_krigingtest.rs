@@ -109,6 +109,7 @@ where
 }
 
 // Helper functions
+#[allow(dead_code)]
 fn create_basis_functions<F: Float + FromPrimitive>(
     points: &ArrayView2<F>,
     trend_fn: TrendFunction,
@@ -117,6 +118,7 @@ fn create_basis_functions<F: Float + FromPrimitive>(
     Ok(Array2::ones((n_points, 1)))
 }
 
+#[allow(dead_code)]
 fn anisotropic_distance<F: Float + FromPrimitive>(
     p1: &ArrayView1<F>,
     p2: &ArrayView1<F>,
@@ -125,6 +127,7 @@ fn anisotropic_distance<F: Float + FromPrimitive>(
     Ok(F::one())
 }
 
+#[allow(dead_code)]
 fn covariance<F: Float + FromPrimitive>(r: F, anisotropic_cov: &AnisotropicCovariance<F>) -> F {
     anisotropic_cov.sigma_sq
 }
@@ -365,6 +368,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Enhanced Kriging Builder Test");
 

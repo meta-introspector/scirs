@@ -11,6 +11,7 @@ use ndarray_rand::rand_distr::{Distribution, Normal, Uniform};
 use ndarray_rand::RandomExt;
 use scirs2_neural::prelude::*;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🧠 SciRS2 Neural Network Enhanced Demo");
     println!("=====================================");
@@ -54,6 +55,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn dense_classification_demo(rng: &mut impl ndarray_rand::rand::Rng) -> Result<()> {
     // Create a simple binary classification dataset
     let num_samples = 100;
@@ -94,6 +96,7 @@ fn dense_classification_demo(rng: &mut impl ndarray_rand::rand::Rng) -> Result<(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn conv2d_demo(rng: &mut impl ndarray_rand::rand::Rng) -> Result<()> {
     // Create a simple 2D image-like dataset
     let batch_size = 4;
@@ -137,6 +140,7 @@ fn conv2d_demo(rng: &mut impl ndarray_rand::rand::Rng) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn lstm_demo(rng: &mut impl ndarray_rand::rand::Rng) -> Result<()> {
     // Create a simple sequence dataset
     let batch_size = 3;
@@ -176,6 +180,7 @@ fn lstm_demo(rng: &mut impl ndarray_rand::rand::Rng) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn training_pipeline_demo(rng: &mut impl ndarray_rand::rand::Rng) -> Result<()> {
     // Create a simple regression dataset
     let num_samples = 200;
@@ -265,6 +270,7 @@ fn training_pipeline_demo(rng: &mut impl ndarray_rand::rand::Rng) -> Result<()> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn loss_functions_demo() -> Result<()> {
     // Create sample predictions and targets
     let predictions = Array::from_shape_vec(

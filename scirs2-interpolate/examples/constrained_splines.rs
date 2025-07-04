@@ -2,6 +2,7 @@ use ndarray::{s, Array1};
 use scirs2_interpolate::bspline::ExtrapolateMode as BSplineExtrapolateMode;
 use scirs2_interpolate::constrained::{ConstrainedSpline, Constraint};
 
+#[allow(dead_code)]
 fn main() {
     println!("Constrained Splines Examples");
     println!("===========================\n");

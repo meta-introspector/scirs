@@ -1341,6 +1341,7 @@ impl PipelineStage for GpuAcceleratedStage {
 }
 
 /// Create SIMD-accelerated pipeline stage for numeric data
+#[allow(dead_code)]
 pub fn create_simd_numeric_stage<T, F>(name: &str, operation: F) -> Box<dyn PipelineStage>
 where
     T: Send + Sync + 'static + Clone + Copy,
@@ -1350,6 +1351,7 @@ where
 }
 
 /// Create GPU-accelerated pipeline stage
+#[allow(dead_code)]
 pub fn create_gpu_stage(name: &str, kernel_code: &str) -> Box<dyn PipelineStage> {
     Box::new(GpuAcceleratedStage::new(name, kernel_code))
 }

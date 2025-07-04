@@ -12,6 +12,7 @@ use scirs2_stats::{
 use std::time::Instant;
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_basic_functionality() {
     let mut processor = create_ultrathink_processor();
     let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
@@ -32,6 +33,7 @@ fn test_ultrathink_basic_functionality() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_large_dataset_performance() {
     let mut processor = create_ultrathink_processor();
 
@@ -56,6 +58,7 @@ fn test_ultrathink_large_dataset_performance() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_optimization_mode_selection() {
     let test_data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
@@ -99,6 +102,7 @@ fn test_optimization_mode_selection() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_numerical_stability_integration() {
     let mut processor = scirs2_stats::ultrathink_unified_processor::UltrathinkUnifiedProcessor::new(
         UltrathinkProcessorConfig {
@@ -136,6 +140,7 @@ fn test_numerical_stability_integration() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_matrix_operations_integration() {
     let mut processor = create_ultrathink_processor();
 
@@ -185,6 +190,7 @@ fn test_matrix_operations_integration() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_time_series_processing() {
     let mut processor = create_ultrathink_processor();
 
@@ -210,6 +216,7 @@ fn test_time_series_processing() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_performance_monitoring() {
     let mut processor = scirs2_stats::ultrathink_unified_processor::UltrathinkUnifiedProcessor::new(
         UltrathinkProcessorConfig {
@@ -244,6 +251,7 @@ fn test_performance_monitoring() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_error_handling() {
     let mut processor = create_ultrathink_processor();
 
@@ -269,6 +277,7 @@ fn test_error_handling() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_stability_analyzer_standalone() {
     let mut analyzer = create_numerical_stability_analyzer();
 
@@ -289,6 +298,7 @@ fn test_stability_analyzer_standalone() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_processing_strategy_effectiveness() {
     let strategies = vec![
         ProcessingStrategy::Standard,
@@ -321,6 +331,7 @@ fn test_processing_strategy_effectiveness() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_workflow() {
     // This test demonstrates a complete ultrathink workflow
     let mut processor = scirs2_stats::ultrathink_unified_processor::UltrathinkUnifiedProcessor::new(

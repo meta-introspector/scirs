@@ -11,6 +11,7 @@ use scirs2_linalg::{compat, cond, det, inv, matrix_norm, matrix_rank, vector_nor
 use std::time::Duration;
 
 /// Generate a well-conditioned test matrix of given size
+#[allow(dead_code)]
 fn create_test_matrix(n: usize) -> Array2<f64> {
     let mut matrix = Array2::zeros((n, n));
     for i in 0..n {
@@ -26,17 +27,20 @@ fn create_test_matrix(n: usize) -> Array2<f64> {
 }
 
 /// Generate a random-like vector of given size
+#[allow(dead_code)]
 fn create_test_vector(n: usize) -> Array1<f64> {
     Array1::from_shape_fn(n, |i| ((i + 1) as f64 * 0.1).sin())
 }
 
 /// Generate a symmetric positive definite matrix
+#[allow(dead_code)]
 fn create_spd_matrix(n: usize) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     a.t().dot(&a) + Array2::<f64>::eye(n) * (n as f64) // A^T * A + n*I
 }
 
 /// Benchmark basic matrix operations
+#[allow(dead_code)]
 fn bench_basic_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("basic_operations");
 
@@ -67,6 +71,7 @@ fn bench_basic_operations(c: &mut Criterion) {
 }
 
 /// Benchmark matrix norms
+#[allow(dead_code)]
 fn bench_matrix_norms(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_norms");
 
@@ -113,6 +118,7 @@ fn bench_matrix_norms(c: &mut Criterion) {
 }
 
 /// Benchmark vector norms
+#[allow(dead_code)]
 fn bench_vector_norms(c: &mut Criterion) {
     let mut group = c.benchmark_group("vector_norms");
 
@@ -165,6 +171,7 @@ fn bench_vector_norms(c: &mut Criterion) {
 }
 
 /// Benchmark matrix decompositions
+#[allow(dead_code)]
 fn bench_decompositions(c: &mut Criterion) {
     let mut group = c.benchmark_group("decompositions");
     group.sample_size(10); // Reduce sample size for expensive operations
@@ -223,6 +230,7 @@ fn bench_decompositions(c: &mut Criterion) {
 }
 
 /// Benchmark eigenvalue computations
+#[allow(dead_code)]
 fn bench_eigenvalues(c: &mut Criterion) {
     let mut group = c.benchmark_group("eigenvalues");
     group.sample_size(10);
@@ -298,6 +306,7 @@ fn bench_eigenvalues(c: &mut Criterion) {
 }
 
 /// Benchmark linear system solvers
+#[allow(dead_code)]
 fn bench_linear_solvers(c: &mut Criterion) {
     let mut group = c.benchmark_group("linear_solvers");
     group.sample_size(20);
@@ -363,6 +372,7 @@ fn bench_linear_solvers(c: &mut Criterion) {
 }
 
 /// Benchmark matrix functions
+#[allow(dead_code)]
 fn bench_matrix_functions(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_functions");
     group.sample_size(10);
@@ -409,6 +419,7 @@ fn bench_matrix_functions(c: &mut Criterion) {
 }
 
 /// Benchmark condition numbers and matrix properties
+#[allow(dead_code)]
 fn bench_matrix_properties(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_properties");
 
@@ -447,6 +458,7 @@ fn bench_matrix_properties(c: &mut Criterion) {
 }
 
 /// Benchmark advanced decompositions
+#[allow(dead_code)]
 fn bench_advanced_decompositions(c: &mut Criterion) {
     let mut group = c.benchmark_group("advanced_decompositions");
     group.sample_size(10);
@@ -475,6 +487,7 @@ fn bench_advanced_decompositions(c: &mut Criterion) {
 }
 
 /// Benchmark utility functions
+#[allow(dead_code)]
 fn bench_utility_functions(c: &mut Criterion) {
     let mut group = c.benchmark_group("utility_functions");
 
@@ -499,6 +512,7 @@ fn bench_utility_functions(c: &mut Criterion) {
 }
 
 /// Memory allocation benchmark
+#[allow(dead_code)]
 fn bench_memory_allocation(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_allocation");
 
@@ -528,6 +542,7 @@ fn bench_memory_allocation(c: &mut Criterion) {
 }
 
 /// Scalability benchmark across different sizes
+#[allow(dead_code)]
 fn bench_scalability(c: &mut Criterion) {
     let mut group = c.benchmark_group("scalability");
     group.sample_size(15);

@@ -7,6 +7,7 @@ use ndarray::Array1;
 use scirs2_io::harwell_boeing::{self, ccs_to_hb, hb_to_ccs, HBMatrixType, HBSparseMatrix};
 use tempfile::tempdir;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔢 Harwell-Boeing Sparse Matrix Format Example");
     println!("==============================================");
@@ -27,6 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_and_write_matrix(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📝 Creating and Writing Harwell-Boeing Matrix...");
 
@@ -79,6 +81,7 @@ fn create_and_write_matrix(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn s
     Ok(())
 }
 
+#[allow(dead_code)]
 fn read_and_analyze_matrix(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Reading and Analyzing Harwell-Boeing Matrix...");
 
@@ -124,6 +127,7 @@ fn read_and_analyze_matrix(temp_dir: &tempfile::TempDir) -> Result<(), Box<dyn s
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_format_conversion(
     temp_dir: &tempfile::TempDir,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -185,6 +189,7 @@ fn demonstrate_format_conversion(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_different_matrix_types(
     temp_dir: &tempfile::TempDir,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -258,6 +263,7 @@ fn demonstrate_different_matrix_types(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn verify_matrix_structure(matrix: &HBSparseMatrix<f64>) -> Result<(), Box<dyn std::error::Error>> {
     // Basic structural checks
     assert_eq!(
@@ -309,6 +315,7 @@ fn verify_matrix_structure(matrix: &HBSparseMatrix<f64>) -> Result<(), Box<dyn s
     Ok(())
 }
 
+#[allow(dead_code)]
 fn estimate_storage_size(matrix: &HBSparseMatrix<f64>) -> usize {
     let ptr_size = matrix.colptr.len() * std::mem::size_of::<usize>();
     let idx_size = matrix.rowind.len() * std::mem::size_of::<usize>();

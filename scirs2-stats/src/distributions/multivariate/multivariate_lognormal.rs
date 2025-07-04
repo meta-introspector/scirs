@@ -402,6 +402,7 @@ impl MultivariateLognormal {
 /// let sigma = array![[0.5, 0.2], [0.2, 0.5]];
 /// let mvln = multivariate::multivariate_lognormal(mu, sigma).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn multivariate_lognormal<D1, D2>(
     mu: ArrayBase<D1, Ix1>,
     sigma: ArrayBase<D2, Ix2>,

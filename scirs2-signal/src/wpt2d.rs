@@ -292,6 +292,7 @@ impl WaveletPacketTree2D {
 /// // 1 at level 0, 4 at level 1, 16 at level 2
 /// assert_eq!(decomp.len(), 1 + 4 + 16);
 /// ```
+#[allow(dead_code)]
 pub fn wpt2d_full<T>(
     data: &Array2<T>,
     wavelet: Wavelet,
@@ -342,6 +343,7 @@ where
 }
 
 /// Recursively decomposes a node in the wavelet packet tree.
+#[allow(dead_code)]
 fn decompose_node(
     tree: &mut WaveletPacketTree2D,
     level: usize,
@@ -477,6 +479,7 @@ fn decompose_node(
 }
 
 /// Decomposes a 2D array into four subbands using separable 2D wavelet transform.
+#[allow(dead_code)]
 fn decompose_2d(
     data: &Array2<f64>,
     filters: &WaveletFilters,
@@ -546,6 +549,7 @@ fn decompose_2d(
 }
 
 /// Apply a filter to a signal and downsample by 2.
+#[allow(dead_code)]
 fn apply_filter(signal: &[f64], filter: &[f64], mode: Option<&str>) -> Vec<f64> {
     let n = signal.len();
     let filter_len = filter.len();
@@ -641,6 +645,7 @@ fn apply_filter(signal: &[f64], filter: &[f64], mode: Option<&str>) -> Vec<f64> 
 /// // The resulting tree will have fewer nodes than the full decomposition
 /// assert!(decomp.len() < 1 + 4 + 16 + 64); // Max possible for level 3
 /// ```
+#[allow(dead_code)]
 pub fn wpt2d_selective<T, F>(
     data: &Array2<T>,
     wavelet: Wavelet,
@@ -682,6 +687,7 @@ where
 }
 
 /// Recursively decomposes a node in the wavelet packet tree if it meets the criterion.
+#[allow(dead_code)]
 fn decompose_node_selective<F>(
     tree: &mut WaveletPacketTree2D,
     level: usize,

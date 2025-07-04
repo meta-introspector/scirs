@@ -15,6 +15,7 @@ use ndarray::{Array1, ArrayView1};
 /// # Returns
 ///
 /// Stability metrics for the solution
+#[allow(dead_code)]
 pub fn stability_metrics<F: IntegrateFloat>(t: &[F], y: &[Array1<F>]) -> F {
     // Simple implementation for now
     // In the future, this could compute eigenvalues of the Jacobian, etc.
@@ -61,6 +62,7 @@ pub fn stability_metrics<F: IntegrateFloat>(t: &[F], y: &[Array1<F>]) -> F {
 /// # Returns
 ///
 /// A stiffness score (higher values indicate more stiffness)
+#[allow(dead_code)]
 pub fn stiffness_detector<F, Func>(t: &[F], y: &[Array1<F>], _f: &Func) -> F
 where
     F: IntegrateFloat,

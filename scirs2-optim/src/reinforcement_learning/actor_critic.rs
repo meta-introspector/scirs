@@ -8,7 +8,7 @@ use super::{
     RLScheduler, TrajectoryBatch, ValueNetwork,
 };
 use crate::error::{OptimError, Result};
-use ndarray::{Array1, Array2, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use rand::{rng, Rng};
 use std::collections::HashMap;

@@ -226,6 +226,7 @@ impl ArrayProtocol for SparseArray {
     }
 }
 
+#[allow(dead_code)]
 fn main() {
     // Initialize the array protocol system
     array_protocol::init();

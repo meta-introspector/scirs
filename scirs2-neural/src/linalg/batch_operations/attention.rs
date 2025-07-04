@@ -51,6 +51,7 @@ type FeedForwardReturn<F> = (Array3<F>, Array2<F>, Array1<F>, Array2<F>, Array1<
 ///     None
 /// assert_eq!(output.shape(), &[batch_size, seq_len_q, d_v]);
 /// assert_eq!(weights.shape(), &[batch_size, seq_len_q, seq_len_k]);
+#[allow(dead_code)]
 pub fn scaled_dot_product_attention<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -168,6 +169,7 @@ where
 ///     num_heads,
 /// assert_eq!(output.shape(), &[batch_size, seq_len_q, d_model]);
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn multi_head_attention<F>(
     wq: &ArrayView2<F>,
     wk: &ArrayView2<F>,
@@ -259,11 +261,12 @@ pub fn multi_head_attention<F>(
 /// * `d_model` - Dimensionality of the model
 /// * `max_seq_len` - Maximum sequence length for precomputation (optional)
 /// * Positional encoding matrix with shape [seq_len, d_model]
-/// use scirs2_neural::linalg::positional_encoding;
+/// use scirs2_neural::linalg::batch_operations::attention::positional_encoding;
 /// // Generate positional encoding for a sequence of length 10
 /// // with embedding dimension 16
 /// let pos_encoding = positional_encoding::<f64>(10, 16, None).unwrap();
 /// assert_eq!(pos_encoding.shape(), &[10, 16]);
+#[allow(dead_code)]
 pub fn positional_encoding<F: Float + Debug>(
     seq_len: usize,
     d_model: usize,
@@ -322,6 +325,7 @@ pub fn positional_encoding<F: Float + Debug>(
 ///     &w2.view(),
 ///     &b2.view()
 /// assert_eq!(output.shape(), x.shape());
+#[allow(dead_code)]
 pub fn transformer_ffn<F>(
     x: &ArrayView3<F>,
     w1: &ArrayView2<F>,
@@ -384,6 +388,7 @@ pub fn transformer_ffn<F>(
 /// assert_eq!(db1.shape(), b1.shape());
 /// assert_eq!(dw2.shape(), w2.shape());
 /// assert_eq!(db2.shape(), b2.shape());
+#[allow(dead_code)]
 pub fn transformer_ffn_backward<F>(
     dout: &ArrayView3<F>,
 ) -> Result<FeedForwardReturn<F>>

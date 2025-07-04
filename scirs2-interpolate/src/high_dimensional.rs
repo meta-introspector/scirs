@@ -980,6 +980,7 @@ where
 /// let query = Array1::from_vec(vec![0.5, 0.5, 0.5]);
 /// let result = interpolator.interpolate(&query.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn make_knn_interpolator<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1044,6 +1045,7 @@ where
 /// let query = Array1::from_vec(vec![1.5, 1.5, 1.5, 0.0, 0.0, 0.0]);
 /// let result = interpolator.interpolate(&query.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn make_pca_interpolator<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1109,6 +1111,7 @@ where
 /// let query = Array1::from_vec(vec![0.5, 0.5]);
 /// let result = interpolator.interpolate(&query.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn make_local_rbf_interpolator<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,

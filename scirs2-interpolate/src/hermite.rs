@@ -607,6 +607,7 @@ impl<T: Float + std::fmt::Display> HermiteSpline<T> {
 /// # Returns
 ///
 /// A `Result` containing the Hermite spline interpolator.
+#[allow(dead_code)]
 pub fn make_hermite_spline<T: Float + std::fmt::Display>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -627,6 +628,7 @@ pub fn make_hermite_spline<T: Float + std::fmt::Display>(
 /// # Returns
 ///
 /// A `Result` containing the Hermite spline interpolator.
+#[allow(dead_code)]
 pub fn make_hermite_spline_with_derivatives<T: Float + std::fmt::Display>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -647,6 +649,7 @@ pub fn make_hermite_spline_with_derivatives<T: Float + std::fmt::Display>(
 /// # Returns
 ///
 /// A `Result` containing the Hermite spline interpolator.
+#[allow(dead_code)]
 pub fn make_natural_hermite_spline<T: Float + std::fmt::Display>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -669,6 +672,7 @@ pub fn make_natural_hermite_spline<T: Float + std::fmt::Display>(
 /// # Returns
 ///
 /// A `Result` containing the Hermite spline interpolator.
+#[allow(dead_code)]
 pub fn make_periodic_hermite_spline<T: Float + std::fmt::Display>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -690,6 +694,7 @@ pub fn make_periodic_hermite_spline<T: Float + std::fmt::Display>(
 /// # Returns
 ///
 /// A `Result` containing the Hermite spline interpolator.
+#[allow(dead_code)]
 pub fn make_quintic_hermite_spline<T: Float + std::fmt::Display>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,

@@ -7,6 +7,7 @@ use scirs2_signal::stft::{MemoryEfficientStft, MemoryEfficientStftConfig, StftCo
 use scirs2_signal::window;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Memory-Efficient STFT Examples");
     println!("===============================\n");
@@ -47,6 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn basic_memory_efficient_stft() -> Result<(), Box<dyn std::error::Error>> {
     // Create a test signal
     let fs = 1000.0;
@@ -98,6 +100,7 @@ fn basic_memory_efficient_stft() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn auto_memory_management() -> Result<(), Box<dyn std::error::Error>> {
     let fs = 8000.0;
 
@@ -151,6 +154,7 @@ fn auto_memory_management() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn large_signal_processing() -> Result<(), Box<dyn std::error::Error>> {
     // Create a very large signal (simulating real-world scenario)
     let fs = 16000.0;
@@ -235,6 +239,7 @@ fn large_signal_processing() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn memory_usage_analysis() -> Result<(), Box<dyn std::error::Error>> {
     let fs = 44100.0; // CD quality sample rate
     let window_length = 1024;
@@ -272,6 +277,7 @@ fn memory_usage_analysis() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn magnitude_only_processing() -> Result<(), Box<dyn std::error::Error>> {
     let fs = 8000.0;
     let duration = 10.0;
@@ -337,6 +343,7 @@ fn magnitude_only_processing() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
     use std::time::Instant;
 

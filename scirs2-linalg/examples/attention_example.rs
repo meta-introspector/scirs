@@ -4,6 +4,7 @@ use scirs2_linalg::attention::{
     scaled_dot_product_attention, sparse_attention, AttentionConfig,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Attention Mechanism Examples");
     println!("============================\n");

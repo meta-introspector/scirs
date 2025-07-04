@@ -9,6 +9,7 @@
 use scirs2_integrate::lebedev::{lebedev_integrate, lebedev_rule, LebedevOrder};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("Lebedev Quadrature Examples");
     println!("==========================\n");

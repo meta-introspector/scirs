@@ -10,6 +10,7 @@
 //! ```
 
 #[cfg(all(feature = "memory_efficient", feature = "parallel"))]
+#[allow(dead_code)]
 fn main() {
     use ndarray::Array1;
     use scirs2_core::memory_efficient::{
@@ -132,6 +133,7 @@ fn main() {
 }
 
 #[cfg(not(all(feature = "memory_efficient", feature = "parallel")))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'memory_efficient' and 'parallel' features.");
     println!("Please run with:");

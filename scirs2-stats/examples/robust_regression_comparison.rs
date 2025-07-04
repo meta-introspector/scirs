@@ -2,6 +2,7 @@ use ndarray::{array, Array2};
 use plotters::prelude::*;
 use scirs2_stats::{huber_regression, ransac, theilslopes};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Robust Regression Methods Comparison");
     println!("===================================\n");

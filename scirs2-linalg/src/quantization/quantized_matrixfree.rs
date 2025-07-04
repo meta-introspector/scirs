@@ -861,6 +861,7 @@ where
 /// # Returns
 ///
 /// A LinearOperator that wraps the quantized operator
+#[allow(dead_code)]
 pub fn quantized_to_linear_operator<F>(op: &QuantizedMatrixFreeOp<F>) -> LinearOperator<F>
 where
     F: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug + 'static,
@@ -918,6 +919,7 @@ where
 }
 
 /// Check if a matrix is symmetric
+#[allow(dead_code)]
 fn is_matrix_symmetric<F>(matrix: &ArrayView2<F>) -> bool
 where
     F: Float + PartialEq,

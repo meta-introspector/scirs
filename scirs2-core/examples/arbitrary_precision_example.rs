@@ -12,6 +12,7 @@ use scirs2_core::numeric::arbitrary_precision::{
 use scirs2_core::CoreResult;
 
 #[cfg(not(feature = "arbitrary-precision"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'arbitrary-precision' feature.");
     println!(
@@ -20,6 +21,7 @@ fn main() {
 }
 
 #[cfg(feature = "arbitrary-precision")]
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     println!("=== Arbitrary Precision Numerical Computation Example ===\n");
 
@@ -59,6 +61,7 @@ fn main() -> CoreResult<()> {
 }
 
 #[cfg(feature = "arbitrary-precision")]
+#[allow(dead_code)]
 fn demo_arbitrary_integers() -> CoreResult<()> {
     // Basic arithmetic with large integers
     let a = ArbitraryInt::from_str_radix("12345678901234567890", 10)?;
@@ -98,6 +101,7 @@ fn demo_arbitrary_integers() -> CoreResult<()> {
 }
 
 #[cfg(feature = "arbitrary-precision")]
+#[allow(dead_code)]
 fn demo_arbitrary_floats() -> CoreResult<()> {
     // Set precision to 256 bits (about 77 decimal digits)
     let prec = 256;
@@ -136,6 +140,7 @@ fn demo_arbitrary_floats() -> CoreResult<()> {
 }
 
 #[cfg(feature = "arbitrary-precision")]
+#[allow(dead_code)]
 fn demo_rational_arithmetic() -> CoreResult<()> {
     // Exact rational arithmetic
     let r1 = ArbitraryRational::from_ratio(22, 7)?;
@@ -168,6 +173,7 @@ fn demo_rational_arithmetic() -> CoreResult<()> {
 }
 
 #[cfg(feature = "arbitrary-precision")]
+#[allow(dead_code)]
 fn demo_complex_numbers() -> CoreResult<()> {
     let prec = 128;
 
@@ -199,6 +205,7 @@ fn demo_complex_numbers() -> CoreResult<()> {
 }
 
 #[cfg(feature = "arbitrary-precision")]
+#[allow(dead_code)]
 fn demo_constants() -> CoreResult<()> {
     // Compute mathematical constants to high precision
     let prec = 512; // About 154 decimal digits
@@ -235,6 +242,7 @@ fn demo_constants() -> CoreResult<()> {
 }
 
 #[cfg(feature = "arbitrary-precision")]
+#[allow(dead_code)]
 fn demo_precision_builder() -> CoreResult<()> {
     // Use the builder pattern for custom precision settings
     let calc = ArbitraryPrecisionBuilder::new()
@@ -274,6 +282,7 @@ fn demo_precision_builder() -> CoreResult<()> {
 }
 
 #[cfg(feature = "arbitrary-precision")]
+#[allow(dead_code)]
 fn demo_numerical_analysis() -> CoreResult<()> {
     let prec = 256;
 
@@ -311,6 +320,7 @@ fn demo_numerical_analysis() -> CoreResult<()> {
 }
 
 #[cfg(feature = "arbitrary-precision")]
+#[allow(dead_code)]
 fn demo_large_numbers() -> CoreResult<()> {
     // Mersenne primes
     println!("Testing Mersenne numbers:");

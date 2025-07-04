@@ -28,6 +28,7 @@ use scirs2_optim::{
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() -> Result<(), OptimizerError> {
     println!("🚀 Phase 6: Neural Architecture Search - Comprehensive Demo");
     println!("===========================================================\n");
@@ -67,6 +68,7 @@ fn main() -> Result<(), OptimizerError> {
 }
 
 /// Demonstrates neural architecture search for discovering optimal optimizer architectures
+#[allow(dead_code)]
 fn demonstrate_optimizer_nas() -> Result<(), OptimizerError> {
     println!("  Creating NAS configuration for optimizer search...");
 
@@ -152,6 +154,7 @@ fn demonstrate_optimizer_nas() -> Result<(), OptimizerError> {
 }
 
 /// Demonstrates automated hyperparameter optimization with advanced techniques
+#[allow(dead_code)]
 fn demonstrate_hyperparameter_optimization() -> Result<(), OptimizerError> {
     println!("  Setting up hyperparameter search space...");
 
@@ -255,6 +258,7 @@ fn demonstrate_hyperparameter_optimization() -> Result<(), OptimizerError> {
 }
 
 /// Demonstrates multi-objective optimization for balancing performance and efficiency
+#[allow(dead_code)]
 fn demonstrate_multi_objective_optimization() -> Result<(), OptimizerError> {
     println!("  Initializing NSGA-II multi-objective optimizer...");
 
@@ -367,6 +371,7 @@ fn demonstrate_multi_objective_optimization() -> Result<(), OptimizerError> {
 }
 
 /// Demonstrates LSTM-based optimizers that learn optimization strategies
+#[allow(dead_code)]
 fn demonstrate_lstm_learned_optimizer() -> Result<(), OptimizerError> {
     println!("  Configuring LSTM meta-learning optimizer...");
 
@@ -454,6 +459,7 @@ fn demonstrate_lstm_learned_optimizer() -> Result<(), OptimizerError> {
 }
 
 /// Demonstrates transformer-based meta-learning for optimization
+#[allow(dead_code)]
 fn demonstrate_transformer_meta_learning() -> Result<(), OptimizerError> {
     println!("  Initializing Transformer-based meta-learning system...");
 
@@ -493,6 +499,7 @@ fn demonstrate_transformer_meta_learning() -> Result<(), OptimizerError> {
 }
 
 /// Demonstrates few-shot learning for rapid adaptation to new optimization tasks
+#[allow(dead_code)]
 fn demonstrate_few_shot_learning() -> Result<(), OptimizerError> {
     println!("  Setting up few-shot learning system...");
 
@@ -535,6 +542,7 @@ fn demonstrate_few_shot_learning() -> Result<(), OptimizerError> {
 }
 
 /// Demonstrates the integrated NAS + Learned Optimizer system
+#[allow(dead_code)]
 fn demonstrate_integrated_system() -> Result<(), OptimizerError> {
     println!("  Launching integrated NAS + Learned Optimizer system...");
 

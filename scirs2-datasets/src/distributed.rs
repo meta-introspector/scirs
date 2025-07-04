@@ -743,7 +743,7 @@ mod tests {
     #[test]
     fn test_split_dataset_into_chunks() {
         let dataset = make_classification(100, 5, 2, 3, 0, Some(42)).unwrap();
-        let processor = DistributedProcessor::default().unwrap();
+        let processor = DistributedProcessor::default_config().unwrap();
 
         let chunks = processor.split_dataset_into_chunks(&dataset).unwrap();
 
@@ -756,7 +756,7 @@ mod tests {
     #[test]
     fn test_distributed_sample() {
         let dataset = make_classification(1000, 5, 2, 3, 0, Some(42)).unwrap();
-        let processor = DistributedProcessor::default().unwrap();
+        let processor = DistributedProcessor::default_config().unwrap();
 
         let sampled = processor
             .distributed_sample(&dataset, 100, Some(42))
@@ -769,7 +769,7 @@ mod tests {
     #[test]
     fn test_distributed_k_fold() {
         let dataset = make_classification(100, 5, 2, 3, 0, Some(42)).unwrap();
-        let processor = DistributedProcessor::default().unwrap();
+        let processor = DistributedProcessor::default_config().unwrap();
 
         let folds = processor
             .distributed_k_fold(&dataset, 5, true, Some(42))
@@ -790,7 +790,7 @@ mod tests {
         let dataset1 = make_classification(50, 3, 2, 2, 0, Some(42)).unwrap();
         let dataset2 = make_classification(30, 3, 2, 2, 0, Some(43)).unwrap();
 
-        let processor = DistributedProcessor::default().unwrap();
+        let processor = DistributedProcessor::default_config().unwrap();
         let combined = processor.combine_datasets(&[dataset1, dataset2]).unwrap();
 
         assert_eq!(combined.n_samples(), 80);
@@ -800,7 +800,7 @@ mod tests {
     #[test]
     fn test_parallel_processing() {
         let dataset = make_classification(200, 4, 2, 3, 0, Some(42)).unwrap();
-        let processor = DistributedProcessor::default().unwrap();
+        let processor = DistributedProcessor::default_config().unwrap();
 
         // Simple processor that counts samples
         let counter = |chunk: &Dataset| -> Result<usize> { Ok(chunk.n_samples()) };

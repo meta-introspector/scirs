@@ -13,6 +13,7 @@ use scirs2_optim::{
     sgd::{SGDConfig, SGD},
 };
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🔒 SciRS2 Security Audit Demonstration");
     println!("======================================\n");
@@ -40,6 +41,7 @@ fn main() -> Result<()> {
 }
 
 /// Run comprehensive security audit
+#[allow(dead_code)]
 fn run_comprehensive_security_audit() -> Result<()> {
     println!("🔍 COMPREHENSIVE SECURITY AUDIT");
     println!("===============================");
@@ -114,6 +116,7 @@ fn run_comprehensive_security_audit() -> Result<()> {
 }
 
 /// Demonstrate input validation security testing
+#[allow(dead_code)]
 fn run_input_validation_demo() -> Result<()> {
     println!("\n🛡️  INPUT VALIDATION SECURITY TESTING");
     println!("====================================");
@@ -141,6 +144,7 @@ fn run_input_validation_demo() -> Result<()> {
 }
 
 /// Test NaN injection attack
+#[allow(dead_code)]
 fn test_nan_injection_attack() -> Result<()> {
     println!("  Testing NaN injection resistance...");
 
@@ -164,6 +168,7 @@ fn test_nan_injection_attack() -> Result<()> {
 }
 
 /// Test infinity injection attack
+#[allow(dead_code)]
 fn test_infinity_injection_attack() -> Result<()> {
     println!("  Testing infinity injection resistance...");
 
@@ -188,6 +193,7 @@ fn test_infinity_injection_attack() -> Result<()> {
 }
 
 /// Test dimension mismatch attack
+#[allow(dead_code)]
 fn test_dimension_mismatch_attack() -> Result<()> {
     println!("  Testing dimension mismatch attack resistance...");
 
@@ -210,6 +216,7 @@ fn test_dimension_mismatch_attack() -> Result<()> {
 }
 
 /// Test extreme value attack
+#[allow(dead_code)]
 fn test_extreme_value_attack() -> Result<()> {
     println!("  Testing extreme value attack resistance...");
 
@@ -237,6 +244,7 @@ fn test_extreme_value_attack() -> Result<()> {
 }
 
 /// Test negative parameter attack
+#[allow(dead_code)]
 fn test_negative_parameter_attack() -> Result<()> {
     println!("  Testing negative learning rate attack...");
 
@@ -254,6 +262,7 @@ fn test_negative_parameter_attack() -> Result<()> {
 }
 
 /// Demonstrate privacy security analysis
+#[allow(dead_code)]
 fn run_privacy_security_demo() -> Result<()> {
     println!("\n🔐 PRIVACY SECURITY ANALYSIS");
     println!("============================");
@@ -275,6 +284,7 @@ fn run_privacy_security_demo() -> Result<()> {
 }
 
 /// Test privacy budget exhaustion attack
+#[allow(dead_code)]
 fn test_privacy_budget_exhaustion() -> Result<()> {
     println!("  Testing privacy budget exhaustion attack resistance...");
 
@@ -325,6 +335,7 @@ fn test_privacy_budget_exhaustion() -> Result<()> {
 }
 
 /// Test privacy parameter manipulation
+#[allow(dead_code)]
 fn test_privacy_parameter_manipulation() -> Result<()> {
     println!("  Testing privacy parameter manipulation resistance...");
 
@@ -368,6 +379,7 @@ fn test_privacy_parameter_manipulation() -> Result<()> {
 }
 
 /// Test noise generation security
+#[allow(dead_code)]
 fn test_noise_generation_security() -> Result<()> {
     println!("  Testing noise generation security...");
 
@@ -408,6 +420,7 @@ fn test_noise_generation_security() -> Result<()> {
 }
 
 /// Demonstrate memory safety analysis
+#[allow(dead_code)]
 fn run_memory_safety_demo() -> Result<()> {
     println!("\n🧠 MEMORY SAFETY ANALYSIS");
     println!("=========================");
@@ -429,6 +442,7 @@ fn run_memory_safety_demo() -> Result<()> {
 }
 
 /// Test memory exhaustion attack
+#[allow(dead_code)]
 fn test_memory_exhaustion_attack() -> Result<()> {
     println!("  Testing memory exhaustion attack resistance...");
 
@@ -452,6 +466,7 @@ fn test_memory_exhaustion_attack() -> Result<()> {
 }
 
 /// Test allocation pattern analysis
+#[allow(dead_code)]
 fn test_allocation_pattern_analysis() -> Result<()> {
     println!("  Testing allocation pattern analysis...");
 
@@ -469,6 +484,7 @@ fn test_allocation_pattern_analysis() -> Result<()> {
 }
 
 /// Test memory leak detection
+#[allow(dead_code)]
 fn test_memory_leak_detection() -> Result<()> {
     println!("  Testing memory leak detection...");
 
@@ -492,6 +508,7 @@ fn test_memory_leak_detection() -> Result<()> {
 }
 
 /// Demonstrate numerical stability testing
+#[allow(dead_code)]
 fn run_numerical_stability_demo() -> Result<()> {
     println!("\n🧮 NUMERICAL STABILITY ANALYSIS");
     println!("===============================");
@@ -513,6 +530,7 @@ fn run_numerical_stability_demo() -> Result<()> {
 }
 
 /// Test overflow conditions
+#[allow(dead_code)]
 fn test_overflow_conditions() -> Result<()> {
     println!("  Testing overflow condition resistance...");
 
@@ -536,6 +554,7 @@ fn test_overflow_conditions() -> Result<()> {
 }
 
 /// Test precision loss
+#[allow(dead_code)]
 fn test_precision_loss() -> Result<()> {
     println!("  Testing precision loss detection...");
 
@@ -561,6 +580,7 @@ fn test_precision_loss() -> Result<()> {
 }
 
 /// Test ill-conditioning
+#[allow(dead_code)]
 fn test_ill_conditioning() -> Result<()> {
     println!("  Testing ill-conditioning detection...");
 
@@ -581,6 +601,7 @@ fn test_ill_conditioning() -> Result<()> {
 }
 
 /// Generate comprehensive security report
+#[allow(dead_code)]
 fn generate_security_report_demo() -> Result<()> {
     println!("\n📋 COMPREHENSIVE SECURITY REPORT");
     println!("=================================");
@@ -681,6 +702,7 @@ fn generate_security_report_demo() -> Result<()> {
 }
 
 /// Simulate security test environment
+#[allow(dead_code)]
 fn simulate_security_test_environment() -> Result<()> {
     println!("\n🔬 SECURITY TEST ENVIRONMENT SIMULATION");
     println!("=======================================");

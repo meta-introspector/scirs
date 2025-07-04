@@ -7,6 +7,7 @@
 use ndarray::{array, Array1, Array2};
 use scirs2_spatial::kriging::{OrdinaryKriging, SimpleKriging, VariogramModel};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Kriging Interpolation Example ===\n");
 
@@ -47,6 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn basic_ordinary_kriging_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create a 2D spatial dataset
     let points = array![
@@ -105,6 +107,7 @@ fn basic_ordinary_kriging_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn variogram_comparison_example() -> Result<(), Box<dyn std::error::Error>> {
     // Same dataset as before
     let points = array![
@@ -147,6 +150,7 @@ fn variogram_comparison_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simple_kriging_example() -> Result<(), Box<dyn std::error::Error>> {
     // Dataset with known global mean
     let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [0.5, 0.5]];
@@ -155,8 +159,8 @@ fn simple_kriging_example() -> Result<(), Box<dyn std::error::Error>> {
     let values = array![98.5, 101.2, 99.8, 102.1, 100.3];
     let known_mean = 100.0;
 
-    println!("Simple Kriging with known mean = {:.1}", known_mean);
-    println!("Data values: {:?}", values);
+    println!("Simple Kriging with known mean = {known_mean:.1}");
+    println!("Data values: {values:?}");
 
     let variogram = VariogramModel::exponential(0.8, 1.5, 0.2);
     let kriging = SimpleKriging::new(&points.view(), &values.view(), known_mean, variogram)?;
@@ -178,6 +182,7 @@ fn simple_kriging_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn batch_prediction_example() -> Result<(), Box<dyn std::error::Error>> {
     // Regular grid of data points
     let points = array![
@@ -240,13 +245,14 @@ fn batch_prediction_example() -> Result<(), Box<dyn std::error::Error>> {
     let mean_variance = variances.iter().sum::<f64>() / variances.len() as f64;
 
     println!("Statistics:");
-    println!("  Mean predicted value: {:.2}", mean_prediction);
-    println!("  Mean prediction variance: {:.2}", mean_variance);
+    println!("  Mean predicted value: {mean_prediction:.2}");
+    println!("  Mean prediction variance: {mean_variance:.2}");
     println!("  Mean prediction std dev: {:.2}", mean_variance.sqrt());
 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn cross_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create more substantial dataset for cross-validation
     let points = array![
@@ -295,9 +301,9 @@ fn cross_validation_example() -> Result<(), Box<dyn std::error::Error>> {
         let mse = errors.iter().map(|e| e * e).sum::<f64>() / errors.len() as f64;
         let rmse = mse.sqrt();
 
-        println!("  {}:", name);
-        println!("    Mean error: {:.4}", mean_error);
-        println!("    RMSE: {:.4}", rmse);
+        println!("  {name}:");
+        println!("    Mean error: {mean_error:.4}");
+        println!("    RMSE: {rmse:.4}");
         println!(
             "    Max absolute error: {:.4}",
             errors.iter().map(|e| e.abs()).fold(0.0f64, f64::max)
@@ -307,6 +313,7 @@ fn cross_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn kriging_1d_example() -> Result<(), Box<dyn std::error::Error>> {
     // 1D example: measurements along a transect
     let points = array![[0.0], [1.0], [2.0], [4.0], [6.0], [8.0], [10.0]];
@@ -340,6 +347,7 @@ fn kriging_1d_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn uncertainty_example() -> Result<(), Box<dyn std::error::Error>> {
     // Sparse data to highlight uncertainty
     let points = array![[0.0, 0.0], [5.0, 0.0], [0.0, 5.0], [5.0, 5.0], [2.5, 2.5]];
@@ -386,7 +394,7 @@ fn uncertainty_example() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             "High"
         };
-        println!("    Uncertainty level: {}", uncertainty_level);
+        println!("    Uncertainty level: {uncertainty_level}");
         println!();
     }
 
@@ -423,7 +431,7 @@ fn create_synthetic_data(n_points: usize, noise_level: f64) -> (Array2<f64>, Arr
 #[allow(dead_code)]
 fn display_variogram_info(variogram: &VariogramModel) {
     println!("Variogram characteristics:");
-    println!("  Type: {:?}", variogram);
+    println!("  Type: {variogram:?}");
     println!("  Effective range: {:.2}", variogram.effective_range());
     println!("  Sill: {:.2}", variogram.sill());
     println!("  Nugget: {:.2}", variogram.nugget());

@@ -834,6 +834,7 @@ impl CacheAwareVectorProcessor {
 }
 
 /// Convenience functions for different precision types
+#[allow(dead_code)]
 pub fn ultra_mean_f64(data: &ArrayView1<f64>) -> StatsResult<UltraStatsResult<f64>> {
     let processor = UltraSimdProcessor::<f64>::new();
     processor.compute_ultra_statistics(data)
@@ -868,6 +869,7 @@ pub fn ultra_mean_f64(data: &ArrayView1<f64>) -> StatsResult<UltraStatsResult<f6
 /// let data = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
 /// let result = ultra_mean_f32(&data.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn ultra_mean_f32(data: &ArrayView1<f32>) -> StatsResult<UltraStatsResult<f32>> {
     let processor = UltraSimdProcessor::<f32>::new();
     processor.compute_ultra_statistics(data)

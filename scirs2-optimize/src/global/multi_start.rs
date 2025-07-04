@@ -290,6 +290,7 @@ where
 }
 
 /// Perform multi-start optimization
+#[allow(dead_code)]
 pub fn multi_start<F>(
     func: F,
     bounds: Bounds,

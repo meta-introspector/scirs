@@ -152,6 +152,7 @@ mod tests {
 
 #[cfg(not(feature = "metrics_integration"))]
 #[test]
+#[allow(dead_code)]
 fn test_metrics_integration_feature_disabled() {
     // This test is just a placeholder when the feature is disabled
     assert!(true);

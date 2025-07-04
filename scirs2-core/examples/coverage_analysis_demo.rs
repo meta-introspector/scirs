@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::time::SystemTime;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧪 Test Coverage Analysis Demo");
     println!("=====================================\n");
@@ -36,6 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demo 1: Production Coverage Configuration
+#[allow(dead_code)]
 fn demo_production_configuration() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Demo 1: Production Coverage Configuration");
     println!("===========================================");
@@ -77,6 +79,7 @@ fn demo_production_configuration() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demo 2: Development Coverage with Full Analysis
+#[allow(dead_code)]
 fn demo_development_coverage() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 Demo 2: Development Coverage with Full Analysis");
     println!("=================================================");
@@ -123,6 +126,7 @@ fn demo_development_coverage() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demo 3: Coverage Analysis and Reporting
+#[allow(dead_code)]
 fn demo_coverage_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("📈 Demo 3: Coverage Analysis and Reporting");
     println!("==========================================");
@@ -219,6 +223,7 @@ fn demo_coverage_analysis() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demo 4: Quality Gates and Recommendations
+#[allow(dead_code)]
 fn demo_quality_gates() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Demo 4: Quality Gates and Recommendations");
     println!("============================================");
@@ -334,6 +339,7 @@ fn demo_quality_gates() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demo 5: Historical Trends and Differential Coverage
+#[allow(dead_code)]
 fn demo_trends_and_differential() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Demo 5: Historical Trends and Differential Coverage");
     println!("======================================================");
@@ -390,6 +396,7 @@ fn demo_trends_and_differential() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Simulate coverage recording for various code elements
+#[allow(dead_code)]
 fn simulate_coverage_recording(
     analyzer: &CoverageAnalyzer,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -414,6 +421,7 @@ fn simulate_coverage_recording(
 }
 
 /// Simulate test execution with comprehensive coverage
+#[allow(dead_code)]
 fn simulate_test_execution(analyzer: &CoverageAnalyzer) -> Result<(), Box<dyn std::error::Error>> {
     // Simulate multiple test files
     let test_files = [
@@ -468,6 +476,7 @@ fn simulate_test_execution(analyzer: &CoverageAnalyzer) -> Result<(), Box<dyn st
 }
 
 /// Simulate partial coverage for quality gate demonstration
+#[allow(dead_code)]
 fn simulate_partial_coverage(
     analyzer: &CoverageAnalyzer,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -513,6 +522,7 @@ fn simulate_partial_coverage(
 }
 
 /// Simulate improved coverage for trend analysis
+#[allow(dead_code)]
 fn simulate_improved_coverage(
     analyzer: &CoverageAnalyzer,
 ) -> Result<(), Box<dyn std::error::Error>> {

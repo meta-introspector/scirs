@@ -10,6 +10,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     // Generate scattered data points in 3D
     let n_points = 100;

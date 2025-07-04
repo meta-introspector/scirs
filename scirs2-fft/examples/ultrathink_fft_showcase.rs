@@ -14,6 +14,7 @@ use scirs2_fft::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink FFT Mode Showcase");
     println!("=====================================");
@@ -236,6 +237,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Create a sine wave signal for testing
+#[allow(dead_code)]
 fn create_sine_wave(length: usize, frequency: f64, sample_rate: f64) -> Array1<Complex64> {
     Array1::from_vec(
         (0..length)
@@ -249,6 +251,7 @@ fn create_sine_wave(length: usize, frequency: f64, sample_rate: f64) -> Array1<C
 }
 
 /// Create a linear chirp signal for testing
+#[allow(dead_code)]
 fn create_chirp_signal(length: usize, f0: f64, f1: f64, sample_rate: f64) -> Array1<Complex64> {
     Array1::from_vec(
         (0..length)
@@ -265,6 +268,7 @@ fn create_chirp_signal(length: usize, f0: f64, f1: f64, sample_rate: f64) -> Arr
 }
 
 /// Create a sparse signal for testing
+#[allow(dead_code)]
 fn create_sparse_signal(length: usize, sparsity: f64) -> Array1<Complex64> {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
@@ -287,6 +291,7 @@ fn create_sparse_signal(length: usize, sparsity: f64) -> Array1<Complex64> {
 }
 
 /// Estimate performance improvement from recommendation
+#[allow(dead_code)]
 fn estimate_performance_improvement(recommendation: &scirs2_fft::FftRecommendation) -> f64 {
     // This is a mock implementation - in reality, this would be based on
     // benchmark data and algorithm characteristics
@@ -300,6 +305,7 @@ fn estimate_performance_improvement(recommendation: &scirs2_fft::FftRecommendati
 }
 
 /// Estimate memory efficiency gain from recommendation
+#[allow(dead_code)]
 fn estimate_memory_efficiency(recommendation: &scirs2_fft::FftRecommendation) -> f64 {
     // Mock implementation based on memory strategy
     match recommendation.memory_strategy.allocation_strategy {
@@ -311,6 +317,7 @@ fn estimate_memory_efficiency(recommendation: &scirs2_fft::FftRecommendation) ->
 }
 
 /// Demonstrate adaptive learning capabilities
+#[allow(dead_code)]
 fn demonstrate_adaptive_learning(
     coordinator: &scirs2_fft::UltrathinkFftCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -360,6 +367,7 @@ fn demonstrate_adaptive_learning(
 }
 
 /// Demonstrate cross-domain knowledge transfer
+#[allow(dead_code)]
 fn demonstrate_knowledge_transfer(
     coordinator: &scirs2_fft::UltrathinkFftCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -399,6 +407,7 @@ fn demonstrate_knowledge_transfer(
 }
 
 /// Demonstrate quantum-inspired optimization
+#[allow(dead_code)]
 fn demonstrate_quantum_optimization(
     coordinator: &scirs2_fft::UltrathinkFftCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -438,6 +447,7 @@ fn demonstrate_quantum_optimization(
 }
 
 /// Create a 2D image-like signal for testing
+#[allow(dead_code)]
 fn create_2d_image_signal(width: usize, height: usize) -> Array1<Complex64> {
     // Flatten a 2D image pattern into 1D for this demo
     Array1::from_vec(
@@ -453,6 +463,7 @@ fn create_2d_image_signal(width: usize, height: usize) -> Array1<Complex64> {
 }
 
 /// Create a scientific data signal for testing
+#[allow(dead_code)]
 fn create_scientific_data_signal(length: usize) -> Array1<Complex64> {
     // Simulate scientific data with multiple frequency components and noise
     use rand::rngs::StdRng;
@@ -480,6 +491,7 @@ fn create_scientific_data_signal(length: usize) -> Array1<Complex64> {
 }
 
 /// Create a signal for testing quantum optimization
+#[allow(dead_code)]
 fn create_quantum_test_signal(length: usize) -> Array1<Complex64> {
     // Create a signal with quantum-like superposition characteristics
     Array1::from_vec(

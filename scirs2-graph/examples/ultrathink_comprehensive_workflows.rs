@@ -5,7 +5,7 @@
 
 #![allow(dead_code)]
 
-use rand::Rng;
+use rand::{random, rng, Rng};
 use scirs2_graph::advanced::{
     create_enhanced_ultrathink_processor, create_large_graph_ultrathink_processor,
     create_performance_ultrathink_processor, create_realtime_ultrathink_processor,
@@ -23,6 +23,7 @@ use std::time::{Duration, Instant};
 ///
 /// This workflow demonstrates how to analyze social networks using ultrathink mode,
 /// including community detection, influence analysis, and path finding.
+#[allow(dead_code)]
 fn social_network_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌐 Social Network Analysis Workflow");
     println!("===================================");
@@ -150,6 +151,7 @@ fn social_network_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> 
 ///
 /// Demonstrates protein interaction network analysis with specific
 /// optimizations for biological data patterns.
+#[allow(dead_code)]
 fn bioinformatics_workflow() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧬 Bioinformatics Network Analysis Workflow");
     println!("===========================================");
@@ -287,6 +289,7 @@ fn bioinformatics_workflow() -> Result<(), Box<dyn std::error::Error>> {
 ///
 /// Demonstrates analysis of large infrastructure networks (roads, internet, etc.)
 /// with memory-efficient processing.
+#[allow(dead_code)]
 fn infrastructure_network_workflow() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🏗️ Infrastructure Network Analysis Workflow");
     println!("===========================================");
@@ -422,6 +425,7 @@ fn infrastructure_network_workflow() -> Result<(), Box<dyn std::error::Error>> {
 ///
 /// Demonstrates real-time analysis capabilities for dynamic networks
 /// with continuous updates and monitoring.
+#[allow(dead_code)]
 fn real_time_monitoring_workflow() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚡ Real-Time Network Monitoring Workflow");
     println!("=======================================");
@@ -560,6 +564,7 @@ fn real_time_monitoring_workflow() -> Result<(), Box<dyn std::error::Error>> {
 ///
 /// Demonstrates comparative analysis of different algorithms
 /// with automatic optimization selection.
+#[allow(dead_code)]
 fn benchmark_suite_workflow() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🏁 Multi-Algorithm Benchmark Suite");
     println!("=================================");
@@ -731,6 +736,7 @@ fn benchmark_suite_workflow() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SciRS2 Ultrathink Comprehensive Workflows");
     println!("============================================");

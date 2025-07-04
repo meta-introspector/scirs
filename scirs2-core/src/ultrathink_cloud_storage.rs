@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 //! Ultrathink Cloud Storage Framework
 //!
 //! This module provides comprehensive cloud storage integration with adaptive streaming
@@ -29,16 +31,20 @@ pub struct UltrathinkCloudStorageCoordinator {
     /// Cloud provider connections
     providers: Arc<RwLock<HashMap<CloudProviderId, Box<dyn CloudStorageProvider + Send + Sync>>>>,
     /// Adaptive streaming engine
+    #[allow(dead_code)]
     streaming_engine: Arc<Mutex<AdaptiveStreamingEngine>>,
     /// Intelligent cache system
     cache_system: Arc<Mutex<IntelligentCacheSystem>>,
     /// Data optimization engine
     optimization_engine: Arc<Mutex<DataOptimizationEngine>>,
     /// Transfer manager
+    #[allow(dead_code)]
     transfer_manager: Arc<Mutex<ParallelTransferManager>>,
     /// Security manager
+    #[allow(dead_code)]
     security_manager: Arc<Mutex<CloudSecurityManager>>,
     /// Monitoring system
+    #[allow(dead_code)]
     monitoring: Arc<Mutex<CloudStorageMonitoring>>,
     /// Configuration
     config: UltrathinkCloudConfig,
@@ -2281,6 +2287,7 @@ pub struct LogRotationConfig {
 }
 
 /// Cloud storage monitoring
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct CloudStorageMonitoring {
     /// Metrics collectors
@@ -2319,6 +2326,7 @@ pub enum MetricType {
 }
 
 /// Alert manager
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct AlertManager {
     /// Active alerts
@@ -2412,6 +2420,7 @@ pub enum NotificationChannelType {
 }
 
 /// Performance dashboard
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct PerformanceDashboard {
     /// Dashboard widgets
@@ -2503,6 +2512,7 @@ pub enum HealthCheckType {
 }
 
 /// Adaptive data stream
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct AdaptiveDataStream {
     /// Underlying stream
@@ -2574,6 +2584,7 @@ impl DataStream for AdaptiveDataStream {
 }
 
 /// Stream buffer manager
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct StreamBufferManager {
     /// Buffer size
@@ -2603,6 +2614,7 @@ impl StreamBufferManager {
 }
 
 /// Stream adaptation engine
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct StreamAdaptationEngine {
     /// Adaptation algorithms
@@ -2667,6 +2679,7 @@ pub struct AdaptationThresholds {
 }
 
 /// Stream metrics
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct StreamMetrics {
     /// Total bytes read

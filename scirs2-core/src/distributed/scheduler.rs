@@ -689,6 +689,7 @@ pub struct FailedTask {
 }
 
 /// Initialize distributed scheduler
+#[allow(dead_code)]
 pub fn initialize_distributed_scheduler() -> CoreResult<()> {
     let _scheduler = DistributedScheduler::global()?;
     Ok(())

@@ -4,6 +4,7 @@ use crate::features::statistical::calculate_std;
 use std::collections::HashMap;
 
 /// Extract entropy-based features from a time series
+#[allow(dead_code)]
 pub fn extract_entropy_features(
     signal: &[f64],
     features: &mut HashMap<String, f64>,
@@ -28,6 +29,7 @@ pub fn extract_entropy_features(
 }
 
 /// Calculate Shannon entropy of a signal
+#[allow(dead_code)]
 pub fn calculate_shannon_entropy(signal: &[f64]) -> f64 {
     if signal.is_empty() {
         return 0.0;
@@ -76,6 +78,7 @@ pub fn calculate_shannon_entropy(signal: &[f64]) -> f64 {
 }
 
 /// Calculate approximate entropy of a signal
+#[allow(dead_code)]
 pub fn calculate_approximate_entropy(signal: &[f64], m: usize, r: f64) -> f64 {
     if signal.is_empty() || m == 0 {
         return 0.0;
@@ -103,6 +106,7 @@ pub fn calculate_approximate_entropy(signal: &[f64], m: usize, r: f64) -> f64 {
 }
 
 /// Helper function for approximate entropy calculation
+#[allow(dead_code)]
 fn calculate_phi(signal: &[f64], m: usize, tolerance: f64) -> f64 {
     let n = signal.len();
     let mut total = 0.0;
@@ -132,6 +136,7 @@ fn calculate_phi(signal: &[f64], m: usize, tolerance: f64) -> f64 {
 }
 
 /// Calculate sample entropy of a signal
+#[allow(dead_code)]
 pub fn calculate_sample_entropy(signal: &[f64], m: usize, r: f64) -> f64 {
     if signal.is_empty() || m == 0 {
         return 0.0;
@@ -163,6 +168,7 @@ pub fn calculate_sample_entropy(signal: &[f64], m: usize, r: f64) -> f64 {
 }
 
 /// Helper function for sample entropy calculation
+#[allow(dead_code)]
 fn count_matches(signal: &[f64], m: usize, tolerance: f64) -> f64 {
     let n = signal.len();
     let mut match_count = 0.0;
@@ -189,6 +195,7 @@ fn count_matches(signal: &[f64], m: usize, tolerance: f64) -> f64 {
 }
 
 /// Calculate permutation entropy of a signal
+#[allow(dead_code)]
 pub fn calculate_permutation_entropy(signal: &[f64], order: usize) -> f64 {
     if signal.is_empty() || order < 2 {
         return 0.0;

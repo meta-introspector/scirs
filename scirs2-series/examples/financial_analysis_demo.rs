@@ -16,6 +16,7 @@ use scirs2_series::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Financial Time Series Analysis Demo ===\n");
 
@@ -58,6 +59,7 @@ fn main() {
     println!("\n=== Financial Analysis Complete ===");
 }
 
+#[allow(dead_code)]
 fn generate_financial_data() -> (Array1<f64>, Array1<f64>) {
     let n = 1000;
     let mut prices = Array1::zeros(n);
@@ -92,6 +94,7 @@ fn generate_financial_data() -> (Array1<f64>, Array1<f64>) {
     (prices, returns)
 }
 
+#[allow(dead_code)]
 fn generate_student_t(df: f64, seed: u64) -> f64 {
     // Simple approximation to t-distribution using Box-Muller + scaling
     let u1 = ((seed * 7919 + 1013) % 10000) as f64 / 10000.0;
@@ -108,6 +111,7 @@ fn generate_student_t(df: f64, seed: u64) -> f64 {
     z * scale_factor
 }
 
+#[allow(dead_code)]
 fn financial_transformations_demo(prices: &Array1<f64>) {
     println!("  Applying financial transformations...");
 
@@ -164,6 +168,7 @@ fn financial_transformations_demo(prices: &Array1<f64>) {
     }
 }
 
+#[allow(dead_code)]
 fn garch_modeling_demo(returns: &Array1<f64>) {
     println!("  GARCH volatility modeling...");
 
@@ -263,6 +268,7 @@ fn garch_modeling_demo(returns: &Array1<f64>) {
     }
 }
 
+#[allow(dead_code)]
 fn technical_indicators_demo(prices: &Array1<f64>) {
     println!("  Computing technical indicators...");
 
@@ -354,6 +360,7 @@ fn technical_indicators_demo(prices: &Array1<f64>) {
     }
 }
 
+#[allow(dead_code)]
 fn risk_metrics_demo(returns: &Array1<f64>) {
     println!("  Computing risk metrics...");
 
@@ -439,6 +446,7 @@ fn risk_metrics_demo(returns: &Array1<f64>) {
     }
 }
 
+#[allow(dead_code)]
 fn portfolio_analysis_demo() {
     println!("  Portfolio analysis with multiple assets...");
 
@@ -540,6 +548,7 @@ fn portfolio_analysis_demo() {
     }
 }
 
+#[allow(dead_code)]
 fn var_analysis_demo(returns: &Array1<f64>) {
     println!("  Value at Risk (VaR) analysis...");
 
@@ -621,6 +630,7 @@ fn var_analysis_demo(returns: &Array1<f64>) {
     }
 }
 
+#[allow(dead_code)]
 fn backtesting_demo(prices: &Array1<f64>) {
     println!("  Strategy backtesting...");
 
@@ -682,6 +692,7 @@ fn backtesting_demo(prices: &Array1<f64>) {
     }
 }
 
+#[allow(dead_code)]
 fn advanced_features_demo(prices: &Array1<f64>, returns: &Array1<f64>) {
     println!("  Advanced financial feature extraction...");
 

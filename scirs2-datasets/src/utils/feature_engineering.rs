@@ -42,6 +42,7 @@ pub enum BinningStrategy {
 /// let poly_features = polynomial_features(&data, 2, true).unwrap();
 /// // Result includes: [1, x1, x2, x1², x1*x2, x2²]
 /// ```
+#[allow(dead_code)]
 pub fn polynomial_features(
     data: &Array2<f64>,
     degree: usize,
@@ -108,6 +109,7 @@ pub fn polynomial_features(
 }
 
 /// Helper function to generate polynomial combinations recursively
+#[allow(dead_code)]
 fn generate_polynomial_combinations(
     features: &Array1<f64>,
     degree: usize,
@@ -169,6 +171,7 @@ fn generate_polynomial_combinations(
 /// let stats_features = statistical_features(&data).unwrap();
 /// // Result includes 9 statistical measures for each of the 2 original features
 /// ```
+#[allow(dead_code)]
 pub fn statistical_features(data: &Array2<f64>) -> Result<Array2<f64>> {
     let n_samples = data.nrows();
     let n_features = data.ncols();
@@ -225,6 +228,7 @@ pub fn statistical_features(data: &Array2<f64>) -> Result<Array2<f64>> {
 }
 
 /// Calculates a specific quantile from sorted data
+#[allow(dead_code)]
 fn calculate_quantile(sorted_data: &[f64], quantile: f64) -> f64 {
     if sorted_data.is_empty() {
         return 0.0;
@@ -244,6 +248,7 @@ fn calculate_quantile(sorted_data: &[f64], quantile: f64) -> f64 {
 }
 
 /// Calculates skewness (third moment)
+#[allow(dead_code)]
 fn calculate_skewness(data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f64 {
     if std <= 1e-10 {
         return 0.0;
@@ -256,6 +261,7 @@ fn calculate_skewness(data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f
 }
 
 /// Calculates kurtosis (fourth moment)
+#[allow(dead_code)]
 fn calculate_kurtosis(data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f64 {
     if std <= 1e-10 {
         return 0.0;
@@ -293,6 +299,7 @@ fn calculate_kurtosis(data: &ndarray::ArrayView1<f64>, mean: f64, std: f64) -> f
 /// let binned = create_binned_features(&data, 3, BinningStrategy::Uniform).unwrap();
 /// // Each feature is now discretized into 3 bins (values 0, 1, 2)
 /// ```
+#[allow(dead_code)]
 pub fn create_binned_features(
     data: &Array2<f64>,
     n_bins: usize,
@@ -323,6 +330,7 @@ pub fn create_binned_features(
 }
 
 /// Calculate bin edges based on the specified strategy
+#[allow(dead_code)]
 fn calculate_bin_edges(
     data: &ndarray::ArrayView1<f64>,
     n_bins: usize,
@@ -367,6 +375,7 @@ fn calculate_bin_edges(
 }
 
 /// Find the bin index for a given value
+#[allow(dead_code)]
 fn find_bin_index(value: f64, bin_edges: &[f64]) -> usize {
     for (i, &edge) in bin_edges.iter().enumerate().skip(1) {
         if value <= edge {

@@ -1967,11 +1967,13 @@ pub enum AnalysisAlgorithmType {
 // Factory functions
 
 /// Create default ultra-think property tester
+#[allow(dead_code)]
 pub fn create_ultra_think_property_tester() -> UltraThinkPropertyTester {
     UltraThinkPropertyTester::new(UltraThinkPropertyConfig::default())
 }
 
 /// Create configured ultra-think property tester
+#[allow(dead_code)]
 pub fn create_configured_ultra_think_property_tester(
     config: UltraThinkPropertyConfig,
 ) -> UltraThinkPropertyTester {
@@ -1979,6 +1981,7 @@ pub fn create_configured_ultra_think_property_tester(
 }
 
 /// Create comprehensive property tester for production use
+#[allow(dead_code)]
 pub fn create_comprehensive_property_tester() -> UltraThinkPropertyTester {
     let config = UltraThinkPropertyConfig {
         enable_mathematical_invariants: true,
@@ -2000,6 +2003,7 @@ pub fn create_comprehensive_property_tester() -> UltraThinkPropertyTester {
 }
 
 /// Create fast property tester for development
+#[allow(dead_code)]
 pub fn create_fast_property_tester() -> UltraThinkPropertyTester {
     let config = UltraThinkPropertyConfig {
         enable_mathematical_invariants: true,

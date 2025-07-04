@@ -1,6 +1,7 @@
 use scirs2_stats::distributions::binomial::Binomial;
 use std::error::Error;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Binomial Distribution Example");
     println!("----------------------------");

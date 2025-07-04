@@ -396,6 +396,7 @@ impl NeuralNetwork {
                 layer_idx += 1;
         println!("Total parameters: {}", total_params);
 /// Generate a noisy non-linear dataset with irrelevant features (for demonstrating regularization)
+#[allow(dead_code)]
 fn generate_dataset(
     n_samples: usize,
     n_features: usize,
@@ -435,6 +436,7 @@ fn generate_dataset(
         y[[i, 0]] = 1.0 / (1.0 + (-target).exp());
     (x, y)
 /// Evaluate binary classification accuracy
+#[allow(dead_code)]
 fn evaluate_accuracy(predictions: &Array2<f32>, targets: &Array2<f32>) -> f32 {
     let n_samples = predictions.shape()[0];
     let mut correct = 0;
@@ -465,6 +467,7 @@ impl ExperimentConfig {
             None => "No early stopping".to_string(),
         format!("{}, {}, {}", reg_desc, dropout_desc, early_stopping_desc)
 /// Run an experiment with different regularization methods
+#[allow(dead_code)]
 fn run_experiment(config: &ExperimentConfig) -> Result<()> {
     // Set up RNG
     let mut rng = SmallRng::seed_from_u64(42);
@@ -549,6 +552,7 @@ fn run_experiment(config: &ExperimentConfig) -> Result<()> {
     {
         println!("{:5} | {:10.6} | {:10.6}", i + 1, train_loss, val_loss);
     Ok(())
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Regularization Techniques Example");
     println!("================================\n");

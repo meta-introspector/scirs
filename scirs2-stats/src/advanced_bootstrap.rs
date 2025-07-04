@@ -1018,12 +1018,12 @@ where
 
     /// Compute bias correction
     fn compute_bias_correction(&self, bootstrap_samples: &Array1<F>, original_statistic: F) -> F {
-        let count_below = bootstrap_samples
+        let _count_below = bootstrap_samples
             .iter()
             .filter(|&&x| x < original_statistic)
             .count();
 
-        let proportion = count_below as f64 / bootstrap_samples.len() as f64;
+        let _proportion = _count_below as f64 / bootstrap_samples.len() as f64;
 
         // Simplified bias correction
         let bootstrap_mean = self.compute_mean(bootstrap_samples);
@@ -1104,7 +1104,7 @@ where
     fn compute_quality_metrics(
         &self,
         samples: &Array1<F>,
-        original_statistic: F,
+        _original_statistic: F,
     ) -> StatsResult<QualityMetrics<F>> {
         let std_error = self.compute_std(samples);
         let mc_std_error = std_error / F::from((samples.len() as f64).sqrt()).unwrap();
@@ -1157,6 +1157,7 @@ where
 }
 
 /// Convenience function for stratified bootstrap
+#[allow(dead_code)]
 pub fn stratified_bootstrap<F, T>(
     data: &ArrayView1<F>,
     strata: &[usize],
@@ -1186,6 +1187,7 @@ where
 }
 
 /// Convenience function for block bootstrap
+#[allow(dead_code)]
 pub fn block_bootstrap<F, T>(
     data: &ArrayView1<F>,
     block_type: BlockType,
@@ -1213,6 +1215,7 @@ where
 }
 
 /// Convenience function for moving block bootstrap
+#[allow(dead_code)]
 pub fn moving_block_bootstrap<F, T>(
     data: &ArrayView1<F>,
     statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<T> + Send + Sync + Copy,
@@ -1244,6 +1247,7 @@ where
 }
 
 /// Convenience function for circular block bootstrap
+#[allow(dead_code)]
 pub fn circular_block_bootstrap<F, T>(
     data: &ArrayView1<F>,
     statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<T> + Send + Sync + Copy,
@@ -1275,6 +1279,7 @@ where
 }
 
 /// Convenience function for stationary bootstrap
+#[allow(dead_code)]
 pub fn stationary_bootstrap<F, T>(
     data: &ArrayView1<F>,
     statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<T> + Send + Sync + Copy,

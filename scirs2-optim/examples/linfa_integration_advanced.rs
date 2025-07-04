@@ -367,6 +367,7 @@ impl OptimizedLinearRegression {
 }
 
 // Benchmark different optimizers
+#[allow(dead_code)]
 fn benchmark_optimizers(dataset: &Dataset) -> Result<()> {
     println!("\n🏁 Benchmarking optimizers on linear regression...");
 
@@ -426,6 +427,7 @@ fn benchmark_optimizers(dataset: &Dataset) -> Result<()> {
 }
 
 // Advanced optimization techniques demonstration
+#[allow(dead_code)]
 fn demonstrate_advanced_techniques(dataset: &Dataset) -> Result<()> {
     println!("\n🔬 Demonstrating advanced optimization techniques...");
 
@@ -478,6 +480,7 @@ fn demonstrate_advanced_techniques(dataset: &Dataset) -> Result<()> {
 }
 
 // Create synthetic dataset for testing
+#[allow(dead_code)]
 fn create_synthetic_dataset(n_samples: usize, n_features: usize, noise_level: f64) -> Dataset {
     let mut rng = Xoshiro256Plus::seed_from_u64(42);
 
@@ -496,6 +499,7 @@ fn create_synthetic_dataset(n_samples: usize, n_features: usize, noise_level: f6
 }
 
 // Performance comparison with different dataset sizes
+#[allow(dead_code)]
 fn scalability_analysis() -> Result<()> {
     println!("\n📈 Scalability Analysis:");
 
@@ -528,6 +532,7 @@ fn scalability_analysis() -> Result<()> {
 }
 
 // Framework compatibility testing
+#[allow(dead_code)]
 fn test_framework_compatibility() -> Result<()> {
     println!("\n🔧 Framework Compatibility Testing:");
 
@@ -581,6 +586,7 @@ fn test_framework_compatibility() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🧠 Scirs2-Optim + Linfa Integration Advanced Example");
     println!("==================================================");

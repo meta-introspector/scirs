@@ -1,5 +1,6 @@
 use scirs2_datasets::{load_boston, load_iris};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let iris = load_iris()?;
     println!("Iris dataset loaded:");

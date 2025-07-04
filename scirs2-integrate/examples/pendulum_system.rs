@@ -9,6 +9,7 @@ use std::f64::consts::PI;
 
 /// Simple pendulum: θ'' + (g/L)sin(θ) = 0
 /// State vector: [θ, θ']
+#[allow(dead_code)]
 fn simple_pendulum(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let _t = t; // Time not explicitly used in this system
     let theta = y[0];
@@ -24,6 +25,7 @@ fn simple_pendulum(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 
 /// Damped pendulum: θ'' + c*θ' + (g/L)sin(θ) = 0
 /// State vector: [θ, θ']
+#[allow(dead_code)]
 fn damped_pendulum(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let _t = t; // Time not explicitly used in this system
     let theta = y[0];
@@ -40,6 +42,7 @@ fn damped_pendulum(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 
 /// Driven pendulum: θ'' + c*θ' + (g/L)sin(θ) = A*cos(ωt)
 /// State vector: [θ, θ']
+#[allow(dead_code)]
 fn driven_pendulum(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let theta = y[0];
     let theta_dot = y[1];
@@ -57,6 +60,7 @@ fn driven_pendulum(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 
 /// Double pendulum system
 /// State vector: [θ₁, θ₁', θ₂, θ₂']
+#[allow(dead_code)]
 fn double_pendulum(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let _t = t; // Time not explicitly used
     let theta1 = y[0];
@@ -93,6 +97,7 @@ fn double_pendulum(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     array![theta1_dot, theta1_ddot, theta2_dot, theta2_ddot]
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Pendulum System Examples\n");
 

@@ -1,15 +1,21 @@
 use ndarray::{Array, IxDyn};
 use scirs2_neural::layers::Layer;
-use scirs2_neural::models::{ViTConfig, VisionTransformer};
+// use scirs2_neural::models::{ViTConfig, VisionTransformer};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Vision Transformer (ViT) Example");
+    println!("Note: Models module is not yet implemented.");
+    println!("This example is a placeholder for future ViT functionality.");
+
+    // TODO: Implement models module and uncomment the following code
+    /*
     // Create a ViT-Base model for image classification
     let image_size = (224, 224);
     let patch_size = (16, 16);
     let in_channels = 3; // RGB images
     let num_classes = 1000; // ImageNet classes
-    println!("Creating ViT-Base model with image size {:?}, patch size {:?}, {} input channels, and {} output classes", 
+    println!("Creating ViT-Base model with image size {:?}, patch size {:?}, {} input channels, and {} output classes",
              image_size, patch_size, in_channels, num_classes);
     // Create model
     let model =
@@ -48,5 +54,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         custom_output.shape()[1]
     );
     println!("\nVision Transformer example completed successfully!");
+    */
     Ok(())
 }

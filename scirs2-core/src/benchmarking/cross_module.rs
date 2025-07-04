@@ -1445,12 +1445,14 @@ impl fmt::Display for RegressionSignificance {
 }
 
 /// Convenience function to create a default benchmark suite
+#[allow(dead_code)]
 pub fn create_default_benchmark_suite() -> CoreResult<CrossModuleBenchmarkRunner> {
     let config = CrossModuleBenchConfig::default();
     Ok(CrossModuleBenchmarkRunner::new(config))
 }
 
 /// Convenience function to run quick benchmarks for CI/CD
+#[allow(dead_code)]
 pub fn run_quick_benchmarks() -> CoreResult<BenchmarkSuiteResult> {
     let config = CrossModuleBenchConfig {
         iterations: 10,

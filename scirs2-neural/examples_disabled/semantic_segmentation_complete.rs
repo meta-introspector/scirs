@@ -336,6 +336,7 @@ impl SegmentationMetrics {
                 matrix[[*gt, *pred]] += 1;
         matrix
 /// Convert logits to class predictions
+#[allow(dead_code)]
 fn logits_to_predictions(logits: &ArrayD<f32>) -> Array3<usize> {
     let shape = logits.shape();
     let batch_size = shape[0];
@@ -356,6 +357,7 @@ fn logits_to_predictions(logits: &ArrayD<f32>) -> Array3<usize> {
                 predictions[[b, i, j]] = best_class;
     predictions
 /// Convert class masks to one-hot encoded targets
+#[allow(dead_code)]
 fn masks_to_targets(masks: &Array3<usize>, num_classes: usize) -> ArrayD<f32> {
     let shape = masks.shape();
     let height = shape[1];
@@ -366,6 +368,7 @@ fn masks_to_targets(masks: &Array3<usize>, num_classes: usize) -> ArrayD<f32> {
                     targets[[b, class_id, i, j]] = 1.0;
     targets.into_dyn()
 /// Training function for semantic segmentation
+#[allow(dead_code)]
 fn train_segmentation_model() -> StdResult<()> {
     println!("🎨 Starting Semantic Segmentation Training");
     let mut rng = SmallRng::seed_from_u64(42);
@@ -472,6 +475,7 @@ fn train_segmentation_model() -> StdResult<()> {
     println!("   - Memory efficient: ✅ (skip connections preserve spatial info)");
     println!("   - JIT optimized: ✅");
     Ok(())
+#[allow(dead_code)]
 fn main() -> StdResult<()> {
     println!("🎨 Semantic Segmentation Complete Example");
     println!("==========================================");

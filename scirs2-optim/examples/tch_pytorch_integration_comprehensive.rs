@@ -1248,6 +1248,7 @@ impl TchDataLoader {
 }
 
 /// Create a PyTorch-style neural network
+#[allow(dead_code)]
 fn create_tch_network(
     input_dim: i64,
     hidden_dims: &[i64],
@@ -1318,6 +1319,7 @@ fn create_tch_network(
 }
 
 /// Create synthetic dataset for PyTorch testing
+#[allow(dead_code)]
 fn create_tch_dataset(
     n_samples: usize,
     input_dim: i64,
@@ -1345,6 +1347,7 @@ fn create_tch_dataset(
 }
 
 /// Benchmark PyTorch optimizers
+#[allow(dead_code)]
 fn benchmark_tch_optimizers() -> Result<()> {
     println!("\n🏁 Benchmarking PyTorch integration optimizers...");
 
@@ -1445,6 +1448,7 @@ fn benchmark_tch_optimizers() -> Result<()> {
 }
 
 /// Demonstrate advanced PyTorch features
+#[allow(dead_code)]
 fn demonstrate_tch_advanced_features() -> Result<()> {
     println!("\n🔬 Demonstrating advanced PyTorch integration features...");
 
@@ -1543,6 +1547,7 @@ fn demonstrate_tch_advanced_features() -> Result<()> {
 }
 
 /// Test distributed training setup
+#[allow(dead_code)]
 fn test_distributed_training() -> Result<()> {
     println!("\n🌐 Distributed Training Testing:");
 
@@ -1590,6 +1595,7 @@ fn test_distributed_training() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🔥 Scirs2-Optim + tch (PyTorch) Integration Example");
     println!("===================================================");

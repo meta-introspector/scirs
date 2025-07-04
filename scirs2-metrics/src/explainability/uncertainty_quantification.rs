@@ -2188,6 +2188,7 @@ pub struct CoverageAnalysis<F: Float> {
 // Additional convenience functions for uncertainty quantification
 
 /// Compute entropy of probability distribution
+#[allow(dead_code)]
 pub fn compute_entropy<F: Float + num_traits::FromPrimitive>(probabilities: &Array1<F>) -> F {
     let mut entropy = F::zero();
     let eps = F::from(1e-15).unwrap();
@@ -2202,6 +2203,7 @@ pub fn compute_entropy<F: Float + num_traits::FromPrimitive>(probabilities: &Arr
 }
 
 /// Compute KL divergence between two distributions
+#[allow(dead_code)]
 pub fn compute_kl_divergence<F: Float + num_traits::FromPrimitive>(
     p: &Array1<F>,
     q: &Array1<F>,
@@ -2225,6 +2227,7 @@ pub fn compute_kl_divergence<F: Float + num_traits::FromPrimitive>(
 }
 
 /// Compute Jensen-Shannon divergence
+#[allow(dead_code)]
 pub fn compute_js_divergence<F: Float + num_traits::FromPrimitive + ndarray::ScalarOperand>(
     p: &Array1<F>,
     q: &Array1<F>,
@@ -2237,6 +2240,7 @@ pub fn compute_js_divergence<F: Float + num_traits::FromPrimitive + ndarray::Sca
 }
 
 /// Compute Wasserstein distance (simplified 1D version)
+#[allow(dead_code)]
 pub fn compute_wasserstein_distance<F: Float + num_traits::FromPrimitive>(
     samples1: &Array1<F>,
     samples2: &Array1<F>,
@@ -2258,6 +2262,7 @@ pub fn compute_wasserstein_distance<F: Float + num_traits::FromPrimitive>(
 }
 
 /// Compute maximum mean discrepancy (simplified)
+#[allow(dead_code)]
 pub fn compute_mmd<F: Float + num_traits::FromPrimitive + std::iter::Sum>(
     samples1: &Array2<F>,
     samples2: &Array2<F>,

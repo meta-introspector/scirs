@@ -14,6 +14,7 @@ use scirs2_signal::filter::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("Advanced Filter Design Example");
     println!("============================\n");
@@ -228,12 +229,14 @@ fn main() {
 }
 
 /// Calculate RMS (Root Mean Square) of a signal
+#[allow(dead_code)]
 fn calculate_rms(signal: &[f64]) -> f64 {
     let sum_squares: f64 = signal.iter().map(|&x| x * x).sum();
     (sum_squares / signal.len() as f64).sqrt()
 }
 
 /// Format coefficients for display
+#[allow(dead_code)]
 fn format_coeffs(coeffs: &[f64]) -> String {
     coeffs
         .iter()

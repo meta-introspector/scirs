@@ -38,6 +38,10 @@ pub struct BenchmarkConfig {
     pub measurement_iterations: usize,
     /// Target measurement time
     pub measurement_time: Duration,
+    /// Minimum duration for each measurement
+    pub min_duration: Duration,
+    /// Maximum duration for each measurement  
+    pub max_duration: Duration,
     /// Confidence level for statistical analysis (e.g., 0.95 for 95%)
     pub confidence_level: f64,
     /// Maximum acceptable coefficient of variation
@@ -61,6 +65,8 @@ impl Default for BenchmarkConfig {
             warmup_iterations: 10,
             measurement_iterations: 100,
             measurement_time: Duration::from_secs(5),
+            min_duration: Duration::from_millis(1),
+            max_duration: Duration::from_secs(30),
             confidence_level: 0.95,
             max_cv: 0.1, // 10% coefficient of variation
             enable_profiling: false,
@@ -91,6 +97,18 @@ impl BenchmarkConfig {
     /// Set measurement time
     pub fn with_measurement_time(mut self, time: Duration) -> Self {
         self.measurement_time = time;
+        self
+    }
+
+    /// Set minimum duration
+    pub fn with_min_duration(mut self, duration: Duration) -> Self {
+        self.min_duration = duration;
+        self
+    }
+
+    /// Set maximum duration
+    pub fn with_max_duration(mut self, duration: Duration) -> Self {
+        self.max_duration = duration;
         self
     }
 
@@ -154,6 +172,14 @@ impl BenchmarkConfig {
 pub struct BenchmarkMeasurement {
     /// Execution time for this measurement
     pub execution_time: Duration,
+    /// Duration field (alias for execution_time for compatibility)
+    pub duration: Duration,
+    /// Strategy used for this measurement  
+    pub strategy: OptimizationStrategy,
+    /// Input size used for this measurement
+    pub input_size: usize,
+    /// Throughput achieved in operations per second
+    pub throughput: f64,
     /// Memory usage during this measurement (in bytes)
     pub memory_usage: usize,
     /// Custom metrics collected during this measurement
@@ -167,6 +193,10 @@ impl BenchmarkMeasurement {
     pub fn new(execution_time: Duration) -> Self {
         Self {
             execution_time,
+            duration: execution_time,
+            strategy: OptimizationStrategy::Scalar,
+            input_size: 0,
+            throughput: 0.0,
             memory_usage: 0,
             custom_metrics: HashMap::new(),
             timestamp: std::time::SystemTime::now(),
@@ -182,6 +212,24 @@ impl BenchmarkMeasurement {
     /// Add a custom metric
     pub fn with_custom_metric(mut self, name: String, value: f64) -> Self {
         self.custom_metrics.insert(name, value);
+        self
+    }
+
+    /// Set strategy
+    pub fn with_strategy(mut self, strategy: OptimizationStrategy) -> Self {
+        self.strategy = strategy;
+        self
+    }
+
+    /// Set input size
+    pub fn with_input_size(mut self, input_size: usize) -> Self {
+        self.input_size = input_size;
+        self
+    }
+
+    /// Set throughput
+    pub fn with_throughput(mut self, throughput: f64) -> Self {
+        self.throughput = throughput;
         self
     }
 
@@ -566,6 +614,37 @@ impl BenchmarkRunner {
         Ok(results)
     }
 
+    /// Benchmark an operation with different strategies
+    #[allow(dead_code)]
+    pub fn benchmark_operation<F, T>(
+        &self,
+        _name: &str,
+        mut operation: F,
+    ) -> CoreResult<Vec<BenchmarkMeasurement>>
+    where
+        F: FnMut(&[u8], OptimizationStrategy) -> CoreResult<T>,
+    {
+        let mut measurements = Vec::new();
+
+        // Generate some dummy data for testing
+        let data = vec![0u8; 1000];
+
+        for strategy in &self.config.strategies {
+            let start = std::time::Instant::now();
+            let _ = operation(&data, strategy.clone())?;
+            let duration = start.elapsed();
+
+            let measurement = BenchmarkMeasurement::new(duration)
+                .with_strategy(strategy.clone())
+                .with_input_size(data.len())
+                .with_throughput(data.len() as f64 / duration.as_secs_f64());
+
+            measurements.push(measurement);
+        }
+
+        Ok(measurements)
+    }
+
     /// Get current memory usage
     fn get_memory_usage(&self) -> CoreResult<usize> {
         #[cfg(target_os = "linux")]
@@ -693,6 +772,81 @@ impl BenchmarkSuite {
     }
 }
 
+/// Strategy performance measurement
+#[derive(Debug, Clone)]
+pub struct StrategyPerformance {
+    pub strategy: OptimizationStrategy,
+    pub throughput: f64,
+    pub latency: Duration,
+    pub memory_efficiency: f64,
+    pub cache_hit_rate: f64,
+}
+
+impl StrategyPerformance {
+    /// Create a new strategy performance measurement
+    #[allow(dead_code)]
+    pub fn new(strategy: OptimizationStrategy) -> Self {
+        Self {
+            strategy,
+            throughput: 0.0,
+            latency: Duration::from_secs(0),
+            memory_efficiency: 0.0,
+            cache_hit_rate: 0.0,
+        }
+    }
+}
+
+/// Memory scaling characteristics  
+#[derive(Debug, Clone)]
+pub struct MemoryScaling {
+    pub linear_factor: f64,
+    pub logarithmic_factor: f64,
+    pub constant_overhead: usize,
+}
+
+impl MemoryScaling {
+    /// Create a new memory scaling measurement
+    #[allow(dead_code)]
+    pub fn new() -> Self {
+        Self {
+            linear_factor: 1.0,
+            logarithmic_factor: 0.0,
+            constant_overhead: 0,
+        }
+    }
+}
+
+/// Performance bottleneck identification
+#[derive(Debug, Clone)]
+pub enum BottleneckType {
+    CpuBound,
+    MemoryBandwidth,
+    CacheMisses,
+    BranchMisprediction,
+    IoWait,
+}
+
+#[derive(Debug, Clone)]
+pub struct PerformanceBottleneck {
+    pub bottleneck_type: BottleneckType,
+    pub severity: f64,
+    pub description: String,
+    pub mitigation_strategy: OptimizationStrategy,
+}
+
+impl PerformanceBottleneck {
+    /// Create a new performance bottleneck
+    #[allow(dead_code)]
+    pub fn new(bottleneck_type: BottleneckType) -> Self {
+        Self {
+            bottleneck_type,
+            severity: 0.0,
+            description: String::new(),
+            mitigation_strategy: OptimizationStrategy::Scalar,
+        }
+    }
+}
+
 /// Benchmark configuration presets
 pub mod presets {
     use super::*;
@@ -728,6 +882,8 @@ pub mod presets {
             warmup_iterations: 15,
             measurement_iterations: 50,
             measurement_time: Duration::from_secs(10),
+            min_duration: Duration::from_millis(10),
+            max_duration: Duration::from_secs(60),
             confidence_level: 0.95,
             max_cv: 0.1,
             enable_profiling: true,
@@ -756,11 +912,102 @@ pub mod presets {
             warmup_iterations: 10,
             measurement_iterations: 30,
             measurement_time: Duration::from_secs(8),
+            min_duration: Duration::from_millis(5),
+            max_duration: Duration::from_secs(30),
             confidence_level: 0.95,
             max_cv: 0.1,
             enable_profiling: true,
             enable_memory_tracking: true,
             tags: vec!["modern".to_string(), "architecture".to_string()],
+        }
+    }
+
+    /// Array operations benchmark configuration
+    ///
+    /// This configuration is optimized for benchmarking array operations
+    /// with strategies focused on SIMD and parallel processing.
+    #[allow(dead_code)]
+    pub fn array_operations() -> BenchmarkConfig {
+        let mut strategies = HashSet::new();
+        strategies.insert(OptimizationStrategy::Scalar);
+        strategies.insert(OptimizationStrategy::Simd);
+        strategies.insert(OptimizationStrategy::VectorOptimized);
+        strategies.insert(OptimizationStrategy::CacheOptimized);
+
+        let sample_sizes = vec![100, 1_000, 10_000, 100_000];
+
+        BenchmarkConfig {
+            strategies,
+            sample_sizes,
+            warmup_iterations: 10,
+            measurement_iterations: 25,
+            measurement_time: Duration::from_secs(5),
+            min_duration: Duration::from_millis(1),
+            max_duration: Duration::from_secs(15),
+            confidence_level: 0.95,
+            max_cv: 0.15,
+            enable_profiling: false,
+            enable_memory_tracking: true,
+            tags: vec!["array".to_string(), "operations".to_string()],
+        }
+    }
+
+    /// Matrix operations benchmark configuration
+    ///
+    /// This configuration is optimized for benchmarking matrix operations
+    /// with strategies focused on cache optimization and parallel processing.
+    #[allow(dead_code)]
+    pub fn matrix_operations() -> BenchmarkConfig {
+        let mut strategies = HashSet::new();
+        strategies.insert(OptimizationStrategy::Scalar);
+        strategies.insert(OptimizationStrategy::Parallel);
+        strategies.insert(OptimizationStrategy::CacheOptimized);
+        strategies.insert(OptimizationStrategy::ModernArchOptimized);
+
+        let sample_sizes = vec![100, 500, 1_000, 5_000];
+
+        BenchmarkConfig {
+            strategies,
+            sample_sizes,
+            warmup_iterations: 5,
+            measurement_iterations: 20,
+            measurement_time: Duration::from_secs(8),
+            min_duration: Duration::from_millis(2),
+            max_duration: Duration::from_secs(20),
+            confidence_level: 0.95,
+            max_cv: 0.12,
+            enable_profiling: true,
+            enable_memory_tracking: true,
+            tags: vec!["matrix".to_string(), "operations".to_string()],
+        }
+    }
+
+    /// Memory intensive benchmark configuration
+    ///
+    /// This configuration is optimized for benchmarking memory-intensive operations
+    /// with strategies focused on memory optimization and throughput.
+    #[allow(dead_code)]
+    pub fn memory_intensive() -> BenchmarkConfig {
+        let mut strategies = HashSet::new();
+        strategies.insert(OptimizationStrategy::MemoryBound);
+        strategies.insert(OptimizationStrategy::CacheOptimized);
+        strategies.insert(OptimizationStrategy::HighThroughput);
+
+        let sample_sizes = vec![10_000, 100_000, 1_000_000];
+
+        BenchmarkConfig {
+            strategies,
+            sample_sizes,
+            warmup_iterations: 3,
+            measurement_iterations: 15,
+            measurement_time: Duration::from_secs(12),
+            min_duration: Duration::from_millis(5),
+            max_duration: Duration::from_secs(45),
+            confidence_level: 0.95,
+            max_cv: 0.2,
+            enable_profiling: true,
+            enable_memory_tracking: true,
+            tags: vec!["memory".to_string(), "intensive".to_string()],
         }
     }
 }

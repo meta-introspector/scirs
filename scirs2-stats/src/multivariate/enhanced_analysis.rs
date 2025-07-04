@@ -802,6 +802,7 @@ where
 }
 
 /// Convenience functions
+#[allow(dead_code)]
 pub fn enhanced_pca<F>(
     data: &ArrayView2<F>,
     n_components: Option<usize>,
@@ -820,6 +821,7 @@ where
     Ok(pca.fit(data)?.clone())
 }
 
+#[allow(dead_code)]
 pub fn enhanced_factor_analysis<F>(
     data: &ArrayView2<F>,
     n_factors: usize,

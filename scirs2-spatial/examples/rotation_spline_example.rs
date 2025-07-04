@@ -4,6 +4,7 @@ use scirs2_spatial::transform::{Rotation, RotationSpline};
 use std::error::Error;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("RotationSpline Example");
     println!("=====================\n");
@@ -151,6 +152,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 /// Visualize the effect of rotation spline on a point in 2D
+#[allow(dead_code)]
 fn visualize_spline_rotations(
     spline: &RotationSpline,
     point: &Array1<f64>,
@@ -218,6 +220,7 @@ fn visualize_spline_rotations(
 }
 
 /// Visualize the effect of rotation spline on a point in 3D
+#[allow(dead_code)]
 fn visualize_spline_rotations_3d(
     spline: &RotationSpline,
     point: &Array1<f64>,

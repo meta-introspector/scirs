@@ -207,6 +207,7 @@ impl NonRigidTransform for ThinPlateSpline {
 /// # Returns
 ///
 /// * Vector of control points (x, y)
+#[allow(dead_code)]
 pub fn generate_grid_points(
     width: u32,
     height: u32,
@@ -374,6 +375,7 @@ impl NonRigidTransform for ElasticDeformation {
 /// # Returns
 ///
 /// * Result containing the transformed image
+#[allow(dead_code)]
 pub fn warp_non_rigid(
     src: &DynamicImage,
     transform: &impl NonRigidTransform,
@@ -465,6 +467,7 @@ pub fn warp_non_rigid(
 /// # Returns
 ///
 /// * Result containing the warped image
+#[allow(dead_code)]
 pub fn warp_thin_plate_spline(
     src: &DynamicImage,
     source_points: Vec<(f64, f64)>,
@@ -492,6 +495,7 @@ pub fn warp_thin_plate_spline(
 /// # Returns
 ///
 /// * Result containing the warped image
+#[allow(dead_code)]
 pub fn warp_elastic(
     src: &DynamicImage,
     alpha: f64,
@@ -520,6 +524,7 @@ pub fn warp_elastic(
 /// # Returns
 ///
 /// * The squared distance between the points
+#[allow(dead_code)]
 fn squared_distance(p1: (f64, f64), p2: (f64, f64)) -> f64 {
     let (x1, y1) = p1;
     let (x2, y2) = p2;
@@ -537,6 +542,7 @@ fn squared_distance(p1: (f64, f64), p2: (f64, f64)) -> f64 {
 /// # Returns
 ///
 /// * Result containing the filtered array
+#[allow(dead_code)]
 fn gaussian_filter(input: &Array2<f64>, sigma: f64) -> Result<Array2<f64>> {
     let (height, width) = input.dim();
 

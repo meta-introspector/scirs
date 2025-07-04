@@ -2239,8 +2239,8 @@ impl RealWorldDatasets {
                 };
 
                 // Add noise and variation
-                data[[i, j]] = base_intensity + rng.random_range(-0.3..0.3);
-                data[[i, j]] = (data[[i, j]] as f64).max(0.0_f64).min(1.0_f64); // Clamp to [0, 1]
+                data[[i, j]] = base_intensity + rng.random_range(-0.3f64..0.3f64);
+                data[[i, j]] = data[[i, j]].max(0.0f64).min(1.0f64); // Clamp to [0, 1]
             }
         }
 
@@ -2279,9 +2279,9 @@ impl RealWorldDatasets {
                 };
 
                 // Add texture and noise
-                let texture_noise = rng.random_range(-0.2..0.2);
+                let texture_noise = rng.random_range(-0.2f64..0.2f64);
                 data[[i, j]] = base_intensity + texture_noise;
-                data[[i, j]] = (data[[i, j]] as f64).max(0.0_f64).min(1.0_f64); // Clamp to [0, 1]
+                data[[i, j]] = data[[i, j]].max(0.0f64).min(1.0f64); // Clamp to [0, 1]
             }
         }
 
@@ -2363,8 +2363,8 @@ impl RealWorldDatasets {
                 };
 
                 // Add some noise
-                let noise = rng.random_range(-0.2..0.2);
-                data[[i, j]] = (base_freq + noise as f64).max(0.0_f64);
+                let noise = rng.random_range(-0.2f64..0.2f64);
+                data[[i, j]] = (base_freq + noise).max(0.0f64);
             }
         }
 
@@ -2373,6 +2373,7 @@ impl RealWorldDatasets {
 }
 
 /// Convenience functions for loading specific real-world datasets
+#[allow(dead_code)]
 pub fn load_adult() -> Result<Dataset> {
     let config = RealWorldConfig::default();
     let mut loader = RealWorldDatasets::new(config)?;
@@ -2380,6 +2381,7 @@ pub fn load_adult() -> Result<Dataset> {
 }
 
 /// Load Titanic dataset
+#[allow(dead_code)]
 pub fn load_titanic() -> Result<Dataset> {
     let config = RealWorldConfig::default();
     let mut loader = RealWorldDatasets::new(config)?;
@@ -2387,6 +2389,7 @@ pub fn load_titanic() -> Result<Dataset> {
 }
 
 /// Load California Housing dataset
+#[allow(dead_code)]
 pub fn load_california_housing() -> Result<Dataset> {
     let config = RealWorldConfig::default();
     let mut loader = RealWorldDatasets::new(config)?;
@@ -2394,6 +2397,7 @@ pub fn load_california_housing() -> Result<Dataset> {
 }
 
 /// Load Heart Disease dataset
+#[allow(dead_code)]
 pub fn load_heart_disease() -> Result<Dataset> {
     let config = RealWorldConfig::default();
     let mut loader = RealWorldDatasets::new(config)?;
@@ -2401,6 +2405,7 @@ pub fn load_heart_disease() -> Result<Dataset> {
 }
 
 /// Load Red Wine Quality dataset
+#[allow(dead_code)]
 pub fn load_red_wine_quality() -> Result<Dataset> {
     let config = RealWorldConfig::default();
     let mut loader = RealWorldDatasets::new(config)?;
@@ -2408,6 +2413,7 @@ pub fn load_red_wine_quality() -> Result<Dataset> {
 }
 
 /// List all available real-world datasets
+#[allow(dead_code)]
 pub fn list_real_world_datasets() -> Vec<String> {
     let config = RealWorldConfig::default();
     let loader = RealWorldDatasets::new(config).unwrap();

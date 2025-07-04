@@ -19,6 +19,7 @@ use ndarray::{Array, Array3, IxDyn};
 use scirs2_linalg::tensor_train::{tt_add, tt_decomposition, tt_hadamard, TTTensor};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 TENSOR-TRAIN DECOMPOSITION - ULTRATHINK DEMONSTRATION");
     println!("========================================================");

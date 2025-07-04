@@ -1182,6 +1182,7 @@ impl AdvancedBenchmark {
 }
 
 /// Create a comprehensive HTML report from benchmark results
+#[allow(dead_code)]
 pub fn create_comprehensive_report(results: &BenchmarkResults, output_path: &str) -> Result<()> {
     let html_content = generate_html_report(results);
 
@@ -1192,6 +1193,7 @@ pub fn create_comprehensive_report(results: &BenchmarkResults, output_path: &str
 }
 
 /// Generate HTML report content
+#[allow(dead_code)]
 fn generate_html_report(results: &BenchmarkResults) -> String {
     format!(
         r#"
@@ -1275,6 +1277,7 @@ fn generate_html_report(results: &BenchmarkResults) -> String {
 }
 
 /// Generate performance table HTML
+#[allow(dead_code)]
 fn generate_performance_table(results: &BenchmarkResults) -> String {
     results.algorithm_results.iter()
         .map(|(name, result)| {
@@ -1296,6 +1299,7 @@ fn generate_performance_table(results: &BenchmarkResults) -> String {
 }
 
 /// Generate regression alerts HTML
+#[allow(dead_code)]
 fn generate_regression_alerts_html(results: &BenchmarkResults) -> String {
     if results.regression_alerts.is_empty() {
         "<p class=\"success\">No performance regressions detected.</p>".to_string()
@@ -1321,6 +1325,7 @@ fn generate_regression_alerts_html(results: &BenchmarkResults) -> String {
 }
 
 /// Generate recommendations HTML
+#[allow(dead_code)]
 fn generate_recommendations_html(results: &BenchmarkResults) -> String {
     results
         .recommendations

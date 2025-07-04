@@ -24,6 +24,7 @@ pub struct GraphColoring<N: Node> {
 ///
 /// # Returns
 /// * A graph coloring
+#[allow(dead_code)]
 pub fn greedy_coloring<N, E, Ix>(graph: &Graph<N, E, Ix>) -> GraphColoring<N>
 where
     N: Node + std::fmt::Debug,
@@ -73,6 +74,7 @@ where
 ///
 /// # Returns
 /// * The chromatic number if found within max_colors, None otherwise
+#[allow(dead_code)]
 pub fn chromatic_number<N, E, Ix>(graph: &Graph<N, E, Ix>, max_colors: usize) -> Option<usize>
 where
     N: Node + std::fmt::Debug,
@@ -88,6 +90,7 @@ where
 }
 
 /// Helper function to check if a graph can be colored with k colors
+#[allow(dead_code)]
 fn can_color_with_k_colors<N, E, Ix>(graph: &Graph<N, E, Ix>, k: usize) -> bool
 where
     N: Node + std::fmt::Debug,

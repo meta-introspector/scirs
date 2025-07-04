@@ -18,6 +18,7 @@ thread_local! {
 }
 
 /// Get a buffer from the thread-local cache or create a new one
+#[allow(dead_code)]
 fn get_or_create_buffer(size: usize) -> Vec<RustComplex<f64>> {
     BUFFER_CACHE.with(|cache| {
         let mut cache_ref = cache.borrow_mut();
@@ -35,6 +36,7 @@ fn get_or_create_buffer(size: usize) -> Vec<RustComplex<f64>> {
 }
 
 /// Return a buffer to the thread-local cache for future reuse
+#[allow(dead_code)]
 fn return_buffer_to_cache(buffer: Vec<RustComplex<f64>>) {
     BUFFER_CACHE.with(|cache| {
         *cache.borrow_mut() = Some(buffer);
@@ -42,6 +44,7 @@ fn return_buffer_to_cache(buffer: Vec<RustComplex<f64>>) {
 }
 
 /// Convert a value to Complex64 with minimal allocations
+#[allow(dead_code)]
 fn to_complex_value<T>(val: T) -> FFTResult<Complex64>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -59,6 +62,7 @@ where
 }
 
 /// Try to convert a value to Complex64
+#[allow(dead_code)]
 fn try_as_complex<T: 'static>(val: &T) -> Option<Complex64> {
     use std::any::Any;
     
@@ -98,6 +102,7 @@ fn try_as_complex<T: 'static>(val: &T) -> Option<Complex64> {
 /// # Returns
 ///
 /// A vector of complex values representing the FFT result
+#[allow(dead_code)]
 pub fn fft_optimized<T>(
     input: &[T],
     n: Option<usize>,
@@ -201,6 +206,7 @@ where
 /// # Returns
 ///
 /// A vector of complex values representing the inverse FFT result
+#[allow(dead_code)]
 pub fn ifft_optimized<T>(
     input: &[T],
     n: Option<usize>,
@@ -305,6 +311,7 @@ where
 /// # Returns
 ///
 /// A 2D array of complex values representing the FFT result
+#[allow(dead_code)]
 pub fn fft2_optimized<T>(
     input: &Array2<T>,
     shape: Option<(usize, usize)>,
@@ -419,6 +426,7 @@ where
 /// # Returns
 ///
 /// A 2D array of complex values representing the inverse FFT result
+#[allow(dead_code)]
 pub fn ifft2_optimized<T>(
     input: &Array2<T>,
     shape: Option<(usize, usize)>,

@@ -2238,6 +2238,7 @@ impl AdvancedTensorCoreDistanceMatrix {
 }
 
 /// Detect tensor core capabilities of available GPU hardware
+#[allow(dead_code)]
 pub fn detect_tensor_core_capabilities() -> SpatialResult<TensorCoreCapabilities> {
     // Simulate hardware detection
     // In a real implementation, this would use CUDA/ROCm/OpenCL APIs

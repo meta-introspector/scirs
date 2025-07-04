@@ -149,6 +149,7 @@ pub struct FeatureRegistrationResult {
 /// # Returns
 ///
 /// * Result containing registration result and statistics
+#[allow(dead_code)]
 pub fn register_images(
     reference: &DynamicImage,
     target: &DynamicImage,
@@ -213,6 +214,7 @@ pub fn register_images(
 }
 
 /// Detect features and compute descriptors
+#[allow(dead_code)]
 fn detect_and_describe(
     image: &DynamicImage,
     params: &FeatureDetectorParams,
@@ -253,6 +255,7 @@ fn detect_and_describe(
 }
 
 /// Detect ORB features using FAST keypoint detection and BRIEF descriptors
+#[allow(dead_code)]
 fn detect_orb_features(
     image: &DynamicImage,
     params: &FeatureDetectorParams,
@@ -296,6 +299,7 @@ fn detect_orb_features(
 }
 
 /// Build ORB image pyramid
+#[allow(dead_code)]
 fn build_orb_pyramid(
     image: &image::GrayImage,
     params: &OrbParams,
@@ -331,6 +335,7 @@ fn build_orb_pyramid(
 }
 
 /// Detect FAST keypoints in an image
+#[allow(dead_code)]
 fn detect_fast_keypoints(
     image: &image::GrayImage,
     threshold: u8,
@@ -392,6 +397,7 @@ fn detect_fast_keypoints(
 }
 
 /// Check if a pixel is a FAST corner
+#[allow(dead_code)]
 fn is_fast_corner(
     image: &image::GrayImage,
     x: u32,
@@ -435,6 +441,7 @@ fn is_fast_corner(
 }
 
 /// Compute FAST corner response
+#[allow(dead_code)]
 fn compute_fast_response(
     image: &image::GrayImage,
     x: u32,
@@ -456,6 +463,7 @@ fn compute_fast_response(
 }
 
 /// Apply non-maximum suppression to keypoints
+#[allow(dead_code)]
 fn non_maximum_suppression(keypoints: &[Keypoint], radius: f32) -> Result<Vec<Keypoint>> {
     let mut suppressed: Vec<Keypoint> = Vec::new();
     let radius_sq = radius * radius;
@@ -486,6 +494,7 @@ fn non_maximum_suppression(keypoints: &[Keypoint], radius: f32) -> Result<Vec<Ke
 }
 
 /// Compute orientations for ORB keypoints using intensity centroid
+#[allow(dead_code)]
 fn compute_orb_orientations(
     image: &image::GrayImage,
     keypoints: &[Keypoint],
@@ -534,6 +543,7 @@ fn compute_orb_orientations(
 }
 
 /// Compute ORB descriptors using oriented BRIEF
+#[allow(dead_code)]
 fn compute_orb_descriptors(
     image: &image::GrayImage,
     keypoints: &[Keypoint],
@@ -554,6 +564,7 @@ fn compute_orb_descriptors(
 }
 
 /// Generate sampling pattern for BRIEF descriptor
+#[allow(dead_code)]
 fn generate_brief_sampling_pattern(patch_size: usize) -> Vec<((i32, i32), (i32, i32))> {
     let mut pattern = Vec::new();
     let half_patch = (patch_size / 2) as i32;
@@ -591,6 +602,7 @@ fn generate_brief_sampling_pattern(patch_size: usize) -> Vec<((i32, i32), (i32, 
 type SamplingPattern = [((i32, i32), (i32, i32))];
 
 /// Compute BRIEF descriptor for a keypoint
+#[allow(dead_code)]
 fn compute_brief_descriptor(
     image: &image::GrayImage,
     keypoint: &Keypoint,
@@ -663,6 +675,7 @@ pub struct FeatureMatch {
 }
 
 /// Match features between two sets of descriptors
+#[allow(dead_code)]
 fn match_features(
     descriptors1: &[Vec<u8>],
     descriptors2: &[Vec<u8>],
@@ -689,6 +702,7 @@ fn match_features(
 /// # Returns
 ///
 /// * Result containing feature matches
+#[allow(dead_code)]
 fn match_features_simd(
     descriptors1: &[Vec<u8>],
     descriptors2: &[Vec<u8>],
@@ -729,6 +743,7 @@ fn match_features_simd(
 /// # Returns
 ///
 /// * Result containing matches for this chunk
+#[allow(dead_code)]
 fn process_descriptor_chunk_simd(
     chunk: &[Vec<u8>],
     chunk_offset: usize,
@@ -787,6 +802,7 @@ fn process_descriptor_chunk_simd(
 /// # Returns
 ///
 /// * Vector of Hamming distances
+#[allow(dead_code)]
 fn compute_hamming_distances_simd(desc1: &[u8], descriptors2: &[Vec<u8>]) -> Vec<f32> {
     let mut distances = Vec::with_capacity(descriptors2.len());
     let desc_len = desc1.len();
@@ -842,6 +858,7 @@ fn compute_hamming_distances_simd(desc1: &[u8], descriptors2: &[Vec<u8>]) -> Vec
 /// # Returns
 ///
 /// * Vector of Hamming distances for the batch
+#[allow(dead_code)]
 fn compute_hamming_simd_optimized(desc1: &[u8], descriptors: &[&Vec<u8>]) -> Vec<f32> {
     let mut distances = Vec::with_capacity(descriptors.len());
     let desc_len = desc1.len();
@@ -902,6 +919,7 @@ fn compute_hamming_simd_optimized(desc1: &[u8], descriptors: &[&Vec<u8>]) -> Vec
 /// # Returns
 ///
 /// * Tuple of (best_index, best_distance, second_best_distance)
+#[allow(dead_code)]
 fn find_best_matches_simd(distances: &[f32]) -> (Option<usize>, f32, f32) {
     use scirs2_core::simd_ops::SimdUnifiedOps;
 
@@ -981,6 +999,7 @@ fn find_best_matches_simd(distances: &[f32]) -> (Option<usize>, f32, f32) {
 /// # Returns
 ///
 /// * Vector of validated matches
+#[allow(dead_code)]
 fn apply_cross_check_simd(
     matches: Vec<FeatureMatch>,
     descriptors1: &[Vec<u8>],
@@ -1015,6 +1034,7 @@ fn apply_cross_check_simd(
 }
 
 /// Compute Hamming distance between two descriptors
+#[allow(dead_code)]
 fn hamming_distance(desc1: &[u8], desc2: &[u8]) -> f32 {
     let min_len = desc1.len().min(desc2.len());
     let mut distance = 0;
@@ -1058,6 +1078,7 @@ fn apply_cross_check(
 }
 
 /// Generate simple descriptors for Harris corners using patch-based approach
+#[allow(dead_code)]
 fn generate_simple_descriptors(image: &GrayImage, keypoints: &[Keypoint]) -> Result<Vec<Vec<u8>>> {
     let (width, height) = image.dimensions();
     let patch_size = 8;
@@ -1099,6 +1120,7 @@ fn generate_simple_descriptors(image: &GrayImage, keypoints: &[Keypoint]) -> Res
 }
 
 /// Multi-scale feature registration
+#[allow(dead_code)]
 pub fn multi_scale_register(
     reference: &DynamicImage,
     target: &DynamicImage,
@@ -1148,6 +1170,7 @@ pub fn multi_scale_register(
 }
 
 /// Build image pyramid
+#[allow(dead_code)]
 fn build_pyramid(image: &DynamicImage, levels: usize) -> Vec<DynamicImage> {
     let mut pyramid = vec![image.clone()];
 
@@ -1173,6 +1196,7 @@ fn build_pyramid(image: &DynamicImage, levels: usize) -> Vec<DynamicImage> {
 }
 
 /// Template matching based registration
+#[allow(dead_code)]
 pub fn template_register(
     reference: &DynamicImage,
     template: &DynamicImage,
@@ -1224,6 +1248,7 @@ pub fn template_register(
 }
 
 /// Compute normalized cross-correlation
+#[allow(dead_code)]
 fn compute_ncc(reference: &GrayImage, template: &GrayImage, offset_x: u32, offset_y: u32) -> f64 {
     let (template_width, template_height) = template.dimensions();
 

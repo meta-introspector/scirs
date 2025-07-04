@@ -27,6 +27,7 @@ use crate::error::{SignalError, SignalResult};
 /// let extended = extend_signal(&signal, 4, "symmetric").unwrap();
 /// // Result will have padding before and after original signal
 /// ```
+#[allow(dead_code)]
 pub fn extend_signal(signal: &[f64], filter_len: usize, mode: &str) -> SignalResult<Vec<f64>> {
     let n = signal.len();
     let pad = filter_len - 1;

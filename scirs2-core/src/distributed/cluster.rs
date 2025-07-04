@@ -997,6 +997,7 @@ impl NodeRegistry {
 #[derive(Debug)]
 pub struct HealthMonitor {
     health_checks: Vec<HealthCheck>,
+    #[allow(dead_code)]
     check_interval: Duration,
 }
 
@@ -2078,6 +2079,7 @@ pub struct ResourceUtilization {
 }
 
 /// Initialize cluster manager with default configuration
+#[allow(dead_code)]
 pub fn initialize_cluster_manager() -> CoreResult<()> {
     let cluster_manager = ClusterManager::global()?;
     cluster_manager.start()?;

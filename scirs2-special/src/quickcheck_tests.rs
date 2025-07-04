@@ -97,6 +97,7 @@ impl Arbitrary for ReasonableComplex {
 }
 
 /// Helper function to run QuickCheck tests with custom configuration
+#[allow(dead_code)]
 pub fn run_quickcheck_test<F, P>(prop: F, config: &TestConfig) -> bool
 where
     F: Fn(P) -> bool + Send + Sync + 'static + quickcheck::Testable,
@@ -110,6 +111,7 @@ where
 }
 
 /// Helper function to run QuickCheck tests that return TestResult
+#[allow(dead_code)]
 pub fn run_quickcheck_test_result<F, P>(prop: F, config: &TestConfig) -> bool
 where
     F: Fn(P) -> TestResult + Send + Sync + 'static + quickcheck::Testable,
@@ -196,14 +198,13 @@ mod gamma_properties {
     #[test]
     fn test_gamma_properties_comprehensive() {
         let config = TestConfig::default();
-        println!("Running gamma property tests with config: {:?}", config);
+        println!("Running gamma property tests with config: {config:?}");
 
         // Run tests only if not in quick mode
         if !config.enable_expensive_tests {
             println!(
                 "Skipping expensive gamma property tests (set COMPREHENSIVE_TESTS=1 to enable)"
             );
-            return;
         }
 
         // Note: Individual quickcheck tests will run with default settings
@@ -308,7 +309,7 @@ mod error_function_properties {
     #[quickcheck]
     fn erf_bounds(x: f64) -> bool {
         let erf_x = crate::erf::erf(x);
-        erf_x >= -1.0 && erf_x <= 1.0
+        (-1.0..=1.0).contains(&erf_x)
     }
 
     #[quickcheck]
@@ -422,7 +423,7 @@ mod statistical_function_properties {
     #[quickcheck]
     fn logistic_bounds(x: f64) -> bool {
         let sigma = crate::statistical::logistic(x);
-        sigma >= 0.0 && sigma <= 1.0
+        (0.0..=1.0).contains(&sigma)
     }
 
     #[quickcheck]
@@ -482,6 +483,7 @@ mod statistical_function_properties {
 }
 
 /// Run all QuickCheck property tests
+#[allow(dead_code)]
 pub fn run_all_quickcheck_tests() {
     println!("Running QuickCheck property tests...");
 

@@ -222,6 +222,7 @@ where
 ///
 /// let result = fft_1d(&input.view(), false).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn fft_1d(input: &ArrayView1<Complex64>, inverse: bool) -> LinalgResult<Array1<Complex64>> {
     let size = input.len();
 
@@ -236,6 +237,7 @@ pub fn fft_1d(input: &ArrayView1<Complex64>, inverse: bool) -> LinalgResult<Arra
 }
 
 /// Compute 1D FFT with a precomputed plan
+#[allow(dead_code)]
 pub fn fft_1d_with_plan(
     input: &ArrayView1<Complex64>,
     plan: &FFTPlan<f64>,
@@ -259,6 +261,7 @@ pub fn fft_1d_with_plan(
 }
 
 /// Cooley-Tukey radix-2 FFT implementation
+#[allow(dead_code)]
 fn cooley_tukey_fft(
     input: &ArrayView1<Complex64>,
     plan: &FFTPlan<f64>,
@@ -313,6 +316,7 @@ fn cooley_tukey_fft(
 }
 
 /// Mixed-radix FFT for arbitrary sizes
+#[allow(dead_code)]
 fn mixed_radix_fft(
     input: &ArrayView1<Complex64>,
     _plan: &FFTPlan<f64>,
@@ -325,6 +329,7 @@ fn mixed_radix_fft(
 }
 
 /// Bluestein's algorithm for arbitrary-size FFT
+#[allow(dead_code)]
 pub fn bluestein_fft(
     input: &ArrayView1<Complex64>,
     inverse: bool,
@@ -390,6 +395,7 @@ pub fn bluestein_fft(
 }
 
 /// FFT for power-of-2 sizes (helper for Bluestein)
+#[allow(dead_code)]
 fn fft_power_of_2(input: &ArrayView1<Complex64>) -> LinalgResult<Array1<Complex64>> {
     if input.len().is_power_of_two() {
         fft_1d(input, false)
@@ -401,6 +407,7 @@ fn fft_power_of_2(input: &ArrayView1<Complex64>) -> LinalgResult<Array1<Complex6
 }
 
 /// IFFT for power-of-2 sizes (helper for Bluestein)
+#[allow(dead_code)]
 fn ifft_power_of_2(input: &ArrayView1<Complex64>) -> LinalgResult<Array1<Complex64>> {
     if input.len().is_power_of_two() {
         fft_1d(input, true)
@@ -434,6 +441,7 @@ fn ifft_power_of_2(input: &ArrayView1<Complex64>) -> LinalgResult<Array1<Complex
 /// let input = array![1.0, 0.0, 0.0, 0.0];
 /// let result = rfft_1d(&input.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn rfft_1d(input: &ArrayView1<f64>) -> LinalgResult<Array1<Complex64>> {
     let n = input.len();
 
@@ -473,6 +481,7 @@ pub fn rfft_1d(input: &ArrayView1<f64>) -> LinalgResult<Array1<Complex64>> {
 /// # Returns
 ///
 /// * Real time-domain signal
+#[allow(dead_code)]
 pub fn irfft_1d(input: &ArrayView1<Complex64>, output_size: usize) -> LinalgResult<Array1<f64>> {
     if output_size % 2 != 0 {
         return Err(LinalgError::ShapeError(
@@ -543,6 +552,7 @@ pub fn irfft_1d(input: &ArrayView1<Complex64>, output_size: usize) -> LinalgResu
 ///
 /// let result = fft_2d(&input.view(), false).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn fft_2d(input: &ArrayView2<Complex64>, inverse: bool) -> LinalgResult<Array2<Complex64>> {
     let (rows, cols) = input.dim();
     let mut result = input.to_owned();
@@ -579,6 +589,7 @@ pub fn fft_2d(input: &ArrayView2<Complex64>, inverse: bool) -> LinalgResult<Arra
 }
 
 /// 3D FFT for volume processing and 3D signal analysis
+#[allow(dead_code)]
 pub fn fft_3d(input: &ArrayView3<Complex64>, inverse: bool) -> LinalgResult<Array3<Complex64>> {
     let (depth, rows, cols) = input.dim();
     let mut result = input.to_owned();
@@ -658,6 +669,7 @@ pub fn fft_3d(input: &ArrayView3<Complex64>, inverse: bool) -> LinalgResult<Arra
 /// # Returns
 ///
 /// * Windowed signal
+#[allow(dead_code)]
 pub fn apply_window(signal: &ArrayView1<f64>, window: WindowFunction) -> LinalgResult<Array1<f64>> {
     let n = signal.len();
     let mut windowed = signal.to_owned();
@@ -721,6 +733,7 @@ pub fn apply_window(signal: &ArrayView1<f64>, window: WindowFunction) -> LinalgR
 }
 
 /// Modified Bessel function I0 (for Kaiser window)
+#[allow(dead_code)]
 fn modified_bessel_i0(x: f64) -> f64 {
     let mut result = 1.0;
     let mut term = 1.0;
@@ -746,6 +759,7 @@ fn modified_bessel_i0(x: f64) -> f64 {
 /// # Returns
 ///
 /// * DCT coefficients
+#[allow(dead_code)]
 pub fn dct_1d(input: &ArrayView1<f64>) -> LinalgResult<Array1<f64>> {
     let n = input.len();
     let mut result = Array1::zeros(n);
@@ -770,6 +784,7 @@ pub fn dct_1d(input: &ArrayView1<f64>) -> LinalgResult<Array1<f64>> {
 }
 
 /// Inverse Discrete Cosine Transform (IDCT)
+#[allow(dead_code)]
 pub fn idct_1d(input: &ArrayView1<f64>) -> LinalgResult<Array1<f64>> {
     let n = input.len();
     let mut result = Array1::zeros(n);
@@ -793,6 +808,7 @@ pub fn idct_1d(input: &ArrayView1<f64>) -> LinalgResult<Array1<f64>> {
 }
 
 /// Discrete Sine Transform (DST) Type-I
+#[allow(dead_code)]
 pub fn dst_1d(input: &ArrayView1<f64>) -> LinalgResult<Array1<f64>> {
     let n = input.len();
     let mut result = Array1::zeros(n);
@@ -823,6 +839,7 @@ pub fn dst_1d(input: &ArrayView1<f64>) -> LinalgResult<Array1<f64>> {
 /// # Returns
 ///
 /// * Convolved signal
+#[allow(dead_code)]
 pub fn fft_convolve(
     signal1: &ArrayView1<f64>,
     signal2: &ArrayView1<f64>,
@@ -878,6 +895,7 @@ pub fn fft_convolve(
 /// # Returns
 ///
 /// * Power spectral density
+#[allow(dead_code)]
 pub fn periodogram_psd(
     signal: &ArrayView1<f64>,
     window: WindowFunction,
@@ -937,6 +955,7 @@ pub fn periodogram_psd(
 /// # Returns
 ///
 /// * Power spectral density estimate
+#[allow(dead_code)]
 pub fn welch_psd(
     signal: &ArrayView1<f64>,
     nperseg: usize,
@@ -1018,6 +1037,7 @@ pub fn welch_psd(
 /// let input = array![1.0, 1.0, 1.0, 1.0];
 /// let result = hadamard_transform(&input.view(), false).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn hadamard_transform(input: &ArrayView1<f64>, inverse: bool) -> LinalgResult<Array1<f64>> {
     let n = input.len();
 
@@ -1074,6 +1094,7 @@ pub fn hadamard_transform(input: &ArrayView1<f64>, inverse: bool) -> LinalgResul
 /// # Returns
 ///
 /// * Walsh-Hadamard transform coefficients
+#[allow(dead_code)]
 pub fn walsh_hadamard_transform(
     input: &ArrayView1<f64>,
     inverse: bool,
@@ -1102,6 +1123,7 @@ pub fn walsh_hadamard_transform(
 }
 
 /// Bit-reverse function for Walsh-Hadamard ordering
+#[allow(dead_code)]
 fn bit_reverse(mut n: usize, bits: usize) -> usize {
     let mut result = 0;
     for _ in 0..bits {
@@ -1124,6 +1146,7 @@ fn bit_reverse(mut n: usize, bits: usize) -> usize {
 /// # Returns
 ///
 /// * Walsh coefficients
+#[allow(dead_code)]
 pub fn fast_walsh_transform(input: &ArrayView1<f64>, inverse: bool) -> LinalgResult<Array1<f64>> {
     let n = input.len();
 
@@ -1168,6 +1191,7 @@ pub fn fast_walsh_transform(input: &ArrayView1<f64>, inverse: bool) -> LinalgRes
 /// # Returns
 ///
 /// * Frequency bins in Hz
+#[allow(dead_code)]
 pub fn fft_frequencies(n: usize, sample_rate: f64, real_fft: bool) -> Array1<f64> {
     let output_size = if real_fft { n / 2 + 1 } else { n };
     let mut freqs = Array1::zeros(output_size);

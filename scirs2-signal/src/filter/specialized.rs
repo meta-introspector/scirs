@@ -35,6 +35,7 @@ use std::f64::consts::PI;
 /// // Normalized frequency = 60 / (1000/2) = 0.12
 /// let (b, a) = notch_filter(0.12, 35.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn notch_filter(notch_freq: f64, quality_factor: f64) -> SignalResult<FilterCoefficients> {
     validate_cutoff_frequency(notch_freq)?;
 
@@ -95,6 +96,7 @@ pub fn notch_filter(notch_freq: f64, quality_factor: f64) -> SignalResult<Filter
 /// // Create notch comb for periodic noise removal
 /// let (b, a) = comb_filter(50, -0.8, 1.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn comb_filter(
     delay_samples: usize,
     feedback_gain: f64,
@@ -157,6 +159,7 @@ pub fn comb_filter(
 /// // Create allpass filter with 90-degree phase shift around 0.2 normalized frequency
 /// let (b, a) = allpass_filter(0.2, 0.9).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn allpass_filter(pole_frequency: f64, pole_radius: f64) -> SignalResult<FilterCoefficients> {
     validate_cutoff_frequency(pole_frequency)?;
 
@@ -196,6 +199,7 @@ pub fn allpass_filter(pole_frequency: f64, pole_radius: f64) -> SignalResult<Fil
 /// # Returns
 ///
 /// * Filter coefficients (b, a) for the second-order allpass filter
+#[allow(dead_code)]
 pub fn allpass_second_order(
     pole_frequency: f64,
     pole_radius: f64,
@@ -248,6 +252,7 @@ pub fn allpass_second_order(
 /// // Design 65-tap Hilbert transformer
 /// let h = hilbert_filter(65).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn hilbert_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
     if num_taps < 3 {
         return Err(SignalError::ValueError(
@@ -311,6 +316,7 @@ pub fn hilbert_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
 /// // Design 21-tap differentiator
 /// let h = differentiator_filter(21).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn differentiator_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
     if num_taps < 3 {
         return Err(SignalError::ValueError(
@@ -368,6 +374,7 @@ pub fn differentiator_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
 /// // Design 21-tap integrator
 /// let h = integrator_filter(21).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn integrator_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
     if num_taps < 3 {
         return Err(SignalError::ValueError(
@@ -406,6 +413,7 @@ pub fn integrator_filter(num_taps: usize) -> SignalResult<Vec<f64>> {
 /// // Design filter with 2.5 sample delay
 /// let h = fractional_delay_filter(2.5, 21).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn fractional_delay_filter(delay: f64, num_taps: usize) -> SignalResult<Vec<f64>> {
     if num_taps < 3 {
         return Err(SignalError::ValueError(
@@ -466,6 +474,7 @@ pub fn fractional_delay_filter(delay: f64, num_taps: usize) -> SignalResult<Vec<
 /// // Design DC blocker with very low cutoff
 /// let (b, a) = dc_blocker(0.995).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn dc_blocker(pole_location: f64) -> SignalResult<FilterCoefficients> {
     if pole_location <= 0.0 || pole_location >= 1.0 {
         return Err(SignalError::ValueError(
@@ -503,6 +512,7 @@ pub fn dc_blocker(pole_location: f64) -> SignalResult<FilterCoefficients> {
 /// // Boost 6 dB at 0.3 normalized frequency with 1 octave bandwidth
 /// let (b, a) = peak_filter(0.3, 6.0, 1.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn peak_filter(
     center_freq: f64,
     gain_db: f64,

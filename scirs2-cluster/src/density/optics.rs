@@ -83,6 +83,7 @@ pub struct OPTICSResult {
 /// # Returns
 ///
 /// * `Array1<i32>` - Cluster labels starting from 0, with -1 for noise points
+#[allow(dead_code)]
 pub fn extract_dbscan_clustering(optics_result: &OPTICSResult, eps: f64) -> Array1<i32> {
     let n_samples = optics_result.ordering.len();
     let mut labels = vec![-1; n_samples];
@@ -160,6 +161,7 @@ pub fn extract_dbscan_clustering(optics_result: &OPTICSResult, eps: f64) -> Arra
 /// println!("Ordering: {:?}", result.ordering);
 /// println!("Reachability: {:?}", result.reachability);
 /// ```
+#[allow(dead_code)]
 pub fn optics<F: Float + FromPrimitive + Debug + PartialOrd>(
     data: ArrayView2<F>,
     min_samples: usize,
@@ -345,6 +347,7 @@ pub fn optics<F: Float + FromPrimitive + Debug + PartialOrd>(
 }
 
 /// Get neighbors of a point within the specified epsilon radius
+#[allow(dead_code)]
 fn get_neighbors(point_idx: usize, distance_matrix: &Array2<f64>, max_eps: f64) -> Vec<usize> {
     let n_samples = distance_matrix.shape()[0];
     let mut neighbors = Vec::new();
@@ -359,6 +362,7 @@ fn get_neighbors(point_idx: usize, distance_matrix: &Array2<f64>, max_eps: f64) 
 }
 
 /// Update seeds with new reachability distances
+#[allow(dead_code)]
 fn update_seeds(
     point_idx: usize,
     neighbors: &[usize],
@@ -419,6 +423,7 @@ fn update_seeds(
 /// # Returns
 ///
 /// * `Array1<i32>` - Cluster labels starting from 0, with -1 for noise points
+#[allow(dead_code)]
 pub fn extract_xi_clusters(
     optics_result: &OPTICSResult,
     xi: f64,
@@ -491,6 +496,7 @@ pub fn extract_xi_clusters(
 }
 
 /// Find steep up and down areas in reachability plot
+#[allow(dead_code)]
 fn find_steep_areas(reachability: &[f64], xi: f64) -> Vec<(String, usize)> {
     let mut steep_areas = Vec::new();
     let n = reachability.len();

@@ -11,11 +11,13 @@ use std::f64::consts::PI;
 const VALIDATION_TOL: f64 = 1e-12;
 
 /// Helper to check if values are close within tolerance
+#[allow(dead_code)]
 fn close_f64(a: f64, b: f64, tol: f64) -> bool {
     (a - b).abs() < tol || (a.is_nan() && b.is_nan())
 }
 
 /// Helper to check if arrays are close within tolerance
+#[allow(dead_code)]
 fn arrays_close_f64(a: &Array2<f64>, b: &Array2<f64>, tol: f64) -> bool {
     if a.shape() != b.shape() {
         return false;

@@ -2,6 +2,7 @@
 
 use scirs2_text::{MLSentimentAnalyzer, MLSentimentConfig, TextDataset};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("ML-based Sentiment Analysis Demo");
     println!("================================\n");
@@ -156,6 +157,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_sentiment_dataset() -> Result<(TextDataset, TextDataset), Box<dyn std::error::Error>> {
     // Training data
     let train_texts = vec![

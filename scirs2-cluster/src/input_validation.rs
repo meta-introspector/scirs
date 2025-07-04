@@ -115,6 +115,7 @@ impl ValidationConfig {
 ///
 /// assert!(validate_clustering_data(data.view(), &config).is_ok());
 /// ```
+#[allow(dead_code)]
 pub fn validate_clustering_data<F: Float + FromPrimitive + Debug + PartialOrd>(
     data: ArrayView2<F>,
     config: &ValidationConfig,
@@ -171,6 +172,7 @@ pub fn validate_clustering_data<F: Float + FromPrimitive + Debug + PartialOrd>(
 }
 
 /// Validate that all values in the data are finite
+#[allow(dead_code)]
 fn validate_finite_values<F: Float + Debug>(data: ArrayView2<F>, prefix: &str) -> Result<()> {
     for (i, row) in data.axis_iter(Axis(0)).enumerate() {
         for (j, &value) in row.iter().enumerate() {
@@ -198,6 +200,7 @@ fn validate_finite_values<F: Float + Debug>(data: ArrayView2<F>, prefix: &str) -
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
+#[allow(dead_code)]
 pub fn validate_n_clusters(n_clusters: usize, n_samples: usize, algorithm: &str) -> Result<()> {
     if n_clusters == 0 {
         return Err(ClusteringError::InvalidInput(format!(
@@ -231,6 +234,7 @@ pub fn validate_n_clusters(n_clusters: usize, n_samples: usize, algorithm: &str)
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
+#[allow(dead_code)]
 pub fn validate_distance_parameter<F: Float + FromPrimitive + Debug + PartialOrd>(
     value: F,
     param_name: &str,
@@ -281,6 +285,7 @@ pub fn validate_distance_parameter<F: Float + FromPrimitive + Debug + PartialOrd
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
+#[allow(dead_code)]
 pub fn validate_integer_parameter(
     value: usize,
     param_name: &str,
@@ -322,6 +327,7 @@ pub fn validate_integer_parameter(
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
+#[allow(dead_code)]
 pub fn validate_sample_weights<F: Float + FromPrimitive + Debug + PartialOrd>(
     weights: ArrayView1<F>,
     n_samples: usize,
@@ -378,6 +384,7 @@ pub fn validate_sample_weights<F: Float + FromPrimitive + Debug + PartialOrd>(
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
+#[allow(dead_code)]
 pub fn validate_cluster_initialization<F: Float + FromPrimitive + Debug + PartialOrd>(
     init_data: ArrayView2<F>,
     n_clusters: usize,
@@ -428,6 +435,7 @@ pub fn validate_cluster_initialization<F: Float + FromPrimitive + Debug + Partia
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
+#[allow(dead_code)]
 pub fn validate_convergence_parameters<F: Float + FromPrimitive + Debug + PartialOrd>(
     tolerance: Option<F>,
     max_iterations: Option<usize>,
@@ -457,6 +465,7 @@ pub fn validate_convergence_parameters<F: Float + FromPrimitive + Debug + Partia
 /// # Returns
 ///
 /// * `Result<Vec<(usize, usize)>>` - List of duplicate point pairs
+#[allow(dead_code)]
 pub fn check_duplicate_points<F: Float + FromPrimitive + Debug + PartialOrd>(
     data: ArrayView2<F>,
     tolerance: F,
@@ -494,6 +503,7 @@ pub fn check_duplicate_points<F: Float + FromPrimitive + Debug + PartialOrd>(
 /// # Returns
 ///
 /// * `Result<String>` - Recommendation message
+#[allow(dead_code)]
 pub fn suggest_clustering_algorithm<F: Float + FromPrimitive + Debug + PartialOrd>(
     data: ArrayView2<F>,
     n_clusters: Option<usize>,

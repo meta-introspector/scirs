@@ -353,6 +353,7 @@ impl Default for ComprehensiveWptValidationConfig {
 /// # Returns
 ///
 /// * Comprehensive validation results
+#[allow(dead_code)]
 pub fn validate_wpt_comprehensive(
     config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<ComprehensiveWptValidationResult> {
@@ -421,6 +422,7 @@ pub fn validate_wpt_comprehensive(
 }
 
 /// Run basic validation test suite
+#[allow(dead_code)]
 fn run_basic_validation_suite(
     config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<WptValidationResult> {
@@ -498,6 +500,7 @@ fn run_basic_validation_suite(
 }
 
 /// Validate frame properties
+#[allow(dead_code)]
 fn validate_frame_properties(
     config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<FrameValidationMetrics> {
@@ -541,6 +544,7 @@ fn validate_frame_properties(
 }
 
 /// Validate multi-scale properties
+#[allow(dead_code)]
 fn validate_multiscale_properties(
     config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<MultiscaleValidationMetrics> {
@@ -584,6 +588,7 @@ fn validate_multiscale_properties(
 }
 
 /// Validate best basis algorithm
+#[allow(dead_code)]
 fn validate_best_basis_algorithm(
     config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<BestBasisValidationMetrics> {
@@ -629,6 +634,7 @@ fn validate_best_basis_algorithm(
 }
 
 /// Run statistical validation
+#[allow(dead_code)]
 fn run_statistical_validation(
     config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<StatisticalValidationMetrics> {
@@ -672,6 +678,7 @@ fn run_statistical_validation(
 }
 
 /// Run cross-validation
+#[allow(dead_code)]
 fn run_cross_validation(
     config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<CrossValidationMetrics> {
@@ -696,6 +703,7 @@ fn run_cross_validation(
 }
 
 /// Test robustness
+#[allow(dead_code)]
 fn test_robustness(
     config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<RobustnessTestingMetrics> {
@@ -722,6 +730,7 @@ fn test_robustness(
 // Helper functions (many would be quite complex in full implementation)
 
 /// Generate test signal of specified type
+#[allow(dead_code)]
 fn generate_test_signal(
     signal_type: TestSignalType,
     length: usize,
@@ -731,7 +740,7 @@ fn generate_test_signal(
 
     let signal = match signal_type {
         TestSignalType::WhiteNoise => {
-            Array1::from_vec((0..length).map(|_| rng.gen_range(-1.0..1.0)).collect())
+            Array1::from_vec((0..length).map(|_| rng.random_range(-1.0..1.0)).collect())
         }
         TestSignalType::Sinusoidal => {
             let freq = 0.1;
@@ -754,7 +763,7 @@ fn generate_test_signal(
             let segments = 8;
             let segment_size = length / segments;
             for i in 0..segments {
-                let value = rng.gen_range(-1.0..1.0);
+                let value = rng.random_range(-1.0..1.0);
                 let start = i * segment_size;
                 let end = ((i + 1) * segment_size).min(length);
                 for j in start..end {
@@ -770,6 +779,7 @@ fn generate_test_signal(
 }
 
 /// Test WPT round trip (decomposition + reconstruction)
+#[allow(dead_code)]
 fn test_wpt_round_trip(
     signal: &Array1<f64>,
     wavelet: Wavelet,
@@ -797,6 +807,7 @@ fn test_wpt_round_trip(
 
 // Additional helper functions (stubs for comprehensive implementation)
 
+#[allow(dead_code)]
 fn construct_frame_matrix(
     length: usize,
     wavelet: Wavelet,
@@ -850,10 +861,12 @@ fn construct_frame_matrix(
     Ok(frame_matrix)
 }
 
+#[allow(dead_code)]
 fn compute_frame_operator(frame_matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
     Ok(frame_matrix.t().dot(frame_matrix))
 }
 
+#[allow(dead_code)]
 fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
     // For small matrices, use iterative power method
     let n = matrix.nrows();
@@ -912,6 +925,7 @@ fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
     Ok(eigenvalues)
 }
 
+#[allow(dead_code)]
 fn analyze_eigenvalue_distribution(eigenvalues: &[f64]) -> EigenvalueDistribution {
     let min_eigenvalue = eigenvalues.iter().cloned().fold(f64::MAX, f64::min);
     let max_eigenvalue = eigenvalues.iter().cloned().fold(0.0, f64::max);
@@ -934,6 +948,7 @@ fn analyze_eigenvalue_distribution(eigenvalues: &[f64]) -> EigenvalueDistributio
 
 /// Helper functions for eigenvalue computation
 
+#[allow(dead_code)]
 fn compute_small_matrix_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Vec<f64>> {
     let n = matrix.nrows();
     match n {
@@ -981,6 +996,7 @@ fn compute_small_matrix_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Vec<f6
     }
 }
 
+#[allow(dead_code)]
 fn power_iteration(
     matrix: &Array2<f64>,
     max_iterations: usize,
@@ -1023,6 +1039,7 @@ fn power_iteration(
     Ok(eigenvalue)
 }
 
+#[allow(dead_code)]
 fn deflate_matrix(matrix: &Array2<f64>, eigenvalue: f64) -> SignalResult<Array2<f64>> {
     // Simple deflation by subtracting eigenvalue * I
     let n = matrix.nrows();
@@ -1035,6 +1052,7 @@ fn deflate_matrix(matrix: &Array2<f64>, eigenvalue: f64) -> SignalResult<Array2<
     Ok(deflated)
 }
 
+#[allow(dead_code)]
 fn extract_packet_coefficients(
     tree: &WaveletPacketTree,
     packet_idx: usize,
@@ -1048,6 +1066,7 @@ fn extract_packet_coefficients(
     }
 }
 
+#[allow(dead_code)]
 fn compute_frame_coherence(frame_matrix: &Array2<f64>) -> SignalResult<f64> {
     // Frame coherence is the maximum absolute inner product between different columns
     let (rows, cols) = frame_matrix.dim();
@@ -1082,6 +1101,7 @@ fn compute_frame_coherence(frame_matrix: &Array2<f64>) -> SignalResult<f64> {
     Ok(max_coherence)
 }
 
+#[allow(dead_code)]
 fn generate_multiscale_test_signal(length: usize) -> SignalResult<Array1<f64>> {
     // Generate signal with known multi-scale structure
     let mut signal = Array1::zeros(length);
@@ -1098,6 +1118,7 @@ fn generate_multiscale_test_signal(length: usize) -> SignalResult<Array1<f64>> {
     Ok(signal)
 }
 
+#[allow(dead_code)]
 fn extract_all_coefficients(tree: &WaveletPacketTree) -> Vec<f64> {
     let mut all_coefficients = Vec::new();
 
@@ -1120,6 +1141,7 @@ fn extract_all_coefficients(tree: &WaveletPacketTree) -> Vec<f64> {
     all_coefficients
 }
 
+#[allow(dead_code)]
 fn compute_inter_scale_correlations(coeffs: &[Vec<f64>]) -> SignalResult<Array2<f64>> {
     let n = coeffs.len();
     if n == 0 {
@@ -1144,6 +1166,7 @@ fn compute_inter_scale_correlations(coeffs: &[Vec<f64>]) -> SignalResult<Array2<
     Ok(correlation_matrix)
 }
 
+#[allow(dead_code)]
 fn compute_correlation(x: &[f64], y: &[f64]) -> SignalResult<f64> {
     if x.is_empty() || y.is_empty() {
         return Ok(0.0);
@@ -1186,6 +1209,7 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> SignalResult<f64> {
     }
 }
 
+#[allow(dead_code)]
 fn compute_scale_consistency(scale_energies: &[f64]) -> f64 {
     // Measure how consistently energy is distributed across scales
     let total_energy: f64 = scale_energies.iter().sum();
@@ -1201,6 +1225,7 @@ fn compute_scale_consistency(scale_energies: &[f64]) -> f64 {
 
 // Many more helper functions would be implemented for a complete validation suite...
 
+#[allow(dead_code)]
 fn run_best_basis_algorithm(
     _signal: &Array1<f64>,
 ) -> SignalResult<(Vec<usize>, ConvergenceAnalysis)> {
@@ -1216,14 +1241,17 @@ fn run_best_basis_algorithm(
     Ok((basis, convergence))
 }
 
+#[allow(dead_code)]
 fn compute_basis_selection_repeatability(_selections: &[Vec<usize>]) -> f64 {
     0.95 // Placeholder
 }
 
+#[allow(dead_code)]
 fn aggregate_convergence_analyses(analyses: &[ConvergenceAnalysis]) -> ConvergenceAnalysis {
     analyses[0].clone() // Placeholder
 }
 
+#[allow(dead_code)]
 fn analyze_optimal_basis(_convergence: &ConvergenceAnalysis) -> SignalResult<OptimalBasisMetrics> {
     Ok(OptimalBasisMetrics {
         sparsity_measure: 0.8,
@@ -1233,6 +1261,7 @@ fn analyze_optimal_basis(_convergence: &ConvergenceAnalysis) -> SignalResult<Opt
     })
 }
 
+#[allow(dead_code)]
 fn measure_algorithm_efficiency(
     _config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<AlgorithmEfficiencyMetrics> {
@@ -1244,6 +1273,7 @@ fn measure_algorithm_efficiency(
     })
 }
 
+#[allow(dead_code)]
 fn analyze_error_distribution(errors: &[f64]) -> ErrorDistribution {
     if errors.is_empty() {
         return ErrorDistribution {
@@ -1309,6 +1339,7 @@ fn analyze_error_distribution(errors: &[f64]) -> ErrorDistribution {
     }
 }
 
+#[allow(dead_code)]
 fn compute_confidence_intervals(
     errors: &[f64],
     energy_ratios: &[f64],
@@ -1365,6 +1396,7 @@ fn compute_confidence_intervals(
     }
 }
 
+#[allow(dead_code)]
 fn run_hypothesis_tests(
     errors: &[f64],
     energy_ratios: &[f64],
@@ -1465,6 +1497,7 @@ fn run_hypothesis_tests(
     }
 }
 
+#[allow(dead_code)]
 fn run_bootstrap_validation(
     _errors: &[f64],
     _config: &ComprehensiveWptValidationConfig,
@@ -1478,6 +1511,7 @@ fn run_bootstrap_validation(
     }
 }
 
+#[allow(dead_code)]
 fn test_wavelet_consistency(config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
     let mut consistency_scores = Vec::new();
 
@@ -1555,6 +1589,7 @@ fn test_wavelet_consistency(config: &ComprehensiveWptValidationConfig) -> Signal
     Ok(final_score)
 }
 
+#[allow(dead_code)]
 fn test_signal_type_consistency(config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
     let mut signal_scores = Vec::new();
 
@@ -1582,7 +1617,7 @@ fn test_signal_type_consistency(config: &ComprehensiveWptValidationConfig) -> Si
     // 4. Test with noise signal (stochastic)
     let mut rng = rand::rng();
     let noise_signal: Vec<f64> = (0..signal_length)
-        .map(|_| rng.gen_range(-1.0..1.0))
+        .map(|_| rng.random_range(-1.0..1.0))
         .collect();
 
     let test_signals = vec![
@@ -1705,6 +1740,7 @@ fn test_signal_type_consistency(config: &ComprehensiveWptValidationConfig) -> Si
     Ok(consistency_score)
 }
 
+#[allow(dead_code)]
 fn test_noise_robustness(
     _config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<NoiseRobustnessMetrics> {
@@ -1716,6 +1752,7 @@ fn test_noise_robustness(
     })
 }
 
+#[allow(dead_code)]
 fn test_parameter_sensitivity(
     _config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<ParameterSensitivityMetrics> {
@@ -1727,6 +1764,7 @@ fn test_parameter_sensitivity(
     })
 }
 
+#[allow(dead_code)]
 fn test_edge_case_handling(
     _config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<EdgeCaseHandlingMetrics> {
@@ -1739,6 +1777,7 @@ fn test_edge_case_handling(
     })
 }
 
+#[allow(dead_code)]
 fn test_extreme_conditions(config: &ComprehensiveWptValidationConfig) -> SignalResult<f64> {
     let mut condition_scores = Vec::new();
 
@@ -1917,6 +1956,7 @@ fn test_extreme_conditions(config: &ComprehensiveWptValidationConfig) -> SignalR
     Ok(final_score)
 }
 
+#[allow(dead_code)]
 fn calculate_comprehensive_score(
     basic: &WptValidationResult,
     frame: &FrameValidationMetrics,

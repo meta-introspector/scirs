@@ -10,6 +10,7 @@ use std::hash::Hash;
 ///
 /// The diameter is the maximum shortest path distance between any two nodes in the graph.
 /// Returns None if the graph is disconnected.
+#[allow(dead_code)]
 pub fn diameter<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Option<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
@@ -57,6 +58,7 @@ where
 /// The radius is the minimum eccentricity over all nodes, where eccentricity of a node
 /// is the maximum distance from that node to any other node.
 /// Returns None if the graph is disconnected.
+#[allow(dead_code)]
 pub fn radius<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Option<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
@@ -111,6 +113,7 @@ where
 ///
 /// Center nodes are those with minimum eccentricity (equal to the radius).
 /// Returns empty vector if the graph is disconnected.
+#[allow(dead_code)]
 pub fn center_nodes<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<N>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,

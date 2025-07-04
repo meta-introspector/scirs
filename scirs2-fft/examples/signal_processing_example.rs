@@ -1,6 +1,7 @@
 // The signal_processing module is currently gated behind a feature flag
 // This example is temporarily disabled until the module is available
 
+#[allow(dead_code)]
 fn main() {
     println!("Signal Processing Example");
     println!("------------------------");
@@ -22,6 +23,7 @@ use scirs2_fft::signal_processing::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Signal Processing Example");
     println!("------------------------");

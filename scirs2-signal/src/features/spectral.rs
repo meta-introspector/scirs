@@ -5,6 +5,7 @@ use crate::utilities::spectral;
 use std::collections::HashMap;
 
 /// Extract spectral features from a time series
+#[allow(dead_code)]
 pub fn extract_spectral_features(
     signal: &[f64],
     options: &FeatureOptions,

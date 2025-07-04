@@ -290,6 +290,7 @@ where
 /// # Returns
 ///
 /// * A ROCCurveVisualizer
+#[allow(dead_code)]
 pub fn roc_curve_visualization(
     fpr: Vec<f64>,
     tpr: Vec<f64>,
@@ -310,6 +311,7 @@ pub fn roc_curve_visualization(
 /// # Returns
 ///
 /// * A ROCCurveVisualizer
+#[allow(dead_code)]
 pub fn roc_curve_from_labels<'a, T, S>(
     y_true: &'a ArrayBase<S, Ix1>,
     y_score: &'a ArrayBase<S, Ix1>,

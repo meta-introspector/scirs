@@ -30,6 +30,7 @@ use scirs2_signal::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), SignalError> {
     println!("🚀 Ultrathink Mode Showcase for scirs2-signal");
     println!("==============================================");
@@ -71,6 +72,7 @@ fn main() -> Result<(), SignalError> {
 }
 
 /// Demonstrate advanced 2D wavelet denoising capabilities
+#[allow(dead_code)]
 fn demo_advanced_wavelet_denoising() -> SignalResult<()> {
     // Create a test image with known structure and noise
     let image_size = 128;
@@ -166,6 +168,7 @@ fn demo_advanced_wavelet_denoising() -> SignalResult<()> {
 }
 
 /// Demonstrate SIMD memory optimization capabilities
+#[allow(dead_code)]
 fn demo_simd_memory_optimization() -> SignalResult<()> {
     // Configure SIMD optimization for maximum performance
     let config = SimdMemoryConfig {
@@ -299,6 +302,7 @@ fn demo_simd_memory_optimization() -> SignalResult<()> {
 }
 
 /// Demonstrate performance benchmarking across different signal sizes
+#[allow(dead_code)]
 fn demo_performance_benchmarking() -> SignalResult<()> {
     let config = SimdMemoryConfig::default();
     let test_sizes = vec![1000, 5000, 10000, 25000, 50000];
@@ -340,6 +344,7 @@ fn demo_performance_benchmarking() -> SignalResult<()> {
 }
 
 /// Demonstrate ultrathink mode validation
+#[allow(dead_code)]
 fn demo_ultrathink_validation() -> SignalResult<()> {
     println!("🔬 Running comprehensive ultrathink validation...");
     println!("   This may take a moment for thorough testing...");
@@ -399,6 +404,7 @@ fn demo_ultrathink_validation() -> SignalResult<()> {
 }
 
 /// Demonstrate a complete production workflow
+#[allow(dead_code)]
 fn demo_production_workflow() -> SignalResult<()> {
     println!("🏭 Simulating production signal processing workflow...");
 
@@ -521,6 +527,7 @@ fn demo_production_workflow() -> SignalResult<()> {
 }
 
 /// Utility function to demonstrate feature availability
+#[allow(dead_code)]
 fn check_feature_availability() {
     println!("🔍 Checking Ultrathink Mode Feature Availability:");
     println!("   ✅ Advanced 2D Wavelet Denoising");

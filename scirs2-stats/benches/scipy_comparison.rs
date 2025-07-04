@@ -12,12 +12,14 @@ use scirs2_stats::{
 };
 
 /// Generate large datasets for throughput testing
+#[allow(dead_code)]
 fn generate_large_dataset(n: usize) -> Array1<f64> {
     let mut rng = rng();
     Array1::from_shape_fn(n, |_| StandardNormal.sample(&mut rng))
 }
 
 /// Benchmark basic descriptive statistics
+#[allow(dead_code)]
 fn bench_descriptive_stats(c: &mut Criterion) {
     let mut group = c.benchmark_group("descriptive_stats");
 
@@ -64,6 +66,7 @@ fn bench_descriptive_stats(c: &mut Criterion) {
 }
 
 /// Benchmark quantile operations
+#[allow(dead_code)]
 fn bench_quantiles(c: &mut Criterion) {
     let mut group = c.benchmark_group("quantiles");
 
@@ -96,6 +99,7 @@ fn bench_quantiles(c: &mut Criterion) {
 }
 
 /// Benchmark correlation calculations on matrices
+#[allow(dead_code)]
 fn bench_correlation_matrix(c: &mut Criterion) {
     let mut group = c.benchmark_group("correlation_matrix");
 
@@ -132,6 +136,7 @@ fn bench_correlation_matrix(c: &mut Criterion) {
 }
 
 /// Benchmark memory-intensive operations
+#[allow(dead_code)]
 fn bench_memory_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_operations");
 
@@ -167,6 +172,7 @@ fn bench_memory_operations(c: &mut Criterion) {
 }
 
 /// Benchmark parallel operations (when available)
+#[allow(dead_code)]
 fn bench_parallel_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_operations");
 

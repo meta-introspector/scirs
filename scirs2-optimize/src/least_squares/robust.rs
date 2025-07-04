@@ -296,6 +296,7 @@ impl Default for RobustOptions {
 /// * `jacobian` - Optional Jacobian function
 /// * `data` - Additional data to pass to residuals and jacobian
 /// * `options` - Options for the optimization
+#[allow(dead_code)]
 pub fn robust_least_squares<F, J, L, D, S1, S2>(
     residuals: F,
     x0: &ArrayBase<S1, Ix1>,
@@ -324,6 +325,7 @@ where
 }
 
 /// IRLS (Iteratively Reweighted Least Squares) optimizer
+#[allow(dead_code)]
 fn irls_optimizer<F, J, L, D, S1, S2>(
     residuals: F,
     x0: &ArrayBase<S1, Ix1>,
@@ -482,7 +484,7 @@ where
     let final_cost = compute_robust_cost(&res, &loss);
 
     // Create result
-    let mut result = OptimizeResults::default();
+    let mut result = OptimizeResults::<f64>::default();
     result.x = x;
     result.fun = final_cost;
     result.nfev = nfev;
@@ -500,6 +502,7 @@ where
 }
 
 /// Gradient-based robust optimizer (fallback implementation)
+#[allow(dead_code)]
 fn gradient_based_robust_optimizer<F, J, L, D, S1, S2>(
     _residuals: F,
     x0: &ArrayBase<S1, Ix1>,
@@ -519,7 +522,7 @@ where
     // For now, return a basic implementation
     // In practice, this would implement a gradient-based optimization
     // using the robust loss function directly
-    let mut result = OptimizeResults::default();
+    let mut result = OptimizeResults::<f64>::default();
     result.x = x0.to_owned();
     result.fun = 0.0;
     result.success = false;
@@ -529,11 +532,13 @@ where
 }
 
 /// Compute the total robust cost
+#[allow(dead_code)]
 fn compute_robust_cost<L: RobustLoss>(residuals: &Array1<f64>, loss: &L) -> f64 {
     residuals.iter().map(|&r| loss.loss(r)).sum()
 }
 
 /// Simple linear system solver (same as in least_squares.rs)
+#[allow(dead_code)]
 fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
     use scirs2_linalg::solve;
 

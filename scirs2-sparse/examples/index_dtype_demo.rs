@@ -8,6 +8,7 @@ use scirs2_sparse::{
     can_cast_safely, get_index_dtype, safely_cast_index_arrays, CooArray, SparseArray,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("# Index dtype handling in sparse arrays\n");
 

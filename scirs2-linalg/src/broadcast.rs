@@ -106,6 +106,7 @@ where
 /// This function implements NumPy-style broadcasting for matrix multiplication
 /// on 3D arrays. The last two dimensions are treated as matrices, and the
 /// first dimension is broadcast.
+#[allow(dead_code)]
 pub fn broadcast_matmul_3d<A>(
     a: &ArrayBase<impl Data<Elem = A>, Ix3>,
     b: &ArrayBase<impl Data<Elem = A>, Ix3>,
@@ -166,6 +167,7 @@ where
 /// This function implements NumPy-style broadcasting for matrix multiplication
 /// on arrays with arbitrary dimensions. The last two dimensions are treated
 /// as matrices, and the leading dimensions are broadcast together.
+#[allow(dead_code)]
 pub fn broadcast_matmul<A>(
     a: &ArrayBase<impl Data<Elem = A>, IxDyn>,
     b: &ArrayBase<impl Data<Elem = A>, IxDyn>,
@@ -297,6 +299,7 @@ where
 }
 
 /// Broadcasting matrix-vector multiplication for dynamic dimensional arrays
+#[allow(dead_code)]
 pub fn broadcast_matvec<A>(
     a: &ArrayBase<impl Data<Elem = A>, IxDyn>,
     x: &ArrayBase<impl Data<Elem = A>, IxDyn>,

@@ -126,7 +126,7 @@ impl SpikingNeuron {
                     self.synaptic_weights[i] += weight_change;
 
                     // Weight bounds
-                    self.synaptic_weights[i] = self.synaptic_weights[i].max(-1.0).min(1.0);
+                    self.synaptic_weights[i] = self.synaptic_weights[i].clamp(-1.0, 1.0);
                 }
             }
         }
@@ -455,7 +455,7 @@ impl NeuromorphicAdaptationNetwork {
                         learning_factor * self.connectivity[[i, j]].signum();
 
                     // Keep weights bounded
-                    self.connectivity[[i, j]] = self.connectivity[[i, j]].max(-1.0).min(1.0);
+                    self.connectivity[[i, j]] = self.connectivity[[i, j]].clamp(-1.0, 1.0);
                 }
             }
         }
@@ -497,7 +497,7 @@ impl NeuromorphicAdaptationNetwork {
         }
 
         // Bound adaptation rate
-        self.adaptation_rate = self.adaptation_rate.max(0.0001).min(0.01);
+        self.adaptation_rate = self.adaptation_rate.clamp(0.0001, 0.01);
 
         Ok(())
     }
@@ -547,6 +547,12 @@ pub struct SemanticConcept {
     /// Links to other concepts
     #[allow(dead_code)]
     associations: HashMap<String, f64>,
+}
+
+impl Default for NeuromorphicMemorySystem {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl NeuromorphicMemorySystem {
@@ -776,7 +782,7 @@ impl NeuromorphicMemorySystem {
         if norm1 < f64::EPSILON || norm2 < f64::EPSILON {
             0.0
         } else {
-            (dot_product / (norm1 * norm2)).max(0.0).min(1.0)
+            (dot_product / (norm1 * norm2)).clamp(0.0, 1.0)
         }
     }
 }
@@ -802,6 +808,12 @@ pub struct SystemState {
     memory_utilization: f64,
     /// System energy level
     energy_level: f64,
+}
+
+impl Default for NeuromorphicTransformationSystem {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl NeuromorphicTransformationSystem {

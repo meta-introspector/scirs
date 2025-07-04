@@ -20,6 +20,7 @@ use std::fmt::Debug;
 /// # Returns
 ///
 /// * Convolution result
+#[allow(dead_code)]
 pub fn parallel_convolve1d<T, U>(a: &[T], v: &[U], mode: &str) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug + Send + Sync,
@@ -48,6 +49,7 @@ where
 }
 
 /// Core parallel convolution implementation
+#[allow(dead_code)]
 fn parallel_convolve_impl(a: &[f64], v: &[f64], mode: &str) -> SignalResult<Vec<f64>> {
     let na = a.len();
     let nv = v.len();
@@ -73,6 +75,7 @@ fn parallel_convolve_impl(a: &[f64], v: &[f64], mode: &str) -> SignalResult<Vec<
 }
 
 /// Direct parallel convolution for small kernels
+#[allow(dead_code)]
 fn parallel_direct_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
     let na = a.len();
     let nv = v.len();
@@ -108,6 +111,7 @@ fn parallel_direct_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
 }
 
 /// Overlap-save parallel convolution for large kernels
+#[allow(dead_code)]
 fn parallel_overlap_save_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
     let na = a.len();
     let nv = v.len();
@@ -175,6 +179,7 @@ fn parallel_overlap_save_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
 }
 
 /// Apply convolution mode (full, same, valid)
+#[allow(dead_code)]
 fn apply_conv_mode(result: Vec<f64>, na: usize, nv: usize, mode: &str) -> SignalResult<Vec<f64>> {
     match mode {
         "full" => Ok(result),
@@ -216,6 +221,7 @@ fn apply_conv_mode(result: Vec<f64>, na: usize, nv: usize, mode: &str) -> Signal
 /// # Returns
 ///
 /// * Cross-correlation result
+#[allow(dead_code)]
 pub fn parallel_correlate<T, U>(a: &[T], v: &[U], mode: &str) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug + Send + Sync,
@@ -249,6 +255,7 @@ where
 /// # Returns
 ///
 /// * 2D convolution result
+#[allow(dead_code)]
 pub fn parallel_convolve2d_ndarray(
     image: ArrayView2<f64>,
     kernel: ArrayView2<f64>,
@@ -353,6 +360,7 @@ pub fn parallel_convolve2d_ndarray(
 /// # Returns
 ///
 /// * 2D convolution result
+#[allow(dead_code)]
 pub fn parallel_separable_convolve2d(
     image: ArrayView2<f64>,
     row_kernel: &[f64],

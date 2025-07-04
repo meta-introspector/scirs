@@ -5178,26 +5178,26 @@ impl Default for SecurityPolicies {
 }
 
 #[derive(Debug, Clone)]
-struct CpuInfo {
+pub struct CpuInfo {
     cores: f64,
     frequency_ghz: f64,
 }
 
 #[derive(Debug, Clone)]
-struct MemoryInfo {
+pub struct MemoryInfo {
     total_gb: f64,
     available_gb: f64,
 }
 
 #[derive(Debug, Clone)]
-struct StorageInfo {
+pub struct StorageInfo {
     total_gb: f64,
     available_gb: f64,
     is_ssd: bool,
 }
 
 #[derive(Debug, Clone)]
-struct NetworkInfo {
+pub struct NetworkInfo {
     bandwidth_gbps: f64,
     latency_ms: f64,
 }
@@ -5260,7 +5260,7 @@ mod tests {
 
     #[test]
     fn test_task_priority_ordering() {
-        let mut priorities = vec![
+        let mut priorities = [
             TaskPriority::Low,
             TaskPriority::Critical,
             TaskPriority::Normal,

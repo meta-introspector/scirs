@@ -6,7 +6,7 @@
 //! - Memory footprint optimization
 //! - Buffer reuse strategies
 
-use ndarray::{Array, ArrayBase, ArrayView, ArrayViewMut, Data, DataMut, Dimension, RawData};
+use ndarray::{Array, ArrayBase, ArrayView, ArrayViewMut, Data, Dimension};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -165,6 +165,7 @@ impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> MemoryEfficientOp<T
 }
 
 /// Estimate memory usage for an operation
+#[allow(dead_code)]
 pub fn estimate_memory_usage<T, D>(shape: &[usize]) -> usize
 where
     T: Float,
@@ -175,6 +176,7 @@ where
 }
 
 /// Check if an operation would exceed memory limit
+#[allow(dead_code)]
 pub fn check_memory_limit<T, D>(shape: &[usize], limit: Option<usize>) -> NdimageResult<()>
 where
     T: Float,
@@ -193,6 +195,7 @@ where
 }
 
 /// Create a memory-efficient view or copy based on configuration
+#[allow(dead_code)]
 pub fn create_output_array<T, D, S>(
     input: &ArrayBase<S, D>,
     config: &MemoryConfig,
@@ -262,6 +265,7 @@ impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> InPlaceOp<T, D> for
 }
 
 /// Memory-efficient array slicing that avoids copies when possible
+#[allow(dead_code)]
 pub fn slice_efficiently<'a, T, D, S>(
     array: &'a ArrayBase<S, D>,
     slice_info: &[std::ops::Range<usize>],
@@ -276,6 +280,7 @@ where
 }
 
 /// Zero-copy transpose for 2D arrays
+#[allow(dead_code)]
 pub fn transpose_view<T, S>(array: &ArrayBase<S, ndarray::Ix2>) -> ArrayView<T, ndarray::Ix2>
 where
     T: Float,

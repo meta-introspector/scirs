@@ -8,6 +8,7 @@ use scirs2_linalg::attention::{
     scaled_dot_product_attention, AttentionConfig,
 };
 
+#[allow(dead_code)]
 fn attention_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("attention");
 

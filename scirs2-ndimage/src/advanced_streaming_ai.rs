@@ -216,6 +216,7 @@ pub struct CacheMetadata {
 ///
 /// Uses machine learning to predict optimal chunk sizes based on content analysis,
 /// historical performance, and system conditions.
+#[allow(dead_code)]
 pub fn ai_predictive_chunking<T>(
     data_shape: &[usize],
     content_analysis: &ContentAnalysis,
@@ -253,6 +254,7 @@ where
 ///
 /// Analyzes image content to determine optimal chunk boundaries that preserve
 /// important features and minimize artifacts.
+#[allow(dead_code)]
 pub fn content_aware_adaptive_chunking<T>(
     image: ArrayView2<T>,
     target_chunk_size: usize,
@@ -261,7 +263,7 @@ pub fn content_aware_adaptive_chunking<T>(
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
-    let (height, width) = image.dim();
+    let (_height, _width) = image.dim();
 
     // Analyze image content
     let content_analysis = analyze_image_content(&image, config)?;
@@ -302,6 +304,7 @@ where
 ///
 /// Uses AI to predict memory pressure and proactively manage memory allocation
 /// to prevent out-of-memory conditions during streaming.
+#[allow(dead_code)]
 pub fn intelligent_memory_management(
     current_usage: &MemoryMetrics,
     prediction_model: &mut Array2<f64>,
@@ -348,6 +351,7 @@ pub fn intelligent_memory_management(
 ///
 /// Uses machine learning to optimally distribute work across available cores
 /// based on worker performance patterns and task characteristics.
+#[allow(dead_code)]
 pub fn ai_enhanced_load_balancing<T>(
     tasks: &[ProcessingTask<T>],
     load_balancer: &mut AILoadBalancer,
@@ -423,6 +427,7 @@ where
 ///
 /// Uses AI to predict future data access patterns and optimize cache management
 /// with intelligent prefetching strategies.
+#[allow(dead_code)]
 pub fn intelligent_cache_management<T>(
     access_pattern: &CacheAccessPattern,
     cache_manager: &mut IntelligentCacheManager,
@@ -470,6 +475,7 @@ where
 ///
 /// Adjusts streaming parameters based on network conditions and bandwidth availability
 /// for distributed image processing scenarios.
+#[allow(dead_code)]
 pub fn adaptive_bandwidth_management(
     current_bandwidth: f64,
     network_conditions: &NetworkConditions,
@@ -636,6 +642,7 @@ pub enum RetryStrategy {
 
 // Implementation of helper functions (simplified for brevity)
 
+#[allow(dead_code)]
 fn analyze_system_conditions() -> NdimageResult<SystemConditions> {
     // Implementation would analyze current system state
     Ok(SystemConditions {
@@ -654,6 +661,7 @@ pub struct SystemConditions {
     pub network_bandwidth: f64,
 }
 
+#[allow(dead_code)]
 fn extract_content_features(
     _analysis: &ContentAnalysis,
     _config: &AIStreamConfig,
@@ -662,6 +670,7 @@ fn extract_content_features(
     Ok(Array1::zeros(10))
 }
 
+#[allow(dead_code)]
 fn prepare_model_input(
     _content_features: &Array1<f64>,
     _system_conditions: &SystemConditions,
@@ -671,6 +680,7 @@ fn prepare_model_input(
     Ok(Array1::zeros(20))
 }
 
+#[allow(dead_code)]
 fn predict_chunk_configuration(
     _input: &Array1<f64>,
     _ai_model: &PredictiveChunkingAI,
@@ -680,6 +690,7 @@ fn predict_chunk_configuration(
     Ok(Array1::zeros(5))
 }
 
+#[allow(dead_code)]
 fn validate_chunk_predictions(
     _predictions: &Array1<f64>,
     _data_shape: &[usize],
@@ -689,6 +700,7 @@ fn validate_chunk_predictions(
     Ok(Array1::zeros(5))
 }
 
+#[allow(dead_code)]
 fn generate_chunk_specifications(
     _validated_chunks: &Array1<f64>,
     _data_shape: &[usize],
@@ -705,6 +717,7 @@ fn generate_chunk_specifications(
     }])
 }
 
+#[allow(dead_code)]
 fn update_ai_model_with_feedback(
     _ai_model: &mut PredictiveChunkingAI,
     _chunk_specs: &[ChunkSpecification],
@@ -714,6 +727,7 @@ fn update_ai_model_with_feedback(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn analyze_image_content<T>(
     _image: &ArrayView2<T>,
     _config: &AIStreamConfig,
@@ -731,6 +745,7 @@ where
     })
 }
 
+#[allow(dead_code)]
 fn detect_optimal_chunk_boundaries(
     _analysis: &ContentAnalysis,
     _target_size: usize,
@@ -744,6 +759,7 @@ fn detect_optimal_chunk_boundaries(
     }])
 }
 
+#[allow(dead_code)]
 fn extract_chunk_with_overlap<T>(
     _image: &ArrayView2<T>,
     _boundary: &ChunkBoundary,
@@ -756,6 +772,7 @@ where
     Ok(Array2::zeros((100, 100)))
 }
 
+#[allow(dead_code)]
 fn compute_chunk_metadata<T>(
     _chunk_data: &Array2<T>,
     _boundary: &ChunkBoundary,
@@ -773,11 +790,13 @@ where
     })
 }
 
+#[allow(dead_code)]
 fn compute_processing_priority(_metadata: &ChunkMetadata) -> NdimageResult<f64> {
     // Implementation would compute processing priority
     Ok(0.8)
 }
 
+#[allow(dead_code)]
 fn determine_overlap_strategy(
     _metadata: &ChunkMetadata,
     _config: &AIStreamConfig,
@@ -789,6 +808,7 @@ fn determine_overlap_strategy(
 // Additional helper function implementations would follow similar patterns...
 // (Simplified for brevity - in a real implementation, these would be fully developed)
 
+#[allow(dead_code)]
 fn predict_memory_usage(
     _current: &MemoryMetrics,
     _model: &Array2<f64>,
@@ -804,6 +824,7 @@ fn predict_memory_usage(
     })
 }
 
+#[allow(dead_code)]
 fn assess_memory_pressure_risk(
     _forecast: &MemoryMetrics,
     _config: &AIStreamConfig,
@@ -811,6 +832,7 @@ fn assess_memory_pressure_risk(
     Ok(0.4)
 }
 
+#[allow(dead_code)]
 fn update_memory_prediction_model(
     _model: &mut Array2<f64>,
     _current: &MemoryMetrics,
@@ -820,6 +842,7 @@ fn update_memory_prediction_model(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn analyze_task_characteristics<T>(
     _tasks: &[ProcessingTask<T>],
     _config: &AIStreamConfig,
@@ -841,6 +864,7 @@ pub struct TaskAnalysis {
     pub operation_types: HashMap<OperationType, usize>,
 }
 
+#[allow(dead_code)]
 fn predict_worker_performance(
     _analysis: &TaskAnalysis,
     _history: &HashMap<usize, VecDeque<f64>>,
@@ -850,6 +874,7 @@ fn predict_worker_performance(
     Ok(HashMap::new())
 }
 
+#[allow(dead_code)]
 fn assign_tasks_gradient_based<T>(
     _tasks: &[ProcessingTask<T>],
     _predictions: &HashMap<usize, f64>,
@@ -862,6 +887,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn assign_tasks_reinforcement_learning<T>(
     _tasks: &[ProcessingTask<T>],
     _predictions: &HashMap<usize, f64>,
@@ -875,6 +901,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn assign_tasks_genetic_algorithm<T>(
     _tasks: &[ProcessingTask<T>],
     _predictions: &HashMap<usize, f64>,
@@ -887,6 +914,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn assign_tasks_hybrid_approach<T>(
     _tasks: &[ProcessingTask<T>],
     _predictions: &HashMap<usize, f64>,
@@ -900,14 +928,16 @@ where
     Ok(())
 }
 
-fn update_load_balancer_state(
+#[allow(dead_code)]
+fn update_load_balancer_state<T>(
     _balancer: &mut AILoadBalancer,
-    _assignments: &HashMap<usize, Vec<ProcessingTask<f64>>>,
+    _assignments: &HashMap<usize, Vec<ProcessingTask<T>>>,
     _config: &AIStreamConfig,
 ) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_access_patterns(
     _manager: &mut IntelligentCacheManager,
     _pattern: &CacheAccessPattern,
@@ -915,6 +945,7 @@ fn update_access_patterns(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn predict_future_accesses(
     _patterns: &HashMap<String, VecDeque<CacheAccessPattern>>,
     _model: &Array2<f64>,
@@ -923,6 +954,7 @@ fn predict_future_accesses(
     Ok(Vec::new())
 }
 
+#[allow(dead_code)]
 fn determine_prefetch_candidates(
     _predictions: &[String],
     _config: &AIStreamConfig,
@@ -930,6 +962,7 @@ fn determine_prefetch_candidates(
     Ok(Vec::new())
 }
 
+#[allow(dead_code)]
 fn evaluate_cache_replacement(
     _cache_state: &Arc<RwLock<HashMap<String, CachedData>>>,
     _strategy: &CacheReplacementStrategy,
@@ -950,6 +983,7 @@ pub struct ReplacementDecision {
     pub priority_adjustments: HashMap<String, f64>,
 }
 
+#[allow(dead_code)]
 fn update_cache_prediction_model(
     _manager: &mut IntelligentCacheManager,
     _decision: &CacheManagementDecision,
@@ -958,6 +992,7 @@ fn update_cache_prediction_model(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn predict_bandwidth_availability(
     _current: f64,
     _conditions: &NetworkConditions,
@@ -967,6 +1002,7 @@ fn predict_bandwidth_availability(
     Ok(1000.0)
 }
 
+#[allow(dead_code)]
 fn analyze_network_stability(
     _history: &VecDeque<BandwidthMeasurement>,
     _config: &AIStreamConfig,
@@ -993,6 +1029,7 @@ pub enum NetworkTrend {
     Unstable,
 }
 
+#[allow(dead_code)]
 fn optimize_streaming_parameters(
     _bandwidth_forecast: &f64,
     _stability: &NetworkStabilityAnalysis,

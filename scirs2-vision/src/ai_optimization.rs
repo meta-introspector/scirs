@@ -21,6 +21,7 @@ use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
 /// Reinforcement learning agent for parameter optimization
+#[derive(Debug)]
 pub struct RLParameterOptimizer {
     /// Q-table for state-action values
     q_table: HashMap<StateDiscrete, HashMap<ActionDiscrete, f64>>,
@@ -600,6 +601,7 @@ impl NeuralNetworkPredictor {
 }
 
 /// Gamma function approximation for Lévy flight sampling
+#[allow(dead_code)]
 fn gamma_function(x: f64) -> f64 {
     // Stirling's approximation for simplicity
     if x < 1.0 {
@@ -1354,6 +1356,7 @@ impl GeneticPipelineOptimizer {
 }
 
 /// Neural Architecture Search for processing stages
+#[derive(Debug)]
 pub struct NeuralArchitectureSearch {
     /// Search space definition
     search_space: ArchitectureSearchSpace,

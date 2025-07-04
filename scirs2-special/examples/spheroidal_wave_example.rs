@@ -3,6 +3,7 @@ use scirs2_special::{
 };
 use std::error::Error;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Spheroidal Wave Functions Example");
     println!("=================================\n");

@@ -8,6 +8,7 @@ use scirs2_linalg::mixed_precision::conversions::convert;
 use scirs2_linalg::mixed_precision::*;
 
 // Simple benchmark function to compare execution times
+#[allow(dead_code)]
 fn benchmark_fn<F>(name: &str, mut f: F) -> std::time::Duration
 where
     F: FnMut(),
@@ -33,6 +34,7 @@ where
     duration
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Mixed-Precision Linear Algebra Examples");
     println!("=======================================\n");

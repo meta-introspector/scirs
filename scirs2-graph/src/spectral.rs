@@ -7,7 +7,7 @@
 //! Features SIMD acceleration for performance-critical operations.
 
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayViewMut1};
-use rand::Rng;
+use rand::{rng, Rng};
 #[cfg(feature = "parallel")]
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -159,6 +159,7 @@ mod simd_spectral {
 
 /// Advanced eigenvalue computation using Lanczos algorithm for Laplacian matrices
 /// This is a production-ready implementation with proper deflation and convergence checking
+#[allow(dead_code)]
 fn compute_smallest_eigenvalues(
     matrix: &Array2<f64>,
     k: usize,
@@ -179,6 +180,7 @@ fn compute_smallest_eigenvalues(
 
 /// Lanczos algorithm for finding smallest eigenvalues of symmetric matrices
 /// Optimized for Laplacian matrices with SIMD acceleration where possible
+#[allow(dead_code)]
 fn lanczos_eigenvalues(
     matrix: &Array2<f64>,
     k: usize,
@@ -223,6 +225,7 @@ fn lanczos_eigenvalues(
 
 /// Single deflated Lanczos iteration to find the next smallest eigenvalue
 /// Uses deflation to avoid previously found eigenvectors
+#[allow(dead_code)]
 fn deflated_lanczos_iteration(
     matrix: &Array2<f64>,
     prev_eigenvectors: &Array2<f64>,
@@ -354,6 +357,7 @@ fn deflated_lanczos_iteration(
 
 /// Solve the tridiagonal eigenvalue problem using QR algorithm
 /// Returns eigenvalues and eigenvectors sorted by eigenvalue magnitude
+#[allow(dead_code)]
 fn solve_tridiagonal_eigenvalue(
     alpha: &[f64],
     beta: &[f64],
@@ -399,6 +403,7 @@ fn solve_tridiagonal_eigenvalue(
 }
 
 /// Solve eigenvalue problem for small symmetric matrices using direct methods
+#[allow(dead_code)]
 fn solve_small_symmetric_eigenvalue(
     matrix: &Array2<f64>,
 ) -> std::result::Result<(Vec<f64>, Array2<f64>), String> {
@@ -491,6 +496,7 @@ pub enum LaplacianType {
 ///
 /// # Returns
 /// * The Laplacian matrix as an ndarray::Array2
+#[allow(dead_code)]
 pub fn laplacian<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     laplacian_type: LaplacianType,
@@ -594,6 +600,7 @@ where
 ///
 /// # Returns
 /// * The Laplacian matrix as an ndarray::Array2
+#[allow(dead_code)]
 pub fn laplacian_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     laplacian_type: LaplacianType,
@@ -700,6 +707,7 @@ where
 ///
 /// # Returns
 /// * The algebraic connectivity as a f64
+#[allow(dead_code)]
 pub fn algebraic_connectivity<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     laplacian_type: LaplacianType,
@@ -741,6 +749,7 @@ where
 ///
 /// # Returns
 /// * The spectral radius as a f64
+#[allow(dead_code)]
 pub fn spectral_radius<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<f64>
 where
     N: Node + std::fmt::Debug,
@@ -820,6 +829,7 @@ where
 ///
 /// # Returns
 /// * The normalized cut value as a f64
+#[allow(dead_code)]
 pub fn normalized_cut<N, E, Ix>(graph: &Graph<N, E, Ix>, partition: &[bool]) -> Result<f64>
 where
     N: Node + std::fmt::Debug,
@@ -894,6 +904,7 @@ where
 ///
 /// # Returns
 /// * A vector of cluster labels, one for each node in the graph
+#[allow(dead_code)]
 pub fn spectral_clustering<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     n_clusters: usize,
@@ -952,6 +963,7 @@ where
 /// # Returns
 /// * A vector of cluster labels, one for each node in the graph
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn parallel_spectral_clustering<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     n_clusters: usize,
@@ -1001,6 +1013,7 @@ where
 
 /// Parallel Laplacian matrix computation with optimized memory access patterns
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn parallel_laplacian<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     laplacian_type: LaplacianType,
@@ -1125,6 +1138,7 @@ where
 
 /// Parallel eigenvalue computation for large symmetric matrices
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn parallel_compute_smallest_eigenvalues(
     matrix: &Array2<f64>,
     k: usize,
@@ -1145,6 +1159,7 @@ fn parallel_compute_smallest_eigenvalues(
 
 /// Parallel Lanczos algorithm with optimized matrix-vector operations
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn parallel_lanczos_eigenvalues(
     matrix: &Array2<f64>,
     k: usize,
@@ -1185,6 +1200,7 @@ fn parallel_lanczos_eigenvalues(
 
 /// Parallel deflated Lanczos iteration with SIMD acceleration
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn parallel_deflated_lanczos_iteration(
     matrix: &Array2<f64>,
     prev_eigenvectors: &Array2<f64>,
@@ -1220,6 +1236,7 @@ fn parallel_deflated_lanczos_iteration(
 
 /// Parallel dot product computation
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn parallel_dot_product(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
     // Use SIMD dot product with parallel chunking for large vectors
     f64::simd_dot(a, b)
@@ -1227,6 +1244,7 @@ fn parallel_dot_product(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
 
 /// Parallel vector norm computation
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn parallel_norm(vector: &ArrayView1<f64>) -> f64 {
     // Use SIMD norm computation
     f64::simd_norm(vector)
@@ -1234,6 +1252,7 @@ fn parallel_norm(vector: &ArrayView1<f64>) -> f64 {
 
 /// Parallel AXPY operation: y = alpha * x + y
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn parallel_axpy(alpha: f64, x: &ArrayView1<f64>, y: &mut ArrayViewMut1<f64>) {
     // Use SIMD AXPY operation
     simd_spectral::simd_axpy(alpha, x, y);
@@ -1241,6 +1260,7 @@ fn parallel_axpy(alpha: f64, x: &ArrayView1<f64>, y: &mut ArrayViewMut1<f64>) {
 
 /// Parallel random clustering assignment (placeholder for full k-means implementation)
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn parallel_random_clustering(n: usize, k: usize) -> Vec<usize> {
     // Generate cluster assignments in parallel
     (0..n)
@@ -1330,8 +1350,7 @@ mod tests {
         // Check that it's in a reasonable range for a path graph
         assert!(
             conn > 0.3 && conn < 0.5,
-            "Algebraic connectivity {} should be in range [0.3, 0.5]",
-            conn
+            "Algebraic connectivity {conn} should be in range [0.3, 0.5]"
         );
 
         // Test a cycle graph C4 (4 nodes in a cycle)
@@ -1348,8 +1367,7 @@ mod tests {
         // Check that it's in a reasonable range for a cycle graph (should be higher than path graph)
         assert!(
             conn > 0.4 && conn < 0.8,
-            "Algebraic connectivity {} should be in range [0.4, 0.8]",
-            conn
+            "Algebraic connectivity {conn} should be in range [0.4, 0.8]"
         );
     }
 

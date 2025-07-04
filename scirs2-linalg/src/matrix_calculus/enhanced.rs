@@ -55,6 +55,7 @@ use crate::matrix_calculus::gradient;
 /// assert!((jvp[0] - 4.0_f64).abs() < 1e-10_f64);
 /// assert!((jvp[1] - 27.0_f64).abs() < 1e-10_f64);
 /// ```
+#[allow(dead_code)]
 pub fn jacobian_vector_product<F>(
     f: impl Fn(&ArrayView1<F>) -> LinalgResult<Array1<F>>,
     x: &ArrayView1<F>,
@@ -130,6 +131,7 @@ where
 /// assert!((vjp[0] - 4.0_f64).abs() < 1e-10_f64);
 /// assert!((vjp[1] - 27.0_f64).abs() < 1e-10_f64);
 /// ```
+#[allow(dead_code)]
 pub fn vector_jacobian_product<F>(
     f: impl Fn(&ArrayView1<F>) -> LinalgResult<Array1<F>> + Copy,
     x: &ArrayView1<F>,
@@ -217,6 +219,7 @@ where
 /// assert!((hvp[0] - 2.0_f64).abs() < 1e-10_f64);
 /// assert!((hvp[1] - 4.0_f64).abs() < 1e-10_f64);
 /// ```
+#[allow(dead_code)]
 pub fn hessian_vector_product<F>(
     f: impl Fn(&ArrayView1<F>) -> LinalgResult<F> + Copy,
     x: &ArrayView1<F>,
@@ -295,6 +298,7 @@ where
 /// assert!((grad[[1, 0]] - 6.0_f64).abs() < 1e-10_f64);
 /// assert!((grad[[1, 1]] - 8.0_f64).abs() < 1e-10_f64);
 /// ```
+#[allow(dead_code)]
 pub fn matrix_gradient<F>(
     f: impl Fn(&ArrayView2<F>) -> LinalgResult<F>,
     x: &ArrayView2<F>,
@@ -376,6 +380,7 @@ where
 /// assert!((jac[[1, 1, 0]] - 6.0_f64).abs() < 1e-10_f64);
 /// assert!((jac[[1, 1, 1]] - 8.0_f64).abs() < 1e-10_f64);
 /// ```
+#[allow(dead_code)]
 pub fn matrix_jacobian<F>(
     f: impl Fn(&ArrayView2<F>) -> LinalgResult<Array1<F>>,
     x: &ArrayView2<F>,
@@ -463,6 +468,7 @@ where
 /// // Should be closer to true value f(1.1,1.2) = 1.21 + 1.44 = 2.65
 /// assert!((approx2 - 2.65_f64).abs() < 1e-10_f64);
 /// ```
+#[allow(dead_code)]
 pub fn taylor_approximation<F>(
     f: impl Fn(&ArrayView1<F>) -> LinalgResult<F> + Copy,
     x: &ArrayView1<F>,
@@ -598,6 +604,7 @@ where
 /// });
 /// assert!(found_min);
 /// ```
+#[allow(dead_code)]
 pub fn find_critical_points<F>(
     f: impl Fn(&ArrayView1<F>) -> LinalgResult<F> + Copy,
     domain: &ArrayView2<F>,

@@ -30,6 +30,7 @@ use scirs2_interpolate::advanced::fast_kriging::{
 use scirs2_interpolate::advanced::kriging::CovarianceFunction;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Fast Approximate Kriging Example");
     println!("================================\n");
@@ -73,6 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Example demonstrating HODLR kriging with different leaf sizes
+#[allow(dead_code)]
 fn hodlr_kriging_example(
     points: &Array2<f64>,
     values: &Array1<f64>,
@@ -137,6 +139,7 @@ fn hodlr_kriging_example(
 }
 
 /// Generate a synthetic spatial dataset with underlying pattern plus noise
+#[allow(dead_code)]
 fn generate_synthetic_data(
     n_points: usize,
     n_dims: usize,
@@ -195,6 +198,7 @@ fn generate_synthetic_data(
 }
 
 /// Generate a grid of points for prediction
+#[allow(dead_code)]
 fn generate_prediction_grid(n_grid: usize, n_dims: usize) -> Array2<f64> {
     // For dimensions > 2, we'll just create a line through the space
     if n_dims > 2 {
@@ -236,6 +240,7 @@ fn generate_prediction_grid(n_grid: usize, n_dims: usize) -> Array2<f64> {
 }
 
 /// Example demonstrating local kriging with different neighborhood sizes
+#[allow(dead_code)]
 fn local_kriging_example(
     points: &Array2<f64>,
     values: &Array1<f64>,
@@ -298,6 +303,7 @@ fn local_kriging_example(
 }
 
 /// Example demonstrating fixed rank kriging with different ranks
+#[allow(dead_code)]
 fn fixed_rank_kriging_example(
     points: &Array2<f64>,
     values: &Array1<f64>,
@@ -363,6 +369,7 @@ fn fixed_rank_kriging_example(
 }
 
 /// Example demonstrating performance scaling with dataset size
+#[allow(dead_code)]
 fn performance_scaling_example(
     small_dataset: &(Array2<f64>, Array1<f64>),
     medium_dataset: &(Array2<f64>, Array1<f64>),
@@ -432,6 +439,7 @@ fn performance_scaling_example(
 }
 
 /// Example demonstrating accuracy comparison between methods
+#[allow(dead_code)]
 fn accuracy_comparison_example(
     points: &Array2<f64>,
     values: &Array1<f64>,

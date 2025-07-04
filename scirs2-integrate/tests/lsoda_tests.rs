@@ -2,6 +2,7 @@ use ndarray::array;
 use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 
 #[test]
+#[allow(dead_code)]
 fn test_lsoda_basic() {
     // Simple decay problem
     let result = solve_ivp(
@@ -45,6 +46,7 @@ fn test_lsoda_basic() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_lsoda_with_stiffness_change() {
     // Test problem that changes from non-stiff to stiff
     // Van der Pol oscillator with moderate mu (too large causes issues)
@@ -98,6 +100,7 @@ fn test_lsoda_with_stiffness_change() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_lsoda_method_switching() {
     // This test will verify that LSODA switches methods appropriately
     // The test passes a problem with known stiffness characteristics

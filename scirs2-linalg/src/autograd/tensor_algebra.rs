@@ -24,6 +24,7 @@ use scirs2_autograd::variable::Variable;
 /// # Returns
 ///
 /// The contracted tensor with gradient tracking.
+#[allow(dead_code)]
 pub fn contract<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
     b: &Tensor<F>,
@@ -260,6 +261,7 @@ pub fn contract<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// The outer product tensor with gradient tracking.
+#[allow(dead_code)]
 pub fn outer<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
     b: &Tensor<F>,
@@ -377,6 +379,7 @@ pub fn outer<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// The contracted tensor with gradient tracking.
+#[allow(dead_code)]
 pub fn tensor_vector_product<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
     v: &Tensor<F>,

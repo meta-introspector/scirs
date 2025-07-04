@@ -8,6 +8,7 @@ use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLo
 /// ∂u/∂t + v_x ∂u/∂x + v_y ∂u/∂y = D_x ∂²u/∂x² + D_y ∂²u/∂y²
 ///
 /// with a Gaussian initial condition.
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Define 2D domain: (x,y) ∈ [0,2]×[0,2]
     let domain = Domain::new(vec![0.0..2.0, 0.0..2.0], vec![101, 101])?;
@@ -121,6 +122,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Analyze the numerical solution and track the movement of the Gaussian pulse
+#[allow(dead_code)]
 fn analyze_solution(
     result: &scirs2_integrate::pde::implicit::ADIResult,
     domain: &Domain,
@@ -247,11 +249,13 @@ fn analyze_solution(
 }
 
 /// Find the maximum value in a 3D array
+#[allow(dead_code)]
 fn find_max_value(array: &ndarray::Array3<f64>) -> f64 {
     array.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b))
 }
 
 /// Compute the total mass (integral of solution)
+#[allow(dead_code)]
 fn compute_total_mass(array: &ndarray::Array3<f64>, cell_area: f64) -> f64 {
     let sum = array.iter().sum::<f64>();
     sum * cell_area

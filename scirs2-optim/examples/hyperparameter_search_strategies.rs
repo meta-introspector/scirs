@@ -75,6 +75,7 @@ impl MockModel {
 }
 
 /// Extract problem features for neural predictor
+#[allow(dead_code)]
 fn extract_problem_features() -> Array1<f64> {
     // In a real scenario, these would be actual dataset/problem characteristics
     Array1::from_vec(vec![
@@ -90,6 +91,7 @@ fn extract_problem_features() -> Array1<f64> {
 }
 
 /// Example 1: Grid Search for Systematic Exploration
+#[allow(dead_code)]
 fn grid_search_example() -> Result<()> {
     println!("=== Grid Search Example ===");
 
@@ -154,6 +156,7 @@ fn grid_search_example() -> Result<()> {
 }
 
 /// Example 2: Random Search for Efficient Sampling
+#[allow(dead_code)]
 fn random_search_example() -> Result<()> {
     println!("\n=== Random Search Example ===");
 
@@ -232,6 +235,7 @@ fn random_search_example() -> Result<()> {
 }
 
 /// Example 3: Bayesian Optimization for Intelligent Search
+#[allow(dead_code)]
 fn bayesian_optimization_example() -> Result<()> {
     println!("\n=== Bayesian Optimization Example ===");
 
@@ -322,6 +326,7 @@ fn bayesian_optimization_example() -> Result<()> {
 }
 
 /// Example 4: Population-Based Training
+#[allow(dead_code)]
 fn population_based_training_example() -> Result<()> {
     println!("\n=== Population-Based Training Example ===");
 
@@ -434,6 +439,7 @@ fn population_based_training_example() -> Result<()> {
 }
 
 /// Example 5: Neural Hyperparameter Prediction
+#[allow(dead_code)]
 fn neural_predictor_example() -> Result<()> {
     println!("\n=== Neural Hyperparameter Prediction Example ===");
 
@@ -519,6 +525,7 @@ fn neural_predictor_example() -> Result<()> {
 }
 
 /// Example 6: Multi-Objective Hyperparameter Optimization
+#[allow(dead_code)]
 fn multi_objective_optimization_example() -> Result<()> {
     println!("\n=== Multi-Objective Optimization Example ===");
 
@@ -604,6 +611,7 @@ fn multi_objective_optimization_example() -> Result<()> {
 }
 
 /// Example 7: Hyperparameter Sensitivity Analysis
+#[allow(dead_code)]
 fn sensitivity_analysis_example() -> Result<()> {
     println!("\n=== Hyperparameter Sensitivity Analysis ===");
 
@@ -689,6 +697,7 @@ fn sensitivity_analysis_example() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("SciRS2 Hyperparameter Search Strategies Examples");
     println!("===============================================\n");

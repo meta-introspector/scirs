@@ -16,6 +16,7 @@ use crate::fft::fft;
 /// This transform is defined with specific boundary conditions that differ
 /// from types I-IV. It assumes the signal is extended with odd symmetry
 /// about both endpoints.
+#[allow(dead_code)]
 pub fn dct_v<S, D>(x: &ArrayBase<S, D>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -56,6 +57,7 @@ where
 ///
 /// This implementation uses a consistent FFT-based approach for improved
 /// numerical stability, avoiding accumulation of errors from direct summation.
+#[allow(dead_code)]
 pub fn idct_v<S>(x: &ArrayBase<S, ndarray::Ix1>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -116,6 +118,7 @@ where
 ///
 /// Type VI DCT has different boundary conditions optimized for
 /// certain signal processing applications.
+#[allow(dead_code)]
 pub fn dct_vi<S, D>(x: &ArrayBase<S, D>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -154,6 +157,7 @@ where
 }
 
 /// Inverse DCT Type VI
+#[allow(dead_code)]
 pub fn idct_vi<S>(x: &ArrayBase<S, ndarray::Ix1>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -165,6 +169,7 @@ where
 }
 
 /// DCT Type VII: Discrete Cosine Transform type VII
+#[allow(dead_code)]
 pub fn dct_vii<S, D>(x: &ArrayBase<S, D>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -194,6 +199,7 @@ where
 }
 
 /// Inverse DCT Type VII
+#[allow(dead_code)]
 pub fn idct_vii<S>(x: &ArrayBase<S, ndarray::Ix1>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -216,6 +222,7 @@ where
 }
 
 /// DCT Type VIII: Discrete Cosine Transform type VIII
+#[allow(dead_code)]
 pub fn dct_viii<S, D>(x: &ArrayBase<S, D>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -250,6 +257,7 @@ where
 }
 
 /// Inverse DCT Type VIII
+#[allow(dead_code)]
 pub fn idct_viii<S>(x: &ArrayBase<S, ndarray::Ix1>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -259,6 +267,7 @@ where
 }
 
 /// DST Type V: Discrete Sine Transform type V
+#[allow(dead_code)]
 pub fn dst_v<S, D>(x: &ArrayBase<S, D>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -295,6 +304,7 @@ where
 }
 
 /// Inverse DST Type V
+#[allow(dead_code)]
 pub fn idst_v<S>(x: &ArrayBase<S, ndarray::Ix1>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -321,6 +331,7 @@ where
 }
 
 /// DST Type VI: Discrete Sine Transform type VI
+#[allow(dead_code)]
 pub fn dst_vi<S, D>(x: &ArrayBase<S, D>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -349,6 +360,7 @@ where
 }
 
 /// Inverse DST Type VI
+#[allow(dead_code)]
 pub fn idst_vi<S>(x: &ArrayBase<S, ndarray::Ix1>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -358,6 +370,7 @@ where
 }
 
 /// DST Type VII: Discrete Sine Transform type VII
+#[allow(dead_code)]
 pub fn dst_vii<S, D>(x: &ArrayBase<S, D>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -386,6 +399,7 @@ where
 }
 
 /// Inverse DST Type VII
+#[allow(dead_code)]
 pub fn idst_vii<S>(x: &ArrayBase<S, ndarray::Ix1>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -394,6 +408,7 @@ where
 }
 
 /// DST Type VIII: Discrete Sine Transform type VIII
+#[allow(dead_code)]
 pub fn dst_viii<S, D>(x: &ArrayBase<S, D>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,
@@ -422,6 +437,7 @@ where
 }
 
 /// Inverse DST Type VIII
+#[allow(dead_code)]
 pub fn idst_viii<S>(x: &ArrayBase<S, ndarray::Ix1>) -> FFTResult<Array1<f64>>
 where
     S: Data<Elem = f64>,

@@ -433,6 +433,7 @@ impl WorkloadSimulator {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 SciRS2-IO Ultrathink Mode Integration Demo");
     println!("===============================================\n");
@@ -467,6 +468,7 @@ fn main() -> Result<()> {
 
 // Data generation functions for different scenarios
 
+#[allow(dead_code)]
 fn generate_scientific_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -478,6 +480,7 @@ fn generate_scientific_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_time_series_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -490,6 +493,7 @@ fn generate_time_series_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_genomic_data(size: usize) -> Vec<u8> {
     // Simulate genomic sequences (A, T, G, C)
     (0..size)
@@ -502,6 +506,7 @@ fn generate_genomic_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_streaming_data(size: usize, chunk_id: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -513,6 +518,7 @@ fn generate_streaming_data(size: usize, chunk_id: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_database_backup_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -528,6 +534,7 @@ fn generate_database_backup_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_log_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -543,6 +550,7 @@ fn generate_log_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_document_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -552,6 +560,7 @@ fn generate_document_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_financial_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -567,6 +576,7 @@ fn generate_financial_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_analytics_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {

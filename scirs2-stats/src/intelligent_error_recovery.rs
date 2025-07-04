@@ -726,11 +726,13 @@ impl IntelligentErrorRecovery {
 }
 
 /// Convenience function to create enhanced error recovery system
+#[allow(dead_code)]
 pub fn create_intelligent_recovery() -> IntelligentErrorRecovery {
     IntelligentErrorRecovery::new(RecoveryConfig::default())
 }
 
 /// Convenience function to analyze error and get recovery suggestions
+#[allow(dead_code)]
 pub fn get_intelligent_suggestions(
     error: &EnhancedStatsError,
 ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
@@ -1554,6 +1556,7 @@ impl MLEnhancedErrorRecovery {
 }
 
 /// Advanced error recovery with ML capabilities
+#[allow(dead_code)]
 pub fn create_ml_enhanced_recovery() -> MLEnhancedErrorRecovery {
     MLEnhancedErrorRecovery::new(MLRecoveryConfig::default())
 }

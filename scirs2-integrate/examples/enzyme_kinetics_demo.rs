@@ -10,6 +10,7 @@ use scirs2_integrate::ode::{
     solve_ivp, ODEMethod, ODEOptions,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Advanced Enzyme Kinetics and Metabolic Pathway Demo\n");
 
@@ -54,6 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate different multi-substrate enzyme mechanisms
+#[allow(dead_code)]
 fn demonstrate_multisubstrate_mechanisms() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Comparing different bi-substrate enzyme mechanisms");
 
@@ -131,6 +133,7 @@ fn demonstrate_multisubstrate_mechanisms() -> Result<(), Box<dyn std::error::Err
 }
 
 /// Demonstrate allosteric enzyme regulation
+#[allow(dead_code)]
 fn demonstrate_allosteric_regulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Allosteric enzyme with activator and inhibitor");
 
@@ -195,6 +198,7 @@ fn demonstrate_allosteric_regulation() -> Result<(), Box<dyn std::error::Error>>
 }
 
 /// Demonstrate simple glycolysis pathway simulation
+#[allow(dead_code)]
 fn demonstrate_glycolysis_pathway() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Simulating simplified glycolysis pathway dynamics");
 
@@ -287,6 +291,7 @@ fn demonstrate_glycolysis_pathway() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate TCA cycle dynamics
+#[allow(dead_code)]
 fn demonstrate_tca_cycle() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Simulating TCA cycle dynamics");
 
@@ -366,6 +371,7 @@ fn demonstrate_tca_cycle() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate metabolic control analysis
+#[allow(dead_code)]
 fn demonstrate_control_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Performing metabolic control analysis on glycolysis");
 
@@ -428,6 +434,7 @@ fn demonstrate_control_analysis() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate temperature and pH effects on enzyme activity
+#[allow(dead_code)]
 fn demonstrate_environmental_effects() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Effects of temperature and pH on enzyme activity");
 
@@ -508,6 +515,7 @@ fn demonstrate_environmental_effects() -> Result<(), Box<dyn std::error::Error>>
 }
 
 /// Demonstrate pathway regulation and feedback inhibition
+#[allow(dead_code)]
 fn demonstrate_pathway_regulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Demonstrating pathway regulation and feedback inhibition");
 

@@ -467,7 +467,8 @@ impl JITCompiler {
         let optimized_operation = self.fusion_optimizer.optimize_operation(operation)?;
         // Generate code for the operation
         let code = self.generate_code(&optimized_operation)?;
-        let entry_point = format!("kernel_{}", self.generate_kernel_id(&key));
+        let kernel_id = self.generate_kernel_id(&key);
+        let entry_point = format!("kernel_{kernel_id}");
         // Analyze memory requirements
         let memory_requirements = self.analyze_memory_requirements(&optimized_operation)?;
         // Estimate performance characteristics
@@ -527,7 +528,8 @@ impl JITCompiler {
     fn generate_kernel_id(&self, key: &JITKernelKey) -> String {
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
         key.hash(&mut hasher);
-        format!("{:x}", hasher.finish())
+        let hash = hasher.finish();
+        format!("{hash:x}")
     /// Generate optimized code for an operation
     fn generate_code(&self, operation: &JITOperation) -> Result<String> {
         match operation {
@@ -565,7 +567,7 @@ impl JITCompiler {
         let k = if transpose_a { a_shape[0] } else { a_shape[1] };
         let n = if transpose_b { b_shape[0] } else { b_shape[1] };
         let mut code = String::new();
-        code.push_str(&format!("// Optimized MatMul: {}x{} * {}x{}\n", m, k, k, n));
+        code.push_str(&format!("// Optimized MatMul: {m}x{k} * {k}x{n}\n"));
         code.push_str("void kernel_matmul(const float* A, const float* B, float* C) {\n");
         if self.codegen_settings.vectorize && self.target_arch_supports_simd() {
             // Generate vectorized code
@@ -579,11 +581,11 @@ impl JITCompiler {
         op: &ElementWiseOp,
         shapes: &[Vec<usize>],
         let total_elements = shapes[0].iter().product::<usize>();
-        code.push_str(&format!("// Element-wise operation: {:?}\n", op));
+        code.push_str(&format!("// Element-wise operation: {op:?}\n"));
         code.push_str("void kernel_elementwise(");
         // Generate input parameters
         for i in 0..shapes.len() {
-            code.push_str(&format!("const float* input{}, ", i));
+            code.push_str(&format!("const float* input{i}, "));
         code.push_str("float* output) {\n");
             code.push_str(&self.generate_vectorized_elementwise(op, total_elements)?);
             code.push_str(&self.generate_scalar_elementwise(op, total_elements));
@@ -617,7 +619,7 @@ impl JITCompiler {
     fn generate_activation_code(
         activation: &ActivationType,
         let total_elements = input_shape.iter().product::<usize>();
-        code.push_str(&format!("// Activation: {:?}\n", activation));
+        code.push_str(&format!("// Activation: {activation:?}\n"));
         code.push_str("void kernel_activation(const float* input, float* output) {\n");
             code.push_str(&self.generate_vectorized_activation(activation, total_elements)?);
             code.push_str(&self.generate_scalar_activation(activation, total_elements));
@@ -636,16 +638,16 @@ impl JITCompiler {
                 code.push_str("const float* input, float* output) {\n");
                 code.push_str("  // Vertical fusion - pipeline operations\n");
                 for (i, op) in operations.iter().enumerate() {
-                    code.push_str(&format!("  // Operation {}: {:?}\n", i, op));
+                    code.push_str(&format!("  // Operation {i}: {op:?}\n"));
                 }
             FusionStrategy::Horizontal => {
                 // Generate code that combines independent operations
                 code.push_str("  // Horizontal fusion - parallel operations\n");
-                    code.push_str(&format!("  // Parallel operation {}: {:?}\n", i, op));
+                    code.push_str(&format!("  // Parallel operation {i}: {op:?}\n"));
                 code.push_str("  // Generic fusion\n");
     /// Generate generic fallback code
     fn generate_generic_code(&self, operation: &JITOperation) -> String {
-        format!("// Generic implementation for: {:?}\nvoid kernel_generic() {{\n  // Fallback implementation\n}}\n", operation)
+        format!("// Generic implementation for: {operation:?}\nvoid kernel_generic() {{\n  // Fallback implementation\n}}\n")
     /// Check if target architecture supports SIMD
     fn target_arch_supports_simd(&self) -> bool {
         match &self.target_arch {
@@ -1651,6 +1653,7 @@ impl Default for CodeGenSettings {
             target_features,
 /// Detect AVX support level on x86_64
 #[cfg(target_arch = "x86_64")]
+#[allow(dead_code)]
 fn detect_avx_level() -> u8 {
     if is_x86_feature_detected!("avx512f") {
         return 512;

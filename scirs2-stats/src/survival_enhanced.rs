@@ -38,7 +38,16 @@ pub struct EnhancedKaplanMeier<F> {
 
 impl<F> EnhancedKaplanMeier<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + PartialOrd,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + PartialOrd
+        + std::fmt::Display,
 {
     /// Fit enhanced Kaplan-Meier estimator
     pub fn fit(
@@ -491,6 +500,7 @@ where
 }
 
 /// Log-rank test for comparing survival curves
+#[allow(dead_code)]
 pub fn log_rank_test<F>(
     durations1: &ArrayView1<F>,
     event_observed1: &ArrayView1<bool>,
@@ -498,7 +508,16 @@ pub fn log_rank_test<F>(
     event_observed2: &ArrayView1<bool>,
 ) -> StatsResult<(F, F)>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + PartialOrd,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + PartialOrd
+        + std::fmt::Display,
 {
     check_array_finite(durations1, "durations1")?;
     check_array_finite(durations2, "durations2")?;
@@ -506,11 +525,11 @@ where
     // Combine data with group indicators
     let mut combined_data = Vec::new();
 
-    for (i, (&duration, &observed)) in durations1.iter().zip(event_observed1.iter()).enumerate() {
+    for (_i, (&duration, &observed)) in durations1.iter().zip(event_observed1.iter()).enumerate() {
         combined_data.push((duration, observed, 0)); // Group 0
     }
 
-    for (i, (&duration, &observed)) in durations2.iter().zip(event_observed2.iter()).enumerate() {
+    for (_i, (&duration, &observed)) in durations2.iter().zip(event_observed2.iter()).enumerate() {
         combined_data.push((duration, observed, 1)); // Group 1
     }
 
@@ -601,17 +620,28 @@ where
 }
 
 /// Convenience functions
+#[allow(dead_code)]
 pub fn kaplan_meier<F>(
     durations: &ArrayView1<F>,
     event_observed: &ArrayView1<bool>,
     confidence_level: Option<F>,
 ) -> StatsResult<EnhancedKaplanMeier<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + PartialOrd,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + PartialOrd
+        + std::fmt::Display,
 {
     EnhancedKaplanMeier::fit(durations, event_observed, confidence_level)
 }
 
+#[allow(dead_code)]
 pub fn cox_regression<F>(
     durations: &ArrayView1<F>,
     event_observed: &ArrayView1<bool>,

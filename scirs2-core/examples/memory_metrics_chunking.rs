@@ -4,6 +4,7 @@
 //! memory usage during chunk-based processing of large arrays.
 
 #[cfg(not(feature = "memory_management"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'memory_management' feature to be enabled.");
     println!("Run with: cargo run --example memory_metrics_chunking --features memory_management");
@@ -29,6 +30,7 @@ struct SharedData {
 }
 
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn main() {
     println!("Memory Metrics with TrackedChunkProcessor Example");
     println!("=================================================\n");
@@ -63,6 +65,7 @@ fn main() {
 
 // Function to process array with standard chunking
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn basic_chunking(array: &Array2<f64>) {
     let start = Instant::now();
     let mut sum = 0.0;
@@ -83,6 +86,7 @@ fn basic_chunking(array: &Array2<f64>) {
 
 // Function to process array with tracked chunking
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn tracked_chunking(array: &Array2<f64>) {
     let start = Instant::now();
 

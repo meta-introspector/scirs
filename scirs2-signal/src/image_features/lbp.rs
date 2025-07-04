@@ -5,6 +5,7 @@ use ndarray::Array2;
 use std::collections::HashMap;
 
 /// Extract Local Binary Pattern features from an image
+#[allow(dead_code)]
 pub fn extract_lbp_features(
     image: &Array2<f64>,
     features: &mut HashMap<String, f64>,

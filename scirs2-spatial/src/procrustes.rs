@@ -11,6 +11,7 @@ use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView2, Axis};
 
 /// Check if all values in an array are finite
+#[allow(dead_code)]
 fn check_array_finite(array: &ArrayView2<'_, f64>, name: &str) -> SpatialResult<()> {
     for value in array.iter() {
         if !value.is_finite() {
@@ -81,6 +82,7 @@ impl ProcrustesParams {
 /// * Returns error if input arrays have different shapes
 /// * Returns error if arrays contain non-finite values
 /// * Returns error if SVD decomposition fails
+#[allow(dead_code)]
 pub fn procrustes(
     data1: &ArrayView2<'_, f64>,
     data2: &ArrayView2<'_, f64>,
@@ -135,6 +137,7 @@ pub fn procrustes(
 }
 
 /// Basic implementation of Procrustes analysis using available matrix operations
+#[allow(dead_code)]
 fn procrustes_basic_impl(
     centered1: &ArrayView2<'_, f64>,
     centered2: &ArrayView2<'_, f64>,
@@ -202,6 +205,7 @@ fn procrustes_basic_impl(
 /// * Returns error if input arrays have different shapes
 /// * Returns error if arrays contain non-finite values
 /// * Returns error if SVD decomposition fails
+#[allow(dead_code)]
 pub fn procrustes_extended(
     data1: &ArrayView2<'_, f64>,
     data2: &ArrayView2<'_, f64>,

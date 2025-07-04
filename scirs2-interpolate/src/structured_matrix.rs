@@ -488,6 +488,7 @@ where
 /// let rhs = Array1::from_vec(vec![1.0, 2.0, 1.0]);
 /// let solution = solve_band_system(&matrix, &rhs.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn solve_band_system<T>(
     band_matrix: &BandMatrix<T>,
     rhs: &ArrayView1<T>,
@@ -625,6 +626,7 @@ where
 ///
 /// Uses the Conjugate Gradient method for symmetric positive definite systems,
 /// or GMRES for general systems.
+#[allow(dead_code)]
 pub fn solve_sparse_system<T>(
     sparse_matrix: &CSRMatrix<T>,
     rhs: &ArrayView1<T>,
@@ -713,6 +715,7 @@ where
 /// - Band matrices: Band QR factorization
 /// - Sparse matrices: Sparse QR or iterative methods
 /// - Dense matrices: Standard QR factorization
+#[allow(dead_code)]
 pub fn solve_structured_least_squares<T>(
     matrix: &ArrayView2<T>,
     rhs: &ArrayView1<T>,
@@ -792,6 +795,7 @@ where
 /// # Returns
 ///
 /// A band matrix structure suitable for B-spline coefficient systems
+#[allow(dead_code)]
 pub fn create_bspline_band_matrix<T>(n: usize, degree: usize) -> BandMatrix<T>
 where
     T: Float + Copy + Zero + AddAssign,
@@ -806,6 +810,7 @@ where
 ///
 /// Uses blocking and SIMD-friendly algorithms when possible.
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn vectorized_matvec<T>(
     matrix: &ArrayView2<T>,
     vector: &ArrayView1<T>,
@@ -836,6 +841,7 @@ where
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn vectorized_matvec_simd_f64<T>(
     matrix: &ArrayView2<T>,
     vector: &ArrayView1<T>,
@@ -861,6 +867,7 @@ where
 
 #[cfg(not(feature = "simd"))]
 /// Vectorized matrix-vector product (scalar fallback)
+#[allow(dead_code)]
 pub fn vectorized_matvec<T>(
     matrix: &ArrayView2<T>,
     vector: &ArrayView1<T>,
@@ -880,6 +887,7 @@ where
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn vectorized_matvec_scalar<T>(
     matrix: &ArrayView2<T>,
     vector: &ArrayView1<T>,

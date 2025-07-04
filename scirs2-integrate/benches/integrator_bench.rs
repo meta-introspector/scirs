@@ -9,6 +9,7 @@ use scirs2_integrate::{
 use std::marker::PhantomData;
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn bench_integrators(c: &mut Criterion) {
     let mut group = c.benchmark_group("integration_methods");
     group.measurement_time(Duration::from_secs(5));

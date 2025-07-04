@@ -10,6 +10,7 @@ use scirs2_io::compression::{
 use std::time::Instant;
 use tempfile::tempdir;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ Parallel Compression and Decompression Example");
     println!("==============================================");
@@ -41,6 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn generate_test_data(size: usize) -> Vec<u8> {
     // Generate semi-random data that compresses well
     let mut data = Vec::with_capacity(size);
@@ -66,6 +68,7 @@ fn generate_test_data(size: usize) -> Vec<u8> {
     data
 }
 
+#[allow(dead_code)]
 fn demonstrate_basic_parallel_compression(data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔧 Demonstrating Basic Parallel Compression...");
 
@@ -142,6 +145,7 @@ fn demonstrate_basic_parallel_compression(data: &[u8]) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_performance_comparison(data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚖️  Comparing Sequential vs Parallel Performance...");
 
@@ -217,6 +221,7 @@ fn demonstrate_performance_comparison(data: &[u8]) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_parallel_file_operations(
     data: &[u8],
     temp_dir: &tempfile::TempDir,
@@ -295,6 +300,7 @@ fn demonstrate_parallel_file_operations(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_algorithm_benchmarking(data: &[u8]) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🏁 Benchmarking Different Algorithms and Configurations...");
 

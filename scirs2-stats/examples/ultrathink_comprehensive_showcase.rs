@@ -14,6 +14,7 @@ use scirs2_stats::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Mode Comprehensive Showcase");
     println!("==========================================\n");
@@ -41,6 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_basic_ultrathink() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Basic Ultrathink Processing");
     println!("------------------------------");
@@ -94,6 +96,7 @@ fn demonstrate_basic_ultrathink() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_advanced_configurations() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚙️  Advanced Configuration Options");
     println!("----------------------------------");
@@ -183,6 +186,7 @@ fn demonstrate_advanced_configurations() -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_stability_testing() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔬 Numerical Stability Testing");
     println!("------------------------------");
@@ -238,6 +242,7 @@ fn demonstrate_stability_testing() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_matrix_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔢 Matrix Operations with Ultrathink");
     println!("-------------------------------------");
@@ -292,6 +297,7 @@ fn demonstrate_matrix_operations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_time_series_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("📈 Time Series Processing");
     println!("-------------------------");
@@ -340,6 +346,7 @@ fn demonstrate_time_series_processing() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_performance_analytics() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Performance Analytics");
     println!("------------------------");
@@ -400,6 +407,7 @@ fn demonstrate_performance_analytics() -> Result<(), Box<dyn std::error::Error>>
 
 // Helper functions for generating test data
 
+#[allow(dead_code)]
 fn generate_sample_data(n: usize) -> Array1<f64> {
     use std::f64::consts::PI;
 
@@ -412,6 +420,7 @@ fn generate_sample_data(n: usize) -> Array1<f64> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_normal_data(n: usize) -> Array1<f64> {
     // Simple Box-Muller approximation for normal distribution
     (0..n)
@@ -423,6 +432,7 @@ fn generate_normal_data(n: usize) -> Array1<f64> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_data_with_outliers(n: usize) -> Array1<f64> {
     let mut data = generate_normal_data(n);
     // Add some outliers
@@ -432,10 +442,12 @@ fn generate_data_with_outliers(n: usize) -> Array1<f64> {
     data
 }
 
+#[allow(dead_code)]
 fn generate_small_values_data(n: usize) -> Array1<f64> {
     generate_normal_data(n).mapv(|x| x * 1e-12) // Very small values
 }
 
+#[allow(dead_code)]
 fn generate_large_range_data(n: usize) -> Array1<f64> {
     (0..n)
         .map(|i| {
@@ -448,6 +460,7 @@ fn generate_large_range_data(n: usize) -> Array1<f64> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_sample_matrix(rows: usize, cols: usize) -> Array2<f64> {
     use std::f64::consts::PI;
 
@@ -458,6 +471,7 @@ fn generate_sample_matrix(rows: usize, cols: usize) -> Array2<f64> {
     })
 }
 
+#[allow(dead_code)]
 fn generate_time_series_data(n: usize) -> Array1<f64> {
     use std::f64::consts::PI;
 

@@ -200,6 +200,7 @@ impl GPUSparseFFT {
 /// # Returns
 ///
 /// * Sparse FFT result containing frequency components, indices, and timing information
+#[allow(dead_code)]
 pub fn gpu_sparse_fft<T>(
     signal: &[T],
     k: usize,
@@ -244,6 +245,7 @@ where
 /// # Returns
 ///
 /// * List of sparse FFT results for each input signal
+#[allow(dead_code)]
 pub fn gpu_batch_sparse_fft<T>(
     signals: &[Vec<T>],
     k: usize,

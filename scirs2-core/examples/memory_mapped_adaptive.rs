@@ -6,6 +6,7 @@ use std::io::Write;
 use std::time::Instant;
 use tempfile::tempdir;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Memory-Mapped Array Adaptive Chunking Example");
     println!("=============================================\n");
@@ -51,6 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Create test arrays of different shapes and sizes
+#[allow(dead_code)]
 fn create_test_arrays(
     dir_path: &std::path::Path,
 ) -> Result<Vec<MemoryMappedArray<f64>>, Box<dyn std::error::Error>> {
@@ -126,6 +128,7 @@ fn create_test_arrays(
 }
 
 // Benchmark different fixed chunking strategies
+#[allow(dead_code)]
 fn benchmark_fixed_chunks(
     array: &MemoryMappedArray<f64>,
     description: &str,
@@ -191,6 +194,7 @@ fn benchmark_fixed_chunks(
 }
 
 // Benchmark adaptive chunking strategies
+#[allow(dead_code)]
 fn benchmark_adaptive_chunks(
     array: &MemoryMappedArray<f64>,
     description: &str,
@@ -276,6 +280,7 @@ fn benchmark_adaptive_chunks(
 }
 
 // Benchmark parallel adaptive chunking
+#[allow(dead_code)]
 fn benchmark_adaptive_parallel(
     array: &MemoryMappedArray<f64>,
     description: &str,

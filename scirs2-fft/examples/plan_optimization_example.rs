@@ -6,6 +6,7 @@ use scirs2_fft::{
 };
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() {
     println!("FFT Plan Optimization Example");
     println!("============================\n");

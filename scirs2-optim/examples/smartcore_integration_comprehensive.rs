@@ -725,6 +725,7 @@ impl OptimizedNeuralNetwork {
 }
 
 // Cross-validation implementation
+#[allow(dead_code)]
 fn cross_validate_optimizers(dataset: &MLDataset, k: usize) -> Result<()> {
     println!("\n🔍 Cross-validating optimizers with {}-fold CV...", k);
 
@@ -806,6 +807,7 @@ struct HyperparameterConfig {
     optimizer: String,
 }
 
+#[allow(dead_code)]
 fn hyperparameter_optimization(dataset: &MLDataset) -> Result<()> {
     println!("\n🎯 Hyperparameter optimization...");
 
@@ -896,6 +898,7 @@ fn hyperparameter_optimization(dataset: &MLDataset) -> Result<()> {
 }
 
 // Model ensemble with different optimizers
+#[allow(dead_code)]
 fn ensemble_demonstration(dataset: &MLDataset) -> Result<()> {
     println!("\n🎭 Model Ensemble Demonstration...");
 
@@ -984,6 +987,7 @@ fn ensemble_demonstration(dataset: &MLDataset) -> Result<()> {
 }
 
 // Create synthetic regression dataset
+#[allow(dead_code)]
 fn create_regression_dataset(n_samples: usize, n_features: usize, noise: f64) -> MLDataset {
     let mut rng = Xoshiro256Plus::seed_from_u64(42);
 
@@ -1003,6 +1007,7 @@ fn create_regression_dataset(n_samples: usize, n_features: usize, noise: f64) ->
     MLDataset::new(features, targets)
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🧠 Scirs2-Optim + SmartCore Integration Comprehensive Example");
     println!("=============================================================");

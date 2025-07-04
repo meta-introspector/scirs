@@ -715,6 +715,7 @@ impl<W: Write> FortranFile<W> {
 }
 
 /// Read a complete Fortran unformatted file into memory
+#[allow(dead_code)]
 pub fn read_fortran_file<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<u8>>> {
     let mut file = FortranFile::open(path)?;
     let mut records = Vec::new();
@@ -731,6 +732,7 @@ pub fn read_fortran_file<P: AsRef<Path>>(path: P) -> Result<Vec<Vec<u8>>> {
 }
 
 /// Detect the endianness and record marker size of a Fortran file
+#[allow(dead_code)]
 pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, RecordMarkerSize)> {
     let mut file = File::open(path.as_ref())
         .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;

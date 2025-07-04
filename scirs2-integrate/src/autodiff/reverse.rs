@@ -712,6 +712,7 @@ impl<F: IntegrateFloat> ReverseAD<F> {
 }
 
 /// Compute gradient using reverse mode AD (convenience function)
+#[allow(dead_code)]
 pub fn reverse_gradient<F, Func>(f: Func, x: ArrayView1<F>) -> IntegrateResult<Array1<F>>
 where
     F: IntegrateFloat,
@@ -722,6 +723,7 @@ where
 }
 
 /// Compute Jacobian using reverse mode AD (convenience function)
+#[allow(dead_code)]
 pub fn reverse_jacobian<F, Func>(f: Func, x: ArrayView1<F>) -> IntegrateResult<Array2<F>>
 where
     F: IntegrateFloat,

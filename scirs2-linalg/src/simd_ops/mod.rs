@@ -9,6 +9,7 @@ pub mod gemm;
 pub mod hardware_specific;
 pub mod neural_memory_optimization;
 pub mod norms;
+pub mod simd_memory_ops;
 pub mod transpose;
 
 // Re-export commonly used SIMD operations
@@ -48,6 +49,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps}
 ///
 /// * Result vector of shape (m,)
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_matvec_f32(
     matrix: &ArrayView2<f32>,
     vector: &ArrayView1<f32>,
@@ -81,6 +83,7 @@ pub fn simd_matvec_f32(
 ///
 /// * Result vector of shape (m,)
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_matvec_f64(
     matrix: &ArrayView2<f64>,
     vector: &ArrayView1<f64>,
@@ -117,6 +120,7 @@ pub fn simd_matvec_f64(
 ///
 /// * Result matrix of shape (m, n)
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_matmul_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgResult<Array2<f32>> {
     let (m, k1) = a.dim();
     let (k2, n) = b.dim();
@@ -149,6 +153,7 @@ pub fn simd_matmul_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgResult
 ///
 /// * Result matrix of shape (m, n)
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_matmul_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
     let (m, k1) = a.dim();
     let (k2, n) = b.dim();
@@ -178,6 +183,7 @@ pub fn simd_matmul_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgResult
 ///
 /// * Matrix containing element-wise maximum values
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_matrix_max_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgResult<Array2<f32>> {
     if a.shape() != b.shape() {
         return Err(LinalgError::ShapeError(format!(
@@ -217,6 +223,7 @@ pub fn simd_matrix_max_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgRe
 ///
 /// * Matrix containing element-wise maximum values
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_matrix_max_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
     if a.shape() != b.shape() {
         return Err(LinalgError::ShapeError(format!(
@@ -256,6 +263,7 @@ pub fn simd_matrix_max_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgRe
 ///
 /// * Matrix containing element-wise minimum values
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_matrix_min_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgResult<Array2<f32>> {
     if a.shape() != b.shape() {
         return Err(LinalgError::ShapeError(format!(
@@ -295,6 +303,7 @@ pub fn simd_matrix_min_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> LinalgRe
 ///
 /// * Matrix containing element-wise minimum values
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_matrix_min_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
     if a.shape() != b.shape() {
         return Err(LinalgError::ShapeError(format!(
@@ -335,6 +344,7 @@ pub fn simd_matrix_min_f64(a: &ArrayView2<f64>, b: &ArrayView2<f64>) -> LinalgRe
 ///
 /// * Modified target vector
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_axpy_f32(alpha: f32, x: &ArrayView1<f32>, y: &mut Array1<f32>) -> LinalgResult<()> {
     if x.len() != y.len() {
         return Err(LinalgError::ShapeError(format!(
@@ -367,6 +377,7 @@ pub fn simd_axpy_f32(alpha: f32, x: &ArrayView1<f32>, y: &mut Array1<f32>) -> Li
 ///
 /// * Modified target vector
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_axpy_f64(alpha: f64, x: &ArrayView1<f64>, y: &mut Array1<f64>) -> LinalgResult<()> {
     if x.len() != y.len() {
         return Err(LinalgError::ShapeError(format!(
@@ -398,6 +409,7 @@ pub fn simd_axpy_f64(alpha: f64, x: &ArrayView1<f64>, y: &mut Array1<f64>) -> Li
 ///
 /// * Dot product result
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> LinalgResult<f32> {
     if a.len() != b.len() {
         return Err(LinalgError::ShapeError(format!(
@@ -421,6 +433,7 @@ pub fn simd_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> LinalgResult<f3
 ///
 /// * Dot product result
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> LinalgResult<f64> {
     if a.len() != b.len() {
         return Err(LinalgError::ShapeError(format!(
@@ -434,11 +447,13 @@ pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> LinalgResult<f6
 }
 
 /// Get platform capabilities for SIMD optimization
+#[allow(dead_code)]
 pub fn get_platform_capabilities() -> PlatformCapabilities {
     PlatformCapabilities::detect()
 }
 
 /// Create an auto-optimizer for automatic SIMD/GPU selection
+#[allow(dead_code)]
 pub fn create_auto_optimizer() -> AutoOptimizer {
     AutoOptimizer::new()
 }

@@ -7,6 +7,7 @@ use ndarray::{arr2, Array2};
 use scirs2_ndimage::filters::{convolve, convolve_fast, convolve_optimized, BorderMode};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Optimized Boundary Handling Example");
     println!("===================================\n");

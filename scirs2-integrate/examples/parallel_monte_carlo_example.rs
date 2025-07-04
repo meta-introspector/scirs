@@ -16,6 +16,7 @@ use scirs2_integrate::monte_carlo_parallel::{
 
 use std::marker::PhantomData;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Parallel Monte Carlo Integration Performance Demo ===");
 
@@ -46,6 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Test integration of a simple polynomial function
+#[allow(dead_code)]
 fn test_simple_function() -> Result<(), Box<dyn std::error::Error>> {
     println!("\\n--- Test 1: Simple Polynomial Function ---");
     println!("Integrating f(x,y) = x² + y² over [0,1]×[0,1] (exact result: 2/3)");
@@ -112,6 +114,7 @@ fn test_simple_function() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Test integration of an expensive trigonometric function
+#[allow(dead_code)]
 fn test_expensive_function() -> Result<(), Box<dyn std::error::Error>> {
     println!("\\n--- Test 2: Expensive Trigonometric Function ---");
     println!("Integrating f(x,y) = sin(10πx) * cos(10πy) * exp(-x²-y²) over [-2,2]×[-2,2]");
@@ -180,6 +183,7 @@ fn test_expensive_function() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Test high-dimensional integration
+#[allow(dead_code)]
 fn test_multidimensional_integration() -> Result<(), Box<dyn std::error::Error>> {
     println!("\\n--- Test 3: High-Dimensional Integration ---");
     println!("Integrating f(x₁,...,x₆) = exp(-∑xᵢ²) over [-1,1]⁶");
@@ -256,6 +260,7 @@ fn test_multidimensional_integration() -> Result<(), Box<dyn std::error::Error>>
 }
 
 /// Test adaptive parallel Monte Carlo integration
+#[allow(dead_code)]
 fn test_adaptive_parallel_integration() -> Result<(), Box<dyn std::error::Error>> {
     println!("\\n--- Test 4: Adaptive Parallel Monte Carlo ---");
     println!("Using adaptive sampling to reach target variance automatically");
@@ -318,6 +323,7 @@ fn test_adaptive_parallel_integration() -> Result<(), Box<dyn std::error::Error>
 }
 
 /// Print performance recommendations
+#[allow(dead_code)]
 fn print_performance_recommendations() {
     println!("\\nParallel Monte Carlo is most beneficial when:");
     println!("• Integrand function is computationally expensive");

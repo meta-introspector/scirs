@@ -1229,6 +1229,7 @@ impl<
 /// Compute the Jacobian of a function with respect to a subset of variables
 ///
 /// This is a helper function for computing partial Jacobians.
+#[allow(dead_code)]
 fn compute_jacobian_for_variables<F, Func>(
     f: &Func,
     t: F,
@@ -1316,6 +1317,7 @@ where
 /// Solve a constrained least-squares problem for projection
 ///
 /// Solves the problem: min ||Δy|| subject to J·Δy = b
+#[allow(dead_code)]
 fn solve_constrained_least_squares<F>(
     j: ArrayView2<F>,
     b: ArrayView1<F>,
@@ -1366,6 +1368,7 @@ where
 }
 
 /// Generate combinations of indices for equation subset analysis
+#[allow(dead_code)]
 fn generate_combinations(n: usize, k: usize) -> Vec<Vec<usize>> {
     if k == 0 || k > n {
         return vec![];
@@ -1380,6 +1383,7 @@ fn generate_combinations(n: usize, k: usize) -> Vec<Vec<usize>> {
 }
 
 /// Recursive helper for generating combinations
+#[allow(dead_code)]
 fn generate_combinations_recursive(
     start: usize,
     n: usize,

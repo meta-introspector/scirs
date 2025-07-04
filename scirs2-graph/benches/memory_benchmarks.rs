@@ -9,6 +9,7 @@ use scirs2_graph::{
 use std::time::Duration;
 
 /// Benchmark memory usage for different graph representations
+#[allow(dead_code)]
 fn bench_memory_usage(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_usage");
     group.measurement_time(Duration::from_secs(10));
@@ -61,6 +62,7 @@ fn bench_memory_usage(c: &mut Criterion) {
 }
 
 /// Benchmark neighbor iteration performance
+#[allow(dead_code)]
 fn bench_neighbor_iteration(c: &mut Criterion) {
     let mut group = c.benchmark_group("neighbor_iteration");
 
@@ -143,6 +145,7 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
 }
 
 /// Benchmark edge query performance
+#[allow(dead_code)]
 fn bench_edge_queries(c: &mut Criterion) {
     let mut group = c.benchmark_group("edge_queries");
 
@@ -199,6 +202,7 @@ fn bench_edge_queries(c: &mut Criterion) {
 }
 
 /// Benchmark graph construction time
+#[allow(dead_code)]
 fn bench_construction_time(c: &mut Criterion) {
     let mut group = c.benchmark_group("construction_time");
 
@@ -251,6 +255,7 @@ fn bench_construction_time(c: &mut Criterion) {
 }
 
 /// Benchmark memory fragmentation analysis
+#[allow(dead_code)]
 fn bench_fragmentation_analysis(c: &mut Criterion) {
     let mut group = c.benchmark_group("fragmentation_analysis");
 

@@ -145,6 +145,7 @@ enum RiskLevel {
     Critical,
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     let matches = Command::new("Memory Pattern Analyzer")
         .version("1.0")
@@ -231,6 +232,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn load_analysis_input(input_dir: &str) -> Result<AnalysisInput> {
     let input_path = Path::new(input_dir);
 
@@ -316,6 +318,7 @@ fn load_analysis_input(input_dir: &str) -> Result<AnalysisInput> {
     })
 }
 
+#[allow(dead_code)]
 fn analyze_memory_patterns(input: &AnalysisInput, detailed: bool) -> Result<PatternAnalysisResult> {
     println!("  📈 Analyzing allocation statistics...");
     let allocation_statistics =
@@ -357,6 +360,7 @@ fn analyze_memory_patterns(input: &AnalysisInput, detailed: bool) -> Result<Patt
     })
 }
 
+#[allow(dead_code)]
 fn analyze_allocation_statistics(
     events: &[AllocationEvent],
     metadata: &AnalysisMetadata,
@@ -439,6 +443,7 @@ fn analyze_allocation_statistics(
     }
 }
 
+#[allow(dead_code)]
 fn analyze_memory_trends(snapshots: &[MemoryUsageSnapshot]) -> MemoryTrends {
     if snapshots.is_empty() {
         return MemoryTrends {
@@ -494,6 +499,7 @@ fn analyze_memory_trends(snapshots: &[MemoryUsageSnapshot]) -> MemoryTrends {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_trend(values: &[f64]) -> (TrendDirection, f64) {
     if values.len() < 2 {
         return (TrendDirection::Stable, 0.0);
@@ -521,6 +527,7 @@ fn calculate_trend(values: &[f64]) -> (TrendDirection, f64) {
     (direction, strength)
 }
 
+#[allow(dead_code)]
 fn calculate_std_dev(values: &[f64]) -> f64 {
     if values.len() <= 1 {
         return 0.0;
@@ -532,6 +539,7 @@ fn calculate_std_dev(values: &[f64]) -> f64 {
     variance.sqrt()
 }
 
+#[allow(dead_code)]
 fn detect_memory_patterns(
     _snapshots: &[MemoryUsageSnapshot],
     _events: &[AllocationEvent],
@@ -545,6 +553,7 @@ fn detect_memory_patterns(
     }]
 }
 
+#[allow(dead_code)]
 fn detect_memory_anomalies(
     _snapshots: &[MemoryUsageSnapshot],
     _events: &[AllocationEvent],
@@ -553,6 +562,7 @@ fn detect_memory_anomalies(
     Vec::new()
 }
 
+#[allow(dead_code)]
 fn generate_optimization_suggestions(
     stats: &AllocationStatistics,
     trends: &MemoryTrends,
@@ -620,6 +630,7 @@ fn generate_optimization_suggestions(
     suggestions
 }
 
+#[allow(dead_code)]
 fn assess_risks(
     stats: &AllocationStatistics,
     trends: &MemoryTrends,
@@ -702,6 +713,7 @@ fn assess_risks(
     }
 }
 
+#[allow(dead_code)]
 fn display_analysis_summary(result: &PatternAnalysisResult) {
     println!("\n📋 Memory Pattern Analysis Summary");
     println!("=================================");
@@ -771,6 +783,7 @@ fn display_analysis_summary(result: &PatternAnalysisResult) {
     }
 }
 
+#[allow(dead_code)]
 fn generate_markdown_report(result: &PatternAnalysisResult) -> String {
     format!(
         r#"# Memory Pattern Analysis Report
@@ -859,6 +872,7 @@ fn generate_markdown_report(result: &PatternAnalysisResult) -> String {
     )
 }
 
+#[allow(dead_code)]
 fn generate_html_report(result: &PatternAnalysisResult) -> String {
     format!(
         r#"<!DOCTYPE html>
@@ -943,6 +957,7 @@ fn generate_html_report(result: &PatternAnalysisResult) -> String {
     )
 }
 
+#[allow(dead_code)]
 fn risk_level_to_css_class(risk: &RiskLevel) -> &'static str {
     match risk {
         RiskLevel::High | RiskLevel::Critical => "high",

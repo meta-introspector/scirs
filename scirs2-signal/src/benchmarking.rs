@@ -21,7 +21,6 @@ use crate::wavelets::cwt;
 use ndarray::Array1;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
-use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
 use std::time::Instant;
@@ -186,6 +185,7 @@ pub struct SystemInfo {
 }
 
 /// Run comprehensive benchmark suite
+#[allow(dead_code)]
 pub fn run_comprehensive_benchmarks(config: &BenchmarkConfig) -> SignalResult<BenchmarkSuite> {
     println!("🚀 Starting comprehensive signal processing benchmarks...");
     let start_time = Instant::now();
@@ -263,6 +263,7 @@ pub fn run_comprehensive_benchmarks(config: &BenchmarkConfig) -> SignalResult<Be
 }
 
 /// Benchmark filtering operations
+#[allow(dead_code)]
 fn benchmark_filtering_operations(config: &BenchmarkConfig) -> SignalResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
@@ -284,6 +285,7 @@ fn benchmark_filtering_operations(config: &BenchmarkConfig) -> SignalResult<Vec<
 }
 
 /// Benchmark spectral analysis operations
+#[allow(dead_code)]
 fn benchmark_spectral_operations(config: &BenchmarkConfig) -> SignalResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
@@ -307,6 +309,7 @@ fn benchmark_spectral_operations(config: &BenchmarkConfig) -> SignalResult<Vec<B
 }
 
 /// Benchmark wavelet operations
+#[allow(dead_code)]
 fn benchmark_wavelet_operations(config: &BenchmarkConfig) -> SignalResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
@@ -326,6 +329,7 @@ fn benchmark_wavelet_operations(config: &BenchmarkConfig) -> SignalResult<Vec<Be
 }
 
 /// Benchmark convolution operations
+#[allow(dead_code)]
 fn benchmark_convolution_operations(
     config: &BenchmarkConfig,
 ) -> SignalResult<Vec<BenchmarkResult>> {
@@ -349,6 +353,7 @@ fn benchmark_convolution_operations(
 }
 
 /// Benchmark memory optimization features
+#[allow(dead_code)]
 fn benchmark_memory_optimization(config: &BenchmarkConfig) -> SignalResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
@@ -363,6 +368,7 @@ fn benchmark_memory_optimization(config: &BenchmarkConfig) -> SignalResult<Vec<B
 }
 
 /// Benchmark SIMD optimizations
+#[allow(dead_code)]
 fn benchmark_simd_optimizations(config: &BenchmarkConfig) -> SignalResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
@@ -377,6 +383,7 @@ fn benchmark_simd_optimizations(config: &BenchmarkConfig) -> SignalResult<Vec<Be
 }
 
 /// Benchmark parallel processing
+#[allow(dead_code)]
 fn benchmark_parallel_processing(config: &BenchmarkConfig) -> SignalResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
@@ -391,6 +398,7 @@ fn benchmark_parallel_processing(config: &BenchmarkConfig) -> SignalResult<Vec<B
 }
 
 /// Benchmark complete signal processing workflows
+#[allow(dead_code)]
 fn benchmark_complete_workflows(config: &BenchmarkConfig) -> SignalResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
@@ -410,6 +418,7 @@ fn benchmark_complete_workflows(config: &BenchmarkConfig) -> SignalResult<Vec<Be
 
 // Individual benchmark implementations
 
+#[allow(dead_code)]
 fn benchmark_fir_filtering(
     signal: &Array1<f64>,
     size: usize,
@@ -419,7 +428,7 @@ fn benchmark_fir_filtering(
     let filter_len = (size / 20).clamp(10, 200);
 
     // Design FIR filter
-    let coeffs = firwin(filter_len, 0.3, None, true, true, None)?;
+    let coeffs = firwin(filter_len, 0.3, "hamming", true)?;
 
     benchmark_operation(name, size, config, || {
         // Apply FIR filter
@@ -435,6 +444,7 @@ fn benchmark_fir_filtering(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_iir_filtering(
     signal: &Array1<f64>,
     size: usize,
@@ -450,6 +460,7 @@ fn benchmark_iir_filtering(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_zero_phase_filtering(
     signal: &Array1<f64>,
     size: usize,
@@ -457,13 +468,14 @@ fn benchmark_zero_phase_filtering(
 ) -> SignalResult<BenchmarkResult> {
     let name = format!("ZeroPhase_Filter_N{}", size);
 
-    let (sos, _) = butter(4, 0.3, Some("low"), false, "sos")?;
+    let (b, a) = butter(4, 0.3, "low")?;
 
     benchmark_operation(name, size, config, || {
-        filtfilt(&sos, signal, None, None, None, None).unwrap()
+        filtfilt(&b, &a, signal).unwrap()
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_periodogram(
     signal: &Array1<f64>,
     size: usize,
@@ -476,6 +488,7 @@ fn benchmark_periodogram(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_welch_method(
     signal: &Array1<f64>,
     size: usize,
@@ -501,6 +514,7 @@ fn benchmark_welch_method(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_spectrogram(
     signal: &Array1<f64>,
     size: usize,
@@ -525,6 +539,7 @@ fn benchmark_spectrogram(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_lombscargle(
     signal: &Array1<f64>,
     size: usize,
@@ -542,6 +557,7 @@ fn benchmark_lombscargle(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_dwt(
     signal: &Array1<f64>,
     size: usize,
@@ -554,6 +570,7 @@ fn benchmark_dwt(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_cwt(
     signal: &Array1<f64>,
     size: usize,
@@ -567,6 +584,7 @@ fn benchmark_cwt(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_convolution(
     signal: &Array1<f64>,
     kernel: &Array1<f64>,
@@ -586,6 +604,7 @@ fn benchmark_convolution(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_fft_convolution(
     signal: &Array1<f64>,
     kernel: &Array1<f64>,
@@ -607,6 +626,7 @@ fn benchmark_fft_convolution(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_memory_optimized_filter(
     size: usize,
     config: &BenchmarkConfig,
@@ -657,6 +677,7 @@ fn benchmark_memory_optimized_filter(
     Ok(create_benchmark_result(name, size, execution_times, config))
 }
 
+#[allow(dead_code)]
 fn benchmark_simd_vs_scalar(
     signal: &Array1<f64>,
     size: usize,
@@ -679,6 +700,7 @@ fn benchmark_simd_vs_scalar(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_parallel_vs_sequential(
     signal: &Array1<f64>,
     size: usize,
@@ -700,6 +722,7 @@ fn benchmark_parallel_vs_sequential(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_audio_processing_workflow(
     size: usize,
     config: &BenchmarkConfig,
@@ -736,6 +759,7 @@ fn benchmark_audio_processing_workflow(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_biomedical_workflow(
     size: usize,
     config: &BenchmarkConfig,
@@ -761,6 +785,7 @@ fn benchmark_biomedical_workflow(
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_communications_workflow(
     size: usize,
     config: &BenchmarkConfig,
@@ -795,6 +820,7 @@ fn benchmark_communications_workflow(
 // Helper functions
 
 /// Generic benchmark operation wrapper
+#[allow(dead_code)]
 fn benchmark_operation<F, T>(
     name: String,
     size: usize,
@@ -832,6 +858,7 @@ where
 }
 
 /// Create benchmark result from timing data
+#[allow(dead_code)]
 fn create_benchmark_result(
     name: String,
     size: usize,
@@ -883,8 +910,8 @@ fn create_benchmark_result(
 }
 
 /// Generate test signal of specified type
+#[allow(dead_code)]
 fn generate_test_signal(size: usize, signal_type: &str) -> Array1<f64> {
-    #[cfg(test)]
     use std::f64::consts::PI;
 
     match signal_type {
@@ -912,7 +939,7 @@ fn generate_test_signal(size: usize, signal_type: &str) -> Array1<f64> {
             .collect(),
         "noise" => {
             let mut rng = rand::rng();
-            (0..size).map(|_| rng.gen_range(-1.0..1.0)).collect()
+            (0..size).map(|_| rng.random_range(-1.0..1.0)).collect()
         }
         "gaussian" => (0..size)
             .map(|i| {
@@ -928,7 +955,7 @@ fn generate_test_signal(size: usize, signal_type: &str) -> Array1<f64> {
                     let t = i as f64 / 44100.0; // 44.1 kHz sample rate
                     0.5 * (2.0 * PI * 440.0 * t).sin() + // A4 note
                     0.3 * (2.0 * PI * 880.0 * t).sin() + // A5 note
-                    0.1 * rand::rng().gen_range(-1.0..1.0) // Noise
+                    0.1 * rand::rng().random_range(-1.0..1.0) // Noise
                 })
                 .collect()
         }
@@ -943,7 +970,7 @@ fn generate_test_signal(size: usize, signal_type: &str) -> Array1<f64> {
                     } else {
                         0.0
                     };
-                    heartbeat + qrs + 0.05 * rand::rng().gen_range(-1.0..1.0)
+                    heartbeat + qrs + 0.05 * rand::rng().random_range(-1.0..1.0)
                 })
                 .collect()
         }
@@ -978,6 +1005,7 @@ fn generate_test_signal(size: usize, signal_type: &str) -> Array1<f64> {
 }
 
 /// Write signal to binary file
+#[allow(dead_code)]
 fn write_signal_to_file(signal: &Array1<f64>, file_path: &std::path::Path) -> SignalResult<()> {
     let mut file = File::create(file_path)
         .map_err(|e| SignalError::ComputationError(format!("Cannot create file: {}", e)))?;
@@ -1014,6 +1042,7 @@ impl MemoryTracker {
 }
 
 /// Gather system information
+#[allow(dead_code)]
 fn gather_system_info() -> SystemInfo {
     SystemInfo {
         cpu_info: "Unknown CPU".to_string(),
@@ -1025,6 +1054,7 @@ fn gather_system_info() -> SystemInfo {
 }
 
 /// Gather configuration information
+#[allow(dead_code)]
 fn gather_config_info() -> ConfigInfo {
     let capabilities = PlatformCapabilities::detect();
 
@@ -1041,6 +1071,7 @@ fn gather_config_info() -> ConfigInfo {
 }
 
 /// Generate benchmark summary
+#[allow(dead_code)]
 fn generate_benchmark_summary(results: &[BenchmarkResult], total_time: f64) -> BenchmarkSummary {
     let total_benchmarks = results.len();
 
@@ -1077,6 +1108,7 @@ fn generate_benchmark_summary(results: &[BenchmarkResult], total_time: f64) -> B
 }
 
 /// Generate comprehensive benchmark reports
+#[allow(dead_code)]
 fn generate_benchmark_reports(suite: &BenchmarkSuite) -> SignalResult<()> {
     // Generate text report
     generate_text_report(suite)?;
@@ -1091,6 +1123,7 @@ fn generate_benchmark_reports(suite: &BenchmarkSuite) -> SignalResult<()> {
 }
 
 /// Generate human-readable text report
+#[allow(dead_code)]
 fn generate_text_report(suite: &BenchmarkSuite) -> SignalResult<()> {
     let report_path = format!("{}/benchmark_report.txt", suite.config.output_dir);
     let mut file = File::create(&report_path)
@@ -1152,6 +1185,7 @@ fn generate_text_report(suite: &BenchmarkSuite) -> SignalResult<()> {
 }
 
 /// Generate CSV report for data analysis
+#[allow(dead_code)]
 fn generate_csv_report(suite: &BenchmarkSuite) -> SignalResult<()> {
     let report_path = format!("{}/benchmark_results.csv", suite.config.output_dir);
     let mut file = File::create(&report_path)
@@ -1181,6 +1215,7 @@ fn generate_csv_report(suite: &BenchmarkSuite) -> SignalResult<()> {
 }
 
 /// Generate JSON report for programmatic analysis
+#[allow(dead_code)]
 fn generate_json_report(suite: &BenchmarkSuite) -> SignalResult<()> {
     let report_path = format!("{}/benchmark_results.json", suite.config.output_dir);
     let json_data = serde_json::to_string_pretty(suite)
@@ -1193,6 +1228,7 @@ fn generate_json_report(suite: &BenchmarkSuite) -> SignalResult<()> {
 }
 
 /// Run quick benchmark for development
+#[allow(dead_code)]
 pub fn run_quick_benchmark() -> SignalResult<()> {
     let config = BenchmarkConfig {
         signal_sizes: vec![1000, 10000],
@@ -1210,8 +1246,8 @@ pub fn run_quick_benchmark() -> SignalResult<()> {
     Ok(())
 }
 
-#[cfg(test)]
 mod tests {
+    #[allow(unused_imports)]
     use super::*;
 
     #[test]

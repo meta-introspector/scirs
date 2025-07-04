@@ -11,18 +11,11 @@ use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{convolve, BorderMode};
+use crate::utils::safe_f64_to_float;
 
-/// Helper function for safe conversion of hardcoded constants
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
 
 /// Helper function for safe usize conversion
+#[allow(dead_code)]
 fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
     value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert value to usize".to_string())
@@ -30,6 +23,7 @@ fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 }
 
 /// Helper function for safe f64 conversion
+#[allow(dead_code)]
 fn safe_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
     value
         .to_f64()
@@ -37,6 +31,7 @@ fn safe_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
 }
 
 /// Helper function for safe isize conversion to float
+#[allow(dead_code)]
 fn safe_isize_to_float<T: Float + FromPrimitive>(value: isize) -> NdimageResult<T> {
     T::from_isize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert isize {} to float type", value))
@@ -44,6 +39,7 @@ fn safe_isize_to_float<T: Float + FromPrimitive>(value: isize) -> NdimageResult<
 }
 
 /// Helper function for safe usize conversion to float
+#[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
@@ -119,6 +115,7 @@ where
 ///
 /// let result = gabor_filter(&image.view(), &params, None, Some(BorderMode::Reflect)).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn gabor_filter<T>(
     input: &ArrayView2<T>,
     params: &GaborParams<T>,
@@ -153,6 +150,7 @@ where
 }
 
 /// Generate a Gabor filter kernel
+#[allow(dead_code)]
 fn generate_gabor_kernel<T>(size: usize, params: &GaborParams<T>) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug,
@@ -220,6 +218,7 @@ where
 /// # Returns
 ///
 /// * `Result<Vec<Array2<T>>>` - Vector of filtered arrays, one for each orientation
+#[allow(dead_code)]
 pub fn gabor_filter_bank<T>(
     input: &ArrayView2<T>,
     base_params: &GaborParams<T>,
@@ -262,6 +261,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Filtered array
+#[allow(dead_code)]
 pub fn log_gabor_filter<T>(
     input: &ArrayView2<T>,
     center_freq: T,
@@ -340,6 +340,7 @@ impl Complex64 {
 }
 
 /// Apply 2D FFT to input array
+#[allow(dead_code)]
 fn apply_2d_fft(input: &Array2<f64>) -> NdimageResult<Array2<Complex64>> {
     let (height, width) = input.dim();
     let mut result = Array2::from_elem((height, width), Complex64::zero());
@@ -371,6 +372,7 @@ fn apply_2d_fft(input: &Array2<f64>) -> NdimageResult<Array2<Complex64>> {
 }
 
 /// Apply inverse 2D FFT
+#[allow(dead_code)]
 fn apply_2d_ifft(input: &Array2<Complex64>) -> NdimageResult<Array2<Complex64>> {
     let (height, width) = input.dim();
     let mut result = input.clone();
@@ -397,6 +399,7 @@ fn apply_2d_ifft(input: &Array2<Complex64>) -> NdimageResult<Array2<Complex64>> 
 }
 
 /// Simple radix-2 FFT implementation for 1D arrays
+#[allow(dead_code)]
 fn fft_1d_radix2(data: &mut [Complex64]) {
     let n = data.len();
     if n <= 1 {
@@ -438,6 +441,7 @@ fn fft_1d_radix2(data: &mut [Complex64]) {
 }
 
 /// Simple radix-2 IFFT implementation for 1D arrays
+#[allow(dead_code)]
 fn ifft_1d_radix2(data: &mut [Complex64]) {
     let n = data.len();
 
@@ -458,6 +462,7 @@ fn ifft_1d_radix2(data: &mut [Complex64]) {
 }
 
 /// Create Log-Gabor filter in frequency domain
+#[allow(dead_code)]
 fn create_log_gabor_frequency_filter(
     height: usize,
     width: usize,
@@ -468,8 +473,8 @@ fn create_log_gabor_frequency_filter(
 ) -> NdimageResult<Array2<f64>> {
     let mut filter = Array2::zeros((height, width));
 
-    let center_y = height as f64 / 2.0;
-    let center_x = width as f64 / 2.0;
+    let _center_y = height as f64 / 2.0;
+    let _center_x = width as f64 / 2.0;
 
     for i in 0..height {
         for j in 0..width {
@@ -515,6 +520,7 @@ fn create_log_gabor_frequency_filter(
 }
 
 /// Apply frequency domain filter
+#[allow(dead_code)]
 fn apply_frequency_filter(
     fft_data: &Array2<Complex64>,
     filter: &Array2<f64>,
@@ -548,6 +554,7 @@ fn apply_frequency_filter(
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Filtered array
+#[allow(dead_code)]
 pub fn steerable_filter<T>(
     input: &ArrayView2<T>,
     filter_order: usize,
@@ -584,6 +591,7 @@ where
 }
 
 /// Generate basis filters for steerable filtering
+#[allow(dead_code)]
 fn generate_steerable_basis<T>(order: usize, sigma: T) -> NdimageResult<Vec<Array2<T>>>
 where
     T: Float + FromPrimitive + Debug,
@@ -708,6 +716,7 @@ where
 }
 
 /// Compute steering coefficients for a given orientation
+#[allow(dead_code)]
 fn compute_steering_coefficients<T>(order: usize, orientation: T) -> Vec<T>
 where
     T: Float + FromPrimitive,
@@ -757,6 +766,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Gradient-filtered array
+#[allow(dead_code)]
 pub fn bilateral_gradient_filter<T>(
     input: &ArrayView2<T>,
     spatial_sigma: T,
@@ -851,6 +861,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Filtered array
+#[allow(dead_code)]
 pub fn anisotropic_diffusion<T>(
     input: &ArrayView2<T>,
     num_iterations: usize,
@@ -903,6 +914,7 @@ where
 }
 
 /// Diffusion function for anisotropic diffusion
+#[allow(dead_code)]
 fn diffusion_function<T>(gradient: T, kappa: T, option: usize) -> T
 where
     T: Float + FromPrimitive,
@@ -937,6 +949,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Denoised array
+#[allow(dead_code)]
 pub fn non_local_means<T>(
     input: &ArrayView2<T>,
     h: T,
@@ -1019,6 +1032,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Filtered array
+#[allow(dead_code)]
 pub fn adaptive_wiener_filter<T>(
     input: &ArrayView2<T>,
     noise_variance: T,
@@ -1090,6 +1104,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Enhanced array
+#[allow(dead_code)]
 pub fn shock_filter<T>(
     input: &ArrayView2<T>,
     num_iterations: usize,
@@ -1110,6 +1125,7 @@ where
 }
 
 /// Single iteration of shock filter
+#[allow(dead_code)]
 fn shock_filter_iteration<T>(input: &ArrayView2<T>, dt: T, sigma: T) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
@@ -1185,6 +1201,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Enhanced array
+#[allow(dead_code)]
 pub fn coherence_enhancing_diffusion<T>(
     input: &ArrayView2<T>,
     num_iterations: usize,
@@ -1210,6 +1227,7 @@ where
 }
 
 /// Single iteration of coherence enhancing diffusion
+#[allow(dead_code)]
 fn ced_iteration<T>(input: &ArrayView2<T>, alpha: T, c: T) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Clone,

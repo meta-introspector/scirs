@@ -11,6 +11,7 @@ use ndarray::{array, Array2, ArrayView1};
 use scirs2_integrate::error::IntegrateResult;
 use scirs2_integrate::ode::{solve_ivp, MassMatrix, ODEMethod, ODEOptions};
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("=== Mass Matrix ODE Example ===");
 

@@ -579,6 +579,7 @@ impl AutoTuner {
 }
 
 /// Detect CPU features for result matching
+#[allow(dead_code)]
 fn detect_cpu_features() -> Vec<String> {
     let mut features = Vec::new();
 

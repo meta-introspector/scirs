@@ -327,6 +327,7 @@ where
 
 /// Convenience functions for memory-efficient processing
 /// Process gamma function on large arrays with automatic chunking
+#[allow(dead_code)]
 pub fn gamma_chunked<T>(
     input: &Array<T, Ix1>,
     config: Option<ChunkedConfig>,
@@ -342,6 +343,7 @@ where
 }
 
 /// Process Bessel J0 function on large arrays with automatic chunking
+#[allow(dead_code)]
 pub fn j0_chunked<T>(
     input: &Array<T, Ix1>,
     config: Option<ChunkedConfig>,
@@ -357,6 +359,7 @@ where
 }
 
 /// Process error function on large arrays with automatic chunking
+#[allow(dead_code)]
 pub fn erf_chunked<T>(
     input: &Array<T, Ix1>,
     config: Option<ChunkedConfig>,

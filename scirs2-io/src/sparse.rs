@@ -40,6 +40,8 @@
 //! # Ok::<(), scirs2_io::error::IoError>(())
 //! ```
 
+#![allow(dead_code)]
+
 use crate::error::{IoError, Result};
 use crate::matrix_market::{
     MMDataType, MMFormat, MMHeader, MMSparseMatrix, MMSymmetry, SparseEntry,

@@ -695,6 +695,7 @@ where
 }
 
 /// Create a sparse grid interpolator with default settings
+#[allow(dead_code)]
 pub fn make_sparse_grid_interpolator<F, Func>(
     bounds: Vec<(F, F)>,
     max_level: usize,
@@ -711,6 +712,7 @@ where
 }
 
 /// Create an adaptive sparse grid interpolator
+#[allow(dead_code)]
 pub fn make_adaptive_sparse_grid_interpolator<F, Func>(
     bounds: Vec<(F, F)>,
     max_level: usize,
@@ -730,6 +732,7 @@ where
 }
 
 /// Create a sparse grid interpolator from scattered data
+#[allow(dead_code)]
 pub fn make_sparse_grid_from_data<F>(
     bounds: Vec<(F, F)>,
     points: &[Vec<F>],

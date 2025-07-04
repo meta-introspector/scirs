@@ -1281,6 +1281,7 @@ where
 /// # Returns
 ///
 /// A new `BSpline` object that interpolates the given points
+#[allow(dead_code)]
 pub fn make_interp_bspline<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -1388,6 +1389,7 @@ where
 /// # Returns
 ///
 /// A knot vector suitable for use with B-splines
+#[allow(dead_code)]
 pub fn generate_knots<T>(
     x: &ArrayView1<T>,
     k: usize,
@@ -1499,6 +1501,7 @@ where
 /// # Returns
 ///
 /// A new `BSpline` object that fits the given points in a least-squares sense
+#[allow(dead_code)]
 pub fn make_lsq_bspline<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -1588,6 +1591,7 @@ where
 ///
 /// This function automatically detects matrix structure and uses the most
 /// appropriate solver (band, sparse, or dense).
+#[allow(dead_code)]
 fn solve_linear_system<T>(
     a: &ndarray::ArrayView2<T>,
     b: &ndarray::ArrayView1<T>,
@@ -1639,6 +1643,7 @@ where
 /// Estimate the bandwidth of a matrix
 ///
 /// Returns the maximum distance from the main diagonal that contains non-zero elements.
+#[allow(dead_code)]
 fn estimate_bandwidth<T: Float + Zero + FromPrimitive>(matrix: &ArrayView2<T>) -> usize {
     let n = matrix.nrows();
     let mut max_bandwidth = 0;
@@ -1657,6 +1662,7 @@ fn estimate_bandwidth<T: Float + Zero + FromPrimitive>(matrix: &ArrayView2<T>) -
 }
 
 /// Dense fallback solver using Gaussian elimination
+#[allow(dead_code)]
 fn solve_dense_fallback<T>(
     matrix: &ArrayView2<T>,
     rhs: &ArrayView1<T>,
@@ -1744,6 +1750,7 @@ where
 ///
 /// This function uses the structured matrix least squares solver which automatically
 /// detects matrix structure for optimal performance.
+#[allow(dead_code)]
 fn solve_least_squares<T>(
     a: &ndarray::ArrayView2<T>,
     b: &ndarray::ArrayView1<T>,

@@ -4,6 +4,7 @@ use scirs2_stats::distribution_characteristics::{
 };
 use scirs2_stats::skew;
 
+#[allow(dead_code)]
 fn main() {
     // Create some sample data
     println!("Distribution Characteristics Example");

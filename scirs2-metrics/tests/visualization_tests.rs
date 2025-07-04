@@ -13,6 +13,7 @@ use scirs2_metrics::{
 };
 
 #[test]
+#[allow(dead_code)]
 fn test_visualization_data() {
     // Test creating a new VisualizationData
     let mut data = VisualizationData::new();
@@ -74,6 +75,7 @@ fn test_visualization_data() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_visualization_metadata() {
     // Test creating a new VisualizationMetadata
     let metadata = VisualizationMetadata::new("Test Title");
@@ -116,6 +118,7 @@ fn test_visualization_metadata() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_visualization_options() {
     // Test default options
     let options = VisualizationOptions::default();
@@ -163,6 +166,7 @@ fn test_visualization_options() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_confusion_matrix_visualizer() {
     // Create a confusion matrix
     let y_true = array![0, 1, 2, 0, 1, 2];
@@ -193,6 +197,7 @@ fn test_confusion_matrix_visualizer() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_roc_curve_visualizer() {
     // Create binary classification data
     let y_true = array![0, 1, 1, 0, 1, 0];
@@ -218,6 +223,7 @@ fn test_roc_curve_visualizer() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_precision_recall_visualizer() {
     // Create binary classification data
     let y_true = array![0, 1, 1, 0, 1, 0];
@@ -247,6 +253,7 @@ fn test_precision_recall_visualizer() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_calibration_visualizer() {
     // Create binary classification data
     let y_true = array![0, 1, 1, 0, 1, 0];
@@ -272,6 +279,7 @@ fn test_calibration_visualizer() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_generic_metric_visualizer() {
     // Create data
     let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -301,6 +309,7 @@ fn test_generic_metric_visualizer() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_multi_curve_visualizer() {
     // Create data for multiple curves
     let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -340,6 +349,7 @@ fn test_multi_curve_visualizer() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_heatmap_visualizer() {
     // Create a matrix
     let matrix =
@@ -375,6 +385,7 @@ fn test_heatmap_visualizer() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_histogram_visualizer() {
     // Create data for a histogram
     let values = array![
@@ -403,6 +414,7 @@ fn test_histogram_visualizer() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_backend_default() {
     // Test that the default backend can be created
     let backend = backends::default_backend();

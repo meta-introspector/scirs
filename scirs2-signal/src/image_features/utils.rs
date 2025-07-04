@@ -3,6 +3,7 @@
 use ndarray::Array2;
 
 /// Calculate skewness of a vector
+#[allow(dead_code)]
 pub fn calculate_skewness(data: &[f64], mean: f64, std_dev: f64) -> f64 {
     if std_dev <= 0.0 || data.len() < 3 {
         return 0.0;
@@ -15,6 +16,7 @@ pub fn calculate_skewness(data: &[f64], mean: f64, std_dev: f64) -> f64 {
 }
 
 /// Calculate kurtosis of a vector
+#[allow(dead_code)]
 pub fn calculate_kurtosis(data: &[f64], mean: f64, std_dev: f64) -> f64 {
     if std_dev <= 0.0 || data.len() < 4 {
         return 0.0;
@@ -27,6 +29,7 @@ pub fn calculate_kurtosis(data: &[f64], mean: f64, std_dev: f64) -> f64 {
 }
 
 /// Calculate raw moment of an image
+#[allow(dead_code)]
 pub fn calculate_raw_moment(image: &Array2<f64>, p: usize, q: usize) -> f64 {
     let shape = image.shape();
     let height = shape[0];
@@ -42,6 +45,7 @@ pub fn calculate_raw_moment(image: &Array2<f64>, p: usize, q: usize) -> f64 {
 }
 
 /// Compute Gray Level Co-occurrence Matrix (GLCM)
+#[allow(dead_code)]
 pub fn compute_glcm(image: &Array2<f64>, distance: usize, num_levels: usize) -> Array2<f64> {
     let shape = image.shape();
     let height = shape[0];

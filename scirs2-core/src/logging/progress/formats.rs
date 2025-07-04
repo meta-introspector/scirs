@@ -93,8 +93,9 @@ struct FormatSpec {
 }
 
 /// Extract format specification from a placeholder
+#[allow(dead_code)]
 fn extract_format_spec(text: &str, field: &str) -> Option<FormatSpec> {
-    let pattern = format!("{field}");
+    let pattern = field.to_string();
     if let Some(start) = text.find(&pattern) {
         if let Some(end) = text[start..].find('}') {
             let spec_str = &text[start..start + end + 1];
@@ -267,7 +268,7 @@ impl ColorScheme {
         };
 
         if let Some(color_code) = color {
-            format!("{}{}\x1b[0m", color_code, text)
+            format!("{color_code}{text}\x1b[0m")
         } else {
             text.to_string()
         }

@@ -11,6 +11,7 @@ use std::time::Instant;
 /// This is a simplified model of the mitogen-activated protein kinase (MAPK) cascade,
 /// which is a crucial signaling pathway in cells involved in various processes including
 /// cell growth, differentiation, and survival.
+#[allow(dead_code)]
 fn mapk_cascade(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables (concentrations)
     // y[0] = MAPKKK
@@ -61,6 +62,7 @@ fn mapk_cascade(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 ///
 /// This is a classic example of a chemical oscillator - a reaction that
 /// naturally produces oscillations in concentration of various species.
+#[allow(dead_code)]
 fn belousov_zhabotinsky(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = HBrO2 (bromous acid)
@@ -87,6 +89,7 @@ fn belousov_zhabotinsky(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 ///
 /// This models the daily cycles in organisms through a negative feedback loop
 /// between gene expression, protein synthesis, and protein degradation.
+#[allow(dead_code)]
 fn circadian_rhythm(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = mRNA concentration
@@ -124,6 +127,7 @@ fn circadian_rhythm(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 ///
 /// Models the spread of an infectious disease through a population,
 /// including the effect of vaccination.
+#[allow(dead_code)]
 fn sir_epidemic(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = S (susceptible population)
@@ -162,6 +166,7 @@ fn sir_epidemic(t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 ///
 /// Used to model excitable media like neurons, showing characteristic
 /// action potential dynamics.
+#[allow(dead_code)]
 fn fitzhugh_nagumo(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = v (membrane potential)
@@ -187,6 +192,7 @@ fn fitzhugh_nagumo(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 ///
 /// A classic example of deterministic chaos that arises from a simple
 /// set of ordinary differential equations.
+#[allow(dead_code)]
 fn lorenz(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = x (related to convective intensity)
@@ -210,6 +216,7 @@ fn lorenz(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 }
 
 /// Run a simulation of the system and benchmark different ODE solvers
+#[allow(dead_code)]
 fn run_simulation<F>(
     model_name: &str,
     system: F,
@@ -313,6 +320,7 @@ where
 }
 
 /// Compare performance on stiff systems
+#[allow(dead_code)]
 fn compare_stiff_solvers() -> IntegrateResult<()> {
     println!("\n====== Comparison of ODE Solvers on Stiff Systems ======");
 
@@ -365,6 +373,7 @@ fn compare_stiff_solvers() -> IntegrateResult<()> {
 }
 
 /// Compare performance on non-stiff and chaotic systems
+#[allow(dead_code)]
 fn compare_non_stiff_solvers() -> IntegrateResult<()> {
     println!("\n====== Comparison of ODE Solvers on Non-Stiff and Chaotic Systems ======");
 
@@ -420,6 +429,7 @@ fn compare_non_stiff_solvers() -> IntegrateResult<()> {
 
 /// Perform a visual test of the BZ reaction by simulating and printing
 /// a character-based visualization of the oscillations
+#[allow(dead_code)]
 fn visualize_bz_reaction() -> IntegrateResult<()> {
     println!("\n=== Belousov-Zhabotinsky Reaction Visualization ===");
 
@@ -487,6 +497,7 @@ fn visualize_bz_reaction() -> IntegrateResult<()> {
 }
 
 /// Estimate the oscillation period from time series data
+#[allow(dead_code)]
 fn estimate_oscillation_period(times: &[f64], values: &[f64]) -> IntegrateResult<f64> {
     if times.len() < 10 || values.len() < 10 {
         return Err(scirs2_integrate::error::IntegrateError::ComputationError(
@@ -520,6 +531,7 @@ fn estimate_oscillation_period(times: &[f64], values: &[f64]) -> IntegrateResult
     Ok(total_period / (peaks.len() - 1) as f64)
 }
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("Real-World ODE Applications with Enhanced Solvers");
     println!("=================================================");

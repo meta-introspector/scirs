@@ -18,6 +18,7 @@ use scirs2_ndimage::{
     },
 };
 
+#[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("🐍 Python Interoperability Infrastructure Demo");
     println!("============================================");

@@ -11,6 +11,7 @@ use scirs2_ndimage::{
     scipy_performance_comparison::{BenchmarkConfig, SciPyBenchmarkSuite},
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== COMPREHENSIVE SCIRS2-NDIMAGE VALIDATION DEMO ===\n");
 

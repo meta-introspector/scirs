@@ -3,6 +3,7 @@ use crate::measurements;
 use std::collections::HashMap;
 
 /// Extract statistical features from a time series
+#[allow(dead_code)]
 pub fn extract_statistical_features(
     signal: &[f64],
     features: &mut HashMap<String, f64>,
@@ -83,6 +84,7 @@ pub fn extract_statistical_features(
 }
 
 /// Calculate skewness of a signal
+#[allow(dead_code)]
 pub fn calculate_skewness(signal: &[f64], mean: f64, std_dev: f64) -> f64 {
     if std_dev <= 0.0 || signal.len() < 3 {
         return 0.0;
@@ -95,6 +97,7 @@ pub fn calculate_skewness(signal: &[f64], mean: f64, std_dev: f64) -> f64 {
 }
 
 /// Calculate kurtosis of a signal
+#[allow(dead_code)]
 pub fn calculate_kurtosis(signal: &[f64], mean: f64, std_dev: f64) -> f64 {
     if std_dev <= 0.0 || signal.len() < 4 {
         return 0.0;
@@ -107,6 +110,7 @@ pub fn calculate_kurtosis(signal: &[f64], mean: f64, std_dev: f64) -> f64 {
 }
 
 /// Calculate a quantile (percentile) of a sorted array
+#[allow(dead_code)]
 pub fn calculate_quantile(sorted: &[f64], q: f64) -> f64 {
     if sorted.is_empty() {
         return 0.0;
@@ -124,6 +128,7 @@ pub fn calculate_quantile(sorted: &[f64], q: f64) -> f64 {
 }
 
 /// Calculate standard deviation
+#[allow(dead_code)]
 pub fn calculate_std(signal: &[f64]) -> f64 {
     if signal.is_empty() {
         return 0.0;

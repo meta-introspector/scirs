@@ -10,6 +10,7 @@ use scirs2_vision::feature::{
     extract_feature_coordinates, harris_corners, LKTracker, TrackerParams,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Feature Tracking Example");
     println!("=======================");
@@ -114,6 +115,7 @@ fn main() -> Result<()> {
 }
 
 /// Create a synthetic sequence with moving objects
+#[allow(dead_code)]
 fn create_synthetic_sequence() -> Result<Vec<DynamicImage>> {
     let width = 640;
     let height = 480;
@@ -189,6 +191,7 @@ fn create_synthetic_sequence() -> Result<Vec<DynamicImage>> {
 }
 
 /// Draw a filled circle on the image
+#[allow(dead_code)]
 fn draw_circle(
     img: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
     cx: u32,
@@ -212,6 +215,7 @@ fn draw_circle(
 }
 
 /// Draw a corner pattern
+#[allow(dead_code)]
 fn draw_corner(
     img: &mut ImageBuffer<Luma<u8>, Vec<u8>>,
     cx: u32,
@@ -237,6 +241,7 @@ fn draw_corner(
 }
 
 /// Visualize tracked features on the image
+#[allow(dead_code)]
 fn visualize_tracking(
     frame: &DynamicImage,
     features: &[scirs2_vision::feature::TrackedFeature],

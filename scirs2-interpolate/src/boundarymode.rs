@@ -481,6 +481,7 @@ pub enum BoundaryResult<T: Float> {
 /// # Returns
 ///
 /// A new `BoundaryParameters` instance with zero-gradient boundary conditions
+#[allow(dead_code)]
 pub fn make_zero_gradient_boundary<T: Float + std::fmt::Display>(
     lower_bound: T,
     upper_bound: T,
@@ -506,6 +507,7 @@ pub fn make_zero_gradient_boundary<T: Float + std::fmt::Display>(
 /// # Returns
 ///
 /// A new `BoundaryParameters` instance with zero-value boundary conditions
+#[allow(dead_code)]
 pub fn make_zero_value_boundary<T: Float + std::fmt::Display>(
     lower_bound: T,
     upper_bound: T,
@@ -531,6 +533,7 @@ pub fn make_zero_value_boundary<T: Float + std::fmt::Display>(
 /// # Returns
 ///
 /// A new `BoundaryParameters` instance with periodic boundary conditions
+#[allow(dead_code)]
 pub fn make_periodic_boundary<T: Float + std::fmt::Display>(
     lower_bound: T,
     upper_bound: T,
@@ -556,6 +559,7 @@ pub fn make_periodic_boundary<T: Float + std::fmt::Display>(
 /// # Returns
 ///
 /// A new `BoundaryParameters` instance with symmetric boundary conditions
+#[allow(dead_code)]
 pub fn make_symmetric_boundary<T: Float + std::fmt::Display>(
     lower_bound: T,
     upper_bound: T,
@@ -581,6 +585,7 @@ pub fn make_symmetric_boundary<T: Float + std::fmt::Display>(
 /// # Returns
 ///
 /// A new `BoundaryParameters` instance with antisymmetric boundary conditions
+#[allow(dead_code)]
 pub fn make_antisymmetric_boundary<T: Float + std::fmt::Display>(
     lower_bound: T,
     upper_bound: T,
@@ -608,6 +613,7 @@ pub fn make_antisymmetric_boundary<T: Float + std::fmt::Display>(
 /// # Returns
 ///
 /// A new `BoundaryParameters` instance with linear gradient boundary conditions
+#[allow(dead_code)]
 pub fn make_linear_gradient_boundary<T: Float + std::fmt::Display>(
     lower_bound: T,
     upper_bound: T,

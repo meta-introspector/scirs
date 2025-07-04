@@ -348,7 +348,7 @@ impl InteractiveDashboard {
     pub fn export_to_json(&self) -> Result<String> {
         let data = self.data.get_all_metrics()?;
         serde_json::to_string_pretty(&data)
-            .map_err(|e| MetricsError::InvalidInput(format!("Failed to serialize data: {}", e)))
+            .map_err(|e| MetricsError::InvalidInput(format!("Failed to serialize data: {e}")))
     }
 
     /// Export data to CSV
@@ -572,7 +572,7 @@ impl InteractiveDashboard {
 </html>
 "#;
 
-        Ok(format!("{}{}{}", html, rows, footer))
+        Ok(format!("{html}{rows}{footer}"))
     }
 }
 
@@ -756,7 +756,7 @@ pub mod utils {
         };
 
         std::fs::write(file_path, content)
-            .map_err(|e| MetricsError::InvalidInput(format!("Failed to write file: {}", e)))?;
+            .map_err(|e| MetricsError::InvalidInput(format!("Failed to write file: {e}")))?;
 
         Ok(())
     }

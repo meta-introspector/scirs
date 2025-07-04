@@ -7,6 +7,7 @@ use scirs2_core::gpu::{GpuBackend, GpuContext, GpuError};
 #[cfg(feature = "gpu")]
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== SciRS2 Heavy GPU Stress Test ===\n");
 
@@ -25,6 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn run_gpu_stress_test() -> Result<(), Box<dyn std::error::Error>> {
     // Try to create GPU context with CUDA
     let ctx = match GpuContext::new(GpuBackend::Cuda) {
@@ -55,6 +57,7 @@ fn run_gpu_stress_test() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn test_large_matrix_ops(ctx: &GpuContext) -> Result<(), GpuError> {
     println!("Test 1: Large Matrix Operations");
     println!("================================");
@@ -118,6 +121,7 @@ fn test_large_matrix_ops(ctx: &GpuContext) -> Result<(), GpuError> {
 }
 
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn test_massive_data_transfer(ctx: &GpuContext) -> Result<(), GpuError> {
     println!("\nTest 2: Massive Data Transfer");
     println!("==============================");
@@ -155,6 +159,7 @@ fn test_massive_data_transfer(ctx: &GpuContext) -> Result<(), GpuError> {
 }
 
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn test_intensive_computation(ctx: &GpuContext) -> Result<(), GpuError> {
     println!("\nTest 3: Intensive Computation Loop");
     println!("===================================");

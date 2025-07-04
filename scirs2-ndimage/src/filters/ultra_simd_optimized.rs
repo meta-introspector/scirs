@@ -19,6 +19,7 @@ use crate::BoundaryMode;
 /// - Cache-efficient tiled processing
 /// - Prefetching for improved memory bandwidth
 /// - Loop unrolling for reduced overhead
+#[allow(dead_code)]
 pub fn ultra_simd_separable_convolution_2d<T>(
     input: ArrayView2<T>,
     kernel_h: &[T],
@@ -196,6 +197,7 @@ fn ultra_simd_vertical_convolution_column<T>(
 ///
 /// This implementation uses separable structure elements when possible
 /// and optimized memory access patterns for maximum throughput.
+#[allow(dead_code)]
 pub fn ultra_simd_morphological_erosion_2d<T>(
     input: ArrayView2<T>,
     structure: ArrayView2<bool>,
@@ -314,6 +316,7 @@ fn ultra_simd_erosion_row<T>(
 }
 
 /// Check if a structure element is separable
+#[allow(dead_code)]
 fn is_separable_structure(structure: &ArrayView2<bool>) -> bool {
     let (height, width) = structure.dim();
 
@@ -359,6 +362,7 @@ fn is_separable_structure(structure: &ArrayView2<bool>) -> bool {
 /// - Cache-efficient memory access patterns
 /// - Optimized normalization with incremental statistics
 /// - Parallel processing for large images
+#[allow(dead_code)]
 pub fn ultra_simd_template_matching<T>(
     image: ArrayView2<T>,
     template: ArrayView2<T>,
@@ -525,6 +529,7 @@ fn ultra_simd_template_match_row<T>(
 /// - SIMD-accelerated convolution and downsampling
 /// - Memory-efficient pyramid storage
 /// - Cache-aware processing patterns
+#[allow(dead_code)]
 pub fn ultra_simd_gaussian_pyramid<T>(
     input: ArrayView2<T>,
     levels: usize,
@@ -564,6 +569,7 @@ where
 }
 
 /// Generate optimized Gaussian kernel for separable convolution
+#[allow(dead_code)]
 fn ultra_simd_generate_gaussian_kernel<T>(sigma: T) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive + Debug,
@@ -593,6 +599,7 @@ where
 }
 
 /// Ultra-fast SIMD downsampling by factor of 2
+#[allow(dead_code)]
 fn ultra_simd_downsample_2x<T>(input: &ArrayView2<T>) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
@@ -727,6 +734,7 @@ where
 }
 
 /// Separable erosion for specific structure patterns
+#[allow(dead_code)]
 fn ultra_simd_separable_erosion<T>(
     input: ArrayView2<T>,
     _structure: ArrayView2<bool>,

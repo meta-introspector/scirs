@@ -67,6 +67,7 @@ const MEDIUM_EPS: f64 = 1e-10;
 /// # References
 ///
 /// 1. Abramowitz, M. and Stegun, I. A. (1972). Handbook of Mathematical Functions, Section 5.
+#[allow(dead_code)]
 pub fn li(x: f64) -> SpecialResult<f64> {
     // Check for domain error
     check_positive(x, "x")?;
@@ -147,6 +148,7 @@ pub fn li(x: f64) -> SpecialResult<f64> {
 /// let z_one = Complex64::new(1.0, 0.0);
 /// assert!(li_complex(z_one).is_err());
 /// ```
+#[allow(dead_code)]
 pub fn li_complex(z: Complex64) -> SpecialResult<Complex64> {
     // Check for domain error
     if z.norm() < f64::EPSILON {
@@ -179,6 +181,7 @@ pub fn li_complex(z: Complex64) -> SpecialResult<Complex64> {
 }
 
 /// Computes the exponential integral for complex values
+#[allow(dead_code)]
 fn exponential_integral_complex(z: Complex64) -> Complex64 {
     // Special case for z = 0
     if z.norm() < f64::EPSILON {
@@ -289,6 +292,7 @@ fn exponential_integral_complex(z: Complex64) -> Complex64 {
 /// // Test domain error for non-positive argument
 /// assert!(e1(0.0).is_err());
 /// ```
+#[allow(dead_code)]
 pub fn e1(x: f64) -> SpecialResult<f64> {
     if x <= 0.0 {
         return Err(SpecialError::DomainError(String::from(
@@ -340,6 +344,7 @@ pub fn e1(x: f64) -> SpecialResult<f64> {
 /// // Test domain error
 /// assert!(expint(1, 0.0).is_err());
 /// ```
+#[allow(dead_code)]
 pub fn expint(n: i32, x: f64) -> SpecialResult<f64> {
     if x <= 0.0 && n <= 1 {
         return Err(SpecialError::DomainError(format!(
@@ -401,6 +406,7 @@ pub fn expint(n: i32, x: f64) -> SpecialResult<f64> {
 /// let result = si(2.0).unwrap();
 /// assert!(result > 1.0 && result < 2.0);
 /// ```
+#[allow(dead_code)]
 pub fn si(x: f64) -> SpecialResult<f64> {
     // For x = 0, the sine integral is 0
     if x == 0.0 {
@@ -465,6 +471,7 @@ pub fn si(x: f64) -> SpecialResult<f64> {
 /// // Ci(1) ≈ 0.337
 /// assert!((result - 0.337).abs() < 1e-3);
 /// ```
+#[allow(dead_code)]
 pub fn ci(x: f64) -> SpecialResult<f64> {
     // Check domain
     if x <= 0.0 {
@@ -527,6 +534,7 @@ pub fn ci(x: f64) -> SpecialResult<f64> {
 /// let result = shi(1.5).unwrap();
 /// assert!(result < -1.0);
 /// ```
+#[allow(dead_code)]
 pub fn shi(x: f64) -> SpecialResult<f64> {
     // For x = 0, the hyperbolic sine integral is 0
     if x == 0.0 {
@@ -587,6 +595,7 @@ pub fn shi(x: f64) -> SpecialResult<f64> {
 /// // Test domain error for non-positive
 /// assert!(chi(0.0).is_err());
 /// ```
+#[allow(dead_code)]
 pub fn chi(x: f64) -> SpecialResult<f64> {
     // Check domain
     if x <= 0.0 {
@@ -643,6 +652,7 @@ pub fn chi(x: f64) -> SpecialResult<f64> {
 /// // Li₂(0.5) ≈ 0.582
 /// assert!((result - 0.582).abs() < 1e-3);
 /// ```
+#[allow(dead_code)]
 pub fn polylog(s: f64, x: f64) -> SpecialResult<f64> {
     // Check cached values first
     if let Some(cached_value) = crate::optimizations::get_cached_polylog(s, x) {
@@ -768,6 +778,7 @@ pub fn polylog(s: f64, x: f64) -> SpecialResult<f64> {
 
 /// Simplified implementation of the Riemann zeta function.
 /// For accurate values, use the full implementation from the zeta module.
+#[allow(dead_code)]
 fn zeta_function(s: f64) -> f64 {
     // Special cases for common values
     if (s - 2.0).abs() < f64::EPSILON {
@@ -815,6 +826,7 @@ fn zeta_function(s: f64) -> f64 {
 /// assert!((si_val - 0.946083).abs() < 1e-5);
 /// assert!((ci_val - 0.337404).abs() < 1e-5);
 /// ```
+#[allow(dead_code)]
 pub fn sici(x: f64) -> SpecialResult<(f64, f64)> {
     Ok((si(x)?, ci(x)?))
 }
@@ -841,6 +853,7 @@ pub fn sici(x: f64) -> SpecialResult<(f64, f64)> {
 /// assert!((shi_val - 1.057251).abs() < 1e-5);
 /// assert!((chi_val - 0.837866).abs() < 1e-5);
 /// ```
+#[allow(dead_code)]
 pub fn shichi(x: f64) -> SpecialResult<(f64, f64)> {
     Ok((shi(x)?, chi(x)?))
 }
@@ -879,6 +892,7 @@ pub fn shichi(x: f64) -> SpecialResult<(f64, f64)> {
 /// let result = spence(1.0).unwrap();
 /// assert!(result.abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn spence(x: f64) -> SpecialResult<f64> {
     // Spence's function is related to the dilogarithm Li₂(x)
     // spence(x) = Li₂(1-x) for x <= 1
@@ -962,14 +976,10 @@ mod tests {
                 let rel_error = (result - expected).abs() / expected.abs();
                 assert!(
                     rel_error < 1e-10,
-                    "Li({}) = {}, expected {}, rel error: {}",
-                    x,
-                    result,
-                    expected,
-                    rel_error
+                    "Li({x}) = {result}, expected {expected}, rel error: {rel_error}"
                 );
             } else {
-                panic!("Failed to compute Li({})!", x);
+                panic!("Failed to compute Li({x})!");
             }
         }
 
@@ -992,7 +1002,7 @@ mod tests {
             if let Ok(result) = e1(x) {
                 assert_relative_eq!(result, expected, epsilon = 1e-10);
             } else {
-                panic!("Failed to compute E₁({})!", x);
+                panic!("Failed to compute E₁({x})!");
             }
         }
 
@@ -1002,7 +1012,7 @@ mod tests {
                 // Just verify computation succeeds
                 assert!(result.abs() < 1.0);
             } else {
-                panic!("Failed to compute E₍{}₎(1.0)!", n);
+                panic!("Failed to compute E₍{n}₎(1.0)!");
             }
         }
     }
@@ -1022,7 +1032,7 @@ mod tests {
             if let Ok(result) = si(x) {
                 assert_relative_eq!(result, expected, epsilon = 1e-10);
             } else {
-                panic!("Failed to compute Si({})!", x);
+                panic!("Failed to compute Si({x})!");
             }
         }
 
@@ -1038,7 +1048,7 @@ mod tests {
             if let Ok(result) = ci(x) {
                 assert_relative_eq!(result, expected, epsilon = 1e-10);
             } else {
-                panic!("Failed to compute Ci({})!", x);
+                panic!("Failed to compute Ci({x})!");
             }
         }
     }
@@ -1058,7 +1068,7 @@ mod tests {
             if let Ok(result) = shi(x) {
                 assert_relative_eq!(result, expected, epsilon = 1e-10);
             } else {
-                panic!("Failed to compute Shi({})!", x);
+                panic!("Failed to compute Shi({x})!");
             }
         }
 
@@ -1073,7 +1083,7 @@ mod tests {
             if let Ok(result) = chi(x) {
                 assert_relative_eq!(result, expected, epsilon = 1e-10);
             } else {
-                panic!("Failed to compute Chi({})!", x);
+                panic!("Failed to compute Chi({x})!");
             }
         }
     }
@@ -1091,7 +1101,7 @@ mod tests {
             if let Ok(result) = polylog(2.0, x) {
                 assert_relative_eq!(result, expected, epsilon = 1e-10);
             } else {
-                panic!("Failed to compute Li₂({})!", x);
+                panic!("Failed to compute Li₂({x})!");
             }
         }
 

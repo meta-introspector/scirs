@@ -852,6 +852,7 @@ impl<'a> InteriorPointSolver<'a> {
 }
 
 /// Solve linear system using LU decomposition from scirs2-linalg
+#[allow(dead_code)]
 fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, OptimizeError> {
     use scirs2_linalg::solve;
 
@@ -860,6 +861,7 @@ fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, OptimizeError>
 }
 
 /// Minimize a function subject to constraints using interior point method
+#[allow(dead_code)]
 pub fn minimize_interior_point<F, H, J>(
     fun: F,
     x0: Array1<f64>,
@@ -978,6 +980,7 @@ fn finite_diff_jacobian(
 
 /// Minimize a function subject to constraints using interior point method
 /// with constraint conversion from general format
+#[allow(dead_code)]
 pub fn minimize_interior_point_constrained<F>(
     func: F,
     x0: Array1<f64>,

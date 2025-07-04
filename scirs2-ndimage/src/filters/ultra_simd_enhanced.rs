@@ -22,6 +22,7 @@ use crate::BoundaryMode;
 /// - Vectorized boundary handling
 /// - Unrolled kernel specializations
 /// - Memory prefetching hints
+#[allow(dead_code)]
 pub fn ultra_simd_convolution_2d<T>(
     input: ArrayView2<T>,
     kernel: ArrayView2<T>,
@@ -54,6 +55,7 @@ where
 }
 
 /// Specialized 3x3 convolution with maximum SIMD optimization
+#[allow(dead_code)]
 fn ultra_simd_convolution_3x3<T>(
     input: ArrayView2<T>,
     kernel: ArrayView2<T>,
@@ -140,6 +142,7 @@ where
 }
 
 /// Specialized 5x5 convolution with SIMD optimization
+#[allow(dead_code)]
 fn ultra_simd_convolution_5x5<T>(
     input: ArrayView2<T>,
     kernel: ArrayView2<T>,
@@ -219,6 +222,7 @@ where
 }
 
 /// General convolution with optimized SIMD implementation
+#[allow(dead_code)]
 fn ultra_simd_convolution_general<T>(
     input: ArrayView2<T>,
     kernel: ArrayView2<T>,
@@ -304,6 +308,7 @@ where
 /// This implementation exploits the separability of many kernels (Gaussian, box filter, etc.)
 /// to achieve significant performance improvements by reducing computational complexity
 /// from O(n*m*k1*k2) to O(n*m*(k1+k2)).
+#[allow(dead_code)]
 pub fn ultra_simd_separable_convolution_2d<T>(
     input: ArrayView2<T>,
     kernel_x: ArrayView1<T>,
@@ -323,6 +328,7 @@ where
 }
 
 /// Optimized horizontal convolution with SIMD vectorization
+#[allow(dead_code)]
 fn ultra_simd_horizontal_convolution<T>(
     input: ArrayView2<T>,
     kernel: ArrayView1<T>,
@@ -385,6 +391,7 @@ where
 }
 
 /// Optimized vertical convolution with SIMD vectorization
+#[allow(dead_code)]
 fn ultra_simd_vertical_convolution<T>(
     input: ArrayView2<T>,
     kernel: ArrayView1<T>,
@@ -451,6 +458,7 @@ where
 ///
 /// This implementation uses advanced vectorization techniques for computing
 /// median values efficiently, including vectorized sorting networks for small windows.
+#[allow(dead_code)]
 pub fn ultra_simd_median_filter<T>(
     input: ArrayView2<T>,
     size: (usize, usize),
@@ -515,6 +523,7 @@ where
 }
 
 /// Specialized 3x3 median filter with SIMD-optimized sorting network
+#[allow(dead_code)]
 fn ultra_simd_median_3x3<T>(
     input: ArrayView2<T>,
     mode: BoundaryMode,
@@ -556,6 +565,7 @@ where
 }
 
 /// Specialized 5x5 median filter with optimized implementation
+#[allow(dead_code)]
 fn ultra_simd_median_5x5<T>(
     input: ArrayView2<T>,
     mode: BoundaryMode,
@@ -590,6 +600,7 @@ where
 // Helper functions
 
 /// Safe boundary value access with comprehensive mode support
+#[allow(dead_code)]
 fn get_boundary_value_safe<T>(
     input: &ArrayView2<T>,
     y: isize,
@@ -632,6 +643,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn reflect_coordinate(coord: isize, size: usize) -> usize {
     let size_i = size as isize;
     if coord < 0 {
@@ -643,15 +655,18 @@ fn reflect_coordinate(coord: isize, size: usize) -> usize {
     }
 }
 
+#[allow(dead_code)]
 fn clamp_coordinate(coord: isize, size: usize) -> usize {
     coord.max(0).min(size as isize - 1) as usize
 }
 
+#[allow(dead_code)]
 fn wrap_coordinate(coord: isize, size: usize) -> usize {
     let size_i = size as isize;
     ((coord % size_i + size_i) % size_i) as usize
 }
 
+#[allow(dead_code)]
 fn mirror_coordinate(coord: isize, size: usize) -> usize {
     let size_i = size as isize;
     if size_i <= 1 {
@@ -669,6 +684,7 @@ fn mirror_coordinate(coord: isize, size: usize) -> usize {
 }
 
 /// Optimized quickselect algorithm for median finding
+#[allow(dead_code)]
 fn quickselect_median<T>(values: &mut [T]) -> Option<T>
 where
     T: PartialOrd + Clone,
@@ -683,6 +699,7 @@ where
     Some(quickselect(values, target).clone())
 }
 
+#[allow(dead_code)]
 fn quickselect<T>(values: &mut [T], k: usize) -> &T
 where
     T: PartialOrd,
@@ -702,6 +719,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn partition<T>(values: &mut [T]) -> usize
 where
     T: PartialOrd,
@@ -723,6 +741,7 @@ where
 }
 
 /// Optimized sorting network for 9 elements (3x3 median)
+#[allow(dead_code)]
 fn median_9_elements<T>(values: &mut [T; 9]) -> T
 where
     T: PartialOrd + Clone,
@@ -742,6 +761,7 @@ where
     medians[1].clone()
 }
 
+#[allow(dead_code)]
 fn sort_3<T>(a: &mut T, b: &mut T, c: &mut T)
 where
     T: PartialOrd,

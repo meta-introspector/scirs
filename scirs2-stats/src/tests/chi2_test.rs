@@ -58,6 +58,7 @@ pub struct ChiSquareResult<F> {
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let significant = result.p_value < 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn chi2_gof<F, I>(
     observed: &ArrayView1<I>,
     expected: Option<ArrayView1<F>>,
@@ -172,6 +173,7 @@ where
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let significant = result.p_value < 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn chi2_independence<F, I>(observed: &ArrayView2<I>) -> StatsResult<ChiSquareResult<F>>
 where
     F: Float
@@ -287,6 +289,7 @@ where
 /// println!("Chi-square statistic (with Yates' correction): {}", result.statistic);
 /// println!("p-value: {}", result.p_value);
 /// ```
+#[allow(dead_code)]
 pub fn chi2_yates<F, I>(observed: &ArrayView2<I>) -> StatsResult<ChiSquareResult<F>>
 where
     F: Float

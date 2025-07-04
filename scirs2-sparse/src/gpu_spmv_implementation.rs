@@ -56,6 +56,7 @@ impl GpuSpMV {
     }
 
     /// Execute sparse matrix-vector multiplication: y = A * x
+    #[allow(clippy::too_many_arguments)]
     pub fn spmv<T>(
         &self,
         rows: usize,

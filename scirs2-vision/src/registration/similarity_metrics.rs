@@ -504,6 +504,7 @@ impl SimilarityMeasure for GradientCorrelation {
 }
 
 /// Factory function to create similarity measure from metric type
+#[allow(dead_code)]
 pub fn create_similarity_measure(metric: SimilarityMetric) -> Box<dyn SimilarityMeasure> {
     match metric {
         SimilarityMetric::SumOfSquaredDifferences => Box::new(SumOfSquaredDifferences),
@@ -519,6 +520,7 @@ pub fn create_similarity_measure(metric: SimilarityMetric) -> Box<dyn Similarity
 
 // Helper functions
 
+#[allow(dead_code)]
 fn validate_dimensions(reference: &Array2<f32>, moving: &Array2<f32>) -> Result<()> {
     if reference.dim() != moving.dim() {
         return Err(VisionError::InvalidParameter(
@@ -536,6 +538,7 @@ fn validate_dimensions(reference: &Array2<f32>, moving: &Array2<f32>) -> Result<
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compute_histograms(
     reference: &Array2<f32>,
     moving: &Array2<f32>,
@@ -575,6 +578,7 @@ fn compute_histograms(
     Ok((joint_hist, ref_hist, mov_hist))
 }
 
+#[allow(dead_code)]
 fn compute_gradient_magnitude(image: &Array2<f32>) -> Result<Array2<f32>> {
     let (height, width) = image.dim();
     let mut gradient = Array2::zeros((height, width));

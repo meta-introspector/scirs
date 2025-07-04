@@ -14,6 +14,7 @@ use ndarray::{Array1, Array2, ArrayView1};
 ///
 /// Implements a specialized BDF method tailored for semi-explicit DAE systems
 /// of the form x' = f(x, y, t), 0 = g(x, y, t)
+#[allow(dead_code)]
 pub fn bdf_semi_explicit_dae<F, FFunc, GFunc>(
     f: FFunc,
     g: GFunc,
@@ -520,6 +521,7 @@ where
 ///
 /// Implements a specialized BDF method tailored for fully implicit DAE systems
 /// of the form F(t, y, y') = 0
+#[allow(dead_code)]
 pub fn bdf_implicit_dae<F, FFunc>(
     f: FFunc,
     t_span: [F; 2],
@@ -932,6 +934,7 @@ where
 }
 
 /// Predict the next state for semi-explicit DAE using extrapolation
+#[allow(dead_code)]
 fn predict_step<F>(
     x_history: &[Array1<F>],
     y_history: &[Array1<F>],
@@ -1011,6 +1014,7 @@ where
 }
 
 /// Predict the next state for fully implicit DAE
+#[allow(dead_code)]
 fn predict_fully_implicit<F>(y_history: &[Array1<F>], order: usize, _h: F) -> Array1<F>
 where
     F: IntegrateFloat,
@@ -1039,6 +1043,7 @@ where
 }
 
 /// Compute the Jacobian of a function with respect to x variables
+#[allow(dead_code)]
 fn compute_jacobian_x<F, Func>(
     f: &Func,
     t: F,
@@ -1086,6 +1091,7 @@ where
 }
 
 /// Compute the Jacobian of a function with respect to y variables
+#[allow(dead_code)]
 fn compute_jacobian_y<F, Func>(
     f: &Func,
     t: F,
@@ -1133,6 +1139,7 @@ where
 }
 
 /// Compute the Jacobian of a function with respect to y for implicit DAE
+#[allow(dead_code)]
 fn compute_jacobian_y_implicit<F, Func>(
     f: &Func,
     t: F,
@@ -1180,6 +1187,7 @@ where
 }
 
 /// Compute the Jacobian of a function with respect to y' for implicit DAE
+#[allow(dead_code)]
 fn compute_jacobian_yprime_implicit<F, Func>(
     f: &Func,
     t: F,
@@ -1227,6 +1235,7 @@ where
 }
 
 /// Solve a linear system using Gaussian elimination with partial pivoting
+#[allow(dead_code)]
 fn solve_linear_system<F>(a: &Array2<F>, b: &Array1<F>) -> IntegrateResult<Array1<F>>
 where
     F: IntegrateFloat,

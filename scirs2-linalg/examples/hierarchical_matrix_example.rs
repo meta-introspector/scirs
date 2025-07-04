@@ -13,6 +13,7 @@
 use ndarray::{Array1, Array2};
 use scirs2_linalg::hierarchical::{adaptive_block_lowrank, HMatrix, HSSMatrix};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Hierarchical Matrix Factorizations - ULTRATHINK DEMONSTRATION");
     println!("================================================================");

@@ -336,6 +336,7 @@ impl NeuromorphicProcessor {
 
     // Private helper methods for neuromorphic processing
 
+    #[allow(clippy::needless_range_loop)]
     fn initialize_network(&self, rng: &mut StdRng) -> Result<Vec<Vec<Synapse>>> {
         let total_neurons = self.network_config.input_neurons
             + self.network_config.hidden_neurons
@@ -375,7 +376,7 @@ impl NeuromorphicProcessor {
     fn process_sample_neuromorphic(
         &self,
         sample: &ndarray::ArrayView1<f64>,
-        network: &mut Vec<Vec<Synapse>>,
+        network: &mut [Vec<Synapse>],
         time_steps: usize,
         _rng: &mut StdRng,
     ) -> Result<(Array2<f64>, f64)> {
@@ -458,7 +459,7 @@ impl NeuromorphicProcessor {
 
     fn propagate_spikes(
         &self,
-        network: &mut Vec<Vec<Synapse>>,
+        network: &mut [Vec<Synapse>],
         spike_pattern: &Array2<f64>,
         neuron_states: &mut [NeuronState],
         time_idx: usize,
@@ -569,7 +570,7 @@ impl NeuromorphicProcessor {
 
     fn adapt_network_hebbian(
         &self,
-        network: &mut Vec<Vec<Synapse>>,
+        network: &mut [Vec<Synapse>],
         features: &Array1<f64>,
     ) -> Result<()> {
         // Apply Hebbian learning: "neurons that fire together, wire together"
@@ -605,7 +606,7 @@ impl NeuromorphicProcessor {
     fn temporal_spike_processing(
         &self,
         input: &Array1<f64>,
-        _network: &mut Vec<Vec<Synapse>>,
+        _network: &mut [Vec<Synapse>],
         time_idx: usize,
         _rng: &mut StdRng,
     ) -> Result<Array1<f64>> {
@@ -624,7 +625,7 @@ impl NeuromorphicProcessor {
         Ok(spike_response)
     }
 
-    fn apply_stdp_learning(&self, network: &mut Vec<Vec<Synapse>>, time_idx: usize) -> Result<f64> {
+    fn apply_stdp_learning(&self, network: &mut [Vec<Synapse>], time_idx: usize) -> Result<f64> {
         let mut total_learning_change = 0.0;
 
         // Spike Timing Dependent Plasticity (STDP)
@@ -650,9 +651,10 @@ impl NeuromorphicProcessor {
         Ok(total_learning_change)
     }
 
+    #[allow(clippy::needless_range_loop)]
     fn add_recurrent_connections(
         &self,
-        network: &mut Vec<Vec<Synapse>>,
+        network: &mut [Vec<Synapse>],
         rng: &mut StdRng,
     ) -> Result<()> {
         let start_hidden = self.network_config.input_neurons;

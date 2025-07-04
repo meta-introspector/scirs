@@ -25,6 +25,7 @@ const PARALLEL_THRESHOLD: usize = 10_000;
 /// # Returns
 ///
 /// The arithmetic mean of the input data
+#[allow(dead_code)]
 pub fn mean_parallel<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum,
@@ -66,6 +67,7 @@ where
 /// # Returns
 ///
 /// The variance of the input data
+#[allow(dead_code)]
 pub fn variance_parallel<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum,
@@ -116,6 +118,7 @@ where
 /// # Returns
 ///
 /// Array of computed quantile values
+#[allow(dead_code)]
 pub fn quantiles_parallel<F, D>(
     x: &ArrayBase<D, Ix1>,
     quantiles: &[F],
@@ -189,6 +192,7 @@ where
 /// # Returns
 ///
 /// Array of statistics, one per row
+#[allow(dead_code)]
 pub fn row_statistics_parallel<F, D, S>(
     data: &ArrayBase<D, Ix2>,
     stat_fn: S,
@@ -231,6 +235,7 @@ where
 /// # Returns
 ///
 /// Correlation matrix
+#[allow(dead_code)]
 pub fn corrcoef_parallel<F, D>(data: &ArrayBase<D, Ix2>) -> StatsResult<ndarray::Array2<F>>
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum + std::fmt::Debug,
@@ -289,6 +294,7 @@ where
 /// # Returns
 ///
 /// Array of bootstrap statistics
+#[allow(dead_code)]
 pub fn bootstrap_parallel<F, S>(
     data: &Array1<F>,
     n_samples: usize,

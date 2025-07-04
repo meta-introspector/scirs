@@ -9,6 +9,7 @@ use scirs2_cluster::metrics::silhouette_score;
 use scirs2_cluster::preprocess::standardize;
 use scirs2_cluster::ultrathink_clustering::{UltrathinkClusterer, UltrathinkConfig};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Clustering - AI-Driven Quantum-Neuromorphic Demo");
     println!("================================================================");
@@ -48,6 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates basic ultrathink clustering capabilities
+#[allow(dead_code)]
 fn basic_ultrathink_clustering() -> Result<(), Box<dyn std::error::Error>> {
     // Create sample data with clear cluster structure
     let data = Array2::from_shape_vec(
@@ -85,6 +87,7 @@ fn basic_ultrathink_clustering() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates AI-driven algorithm selection capabilities
+#[allow(dead_code)]
 fn ai_driven_clustering() -> Result<(), Box<dyn std::error::Error>> {
     // Create high-dimensional noisy data
     let mut data_vec = Vec::new();
@@ -124,6 +127,7 @@ fn ai_driven_clustering() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates quantum-neuromorphic fusion clustering
+#[allow(dead_code)]
 fn quantum_neuromorphic_clustering() -> Result<(), Box<dyn std::error::Error>> {
     // Create complex overlapping clusters
     let mut data_vec = Vec::new();
@@ -170,6 +174,7 @@ fn quantum_neuromorphic_clustering() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates meta-learning hyperparameter optimization
+#[allow(dead_code)]
 fn meta_learning_clustering() -> Result<(), Box<dyn std::error::Error>> {
     // Create dataset with varying densities
     let mut data_vec = Vec::new();
@@ -211,6 +216,7 @@ fn meta_learning_clustering() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates continual adaptation for streaming data
+#[allow(dead_code)]
 fn continual_adaptation_clustering() -> Result<(), Box<dyn std::error::Error>> {
     // Simulate streaming data with concept drift
     let mut data_vec = Vec::new();
@@ -253,6 +259,7 @@ fn continual_adaptation_clustering() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates full ultrathink mode with all features enabled
+#[allow(dead_code)]
 fn full_ultrathink_mode() -> Result<(), Box<dyn std::error::Error>> {
     // Create complex multi-scale dataset
     let mut data_vec = Vec::new();
@@ -335,6 +342,7 @@ fn full_ultrathink_mode() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates multi-objective optimization balancing accuracy, speed, and interpretability
+#[allow(dead_code)]
 fn multi_objective_clustering() -> Result<(), Box<dyn std::error::Error>> {
     // Create dataset requiring balance between different objectives
     let mut data_vec = Vec::new();

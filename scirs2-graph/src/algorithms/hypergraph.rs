@@ -42,6 +42,7 @@ pub struct MinimalTransversal<N: Node> {
 ///
 /// # Returns
 /// * Vector of minimal transversals
+#[allow(dead_code)]
 pub fn minimal_transversals<N, E, Ix>(
     hypergraph: &Hypergraph<N, E, Ix>,
     max_size: Option<usize>,
@@ -114,6 +115,7 @@ where
 }
 
 /// Generate all combinations of k elements from a vector
+#[allow(dead_code)]
 fn generate_combinations<T: Clone>(items: &[T], k: usize) -> Vec<Vec<T>> {
     if k == 0 {
         return vec![vec![]];
@@ -152,6 +154,7 @@ fn generate_combinations<T: Clone>(items: &[T], k: usize) -> Vec<Vec<T>> {
 ///
 /// # Returns
 /// * The minimum cut information
+#[allow(dead_code)]
 pub fn minimum_vertex_cut<N, E, Ix>(
     hypergraph: &Hypergraph<N, E, Ix>,
     source: &N,
@@ -232,6 +235,7 @@ where
 ///
 /// # Returns
 /// * The hyperedge connectivity (minimum number of hyperedges to remove)
+#[allow(dead_code)]
 pub fn hyperedge_connectivity<N, E, Ix>(
     hypergraph: &Hypergraph<N, E, Ix>,
     source: &N,
@@ -305,6 +309,7 @@ where
 ///
 /// # Returns
 /// * The diameter, or None if the hypergraph is disconnected
+#[allow(dead_code)]
 pub fn hypergraph_diameter<N, E, Ix>(hypergraph: &Hypergraph<N, E, Ix>) -> Option<usize>
 where
     N: Node + Clone + Ord + std::fmt::Debug,
@@ -343,6 +348,7 @@ where
 ///
 /// # Returns
 /// * The distance, or None if nodes are not connected
+#[allow(dead_code)]
 pub fn hypergraph_distance<N, E, Ix>(
     hypergraph: &Hypergraph<N, E, Ix>,
     source: &N,
@@ -405,6 +411,7 @@ where
 ///
 /// # Returns
 /// * Vector of strongly connected components (as sets of nodes)
+#[allow(dead_code)]
 pub fn hypergraph_connected_components<N, E, Ix>(
     hypergraph: &Hypergraph<N, E, Ix>,
 ) -> Vec<HashSet<N>>
@@ -454,6 +461,7 @@ where
 ///
 /// # Returns
 /// * True if connected, false otherwise
+#[allow(dead_code)]
 pub fn is_hypergraph_connected<N, E, Ix>(hypergraph: &Hypergraph<N, E, Ix>) -> bool
 where
     N: Node + Clone + Ord + std::fmt::Debug,
@@ -619,8 +627,7 @@ mod tests {
         let connectivity = hyperedge_connectivity(&hypergraph, &1, &4).unwrap();
         assert!(
             connectivity >= 1,
-            "Expected connectivity >= 1, got {}",
-            connectivity
+            "Expected connectivity >= 1, got {connectivity}"
         );
 
         // Test disconnected nodes

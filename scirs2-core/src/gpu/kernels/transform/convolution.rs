@@ -92,6 +92,7 @@ struct Uniforms {
 @group(0) @binding(3) var<storage, write> output: array<f32>;
 
 @compute @workgroup_size(256)
+#[allow(dead_code)]
 fn conv1d(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let out_idx = global_id.x;
     
@@ -354,6 +355,7 @@ struct Uniforms {
 @group(0) @binding(3) var<storage, write> output: array<f32>;
 
 @compute @workgroup_size(16, 16)
+#[allow(dead_code)]
 fn conv2d(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let batch_idx = global_id.z;
     let out_channel = global_id.y % uniforms.out_channels;

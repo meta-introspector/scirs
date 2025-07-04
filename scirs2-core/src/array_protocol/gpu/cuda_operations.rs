@@ -26,6 +26,7 @@ use crate::array_protocol::{
 };
 
 /// Registers CUDA-specific optimized functions with the array protocol system.
+#[allow(dead_code)]
 pub fn register_cuda_operations() {
     // This would register the CUDA-specific implementations with the
     // global ArrayFunctionRegistry. For this implementation, we're
@@ -36,6 +37,7 @@ pub fn register_cuda_operations() {
 /// Implements matrix multiplication for CUDA-accelerated arrays.
 ///
 /// This function would use CUBLAS for efficient matrix multiplication.
+#[allow(dead_code)]
 pub fn cuda_matmul<D1, D2>(
     a: &GPUNdarray<f64, D1>,
     b: &GPUNdarray<f64, D2>,
@@ -79,6 +81,7 @@ where
 /// Implements element-wise addition for CUDA-accelerated arrays.
 ///
 /// This function would use a CUDA kernel for element-wise addition.
+#[allow(dead_code)]
 pub fn cuda_add<D1, D2>(
     a: &GPUNdarray<f64, D1>,
     b: &GPUNdarray<f64, D2>,
@@ -115,6 +118,7 @@ where
 }
 
 /// Implements element-wise multiplication for CUDA-accelerated arrays.
+#[allow(dead_code)]
 pub fn cuda_multiply<D1, D2>(
     a: &GPUNdarray<f64, D1>,
     b: &GPUNdarray<f64, D2>,
@@ -146,6 +150,7 @@ where
 }
 
 /// Implements array transpose for CUDA-accelerated arrays.
+#[allow(dead_code)]
 pub fn cuda_transpose<D>(
     a: &GPUNdarray<f64, D>,
 ) -> Result<GPUNdarray<f64, Ix2>, NotImplemented>
@@ -171,6 +176,7 @@ where
 }
 
 /// Implements array sum for CUDA-accelerated arrays.
+#[allow(dead_code)]
 pub fn cuda_sum<D>(
     a: &GPUNdarray<f64, D>,
     axis: Option<usize>,
@@ -196,6 +202,7 @@ where
 }
 
 /// Implements array reshape for CUDA-accelerated arrays.
+#[allow(dead_code)]
 pub fn cuda_reshape<D>(
     a: &GPUNdarray<f64, D>,
     shape: &[usize],
@@ -218,6 +225,7 @@ where
 }
 
 /// Implements 2D convolution for CUDA-accelerated arrays.
+#[allow(dead_code)]
 pub fn cuda_conv2d<D1, D2>(
     input: &GPUNdarray<f64, D1>,
     kernel: &GPUNdarray<f64, D2>,
@@ -255,6 +263,7 @@ where
 }
 
 /// Implements SVD decomposition for CUDA-accelerated arrays.
+#[allow(dead_code)]
 pub fn cuda_svd<D>(
     a: &GPUNdarray<f64, D>,
 ) -> Result<(GPUNdarray<f64, Ix2>, GPUNdarray<f64, IxDyn>, GPUNdarray<f64, Ix2>), NotImplemented>
@@ -284,6 +293,7 @@ where
 }
 
 /// Implements matrix inverse for CUDA-accelerated arrays.
+#[allow(dead_code)]
 pub fn cuda_inverse<D>(
     a: &GPUNdarray<f64, D>,
 ) -> Result<GPUNdarray<f64, Ix2>, NotImplemented>

@@ -4,6 +4,7 @@ use ag::tensor_ops as T;
 use scirs2_autograd as ag;
 
 #[test]
+#[allow(dead_code)]
 fn test_matrix_inverse() {
     ag::run::<f32, _, _>(|ctx| {
         // Create a simple test matrix with known inverse
@@ -72,6 +73,7 @@ fn test_matrix_inverse() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_determinant() {
     ag::run::<f32, _, _>(|ctx| {
         // Create a test matrix with known determinant
@@ -150,6 +152,7 @@ fn test_determinant() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_matrix_solve() {
     ag::run::<f32, _, _>(|ctx| {
         // Create a simple system Ax = b with known solution
@@ -224,6 +227,7 @@ fn test_matrix_solve() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_qr_decomposition() {
     ag::run::<f32, _, _>(|ctx| {
         let rng = &mut ArrayRng::<f32>::default();
@@ -303,6 +307,7 @@ fn test_qr_decomposition() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_matrix_exp() {
     ag::run::<f32, _, _>(|ctx| {
         // Create a simple matrix to test exponential
@@ -366,6 +371,7 @@ fn test_matrix_exp() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_near_singular_matrix_operations() {
     ag::run::<f32, _, _>(|ctx| {
         // Create a nearly singular matrix
@@ -573,6 +579,7 @@ fn test_near_singular_matrix_operations() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_matrix_sqrt() {
     ag::run::<f32, _, _>(|ctx| {
         // Create a positive definite matrix for testing matrix square root

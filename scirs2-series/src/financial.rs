@@ -2514,7 +2514,9 @@ mod tests {
     use super::risk::*;
     use super::technical_indicators::*;
     use super::volatility::*;
+    use super::{Distribution, GarchConfig, GarchModel, MeanModel};
     use approx::assert_abs_diff_eq;
+    use ndarray::Array1;
 
     #[test]
     fn test_garch_config_default() {
@@ -2940,6 +2942,7 @@ mod tests {
 }
 
 /// Average Directional Index (ADX) - measures trend strength
+#[allow(dead_code)]
 pub fn adx<F: Float + Clone + num_traits::FromPrimitive>(
     high: &Array1<F>,
     low: &Array1<F>,
@@ -3020,6 +3023,7 @@ pub fn adx<F: Float + Clone + num_traits::FromPrimitive>(
 }
 
 /// Commodity Channel Index (CCI) - momentum oscillator
+#[allow(dead_code)]
 pub fn cci<F: Float + Clone>(
     high: &Array1<F>,
     low: &Array1<F>,
@@ -3069,6 +3073,7 @@ pub fn cci<F: Float + Clone>(
 }
 
 /// Parabolic Stop and Reverse (SAR) - trend-following indicator
+#[allow(dead_code)]
 pub fn parabolic_sar<F: Float + Clone>(
     high: &Array1<F>,
     low: &Array1<F>,
@@ -3151,6 +3156,7 @@ pub fn parabolic_sar<F: Float + Clone>(
 }
 
 /// Black-Scholes option pricing model
+#[allow(dead_code)]
 pub fn black_scholes<F: Float + Clone>(
     spot_price: F,
     strike_price: F,
@@ -3382,6 +3388,7 @@ pub struct EgarchResult<F: Float> {
 }
 
 /// Normal cumulative distribution function approximation
+#[allow(dead_code)]
 fn normal_cdf<F: Float>(x: F) -> F {
     // Abramowitz and Stegun approximation
     let a1 = F::from(0.254829592).unwrap();

@@ -66,7 +66,6 @@ where
 {
     array: &'a ArrayBase<S, D>,
     // Chunk shape is necessary for the full implementation of chunked processing
-    #[allow(dead_code)]
     chunk_shape: D,
     // Current position needed for iterative processing
     #[allow(dead_code)]
@@ -367,6 +366,7 @@ impl Default for GlobalBufferPool {
 }
 
 /// Static global buffer pool instance
+#[allow(dead_code)]
 pub fn global_buffer_pool() -> &'static GlobalBufferPool {
     use once_cell::sync::Lazy;
     static GLOBAL_POOL: Lazy<GlobalBufferPool> = Lazy::new(GlobalBufferPool::new);
@@ -464,6 +464,7 @@ impl MemoryTracker {
 }
 
 /// Static global memory tracker instance
+#[allow(dead_code)]
 pub fn global_memory_tracker() -> &'static MemoryTracker {
     use once_cell::sync::Lazy;
     static GLOBAL_TRACKER: Lazy<MemoryTracker> = Lazy::new(MemoryTracker::new);

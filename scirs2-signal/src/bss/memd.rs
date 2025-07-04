@@ -21,6 +21,7 @@ use rand::{Rng, SeedableRng};
 /// # Returns
 ///
 /// * Array of decomposed IMFs for each signal
+#[allow(dead_code)]
 pub fn multivariate_emd(
     signals: &Array2<f64>,
     n_directions: usize,
@@ -45,7 +46,7 @@ pub fn multivariate_emd(
 
         // Generate random normal vector
         for _ in 0..n_signals {
-            v.push(rng.gen_range(-1.0..1.0));
+            v.push(rng.random_range(-1.0..1.0));
         }
 
         // Normalize

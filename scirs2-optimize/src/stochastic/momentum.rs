@@ -51,6 +51,7 @@ impl Default for MomentumOptions {
 }
 
 /// SGD with momentum optimizer implementation
+#[allow(dead_code)]
 pub fn minimize_sgd_momentum<F>(
     mut grad_func: F,
     mut x: Array1<f64>,
@@ -218,6 +219,7 @@ where
 }
 
 /// Heavy-ball momentum (Polyak momentum) implementation
+#[allow(dead_code)]
 pub fn minimize_heavy_ball<F>(
     mut grad_func: F,
     mut x: Array1<f64>,
@@ -318,6 +320,7 @@ where
 }
 
 /// Adaptive momentum based on gradient correlation
+#[allow(dead_code)]
 pub fn minimize_adaptive_momentum<F>(
     mut grad_func: F,
     mut x: Array1<f64>,

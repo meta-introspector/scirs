@@ -627,11 +627,12 @@ impl TapeBuilder {
     }
 
     /// Add a unary operation
-    pub fn unary_op(&mut self, input: usize, partial: f64) -> usize {
+    pub fn unary_op(&mut self, op_type: UnaryOpType, input: usize, partial: f64) -> usize {
         let result_id = self.next_var_id;
         self.next_var_id += 1;
 
         let node = TapeNode::UnaryOp {
+            op_type,
             input,
             result: result_id,
             partial,
@@ -644,6 +645,7 @@ impl TapeBuilder {
     /// Add a binary operation
     pub fn binary_op(
         &mut self,
+        op_type: BinaryOpType,
         left: usize,
         right: usize,
         left_partial: f64,
@@ -653,6 +655,7 @@ impl TapeBuilder {
         self.next_var_id += 1;
 
         let node = TapeNode::BinaryOp {
+            op_type,
             left,
             right,
             result: result_id,
@@ -744,8 +747,8 @@ mod tests {
         // Build tape for: z = (x + y) * x
         let x = builder.input(2.0);
         let y = builder.input(3.0);
-        let sum = builder.binary_op(x, y, 1.0, 1.0); // x + y, partials: ∂/∂x=1, ∂/∂y=1
-        let _result = builder.binary_op(sum, x, 2.0, 5.0); // sum * x, partials: ∂/∂sum=x=2, ∂/∂x=sum=5
+        let sum = builder.binary_op(BinaryOpType::Add, x, y, 1.0, 1.0); // x + y, partials: ∂/∂x=1, ∂/∂y=1
+        let _result = builder.binary_op(BinaryOpType::Mul, sum, x, 2.0, 5.0); // sum * x, partials: ∂/∂sum=x=2, ∂/∂x=sum=5
 
         let tape = builder.build();
 
@@ -789,6 +792,7 @@ mod tests {
 
         tape.add_input(Variable::new(0, 1.0));
         tape.add_node(TapeNode::UnaryOp {
+            op_type: UnaryOpType::Neg,
             input: 0,
             result: 1,
             partial: 1.0,

@@ -538,7 +538,7 @@ where
 
                 // Use a simple pseudo-random approach for demonstration
                 // In production, this should use proper random number generation
-                for split in 0..*n_splits {
+                for split in 0..n_splits {
                     let mut indices: Vec<usize> = (0..n).collect();
 
                     // Simple deterministic shuffle based on split number for reproducibility
@@ -556,10 +556,10 @@ where
             CrossValidationStrategy::TimeSeries { n_splits, gap: _ } => {
                 // Time series cross-validation: progressively larger training sets
                 let mut folds = Vec::new();
-                let min_train_size = n / (*n_splits + 1);
-                let test_size = n / (*n_splits + 1);
+                let min_train_size = n / (n_splits + 1);
+                let test_size = n / (n_splits + 1);
 
-                for i in 0..*n_splits {
+                for i in 0..n_splits {
                     let train_end = min_train_size + i * test_size;
                     let test_start = train_end;
                     let test_end = (test_start + test_size).min(n);
@@ -952,6 +952,7 @@ where
 /// # Returns
 ///
 /// Configured cross-validator
+#[allow(dead_code)]
 pub fn make_cross_validator<T>(k_folds: usize, metric: ValidationMetric) -> CrossValidator<T>
 where
     T: Float

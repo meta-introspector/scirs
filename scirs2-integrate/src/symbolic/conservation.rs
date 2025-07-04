@@ -73,6 +73,7 @@ impl<F: IntegrateFloat> ConservationLaw<F> {
 /// 1. Hamiltonian structure (energy conservation)
 /// 2. Symmetries (Noether's theorem)
 /// 3. Linear/quadratic invariants
+#[allow(dead_code)]
 pub fn detect_conservation_laws<F: IntegrateFloat>(
     expressions: &[SymbolicExpression<F>],
     state_vars: &[Variable],
@@ -94,6 +95,7 @@ pub fn detect_conservation_laws<F: IntegrateFloat>(
 }
 
 /// Detect if the system has Hamiltonian structure
+#[allow(dead_code)]
 fn detect_hamiltonian_conservation<F: IntegrateFloat>(
     expressions: &[SymbolicExpression<F>],
     state_vars: &[Variable],
@@ -200,6 +202,7 @@ fn detect_hamiltonian_conservation<F: IntegrateFloat>(
 }
 
 /// Extract linear coefficient if expression is linear in variable
+#[allow(dead_code)]
 fn extract_linear_coefficient<F: IntegrateFloat>(
     expr: &SymbolicExpression<F>,
     var: &Variable,
@@ -228,6 +231,7 @@ fn extract_linear_coefficient<F: IntegrateFloat>(
 }
 
 /// Simple symbolic integration for polynomial expressions
+#[allow(dead_code)]
 fn integrate_expression<F: IntegrateFloat>(
     expr: &SymbolicExpression<F>,
     var: &Variable,
@@ -308,11 +312,13 @@ fn integrate_expression<F: IntegrateFloat>(
 }
 
 /// Check if expression depends on variable
+#[allow(dead_code)]
 fn depends_on_var<F: IntegrateFloat>(expr: &SymbolicExpression<F>, var: &Variable) -> bool {
     expr.variables().contains(var)
 }
 
 /// Check if two expressions are structurally equal
+#[allow(dead_code)]
 fn expressions_equal<F: IntegrateFloat>(
     expr1: &SymbolicExpression<F>,
     expr2: &SymbolicExpression<F>,
@@ -338,6 +344,7 @@ fn expressions_equal<F: IntegrateFloat>(
 }
 
 /// Detect linear conservation laws of the form c^T * y = constant
+#[allow(dead_code)]
 fn detect_linear_conservation<F: IntegrateFloat>(
     expressions: &[SymbolicExpression<F>],
     state_vars: &[Variable],
@@ -377,6 +384,7 @@ fn detect_linear_conservation<F: IntegrateFloat>(
 }
 
 /// Detect quadratic conservation laws
+#[allow(dead_code)]
 fn detect_quadratic_conservation<F: IntegrateFloat>(
     expressions: &[SymbolicExpression<F>],
     state_vars: &[Variable],
@@ -492,6 +500,7 @@ impl<F: IntegrateFloat> ConservationEnforcer<F> {
 }
 
 /// Example: Create conservation laws for a pendulum
+#[allow(dead_code)]
 pub fn example_pendulum_conservation<F: IntegrateFloat>() -> Vec<ConservationLaw<F>> {
     use SymbolicExpression::*;
 
@@ -520,6 +529,7 @@ pub fn example_pendulum_conservation<F: IntegrateFloat>() -> Vec<ConservationLaw
 }
 
 /// Example: Create conservation laws for N-body gravitational system
+#[allow(dead_code)]
 pub fn example_nbody_conservation<F: IntegrateFloat>(n: usize) -> Vec<ConservationLaw<F>> {
     use SymbolicExpression::*;
 
@@ -610,6 +620,7 @@ pub fn example_nbody_conservation<F: IntegrateFloat>(n: usize) -> Vec<Conservati
 }
 
 /// Example: Create conservation laws for a coupled oscillator system
+#[allow(dead_code)]
 pub fn example_coupled_oscillators<F: IntegrateFloat>(n: usize) -> Vec<ConservationLaw<F>> {
     use SymbolicExpression::*;
 

@@ -74,6 +74,7 @@ use scirs2_core::{parallel_ops, CoreError};
 /// - Automatically switches to parallel processing for large arrays
 /// - Kernel size is automatically determined from sigma and truncate parameters
 /// - For σ < 0.5, consider using other smoothing methods for better efficiency
+#[allow(dead_code)]
 pub fn gaussian_filter<D>(
     input: &Array<f64, D>,
     sigma: f64,
@@ -133,6 +134,7 @@ where
 }
 
 /// Apply a 1D Gaussian filter along a single dimension (f64 version)
+#[allow(dead_code)]
 pub fn gaussian_filter1d_f64<D>(
     input: &Array<f64, D>,
     sigma: f64,
@@ -182,6 +184,7 @@ where
 
 /// Generate a 1D Gaussian kernel for f64 filtering
 /// This function uses manual caching to avoid Result Clone issues
+#[allow(dead_code)]
 pub fn gaussian_kernel1d_f64(sigma: f64, truncate: f64) -> NdimageResult<Array1<f64>> {
     // Manual caching using lazy_static or thread_local would be ideal here
     // but for simplicity, we'll just implement the function without caching for now
@@ -226,6 +229,7 @@ pub fn gaussian_kernel1d_f64(sigma: f64, truncate: f64) -> NdimageResult<Array1<
 }
 
 /// Apply a f64 1D kernel to a f64 1D array
+#[allow(dead_code)]
 fn apply_kernel1d_1d_f64(
     input: &Array1<f64>,
     kernel: &Array1<f64>,
@@ -258,6 +262,7 @@ fn apply_kernel1d_1d_f64(
 }
 
 /// Apply a Gaussian filter along a specific axis (f64 version)
+#[allow(dead_code)]
 fn apply_gaussian_along_axis_f64<D>(
     input: &Array<f64, D>,
     axis: usize,
@@ -350,6 +355,7 @@ where
 }
 
 /// Apply a Gaussian filter along a specific axis for n-dimensional arrays (f64 version)
+#[allow(dead_code)]
 fn apply_gaussian_along_axis_nd_f64<D>(
     input: &Array<f64, D>,
     axis: usize,
@@ -579,6 +585,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<f32, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn gaussian_filter_f32<D>(
     input: &Array<f32, D>,
     sigma: f32,
@@ -886,6 +893,7 @@ pub fn gaussian_kernel1d_f32(sigma: f32, truncate: f32) -> NdimageResult<Array1<
 ///
 /// This is a convenience function for the common case where T is f64.
 /// It's useful for functions like canny_edges that need to avoid Send/Sync constraints.
+#[allow(dead_code)]
 pub fn gaussian_filter_f64<D>(
     input: &Array<f64, D>,
     sigma: f64,

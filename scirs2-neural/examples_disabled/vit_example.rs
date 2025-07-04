@@ -2,6 +2,7 @@ use ndarray::{Array, IxDyn};
 use scirs2_neural::layers::Layer;
 use scirs2_neural::models::{ViTConfig, VisionTransformer};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Vision Transformer (ViT) Example");
     // Create a ViT-Base model for image classification

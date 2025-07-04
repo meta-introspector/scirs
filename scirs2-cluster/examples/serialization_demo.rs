@@ -8,6 +8,7 @@ use scirs2_cluster::{
     HierarchicalModel, KMeansModel, Metric, SerializableModel,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Generate sample data
     let data = array![
@@ -34,6 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn kmeans_example(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     // Perform K-means clustering
     let (centroids, labels) = kmeans2(data.view(), 3, None, None, None, None, None, None)?;
@@ -57,6 +59,7 @@ fn kmeans_example(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn hierarchical_example(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     // Perform hierarchical clustering
     let linkage_matrix = linkage(data.view(), LinkageMethod::Average, Metric::Euclidean)?;
@@ -109,6 +112,7 @@ fn hierarchical_example(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn model_loading_example() -> Result<(), Box<dyn std::error::Error>> {
     // Load K-means model
     let loaded_kmeans = KMeansModel::load_from_file("kmeans_model.json")?;

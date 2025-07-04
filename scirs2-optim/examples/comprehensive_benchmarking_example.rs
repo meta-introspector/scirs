@@ -13,6 +13,7 @@ use scirs2_optim::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 SciRS2 Comprehensive Cross-Framework Benchmark Suite");
     println!("=======================================================\n");
@@ -71,6 +72,7 @@ fn main() -> Result<()> {
 }
 
 /// Add custom test functions for comprehensive evaluation
+#[allow(dead_code)]
 fn add_custom_test_functions(benchmark: &mut CrossFrameworkBenchmark<f64>) {
     // Himmelblau's function
     benchmark.add_test_function(TestFunction {
@@ -157,6 +159,7 @@ fn add_custom_test_functions(benchmark: &mut CrossFrameworkBenchmark<f64>) {
 }
 
 /// Prepare SciRS2 optimizers with various configurations
+#[allow(dead_code)]
 fn prepare_scirs2_optimizers() -> Vec<(
     String,
     Box<dyn Fn(&Array1<f64>, &Array1<f64>) -> Array1<f64>>,
@@ -298,6 +301,7 @@ fn prepare_scirs2_optimizers() -> Vec<(
 }
 
 /// Save detailed results to JSON file
+#[allow(dead_code)]
 fn save_detailed_results(results: &[CrossFrameworkBenchmarkResult<f64>]) -> Result<()> {
     use std::fs::File;
     use std::io::Write;
@@ -318,6 +322,7 @@ fn save_detailed_results(results: &[CrossFrameworkBenchmarkResult<f64>]) -> Resu
 }
 
 /// Generate visualization data for plotting
+#[allow(dead_code)]
 fn generate_visualization_data(results: &[CrossFrameworkBenchmarkResult<f64>]) -> Result<()> {
     use std::fs::File;
     use std::io::Write;
@@ -364,6 +369,7 @@ fn generate_visualization_data(results: &[CrossFrameworkBenchmarkResult<f64>]) -
 }
 
 /// Run detailed performance analysis
+#[allow(dead_code)]
 fn run_performance_analysis(results: &[CrossFrameworkBenchmarkResult<f64>]) -> Result<()> {
     println!("\n🔍 DETAILED PERFORMANCE ANALYSIS");
     println!("==================================");
@@ -452,6 +458,7 @@ fn run_performance_analysis(results: &[CrossFrameworkBenchmarkResult<f64>]) -> R
 }
 
 /// Analyze convergence characteristics for a specific test
+#[allow(dead_code)]
 fn analyze_convergence_characteristics(result: &CrossFrameworkBenchmarkResult<f64>) {
     println!("  📉 Convergence Analysis:");
 
@@ -489,6 +496,7 @@ fn analyze_convergence_characteristics(result: &CrossFrameworkBenchmarkResult<f6
 }
 
 /// Analyze pairwise statistical comparisons
+#[allow(dead_code)]
 fn analyze_pairwise_comparisons(result: &CrossFrameworkBenchmarkResult<f64>) {
     println!("  🔬 Pairwise Comparisons:");
 

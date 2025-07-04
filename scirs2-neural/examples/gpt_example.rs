@@ -2,6 +2,7 @@ use ndarray::{Array, IxDyn};
 use scirs2_neural::layers::Layer;
 use scirs2_neural::models::{GPTConfig, GPTModel};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("GPT Model Example");
     // Create a small GPT model for demonstration

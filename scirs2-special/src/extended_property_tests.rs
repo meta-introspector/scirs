@@ -57,7 +57,7 @@ impl Arbitrary for NonNegInt {
 
 /// Reasonable complex number
 #[derive(Clone, Debug)]
-struct ReasonableComplex(Complex64);
+struct ReasonableComplex(#[allow(dead_code)] Complex64);
 
 impl Arbitrary for ReasonableComplex {
     fn arbitrary(g: &mut Gen) -> Self {
@@ -71,6 +71,7 @@ impl Arbitrary for ReasonableComplex {
 }
 
 // Helper functions
+#[allow(dead_code)]
 fn approx_eq(a: f64, b: f64, tol: f64) -> bool {
     if a.is_infinite() && b.is_infinite() {
         return a.signum() == b.signum();
@@ -81,6 +82,7 @@ fn approx_eq(a: f64, b: f64, tol: f64) -> bool {
     (a - b).abs() <= tol * (1.0 + a.abs().max(b.abs()))
 }
 
+#[allow(dead_code)]
 fn complex_approx_eq(a: Complex64, b: Complex64, tol: f64) -> bool {
     approx_eq(a.re, b.re, tol) && approx_eq(a.im, b.im, tol)
 }
@@ -160,7 +162,7 @@ mod gamma_properties {
     #[quickcheck]
     fn log_gamma_stirling_approximation(x: f64) -> TestResult {
         // For large x: log(Gamma(x)) ≈ (x - 0.5) * log(x) - x + 0.5 * log(2π)
-        if x < 100.0 || x > 1000.0 {
+        if !(100.0..=1000.0).contains(&x) {
             return TestResult::discard();
         }
 
@@ -183,7 +185,7 @@ mod bessel_properties {
         let n = n.0;
         let x = x.0;
 
-        if n < 1 || n > 10 || x > 20.0 {
+        if !(1..=10).contains(&n) || x > 20.0 {
             return TestResult::discard();
         }
 
@@ -234,7 +236,7 @@ mod bessel_properties {
         let v = v.0;
         let x = x.0;
 
-        if v < 0.5 || v > 5.0 || x > 10.0 {
+        if !(0.5..=5.0).contains(&v) || x > 10.0 {
             return TestResult::discard();
         }
 
@@ -295,7 +297,7 @@ mod error_function_properties {
     fn erfc_erfcinv_inverse(p: UnitInterval) -> TestResult {
         // erfcinv(erfc(x)) = x
         let p_val = p.0;
-        if p_val < 0.001 || p_val > 0.999 {
+        if !(0.001..=0.999).contains(&p_val) {
             return TestResult::discard();
         }
 
@@ -317,7 +319,7 @@ mod orthogonal_polynomial_properties {
         let n = n.0 as usize;
         let x = x.0;
 
-        if n < 1 || n > 10 {
+        if !(1..=10).contains(&n) {
             return TestResult::discard();
         }
 
@@ -418,14 +420,9 @@ mod spherical_harmonics_properties {
         let theta_val = theta.abs() % f64::consts::PI;
         let phi_val = phi % (2.0 * f64::consts::PI);
 
-        let y_lm =
-            crate::spherical_harmonics::sph_harm_complex(l as usize, m as i32, theta_val, phi_val);
-        let y_l_neg_m = crate::spherical_harmonics::sph_harm_complex(
-            l as usize,
-            -(m as i32),
-            theta_val,
-            phi_val,
-        );
+        let y_lm = crate::spherical_harmonics::sph_harm_complex(l as usize, m, theta_val, phi_val);
+        let y_l_neg_m =
+            crate::spherical_harmonics::sph_harm_complex(l as usize, -m, theta_val, phi_val);
 
         match (y_lm, y_l_neg_m) {
             (Ok((re1, im1)), Ok((re2, im2))) => {
@@ -466,12 +463,12 @@ mod elliptic_properties {
     fn elliptic_e_bounds(m: UnitInterval) -> TestResult {
         // 1 <= E(m) <= π/2 for 0 <= m <= 1
         let m_val = m.0;
-        if m_val < 0.0 || m_val > 1.0 {
+        if !(0.0..=1.0).contains(&m_val) {
             return TestResult::discard();
         }
 
         let e_m = ellipe(m_val);
-        TestResult::from_bool(e_m >= 1.0 && e_m <= f64::consts::PI / 2.0)
+        TestResult::from_bool((1.0..=f64::consts::PI / 2.0).contains(&e_m))
     }
 }
 
@@ -500,13 +497,13 @@ mod hypergeometric_properties {
     fn hyp2f1_special_case(c: Positive, z: UnitInterval) -> TestResult {
         // 2F1(a, b; c; 0) = 1
         let c_val = c.0;
-        let z_val = z.0 * 0.5; // Keep z small
+        let _z_val = z.0 * 0.5; // Keep z small
 
         if c_val > 10.0 {
             return TestResult::discard();
         }
 
-        let result = hyp2f1(1.0, 2.0, c_val, 0.0);
+        let result = hyp2f1(1.0, 2.0, c_val, 0.0).unwrap_or(f64::NAN);
         TestResult::from_bool(approx_eq(result, 1.0, 1e-10))
     }
 }
@@ -527,7 +524,7 @@ mod cross_function_properties {
         }
 
         let gamma_n_plus_1 = gamma((n + 1) as f64);
-        let n_factorial = factorial(n).unwrap();
+        let n_factorial = factorial(n.try_into().unwrap()).unwrap();
 
         TestResult::from_bool(approx_eq(gamma_n_plus_1, n_factorial, 1e-10))
     }
@@ -558,6 +555,6 @@ mod cross_function_properties {
         let erf_scaled = erf(x / 2.0_f64.sqrt());
 
         // Check bounds: -1 <= erf(x) <= 1
-        TestResult::from_bool(erf_scaled >= -1.0 && erf_scaled <= 1.0)
+        TestResult::from_bool((-1.0..=1.0).contains(&erf_scaled))
     }
 }

@@ -1078,6 +1078,7 @@ impl TrackingMetrics {
 }
 
 /// Utility function to compute cosine similarity between two vectors
+#[allow(dead_code)]
 fn cosine_similarity(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
     let dot_product = a.dot(b);
     let norm_a = a.dot(a).sqrt();

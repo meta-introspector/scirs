@@ -13,6 +13,7 @@ use scirs2_integrate::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Robin and Mixed Boundary Conditions Examples ===\n");
 
@@ -31,6 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn heat_conduction_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔥 Heat Conduction with Convective Boundary Conditions");
     println!("{}", "=".repeat(60));
@@ -121,6 +123,7 @@ fn heat_conduction_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn beam_deflection_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🏗️  Beam Deflection with Mixed Boundary Conditions");
     println!("{}", "=".repeat(60));
@@ -237,6 +240,7 @@ fn beam_deflection_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn reaction_diffusion_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧪 Reaction-Diffusion with Robin Boundary Conditions");
     println!("{}", "=".repeat(60));
@@ -315,6 +319,7 @@ fn reaction_diffusion_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn periodic_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Periodic Boundary Conditions");
     println!("{}", "=".repeat(60));

@@ -13,6 +13,7 @@ use scirs2_fft::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> FFTResult<()> {
     println!("Specialized Hardware Accelerator Example");
     println!("========================================");
@@ -33,6 +34,7 @@ fn main() -> FFTResult<()> {
 }
 
 /// Test hardware discovery and capabilities
+#[allow(dead_code)]
 fn test_hardware_discovery() -> FFTResult<()> {
     println!("\n--- Hardware Discovery ---");
 
@@ -105,6 +107,7 @@ fn test_hardware_discovery() -> FFTResult<()> {
 }
 
 /// Test performance comparison between different accelerators
+#[allow(dead_code)]
 fn test_performance_comparison() -> FFTResult<()> {
     println!("\n--- Performance Comparison ---");
 
@@ -146,6 +149,7 @@ fn test_performance_comparison() -> FFTResult<()> {
 }
 
 /// Test scaling behavior with different signal sizes
+#[allow(dead_code)]
 fn test_signal_size_scaling() -> FFTResult<()> {
     println!("\n--- Signal Size Scaling ---");
 
@@ -184,6 +188,7 @@ fn test_signal_size_scaling() -> FFTResult<()> {
 }
 
 /// Test power efficiency of different accelerators
+#[allow(dead_code)]
 fn test_power_efficiency() -> FFTResult<()> {
     println!("\n--- Power Efficiency Analysis ---");
 
@@ -249,6 +254,7 @@ fn test_power_efficiency() -> FFTResult<()> {
 }
 
 /// Create a test signal with sparse frequency components
+#[allow(dead_code)]
 fn create_test_signal(n: usize) -> Vec<f64> {
     let mut signal = vec![0.0; n];
 

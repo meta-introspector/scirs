@@ -385,6 +385,7 @@ impl ENASTrainer {
         let architectures = controller.sample_architecture(1)?;
         Ok(architectures[0].clone())
 /// Helper function to apply softmax with temperature
+#[allow(dead_code)]
 fn softmax(logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
     let scaled_logits = logits / temperature;
     let max_logit = scaled_logits
@@ -395,6 +396,7 @@ fn softmax(logits: &Array1<f32>, temperature: f32) -> Array1<f32> {
     let sum = exp_logits.sum();
     exp_logits / sum
 /// Helper function to sample from categorical distribution
+#[allow(dead_code)]
 fn sample_categorical(probs: &Array1<f32>) -> Result<usize> {
     let mut rng = rng();
     let uniform: f32 = rand::Rng::random(&mut rng);

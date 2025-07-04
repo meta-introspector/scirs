@@ -7,6 +7,7 @@ use ndarray::{array, Array1, ArrayView1};
 use scirs2_linalg::error::LinalgResult;
 use scirs2_linalg::matrix_calculus::{gradient, hessian, jacobian};
 
+#[allow(dead_code)]
 fn main() -> LinalgResult<()> {
     println!("Matrix Calculus Examples");
     println!("=======================\n");

@@ -4,6 +4,7 @@
 //! and profiling capabilities of the enhanced memory metrics system.
 
 #[cfg(not(feature = "memory_management"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'memory_management' feature to be enabled.");
     println!("Run with: cargo run --example enhanced_memory_metrics_example --features memory_management");
@@ -22,6 +23,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Enhanced Memory Metrics System Demonstration ===");
 
@@ -46,6 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Demonstrate basic memory analytics capabilities
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn demo_memory_analytics() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Memory Analytics");
     println!("=========================");
@@ -132,6 +135,7 @@ fn demo_memory_analytics() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Demonstrate memory leak detection
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn demo_leak_detection() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Memory Leak Detection");
     println!("========================");
@@ -219,6 +223,7 @@ fn demo_leak_detection() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Demonstrate memory profiler with real-time monitoring
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn demo_memory_profiler() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Memory Profiler with Real-time Monitoring");
     println!("===========================================");
@@ -368,6 +373,7 @@ fn demo_memory_profiler() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Demonstrate pattern analysis and optimization recommendations
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn demo_pattern_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n4. Pattern Analysis and Optimization Recommendations");
     println!("===================================================");
@@ -617,6 +623,7 @@ fn demo_pattern_analysis() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Demonstrate performance impact analysis
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn demo_performance_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n5. Performance Impact Analysis");
     println!("==============================");

@@ -42,6 +42,7 @@ impl Default for SGDOptions {
 }
 
 /// Stochastic Gradient Descent optimizer
+#[allow(dead_code)]
 pub fn minimize_sgd<F>(
     mut grad_func: F,
     mut x: Array1<f64>,
@@ -188,6 +189,7 @@ where
 }
 
 /// Variance-reduced SGD using SVRG (Stochastic Variance Reduced Gradient)
+#[allow(dead_code)]
 pub fn minimize_svrg<F>(
     mut grad_func: F,
     mut x: Array1<f64>,
@@ -311,6 +313,7 @@ where
 }
 
 /// Mini-batch SGD with averaging for better convergence
+#[allow(dead_code)]
 pub fn minimize_mini_batch_sgd<F>(
     mut grad_func: F,
     mut x: Array1<f64>,

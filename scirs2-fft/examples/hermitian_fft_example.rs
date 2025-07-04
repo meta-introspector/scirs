@@ -2,6 +2,7 @@ use num_complex::Complex64;
 use scirs2_fft::{hfft, ihfft};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     // Part 1: Real to Complex (IHFFT)
     // Create a simple real-valued signal (a cosine wave)

@@ -1,5 +1,4 @@
 #![recursion_limit = "512"]
-#![allow(dead_code)]
 
 //! # ``SciRS2`` Core (Beta 1)
 //!
@@ -374,6 +373,7 @@ pub const fn version() -> &'static str {
 
 /// Initialize the library (called automatically)
 #[doc(hidden)]
+#[allow(dead_code)]
 pub fn __init() {
     use std::sync::Once;
     static INIT: Once = Once::new();

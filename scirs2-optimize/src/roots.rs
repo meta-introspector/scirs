@@ -179,6 +179,7 @@ impl Default for Options {
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn root<F, J, S>(
     func: F,
     x0: &ArrayBase<S, Ix1>,
@@ -215,6 +216,7 @@ where
 }
 
 /// Implements the hybrid method for root finding
+#[allow(dead_code)]
 fn root_hybr<F, J, S>(
     func: F,
     x0: &ArrayBase<S, Ix1>,
@@ -402,6 +404,7 @@ where
 }
 
 /// Solves a linear system Ax = b using LU decomposition
+#[allow(dead_code)]
 fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
     use scirs2_linalg::solve;
 
@@ -409,6 +412,7 @@ fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
 }
 
 /// Implements Broyden's first method (good Broyden) for root finding
+#[allow(dead_code)]
 fn root_broyden1<F, J, S>(
     func: F,
     x0: &ArrayBase<S, Ix1>,
@@ -626,6 +630,7 @@ where
 }
 
 /// Implements Broyden's second method (bad Broyden) for root finding
+#[allow(dead_code)]
 fn root_broyden2<F, J, S>(
     func: F,
     x0: &ArrayBase<S, Ix1>,
@@ -873,6 +878,7 @@ where
 /// This is a damped least-squares method that combines the steepest descent
 /// and Gauss-Newton methods. It's particularly effective for overdetermined
 /// systems and provides good convergence properties.
+#[allow(dead_code)]
 fn root_levenberg_marquardt<F, J, S>(
     func: F,
     x0: &ArrayBase<S, Ix1>,
@@ -1078,6 +1084,7 @@ where
 ///
 /// This method assumes the input function is scalar (single input, single output)
 /// and uses a combination of bisection and Newton's method for robust convergence.
+#[allow(dead_code)]
 fn root_scalar<F, J, S>(
     func: F,
     x0: &ArrayBase<S, Ix1>,

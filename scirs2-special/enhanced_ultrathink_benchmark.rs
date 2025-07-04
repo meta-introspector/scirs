@@ -16,6 +16,7 @@ use scirs2_special::{
 };
 
 /// Test the accuracy and performance of the fixed polygamma function
+#[allow(dead_code)]
 fn bench_polygamma_improvements(c: &mut Criterion) {
     let mut group = c.benchmark_group("polygamma_advanced_improvements");
     
@@ -57,6 +58,7 @@ fn bench_polygamma_improvements(c: &mut Criterion) {
 }
 
 /// Test the accuracy and performance of the enhanced Dawson function
+#[allow(dead_code)]
 fn bench_dawson_improvements(c: &mut Criterion) {
     let mut group = c.benchmark_group("dawson_advanced_improvements");
     
@@ -104,6 +106,7 @@ fn bench_dawson_improvements(c: &mut Criterion) {
 }
 
 /// Benchmark the new modified Bessel function derivatives
+#[allow(dead_code)]
 fn bench_new_bessel_derivatives(c: &mut Criterion) {
     let mut group = c.benchmark_group("new_bessel_derivatives");
     
@@ -178,6 +181,7 @@ fn bench_new_bessel_derivatives(c: &mut Criterion) {
 }
 
 /// Compare performance against existing implementations
+#[allow(dead_code)]
 fn bench_performance_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("advanced_performance_comparison");
     
@@ -212,6 +216,7 @@ fn bench_performance_comparison(c: &mut Criterion) {
 }
 
 /// Comprehensive accuracy test across all improvements
+#[allow(dead_code)]
 fn validate_advanced_improvements() {
     println!("\n=== ULTRATHINK MODE VALIDATION SUMMARY ===");
     
@@ -272,6 +277,7 @@ criterion_group!(
 criterion_main!(ultrathink_benches);
 
 /// Run validation when executed directly
+#[allow(dead_code)]
 fn main() {
     validate_ultrathink_improvements();
 }

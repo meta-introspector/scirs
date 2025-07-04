@@ -49,6 +49,7 @@ use crate::error::{MetricsError, Result};
 /// let score = dunn_index_enhanced(&x, &labels).unwrap();
 /// assert!(score > 0.5); // High score for well-separated clusters
 /// ```
+#[allow(dead_code)]
 pub fn dunn_index_enhanced<F, S1, S2, D>(
     x: &ArrayBase<S1, Ix2>,
     labels: &ArrayBase<S2, D>,
@@ -155,6 +156,7 @@ where
 ///
 /// // Now you can plot inertias against k to find the "elbow"
 /// ```
+#[allow(dead_code)]
 pub fn elbow_method<F, S>(
     x: &ArrayBase<S, Ix2>,
     k_range: std::ops::RangeInclusive<usize>,

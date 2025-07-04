@@ -12,6 +12,7 @@ use scirs2_special::performance_benchmarks::{
 use std::env;
 use std::fs;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize logging
     // env_logger::init(); // Requires env_logger dependency
@@ -61,6 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_custom_benchmark(
 ) -> Result<scirs2_special::performance_benchmarks::BenchmarkSuite, Box<dyn std::error::Error>> {
     let config = BenchmarkConfig {
@@ -93,6 +95,7 @@ fn run_custom_benchmark(
         .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
 }
 
+#[allow(dead_code)]
 fn save_benchmark_results(
     suite: &scirs2_special::performance_benchmarks::BenchmarkSuite,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -107,6 +110,7 @@ fn save_benchmark_results(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn generate_performance_recommendations(
     suite: &scirs2_special::performance_benchmarks::BenchmarkSuite,
 ) {

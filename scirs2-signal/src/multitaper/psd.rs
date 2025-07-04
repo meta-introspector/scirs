@@ -47,7 +47,7 @@ pub type MultitaperResult = (Vec<f64>, Vec<f64>, Option<Array2<f64>>, Option<Arr
 /// use rand::Rng;
 /// let mut rng = rand::rng();
 /// let signal: Vec<f64> = t.iter()
-///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.gen_range(0.0..1.0))
+///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(0.0..1.0))
 ///     .collect();
 ///
 /// // Compute multitaper power spectral density
@@ -68,6 +68,7 @@ pub type MultitaperResult = (Vec<f64>, Vec<f64>, Option<Array2<f64>>, Option<Arr
 /// assert!(eigenvalues.is_some());
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn pmtm<T>(
     x: &[T],
     fs: Option<f64>,
@@ -253,7 +254,7 @@ where
 /// let signal: Vec<f64> = t.iter()
 ///     .map(|&ti| {
 ///         let freq = 50.0 + 200.0 * ti; // Linear chirp from 50Hz to 250Hz
-///         (2.0 * PI * freq * ti).sin() + 0.1 * rng.gen_range(0.0..1.0)
+///         (2.0 * PI * freq * ti).sin() + 0.1 * rng.random_range(0.0..1.0)
 ///     })
 ///     .collect();
 ///
@@ -273,6 +274,7 @@ where
 /// // The spectrogram should show the frequency increasing over time
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn multitaper_spectrogram<T>(
     x: &[T],
     fs: Option<f64>,

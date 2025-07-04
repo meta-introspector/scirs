@@ -102,6 +102,7 @@ pub struct LSQRResult<T> {
 /// // Solve using LSQR
 /// let result = lsqr(&matrix, &b.view(), None, LSQROptions::default()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn lsqr<T, S>(
     matrix: &S,
     b: &ArrayView1<T>,
@@ -311,6 +312,7 @@ where
 }
 
 /// Helper function for matrix-vector multiplication
+#[allow(dead_code)]
 fn matrix_vector_multiply<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
@@ -335,6 +337,7 @@ where
 }
 
 /// Helper function for matrix transpose-vector multiplication
+#[allow(dead_code)]
 fn matrix_transpose_vector_multiply<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
@@ -359,6 +362,7 @@ where
 }
 
 /// Compute L2 norm of a vector
+#[allow(dead_code)]
 fn l2_norm<T>(x: &ArrayView1<T>) -> T
 where
     T: Float + Debug + Copy,
@@ -367,6 +371,7 @@ where
 }
 
 /// Compute standard errors (simplified implementation)
+#[allow(dead_code)]
 fn compute_standard_errors<T, S>(matrix: &S, residual_norm: T, n: usize) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,

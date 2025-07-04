@@ -186,7 +186,7 @@ impl BitPackedGraph {
             n_nodes * (n_nodes + 1) / 2 // Upper triangle including diagonal
         };
 
-        let words_needed = (bits_needed + 63) / 64;
+        let words_needed = bits_needed.div_ceil(64);
 
         BitPackedGraph {
             n_nodes,
@@ -246,7 +246,7 @@ impl BitPackedGraph {
             let end_bit = start_bit + self.n_nodes;
 
             let start_word = start_bit / 64;
-            let end_word = (end_bit + 63) / 64;
+            let end_word = end_bit.div_ceil(64);
 
             for word_idx in start_word..end_word {
                 if word_idx >= self.bits.len() {
@@ -300,7 +300,7 @@ impl BitPackedGraph {
             let end_bit = start_bit + self.n_nodes;
 
             let start_word = start_bit / 64;
-            let end_word = (end_bit + 63) / 64;
+            let end_word = end_bit.div_ceil(64);
             let mut count = 0;
 
             for word_idx in start_word..end_word {

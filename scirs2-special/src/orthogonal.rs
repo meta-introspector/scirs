@@ -34,6 +34,7 @@ use std::fmt::Debug;
 /// // P₁(x) = x
 /// assert!((legendre(1, 0.5f64) - 0.5).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn legendre<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
     // Special cases
     if n == 0 {
@@ -251,6 +252,7 @@ pub fn legendre_assoc<F: Float + FromPrimitive + Debug>(n: usize, m: i32, x: F) 
 /// // L₁(x) = 1 - x
 /// assert!((laguerre(1, 0.5f64) - 0.5).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn laguerre<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
     // Special cases
     if n == 0 {
@@ -369,6 +371,7 @@ pub fn laguerre_generalized<F: Float + FromPrimitive + Debug>(n: usize, alpha: F
 /// // H₂(x) = 4x² - 2
 /// assert!((hermite(2, 0.5f64) - 0.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn hermite<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
     // Special cases
     if n == 0 {
@@ -503,6 +506,7 @@ pub fn hermite_prob<F: Float + FromPrimitive + Debug>(n: usize, x: F) -> F {
 /// // T₂(x) = 2x² - 1
 /// assert!((chebyshev(2, 0.5f64, true) - (-0.5)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, first_kind: bool) -> F {
     if first_kind {
         // Chebyshev polynomials of the first kind T_n(x)

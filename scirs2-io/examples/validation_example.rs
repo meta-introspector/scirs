@@ -14,6 +14,7 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create temporary files for examples
     println!("\n=== Creating Example Files ===");
@@ -56,6 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn basic_checksum_example(data: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Basic Checksum Example ===");
 
@@ -115,6 +117,7 @@ fn basic_checksum_example(data: &str) -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn file_checksum_example(file_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== File Checksum Example ===");
 
@@ -150,6 +153,7 @@ fn file_checksum_example(file_path: &Path) -> Result<(), Box<dyn std::error::Err
     Ok(())
 }
 
+#[allow(dead_code)]
 fn integrity_metadata_example(
     file_path: &Path,
     temp_dir: &Path,
@@ -200,6 +204,7 @@ fn integrity_metadata_example(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn format_validation_example(
     csv_path: &Path,
     json_path: &Path,
@@ -272,6 +277,7 @@ fn format_validation_example(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn directory_manifest_example(dir_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Directory Manifest Example ===");
 

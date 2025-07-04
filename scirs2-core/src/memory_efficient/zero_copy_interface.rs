@@ -707,6 +707,7 @@ impl Default for ZeroCopyInterface {
 static GLOBAL_INTERFACE: std::sync::OnceLock<ZeroCopyInterface> = std::sync::OnceLock::new();
 
 /// Get the global zero-copy interface
+#[allow(dead_code)]
 pub fn global_interface() -> &'static ZeroCopyInterface {
     GLOBAL_INTERFACE.get_or_init(ZeroCopyInterface::new)
 }
@@ -788,6 +789,7 @@ pub trait IntoZeroCopy<T: Clone + 'static> {
 // Convenience functions for common data exchange operations
 
 /// Export array data to the global zero-copy interface
+#[allow(dead_code)]
 pub fn export_array_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
     data: &[T],
     name: &str,
@@ -797,6 +799,7 @@ pub fn export_array_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
 }
 
 /// Import array data from the global zero-copy interface
+#[allow(dead_code)]
 pub fn import_array_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
     name: &str,
 ) -> CoreResult<Vec<T>> {
@@ -804,6 +807,7 @@ pub fn import_array_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
 }
 
 /// Export memory-mapped array to the global zero-copy interface
+#[allow(dead_code)]
 pub fn export_memmap_array<A>(
     array: &crate::memory_efficient::memmap::MemoryMappedArray<A>,
     name: &str,
@@ -815,6 +819,7 @@ where
 }
 
 /// Import memory-mapped array from the global zero-copy interface
+#[allow(dead_code)]
 pub fn import_memmap_array<A>(
     name: &str,
 ) -> CoreResult<crate::memory_efficient::memmap::MemoryMappedArray<A>>
@@ -849,11 +854,13 @@ impl<T: Clone + 'static> FromZeroCopy<T> for Vec<T> {
 }
 
 /// Create a global zero-copy data registry
+#[allow(dead_code)]
 pub fn create_global_data_registry() -> &'static ZeroCopyInterface {
     global_interface()
 }
 
 /// Register data globally by name
+#[allow(dead_code)]
 pub fn register_global_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
     name: &str,
     data: ZeroCopyData<T>,
@@ -862,6 +869,7 @@ pub fn register_global_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
 }
 
 /// Get data globally by name
+#[allow(dead_code)]
 pub fn get_global_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
     name: &str,
 ) -> CoreResult<ZeroCopyData<T>> {
@@ -869,6 +877,7 @@ pub fn get_global_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
 }
 
 /// Create zero-copy data from a vector
+#[allow(dead_code)]
 pub fn create_zero_copy_data<T: Clone + 'static + Send + Sync + std::fmt::Debug>(
     data: Vec<T>,
 ) -> CoreResult<ZeroCopyData<T>> {

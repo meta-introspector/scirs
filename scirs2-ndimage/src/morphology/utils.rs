@@ -19,6 +19,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Padded array
+#[allow(dead_code)]
 pub fn pad_array<T, D>(
     input: &Array<T, D>,
     pad_width: &[(usize, usize)],
@@ -63,6 +64,7 @@ where
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, Error otherwise
+#[allow(dead_code)]
 pub fn validate_structure<D>(structure: &Array<bool, D>) -> NdimageResult<()>
 where
     D: Dimension,
@@ -98,6 +100,7 @@ where
 /// # Returns
 ///
 /// * `Result<Vec<isize>>` - Center indices
+#[allow(dead_code)]
 pub fn get_structure_center<D>(
     structure: &Array<bool, D>,
     origin: Option<&[isize]>,

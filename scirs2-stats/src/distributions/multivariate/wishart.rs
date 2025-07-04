@@ -13,6 +13,7 @@ use super::normal::{compute_cholesky, compute_inverse_from_cholesky};
 
 /// Implementation of the natural logarithm of the gamma function
 /// This is a workaround for the unstable gamma function in Rust
+#[allow(dead_code)]
 fn lgamma(x: f64) -> f64 {
     if x <= 0.0 {
         panic!("lgamma requires positive input");
@@ -79,6 +80,7 @@ fn lgamma(x: f64) -> f64 {
 /// ln Γₚ(n/2) = ln (π^(p(p-1)/4) ∏ᵢ₌₁ᵖ Γ((n+1-i)/2))
 ///
 /// where p is the dimension and n is the degrees of freedom
+#[allow(dead_code)]
 pub fn lmultigamma(n: f64, p: usize) -> f64 {
     // Calculate ln(π^(p(p-1)/4))
     let pi = std::f64::consts::PI;
@@ -511,6 +513,7 @@ impl Wishart {
 /// let df = 5.0;
 /// let wishart = multivariate::wishart(scale, df).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn wishart<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<Wishart>
 where
     D: Data<Elem = f64>,

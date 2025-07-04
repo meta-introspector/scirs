@@ -411,6 +411,7 @@ pub struct MatrixParallelResult<F> {
 }
 
 /// High-level convenience functions
+#[allow(dead_code)]
 pub fn mean_parallel_ultra<F>(data: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
@@ -419,6 +420,7 @@ where
     processor.mean_parallel_enhanced(data)
 }
 
+#[allow(dead_code)]
 pub fn variance_parallel_ultra<F>(data: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
@@ -427,6 +429,7 @@ where
     processor.variance_parallel_enhanced(data, ddof)
 }
 
+#[allow(dead_code)]
 pub fn correlation_matrix_parallel_ultra<F>(matrix: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
@@ -435,6 +438,7 @@ where
     processor.correlation_matrix_parallel(matrix)
 }
 
+#[allow(dead_code)]
 pub fn bootstrap_parallel_ultra<F>(
     data: &ArrayView1<F>,
     n_bootstrap: usize,

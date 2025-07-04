@@ -197,6 +197,7 @@ pub struct AnimationData {
 /// println!("Image size: {}x{}", image_data.metadata.width, image_data.metadata.height);
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn load_image<P: AsRef<Path>>(path: P) -> Result<ImageData> {
     let path = path.as_ref();
     let img = image::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
@@ -248,6 +249,7 @@ pub fn load_image<P: AsRef<Path>>(path: P) -> Result<ImageData> {
 /// save_image(&image_data, "output.png", Some(ImageFormat::PNG))?;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn save_image<P: AsRef<Path>>(
     image_data: &ImageData,
     path: P,
@@ -294,6 +296,7 @@ pub fn save_image<P: AsRef<Path>>(
 /// convert_image("photo.jpg", "photo.png", ImageFormat::PNG)?;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn convert_image<P1: AsRef<Path>, P2: AsRef<Path>>(
     input_path: P1,
     output_path: P2,
@@ -321,6 +324,7 @@ pub fn convert_image<P1: AsRef<Path>, P2: AsRef<Path>>(
 /// let resized = resize_image(&image_data, 800, 600)?;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn resize_image(image_data: &ImageData, new_width: u32, new_height: u32) -> Result<ImageData> {
     let (height, width, _) = image_data.data.dim();
     let raw_data = image_data.data.iter().cloned().collect::<Vec<u8>>();
@@ -364,6 +368,7 @@ pub fn resize_image(image_data: &ImageData, new_width: u32, new_height: u32) -> 
 /// println!("Image: {}x{} pixels", info.width, info.height);
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn get_image_info<P: AsRef<Path>>(path: P) -> Result<ImageMetadata> {
     let path = path.as_ref();
     let reader = image::ImageReader::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
@@ -412,6 +417,7 @@ pub fn get_image_info<P: AsRef<Path>>(path: P) -> Result<ImageMetadata> {
 /// println!("Animation has {} frames", animation.frames.len());
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn load_animation<P: AsRef<Path>>(path: P) -> Result<AnimationData> {
     let path = path.as_ref();
     let file = std::fs::File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
@@ -486,6 +492,7 @@ pub fn load_animation<P: AsRef<Path>>(path: P) -> Result<AnimationData> {
 /// }
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn read_exif_metadata<P: AsRef<Path>>(path: P) -> Result<Option<ExifMetadata>> {
     let _path = path.as_ref();
 
@@ -786,6 +793,7 @@ pub fn read_exif_metadata<P: AsRef<Path>>(path: P) -> Result<Option<ExifMetadata
 /// }
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn find_images<P: AsRef<Path>>(
     dir_path: P,
     pattern: &str,
@@ -830,6 +838,7 @@ pub fn find_images<P: AsRef<Path>>(
 /// )?;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn batch_process_images<P1, P2, F>(input_dir: P1, output_dir: P2, processor: F) -> Result<()>
 where
     P1: AsRef<Path>,

@@ -3,6 +3,7 @@ use scirs2_special::{
     mathieu_b, mathieu_cem, mathieu_even_coef, mathieu_odd_coef, mathieu_sem, y0, y1, zeta, zetac,
 };
 
+#[allow(dead_code)]
 fn main() {
     let x1 = 3.957678419314858;
     let x2 = 5.429;

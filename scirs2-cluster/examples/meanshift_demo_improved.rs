@@ -1,6 +1,7 @@
 use ndarray::{array, Array2};
 use scirs2_cluster::meanshift::{estimate_bandwidth, mean_shift, MeanShiftOptions};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Mean Shift Clustering Demo (Improved)");
     println!("=====================================\n");

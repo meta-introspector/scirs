@@ -17,6 +17,7 @@ const DATASET_BASE_URL: &str = "https://raw.githubusercontent.com/cool-japan/sci
 
 /// Load the California Housing dataset
 #[cfg(feature = "download")]
+#[allow(dead_code)]
 pub fn load_california_housing(force_download: bool) -> Result<Dataset> {
     let url = format!("{DATASET_BASE_URL}/california_housing.csv");
 
@@ -95,6 +96,7 @@ This dataset is useful for regression tasks."
 /// # Returns
 ///
 /// * An error indicating that the download feature is not enabled
+#[allow(dead_code)]
 pub fn load_california_housing(_force_download: bool) -> Result<Dataset> {
     Err(DatasetsError::Other(
         "Download feature is not enabled. Recompile with --features download".to_string(),
@@ -103,6 +105,7 @@ pub fn load_california_housing(_force_download: bool) -> Result<Dataset> {
 
 /// Load the Wine dataset
 #[cfg(feature = "download")]
+#[allow(dead_code)]
 pub fn load_wine(force_download: bool) -> Result<Dataset> {
     let url = format!("{DATASET_BASE_URL}/wine.csv");
 
@@ -182,6 +185,7 @@ This dataset is useful for classification tasks."
 /// # Returns
 ///
 /// * An error indicating that the download feature is not enabled
+#[allow(dead_code)]
 pub fn load_wine(_force_download: bool) -> Result<Dataset> {
     Err(DatasetsError::Other(
         "Download feature is not enabled. Recompile with --features download".to_string(),
@@ -190,6 +194,7 @@ pub fn load_wine(_force_download: bool) -> Result<Dataset> {
 
 /// Sample data fetcher - retrieves a list of available datasets
 #[cfg(feature = "download")]
+#[allow(dead_code)]
 pub fn get_available_datasets() -> Result<Vec<String>> {
     let url = format!("{DATASET_BASE_URL}/datasets_index.txt");
 
@@ -220,6 +225,7 @@ pub fn get_available_datasets() -> Result<Vec<String>> {
 /// # Returns
 ///
 /// * An error indicating that the download feature is not enabled
+#[allow(dead_code)]
 pub fn get_available_datasets() -> Result<Vec<String>> {
     Err(DatasetsError::Other(
         "Download feature is not enabled. Recompile with --features download".to_string(),

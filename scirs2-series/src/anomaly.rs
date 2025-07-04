@@ -175,6 +175,7 @@ pub enum MethodInfo {
 /// let result = detect_anomalies(&ts, &options).unwrap();
 /// println!("Anomalies detected: {}", result.is_anomaly.iter().filter(|&&x| x).count());
 /// ```
+#[allow(dead_code)]
 pub fn detect_anomalies<F>(ts: &Array1<F>, options: &AnomalyOptions) -> Result<AnomalyResult>
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
@@ -214,6 +215,7 @@ where
 }
 
 /// Statistical Process Control (SPC) anomaly detection
+#[allow(dead_code)]
 fn detect_anomalies_spc<F>(ts: &Array1<F>, options: &AnomalyOptions) -> Result<AnomalyResult>
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
@@ -348,6 +350,7 @@ where
 }
 
 /// Isolation Forest anomaly detection (simplified version)
+#[allow(dead_code)]
 fn detect_anomalies_isolation_forest<F>(
     ts: &Array1<F>,
     options: &AnomalyOptions,
@@ -424,6 +427,7 @@ where
 }
 
 /// Z-score based anomaly detection
+#[allow(dead_code)]
 fn detect_anomalies_zscore<F>(ts: &Array1<F>, options: &AnomalyOptions) -> Result<AnomalyResult>
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
@@ -454,6 +458,7 @@ where
 }
 
 /// Modified Z-score using median absolute deviation
+#[allow(dead_code)]
 fn detect_anomalies_modified_zscore<F>(
     ts: &Array1<F>,
     options: &AnomalyOptions,
@@ -514,6 +519,7 @@ where
 }
 
 /// Interquartile Range (IQR) anomaly detection
+#[allow(dead_code)]
 fn detect_anomalies_iqr<F>(ts: &Array1<F>, options: &AnomalyOptions) -> Result<AnomalyResult>
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
@@ -560,6 +566,7 @@ where
 }
 
 /// Placeholder implementations for complex methods
+#[allow(dead_code)]
 fn detect_anomalies_one_class_svm<F>(
     ts: &Array1<F>,
     options: &AnomalyOptions,
@@ -571,6 +578,7 @@ where
     detect_anomalies_distance_based(ts, options)
 }
 
+#[allow(dead_code)]
 fn detect_anomalies_distance_based<F>(
     ts: &Array1<F>,
     options: &AnomalyOptions,
@@ -632,6 +640,7 @@ where
     })
 }
 
+#[allow(dead_code)]
 fn detect_anomalies_prediction_based<F>(
     ts: &Array1<F>,
     _options: &AnomalyOptions,
@@ -695,6 +704,7 @@ where
 
 // Helper functions
 
+#[allow(dead_code)]
 fn seasonally_adjust<F>(ts: &Array1<F>, period: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,
@@ -729,6 +739,7 @@ where
     Ok(adjusted)
 }
 
+#[allow(dead_code)]
 fn create_sliding_windows<F>(ts: &Array1<F>, window_size: usize) -> Result<Array2<f64>>
 where
     F: Float + FromPrimitive + Debug + NumCast,
@@ -754,6 +765,7 @@ where
     Ok(windows)
 }
 
+#[allow(dead_code)]
 fn build_isolation_tree(
     data: &Array2<f64>,
     subsample_size: usize,
@@ -779,6 +791,7 @@ fn build_isolation_tree(
     Ok(path_lengths)
 }
 
+#[allow(dead_code)]
 fn calculate_isolation_path_length(
     point: &Array1<f64>,
     data: &Array2<f64>,
@@ -819,6 +832,7 @@ fn calculate_isolation_path_length(
     }
 }
 
+#[allow(dead_code)]
 fn euclidean_distance(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
     a.iter()
         .zip(b.iter())
@@ -827,6 +841,7 @@ fn euclidean_distance(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
         .sqrt()
 }
 
+#[allow(dead_code)]
 fn determine_threshold(scores: &Array1<f64>, contamination: f64) -> f64 {
     let mut sorted_scores: Vec<f64> = scores.to_vec();
     sorted_scores.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
@@ -835,6 +850,7 @@ fn determine_threshold(scores: &Array1<f64>, contamination: f64) -> f64 {
     sorted_scores[threshold_idx.min(sorted_scores.len() - 1)]
 }
 
+#[allow(dead_code)]
 fn calculate_std_dev<F>(data: &Array1<F>) -> F
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,

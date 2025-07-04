@@ -82,6 +82,7 @@ pub enum InterpolationType {
 ///
 /// This is a basic implementation. For performance-critical applications,
 /// consider using a more optimized NUFFT library.
+#[allow(dead_code)]
 pub fn nufft_type1(
     x: &[f64],
     samples: &[Complex64],
@@ -233,6 +234,7 @@ pub fn nufft_type1(
 ///
 /// This is a basic implementation. For performance-critical applications,
 /// consider using a more optimized NUFFT library.
+#[allow(dead_code)]
 pub fn nufft_type2(
     spectrum: &[Complex64],
     x: &[f64],
@@ -324,6 +326,7 @@ pub fn nufft_type2(
 }
 
 /// Helper function for FFT computation used in NUFFT implementations
+#[allow(dead_code)]
 fn fft_backend(data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
     use rustfft::{num_complex::Complex, FftPlanner};
 
@@ -345,6 +348,7 @@ fn fft_backend(data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
 }
 
 /// Helper function for IFFT computation used in NUFFT implementations
+#[allow(dead_code)]
 fn ifft_backend(data: &[Complex64]) -> FFTResult<Vec<Complex64>> {
     use rustfft::{num_complex::Complex, FftPlanner};
 

@@ -86,6 +86,7 @@ impl<N: Node, E: EdgeWeight> LargeGraphIterator<N, E> {
 }
 
 /// Parallel degree computation for large graphs
+#[allow(dead_code)]
 pub fn parallel_degree_computation<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     config: &ParallelConfig,
@@ -120,6 +121,7 @@ where
 }
 
 /// Memory-efficient parallel shortest path computation
+#[allow(dead_code)]
 pub fn parallel_shortest_paths<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     sources: &[N],
@@ -167,6 +169,7 @@ where
 }
 
 /// Cache-friendly adjacency matrix computation for large graphs
+#[allow(dead_code)]
 pub fn cache_friendly_adjacency_matrix<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<Vec<Vec<E>>>
 where
     N: Node + Clone + std::fmt::Debug,
@@ -517,6 +520,7 @@ pub struct LazyGraphMetric<T> {
     /// The computed value stored in a thread-safe cell
     value: std::sync::OnceLock<std::result::Result<T, GraphError>>,
     /// Computation function stored in a mutex for thread safety
+    #[allow(clippy::type_complexity)]
     compute_fn: std::sync::Mutex<Option<Box<dyn FnOnce() -> Result<T> + Send + 'static>>>,
 }
 
@@ -554,8 +558,7 @@ where
         match result {
             Ok(value) => Ok(value),
             Err(e) => Err(GraphError::AlgorithmError(format!(
-                "Lazy computation failed: {}",
-                e
+                "Lazy computation failed: {e}"
             ))),
         }
     }
@@ -765,14 +768,12 @@ impl PerformanceMonitor {
 
     /// Start monitoring with custom sampling interval
     pub fn start_with_config(operation_name: String, sample_interval_ms: u64) -> Self {
-        let monitor = PerformanceMonitor {
+        PerformanceMonitor {
             start_time: std::time::Instant::now(),
             operation_name,
             memory_profiler: RealTimeMemoryProfiler::new(sample_interval_ms),
             sampling_active: Arc::new(std::sync::atomic::AtomicBool::new(true)),
-        };
-
-        monitor
+        }
     }
 
     /// Manually record current memory usage
@@ -841,7 +842,7 @@ impl PerformanceMonitor {
         if !memory_warnings.is_empty() {
             println!("Memory warnings:");
             for warning in &memory_warnings {
-                println!("  - {}", warning);
+                println!("  - {warning}");
             }
         }
 
@@ -1217,7 +1218,7 @@ mod tests {
         let handles: Vec<_> = (0..10)
             .map(|_| {
                 let metric = lazy_metric.clone();
-                thread::spawn(move || metric.get().unwrap().clone())
+                thread::spawn(move || *metric.get().unwrap())
             })
             .collect();
 

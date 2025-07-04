@@ -44,6 +44,10 @@ pub enum NdimageError {
     #[error("Not implemented: {0}")]
     NotImplementedError(String),
 
+    /// Processing error
+    #[error("Processing error: {0}")]
+    ProcessingError(String),
+
     /// Core error (propagated from scirs2-core)
     #[error("{0}")]
     CoreError(#[from] CoreError),

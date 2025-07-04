@@ -217,6 +217,7 @@ impl<F: Float + FromPrimitive> Default for HDBSCANOptions<F> {
 /// // Print the cluster labels
 /// println!("Cluster labels: {:?}", result.labels);
 /// ```
+#[allow(dead_code)]
 pub fn hdbscan<F>(
     data: ArrayView2<F>,
     options: Option<HDBSCANOptions<F>>,
@@ -301,6 +302,7 @@ type CentersResult<F> = (Option<Array2<F>>, Option<Array1<usize>>);
 /// # Returns
 ///
 /// * `Result<(Option<Array2<F>>, Option<Array1<usize>>)>` - Tuple of (centroids, medoids)
+#[allow(dead_code)]
 fn compute_centers<F>(
     data: ArrayView2<F>,
     labels: &Array1<i32>,
@@ -464,6 +466,7 @@ where
 /// // Print the cluster labels
 /// println!("DBSCAN cluster labels: {:?}", dbscan_labels);
 /// ```
+#[allow(dead_code)]
 pub fn dbscan_clustering<F>(
     hdbscan_result: &HDBSCANResult<F>,
     cut_distance: F,
@@ -583,6 +586,7 @@ where
 }
 
 /// Get all leaf nodes (original points) in a subtree
+#[allow(dead_code)]
 fn get_leaves(node: i32, tree: &SingleLinkageTree<impl Float>, n_samples: i32) -> Vec<i32> {
     let mut leaves = Vec::new();
 
@@ -624,6 +628,7 @@ fn get_leaves(node: i32, tree: &SingleLinkageTree<impl Float>, n_samples: i32) -
 /// # Returns
 ///
 /// The mutual reachability distance
+#[allow(dead_code)]
 fn mutual_reachability_distance<F: Float>(distance: F, core_dist1: F, core_dist2: F) -> F {
     distance.max(core_dist1).max(core_dist2)
 }
@@ -642,6 +647,7 @@ fn mutual_reachability_distance<F: Float>(distance: F, core_dist1: F, core_dist2
 /// # Returns
 ///
 /// * `Result<Array1<F>>` - Core distances for each point
+#[allow(dead_code)]
 fn compute_core_distances<F>(
     data: ArrayView2<F>,
     min_samples: usize,
@@ -726,6 +732,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<F>>` - Mutual reachability distance matrix
+#[allow(dead_code)]
 fn compute_mutual_reachability<F>(
     data: ArrayView2<F>,
     core_distances: &Array1<F>,
@@ -774,6 +781,7 @@ where
 /// # Returns
 ///
 /// * `Result<Vec<(usize, usize, F)>>` - MST edges as (source, target, distance) tuples
+#[allow(dead_code)]
 fn build_mst<F>(distances: &Array2<F>) -> Result<Vec<(usize, usize, F)>>
 where
     F: Float + FromPrimitive + Debug + PartialOrd,
@@ -914,6 +922,7 @@ impl UnionFind {
 /// # Returns
 ///
 /// * `Result<SingleLinkageTree<F>>` - Single-linkage tree representation
+#[allow(dead_code)]
 fn mst_to_single_linkage<F>(
     mst: &[(usize, usize, F)],
     n_samples: usize,
@@ -993,6 +1002,7 @@ where
 /// # Returns
 ///
 /// * `Result<CondensedTree<F>>` - Condensed tree for cluster extraction
+#[allow(dead_code)]
 fn condense_tree<F>(
     single_linkage_tree: &SingleLinkageTree<F>,
     min_cluster_size: usize,
@@ -1143,6 +1153,7 @@ where
 /// # Returns
 ///
 /// * `Result<(Array1<i32>, Array1<F>)>` - Tuple of (cluster labels, stability scores)
+#[allow(dead_code)]
 fn extract_clusters<F>(
     condensed_tree: &CondensedTree<F>,
     method: ClusterSelectionMethod,
@@ -1334,6 +1345,7 @@ where
 /// # Returns
 ///
 /// * `Result<(Array1<i32>, Array1<F>)>` - Tuple of (cluster labels, probabilities)
+#[allow(dead_code)]
 fn assign_points_to_clusters<F>(
     condensed_tree: &CondensedTree<F>,
     selected_clusters: &[i32],

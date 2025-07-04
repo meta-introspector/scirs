@@ -8,6 +8,7 @@ use scirs2_integrate::ode::ODEMethod;
 use std::f64::consts::PI;
 
 #[test]
+#[allow(dead_code)]
 fn test_pendulum_dae() -> IntegrateResult<()> {
     // Physical parameters
     let g = 9.81; // Gravity constant (m/s²)
@@ -100,6 +101,7 @@ fn test_pendulum_dae() -> IntegrateResult<()> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_linear_dae() -> IntegrateResult<()> {
     // A simple linear DAE test case
     // x' = -x + y
@@ -183,6 +185,7 @@ fn test_linear_dae() -> IntegrateResult<()> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_implicit_linear_dae() -> IntegrateResult<()> {
     // Test the implicit DAE solver with a simple linear system
     // Express the same problem as an implicit DAE:
@@ -262,6 +265,7 @@ fn test_implicit_linear_dae() -> IntegrateResult<()> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_higher_index_dae() -> IntegrateResult<()> {
     // Test the higher-index DAE solver with a simple index-2 system
     // x' = y
@@ -368,6 +372,7 @@ fn test_higher_index_dae() -> IntegrateResult<()> {
 }
 
 // Calculate potential energy of the pendulum system
+#[allow(dead_code)]
 fn potential_energy(x: &Array1<f64>, g: f64, l: f64, m: f64) -> f64 {
     // For a pendulum, potential energy is m*g*h = m*g*(l + y)
     // where h is the height, and y is the vertical position (with origin at the pivot)

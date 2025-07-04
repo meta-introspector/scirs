@@ -4,6 +4,7 @@ use rand::Rng;
 use scirs2_sparse::*;
 use std::hint::black_box;
 
+#[allow(dead_code)]
 fn generate_sparse_matrix(size: usize, density: f64) -> (Vec<usize>, Vec<usize>, Vec<f64>) {
     let mut rng = rand::rng();
     let mut rows = Vec::new();
@@ -23,6 +24,7 @@ fn generate_sparse_matrix(size: usize, density: f64) -> (Vec<usize>, Vec<usize>,
     (rows, cols, data)
 }
 
+#[allow(dead_code)]
 fn bench_sparse_construction(c: &mut Criterion) {
     let mut group = c.benchmark_group("sparse_construction");
 
@@ -75,6 +77,7 @@ fn bench_sparse_construction(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_sparse_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("sparse_operations");
 
@@ -101,6 +104,7 @@ fn bench_sparse_operations(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_sparse_sparse_ops(c: &mut Criterion) {
     let mut group = c.benchmark_group("sparse_sparse_ops");
 
@@ -123,6 +127,7 @@ fn bench_sparse_sparse_ops(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_format_conversions(c: &mut Criterion) {
     let mut group = c.benchmark_group("format_conversions");
 
@@ -152,6 +157,7 @@ fn bench_format_conversions(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_linear_solvers(c: &mut Criterion) {
     let mut group = c.benchmark_group("linear_solvers");
 
@@ -212,6 +218,7 @@ fn bench_linear_solvers(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_symmetric_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("symmetric_operations");
 
@@ -248,6 +255,7 @@ fn bench_symmetric_operations(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_special_formats(c: &mut Criterion) {
     let mut group = c.benchmark_group("special_formats");
 
@@ -279,6 +287,7 @@ fn bench_special_formats(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_dok_lil_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("dok_lil_operations");
 

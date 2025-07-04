@@ -21,7 +21,7 @@ use std::sync::{Arc, RwLock};
 /// use rand::SeedableRng;
 ///
 /// // Create RNN layers for forward and backward directions
-/// let mut rng = rand::thread_rng();
+/// let mut rng = rand::rng();
 /// let forward_rnn = RNN::new(10, 20, RecurrentActivation::Tanh, &mut rng).unwrap();
 /// let backward_rnn = RNN::new(10, 20, RecurrentActivation::Tanh, &mut rng).unwrap();
 ///
@@ -96,8 +96,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidi
         let input_shape = input.shape();
         if input_shape.len() != 3 {
             return Err(NeuralError::InferenceError(format!(
-                "Expected 3D input [batch_size, seq_len, input_size], got {:?}",
-                input_shape
+                "Expected 3D input [batch_size, seq_len, input_size], got {input_shape:?}"
             )));
         }
         let _batch_size = input_shape[0];
@@ -192,8 +191,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Bidi
         let grad_shape = grad_output.shape();
         if grad_shape.len() != 3 {
             return Err(NeuralError::InferenceError(format!(
-                "Expected 3D gradient [batch_size, seq_len, hidden_size*2], got {:?}",
-                grad_shape
+                "Expected 3D gradient [batch_size, seq_len, hidden_size*2], got {grad_shape:?}"
             )));
         }
         let _batch_size = grad_shape[0];

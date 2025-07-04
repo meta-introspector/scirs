@@ -7,6 +7,7 @@
 use ndarray::arr1;
 use scirs2_integrate::ode::chemical_equilibrium::{systems, ActivityModel, ThermoData};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Chemical Equilibrium Calculation Demo\n");
 
@@ -56,6 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate weak acid equilibrium calculation
+#[allow(dead_code)]
 fn demonstrate_weak_acid_equilibrium() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Calculating equilibrium for acetic acid (CH₃COOH)");
 
@@ -105,6 +107,7 @@ fn demonstrate_weak_acid_equilibrium() -> Result<(), Box<dyn std::error::Error>>
 }
 
 /// Demonstrate buffer equilibrium
+#[allow(dead_code)]
 fn demonstrate_buffer_equilibrium() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Acetate buffer system analysis");
 
@@ -189,6 +192,7 @@ fn demonstrate_buffer_equilibrium() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate complex formation equilibrium
+#[allow(dead_code)]
 fn demonstrate_complex_formation() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Metal-ligand complex formation: Cu²⁺ + 4NH₃ ⇌ [Cu(NH₃)₄]²⁺");
 
@@ -266,6 +270,7 @@ fn demonstrate_complex_formation() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate solubility equilibrium
+#[allow(dead_code)]
 fn demonstrate_solubility_equilibrium() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Solubility equilibrium: AgCl(s) ⇌ Ag⁺ + Cl⁻");
 
@@ -335,6 +340,7 @@ fn demonstrate_solubility_equilibrium() -> Result<(), Box<dyn std::error::Error>
 }
 
 /// Demonstrate amino acid equilibrium (multiple equilibria)
+#[allow(dead_code)]
 fn demonstrate_amino_acid_equilibrium() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Amino acid equilibrium: glycine (NH₃⁺-CH₂-COO⁻)");
 
@@ -431,6 +437,7 @@ fn demonstrate_amino_acid_equilibrium() -> Result<(), Box<dyn std::error::Error>
 }
 
 /// Demonstrate activity coefficient effects
+#[allow(dead_code)]
 fn demonstrate_activity_coefficients() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Activity coefficient effects in ionic solutions");
 
@@ -513,6 +520,7 @@ fn demonstrate_activity_coefficients() -> Result<(), Box<dyn std::error::Error>>
 }
 
 /// Demonstrate temperature effects on equilibrium
+#[allow(dead_code)]
 fn demonstrate_temperature_effects() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Temperature effects on chemical equilibrium");
 
@@ -591,6 +599,7 @@ fn demonstrate_temperature_effects() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate pH titration simulation
+#[allow(dead_code)]
 fn demonstrate_titration_curve() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Simulating titration of acetic acid with NaOH");
 

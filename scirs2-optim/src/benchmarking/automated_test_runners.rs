@@ -662,7 +662,7 @@ impl AutomatedTestRunner {
     /// Execute test for a specific platform
     fn execute_platform_test(
         execution: &mut TestExecution,
-        config: &AutomatedRunnerConfig,
+        _config: &AutomatedRunnerConfig,
     ) -> Result<()> {
         let start_time = Instant::now();
 
@@ -680,7 +680,7 @@ impl AutomatedTestRunner {
 
         // Run tests
         let mut tester = CrossPlatformTester::new(test_config)?;
-        let test_results = tester.run_test_suite()?;
+        let _test_results = tester.run_test_suite()?;
 
         // Generate report
         let report = tester.generate_report();

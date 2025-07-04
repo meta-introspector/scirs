@@ -1,6 +1,7 @@
 use ndarray::Array2;
 use scirs2_cluster::density::{dbscan, labels, DistanceMetric};
 
+#[allow(dead_code)]
 fn main() {
     println!("DBSCAN Clustering Example");
     println!("========================");

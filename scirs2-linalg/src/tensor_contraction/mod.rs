@@ -56,6 +56,7 @@ pub mod tucker;
 /// assert_eq!(result.shape(), &[2, 2, 2, 2]);
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn contract<A, D1, D2>(
     a: &ArrayView<A, D1>,
     b: &ArrayView<A, D2>,
@@ -272,6 +273,7 @@ where
 /// // Check a specific result: a[0] @ b[0]
 /// assert_eq!(result[[0, 0, 0]], 1.0 * 1.0 + 2.0 * 3.0 + 3.0 * 5.0);
 /// ```
+#[allow(dead_code)]
 pub fn batch_matmul<A, D1, D2>(
     a: &ArrayView<A, D1>,
     b: &ArrayView<A, D2>,
@@ -451,6 +453,7 @@ where
 /// // The result should have shape 4x3x2
 /// assert_eq!(result.shape(), &[4, 3, 2]);
 /// ```
+#[allow(dead_code)]
 pub fn mode_n_product<A, D1, D2>(
     tensor: &ArrayView<A, D1>,
     matrix: &ArrayView<A, D2>,
@@ -641,6 +644,7 @@ where
 /// assert_eq!(result[[0, 0]], 1.0 * 1.0 + 2.0 * 5.0 + 3.0 * 9.0);
 /// ```
 #[allow(clippy::type_complexity)]
+#[allow(dead_code)]
 pub fn einsum<'a, A>(
     einsum_str: &str,
     tensors: &'a [&'a ArrayViewD<'a, A>],
@@ -890,6 +894,7 @@ where
 /// assert_eq!(factors[1].shape(), &[2, 2]); // mode 2
 /// assert_eq!(factors[2].shape(), &[2, 2]); // mode 3
 /// ```
+#[allow(dead_code)]
 pub fn hosvd<A, D>(
     tensor: &ArrayView<A, D>,
     rank: &[usize],
@@ -960,6 +965,7 @@ where
 
 // Helper function to unfold a tensor along a specified mode
 // "Unfolding" means reshaping a tensor into a matrix
+#[allow(dead_code)]
 fn unfold<A>(tensor: &ArrayD<A>, mode: usize) -> LinalgResult<Array2<A>>
 where
     A: Clone + Float + Debug + Send + Sync,
@@ -1052,6 +1058,7 @@ where
 }
 
 // Helper function to compute truncated SVD
+#[allow(dead_code)]
 pub fn svd_truncated<A>(
     matrix: &Array2<A>,
     rank: usize,

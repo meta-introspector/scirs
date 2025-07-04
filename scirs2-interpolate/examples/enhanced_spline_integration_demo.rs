@@ -8,6 +8,7 @@ use scirs2_interpolate::error::InterpolateResult;
 use scirs2_interpolate::interp1d::ExtrapolateMode;
 use scirs2_interpolate::spline::CubicSpline;
 
+#[allow(dead_code)]
 fn main() -> InterpolateResult<()> {
     println!("=== Enhanced Spline Integration with Extrapolation Demo ===\n");
 

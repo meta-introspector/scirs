@@ -14,6 +14,7 @@ use scirs2_datasets::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌍 Real-World Datasets Demonstration");
     println!("====================================\n");
@@ -36,6 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_dataset_catalog() {
     println!("📋 AVAILABLE REAL-WORLD DATASETS");
     println!("{}", "-".repeat(40));
@@ -95,6 +97,7 @@ fn demonstrate_dataset_catalog() {
     );
 }
 
+#[allow(dead_code)]
 fn demonstrate_classification_datasets() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 CLASSIFICATION DATASETS");
     println!("{}", "-".repeat(40));
@@ -173,6 +176,7 @@ fn demonstrate_classification_datasets() -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
     println!("📈 REGRESSION DATASETS");
     println!("{}", "-".repeat(40));
@@ -240,6 +244,7 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_healthcare_datasets() -> Result<(), Box<dyn std::error::Error>> {
     println!("🏥 HEALTHCARE DATASETS");
     println!("{}", "-".repeat(40));
@@ -292,6 +297,7 @@ fn demonstrate_healthcare_datasets() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_advanced_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 ADVANCED DATASET OPERATIONS");
     println!("{}", "-".repeat(40));
@@ -343,6 +349,7 @@ fn demonstrate_advanced_operations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ PERFORMANCE COMPARISON");
     println!("{}", "-".repeat(40));

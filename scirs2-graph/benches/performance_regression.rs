@@ -67,6 +67,7 @@ impl GraphGenerator {
 }
 
 /// Centrality algorithms benchmarks
+#[allow(dead_code)]
 fn bench_centrality_algorithms(c: &mut Criterion) {
     let mut generator = GraphGenerator::new();
     let mut group = c.benchmark_group("centrality");
@@ -125,6 +126,7 @@ fn bench_centrality_algorithms(c: &mut Criterion) {
 }
 
 /// Community detection algorithms benchmarks
+#[allow(dead_code)]
 fn bench_community_detection(c: &mut Criterion) {
     let mut generator = GraphGenerator::new();
     let mut group = c.benchmark_group("community_detection");
@@ -202,6 +204,7 @@ fn bench_community_detection(c: &mut Criterion) {
 }
 
 /// Path finding algorithms benchmarks
+#[allow(dead_code)]
 fn bench_path_algorithms(c: &mut Criterion) {
     let mut generator = GraphGenerator::new();
     let mut group = c.benchmark_group("path_algorithms");
@@ -253,6 +256,7 @@ fn bench_path_algorithms(c: &mut Criterion) {
 }
 
 /// Graph properties and measures benchmarks
+#[allow(dead_code)]
 fn bench_graph_measures(c: &mut Criterion) {
     let mut generator = GraphGenerator::new();
     let mut group = c.benchmark_group("graph_measures");
@@ -307,6 +311,7 @@ fn bench_graph_measures(c: &mut Criterion) {
 }
 
 /// Spanning tree and matching algorithms benchmarks
+#[allow(dead_code)]
 fn bench_spanning_and_matching(c: &mut Criterion) {
     let mut generator = GraphGenerator::new();
     let mut group = c.benchmark_group("spanning_matching");
@@ -346,6 +351,7 @@ fn bench_spanning_and_matching(c: &mut Criterion) {
 }
 
 /// Graph generation benchmarks
+#[allow(dead_code)]
 fn bench_graph_generation(c: &mut Criterion) {
     let mut group = c.benchmark_group("graph_generation");
 
@@ -403,6 +409,7 @@ fn bench_graph_generation(c: &mut Criterion) {
 }
 
 /// Memory operations benchmarks
+#[allow(dead_code)]
 fn bench_memory_operations(c: &mut Criterion) {
     let mut generator = GraphGenerator::new();
     let mut group = c.benchmark_group("memory_operations");
@@ -451,6 +458,7 @@ fn bench_memory_operations(c: &mut Criterion) {
 
 /// Parallel algorithms benchmarks (if parallel features are enabled)
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn bench_parallel_algorithms(c: &mut Criterion) {
     let mut generator = GraphGenerator::new();
     let mut group = c.benchmark_group("parallel_algorithms");
@@ -499,6 +507,7 @@ fn bench_parallel_algorithms(c: &mut Criterion) {
 }
 
 /// Large graph stress tests for scalability
+#[allow(dead_code)]
 fn bench_large_graph_scalability(c: &mut Criterion) {
     let mut generator = GraphGenerator::new();
     let mut group = c.benchmark_group("large_graph_scalability");
@@ -561,6 +570,7 @@ fn bench_large_graph_scalability(c: &mut Criterion) {
 }
 
 /// Regression checker function
+#[allow(dead_code)]
 fn check_performance_regression() {
     println!("\n=== Performance Regression Check ===");
     println!("Baseline performance expectations:");
@@ -598,6 +608,7 @@ criterion_main!(benches);
 
 // Initialize regression checker on import
 #[ctor::ctor]
+#[allow(dead_code)]
 fn init() {
     check_performance_regression();
 }

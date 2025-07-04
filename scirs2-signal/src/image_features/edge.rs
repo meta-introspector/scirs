@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 
 /// Extract edge-based features from an image
+#[allow(dead_code)]
 pub fn extract_edge_features(
     image: &Array2<f64>,
     features: &mut HashMap<String, f64>,

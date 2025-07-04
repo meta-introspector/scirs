@@ -8,6 +8,7 @@ use scirs2_fft::{
 use std::f64::consts::PI;
 
 // Helper function to create a sparse signal
+#[allow(dead_code)]
 fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
     let mut signal = vec![0.0; n];
 
@@ -22,6 +23,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 }
 
 // Helper to add noise to a signal
+#[allow(dead_code)]
 fn add_noise(signal: &[f64], noise_level: f64) -> Vec<f64> {
     let mut rng = rand::rng();
     signal
@@ -31,6 +33,7 @@ fn add_noise(signal: &[f64], noise_level: f64) -> Vec<f64> {
 }
 
 // Basic kernel benchmarks
+#[allow(dead_code)]
 fn bench_gpu_kernel_sublinear(c: &mut Criterion) {
     if !cfg!(feature = "cuda") {
         return;
@@ -55,6 +58,7 @@ fn bench_gpu_kernel_sublinear(c: &mut Criterion) {
     });
 }
 
+#[allow(dead_code)]
 fn bench_gpu_kernel_compressed_sensing(c: &mut Criterion) {
     if !cfg!(feature = "cuda") {
         return;
@@ -79,6 +83,7 @@ fn bench_gpu_kernel_compressed_sensing(c: &mut Criterion) {
     });
 }
 
+#[allow(dead_code)]
 fn bench_gpu_kernel_iterative(c: &mut Criterion) {
     if !cfg!(feature = "cuda") {
         return;
@@ -104,6 +109,7 @@ fn bench_gpu_kernel_iterative(c: &mut Criterion) {
 }
 
 // Window function comparison
+#[allow(dead_code)]
 fn bench_window_functions(c: &mut Criterion) {
     if !cfg!(feature = "cuda") {
         return;
@@ -144,6 +150,7 @@ fn bench_window_functions(c: &mut Criterion) {
 }
 
 // Signal size comparison
+#[allow(dead_code)]
 fn bench_signal_sizes(c: &mut Criterion) {
     if !cfg!(feature = "cuda") {
         return;
@@ -172,6 +179,7 @@ fn bench_signal_sizes(c: &mut Criterion) {
 }
 
 // GPU vs CPU comparison
+#[allow(dead_code)]
 fn bench_gpu_vs_cpu(c: &mut Criterion) {
     let n = 16384;
     let frequencies = vec![(30, 1.0), (70, 0.5), (150, 0.25)];
@@ -209,6 +217,7 @@ fn bench_gpu_vs_cpu(c: &mut Criterion) {
 }
 
 // Algorithm comparison on GPU
+#[allow(dead_code)]
 fn bench_gpu_algorithms(c: &mut Criterion) {
     if !cfg!(feature = "cuda") {
         return;

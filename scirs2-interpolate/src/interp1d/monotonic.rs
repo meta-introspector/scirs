@@ -700,6 +700,7 @@ impl<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>
 ///     true
 /// ).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn monotonic_interpolate<
     F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat,
 >(
@@ -738,6 +739,7 @@ pub fn monotonic_interpolate<
 ///
 /// let y_interp = hyman_interpolate(&x.view(), &y.view(), &x_new.view(), true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn hyman_interpolate<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -772,6 +774,7 @@ pub fn hyman_interpolate<F: Float + FromPrimitive + Debug + crate::traits::Inter
 ///
 /// let y_interp = steffen_interpolate(&x.view(), &y.view(), &x_new.view(), true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn steffen_interpolate<F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -806,6 +809,7 @@ pub fn steffen_interpolate<F: Float + FromPrimitive + Debug + crate::traits::Int
 ///
 /// let y_interp = modified_akima_interpolate(&x.view(), &y.view(), &x_new.view(), true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn modified_akima_interpolate<
     F: Float + FromPrimitive + Debug + crate::traits::InterpolationFloat,
 >(

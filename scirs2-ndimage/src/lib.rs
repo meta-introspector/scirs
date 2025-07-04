@@ -46,6 +46,7 @@ mod scipy_validation_tests;
 pub mod segmentation;
 pub mod streaming;
 pub mod threading;
+pub mod utils;
 pub mod visualization;
 
 // Re-exports
@@ -318,3 +319,6 @@ pub use self::comprehensive_validation::{
     validated_ultrathink_processing, PerformanceBenchmark, PerformanceSummary, UltrathinkValidator,
     ValidationConfig, ValidationError, ValidationReport,
 };
+
+// Utils exports
+pub use self::utils::{safe_f64_to_float, safe_float_to_f64, safe_usize_to_float};

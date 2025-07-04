@@ -15,6 +15,7 @@ struct SimpleLayer {
     name: String,
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Neural Network Quantization Example");
     println!("===================================\n");
@@ -51,6 +52,7 @@ fn main() {
 }
 
 /// Create a simple example network with 2 layers
+#[allow(dead_code)]
 fn create_example_network() -> Vec<SimpleLayer> {
     let mut rng = rng();
 
@@ -95,6 +97,7 @@ fn create_example_network() -> Vec<SimpleLayer> {
 }
 
 /// Create test input data
+#[allow(dead_code)]
 fn create_test_input(batch_size: usize, input_size: usize) -> Array2<f32> {
     let mut rng = rng();
     let mut input = Array2::zeros((batch_size, input_size));
@@ -109,11 +112,13 @@ fn create_test_input(batch_size: usize, input_size: usize) -> Array2<f32> {
 }
 
 /// ReLU activation function
+#[allow(dead_code)]
 fn relu(x: &ArrayView2<f32>) -> Array2<f32> {
     x.mapv(|v| if v > 0.0 { v } else { 0.0 })
 }
 
 /// Run inference with full precision network
+#[allow(dead_code)]
 fn run_network_full_precision(network: &[SimpleLayer], input: &Array2<f32>) -> Array2<f32> {
     // First layer
     let layer1 = &network[0];
@@ -133,6 +138,7 @@ type QuantizedLayerPair = (QuantizedMatrix, QuantizedMatrix);
 type QuantizationParamsPair = (QuantizationParams, QuantizationParams);
 
 /// Quantize a neural network
+#[allow(dead_code)]
 fn quantize_network(
     network: &[SimpleLayer],
     bits: u8,
@@ -188,6 +194,7 @@ fn quantize_network(
 }
 
 /// Run inference with quantized network
+#[allow(dead_code)]
 fn run_network_quantized(
     network: &[SimpleLayer],
     quantized_network: &[(QuantizedMatrix, QuantizedMatrix)],
@@ -260,6 +267,7 @@ fn run_network_quantized(
 }
 
 /// Compare outputs from full precision and quantized networks
+#[allow(dead_code)]
 fn compare_outputs(full_precision: &Array2<f32>, quantized: &Array2<f32>) {
     // Calculate MSE
     let mse = (full_precision - quantized).mapv(|x| x * x).sum() / full_precision.len() as f32;
@@ -313,6 +321,7 @@ fn compare_outputs(full_precision: &Array2<f32>, quantized: &Array2<f32>) {
 }
 
 /// Demonstrate mixed precision quantization with different bit widths per layer
+#[allow(dead_code)]
 fn mixed_precision_quantization(network: &[SimpleLayer], input: &Array2<f32>) {
     // Define quantization bit widths for each layer
     // First layer: weights=8-bit, activations=8-bit

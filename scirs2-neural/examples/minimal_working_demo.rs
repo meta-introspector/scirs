@@ -3,6 +3,7 @@
 use ndarray::Array;
 use scirs2_neural::prelude::*;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 Scirs2-Neural Minimal Working Demo");
 

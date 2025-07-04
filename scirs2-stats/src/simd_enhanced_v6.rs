@@ -493,6 +493,7 @@ impl AdvancedSimdOps<f32> for f32 {}
 impl AdvancedSimdOps<f64> for f64 {}
 
 /// High-level convenience functions
+#[allow(dead_code)]
 pub fn ultra_mean_simd<F>(data: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float
@@ -511,6 +512,7 @@ where
     Ok(stats.mean)
 }
 
+#[allow(dead_code)]
 pub fn ultra_std_simd<F>(data: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float
@@ -529,6 +531,7 @@ where
     Ok(stats.std_dev)
 }
 
+#[allow(dead_code)]
 pub fn ultra_comprehensive_simd<F>(data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
 where
     F: Float
@@ -547,6 +550,7 @@ where
 }
 
 /// Create RNG with optional seed
+#[allow(dead_code)]
 fn create_rng(seed: Option<u64>) -> impl Rng {
     use rand::{rngs::StdRng, SeedableRng};
     match seed {

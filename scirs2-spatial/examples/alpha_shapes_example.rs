@@ -8,6 +8,7 @@ use ndarray::array;
 use scirs2_spatial::alpha_shapes::AlphaShape;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Alpha Shapes Example ===\n");
 
@@ -48,6 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn basic_2d_alpha_shape() -> Result<(), Box<dyn std::error::Error>> {
     // Create a simple square with an interior point
     let points = array![
@@ -89,6 +91,7 @@ fn basic_2d_alpha_shape() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn alpha_spectrum_analysis() -> Result<(), Box<dyn std::error::Error>> {
     // Create a more complex point set
     let points = array![
@@ -125,6 +128,7 @@ fn alpha_spectrum_analysis() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn non_convex_shape_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create a C-shaped point set
     let mut points_vec = Vec::new();
@@ -180,6 +184,7 @@ fn non_convex_shape_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn outlier_detection_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create a main cluster with some outliers
     let mut points_vec = Vec::new();
@@ -235,6 +240,7 @@ fn outlier_detection_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn alpha_shape_3d_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create a 3D point set (vertices of a cube plus center)
     let points = array![
@@ -281,6 +287,7 @@ fn alpha_shape_3d_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn optimal_alpha_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create a point set with clear structure
     let mut points_vec = Vec::new();
@@ -327,6 +334,7 @@ fn optimal_alpha_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn circular_points_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create points arranged in a circle (ring shape)
     let mut points_vec = Vec::new();

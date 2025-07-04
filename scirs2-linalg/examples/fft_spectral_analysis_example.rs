@@ -25,6 +25,7 @@ use scirs2_linalg::fft::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 FFT AND SPECTRAL ANALYSIS - ULTRATHINK DEMONSTRATION");
     println!("========================================================");

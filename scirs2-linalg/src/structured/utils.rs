@@ -163,6 +163,7 @@ where
 /// # Returns
 ///
 /// The solution vector x
+#[allow(dead_code)]
 pub fn solve_toeplitz<A>(
     c: ArrayView1<A>,
     r: ArrayView1<A>,
@@ -230,6 +231,7 @@ where
 /// # Returns
 ///
 /// The solution vector x
+#[allow(dead_code)]
 pub fn solve_circulant<A>(c: ArrayView1<A>, b: ArrayView1<A>) -> LinalgResult<Array1<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
@@ -273,6 +275,7 @@ where
 /// # Returns
 ///
 /// The result of the matrix-vector multiplication
+#[allow(dead_code)]
 pub fn circulant_matvec_fft<A>(
     matrix: &super::CirculantMatrix<A>,
     vector: &ArrayView1<A>,
@@ -297,6 +300,7 @@ where
 /// # Returns
 ///
 /// The result of the matrix-vector multiplication
+#[allow(dead_code)]
 pub fn circulant_matvec_direct<A>(
     matrix: &super::CirculantMatrix<A>,
     vector: &ArrayView1<A>,
@@ -321,6 +325,7 @@ where
 /// # Returns
 ///
 /// The autoregressive coefficients
+#[allow(dead_code)]
 pub fn levinson_durbin<A>(toeplitz_col: &ArrayView1<A>) -> LinalgResult<Array1<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
@@ -390,6 +395,7 @@ where
 /// # Returns
 ///
 /// The autoregressive coefficients
+#[allow(dead_code)]
 pub fn yule_walker<A>(autocorr: &ArrayView1<A>) -> LinalgResult<Array1<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
@@ -411,6 +417,7 @@ where
 /// # Returns
 ///
 /// Solution vector
+#[allow(dead_code)]
 pub fn solve_circulant_fft<A>(
     matrix: &super::CirculantMatrix<A>,
     rhs: &ArrayView1<A>,
@@ -435,6 +442,7 @@ where
 /// # Returns
 ///
 /// Array of eigenvalues
+#[allow(dead_code)]
 pub fn circulant_eigenvalues<A>(matrix: &super::CirculantMatrix<A>) -> LinalgResult<Array1<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
@@ -455,6 +463,7 @@ where
 /// # Returns
 ///
 /// Determinant value
+#[allow(dead_code)]
 pub fn circulant_determinant<A>(matrix: &super::CirculantMatrix<A>) -> LinalgResult<A>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
@@ -480,6 +489,7 @@ where
 /// # Returns
 ///
 /// The inverse matrix as a dense Array2
+#[allow(dead_code)]
 pub fn circulant_inverse_fft<A>(matrix: &super::CirculantMatrix<A>) -> LinalgResult<Array2<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
@@ -502,6 +512,7 @@ where
 /// # Returns
 ///
 /// The result of the matrix-vector multiplication
+#[allow(dead_code)]
 pub fn hankel_matvec<A>(
     matrix: &super::HankelMatrix<A>,
     vector: &ArrayView1<A>,
@@ -525,6 +536,7 @@ where
 /// # Returns
 ///
 /// The result of the matrix-vector multiplication
+#[allow(dead_code)]
 pub fn hankel_matvec_fft<A>(
     matrix: &super::HankelMatrix<A>,
     vector: &ArrayView1<A>,
@@ -545,6 +557,7 @@ where
 /// # Returns
 ///
 /// Determinant value
+#[allow(dead_code)]
 pub fn hankel_determinant<A>(matrix: &super::HankelMatrix<A>) -> LinalgResult<A>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
@@ -563,6 +576,7 @@ where
 /// # Returns
 ///
 /// SVD decomposition as (U, S, VT)
+#[allow(dead_code)]
 pub fn hankel_svd<A>(
     matrix: &super::HankelMatrix<A>,
 ) -> LinalgResult<(Array2<A>, Array1<A>, Array2<A>)>
@@ -586,6 +600,7 @@ where
 /// # Returns
 ///
 /// The result of the matrix-vector multiplication
+#[allow(dead_code)]
 pub fn tridiagonal_matvec<A>(
     matrix: &crate::specialized::TridiagonalMatrix<A>,
     vector: &ArrayView1<A>,
@@ -609,6 +624,7 @@ where
 /// # Returns
 ///
 /// Solution vector
+#[allow(dead_code)]
 pub fn solve_tridiagonal_thomas<A>(
     matrix: &crate::specialized::TridiagonalMatrix<A>,
     rhs: &ArrayView1<A>,
@@ -632,6 +648,7 @@ where
 /// # Returns
 ///
 /// Solution vector
+#[allow(dead_code)]
 pub fn solve_tridiagonal_lu<A>(
     matrix: &crate::specialized::TridiagonalMatrix<A>,
     rhs: &ArrayView1<A>,
@@ -654,6 +671,7 @@ where
 /// # Returns
 ///
 /// Determinant value
+#[allow(dead_code)]
 pub fn tridiagonal_determinant<A>(
     matrix: &crate::specialized::TridiagonalMatrix<A>,
 ) -> LinalgResult<A>
@@ -674,6 +692,7 @@ where
 /// # Returns
 ///
 /// Array of eigenvalues
+#[allow(dead_code)]
 pub fn tridiagonal_eigenvalues<A>(
     matrix: &crate::specialized::TridiagonalMatrix<A>,
 ) -> LinalgResult<Array1<A>>
@@ -695,6 +714,7 @@ where
 /// # Returns
 ///
 /// Tuple of (eigenvalues, eigenvectors)
+#[allow(dead_code)]
 pub fn tridiagonal_eigenvectors<A>(
     matrix: &crate::specialized::TridiagonalMatrix<A>,
 ) -> LinalgResult<(Array1<A>, Array2<A>)>
@@ -717,6 +737,7 @@ where
 /// # Returns
 ///
 /// The inverse of the Toeplitz matrix
+#[allow(dead_code)]
 pub fn fast_toeplitz_inverse<A, T>(toeplitz: &T) -> LinalgResult<Array2<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
@@ -788,6 +809,7 @@ where
 /// # Returns
 ///
 /// The inverse matrix computed using the Gohberg-Semencul formula
+#[allow(dead_code)]
 pub fn gohberg_semencul_inverse<A, T>(toeplitz: &T) -> LinalgResult<Array2<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
@@ -840,6 +862,7 @@ where
 /// # Returns
 ///
 /// Result of multiplying the input vector by the DFT matrix
+#[allow(dead_code)]
 pub fn dft_matrix_multiply<A>(x: &ArrayView1<A>) -> LinalgResult<Array1<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
@@ -895,6 +918,7 @@ where
 /// # Returns
 ///
 /// The Hadamard transform of the input vector
+#[allow(dead_code)]
 pub fn hadamard_transform<A>(x: &ArrayView1<A>) -> LinalgResult<Array1<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug + Copy,

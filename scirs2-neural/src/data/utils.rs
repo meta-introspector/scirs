@@ -12,6 +12,7 @@ type SplitResult<F> = Result<(
     Array<F, IxDyn>,
 )>;
 /// Split data into training and validation sets
+#[allow(dead_code)]
 pub fn train_val_split<F: Float + Debug + ScalarOperand>(
     x: &Array<F, IxDyn>,
     y: &Array<F, IxDyn>,
@@ -127,6 +128,7 @@ impl KFold {
             current = end;
         Ok(result)
 /// Create batches from data
+#[allow(dead_code)]
 pub fn create_batches<F: Float + Debug + ScalarOperand>(
     batch_size: usize,
 ) -> Vec<(Array<F, IxDyn>, Array<F, IxDyn>)> {

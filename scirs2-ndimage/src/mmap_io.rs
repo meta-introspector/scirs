@@ -3,11 +3,10 @@
 //! This module provides functions for loading and saving large images using
 //! memory-mapped arrays, enabling processing of datasets that don't fit in RAM.
 
-use ndarray::{Array, ArrayView, Dimension, Ix1, Ix2, Ix3, IxDyn};
+use ndarray::{Array, ArrayView, Dimension, Ix1, Ix2, IxDyn};
 use num_traits::{Float, FromPrimitive, NumCast};
 use std::path::Path;
 
-use scirs2_core::error::CoreResult;
 use scirs2_core::memory_efficient::{
     create_mmap, AccessMode, ChunkingStrategy, MemoryMappedArray, MemoryMappedChunkIter,
     MemoryMappedChunks,
@@ -30,6 +29,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// # Returns
 ///
 /// A memory-mapped array that can be used like a regular ndarray
+#[allow(dead_code)]
 pub fn load_image_mmap<T, D, P>(
     path: P,
     shape: &[usize],
@@ -48,7 +48,7 @@ where
 
     // Check if file exists and has correct size
     let file_size = std::fs::metadata(path.as_ref())
-        .map_err(|e| NdimageError::IOError(format!("Failed to get file metadata: {}", e)))?
+        .map_err(|e| NdimageError::IoError(format!("Failed to get file metadata: {}", e)))?
         .len() as usize;
 
     if file_size < offset + total_bytes {
@@ -64,7 +64,7 @@ where
 
     // Create memory-mapped array
     let mmap = create_mmap(&dummy_array.view(), path.as_ref(), access, offset)
-        .map_err(|e| NdimageError::IOError(format!("Failed to create memory map: {}", e)))?;
+        .map_err(|e| NdimageError::IoError(format!("Failed to create memory map: {}", e)))?;
 
     Ok(mmap)
 }
@@ -82,6 +82,7 @@ where
 /// # Returns
 ///
 /// A memory-mapped array pointing to the saved data
+#[allow(dead_code)]
 pub fn save_image_mmap<T, D, P>(
     array: &ArrayView<T, D>,
     path: P,
@@ -94,7 +95,7 @@ where
 {
     // Create memory-mapped array with write access
     let mmap = create_mmap(array, path.as_ref(), AccessMode::Write, offset)
-        .map_err(|e| NdimageError::IOError(format!("Failed to create memory map: {}", e)))?;
+        .map_err(|e| NdimageError::IoError(format!("Failed to create memory map: {}", e)))?;
 
     Ok(mmap)
 }
@@ -110,6 +111,7 @@ where
 /// # Returns
 ///
 /// A memory-mapped array backed by a temporary file
+#[allow(dead_code)]
 pub fn create_temp_mmap<T>(
     shape: &[usize],
 ) -> NdimageResult<(MemoryMappedArray<T>, tempfile::TempPath)>
@@ -120,7 +122,7 @@ where
 
     // Create temporary file
     let temp_file = NamedTempFile::new()
-        .map_err(|e| NdimageError::IOError(format!("Failed to create temp file: {}", e)))?;
+        .map_err(|e| NdimageError::IoError(format!("Failed to create temp file: {}", e)))?;
 
     let temp_path = temp_file.into_temp_path();
 
@@ -129,7 +131,7 @@ where
 
     // Create memory-mapped array
     let mmap = create_mmap(&dummy_array.view(), &temp_path, AccessMode::Write, 0)
-        .map_err(|e| NdimageError::IOError(format!("Failed to create memory map: {}", e)))?;
+        .map_err(|e| NdimageError::IoError(format!("Failed to create memory map: {}", e)))?;
 
     Ok((mmap, temp_path))
 }
@@ -148,6 +150,7 @@ where
 /// # Returns
 ///
 /// Results from processing each chunk
+#[allow(dead_code)]
 pub fn process_mmap_chunks<T, R, F>(
     mmap: &MemoryMappedArray<T>,
     strategy: ChunkingStrategy,
@@ -224,6 +227,7 @@ impl Default for MmapConfig {
 /// # Returns
 ///
 /// A regular ndarray containing the loaded data
+#[allow(dead_code)]
 pub fn load_regular_array<T, D, P>(path: P, shape: &[usize]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Send + Sync + 'static,
@@ -239,12 +243,12 @@ where
 
     // Open and read the file
     let mut file = File::open(path.as_ref())
-        .map_err(|e| NdimageError::IOError(format!("Failed to open file: {}", e)))?;
+        .map_err(|e| NdimageError::IoError(format!("Failed to open file: {}", e)))?;
 
     // Check file size
     let file_size = file
         .metadata()
-        .map_err(|e| NdimageError::IOError(format!("Failed to get file metadata: {}", e)))?
+        .map_err(|e| NdimageError::IoError(format!("Failed to get file metadata: {}", e)))?
         .len() as usize;
 
     if file_size < expected_bytes {
@@ -257,7 +261,7 @@ where
     // Read the binary data
     let mut buffer = vec![0u8; expected_bytes];
     file.read_exact(&mut buffer)
-        .map_err(|e| NdimageError::IOError(format!("Failed to read file: {}", e)))?;
+        .map_err(|e| NdimageError::IoError(format!("Failed to read file: {}", e)))?;
 
     // Convert bytes to the target type
     let mut data = Vec::with_capacity(total_elements);
@@ -303,6 +307,7 @@ where
 }
 
 /// Smart image loader that automatically decides between regular and memory-mapped loading
+#[allow(dead_code)]
 pub fn smart_load_image<T, D, P>(
     path: P,
     shape: &[usize],
@@ -370,6 +375,7 @@ where
 }
 
 /// Example: Process a large image file using memory mapping
+#[allow(dead_code)]
 pub fn process_large_image_example<P: AsRef<Path>>(
     input_path: P,
     output_path: P,

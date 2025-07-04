@@ -6,6 +6,7 @@
 
 use scirs2_datasets::{get_cache_dir, CacheManager, DatasetCache};
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Enhanced Cache Management Demonstration ===\n");
 

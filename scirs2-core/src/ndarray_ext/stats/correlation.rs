@@ -30,6 +30,7 @@ use num_traits::{Float, FromPrimitive};
 /// ```
 ///
 /// This function is similar to ``NumPy``'s `np.corrcoef` function but returns a single value.
+#[allow(dead_code)]
 pub fn corrcoef<T>(x: ArrayView<T, Ix1>, y: ArrayView<T, Ix1>) -> Result<T, &'static str>
 where
     T: Clone + Float + FromPrimitive,
@@ -104,6 +105,7 @@ where
 /// ```
 ///
 /// This function is equivalent to ``NumPy``'s `np.cov` function.
+#[allow(dead_code)]
 pub fn cov<T>(array: ArrayView<T, Ix2>, ddof: usize) -> Result<Array<T, Ix2>, &'static str>
 where
     T: Clone + Float + FromPrimitive,

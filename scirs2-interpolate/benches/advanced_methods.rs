@@ -9,6 +9,7 @@ use scirs2_interpolate::advanced::thinplate::ThinPlateSpline;
 use scirs2_interpolate::local::mls::{MovingLeastSquares, PolynomialBasis, WeightFunction};
 use scirs2_interpolate::sparse_grid::make_sparse_grid_interpolator;
 
+#[allow(dead_code)]
 fn generate_2d_test_data(n: usize) -> (Array2<f64>, Array1<f64>) {
     let mut points = Array2::zeros((n, 2));
     let mut values = Array1::zeros(n);
@@ -44,6 +45,7 @@ fn generate_3d_test_data(n: usize) -> (Array2<f64>, Array1<f64>) {
     (points, values)
 }
 
+#[allow(dead_code)]
 fn generate_query_points_2d(n: usize) -> Array2<f64> {
     let mut queries = Array2::zeros((n, 2));
     for i in 0..n {
@@ -53,6 +55,7 @@ fn generate_query_points_2d(n: usize) -> Array2<f64> {
     queries
 }
 
+#[allow(dead_code)]
 fn bench_rbf_interpolation(c: &mut Criterion) {
     let mut group = c.benchmark_group("rbf_interpolation");
 
@@ -92,6 +95,7 @@ fn bench_rbf_interpolation(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_enhanced_rbf(c: &mut Criterion) {
     let mut group = c.benchmark_group("enhanced_rbf");
 
@@ -123,6 +127,7 @@ fn bench_enhanced_rbf(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_kriging_interpolation(c: &mut Criterion) {
     let mut group = c.benchmark_group("kriging_interpolation");
 
@@ -172,6 +177,7 @@ fn bench_kriging_interpolation(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_enhanced_kriging(c: &mut Criterion) {
     let mut group = c.benchmark_group("enhanced_kriging");
 
@@ -198,6 +204,7 @@ fn bench_enhanced_kriging(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_fast_kriging(c: &mut Criterion) {
     let mut group = c.benchmark_group("fast_kriging");
 
@@ -230,6 +237,7 @@ fn bench_fast_kriging(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_thin_plate_splines(c: &mut Criterion) {
     let mut group = c.benchmark_group("thin_plate_splines");
 
@@ -254,6 +262,7 @@ fn bench_thin_plate_splines(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_sparse_grid_interpolation(c: &mut Criterion) {
     let mut group = c.benchmark_group("sparse_grid_interpolation");
 
@@ -283,6 +292,7 @@ fn bench_sparse_grid_interpolation(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_moving_least_squares(c: &mut Criterion) {
     let mut group = c.benchmark_group("moving_least_squares");
 
@@ -331,6 +341,7 @@ fn bench_moving_least_squares(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_dimensionality_scaling(c: &mut Criterion) {
     let mut group = c.benchmark_group("dimensionality_scaling");
 

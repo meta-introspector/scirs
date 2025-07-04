@@ -108,8 +108,7 @@ where
             Ok(F::one() - cosine_similarity)
         }
         _ => Err(MetricsError::InvalidInput(format!(
-            "Unknown distance metric: {}",
-            metric
+            "Unknown distance metric: {metric}"
         ))),
     }
 }

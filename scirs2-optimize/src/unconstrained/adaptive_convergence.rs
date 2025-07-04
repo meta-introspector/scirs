@@ -378,6 +378,7 @@ pub struct AdaptationStats {
 }
 
 /// Create adaptive tolerance options optimized for specific problem types
+#[allow(dead_code)]
 pub fn create_adaptive_options_for_problem(
     problem_type: &str,
     problem_size: usize,
@@ -429,6 +430,7 @@ pub fn create_adaptive_options_for_problem(
 }
 
 /// Enhanced convergence check with adaptive tolerances
+#[allow(dead_code)]
 pub fn check_convergence_adaptive(
     function_change: f64,
     step_norm: f64,

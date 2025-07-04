@@ -3,7 +3,7 @@
 //! This module implements reverse-mode automatic differentiation for efficient
 //! gradient computation in neural networks and optimization algorithms.
 
-use ndarray::{Array1, Dimension};
+use ndarray::Array1;
 use num_traits::Float;
 use std::collections::HashMap;
 

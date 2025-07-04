@@ -4,6 +4,7 @@
 //! for large-scale metrics computation with optimal memory management.
 
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::uninlined_format_args)]
 #![allow(dead_code)]
 
 use crate::error::{MetricsError, Result};

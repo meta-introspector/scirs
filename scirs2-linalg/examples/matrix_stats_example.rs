@@ -8,6 +8,7 @@ use scirs2_linalg::error::LinalgResult;
 use scirs2_linalg::stats::covariance::mahalanobis_distance;
 use scirs2_linalg::stats::{correlation_matrix, covariance_matrix};
 
+#[allow(dead_code)]
 fn main() -> LinalgResult<()> {
     println!("Matrix Statistical Functions Example");
     println!("==================================\n");

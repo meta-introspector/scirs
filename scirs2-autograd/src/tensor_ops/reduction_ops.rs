@@ -125,6 +125,7 @@ impl_reduce_forward!(compute_reduce_max, max, min_value);
 impl_reduce_forward!(compute_reduce_prod, mul, one);
 
 #[inline]
+#[allow(dead_code)]
 fn preprocess_axes<T: Float>(
     x: &NdArrayView<T>,
     axes: &NdArrayView<T>,
@@ -326,6 +327,7 @@ impl<T: Float> op::Op<T> for ReduceMax {
     }
 }
 
+#[allow(dead_code)]
 fn min_max_grad<'a, 'g: 'a, T: Float>(
     gy: &Tensor<'g, T>,
     x1: &Tensor<'g, T>,
@@ -359,6 +361,7 @@ fn min_max_grad<'a, 'g: 'a, T: Float>(
     ctx.append_input_grad(1, None);
 }
 
+#[allow(dead_code)]
 fn argx_helper<T: Float>(
     x: &NdArrayView<T>,
     comp_fn: fn(T, T) -> T,

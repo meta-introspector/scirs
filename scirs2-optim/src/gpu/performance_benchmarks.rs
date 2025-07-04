@@ -1275,6 +1275,7 @@ impl DataGenerator for RealisticDataGenerator {
 }
 
 /// Convenience function to run quick performance comparison
+#[allow(dead_code)]
 pub fn quick_performance_comparison() -> Result<()> {
     let config = BenchmarkConfig {
         backends: vec![GpuBackend::Cuda, GpuBackend::Rocm],

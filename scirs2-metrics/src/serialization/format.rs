@@ -21,6 +21,7 @@ use crate::error::{MetricsError, Result};
 /// # Returns
 ///
 /// * Result containing the converted data
+#[allow(dead_code)]
 pub fn convert_format<T>(
     data: &T,
     from_format: SerializationFormat,
@@ -123,6 +124,7 @@ where
 /// # Returns
 ///
 /// * Result indicating success or error
+#[allow(dead_code)]
 pub fn convert_file<T, P1, P2>(
     input_path: P1,
     output_path: P2,
@@ -151,6 +153,7 @@ where
 /// # Returns
 ///
 /// * Result containing the serialized data
+#[allow(dead_code)]
 pub fn serialize<T>(data: &T, format: SerializationFormat) -> Result<Vec<u8>>
 where
     T: Serialize,
@@ -187,6 +190,7 @@ where
 /// # Returns
 ///
 /// * Result containing the deserialized data
+#[allow(dead_code)]
 pub fn deserialize<T>(data: &[u8], format: SerializationFormat) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,
@@ -221,6 +225,7 @@ where
 /// # Returns
 ///
 /// * Result indicating success or error
+#[allow(dead_code)]
 pub fn serialize_to_file<T, P>(data: &T, path: P, format: SerializationFormat) -> Result<()>
 where
     T: Serialize,
@@ -246,6 +251,7 @@ where
 /// # Returns
 ///
 /// * Result containing the deserialized data
+#[allow(dead_code)]
 pub fn deserialize_from_file<T, P>(path: P, format: SerializationFormat) -> Result<T>
 where
     T: for<'de> Deserialize<'de>,

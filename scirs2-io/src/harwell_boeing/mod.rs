@@ -312,6 +312,7 @@ impl HBHeader {
 /// let matrix = read_harwell_boeing("matrix.hb").unwrap();
 /// println!("Matrix: {}x{} with {} non-zeros", matrix.header.nrow, matrix.header.ncol, matrix.header.nnzero);
 /// ```
+#[allow(dead_code)]
 pub fn read_harwell_boeing<P: AsRef<Path>>(path: P) -> Result<HBSparseMatrix<f64>> {
     let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut reader = BufReader::new(file);
@@ -446,6 +447,7 @@ pub fn read_harwell_boeing<P: AsRef<Path>>(path: P) -> Result<HBSparseMatrix<f64
 /// # };
 /// write_harwell_boeing("output.hb", &matrix).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn write_harwell_boeing<P: AsRef<Path>>(path: P, matrix: &HBSparseMatrix<f64>) -> Result<()> {
     let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
@@ -499,6 +501,7 @@ pub fn write_harwell_boeing<P: AsRef<Path>>(path: P, matrix: &HBSparseMatrix<f64
 /// # Returns
 ///
 /// * `(Array1<usize>, Array1<usize>, Array1<f64>)` - Column pointers, row indices, and values
+#[allow(dead_code)]
 pub fn hb_to_ccs(matrix: &HBSparseMatrix<f64>) -> (Array1<usize>, Array1<usize>, Array1<f64>) {
     let colptr = Array1::from(matrix.colptr.clone());
     let rowind = Array1::from(matrix.rowind.clone());
@@ -526,6 +529,7 @@ pub fn hb_to_ccs(matrix: &HBSparseMatrix<f64>) -> (Array1<usize>, Array1<usize>,
 /// # Returns
 ///
 /// * `HBSparseMatrix<f64>` - The Harwell-Boeing matrix
+#[allow(dead_code)]
 pub fn ccs_to_hb(
     colptr: &Array1<usize>,
     rowind: &Array1<usize>,
@@ -554,6 +558,7 @@ pub fn ccs_to_hb(
 /// # Returns
 ///
 /// * `HBSparseMatrix<f64>` - The Harwell-Boeing matrix
+#[allow(dead_code)]
 pub fn ccs_to_hb_with_rhs(
     colptr: &Array1<usize>,
     rowind: &Array1<usize>,
@@ -627,6 +632,7 @@ pub fn ccs_to_hb_with_rhs(
 }
 
 /// Read integer data from file
+#[allow(dead_code)]
 fn read_integer_data<R: BufRead>(
     reader: &mut R,
     num_lines: usize,
@@ -649,6 +655,7 @@ fn read_integer_data<R: BufRead>(
 }
 
 /// Read real data from file
+#[allow(dead_code)]
 fn read_real_data<R: BufRead>(reader: &mut R, num_lines: usize, data: &mut Vec<f64>) -> Result<()> {
     for _ in 0..num_lines {
         let mut line = String::new();
@@ -667,6 +674,7 @@ fn read_real_data<R: BufRead>(reader: &mut R, num_lines: usize, data: &mut Vec<f
 }
 
 /// Write integer data to file
+#[allow(dead_code)]
 fn write_integer_data<W: Write>(writer: &mut W, data: &[usize], field_width: usize) -> Result<()> {
     const INTS_PER_LINE: usize = 8;
 
@@ -684,6 +692,7 @@ fn write_integer_data<W: Write>(writer: &mut W, data: &[usize], field_width: usi
 }
 
 /// Write real data to file
+#[allow(dead_code)]
 fn write_real_data<W: Write>(writer: &mut W, data: &[f64], field_width: usize) -> Result<()> {
     const REALS_PER_LINE: usize = 4;
 

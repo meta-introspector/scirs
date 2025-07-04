@@ -44,6 +44,7 @@ pub struct Descriptor {
 /// # Returns
 ///
 /// * Result containing a vector of descriptors
+#[allow(dead_code)]
 pub fn detect_and_compute(
     img: &DynamicImage,
     max_features: usize,
@@ -153,6 +154,7 @@ pub fn detect_and_compute(
 /// # Returns
 ///
 /// * Result containing a descriptor vector
+#[allow(dead_code)]
 fn compute_descriptor(
     image: &Array2<f32>,
     magnitude: &Array2<f32>,
@@ -266,6 +268,7 @@ fn compute_descriptor(
 /// # Returns
 ///
 /// * Vector of matched descriptor indices (idx1, idx2, distance)
+#[allow(dead_code)]
 pub fn match_descriptors(
     descriptors1: &[Descriptor],
     descriptors2: &[Descriptor],
@@ -313,6 +316,7 @@ pub fn match_descriptors(
 /// # Returns
 ///
 /// * Euclidean distance
+#[allow(dead_code)]
 fn euclidean_distance(vec1: &[f32], vec2: &[f32]) -> f32 {
     let mut sum_sq = 0.0;
 

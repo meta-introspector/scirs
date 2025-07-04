@@ -2,6 +2,7 @@ use ndarray::{array, Array2};
 use rand::prelude::*;
 use scirs2_spatial::{BoundingBox2D, Quadtree};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Quadtree Example");
     println!("===============\n");
@@ -72,8 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let search_radius = 0.3;
     println!(
-        "Finding points within radius {:.1} of query point:",
-        search_radius
+        "Finding points within radius {search_radius:.1} of query point:"
     );
 
     let (indices, distances) = quadtree.query_radius(&query_point.view(), search_radius)?;
@@ -123,7 +123,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (name, region) in &regions {
-        println!("\nRegion: {}", name);
+        println!("\nRegion: {name}");
         println!("  Min: [{:.2}, {:.2}]", region.min[0], region.min[1]);
         println!("  Max: [{:.2}, {:.2}]", region.max[0], region.max[1]);
 

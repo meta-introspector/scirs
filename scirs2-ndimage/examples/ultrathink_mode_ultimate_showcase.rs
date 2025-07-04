@@ -58,6 +58,7 @@ use scirs2_ndimage::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌌🧠 ULTIMATE ULTRATHINK MODE SHOWCASE 🧠🌌");
     println!("=========================================");
@@ -128,6 +129,7 @@ struct AdvancedTestData {
     feature_templates: Vec<Array2<f64>>,
 }
 
+#[allow(dead_code)]
 fn create_advanced_test_dataset() -> AdvancedTestData {
     println!("🎨 Creating Advanced Multi-Modal Test Dataset...");
 
@@ -239,6 +241,7 @@ fn create_advanced_test_dataset() -> AdvancedTestData {
     }
 }
 
+#[allow(dead_code)]
 fn configure_quantum_system() -> QuantumConfig {
     let mut config = QuantumConfig::default();
     config.iterations = 30;
@@ -249,6 +252,7 @@ fn configure_quantum_system() -> QuantumConfig {
     config
 }
 
+#[allow(dead_code)]
 fn configure_neuromorphic_system() -> NeuromorphicConfig {
     let mut config = NeuromorphicConfig::default();
     config.tau_membrane = 15.0;
@@ -261,6 +265,7 @@ fn configure_neuromorphic_system() -> NeuromorphicConfig {
     config
 }
 
+#[allow(dead_code)]
 fn demonstrate_quantum_preprocessing(
     test_data: &AdvancedTestData,
     config: &QuantumConfig,
@@ -316,6 +321,7 @@ fn demonstrate_quantum_preprocessing(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_neuromorphic_learning(
     test_data: &AdvancedTestData,
     config: &NeuromorphicConfig,
@@ -395,6 +401,7 @@ fn demonstrate_neuromorphic_learning(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_hybrid_processing(
     test_data: &AdvancedTestData,
     quantum_config: &QuantumConfig,
@@ -487,6 +494,7 @@ fn demonstrate_hybrid_processing(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_fusion_pipeline(
     test_data: &AdvancedTestData,
     quantum_config: &QuantumConfig,
@@ -572,6 +580,7 @@ fn demonstrate_fusion_pipeline(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_multiscale_analysis(
     test_data: &AdvancedTestData,
     quantum_config: &QuantumConfig,
@@ -660,6 +669,7 @@ fn demonstrate_multiscale_analysis(
 
 // Helper functions for metrics and analysis
 
+#[allow(dead_code)]
 fn create_gaussian_kernel(size: usize, sigma: f64) -> Array2<f64> {
     let mut kernel = Array2::zeros((size, size));
     let center = size as f64 / 2.0;
@@ -679,6 +689,7 @@ fn create_gaussian_kernel(size: usize, sigma: f64) -> Array2<f64> {
     kernel.mapv(|x| x / sum)
 }
 
+#[allow(dead_code)]
 fn create_edge_kernel() -> Array2<f64> {
     Array2::from_shape_vec(
         (3, 3),
@@ -687,6 +698,7 @@ fn create_edge_kernel() -> Array2<f64> {
     .unwrap()
 }
 
+#[allow(dead_code)]
 fn create_enhancement_kernel() -> Array2<f64> {
     Array2::from_shape_vec(
         (3, 3),
@@ -695,17 +707,20 @@ fn create_enhancement_kernel() -> Array2<f64> {
     .unwrap()
 }
 
+#[allow(dead_code)]
 fn calculate_noise_reduction(noisy: &Array2<f64>, corrected: &Array2<f64>) -> f64 {
     let original_variance = calculate_variance(noisy);
     let corrected_variance = calculate_variance(corrected);
     ((original_variance - corrected_variance) / original_variance * 100.0).max(0.0)
 }
 
+#[allow(dead_code)]
 fn calculate_variance(image: &Array2<f64>) -> f64 {
     let mean = image.sum() / image.len() as f64;
     image.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / image.len() as f64
 }
 
+#[allow(dead_code)]
 fn calculate_filter_complexity(filter: &Array2<f64>) -> f64 {
     // Measure complexity based on entropy and variance
     let variance = calculate_variance(filter);
@@ -713,6 +728,7 @@ fn calculate_filter_complexity(filter: &Array2<f64>) -> f64 {
     variance * entropy
 }
 
+#[allow(dead_code)]
 fn calculate_entropy(data: &Array2<f64>) -> f64 {
     // Simple entropy calculation
     let mut histogram = vec![0; 256];
@@ -742,6 +758,7 @@ fn calculate_entropy(data: &Array2<f64>) -> f64 {
         .sum()
 }
 
+#[allow(dead_code)]
 fn calculate_adaptation_score(original: &Array2<f64>, adapted: &Array2<f64>) -> f64 {
     // Measure how well adaptation preserved important features while reducing noise
     let edge_preservation = calculate_edge_preservation(original, adapted);
@@ -749,6 +766,7 @@ fn calculate_adaptation_score(original: &Array2<f64>, adapted: &Array2<f64>) -> 
     (edge_preservation + noise_reduction) / 2.0
 }
 
+#[allow(dead_code)]
 fn calculate_edge_preservation(original: &Array2<f64>, processed: &Array2<f64>) -> f64 {
     // Simplified edge preservation metric
     let orig_edges = calculate_edge_strength(original);
@@ -756,6 +774,7 @@ fn calculate_edge_preservation(original: &Array2<f64>, processed: &Array2<f64>) 
     (1.0 - (orig_edges - proc_edges).abs() / orig_edges.max(1e-10)).max(0.0)
 }
 
+#[allow(dead_code)]
 fn calculate_edge_strength(image: &Array2<f64>) -> f64 {
     let (height, width) = image.dim();
     let mut total_strength = 0.0;
@@ -771,6 +790,7 @@ fn calculate_edge_strength(image: &Array2<f64>) -> f64 {
     total_strength / ((height - 2) * (width - 2)) as f64
 }
 
+#[allow(dead_code)]
 fn calculate_correlation(a: &Array2<f64>, b: &Array2<f64>) -> f64 {
     let mean_a = a.sum() / a.len() as f64;
     let mean_b = b.sum() / b.len() as f64;
@@ -791,6 +811,7 @@ fn calculate_correlation(a: &Array2<f64>, b: &Array2<f64>) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_enhancement_quality(original: &Array2<f64>, enhanced: &Array2<f64>) -> f64 {
     let sharpness_orig = calculate_edge_strength(original);
     let sharpness_enh = calculate_edge_strength(enhanced);
@@ -803,6 +824,7 @@ fn calculate_enhancement_quality(original: &Array2<f64>, enhanced: &Array2<f64>)
     (sharpness_improvement + contrast_improvement) / 2.0 - 1.0
 }
 
+#[allow(dead_code)]
 fn calculate_contrast(image: &Array2<f64>) -> f64 {
     let (min_val, max_val) = image
         .iter()
@@ -812,6 +834,7 @@ fn calculate_contrast(image: &Array2<f64>) -> f64 {
     max_val - min_val
 }
 
+#[allow(dead_code)]
 fn calculate_liquid_dynamics(output: &Array2<f64>) -> f64 {
     // Measure the complexity of liquid state dynamics
     let temporal_complexity = calculate_variance(output);
@@ -819,6 +842,7 @@ fn calculate_liquid_dynamics(output: &Array2<f64>) -> f64 {
     (temporal_complexity * spatial_entropy).sqrt()
 }
 
+#[allow(dead_code)]
 fn calculate_amplification_effectiveness(amplified: &Array2<f64>) -> f64 {
     // Measure how effectively features were amplified
     let max_val = amplified.iter().cloned().fold(0.0, f64::max);
@@ -827,6 +851,7 @@ fn calculate_amplification_effectiveness(amplified: &Array2<f64>) -> f64 {
     dynamic_range.ln().max(0.0) / 10.0 // Normalized logarithmic measure
 }
 
+#[allow(dead_code)]
 fn calculate_segmentation_quality(segmentation: &Array2<usize>) -> f64 {
     // Measure segmentation quality based on region coherence
     let mut segment_sizes = std::collections::HashMap::new();
@@ -852,6 +877,7 @@ fn calculate_segmentation_quality(segmentation: &Array2<usize>) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_frequency_complexity(qft_result: &Array2<num_complex::Complex<f64>>) -> f64 {
     // Measure complexity in frequency domain
     let magnitude_spectrum: Vec<f64> = qft_result.iter().map(|c| c.norm()).collect();
@@ -864,6 +890,7 @@ fn calculate_frequency_complexity(qft_result: &Array2<num_complex::Complex<f64>>
     variance.sqrt() / mean_magnitude.max(1e-10)
 }
 
+#[allow(dead_code)]
 fn subsample_image(
     image: &Array2<f64>,
     new_size: usize,
@@ -882,6 +909,7 @@ fn subsample_image(
     Ok(subsampled)
 }
 
+#[allow(dead_code)]
 fn combine_multiscale_results(
     results: &[Array2<f64>],
 ) -> Result<Array2<f64>, Box<dyn std::error::Error>> {
@@ -912,6 +940,7 @@ fn combine_multiscale_results(
     Ok(combined)
 }
 
+#[allow(dead_code)]
 fn calculate_synthesis_quality(original: &Array2<f64>, synthesized: &Array2<f64>) -> f64 {
     // Comprehensive quality metric combining multiple factors
     let correlation = calculate_correlation(original, synthesized).abs();

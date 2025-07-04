@@ -266,6 +266,7 @@ impl NeuralNetwork {
             model.input_size = model.layers[0].input_size();
         Ok(model)
 /// Train and save a model for the XOR problem
+#[allow(dead_code)]
 fn train_and_save_xor_model() -> Result<()> {
     // XOR dataset
     let x = Array2::from_shape_vec((4, 2), vec![0.0f32, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0])?;
@@ -295,6 +296,7 @@ fn train_and_save_xor_model() -> Result<()> {
     println!("Model saved successfully!");
     Ok(())
 /// Load and use a previously trained XOR model
+#[allow(dead_code)]
 fn load_and_evaluate_xor_model() -> Result<()> {
     println!("\nLoading model from {}", model_path);
     // Load the model
@@ -327,6 +329,7 @@ fn load_and_evaluate_xor_model() -> Result<()> {
             expected
     let accuracy = (correct as f32) / 4.0;
     println!("\nAccuracy: {:.2}% ({}/{})", accuracy * 100.0, correct, 4);
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Neural Network Model Serialization Example");
     println!("=========================================\n");

@@ -715,6 +715,7 @@ where
 }
 
 /// Helper function for matrix-vector multiplication
+#[allow(dead_code)]
 fn matrix_vector_multiply<T>(matrix: &CsrArray<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,

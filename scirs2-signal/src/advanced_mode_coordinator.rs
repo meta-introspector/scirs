@@ -476,12 +476,14 @@ impl Default for UltrathinkCoordinator {
 }
 
 /// Convenience function to run a quick ultrathink validation
+#[allow(dead_code)]
 pub fn run_quick_ultrathink_validation() -> SignalResult<UltrathinkResults> {
     let mut coordinator = UltrathinkCoordinator::new();
     coordinator.run_comprehensive_validation()
 }
 
 /// Convenience function to run ultrathink validation with custom config
+#[allow(dead_code)]
 pub fn run_ultrathink_validation_with_config(
     config: UltrathinkConfig,
 ) -> SignalResult<UltrathinkResults> {

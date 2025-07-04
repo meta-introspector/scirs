@@ -690,6 +690,7 @@ static CIRCUIT_BREAKER_REGISTRY: std::sync::LazyLock<RwLock<HashMap<String, Arc<
     std::sync::LazyLock::new(|| RwLock::new(HashMap::new()));
 
 /// Get or create a circuit breaker
+#[allow(dead_code)]
 pub fn get_circuit_breaker(name: &str) -> CoreResult<Arc<CircuitBreaker>> {
     let registry = CIRCUIT_BREAKER_REGISTRY.read().map_err(|_| {
         CoreError::ComputationError(ErrorContext::new("Failed to read circuit breaker registry"))
@@ -719,6 +720,7 @@ pub fn get_circuit_breaker(name: &str) -> CoreResult<Arc<CircuitBreaker>> {
 }
 
 /// List all registered circuit breakers
+#[allow(dead_code)]
 pub fn list_circuit_breakers() -> CoreResult<Vec<CircuitBreakerStatus>> {
     let registry = CIRCUIT_BREAKER_REGISTRY.read().map_err(|_| {
         CoreError::ComputationError(ErrorContext::new("Failed to read circuit breaker registry"))

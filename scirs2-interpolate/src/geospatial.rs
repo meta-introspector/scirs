@@ -804,6 +804,7 @@ where
 }
 
 /// Convenience function to create a geospatial interpolator for climate data
+#[allow(dead_code)]
 pub fn make_climate_interpolator<T>() -> GeospatialInterpolator<T>
 where
     T: Float
@@ -832,6 +833,7 @@ where
 }
 
 /// Convenience function to create a geospatial interpolator for elevation data
+#[allow(dead_code)]
 pub fn make_elevation_interpolator<T>() -> GeospatialInterpolator<T>
 where
     T: Float

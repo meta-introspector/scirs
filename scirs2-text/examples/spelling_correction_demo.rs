@@ -77,6 +77,7 @@ const COMMON_MISSPELLINGS: &[(&str, &str)] = &[
     ("whereever", "wherever"),
 ];
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Dictionary-based Spelling Correction Demo\n");
 
@@ -105,6 +106,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Basic correction of common misspellings
+#[allow(dead_code)]
 fn basic_correction_demo(
     corrector: &DictionaryCorrector,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -143,6 +145,7 @@ fn basic_correction_demo(
 }
 
 // Create a specialized spelling corrector for programming-related terms
+#[allow(dead_code)]
 fn create_specialized_corrector() -> DictionaryCorrector {
     let mut dictionary = HashMap::new();
 
@@ -189,6 +192,7 @@ fn create_specialized_corrector() -> DictionaryCorrector {
 }
 
 // Compare the basic and specialized correctors
+#[allow(dead_code)]
 fn compare_correctors(
     basic: &DictionaryCorrector,
     specialized: &DictionaryCorrector,
@@ -233,6 +237,7 @@ fn compare_correctors(
 }
 
 // Test performance of different correctors and configurations
+#[allow(dead_code)]
 fn performance_test(
     basic: &DictionaryCorrector,
     specialized: &DictionaryCorrector,
@@ -286,6 +291,7 @@ fn performance_test(
 }
 
 // Demonstrate text-wide correction
+#[allow(dead_code)]
 fn text_correction_demo(corrector: &DictionaryCorrector) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Text Correction Demo ===\n");
 
@@ -335,6 +341,7 @@ fn text_correction_demo(corrector: &DictionaryCorrector) -> Result<(), Box<dyn s
 }
 
 // Demonstrate custom configurations
+#[allow(dead_code)]
 fn custom_config_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Custom Configuration Demo ===\n");
 

@@ -7,12 +7,9 @@ use super::{
     utils, Experience, ExperienceBuffer, ImprovementReward, OptimizationAction, OptimizationState,
     RLOptimizationConfig, RLOptimizer, RewardFunction,
 };
-use crate::error::OptimizeError;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::CoreResult;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::collections::VecDeque;
+// use std::collections::VecDeque; // Unused import
 
 /// Actor network for policy learning
 #[derive(Debug, Clone)]
@@ -809,6 +806,7 @@ impl RLOptimizer for AdvantageActorCriticOptimizer {
 }
 
 /// Convenience function for Actor-Critic optimization
+#[allow(dead_code)]
 pub fn actor_critic_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

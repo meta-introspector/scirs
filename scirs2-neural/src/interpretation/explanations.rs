@@ -199,6 +199,7 @@ impl<F> LIMEExplainer<F>
             .insert(cache_key, perturbations.clone());
         perturbations
 /// Generate adversarial explanation
+#[allow(dead_code)]
 pub fn generate_adversarial_explanation<F>(
     original_input: &ArrayD<F>,
     attack_method: &str,
@@ -244,6 +245,7 @@ pub fn generate_adversarial_explanation<F>(
         perturbation_magnitude,
     })
 /// Compute concept activation vectors from examples
+#[allow(dead_code)]
 pub fn compute_concept_vectors<F>(
     concept_examples: &[ArrayD<F>],
     concept_labels: &[String],

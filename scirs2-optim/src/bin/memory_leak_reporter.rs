@@ -89,6 +89,7 @@ struct OptimizationRecommendation {
     pub code_examples: Vec<String>,
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     let matches = Command::new("memory_leak_reporter")
         .version("0.1.0")
@@ -284,6 +285,7 @@ struct MacosLeaksResults {
     leak_summaries: Vec<String>,
 }
 
+#[allow(dead_code)]
 fn collect_memory_analysis_results(
     input_dir: &Path,
     verbose: bool,
@@ -344,6 +346,7 @@ fn collect_memory_analysis_results(
     Ok(results)
 }
 
+#[allow(dead_code)]
 fn parse_valgrind_results(path: &Path) -> Result<ValgrindResults> {
     // Simplified Valgrind XML parsing
     let content = fs::read_to_string(path)?;
@@ -386,6 +389,7 @@ fn parse_valgrind_results(path: &Path) -> Result<ValgrindResults> {
     })
 }
 
+#[allow(dead_code)]
 fn parse_massif_results(path: &Path) -> Result<MassifResults> {
     // Simplified Massif parsing
     let _content = fs::read_to_string(path)?;
@@ -417,6 +421,7 @@ fn parse_massif_results(path: &Path) -> Result<MassifResults> {
     })
 }
 
+#[allow(dead_code)]
 fn parse_heaptrack_results(path: &Path) -> Result<HeaptrackResults> {
     // Simplified HeapTrack parsing
     let _content = fs::read_to_string(path)?;
@@ -436,6 +441,7 @@ fn parse_heaptrack_results(path: &Path) -> Result<HeaptrackResults> {
     })
 }
 
+#[allow(dead_code)]
 fn parse_custom_profiler_results(path: &Path) -> Result<CustomProfilerResults> {
     // Parse JSON from custom profiler
     let content = fs::read_to_string(path)?;
@@ -458,6 +464,7 @@ fn parse_custom_profiler_results(path: &Path) -> Result<CustomProfilerResults> {
     })
 }
 
+#[allow(dead_code)]
 fn parse_macos_leaks_results(path: &Path) -> Result<MacosLeaksResults> {
     let content = fs::read_to_string(path)?;
 
@@ -477,6 +484,7 @@ fn parse_macos_leaks_results(path: &Path) -> Result<MacosLeaksResults> {
     })
 }
 
+#[allow(dead_code)]
 fn detect_memory_leaks(
     results: &MemoryAnalysisResults,
     severity_threshold: f64,
@@ -602,6 +610,7 @@ fn detect_memory_leaks(
     Ok(leaks)
 }
 
+#[allow(dead_code)]
 fn calculate_severity(leaked_bytes: usize) -> f64 {
     match leaked_bytes {
         0..=1024 => 0.2,         // Low severity for small leaks
@@ -612,6 +621,7 @@ fn calculate_severity(leaked_bytes: usize) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_memory_growth_rate(timeline: &[(u64, usize)]) -> f64 {
     if timeline.len() < 2 {
         return 0.0;
@@ -630,6 +640,7 @@ fn calculate_memory_growth_rate(timeline: &[(u64, usize)]) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn generate_fix_suggestions(call_stack: &[String]) -> Vec<String> {
     let mut suggestions = Vec::new();
 
@@ -656,6 +667,7 @@ fn generate_fix_suggestions(call_stack: &[String]) -> Vec<String> {
     suggestions
 }
 
+#[allow(dead_code)]
 fn perform_memory_analysis(results: &MemoryAnalysisResults) -> Result<MemoryAnalysis> {
     let mut peak_memory = 0;
     let mut memory_timeline = Vec::new();
@@ -738,6 +750,7 @@ fn perform_memory_analysis(results: &MemoryAnalysisResults) -> Result<MemoryAnal
     })
 }
 
+#[allow(dead_code)]
 fn calculate_memory_efficiency_score(
     peak_memory: usize,
     average_memory: usize,
@@ -765,6 +778,7 @@ fn calculate_memory_efficiency_score(
     score.max(0.0).min(1.0)
 }
 
+#[allow(dead_code)]
 fn generate_optimization_recommendations(
     leaks: &[MemoryLeak],
     analysis: &MemoryAnalysis,
@@ -835,6 +849,7 @@ fn generate_optimization_recommendations(
     recommendations
 }
 
+#[allow(dead_code)]
 fn create_memory_leak_report(
     leaks: Vec<MemoryLeak>,
     analysis: MemoryAnalysis,
@@ -881,10 +896,12 @@ fn create_memory_leak_report(
     })
 }
 
+#[allow(dead_code)]
 fn generate_json_report(report: &MemoryLeakReport) -> Result<String> {
     serde_json::to_string_pretty(report).map_err(|e| OptimError::SerializationError(e.to_string()))
 }
 
+#[allow(dead_code)]
 fn generate_markdown_report(report: &MemoryLeakReport) -> Result<String> {
     let mut md = String::new();
 
@@ -998,6 +1015,7 @@ fn generate_markdown_report(report: &MemoryLeakReport) -> Result<String> {
     Ok(md)
 }
 
+#[allow(dead_code)]
 fn generate_github_actions_report(report: &MemoryLeakReport) -> Result<String> {
     let json_report = generate_json_report(report)?;
     let mut output = String::new();

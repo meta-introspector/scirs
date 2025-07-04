@@ -34,6 +34,7 @@ use std::fmt::{Debug, Display};
 ///
 /// let x = solve_generalized_sylvester(&a.view(), &b.view(), &c.view(), &d.view(), &e.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn solve_generalized_sylvester<A>(
     a: &ArrayView2<A>,
     b: &ArrayView2<A>,
@@ -143,6 +144,7 @@ where
 ///
 /// let x = solve_sylvester(&a.view(), &b.view(), &c.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn solve_sylvester<A>(
     a: &ArrayView2<A>,
     b: &ArrayView2<A>,
@@ -252,6 +254,7 @@ where
 ///
 /// let x = solve_continuous_riccati(&a.view(), &b.view(), &q.view(), &r.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn solve_continuous_riccati<A>(
     a: &ArrayView2<A>,
     b: &ArrayView2<A>,
@@ -365,6 +368,7 @@ where
 ///
 /// # Returns
 /// * Solution matrix X (n × n, symmetric positive semidefinite)
+#[allow(dead_code)]
 pub fn solve_discrete_riccati<A>(
     a: &ArrayView2<A>,
     b: &ArrayView2<A>,
@@ -462,6 +466,7 @@ where
 ///
 /// # Returns
 /// * Solution matrix X (n × n)
+#[allow(dead_code)]
 pub fn solve_stein<A>(a: &ArrayView2<A>, q: &ArrayView2<A>) -> LinalgResult<Array2<A>>
 where
     A: Float

@@ -1549,6 +1549,7 @@ impl CompetingRisksModel {
 }
 
 /// Helper function to compute outer product of array
+#[allow(dead_code)]
 fn outer_product_array(v: &Array1<f64>) -> Array2<f64> {
     let n = v.len();
     let mut result = Array2::zeros((n, n));

@@ -6,6 +6,7 @@ use scirs2_signal::dwt::Wavelet;
 use scirs2_signal::waveforms::chirp;
 use scirs2_signal::wpt::{get_level_coefficients, reconstruct_from_nodes, wp_decompose};
 
+#[allow(dead_code)]
 fn main() {
     // Generate a chirp signal (frequency increasing linearly with time)
     let fs = 1024.0; // Sample rate
@@ -135,6 +136,7 @@ fn main() {
 }
 
 // Helper function to plot coefficients at a specific level
+#[allow(dead_code)]
 fn plot_coefficients(coeffs: &[Vec<f64>], level: usize, title: &str) {
     let mut plot = Plot::new();
 

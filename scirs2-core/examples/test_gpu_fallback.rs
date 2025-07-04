@@ -1,6 +1,7 @@
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBackend, GpuContext};
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing GPU backend detection and fallback...\n");
 

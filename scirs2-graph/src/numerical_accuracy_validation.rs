@@ -1,7 +1,7 @@
-//! Numerical Accuracy Validation for Ultrathink Mode
+//! Numerical Accuracy Validation for Advanced Mode
 //!
 //! This module provides comprehensive validation of numerical accuracy
-//! for ultrathink mode optimizations by comparing results against
+//! for advanced mode optimizations by comparing results against
 //! reference implementations and established benchmarks.
 
 #![allow(missing_docs)]
@@ -19,6 +19,7 @@ use crate::measures::pagerank_centrality;
 //     create_ultrathink_processor, execute_with_ultrathink, UltrathinkProcessor,
 // };
 use crate::advanced::{create_enhanced_advanced_processor, execute_with_enhanced_advanced};
+use rand::rng;
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant, SystemTime};
 
@@ -158,8 +159,8 @@ pub struct ValidationResult {
     pub accuracy_score: f64,
     /// Execution time for standard implementation
     pub standard_time: Duration,
-    /// Execution time for ultrathink implementation
-    pub ultrathink_time: Duration,
+    /// Execution time for advanced implementation
+    pub advanced_time: Duration,
     /// Performance speedup achieved
     pub speedup_factor: f64,
     /// Detailed comparison metrics
@@ -253,8 +254,8 @@ pub struct AccuracyAnalysis {
     pub statistical_significance: f64,
 }
 
-/// Main validator for ultrathink numerical accuracy
-pub struct UltrathinkNumericalValidator {
+/// Main validator for advanced numerical accuracy
+pub struct AdvancedNumericalValidator {
     /// Validation configuration
     config: ValidationConfig,
     /// Test cases to run
@@ -295,7 +296,7 @@ impl Default for ValidationConfig {
     }
 }
 
-impl UltrathinkNumericalValidator {
+impl AdvancedNumericalValidator {
     /// Create a new numerical validator
     pub fn new(config: ValidationConfig) -> Self {
         Self {
@@ -318,7 +319,7 @@ impl UltrathinkNumericalValidator {
 
     /// Run comprehensive validation suite
     pub fn run_validation(&mut self) -> Result<ValidationReport> {
-        println!("🔬 Starting Ultrathink Numerical Accuracy Validation");
+        println!("🔬 Starting Advanced Numerical Accuracy Validation");
         println!("==================================================");
 
         let start_time = Instant::now();
@@ -327,7 +328,7 @@ impl UltrathinkNumericalValidator {
         // Initialize random seed if specified
         if let Some(seed) = self.config.random_seed {
             // Note: In a real implementation, we'd set the random seed here
-            println!("🎲 Using random seed: {}", seed);
+            println!("🎲 Using random seed: {seed}");
         }
 
         // Run validation for each test case
@@ -343,7 +344,7 @@ impl UltrathinkNumericalValidator {
         // Generate comprehensive report
         let report = self.generate_validation_report(total_time)?;
 
-        println!("\n✅ Validation completed in {:?}", total_time);
+        println!("\n✅ Validation completed in {total_time:?}");
         self.print_validation_summary(&report.summary);
 
         Ok(report)
@@ -362,7 +363,7 @@ impl UltrathinkNumericalValidator {
 
         // Run validation for each algorithm in the test case
         for algorithm in &test_case.algorithms {
-            println!("    🧮 Validating algorithm: {:?}", algorithm);
+            println!("    🧮 Validating algorithm: {algorithm:?}");
 
             // Run multiple validation runs for statistical accuracy
             let mut run_results = Vec::new();
@@ -391,7 +392,7 @@ impl UltrathinkNumericalValidator {
             );
 
             if let Some(ref error) = aggregated_result.error_message {
-                println!("      ❌ Error: {}", error);
+                println!("      ❌ Error: {error}");
             }
 
             self.results.push(aggregated_result);
@@ -427,8 +428,7 @@ impl UltrathinkNumericalValidator {
 
         let error_message = if !passed {
             Some(format!(
-                "Validation failed: accuracy score {:.6} below threshold",
-                accuracy_score
+                "Validation failed: accuracy score {accuracy_score:.6} below threshold"
             ))
         } else {
             None
@@ -440,7 +440,7 @@ impl UltrathinkNumericalValidator {
             passed,
             accuracy_score,
             standard_time,
-            ultrathink_time: advanced_time,
+            advanced_time,
             speedup_factor,
             metrics,
             error_message,
@@ -508,7 +508,7 @@ impl UltrathinkNumericalValidator {
                 let distances = dijkstra(graph_ref, source_idx, None, |e| *e.weight());
                 let mut distance_map = HashMap::new();
                 for (node_idx, distance) in distances {
-                    distance_map.insert(graph_ref[node_idx].clone(), distance);
+                    distance_map.insert(graph_ref[node_idx], distance);
                 }
                 AlgorithmOutput::DistanceMap(distance_map)
             }
@@ -624,7 +624,7 @@ impl UltrathinkNumericalValidator {
                     |g| {
                         let mut degree_map = HashMap::new();
                         for node in g.nodes() {
-                            degree_map.insert(node.clone(), g.degree(node) as f64);
+                            degree_map.insert(*node, g.degree(node) as f64);
                         }
                         Ok(degree_map)
                     },
@@ -649,7 +649,7 @@ impl UltrathinkNumericalValidator {
                         let distances = dijkstra(graph_ref, source_idx, None, |e| *e.weight());
                         let mut distance_map = HashMap::new();
                         for (node_idx, distance) in distances {
-                            distance_map.insert(graph_ref[node_idx].clone(), distance);
+                            distance_map.insert(graph_ref[node_idx], distance);
                         }
                         Ok(distance_map)
                     },
@@ -1055,7 +1055,7 @@ impl UltrathinkNumericalValidator {
         let advanced_time = Duration::from_secs_f64(
             results
                 .iter()
-                .map(|r| r.ultrathink_time.as_secs_f64())
+                .map(|r| r.advanced_time.as_secs_f64())
                 .sum::<f64>()
                 / results.len() as f64,
         );
@@ -1101,8 +1101,7 @@ impl UltrathinkNumericalValidator {
 
         let error_message = if !passed {
             Some(format!(
-                "Aggregated validation failed: average accuracy {:.6}",
-                accuracy_score
+                "Aggregated validation failed: average accuracy {accuracy_score:.6}"
             ))
         } else {
             None
@@ -1114,7 +1113,7 @@ impl UltrathinkNumericalValidator {
             passed,
             accuracy_score,
             standard_time,
-            ultrathink_time: advanced_time,
+            advanced_time,
             speedup_factor,
             metrics,
             error_message,
@@ -1170,7 +1169,7 @@ impl UltrathinkNumericalValidator {
         for result in &self.results {
             algorithm_speedups
                 .entry(result.algorithm.clone())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(result.speedup_factor);
         }
 
@@ -1235,8 +1234,7 @@ impl UltrathinkNumericalValidator {
         let failed_tests = self.results.iter().filter(|r| !r.passed).count();
         if failed_tests > 0 {
             recommendations.push(format!(
-                "Address {} failed validation tests to improve overall accuracy",
-                failed_tests
+                "Address {failed_tests} failed validation tests to improve overall accuracy"
             ));
         }
 
@@ -1247,8 +1245,7 @@ impl UltrathinkNumericalValidator {
             .count();
         if low_accuracy_tests > 0 {
             recommendations.push(format!(
-                "Investigate {} tests with accuracy scores below 0.95",
-                low_accuracy_tests
+                "Investigate {low_accuracy_tests} tests with accuracy scores below 0.95"
             ));
         }
 
@@ -1259,8 +1256,7 @@ impl UltrathinkNumericalValidator {
             .count();
         if slow_algorithms > 0 {
             recommendations.push(format!(
-                "Optimize {} algorithms showing performance regressions",
-                slow_algorithms
+                "Optimize {slow_algorithms} algorithms showing performance regressions"
             ));
         }
 
@@ -1302,7 +1298,7 @@ impl UltrathinkNumericalValidator {
         println!("Total validation time: {:?}", summary.total_time);
 
         if summary.pass_rate >= 0.95 {
-            println!("✅ Validation PASSED: Ultrathink maintains high numerical accuracy");
+            println!("✅ Validation PASSED: Advanced mode maintains high numerical accuracy");
         } else {
             println!("❌ Validation FAILED: Accuracy issues detected");
         }
@@ -1323,8 +1319,9 @@ pub enum AlgorithmOutput {
 }
 
 /// Create comprehensive validation test suite
-pub fn create_comprehensive_validation_suite() -> UltrathinkNumericalValidator {
-    let mut validator = UltrathinkNumericalValidator::new(ValidationConfig::default());
+#[allow(dead_code)]
+pub fn create_comprehensive_validation_suite() -> AdvancedNumericalValidator {
+    let mut validator = AdvancedNumericalValidator::new(ValidationConfig::default());
 
     // Test Case 1: Small Random Graphs
     validator.add_test_case(ValidationTestCase {
@@ -1415,11 +1412,12 @@ pub fn create_comprehensive_validation_suite() -> UltrathinkNumericalValidator {
 }
 
 /// Run quick validation test
+#[allow(dead_code)]
 pub fn run_quick_validation() -> Result<ValidationReport> {
-    println!("🚀 Running Quick Ultrathink Numerical Validation");
+    println!("🚀 Running Quick Advanced Numerical Validation");
     println!("===============================================");
 
-    let mut validator = UltrathinkNumericalValidator::new(ValidationConfig {
+    let mut validator = AdvancedNumericalValidator::new(ValidationConfig {
         verbose_logging: true,
         warmup_runs: 1,
         ..ValidationConfig::default()
@@ -1462,7 +1460,7 @@ mod tests {
 
     #[test]
     fn test_graph_generation() {
-        let validator = UltrathinkNumericalValidator::new(ValidationConfig::default());
+        let validator = AdvancedNumericalValidator::new(ValidationConfig::default());
 
         // Test random graph generation
         let graph = validator
@@ -1485,7 +1483,7 @@ mod tests {
 
     #[test]
     fn test_pearson_correlation() {
-        let validator = UltrathinkNumericalValidator::new(ValidationConfig::default());
+        let validator = AdvancedNumericalValidator::new(ValidationConfig::default());
 
         // Perfect positive correlation
         let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -1501,7 +1499,7 @@ mod tests {
 
     #[test]
     fn test_component_map_normalization() {
-        let validator = UltrathinkNumericalValidator::new(ValidationConfig::default());
+        let validator = AdvancedNumericalValidator::new(ValidationConfig::default());
 
         let mut components = HashMap::new();
         components.insert(0, 100);

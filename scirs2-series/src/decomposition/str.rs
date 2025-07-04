@@ -109,6 +109,7 @@ pub struct STRResult<F> {
 /// println!("Seasonal Components: {:?}", result.seasonal_components);
 /// println!("Residual: {:?}", result.residual);
 /// ```
+#[allow(dead_code)]
 pub fn str_decomposition<F>(ts: &Array1<F>, options: &STROptions) -> Result<STRResult<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand + NumCast + std::iter::Sum,
@@ -343,6 +344,7 @@ type ConfidenceIntervalsResult<F> = Result<(
 )>;
 
 /// Compute confidence intervals for STR components
+#[allow(dead_code)]
 fn compute_confidence_intervals<F>(
     design_matrix: &Array2<F>,
     system_matrix: &Array2<F>,
@@ -419,6 +421,7 @@ where
 }
 
 /// Compute standard errors for a component given its basis and covariance matrix
+#[allow(dead_code)]
 fn compute_component_standard_errors<F>(
     basis: &Array2<F>,
     covariance: &Array2<F>,
@@ -439,6 +442,7 @@ where
 }
 
 /// Matrix solve using scirs2-linalg
+#[allow(dead_code)]
 fn solve_regularized_system<F>(a: &Array2<F>, b: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + ScalarOperand + NumCast + 'static,
@@ -465,6 +469,7 @@ where
 }
 
 /// LASSO regression using coordinate descent algorithm
+#[allow(dead_code)]
 fn solve_lasso<F>(
     x: &Array2<F>,
     y: &Array1<F>,
@@ -530,6 +535,7 @@ where
 }
 
 /// Elastic Net regression using coordinate descent algorithm
+#[allow(dead_code)]
 fn solve_elastic_net<F>(
     x: &Array2<F>,
     y: &Array1<F>,
@@ -597,6 +603,7 @@ where
 }
 
 /// Matrix inversion using scirs2-linalg
+#[allow(dead_code)]
 fn matrix_inverse<F>(a: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + ScalarOperand + NumCast + 'static,

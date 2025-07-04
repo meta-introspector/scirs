@@ -287,6 +287,7 @@ impl<F: Float + NumCast + FloatConst> Hypergeometric<F> {
 }
 
 /// Computes the natural logarithm of the binomial coefficient "n choose k"
+#[allow(dead_code)]
 fn ln_binomial(n: usize, k: usize) -> f64 {
     if k > n {
         return f64::NEG_INFINITY;
@@ -337,6 +338,7 @@ fn ln_binomial(n: usize, k: usize) -> f64 {
 /// // Calculate PMF at different points
 /// let pmf_3 = hyper.pmf(3.0); // Probability of exactly 3 successes
 /// ```
+#[allow(dead_code)]
 pub fn hypergeom<F>(
     n_population: usize,
     n_success: usize,

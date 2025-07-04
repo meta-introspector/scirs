@@ -975,11 +975,13 @@ pub struct RegressionSummaryStatistics {
 }
 
 /// Convenience function to create a regression detector with default configuration
+#[allow(dead_code)]
 pub fn create_regression_detector() -> StatsResult<CrossPlatformRegressionDetector> {
     CrossPlatformRegressionDetector::new(CrossPlatformRegressionConfig::default())
 }
 
 /// Convenience function to create a regression detector with custom configuration
+#[allow(dead_code)]
 pub fn create_regression_detector_with_config(
     config: CrossPlatformRegressionConfig,
 ) -> StatsResult<CrossPlatformRegressionDetector> {

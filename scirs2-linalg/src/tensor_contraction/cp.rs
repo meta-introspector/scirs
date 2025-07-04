@@ -315,6 +315,7 @@ where
 /// assert_eq!(cp.factors[1].shape(), &[3, 3]); // mode 1: 3 rows, rank 3
 /// assert_eq!(cp.factors[2].shape(), &[2, 3]); // mode 2: 2 rows, rank 3
 /// ```
+#[allow(dead_code)]
 pub fn cp_als<A, D>(
     tensor: &ArrayView<A, D>,
     rank: usize,
@@ -416,6 +417,7 @@ where
 }
 
 // Unfolds a tensor along a specified mode
+#[allow(dead_code)]
 fn unfold_tensor<A>(tensor: &ArrayD<A>, mode: usize) -> LinalgResult<Array2<A>>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
@@ -470,6 +472,7 @@ where
 }
 
 // Computes the Khatri-Rao product (columnwise Kronecker product) of all factors except one
+#[allow(dead_code)]
 fn khatri_rao_product<A>(factors: &[Array2<A>], skip_mode: usize) -> LinalgResult<Array2<A>>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
@@ -541,6 +544,7 @@ where
 }
 
 // Computes the Gram matrix for ALS update
+#[allow(dead_code)]
 fn compute_gram_matrix<A>(factors: &[Array2<A>], skip_mode: usize) -> LinalgResult<Array2<A>>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
@@ -572,6 +576,7 @@ where
 }
 
 // Computes the Moore-Penrose pseudoinverse using SVD
+#[allow(dead_code)]
 fn pseudo_inverse<A>(matrix: &Array2<A>) -> LinalgResult<Array2<A>>
 where
     A: Clone
@@ -606,6 +611,7 @@ where
 }
 
 // Normalizes the factor matrices and returns the weights
+#[allow(dead_code)]
 fn normalize_factors<A>(factors: &mut [Array2<A>]) -> Array1<A>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,

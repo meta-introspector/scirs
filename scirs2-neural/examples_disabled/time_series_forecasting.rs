@@ -355,6 +355,7 @@ impl MinMaxScaler {
     fn inverse_transform(&self, data: &Array2<f32>) -> Array2<f32> {
                 result[[r, c]] = data[[r, c]] * (max_val - min_val) + min_val;
 // Create sliding window dataset from time series
+#[allow(dead_code)]
 fn create_sliding_window_dataset(
     data: &Array2<f32>,
     window_size: usize,
@@ -375,6 +376,7 @@ fn create_sliding_window_dataset(
                 y[[i, t, f]] = data[[i + window_size + t, f]];
     (x, y)
 // Generate synthetic time series data
+#[allow(dead_code)]
 fn generate_synthetic_time_series(n_samples: usize, n_features: usize) -> Array2<f32> {
     let mut data = Array2::<f32>::zeros((n_samples, n_features));
     // Generate time range
@@ -403,6 +405,7 @@ fn generate_synthetic_time_series(n_samples: usize, n_features: usize) -> Array2
             data[[i, 2]] = trend + noise;
     data
 // Mean Absolute Error calculation
+#[allow(dead_code)]
 fn mean_absolute_error(y_true: &Array3<f32>, y_pred: &Array3<f32>) -> f32 {
     let batch_size = y_true.shape()[0];
     let forecast_horizon = y_true.shape()[1];
@@ -418,6 +421,7 @@ fn mean_absolute_error(y_true: &Array3<f32>, y_pred: &Array3<f32>) -> f32 {
     } else {
         0.0
 // Train the forecaster (simplified training loop without actual parameter updates)
+#[allow(dead_code)]
 fn train_forecaster(
     model: &mut TimeSeriesForecaster,
     x_train: &Array3<f32>,
@@ -471,6 +475,7 @@ fn train_forecaster(
         let avg_loss = total_loss / n_batches as f32;
         println!("Epoch {}/{} - Loss: {:.6}", epoch, num_epochs, avg_loss);
 // Evaluate the model
+#[allow(dead_code)]
 fn evaluate_forecaster(
     x_test: &Array3<f32>,
     y_test: &Array3<f32>,
@@ -503,6 +508,7 @@ fn evaluate_forecaster(
                 actual_orig[[t, 0]],
                 pred_orig[[t, 0]]
 // Forecast future time steps starting from the last observed values
+#[allow(dead_code)]
 fn forecast_future(
     last_window: &Array2<f32>,
     num_steps: usize,
@@ -543,6 +549,7 @@ fn forecast_future(
     println!("Time | Value");
     for t in 0..num_steps {
         println!("{:4} | {:6.3}", t + 1, forecasts_orig[[t, 0]]);
+#[allow(dead_code)]
 fn main() {
     println!("Time Series Forecasting with LSTM and Attention");
     println!("==============================================");

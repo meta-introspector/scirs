@@ -114,6 +114,7 @@ impl DemotableTo<f32> for f32 {
 /// Matrix-vector multiplication using higher precision arithmetic
 ///
 /// Computes y = A*x using higher precision intermediate calculations
+#[allow(dead_code)]
 pub fn extended_matvec<A, I>(a: &ArrayView2<A>, x: &ArrayView1<A>) -> LinalgResult<Array1<A>>
 where
     A: Float + Zero + PromotableTo<I> + Copy,
@@ -151,6 +152,7 @@ where
 /// Matrix-matrix multiplication using higher precision arithmetic
 ///
 /// Computes C = A*B using higher precision intermediate calculations
+#[allow(dead_code)]
 pub fn extended_matmul<A, I>(a: &ArrayView2<A>, b: &ArrayView2<A>) -> LinalgResult<Array2<A>>
 where
     A: Float + Zero + PromotableTo<I> + Copy,
@@ -224,6 +226,7 @@ where
 /// // The determinant of this matrix should be 0
 /// assert!(det.abs() < 1e-5);
 /// ```
+#[allow(dead_code)]
 pub fn extended_det<A, I>(a: &ArrayView2<A>) -> LinalgResult<A>
 where
     A: Float + Zero + One + PromotableTo<I> + DemotableTo<A> + Copy,
@@ -295,6 +298,7 @@ where
 ///
 /// This implementation uses Gaussian elimination with partial pivoting
 /// and higher precision intermediate calculations for better accuracy.
+#[allow(dead_code)]
 pub fn extended_solve<A, I>(a: &ArrayView2<A>, b: &ArrayView1<A>) -> LinalgResult<Array1<A>>
 where
     A: Float + Zero + One + PromotableTo<I> + Copy,

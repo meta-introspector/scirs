@@ -42,6 +42,7 @@ use num_traits::{Float, NumCast};
 /// println!("ICC = {}", icc_val);
 /// println!("95% Confidence interval: [{}, {}]", conf_interval[0], conf_interval[1]);
 /// ```
+#[allow(dead_code)]
 pub fn icc<F, D>(
     data: &ArrayBase<D, Ix2>,
     model: u8,
@@ -248,6 +249,7 @@ where
 }
 
 // Helper function: F-distribution quantile function (using approximation)
+#[allow(dead_code)]
 fn f_distribution_quantile<F: Float + NumCast>(p: F, df1: F, df2: F) -> F {
     let p_f64 = <f64 as NumCast>::from(p).unwrap();
     let df1_f64 = <f64 as NumCast>::from(df1).unwrap();
@@ -279,6 +281,7 @@ fn f_distribution_quantile<F: Float + NumCast>(p: F, df1: F, df2: F) -> F {
 }
 
 // Helper function: Normal quantile function (inverse of CDF)
+#[allow(dead_code)]
 fn normal_quantile(p: f64) -> f64 {
     // Approximation of the normal quantile function (inverse of normal CDF)
     if p <= 0.0 {

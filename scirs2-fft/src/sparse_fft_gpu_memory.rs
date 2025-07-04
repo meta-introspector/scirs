@@ -118,6 +118,7 @@ unsafe impl Sync for BufferDescriptor {}
 
 /// Initialize CUDA device (call once at startup)
 #[cfg(feature = "cuda")]
+#[allow(dead_code)]
 pub fn init_cuda_device() -> FFTResult<bool> {
     let device_result = CUDA_DEVICE.get_or_init(|| {
         // CUDA device initialization temporarily disabled until cudarc dependency is enabled
@@ -135,12 +136,14 @@ pub fn init_cuda_device() -> FFTResult<bool> {
 
 /// Initialize CUDA device (no-op without CUDA feature)
 #[cfg(not(feature = "cuda"))]
+#[allow(dead_code)]
 pub fn init_cuda_device() -> FFTResult<bool> {
     Ok(false)
 }
 
 /// Initialize HIP device (call once at startup)
 #[cfg(feature = "hip")]
+#[allow(dead_code)]
 pub fn init_hip_device() -> FFTResult<bool> {
     // HIP support temporarily disabled until hiprt dependency is enabled
     Err(FFTError::NotImplementedError(
@@ -150,12 +153,14 @@ pub fn init_hip_device() -> FFTResult<bool> {
 
 /// Initialize HIP device (no-op without HIP feature)
 #[cfg(not(feature = "hip"))]
+#[allow(dead_code)]
 pub fn init_hip_device() -> FFTResult<bool> {
     Ok(false)
 }
 
 /// Initialize SYCL device (call once at startup)
 #[cfg(feature = "sycl")]
+#[allow(dead_code)]
 pub fn init_sycl_device() -> FFTResult<bool> {
     let device_result = SYCL_DEVICE.get_or_init(|| {
         // In a real SYCL implementation, this would:
@@ -175,52 +180,61 @@ pub fn init_sycl_device() -> FFTResult<bool> {
 
 /// Initialize SYCL device (no-op without SYCL feature)
 #[cfg(not(feature = "sycl"))]
+#[allow(dead_code)]
 pub fn init_sycl_device() -> FFTResult<bool> {
     Ok(false)
 }
 
 /// Check if CUDA is available
 #[cfg(feature = "cuda")]
+#[allow(dead_code)]
 pub fn is_cuda_available() -> bool {
     CUDA_DEVICE.get().map(|d| d.is_some()).unwrap_or(false)
 }
 
 /// Check if CUDA is available (always false without CUDA feature)
 #[cfg(not(feature = "cuda"))]
+#[allow(dead_code)]
 pub fn is_cuda_available() -> bool {
     false
 }
 
 /// Check if HIP is available
 #[cfg(feature = "hip")]
+#[allow(dead_code)]
 pub fn is_hip_available() -> bool {
     HIP_DEVICE.get().map(|d| d.is_some()).unwrap_or(false)
 }
 
 /// Check if HIP is available (always false without HIP feature)
 #[cfg(not(feature = "hip"))]
+#[allow(dead_code)]
 pub fn is_hip_available() -> bool {
     false
 }
 
 /// Check if SYCL is available
 #[cfg(feature = "sycl")]
+#[allow(dead_code)]
 pub fn is_sycl_available() -> bool {
     SYCL_DEVICE.get().map(|d| d.is_some()).unwrap_or(false)
 }
 
 /// Check if SYCL is available (always false without SYCL feature)
 #[cfg(not(feature = "sycl"))]
+#[allow(dead_code)]
 pub fn is_sycl_available() -> bool {
     false
 }
 
 /// Check if any GPU backend is available
+#[allow(dead_code)]
 pub fn is_gpu_available() -> bool {
     is_cuda_available() || is_hip_available() || is_sycl_available()
 }
 
 /// Initialize the best available GPU backend
+#[allow(dead_code)]
 pub fn init_gpu_backend() -> FFTResult<GPUBackend> {
     // Try CUDA first (usually fastest)
     if init_cuda_device()? {
@@ -858,6 +872,7 @@ impl GPUMemoryManager {
 static GLOBAL_MEMORY_MANAGER: Mutex<Option<Arc<Mutex<GPUMemoryManager>>>> = Mutex::new(None);
 
 /// Initialize global memory manager
+#[allow(dead_code)]
 pub fn init_global_memory_manager(
     backend: GPUBackend,
     device_id: i32,
@@ -875,6 +890,7 @@ pub fn init_global_memory_manager(
 }
 
 /// Get global memory manager
+#[allow(dead_code)]
 pub fn get_global_memory_manager() -> FFTResult<Arc<Mutex<GPUMemoryManager>>> {
     let global = GLOBAL_MEMORY_MANAGER.lock().unwrap();
     if let Some(ref manager) = *global {
@@ -892,6 +908,7 @@ pub fn get_global_memory_manager() -> FFTResult<Arc<Mutex<GPUMemoryManager>>> {
 }
 
 /// Memory-efficient GPU sparse FFT computation
+#[allow(dead_code)]
 pub fn memory_efficient_gpu_sparse_fft<T>(
     signal: &[T],
     _max_memory: usize,

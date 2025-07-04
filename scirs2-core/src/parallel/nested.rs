@@ -24,6 +24,7 @@ static GLOBAL_RESOURCE_MANAGER: std::sync::OnceLock<Arc<ResourceManager>> =
     std::sync::OnceLock::new();
 
 /// Get or create the global resource manager
+#[allow(dead_code)]
 fn get_resource_manager() -> Arc<ResourceManager> {
     GLOBAL_RESOURCE_MANAGER
         .get_or_init(|| Arc::new(ResourceManager::new()))
@@ -342,6 +343,7 @@ impl Drop for NestedScope<'_> {
 }
 
 /// Execute a function with nested parallelism support
+#[allow(dead_code)]
 pub fn nested_scope<F, R>(f: F) -> CoreResult<R>
 where
     F: FnOnce(&NestedScope) -> CoreResult<R>,
@@ -350,6 +352,7 @@ where
 }
 
 /// Execute a function with nested parallelism support and custom limits
+#[allow(dead_code)]
 pub fn nested_scope_with_limits<F, R>(limits: ResourceLimits, f: F) -> CoreResult<R>
 where
     F: FnOnce(&NestedScope) -> CoreResult<R>,
@@ -376,11 +379,13 @@ where
 }
 
 /// Get the current nesting level
+#[allow(dead_code)]
 pub fn current_nesting_level() -> usize {
     NESTING_LEVEL.with(|level| *level.borrow())
 }
 
 /// Check if nested parallelism is allowed at the current level
+#[allow(dead_code)]
 pub fn is_nested_parallelism_allowed() -> bool {
     PARENT_CONTEXT.with(|ctx| {
         if let Some(ref context) = *ctx.borrow() {
@@ -392,6 +397,7 @@ pub fn is_nested_parallelism_allowed() -> bool {
 }
 
 /// Adaptive parallel execution based on nesting level
+#[allow(dead_code)]
 pub fn adaptive_par_for_each<T, F>(data: Vec<T>, f: F) -> CoreResult<()>
 where
     T: Send,
@@ -407,6 +413,7 @@ where
 }
 
 /// Adaptive parallel map based on nesting level
+#[allow(dead_code)]
 pub fn adaptive_par_map<T, F, R>(data: Vec<T>, f: F) -> CoreResult<Vec<R>>
 where
     T: Send,
@@ -459,6 +466,7 @@ impl Default for NestedConfig {
 }
 
 /// Execute with specific nested parallelism policy
+#[allow(dead_code)]
 pub fn with_nested_policy<F, R>(config: NestedConfig, f: F) -> CoreResult<R>
 where
     F: FnOnce() -> CoreResult<R>,
@@ -495,6 +503,7 @@ where
 }
 
 /// Get parent level scheduler if available
+#[allow(dead_code)]
 fn get_parent_scheduler() -> Option<Arc<Mutex<WorkStealingScheduler>>> {
     PARENT_CONTEXT.with(|ctx| {
         ctx.borrow()

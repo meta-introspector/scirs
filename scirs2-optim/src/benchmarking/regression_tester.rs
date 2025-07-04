@@ -2630,11 +2630,13 @@ impl AlertSystem {
 }
 
 // Helper function for normal distribution CDF approximation
+#[allow(dead_code)]
 fn normal_cdf(x: f64) -> f64 {
     0.5 * (1.0 + erf(x / std::f64::consts::SQRT_2))
 }
 
 // Simple error function approximation
+#[allow(dead_code)]
 fn erf(x: f64) -> f64 {
     let a1 = 0.254829592;
     let a2 = -0.284496736;

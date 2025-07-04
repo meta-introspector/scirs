@@ -7,6 +7,7 @@ use ndarray::Array3;
 use scirs2_fft::{fftn, fftn_memory_efficient, fftn_optimized};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Optimized N-dimensional FFT Example");
     println!("===================================");

@@ -41,6 +41,7 @@ type CODResult<F> = LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>;
 /// let l = cholesky(&a.view(), None).unwrap();
 /// // l should be [[2.0, 0.0], [1.0, 2.0]]
 /// ```
+#[allow(dead_code)]
 pub fn cholesky<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -119,6 +120,7 @@ where
 /// let (p, l, u) = lu(&a.view(), None).unwrap();
 /// // Result should be a valid LU decomposition where P*L*U = A
 /// ```
+#[allow(dead_code)]
 pub fn lu<F>(
     a: &ArrayView2<F>,
     workers: Option<usize>,
@@ -242,6 +244,7 @@ where
 /// let (q, r) = qr(&a.view(), None).unwrap();
 /// // Result should be a valid QR decomposition where Q*R = A
 /// ```
+#[allow(dead_code)]
 pub fn qr<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -326,6 +329,7 @@ where
 /// let (u, s, vh) = svd(&a.view(), false, None).unwrap();
 /// // Result should be a valid SVD where U*diag(S)*Vh = A
 /// ```
+#[allow(dead_code)]
 pub fn svd<F>(
     a: &ArrayView2<F>,
     full_matrices: bool,
@@ -389,6 +393,7 @@ where
 
 // Convenience wrapper functions for backward compatibility
 /// Compute Cholesky decomposition using default thread count
+#[allow(dead_code)]
 pub fn cholesky_default<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -397,6 +402,7 @@ where
 }
 
 /// Compute LU decomposition using default thread count
+#[allow(dead_code)]
 pub fn lu_default<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>
 where
     F: Float + NumAssign + One + Sum + Send + Sync + ScalarOperand + 'static,
@@ -405,6 +411,7 @@ where
 }
 
 /// Compute QR decomposition using default thread count
+#[allow(dead_code)]
 pub fn qr_default<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -413,6 +420,7 @@ where
 }
 
 /// Compute SVD using default thread count
+#[allow(dead_code)]
 pub fn svd_default<F>(
     a: &ArrayView2<F>,
     full_matrices: bool,
@@ -446,6 +454,7 @@ where
 /// let (z, t) = schur(&a.view()).unwrap();
 /// // Result should be a valid Schur decomposition where Z*T*Z^T = A
 /// ```
+#[allow(dead_code)]
 pub fn schur<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,

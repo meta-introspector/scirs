@@ -18,6 +18,7 @@ use ndarray::Array2;
 use scirs2_linalg::kronecker::{advanced_kfac_step, KFACOptimizer};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 K-FAC NEURAL NETWORK OPTIMIZATION - ULTRATHINK DEMONSTRATION");
     println!("=================================================================");

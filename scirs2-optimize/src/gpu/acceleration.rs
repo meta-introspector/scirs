@@ -1712,6 +1712,7 @@ pub struct MigrationStatistics {
 }
 
 /// Convenience function for ultra-parallel swarm optimization
+#[allow(dead_code)]
 pub fn ultra_parallel_swarm_optimize<F>(
     objective: F,
     bounds: &[(f64, f64)],
@@ -1726,6 +1727,7 @@ where
 }
 
 // Gamma function implementation for Lévy flights
+#[allow(dead_code)]
 fn tgamma(x: f64) -> f64 {
     // Lanczos approximation for gamma function
     if x < 0.5 {

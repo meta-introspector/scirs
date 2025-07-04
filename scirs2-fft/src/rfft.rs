@@ -36,6 +36,7 @@ use std::fmt::Debug;
 /// // RFFT produces n//2 + 1 complex values
 /// assert_eq!(spectrum.len(), signal.len() / 2 + 1);
 /// ```
+#[allow(dead_code)]
 pub fn rfft<T>(x: &[T], n: Option<usize>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -89,6 +90,7 @@ where
 ///     assert!((val - recovered[i]).abs() < 1e-10);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn irfft<T>(x: &[T], n: Option<usize>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -208,6 +210,7 @@ where
 /// // Check the DC component (sum of all elements)
 /// assert_eq!(spectrum[[0, 0]].re, 10.0); // 1.0 + 2.0 + 3.0 + 4.0 = 10.0
 /// ```
+#[allow(dead_code)]
 pub fn rfft2<T>(
     x: &ArrayView2<T>,
     shape: Option<(usize, usize)>,
@@ -270,6 +273,7 @@ where
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn irfft2<T>(
     x: &ArrayView2<T>,
     shape: Option<(usize, usize)>,
@@ -473,6 +477,7 @@ where
 /// * `rfft` - The 1-D FFT of real input
 /// * `fftn` - The N-D FFT
 /// * `rfft2` - The 2-D FFT of real input
+#[allow(dead_code)]
 pub fn rfftn<T>(
     x: &ArrayView<T, IxDyn>,
     shape: Option<Vec<usize>>,
@@ -622,6 +627,7 @@ where
 /// * `rfftn` - The forward N-D FFT of real input, of which `irfftn` is the inverse
 /// * `irfft` - The inverse of the 1-D FFT of real input
 /// * `irfft2` - The inverse of the 2-D FFT of real input
+#[allow(dead_code)]
 pub fn irfftn<T>(
     x: &ArrayView<T, IxDyn>,
     shape: Option<Vec<usize>>,
@@ -733,6 +739,7 @@ where
 /// F[k] = F[-k]* (conjugate symmetry)
 ///
 /// This function reconstructs the full spectrum from the non-redundant portion.
+#[allow(dead_code)]
 fn reconstruct_hermitian_symmetry<T>(
     x: &ArrayView<T, IxDyn>,
     out_shape: &[usize],
@@ -904,6 +911,7 @@ where
 }
 
 /// Helper function to attempt conversion to Complex64.
+#[allow(dead_code)]
 fn try_as_complex<T: Copy + Debug + 'static>(val: T) -> Option<Complex64> {
     // Attempt to cast the value to a complex number directly
     // This should work for types like Complex64 or Complex32

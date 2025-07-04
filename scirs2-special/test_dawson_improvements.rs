@@ -1,6 +1,7 @@
 // Test script to verify Dawson function accuracy improvements
 use scirs2_special::erf::dawsn;
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing Dawson function accuracy improvements...");
     

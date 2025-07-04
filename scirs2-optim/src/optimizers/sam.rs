@@ -312,6 +312,7 @@ where
 }
 
 /// Calculate the L2 norm of an array
+#[allow(dead_code)]
 fn calculate_norm<A, D>(array: &Array<A, D>) -> Result<A>
 where
     A: Float + ScalarOperand + Debug,

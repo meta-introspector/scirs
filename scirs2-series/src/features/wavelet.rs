@@ -218,6 +218,7 @@ where
 ///
 /// Comprehensive wavelet features including energy distribution,
 /// entropy measures, and time-frequency characteristics.
+#[allow(dead_code)]
 pub fn calculate_wavelet_features<F>(
     ts: &Array1<F>,
     config: &WaveletConfig,
@@ -299,6 +300,7 @@ struct DWTResult<F> {
 /// Implements a simplified DWT using Haar wavelets or Daubechies wavelets.
 /// This is a basic implementation for demonstration purposes.
 /// In production, you would typically use a specialized wavelet library.
+#[allow(dead_code)]
 fn discrete_wavelet_transform<F>(signal: &Array1<F>, config: &WaveletConfig) -> Result<DWTResult<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -340,6 +342,7 @@ where
 }
 
 /// Get wavelet filter coefficients for different wavelet families
+#[allow(dead_code)]
 fn get_wavelet_filters<F>(family: &WaveletFamily) -> Result<(Array1<F>, Array1<F>)>
 where
     F: Float + FromPrimitive,
@@ -431,6 +434,7 @@ where
 }
 
 /// Perform one level of wavelet decomposition
+#[allow(dead_code)]
 fn wavelet_decompose_level<F>(
     signal: &Array1<F>,
     h: &Array1<F>, // Low-pass filter
@@ -491,6 +495,7 @@ where
 // =============================================================================
 
 /// Calculate energy in each wavelet frequency band
+#[allow(dead_code)]
 fn calculate_wavelet_energy_bands<F>(coefficients: &[Array1<F>]) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive,
@@ -506,6 +511,7 @@ where
 }
 
 /// Calculate relative wavelet energy (normalized energy distribution)
+#[allow(dead_code)]
 fn calculate_relative_wavelet_energy<F>(energy_bands: &[F]) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive,
@@ -534,6 +540,7 @@ where
 /// ```
 ///
 /// where p_j is the relative energy at scale j.
+#[allow(dead_code)]
 fn calculate_wavelet_entropy<F>(coefficients: &[Array1<F>]) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -552,6 +559,7 @@ where
 }
 
 /// Calculate wavelet variance as a measure of signal variability
+#[allow(dead_code)]
 fn calculate_wavelet_variance<F>(coefficients: &[Array1<F>]) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -582,6 +590,7 @@ where
 ///
 /// The regularity index measures the smoothness/regularity of the signal
 /// based on the decay of wavelet coefficients across scales.
+#[allow(dead_code)]
 fn calculate_regularity_index<F>(coefficients: &[Array1<F>]) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -641,6 +650,7 @@ where
 }
 
 /// Find the dominant scale (frequency band) based on energy distribution
+#[allow(dead_code)]
 fn find_dominant_wavelet_scale<F>(energy_bands: &[F]) -> usize
 where
     F: Float + PartialOrd,
@@ -658,6 +668,7 @@ where
 // =============================================================================
 
 /// Calculate multi-resolution analysis features
+#[allow(dead_code)]
 fn calculate_mra_features<F>(dwt_result: &DWTResult<F>) -> Result<MultiResolutionFeatures<F>>
 where
     F: Float + FromPrimitive,
@@ -704,6 +715,7 @@ where
 // =============================================================================
 
 /// Calculate time-frequency features using simplified CWT
+#[allow(dead_code)]
 fn calculate_time_frequency_features<F>(
     signal: &Array1<F>,
     config: &WaveletConfig,
@@ -745,6 +757,7 @@ where
 }
 
 /// Generate scales for CWT analysis
+#[allow(dead_code)]
 fn generate_cwt_scales(config: &WaveletConfig) -> Vec<f64> {
     let (min_scale, max_scale) = config.cwt_scales.unwrap_or((1.0, 32.0));
     let count = config.cwt_scale_count;
@@ -759,6 +772,7 @@ fn generate_cwt_scales(config: &WaveletConfig) -> Vec<f64> {
 }
 
 /// Compute simplified CWT using Morlet-like wavelet
+#[allow(dead_code)]
 fn compute_simplified_cwt<F>(signal: &Array1<F>, scales: &[f64]) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Clone,
@@ -803,6 +817,7 @@ where
 }
 
 /// Estimate instantaneous frequencies from CWT
+#[allow(dead_code)]
 fn estimate_instantaneous_frequencies<F>(cwt_matrix: &Array2<F>, scales: &[f64]) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + PartialOrd,
@@ -835,6 +850,7 @@ where
 }
 
 /// Calculate energy concentrations from CWT
+#[allow(dead_code)]
 fn calculate_energy_concentrations<F>(cwt_matrix: &Array2<F>) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive,
@@ -852,6 +868,7 @@ where
 }
 
 /// Calculate frequency stability over time
+#[allow(dead_code)]
 fn calculate_frequency_stability<F>(instantaneous_frequencies: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -881,6 +898,7 @@ where
 }
 
 /// Calculate scalogram entropy
+#[allow(dead_code)]
 fn calculate_scalogram_entropy<F>(cwt_matrix: &Array2<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -904,6 +922,7 @@ where
 }
 
 /// Calculate frequency evolution over time
+#[allow(dead_code)]
 fn calculate_frequency_evolution<F>(cwt_matrix: &Array2<F>, scales: &[f64]) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + PartialOrd,
@@ -941,6 +960,7 @@ where
 // =============================================================================
 
 /// Calculate statistical features of wavelet coefficients
+#[allow(dead_code)]
 fn calculate_coefficient_statistics<F>(
     coefficients: &[Array1<F>],
 ) -> Result<WaveletCoefficientStats<F>>
@@ -1041,6 +1061,7 @@ where
 /// # Returns
 ///
 /// Tuple of (denoised_signal, denoising_features)
+#[allow(dead_code)]
 pub fn wavelet_denoise<F>(
     signal: &Array1<F>,
     config: &WaveletConfig,
@@ -1092,6 +1113,7 @@ where
 }
 
 /// Calculate optimal threshold for denoising
+#[allow(dead_code)]
 fn calculate_optimal_threshold<F>(coefficients: &[Array1<F>], method: &DenoisingMethod) -> Result<F>
 where
     F: Float + FromPrimitive + PartialOrd,
@@ -1132,6 +1154,7 @@ where
 }
 
 /// Apply thresholding to wavelet coefficients
+#[allow(dead_code)]
 fn apply_thresholding<F>(
     coefficients: &[Array1<F>],
     threshold: F,
@@ -1191,6 +1214,7 @@ where
 }
 
 /// Simplified signal reconstruction from thresholded coefficients
+#[allow(dead_code)]
 fn reconstruct_signal_simplified<F>(coefficients: &[Array1<F>]) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Clone,
@@ -1218,6 +1242,7 @@ where
 }
 
 /// Calculate SNR improvement after denoising
+#[allow(dead_code)]
 fn calculate_snr_improvement<F>(original: &Array1<F>, denoised: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -1241,6 +1266,7 @@ where
 }
 
 /// Calculate MSE reduction after denoising
+#[allow(dead_code)]
 fn calculate_mse_reduction<F>(original: &Array1<F>, denoised: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive,

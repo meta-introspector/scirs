@@ -356,8 +356,11 @@ pub enum DynamicKernelArg {
 
 /// GPU communication channel for multi-GPU operations
 pub struct GpuChannel {
+    #[allow(dead_code)]
     source_device: usize,
+    #[allow(dead_code)]
     target_device: usize,
+    #[allow(dead_code)]
     bandwidth: f64, // GB/s
 }
 
@@ -804,14 +807,17 @@ pub(crate) trait GpuBufferImpl: Send + Sync {
     unsafe fn copy_to_host(&self, data: *mut u8, size: usize);
 
     /// Get a reference to self as Any for downcasting
+    #[allow(dead_code)]
     fn as_any(&self) -> &dyn std::any::Any;
 
     /// Get the size of the buffer in bytes
+    #[allow(dead_code)]
     fn size(&self) -> usize {
         0 // Default implementation for backward compatibility
     }
 
     /// Get the device pointer (for backends that use device pointers)
+    #[allow(dead_code)]
     fn device_ptr(&self) -> u64 {
         0 // Default implementation for backward compatibility
     }

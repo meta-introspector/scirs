@@ -240,6 +240,7 @@ impl LabeledPolygon {
 ///
 /// let union = polygon_union(&poly1.view(), &poly2.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn polygon_union(
     poly1: &ArrayView2<'_, f64>,
     poly2: &ArrayView2<'_, f64>,
@@ -284,6 +285,7 @@ pub fn polygon_union(
 /// # Returns
 ///
 /// * Array of intersection polygon vertices
+#[allow(dead_code)]
 pub fn polygon_intersection(
     poly1: &ArrayView2<'_, f64>,
     poly2: &ArrayView2<'_, f64>,
@@ -318,6 +320,7 @@ pub fn polygon_intersection(
 /// # Returns
 ///
 /// * Array of difference polygon vertices
+#[allow(dead_code)]
 pub fn polygon_difference(
     poly1: &ArrayView2<'_, f64>,
     poly2: &ArrayView2<'_, f64>,
@@ -357,6 +360,7 @@ pub fn polygon_difference(
 /// # Returns
 ///
 /// * Array of symmetric difference polygon vertices
+#[allow(dead_code)]
 pub fn polygon_symmetric_difference(
     poly1: &ArrayView2<'_, f64>,
     poly2: &ArrayView2<'_, f64>,
@@ -370,6 +374,7 @@ pub fn polygon_symmetric_difference(
 }
 
 /// Find intersections between edges of two polygons
+#[allow(dead_code)]
 fn find_intersections(poly1: &mut LabeledPolygon, poly2: &mut LabeledPolygon) -> SpatialResult<()> {
     for (i, edge1) in poly1.edges.iter_mut().enumerate() {
         for (j, edge2) in poly2.edges.iter_mut().enumerate() {
@@ -406,6 +411,7 @@ fn find_intersections(poly1: &mut LabeledPolygon, poly2: &mut LabeledPolygon) ->
 }
 
 /// Find intersection of two line segments
+#[allow(dead_code)]
 fn line_segment_intersection(
     p1: &Point2D,
     p2: &Point2D,
@@ -443,6 +449,7 @@ fn line_segment_intersection(
 }
 
 /// Sutherland-Hodgman polygon clipping algorithm for intersection
+#[allow(dead_code)]
 fn sutherland_hodgman_clip(
     subject: &LabeledPolygon,
     clip: &LabeledPolygon,
@@ -513,6 +520,7 @@ fn sutherland_hodgman_clip(
 }
 
 /// Check if a point is inside relative to a directed edge
+#[allow(dead_code)]
 fn is_inside(point: &Point2D, edge_start: &Point2D, edge_end: &Point2D) -> bool {
     let edge_vector = Point2D::new(edge_end.x - edge_start.x, edge_end.y - edge_start.y);
     let point_vector = Point2D::new(point.x - edge_start.x, point.y - edge_start.y);
@@ -520,6 +528,7 @@ fn is_inside(point: &Point2D, edge_start: &Point2D, edge_end: &Point2D) -> bool 
 }
 
 /// Weiler-Atherton algorithm for union operation
+#[allow(dead_code)]
 fn weiler_atherton_union(
     poly1: &LabeledPolygon,
     poly2: &LabeledPolygon,
@@ -540,6 +549,7 @@ fn weiler_atherton_union(
 }
 
 /// Weiler-Atherton algorithm for difference operation
+#[allow(dead_code)]
 fn weiler_atherton_difference(
     poly1: &LabeledPolygon,
     poly2: &LabeledPolygon,
@@ -560,6 +570,7 @@ fn weiler_atherton_difference(
 }
 
 /// Check if two polygons intersect
+#[allow(dead_code)]
 fn polygons_intersect(poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
     // Quick check: if any vertex of one polygon is inside the other
     for vertex in &poly1.vertices {
@@ -589,6 +600,7 @@ fn polygons_intersect(poly1: &LabeledPolygon, poly2: &LabeledPolygon) -> bool {
 }
 
 /// Build intersection graph for Weiler-Atherton algorithm
+#[allow(dead_code)]
 fn build_intersection_graph(
     _poly1: &LabeledPolygon,
     _poly2: &LabeledPolygon,
@@ -600,6 +612,7 @@ fn build_intersection_graph(
 }
 
 /// Trace union boundary using intersection graph
+#[allow(dead_code)]
 fn trace_union_boundary(
     _graph: &HashMap<String, Vec<Point2D>>,
     poly1: &LabeledPolygon,
@@ -615,6 +628,7 @@ fn trace_union_boundary(
 }
 
 /// Trace difference boundary using intersection graph
+#[allow(dead_code)]
 fn trace_difference_boundary(
     _graph: &HashMap<String, Vec<Point2D>>,
     poly1: &LabeledPolygon,
@@ -626,6 +640,7 @@ fn trace_difference_boundary(
 }
 
 /// Check if a polygon is convex
+#[allow(dead_code)]
 pub fn is_convex_polygon(vertices: &ArrayView2<'_, f64>) -> SpatialResult<bool> {
     if vertices.ncols() != 2 {
         return Err(SpatialError::ValueError("Vertices must be 2D".to_string()));
@@ -663,12 +678,14 @@ pub fn is_convex_polygon(vertices: &ArrayView2<'_, f64>) -> SpatialResult<bool> 
 }
 
 /// Compute the area of a polygon
+#[allow(dead_code)]
 pub fn compute_polygon_area(vertices: &ArrayView2<'_, f64>) -> SpatialResult<f64> {
     let polygon = LabeledPolygon::from_array(vertices)?;
     Ok(polygon.compute_area())
 }
 
 /// Check if a polygon is self-intersecting
+#[allow(dead_code)]
 pub fn is_self_intersecting(vertices: &ArrayView2<'_, f64>) -> SpatialResult<bool> {
     let polygon = LabeledPolygon::from_array(vertices)?;
     let n = polygon.vertices.len();

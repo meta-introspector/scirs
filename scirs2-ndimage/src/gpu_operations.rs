@@ -7,7 +7,6 @@
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::Instant;
 
 use ndarray::{Array, ArrayView, ArrayView2, Dimension, Ix2};
 use num_traits::{Float, FromPrimitive};
@@ -15,7 +14,7 @@ use num_traits::{Float, FromPrimitive};
 use crate::backend::gpu_acceleration_framework::{
     GpuAccelerationManager, GpuPerformanceReport, MemoryPoolConfig,
 };
-use crate::backend::{Backend, BackendConfig, DeviceManager};
+use crate::backend::{Backend, DeviceManager};
 use crate::error::{NdimageError, NdimageResult};
 use crate::interpolation::BoundaryMode;
 
@@ -405,10 +404,10 @@ impl GpuOperations {
     fn execute_gpu_convolution<T>(
         &self,
         input: ArrayView2<T>,
-        kernel: ArrayView2<T>,
+        _kernel: ArrayView2<T>,
         kernel_source: &str,
         backend: Backend,
-        mode: BoundaryMode,
+        _mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
         T: Float + FromPrimitive + Clone + Send + Sync,
@@ -423,11 +422,11 @@ impl GpuOperations {
     fn execute_gpu_morphology<T>(
         &self,
         input: ArrayView2<T>,
-        structuring_element: ArrayView2<bool>,
+        _structuring_element: ArrayView2<bool>,
         kernel_source: &str,
         backend: Backend,
-        mode: BoundaryMode,
-        operation: MorphologyOperation,
+        _mode: BoundaryMode,
+        _operation: MorphologyOperation,
     ) -> NdimageResult<Array<T, Ix2>>
     where
         T: Float + FromPrimitive + Clone + Send + Sync + PartialOrd,
@@ -446,10 +445,10 @@ impl GpuOperations {
     fn execute_gpu_gaussian<T>(
         &self,
         input: ArrayView2<T>,
-        sigma: (f64, f64),
+        _sigma: (f64, f64),
         kernel_source: &str,
         backend: Backend,
-        mode: BoundaryMode,
+        _mode: BoundaryMode,
     ) -> NdimageResult<Array<T, Ix2>>
     where
         T: Float + FromPrimitive + Clone + Send + Sync,
@@ -463,7 +462,7 @@ impl GpuOperations {
     fn execute_gpu_distance_transform<T>(
         &self,
         input: ArrayView2<T>,
-        metric: DistanceMetric,
+        _metric: DistanceMetric,
         kernel_source: &str,
         backend: Backend,
     ) -> NdimageResult<Array<T, Ix2>>
@@ -612,11 +611,13 @@ impl GpuInfo {
 }
 
 /// Convenience function to create a GPU operations instance with default configuration
+#[allow(dead_code)]
 pub fn create_gpu_operations() -> NdimageResult<GpuOperations> {
     GpuOperations::new(GpuOperationsConfig::default())
 }
 
 /// Convenience function to create GPU operations with custom configuration
+#[allow(dead_code)]
 pub fn create_gpu_operations_with_config(
     config: GpuOperationsConfig,
 ) -> NdimageResult<GpuOperations> {

@@ -4,16 +4,19 @@ use scirs2_interpolate::interp1d::monotonic::{MonotonicInterpolator, MonotonicMe
 use scirs2_interpolate::spline::CubicSpline;
 use scirs2_interpolate::{cubic_interpolate, linear_interpolate, pchip_interpolate};
 
+#[allow(dead_code)]
 fn generate_test_data(n: usize) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::linspace(0.0, 10.0, n);
     let y = x.mapv(|xi| (xi * 0.5_f64).sin() + 0.1 * xi + 0.05 * (3.0 * xi).cos());
     (x, y)
 }
 
+#[allow(dead_code)]
 fn generate_query_points(n: usize, x_min: f64, x_max: f64) -> Array1<f64> {
     Array1::linspace(x_min + 0.1, x_max - 0.1, n)
 }
 
+#[allow(dead_code)]
 fn bench_linear_interpolation(c: &mut Criterion) {
     let mut group = c.benchmark_group("linear_interpolation");
 
@@ -40,6 +43,7 @@ fn bench_linear_interpolation(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_cubic_interpolation(c: &mut Criterion) {
     let mut group = c.benchmark_group("cubic_interpolation");
 
@@ -66,6 +70,7 @@ fn bench_cubic_interpolation(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_pchip_interpolation(c: &mut Criterion) {
     let mut group = c.benchmark_group("pchip_interpolation");
 
@@ -93,6 +98,7 @@ fn bench_pchip_interpolation(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_monotonic_interpolation(c: &mut Criterion) {
     let mut group = c.benchmark_group("monotonic_interpolation");
 
@@ -121,6 +127,7 @@ fn bench_monotonic_interpolation(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_cubic_spline(c: &mut Criterion) {
     let mut group = c.benchmark_group("cubic_spline");
 
@@ -182,6 +189,7 @@ fn bench_cubic_spline(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_array_evaluation(c: &mut Criterion) {
     let mut group = c.benchmark_group("array_evaluation");
 

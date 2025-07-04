@@ -324,6 +324,7 @@ pub mod regression {
 }
 
 /// Comprehensive test runner
+#[allow(dead_code)]
 pub fn run_comprehensive_tests() -> Vec<String> {
     let mut all_errors = Vec::new();
 

@@ -8,6 +8,7 @@ use scirs2_interpolate::{
     StabilizationConfig, StableReleaseReadiness, StrictnessLevel,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== API Stabilization Analysis Demo ===\n");
 

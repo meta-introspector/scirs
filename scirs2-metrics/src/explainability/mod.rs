@@ -1302,6 +1302,7 @@ pub enum ExplanationMethod {
 }
 
 /// Compute model interpretability score
+#[allow(dead_code)]
 pub fn compute_interpretability_score<F: Float + std::iter::Sum>(
     explainability_metrics: &ExplainabilityMetrics<F>,
 ) -> F {

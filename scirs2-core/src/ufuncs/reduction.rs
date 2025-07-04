@@ -11,6 +11,7 @@ use std::sync::Once;
 static INIT: Once = Once::new();
 
 // Initialize the ufunc registry with reduction operations
+#[allow(dead_code)]
 fn init_reduction_ufuncs() {
     INIT.call_once(|| {
         // Register all the reduction ufuncs
@@ -340,6 +341,7 @@ impl UFunc for MaxUFunc {
 }
 
 // Helper function to prepare the output array for reduction
+#[allow(dead_code)]
 fn prepare_reduction_output<D>(input: &ndarray::ArrayBase<ndarray::Data, D>, axis: Option<usize>) -> (Array<f64, Ix1>, Vec<usize>)
 where
     D: Dimension,
@@ -404,6 +406,7 @@ where
 /// let result = sum(&a, Some(1));
 /// assert_eq!(result, array![6.0, 15.0]);
 /// ```
+#[allow(dead_code)]
 pub fn sum<D>(array: &ndarray::ArrayBase<ndarray::Data, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
     D: Dimension,
@@ -460,6 +463,7 @@ where
 /// let result = product(&a, Some(1));
 /// assert_eq!(result, array![6.0, 120.0]);
 /// ```
+#[allow(dead_code)]
 pub fn product<D>(array: &ndarray::ArrayBase<ndarray::Data, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
     D: Dimension,
@@ -516,6 +520,7 @@ where
 /// let result = mean(&a, Some(1));
 /// assert_eq!(result, array![2.0, 5.0]);
 /// ```
+#[allow(dead_code)]
 pub fn mean<D>(array: &ndarray::ArrayBase<ndarray::Data, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
     D: Dimension,
@@ -568,6 +573,7 @@ where
 /// assert!((result[1] - 1.5).abs() < 1e-10);
 /// assert!((result[2] - 1.5).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn std<D>(array: &ndarray::ArrayBase<ndarray::Data, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
     D: Dimension,
@@ -603,6 +609,7 @@ where
 /// let result = var(&a, Some(0));
 /// assert_eq!(result, array![2.25, 2.25, 2.25]);
 /// ```
+#[allow(dead_code)]
 pub fn var<D>(array: &ndarray::ArrayBase<ndarray::Data, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
     D: Dimension,
@@ -708,6 +715,7 @@ where
 /// let result = min(&a, Some(1));
 /// assert_eq!(result, array![1.0, 4.0]);
 /// ```
+#[allow(dead_code)]
 pub fn min<D>(array: &ndarray::ArrayBase<ndarray::Data, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
     D: Dimension,
@@ -805,6 +813,7 @@ where
 /// let result = max(&a, Some(1));
 /// assert_eq!(result, array![3.0, 6.0]);
 /// ```
+#[allow(dead_code)]
 pub fn max<D>(array: &ndarray::ArrayBase<ndarray::Data, D>, axis: Option<usize>) -> Array<f64, Ix1>
 where
     D: Dimension,

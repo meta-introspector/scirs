@@ -39,6 +39,7 @@ use num_traits::{Float, NumAssign};
 ///
 /// let corners = harris_corners(&image, 3, 0.04, 0.01);
 /// ```
+#[allow(dead_code)]
 pub fn harris_corners(
     image: &Array<f32, Ix2>,
     block_size: usize,
@@ -170,6 +171,7 @@ pub fn harris_corners(
 ///
 /// let corners = fast_corners(&image, 0.3, 9);
 /// ```
+#[allow(dead_code)]
 pub fn fast_corners<T>(image: &Array<T, Ix2>, threshold: T, n: usize) -> Array<bool, Ix2>
 where
     T: Float + NumAssign + num_traits::FromPrimitive,

@@ -1269,6 +1269,7 @@ impl Default for AutoOptimizationState {
 }
 
 /// Get human-readable backend name
+#[allow(dead_code)]
 fn backend_name(backend: GpuBackend) -> &'static str {
     match backend {
         GpuBackend::Cuda => "CUDA",
@@ -1281,12 +1282,14 @@ fn backend_name(backend: GpuBackend) -> &'static str {
 }
 
 /// Convenience function to create a cross-platform optimizer with default settings
+#[allow(dead_code)]
 pub fn create_cross_platform_optimizer<T: Float>() -> Result<CrossPlatformOptimizer<T>> {
     let config = CrossPlatformConfig::default();
     CrossPlatformOptimizer::new(config)
 }
 
 /// Convenience function to create a cross-platform optimizer with performance-focused settings
+#[allow(dead_code)]
 pub fn create_performance_optimizer<T: Float>() -> Result<CrossPlatformOptimizer<T>> {
     let mut config = CrossPlatformConfig::default();
     config.device_selection = DeviceSelectionStrategy::Fastest;
@@ -1300,6 +1303,7 @@ pub fn create_performance_optimizer<T: Float>() -> Result<CrossPlatformOptimizer
 }
 
 /// Convenience function to create a cross-platform optimizer with memory-optimized settings
+#[allow(dead_code)]
 pub fn create_memory_optimizer<T: Float>() -> Result<CrossPlatformOptimizer<T>> {
     let mut config = CrossPlatformConfig::default();
     config.device_selection = DeviceSelectionStrategy::LargestMemory;
@@ -1312,6 +1316,7 @@ pub fn create_memory_optimizer<T: Float>() -> Result<CrossPlatformOptimizer<T>> 
 }
 
 /// Convenience function to create a cross-platform optimizer with power-efficient settings
+#[allow(dead_code)]
 pub fn create_power_efficient_optimizer<T: Float>() -> Result<CrossPlatformOptimizer<T>> {
     let mut config = CrossPlatformConfig::default();
     config.device_selection = DeviceSelectionStrategy::LowPower;

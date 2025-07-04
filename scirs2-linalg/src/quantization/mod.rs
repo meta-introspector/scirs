@@ -242,6 +242,7 @@ pub enum QuantizedData1D {
 /// Helper function to get the i8 data from a QuantizedMatrix if available
 ///
 /// Returns None if the matrix does not use Int8 storage
+#[allow(dead_code)]
 pub fn get_quantized_matrix_2d_i8(matrix: &QuantizedMatrix) -> Option<&Array2<i8>> {
     match &matrix.data {
         QuantizedData2D::Int8(data) => Some(data),
@@ -252,6 +253,7 @@ pub fn get_quantized_matrix_2d_i8(matrix: &QuantizedMatrix) -> Option<&Array2<i8
 /// Helper function to get the i8 data from a QuantizedVector if available
 ///
 /// Returns None if the vector does not use Int8 storage
+#[allow(dead_code)]
 pub fn get_quantized_vector_1d_i8(vector: &QuantizedVector) -> Option<&Array1<i8>> {
     match &vector.data {
         QuantizedData1D::Int8(data) => Some(data),
@@ -513,6 +515,7 @@ impl QuantizedVector {
 /// # Notes
 ///
 /// For per-channel quantization, use `quantize_matrix_per_channel` instead.
+#[allow(dead_code)]
 pub fn quantize_matrix<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -792,6 +795,7 @@ where
 /// # Panics
 ///
 /// This function will panic if the method is not PerChannelSymmetric or PerChannelAffine
+#[allow(dead_code)]
 pub fn quantize_matrix_per_channel<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -938,6 +942,7 @@ where
 /// # Returns
 ///
 /// The dequantized matrix
+#[allow(dead_code)]
 pub fn dequantize_matrix(quantized: &QuantizedMatrix, params: &QuantizationParams) -> Array2<f32> {
     let shape = quantized.shape();
     let mut dequantized = Array2::zeros(shape);
@@ -1074,6 +1079,7 @@ pub fn dequantize_matrix(quantized: &QuantizedMatrix, params: &QuantizationParam
 /// # Returns
 ///
 /// A tuple containing the quantized vector and the quantization parameters
+#[allow(dead_code)]
 pub fn quantize_vector<F>(
     vector: &ArrayView1<F>,
     bits: u8,
@@ -1332,6 +1338,7 @@ where
 /// # Returns
 ///
 /// The dequantized vector
+#[allow(dead_code)]
 pub fn dequantize_vector(quantized: &QuantizedVector, params: &QuantizationParams) -> Array1<f32> {
     let length = quantized.len();
     let mut dequantized = Array1::zeros(length);
@@ -1423,6 +1430,7 @@ pub fn dequantize_vector(quantized: &QuantizedVector, params: &QuantizationParam
 /// # Returns
 ///
 /// The result of the matrix multiplication in floating-point
+#[allow(dead_code)]
 pub fn quantized_matmul(
     a: &QuantizedMatrix,
     a_params: &QuantizationParams,
@@ -1544,6 +1552,7 @@ pub fn quantized_matmul(
 /// # Returns
 ///
 /// The result of the matrix-vector multiplication in floating-point
+#[allow(dead_code)]
 pub fn quantized_matvec(
     a: &QuantizedMatrix,
     a_params: &QuantizationParams,
@@ -1655,6 +1664,7 @@ pub fn quantized_matvec(
 /// # Returns
 ///
 /// The dot product as a floating-point value
+#[allow(dead_code)]
 pub fn quantized_dot(
     a: &QuantizedVector,
     a_params: &QuantizationParams,
@@ -1760,6 +1770,7 @@ pub fn quantized_dot(
 /// # Returns
 ///
 /// The matrix after applying fake quantization
+#[allow(dead_code)]
 pub fn fake_quantize<F>(matrix: &ArrayView2<F>, bits: u8, method: QuantizationMethod) -> Array2<F>
 where
     F: Float + Debug + AsPrimitive<f32> + FromPrimitive,
@@ -1789,6 +1800,7 @@ where
 /// # Returns
 ///
 /// The vector after applying fake quantization
+#[allow(dead_code)]
 pub fn fake_quantize_vector<F>(
     vector: &ArrayView1<F>,
     bits: u8,

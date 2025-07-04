@@ -52,7 +52,9 @@ pub enum QuantumGate {
     Phase(usize, f32),
     /// Rotation gates
     RotationX(usize, f32),
+    /// Rotation around Y-axis
     RotationY(usize, f32),
+    /// Rotation around Z-axis
     RotationZ(usize, f32),
 }
 

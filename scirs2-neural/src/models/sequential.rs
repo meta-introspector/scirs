@@ -24,6 +24,8 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Defau
     fn default() -> Self {
         Self::new()
     }
+}
+
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Clone for Sequential<F> {
     fn clone(&self) -> Self {
         // Note: We can't clone the layer trait objects directly
@@ -34,17 +36,36 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Clone
             input: None,
             history: History::default(),
         }
+    }
+}
+
 impl<F: Float + Debug + ScalarOperand + FromPrimitive + Display + 'static> Sequential<F> {
     /// Create a new empty sequential model
     pub fn new() -> Self {
+        Self {
             layers: Vec::new(),
+            layer_outputs: Vec::new(),
+            input: None,
+            history: History::default(),
+        }
+    }
+
     /// Create a new sequential model from existing layers
     pub fn from_layers(layers: Vec<Box<dyn Layer<F> + Send + Sync>>) -> Self {
+        Self {
             layers,
+            layer_outputs: Vec::new(),
+            input: None,
+            history: History::default(),
+        }
+    }
+
     /// Add a layer to the model
     pub fn add_layer<L: Layer<F> + 'static + Send + Sync>(&mut self, layer: L) -> &mut Self {
         self.layers.push(Box::new(layer));
         self
+    }
+
     /// Get the number of layers in the model
     pub fn num_layers(&self) -> usize {
         self.layers.len()

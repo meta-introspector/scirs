@@ -488,6 +488,7 @@ impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
     }
 
     /// Detect CPU architecture
+    #[allow(unreachable_code)]
     fn detect_cpu_architecture(&self) -> CpuArchitecture {
         #[cfg(target_arch = "x86_64")]
         return CpuArchitecture::X86_64;
@@ -842,9 +843,9 @@ impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
         let scalar_result = self.execute_scalar_operation(operation, &data)?;
 
         // Calculate accuracy metrics
-        let mut max_error = 0.0;
-        let mut total_error = 0.0;
-        let mut total_relative_error = 0.0;
+        let mut max_error = 0.0f64;
+        let mut total_error = 0.0f64;
+        let mut total_relative_error = 0.0f64;
 
         for i in 0..test_size {
             let abs_error = (simd_result[i] - scalar_result[i]).to_f64().unwrap().abs();
@@ -1101,6 +1102,7 @@ pub struct PerformanceSummary {
 
 /// Convenience functions
 /// Run comprehensive SIMD validation with default configuration
+#[allow(dead_code)]
 pub fn validate_simd_performance<T>() -> InterpolateResult<SimdValidationReport>
 where
     T: InterpolationFloat,
@@ -1111,6 +1113,7 @@ where
 }
 
 /// Run SIMD validation with custom configuration
+#[allow(dead_code)]
 pub fn validate_simd_with_config<T>(
     config: SimdValidationConfig,
 ) -> InterpolateResult<SimdValidationReport>
@@ -1122,6 +1125,7 @@ where
 }
 
 /// Quick SIMD validation for CI/CD
+#[allow(dead_code)]
 pub fn quick_simd_validation<T>() -> InterpolateResult<bool>
 where
     T: InterpolationFloat,

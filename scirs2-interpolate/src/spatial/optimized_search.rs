@@ -12,7 +12,7 @@
 
 use crate::error::InterpolateResult;
 use crate::spatial::{BallTree, KdTree};
-use ndarray::{ArrayView2, Axis};
+use ndarray::{Array1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
@@ -118,8 +118,8 @@ impl SimdDistanceOps {
                         let distance = if dim >= 8 {
                             // For higher dimensions, use vectorized operations
                             let diff = F::simd_sub(&point, &query);
-                            let squared = F::simd_mul(&diff, &diff);
-                            F::simd_sum(&squared)
+                            let squared = F::simd_mul(&diff.view(), &diff.view());
+                            F::simd_sum(&squared.view())
                         } else {
                             // Fallback for lower dimensions
                             Self::squared_euclidean_distance(

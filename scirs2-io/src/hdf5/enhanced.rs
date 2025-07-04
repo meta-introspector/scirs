@@ -665,6 +665,7 @@ impl EnhancedHDF5File {
 }
 
 /// Enhanced write function with compression and parallel I/O
+#[allow(dead_code)]
 pub fn write_hdf5_enhanced<P: AsRef<Path>>(
     path: P,
     datasets: HashMap<String, (ArrayD<f64>, ExtendedDataType, DatasetOptions)>,
@@ -677,6 +678,7 @@ pub fn write_hdf5_enhanced<P: AsRef<Path>>(
 }
 
 /// Enhanced read function with parallel I/O
+#[allow(dead_code)]
 pub fn read_hdf5_enhanced<P: AsRef<Path>>(
     path: P,
     parallel_config: Option<ParallelConfig>,
@@ -685,6 +687,7 @@ pub fn read_hdf5_enhanced<P: AsRef<Path>>(
 }
 
 /// Utility function to create optimal compression options
+#[allow(dead_code)]
 pub fn create_optimal_compression_options(
     data_type: &ExtendedDataType,
     estimated_size: usize,

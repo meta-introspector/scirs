@@ -634,6 +634,7 @@ impl ErrorRecoveryManager {
 }
 
 /// Detect available SIMD instruction sets
+#[allow(dead_code)]
 fn detect_simd_support() -> SimdSupport {
     // In a real implementation, this would detect actual CPU features
     // For now, assume AVX2 support on most modern systems
@@ -662,6 +663,7 @@ fn detect_simd_support() -> SimdSupport {
 }
 
 /// Check GPU availability
+#[allow(dead_code)]
 fn check_gpu_availability() -> bool {
     // In a real implementation, this would check for actual GPU
     // For now, assume no GPU by default
@@ -672,12 +674,14 @@ fn check_gpu_availability() -> bool {
 static ERROR_RECOVERY: std::sync::Mutex<Option<ErrorRecoveryManager>> = std::sync::Mutex::new(None);
 
 /// Initialize global error recovery manager
+#[allow(dead_code)]
 pub fn initialize_error_recovery(config: RecoveryConfig) {
     let mut global_recovery = ERROR_RECOVERY.lock().unwrap();
     *global_recovery = Some(ErrorRecoveryManager::new(config));
 }
 
 /// Get global error recovery manager
+#[allow(dead_code)]
 pub fn get_error_recovery() -> std::sync::MutexGuard<'static, Option<ErrorRecoveryManager>> {
     ERROR_RECOVERY.lock().unwrap()
 }

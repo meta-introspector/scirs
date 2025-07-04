@@ -12,6 +12,7 @@ const SAMPLE_SIZES: &[usize] = &[100, 1000, 10_000];
 const FEATURE_SIZES: &[usize] = &[10, 50, 100];
 
 /// Benchmark normalization operations
+#[allow(dead_code)]
 fn bench_normalization(c: &mut Criterion) {
     let mut group = c.benchmark_group("Normalization");
 
@@ -74,6 +75,7 @@ fn bench_normalization(c: &mut Criterion) {
 
 /// Benchmark SIMD-accelerated normalization operations
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn bench_simd_normalization(c: &mut Criterion) {
     use scirs2_transform::normalize_simd::*;
 
@@ -114,6 +116,7 @@ fn bench_simd_normalization(c: &mut Criterion) {
 }
 
 /// Benchmark scaling operations
+#[allow(dead_code)]
 fn bench_scaling(c: &mut Criterion) {
     let mut group = c.benchmark_group("Scaling");
 
@@ -159,6 +162,7 @@ fn bench_scaling(c: &mut Criterion) {
 }
 
 /// Benchmark feature engineering operations
+#[allow(dead_code)]
 fn bench_feature_engineering(c: &mut Criterion) {
     let mut group = c.benchmark_group("Feature_Engineering");
 
@@ -216,6 +220,7 @@ fn bench_feature_engineering(c: &mut Criterion) {
 }
 
 /// Benchmark dimensionality reduction operations
+#[allow(dead_code)]
 fn bench_dimensionality_reduction(c: &mut Criterion) {
     let mut group = c.benchmark_group("Dimensionality_Reduction");
 
@@ -260,6 +265,7 @@ fn bench_dimensionality_reduction(c: &mut Criterion) {
 }
 
 /// Benchmark imputation operations
+#[allow(dead_code)]
 fn bench_imputation(c: &mut Criterion) {
     let mut group = c.benchmark_group("Imputation");
 
@@ -318,6 +324,7 @@ fn bench_imputation(c: &mut Criterion) {
 }
 
 /// Benchmark pipeline operations
+#[allow(dead_code)]
 fn bench_pipeline(c: &mut Criterion) {
     let mut group = c.benchmark_group("Pipeline");
 

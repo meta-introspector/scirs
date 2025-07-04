@@ -92,6 +92,7 @@ impl HttpResponse {
 }
 
 /// Parse HTTP request path from raw request
+#[allow(dead_code)]
 fn parse_request_path(request: &str) -> Option<String> {
     let lines: Vec<&str> = request.lines().collect();
     if lines.is_empty() {
@@ -271,6 +272,7 @@ struct PerformancePrediction {
 }
 
 /// Generate AI-driven insights from metrics data
+#[allow(dead_code)]
 fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
     let mut insights = Vec::new();
 
@@ -382,6 +384,7 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
 }
 
 /// Detect anomalies in metrics data using statistical methods
+#[allow(dead_code)]
 fn detect_anomalies(metrics: &[MetricDataPoint]) -> Vec<AnomalyAlert> {
     let mut alerts = Vec::new();
 
@@ -439,6 +442,7 @@ fn detect_anomalies(metrics: &[MetricDataPoint]) -> Vec<AnomalyAlert> {
 }
 
 /// Predict future performance using simple linear regression
+#[allow(dead_code)]
 fn predict_future_performance(metrics: &[MetricDataPoint]) -> Vec<PerformancePrediction> {
     let mut predictions = Vec::new();
 
@@ -811,6 +815,7 @@ async fn generate_dashboard_html(dashboard: &Arc<InteractiveDashboard>) -> Strin
 }
 
 /// Create and start an HTTP server for the given dashboard
+#[allow(dead_code)]
 pub fn start_http_server(dashboard: InteractiveDashboard) -> Result<DashboardHttpServer> {
     let mut server = DashboardHttpServer::new(dashboard)?;
     server.start()?;

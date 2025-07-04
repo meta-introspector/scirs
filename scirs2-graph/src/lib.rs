@@ -287,18 +287,18 @@ pub use advanced::{
 
 // Graph memory profiling - experimental
 pub use graph_memory_profiler::{
+    AdvancedMemoryProfiler,
     EfficiencyAnalysis,
     MemoryProfile,
     MemoryProfilerConfig,
     MemoryStats as GraphMemoryStats, // Renamed to avoid conflict
     OptimizationOpportunity,
     OptimizationType,
-    UltrathinkMemoryProfiler,
 };
 
 // Numerical accuracy validation - experimental
 pub use numerical_accuracy_validation::{
-    create_comprehensive_validation_suite, run_quick_validation, UltrathinkNumericalValidator,
+    create_comprehensive_validation_suite, run_quick_validation, AdvancedNumericalValidator,
     ValidationAlgorithm, ValidationConfig, ValidationReport, ValidationResult,
     ValidationTolerances,
 };

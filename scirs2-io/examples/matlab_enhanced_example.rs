@@ -17,6 +17,7 @@ use std::collections::HashMap;
 use std::time::Instant;
 use tempfile::tempdir;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧮 Enhanced MATLAB Format Support Example");
     println!("=========================================");
@@ -50,6 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_basic_mat_v5() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Demonstrating Basic MAT v5 Format...");
 
@@ -122,6 +124,7 @@ fn demonstrate_basic_mat_v5() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_enhanced_features() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🚀 Demonstrating Enhanced Format Features...");
 
@@ -194,6 +197,7 @@ fn demonstrate_enhanced_features() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_cell_arrays() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📦 Demonstrating Cell Arrays...");
 
@@ -255,6 +259,7 @@ fn demonstrate_cell_arrays() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_structures() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🏗️  Demonstrating Structures...");
 
@@ -333,6 +338,7 @@ fn demonstrate_structures() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_format_detection() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔍 Demonstrating Format Detection...");
 
@@ -383,6 +389,7 @@ fn demonstrate_format_detection() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_performance_and_errors() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Demonstrating Performance and Error Handling...");
 

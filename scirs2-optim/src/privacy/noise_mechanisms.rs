@@ -653,6 +653,7 @@ pub struct PrivacyParameters<T: Float> {
 /// Utility functions for noise mechanisms
 
 /// Generate correlated noise for matrix operations
+#[allow(dead_code)]
 pub fn generate_correlated_gaussian_noise<T>(
     shape: (usize, usize),
     correlation_matrix: &Array2<T>,
@@ -695,6 +696,7 @@ where
 }
 
 /// Validate differential privacy parameters
+#[allow(dead_code)]
 pub fn validate_privacy_parameters<T: Float>(epsilon: T, delta: Option<T>) -> Result<()> {
     if epsilon <= T::zero() {
         return Err(OptimError::InvalidConfig(

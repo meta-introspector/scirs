@@ -6,6 +6,7 @@ use scirs2_fft::window_extended::{
     analyze_window, compare_windows, get_extended_window, ExtendedWindow,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Window Analysis Example ===");
     println!();

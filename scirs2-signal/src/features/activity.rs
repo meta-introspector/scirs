@@ -18,6 +18,7 @@ use std::fmt::Debug;
 /// # Returns
 ///
 /// * A HashMap containing the extracted features
+#[allow(dead_code)]
 pub fn activity_recognition_features<T>(signal: &[T], fs: f64) -> SignalResult<HashMap<String, f64>>
 where
     T: Float + NumCast + Debug,
@@ -84,6 +85,7 @@ where
 }
 
 /// Calculate autocorrelation up to a given lag
+#[allow(dead_code)]
 fn calculate_autocorrelation(signal: &[f64], max_lag: usize) -> Vec<f64> {
     let n = signal.len();
     let mean = signal.iter().sum::<f64>() / n as f64;
@@ -123,6 +125,7 @@ fn calculate_autocorrelation(signal: &[f64], max_lag: usize) -> Vec<f64> {
 }
 
 /// Find the first peak in a vector
+#[allow(dead_code)]
 fn find_first_peak(signal: &[f64]) -> (usize, f64) {
     if signal.len() <= 2 {
         return (0, if signal.is_empty() { 0.0 } else { signal[0] });

@@ -545,12 +545,14 @@ impl ImagePyramid {
 
 /// Convenience functions for enhanced image operations
 /// Create an image pyramid with default configuration
+#[allow(dead_code)]
 pub fn create_image_pyramid(image: &ImageData) -> Result<ImagePyramid> {
     let processor = EnhancedImageProcessor::new();
     processor.create_pyramid(image, PyramidConfig::default())
 }
 
 /// Save image with lossless compression
+#[allow(dead_code)]
 pub fn save_lossless<P: AsRef<Path>>(
     image: &ImageData,
     path: P,
@@ -567,6 +569,7 @@ pub fn save_lossless<P: AsRef<Path>>(
 }
 
 /// Save image with high quality compression
+#[allow(dead_code)]
 pub fn save_high_quality<P: AsRef<Path>>(
     image: &ImageData,
     path: P,
@@ -583,6 +586,7 @@ pub fn save_high_quality<P: AsRef<Path>>(
 }
 
 /// Batch convert images with enhanced compression
+#[allow(dead_code)]
 pub fn batch_convert_with_compression<P1: AsRef<Path>, P2: AsRef<Path>>(
     input_dir: P1,
     output_dir: P2,

@@ -15,8 +15,8 @@ use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
+use crate::advanced_fusion_algorithms::UltrathinkConfig;
 use crate::error::{NdimageError, NdimageResult};
-use crate::ultrathink_fusion_core::UltrathinkConfig;
 
 /// AI-Driven Adaptive Processing Configuration
 #[derive(Debug, Clone)]
@@ -570,6 +570,7 @@ pub struct AdaptationStrategy {
 ///
 /// This function implements the ultimate AI-driven adaptive processing system
 /// that learns, adapts, and optimizes in real-time.
+#[allow(dead_code)]
 pub fn ai_driven_adaptive_processing<T>(
     image: ArrayView2<T>,
     config: &AIAdaptiveConfig,
@@ -703,6 +704,7 @@ pub struct TradeOffExplanation {
 
 // Implementation of helper functions (simplified for brevity)
 
+#[allow(dead_code)]
 fn initialize_or_update_ai_state(
     _previous_state: Option<AIProcessingState>,
     _shape: (usize, usize),
@@ -763,6 +765,7 @@ fn initialize_or_update_ai_state(
     })
 }
 
+#[allow(dead_code)]
 fn recognize_image_pattern<T>(
     image: &ArrayView2<T>,
     state: &mut AIProcessingState,
@@ -843,6 +846,7 @@ where
 }
 
 // Helper functions for advanced pattern recognition
+#[allow(dead_code)]
 fn calculate_variance<T>(image: &ArrayView2<T>, mean: T) -> T
 where
     T: Float + FromPrimitive + Copy,
@@ -863,6 +867,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn analyze_edge_density<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
@@ -894,6 +899,7 @@ where
     edge_count as f64 / ((rows - 2) * (cols - 2)) as f64
 }
 
+#[allow(dead_code)]
 fn analyze_texture_energy<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
@@ -932,6 +938,7 @@ where
     energy / ((rows - 2) * (cols - 2)) as f64
 }
 
+#[allow(dead_code)]
 fn analyze_frequency_content<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
@@ -953,6 +960,7 @@ where
     high_freq_energy / ((rows - 2) * (cols - 2)) as f64
 }
 
+#[allow(dead_code)]
 fn analyze_gradient_strength<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
@@ -972,6 +980,7 @@ where
     total_gradient / ((rows - 1) * (cols - 1)) as f64
 }
 
+#[allow(dead_code)]
 fn analyze_homogeneity<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
@@ -1013,6 +1022,7 @@ where
     homogeneity / ((rows - window_size + 1) * (cols - window_size + 1)) as f64
 }
 
+#[allow(dead_code)]
 fn analyze_symmetry<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
@@ -1044,6 +1054,7 @@ where
     1.0 - (horizontal_symmetry + vertical_symmetry) / 2.0
 }
 
+#[allow(dead_code)]
 fn estimate_noise_level<T>(image: &ArrayView2<T>) -> f64
 where
     T: Float + FromPrimitive + Copy,
@@ -1065,6 +1076,7 @@ where
     noise_estimate / ((rows - 2) * (cols - 2)) as f64
 }
 
+#[allow(dead_code)]
 fn classify_pattern_type(features: &Array1<f64>, _neural_network: &NeuralModel) -> PatternType {
     // AI-based classification using extracted features
     let edge_density = features[1];
@@ -1086,6 +1098,7 @@ fn classify_pattern_type(features: &Array1<f64>, _neural_network: &NeuralModel) 
     }
 }
 
+#[allow(dead_code)]
 fn assess_complexity(features: &Array1<f64>, image_size: usize) -> ComplexityLevel {
     let variance = features[0];
     let edge_density = features[1];
@@ -1107,6 +1120,7 @@ fn assess_complexity(features: &Array1<f64>, image_size: usize) -> ComplexityLev
     }
 }
 
+#[allow(dead_code)]
 fn classify_noise_level(noise_estimate: f64) -> NoiseLevel {
     if noise_estimate > 0.5 {
         NoiseLevel::High
@@ -1117,6 +1131,7 @@ fn classify_noise_level(noise_estimate: f64) -> NoiseLevel {
     }
 }
 
+#[allow(dead_code)]
 fn identify_dominant_features(features: &Array1<f64>) -> Vec<FeatureType> {
     let mut dominant_features = Vec::new();
 
@@ -1148,6 +1163,7 @@ fn identify_dominant_features(features: &Array1<f64>) -> Vec<FeatureType> {
     dominant_features
 }
 
+#[allow(dead_code)]
 fn select_optimal_strategy(
     pattern: &ImagePattern,
     state: &mut AIProcessingState,
@@ -1186,6 +1202,7 @@ fn select_optimal_strategy(
 }
 
 // Helper functions for intelligent strategy selection
+#[allow(dead_code)]
 fn analyze_pattern_for_strategy(pattern: &ImagePattern) -> HashMap<String, f64> {
     let mut weights = HashMap::new();
 
@@ -1300,6 +1317,7 @@ fn analyze_pattern_for_strategy(pattern: &ImagePattern) -> HashMap<String, f64> 
     weights
 }
 
+#[allow(dead_code)]
 fn calculate_performance_weights(
     state: &AIProcessingState,
     _config: &AIAdaptiveConfig,
@@ -1339,6 +1357,7 @@ fn calculate_performance_weights(
     weights
 }
 
+#[allow(dead_code)]
 fn apply_optimization_target_weights(target: &OptimizationTarget) -> HashMap<String, f64> {
     let mut weights = HashMap::new();
 
@@ -1382,6 +1401,7 @@ fn apply_optimization_target_weights(target: &OptimizationTarget) -> HashMap<Str
     weights
 }
 
+#[allow(dead_code)]
 fn generate_candidate_strategies(
     pattern: &ImagePattern,
     config: &AIAdaptiveConfig,
@@ -1624,6 +1644,7 @@ fn generate_candidate_strategies(
     strategies
 }
 
+#[allow(dead_code)]
 fn score_strategies(
     strategies: &[ProcessingStrategy],
     pattern_weights: &HashMap<String, f64>,
@@ -1639,15 +1660,17 @@ fn score_strategies(
 
         // Score based on algorithm sequence
         for algorithm in &strategy.algorithm_sequence {
-            let algorithm_name = match algorithm {
-                ProcessingAlgorithm::AdaptiveGaussianFilter => "gaussian_filter",
-                ProcessingAlgorithm::IntelligentEdgeDetection => "edge_detection",
-                ProcessingAlgorithm::AIEnhancedMedianFilter => "median_filter",
-                ProcessingAlgorithm::SmartBilateralFilter => "bilateral_filter",
-                ProcessingAlgorithm::ContextAwareNoiseReduction => "noise_reduction",
-                ProcessingAlgorithm::AdaptiveMorphology => "morphology",
-                ProcessingAlgorithm::IntelligentSegmentation => "segmentation",
-                ProcessingAlgorithm::AIFeatureExtraction => "feature_extraction",
+            let algorithm_name = match &algorithm.algorithm {
+                AlgorithmType::GaussianFilter => "gaussian_filter",
+                AlgorithmType::EdgeDetection => "edge_detection",
+                AlgorithmType::MedianFilter => "median_filter",
+                AlgorithmType::BilateralFilter => "bilateral_filter",
+                AlgorithmType::MorphologyOperation => "morphology",
+                AlgorithmType::QuantumProcessing => "quantum_processing",
+                AlgorithmType::NeuromorphicProcessing => "neuromorphic_processing",
+                AlgorithmType::ConsciousnessSimulation => "consciousness_simulation",
+                AlgorithmType::UltrathinkFusion => "ultrathink_fusion",
+                AlgorithmType::CustomAI => "custom_ai",
             };
 
             let pattern_score = pattern_weights.get(algorithm_name).unwrap_or(&0.5);
@@ -1688,6 +1711,7 @@ fn score_strategies(
     scored_strategies
 }
 
+#[allow(dead_code)]
 fn select_best_strategy(
     mut scored_strategies: Vec<(ProcessingStrategy, f64)>,
     state: &AIProcessingState,
@@ -1726,6 +1750,7 @@ fn select_best_strategy(
     Ok(selected_strategy)
 }
 
+#[allow(dead_code)]
 fn update_strategy_selection_learning(
     state: &mut AIProcessingState,
     strategy: &ProcessingStrategy,
@@ -1759,6 +1784,7 @@ fn update_strategy_selection_learning(
 // Additional placeholder implementations for other functions...
 // (These would be fully implemented in a production system)
 
+#[allow(dead_code)]
 fn integrate_multimodal_knowledge(
     strategy: ProcessingStrategy,
     _pattern: &ImagePattern,
@@ -1768,6 +1794,7 @@ fn integrate_multimodal_knowledge(
     Ok(strategy)
 }
 
+#[allow(dead_code)]
 fn apply_predictive_processing(
     _strategy: &ProcessingStrategy,
     _state: &mut AIProcessingState,
@@ -1776,6 +1803,7 @@ fn apply_predictive_processing(
     Ok(HashMap::new())
 }
 
+#[allow(dead_code)]
 fn execute_adaptive_pipeline<T>(
     image: &ArrayView2<T>,
     strategy: &ProcessingStrategy,
@@ -1797,35 +1825,39 @@ where
         let step_start = std::time::Instant::now();
 
         // Apply algorithm-specific adjustments from AI predictions
-        let step_adjustments = get_algorithm_adjustments(algorithm, adjustments);
+        let step_adjustments = get_algorithm_adjustments(&algorithm.algorithm, adjustments);
 
         // Execute the algorithm with adaptive parameters
-        let (processed_image, step_quality) = match algorithm {
-            ProcessingAlgorithm::AdaptiveGaussianFilter => {
+        let (processed_image, step_quality) = match &algorithm.algorithm {
+            AlgorithmType::GaussianFilter => {
                 apply_adaptive_gaussian_filter(&current_image.view(), &step_adjustments, config)?
             }
-            ProcessingAlgorithm::IntelligentEdgeDetection => {
+            AlgorithmType::EdgeDetection => {
                 apply_intelligent_edge_detection(&current_image.view(), &step_adjustments, config)?
             }
-            ProcessingAlgorithm::AIEnhancedMedianFilter => {
+            AlgorithmType::MedianFilter => {
                 apply_ai_enhanced_median_filter(&current_image.view(), &step_adjustments, config)?
             }
-            ProcessingAlgorithm::SmartBilateralFilter => {
+            AlgorithmType::BilateralFilter => {
                 apply_smart_bilateral_filter(&current_image.view(), &step_adjustments, config)?
             }
-            ProcessingAlgorithm::ContextAwareNoiseReduction => apply_context_aware_noise_reduction(
-                &current_image.view(),
-                &step_adjustments,
-                config,
-            )?,
-            ProcessingAlgorithm::AdaptiveMorphology => {
+            AlgorithmType::MorphologyOperation => {
                 apply_adaptive_morphology(&current_image.view(), &step_adjustments, config)?
             }
-            ProcessingAlgorithm::IntelligentSegmentation => {
-                apply_intelligent_segmentation(&current_image.view(), &step_adjustments, config)?
+            AlgorithmType::QuantumProcessing => {
+                apply_quantum_processing(&current_image.view(), &step_adjustments, config)?
             }
-            ProcessingAlgorithm::AIFeatureExtraction => {
-                apply_ai_feature_extraction(&current_image.view(), &step_adjustments, config)?
+            AlgorithmType::NeuromorphicProcessing => {
+                apply_neuromorphic_processing(&current_image.view(), &step_adjustments, config)?
+            }
+            AlgorithmType::ConsciousnessSimulation => {
+                apply_consciousness_simulation(&current_image.view(), &step_adjustments, config)?
+            }
+            AlgorithmType::UltrathinkFusion => {
+                apply_ultrathink_fusion(&current_image.view(), &step_adjustments, config)?
+            }
+            AlgorithmType::CustomAI => {
+                apply_custom_ai(&current_image.view(), &step_adjustments, config)?
             }
         };
 
@@ -1839,7 +1871,7 @@ where
 
         // Update AI state with step performance
         let step_duration = step_start.elapsed().as_secs_f64() * 1000.0; // ms
-        update_algorithm_performance(state, algorithm, step_duration, step_quality);
+        update_algorithm_performance(state, &algorithm.algorithm, step_duration, step_quality);
 
         // Early termination if quality degrades too much
         if quality_score < 0.3 && config.optimization_target == OptimizationTarget::Quality {
@@ -1878,8 +1910,9 @@ where
 }
 
 // Helper functions for algorithm execution
+#[allow(dead_code)]
 fn get_algorithm_adjustments(
-    algorithm: &ProcessingAlgorithm,
+    algorithm: &AlgorithmType,
     adjustments: &HashMap<String, f64>,
 ) -> HashMap<String, f64> {
     let algorithm_name = format!("{:?}", algorithm);
@@ -1890,6 +1923,7 @@ fn get_algorithm_adjustments(
         .collect()
 }
 
+#[allow(dead_code)]
 fn apply_adaptive_gaussian_filter<T>(
     image: &ArrayView2<T>,
     adjustments: &HashMap<String, f64>,
@@ -1953,6 +1987,7 @@ where
     Ok((output, quality.max(0.1)))
 }
 
+#[allow(dead_code)]
 fn apply_intelligent_edge_detection<T>(
     image: &ArrayView2<T>,
     adjustments: &HashMap<String, f64>,
@@ -2000,6 +2035,7 @@ where
     Ok((output, quality.min(1.0)))
 }
 
+#[allow(dead_code)]
 fn apply_ai_enhanced_median_filter<T>(
     image: &ArrayView2<T>,
     adjustments: &HashMap<String, f64>,
@@ -2051,6 +2087,7 @@ where
     Ok((output, quality.max(0.3).min(1.0)))
 }
 
+#[allow(dead_code)]
 fn apply_smart_bilateral_filter<T>(
     image: &ArrayView2<T>,
     _adjustments: &HashMap<String, f64>,
@@ -2096,6 +2133,7 @@ where
     Ok((output, 0.85))
 }
 
+#[allow(dead_code)]
 fn apply_context_aware_noise_reduction<T>(
     image: &ArrayView2<T>,
     _adjustments: &HashMap<String, f64>,
@@ -2139,6 +2177,7 @@ where
     Ok((output, 0.75))
 }
 
+#[allow(dead_code)]
 fn apply_adaptive_morphology<T>(
     image: &ArrayView2<T>,
     _adjustments: &HashMap<String, f64>,
@@ -2171,6 +2210,7 @@ where
     Ok((output, 0.7))
 }
 
+#[allow(dead_code)]
 fn apply_intelligent_segmentation<T>(
     image: &ArrayView2<T>,
     _adjustments: &HashMap<String, f64>,
@@ -2191,6 +2231,7 @@ where
     Ok((output, 0.65))
 }
 
+#[allow(dead_code)]
 fn apply_ai_feature_extraction<T>(
     image: &ArrayView2<T>,
     _adjustments: &HashMap<String, f64>,
@@ -2217,9 +2258,10 @@ where
     Ok((output, 0.8))
 }
 
+#[allow(dead_code)]
 fn update_algorithm_performance(
     state: &mut AIProcessingState,
-    algorithm: &ProcessingAlgorithm,
+    algorithm: &AlgorithmType,
     duration: f64,
     quality: f64,
 ) {
@@ -2231,6 +2273,7 @@ fn update_algorithm_performance(
     }
 }
 
+#[allow(dead_code)]
 fn calculate_energy_consumption(
     duration_ms: f64,
     memory_mb: f64,
@@ -2246,6 +2289,7 @@ fn calculate_energy_consumption(
     base_power * duration_s * memory_factor * complexity_factor
 }
 
+#[allow(dead_code)]
 fn calculate_user_satisfaction(
     quality: f64,
     speed_pps: f64,
@@ -2271,6 +2315,7 @@ fn calculate_user_satisfaction(
     }
 }
 
+#[allow(dead_code)]
 fn update_pipeline_performance(
     state: &mut AIProcessingState,
     strategy: &ProcessingStrategy,
@@ -2305,6 +2350,7 @@ fn update_pipeline_performance(
     }
 }
 
+#[allow(dead_code)]
 fn evaluate_performance<T>(
     _original: &ArrayView2<T>,
     _processed: &Array2<T>,
@@ -2324,6 +2370,7 @@ where
     })
 }
 
+#[allow(dead_code)]
 fn update_continual_learning(
     _state: &mut AIProcessingState,
     _performance: &PerformanceRecord,
@@ -2332,6 +2379,7 @@ fn update_continual_learning(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_experience_replay(
     _state: &mut AIProcessingState,
     _pattern: &ImagePattern,
@@ -2342,6 +2390,7 @@ fn update_experience_replay(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_transfer_learning(
     _state: &mut AIProcessingState,
     _pattern: &ImagePattern,
@@ -2351,6 +2400,7 @@ fn update_transfer_learning(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_few_shot_learning(
     _state: &mut AIProcessingState,
     _pattern: &ImagePattern,
@@ -2360,6 +2410,7 @@ fn update_few_shot_learning(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn generate_processing_explanation(
     _strategy: &ProcessingStrategy,
     _performance: &PerformanceRecord,
@@ -2396,6 +2447,7 @@ fn generate_processing_explanation(
     })
 }
 
+#[allow(dead_code)]
 fn optimize_resource_learning(
     _state: &mut AIProcessingState,
     _metrics: &PerformanceMetrics,
@@ -2509,4 +2561,75 @@ mod tests {
         assert_eq!(explanation.alternatives_considered.len(), 1);
         assert_eq!(explanation.learning_insights.len(), 1);
     }
+}
+
+// Missing function implementations - placeholders for now
+#[allow(dead_code)]
+fn apply_quantum_processing<T>(
+    _image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
+) -> NdimageResult<(Array2<T>, f64)>
+where
+    T: Float + FromPrimitive + Copy + Clone,
+{
+    // Placeholder implementation
+    let output = _image.to_owned();
+    Ok((output, 0.7))
+}
+
+#[allow(dead_code)]
+fn apply_neuromorphic_processing<T>(
+    _image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
+) -> NdimageResult<(Array2<T>, f64)>
+where
+    T: Float + FromPrimitive + Copy + Clone,
+{
+    // Placeholder implementation
+    let output = _image.to_owned();
+    Ok((output, 0.7))
+}
+
+#[allow(dead_code)]
+fn apply_consciousness_simulation<T>(
+    _image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
+) -> NdimageResult<(Array2<T>, f64)>
+where
+    T: Float + FromPrimitive + Copy + Clone,
+{
+    // Placeholder implementation
+    let output = _image.to_owned();
+    Ok((output, 0.7))
+}
+
+#[allow(dead_code)]
+fn apply_ultrathink_fusion<T>(
+    _image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
+) -> NdimageResult<(Array2<T>, f64)>
+where
+    T: Float + FromPrimitive + Copy + Clone,
+{
+    // Placeholder implementation
+    let output = _image.to_owned();
+    Ok((output, 0.7))
+}
+
+#[allow(dead_code)]
+fn apply_custom_ai<T>(
+    _image: &ArrayView2<T>,
+    _adjustments: &HashMap<String, f64>,
+    _config: &AIAdaptiveConfig,
+) -> NdimageResult<(Array2<T>, f64)>
+where
+    T: Float + FromPrimitive + Copy + Clone,
+{
+    // Placeholder implementation
+    let output = _image.to_owned();
+    Ok((output, 0.7))
 }

@@ -359,6 +359,7 @@ pub struct ProcessingDecision {
 }
 
 /// Quantum-inspired streaming processor
+#[derive(Debug)]
 pub struct QuantumStreamProcessor {
     /// Current quantum state
     quantum_state: QuantumProcessingState,

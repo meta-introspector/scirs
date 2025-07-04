@@ -1224,6 +1224,7 @@ if config.is_available() {
         CodeExample {
             title: "Method Selection Matrix".to_string(),
             code: r#"// Pseudo-code for method selection
+#[allow(dead_code)]
 fn select_method(data_size: usize, smoothness_required: bool, has_derivatives: bool) -> InterpolationMethod {
     match (data_size, smoothness_required, has_derivatives) {
         (n, false, _) if n < 1000 => InterpolationMethod::Linear,
@@ -1509,6 +1510,7 @@ impl fmt::Display for DocumentationReport {
 
 /// Convenience functions
 /// Run comprehensive documentation enhancement with default configuration
+#[allow(dead_code)]
 pub fn enhance_documentation_for_stable_release() -> InterpolateResult<DocumentationReport> {
     let config = DocumentationConfig::default();
     let mut enhancer = DocumentationEnhancer::new(config);
@@ -1516,6 +1518,7 @@ pub fn enhance_documentation_for_stable_release() -> InterpolateResult<Documenta
 }
 
 /// Run quick documentation analysis for development
+#[allow(dead_code)]
 pub fn quick_documentation_analysis() -> InterpolateResult<DocumentationReport> {
     let config = DocumentationConfig {
         min_coverage_percentage: 80.0,
@@ -1530,6 +1533,7 @@ pub fn quick_documentation_analysis() -> InterpolateResult<DocumentationReport> 
 }
 
 /// Run documentation enhancement with custom configuration
+#[allow(dead_code)]
 pub fn enhance_documentation_with_config(
     config: DocumentationConfig,
 ) -> InterpolateResult<DocumentationReport> {

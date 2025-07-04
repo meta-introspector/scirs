@@ -4,7 +4,7 @@
 //! enabling efficient batch parallelization and distributed optimization
 //! across multiple TPU devices and nodes.
 
-use ndarray::{Array, Array2, Dimension};
+use ndarray::{Array, Array2};
 use num_traits::Float;
 use rand::{rng, Rng};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -1995,7 +1995,7 @@ impl SynchronizationManager {
 
     pub async fn global_barrier(&mut self) -> Result<()> {
         // Simplified barrier implementation
-        let barrier_id = BarrierId(rng().gen());
+        let barrier_id = BarrierId(rng().random());
         let barrier_state = BarrierState {
             participants: HashSet::new(),
             arrived: HashSet::new(),
@@ -2092,7 +2092,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
     }
 
     pub async fn create_batch(&mut self, batch_data: BatchData<T>) -> Result<BatchId> {
-        let batch_id = BatchId(rng().gen());
+        let batch_id = BatchId(rng().random());
         let batch_execution = BatchExecution {
             id: batch_id,
             data: batch_data,
@@ -2163,7 +2163,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
     }
 }
 
-impl<T: Float + Default + Clone> GradientAggregator<T> {
+impl<T: Float + Default + Clone + ndarray::ScalarOperand> GradientAggregator<T> {
     pub fn new(config: &PodCoordinationConfig) -> Result<Self> {
         Ok(Self {
             method: config.gradient_aggregation,

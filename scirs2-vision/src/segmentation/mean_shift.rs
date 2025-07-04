@@ -79,6 +79,7 @@ impl Default for MeanShiftParams {
 /// let labels = mean_shift(&DynamicImage::ImageRgb8(img), &params).unwrap();
 /// assert_eq!(labels.dim(), (10, 10));
 /// ```
+#[allow(dead_code)]
 pub fn mean_shift(img: &DynamicImage, params: &MeanShiftParams) -> Result<Array2<u32>> {
     let rgb = img.to_rgb8();
     let (width, height) = rgb.dimensions();
@@ -143,6 +144,7 @@ pub fn mean_shift(img: &DynamicImage, params: &MeanShiftParams) -> Result<Array2
 }
 
 /// Convert image to feature space (x, y, L, a, b)
+#[allow(dead_code)]
 fn image_to_feature_space(img: &RgbImage) -> Array2<f32> {
     let (width, height) = img.dimensions();
     let n_pixels = (width * height) as usize;
@@ -168,6 +170,7 @@ fn image_to_feature_space(img: &RgbImage) -> Array2<f32> {
 }
 
 /// Compute mean shift update for a point
+#[allow(dead_code)]
 fn compute_mean_shift(
     features: &Array2<f32>,
     point: &Array1<f32>,
@@ -211,6 +214,7 @@ fn compute_mean_shift(
 }
 
 /// Cluster modes and assign labels
+#[allow(dead_code)]
 fn cluster_modes(modes: &Array2<f32>, spatial_bandwidth: f32, color_bandwidth: f32) -> Vec<u32> {
     let n_points = modes.nrows();
     let mut labels = vec![u32::MAX; n_points];
@@ -253,12 +257,14 @@ fn cluster_modes(modes: &Array2<f32>, spatial_bandwidth: f32, color_bandwidth: f
 }
 
 /// Euclidean distance between two points
+#[allow(dead_code)]
 fn euclidean_distance(a: &Array1<f32>, b: &Array1<f32>) -> f32 {
     let diff = a - b;
     diff.mapv(|x| x * x).sum().sqrt()
 }
 
 /// Merge small regions with neighbors
+#[allow(dead_code)]
 fn merge_small_regions(labels: &Array2<u32>, min_size: usize) -> Array2<u32> {
     let (height, width) = labels.dim();
     let mut result = labels.clone();
@@ -317,6 +323,7 @@ fn merge_small_regions(labels: &Array2<u32>, min_size: usize) -> Array2<u32> {
 }
 
 /// Convert RGB to Lab color space (simplified)
+#[allow(dead_code)]
 fn rgb_to_lab(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
     // Normalize RGB
     let r = r as f32 / 255.0;
@@ -358,6 +365,7 @@ fn rgb_to_lab(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
 }
 
 /// Convert mean shift segmentation labels to color image
+#[allow(dead_code)]
 pub fn mean_shift_labels_to_color(labels: &Array2<u32>) -> RgbImage {
     let (height, width) = labels.dim();
     let mut result = RgbImage::new(width as u32, height as u32);
@@ -398,6 +406,7 @@ pub fn mean_shift_labels_to_color(labels: &Array2<u32>) -> RgbImage {
 }
 
 /// Convert HSV to RGB
+#[allow(dead_code)]
 fn hsv_to_rgb(h: f32, s: f32, v: f32) -> (f32, f32, f32) {
     let c = v * s;
     let x = c * (1.0 - ((h * 6.0) % 2.0 - 1.0).abs());

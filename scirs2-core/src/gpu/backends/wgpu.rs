@@ -49,6 +49,7 @@ struct AdamUniforms {
 @group(0) @binding(4) var<uniform> uniforms: AdamUniforms;
 
 @compute @workgroup_size(64)
+#[allow(dead_code)]
 fn adam_update(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let idx = global_id.x;
     
@@ -94,6 +95,7 @@ struct GemmUniforms {
 @group(0) @binding(3) var<uniform> uniforms: GemmUniforms;
 
 @compute @workgroup_size(8, 8)
+#[allow(dead_code)]
 fn gemm(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let row = global_id.x;
     let col = global_id.y;

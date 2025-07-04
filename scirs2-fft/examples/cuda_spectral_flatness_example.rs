@@ -6,6 +6,7 @@ use scirs2_fft::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
     let mut signal = vec![0.0; n];
     for &(freq, amplitude) in frequencies {
@@ -17,6 +18,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
     signal
 }
 
+#[allow(dead_code)]
 fn add_noise(signal: &[f64], noise_level: f64) -> Vec<f64> {
     let mut rng = rand::rng();
     signal
@@ -25,6 +27,7 @@ fn add_noise(signal: &[f64], noise_level: f64) -> Vec<f64> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn print_result(
     name: &str,
     result: &scirs2_fft::sparse_fft::SparseFFTResult,
@@ -56,6 +59,7 @@ fn print_result(
     println!();
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Parameters
     let n = 8192;

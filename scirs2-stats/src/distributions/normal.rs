@@ -223,6 +223,7 @@ impl<F: Float + NumCast + std::fmt::Display> Normal<F> {
 }
 
 /// Calculate the error function (erf)
+#[allow(dead_code)]
 fn erf<F: Float>(x: F) -> F {
     // Approximation based on Abramowitz and Stegun
     let zero = F::zero();

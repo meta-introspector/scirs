@@ -527,6 +527,7 @@ impl<F: Float + FromPrimitive + Debug + ScalarOperand + Sum> GaussianMixture<F> 
 ///
 /// let labels = gaussian_mixture(data.view(), options).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn gaussian_mixture<F>(data: ArrayView2<F>, options: GMMOptions<F>) -> Result<Array1<i32>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand + Sum,

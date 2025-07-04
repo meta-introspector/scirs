@@ -8,6 +8,7 @@ use ndarray::{Array1, Array2};
 use scirs2_interpolate::griddata::{griddata, GriddataMethod};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Improved Griddata Linear Interpolation Demo ===\n");
 
@@ -44,6 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_1d_linear() -> Result<(), Box<dyn std::error::Error>> {
     // Create 1D test data
     let x_data = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
@@ -87,6 +89,7 @@ fn demonstrate_1d_linear() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_2d_triangulation() -> Result<(), Box<dyn std::error::Error>> {
     // Create 2D test data - unit square with function f(x,y) = x + y
     let data_points = [
@@ -152,6 +155,7 @@ fn demonstrate_2d_triangulation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_nd_interpolation() -> Result<(), Box<dyn std::error::Error>> {
     // Create 3D test data
     let n_points = 20;
@@ -196,6 +200,7 @@ fn demonstrate_nd_interpolation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compare_interpolation_methods() -> Result<(), Box<dyn std::error::Error>> {
     // Create 2D test data
     let data_points = vec![[0.0, 0.0], [2.0, 0.0], [1.0, 1.5], [0.5, 1.0], [1.5, 0.5]];
@@ -239,6 +244,7 @@ fn compare_interpolation_methods() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Testing edge cases:");
 

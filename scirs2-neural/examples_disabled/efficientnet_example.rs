@@ -2,6 +2,7 @@ use ndarray::{Array, IxDyn};
 use scirs2_neural::layers::Layer;
 use scirs2_neural::models::{EfficientNet, EfficientNetConfig};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("EfficientNet Example");
     // Create EfficientNet-B0 model for image classification

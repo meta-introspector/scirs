@@ -4,6 +4,7 @@ use rand::rng;
 use rand::Rng;
 use scirs2_neural::*;
 
+#[allow(dead_code)]
 fn generate_random_data(shape: &[usize]) -> Array2<f32> {
     let mut rng = rand::rng();
     let total_size = shape.iter().product();
@@ -13,6 +14,7 @@ fn generate_random_data(shape: &[usize]) -> Array2<f32> {
     )
     .unwrap()
 }
+#[allow(dead_code)]
 fn generate_random_3d(shape: &[usize]) -> Array3<f32> {
     let mut rng = rand::rng();
     let total_size = shape.iter().product();
@@ -22,6 +24,7 @@ fn generate_random_3d(shape: &[usize]) -> Array3<f32> {
     )
     .unwrap()
 }
+#[allow(dead_code)]
 fn generate_random_4d(shape: &[usize]) -> Array4<f32> {
     let mut rng = rand::rng();
     let total_size = shape.iter().product();
@@ -31,6 +34,7 @@ fn generate_random_4d(shape: &[usize]) -> Array4<f32> {
     )
     .unwrap()
 }
+#[allow(dead_code)]
 fn bench_activation_functions(c: &mut Criterion) {
     let mut group = c.benchmark_group("activation_functions");
     for size in [1000, 10000, 100000].iter() {
@@ -58,6 +62,7 @@ fn bench_activation_functions(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_dense_layers(c: &mut Criterion) {
     let mut group = c.benchmark_group("dense_layers");
     for (batch_size, input_size, output_size) in
@@ -93,6 +98,7 @@ fn bench_dense_layers(c: &mut Criterion) {
     }
     group.finish();
 }
+#[allow(dead_code)]
 fn bench_convolutional_layers(c: &mut Criterion) {
     let mut group = c.benchmark_group("conv_layers");
     for (batch_size, channels, height, width, filters) in
@@ -117,6 +123,7 @@ fn bench_convolutional_layers(c: &mut Criterion) {
     }
     group.finish();
 }
+#[allow(dead_code)]
 fn bench_recurrent_layers(c: &mut Criterion) {
     let mut group = c.benchmark_group("rnn_layers");
     for (batch_size, seq_len, input_size, hidden_size) in
@@ -147,6 +154,7 @@ fn bench_recurrent_layers(c: &mut Criterion) {
     }
     group.finish();
 }
+#[allow(dead_code)]
 fn bench_loss_functions(c: &mut Criterion) {
     let mut group = c.benchmark_group("loss_functions");
     for size in [1000, 10000, 100000].iter() {
@@ -185,6 +193,7 @@ fn bench_loss_functions(c: &mut Criterion) {
     }
     group.finish();
 }
+#[allow(dead_code)]
 fn bench_optimizers(c: &mut Criterion) {
     let mut group = c.benchmark_group("optimizers");
     for param_size in [1000, 10000, 100000].iter() {
@@ -214,6 +223,7 @@ fn bench_optimizers(c: &mut Criterion) {
     }
     group.finish();
 }
+#[allow(dead_code)]
 fn bench_batch_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("batch_operations");
     for (batch_size, feature_size) in [(32, 128), (64, 256), (128, 512)].iter() {
@@ -237,6 +247,7 @@ fn bench_batch_operations(c: &mut Criterion) {
     }
     group.finish();
 }
+#[allow(dead_code)]
 fn bench_model_training(c: &mut Criterion) {
     let mut group = c.benchmark_group("model_training");
     group.sample_size(10); // Reduced sample size for expensive operations

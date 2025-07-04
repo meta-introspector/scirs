@@ -21,6 +21,7 @@ use scirs2_neural::{
     model_evaluation::{CrossValidationStrategy, EvaluationBuilder},
     transfer_learning::{TransferLearningManager, TransferStrategy},
 };
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("=== Advanced Neural Network Features Demonstration ===\n");
     // 1. Advanced Data Augmentation
@@ -38,6 +39,7 @@ fn main() -> Result<()> {
     println!("=== All advanced demonstrations completed successfully! ===");
     Ok(())
 }
+#[allow(dead_code)]
 fn demonstrate_advanced_augmentation() -> Result<()> {
     println!("🎨 Advanced Data Augmentation Demonstration");
     println!("==========================================\n");
@@ -80,6 +82,7 @@ fn demonstrate_advanced_augmentation() -> Result<()> {
     println!("   Processing time: {:.2}ms", stats.processing_time_ms);
     println!("   Transform counts: {:?}", stats.transform_counts);
     println!("✅ Advanced augmentation demonstration completed!\n");
+#[allow(dead_code)]
 fn demonstrate_enhanced_evaluation() -> Result<()> {
     println!("📊 Enhanced Model Evaluation Demonstration");
     println!("=========================================\n");
@@ -134,6 +137,7 @@ fn demonstrate_enhanced_evaluation() -> Result<()> {
             t_test.t_statistic, t_test.p_value, t_test.significant
         );
     println!("✅ Enhanced evaluation demonstration completed!\n");
+#[allow(dead_code)]
 fn demonstrate_model_compression() -> Result<()> {
     println!("🗜️  Model Compression Demonstration");
     println!("==================================\n");
@@ -172,6 +176,7 @@ fn demonstrate_model_compression() -> Result<()> {
             stats.pruned_params,
             stats.total_params
     println!("✅ Model compression demonstration completed!\n");
+#[allow(dead_code)]
 fn demonstrate_knowledge_distillation() -> Result<()> {
     println!("🎓 Knowledge Distillation Demonstration");
     println!("======================================\n");
@@ -215,6 +220,7 @@ fn demonstrate_knowledge_distillation() -> Result<()> {
         "   Loss history length: {}",
         stats.distillation_loss_history.len()
     println!("✅ Knowledge distillation demonstration completed!\n");
+#[allow(dead_code)]
 fn demonstrate_transfer_learning() -> Result<()> {
     println!("🔄 Transfer Learning Demonstration");
     println!("=================================\n");
@@ -249,6 +255,7 @@ fn demonstrate_transfer_learning() -> Result<()> {
             epoch,
             transfer_manager.get_summary().frozen_layers
     println!("✅ Transfer learning demonstration completed!\n");
+#[allow(dead_code)]
 fn demonstrate_model_interpretation() -> Result<()> {
     println!("🔍 Model Interpretation Demonstration");
     println!("====================================\n");

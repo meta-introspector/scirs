@@ -5,6 +5,7 @@ use scirs2_neural::error::Result;
 use scirs2_neural::layers::{Dense, Layer};
 use scirs2_neural::losses::{Loss, MeanSquaredError};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Manual XOR Neural Network Example");
     // Create a simple dataset for XOR problem

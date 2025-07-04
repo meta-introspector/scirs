@@ -14,6 +14,7 @@ use scirs2_optim::optimizer_composition::{
 use scirs2_optim::optimizers::{Adam, Optimizer, RMSprop, SGD};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Optimizer Composition Framework Example");
     println!("======================================\n");
@@ -43,6 +44,7 @@ fn main() {
 }
 
 /// Example demonstrating a sequential optimizer composition
+#[allow(dead_code)]
 fn sequential_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_features: usize) {
     println!("Sequential Optimizer Example");
     println!("----------------------------");
@@ -98,6 +100,7 @@ fn sequential_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_
 }
 
 /// Example demonstrating a parallel optimizer composition
+#[allow(dead_code)]
 fn parallel_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_features: usize) {
     println!("Parallel Optimizer Example");
     println!("---------------------------");
@@ -197,6 +200,7 @@ fn parallel_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_fe
 }
 
 /// Example demonstrating a chained optimizer composition
+#[allow(dead_code)]
 fn chained_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_features: usize) {
     println!("Chained Optimizer Example");
     println!("-------------------------");
@@ -250,6 +254,7 @@ fn chained_optimizer_example(x_train: &Array2<f64>, y_train: &Array1<f64>, n_fea
 }
 
 /// Generate synthetic regression data
+#[allow(dead_code)]
 fn generate_data(
     n_samples: usize,
     n_features: usize,
@@ -270,11 +275,13 @@ fn generate_data(
 }
 
 /// Compute predictions for linear regression
+#[allow(dead_code)]
 fn compute_predictions(x: &Array2<f64>, weights: &Array1<f64>, bias: f64) -> Array1<f64> {
     &x.dot(weights) + bias
 }
 
 /// Compute loss and gradients for linear regression
+#[allow(dead_code)]
 fn compute_gradients(
     x: &Array2<f64>,
     y: &Array1<f64>,

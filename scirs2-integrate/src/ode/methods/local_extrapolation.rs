@@ -87,6 +87,7 @@ pub struct ExtrapolationResult<F: IntegrateFloat> {
 /// # Returns
 ///
 /// The solution as an ODEResult or an error
+#[allow(dead_code)]
 pub fn gragg_bulirsch_stoer_method<F, Func>(
     f: Func,
     t_span: [F; 2],
@@ -204,6 +205,7 @@ where
 }
 
 /// Perform a single extrapolation step
+#[allow(dead_code)]
 fn extrapolation_step<F, Func>(
     f: &Func,
     t: F,
@@ -316,6 +318,7 @@ where
 }
 
 /// Modified midpoint method sequence (optimal for extrapolation)
+#[allow(dead_code)]
 fn modified_midpoint_sequence<F, Func>(
     f: &Func,
     t0: F,
@@ -363,6 +366,7 @@ where
 }
 
 /// Euler method sequence
+#[allow(dead_code)]
 fn euler_sequence<F, Func>(
     f: &Func,
     t0: F,
@@ -387,6 +391,7 @@ where
 }
 
 /// RK4 method sequence
+#[allow(dead_code)]
 fn rk4_sequence<F, Func>(
     f: &Func,
     t0: F,
@@ -422,6 +427,7 @@ where
 ///
 /// Takes a step with size h and two steps with size h/2, then extrapolates
 /// to get a higher-order approximation.
+#[allow(dead_code)]
 pub fn richardson_extrapolation_step<F, Func, Method>(
     method: Method,
     f: &Func,

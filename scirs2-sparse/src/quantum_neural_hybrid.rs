@@ -183,6 +183,7 @@ impl QuantumNeuralHybridProcessor {
     }
 
     /// Hybrid sparse matrix-vector multiplication
+    #[allow(clippy::too_many_arguments)]
     pub fn hybrid_spmv<T>(
         &mut self,
         rows: usize,

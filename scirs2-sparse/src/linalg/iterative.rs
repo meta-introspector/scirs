@@ -41,6 +41,7 @@ impl<F: Float> Default for CGOptions<F> {
 /// Conjugate gradient solver for symmetric positive definite systems
 ///
 /// Solves Ax = b where A is symmetric positive definite
+#[allow(dead_code)]
 pub fn cg<F>(
     a: &dyn LinearOperator<F>,
     b: &[F],
@@ -191,6 +192,7 @@ impl<F: Float> Default for BiCGOptions<F> {
 /// Biconjugate Gradient solver
 ///
 /// Solves Ax = b where A is non-symmetric.
+#[allow(dead_code)]
 pub fn bicg<F>(
     a: &dyn LinearOperator<F>,
     b: &[F],
@@ -378,6 +380,7 @@ pub type BiCGSTABResult<F> = IterationResult<F>;
 ///
 /// An improved version of BiCG that avoids the irregular convergence patterns
 /// and has better numerical stability. Works for general non-symmetric systems.
+#[allow(dead_code)]
 pub fn bicgstab<F>(
     a: &dyn LinearOperator<F>,
     b: &[F],
@@ -642,6 +645,7 @@ impl<F: Float> Default for GMRESOptions<F> {
 /// Solves Ax = b for general non-symmetric systems. GMRES is particularly
 /// robust but requires more memory than other methods due to the need to
 /// store the Krylov basis vectors.
+#[allow(dead_code)]
 pub fn gmres<F>(
     a: &dyn LinearOperator<F>,
     b: &[F],

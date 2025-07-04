@@ -3,6 +3,7 @@ use crate::features::statistical::calculate_std;
 use std::collections::HashMap;
 
 /// Extract trend features from a time series
+#[allow(dead_code)]
 pub fn extract_trend_features(
     signal: &[f64],
     features: &mut HashMap<String, f64>,
@@ -43,6 +44,7 @@ pub fn extract_trend_features(
 }
 
 /// Perform linear regression on two vectors
+#[allow(dead_code)]
 pub fn linear_regression(x: &[f64], y: &[f64]) -> (f64, f64, f64) {
     if x.is_empty() || y.is_empty() || x.len() != y.len() {
         return (0.0, 0.0, 0.0);
@@ -75,6 +77,7 @@ pub fn linear_regression(x: &[f64], y: &[f64]) -> (f64, f64, f64) {
 }
 
 /// Perform quadratic regression on two vectors
+#[allow(dead_code)]
 pub fn quadratic_regression(x: &[f64], y: &[f64]) -> (f64, f64, f64) {
     if x.is_empty() || y.is_empty() || x.len() != y.len() {
         return (0.0, 0.0, 0.0);

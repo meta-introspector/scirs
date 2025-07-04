@@ -42,6 +42,7 @@ impl Default for SparseOptimizationOptions {
 }
 
 /// Sparse BFGS algorithm for large-scale optimization
+#[allow(dead_code)]
 pub fn minimize_sparse_bfgs<F, S>(
     fun: F,
     x0: Array1<f64>,
@@ -275,6 +276,7 @@ where
 }
 
 /// Compute sparse gradient using sparse numerical differentiation
+#[allow(dead_code)]
 pub fn compute_sparse_gradient<F, S>(
     fun: &F,
     x: &ArrayView1<f64>,
@@ -316,6 +318,7 @@ where
 }
 
 /// Compute gradient using sparse finite differences with a scalar function
+#[allow(dead_code)]
 fn finite_difference_gradient_sparse<F, S>(
     fun: &mut F,
     x: &ArrayView1<f64>,
@@ -354,6 +357,7 @@ where
 }
 
 /// Compute L-BFGS search direction using two-loop recursion
+#[allow(dead_code)]
 fn compute_lbfgs_direction(
     g: &Array1<f64>,
     s_history: &[Array1<f64>],
@@ -393,6 +397,7 @@ fn compute_lbfgs_direction(
 }
 
 /// Auto-detect sparsity pattern by evaluating the function at multiple points
+#[allow(dead_code)]
 pub fn auto_detect_sparsity<F, S>(
     fun: F,
     x: &ArrayView1<f64>,

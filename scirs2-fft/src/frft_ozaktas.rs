@@ -20,6 +20,7 @@ use std::f64::consts::PI;
 /// 1. Using a more stable chirp computation
 /// 2. Better handling of edge effects
 /// 3. Improved interpolation for non-uniform sampling
+#[allow(dead_code)]
 pub fn frft_ozaktas<T>(x: &[T], alpha: f64) -> FFTResult<Vec<Complex64>>
 where
     T: Copy + Into<f64>,
@@ -99,6 +100,7 @@ where
 }
 
 /// Compute chirp function with improved numerical stability
+#[allow(dead_code)]
 fn compute_stable_chirp(n: usize, param: f64) -> Vec<Complex64> {
     let mut chirp = Vec::with_capacity(n);
     let n_f64 = n as f64;
@@ -116,6 +118,7 @@ fn compute_stable_chirp(n: usize, param: f64) -> Vec<Complex64> {
 }
 
 /// Apply Tukey window to reduce edge effects
+#[allow(dead_code)]
 fn apply_tukey_window(x: &mut [Complex64], original_len: usize) {
     let alpha = 0.1; // Tukey parameter
     let taper_len = (alpha * original_len as f64) as usize;
@@ -129,6 +132,7 @@ fn apply_tukey_window(x: &mut [Complex64], original_len: usize) {
 }
 
 /// Handle special cases where alpha is a multiple of 4
+#[allow(dead_code)]
 fn handle_special_cases<T>(x: &[T], alpha: f64) -> FFTResult<Vec<Complex64>>
 where
     T: Copy + Into<f64>,
@@ -164,6 +168,7 @@ where
 }
 
 /// Handle cases where phi is close to multiples of PI
+#[allow(dead_code)]
 fn handle_near_special_angles(x: &[Complex64], phi: f64) -> FFTResult<Vec<Complex64>> {
     let k = (phi / PI).round() as i32;
 
@@ -185,6 +190,7 @@ fn handle_near_special_angles(x: &[Complex64], phi: f64) -> FFTResult<Vec<Comple
 }
 
 /// Post-processing to improve numerical accuracy
+#[allow(dead_code)]
 fn post_process_result(result: &mut [Complex64], alpha: f64) {
     // Apply phase correction for improved accuracy
     let phase = alpha * PI / 4.0;

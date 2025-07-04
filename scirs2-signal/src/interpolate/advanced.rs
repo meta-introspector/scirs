@@ -36,6 +36,7 @@ use scirs2_linalg::{cholesky, solve, solve_triangular};
 /// let result = gaussian_process_interpolate(&signal, 2.0, 1.0, 0.01).unwrap();
 /// // Result contains probabilistically interpolated values
 /// ```
+#[allow(dead_code)]
 pub fn gaussian_process_interpolate(
     signal: &Array1<f64>,
     kernel_length: f64,
@@ -179,6 +180,7 @@ pub fn gaussian_process_interpolate(
 /// let variogram = |h: f64| 1.0 - (-h / 2.0).exp(); // Exponential model
 /// let result = kriging_interpolate(&signal, variogram, &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn kriging_interpolate<F>(
     signal: &Array1<f64>,
     variogram_model: F,
@@ -304,6 +306,7 @@ where
 /// let rbf = |r: f64| (-r * r).exp(); // Gaussian RBF
 /// let result = rbf_interpolate(&signal, rbf, &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn rbf_interpolate<F>(
     signal: &Array1<f64>,
     rbf_function: F,
@@ -414,6 +417,7 @@ where
 /// let result = minimum_energy_interpolate(&signal, &config).unwrap();
 /// // Result contains the smoothest possible interpolation
 /// ```
+#[allow(dead_code)]
 pub fn minimum_energy_interpolate(
     signal: &Array1<f64>,
     config: &InterpolationConfig,

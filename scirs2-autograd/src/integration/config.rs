@@ -635,6 +635,7 @@ static GLOBAL_CONFIG_MANAGER: std::sync::OnceLock<std::sync::Mutex<ConfigManager
     std::sync::OnceLock::new();
 
 /// Initialize global configuration manager
+#[allow(dead_code)]
 pub fn init_config_manager() -> &'static std::sync::Mutex<ConfigManager> {
     GLOBAL_CONFIG_MANAGER.get_or_init(|| {
         let mut manager = ConfigManager::new();
@@ -652,6 +653,7 @@ pub fn init_config_manager() -> &'static std::sync::Mutex<ConfigManager> {
 }
 
 /// Get global configuration value
+#[allow(dead_code)]
 pub fn get_config_value(key: &str) -> Result<Option<ConfigValue>, IntegrationError> {
     let manager = init_config_manager();
     let manager_guard = manager.lock().map_err(|_| {
@@ -661,6 +663,7 @@ pub fn get_config_value(key: &str) -> Result<Option<ConfigValue>, IntegrationErr
 }
 
 /// Set global configuration value
+#[allow(dead_code)]
 pub fn set_config_value<T: Into<ConfigValue>>(key: &str, value: T) -> Result<(), IntegrationError> {
     let manager = init_config_manager();
     let mut manager_guard = manager.lock().map_err(|_| {
@@ -671,6 +674,7 @@ pub fn set_config_value<T: Into<ConfigValue>>(key: &str, value: T) -> Result<(),
 }
 
 /// Get module configuration
+#[allow(dead_code)]
 pub fn get_module_config(module_name: &str) -> Result<Option<ModuleConfig>, IntegrationError> {
     let manager = init_config_manager();
     let manager_guard = manager.lock().map_err(|_| {
@@ -680,6 +684,7 @@ pub fn get_module_config(module_name: &str) -> Result<Option<ModuleConfig>, Inte
 }
 
 /// Update global integration configuration
+#[allow(dead_code)]
 pub fn update_integration_config(config: IntegrationConfig) -> Result<(), IntegrationError> {
     let manager = init_config_manager();
     let mut manager_guard = manager.lock().map_err(|_| {
@@ -690,6 +695,7 @@ pub fn update_integration_config(config: IntegrationConfig) -> Result<(), Integr
 }
 
 /// Load configuration from file
+#[allow(dead_code)]
 pub fn load_config_from_file<P: AsRef<Path>>(path: P) -> Result<(), IntegrationError> {
     let manager = init_config_manager();
     let mut manager_guard = manager.lock().map_err(|_| {
@@ -699,6 +705,7 @@ pub fn load_config_from_file<P: AsRef<Path>>(path: P) -> Result<(), IntegrationE
 }
 
 /// Export configuration to file
+#[allow(dead_code)]
 pub fn export_config_to_file<P: AsRef<Path>>(path: P) -> Result<(), IntegrationError> {
     let manager = init_config_manager();
     let manager_guard = manager.lock().map_err(|_| {
@@ -708,6 +715,7 @@ pub fn export_config_to_file<P: AsRef<Path>>(path: P) -> Result<(), IntegrationE
 }
 
 /// Get configuration summary
+#[allow(dead_code)]
 pub fn get_config_summary() -> Result<ConfigSummary, IntegrationError> {
     let manager = init_config_manager();
     let manager_guard = manager.lock().map_err(|_| {

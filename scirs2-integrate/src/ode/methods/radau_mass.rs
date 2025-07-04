@@ -33,6 +33,7 @@ use ndarray::{Array1, Array2, ArrayView1};
 /// # Returns
 ///
 /// The solution as an ODEResult or an error
+#[allow(dead_code)]
 pub fn radau_method_with_mass<F, Func>(
     f: Func,
     t_span: [F; 2],

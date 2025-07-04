@@ -4,7 +4,7 @@
 //! optimization algorithms. It provides high-level abstractions for building, optimizing,
 //! and executing XLA computations on TPU hardware.
 
-use ndarray::{Array1, Array2, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::marker::PhantomData;
@@ -5113,7 +5113,7 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
             LayoutType::RowMajor
         };
 
-        let strides = self.calculate_strides(&shape.dimensions, layout_type)?;
+        let strides = Self::calculate_strides_static(&shape.dimensions, layout_type)?;
 
         Ok(TensorLayout {
             base_address: 0, // Will be assigned during allocation
@@ -5122,8 +5122,7 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
         })
     }
 
-    fn calculate_strides(
-        &self,
+    fn calculate_strides_static(
         dimensions: &[usize],
         layout_type: LayoutType,
     ) -> Result<Vec<usize>> {
@@ -5300,6 +5299,7 @@ impl<T: Float + Default + Clone> LoadBalancer<T> {
                 update_frequency: Duration::from_millis(100),
                 history_length: 100,
             },
+            _phantom: PhantomData,
         }
     }
 }

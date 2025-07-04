@@ -7,6 +7,7 @@ use ndarray::{Array1, Array2};
 use scirs2_linalg::error::LinalgResult;
 use scirs2_linalg::prelude::*;
 
+#[allow(dead_code)]
 fn main() -> LinalgResult<()> {
     println!("Extended Precision Matrix Operations Example");
     println!("==========================================\n");

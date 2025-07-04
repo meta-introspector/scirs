@@ -26,6 +26,7 @@ use std::iter::Sum;
 /// let d = det(&a.view(), None).unwrap();
 /// assert!((d - (-2.0)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn det<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -114,6 +115,7 @@ where
 /// assert!((a_inv[[0, 0]] - 1.0).abs() < 1e-10);
 /// assert!((a_inv[[1, 1]] - 0.5).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn inv<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -212,6 +214,7 @@ where
 /// assert!((a_0[[1, 0]] - 0.0).abs() < 1e-10);
 /// assert!((a_0[[1, 1]] - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn matrix_power<F>(a: &ArrayView2<F>, n: i32, workers: Option<usize>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -315,6 +318,7 @@ where
 ///
 /// This is a convenience function that calls `det` with `workers = None`.
 /// For new code, prefer using `det` directly with explicit workers parameter.
+#[allow(dead_code)]
 pub fn det_default<F>(a: &ArrayView2<F>) -> LinalgResult<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -326,6 +330,7 @@ where
 ///
 /// This is a convenience function that calls `inv` with `workers = None`.
 /// For new code, prefer using `inv` directly with explicit workers parameter.
+#[allow(dead_code)]
 pub fn inv_default<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -337,6 +342,7 @@ where
 ///
 /// This is a convenience function that calls `matrix_power` with `workers = None`.
 /// For new code, prefer using `matrix_power` directly with explicit workers parameter.
+#[allow(dead_code)]
 pub fn matrix_power_default<F>(a: &ArrayView2<F>, n: i32) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,

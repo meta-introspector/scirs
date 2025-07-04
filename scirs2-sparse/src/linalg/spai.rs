@@ -192,6 +192,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for SpaiPre
 }
 
 /// Solve a dense linear system using Gaussian elimination with partial pivoting
+#[allow(dead_code)]
 fn solve_dense_system<F: Float + NumAssign>(a: &[Vec<F>], b: &[F]) -> SparseResult<Vec<F>> {
     let n = a.len();
     if n == 0 || n != a[0].len() || n != b.len() {

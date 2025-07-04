@@ -8,6 +8,7 @@ use scirs2_core::error::CoreResult;
 use scirs2_core::performance_optimization::ultrathink_optimization::*;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     println!("🧠 SciRS2 Ultrathink AI-Driven Optimization Demo");
     println!("================================================\n");
@@ -36,6 +37,7 @@ fn main() -> CoreResult<()> {
 }
 
 /// Demonstrate AI optimization for scientific computing workloads
+#[allow(dead_code)]
 fn demonstrate_scientific_computing_optimization(
     ai_engine: &AIOptimizationEngine,
 ) -> CoreResult<()> {
@@ -103,6 +105,7 @@ fn demonstrate_scientific_computing_optimization(
 }
 
 /// Demonstrate real-time learning capabilities
+#[allow(dead_code)]
 fn demonstrate_real_time_learning(ai_engine: &AIOptimizationEngine) -> CoreResult<()> {
     println!("\n\n🎯 Real-time Learning Demonstration");
     println!("===================================");
@@ -145,6 +148,7 @@ fn demonstrate_real_time_learning(ai_engine: &AIOptimizationEngine) -> CoreResul
 }
 
 /// Demonstrate multi-objective optimization
+#[allow(dead_code)]
 fn demonstrate_multi_objective_optimization(ai_engine: &AIOptimizationEngine) -> CoreResult<()> {
     println!("\n\n🎯 Multi-Objective Optimization");
     println!("===============================");
@@ -193,6 +197,7 @@ fn demonstrate_multi_objective_optimization(ai_engine: &AIOptimizationEngine) ->
 }
 
 /// Demonstrate analytics and insights
+#[allow(dead_code)]
 fn demonstrate_analytics_and_insights(ai_engine: &AIOptimizationEngine) -> CoreResult<()> {
     println!("\n\n📈 AI Optimization Analytics");
     println!("============================");
@@ -244,6 +249,7 @@ fn demonstrate_analytics_and_insights(ai_engine: &AIOptimizationEngine) -> CoreR
 }
 
 /// Create execution context for testing
+#[allow(dead_code)]
 fn create_execution_context(
     data_size: usize,
     data_type: &str,
@@ -281,6 +287,7 @@ fn create_execution_context(
 }
 
 /// Simulate execution and learning
+#[allow(dead_code)]
 fn simulate_execution_and_learning(
     ai_engine: &AIOptimizationEngine,
     context: &ExecutionContext,

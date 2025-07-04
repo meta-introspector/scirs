@@ -64,6 +64,7 @@ use rand::{rngs::StdRng, SeedableRng};
 /// println!("Point in set1 that realizes this distance: {:?}", points1.row(idx1));
 /// println!("Point in set2 that realizes this distance: {:?}", points2.row(idx2));
 /// ```
+#[allow(dead_code)]
 pub fn directed_hausdorff<T: Float + Send + Sync>(
     set1: &ArrayView2<T>,
     set2: &ArrayView2<T>,
@@ -182,6 +183,7 @@ pub fn directed_hausdorff<T: Float + Send + Sync>(
 /// let dist = hausdorff_distance(&points1.view(), &points2.view(), None);
 /// println!("Hausdorff distance: {}", dist);
 /// ```
+#[allow(dead_code)]
 pub fn hausdorff_distance<T: Float + Send + Sync>(
     set1: &ArrayView2<T>,
     set2: &ArrayView2<T>,
@@ -227,6 +229,7 @@ pub fn hausdorff_distance<T: Float + Send + Sync>(
 /// let dist = wasserstein_distance(&points1.view(), &points2.view()).unwrap();
 /// println!("Approximate Wasserstein distance: {}", dist);
 /// ```
+#[allow(dead_code)]
 pub fn wasserstein_distance<T: Float + Send + Sync>(
     set1: &ArrayView2<T>,
     set2: &ArrayView2<T>,
@@ -318,6 +321,7 @@ pub fn wasserstein_distance<T: Float + Send + Sync>(
 }
 
 /// Implement the Gromov-Hausdorff distance, which measures similarity between metric spaces
+#[allow(dead_code)]
 pub fn gromov_hausdorff_distance<T: Float + Send + Sync>(
     set1: &ArrayView2<T>,
     set2: &ArrayView2<T>,

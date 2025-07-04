@@ -10,6 +10,7 @@ use scirs2_interpolate::{
     numerical_stability::{assess_matrix_condition, machine_epsilon, StabilityLevel},
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Numerical Stability Monitoring Demo ===\n");
 

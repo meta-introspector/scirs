@@ -3,8 +3,13 @@
 //! This module provides enhanced SIMD operations that complement the existing
 //! optimized_search.rs functionality with more specialized optimizations.
 
-use ndarray::{ArrayView1, ArrayView2};
-use num_traits::{Float, Zero};
+use crate::error::InterpolateResult;
+use ndarray::{Array2, ArrayView1, ArrayView2, Axis};
+use num_traits::{Float, FromPrimitive, Zero};
+use std::fmt::Debug;
+
+#[cfg(test)]
+use ndarray::Array1;
 
 #[cfg(feature = "simd")]
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -39,8 +44,8 @@ impl AdvancedSimdOps {
                 for (p_idx, point) in points.axis_iter(Axis(0)).enumerate() {
                     // Vectorized distance computation
                     let diff = F::simd_sub(&query, &point);
-                    let squared = F::simd_mul(&diff, &diff);
-                    let distance = F::simd_sum(&squared);
+                    let squared = F::simd_mul(&diff.view(), &diff.view());
+                    let distance = F::simd_sum(&squared.view());
                     distance_matrix[[q_idx, p_idx]] = distance;
                 }
             }
@@ -120,8 +125,8 @@ impl AdvancedSimdOps {
                     let point = points.row(idx);
                     let distance = if dim >= 4 {
                         let diff = F::simd_sub(query, &point);
-                        let squared = F::simd_mul(&diff, &diff);
-                        F::simd_sum(&squared)
+                        let squared = F::simd_mul(&diff.view(), &diff.view());
+                        F::simd_sum(&squared.view())
                     } else {
                         Self::scalar_distance(query, &point)
                     };
@@ -153,8 +158,8 @@ impl AdvancedSimdOps {
                 let distance = if dim >= 4 {
                     // Use SIMD for higher dimensions
                     let diff = F::simd_sub(query, &point);
-                    let squared = F::simd_mul(&diff, &diff);
-                    F::simd_sum(&squared)
+                    let squared = F::simd_mul(&diff.view(), &diff.view());
+                    F::simd_sum(&squared.view())
                 } else {
                     // Scalar computation for low dimensions
                     Self::scalar_distance(query, &point)
@@ -221,8 +226,8 @@ impl AdvancedSimdOps {
             for point_idx in 0..n_points {
                 let point = points.row(point_idx);
                 let diff = F::simd_sub(query, &point);
-                let squared = F::simd_mul(&diff, &diff);
-                let distance_sq = F::simd_sum(&squared);
+                let squared = F::simd_mul(&diff.view(), &diff.view());
+                let distance_sq = F::simd_sum(&squared.view());
 
                 if distance_sq <= radius_squared {
                     results.push((point_idx, distance_sq));
@@ -348,8 +353,8 @@ impl AdvancedSimdOps {
 
                 let distance = if dim >= 4 {
                     let diff = F::simd_sub(query, &point);
-                    let squared = F::simd_mul(&diff, &diff);
-                    F::simd_sum(&squared)
+                    let squared = F::simd_mul(&diff.view(), &diff.view());
+                    F::simd_sum(&squared.view())
                 } else {
                     Self::scalar_distance(query, &point)
                 };

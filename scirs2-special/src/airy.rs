@@ -238,6 +238,7 @@ const AIRY_TABLE: [(f64, f64, f64, f64, f64); 13] = [
 /// // Ai(0) = 3^(-2/3) / Γ(2/3) ≈ 0.3550
 /// assert!((ai(0.0f64) - 0.3550280538878172).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn ai<F: Float + FromPrimitive + Debug>(x: F) -> F {
     let x_f64 = x.to_f64().unwrap();
 
@@ -297,6 +298,7 @@ pub fn ai<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// // Ai'(0) = -3^(-1/3) / Γ(1/3) ≈ -0.2588
 /// assert!((aip(0.0f64) + 0.25881940379280677).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn aip<F: Float + FromPrimitive + Debug>(x: F) -> F {
     let x_f64 = x.to_f64().unwrap();
 
@@ -359,6 +361,7 @@ pub fn aip<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// // Bi(0) = 3^(-1/6) / Γ(2/3) ≈ 0.6149
 /// assert!((bi(0.0f64) - 0.6149266274460007).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn bi<F: Float + FromPrimitive + Debug>(x: F) -> F {
     let x_f64 = x.to_f64().unwrap();
 
@@ -418,6 +421,7 @@ pub fn bi<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// // Bi'(0) = 3^(1/6) / Γ(1/3) ≈ 0.4483
 /// assert!((bip(0.0f64) - 0.4482883573538264).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn bip<F: Float + FromPrimitive + Debug>(x: F) -> F {
     let x_f64 = x.to_f64().unwrap();
 
@@ -998,6 +1002,7 @@ pub mod complex {
 /// Exponentially scaled Airy function Ai(x) * exp(2/3 * x^(3/2)) for x >= 0
 ///
 /// For negative x, returns Ai(x)
+#[allow(dead_code)]
 pub fn aie<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x >= F::zero() {
         let two_thirds = F::from_f64(2.0 / 3.0).unwrap();
@@ -1011,6 +1016,7 @@ pub fn aie<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// Exponentially scaled Airy function Bi(x) * exp(-2/3 * |x|^(3/2)) for x >= 0
 ///
 /// For negative x, returns Bi(x)
+#[allow(dead_code)]
 pub fn bie<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x >= F::zero() {
         let two_thirds = F::from_f64(2.0 / 3.0).unwrap();
@@ -1025,6 +1031,7 @@ pub fn bie<F: Float + FromPrimitive + Debug>(x: F) -> F {
 ///
 /// Returns (Ai(x)*exp_factor, Ai'(x)*exp_factor, Bi(x)*exp_factor, Bi'(x)*exp_factor)
 /// where exp_factor = exp(2/3 * x^(3/2)) for x >= 0, and 1 for x < 0
+#[allow(dead_code)]
 pub fn airye<F: Float + FromPrimitive + Debug>(x: F) -> (F, F, F, F) {
     if x >= F::zero() {
         let two_thirds = F::from_f64(2.0 / 3.0).unwrap();
@@ -1043,6 +1050,7 @@ pub fn airye<F: Float + FromPrimitive + Debug>(x: F) -> (F, F, F, F) {
 /// Compute zeros of Airy function Ai(x)
 ///
 /// Returns the k-th negative zero of Ai(x)
+#[allow(dead_code)]
 pub fn ai_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialResult<F> {
     use crate::error::SpecialError;
 
@@ -1086,6 +1094,7 @@ pub fn ai_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
 /// Compute zeros of Airy function Bi(x)
 ///
 /// Returns the k-th negative zero of Bi(x)
+#[allow(dead_code)]
 pub fn bi_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialResult<F> {
     use crate::error::SpecialError;
 
@@ -1129,6 +1138,7 @@ pub fn bi_zeros<F: Float + FromPrimitive + Debug>(k: usize) -> crate::SpecialRes
 /// Integral of Airy functions: ∫₀^x Ai(t) dt and ∫₀^x Bi(t) dt
 ///
 /// Returns (∫₀^x Ai(t) dt, ∫₀^x Bi(t) dt)
+#[allow(dead_code)]
 pub fn itairy<F: Float + FromPrimitive + Debug>(x: F) -> (F, F) {
     // Use adaptive integration with Simpson's rule
     let n_points = 100;

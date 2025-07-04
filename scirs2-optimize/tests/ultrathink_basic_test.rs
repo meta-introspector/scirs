@@ -6,6 +6,7 @@ use ndarray::{Array1, ArrayView1};
 use scirs2_optimize::prelude::*;
 
 /// Simple quadratic test function
+#[allow(dead_code)]
 fn quadratic_function(x: &ArrayView1<f64>) -> f64 {
     x.iter().map(|&xi| xi.powi(2)).sum::<f64>()
 }

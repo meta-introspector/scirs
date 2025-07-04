@@ -11,6 +11,7 @@ use scirs2_spatial::boolean_ops::{
     polygon_intersection, polygon_symmetric_difference, polygon_union,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Boolean Operations Example ===\n");
 
@@ -51,6 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn overlapping_squares_example() -> Result<(), Box<dyn std::error::Error>> {
     // Define two overlapping squares
     let poly1 = array![[0.0, 0.0], [2.0, 0.0], [2.0, 2.0], [0.0, 2.0]];
@@ -106,6 +108,7 @@ fn overlapping_squares_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn non_overlapping_example() -> Result<(), Box<dyn std::error::Error>> {
     // Two non-overlapping squares
     let poly1 = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -143,6 +146,7 @@ fn non_overlapping_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn complex_polygon_example() -> Result<(), Box<dyn std::error::Error>> {
     // Hexagon and triangle
     let hexagon = regular_hexagon(2.0, 0.0, 0.0);
@@ -152,18 +156,12 @@ fn complex_polygon_example() -> Result<(), Box<dyn std::error::Error>> {
 
     let hex_area = compute_polygon_area(&hexagon.view())?;
     let tri_area = compute_polygon_area(&triangle.view())?;
-    println!(
-        "Areas: hexagon = {:.3}, triangle = {:.3}",
-        hex_area, tri_area
-    );
+    println!("Areas: hexagon = {hex_area:.3}, triangle = {tri_area:.3}");
 
     // Check if polygons are convex
     let hex_convex = is_convex_polygon(&hexagon.view())?;
     let tri_convex = is_convex_polygon(&triangle.view())?;
-    println!(
-        "Convex: hexagon = {}, triangle = {}",
-        hex_convex, tri_convex
-    );
+    println!("Convex: hexagon = {hex_convex}, triangle = {tri_convex}");
 
     // Union
     let union_result = polygon_union(&hexagon.view(), &triangle.view())?;
@@ -184,6 +182,7 @@ fn complex_polygon_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn polygon_properties_example() -> Result<(), Box<dyn std::error::Error>> {
     // Test different polygon types
     let polygons = vec![
@@ -223,6 +222,7 @@ fn polygon_properties_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn triangle_operations_example() -> Result<(), Box<dyn std::error::Error>> {
     let triangle1 = array![[0.0, 0.0], [2.0, 0.0], [1.0, 2.0]];
 
@@ -253,6 +253,7 @@ fn triangle_operations_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn l_shape_operations_example() -> Result<(), Box<dyn std::error::Error>> {
     // L-shaped polygon
     let l_shape = array![
@@ -297,6 +298,7 @@ fn l_shape_operations_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn self_intersection_example() -> Result<(), Box<dyn std::error::Error>> {
     // Simple polygon
     let simple = array![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]];
@@ -335,6 +337,7 @@ fn self_intersection_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Create a regular hexagon with given radius and center
+#[allow(dead_code)]
 fn regular_hexagon(radius: f64, center_x: f64, center_y: f64) -> Array2<f64> {
     let mut vertices = Vec::with_capacity(12); // 6 vertices * 2 coordinates
 
@@ -350,6 +353,7 @@ fn regular_hexagon(radius: f64, center_x: f64, center_y: f64) -> Array2<f64> {
 }
 
 /// Create a simple star polygon (5-pointed)
+#[allow(dead_code)]
 fn create_star_polygon() -> Array2<f64> {
     let outer_radius = 1.0;
     let inner_radius = 0.4;
@@ -372,6 +376,7 @@ fn create_star_polygon() -> Array2<f64> {
 }
 
 /// Print polygon vertices (limited to first few vertices for readability)
+#[allow(dead_code)]
 fn print_vertices(poly: &Array2<f64>) {
     let max_vertices = 6; // Limit output for readability
     let n = poly.nrows().min(max_vertices);

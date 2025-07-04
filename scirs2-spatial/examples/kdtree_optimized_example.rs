@@ -12,6 +12,7 @@ use scirs2_spatial::set_distance::hausdorff_distance;
 use std::time::Instant;
 
 /// Generate random points in the unit square
+#[allow(dead_code)]
 fn generate_random_points(n: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
     let mut points = Array2::zeros((n, 2));
@@ -25,6 +26,7 @@ fn generate_random_points(n: usize, seed: u64) -> Array2<f64> {
 }
 
 /// Benchmark Hausdorff distance computation: direct vs. KD-tree optimized
+#[allow(dead_code)]
 fn benchmark_hausdorff(n1: usize, n2: usize) {
     println!("Benchmarking Hausdorff distance computation");
     println!("------------------------------------------");
@@ -71,6 +73,7 @@ fn benchmark_hausdorff(n1: usize, n2: usize) {
 }
 
 /// Demonstrate batch nearest neighbor computation
+#[allow(dead_code)]
 fn demo_batch_nearest_neighbor() {
     println!("\nBatch Nearest Neighbor Computation");
     println!("----------------------------------");
@@ -131,6 +134,7 @@ fn demo_batch_nearest_neighbor() {
     println!("\nBatch query speedup: {speedup:.2}x");
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("KD-Tree Optimized Operations Example");
     println!("===================================");

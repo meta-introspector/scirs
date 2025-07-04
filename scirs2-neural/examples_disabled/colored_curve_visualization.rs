@@ -5,6 +5,7 @@ use rand_distr::StandardNormal;
 use scirs2_neural::utils::colors::ColorOptions;
 use scirs2_neural::utils::evaluation::{LearningCurve, ROCCurve};
 
+#[allow(dead_code)]
 fn main() {
     // Create a reproducible random number generator
     let mut rng = SmallRng::seed_from_u64(42);

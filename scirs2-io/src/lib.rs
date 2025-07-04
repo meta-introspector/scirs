@@ -43,8 +43,7 @@ pub mod arff;
 /// - Real-time performance monitoring and self-optimization
 /// - Meta-learning for cross-domain adaptation
 /// - Emergent behavior detection and autonomous system improvement
-// TODO: Fix compilation issues
-// pub mod ultrathink_coordinator;
+pub mod ultrathink_coordinator;
 /// Enhanced algorithms for Ultra-Think Mode
 ///
 /// Provides advanced algorithmic enhancements for the Ultra-Think coordinator:
@@ -53,8 +52,7 @@ pub mod arff;
 /// - Emergent pattern detection and meta-pattern recognition
 /// - Sophisticated optimization recommendation systems
 /// - Self-improving algorithmic components with adaptive learning
-// TODO: Fix compilation issues
-// pub mod ultrathink_enhanced_algorithms;
+pub mod ultrathink_enhanced_algorithms;
 
 /// Async I/O support for streaming capabilities
 ///
@@ -268,8 +266,7 @@ pub mod network;
 /// - Real-time performance feedback and learning
 /// - Ultra-high performance processing with adaptive algorithms
 /// - SIMD-accelerated neural inference for low-latency decisions
-// TODO: Fix compilation issues
-// pub mod neural_adaptive_io;
+pub mod neural_adaptive_io;
 /// Out-of-core processing for terabyte-scale datasets
 ///
 /// Provides infrastructure for processing datasets too large for memory:
@@ -289,6 +286,16 @@ pub mod out_of_core;
 /// - Progress tracking and monitoring
 /// - Caching and checkpointing for long-running pipelines
 pub mod pipeline;
+/// Quantum-inspired I/O processing algorithms with ultrathink capabilities
+///
+/// Provides quantum-inspired algorithms for ultra-high performance I/O:
+/// - Quantum superposition for parallel processing paths
+/// - Quantum entanglement for correlated data operations
+/// - Quantum annealing for parameter optimization
+/// - Quantum interference patterns for data compression
+/// - Quantum tunneling for barrier-free processing
+/// - Quantum measurement for adaptive decision making
+pub mod quantum_inspired_io;
 /// Real-time data streaming protocols
 ///
 /// Provides infrastructure for real-time data streaming and processing:
@@ -300,17 +307,6 @@ pub mod pipeline;
 /// - Time series buffering and aggregation
 #[cfg(feature = "async")]
 pub mod realtime;
-/// Quantum-inspired I/O processing algorithms with ultrathink capabilities
-///
-/// Provides quantum-inspired algorithms for ultra-high performance I/O:
-/// - Quantum superposition for parallel processing paths
-/// - Quantum entanglement for correlated data operations
-/// - Quantum annealing for parameter optimization
-/// - Quantum interference patterns for data compression
-/// - Quantum tunneling for barrier-free processing
-/// - Quantum measurement for adaptive decision making
-// TODO: Fix compilation issues
-// pub mod quantum_inspired_io;
 /// Data serialization utilities
 ///
 /// Provides functionality for serializing and deserializing scientific data:
@@ -436,12 +432,11 @@ pub mod workflow;
 pub mod zero_copy;
 
 // Re-export commonly used functionality
-// TODO: Uncomment when modules are fixed
-// pub use ultrathink_coordinator::{
-//     AdaptiveImprovements, IntelligenceLevel, PerformanceIntelligenceStats, ProcessingResult,
-//     QualityMetrics, StrategyType, UltraThinkCoordinator, UltraThinkStatistics,
-// };
-// pub use ultrathink_enhanced_algorithms::{
-//     AdvancedPatternAnalysis, AdvancedPatternRecognizer, DataCharacteristics, EmergentPattern,
-//     MetaPattern, OptimizationRecommendation, SynergyType,
-// };
+pub use ultrathink_coordinator::{
+    AdaptiveImprovements, IntelligenceLevel, PerformanceIntelligenceStats, ProcessingResult,
+    QualityMetrics, StrategyType, UltraThinkCoordinator, UltraThinkStatistics,
+};
+pub use ultrathink_enhanced_algorithms::{
+    AdvancedPatternAnalysis, AdvancedPatternRecognizer, DataCharacteristics, EmergentPattern,
+    MetaPattern, OptimizationRecommendation, SynergyType,
+};

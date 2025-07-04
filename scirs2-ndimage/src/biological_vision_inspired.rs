@@ -171,6 +171,7 @@ pub struct ColorConstancySystem {
 ///
 /// Implements hierarchical processing inspired by the mammalian visual cortex.
 /// Features predictive coding, lateral inhibition, and multi-scale analysis.
+#[allow(dead_code)]
 pub fn hierarchical_cortical_processing<T>(
     image: ArrayView2<T>,
     config: &BiologicalVisionConfig,
@@ -244,6 +245,7 @@ where
 ///
 /// Implements biological retinal processing including center-surround
 /// receptive fields, temporal dynamics, and edge enhancement.
+#[allow(dead_code)]
 pub fn retinal_processing<T>(
     image_sequence: &[ArrayView2<T>],
     config: &BiologicalVisionConfig,
@@ -293,6 +295,7 @@ where
 ///
 /// Implements insect-inspired compound eye vision for ultra-wide field
 /// motion detection and looming object detection.
+#[allow(dead_code)]
 pub fn compound_eye_motion_detection<T>(
     image_sequence: &[ArrayView2<T>],
     config: &BiologicalVisionConfig,
@@ -336,6 +339,7 @@ where
 ///
 /// Implements attention mechanisms and saccade planning inspired by
 /// primate visual systems for efficient scene exploration.
+#[allow(dead_code)]
 pub fn bio_inspired_attention_saccades<T>(
     image: ArrayView2<T>,
     feature_maps: &[Array3<f64>],
@@ -386,6 +390,7 @@ where
 ///
 /// Implements predictive coding mechanisms inspired by hierarchical
 /// processing in the brain for efficient visual representation.
+#[allow(dead_code)]
 pub fn predictive_coding_visual_processing<T>(
     image_sequence: &[ArrayView2<T>],
     config: &BiologicalVisionConfig,
@@ -427,6 +432,7 @@ where
 ///
 /// Implements color constancy mechanisms inspired by human color perception
 /// for robust color processing under varying illumination.
+#[allow(dead_code)]
 pub fn bio_inspired_color_constancy<T>(
     color_image_sequence: &[Array3<T>],
     config: &BiologicalVisionConfig,
@@ -476,6 +482,7 @@ where
 ///
 /// Implements biological motion prediction mechanisms for robust
 /// object tracking and motion extrapolation.
+#[allow(dead_code)]
 pub fn bio_motion_prediction_tracking<T>(
     image_sequence: &[ArrayView2<T>],
     initial_targets: &[(usize, usize)],
@@ -544,6 +551,7 @@ pub struct MotionTrack {
 
 // Helper function implementations (simplified for brevity)
 
+#[allow(dead_code)]
 fn initialize_v1_processing<T>(
     layer: &mut CorticalLayer,
     image: &ArrayView2<T>,
@@ -580,6 +588,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn forward_pass_cortical_layer(
     current_layer: &mut CorticalLayer,
     previous_layer: &CorticalLayer,
@@ -627,6 +636,7 @@ fn forward_pass_cortical_layer(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn backward_pass_cortical_layer(
     current_layer: &mut CorticalLayer,
     next_layer: &CorticalLayer,
@@ -666,6 +676,7 @@ fn backward_pass_cortical_layer(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn apply_lateral_inhibition(
     layer: &mut CorticalLayer,
     config: &BiologicalVisionConfig,
@@ -705,6 +716,7 @@ fn apply_lateral_inhibition(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_center_surround_filters() -> NdimageResult<Vec<Array2<f64>>> {
     let mut filters = Vec::new();
 
@@ -747,6 +759,7 @@ fn create_center_surround_filters() -> NdimageResult<Vec<Array2<f64>>> {
 // Additional simplified helper function implementations...
 // (In a real implementation, these would be fully developed)
 
+#[allow(dead_code)]
 fn update_photoreceptors<T>(
     photoreceptors: &mut Array2<f64>,
     image: &ArrayView2<T>,
@@ -775,6 +788,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_horizontal_cells(
     horizontal_cells: &mut Array2<f64>,
     photoreceptors: &Array2<f64>,
@@ -804,6 +818,7 @@ fn update_horizontal_cells(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_bipolar_cells(
     bipolar_cells: &mut Array2<f64>,
     photoreceptors: &Array2<f64>,
@@ -826,6 +841,7 @@ fn update_bipolar_cells(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_ganglion_cells(
     ganglion_cells: &mut Array2<f64>,
     bipolar_cells: &Array2<f64>,
@@ -851,6 +867,7 @@ fn update_ganglion_cells(
 // Additional helper functions would be implemented similarly...
 // (Simplified for brevity)
 
+#[allow(dead_code)]
 fn initialize_compound_eye(
     height: usize,
     width: usize,
@@ -881,6 +898,7 @@ fn initialize_compound_eye(
     })
 }
 
+#[allow(dead_code)]
 fn compute_bottom_up_attention<T>(
     attention_map: &mut Array2<f64>,
     image: &ArrayView2<T>,
@@ -928,6 +946,7 @@ where
 // Additional helper function stubs...
 // (In a real implementation, these would be fully developed)
 
+#[allow(dead_code)]
 fn update_ommatidia_responses<T>(
     _compound_eye: &mut CompoundEyeModel,
     _current_frame: &ArrayView2<T>,
@@ -940,6 +959,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compute_motion_detection(
     _compound_eye: &mut CompoundEyeModel,
     _config: &BiologicalVisionConfig,
@@ -947,6 +967,7 @@ fn compute_motion_detection(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn detect_looming_objects(
     _compound_eye: &mut CompoundEyeModel,
     _config: &BiologicalVisionConfig,
@@ -954,6 +975,7 @@ fn detect_looming_objects(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_wide_field_neurons(
     _compound_eye: &mut CompoundEyeModel,
     _config: &BiologicalVisionConfig,
@@ -961,6 +983,7 @@ fn update_wide_field_neurons(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn add_feature_based_attention(
     _attention_map: &mut Array2<f64>,
     _feature_map: &Array3<f64>,
@@ -969,6 +992,7 @@ fn add_feature_based_attention(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn apply_inhibition_of_return(
     _attention_system: &mut AttentionSystem,
     _config: &BiologicalVisionConfig,
@@ -976,6 +1000,7 @@ fn apply_inhibition_of_return(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn plan_saccade_sequence(
     _attention_system: &mut AttentionSystem,
     _config: &BiologicalVisionConfig,
@@ -983,6 +1008,7 @@ fn plan_saccade_sequence(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn initialize_predictive_coding_system(
     _height: usize,
     _width: usize,
@@ -996,6 +1022,7 @@ fn initialize_predictive_coding_system(
     })
 }
 
+#[allow(dead_code)]
 fn generate_predictions(
     _system: &mut PredictiveCodingSystem,
     _time: usize,
@@ -1004,6 +1031,7 @@ fn generate_predictions(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compute_prediction_errors<T>(
     _system: &mut PredictiveCodingSystem,
     _image: &ArrayView2<T>,
@@ -1015,6 +1043,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_prediction_models(
     _system: &mut PredictiveCodingSystem,
     _config: &BiologicalVisionConfig,
@@ -1022,6 +1051,7 @@ fn update_prediction_models(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn estimate_prediction_confidence(
     _system: &mut PredictiveCodingSystem,
     _config: &BiologicalVisionConfig,
@@ -1029,6 +1059,7 @@ fn estimate_prediction_confidence(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn adapt_to_prediction_errors(
     _system: &mut PredictiveCodingSystem,
     _config: &BiologicalVisionConfig,
@@ -1036,6 +1067,7 @@ fn adapt_to_prediction_errors(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn estimate_illumination<T>(
     _color_system: &mut ColorConstancySystem,
     _color_image: &Array3<T>,
@@ -1047,6 +1079,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn adapt_to_illumination(
     _color_system: &mut ColorConstancySystem,
     _config: &BiologicalVisionConfig,
@@ -1054,6 +1087,7 @@ fn adapt_to_illumination(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compute_surface_reflectance<T>(
     _color_system: &mut ColorConstancySystem,
     _color_image: &Array3<T>,
@@ -1064,6 +1098,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_color_memory<T>(
     _color_system: &mut ColorConstancySystem,
     _color_image: &Array3<T>,
@@ -1075,6 +1110,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_motion_estimates<T>(
     _track: &mut MotionTrack,
     _window: &[ArrayView2<T>],
@@ -1086,6 +1122,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn predict_future_positions(
     _track: &mut MotionTrack,
     _config: &BiologicalVisionConfig,
@@ -1093,6 +1130,7 @@ fn predict_future_positions(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_tracking_confidence<T>(
     _track: &mut MotionTrack,
     _window: &[ArrayView2<T>],
@@ -1104,6 +1142,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn manage_tracks<T>(
     _tracks: &mut Vec<MotionTrack>,
     _image_sequence: &[ArrayView2<T>],
@@ -1428,6 +1467,7 @@ pub struct VisualWorkingMemoryResult {
 ///
 /// Implements cutting-edge retinal processing with specialized ganglion cell types,
 /// circadian sensitivity, and advanced adaptation mechanisms.
+#[allow(dead_code)]
 pub fn advanced_retinal_circuits<T>(
     image: ArrayView2<T>,
     config: &BiologicalVisionConfig,
@@ -1509,6 +1549,7 @@ where
 ///
 /// Implements sophisticated binocular vision processing with disparity computation,
 /// ocular dominance columns, and stereoscopic depth perception.
+#[allow(dead_code)]
 pub fn binocular_stereo_processing<T>(
     left_image: ArrayView2<T>,
     right_image: ArrayView2<T>,
@@ -1597,6 +1638,7 @@ where
 ///
 /// Implements biological visual working memory with capacity limitations,
 /// maintenance activity, and interference patterns.
+#[allow(dead_code)]
 pub fn visual_working_memory_processing<T>(
     image_sequence: &[ArrayView2<T>],
     config: &BiologicalVisionConfig,
@@ -1662,6 +1704,7 @@ where
 ///
 /// Implements circadian-influenced vision processing that adapts based on
 /// estimated lighting conditions and time-of-day effects.
+#[allow(dead_code)]
 pub fn circadian_vision_processing<T>(
     image: ArrayView2<T>,
     illumination_estimate: f64,
@@ -1713,6 +1756,7 @@ where
 ///
 /// Implements long-term and short-term neural adaptation mechanisms
 /// that modify visual processing based on experience.
+#[allow(dead_code)]
 pub fn neural_plasticity_adaptation<T>(
     image_history: &[ArrayView2<T>],
     config: &BiologicalVisionConfig,
@@ -1764,6 +1808,7 @@ where
 
 // Helper functions for ultrathink mode biological vision algorithms
 
+#[allow(dead_code)]
 fn extract_retinal_neighborhood<T>(
     image: &ArrayView2<T>,
     position: (usize, usize),
@@ -1794,6 +1839,7 @@ where
     Ok(neighborhood)
 }
 
+#[allow(dead_code)]
 fn compute_on_off_ganglion_responses(
     center_value: f64,
     neighborhood: &Array2<f64>,
@@ -1830,6 +1876,7 @@ fn compute_on_off_ganglion_responses(
     Ok((on_response, off_response))
 }
 
+#[allow(dead_code)]
 fn compute_direction_selective_response(
     neighborhood: &Array2<f64>,
     preferred_direction: f64,
@@ -1863,6 +1910,7 @@ fn compute_direction_selective_response(
     Ok(directional_response.max(0.0))
 }
 
+#[allow(dead_code)]
 fn compute_iprgc_response(
     pixel_value: f64,
     neighborhood: &Array2<f64>,
@@ -1877,6 +1925,7 @@ fn compute_iprgc_response(
     Ok(iprgc_response)
 }
 
+#[allow(dead_code)]
 fn compute_local_edge_detection(
     neighborhood: &Array2<f64>,
     config: &AdvancedRetinalConfig,
@@ -1908,6 +1957,7 @@ fn compute_local_edge_detection(
     Ok(edge_magnitude)
 }
 
+#[allow(dead_code)]
 fn compute_object_motion_detection(
     neighborhood: &Array2<f64>,
     config: &AdvancedRetinalConfig,
@@ -1924,6 +1974,7 @@ fn compute_object_motion_detection(
     Ok(variance.sqrt())
 }
 
+#[allow(dead_code)]
 fn compute_approach_sensitivity(
     neighborhood: &Array2<f64>,
     config: &AdvancedRetinalConfig,
@@ -1952,6 +2003,7 @@ fn compute_approach_sensitivity(
     Ok(radial_gradient.max(0.0))
 }
 
+#[allow(dead_code)]
 fn apply_retinal_adaptation(
     retina: &mut AdvancedRetinaModel,
     config: &AdvancedRetinalConfig,
@@ -1980,6 +2032,7 @@ fn apply_retinal_adaptation(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_retinal_waves(
     retina: &mut AdvancedRetinaModel,
     config: &AdvancedRetinalConfig,
@@ -2002,6 +2055,7 @@ fn simulate_retinal_waves(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compute_binocular_correlation<T>(
     left_image: &ArrayView2<T>,
     right_image: &ArrayView2<T>,
@@ -2057,6 +2111,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compute_ocular_dominance<T>(
     left_image: &ArrayView2<T>,
     right_image: &ArrayView2<T>,
@@ -2088,6 +2143,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn refine_disparity_map(
     stereo_result: &mut BinocularStereoResult,
     config: &BinocularConfig,
@@ -2135,6 +2191,7 @@ fn refine_disparity_map(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn encode_visual_features<T>(
     image: &ArrayView2<T>,
     config: &BiologicalVisionConfig,
@@ -2170,6 +2227,7 @@ where
     Ok(features)
 }
 
+#[allow(dead_code)]
 fn select_memory_slot(
     features: &Array2<f64>,
     vwm_result: &VisualWorkingMemoryResult,
@@ -2192,6 +2250,7 @@ fn select_memory_slot(
     Ok(best_slot)
 }
 
+#[allow(dead_code)]
 fn calculate_memory_compatibility(
     features: &Array2<f64>,
     memory_slot: &Array2<f64>,
@@ -2227,6 +2286,7 @@ fn calculate_memory_compatibility(
     Ok(normalized_correlation)
 }
 
+#[allow(dead_code)]
 fn store_in_memory_slot(
     features: &Array2<f64>,
     slot_idx: usize,
@@ -2247,6 +2307,7 @@ fn store_in_memory_slot(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_maintenance_activity(
     vwm_result: &mut VisualWorkingMemoryResult,
     time_step: usize,
@@ -2268,6 +2329,7 @@ fn update_maintenance_activity(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_interference_matrix(
     vwm_result: &mut VisualWorkingMemoryResult,
     config: &VisualWorkingMemoryConfig,
@@ -2289,6 +2351,7 @@ fn update_interference_matrix(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_precision_estimates(
     vwm_result: &mut VisualWorkingMemoryResult,
     config: &VisualWorkingMemoryConfig,
@@ -2305,6 +2368,7 @@ fn update_precision_estimates(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_attention_weights(
     vwm_result: &mut VisualWorkingMemoryResult,
     current_features: &Array2<f64>,
@@ -2331,6 +2395,7 @@ fn update_attention_weights(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn apply_memory_decay(
     vwm_result: &mut VisualWorkingMemoryResult,
     config: &VisualWorkingMemoryConfig,
@@ -2347,6 +2412,7 @@ fn apply_memory_decay(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compute_circadian_sensitivity(illumination: f64, circadian_phase: f64) -> NdimageResult<f64> {
     // Circadian modulation of visual sensitivity
     let circadian_factor = (circadian_phase * 2.0 * PI).cos() * 0.3 + 0.7;
@@ -2355,6 +2421,7 @@ fn compute_circadian_sensitivity(illumination: f64, circadian_phase: f64) -> Ndi
     Ok(circadian_factor * illumination_factor)
 }
 
+#[allow(dead_code)]
 fn compute_melanopsin_response(illumination: f64, circadian_phase: f64) -> NdimageResult<f64> {
     // Melanopsin response (ipRGCs) - sluggish, sustained response to light
     let melanopsin_sensitivity = 0.1 + 0.3 * (circadian_phase * 2.0 * PI + PI).cos().max(0.0);
@@ -2363,6 +2430,7 @@ fn compute_melanopsin_response(illumination: f64, circadian_phase: f64) -> Ndima
     Ok(response.min(1.0))
 }
 
+#[allow(dead_code)]
 fn apply_melanopsin_contrast_adaptation(
     pixel_value: f64,
     melanopsin_response: f64,
@@ -2375,6 +2443,7 @@ fn apply_melanopsin_contrast_adaptation(
     Ok((pixel_value * contrast_gain).max(0.0).min(1.0))
 }
 
+#[allow(dead_code)]
 fn apply_circadian_color_adjustment(pixel_value: f64, circadian_phase: f64) -> NdimageResult<f64> {
     // Simplified color temperature adjustment
     let color_shift = (circadian_phase * 2.0 * PI).sin() * 0.1;
@@ -2383,6 +2452,7 @@ fn apply_circadian_color_adjustment(pixel_value: f64, circadian_phase: f64) -> N
     Ok(adjusted_value.max(0.0).min(1.0))
 }
 
+#[allow(dead_code)]
 fn compute_short_term_adaptation<T>(
     recent_images: &[ArrayView2<T>],
     adaptation_map: &mut ArrayViewMut2<f64>,
@@ -2410,6 +2480,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compute_medium_term_adaptation<T>(
     medium_images: &[ArrayView2<T>],
     adaptation_map: &mut ArrayViewMut2<f64>,
@@ -2440,6 +2511,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compute_long_term_adaptation<T>(
     all_images: &[ArrayView2<T>],
     adaptation_map: &mut ArrayViewMut2<f64>,
@@ -2474,6 +2546,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compute_homeostatic_adaptation<T>(
     all_images: &[ArrayView2<T>],
     adaptation_map: &mut ArrayViewMut2<f64>,

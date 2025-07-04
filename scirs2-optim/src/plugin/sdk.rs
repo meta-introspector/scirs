@@ -681,6 +681,7 @@ use super::*;
 use ndarray::Array1;
 
 #[test]
+#[allow(dead_code)]
 fn test_{}_basic_functionality() {{
     let mut optimizer = {}Optimizer::new(0.01);
     let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
@@ -695,6 +696,7 @@ fn test_{}_basic_functionality() {{
 }}
 
 #[test]
+#[allow(dead_code)]
 fn test_{}_convergence() {{
     let mut optimizer = {}Optimizer::new(0.1);
     let mut params = Array1::from_vec(vec![1.0, 1.0]);

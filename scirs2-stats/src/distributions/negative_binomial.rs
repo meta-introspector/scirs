@@ -650,6 +650,7 @@ impl<F: Float + NumCast> NegativeBinomial<F> {
 /// let pmf_at_7 = nb.pmf(7.0);
 /// assert!((pmf_at_7 - 0.0660).abs() < 1e-4);
 /// ```
+#[allow(dead_code)]
 pub fn nbinom<F>(r: F, p: F) -> StatsResult<NegativeBinomial<F>>
 where
     F: Float + NumCast,

@@ -70,6 +70,7 @@ pub struct ScaleSpectralFeatures<F> {
 // ============================================================================
 
 /// Find minimum and maximum values in a time series
+#[allow(dead_code)]
 pub fn find_min_max<F>(ts: &Array1<F>) -> (F, F)
 where
     F: Float + FromPrimitive,
@@ -90,6 +91,7 @@ where
 }
 
 /// Calculate median of a time series
+#[allow(dead_code)]
 pub fn calculate_median<F>(ts: &Array1<F>) -> F
 where
     F: Float + FromPrimitive + Clone,
@@ -105,6 +107,7 @@ where
 }
 
 /// Calculate standard deviation of a time series
+#[allow(dead_code)]
 pub fn calculate_std_dev<F>(ts: &Array1<F>) -> F
 where
     F: Float + FromPrimitive,
@@ -116,6 +119,7 @@ where
 }
 
 /// Calculate percentile from sorted data
+#[allow(dead_code)]
 pub fn calculate_percentile<F>(sorted: &[F], percentile: f64) -> F
 where
     F: Float + FromPrimitive,
@@ -142,6 +146,7 @@ where
 // ============================================================================
 
 /// Simple linear fit for two variables
+#[allow(dead_code)]
 pub fn linear_fit<F>(x: &[F], y: &[F]) -> (F, F)
 where
     F: Float + FromPrimitive,
@@ -172,6 +177,7 @@ where
 }
 
 /// Calculate Pearson correlation coefficient between two arrays
+#[allow(dead_code)]
 pub fn calculate_pearson_correlation<F>(x: &Array1<F>, y: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -221,6 +227,7 @@ where
 // ============================================================================
 
 /// Discretize and get probability distribution
+#[allow(dead_code)]
 pub fn discretize_and_get_probabilities<F>(ts: &Array1<F>, n_bins: usize) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -246,6 +253,7 @@ where
 }
 
 /// Discretize a single value into a bin
+#[allow(dead_code)]
 pub fn discretize_value<F>(value: F, min_val: F, max_val: F, n_bins: usize) -> usize
 where
     F: Float + FromPrimitive,
@@ -263,6 +271,7 @@ where
 }
 
 /// Coarse grain time series for multiscale analysis
+#[allow(dead_code)]
 pub fn coarse_grain_series<F>(ts: &Array1<F>, scale: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -285,6 +294,7 @@ where
 }
 
 /// Refined coarse grain series with offset
+#[allow(dead_code)]
 pub fn refined_coarse_grain_series<F>(
     ts: &Array1<F>,
     scale: usize,
@@ -314,6 +324,7 @@ where
 // ============================================================================
 
 /// Downsample signal by taking every nth sample
+#[allow(dead_code)]
 pub fn downsample_signal<F>(ts: &Array1<F>, factor: usize) -> Result<Array1<F>>
 where
     F: Float + Clone,
@@ -328,6 +339,7 @@ where
 }
 
 /// Downsample time series
+#[allow(dead_code)]
 pub fn downsample_series<F>(ts: &Array1<F>, factor: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -345,6 +357,7 @@ where
 // ============================================================================
 
 /// Get ordinal pattern from a window
+#[allow(dead_code)]
 pub fn get_ordinal_pattern<F>(window: &ArrayView1<F>) -> Vec<usize>
 where
     F: Float + FromPrimitive,
@@ -355,6 +368,7 @@ where
 }
 
 /// Find local extrema in a signal
+#[allow(dead_code)]
 pub fn find_local_extrema<F>(signal: &Array1<F>, find_maxima: bool) -> Result<(Vec<usize>, Vec<F>)>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -386,6 +400,7 @@ where
 }
 
 /// Detect turning points in time series
+#[allow(dead_code)]
 pub fn detect_turning_points<F>(
     ts: &Array1<F>,
     config: &TurningPointsConfig,
@@ -444,6 +459,7 @@ where
 // ============================================================================
 
 /// Calculate Euclidean distance between two subsequences
+#[allow(dead_code)]
 pub fn euclidean_distance_subsequence<F>(
     ts: &Array1<F>,
     start1: usize,
@@ -468,6 +484,7 @@ where
 // ============================================================================
 
 /// Linear interpolation between points
+#[allow(dead_code)]
 pub fn linear_interpolate<F>(x: usize, indices: &[usize], values: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -508,6 +525,7 @@ where
 }
 
 /// Cubic interpolation (fallback to linear for now)
+#[allow(dead_code)]
 pub fn cubic_interpolate<F>(x: usize, indices: &[usize], values: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -522,6 +540,7 @@ where
 // ============================================================================
 
 /// Get Gaussian breakpoints for SAX conversion
+#[allow(dead_code)]
 pub fn gaussian_breakpoints(alphabet_size: usize) -> Vec<f64> {
     match alphabet_size {
         2 => vec![0.0],
@@ -546,6 +565,7 @@ pub fn gaussian_breakpoints(alphabet_size: usize) -> Vec<f64> {
 }
 
 /// Standard normal quantile function (inverse CDF)
+#[allow(dead_code)]
 pub fn standard_normal_quantile(p: f64) -> f64 {
     if p <= 0.0 {
         return f64::NEG_INFINITY;
@@ -606,6 +626,7 @@ pub fn standard_normal_quantile(p: f64) -> f64 {
 }
 
 /// Calculate entropy from class counts
+#[allow(dead_code)]
 pub fn calculate_entropy(class1_count: usize, class2_count: usize) -> f64 {
     let total = class1_count + class2_count;
     if total == 0 {
@@ -631,6 +652,7 @@ pub fn calculate_entropy(class1_count: usize, class2_count: usize) -> f64 {
 // ============================================================================
 
 /// Calculate median absolute deviation
+#[allow(dead_code)]
 pub fn calculate_mad<F>(ts: &Array1<F>, median: F) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -651,6 +673,7 @@ where
 }
 
 /// Calculate trimmed mean
+#[allow(dead_code)]
 pub fn calculate_trimmed_mean<F>(ts: &Array1<F>, trim_fraction: f64) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -678,6 +701,7 @@ where
 }
 
 /// Calculate winsorized mean
+#[allow(dead_code)]
 pub fn calculate_winsorized_mean<F>(ts: &Array1<F>, winsor_fraction: f64) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -720,6 +744,7 @@ where
 // ============================================================================
 
 /// Compute power spectrum from autocorrelation
+#[allow(dead_code)]
 pub fn compute_power_spectrum<F>(acf: &Array1<F>) -> Array1<F>
 where
     F: Float + FromPrimitive + Clone,

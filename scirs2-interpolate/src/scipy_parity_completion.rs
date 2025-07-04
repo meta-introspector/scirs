@@ -1200,6 +1200,7 @@ pub struct SciPyParityReport {
 
 /// Convenience functions
 /// Run comprehensive SciPy parity completion with default configuration
+#[allow(dead_code)]
 pub fn complete_scipy_parity<T>() -> InterpolateResult<SciPyParityReport>
 where
     T: InterpolationFloat,
@@ -1210,6 +1211,7 @@ where
 }
 
 /// Run SciPy parity completion with custom configuration
+#[allow(dead_code)]
 pub fn complete_scipy_parity_with_config<T>(
     config: ParityCompletionConfig,
 ) -> InterpolateResult<SciPyParityReport>
@@ -1221,6 +1223,7 @@ where
 }
 
 /// Run quick SciPy parity assessment for development
+#[allow(dead_code)]
 pub fn quick_scipy_parity_assessment<T>() -> InterpolateResult<SciPyParityReport>
 where
     T: InterpolationFloat,
@@ -1241,6 +1244,7 @@ where
 }
 
 /// Create a SciPy parity checker for ongoing validation
+#[allow(dead_code)]
 pub fn create_scipy_parity_checker<T>(
     config: ParityCompletionConfig,
 ) -> InterpolateResult<SciPyParityCompletion<T>>
@@ -1251,6 +1255,7 @@ where
 }
 
 /// Quick SciPy parity check for CI/CD pipelines
+#[allow(dead_code)]
 pub fn quick_scipy_parity_check<T>() -> InterpolateResult<bool>
 where
     T: InterpolationFloat,
@@ -1262,6 +1267,7 @@ where
 }
 
 /// Validate SciPy parity with detailed reporting
+#[allow(dead_code)]
 pub fn validate_scipy_parity<T>(
     target_version: &str,
     min_performance_factor: f64,

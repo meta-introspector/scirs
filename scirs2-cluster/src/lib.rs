@@ -80,14 +80,14 @@ pub mod advanced;
 /// * **Cross-Platform Benchmarking**: Performance comparisons across different systems
 /// * **GPU vs CPU Analysis**: Comprehensive acceleration analysis
 pub mod advanced_benchmarking;
-/// Ultrathink Clustering - AI-Driven Quantum-Neuromorphic Clustering (Ultrathink Mode)
+/// Advanced Clustering - AI-Driven Quantum-Neuromorphic Clustering
 ///
 /// This module represents the pinnacle of clustering intelligence, combining
 /// AI-driven algorithm selection with quantum-neuromorphic fusion algorithms
 /// to achieve unprecedented clustering performance. It leverages meta-learning,
 /// neural architecture search, and bio-quantum computing paradigms.
 ///
-/// # Revolutionary Ultrathink Features
+/// # Revolutionary Advanced Features
 ///
 /// * **AI-Driven Clustering Selection** - Automatically select optimal clustering algorithms
 /// * **Quantum-Neuromorphic Clustering** - Fusion of quantum and spiking neural networks
@@ -97,9 +97,9 @@ pub mod advanced_benchmarking;
 /// * **Continual Learning** - Adapt to changing data distributions in real-time
 /// * **Bio-Quantum Clustering** - Nature-inspired quantum clustering algorithms
 pub mod advanced_clustering;
-/// Enhanced visualization specifically for ultrathink clustering results.
+/// Enhanced visualization specifically for advanced clustering results.
 ///
-/// This module provides specialized visualization capabilities for ultrathink clustering,
+/// This module provides specialized visualization capabilities for advanced clustering,
 /// including quantum state visualization, neuromorphic adaptation plots, and AI algorithm
 /// selection insights with real-time interactive capabilities.
 ///
@@ -129,9 +129,9 @@ pub mod density;
 /// * **Memory Management**: Configurable memory limits and optimization
 /// * **Fault Tolerance**: Worker failure detection and recovery mechanisms
 pub mod distributed;
-/// Enhanced Ultrathink Features - Advanced AI-Driven Clustering Extensions
+/// Enhanced Advanced Features - Advanced AI-Driven Clustering Extensions
 ///
-/// This module extends the ultrathink clustering capabilities with cutting-edge
+/// This module extends the advanced clustering capabilities with cutting-edge
 /// features including deep learning integration, quantum-inspired algorithms,
 /// and advanced ensemble methods for superior clustering performance.
 ///
@@ -168,10 +168,10 @@ pub mod gmm;
 /// * **Device Selection**: Automatic or manual GPU device selection strategies
 #[cfg(feature = "gpu")]
 pub mod gpu;
-/// Ultrathink GPU and Distributed Computing Extensions
+/// Advanced GPU and Distributed Computing Extensions
 ///
 /// This module provides GPU acceleration and distributed computing capabilities
-/// for ultrathink clustering, enabling massive scalability and performance
+/// for advanced clustering, enabling massive scalability and performance
 /// improvements for large-scale clustering tasks.
 ///
 /// # High-Performance Computing Features
@@ -318,33 +318,33 @@ pub use quantum_clustering::{
     QuantumAnnealingConfig,
 };
 
-// Re-export ultrathink clustering capabilities
+// Re-export advanced clustering capabilities
 pub use advanced_clustering::{
-    UltrathinkClusterer, UltrathinkClusteringResult, UltrathinkConfig, UltrathinkPerformanceMetrics,
+    AdvancedClusterer, AdvancedClusteringResult, AdvancedConfig, AdvancedPerformanceMetrics,
 };
 
-// Re-export ultrathink visualization capabilities
+// Re-export advanced visualization capabilities
 pub use advanced_visualization::{
-    create_ultrathink_visualization_report, visualize_ultrathink_results, AISelectionPlot,
-    ClusterPlot, NeuromorphicAdaptationPlot, PerformanceDashboard, QuantumCoherencePlot,
-    QuantumColorScheme, UltrathinkVisualizationConfig, UltrathinkVisualizationOutput,
-    UltrathinkVisualizer, VisualizationExportFormat,
+    create_advanced_visualization_report, visualize_advanced_results, AISelectionPlot,
+    AdvancedVisualizationConfig, AdvancedVisualizationOutput, AdvancedVisualizer, ClusterPlot,
+    NeuromorphicAdaptationPlot, PerformanceDashboard, QuantumCoherencePlot, QuantumColorScheme,
+    VisualizationExportFormat,
 };
 
-// Re-export enhanced ultrathink features
+// Re-export enhanced advanced features
 pub use enhanced_clustering_features::{
-    DeepEnsembleCoordinator, DeepUltrathinkClusterer, DeepUltrathinkResult, EnsembleConsensus,
+    DeepAdvancedClusterer, DeepAdvancedResult, DeepEnsembleCoordinator, EnsembleConsensus,
     GraphNeuralNetworkProcessor, GraphStructureInsights, NeuralArchitectureSearchEngine,
     OptimalArchitecture, ReinforcementLearningAgent, SpectralProperties,
     TransformerClusterEmbedder,
 };
 
-// Re-export GPU and distributed ultrathink features
+// Re-export GPU and distributed advanced features
 pub use gpu_distributed_clustering::{
-    CommunicationOverhead, CoordinationStrategy, DistributedProcessingMetrics,
-    DistributedUltrathinkClusterer, DistributedUltrathinkResult, GpuAccelerationConfig,
-    GpuAccelerationMetrics, GpuDeviceSelection, GpuMemoryStrategy, GpuOptimizationLevel,
-    GpuUltrathinkClusterer, GpuUltrathinkResult, HybridGpuDistributedClusterer,
+    CommunicationOverhead, CoordinationStrategy, DistributedAdvancedClusterer,
+    DistributedAdvancedResult, DistributedProcessingMetrics, GpuAccelerationConfig,
+    GpuAccelerationMetrics, GpuAdvancedClusterer, GpuAdvancedResult, GpuDeviceSelection,
+    GpuMemoryStrategy, GpuOptimizationLevel, HybridGpuDistributedClusterer,
     HybridGpuDistributedResult, LoadBalancingStats, WorkerNodeConfig, WorkerPerformanceStats,
 };
 

@@ -318,6 +318,7 @@ impl<
 }
 
 /// Creates extrapolation parameters for nearest neighbor extrapolation
+#[allow(dead_code)]
 pub fn nearest_neighbor_extrapolation<F: crate::traits::InterpolationFloat>(
 ) -> ExtrapolationParams<F> {
     ExtrapolationParams {
@@ -331,6 +332,7 @@ pub fn nearest_neighbor_extrapolation<F: crate::traits::InterpolationFloat>(
 /// # Arguments
 /// * `n_neighbors` - The number of nearest neighbors to use
 /// * `power` - The power parameter for inverse distance weighting
+#[allow(dead_code)]
 pub fn inverse_distance_extrapolation<F: crate::traits::InterpolationFloat>(
     n_neighbors: usize,
     power: F,
@@ -344,6 +346,7 @@ pub fn inverse_distance_extrapolation<F: crate::traits::InterpolationFloat>(
 }
 
 /// Creates extrapolation parameters for linear gradient extrapolation
+#[allow(dead_code)]
 pub fn linear_gradient_extrapolation<F: crate::traits::InterpolationFloat>(
 ) -> ExtrapolationParams<F> {
     ExtrapolationParams {
@@ -356,6 +359,7 @@ pub fn linear_gradient_extrapolation<F: crate::traits::InterpolationFloat>(
 ///
 /// # Arguments
 /// * `value` - The constant value to use for extrapolation
+#[allow(dead_code)]
 pub fn constant_value_extrapolation<F: crate::traits::InterpolationFloat>(
     value: F,
 ) -> ExtrapolationParams<F> {

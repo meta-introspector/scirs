@@ -820,6 +820,7 @@ pub struct ClusterStatus {
 }
 
 /// Convenience functions for common distributed operations
+#[allow(dead_code)]
 pub fn distributed_moving_average<
     F: Float + Debug + Clone + num_traits::FromPrimitive + num_traits::Zero + ndarray::ScalarOperand,
 >(

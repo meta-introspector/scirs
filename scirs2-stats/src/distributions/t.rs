@@ -264,6 +264,7 @@ impl<F: Float + NumCast + Debug> StudentT<F> {
 /// Gamma function approximation
 ///
 /// This is a simple approximation of the gamma function using Stirling's formula.
+#[allow(dead_code)]
 fn gamma_function<F: Float>(x: F) -> F {
     if x <= F::zero() {
         // Not defined for non-positive values
@@ -312,6 +313,7 @@ fn gamma_function<F: Float>(x: F) -> F {
 /// Incomplete beta function approximation
 ///
 /// This is a simple approximation of the regularized incomplete beta function.
+#[allow(dead_code)]
 fn incomplete_beta<F: Float>(a: F, b: F, x: F) -> F {
     if x <= F::zero() {
         return F::zero();

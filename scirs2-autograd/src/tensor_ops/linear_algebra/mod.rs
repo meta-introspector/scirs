@@ -33,6 +33,7 @@ use crate::tensor_ops::{array_ops, conv_ops, dot_ops, math_ops, shape};
 /// ```
 ///
 /// This function supports only f32 and f64.
+#[allow(dead_code)]
 pub fn matmul<'graph, A, B, F: Float>(a: A, b: B) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -80,6 +81,7 @@ where
 //
 // For detailed description,
 // see <https://docs.scipy.org/doc/numpy/reference/generated/numpy.tensordot.html>.
+#[allow(dead_code)]
 pub fn tensordot<'graph, A, B, AT1, AT2, F: Float>(
     a: A,
     b: B,
@@ -137,6 +139,7 @@ where
 ///
 /// This function supports only f32 and f64.
 /// For detailed description, see <https://www.tensorflow.org/api_docs/python/tf/matmul>.
+#[allow(dead_code)]
 pub fn batch_matmul_t<'graph, A, B, F: Float>(
     a: A,
     b: B,
@@ -179,6 +182,7 @@ where
 ///
 /// This function supports only f32 and f64.
 /// For detailed description, see <https://www.tensorflow.org/api_docs/python/tf/matmul>.
+#[allow(dead_code)]
 pub fn batch_matmul<'graph, A, B, F: Float>(a: A, b: B) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -213,6 +217,7 @@ where
 ///    assert_eq!(b.eval(g).unwrap().shape(), &[5, 3, 4, 1, 2]);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn transpose<'graph, A, AT, F: Float>(x: A, axes: &AT) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -242,6 +247,7 @@ where
 ///    assert_eq!(d.eval(g), Ok(array![1., 4.].into_dyn()));
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn extract_diag<'graph, A, F: Float>(x: A) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -268,6 +274,7 @@ where
 ///    assert_eq!(tr.eval(g), Ok(ndarray::arr0(5.).into_dyn()));
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn trace<'graph, A, F: Float>(x: A) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -296,6 +303,7 @@ where
 ///    assert_eq!(result[[0, 1]], 0.0);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn eye<F: Float>(size: usize, graph: &impl AsGraph<F>) -> Tensor<'_, F> {
     Tensor::builder(graph).build(crate::tensor_ops::linalg_ops::EyeOp { size })
 }
@@ -319,6 +327,7 @@ pub fn eye<F: Float>(size: usize, graph: &impl AsGraph<F>) -> Tensor<'_, F> {
 ///    assert_eq!(result[[2, 2]], 3.0);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn diag<'graph, A, F: Float>(x: A) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -347,6 +356,7 @@ where
 ///    assert_eq!(r.eval(g).unwrap().shape(), &[2, 2]);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn qr<'graph, A, F: Float>(x: A) -> (Tensor<'graph, F>, Tensor<'graph, F>)
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -373,6 +383,7 @@ where
 ///    assert_eq!(vt.eval(g).unwrap().shape(), &[2, 2]);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn svd<'graph, A, F: Float + ndarray::ScalarOperand>(
     x: A,
 ) -> (Tensor<'graph, F>, Tensor<'graph, F>, Tensor<'graph, F>)
@@ -398,6 +409,7 @@ where
 ///    assert_eq!(w.eval(g).unwrap().shape(), &[2]);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn eigenvalues<'graph, A, F: Float + ndarray::ScalarOperand + num_traits::FromPrimitive>(
     x: A,
 ) -> Tensor<'graph, F>
@@ -427,6 +439,7 @@ where
 ///    assert_eq!(v.eval(g).unwrap().shape(), &[2, 2]);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn eigen<'graph, A, F: Float + ndarray::ScalarOperand + num_traits::FromPrimitive>(
     x: A,
 ) -> (Tensor<'graph, F>, Tensor<'graph, F>)
@@ -452,6 +465,7 @@ where
 ///    assert_eq!(det.eval(g), Ok(ndarray::arr0(-2.).into_dyn()));
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn determinant<'graph, A, F: Float + ndarray::ScalarOperand>(x: A) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -478,6 +492,7 @@ where
 ///    assert_eq!(inv_a.eval(g).unwrap().shape(), &[2, 2]);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn matrix_inverse<'graph, A, F: Float>(x: A) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -505,6 +520,7 @@ where
 ///    assert_eq!(x.eval(g).unwrap().shape(), &[2]);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn solve<'graph, A, B, F: Float + ndarray::ScalarOperand>(a: A, b: B) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -534,6 +550,7 @@ where
 ///    assert_eq!(x.eval(g).unwrap().shape(), &[2]);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn lstsq<'graph, A, B, F: Float>(a: A, b: B) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -560,6 +577,7 @@ where
 ///   * `out_w` = `(w + 2 * pad - filter_w) / stride + 1`
 ///
 /// This function supports only f32 and f64.
+#[allow(dead_code)]
 pub fn conv2d<'graph, A, B, F: Float>(x: A, w: B, pad: usize, stride: usize) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -590,6 +608,7 @@ where
 ///   * `out_w` = `(w + 2 * pad - (dilate * (filter - 1) + 1)) / stride + 1`
 ///
 /// This function supports only f32 and f64.
+#[allow(dead_code)]
 pub fn dilated_conv2d<'graph, A, B, F: Float>(
     x: A,
     w: B,
@@ -626,6 +645,7 @@ where
 ///   * `out_w` = `stride * (w - 1) - pad + filter_w`
 ///
 /// This function supports only f32 and f64.
+#[allow(dead_code)]
 pub fn conv2d_transpose<'graph, A, B, F: Float>(
     x: A,
     w: B,
@@ -660,6 +680,7 @@ where
 ///   * `out_w` = `(w + 2 * pad - pool_size) / stride + 1`
 ///
 /// This function supports only f32 and f64.
+#[allow(dead_code)]
 pub fn max_pool2d<'graph, A, F: Float>(
     x: A,
     pool_size: usize,
@@ -699,6 +720,7 @@ where
 ///    assert_eq!(d.eval(g).unwrap().shape(), &[9, 2]);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn concat<'graph, A, F: Float>(tensors: &[A], axis: isize) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -740,6 +762,7 @@ where
 ///    assert_eq!(e2.as_ref().unwrap().shape(), &[3, 2, 5]);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn split<'graph, A, F: Float>(x: A, sizes: &[usize], axis: isize) -> Vec<Tensor<'graph, F>>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -768,6 +791,7 @@ where
 }
 
 /// Scalar multiplication
+#[allow(dead_code)]
 pub fn scalar_mul<'graph, A, F: Float>(x: A, scalar: F) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,
@@ -795,6 +819,7 @@ where
 ///    assert_eq!(norm.eval(g), Ok(ndarray::arr0(5.).into_dyn()));
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn frobenius_norm<'graph, A, F: Float>(x: A) -> Tensor<'graph, F>
 where
     A: AsRef<Tensor<'graph, F>> + Copy,

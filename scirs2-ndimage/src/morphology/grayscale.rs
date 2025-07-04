@@ -41,16 +41,8 @@ use std::fmt::Debug;
 
 use super::MorphBorderMode;
 use crate::error::{NdimageError, NdimageResult};
+use crate::utils::safe_f64_to_float;
 
-/// Helper function for safe conversion of hardcoded constants
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
 
 /// Internal enum for specifying morphological operation type
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -95,6 +87,7 @@ enum MorphOperation {
 /// // The center value should be eroded to match its lowest neighbor (1.0)
 /// assert_eq!(result[[2, 2]], 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn grey_erosion<T, D>(
     input: &Array<T, D>,
     size: Option<&[usize]>,
@@ -296,6 +289,7 @@ where
 /// assert_eq!(result[[2, 3]], 2.0);
 /// assert_eq!(result[[3, 2]], 2.0);
 /// ```
+#[allow(dead_code)]
 pub fn grey_dilation<T, D>(
     input: &Array<T, D>,
     size: Option<&[usize]>,
@@ -494,6 +488,7 @@ where
 /// // The peak value should be reduced
 /// assert!(result[[3, 3]] < 2.0);
 /// ```
+#[allow(dead_code)]
 pub fn grey_opening<T, D>(
     input: &Array<T, D>,
     size: Option<&[usize]>,
@@ -548,6 +543,7 @@ where
 /// // The dark spot should be filled
 /// assert!(result[[3, 3]] > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn grey_closing<T, D>(
     input: &Array<T, D>,
     size: Option<&[usize]>,
@@ -602,6 +598,7 @@ where
 /// // The edge should be highlighted
 /// assert!(result[[3, 3]] > 0.5);
 /// ```
+#[allow(dead_code)]
 pub fn morphological_gradient<T, D>(
     input: &Array<T, D>,
     size: Option<&[usize]>,
@@ -694,6 +691,7 @@ where
 /// assert!(result[[2, 2]] > 0.0);
 /// assert!(result[[4, 4]] > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn morphological_laplace<T, D>(
     input: &Array<T, D>,
     size: Option<&[usize]>,
@@ -799,6 +797,7 @@ where
 /// // Background should be close to zero
 /// assert!(result[[3, 3]] < 0.1);
 /// ```
+#[allow(dead_code)]
 pub fn white_tophat<T, D>(
     input: &Array<T, D>,
     size: Option<&[usize]>,
@@ -889,6 +888,7 @@ where
 /// // Background should be close to zero
 /// assert!(result[[3, 3]] < 0.1);
 /// ```
+#[allow(dead_code)]
 pub fn black_tophat<T, D>(
     input: &Array<T, D>,
     size: Option<&[usize]>,
@@ -955,6 +955,7 @@ where
 
 /// Apply a grayscale morphological operation to an n-dimensional array
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn apply_grey_morphology_nd<T, D>(
     input: &Array<T, D>,
     structure: Option<&Array<bool, D>>,

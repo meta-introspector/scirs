@@ -1,5 +1,6 @@
 //! Simple test for ultrathink mode basic functionality
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing advanced mode basic functionality...");
     

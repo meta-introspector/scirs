@@ -2260,6 +2260,7 @@ impl AsyncAuditLogger {
 // Utility functions
 
 #[must_use]
+#[allow(dead_code)]
 fn get_thread_id() -> u64 {
     use std::thread;
     // This is a simplified implementation
@@ -2272,6 +2273,7 @@ fn get_thread_id() -> u64 {
 }
 
 #[must_use]
+#[allow(dead_code)]
 fn get_hostname() -> String {
     std::env::var("HOSTNAME")
         .or_else(|_| std::env::var("COMPUTERNAME"))
@@ -2279,6 +2281,7 @@ fn get_hostname() -> String {
 }
 
 #[must_use]
+#[allow(dead_code)]
 fn get_local_ip() -> Option<String> {
     // Try to get the actual local IP address
     #[cfg(feature = "sysinfo")]
@@ -2318,6 +2321,7 @@ fn get_local_ip() -> Option<String> {
 }
 
 #[must_use]
+#[allow(dead_code)]
 fn get_stack_trace() -> String {
     // Simplified stack trace implementation for compatibility
     let mut result = String::new();

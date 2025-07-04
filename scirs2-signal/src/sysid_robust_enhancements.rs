@@ -13,7 +13,7 @@ use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
-#[cfg(test)]
+
 use std::f64::consts::PI;
 
 /// Enhanced numerical robustness for system identification
@@ -134,6 +134,7 @@ pub struct PredictionIntervals {
 /// # Returns
 ///
 /// * SNR estimate in dB
+#[allow(dead_code)]
 pub fn estimate_signal_noise_ratio_advanced(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -174,6 +175,7 @@ pub fn estimate_signal_noise_ratio_advanced(
 }
 
 /// Spectral-based SNR estimation
+#[allow(dead_code)]
 fn estimate_snr_spectral(input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<f64> {
     let n = input.len();
     let nfft = next_power_of_2(n);
@@ -209,8 +211,9 @@ fn estimate_snr_spectral(input: &Array1<f64>, output: &Array1<f64>) -> SignalRes
 }
 
 /// Correlation-based SNR estimation
+#[allow(dead_code)]
 fn estimate_snr_correlation(input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<f64> {
-    let n = input.len();
+    let _n = input.len();
 
     // Compute normalized cross-correlation
     let input_mean = input.mean().unwrap_or(0.0);
@@ -235,6 +238,7 @@ fn estimate_snr_correlation(input: &Array1<f64>, output: &Array1<f64>) -> Signal
 }
 
 /// High-pass residual SNR estimation
+#[allow(dead_code)]
 fn estimate_snr_highpass_residual(signal: &Array1<f64>) -> SignalResult<f64> {
     let n = signal.len();
     if n < 3 {
@@ -259,6 +263,7 @@ fn estimate_snr_highpass_residual(signal: &Array1<f64>) -> SignalResult<f64> {
 }
 
 /// Wavelet-based SNR estimation
+#[allow(dead_code)]
 fn estimate_snr_wavelet_denoising(signal: &Array1<f64>) -> SignalResult<f64> {
     // Simple wavelet-like denoising using median filtering
     let n = signal.len();
@@ -298,6 +303,7 @@ fn estimate_snr_wavelet_denoising(signal: &Array1<f64>) -> SignalResult<f64> {
 /// # Returns
 ///
 /// * Robust parameter estimates
+#[allow(dead_code)]
 pub fn robust_least_squares(
     phi: &Array2<f64>,
     y: &Array1<f64>,
@@ -351,6 +357,7 @@ pub fn robust_least_squares(
 }
 
 /// Solve with robust loss function (iteratively reweighted least squares)
+#[allow(dead_code)]
 fn solve_with_robust_loss(
     phi: &Array2<f64>,
     y: &Array1<f64>,
@@ -424,6 +431,7 @@ fn solve_with_robust_loss(
 /// # Returns
 ///
 /// * Cross-validation results
+#[allow(dead_code)]
 pub fn enhanced_cross_validation(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -528,6 +536,7 @@ pub fn enhanced_cross_validation(
 /// # Returns
 ///
 /// * Stability analysis results
+#[allow(dead_code)]
 pub fn analyze_model_stability(model: &SystemModel) -> SignalResult<StabilityAnalysis> {
     match model {
         SystemModel::ARX { a, .. } | SystemModel::ARMAX { a, .. } => {
@@ -558,6 +567,7 @@ pub fn analyze_model_stability(model: &SystemModel) -> SignalResult<StabilityAna
 }
 
 /// Analyze polynomial stability (for discrete-time systems)
+#[allow(dead_code)]
 fn analyze_polynomial_stability(poly: &Array1<f64>) -> SignalResult<StabilityAnalysis> {
     let n = poly.len();
     if n <= 1 {
@@ -617,6 +627,7 @@ fn analyze_polynomial_stability(poly: &Array1<f64>) -> SignalResult<StabilityAna
 
 /// Helper functions for robust system identification
 
+#[allow(dead_code)]
 fn next_power_of_2(n: usize) -> usize {
     if n == 0 {
         return 1;
@@ -628,6 +639,7 @@ fn next_power_of_2(n: usize) -> usize {
     power
 }
 
+#[allow(dead_code)]
 fn compute_fft_padded(signal: &Array1<f64>, nfft: usize) -> Array1<Complex64> {
     let mut padded = Array1::zeros(nfft);
     let n = signal.len().min(nfft);
@@ -646,6 +658,7 @@ fn compute_fft_padded(signal: &Array1<f64>, nfft: usize) -> Array1<Complex64> {
     result
 }
 
+#[allow(dead_code)]
 fn estimate_condition_number(matrix: &Array2<f64>) -> f64 {
     // Simplified condition number estimation
     let n = matrix.nrows();
@@ -665,6 +678,7 @@ fn estimate_condition_number(matrix: &Array2<f64>) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn solve_regularized_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Simple Gaussian elimination with partial pivoting
     let n = a.nrows();
@@ -726,6 +740,7 @@ fn solve_regularized_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Ar
     Ok(x)
 }
 
+#[allow(dead_code)]
 fn compute_mad(data: &[f64]) -> f64 {
     if data.is_empty() {
         return 0.0;
@@ -741,6 +756,7 @@ fn compute_mad(data: &[f64]) -> f64 {
     sorted_dev[sorted_dev.len() / 2]
 }
 
+#[allow(dead_code)]
 fn bootstrap_resample(data: &[f64]) -> Vec<f64> {
     let n = data.len();
     let mut result = Vec::with_capacity(n);
@@ -748,12 +764,13 @@ fn bootstrap_resample(data: &[f64]) -> Vec<f64> {
     let mut rng = rand::rng();
 
     for _ in 0..n {
-        let idx = rng.gen_range(0..n);
+        let idx = rng.random_range(0..n);
         result.push(data[idx]);
     }
     result
 }
 
+#[allow(dead_code)]
 fn estimate_arx_cv(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -807,6 +824,7 @@ fn estimate_arx_cv(
     Ok((a, b, cost))
 }
 
+#[allow(dead_code)]
 fn compute_validation_error(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -845,6 +863,7 @@ fn compute_validation_error(
     Ok(error)
 }
 
+#[allow(dead_code)]
 fn compute_loo_approximation(
     _input: &Array1<f64>,
     _output: &Array1<f64>,
@@ -854,6 +873,7 @@ fn compute_loo_approximation(
     Ok(0.1)
 }
 
+#[allow(dead_code)]
 fn analyze_state_space_stability(_ss: &StateSpace) -> SignalResult<StabilityAnalysis> {
     // Placeholder for state-space stability analysis
     Ok(StabilityAnalysis {
@@ -866,6 +886,7 @@ fn analyze_state_space_stability(_ss: &StateSpace) -> SignalResult<StabilityAnal
     })
 }
 
+#[allow(dead_code)]
 fn create_companion_matrix(poly: &Array1<f64>) -> Array2<f64> {
     let n = poly.len() - 1;
     if n == 0 {
@@ -888,6 +909,7 @@ fn create_companion_matrix(poly: &Array1<f64>) -> Array2<f64> {
     companion
 }
 
+#[allow(dead_code)]
 fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Array1<Complex64>> {
     let n = matrix.nrows();
     if n == 0 {
@@ -942,11 +964,10 @@ fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Array1<Complex64>> 
     Ok(Array1::from_vec(vec![Complex64::new(lambda, 0.0)]))
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
     use num_complex::Complex64;
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     #[test]

@@ -101,6 +101,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// - Automatically enables parallel processing for large arrays (> 10,000 elements)
 /// - For very large windows, consider using percentile_filter with 50th percentile
 ///   which may offer better cache locality
+#[allow(dead_code)]
 pub fn median_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -166,6 +167,7 @@ where
 /// - `"large_kernel"` - Optimized for larger kernels with better cache usage
 /// - `"streaming"` - Optimized for very large arrays with limited memory
 /// - `"auto"` or None - Automatically select based on input characteristics
+#[allow(dead_code)]
 pub fn median_filter_optimized<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -211,6 +213,7 @@ where
 /// This implementation uses a running histogram to efficiently compute
 /// the median for large filter windows. It's particularly effective when
 /// the kernel size is large relative to the number of unique values.
+#[allow(dead_code)]
 fn histogram_based_median_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -237,6 +240,7 @@ where
 ///
 /// This implementation processes the array in chunks to reduce memory usage
 /// and improve cache locality for very large datasets.
+#[allow(dead_code)]
 fn chunked_median_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],

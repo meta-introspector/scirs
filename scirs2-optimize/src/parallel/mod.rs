@@ -59,6 +59,7 @@ impl Default for ParallelOptions {
 ///
 /// Computes the gradient using parallel function evaluations when
 /// the dimension is large enough to benefit from parallelization.
+#[allow(dead_code)]
 pub fn parallel_finite_diff_gradient<F>(
     f: F,
     x: ArrayView1<f64>,
@@ -80,6 +81,7 @@ where
 }
 
 /// Sequential finite difference gradient (fallback)
+#[allow(dead_code)]
 fn sequential_finite_diff_gradient<F>(f: F, x: ArrayView1<f64>, eps: f64) -> Array1<f64>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
@@ -99,6 +101,7 @@ where
 }
 
 /// Compute gradient in parallel
+#[allow(dead_code)]
 fn compute_parallel_gradient<F>(f: &F, x: ArrayView1<f64>, eps: f64) -> Array1<f64>
 where
     F: Fn(&ArrayView1<f64>) -> f64 + Sync,
@@ -123,6 +126,7 @@ where
 /// Parallel evaluation of multiple points
 ///
 /// Evaluates the objective function at multiple points in parallel.
+#[allow(dead_code)]
 pub fn parallel_evaluate_batch<F>(
     f: F,
     points: &[Array1<f64>],
@@ -201,6 +205,7 @@ pub struct OptimizationResult {
 }
 
 /// Parallel computation of Hessian matrix using finite differences
+#[allow(dead_code)]
 pub fn parallel_finite_diff_hessian<F>(
     f: &F,
     x: ArrayView1<f64>,
@@ -277,6 +282,7 @@ where
 }
 
 /// Sequential Hessian computation (fallback)
+#[allow(dead_code)]
 fn sequential_finite_diff_hessian<F>(
     f: &F,
     x: ArrayView1<f64>,
@@ -334,6 +340,7 @@ where
 }
 
 /// Convert linear index to (i, j) coordinates in upper triangle
+#[allow(dead_code)]
 fn index_to_upper_triangle(idx: usize, _n: usize) -> (usize, usize) {
     // Find row i such that i*(i+1)/2 <= idx < (i+1)*(i+2)/2
     let mut i = 0;
@@ -351,6 +358,7 @@ fn index_to_upper_triangle(idx: usize, _n: usize) -> (usize, usize) {
 /// Parallel line search
 ///
 /// Evaluates multiple step sizes in parallel to find the best one.
+#[allow(dead_code)]
 pub fn parallel_line_search<F>(
     f: F,
     x: &Array1<f64>,

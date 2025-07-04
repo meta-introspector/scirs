@@ -3,25 +3,18 @@
 //! This module provides functions for thresholding images to create binary masks or segmentations.
 
 use crate::error::{NdimageError, NdimageResult};
+use crate::utils::safe_f64_to_float;
 use ndarray::{Array, Dimension, Ix2};
 use num_traits::{Float, FromPrimitive, NumAssign};
 
 /// Helper function for safe conversion from usize to float
+#[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
 
-/// Helper function for safe conversion from f64 to float
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
 
 /// Apply a threshold to an image to create a binary image
 ///
@@ -48,6 +41,7 @@ fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
 ///
 /// let mask = threshold_binary(&image, 0.5).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn threshold_binary<T, D>(image: &Array<T, D>, threshold: T) -> NdimageResult<Array<T, D>>
 where
     T: Float + NumAssign + std::fmt::Debug,
@@ -88,6 +82,7 @@ where
 /// let (binary, threshold) = otsu_threshold(&image, 256).unwrap();
 /// ```
 /// ```
+#[allow(dead_code)]
 pub fn otsu_threshold<T, D>(image: &Array<T, D>, bins: usize) -> NdimageResult<(Array<T, D>, T)>
 where
     T: Float + NumAssign + std::fmt::Debug,
@@ -217,6 +212,7 @@ pub enum AdaptiveMethod {
     Gaussian,
 }
 
+#[allow(dead_code)]
 pub fn adaptive_threshold<T>(
     image: &Array<T, Ix2>,
     block_size: usize,

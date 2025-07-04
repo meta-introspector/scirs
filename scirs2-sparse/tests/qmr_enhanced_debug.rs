@@ -1,6 +1,7 @@
 use scirs2_sparse::linalg::{qmr, IdentityOperator, QMROptions};
 
 #[test]
+#[allow(dead_code)]
 fn test_qmr_identity_step_by_step() {
     // Test QMR implementation step-by-step on the identity matrix
     println!("=== QMR Step-by-Step Debug ===");

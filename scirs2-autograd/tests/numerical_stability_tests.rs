@@ -21,6 +21,7 @@ const EPSILON_VERY_RELAXED: f32 = 1e-2;
 
 /// Test numerical stability of basic arithmetic operations
 #[test]
+#[allow(dead_code)]
 fn test_arithmetic_stability() {
     println!("🔬 Testing arithmetic operation numerical stability...");
 
@@ -87,6 +88,7 @@ fn test_arithmetic_stability() {
 
 /// Test numerical stability of matrix operations
 #[test]
+#[allow(dead_code)]
 fn test_matrix_operation_stability() {
     println!("🔬 Testing matrix operation numerical stability...");
 
@@ -147,6 +149,7 @@ fn test_matrix_operation_stability() {
 
 /// Test numerical stability of activation functions
 #[test]
+#[allow(dead_code)]
 fn test_activation_function_stability() {
     println!("🔬 Testing activation function numerical stability...");
 
@@ -212,6 +215,7 @@ fn test_activation_function_stability() {
 
 /// Test numerical stability of reduction operations
 #[test]
+#[allow(dead_code)]
 fn test_reduction_stability() {
     println!("🔬 Testing reduction operation numerical stability...");
 
@@ -307,6 +311,7 @@ fn test_reduction_stability() {
 
 /// Test gradient computation numerical stability
 #[test]
+#[allow(dead_code)]
 fn test_gradient_numerical_stability() {
     println!("🔬 Testing gradient computation numerical stability...");
 
@@ -395,6 +400,7 @@ fn test_gradient_numerical_stability() {
 
 /// Test numerical stability under optimization
 #[test]
+#[allow(dead_code)]
 fn test_optimization_numerical_stability() {
     println!("🔬 Testing numerical stability under graph optimization...");
 
@@ -465,6 +471,7 @@ fn test_optimization_numerical_stability() {
 
 /// Test numerical stability of parallel operations
 #[test]
+#[allow(dead_code)]
 fn test_parallel_operation_stability() {
     println!("🔬 Testing parallel operation numerical stability...");
 
@@ -580,6 +587,7 @@ fn test_parallel_operation_stability() {
 
 /// Test numerical stability with tracing enabled
 #[test]
+#[allow(dead_code)]
 fn test_tracing_numerical_stability() {
     println!("🔬 Testing numerical stability with tracing enabled...");
 
@@ -651,6 +659,7 @@ fn test_tracing_numerical_stability() {
 
 /// Test numerical stability of memory optimization features
 #[test]
+#[allow(dead_code)]
 fn test_memory_optimization_stability() {
     println!("🔬 Testing memory optimization numerical stability...");
 
@@ -725,6 +734,7 @@ fn test_memory_optimization_stability() {
 
 /// Comprehensive numerical stability report
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_stability_report() {
     println!("\n🎯 COMPREHENSIVE NUMERICAL STABILITY REPORT");
     println!("==========================================");

@@ -4,6 +4,7 @@ use scirs2_spatial::pathplanning::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Potential Field Pathfinding Examples");
     println!("===================================\n");
@@ -59,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("  {}: [{:.2}, {:.2}]", i, point[0], point[1]);
                 }
             }
-            println!("Path finding time: {:.2?}", plan_time);
+            println!("Path finding time: {plan_time:.2?}");
 
             // Simple ASCII visualization
             print_ascii_visualization_circles(
@@ -129,7 +130,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("  {}: [{:.2}, {:.2}]", i, point[0], point[1]);
                 }
             }
-            println!("Path finding time: {:.2?}", plan_time);
+            println!("Path finding time: {plan_time:.2?}");
 
             // Simple ASCII visualization
             print_ascii_visualization_polygons(
@@ -198,7 +199,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("  {}: [{:.2}, {:.2}]", i, point[0], point[1]);
                 }
             }
-            println!("Path finding time: {:.2?}", plan_time);
+            println!("Path finding time: {plan_time:.2?}");
 
             // Simple ASCII visualization
             print_ascii_visualization_polygons(
@@ -217,7 +218,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         None => {
             println!("No path found - stuck in local minimum as expected!");
-            println!("Path finding time: {:.2?}", plan_time);
+            println!("Path finding time: {plan_time:.2?}");
 
             // Simple ASCII visualization with just the obstacles
             print_local_minimum_visualization(
@@ -294,7 +295,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("  {}: [{:.2}, {:.2}]", i, point[0], point[1]);
                 }
             }
-            println!("Path finding time: {:.2?}", plan_time);
+            println!("Path finding time: {plan_time:.2?}");
 
             // Simple ASCII visualization
             print_ascii_visualization_polygons(
@@ -318,6 +319,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Simple ASCII visualization of a path with circular obstacles
+#[allow(dead_code)]
 fn print_ascii_visualization_circles(path: &[Array1<f64>], circles: &[([f64; 2], f64)]) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
@@ -404,6 +406,7 @@ fn print_ascii_visualization_circles(path: &[Array1<f64>], circles: &[([f64; 2],
 }
 
 /// Simple ASCII visualization of a path with polygon obstacles
+#[allow(dead_code)]
 fn print_ascii_visualization_polygons(path: &[Array1<f64>], polygons: &[Vec<[f64; 2]>]) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
@@ -486,6 +489,7 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], polygons: &[Vec<[f64
 }
 
 /// Visualize a local minimum case with no path
+#[allow(dead_code)]
 fn print_local_minimum_visualization(start: [f64; 2], goal: [f64; 2], polygons: &[Vec<[f64; 2]>]) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
@@ -532,6 +536,7 @@ fn print_local_minimum_visualization(start: [f64; 2], goal: [f64; 2], polygons: 
 }
 
 /// Check if a point is inside a polygon using the ray casting algorithm
+#[allow(dead_code)]
 fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
     let (x, y) = (point[0], point[1]);
     let mut inside = false;

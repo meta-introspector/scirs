@@ -133,6 +133,7 @@ impl SimdConfig {
 }
 
 /// SIMD-optimized RBF evaluation
+#[allow(dead_code)]
 pub fn simd_rbf_evaluate<F>(
     queries: &ArrayView2<F>,
     centers: &ArrayView2<F>,
@@ -200,6 +201,7 @@ where
 }
 
 /// SIMD-optimized RBF evaluation for f64
+#[allow(dead_code)]
 fn simd_rbf_evaluate_f64(
     queries: &ArrayView2<f64>,
     centers: &ArrayView2<f64>,
@@ -227,6 +229,7 @@ fn simd_rbf_evaluate_f64(
 }
 
 /// Vectorized f64 RBF evaluation using SIMD
+#[allow(dead_code)]
 fn simd_rbf_evaluate_f64_vectorized(
     queries: &ArrayView2<f64>,
     centers: &ArrayView2<f64>,
@@ -275,6 +278,7 @@ fn simd_rbf_evaluate_f64_vectorized(
 
 /// Fallback implementation for all architectures
 /// Scalar fallback implementation
+#[allow(dead_code)]
 fn simd_rbf_evaluate_scalar<F>(
     queries: &ArrayView2<F>,
     centers: &ArrayView2<F>,
@@ -352,6 +356,7 @@ fn evaluate_rbf_kernel_scalar(r: f64, epsilon: f64, kernel: RBFKernel) -> f64 {
 ///
 /// Distance matrix with shape (n_a, n_b) where entry (i,j) contains the
 /// Euclidean distance between points_a[i] and points_b[j]
+#[allow(dead_code)]
 pub fn simd_distance_matrix<F>(
     points_a: &ArrayView2<F>,
     points_b: &ArrayView2<F>,
@@ -382,6 +387,7 @@ where
 }
 
 /// SIMD-optimized distance matrix computation for f64 values
+#[allow(dead_code)]
 fn simd_distance_matrix_f64_vectorized(
     points_a: &ArrayView2<f64>,
     points_b: &ArrayView2<f64>,
@@ -420,6 +426,7 @@ fn simd_distance_matrix_f64_vectorized(
 // Direct SIMD intrinsics implementations removed - all SIMD operations now go through core abstractions
 
 /// Scalar fallback implementation for distance matrix computation
+#[allow(dead_code)]
 fn simd_distance_matrix_scalar<F>(
     points_a: &ArrayView2<F>,
     points_b: &ArrayView2<F>,
@@ -447,6 +454,7 @@ where
 }
 
 /// SIMD-optimized batch evaluation for B-splines
+#[allow(dead_code)]
 pub fn simd_bspline_batch_evaluate<F>(
     knots: &ArrayView1<F>,
     coefficients: &ArrayView1<F>,
@@ -471,6 +479,7 @@ where
 ///
 /// This function computes B-spline basis functions for multiple evaluation points
 /// simultaneously using SIMD instructions when available.
+#[allow(dead_code)]
 pub fn simd_bspline_basis_functions<F>(
     knots: &ArrayView1<F>,
     degree: usize,
@@ -491,6 +500,7 @@ where
 // B-spline basis function AVX2 implementation removed - using scalar implementation only
 
 /// Scalar implementation of B-spline basis function computation
+#[allow(dead_code)]
 fn scalar_bspline_basis_functions<F>(
     knots: &ArrayView1<F>,
     degree: usize,
@@ -518,6 +528,7 @@ where
 }
 
 /// Compute basis functions for a single point using de Boor's algorithm
+#[allow(dead_code)]
 fn compute_basis_functions_scalar<F>(
     knots: &ArrayView1<F>,
     degree: usize,
@@ -564,6 +575,7 @@ where
 }
 
 /// Improved scalar B-spline evaluation using cached workspace
+#[allow(dead_code)]
 fn scalar_bspline_evaluate<F>(
     knots: &ArrayView1<F>,
     coefficients: &ArrayView1<F>,
@@ -592,6 +604,7 @@ where
 }
 
 /// Find the knot span for a given parameter value
+#[allow(dead_code)]
 fn find_knot_span<F>(knots: &ArrayView1<F>, n: usize, degree: usize, x: F) -> usize
 where
     F: Float + FromPrimitive + PartialOrd,
@@ -623,11 +636,13 @@ where
 // SIMD helper functions removed - all operations now use core abstractions
 
 /// Get SIMD configuration information
+#[allow(dead_code)]
 pub fn get_simd_config() -> SimdConfig {
     SimdConfig::detect()
 }
 
 /// Check if SIMD is available on this platform
+#[allow(dead_code)]
 pub fn is_simd_available() -> bool {
     SimdConfig::detect().simd_available
 }

@@ -55,6 +55,7 @@ pub struct ComplexEigDecomposition<F: Float> {
 /// - P is a permutation matrix
 /// - L is lower triangular with 1s on diagonal
 /// - U is upper triangular
+#[allow(dead_code)]
 pub fn complex_lu<F>(a: &ArrayView2<Complex<F>>) -> LinalgResult<ComplexLUDecomposition<F>>
 where
     F: Float + Sum + Debug,
@@ -114,6 +115,7 @@ where
 /// Decomposes A into Q * R where:
 /// - Q is unitary (Q^H * Q = I)
 /// - R is upper triangular
+#[allow(dead_code)]
 pub fn complex_qr<F>(a: &ArrayView2<Complex<F>>) -> LinalgResult<ComplexQRDecomposition<F>>
 where
     F: Float + Sum + Debug,
@@ -210,6 +212,7 @@ where
 /// - U is unitary (left singular vectors)
 /// - S is diagonal with real, non-negative values
 /// - V^H is unitary (conjugate transpose of right singular vectors)
+#[allow(dead_code)]
 pub fn complex_svd<F>(
     a: &ArrayView2<Complex<F>>,
     full_matrices: bool,
@@ -355,6 +358,7 @@ where
 /// Performs eigendecomposition of a complex matrix
 ///
 /// Finds eigenvalues and eigenvectors such that A * v = λ * v
+#[allow(dead_code)]
 pub fn complex_eig<F>(a: &ArrayView2<Complex<F>>) -> LinalgResult<ComplexEigDecomposition<F>>
 where
     F: Float + Sum + Debug,
@@ -501,6 +505,7 @@ where
 /// Performs eigendecomposition of a Hermitian complex matrix
 ///
 /// For Hermitian matrices, eigenvalues are real and eigenvectors are orthogonal
+#[allow(dead_code)]
 pub fn complex_eigh<F>(a: &ArrayView2<Complex<F>>) -> LinalgResult<ComplexEigDecomposition<F>>
 where
     F: Float + Sum + Debug,
@@ -709,6 +714,7 @@ where
 /// Performs Cholesky decomposition of a positive-definite Hermitian matrix
 ///
 /// Decomposes A into L * L^H where L is lower triangular
+#[allow(dead_code)]
 pub fn complex_cholesky<F>(a: &ArrayView2<Complex<F>>) -> LinalgResult<Array2<Complex<F>>>
 where
     F: Float + Sum + Debug,
@@ -771,6 +777,7 @@ pub type SchurResult<F> = LinalgResult<(Array2<Complex<F>>, Array2<Complex<F>>)>
 /// Performs Schur decomposition of a complex matrix
 ///
 /// Decomposes A into Q * T * Q^H where T is upper triangular
+#[allow(dead_code)]
 pub fn complex_schur<F>(a: &ArrayView2<Complex<F>>) -> SchurResult<F>
 where
     F: Float + Sum + Debug,

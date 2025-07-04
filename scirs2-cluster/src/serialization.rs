@@ -1010,6 +1010,7 @@ impl LeaderTreeModel {
 }
 
 /// Convert K-means output to a serializable model
+#[allow(dead_code)]
 pub fn kmeans_to_model(
     centroids: Array2<f64>,
     labels: Array1<usize>,
@@ -1023,6 +1024,7 @@ pub fn kmeans_to_model(
 }
 
 /// Convert hierarchical clustering output to a serializable model
+#[allow(dead_code)]
 pub fn hierarchy_to_model(
     linkage: Array2<f64>,
     n_observations: usize,
@@ -1033,6 +1035,7 @@ pub fn hierarchy_to_model(
 }
 
 /// Convert DBSCAN output to a serializable model
+#[allow(dead_code)]
 pub fn dbscan_to_model(
     core_sample_indices: Array1<usize>,
     labels: Array1<i32>,
@@ -1043,6 +1046,7 @@ pub fn dbscan_to_model(
 }
 
 /// Convert Mean Shift output to a serializable model
+#[allow(dead_code)]
 pub fn meanshift_to_model(
     cluster_centers: Array2<f64>,
     bandwidth: f64,
@@ -1052,6 +1056,7 @@ pub fn meanshift_to_model(
 }
 
 /// Convert Leader algorithm output to a serializable model
+#[allow(dead_code)]
 pub fn leader_to_model(
     leaders: Array2<f64>,
     threshold: f64,
@@ -1061,6 +1066,7 @@ pub fn leader_to_model(
 }
 
 /// Convert Leader tree to a serializable model
+#[allow(dead_code)]
 pub fn leader_tree_to_model<F: num_traits::Float>(tree: &LeaderTree<F>) -> LeaderTreeModel
 where
     f64: From<F>,
@@ -1069,6 +1075,7 @@ where
 }
 
 /// Convert Affinity Propagation output to a serializable model
+#[allow(dead_code)]
 pub fn affinity_propagation_to_model(
     exemplars: Vec<usize>,
     labels: Array1<i32>,
@@ -1086,6 +1093,7 @@ pub fn affinity_propagation_to_model(
 }
 
 /// Convert BIRCH output to a serializable model
+#[allow(dead_code)]
 pub fn birch_to_model(
     centroids: Array2<f64>,
     labels: Array1<i32>,
@@ -1102,6 +1110,7 @@ pub fn birch_to_model(
 }
 
 /// Convert GMM output to a serializable model
+#[allow(dead_code)]
 pub fn gmm_to_model(
     weights: Array1<f64>,
     means: Array2<f64>,
@@ -1124,6 +1133,7 @@ pub fn gmm_to_model(
 }
 
 /// Convert Spectral Clustering output to a serializable model
+#[allow(dead_code)]
 pub fn spectral_clustering_to_model(
     embeddings: Array2<f64>,
     labels: Array1<usize>,
@@ -1140,6 +1150,7 @@ pub fn spectral_clustering_to_model(
     }
 }
 
+#[allow(dead_code)]
 fn calculate_inertia(_centroids: &Array2<f64>, _labels: &Array1<usize>) -> f64 {
     // This is a placeholder - in practice, we'd need the original data
     // to calculate the actual inertia
@@ -1147,6 +1158,7 @@ fn calculate_inertia(_centroids: &Array2<f64>, _labels: &Array1<usize>) -> f64 {
 }
 
 /// Get current Unix timestamp
+#[allow(dead_code)]
 fn current_timestamp() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -1155,6 +1167,7 @@ fn current_timestamp() -> u64 {
 }
 
 /// Format Unix timestamp to human-readable string
+#[allow(dead_code)]
 fn format_timestamp(timestamp: u64) -> String {
     // Simple formatting without chrono dependency
     // In production, you might want to use a proper date library
@@ -1327,6 +1340,7 @@ pub mod performance {
 }
 
 /// Convenience function to save K-means results directly
+#[allow(dead_code)]
 pub fn save_kmeans<P: AsRef<Path>>(
     path: P,
     centroids: Array2<f64>,
@@ -1338,6 +1352,7 @@ pub fn save_kmeans<P: AsRef<Path>>(
 }
 
 /// Convenience function to save hierarchical clustering results directly
+#[allow(dead_code)]
 pub fn save_hierarchy<P: AsRef<Path>>(
     path: P,
     linkage: Array2<f64>,
@@ -1350,6 +1365,7 @@ pub fn save_hierarchy<P: AsRef<Path>>(
 }
 
 /// Convenience function to save Leader algorithm results directly
+#[allow(dead_code)]
 pub fn save_leader<P: AsRef<Path>>(
     path: P,
     leaders: Array2<f64>,
@@ -1361,6 +1377,7 @@ pub fn save_leader<P: AsRef<Path>>(
 }
 
 /// Convenience function to save Leader tree results directly
+#[allow(dead_code)]
 pub fn save_leader_tree<P: AsRef<Path>, F: num_traits::Float>(
     path: P,
     tree: &LeaderTree<F>,
@@ -1373,6 +1390,7 @@ where
 }
 
 /// Convenience function to save Affinity Propagation results directly
+#[allow(dead_code)]
 pub fn save_affinity_propagation<P: AsRef<Path>>(
     path: P,
     exemplars: Vec<usize>,
@@ -1386,6 +1404,7 @@ pub fn save_affinity_propagation<P: AsRef<Path>>(
 }
 
 /// Convenience function to save BIRCH results directly
+#[allow(dead_code)]
 pub fn save_birch<P: AsRef<Path>>(
     path: P,
     centroids: Array2<f64>,
@@ -1398,6 +1417,7 @@ pub fn save_birch<P: AsRef<Path>>(
 }
 
 /// Convenience function to save GMM results directly
+#[allow(dead_code)]
 pub fn save_gmm<P: AsRef<Path>>(
     path: P,
     weights: Array1<f64>,
@@ -1421,6 +1441,7 @@ pub fn save_gmm<P: AsRef<Path>>(
 }
 
 /// Convenience function to save Spectral Clustering results directly
+#[allow(dead_code)]
 pub fn save_spectral_clustering<P: AsRef<Path>>(
     path: P,
     embeddings: Array2<f64>,
@@ -3706,6 +3727,7 @@ impl compatibility {
 }
 
 /// Parse scikit-learn JSON format
+#[allow(dead_code)]
 fn parse_sklearn_json_format(json: &serde_json::Value) -> Result<KMeansModel> {
     let cluster_centers = json
         .get("cluster_centers_")
@@ -3761,6 +3783,7 @@ fn parse_sklearn_json_format(json: &serde_json::Value) -> Result<KMeansModel> {
 }
 
 /// Parse SciPy JSON format
+#[allow(dead_code)]
 fn parse_scipy_json_format(json: &serde_json::Value) -> Result<HierarchicalModel> {
     let linkage_data = json
         .get("linkage")

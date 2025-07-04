@@ -318,11 +318,13 @@ impl AStarPlanner {
 // Useful heuristic functions
 
 /// Manhattan distance heuristic for 2D grid-based pathfinding
+#[allow(dead_code)]
 pub fn manhattan_distance(a: &[i32; 2], b: &[i32; 2]) -> f64 {
     ((a[0] - b[0]).abs() + (a[1] - b[1]).abs()) as f64
 }
 
 /// Euclidean distance heuristic for continuous 2D space
+#[allow(dead_code)]
 pub fn euclidean_distance_2d(a: &[f64; 2], b: &[f64; 2]) -> f64 {
     let dx = a[0] - b[0];
     let dy = a[1] - b[1];
@@ -330,6 +332,7 @@ pub fn euclidean_distance_2d(a: &[f64; 2], b: &[f64; 2]) -> f64 {
 }
 
 /// Euclidean distance for n-dimensional points
+#[allow(dead_code)]
 pub fn euclidean_distance(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> SpatialResult<f64> {
     if a.len() != b.len() {
         return Err(SpatialError::DimensionError(format!(

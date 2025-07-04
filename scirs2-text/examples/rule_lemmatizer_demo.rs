@@ -22,6 +22,7 @@ const TEXTS: &[&str] = &[
     "He walked slowly through the forest, listening to the birds singing. The leaves rustled beneath his feet as he went deeper into the woods. Shadows grew longer as the sun began setting beyond the hills.",
 ];
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Rule-based Lemmatization Demo\n");
 

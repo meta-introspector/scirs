@@ -747,21 +747,25 @@ impl HealthReport {
 static GLOBAL_MONITOR: std::sync::OnceLock<ErrorMonitor> = std::sync::OnceLock::new();
 
 /// Get the global error monitor instance
+#[allow(dead_code)]
 pub fn global_monitor() -> &'static ErrorMonitor {
     GLOBAL_MONITOR.get_or_init(|| ErrorMonitor::new())
 }
 
 /// Convenience function to record an error globally
+#[allow(dead_code)]
 pub fn record_global_error(code: ErrorCode, operation: impl Into<String>) {
     global_monitor().record_error(code, operation);
 }
 
 /// Convenience function to get global error statistics
+#[allow(dead_code)]
 pub fn get_global_statistics() -> ErrorStatistics {
     global_monitor().get_statistics()
 }
 
 /// Convenience function to generate global health report
+#[allow(dead_code)]
 pub fn generate_global_health_report() -> HealthReport {
     global_monitor().generate_health_report()
 }

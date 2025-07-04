@@ -273,6 +273,7 @@ where
 }
 
 /// Minimize a function using the truncated Newton method
+#[allow(dead_code)]
 pub fn minimize_truncated_newton<F, G>(
     mut fun: F,
     grad: Option<G>,
@@ -416,6 +417,7 @@ where
 }
 
 /// Compute gradient using finite differences
+#[allow(dead_code)]
 fn finite_diff_gradient<F>(fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,
@@ -437,6 +439,7 @@ where
 }
 
 /// Trust region variant of truncated Newton method
+#[allow(dead_code)]
 pub fn minimize_trust_region_newton<F, G>(
     mut fun: F,
     grad: Option<G>,

@@ -484,6 +484,7 @@ impl std::fmt::Display for OptimizationRecommendation {
 static GLOBAL_REGISTRY: Lazy<PerformanceHintRegistry> = Lazy::new(PerformanceHintRegistry::new);
 
 /// Get the global performance hint registry
+#[allow(dead_code)]
 pub fn global_registry() -> &'static PerformanceHintRegistry {
     &GLOBAL_REGISTRY
 }

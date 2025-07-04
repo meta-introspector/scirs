@@ -113,6 +113,7 @@ impl Default for EdgeDetectionConfig {
 /// };
 /// let edge_magnitudes = edge_detector(&image, custom_config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Array<f32, Ix2> {
     match config.algorithm {
         EdgeDetectionAlgorithm::Canny => {
@@ -200,6 +201,7 @@ pub fn edge_detector(image: &Array<f32, Ix2>, config: EdgeDetectionConfig) -> Ar
 /// // Using Scharr method for better edge detection
 /// let edges_scharr = canny(&image, 1.0, 0.1, 0.2, Some(GradientMethod::Scharr));
 /// ```
+#[allow(dead_code)]
 pub fn canny(
     image: &Array<f32, Ix2>,
     sigma: f32,
@@ -221,6 +223,7 @@ pub fn canny(
 }
 
 // Internal implementation of Canny edge detection with enhanced performance
+#[allow(dead_code)]
 fn canny_impl(
     image: &Array<f32, Ix2>,
     sigma: f32,
@@ -253,6 +256,7 @@ fn canny_impl(
 }
 
 // Calculate gradients using the specified method
+#[allow(dead_code)]
 fn calculate_gradient(
     image: &ArrayD<f32>,
     method: GradientMethod,
@@ -282,6 +286,7 @@ fn calculate_gradient(
 }
 
 // Calculate magnitude and direction from gradient components
+#[allow(dead_code)]
 fn calculate_magnitude_and_direction(
     gradient_x: &ArrayD<f32>,
     gradient_y: &ArrayD<f32>,
@@ -322,6 +327,7 @@ fn calculate_magnitude_and_direction(
 }
 
 // Non-maximum suppression to thin edges
+#[allow(dead_code)]
 fn non_maximum_suppression(
     magnitude: &Array<f32, Ix2>,
     direction: &Array<f32, Ix2>,
@@ -353,6 +359,7 @@ fn non_maximum_suppression(
 }
 
 // Hysteresis thresholding to connect edges
+#[allow(dead_code)]
 fn hysteresis_thresholding(
     suppressed: &Array<f32, Ix2>,
     low_threshold: f32,
@@ -418,6 +425,7 @@ fn hysteresis_thresholding(
 }
 
 /// Helper function to get the neighbors in the gradient direction
+#[allow(dead_code)]
 fn get_gradient_neighbors(
     row: usize,
     col: usize,
@@ -443,6 +451,7 @@ fn get_gradient_neighbors(
 }
 
 /// Helper function to check if a pixel is connected to a strong edge
+#[allow(dead_code)]
 fn is_connected_to_strong_edge(row: usize, col: usize, edges: &Array<f32, Ix2>) -> bool {
     let shape = edges.dim();
 
@@ -494,6 +503,7 @@ fn is_connected_to_strong_edge(row: usize, col: usize, edges: &Array<f32, Ix2>) 
 /// // Apply LoG filter with thresholding
 /// let edges_threshold = laplacian_edges(&image, 1.0, Some(0.1), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn laplacian_edges(
     image: &Array<f32, Ix2>,
     sigma: f32,
@@ -505,6 +515,7 @@ pub fn laplacian_edges(
 }
 
 // Internal implementation of Laplacian of Gaussian edge detection
+#[allow(dead_code)]
 fn laplacian_edges_impl(
     image: &Array<f32, Ix2>,
     sigma: f32,
@@ -609,6 +620,7 @@ fn laplacian_edges_impl(
 /// // Using Scharr method with Gaussian smoothing
 /// let edges_scharr = gradient_edges(&image, Some(GradientMethod::Scharr), Some(1.0), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn gradient_edges(
     image: &Array<f32, Ix2>,
     method: Option<GradientMethod>,
@@ -622,6 +634,7 @@ pub fn gradient_edges(
 }
 
 // Internal implementation of gradient-based edge detection
+#[allow(dead_code)]
 fn gradient_edges_impl(
     image: &Array<f32, Ix2>,
     method: GradientMethod,
@@ -674,6 +687,7 @@ fn gradient_edges_impl(
 /// # Returns
 ///
 /// * Result containing the magnitude of edges
+#[allow(dead_code)]
 pub fn sobel_edges(image: &ArrayD<f32>) -> NdimageResult<ArrayD<f32>> {
     edge_detector_simple(image, Some(GradientMethod::Sobel), None)
 }
@@ -713,6 +727,7 @@ pub fn sobel_edges(image: &ArrayD<f32>) -> NdimageResult<ArrayD<f32>> {
 /// // Using Scharr method for better rotational invariance
 /// let edges_scharr = edge_detector_simple(&image, Some(GradientMethod::Scharr), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn edge_detector_simple(
     image: &ArrayD<f32>,
     method: Option<GradientMethod>,

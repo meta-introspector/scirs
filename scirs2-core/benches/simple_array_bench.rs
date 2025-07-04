@@ -8,6 +8,7 @@ use ndarray_rand::rand_distr::Uniform;
 use ndarray_rand::RandomExt;
 use std::hint::black_box;
 
+#[allow(dead_code)]
 fn bench_array_creation(c: &mut Criterion) {
     let mut group = c.benchmark_group("array_creation");
 
@@ -35,6 +36,7 @@ fn bench_array_creation(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_array_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("array_operations");
 
@@ -65,6 +67,7 @@ fn bench_array_operations(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_matrix_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_operations");
 

@@ -391,6 +391,7 @@ where
 /// assert_eq!(tucker.factors[1].shape(), &[3, 3]); // mode 1
 /// assert_eq!(tucker.factors[2].shape(), &[2, 2]); // mode 2
 /// ```
+#[allow(dead_code)]
 pub fn tucker_decomposition<A, D>(
     tensor: &ArrayView<A, D>,
     ranks: &[usize],
@@ -476,6 +477,7 @@ where
 /// // The core tensor should have the specified rank
 /// assert_eq!(tucker.core.shape(), &[2, 2, 2]);
 /// ```
+#[allow(dead_code)]
 pub fn tucker_als<A, D>(
     tensor: &ArrayView<A, D>,
     ranks: &[usize],
@@ -557,6 +559,7 @@ where
 }
 
 // Helper function to unfold a tensor along a specified mode
+#[allow(dead_code)]
 fn unfold_tensor<A>(tensor: &ArrayD<A>, mode: usize) -> LinalgResult<Array2<A>>
 where
     A: Clone + Float + NumAssign + Zero + Debug + Send + Sync + 'static,
@@ -611,6 +614,7 @@ where
 }
 
 // Helper function to compute the Khatri-Rao product for Tucker ALS
+#[allow(dead_code)]
 fn compute_khatri_rao_product<A>(
     factors: &[Array2<A>],
     skip_mode: usize,

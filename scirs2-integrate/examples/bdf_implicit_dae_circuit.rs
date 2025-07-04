@@ -15,6 +15,7 @@ use num_traits::Float;
 use plotters::prelude::*;
 use scirs2_integrate::{bdf_implicit_dae, DAEIndex, DAEOptions, DAEType};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Circuit parameters
     let r = 1.0; // Resistance (Ohms)

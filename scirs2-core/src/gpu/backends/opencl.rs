@@ -110,11 +110,11 @@ __kernel void gemm_f32(
 /// OpenCL context wrapper
 pub struct OpenCLContext {
     #[cfg(feature = "opencl")]
-    device: Device,
+    device: Arc<Device>,
     #[cfg(feature = "opencl")]
-    context: Context,
+    context: Arc<Context>,
     #[cfg(feature = "opencl")]
-    queue: CommandQueue,
+    queue: Arc<CommandQueue>,
     #[cfg(not(feature = "opencl"))]
     device: CLDeviceId,
     #[cfg(not(feature = "opencl"))]
@@ -149,8 +149,8 @@ impl OpenCLContext {
                 return Err(GpuError::Other("No OpenCL GPU devices found".to_string()));
             }
 
-            let device = devices[0];
-            let context = Context::from_device(&device)
+            let device = &devices[0];
+            let context = Context::from_device(device)
                 .map_err(|e| GpuError::Other(format!("Failed to create OpenCL context: {e}")))?;
 
             let queue =
@@ -159,9 +159,9 @@ impl OpenCLContext {
                 })?;
 
             Ok(Self {
-                device,
-                context,
-                queue,
+                device: Arc::new(device.clone()),
+                context: Arc::new(context),
+                queue: Arc::new(queue),
                 compiled_kernels: Arc::new(Mutex::new(HashMap::new())),
                 memory_pool: Arc::new(Mutex::new(OpenCLMemoryPool::new(1024 * 1024 * 1024))), // 1GB pool
             })
@@ -224,7 +224,7 @@ impl OpenCLContext {
 
             Ok(OpenCLKernel {
                 kernel,
-                queue: self.queue.clone(),
+                queue: Arc::clone(&self.queue),
                 name: name.to_string(),
             })
         }
@@ -302,7 +302,7 @@ impl GpuContextImpl for OpenCLContext {
                 return Arc::new(OpenCLBuffer {
                     device_buffer,
                     #[cfg(feature = "opencl")]
-                    queue: self.queue.clone(),
+                    queue: Arc::clone(&self.queue),
                     #[cfg(not(feature = "opencl"))]
                     queue: self.queue,
                     size,
@@ -340,7 +340,7 @@ impl GpuContextImpl for OpenCLContext {
         Arc::new(OpenCLBuffer {
             device_buffer,
             #[cfg(feature = "opencl")]
-            queue: self.queue.clone(),
+            queue: Arc::clone(&self.queue),
             #[cfg(not(feature = "opencl"))]
             queue: self.queue,
             size,
@@ -354,11 +354,11 @@ impl GpuContextImpl for OpenCLContext {
                 memory_pool: Arc::clone(&self.memory_pool),
                 compiled_kernels: Arc::clone(&self.compiled_kernels),
                 #[cfg(feature = "opencl")]
-                context: self.context.clone(),
+                context: Arc::clone(&self.context),
                 #[cfg(feature = "opencl")]
-                device: self.device.clone(),
+                device: Arc::clone(&self.device),
                 #[cfg(feature = "opencl")]
-                queue: self.queue.clone(),
+                queue: Arc::clone(&self.queue),
                 #[cfg(not(feature = "opencl"))]
                 context: self.context,
                 #[cfg(not(feature = "opencl"))]
@@ -375,7 +375,7 @@ struct OpenCLKernel {
     #[cfg(feature = "opencl")]
     kernel: Kernel,
     #[cfg(feature = "opencl")]
-    queue: CommandQueue,
+    queue: Arc<CommandQueue>,
     #[cfg(not(feature = "opencl"))]
     program: CLProgram,
     #[cfg(not(feature = "opencl"))]
@@ -473,28 +473,30 @@ impl GpuKernelImpl for OpenCLKernelHandle {
                     match param.1 {
                         KernelParam::Buffer(_buffer) => {
                             // In real implementation, would set buffer parameter
-                            // execute_kernel = execute_kernel.set_arg(buffer);
+                            // execute_kernel.set_arg(buffer);
                         }
                         KernelParam::U32(val) => {
-                            execute_kernel = execute_kernel.set_arg(val);
+                            unsafe { execute_kernel.set_arg(val) };
                         }
                         KernelParam::I32(val) => {
-                            execute_kernel = execute_kernel.set_arg(val);
+                            unsafe { execute_kernel.set_arg(val) };
                         }
                         KernelParam::F32(val) => {
-                            execute_kernel = execute_kernel.set_arg(val);
+                            unsafe { execute_kernel.set_arg(val) };
                         }
                         KernelParam::F64(val) => {
-                            execute_kernel = execute_kernel.set_arg(val);
+                            unsafe { execute_kernel.set_arg(val) };
                         }
                     }
                 }
 
                 // Execute kernel
-                let _event = execute_kernel
-                    .set_global_work_size(work_groups[0] as usize)
-                    .set_local_work_size(64)
-                    .enqueue_nd_range(&kernel.queue);
+                let _event = unsafe {
+                    execute_kernel
+                        .set_global_work_size(work_groups[0] as usize)
+                        .set_local_work_size(64)
+                        .enqueue_nd_range(&kernel.queue)
+                };
             }
         }
         #[cfg(not(feature = "opencl"))]
@@ -511,7 +513,7 @@ struct OpenCLBuffer {
     #[cfg(feature = "opencl")]
     device_buffer: Buffer<u8>,
     #[cfg(feature = "opencl")]
-    queue: CommandQueue,
+    queue: Arc<CommandQueue>,
     #[cfg(not(feature = "opencl"))]
     device_buffer: CLMem,
     #[cfg(not(feature = "opencl"))]
@@ -537,8 +539,11 @@ impl GpuBufferImpl for OpenCLBuffer {
             let data_slice = std::slice::from_raw_parts(data, size);
 
             // Real OpenCL implementation - write data to buffer
+            // Note: In real implementation, we would need mutable access to the buffer
+            // For now, we'll use unsafe to demonstrate the pattern
+            let device_buffer_ptr = &self.device_buffer as *const Buffer<u8> as *mut Buffer<u8>;
             if let Err(_) = self.queue.enqueue_write_buffer(
-                &self.device_buffer,
+                unsafe { &mut *device_buffer_ptr },
                 CL_BLOCKING,
                 0,
                 data_slice,
@@ -588,11 +593,12 @@ impl GpuBufferImpl for OpenCLBuffer {
 impl Drop for OpenCLBuffer {
     fn drop(&mut self) {
         // Return buffer to memory pool if possible
-        if let Ok(mut pool) = self.memory_pool.lock() {
+        if let Ok(_pool) = self.memory_pool.lock() {
             #[cfg(feature = "opencl")]
             {
                 // In real implementation, would return buffer to pool
-                pool.deallocate(std::mem::take(&mut self.device_buffer));
+                // Cannot use std::mem::take here since Buffer doesn't implement Default
+                // pool.deallocate(self.device_buffer.clone());
             }
             #[cfg(not(feature = "opencl"))]
             {

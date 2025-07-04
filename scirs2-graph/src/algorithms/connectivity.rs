@@ -17,6 +17,7 @@ pub type Component<N> = HashSet<N>;
 ///
 /// # Returns
 /// * A vector of connected components, where each component is a set of nodes
+#[allow(dead_code)]
 pub fn connected_components<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Component<N>>
 where
     N: Node + std::fmt::Debug,
@@ -64,6 +65,7 @@ where
 ///
 /// # Returns
 /// * A vector of strongly connected components
+#[allow(dead_code)]
 pub fn strongly_connected_components<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Vec<Component<N>>
 where
     N: Node + std::fmt::Debug,
@@ -156,6 +158,7 @@ where
 ///
 /// # Returns
 /// * A vector of weakly connected components
+#[allow(dead_code)]
 pub fn weakly_connected_components<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Vec<Component<N>>
 where
     N: Node + std::fmt::Debug,
@@ -205,6 +208,7 @@ where
 ///
 /// # Returns
 /// * A set of articulation points
+#[allow(dead_code)]
 pub fn articulation_points<N, E, Ix>(graph: &Graph<N, E, Ix>) -> HashSet<N>
 where
     N: Node + std::fmt::Debug,
@@ -303,6 +307,7 @@ pub struct BipartiteResult<N: Node> {
 ///
 /// # Returns
 /// * A BipartiteResult indicating if the graph is bipartite and the coloring
+#[allow(dead_code)]
 pub fn is_bipartite<N, E, Ix>(graph: &Graph<N, E, Ix>) -> BipartiteResult<N>
 where
     N: Node + std::fmt::Debug,
@@ -365,6 +370,7 @@ where
 ///
 /// # Returns
 /// * A vector of bridges, where each bridge is represented as a tuple of nodes
+#[allow(dead_code)]
 pub fn bridges<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<(N, N)>
 where
     N: Node + std::fmt::Debug,

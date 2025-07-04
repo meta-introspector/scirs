@@ -283,6 +283,7 @@ impl<F: Float + NumCast + Send + Sync + 'static> ChiSquare<F> {
 
 /// Calculate 1 - exp(-x) accurately even for small x
 #[inline]
+#[allow(dead_code)]
 fn one_minus_exp<F: Float>(x: F) -> F {
     // For small x, use the Taylor expansion: 1 - exp(-x) ≈ x - x^2/2 + x^3/6 - ...
     // This avoids catastrophic cancellation when x is small
@@ -307,6 +308,7 @@ fn one_minus_exp<F: Float>(x: F) -> F {
 
 /// Chi-square CDF for integer degrees of freedom
 #[inline]
+#[allow(dead_code)]
 fn chi_square_cdf_int<F: Float>(x: F, df: u32) -> F {
     let half = F::from(0.5).unwrap();
     let one = F::one();
@@ -349,6 +351,7 @@ fn chi_square_cdf_int<F: Float>(x: F, df: u32) -> F {
 
 /// Lower incomplete gamma function (regularized)
 #[inline]
+#[allow(dead_code)]
 fn lower_incomplete_gamma<F: Float>(a: F, x: F) -> F {
     // Implementation of the regularized lower incomplete gamma function P(a,x)
     // Using a series expansion for small x and a continued fraction for large x
@@ -409,6 +412,7 @@ fn lower_incomplete_gamma<F: Float>(a: F, x: F) -> F {
 
 /// Approximation of the gamma function for floating point types
 #[inline]
+#[allow(dead_code)]
 fn gamma_function<F: Float>(x: F) -> F {
     if x == F::one() {
         return F::one();

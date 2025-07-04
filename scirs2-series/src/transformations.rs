@@ -104,6 +104,7 @@ pub enum StationarityTestType {
 /// let ts = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 /// let (transformed, params) = box_cox_transform(&ts, Some(0.5)).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn box_cox_transform<F, S>(
     ts: &ArrayBase<S, Ix1>,
     lambda: Option<F>,
@@ -159,6 +160,7 @@ where
 }
 
 /// Estimate optimal Box-Cox lambda parameter using maximum likelihood
+#[allow(dead_code)]
 fn estimate_box_cox_lambda<F>(ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Display,
@@ -217,6 +219,7 @@ where
 /// # Returns
 ///
 /// Original time series (approximately)
+#[allow(dead_code)]
 pub fn inverse_box_cox_transform<F, S>(
     transformed_ts: &ArrayBase<S, Ix1>,
     params: &BoxCoxTransform<F>,
@@ -267,6 +270,7 @@ where
 /// let (differenced, params) = difference_transform(&ts, 1, None).unwrap();
 /// // Result: [2.0, 3.0, 4.0, 5.0] (first differences)
 /// ```
+#[allow(dead_code)]
 pub fn difference_transform<F, S>(
     ts: &ArrayBase<S, Ix1>,
     order: usize,
@@ -345,6 +349,7 @@ where
 /// # Returns
 ///
 /// Integrated (original level) time series
+#[allow(dead_code)]
 pub fn integrate_transform<F, S>(
     differenced_ts: &ArrayBase<S, Ix1>,
     params: &DifferencingTransform,
@@ -420,6 +425,7 @@ where
 /// let ts = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
 /// let (normalized, params) = normalize_transform(&ts, NormalizationMethod::ZScore).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn normalize_transform<F, S>(
     ts: &ArrayBase<S, Ix1>,
     method: NormalizationMethod,
@@ -538,6 +544,7 @@ where
 /// # Returns
 ///
 /// Original scale time series
+#[allow(dead_code)]
 pub fn inverse_normalize_transform<F, S>(
     normalized_ts: &ArrayBase<S, Ix1>,
     params: &NormalizationParams<F>,
@@ -591,6 +598,7 @@ where
 /// # Returns
 ///
 /// Stationarity test results
+#[allow(dead_code)]
 pub fn adf_test<F, S>(
     ts: &ArrayBase<S, Ix1>,
     max_lags: Option<usize>,
@@ -725,6 +733,7 @@ where
 }
 
 /// Simple OLS solver for small matrices
+#[allow(dead_code)]
 fn solve_ols_simple<F>(xtx: &Array2<F>, xty: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Display + Clone,
@@ -796,6 +805,7 @@ where
 }
 
 /// Get diagonal element of pseudo-inverse (simplified)
+#[allow(dead_code)]
 fn pseudo_inverse_diag<F>(matrix: &Array2<F>, idx: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -810,6 +820,7 @@ where
 }
 
 /// Get ADF critical values (approximated)
+#[allow(dead_code)]
 fn get_adf_critical_values<F>(regression_type: &str) -> Vec<(F, F)>
 where
     F: Float + FromPrimitive,
@@ -840,6 +851,7 @@ where
 }
 
 /// Approximate p-value for ADF test (simplified)
+#[allow(dead_code)]
 fn approximate_adf_p_value<F>(t_stat: F, _regression_type: &str) -> F
 where
     F: Float + FromPrimitive,
@@ -870,6 +882,7 @@ where
 /// # Returns
 ///
 /// Stationarity test results
+#[allow(dead_code)]
 pub fn kpss_test<F, S>(ts: &ArrayBase<S, Ix1>, regression_type: &str) -> Result<StationarityTest<F>>
 where
     S: Data<Elem = F>,
@@ -932,6 +945,7 @@ where
 }
 
 /// Remove linear trend from time series
+#[allow(dead_code)]
 fn detrend_linear<F, S>(ts: &ArrayBase<S, Ix1>) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
@@ -977,6 +991,7 @@ where
 }
 
 /// Estimate long-run variance using Newey-West estimator
+#[allow(dead_code)]
 fn estimate_long_run_variance<F>(residuals: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -1006,6 +1021,7 @@ where
 }
 
 /// Get KPSS critical values
+#[allow(dead_code)]
 fn get_kpss_critical_values<F>(include_trend: bool) -> Vec<(F, F)>
 where
     F: Float + FromPrimitive,
@@ -1026,6 +1042,7 @@ where
 }
 
 /// Approximate p-value for KPSS test
+#[allow(dead_code)]
 fn approximate_kpss_p_value<F>(lm_stat: F, include_trend: bool) -> F
 where
     F: Float + FromPrimitive,

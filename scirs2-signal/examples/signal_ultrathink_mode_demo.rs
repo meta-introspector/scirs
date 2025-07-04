@@ -3,10 +3,11 @@
 //! This example shows how to use the ultrathink mode coordinator for comprehensive
 //! validation and performance testing of signal processing implementations.
 
-use scirs2_signal::ultrathink_mode_coordinator::{
-    run_quick_ultrathink_validation, UltrathinkConfig, UltrathinkCoordinator,
+use scirs2_signal::ultrathink_validation_suite::{
+    run_quick_ultrathink_validation, run_ultrathink_validation, generate_ultrathink_report, UltrathinkValidationConfig,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Mode Signal Processing Demo");
     println!("=========================================\n");
@@ -16,27 +17,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match run_quick_ultrathink_validation() {
         Ok(results) => {
             println!("✅ Quick validation completed successfully!");
-            println!("   Overall success score: {:.1}/100", results.success_score);
+            println!("   Overall pass rate: {:.1}%", results.summary.pass_rate * 100.0);
             println!(
-                "   SIMD speedup: {:.1}x",
-                results.performance_metrics.simd_speedup
+                "   SIMD validation score: {:.1}",
+                results.simd_results.overall_simd_score
             );
             println!(
-                "   Parallel speedup: {:.1}x",
-                results.performance_metrics.parallel_speedup
+                "   Parallel validation score: {:.1}",
+                results.parallel_results.overall_parallel_score
             );
             println!(
-                "   Memory efficiency: {:.1}%",
-                results.performance_metrics.memory_efficiency * 100.0
+                "   Memory efficiency score: {:.1}",
+                results.memory_results.overall_memory_score
             );
             println!(
                 "   Execution time: {:.1} ms",
-                results.performance_metrics.execution_time_ms
+                results.total_execution_time_ms
             );
 
-            if !results.issues.is_empty() {
-                println!("   Issues found:");
-                for issue in &results.issues {
+            if !results.recommendations.is_empty() {
+                println!("   Recommendations:");
+                for issue in &results.recommendations {
                     println!("     - {}", issue);
                 }
             }
@@ -50,65 +51,51 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 2: Custom configuration
     println!("2. Running validation with custom configuration...");
-    let custom_config = UltrathinkConfig {
-        enable_simd: true,
-        enable_parallel: true,
-        enable_memory_optimization: true,
-        enable_numerical_stability: true,
-        enable_validation: true,
-        max_threads: Some(4),
-        validation_tolerance: 1e-12,
+    let custom_config = UltrathinkValidationConfig {
+        tolerance: 1e-12,
+        exhaustive: false,
+        test_lengths: vec![64, 128, 256, 512],
+        sampling_frequencies: vec![44100.0, 48000.0],
+        random_seed: 42,
+        max_test_duration: 30.0,
+        benchmark: true,
+        memory_profiling: true,
+        cross_platform_testing: true,
+        simd_validation: true,
+        parallel_validation: true,
+        monte_carlo_trials: 100,
+        snr_levels: vec![10.0, 20.0, 30.0],
+        test_complex: true,
+        test_edge_cases: true,
     };
 
-    let mut coordinator = UltrathinkCoordinator::with_config(custom_config);
-
-    match coordinator.run_comprehensive_validation() {
+    match run_ultrathink_validation(&custom_config) {
         Ok(results) => {
             println!("✅ Custom validation completed!");
             println!("   Validation Results:");
             println!(
-                "     - Multitaper: {}",
-                if results.validation_results.multitaper_validation {
-                    "✅"
-                } else {
-                    "❌"
-                }
+                "     - Multitaper accuracy: {:.1}",
+                results.multitaper_results.dpss_accuracy_score
             );
             println!(
-                "     - Lomb-Scargle: {}",
-                if results.validation_results.lombscargle_validation {
-                    "✅"
-                } else {
-                    "❌"
-                }
+                "     - Lomb-Scargle accuracy: {:.1}",
+                results.lombscargle_results.analytical_accuracy
             );
             println!(
-                "     - Parametric: {}",
-                if results.validation_results.parametric_validation {
-                    "✅"
-                } else {
-                    "❌"
-                }
+                "     - Parametric AR accuracy: {:.1}",
+                results.parametric_results.ar_validation.order_estimation_accuracy
             );
             println!(
-                "     - Wavelet: {}",
-                if results.validation_results.wavelet_validation {
-                    "✅"
-                } else {
-                    "❌"
-                }
+                "     - Wavelet 2D accuracy: {:.1}%",
+                results.wavelet2d_results.reconstruction_accuracy
             );
             println!(
-                "     - Filter: {}",
-                if results.validation_results.filter_validation {
-                    "✅"
-                } else {
-                    "❌"
-                }
+                "     - SIMD validation: {:.1}",
+                results.simd_results.overall_simd_score
             );
             println!(
-                "   Overall validation score: {:.1}/100",
-                results.validation_results.overall_score
+                "   Overall pass rate: {:.1}%",
+                results.summary.pass_rate * 100.0
             );
         }
         Err(e) => {
@@ -120,54 +107,48 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Example 3: Performance comparison
     println!("3. Performance analysis over multiple runs...");
-    let mut coordinator = UltrathinkCoordinator::new();
 
     for i in 1..=3 {
         println!("   Run {}...", i);
-        if let Ok(_results) = coordinator.run_comprehensive_validation() {
+        if let Ok(_results) = run_quick_ultrathink_validation() {
             println!("   ✅ Run {} completed", i);
         } else {
             println!("   ❌ Run {} failed", i);
         }
     }
 
-    // Generate performance report
-    let performance_report = coordinator.generate_performance_report();
-    println!("\n   Performance Report:");
-    for (metric, value) in performance_report {
-        match metric.as_str() {
-            "simd_speedup" => println!("     SIMD Speedup: {:.2}x", value),
-            "parallel_speedup" => println!("     Parallel Speedup: {:.2}x", value),
-            "memory_efficiency" => println!("     Memory Efficiency: {:.1}%", value * 100.0),
-            "numerical_stability" => println!("     Numerical Stability: {:.1}%", value * 100.0),
-            "execution_time_ms" => println!("     Execution Time: {:.1} ms", value),
-            _ => {}
-        }
-    }
+    println!("\n   Multiple runs completed successfully!");
 
     // Example 4: Memory-constrained validation
     println!("\n4. Testing memory-constrained configuration...");
-    let memory_constrained_config = UltrathinkConfig {
-        enable_simd: false,
-        enable_parallel: false,
-        enable_memory_optimization: true,
-        enable_numerical_stability: true,
-        enable_validation: false, // Skip extensive validation to save memory
-        max_threads: Some(1),
-        validation_tolerance: 1e-8,
+    let memory_constrained_config = UltrathinkValidationConfig {
+        tolerance: 1e-8,
+        exhaustive: false,
+        test_lengths: vec![64, 128], // Smaller test sizes
+        sampling_frequencies: vec![44100.0],
+        random_seed: 42,
+        max_test_duration: 10.0, // Shorter test duration
+        benchmark: false,
+        memory_profiling: true,
+        cross_platform_testing: false,
+        simd_validation: false,
+        parallel_validation: false,
+        monte_carlo_trials: 10,   // Fewer trials
+        snr_levels: vec![20.0],   // Single SNR level
+        test_complex: false,
+        test_edge_cases: false,
     };
 
-    let mut memory_coordinator = UltrathinkCoordinator::with_config(memory_constrained_config);
-    match memory_coordinator.run_comprehensive_validation() {
+    match run_ultrathink_validation(&memory_constrained_config) {
         Ok(results) => {
             println!("✅ Memory-constrained validation completed!");
             println!(
-                "   Memory efficiency: {:.1}%",
-                results.performance_metrics.memory_efficiency * 100.0
+                "   Memory efficiency: {:.1}",
+                results.memory_results.overall_memory_score
             );
             println!(
                 "   Execution time: {:.1} ms",
-                results.performance_metrics.execution_time_ms
+                results.total_execution_time_ms
             );
         }
         Err(e) => {

@@ -202,7 +202,7 @@ where
             options.popsize
         };
 
-        let seed = options.seed.unwrap_or_else(|| rand::rng().random());
+        let seed = options.seed.unwrap_or_else(|| rand::rng().gen());
         let rng = StdRng::seed_from_u64(seed);
 
         let strategy_enum = Strategy::from_str(strategy).unwrap_or(Strategy::Best1Bin);
@@ -709,6 +709,7 @@ where
 }
 
 /// Perform global optimization using differential evolution
+#[allow(dead_code)]
 pub fn differential_evolution<F>(
     func: F,
     bounds: Bounds,

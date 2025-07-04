@@ -27,6 +27,7 @@ use std::ops::{Add, Div, Mul, Sub};
 /// # Returns
 ///
 /// The result vector y = exp(t*A) * v
+#[allow(dead_code)]
 pub fn expm_multiply<F>(
     a: &dyn LinearOperator<F>,
     v: &[F],
@@ -137,6 +138,7 @@ where
 }
 
 /// Compute matrix exponential of a small dense matrix
+#[allow(dead_code)]
 fn matrix_exponential_dense<F>(h: &[Vec<F>], t: F) -> SparseResult<Vec<Vec<F>>>
 where
     F: Float + NumAssign + 'static,
@@ -169,6 +171,7 @@ where
 }
 
 /// Padé approximation for matrix exponential
+#[allow(dead_code)]
 fn pade_approximation<F>(a: &[Vec<F>], t: F, order: usize) -> SparseResult<Vec<Vec<F>>>
 where
     F: Float + NumAssign + 'static,
@@ -430,6 +433,7 @@ where
 }
 
 /// Estimate ||A^(-1)|| using inverse power iteration
+#[allow(dead_code)]
 fn estimate_inverse_norm<F>(
     a: &CsrMatrix<F>,
     norm_type: &str,
@@ -465,6 +469,7 @@ where
 }
 
 /// Estimate the smallest singular value using inverse power iteration on A^T * A
+#[allow(dead_code)]
 fn estimate_smallest_singular_value<F>(a: &CsrMatrix<F>, tol: F, maxiter: usize) -> SparseResult<F>
 where
     F: Float + NumAssign + Sum + 'static + Debug,
@@ -533,6 +538,7 @@ where
 }
 
 /// Approximately solve (A^T * A) * x = b using simple iteration
+#[allow(dead_code)]
 fn solve_ata_approximately<F>(
     a: &CsrMatrix<F>,
     b: &[F],
@@ -584,6 +590,7 @@ where
 }
 
 /// Estimate the Rayleigh quotient v^T * (A^T * A) * v
+#[allow(dead_code)]
 fn estimate_rayleigh_quotient<F>(a: &CsrMatrix<F>, v: &[F]) -> SparseResult<F>
 where
     F: Float + NumAssign + Sum + 'static + Debug,
@@ -622,6 +629,7 @@ where
 }
 
 /// Compute the exact 2-norm for small matrices
+#[allow(dead_code)]
 fn exact_twonorm<F>(a: &CsrMatrix<F>) -> SparseResult<F>
 where
     F: Float + NumAssign + Sum + 'static + Debug,
@@ -668,6 +676,7 @@ where
 /// # Returns
 ///
 /// An estimate of the 1-norm of the matrix
+#[allow(dead_code)]
 pub fn onenormest<F>(a: &CsrMatrix<F>, t: Option<usize>, itmax: Option<usize>) -> SparseResult<F>
 where
     F: Float + NumAssign + Sum + 'static + Debug,
@@ -820,6 +829,7 @@ where
 // Helper functions
 
 /// Compute the exact 1-norm of a matrix
+#[allow(dead_code)]
 fn exact_onenorm<F>(a: &CsrMatrix<F>) -> SparseResult<F>
 where
     F: Float + NumAssign + Sum + 'static + Debug,
@@ -844,21 +854,25 @@ where
 }
 
 /// Compute the 1-norm of a vector
+#[allow(dead_code)]
 fn onenorm_vec<F: Float + Sum>(x: &[F]) -> F {
     x.iter().map(|&xi| xi.abs()).sum()
 }
 
 /// Compute the dot product of two vectors
+#[allow(dead_code)]
 fn dot<F: Float + Sum>(x: &[F], y: &[F]) -> F {
     x.iter().zip(y).map(|(&xi, &yi)| xi * yi).sum()
 }
 
 /// Compute the 2-norm of a vector
+#[allow(dead_code)]
 fn norm2<F: Float + Sum>(x: &[F]) -> F {
     dot(x, x).sqrt()
 }
 
 /// Compute the infinity norm of a matrix
+#[allow(dead_code)]
 fn matrix_norm_inf<F: Float>(a: &[Vec<F>]) -> F {
     let mut max_norm = F::zero();
     for row in a {
@@ -871,6 +885,7 @@ fn matrix_norm_inf<F: Float>(a: &[Vec<F>]) -> F {
 }
 
 /// Create an identity matrix
+#[allow(dead_code)]
 fn identity_matrix<F: Float>(n: usize) -> Vec<Vec<F>> {
     let mut identity = vec![vec![F::zero(); n]; n];
     for (i, row) in identity.iter_mut().enumerate().take(n) {
@@ -880,11 +895,13 @@ fn identity_matrix<F: Float>(n: usize) -> Vec<Vec<F>> {
 }
 
 /// Create a zero matrix
+#[allow(dead_code)]
 fn zero_matrix<F: Float>(n: usize) -> Vec<Vec<F>> {
     vec![vec![F::zero(); n]; n]
 }
 
 /// Add a scaled matrix to another: A += alpha * B
+#[allow(dead_code)]
 fn add_scaled_matrix<F: Float + NumAssign>(a: &mut [Vec<F>], b: &[Vec<F>], alpha: F) {
     let n = a.len();
     for i in 0..n {
@@ -895,6 +912,7 @@ fn add_scaled_matrix<F: Float + NumAssign>(a: &mut [Vec<F>], b: &[Vec<F>], alpha
 }
 
 /// Multiply two dense matrices
+#[allow(dead_code)]
 fn matrix_multiply_dense<F: Float + NumAssign>(
     a: &[Vec<F>],
     b: &[Vec<F>],
@@ -914,6 +932,7 @@ fn matrix_multiply_dense<F: Float + NumAssign>(
 }
 
 /// Solve the matrix equation AX = B for X
+#[allow(dead_code)]
 fn solve_matrix_equation<F: Float + NumAssign>(
     a: &[Vec<F>],
     b: &[Vec<F>],
@@ -1328,6 +1347,7 @@ where
 }
 
 /// Estimate ||A^(-1)|| using enhanced inverse power iteration
+#[allow(dead_code)]
 fn estimate_inverse_norm_enhanced<T, S>(
     a: &S,
     _norm_type: &str,
@@ -1361,6 +1381,7 @@ where
 }
 
 /// Estimate the smallest singular value using enhanced inverse power iteration
+#[allow(dead_code)]
 fn estimate_smallest_singular_value_enhanced<T, S>(a: &S, tol: T, maxiter: usize) -> SparseResult<T>
 where
     T: Float
@@ -1438,6 +1459,7 @@ where
 }
 
 /// Enhanced sparse matrix-vector product
+#[allow(dead_code)]
 fn sparse_matvec<T, S>(a: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + 'static,
@@ -1462,6 +1484,7 @@ where
 }
 
 /// Enhanced sparse matrix-vector product with transpose
+#[allow(dead_code)]
 fn sparse_matvec_transpose<T, S>(a: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + 'static,
@@ -1486,6 +1509,7 @@ where
 }
 
 /// Approximately solve (A^T * A) * x = b using enhanced iterative method
+#[allow(dead_code)]
 fn solve_ata_system_enhanced<T, S>(
     a: &S,
     b: &Array1<T>,
@@ -1524,6 +1548,7 @@ where
 }
 
 /// Estimate the Rayleigh quotient v^T * (A^T * A) * v with enhanced accuracy
+#[allow(dead_code)]
 fn estimate_rayleigh_quotient_enhanced<T, S>(a: &S, v: &Array1<T>) -> SparseResult<T>
 where
     T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + 'static + std::iter::Sum,
@@ -1540,6 +1565,7 @@ where
 }
 
 /// Compute exact 2-norm for small sparse arrays
+#[allow(dead_code)]
 fn exact_twonorm_enhanced<T, S>(a: &S) -> SparseResult<T>
 where
     T: Float
@@ -1580,6 +1606,7 @@ where
 }
 
 /// Compute exact 1-norm for small sparse arrays
+#[allow(dead_code)]
 fn exact_onenorm_enhanced<T, S>(a: &S) -> SparseResult<T>
 where
     T: Float + Debug + Copy + Add<Output = T> + 'static,

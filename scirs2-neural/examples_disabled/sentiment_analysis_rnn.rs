@@ -619,6 +619,7 @@ impl RecurrentClassifier for GRUClassifier {
         if let Some(db_n) = &self.db_n {
             self.b_n = &self.b_n - &(db_n * learning_rate);
 // Helper function to create training data
+#[allow(dead_code)]
 fn create_sentiment_data() -> (Vec<Array3<f32>>, Vec<Array2<f32>>) {
     // Simple toy sentiment analysis dataset
     // Format: (text, sentiment) where sentiment is 0 (negative) or 1 (positive)
@@ -662,6 +663,7 @@ fn create_sentiment_data() -> (Vec<Array3<f32>>, Vec<Array2<f32>>) {
         inputs.push(input);
         targets.push(target);
     (inputs, targets)
+#[allow(dead_code)]
 fn sentiment_analysis_example() {
     println!("Creating toy sentiment analysis dataset...");
     let (inputs, targets) = create_sentiment_data();
@@ -775,6 +777,7 @@ fn sentiment_analysis_example() {
         );
             "  GRU prediction: {}",
             if gru_pred == 1 {
+#[allow(dead_code)]
 fn main() {
     println!("Sentiment Analysis with Recurrent Neural Networks");
     println!("================================================");

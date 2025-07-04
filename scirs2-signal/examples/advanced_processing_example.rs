@@ -8,6 +8,7 @@ use scirs2_signal::{
     window::{self, analysis::*, hann, kaiser},
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Advanced Signal Processing Examples");
     println!("==================================");
@@ -27,6 +28,7 @@ fn main() {
     println!("\nAll examples completed successfully!");
 }
 
+#[allow(dead_code)]
 fn demonstrate_memory_efficient_stft() {
     // Create a long signal that would consume significant memory
     let fs = 8000.0;
@@ -92,6 +94,7 @@ fn demonstrate_memory_efficient_stft() {
     println!("  Saved spectrogram sample to memory_efficient_spectrogram.csv");
 }
 
+#[allow(dead_code)]
 fn demonstrate_window_analysis() {
     // Create different windows for comparison
     let length = 64;
@@ -153,6 +156,7 @@ fn demonstrate_window_analysis() {
     println!("  Saved window analysis to window_analysis.csv");
 }
 
+#[allow(dead_code)]
 fn demonstrate_polynomial_interpolation() {
     // Create test data with a known function: f(x) = sin(2πx) + 0.5*sin(6πx)
     let x_data = vec![0.0, 0.1, 0.25, 0.4, 0.6, 0.75, 0.9, 1.0];
@@ -237,6 +241,7 @@ fn demonstrate_polynomial_interpolation() {
 
 // Helper functions
 
+#[allow(dead_code)]
 fn save_spectrogram_sample(spectrogram: &ndarray::Array2<f64>, filename: &str) {
     let mut file = File::create(filename).expect("Could not create file");
 
@@ -253,6 +258,7 @@ fn save_spectrogram_sample(spectrogram: &ndarray::Array2<f64>, filename: &str) {
     }
 }
 
+#[allow(dead_code)]
 fn save_window_comparison(comparison: &[(String, WindowAnalysis)], filename: &str) {
     let mut file = File::create(filename).expect("Could not create file");
 
@@ -275,6 +281,7 @@ fn save_window_comparison(comparison: &[(String, WindowAnalysis)], filename: &st
     }
 }
 
+#[allow(dead_code)]
 fn save_interpolation_comparison(x: &[f64], y_true: &[f64], y_interp: &[f64], filename: &str) {
     let mut file = File::create(filename).expect("Could not create file");
 
@@ -291,6 +298,7 @@ fn save_interpolation_comparison(x: &[f64], y_true: &[f64], y_interp: &[f64], fi
     }
 }
 
+#[allow(dead_code)]
 fn calculate_rmse(y_true: &[f64], y_pred: &[f64]) -> f64 {
     let mse: f64 = y_true
         .iter()
@@ -301,6 +309,7 @@ fn calculate_rmse(y_true: &[f64], y_pred: &[f64]) -> f64 {
     mse.sqrt()
 }
 
+#[allow(dead_code)]
 fn calculate_max_error(y_true: &[f64], y_pred: &[f64]) -> f64 {
     y_true
         .iter()

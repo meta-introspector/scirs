@@ -11,6 +11,7 @@ use std::hash::Hash;
 ///
 /// Jaccard similarity is the size of the intersection divided by the size of the union
 /// of the neighbor sets.
+#[allow(dead_code)]
 pub fn jaccard_similarity<N, E, Ix>(graph: &Graph<N, E, Ix>, node1: &N, node2: &N) -> Result<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
@@ -43,6 +44,7 @@ where
 }
 
 /// Compute the cosine similarity between two nodes based on their adjacency vectors
+#[allow(dead_code)]
 pub fn cosine_similarity<N, E, Ix>(graph: &Graph<N, E, Ix>, node1: &N, node2: &N) -> Result<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
@@ -85,6 +87,7 @@ where
 ///
 /// This is a simplified version that counts the number of edge additions/deletions
 /// needed to transform one graph into another.
+#[allow(dead_code)]
 pub fn graph_edit_distance<N, E, Ix>(graph1: &Graph<N, E, Ix>, graph2: &Graph<N, E, Ix>) -> usize
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,

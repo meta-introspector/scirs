@@ -300,6 +300,7 @@ impl NeuralNetwork {
 }
 
 /// Train a neural network for the XOR problem
+#[allow(dead_code)]
 fn train_xor_network() -> Result<()> {
     // XOR dataset
     let x = Array2::from_shape_vec((4, 2), vec![0.0f32, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0])?;
@@ -396,6 +397,7 @@ fn train_xor_network() -> Result<()> {
     Ok(())
 }
 /// Train a neural network for a simple regression problem
+#[allow(dead_code)]
 fn train_regression_network() -> Result<()> {
     // Create a simple regression dataset: y = sin(x)
     let n_samples = 100;
@@ -442,6 +444,7 @@ fn train_regression_network() -> Result<()> {
 }
 
 /// Print a simple ASCII loss curve
+#[allow(dead_code)]
 fn print_loss_curve(losses: &[f32], width: usize) {
     // Skip the first few values which might be very high
     let start_idx = losses.len().min(10);
@@ -472,6 +475,7 @@ fn print_loss_curve(losses: &[f32], width: usize) {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("General-Purpose Neural Network Example");
     println!("======================================\n");

@@ -2100,12 +2100,14 @@ pub enum IssueSeverity {
 // Convenience functions for creating testers
 
 /// Create comprehensive numerical stability tester
+#[allow(dead_code)]
 pub fn create_ultra_think_numerical_stability_tester() -> UltraThinkNumericalStabilityTester {
     let config = UltraThinkNumericalStabilityConfig::default();
     UltraThinkNumericalStabilityTester::new(config)
 }
 
 /// Create fast numerical stability tester for development
+#[allow(dead_code)]
 pub fn create_fast_numerical_stability_tester() -> UltraThinkNumericalStabilityTester {
     let config = UltraThinkNumericalStabilityConfig {
         enable_edge_case_testing: true,
@@ -2130,6 +2132,7 @@ pub fn create_fast_numerical_stability_tester() -> UltraThinkNumericalStabilityT
 }
 
 /// Create exhaustive numerical stability tester for release validation
+#[allow(dead_code)]
 pub fn create_exhaustive_numerical_stability_tester() -> UltraThinkNumericalStabilityTester {
     let config = UltraThinkNumericalStabilityConfig {
         enable_edge_case_testing: true,
@@ -2161,6 +2164,7 @@ pub fn create_exhaustive_numerical_stability_tester() -> UltraThinkNumericalStab
 }
 
 /// Enhanced numerical stability testing for common statistical functions
+#[allow(dead_code)]
 pub fn test_statistical_function_stability<F>(
     function_name: &str,
     test_function: F,
@@ -2199,6 +2203,7 @@ where
 }
 
 /// Generate test data for numerical stability testing
+#[allow(dead_code)]
 fn generate_stability_test_data(min_val: f64, max_val: f64, size: usize) -> Array1<f64> {
     use rand::{rngs::StdRng, Rng, SeedableRng};
 
@@ -2221,6 +2226,7 @@ fn generate_stability_test_data(min_val: f64, max_val: f64, size: usize) -> Arra
 }
 
 /// Test numerical stability of mean function specifically
+#[allow(dead_code)]
 pub fn test_mean_stability() -> StatsResult<ComprehensiveStabilityResult> {
     use crate::descriptive::mean;
 
@@ -2238,6 +2244,7 @@ pub fn test_mean_stability() -> StatsResult<ComprehensiveStabilityResult> {
 }
 
 /// Test numerical stability of variance function specifically
+#[allow(dead_code)]
 pub fn test_variance_stability() -> StatsResult<ComprehensiveStabilityResult> {
     use crate::descriptive::var;
 
@@ -2255,6 +2262,7 @@ pub fn test_variance_stability() -> StatsResult<ComprehensiveStabilityResult> {
 }
 
 /// Test numerical stability of correlation function specifically
+#[allow(dead_code)]
 pub fn test_correlation_stability() -> StatsResult<ValidationReport> {
     use crate::property_based_validation::{
         CorrelationBounds, PropertyBasedValidator, PropertyTestConfig,
@@ -2279,6 +2287,7 @@ pub fn test_correlation_stability() -> StatsResult<ValidationReport> {
 }
 
 /// Run comprehensive numerical stability tests for all core statistical functions
+#[allow(dead_code)]
 pub fn run_comprehensive_statistical_stability_tests(
 ) -> StatsResult<HashMap<String, ComprehensiveStabilityResult>> {
     let mut results = HashMap::new();
@@ -2299,6 +2308,7 @@ pub fn run_comprehensive_statistical_stability_tests(
 }
 
 /// Quick numerical stability validation for CI/CD pipelines
+#[allow(dead_code)]
 pub fn run_quick_stability_validation() -> StatsResult<bool> {
     let results = run_comprehensive_statistical_stability_tests()?;
 

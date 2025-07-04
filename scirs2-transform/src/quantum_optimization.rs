@@ -422,7 +422,7 @@ impl QuantumTransformationOptimizer {
         let base_score =
             configs.iter().map(|c| c.expected_performance).sum::<f64>() / configs.len() as f64;
 
-        (base_score - complexity_penalty).max(0.0).min(1.0)
+        (base_score - complexity_penalty).clamp(0.0, 1.0)
     }
 
     /// Evaluate pipeline performance (simplified simulation)
@@ -1070,9 +1070,8 @@ impl UltraThinkQuantumOptimizer {
 
             // ✅ ULTRATHINK OPTIMIZATION: Update particle entanglement
             if entanglement_count > 0 {
-                self.particles[i].entanglement = (total_entanglement / entanglement_count as f64)
-                    .max(0.0)
-                    .min(1.0);
+                self.particles[i].entanglement =
+                    (total_entanglement / entanglement_count as f64).clamp(0.0, 1.0);
             }
         }
 
@@ -1200,6 +1199,20 @@ impl UltraThinkQuantumOptimizer {
     /// ✅ ULTRATHINK MODE: Get adaptive parameters state
     pub fn get_adaptive_params(&self) -> &UltraThinkQuantumParams {
         &self.adaptive_params
+    }
+
+    /// ✅ ULTRATHINK MODE: Simplified optimize interface (defaults to 100 iterations)
+    pub fn optimize<F>(&mut self, objective_function: F) -> Result<(Array1<f64>, f64)>
+    where
+        F: Fn(&Array1<f64>) -> f64 + Sync + Send,
+        F: Copy,
+    {
+        self.optimize_ultrafast(objective_function, 100)
+    }
+
+    /// ✅ ULTRATHINK MODE: Get advanced performance diagnostics (alias for get_ultrathink_diagnostics)
+    pub fn get_advanced_diagnostics(&self) -> &UltraThinkQuantumMetrics {
+        &self.performance_metrics
     }
 }
 

@@ -170,6 +170,7 @@ mod tests {
     }
 
     // Helper functions
+    #[allow(dead_code)]
     fn create_test_meta_features() -> DatasetMetaFeatures {
         DatasetMetaFeatures {
             n_samples: 1000,
@@ -185,6 +186,7 @@ mod tests {
         }
     }
 
+    #[allow(dead_code)]
     fn create_test_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
         use rand::Rng;
         let mut rng = rand::rng();

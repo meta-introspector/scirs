@@ -591,6 +591,7 @@ impl GenerativeMetrics {
     }
 }
 /// Training function for VAE
+#[allow(dead_code)]
 fn train_vae_model() -> StdResult<()> {
     println!("🎨 Starting VAE Training");
     let mut rng = SmallRng::seed_from_u64(42);
@@ -681,6 +682,7 @@ fn train_vae_model() -> StdResult<()> {
 }
 
 /// Training function for simple GAN
+#[allow(dead_code)]
 fn train_gan_model() -> StdResult<()> {
     println!("⚔️ Starting GAN Training");
     let mut rng = SmallRng::seed_from_u64(42);
@@ -780,6 +782,7 @@ fn train_gan_model() -> StdResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> StdResult<()> {
     println!("🎨 Generative Models Complete Example");
     println!("=====================================");

@@ -7,20 +7,21 @@
 #![allow(dead_code)]
 
 use ndarray::{s, Array, Array1, Array2, Array4, ArrayView1, Axis};
-use rand::distributions::{Distribution, Uniform};
-use rand::prelude::SliceRandom;
-use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use ndarray_rand::rand::distributions::{Distribution, Uniform};
+use ndarray_rand::rand::prelude::SliceRandom;
+use ndarray_rand::rand::rngs::SmallRng;
+use ndarray_rand::rand::{Rng, SeedableRng};
 use scirs2_neural::error::Result;
-use serde::{Deserialize, Serialize};
+// use serde::{Deserialize, Serialize};
 use std::f32;
 /// Padding mode for convolutional layers
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy)]
 enum PaddingMode {
     Valid, // No padding
     Same,  // Pad to keep same dimensions
 }
 /// Activation function type
+#[derive(Debug)]
 enum ActivationFunction {
     ReLU,
     Sigmoid,
@@ -150,7 +151,7 @@ trait Layer {
     fn num_parameters(&self) -> usize;
 }
 /// Convolutional layer (Conv2D)
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 struct Conv2D {
     filters: usize,
     kernel_size: (usize, usize),
@@ -164,7 +165,7 @@ struct Conv2D {
     dweights: Option<Array4<f32>>,
     dbiases: Option<Array1<f32>>,
     // Cache for backward pass
-    #[serde(skip)]
+    // #[serde(skip)]
     input: Option<Array4<f32>>,
     z: Option<Array4<f32>>, // Pre-activation
     output: Option<Array4<f32>>,
@@ -977,6 +978,7 @@ impl Sequential {
 }
 /// Create an MNIST-like synthetic dataset (small 4x4 images, 10 classes)
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn create_synthetic_dataset(
     num_samples: usize,
     num_classes: usize,
@@ -990,7 +992,7 @@ fn create_synthetic_dataset(
     let mut class_patterns = Vec::with_capacity(num_classes);
     for _ in 0..num_classes {
         let pattern = Array2::from_shape_fn(image_size, |_| {
-            if rng.random::<f32>() > 0.7 {
+            if rng.gen::<f32>() > 0.7 {
                 1.0
             } else {
                 0.0
@@ -1001,11 +1003,11 @@ fn create_synthetic_dataset(
     // Generate samples with noise
     for i in 0..num_samples {
         // Assign a random class
-        let class = rng.random_range(0..num_classes);
+        let class = rng.gen_range(0..num_classes);
         // Add the class pattern with noise
         for h in 0..image_size.0 {
             for w in 0..image_size.1 {
-                let noise = rng.random::<f32>() * 0.3;
+                let noise = rng.gen::<f32>() * 0.3;
                 let pixel = (class_patterns[class][[h, w]] + noise).min(1.0);
                 images[[i, 0, h, w]] = pixel;
             }
@@ -1016,6 +1018,7 @@ fn create_synthetic_dataset(
     (images, labels)
 }
 // Helper function to find index of maximum value in array
+#[allow(dead_code)]
 fn argmax(arr: ArrayView1<f32>) -> usize {
     let mut max_idx = 0;
     let mut max_val = arr[0];
@@ -1028,6 +1031,7 @@ fn argmax(arr: ArrayView1<f32>) -> usize {
     max_idx
 }
 /// Train and evaluate a simple CNN model
+#[allow(dead_code)]
 fn train_cnn_example() -> Result<()> {
     // Set up RNG
     let mut rng = SmallRng::seed_from_u64(42);
@@ -1124,7 +1128,7 @@ fn train_cnn_example() -> Result<()> {
     // Make some example predictions
     println!("\nExample predictions:");
     for i in 0..5 {
-        let idx = rng.random_range(0..test_size);
+        let idx = rng.gen_range(0..test_size);
         let true_class = argmax(test_labels.row(idx));
         let predicted_class = argmax(predictions.row(idx));
         println!(
@@ -1137,6 +1141,7 @@ fn train_cnn_example() -> Result<()> {
     Ok(())
 }
 /// Main function
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Convolutional Neural Network Implementation Example\n");
     train_cnn_example()?;

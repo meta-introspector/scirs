@@ -11,7 +11,6 @@ use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
-#[cfg(test)]
 use std::f64::consts::PI;
 use std::sync::Arc;
 
@@ -154,6 +153,7 @@ pub enum EstimationMethod {
 /// # Returns
 ///
 /// * Enhanced parametric result with optimal model
+#[allow(dead_code)]
 pub fn enhanced_parametric_estimation(
     signal: &Array1<f64>,
     config: &ParametricConfig,
@@ -213,6 +213,7 @@ pub fn enhanced_parametric_estimation(
 }
 
 /// Parallel model selection across different orders
+#[allow(dead_code)]
 fn parallel_model_selection(
     signal: &Array1<f64>,
     max_ar: usize,
@@ -279,6 +280,7 @@ struct ModelEvaluation {
 }
 
 /// Evaluate a single model configuration
+#[allow(dead_code)]
 fn evaluate_model(
     signal: &Array1<f64>,
     p: usize,
@@ -363,6 +365,7 @@ fn evaluate_model(
 }
 
 /// Select optimal model from evaluation results
+#[allow(dead_code)]
 fn select_optimal_model(results: Vec<ModelEvaluation>) -> SignalResult<OptimalModelResult> {
     if results.is_empty() {
         return Err(SignalError::ComputationError(
@@ -403,6 +406,7 @@ fn select_optimal_model(results: Vec<ModelEvaluation>) -> SignalResult<OptimalMo
 }
 
 /// Sequential model selection (fallback for non-parallel processing)
+#[allow(dead_code)]
 fn sequential_model_selection(
     signal: &Array1<f64>,
     max_ar: usize,
@@ -436,6 +440,7 @@ fn sequential_model_selection(
 }
 
 /// Robust parametric estimation with outlier handling
+#[allow(dead_code)]
 fn robust_parametric_estimation(
     signal: &Array1<f64>,
     max_ar: usize,
@@ -468,6 +473,7 @@ fn robust_parametric_estimation(
 }
 
 /// Remove outliers using Median Absolute Deviation
+#[allow(dead_code)]
 fn robust_outlier_removal(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     let mut sorted_signal = signal.to_vec();
     sorted_signal.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -525,6 +531,7 @@ struct RobustArResult {
 }
 
 /// Robust AR estimation using iteratively reweighted least squares
+#[allow(dead_code)]
 fn robust_ar_estimation(signal: &Array1<f64>, max_order: usize) -> SignalResult<RobustArResult> {
     let n = signal.len();
     let mut best_result = None;
@@ -544,6 +551,7 @@ fn robust_ar_estimation(signal: &Array1<f64>, max_order: usize) -> SignalResult<
 }
 
 /// Robust AR estimation for specific order using IRLS
+#[allow(dead_code)]
 fn robust_ar_order(signal: &Array1<f64>, p: usize) -> SignalResult<RobustArResult> {
     let n = signal.len();
     if n <= p + 1 {
@@ -650,6 +658,7 @@ fn robust_ar_order(signal: &Array1<f64>, p: usize) -> SignalResult<RobustArResul
 }
 
 /// Solve weighted least squares problem
+#[allow(dead_code)]
 fn solve_weighted_least_squares(
     x_matrix: &[Vec<f64>],
     y_vector: &[f64],
@@ -677,6 +686,7 @@ fn solve_weighted_least_squares(
 }
 
 /// Simple Gaussian elimination solver
+#[allow(dead_code)]
 fn solve_linear_system(a: &[Vec<f64>], b: &[f64]) -> SignalResult<Vec<f64>> {
     let n = a.len();
     let mut aug_matrix = vec![vec![0.0; n + 1]; n];
@@ -734,6 +744,7 @@ fn solve_linear_system(a: &[Vec<f64>], b: &[f64]) -> SignalResult<Vec<f64>> {
 }
 
 /// Adaptive order selection using cross-validation
+#[allow(dead_code)]
 fn adaptive_order_selection(
     signal: &Array1<f64>,
     max_ar: usize,
@@ -793,6 +804,7 @@ fn adaptive_order_selection(
 }
 
 /// Cross-validate AR model with given order
+#[allow(dead_code)]
 fn cross_validate_ar_model(
     signal: &Array1<f64>,
     p: usize,
@@ -850,6 +862,7 @@ fn cross_validate_ar_model(
 }
 
 /// Time-varying parametric estimation using Kalman filter
+#[allow(dead_code)]
 fn time_varying_parametric_estimation(
     signal: &Array1<f64>,
     config: &ParametricConfig,
@@ -868,6 +881,7 @@ fn time_varying_parametric_estimation(
 }
 
 /// Kalman filter-based adaptive AR estimation
+#[allow(dead_code)]
 fn kalman_adaptive_ar_estimation(
     signal: &Array1<f64>,
     ar_order: usize,
@@ -971,6 +985,7 @@ fn kalman_adaptive_ar_estimation(
 }
 
 /// Improved windowed parametric estimation
+#[allow(dead_code)]
 fn windowed_parametric_estimation(
     signal: &Array1<f64>,
     config: &ParametricConfig,
@@ -1048,6 +1063,7 @@ fn windowed_parametric_estimation(
 }
 
 /// Determine adaptive window size based on signal characteristics
+#[allow(dead_code)]
 fn adaptive_window_size(signal: &Array1<f64>, ar_order: usize) -> SignalResult<usize> {
     let n = signal.len();
     let min_window = (ar_order * 10).max(50);
@@ -1092,6 +1108,7 @@ pub struct ArResult {
 }
 
 /// Assess the quality of a window-based AR estimate
+#[allow(dead_code)]
 fn assess_window_quality(ar_result: &ArResult, window_data: &[f64]) -> f64 {
     let n = window_data.len();
     let p = ar_result.coefficients.len();
@@ -1129,6 +1146,7 @@ fn assess_window_quality(ar_result: &ArResult, window_data: &[f64]) -> f64 {
 }
 
 /// Check AR model stability
+#[allow(dead_code)]
 fn check_ar_stability(coefficients: &[f64]) -> f64 {
     let p = coefficients.len();
     if p == 0 {
@@ -1146,6 +1164,7 @@ fn check_ar_stability(coefficients: &[f64]) -> f64 {
 }
 
 /// Weighted average of coefficient vectors
+#[allow(dead_code)]
 fn weighted_average_coefficients(coeff_vectors: &[Vec<f64>], weights: &[f64]) -> Vec<f64> {
     if coeff_vectors.is_empty() || weights.is_empty() {
         return Vec::new();
@@ -1171,6 +1190,7 @@ fn weighted_average_coefficients(coeff_vectors: &[Vec<f64>], weights: &[f64]) ->
 }
 
 /// Weighted average of scalar values
+#[allow(dead_code)]
 fn weighted_average(values: &[f64], weights: &[f64]) -> f64 {
     if values.is_empty() || weights.is_empty() {
         return 0.0;
@@ -1190,6 +1210,7 @@ fn weighted_average(values: &[f64], weights: &[f64]) -> f64 {
 }
 
 /// Average AR coefficients across multiple estimates
+#[allow(dead_code)]
 fn average_coefficients(all_coeffs: &[Vec<f64>]) -> Vec<f64> {
     if all_coeffs.is_empty() {
         return Vec::new();
@@ -1214,6 +1235,7 @@ fn average_coefficients(all_coeffs: &[Vec<f64>]) -> Vec<f64> {
 }
 
 /// Compute parametric spectrum from model
+#[allow(dead_code)]
 fn compute_parametric_spectrum(
     result: &OptimalModelResult,
     n_frequencies: usize,
@@ -1285,6 +1307,7 @@ fn compute_parametric_spectrum(
 }
 
 /// Compute confidence intervals for spectrum
+#[allow(dead_code)]
 fn compute_spectrum_confidence_intervals(
     psd: &[f64],
     confidence_level: f64,
@@ -1311,6 +1334,7 @@ fn compute_spectrum_confidence_intervals(
 }
 
 /// Compute comprehensive diagnostics
+#[allow(dead_code)]
 fn compute_diagnostics(
     signal: &Array1<f64>,
     result: &OptimalModelResult,
@@ -1341,6 +1365,7 @@ fn compute_diagnostics(
 }
 
 /// Compute model residuals
+#[allow(dead_code)]
 fn compute_model_residuals(
     signal: &Array1<f64>,
     result: &OptimalModelResult,
@@ -1371,6 +1396,7 @@ fn compute_model_residuals(
 }
 
 /// Ljung-Box test for serial correlation
+#[allow(dead_code)]
 fn ljung_box_test(residuals: &[f64], max_lag: usize) -> SignalResult<(f64, f64)> {
     let n = residuals.len() as f64;
 
@@ -1398,6 +1424,7 @@ fn ljung_box_test(residuals: &[f64], max_lag: usize) -> SignalResult<(f64, f64)>
 }
 
 /// Compute autocorrelation function
+#[allow(dead_code)]
 fn compute_autocorrelation(data: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
     let n = data.len();
     if max_lag >= n {
@@ -1430,6 +1457,7 @@ fn compute_autocorrelation(data: &[f64], max_lag: usize) -> SignalResult<Vec<f64
 }
 
 /// Estimate condition number of the model
+#[allow(dead_code)]
 fn estimate_condition_number(result: &OptimalModelResult) -> SignalResult<f64> {
     // Simplified condition number based on coefficient magnitudes
     match result.model_type {

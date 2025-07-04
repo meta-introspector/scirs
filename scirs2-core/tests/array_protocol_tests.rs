@@ -44,6 +44,7 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
 #[test]
+#[allow(dead_code)]
 fn test_ndarray_wrapper() {
     // Create a regular ndarray
     let arr = Array2::<f64>::ones((3, 3));
@@ -61,6 +62,7 @@ fn test_ndarray_wrapper() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_gpu_array() {
     // Create a regular ndarray
     let arr = Array2::<f64>::ones((3, 3));
@@ -112,6 +114,7 @@ fn test_gpu_array() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_distributed_array() {
     // Create a regular ndarray
     let arr = Array2::<f64>::ones((10, 5));
@@ -142,6 +145,7 @@ fn test_distributed_array() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_jit_array() {
     // Initialize the array protocol system
     array_protocol::init();
@@ -169,6 +173,7 @@ fn test_jit_array() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_array_function_dispatch() {
     // Initialize the array protocol system
     array_protocol::init();
@@ -232,6 +237,7 @@ fn test_array_function_dispatch() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_array_interoperability() {
     // Initialize the array protocol system
     array_protocol::init();
@@ -341,6 +347,7 @@ fn test_array_interoperability() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_array_operations() {
     // Initialize the array protocol system
     array_protocol::init();
@@ -477,6 +484,7 @@ fn test_array_operations() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_mixed_array_types() {
     // Initialize the array protocol system
     array_protocol::init();
@@ -680,6 +688,7 @@ impl<T: Clone + Send + Sync + 'static> ArrayProtocol for CustomArray<T> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_custom_array_type() {
     // Initialize the array protocol system
     array_protocol::init();

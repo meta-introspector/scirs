@@ -1116,6 +1116,7 @@ impl<F: crate::traits::InterpolationFloat> DistanceMatrixCache<F> {
 }
 
 /// Create a cached B-spline with default cache settings
+#[allow(dead_code)]
 pub fn make_cached_bspline<T>(
     knots: &ArrayView1<T>,
     coeffs: &ArrayView1<T>,
@@ -1130,6 +1131,7 @@ where
 }
 
 /// Create a cached B-spline with custom cache configuration
+#[allow(dead_code)]
 pub fn make_cached_bspline_with_config<T>(
     knots: &ArrayView1<T>,
     coeffs: &ArrayView1<T>,

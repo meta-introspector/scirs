@@ -62,6 +62,7 @@ impl_transformer!(TargetEncoder);
 impl_transformer!(VarianceThreshold);
 
 /// Helper function to create a boxed transformer
+#[allow(dead_code)]
 pub fn boxed<T: Transformer + 'static>(transformer: T) -> Box<dyn Transformer> {
     Box::new(transformer)
 }

@@ -11,6 +11,7 @@ use scirs2_linalg::quantization::calibration::{
 };
 use scirs2_linalg::quantization::{dequantize_matrix, quantize_matrix, quantized_matmul};
 
+#[allow(dead_code)]
 fn main() {
     println!("Quantization for Machine Learning Example");
     println!("=========================================\n");
@@ -35,6 +36,7 @@ fn main() {
 
 /// Create synthetic model weights with normal distribution
 /// (typical for trained neural networks)
+#[allow(dead_code)]
 fn create_model_weights(input_size: usize, output_size: usize) -> Array2<f32> {
     let mut rng = rng();
     let normal = Normal::new(0.0, 0.1).unwrap(); // Small standard deviation typical for weights
@@ -50,6 +52,7 @@ fn create_model_weights(input_size: usize, output_size: usize) -> Array2<f32> {
 }
 
 /// Create synthetic activations with various distributions
+#[allow(dead_code)]
 fn create_activations(batch_size: usize, feature_size: usize) -> Array2<f32> {
     let mut rng = rng();
 
@@ -73,6 +76,7 @@ fn create_activations(batch_size: usize, feature_size: usize) -> Array2<f32> {
 }
 
 /// Compare matmul accuracy with different calibration methods
+#[allow(dead_code)]
 fn compare_matmul_accuracy(weights: &Array2<f32>, activations: &Array2<f32>, bits: u8) {
     // Calculate reference result with full precision
     let reference_result = activations.dot(&weights.t());
@@ -177,6 +181,7 @@ fn compare_matmul_accuracy(weights: &Array2<f32>, activations: &Array2<f32>, bit
 }
 
 /// Compare different bit-widths for matrix multiplication
+#[allow(dead_code)]
 fn compare_bit_widths_matmul(weights: &Array2<f32>, activations: &Array2<f32>) {
     // Calculate reference result with full precision
     let reference_result = activations.dot(&weights.t());
@@ -257,6 +262,7 @@ fn compare_bit_widths_matmul(weights: &Array2<f32>, activations: &Array2<f32>) {
 }
 
 /// Demonstrate mixed precision quantization (different bit widths for weights and activations)
+#[allow(dead_code)]
 fn demonstrate_mixed_precision(weights: &Array2<f32>, activations: &Array2<f32>) {
     // Calculate reference result with full precision
     let reference_result = activations.dot(&weights.t());

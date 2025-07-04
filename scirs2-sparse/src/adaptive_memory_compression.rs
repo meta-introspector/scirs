@@ -289,7 +289,7 @@ impl MemoryMappedFile {
             let mut file_ref = &self.file;
             file_ref
                 .seek_read(buffer, offset as u64)
-                .map_err(|e| SparseError::Io(format!("Failed to read at offset {}: {}", offset, e)))
+                .map_err(|e| SparseError::Io(format!("Failed to read at offset {offset}: {e}")))
         }
 
         #[cfg(not(any(unix, windows)))]
@@ -298,15 +298,13 @@ impl MemoryMappedFile {
             let mut file_clone = self
                 .file
                 .try_clone()
-                .map_err(|e| SparseError::Io(format!("Failed to clone file handle: {}", e)))?;
+                .map_err(|e| SparseError::Io(format!("Failed to clone file handle: {e}")))?;
             file_clone
                 .seek(SeekFrom::Start(offset as u64))
-                .map_err(|e| {
-                    SparseError::Io(format!("Failed to seek to offset {}: {}", offset, e))
-                })?;
+                .map_err(|e| SparseError::Io(format!("Failed to seek to offset {offset}: {e}")))?;
             file_clone
                 .read(buffer)
-                .map_err(|e| SparseError::Io(format!("Failed to read data: {}", e)))
+                .map_err(|e| SparseError::Io(format!("Failed to read data: {e}")))
         }
     }
 
@@ -323,9 +321,9 @@ impl MemoryMappedFile {
         #[cfg(windows)]
         {
             let mut file_ref = &self.file;
-            file_ref.seek_write(data, offset as u64).map_err(|e| {
-                SparseError::Io(format!("Failed to write at offset {}: {}", offset, e))
-            })
+            file_ref
+                .seek_write(data, offset as u64)
+                .map_err(|e| SparseError::Io(format!("Failed to write at offset {offset}: {e}")))
         }
 
         #[cfg(not(any(unix, windows)))]
@@ -334,15 +332,13 @@ impl MemoryMappedFile {
             let mut file_clone = self
                 .file
                 .try_clone()
-                .map_err(|e| SparseError::Io(format!("Failed to clone file handle: {}", e)))?;
+                .map_err(|e| SparseError::Io(format!("Failed to clone file handle: {e}")))?;
             file_clone
                 .seek(SeekFrom::Start(offset as u64))
-                .map_err(|e| {
-                    SparseError::Io(format!("Failed to seek to offset {}: {}", offset, e))
-                })?;
+                .map_err(|e| SparseError::Io(format!("Failed to seek to offset {offset}: {e}")))?;
             file_clone
                 .write(data)
-                .map_err(|e| SparseError::Io(format!("Failed to write data: {}", e)))
+                .map_err(|e| SparseError::Io(format!("Failed to write data: {e}")))
         }
     }
 
@@ -405,6 +401,7 @@ impl AdaptiveMemoryCompressor {
     }
 
     /// Compress sparse matrix data adaptively
+    #[allow(clippy::too_many_arguments)]
     pub fn compress_matrix<T>(
         &mut self,
         matrix_id: u64,
@@ -2032,7 +2029,7 @@ impl OutOfCoreManager {
     #[allow(dead_code)]
     fn write_block_to_disk(&mut self, block: &CompressedBlock) -> SparseResult<String> {
         let file_id = self.file_counter.fetch_add(1, Ordering::Relaxed);
-        let file_name = format!("block_{}_{}.dat", block.block_id, file_id);
+        let file_name = format!("block_{}_{file_id}.dat", block.block_id);
         let file_path = Path::new(&self.temp_dir).join(&file_name);
 
         // Create and write to file

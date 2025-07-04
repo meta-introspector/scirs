@@ -26,6 +26,7 @@ pub type CompressedJacobianPattern = (CsrArray<f64>, Array2<f64>, Array2<f64>);
 ///
 /// * Compressed sparsity pattern and compression matrices (original, B, C)
 ///   where B is the column compression matrix and C is the row compression matrix
+#[allow(dead_code)]
 pub fn compress_jacobian_pattern(
     sparsity: &CsrArray<f64>,
 ) -> Result<CompressedJacobianPattern, OptimizeError> {
@@ -50,6 +51,7 @@ pub fn compress_jacobian_pattern(
 /// Colors the columns of a Jacobian sparsity pattern using a greedy algorithm
 ///
 /// Two columns can have the same color if they don't both have nonzeros in the same row
+#[allow(dead_code)]
 fn color_jacobian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
     let (_m, n) = sparsity.shape();
     let mut coloring = vec![0; n];
@@ -83,15 +85,15 @@ fn color_jacobian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimi
 }
 
 /// Helper function to get rows where a column has nonzero entries
+#[allow(dead_code)]
 fn get_column_nonzero_rows(sparsity: &CsrArray<f64>, col: usize) -> HashSet<usize> {
     let mut rows = HashSet::new();
     let (m, _) = sparsity.shape();
 
     for row in 0..m {
-        if let Some(val) = sparsity.get(row, col) {
-            if val.abs() > 1e-15 {
-                rows.insert(row);
-            }
+        let val = sparsity.get(row, col);
+        if val.abs() > 1e-15 {
+            rows.insert(row);
         }
     }
 
@@ -110,6 +112,7 @@ fn get_column_nonzero_rows(sparsity: &CsrArray<f64>, col: usize) -> HashSet<usiz
 /// # Returns
 ///
 /// * Compressed sparsity pattern and compression matrix P (n x num_colors)
+#[allow(dead_code)]
 pub fn compress_hessian_pattern(
     sparsity: &CsrArray<f64>,
 ) -> Result<(CsrArray<f64>, Array2<f64>), OptimizeError> {
@@ -133,6 +136,7 @@ pub fn compress_hessian_pattern(
 /// For symmetric matrices, two columns i and j can have the same color if:
 /// 1. They are not adjacent (H[i,j] = 0)
 /// 2. They don't share any common neighbors
+#[allow(dead_code)]
 fn color_hessian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, OptimizeError> {
     let (n, _) = sparsity.shape();
     let mut coloring = vec![0; n];
@@ -175,6 +179,7 @@ fn color_hessian_columns(sparsity: &CsrArray<f64>) -> Result<Vec<usize>, Optimiz
 }
 
 /// Build adjacency list representation of the sparsity pattern
+#[allow(dead_code)]
 fn build_adjacency_list(sparsity: &CsrArray<f64>) -> Vec<HashSet<usize>> {
     let (n, _) = sparsity.shape();
     let mut adjacency = vec![HashSet::new(); n];
@@ -182,11 +187,10 @@ fn build_adjacency_list(sparsity: &CsrArray<f64>) -> Vec<HashSet<usize>> {
     for i in 0..n {
         for j in 0..n {
             if i != j {
-                if let Some(val) = sparsity.get(i, j) {
-                    if val.abs() > 1e-15 {
-                        adjacency[i].insert(j);
-                        adjacency[j].insert(i); // Symmetric
-                    }
+                let val = sparsity.get(i, j);
+                if val.abs() > 1e-15 {
+                    adjacency[i].insert(j);
+                    adjacency[j].insert(i); // Symmetric
                 }
             }
         }
@@ -211,6 +215,7 @@ fn build_adjacency_list(sparsity: &CsrArray<f64>) -> Vec<HashSet<usize>> {
 /// # Returns
 ///
 /// * Reconstructed sparse Jacobian
+#[allow(dead_code)]
 pub fn reconstruct_jacobian(
     gradients: &ArrayView2<f64>,
     b: &ArrayView2<f64>,
@@ -246,7 +251,8 @@ pub fn reconstruct_jacobian(
         for &col in &columns_in_color {
             for row in 0..m {
                 // Check if this position should be nonzero according to sparsity pattern
-                if let Some(_) = sparsity.get(row, col) {
+                let val = sparsity.get(row, col);
+                if val.abs() > 1e-15 {
                     // The gradient[row, color] contains the derivative ∂f_row/∂x_col
                     jacobian_dense[[row, col]] = gradients[[row, color]];
                 }
@@ -261,7 +267,8 @@ pub fn reconstruct_jacobian(
 
     for row in 0..m {
         for col in 0..n {
-            if sparsity.get(row, col).is_some() && jacobian_dense[[row, col]].abs() > 1e-15 {
+            let sparsity_val = sparsity.get(row, col);
+            if sparsity_val.abs() > 1e-15 && jacobian_dense[[row, col]].abs() > 1e-15 {
                 row_indices.push(row);
                 col_indices.push(col);
                 values.push(jacobian_dense[[row, col]]);
@@ -270,7 +277,7 @@ pub fn reconstruct_jacobian(
     }
 
     // Create sparse matrix from the reconstructed values
-    CsrArray::from_triplets(row_indices, col_indices, values, (m, n))
+    CsrArray::from_triplets(&row_indices, &col_indices, &values, (m, n), false)
         .map_err(|_| OptimizeError::InvalidInput("Failed to create sparse matrix".to_string()))
 }
 
@@ -291,6 +298,7 @@ pub fn reconstruct_jacobian(
 /// # Returns
 ///
 /// * Reconstructed sparse Hessian
+#[allow(dead_code)]
 pub fn reconstruct_hessian_central_diff(
     gradients_forward: &ArrayView2<f64>,
     gradients_backward: &ArrayView2<f64>,
@@ -369,6 +377,7 @@ pub fn reconstruct_hessian_central_diff(
 }
 
 /// Simplified version of Hessian reconstruction for single gradient input
+#[allow(dead_code)]
 pub fn reconstruct_hessian(
     gradients: &ArrayView2<f64>,
     p: &ArrayView2<f64>,

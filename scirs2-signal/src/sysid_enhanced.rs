@@ -18,7 +18,7 @@ use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_shape};
-#[cfg(test)]
+
 use std::f64::consts::PI;
 
 /// Enhanced system identification result
@@ -267,6 +267,7 @@ pub struct ModelOrders {
 /// # Returns
 ///
 /// * Enhanced identification result
+#[allow(dead_code)]
 pub fn enhanced_system_identification(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -519,6 +520,7 @@ impl RecursiveSysId {
 }
 
 /// Preprocess data for identification
+#[allow(dead_code)]
 fn preprocess_data(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -544,6 +546,7 @@ fn preprocess_data(
 }
 
 /// Remove outliers using robust statistics
+#[allow(dead_code)]
 fn remove_outliers(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -570,6 +573,7 @@ fn remove_outliers(
 }
 
 /// Compute median
+#[allow(dead_code)]
 fn median(data: &[f64]) -> f64 {
     let mut sorted = data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -577,12 +581,14 @@ fn median(data: &[f64]) -> f64 {
 }
 
 /// Compute median absolute deviation
+#[allow(dead_code)]
 fn median_absolute_deviation(data: &[f64], median_val: f64) -> f64 {
     let deviations: Vec<f64> = data.iter().map(|&x| (x - median_val).abs()).collect();
     median(&deviations) / 0.6745 // Scale for normal distribution
 }
 
 /// Identify ARX model
+#[allow(dead_code)]
 fn identify_arx(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -638,6 +644,7 @@ fn identify_arx(
 }
 
 /// Form ARX regression matrices
+#[allow(dead_code)]
 fn form_arx_regression(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -678,6 +685,7 @@ fn form_arx_regression(
 }
 
 /// Select ARX model orders using information criteria
+#[allow(dead_code)]
 fn select_arx_orders(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -719,6 +727,7 @@ fn select_arx_orders(
 }
 
 /// Solve regularized least squares with enhanced numerical stability
+#[allow(dead_code)]
 fn solve_regularized_ls(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // use ndarray_linalg::{Norm, Solve, SVD}; // TODO: Add ndarray-linalg dependency
 
@@ -741,6 +750,7 @@ fn solve_regularized_ls(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1
 }
 
 /// Solve using SVD decomposition for numerical stability
+#[allow(dead_code)]
 fn solve_using_svd(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // use ndarray_linalg::SVD; // TODO: Add ndarray-linalg dependency
 
@@ -770,6 +780,7 @@ fn solve_using_svd(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>
 }
 
 /// Compute matrix condition number
+#[allow(dead_code)]
 fn compute_matrix_condition_number(matrix: &Array2<f64>) -> SignalResult<f64> {
     // use ndarray_linalg::{Norm, SVD}; // TODO: Add ndarray-linalg dependency
 
@@ -788,6 +799,7 @@ fn compute_matrix_condition_number(matrix: &Array2<f64>) -> SignalResult<f64> {
 }
 
 /// Enhanced ARMAX identification with iterative prediction error method
+#[allow(dead_code)]
 fn identify_armax(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -803,6 +815,7 @@ fn identify_armax(
     identify_armax_complete(input, output, na, nb, nc, delay)
 }
 
+#[allow(dead_code)]
 fn identify_oe(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -817,6 +830,7 @@ fn identify_oe(
     identify_oe_complete(input, output, nb, nf, delay)
 }
 
+#[allow(dead_code)]
 fn identify_bj(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -833,6 +847,7 @@ fn identify_bj(
     identify_bj_complete(input, output, nb, nc, nd, nf, delay)
 }
 
+#[allow(dead_code)]
 fn identify_state_space(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -845,6 +860,7 @@ fn identify_state_space(
     identify_state_space_complete(input, output, order)
 }
 
+#[allow(dead_code)]
 fn identify_narx(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -863,6 +879,7 @@ fn identify_narx(
 }
 
 /// Validate identified model with enhanced cross-validation and stability analysis
+#[allow(dead_code)]
 fn validate_model(
     model: &SystemModel,
     input: &Array1<f64>,
@@ -917,6 +934,7 @@ fn validate_model(
 }
 
 /// Cross-validate model performance
+#[allow(dead_code)]
 fn cross_validate_model(
     model: &SystemModel,
     input: &Array1<f64>,
@@ -989,6 +1007,7 @@ fn cross_validate_model(
 }
 
 /// Enhanced residual analysis with statistical tests
+#[allow(dead_code)]
 fn enhanced_residual_analysis(
     residuals: &Array1<f64>,
     input: &Array1<f64>,
@@ -1053,6 +1072,7 @@ fn enhanced_residual_analysis(
 }
 
 /// Ljung-Box test for whiteness
+#[allow(dead_code)]
 fn ljung_box_test(autocorr: &Array1<f64>) -> f64 {
     let n = autocorr.len() as f64;
     let h = autocorr.len().min(10); // Use up to 10 lags
@@ -1071,6 +1091,7 @@ fn ljung_box_test(autocorr: &Array1<f64>) -> f64 {
 }
 
 /// Cross-correlation independence test
+#[allow(dead_code)]
 fn cross_correlation_test(cross_corr: &Array1<f64>) -> f64 {
     let max_corr = cross_corr.iter().map(|&x| x.abs()).fold(0.0, f64::max);
     let n = cross_corr.len() as f64;
@@ -1083,6 +1104,7 @@ fn cross_correlation_test(cross_corr: &Array1<f64>) -> f64 {
 }
 
 /// Jarque-Bera test for normality
+#[allow(dead_code)]
 fn jarque_bera_test(data: &Array1<f64>) -> f64 {
     let n = data.len() as f64;
     let mean = data.mean().unwrap();
@@ -1116,6 +1138,7 @@ fn jarque_bera_test(data: &Array1<f64>) -> f64 {
 }
 
 /// Chi-square p-value approximation
+#[allow(dead_code)]
 fn chi_square_pvalue(x: f64, df: usize) -> f64 {
     // Simple approximation for small df
     if df == 1 {
@@ -1132,11 +1155,13 @@ fn chi_square_pvalue(x: f64, df: usize) -> f64 {
 }
 
 /// Standard normal CDF approximation
+#[allow(dead_code)]
 fn standard_normal_cdf(x: f64) -> f64 {
     0.5 * (1.0 + erf(x / 2.0_f64.sqrt()))
 }
 
 /// Error function approximation
+#[allow(dead_code)]
 fn erf(x: f64) -> f64 {
     let a1 = 0.254829592;
     let a2 = -0.284496736;
@@ -1155,6 +1180,7 @@ fn erf(x: f64) -> f64 {
 }
 
 /// Compute stability margin for different model types
+#[allow(dead_code)]
 fn compute_stability_margin(model: &SystemModel) -> SignalResult<f64> {
     match model {
         SystemModel::ARX { a, .. } => {
@@ -1185,6 +1211,7 @@ fn compute_stability_margin(model: &SystemModel) -> SignalResult<f64> {
 }
 
 /// Compute polynomial roots (simplified for stability analysis)
+#[allow(dead_code)]
 fn compute_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
     // For stability, we only need to check if roots are inside unit circle
     // Use companion matrix approach for general polynomial root finding
@@ -1227,6 +1254,7 @@ fn compute_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>
 }
 
 /// Simulate model response
+#[allow(dead_code)]
 fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Array1<f64>> {
     match model {
         SystemModel::ARX { a, b, delay } => {
@@ -1258,7 +1286,7 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
             use rand::prelude::*;
             let mut rng = rand::rng();
             for i in 0..n {
-                noise[i] = rng.gen_range(-1.0..1.0) * 0.1; // Small noise
+                noise[i] = rng.random_range(-1.0..1.0) * 0.1; // Small noise
             }
 
             for t in (*delay + b.len().max(c.len())).max(a.len())..n {
@@ -1321,7 +1349,7 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
             use rand::prelude::*;
             let mut rng = rand::rng();
             for i in 0..n {
-                noise[i] = rng.gen_range(-1.0..1.0) * 0.1;
+                noise[i] = rng.random_range(-1.0..1.0) * 0.1;
             }
 
             for t in (*delay + b.len()).max(f.len()).max(c.len()).max(d.len())..n {
@@ -1388,6 +1416,7 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
 }
 
 /// Apply nonlinear function
+#[allow(dead_code)]
 fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResult<f64> {
     match func {
         NonlinearFunction::Polynomial(coeffs) => {
@@ -1464,6 +1493,7 @@ fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResul
 }
 
 /// Convert transfer function to state space representation
+#[allow(dead_code)]
 fn transfer_function_to_state_space(tf: &TransferFunction) -> SignalResult<StateSpace> {
     let num = &tf.numerator;
     let den = &tf.denominator;
@@ -1531,6 +1561,7 @@ fn transfer_function_to_state_space(tf: &TransferFunction) -> SignalResult<State
 }
 
 /// Simulate state space system
+#[allow(dead_code)]
 fn simulate_state_space(ss: &StateSpace, input: &Array1<f64>) -> SignalResult<Array1<f64>> {
     let n_states = ss.a.nrows();
     let n_inputs = ss.b.ncols();
@@ -1575,6 +1606,7 @@ fn simulate_state_space(ss: &StateSpace, input: &Array1<f64>) -> SignalResult<Ar
 }
 
 /// Get number of model parameters
+#[allow(dead_code)]
 fn get_model_parameters(model: &SystemModel) -> usize {
     match model {
         SystemModel::ARX { a, b, .. } => a.len() + b.len(),
@@ -1590,6 +1622,7 @@ fn get_model_parameters(model: &SystemModel) -> usize {
 // This function is now replaced by enhanced_residual_analysis
 
 /// SIMD-optimized parameter estimation for large datasets
+#[allow(dead_code)]
 pub fn simd_optimized_identification(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1606,6 +1639,7 @@ pub fn simd_optimized_identification(
 }
 
 /// Parallel block-based identification for large datasets
+#[allow(dead_code)]
 fn parallel_block_identification(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1635,6 +1669,7 @@ fn parallel_block_identification(
 }
 
 /// Aggregate results from parallel blocks
+#[allow(dead_code)]
 fn aggregate_block_results(results: &[EnhancedSysIdResult]) -> SignalResult<EnhancedSysIdResult> {
     if results.is_empty() {
         return Err(SignalError::ValueError(
@@ -1671,6 +1706,7 @@ fn aggregate_block_results(results: &[EnhancedSysIdResult]) -> SignalResult<Enha
 }
 
 /// Robust system identification with outlier rejection
+#[allow(dead_code)]
 pub fn robust_system_identification(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1724,6 +1760,7 @@ pub fn robust_system_identification(
 }
 
 /// Detect outliers using Median Absolute Deviation
+#[allow(dead_code)]
 fn detect_outliers_mad(data: &Array1<f64>, threshold: f64) -> Vec<bool> {
     let median = compute_median(&data.to_vec());
     let deviations: Vec<f64> = data.iter().map(|&x| (x - median).abs()).collect();
@@ -1735,6 +1772,7 @@ fn detect_outliers_mad(data: &Array1<f64>, threshold: f64) -> Vec<bool> {
 }
 
 /// Compute median of a vector
+#[allow(dead_code)]
 fn compute_median(data: &[f64]) -> f64 {
     let mut sorted = data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -1748,6 +1786,7 @@ fn compute_median(data: &[f64]) -> f64 {
 }
 
 /// Multi-Input Multi-Output (MIMO) system identification
+#[allow(dead_code)]
 pub fn mimo_system_identification(
     inputs: &Array2<f64>,  // Each column is an input
     outputs: &Array2<f64>, // Each column is an output
@@ -1783,6 +1822,7 @@ pub fn mimo_system_identification(
 }
 
 /// Advanced model selection using information-theoretic criteria
+#[allow(dead_code)]
 pub fn advanced_model_selection(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1821,6 +1861,7 @@ pub fn advanced_model_selection(
 }
 
 /// Compute penalized likelihood for model selection
+#[allow(dead_code)]
 fn compute_penalized_likelihood(result: &EnhancedSysIdResult) -> f64 {
     let n = result.parameters.values.len() as f64;
     let k = get_model_parameters(&result.model) as f64;
@@ -1903,6 +1944,7 @@ impl AdaptiveIdentifier {
 }
 
 /// Compute condition number
+#[allow(dead_code)]
 fn compute_condition_number(params: &ParameterEstimate) -> f64 {
     // use ndarray_linalg::Norm; // TODO: Add ndarray-linalg dependency
 
@@ -1913,7 +1955,6 @@ fn compute_condition_number(params: &ParameterEstimate) -> f64 {
     }
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -2133,6 +2174,7 @@ mod tests {
 }
 
 /// ARX model identification implementation
+#[allow(dead_code)]
 fn identify_arx_complete(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -2175,7 +2217,7 @@ fn identify_arx_complete(
     // Least squares solution
     let phi_t = phi.t();
     let phi_t_phi = phi_t.dot(&phi);
-    let phi_t_y = phi_t.dot(&y);
+    let _phi_t_y = phi_t.dot(&y);
 
     // Check condition number
     let condition_number = estimate_condition_number(&phi_t_phi);
@@ -2243,6 +2285,7 @@ fn identify_arx_complete(
 }
 
 /// MIMO system identification function
+#[allow(dead_code)]
 pub fn mimo_system_identification_advanced(
     inputs: &Array2<f64>,
     outputs: &Array2<f64>,
@@ -2280,6 +2323,7 @@ pub fn mimo_system_identification_advanced(
 }
 
 /// Advanced model selection function
+#[allow(dead_code)]
 pub fn advanced_model_selection_enhanced(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -2322,6 +2366,7 @@ pub fn advanced_model_selection_enhanced(
 // Helper functions
 
 /// Solve least squares problem using SVD for numerical stability
+#[allow(dead_code)]
 fn solve_least_squares(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Use normal equations for simplicity (in practice would use SVD)
     let at = a.t();
@@ -2339,6 +2384,7 @@ fn solve_least_squares(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<
 }
 
 /// Estimate condition number of a matrix
+#[allow(dead_code)]
 fn estimate_condition_number(matrix: &Array2<f64>) -> f64 {
     // Simplified condition number estimation
     // In practice would use SVD to compute actual condition number
@@ -2353,6 +2399,7 @@ fn estimate_condition_number(matrix: &Array2<f64>) -> f64 {
 }
 
 /// Simple matrix inversion using Gauss-Jordan elimination
+#[allow(dead_code)]
 fn invert_matrix(matrix: &Array2<f64>) -> Result<Array2<f64>, SignalError> {
     let n = matrix.nrows();
     if n != matrix.ncols() {
@@ -2372,6 +2419,7 @@ fn invert_matrix(matrix: &Array2<f64>) -> Result<Array2<f64>, SignalError> {
 }
 
 /// Compute pseudo-inverse of a matrix
+#[allow(dead_code)]
 fn pseudo_inverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
     // Simplified pseudo-inverse implementation
     let (m, n) = matrix.dim();
@@ -2392,6 +2440,7 @@ fn pseudo_inverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
 }
 
 /// Create companion form matrix for polynomial coefficients
+#[allow(dead_code)]
 fn companion_form_matrix(coeffs: &Array1<f64>) -> Array2<f64> {
     let n = coeffs.len();
     if n == 0 {
@@ -2414,6 +2463,7 @@ fn companion_form_matrix(coeffs: &Array1<f64>) -> Array2<f64> {
 }
 
 /// Enhanced robust outlier detection and removal
+#[allow(dead_code)]
 fn robust_outlier_removal(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -2454,6 +2504,7 @@ fn robust_outlier_removal(
 }
 
 /// Estimate signal-to-noise ratio
+#[allow(dead_code)]
 fn estimate_signal_noise_ratio(input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<f64> {
     // Use simple linear regression to estimate noise level
     let n = input.len() as f64;
@@ -2483,10 +2534,11 @@ fn estimate_signal_noise_ratio(input: &Array1<f64>, output: &Array1<f64>) -> Sig
 }
 
 /// Select optimal identification method based on data characteristics
+#[allow(dead_code)]
 fn select_optimal_method(
     input: &Array1<f64>,
     output: &Array1<f64>,
-    config: &EnhancedSysIdConfig,
+    _config: &EnhancedSysIdConfig,
 ) -> SignalResult<IdentificationMethod> {
     let n = input.len();
 
@@ -2511,6 +2563,7 @@ fn select_optimal_method(
 }
 
 /// Enhanced order selection with multiple criteria
+#[allow(dead_code)]
 fn enhanced_order_selection(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -2548,6 +2601,7 @@ fn enhanced_order_selection(
 }
 
 /// Median calculation (helper)
+#[allow(dead_code)]
 fn median_helper(data: &[f64]) -> f64 {
     let mut sorted = data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -2561,12 +2615,14 @@ fn median_helper(data: &[f64]) -> f64 {
 }
 
 /// Median Absolute Deviation calculation
+#[allow(dead_code)]
 fn mad(data: &[f64], median_val: f64) -> f64 {
     let deviations: Vec<f64> = data.iter().map(|&x| (x - median_val).abs()).collect();
     median_helper(&deviations) * 1.4826 // Scale factor for normal distribution
 }
 
 /// Simplified ARX model identification for order selection
+#[allow(dead_code)]
 fn identify_arx_model(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -2643,6 +2699,7 @@ fn identify_arx_model(
 }
 
 /// Solve least squares problem (helper)
+#[allow(dead_code)]
 fn solve_least_squares_helper(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Use normal equations: theta = (A^T A)^{-1} A^T b
     let at = a.t();

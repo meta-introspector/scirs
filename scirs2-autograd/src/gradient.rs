@@ -362,6 +362,7 @@ impl<'graph, F: Float> GradientInfo<'graph, F> {
 }
 
 #[inline]
+#[allow(dead_code)]
 fn has_child_on_path<T: Float>(
     parent: Tensor<T>,
     path: &FxHashMap<usize, GradientInfo<T>>,
@@ -377,6 +378,7 @@ fn has_child_on_path<T: Float>(
 
 // checks `candidate` node is an xs node or not.
 #[inline]
+#[allow(dead_code)]
 fn is_given_xs<'graph, F: Float, A>(candidate: usize, xs: &[A]) -> bool
 where
     A: AsRef<Tensor<'graph, F>>,
@@ -391,6 +393,7 @@ where
 
 // Go backward from ys and collect reachable nodes.
 // Nodes between `ys` and `xs` are marked as `on_backprop_path`.
+#[allow(dead_code)]
 fn init_gradient_map<'graph, A, B, F: Float>(
     g: &'graph Graph<F>,
     ys: &[A],

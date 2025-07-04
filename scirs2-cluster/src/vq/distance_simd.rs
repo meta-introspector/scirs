@@ -37,6 +37,7 @@ impl Default for SimdConfig {
 ///
 /// This function uses cache-friendly blocking to compute distances efficiently
 /// for datasets that don't fit in cache.
+#[allow(dead_code)]
 pub fn pairwise_euclidean_blocked<F>(data: ArrayView2<F>, config: Option<SimdConfig>) -> Array1<F>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
@@ -59,6 +60,7 @@ where
 }
 
 /// Cache-friendly blocked SIMD implementation
+#[allow(dead_code)]
 fn pairwise_euclidean_blocked_simd<F>(
     data: ArrayView2<F>,
     distances: &mut Array1<F>,
@@ -107,6 +109,7 @@ fn pairwise_euclidean_blocked_simd<F>(
 ///
 /// This function computes distances in streaming fashion, suitable for
 /// datasets that don't fit in memory.
+#[allow(dead_code)]
 pub fn pairwise_euclidean_streaming<F>(
     data_chunks: impl Iterator<Item = ArrayView2<F>>,
     chunk_size: usize,
@@ -150,6 +153,7 @@ where
 }
 
 /// Compute distances within a single chunk
+#[allow(dead_code)]
 fn compute_intra_chunk_distances<F>(
     chunk: ArrayView2<F>,
     distances: &mut Array1<F>,
@@ -178,6 +182,7 @@ where
 }
 
 /// Compute distances between two chunks
+#[allow(dead_code)]
 fn compute_inter_chunk_distances<F>(
     chunk_i: ArrayView2<F>,
     chunk_j: ArrayView2<F>,
@@ -216,6 +221,7 @@ where
 /// # Returns
 ///
 /// * Condensed distance matrix as a 1D array
+#[allow(dead_code)]
 pub fn pairwise_euclidean_simd<F>(data: ArrayView2<F>) -> Array1<F>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
@@ -238,6 +244,7 @@ where
 }
 
 /// Standard pairwise Euclidean distance computation
+#[allow(dead_code)]
 fn pairwise_euclidean_standard<F>(data: ArrayView2<F>, distances: &mut Array1<F>)
 where
     F: Float + FromPrimitive + Debug,
@@ -260,6 +267,7 @@ where
 }
 
 /// SIMD-optimized pairwise Euclidean distance computation using unified operations
+#[allow(dead_code)]
 fn pairwise_euclidean_simd_optimized<F>(data: ArrayView2<F>, distances: &mut Array1<F>)
 where
     F: Float + FromPrimitive + Debug + SimdUnifiedOps,
@@ -296,6 +304,7 @@ where
 /// # Errors
 ///
 /// * Returns error if data and centroids have different numbers of features
+#[allow(dead_code)]
 pub fn distance_to_centroids_simd<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
@@ -329,6 +338,7 @@ where
 }
 
 /// Standard distance to centroids computation
+#[allow(dead_code)]
 fn distance_to_centroids_standard<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
@@ -353,6 +363,7 @@ fn distance_to_centroids_standard<F>(
 }
 
 /// SIMD-optimized distance to centroids computation using unified operations
+#[allow(dead_code)]
 fn distance_to_centroids_simd_optimized<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
@@ -386,6 +397,7 @@ fn distance_to_centroids_simd_optimized<F>(
 /// # Returns
 ///
 /// * Condensed distance matrix
+#[allow(dead_code)]
 pub fn pairwise_euclidean_parallel<F>(data: ArrayView2<F>) -> Array1<F>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,

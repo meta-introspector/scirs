@@ -59,6 +59,7 @@ impl Default for SimdOptimizationConfig {
 /// # Errors
 ///
 /// * Returns error if vectors have different lengths
+#[allow(dead_code)]
 pub fn euclidean_distance_simd<F>(
     x: ArrayView1<F>,
     y: ArrayView1<F>,
@@ -108,6 +109,7 @@ where
 /// # Returns
 ///
 /// * Whitened array with the same shape as input
+#[allow(dead_code)]
 pub fn whiten_simd<F>(obs: &Array2<F>, config: Option<&SimdOptimizationConfig>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
@@ -137,6 +139,7 @@ where
 }
 
 /// SIMD-optimized sequential whitening
+#[allow(dead_code)]
 fn whiten_simd_sequential<F>(obs: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + SimdUnifiedOps,
@@ -187,6 +190,7 @@ where
 }
 
 /// Parallel SIMD-optimized whitening for large datasets
+#[allow(dead_code)]
 fn whiten_simd_parallel<F>(obs: &Array2<F>, config: &SimdOptimizationConfig) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps,
@@ -288,6 +292,7 @@ where
 }
 
 /// Scalar fallback for whitening when SIMD is not available
+#[allow(dead_code)]
 fn whiten_scalar_fallback<F>(obs: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -347,6 +352,7 @@ where
 ///
 /// * Tuple of (labels, distances) where labels are cluster assignments
 ///   and distances are distances to the nearest centroid
+#[allow(dead_code)]
 pub fn vq_simd<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
@@ -375,6 +381,7 @@ where
 }
 
 /// Sequential SIMD-optimized vector quantization
+#[allow(dead_code)]
 fn vq_simd_sequential<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
@@ -427,6 +434,7 @@ where
 }
 
 /// Parallel SIMD-optimized vector quantization
+#[allow(dead_code)]
 fn vq_simd_parallel<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
@@ -501,6 +509,7 @@ where
 /// # Returns
 ///
 /// * Array of new centroids (k × n_features)
+#[allow(dead_code)]
 pub fn compute_centroids_simd<F>(
     data: ArrayView2<F>,
     labels: &Array1<usize>,
@@ -531,6 +540,7 @@ where
 }
 
 /// Sequential SIMD-optimized centroid computation
+#[allow(dead_code)]
 fn compute_centroids_simd_sequential<F>(
     data: ArrayView2<F>,
     labels: &Array1<usize>,
@@ -605,6 +615,7 @@ where
 }
 
 /// Parallel SIMD-optimized centroid computation
+#[allow(dead_code)]
 fn compute_centroids_simd_parallel<F>(
     data: ArrayView2<F>,
     labels: &Array1<usize>,
@@ -691,6 +702,7 @@ where
 /// # Returns
 ///
 /// * Total distortion (sum of squared distances)
+#[allow(dead_code)]
 pub fn calculate_distortion_simd<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
@@ -720,6 +732,7 @@ where
 }
 
 /// Sequential SIMD-optimized distortion calculation
+#[allow(dead_code)]
 fn calculate_distortion_simd_sequential<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
@@ -766,6 +779,7 @@ where
 }
 
 /// Parallel SIMD-optimized distortion calculation
+#[allow(dead_code)]
 fn calculate_distortion_simd_parallel<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,

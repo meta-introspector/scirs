@@ -65,6 +65,7 @@ pub use simd_optimizations::{
 pub use weighted_kmeans::{weighted_kmeans, weighted_kmeans_plus_plus, WeightedKMeansOptions};
 
 /// Computes the Euclidean distance between two vectors
+#[allow(dead_code)]
 pub fn euclidean_distance<F>(x: ArrayView1<F>, y: ArrayView1<F>) -> F
 where
     F: Float + FromPrimitive,
@@ -109,6 +110,7 @@ where
 ///
 /// let whitened = whiten(&data).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn whiten<F>(obs: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + std::fmt::Debug,
@@ -174,6 +176,7 @@ where
 /// # Errors
 ///
 /// * Returns an error if the dimensions of data and centroids don't match
+#[allow(dead_code)]
 pub fn vq<F>(data: ArrayView2<F>, centroids: ArrayView2<F>) -> Result<(Array1<usize>, Array1<F>)>
 where
     F: Float + FromPrimitive + Debug,

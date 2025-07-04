@@ -471,6 +471,7 @@ impl GpuContextPool {
 static GPU_POOL: std::sync::OnceLock<GpuContextPool> = std::sync::OnceLock::new();
 
 /// Get the global GPU context pool
+#[allow(dead_code)]
 pub fn get_gpu_pool() -> &'static GpuContextPool {
     GPU_POOL.get_or_init(|| {
         let pool = GpuContextPool::new();
@@ -483,22 +484,26 @@ pub fn get_gpu_pool() -> &'static GpuContextPool {
 }
 
 /// Initialize the global GPU context pool
+#[allow(dead_code)]
 pub fn initialize_gpu_system() -> SpecialResult<()> {
     let pool = get_gpu_pool();
     pool.initialize()
 }
 
 /// Get the best available GPU context from the global pool
+#[allow(dead_code)]
 pub fn get_best_gpu_context() -> SpecialResult<Arc<GpuContext>> {
     get_gpu_pool().get_best_context()
 }
 
 /// Check if GPU should be used for computation
+#[allow(dead_code)]
 pub fn should_use_gpu_computation(array_size: usize, element_size: usize) -> bool {
     get_gpu_pool().should_use_gpu(array_size, element_size)
 }
 
 /// Record GPU operation performance
+#[allow(dead_code)]
 pub fn record_gpu_performance(
     backend_type: GpuBackend,
     execution_time: Duration,
@@ -509,6 +514,7 @@ pub fn record_gpu_performance(
 }
 
 /// Validate GPU infrastructure for production use
+#[allow(dead_code)]
 pub fn validate_gpu_production_readiness() -> SpecialResult<String> {
     let pool = get_gpu_pool();
     let mut validation_report = String::new();
@@ -585,6 +591,7 @@ pub fn validate_gpu_production_readiness() -> SpecialResult<String> {
 }
 
 /// Enable production monitoring with performance alerts
+#[allow(dead_code)]
 pub fn enable_gpu_monitoring(enable_alerts: bool) -> SpecialResult<()> {
     let pool = get_gpu_pool();
     let mut config = pool.get_config();
@@ -604,6 +611,7 @@ pub fn enable_gpu_monitoring(enable_alerts: bool) -> SpecialResult<()> {
 }
 
 /// Get GPU resource utilization report
+#[allow(dead_code)]
 pub fn get_gpu_resource_utilization() -> String {
     let pool = get_gpu_pool();
     let device_info = pool.get_device_info();

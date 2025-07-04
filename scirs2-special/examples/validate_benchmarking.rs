@@ -7,6 +7,7 @@
 
 use scirs2_special::performance_benchmarks::GammaBenchmarks;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 Benchmarking Infrastructure Validation");
     println!("=========================================");

@@ -171,6 +171,7 @@ impl SparseQuasiNewton {
 }
 
 /// Efficient sparse Newton method with adaptive sparsity detection
+#[allow(dead_code)]
 pub fn minimize_efficient_sparse_newton<F, G>(
     mut fun: F,
     mut grad: G,
@@ -335,6 +336,7 @@ where
 }
 
 /// Detect sparsity patterns in Jacobian and Hessian
+#[allow(dead_code)]
 fn detect_sparsity_patterns<F, G>(
     _fun: &mut F,
     grad: &mut G,
@@ -399,6 +401,7 @@ where
 }
 
 /// Compute sparse Newton direction using sparse Hessian
+#[allow(dead_code)]
 fn compute_sparse_newton_direction<F>(
     fun: &mut F,
     x: &ArrayView1<f64>,
@@ -422,6 +425,7 @@ where
 }
 
 /// Compute sparse Hessian using finite differences with FnMut compatibility
+#[allow(dead_code)]
 fn compute_sparse_hessian_fnmut<F>(
     fun: &mut F,
     x: &ArrayView1<f64>,
@@ -516,6 +520,7 @@ where
 }
 
 /// Solve sparse Newton system H * p = -g for search direction p
+#[allow(dead_code)]
 fn solve_sparse_newton_system(
     hessian: &CsrArray<f64>,
     gradient_sparse: &CsrArray<f64>,
@@ -537,12 +542,14 @@ fn solve_sparse_newton_system(
 
 // Helper functions for sparse operations
 
+#[allow(dead_code)]
 fn should_use_sparse(vector: &Array1<f64>, threshold: f64) -> bool {
     let nnz = vector.iter().filter(|&&x| x.abs() > 1e-12).count();
     let sparsity = nnz as f64 / vector.len() as f64;
     sparsity < threshold
 }
 
+#[allow(dead_code)]
 fn dense_to_sparse_vector(
     dense: &Array1<f64>,
     threshold: f64,
@@ -564,6 +571,7 @@ fn dense_to_sparse_vector(
         .map_err(|_| OptimizeError::ComputationError("Failed to create sparse vector".to_string()))
 }
 
+#[allow(dead_code)]
 fn sparse_to_dense(sparse: &CsrArray<f64>) -> Array1<f64> {
     let n = sparse.ncols();
     let mut dense = Array1::zeros(n);
@@ -576,10 +584,12 @@ fn sparse_to_dense(sparse: &CsrArray<f64>) -> Array1<f64> {
     dense
 }
 
+#[allow(dead_code)]
 fn sparse_vector_norm(sparse: &CsrArray<f64>) -> f64 {
     sparse.get_data().iter().map(|&x| x * x).sum::<f64>().sqrt()
 }
 
+#[allow(dead_code)]
 fn sparse_vector_subtract(
     a: &CsrArray<f64>,
     b: &CsrArray<f64>,
@@ -591,6 +601,7 @@ fn sparse_vector_subtract(
     dense_to_sparse_vector(&diff, 1e-12)
 }
 
+#[allow(dead_code)]
 fn apply_bounds_projection(p: &Array1<f64>, x: &Array1<f64>, options: &Options) -> Array1<f64> {
     let mut p_proj = p.clone();
 
@@ -619,6 +630,7 @@ fn apply_bounds_projection(p: &Array1<f64>, x: &Array1<f64>, options: &Options) 
     p_proj
 }
 
+#[allow(dead_code)]
 fn refine_sparsity_pattern(
     _sparsity_info: &mut SparsityInfo,
     _current_gradient: &CsrArray<f64>,
@@ -632,6 +644,7 @@ fn refine_sparsity_pattern(
 
 // Additional helper functions (simplified implementations)
 
+#[allow(dead_code)]
 fn create_sparse_identity(
     n: usize,
     pattern: &CsrArray<f64>,
@@ -653,6 +666,7 @@ fn create_sparse_identity(
     })
 }
 
+#[allow(dead_code)]
 fn sparse_to_dense_matrix(sparse: &CsrArray<f64>) -> Array2<f64> {
     let (m, n) = (sparse.nrows(), sparse.ncols());
     let mut dense = Array2::zeros((m, n));
@@ -666,6 +680,7 @@ fn sparse_to_dense_matrix(sparse: &CsrArray<f64>) -> Array2<f64> {
     dense
 }
 
+#[allow(dead_code)]
 fn dense_to_sparse_matrix(
     dense: &Array2<f64>,
     pattern: &CsrArray<f64>,
@@ -689,6 +704,7 @@ fn dense_to_sparse_matrix(
         .map_err(|_| OptimizeError::ComputationError("Failed to create sparse matrix".to_string()))
 }
 
+#[allow(dead_code)]
 fn dense_bfgs_update(
     h_inv: &Array2<f64>,
     s: &Array1<f64>,
@@ -721,6 +737,7 @@ fn dense_bfgs_update(
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn sparse_matrix_vector_product(
     matrix: &CsrArray<f64>,
     vector_sparse: &CsrArray<f64>,

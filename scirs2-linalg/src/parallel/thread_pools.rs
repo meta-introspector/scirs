@@ -1154,6 +1154,7 @@ static GLOBAL_MANAGER: std::sync::OnceLock<Arc<Mutex<ThreadPoolManager>>> =
     std::sync::OnceLock::new();
 
 /// Get the global thread pool manager
+#[allow(dead_code)]
 pub fn get_global_manager() -> Arc<Mutex<ThreadPoolManager>> {
     GLOBAL_MANAGER
         .get_or_init(|| Arc::new(Mutex::new(ThreadPoolManager::new())))

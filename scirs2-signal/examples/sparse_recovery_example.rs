@@ -8,6 +8,7 @@ use scirs2_signal::sparse::{
     SparseTransform,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("# Sparse Signal Recovery Examples");
 
@@ -33,6 +34,7 @@ fn main() {
 }
 
 /// Basic compressed sensing recovery example
+#[allow(dead_code)]
 fn basic_compressed_sensing_example() {
     // Create a sparse signal
     let n = 100; // Signal dimension
@@ -104,6 +106,7 @@ fn basic_compressed_sensing_example() {
 }
 
 /// Example of recovering signals with missing samples
+#[allow(dead_code)]
 fn missing_samples_recovery_example() {
     // Create a sparse signal in frequency domain
     let n = 128;
@@ -178,6 +181,7 @@ fn missing_samples_recovery_example() {
 }
 
 /// Example of sparse signal denoising
+#[allow(dead_code)]
 fn sparse_denoising_example() {
     // Create a signal that is sparse in the frequency domain
     let n = 128;
@@ -240,6 +244,7 @@ fn sparse_denoising_example() {
 }
 
 /// Compare different recovery methods
+#[allow(dead_code)]
 fn compare_recovery_methods() {
     // Create a sparse signal
     let n = 200; // Signal dimension
@@ -320,6 +325,7 @@ fn compare_recovery_methods() {
 }
 
 /// Example of image inpainting with sparse recovery
+#[allow(dead_code)]
 fn image_inpainting_example() {
     // Create a simple test image (a gradient pattern)
     let n_rows = 32;

@@ -192,6 +192,7 @@ where
 }
 
 /// Identifies sparse arrays (both matrix and array types)
+#[allow(dead_code)]
 pub fn is_sparse<T>(_obj: &dyn SparseArray<T>) -> bool
 where
     T: Float

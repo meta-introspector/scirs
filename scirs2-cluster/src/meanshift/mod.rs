@@ -119,6 +119,7 @@ impl<T: Float> Hash for FloatPoint<T> {
 /// let bandwidth = estimate_bandwidth(&data.view(), Some(0.5), None, None).unwrap();
 /// println!("Estimated bandwidth: {}", bandwidth);
 /// ```
+#[allow(dead_code)]
 pub fn estimate_bandwidth<T: Float + Display + FromPrimitive + Send + Sync + 'static>(
     data: &ArrayView2<T>,
     quantile: Option<T>,
@@ -203,6 +204,7 @@ pub fn estimate_bandwidth<T: Float + Display + FromPrimitive + Send + Sync + 'st
 /// # Returns
 ///
 /// * `Array2<T>` - Coordinates of bin seeds to use as initial kernel positions.
+#[allow(dead_code)]
 pub fn get_bin_seeds<T: Float + Display + FromPrimitive + Send + Sync + 'static>(
     data: &ArrayView2<T>,
     bin_size: T,
@@ -264,6 +266,7 @@ pub fn get_bin_seeds<T: Float + Display + FromPrimitive + Send + Sync + 'static>
 /// # Returns
 ///
 /// * `(Vec<T>, usize, usize)` - (Final seed position, number of points within bandwidth, iterations performed)
+#[allow(dead_code)]
 fn mean_shift_single_seed<
     T: Float
         + Display
@@ -367,6 +370,7 @@ fn mean_shift_single_seed<
 /// let (centers, labels) = mean_shift(&data.view(), options).unwrap();
 /// println!("Number of clusters: {}", centers.nrows());
 /// ```
+#[allow(dead_code)]
 pub fn mean_shift<
     T: Float
         + Display

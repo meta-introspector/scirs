@@ -13,6 +13,7 @@ use scirs2_signal::filter::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Enhanced Parallel Filtering Showcase");
     println!("==================================================");
@@ -62,6 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate multi-rate filter bank with perfect reconstruction
+#[allow(dead_code)]
 fn demonstrate_multirate_filter_bank() -> Result<(), Box<dyn std::error::Error>> {
     println!("  🔍 Creating 4-band multi-rate filter bank...");
 
@@ -136,6 +138,7 @@ fn demonstrate_multirate_filter_bank() -> Result<(), Box<dyn std::error::Error>>
 }
 
 /// Demonstrate sparse parallel filtering
+#[allow(dead_code)]
 fn demonstrate_sparse_filtering() -> Result<(), Box<dyn std::error::Error>> {
     println!("  🔍 Creating sparse filter from dense coefficients...");
 
@@ -218,6 +221,7 @@ fn demonstrate_sparse_filtering() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate real-time streaming filter
+#[allow(dead_code)]
 fn demonstrate_streaming_filter() -> Result<(), Box<dyn std::error::Error>> {
     println!("  🔍 Setting up real-time streaming filter...");
 
@@ -315,6 +319,7 @@ fn demonstrate_streaming_filter() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate parallel spectral filtering
+#[allow(dead_code)]
 fn demonstrate_spectral_filtering() -> Result<(), Box<dyn std::error::Error>> {
     println!("  🔍 Setting up parallel spectral filter...");
 
@@ -406,6 +411,7 @@ fn demonstrate_spectral_filtering() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate performance benchmarking
+#[allow(dead_code)]
 fn demonstrate_performance_benchmarking() -> Result<(), Box<dyn std::error::Error>> {
     println!("  🔍 Running comprehensive performance benchmark...");
 
@@ -455,6 +461,7 @@ fn demonstrate_performance_benchmarking() -> Result<(), Box<dyn std::error::Erro
 }
 
 /// Demonstrate advanced configuration options
+#[allow(dead_code)]
 fn demonstrate_advanced_configuration() -> Result<(), Box<dyn std::error::Error>> {
     println!("  🔍 Exploring advanced configuration options...");
 

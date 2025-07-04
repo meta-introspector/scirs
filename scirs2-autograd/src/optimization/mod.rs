@@ -504,6 +504,7 @@ pub enum OptimizationError {
 
 /// Public API functions for graph optimization
 /// Optimize a computation graph with default settings
+#[allow(dead_code)]
 pub fn optimize_graph<F: Float>(
     graph: &mut Graph<F>,
 ) -> Result<OptimizationReport, OptimizationError> {
@@ -512,6 +513,7 @@ pub fn optimize_graph<F: Float>(
 }
 
 /// Optimize a computation graph with specified optimization level
+#[allow(dead_code)]
 pub fn optimize_graph_with_level<F: Float>(
     graph: &mut Graph<F>,
     level: OptimizationLevel,
@@ -521,6 +523,7 @@ pub fn optimize_graph_with_level<F: Float>(
 }
 
 /// Optimize a computation graph with custom configuration
+#[allow(dead_code)]
 pub fn optimize_graph_with_config<F: Float>(
     graph: &mut Graph<F>,
     config: OptimizationConfig,
@@ -530,6 +533,7 @@ pub fn optimize_graph_with_config<F: Float>(
 }
 
 /// Apply only constant folding optimization
+#[allow(dead_code)]
 pub fn apply_constant_folding<F: Float>(graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
     let config = OptimizationConfig {
         constant_folding: true,
@@ -547,6 +551,7 @@ pub fn apply_constant_folding<F: Float>(graph: &mut Graph<F>) -> Result<usize, O
 }
 
 /// Apply only dead code elimination
+#[allow(dead_code)]
 pub fn apply_dead_code_elimination<F: Float>(
     graph: &mut Graph<F>,
 ) -> Result<usize, OptimizationError> {
@@ -566,6 +571,7 @@ pub fn apply_dead_code_elimination<F: Float>(
 }
 
 /// Apply common subexpression elimination
+#[allow(dead_code)]
 pub fn apply_cse<F: Float>(graph: &mut Graph<F>) -> Result<usize, OptimizationError> {
     let config = OptimizationConfig {
         constant_folding: false,

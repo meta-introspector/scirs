@@ -755,6 +755,7 @@ impl ContextualReasoningEngine {
 }
 
 /// Ultra-advanced scene understanding with cognitive-level reasoning
+#[allow(dead_code)]
 pub fn analyze_scene_with_reasoning(
     image: &ArrayView3<f32>,
     context: Option<&SceneAnalysisResult>,
@@ -771,6 +772,7 @@ pub fn analyze_scene_with_reasoning(
 }
 
 /// Apply contextual enhancement based on previous scene understanding
+#[allow(dead_code)]
 fn apply_contextual_enhancement(
     current: &SceneAnalysisResult,
     _previous: &SceneAnalysisResult,

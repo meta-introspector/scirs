@@ -10,6 +10,7 @@ use ndarray_rand::RandomExt;
 use scirs2_optim::optimizers::{Adam, Optimizer, SAM, SGD};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Sharpness-Aware Minimization (SAM) Optimizer Example");
     println!("===================================================\n");
@@ -206,6 +207,7 @@ struct TrainingResult {
 }
 
 /// Trains a linear regression model using standard optimizers
+#[allow(dead_code)]
 fn train_linear_regression_standard<O>(
     x_train: &Array2<f64>,
     y_train: &Array1<f64>,
@@ -269,6 +271,7 @@ where
 }
 
 /// Trains a linear regression model using SAM optimizer
+#[allow(dead_code)]
 fn train_linear_regression_sam<O>(
     x_train: &Array2<f64>,
     y_train: &Array1<f64>,

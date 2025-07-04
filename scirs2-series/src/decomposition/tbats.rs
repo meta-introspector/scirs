@@ -136,6 +136,7 @@ pub struct TBATSParameters {
 /// println!("Seasonal Components: {:?}", result.seasonal_components);
 /// println!("Residuals: {:?}", result.residuals);
 /// ```
+#[allow(dead_code)]
 pub fn tbats_decomposition<F>(ts: &Array1<F>, options: &TBATSOptions) -> Result<TBATSResult<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum + ScalarOperand + NumCast,
@@ -254,6 +255,7 @@ where
 }
 
 /// Estimate optimal Box-Cox lambda parameter
+#[allow(dead_code)]
 fn estimate_box_cox_lambda<F>(ts: &Array1<F>) -> f64
 where
     F: Float + FromPrimitive + Debug,
@@ -276,6 +278,7 @@ where
 }
 
 /// Calculate the size of the state vector
+#[allow(dead_code)]
 fn calculate_state_size(options: &TBATSOptions, fourier_terms: &[usize]) -> usize {
     let mut size = 1; // Level
 
@@ -292,6 +295,7 @@ fn calculate_state_size(options: &TBATSOptions, fourier_terms: &[usize]) -> usiz
 }
 
 /// Initialize the state vector
+#[allow(dead_code)]
 fn initialize_state<F>(
     state: &mut Array1<F>,
     ts: &Array1<F>,
@@ -339,6 +343,7 @@ where
 }
 
 /// Estimate model parameters using simplified maximum likelihood
+#[allow(dead_code)]
 fn estimate_parameters<F>(
     ts: &Array1<F>,
     options: &TBATSOptions,
@@ -389,6 +394,7 @@ where
 }
 
 /// Estimate Fourier coefficients using regression
+#[allow(dead_code)]
 fn estimate_fourier_coefficients<F>(
     ts: &Array1<F>,
     options: &TBATSOptions,
@@ -448,6 +454,7 @@ where
 }
 
 /// Estimate residual variance
+#[allow(dead_code)]
 fn estimate_residual_variance<F>(
     ts: &Array1<F>,
     fourier_coefficients: &[Vec<(f64, f64)>],
@@ -489,6 +496,7 @@ where
 }
 
 /// Apply state space model (simplified version)
+#[allow(dead_code)]
 fn apply_state_space_model<F>(
     ts: &Array1<F>,
     parameters: &TBATSParameters,
@@ -524,6 +532,7 @@ where
 type TBATSComponentsResult<F> = Result<(Array1<F>, Array1<F>, Vec<Array1<F>>, Array1<F>, f64)>;
 
 /// Extract components from state space results
+#[allow(dead_code)]
 fn extract_components<F>(
     ts: &Array1<F>,
     states: &Array2<F>,
@@ -602,6 +611,7 @@ where
 }
 
 /// Solve regularized least squares system using scirs2-linalg
+#[allow(dead_code)]
 fn solve_regularized_least_squares<F>(a: &Array2<F>, b: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + ScalarOperand + NumCast + 'static,

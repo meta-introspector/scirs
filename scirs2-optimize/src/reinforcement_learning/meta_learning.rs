@@ -4,7 +4,8 @@
 
 use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
-use scirs2_core::error::CoreResult;
+// Unused import
+// use scirs2_core::error::CoreResult;
 use std::collections::HashMap;
 
 /// Meta-learning optimizer that learns across multiple tasks
@@ -121,6 +122,7 @@ impl MetaLearningOptimizer {
 }
 
 /// Meta-learning optimization function
+#[allow(dead_code)]
 pub fn meta_learning_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

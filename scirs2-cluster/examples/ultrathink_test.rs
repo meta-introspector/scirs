@@ -3,6 +3,7 @@
 use ndarray::Array2;
 use scirs2_cluster::ultrathink_clustering::UltrathinkClusterer;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing Ultrathink Clustering...");
 

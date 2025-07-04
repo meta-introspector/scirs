@@ -996,6 +996,7 @@ macro_rules! check_leaks {
 static GLOBAL_DETECTOR: std::sync::OnceLock<Arc<Mutex<LeakDetector>>> = std::sync::OnceLock::new();
 
 /// Get the global leak detector
+#[allow(dead_code)]
 pub fn global_leak_detector() -> Arc<Mutex<LeakDetector>> {
     GLOBAL_DETECTOR
         .get_or_init(|| {

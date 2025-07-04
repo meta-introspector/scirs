@@ -528,7 +528,7 @@ where
             if self.show_metrics {
                 if let Ok(metrics) = self.calculate_metrics(threshold_idx) {
                     for (name, value) in metrics {
-                        data.add_auxiliary_metadata(format!("metric_{}", name), value.to_string());
+                        data.add_auxiliary_metadata(format!("metric_{name}"), value.to_string());
                     }
                 }
             }
@@ -558,7 +558,7 @@ where
 
         // Add custom layout options
         for (key, value) in &self.interactive_options.custom_layout {
-            data.add_auxiliary_metadata(format!("layout_{}", key), value.clone());
+            data.add_auxiliary_metadata(format!("layout_{key}"), value.clone());
         }
 
         // Add baseline if requested
@@ -611,6 +611,7 @@ where
 /// # Returns
 ///
 /// * An InteractiveROCVisualizer
+#[allow(dead_code)]
 pub fn interactive_roc_curve_visualization(
     fpr: Vec<f64>,
     tpr: Vec<f64>,
@@ -631,6 +632,7 @@ pub fn interactive_roc_curve_visualization(
 /// # Returns
 ///
 /// * An InteractiveROCVisualizer
+#[allow(dead_code)]
 pub fn interactive_roc_curve_from_labels<'a, T, S>(
     y_true: &'a ArrayBase<S, Ix1>,
     y_score: &'a ArrayBase<S, Ix1>,

@@ -3,6 +3,7 @@ use num_complex::Complex64;
 use scirs2_fft::{fft, fft_strided, fft_strided_complex, ifft_strided};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Advanced Strided FFT Example");
     println!("----------------------------");
@@ -89,6 +90,7 @@ fn main() {
 }
 
 // Implement standard FFT along axis 0 (for comparison)
+#[allow(dead_code)]
 fn perform_standard_fft_axis0(arr: &Array2<f64>) -> Array2<Complex64> {
     let (rows, cols) = (arr.shape()[0], arr.shape()[1]);
     let mut result = Array2::zeros((rows, cols));
@@ -108,6 +110,7 @@ fn perform_standard_fft_axis0(arr: &Array2<f64>) -> Array2<Complex64> {
 }
 
 // Implement standard FFT along axis 1 (for comparison)
+#[allow(dead_code)]
 fn perform_standard_fft_axis1(arr: &Array2<f64>) -> Array2<Complex64> {
     let (rows, cols) = (arr.shape()[0], arr.shape()[1]);
     let mut result = Array2::zeros((rows, cols));
@@ -127,6 +130,7 @@ fn perform_standard_fft_axis1(arr: &Array2<f64>) -> Array2<Complex64> {
 }
 
 // Calculate maximum difference between two arrays
+#[allow(dead_code)]
 fn calculate_max_diff(a: &Array2<Complex64>, b: &Array2<Complex64>) -> f64 {
     let mut max_diff: f64 = 0.0;
 

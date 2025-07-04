@@ -13,6 +13,7 @@ use scirs2_signal::sysid::{
 };
 use scirs2_signal::waveforms::chirp;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== System Identification Example ===\n");
 

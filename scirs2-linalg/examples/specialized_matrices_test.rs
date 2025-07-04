@@ -4,6 +4,7 @@ use ndarray::array;
 use scirs2_linalg::specialized::{BandedMatrix, SymmetricMatrix, TridiagonalMatrix};
 use scirs2_linalg::SpecializedMatrix;
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing specialized matrices...");
 

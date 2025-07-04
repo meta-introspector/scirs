@@ -458,6 +458,7 @@ impl<X, Y> BatchEvaluator<X, Y> {
 /// # */
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn learning_curve<X, Y, F>(
     _model_evaluator: F,
     _x_train: &X,

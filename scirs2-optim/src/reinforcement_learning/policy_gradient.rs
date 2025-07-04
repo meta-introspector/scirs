@@ -9,8 +9,7 @@ use super::{
     TrajectoryBatch, ValueNetwork,
 };
 use crate::error::{OptimError, Result};
-use crate::optimizers::Optimizer;
-use ndarray::{Array1, Array2, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::HashMap;
 

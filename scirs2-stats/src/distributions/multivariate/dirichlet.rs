@@ -11,6 +11,7 @@ use std::fmt::Debug;
 /// Implementation of the natural logarithm of the gamma function
 ///
 /// This is a workaround for the unstable gamma function in Rust
+#[allow(dead_code)]
 fn lgamma(x: f64) -> f64 {
     if x <= 0.0 {
         panic!("lgamma requires positive input");
@@ -349,6 +350,7 @@ impl Dirichlet {
 /// let point = array![0.3, 0.3, 0.4];
 /// let pdf_at_point = dirichlet.pdf(&point);
 /// ```
+#[allow(dead_code)]
 pub fn dirichlet<D>(alpha: &ArrayBase<D, Ix1>) -> StatsResult<Dirichlet>
 where
     D: Data<Elem = f64>,

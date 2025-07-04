@@ -79,6 +79,7 @@ impl<F: Float + FromPrimitive> Default for MiniBatchKMeansOptions<F> {
 ///
 /// let (centroids, labels) = minibatch_kmeans(ArrayView2::from(&data), 2, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn minibatch_kmeans<F>(
     data: ArrayView2<F>,
     k: usize,
@@ -243,6 +244,7 @@ where
 /// # Returns
 ///
 /// * Tuple of (batch_inertia, has_converged)
+#[allow(dead_code)]
 fn mini_batch_step<F>(
     data: &ArrayView2<F>,
     batch_indices: &[usize],
@@ -359,6 +361,7 @@ where
 /// # Returns
 ///
 /// * Tuple of (labels, distances)
+#[allow(dead_code)]
 fn assign_labels<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,

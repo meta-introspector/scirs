@@ -21,6 +21,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// # Returns
 ///
 /// * Tuple containing eigenvalues and eigenvectors
+#[allow(dead_code)]
 pub fn symmetric_eigh<F>(a: &ArrayView2<F>) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -64,6 +65,7 @@ where
 /// # Returns
 ///
 /// * Vector of eigenvalues
+#[allow(dead_code)]
 pub fn symmetric_eigvalsh<F>(a: &ArrayView2<F>) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -108,6 +110,7 @@ where
 /// # Returns
 ///
 /// * Diagonal and off-diagonal elements of the tridiagonal matrix
+#[allow(dead_code)]
 fn tridiagonalize<F>(a: &ArrayView2<F>) -> LinalgResult<(Array1<F>, Array1<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,

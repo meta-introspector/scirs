@@ -36,6 +36,7 @@ use crate::error::{Result, TimeSeriesError};
 /// let ts = array![1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0, 1.0, 2.0, 3.0, 2.0];
 /// let result = decompose_robust_seasonal(&ts, 4, DecompositionModel::Additive, 50, 1e-6).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn decompose_robust_seasonal<F>(
     ts: &Array1<F>,
     period: usize,
@@ -136,6 +137,7 @@ where
 /// * `max_iter` - Maximum iterations
 /// * `tolerance` - Convergence tolerance
 ///
+#[allow(dead_code)]
 pub fn decompose_robust_loess<F>(
     ts: &Array1<F>,
     period: usize,
@@ -199,6 +201,7 @@ where
 ///
 /// Uses M-estimators with Huber or Tukey bisquare loss functions for robustness.
 ///
+#[allow(dead_code)]
 pub fn decompose_m_estimator<F>(
     ts: &Array1<F>,
     period: usize,
@@ -302,6 +305,7 @@ pub enum RobustLossType {
 
 // Helper functions
 
+#[allow(dead_code)]
 fn robust_trend_initial<F>(ts: &Array1<F>, period: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -325,6 +329,7 @@ where
     Ok(trend)
 }
 
+#[allow(dead_code)]
 fn update_seasonal_robust<F>(
     residual: &Array1<F>,
     period: usize,
@@ -375,6 +380,7 @@ where
     Ok(seasonal)
 }
 
+#[allow(dead_code)]
 fn robust_trend_smoother<F>(ts: &Array1<F>, window: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -397,6 +403,7 @@ where
     Ok(trend)
 }
 
+#[allow(dead_code)]
 fn robust_loess_seasonal<F>(
     ts: &Array1<F>,
     _period: usize,
@@ -444,6 +451,7 @@ where
     Ok(seasonal)
 }
 
+#[allow(dead_code)]
 fn robust_loess_trend<F>(ts: &Array1<F>, bandwidth: F, weights: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -486,6 +494,7 @@ where
     Ok(trend)
 }
 
+#[allow(dead_code)]
 fn calculate_robust_weights<F>(residuals: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -522,6 +531,7 @@ where
     Ok(weights)
 }
 
+#[allow(dead_code)]
 fn update_seasonal_m_estimator<F>(
     ts: &Array1<F>,
     trend: &Array1<F>,
@@ -593,6 +603,7 @@ where
     Ok(seasonal)
 }
 
+#[allow(dead_code)]
 fn update_trend_m_estimator<F>(
     ts: &Array1<F>,
     window: usize,
@@ -619,6 +630,7 @@ where
     Ok(trend)
 }
 
+#[allow(dead_code)]
 fn m_estimator<F>(values: &[F], loss_type: RobustLossType) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -634,6 +646,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn huber_estimator<F>(values: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -693,6 +706,7 @@ where
     Ok(estimate)
 }
 
+#[allow(dead_code)]
 fn tukey_estimator<F>(values: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -755,6 +769,7 @@ where
     Ok(estimate)
 }
 
+#[allow(dead_code)]
 fn andrews_estimator<F>(values: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -817,6 +832,7 @@ where
     Ok(estimate)
 }
 
+#[allow(dead_code)]
 fn median<F>(values: &[F]) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -838,6 +854,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn calculate_l2_norm<F>(arr: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,

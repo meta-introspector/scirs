@@ -44,7 +44,7 @@ use crate::parametric::ARMethod;
 use ndarray::{Array1, Array2};
 use rand::Rng;
 use std::collections::HashMap;
-#[cfg(test)]
+
 use std::f64::consts::PI;
 
 /// Configuration for SciPy validation
@@ -155,6 +155,7 @@ impl ValidationResults {
 }
 
 /// Run comprehensive validation against SciPy
+#[allow(dead_code)]
 pub fn validate_all(config: &ValidationConfig) -> SignalResult<ValidationResults> {
     let start_time = std::time::Instant::now();
     let mut test_results = HashMap::new();
@@ -196,6 +197,7 @@ pub fn validate_all(config: &ValidationConfig) -> SignalResult<ValidationResults
 }
 
 /// Validate filtering functions
+#[allow(dead_code)]
 fn validate_filtering(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -219,6 +221,7 @@ fn validate_filtering(
 }
 
 /// Validate Butterworth filter against SciPy reference
+#[allow(dead_code)]
 fn validate_butterworth_filter(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -301,6 +304,7 @@ fn validate_butterworth_filter(
 }
 
 /// Test a single Chebyshev Type I filter configuration
+#[allow(dead_code)]
 fn test_single_cheby1_filter(
     n: usize,
     fs: f64,
@@ -340,6 +344,7 @@ fn test_single_cheby1_filter(
 }
 
 /// Test a single Chebyshev Type II filter configuration
+#[allow(dead_code)]
 fn test_single_cheby2_filter(
     n: usize,
     fs: f64,
@@ -379,6 +384,7 @@ fn test_single_cheby2_filter(
 }
 
 /// Test a single Butterworth filter configuration
+#[allow(dead_code)]
 fn test_single_butter_filter(
     n: usize,
     fs: f64,
@@ -417,6 +423,7 @@ fn test_single_butter_filter(
 }
 
 /// Simplified reference implementation (in practice, this would call SciPy via Python)
+#[allow(dead_code)]
 fn reference_butter_filter(
     signal: &[f64],
     order: usize,
@@ -435,6 +442,7 @@ fn reference_butter_filter(
 }
 
 /// Reference Chebyshev Type I filter implementation
+#[allow(dead_code)]
 fn reference_cheby1_filter(
     signal: &[f64],
     order: usize,
@@ -463,6 +471,7 @@ fn reference_cheby1_filter(
 }
 
 /// Reference Chebyshev Type II filter implementation
+#[allow(dead_code)]
 fn reference_cheby2_filter(
     signal: &[f64],
     order: usize,
@@ -501,6 +510,7 @@ fn reference_cheby2_filter(
 }
 
 /// Calculate absolute error, relative error, and RMSE between two signals
+#[allow(dead_code)]
 fn calculate_errors(signal1: &[f64], signal2: &[f64]) -> SignalResult<(f64, f64, f64)> {
     if signal1.len() != signal2.len() {
         return Err(SignalError::ValueError(
@@ -533,6 +543,7 @@ fn calculate_errors(signal1: &[f64], signal2: &[f64]) -> SignalResult<(f64, f64,
 }
 
 /// Validate Chebyshev filters
+#[allow(dead_code)]
 fn validate_chebyshev_filter(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -657,6 +668,7 @@ fn validate_chebyshev_filter(
 }
 
 /// Validate Elliptic filters
+#[allow(dead_code)]
 fn validate_elliptic_filter(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -679,6 +691,7 @@ fn validate_elliptic_filter(
 }
 
 /// Validate Bessel filters
+#[allow(dead_code)]
 fn validate_bessel_filter(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -701,6 +714,7 @@ fn validate_bessel_filter(
 }
 
 /// Validate filtfilt (zero-phase filtering)
+#[allow(dead_code)]
 fn validate_filtfilt(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -723,6 +737,7 @@ fn validate_filtfilt(
 }
 
 /// Validate spectral analysis functions
+#[allow(dead_code)]
 fn validate_spectral_analysis(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -749,6 +764,7 @@ fn validate_spectral_analysis(
 }
 
 /// Validate periodogram against SciPy
+#[allow(dead_code)]
 fn validate_periodogram(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -769,6 +785,7 @@ fn validate_periodogram(
 }
 
 /// Validate Welch's method against SciPy
+#[allow(dead_code)]
 fn validate_welch(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -789,6 +806,7 @@ fn validate_welch(
 }
 
 /// Validate STFT against SciPy
+#[allow(dead_code)]
 fn validate_stft(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -809,6 +827,7 @@ fn validate_stft(
 }
 
 /// Validate multitaper method against SciPy
+#[allow(dead_code)]
 fn validate_multitaper_scipy(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -895,6 +914,7 @@ fn validate_multitaper_scipy(
 }
 
 /// Validate wavelet functions
+#[allow(dead_code)]
 fn validate_wavelets(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -912,6 +932,7 @@ fn validate_wavelets(
 }
 
 /// Validate DWT against SciPy
+#[allow(dead_code)]
 fn validate_dwt(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -1007,6 +1028,7 @@ fn validate_dwt(
 }
 
 /// Validate CWT against SciPy
+#[allow(dead_code)]
 fn validate_cwt(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -1027,6 +1049,7 @@ fn validate_cwt(
 }
 
 /// Validate wavelet families against SciPy
+#[allow(dead_code)]
 fn validate_wavelet_families(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -1047,6 +1070,7 @@ fn validate_wavelet_families(
 }
 
 /// Validate window functions
+#[allow(dead_code)]
 fn validate_windows(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -1138,6 +1162,7 @@ fn validate_windows(
 }
 
 /// Validate signal generation functions
+#[allow(dead_code)]
 fn validate_signal_generation(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -1158,6 +1183,7 @@ fn validate_signal_generation(
 }
 
 /// Validate convolution and correlation
+#[allow(dead_code)]
 fn validate_convolution_correlation(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -1178,6 +1204,7 @@ fn validate_convolution_correlation(
 }
 
 /// Validate resampling operations
+#[allow(dead_code)]
 fn validate_resampling(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -1198,6 +1225,7 @@ fn validate_resampling(
 }
 
 /// Validate peak detection
+#[allow(dead_code)]
 fn validate_peak_detection(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -1218,6 +1246,7 @@ fn validate_peak_detection(
 }
 
 /// Test a single multitaper configuration
+#[allow(dead_code)]
 fn test_single_multitaper(
     n: usize,
     fs: f64,
@@ -1256,6 +1285,7 @@ fn test_single_multitaper(
 }
 
 /// Validate Lomb-Scargle periodogram
+#[allow(dead_code)]
 fn validate_lombscargle(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -1325,6 +1355,7 @@ fn validate_lombscargle(
 }
 
 /// Test a single Lomb-Scargle configuration
+#[allow(dead_code)]
 fn test_single_lombscargle(
     n: usize,
     fs: f64,
@@ -1342,7 +1373,7 @@ fn test_single_lombscargle(
     let duration = n as f64 / fs;
     for i in 0..n {
         let base_time = i as f64 * duration / n as f64;
-        let jitter = rng.gen_range(-0.1..0.1) * duration / n as f64;
+        let jitter = rng.random_range(-0.1..0.1) * duration / n as f64;
         let time = (base_time + jitter).max(0.0).min(duration);
         t.push(time);
 
@@ -1372,6 +1403,7 @@ fn test_single_lombscargle(
 }
 
 /// Validate parametric spectral estimation
+#[allow(dead_code)]
 fn validate_parametric_spectral(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
@@ -1458,6 +1490,7 @@ fn validate_parametric_spectral(
 }
 
 /// Test a single DWT configuration
+#[allow(dead_code)]
 fn test_single_dwt(
     n: usize,
     wavelet: Wavelet,
@@ -1465,7 +1498,7 @@ fn test_single_dwt(
     config: &ValidationConfig,
 ) -> SignalResult<(f64, f64, f64)> {
     use crate::dwt::{wavedec, waverec};
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     // Create test signal with known characteristics
@@ -1504,6 +1537,7 @@ fn test_single_dwt(
 }
 
 /// Test a single AR estimation configuration
+#[allow(dead_code)]
 fn test_single_ar_estimation(
     n: usize,
     fs: f64,
@@ -1540,6 +1574,7 @@ fn test_single_ar_estimation(
 ///
 /// In a production implementation, this would load reference data that was
 /// computed offline using SciPy and stored in files or embedded in the binary.
+#[allow(dead_code)]
 pub fn load_reference_data(test_name: &str, parameters: &str) -> SignalResult<Vec<f64>> {
     // This is a placeholder implementation
     // In practice, you would:
@@ -1560,6 +1595,7 @@ pub fn load_reference_data(test_name: &str, parameters: &str) -> SignalResult<Ve
 }
 
 /// Test a single window function configuration
+#[allow(dead_code)]
 fn test_single_window(
     n: usize,
     window_type: &str,
@@ -1603,6 +1639,7 @@ fn test_single_window(
 /// In practice, these would be actual SciPy outputs or pre-computed data
 
 /// Reference multitaper PSD implementation
+#[allow(dead_code)]
 fn reference_multitaper_psd(
     signal: &[f64],
     fs: f64,
@@ -1630,6 +1667,7 @@ fn reference_multitaper_psd(
 }
 
 /// Reference Lomb-Scargle implementation
+#[allow(dead_code)]
 fn reference_lombscargle(t: &[f64], signal: &[f64], freqs: &[f64]) -> SignalResult<Vec<f64>> {
     // Simplified reference implementation
     // In practice, this would call scipy.signal.lombscargle
@@ -1666,6 +1704,7 @@ fn reference_lombscargle(t: &[f64], signal: &[f64], freqs: &[f64]) -> SignalResu
 }
 
 /// Reference AR spectrum implementation
+#[allow(dead_code)]
 fn reference_ar_spectrum(
     signal: &Array1<f64>,
     order: usize,
@@ -1689,6 +1728,7 @@ fn reference_ar_spectrum(
 }
 
 /// Reference DWT reconstruction implementation
+#[allow(dead_code)]
 fn reference_dwt_reconstruction(
     signal: &[f64],
     wavelet: Wavelet,
@@ -1730,6 +1770,7 @@ fn reference_dwt_reconstruction(
 }
 
 /// Reference window function implementation
+#[allow(dead_code)]
 fn reference_window_function(
     n: usize,
     window_type: &str,
@@ -1794,6 +1835,7 @@ fn reference_window_function(
 }
 
 /// Quick validation suite for basic functionality testing
+#[allow(dead_code)]
 pub fn validate_quick() -> SignalResult<ValidationResults> {
     let mut config = ValidationConfig::default();
     config.extensive = false;
@@ -1806,6 +1848,7 @@ pub fn validate_quick() -> SignalResult<ValidationResults> {
 }
 
 /// Reference signal generation for validation testing
+#[allow(dead_code)]
 fn reference_signal_generation(
     t: &[f64],
     fs: f64,
@@ -1875,6 +1918,7 @@ fn reference_signal_generation(
 }
 
 /// Generate detailed validation report
+#[allow(dead_code)]
 pub fn generate_validation_report(results: &ValidationResults) -> String {
     let mut report = String::new();
 
@@ -1940,7 +1984,6 @@ pub fn generate_validation_report(results: &ValidationResults) -> String {
     report
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
 

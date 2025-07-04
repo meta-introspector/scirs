@@ -5,7 +5,6 @@
 
 use crate::error::SignalResult;
 use scirs2_special::i0;
-#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Kaiser window.
@@ -34,6 +33,7 @@ use std::f64::consts::PI;
 /// let window = kaiser(10, 5.0, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn kaiser(m: usize, beta: f64, sym: bool) -> SignalResult<Vec<f64>> {
     if super::_len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -88,6 +88,7 @@ pub fn kaiser(m: usize, beta: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = kaiser_bessel_derived(10, 5.0, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn kaiser_bessel_derived(m: usize, beta: f64, sym: bool) -> SignalResult<Vec<f64>> {
     if super::_len_guards(m) {
         return Ok(vec![1.0; m]);

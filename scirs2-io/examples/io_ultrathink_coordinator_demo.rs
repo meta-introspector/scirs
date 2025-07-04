@@ -16,6 +16,7 @@ use scirs2_io::error::Result;
 use scirs2_io::ultrathink_coordinator::UltraThinkCoordinator;
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 SciRS2-IO Ultra-Think Coordinator Demo");
     println!("==========================================\n");
@@ -75,6 +76,7 @@ fn main() -> Result<()> {
 }
 
 /// Demonstrate progressive intelligence with increasing data complexity
+#[allow(dead_code)]
 fn demonstrate_progressive_intelligence(coordinator: &mut UltraThinkCoordinator) -> Result<()> {
     println!("🧠 Progressive Intelligence Testing");
     println!("==================================");
@@ -119,6 +121,7 @@ fn demonstrate_progressive_intelligence(coordinator: &mut UltraThinkCoordinator)
 }
 
 /// Demonstrate multi-modal processing with strategy comparison
+#[allow(dead_code)]
 fn demonstrate_multi_modal_processing(coordinator: &mut UltraThinkCoordinator) -> Result<()> {
     println!("⚡ Multi-Modal Processing Comparison");
     println!("===================================");
@@ -173,6 +176,7 @@ fn demonstrate_multi_modal_processing(coordinator: &mut UltraThinkCoordinator) -
 }
 
 /// Demonstrate adaptive learning evolution over time
+#[allow(dead_code)]
 fn demonstrate_adaptive_learning_evolution(coordinator: &mut UltraThinkCoordinator) -> Result<()> {
     println!("📚 Adaptive Learning Evolution");
     println!("=============================");
@@ -244,6 +248,7 @@ fn demonstrate_adaptive_learning_evolution(coordinator: &mut UltraThinkCoordinat
 }
 
 /// Demonstrate cross-domain intelligence transfer
+#[allow(dead_code)]
 fn demonstrate_cross_domain_intelligence(coordinator: &mut UltraThinkCoordinator) -> Result<()> {
     println!("🌐 Cross-Domain Intelligence Transfer");
     println!("====================================");
@@ -316,6 +321,7 @@ fn demonstrate_cross_domain_intelligence(coordinator: &mut UltraThinkCoordinator
 }
 
 /// Demonstrate emergent behavior detection
+#[allow(dead_code)]
 fn demonstrate_emergent_behavior_detection(coordinator: &mut UltraThinkCoordinator) -> Result<()> {
     println!("🚀 Emergent Behavior Detection");
     println!("==============================");
@@ -391,6 +397,7 @@ fn demonstrate_emergent_behavior_detection(coordinator: &mut UltraThinkCoordinat
 }
 
 /// Demonstrate real-world performance analysis
+#[allow(dead_code)]
 fn demonstrate_real_world_performance(coordinator: &mut UltraThinkCoordinator) -> Result<()> {
     println!("🏭 Real-World Performance Analysis");
     println!("==================================");
@@ -505,6 +512,7 @@ fn demonstrate_real_world_performance(coordinator: &mut UltraThinkCoordinator) -
 }
 
 /// Display final comprehensive statistics
+#[allow(dead_code)]
 fn display_final_statistics(coordinator: &UltraThinkCoordinator) -> Result<()> {
     println!("📈 Final Ultra-Think Statistics");
     println!("==============================");
@@ -599,10 +607,12 @@ fn display_final_statistics(coordinator: &UltraThinkCoordinator) -> Result<()> {
 
 // Data generation functions for various scenarios
 
+#[allow(dead_code)]
 fn generate_simple_pattern(size: usize) -> Vec<u8> {
     (0..size).map(|i| (i % 16) as u8).collect()
 }
 
+#[allow(dead_code)]
 fn generate_complex_structure(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -613,10 +623,12 @@ fn generate_complex_structure(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_random_entropy(size: usize) -> Vec<u8> {
     (0..size).map(|i| ((i * 157 + 73) % 256) as u8).collect()
 }
 
+#[allow(dead_code)]
 fn generate_hybrid_dataset(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -631,6 +643,7 @@ fn generate_hybrid_dataset(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_ultra_complex_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -643,12 +656,14 @@ fn generate_ultra_complex_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_benchmark_dataset(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| ((i * 31 + i * i + 17) % 256) as u8)
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_cpu_intensive_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -659,15 +674,18 @@ fn generate_cpu_intensive_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_memory_heavy_data(size: usize) -> Vec<u8> {
     let pattern = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     (0..size).map(|i| pattern[i % pattern.len()]).collect()
 }
 
+#[allow(dead_code)]
 fn generate_io_bound_data(size: usize) -> Vec<u8> {
     (0..size).map(|i| ((i / 100) % 256) as u8).collect()
 }
 
+#[allow(dead_code)]
 fn generate_balanced_workload(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -677,6 +695,7 @@ fn generate_balanced_workload(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_gpu_optimal_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -686,6 +705,7 @@ fn generate_gpu_optimal_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_scientific_domain_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -695,6 +715,7 @@ fn generate_scientific_domain_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_financial_domain_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -704,6 +725,7 @@ fn generate_financial_domain_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_image_domain_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -713,6 +735,7 @@ fn generate_image_domain_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_text_domain_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -722,6 +745,7 @@ fn generate_text_domain_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_sensor_domain_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -731,6 +755,7 @@ fn generate_sensor_domain_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_fractal_pattern_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -741,6 +766,7 @@ fn generate_fractal_pattern_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_chaotic_series_data(size: usize) -> Vec<u8> {
     let mut chaos = 0.5;
     (0..size)
@@ -751,6 +777,7 @@ fn generate_chaotic_series_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_quantum_like_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -762,6 +789,7 @@ fn generate_quantum_like_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_adaptive_pattern_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -771,6 +799,7 @@ fn generate_adaptive_pattern_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_evolution_trigger_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -784,6 +813,7 @@ fn generate_evolution_trigger_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_database_export_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -798,6 +828,7 @@ fn generate_database_export_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_log_analysis_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -812,6 +843,7 @@ fn generate_log_analysis_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_backup_process_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -822,6 +854,7 @@ fn generate_backup_process_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_ml_dataset_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -832,6 +865,7 @@ fn generate_ml_dataset_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_realtime_stream_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {

@@ -26,6 +26,7 @@ use std::fmt::Debug;
 /// # Returns
 ///
 /// * The result of the matrix multiplication chain
+#[allow(dead_code)]
 pub fn fused_quantized_matmul_chain(
     matrices: &[&QuantizedMatrix],
     params: &[&QuantizationParams],
@@ -89,6 +90,7 @@ pub fn fused_quantized_matmul_chain(
 }
 
 /// Optimized implementation for Int8 symmetric quantized matrices
+#[allow(dead_code)]
 fn fused_quantized_matmul_chain_int8_symmetric(
     matrices: &[&QuantizedMatrix],
     params: &[&QuantizationParams],
@@ -186,6 +188,7 @@ fn fused_quantized_matmul_chain_int8_symmetric(
 /// # Returns
 ///
 /// * The result of the matrix-vector multiplication sequence
+#[allow(dead_code)]
 pub fn fused_quantized_matvec_sequence<F>(
     matrices: &[&QuantizedMatrix],
     matrix_params: &[&QuantizationParams],
@@ -291,6 +294,7 @@ where
 }
 
 /// Optimized implementation for Int8 quantized matrices in a matvec sequence
+#[allow(dead_code)]
 fn fused_quantized_matvec_sequence_int8(
     matrices: &[&QuantizedMatrix],
     params: &[&QuantizationParams],

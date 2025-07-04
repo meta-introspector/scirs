@@ -13,6 +13,7 @@ use scirs2_spatial::polygon::{
 };
 
 /// Visualize a polygon and highlight points inside/outside/on boundary
+#[allow(dead_code)]
 fn visualize_polygon(polygon: &ArrayView2<f64>, title: &str) {
     let grid_size = 21;
     let mut grid = vec![vec!['.'; grid_size]; grid_size];
@@ -96,6 +97,7 @@ fn visualize_polygon(polygon: &ArrayView2<f64>, title: &str) {
     println!("V: Vertex, E: Edge, I: Inside, O: Outside, B: Boundary\n");
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Polygon Operations Examples");
     println!("==========================");

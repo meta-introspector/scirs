@@ -2,6 +2,7 @@ use scirs2_stats::distributions::beta::Beta;
 use scirs2_stats::traits::distribution::{ContinuousDistribution, Distribution};
 use std::error::Error;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Beta Distribution Example");
     println!("-----------------------");

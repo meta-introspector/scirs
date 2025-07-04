@@ -629,6 +629,7 @@ impl Default for Profiler {
 }
 
 /// Access a memory tracker from the profiling module to avoid name conflicts
+#[allow(dead_code)]
 pub fn profiling_memory_tracker() -> &'static MemoryTracker {
     // Create a dummy memory tracker for static access
     static MEMORY_TRACKER: once_cell::sync::Lazy<MemoryTracker> =
@@ -848,7 +849,7 @@ pub mod advanced {
             let mut writer = BufWriter::new(file);
 
             for line in lines {
-                writeln!(writer, "{}", line)?;
+                writeln!(writer, "{line}")?;
             }
 
             writer.flush()?;
@@ -1109,7 +1110,7 @@ pub mod advanced {
                 if !report.suggestions.is_empty() {
                     println!("   Suggestions:");
                     for suggestion in &report.suggestions {
-                        println!("     • {}", suggestion);
+                        println!("     • {suggestion}");
                     }
                 }
 
@@ -2153,8 +2154,8 @@ pub mod comprehensive {
                     .max()
                     .unwrap_or(0);
 
-                writeln!(report, "Average CPU Usage: {:.1}%", avg_cpu).unwrap();
-                writeln!(report, "Maximum CPU Usage: {:.1}%", max_cpu).unwrap();
+                writeln!(report, "Average CPU Usage: {avg_cpu:.1}%").unwrap();
+                writeln!(report, "Maximum CPU Usage: {max_cpu:.1}%").unwrap();
                 writeln!(
                     report,
                     "Average Memory Usage: {:.1} MB",
@@ -2188,14 +2189,14 @@ pub mod comprehensive {
                 )
                 .unwrap();
                 for bottleneck in &self.bottleneck_reports {
-                    writeln!(report, "Operation: {}", bottleneck.operation).unwrap();
+                    writeln!(report, "Operation: {op}", op = bottleneck.operation).unwrap();
                     writeln!(report, "Type: {:?}", bottleneck.bottleneck_type).unwrap();
                     writeln!(report, "Severity: {:.2}", bottleneck.severity).unwrap();
                     writeln!(report, "Description: {}", bottleneck.description).unwrap();
                     if !bottleneck.suggestions.is_empty() {
                         writeln!(report, "Suggestions:").unwrap();
                         for suggestion in &bottleneck.suggestions {
-                            writeln!(report, "  - {}", suggestion).unwrap();
+                            writeln!(report, "  - {suggestion}").unwrap();
                         }
                     }
                     writeln!(report).unwrap();
@@ -2241,8 +2242,8 @@ pub mod comprehensive {
                     .iter()
                     .map(|m| m.cpu_usage)
                     .fold(0.0, f64::max);
-                writeln!(json, "  \"average_cpu_usage\": {},", avg_cpu).unwrap();
-                writeln!(json, "  \"maximum_cpu_usage\": {}", max_cpu).unwrap();
+                writeln!(json, "  \"average_cpu_usage\": {avg_cpu},").unwrap();
+                writeln!(json, "  \"maximum_cpu_usage\": {max_cpu}").unwrap();
             }
 
             writeln!(json, "}}").unwrap();

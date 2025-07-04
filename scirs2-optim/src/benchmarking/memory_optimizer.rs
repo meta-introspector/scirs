@@ -4,7 +4,6 @@
 //! recommendations specifically for machine learning optimizers and their usage patterns.
 
 use crate::error::Result;
-use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::time::{Duration, Instant};

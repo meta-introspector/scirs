@@ -1,13 +1,19 @@
 use ndarray::Array;
 use scirs2_neural::{
     error::Result,
-    models::architectures::{ConvNeXt, ConvNeXtConfig, ConvNeXtVariant},
+    // models::architectures::{ConvNeXt, ConvNeXtConfig, ConvNeXtVariant}, // TODO: Implement models module
     prelude::*,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("ConvNeXt Example");
     println!("----------------");
+    println!("Note: ConvNeXt models are not yet implemented.");
+    println!("This example is a placeholder for future ConvNeXt functionality.");
+
+    // TODO: Implement ConvNeXt models module and uncomment the following code
+    /*
     // Create a random input tensor (batch_size=1, channels=3, height=224, width=224)
     let input_shape = [1, 3, 224, 224];
     let mut input = Array::<f32, _>::zeros(input_shape).into_dyn();
@@ -67,5 +73,6 @@ fn main() -> Result<()> {
         "Predicted class: {} with confidence: {:.4}",
         max_idx, max_val
     );
+    */
     Ok(())
 }

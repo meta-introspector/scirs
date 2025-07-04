@@ -25,6 +25,7 @@ use scirs2_core::testing::ecosystem_integration::{
 use std::collections::HashSet;
 use std::path::PathBuf;
 
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     println!("🚀 SciRS2 Ecosystem Integration Testing Demo - 1.0 Release Readiness");
     println!("=====================================================================");
@@ -143,6 +144,7 @@ fn main() -> CoreResult<()> {
 }
 
 /// Display ecosystem summary results
+#[allow(dead_code)]
 fn display_ecosystem_summary(
     result: &scirs2_core::testing::ecosystem_integration::EcosystemTestResult,
 ) {
@@ -309,6 +311,7 @@ fn display_ecosystem_summary(
 }
 
 /// Display final 1.0 release assessment
+#[allow(dead_code)]
 fn display_final_assessment(
     result: &scirs2_core::testing::ecosystem_integration::EcosystemTestResult,
 ) {

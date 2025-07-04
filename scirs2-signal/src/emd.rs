@@ -95,6 +95,7 @@ pub struct EmdResult {
 /// assert!(result.imfs.shape()[0] <= config.max_imfs);
 /// assert_eq!(result.imfs.shape()[1], signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn emd<T>(signal: &[T], config: &EmdConfig) -> SignalResult<EmdResult>
 where
     T: Float + NumCast + Debug,
@@ -190,6 +191,7 @@ where
 /// # Returns
 ///
 /// * Tuple of (IMF, number of iterations)
+#[allow(dead_code)]
 fn extract_imf(signal: &Array1<f64>, config: &EmdConfig) -> SignalResult<(Array1<f64>, usize)> {
     let n = signal.len();
     let mut h = signal.clone();
@@ -265,6 +267,7 @@ fn extract_imf(signal: &Array1<f64>, config: &EmdConfig) -> SignalResult<(Array1
 /// # Returns
 ///
 /// * Sifting criterion value
+#[allow(dead_code)]
 fn compute_sifting_criterion(current: &Array1<f64>, previous: &Array1<f64>) -> f64 {
     let n = current.len();
     let mut sum_squared_diff = 0.0;
@@ -292,6 +295,7 @@ fn compute_sifting_criterion(current: &Array1<f64>, previous: &Array1<f64>) -> f
 /// # Returns
 ///
 /// * Tuple of (indices, values) of local maxima
+#[allow(dead_code)]
 fn find_local_maxima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
     let n = signal.len();
     let mut indices = Vec::new();
@@ -343,6 +347,7 @@ fn find_local_maxima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
 /// # Returns
 ///
 /// * Tuple of (indices, values) of local minima
+#[allow(dead_code)]
 fn find_local_minima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
     let n = signal.len();
     let mut indices = Vec::new();
@@ -394,6 +399,7 @@ fn find_local_minima(signal: &Array1<f64>) -> (Vec<usize>, Vec<f64>) {
 /// # Returns
 ///
 /// * Tuple of (number of maxima, number of minima)
+#[allow(dead_code)]
 fn count_extrema(signal: &Array1<f64>) -> (usize, usize) {
     let (maxima_idx, _) = find_local_maxima(signal);
     let (minima_idx, _) = find_local_minima(signal);
@@ -413,6 +419,7 @@ fn count_extrema(signal: &Array1<f64>) -> (usize, usize) {
 /// # Returns
 ///
 /// * Extended extrema as tuple of (indices, values)
+#[allow(dead_code)]
 fn extend_extrema(
     indices: &[usize],
     values: &[f64],
@@ -514,6 +521,7 @@ fn extend_extrema(
 /// # Returns
 ///
 /// * Interpolated envelope
+#[allow(dead_code)]
 fn interpolate_envelope(
     indices: &[usize],
     values: &[f64],
@@ -704,6 +712,7 @@ fn interpolate_envelope(
 /// assert!(result.imfs.shape()[0] <= config.max_imfs);
 /// assert_eq!(result.imfs.shape()[1], signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn eemd<T>(
     signal: &[T],
     config: &EmdConfig,
@@ -834,6 +843,7 @@ where
 /// # Returns
 ///
 /// * Tuple of (time points, frequencies, Hilbert-Huang spectrum)
+#[allow(dead_code)]
 pub fn hilbert_huang_spectrum(
     emd_result: &EmdResult,
     sample_rate: f64,

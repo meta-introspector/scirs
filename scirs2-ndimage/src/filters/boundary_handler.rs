@@ -163,6 +163,7 @@ where
 ///
 /// This function applies a filter kernel to an array using on-the-fly boundary
 /// value computation, avoiding the need to create a padded array.
+#[allow(dead_code)]
 pub fn apply_filter_with_boundary<T, D, F>(
     input: &Array<T, D>,
     kernel_shape: &[usize],
@@ -233,6 +234,7 @@ where
 }
 
 /// Optimized convolution using virtual boundary handling
+#[allow(dead_code)]
 pub fn convolve_optimized<T, D, E>(
     input: &Array<T, D>,
     kernel: &Array<T, E>,

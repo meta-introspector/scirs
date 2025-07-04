@@ -8,6 +8,7 @@ use scirs2_fft::{fft_adaptive, fftfreq, ifft_adaptive, simd_support_available, w
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Spectral Analysis Application with SIMD-accelerated FFT");
     println!("======================================================");
@@ -108,12 +109,14 @@ fn main() {
 }
 
 // Generate linearly spaced points
+#[allow(dead_code)]
 fn linspace(start: f64, end: f64, num: usize) -> Vec<f64> {
     let step = (end - start) / (num - 1) as f64;
     (0..num).map(|i| start + i as f64 * step).collect()
 }
 
 // Generate a test signal with multiple frequency components
+#[allow(dead_code)]
 fn generate_test_signal(time: &[f64]) -> Vec<f64> {
     let mut signal = Vec::with_capacity(time.len());
 
@@ -133,6 +136,7 @@ fn generate_test_signal(time: &[f64]) -> Vec<f64> {
 }
 
 // Generate a larger signal for performance testing
+#[allow(dead_code)]
 fn generate_large_signal(size: usize) -> Vec<f64> {
     let mut signal = Vec::with_capacity(size);
 
@@ -156,6 +160,7 @@ fn generate_large_signal(size: usize) -> Vec<f64> {
 }
 
 // Generate normally distributed random numbers using Box-Muller transform
+#[allow(dead_code)]
 fn rand_normal(mean: f64, stddev: f64) -> f64 {
     let x: f64 = rand::random::<f64>();
     let y: f64 = rand::random::<f64>();
@@ -165,6 +170,7 @@ fn rand_normal(mean: f64, stddev: f64) -> f64 {
 }
 
 // Perform spectral analysis on the signal
+#[allow(dead_code)]
 fn spectral_analysis(signal: &[f64], sample_rate: f64) -> (Vec<f64>, Vec<f64>) {
     // Apply a window function to reduce spectral leakage
     let window_func = window::get_window(window::Window::Hann, signal.len(), true).unwrap();
@@ -210,6 +216,7 @@ fn spectral_analysis(signal: &[f64], sample_rate: f64) -> (Vec<f64>, Vec<f64>) {
 }
 
 // Find peak frequencies in the power spectrum
+#[allow(dead_code)]
 fn find_peak_frequencies(freqs: &[f64], power: &[f64], threshold_factor: f64) -> Vec<(f64, f64)> {
     // Find maximum power value for threshold calculation
     let max_power = power.iter().fold(0.0f64, |a, &b| a.max(b));
@@ -232,6 +239,7 @@ fn find_peak_frequencies(freqs: &[f64], power: &[f64], threshold_factor: f64) ->
 }
 
 // Apply a bandpass filter in the frequency domain
+#[allow(dead_code)]
 fn bandpass_filter(
     signal: &[f64],
     sample_rate: f64,
@@ -267,6 +275,7 @@ fn bandpass_filter(
 }
 
 // Compute spectrogram using STFT
+#[allow(dead_code)]
 fn compute_spectrogram(
     signal: &[f64],
     sample_rate: f64,

@@ -2,6 +2,7 @@ use ndarray::Array2;
 use scirs2_signal::dwt::Wavelet;
 use scirs2_signal::swt2d::swt2d_decompose;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("2D Stationary Wavelet Transform for Edge Detection");
     println!("--------------------------------------------------");
@@ -77,6 +78,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Edge detection function using 2D SWT
+#[allow(dead_code)]
 fn detect_edges_swt<T>(
     image: &Array2<T>,
     wavelet: Wavelet,
@@ -114,6 +116,7 @@ where
 }
 
 // Helper function to count non-zero (above threshold) elements in an array
+#[allow(dead_code)]
 fn count_nonzero(array: &Array2<f64>, threshold: f64) -> usize {
     array.iter().filter(|&&x| x > threshold).count()
 }

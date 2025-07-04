@@ -108,6 +108,7 @@ impl MetricVisualizer for TrainingHistoryVisualizer {
 }
 
 /// Create a training history visualizer from a neural network's training history
+#[allow(dead_code)]
 pub fn training_history_visualization(
     metric_names: Vec<String>,
     history: Vec<HashMap<String, f64>>,

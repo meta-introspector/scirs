@@ -92,6 +92,7 @@ impl BoundingBox {
 /// # Returns
 ///
 /// * Vector of indices of boxes to keep
+#[allow(dead_code)]
 pub fn nms_boxes(boxes: &[BoundingBox], iou_threshold: f32) -> Vec<usize> {
     if boxes.is_empty() {
         return vec![];
@@ -133,6 +134,7 @@ pub fn nms_boxes(boxes: &[BoundingBox], iou_threshold: f32) -> Vec<usize> {
 /// Perform class-aware NMS
 ///
 /// Only suppress boxes of the same class
+#[allow(dead_code)]
 pub fn nms_boxes_class_aware(boxes: &[BoundingBox], iou_threshold: f32) -> Vec<usize> {
     if boxes.is_empty() {
         return vec![];
@@ -173,6 +175,7 @@ pub fn nms_boxes_class_aware(boxes: &[BoundingBox], iou_threshold: f32) -> Vec<u
 /// * `iou_threshold` - IoU threshold for score reduction
 /// * `sigma` - Gaussian parameter for score reduction
 /// * `score_threshold` - Minimum score threshold
+#[allow(dead_code)]
 pub fn soft_nms(
     boxes: &mut [BoundingBox],
     iou_threshold: f32,
@@ -236,6 +239,7 @@ pub fn soft_nms(
 /// # Returns
 ///
 /// * Vector of (x, y, response) tuples for local maxima
+#[allow(dead_code)]
 pub fn nms_2d(
     response: &ArrayView2<f32>,
     window_size: usize,
@@ -279,6 +283,7 @@ pub fn nms_2d(
 /// Fast NMS for 2D using maximum filter
 ///
 /// More efficient implementation using maximum filtering
+#[allow(dead_code)]
 pub fn fast_nms_2d(
     response: &ArrayView2<f32>,
     window_size: usize,
@@ -321,6 +326,7 @@ pub fn fast_nms_2d(
 /// Oriented NMS for edge detection
 ///
 /// Performs NMS along the gradient direction
+#[allow(dead_code)]
 pub fn oriented_nms(
     magnitude: &ArrayView2<f32>,
     orientation: &ArrayView2<f32>,
@@ -366,6 +372,7 @@ pub fn oriented_nms(
 /// Scale-space NMS
 ///
 /// Performs NMS across multiple scales
+#[allow(dead_code)]
 pub fn scale_space_nms(
     responses: &[Array2<f32>],
     window_size: usize,

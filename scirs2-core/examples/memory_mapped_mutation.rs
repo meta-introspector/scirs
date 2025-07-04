@@ -20,12 +20,14 @@ use std::path::Path;
 use tempfile::tempdir;
 
 #[cfg(not(feature = "memory_efficient"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the memory_efficient feature.");
     println!("Run with: cargo run --example memory_mapped_mutation --features memory_efficient");
 }
 
 #[cfg(feature = "memory_efficient")]
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Memory-Mapped Array Mutation Example");
     println!("====================================\n");
@@ -46,6 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Basic example of mutating a memory-mapped array
 #[cfg(feature = "memory_efficient")]
+#[allow(dead_code)]
 fn basic_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Mutation Example");
     println!("-------------------------");
@@ -120,6 +123,7 @@ fn basic_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Err
 
 /// Example of mutating a memory-mapped array using chunk-wise processing
 #[cfg(feature = "memory_efficient")]
+#[allow(dead_code)]
 fn chunked_mutation_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Chunked Mutation Example");
     println!("---------------------------");

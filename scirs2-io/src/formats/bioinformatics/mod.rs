@@ -594,6 +594,7 @@ impl FastqWriter {
 }
 
 /// Count sequences in a FASTA file
+#[allow(dead_code)]
 pub fn count_fasta_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
     let file = File::open(path.as_ref())
         .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;
@@ -609,6 +610,7 @@ pub fn count_fasta_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
 }
 
 /// Count sequences in a FASTQ file
+#[allow(dead_code)]
 pub fn count_fastq_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
     let file = File::open(path.as_ref())
         .map_err(|_e| IoError::FileNotFound(path.as_ref().to_string_lossy().to_string()))?;

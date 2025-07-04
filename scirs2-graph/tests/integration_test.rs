@@ -6,6 +6,7 @@ use scirs2_graph::algorithms::*;
 use scirs2_graph::generators::create_graph;
 
 #[test]
+#[allow(dead_code)]
 fn test_basic_graph_operations() {
     let mut graph = create_graph::<i32, f64>();
 
@@ -20,6 +21,7 @@ fn test_basic_graph_operations() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_shortest_path_algorithm() {
     let mut graph = create_graph::<i32, f64>();
 
@@ -37,6 +39,7 @@ fn test_shortest_path_algorithm() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_connectivity_algorithms() {
     let mut graph = create_graph::<i32, f64>();
 
@@ -50,6 +53,7 @@ fn test_connectivity_algorithms() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_minimum_spanning_tree() {
     let mut graph = create_graph::<i32, f64>();
 
@@ -69,6 +73,7 @@ fn test_minimum_spanning_tree() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_pagerank() {
     // Create a simple directed graph for PageRank
     use scirs2_graph::generators::create_digraph;

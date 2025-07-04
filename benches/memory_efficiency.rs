@@ -12,12 +12,14 @@ const SEED: u64 = 42;
 const MEMORY_TEST_SIZES: &[usize] = &[100, 500, 1000, 2000];
 
 /// Generate test data with specific memory characteristics
+#[allow(dead_code)]
 fn generate_memory_test_data(size: usize) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
     Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng)
 }
 
 /// Benchmark buffer pool efficiency
+#[allow(dead_code)]
 fn bench_buffer_pool_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("buffer_pool_efficiency");
 
@@ -51,6 +53,7 @@ fn bench_buffer_pool_efficiency(c: &mut Criterion) {
 }
 
 /// Benchmark chunked matrix operations
+#[allow(dead_code)]
 fn bench_chunked_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("chunked_operations");
 
@@ -101,6 +104,7 @@ fn bench_chunked_operations(c: &mut Criterion) {
 }
 
 /// Benchmark memory usage patterns
+#[allow(dead_code)]
 fn bench_memory_usage_patterns(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_usage_patterns");
 
@@ -159,6 +163,7 @@ fn bench_memory_usage_patterns(c: &mut Criterion) {
 }
 
 /// Benchmark memory allocation patterns
+#[allow(dead_code)]
 fn bench_allocation_patterns(c: &mut Criterion) {
     let mut group = c.benchmark_group("allocation_patterns");
 
@@ -201,6 +206,7 @@ fn bench_allocation_patterns(c: &mut Criterion) {
 }
 
 /// Benchmark memory fragmentation resistance
+#[allow(dead_code)]
 fn bench_fragmentation_resistance(c: &mut Criterion) {
     let mut group = c.benchmark_group("fragmentation_resistance");
 
@@ -233,6 +239,7 @@ fn bench_fragmentation_resistance(c: &mut Criterion) {
 }
 
 /// Benchmark large matrix operations with memory constraints
+#[allow(dead_code)]
 fn bench_large_matrix_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("large_matrix_operations");
     group.sample_size(10); // Fewer samples for large operations
@@ -282,6 +289,7 @@ fn bench_large_matrix_operations(c: &mut Criterion) {
 }
 
 /// Benchmark zero-copy operations
+#[allow(dead_code)]
 fn bench_zero_copy_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("zero_copy_operations");
 

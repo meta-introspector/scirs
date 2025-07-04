@@ -3,6 +3,7 @@ use scirs2_core::ndarray_ext::stats::{
     bincount, corrcoef, cov, digitize, histogram, histogram2d, quantile,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Advanced Statistical Analysis with scirs2-core\n");
 

@@ -16,6 +16,7 @@
 use scirs2_text::error::Result;
 use scirs2_text::ultrathink_text_coordinator::{UltrathinkTextConfig, UltrathinkTextCoordinator};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 Ultrathink Mode Demo - Advanced Text Processing");
     println!("================================================\n");
@@ -82,6 +83,7 @@ fn main() -> Result<()> {
 }
 
 /// Demonstrates ultra-optimized text processing with full feature coordination
+#[allow(dead_code)]
 fn demo_ultra_text_processing(coordinator: &UltrathinkTextCoordinator) -> Result<()> {
     println!("📊 Demo 1: Ultra-Optimized Text Processing");
     println!("==========================================");
@@ -156,6 +158,7 @@ fn demo_ultra_text_processing(coordinator: &UltrathinkTextCoordinator) -> Result
 }
 
 /// Demonstrates advanced semantic similarity with multiple metrics
+#[allow(dead_code)]
 fn demo_semantic_similarity(coordinator: &UltrathinkTextCoordinator) -> Result<()> {
     println!("🔍 Demo 2: Advanced Semantic Similarity");
     println!("=======================================");
@@ -192,6 +195,7 @@ fn demo_semantic_similarity(coordinator: &UltrathinkTextCoordinator) -> Result<(
 }
 
 /// Demonstrates batch text classification with confidence estimation
+#[allow(dead_code)]
 fn demo_batch_classification(coordinator: &UltrathinkTextCoordinator) -> Result<()> {
     println!("🏷️  Demo 3: Batch Text Classification");
     println!("===================================");
@@ -245,6 +249,7 @@ fn demo_batch_classification(coordinator: &UltrathinkTextCoordinator) -> Result<
 }
 
 /// Demonstrates dynamic topic modeling with quality metrics
+#[allow(dead_code)]
 fn demo_topic_modeling(coordinator: &UltrathinkTextCoordinator) -> Result<()> {
     println!("📚 Demo 4: Dynamic Topic Modeling");
     println!("================================");
@@ -294,6 +299,7 @@ fn demo_topic_modeling(coordinator: &UltrathinkTextCoordinator) -> Result<()> {
 }
 
 /// Demonstrates comprehensive performance reporting
+#[allow(dead_code)]
 fn demo_performance_reporting(coordinator: &UltrathinkTextCoordinator) -> Result<()> {
     println!("📊 Demo 5: Performance Reporting");
     println!("===============================");

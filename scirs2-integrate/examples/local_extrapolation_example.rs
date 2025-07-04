@@ -13,6 +13,7 @@ use scirs2_integrate::ode::{
     types::ODEOptions,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Local Extrapolation Methods for ODE Solving ===");
 
@@ -79,6 +80,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_extrapolation_methods<F, ExactFunc>(
     f: F,
     t_span: [f64; 2],
@@ -175,6 +177,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_van_der_pol_extrapolation<F>(
     f: F,
     t_span: [f64; 2],
@@ -230,6 +233,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_richardson_extrapolation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\nRichardson Extrapolation with Single Steps:");
     println!("Problem: dy/dt = -y, y(0) = 1, step from t=0 to t=0.1");

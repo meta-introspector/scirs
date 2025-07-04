@@ -12,6 +12,7 @@ use scirs2_interpolate::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Interpolation Mode Showcase");
     println!("==========================================");
@@ -326,6 +327,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Create smooth function data for testing
+#[allow(dead_code)]
 fn create_smooth_function_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::from_vec(
         (0..n_points)
@@ -341,6 +343,7 @@ fn create_smooth_function_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
 }
 
 /// Create noisy experimental data for testing
+#[allow(dead_code)]
 fn create_noisy_data(n_points: usize, noise_level: f64) -> (Array1<f64>, Array1<f64>) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
@@ -365,6 +368,7 @@ fn create_noisy_data(n_points: usize, noise_level: f64) -> (Array1<f64>, Array1<
 }
 
 /// Create sparse scattered data for testing
+#[allow(dead_code)]
 fn create_sparse_scattered_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
@@ -384,6 +388,7 @@ fn create_sparse_scattered_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
 }
 
 /// Create oscillatory signal data for testing
+#[allow(dead_code)]
 fn create_oscillatory_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::from_vec(
         (0..n_points)
@@ -405,6 +410,7 @@ fn create_oscillatory_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
 }
 
 /// Create query points for interpolation
+#[allow(dead_code)]
 fn create_query_points(n_points: usize, start: f64, end: f64) -> Array1<f64> {
     Array1::from_vec(
         (0..n_points)
@@ -414,6 +420,7 @@ fn create_query_points(n_points: usize, start: f64, end: f64) -> Array1<f64> {
 }
 
 /// Estimate interpolation accuracy
+#[allow(dead_code)]
 fn estimate_interpolation_accuracy(result: &Array1<f64>, x_new: &Array1<f64>) -> f64 {
     // Mock implementation - in reality, this would compare against analytical solution
     // or use cross-validation
@@ -429,6 +436,7 @@ fn estimate_interpolation_accuracy(result: &Array1<f64>, x_new: &Array1<f64>) ->
 }
 
 /// Get noise handling strategy description
+#[allow(dead_code)]
 fn get_noise_handling_strategy(
     recommendation: &scirs2_interpolate::InterpolationRecommendation<f64>,
 ) -> String {
@@ -447,6 +455,7 @@ fn get_noise_handling_strategy(
 }
 
 /// Estimate memory efficiency gain
+#[allow(dead_code)]
 fn estimate_memory_efficiency(
     recommendation: &scirs2_interpolate::InterpolationRecommendation<f64>,
 ) -> f64 {
@@ -460,6 +469,7 @@ fn estimate_memory_efficiency(
 }
 
 /// Estimate extrapolation quality
+#[allow(dead_code)]
 fn estimate_extrapolation_quality(result: &Array1<f64>) -> f64 {
     // Mock implementation - assess boundary behavior
     let n = result.len();
@@ -479,6 +489,7 @@ fn estimate_extrapolation_quality(result: &Array1<f64>) -> f64 {
 }
 
 /// Estimate frequency preservation quality
+#[allow(dead_code)]
 fn estimate_frequency_preservation(result: &Array1<f64>) -> f64 {
     // Mock implementation - this would typically use FFT analysis
     let n = result.len();
@@ -501,6 +512,7 @@ fn estimate_frequency_preservation(result: &Array1<f64>) -> f64 {
 }
 
 /// Demonstrate adaptive learning capabilities
+#[allow(dead_code)]
 fn demonstrate_adaptive_learning(
     coordinator: &scirs2_interpolate::UltrathinkInterpolationCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -556,6 +568,7 @@ fn demonstrate_adaptive_learning(
 }
 
 /// Demonstrate cross-domain knowledge transfer
+#[allow(dead_code)]
 fn demonstrate_knowledge_transfer(
     coordinator: &scirs2_interpolate::UltrathinkInterpolationCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -608,6 +621,7 @@ fn demonstrate_knowledge_transfer(
 }
 
 /// Demonstrate quantum-inspired optimization
+#[allow(dead_code)]
 fn demonstrate_quantum_optimization(
     coordinator: &scirs2_interpolate::UltrathinkInterpolationCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -663,6 +677,7 @@ fn demonstrate_quantum_optimization(
 }
 
 /// Demonstrate error prediction capabilities
+#[allow(dead_code)]
 fn demonstrate_error_prediction(
     coordinator: &scirs2_interpolate::UltrathinkInterpolationCoordinator<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -701,6 +716,7 @@ fn demonstrate_error_prediction(
 }
 
 /// Create complex data for quantum optimization testing
+#[allow(dead_code)]
 fn create_complex_optimization_data(n_points: usize) -> (Array1<f64>, Array1<f64>) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
@@ -729,6 +745,7 @@ fn create_complex_optimization_data(n_points: usize) -> (Array1<f64>, Array1<f64
 }
 
 /// Estimate parameter optimization quality
+#[allow(dead_code)]
 fn estimate_parameter_optimization_quality(
     recommendation: &scirs2_interpolate::InterpolationRecommendation<f64>,
 ) -> f64 {

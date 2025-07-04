@@ -386,6 +386,7 @@ impl QuantumDatasetGenerator {
 }
 
 /// Convenience function to create quantum classification dataset
+#[allow(dead_code)]
 pub fn make_quantum_classification(
     n_samples: usize,
     n_features: usize,
@@ -404,6 +405,7 @@ pub fn make_quantum_classification(
 }
 
 /// Convenience function to create quantum regression dataset
+#[allow(dead_code)]
 pub fn make_quantum_regression(
     n_samples: usize,
     n_features: usize,
@@ -422,6 +424,7 @@ pub fn make_quantum_regression(
 }
 
 /// Convenience function to create quantum clustering dataset
+#[allow(dead_code)]
 pub fn make_quantum_blobs(
     n_samples: usize,
     n_features: usize,

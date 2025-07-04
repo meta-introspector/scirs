@@ -407,6 +407,7 @@ impl<N: Node, E: EdgeWeight> TemporalPath<N, E> {
 /// Compute reachability in a temporal graph
 ///
 /// Returns all nodes reachable from a source node within a time window.
+#[allow(dead_code)]
 pub fn temporal_reachability<N, E, Ix>(
     temporal_graph: &TemporalGraph<N, E, Ix>,
     source: &N,
@@ -457,6 +458,7 @@ where
 }
 
 /// Compute temporal centrality measures
+#[allow(dead_code)]
 pub fn temporal_betweenness_centrality<N, E, Ix>(
     temporal_graph: &TemporalGraph<N, E, Ix>,
     time_window: TimeInterval,

@@ -481,6 +481,7 @@ impl<F: Float + NumCast + std::fmt::Display> Bernoulli<F> {
 /// let pmf_at_one = b.pmf(1.0);
 /// assert!((pmf_at_one - 0.3).abs() < 1e-7);
 /// ```
+#[allow(dead_code)]
 pub fn bernoulli<F>(p: F) -> StatsResult<Bernoulli<F>>
 where
     F: Float + NumCast + std::fmt::Display,

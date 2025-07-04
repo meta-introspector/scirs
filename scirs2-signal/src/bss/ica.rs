@@ -25,6 +25,7 @@ use scirs2_linalg::solve_multiple;
 /// # Returns
 ///
 /// * Tuple containing (extracted sources, mixing matrix)
+#[allow(dead_code)]
 pub fn ica(
     signals: &Array2<f64>,
     n_components: Option<usize>,

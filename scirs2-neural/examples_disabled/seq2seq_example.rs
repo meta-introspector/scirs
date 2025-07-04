@@ -7,6 +7,7 @@ use scirs2_neural::{
     prelude::*,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Sequence-to-Sequence (Seq2Seq) Model Example");
     println!("--------------------------------------------");

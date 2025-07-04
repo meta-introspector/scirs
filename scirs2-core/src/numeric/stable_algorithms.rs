@@ -53,6 +53,7 @@ pub struct IterativeResult<T: Float> {
 }
 
 /// Stable Gaussian elimination with partial pivoting
+#[allow(dead_code)]
 pub fn gaussian_elimination_stable<T: Float + StableComputation>(
     a: &ArrayView2<T>,
     b: &ArrayView1<T>,
@@ -139,6 +140,7 @@ pub fn gaussian_elimination_stable<T: Float + StableComputation>(
 }
 
 /// Stable QR decomposition using Householder reflections
+#[allow(dead_code)]
 pub fn qr_decomposition_stable<T: Float + StableComputation>(
     a: &ArrayView2<T>,
 ) -> CoreResult<(Array2<T>, Array2<T>)> {
@@ -212,6 +214,7 @@ pub fn qr_decomposition_stable<T: Float + StableComputation>(
 }
 
 /// Stable Cholesky decomposition
+#[allow(dead_code)]
 pub fn cholesky_stable<T: Float + StableComputation>(a: &ArrayView2<T>) -> CoreResult<Array2<T>> {
     let n = a.nrows();
 
@@ -253,6 +256,7 @@ pub fn cholesky_stable<T: Float + StableComputation>(a: &ArrayView2<T>) -> CoreR
 }
 
 /// Conjugate gradient method with preconditioning
+#[allow(dead_code)]
 pub fn conjugate_gradient<T: Float + StableComputation>(
     a: &ArrayView2<T>,
     b: &ArrayView1<T>,
@@ -378,6 +382,7 @@ pub fn conjugate_gradient<T: Float + StableComputation>(
 }
 
 /// GMRES (Generalized Minimal Residual) method
+#[allow(dead_code)]
 pub fn gmres<T: Float + StableComputation>(
     a: &ArrayView2<T>,
     b: &ArrayView1<T>,
@@ -578,6 +583,7 @@ pub fn gmres<T: Float + StableComputation>(
 }
 
 /// Stable numerical differentiation using Richardson extrapolation
+#[allow(dead_code)]
 pub fn richardson_derivative<T, F>(f: F, x: T, h: T, order: usize) -> CoreResult<T>
 where
     T: Float + StableComputation,
@@ -618,6 +624,7 @@ where
 }
 
 /// Stable numerical integration using adaptive Simpson's rule
+#[allow(dead_code)]
 pub fn adaptive_simpson<T, F>(f: F, a: T, b: T, tolerance: T, max_depth: usize) -> CoreResult<T>
 where
     T: Float + StableComputation,
@@ -697,6 +704,7 @@ where
 }
 
 /// Stable computation of matrix exponential using scaling and squaring
+#[allow(dead_code)]
 pub fn matrix_exp_stable<T: Float + StableComputation>(
     a: &ArrayView2<T>,
     scaling_threshold: Option<T>,

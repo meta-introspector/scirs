@@ -653,11 +653,13 @@ impl CompatibilityReport {
 }
 
 /// Create a default compatibility checker
+#[allow(dead_code)]
 pub fn create_compatibility_checker() -> SciPyCompatibilityChecker {
     SciPyCompatibilityChecker::new(CompatibilityConfig::default())
 }
 
 /// Run a quick compatibility assessment
+#[allow(dead_code)]
 pub fn quick_compatibility_check() -> InterpolateResult<f64> {
     let mut checker = create_compatibility_checker();
     let report = checker.run_full_analysis()?;

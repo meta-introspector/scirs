@@ -6,6 +6,7 @@
 
 use crate::base::{DiGraph, EdgeWeight, Graph, IndexType, Node};
 use crate::error::{GraphError, Result};
+use rand::{rng, seq::SliceRandom, Rng};
 use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::Hash;
@@ -23,6 +24,7 @@ use std::hash::Hash;
 ///
 /// # Space Complexity
 /// O(n) for storing the partition and temporary data structures.
+#[allow(dead_code)]
 pub fn minimum_cut<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<(f64, Vec<bool>)>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
@@ -67,6 +69,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn calculate_cut_value<N, E, Ix>(graph: &Graph<N, E, Ix>, nodes: &[N], partition: &[bool]) -> f64
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
@@ -93,6 +96,7 @@ where
     cut_value
 }
 
+#[allow(dead_code)]
 fn minimum_cut_heuristic<N, E, Ix>(graph: &Graph<N, E, Ix>, nodes: &[N]) -> Result<(f64, Vec<bool>)>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
@@ -104,7 +108,6 @@ where
     let mut best_partition = vec![false; n];
 
     // Try a few random partitions
-    use rand::Rng;
     let mut rng = rand::rng();
 
     for _ in 0..10 {
@@ -113,7 +116,6 @@ where
 
         // Randomly select nodes for partition A
         let mut indices: Vec<usize> = (0..n).collect();
-        use rand::seq::SliceRandom;
         indices.shuffle(&mut rng);
 
         for i in 0..size_a {
@@ -155,6 +157,7 @@ where
 /// # Performance Note
 /// Dinic's algorithm is more efficient than Ford-Fulkerson for dense graphs
 /// and performs particularly well on networks with unit capacities.
+#[allow(dead_code)]
 pub fn dinic_max_flow<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
@@ -344,6 +347,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> DinicResidualGraph<N> {
 ///
 /// # Returns
 /// * The maximum flow value from source to sink
+#[allow(dead_code)]
 pub fn push_relabel_max_flow<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,
@@ -478,6 +482,7 @@ where
 ///
 /// # Space Complexity
 /// O(V + E) for the residual graph and path tracking
+#[allow(dead_code)]
 pub fn ford_fulkerson_max_flow<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,
@@ -523,6 +528,7 @@ where
 ///
 /// # Space Complexity
 /// O(V + E) for the residual graph and BFS queue
+#[allow(dead_code)]
 pub fn edmonds_karp_max_flow<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,
@@ -567,6 +573,7 @@ where
 ///
 /// # Space Complexity  
 /// O(V + E) for the residual graph and distance labels
+#[allow(dead_code)]
 pub fn isap_max_flow<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N, sink: &N) -> Result<f64>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug,
@@ -599,6 +606,7 @@ where
 ///
 /// # Space Complexity
 /// O(V + E) for the residual graph representation
+#[allow(dead_code)]
 pub fn capacity_scaling_max_flow<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,
@@ -641,6 +649,7 @@ where
 ///
 /// # Time Complexity
 /// O(VE² + VF log V) where F is the maximum flow value
+#[allow(dead_code)]
 pub fn min_cost_max_flow<N, E, Ix, F>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,
@@ -679,6 +688,7 @@ where
 ///
 /// # Space Complexity
 /// O(V + E) distributed across parallel workers
+#[allow(dead_code)]
 pub fn parallel_max_flow<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,
@@ -730,6 +740,7 @@ where
 ///
 /// # Returns
 /// * The maximum flow value from all sources to all sinks
+#[allow(dead_code)]
 pub fn multi_source_multi_sink_max_flow<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     sources: &[N],
@@ -1133,7 +1144,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> ISAPGraph<N> {
 
                             // Increase reverse capacity
                             let (neighbor, _, rev_idx) = &adj_edges[*edge_idx].clone();
-                            if let Some(neighbor_edges) = self.adj.get_mut(&neighbor) {
+                            if let Some(neighbor_edges) = self.adj.get_mut(neighbor) {
                                 neighbor_edges[*rev_idx].1 += bottleneck;
                             }
                         }
@@ -1374,7 +1385,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> MinCostMaxFlowGraph<N> {
         let mut queue = VecDeque::new();
 
         // Initialize distances
-        for (node, _) in &self.adj {
+        for node in self.adj.keys() {
             dist.insert(node.clone(), f64::INFINITY);
             parent.insert(node.clone(), None);
             in_queue.insert(node.clone(), false);
@@ -1489,7 +1500,7 @@ impl<N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug> ParallelFlowGr
     {
         // Simplified graph partitioning - would use proper graph partitioning algorithms
         let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
-        let chunk_size = (nodes.len() + num_threads - 1) / num_threads;
+        let chunk_size = nodes.len().div_ceil(num_threads);
         let mut subgraphs = Vec::new();
 
         for i in 0..num_threads {
@@ -1498,8 +1509,7 @@ impl<N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug> ParallelFlowGr
             let mut subgraph = HashMap::new();
 
             // Create subgraph for this chunk
-            for j in start..end {
-                let node = &nodes[j];
+            for node in nodes.iter().take(end).skip(start) {
                 subgraph.insert(node.clone(), Vec::new());
                 // Add edges within this partition or to adjacent partitions
             }
@@ -1785,7 +1795,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> MultiSourceSinkGraph<N> {
         visited.insert(self.super_source.clone());
 
         while let Some(current) = queue.pop_front() {
-            if &current == &self.super_sink {
+            if current == self.super_sink {
                 // Reconstruct path
                 let mut path = Vec::new();
                 let mut node = current.clone();

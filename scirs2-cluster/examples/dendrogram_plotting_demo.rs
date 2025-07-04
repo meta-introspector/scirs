@@ -13,6 +13,7 @@ use scirs2_cluster::hierarchy::visualization::{
     ColorScheme, ColorThreshold, DendrogramConfig, DendrogramOrientation,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Dendrogram Plotting Demo for scirs2-cluster");
     println!("==========================================");
@@ -66,6 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "plotters")]
+#[allow(dead_code)]
 fn create_dendrograms(
     linkage_matrix: &ndarray::ArrayView2<f64>,
     labels: &[String],
@@ -243,6 +245,7 @@ fn create_dendrograms(
 }
 
 /// Create sample hierarchical data with distinct clusters
+#[allow(dead_code)]
 fn create_sample_data() -> Array2<f64> {
     use rand::prelude::*;
     use rand_distr::Normal;

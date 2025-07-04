@@ -6,6 +6,7 @@
 use ndarray::Array1;
 use scirs2_datasets::{load_iris, random_sample, stratified_sample, Dataset};
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Sampling and Bootstrapping Demonstration ===\n");
 
@@ -148,6 +149,7 @@ fn main() {
 }
 
 /// Count the number of samples in each class
+#[allow(dead_code)]
 fn count_classes(targets: &Array1<f64>) -> std::collections::HashMap<i64, usize> {
     let mut counts = std::collections::HashMap::new();
     for &target in targets.iter() {
@@ -158,6 +160,7 @@ fn count_classes(targets: &Array1<f64>) -> std::collections::HashMap<i64, usize>
 }
 
 /// Calculate class proportions
+#[allow(dead_code)]
 fn calculate_proportions(
     counts: &std::collections::HashMap<i64, usize>,
 ) -> std::collections::HashMap<i64, f64> {

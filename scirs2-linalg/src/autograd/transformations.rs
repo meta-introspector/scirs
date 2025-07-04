@@ -22,6 +22,7 @@ use scirs2_autograd::variable::Variable;
 /// # Returns
 ///
 /// The projection of x onto the column space of A with gradient tracking.
+#[allow(dead_code)]
 pub fn project<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
     x: &Tensor<F>,
@@ -240,6 +241,7 @@ pub fn project<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A 2x2 rotation matrix with gradient tracking.
+#[allow(dead_code)]
 pub fn rotation_matrix_2d<F: Float + Debug + Send + Sync + 'static>(
     angle: &Tensor<F>,
 ) -> AutogradResult<Tensor<F>> {
@@ -315,6 +317,7 @@ pub fn rotation_matrix_2d<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A diagonal scaling matrix with gradient tracking.
+#[allow(dead_code)]
 pub fn scaling_matrix<F: Float + Debug + Send + Sync + 'static>(
     scales: &Tensor<F>,
 ) -> AutogradResult<Tensor<F>> {
@@ -383,6 +386,7 @@ pub fn scaling_matrix<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A reflection matrix with gradient tracking.
+#[allow(dead_code)]
 pub fn reflection_matrix<F: Float + Debug + Send + Sync + 'static>(
     normal: &Tensor<F>,
 ) -> AutogradResult<Tensor<F>> {
@@ -464,6 +468,7 @@ pub fn reflection_matrix<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A shear matrix with gradient tracking.
+#[allow(dead_code)]
 pub fn shear_matrix<F: Float + Debug + Send + Sync + 'static>(
     shear_factor: &Tensor<F>,
     dim1: usize,

@@ -219,6 +219,7 @@ impl<F: Float + SampleUniform + Debug + 'static> CircularDistribution<F> for Wra
 /// # Returns
 ///
 /// A new wrapped Cauchy distribution
+#[allow(dead_code)]
 pub fn wrapped_cauchy<F: Float + SampleUniform + Debug + 'static>(
     mu: F,
     gamma: F,

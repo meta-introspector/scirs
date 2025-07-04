@@ -8,14 +8,14 @@ use crate::denoise::{denoise_wavelet, ThresholdMethod, ThresholdSelect};
 use crate::denoise_advanced::{advanced_denoise, AdvancedDenoiseConfig, NoiseEstimation};
 use crate::denoise_cutting_edge::{denoise_dictionary_learning, DictionaryDenoiseConfig};
 use crate::denoise_enhanced::{
-    denoise_median_1d, denoise_total_variation_1d, denoise_wiener_1d, BilateralConfig, WienerConfig,
+    denoise_median_1d, denoise_total_variation_1d, denoise_wiener_1d, WienerConfig,
 };
 use crate::denoise_ultra_advanced::{ultra_advanced_denoise, UltraAdvancedDenoisingConfig};
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
 use serde::{Deserialize, Serialize};
-use std::f64::consts::PI;
+// use std::f64::consts::PI;
 
 /// Unified denoising method selector
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -165,6 +165,7 @@ pub struct QualityMetrics {
 /// };
 /// let advanced_result = denoise_unified(&signal, &advanced_config, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn denoise_unified(
     signal: &Array1<f64>,
     config: &UnifiedDenoisingConfig,
@@ -321,6 +322,7 @@ pub fn denoise_unified(
 /// # Returns
 ///
 /// * Recommended denoising configuration
+#[allow(dead_code)]
 pub fn auto_select_denoising_method(
     signal: &Array1<f64>,
     noise_level: Option<f64>,
@@ -379,6 +381,7 @@ pub fn auto_select_denoising_method(
 }
 
 /// Preprocess signal before denoising
+#[allow(dead_code)]
 fn preprocess_signal(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Basic preprocessing: remove DC offset
     let mean = signal.mean().unwrap_or(0.0);
@@ -386,6 +389,7 @@ fn preprocess_signal(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
 }
 
 /// Postprocess signal after denoising
+#[allow(dead_code)]
 fn postprocess_signal(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Basic postprocessing: ensure no NaN or infinite values
     let cleaned = signal.mapv(|x| if x.is_finite() { x } else { 0.0 });
@@ -393,6 +397,7 @@ fn postprocess_signal(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
 }
 
 /// Estimate noise level from signal
+#[allow(dead_code)]
 fn estimate_noise_level(signal: &Array1<f64>) -> f64 {
     if signal.len() < 2 {
         return 0.0;
@@ -410,6 +415,7 @@ fn estimate_noise_level(signal: &Array1<f64>) -> f64 {
 }
 
 /// Analyze signal complexity
+#[allow(dead_code)]
 fn analyze_signal_complexity(signal: &Array1<f64>) -> f64 {
     if signal.len() < 4 {
         return 0.0;
@@ -431,6 +437,7 @@ fn analyze_signal_complexity(signal: &Array1<f64>) -> f64 {
 }
 
 /// Calculate quality metrics
+#[allow(dead_code)]
 fn calculate_quality_metrics(
     original: &Array1<f64>,
     denoised: &Array1<f64>,
@@ -492,6 +499,7 @@ fn calculate_quality_metrics(
 }
 
 /// Calculate high-frequency energy (simple approximation)
+#[allow(dead_code)]
 fn calculate_high_frequency_energy(signal: &Array1<f64>) -> f64 {
     if signal.len() < 2 {
         return 0.0;
@@ -505,6 +513,7 @@ fn calculate_high_frequency_energy(signal: &Array1<f64>) -> f64 {
 }
 
 /// Calculate SNR improvement
+#[allow(dead_code)]
 fn calculate_snr_improvement(original: &Array1<f64>, denoised: &Array1<f64>) -> Option<f64> {
     if original.len() != denoised.len() {
         return None;
@@ -552,6 +561,7 @@ pub struct AdaptiveHybridResult {
 /// # Returns
 ///
 /// * Best denoising result found
+#[allow(dead_code)]
 pub fn denoise_adaptive_hybrid(
     signal: &Array1<f64>,
     fallback_methods: &[DenoisingMethod],
@@ -634,6 +644,7 @@ pub fn denoise_adaptive_hybrid(
 }
 
 /// Calculate adaptive quality score for method selection
+#[allow(dead_code)]
 fn calculate_adaptive_quality_score(
     original: &Array1<f64>,
     denoised: &Array1<f64>,
@@ -668,6 +679,7 @@ fn calculate_adaptive_quality_score(
 }
 
 /// Detect artifacts in denoised signal
+#[allow(dead_code)]
 fn detect_artifacts(original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
     if original.len() != denoised.len() {
         return 1.0; // Maximum penalty for length mismatch
@@ -759,6 +771,7 @@ fn detect_artifacts(original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
 /// # Returns
 ///
 /// * Denoised signal
+#[allow(dead_code)]
 pub fn denoise_non_local_means(
     signal: &Array1<f64>,
     search_window: usize,
@@ -822,6 +835,7 @@ pub fn denoise_non_local_means(
 }
 
 /// Calculate distance between patches centered at positions i and j
+#[allow(dead_code)]
 fn calculate_patch_distance(signal: &Array1<f64>, i: usize, j: usize, patch_size: usize) -> f64 {
     let n = signal.len();
     let half_patch = patch_size / 2;

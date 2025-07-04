@@ -21,6 +21,7 @@ pub struct MemoryProfile {
 }
 
 /// Profile memory usage of an operation using peak memory estimation
+#[allow(dead_code)]
 fn profile_memory<F: FnOnce() -> R, R>(operation: &str, size: usize, f: F) -> MemoryProfile {
     // Use before/after memory estimation instead of custom allocator
     let start = Instant::now();
@@ -77,6 +78,7 @@ fn profile_memory<F: FnOnce() -> R, R>(operation: &str, size: usize, f: F) -> Me
 }
 
 /// Benchmark memory usage for 1D FFT operations
+#[allow(dead_code)]
 pub fn profile_fft_1d() -> Vec<MemoryProfile> {
     let mut results = Vec::new();
     let _plan_cache = PlanCache::new();
@@ -122,6 +124,7 @@ pub fn profile_fft_1d() -> Vec<MemoryProfile> {
 }
 
 /// Benchmark memory usage for 2D FFT operations
+#[allow(dead_code)]
 pub fn profile_fft_2d() -> Vec<MemoryProfile> {
     let mut results = Vec::new();
     let _plan_cache = PlanCache::new();
@@ -160,6 +163,7 @@ pub fn profile_fft_2d() -> Vec<MemoryProfile> {
 }
 
 /// Generate memory usage report
+#[allow(dead_code)]
 pub fn generate_memory_report(profiles: &[MemoryProfile]) {
     println!("=== Memory Usage Report ===");
     println!("Operation | Size | Est. Memory (MB) | Time (ms)");
@@ -213,6 +217,7 @@ mod tests {
     }
 }
 
+#[allow(dead_code)]
 fn main() {
     let profiles_1d = profile_fft_1d();
     let profiles_2d = profile_fft_2d();

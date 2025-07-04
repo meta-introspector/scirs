@@ -21,6 +21,7 @@
 use crate::error::{SpatialError, SpatialResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 // Simple linear system solver
+#[allow(dead_code)]
 fn solve_linear_system(a: Array2<f64>, b: Array1<f64>) -> SpatialResult<Array1<f64>> {
     // We should use a proper linear algebra library, but for now we'll use a simple approach
     // This is not numerically stable for ill-conditioned matrices

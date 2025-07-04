@@ -745,6 +745,7 @@ array_function_dispatch!(
 );
 
 // Element-wise application of a function implementation
+#[allow(dead_code)]
 pub fn apply_elementwise<F>(
     a: &dyn ArrayProtocol,
     f: F,
@@ -1034,6 +1035,7 @@ array_function_dispatch!(
 );
 
 // Scalar multiplication operation (implemented without macro due to generic constraints)
+#[allow(dead_code)]
 pub fn multiply_by_scalar_f64(
     a: &dyn ArrayProtocol,
     scalar: f64,
@@ -1084,6 +1086,7 @@ pub fn multiply_by_scalar_f64(
 }
 
 // Scalar multiplication for f32
+#[allow(dead_code)]
 pub fn multiply_by_scalar_f32(
     a: &dyn ArrayProtocol,
     scalar: f32,
@@ -1134,6 +1137,7 @@ pub fn multiply_by_scalar_f32(
 }
 
 // Scalar division for f64
+#[allow(dead_code)]
 pub fn divide_by_scalar_f64(
     a: &dyn ArrayProtocol,
     scalar: f64,

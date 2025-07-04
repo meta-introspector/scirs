@@ -386,6 +386,7 @@ impl<T: Float> Default for DistributedConfig<T> {
 }
 
 /// Example usage of distributed optimizer
+#[allow(dead_code)]
 pub fn distributed_training_example() -> Result<()> {
     // Simulation parameters
     let world_size = 4;
@@ -465,6 +466,7 @@ pub fn distributed_training_example() -> Result<()> {
 }
 
 /// Benchmark multi-GPU communication performance
+#[allow(dead_code)]
 pub fn benchmark_multi_gpu_communication() -> Result<()> {
     let world_size = 8;
     let local_rank = 0;

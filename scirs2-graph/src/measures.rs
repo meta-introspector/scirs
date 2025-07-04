@@ -56,6 +56,7 @@ pub enum CentralityType {
 ///
 /// # Space Complexity
 /// O(V) for storing centrality values plus algorithm-specific requirements
+#[allow(dead_code)]
 pub fn centrality<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     centrality_type: CentralityType,
@@ -101,6 +102,7 @@ where
 ///
 /// # Returns
 /// * `Result<HashMap<N, f64>>` - A map from nodes to their centrality values
+#[allow(dead_code)]
 pub fn centrality_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     centrality_type: CentralityType,
@@ -145,6 +147,7 @@ where
 ///
 /// # Space Complexity
 /// O(V) for storing the centrality values
+#[allow(dead_code)]
 fn degree_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
@@ -167,6 +170,7 @@ where
 }
 
 /// Calculates degree centrality for nodes in a directed graph
+#[allow(dead_code)]
 fn degree_centrality_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
@@ -198,6 +202,7 @@ where
 ///
 /// # Space Complexity
 /// O(V + E) for the algorithm's data structures
+#[allow(dead_code)]
 fn betweenness_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
@@ -255,6 +260,7 @@ where
 }
 
 /// Calculates betweenness centrality for nodes in a directed graph
+#[allow(dead_code)]
 fn betweenness_centrality_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
@@ -312,6 +318,7 @@ where
 }
 
 /// Calculates closeness centrality for nodes in an undirected graph
+#[allow(dead_code)]
 fn closeness_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
@@ -372,6 +379,7 @@ where
 }
 
 /// Calculates closeness centrality for nodes in a directed graph
+#[allow(dead_code)]
 fn closeness_centrality_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
@@ -434,6 +442,7 @@ where
 /// Calculates eigenvector centrality for nodes in an undirected graph
 ///
 /// Uses the power iteration method.
+#[allow(dead_code)]
 fn eigenvector_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
@@ -504,6 +513,7 @@ where
 /// Calculates eigenvector centrality for nodes in a directed graph
 ///
 /// Uses the power iteration method.
+#[allow(dead_code)]
 fn eigenvector_centrality_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
@@ -580,6 +590,7 @@ where
 ///
 /// # Returns
 /// * `Result<HashMap<N, f64>>` - A map from nodes to their clustering coefficients
+#[allow(dead_code)]
 pub fn clustering_coefficient<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
@@ -634,6 +645,7 @@ where
 ///
 /// # Returns
 /// * `Result<f64>` - The global clustering coefficient
+#[allow(dead_code)]
 pub fn graph_density<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<f64>
 where
     N: Node + std::fmt::Debug,
@@ -661,6 +673,7 @@ where
 ///
 /// # Returns
 /// * `Result<f64>` - The graph density
+#[allow(dead_code)]
 pub fn graph_density_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<f64>
 where
     N: Node + std::fmt::Debug,
@@ -693,6 +706,7 @@ where
 ///
 /// # Returns
 /// * `Result<HashMap<N, f64>>` - Katz centrality values
+#[allow(dead_code)]
 pub fn katz_centrality<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     alpha: f64,
@@ -772,6 +786,7 @@ where
 ///
 /// # Returns
 /// * `Result<HashMap<N, f64>>` - Katz centrality values
+#[allow(dead_code)]
 pub fn katz_centrality_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     alpha: f64,
@@ -844,6 +859,7 @@ where
 ///
 /// # Returns
 /// * `Result<HashMap<N, f64>>` - PageRank values
+#[allow(dead_code)]
 pub fn pagerank_centrality<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     damping: f64,
@@ -933,6 +949,7 @@ where
 /// - Best performance gain on graphs with >10,000 nodes
 /// - Requires multiple CPU cores for meaningful speedup
 /// - Memory access patterns optimized for cache efficiency
+#[allow(dead_code)]
 pub fn parallel_pagerank_centrality<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     damping: f64,
@@ -1057,6 +1074,7 @@ pub struct HitsScores<N: Node> {
 ///
 /// # Returns
 /// * HitsScores containing authority and hub scores for each node
+#[allow(dead_code)]
 pub fn hits_algorithm<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     max_iter: usize,
@@ -1182,6 +1200,7 @@ where
 ///
 /// # Returns
 /// * `Result<HashMap<N, f64>>` - PageRank values
+#[allow(dead_code)]
 pub fn pagerank_centrality_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     damping: f64,
@@ -1257,6 +1276,7 @@ where
 /// Calculates weighted degree centrality for undirected graphs
 ///
 /// Weighted degree centrality is the sum of the weights of all edges incident to a node.
+#[allow(dead_code)]
 fn weighted_degree_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
@@ -1283,6 +1303,7 @@ where
 }
 
 /// Calculates weighted degree centrality for directed graphs
+#[allow(dead_code)]
 fn weighted_degree_centrality_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
 ) -> Result<HashMap<N, f64>>
@@ -1324,6 +1345,7 @@ where
 /// Calculates weighted betweenness centrality for undirected graphs
 ///
 /// Uses Dijkstra's algorithm to find shortest weighted paths between all pairs of nodes.
+#[allow(dead_code)]
 fn weighted_betweenness_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
@@ -1369,6 +1391,7 @@ where
 }
 
 /// Calculates weighted betweenness centrality for directed graphs
+#[allow(dead_code)]
 fn weighted_betweenness_centrality_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
 ) -> Result<HashMap<N, f64>>
@@ -1418,6 +1441,7 @@ where
 /// Calculates weighted closeness centrality for undirected graphs
 ///
 /// Weighted closeness centrality uses the shortest weighted path distances.
+#[allow(dead_code)]
 fn weighted_closeness_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, f64>>
 where
     N: Node + std::fmt::Debug,
@@ -1469,6 +1493,7 @@ where
 }
 
 /// Calculates weighted closeness centrality for directed graphs
+#[allow(dead_code)]
 fn weighted_closeness_centrality_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
 ) -> Result<HashMap<N, f64>>

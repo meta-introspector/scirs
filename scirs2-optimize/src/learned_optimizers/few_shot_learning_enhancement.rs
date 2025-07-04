@@ -1365,6 +1365,7 @@ impl FewShotLearningOptimizer {
 }
 
 /// Convenience function for few-shot learning optimization
+#[allow(dead_code)]
 pub fn few_shot_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

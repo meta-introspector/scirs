@@ -847,7 +847,7 @@ impl APIConsistencyValidator {
         for (scipy_name, expected_sig) in &scipy_functions {
             // Check if we have this function
             let mut found = false;
-            for (module, functions) in &self.function_registry.functions_by_module {
+            for (_module, functions) in &self.function_registry.functions_by_module {
                 for function in functions {
                     if function.name == *scipy_name {
                         found = true;
@@ -1288,6 +1288,7 @@ impl ValidationReport {
 }
 
 /// Convenience function to validate API consistency
+#[allow(dead_code)]
 pub fn validate_api_consistency(
     config: Option<ValidationConfig>,
 ) -> StatsResult<ValidationResults> {

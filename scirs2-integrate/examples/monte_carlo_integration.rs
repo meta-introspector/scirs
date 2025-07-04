@@ -4,6 +4,7 @@ use rand_distr::{Distribution, Normal};
 use scirs2_integrate::monte_carlo::{importance_sampling, monte_carlo, MonteCarloOptions};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("Monte Carlo Integration Examples\n");
 

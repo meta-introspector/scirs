@@ -39,6 +39,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// let similarity = jaccard_similarity(&labels_true, &labels_pred).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn jaccard_similarity<S1, S2, D1, D2>(
     labels_true: &ArrayBase<S1, D1>,
     labels_pred: &ArrayBase<S2, D2>,
@@ -141,6 +142,7 @@ where
 ///
 /// let stability = cluster_stability(&x, &labels, None, None, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn cluster_stability<F, S1, S2, D>(
     x: &ArrayBase<S1, Ix2>,
     labels: &ArrayBase<S2, D>,
@@ -310,6 +312,7 @@ where
 /// let all_clusterings = vec![&clustering1, &clustering2, &clustering3];
 /// let score = consensus_score(&all_clusterings).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn consensus_score<S, D>(all_labels: &[&ArrayBase<S, D>]) -> Result<f64>
 where
     S: Data<Elem = usize>,
@@ -423,6 +426,7 @@ where
 ///
 /// let stability = fold_stability(&x, &labels, None, None, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn fold_stability<F, S1, S2, D>(
     x: &ArrayBase<S1, Ix2>,
     labels: &ArrayBase<S2, D>,

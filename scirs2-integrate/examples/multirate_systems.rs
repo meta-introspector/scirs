@@ -178,6 +178,7 @@ impl MultirateSystem<f64> for ClimateWeatherSystem {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Multirate Systems Examples\n");
 

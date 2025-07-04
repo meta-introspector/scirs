@@ -15,6 +15,7 @@ use serde_json;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     let matches = Command::new("Memory Leak Detector Demo")
         .version("1.0")
@@ -132,6 +133,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_basic_scenario(detector: &mut MemoryLeakDetector, duration: u64) -> Result<()> {
     println!("Running basic memory leak detection scenario...");
 
@@ -170,6 +172,7 @@ fn run_basic_scenario(detector: &mut MemoryLeakDetector, duration: u64) -> Resul
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_optimizer_stress_scenario(detector: &mut MemoryLeakDetector, duration: u64) -> Result<()> {
     println!("Running optimizer stress test scenario...");
 
@@ -251,6 +254,7 @@ fn run_optimizer_stress_scenario(detector: &mut MemoryLeakDetector, duration: u6
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_memory_growth_scenario(detector: &mut MemoryLeakDetector, duration: u64) -> Result<()> {
     println!("Running memory growth pattern scenario...");
 
@@ -291,6 +295,7 @@ fn run_memory_growth_scenario(detector: &mut MemoryLeakDetector, duration: u64) 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_pattern_analysis_scenario(detector: &mut MemoryLeakDetector, duration: u64) -> Result<()> {
     println!("Running memory pattern analysis scenario...");
 
@@ -352,6 +357,7 @@ fn run_pattern_analysis_scenario(detector: &mut MemoryLeakDetector, duration: u6
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_leak_summary(
     report: &scirs2_optim::benchmarking::memory_leak_detector::MemoryOptimizationReport,
 ) {
@@ -407,6 +413,7 @@ fn display_leak_summary(
     }
 }
 
+#[allow(dead_code)]
 fn display_recommendations(
     report: &scirs2_optim::benchmarking::memory_leak_detector::MemoryOptimizationReport,
 ) {

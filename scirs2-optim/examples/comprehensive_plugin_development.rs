@@ -635,6 +635,7 @@ impl scirs2_optim::plugin::RegistryEventListener for PluginEventLogger {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🔌 Comprehensive Plugin Development Example");
     println!("==========================================");

@@ -71,6 +71,7 @@ impl<F: Float + FromPrimitive> Default for ParallelKMeansOptions<F> {
 ///
 /// let (centroids, labels) = parallel_kmeans(data.view(), 5, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn parallel_kmeans<F>(
     data: ArrayView2<F>,
     k: usize,
@@ -130,6 +131,7 @@ where
 }
 
 /// Run a single parallel k-means clustering iteration
+#[allow(dead_code)]
 fn parallel_kmeans_single<F>(
     data: ArrayView2<F>,
     init_centroids: ArrayView2<F>,
@@ -194,6 +196,7 @@ where
 }
 
 /// Parallel assignment of samples to nearest centroids
+#[allow(dead_code)]
 fn parallel_assign_labels<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
@@ -239,6 +242,7 @@ where
 }
 
 /// Parallel update of centroids based on assigned labels
+#[allow(dead_code)]
 fn parallel_update_centroids<F>(
     data: ArrayView2<F>,
     labels: &Array1<usize>,
@@ -288,6 +292,7 @@ where
 }
 
 /// Count number of points in each cluster
+#[allow(dead_code)]
 fn count_clusters(labels: &Array1<usize>, k: usize) -> Vec<usize> {
     let mut counts = vec![0; k];
     for &label in labels.iter() {
@@ -297,6 +302,7 @@ fn count_clusters(labels: &Array1<usize>, k: usize) -> Vec<usize> {
 }
 
 /// Parallel computation of inertia (sum of squared distances to centroids)
+#[allow(dead_code)]
 fn parallel_compute_inertia<F>(
     data: ArrayView2<F>,
     labels: &Array1<usize>,

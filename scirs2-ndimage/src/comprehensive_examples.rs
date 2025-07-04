@@ -1038,6 +1038,7 @@ println!("   - Object labels with distinct intensities");
 }
 
 /// Utility function to run all examples and validate they work
+#[allow(dead_code)]
 pub fn validate_all_examples() -> Result<()> {
     println!("Validating all comprehensive examples...");
 

@@ -566,8 +566,7 @@ impl AutoFeatureEngineer {
             return Ok(Array1::zeros(0));
         }
 
-        let mut correlations = Vec::new();
-        correlations.reserve((n_features * (n_features - 1)) / 2);
+        let mut correlations = Vec::with_capacity((n_features * (n_features - 1)) / 2);
 
         for i in 0..n_features {
             for j in i + 1..n_features {
@@ -620,7 +619,7 @@ impl AutoFeatureEngineer {
         } else {
             let correlation = numerator / denominator;
             // Clamp to valid correlation range due to numerical precision
-            Ok(correlation.max(-1.0).min(1.0))
+            Ok(correlation.clamp(-1.0, 1.0))
         }
     }
 
@@ -684,8 +683,8 @@ impl AutoFeatureEngineer {
                 };
 
                 // Clamp to reasonable ranges to avoid extreme outliers
-                skewness_values.push(skew.max(-20.0).min(20.0));
-                kurtosis_values.push(kurt.max(-20.0).min(20.0));
+                skewness_values.push(skew.clamp(-20.0, 20.0));
+                kurtosis_values.push(kurt.clamp(-20.0, 20.0));
             }
         }
 

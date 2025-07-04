@@ -58,6 +58,7 @@ pub enum SerializationFormat {
 /// // JSON serialization (human-readable)
 /// serialize_array("data.json", &array_dyn, SerializationFormat::JSON).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn serialize_array<P, A, S>(
     path: P,
     array: &ArrayBase<S, IxDyn>,
@@ -131,6 +132,7 @@ where
 /// // JSON deserialization
 /// let array = deserialize_array::<_, f64>("data.json", SerializationFormat::JSON).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn deserialize_array<P, A>(path: P, format: SerializationFormat) -> Result<Array<A, IxDyn>>
 where
     P: AsRef<Path>,
@@ -212,6 +214,7 @@ pub struct SerializedArray<A> {
 ///     SerializationFormat::JSON
 /// ).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn serialize_array_with_metadata<P, A, S>(
     path: P,
     array: &ArrayBase<S, IxDyn>,
@@ -291,6 +294,7 @@ where
 /// println!("Deserialized array shape: {:?}", array.shape());
 /// println!("Metadata: {:?}", metadata);
 /// ```
+#[allow(dead_code)]
 pub fn deserialize_array_with_metadata<P, A>(
     path: P,
     format: SerializationFormat,
@@ -356,6 +360,7 @@ where
 /// // JSON serialization
 /// serialize_struct("person.json", &person, SerializationFormat::JSON).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn serialize_struct<P, T>(path: P, data: &T, format: SerializationFormat) -> Result<()>
 where
     P: AsRef<Path>,
@@ -413,6 +418,7 @@ where
 /// let person: Person = deserialize_struct("person.json", SerializationFormat::JSON).unwrap();
 /// println!("Name: {}, Age: {}, Height: {}", person.name, person.age, person.height);
 /// ```
+#[allow(dead_code)]
 pub fn deserialize_struct<P, T>(path: P, format: SerializationFormat) -> Result<T>
 where
     P: AsRef<Path>,
@@ -514,6 +520,7 @@ impl<A> SparseMatrixCOO<A> {
 /// // Serialize to file
 /// serialize_sparse_matrix("sparse.json", &sparse, SerializationFormat::JSON).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn serialize_sparse_matrix<P, A>(
     path: P,
     matrix: &SparseMatrixCOO<A>,
@@ -546,6 +553,7 @@ where
 /// let sparse = deserialize_sparse_matrix::<_, f64>("sparse.json", SerializationFormat::JSON).unwrap();
 /// println!("Sparse matrix: {}x{} with {} non-zero elements", sparse.rows, sparse.cols, sparse.nnz());
 /// ```
+#[allow(dead_code)]
 pub fn deserialize_sparse_matrix<P, A>(
     path: P,
     format: SerializationFormat,
@@ -945,6 +953,7 @@ impl<A: Clone> SparseMatrixCSC<A> {
 }
 
 /// Enhanced sparse matrix serialization with format conversion
+#[allow(dead_code)]
 pub fn serialize_enhanced_sparse_matrix<P, A>(
     path: P,
     matrix: &SparseMatrix<A>,
@@ -958,6 +967,7 @@ where
 }
 
 /// Enhanced sparse matrix deserialization
+#[allow(dead_code)]
 pub fn deserialize_enhanced_sparse_matrix<P, A>(
     path: P,
     format: SerializationFormat,
@@ -970,6 +980,7 @@ where
 }
 
 /// Convert Matrix Market format to enhanced sparse matrix
+#[allow(dead_code)]
 pub fn from_matrix_market<A>(mm_matrix: &crate::matrix_market::MMSparseMatrix<A>) -> SparseMatrix<A>
 where
     A: Clone,
@@ -1001,6 +1012,7 @@ where
 }
 
 /// Convert enhanced sparse matrix to Matrix Market format
+#[allow(dead_code)]
 pub fn to_matrix_market<A>(sparse: &SparseMatrix<A>) -> crate::matrix_market::MMSparseMatrix<A>
 where
     A: Clone,
@@ -1141,6 +1153,7 @@ pub mod sparse_ops {
 // Convenience functions for common serialization formats
 
 /// Convenience function to write an array to JSON format
+#[allow(dead_code)]
 pub fn write_array_json<P, A, S>(path: P, array: &ArrayBase<S, IxDyn>) -> Result<()>
 where
     P: AsRef<Path>,
@@ -1151,6 +1164,7 @@ where
 }
 
 /// Convenience function to read an array from JSON format
+#[allow(dead_code)]
 pub fn read_array_json<P, A>(path: P) -> Result<Array<A, IxDyn>>
 where
     P: AsRef<Path>,
@@ -1160,6 +1174,7 @@ where
 }
 
 /// Convenience function to write an array to binary format
+#[allow(dead_code)]
 pub fn write_array_binary<P, A, S>(path: P, array: &ArrayBase<S, IxDyn>) -> Result<()>
 where
     P: AsRef<Path>,
@@ -1170,6 +1185,7 @@ where
 }
 
 /// Convenience function to read an array from binary format
+#[allow(dead_code)]
 pub fn read_array_binary<P, A>(path: P) -> Result<Array<A, IxDyn>>
 where
     P: AsRef<Path>,
@@ -1179,6 +1195,7 @@ where
 }
 
 /// Convenience function to write an array to MessagePack format
+#[allow(dead_code)]
 pub fn write_array_messagepack<P, A, S>(path: P, array: &ArrayBase<S, IxDyn>) -> Result<()>
 where
     P: AsRef<Path>,
@@ -1189,6 +1206,7 @@ where
 }
 
 /// Convenience function to read an array from MessagePack format
+#[allow(dead_code)]
 pub fn read_array_messagepack<P, A>(path: P) -> Result<Array<A, IxDyn>>
 where
     P: AsRef<Path>,
@@ -1217,6 +1235,7 @@ where
 ///
 /// This function requires the array to be in standard (C-contiguous) layout.
 /// For non-contiguous arrays, use the regular `serialize_array` function.
+#[allow(dead_code)]
 pub fn serialize_array_zero_copy<P, A, S>(
     path: P,
     array: &ArrayBase<S, IxDyn>,
@@ -1289,6 +1308,7 @@ where
 /// # Safety
 ///
 /// The returned memory map must outlive any array views created from it.
+#[allow(dead_code)]
 pub fn deserialize_array_zero_copy<P>(path: P) -> Result<(ArrayMetadata, memmap2::Mmap)>
 where
     P: AsRef<Path>,

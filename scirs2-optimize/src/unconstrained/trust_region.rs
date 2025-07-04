@@ -7,6 +7,7 @@ use crate::unconstrained::Options;
 use ndarray::{Array1, Array2, ArrayView1};
 
 /// Implements the Trust-Region Newton Conjugate Gradient method for optimization
+#[allow(dead_code)]
 pub fn minimize_trust_ncg<F, S>(
     mut fun: F,
     x0: Array1<f64>,
@@ -139,6 +140,7 @@ where
 }
 
 /// Implements the Trust-Region truncated generalized Lanczos / conjugate gradient algorithm
+#[allow(dead_code)]
 pub fn minimize_trust_krylov<F, S>(
     mut fun: F,
     x0: Array1<f64>,
@@ -271,6 +273,7 @@ where
 }
 
 /// Implements the Trust-region nearly exact algorithm
+#[allow(dead_code)]
 pub fn minimize_trust_exact<F, S>(
     mut fun: F,
     x0: Array1<f64>,
@@ -403,6 +406,7 @@ where
 }
 
 /// Solve the trust-region subproblem using the conjugate gradient method
+#[allow(dead_code)]
 fn trust_region_subproblem(
     g: &Array1<f64>,
     hess: &Array2<f64>,
@@ -488,6 +492,7 @@ fn trust_region_subproblem(
 }
 
 /// Solve the trust region subproblem using the Lanczos method
+#[allow(dead_code)]
 fn trust_region_lanczos_subproblem(
     g: &Array1<f64>,
     hess: &Array2<f64>,
@@ -640,6 +645,7 @@ fn trust_region_lanczos_subproblem(
 }
 
 /// Solve the trust region subproblem using the exact method with eigendecomposition
+#[allow(dead_code)]
 fn trust_region_exact_subproblem(
     g: &Array1<f64>,
     hess: &Array2<f64>,
@@ -728,6 +734,7 @@ fn trust_region_exact_subproblem(
 }
 
 /// Find a step that lies on the trust region boundary
+#[allow(dead_code)]
 fn find_boundary_step(s: &Array1<f64>, p: &Array1<f64>, trust_radius: f64) -> (f64, Array1<f64>) {
     // Solve the quadratic equation ||s + alpha*p||^2 = trust_radius^2
     let s_norm_squared = s.dot(s);
@@ -752,6 +759,7 @@ fn find_boundary_step(s: &Array1<f64>, p: &Array1<f64>, trust_radius: f64) -> (f
 }
 
 /// Calculate the predicted reduction in the quadratic model
+#[allow(dead_code)]
 fn calculate_predicted_reduction(g: &Array1<f64>, hess: &Array2<f64>, step: &Array1<f64>) -> f64 {
     // The model is 0.5 * s'*B*s + g'*s
     let g_dot_s = g.dot(step);
@@ -761,6 +769,7 @@ fn calculate_predicted_reduction(g: &Array1<f64>, hess: &Array2<f64>, step: &Arr
 }
 
 /// Solve a tridiagonal system (T + lambda*I)x = b
+#[allow(dead_code)]
 fn solve_tridiagonal_system(t: &Array2<f64>, b: &Array1<f64>, lambda: f64) -> Array1<f64> {
     let n = t.shape()[0];
     let mut d = Array1::zeros(n); // Diagonal elements
@@ -798,6 +807,7 @@ fn solve_tridiagonal_system(t: &Array2<f64>, b: &Array1<f64>, lambda: f64) -> Ar
 }
 
 /// Compute eigendecomposition of a matrix (simplified version)
+#[allow(dead_code)]
 fn compute_eig_decomposition(mat: &Array2<f64>) -> (Array1<f64>, Array2<f64>) {
     let n = mat.nrows();
 
@@ -856,6 +866,7 @@ fn compute_eig_decomposition(mat: &Array2<f64>) -> (Array1<f64>, Array2<f64>) {
 }
 
 /// Find the optimal lambda using the bisection method
+#[allow(dead_code)]
 fn find_lambda_bisection<F>(a: f64, b: f64, f: F) -> f64
 where
     F: Fn(f64) -> f64,

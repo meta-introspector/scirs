@@ -13,6 +13,7 @@ use scirs2_neural::{
     },
     performance::{PerformanceOptimizer, ThreadPoolManager},
 };
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== SciRS2 Neural Network New Features Showcase ===\n");
     // 1. Demonstrate Adaptive Pooling Layers
@@ -24,6 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== All demonstrations completed successfully! ===");
     Ok(())
 }
+#[allow(dead_code)]
 fn demonstrate_adaptive_pooling() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 Adaptive Pooling Layers Demonstration");
     println!("========================================\n");
@@ -53,6 +55,7 @@ fn demonstrate_adaptive_pooling() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Input shape: [1, 2, 16, 20]");
     println!("   Output shape: {:?}", non_square_output.shape());
     println!("✅ Adaptive pooling demonstration completed!\n");
+#[allow(dead_code)]
 fn demonstrate_activity_regularization() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Activity Regularization Demonstration");
     println!("=======================================\n");
@@ -96,6 +99,7 @@ fn demonstrate_activity_regularization() -> Result<(), Box<dyn std::error::Error
         grad_input[[0, 2]],
         grad_input[[0, 3]]
     println!("✅ Activity regularization demonstration completed!\n");
+#[allow(dead_code)]
 fn demonstrate_performance_optimizations() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ Performance Optimizations Demonstration");
     // 1. Thread Pool Manager

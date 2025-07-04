@@ -3,6 +3,7 @@ use ndarray::Array2;
 use scirs2_autograd as ag;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Flexible Gradient Checkpointing Example");
     println!("======================================");

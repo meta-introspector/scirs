@@ -166,22 +166,22 @@ where
     }
 
     /// Add descriptive statistics operation
-    pub fn descriptive(mut self) -> FluentDescriptive<F> {
+    pub fn descriptive(self) -> FluentDescriptive<F> {
         FluentDescriptive::new(self)
     }
 
     /// Add correlation analysis operation
-    pub fn correlation(mut self) -> FluentCorrelation<F> {
+    pub fn correlation(self) -> FluentCorrelation<F> {
         FluentCorrelation::new(self)
     }
 
     /// Add hypothesis testing operation
-    pub fn test(mut self) -> FluentTesting<F> {
+    pub fn test(self) -> FluentTesting<F> {
         FluentTesting::new(self)
     }
 
     /// Add regression analysis operation
-    pub fn regression(mut self) -> FluentRegression<F> {
+    pub fn regression(self) -> FluentRegression<F> {
         FluentRegression::new(self)
     }
 
@@ -269,7 +269,7 @@ where
             OperationType::Variance => self.execute_variance_operation(operation),
             OperationType::Correlation => self.execute_correlation_operation(operation),
             OperationType::TTest => self.execute_ttest_operation(operation),
-            // Add more operation types as needed
+            OperationType::Regression => self.execute_regression_operation(operation),
         }?;
 
         // Cache result if enabled
@@ -368,6 +368,28 @@ where
                 extra: HashMap::new(),
             },
             operation_type: OperationType::TTest,
+        })
+    }
+
+    /// Execute regression operation (placeholder)
+    fn execute_regression_operation(
+        &self,
+        _operation: &StatisticalOperation,
+    ) -> StatsResult<OperationResult<F>> {
+        // Placeholder implementation
+        Ok(OperationResult {
+            value: Box::new(F::zero()),
+            metadata: ResultMetadata {
+                sample_size: 0,
+                degrees_of_freedom: Some(0),
+                confidence_level: Some(0.95),
+                method: "linear_regression".to_string(),
+                computation_time_ms: 0.0,
+                memory_usage_bytes: None,
+                optimized: true,
+                extra: HashMap::new(),
+            },
+            operation_type: OperationType::Regression,
         })
     }
 }
@@ -540,7 +562,7 @@ where
 
     /// One-sample t-test
     pub fn t_test_one_sample(mut self, mu: F) -> Self {
-        self.test_type = TestType::TTestOneSample(mu);
+        self.test_type = TestType::TTestOneSample(mu.to_f64().unwrap_or(0.0));
         self
     }
 
@@ -603,7 +625,7 @@ where
 
     /// Ridge regression
     pub fn ridge(mut self, alpha: F) -> Self {
-        self.regression_type = RegressionType::Ridge(alpha);
+        self.regression_type = RegressionType::Ridge(alpha.to_f64().unwrap_or(0.0));
         self
     }
 
@@ -867,6 +889,7 @@ struct ExecutionMetrics {
 }
 
 /// Convenience functions for creating fluent API instances
+#[allow(dead_code)]
 pub fn stats<F>() -> FluentStats<F>
 where
     F: Float + NumCast + Send + Sync + 'static,
@@ -874,6 +897,7 @@ where
     FluentStats::new()
 }
 
+#[allow(dead_code)]
 pub fn stats_with<F>(config: FluentStatsConfig) -> FluentStats<F>
 where
     F: Float + NumCast + Send + Sync + 'static,
@@ -882,6 +906,7 @@ where
 }
 
 /// Quick descriptive statistics with fluent API
+#[allow(dead_code)]
 pub fn quick_descriptive<F>() -> FluentDescriptive<F>
 where
     F: Float + NumCast + Send + Sync + 'static,
@@ -890,6 +915,7 @@ where
 }
 
 /// Quick correlation analysis with fluent API
+#[allow(dead_code)]
 pub fn quick_correlation<F>() -> FluentCorrelation<F>
 where
     F: Float + NumCast + Send + Sync + 'static,

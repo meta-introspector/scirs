@@ -22,6 +22,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 /// Benchmark community detection algorithms
+#[allow(dead_code)]
 fn bench_community_detection(c: &mut Criterion) {
     let mut group = c.benchmark_group("community_detection");
     group.sample_size(10);
@@ -82,6 +83,7 @@ fn bench_community_detection(c: &mut Criterion) {
 }
 
 /// Benchmark motif finding algorithms  
+#[allow(dead_code)]
 fn bench_motif_finding(c: &mut Criterion) {
     let mut group = c.benchmark_group("motif_finding");
     group.sample_size(10);
@@ -137,6 +139,7 @@ fn bench_motif_finding(c: &mut Criterion) {
 }
 
 /// Benchmark embedding algorithms
+#[allow(dead_code)]
 fn bench_embeddings(c: &mut Criterion) {
     let mut group = c.benchmark_group("embeddings");
     group.sample_size(10);
@@ -202,6 +205,7 @@ fn bench_embeddings(c: &mut Criterion) {
 }
 
 /// Benchmark flow algorithms
+#[allow(dead_code)]
 fn bench_flow_algorithms(c: &mut Criterion) {
     let mut group = c.benchmark_group("flow_algorithms");
     group.sample_size(10);
@@ -269,6 +273,7 @@ fn bench_flow_algorithms(c: &mut Criterion) {
 }
 
 /// Benchmark matching algorithms
+#[allow(dead_code)]
 fn bench_matching_algorithms(c: &mut Criterion) {
     let mut group = c.benchmark_group("matching_algorithms");
     group.sample_size(10);
@@ -328,6 +333,7 @@ fn bench_matching_algorithms(c: &mut Criterion) {
 }
 
 /// Benchmark similarity measures
+#[allow(dead_code)]
 fn bench_similarity_measures(c: &mut Criterion) {
     let mut group = c.benchmark_group("similarity_measures");
     group.sample_size(10);
@@ -414,6 +420,7 @@ fn bench_similarity_measures(c: &mut Criterion) {
 }
 
 /// Benchmark random walk algorithms
+#[allow(dead_code)]
 fn bench_random_walks(c: &mut Criterion) {
     let mut group = c.benchmark_group("random_walks");
 

@@ -12,6 +12,7 @@ use scirs2_optim::schedulers::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Cosine Annealing with Warm Restarts Example");
     println!("===========================================\n");
@@ -105,6 +106,7 @@ fn main() {
 }
 
 /// Train linear regression with a given learning rate scheduler
+#[allow(dead_code)]
 fn train_linear_regression<S: LearningRateScheduler<f64>>(
     x_train: &Array2<f64>,
     y_train: &Array1<f64>,
@@ -169,6 +171,7 @@ fn train_linear_regression<S: LearningRateScheduler<f64>>(
 }
 
 /// Generate synthetic regression data
+#[allow(dead_code)]
 fn generate_data(
     n_samples: usize,
     n_features: usize,

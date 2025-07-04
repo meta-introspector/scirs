@@ -149,6 +149,7 @@ where
 
 /// Standalone test for box_clone implementation in ArrayProtocol
 #[test]
+#[allow(dead_code)]
 fn test_array_protocol_box_clone() {
     // Test NdarrayWrapper
     let array = Array2::<f64>::ones((3, 3));
@@ -178,6 +179,7 @@ fn test_array_protocol_box_clone() {
 
 /// Test box_clone for NdarrayWrapper
 #[test]
+#[allow(dead_code)]
 fn test_ndarray_wrapper_box_clone() {
     // Create a simple ndarray
     let array = Array2::<f64>::ones((3, 3));
@@ -201,6 +203,7 @@ fn test_ndarray_wrapper_box_clone() {
 
 /// Test box_clone for MockDistributedArray
 #[test]
+#[allow(dead_code)]
 fn test_mock_distributed_array_box_clone() {
     // Create a mock distributed array
     let array = MockDistributedArray::new(vec![1.0, 2.0, 3.0], vec![3]);
@@ -221,6 +224,7 @@ fn test_mock_distributed_array_box_clone() {
 
 /// Test box_clone for MockGPUArray
 #[test]
+#[allow(dead_code)]
 fn test_mock_gpu_array_box_clone() {
     // Create a mock GPU array
     let array = MockGPUArray::new(vec![1.0, 2.0, 3.0], vec![3], "cuda:0".to_string());
@@ -241,6 +245,7 @@ fn test_mock_gpu_array_box_clone() {
 
 /// Test box_clone for JIT-enabled arrays
 #[test]
+#[allow(dead_code)]
 fn test_jit_array_box_clone() {
     // Create a regular array
     let array = Array2::<f64>::ones((10, 5));
@@ -267,6 +272,7 @@ fn test_jit_array_box_clone() {
 
 /// Test chained cloning of different array types
 #[test]
+#[allow(dead_code)]
 fn test_chained_box_clone() {
     // Create a variety of array types
     let ndarray = NdarrayWrapper::new(Array2::<f64>::ones((3, 3)));

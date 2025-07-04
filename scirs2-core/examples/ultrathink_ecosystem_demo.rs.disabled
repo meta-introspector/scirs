@@ -12,12 +12,13 @@
 //! - AI-driven workflow optimization
 //! - Quantum-enhanced computation pipelines
 
-use scirs2_core::ecosystem_bridge::{
-    EcosystemContext, InterModuleMessage, MessageType, ModulePerformanceMetrics,
-    ModuleResourceUsage, Priority, ProcessingContext, ProcessingMetrics, QualityRequirements,
-    TimingConstraints, UltrathinkEcosystemCoordinator, UltrathinkInput, UltrathinkModule,
-    UltrathinkOutput,
-};
+// TODO: Ecosystem bridge module is not yet implemented
+// use scirs2_core::ecosystem_bridge::{
+//     EcosystemContext, InterModuleMessage, MessageType, ModulePerformanceMetrics,
+//     ModuleResourceUsage, Priority, ProcessingContext, ProcessingMetrics, QualityRequirements,
+//     TimingConstraints, UltrathinkEcosystemCoordinator, UltrathinkInput, UltrathinkModule,
+//     UltrathinkOutput,
+// };
 use scirs2_core::error::{CoreError, CoreResult, ErrorContext};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -773,6 +774,7 @@ impl UltrathinkWorkflowDemo {
 }
 
 /// Generate test data for demonstrations
+#[allow(dead_code)]
 fn generate_test_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -784,18 +786,16 @@ fn generate_test_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
-    println!("🌟 Welcome to SciRS2 Ultrathink Ecosystem Integration!");
-    println!("======================================================");
-    println!("This demo showcases the full power of coordinated");
-    println!("scientific computing across the entire SciRS2 ecosystem.\n");
+    println!("🌟 SciRS2 Ultrathink Ecosystem Integration Demo");
+    println!("===============================================");
+    println!("⚠️  Note: This demo is currently disabled as the ecosystem_bridge");
+    println!("   module is not yet implemented. Please check back in a future release!");
 
-    let mut demo = UltrathinkWorkflowDemo::new();
-    demo.run_demo()?;
-
-    println!("\n🚀 The future of scientific computing is here!");
-    println!("The advanced ecosystem enables unprecedented");
-    println!("performance, intelligence, and adaptability.");
+    // TODO: Uncomment when ecosystem_bridge module is implemented
+    // let mut demo = UltrathinkWorkflowDemo::new();
+    // demo.run_demo()?;
 
     Ok(())
 }

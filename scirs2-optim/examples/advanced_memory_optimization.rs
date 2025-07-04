@@ -180,6 +180,7 @@ impl AdvancedTrainer {
     }
 }
 
+#[allow(dead_code)]
 fn train_with_memory_optimization(
     trainer: &mut AdvancedTrainer,
     data: &Array2<f64>,
@@ -238,6 +239,7 @@ fn train_with_memory_optimization(
     Ok(losses)
 }
 
+#[allow(dead_code)]
 fn benchmark_memory_efficiency() -> Result<(), Box<dyn Error>> {
     println!("\nMemory Efficiency Benchmark");
     println!("===========================");
@@ -293,6 +295,7 @@ fn benchmark_memory_efficiency() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     // Create synthetic dataset
     let n_samples = 5000;

@@ -422,6 +422,7 @@ impl MemoryBenchmark {
 }
 
 /// Benchmark memory usage for distance calculations
+#[allow(dead_code)]
 fn bench_memory_distance_calculations(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_distance_calculations");
 
@@ -450,6 +451,7 @@ fn bench_memory_distance_calculations(c: &mut Criterion) {
 }
 
 /// Benchmark memory usage for different data structures
+#[allow(dead_code)]
 fn bench_memory_data_structures(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_data_structures");
 

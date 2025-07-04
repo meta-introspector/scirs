@@ -7,6 +7,7 @@ use ndarray::Array2;
 use std::collections::HashMap;
 
 /// Extract Haralick texture features from an image
+#[allow(dead_code)]
 pub fn extract_haralick_features(
     image: &Array2<f64>,
     options: &ImageFeatureOptions,

@@ -56,6 +56,7 @@ type PreprocessingResult<F> = (Array2<F>, F, Array1<F>, Array1<F>);
 /// assert!(result.coefficients.len() > 0);
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn ridge_regression<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
@@ -247,6 +248,7 @@ where
 }
 
 /// Helper function to solve the ridge regression system
+#[allow(dead_code)]
 fn solve_ridge_system<F>(
     x_ridge: &ArrayView2<F>,
     y_ridge: &ArrayView1<F>,
@@ -272,6 +274,7 @@ where
 }
 
 /// Preprocess data for regularized regression
+#[allow(dead_code)]
 fn preprocess_data<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
@@ -347,6 +350,7 @@ where
 }
 
 /// Transform coefficients back after fitting with normalized/centered data
+#[allow(dead_code)]
 fn transform_coefficients<F>(
     coefficients: &Array1<F>,
     y_mean: F,
@@ -390,6 +394,7 @@ where
 }
 
 /// Calculate standard errors for ridge regression
+#[allow(dead_code)]
 fn calculate_ridge_std_errors<F>(
     x: &ArrayView2<F>,
     residuals: &ArrayView1<F>,
@@ -493,6 +498,7 @@ where
 /// // Typically, lasso would drive coefficients of irrelevant features toward zero
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn lasso_regression<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
@@ -727,6 +733,7 @@ where
 }
 
 /// Calculate standard errors for lasso regression
+#[allow(dead_code)]
 fn calculate_lasso_std_errors<F>(
     x: &ArrayView2<F>,
     residuals: &ArrayView1<F>,
@@ -847,6 +854,7 @@ where
 /// assert!(result.coefficients.len() > 0);
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn elastic_net<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
@@ -1123,6 +1131,7 @@ where
 }
 
 /// Calculate standard errors for elastic net regression
+#[allow(dead_code)]
 fn calculate_elastic_net_std_errors<F>(
     x: &ArrayView2<F>,
     residuals: &ArrayView1<F>,
@@ -1254,6 +1263,7 @@ where
 /// // Group lasso should ideally set all coefficients in group 1 to zero or near-zero
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn group_lasso<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
@@ -1578,6 +1588,7 @@ where
 }
 
 /// Solve group lasso subproblem for a single group
+#[allow(dead_code)]
 fn solve_group<F>(
     xtr: Array1<F>,
     xtx: Array2<F>,
@@ -1648,6 +1659,7 @@ where
 }
 
 /// Calculate standard errors for group lasso regression
+#[allow(dead_code)]
 fn calculate_group_lasso_std_errors<F>(
     x: &ArrayView2<F>,
     residuals: &ArrayView1<F>,

@@ -59,6 +59,7 @@ pub enum ArmaMethod {
 /// # Returns
 ///
 /// * ARMA model with estimated parameters
+#[allow(dead_code)]
 pub fn estimate_arma(
     signal: &Array1<f64>,
     p: usize,
@@ -94,6 +95,7 @@ pub fn estimate_arma(
 /// Hannan-Rissanen two-stage method for ARMA estimation
 ///
 /// This is a computationally efficient method that provides good initial estimates
+#[allow(dead_code)]
 fn hannan_rissanen(signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
     let n = signal.len();
 
@@ -170,6 +172,7 @@ fn hannan_rissanen(signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<Arm
 /// Innovation algorithm for ARMA estimation
 ///
 /// Uses recursive prediction error minimization
+#[allow(dead_code)]
 fn innovation_algorithm(signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
     let n = signal.len();
 
@@ -282,6 +285,7 @@ fn innovation_algorithm(signal: &Array1<f64>, p: usize, q: usize) -> SignalResul
 }
 
 /// Conditional sum of squares estimation
+#[allow(dead_code)]
 fn conditional_sum_of_squares(signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
     let n = signal.len();
 
@@ -350,6 +354,7 @@ fn conditional_sum_of_squares(signal: &Array1<f64>, p: usize, q: usize) -> Signa
 }
 
 /// Maximum likelihood estimation for ARMA models
+#[allow(dead_code)]
 fn maximum_likelihood(signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
     // Start with CSS estimates
     let initial = conditional_sum_of_squares(signal, p, q)?;
@@ -369,6 +374,7 @@ fn maximum_likelihood(signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<
 }
 
 /// Compute ARMA model residuals (innovations)
+#[allow(dead_code)]
 fn compute_arma_residuals(
     signal: &Array1<f64>,
     ar_coeffs: &Array1<f64>,
@@ -400,6 +406,7 @@ fn compute_arma_residuals(
 }
 
 /// Compute innovations for given ARMA parameters
+#[allow(dead_code)]
 fn compute_innovations(
     signal: &Array1<f64>,
     ar_coeffs: &Array1<f64>,
@@ -409,6 +416,7 @@ fn compute_innovations(
 }
 
 /// Yule-Walker method for AR estimation (helper function)
+#[allow(dead_code)]
 fn yule_walker_ar(
     signal: &Array1<f64>,
     order: usize,
@@ -459,6 +467,7 @@ fn yule_walker_ar(
 }
 
 /// Solve linear system (helper function)
+#[allow(dead_code)]
 fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Simple Gaussian elimination for small systems
     let n = a.nrows();
@@ -530,6 +539,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<
 /// # Returns
 ///
 /// * Power spectral density values
+#[allow(dead_code)]
 pub fn arma_spectrum(
     model: &ArmaModel,
     frequencies: &Array1<f64>,
@@ -575,6 +585,7 @@ pub fn arma_spectrum(
 /// * `forecasts` - Point forecasts
 /// * `lower_bounds` - Lower confidence bounds
 /// * `upper_bounds` - Upper confidence bounds
+#[allow(dead_code)]
 pub fn arma_forecast(
     model: &ArmaModel,
     signal: &Array1<f64>,
@@ -650,6 +661,7 @@ pub fn arma_forecast(
 }
 
 /// Approximate inverse normal CDF (for confidence intervals)
+#[allow(dead_code)]
 fn inverse_normal_cdf(p: f64) -> f64 {
     // Approximation for standard normal quantile
     if p <= 0.0 || p >= 1.0 {
@@ -692,6 +704,7 @@ fn inverse_normal_cdf(p: f64) -> f64 {
 /// This method provides good estimates for AR models with improved numerical stability
 /// compared to the autocorrelation method. It minimizes forward and backward prediction
 /// errors simultaneously.
+#[allow(dead_code)]
 fn burg_method(signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
     let n = signal.len();
 
@@ -792,6 +805,7 @@ fn burg_method(signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
 ///
 /// This method minimizes the forward and backward prediction errors over a modified
 /// covariance matrix, providing improved estimates for short data sequences.
+#[allow(dead_code)]
 fn modified_covariance_method(signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
     let n = signal.len();
 
@@ -855,6 +869,7 @@ fn modified_covariance_method(signal: &Array1<f64>, p: usize) -> SignalResult<Ar
 ///
 /// Combines forward and backward linear prediction for improved AR parameter estimation,
 /// particularly effective for signals with non-stationary characteristics.
+#[allow(dead_code)]
 fn forward_backward_method(signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
     let n = signal.len();
 
@@ -901,6 +916,7 @@ fn forward_backward_method(signal: &Array1<f64>, p: usize) -> SignalResult<ArmaM
 ///
 /// Uses Kalman filtering approach for robust estimation of ARMA parameters,
 /// particularly suitable for non-stationary or noisy data.
+#[allow(dead_code)]
 fn kalman_filter_estimation(signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<ArmaModel> {
     let n = signal.len();
 
@@ -1018,6 +1034,7 @@ fn kalman_filter_estimation(signal: &Array1<f64>, p: usize, q: usize) -> SignalR
 }
 
 /// Solve forward prediction problem for AR estimation
+#[allow(dead_code)]
 fn solve_forward_prediction(signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
     let n = signal.len();
     let mut data_matrix = Array2::zeros((n - p, p));
@@ -1053,6 +1070,7 @@ fn solve_forward_prediction(signal: &Array1<f64>, p: usize) -> SignalResult<Arma
 }
 
 /// Solve backward prediction problem for AR estimation
+#[allow(dead_code)]
 fn solve_backward_prediction(signal: &Array1<f64>, p: usize) -> SignalResult<ArmaModel> {
     let n = signal.len();
     let mut data_matrix = Array2::zeros((n - p, p));
@@ -1088,6 +1106,7 @@ fn solve_backward_prediction(signal: &Array1<f64>, p: usize) -> SignalResult<Arm
 }
 
 /// Compute residual at a specific time index
+#[allow(dead_code)]
 fn compute_residual_at_time(
     signal: &Array1<f64>,
     ar_coeffs: &Array1<f64>,

@@ -7,6 +7,7 @@ use ndarray::array;
 use scirs2_autograd as ag;
 
 #[test]
+#[allow(dead_code)]
 fn test_matrix_rank() {
     ag::run(|g| {
         // Full rank matrix
@@ -30,6 +31,7 @@ fn test_matrix_rank() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_condition_numbers() {
     ag::run(|g| {
         // Well-conditioned matrix
@@ -55,6 +57,7 @@ fn test_condition_numbers() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_matrix_power() {
     ag::run(|g| {
         let a = convert_to_tensor(array![[2.0_f64, 1.0], [0.0, 3.0]], g);
@@ -85,6 +88,7 @@ fn test_matrix_power() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_kronecker_product() {
     ag::run(|g| {
         let a = convert_to_tensor(array![[1.0_f64, 2.0], [3.0, 4.0]], g);
@@ -118,6 +122,7 @@ fn test_kronecker_product() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_kronecker_gradient() {
     ag::run(|g| {
         let a = variable(array![[2.0_f64]], g);
@@ -161,6 +166,7 @@ fn test_kronecker_gradient() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_lu_decomposition() {
     ag::run(|g| {
         let a = convert_to_tensor(array![[2.0_f64, 1.0], [4.0, 3.0]], g);
@@ -200,6 +206,7 @@ fn test_lu_decomposition() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_logdet() {
     ag::run(|g| {
         // Diagonal matrix with known determinant
@@ -224,6 +231,7 @@ fn test_logdet() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_slogdet() {
     ag::run(|g| {
         // Positive determinant
@@ -251,6 +259,7 @@ fn test_slogdet() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_aliases_usage() {
     ag::run(|g| {
         let a = convert_to_tensor(array![[4.0_f64, 2.0], [1.0, 3.0]], g);
@@ -283,6 +292,7 @@ fn test_aliases_usage() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_combined_operations() {
     ag::run(|g| {
         let a = variable(array![[2.0_f64, 1.0], [1.0, 3.0]], g);

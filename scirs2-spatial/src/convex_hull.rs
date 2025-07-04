@@ -67,6 +67,7 @@ pub enum ConvexHullAlgorithm {
 /// // The hull vertices should be the corners, not the interior point
 /// assert!(hull_vertices.nrows() >= 3);
 /// ```
+#[allow(dead_code)]
 pub fn convex_hull(points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
     let hull = ConvexHull::new(points)?;
     Ok(hull.vertices_array())
@@ -94,6 +95,7 @@ pub fn convex_hull(points: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
 /// let hull_vertices = convex_hull_with_algorithm(&points.view(), ConvexHullAlgorithm::GrahamScan).unwrap();
 /// assert!(hull_vertices.nrows() >= 3);
 /// ```
+#[allow(dead_code)]
 pub fn convex_hull_with_algorithm(
     points: &ArrayView2<'_, f64>,
     algorithm: ConvexHullAlgorithm,

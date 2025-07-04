@@ -71,15 +71,21 @@ pub struct NodeClassificationMetrics {
     pub calibration_metrics: CalibrationMetrics,
 }
 
-impl NodeClassificationMetrics {
-    pub fn new() -> Self {
+impl Default for NodeClassificationMetrics {
+    fn default() -> Self {
         Self {
             structure_aware_accuracy: 0.0,
             macro_f1: 0.0,
             micro_f1: 0.0,
             per_class_metrics: HashMap::new(),
-            calibration_metrics: CalibrationMetrics::new(),
+            calibration_metrics: CalibrationMetrics::default(),
         }
+    }
+}
+
+impl NodeClassificationMetrics {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -96,8 +102,8 @@ pub struct ClassMetrics {
     pub support: usize,
 }
 
-impl ClassMetrics {
-    pub fn new() -> Self {
+impl Default for ClassMetrics {
+    fn default() -> Self {
         Self {
             precision: 0.0,
             recall: 0.0,
@@ -107,8 +113,14 @@ impl ClassMetrics {
     }
 }
 
+impl ClassMetrics {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
 /// Calibration metrics for node predictions
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CalibrationMetrics {
     /// Expected Calibration Error (ECE)
     pub ece: f64,
@@ -146,8 +158,8 @@ pub struct NodeEmbeddingMetrics {
     pub neighborhood_preservation: f64,
 }
 
-impl NodeEmbeddingMetrics {
-    pub fn new() -> Self {
+impl Default for NodeEmbeddingMetrics {
+    fn default() -> Self {
         Self {
             silhouette_score: 0.0,
             intra_cluster_cohesion: 0.0,
@@ -155,6 +167,12 @@ impl NodeEmbeddingMetrics {
             structure_alignment: 0.0,
             neighborhood_preservation: 0.0,
         }
+    }
+}
+
+impl NodeEmbeddingMetrics {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -173,8 +191,8 @@ pub struct HomophilyAwareMetrics {
     pub local_homophily: HashMap<usize, f64>, // node_id -> local homophily
 }
 
-impl HomophilyAwareMetrics {
-    pub fn new() -> Self {
+impl Default for HomophilyAwareMetrics {
+    fn default() -> Self {
         Self {
             homophily_ratio: 0.0,
             homophilic_performance: 0.0,
@@ -182,6 +200,12 @@ impl HomophilyAwareMetrics {
             performance_gap: 0.0,
             local_homophily: HashMap::new(),
         }
+    }
+}
+
+impl HomophilyAwareMetrics {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -198,14 +222,20 @@ pub struct NodeFairnessMetrics {
     pub group_fairness: HashMap<String, GroupFairnessMetrics>,
 }
 
-impl NodeFairnessMetrics {
-    pub fn new() -> Self {
+impl Default for NodeFairnessMetrics {
+    fn default() -> Self {
         Self {
             demographic_parity: 0.0,
             equalized_odds: 0.0,
             individual_fairness: 0.0,
             group_fairness: HashMap::new(),
         }
+    }
+}
+
+impl NodeFairnessMetrics {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -222,14 +252,20 @@ pub struct GroupFairnessMetrics {
     pub selection_rate: f64,
 }
 
-impl GroupFairnessMetrics {
-    pub fn new() -> Self {
+impl Default for GroupFairnessMetrics {
+    fn default() -> Self {
         Self {
             tpr: 0.0,
             fpr: 0.0,
             precision: 0.0,
             selection_rate: 0.0,
         }
+    }
+}
+
+impl GroupFairnessMetrics {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -265,8 +301,8 @@ pub struct LinkPredictionMetrics {
     pub recall_at_k: HashMap<usize, f64>,
 }
 
-impl LinkPredictionMetrics {
-    pub fn new() -> Self {
+impl Default for LinkPredictionMetrics {
+    fn default() -> Self {
         Self {
             auc_roc: 0.0,
             auc_pr: 0.0,
@@ -276,6 +312,12 @@ impl LinkPredictionMetrics {
             precision_at_k: HashMap::new(),
             recall_at_k: HashMap::new(),
         }
+    }
+}
+
+impl LinkPredictionMetrics {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -292,14 +334,20 @@ pub struct EdgeClassificationMetrics {
     pub per_type_metrics: HashMap<String, ClassMetrics>,
 }
 
-impl EdgeClassificationMetrics {
-    pub fn new() -> Self {
+impl Default for EdgeClassificationMetrics {
+    fn default() -> Self {
         Self {
             accuracy: 0.0,
             macro_f1: 0.0,
             micro_f1: 0.0,
             per_type_metrics: HashMap::new(),
         }
+    }
+}
+
+impl EdgeClassificationMetrics {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -318,8 +366,8 @@ pub struct EdgeRegressionMetrics {
     pub pearson_correlation: f64,
 }
 
-impl EdgeRegressionMetrics {
-    pub fn new() -> Self {
+impl Default for EdgeRegressionMetrics {
+    fn default() -> Self {
         Self {
             mse: 0.0,
             mae: 0.0,
@@ -327,6 +375,12 @@ impl EdgeRegressionMetrics {
             spearman_correlation: 0.0,
             pearson_correlation: 0.0,
         }
+    }
+}
+
+impl EdgeRegressionMetrics {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

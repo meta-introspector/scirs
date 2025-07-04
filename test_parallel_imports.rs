@@ -4,6 +4,7 @@ use scirs2_core::parallel_ops::{
     ParallelBridge, num_threads
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing parallel operations imports...");
     

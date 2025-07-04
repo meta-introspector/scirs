@@ -518,7 +518,7 @@ impl PluginLoader {
     pub fn load_plugin_from_file<P: AsRef<Path>>(&mut self, path: P) -> Result<PluginLoadResult> {
         let start_time = std::time::Instant::now();
         let mut errors = Vec::new();
-        let mut warnings = Vec::new();
+        let warnings = Vec::new();
 
         let path = path.as_ref();
         if !path.exists() {
@@ -732,7 +732,7 @@ impl PluginLoader {
         let mut warnings = Vec::new();
 
         // Create temporary directory for clone
-        let temp_dir = std::env::temp_dir().join(format!(
+        let _temp_dir = std::env::temp_dir().join(format!(
             "plugin_{}_{}",
             config.name,
             start_time.elapsed().as_nanos()
@@ -790,7 +790,7 @@ impl PluginLoader {
         &mut self,
         name: &str,
         version: Option<&str>,
-        config: &PluginConfig,
+        _config: &PluginConfig,
     ) -> Result<PluginLoadResult> {
         let start_time = std::time::Instant::now();
         let mut errors = Vec::new();
@@ -875,7 +875,7 @@ impl PluginLoader {
     fn load_plugin_from_http(
         &mut self,
         url: &str,
-        config: &PluginConfig,
+        _config: &PluginConfig,
     ) -> Result<PluginLoadResult> {
         let start_time = std::time::Instant::now();
         let mut errors = Vec::new();

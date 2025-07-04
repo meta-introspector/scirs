@@ -47,6 +47,7 @@ mod gpu_implementation {
     use crate::gpu::tensor_cores::TensorCoreOp;
 
     /// Central coordinator for advanced tensor cores and kernel tuning
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct UltrathinkTensorCoreCoordinator {
         /// Tensor core managers for different backends
@@ -70,6 +71,7 @@ mod gpu_implementation {
     }
 
     /// Configuration for advanced tensor core operations
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct UltrathinkTensorConfig {
@@ -116,17 +118,21 @@ mod gpu_implementation {
     }
 
     /// AI optimization engine for tensor operations
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct AIOptimizationEngine {
         /// Neural network for performance modeling
         performance_model: PerformanceNeuralNetwork,
         /// Optimization strategies
+        #[allow(dead_code)]
         optimization_strategies: HashMap<String, OptimizationStrategy>,
         /// Learning algorithm
+        #[allow(dead_code)]
         learning_algorithm: LearningAlgorithm,
         /// Feature extraction
         feature_extractor: FeatureExtractor,
         /// Decision tree for strategy selection
+        #[allow(dead_code)]
         strategy_selector: StrategySelector,
         /// Performance history
         performance_history: Vec<PerformanceDataPoint>,
@@ -135,32 +141,43 @@ mod gpu_implementation {
     }
 
     /// Performance neural network for prediction and optimization
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct PerformanceNeuralNetwork {
         /// Network layers
+        #[allow(dead_code)]
         layers: Vec<NetworkLayer>,
         /// Training parameters
+        #[allow(dead_code)]
         training_params: TrainingParameters,
         /// Model accuracy metrics
+        #[allow(dead_code)]
         accuracy_metrics: AccuracyMetrics,
         /// Last training timestamp
+        #[allow(dead_code)]
         last_training: Instant,
     }
 
     /// Network layer representation
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct NetworkLayer {
         /// Layer weights (simplified representation)
+        #[allow(dead_code)]
         weights: Vec<Vec<f64>>,
         /// Layer biases
+        #[allow(dead_code)]
         biases: Vec<f64>,
         /// Activation function
+        #[allow(dead_code)]
         activation: ActivationFunction,
         /// Layer type
+        #[allow(dead_code)]
         layer_type: LayerType,
     }
 
     /// Activation functions for neural network layers
+    #[allow(dead_code)]
     #[derive(Debug, Clone, Default)]
     pub enum ActivationFunction {
         #[default]
@@ -173,6 +190,7 @@ mod gpu_implementation {
     }
 
     /// Neural network layer types
+    #[allow(dead_code)]
     #[derive(Debug, Clone, Default)]
     pub enum LayerType {
         #[default]
@@ -185,6 +203,7 @@ mod gpu_implementation {
     }
 
     /// Training parameters for the performance model
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct TrainingParameters {
         /// Learning rate
@@ -200,6 +219,7 @@ mod gpu_implementation {
     }
 
     /// Optimizer types for neural network training
+    #[allow(dead_code)]
     #[derive(Debug, Clone, Default)]
     pub enum OptimizerType {
         #[default]
@@ -211,6 +231,7 @@ mod gpu_implementation {
     }
 
     /// Model accuracy metrics
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct AccuracyMetrics {
         /// Mean squared error
@@ -224,6 +245,7 @@ mod gpu_implementation {
     }
 
     /// Optimization strategy
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct OptimizationStrategy {
         /// Strategy name
@@ -239,21 +261,28 @@ mod gpu_implementation {
     }
 
     /// Learning algorithm for continuous improvement
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct LearningAlgorithm {
         /// Algorithm type
+        #[allow(dead_code)]
         algorithm_type: LearningAlgorithmType,
         /// Hyperparameters
+        #[allow(dead_code)]
         hyperparameters: HashMap<String, f64>,
         /// Exploration rate
+        #[allow(dead_code)]
         exploration_rate: f64,
         /// Exploitation rate
+        #[allow(dead_code)]
         exploitation_rate: f64,
         /// Learning progress
+        #[allow(dead_code)]
         learning_progress: LearningProgress,
     }
 
     /// Types of learning algorithms
+    #[allow(dead_code)]
     #[derive(Debug, Clone, Default)]
     pub enum LearningAlgorithmType {
         #[default]
@@ -266,6 +295,7 @@ mod gpu_implementation {
     }
 
     /// Learning progress tracking
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct LearningProgress {
         /// Total learning iterations
@@ -281,19 +311,24 @@ mod gpu_implementation {
     }
 
     /// Feature extractor for performance characteristics
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct FeatureExtractor {
         /// Feature types to extract
+        #[allow(dead_code)]
         feature_types: Vec<FeatureType>,
         /// Feature normalization parameters
         normalization_params: HashMap<String, NormalizationParams>,
         /// Feature importance weights
+        #[allow(dead_code)]
         feature_weights: HashMap<String, f64>,
         /// Dimensionality reduction
+        #[allow(dead_code)]
         dimensionality_reduction: Option<DimensionalityReduction>,
     }
 
     /// Types of features to extract
+    #[allow(dead_code)]
     #[derive(Debug, Clone, Default)]
     pub enum FeatureType {
         #[default]
@@ -308,6 +343,7 @@ mod gpu_implementation {
     }
 
     /// Feature normalization parameters
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct NormalizationParams {
         /// Mean value
@@ -321,6 +357,7 @@ mod gpu_implementation {
     }
 
     /// Dimensionality reduction techniques
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum DimensionalityReduction {
         PCA(usize),         // Principal Component Analysis with n components
@@ -331,17 +368,22 @@ mod gpu_implementation {
     }
 
     /// Strategy selector for optimization approaches
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct StrategySelector {
         /// Decision tree for strategy selection
+        #[allow(dead_code)]
         decision_tree: DecisionTree,
         /// Strategy effectiveness history
+        #[allow(dead_code)]
         strategy_history: HashMap<String, StrategyPerformance>,
         /// Context analysis
+        #[allow(dead_code)]
         context_analyzer: ContextAnalyzer,
     }
 
     /// Decision tree for intelligent strategy selection
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct DecisionTree {
         /// Root node
@@ -353,21 +395,28 @@ mod gpu_implementation {
     }
 
     /// Decision tree node
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct DecisionNode {
         /// Feature to split on
+        #[allow(dead_code)]
         feature: String,
         /// Threshold value
+        #[allow(dead_code)]
         threshold: f64,
         /// Left child (condition < threshold)
+        #[allow(dead_code)]
         left: Option<Box<DecisionNode>>,
         /// Right child (condition >= threshold)
+        #[allow(dead_code)]
         right: Option<Box<DecisionNode>>,
         /// Leaf value (if leaf node)
+        #[allow(dead_code)]
         leaf_value: Option<String>,
     }
 
     /// Strategy performance tracking
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct StrategyPerformance {
         /// Total applications
@@ -383,28 +432,37 @@ mod gpu_implementation {
     }
 
     /// Context analyzer for workload understanding
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct ContextAnalyzer {
         /// Workload classifier
+        #[allow(dead_code)]
         workload_classifier: WorkloadClassifier,
         /// Hardware profiler
+        #[allow(dead_code)]
         hardware_profiler: HardwareProfiler,
         /// Environment detector
+        #[allow(dead_code)]
         environment_detector: EnvironmentDetector,
     }
 
     /// Workload classifier for automatic workload type detection
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct WorkloadClassifier {
         /// Classification models
+        #[allow(dead_code)]
         models: HashMap<String, ClassificationModel>,
         /// Feature extractors
+        #[allow(dead_code)]
         extractors: Vec<String>,
         /// Classification history
+        #[allow(dead_code)]
         classification_history: Vec<WorkloadClassification>,
     }
 
     /// Classification model for workload types
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct ClassificationModel {
         /// Model type
@@ -418,6 +476,7 @@ mod gpu_implementation {
     }
 
     /// Types of machine learning models
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum ModelType {
         SVM,
@@ -429,6 +488,7 @@ mod gpu_implementation {
     }
 
     /// Workload classification result
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct WorkloadClassification {
         /// Workload type
@@ -442,6 +502,7 @@ mod gpu_implementation {
     }
 
     /// Types of computational workloads
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum WorkloadType {
         LinearAlgebra,
@@ -457,6 +518,7 @@ mod gpu_implementation {
     }
 
     /// Hardware profiler for device characteristics
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct HardwareProfiler {
         /// Device specifications
@@ -470,6 +532,7 @@ mod gpu_implementation {
     }
 
     /// Detailed device specifications
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct DeviceSpecifications {
         /// Compute units
@@ -488,6 +551,7 @@ mod gpu_implementation {
     }
 
     /// Tensor core specifications
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct TensorCoreSpecs {
         /// Number of tensor cores
@@ -501,6 +565,7 @@ mod gpu_implementation {
     }
 
     /// Performance characteristics
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PerformanceCharacteristics {
         /// Peak compute throughput
@@ -516,6 +581,7 @@ mod gpu_implementation {
     }
 
     /// Thermal profile for temperature management
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct ThermalProfile {
         /// Idle temperature
@@ -531,6 +597,7 @@ mod gpu_implementation {
     }
 
     /// Power profile for energy optimization
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PowerProfile {
         /// Idle power consumption
@@ -546,6 +613,7 @@ mod gpu_implementation {
     }
 
     /// Power state configuration
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PowerState {
         /// State name
@@ -561,6 +629,7 @@ mod gpu_implementation {
     }
 
     /// Environment detector for system context
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct EnvironmentDetector {
         /// System load monitor
@@ -574,6 +643,7 @@ mod gpu_implementation {
     }
 
     /// System load monitoring
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct SystemLoadMonitor {
         /// CPU utilization
@@ -587,6 +657,7 @@ mod gpu_implementation {
     }
 
     /// Temperature monitoring
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct TemperatureMonitor {
         /// GPU temperatures
@@ -600,6 +671,7 @@ mod gpu_implementation {
     }
 
     /// Thermal event tracking
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct ThermalEvent {
         /// Event type
@@ -613,6 +685,7 @@ mod gpu_implementation {
     }
 
     /// Types of thermal events
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum ThermalEventType {
         TemperatureRise,
@@ -623,6 +696,7 @@ mod gpu_implementation {
     }
 
     /// Power monitoring
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct PowerMonitor {
         /// Current power consumption
@@ -638,6 +712,7 @@ mod gpu_implementation {
     }
 
     /// Power event tracking
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PowerEvent {
         /// Event type
@@ -651,6 +726,7 @@ mod gpu_implementation {
     }
 
     /// Types of power events
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum PowerEventType {
         PowerSpike,
@@ -661,6 +737,7 @@ mod gpu_implementation {
     }
 
     /// Network monitoring for distributed optimization
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct NetworkMonitor {
         /// Network bandwidth
@@ -674,6 +751,7 @@ mod gpu_implementation {
     }
 
     /// Network connection quality assessment
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum ConnectionQuality {
         Excellent,
@@ -684,6 +762,7 @@ mod gpu_implementation {
     }
 
     /// Performance data point for learning
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PerformanceDataPoint {
         /// Workload characteristics
@@ -701,6 +780,7 @@ mod gpu_implementation {
     }
 
     /// Model training state
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct ModelTrainingState {
         /// Training in progress
@@ -718,6 +798,7 @@ mod gpu_implementation {
     }
 
     /// Performance predictor for optimization guidance
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct PerformancePredictor {
         /// Prediction models
@@ -731,6 +812,7 @@ mod gpu_implementation {
     }
 
     /// Prediction model for performance estimation
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct PredictionModel {
         /// Model type
@@ -744,6 +826,7 @@ mod gpu_implementation {
     }
 
     /// Types of prediction models
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum PredictionModelType {
         LinearRegression,
@@ -756,6 +839,7 @@ mod gpu_implementation {
     }
 
     /// Confidence intervals for predictions
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct ConfidenceIntervals {
         /// Lower bound
@@ -767,6 +851,7 @@ mod gpu_implementation {
     }
 
     /// Model selection criteria
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct ModelSelectionCriteria {
         /// Cross-validation folds
@@ -780,6 +865,7 @@ mod gpu_implementation {
     }
 
     /// Scoring metrics for model evaluation
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum ScoringMetric {
         MeanSquaredError,
@@ -791,6 +877,7 @@ mod gpu_implementation {
     }
 
     /// Model selection strategies
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum SelectionStrategy {
         BestScore,
@@ -800,21 +887,27 @@ mod gpu_implementation {
     }
 
     /// Adaptive scheduler for intelligent workload management
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct AdaptiveScheduler {
         /// Scheduling strategies
         scheduling_strategies: HashMap<String, SchedulingStrategy>,
         /// Resource allocation
+        #[allow(dead_code)]
         resource_allocator: ResourceAllocator,
         /// Load balancer
+        #[allow(dead_code)]
         load_balancer: LoadBalancer,
         /// Priority manager
+        #[allow(dead_code)]
         priority_manager: PriorityManager,
         /// Scheduling history
+        #[allow(dead_code)]
         scheduling_history: Vec<SchedulingDecision>,
     }
 
     /// Scheduling strategy
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct SchedulingStrategy {
         /// Strategy name
@@ -830,6 +923,7 @@ mod gpu_implementation {
     }
 
     /// Scheduling algorithms
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum SchedulingAlgorithm {
         FirstComeFirstServe,
@@ -843,6 +937,7 @@ mod gpu_implementation {
     }
 
     /// Resource requirements specification
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct ResourceRequirements {
         /// Compute requirements
@@ -858,19 +953,25 @@ mod gpu_implementation {
     }
 
     /// Resource allocator for efficient resource management
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct ResourceAllocator {
         /// Available resources
+        #[allow(dead_code)]
         available_resources: HashMap<GpuBackend, AvailableResources>,
         /// Allocation strategies
+        #[allow(dead_code)]
         allocation_strategies: Vec<AllocationStrategy>,
         /// Resource utilization
+        #[allow(dead_code)]
         resource_utilization: ResourceUtilization,
         /// Allocation history
+        #[allow(dead_code)]
         allocation_history: Vec<AllocationDecision>,
     }
 
     /// Available resources on a device
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct AvailableResources {
         /// Available compute units
@@ -886,6 +987,7 @@ mod gpu_implementation {
     }
 
     /// Resource allocation strategies
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum AllocationStrategy {
         BestFit,
@@ -897,6 +999,7 @@ mod gpu_implementation {
     }
 
     /// Resource utilization tracking
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct ResourceUtilization {
         /// Compute utilization
@@ -910,6 +1013,7 @@ mod gpu_implementation {
     }
 
     /// Resource allocation decision
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct AllocationDecision {
         /// Request ID
@@ -925,6 +1029,7 @@ mod gpu_implementation {
     }
 
     /// Allocated resources
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct AllocatedResources {
         /// Compute units allocated
@@ -938,19 +1043,25 @@ mod gpu_implementation {
     }
 
     /// Load balancer for multi-device coordination
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct LoadBalancer {
         /// Load balancing algorithm
+        #[allow(dead_code)]
         algorithm: LoadBalancingAlgorithm,
         /// Device loads
+        #[allow(dead_code)]
         device_loads: HashMap<GpuBackend, DeviceLoad>,
         /// Balancing history
+        #[allow(dead_code)]
         balancing_history: Vec<BalancingDecision>,
         /// Performance metrics
+        #[allow(dead_code)]
         balancing_metrics: BalancingMetrics,
     }
 
     /// Load balancing algorithms
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum LoadBalancingAlgorithm {
         RoundRobin,
@@ -962,6 +1073,7 @@ mod gpu_implementation {
     }
 
     /// Device load information
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct DeviceLoad {
         /// Current workload
@@ -975,6 +1087,7 @@ mod gpu_implementation {
     }
 
     /// Load balancing decision
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct BalancingDecision {
         /// Source device
@@ -990,6 +1103,7 @@ mod gpu_implementation {
     }
 
     /// Load balancing performance metrics
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct BalancingMetrics {
         /// Load variance across devices
@@ -1003,19 +1117,25 @@ mod gpu_implementation {
     }
 
     /// Priority manager for task prioritization
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct PriorityManager {
         /// Priority algorithms
+        #[allow(dead_code)]
         priority_algorithms: Vec<PriorityAlgorithm>,
         /// Task priorities
+        #[allow(dead_code)]
         task_priorities: HashMap<String, TaskPriority>,
         /// Priority adjustments
+        #[allow(dead_code)]
         priority_adjustments: Vec<PriorityAdjustment>,
         /// Fairness metrics
+        #[allow(dead_code)]
         fairness_metrics: FairnessMetrics,
     }
 
     /// Priority assignment algorithms
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum PriorityAlgorithm {
         FixedPriority,
@@ -1027,6 +1147,7 @@ mod gpu_implementation {
     }
 
     /// Task priority information
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct TaskPriority {
         /// Base priority
@@ -1040,6 +1161,7 @@ mod gpu_implementation {
     }
 
     /// Priority adjustment record
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PriorityAdjustment {
         /// Task ID
@@ -1055,6 +1177,7 @@ mod gpu_implementation {
     }
 
     /// Fairness metrics for priority management
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct FairnessMetrics {
         /// Gini coefficient
@@ -1068,6 +1191,7 @@ mod gpu_implementation {
     }
 
     /// Scheduling decision record
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct SchedulingDecision {
         /// Task ID
@@ -1085,21 +1209,27 @@ mod gpu_implementation {
     }
 
     /// Smart cache system for optimized configurations
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct SmartCacheSystem {
         /// Cached configurations
         configuration_cache: HashMap<String, CachedConfiguration>,
         /// Cache analytics
+        #[allow(dead_code)]
         cache_analytics: CacheAnalytics,
         /// Eviction policy
+        #[allow(dead_code)]
         eviction_policy: EvictionPolicy,
         /// Prefetch engine
+        #[allow(dead_code)]
         prefetch_engine: PrefetchEngine,
         /// Cache optimization
+        #[allow(dead_code)]
         cache_optimizer: CacheOptimizer,
     }
 
     /// Cached configuration entry
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct CachedConfiguration {
         /// Configuration ID
@@ -1119,6 +1249,7 @@ mod gpu_implementation {
     }
 
     /// Usage statistics for cache entries
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct UsageStatistics {
         /// Access count
@@ -1132,6 +1263,7 @@ mod gpu_implementation {
     }
 
     /// Cache analytics and metrics
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct CacheAnalytics {
         /// Cache hit rate
@@ -1147,6 +1279,7 @@ mod gpu_implementation {
     }
 
     /// Cache eviction policies
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum EvictionPolicy {
         LRU,  // Least Recently Used
@@ -1158,19 +1291,25 @@ mod gpu_implementation {
     }
 
     /// Predictive prefetch engine
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct PrefetchEngine {
         /// Prefetch algorithms
+        #[allow(dead_code)]
         prefetch_algorithms: Vec<PrefetchAlgorithm>,
         /// Access pattern analyzer
+        #[allow(dead_code)]
         pattern_analyzer: AccessPatternAnalyzer,
         /// Prefetch decisions
+        #[allow(dead_code)]
         prefetch_decisions: Vec<PrefetchDecision>,
         /// Prefetch effectiveness
+        #[allow(dead_code)]
         prefetch_metrics: PrefetchMetrics,
     }
 
     /// Prefetch algorithms
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum PrefetchAlgorithm {
         SequentialPrefetch,
@@ -1181,6 +1320,7 @@ mod gpu_implementation {
     }
 
     /// Access pattern analyzer
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct AccessPatternAnalyzer {
         /// Detected patterns
@@ -1192,6 +1332,7 @@ mod gpu_implementation {
     }
 
     /// Access patterns for cache optimization
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum AccessPattern {
         Sequential,
@@ -1203,6 +1344,7 @@ mod gpu_implementation {
     }
 
     /// Pattern prediction
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PatternPrediction {
         /// Pattern type
@@ -1216,6 +1358,7 @@ mod gpu_implementation {
     }
 
     /// Prefetch decision
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PrefetchDecision {
         /// Item to prefetch
@@ -1231,6 +1374,7 @@ mod gpu_implementation {
     }
 
     /// Prefetch effectiveness metrics
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PrefetchMetrics {
         /// Prefetch accuracy
@@ -1244,6 +1388,7 @@ mod gpu_implementation {
     }
 
     /// Cache optimizer for intelligent cache management
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct CacheOptimizer {
         /// Optimization strategies
@@ -1255,6 +1400,7 @@ mod gpu_implementation {
     }
 
     /// Cache optimization strategies
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum CacheOptimizationStrategy {
         SizeOptimization,
@@ -1265,6 +1411,7 @@ mod gpu_implementation {
     }
 
     /// Cache performance model
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct CachePerformanceModel {
         /// Model parameters
@@ -1276,6 +1423,7 @@ mod gpu_implementation {
     }
 
     /// Cache optimization decision
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct CacheOptimizationDecision {
         /// Optimization type
@@ -1291,6 +1439,7 @@ mod gpu_implementation {
     }
 
     /// Real-time analytics engine
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct RealTimeAnalytics {
         /// Analytics collectors
@@ -1306,6 +1455,7 @@ mod gpu_implementation {
     }
 
     /// Analytics data collector
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct AnalyticsCollector {
         /// Collector type
@@ -1319,6 +1469,7 @@ mod gpu_implementation {
     }
 
     /// Types of analytics collectors
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum CollectorType {
         PerformanceMetrics,
@@ -1330,6 +1481,7 @@ mod gpu_implementation {
     }
 
     /// Analytics data point
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct AnalyticsDataPoint {
         /// Timestamp
@@ -1343,6 +1495,7 @@ mod gpu_implementation {
     }
 
     /// Data aggregator for analytics processing
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct DataAggregator {
         /// Aggregation function
@@ -1354,6 +1507,7 @@ mod gpu_implementation {
     }
 
     /// Aggregation functions
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum AggregationFunction {
         Mean,
@@ -1367,6 +1521,7 @@ mod gpu_implementation {
     }
 
     /// Aggregated data result
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct AggregatedData {
         /// Time period
@@ -1380,6 +1535,7 @@ mod gpu_implementation {
     }
 
     /// Alert system for anomaly detection
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct AlertSystem {
         /// Alert rules
@@ -1393,6 +1549,7 @@ mod gpu_implementation {
     }
 
     /// Alert rule definition
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct AlertRule {
         /// Rule ID
@@ -1408,6 +1565,7 @@ mod gpu_implementation {
     }
 
     /// Alert condition
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum AlertCondition {
         Threshold {
@@ -1428,6 +1586,7 @@ mod gpu_implementation {
     }
 
     /// Comparison operators for alert conditions
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum ComparisonOperator {
         GreaterThan,
@@ -1439,6 +1598,7 @@ mod gpu_implementation {
     }
 
     /// Alert severity levels
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum AlertSeverity {
         Critical,
@@ -1449,6 +1609,7 @@ mod gpu_implementation {
     }
 
     /// Alert instance
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct Alert {
         /// Alert ID
@@ -1468,6 +1629,7 @@ mod gpu_implementation {
     }
 
     /// Alert status
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum AlertStatus {
         Active,
@@ -1477,6 +1639,7 @@ mod gpu_implementation {
     }
 
     /// Notification channels
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum NotificationChannel {
         Email(String),
@@ -1488,6 +1651,7 @@ mod gpu_implementation {
     }
 
     /// Visualization engine for analytics
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct VisualizationEngine {
         /// Chart generators
@@ -1499,6 +1663,7 @@ mod gpu_implementation {
     }
 
     /// Chart generator for different visualization types
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct ChartGenerator {
         /// Chart type
@@ -1510,6 +1675,7 @@ mod gpu_implementation {
     }
 
     /// Types of charts for visualization
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum ChartType {
         LineChart,
@@ -1523,6 +1689,7 @@ mod gpu_implementation {
     }
 
     /// Chart configuration
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct ChartConfig {
         /// Chart title
@@ -1538,6 +1705,7 @@ mod gpu_implementation {
     }
 
     /// Rendering engines for visualization
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum RenderingEngine {
         SVG,
@@ -1548,6 +1716,7 @@ mod gpu_implementation {
     }
 
     /// Dashboard configuration
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct Dashboard {
         /// Dashboard name
@@ -1561,6 +1730,7 @@ mod gpu_implementation {
     }
 
     /// Dashboard layout
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum DashboardLayout {
         Grid { rows: usize, columns: usize },
@@ -1569,6 +1739,7 @@ mod gpu_implementation {
     }
 
     /// Export formats for analytics data
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum ExportFormat {
         JSON,
@@ -1582,6 +1753,7 @@ mod gpu_implementation {
     }
 
     /// Analytics storage system
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct AnalyticsStorage {
         /// Storage backends
@@ -1595,6 +1767,7 @@ mod gpu_implementation {
     }
 
     /// Storage backends for analytics data
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum StorageBackend {
         InMemory,
@@ -1613,6 +1786,7 @@ mod gpu_implementation {
     }
 
     /// Storage formats
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum StorageFormat {
         Binary,
@@ -1624,6 +1798,7 @@ mod gpu_implementation {
     }
 
     /// Data retention policies
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct RetentionPolicy {
         /// Retention duration
@@ -1635,6 +1810,7 @@ mod gpu_implementation {
     }
 
     /// Archival settings
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct ArchivalSettings {
         /// Archive location
@@ -1646,6 +1822,7 @@ mod gpu_implementation {
     }
 
     /// Data access frequency categories
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum AccessFrequency {
         Hot,    // Frequently accessed
@@ -1655,6 +1832,7 @@ mod gpu_implementation {
     }
 
     /// Data deletion policies
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum DeletionPolicy {
         Immediate,
@@ -1664,6 +1842,7 @@ mod gpu_implementation {
     }
 
     /// Compression settings for storage
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct CompressionSettings {
         /// Compression algorithm
@@ -1675,6 +1854,7 @@ mod gpu_implementation {
     }
 
     /// Compression algorithms
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum CompressionAlgorithm {
         None,
@@ -1686,6 +1866,7 @@ mod gpu_implementation {
     }
 
     /// Indexing strategy for efficient data access
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct IndexingStrategy {
         /// Index types
@@ -1697,6 +1878,7 @@ mod gpu_implementation {
     }
 
     /// Index types for data organization
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum IndexType {
         BTree,
@@ -1708,6 +1890,7 @@ mod gpu_implementation {
     }
 
     /// Tensor core monitoring system
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct TensorCoreMonitoring {
         /// Performance monitors
@@ -1723,6 +1906,7 @@ mod gpu_implementation {
     }
 
     /// Performance monitor for device tracking
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct PerformanceMonitor {
         /// Current performance metrics
@@ -1736,6 +1920,7 @@ mod gpu_implementation {
     }
 
     /// Historical performance data
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct HistoricalPerformanceData {
         /// Timestamp
@@ -1749,6 +1934,7 @@ mod gpu_implementation {
     }
 
     /// Environmental conditions during performance measurement
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct EnvironmentalConditions {
         /// Temperature
@@ -1762,6 +1948,7 @@ mod gpu_implementation {
     }
 
     /// Performance trend analysis
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PerformanceTrends {
         /// Throughput trend
@@ -1775,6 +1962,7 @@ mod gpu_implementation {
     }
 
     /// Trend directions
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum TrendDirection {
         Increasing,
@@ -1785,6 +1973,7 @@ mod gpu_implementation {
     }
 
     /// Anomaly detector for performance monitoring
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct AnomalyDetector {
         /// Detection algorithms
@@ -1796,6 +1985,7 @@ mod gpu_implementation {
     }
 
     /// Anomaly detection algorithms
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum AnomalyDetectionAlgorithm {
         StatisticalOutlier,
@@ -1807,6 +1997,7 @@ mod gpu_implementation {
     }
 
     /// Performance anomaly
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PerformanceAnomaly {
         /// Anomaly type
@@ -1822,6 +2013,7 @@ mod gpu_implementation {
     }
 
     /// Types of performance anomalies
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum AnomalyType {
         PerformanceDegradation,
@@ -1833,6 +2025,7 @@ mod gpu_implementation {
     }
 
     /// Anomaly detection thresholds
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct AnomalyThresholds {
         /// Statistical threshold (standard deviations)
@@ -1844,6 +2037,7 @@ mod gpu_implementation {
     }
 
     /// Health monitor for device wellness tracking
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct HealthMonitor {
         /// Current health status
@@ -1857,6 +2051,7 @@ mod gpu_implementation {
     }
 
     /// Device health status
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum HealthStatus {
         Healthy,
@@ -1867,6 +2062,7 @@ mod gpu_implementation {
     }
 
     /// Health indicator
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct HealthIndicator {
         /// Indicator name
@@ -1882,6 +2078,7 @@ mod gpu_implementation {
     }
 
     /// Health trends analysis
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct HealthTrends {
         /// Temperature trends
@@ -1895,6 +2092,7 @@ mod gpu_implementation {
     }
 
     /// Predictive health analysis
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct PredictiveHealthAnalysis {
         /// Failure prediction model
@@ -1906,6 +2104,7 @@ mod gpu_implementation {
     }
 
     /// Failure prediction model
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct FailurePredictionModel {
         /// Model type
@@ -1919,6 +2118,7 @@ mod gpu_implementation {
     }
 
     /// Maintenance recommendation
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct MaintenanceRecommendation {
         /// Recommendation type
@@ -1934,6 +2134,7 @@ mod gpu_implementation {
     }
 
     /// Types of maintenance
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum MaintenanceType {
         Preventive,
@@ -1943,6 +2144,7 @@ mod gpu_implementation {
     }
 
     /// Maintenance priority levels
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum MaintenancePriority {
         Critical,
@@ -1952,6 +2154,7 @@ mod gpu_implementation {
     }
 
     /// Reliability metrics
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct ReliabilityMetrics {
         /// Mean time between failures
@@ -1965,6 +2168,7 @@ mod gpu_implementation {
     }
 
     /// Utilization tracker for resource monitoring
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct UtilizationTracker {
         /// Current utilization
@@ -1978,6 +2182,7 @@ mod gpu_implementation {
     }
 
     /// Utilization snapshot
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct UtilizationSnapshot {
         /// Snapshot timestamp
@@ -1989,6 +2194,7 @@ mod gpu_implementation {
     }
 
     /// Utilization patterns
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct UtilizationPatterns {
         /// Daily patterns
@@ -2000,6 +2206,7 @@ mod gpu_implementation {
     }
 
     /// Daily utilization pattern
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct DailyPattern {
         /// Hour of day
@@ -2013,6 +2220,7 @@ mod gpu_implementation {
     }
 
     /// Weekly utilization pattern
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct WeeklyPattern {
         /// Day of week
@@ -2024,6 +2232,7 @@ mod gpu_implementation {
     }
 
     /// Seasonal utilization pattern
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct SeasonalPattern {
         /// Season identifier
@@ -2035,6 +2244,7 @@ mod gpu_implementation {
     }
 
     /// Efficiency metrics
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct EfficiencyMetrics {
         /// Compute efficiency
@@ -2048,6 +2258,7 @@ mod gpu_implementation {
     }
 
     /// Monitoring configuration
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct MonitoringConfig {
         /// Monitoring interval
@@ -2061,6 +2272,7 @@ mod gpu_implementation {
     }
 
     /// Monitoring statistics
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct MonitoringStatistics {
         /// Total monitoring time
@@ -2467,6 +2679,7 @@ mod gpu_implementation {
     }
 
     /// Optimized tensor operation result
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct OptimizedTensorOperation {
         /// Original operation
@@ -2484,6 +2697,7 @@ mod gpu_implementation {
     }
 
     /// Performance prediction result
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PerformancePrediction {
         /// Predicted execution time
@@ -2501,6 +2715,7 @@ mod gpu_implementation {
     }
 
     /// Comprehensive tensor core analytics
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct TensorCoreAnalytics {
         /// Performance statistics
@@ -2518,6 +2733,7 @@ mod gpu_implementation {
     }
 
     /// Performance statistics summary
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PerformanceStatistics {
         /// Average execution time
@@ -2533,6 +2749,7 @@ mod gpu_implementation {
     }
 
     /// Throughput statistics
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct ThroughputStatistics {
         /// Mean throughput
@@ -2548,6 +2765,7 @@ mod gpu_implementation {
     }
 
     /// Energy efficiency metrics
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct EnergyEfficiencyMetrics {
         /// Operations per joule
@@ -2561,6 +2779,7 @@ mod gpu_implementation {
     }
 
     /// Optimization recommendation
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct OptimizationRecommendation {
         /// Recommendation type
@@ -2576,6 +2795,7 @@ mod gpu_implementation {
     }
 
     /// Types of optimization recommendations
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum RecommendationType {
         ConfigurationAdjustment,
@@ -2587,6 +2807,7 @@ mod gpu_implementation {
     }
 
     /// Complexity levels for recommendations
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum ComplexityLevel {
         Low,
@@ -2596,6 +2817,7 @@ mod gpu_implementation {
     }
 
     /// Energy optimization result
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct EnergyOptimizationResult {
         /// Target backend
@@ -2613,6 +2835,7 @@ mod gpu_implementation {
     }
 
     /// Power information for energy optimization
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct PowerInformation {
         /// Current power consumption
@@ -3694,6 +3917,7 @@ mod gpu_implementation {
     }
 
     /// Quantum-inspired optimization engine for advanced tensor operations
+    #[allow(dead_code)]
     #[derive(Debug)]
     pub struct QuantumInspiredOptimizer {
         /// Quantum state approximation
@@ -3707,6 +3931,7 @@ mod gpu_implementation {
     }
 
     /// Quantum state approximation for classical systems
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct QuantumStateApproximation {
         /// State amplitudes
@@ -3720,6 +3945,7 @@ mod gpu_implementation {
     }
 
     /// Optimization step in quantum-inspired algorithm
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct OptimizationStep {
         /// Step number
@@ -3735,6 +3961,7 @@ mod gpu_implementation {
     }
 
     /// Entanglement pattern for optimization
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct EntanglementPattern {
         /// Connected parameter indices
@@ -3746,6 +3973,7 @@ mod gpu_implementation {
     }
 
     /// Types of entanglement patterns
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub enum EntanglementType {
         Bipartite,
@@ -3962,6 +4190,7 @@ mod gpu_implementation {
     }
 
     /// Convergence metrics for quantum-inspired optimization
+    #[allow(dead_code)]
     #[derive(Debug, Clone)]
     pub struct ConvergenceMetrics {
         /// Best objective value found
@@ -4110,6 +4339,7 @@ pub mod fallback {
     use super::*;
 
     /// Configuration for advanced tensor core operations (fallback)
+    #[allow(dead_code)]
     #[derive(Debug, Clone, Default)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
     pub struct UltrathinkTensorConfig {

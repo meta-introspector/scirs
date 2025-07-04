@@ -44,6 +44,7 @@ use crate::lti::LtiSystem;
 /// // Just check that we got a valid response vector
 /// assert!(response.iter().all(|x| x.is_finite()));
 /// ```
+#[allow(dead_code)]
 pub fn impulse_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec<f64>> {
     system.impulse_response(t)
 }
@@ -85,6 +86,7 @@ pub fn impulse_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec
 /// // Just check that we got a valid response vector
 /// assert!(response.iter().all(|x| x.is_finite()));
 /// ```
+#[allow(dead_code)]
 pub fn step_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec<f64>> {
     system.step_response(t)
 }
@@ -126,6 +128,7 @@ pub fn step_response<T: LtiSystem>(system: &T, t: &[f64]) -> SignalResult<Vec<f6
 /// // Basic sanity checks
 /// assert!(y.iter().all(|&val| val.is_finite()));
 /// ```
+#[allow(dead_code)]
 pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<f64>> {
     if t.is_empty() || u.is_empty() {
         return Ok(Vec::new());

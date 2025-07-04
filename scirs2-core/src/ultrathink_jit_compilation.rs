@@ -100,12 +100,16 @@ impl Default for JitCompilerConfig {
 #[derive(Debug)]
 pub struct LlvmCompilationEngine {
     /// LLVM context
+    #[allow(dead_code)]
     llvm_context: LlvmContext,
     /// Module registry
+    #[allow(dead_code)]
     modules: HashMap<String, CompiledModule>,
     /// Target machine configuration
+    #[allow(dead_code)]
     target_machine: TargetMachine,
     /// Optimization passes
+    #[allow(dead_code)]
     optimization_passes: OptimizationPasses,
 }
 
@@ -282,8 +286,10 @@ pub struct KernelCache {
     /// Cache statistics
     stats: CacheStatistics,
     /// Cache configuration
+    #[allow(dead_code)]
     config: CacheConfig,
     /// LRU eviction list
+    #[allow(dead_code)]
     lru_list: Vec<String>,
 }
 
@@ -407,12 +413,16 @@ pub enum EvictionPolicy {
 #[derive(Debug)]
 pub struct JitProfiler {
     /// Compilation profiles
+    #[allow(dead_code)]
     compilation_profiles: HashMap<String, CompilationProfile>,
     /// Execution profiles
+    #[allow(dead_code)]
     execution_profiles: HashMap<String, ExecutionProfile>,
     /// Profiling configuration
+    #[allow(dead_code)]
     config: ProfilerConfig,
     /// Active profiling sessions
+    #[allow(dead_code)]
     active_sessions: HashMap<String, ProfilingSession>,
 }
 
@@ -611,12 +621,16 @@ pub struct ProfilingSessionConfig {
 #[derive(Debug)]
 pub struct RuntimeOptimizer {
     /// Optimization strategies
+    #[allow(dead_code)]
     strategies: HashMap<String, OptimizationStrategy>,
     /// Performance feedback
+    #[allow(dead_code)]
     performance_feedback: Vec<PerformanceFeedback>,
     /// Adaptation rules
+    #[allow(dead_code)]
     adaptation_rules: Vec<AdaptationRule>,
     /// Current optimization state
+    #[allow(dead_code)]
     current_state: OptimizationState,
 }
 
@@ -699,12 +713,16 @@ pub struct AdaptationEvent {
 #[derive(Debug)]
 pub struct AdaptiveCodeGenerator {
     /// Code templates
+    #[allow(dead_code)]
     templates: HashMap<String, CodeTemplate>,
     /// Specialization cache
+    #[allow(dead_code)]
     specialization_cache: HashMap<String, SpecializedCode>,
     /// Generation statistics
+    #[allow(dead_code)]
     generation_stats: GenerationStatistics,
     /// Target-specific generators
+    #[allow(dead_code)]
     target_generators: HashMap<String, TargetCodeGenerator>,
 }
 
@@ -1647,6 +1665,7 @@ pub struct NeuromorphicJitCompiler {
     /// Temporal dynamics compiler
     temporal_compiler: TemporalDynamicsCompiler,
     /// Neuromorphic configuration
+    #[allow(dead_code)]
     config: NeuromorphicConfig,
 }
 
@@ -1654,12 +1673,16 @@ pub struct NeuromorphicJitCompiler {
 #[derive(Debug)]
 pub struct SpikingNeuralNetworkCompiler {
     /// Neuron models
+    #[allow(dead_code)]
     neuron_models: HashMap<String, NeuronModel>,
     /// Synapse models
+    #[allow(dead_code)]
     synapse_models: HashMap<String, SynapseModel>,
     /// Network topology
+    #[allow(dead_code)]
     network_topology: NetworkTopology,
     /// Spike pattern cache
+    #[allow(dead_code)]
     spike_cache: SpikePatternCache,
 }
 
@@ -1857,10 +1880,13 @@ pub struct PopulationStatistics {
 #[derive(Debug)]
 pub struct SpikePatternCache {
     /// Cached patterns
+    #[allow(dead_code)]
     patterns: HashMap<String, SpikePattern>,
     /// Pattern usage statistics
+    #[allow(dead_code)]
     usage_stats: HashMap<String, PatternUsage>,
     /// Cache configuration
+    #[allow(dead_code)]
     config: PatternCacheConfig,
 }
 
@@ -1907,10 +1933,13 @@ pub struct PatternCacheConfig {
 #[derive(Debug)]
 pub struct SynapticPlasticityEngine {
     /// Active plasticity rules
+    #[allow(dead_code)]
     active_rules: HashMap<String, PlasticityRule>,
     /// Learning history
+    #[allow(dead_code)]
     learning_history: Vec<LearningEvent>,
     /// Plasticity statistics
+    #[allow(dead_code)]
     plasticity_stats: PlasticityStatistics,
 }
 
@@ -1950,10 +1979,13 @@ pub struct PlasticityStatistics {
 #[derive(Debug)]
 pub struct EventDrivenOptimizer {
     /// Event queue
+    #[allow(dead_code)]
     event_queue: EventQueue,
     /// Optimization strategies
+    #[allow(dead_code)]
     strategies: HashMap<String, OptimizationStrategy>,
     /// Performance metrics
+    #[allow(dead_code)]
     performance_metrics: EventPerformanceMetrics,
 }
 
@@ -1961,10 +1993,13 @@ pub struct EventDrivenOptimizer {
 #[derive(Debug)]
 pub struct EventQueue {
     /// Pending events
+    #[allow(dead_code)]
     events: Vec<SpikeEvent>,
     /// Queue capacity
+    #[allow(dead_code)]
     capacity: usize,
     /// Current time
+    #[allow(dead_code)]
     current_time: f64,
 }
 
@@ -2023,10 +2058,13 @@ pub struct EventPerformanceMetrics {
 #[derive(Debug)]
 pub struct TemporalDynamicsCompiler {
     /// Time series patterns
+    #[allow(dead_code)]
     temporal_patterns: HashMap<String, TemporalPattern>,
     /// Dynamics models
+    #[allow(dead_code)]
     dynamics_models: HashMap<String, DynamicsModel>,
     /// Temporal statistics
+    #[allow(dead_code)]
     temporal_stats: TemporalStatistics,
 }
 

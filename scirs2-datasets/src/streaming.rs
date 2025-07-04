@@ -740,11 +740,13 @@ impl Default for StreamTransformer {
 /// Convenience functions for common streaming operations
 ///
 /// Stream a large CSV file
+#[allow(dead_code)]
 pub fn stream_csv<P: AsRef<Path>>(path: P, config: StreamConfig) -> Result<StreamingIterator> {
     StreamingIterator::from_csv(path, config)
 }
 
 /// Stream synthetic classification data
+#[allow(dead_code)]
 pub fn stream_classification(
     total_samples: usize,
     n_features: usize,
@@ -769,6 +771,7 @@ pub fn stream_classification(
 }
 
 /// Stream synthetic regression data
+#[allow(dead_code)]
 pub fn stream_regression(
     total_samples: usize,
     n_features: usize,

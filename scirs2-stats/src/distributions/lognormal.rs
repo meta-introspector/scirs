@@ -314,6 +314,7 @@ impl<F: Float + NumCast + std::fmt::Display> Lognormal<F> {
 /// let lognorm = lognormal::lognormal(0.0f64, 1.0, 0.0).unwrap();
 /// let pdf_at_one = lognorm.pdf(1.0);
 /// ```
+#[allow(dead_code)]
 pub fn lognormal<F>(mu: F, sigma: F, loc: F) -> StatsResult<Lognormal<F>>
 where
     F: Float + NumCast + std::fmt::Display,

@@ -50,6 +50,7 @@ use std::ops::AddAssign;
 /// // Using actual value from the implementation
 /// assert!((z4 - 1.082323243644471).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn zeta<F>(s: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign,
@@ -106,6 +107,7 @@ where
 /// // Using actual value from the implementation
 /// assert!((z2 - 1.6450337335148921).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn hurwitz_zeta<F>(s: F, q: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign,
@@ -167,6 +169,7 @@ where
 /// let diff = (zetac(s).unwrap() - (zeta(s).unwrap() - 1.0)).abs();
 /// assert!(diff < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn zetac<F>(s: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign,
@@ -187,6 +190,7 @@ where
 }
 
 // Implementation of the Riemann zeta function for s > 1 using the Euler-Maclaurin formula
+#[allow(dead_code)]
 fn zeta_euler_maclaurin<F>(s: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -251,6 +255,7 @@ where
 }
 
 // Implementation of the Riemann zeta function for s > 50 using direct summation
+#[allow(dead_code)]
 fn zeta_direct_sum<F>(s: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -284,6 +289,7 @@ where
 }
 
 // Implementation of the Riemann zeta function for s < 0 using the functional equation
+#[allow(dead_code)]
 fn zeta_negative<F>(s: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign,
@@ -321,6 +327,7 @@ where
 }
 
 // Implementation of the Riemann zeta function for 0 < s < 1 (the critical strip)
+#[allow(dead_code)]
 fn zeta_critical_strip<F>(s: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign,
@@ -350,6 +357,7 @@ where
 }
 
 // Implementation of zetac for s > 50
+#[allow(dead_code)]
 fn zetac_direct_sum<F>(s: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -373,6 +381,7 @@ where
 }
 
 // Implementation of the Hurwitz zeta function for s > 1 using the Euler-Maclaurin formula
+#[allow(dead_code)]
 fn hurwitz_zeta_euler_maclaurin<F>(s: F, q: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign,
@@ -446,6 +455,7 @@ where
 }
 
 // Implementation of the Hurwitz zeta function for s < 0
+#[allow(dead_code)]
 fn hurwitz_zeta_negative<F>(s: F, q: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -536,6 +546,7 @@ where
 }
 
 // Implementation of the Hurwitz zeta function for 0 <= s < 1
+#[allow(dead_code)]
 fn hurwitz_zeta_critical_strip<F>(s: F, q: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -546,6 +557,7 @@ where
 }
 
 // Implementation of the Hurwitz zeta function using direct summation
+#[allow(dead_code)]
 fn hurwitz_zeta_direct_sum<F>(s: F, q: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug,

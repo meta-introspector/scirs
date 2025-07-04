@@ -30,6 +30,7 @@ use scirs2_ndimage::{
 };
 
 /// Complete showcase of enhanced ultrathink capabilities
+#[allow(dead_code)]
 pub fn complete_ultrathink_showcase() -> NdimageResult<()> {
     println!("🚀 Complete Ultrathink Mode Showcase");
     println!("====================================");
@@ -80,6 +81,7 @@ pub fn complete_ultrathink_showcase() -> NdimageResult<()> {
 }
 
 /// Demonstrate adaptive learning capabilities
+#[allow(dead_code)]
 fn adaptive_learning_showcase(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
     println!("Testing adaptive learning with different configurations...");
 
@@ -115,6 +117,7 @@ fn adaptive_learning_showcase(validator: &mut UltrathinkValidator) -> NdimageRes
 }
 
 /// Demonstrate quantum coherence optimization
+#[allow(dead_code)]
 fn quantum_coherence_showcase(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
     println!("Testing quantum coherence optimization at different thresholds...");
 
@@ -152,6 +155,7 @@ fn quantum_coherence_showcase(validator: &mut UltrathinkValidator) -> NdimageRes
 }
 
 /// Demonstrate neuromorphic plasticity features
+#[allow(dead_code)]
 fn neuromorphic_plasticity_showcase(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
     println!("Testing neuromorphic plasticity at different levels...");
 
@@ -186,6 +190,7 @@ fn neuromorphic_plasticity_showcase(validator: &mut UltrathinkValidator) -> Ndim
 }
 
 /// Demonstrate ultra processing intensity control
+#[allow(dead_code)]
 fn processing_intensity_showcase(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
     println!("Testing ultra processing intensity at different levels...");
 
@@ -224,6 +229,7 @@ fn processing_intensity_showcase(validator: &mut UltrathinkValidator) -> Ndimage
 }
 
 /// Comprehensive integration test of all features
+#[allow(dead_code)]
 fn comprehensive_integration_test(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
     println!("Running comprehensive integration test with all features enabled...");
 
@@ -287,6 +293,7 @@ fn comprehensive_integration_test(validator: &mut UltrathinkValidator) -> Ndimag
 
 // Configuration creation functions
 
+#[allow(dead_code)]
 fn create_base_config() -> UltrathinkConfig {
     UltrathinkConfig {
         quantum: QuantumConfig::default(),
@@ -309,6 +316,7 @@ fn create_base_config() -> UltrathinkConfig {
     }
 }
 
+#[allow(dead_code)]
 fn create_conservative_adaptive_config() -> UltrathinkConfig {
     let mut config = create_base_config();
     config.adaptive_learning = true;
@@ -317,6 +325,7 @@ fn create_conservative_adaptive_config() -> UltrathinkConfig {
     config
 }
 
+#[allow(dead_code)]
 fn create_moderate_adaptive_config() -> UltrathinkConfig {
     let mut config = create_base_config();
     config.adaptive_learning = true;
@@ -325,6 +334,7 @@ fn create_moderate_adaptive_config() -> UltrathinkConfig {
     config
 }
 
+#[allow(dead_code)]
 fn create_aggressive_adaptive_config() -> UltrathinkConfig {
     let mut config = create_base_config();
     config.adaptive_learning = true;
@@ -333,6 +343,7 @@ fn create_aggressive_adaptive_config() -> UltrathinkConfig {
     config
 }
 
+#[allow(dead_code)]
 fn create_optimal_integration_config() -> UltrathinkConfig {
     UltrathinkConfig {
         quantum: QuantumConfig::default(),
@@ -357,6 +368,7 @@ fn create_optimal_integration_config() -> UltrathinkConfig {
 
 // Test image creation functions
 
+#[allow(dead_code)]
 fn create_adaptive_test_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
 
@@ -380,6 +392,7 @@ fn create_adaptive_test_image(height: usize, width: usize) -> Array2<f64> {
     image
 }
 
+#[allow(dead_code)]
 fn create_quantum_test_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
 
@@ -404,6 +417,7 @@ fn create_quantum_test_image(height: usize, width: usize) -> Array2<f64> {
     image
 }
 
+#[allow(dead_code)]
 fn create_neuromorphic_test_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
 
@@ -425,6 +439,7 @@ fn create_neuromorphic_test_image(height: usize, width: usize) -> Array2<f64> {
     image
 }
 
+#[allow(dead_code)]
 fn create_intensity_test_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
 
@@ -452,6 +467,7 @@ fn create_intensity_test_image(height: usize, width: usize) -> Array2<f64> {
     image
 }
 
+#[allow(dead_code)]
 fn create_comprehensive_test_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
 
@@ -480,6 +496,7 @@ fn create_comprehensive_test_image(height: usize, width: usize) -> Array2<f64> {
 
 // Validation functions
 
+#[allow(dead_code)]
 fn validate_adaptive_output<T>(output: &Array2<T>, config_name: &str) -> NdimageResult<()>
 where
     T: num_traits::Float + Copy,
@@ -505,6 +522,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn validate_quantum_output<T>(output: &Array2<T>, threshold: f64) -> NdimageResult<()>
 where
     T: num_traits::Float + Copy,
@@ -525,6 +543,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn validate_neuromorphic_output<T>(output: &Array2<T>, plasticity: f64) -> NdimageResult<()>
 where
     T: num_traits::Float + Copy,
@@ -544,6 +563,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn validate_intensity_output<T>(output: &Array2<T>, intensity: f64) -> NdimageResult<()>
 where
     T: num_traits::Float + Copy,
@@ -563,6 +583,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn validate_comprehensive_output<T>(output: &Array2<T>) -> NdimageResult<()>
 where
     T: num_traits::Float + Copy,
@@ -589,6 +610,7 @@ where
 
 // Utility functions for validation metrics
 
+#[allow(dead_code)]
 fn calculate_variance<T>(array: &Array2<T>) -> f64
 where
     T: num_traits::Float + Copy,
@@ -606,6 +628,7 @@ where
     variance
 }
 
+#[allow(dead_code)]
 fn calculate_edge_strength<T>(array: &Array2<T>) -> f64
 where
     T: num_traits::Float + Copy,
@@ -638,6 +661,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn calculate_detail_preservation<T>(array: &Array2<T>) -> f64
 where
     T: num_traits::Float + Copy,
@@ -677,6 +701,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn print_comprehensive_analysis(summary: &scirs2_ndimage::PerformanceSummary) {
     println!("🔍 Comprehensive Performance Analysis");
     println!("=====================================");
@@ -718,6 +743,7 @@ fn print_comprehensive_analysis(summary: &scirs2_ndimage::PerformanceSummary) {
 }
 
 /// Main demonstration function
+#[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("🌟 Complete Ultrathink Mode Showcase");
     println!("====================================");

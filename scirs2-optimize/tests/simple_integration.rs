@@ -22,6 +22,7 @@ impl StochasticGradientFunction for QuadraticFunction {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_basic_sgd_integration() {
     // Test SGD
     let grad_func = QuadraticFunction;
@@ -49,6 +50,7 @@ fn test_basic_sgd_integration() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_basic_adam_integration() {
     // Test Adam optimizer
     let grad_func = QuadraticFunction;
@@ -76,6 +78,7 @@ fn test_basic_adam_integration() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_stochastic_optimization_capabilities() {
     println!("\n🔬 scirs2-optimize Stochastic Capabilities Test");
     println!("==============================================");
@@ -111,6 +114,7 @@ fn test_stochastic_optimization_capabilities() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_stochastic_algorithms_variety() {
     use scirs2_optimize::stochastic::{
         minimize_adamw, minimize_rmsprop, AdamWOptions, RMSPropOptions,

@@ -1481,6 +1481,7 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
 }
 
 /// Compute attention entropy for analysis
+#[allow(dead_code)]
 fn compute_attention_entropy(attention_scores: &Array2<f64>) -> f64 {
     let mut total_entropy = 0.0;
     let num_heads = attention_scores.nrows();
@@ -1499,6 +1500,7 @@ fn compute_attention_entropy(attention_scores: &Array2<f64>) -> f64 {
 }
 
 /// Convenience function for transformer-based optimization
+#[allow(dead_code)]
 pub fn transformer_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

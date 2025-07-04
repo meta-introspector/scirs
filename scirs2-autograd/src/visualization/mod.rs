@@ -492,12 +492,14 @@ pub enum VisualizationError {
 
 /// Public API functions for graph visualization
 /// Visualize a computation graph in DOT format
+#[allow(dead_code)]
 pub fn visualize_graph_dot<F: Float>(graph: &Graph<F>) -> Result<String, VisualizationError> {
     let visualizer = GraphVisualizer::new();
     visualizer.visualize(graph)
 }
 
 /// Visualize a computation graph in text format
+#[allow(dead_code)]
 pub fn visualize_graph_text<F: Float>(graph: &Graph<F>) -> Result<String, VisualizationError> {
     let config = VisualizationConfig {
         format: OutputFormat::Text,
@@ -508,6 +510,7 @@ pub fn visualize_graph_text<F: Float>(graph: &Graph<F>) -> Result<String, Visual
 }
 
 /// Visualize a computation graph in JSON format
+#[allow(dead_code)]
 pub fn visualize_graph_json<F: Float>(graph: &Graph<F>) -> Result<String, VisualizationError> {
     let config = VisualizationConfig {
         format: OutputFormat::Json,
@@ -518,6 +521,7 @@ pub fn visualize_graph_json<F: Float>(graph: &Graph<F>) -> Result<String, Visual
 }
 
 /// Visualize a computation graph in Mermaid format
+#[allow(dead_code)]
 pub fn visualize_graph_mermaid<F: Float>(graph: &Graph<F>) -> Result<String, VisualizationError> {
     let config = VisualizationConfig {
         format: OutputFormat::Mermaid,
@@ -528,18 +532,21 @@ pub fn visualize_graph_mermaid<F: Float>(graph: &Graph<F>) -> Result<String, Vis
 }
 
 /// Print graph statistics to console
+#[allow(dead_code)]
 pub fn print_graph_stats<F: Float>(graph: &Graph<F>) -> Result<(), VisualizationError> {
     let debugger = GraphDebugger::new();
     debugger.print_stats(graph)
 }
 
 /// Validate graph structure and return any issues found
+#[allow(dead_code)]
 pub fn validate_graph<F: Float>(graph: &Graph<F>) -> Result<Vec<String>, VisualizationError> {
     let debugger = GraphDebugger::new();
     debugger.validate_graph(graph)
 }
 
 /// Analyze graph for optimization opportunities
+#[allow(dead_code)]
 pub fn analyze_graph_optimizations<F: Float>(
     graph: &Graph<F>,
 ) -> Result<Vec<String>, VisualizationError> {

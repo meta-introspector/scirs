@@ -1,5 +1,6 @@
 use ndarray::{Array1, ArrayView1};
 
+#[allow(dead_code)]
 fn main() {
     let data: Array1<f64> = Array1::from(vec![]);
     let view: ArrayView1<f64> = data.view();

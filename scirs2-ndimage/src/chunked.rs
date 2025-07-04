@@ -68,6 +68,7 @@ where
 }
 
 /// Process an array in chunks using the given processor
+#[allow(dead_code)]
 pub fn process_chunked<T, D, P>(
     input: &ArrayView<T, D>,
     processor: &mut P,
@@ -146,6 +147,7 @@ where
 }
 
 /// Calculate optimal chunk sizes for each dimension
+#[allow(dead_code)]
 fn calculate_chunk_sizes(
     shape: &[usize],
     target_elements: usize,
@@ -185,6 +187,7 @@ fn calculate_chunk_sizes(
 }
 
 /// Generate chunk positions with overlap
+#[allow(dead_code)]
 fn generate_chunk_positions(
     shape: &[usize],
     chunk_sizes: &[usize],
@@ -242,6 +245,7 @@ fn generate_chunk_positions(
 }
 
 /// Extract a chunk from the array
+#[allow(dead_code)]
 fn extract_chunk<T, D>(
     array: &ArrayView<T, D>,
     position: &ChunkPosition,

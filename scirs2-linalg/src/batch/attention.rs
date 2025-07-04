@@ -28,6 +28,7 @@ use crate::error::{check_dimensions, LinalgError, LinalgResult};
 /// # Returns
 ///
 /// * Batch of attention outputs [batch_size, seq_len_q, d_model]
+#[allow(dead_code)]
 pub fn batch_multi_query_attention<F>(
     batch_query: &ArrayView3<F>,
     key: &ArrayView2<F>,
@@ -155,6 +156,7 @@ where
 ///
 /// * Batch of attention outputs [batch_size, seq_len_q, d_model]
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn batch_multi_head_attention<F>(
     batch_query: &ArrayView3<F>,
     batch_key: &ArrayView3<F>,
@@ -404,6 +406,7 @@ where
 /// # Returns
 ///
 /// * Batch of attention outputs [batch_size, seq_len_q, d_model]
+#[allow(dead_code)]
 pub fn batch_flash_attention<F>(
     batch_query: &ArrayView3<F>,
     batch_key: &ArrayView3<F>,

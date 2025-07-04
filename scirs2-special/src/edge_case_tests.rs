@@ -45,6 +45,7 @@ pub struct EdgeCaseResult {
 }
 
 /// Edge case test suite for gamma function
+#[allow(dead_code)]
 pub fn test_gamma_edge_cases(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
@@ -72,6 +73,7 @@ pub fn test_gamma_edge_cases(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 }
 
 /// Test gamma function with special values
+#[allow(dead_code)]
 fn test_gamma_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
@@ -113,6 +115,7 @@ fn test_gamma_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 }
 
 /// Test gamma function with extreme values
+#[allow(dead_code)]
 fn test_gamma_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
@@ -154,6 +157,7 @@ fn test_gamma_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 }
 
 /// Test gamma function boundary conditions
+#[allow(dead_code)]
 fn test_gamma_boundary_conditions(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
@@ -195,6 +199,7 @@ fn test_gamma_boundary_conditions(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResul
 }
 
 /// Test gamma function with subnormal values
+#[allow(dead_code)]
 fn test_gamma_subnormal_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
@@ -220,6 +225,7 @@ fn test_gamma_subnormal_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> 
 }
 
 /// Edge case test suite for Bessel functions
+#[allow(dead_code)]
 pub fn test_bessel_edge_cases(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
@@ -239,6 +245,7 @@ pub fn test_bessel_edge_cases(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 }
 
 /// Test Bessel functions with special values
+#[allow(dead_code)]
 fn test_bessel_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
@@ -284,6 +291,7 @@ fn test_bessel_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 }
 
 /// Test Bessel functions with extreme values
+#[allow(dead_code)]
 fn test_bessel_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
@@ -311,6 +319,7 @@ fn test_bessel_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 }
 
 /// Test Bessel functions boundary conditions
+#[allow(dead_code)]
 fn test_bessel_boundary_conditions(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
@@ -338,6 +347,7 @@ fn test_bessel_boundary_conditions(config: &EdgeCaseConfig) -> Vec<EdgeCaseResul
 }
 
 /// Edge case test suite for error functions
+#[allow(dead_code)]
 pub fn test_erf_edge_cases(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
@@ -353,6 +363,7 @@ pub fn test_erf_edge_cases(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 }
 
 /// Test error functions with special values
+#[allow(dead_code)]
 fn test_erf_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
@@ -395,6 +406,7 @@ fn test_erf_special_values(config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 }
 
 /// Test error functions with extreme values
+#[allow(dead_code)]
 fn test_erf_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
     let mut results = Vec::new();
 
@@ -438,6 +450,7 @@ fn test_erf_extreme_values(_config: &EdgeCaseConfig) -> Vec<EdgeCaseResult> {
 }
 
 /// Comprehensive edge case test runner
+#[allow(dead_code)]
 pub fn run_comprehensive_edge_case_tests(config: &EdgeCaseConfig) -> SpecialResult<()> {
     println!("🧪 Running Comprehensive Edge Case Tests");
     println!("========================================");
@@ -512,6 +525,7 @@ pub fn run_comprehensive_edge_case_tests(config: &EdgeCaseConfig) -> SpecialResu
 }
 
 /// Test numerical precision and accuracy
+#[allow(dead_code)]
 pub fn test_numerical_precision() -> SpecialResult<()> {
     println!("\n🔬 Testing Numerical Precision");
     println!("=============================");
@@ -555,6 +569,7 @@ pub fn test_numerical_precision() -> SpecialResult<()> {
 }
 
 /// Array-based edge case testing
+#[allow(dead_code)]
 pub fn test_array_edge_cases() -> SpecialResult<()> {
     println!("\n📊 Testing Array Edge Cases");
     println!("===========================");

@@ -101,6 +101,7 @@ impl Default for BoundedOptions {
 /// * `jacobian` - Optional Jacobian function
 /// * `data` - Additional data to pass to residuals and jacobian
 /// * `options` - Options for the optimization
+#[allow(dead_code)]
 pub fn bounded_least_squares<F, J, D, S1, S2>(
     residuals: F,
     x0: &ArrayBase<S1, Ix1>,
@@ -129,6 +130,7 @@ where
 }
 
 /// Trust region reflective algorithm for bounded least squares
+#[allow(dead_code)]
 fn trust_region_reflective<F, J, D, S1, S2>(
     residuals: F,
     x0: &ArrayBase<S1, Ix1>,
@@ -220,7 +222,7 @@ where
 
         // Check convergence on projected gradient
         if proj_grad.iter().all(|&g| g.abs() < options.gtol) {
-            let mut result = OptimizeResults::default();
+            let mut result = OptimizeResults::<f64>::default();
             result.x = x;
             result.fun = cost;
             result.nfev = nfev;
@@ -237,7 +239,7 @@ where
         // Check step size for convergence
         let step_norm = step.iter().map(|&s| s * s).sum::<f64>().sqrt();
         if step_norm < options.xtol {
-            let mut result = OptimizeResults::default();
+            let mut result = OptimizeResults::<f64>::default();
             result.x = x;
             result.fun = cost;
             result.nfev = nfev;
@@ -283,7 +285,7 @@ where
         if rho > 0.01 {
             // Check convergence on cost function
             if actual_reduction.abs() < options.ftol * cost {
-                let mut result = OptimizeResults::default();
+                let mut result = OptimizeResults::<f64>::default();
                 result.x = x_new;
                 result.fun = cost_new;
                 result.nfev = nfev;
@@ -304,7 +306,7 @@ where
     let res_final = residuals(x.as_slice().unwrap(), data.as_slice().unwrap());
     let final_cost = 0.5 * res_final.iter().map(|&r| r * r).sum::<f64>();
 
-    let mut result = OptimizeResults::default();
+    let mut result = OptimizeResults::<f64>::default();
     result.x = x;
     result.fun = final_cost;
     result.nfev = nfev;
@@ -317,6 +319,7 @@ where
 }
 
 /// Project point to bounds
+#[allow(dead_code)]
 fn project_to_bounds(x: &Array1<f64>, bounds: &Bounds) -> Array1<f64> {
     let mut x_proj = x.clone();
 
@@ -333,6 +336,7 @@ fn project_to_bounds(x: &Array1<f64>, bounds: &Bounds) -> Array1<f64> {
 }
 
 /// Compute projected gradient for bounded problems
+#[allow(dead_code)]
 fn compute_projected_gradient(
     x: &Array1<f64>,
     gradient: &Array1<f64>,
@@ -362,6 +366,7 @@ fn compute_projected_gradient(
 }
 
 /// Solve trust region subproblem with bounds
+#[allow(dead_code)]
 fn solve_trust_region_bounds(
     jac: &Array2<f64>,
     _res: &Array1<f64>,
@@ -416,6 +421,7 @@ fn solve_trust_region_bounds(
 }
 
 /// Compute predicted reduction in cost
+#[allow(dead_code)]
 fn compute_predicted_reduction(jac: &Array2<f64>, res: &Array1<f64>, step: &Array1<f64>) -> f64 {
     let jac_step = jac.dot(step);
     let linear_term = res.dot(&jac_step);
@@ -425,6 +431,7 @@ fn compute_predicted_reduction(jac: &Array2<f64>, res: &Array1<f64>, step: &Arra
 }
 
 /// Simple linear system solver (same as in other modules)
+#[allow(dead_code)]
 fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
     use scirs2_linalg::solve;
 

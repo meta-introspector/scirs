@@ -18,6 +18,7 @@ use scirs2_core::safe_ops::safe_divide;
 /// # Returns
 ///
 /// * The Jacobian matrix (n_outputs x n_inputs)
+#[allow(dead_code)]
 pub fn numerical_jacobian<F, Func>(
     f: &Func,
     x: ArrayView1<F>,
@@ -64,6 +65,7 @@ where
 /// # Returns
 ///
 /// * The Jacobian matrix (n_outputs x n_inputs)
+#[allow(dead_code)]
 pub fn numerical_jacobian_with_param<F, Func>(
     f: &Func,
     t: F,
@@ -108,6 +110,7 @@ where
 /// # Returns
 ///
 /// * The solution vector
+#[allow(dead_code)]
 pub fn solve_linear_system<F: IntegrateFloat>(
     a: ArrayView2<F>,
     b: ArrayView1<F>,
@@ -270,6 +273,7 @@ pub fn solve_linear_system<F: IntegrateFloat>(
 /// # Returns
 ///
 /// * The solution vector and a bool indicating whether it converged
+#[allow(dead_code)]
 pub fn newton_method<F, Func>(
     f: &Func,
     x0: ArrayView1<F>,
@@ -330,6 +334,7 @@ where
 /// # Returns
 ///
 /// * The solution vector and a bool indicating whether it converged
+#[allow(dead_code)]
 pub fn newton_method_with_param<F, Func>(
     f: &Func,
     t: F,

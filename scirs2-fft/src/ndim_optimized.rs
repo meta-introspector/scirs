@@ -14,6 +14,7 @@ use crate::fft::fft;
 use crate::rfft::rfft;
 
 /// Optimized N-dimensional FFT with better memory access patterns
+#[allow(dead_code)]
 pub fn fftn_optimized<T, D>(
     x: &ArrayView<T, D>,
     _shape: Option<Vec<usize>>,
@@ -60,6 +61,7 @@ where
 }
 
 /// Apply FFT along a specific axis
+#[allow(dead_code)]
 fn apply_fft_along_axis<D>(data: &mut Array<Complex64, D>, axis: usize) -> FFTResult<()>
 where
     D: Dimension,
@@ -90,6 +92,7 @@ where
 }
 
 /// Optimize axis order based on memory layout and cache efficiency
+#[allow(dead_code)]
 fn optimize_axis_order(axes: &[usize], shape: &[usize]) -> Vec<usize> {
     let mut axis_info: Vec<(usize, usize, usize)> = axes
         .iter()
@@ -108,6 +111,7 @@ fn optimize_axis_order(axes: &[usize], shape: &[usize]) -> Vec<usize> {
 }
 
 /// Validate that axes are within bounds
+#[allow(dead_code)]
 fn validate_axes(axes: &[usize], ndim: usize) -> FFTResult<()> {
     for &axis in axes {
         if axis >= ndim {
@@ -155,6 +159,7 @@ where
 }
 
 /// Memory-efficient FFT for very large arrays
+#[allow(dead_code)]
 pub fn fftn_memory_efficient<T, D>(
     x: &ArrayView<T, D>,
     axes: Option<Vec<usize>>,
@@ -206,6 +211,7 @@ where
 }
 
 /// Apply FFT along axis using chunked processing for large dimensions
+#[allow(dead_code)]
 fn apply_fft_chunked<D>(data: &mut Array<Complex64, D>, axis: usize) -> FFTResult<()>
 where
     D: Dimension,
@@ -248,6 +254,7 @@ where
 }
 
 /// Optimized real-to-complex N-dimensional FFT
+#[allow(dead_code)]
 pub fn rfftn_optimized<T, D>(
     x: &ArrayView<T, D>,
     _shape: Option<Vec<usize>>,

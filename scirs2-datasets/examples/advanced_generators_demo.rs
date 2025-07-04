@@ -15,6 +15,7 @@ use scirs2_datasets::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧬 Advanced Synthetic Data Generators Demonstration");
     println!("===================================================\n");
@@ -44,6 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_adversarial_examples() -> Result<(), Box<dyn std::error::Error>> {
     println!("🛡️ ADVERSARIAL EXAMPLES GENERATION");
     println!("-".repeat(45));
@@ -119,6 +121,7 @@ fn demonstrate_adversarial_examples() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_anomaly_detection() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔍 ANOMALY DETECTION DATASETS");
     println!("-".repeat(35));
@@ -209,6 +212,7 @@ fn demonstrate_anomaly_detection() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_multitask_learning() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 MULTI-TASK LEARNING DATASETS");
     println!("-".repeat(35));
@@ -284,6 +288,7 @@ fn demonstrate_multitask_learning() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_domain_adaptation() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌐 DOMAIN ADAPTATION DATASETS");
     println!("-".repeat(35));
@@ -335,6 +340,7 @@ fn demonstrate_domain_adaptation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_few_shot_learning() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 FEW-SHOT LEARNING DATASETS");
     println!("-".repeat(35));
@@ -379,6 +385,7 @@ fn demonstrate_few_shot_learning() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_continual_learning() -> Result<(), Box<dyn std::error::Error>> {
     println!("📚 CONTINUAL LEARNING DATASETS");
     println!("-".repeat(35));
@@ -419,6 +426,7 @@ fn demonstrate_continual_learning() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_advanced_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 ADVANCED APPLICATIONS");
     println!("-".repeat(25));
@@ -440,6 +448,7 @@ fn demonstrate_advanced_applications() -> Result<(), Box<dyn std::error::Error>>
 
 // Helper functions for analysis
 
+#[allow(dead_code)]
 fn calculate_perturbation_norm(
     original: &scirs2_datasets::Dataset,
     adversarial: &scirs2_datasets::Dataset,
@@ -449,6 +458,7 @@ fn calculate_perturbation_norm(
     norm / (original.n_samples() * original.n_features()) as f64
 }
 
+#[allow(dead_code)]
 fn calculate_anomaly_separation(dataset: &scirs2_datasets::Dataset) -> f64 {
     // Simplified separation metric
     if let Some(target) = &dataset.target {
@@ -482,6 +492,7 @@ fn calculate_anomaly_separation(dataset: &scirs2_datasets::Dataset) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_centroid(data: &ndarray::Array2<f64>, indices: &[usize]) -> ndarray::Array1<f64> {
     let mut centroid = ndarray::Array1::zeros(data.ncols());
     for &idx in indices {
@@ -490,6 +501,7 @@ fn calculate_centroid(data: &ndarray::Array2<f64>, indices: &[usize]) -> ndarray
     centroid / indices.len() as f64
 }
 
+#[allow(dead_code)]
 fn get_recommended_anomaly_algorithms(anomaly_type: &AnomalyType) -> &'static str {
     match anomaly_type {
         AnomalyType::Point => "Isolation Forest, Local Outlier Factor, One-Class SVM",
@@ -500,6 +512,7 @@ fn get_recommended_anomaly_algorithms(anomaly_type: &AnomalyType) -> &'static st
     }
 }
 
+#[allow(dead_code)]
 fn analyze_classification_target(target: &ndarray::Array1<f64>) -> usize {
     let mut classes = std::collections::HashSet::new();
     for &label in target.iter() {
@@ -508,17 +521,20 @@ fn analyze_classification_target(target: &ndarray::Array1<f64>) -> usize {
     classes.len()
 }
 
+#[allow(dead_code)]
 fn analyze_regression_target(target: &ndarray::Array1<f64>) -> (f64, f64) {
     let mean = target.mean().unwrap_or(0.0);
     let std = target.std(0.0);
     (mean, std)
 }
 
+#[allow(dead_code)]
 fn analyze_ordinal_target(target: &ndarray::Array1<f64>) -> usize {
     let max_level = target.iter().fold(0.0f64, |a, &b| a.max(b)) as usize;
     max_level + 1
 }
 
+#[allow(dead_code)]
 fn analyze_task_relationships(multitask_dataset: &scirs2_datasets::MultiTaskDataset) {
     println!("  🔗 Task relationship analysis:");
     println!(
@@ -540,6 +556,7 @@ fn analyze_task_relationships(multitask_dataset: &scirs2_datasets::MultiTaskData
     }
 }
 
+#[allow(dead_code)]
 fn analyze_class_distribution(target: &ndarray::Array1<f64>) -> HashMap<i32, usize> {
     let mut distribution = HashMap::new();
     for &label in target.iter() {
@@ -548,12 +565,14 @@ fn analyze_class_distribution(target: &ndarray::Array1<f64>) -> HashMap<i32, usi
     distribution
 }
 
+#[allow(dead_code)]
 fn calculate_domain_statistics(data: &ndarray::Array2<f64>) -> (f64, f64) {
     let mean = data.mean().unwrap_or(0.0);
     let std = data.std(0.0);
     (mean, std)
 }
 
+#[allow(dead_code)]
 fn analyze_domain_shifts(domain_dataset: &scirs2_datasets::DomainAdaptationDataset) {
     if domain_dataset.domains.len() >= 2 {
         let source_stats = calculate_domain_statistics(&domain_dataset.domains[0].1.data);
@@ -574,6 +593,7 @@ fn analyze_domain_shifts(domain_dataset: &scirs2_datasets::DomainAdaptationDatas
     }
 }
 
+#[allow(dead_code)]
 fn calculate_class_balance(target: &ndarray::Array1<f64>, n_classes: usize) -> f64 {
     let mut class_counts = vec![0; n_classes];
     for &label in target.iter() {
@@ -595,6 +615,7 @@ fn calculate_class_balance(target: &ndarray::Array1<f64>, n_classes: usize) -> f
     1.0 - balance_score.min(1.0) // Higher score = better balance
 }
 
+#[allow(dead_code)]
 fn get_few_shot_use_case(n_way: usize, k_shot: usize) -> &'static str {
     match (n_way, k_shot) {
         (5, 1) => "Image classification with minimal examples",
@@ -605,6 +626,7 @@ fn get_few_shot_use_case(n_way: usize, k_shot: usize) -> &'static str {
     }
 }
 
+#[allow(dead_code)]
 fn analyze_concept_drift(dataset: &scirs2_datasets::ContinualLearningDataset) {
     println!("    Task progression analysis:");
 
@@ -624,6 +646,7 @@ fn analyze_concept_drift(dataset: &scirs2_datasets::ContinualLearningDataset) {
     }
 }
 
+#[allow(dead_code)]
 fn get_continual_learning_strategies(drift_strength: f64) -> &'static str {
     if drift_strength < 0.3 {
         "Fine-tuning, Elastic Weight Consolidation"
@@ -634,6 +657,7 @@ fn get_continual_learning_strategies(drift_strength: f64) -> &'static str {
     }
 }
 
+#[allow(dead_code)]
 fn simulate_catastrophic_forgetting() -> Result<(), Box<dyn std::error::Error>> {
     let _dataset = make_continual_learning_dataset(3, 200, 10, 3, 0.8)?;
 
@@ -645,6 +669,7 @@ fn simulate_catastrophic_forgetting() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_meta_learning_setup() -> Result<(), Box<dyn std::error::Error>> {
     let few_shot_data = make_few_shot_dataset(5, 3, 10, 20, 15)?;
 
@@ -662,6 +687,7 @@ fn demonstrate_meta_learning_setup() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_robust_ml_setup() -> Result<(), Box<dyn std::error::Error>> {
     let base_dataset = make_classification(500, 15, 3, 2, 10, Some(42))?;
 
@@ -694,6 +720,7 @@ fn demonstrate_robust_ml_setup() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_federated_learning_setup() -> Result<(), Box<dyn std::error::Error>> {
     let domain_data = make_domain_adaptation_dataset(
         300,

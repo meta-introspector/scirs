@@ -11,6 +11,7 @@ use scirs2_spatial::simd_distance::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== SIMD Performance Optimization Example ===\n");
 
@@ -51,6 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn system_capabilities_example() {
     println!("Detecting available SIMD instruction sets:");
     bench::report_simd_features();
@@ -65,6 +67,7 @@ fn system_capabilities_example() {
     println!("\nUsing scalar fallback implementations");
 }
 
+#[allow(dead_code)]
 fn single_distance_performance_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("Comparing SIMD vs scalar for single distance computations:");
 
@@ -107,6 +110,7 @@ fn single_distance_performance_example() -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
+#[allow(dead_code)]
 fn batch_distance_performance_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("Batch distance computation performance:");
 
@@ -145,6 +149,7 @@ fn batch_distance_performance_example() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn distance_matrix_performance_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("Distance matrix computation performance comparison:");
 
@@ -179,6 +184,7 @@ fn distance_matrix_performance_example() -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
+#[allow(dead_code)]
 fn knn_performance_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("K-nearest neighbors search performance:");
 
@@ -233,6 +239,7 @@ fn knn_performance_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn scalability_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("Scalability analysis with increasing problem sizes:");
 
@@ -265,6 +272,7 @@ fn scalability_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_parallel_efficiency() -> Result<(), Box<dyn std::error::Error>> {
     let n_points = 2000;
     let dim = 5;
@@ -308,6 +316,7 @@ fn test_parallel_efficiency() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn memory_efficiency_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("Memory efficiency and cache performance analysis:");
 
@@ -352,6 +361,7 @@ fn memory_efficiency_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn memory_allocation_analysis() -> Result<(), Box<dyn std::error::Error>> {
     let n_points = 2000;
     let dim = 10;
@@ -385,6 +395,7 @@ fn memory_allocation_analysis() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Generate random points for testing
+#[allow(dead_code)]
 fn generate_random_points(n_points: usize, dim: usize) -> Array2<f64> {
     let mut rng = rand::rng();
     Array2::from_shape_fn((n_points, dim), |_| rng.random_range(-10.0..10.0))

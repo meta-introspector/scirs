@@ -1418,6 +1418,7 @@ impl ActivityKnowledgeBase {
 }
 
 /// High-level function for comprehensive activity recognition
+#[allow(dead_code)]
 pub fn recognize_activities_comprehensive(
     frames: &[ArrayView3<f32>],
     scene_analyses: &[SceneAnalysisResult],
@@ -1432,6 +1433,7 @@ pub fn recognize_activities_comprehensive(
 }
 
 /// Specialized function for real-time activity monitoring
+#[allow(dead_code)]
 pub fn monitor_activities_realtime(
     current_frame: &ArrayView3<f32>,
     scene_analysis: &SceneAnalysisResult,
@@ -1449,6 +1451,7 @@ pub fn monitor_activities_realtime(
 }
 
 /// Apply temporal smoothing to reduce flickering in real-time recognition
+#[allow(dead_code)]
 fn apply_temporal_smoothing(
     current_result: ActivityRecognitionResult,
     _history: &[ActivityRecognitionResult],

@@ -664,6 +664,7 @@ impl Trainer {
         total_loss / x_batches.len() as f32
 // Helper functions for dataset creation and manipulation
 // Create simple classification dataset
+#[allow(dead_code)]
 fn create_classification_dataset(
     num_samples: usize,
     num_features: usize,
@@ -687,6 +688,7 @@ fn create_classification_dataset(
     let y_tensor = Tensor::new_1d(y_data);
     (x_tensor, y_tensor)
 // Create regression dataset with non-linear relationship
+#[allow(dead_code)]
 fn create_regression_dataset(num_samples: usize, num_features: usize) -> (Tensor, Tensor) {
     // Create target values based on non-linear function
     let mut y_data = Array2::<f32>::zeros((num_samples, 1));
@@ -700,6 +702,7 @@ fn create_regression_dataset(num_samples: usize, num_features: usize) -> (Tensor
         y_data[[i, 0]] = x1.sin() + x2 * x2 + noise;
     let y_tensor = Tensor::new_2d(y_data);
 // Split data into batches
+#[allow(dead_code)]
 fn create_batches(x: &Tensor, y: &Tensor, batch_size: usize) -> (Vec<Tensor>, Vec<Tensor>) {
     match (x.dim.clone(), y.dim.clone()) {
         (TensorDim::Dim2(samples, features), _) => {
@@ -733,6 +736,7 @@ fn create_batches(x: &Tensor, y: &Tensor, batch_size: usize) -> (Vec<Tensor>, Ve
             (x_batches, y_batches)
         _ => panic!("Batching only supported for 2D input tensors"),
 // Calculate accuracy for classification
+#[allow(dead_code)]
 fn calculate_accuracy(predictions: &Tensor, targets: &Tensor) -> f32 {
     match (predictions.dim.clone(), targets.dim.clone()) {
         (TensorDim::Dim2(batch_size, _), TensorDim::Dim1(_)) => {
@@ -753,6 +757,7 @@ fn calculate_accuracy(predictions: &Tensor, targets: &Tensor) -> f32 {
             correct as f32 / batch_size as f32
         _ => panic!("Accuracy calculation only supported for classification problems"),
 // Example of building and training a simple classification model
+#[allow(dead_code)]
 fn classification_example() {
     println!("Classification Example");
     println!("=====================");
@@ -828,6 +833,7 @@ fn classification_example() {
             test_accuracy * 100.0
     println!("Classification training completed!");
 // Example of building and training a regression model
+#[allow(dead_code)]
 fn regression_example() {
     println!("\nRegression Example");
     println!("=================");
@@ -851,6 +857,7 @@ fn regression_example() {
             "Epoch {}/{}: Train Loss: {:.4}, Test Loss: {:.4}",
             test_loss
     println!("Regression training completed!");
+#[allow(dead_code)]
 fn main() {
     println!("Unified Neural Network Framework Example");
     println!("=======================================");

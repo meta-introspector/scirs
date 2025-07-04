@@ -1,6 +1,7 @@
 extern crate scirs2_autograd as ag;
 use ag::tensor_ops as T;
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing shape preservation in tensor operations");
 

@@ -7,6 +7,7 @@ use rustfft::FftPlanner;
 use scirs2_fft::{fft, get_global_cache, init_global_cache};
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() {
     // Initialize the global cache with custom settings
     // This is optional - if not called, default settings will be used

@@ -7,6 +7,7 @@ use std::fmt::Debug;
 use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function to generate n-dimensional neighborhood offsets
+#[allow(dead_code)]
 fn generate_offsets(offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[isize], dim: usize) {
     if dim == sizes.len() {
         offsets.push(current.to_vec());
@@ -98,6 +99,7 @@ fn generate_offsets(offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[i
 /// Returns an error if:
 /// - Input array is 0-dimensional
 /// - Input array is empty
+#[allow(dead_code)]
 pub fn extrema<T, D>(input: &Array<T, D>) -> NdimageResult<(T, T, Vec<usize>, Vec<usize>)>
 where
     T: Float + FromPrimitive + Debug + NumAssign + PartialOrd,
@@ -245,6 +247,7 @@ where
 /// # Note
 ///
 /// Current implementation is a placeholder and needs proper extrema detection algorithm.
+#[allow(dead_code)]
 pub fn local_extrema<T, D>(
     input: &Array<T, D>,
     size: Option<&[usize]>,
@@ -483,6 +486,7 @@ where
 ///
 /// Current implementation is a placeholder returning unit values.
 /// Full prominence calculation algorithm needs to be implemented.
+#[allow(dead_code)]
 pub fn peak_prominences<T>(
     input: &Array<T, ndarray::Ix1>,
     peaks: &[usize],
@@ -656,6 +660,7 @@ pub type PeakWidthsResult<T> = (Vec<T>, Vec<T>, Vec<T>, Vec<T>);
 ///
 /// Current implementation is a placeholder returning default values.
 /// Full width calculation with interpolation needs to be implemented.
+#[allow(dead_code)]
 pub fn peak_widths<T>(
     input: &Array<T, ndarray::Ix1>,
     peaks: &[usize],

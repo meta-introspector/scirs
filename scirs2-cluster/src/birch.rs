@@ -572,6 +572,7 @@ pub struct BirchStatistics<F: Float> {
 ///
 /// let (centroids, labels) = birch(data.view(), options).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn birch<F>(data: ArrayView2<F>, options: BirchOptions<F>) -> Result<(Array2<F>, Array1<i32>)>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand,

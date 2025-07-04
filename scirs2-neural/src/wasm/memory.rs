@@ -286,6 +286,7 @@ impl ParallelConfig {
     pub fn supports_multithreading(&self) -> bool {
         self.web_workers && self.effective_workers() > 1
 /// Utility function to get navigator hardware concurrency (mock for server-side)
+#[allow(dead_code)]
 fn navigator_hardware_concurrency() -> Option<usize> {
     // In real implementation, this would access navigator.hardwareConcurrency
     // For now, return a reasonable default

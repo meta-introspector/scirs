@@ -21,6 +21,7 @@ use std::fmt::Debug;
 /// j_n(x) = (x^n)/(2n+1)!! * (1 - x^2/(2(2n+3)) + x^4/(2*4*(2n+3)(2n+5)) - ...)
 ///
 /// The function computes the first few terms for small x to avoid precision loss.
+#[allow(dead_code)]
 fn small_arg_series_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     let _n_f = F::from(n).unwrap();
     let x_sq = x * x;
@@ -89,6 +90,7 @@ fn small_arg_series_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// let j0_exact = x.sin() / x;
 /// assert!((spherical_jn(0, x) - j0_exact).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn spherical_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     if n < 0 {
         panic!("Order n must be non-negative");
@@ -196,6 +198,7 @@ pub fn spherical_jn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// let y0_exact = -x.cos() / x;
 /// assert!((spherical_yn(0, x) - y0_exact).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn spherical_yn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     if n < 0 {
         panic!("Order n must be non-negative");
@@ -250,6 +253,7 @@ pub fn spherical_yn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// # Returns
 ///
 /// * Scaled spherical Bessel function value j̃_n(x)
+#[allow(dead_code)]
 pub fn spherical_jn_scaled<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     if n < 0 {
         panic!("Order n must be non-negative");
@@ -383,6 +387,7 @@ pub fn spherical_jn_scaled<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F 
 /// # Returns
 ///
 /// * Scaled spherical Bessel function value ỹ_n(x)
+#[allow(dead_code)]
 pub fn spherical_yn_scaled<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     if n < 0 {
         panic!("Order n must be non-negative");

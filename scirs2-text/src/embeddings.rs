@@ -1045,6 +1045,7 @@ impl Word2Vec {
 }
 
 /// Calculate cosine similarity between two vectors
+#[allow(dead_code)]
 pub fn cosine_similarity(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
     let dot_product = (a * b).sum();
     let norm_a = (a.iter().fold(0.0, |sum, &val| sum + val * val)).sqrt();

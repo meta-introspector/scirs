@@ -21,11 +21,9 @@
 //! - Neural architecture search
 //! - AutoML optimization pipelines
 
-use crate::error::OptimizeError;
 use crate::result::OptimizeResults;
-use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::CoreResult;
-use std::collections::HashMap;
+use ndarray::{Array1, ArrayView1};
+use rand::Rng;
 
 pub mod actor_critic;
 pub mod bandit_optimization;
@@ -270,7 +268,7 @@ impl ExperienceBuffer {
     pub fn sample_batch(&self, batch_size: usize) -> Vec<Experience> {
         let mut batch = Vec::with_capacity(batch_size);
         for _ in 0..batch_size.min(self.buffer.len()) {
-            let idx = rand::rng().random::<usize>() % self.buffer.len();
+            let idx = rand::rng().random_range(0..self.buffer.len());
             batch.push(self.buffer[idx].clone());
         }
         batch

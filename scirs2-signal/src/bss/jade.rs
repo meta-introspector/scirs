@@ -21,6 +21,7 @@ use std::f64::consts::PI;
 /// # Returns
 ///
 /// * Tuple containing (extracted sources, unmixing matrix)
+#[allow(dead_code)]
 pub fn jade_ica(
     signals: &Array2<f64>,
     n_components: usize,

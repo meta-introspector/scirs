@@ -933,6 +933,7 @@ where
 }
 
 /// Extract samples based on indices
+#[allow(dead_code)]
 fn extract_samples(&self, data: ArrayView2<F>, indices: &[usize]) -> Result<Array2<F>> {
     let n_features = data.ncols();
     let mut sampled_data = Array2::zeros((indices.len(), n_features));
@@ -947,6 +948,7 @@ fn extract_samples(&self, data: ArrayView2<F>, indices: &[usize]) -> Result<Arra
 }
 
 /// Extract features based on indices
+#[allow(dead_code)]
 fn extract_features(&self, data: ArrayView2<F>, feature_indices: &[usize]) -> Result<Array2<F>> {
     let n_samples = data.nrows();
     let mut sampled_data = Array2::zeros((n_samples, feature_indices.len()));
@@ -963,6 +965,7 @@ fn extract_features(&self, data: ArrayView2<F>, feature_indices: &[usize]) -> Re
 }
 
 /// Select algorithm and parameters based on diversity strategy
+#[allow(dead_code)]
 fn select_algorithm_and_parameters(
     &self,
     estimator_index: usize,
@@ -993,6 +996,7 @@ fn select_algorithm_and_parameters(
 }
 
 /// Generate random parameters for an algorithm
+#[allow(dead_code)]
 fn generate_random_parameters(
     &self,
     algorithm: &ClusteringAlgorithm,
@@ -1036,6 +1040,7 @@ fn generate_random_parameters(
 }
 
 /// Sample parameters from ranges
+#[allow(dead_code)]
 fn sample_parameter_ranges(
     &self,
     parameter_ranges: &HashMap<String, ParameterRange>,
@@ -1059,6 +1064,7 @@ fn sample_parameter_ranges(
 }
 
 /// Run clustering with specified algorithm and parameters
+#[allow(dead_code)]
 fn run_clustering(
     &self,
     data: &Array2<F>,
@@ -1242,6 +1248,7 @@ fn run_clustering(
 }
 
 /// Map labels back to full dataset size
+#[allow(dead_code)]
 fn map_labels_to_full_data(
     &self,
     labels: &Array1<i32>,
@@ -1267,12 +1274,14 @@ fn map_labels_to_full_data(
 }
 
 /// Count number of clusters in labels
+#[allow(dead_code)]
 fn count_clusters(&self, labels: &Array1<i32>) -> usize {
     let unique_labels: HashSet<i32> = labels.iter().cloned().collect();
     unique_labels.len()
 }
 
 /// Filter results based on quality threshold
+#[allow(dead_code)]
 fn filter_by_quality(&self, results: &[ClusteringResult]) -> Vec<ClusteringResult> {
     if let Some(threshold) = self.config.quality_threshold {
         results
@@ -1286,6 +1295,7 @@ fn filter_by_quality(&self, results: &[ClusteringResult]) -> Vec<ClusteringResul
 }
 
 /// Build consensus from multiple clustering results
+#[allow(dead_code)]
 fn build_consensus(
     &self,
     results: &[ClusteringResult],
@@ -1322,6 +1332,7 @@ fn build_consensus(
 }
 
 /// Implement majority voting consensus
+#[allow(dead_code)]
 fn majority_voting_consensus(
     &self,
     results: &[ClusteringResult],
@@ -1350,6 +1361,7 @@ fn majority_voting_consensus(
 }
 
 /// Implement weighted consensus
+#[allow(dead_code)]
 fn weighted_consensus(
     &self,
     results: &[ClusteringResult],
@@ -1383,6 +1395,7 @@ fn weighted_consensus(
 }
 
 /// Implement co-association consensus
+#[allow(dead_code)]
 fn co_association_consensus(
     &self,
     results: &[ClusteringResult],
@@ -1411,6 +1424,7 @@ fn co_association_consensus(
 }
 
 /// Implement evidence accumulation consensus
+#[allow(dead_code)]
 fn evidence_accumulation_consensus(
     &self,
     results: &[ClusteringResult],
@@ -1422,6 +1436,7 @@ fn evidence_accumulation_consensus(
 }
 
 /// Implement graph-based consensus clustering
+#[allow(dead_code)]
 fn graph_based_consensus(
     &self,
     results: &[ClusteringResult],
@@ -1486,6 +1501,7 @@ fn graph_based_consensus(
 }
 
 /// Implement hierarchical consensus clustering
+#[allow(dead_code)]
 fn hierarchical_consensus(
     &self,
     results: &[ClusteringResult],
@@ -1547,6 +1563,7 @@ fn hierarchical_consensus(
 }
 
 /// Estimate optimal number of clusters from linkage matrix
+#[allow(dead_code)]
 fn estimate_optimal_clusters(&self, linkage_matrix: &Array2<f64>) -> usize {
     // Use elbow method on linkage distances
     let n_merges = linkage_matrix.nrows();
@@ -1573,6 +1590,7 @@ fn estimate_optimal_clusters(&self, linkage_matrix: &Array2<f64>) -> usize {
 }
 
 /// Extract clusters from similarity/association matrix
+#[allow(dead_code)]
 fn extract_clusters_from_matrix(
     &self,
     matrix: &Array2<f64>,
@@ -1617,6 +1635,7 @@ fn extract_clusters_from_matrix(
 }
 
 /// Calculate consensus statistics
+#[allow(dead_code)]
 fn calculate_consensus_statistics(
     &self,
     results: &[ClusteringResult],
@@ -1703,6 +1722,7 @@ fn calculate_consensus_statistics(
 }
 
 /// Calculate diversity metrics (stub implementation)
+#[allow(dead_code)]
 fn calculate_diversity_metrics(&self, results: &[ClusteringResult]) -> Result<DiversityMetrics> {
     let n_results = results.len();
     Ok(DiversityMetrics {
@@ -1714,6 +1734,7 @@ fn calculate_diversity_metrics(&self, results: &[ClusteringResult]) -> Result<Di
 }
 
 /// Calculate consensus stability score for the ensemble
+#[allow(dead_code)]
 fn calculate_consensus_stability_score(&self, _consensus_stats: &ConsensusStatistics) -> f64 {
     0.5 // Stub implementation
 }
@@ -3177,6 +3198,7 @@ pub mod advanced_ensemble {
 
 // Helper functions for advanced ensemble methods
 
+#[allow(dead_code)]
 fn evaluate_ensemble_performance(results: &[EnsembleResult]) -> f64 {
     if results.is_empty() {
         return 0.0;
@@ -3186,6 +3208,7 @@ fn evaluate_ensemble_performance(results: &[EnsembleResult]) -> f64 {
     results.iter().map(|r| r.ensemble_quality).sum::<f64>() / results.len() as f64
 }
 
+#[allow(dead_code)]
 fn adapt_ensemble_composition<F>(
     mut ensemble: EnsembleClusterer<F>,
     results: &[EnsembleResult],
@@ -3214,6 +3237,7 @@ where
     Ok(ensemble)
 }
 
+#[allow(dead_code)]
 fn combine_chunk_results(chunk_results: Vec<EnsembleResult>) -> Result<EnsembleResult> {
     if chunk_results.is_empty() {
         return Err(ClusteringError::InvalidInput(
@@ -3226,6 +3250,7 @@ fn combine_chunk_results(chunk_results: Vec<EnsembleResult>) -> Result<EnsembleR
     Ok(chunk_results.into_iter().next().unwrap())
 }
 
+#[allow(dead_code)]
 fn apply_differential_privacy(
     mut result: EnsembleResult,
     _privacy_budget: f64,
@@ -3245,6 +3270,7 @@ fn apply_differential_privacy(
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn secure_aggregate_results(
     local_results: Vec<EnsembleResult>,
     _config: &FederationConfig,

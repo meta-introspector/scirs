@@ -347,6 +347,7 @@ impl<F: Float + NumCast> Weibull<F> {
 /// # Returns
 ///
 /// * The value of the gamma function at x
+#[allow(dead_code)]
 fn gamma_function<F: Float + NumCast>(x: F) -> F {
     // Lanczos approximation coefficients
     let p = [
@@ -407,6 +408,7 @@ fn gamma_function<F: Float + NumCast>(x: F) -> F {
 /// let pdf_at_one = w.pdf(1.0);
 /// assert!((pdf_at_one - 0.73575888).abs() < 1e-7);
 /// ```
+#[allow(dead_code)]
 pub fn weibull<F>(shape: F, scale: F, loc: F) -> StatsResult<Weibull<F>>
 where
     F: Float + NumCast,

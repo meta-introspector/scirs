@@ -663,6 +663,7 @@ impl<
 // Enhanced solver for the linear system Ax = b with numerical stability checks
 // This implements Gaussian elimination with basic pivoting and safe division
 // Now includes numerical stability monitoring to detect potential issues
+#[allow(dead_code)]
 fn self_solve_linear_system<
     F: Float
         + FromPrimitive

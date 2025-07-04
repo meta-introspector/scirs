@@ -306,6 +306,7 @@ where
 /// # Returns
 ///
 /// * A PrecisionRecallVisualizer
+#[allow(dead_code)]
 pub fn precision_recall_visualization(
     precision: Vec<f64>,
     recall: Vec<f64>,
@@ -326,6 +327,7 @@ pub fn precision_recall_visualization(
 /// # Returns
 ///
 /// * A PrecisionRecallVisualizer
+#[allow(dead_code)]
 pub fn precision_recall_from_labels<'a, T, S>(
     y_true: &'a ArrayBase<S, Ix1>,
     y_score: &'a ArrayBase<S, Ix1>,

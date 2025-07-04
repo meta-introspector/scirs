@@ -507,6 +507,7 @@ where
 }
 
 /// Stream process a file-based array
+#[allow(dead_code)]
 pub fn stream_process_file<T, D, Op>(
     input_path: &Path,
     output_path: &Path,
@@ -1090,7 +1091,7 @@ where
 {
     // Open input file with appropriate compression decompression
     let input_file = File::open(input_path)
-        .map_err(|e| NdimageError::IOError(format!("Failed to open input file: {}", e)))?;
+        .map_err(|e| NdimageError::IoError(format!("Failed to open input file: {}", e)))?;
 
     let mut input_reader: Box<dyn Read> = match compression {
         CompressionType::None => Box::new(BufReader::new(input_file)),
@@ -1110,7 +1111,7 @@ where
             {
                 use lz4::Decoder;
                 Box::new(BufReader::new(Decoder::new(input_file).map_err(|e| {
-                    NdimageError::IOError(format!("Failed to create LZ4 decoder: {}", e))
+                    NdimageError::IoError(format!("Failed to create LZ4 decoder: {}", e))
                 })?))
             }
             #[cfg(not(feature = "compression"))]
@@ -1123,7 +1124,7 @@ where
             {
                 use zstd::stream::read::Decoder;
                 Box::new(BufReader::new(Decoder::new(input_file).map_err(|e| {
-                    NdimageError::IOError(format!("Failed to create Zstd decoder: {}", e))
+                    NdimageError::IoError(format!("Failed to create Zstd decoder: {}", e))
                 })?))
             }
             #[cfg(not(feature = "compression"))]
@@ -1135,7 +1136,7 @@ where
 
     // Create output file with appropriate compression
     let output_file = File::create(output_path)
-        .map_err(|e| NdimageError::IOError(format!("Failed to create output file: {}", e)))?;
+        .map_err(|e| NdimageError::IoError(format!("Failed to create output file: {}", e)))?;
 
     let mut output_writer: Box<dyn Write> = match compression {
         CompressionType::None => Box::new(BufWriter::new(output_file)),
@@ -1160,7 +1161,7 @@ where
                 use lz4::EncoderBuilder;
                 Box::new(BufWriter::new(
                     EncoderBuilder::new().build(output_file).map_err(|e| {
-                        NdimageError::IOError(format!("Failed to create LZ4 encoder: {}", e))
+                        NdimageError::IoError(format!("Failed to create LZ4 encoder: {}", e))
                     })?,
                 ))
             }
@@ -1174,7 +1175,7 @@ where
             {
                 use zstd::stream::write::Encoder;
                 Box::new(BufWriter::new(Encoder::new(output_file, 0).map_err(
-                    |e| NdimageError::IOError(format!("Failed to create Zstd encoder: {}", e)),
+                    |e| NdimageError::IoError(format!("Failed to create Zstd encoder: {}", e)),
                 )?))
             }
             #[cfg(not(feature = "compression"))]
@@ -1198,7 +1199,7 @@ where
         let mut chunk_data = vec![0u8; chunk_size * element_size];
         input_reader
             .read_exact(&mut chunk_data)
-            .map_err(|e| NdimageError::IOError(format!("Failed to read chunk: {}", e)))?;
+            .map_err(|e| NdimageError::IoError(format!("Failed to read chunk: {}", e)))?;
 
         // Convert bytes to typed data (this is a simplified approach)
         // In a real implementation, you would:
@@ -1209,7 +1210,7 @@ where
         // For now, just pass through the data (placeholder for actual processing)
         output_writer
             .write_all(&chunk_data)
-            .map_err(|e| NdimageError::IOError(format!("Failed to write chunk: {}", e)))?;
+            .map_err(|e| NdimageError::IoError(format!("Failed to write chunk: {}", e)))?;
 
         elements_processed += chunk_size;
     }
@@ -1217,7 +1218,7 @@ where
     // Ensure all data is written
     output_writer
         .flush()
-        .map_err(|e| NdimageError::IOError(format!("Failed to flush output: {}", e)))?;
+        .map_err(|e| NdimageError::IoError(format!("Failed to flush output: {}", e)))?;
 
     Ok(())
 }

@@ -11,6 +11,7 @@ use scirs2_linalg::quantization::calibration::{
 };
 use scirs2_linalg::quantization::{dequantize_matrix, quantize_matrix};
 
+#[allow(dead_code)]
 fn main() {
     println!("Dynamic Quantization Calibration Example");
     println!("=======================================\n");
@@ -33,6 +34,7 @@ fn main() {
 }
 
 /// Create a sequence of data matrices with drifting distribution
+#[allow(dead_code)]
 fn create_drifting_data_sequence(num_matrices: usize, drift_factor: f32) -> Vec<Array2<f32>> {
     let mut rng = rng();
     let mut result = Vec::with_capacity(num_matrices);
@@ -74,6 +76,7 @@ fn create_drifting_data_sequence(num_matrices: usize, drift_factor: f32) -> Vec<
 }
 
 /// Compare static (one-time) vs dynamic (EMA) calibration
+#[allow(dead_code)]
 fn compare_static_vs_dynamic_calibration(data_sequence: &[Array2<f32>], bits: u8) {
     println!(
         "{:^10} | {:^15} | {:^15} | {:^15}",
@@ -147,6 +150,7 @@ fn compare_static_vs_dynamic_calibration(data_sequence: &[Array2<f32>], bits: u8
 }
 
 /// Compare different EMA factors for dynamic calibration
+#[allow(dead_code)]
 fn compare_ema_factors(data_sequence: &[Array2<f32>], bits: u8) {
     let ema_factors = [0.05, 0.1, 0.3, 0.5, 0.9];
 
@@ -210,6 +214,7 @@ fn compare_ema_factors(data_sequence: &[Array2<f32>], bits: u8) {
 }
 
 /// Simulate a streaming data scenario with dynamic calibration
+#[allow(dead_code)]
 fn simulate_streaming_data() {
     let bits = 8;
     let mut rng = rng();
@@ -286,6 +291,7 @@ fn simulate_streaming_data() {
 }
 
 /// Generate a batch of simulated sensor data with specified drift and amplitude
+#[allow(dead_code)]
 fn generate_sensor_batch(
     size: usize,
     drift: f32,

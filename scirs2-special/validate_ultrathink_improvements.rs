@@ -7,6 +7,7 @@ use scirs2_special::{
     i0, i1, k0, k1
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Ultrathink Mode Improvements Validation ===\n");
     

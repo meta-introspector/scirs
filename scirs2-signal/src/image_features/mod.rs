@@ -65,6 +65,7 @@ use std::fmt::Debug;
 /// let contrast = *features.get("haralick_contrast").unwrap();
 /// let mean = *features.get("intensity_mean").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn extract_image_features<T>(
     image: &Array2<T>,
     options: &ImageFeatureOptions,
@@ -156,6 +157,7 @@ where
 /// let g_mean = *features.get("g_intensity_mean").unwrap();
 /// let b_mean = *features.get("b_intensity_mean").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn extract_color_image_features<T>(
     image: &ndarray::Array3<T>,
     options: &ImageFeatureOptions,

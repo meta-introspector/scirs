@@ -662,6 +662,7 @@ where
 /// # Returns
 ///
 /// A new fast evaluator
+#[allow(dead_code)]
 pub fn make_fast_bspline_evaluator<T>(spline: &BSpline<T>) -> FastBSplineEvaluator<T>
 where
     T: InterpolationFloat + Copy,
@@ -680,6 +681,7 @@ where
 /// # Returns
 ///
 /// A new fast evaluator
+#[allow(dead_code)]
 pub fn make_fast_bspline_evaluator_owned<T>(spline: BSpline<T>) -> FastBSplineEvaluator<T>
 where
     T: InterpolationFloat + Copy,
@@ -697,6 +699,7 @@ where
 /// # Returns
 ///
 /// A new fast evaluator with caching
+#[allow(dead_code)]
 pub fn make_cached_fast_bspline_evaluator<T>(
     spline: &BSpline<T>,
     cache: BSplineCache<T>,

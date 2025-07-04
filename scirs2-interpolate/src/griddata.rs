@@ -121,6 +121,7 @@ pub enum GriddataMethod {
 /// - **RBF methods**: Slow setup O(n³), medium evaluation O(n)
 ///
 /// For large datasets (n > 1000), consider using FastRBF or other approximation methods.
+#[allow(dead_code)]
 pub fn griddata<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -231,6 +232,7 @@ where
 ///                                GriddataMethod::Linear, None, Some(4))?;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[allow(dead_code)]
 pub fn griddata_parallel<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -310,6 +312,7 @@ where
 }
 
 /// Parallel implementation of linear interpolation
+#[allow(dead_code)]
 fn griddata_linear_parallel<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -339,6 +342,7 @@ where
 }
 
 /// Parallel implementation of nearest neighbor interpolation
+#[allow(dead_code)]
 fn griddata_nearest_parallel<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -367,6 +371,7 @@ where
 }
 
 /// Parallel implementation of cubic interpolation
+#[allow(dead_code)]
 fn griddata_cubic_parallel<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -395,6 +400,7 @@ where
 }
 
 /// Parallel implementation of RBF interpolation
+#[allow(dead_code)]
 fn griddata_rbf_parallel<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -448,6 +454,7 @@ where
 }
 
 /// Helper function for single point linear interpolation
+#[allow(dead_code)]
 fn interpolate_single_linear<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -463,6 +470,7 @@ where
 }
 
 /// Helper function for single point nearest neighbor interpolation
+#[allow(dead_code)]
 fn interpolate_single_nearest<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -492,6 +500,7 @@ where
 }
 
 /// Helper function for single point cubic interpolation
+#[allow(dead_code)]
 fn interpolate_single_cubic<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -507,6 +516,7 @@ where
 }
 
 /// Validate input arrays for griddata
+#[allow(dead_code)]
 fn validate_griddata_inputs<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -547,6 +557,7 @@ where
 }
 
 /// Linear interpolation using barycentric coordinates and triangulation
+#[allow(dead_code)]
 fn griddata_linear<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -590,6 +601,7 @@ where
 }
 
 /// Nearest neighbor interpolation
+#[allow(dead_code)]
 fn griddata_nearest<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -638,6 +650,7 @@ where
 }
 
 /// 1D linear interpolation
+#[allow(dead_code)]
 fn griddata_linear_1d<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -704,6 +717,7 @@ where
 }
 
 /// 2D linear interpolation using triangulation
+#[allow(dead_code)]
 fn griddata_linear_2d<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -737,6 +751,7 @@ where
 }
 
 /// N-dimensional linear interpolation using natural neighbor approximation
+#[allow(dead_code)]
 fn griddata_linear_nd<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -760,6 +775,7 @@ where
 }
 
 /// Barycentric interpolation for 2D points
+#[allow(dead_code)]
 fn interpolate_barycentric_2d<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -826,6 +842,7 @@ where
 }
 
 /// Compute barycentric coordinates for a triangle
+#[allow(dead_code)]
 fn compute_barycentric_coordinates<F>(
     p1: &[F; 2],
     p2: &[F; 2],
@@ -849,6 +866,7 @@ where
 }
 
 /// Natural neighbor-style interpolation for 2D
+#[allow(dead_code)]
 fn interpolate_natural_neighbor_2d<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -900,6 +918,7 @@ where
 }
 
 /// Inverse distance weighting for linear interpolation approximation
+#[allow(dead_code)]
 fn interpolate_idw_linear<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -946,6 +965,7 @@ where
 }
 
 /// Cubic interpolation using Clough-Tocher scheme (simplified)
+#[allow(dead_code)]
 fn griddata_cubic<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -970,6 +990,7 @@ where
 }
 
 /// Simplified Clough-Tocher interpolation using gradient-enhanced approach
+#[allow(dead_code)]
 fn clough_tocher_interpolation<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1034,6 +1055,7 @@ where
 }
 
 /// Estimate gradients at data points using local least squares fitting
+#[allow(dead_code)]
 fn estimate_gradients<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1092,6 +1114,7 @@ where
 }
 
 /// Find k nearest neighbors to a query point
+#[allow(dead_code)]
 fn find_nearest_neighbors<F>(
     points: &ArrayView2<F>,
     query: &[F],
@@ -1119,6 +1142,7 @@ where
 }
 
 /// Perform local cubic interpolation using function values and gradients
+#[allow(dead_code)]
 fn local_cubic_interpolation<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1177,6 +1201,7 @@ where
 }
 
 /// Simple least squares solver for small systems
+#[allow(dead_code)]
 fn solve_least_squares<F>(a: &Array2<F>, b: &Array1<F>) -> InterpolateResult<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + Display + AddAssign + std::ops::SubAssign,
@@ -1234,6 +1259,7 @@ where
 }
 
 /// RBF-based interpolation
+#[allow(dead_code)]
 fn griddata_rbf<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1265,6 +1291,7 @@ where
 }
 
 /// Estimate appropriate epsilon parameter for RBF interpolation
+#[allow(dead_code)]
 fn estimate_rbf_epsilon<F>(points: &ArrayView2<F>) -> F
 where
     F: Float + FromPrimitive,
@@ -1344,6 +1371,7 @@ where
 /// assert_eq!(grid.ncols(), 2); // 2 dimensions
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[allow(dead_code)]
 pub fn make_regular_grid<F>(bounds: &[(F, F)], resolution: &[usize]) -> InterpolateResult<Array2<F>>
 where
     F: Float + FromPrimitive + Clone,

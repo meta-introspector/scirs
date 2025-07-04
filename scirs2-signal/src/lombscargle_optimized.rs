@@ -268,6 +268,7 @@ pub struct PerformanceTrendAnalysis {
 }
 
 /// Run complete ultrathink enhanced Lomb-Scargle validation
+#[allow(dead_code)]
 pub fn run_ultrathink_lombscargle_validation() -> SignalResult<UltrathinkLombScargleResult> {
     println!("🚀 Starting Ultrathink Enhanced Lomb-Scargle Validation...");
 
@@ -337,6 +338,7 @@ pub fn run_ultrathink_lombscargle_validation() -> SignalResult<UltrathinkLombSca
 }
 
 /// Validate comprehensive accuracy across multiple signal types
+#[allow(dead_code)]
 fn validate_comprehensive_accuracy() -> SignalResult<ComprehensiveAccuracyResult> {
     // Generate comprehensive test signals
     let test_signals = generate_comprehensive_test_signals()?;
@@ -393,6 +395,7 @@ fn validate_comprehensive_accuracy() -> SignalResult<ComprehensiveAccuracyResult
 }
 
 /// Generate comprehensive test signals for validation
+#[allow(dead_code)]
 fn generate_comprehensive_test_signals(
 ) -> SignalResult<HashMap<String, (Array1<f64>, Array1<f64>, Vec<f64>, Vec<f64>)>> {
     let mut signals = HashMap::new();
@@ -404,10 +407,11 @@ fn generate_comprehensive_test_signals(
     let mut t = Array1::linspace(0.0, (n as f64 - 1.0) / fs, n);
     // Add irregular sampling
     for i in 1..n {
-        t[i] += 0.001 * rng.gen_range(-1.0..1.0);
+        t[i] += 0.001 * rng.random_range(-1.0..1.0);
     }
     let f0 = 10.0;
-    let y1: Array1<f64> = t.mapv(|ti| (2.0 * PI * f0 * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0));
+    let y1: Array1<f64> =
+        t.mapv(|ti| (2.0 * PI * f0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
     signals.insert(
         "single_tone".to_string(),
         (t.clone(), y1, vec![f0], vec![1.0]),
@@ -421,7 +425,7 @@ fn generate_comprehensive_test_signals(
         (2.0 * PI * f1 * ti).sin()
             + 0.7 * (2.0 * PI * f2 * ti).sin()
             + 0.5 * (2.0 * PI * f3 * ti).sin()
-            + 0.1 * rng.gen_range(-1.0..1.0)
+            + 0.1 * rng.random_range(-1.0..1.0)
     });
     signals.insert(
         "multi_tone".to_string(),
@@ -434,7 +438,7 @@ fn generate_comprehensive_test_signals(
     let y3: Array1<f64> = t.mapv(|ti| {
         (2.0 * PI * fc1 * ti).sin()
             + 0.8 * (2.0 * PI * fc2 * ti).sin()
-            + 0.1 * rng.gen_range(-1.0..1.0)
+            + 0.1 * rng.random_range(-1.0..1.0)
     });
     signals.insert(
         "close_frequencies".to_string(),
@@ -445,6 +449,7 @@ fn generate_comprehensive_test_signals(
 }
 
 /// Validate frequency detection accuracy
+#[allow(dead_code)]
 fn validate_frequency_detection(
     freqs: &Array1<f64>,
     power: &Array1<f64>,
@@ -486,6 +491,7 @@ fn validate_frequency_detection(
 }
 
 /// Validate power estimation accuracy
+#[allow(dead_code)]
 fn validate_power_estimation(
     freqs: &Array1<f64>,
     power: &Array1<f64>,
@@ -518,6 +524,7 @@ fn validate_power_estimation(
 }
 
 /// Validate phase coherence preservation
+#[allow(dead_code)]
 fn validate_phase_coherence(
     t: &Array1<f64>,
     y: &Array1<f64>,
@@ -555,6 +562,7 @@ fn validate_phase_coherence(
 }
 
 /// Analyze spectral leakage with different window functions
+#[allow(dead_code)]
 fn analyze_spectral_leakage() -> SignalResult<SpectralLeakageMetrics> {
     // Generate test signal with known spectral properties
     let n = 256;
@@ -607,6 +615,7 @@ fn analyze_spectral_leakage() -> SignalResult<SpectralLeakageMetrics> {
 }
 
 /// Test dynamic range handling
+#[allow(dead_code)]
 fn test_dynamic_range_handling() -> SignalResult<DynamicRangeMetrics> {
     let n = 512;
     let fs = 100.0;
@@ -644,6 +653,7 @@ fn test_dynamic_range_handling() -> SignalResult<DynamicRangeMetrics> {
 }
 
 /// Perform comprehensive SciPy comparison
+#[allow(dead_code)]
 fn perform_scipy_comparison() -> SignalResult<ScipyComparisonResult> {
     // Generate test signals
     let test_signals = generate_scipy_test_signals()?;
@@ -689,6 +699,7 @@ fn perform_scipy_comparison() -> SignalResult<ScipyComparisonResult> {
 }
 
 /// Generate test signals for SciPy comparison
+#[allow(dead_code)]
 fn generate_scipy_test_signals() -> SignalResult<Vec<(Array1<f64>, Array1<f64>)>> {
     let mut signals = Vec::new();
     let mut rng = rand::rng();
@@ -697,20 +708,20 @@ fn generate_scipy_test_signals() -> SignalResult<Vec<(Array1<f64>, Array1<f64>)>
     let n = 100;
     let mut t1 = Array1::linspace(0.0, 10.0, n);
     for i in 1..n {
-        t1[i] += 0.1 * rng.gen_range(-1.0..1.0);
+        t1[i] += 0.1 * rng.random_range(-1.0..1.0);
     }
     t1.as_slice_mut()
         .unwrap()
         .sort_by(|a, b| a.partial_cmp(b).unwrap());
     let y1: Array1<f64> =
-        t1.mapv(|ti| (2.0 * PI * 1.0 * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0));
+        t1.mapv(|ti| (2.0 * PI * 1.0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
     signals.push((t1, y1));
 
     // Signal 2: Multi-component signal
     let n = 150;
     let mut t2 = Array1::linspace(0.0, 15.0, n);
     for i in 1..n {
-        t2[i] += 0.05 * rng.gen_range(-1.0..1.0);
+        t2[i] += 0.05 * rng.random_range(-1.0..1.0);
     }
     t2.as_slice_mut()
         .unwrap()
@@ -718,7 +729,7 @@ fn generate_scipy_test_signals() -> SignalResult<Vec<(Array1<f64>, Array1<f64>)>
     let y2: Array1<f64> = t2.mapv(|ti| {
         (2.0 * PI * 0.5 * ti).sin()
             + 0.7 * (2.0 * PI * 1.5 * ti).sin()
-            + 0.2 * rng.gen_range(-1.0..1.0)
+            + 0.2 * rng.random_range(-1.0..1.0)
     });
     signals.push((t2, y2));
 
@@ -726,6 +737,7 @@ fn generate_scipy_test_signals() -> SignalResult<Vec<(Array1<f64>, Array1<f64>)>
 }
 
 /// Simulate SciPy Lomb-Scargle implementation (placeholder)
+#[allow(dead_code)]
 fn simulate_scipy_lombscargle(
     t: &Array1<f64>,
     y: &Array1<f64>,
@@ -737,13 +749,14 @@ fn simulate_scipy_lombscargle(
     // Add small random perturbations to simulate SciPy differences
     let mut rng = rand::rng();
     for p in power.iter_mut() {
-        *p *= 1.0 + 0.001 * rng.gen_range(-1.0..1.0); // 0.1% random variation
+        *p *= 1.0 + 0.001 * rng.random_range(-1.0..1.0); // 0.1% random variation
     }
 
     Ok((freqs, power))
 }
 
 /// Validate SIMD implementation completely
+#[allow(dead_code)]
 fn validate_simd_implementation_complete() -> SignalResult<CompleteSimdValidation> {
     let capabilities = PlatformCapabilities::detect();
 
@@ -751,8 +764,9 @@ fn validate_simd_implementation_complete() -> SignalResult<CompleteSimdValidatio
     let n = 1024;
     let mut rng = rand::rng();
     let t: Array1<f64> =
-        Array1::from_shape_fn(n, |i| i as f64 * 0.01 + 0.001 * rng.gen_range(-1.0..1.0));
-    let y: Array1<f64> = t.mapv(|ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.gen_range(-1.0..1.0));
+        Array1::from_shape_fn(n, |i| i as f64 * 0.01 + 0.001 * rng.random_range(-1.0..1.0));
+    let y: Array1<f64> =
+        t.mapv(|ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
 
     // Compute with scalar implementation
     let start_scalar = Instant::now();
@@ -811,6 +825,7 @@ fn validate_simd_implementation_complete() -> SignalResult<CompleteSimdValidatio
 }
 
 /// Profile memory usage during computation
+#[allow(dead_code)]
 fn profile_memory_usage() -> SignalResult<MemoryProfilingResult> {
     // Simulate memory profiling
     // In practice, this would use actual memory profiling tools
@@ -837,6 +852,7 @@ fn profile_memory_usage() -> SignalResult<MemoryProfilingResult> {
 }
 
 /// Validate statistical properties with theoretical distributions
+#[allow(dead_code)]
 fn validate_statistical_properties() -> SignalResult<StatisticalValidationResult> {
     // False alarm probability validation
     let false_alarm_validation = validate_false_alarm_probability()?;
@@ -859,6 +875,7 @@ fn validate_statistical_properties() -> SignalResult<StatisticalValidationResult
 }
 
 /// Validate false alarm probability
+#[allow(dead_code)]
 fn validate_false_alarm_probability() -> SignalResult<FalseAlarmValidation> {
     // Generate white noise signals and check false alarm rates
     let n_trials = 1000;
@@ -870,7 +887,7 @@ fn validate_false_alarm_probability() -> SignalResult<FalseAlarmValidation> {
 
     for _ in 0..n_trials {
         let t = Array1::linspace(0.0, 10.0, n_samples);
-        let y: Array1<f64> = Array1::from_shape_fn(n_samples, |_| rng.gen_range(-1.0..1.0));
+        let y: Array1<f64> = Array1::from_shape_fn(n_samples, |_| rng.random_range(-1.0..1.0));
 
         let (_, power) = lombscargle(&t, &y, None, Some("standard"), Some(true), Some(false))?;
 
@@ -892,12 +909,13 @@ fn validate_false_alarm_probability() -> SignalResult<FalseAlarmValidation> {
 }
 
 /// Compare with theoretical PSD
+#[allow(dead_code)]
 fn compare_with_theoretical_psd() -> SignalResult<PsdTheoreticalComparison> {
     // Test with white noise (flat PSD)
     let n = 512;
     let mut rng = rand::rng();
     let t = Array1::linspace(0.0, 10.0, n);
-    let white_noise: Array1<f64> = Array1::from_shape_fn(n, |_| rng.gen_range(-1.0..1.0));
+    let white_noise: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(-1.0..1.0));
 
     let (freqs, power) = lombscargle(&t, &white_noise, None, Some("psd"), Some(true), Some(false))?;
 
@@ -915,6 +933,7 @@ fn compare_with_theoretical_psd() -> SignalResult<PsdTheoreticalComparison> {
 }
 
 /// Validate confidence intervals
+#[allow(dead_code)]
 fn validate_confidence_intervals() -> SignalResult<ConfidenceIntervalValidation> {
     // Placeholder implementation
     Ok(ConfidenceIntervalValidation {
@@ -925,6 +944,7 @@ fn validate_confidence_intervals() -> SignalResult<ConfidenceIntervalValidation>
 }
 
 /// Validate hypothesis testing
+#[allow(dead_code)]
 fn validate_hypothesis_testing() -> SignalResult<HypothesisTestingValidation> {
     // Placeholder implementation
     Ok(HypothesisTestingValidation {
@@ -936,6 +956,7 @@ fn validate_hypothesis_testing() -> SignalResult<HypothesisTestingValidation> {
 }
 
 /// Detect performance regression
+#[allow(dead_code)]
 fn detect_performance_regression() -> SignalResult<PerformanceRegressionResult> {
     // Baseline metrics (would be loaded from historical data)
     let baseline_metrics = BaselinePerformanceMetrics {
@@ -977,6 +998,7 @@ fn detect_performance_regression() -> SignalResult<PerformanceRegressionResult> 
 // Helper functions
 
 /// Calculate overall quality score
+#[allow(dead_code)]
 fn calculate_quality_score(
     accuracy: &ComprehensiveAccuracyResult,
     scipy: &ScipyComparisonResult,
@@ -995,6 +1017,7 @@ fn calculate_quality_score(
 }
 
 /// Identify critical issues
+#[allow(dead_code)]
 fn identify_critical_issues(
     accuracy: &ComprehensiveAccuracyResult,
     scipy: &ScipyComparisonResult,
@@ -1015,6 +1038,7 @@ fn identify_critical_issues(
 }
 
 /// Generate optimization recommendations
+#[allow(dead_code)]
 fn generate_optimization_recommendations(
     accuracy: &ComprehensiveAccuracyResult,
     scipy: &ScipyComparisonResult,
@@ -1043,6 +1067,7 @@ fn generate_optimization_recommendations(
 // Utility functions
 
 /// Compute correlation between two arrays
+#[allow(dead_code)]
 fn compute_correlation(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
     let n = a.len().min(b.len());
     let mean_a = a.slice(ndarray::s![..n]).mean().unwrap();
@@ -1068,6 +1093,7 @@ fn compute_correlation(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
 }
 
 /// Find peak near a specific frequency
+#[allow(dead_code)]
 fn find_peak_near_frequency(
     freqs: &Array1<f64>,
     power: &Array1<f64>,
@@ -1088,6 +1114,7 @@ fn find_peak_near_frequency(
 }
 
 /// Estimate noise floor from power spectrum
+#[allow(dead_code)]
 fn estimate_noise_floor(power: &Array1<f64>) -> f64 {
     // Use median as robust noise floor estimate
     let mut sorted_power = power.to_vec();
@@ -1096,6 +1123,7 @@ fn estimate_noise_floor(power: &Array1<f64>) -> f64 {
 }
 
 /// Perform statistical tests on error distribution
+#[allow(dead_code)]
 fn perform_statistical_tests(errors: &[f64]) -> SignalResult<StatisticalTestResults> {
     // Placeholder implementation of statistical tests
     Ok(StatisticalTestResults {
@@ -1107,6 +1135,7 @@ fn perform_statistical_tests(errors: &[f64]) -> SignalResult<StatisticalTestResu
 }
 
 /// Generate comprehensive validation report
+#[allow(dead_code)]
 pub fn generate_ultrathink_lombscargle_report(result: &UltrathinkLombScargleResult) -> String {
     let mut report = String::new();
 

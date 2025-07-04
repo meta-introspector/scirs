@@ -43,6 +43,7 @@ use rayon::prelude::*;
 /// let mi = mutual_info_score(true_labels.view(), pred_labels.view()).unwrap();
 /// assert!(mi > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn mutual_info_score<F>(labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -104,6 +105,7 @@ where
 /// # Returns
 ///
 /// The normalized mutual information score (0 to 1, higher is better)
+#[allow(dead_code)]
 pub fn normalized_mutual_info_score<F>(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -141,6 +143,7 @@ where
 /// # Returns
 ///
 /// The adjusted mutual information score (higher is better, can be negative)
+#[allow(dead_code)]
 pub fn adjusted_mutual_info_score<F>(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -176,6 +179,7 @@ where
 /// # Returns
 ///
 /// The adjusted rand index (-1 to 1, higher is better)
+#[allow(dead_code)]
 pub fn adjusted_rand_score<F>(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -251,6 +255,7 @@ where
 /// # Returns
 ///
 /// The V-measure score (0 to 1, higher is better)
+#[allow(dead_code)]
 pub fn v_measure_score<F>(labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -279,6 +284,7 @@ where
 /// # Returns
 ///
 /// The homogeneity score (0 to 1, higher is better)
+#[allow(dead_code)]
 pub fn homogeneity_score<F>(labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -307,6 +313,7 @@ where
 /// # Returns
 ///
 /// The completeness score (0 to 1, higher is better)
+#[allow(dead_code)]
 pub fn completeness_score<F>(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -327,6 +334,7 @@ where
 // Helper functions
 
 /// Build contingency table from two label arrays
+#[allow(dead_code)]
 fn build_contingency_table(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -341,6 +349,7 @@ fn build_contingency_table(
 }
 
 /// Calculate entropy of a label assignment
+#[allow(dead_code)]
 fn entropy<F>(labels: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -365,6 +374,7 @@ where
 }
 
 /// Calculate conditional entropy H(X|Y)
+#[allow(dead_code)]
 fn conditional_entropy<F>(labels_x: ArrayView1<i32>, labels_y: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -404,6 +414,7 @@ where
 }
 
 /// Calculate expected mutual information for random labeling
+#[allow(dead_code)]
 fn expected_mutual_info<F>(labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -456,6 +467,7 @@ where
 }
 
 /// Calculate combinations C(n, 2) = n * (n-1) / 2
+#[allow(dead_code)]
 fn comb2(n: usize) -> usize {
     if n < 2 {
         0
@@ -468,6 +480,7 @@ fn comb2(n: usize) -> usize {
 /// P(X = k) = C(K, k) * C(N-K, n-k) / C(N, n)
 /// where N is population size, K is success states in population,
 /// n is sample size, k is observed successes
+#[allow(dead_code)]
 fn hypergeometric_pmf(k: usize, n_total: usize, row_sum: usize, col_sum: usize) -> f64 {
     if k > row_sum || k > col_sum || (row_sum + col_sum - k) > n_total {
         return 0.0;
@@ -480,6 +493,7 @@ fn hypergeometric_pmf(k: usize, n_total: usize, row_sum: usize, col_sum: usize) 
 }
 
 /// Calculate log of binomial coefficient C(n, k) = log(n!) - log(k!) - log((n-k)!)
+#[allow(dead_code)]
 fn log_comb(n: usize, k: usize) -> f64 {
     if k > n {
         return f64::NEG_INFINITY;
@@ -525,6 +539,7 @@ pub enum NormalizationMethod {
 /// # Returns
 ///
 /// The normalized mutual information score (0 to 1, higher is better)
+#[allow(dead_code)]
 pub fn normalized_mutual_info_score_with_method<F>(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -564,6 +579,7 @@ where
 /// # Returns
 ///
 /// The Fowlkes-Mallows Index (0 to 1, higher is better)
+#[allow(dead_code)]
 pub fn fowlkes_mallows_score<F>(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -630,6 +646,7 @@ where
 /// # Returns
 ///
 /// The Rand Index (0 to 1, higher is better)
+#[allow(dead_code)]
 pub fn rand_score<F>(labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -675,6 +692,7 @@ where
 /// # Returns
 ///
 /// The normalized variation of information (0 to 1, lower is better)
+#[allow(dead_code)]
 pub fn normalized_variation_of_information<F>(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -710,6 +728,7 @@ where
 /// # Returns
 ///
 /// The Jensen-Shannon Divergence (0 to 1, lower is better)
+#[allow(dead_code)]
 pub fn jensen_shannon_divergence<F>(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -763,6 +782,7 @@ where
 }
 
 /// Convert label array to probability distribution
+#[allow(dead_code)]
 fn labels_to_distribution<F>(labels: ArrayView1<i32>) -> Result<HashMap<i32, F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -795,6 +815,7 @@ where
 /// # Returns
 ///
 /// The conditional mutual information
+#[allow(dead_code)]
 pub fn conditional_mutual_information<F>(
     x_labels: ArrayView1<i32>,
     y_labels: ArrayView1<i32>,

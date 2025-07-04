@@ -3,6 +3,7 @@ extern crate scirs2_autograd as ag;
 use ag::tensor_ops as T;
 
 #[test]
+#[allow(dead_code)]
 fn test_basic_operations() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Basic scalar operations
@@ -26,6 +27,7 @@ fn test_basic_operations() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_tensor_shapes() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test various tensor shapes

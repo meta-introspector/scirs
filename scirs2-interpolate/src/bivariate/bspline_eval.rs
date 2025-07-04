@@ -19,6 +19,7 @@ use std::fmt::Debug;
 ///
 /// The index i such that knots[i] <= x < knots[i+1]
 /// or the largest i such that knots[i] <= x if x == knots[knots.len()-1]
+#[allow(dead_code)]
 pub fn find_span<F: crate::traits::InterpolationFloat>(
     x: F,
     knots: &ArrayView1<F>,
@@ -63,6 +64,7 @@ pub fn find_span<F: crate::traits::InterpolationFloat>(
 /// # Returns
 ///
 /// An array of k+1 basis function values
+#[allow(dead_code)]
 pub fn basis_funs<F: crate::traits::InterpolationFloat>(
     x: F,
     span: usize,
@@ -109,6 +111,7 @@ pub fn basis_funs<F: crate::traits::InterpolationFloat>(
 /// # Returns
 ///
 /// A 2D array where the row `i` contains the `i`-th derivatives of the basis functions
+#[allow(dead_code)]
 pub fn basis_funs_derivatives<F: crate::traits::InterpolationFloat>(
     x: F,
     span: usize,
@@ -221,6 +224,7 @@ pub fn basis_funs_derivatives<F: crate::traits::InterpolationFloat>(
 /// # Returns
 ///
 /// The value of the tensor-product B-spline at (x, y)
+#[allow(dead_code)]
 pub fn evaluate_bispline<F: crate::traits::InterpolationFloat>(
     x: F,
     y: F,
@@ -276,6 +280,7 @@ pub fn evaluate_bispline<F: crate::traits::InterpolationFloat>(
 ///
 /// The value of the specified derivative of the tensor-product B-spline at (x, y)
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn evaluate_bispline_derivative<F: crate::traits::InterpolationFloat>(
     x: F,
     y: F,
@@ -352,6 +357,7 @@ pub fn evaluate_bispline_derivative<F: crate::traits::InterpolationFloat>(
 ///
 /// The integral of the tensor-product B-spline over the rectangular region
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn integrate_bispline<F: crate::traits::InterpolationFloat>(
     xa: F,
     xb: F,
@@ -405,6 +411,7 @@ pub fn integrate_bispline<F: crate::traits::InterpolationFloat>(
 /// # Returns
 ///
 /// A tuple of arrays containing the quadrature points and weights
+#[allow(dead_code)]
 fn gauss_legendre_quadrature<F: Float + FromPrimitive + Debug>(n: usize) -> (Vec<F>, Vec<F>) {
     let mut points = Vec::with_capacity(n);
     let mut weights = Vec::with_capacity(n);

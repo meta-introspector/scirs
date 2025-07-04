@@ -19,6 +19,7 @@ use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
 
+#[allow(dead_code)]
 fn main() -> SignalResult<()> {
     println!("SIMD and Memory Optimization Demo");
     println!("==================================");
@@ -51,6 +52,7 @@ fn main() -> SignalResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_simd_fir_filter() -> SignalResult<()> {
     println!("\n1. SIMD-Optimized FIR Filtering");
     println!("-------------------------------");
@@ -114,6 +116,7 @@ fn demo_simd_fir_filter() -> SignalResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_simd_autocorrelation() -> SignalResult<()> {
     println!("\n2. SIMD-Optimized Autocorrelation");
     println!("---------------------------------");
@@ -173,6 +176,7 @@ fn demo_simd_autocorrelation() -> SignalResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_simd_cross_correlation() -> SignalResult<()> {
     println!("\n3. SIMD-Optimized Cross-Correlation");
     println!("-----------------------------------");
@@ -225,6 +229,7 @@ fn demo_simd_cross_correlation() -> SignalResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_simd_windowing() -> SignalResult<()> {
     println!("\n4. SIMD-Optimized Windowing");
     println!("---------------------------");
@@ -269,6 +274,7 @@ fn demo_simd_windowing() -> SignalResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_simd_benchmarks() -> SignalResult<()> {
     println!("\n5. SIMD Performance Benchmarking");
     println!("--------------------------------");
@@ -284,6 +290,7 @@ fn demo_simd_benchmarks() -> SignalResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_memory_optimized_filtering() -> SignalResult<()> {
     println!("\n6. Memory-Optimized FIR Filtering");
     println!("---------------------------------");
@@ -377,6 +384,7 @@ fn demo_memory_optimized_filtering() -> SignalResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_memory_optimized_spectrogram() -> SignalResult<()> {
     println!("\n7. Memory-Optimized Spectrogram");
     println!("-------------------------------");
@@ -467,6 +475,7 @@ fn demo_memory_optimized_spectrogram() -> SignalResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_ultrathink_simd_memory() -> SignalResult<()> {
     println!("\n8. Ultrathink Mode SIMD Memory Optimization");
     println!("===========================================");
@@ -656,6 +665,7 @@ fn demo_ultrathink_simd_memory() -> SignalResult<()> {
 }
 
 /// Calculate RMS (Root Mean Square) of a signal
+#[allow(dead_code)]
 fn rms(signal: &[f64]) -> f64 {
     let sum_squares: f64 = signal.iter().map(|&x| x * x).sum();
     (sum_squares / signal.len() as f64).sqrt()

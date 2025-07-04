@@ -25,6 +25,7 @@ use scirs2_transform::monitoring::{
     AlertConfig, DriftMethod, PerformanceMetrics, TransformationMonitor,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 SciRS2 Transform Advanced Features Demo");
     println!("==========================================");
@@ -58,6 +59,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_automated_feature_engineering(data: &Array2<f64>) -> Result<()> {
     println!("\n📊 Automated Feature Engineering Demo");
     println!("=====================================");
@@ -92,6 +94,7 @@ fn demo_automated_feature_engineering(data: &Array2<f64>) -> Result<()> {
 }
 
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn demo_gpu_acceleration(data: &Array2<f64>) -> Result<()> {
     println!("\n🎮 GPU Acceleration Demo");
     println!("========================");
@@ -163,6 +166,7 @@ async fn demo_distributed_processing(data: &Array2<f64>) -> Result<()> {
 }
 
 #[cfg(feature = "monitoring")]
+#[allow(dead_code)]
 fn demo_production_monitoring(data: &Array2<f64>) -> Result<()> {
     println!("\n📊 Production Monitoring Demo");
     println!("=============================");
@@ -216,6 +220,7 @@ fn demo_production_monitoring(data: &Array2<f64>) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn generate_sample_data(n_samples: usize, n_features: usize) -> Result<Array2<f64>> {
     use ndarray_rand::rand_distr::Normal;
     use ndarray_rand::RandomExt;

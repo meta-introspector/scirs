@@ -96,6 +96,7 @@ const CUDA_SUCCESS: i32 = 0;
 const NVRTC_SUCCESS: i32 = 0;
 
 // Helper function to get CUDA error string
+#[allow(dead_code)]
 fn cuda_error_string(error: i32) -> String {
     unsafe {
         let error_ptr = cudaGetErrorString(error);
@@ -697,6 +698,7 @@ impl CudaOperations {
 }
 
 /// Helper function to allocate GPU buffer
+#[allow(dead_code)]
 pub fn allocate_gpu_buffer<T>(data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
     T: 'static,
@@ -705,6 +707,7 @@ where
 }
 
 /// Helper function to allocate empty GPU buffer
+#[allow(dead_code)]
 pub fn allocate_gpu_buffer_empty<T>(size: usize) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
     T: 'static,
@@ -950,6 +953,7 @@ impl<T> CudaManagedBuffer<T> {
 }
 
 /// Convert OpenCL-style kernel to CUDA syntax
+#[allow(dead_code)]
 fn convert_opencl_to_cuda(source: &str) -> String {
     let mut cuda_source = source.to_string();
 
@@ -1014,6 +1018,7 @@ fn convert_opencl_to_cuda(source: &str) -> String {
 }
 
 /// Calculate optimal grid and block dimensions for kernel launch
+#[allow(dead_code)]
 fn calculate_launch_config(
     work_size: &[usize],
     dimensions: usize,
@@ -1022,6 +1027,7 @@ fn calculate_launch_config(
 }
 
 /// Advanced launch configuration calculation with device constraints
+#[allow(dead_code)]
 fn calculate_launch_config_advanced(
     work_size: &[usize],
     dimensions: usize,

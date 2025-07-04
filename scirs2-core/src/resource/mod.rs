@@ -437,47 +437,56 @@ static GLOBAL_RESOURCE_DISCOVERY: std::sync::LazyLock<ResourceDiscovery> =
     std::sync::LazyLock::new(ResourceDiscovery::default);
 
 /// Get the global resource discovery instance
+#[allow(dead_code)]
 pub fn global_resource_discovery() -> &'static ResourceDiscovery {
     &GLOBAL_RESOURCE_DISCOVERY
 }
 
 /// Quick access functions for common operations
 /// Get system resources using global discovery
+#[allow(dead_code)]
 pub fn get_system_resources() -> CoreResult<SystemResources> {
     global_resource_discovery().discover()
 }
 
 /// Get recommended thread count
+#[allow(dead_code)]
 pub fn get_recommended_thread_count() -> CoreResult<usize> {
     Ok(get_system_resources()?.recommended_thread_count())
 }
 
 /// Get recommended chunk size
+#[allow(dead_code)]
 pub fn get_recommended_chunk_size() -> CoreResult<usize> {
     Ok(get_system_resources()?.recommended_chunk_size())
 }
 
 /// Check if SIMD is supported
+#[allow(dead_code)]
 pub fn is_simd_supported() -> CoreResult<bool> {
     Ok(get_system_resources()?.supports_simd())
 }
 
 /// Check if GPU is available
+#[allow(dead_code)]
 pub fn is_gpu_available() -> CoreResult<bool> {
     Ok(get_system_resources()?.supports_gpu())
 }
 
 /// Get total system memory
+#[allow(dead_code)]
 pub fn get_total_memory() -> CoreResult<usize> {
     Ok(get_system_resources()?.total_memory())
 }
 
 /// Get available system memory
+#[allow(dead_code)]
 pub fn get_available_memory() -> CoreResult<usize> {
     Ok(get_system_resources()?.available_memory())
 }
 
 /// Get performance tier
+#[allow(dead_code)]
 pub fn get_performance_tier() -> CoreResult<PerformanceTier> {
     Ok(get_system_resources()?.performance_tier())
 }

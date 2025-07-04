@@ -4,6 +4,7 @@ use rand::Rng;
 use scirs2_signal::dwt::{wavedec, waverec, Wavelet};
 use scirs2_signal::waveforms::chirp;
 
+#[allow(dead_code)]
 fn main() {
     // Generate a chirp signal
     let fs = 1000.0; // Sample rate in Hz
@@ -124,6 +125,7 @@ fn main() {
 }
 
 // Helper function to apply thresholding to coefficients
+#[allow(dead_code)]
 fn apply_threshold(coeffs: &mut [f64], threshold: f64) {
     for val in coeffs.iter_mut() {
         if val.abs() < threshold {
@@ -133,6 +135,7 @@ fn apply_threshold(coeffs: &mut [f64], threshold: f64) {
 }
 
 // Compare the Meyer wavelet with other wavelet families
+#[allow(dead_code)]
 fn compare_wavelets(signal: &[f64], noisy_signal: &[f64], t: &[f64]) {
     // Wavelet families to compare
     let wavelets = vec![

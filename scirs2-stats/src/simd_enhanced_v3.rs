@@ -12,6 +12,7 @@ use scirs2_core::simd_ops::SimdUnifiedOps;
 ///
 /// Computes pairwise distances between all points using SIMD acceleration.
 /// This is commonly used in clustering and nearest neighbor algorithms.
+#[allow(dead_code)]
 pub fn distance_matrix_simd<F, D>(
     data: &ArrayBase<D, Ix2>,
     metric: &str,
@@ -57,6 +58,7 @@ where
 }
 
 /// SIMD-optimized Euclidean distance computation
+#[allow(dead_code)]
 pub fn euclidean_distance_simd<F>(x: &ArrayView1<F>, y: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -90,6 +92,7 @@ where
 }
 
 /// SIMD-optimized Manhattan distance computation
+#[allow(dead_code)]
 pub fn manhattan_distance_simd<F>(x: &ArrayView1<F>, y: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -120,6 +123,7 @@ where
 }
 
 /// SIMD-optimized cosine distance computation
+#[allow(dead_code)]
 pub fn cosine_distance_simd<F>(x: &ArrayView1<F>, y: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -344,6 +348,7 @@ where
 /// SIMD-optimized histogram computation
 ///
 /// Efficiently computes histograms using SIMD operations for binning.
+#[allow(dead_code)]
 pub fn histogram_simd<F, D>(
     data: &ArrayBase<D, Ix1>,
     bins: usize,
@@ -418,6 +423,7 @@ where
 /// SIMD-optimized outlier detection using z-score method
 ///
 /// Identifies outliers based on z-scores using SIMD-accelerated statistics.
+#[allow(dead_code)]
 pub fn detect_outliers_zscore_simd<F, D>(
     data: &ArrayBase<D, Ix1>,
     threshold: F,

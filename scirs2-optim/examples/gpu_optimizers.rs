@@ -7,6 +7,7 @@ use ndarray::{Array1, Array2};
 use scirs2_core::gpu::GpuBackend;
 use scirs2_optim::{AdamGpu, GpuOptimizer, GpuOptimizerConfig, LAMBGpu, Optimizer};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("GPU-Accelerated Optimizers Example");
     println!("==================================\n");
@@ -38,6 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Check available GPU backends
+#[allow(dead_code)]
 fn check_gpu_availability() {
     println!("Checking GPU availability...");
 
@@ -66,6 +68,7 @@ fn check_gpu_availability() {
 }
 
 /// Example using GPU-accelerated Adam optimizer
+#[allow(dead_code)]
 fn gpu_adam_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create model parameters and gradients
     let param_size = 10_000; // Large parameter vector
@@ -134,6 +137,7 @@ fn gpu_adam_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Example using GPU-accelerated LAMB optimizer
+#[allow(dead_code)]
 fn gpu_lamb_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create larger model parameters for LAMB (suitable for large batch training)
     let param_size = 50_000;
@@ -190,6 +194,7 @@ fn gpu_lamb_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Example of mixed precision training
+#[allow(dead_code)]
 fn mixed_precision_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("Mixed precision training simulation");
 
@@ -242,6 +247,7 @@ fn mixed_precision_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Example simulating multi-GPU training
+#[allow(dead_code)]
 fn multi_gpu_example() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_optim::gpu::lamb_gpu::BatchLAMBGpu;
 

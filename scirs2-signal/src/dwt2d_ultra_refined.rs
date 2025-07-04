@@ -257,6 +257,7 @@ impl Default for UltraRefinedConfig {
 /// assert!(result.quality_metrics.perceptual_quality > 0.0);
 /// assert!(result.memory_stats.memory_efficiency > 0.5);
 /// ```
+#[allow(dead_code)]
 pub fn ultra_refined_wavelet_packet_2d(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -345,6 +346,7 @@ pub fn ultra_refined_wavelet_packet_2d(
 /// # Returns
 ///
 /// * Reconstructed image with optimization metrics
+#[allow(dead_code)]
 pub fn ultra_refined_wavelet_packet_inverse_2d(
     result: &UltraRefinedWaveletPacketResult,
     wavelet: &Wavelet,
@@ -402,6 +404,7 @@ pub fn ultra_refined_wavelet_packet_inverse_2d(
 /// # Returns
 ///
 /// * Denoised image with quality assessment
+#[allow(dead_code)]
 pub fn ultra_refined_denoise_2d(
     noisy_image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -599,6 +602,7 @@ impl PerceptualReconstructionEngine {
 
 // Implementation of helper functions (simplified for brevity)
 
+#[allow(dead_code)]
 fn validate_input_image(image: &Array2<f64>, config: &UltraRefinedConfig) -> SignalResult<()> {
     let (height, width) = image.dim();
 
@@ -613,6 +617,7 @@ fn validate_input_image(image: &Array2<f64>, config: &UltraRefinedConfig) -> Sig
     Ok(())
 }
 
+#[allow(dead_code)]
 fn optimize_simd_configuration(caps: &PlatformCapabilities, level: SimdLevel) -> SimdConfiguration {
     let acceleration_factor = match level {
         SimdLevel::None => 1.0,
@@ -656,6 +661,7 @@ fn optimize_simd_configuration(caps: &PlatformCapabilities, level: SimdLevel) ->
     }
 }
 
+#[allow(dead_code)]
 fn should_use_tiled_processing(image: &Array2<f64>, config: &UltraRefinedConfig) -> bool {
     let (height, width) = image.dim();
     let image_size = height * width;
@@ -664,6 +670,7 @@ fn should_use_tiled_processing(image: &Array2<f64>, config: &UltraRefinedConfig)
     config.memory_efficient && image_size > tile_size * 4
 }
 
+#[allow(dead_code)]
 fn process_image_tiled(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -728,6 +735,7 @@ fn process_image_tiled(
     })
 }
 
+#[allow(dead_code)]
 fn process_image_whole(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -779,6 +787,7 @@ fn process_image_whole(
 }
 
 /// Perform single-level wavelet decomposition with SIMD acceleration
+#[allow(dead_code)]
 fn perform_level_decomposition(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -812,6 +821,7 @@ fn perform_level_decomposition(
 }
 
 /// Apply separable 2D DWT with SIMD acceleration
+#[allow(dead_code)]
 fn apply_separable_2d_dwt_simd(
     image: &Array2<f64>,
     filters: &WaveletFilters,
@@ -866,6 +876,7 @@ fn apply_separable_2d_dwt_simd(
 }
 
 /// Apply 1D DWT with SIMD acceleration
+#[allow(dead_code)]
 fn apply_1d_dwt_simd(
     signal: &ArrayView1<f64>,
     filters: &WaveletFilters,
@@ -887,6 +898,7 @@ fn apply_1d_dwt_simd(
 }
 
 /// SIMD-accelerated convolution for DWT
+#[allow(dead_code)]
 fn apply_dwt_convolution_simd(
     signal: &ArrayView1<f64>,
     filters: &WaveletFilters,
@@ -925,6 +937,7 @@ fn apply_dwt_convolution_simd(
 }
 
 /// Scalar fallback for DWT convolution
+#[allow(dead_code)]
 fn apply_dwt_convolution_scalar(
     signal: &ArrayView1<f64>,
     filters: &WaveletFilters,
@@ -955,6 +968,7 @@ fn apply_dwt_convolution_scalar(
 }
 
 /// Standard (non-SIMD) 2D DWT implementation
+#[allow(dead_code)]
 fn apply_separable_2d_dwt_standard(
     image: &Array2<f64>,
     filters: &WaveletFilters,
@@ -980,6 +994,7 @@ fn apply_separable_2d_dwt_standard(
 }
 
 /// Extract approximation coefficients for next decomposition level
+#[allow(dead_code)]
 fn extract_approximation_coefficients(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -990,6 +1005,7 @@ fn extract_approximation_coefficients(
 }
 
 /// Compute energy distribution map for subbands
+#[allow(dead_code)]
 fn compute_subband_energy_map(
     ll: &Array2<f64>,
     lh: &Array2<f64>,
@@ -1014,6 +1030,7 @@ fn compute_subband_energy_map(
 }
 
 /// Update energy map with current level's contribution
+#[allow(dead_code)]
 fn update_energy_map(
     energy_map: &mut Array2<f64>,
     level_energy: &Array2<f64>,
@@ -1042,6 +1059,7 @@ struct LevelCoefficients {
 }
 
 /// Organize level coefficients into 3D array structure
+#[allow(dead_code)]
 fn organize_coefficients_into_3d_array(
     level_coeffs: &[LevelCoefficients],
     max_levels: usize,
@@ -1089,6 +1107,7 @@ fn organize_coefficients_into_3d_array(
 }
 
 /// Estimate SIMD efficiency based on configuration
+#[allow(dead_code)]
 fn estimate_simd_efficiency(simd_config: &SimdConfiguration) -> f64 {
     if simd_config.use_advanced_simd {
         simd_config.acceleration_factor / simd_config.theoretical_max_speedup
@@ -1097,6 +1116,7 @@ fn estimate_simd_efficiency(simd_config: &SimdConfiguration) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn process_tiles_parallel(
     image: &Array2<f64>,
     coefficients: &mut Array3<f64>,
@@ -1114,6 +1134,7 @@ fn process_tiles_parallel(
     Ok(0.85) // Good parallel efficiency
 }
 
+#[allow(dead_code)]
 fn process_tiles_sequential(
     image: &Array2<f64>,
     coefficients: &mut Array3<f64>,
@@ -1131,6 +1152,7 @@ fn process_tiles_sequential(
     Ok(1.0) // Perfect efficiency for sequential
 }
 
+#[allow(dead_code)]
 fn build_optimal_decomposition_tree(
     coefficients: &Array3<f64>,
     cost_function: CostFunction,
@@ -1170,6 +1192,7 @@ fn build_optimal_decomposition_tree(
 }
 
 /// Recursively build the wavelet packet tree structure
+#[allow(dead_code)]
 fn build_tree_recursive(
     nodes: &mut Vec<TreeNode>,
     node_id_counter: &mut usize,
@@ -1233,6 +1256,7 @@ fn build_tree_recursive(
 }
 
 /// Compute energy and entropy statistics for all nodes
+#[allow(dead_code)]
 fn compute_node_statistics(nodes: &mut [TreeNode], coefficients: &Array3<f64>) -> SignalResult<()> {
     for node in nodes.iter_mut() {
         // Extract coefficients for this node
@@ -1249,6 +1273,7 @@ fn compute_node_statistics(nodes: &mut [TreeNode], coefficients: &Array3<f64>) -
 }
 
 /// Extract coefficients corresponding to a specific tree node
+#[allow(dead_code)]
 fn extract_node_coefficients(
     coefficients: &Array3<f64>,
     node: &TreeNode,
@@ -1282,6 +1307,7 @@ fn extract_node_coefficients(
 }
 
 /// Compute Shannon entropy of coefficient sequence
+#[allow(dead_code)]
 fn compute_shannon_entropy(coefficients: &[f64]) -> SignalResult<f64> {
     if coefficients.is_empty() {
         return Ok(0.0);
@@ -1306,6 +1332,7 @@ fn compute_shannon_entropy(coefficients: &[f64]) -> SignalResult<f64> {
 }
 
 /// Find optimal basis using dynamic programming with the specified cost function
+#[allow(dead_code)]
 fn find_optimal_basis(nodes: &[TreeNode], cost_function: CostFunction) -> SignalResult<Vec<usize>> {
     let mut optimal_basis = Vec::new();
     let mut visited = vec![false; nodes.len()];
@@ -1317,6 +1344,7 @@ fn find_optimal_basis(nodes: &[TreeNode], cost_function: CostFunction) -> Signal
 }
 
 /// Recursive function to find optimal basis using dynamic programming
+#[allow(dead_code)]
 fn find_optimal_basis_recursive(
     nodes: &[TreeNode],
     node_id: usize,
@@ -1360,6 +1388,7 @@ fn find_optimal_basis_recursive(
 }
 
 /// Compute cost for a node based on the cost function
+#[allow(dead_code)]
 fn compute_node_cost(node: &TreeNode, cost_function: CostFunction) -> f64 {
     match cost_function {
         CostFunction::Entropy => node.entropy,
@@ -1394,6 +1423,7 @@ fn compute_node_cost(node: &TreeNode, cost_function: CostFunction) -> f64 {
 }
 
 /// Compute traversal statistics for the optimal tree
+#[allow(dead_code)]
 fn compute_traversal_statistics(nodes: &[TreeNode], optimal_basis: &[usize]) -> TreeTraversalStats {
     let total_nodes = nodes.len();
     let leaf_nodes = optimal_basis.len();
@@ -1431,6 +1461,7 @@ fn compute_traversal_statistics(nodes: &[TreeNode], optimal_basis: &[usize]) -> 
 }
 
 /// Estimate subband size at a given level (used for stopping criteria)
+#[allow(dead_code)]
 fn estimate_subband_size(coefficients: &Array3<f64>, level: usize) -> usize {
     let (max_levels, _, coeff_per_subband) = coefficients.dim();
     if level >= max_levels {
@@ -1441,6 +1472,7 @@ fn estimate_subband_size(coefficients: &Array3<f64>, level: usize) -> usize {
     coeff_per_subband / (4_usize.pow(level as u32))
 }
 
+#[allow(dead_code)]
 fn compute_ultra_refined_quality_metrics(
     original_image: &Array2<f64>,
     processing_result: &ProcessingResult,
@@ -1509,6 +1541,7 @@ fn compute_ultra_refined_quality_metrics(
 
 // Additional helper functions (simplified implementations)
 
+#[allow(dead_code)]
 fn compute_subband_energy(coefficients: &Array3<f64>, level: usize, index: usize) -> f64 {
     if level < coefficients.dim().0 && index < coefficients.dim().1 {
         coefficients
@@ -1520,11 +1553,13 @@ fn compute_subband_energy(coefficients: &Array3<f64>, level: usize, index: usize
     }
 }
 
+#[allow(dead_code)]
 fn compute_subband_entropy(coefficients: &Array3<f64>, level: usize, index: usize) -> f64 {
     // Simplified entropy calculation
     0.5 // Placeholder
 }
 
+#[allow(dead_code)]
 fn classify_subband(index: usize) -> SubbandType {
     match index % 4 {
         0 => SubbandType::Approximation,
@@ -1535,10 +1570,12 @@ fn classify_subband(index: usize) -> SubbandType {
     }
 }
 
+#[allow(dead_code)]
 fn compute_approximation_energy(coefficients: &Array3<f64>) -> f64 {
     coefficients.slice(s![0, 0, ..]).mapv(|x| x * x).sum()
 }
 
+#[allow(dead_code)]
 fn compute_detail_energy(coefficients: &Array3<f64>) -> f64 {
     let mut total = 0.0;
     for level in 0..coefficients.dim().0 {
@@ -1552,22 +1589,26 @@ fn compute_detail_energy(coefficients: &Array3<f64>) -> f64 {
     total
 }
 
+#[allow(dead_code)]
 fn compute_image_energy(image: &Array2<f64>) -> f64 {
     image.mapv(|x| x * x).sum()
 }
 
+#[allow(dead_code)]
 fn estimate_compression_ratio(coefficients: &Array3<f64>) -> f64 {
     let total_coeffs = coefficients.len();
     let significant_coeffs = coefficients.iter().filter(|&&x| x.abs() > 1e-6).count();
     total_coeffs as f64 / significant_coeffs.max(1) as f64
 }
 
+#[allow(dead_code)]
 fn compute_sparsity(coefficients: &Array3<f64>) -> f64 {
     let total_coeffs = coefficients.len();
     let zero_coeffs = coefficients.iter().filter(|&&x| x.abs() < 1e-10).count();
     zero_coeffs as f64 / total_coeffs as f64
 }
 
+#[allow(dead_code)]
 fn compute_perceptual_quality(
     image: &Array2<f64>,
     coefficients: &Array3<f64>,
@@ -1576,6 +1617,7 @@ fn compute_perceptual_quality(
     Ok(0.85)
 }
 
+#[allow(dead_code)]
 fn compute_structural_similarity(
     image: &Array2<f64>,
     coefficients: &Array3<f64>,
@@ -1584,6 +1626,7 @@ fn compute_structural_similarity(
     Ok(0.90)
 }
 
+#[allow(dead_code)]
 fn compute_peak_snr(image: &Array2<f64>, coefficients: &Array3<f64>) -> SignalResult<f64> {
     // Reconstruct image from coefficients for comparison
     let reconstructed = reconstruct_image_from_coefficients(coefficients)?;
@@ -1624,6 +1667,7 @@ fn compute_peak_snr(image: &Array2<f64>, coefficients: &Array3<f64>) -> SignalRe
     Ok(psnr.max(0.0).min(100.0)) // Clamp to reasonable range
 }
 
+#[allow(dead_code)]
 fn compute_multiscale_edge_preservation(
     image: &Array2<f64>,
     coefficients: &Array3<f64>,
@@ -1652,6 +1696,7 @@ fn compute_multiscale_edge_preservation(
     Ok(edge_preservation_scores)
 }
 
+#[allow(dead_code)]
 fn compute_frequency_analysis(coefficients: &Array3<f64>) -> SignalResult<FrequencyAnalysis> {
     let (levels, subbands, coeff_per_subband) = coefficients.dim();
 
@@ -1719,6 +1764,7 @@ fn compute_frequency_analysis(coefficients: &Array3<f64>) -> SignalResult<Freque
     })
 }
 
+#[allow(dead_code)]
 fn compute_compression_metrics(coefficients: &Array3<f64>) -> SignalResult<CompressionMetrics> {
     let (levels, subbands, coeff_per_subband) = coefficients.dim();
     let total_coeffs = levels * subbands * coeff_per_subband;
@@ -1783,6 +1829,7 @@ fn compute_compression_metrics(coefficients: &Array3<f64>) -> SignalResult<Compr
 }
 
 /// Reconstruct image from wavelet coefficients (simplified)
+#[allow(dead_code)]
 fn reconstruct_image_from_coefficients(coefficients: &Array3<f64>) -> SignalResult<Array2<f64>> {
     let (levels, subbands, coeff_per_subband) = coefficients.dim();
 
@@ -1825,6 +1872,7 @@ fn reconstruct_image_from_coefficients(coefficients: &Array3<f64>) -> SignalResu
 }
 
 /// Resize image using bilinear interpolation
+#[allow(dead_code)]
 fn resize_image_bilinear(
     image: &Array2<f64>,
     target_size: (usize, usize),
@@ -1864,6 +1912,7 @@ fn resize_image_bilinear(
 }
 
 /// Apply Sobel edge detection at a given scale
+#[allow(dead_code)]
 fn detect_edges_sobel(image: &Array2<f64>, scale: usize) -> SignalResult<Array2<f64>> {
     let (height, width) = image.dim();
     let mut edges = Array2::zeros((height, width));
@@ -1893,6 +1942,7 @@ fn detect_edges_sobel(image: &Array2<f64>, scale: usize) -> SignalResult<Array2<
 }
 
 /// Compute correlation between two edge maps
+#[allow(dead_code)]
 fn compute_edge_correlation(edges1: &Array2<f64>, edges2: &Array2<f64>) -> SignalResult<f64> {
     let (h1, w1) = edges1.dim();
     let (h2, w2) = edges2.dim();
@@ -1940,6 +1990,7 @@ fn compute_edge_correlation(edges1: &Array2<f64>, edges2: &Array2<f64>) -> Signa
     Ok(correlation.abs()) // Return absolute correlation
 }
 
+#[allow(dead_code)]
 fn estimate_cache_efficiency(image_dim: (usize, usize)) -> f64 {
     // Estimate cache hit ratio based on image size and access patterns
     let total_pixels = image_dim.0 * image_dim.1;
@@ -1954,6 +2005,7 @@ fn estimate_cache_efficiency(image_dim: (usize, usize)) -> f64 {
 
 // Additional functions for denoising and reconstruction (simplified implementations)
 
+#[allow(dead_code)]
 fn apply_perceptual_coefficient_processing(
     coefficients: &Array3<f64>,
     tree: &DecompositionTree,
@@ -1961,6 +2013,7 @@ fn apply_perceptual_coefficient_processing(
     Ok(coefficients.clone()) // Placeholder
 }
 
+#[allow(dead_code)]
 fn reconstruct_image_memory_efficient(
     coefficients: &Array3<f64>,
     tree: &DecompositionTree,
@@ -1970,6 +2023,7 @@ fn reconstruct_image_memory_efficient(
     Ok(Array2::zeros((64, 64))) // Placeholder
 }
 
+#[allow(dead_code)]
 fn reconstruct_image_standard(
     coefficients: &Array3<f64>,
     tree: &DecompositionTree,
@@ -1979,6 +2033,7 @@ fn reconstruct_image_standard(
     Ok(Array2::zeros((64, 64))) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_reconstruction_metrics(
     image: &Array2<f64>,
     result: &UltraRefinedWaveletPacketResult,
@@ -1990,11 +2045,13 @@ fn compute_reconstruction_metrics(
     })
 }
 
+#[allow(dead_code)]
 fn compute_coefficient_utilization(coefficients: &Array3<f64>) -> f64 {
     let significant = coefficients.iter().filter(|&&x| x.abs() > 1e-6).count();
     significant as f64 / coefficients.len() as f64
 }
 
+#[allow(dead_code)]
 fn analyze_noise_characteristics(
     image: &Array2<f64>,
     wavelet: &Wavelet,
@@ -2008,6 +2065,7 @@ fn analyze_noise_characteristics(
     })
 }
 
+#[allow(dead_code)]
 fn apply_adaptive_denoising(
     coefficients: &Array3<f64>,
     noise_analysis: &NoiseAnalysis,
@@ -2017,6 +2075,7 @@ fn apply_adaptive_denoising(
     Ok(coefficients.clone()) // Placeholder - would apply sophisticated denoising
 }
 
+#[allow(dead_code)]
 fn compute_denoising_quality_metrics(
     noisy: &Array2<f64>,
     denoised: &Array2<f64>,
@@ -2030,6 +2089,7 @@ fn compute_denoising_quality_metrics(
     })
 }
 
+#[allow(dead_code)]
 fn compute_coefficient_statistics(coefficients: &Array3<f64>) -> CoefficientStatistics {
     let sparsity = compute_sparsity(coefficients);
     let energy_per_level = (0..coefficients.dim().0)

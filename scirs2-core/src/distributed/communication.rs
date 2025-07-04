@@ -144,6 +144,7 @@ pub trait MessageHandler {
 /// Default heartbeat handler
 #[derive(Debug)]
 pub struct HeartbeatHandler {
+    #[allow(dead_code)]
     node_id: String,
 }
 

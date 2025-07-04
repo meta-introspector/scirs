@@ -35,6 +35,7 @@ use ndarray::Array2;
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn prewitt_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
     let array = image_to_array(img)?;
     let (height, width) = array.dim();
@@ -93,6 +94,7 @@ pub fn prewitt_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
 /// # Returns
 ///
 /// * Result containing a tuple of (magnitude array, direction array in radians)
+#[allow(dead_code)]
 pub fn prewitt_gradients(img: &DynamicImage) -> Result<(Array2<f32>, Array2<f32>)> {
     let array = image_to_array(img)?;
     let (height, width) = array.dim();

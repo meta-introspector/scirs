@@ -13,6 +13,7 @@ use scirs2_stats::{
 };
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🤖 AI-Driven Statistical Computing Benchmark Suite");
     println!("==================================================\n");
@@ -101,6 +102,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_benchmark_results(
     report: &scirs2_stats::benchmark_suite_enhanced::EnhancedBenchmarkReport,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -240,6 +242,7 @@ fn display_benchmark_results(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_recommendation(
     index: usize,
     rec: &scirs2_stats::benchmark_suite_enhanced::IntelligentRecommendation,
@@ -278,6 +281,7 @@ fn display_recommendation(
     }
 }
 
+#[allow(dead_code)]
 fn display_feature_overview() {
     println!("   🤖 AI-Driven Analysis:");
     println!("      • Intelligent bottleneck identification");
@@ -310,6 +314,7 @@ fn display_feature_overview() {
     println!("      • Workload-specific optimization");
 }
 
+#[allow(dead_code)]
 fn display_usage_examples() {
     println!("   📋 Basic Usage:");
     println!("      let mut suite = create_enhanced_benchmark_suite();");

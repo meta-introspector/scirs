@@ -12,6 +12,7 @@ use std::process;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 /// Main entry point for the security audit scanner
+#[allow(dead_code)]
 fn main() {
     let matches = Command::new("Security Audit Scanner")
         .version("0.1.0")
@@ -106,6 +107,7 @@ fn main() {
 }
 
 /// Run the complete security audit process
+#[allow(dead_code)]
 fn run_security_audit(matches: &ArgMatches) -> Result<(), Box<dyn std::error::Error>> {
     let project_path = Path::new(matches.get_one::<String>("project-path").unwrap());
     let verbose = matches.get_flag("verbose");
@@ -150,6 +152,7 @@ fn run_security_audit(matches: &ArgMatches) -> Result<(), Box<dyn std::error::Er
 }
 
 /// Build audit configuration from command line arguments
+#[allow(dead_code)]
 fn build_audit_config(matches: &ArgMatches) -> Result<AuditConfig, Box<dyn std::error::Error>> {
     let all_scans = matches.get_flag("all");
 
@@ -174,6 +177,7 @@ fn build_audit_config(matches: &ArgMatches) -> Result<AuditConfig, Box<dyn std::
 }
 
 /// Parse severity level from string
+#[allow(dead_code)]
 fn parse_severity(severity_str: &str) -> Result<Severity, Box<dyn std::error::Error>> {
     match severity_str.to_lowercase().as_str() {
         "info" => Ok(Severity::Info),
@@ -1163,6 +1167,7 @@ impl LicenseChecker {
 }
 
 /// Generate audit report in specified format
+#[allow(dead_code)]
 fn generate_audit_report(
     audit_result: &AuditResult,
     format: &str,
@@ -1177,6 +1182,7 @@ fn generate_audit_report(
 }
 
 /// Generate markdown report
+#[allow(dead_code)]
 fn generate_markdown_report(
     audit_result: &AuditResult,
 ) -> Result<String, Box<dyn std::error::Error>> {
@@ -1296,6 +1302,7 @@ fn generate_markdown_report(
 }
 
 /// Generate HTML report
+#[allow(dead_code)]
 fn generate_html_report(audit_result: &AuditResult) -> Result<String, Box<dyn std::error::Error>> {
     let mut html = String::new();
 
@@ -1358,6 +1365,7 @@ fn generate_html_report(audit_result: &AuditResult) -> Result<String, Box<dyn st
 }
 
 /// Determine exit code based on audit results
+#[allow(dead_code)]
 fn determine_exit_code(audit_result: &AuditResult, matches: &ArgMatches) -> i32 {
     let min_severity =
         parse_severity(matches.get_one::<String>("severity").unwrap()).unwrap_or(Severity::Low);

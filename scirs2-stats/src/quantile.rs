@@ -99,6 +99,7 @@ pub enum QuantileInterpolation {
 /// let q3 = quantile(&data.view(), 0.75, QuantileInterpolation::Linear).unwrap();
 /// assert_eq!(q3, 7.0);
 /// ```
+#[allow(dead_code)]
 pub fn quantile<F>(x: &ArrayView1<F>, q: F, method: QuantileInterpolation) -> StatsResult<F>
 where
     F: Float + NumCast,
@@ -283,6 +284,7 @@ where
 /// let q3 = percentile(&data.view(), 75.0, QuantileInterpolation::Linear).unwrap();
 /// assert_eq!(q3, 7.0);
 /// ```
+#[allow(dead_code)]
 pub fn percentile<F>(x: &ArrayView1<F>, p: F, method: QuantileInterpolation) -> StatsResult<F>
 where
     F: Float + NumCast,
@@ -336,6 +338,7 @@ where
 /// assert_eq!(q[1], 5.0);  // Q2 (median)
 /// assert_eq!(q[2], 7.0);  // Q3 (75th percentile)
 /// ```
+#[allow(dead_code)]
 pub fn quartiles<F>(x: &ArrayView1<F>, method: QuantileInterpolation) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast,
@@ -385,6 +388,7 @@ where
 /// assert_eq!(q[2], 6.4);  // 60th percentile
 /// assert_eq!(q[3], 8.2);  // 80th percentile
 /// ```
+#[allow(dead_code)]
 pub fn quintiles<F>(x: &ArrayView1<F>, method: QuantileInterpolation) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast,
@@ -434,6 +438,7 @@ where
 /// assert_eq!(d[4], 5.5);  // 50th percentile (median)
 /// assert_eq!(d[8], 9.1);  // 90th percentile
 /// ```
+#[allow(dead_code)]
 pub fn deciles<F>(x: &ArrayView1<F>, method: QuantileInterpolation) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast,
@@ -498,6 +503,7 @@ where
 /// assert_eq!(whishi, 9.0);  // highest value within 1.5*IQR of Q3
 /// assert_eq!(outliers[0], 20.0);  // outlier beyond the whiskers
 /// ```
+#[allow(dead_code)]
 pub fn boxplot_stats<F>(
     x: &ArrayView1<F>,
     whis: Option<F>,
@@ -594,6 +600,7 @@ where
 /// // Then calculate the mean of [3.0, 3.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 8.0]
 /// assert!((mean_20 - 5.5f64).abs() < 1e-10f64);
 /// ```
+#[allow(dead_code)]
 pub fn winsorized_mean<F>(x: &ArrayView1<F>, limits: F) -> StatsResult<F>
 where
     F: Float + NumCast + std::iter::Sum,
@@ -672,6 +679,7 @@ where
 /// // Variance of the winsorized data [2.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 9.0]
 /// assert!((var_10 - 7.3888888888889f64).abs() < 1e-10f64);
 /// ```
+#[allow(dead_code)]
 pub fn winsorized_variance<F>(x: &ArrayView1<F>, limits: F, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + std::iter::Sum,

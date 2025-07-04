@@ -13,6 +13,7 @@ use scirs2_special::{
     log_wright_bessel,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing new SciPy parity functions...");
     

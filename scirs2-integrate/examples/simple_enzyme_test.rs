@@ -5,6 +5,7 @@
 use ndarray::Array1;
 use scirs2_integrate::ode::enzyme_kinetics::{pathways, EnzymeParameters};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Simple Enzyme Kinetics Test\n");
 

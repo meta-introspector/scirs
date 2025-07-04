@@ -15,6 +15,7 @@ use scirs2_neural::utils::{
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Training loop example with visualization");
     // Create dummy data
@@ -284,6 +285,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 // Create a simple model for classification
+#[allow(dead_code)]
 fn create_model(input_size: usize, num_classes: usize) -> Result<impl Layer<f32>> {
     // Create a mutable RNG for initialization
     let mut rng = rand::rng();
@@ -301,6 +303,7 @@ fn create_model(input_size: usize, num_classes: usize) -> Result<impl Layer<f32>
     let model = Dense::<f32>::new(input_size, hidden_size1, Some("relu"), &mut rng)?;
     Ok(model)
 // Helper function to create a directory if it doesn't exist
+#[allow(dead_code)]
 fn create_dir_if_not_exists(path: impl AsRef<Path>) -> Result<()> {
     let path = path.as_ref();
     if !path.exists() {

@@ -343,6 +343,7 @@ impl ArrayFunctionRegistry {
 ///
 /// This is similar to `NumPy`'s `_get_implementing_args` function.
 /// Optimized version with pre-allocated capacity and fast-path for common cases.
+#[allow(dead_code)]
 pub fn get_implementing_args(args: &[Box<dyn Any>]) -> Vec<(TypeId, &dyn ArrayProtocol)> {
     if args.is_empty() {
         return Vec::new();
@@ -381,6 +382,7 @@ pub fn get_implementing_args(args: &[Box<dyn Any>]) -> Vec<(TypeId, &dyn ArrayPr
 /// cannot be dispatched to any of the array protocol implementations.
 ///
 /// Optimized version with caching and fast-path optimizations.
+#[allow(dead_code)]
 pub fn array_function_dispatch(
     func: &ArrayFunction,
     args: &[Box<dyn Any>],
@@ -1156,6 +1158,7 @@ pub use self::ml_ops::{
 /// This function initializes the array protocol system by registering the
 /// default JIT function factories and other components. It should be called
 /// before using any of the array protocol features.
+#[allow(dead_code)]
 pub fn init() {
     // Initialize the JIT manager
     let mut jit_manager = JITManager::global().write().unwrap();

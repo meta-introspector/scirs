@@ -8,6 +8,7 @@ use scirs2_core::numeric::stability::*;
 use scirs2_core::numeric::stable_algorithms::*;
 use scirs2_core::CoreResult;
 
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     println!("=== Numerical Stability Improvements Example ===\n");
 
@@ -46,6 +47,7 @@ fn main() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_stable_summation() -> CoreResult<()> {
     // Case 1: Adding many small numbers to a large number
     let large = 1e10_f64;
@@ -104,6 +106,7 @@ fn demo_stable_summation() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_stable_variance() -> CoreResult<()> {
     // Dataset with large mean and small variance
     let mean = 1e8;
@@ -144,6 +147,7 @@ fn demo_stable_variance() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_log_sum_exp() -> CoreResult<()> {
     // Case 1: Large values that would overflow
     let large_values: Vec<f64> = vec![700.0, 701.0, 702.0, 703.0, 704.0];
@@ -187,6 +191,7 @@ fn demo_log_sum_exp() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_stable_matrix_ops() -> CoreResult<()> {
     // Ill-conditioned matrix (Hilbert matrix)
     let n = 5;
@@ -236,6 +241,7 @@ fn demo_stable_matrix_ops() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_iterative_methods() -> CoreResult<()> {
     // Create a symmetric positive definite matrix
     let n = 10;
@@ -286,6 +292,7 @@ fn demo_iterative_methods() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_numerical_differentiation() -> CoreResult<()> {
     // Function with known derivative: f(x) = sin(x) * exp(x)
     // f'(x) = cos(x) * exp(x) + sin(x) * exp(x)
@@ -326,6 +333,7 @@ fn demo_numerical_differentiation() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_condition_number() -> CoreResult<()> {
     // Well-conditioned matrix
     let well_conditioned = array![[2.0, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]];
@@ -356,6 +364,7 @@ fn demo_condition_number() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_stable_special_functions() -> CoreResult<()> {
     // Demonstrate stable computation of special functions
 

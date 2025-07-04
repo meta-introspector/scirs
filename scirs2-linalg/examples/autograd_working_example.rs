@@ -8,12 +8,14 @@ use ag::tensor_ops::*;
 use scirs2_autograd as ag;
 
 #[cfg(not(feature = "autograd"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'autograd' feature. Run with:");
     println!("cargo run --example autograd_working_example --features=autograd");
 }
 
 #[cfg(feature = "autograd")]
+#[allow(dead_code)]
 fn main() {
     println!("SciRS2 Automatic Differentiation Example");
     println!("======================================\n");
@@ -29,6 +31,7 @@ fn main() {
 }
 
 #[cfg(feature = "autograd")]
+#[allow(dead_code)]
 fn demo_basic_derivatives() {
     println!("1. Basic Derivatives");
     println!("-------------------");
@@ -66,6 +69,7 @@ fn demo_basic_derivatives() {
 }
 
 #[cfg(feature = "autograd")]
+#[allow(dead_code)]
 fn demo_matrix_operations() {
     println!("2. Matrix Operations");
     println!("-------------------");
@@ -121,6 +125,7 @@ fn demo_matrix_operations() {
 }
 
 #[cfg(feature = "autograd")]
+#[allow(dead_code)]
 fn demo_linalg_ops() {
     println!("3. Linear Algebra Operations");
     println!("---------------------------");

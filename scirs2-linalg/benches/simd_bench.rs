@@ -6,6 +6,7 @@ use scirs2_linalg::blas_accelerated;
 use scirs2_linalg::simd_ops::{simd_dot_f32, simd_matmul_f32, simd_matvec_f32};
 use std::hint::black_box;
 
+#[allow(dead_code)]
 fn regular_matmul_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> Array2<f32> {
     let (m, k) = a.dim();
     let (_, n) = b.dim();
@@ -24,6 +25,7 @@ fn regular_matmul_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> Array2<f32> {
     result
 }
 
+#[allow(dead_code)]
 fn regular_matvec_f32(a: &ArrayView2<f32>, x: &ArrayView1<f32>) -> Array1<f32> {
     let n = a.dim().0;
     let mut result = Array1::zeros(n);
@@ -39,6 +41,7 @@ fn regular_matvec_f32(a: &ArrayView2<f32>, x: &ArrayView1<f32>) -> Array1<f32> {
     result
 }
 
+#[allow(dead_code)]
 fn regular_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
     let mut sum = 0.0;
 
@@ -49,14 +52,17 @@ fn regular_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
     sum
 }
 
+#[allow(dead_code)]
 fn create_random_array1_f32(size: usize) -> Array1<f32> {
     Array1::from_iter((0..size).map(|i| (i % 100) as f32 / 100.0))
 }
 
+#[allow(dead_code)]
 fn create_random_array2_f32(rows: usize, cols: usize) -> Array2<f32> {
     Array2::from_shape_fn((rows, cols), |(i, j)| ((i * cols + j) % 100) as f32 / 100.0)
 }
 
+#[allow(dead_code)]
 fn bench_matvec(c: &mut Criterion) {
     let mut group = c.benchmark_group("MatVec");
 
@@ -96,6 +102,7 @@ fn bench_matvec(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_matmul(c: &mut Criterion) {
     let mut group = c.benchmark_group("MatMul");
 
@@ -138,6 +145,7 @@ fn bench_matmul(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_dot(c: &mut Criterion) {
     let mut group = c.benchmark_group("Dot");
 

@@ -15,6 +15,7 @@ use scirs2_cluster::ultrathink_visualization::{
     VisualizationExportFormat,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Deep Ultrathink Clustering - Next-Generation AI Clustering Demo");
     println!("=================================================================");
@@ -54,6 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates transformer-based feature embedding
+#[allow(dead_code)]
 fn transformer_embedding_demo() -> Result<(), Box<dyn std::error::Error>> {
     // Create high-dimensional complex data
     let data = create_complex_high_dimensional_data();
@@ -83,6 +85,7 @@ fn transformer_embedding_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates graph neural network processing
+#[allow(dead_code)]
 fn graph_neural_network_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_graph_structured_data();
     let embeddings = create_sample_embeddings(data.nrows());
@@ -122,6 +125,7 @@ fn graph_neural_network_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates reinforcement learning optimization
+#[allow(dead_code)]
 fn reinforcement_learning_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_dynamic_clustering_data();
     let embeddings = create_sample_embeddings(data.nrows());
@@ -151,6 +155,7 @@ fn reinforcement_learning_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates neural architecture search
+#[allow(dead_code)]
 fn neural_architecture_search_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_architecture_search_data();
     let embeddings = create_sample_embeddings(data.nrows());
@@ -182,6 +187,7 @@ fn neural_architecture_search_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates deep ensemble clustering
+#[allow(dead_code)]
 fn deep_ensemble_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_ensemble_test_data();
 
@@ -232,6 +238,7 @@ fn deep_ensemble_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates complete deep ultrathink pipeline
+#[allow(dead_code)]
 fn complete_deep_ultrathink_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_comprehensive_test_data();
 
@@ -298,6 +305,7 @@ fn complete_deep_ultrathink_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates advanced visualization capabilities
+#[allow(dead_code)]
 fn advanced_visualization_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_visualization_data();
 
@@ -343,6 +351,7 @@ fn advanced_visualization_demo() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper functions to create test data
 
+#[allow(dead_code)]
 fn create_complex_high_dimensional_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 50;
@@ -366,6 +375,7 @@ fn create_complex_high_dimensional_data() -> Array2<f64> {
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_graph_structured_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 30;
@@ -385,6 +395,7 @@ fn create_graph_structured_data() -> Array2<f64> {
     Array2::from_shape_vec((n_samples, 3), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_dynamic_clustering_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 40;
@@ -407,6 +418,7 @@ fn create_dynamic_clustering_data() -> Array2<f64> {
     Array2::from_shape_vec((n_samples, 2), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_architecture_search_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 35;
@@ -426,6 +438,7 @@ fn create_architecture_search_data() -> Array2<f64> {
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_ensemble_test_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 45;
@@ -445,6 +458,7 @@ fn create_ensemble_test_data() -> Array2<f64> {
     Array2::from_shape_vec((n_samples, 3), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_comprehensive_test_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 60;
@@ -467,6 +481,7 @@ fn create_comprehensive_test_data() -> Array2<f64> {
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_visualization_data() -> Array2<f64> {
     let mut data_vec = Vec::new();
     let n_samples = 25;
@@ -486,6 +501,7 @@ fn create_visualization_data() -> Array2<f64> {
     Array2::from_shape_vec((n_samples, 3), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_sample_embeddings(n_samples: usize) -> Array2<f64> {
     let embed_dim = 128;
     let mut embeddings = Array2::zeros((n_samples, embed_dim));
@@ -500,6 +516,7 @@ fn create_sample_embeddings(n_samples: usize) -> Array2<f64> {
     embeddings
 }
 
+#[allow(dead_code)]
 fn compute_embedding_variance(embeddings: &Array2<f64>) -> f64 {
     let mean = embeddings.mean().unwrap_or(0.0);
     let mut variance = 0.0;

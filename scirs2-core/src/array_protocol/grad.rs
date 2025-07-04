@@ -111,6 +111,7 @@ impl Default for GradientDict {
 }
 
 // Convert Box<dyn ArrayProtocol> to Rc<dyn ArrayProtocol> with proper trait object handling
+#[allow(dead_code)]
 fn box_to_rc_array_protocol(boxed: Box<dyn ArrayProtocol>) -> Rc<dyn ArrayProtocol> {
     // We need to create an Rc from a Box that contains a trait object.
     // The most reliable way is to create a new NdarrayWrapper by extracting the ndarray data.
@@ -135,18 +136,22 @@ fn box_to_rc_array_protocol(boxed: Box<dyn ArrayProtocol>) -> Rc<dyn ArrayProtoc
 }
 
 // Import the functions with the correct return type for our use
+#[allow(dead_code)]
 fn add(a: &dyn ArrayProtocol, b: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
     crate::array_protocol::operations::add(a, b).map_err(|e| e.into())
 }
 
+#[allow(dead_code)]
 fn multiply(a: &dyn ArrayProtocol, b: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
     crate::array_protocol::operations::multiply(a, b).map_err(|e| e.into())
 }
 
+#[allow(dead_code)]
 fn subtract(a: &dyn ArrayProtocol, b: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
     crate::array_protocol::operations::subtract(a, b).map_err(|e| e.into())
 }
 
+#[allow(dead_code)]
 fn ones_like(a: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
     // Create an array of ones with the same shape as the input
     // Try different numeric types
@@ -174,6 +179,7 @@ fn ones_like(a: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
     }
 }
 
+#[allow(dead_code)]
 fn broadcast_to(a: &dyn ArrayProtocol, shape: &[usize]) -> CoreResult<Box<dyn ArrayProtocol>> {
     // Broadcast the array to the given shape
     if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
@@ -831,6 +837,7 @@ impl GradientTensor {
 
 /// Implementations of gradient-aware operations
 /// Addition operation with gradient tracking.
+#[allow(dead_code)]
 pub fn grad_add(a: &GradientTensor, b: &GradientTensor) -> CoreResult<GradientTensor> {
     let a_value = a.value();
     let b_value = b.value();
@@ -848,6 +855,7 @@ pub fn grad_add(a: &GradientTensor, b: &GradientTensor) -> CoreResult<GradientTe
 }
 
 /// Element-wise multiplication with gradient tracking.
+#[allow(dead_code)]
 pub fn grad_multiply(a: &GradientTensor, b: &GradientTensor) -> CoreResult<GradientTensor> {
     let a_value = a.value();
     let b_value = b.value();
@@ -865,6 +873,7 @@ pub fn grad_multiply(a: &GradientTensor, b: &GradientTensor) -> CoreResult<Gradi
 }
 
 /// Matrix multiplication with gradient tracking.
+#[allow(dead_code)]
 pub fn grad_matmul(a: &GradientTensor, b: &GradientTensor) -> CoreResult<GradientTensor> {
     let a_value = a.value();
     let b_value = b.value();
@@ -882,6 +891,7 @@ pub fn grad_matmul(a: &GradientTensor, b: &GradientTensor) -> CoreResult<Gradien
 }
 
 /// Subtraction with gradient tracking.
+#[allow(dead_code)]
 pub fn grad_subtract(a: &GradientTensor, b: &GradientTensor) -> CoreResult<GradientTensor> {
     let a_value = a.value();
     let b_value = b.value();
@@ -899,6 +909,7 @@ pub fn grad_subtract(a: &GradientTensor, b: &GradientTensor) -> CoreResult<Gradi
 }
 
 /// Division with gradient tracking.
+#[allow(dead_code)]
 pub fn grad_divide(a: &GradientTensor, b: &GradientTensor) -> CoreResult<GradientTensor> {
     let a_value = a.value();
     let b_value = b.value();
@@ -916,6 +927,7 @@ pub fn grad_divide(a: &GradientTensor, b: &GradientTensor) -> CoreResult<Gradien
 }
 
 /// Sigmoid activation with gradient tracking.
+#[allow(dead_code)]
 pub fn grad_sigmoid(a: &GradientTensor) -> CoreResult<GradientTensor> {
     let a_value = a.value();
 
@@ -954,6 +966,7 @@ pub fn grad_sigmoid(a: &GradientTensor) -> CoreResult<GradientTensor> {
 }
 
 /// Mean reduction with gradient tracking.
+#[allow(dead_code)]
 pub fn grad_mean(a: &GradientTensor) -> CoreResult<GradientTensor> {
     let a_value = a.value();
 
@@ -1334,6 +1347,7 @@ impl Optimizer for Adam {
 // Helper functions for optimizers
 
 /// Multiply an array by a scalar.
+#[allow(dead_code)]
 fn multiply_by_scalar(a: &dyn ArrayProtocol, scalar: f64) -> CoreResult<Box<dyn ArrayProtocol>> {
     if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
         let input_array = a_array.as_array();
@@ -1359,6 +1373,7 @@ fn multiply_by_scalar(a: &dyn ArrayProtocol, scalar: f64) -> CoreResult<Box<dyn 
 }
 
 /// Subtract one array from another, returning a new array.
+#[allow(dead_code)]
 fn subtract_arrays(
     a: &dyn ArrayProtocol,
     b: &dyn ArrayProtocol,
@@ -1404,6 +1419,7 @@ fn subtract_arrays(
 }
 
 /// Element-wise square root.
+#[allow(dead_code)]
 fn sqrt(a: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
     if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
         let result = a_array.as_array().mapv(|x| x.sqrt());
@@ -1419,6 +1435,7 @@ fn sqrt(a: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
 }
 
 /// Add a scalar to an array.
+#[allow(dead_code)]
 fn add_scalar(a: &dyn ArrayProtocol, scalar: f64) -> CoreResult<Box<dyn ArrayProtocol>> {
     if let Some(a_array) = a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>() {
         let result = a_array.as_array().mapv(|x| x + scalar);
@@ -1440,6 +1457,7 @@ fn add_scalar(a: &dyn ArrayProtocol, scalar: f64) -> CoreResult<Box<dyn ArrayPro
 }
 
 /// Element-wise division.
+#[allow(dead_code)]
 fn divide(a: &dyn ArrayProtocol, b: &dyn ArrayProtocol) -> CoreResult<Box<dyn ArrayProtocol>> {
     if let (Some(a_array), Some(b_array)) = (
         a.as_any().downcast_ref::<NdarrayWrapper<f64, IxDyn>>(),

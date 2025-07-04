@@ -62,6 +62,7 @@ impl GELU {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Testing GELU activation function...");
     

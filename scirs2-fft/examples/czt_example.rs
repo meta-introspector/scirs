@@ -11,6 +11,7 @@ use plotly::{Plot, Scatter};
 use scirs2_fft::{czt, czt_points, zoom_fft, CZT};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a test signal with multiple frequency components
     let n = 256;

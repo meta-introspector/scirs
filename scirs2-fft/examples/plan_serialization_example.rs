@@ -2,6 +2,7 @@ use num_complex::Complex64;
 use scirs2_fft::plan_serialization::{create_and_time_plan, PlanSerializationManager};
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() {
     println!("FFT Plan Serialization Example");
     println!("------------------------------");
@@ -28,6 +29,7 @@ fn main() {
     println!("You can remove it if no longer needed.");
 }
 
+#[allow(dead_code)]
 fn benchmark_plan_creation(manager: &PlanSerializationManager) {
     println!("\nBenchmarking FFT plan creation for different sizes:");
     println!("{:>8} | {:>12} | {:>10}", "Size", "Time (us)", "Exists?");
@@ -64,6 +66,7 @@ fn benchmark_plan_creation(manager: &PlanSerializationManager) {
     }
 }
 
+#[allow(dead_code)]
 fn compare_performance(manager: &PlanSerializationManager) {
     println!("\nComparing FFT performance with cached vs. non-cached plans:");
 

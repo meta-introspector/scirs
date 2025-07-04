@@ -349,6 +349,7 @@ where
 }
 
 /// Evaluate a lazy array and return a concrete array
+#[allow(dead_code)]
 pub fn evaluate<A, D>(lazy: &LazyArray<A, D>) -> Result<Array<A, D>, CoreError>
 where
     A: Clone + 'static + std::fmt::Debug,

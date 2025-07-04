@@ -41,6 +41,7 @@ use crate::error::{NeuralError, Result};
 /// let output = conv2d(&input.view(), &weight.view(), bias.as_ref().map(|b| b.view()), 1, 1).unwrap();
 /// // Output shape should be [batch_size, out_channels, height, width] with padding 1 and stride 1
 /// assert_eq!(output.shape(), &[batch_size, out_channels, height, width]);
+#[allow(dead_code)]
 pub fn conv2d<F>(
     input: &ArrayView4<F>,
     weight: &ArrayView4<F>,
@@ -142,6 +143,7 @@ where
 /// let (output, _) = max_pool2d(&input.view(), 2, 2, 0).unwrap();
 /// // Output shape should be [batch_size, channels, height/stride, width/stride]
 /// assert_eq!(output.shape(), &[batch_size, channels, height/2, width/2]);
+#[allow(dead_code)]
 pub fn max_pool2d<F>(
     kernel_size: usize,
 ) -> Result<(Array4<F>, Array4<usize>)>
@@ -191,6 +193,7 @@ pub fn max_pool2d<F>(
 /// let col_height = channels * 3 * 3;
 /// let col_width = batch_size * output_height * output_width;
 /// assert_eq!(col.shape(), &[col_height, col_width]);
+#[allow(dead_code)]
 pub fn im2col<F>(
     kernel_height: usize,
     kernel_width: usize,
@@ -231,6 +234,7 @@ pub fn im2col<F>(
 /// ).unwrap();
 /// assert_eq!(output.shape(), input.shape());
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn col2im<F>(
     cols: &ArrayView2<F>,
     batch_size: usize,
@@ -279,6 +283,7 @@ pub fn col2im<F>(
 /// // Adaptively pool to 3x4 output size
 /// let output = adaptive_avg_pool2d(&input.view(), 3, 4).unwrap();
 /// assert_eq!(output.shape(), &[batch_size, channels, 3, 4]);
+#[allow(dead_code)]
 pub fn adaptive_avg_pool2d<F>(
     output_height: usize,
     output_width: usize,
@@ -320,6 +325,7 @@ pub fn adaptive_avg_pool2d<F>(
 /// assert_eq!(d_input.shape(), input.shape());
 /// assert_eq!(d_weight.shape(), weight.shape());
 /// assert_eq!(d_bias.shape()[0], out_channels);
+#[allow(dead_code)]
 pub fn conv2d_backward<F>(
     dout: &ArrayView4<F>,
 ) -> Result<(Array4<F>, Array4<F>, Array1<F>)>
@@ -383,6 +389,7 @@ pub fn conv2d_backward<F>(
 /// let (output, indices) = max_pool2d(&input.view(), 2, 2, 0).unwrap();
 /// let d_input = max_pool2d_backward(
 ///     &dout.view(), &input.view(), &indices.view(), 2, 2, 0
+#[allow(dead_code)]
 pub fn max_pool2d_backward<F>(
     indices: &ArrayView4<usize>,
     if dout.shape()[0] != batch_size || dout.shape()[1] != channels {
@@ -415,6 +422,7 @@ pub fn max_pool2d_backward<F>(
 /// use scirs2_neural::linalg::{adaptive_avg_pool2d, adaptive_avg_pool2d_backward};
 /// let d_input = adaptive_avg_pool2d_backward(
 ///     &dout.view(), &input.view(), 3, 4
+#[allow(dead_code)]
 pub fn adaptive_avg_pool2d_backward<F>(
     if dout.shape() != [batch_size, channels, output_height, output_width] {
             format!("Gradient shape mismatch in adaptive_avg_pool2d_backward: dout shape {:?}, expected [{}, {}, {}, {}]",

@@ -62,6 +62,7 @@ use std::fmt::{Debug, Display};
 /// let result = boxcox(4.0, 0.5).unwrap();
 /// assert!((result - 2.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn boxcox<T>(x: T, lmbda: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -106,6 +107,7 @@ where
 /// let result = boxcox1p(0.01, 0.5).unwrap();
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn boxcox1p<T>(x: T, lmbda: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -153,6 +155,7 @@ where
 /// let x_recovered = inv_boxcox(y, lmbda).unwrap();
 /// assert!((x - x_recovered).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn inv_boxcox<T>(y: T, lmbda: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -200,6 +203,7 @@ where
 /// let x_recovered = inv_boxcox1p(y, lmbda).unwrap();
 /// assert!((x - x_recovered).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn inv_boxcox1p<T>(y: T, lmbda: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -244,6 +248,7 @@ where
 /// let result = boxcox_array(&x.view(), 0.0).unwrap();
 /// // Should be approximately [0, ln(2), ln(4), ln(8)]
 /// ```
+#[allow(dead_code)]
 pub fn boxcox_array<T>(x: &ArrayView1<T>, lmbda: T) -> SpecialResult<Array1<T>>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -258,6 +263,7 @@ where
 }
 
 /// Box-Cox1p transformation for arrays
+#[allow(dead_code)]
 pub fn boxcox1p_array<T>(x: &ArrayView1<T>, lmbda: T) -> SpecialResult<Array1<T>>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -272,6 +278,7 @@ where
 }
 
 /// Inverse Box-Cox transformation for arrays
+#[allow(dead_code)]
 pub fn inv_boxcox_array<T>(y: &ArrayView1<T>, lmbda: T) -> SpecialResult<Array1<T>>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -286,6 +293,7 @@ where
 }
 
 /// Inverse Box-Cox1p transformation for arrays
+#[allow(dead_code)]
 pub fn inv_boxcox1p_array<T>(y: &ArrayView1<T>, lmbda: T) -> SpecialResult<Array1<T>>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,

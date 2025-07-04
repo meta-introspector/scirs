@@ -315,7 +315,7 @@ impl BayesianModelComparison {
                 2.0 * t - 1.0
             };
 
-            temperatures.push(beta.min(1.0).max(0.0));
+            temperatures.push(beta.clamp(0.0, 1.0));
         }
 
         // Ensure we have exactly β=0 and β=1
@@ -775,7 +775,7 @@ impl BayesianModelComparison {
         }
 
         let n_samples = log_likelihood.len();
-        let n_live = (n_samples / 10).max(10).min(100); // Adaptive number of live points
+        let n_live = (n_samples / 10).clamp(10, 100); // Adaptive number of live points
 
         // Initialize nested sampling
         let (log_evidence, log_evidence_error) =

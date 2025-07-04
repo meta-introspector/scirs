@@ -3,6 +3,7 @@
 use scirs2_spatial::error::SpatialResult;
 use scirs2_spatial::pathplanning::{RRT2DPlanner, RRTConfig};
 
+#[allow(dead_code)]
 fn main() -> SpatialResult<()> {
     println!("RRT Path Planning Examples");
     println!("========================\n");
@@ -19,6 +20,7 @@ fn main() -> SpatialResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn basic_rrt_example() -> SpatialResult<()> {
     println!("Example 1: Basic RRT with Obstacles");
     println!("----------------------------------");
@@ -91,6 +93,7 @@ fn basic_rrt_example() -> SpatialResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn rrt_star_example() -> SpatialResult<()> {
     println!("Example 2: RRT* for Optimized Paths");
     println!("---------------------------------");
@@ -163,6 +166,7 @@ fn rrt_star_example() -> SpatialResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bidirectional_rrt_example() -> SpatialResult<()> {
     println!("Example 3: Bidirectional RRT for Faster Convergence");
     println!("-----------------------------------------------");
@@ -229,6 +233,7 @@ fn bidirectional_rrt_example() -> SpatialResult<()> {
 }
 
 // Helper function to visualize the path in a simple ASCII grid
+#[allow(dead_code)]
 fn visualize_path(
     path: &[[f64; 2]],
     obstacles: &[Vec<[f64; 2]>],
@@ -289,6 +294,7 @@ fn visualize_path(
 }
 
 // Helper function for point-in-polygon test
+#[allow(dead_code)]
 fn is_point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
     if polygon.len() < 3 {
         return false;

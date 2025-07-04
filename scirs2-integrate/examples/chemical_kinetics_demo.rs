@@ -7,6 +7,7 @@
 use scirs2_integrate::ode::chemical::{ChemicalIntegrator, StiffIntegrationMethod};
 use scirs2_integrate::ode::chemical_systems;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Chemical Kinetics Integration Demo\n");
 
@@ -46,6 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate simple first-order reaction kinetics
+#[allow(dead_code)]
 fn demonstrate_first_order_reaction() -> Result<(), Box<dyn std::error::Error>> {
     let rate_constant = 0.5; // s^-1
     let initial_a = 1.0; // Initial concentration of A
@@ -107,6 +109,7 @@ fn demonstrate_first_order_reaction() -> Result<(), Box<dyn std::error::Error>> 
 }
 
 /// Demonstrate reversible reaction kinetics
+#[allow(dead_code)]
 fn demonstrate_reversible_reaction() -> Result<(), Box<dyn std::error::Error>> {
     let k_forward = 0.3; // Forward rate constant
     let k_reverse = 0.1; // Reverse rate constant
@@ -174,6 +177,7 @@ fn demonstrate_reversible_reaction() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate enzyme kinetics (Michaelis-Menten mechanism)
+#[allow(dead_code)]
 fn demonstrate_enzyme_kinetics() -> Result<(), Box<dyn std::error::Error>> {
     let k1 = 1.0; // Forward binding rate (M^-1 s^-1)
     let k_minus_1 = 0.5; // Reverse binding rate (s^-1)
@@ -282,6 +286,7 @@ fn demonstrate_enzyme_kinetics() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate competitive reactions
+#[allow(dead_code)]
 fn demonstrate_competitive_reactions() -> Result<(), Box<dyn std::error::Error>> {
     let k1 = 0.2; // A + B -> C
     let k2 = 0.3; // A + D -> E
@@ -349,6 +354,7 @@ fn demonstrate_competitive_reactions() -> Result<(), Box<dyn std::error::Error>>
 }
 
 /// Demonstrate stiff reaction system
+#[allow(dead_code)]
 fn demonstrate_stiff_reactions() -> Result<(), Box<dyn std::error::Error>> {
     let fast_rate = 1000.0; // Very fast reaction
     let slow_rate = 0.001; // Very slow reaction
@@ -434,6 +440,7 @@ fn demonstrate_stiff_reactions() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Compare different integration methods for stiff systems
+#[allow(dead_code)]
 fn demonstrate_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let fast_rate = 500.0;
     let slow_rate = 0.002;

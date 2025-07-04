@@ -629,6 +629,7 @@ static GLOBAL_TYPE_REGISTRY: std::sync::LazyLock<TypeRegistry> =
     std::sync::LazyLock::new(TypeRegistry::new);
 
 /// Get the global type registry
+#[allow(dead_code)]
 pub fn global_type_registry() -> &'static TypeRegistry {
     &GLOBAL_TYPE_REGISTRY
 }

@@ -10,6 +10,7 @@ use num_traits::{Float, NumAssign};
 use std::iter::Sum;
 
 /// Backward compatibility wrapper for cholesky decomposition
+#[allow(dead_code)]
 pub fn cholesky_compat<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -18,6 +19,7 @@ where
 }
 
 /// Backward compatibility wrapper for LU decomposition  
+#[allow(dead_code)]
 pub fn lu_compat<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -26,6 +28,7 @@ where
 }
 
 /// Backward compatibility wrapper for QR decomposition
+#[allow(dead_code)]
 pub fn qr_compat<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -34,6 +37,7 @@ where
 }
 
 /// Backward compatibility wrapper for SVD
+#[allow(dead_code)]
 pub fn svd_compat<F>(
     a: &ArrayView2<F>,
     full_matrices: bool,
@@ -45,6 +49,7 @@ where
 }
 
 /// Backward compatibility wrapper for solve
+#[allow(dead_code)]
 pub fn solve_compat<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -53,6 +58,7 @@ where
 }
 
 /// Backward compatibility wrapper for lstsq
+#[allow(dead_code)]
 pub fn lstsq_compat<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> LinalgResult<solve::LstsqResult<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -61,6 +67,7 @@ where
 }
 
 /// Backward compatibility wrapper for solve_multiple
+#[allow(dead_code)]
 pub fn solve_multiple_compat<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,

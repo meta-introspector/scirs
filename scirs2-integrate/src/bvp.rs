@@ -100,6 +100,7 @@ pub struct BVPResult<F: IntegrateFloat> {
 /// // The BVP solver needs more work for robust convergence
 /// assert!(result.is_ok() || result.is_err());
 /// ```
+#[allow(dead_code)]
 pub fn solve_bvp<F, FunType, BCType>(
     fun: FunType,
     bc: BCType,
@@ -347,6 +348,7 @@ where
 }
 
 /// Solve a linear system Ax = b using Gaussian elimination with partial pivoting
+#[allow(dead_code)]
 fn solve_linear_system<F: IntegrateFloat>(
     a: ArrayView2<F>,
     b: ArrayView1<F>,
@@ -454,6 +456,7 @@ fn solve_linear_system<F: IntegrateFloat>(
 /// # Returns
 ///
 /// * `IntegrateResult<BVPResult<F>>` - The solution or an error
+#[allow(dead_code)]
 pub fn solve_bvp_auto<F, FunType>(
     fun: FunType,
     x_span: [F; 2],

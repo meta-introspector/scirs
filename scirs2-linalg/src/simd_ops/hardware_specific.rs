@@ -202,6 +202,7 @@ where
 }
 
 /// Standard fallback matrix-vector multiplication
+#[allow(dead_code)]
 fn standard_matvec<F>(a: &ArrayView2<F>, x: &ArrayView1<F>) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Zero,
@@ -577,6 +578,7 @@ unsafe fn neon_dot_f64(x_ptr: *const f64, y_ptr: *const f64, n: usize) -> Linalg
 ///
 /// This function combines SIMD vectorization with parallel processing
 /// to achieve optimal performance for large matrix operations.
+#[allow(dead_code)]
 pub fn simd_parallel_gemm<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -641,6 +643,7 @@ where
 }
 
 /// Hardware-optimized GEMM for sequential execution
+#[allow(dead_code)]
 fn hardware_optimized_gemm<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -682,6 +685,7 @@ where
 }
 
 /// Hardware-optimized block GEMM for worker threads
+#[allow(dead_code)]
 fn hardware_optimized_gemm_block<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,

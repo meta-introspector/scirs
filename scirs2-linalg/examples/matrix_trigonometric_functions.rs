@@ -7,6 +7,7 @@ use ndarray::array;
 use scirs2_linalg::compat;
 use scirs2_linalg::matrix_functions::{cosm, sinm, tanm};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Matrix Trigonometric Functions Example");
     println!("=====================================\n");

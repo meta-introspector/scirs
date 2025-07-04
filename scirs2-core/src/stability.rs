@@ -468,14 +468,17 @@ pub struct FormalVerificationEngine {
 #[derive(Debug, Clone)]
 struct VerificationTask {
     /// API being verified
+    #[allow(dead_code)]
     api_name: String,
     /// Module containing the API
+    #[allow(dead_code)]
     module: String,
     /// Verification properties to check
     properties: Vec<VerificationProperty>,
     /// Task status
     status: VerificationStatus,
     /// Started at
+    #[allow(dead_code)]
     started_at: Instant,
 }
 
@@ -485,8 +488,10 @@ struct VerificationProperty {
     /// Property name
     name: String,
     /// Property specification (e.g., temporal logic formula)
+    #[allow(dead_code)]
     specification: String,
     /// Property type
+    #[allow(dead_code)]
     property_type: PropertyType,
 }
 
@@ -494,8 +499,11 @@ struct VerificationProperty {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PropertyType {
     Safety,
+    #[allow(dead_code)]
     Liveness,
+    #[allow(dead_code)]
     Invariant,
+    #[allow(dead_code)]
     Temporal,
 }
 
@@ -503,23 +511,32 @@ enum PropertyType {
 #[derive(Debug, Clone)]
 pub struct VerificationResult {
     /// Whether verification succeeded
+    #[allow(dead_code)]
     verified: bool,
     /// Verification time
+    #[allow(dead_code)]
     verification_time: Duration,
     /// Properties that were checked
+    #[allow(dead_code)]
     checked_properties: Vec<String>,
     /// Counterexample if verification failed
+    #[allow(dead_code)]
     counterexample: Option<String>,
     /// Verification method used
+    #[allow(dead_code)]
     method: VerificationMethod,
 }
 
 /// Verification methods
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum VerificationMethod {
+    #[allow(dead_code)]
     ModelChecking,
+    #[allow(dead_code)]
     TheoremProving,
+    #[allow(dead_code)]
     AbstractInterpretation,
+    #[allow(dead_code)]
     SymbolicExecution,
     StaticAnalysis,
 }
@@ -578,6 +595,7 @@ pub struct AdvancedPerformanceModeler {
 #[derive(Debug, Clone)]
 struct PerformanceDataPoint {
     /// Timestamp
+    #[allow(dead_code)]
     timestamp: Instant,
     /// API name
     api_name: String,
@@ -586,6 +604,7 @@ struct PerformanceDataPoint {
     /// Measured performance
     performance: RuntimePerformanceMetrics,
     /// System state
+    #[allow(dead_code)]
     system_state: SystemState,
 }
 
@@ -595,10 +614,13 @@ pub struct InputCharacteristics {
     /// Input size
     size: usize,
     /// Data type
+    #[allow(dead_code)]
     data_type: String,
     /// Memory layout
+    #[allow(dead_code)]
     memory_layout: String,
     /// Access pattern
+    #[allow(dead_code)]
     access_pattern: String,
 }
 
@@ -608,12 +630,16 @@ pub struct SystemState {
     /// CPU utilization
     cpu_utilization: f64,
     /// Memory utilization
+    #[allow(dead_code)]
     memory_utilization: f64,
     /// IO load
+    #[allow(dead_code)]
     io_load: f64,
     /// Network load
+    #[allow(dead_code)]
     network_load: f64,
     /// Temperature
+    #[allow(dead_code)]
     temperature: f64,
 }
 
@@ -627,8 +653,10 @@ struct PerformancePredictionModel {
     /// Model accuracy
     accuracy: f64,
     /// Training data size
+    #[allow(dead_code)]
     training_data_size: usize,
     /// Last updated
+    #[allow(dead_code)]
     last_updated: Instant,
 }
 
@@ -636,10 +664,15 @@ struct PerformancePredictionModel {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ModelType {
     LinearRegression,
+    #[allow(dead_code)]
     PolynomialRegression,
+    #[allow(dead_code)]
     NeuralNetwork,
+    #[allow(dead_code)]
     RandomForest,
+    #[allow(dead_code)]
     SupportVectorMachine,
+    #[allow(dead_code)]
     GradientBoosting,
 }
 
@@ -720,6 +753,7 @@ pub struct StabilityGuaranteeManager {
     /// Immutable audit trail
     audit_trail: Arc<ImmutableAuditTrail>,
     /// Real-time monitoring event receiver
+    #[allow(dead_code)]
     monitoring_receiver: Option<Receiver<MonitoringEvent>>,
 }
 
@@ -1083,6 +1117,7 @@ impl StabilityGuaranteeManager {
     }
 
     /// Calculate cryptographic hash of contract
+    #[allow(dead_code)]
     fn calculate_contract_hash(&self, contract: &ApiContract) -> String {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::Hasher;
@@ -1228,6 +1263,7 @@ static INIT_STABILITY: std::sync::Once = std::sync::Once::new();
 
 /// Get the global stability guarantee manager
 #[allow(static_mut_refs)]
+#[allow(dead_code)]
 pub fn global_stability_manager() -> &'static mut StabilityGuaranteeManager {
     unsafe {
         INIT_STABILITY.call_once(|| {
@@ -1241,11 +1277,13 @@ pub fn global_stability_manager() -> &'static mut StabilityGuaranteeManager {
 }
 
 /// Check if an API has long-term stability guarantees
+#[allow(dead_code)]
 pub fn has_long_term_stability(api_name: &str, module: &str) -> bool {
     global_stability_manager().has_stability_guarantee(api_name, module)
 }
 
 /// Validate API usage against stability contracts
+#[allow(dead_code)]
 pub fn validate_stability_requirements(
     api_name: &str,
     module: &str,

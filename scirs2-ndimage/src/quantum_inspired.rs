@@ -14,14 +14,12 @@
 //! - **Quantum Walk-Based Edge Detection**: Novel edge detection using quantum random walks
 //! - **Quantum Amplitude Amplification**: Enhanced feature detection through amplitude amplification
 
-use ndarray::{Array, Array1, Array2, Array3, ArrayView2, ArrayViewMut2, Axis, Ix2, Zip};
+use ndarray::{Array1, Array2, Array3, ArrayView2};
 use num_complex::Complex;
-use num_traits::{Float, FromPrimitive, One, Zero};
-use std::collections::HashMap;
+use num_traits::{Float, FromPrimitive};
 use std::f64::consts::PI;
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::filters::BorderMode;
 
 /// Quantum state representation for image processing
 #[derive(Debug, Clone)]
@@ -47,6 +45,12 @@ pub struct QuantumConfig {
     pub noise_level: f64,
     /// Use quantum acceleration if available
     pub use_quantum_acceleration: bool,
+    /// Phase factor for quantum operations
+    pub phase_factor: f64,
+    /// Decoherence rate for quantum states
+    pub decoherence_rate: f64,
+    /// Coherence factor for quantum processing
+    pub coherence_factor: f64,
 }
 
 impl Default for QuantumConfig {
@@ -57,6 +61,9 @@ impl Default for QuantumConfig {
             entanglement_strength: 0.5,
             noise_level: 0.01,
             use_quantum_acceleration: false,
+            phase_factor: 1.0,
+            decoherence_rate: 0.1,
+            coherence_factor: 0.9,
         }
     }
 }
@@ -78,6 +85,7 @@ impl Default for QuantumConfig {
 ///
 /// # Returns
 /// Filtered image after quantum measurement collapse
+#[allow(dead_code)]
 pub fn quantum_superposition_filter<T>(
     image: ArrayView2<T>,
     filter_states: &[Array2<T>],
@@ -131,6 +139,7 @@ where
 /// Uses the concept of quantum entanglement where measurements on one part
 /// of the system instantly affect another part, regardless of distance.
 /// Applied to image analysis to find long-range spatial correlations.
+#[allow(dead_code)]
 pub fn quantum_entanglement_correlation<T>(
     image: ArrayView2<T>,
     config: &QuantumConfig,
@@ -177,6 +186,7 @@ where
 /// # Theory
 /// Quantum annealing leverages quantum tunneling to explore the energy
 /// landscape more effectively than classical simulated annealing.
+#[allow(dead_code)]
 pub fn quantum_annealing_segmentation<T>(
     image: ArrayView2<T>,
     num_segments: usize,
@@ -219,6 +229,7 @@ where
 /// # Theory
 /// Quantum walks exhibit different spreading properties compared to classical
 /// random walks, allowing for enhanced sensitivity to local image structure.
+#[allow(dead_code)]
 pub fn quantum_walk_edge_detection<T>(
     image: ArrayView2<T>,
     walk_steps: usize,
@@ -248,6 +259,7 @@ where
 ///
 /// Uses quantum amplitude amplification to enhance detection of specific features.
 /// This provides quadratic speedup over classical search algorithms.
+#[allow(dead_code)]
 pub fn quantum_amplitude_amplification<T>(
     image: ArrayView2<T>,
     target_features: &[Array2<T>],
@@ -277,6 +289,7 @@ where
 
 // Helper functions
 
+#[allow(dead_code)]
 fn apply_quantum_convolution<T>(
     image: &ArrayView2<T>,
     filter: &Array2<T>,
@@ -317,6 +330,7 @@ where
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn quantum_measurement<T>(
     superposition: Array2<T>,
     config: &QuantumConfig,
@@ -333,7 +347,7 @@ where
             let amplitude = superposition[(y, x)];
 
             // Probability based on amplitude squared (Born rule)
-            let probability = amplitude * amplitude;
+            let _probability = amplitude * amplitude;
 
             // Add quantum noise
             let noise = T::from_f64(config.noise_level * (rand::random::<f64>() - 0.5))
@@ -348,6 +362,7 @@ where
     Ok(measured)
 }
 
+#[allow(dead_code)]
 fn find_quantum_entangled_pixels<T>(
     image: &ArrayView2<T>,
     center: (usize, usize),
@@ -394,6 +409,7 @@ where
     Ok(entangled_pixels)
 }
 
+#[allow(dead_code)]
 fn calculate_quantum_correlation<T>(value1: T, value2: T, strength: T) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
@@ -403,6 +419,7 @@ where
     Ok(correlation)
 }
 
+#[allow(dead_code)]
 fn normalize_quantum_correlations<T>(matrix: &mut Array2<T>) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -419,6 +436,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn calculate_quantum_distance(pos1: (usize, usize), pos2: (usize, usize)) -> NdimageResult<f64> {
     let dx = (pos1.0 as f64 - pos2.0 as f64).abs();
     let dy = (pos1.1 as f64 - pos2.1 as f64).abs();
@@ -429,9 +447,10 @@ fn calculate_quantum_distance(pos1: (usize, usize), pos2: (usize, usize)) -> Ndi
     Ok(quantum_distance)
 }
 
+#[allow(dead_code)]
 fn create_segmentation_hamiltonian<T>(
     image: &ArrayView2<T>,
-    num_segments: usize,
+    _num_segments: usize,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -462,6 +481,7 @@ where
     Ok(hamiltonian)
 }
 
+#[allow(dead_code)]
 fn calculate_quantum_temperature<T>(
     initial_temp: T,
     iteration: usize,
@@ -481,6 +501,7 @@ where
     Ok(temp)
 }
 
+#[allow(dead_code)]
 fn quantum_tunneling_update<T>(
     segmentation: &mut Array2<usize>,
     hamiltonian: &Array2<T>,
@@ -519,6 +540,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn apply_quantum_decoherence<T>(
     segmentation: &mut Array2<usize>,
     coherence_threshold: f64,
@@ -538,11 +560,12 @@ fn apply_quantum_decoherence<T>(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_quantum_walk<T>(
     image: &ArrayView2<T>,
     start_pos: (usize, usize),
     steps: usize,
-    config: &QuantumConfig,
+    _config: &QuantumConfig,
 ) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
@@ -581,6 +604,7 @@ where
     Ok(edge_strength / T::from_usize(steps).unwrap_or(T::one()))
 }
 
+#[allow(dead_code)]
 fn enhance_quantum_interference<T>(
     probability_map: &mut Array2<T>,
     config: &QuantumConfig,
@@ -621,6 +645,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_quantum_oracle<T>(
     image: &ArrayView2<T>,
     target_feature: &Array2<T>,
@@ -656,10 +681,11 @@ where
     Ok(oracle)
 }
 
+#[allow(dead_code)]
 fn apply_grover_iteration<T>(
     amplified_features: &mut Array2<T>,
     oracle: &Array2<bool>,
-    config: &QuantumConfig,
+    _config: &QuantumConfig,
 ) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Copy,
@@ -690,9 +716,10 @@ where
 ///
 /// Applies quantum Fourier transform principles for enhanced frequency domain processing.
 /// Provides exponential improvements in certain frequency analysis tasks.
+#[allow(dead_code)]
 pub fn quantum_fourier_enhancement<T>(
     image: ArrayView2<T>,
-    config: &QuantumConfig,
+    _config: &QuantumConfig,
 ) -> NdimageResult<Array2<Complex<T>>>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
@@ -739,6 +766,7 @@ where
 /// # Theory
 /// Quantum machine learning can provide exponential speedups for certain classification
 /// tasks by exploiting quantum parallelism and interference effects.
+#[allow(dead_code)]
 pub fn quantum_machine_learning_classifier<T>(
     image: ArrayView2<T>,
     training_data: &[Array2<T>],
@@ -784,13 +812,14 @@ where
 /// # Theory
 /// Quantum error correction can detect and correct errors that would be
 /// impossible to handle with classical methods, providing enhanced robustness.
+#[allow(dead_code)]
 pub fn quantum_error_correction<T>(
     noisy_image: ArrayView2<T>,
     redundancy_factor: usize,
     config: &QuantumConfig,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Copy + Send + Sync,
+    T: Float + FromPrimitive + Copy + Send + Sync + 'static,
 {
     let (height, width) = noisy_image.dim();
     let mut corrected_image = Array2::zeros((height, width));
@@ -824,6 +853,7 @@ where
 /// # Theory
 /// Tensor networks can represent exponentially large quantum states efficiently,
 /// enabling novel approaches to image representation and processing.
+#[allow(dead_code)]
 pub fn quantum_tensor_network_processing<T>(
     image: ArrayView2<T>,
     bond_dimension: usize,
@@ -854,6 +884,7 @@ where
 /// # Theory
 /// Variational quantum algorithms can find optimal parameters for image
 /// enhancement by leveraging quantum optimization landscapes.
+#[allow(dead_code)]
 pub fn quantum_variational_enhancement<T>(
     image: ArrayView2<T>,
     num_layers: usize,
@@ -888,9 +919,10 @@ where
 
 // Helper functions for quantum machine learning and advanced algorithms
 
+#[allow(dead_code)]
 fn quantum_feature_map<T>(
     image: &ArrayView2<T>,
-    config: &QuantumConfig,
+    _config: &QuantumConfig,
 ) -> NdimageResult<Array2<Complex<T>>>
 where
     T: Float + FromPrimitive + Copy,
@@ -913,10 +945,11 @@ where
     Ok(feature_map)
 }
 
+#[allow(dead_code)]
 fn quantum_kernel<T>(
     features1: &Array2<Complex<T>>,
     features2: &Array2<Complex<T>>,
-    config: &QuantumConfig,
+    _config: &QuantumConfig,
 ) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
@@ -942,6 +975,7 @@ where
     Ok(kernel_value)
 }
 
+#[allow(dead_code)]
 fn create_quantum_syndrome_generators<T>(redundancy_factor: usize) -> NdimageResult<Vec<Array1<T>>>
 where
     T: Float + FromPrimitive + Copy,
@@ -966,6 +1000,7 @@ where
     Ok(generators)
 }
 
+#[allow(dead_code)]
 fn quantum_encode_pixel<T>(
     pixel_value: T,
     syndrome_generators: &[Array1<T>],
@@ -985,13 +1020,14 @@ where
     Ok(encoded)
 }
 
+#[allow(dead_code)]
 fn quantum_error_detect_correct<T>(
     encoded_pixel: Array1<T>,
     syndrome_generators: &[Array1<T>],
-    config: &QuantumConfig,
+    _config: &QuantumConfig,
 ) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive + Copy,
+    T: Float + FromPrimitive + Copy + 'static,
 {
     // Calculate syndrome
     let mut syndrome = Vec::new();
@@ -1008,6 +1044,7 @@ where
     Ok(corrected_value)
 }
 
+#[allow(dead_code)]
 fn majority_vote<T>(values: &[T]) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
@@ -1025,10 +1062,11 @@ where
     Ok(average)
 }
 
+#[allow(dead_code)]
 fn image_to_tensor_network<T>(
     image: &ArrayView2<T>,
     bond_dimension: usize,
-    config: &QuantumConfig,
+    _config: &QuantumConfig,
 ) -> NdimageResult<Array3<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1053,6 +1091,7 @@ where
     Ok(tensor_network)
 }
 
+#[allow(dead_code)]
 fn apply_tensor_network_gates<T>(
     mut tensor_network: Array3<T>,
     config: &QuantumConfig,
@@ -1080,6 +1119,7 @@ where
     Ok(tensor_network)
 }
 
+#[allow(dead_code)]
 fn tensor_network_to_image<T>(
     tensor_network: Array3<T>,
     output_shape: (usize, usize),
@@ -1107,6 +1147,7 @@ where
     Ok(image)
 }
 
+#[allow(dead_code)]
 fn initialize_variational_parameters<T>(num_layers: usize) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1123,10 +1164,11 @@ where
     Ok(parameters)
 }
 
+#[allow(dead_code)]
 fn apply_variational_circuit<T>(
     image: &Array2<T>,
     parameters: &Array1<T>,
-    config: &QuantumConfig,
+    _config: &QuantumConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1157,6 +1199,7 @@ where
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn calculate_enhancement_cost<T>(enhanced: &Array2<T>, original: &Array2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Copy,
@@ -1178,6 +1221,7 @@ where
     Ok(cost)
 }
 
+#[allow(dead_code)]
 fn calculate_quantum_gradients<T>(
     image: &Array2<T>,
     parameters: &Array1<T>,
@@ -1214,6 +1258,7 @@ where
     Ok(gradients)
 }
 
+#[allow(dead_code)]
 fn update_variational_parameters<T>(
     parameters: &mut Array1<T>,
     gradients: &Array1<T>,

@@ -944,7 +944,7 @@ pub struct MethodStats {
 }
 
 /// Performance trends
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct PerformanceTrends {
     /// Execution time trend (positive = getting slower)
     pub execution_time_trend: f64,
@@ -1164,7 +1164,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
     /// Get current performance metrics
     pub fn get_performance_metrics(&self) -> InterpolateResult<InterpolationPerformanceMetrics> {
         let tracker = self.performance_tracker.read().map_err(|_| {
-            InterpolateError::Other("Failed to read performance tracker".to_string())
+            InterpolateError::InvalidState("Failed to read performance tracker".to_string())
         })?;
 
         Ok(InterpolationPerformanceMetrics {
@@ -1446,13 +1446,13 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
     ) -> InterpolateResult<ArrayD<F>> {
         // Enhanced linear interpolation implementation
         if x_data.len() != y_data.len() {
-            return Err(InterpolateError::Other(
+            return Err(InterpolateError::ComputationError(
                 "Data arrays must have same length".to_string(),
             ));
         }
 
         if x_data.len() < 2 {
-            return Err(InterpolateError::Other(
+            return Err(InterpolateError::ComputationError(
                 "Need at least 2 points for interpolation".to_string(),
             ));
         }
@@ -1532,7 +1532,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
     ) -> InterpolateResult<ArrayD<F>> {
         // Enhanced cubic spline interpolation implementation
         if x_data.len() != y_data.len() {
-            return Err(InterpolateError::Other(
+            return Err(InterpolateError::ComputationError(
                 "Data arrays must have same length".to_string(),
             ));
         }
@@ -1558,7 +1558,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         for i in 0..n - 1 {
             h[i] = x_flat[indices[i + 1]] - x_flat[indices[i]];
             if h[i].abs() < F::from(1e-12).unwrap() {
-                return Err(InterpolateError::Other(
+                return Err(InterpolateError::ComputationError(
                     "Duplicate x values found".to_string(),
                 ));
             }
@@ -2178,7 +2178,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
             method, error, data_info
         );
 
-        InterpolateError::Other(detailed_message)
+        InterpolateError::ComputationError(detailed_message)
     }
 
     fn record_performance_metrics(
@@ -2187,7 +2187,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         method: &InterpolationMethodType,
     ) -> InterpolateResult<()> {
         let mut tracker = self.performance_tracker.write().map_err(|_| {
-            InterpolateError::Other("Failed to write to performance tracker".to_string())
+            InterpolateError::ComputationError("Failed to write to performance tracker".to_string())
         })?;
 
         // Record execution time
@@ -2238,20 +2238,18 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
     }
 
     fn calculate_memory_efficiency(&self) -> InterpolateResult<f64> {
-        let manager = self
-            .memory_manager
-            .lock()
-            .map_err(|_| InterpolateError::Other("Failed to lock memory manager".to_string()))?;
+        let manager = self.memory_manager.lock().map_err(|_| {
+            InterpolateError::ComputationError("Failed to lock memory manager".to_string())
+        })?;
 
         // Placeholder calculation
         Ok(0.85) // Return a reasonable default
     }
 
     fn get_cache_hit_ratio(&self) -> InterpolateResult<f64> {
-        let cache = self
-            .adaptive_cache
-            .lock()
-            .map_err(|_| InterpolateError::Other("Failed to lock adaptive cache".to_string()))?;
+        let _cache = self.adaptive_cache.lock().map_err(|_| {
+            InterpolateError::ComputationError("Failed to lock adaptive cache".to_string())
+        })?;
 
         // Placeholder calculation
         Ok(0.75) // Return a reasonable default
@@ -2884,12 +2882,14 @@ pub struct InterpolationPerformanceMetrics {
 }
 
 /// Create a new ultrathink interpolation coordinator with default configuration
+#[allow(dead_code)]
 pub fn create_ultrathink_interpolation_coordinator<F: Float + Debug>(
 ) -> InterpolateResult<UltrathinkInterpolationCoordinator<F>> {
     UltrathinkInterpolationCoordinator::new(UltrathinkInterpolationConfig::default())
 }
 
 /// Create a new ultrathink interpolation coordinator with custom configuration
+#[allow(dead_code)]
 pub fn create_ultrathink_interpolation_coordinator_with_config<F: Float + Debug>(
     config: UltrathinkInterpolationConfig,
 ) -> InterpolateResult<UltrathinkInterpolationCoordinator<F>> {

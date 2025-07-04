@@ -10,6 +10,7 @@ use scirs2_signal::wiener::{
     wiener_filter, wiener_filter_2d, wiener_filter_freq, wiener_filter_time, WienerConfig,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Wiener Filtering Examples");
     println!("------------------------");
@@ -193,6 +194,7 @@ fn main() {
 }
 
 /// Generates a test signal with additive noise
+#[allow(dead_code)]
 fn generate_test_signal() -> (Array1<f64>, Array1<f64>) {
     // Signal parameters
     let n_samples = 1000;
@@ -217,6 +219,7 @@ fn generate_test_signal() -> (Array1<f64>, Array1<f64>) {
 }
 
 /// Generates a non-stationary signal with time-varying noise
+#[allow(dead_code)]
 fn generate_nonstationary_signal() -> (Array1<f64>, Array1<f64>) {
     // Signal parameters
     let n_samples = 1000;
@@ -244,6 +247,7 @@ fn generate_nonstationary_signal() -> (Array1<f64>, Array1<f64>) {
 }
 
 /// Generates a test image with additive noise
+#[allow(dead_code)]
 fn generate_test_image() -> (Array2<f64>, Array2<f64>) {
     // Image parameters
     let height = 32;
@@ -295,6 +299,7 @@ fn generate_test_image() -> (Array2<f64>, Array2<f64>) {
 }
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB
+#[allow(dead_code)]
 fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
     if clean.len() != noisy.len() {
         return f64::NEG_INFINITY;
@@ -316,6 +321,7 @@ fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
 }
 
 /// Calculates the SNR for images
+#[allow(dead_code)]
 fn calculate_image_snr(clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
     if clean.dim() != noisy.dim() {
         return f64::NEG_INFINITY;
@@ -339,6 +345,7 @@ fn calculate_image_snr(clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
 }
 
 /// Saves signals to a CSV file for plotting
+#[allow(dead_code)]
 fn save_signals_to_csv(
     filename: &str,
     clean: &Array1<f64>,
@@ -369,6 +376,7 @@ fn save_signals_to_csv(
 }
 
 /// Saves an image to CSV for visualization
+#[allow(dead_code)]
 fn save_image_to_csv(filename: &str, image: &Array2<f64>) {
     let mut file = File::create(filename).expect("Failed to create file");
 

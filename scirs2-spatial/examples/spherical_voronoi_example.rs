@@ -2,6 +2,7 @@ use ndarray::array;
 use scirs2_spatial::spherical_voronoi::SphericalVoronoi;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Spherical Voronoi Diagram Example");
     println!("=================================\n");
@@ -144,6 +145,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Generate vertices of a dodecahedron as generator points on a unit sphere
+#[allow(dead_code)]
 fn generate_dodecahedron_points() -> ndarray::Array2<f64> {
     use ndarray::Array2;
 

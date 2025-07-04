@@ -5,6 +5,7 @@ use scirs2_cluster::vq::{
     kmeans2, minibatch_kmeans, MiniBatchKMeansOptions, MinitMethod, MissingMethod,
 };
 
+#[allow(dead_code)]
 fn main() {
     // Generate random data with two clusters
     let data = generate_clustered_data(1000, 2);
@@ -117,6 +118,7 @@ fn main() {
 }
 
 /// Generate random data with clusters
+#[allow(dead_code)]
 fn generate_clustered_data(n_samples: usize, n_dim: usize) -> Array2<f64> {
     let mut rng = rand::rng();
 
@@ -164,6 +166,7 @@ fn generate_clustered_data(n_samples: usize, n_dim: usize) -> Array2<f64> {
 }
 
 /// Calculate the agreement between two clusterings (adjusting for label permutation)
+#[allow(dead_code)]
 fn calculate_cluster_agreement(
     labels1: &ndarray::ArrayBase<ndarray::OwnedRepr<usize>, ndarray::Dim<[usize; 1]>>,
     labels2: &ndarray::ArrayBase<ndarray::OwnedRepr<usize>, ndarray::Dim<[usize; 1]>>,

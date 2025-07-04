@@ -10,6 +10,7 @@ use std::fmt::{Debug, Display};
 
 /// Safely divide two numbers, checking for division by zero and validating the result
 #[inline]
+#[allow(dead_code)]
 pub fn safe_divide<T>(numerator: T, denominator: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug,
@@ -43,6 +44,7 @@ where
 
 /// Safely compute square root, checking for negative values
 #[inline]
+#[allow(dead_code)]
 pub fn safe_sqrt<T>(value: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug,
@@ -67,6 +69,7 @@ where
 
 /// Safely compute natural logarithm, checking for non-positive values
 #[inline]
+#[allow(dead_code)]
 pub fn safe_log<T>(value: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug,
@@ -90,6 +93,7 @@ where
 
 /// Safely compute base-10 logarithm
 #[inline]
+#[allow(dead_code)]
 pub fn safe_log10<T>(value: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug,
@@ -113,6 +117,7 @@ where
 
 /// Safely compute power, checking for domain errors and overflow
 #[inline]
+#[allow(dead_code)]
 pub fn safe_pow<T>(base: T, exponent: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug,
@@ -143,6 +148,7 @@ where
 
 /// Safely compute exponential, checking for overflow
 #[inline]
+#[allow(dead_code)]
 pub fn safe_exp<T>(value: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug,
@@ -169,6 +175,7 @@ where
 
 /// Safely normalize a value by dividing by a norm/magnitude
 #[inline]
+#[allow(dead_code)]
 pub fn safe_normalize<T>(value: T, norm: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug,
@@ -182,6 +189,7 @@ where
 }
 
 /// Safely compute the mean of a slice, handling empty slices
+#[allow(dead_code)]
 pub fn safe_mean<T>(values: &[T]) -> Result<T, CoreError>
 where
     T: Float + Display + Debug + std::iter::Sum,
@@ -204,6 +212,7 @@ where
 }
 
 /// Safely compute variance, handling numerical issues
+#[allow(dead_code)]
 pub fn safe_variance<T>(values: &[T], mean: T) -> Result<T, CoreError>
 where
     T: Float + Display + Debug + std::iter::Sum,

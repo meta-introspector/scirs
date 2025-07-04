@@ -6,6 +6,7 @@ use scirs2_neural::models::{Model, Sequential};
 use scirs2_neural::serialization::{self, SerializationFormat};
 use std::path::Path;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Model Serialization Example");
     // Initialize random number generator

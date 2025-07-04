@@ -418,6 +418,7 @@ thread_local! {
 }
 
 /// Set the worker ID for the current thread
+#[allow(dead_code)]
 fn set_worker_id(id: usize) {
     WORKER_ID.with(|cell| unsafe {
         *cell.get() = Some(id);
@@ -425,6 +426,7 @@ fn set_worker_id(id: usize) {
 }
 
 /// Get the worker ID for the current thread
+#[allow(dead_code)]
 pub fn get_worker_id() -> Option<usize> {
     WORKER_ID.with(|cell| unsafe { *cell.get() })
 }
@@ -1277,11 +1279,13 @@ where
 }
 
 /// Create a new work-stealing scheduler with default configuration
+#[allow(dead_code)]
 pub fn create_work_stealing_scheduler() -> WorkStealingScheduler {
     WorkStealingScheduler::new(SchedulerConfig::default())
 }
 
 /// Create a new work-stealing scheduler with the specified number of workers
+#[allow(dead_code)]
 pub fn create_work_stealing_scheduler_with_workers(workers: usize) -> WorkStealingScheduler {
     let config = SchedulerConfigBuilder::new().num_workers(workers).build();
 

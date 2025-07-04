@@ -9,6 +9,7 @@ use std::sync::Once;
 static INIT: Once = Once::new();
 
 /// Initialize the API registry with all frozen APIs for 1.0
+#[allow(dead_code)]
 pub fn initialize_api_freeze() {
     INIT.call_once(|| {
         initialize_api_freeze_impl();
@@ -16,6 +17,7 @@ pub fn initialize_api_freeze() {
 }
 
 /// Internal implementation of API freeze initialization
+#[allow(dead_code)]
 fn initialize_api_freeze_impl() {
     let mut registry = global_registry_mut();
     let v1_0_0 = Version::new(1, 0, 0);
@@ -277,6 +279,7 @@ fn initialize_api_freeze_impl() {
 }
 
 /// Check if an API is part of the frozen 1.0 API surface
+#[allow(dead_code)]
 pub fn is_api_frozen(api_name: &str, module: &str) -> bool {
     let registry = global_registry_mut();
     let v1_0_0 = Version::new(1, 0, 0);
@@ -288,6 +291,7 @@ pub fn is_api_frozen(api_name: &str, module: &str) -> bool {
 }
 
 /// Generate a report of all frozen APIs
+#[allow(dead_code)]
 pub fn generate_frozen_api_report() -> String {
     let registry = global_registry_mut();
     let v1_0_0 = Version::new(1, 0, 0);

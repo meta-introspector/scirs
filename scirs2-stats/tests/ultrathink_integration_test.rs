@@ -13,6 +13,7 @@ use scirs2_stats::ultrathink_simd_optimizations::{ultra_batch_statistics, Ultrat
 use scirs2_stats::{mean, var};
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_error_context_creation() {
     let context = UltrathinkContextBuilder::new(1000)
         .memory_usage(256.0)
@@ -27,6 +28,7 @@ fn test_ultrathink_error_context_creation() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_error_messages() {
     // Test memory exhaustion message
     let error = UltrathinkErrorMessages::memory_exhaustion(2000.0, 1000.0, 50000);
@@ -37,6 +39,7 @@ fn test_ultrathink_error_messages() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_numerical_stability_config() {
     let config = NumericalStabilityConfig::default();
     assert_eq!(config.relative_tolerance, 1e-12);
@@ -47,6 +50,7 @@ fn test_ultrathink_numerical_stability_config() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_parallel_config() {
     let config = UltrathinkParallelConfig::default();
     assert!(config.max_threads > 0);
@@ -56,6 +60,7 @@ fn test_ultrathink_parallel_config() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_simd_config() {
     let config = UltrathinkSimdConfig::default();
     assert_eq!(config.min_simd_size, 64);
@@ -66,6 +71,7 @@ fn test_ultrathink_simd_config() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_batch_statistics() {
     let data = Array1::from_vec((1..=1000).map(|x| x as f64).collect());
     let config = UltrathinkSimdConfig::default();
@@ -85,6 +91,7 @@ fn test_ultrathink_batch_statistics() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_property_tester_creation() {
     let simd_config = UltrathinkSimdConfig::default();
     let parallel_config = UltrathinkParallelConfig::default();
@@ -97,6 +104,7 @@ fn test_ultrathink_property_tester_creation() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_numerical_stability_analyzer() {
     let config = NumericalStabilityConfig::default();
     let analyzer = UltrathinkNumericalStabilityAnalyzer::new(config);
@@ -112,6 +120,7 @@ fn test_numerical_stability_analyzer() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_integration_basic_stats() {
     // Test that ultrathink features work with basic statistical functions
     let data = Array1::from_vec((1..=100).map(|x| x as f64).collect());

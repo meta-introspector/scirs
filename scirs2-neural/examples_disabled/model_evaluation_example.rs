@@ -49,6 +49,7 @@ impl<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync> ModelBuilde
             None,
         Ok(model)
 // Generate synthetic regression dataset
+#[allow(dead_code)]
 fn generate_regression_dataset<F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync>(
     n_samples: usize,
 ) -> Result<InMemoryDataset<F>> {
@@ -75,6 +76,7 @@ fn generate_regression_dataset<F: Float + Debug + ScalarOperand + FromPrimitive 
     let labels = Array::<F, _>::from_shape_vec([n_samples, 1], labels_data)
     InMemoryDataset::new(features, labels)
 // Generate synthetic classification dataset
+#[allow(dead_code)]
 fn generate_classification_dataset<
     F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync,
 >(
@@ -100,6 +102,7 @@ fn generate_classification_dataset<
         // Set the one-hot encoding in the labels array
         labels_data[i * n_classes + max_class] = F::one();
     let labels = Array::<F, _>::from_shape_vec([n_samples, n_classes], labels_data)
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Model Evaluation Framework Example");
     println!("---------------------------------");

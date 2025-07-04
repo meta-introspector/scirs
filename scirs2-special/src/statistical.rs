@@ -134,6 +134,7 @@ use std::f64::consts::PI;
 /// assert_relative_eq!(logistic(1.0), 1.0 / (1.0 + (-1.0_f64).exp()), epsilon = 1e-10);
 /// assert_relative_eq!(logistic(-1.0), (-1.0_f64).exp() / (1.0 + (-1.0_f64).exp()), epsilon = 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn logistic(x: f64) -> f64 {
     // Use numerically stable computation to avoid overflow
     if x >= 0.0 {
@@ -167,6 +168,7 @@ pub fn logistic(x: f64) -> f64 {
 /// // At x=0, σ'(0) = 0.5 * (1 - 0.5) = 0.25
 /// assert_relative_eq!(logistic_derivative(0.0), 0.25, epsilon = 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn logistic_derivative(x: f64) -> f64 {
     let sigma = logistic(x);
     sigma * (1.0 - sigma)
@@ -203,6 +205,7 @@ pub fn logistic_derivative(x: f64) -> f64 {
 /// // Check that all values are positive
 /// assert!(result.iter().all(|&val| val > 0.0));
 /// ```
+#[allow(dead_code)]
 pub fn softmax(x: ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
     if x.is_empty() {
         return Err(SpecialError::DomainError(
@@ -269,6 +272,7 @@ pub fn softmax(x: ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
 ///     assert_relative_eq!(a, b, epsilon = 1e-10);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn log_softmax(x: ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
     if x.is_empty() {
         return Err(SpecialError::DomainError(
@@ -328,6 +332,7 @@ pub fn log_softmax(x: ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
 /// let manual = (1.0_f64.exp() + 2.0_f64.exp() + 3.0_f64.exp()).ln();
 /// assert_relative_eq!(result, manual, epsilon = 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn logsumexp(x: ArrayView1<f64>) -> SpecialResult<f64> {
     if x.is_empty() {
         return Err(SpecialError::DomainError(
@@ -383,6 +388,7 @@ pub fn logsumexp(x: ArrayView1<f64>) -> SpecialResult<f64> {
 ///     assert_relative_eq!(*output, input.ln_1p(), epsilon = 1e-15);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn log1p_array(x: ArrayView1<f64>) -> Array1<f64> {
     x.mapv(|val| val.ln_1p())
 }
@@ -415,6 +421,7 @@ pub fn log1p_array(x: ArrayView1<f64>) -> Array1<f64> {
 ///     assert_relative_eq!(*output, input.exp_m1(), epsilon = 1e-15);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn expm1_array(x: ArrayView1<f64>) -> Array1<f64> {
     x.mapv(|val| val.exp_m1())
 }
@@ -442,6 +449,7 @@ pub fn expm1_array(x: ArrayView1<f64>) -> Array1<f64> {
 /// assert_relative_eq!(sinc(1.0), 0.0, epsilon = 1e-10);
 /// assert_relative_eq!(sinc(0.5), 2.0 / std::f64::consts::PI, epsilon = 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn sinc(x: f64) -> f64 {
     if x == 0.0 {
         1.0
@@ -476,6 +484,7 @@ pub fn sinc(x: f64) -> f64 {
 /// assert_eq!(result[0], 1.0);
 /// assert_relative_eq!(result[2], 0.0, epsilon = 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn sinc_array(x: ArrayView1<f64>) -> Array1<f64> {
     x.mapv(sinc)
 }
@@ -502,6 +511,7 @@ pub fn sinc_array(x: ArrayView1<f64>) -> Array1<f64> {
 /// // For small positive integers, log(Γ(n)) = log((n-1)!)
 /// assert_relative_eq!(log_abs_gamma(5.0).unwrap(), (24.0_f64).ln(), epsilon = 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn log_abs_gamma(x: f64) -> SpecialResult<f64> {
     if x <= 0.0 && x == x.floor() {
         // Gamma function has poles at non-positive integers

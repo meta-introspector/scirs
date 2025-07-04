@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::thread;
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Interactive Dashboard Example");
     println!("===========================");
@@ -56,6 +57,7 @@ fn main() -> Result<()> {
 }
 
 /// Example of basic dashboard creation and usage
+#[allow(dead_code)]
 fn basic_dashboard_example() -> Result<()> {
     // Create a dashboard with default configuration
     let dashboard = InteractiveDashboard::default();
@@ -95,6 +97,7 @@ fn basic_dashboard_example() -> Result<()> {
 }
 
 /// Example of real-time metrics monitoring
+#[allow(dead_code)]
 fn realtime_monitoring_example() -> Result<()> {
     // Create dashboard with custom configuration
     let config = DashboardConfig {
@@ -175,6 +178,7 @@ fn realtime_monitoring_example() -> Result<()> {
 }
 
 /// Example of domain-specific dashboards
+#[allow(dead_code)]
 fn domain_specific_dashboards_example() -> Result<()> {
     println!("Creating domain-specific dashboards...");
 
@@ -223,6 +227,7 @@ fn domain_specific_dashboards_example() -> Result<()> {
 }
 
 /// Example of export and data management functionality
+#[allow(dead_code)]
 fn export_and_data_management_example() -> Result<()> {
     let dashboard = InteractiveDashboard::default();
 
@@ -298,6 +303,7 @@ fn export_and_data_management_example() -> Result<()> {
 }
 
 /// Example of advanced dashboard configuration
+#[allow(dead_code)]
 fn advanced_configuration_example() -> Result<()> {
     // Create custom theme
     let custom_theme = DashboardTheme {
@@ -387,6 +393,7 @@ fn advanced_configuration_example() -> Result<()> {
 }
 
 /// Example of widget system usage
+#[allow(dead_code)]
 fn widget_system_example() -> Result<()> {
     println!("Creating dashboard widgets...");
 

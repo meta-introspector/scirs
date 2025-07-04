@@ -6,8 +6,8 @@
 //! performance on large-scale statistical computations.
 
 use crate::error::StatsResult;
+use crate::error_handling_enhancements::{UltrathinkContextBuilder, UltrathinkErrorMessages};
 use crate::error_standardization::ErrorMessages;
-use crate::ultrathink_error_enhancements::{UltrathinkContextBuilder, UltrathinkErrorMessages};
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::{num_threads, par_chunks, parallel_map, ParallelIterator};
@@ -283,7 +283,7 @@ impl UltraParallelProcessor {
     fn determine_optimal_parallelization(
         &self,
         data_size: usize,
-        _context: &crate::ultrathink_error_enhancements::UltrathinkErrorContext,
+        _context: &crate::ultrathink_error_enhancements_v2::UltraThinkErrorContext,
     ) -> StatsResult<(usize, usize)> {
         let max_threads = self.config.max_threads.min(num_threads());
         let min_chunk = self.config.min_chunk_size;
@@ -358,7 +358,7 @@ impl UltraParallelProcessor {
         &self,
         data: &ArrayBase<D, Ix1>,
         num_threads: usize,
-        _context: &crate::ultrathink_error_enhancements::UltrathinkErrorContext,
+        _context: &crate::ultrathink_error_enhancements_v2::UltraThinkErrorContext,
     ) -> StatsResult<UltraParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
@@ -1070,11 +1070,13 @@ pub struct ParallelPerformanceAnalytics {
 }
 
 /// Create a new ultra-parallel processor with default configuration
+#[allow(dead_code)]
 pub fn create_ultra_parallel_processor() -> UltraParallelProcessor {
     UltraParallelProcessor::new(UltrathinkParallelConfig::default())
 }
 
 /// Create a new ultra-parallel processor with custom configuration
+#[allow(dead_code)]
 pub fn create_configured_ultra_parallel_processor(
     config: UltrathinkParallelConfig,
 ) -> UltraParallelProcessor {

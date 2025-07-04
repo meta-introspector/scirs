@@ -27,6 +27,7 @@ pub enum LinearSolverType {
 ///
 /// # Returns
 /// * `Result<Array1<F>, IntegrateError>` - The solution vector x
+#[allow(dead_code)]
 pub fn solve_linear_system<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> IntegrateResult<Array1<F>>
 where
     F: Float
@@ -134,6 +135,7 @@ where
 ///
 /// # Returns
 /// * The L2 norm of the vector
+#[allow(dead_code)]
 pub fn vector_norm<F>(v: &ArrayView1<F>) -> F
 where
     F: Float,
@@ -152,6 +154,7 @@ where
 ///
 /// # Returns
 /// * The Frobenius norm of the matrix
+#[allow(dead_code)]
 pub fn matrix_norm<F>(m: &ArrayView2<F>) -> F
 where
     F: Float,
@@ -164,6 +167,7 @@ where
 }
 
 /// Solve a linear system using automatic method selection
+#[allow(dead_code)]
 pub fn auto_solve_linear_system<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,
@@ -201,6 +205,7 @@ where
 }
 
 /// Solve a linear system using LU decomposition (alias for compatibility)
+#[allow(dead_code)]
 pub fn solve_lu<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> IntegrateResult<Array1<F>>
 where
     F: Float
@@ -226,6 +231,7 @@ where
 ///
 /// # Returns
 /// * `Result<Array1<F>, IntegrateError>` - The solution vector x
+#[allow(dead_code)]
 pub fn solve_gmres<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,

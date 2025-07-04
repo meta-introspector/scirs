@@ -10,6 +10,7 @@ use scirs2_linalg::LinalgResult;
 
 type C64 = Complex<f64>;
 
+#[allow(dead_code)]
 fn main() -> LinalgResult<()> {
     println!("Complex Matrix Decompositions Example");
     println!("====================================\n");
@@ -35,6 +36,7 @@ fn main() -> LinalgResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_complex_lu() -> LinalgResult<()> {
     println!("Complex LU Decomposition");
     println!("----------------------");
@@ -80,6 +82,7 @@ fn demo_complex_lu() -> LinalgResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_complex_qr() -> LinalgResult<()> {
     println!("Complex QR Decomposition");
     println!("----------------------");
@@ -116,6 +119,7 @@ fn demo_complex_qr() -> LinalgResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_complex_svd() -> LinalgResult<()> {
     println!("Complex SVD");
     println!("----------");
@@ -161,6 +165,7 @@ fn demo_complex_svd() -> LinalgResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_complex_cholesky() -> LinalgResult<()> {
     println!("Complex Cholesky Decomposition");
     println!("----------------------------");
@@ -199,6 +204,7 @@ fn demo_complex_cholesky() -> LinalgResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_complex_eig() -> LinalgResult<()> {
     println!("Complex Eigenvalue Decomposition");
     println!("-------------------------------");
@@ -233,6 +239,7 @@ fn demo_complex_eig() -> LinalgResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_complex_eigh() -> LinalgResult<()> {
     println!("Hermitian Eigenvalue Decomposition");
     println!("---------------------------------");
@@ -304,6 +311,7 @@ fn demo_complex_eigh() -> LinalgResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn print_complex_matrix(a: &Array2<C64>) {
     for i in 0..a.nrows() {
         for j in 0..a.ncols() {

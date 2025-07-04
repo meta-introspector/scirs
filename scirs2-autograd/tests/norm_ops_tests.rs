@@ -6,11 +6,13 @@ use scirs2_autograd as ag;
 const EPSILON: f64 = 1e-5;
 
 // Collection of test utilities
+#[allow(dead_code)]
 fn is_close(a: f64, b: f64, epsilon: f64) -> bool {
     (a - b).abs() < epsilon
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_frobenius_norm() {
     ag::run::<f64, _, _>(|ctx| {
         // Test with a known matrix
@@ -54,6 +56,7 @@ fn test_frobenius_norm() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_spectral_norm() {
     ag::run::<f64, _, _>(|ctx| {
         // Test with a matrix that has a known largest singular value
@@ -98,6 +101,7 @@ fn test_spectral_norm() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_nuclear_norm() {
     ag::run::<f64, _, _>(|ctx| {
         // Test with a matrix that has known singular values
@@ -164,6 +168,7 @@ fn test_nuclear_norm() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_norm_gradient_stability() {
     ag::run::<f64, _, _>(|ctx| {
         // Test with a nearly singular matrix

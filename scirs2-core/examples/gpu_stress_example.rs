@@ -9,6 +9,7 @@ use std::error::Error;
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBackend, GpuContext};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("=== SciRS2 GPU Stress Test Example ===");
 
@@ -26,6 +27,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn run_stress_test() -> Result<(), Box<dyn Error>> {
     // Try to create GPU context, fallback to CPU if needed
     let ctx = match GpuContext::new(GpuBackend::Cuda) {

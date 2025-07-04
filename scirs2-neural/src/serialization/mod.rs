@@ -114,6 +114,7 @@ pub struct SerializedModel {
     /// Model parameters (weights and biases)
     pub parameters: Vec<Vec<Vec<f64>>>,
 /// Save model to file
+#[allow(dead_code)]
 pub fn save_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static, P: AsRef<Path>>(
     model: &Sequential<F>,
     path: P,
@@ -137,6 +138,7 @@ pub fn save_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static, P: A
     fs::write(path, bytes).map_err(|e| NeuralError::IOError(e.to_string()))?;
     Ok(())
 /// Load model from file
+#[allow(dead_code)]
 pub fn load_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static, P: AsRef<Path>>(
 ) -> Result<Sequential<F>> {
     let bytes = fs::read(path).map_err(|e| NeuralError::IOError(e.to_string()))?;
@@ -146,6 +148,7 @@ pub fn load_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static, P: A
         SerializationFormat::MessagePack => rmp_serde::from_slice(&bytes)
     deserialize_model(&serialized)
 /// Serialize model to SerializedModel
+#[allow(dead_code)]
 fn serialize_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
 ) -> Result<SerializedModel> {
     let mut layers = Vec::new();
@@ -212,6 +215,7 @@ fn serialize_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
         parameters,
     })
 /// Extract parameters from layer
+#[allow(dead_code)]
 fn extract_parameters<F: Float + Debug + ScalarOperand + Send + Sync>(
     params: Vec<&Array<F, ndarray::IxDyn>>,
 ) -> Result<Vec<Vec<f64>>> {
@@ -228,6 +232,7 @@ fn extract_parameters<F: Float + Debug + ScalarOperand + Send + Sync>(
         result.push(f64_vec);
     Ok(result)
 /// Deserialize model from SerializedModel
+#[allow(dead_code)]
 fn deserialize_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
     serialized: &SerializedModel,
     let mut layers: Vec<Box<dyn Layer<F>>> = Vec::new();
@@ -287,6 +292,7 @@ fn deserialize_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
             )));
     Ok(Sequential::from_layers(bound_layers))
 /// Create a Dense layer from configuration and parameters
+#[allow(dead_code)]
 fn create_dense_layer<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
     config: &DenseConfig,
     params: &[Vec<f64>],
@@ -323,6 +329,7 @@ fn create_dense_layer<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
                 config.input_dim * config.output_dim
     Ok(layer)
 /// Create a Conv2D layer from configuration and parameters
+#[allow(dead_code)]
 fn create_conv2d_layer<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
     config: &Conv2DConfig,
 ) -> Result<Conv2D<F>> {
@@ -353,6 +360,7 @@ fn create_conv2d_layer<F: Float + Debug + ScalarOperand + Send + Sync + 'static>
         let bias_array = array_from_vec::<F>(&params[1], &bias_shape)?;
         layer.set_parameters(vec![weights_array, bias_array])?;
 /// Create a LayerNorm layer from configuration and parameters
+#[allow(dead_code)]
 fn create_layer_norm<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
     config: &LayerNormConfig,
 ) -> Result<LayerNorm<F>> {
@@ -363,6 +371,7 @@ fn create_layer_norm<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
         let beta_array = array_from_vec::<F>(&params[1], &beta_shape)?;
         layer.set_parameters(vec![gamma_array, beta_array])?;
 /// Create a BatchNorm layer from configuration and parameters
+#[allow(dead_code)]
 fn create_batch_norm<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
     config: &BatchNormConfig,
 ) -> Result<BatchNorm<F>> {
@@ -370,16 +379,19 @@ fn create_batch_norm<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
         let gamma_shape = [config.num_features];
         let beta_shape = [config.num_features];
 /// Create a Dropout layer from configuration
+#[allow(dead_code)]
 fn create_dropout<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
     config: &DropoutConfig,
 ) -> Result<Dropout<F>> {
     Dropout::new(config.p, &mut rng)
 /// Create a MaxPool2D layer from configuration
+#[allow(dead_code)]
 fn create_maxpool2d<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
     config: &MaxPool2DConfig,
 ) -> Result<MaxPool2D<F>> {
     MaxPool2D::new(config.kernel_size, config.stride, config.padding)
 /// Convert a vector of f64 values to an ndarray with the given shape
+#[allow(dead_code)]
 fn array_from_vec<F: Float + Debug + ScalarOperand + Send + Sync + 'static>(
     vec: &[f64],
     shape: &[usize],

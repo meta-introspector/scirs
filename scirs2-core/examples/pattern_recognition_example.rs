@@ -7,6 +7,7 @@ use scirs2_core::memory_efficient::{
     ComplexPattern, Confidence, PatternRecognitionConfig, PatternRecognizer,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Pattern Recognition Example ===\n");
 
@@ -29,6 +30,7 @@ fn main() {
     example_matrix_multiplication();
 }
 
+#[allow(dead_code)]
 fn example_row_major_detection() {
     println!("1. Row-Major Pattern Detection");
     println!("------------------------------");
@@ -52,6 +54,7 @@ fn example_row_major_detection() {
     println!();
 }
 
+#[allow(dead_code)]
 fn example_column_major_detection() {
     println!("2. Column-Major Pattern Detection");
     println!("---------------------------------");
@@ -77,6 +80,7 @@ fn example_column_major_detection() {
     println!();
 }
 
+#[allow(dead_code)]
 fn example_zigzag_detection() {
     println!("3. Zigzag Pattern Detection");
     println!("---------------------------");
@@ -117,6 +121,7 @@ fn example_zigzag_detection() {
     println!();
 }
 
+#[allow(dead_code)]
 fn example_block_detection() {
     println!("4. Block Pattern Detection");
     println!("--------------------------");
@@ -165,6 +170,7 @@ fn example_block_detection() {
     println!();
 }
 
+#[allow(dead_code)]
 fn example_stencil_detection() {
     println!("5. Stencil Pattern Detection");
     println!("----------------------------");
@@ -204,6 +210,7 @@ fn example_stencil_detection() {
     println!();
 }
 
+#[allow(dead_code)]
 fn example_matrix_multiplication() {
     println!("6. Real-World Example: Matrix Multiplication");
     println!("--------------------------------------------");

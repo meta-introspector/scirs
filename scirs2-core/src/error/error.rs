@@ -408,6 +408,7 @@ macro_rules! computation_error {
 /// # Errors
 ///
 /// Returns `CoreError::DomainError` if the condition is false.
+#[allow(dead_code)]
 pub fn check_domain<S: Into<String>>(condition: bool, message: S) -> CoreResult<()> {
     if condition {
         Ok(())
@@ -433,6 +434,7 @@ pub fn check_domain<S: Into<String>>(condition: bool, message: S) -> CoreResult<
 /// # Errors
 ///
 /// Returns `CoreError::DimensionError` if the condition is false.
+#[allow(dead_code)]
 pub fn check_dimensions<S: Into<String>>(condition: bool, message: S) -> CoreResult<()> {
     if condition {
         Ok(())
@@ -458,6 +460,7 @@ pub fn check_dimensions<S: Into<String>>(condition: bool, message: S) -> CoreRes
 /// # Errors
 ///
 /// Returns `CoreError::ValueError` if the condition is false.
+#[allow(dead_code)]
 pub fn check_value<S: Into<String>>(condition: bool, message: S) -> CoreResult<()> {
     if condition {
         Ok(())
@@ -484,6 +487,7 @@ pub fn check_value<S: Into<String>>(condition: bool, message: S) -> CoreResult<(
 /// # Errors
 ///
 /// Returns `CoreError::ValidationError` if the validator function returns false.
+#[allow(dead_code)]
 pub fn validate<T, F, S>(value: T, validator: F, message: S) -> CoreResult<T>
 where
     F: FnOnce(&T) -> bool,
@@ -509,6 +513,7 @@ where
 ///
 /// * A CoreError with the original error as its cause
 #[must_use]
+#[allow(dead_code)]
 pub fn convert_error<E, S>(error: E, message: S) -> CoreError
 where
     E: std::error::Error + 'static,
@@ -541,6 +546,7 @@ where
 ///
 /// * A CoreError with the original error as its cause
 #[must_use]
+#[allow(dead_code)]
 pub fn chain_error<S>(error: CoreError, message: S) -> CoreError
 where
     S: Into<String>,

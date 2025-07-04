@@ -79,6 +79,7 @@ impl Default for SimdOptions {
 /// // Compute using SIMD acceleration
 /// let y = simd_csr_matvec(&matrix, &x.view(), SimdOptions::default()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn simd_csr_matvec<T>(
     matrix: &CsrArray<T>,
     x: &ArrayView1<T>,
@@ -245,6 +246,7 @@ pub enum ElementwiseOp {
 /// # Returns
 ///
 /// Result sparse matrix
+#[allow(dead_code)]
 pub fn simd_sparse_elementwise<T, S1, S2>(
     a: &S1,
     b: &S2,
@@ -384,6 +386,7 @@ where
 }
 
 /// SIMD-accelerated binary operation on sparse matrices
+#[allow(dead_code)]
 fn simd_sparse_binary_op<T, F>(
     a: &CsrArray<T>,
     b: &CsrArray<T>,
@@ -491,6 +494,7 @@ where
 /// # Returns
 ///
 /// Transposed matrix
+#[allow(dead_code)]
 pub fn simd_sparse_transpose<T, S>(
     matrix: &S,
     options: Option<SimdOptions>,
@@ -566,6 +570,7 @@ where
 /// # Returns
 ///
 /// Result of A * B
+#[allow(dead_code)]
 pub fn simd_sparse_matmul<T, S1, S2>(
     a: &S1,
     b: &S2,
@@ -769,6 +774,7 @@ where
 /// # Returns
 ///
 /// The computed norm value
+#[allow(dead_code)]
 pub fn simd_sparse_norm<T, S>(
     matrix: &S,
     norm_type: &str,
@@ -904,6 +910,7 @@ where
 /// # Returns
 ///
 /// Scaled matrix
+#[allow(dead_code)]
 pub fn simd_sparse_scale<T, S>(
     matrix: &S,
     scalar: T,
@@ -964,6 +971,7 @@ where
 /// # Returns
 ///
 /// Result of coefficient[0] * matrices[0] + coefficient[1] * matrices[1] + ...
+#[allow(dead_code)]
 pub fn simd_sparse_linear_combination<T, S>(
     matrices: &[&S],
     coefficients: &[T],
@@ -1059,6 +1067,7 @@ where
 }
 
 /// Convenience function for backward compatibility
+#[allow(dead_code)]
 pub fn simd_sparse_matmul_default<T, S1, S2>(a: &S1, b: &S2) -> SparseResult<CsrArray<T>>
 where
     T: Float + Debug + Copy + 'static + SimdUnifiedOps + Send + Sync,

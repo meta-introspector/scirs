@@ -4,7 +4,6 @@
 //! memory profiling, and optimization recommendations for optimization algorithms.
 
 use crate::error::Result;
-use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;

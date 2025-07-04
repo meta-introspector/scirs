@@ -17,6 +17,7 @@ use scirs2_ndimage::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 SciRS2 NDImage - Ultrathink Mode Comprehensive Demo");
     println!("====================================================");
@@ -270,6 +271,7 @@ fn main() -> Result<()> {
 }
 
 /// Create test datasets with different characteristics
+#[allow(dead_code)]
 fn create_test_datasets() -> Vec<(String, Array2<f64>)> {
     vec![
         ("small_dense".to_string(), Array2::from_elem((50, 50), 1.0)),
@@ -295,6 +297,7 @@ fn create_test_datasets() -> Vec<(String, Array2<f64>)> {
 }
 
 /// Calculate complexity score for an image
+#[allow(dead_code)]
 fn calculate_complexity_score<D>(image: &ndarray::ArrayView<f64, D>) -> f64
 where
     D: ndarray::Dimension,

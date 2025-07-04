@@ -10,7 +10,8 @@ use super::{
 };
 use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::CoreResult;
+// Unused import
+// use scirs2_core::error::CoreResult;
 use scirs2_linalg::{solve, LinalgError};
 
 /// Streaming Trust Region optimizer
@@ -325,6 +326,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for StreamingTrustRegion<
 }
 
 /// Convenience function for streaming trust region with linear regression
+#[allow(dead_code)]
 pub fn streaming_trust_region_linear_regression(
     n_features: usize,
     config: Option<StreamingConfig>,
@@ -339,6 +341,7 @@ pub fn streaming_trust_region_linear_regression(
 }
 
 /// Convenience function for streaming trust region with logistic regression
+#[allow(dead_code)]
 pub fn streaming_trust_region_logistic_regression(
     n_features: usize,
     config: Option<StreamingConfig>,

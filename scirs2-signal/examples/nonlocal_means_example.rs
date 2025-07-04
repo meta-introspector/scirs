@@ -8,6 +8,7 @@ use scirs2_signal::nlm::{
     NlmConfig,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Non-Local Means Denoising Examples");
     println!("---------------------------------");
@@ -178,6 +179,7 @@ fn main() {
 }
 
 /// Generates a test 1D signal with additive noise
+#[allow(dead_code)]
 fn generate_test_signal() -> (Array1<f64>, Array1<f64>) {
     // Create a piecewise signal with edges and smooth regions
     let n = 500;
@@ -228,6 +230,7 @@ fn generate_test_signal() -> (Array1<f64>, Array1<f64>) {
 }
 
 /// Generates a test 2D image with additive noise
+#[allow(dead_code)]
 fn generate_test_image() -> (Array2<f64>, Array2<f64>) {
     // Create a test image with geometric shapes
     let size = 64;
@@ -286,6 +289,7 @@ fn generate_test_image() -> (Array2<f64>, Array2<f64>) {
 }
 
 /// Generates a test color image with additive noise
+#[allow(dead_code)]
 fn generate_color_image() -> (Array3<f64>, Array3<f64>) {
     // Create a color image with RGB channels
     let size = 64;
@@ -340,6 +344,7 @@ fn generate_color_image() -> (Array3<f64>, Array3<f64>) {
 }
 
 /// Helper function to extract a color channel from a color image
+#[allow(dead_code)]
 fn extract_color_channel(image: &Array3<f64>, channel: usize) -> Array2<f64> {
     let (height, width, _) = image.dim();
     let mut result = Array2::zeros((height, width));
@@ -354,6 +359,7 @@ fn extract_color_channel(image: &Array3<f64>, channel: usize) -> Array2<f64> {
 }
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for 1D signals
+#[allow(dead_code)]
 fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
     if clean.len() != noisy.len() {
         return f64::NEG_INFINITY;
@@ -376,6 +382,7 @@ fn calculate_snr(clean: &Array1<f64>, noisy: &Array1<f64>) -> f64 {
 }
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for 2D images
+#[allow(dead_code)]
 fn calculate_image_snr(clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
     if clean.dim() != noisy.dim() {
         return f64::NEG_INFINITY;
@@ -401,6 +408,7 @@ fn calculate_image_snr(clean: &Array2<f64>, noisy: &Array2<f64>) -> f64 {
 }
 
 /// Calculates the Signal-to-Noise Ratio (SNR) in dB for color images
+#[allow(dead_code)]
 fn calculate_color_image_snr(clean: &Array3<f64>, noisy: &Array3<f64>) -> f64 {
     if clean.dim() != noisy.dim() {
         return f64::NEG_INFINITY;
@@ -428,6 +436,7 @@ fn calculate_color_image_snr(clean: &Array3<f64>, noisy: &Array3<f64>) -> f64 {
 }
 
 /// Saves 1D signals to a CSV file for plotting
+#[allow(dead_code)]
 fn save_signal_to_csv(
     filename: &str,
     clean: &Array1<f64>,
@@ -447,6 +456,7 @@ fn save_signal_to_csv(
 }
 
 /// Saves a 2D image to a CSV file for visualization
+#[allow(dead_code)]
 fn save_image_to_csv(filename: &str, image: &Array2<f64>) {
     let mut file = File::create(filename).expect("Failed to create file");
 

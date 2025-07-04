@@ -73,6 +73,7 @@ use std::fmt::{Debug, Display};
 /// let v_neg = voigt_profile(-x, sigma, gamma).unwrap();
 /// assert!((v_pos - v_neg).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn voigt_profile<T>(x: T, sigma: T, gamma: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -122,6 +123,7 @@ where
 ///
 /// # Returns
 /// Normalized Voigt profile value
+#[allow(dead_code)]
 pub fn voigt_profile_normalized<T>(x: T, sigma: T, gamma: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -145,6 +147,7 @@ where
 /// The conversion from FWHM to standard parameters is:
 /// - σ = fwhm_gaussian / (2√(2 ln 2))
 /// - γ = fwhm_lorentzian / 2
+#[allow(dead_code)]
 pub fn voigt_profile_fwhm<T>(x: T, fwhm_gaussian: T, fwhm_lorentzian: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -188,6 +191,7 @@ where
 /// assert!(result[2] >= result[0]);
 /// assert!(result[2] >= result[1]);
 /// ```
+#[allow(dead_code)]
 pub fn voigt_profile_array<T>(x: &ArrayView1<T>, sigma: T, gamma: T) -> SpecialResult<Array1<T>>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -202,6 +206,7 @@ where
 }
 
 /// Voigt profile FWHM for arrays
+#[allow(dead_code)]
 pub fn voigt_profile_fwhm_array<T>(
     x: &ArrayView1<T>,
     fwhm_gaussian: T,
@@ -247,6 +252,7 @@ where
 /// let lorentzian_max = 1.0 / (std::f64::consts::PI * 0.5);
 /// assert!((result - lorentzian_max).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn pseudo_voigt<T>(x: T, sigma: T, gamma: T, eta: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,

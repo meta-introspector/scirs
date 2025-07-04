@@ -30,6 +30,7 @@ const CHUNK_SIZE: usize = 8192;
 /// # Returns
 ///
 /// The arithmetic mean
+#[allow(dead_code)]
 pub fn streaming_mean<F, I>(mut data_iter: I, total_count: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
@@ -69,6 +70,7 @@ where
 /// # Returns
 ///
 /// * Tuple of (mean, variance)
+#[allow(dead_code)]
 pub fn welford_variance<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<(F, F)>
 where
     F: Float + NumCast,
@@ -106,6 +108,7 @@ where
 ///
 /// * `data` - Mutable array to normalize
 /// * `ddof` - Delta degrees of freedom for variance calculation
+#[allow(dead_code)]
 pub fn normalize_inplace<F>(data: &mut ArrayViewMut1<F>, ddof: usize) -> StatsResult<()>
 where
     F: Float + NumCast,
@@ -141,6 +144,7 @@ where
 /// # Returns
 ///
 /// The computed quantile value
+#[allow(dead_code)]
 pub fn quantile_quickselect<F>(data: &mut [F], q: F) -> StatsResult<F>
 where
     F: Float + NumCast,
@@ -176,6 +180,7 @@ where
 }
 
 /// Quickselect algorithm for finding k-th smallest element
+#[allow(dead_code)]
 fn quickselect<F: Float>(data: &mut [F], k: usize) {
     let len = data.len();
     if len <= 1 {
@@ -197,6 +202,7 @@ fn quickselect<F: Float>(data: &mut [F], k: usize) {
 }
 
 /// Partition function for quickselect
+#[allow(dead_code)]
 fn partition<F: Float>(data: &mut [F], left: usize, right: usize) -> usize {
     let pivot_idx = left + (right - left) / 2;
     let pivot = data[pivot_idx];
@@ -228,6 +234,7 @@ fn partition<F: Float>(data: &mut [F], left: usize, right: usize) -> usize {
 /// # Returns
 ///
 /// Covariance matrix
+#[allow(dead_code)]
 pub fn covariance_chunked<F, D>(
     data: &ArrayBase<D, Ix2>,
     ddof: usize,

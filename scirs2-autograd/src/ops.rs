@@ -19,6 +19,7 @@ use crate::error::{AutogradError, Result};
 /// # Returns
 ///
 /// A new tensor with shape (..., n, p) containing the matrix product.
+#[allow(dead_code)]
 pub fn matmul_forward<F: Float + Debug + Send + Sync + 'static>(
     a: &Array<F, IxDyn>,
     b: &Array<F, IxDyn>,
@@ -81,6 +82,7 @@ pub fn matmul_forward<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A tuple of (grad_a, grad_b) containing the gradients for each input.
+#[allow(dead_code)]
 pub fn matmul_backward<F: Float + Debug + Send + Sync + 'static>(
     grad: &Array<F, IxDyn>,
     a: &Array<F, IxDyn>,
@@ -175,6 +177,7 @@ pub fn matmul_backward<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A tensor with ReLU applied element-wise.
+#[allow(dead_code)]
 pub fn relu_forward<F: Float + Debug + Send + Sync + 'static>(
     input: &Array<F, IxDyn>,
 ) -> Array<F, IxDyn> {
@@ -191,6 +194,7 @@ pub fn relu_forward<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// Gradient for the input tensor.
+#[allow(dead_code)]
 pub fn relu_backward<F: Float + Debug + Send + Sync + 'static>(
     grad: &Array<F, IxDyn>,
     input: &Array<F, IxDyn>,
@@ -215,6 +219,7 @@ pub fn relu_backward<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A tensor with sigmoid applied element-wise.
+#[allow(dead_code)]
 pub fn sigmoid_forward<F: Float + Debug + Send + Sync + 'static>(
     input: &Array<F, IxDyn>,
 ) -> Array<F, IxDyn> {
@@ -231,6 +236,7 @@ pub fn sigmoid_forward<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// Gradient for the input tensor.
+#[allow(dead_code)]
 pub fn sigmoid_backward<F: Float + Debug + Send + Sync + 'static>(
     grad: &Array<F, IxDyn>,
     output: &Array<F, IxDyn>,
@@ -248,6 +254,7 @@ pub fn sigmoid_backward<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A tensor with tanh applied element-wise.
+#[allow(dead_code)]
 pub fn tanh_forward<F: Float + Debug + Send + Sync + 'static>(
     input: &Array<F, IxDyn>,
 ) -> Array<F, IxDyn> {
@@ -264,6 +271,7 @@ pub fn tanh_forward<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// Gradient for the input tensor.
+#[allow(dead_code)]
 pub fn tanh_backward<F: Float + Debug + Send + Sync + 'static>(
     grad: &Array<F, IxDyn>,
     output: &Array<F, IxDyn>,
@@ -282,6 +290,7 @@ pub fn tanh_backward<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A tensor with softmax applied along the specified dimension.
+#[allow(dead_code)]
 pub fn softmax_forward<F: Float + Debug + Send + Sync + 'static>(
     input: &Array<F, IxDyn>,
     dim: usize,
@@ -332,6 +341,7 @@ pub fn softmax_forward<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// Gradient for the input tensor.
+#[allow(dead_code)]
 pub fn softmax_backward<F: Float + Debug + Send + Sync + 'static>(
     grad: &Array<F, IxDyn>,
     output: &Array<F, IxDyn>,

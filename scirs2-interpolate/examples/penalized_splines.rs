@@ -4,6 +4,7 @@ use scirs2_interpolate::penalized::{
     cross_validate_lambda, pspline_with_custom_penalty, PSpline, PenaltyType,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Penalized Splines (P-splines) Examples");
     println!("======================================\n");
@@ -282,6 +283,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Helper function to generate uniformly spaced knots
+#[allow(dead_code)]
 fn generate_uniform_knots(
     x: &ArrayView1<f64>,
     n_knots: usize,

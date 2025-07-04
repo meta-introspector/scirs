@@ -26,6 +26,7 @@ use std::f32;
 
 /// Test graph visualization with extremely large graphs
 #[test]
+#[allow(dead_code)]
 fn test_visualization_extreme_graphs() {
     println!("🧪 Testing graph visualization with extreme cases...");
 
@@ -74,6 +75,7 @@ fn test_visualization_extreme_graphs() {
 
 /// Test graph optimization with pathological cases
 #[test]
+#[allow(dead_code)]
 fn test_optimization_pathological_cases() {
     println!("🧪 Testing graph optimization with pathological cases...");
 
@@ -129,6 +131,7 @@ fn test_optimization_pathological_cases() {
 
 /// Test thread pool under extreme load and edge cases
 #[test]
+#[allow(dead_code)]
 fn test_thread_pool_extreme_load() {
     println!("🧪 Testing thread pool under extreme load...");
 
@@ -208,6 +211,7 @@ fn test_thread_pool_extreme_load() {
 
 /// Test custom activation functions with extreme inputs
 #[test]
+#[allow(dead_code)]
 fn test_custom_activations_extreme_inputs() {
     println!("🧪 Testing custom activations with extreme inputs...");
 
@@ -299,6 +303,7 @@ fn test_custom_activations_extreme_inputs() {
 
 /// Test SIMD operations with edge values and numerical stability
 #[test]
+#[allow(dead_code)]
 fn test_simd_operations_edge_cases() {
     println!("🧪 Testing SIMD operations with edge cases...");
 
@@ -410,6 +415,7 @@ fn test_simd_operations_edge_cases() {
 
 /// Test memory optimization under stress conditions
 #[test]
+#[allow(dead_code)]
 fn test_memory_optimization_stress() {
     println!("🧪 Testing memory optimization under stress...");
 
@@ -492,6 +498,7 @@ fn test_memory_optimization_stress() {
 
 /// Test parallel operations under numerical instability conditions
 #[test]
+#[allow(dead_code)]
 fn test_parallel_operations_numerical_stability() {
     println!("🧪 Testing parallel operations numerical stability...");
 
@@ -598,6 +605,7 @@ fn test_parallel_operations_numerical_stability() {
 
 /// Test graph enhancement features under edge conditions
 #[test]
+#[allow(dead_code)]
 fn test_graph_enhancements_edge_cases() {
     println!("🧪 Testing graph enhancements with edge cases...");
 
@@ -678,6 +686,7 @@ fn test_graph_enhancements_edge_cases() {
 
 /// Test cross-feature integration under stress
 #[test]
+#[allow(dead_code)]
 fn test_cross_feature_integration_stress() {
     println!("🧪 Testing cross-feature integration under stress...");
 
@@ -781,6 +790,7 @@ fn test_cross_feature_integration_stress() {
 
 /// Test numerical precision and stability across all features
 #[test]
+#[allow(dead_code)]
 fn test_numerical_precision_stability() {
     println!("🧪 Testing numerical precision and stability...");
 
@@ -863,6 +873,7 @@ fn test_numerical_precision_stability() {
 
 /// Summary test for all edge cases
 #[test]
+#[allow(dead_code)]
 fn test_edge_case_summary() {
     println!("\n🎯 EDGE CASE AND STRESS TESTING SUMMARY");
     println!("=====================================");

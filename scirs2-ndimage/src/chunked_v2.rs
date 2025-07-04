@@ -56,6 +56,7 @@ where
 }
 
 /// Process an array using scirs2-core's chunk-wise operations
+#[allow(dead_code)]
 pub fn process_chunked_v2<T, D, P>(
     input: &ArrayView<T, D>,
     processor: &P,
@@ -83,7 +84,7 @@ where
     let input_dyn = input.view().into_dyn();
 
     // Use scirs2-core's chunk_wise_op
-    let result_dyn = chunk_wise_op(&input_dyn, config.strategy.clone(), &*op)
+    let result_dyn = chunk_wise_op(&input_dyn, &*op, config.strategy.clone())
         .map_err(|e| NdimageError::ProcessingError(format!("Chunk processing failed: {}", e)))?;
 
     // Convert back to original dimension
@@ -93,6 +94,7 @@ where
 }
 
 /// Process using memory-mapped arrays for very large inputs
+#[allow(dead_code)]
 fn process_with_mmap<T, D, P>(
     input: &ArrayView<T, D>,
     processor: &P,
@@ -108,14 +110,14 @@ where
 
     // Create temporary directory for memory-mapped files
     let temp_dir = tempdir()
-        .map_err(|e| NdimageError::IOError(format!("Failed to create temp dir: {}", e)))?;
+        .map_err(NdimageError::IoError)?;
 
     let input_path = temp_dir.path().join("input.mmap");
     let output_path = temp_dir.path().join("output.mmap");
 
     // Create memory-mapped input array
     let mmap_input = create_mmap(input, &input_path, AccessMode::Write, 0)
-        .map_err(|e| NdimageError::IOError(format!("Failed to create mmap: {}", e)))?;
+        .map_err(|e| NdimageError::ProcessingError(format!("Failed to create mmap: {}", e)))?;
 
     // Process using memory-mapped array
     let input_view = mmap_input
@@ -125,7 +127,7 @@ where
     let input_dyn = input_view.view().into_dyn();
 
     // Use chunk_wise_op on the memory-mapped array
-    let result_dyn = chunk_wise_op(&input_dyn, config.strategy.clone(), op)
+    let result_dyn = chunk_wise_op(&input_dyn, op, config.strategy.clone())
         .map_err(|e| NdimageError::ProcessingError(format!("Chunk processing failed: {}", e)))?;
 
     // Convert to owned array and correct dimension
@@ -137,6 +139,7 @@ where
 }
 
 /// Memory-efficient uniform filter using core's chunking
+#[allow(dead_code)]
 pub fn uniform_filter_chunked_v2<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -206,7 +209,7 @@ where
                     Some(border_mode_clone),
                     None,
                 )
-                .map_err(|e| scirs2_core::error::CoreError::ComputationError(e.to_string()))?;
+                .map_err(|e| scirs2_core::error::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(e.to_string())))?;
 
                 Ok(result.into_dyn())
             },
@@ -219,6 +222,7 @@ where
 }
 
 /// Memory-efficient convolution using core's chunking
+#[allow(dead_code)]
 pub fn convolve_chunked_v2<T, D>(
     input: &Array<T, D>,
     kernel: &Array<T, D>,
@@ -276,7 +280,7 @@ where
                     Some(border_mode_clone),
                     None,
                 )
-                .map_err(|e| scirs2_core::error::CoreError::ComputationError(e.to_string()))?;
+                .map_err(|e| scirs2_core::error::CoreError::ComputationError(scirs2_core::error::ErrorContext::new(e.to_string())))?;
 
                 Ok(result)
             },
@@ -289,6 +293,7 @@ where
 }
 
 /// Binary operation between two arrays using chunked processing
+#[allow(dead_code)]
 pub fn binary_op_chunked_v2<T, D, F>(
     array1: &Array<T, D>,
     array2: &Array<T, D>,
@@ -307,7 +312,7 @@ where
     let array2_dyn = array2.view().into_dyn();
 
     // Use chunk_wise_binary_op from core
-    let result_dyn = chunk_wise_binary_op(&array1_dyn, &array2_dyn, config.strategy, op)
+    let result_dyn = chunk_wise_binary_op(&array1_dyn, &array2_dyn, op, config.strategy)
         .map_err(|e| NdimageError::ProcessingError(format!("Binary operation failed: {}", e)))?;
 
     // Convert back to original dimension

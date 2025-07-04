@@ -347,6 +347,7 @@ pub struct LegendEntry {
 /// # Returns
 ///
 /// * `Result<DendrogramPlot<F>>` - The dendrogram plot data
+#[allow(dead_code)]
 pub fn create_dendrogram_plot<F: Float + FromPrimitive + PartialOrd + Debug>(
     linkage_matrix: ArrayView2<F>,
     labels: Option<&[String]>,
@@ -417,6 +418,7 @@ struct TreeNode<F: Float> {
 }
 
 /// Build the dendrogram tree structure from linkage matrix
+#[allow(dead_code)]
 fn build_dendrogram_tree<F: Float + FromPrimitive + Debug>(
     linkage_matrix: &ArrayView2<F>,
 ) -> Result<TreeNode<F>> {
@@ -475,6 +477,7 @@ fn build_dendrogram_tree<F: Float + FromPrimitive + Debug>(
 }
 
 /// Calculate positions for all nodes in the dendrogram
+#[allow(dead_code)]
 fn calculate_node_positions<F: Float + FromPrimitive>(
     root: &TreeNode<F>,
     n_samples: usize,
@@ -495,6 +498,7 @@ fn calculate_node_positions<F: Float + FromPrimitive>(
 }
 
 /// Recursive helper for calculating node positions
+#[allow(dead_code)]
 fn calculate_positions_recursive<F: Float + FromPrimitive>(
     node: &TreeNode<F>,
     positions: &mut HashMap<usize, (F, F)>,
@@ -543,6 +547,7 @@ fn calculate_positions_recursive<F: Float + FromPrimitive>(
 }
 
 /// Create branches for the dendrogram
+#[allow(dead_code)]
 fn create_branches<F: Float + FromPrimitive + PartialOrd>(
     tree: &TreeNode<F>,
     positions: &HashMap<usize, (F, F)>,
@@ -555,6 +560,7 @@ fn create_branches<F: Float + FromPrimitive + PartialOrd>(
 }
 
 /// Recursive helper for creating branches
+#[allow(dead_code)]
 fn create_branches_recursive<F: Float + FromPrimitive + PartialOrd>(
     node: &TreeNode<F>,
     positions: &HashMap<usize, (F, F)>,
@@ -620,6 +626,7 @@ fn create_branches_recursive<F: Float + FromPrimitive + PartialOrd>(
 }
 
 /// Create leaves for the dendrogram
+#[allow(dead_code)]
 fn create_leaves<F: Float>(
     positions: &HashMap<usize, (F, F)>,
     labels: Option<&[String]>,
@@ -648,6 +655,7 @@ fn create_leaves<F: Float>(
 }
 
 /// Assign colors to branches based on configuration
+#[allow(dead_code)]
 fn assign_branch_colors<F: Float>(
     branches: &[Branch<F>],
     config: &DendrogramConfig<F>,
@@ -665,6 +673,7 @@ fn assign_branch_colors<F: Float>(
 }
 
 /// Create legend for the dendrogram
+#[allow(dead_code)]
 fn create_legend<F: Float>(config: &DendrogramConfig<F>, threshold: F) -> Vec<LegendEntry> {
     vec![
         LegendEntry {
@@ -679,6 +688,7 @@ fn create_legend<F: Float>(config: &DendrogramConfig<F>, threshold: F) -> Vec<Le
 }
 
 /// Calculate automatic threshold based on desired number of clusters
+#[allow(dead_code)]
 fn calculate_auto_threshold<F: Float + FromPrimitive + PartialOrd>(
     linkage_matrix: &ArrayView2<F>,
     target_clusters: Option<usize>,
@@ -702,6 +712,7 @@ fn calculate_auto_threshold<F: Float + FromPrimitive + PartialOrd>(
 }
 
 /// Calculate plot bounds
+#[allow(dead_code)]
 fn calculate_plot_bounds<F: Float>(branches: &[Branch<F>], leaves: &[Leaf]) -> (F, F, F, F) {
     let mut min_x = F::infinity();
     let mut max_x = F::neg_infinity();
@@ -750,6 +761,7 @@ fn calculate_plot_bounds<F: Float>(branches: &[Branch<F>], leaves: &[Leaf]) -> (
 }
 
 /// Get color palette for a given color scheme
+#[allow(dead_code)]
 pub fn get_color_palette(scheme: ColorScheme, n_colors: usize) -> Vec<String> {
     match scheme {
         ColorScheme::Default => get_default_colors(n_colors),
@@ -761,6 +773,7 @@ pub fn get_color_palette(scheme: ColorScheme, n_colors: usize) -> Vec<String> {
 }
 
 /// Default color palette
+#[allow(dead_code)]
 fn get_default_colors(n_colors: usize) -> Vec<String> {
     let base_colors = vec![
         "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f",
@@ -776,6 +789,7 @@ fn get_default_colors(n_colors: usize) -> Vec<String> {
 }
 
 /// High contrast color palette
+#[allow(dead_code)]
 fn get_high_contrast_colors(n_colors: usize) -> Vec<String> {
     let base_colors = vec![
         "#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF",
@@ -791,6 +805,7 @@ fn get_high_contrast_colors(n_colors: usize) -> Vec<String> {
 }
 
 /// Viridis color palette (approximation)
+#[allow(dead_code)]
 fn get_viridis_colors(n_colors: usize) -> Vec<String> {
     let base_colors = vec![
         "#440154", "#482777", "#3f4a8a", "#31678e", "#26838f", "#1f9d8a", "#6cce5a", "#b6de2b",
@@ -806,6 +821,7 @@ fn get_viridis_colors(n_colors: usize) -> Vec<String> {
 }
 
 /// Plasma color palette (approximation)
+#[allow(dead_code)]
 fn get_plasma_colors(n_colors: usize) -> Vec<String> {
     let base_colors = vec![
         "#0c0887", "#5c01a6", "#900da4", "#bf3984", "#e16462", "#f89441", "#fdc328", "#f0f921",
@@ -821,6 +837,7 @@ fn get_plasma_colors(n_colors: usize) -> Vec<String> {
 }
 
 /// Grayscale color palette
+#[allow(dead_code)]
 fn get_grayscale_colors(n_colors: usize) -> Vec<String> {
     (0..n_colors)
         .map(|i| {

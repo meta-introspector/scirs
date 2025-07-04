@@ -56,6 +56,7 @@ impl Default for AdamOptions {
 }
 
 /// ADAM optimizer implementation
+#[allow(dead_code)]
 pub fn minimize_adam<F>(
     mut grad_func: F,
     mut x: Array1<f64>,
@@ -237,6 +238,7 @@ where
 }
 
 /// ADAM with learning rate warmup
+#[allow(dead_code)]
 pub fn minimize_adam_with_warmup<F>(
     grad_func: F,
     x: Array1<f64>,
@@ -267,6 +269,7 @@ where
 }
 
 /// ADAM with custom learning rate schedule function
+#[allow(dead_code)]
 fn minimize_adam_with_custom_schedule<F, S>(
     mut grad_func: F,
     mut x: Array1<f64>,

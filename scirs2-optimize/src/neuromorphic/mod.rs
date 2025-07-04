@@ -32,11 +32,18 @@ pub mod neural_ode_optimization;
 pub mod spiking_networks;
 pub mod stdp_learning;
 
+// Use glob re-exports with allow for ambiguous names
+#[allow(ambiguous_glob_reexports)]
 pub use event_driven::*;
+#[allow(ambiguous_glob_reexports)]
 pub use liquid_state_machines::*;
+#[allow(ambiguous_glob_reexports)]
 pub use memristive_optimization::*;
+#[allow(ambiguous_glob_reexports)]
 pub use neural_ode_optimization::*;
+#[allow(ambiguous_glob_reexports)]
 pub use spiking_networks::*;
+#[allow(ambiguous_glob_reexports)]
 pub use stdp_learning::*;
 
 /// Configuration for neuromorphic optimization algorithms
@@ -513,6 +520,7 @@ impl BasicNeuromorphicOptimizer {
 }
 
 /// Convenience function to create and run neuromorphic optimization
+#[allow(dead_code)]
 pub fn neuromorphic_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

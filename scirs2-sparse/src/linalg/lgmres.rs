@@ -55,6 +55,7 @@ pub struct LGMRESResult<F> {
 ///
 /// LGMRES (Loose GMRES) is a variant of restarted GMRES that supplements
 /// the Krylov subspace with approximations to error from previous restart cycles.
+#[allow(dead_code)]
 pub fn lgmres<F>(
     a: &dyn LinearOperator<F>,
     b: &[F],
@@ -188,6 +189,7 @@ where
 }
 
 /// Inner GMRES iteration
+#[allow(dead_code)]
 fn inner_gmres<F>(
     a: &dyn LinearOperator<F>,
     r0: &[F],

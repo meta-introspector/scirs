@@ -5,6 +5,7 @@ use scirs2_text::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Topic Modeling with LDA Demo");
     println!("===========================\n");

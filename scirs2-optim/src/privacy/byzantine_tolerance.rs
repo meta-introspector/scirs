@@ -4,7 +4,7 @@
 //! tolerate malicious participants in federated learning scenarios.
 
 use crate::error::{OptimError, Result};
-use ndarray::{Array1, Array2, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::cmp::Ordering;
 use std::collections::HashMap;

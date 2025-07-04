@@ -1211,6 +1211,7 @@ where
 }
 
 /// Convenience functions for ultra-parallel operations
+#[allow(dead_code)]
 pub fn ultra_parallel_matrix_multiply<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -1222,6 +1223,7 @@ where
     processor.parallel_matrix_multiply(a, b)
 }
 
+#[allow(dead_code)]
 pub fn ultra_parallel_bootstrap<F>(
     data: &ArrayView1<F>,
     statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,

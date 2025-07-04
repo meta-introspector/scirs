@@ -43,6 +43,7 @@ impl ConfigBuilder {
         _hidden_dim: usize,
     ) -> ModelConfig {
         ModelConfig::Seq2Seq(())
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Model Configuration System Example");
     println!("---------------------------------");

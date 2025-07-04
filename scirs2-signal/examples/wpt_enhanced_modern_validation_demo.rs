@@ -15,6 +15,7 @@ use scirs2_signal::wpt_enhanced_modern_validation::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Enhanced Modern WPT Validation Demonstration");
     println!("================================================\n");
@@ -76,6 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Create various test signals with different characteristics
+#[allow(dead_code)]
 fn create_test_signals() -> Vec<(String, Vec<f64>)> {
     let mut signals = Vec::new();
 
@@ -124,6 +126,7 @@ fn create_test_signals() -> Vec<(String, Vec<f64>)> {
 }
 
 /// Create different validation configurations for testing
+#[allow(dead_code)]
 fn create_validation_configs() -> Vec<(String, EnhancedModernValidationConfig)> {
     let mut configs = Vec::new();
 
@@ -179,6 +182,7 @@ fn create_validation_configs() -> Vec<(String, EnhancedModernValidationConfig)> 
 }
 
 /// Print a summary of validation results
+#[allow(dead_code)]
 fn print_validation_summary(
     results: &scirs2_signal::wpt_enhanced_modern_validation::EnhancedModernValidationResult,
 ) {
@@ -234,6 +238,7 @@ fn print_validation_summary(
 }
 
 /// Demonstrate specific validation capabilities in detail
+#[allow(dead_code)]
 fn demonstrate_specific_validations() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔬 Detailed Validation Capability Demonstration");
     println!("===============================================\n");
@@ -294,6 +299,7 @@ fn demonstrate_specific_validations() -> Result<(), Box<dyn std::error::Error>> 
 }
 
 /// Analyze streaming performance metrics in detail
+#[allow(dead_code)]
 fn analyze_streaming_performance(
     results: &scirs2_signal::wpt_enhanced_modern_validation::EnhancedModernValidationResult,
 ) {
@@ -336,6 +342,7 @@ fn analyze_streaming_performance(
 }
 
 /// Analyze precision metrics in detail
+#[allow(dead_code)]
 fn analyze_precision_metrics(
     results: &scirs2_signal::wpt_enhanced_modern_validation::EnhancedModernValidationResult,
 ) {
@@ -370,6 +377,7 @@ fn analyze_precision_metrics(
 }
 
 /// Analyze resource usage metrics in detail
+#[allow(dead_code)]
 fn analyze_resource_usage(
     results: &scirs2_signal::wpt_enhanced_modern_validation::EnhancedModernValidationResult,
 ) {

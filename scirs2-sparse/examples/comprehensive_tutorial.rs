@@ -16,6 +16,7 @@ use scirs2_sparse::{
     SparseArray,
 };
 
+#[allow(dead_code)]
 fn main() -> SparseResult<()> {
     println!("=== SciRS2-Sparse Comprehensive Tutorial ===\n");
 
@@ -44,6 +45,7 @@ fn main() -> SparseResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_basic_operations() -> SparseResult<()> {
     println!("1. Basic Matrix Construction and Operations");
     println!("==========================================");
@@ -77,6 +79,7 @@ fn demonstrate_basic_operations() -> SparseResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_advanced_decompositions() -> SparseResult<()> {
     println!("2. Advanced Matrix Decompositions");
     println!("=================================");
@@ -148,6 +151,7 @@ fn demonstrate_advanced_decompositions() -> SparseResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_norm_estimation() -> SparseResult<()> {
     println!("3. Matrix Norm Estimation and Condition Numbers");
     println!("===============================================");
@@ -178,6 +182,7 @@ fn demonstrate_norm_estimation() -> SparseResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_eigenvalue_problems() -> SparseResult<()> {
     println!("4. Advanced Eigenvalue Problems");
     println!("===============================");
@@ -205,6 +210,7 @@ fn demonstrate_eigenvalue_problems() -> SparseResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_linear_operators() -> SparseResult<()> {
     println!("5. Linear Operators and Composition");
     println!("===================================");
@@ -231,6 +237,7 @@ fn demonstrate_linear_operators() -> SparseResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_advanced_solvers() -> SparseResult<()> {
     println!("6. Advanced Iterative Solvers");
     println!("=============================");
@@ -352,6 +359,7 @@ fn demonstrate_advanced_solvers() -> SparseResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_error_handling() -> SparseResult<()> {
     println!("7. Enhanced Error Handling and Diagnostics");
     println!("==========================================");

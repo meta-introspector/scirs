@@ -70,6 +70,7 @@ where
 }
 
 /// Convert a specialized matrix to a matrix-free operator
+#[allow(dead_code)]
 pub fn specialized_to_operator<A, S>(matrix: &S) -> LinalgResult<LinearOperator<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug + 'static,

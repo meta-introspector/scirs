@@ -946,6 +946,7 @@ where
 }
 
 /// Factory functions for common operations
+#[allow(dead_code)]
 pub fn create_ultra_simd_processor<F>() -> UltraComprehensiveSimdProcessor<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
@@ -953,6 +954,7 @@ where
     UltraComprehensiveSimdProcessor::new()
 }
 
+#[allow(dead_code)]
 pub fn create_optimized_simd_processor<F>(
     config: UltraComprehensiveSimdConfig,
 ) -> UltraComprehensiveSimdProcessor<F>

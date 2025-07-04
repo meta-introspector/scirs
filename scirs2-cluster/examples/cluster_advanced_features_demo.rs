@@ -15,6 +15,7 @@ use scirs2_cluster::vq::{
     ParallelKMeansOptions, WeightedKMeansOptions,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Advanced Clustering Features Demo");
     println!("=================================\n");
@@ -50,6 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn generate_sample_data() -> Array2<f64> {
     // Create 3 clusters of data
     let mut data = Vec::new();
@@ -81,6 +83,7 @@ fn generate_sample_data() -> Array2<f64> {
     Array2::from_shape_vec((150, 2), data).unwrap()
 }
 
+#[allow(dead_code)]
 fn demo_initialization_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("1. K-means with Different Initialization Methods");
     println!("================================================");
@@ -116,6 +119,7 @@ fn demo_initialization_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_weighted_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("2. Weighted K-means Clustering");
     println!("==============================");
@@ -157,6 +161,7 @@ fn demo_weighted_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_parallel_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("3. Parallel K-means Clustering");
     println!("==============================");
@@ -183,6 +188,7 @@ fn demo_parallel_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_minibatch_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("4. Mini-batch K-means Clustering");
     println!("=================================");
@@ -209,6 +215,7 @@ fn demo_minibatch_kmeans(data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_simd_distances(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("5. SIMD Distance Computations");
     println!("=============================");

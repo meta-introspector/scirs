@@ -2324,6 +2324,7 @@ impl Default for DocumentationSite {
     }
 }
 
+#[allow(dead_code)]
 pub fn generate_documentation_website() -> Result<()> {
     let mut doc_site = DocumentationSite::new();
     doc_site.build_comprehensive_documentation()?;
@@ -2349,6 +2350,7 @@ pub fn export_documentation_to_formats() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn export_to_markdown(doc_site: &DocumentationSite) -> Result<()> {
     let mut markdown = String::new();
     
@@ -2372,6 +2374,7 @@ fn export_to_markdown(doc_site: &DocumentationSite) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn export_to_json(doc_site: &DocumentationSite) -> Result<()> {
     let json_data = serde_json::to_string_pretty(doc_site)?;
     let mut file = fs::File::create("docs/documentation.json")?;

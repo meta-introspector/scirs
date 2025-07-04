@@ -210,6 +210,7 @@ trait MLFrameworkConverter {
 }
 
 /// Get appropriate converter for framework
+#[allow(dead_code)]
 fn get_converter(framework: MLFramework) -> Box<dyn MLFrameworkConverter> {
     match framework {
         MLFramework::PyTorch => Box::new(PyTorchConverter),
@@ -1269,6 +1270,7 @@ impl MLFrameworkConverter for GenericConverter {
 }
 
 /// Helper functions for tensor conversions
+#[allow(dead_code)]
 fn tensor_to_python_dict(tensor: &MLTensor) -> Result<serde_json::Value> {
     Ok(serde_json::json!({
         "data": tensor.data.as_slice().unwrap().to_vec(),
@@ -1278,6 +1280,7 @@ fn tensor_to_python_dict(tensor: &MLTensor) -> Result<serde_json::Value> {
     }))
 }
 
+#[allow(dead_code)]
 fn python_dict_to_tensor(dict: &serde_json::Value) -> Result<MLTensor> {
     let shape: Vec<usize> = serde_json::from_value(dict["shape"].clone())
         .map_err(|e| IoError::SerializationError(e.to_string()))?;

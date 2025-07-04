@@ -569,6 +569,7 @@ pub struct EvaluationResults {
 }
 
 /// Generate synthetic training data for demonstration
+#[allow(dead_code)]
 pub fn generate_synthetic_data(
     n_samples: usize,
     input_dim: usize,
@@ -612,6 +613,7 @@ pub fn generate_synthetic_data(
     (input, targets)
 }
 
+#[allow(dead_code)]
 fn main() -> OptimResult<()> {
     println!("🔥 Advanced Candle Integration with scirs2-optim");
     println!("================================================");

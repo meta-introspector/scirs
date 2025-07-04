@@ -11,7 +11,8 @@ use super::{
 };
 use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::error::CoreResult;
+// Unused import
+// use scirs2_core::error::CoreResult;
 use scirs2_linalg::{cholesky, solve, LinalgError};
 
 /// Types of incremental Newton methods
@@ -400,6 +401,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for IncrementalNewton<T> 
 }
 
 /// Convenience function for incremental Newton with BFGS
+#[allow(dead_code)]
 pub fn incremental_bfgs<T: StreamingObjective>(
     initial_parameters: Array1<f64>,
     objective: T,
@@ -415,6 +417,7 @@ pub fn incremental_bfgs<T: StreamingObjective>(
 }
 
 /// Convenience function for incremental L-BFGS
+#[allow(dead_code)]
 pub fn incremental_lbfgs<T: StreamingObjective>(
     initial_parameters: Array1<f64>,
     objective: T,
@@ -431,6 +434,7 @@ pub fn incremental_lbfgs<T: StreamingObjective>(
 }
 
 /// Convenience function for L-BFGS linear regression
+#[allow(dead_code)]
 pub fn incremental_lbfgs_linear_regression(
     n_features: usize,
     memory_size: Option<usize>,

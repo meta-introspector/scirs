@@ -5,6 +5,7 @@
 
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Enhanced Lomb-Scargle Periodogram Validation");
     println!("===========================================");
@@ -33,6 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_basic_lombscargle() -> Result<(), Box<dyn std::error::Error>> {
     // Generate test signal with known frequency content
     let n = 1000;
@@ -101,6 +103,7 @@ fn test_basic_lombscargle() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_scipy_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Comparing with SciPy reference implementation...");
 
@@ -155,6 +158,7 @@ fn test_scipy_comparison() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_noise_robustness() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Testing robustness against noise...");
 
@@ -214,6 +218,7 @@ fn test_noise_robustness() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_memory_efficiency() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Testing memory efficiency with large signals...");
 
@@ -249,6 +254,7 @@ fn test_memory_efficiency() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_simd_consistency() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Testing SIMD vs scalar implementation consistency...");
 
@@ -307,6 +313,7 @@ fn test_simd_consistency() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn calculate_correlation(x: &[f64], y: &[f64]) -> f64 {
     let n = x.len() as f64;
     let mean_x = x.iter().sum::<f64>() / n;

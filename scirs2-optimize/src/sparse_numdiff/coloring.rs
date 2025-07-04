@@ -9,6 +9,7 @@ use scirs2_sparse::csr_array::CsrArray;
 use std::collections::{HashMap, HashSet};
 
 /// Get the list of non-zero columns in a specific row of a sparse matrix
+#[allow(dead_code)]
 fn get_nonzero_cols_in_row(matrix: &CsrArray<f64>, row: usize) -> Vec<usize> {
     // Get row indices
     let row_start = matrix.get_indptr()[row];
@@ -35,6 +36,7 @@ fn get_nonzero_cols_in_row(matrix: &CsrArray<f64>, row: usize) -> Vec<usize> {
 /// # Returns
 ///
 /// * Vector of column groups, where each group contains columns that don't conflict
+#[allow(dead_code)]
 pub fn determine_column_groups(
     sparsity: &CsrArray<f64>,
     seed: Option<u64>,

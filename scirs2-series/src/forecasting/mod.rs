@@ -121,6 +121,7 @@ impl Default for ExpSmoothingParams {
 /// println!("Lower CI: {:?}", result.lower_ci);
 /// println!("Upper CI: {:?}", result.upper_ci);
 /// ```
+#[allow(dead_code)]
 pub fn moving_average_forecast<F>(
     ts: &Array1<F>,
     window_size: usize,
@@ -232,6 +233,7 @@ where
 /// println!("Lower CI: {:?}", result.lower_ci);
 /// println!("Upper CI: {:?}", result.upper_ci);
 /// ```
+#[allow(dead_code)]
 pub fn exponential_smoothing_forecast<F>(
     ts: &Array1<F>,
     alpha: f64,
@@ -348,6 +350,7 @@ where
 /// let result = holt_winters_forecast(&ts, &params, 8, 0.95).unwrap();
 /// println!("Forecast: {:?}", result.forecast);
 /// ```
+#[allow(dead_code)]
 pub fn holt_winters_forecast<F>(
     ts: &Array1<F>,
     params: &ExpSmoothingParams,
@@ -638,6 +641,7 @@ where
 /// let result = arima_forecast(&ts, &params, 5, 0.95).unwrap();
 /// println!("Forecast: {:?}", result.forecast);
 /// ```
+#[allow(dead_code)]
 pub fn arima_forecast<F>(
     ts: &Array1<F>,
     params: &ArimaParams,
@@ -881,6 +885,7 @@ struct ModelFitMetrics<F> {
 /// let params = auto_arima(&ts, 2, 1, 2, false, None).unwrap();
 /// println!("Optimal p: {}, d: {}, q: {}", params.p, params.d, params.q);
 /// ```
+#[allow(dead_code)]
 pub fn auto_arima<F>(
     ts: &Array1<F>,
     max_p: usize,
@@ -936,6 +941,7 @@ where
 /// let params = auto_arima_with_options(&ts, &options).unwrap();
 /// println!("Optimal ARIMA({},{},{}) model", params.p, params.d, params.q);
 /// ```
+#[allow(dead_code)]
 pub fn auto_arima_with_options<F>(ts: &Array1<F>, options: &AutoArimaOptions) -> Result<ArimaParams>
 where
     F: Float + FromPrimitive + Debug,
@@ -1145,6 +1151,7 @@ where
 }
 
 /// Determines the optimal differencing order for stationarity
+#[allow(dead_code)]
 fn determine_differencing_order<F>(ts: &Array1<F>, max_d: usize) -> Result<usize>
 where
     F: Float + FromPrimitive + Debug,
@@ -1181,6 +1188,7 @@ where
 }
 
 /// Determines the optimal seasonal differencing order
+#[allow(dead_code)]
 fn determine_seasonal_differencing_order<F>(
     ts: &Array1<F>,
     seasonal_period: usize,
@@ -1220,6 +1228,7 @@ where
 }
 
 /// Applies both regular and seasonal differencing to a time series
+#[allow(dead_code)]
 fn apply_differencing<F>(
     ts: &Array1<F>,
     d: usize,
@@ -1259,6 +1268,7 @@ where
 }
 
 /// Evaluates an ARIMA model on the time series data and returns fit metrics
+#[allow(dead_code)]
 fn evaluate_arima_model<F>(
     ts: &Array1<F>,
     params: &ArimaParams,
@@ -1333,6 +1343,7 @@ where
 /// let params = auto_ets(&ts, None).unwrap();
 /// println!("Alpha: {}", params.alpha);
 /// ```
+#[allow(dead_code)]
 pub fn auto_ets<F>(ts: &Array1<F>, seasonal_period: Option<usize>) -> Result<ExpSmoothingParams>
 where
     F: Float + FromPrimitive + Debug,
@@ -1537,6 +1548,7 @@ where
 }
 
 // Helper function to get the minimum of two values
+#[allow(dead_code)]
 fn min<T: Ord>(a: T, b: T) -> T {
     if a < b {
         a

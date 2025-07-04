@@ -338,6 +338,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static> Gamma<F> {
 
 // Helper function to calculate the gamma function for a value
 // Uses the Lanczos approximation for gamma function
+#[allow(dead_code)]
 fn gamma_fn<F: Float + NumCast>(x: F) -> F {
     // Lanczos coefficients
     let p = [
@@ -377,6 +378,7 @@ fn gamma_fn<F: Float + NumCast>(x: F) -> F {
 }
 
 // Implementation of the regularized lower incomplete gamma function
+#[allow(dead_code)]
 fn lower_incomplete_gamma_regularized<F: Float + NumCast>(s: F, x: F) -> F {
     // For small x, use a series expansion
     if x < s + F::one() {
@@ -403,6 +405,7 @@ fn lower_incomplete_gamma_regularized<F: Float + NumCast>(s: F, x: F) -> F {
 }
 
 // Implementation of the regularized upper incomplete gamma function
+#[allow(dead_code)]
 fn upper_incomplete_gamma_regularized<F: Float + NumCast>(s: F, x: F) -> F {
     // Use a continued fraction representation
     let mut a = F::one() - s;
@@ -430,6 +433,7 @@ fn upper_incomplete_gamma_regularized<F: Float + NumCast>(s: F, x: F) -> F {
 }
 
 // Helper function to provide initial guess for gamma quantile
+#[allow(dead_code)]
 fn initial_gamma_quantile_guess<F: Float + NumCast>(p: F, shape: F, scale: F) -> F {
     let one = F::one();
 
@@ -466,6 +470,7 @@ fn initial_gamma_quantile_guess<F: Float + NumCast>(p: F, shape: F, scale: F) ->
 }
 
 // Simple approximation for the standard normal quantile function
+#[allow(dead_code)]
 fn normal_quantile_approx<F: Float + NumCast>(p: F) -> F {
     let half = F::from(0.5).unwrap();
 
@@ -497,6 +502,7 @@ fn normal_quantile_approx<F: Float + NumCast>(p: F) -> F {
 }
 
 // Helper function to calculate 1-p with higher precision
+#[allow(dead_code)]
 fn one_minus_p<F: Float>(p: F) -> F {
     if p < F::from(0.5).unwrap() {
         F::one() - p

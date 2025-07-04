@@ -954,6 +954,7 @@ impl<T: Copy + 'static> ZeroCopyStreamProcessor<T> {
 }
 
 /// Static function for applying memory advice without borrowing self
+#[allow(dead_code)]
 fn apply_memory_advice_static(
     addr: *const u8,
     len: usize,
@@ -986,6 +987,7 @@ fn apply_memory_advice_static(
 }
 
 /// Static function for configuring NUMA policy without borrowing self
+#[allow(dead_code)]
 fn configure_numa_policy_static(numa_node: usize, memory_policy: NumaMemoryPolicy) -> Result<()> {
     #[cfg(target_os = "linux")]
     {

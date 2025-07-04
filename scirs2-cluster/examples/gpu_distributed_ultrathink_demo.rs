@@ -11,6 +11,7 @@ use scirs2_cluster::ultrathink_gpu_distributed::{
     GpuUltrathinkClusterer, HybridGpuDistributedClusterer, WorkerNodeConfig,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 GPU and Distributed Ultrathink Clustering Demo");
     println!("=================================================");
@@ -50,6 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates GPU-accelerated ultrathink clustering
+#[allow(dead_code)]
 fn gpu_acceleration_demo() -> Result<(), Box<dyn std::error::Error>> {
     // Create large dataset for GPU acceleration
     let data = create_large_dataset(5000, 50);
@@ -108,6 +110,7 @@ fn gpu_acceleration_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates distributed ultrathink clustering
+#[allow(dead_code)]
 fn distributed_clustering_demo() -> Result<(), Box<dyn std::error::Error>> {
     // Create massive dataset for distributed processing
     let data = create_massive_dataset(20000, 100);
@@ -214,6 +217,7 @@ fn distributed_clustering_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates hybrid GPU-distributed clustering
+#[allow(dead_code)]
 fn hybrid_clustering_demo() -> Result<(), Box<dyn std::error::Error>> {
     // Create ultra-massive dataset for hybrid processing
     let data = create_ultra_massive_dataset(50000, 200);
@@ -290,6 +294,7 @@ fn hybrid_clustering_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates GPU configuration optimization
+#[allow(dead_code)]
 fn gpu_optimization_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_optimization_test_data(10000, 75);
 
@@ -401,6 +406,7 @@ fn gpu_optimization_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates distributed load balancing and fault tolerance
+#[allow(dead_code)]
 fn distributed_load_balancing_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_unbalanced_dataset(15000, 60);
 
@@ -515,6 +521,7 @@ fn distributed_load_balancing_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates performance scaling analysis
+#[allow(dead_code)]
 fn performance_scaling_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("   📈 Performance Scaling Analysis");
 
@@ -570,6 +577,7 @@ fn performance_scaling_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrates resource utilization monitoring
+#[allow(dead_code)]
 fn resource_monitoring_demo() -> Result<(), Box<dyn std::error::Error>> {
     let data = create_monitoring_test_data(8000, 40);
 
@@ -678,6 +686,7 @@ fn resource_monitoring_demo() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper functions to create test datasets
 
+#[allow(dead_code)]
 fn create_large_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
 
@@ -696,6 +705,7 @@ fn create_large_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_massive_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
 
@@ -716,6 +726,7 @@ fn create_massive_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_ultra_massive_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
 
@@ -745,6 +756,7 @@ fn create_ultra_massive_dataset(n_samples: usize, n_features: usize) -> Array2<f
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_optimization_test_data(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
 
@@ -761,6 +773,7 @@ fn create_optimization_test_data(n_samples: usize, n_features: usize) -> Array2<
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_unbalanced_dataset(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
 
@@ -793,6 +806,7 @@ fn create_unbalanced_dataset(n_samples: usize, n_features: usize) -> Array2<f64>
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_scaling_test_data(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
 
@@ -816,6 +830,7 @@ fn create_scaling_test_data(n_samples: usize, n_features: usize) -> Array2<f64> 
     Array2::from_shape_vec((n_samples, n_features), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn create_monitoring_test_data(n_samples: usize, n_features: usize) -> Array2<f64> {
     let mut data_vec = Vec::with_capacity(n_samples * n_features);
 

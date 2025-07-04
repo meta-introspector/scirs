@@ -136,6 +136,7 @@ pub struct FalseAlarmAnalysisMetrics {
 }
 
 /// Run comprehensive ultra-enhanced Lomb-Scargle validation
+#[allow(dead_code)]
 pub fn run_ultra_enhanced_lombscargle_validation(
 ) -> SignalResult<UltraEnhancedLombScargleValidationResult> {
     println!("Running ultra-enhanced Lomb-Scargle validation in ultrathink mode...");
@@ -213,6 +214,7 @@ pub fn run_ultra_enhanced_lombscargle_validation(
 }
 
 /// Validate basic accuracy with known analytical signals
+#[allow(dead_code)]
 fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
     let mut frequency_errors = Vec::new();
     let mut power_errors = Vec::new();
@@ -228,7 +230,7 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
         let mut current_time = 0.0;
         for _ in 0..n {
             t.push(current_time);
-            current_time += 0.1 + 0.05 * rng.gen_range(-1.0..1.0); // Irregular sampling
+            current_time += 0.1 + 0.05 * rng.random_range(-1.0..1.0); // Irregular sampling
         }
 
         // Generate signal with known frequency
@@ -316,6 +318,7 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
 }
 
 /// Validate statistical robustness
+#[allow(dead_code)]
 fn validate_statistical_robustness() -> SignalResult<StatisticalRobustnessMetrics> {
     // Test with white noise to validate statistical properties
     let n_trials = 100;
@@ -325,7 +328,7 @@ fn validate_statistical_robustness() -> SignalResult<StatisticalRobustnessMetric
         let n = 200;
         let t: Vec<f64> = (0..n).map(|i| i as f64 * 0.01).collect();
         let mut rng = rand::rng();
-        let y: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
+        let y: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
 
         let freq_grid = Array1::linspace(0.1, 10.0, 100);
         let (freqs, power) = lombscargle(
@@ -359,6 +362,7 @@ fn validate_statistical_robustness() -> SignalResult<StatisticalRobustnessMetric
 }
 
 /// Validate edge cases
+#[allow(dead_code)]
 fn validate_edge_cases() -> SignalResult<EdgeCaseValidationMetrics> {
     let mut edge_case_scores = Vec::new();
 
@@ -392,6 +396,7 @@ fn validate_edge_cases() -> SignalResult<EdgeCaseValidationMetrics> {
 }
 
 /// Validate numerical consistency
+#[allow(dead_code)]
 fn validate_numerical_consistency() -> SignalResult<NumericalConsistencyMetrics> {
     // Test floating point precision consistency
     let precision_consistency = test_precision_consistency()?;
@@ -414,6 +419,7 @@ fn validate_numerical_consistency() -> SignalResult<NumericalConsistencyMetrics>
 }
 
 /// Analyze performance scaling
+#[allow(dead_code)]
 fn analyze_performance_scaling() -> SignalResult<PerformanceScalingMetrics> {
     let sizes = vec![100, 500, 1000, 2000];
     let mut times = Vec::new();
@@ -450,6 +456,7 @@ fn analyze_performance_scaling() -> SignalResult<PerformanceScalingMetrics> {
 }
 
 /// Validate signal detection capabilities
+#[allow(dead_code)]
 fn validate_signal_detection() -> SignalResult<SignalDetectionMetrics> {
     // Test weak signal detection
     let weak_signal_threshold = test_weak_signal_detection()?;
@@ -476,6 +483,7 @@ fn validate_signal_detection() -> SignalResult<SignalDetectionMetrics> {
 }
 
 /// Validate false alarm rates
+#[allow(dead_code)]
 fn validate_false_alarm_rates() -> SignalResult<FalseAlarmAnalysisMetrics> {
     // Test theoretical false alarm rate accuracy
     let theoretical_far_accuracy = test_theoretical_false_alarm_rate()?;
@@ -499,6 +507,7 @@ fn validate_false_alarm_rates() -> SignalResult<FalseAlarmAnalysisMetrics> {
 
 // Helper functions for specific tests (simplified implementations)
 
+#[allow(dead_code)]
 fn find_peaks(data: &[f64], threshold_ratio: f64) -> Vec<usize> {
     let max_val = data.iter().cloned().fold(0.0, f64::max);
     let threshold = max_val * threshold_ratio;
@@ -512,126 +521,151 @@ fn find_peaks(data: &[f64], threshold_ratio: f64) -> Vec<usize> {
     peaks
 }
 
+#[allow(dead_code)]
 fn test_chi_squared_goodness_of_fit(_data: &[f64]) -> f64 {
     // Simplified chi-squared test
     0.15 // Placeholder p-value
 }
 
+#[allow(dead_code)]
 fn test_kolmogorov_smirnov(_data: &[f64]) -> f64 {
     // Simplified KS test
     0.25 // Placeholder p-value
 }
 
+#[allow(dead_code)]
 fn test_bootstrap_consistency() -> SignalResult<f64> {
     // Bootstrap validation test
     Ok(0.92)
 }
 
+#[allow(dead_code)]
 fn test_false_discovery_rate_control() -> SignalResult<f64> {
     // FDR control test
     Ok(0.88)
 }
 
+#[allow(dead_code)]
 fn test_psd_normalization() -> SignalResult<f64> {
     // PSD normalization accuracy test
     Ok(0.95)
 }
 
+#[allow(dead_code)]
 fn test_irregular_sampling() -> SignalResult<f64> {
     // Test with highly irregular sampling patterns
     Ok(0.85)
 }
 
+#[allow(dead_code)]
 fn test_large_time_gaps() -> SignalResult<f64> {
     // Test with large gaps in time series
     Ok(0.80)
 }
 
+#[allow(dead_code)]
 fn test_extreme_frequencies() -> SignalResult<f64> {
     // Test with very high and very low frequencies
     Ok(0.88)
 }
 
+#[allow(dead_code)]
 fn test_length_extremes() -> SignalResult<f64> {
     // Test with very short and very long time series
     Ok(0.83)
 }
 
+#[allow(dead_code)]
 fn test_high_noise_robustness() -> SignalResult<f64> {
     // Test under high noise conditions
     Ok(0.78)
 }
 
+#[allow(dead_code)]
 fn test_precision_consistency() -> SignalResult<f64> {
     // Test numerical precision consistency
     Ok(0.94)
 }
 
+#[allow(dead_code)]
 fn test_perturbation_stability() -> SignalResult<f64> {
     // Test stability under small perturbations
     Ok(0.91)
 }
 
+#[allow(dead_code)]
 fn test_reproducibility() -> SignalResult<f64> {
     // Test reproducibility across runs
     Ok(0.98)
 }
 
+#[allow(dead_code)]
 fn test_accuracy_degradation() -> SignalResult<f64> {
     // Test accuracy degradation with problem size
     Ok(0.87)
 }
 
+#[allow(dead_code)]
 fn analyze_complexity_scaling(_sizes: &[usize], _times: &[f64]) -> f64 {
     // Analyze computational complexity scaling
     1.2 // Should be close to 1.0 for optimal scaling
 }
 
+#[allow(dead_code)]
 fn test_weak_signal_detection() -> SignalResult<f64> {
     // Test detection of weak signals
     Ok(0.75)
 }
 
+#[allow(dead_code)]
 fn test_snr_effectiveness() -> SignalResult<f64> {
     // Test signal-to-noise ratio effectiveness
     Ok(0.82)
 }
 
+#[allow(dead_code)]
 fn test_harmonic_detection() -> SignalResult<f64> {
     // Test harmonic detection capability
     Ok(0.88)
 }
 
+#[allow(dead_code)]
 fn test_amplitude_modulation_detection() -> SignalResult<f64> {
     // Test amplitude modulation detection
     Ok(0.70)
 }
 
+#[allow(dead_code)]
 fn test_frequency_modulation_handling() -> SignalResult<f64> {
     // Test frequency modulation handling
     Ok(0.65)
 }
 
+#[allow(dead_code)]
 fn test_theoretical_false_alarm_rate() -> SignalResult<f64> {
     // Test theoretical false alarm rate accuracy
     Ok(0.93)
 }
 
+#[allow(dead_code)]
 fn test_empirical_false_alarm_rate() -> SignalResult<f64> {
     // Test empirical false alarm rate consistency
     Ok(0.89)
 }
 
+#[allow(dead_code)]
 fn test_multiple_testing_correction() -> SignalResult<f64> {
     // Test multiple testing correction effectiveness
     Ok(0.86)
 }
 
+#[allow(dead_code)]
 fn test_statistical_significance() -> SignalResult<f64> {
     // Test statistical significance reliability
     Ok(0.91)
 }
 
+#[allow(dead_code)]
 fn calculate_enhanced_overall_score(
     basic: &LombScargleAccuracyValidation,
     statistical: &StatisticalRobustnessMetrics,
@@ -654,6 +688,7 @@ fn calculate_enhanced_overall_score(
 }
 
 /// Generate comprehensive validation report
+#[allow(dead_code)]
 pub fn generate_ultra_enhanced_validation_report(
     result: &UltraEnhancedLombScargleValidationResult,
 ) -> String {

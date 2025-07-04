@@ -8,6 +8,7 @@ use scirs2_vision::transform::{warp_affine, AffineTransform};
 use std::env;
 use std::path::Path;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Get command line arguments
     let args: Vec<String> = env::args().collect();
@@ -126,6 +127,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Draw matches between two images
+#[allow(dead_code)]
 fn draw_matches(
     img1: &image::DynamicImage,
     img2: &image::DynamicImage,
@@ -187,6 +189,7 @@ fn draw_matches(
 }
 
 /// Create a composite image showing alignment
+#[allow(dead_code)]
 fn create_composite(base: &image::DynamicImage, aligned: &image::DynamicImage) -> RgbaImage {
     let (width, height) = base.dimensions();
     let mut result = RgbaImage::new(width, height);
@@ -213,6 +216,7 @@ fn create_composite(base: &image::DynamicImage, aligned: &image::DynamicImage) -
 }
 
 /// Draw a circle on an image
+#[allow(dead_code)]
 fn draw_circle(img: &mut RgbaImage, cx: u32, cy: u32, radius: u32, color: Rgba<u8>) {
     let (width, height) = img.dimensions();
 
@@ -229,6 +233,7 @@ fn draw_circle(img: &mut RgbaImage, cx: u32, cy: u32, radius: u32, color: Rgba<u
 }
 
 /// Draw a line on an image
+#[allow(dead_code)]
 fn draw_line(img: &mut RgbaImage, x0: u32, y0: u32, x1: u32, y1: u32, color: Rgba<u8>) {
     let (width, height) = img.dimensions();
 

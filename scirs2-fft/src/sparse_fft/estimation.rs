@@ -12,6 +12,7 @@ use std::fmt::Debug;
 use super::config::{SparseFFTConfig, SparsityEstimationMethod};
 
 /// Estimate sparsity of a signal using various methods
+#[allow(dead_code)]
 pub fn estimate_sparsity<T>(signal: &[T], config: &SparseFFTConfig) -> FFTResult<usize>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -40,6 +41,7 @@ where
 }
 
 /// Estimate sparsity using magnitude thresholding
+#[allow(dead_code)]
 pub fn estimate_sparsity_threshold<T>(signal: &[T], threshold: f64) -> FFTResult<usize>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -61,6 +63,7 @@ where
 }
 
 /// Estimate sparsity using adaptive energy-based method
+#[allow(dead_code)]
 pub fn estimate_sparsity_adaptive<T>(
     signal: &[T],
     adaptivity_factor: f64,
@@ -98,6 +101,7 @@ where
 }
 
 /// Estimate sparsity using frequency pruning method
+#[allow(dead_code)]
 pub fn estimate_sparsity_frequency_pruning<T>(
     signal: &[T],
     pruning_sensitivity: f64,
@@ -142,6 +146,7 @@ where
 }
 
 /// Estimate sparsity using spectral flatness measure
+#[allow(dead_code)]
 pub fn estimate_sparsity_spectral_flatness<T>(
     signal: &[T],
     flatness_threshold: f64,

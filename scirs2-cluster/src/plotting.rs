@@ -66,6 +66,7 @@ impl Default for PlotOutput {
 
 /// Native dendrogram plot using plotters
 #[cfg(feature = "plotters")]
+#[allow(dead_code)]
 pub fn plot_dendrogram<P: AsRef<Path>>(
     dendrogram_plot: &DendrogramPlot<f64>,
     output_path: P,
@@ -83,6 +84,7 @@ pub fn plot_dendrogram<P: AsRef<Path>>(
 }
 
 #[cfg(feature = "plotters")]
+#[allow(dead_code)]
 fn plot_dendrogram_png<P: AsRef<Path>>(
     dendrogram_plot: &DendrogramPlot<f64>,
     output_path: P,
@@ -166,6 +168,7 @@ fn plot_dendrogram_png<P: AsRef<Path>>(
 }
 
 #[cfg(feature = "plotters")]
+#[allow(dead_code)]
 fn plot_dendrogram_svg<P: AsRef<Path>>(
     dendrogram_plot: &DendrogramPlot<f64>,
     output_path: P,
@@ -250,6 +253,7 @@ fn plot_dendrogram_svg<P: AsRef<Path>>(
 
 /// Native 2D scatter plot using plotters
 #[cfg(feature = "plotters")]
+#[allow(dead_code)]
 pub fn plot_scatter_2d<P: AsRef<Path>>(
     scatter_plot: &ScatterPlot2D,
     output_path: P,
@@ -267,6 +271,7 @@ pub fn plot_scatter_2d<P: AsRef<Path>>(
 }
 
 #[cfg(feature = "plotters")]
+#[allow(dead_code)]
 fn plot_scatter_2d_png<P: AsRef<Path>>(
     scatter_plot: &ScatterPlot2D,
     output_path: P,
@@ -349,6 +354,7 @@ fn plot_scatter_2d_png<P: AsRef<Path>>(
 }
 
 #[cfg(feature = "plotters")]
+#[allow(dead_code)]
 fn plot_scatter_2d_svg<P: AsRef<Path>>(
     scatter_plot: &ScatterPlot2D,
     output_path: P,
@@ -637,6 +643,7 @@ impl InteractiveClusteringApp {
 }
 
 /// Utility function to parse hex color to RGB
+#[allow(dead_code)]
 fn parse_hex_color(hex: &str) -> Option<[u8; 3]> {
     if hex.len() != 7 || !hex.starts_with('#') {
         return None;
@@ -650,12 +657,14 @@ fn parse_hex_color(hex: &str) -> Option<[u8; 3]> {
 }
 
 #[cfg(feature = "plotters")]
+#[allow(dead_code)]
 fn parse_hex_color_plotters(hex: &str) -> Option<RGBColor> {
     let rgb = parse_hex_color(hex)?;
     Some(RGBColor(rgb[0], rgb[1], rgb[2]))
 }
 
 /// High-level function to create and save a dendrogram plot
+#[allow(dead_code)]
 pub fn save_dendrogram_plot<P: AsRef<Path>>(
     linkage_matrix: ArrayView2<f64>,
     labels: Option<&[String]>,
@@ -686,6 +695,7 @@ pub fn save_dendrogram_plot<P: AsRef<Path>>(
 
 /// Native 3D scatter plot using plotters
 #[cfg(feature = "plotters")]
+#[allow(dead_code)]
 pub fn plot_scatter_3d<P: AsRef<Path>>(
     scatter_plot: &ScatterPlot3D,
     output_path: P,
@@ -703,6 +713,7 @@ pub fn plot_scatter_3d<P: AsRef<Path>>(
 }
 
 #[cfg(feature = "plotters")]
+#[allow(dead_code)]
 fn plot_scatter_3d_png<P: AsRef<Path>>(
     scatter_plot: &ScatterPlot3D,
     output_path: P,
@@ -798,6 +809,7 @@ fn plot_scatter_3d_png<P: AsRef<Path>>(
 }
 
 #[cfg(feature = "plotters")]
+#[allow(dead_code)]
 fn plot_scatter_3d_svg<P: AsRef<Path>>(
     scatter_plot: &ScatterPlot3D,
     output_path: P,
@@ -893,6 +905,7 @@ fn plot_scatter_3d_svg<P: AsRef<Path>>(
 }
 
 /// High-level function to create and save a clustering plot
+#[allow(dead_code)]
 pub fn save_clustering_plot<P: AsRef<Path>>(
     data: ArrayView2<f64>,
     labels: &Array1<i32>,
@@ -924,6 +937,7 @@ pub fn save_clustering_plot<P: AsRef<Path>>(
 }
 
 /// High-level function to create and save a 3D clustering plot
+#[allow(dead_code)]
 pub fn save_clustering_plot_3d<P: AsRef<Path>>(
     data: ArrayView2<f64>,
     labels: &Array1<i32>,
@@ -956,6 +970,7 @@ pub fn save_clustering_plot_3d<P: AsRef<Path>>(
 
 /// Launch interactive clustering visualization
 #[cfg(feature = "egui")]
+#[allow(dead_code)]
 pub fn launch_interactive_visualization(
     data: ArrayView2<f64>,
     labels: &Array1<i32>,
@@ -990,6 +1005,7 @@ pub fn launch_interactive_visualization(
 }
 
 #[cfg(not(feature = "egui"))]
+#[allow(dead_code)]
 pub fn launch_interactive_visualization(
     _data: ArrayView2<f64>,
     _labels: &Array1<i32>,

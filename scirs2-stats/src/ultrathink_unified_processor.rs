@@ -8,19 +8,16 @@
 #![allow(dead_code)]
 
 use crate::error::{StatsError, StatsResult};
+use crate::error_handling_enhancements::{UltrathinkContextBuilder, UltrathinkErrorMessages};
 use crate::error_standardization::ErrorMessages;
-use crate::ultrathink_error_enhancements::{UltrathinkContextBuilder, UltrathinkErrorMessages};
-use crate::ultrathink_numerical_stability::{
-    create_numerical_stability_analyzer, NumericalStabilityConfig, StabilityAnalysisReport,
+use crate::ultrathink_stubs::{
+    BatchOperation, BatchResults, UltraThinkSimdConfig, UltraThinkSimdOptimizer,
+    create_exhaustive_numerical_stability_tester,
+    ComprehensiveStabilityResult as StabilityAnalysisReport,
+    UltraThinkNumericalStabilityConfig as NumericalStabilityConfig,
     UltrathinkNumericalStabilityAnalyzer,
-};
-use crate::ultrathink_parallel_enhancements::{
     create_ultra_parallel_processor, MatrixOperationType, TimeSeriesOperation,
     UltraParallelProcessor, UltrathinkParallelConfig,
-};
-use crate::ultrathink_simd_optimizations::{
-    ultra_batch_statistics, ultra_matrix_operations, ultra_moving_window_stats, MatrixOperation,
-    MovingWindowResult, UltraBatchStats, UltrathinkSimdConfig,
 };
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast};
@@ -28,11 +25,21 @@ use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::collections::HashMap;
 use std::time::Instant;
 
+/// Result of moving window analysis
+#[derive(Debug, Clone)]
+pub struct MovingWindowResult<F> {
+    pub means: Array1<F>,
+    pub variances: Array1<F>,
+    pub mins: Array1<F>,
+    pub maxs: Array1<F>,
+    pub window_size: usize,
+}
+
 /// Comprehensive ultrathink processing configuration
 #[derive(Debug, Clone)]
 pub struct UltrathinkProcessorConfig {
     /// SIMD optimization settings
-    pub simd_config: UltrathinkSimdConfig,
+    pub simd_config: UltraThinkSimdConfig,
     /// Parallel processing settings
     pub parallel_config: UltrathinkParallelConfig,
     /// Numerical stability testing settings
@@ -50,7 +57,7 @@ pub struct UltrathinkProcessorConfig {
 impl Default for UltrathinkProcessorConfig {
     fn default() -> Self {
         Self {
-            simd_config: UltrathinkSimdConfig::default(),
+            simd_config: UltraThinkSimdConfig::default(),
             parallel_config: UltrathinkParallelConfig::default(),
             stability_config: NumericalStabilityConfig::default(),
             auto_optimize: true,
@@ -89,7 +96,7 @@ impl UltrathinkUnifiedProcessor {
     pub fn new(config: UltrathinkProcessorConfig) -> Self {
         Self {
             parallel_processor: create_ultra_parallel_processor(),
-            stability_analyzer: create_numerical_stability_analyzer(),
+            stability_analyzer: create_exhaustive_numerical_stability_tester(),
             capabilities: PlatformCapabilities::detect(),
             simd_processor: None,
             performance_history: Vec::new(),
@@ -134,7 +141,16 @@ impl UltrathinkUnifiedProcessor {
 
         // Compute statistics using the selected strategy
         let stats = match strategy {
-            ProcessingStrategy::SimdOnly => ultra_batch_statistics(data, &self.config.simd_config)?,
+            ProcessingStrategy::SimdOnly => {
+                let optimizer = UltraThinkSimdOptimizer::new(self.config.simd_config.clone());
+                let data_arrays = vec![data.to_owned().view()];
+                let operations = vec![
+                    BatchOperation::Mean,
+                    BatchOperation::Variance,
+                    BatchOperation::StandardDeviation,
+                ];
+                optimizer.ultra_batch_statistics(&data_arrays, &operations)?
+            }
             ProcessingStrategy::ParallelOnly => {
                 let parallel_result = self.parallel_processor.process_batch_statistics(data)?;
                 self.convert_parallel_to_batch_stats(parallel_result)
@@ -208,16 +224,12 @@ impl UltrathinkUnifiedProcessor {
 
         let result = match (strategy, operation) {
             (ProcessingStrategy::SimdOnly, UltrathinkMatrixOperation::Covariance) => {
-                ultra_matrix_operations(
-                    data,
-                    MatrixOperation::Covariance,
-                    &self.config.simd_config,
-                )?
+                ultra_matrix_operations(data, BatchOperation::Covariance, &self.config.simd_config)?
             }
             (ProcessingStrategy::SimdOnly, UltrathinkMatrixOperation::Correlation) => {
                 ultra_matrix_operations(
                     data,
-                    MatrixOperation::Correlation,
+                    BatchOperation::Correlation,
                     &self.config.simd_config,
                 )?
             }
@@ -390,7 +402,7 @@ impl UltrathinkUnifiedProcessor {
     fn determine_processing_strategy(
         &self,
         data_size: usize,
-        _context: &crate::ultrathink_error_enhancements::UltrathinkErrorContext,
+        _context: &crate::ultrathink_error_enhancements_v2::UltraThinkErrorContext,
     ) -> StatsResult<ProcessingStrategy> {
         match self.config.optimization_mode {
             OptimizationMode::Performance => {
@@ -572,11 +584,11 @@ impl UltrathinkUnifiedProcessor {
     fn convert_parallel_to_batch_stats<F>(
         &self,
         parallel_result: crate::ultrathink_parallel_enhancements::UltraParallelBatchResult<F>,
-    ) -> UltraBatchStats<F>
+    ) -> BatchResults<F>
     where
         F: Float + NumCast + Copy,
     {
-        UltraBatchStats {
+        BatchResults {
             mean: parallel_result.mean,
             variance: parallel_result.variance,
             std_dev: parallel_result.std_dev,
@@ -593,19 +605,27 @@ impl UltrathinkUnifiedProcessor {
     fn process_simd_parallel_hybrid<F, D>(
         &self,
         data: &ArrayBase<D, Ix1>,
-    ) -> StatsResult<UltraBatchStats<F>>
+    ) -> StatsResult<BatchResults<F>>
     where
-        F: Float + NumCast + SimdUnifiedOps + Send + Sync + Copy + PartialOrd,
+        F: Float + NumCast + SimdUnifiedOps + Send + Sync + Copy + PartialOrd + 'static,
         D: Data<Elem = F> + Sync,
     {
         // For now, fall back to SIMD-only
-        ultra_batch_statistics(data, &self.config.simd_config)
+        let optimizer = UltraThinkSimdOptimizer::new(self.config.simd_config.clone());
+        let binding = data.to_owned();
+        let data_arrays = vec![binding.view()];
+        let operations = vec![
+            BatchOperation::Mean,
+            BatchOperation::Variance,
+            BatchOperation::StandardDeviation,
+        ];
+        optimizer.ultra_batch_statistics(&data_arrays, &operations)
     }
 
     fn process_standard_fallback<F, D>(
         &self,
         data: &ArrayBase<D, Ix1>,
-    ) -> StatsResult<UltraBatchStats<F>>
+    ) -> StatsResult<BatchResults<F>>
     where
         F: Float + NumCast + Copy + PartialOrd,
         D: Data<Elem = F>,
@@ -646,7 +666,7 @@ impl UltrathinkUnifiedProcessor {
         let skewness = (sum_cubed_dev / n_f) / (std_dev * std_dev * std_dev);
         let kurtosis = (sum_fourth_dev / n_f) / (variance * variance) - F::from(3.0).unwrap();
 
-        Ok(UltraBatchStats {
+        Ok(BatchResults {
             mean,
             variance,
             std_dev,
@@ -831,7 +851,7 @@ pub struct ProcessingMetrics {
 /// Comprehensive ultrathink processing result
 #[derive(Debug, Clone)]
 pub struct UltrathinkComprehensiveResult<F> {
-    pub statistics: UltraBatchStats<F>,
+    pub statistics: BatchResults<F>,
     pub stability_report: Option<StabilityAnalysisReport>,
     pub processing_metrics: ProcessingMetrics,
     pub recommendations: Vec<String>,
@@ -869,11 +889,13 @@ pub struct UltrathinkPerformanceAnalytics {
 }
 
 /// Create a unified ultrathink processor with default configuration
+#[allow(dead_code)]
 pub fn create_ultrathink_processor() -> UltrathinkUnifiedProcessor {
     UltrathinkUnifiedProcessor::new(UltrathinkProcessorConfig::default())
 }
 
 /// Create a unified ultrathink processor with custom configuration
+#[allow(dead_code)]
 pub fn create_configured_ultrathink_processor(
     config: UltrathinkProcessorConfig,
 ) -> UltrathinkUnifiedProcessor {

@@ -38,6 +38,7 @@ cuda = []
 opencl = []
 metal = []
 gpu = ["cuda"]
+compression = []
 
 [dev-dependencies]
 criterion = { workspace = true }

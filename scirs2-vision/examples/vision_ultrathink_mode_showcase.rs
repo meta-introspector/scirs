@@ -17,6 +17,7 @@ use scirs2_vision::*;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🔬 SciRS2-Vision Ultrathink Mode Showcase");
     println!("=========================================");
@@ -49,6 +50,7 @@ fn main() -> Result<()> {
 }
 
 /// Create a test video sequence with various patterns
+#[allow(dead_code)]
 fn create_test_video_sequence(num_frames: usize, dimensions: (usize, usize)) -> Result<Vec<Frame>> {
     let (height, width) = dimensions;
     let mut frames = Vec::with_capacity(num_frames);
@@ -101,6 +103,7 @@ fn create_test_video_sequence(num_frames: usize, dimensions: (usize, usize)) -> 
 }
 
 /// Demonstrate quantum-inspired streaming processing
+#[allow(dead_code)]
 fn quantum_streaming_demo(frames: &[Frame]) -> Result<()> {
     println!("  Initializing quantum processor...");
 
@@ -163,6 +166,7 @@ fn quantum_streaming_demo(frames: &[Frame]) -> Result<()> {
 }
 
 /// Demonstrate neuromorphic processing
+#[allow(dead_code)]
 fn neuromorphic_processing_demo(frames: &[Frame]) -> Result<()> {
     println!("  Initializing neuromorphic processor...");
 
@@ -211,6 +215,7 @@ fn neuromorphic_processing_demo(frames: &[Frame]) -> Result<()> {
 }
 
 /// Demonstrate AI-driven optimization
+#[allow(dead_code)]
 fn ai_optimization_demo(_frames: &[Frame]) -> Result<()> {
     println!("  Initializing AI optimization systems...");
 
@@ -404,6 +409,7 @@ fn ai_optimization_demo(_frames: &[Frame]) -> Result<()> {
 }
 
 /// Demonstrate integrated ultrathink pipeline
+#[allow(dead_code)]
 fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
     println!("  Creating integrated ultrathink pipeline...");
 
@@ -522,6 +528,7 @@ fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
 }
 
 /// Demonstrate ultra-advanced neural-quantum hybrid processing
+#[allow(dead_code)]
 fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
     println!("  Initializing Neural-Quantum Hybrid Processor...");
 

@@ -162,6 +162,7 @@ pub use error::{
 ///
 /// This function does not return errors but analyzes the provided error.
 #[must_use]
+#[allow(dead_code)]
 pub fn diagnose_error_advanced(
     error: &CoreError,
     context: Option<&str>,
@@ -184,6 +185,7 @@ pub fn diagnose_error_advanced(
 }
 
 /// Record an error for pattern analysis
+#[allow(dead_code)]
 pub fn record_error_occurrence(error: &CoreError, context: String) {
     let diagnostics = ErrorDiagnostics::global();
     diagnostics.record_error(error, context);
@@ -191,6 +193,7 @@ pub fn record_error_occurrence(error: &CoreError, context: String) {
 
 /// Get predictive error analysis for a given context
 #[must_use]
+#[allow(dead_code)]
 pub fn predict_errors_for_context(context: &str) -> Vec<String> {
     let diagnostics = ErrorDiagnostics::global();
     diagnostics.predict_potential_errors(context)
@@ -198,6 +201,7 @@ pub fn predict_errors_for_context(context: &str) -> Vec<String> {
 
 /// Get domain-specific recovery strategies for an error
 #[must_use]
+#[allow(dead_code)]
 pub fn get_domain_recovery_strategies(error: &CoreError, domain: &str) -> Vec<String> {
     let diagnostics = ErrorDiagnostics::global();
     diagnostics.suggest_domain_recovery(error, domain)

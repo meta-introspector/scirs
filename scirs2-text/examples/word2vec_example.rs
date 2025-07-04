@@ -2,6 +2,7 @@ use ndarray::Array1;
 use scirs2_text::embeddings::{cosine_similarity, Word2Vec, Word2VecAlgorithm};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Word2Vec Example");
     println!("================\n");

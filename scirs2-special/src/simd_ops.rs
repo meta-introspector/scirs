@@ -14,6 +14,7 @@ use scirs2_core::parallel_ops::*;
 
 /// SIMD-optimized gamma function for f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn gamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -47,6 +48,7 @@ pub fn gamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
 /// SIMD-optimized gamma function for f64 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn gamma_f64_simd(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -79,6 +81,7 @@ pub fn gamma_f64_simd(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
 
 /// SIMD approximation of gamma function for f32 with enhanced accuracy
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn simd_gamma_approx_f32(x: &[f32]) -> Vec<f32> {
     // Enhanced gamma function using Lanczos approximation for better accuracy
     // Coefficients for Lanczos approximation (g=7, n=9)
@@ -130,6 +133,7 @@ fn simd_gamma_approx_f32(x: &[f32]) -> Vec<f32> {
 
 /// Lanczos approximation for gamma function (f32)
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn lanczos_gamma_f32(z: f32) -> f32 {
     const G: f32 = 7.0;
     const LANCZOS_COEFFS: [f32; 9] = [
@@ -159,6 +163,7 @@ fn lanczos_gamma_f32(z: f32) -> f32 {
 
 /// SIMD approximation of gamma function for f64 with enhanced accuracy
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn simd_gamma_approx_f64(x: &[f64]) -> Vec<f64> {
     // Enhanced gamma function using higher precision Lanczos approximation
     // Coefficients for Lanczos approximation (g=7, n=15) for better f64 precision
@@ -218,6 +223,7 @@ fn simd_gamma_approx_f64(x: &[f64]) -> Vec<f64> {
 
 /// Enhanced Lanczos approximation for gamma function (f64)
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn lanczos_gamma_f64(z: f64) -> f64 {
     const G: f64 = 7.0;
     const LANCZOS_COEFFS: [f64; 15] = [
@@ -253,6 +259,7 @@ fn lanczos_gamma_f64(z: f64) -> f64 {
 
 /// SIMD-optimized exponential function
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn exp_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -275,6 +282,7 @@ pub fn exp_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
 /// SIMD exponential for f32 slices
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn simd_exp_f32_slice(input: &[f32], output: &mut [f32]) {
     let chunk_size = 8;
     let chunks = input.len() / chunk_size;
@@ -298,6 +306,7 @@ fn simd_exp_f32_slice(input: &[f32], output: &mut [f32]) {
 
 /// SIMD-optimized error function for f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn erf_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -326,6 +335,7 @@ pub fn erf_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
 /// SIMD-optimized Bessel J0 function for f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn j0_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -376,6 +386,7 @@ pub fn vectorized_special_ops() -> SpecialResult<()> {
 
 /// Parallel-optimized gamma function for f64 arrays
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn gamma_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -408,6 +419,7 @@ pub fn gamma_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>>
 
 /// Parallel-optimized Bessel J0 function for f64 arrays
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn j0_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -440,6 +452,7 @@ pub fn j0_f64_parallel(input: &ArrayView1<f64>) -> SpecialResult<Array1<f64>> {
 
 /// Combined SIMD and parallel optimized gamma function
 #[cfg(all(feature = "simd", feature = "parallel"))]
+#[allow(dead_code)]
 pub fn gamma_f32_simd_parallel(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -482,6 +495,7 @@ pub fn gamma_f32_simd_parallel(input: &ArrayView1<f32>) -> SpecialResult<Array1<
 
 /// Benchmark parallel vs sequential performance
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn benchmark_parallel_performance(size: usize) -> SpecialResult<()> {
     use std::time::Instant;
 
@@ -567,6 +581,7 @@ pub fn adaptive_gamma_processing(input: &ArrayView1<f64>) -> SpecialResult<Array
 
 /// Benchmark SIMD vs scalar performance
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn benchmark_simd_performance(size: usize) -> SpecialResult<()> {
     use std::time::Instant;
 
@@ -615,6 +630,7 @@ pub fn benchmark_simd_performance(size: usize) -> SpecialResult<()> {
 
 /// SIMD-optimized logarithm function for f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn log_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -646,6 +662,7 @@ pub fn log_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
 /// SIMD-optimized sine function for f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn sin_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -672,6 +689,7 @@ pub fn sin_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
 /// SIMD-optimized cosine function for f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn cos_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -698,6 +716,7 @@ pub fn cos_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
 /// SIMD-optimized Bessel J1 function for f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn j1_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -725,6 +744,7 @@ pub fn j1_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
 /// SIMD-optimized error function complement (erfc) for f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn erfc_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -752,6 +772,7 @@ pub fn erfc_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
 /// SIMD-optimized digamma function for f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn digamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -779,22 +800,26 @@ pub fn digamma_f32_simd(input: &ArrayView1<f32>) -> SpecialResult<Array1<f32>> {
 
 /// SIMD helper functions - these would be implemented with actual SIMD intrinsics
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn simd_log_approx_f32(x: &[f32]) -> Vec<f32> {
     // Simplified implementation - in practice would use SIMD intrinsics
     x.iter().map(|&val| val.ln()).collect()
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn simd_sin_approx_f32(x: &[f32]) -> Vec<f32> {
     x.iter().map(|&val| val.sin()).collect()
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn simd_cos_approx_f32(x: &[f32]) -> Vec<f32> {
     x.iter().map(|&val| val.cos()).collect()
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn simd_j0_approx_f32(x: &[f32]) -> Vec<f32> {
     x.iter()
         .map(|&val| {
@@ -814,6 +839,7 @@ fn simd_j0_approx_f32(x: &[f32]) -> Vec<f32> {
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn simd_j1_approx_f32(x: &[f32]) -> Vec<f32> {
     x.iter()
         .map(|&val| {
@@ -833,6 +859,7 @@ fn simd_j1_approx_f32(x: &[f32]) -> Vec<f32> {
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn simd_erf_approx_f32(x: &[f32]) -> Vec<f32> {
     x.iter()
         .map(|&val| {
@@ -854,6 +881,7 @@ fn simd_erf_approx_f32(x: &[f32]) -> Vec<f32> {
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn simd_erfc_approx_f32(x: &[f32]) -> Vec<f32> {
     x.iter()
         .map(|&val| {
@@ -875,6 +903,7 @@ fn simd_erfc_approx_f32(x: &[f32]) -> Vec<f32> {
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn simd_digamma_approx_f32(x: &[f32]) -> Vec<f32> {
     x.iter()
         .map(|&val| {
@@ -891,6 +920,7 @@ fn simd_digamma_approx_f32(x: &[f32]) -> Vec<f32> {
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn simd_digamma_positive(x: f32) -> f32 {
     // Simplified positive digamma approximation
     if x > 8.0 {
@@ -910,6 +940,7 @@ fn simd_digamma_positive(x: f32) -> f32 {
 
 /// Multi-function SIMD processor - processes multiple functions in one pass
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn multi_function_simd_f32(
     input: &ArrayView1<f32>,
     functions: &[&str],

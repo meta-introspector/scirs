@@ -2,6 +2,7 @@
 
 use scirs2_core::api_freeze::{generate_frozen_api_report, initialize_api_freeze};
 
+#[allow(dead_code)]
 fn main() {
     println!("Generating API freeze report for scirs2-core 1.0...\n");
 

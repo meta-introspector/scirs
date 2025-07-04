@@ -570,13 +570,13 @@ impl ModelSurgery {
                     ));
                 SurgeryOperation::RemoveLayer { layer_name } => {
                     self.remove_layer(model_config, layer_name)?;
-                    applied_operations.push(format!("Removed layer {}", layer_name));
+                    applied_operations.push(format!("Removed layer {layer_name}"));
                 SurgeryOperation::ReplaceLayer {
                     old_layer,
                     new_layer,
                     self.replace_layer(model_config, old_layer, new_layer, layer_config)?;
                     applied_operations
-                        .push(format!("Replaced layer {} with {}", old_layer, new_layer));
+                        .push(format!("Replaced layer {old_layer} with {new_layer}"));
                 SurgeryOperation::ResizeLayer {
                     new_shape,
                     init_strategy,
@@ -911,7 +911,7 @@ mod tests {
             frozen_layers: 3,
             trainable_layers: 2,
             reduced_lr_layers: 0,
-        let display_str = format!("{}", state);
+        let display_str = format!("{state}");
         assert!(display_str.contains("Epoch 10"));
         assert!(display_str.contains("Total layers: 5"));
         assert!(display_str.contains("Frozen layers: 3"));

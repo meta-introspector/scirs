@@ -17,6 +17,7 @@ use scirs2_linalg::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> LinalgResult<()> {
     println!("=== Advanced Features Showcase ===\n");
 
@@ -43,6 +44,7 @@ fn main() -> LinalgResult<()> {
 }
 
 /// Demonstrates performance optimization techniques
+#[allow(dead_code)]
 fn performance_optimization_demo() -> LinalgResult<()> {
     println!("🚀 Performance Optimization Techniques");
     println!("{}", "=".repeat(50));
@@ -107,6 +109,7 @@ fn simd_operations_demo() -> LinalgResult<()> {
 }
 
 /// Demonstrates memory-efficient algorithms
+#[allow(dead_code)]
 fn memory_efficiency_demo() -> LinalgResult<()> {
     println!("💾 Memory-Efficient Algorithms");
     println!("{}", "=".repeat(50));
@@ -184,6 +187,7 @@ fn memory_efficiency_demo() -> LinalgResult<()> {
 }
 
 /// Demonstrates numerical stability features
+#[allow(dead_code)]
 fn numerical_stability_demo() -> LinalgResult<()> {
     println!("🔧 Numerical Stability Features");
     println!("{}", "=".repeat(50));
@@ -272,6 +276,7 @@ fn numerical_stability_demo() -> LinalgResult<()> {
 }
 
 /// Demonstrates specialized algorithms
+#[allow(dead_code)]
 fn specialized_algorithms_demo() -> LinalgResult<()> {
     println!("🎯 Specialized Algorithms");
     println!("{}", "=".repeat(50));
@@ -347,6 +352,7 @@ fn specialized_algorithms_demo() -> LinalgResult<()> {
 }
 
 /// Demonstrates adaptive algorithm selection
+#[allow(dead_code)]
 fn adaptive_algorithms_demo() -> LinalgResult<()> {
     println!("🤖 Adaptive Algorithm Selection");
     println!("{}", "=".repeat(50));

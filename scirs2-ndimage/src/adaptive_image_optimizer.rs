@@ -11,8 +11,8 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
+use crate::advanced_fusion_algorithms::UltrathinkConfig;
 use crate::error::{NdimageError, NdimageResult};
-use crate::ultrathink_fusion_core::UltrathinkConfig;
 
 /// Adaptive optimization system for ultrathink mode operations
 #[derive(Debug)]

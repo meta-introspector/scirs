@@ -61,6 +61,7 @@ pub type TrainTestSplitResult<T> = (Vec<Array1<T>>, Vec<Array1<T>>);
 /// assert_eq!(x_train.len(), 7);  // 70% of the data
 /// assert_eq!(x_test.len(), 3);   // 30% of the data
 /// ```
+#[allow(dead_code)]
 pub fn train_test_split<T>(
     arrays: &[&ArrayBase<impl Data<Elem = T>, impl Dimension>],
     test_size: f64,
@@ -109,7 +110,7 @@ where
     let mut indices: Vec<usize> = (0..n_samples).collect();
 
     // Initialize random number generator with provided seed
-    // In rand 0.9.0 we need to use rng() instead of thread_rng()
+    // In rand 0.9.0 we need to use rng() instead of rng()
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {

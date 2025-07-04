@@ -1192,6 +1192,7 @@ impl VisualKnowledgeBase {
 }
 
 /// High-level function for complex visual reasoning
+#[allow(dead_code)]
 pub fn perform_advanced_visual_reasoning(
     scene: &SceneAnalysisResult,
     question: &str,

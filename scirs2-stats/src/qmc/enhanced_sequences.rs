@@ -650,6 +650,7 @@ where
 }
 
 /// Convenience functions for enhanced QMC
+#[allow(dead_code)]
 pub fn enhanced_sobol<F>(
     n: usize,
     dimension: usize,
@@ -674,6 +675,7 @@ where
     generator.generate(n)
 }
 
+#[allow(dead_code)]
 pub fn enhanced_niederreiter<F>(
     n: usize,
     dimension: usize,
@@ -696,6 +698,7 @@ where
     generator.generate(n)
 }
 
+#[allow(dead_code)]
 pub fn enhanced_digital_net<F>(
     n: usize,
     dimension: usize,

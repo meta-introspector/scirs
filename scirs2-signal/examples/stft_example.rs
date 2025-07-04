@@ -6,6 +6,7 @@ use scirs2_signal::window;
 use std::error::Error;
 // use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Short-Time Fourier Transform (STFT) Example");
     println!("-------------------------------------------");

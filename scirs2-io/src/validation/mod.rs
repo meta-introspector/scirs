@@ -82,6 +82,7 @@ pub struct IntegrityMetadata {
 /// # Returns
 ///
 /// The checksum as a hex encoded string
+#[allow(dead_code)]
 pub fn calculate_checksum(data: &[u8], algorithm: ChecksumAlgorithm) -> String {
     match algorithm {
         ChecksumAlgorithm::CRC32 => {
@@ -112,6 +113,7 @@ pub fn calculate_checksum(data: &[u8], algorithm: ChecksumAlgorithm) -> String {
 /// # Returns
 ///
 /// The checksum as a hex encoded string
+#[allow(dead_code)]
 pub fn calculate_file_checksum<P: AsRef<Path>>(
     path: P,
     algorithm: ChecksumAlgorithm,
@@ -188,6 +190,7 @@ pub fn calculate_file_checksum<P: AsRef<Path>>(
 /// # Returns
 ///
 /// `true` if the checksum matches, `false` otherwise
+#[allow(dead_code)]
 pub fn verify_checksum(data: &[u8], expected_checksum: &str, algorithm: ChecksumAlgorithm) -> bool {
     let calculated = calculate_checksum(data, algorithm);
     calculated.eq_ignore_ascii_case(expected_checksum)
@@ -204,6 +207,7 @@ pub fn verify_checksum(data: &[u8], expected_checksum: &str, algorithm: Checksum
 /// # Returns
 ///
 /// `Ok(true)` if the checksum matches, `Ok(false)` otherwise, or an error
+#[allow(dead_code)]
 pub fn verify_file_checksum<P: AsRef<Path>>(
     path: P,
     expected_checksum: &str,
@@ -223,6 +227,7 @@ pub fn verify_file_checksum<P: AsRef<Path>>(
 /// # Returns
 ///
 /// A struct containing integrity metadata
+#[allow(dead_code)]
 pub fn generate_file_integrity_metadata<P: AsRef<Path>>(
     path: P,
     algorithm: ChecksumAlgorithm,
@@ -266,6 +271,7 @@ pub fn generate_file_integrity_metadata<P: AsRef<Path>>(
 /// # Returns
 ///
 /// Result indicating success or failure
+#[allow(dead_code)]
 pub fn save_integrity_metadata<P: AsRef<Path>>(
     metadata: &IntegrityMetadata,
     path: P,
@@ -285,6 +291,7 @@ pub fn save_integrity_metadata<P: AsRef<Path>>(
 /// # Returns
 ///
 /// The loaded integrity metadata
+#[allow(dead_code)]
 pub fn load_integrity_metadata<P: AsRef<Path>>(path: P) -> Result<IntegrityMetadata> {
     let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
@@ -306,6 +313,7 @@ pub fn load_integrity_metadata<P: AsRef<Path>>(path: P) -> Result<IntegrityMetad
 /// - Ok(true) - Validation passed
 /// - Ok(false) - Validation failed
 /// - Err(e) - Error during validation
+#[allow(dead_code)]
 pub fn validate_file_integrity<P: AsRef<Path>>(
     file_path: P,
     metadata: &IntegrityMetadata,
@@ -352,6 +360,7 @@ pub fn validate_file_integrity<P: AsRef<Path>>(
 /// # Returns
 ///
 /// A struct containing validation results
+#[allow(dead_code)]
 pub fn generate_validation_report<P: AsRef<Path>>(
     file_path: P,
     metadata: &IntegrityMetadata,
@@ -625,6 +634,7 @@ impl FormatValidatorRegistry {
 }
 
 /// Check if a file exists and has the expected size
+#[allow(dead_code)]
 pub fn validate_file_exists_with_size<P: AsRef<Path>>(
     path: P,
     expected_size: Option<u64>,
@@ -657,6 +667,7 @@ pub fn validate_file_exists_with_size<P: AsRef<Path>>(
 /// # Returns
 ///
 /// Result with the path to the checksum file
+#[allow(dead_code)]
 pub fn create_checksum_file<P, Q>(
     data_path: P,
     algorithm: ChecksumAlgorithm,
@@ -711,6 +722,7 @@ where
 /// # Returns
 ///
 /// Result indicating if the verification passed
+#[allow(dead_code)]
 pub fn verify_checksum_file<P, Q>(data_path: P, checksum_path: Q) -> Result<bool>
 where
     P: AsRef<Path>,
@@ -758,6 +770,7 @@ where
 }
 
 /// Add integrity metadata to an array of objects
+#[allow(dead_code)]
 pub fn add_integrity_metadata<T: Serialize>(
     data: &[T],
     algorithm: ChecksumAlgorithm,
@@ -787,6 +800,7 @@ pub fn add_integrity_metadata<T: Serialize>(
 }
 
 /// Verify array integrity using metadata
+#[allow(dead_code)]
 pub fn verify_array_integrity<T: Serialize>(
     data: &[T],
     metadata: &std::collections::HashMap<String, String>,
@@ -832,6 +846,7 @@ pub fn verify_array_integrity<T: Serialize>(
 }
 
 /// Create a manifest file for a directory with checksums
+#[allow(dead_code)]
 pub fn create_directory_manifest<P, Q>(
     dir_path: P,
     output_path: Q,
@@ -897,6 +912,7 @@ where
 }
 
 /// Helper function to collect files in a directory
+#[allow(dead_code)]
 fn collect_files(dir: &Path, files: &mut Vec<std::path::PathBuf>, recursive: bool) -> Result<()> {
     for entry in std::fs::read_dir(dir)
         .map_err(|e| IoError::FileError(format!("Failed to read directory: {}", e)))?
@@ -1089,11 +1105,13 @@ impl ManifestVerificationReport {
 // Convenience functions for common checksum algorithms
 
 /// Convenience function to calculate CRC32 checksum for a file
+#[allow(dead_code)]
 pub fn calculate_crc32<P: AsRef<Path>>(path: P) -> Result<String> {
     calculate_file_checksum(path, ChecksumAlgorithm::CRC32)
 }
 
 /// Convenience function to calculate SHA256 checksum for a file
+#[allow(dead_code)]
 pub fn calculate_sha256<P: AsRef<Path>>(path: P) -> Result<String> {
     calculate_file_checksum(path, ChecksumAlgorithm::SHA256)
 }
@@ -1782,6 +1800,7 @@ pub mod schema_helpers {
 }
 
 /// Build schemas from JSON Schema format
+#[allow(dead_code)]
 pub fn schema_from_json_schema(json_schema: &serde_json::Value) -> Result<SchemaDefinition> {
     let object = json_schema
         .as_object()

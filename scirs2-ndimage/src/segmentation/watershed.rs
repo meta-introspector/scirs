@@ -86,6 +86,7 @@ impl<T: PartialOrd> Ord for PriorityPoint<T> {
 ///
 /// let segmented = watershed(&image, &markers).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn watershed<T>(
     image: &Array<T, Ix2>,
     markers: &Array<i32, Ix2>,
@@ -185,6 +186,7 @@ where
 }
 
 /// Get the neighbors of a point in a 2D array
+#[allow(dead_code)]
 fn get_neighbors_2d<T>(array: &Array<T, Ix2>, row: usize, col: usize) -> Vec<PriorityPoint<T>>
 where
     T: Float + std::fmt::Debug + Copy,
@@ -227,6 +229,7 @@ where
 }
 
 /// Get the face-connected neighbors of a point in a 2D array (4-connectivity)
+#[allow(dead_code)]
 fn get_face_neighbors_2d<T>(array: &Array<T, Ix2>, row: usize, col: usize) -> Vec<PriorityPoint<T>>
 where
     T: Float + std::fmt::Debug + Copy,
@@ -295,6 +298,7 @@ where
 ///
 /// let segmented = marker_watershed(&image, &markers, 1).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn marker_watershed<T>(
     image: &Array<T, Ix2>,
     markers: &Array<i32, Ix2>,

@@ -2,6 +2,7 @@ use ndarray::array;
 use num_traits::float::Float;
 use scirs2_linalg::compat;
 
+#[allow(dead_code)]
 fn arrays_consistent(a: &ndarray::Array2<f64>, b: &ndarray::Array2<f64>, tol: f64) -> bool {
     if a.shape() != b.shape() {
         return false;
@@ -11,6 +12,7 @@ fn arrays_consistent(a: &ndarray::Array2<f64>, b: &ndarray::Array2<f64>, tol: f6
         .all(|(x, y)| (x - y).abs() < tol || (x.is_nan() && y.is_nan()))
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing the specific failing 3x3 matrix...");
 

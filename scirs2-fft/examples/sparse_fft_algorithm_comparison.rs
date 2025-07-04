@@ -15,6 +15,7 @@ use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Create a sparse signal with known frequencies in the spectrum
+#[allow(dead_code)]
 fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)], noise_level: f64) -> Vec<f64> {
     // Create deterministic RNG for reproducible results
     let mut rng = StdRng::seed_from_u64(42);
@@ -41,6 +42,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)], noise_level: f64
 }
 
 /// Calculate relative error between identified frequencies and ground truth
+#[allow(dead_code)]
 fn calculate_frequency_error(result: &SparseFFTResult, true_frequencies: &[(usize, f64)]) -> f64 {
     let mut min_error_sum = 0.0;
     let mut found_count = 0;
@@ -74,6 +76,7 @@ fn calculate_frequency_error(result: &SparseFFTResult, true_frequencies: &[(usiz
 }
 
 /// Run a benchmark of all algorithms on signals with different characteristics
+#[allow(dead_code)]
 fn run_algorithm_benchmarks() {
     // Print header
     println!(
@@ -175,6 +178,7 @@ fn run_algorithm_benchmarks() {
 }
 
 /// Analyze algorithm accuracy on signals with increasing noise levels
+#[allow(dead_code)]
 fn analyze_algorithm_accuracy() {
     println!("\nAnalyzing algorithm accuracy with increasing noise levels:");
 
@@ -310,6 +314,7 @@ fn analyze_algorithm_accuracy() {
 }
 
 /// Analyze the performance of different algorithms with increasing signal size
+#[allow(dead_code)]
 fn analyze_scaling_behavior() {
     println!("\nAnalyzing algorithm scaling behavior with increasing signal size:");
 
@@ -417,6 +422,7 @@ fn analyze_scaling_behavior() {
     println!("\nPlot saved as sparse_fft_algorithm_scaling.html");
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("GPU-Accelerated Sparse FFT Algorithm Comparison");
     println!("===============================================");

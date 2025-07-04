@@ -9,6 +9,7 @@ use num_traits::{Float, Zero};
 use scirs2_core::validation;
 
 /// Check if a value is positive (> 0)
+#[allow(dead_code)]
 pub fn check_positive<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy + Zero,
@@ -18,6 +19,7 @@ where
 }
 
 /// Check if a value is non-negative (>= 0)
+#[allow(dead_code)]
 pub fn check_non_negative<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy + Zero,
@@ -27,6 +29,7 @@ where
 }
 
 /// Check if a value is finite
+#[allow(dead_code)]
 pub fn check_finite<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,
@@ -47,6 +50,7 @@ where
 }
 
 /// Check if a probability value is valid (0 <= p <= 1)
+#[allow(dead_code)]
 pub fn check_probability<T>(value: T, name: &str) -> SpecialResult<T>
 where
     T: Float + std::fmt::Display + Copy,

@@ -609,6 +609,7 @@ impl<F: Float> ParameterCheckResult<'_, F> {
 
 /// Public API functions
 /// Quick gradient check for a scalar function
+#[allow(dead_code)]
 pub fn check_gradient<F: Float, Func>(
     function: Func,
     input: &Tensor<F>,
@@ -623,6 +624,7 @@ where
 }
 
 /// Comprehensive gradient check with detailed results
+#[allow(dead_code)]
 pub fn comprehensive_gradient_check<'a, F: Float, Func>(
     _function: Func,
     _input: &'a Tensor<'a, F>,

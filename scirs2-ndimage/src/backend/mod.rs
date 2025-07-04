@@ -294,7 +294,13 @@ where
 {
     fn execute_cpu(&self, input: &ArrayView<T, D>) -> NdimageResult<Array<T, D>> {
         // Call the existing CPU implementation
-        crate::filters::gaussian_filter(input.to_owned(), &self.sigma, self.truncate, None, None)
+        crate::filters::gaussian_filter_chunked(
+            &input.to_owned(),
+            &self.sigma,
+            self.truncate,
+            crate::filters::BorderMode::Reflect,
+            None,
+        )
     }
 
     #[cfg(feature = "gpu")]
@@ -322,6 +328,7 @@ where
 }
 
 #[cfg(feature = "cuda")]
+#[allow(dead_code)]
 fn cuda_gaussian_filter<T, D>(
     input: &ArrayView<T, D>,
     sigma: &[T],
@@ -400,6 +407,7 @@ impl BackendBuilder {
 }
 
 /// Convenience function to create an auto-selecting backend executor
+#[allow(dead_code)]
 pub fn auto_backend() -> NdimageResult<BackendExecutor> {
     BackendBuilder::new().backend(Backend::Auto).build()
 }

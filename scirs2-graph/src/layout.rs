@@ -6,7 +6,7 @@
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
-use rand::Rng;
+use rand::{rng, Rng};
 
 use crate::base::{EdgeWeight, Graph, Node};
 use crate::error::Result;
@@ -37,6 +37,7 @@ impl Position {
 /// Compute a circular layout for the graph
 ///
 /// Nodes are placed evenly around a circle.
+#[allow(dead_code)]
 pub fn circular_layout<N, E, Ix>(graph: &Graph<N, E, Ix>, radius: f64) -> HashMap<N, Position>
 where
     N: Node + Clone + std::fmt::Debug,
@@ -66,6 +67,7 @@ where
 /// Compute a spring layout using force-directed placement
 ///
 /// This is a simplified version of the Fruchterman-Reingold algorithm.
+#[allow(dead_code)]
 pub fn spring_layout<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     iterations: usize,
@@ -178,6 +180,7 @@ where
 /// Compute a hierarchical layout for a directed acyclic graph
 ///
 /// Nodes are arranged in layers based on their topological ordering.
+#[allow(dead_code)]
 pub fn hierarchical_layout<N, E, Ix>(
     graph: &crate::base::DiGraph<N, E, Ix>,
     layer_height: f64,
@@ -238,6 +241,7 @@ where
 /// Compute a spectral layout based on eigenvectors of the Laplacian
 ///
 /// Uses the second and third smallest eigenvectors of the Laplacian matrix.
+#[allow(dead_code)]
 pub fn spectral_layout<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<HashMap<N, Position>>
 where
     N: Node + Clone + std::fmt::Debug,

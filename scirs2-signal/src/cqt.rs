@@ -172,6 +172,7 @@ pub struct SparseKernel {
 /// // result.cqt contains the CQT coefficients
 /// // result.frequencies contains the center frequencies of each bin
 /// ```
+#[allow(dead_code)]
 pub fn constant_q_transform(signal: &Array1<f64>, config: &CqtConfig) -> SignalResult<CqtResult> {
     // Calculate the Q factor if not provided
     let q = config.q_factor.unwrap_or_else(|| {
@@ -226,6 +227,7 @@ pub fn constant_q_transform(signal: &Array1<f64>, config: &CqtConfig) -> SignalR
 
 /// Compute the CQT kernel for efficient CQT calculation
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn compute_cqt_kernel(
     f_min: f64,
     f_max: f64,
@@ -348,6 +350,7 @@ fn compute_cqt_kernel(
 }
 
 /// Compute the CQT of a single frame
+#[allow(dead_code)]
 fn compute_cqt_frame(signal: &Array1<f64>, kernel: &CqtKernel) -> SignalResult<Vec<Complex64>> {
     let n_signal = signal.len();
     let n_fft = kernel.n_fft;
@@ -427,6 +430,7 @@ fn compute_cqt_frame(signal: &Array1<f64>, kernel: &CqtKernel) -> SignalResult<V
 }
 
 /// Compute the CQT spectrogram (time-frequency representation)
+#[allow(dead_code)]
 fn compute_cqt_spectrogram(
     signal: &Array1<f64>,
     kernel: &CqtKernel,
@@ -478,6 +482,7 @@ fn compute_cqt_spectrogram(
 }
 
 /// Create window function of specified type and length
+#[allow(dead_code)]
 fn create_window(window_type: &str, length: usize) -> SignalResult<Vec<f64>> {
     match window_type.to_lowercase().as_str() {
         "hann" | "hanning" => Ok(window::hann(length, true)?),
@@ -493,6 +498,7 @@ fn create_window(window_type: &str, length: usize) -> SignalResult<Vec<f64>> {
 }
 
 /// Find the next power of two greater than or equal to n
+#[allow(dead_code)]
 fn next_power_of_two(n: usize) -> usize {
     let mut power = 1;
     while power < n {
@@ -512,6 +518,7 @@ fn next_power_of_two(n: usize) -> usize {
 /// # Returns
 ///
 /// A 2D array containing the magnitude (or log magnitude) of the CQT coefficients
+#[allow(dead_code)]
 pub fn cqt_magnitude(cqt: &CqtResult, log_scale: bool, ref_value: Option<f64>) -> Array2<f64> {
     let mut magnitude = Array2::<f64>::zeros(cqt.cqt.raw_dim());
 
@@ -548,6 +555,7 @@ pub fn cqt_magnitude(cqt: &CqtResult, log_scale: bool, ref_value: Option<f64>) -
 /// # Returns
 ///
 /// A 2D array containing the phase of the CQT coefficients (in radians)
+#[allow(dead_code)]
 pub fn cqt_phase(cqt: &CqtResult) -> Array2<f64> {
     let mut phase = Array2::<f64>::zeros(cqt.cqt.raw_dim());
 
@@ -606,6 +614,7 @@ pub fn cqt_phase(cqt: &CqtResult) -> Array2<f64> {
 /// // CQT reconstruction can have significant energy loss, just check it's not empty
 /// assert!(rec_energy > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn inverse_constant_q_transform(
     cqt: &CqtResult,
     target_length: Option<usize>,
@@ -710,6 +719,7 @@ pub fn inverse_constant_q_transform(
 /// # Returns
 ///
 /// A 2D array containing the chromagram (pitch class vs. time)
+#[allow(dead_code)]
 pub fn chromagram(
     cqt: &CqtResult,
     n_chroma: Option<usize>,

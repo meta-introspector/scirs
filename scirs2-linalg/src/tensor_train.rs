@@ -403,6 +403,7 @@ where
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn tt_decomposition<F, D>(
     tensor: &ndarray::ArrayView<F, D>,
     tolerance: F,
@@ -545,6 +546,7 @@ where
 /// # Returns
 ///
 /// * Sum of TT tensors in TT format
+#[allow(dead_code)]
 pub fn tt_add<F>(a: &TTTensor<F>, b: &TTTensor<F>) -> LinalgResult<TTTensor<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -578,6 +580,7 @@ where
 }
 
 /// Create a rank-1 TT tensor from a dense tensor (simplified implementation)
+#[allow(dead_code)]
 fn tt_from_dense_simple<F>(dense: &ndarray::ArrayViewD<F>) -> LinalgResult<TTTensor<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -617,6 +620,7 @@ where
 /// # Returns
 ///
 /// * Element-wise product in TT format
+#[allow(dead_code)]
 pub fn tt_hadamard<F>(a: &TTTensor<F>, b: &TTTensor<F>) -> LinalgResult<TTTensor<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,

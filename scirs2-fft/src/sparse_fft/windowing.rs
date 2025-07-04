@@ -12,6 +12,7 @@ use std::fmt::Debug;
 use super::config::WindowFunction;
 
 /// Apply a window function to the signal
+#[allow(dead_code)]
 pub fn apply_window<T>(
     signal: &[T],
     window_function: WindowFunction,
@@ -102,6 +103,7 @@ where
 
 /// Modified Bessel function of the first kind, order 0
 /// Used for Kaiser window computation
+#[allow(dead_code)]
 fn modified_bessel_i0(x: f64) -> f64 {
     let mut sum = 1.0;
     let mut term = 1.0;

@@ -17,6 +17,7 @@ use num_traits::Float;
 use plotters::prelude::*;
 use scirs2_integrate::{bdf_semi_explicit_dae, DAEIndex, DAEOptions, DAEType};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Constants
     let g = 9.81f64; // Gravitational acceleration (m/s²)

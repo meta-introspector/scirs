@@ -37,6 +37,7 @@ use super::core::{find_nearest_valid_index, InterpolationConfig, InterpolationMe
 /// let result = sinc_interpolate(&signal, 0.4).unwrap();
 /// // Result contains bandlimited interpolated values
 /// ```
+#[allow(dead_code)]
 pub fn sinc_interpolate(signal: &Array1<f64>, cutoff_freq: f64) -> SignalResult<Array1<f64>> {
     if cutoff_freq <= 0.0 || cutoff_freq > 0.5 {
         return Err(SignalError::ValueError(
@@ -147,6 +148,7 @@ pub fn sinc_interpolate(signal: &Array1<f64>, cutoff_freq: f64) -> SignalResult<
 /// let config = InterpolationConfig::default();
 /// let result = spectral_interpolate(&signal, &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn spectral_interpolate(
     signal: &Array1<f64>,
     config: &InterpolationConfig,
@@ -267,6 +269,7 @@ pub fn spectral_interpolate(
 /// let (result, method) = auto_interpolate(&signal, &config, true).unwrap();
 /// println!("Best method: {:?}", method);
 /// ```
+#[allow(dead_code)]
 pub fn auto_interpolate(
     signal: &Array1<f64>,
     config: &InterpolationConfig,

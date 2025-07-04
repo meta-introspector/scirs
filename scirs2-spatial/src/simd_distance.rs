@@ -74,6 +74,7 @@ impl SimdMetric {
 ///
 /// # Returns
 /// * Euclidean distance between the points
+#[allow(dead_code)]
 pub fn simd_euclidean_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
     if a.len() != b.len() {
         return Err(SpatialError::ValueError(
@@ -93,6 +94,7 @@ pub fn simd_euclidean_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
 }
 
 /// SIMD-accelerated squared Euclidean distance between two points
+#[allow(dead_code)]
 pub fn simd_squared_euclidean_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
     if a.len() != b.len() {
         return Err(SpatialError::ValueError(
@@ -110,6 +112,7 @@ pub fn simd_squared_euclidean_distance(a: &[f64], b: &[f64]) -> SpatialResult<f6
 }
 
 /// SIMD-accelerated Manhattan distance between two points
+#[allow(dead_code)]
 pub fn simd_manhattan_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
     if a.len() != b.len() {
         return Err(SpatialError::ValueError(
@@ -127,6 +130,7 @@ pub fn simd_manhattan_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
 }
 
 /// SIMD-accelerated Chebyshev distance
+#[allow(dead_code)]
 pub fn simd_chebyshev_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
     if a.len() != b.len() {
         return Err(SpatialError::ValueError(
@@ -153,6 +157,7 @@ pub fn simd_chebyshev_distance(a: &[f64], b: &[f64]) -> SpatialResult<f64> {
 ///
 /// # Returns
 /// * Array of distances, shape (n,)
+#[allow(dead_code)]
 pub fn simd_euclidean_distance_batch(
     points1: &ArrayView2<'_, f64>,
     points2: &ArrayView2<'_, f64>,
@@ -189,6 +194,7 @@ pub fn simd_euclidean_distance_batch(
 ///
 /// # Returns
 /// * Condensed distance matrix, shape (n*(n-1)/2,)
+#[allow(dead_code)]
 pub fn parallel_pdist(points: &ArrayView2<'_, f64>, metric: &str) -> SpatialResult<Array1<f64>> {
     let n_points = points.nrows();
     if n_points < 2 {
@@ -259,6 +265,7 @@ pub fn parallel_pdist(points: &ArrayView2<'_, f64>, metric: &str) -> SpatialResu
 ///
 /// # Returns
 /// * Distance matrix, shape (n, m)
+#[allow(dead_code)]
 pub fn parallel_cdist(
     points1: &ArrayView2<'_, f64>,
     points2: &ArrayView2<'_, f64>,
@@ -337,6 +344,7 @@ pub fn parallel_cdist(
 ///
 /// # Returns
 /// * (indices, distances) where both have shape (n_queries, k)
+#[allow(dead_code)]
 pub fn simd_knn_search(
     query_points: &ArrayView2<'_, f64>,
     data_points: &ArrayView2<'_, f64>,
@@ -432,6 +440,7 @@ pub fn simd_knn_search(
 }
 
 /// Convert linear index to (i, j) indices for condensed distance matrix
+#[allow(dead_code)]
 fn linear_to_condensed_indices(linear_idx: usize, n: usize) -> (usize, usize) {
     // For condensed distance matrix where entry (i,j) with i < j is stored
     // at position (n-1-i)*(n-i)/2 + (j-i-1)

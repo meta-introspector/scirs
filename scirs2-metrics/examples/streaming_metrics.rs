@@ -10,6 +10,7 @@ use scirs2_metrics::streaming::{
 use std::thread;
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("Streaming Metrics Example");
     println!("========================");
@@ -49,6 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 /// Simulates real-time classification with streaming metrics
+#[allow(dead_code)]
 fn real_time_classification_example() {
     let mut metrics = StreamingClassificationMetrics::new();
 
@@ -89,6 +91,7 @@ fn real_time_classification_example() {
 }
 
 /// Demonstrates processing large datasets without loading everything into memory
+#[allow(dead_code)]
 fn large_dataset_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mut metrics = StreamingClassificationMetrics::new();
 
@@ -129,6 +132,7 @@ fn large_dataset_example() -> Result<(), Box<dyn std::error::Error + Send + Sync
 }
 
 /// Generates synthetic data for a chunk
+#[allow(dead_code)]
 fn generate_synthetic_chunk(start_idx: usize, size: usize) -> (Vec<i32>, Vec<i32>) {
     let mut true_labels = Vec::with_capacity(size);
     let mut pred_labels = Vec::with_capacity(size);
@@ -152,6 +156,7 @@ fn generate_synthetic_chunk(start_idx: usize, size: usize) -> (Vec<i32>, Vec<i32
 }
 
 /// Demonstrates windowed metrics for detecting concept drift
+#[allow(dead_code)]
 fn concept_drift_example() {
     let window_size = 50;
     let mut metrics = WindowedClassificationMetrics::new(window_size);
@@ -201,6 +206,7 @@ fn concept_drift_example() {
 }
 
 /// Demonstrates streaming regression metrics
+#[allow(dead_code)]
 fn streaming_regression_example() {
     let mut metrics = StreamingRegressionMetrics::<f64>::new();
 
@@ -235,6 +241,7 @@ fn streaming_regression_example() {
 }
 
 /// Compares performance of streaming vs batch computation
+#[allow(dead_code)]
 fn performance_comparison_example() {
     use std::time::Instant;
 

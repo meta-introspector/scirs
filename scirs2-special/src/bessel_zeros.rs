@@ -19,6 +19,7 @@ use std::fmt::{Debug, Display};
 ///
 /// # Returns
 /// The k-th positive zero of J₀(x)
+#[allow(dead_code)]
 pub fn j0_zeros<T>(k: usize) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display,
@@ -41,6 +42,7 @@ where
 }
 
 /// Compute the k-th zero of J₁(x)
+#[allow(dead_code)]
 pub fn j1_zeros<T>(k: usize) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display,
@@ -69,6 +71,7 @@ where
 ///
 /// # Returns
 /// The k-th positive zero of Jₙ(x)
+#[allow(dead_code)]
 pub fn jn_zeros<T>(n: usize, k: usize) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display + std::ops::AddAssign,
@@ -93,6 +96,7 @@ where
 }
 
 /// Compute the k-th zero of the derivative J'ₙ(x)
+#[allow(dead_code)]
 pub fn jnp_zeros<T>(n: usize, k: usize) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display + std::ops::AddAssign,
@@ -117,6 +121,7 @@ where
 }
 
 /// Compute the k-th zero of Y₀(x)
+#[allow(dead_code)]
 pub fn y0_zeros<T>(k: usize) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display,
@@ -138,6 +143,7 @@ where
 }
 
 /// Compute the k-th zero of Y₁(x)
+#[allow(dead_code)]
 pub fn y1_zeros<T>(k: usize) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display,
@@ -159,6 +165,7 @@ where
 }
 
 /// Compute the k-th zero of Yₙ(x)
+#[allow(dead_code)]
 pub fn yn_zeros<T>(n: usize, k: usize) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display,
@@ -185,6 +192,7 @@ where
 /// Compute zeros of Jₙ(x) and Yₙ(x) simultaneously
 ///
 /// Returns (jn_zero, yn_zero) for the k-th zero
+#[allow(dead_code)]
 pub fn jnyn_zeros<T>(n: usize, k: usize) -> SpecialResult<(T, T)>
 where
     T: Float + FromPrimitive + Debug + Display + std::ops::AddAssign,
@@ -195,6 +203,7 @@ where
 }
 
 /// Numerical integration for higher order itj0y0 integrals
+#[allow(dead_code)]
 fn numerical_itj0y0_integration<T>(x: T, n: usize) -> SpecialResult<(T, T)>
 where
     T: Float + FromPrimitive + Debug + Display,
@@ -267,6 +276,7 @@ where
 /// Compute integrals ∫₀^∞ tⁿ J₀(t) Y₀(xt) dt and ∫₀^∞ tⁿ J₀(t) Y₀(xt) J₀(t) dt
 ///
 /// Used in various applications involving Bessel functions.
+#[allow(dead_code)]
 pub fn itj0y0<T>(x: T, n: usize) -> SpecialResult<(T, T)>
 where
     T: Float + FromPrimitive + Debug + Display,
@@ -375,6 +385,7 @@ where
 /// Compute Bessel polynomial
 ///
 /// The Bessel polynomial of degree n at point x.
+#[allow(dead_code)]
 pub fn besselpoly<T>(n: usize, x: T) -> T
 where
     T: Float + FromPrimitive + std::ops::AddAssign + std::ops::MulAssign,
@@ -400,6 +411,7 @@ where
 // Helper functions
 
 /// Refine a Bessel function zero using Newton's method
+#[allow(dead_code)]
 fn refine_bessel_zero<T, F, D>(initial: T, f: F, df: D) -> SpecialResult<T>
 where
     T: Float + FromPrimitive,
@@ -434,6 +446,7 @@ where
 }
 
 /// Compute Y'₁(x) using the recurrence relation
+#[allow(dead_code)]
 fn y1_prime<T>(x: T) -> T
 where
     T: Float + FromPrimitive + Debug,
@@ -442,6 +455,7 @@ where
 }
 
 /// Compute Y'ₙ(x) using the recurrence relation
+#[allow(dead_code)]
 fn yn_prime<T>(n: usize, x: T) -> T
 where
     T: Float + FromPrimitive + Debug,
@@ -455,6 +469,7 @@ where
 }
 
 /// Compute J''ₙ(x) using the recurrence relation
+#[allow(dead_code)]
 fn jn_prime_prime<T>(n: usize, x: T) -> T
 where
     T: Float + FromPrimitive + Debug + std::ops::AddAssign,
@@ -476,6 +491,7 @@ where
 /// Compute zeros where Jₙ(x) and J'ₙ(x) cross zero simultaneously
 ///
 /// These are important in various boundary value problems.
+#[allow(dead_code)]
 pub fn jnjnp_zeros<T>(n: usize, k: usize) -> SpecialResult<(T, T)>
 where
     T: Float + FromPrimitive + Debug + Display + std::ops::AddAssign,
@@ -495,17 +511,17 @@ mod tests {
         // First few zeros of J₀(x)
         assert_relative_eq!(
             j0_zeros::<f64>(1).unwrap(),
-            2.4048255576957728,
+            2.404_825_557_695_773,
             epsilon = 1e-10
         );
         assert_relative_eq!(
             j0_zeros::<f64>(2).unwrap(),
-            5.5200781102863106,
+            5.520_078_110_286_311,
             epsilon = 1e-10
         );
         assert_relative_eq!(
             j0_zeros::<f64>(3).unwrap(),
-            8.6537279129110122,
+            8.653_727_912_911_013,
             epsilon = 1e-10
         );
     }
@@ -520,7 +536,7 @@ mod tests {
         );
         assert_relative_eq!(
             j1_zeros::<f64>(2).unwrap(),
-            7.0155866698156187,
+            7.015_586_669_815_619,
             epsilon = 1e-10
         );
     }
@@ -530,7 +546,7 @@ mod tests {
         // First zero of J₂(x)
         assert_relative_eq!(
             jn_zeros::<f64>(2, 1).unwrap(),
-            5.1356223018406826,
+            5.135_622_301_840_683,
             epsilon = 1e-8
         );
     }
@@ -545,7 +561,7 @@ mod tests {
         );
         assert_relative_eq!(
             y0_zeros::<f64>(2).unwrap(),
-            3.9576784193148578,
+            3.957_678_419_314_858,
             epsilon = 1e-10
         );
     }
@@ -649,10 +665,10 @@ mod tests {
         // For small n, analytical formulas should give finite results
         for n in 0..=4 {
             let result = itj0y0::<f64>(x, n);
-            assert!(result.is_ok(), "Analytical formula should work for n={}", n);
+            assert!(result.is_ok(), "Analytical formula should work for n={n}");
             let (int1, int2) = result.unwrap();
-            assert!(int1.is_finite(), "Integral 1 should be finite for n={}", n);
-            assert!(int2.is_finite(), "Integral 2 should be finite for n={}", n);
+            assert!(int1.is_finite(), "Integral 1 should be finite for n={n}");
+            assert!(int2.is_finite(), "Integral 2 should be finite for n={n}");
         }
 
         // For higher n with numerical integration
@@ -660,12 +676,11 @@ mod tests {
             let result = itj0y0::<f64>(x, n);
             assert!(
                 result.is_ok(),
-                "Numerical integration should work for n={}",
-                n
+                "Numerical integration should work for n={n}"
             );
             let (int1, int2) = result.unwrap();
-            assert!(int1.is_finite(), "Integral 1 should be finite for n={}", n);
-            assert!(int2.is_finite(), "Integral 2 should be finite for n={}", n);
+            assert!(int1.is_finite(), "Integral 1 should be finite for n={n}");
+            assert!(int2.is_finite(), "Integral 2 should be finite for n={n}");
         }
     }
 }

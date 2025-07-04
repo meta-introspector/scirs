@@ -6,6 +6,7 @@
 use ndarray::array;
 use scirs2_linalg::{eig_gen, eigh_gen, eigvals_gen, eigvalsh_gen};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing Generalized Eigenvalue Decomposition Functions");
     println!("======================================================");

@@ -707,7 +707,7 @@ where
             chunk_map
                 .get(chunk_coords)
                 .ok_or_else(|| {
-                    OutOfCoreError::ChunkNotFound(format!("Chunk not found: {:?}", chunk_coords))
+                    OutOfCoreError::ChunkNotFound(format!("Chunk not found: {chunk_coords:?}"))
                 })?
                 .clone()
         };
@@ -1224,6 +1224,7 @@ pub struct ManagerStatistics {
 static GLOBAL_MANAGER: std::sync::OnceLock<Arc<OutOfCoreManager>> = std::sync::OnceLock::new();
 
 /// Get the global out-of-core manager
+#[allow(dead_code)]
 pub fn global_manager() -> Arc<OutOfCoreManager> {
     GLOBAL_MANAGER
         .get_or_init(|| Arc::new(OutOfCoreManager::default()))

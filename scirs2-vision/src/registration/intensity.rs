@@ -83,6 +83,7 @@ impl Default for IntensityRegistrationConfig {
 /// # Returns
 ///
 /// * Result containing registration result
+#[allow(dead_code)]
 pub fn register_images_intensity(
     reference: &GrayImage,
     moving: &GrayImage,
@@ -101,6 +102,7 @@ pub fn register_images_intensity(
 }
 
 /// Single-level intensity-based registration
+#[allow(dead_code)]
 fn single_level_register(
     reference: &GrayImage,
     moving: &GrayImage,
@@ -169,6 +171,7 @@ fn single_level_register(
 }
 
 /// Multi-resolution pyramid registration
+#[allow(dead_code)]
 fn multi_resolution_register(
     reference: &GrayImage,
     moving: &GrayImage,
@@ -215,6 +218,7 @@ fn multi_resolution_register(
 }
 
 /// Build image pyramid by downsampling
+#[allow(dead_code)]
 fn build_image_pyramid(image: &GrayImage, levels: usize) -> Vec<GrayImage> {
     let mut pyramid = vec![image.clone()];
 
@@ -234,6 +238,7 @@ fn build_image_pyramid(image: &GrayImage, levels: usize) -> Vec<GrayImage> {
 }
 
 /// Downsample image by factor of 2
+#[allow(dead_code)]
 fn downsample_image(image: &GrayImage) -> GrayImage {
     let (width, height) = image.dimensions();
     let new_width = width / 2;
@@ -271,6 +276,7 @@ fn downsample_image(image: &GrayImage) -> GrayImage {
 }
 
 /// Compute similarity metric between images
+#[allow(dead_code)]
 fn compute_similarity(
     reference: &GrayImage,
     moving: &GrayImage,
@@ -299,6 +305,7 @@ fn compute_similarity(
 }
 
 /// Compute gradient of similarity metric
+#[allow(dead_code)]
 fn compute_gradient(
     reference: &GrayImage,
     moving: &GrayImage,
@@ -333,6 +340,7 @@ fn compute_gradient(
 }
 
 /// Update transformation using gradient descent
+#[allow(dead_code)]
 fn update_transform_gradient_descent(
     transform: &TransformMatrix,
     gradient: &Array1<f64>,
@@ -352,6 +360,7 @@ fn update_transform_gradient_descent(
 }
 
 /// Compute Sum of Squared Differences
+#[allow(dead_code)]
 fn compute_ssd(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     let (width, height) = image1.dimensions();
     let mut ssd = 0.0;
@@ -371,11 +380,13 @@ fn compute_ssd(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
 }
 
 /// Compute Mean Squared Error
+#[allow(dead_code)]
 fn compute_mse(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     compute_ssd(image1, image2) // MSE is the same as average SSD
 }
 
 /// Compute Normalized Cross-Correlation
+#[allow(dead_code)]
 fn compute_ncc(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     let (width, height) = image1.dimensions();
 
@@ -425,6 +436,7 @@ fn compute_ncc(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
 }
 
 /// Compute Cross-Correlation
+#[allow(dead_code)]
 fn compute_cross_correlation(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     let (width, height) = image1.dimensions();
     let mut cc = 0.0;
@@ -450,6 +462,7 @@ fn compute_cross_correlation(image1: &GrayImage, image2: &GrayImage) -> Result<f
 }
 
 /// Compute Mutual Information
+#[allow(dead_code)]
 fn compute_mutual_information(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     let joint_hist = compute_joint_histogram(image1, image2, 256);
     let (hist1, hist2) = compute_marginal_histograms(&joint_hist);
@@ -473,6 +486,7 @@ fn compute_mutual_information(image1: &GrayImage, image2: &GrayImage) -> Result<
 }
 
 /// Compute Normalized Mutual Information
+#[allow(dead_code)]
 fn compute_normalized_mutual_information(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     let joint_hist = compute_joint_histogram(image1, image2, 256);
     let (hist1, hist2) = compute_marginal_histograms(&joint_hist);
@@ -508,6 +522,7 @@ fn compute_normalized_mutual_information(image1: &GrayImage, image2: &GrayImage)
 }
 
 /// Compute joint histogram of two images
+#[allow(dead_code)]
 fn compute_joint_histogram(image1: &GrayImage, image2: &GrayImage, bins: usize) -> Array2<f64> {
     let (width, height) = image1.dimensions();
     let mut hist = Array2::zeros((bins, bins));
@@ -527,6 +542,7 @@ fn compute_joint_histogram(image1: &GrayImage, image2: &GrayImage, bins: usize) 
 }
 
 /// Compute marginal histograms from joint histogram
+#[allow(dead_code)]
 fn compute_marginal_histograms(joint_hist: &Array2<f64>) -> (Array1<f64>, Array1<f64>) {
     let (bins1, bins2) = joint_hist.dim();
     let mut hist1 = Array1::zeros(bins1);
@@ -543,6 +559,7 @@ fn compute_marginal_histograms(joint_hist: &Array2<f64>) -> (Array1<f64>, Array1
 }
 
 /// Rigid registration using intensity-based methods
+#[allow(dead_code)]
 pub fn rigid_register_intensity(
     reference: &GrayImage,
     moving: &GrayImage,

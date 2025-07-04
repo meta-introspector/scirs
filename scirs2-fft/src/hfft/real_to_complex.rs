@@ -46,6 +46,7 @@ use super::utility::try_as_complex;
 /// assert_eq!(result.len(), 3);
 /// assert!(result[0].im.abs() < 1e-10); // DC component should be real
 /// ```
+#[allow(dead_code)]
 pub fn ihfft<T>(x: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -108,6 +109,7 @@ where
 }
 
 /// Internal implementation for f64 input
+#[allow(dead_code)]
 fn _ihfft_real(x: &[f64], n: Option<usize>, _norm: Option<&str>) -> FFTResult<Vec<Complex64>> {
     let n_input = x.len();
     let n_fft = n.unwrap_or(n_input);
@@ -162,6 +164,7 @@ fn _ihfft_real(x: &[f64], n: Option<usize>, _norm: Option<&str>) -> FFTResult<Ve
 /// # Returns
 ///
 /// * The Hermitian-symmetric complex 2D FFT of the real input array
+#[allow(dead_code)]
 pub fn ihfft2<T>(
     x: &ArrayView2<T>,
     shape: Option<(usize, usize)>,
@@ -209,6 +212,7 @@ where
 }
 
 /// Internal implementation for f64 input
+#[allow(dead_code)]
 fn _ihfft2_real(
     x: &ArrayView2<f64>,
     shape: Option<(usize, usize)>,
@@ -297,6 +301,7 @@ fn _ihfft2_real(
 /// # Returns
 ///
 /// * The Hermitian-symmetric complex N-dimensional FFT of the real input array
+#[allow(dead_code)]
 pub fn ihfftn<T>(
     x: &ArrayView<T, IxDyn>,
     shape: Option<Vec<usize>>,
@@ -343,6 +348,7 @@ where
 }
 
 /// Internal implementation that works directly with f64 input
+#[allow(dead_code)]
 fn _ihfftn_real(
     x: &ArrayView<f64, IxDyn>,
     shape: Option<Vec<usize>>,

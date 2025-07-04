@@ -110,6 +110,7 @@ pub struct TotalLeastSquaresResult {
 /// * `x_variance` - Optional variance estimates for x measurements
 /// * `y_variance` - Optional variance estimates for y measurements
 /// * `options` - Options for the optimization
+#[allow(dead_code)]
 pub fn total_least_squares<S1, S2, S3, S4>(
     x_measured: &ArrayBase<S1, Ix1>,
     y_measured: &ArrayBase<S2, Ix1>,
@@ -161,6 +162,7 @@ where
 }
 
 /// Total least squares using SVD
+#[allow(dead_code)]
 fn tls_svd<S1, S2, S3, S4>(
     x_measured: &ArrayBase<S1, Ix1>,
     y_measured: &ArrayBase<S2, Ix1>,
@@ -263,6 +265,7 @@ where
 }
 
 /// Iterative total least squares
+#[allow(dead_code)]
 fn tls_iterative<S1, S2, S3, S4>(
     x_measured: &ArrayBase<S1, Ix1>,
     y_measured: &ArrayBase<S2, Ix1>,
@@ -362,6 +365,7 @@ where
 }
 
 /// Maximum likelihood total least squares
+#[allow(dead_code)]
 fn tls_maximum_likelihood<S1, S2, S3, S4>(
     x_measured: &ArrayBase<S1, Ix1>,
     y_measured: &ArrayBase<S2, Ix1>,
@@ -381,6 +385,7 @@ where
 }
 
 /// Compute ordinary least squares for initial estimate
+#[allow(dead_code)]
 fn ordinary_least_squares<S1, S2>(x: &ArrayBase<S1, Ix1>, y: &ArrayBase<S2, Ix1>) -> (f64, f64)
 where
     S1: Data<Elem = f64>,
@@ -407,6 +412,7 @@ where
 }
 
 /// Orthogonal projection of a point onto a line
+#[allow(dead_code)]
 fn orthogonal_projection(x: f64, y: f64, slope: f64, intercept: f64) -> (f64, f64) {
     // Line equation: y = slope * x + intercept
     // Normal vector: (slope, -1)
@@ -422,6 +428,7 @@ fn orthogonal_projection(x: f64, y: f64, slope: f64, intercept: f64) -> (f64, f6
 }
 
 /// Weighted orthogonal projection
+#[allow(dead_code)]
 fn weighted_orthogonal_projection(
     x: f64,
     y: f64,
@@ -444,6 +451,7 @@ fn weighted_orthogonal_projection(
 }
 
 /// Weighted least squares for a line
+#[allow(dead_code)]
 fn weighted_least_squares_line<S1, S2, S3, S4>(
     x: &ArrayBase<S1, Ix1>,
     y: &ArrayBase<S2, Ix1>,
@@ -487,6 +495,7 @@ where
 }
 
 /// Simple 2x2 eigendecomposition
+#[allow(dead_code)]
 fn eigen_2x2(matrix: &Array2<f64>) -> (Array1<f64>, Array2<f64>) {
     let a = matrix[[0, 0]];
     let b = matrix[[0, 1]];

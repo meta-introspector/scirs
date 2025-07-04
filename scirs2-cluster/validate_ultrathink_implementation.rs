@@ -44,6 +44,7 @@ struct ValidationReport {
     module_analyses: Vec<ModuleAnalysis>,
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Clustering Implementation Validation");
     println!("================================================");
@@ -73,6 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn analyze_modules(src_dir: &Path) -> Result<Vec<ModuleAnalysis>, Box<dyn std::error::Error>> {
     let mut modules = Vec::new();
 
@@ -118,6 +120,7 @@ fn analyze_modules(src_dir: &Path) -> Result<Vec<ModuleAnalysis>, Box<dyn std::e
     Ok(modules)
 }
 
+#[allow(dead_code)]
 fn analyze_single_module(path: &Path, name: &str) -> Result<ModuleAnalysis, Box<dyn std::error::Error>> {
     let content = fs::read_to_string(path)?;
     let lines: Vec<&str> = content.lines().collect();
@@ -164,6 +167,7 @@ fn analyze_single_module(path: &Path, name: &str) -> Result<ModuleAnalysis, Box<
     })
 }
 
+#[allow(dead_code)]
 fn count_pattern(content: &str, pattern: &str) -> usize {
     regex::Regex::new(pattern)
         .unwrap_or_else(|_| regex::Regex::new(r"").unwrap())
@@ -171,6 +175,7 @@ fn count_pattern(content: &str, pattern: &str) -> usize {
         .count()
 }
 
+#[allow(dead_code)]
 fn identify_ultrathink_features(content: &str) -> Vec<String> {
     let mut features = Vec::new();
     
@@ -203,6 +208,7 @@ fn identify_ultrathink_features(content: &str) -> Vec<String> {
     features
 }
 
+#[allow(dead_code)]
 fn assess_completion_status(
     content: &str,
     functions: usize,
@@ -226,6 +232,7 @@ fn assess_completion_status(
     }
 }
 
+#[allow(dead_code)]
 fn generate_validation_report(modules: Vec<ModuleAnalysis>) -> Result<ValidationReport, Box<dyn std::error::Error>> {
     let total_modules = modules.len();
     let total_lines = modules.iter().map(|m| m.lines_of_code).sum();
@@ -272,6 +279,7 @@ fn generate_validation_report(modules: Vec<ModuleAnalysis>) -> Result<Validation
     })
 }
 
+#[allow(dead_code)]
 fn display_validation_report(report: &ValidationReport) {
     println!();
     println!("📊 VALIDATION RESULTS");
@@ -323,6 +331,7 @@ fn display_validation_report(report: &ValidationReport) {
     }
 }
 
+#[allow(dead_code)]
 fn save_detailed_report(report: &ValidationReport) -> Result<(), Box<dyn std::error::Error>> {
     let mut content = String::new();
     

@@ -15,10 +15,9 @@
 //! - **STDP Learning** (Spike-Timing Dependent Plasticity) for unsupervised feature learning
 //! - **Address-Event Representation** for efficient sparse image encoding
 
-use ndarray::{s, Array, Array1, Array2, Array3, ArrayView2, ArrayViewMut2, Axis, Zip};
-use num_traits::{Float, FromPrimitive, One, Zero};
-use std::collections::{HashMap, VecDeque};
-use std::f64::consts::PI;
+use ndarray::{s, Array1, Array2, Array3, ArrayView2};
+use num_traits::{Float, FromPrimitive};
+use std::collections::VecDeque;
 
 use crate::error::{NdimageError, NdimageResult};
 
@@ -129,6 +128,7 @@ impl Default for PlasticSynapse {
 ///
 /// Implements a multi-layer spiking neural network that processes images
 /// through temporal spike patterns, providing biological-like processing.
+#[allow(dead_code)]
 pub fn spiking_neural_network_filter<T>(
     image: ArrayView2<T>,
     network_layers: &[usize],
@@ -173,6 +173,7 @@ where
 ///
 /// Processes images using event-driven neuromorphic algorithms that only
 /// activate when significant changes occur, mimicking retinal processing.
+#[allow(dead_code)]
 pub fn event_driven_processing<T>(
     current_frame: ArrayView2<T>,
     previous_frame: Option<ArrayView2<T>>,
@@ -220,6 +221,7 @@ where
 ///
 /// Implements a liquid state machine (reservoir computing) for processing
 /// temporal sequences of images with rich dynamics and memory.
+#[allow(dead_code)]
 pub fn liquid_state_machine<T>(
     image_sequence: &[ArrayView2<T>],
     reservoir_size: usize,
@@ -264,6 +266,7 @@ where
 ///
 /// Implements homeostatic plasticity mechanisms that maintain optimal
 /// neural activity levels for robust image processing under varying conditions.
+#[allow(dead_code)]
 pub fn homeostatic_adaptive_filter<T>(
     image: ArrayView2<T>,
     config: &NeuromorphicConfig,
@@ -338,6 +341,7 @@ where
 ///
 /// Extracts features using temporal coding principles where information
 /// is encoded in the precise timing of neural spikes.
+#[allow(dead_code)]
 pub fn temporal_coding_feature_extraction<T>(
     image: ArrayView2<T>,
     feature_detectors: &[Array2<f64>],
@@ -398,6 +402,7 @@ where
 ///
 /// Implements Spike-Timing Dependent Plasticity for unsupervised learning
 /// of image features through biological-like synaptic adaptation.
+#[allow(dead_code)]
 pub fn stdp_unsupervised_learning<T>(
     training_images: &[ArrayView2<T>],
     filter_size: (usize, usize),
@@ -494,6 +499,7 @@ where
 
 // Helper functions
 
+#[allow(dead_code)]
 fn initialize_snn(
     layers: &[usize],
     height: usize,
@@ -501,7 +507,7 @@ fn initialize_snn(
 ) -> NdimageResult<Vec<Array2<SpikingNeuron>>> {
     let mut network = Vec::new();
 
-    for &layer_size in layers {
+    for &_layer_size in layers {
         let neurons = Array2::from_elem((height, width), SpikingNeuron::default());
         network.push(neurons);
     }
@@ -509,6 +515,7 @@ fn initialize_snn(
     Ok(network)
 }
 
+#[allow(dead_code)]
 fn image_to_spike_trains<T>(
     image: &ArrayView2<T>,
     time_steps: usize,
@@ -537,6 +544,7 @@ where
     Ok(spike_trains)
 }
 
+#[allow(dead_code)]
 fn forward_propagate_snn(
     network: &mut [Array2<SpikingNeuron>],
     input_spikes: &ndarray::ArrayView2<f64>,
@@ -589,6 +597,7 @@ fn forward_propagate_snn(
     Ok(output_spikes)
 }
 
+#[allow(dead_code)]
 fn apply_stdp_learning(
     network: &mut [Array2<SpikingNeuron>],
     config: &NeuromorphicConfig,
@@ -616,6 +625,7 @@ fn apply_stdp_learning(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn spike_trains_to_image<T>(
     spike_trains: ndarray::ArrayView3<f64>,
     config: &NeuromorphicConfig,
@@ -629,13 +639,13 @@ where
     // Convert spike trains back to continuous values
     for y in 0..height {
         for x in 0..width {
-            let mut spike_count = 0.0;
+            let mut _spike_count = 0.0;
             let mut weighted_sum = 0.0;
 
             for t in 0..time_steps {
                 let spike = spike_trains[(t, y, x)];
                 if spike > 0.0 {
-                    spike_count += 1.0;
+                    _spike_count += 1.0;
                     // Weight by temporal position
                     let temporal_weight = 1.0 - (t as f64 / time_steps as f64);
                     weighted_sum += spike * temporal_weight;
@@ -652,6 +662,7 @@ where
     Ok(image)
 }
 
+#[allow(dead_code)]
 fn generate_events<T>(
     current: &ArrayView2<T>,
     previous: &ArrayView2<T>,
@@ -684,6 +695,7 @@ where
     Ok(events)
 }
 
+#[allow(dead_code)]
 fn generate_initial_events<T>(
     image: &ArrayView2<T>,
     config: &NeuromorphicConfig,
@@ -713,6 +725,7 @@ where
     Ok(events)
 }
 
+#[allow(dead_code)]
 fn apply_event_kernel(
     accumulator: &mut Array2<f64>,
     event: &Event,
@@ -752,11 +765,12 @@ fn apply_event_kernel(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn initialize_reservoir(
     reservoir_size: usize,
-    height: usize,
-    width: usize,
-    config: &NeuromorphicConfig,
+    _height: usize,
+    _width: usize,
+    _config: &NeuromorphicConfig,
 ) -> NdimageResult<Array1<SpikingNeuron>> {
     let mut reservoir = Array1::from_elem(reservoir_size, SpikingNeuron::default());
 
@@ -769,6 +783,7 @@ fn initialize_reservoir(
     Ok(reservoir)
 }
 
+#[allow(dead_code)]
 fn image_to_currents<T>(image: &ArrayView2<T>) -> NdimageResult<Array2<f64>>
 where
     T: Float + FromPrimitive + Copy,
@@ -785,6 +800,7 @@ where
     Ok(currents)
 }
 
+#[allow(dead_code)]
 fn update_reservoir_dynamics(
     reservoir: &mut Array1<SpikingNeuron>,
     input_currents: &Array2<f64>,
@@ -815,6 +831,7 @@ fn update_reservoir_dynamics(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn capture_reservoir_state(reservoir: &Array1<SpikingNeuron>) -> NdimageResult<Array1<f64>> {
     let mut state = Array1::zeros(reservoir.len());
 
@@ -825,6 +842,7 @@ fn capture_reservoir_state(reservoir: &Array1<SpikingNeuron>) -> NdimageResult<A
     Ok(state)
 }
 
+#[allow(dead_code)]
 fn readout_from_liquid_states(
     liquid_states: &[Array1<f64>],
     output_shape: (usize, usize),
@@ -860,6 +878,7 @@ fn readout_from_liquid_states(
     Ok(output)
 }
 
+#[allow(dead_code)]
 fn update_homeostatic_weights(
     weights: &mut Array3<f64>,
     pos: (usize, usize),
@@ -890,6 +909,7 @@ fn update_homeostatic_weights(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_temporal_patterns<T>(
     image: &ArrayView2<T>,
     time_window: usize,

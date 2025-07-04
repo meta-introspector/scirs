@@ -13,6 +13,7 @@ use std::fmt::Debug;
 use std::time::Instant;
 
 // Create a synthetic regression dataset (noisy sine wave)
+#[allow(dead_code)]
 fn create_sine_dataset(
     n_samples: usize,
     noise_level: f32,
@@ -31,6 +32,7 @@ fn create_sine_dataset(
     (x, y)
 }
 // Create a neural network model for regression
+#[allow(dead_code)]
 fn create_regression_model(input_dim: usize, rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
     // Input layer
@@ -44,6 +46,7 @@ fn create_regression_model(input_dim: usize, rng: &mut SmallRng) -> Result<Seque
     model.add_layer(dense3);
     Ok(model)
 // Calculate mean squared error
+#[allow(dead_code)]
 fn calculate_mse<F: Float + Debug + ScalarOperand>(
     model: &Sequential<F>,
     x: &Array2<F>,
@@ -55,6 +58,7 @@ fn calculate_mse<F: Float + Debug + ScalarOperand>(
         let diff = predictions[[i, 0]] - y[[i, 0]];
         sum_squared_error = sum_squared_error + diff * diff;
     Ok(sum_squared_error / F::from(x.nrows()).unwrap())
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Advanced Learning Rate Scheduling and Early Stopping Example");
     println!("==========================================================\n");
@@ -87,6 +91,7 @@ fn main() -> Result<()> {
     println!("\nAdvanced callbacks example completed successfully!");
     Ok(())
 // Train with early stopping and validation
+#[allow(dead_code)]
 fn train_with_early_stopping(
     x_train: &Array2<f32>,
     y_train: &Array2<f32>,

@@ -214,11 +214,13 @@ impl<F: Float> Op<F> for CachedOp {
 // Public API functions
 
 /// Clear the computation cache
+#[allow(dead_code)]
 pub fn clear_computation_cache() {
     COMPUTATION_CACHE.lock().unwrap().clear();
 }
 
 /// Get cache statistics
+#[allow(dead_code)]
 pub fn get_cache_stats() -> CacheStats {
     let cache = COMPUTATION_CACHE.lock().unwrap();
     let config = CACHE_CONFIG.lock().unwrap();
@@ -232,6 +234,7 @@ pub fn get_cache_stats() -> CacheStats {
 }
 
 /// Configure cache settings
+#[allow(dead_code)]
 pub fn configure_cache(max_entries: usize, ttl_seconds: u64) {
     let mut config = CACHE_CONFIG.lock().unwrap();
     config.max_entries = max_entries;
@@ -239,6 +242,7 @@ pub fn configure_cache(max_entries: usize, ttl_seconds: u64) {
 }
 
 /// Run garbage collection
+#[allow(dead_code)]
 pub fn run_garbage_collection() -> usize {
     let mut gc_state = GC_STATE.lock().unwrap();
     gc_state.total_collections += 1;
@@ -249,6 +253,7 @@ pub fn run_garbage_collection() -> usize {
 }
 
 /// Get garbage collection statistics
+#[allow(dead_code)]
 pub fn get_gc_stats() -> GcStats {
     let gc_state = GC_STATE.lock().unwrap();
     GcStats {
@@ -260,6 +265,7 @@ pub fn get_gc_stats() -> GcStats {
 }
 
 /// Create a conditional operation
+#[allow(dead_code)]
 pub fn conditional<'g, F: Float>(
     condition: &Tensor<'g, F>,
     true_branch: &Tensor<'g, F>,
@@ -275,6 +281,7 @@ pub fn conditional<'g, F: Float>(
 }
 
 /// Create a smart checkpoint
+#[allow(dead_code)]
 pub fn smart_checkpoint<'g, F: Float>(
     tensor: &Tensor<'g, F>,
     memory_threshold: usize,
@@ -289,6 +296,7 @@ pub fn smart_checkpoint<'g, F: Float>(
 }
 
 /// Create a cached operation
+#[allow(dead_code)]
 pub fn cached_op<'g, F: Float>(tensor: &Tensor<'g, F>, operation_name: &str) -> Tensor<'g, F> {
     let g = tensor.graph();
     Tensor::builder(g)

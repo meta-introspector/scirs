@@ -12,12 +12,14 @@ use scirs2_autograd as ag;
 use scirs2_linalg::autograd::helpers;
 
 #[cfg(not(feature = "autograd"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'autograd' feature. Run with:");
     println!("cargo run --example autograd_linalg_example --features=autograd");
 }
 
 #[cfg(feature = "autograd")]
+#[allow(dead_code)]
 fn main() {
     println!("SciRS2 Linear Algebra Automatic Differentiation Example");
     println!("=====================================================\n");
@@ -33,6 +35,7 @@ fn main() {
 }
 
 #[cfg(feature = "autograd")]
+#[allow(dead_code)]
 fn demo_basic_matrix_ops() {
     println!("1. Basic Matrix Operations");
     println!("-------------------------");
@@ -74,6 +77,7 @@ fn demo_basic_matrix_ops() {
 }
 
 #[cfg(feature = "autograd")]
+#[allow(dead_code)]
 fn demo_trace_and_functions() {
     println!("2. Trace and Matrix Functions");
     println!("----------------------------");
@@ -121,6 +125,7 @@ fn demo_trace_and_functions() {
 }
 
 #[cfg(feature = "autograd")]
+#[allow(dead_code)]
 fn demo_advanced_ops() {
     println!("3. Advanced Operations");
     println!("---------------------");

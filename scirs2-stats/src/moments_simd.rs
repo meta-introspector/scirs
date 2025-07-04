@@ -35,6 +35,7 @@ use scirs2_core::{
 /// let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 /// let skew = skewness_simd(&data.view(), false).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn skewness_simd<F, D>(x: &ArrayBase<D, Ix1>, bias: bool) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::fmt::Display,
@@ -106,6 +107,7 @@ where
 /// # Returns
 ///
 /// * The kurtosis of the input data
+#[allow(dead_code)]
 pub fn kurtosis_simd<F, D>(x: &ArrayBase<D, Ix1>, fisher: bool, bias: bool) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::fmt::Display,
@@ -189,6 +191,7 @@ where
 /// # Returns
 ///
 /// * The nth moment of the input data
+#[allow(dead_code)]
 pub fn moment_simd<F, D>(x: &ArrayBase<D, Ix1>, moment_order: usize, center: bool) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + Send + Sync + std::fmt::Display,
@@ -251,6 +254,7 @@ where
 /// # Returns
 ///
 /// * Vector of computed moments in the same order as requested
+#[allow(dead_code)]
 pub fn moments_batch_simd<F, D>(
     x: &ArrayBase<D, Ix1>,
     moments: &[usize],
@@ -316,6 +320,7 @@ where
 
 // Helper functions for SIMD computations
 
+#[allow(dead_code)]
 fn compute_moments_simd<F, D>(x: &ArrayBase<D, Ix1>, mean: F, n: usize) -> (F, F)
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy,
@@ -340,6 +345,7 @@ where
     (sum_sq_dev, sum_cubed_dev)
 }
 
+#[allow(dead_code)]
 fn compute_moments_scalar<F, D>(x: &ArrayBase<D, Ix1>, mean: F) -> (F, F)
 where
     F: Float + NumCast + Zero + One + Copy,
@@ -358,6 +364,7 @@ where
     (sum_sq_dev, sum_cubed_dev)
 }
 
+#[allow(dead_code)]
 fn compute_fourth_moments_simd<F, D>(x: &ArrayBase<D, Ix1>, mean: F, n: usize) -> (F, F)
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy,
@@ -382,6 +389,7 @@ where
     (sum_sq_dev, sum_fourth_dev)
 }
 
+#[allow(dead_code)]
 fn compute_fourth_moments_scalar<F, D>(x: &ArrayBase<D, Ix1>, mean: F) -> (F, F)
 where
     F: Float + NumCast + Zero + One + Copy,
@@ -400,6 +408,7 @@ where
     (sum_sq_dev, sum_fourth_dev)
 }
 
+#[allow(dead_code)]
 fn compute_central_moment_simd<F, D>(x: &ArrayBase<D, Ix1>, mean: F, order: usize) -> F
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy,
@@ -437,6 +446,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn compute_central_moment_scalar<F, D>(x: &ArrayBase<D, Ix1>, mean: F, order: usize) -> F
 where
     F: Float + NumCast + Zero + One + Copy,
@@ -448,6 +458,7 @@ where
         .fold(F::zero(), |acc, val| acc + val)
 }
 
+#[allow(dead_code)]
 fn compute_raw_moment_simd<F, D>(x: &ArrayBase<D, Ix1>, order: usize) -> F
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy,
@@ -479,6 +490,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn compute_raw_moment_scalar<F, D>(x: &ArrayBase<D, Ix1>, order: usize) -> F
 where
     F: Float + NumCast + Zero + One + Copy,

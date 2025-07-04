@@ -60,8 +60,10 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
     ///     0.75, 0.73, 0.74,   // 300 samples, 3 folds
     ///     0.76, 0.74, 0.75,   // 400 samples, 3 folds
     ///     0.77, 0.76, 0.76,   // 500 samples, 3 folds
+    /// ]).unwrap();
     /// // Create learning curve
     /// let curve = LearningCurve::<f64>::new(train_sizes, train_scores, val_scores).unwrap();
+    /// ```
     pub fn new(
         train_sizes: Array1<usize>,
         train_scores: Array2<F>,
@@ -74,7 +76,10 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
             ));
         }
         if train_scores.shape()[1] != val_scores.shape()[1] {
+            return Err(NeuralError::ValidationError(
                 "Training and validation scores must have the same number of CV folds".to_string(),
+            ));
+        }
         // Compute means and standard deviations
         let train_mean = train_scores.mean_axis(Axis(1)).unwrap();
         let val_mean = val_scores.mean_axis(Axis(1)).unwrap();
@@ -105,27 +110,40 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
         metric_name: &str,
     ) -> String {
         self.to_ascii_with_options(title, width, height, metric_name, &ColorOptions::default())
+    }
+
     /// Create an ASCII line plot of the learning curve with customizable colors
     /// This method allows fine-grained control over the color scheme using the
     /// provided ColorOptions parameter.
     /// * `color_options` - Color options for visualization
     /// * `String` - ASCII line plot with colors
     pub fn to_ascii_with_options(
+        &self,
+        title: Option<&str>,
+        width: usize,
+        height: usize,
+        metric_name: &str,
         color_options: &ColorOptions,
+    ) -> String {
         // Pre-allocate result string with estimated capacity
         let mut result = String::with_capacity(width * height * 2);
         // Add title with styling if provided
         if let Some(title_text) = title {
             if color_options.enabled {
-                result.push_str(&format!("{}\n\n", stylize(title_text, Style::Bold)));
+                let styled_title = stylize(title_text, Style::Bold);
+                result.push_str(&format!("{styled_title}\n\n"));
             } else {
-                result.push_str(&format!("{}\n\n", title_text));
+                result.push_str(&format!("{title_text}\n\n"));
             }
         } else if color_options.enabled {
-            let title = format!("Learning Curve ({})", stylize(metric_name, Style::Bold));
-            result.push_str(&format!("{}\n\n", stylize(title, Style::Bold)));
+            let styled_metric = stylize(metric_name, Style::Bold);
+            let title = format!("Learning Curve ({styled_metric})");
+            let styled_title = stylize(title, Style::Bold);
+            result.push_str(&format!("{styled_title}\n\n"));
         } else {
-            result.push_str(&format!("Learning Curve ({})\n\n", metric_name));
+            result.push_str(&format!("Learning Curve ({metric_name})\n\n"));
+        }
+
         // Find min and max values for y-axis scaling
         let min_score = self
             .val_mean
@@ -142,7 +160,7 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
         // Create a 2D grid for the plot
         let mut grid = vec![vec![' '; width]; height];
         let mut grid_markers = vec![vec![(false, false); width]; height]; // Track which points are training vs. validation
-        // Function to map a value to a y-coordinate
+                                                                          // Function to map a value to a y-coordinate
         let y_coord = |value: F| -> usize {
             let norm = (value - y_min) / (y_max - y_min);
             let y = height - 1 - (norm.to_f64().unwrap() * (height - 1) as f64).round() as usize;
@@ -152,6 +170,8 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
         let x_coord = |size_idx: usize| -> usize {
             ((size_idx as f64) / ((self.train_sizes.len() - 1) as f64) * (width - 1) as f64).round()
                 as usize
+        };
+
         // Draw training curve and mark as training points
         for i in 0..self.train_sizes.len() - 1 {
             let x1 = x_coord(i);
@@ -162,34 +182,54 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
             for (x, y) in draw_line_with_coords(x1, y1, x2, y2, Some(width), Some(height)) {
                 grid[y][x] = '●';
                 grid_markers[y][x].0 = true; // Mark as training point
+            }
+        }
+
         // Draw validation curve and mark as validation points
+        for i in 0..self.train_sizes.len() - 1 {
+            let x1 = x_coord(i);
             let y1 = y_coord(self.val_mean[i]);
+            let x2 = x_coord(i + 1);
             let y2 = y_coord(self.val_mean[i + 1]);
             // Draw a line between points and mark as validation points
+            for (x, y) in draw_line_with_coords(x1, y1, x2, y2, Some(width), Some(height)) {
                 grid[y][x] = '○';
                 grid_markers[y][x].1 = true; // Mark as validation point
+            }
+        }
         // Draw the grid
         for y in 0..height {
             // Y-axis labels with styling
             if y == 0 {
                 if color_options.enabled {
-                    let value = format!("{:.2}", y_max);
+                    let value = format!("{y_max:.2}");
                     result.push_str(&format!("{} |", colorize(value, Color::BrightCyan)));
                 } else {
-                    result.push_str(&format!("{:.2} |", y_max));
+                    result.push_str(&format!("{y_max:.2} |"));
                 }
             } else if y == height - 1 {
-                    let value = format!("{:.2}", y_min);
-                    result.push_str(&format!("{:.2} |", y_min));
+                if color_options.enabled {
+                    let value = format!("{y_min:.2}");
+                    result.push_str(&format!("{} |", colorize(value, Color::BrightCyan)));
+                } else {
+                    result.push_str(&format!("{y_min:.2} |"));
+                }
             } else if y == height / 2 {
                 let mid = y_min + (y_max - y_min) * F::from(0.5).unwrap();
-                    let value = format!("{:.2}", mid);
-                    result.push_str(&format!("{:.2} |", mid));
+                if color_options.enabled {
+                    let value = format!("{mid:.2}");
+                    result.push_str(&format!("{} |", colorize(value, Color::BrightCyan)));
+                } else {
+                    result.push_str(&format!("{mid:.2} |"));
+                }
+            } else {
                 result.push_str("      |");
+            }
             // Grid content with coloring
             for x in 0..width {
                 let char = grid[y][x];
                 let (is_train, is_val) = grid_markers[y][x];
+                if color_options.enabled {
                     if is_train {
                         // Training point
                         result.push_str(&colorize("●", Color::BrightBlue));
@@ -199,8 +239,12 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
                     } else {
                         result.push(char);
                     }
+                } else {
                     result.push(char);
+                }
+            }
             result.push('\n');
+        }
         // X-axis
         result.push_str("      +");
         result.push_str(&"-".repeat(width));
@@ -212,28 +256,53 @@ impl<F: Float + Debug + Display + FromPrimitive> LearningCurve<F> {
         for i in 0..n_labels {
             let idx = i * (self.train_sizes.len() - 1) / (n_labels - 1);
             let size = self.train_sizes[idx];
-            let label = format!("{}", size);
+            let label = format!("{size}");
             let x = x_coord(idx);
             // Position the label with styling
             if i == 0 {
+                if color_options.enabled {
                     result.push_str(&colorize(label, Color::BrightCyan));
+                } else {
                     result.push_str(&label);
+                }
+            } else {
                 let prev_end = result.len();
                 let spaces = x.saturating_sub(prev_end - 7);
                 result.push_str(&" ".repeat(spaces));
+                if color_options.enabled {
+                    result.push_str(&colorize(label, Color::BrightCyan));
+                } else {
+                    result.push_str(&label);
+                }
+            }
+        }
+        result.push('\n');
+
         // X-axis title with styling
         if color_options.enabled {
             result.push_str(&format!(
                 "       {}\n\n",
                 stylize("Training Set Size", Style::Bold)
+            ));
+        } else {
             result.push_str("       Training Set Size\n\n");
+        }
         // Add legend with colors
+        if color_options.enabled {
+            result.push_str(&format!(
                 "       {} Training score   {} Validation score\n",
                 colorize("●", Color::BrightBlue),
                 colorize("○", Color::BrightGreen)
+            ));
+        } else {
             result.push_str("       ● Training score   ○ Validation score\n");
+        }
+
         result
+    }
+}
 /// Helper function to compute standard deviation for scores
+#[allow(dead_code)]
 fn compute_std<F: Float + Debug + Display + FromPrimitive>(
     scores: &Array2<F>,
     mean: &Array1<F>,
@@ -246,5 +315,8 @@ fn compute_std<F: Float + Debug + Display + FromPrimitive>(
         for j in 0..n_folds {
             let diff = scores[[i, j]] - mean[i];
             sum_sq_diff = sum_sq_diff + diff * diff;
+        }
         std_arr[i] = (sum_sq_diff / F::from(n_folds).unwrap()).sqrt();
+    }
     std_arr
+}

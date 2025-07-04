@@ -342,6 +342,7 @@ impl BiLSTMClassifier {
             predictions[i] = max_idx;
         predictions
 // Extended sentiment analysis dataset with more complex examples
+#[allow(dead_code)]
 fn create_sentiment_dataset() -> (Vec<Vec<String>>, Vec<usize>) {
     // Format: (text, sentiment) where sentiment is 0 (negative), 1 (neutral), or 2 (positive)
     let dataset = vec![
@@ -395,6 +396,7 @@ fn create_sentiment_dataset() -> (Vec<Vec<String>>, Vec<usize>) {
         labels.push(label);
     (texts, labels)
 // Create vocabulary from tokenized texts
+#[allow(dead_code)]
 fn create_vocabulary(texts: &[Vec<String>]) -> (HashMap<String, usize>, HashMap<usize, String>) {
     let mut word_to_idx = HashMap::new();
     let mut idx_to_word = HashMap::new();
@@ -414,6 +416,7 @@ fn create_vocabulary(texts: &[Vec<String>]) -> (HashMap<String, usize>, HashMap<
                 idx += 1;
     (word_to_idx, idx_to_word)
 // Convert texts to token IDs with padding
+#[allow(dead_code)]
 fn tokenize_texts(
     texts: &[Vec<String>],
     word_to_idx: &HashMap<String, usize>,
@@ -427,6 +430,7 @@ fn tokenize_texts(
             tokens[[i, j]] = *word_to_idx.get(word).unwrap_or(&unk_idx);
     tokens
 // Convert labels to one-hot encoded vectors
+#[allow(dead_code)]
 fn one_hot_encode(labels: &[usize], num_classes: usize) -> Array2<f32> {
     let mut one_hot = Array2::<f32>::zeros((labels.len(), num_classes));
     for (i, &label) in labels.iter().enumerate() {
@@ -434,6 +438,7 @@ fn one_hot_encode(labels: &[usize], num_classes: usize) -> Array2<f32> {
             one_hot[[i, label]] = 1.0;
     one_hot
 // Shuffle the dataset
+#[allow(dead_code)]
 fn shuffle_dataset<T: Clone, U: Clone>(xs: &[T], ys: &[U]) -> (Vec<T>, Vec<U>) {
     assert_eq!(
         xs.len(),
@@ -451,6 +456,7 @@ fn shuffle_dataset<T: Clone, U: Clone>(xs: &[T], ys: &[U]) -> (Vec<T>, Vec<U>) {
         shuffled_ys.push(ys[idx].clone());
     (shuffled_xs, shuffled_ys)
 // Split dataset into training and testing sets
+#[allow(dead_code)]
 fn train_test_split<T: Clone, U: Clone>(
     xs: &[T],
     ys: &[U],
@@ -465,6 +471,7 @@ fn train_test_split<T: Clone, U: Clone>(
     let test_ys = shuffled_ys[train_size..].to_vec();
     (train_xs, test_xs, train_ys, test_ys)
 // Train the BiLSTM classifier
+#[allow(dead_code)]
 fn train_model(
     model: &mut BiLSTMClassifier,
     x_train: &Array2<usize>,
@@ -514,6 +521,7 @@ fn train_model(
         // For simplicity, we're skipping the actual parameter updates
         // as implementing backpropagation for this complex model would require significant code
 // Evaluate the model on test data
+#[allow(dead_code)]
 fn evaluate_model(model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test: &[usize]) {
     let predictions = model.predict(x_test);
     // Calculate accuracy
@@ -573,6 +581,7 @@ fn evaluate_model(model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test: 
             "{} | {:.4}    {:.4}  {:.4}",
             class_name, precision, recall, f1
 // Example predictions
+#[allow(dead_code)]
 fn example_predictions(model: &mut BiLSTMClassifier, word_to_idx: &HashMap<String, usize>) {
     let examples = [
         "this is a great movie with amazing performances",
@@ -599,6 +608,7 @@ fn example_predictions(model: &mut BiLSTMClassifier, word_to_idx: &HashMap<Strin
             _ => "Unknown",
         println!("Text: \"{}\"", example);
         println!("Predicted sentiment: {}\n", sentiment);
+#[allow(dead_code)]
 fn main() {
     println!("Bidirectional LSTM with Embedding for Sentiment Analysis");
     println!("======================================================");

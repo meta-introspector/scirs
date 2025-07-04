@@ -1,6 +1,7 @@
 // Test script to verify polygamma sign fix
 use scirs2_special::gamma::polygamma;
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing polygamma sign fix...");
     

@@ -40,6 +40,7 @@ pub enum FiniteDifferenceScheme {
 }
 
 /// Compute first derivative approximation at a point using the specified scheme
+#[allow(dead_code)]
 pub fn first_derivative(
     u: &ArrayView1<f64>,
     i: usize,
@@ -101,6 +102,7 @@ pub fn first_derivative(
 }
 
 /// Compute upwind first derivative based on sign of velocity
+#[allow(dead_code)]
 pub fn upwind_first_derivative(
     u: &ArrayView1<f64>,
     i: usize,
@@ -138,6 +140,7 @@ pub fn upwind_first_derivative(
 }
 
 /// Compute second derivative approximation at a point
+#[allow(dead_code)]
 pub fn second_derivative(
     u: &ArrayView1<f64>,
     i: usize,
@@ -188,6 +191,7 @@ pub fn second_derivative(
 }
 
 /// Generate a finite difference differentiation matrix for the first derivative
+#[allow(dead_code)]
 pub fn first_derivative_matrix(
     n: usize,
     dx: f64,
@@ -287,6 +291,7 @@ pub fn first_derivative_matrix(
 }
 
 /// Generate a finite difference differentiation matrix for the second derivative
+#[allow(dead_code)]
 pub fn second_derivative_matrix(
     n: usize,
     dx: f64,
@@ -374,6 +379,7 @@ pub fn second_derivative_matrix(
 }
 
 /// Apply a differentiation matrix to a vector
+#[allow(dead_code)]
 pub fn apply_diff_matrix(matrix: &Array2<f64>, u: &ArrayView1<f64>) -> PDEResult<Array1<f64>> {
     if matrix.shape()[1] != u.len() {
         return Err(PDEError::FiniteDifferenceError(format!(

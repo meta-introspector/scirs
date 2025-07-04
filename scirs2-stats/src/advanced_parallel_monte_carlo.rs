@@ -199,7 +199,16 @@ where
 
 impl<F> AdvancedParallelMonteCarlo<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + 'static,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::iter::Product
+        + 'static,
 {
     /// Create new advanced parallel Monte Carlo integrator
     pub fn new(config: MonteCarloConfig, variance_reduction: VarianceReductionConfig) -> Self {
@@ -338,16 +347,20 @@ where
         let num_chunks = (n_samples + chunk_size - 1) / chunk_size;
 
         // Generate seeds for parallel workers
-        let seeds: Vec<u64> = (0..num_chunks).map(|_| rng.gen()).collect();
+        let seeds: Vec<u64> = (0..num_chunks).map(|_| rng.random()).collect();
 
         // Parallel evaluation
-        let results = parallel_map_collect(seeds.iter().enumerate(), |(chunk_idx, &seed)| {
-            let start = chunk_idx * chunk_size;
-            let end = ((chunk_idx + 1) * chunk_size).min(n_samples);
-            let actual_chunk_size = end - start;
+        let results: Vec<StatsResult<Array1<F>>> = seeds
+            .iter()
+            .enumerate()
+            .map(|(chunk_idx, &seed)| {
+                let start = chunk_idx * chunk_size;
+                let end = ((chunk_idx + 1) * chunk_size).min(n_samples);
+                let actual_chunk_size = end - start;
 
-            self.evaluate_chunk(function, actual_chunk_size, seed)
-        });
+                self.evaluate_chunk(function, actual_chunk_size, seed)
+            })
+            .collect();
 
         // Combine results
         let mut combined_values = Vec::new();
@@ -369,7 +382,7 @@ where
     where
         T: IntegrableFunction<F>,
     {
-        self.evaluate_chunk(function, n_samples, rng.gen())
+        self.evaluate_chunk(function, n_samples, rng.random())
     }
 
     /// Evaluate function on a chunk of samples
@@ -386,7 +399,7 @@ where
             // Generate sample point
             let mut point = Array1::zeros(dimension);
             for j in 0..dimension {
-                let u: f64 = rng.gen();
+                let u: f64 = rng.random();
                 let range = upper_bounds[j] - lower_bounds[j];
                 point[j] = lower_bounds[j] + F::from(u).unwrap() * range;
             }
@@ -613,13 +626,23 @@ where
 }
 
 /// Convenience function for simple integration
+#[allow(dead_code)]
 pub fn integrate_parallel<T, F>(
     function: &T,
     config: Option<MonteCarloConfig>,
 ) -> StatsResult<MonteCarloResult<F>>
 where
     T: IntegrableFunction<F>,
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + 'static,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + 'static
+        + std::iter::Product,
 {
     let config = config.unwrap_or_default();
     let variance_reduction = VarianceReductionConfig::default();

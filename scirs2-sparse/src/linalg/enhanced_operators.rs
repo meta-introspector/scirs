@@ -883,6 +883,7 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps> LinearOpe
 
 /// Create utility functions for enhanced operators
 /// Create an enhanced diagonal operator
+#[allow(dead_code)]
 pub fn enhanced_diagonal<
     F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
@@ -892,6 +893,7 @@ pub fn enhanced_diagonal<
 }
 
 /// Create an enhanced sum operator
+#[allow(dead_code)]
 pub fn enhanced_add<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static>(
     left: Box<dyn LinearOperator<F>>,
     right: Box<dyn LinearOperator<F>>,
@@ -900,6 +902,7 @@ pub fn enhanced_add<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifie
 }
 
 /// Create an enhanced difference operator
+#[allow(dead_code)]
 pub fn enhanced_subtract<
     F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
@@ -910,6 +913,7 @@ pub fn enhanced_subtract<
 }
 
 /// Create an enhanced scaled operator
+#[allow(dead_code)]
 pub fn enhanced_scale<
     F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
@@ -920,6 +924,7 @@ pub fn enhanced_scale<
 }
 
 /// Create a convolution operator
+#[allow(dead_code)]
 pub fn convolution_operator<
     F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
@@ -931,6 +936,7 @@ pub fn convolution_operator<
 }
 
 /// Create a finite difference operator
+#[allow(dead_code)]
 pub fn finite_difference_operator<
     F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps + 'static,
 >(
@@ -957,7 +963,6 @@ impl<F: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps>
 {
     /// Create a new composition operator (left * right)
     /// This represents the operation: left(right(x))
-    #[allow(dead_code)]
     #[allow(dead_code)]
     pub fn new(
         left: Box<dyn LinearOperator<F>>,

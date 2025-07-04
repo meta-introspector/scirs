@@ -5,6 +5,7 @@ use scirs2_integrate::pde::method_of_lines::{MOLOptions, MOLParabolicSolver1D};
 use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Define domain: x ∈ [0, 1]
     let domain = Domain::new(vec![0.0..1.0], vec![101])?;

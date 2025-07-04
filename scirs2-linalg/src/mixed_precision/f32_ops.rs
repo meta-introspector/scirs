@@ -46,6 +46,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// assert!((y[0] - 1.5f32).abs() < 1e-6);
 /// assert!((y[1] - 3.5f32).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn mixed_precision_matvec_f32<A, B, C, H>(
     a: &ArrayView2<A>,
     x: &ArrayView1<B>,
@@ -97,6 +98,7 @@ where
 ///
 /// This implementation uses simple algorithms optimized for f32 precision,
 /// with efficient blocked algorithms for better cache usage on larger matrices.
+#[allow(dead_code)]
 pub fn mixed_precision_matmul_f32_basic<A, B, C, H>(
     a: &ArrayView2<A>,
     b: &ArrayView2<B>,
@@ -225,6 +227,7 @@ where
 /// * `B` - Second input vector precision
 /// * `C` - Output scalar precision
 /// * `H` - High precision used for computation
+#[allow(dead_code)]
 pub fn mixed_precision_dot_f32<A, B, C, H>(a: &ArrayView1<A>, b: &ArrayView1<B>) -> LinalgResult<C>
 where
     A: Clone + Debug + ToPrimitive + Copy,

@@ -1344,6 +1344,7 @@ impl LearnedOptimizer for LearnedHyperparameterTuner {
 }
 
 /// Convenience function for learned hyperparameter tuning
+#[allow(dead_code)]
 pub fn hyperparameter_tuning_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

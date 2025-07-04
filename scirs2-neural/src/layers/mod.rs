@@ -112,6 +112,23 @@ pub trait ParamLayer<F: Float + Debug + ScalarOperand>: Layer<F> {
     fn set_parameters(&mut self, params: Vec<Array<F, ndarray::IxDyn>>) -> Result<()>;
 }
 
+/// Information about a layer for visualization purposes
+#[derive(Debug, Clone)]
+pub struct LayerInfo {
+    /// Index of the layer in the sequence
+    pub index: usize,
+    /// Name of the layer
+    pub name: String,
+    /// Type of the layer
+    pub layer_type: String,
+    /// Number of parameters in the layer
+    pub parameter_count: usize,
+    /// Input shape of the layer
+    pub input_shape: Option<Vec<usize>>,
+    /// Output shape of the layer
+    pub output_shape: Option<Vec<usize>>,
+}
+
 /// Sequential container for neural network layers
 ///
 /// A Sequential model is a linear stack of layers where data flows through
@@ -177,6 +194,22 @@ impl<F: Float + Debug + ScalarOperand> Sequential<F> {
             .iter()
             .map(|layer| layer.parameter_count())
             .sum()
+    }
+
+    /// Get layer information for visualization purposes
+    pub fn layer_info(&self) -> Vec<LayerInfo> {
+        self.layers
+            .iter()
+            .enumerate()
+            .map(|(i, layer)| LayerInfo {
+                index: i,
+                name: layer.name().unwrap_or(&format!("Layer_{i}")).to_string(),
+                layer_type: layer.layer_type().to_string(),
+                parameter_count: layer.parameter_count(),
+                input_shape: layer.input_shape(),
+                output_shape: layer.output_shape(),
+            })
+            .collect()
     }
 }
 

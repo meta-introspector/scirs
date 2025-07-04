@@ -3,6 +3,7 @@
 use scirs2_spatial::error::SpatialResult;
 use scirs2_spatial::pathplanning::ContinuousAStarPlanner;
 
+#[allow(dead_code)]
 fn main() -> SpatialResult<()> {
     println!("Continuous Space A* Path Planning Example");
     println!("========================================\n");

@@ -135,6 +135,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// // The signal will be eroded from the edges inward
 /// assert_eq!(eroded.len(), signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn binary_erosion<D>(
     input: &Array<bool, D>,
     structure: Option<&Array<bool, D>>,
@@ -313,6 +314,7 @@ where
 }
 
 /// Implementation of binary erosion for 1D arrays
+#[allow(dead_code)]
 fn binary_erosion1d(
     input: &Array1<bool>,
     structure: Option<&Array1<bool>>,
@@ -411,6 +413,7 @@ fn binary_erosion1d(
 }
 
 /// Implementation of binary erosion for 2D arrays
+#[allow(dead_code)]
 fn binary_erosion2d(
     input: &Array2<bool>,
     structure: Option<&Array2<bool>>,
@@ -527,6 +530,7 @@ fn binary_erosion2d(
 }
 
 /// Implementation of binary erosion for n-dimensional arrays (using dynamic dimensions)
+#[allow(dead_code)]
 fn binary_erosion_dyn(
     input: &Array<bool, IxDyn>,
     structure: Option<&Array<bool, IxDyn>>,
@@ -650,6 +654,7 @@ fn binary_erosion_dyn(
 /// # Returns
 ///
 /// * `Result<Array<bool, D>>` - Dilated array
+#[allow(dead_code)]
 pub fn binary_dilation<D>(
     input: &Array<bool, D>,
     structure: Option<&Array<bool, D>>,
@@ -828,6 +833,7 @@ where
 }
 
 /// Implementation of binary dilation for 1D arrays
+#[allow(dead_code)]
 fn binary_dilation1d(
     input: &Array1<bool>,
     structure: Option<&Array1<bool>>,
@@ -931,6 +937,7 @@ fn binary_dilation1d(
 }
 
 /// Implementation of binary dilation for 2D arrays
+#[allow(dead_code)]
 fn binary_dilation2d(
     input: &Array2<bool>,
     structure: Option<&Array2<bool>>,
@@ -1057,6 +1064,7 @@ fn binary_dilation2d(
 }
 
 /// Implementation of binary dilation for n-dimensional arrays (using dynamic dimensions)
+#[allow(dead_code)]
 fn binary_dilation_dyn(
     input: &Array<bool, IxDyn>,
     structure: Option<&Array<bool, IxDyn>>,
@@ -1181,6 +1189,7 @@ fn binary_dilation_dyn(
 /// # Returns
 ///
 /// * `Result<Array<bool, D>>` - Opened array
+#[allow(dead_code)]
 pub fn binary_opening<D>(
     input: &Array<bool, D>,
     structure: Option<&Array<bool, D>>,
@@ -1233,6 +1242,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<bool, D>>` - Closed array
+#[allow(dead_code)]
 pub fn binary_closing<D>(
     input: &Array<bool, D>,
     structure: Option<&Array<bool, D>>,
@@ -1280,6 +1290,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<bool, D>>` - Array with filled holes
+#[allow(dead_code)]
 pub fn binary_fill_holes<D>(
     input: &Array<bool, D>,
     _structure: Option<&Array<bool, D>>,
@@ -1331,6 +1342,7 @@ where
 /// // Apply hit-or-miss transform
 /// let result = binary_hit_or_miss(&input, Some(&structure1), None, None, None, None, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn binary_hit_or_miss<D>(
     input: &Array<bool, D>,
     structure1: Option<&Array<bool, D>>,
@@ -1391,6 +1403,7 @@ where
 }
 
 /// Apply binary hit-or-miss transform to a 1D array
+#[allow(dead_code)]
 fn binary_hit_or_miss_1d<D>(
     input: &Array<bool, ndarray::Ix1>,
     _structure1: Option<&Array<bool, D>>,
@@ -1408,6 +1421,7 @@ where
 }
 
 /// Apply binary hit-or-miss transform to a 2D array
+#[allow(dead_code)]
 fn binary_hit_or_miss_2d<D>(
     input: &Array<bool, ndarray::Ix2>,
     structure1: Option<&Array<bool, D>>,

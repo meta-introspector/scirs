@@ -173,6 +173,7 @@ pub trait ParallelPredict<F: Float> {
 /// # Returns
 ///
 /// The recommended chunk size
+#[allow(dead_code)]
 pub fn estimate_chunk_size(total_size: usize, cost_factor: f64, config: &ParallelConfig) -> usize {
     // If chunk size is explicitly specified, use that
     if let Some(size) = config.chunk_size {
@@ -219,6 +220,7 @@ pub fn estimate_chunk_size(total_size: usize, cost_factor: f64, config: &Paralle
 /// # Returns
 ///
 /// Vector of (start, end) index pairs for each partition
+#[allow(dead_code)]
 pub fn create_index_ranges(total_size: usize, n_parts: usize) -> Vec<(usize, usize)> {
     if total_size == 0 || n_parts == 0 {
         return Vec::new();

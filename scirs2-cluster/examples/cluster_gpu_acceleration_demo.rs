@@ -12,6 +12,7 @@ use scirs2_cluster::{
     DeviceSelection, GpuBackend, GpuConfig, GpuLinkageMethod, MemoryStrategy,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("GPU Acceleration Demo for scirs2-cluster");
     println!("=======================================");
@@ -39,6 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Test automatic GPU detection and fallback
+#[allow(dead_code)]
 fn test_automatic_gpu_detection(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Testing Automatic GPU Detection");
     println!("==================================");
@@ -118,6 +120,7 @@ fn test_automatic_gpu_detection(data: &Array2<f64>) -> Result<(), Box<dyn std::e
 }
 
 /// Test specific GPU backends
+#[allow(dead_code)]
 fn test_specific_gpu_backends(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Testing Specific GPU Backends");
     println!("================================");
@@ -165,6 +168,7 @@ fn test_specific_gpu_backends(data: &Array2<f64>) -> Result<(), Box<dyn std::err
 }
 
 /// Test different memory strategies
+#[allow(dead_code)]
 fn test_memory_strategies(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Testing Memory Management Strategies");
     println!("======================================");
@@ -214,6 +218,7 @@ fn test_memory_strategies(data: &Array2<f64>) -> Result<(), Box<dyn std::error::
 }
 
 /// Compare performance across different algorithms and configurations
+#[allow(dead_code)]
 fn test_multi_algorithm_comparison(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n4. Multi-Algorithm Performance Comparison");
     println!("=========================================");
@@ -315,6 +320,7 @@ fn test_multi_algorithm_comparison(data: &Array2<f64>) -> Result<(), Box<dyn std
 }
 
 /// Generate large sample data for performance testing
+#[allow(dead_code)]
 fn create_large_sample_data(n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
     use rand_distr::Normal;

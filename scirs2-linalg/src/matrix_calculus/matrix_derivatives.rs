@@ -38,6 +38,7 @@ use crate::norm::matrix_norm;
 /// // For this matrix: det(X) = 3, X^{-1} = [[2/3, -1/3], [-1/3, 2/3]]
 /// // So d(det)/dX = 3 * [[2/3, -1/3], [-1/3, 2/3]]^T = [[2, -1], [-1, 2]]
 /// ```
+#[allow(dead_code)]
 pub fn det_derivative<F>(x: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float
@@ -105,6 +106,7 @@ where
 /// assert!((d_trace[[2, 2]] - 1.0).abs() < 1e-10);
 /// assert!(d_trace[[0, 1]].abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn trace_derivative<F>(
     a: Option<&ArrayView2<F>>,
     shape: (usize, usize),
@@ -156,6 +158,7 @@ where
 ///
 /// // For X = 2*I, X^{-1} = 0.5*I, so derivative should be -0.5*I * E_{1,1} * 0.5*I
 /// ```
+#[allow(dead_code)]
 pub fn inv_directional_derivative<F>(
     x: &ArrayView2<F>,
     direction: &ArrayView2<F>,
@@ -224,6 +227,7 @@ where
 ///
 /// let d_exp = exp_directional_derivative(&x.view(), &v.view(), 10).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn exp_directional_derivative<F>(
     x: &ArrayView2<F>,
     direction: &ArrayView2<F>,
@@ -322,6 +326,7 @@ where
 ///
 /// let d_eigs = eigenvalue_derivatives(&x.view(), &v.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn eigenvalue_derivatives<F>(
     x: &ArrayView2<F>,
     direction: &ArrayView2<F>,
@@ -411,6 +416,7 @@ where
 /// // For Frobenius norm ||X||_F = sqrt(sum(X_ij^2)),
 /// // derivative is X / ||X||_F
 /// ```
+#[allow(dead_code)]
 pub fn norm_derivative<F>(x: &ArrayView2<F>, norm_type: &str) -> LinalgResult<Array2<F>>
 where
     F: Float
@@ -498,6 +504,7 @@ where
 /// let d_ab = matmul_derivative(&a.view(), &b.view(), Some(&va.view()), None).unwrap();
 /// // Should equal va.dot(&b) = [[5, 6], [0, 0]]
 /// ```
+#[allow(dead_code)]
 pub fn matmul_derivative<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -556,6 +563,7 @@ where
 
 /// Simple eigenvalue computation for symmetric matrices (using power iteration for largest)
 /// This is a simplified version for demonstration purposes
+#[allow(dead_code)]
 fn simple_symmetric_eigenvalues<F>(x: &ArrayView2<F>) -> LinalgResult<Array1<F>>
 where
     F: Float

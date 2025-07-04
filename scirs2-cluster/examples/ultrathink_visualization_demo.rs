@@ -11,6 +11,7 @@ use scirs2_cluster::ultrathink_visualization::{
     UltrathinkVisualizationConfig, UltrathinkVisualizer, VisualizationExportFormat,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Clustering Visualization Demo");
     println!("==========================================");
@@ -87,6 +88,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_sample_data() -> Array2<f64> {
     // Create a multi-cluster dataset with interesting properties
     let mut data_vec = Vec::new();
@@ -130,6 +132,7 @@ fn create_sample_data() -> Array2<f64> {
     Array2::from_shape_vec((65, 3), data_vec).unwrap()
 }
 
+#[allow(dead_code)]
 fn display_visualization_insights(
     output: &scirs2_cluster::ultrathink_visualization::UltrathinkVisualizationOutput,
 ) {
@@ -214,6 +217,7 @@ fn display_visualization_insights(
     );
 }
 
+#[allow(dead_code)]
 fn demonstrate_visualization_configurations(
     data: &Array2<f64>,
     result: &scirs2_cluster::ultrathink_clustering::UltrathinkClusteringResult,

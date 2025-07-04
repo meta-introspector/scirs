@@ -122,6 +122,7 @@ pub struct MethodDocumentation {
 }
 
 /// Generate documentation for common interpolation methods
+#[allow(dead_code)]
 pub fn get_method_documentation(method_name: &str) -> Option<MethodDocumentation> {
     match method_name {
         "linear" => Some(linear_interpolation_docs()),
@@ -137,6 +138,7 @@ pub fn get_method_documentation(method_name: &str) -> Option<MethodDocumentation
 }
 
 /// Linear interpolation documentation
+#[allow(dead_code)]
 fn linear_interpolation_docs() -> MethodDocumentation {
     MethodDocumentation {
         method_name: "Linear Interpolation".to_string(),
@@ -187,6 +189,7 @@ fn linear_interpolation_docs() -> MethodDocumentation {
 }
 
 /// Cubic spline interpolation documentation
+#[allow(dead_code)]
 fn cubic_interpolation_docs() -> MethodDocumentation {
     MethodDocumentation {
         method_name: "Cubic Spline Interpolation".to_string(),
@@ -239,6 +242,7 @@ fn cubic_interpolation_docs() -> MethodDocumentation {
 }
 
 /// PCHIP interpolation documentation
+#[allow(dead_code)]
 fn pchip_interpolation_docs() -> MethodDocumentation {
     MethodDocumentation {
         method_name: "PCHIP (Piecewise Cubic Hermite Interpolating Polynomial)".to_string(),
@@ -288,6 +292,7 @@ fn pchip_interpolation_docs() -> MethodDocumentation {
 }
 
 /// B-spline interpolation documentation
+#[allow(dead_code)]
 fn bspline_interpolation_docs() -> MethodDocumentation {
     MethodDocumentation {
         method_name: "B-spline Interpolation".to_string(),
@@ -338,6 +343,7 @@ fn bspline_interpolation_docs() -> MethodDocumentation {
 }
 
 /// RBF interpolation documentation
+#[allow(dead_code)]
 fn rbf_interpolation_docs() -> MethodDocumentation {
     MethodDocumentation {
         method_name: "Radial Basis Function (RBF) Interpolation".to_string(),
@@ -390,6 +396,7 @@ fn rbf_interpolation_docs() -> MethodDocumentation {
 }
 
 /// Kriging interpolation documentation
+#[allow(dead_code)]
 fn kriging_interpolation_docs() -> MethodDocumentation {
     MethodDocumentation {
         method_name: "Kriging (Gaussian Process Regression)".to_string(),
@@ -442,6 +449,7 @@ fn kriging_interpolation_docs() -> MethodDocumentation {
 }
 
 /// Akima interpolation documentation
+#[allow(dead_code)]
 fn akima_interpolation_docs() -> MethodDocumentation {
     MethodDocumentation {
         method_name: "Akima Spline Interpolation".to_string(),
@@ -491,6 +499,7 @@ fn akima_interpolation_docs() -> MethodDocumentation {
 }
 
 /// Hermite interpolation documentation
+#[allow(dead_code)]
 fn hermite_interpolation_docs() -> MethodDocumentation {
     MethodDocumentation {
         method_name: "Hermite Interpolation".to_string(),
@@ -541,6 +550,7 @@ fn hermite_interpolation_docs() -> MethodDocumentation {
 }
 
 /// Print comprehensive method comparison
+#[allow(dead_code)]
 pub fn print_method_comparison() {
     let methods = [
         "linear", "cubic", "pchip", "bspline", "rbf", "kriging", "akima", "hermite",

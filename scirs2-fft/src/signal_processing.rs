@@ -82,6 +82,7 @@ impl Default for FilterSpec {
 /// # Returns
 ///
 /// * Filtered signal
+#[allow(dead_code)]
 pub fn frequency_filter<T>(signal: &[T], filter_spec: &FilterSpec) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
@@ -132,6 +133,7 @@ where
 /// # Returns
 ///
 /// * Filter frequency response
+#[allow(dead_code)]
 fn design_frequency_response(filter_spec: &FilterSpec, size: usize) -> FFTResult<Vec<f64>> {
     if let Some(ref coeffs) = filter_spec.custom_coeffs {
         if filter_spec.filter_type == FilterType::Custom {
@@ -203,6 +205,7 @@ fn design_frequency_response(filter_spec: &FilterSpec, size: usize) -> FFTResult
 ///
 /// * `response` - Filter response to modify
 /// * `filter_spec` - Filter specification
+#[allow(dead_code)]
 fn apply_window_to_response(response: &mut [f64], filter_spec: &FilterSpec) {
     // This is a simplified implementation
     let size = response.len();
@@ -261,6 +264,7 @@ fn apply_window_to_response(response: &mut [f64], filter_spec: &FilterSpec) {
 /// # Returns
 ///
 /// * Bessel function value
+#[allow(dead_code)]
 fn bessel_i0(x: f64) -> f64 {
     // Simplified Bessel function implementation using series expansion
     let ax = x.abs();
@@ -294,6 +298,7 @@ fn bessel_i0(x: f64) -> f64 {
 /// # Returns
 ///
 /// * Convolution result
+#[allow(dead_code)]
 pub fn convolve<T, U>(signal: &[T], kernel: &[U]) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
@@ -360,6 +365,7 @@ where
 /// # Returns
 ///
 /// * Cross-correlation result
+#[allow(dead_code)]
 pub fn cross_correlate<T, U>(signal1: &[T], signal2: &[U]) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
@@ -422,6 +428,7 @@ where
 /// # Returns
 ///
 /// * Filter coefficients
+#[allow(dead_code)]
 pub fn design_fir_filter(filter_spec: &FilterSpec) -> FFTResult<Vec<f64>> {
     let order = filter_spec.order;
 
@@ -512,6 +519,7 @@ pub fn design_fir_filter(filter_spec: &FilterSpec) -> FFTResult<Vec<f64>> {
 /// # Returns
 ///
 /// * Filtered signal
+#[allow(dead_code)]
 pub fn fir_filter<T>(signal: &[T], filter_coeffs: &[f64]) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,

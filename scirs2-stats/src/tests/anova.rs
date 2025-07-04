@@ -64,6 +64,7 @@ pub struct AnovaResult<F> {
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let significant_differences = anova_result.p_value < 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn one_way_anova<F>(groups: &[&ArrayView1<F>]) -> StatsResult<AnovaResult<F>>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + Debug,
@@ -211,6 +212,7 @@ where
 /// Type alias for Tukey HSD results
 pub type TukeyHSDResult<F> = Vec<(usize, usize, F, F, bool)>;
 
+#[allow(dead_code)]
 pub fn tukey_hsd<F>(groups: &[&ArrayView1<F>], alpha: F) -> StatsResult<TukeyHSDResult<F>>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + Debug,
@@ -281,6 +283,7 @@ where
 ///
 /// This is a simplified approximation. A more accurate implementation would use
 /// a lookup table or a more complex algorithm.
+#[allow(dead_code)]
 fn calculate_studentized_range_critical_value<F: Float + NumCast>(
     alpha: F,
     k: F,
@@ -372,6 +375,7 @@ fn calculate_studentized_range_critical_value<F: Float + NumCast>(
 ///
 /// This is a very rough approximation for educational purposes.
 /// In practice, you would use a more accurate algorithm.
+#[allow(dead_code)]
 fn calculate_studentized_range_p_value<F: Float + NumCast>(q: F, k: F, df: F) -> F {
     // This is a very rough approximation that assumes the studentized range
     // distribution can be approximated using the standard normal distribution

@@ -3,6 +3,7 @@
 use ndarray::Array1;
 use scirs2_integrate::cubature::{cubature, Bound};
 
+#[allow(dead_code)]
 fn main() {
     println!("Running simple cubature test...");
 

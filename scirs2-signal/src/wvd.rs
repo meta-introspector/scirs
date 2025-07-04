@@ -76,6 +76,7 @@ impl Default for WvdConfig {
 /// // Compute the WVD
 /// let wvd = wigner_ville(&signal, config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn wigner_ville(signal: &Array1<f64>, config: WvdConfig) -> SignalResult<Array2<f64>> {
     // Convert to analytic signal if needed
     let analytic_signal = if config.analytic {
@@ -121,6 +122,7 @@ pub fn wigner_ville(signal: &Array1<f64>, config: WvdConfig) -> SignalResult<Arr
 /// // Compute the Cross WVD
 /// let xwvd = cross_wigner_ville(&signal1, &signal2, config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn cross_wigner_ville(
     signal1: &Array1<f64>,
     signal2: &Array1<f64>,
@@ -189,6 +191,7 @@ pub fn cross_wigner_ville(
 /// // Compute the SPWVD
 /// let spwvd = smoothed_pseudo_wigner_ville(&signal, &time_win, &freq_win, config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn smoothed_pseudo_wigner_ville(
     signal: &Array1<f64>,
     time_window: &Array1<f64>,
@@ -213,6 +216,7 @@ pub fn smoothed_pseudo_wigner_ville(
 /// Core computation function for the Wigner-Ville Distribution
 ///
 /// This function implements the core algorithm for all variants of the WVD.
+#[allow(dead_code)]
 fn compute_wvd(
     signal: &Array1<Complex64>,
     signal2: Option<&Array1<Complex64>>,
@@ -229,6 +233,7 @@ fn compute_wvd(
 }
 
 /// Core computation function for the Cross Wigner-Ville Distribution
+#[allow(dead_code)]
 fn compute_cross_wvd(
     signal1: &Array1<Complex64>,
     signal2: &Array1<Complex64>,
@@ -350,6 +355,7 @@ fn compute_cross_wvd(
 /// # Returns
 ///
 /// An array of frequency values in Hz
+#[allow(dead_code)]
 pub fn frequency_axis(n_freqs: usize, fs: f64) -> Array1<f64> {
     Array1::linspace(0.0, fs / 2.0, n_freqs)
 }
@@ -364,6 +370,7 @@ pub fn frequency_axis(n_freqs: usize, fs: f64) -> Array1<f64> {
 /// # Returns
 ///
 /// An array of time values in seconds
+#[allow(dead_code)]
 pub fn time_axis(n_times: usize, fs: f64) -> Array1<f64> {
     let dt = 1.0 / fs;
     Array1::linspace(0.0, (n_times as f64 - 1.0) * dt, n_times)
@@ -381,6 +388,7 @@ pub fn time_axis(n_times: usize, fs: f64) -> Array1<f64> {
 /// # Returns
 ///
 /// A vector of ridges, where each ridge is a vector of (time_index, frequency) pairs
+#[allow(dead_code)]
 pub fn extract_ridges(
     wvd: &Array2<f64>,
     frequencies: &Array1<f64>,
@@ -473,11 +481,10 @@ pub fn extract_ridges(
     ridges
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
     use ndarray::Array;
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     #[test]

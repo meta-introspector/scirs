@@ -2,6 +2,7 @@
 //! 
 //! This script verifies that all ultrathink modules compile and have required methods
 
+#[allow(dead_code)]
 fn main() {
     println!("Verifying advanced mode implementations...");
     
@@ -30,11 +31,13 @@ fn main() {
     println!("✅ All advanced mode implementations verified successfully!");
 }
 
+#[allow(dead_code)]
 fn test_ecosystem_coordinator() {
     let _coordinator = scirs2_core::ecosystem_bridge::UltrathinkEcosystemCoordinator::new();
     println!("✓ UltrathinkEcosystemCoordinator::new() works");
 }
 
+#[allow(dead_code)]
 fn test_distributed_computer() {
     match scirs2_core::advanced_distributed_computing::UltrathinkDistributedComputer::new() {
         Ok(_) => println!("✓ UltrathinkDistributedComputer::new() works"),
@@ -42,6 +45,7 @@ fn test_distributed_computer() {
     }
 }
 
+#[allow(dead_code)]
 fn test_neural_architecture_search() {
     let search_space = scirs2_core::neural_architecture_search::SearchSpace::default();
     let objectives = scirs2_core::neural_architecture_search::OptimizationObjectives::default();
@@ -66,6 +70,7 @@ fn test_neural_architecture_search() {
 }
 
 #[cfg(feature = "jit")]
+#[allow(dead_code)]
 fn test_jit_compiler() {
     match scirs2_core::advanced_jit_compilation::UltrathinkJitCompiler::new() {
         Ok(_) => println!("✓ UltrathinkJitCompiler::new() works"),

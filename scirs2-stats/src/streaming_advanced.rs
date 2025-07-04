@@ -938,6 +938,7 @@ impl MemoryMappedReader {
 }
 
 /// Convenience functions for streaming operations
+#[allow(dead_code)]
 pub fn stream_mean<F, R>(data_reader: R) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
@@ -948,6 +949,7 @@ where
     Ok(accumulator.mean())
 }
 
+#[allow(dead_code)]
 pub fn stream_variance<F, R>(data_reader: R) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
@@ -958,6 +960,7 @@ where
     Ok(accumulator.sample_variance())
 }
 
+#[allow(dead_code)]
 pub fn stream_std<F, R>(data_reader: R) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,

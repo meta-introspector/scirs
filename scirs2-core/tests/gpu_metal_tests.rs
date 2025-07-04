@@ -11,6 +11,7 @@ use scirs2_core::gpu::{
 };
 
 #[test]
+#[allow(dead_code)]
 fn test_metal_device_detection() {
     use scirs2_core::gpu::backends::detect_gpu_backends;
 
@@ -43,6 +44,7 @@ fn test_metal_device_detection() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_metal_context_creation() {
     let result = GpuContext::new(GpuBackend::Metal);
 
@@ -63,6 +65,7 @@ fn test_metal_context_creation() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_metal_buffer_creation() {
     let context = match GpuContext::new(GpuBackend::Metal) {
         Ok(c) => c,
@@ -86,6 +89,7 @@ fn test_metal_buffer_creation() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_metal_buffer_options() {
     use metal::MTLCPUCacheMode;
     use metal::MTLHazardTrackingMode;
@@ -117,6 +121,7 @@ fn test_metal_buffer_options() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_metal_kernel_compilation() {
     let context = match GpuContext::new(GpuBackend::Metal) {
         Ok(c) => c,
@@ -136,6 +141,7 @@ fn test_metal_kernel_compilation() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_metal_kernel_execution() {
     let context = match GpuContext::new(GpuBackend::Metal) {
         Ok(c) => c,
@@ -177,6 +183,7 @@ fn test_metal_kernel_execution() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_metal_complex_operations() {
     let context = match GpuContext::new(GpuBackend::Metal) {
         Ok(c) => c,
@@ -244,6 +251,7 @@ fn test_metal_complex_operations() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_metal_performance_shaders() {
     #[cfg(feature = "metal-performance-shaders")]
     {
@@ -263,6 +271,7 @@ fn test_metal_performance_shaders() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_metal_unified_memory() {
     let context = match MetalContext::new() {
         Ok(c) => c,
@@ -282,6 +291,7 @@ fn test_metal_unified_memory() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_metal_error_handling() {
     let context = match GpuContext::new(GpuBackend::Metal) {
         Ok(c) => c,
@@ -301,6 +311,7 @@ fn test_metal_error_handling() {
 
 #[test]
 #[should_panic(expected = "Data size exceeds buffer size")]
+#[allow(dead_code)]
 fn test_metal_buffer_overflow() {
     let context = match GpuContext::new(GpuBackend::Metal) {
         Ok(c) => c,

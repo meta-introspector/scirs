@@ -252,6 +252,7 @@ thread_local! {
 ///
 /// This function first checks for a thread-local configuration, and falls back to the global configuration.
 #[must_use]
+#[allow(dead_code)]
 pub fn get_config() -> Config {
     // Try to get thread-local config first
     let thread_local = THREAD_LOCAL_CONFIG.with(|config| {
@@ -267,12 +268,14 @@ pub fn get_config() -> Config {
 }
 
 /// Set the global configuration
+#[allow(dead_code)]
 pub fn set_global_config(config: Config) {
     let mut global_config = GLOBAL_CONFIG.write().unwrap();
     *global_config = config;
 }
 
 /// Set a thread-local configuration
+#[allow(dead_code)]
 pub fn set_thread_local_config(config: Config) {
     THREAD_LOCAL_CONFIG.with(|thread_config| {
         let mut config_lock = thread_config.lock().unwrap();
@@ -281,6 +284,7 @@ pub fn set_thread_local_config(config: Config) {
 }
 
 /// Clear the thread-local configuration
+#[allow(dead_code)]
 pub fn clear_thread_local_config() {
     THREAD_LOCAL_CONFIG.with(|thread_config| {
         let mut config_lock = thread_config.lock().unwrap();
@@ -289,6 +293,7 @@ pub fn clear_thread_local_config() {
 }
 
 /// Set a global configuration value
+#[allow(dead_code)]
 pub fn set_config_value(key: &str, value: ConfigValue) {
     let mut global_config = GLOBAL_CONFIG.write().unwrap();
     global_config.set(key, value);
@@ -296,12 +301,14 @@ pub fn set_config_value(key: &str, value: ConfigValue) {
 
 /// Get a global configuration value
 #[must_use]
+#[allow(dead_code)]
 pub fn get_config_value(key: &str) -> Option<ConfigValue> {
     let config = get_config();
     config.get(key).cloned()
 }
 
 /// Set a thread-local configuration value
+#[allow(dead_code)]
 pub fn set_thread_local_config_value(key: &str, value: ConfigValue) {
     THREAD_LOCAL_CONFIG.with(|thread_config| {
         let mut config_lock = thread_config.lock().unwrap();

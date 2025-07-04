@@ -7,6 +7,7 @@ use ndarray::{Array1, Array2};
 use scirs2_metrics::error::Result;
 use scirs2_metrics::sklearn_compat::*;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Scikit-learn Compatibility Example");
     println!("=================================");
@@ -58,6 +59,7 @@ fn main() -> Result<()> {
 }
 
 /// Example of classification report functionality
+#[allow(dead_code)]
 fn classification_report_example() -> Result<()> {
     // Create sample multi-class classification data
     let y_true = Array1::from_vec(vec![0, 1, 2, 2, 0, 1, 0, 2, 1, 0]);
@@ -102,6 +104,7 @@ fn classification_report_example() -> Result<()> {
 }
 
 /// Example of precision, recall, f-score, and support calculation
+#[allow(dead_code)]
 fn precision_recall_fscore_support_example() -> Result<()> {
     let y_true = Array1::from_vec(vec![0, 1, 2, 0, 1, 2, 0, 1, 2]);
     let y_pred = Array1::from_vec(vec![0, 2, 1, 0, 0, 2, 1, 1, 2]);
@@ -162,6 +165,7 @@ fn precision_recall_fscore_support_example() -> Result<()> {
 }
 
 /// Example of Cohen's kappa score calculation
+#[allow(dead_code)]
 fn cohen_kappa_example() -> Result<()> {
     println!("Testing Cohen's Kappa Score with different scenarios:");
 
@@ -207,6 +211,7 @@ fn cohen_kappa_example() -> Result<()> {
 }
 
 /// Example of multilabel confusion matrix
+#[allow(dead_code)]
 fn multilabel_confusion_matrix_example() -> Result<()> {
     // Create multilabel classification data
     // Each row is a sample, each column is a label (0 or 1)
@@ -291,6 +296,7 @@ fn multilabel_confusion_matrix_example() -> Result<()> {
 }
 
 /// Example of loss functions
+#[allow(dead_code)]
 fn loss_functions_example() -> Result<()> {
     // Test zero-one loss
     let y_true_binary = Array1::from_vec(vec![0, 1, 0, 1, 0, 1]);
@@ -341,6 +347,7 @@ fn loss_functions_example() -> Result<()> {
 }
 
 /// Example of different averaging methods
+#[allow(dead_code)]
 fn averaging_methods_example() -> Result<()> {
     // Create imbalanced multi-class data
     let y_true = Array1::from_vec(vec![
@@ -414,6 +421,7 @@ fn averaging_methods_example() -> Result<()> {
 }
 
 /// Example of weighted metrics
+#[allow(dead_code)]
 fn weighted_metrics_example() -> Result<()> {
     let y_true = Array1::from_vec(vec![0, 1, 0, 1, 0, 1]);
     let y_pred = Array1::from_vec(vec![0, 1, 1, 1, 0, 0]);

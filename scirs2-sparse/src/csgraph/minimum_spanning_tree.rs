@@ -155,6 +155,7 @@ impl MSTAlgorithm {
 ///
 /// let (total_weight, mst, parents) = minimum_spanning_tree(&graph, "kruskal", true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn minimum_spanning_tree<T, S>(
     graph: &S,
     algorithm: &str,
@@ -199,6 +200,7 @@ where
 }
 
 /// Kruskal's algorithm for MST
+#[allow(dead_code)]
 pub fn kruskal_mst<T, S>(
     graph: &S,
     return_tree: bool,
@@ -266,6 +268,7 @@ where
 }
 
 /// Prim's algorithm for MST
+#[allow(dead_code)]
 pub fn prim_mst<T, S>(
     graph: &S,
     start: usize,
@@ -351,6 +354,7 @@ where
 }
 
 /// Build a sparse matrix representation of the MST from edges
+#[allow(dead_code)]
 fn build_mst_matrix<T>(edges: &[Edge<T>], n: usize) -> SparseResult<CsrArray<T>>
 where
     T: Float + Debug + Copy + 'static,
@@ -384,6 +388,7 @@ where
 /// # Returns
 ///
 /// True if the tree is a valid spanning tree, false otherwise
+#[allow(dead_code)]
 pub fn is_spanning_tree<T, S1, S2>(graph: &S1, tree: &S2, tol: T) -> SparseResult<bool>
 where
     T: Float + Debug + Copy + 'static,
@@ -434,6 +439,7 @@ where
 /// # Returns
 ///
 /// Total weight of the spanning tree
+#[allow(dead_code)]
 pub fn spanning_tree_weight<T, S>(tree: &S) -> SparseResult<T>
 where
     T: Float + Debug + Copy + 'static,
@@ -469,6 +475,7 @@ where
 /// - One minimum spanning tree
 /// - Boolean indicating if multiple MSTs exist
 /// - Total weight of any MST
+#[allow(dead_code)]
 pub fn all_minimum_spanning_trees<T, S>(
     graph: &S,
     algorithm: &str,

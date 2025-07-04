@@ -16,13 +16,12 @@
 //! - **Real-Time Processing**: Ultra-fast associative memory operations
 //! - **Compositional Reasoning**: Ability to compose and decompose concepts
 
-use ndarray::{s, Array, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis, Zip};
-use num_traits::{Float, FromPrimitive, One, Zero};
+use ndarray::{s, Array1, Array2, ArrayView2};
+use num_traits::{Float, FromPrimitive};
 use rand::Rng;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::hash::{Hash, Hasher};
-use std::sync::Arc;
 
 use crate::error::{NdimageError, NdimageResult};
 use scirs2_core::parallel_ops::*;
@@ -436,6 +435,7 @@ impl ImageHDCEncoder {
 ///
 /// Ultra-fast image classification using hyperdimensional computing.
 /// Achieves brain-like efficiency with massive parallelism.
+#[allow(dead_code)]
 pub fn hdc_image_classification<T>(
     images: &[ArrayView2<T>],
     labels: &[String],
@@ -490,6 +490,7 @@ where
 ///
 /// Ultra-fast pattern matching using hyperdimensional representations.
 /// Robust to noise and partial occlusion.
+#[allow(dead_code)]
 pub fn hdc_pattern_matching<T>(
     image: ArrayView2<T>,
     patterns: &[(ArrayView2<T>, String)],
@@ -538,6 +539,7 @@ where
 ///
 /// Detect and encode image features using hyperdimensional computing.
 /// Provides compositional feature representations.
+#[allow(dead_code)]
 pub fn hdc_feature_detection<T>(
     image: ArrayView2<T>,
     feature_types: &[String],
@@ -592,6 +594,7 @@ where
 ///
 /// Process temporal sequences using hyperdimensional computing.
 /// Encodes temporal relationships and sequences efficiently.
+#[allow(dead_code)]
 pub fn hdc_sequence_processing<T>(
     image_sequence: &[ArrayView2<T>],
     sequence_length: usize,
@@ -630,6 +633,7 @@ where
 ///
 /// Compose and decompose visual concepts using hyperdimensional operations.
 /// Enables complex reasoning about image content.
+#[allow(dead_code)]
 pub fn hdc_compositional_reasoning<T>(
     image: ArrayView2<T>,
     concept_memory: &HDCMemory,
@@ -692,6 +696,7 @@ where
 /// - Compositional concept learning
 /// - Recursive pattern decomposition
 /// - Meta-cognitive reasoning capabilities
+#[allow(dead_code)]
 pub fn ultrathink_hierarchical_hdc_reasoning<T>(
     image: ArrayView2<T>,
     hierarchy_levels: usize,
@@ -759,6 +764,7 @@ where
 /// - Maintains memory consolidation through replay
 /// - Implements interference-resistant encoding
 /// - Provides meta-learning capabilities
+#[allow(dead_code)]
 pub fn ultrathink_continual_learning_hdc<T>(
     training_images: &[ArrayView2<T>],
     training_labels: &[String],
@@ -830,6 +836,7 @@ where
 /// - Temporal-spatial integration
 /// - Cross-modal attention mechanisms
 /// - Multi-scale feature binding
+#[allow(dead_code)]
 pub fn ultrathink_multimodal_hdc_fusion<T>(
     visual_data: ArrayView2<T>,
     temporal_sequence: Option<&[ArrayView2<T>]>,
@@ -911,6 +918,7 @@ where
 /// - Forgetting mechanisms for outdated information
 /// - Adaptive threshold adjustment
 /// - Performance monitoring and optimization
+#[allow(dead_code)]
 pub fn ultrathink_online_learning_hdc<T>(
     stream_image: ArrayView2<T>,
     true_label: Option<&str>,
@@ -987,6 +995,7 @@ pub struct CompositionResult {
     pub image_representation: Hypervector,
 }
 
+#[allow(dead_code)]
 fn non_maximum_suppression(
     mut matches: Vec<PatternMatch>,
     overlap_threshold: f64,
@@ -1014,6 +1023,7 @@ fn non_maximum_suppression(
     Ok(kept_matches)
 }
 
+#[allow(dead_code)]
 fn calculate_overlap(match1: &PatternMatch, match2: &PatternMatch) -> f64 {
     let (y1, x1) = match1.position;
     let (h1, w1) = match1.size;
@@ -1035,6 +1045,7 @@ fn calculate_overlap(match1: &PatternMatch, match2: &PatternMatch) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn analyze_patch_for_feature<T>(
     _patch: &ndarray::ArrayView2<T>,
     feature_type: &str,
@@ -1551,6 +1562,7 @@ pub struct OnlineLearningResult {
 
 // UltraThink Mode Helper Functions
 
+#[allow(dead_code)]
 fn weight_hypervector(hv: &Hypervector, weight: f64) -> Hypervector {
     let weighted_data = hv
         .sparse_data
@@ -1565,6 +1577,7 @@ fn weight_hypervector(hv: &Hypervector, weight: f64) -> Hypervector {
     }
 }
 
+#[allow(dead_code)]
 fn generate_reasoning_chains(
     _abstraction_levels: &[AbstractionLevel],
     _concept_library: &HierarchicalConceptLibrary,
@@ -1578,6 +1591,7 @@ fn generate_reasoning_chains(
     }])
 }
 
+#[allow(dead_code)]
 fn assess_reasoning_confidence(_reasoning_chains: &[ReasoningChain]) -> MetaCognitiveAssessment {
     MetaCognitiveAssessment {
         confidence_score: 0.8,
@@ -1587,6 +1601,7 @@ fn assess_reasoning_confidence(_reasoning_chains: &[ReasoningChain]) -> MetaCogn
     }
 }
 
+#[allow(dead_code)]
 fn apply_interference_resistant_encoding(
     encoding: &Hypervector,
     _memory_system: &ContinualLearningMemory,
@@ -1597,6 +1612,7 @@ fn apply_interference_resistant_encoding(
     Ok(encoding.bundle(&noise_hv))
 }
 
+#[allow(dead_code)]
 fn calculate_experience_importance(
     _encoding: &Hypervector,
     _memory_system: &ContinualLearningMemory,
@@ -1605,6 +1621,7 @@ fn calculate_experience_importance(
     0.7
 }
 
+#[allow(dead_code)]
 fn perform_memory_consolidation(
     _new_experiences: &[Experience],
     _memory_system: &mut ContinualLearningMemory,
@@ -1617,6 +1634,7 @@ fn perform_memory_consolidation(
     })
 }
 
+#[allow(dead_code)]
 fn encode_semantic_concepts(concepts: &[String], config: &HDCConfig) -> NdimageResult<Hypervector> {
     let mut result = Hypervector::random(config.hypervector_dim, 0.0);
 
@@ -1633,6 +1651,7 @@ fn encode_semantic_concepts(concepts: &[String], config: &HDCConfig) -> NdimageR
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn compute_attention_weights(
     _visual_encoding: &Hypervector,
     attention_map: ArrayView2<f64>,
@@ -1643,6 +1662,7 @@ fn compute_attention_weights(
     Ok(weights)
 }
 
+#[allow(dead_code)]
 fn perform_weighted_fusion(
     components: &[FusionComponent],
     _attention_weights: Option<&Vec<f64>>,
@@ -1664,6 +1684,7 @@ fn perform_weighted_fusion(
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn analyze_cross_modal_coherence(
     components: &[FusionComponent],
     _config: &HDCConfig,
@@ -1699,6 +1720,7 @@ fn analyze_cross_modal_coherence(
     })
 }
 
+#[allow(dead_code)]
 fn calculate_prediction_error(prediction: &PredictionResult, true_label: &str) -> f64 {
     if prediction.predicted_label == true_label {
         0.0

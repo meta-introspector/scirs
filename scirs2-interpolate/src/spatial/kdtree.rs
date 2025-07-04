@@ -929,6 +929,7 @@ where
 
 /// QuckSelect algorithm to find the k-th smallest element by a key function
 /// This modifies the slice to partition it
+#[allow(dead_code)]
 fn quickselect_by_key<T, F, K>(items: &mut [T], k: usize, key_fn: F)
 where
     F: Fn(&T) -> K,

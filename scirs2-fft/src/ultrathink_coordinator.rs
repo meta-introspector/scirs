@@ -2364,12 +2364,14 @@ pub struct FftPerformanceMetrics {
 }
 
 /// Create a new ultrathink FFT coordinator with default configuration
+#[allow(dead_code)]
 pub fn create_ultrathink_fft_coordinator<F: Float + Debug + std::ops::AddAssign>(
 ) -> FFTResult<UltrathinkFftCoordinator<F>> {
     UltrathinkFftCoordinator::new(UltrathinkFftConfig::default())
 }
 
 /// Create a new ultrathink FFT coordinator with custom configuration
+#[allow(dead_code)]
 pub fn create_ultrathink_fft_coordinator_with_config<F: Float + Debug + std::ops::AddAssign>(
     config: UltrathinkFftConfig,
 ) -> FFTResult<UltrathinkFftCoordinator<F>> {

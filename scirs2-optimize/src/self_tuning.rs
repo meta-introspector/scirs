@@ -223,14 +223,17 @@ impl ParameterManager {
     fn update_parameter(&mut self, name: &str, new_value: ParameterValue) -> ScirsResult<()> {
         if let Some((min_bound, max_bound)) = self.parameter_bounds.get(name) {
             if new_value < *min_bound || new_value > *max_bound {
-                return Err(ScirsError::InvalidInput(format!(
-                    "Parameter {} value {:?} is out of bounds [{:?}, {:?}]",
-                    name, new_value, min_bound, max_bound
-                )));
+                return Err(ScirsError::InvalidInput(
+                    scirs2_core::error::ErrorContext::new(format!(
+                        "Parameter {} value {:?} is out of bounds [{:?}, {:?}]",
+                        name, new_value, min_bound, max_bound
+                    )),
+                ));
             }
         }
 
-        self.current_values.insert(name.to_string(), new_value);
+        self.current_values
+            .insert(name.to_string(), new_value.clone());
 
         if let Some(param) = self.parameters.get_mut(name) {
             param.set_value(new_value)?;
@@ -352,21 +355,23 @@ where
                 }
             }
         } else if type_id == TypeId::of::<String>() {
-            if let ParameterValue::String(s_val) = value {
+            if let ParameterValue::String(ref s_val) = value {
                 if let Some(self_any) =
                     (&mut self.current_value as &mut dyn Any).downcast_mut::<String>()
                 {
-                    *self_any = s_val;
+                    *self_any = s_val.clone();
                     return Ok(());
                 }
             }
         }
 
-        Err(ScirsError::InvalidInput(format!(
-            "Cannot convert parameter value {:?} to type {}",
-            value,
-            std::any::type_name::<T>()
-        )))
+        Err(ScirsError::InvalidInput(
+            scirs2_core::error::ErrorContext::new(format!(
+                "Cannot convert parameter value {:?} to type {}",
+                value,
+                std::any::type_name::<T>()
+            )),
+        ))
     }
 
     fn get_value(&self) -> ParameterValue {
@@ -672,15 +677,20 @@ impl AdaptationEngine {
                 self.convergence_based_adaptation(parameter_manager, metrics, config)
             }
             AdaptationStrategy::ReinforcementLearning => {
-                if let Some(ref mut agent) = self.rl_agent {
-                    self.rl_based_adaptation(agent, parameter_manager, metrics, config)
+                if self.rl_agent.is_some() {
+                    // Temporarily take the agent to avoid borrow conflicts
+                    let mut agent = self.rl_agent.take().unwrap();
+                    let result =
+                        self.rl_based_adaptation(&mut agent, parameter_manager, metrics, config);
+                    self.rl_agent = Some(agent);
+                    result
                 } else {
                     self.performance_based_adaptation(parameter_manager, metrics, config)
                 }
             }
             AdaptationStrategy::BayesianOptimization => {
-                if let Some(ref mut optimizer) = self.bayesian_optimizer {
-                    self.bayesian_adaptation(optimizer, parameter_manager, metrics, config)
+                if let Some(ref mut _optimizer) = self.bayesian_optimizer {
+                    self.bayesian_adaptation(parameter_manager, metrics, config)
                 } else {
                     self.performance_based_adaptation(parameter_manager, metrics, config)
                 }
@@ -695,7 +705,7 @@ impl AdaptationEngine {
         &self,
         parameter_manager: &mut ParameterManager,
         metrics: &PerformanceMetrics,
-        config: &SelfTuningConfig,
+        _config: &SelfTuningConfig,
     ) -> ScirsResult<AdaptationResult> {
         let mut changes = Vec::new();
         let mut parameters_changed = false;
@@ -705,13 +715,14 @@ impl AdaptationEngine {
             // Slow convergence - increase exploration
             for (name, value) in parameter_manager.current_values().clone() {
                 if name.contains("learning_rate") || name.contains("step_size") {
+                    let old_value = value.clone();
                     if let Some(new_value) =
                         self.increase_parameter(value, 1.1, parameter_manager.get_bounds(&name))
                     {
-                        parameter_manager.update_parameter(name, new_value.clone())?;
+                        parameter_manager.update_parameter(&name, new_value.clone())?;
                         changes.push(ParameterChange {
                             name: name.clone(),
-                            old_value: value,
+                            old_value,
                             new_value,
                             reason: "Increase step size for slow convergence".to_string(),
                         });
@@ -723,13 +734,14 @@ impl AdaptationEngine {
             // Fast convergence - might overshoot
             for (name, value) in parameter_manager.current_values().clone() {
                 if name.contains("learning_rate") || name.contains("step_size") {
+                    let old_value = value.clone();
                     if let Some(new_value) =
                         self.decrease_parameter(value, 0.9, parameter_manager.get_bounds(&name))
                     {
-                        parameter_manager.update_parameter(name, new_value.clone())?;
+                        parameter_manager.update_parameter(&name, new_value.clone())?;
                         changes.push(ParameterChange {
                             name: name.clone(),
-                            old_value: value,
+                            old_value,
                             new_value,
                             reason: "Decrease step size for fast convergence".to_string(),
                         });
@@ -777,23 +789,24 @@ impl AdaptationEngine {
         &mut self,
         parameter_manager: &mut ParameterManager,
         metrics: &PerformanceMetrics,
-        config: &SelfTuningConfig,
+        _config: &SelfTuningConfig,
     ) -> ScirsResult<AdaptationResult> {
         let suggestions = if let Some(ref mut optimizer) = self.bayesian_optimizer {
             optimizer.suggest_parameters(parameter_manager.current_values(), metrics)?
         } else {
             return Err(ScirsError::ComputationError(
-                "Bayesian optimizer not available".to_string(),
+                scirs2_core::error::ErrorContext::new("Bayesian optimizer not available"),
             ));
         };
         let mut changes = Vec::new();
 
         for (name, new_value) in suggestions {
             if let Some(old_value) = parameter_manager.current_values().get(&name) {
+                let old_value_clone = old_value.clone();
                 parameter_manager.update_parameter(&name, new_value.clone())?;
                 changes.push(ParameterChange {
                     name: name.clone(),
-                    old_value: old_value.clone(),
+                    old_value: old_value_clone,
                     new_value,
                     reason: "Bayesian optimization suggestion".to_string(),
                 });

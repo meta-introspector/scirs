@@ -6,6 +6,7 @@
 
 use crate::error::StatsError;
 use crate::error_standardization::PerformanceImpact;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -360,7 +361,7 @@ pub enum EffortLevel {
 }
 
 /// Compatibility impact
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CompatibilityImpact {
     None,
     Minor,
@@ -745,6 +746,7 @@ impl UltraThinkErrorEngine {
 use ndarray::Array1;
 use rand::{rng, seq::SliceRandom};
 
+#[allow(dead_code)]
 fn bootstrap_augment(data: &Array1<f64>, target_size: usize) -> Array1<f64> {
     let mut rng = rng();
     let mut augmented = Vec::with_capacity(target_size);
@@ -783,6 +785,7 @@ fn bootstrap_augment(data: &Array1<f64>, target_size: usize) -> Array1<f64> {
                     code_example: Some(
                         r#"
 // Example: Ridge regularization for matrix operations
+#[allow(dead_code)]
 fn add_ridge_regularization(matrix: &mut Array2<f64>, lambda: f64) {
     for i in 0..matrix.nrows().min(matrix.ncols()) {
         matrix[[i, i]] += lambda;
@@ -909,6 +912,7 @@ impl Default for ErrorEngineConfig {
 }
 
 /// Convenience function to create enhanced error context
+#[allow(dead_code)]
 pub fn create_enhanced_error_context(
     error: StatsError,
     function_name: &str,

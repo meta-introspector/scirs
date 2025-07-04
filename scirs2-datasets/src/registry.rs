@@ -261,12 +261,14 @@ impl DatasetRegistry {
 }
 
 /// Get the global dataset registry
+#[allow(dead_code)]
 pub fn get_registry() -> DatasetRegistry {
     DatasetRegistry::default()
 }
 
 /// Load a dataset by name from the registry
 #[cfg(feature = "download")]
+#[allow(dead_code)]
 pub fn load_dataset_by_name(name: &str, force_download: bool) -> Result<crate::utils::Dataset> {
     let registry = get_registry();
 
@@ -318,6 +320,7 @@ pub fn load_dataset_by_name(name: &str, force_download: bool) -> Result<crate::u
 
 /// Load a local dataset file
 #[cfg(feature = "download")]
+#[allow(dead_code)]
 fn load_local_dataset(
     name: &str,
     relative_path: &str,
@@ -361,6 +364,7 @@ fn load_local_dataset(
 
 #[cfg(not(feature = "download"))]
 /// Load a dataset by name from the registry (stub for when download feature is disabled)
+#[allow(dead_code)]
 pub fn load_dataset_by_name(_name: &str, _force_download: bool) -> Result<crate::utils::Dataset> {
     Err(DatasetsError::Other(
         "Download feature is not enabled. Recompile with --features download".to_string(),
@@ -467,8 +471,7 @@ mod tests {
         for expected in expected_datasets {
             assert!(
                 datasets.contains(&expected.to_string()),
-                "Dataset '{}' not found in registry",
-                expected
+                "Dataset '{expected}' not found in registry"
             );
         }
     }

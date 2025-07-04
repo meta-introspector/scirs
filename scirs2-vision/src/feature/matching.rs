@@ -653,6 +653,7 @@ impl KdTree {
 }
 
 /// Calculate Euclidean distance between two points
+#[allow(dead_code)]
 fn euclidean_distance(p1: &[f32], p2: &[f32]) -> f32 {
     p1.iter()
         .zip(p2.iter())
@@ -1055,6 +1056,7 @@ impl RansacMatcher {
 }
 
 /// Estimate homography matrix from point correspondences using Direct Linear Transform (DLT)
+#[allow(dead_code)]
 fn estimate_homography(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<Array2<f32>> {
     if src_points.len() != dst_points.len() || src_points.len() < 4 {
         return Err(VisionError::InvalidParameter(
@@ -1114,6 +1116,7 @@ fn estimate_homography(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Resu
 }
 
 /// Apply homography transformation to a point
+#[allow(dead_code)]
 fn apply_homography(h: &Array2<f32>, point: [f32; 2]) -> [f32; 2] {
     let [x, y] = point;
     let w = h[[2, 0]] * x + h[[2, 1]] * y + h[[2, 2]];
@@ -1129,6 +1132,7 @@ fn apply_homography(h: &Array2<f32>, point: [f32; 2]) -> [f32; 2] {
 }
 
 /// Estimate affine transformation from point correspondences using least squares
+#[allow(dead_code)]
 fn estimate_affine(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<Array2<f32>> {
     if src_points.len() != dst_points.len() || src_points.len() < 3 {
         return Err(VisionError::InvalidParameter(
@@ -1180,6 +1184,7 @@ fn estimate_affine(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Result<A
 }
 
 /// Apply affine transformation to a point
+#[allow(dead_code)]
 fn apply_affine(affine: &Array2<f32>, point: [f32; 2]) -> [f32; 2] {
     let [x, y] = point;
     [
@@ -1314,6 +1319,7 @@ impl Default for MatchStatistics {
 
 /// Helper functions for linear algebra operations
 /// Normalize points for better numerical stability in homography estimation
+#[allow(dead_code)]
 fn normalize_points(points: &[[f32; 2]]) -> (Vec<[f32; 2]>, Array2<f32>) {
     if points.is_empty() {
         return (Vec::new(), Array2::eye(3));
@@ -1356,6 +1362,7 @@ fn normalize_points(points: &[[f32; 2]]) -> (Vec<[f32; 2]>, Array2<f32>) {
 }
 
 /// Compute A^T * A for homography estimation
+#[allow(dead_code)]
 fn compute_ata(a: &Array2<f32>) -> Array2<f32> {
     let (m, n) = a.dim();
     let mut ata = Array2::zeros((n, n));
@@ -1372,6 +1379,7 @@ fn compute_ata(a: &Array2<f32>) -> Array2<f32> {
 }
 
 /// Find smallest eigenvector for homography estimation using power iteration
+#[allow(dead_code)]
 fn find_smallest_eigenvector_homography(matrix: &Array2<f32>) -> Result<Vec<f32>> {
     let n = matrix.shape()[0];
     let mut v = vec![1.0; n];
@@ -1418,6 +1426,7 @@ fn find_smallest_eigenvector_homography(matrix: &Array2<f32>) -> Result<Vec<f32>
 }
 
 /// Compute 3x3 matrix inverse
+#[allow(dead_code)]
 fn matrix_inverse_3x3(matrix: &Array2<f32>) -> Result<Array2<f32>> {
     let m = matrix;
     let det = m[[0, 0]] * (m[[1, 1]] * m[[2, 2]] - m[[1, 2]] * m[[2, 1]])
@@ -1445,6 +1454,7 @@ fn matrix_inverse_3x3(matrix: &Array2<f32>) -> Result<Array2<f32>> {
 }
 
 /// Multiply two 3x3 matrices
+#[allow(dead_code)]
 fn matrix_multiply_3x3(a: &Array2<f32>, b: &Array2<f32>) -> Array2<f32> {
     let mut result = Array2::zeros((3, 3));
     for i in 0..3 {
@@ -1458,6 +1468,7 @@ fn matrix_multiply_3x3(a: &Array2<f32>, b: &Array2<f32>) -> Array2<f32> {
 }
 
 /// Solve least squares problem using normal equations
+#[allow(dead_code)]
 fn solve_least_squares(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
     let (m, n) = a.dim();
 
@@ -1484,6 +1495,7 @@ fn solve_least_squares(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
 }
 
 /// Solve linear system using Gaussian elimination with partial pivoting
+#[allow(dead_code)]
 fn solve_linear_system(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
     let n = a.shape()[0];
     let mut a_copy = a.clone();
@@ -1538,6 +1550,7 @@ fn solve_linear_system(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
 }
 
 /// Estimate fundamental matrix using 8-point algorithm
+#[allow(dead_code)]
 fn estimate_fundamental_matrix(
     src_points: &[[f32; 2]],
     dst_points: &[[f32; 2]],
@@ -1592,6 +1605,7 @@ fn estimate_fundamental_matrix(
 }
 
 /// Estimate essential matrix (simplified using fundamental matrix)
+#[allow(dead_code)]
 fn estimate_essential_matrix(
     src_points: &[[f32; 2]],
     dst_points: &[[f32; 2]],
@@ -1602,6 +1616,7 @@ fn estimate_essential_matrix(
 }
 
 /// Compute epipolar error for a point correspondence
+#[allow(dead_code)]
 fn compute_epipolar_error(matrix: &Array2<f32>, p1: &[f32; 3], p2: &[f32; 3]) -> f32 {
     // Compute F * p1
     let mut fp1 = [0.0f32; 3];
@@ -1627,6 +1642,7 @@ fn compute_epipolar_error(matrix: &Array2<f32>, p1: &[f32; 3], p2: &[f32; 3]) ->
 }
 
 /// Transpose a 3x3 matrix
+#[allow(dead_code)]
 fn transpose_3x3(matrix: &Array2<f32>) -> Array2<f32> {
     let mut result = Array2::zeros((3, 3));
     for i in 0..3 {

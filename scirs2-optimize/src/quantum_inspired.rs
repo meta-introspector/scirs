@@ -8,11 +8,8 @@
 //! - Quantum interference patterns for optimization landscapes
 //! - Quantum state collapse for solution selection
 
-use crate::error::OptimizeError;
 use crate::result::OptimizeResults;
-use ndarray::{Array1, Array2, ArrayView1, Axis};
-use scirs2_core::error::CoreResult;
-use scirs2_core::simd_ops::SimdUnifiedOps;
+use ndarray::{Array1, Array2, ArrayView1};
 use std::collections::VecDeque;
 use std::f64::consts::PI;
 
@@ -677,6 +674,7 @@ pub struct QuantumOptimizationStats {
 }
 
 /// Convenience function for quantum-inspired optimization
+#[allow(dead_code)]
 pub fn quantum_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
@@ -694,6 +692,7 @@ where
 }
 
 /// Quantum-enhanced particle swarm optimization
+#[allow(dead_code)]
 pub fn quantum_particle_swarm_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

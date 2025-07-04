@@ -5,6 +5,7 @@ use scirs2_signal::dwt::Wavelet;
 use scirs2_signal::swt::{iswt, swt};
 use scirs2_signal::waveforms::chirp;
 
+#[allow(dead_code)]
 fn main() {
     // Generate a chirp signal
     let fs = 1000.0; // Sample rate in Hz

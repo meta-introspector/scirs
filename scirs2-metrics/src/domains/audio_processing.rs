@@ -198,7 +198,7 @@ pub struct MusicInformationMetrics {
 }
 
 /// Beat tracking evaluation metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct BeatTrackingMetrics {
     /// F-measure for beat tracking
     f_measure: f64,
@@ -213,7 +213,7 @@ pub struct BeatTrackingMetrics {
 }
 
 /// Continuity metrics for beat tracking
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ContinuityMetrics {
     /// CMLt (Continuity-based measure with tolerance)
     cmlt: f64,
@@ -226,7 +226,7 @@ pub struct ContinuityMetrics {
 }
 
 /// Chord recognition metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ChordRecognitionMetrics {
     /// Weighted Chord Symbol Recall (WCSR)
     wcsr: f64,
@@ -243,7 +243,7 @@ pub struct ChordRecognitionMetrics {
 }
 
 /// Key detection metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct KeyDetectionMetrics {
     /// Correct key detection rate
     correct_key_rate: f64,
@@ -258,7 +258,7 @@ pub struct KeyDetectionMetrics {
 }
 
 /// Tempo estimation metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct TempoEstimationMetrics {
     /// Tempo accuracy within tolerance
     tempo_accuracy: f64,
@@ -312,7 +312,7 @@ pub struct AudioQualityMetrics {
 }
 
 /// Perceptual audio quality metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct PerceptualAudioMetrics {
     /// PESQ (Perceptual Evaluation of Speech Quality)
     pesq: Option<f64>,
@@ -327,7 +327,7 @@ pub struct PerceptualAudioMetrics {
 }
 
 /// Objective audio quality metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ObjectiveAudioMetrics {
     /// Signal-to-Noise Ratio
     snr: f64,
@@ -344,7 +344,7 @@ pub struct ObjectiveAudioMetrics {
 }
 
 /// Spectral distortion metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SpectralDistortionMetrics {
     /// Log-spectral distance
     log_spectral_distance: f64,
@@ -357,7 +357,7 @@ pub struct SpectralDistortionMetrics {
 }
 
 /// Speech intelligibility metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct IntelligibilityMetrics {
     /// Normalized Covariance Measure (NCM)
     ncm: f64,
@@ -381,7 +381,7 @@ pub struct SoundEventDetectionMetrics {
 }
 
 /// Event-based detection metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct EventBasedMetrics {
     /// Error rate
     error_rate: f64,
@@ -398,7 +398,7 @@ pub struct EventBasedMetrics {
 }
 
 /// Segment-based detection metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SegmentBasedMetrics {
     /// F1 score
     f1_score: f64,
@@ -411,7 +411,7 @@ pub struct SegmentBasedMetrics {
 }
 
 /// Class-wise event detection metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ClassWiseEventMetrics {
     /// Per-class F1 scores
     class_f1_scores: HashMap<String, f64>,
@@ -465,7 +465,7 @@ pub struct SpeakerVerificationMetrics {
 }
 
 /// Speaker diarization metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SpeakerDiarizationMetrics {
     /// Diarization Error Rate (DER)
     der: f64,
@@ -506,7 +506,7 @@ pub struct ContentBasedRetrievalMetrics {
 }
 
 /// Acoustic similarity metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct AcousticSimilarityMetrics {
     /// Mel-frequency cepstral coefficient similarity
     mfcc_similarity: f64,
@@ -521,7 +521,7 @@ pub struct AcousticSimilarityMetrics {
 }
 
 /// Semantic similarity metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SemanticSimilarityMetrics {
     /// Tag-based similarity
     tag_similarity: f64,
@@ -1712,17 +1712,71 @@ impl AudioEvaluationReport {
 macro_rules! impl_new {
     ($struct_name:ident) => {
         impl $struct_name {
+            #[allow(dead_code)]
             fn new() -> Self {
                 Self::default()
             }
         }
-
-        impl Default for $struct_name {
-            fn default() -> Self {
-                unsafe { std::mem::zeroed() }
-            }
-        }
     };
+}
+
+impl Default for MusicSimilarityMetrics {
+    fn default() -> Self {
+        Self {
+            average_precision: 0.0,
+            mean_reciprocal_rank: 0.0,
+            ndcg: 0.0,
+            precision_at_k: HashMap::new(),
+            cover_song_metrics: CoverSongMetrics::default(),
+        }
+    }
+}
+
+impl Default for CoverSongMetrics {
+    fn default() -> Self {
+        Self {
+            map: 0.0,
+            top1_accuracy: 0.0,
+            top10_accuracy: 0.0,
+            mr1: 0.0,
+        }
+    }
+}
+
+impl Default for SpeakerIdentificationMetrics {
+    fn default() -> Self {
+        Self {
+            top1_accuracy: 0.0,
+            top5_accuracy: 0.0,
+            mean_reciprocal_rank: 0.0,
+            speaker_confusion: HashMap::new(),
+        }
+    }
+}
+
+impl Default for SpeakerVerificationMetrics {
+    fn default() -> Self {
+        Self {
+            eer: 0.0,
+            dcf: 0.0,
+            min_dcf: 0.0,
+            auc: 0.0,
+            far_at_threshold: HashMap::new(),
+            frr_at_threshold: HashMap::new(),
+        }
+    }
+}
+
+impl Default for ContentBasedRetrievalMetrics {
+    fn default() -> Self {
+        Self {
+            map: 0.0,
+            precision_at_k: HashMap::new(),
+            recall_at_k: HashMap::new(),
+            ndcg: 0.0,
+            mrr: 0.0,
+        }
+    }
 }
 
 impl_new!(BeatTrackingMetrics);

@@ -7,26 +7,18 @@
 //! - Optimized memory access patterns
 //! - SIMD operations where applicable
 
-use ndarray::{Array, Array2, Array3, Array4, ArrayView2, ArrayView3, Axis, Dimension};
+use ndarray::{Array2, Array3, Axis, Dimension};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 
 use super::{boundary_optimized::*, BorderMode};
 use crate::error::{NdimageError, NdimageResult};
+use crate::utils::safe_f64_to_float;
 
-/// Helper function for safe conversion of hardcoded constants
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
 
 /// Helper function for safe i32 conversion
+#[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
     T::from_i32(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
@@ -34,6 +26,7 @@ fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
 }
 
 /// Helper function for safe float to usize conversion
+#[allow(dead_code)]
 fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
     value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert float to usize".to_string())
@@ -41,6 +34,7 @@ fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 }
 
 /// Helper function for safe float to f64 conversion
+#[allow(dead_code)]
 fn safe_float_to_f64<T: Float>(value: T) -> NdimageResult<f64> {
     value
         .to_f64()
@@ -79,6 +73,7 @@ impl Default for BatchConfig {
 /// * `mode` - Boundary handling mode
 /// * `cval` - Constant value for constant mode
 /// * `config` - Batch processing configuration
+#[allow(dead_code)]
 pub fn gaussian_filter_batch<T>(
     batch: &Array3<T>,
     sigma: T,
@@ -140,6 +135,7 @@ where
 }
 
 /// Apply median filter to a batch of 2D images
+#[allow(dead_code)]
 pub fn median_filter_batch<T>(
     batch: &Array3<T>,
     size: &[usize],
@@ -200,6 +196,7 @@ where
 }
 
 /// Apply generic convolution to a batch of images with the same kernel
+#[allow(dead_code)]
 pub fn convolve_batch<T>(
     batch: &Array3<T>,
     kernel: &Array2<T>,
@@ -249,6 +246,7 @@ where
 }
 
 /// Process a chunk of images
+#[allow(dead_code)]
 fn process_batch_chunk<T>(
     chunk: &Array3<T>,
     kernel: &Array2<T>,
@@ -295,6 +293,7 @@ where
 }
 
 /// Apply Sobel edge detection to a batch of images
+#[allow(dead_code)]
 pub fn sobel_batch<T>(
     batch: &Array3<T>,
     axis: Option<usize>,
@@ -366,6 +365,7 @@ where
 }
 
 /// Apply a custom filter function to a batch of images
+#[allow(dead_code)]
 pub fn apply_filter_batch<T, F>(
     batch: &Array3<T>,
     filter_fn: F,
@@ -418,6 +418,7 @@ where
 
 // Helper functions
 
+#[allow(dead_code)]
 fn create_gaussian_kernel_2d<T>(sigma: T, size: usize) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug,
@@ -447,6 +448,7 @@ where
     Ok(kernel)
 }
 
+#[allow(dead_code)]
 fn create_sobel_kernels<T>() -> NdimageResult<(Array2<T>, Array2<T>)>
 where
     T: Float + FromPrimitive,

@@ -60,6 +60,7 @@ impl<F: Float> TestResult<F> {
 /// # Returns
 ///
 /// * Test result with chi-square statistic and p-value
+#[allow(dead_code)]
 pub fn box_m_test<F>(groups: &[ArrayView2<F>], significance_level: F) -> LinalgResult<TestResult<F>>
 where
     F: Float
@@ -203,6 +204,7 @@ where
 /// # Returns
 ///
 /// * Test result with W statistic and p-value
+#[allow(dead_code)]
 pub fn mauchly_sphericity_test<F>(
     data: &ArrayView2<F>,
     significance_level: F,
@@ -276,6 +278,7 @@ where
 /// # Returns
 ///
 /// * Test result containing both skewness and kurtosis components
+#[allow(dead_code)]
 pub fn mardia_normality_test<F>(
     data: &ArrayView2<F>,
     significance_level: F,
@@ -387,6 +390,7 @@ where
 /// # Returns
 ///
 /// * Test result with T² statistic and F-distributed p-value
+#[allow(dead_code)]
 pub fn hotelling_t2_test<F>(
     data: &ArrayView2<F>,
     mu0: Option<&ArrayView1<F>>,
@@ -472,6 +476,7 @@ where
 
 // Helper functions for computing distribution functions (simplified implementations)
 
+#[allow(dead_code)]
 fn compute_box_correction_c1<F>(sample_sizes: &[usize], p: usize) -> LinalgResult<F>
 where
     F: Float + Zero + One + Copy + num_traits::FromPrimitive,
@@ -492,6 +497,7 @@ where
     Ok(c1)
 }
 
+#[allow(dead_code)]
 fn chi_square_survival_function<F>(x: F, df: usize) -> LinalgResult<F>
 where
     F: Float + Zero + One + Copy + num_traits::FromPrimitive,
@@ -513,6 +519,7 @@ where
     Ok(approx.min(F::one()))
 }
 
+#[allow(dead_code)]
 fn f_survival_function<F>(x: F, _df1: usize, _df2: usize) -> LinalgResult<F>
 where
     F: Float + Zero + One + Copy + num_traits::FromPrimitive,
@@ -527,6 +534,7 @@ where
     Ok(approx)
 }
 
+#[allow(dead_code)]
 fn standard_normal_survival_function<F>(z: F) -> F
 where
     F: Float + Zero + One + Copy + num_traits::FromPrimitive,
@@ -545,6 +553,7 @@ where
 use ndarray::array;
 
 #[test]
+#[allow(dead_code)]
 fn test_hotelling_t2_test() {
     // Test data with some variation to avoid singular covariance matrix
     let data = array![
@@ -566,6 +575,7 @@ fn test_hotelling_t2_test() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_mauchly_sphericity_test() {
     // Test with identity-like covariance (should not reject sphericity)
     let data = array![
@@ -591,6 +601,7 @@ fn test_mauchly_sphericity_test() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_mardia_normality_test() {
     // Simple test data
     let data = array![
@@ -610,6 +621,7 @@ fn test_mardia_normality_test() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_box_m_test() {
     // Create two groups with more samples and variation to avoid singular matrices
     let group1 = array![

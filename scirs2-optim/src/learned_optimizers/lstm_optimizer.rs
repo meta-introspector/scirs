@@ -11,7 +11,6 @@ use std::collections::{HashMap, VecDeque};
 
 use super::{LearnedOptimizerConfig, MetaOptimizationStrategy};
 use crate::error::{OptimError, Result};
-use crate::optimizers::Optimizer;
 
 /// LSTM-based neural optimizer with meta-learning capabilities
 pub struct LSTMOptimizer<T: Float> {

@@ -292,6 +292,7 @@ impl DetectionMetrics {
                     used_gt[gt_idx] = true;
             true_positives as f32 / predictions.len() as f32
 /// Convert ground truth bounding boxes to target tensors
+#[allow(dead_code)]
 fn prepare_targets(
     ground_truth: &[Vec<BoundingBox>],
     config: &DetectionConfig,
@@ -317,6 +318,7 @@ fn prepare_targets(
                 bbox_targets[[batch_idx, bbox_start + 3]] = obj.height;
     (class_targets.into_dyn(), bbox_targets.into_dyn())
 /// Training function for object detection
+#[allow(dead_code)]
 fn train_detection_model() -> StdResult<()> {
     println!("🎯 Starting Object Detection Training");
     let mut rng = SmallRng::seed_from_u64(42);
@@ -426,6 +428,7 @@ fn train_detection_model() -> StdResult<()> {
     for (class_id, count) in detection_stats {
         println!("     Class {}: {} detections", class_id, count);
     Ok(())
+#[allow(dead_code)]
 fn main() -> StdResult<()> {
     println!("🎯 Object Detection Complete Example");
     println!("=====================================");

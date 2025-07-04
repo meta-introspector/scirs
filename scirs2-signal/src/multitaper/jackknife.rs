@@ -28,6 +28,7 @@ use statrs::distribution::{ContinuousCDF, StudentsT};
 /// * `lower_ci` - Lower confidence interval
 /// * `upper_ci` - Upper confidence interval
 /// * `std_error` - Standard error estimate
+#[allow(dead_code)]
 pub fn jackknife_confidence_intervals(
     eigenspectra: &Array2<f64>,
     eigenvalues: &Array1<f64>,
@@ -164,6 +165,7 @@ pub fn jackknife_confidence_intervals(
 /// * `psd` - PSD estimate
 /// * `lower_ci` - Lower confidence bound
 /// * `upper_ci` - Upper confidence bound
+#[allow(dead_code)]
 pub fn weighted_jackknife(
     eigenspectra: &Array2<f64>,
     adaptive_weights: &Array2<f64>,
@@ -277,6 +279,7 @@ pub fn weighted_jackknife(
 /// * `coherence_ci` - Confidence intervals for coherence
 /// * `phase` - Cross-spectrum phase
 /// * `phase_ci` - Confidence intervals for phase
+#[allow(dead_code)]
 pub fn cross_spectrum_jackknife(
     eigenspectra_x: &Array2<num_complex::Complex64>,
     eigenspectra_y: &Array2<num_complex::Complex64>,

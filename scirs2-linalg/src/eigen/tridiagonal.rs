@@ -22,6 +22,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// # Returns
 ///
 /// * Array of eigenvalues
+#[allow(dead_code)]
 pub fn tridiagonal_eigvalsh<F>(
     diagonal: &ArrayView1<F>,
     off_diagonal: &ArrayView1<F>
@@ -164,6 +165,7 @@ where
 /// # Returns
 ///
 /// * Tuple containing eigenvalues and eigenvectors
+#[allow(dead_code)]
 pub fn tridiagonal_eigh<F>(
     diagonal: &ArrayView1<F>,
     off_diagonal: &ArrayView1<F>

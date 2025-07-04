@@ -5,7 +5,6 @@
 //! reducing spectral leakage in Fourier transforms and filter design.
 
 use crate::error::{SignalError, SignalResult};
-#[cfg(test)]
 use std::f64::consts::PI;
 
 // Import specialized window implementations
@@ -36,6 +35,7 @@ pub use kaiser::{kaiser, kaiser_bessel_derived};
 /// assert!(window[0] > 0.0 && window[0] < 1.0);
 /// assert!(window[window.len() / 2] > 0.9);
 /// ```
+#[allow(dead_code)]
 pub fn get_window(window_type: &str, length: usize, periodic: bool) -> SignalResult<Vec<f64>> {
     if length == 0 {
         return Err(SignalError::ValueError(
@@ -129,6 +129,7 @@ pub(crate) fn _truncate(w: Vec<f64>, needed: bool) -> Vec<f64> {
 /// let window = hamming(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn hamming(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -166,6 +167,7 @@ pub fn hamming(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = hann(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn hann(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -204,6 +206,7 @@ pub fn hann(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = blackman(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn blackman(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -242,6 +245,7 @@ pub fn blackman(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = bartlett(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn bartlett(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -278,6 +282,7 @@ pub fn bartlett(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = triang(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn triang(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -317,6 +322,7 @@ pub fn triang(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = flattop(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn flattop(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -364,6 +370,7 @@ pub fn flattop(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// assert_eq!(window.len(), 10);
 /// assert_eq!(window[0], 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn boxcar(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -395,6 +402,7 @@ pub fn boxcar(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = bohman(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn bohman(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -438,6 +446,7 @@ pub fn bohman(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = parzen(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn parzen(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -487,6 +496,7 @@ pub fn parzen(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = nuttall(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn nuttall(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -532,6 +542,7 @@ pub fn nuttall(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = blackmanharris(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn blackmanharris(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -576,6 +587,7 @@ pub fn blackmanharris(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = cosine(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn cosine(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -613,6 +625,7 @@ pub fn cosine(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = exponential(10, None, 1.0, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn exponential(m: usize, center: Option<f64>, tau: f64, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -655,6 +668,7 @@ pub fn exponential(m: usize, center: Option<f64>, tau: f64, sym: bool) -> Signal
 /// let window = tukey(10, 0.5, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn tukey(m: usize, alpha: f64, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -712,6 +726,7 @@ pub fn tukey(m: usize, alpha: f64, sym: bool) -> SignalResult<Vec<f64>> {
 /// let window = barthann(10, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn barthann(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(m) {
         return Ok(vec![1.0; m]);
@@ -756,6 +771,7 @@ pub fn barthann(m: usize, sym: bool) -> SignalResult<Vec<f64>> {
 /// assert_eq!(windows.len(), 7);
 /// assert_eq!(windows[0].len(), 256);
 /// ```
+#[allow(dead_code)]
 pub fn dpss_windows(
     m: usize,
     nw: f64,
@@ -851,6 +867,7 @@ pub fn dpss_windows(
 /// let window = dpss(64, 2.5, None, true).unwrap();
 /// assert_eq!(window.len(), 64);
 /// ```
+#[allow(dead_code)]
 pub fn dpss(m: usize, nw: f64, k: Option<usize>, sym: bool) -> SignalResult<Vec<f64>> {
     let window_idx = k.unwrap_or(0);
     let windows = dpss_windows(m, nw, Some(window_idx + 1), sym)?;
@@ -868,6 +885,7 @@ pub fn dpss(m: usize, nw: f64, k: Option<usize>, sym: bool) -> SignalResult<Vec<
 ///
 /// This is a simplified implementation for finding the largest eigenvalues
 /// and their corresponding eigenvectors.
+#[allow(dead_code)]
 fn solve_tridiagonal_eigenproblem(
     diag: &[f64],
     off_diag: &[f64],
@@ -1186,6 +1204,7 @@ mod tests {
 /// let window = lanczos(10, 2, true).unwrap();
 /// assert_eq!(window.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn lanczos(length: usize, a: i32, sym: bool) -> SignalResult<Vec<f64>> {
     if _len_guards(length) {
         return Ok(vec![1.0; length]);
@@ -1322,7 +1341,7 @@ mod lanczos_tests {
 pub mod analysis {
     use super::*;
     use crate::error::{SignalError, SignalResult};
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     /// Window analysis results
@@ -1557,7 +1576,6 @@ pub mod analysis {
         Ok(bandwidth_bins)
     }
 
-    #[cfg(test)]
     mod analysis_tests {
         use super::*;
 

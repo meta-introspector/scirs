@@ -112,6 +112,7 @@ pub(crate) fn hierarchical_clustering<F: Float + FromPrimitive + Debug + Partial
 }
 
 /// Finds the two closest clusters based on the given linkage method
+#[allow(dead_code)]
 fn find_closest_clusters<F: Float + FromPrimitive + Debug + PartialOrd>(
     active_clusters: &[usize],
     clusters: &[Cluster],

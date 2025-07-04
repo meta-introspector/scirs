@@ -10,6 +10,7 @@ use std::hash::Hash;
 /// Find all subgraph matches of a pattern graph in a target graph
 ///
 /// Returns a vector of mappings from pattern nodes to target nodes for each match found.
+#[allow(dead_code)]
 pub fn find_subgraph_matches<N1, N2, E, Ix>(
     pattern: &Graph<N1, E, Ix>,
     target: &Graph<N2, E, Ix>,
@@ -46,6 +47,7 @@ where
     matches
 }
 
+#[allow(dead_code)]
 fn find_matches_recursive<N1, N2, E, Ix>(
     pattern_nodes: &[N1],
     pattern: &Graph<N1, E, Ix>,
@@ -126,6 +128,7 @@ fn find_matches_recursive<N1, N2, E, Ix>(
     current_mapping.remove(pattern_node);
 }
 
+#[allow(dead_code)]
 fn is_mapping_consistent<N1, N2, E, Ix>(
     pattern: &Graph<N1, E, Ix>,
     target: &Graph<N2, E, Ix>,
@@ -165,6 +168,7 @@ where
 ///
 /// # Returns
 /// * `bool` - True if the graphs are isomorphic, false otherwise
+#[allow(dead_code)]
 pub fn are_graphs_isomorphic<N1, N2, E, Ix>(
     graph1: &Graph<N1, E, Ix>,
     graph2: &Graph<N2, E, Ix>,
@@ -202,6 +206,7 @@ where
 ///
 /// # Returns
 /// * `Option<HashMap<N1, N2>>` - Mapping from graph1 nodes to graph2 nodes if isomorphic
+#[allow(dead_code)]
 pub fn find_isomorphism<N1, N2, E, Ix>(
     graph1: &Graph<N1, E, Ix>,
     graph2: &Graph<N2, E, Ix>,
@@ -228,6 +233,7 @@ where
 }
 
 /// Check if two graphs have the same degree sequence
+#[allow(dead_code)]
 fn have_same_degree_sequence<N1, N2, E, Ix>(
     graph1: &Graph<N1, E, Ix>,
     graph2: &Graph<N2, E, Ix>,
@@ -265,6 +271,7 @@ where
 }
 
 /// Backtracking algorithm to find isomorphism
+#[allow(dead_code)]
 fn backtrack_isomorphism<N1, N2, E, Ix>(
     nodes1: &[N1],
     nodes2: &[N2],
@@ -322,6 +329,7 @@ where
 }
 
 /// Check if a partial mapping is valid (preserves edges among mapped nodes)
+#[allow(dead_code)]
 fn is_partial_mapping_valid<N1, N2, E, Ix>(
     graph1: &Graph<N1, E, Ix>,
     graph2: &Graph<N2, E, Ix>,
@@ -350,6 +358,7 @@ where
 }
 
 /// Check if a complete mapping is a valid isomorphism
+#[allow(dead_code)]
 fn is_valid_isomorphism<N1, N2, E, Ix>(
     graph1: &Graph<N1, E, Ix>,
     graph2: &Graph<N2, E, Ix>,
@@ -701,6 +710,7 @@ where
 /// This implementation uses the VF2 algorithm which provides significant performance
 /// improvements over naive backtracking through intelligent state space exploration
 /// and feasibility-based pruning.
+#[allow(dead_code)]
 pub fn find_isomorphism_vf2<N1, N2, E, Ix>(
     graph1: &Graph<N1, E, Ix>,
     graph2: &Graph<N2, E, Ix>,
@@ -735,6 +745,7 @@ where
 }
 
 /// Core VF2 matching recursive function
+#[allow(dead_code)]
 fn vf2_match<N1, N2, E, Ix>(
     state: &mut VF2State<N1, N2>,
     graph1: &Graph<N1, E, Ix>,
@@ -777,6 +788,7 @@ where
 ///
 /// This function first attempts to use the efficient VF2 algorithm for isomorphism checking.
 /// For very small graphs or edge cases, it may fall back to the simpler backtracking algorithm.
+#[allow(dead_code)]
 pub fn are_graphs_isomorphic_enhanced<N1, N2, E, Ix>(
     graph1: &Graph<N1, E, Ix>,
     graph2: &Graph<N2, E, Ix>,

@@ -104,6 +104,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight + std::ops::Add<Output = E> + Copy
     since = "0.1.0-beta.2",
     note = "Use `dijkstra_path` for future compatibility. This function will return PathResult in v1.0"
 )]
+#[allow(dead_code)]
 pub fn shortest_path<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     source: &N,
@@ -124,14 +125,12 @@ where
     // Check if source and target are in the graph
     if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Source node {:?} not found",
-            source
+            "Source node {source:?} not found"
         )));
     }
     if !graph.has_node(target) {
         return Err(GraphError::InvalidGraph(format!(
-            "Target node {:?} not found",
-            target
+            "Target node {target:?} not found"
         )));
     }
 
@@ -236,6 +235,7 @@ where
 /// let path = dijkstra_path(&graph, &"A".to_string(), &"B".to_string()).unwrap();
 /// assert!(path.is_some());
 /// ```
+#[allow(dead_code)]
 pub fn dijkstra_path<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     source: &N,
@@ -267,6 +267,7 @@ where
     since = "0.1.0-beta.2",
     note = "Use `dijkstra_path_digraph` for future compatibility. This function will return PathResult in v1.0"
 )]
+#[allow(dead_code)]
 pub fn shortest_path_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,
@@ -288,14 +289,12 @@ where
     // Check if source and target are in the graph
     if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Source node {:?} not found",
-            source
+            "Source node {source:?} not found"
         )));
     }
     if !graph.has_node(target) {
         return Err(GraphError::InvalidGraph(format!(
-            "Target node {:?} not found",
-            target
+            "Target node {target:?} not found"
         )));
     }
 
@@ -386,6 +385,7 @@ where
 ///
 /// # Space Complexity
 /// O(V) for the distance array and predecessor tracking.
+#[allow(dead_code)]
 pub fn dijkstra_path_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,
@@ -429,6 +429,7 @@ where
 /// This algorithm can detect negative cycles if the diagonal contains negative values
 /// after completion. It works correctly with negative edge weights but not with
 /// negative cycles.
+#[allow(dead_code)]
 pub fn floyd_warshall<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<ndarray::Array2<f64>>
 where
     N: Node + std::fmt::Debug + std::fmt::Debug,
@@ -476,6 +477,7 @@ where
 }
 
 /// Computes all-pairs shortest paths for a directed graph using Floyd-Warshall
+#[allow(dead_code)]
 pub fn floyd_warshall_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<ndarray::Array2<f64>>
 where
     N: Node + std::fmt::Debug + std::fmt::Debug,
@@ -544,6 +546,7 @@ where
 /// The heuristic function must be admissible (never overestimate the actual cost)
 /// and consistent (satisfy the triangle inequality) to guarantee finding the
 /// optimal path.
+#[allow(dead_code)]
 pub fn astar_search<N, E, Ix, H>(
     graph: &Graph<N, E, Ix>,
     source: &N,
@@ -611,14 +614,15 @@ where
     }
 
     Err(GraphError::NoPath {
-        src_node: format!("{:?}", source),
-        target: format!("{:?}", target),
+        src_node: format!("{source:?}"),
+        target: format!("{target:?}"),
         nodes: 0,
         edges: 0,
     })
 }
 
 /// A* search for directed graphs
+#[allow(dead_code)]
 pub fn astar_search_digraph<N, E, Ix, H>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,
@@ -686,8 +690,8 @@ where
     }
 
     Err(GraphError::NoPath {
-        src_node: format!("{:?}", source),
-        target: format!("{:?}", target),
+        src_node: format!("{source:?}"),
+        target: format!("{target:?}"),
         nodes: 0,
         edges: 0,
     })
@@ -697,6 +701,7 @@ where
 ///
 /// Returns up to k shortest paths sorted by total weight.
 /// Each path includes the total weight and the sequence of nodes.
+#[allow(dead_code)]
 pub fn k_shortest_paths<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     source: &N,
@@ -805,6 +810,7 @@ where
 }
 
 /// Helper function for k-shortest paths that finds shortest path avoiding certain edges
+#[allow(dead_code)]
 fn shortest_path_avoiding_edges<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     source: &N,
@@ -873,8 +879,8 @@ where
     }
 
     Err(GraphError::NoPath {
-        src_node: format!("{:?}", source),
-        target: format!("{:?}", target),
+        src_node: format!("{source:?}"),
+        target: format!("{target:?}"),
         nodes: 0,
         edges: 0,
     })

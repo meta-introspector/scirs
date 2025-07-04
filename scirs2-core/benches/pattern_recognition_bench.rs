@@ -8,11 +8,13 @@ use scirs2_core::memory_efficient::{ComplexPattern, PatternRecognitionConfig, Pa
 use std::hint::black_box;
 
 /// Simulate row-major access pattern
+#[allow(dead_code)]
 fn generate_row_major_pattern(rows: usize, cols: usize) -> Vec<usize> {
     (0..rows * cols).collect()
 }
 
 /// Simulate column-major access pattern
+#[allow(dead_code)]
 fn generate_column_major_pattern(rows: usize, cols: usize) -> Vec<usize> {
     let mut pattern = Vec::with_capacity(rows * cols);
     for j in 0..cols {
@@ -24,6 +26,7 @@ fn generate_column_major_pattern(rows: usize, cols: usize) -> Vec<usize> {
 }
 
 /// Simulate zigzag access pattern
+#[allow(dead_code)]
 fn generate_zigzag_pattern(rows: usize, cols: usize) -> Vec<usize> {
     let mut pattern = Vec::with_capacity(rows * cols);
     for row in 0..rows {
@@ -52,6 +55,7 @@ fn generate_diagonal_pattern(rows: usize, cols: usize) -> Vec<usize> {
 }
 
 /// Simulate block access pattern
+#[allow(dead_code)]
 fn generate_block_pattern(rows: usize, cols: usize, block_size: usize) -> Vec<usize> {
     let mut pattern = Vec::new();
 
@@ -70,6 +74,7 @@ fn generate_block_pattern(rows: usize, cols: usize, block_size: usize) -> Vec<us
 }
 
 /// Simulate random access pattern
+#[allow(dead_code)]
 fn generate_random_pattern(rows: usize, cols: usize, count: usize) -> Vec<usize> {
     use rand::{rngs::StdRng, Rng, SeedableRng};
     let mut rng = StdRng::seed_from_u64(42);
@@ -79,6 +84,7 @@ fn generate_random_pattern(rows: usize, cols: usize, count: usize) -> Vec<usize>
 }
 
 /// Simulate stencil access pattern (5-point stencil)
+#[allow(dead_code)]
 fn generate_stencil_pattern(rows: usize, cols: usize) -> Vec<usize> {
     let mut pattern = Vec::new();
 
@@ -97,6 +103,7 @@ fn generate_stencil_pattern(rows: usize, cols: usize) -> Vec<usize> {
 }
 
 /// Benchmark pattern detection speed
+#[allow(dead_code)]
 fn bench_pattern_detection(c: &mut Criterion) {
     let mut group = c.benchmark_group("pattern_detection");
 
@@ -191,6 +198,7 @@ fn bench_pattern_detection(c: &mut Criterion) {
 }
 
 /// Benchmark recognition accuracy with mixed patterns
+#[allow(dead_code)]
 fn bench_mixed_patterns(c: &mut Criterion) {
     let mut group = c.benchmark_group("mixed_patterns");
 
@@ -227,6 +235,7 @@ fn bench_mixed_patterns(c: &mut Criterion) {
 }
 
 /// Benchmark memory overhead of pattern recognition
+#[allow(dead_code)]
 fn bench_memory_overhead(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_overhead");
 
@@ -258,6 +267,7 @@ fn bench_memory_overhead(c: &mut Criterion) {
 }
 
 /// Benchmark pattern-specific optimizations
+#[allow(dead_code)]
 fn bench_pattern_optimizations(c: &mut Criterion) {
     let mut group = c.benchmark_group("pattern_optimizations");
 
@@ -325,6 +335,7 @@ fn bench_pattern_optimizations(c: &mut Criterion) {
 }
 
 /// Benchmark real-world scenarios
+#[allow(dead_code)]
 fn bench_real_world_scenarios(c: &mut Criterion) {
     let mut group = c.benchmark_group("real_world");
 

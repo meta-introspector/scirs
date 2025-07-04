@@ -1,6 +1,6 @@
 //! Utility functions for filter operations
 
-use ndarray::{Array, ArrayBase, ArrayView, ArrayView1, ArrayView2, Dimension, Ix1, Ix2};
+use ndarray::{Array, ArrayBase, ArrayView2, Dimension, Ix1, Ix2};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::Debug;
 
@@ -9,18 +9,11 @@ use scirs2_core::parallel_ops::*;
 
 use super::BorderMode;
 use crate::error::{NdimageError, NdimageResult};
+use crate::utils::safe_f64_to_float;
 
-/// Helper function for safe conversion of hardcoded constants
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
 
 /// Helper function for safe usize conversion
+#[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
@@ -28,6 +21,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 }
 
 /// Calculate optimal kernel size for a given sigma
+#[allow(dead_code)]
 pub fn calculate_kernel_size<T: Float + FromPrimitive>(
     sigma: T,
     truncate: Option<T>,
@@ -52,6 +46,7 @@ pub fn calculate_kernel_size<T: Float + FromPrimitive>(
 }
 
 /// Generate a Gaussian kernel with specified sigma
+#[allow(dead_code)]
 pub fn generate_gaussian_kernel<T: Float + FromPrimitive>(
     sigma: T,
     size: Option<usize>,
@@ -88,6 +83,7 @@ pub fn generate_gaussian_kernel<T: Float + FromPrimitive>(
 }
 
 /// Fast separable Gaussian blur implementation
+#[allow(dead_code)]
 pub fn separable_gaussian_blur<T>(
     input: ArrayView2<T>,
     sigma_x: T,
@@ -189,6 +185,7 @@ where
 }
 
 /// Memory-efficient convolution implementation
+#[allow(dead_code)]
 pub fn memory_efficient_convolution<T>(
     input: ArrayView2<T>,
     kernel: ArrayView2<T>,
@@ -313,6 +310,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Padded array
+#[allow(dead_code)]
 pub fn pad_array<T, D>(
     input: &Array<T, D>,
     pad_width: &[(usize, usize)],
@@ -773,6 +771,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Window array
+#[allow(dead_code)]
 pub fn get_window<T, D>(
     input: &Array<T, D>,
     center: &[usize],
@@ -857,6 +856,7 @@ where
 /// # Returns
 ///
 /// * `Result<()>` - Success or error
+#[allow(dead_code)]
 fn copy_nd_array<T, S1, S2>(
     output: &mut ArrayBase<S1, ndarray::IxDyn>,
     input: &ArrayBase<S2, ndarray::IxDyn>,
@@ -950,6 +950,7 @@ where
 /// # Returns
 ///
 /// * `Result<()>` - Success or error
+#[allow(dead_code)]
 fn pad_nd_array_reflect<T, S1, S2>(
     output: &mut ArrayBase<S1, ndarray::IxDyn>,
     input: &ArrayBase<S2, ndarray::IxDyn>,
@@ -1137,6 +1138,7 @@ where
 /// # Returns
 ///
 /// * `Result<()>` - Success or error
+#[allow(dead_code)]
 fn pad_nd_array_mirror<T, S1, S2>(
     output: &mut ArrayBase<S1, ndarray::IxDyn>,
     input: &ArrayBase<S2, ndarray::IxDyn>,
@@ -1305,6 +1307,7 @@ where
 /// # Returns
 ///
 /// * `Result<()>` - Success or error
+#[allow(dead_code)]
 fn pad_nd_array_wrap<T, S1, S2>(
     output: &mut ArrayBase<S1, ndarray::IxDyn>,
     input: &ArrayBase<S2, ndarray::IxDyn>,
@@ -1484,6 +1487,7 @@ where
 /// # Returns
 ///
 /// * `Result<()>` - Success or error
+#[allow(dead_code)]
 fn pad_nd_array_nearest<T, S1, S2>(
     output: &mut ArrayBase<S1, ndarray::IxDyn>,
     input: &ArrayBase<S2, ndarray::IxDyn>,
@@ -1673,6 +1677,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Result array
+#[allow(dead_code)]
 pub fn apply_window_function<T, D, F>(
     input: &Array<T, D>,
     window_size: &[usize],

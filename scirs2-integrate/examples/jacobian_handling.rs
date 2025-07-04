@@ -13,6 +13,7 @@ use scirs2_integrate::ode::utils::jacobian::JacobianStrategy;
 use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Jacobian Handling Example");
     println!("========================\n");
@@ -167,6 +168,7 @@ fn main() {
 /// dy1/dt = -0.04y1 + 1e4*y2*y3
 /// dy2/dt = 0.04y1 - 1e4*y2*y3 - 3e7*y2^2
 /// dy3/dt = 3e7*y2^2
+#[allow(dead_code)]
 fn chemical_kinetics(y: ArrayView1<f64>) -> Array1<f64> {
     let mut dydt = Array1::zeros(3);
 

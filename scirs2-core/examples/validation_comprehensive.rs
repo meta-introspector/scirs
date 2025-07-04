@@ -14,6 +14,7 @@ use scirs2_core::validation::data::*;
 use std::time::Duration;
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Comprehensive Data Validation Examples ===\n");
 
@@ -42,6 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn basic_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Basic Data Type Validation");
     println!("-----------------------------");
@@ -109,6 +111,7 @@ fn basic_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn temporal_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("2. Temporal Constraint Validation");
     println!("---------------------------------");
@@ -171,6 +174,7 @@ fn temporal_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn statistical_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("3. Statistical Constraint Validation");
     println!("-----------------------------------");
@@ -229,6 +233,7 @@ fn statistical_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn shape_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("4. Shape Constraint Validation");
     println!("------------------------------");
@@ -309,6 +314,7 @@ fn shape_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn complex_schema_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("5. Complex Schema Composition");
     println!("-----------------------------");
@@ -375,6 +381,7 @@ fn complex_schema_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn array_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("6. Array Validation with ndarray");
     println!("--------------------------------");
@@ -439,6 +446,7 @@ fn array_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn custom_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("7. Custom Validation Rules");
     println!("--------------------------");
@@ -533,6 +541,7 @@ fn custom_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(not(feature = "data_validation"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'data_validation' feature to be enabled.");
     println!("Run with: cargo run --example validation_comprehensive --features data_validation");

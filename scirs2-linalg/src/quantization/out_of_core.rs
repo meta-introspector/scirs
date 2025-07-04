@@ -688,6 +688,7 @@ where
 }
 
 /// Check if a matrix is symmetric
+#[allow(dead_code)]
 fn is_matrix_symmetric<F>(matrix: &ArrayView2<F>) -> bool
 where
     F: Float + PartialEq,
@@ -709,6 +710,7 @@ where
 }
 
 /// Quantize a chunk of a matrix
+#[allow(dead_code)]
 fn quantize_chunk<F>(chunk: &ArrayView2<F>, params: &QuantizationParams) -> LinalgResult<Vec<i8>>
 where
     F: Float + AsPrimitive<f32>,

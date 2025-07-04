@@ -5,6 +5,7 @@ use scirs2_autograd as ag;
 const EPSILON: f64 = 1e-5;
 
 #[test]
+#[allow(dead_code)]
 fn test_complete_linear_algebra_pipeline() {
     ag::run(|g: &mut ag::Context<f64>| {
         // Create a positive definite matrix for comprehensive testing
@@ -121,6 +122,7 @@ fn test_complete_linear_algebra_pipeline() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_element_wise_vs_matrix_operations() {
     ag::run(|g: &mut ag::Context<f64>| {
         let a = convert_to_tensor(array![[2.0, 0.0], [0.0, 3.0]], g);
@@ -183,6 +185,7 @@ fn test_element_wise_vs_matrix_operations() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_gradient_flow_through_decompositions() {
     ag::run(|g: &mut ag::Context<f64>| {
         let a = variable(array![[3.0, 1.0], [1.0, 2.0]], g);
@@ -208,6 +211,7 @@ fn test_gradient_flow_through_decompositions() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_special_matrices_operations() {
     ag::run(|g: &mut ag::Context<f64>| {
         let a = convert_to_tensor(array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]], g);
@@ -234,6 +238,7 @@ fn test_special_matrices_operations() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_matrix_functions_accuracy() {
     ag::run(|g: &mut ag::Context<f64>| {
         // Use a small matrix for numerical stability

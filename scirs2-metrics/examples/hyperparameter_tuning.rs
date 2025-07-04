@@ -15,6 +15,7 @@ use std::error::Error;
 #[cfg(feature = "optim_integration")]
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     #[cfg(not(feature = "optim_integration"))]
     {

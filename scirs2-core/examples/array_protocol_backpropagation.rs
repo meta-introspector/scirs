@@ -24,6 +24,7 @@ use scirs2_core::array_protocol::{
 };
 
 /// A simple feed-forward neural network for demonstrating backpropagation
+#[allow(dead_code)]
 fn main() {
     // Initialize the array protocol system
     array_protocol::init();

@@ -5,6 +5,7 @@
 use crate::base::{EdgeWeight, Graph, IndexType, Node};
 use crate::error::{GraphError, Result};
 use ndarray::{Array1, Array2};
+use rand::rng;
 use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -12,6 +13,7 @@ use std::hash::Hash;
 /// Perform a random walk on the graph
 ///
 /// Returns a sequence of nodes visited during the walk.
+#[allow(dead_code)]
 pub fn random_walk<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     start: &N,
@@ -64,6 +66,7 @@ where
 ///
 /// Returns a row-stochastic matrix where entry (i,j) is the probability
 /// of transitioning from node i to node j.
+#[allow(dead_code)]
 pub fn transition_matrix<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<(Vec<N>, Array2<f64>)>
 where
     N: Node + Clone + std::fmt::Debug,
@@ -114,6 +117,7 @@ where
 /// Compute personalized PageRank from a given source node
 ///
 /// This is useful for measuring node similarity and influence.
+#[allow(dead_code)]
 pub fn personalized_pagerank<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     source: &N,
@@ -170,6 +174,7 @@ where
 
 /// Parallel random walk generator for multiple walks simultaneously
 /// Optimized for embedding algorithms like Node2Vec and DeepWalk
+#[allow(dead_code)]
 pub fn parallel_random_walks<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     starts: &[N],
@@ -240,9 +245,7 @@ impl AliasTable {
             }
         }
 
-        for i in 0..n {
-            prob[i] = normalized[i];
-        }
+        prob[..n].copy_from_slice(&normalized[..n]);
 
         while let (Some(small_idx), Some(large_idx)) = (small.pop(), large.pop()) {
             alias[small_idx] = large_idx;
@@ -421,6 +424,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> BatchRandomWalker<N> {
 
 /// Node2Vec biased random walk with SIMD optimizations
 /// Implements the p and q parameters for controlling exploration vs exploitation
+#[allow(dead_code)]
 pub fn node2vec_walk<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     start: &N,
@@ -515,6 +519,7 @@ where
 }
 
 /// Parallel Node2Vec walk generation for large-scale embedding
+#[allow(dead_code)]
 pub fn parallel_node2vec_walks<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     starts: &[N],
@@ -543,6 +548,7 @@ where
 
 /// SIMD-optimized random walk with restart for large graphs
 /// Uses vectorized operations for better performance on large node sets
+#[allow(dead_code)]
 pub fn simd_random_walk_with_restart<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     start: &N,

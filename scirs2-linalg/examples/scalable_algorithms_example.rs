@@ -21,6 +21,7 @@ use scirs2_linalg::scalable::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SCALABLE ALGORITHMS - ULTRATHINK DEMONSTRATION");
     println!("=================================================");

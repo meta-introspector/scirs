@@ -16,6 +16,7 @@ use scirs2_interpolate::simd_optimized::{
 use std::time::Duration;
 
 /// Generate test data for SIMD validation
+#[allow(dead_code)]
 fn generate_test_data_1d(n: usize) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::linspace(0.0, 10.0, n);
     let y = x.mapv(|xi| (xi * 0.5).sin() + 0.1 * xi + 0.05 * (3.0 * xi).cos());
@@ -23,6 +24,7 @@ fn generate_test_data_1d(n: usize) -> (Array1<f64>, Array1<f64>) {
 }
 
 /// Generate 2D test data for RBF and distance matrix tests
+#[allow(dead_code)]
 fn generate_test_data_2d(n: usize, dim: usize) -> Array2<f64> {
     let mut data = Array2::zeros((n, dim));
     for i in 0..n {
@@ -34,6 +36,7 @@ fn generate_test_data_2d(n: usize, dim: usize) -> Array2<f64> {
 }
 
 /// Generate query points with specific alignment for SIMD testing
+#[allow(dead_code)]
 fn generate_aligned_queries(n: usize, dim: usize) -> Array2<f64> {
     // Ensure data is properly aligned for SIMD operations
     let mut queries = Array2::zeros((n, dim));
@@ -46,6 +49,7 @@ fn generate_aligned_queries(n: usize, dim: usize) -> Array2<f64> {
 }
 
 /// Test SIMD availability and configuration
+#[allow(dead_code)]
 fn bench_simd_availability(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_availability");
 
@@ -61,6 +65,7 @@ fn bench_simd_availability(c: &mut Criterion) {
 }
 
 /// Benchmark SIMD B-spline basis function evaluation
+#[allow(dead_code)]
 fn bench_simd_bspline_basis(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_bspline_basis");
 
@@ -88,6 +93,7 @@ fn bench_simd_bspline_basis(c: &mut Criterion) {
 }
 
 /// Benchmark SIMD B-spline batch evaluation
+#[allow(dead_code)]
 fn bench_simd_bspline_batch(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_bspline_batch");
 
@@ -132,6 +138,7 @@ fn bench_simd_bspline_batch(c: &mut Criterion) {
 }
 
 /// Benchmark SIMD distance matrix computation
+#[allow(dead_code)]
 fn bench_simd_distance_matrix(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_distance_matrix");
 
@@ -163,6 +170,7 @@ fn bench_simd_distance_matrix(c: &mut Criterion) {
 }
 
 /// Benchmark SIMD RBF evaluation
+#[allow(dead_code)]
 fn bench_simd_rbf_evaluation(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_rbf_evaluation");
 
@@ -211,6 +219,7 @@ fn bench_simd_rbf_evaluation(c: &mut Criterion) {
 }
 
 /// Benchmark memory layout effects on SIMD performance
+#[allow(dead_code)]
 fn bench_simd_memory_layout(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_memory_layout");
 
@@ -253,6 +262,7 @@ fn bench_simd_memory_layout(c: &mut Criterion) {
 }
 
 /// Validate SIMD correctness by comparing with scalar implementations
+#[allow(dead_code)]
 fn bench_simd_correctness_validation(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_correctness");
 
@@ -280,6 +290,7 @@ fn bench_simd_correctness_validation(c: &mut Criterion) {
 }
 
 /// Benchmark SIMD performance scaling with data size
+#[allow(dead_code)]
 fn bench_simd_scaling(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_scaling");
     group.measurement_time(Duration::from_secs(10));

@@ -984,6 +984,7 @@ where
 }
 
 /// Convenience functions
+#[allow(dead_code)]
 pub fn gaussian_mixture_model<F>(
     data: &ArrayView2<F>,
     n_components: usize,
@@ -997,6 +998,7 @@ where
     Ok(gmm.fit(data)?.clone())
 }
 
+#[allow(dead_code)]
 pub fn kernel_density_estimation<F>(
     data: &ArrayView2<F>,
     points: &ArrayView2<F>,
@@ -1022,6 +1024,7 @@ where
 }
 
 /// Advanced model selection for GMM
+#[allow(dead_code)]
 pub fn gmm_model_selection<F>(
     data: &ArrayView2<F>,
     min_components: usize,
@@ -1234,6 +1237,7 @@ where
 }
 
 /// Hierarchical clustering-based mixture model initialization
+#[allow(dead_code)]
 pub fn hierarchical_gmm_init<F>(
     data: &ArrayView2<F>,
     n_components: usize,
@@ -1252,6 +1256,7 @@ where
 }
 
 /// Cross-validation for GMM hyperparameter tuning
+#[allow(dead_code)]
 pub fn gmm_cross_validation<F>(
     data: &ArrayView2<F>,
     n_components: usize,
@@ -1308,6 +1313,7 @@ where
 }
 
 /// Performance benchmarking for mixture models
+#[allow(dead_code)]
 pub fn benchmark_mixture_models<F>(
     data: &ArrayView2<F>,
     methods: &[(

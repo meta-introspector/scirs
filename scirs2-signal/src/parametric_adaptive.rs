@@ -12,7 +12,6 @@ use ndarray::{Array1, Array2, ArrayView1};
 use num_complex::Complex64;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
-#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Adaptive AR model with time-varying parameters
@@ -95,6 +94,7 @@ impl Default for AdaptiveConfig {
 /// # Returns
 ///
 /// * Initialized adaptive model
+#[allow(dead_code)]
 pub fn initialize_adaptive_ar(config: &AdaptiveConfig) -> SignalResult<AdaptiveArModel> {
     check_positive(config.initial_order, "initial_order")?;
     check_positive(config.forgetting_factor, "forgetting_factor")?;
@@ -143,6 +143,7 @@ pub fn initialize_adaptive_ar(config: &AdaptiveConfig) -> SignalResult<AdaptiveA
 /// # Returns
 ///
 /// * Prediction error
+#[allow(dead_code)]
 pub fn update_adaptive_ar(
     model: &mut AdaptiveArModel,
     sample: f64,
@@ -181,6 +182,7 @@ pub fn update_adaptive_ar(
 }
 
 /// Predict next sample using current model
+#[allow(dead_code)]
 fn predict_next_sample(model: &AdaptiveArModel) -> SignalResult<f64> {
     let mut prediction = 0.0;
 
@@ -194,6 +196,7 @@ fn predict_next_sample(model: &AdaptiveArModel) -> SignalResult<f64> {
 }
 
 /// Update using Recursive Least Squares
+#[allow(dead_code)]
 fn update_rls(model: &mut AdaptiveArModel, error: f64, lambda: f64) -> SignalResult<()> {
     let order = model.order;
     let x = Array1::from_vec(model.state_buffer[..order].to_vec());
@@ -222,6 +225,7 @@ fn update_rls(model: &mut AdaptiveArModel, error: f64, lambda: f64) -> SignalRes
 }
 
 /// Update using Kalman filter
+#[allow(dead_code)]
 fn update_kalman(
     model: &mut AdaptiveArModel,
     error: f64,
@@ -261,6 +265,7 @@ fn update_kalman(
 }
 
 /// Update using Least Mean Squares
+#[allow(dead_code)]
 fn update_lms(model: &mut AdaptiveArModel, error: f64, step_size: f64) -> SignalResult<()> {
     let order = model.order;
     let x = Array1::from_vec(model.state_buffer[..order].to_vec());
@@ -272,6 +277,7 @@ fn update_lms(model: &mut AdaptiveArModel, error: f64, step_size: f64) -> Signal
 }
 
 /// Update using Normalized LMS
+#[allow(dead_code)]
 fn update_nlms(model: &mut AdaptiveArModel, error: f64, step_size: f64) -> SignalResult<()> {
     let order = model.order;
     let x = Array1::from_vec(model.state_buffer[..order].to_vec());
@@ -289,6 +295,7 @@ fn update_nlms(model: &mut AdaptiveArModel, error: f64, step_size: f64) -> Signa
 }
 
 /// Update model order based on prediction performance
+#[allow(dead_code)]
 fn update_model_order(model: &mut AdaptiveArModel, config: &AdaptiveConfig) -> SignalResult<()> {
     // Simple criterion: increase order if variance too high, decrease if coefficients small
 
@@ -316,6 +323,7 @@ fn update_model_order(model: &mut AdaptiveArModel, config: &AdaptiveConfig) -> S
 }
 
 /// Resize model to new order
+#[allow(dead_code)]
 fn resize_model(model: &mut AdaptiveArModel, new_order: usize) -> SignalResult<()> {
     if new_order == model.order {
         return Ok(());
@@ -356,6 +364,7 @@ fn resize_model(model: &mut AdaptiveArModel, new_order: usize) -> SignalResult<(
 /// # Returns
 ///
 /// * (frequencies, power spectral density)
+#[allow(dead_code)]
 pub fn adaptive_spectrum(
     model: &AdaptiveArModel,
     n_freq: usize,

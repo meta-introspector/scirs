@@ -594,6 +594,7 @@ where
 }
 
 /// Convenience function to create a time series interpolator for daily data
+#[allow(dead_code)]
 pub fn make_daily_interpolator<T>() -> TimeSeriesInterpolator<T>
 where
     T: Float
@@ -621,6 +622,7 @@ where
 }
 
 /// Convenience function to create a time series interpolator for weekly data
+#[allow(dead_code)]
 pub fn make_weekly_interpolator<T>() -> TimeSeriesInterpolator<T>
 where
     T: Float
@@ -648,6 +650,7 @@ where
 }
 
 /// Simple forward fill interpolation for time series
+#[allow(dead_code)]
 pub fn forward_fill<T>(
     timestamps: &ArrayView1<T>,
     values: &ArrayView1<T>,
@@ -683,6 +686,7 @@ where
 }
 
 /// Simple backward fill interpolation for time series
+#[allow(dead_code)]
 pub fn backward_fill<T>(
     timestamps: &ArrayView1<T>,
     values: &ArrayView1<T>,

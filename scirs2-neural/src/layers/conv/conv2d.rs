@@ -36,7 +36,7 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Conv2D<F> {
         name: Option<&str>,
     ) -> Result<Self> {
         validate_conv_params(in_channels, out_channels, kernel_size, stride)
-            .map_err(|e| NeuralError::InvalidArchitecture(e))?;
+            .map_err(NeuralError::InvalidArchitecture)?;
 
         let weights_shape = vec![out_channels, in_channels, kernel_size.0, kernel_size.1];
         let weights = Array::zeros(IxDyn(&weights_shape));
@@ -99,6 +99,13 @@ impl<F: Float + Debug + Send + Sync + ScalarOperand + Default> Layer<F> for Conv
 
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
+    }
+
+    fn parameter_count(&self) -> usize {
+        let weights_count =
+            self.out_channels * self.in_channels * self.kernel_size.0 * self.kernel_size.1;
+        let bias_count = if self.use_bias { self.out_channels } else { 0 };
+        weights_count + bias_count
     }
 }
 

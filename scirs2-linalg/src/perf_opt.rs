@@ -75,6 +75,7 @@ impl OptConfig {
 ///
 /// This implementation uses loop tiling to improve cache locality
 /// for large matrix multiplications.
+#[allow(dead_code)]
 pub fn blocked_matmul<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -120,6 +121,7 @@ where
 }
 
 /// Serial blocked matrix multiplication
+#[allow(dead_code)]
 fn serial_blocked_matmul<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -158,6 +160,7 @@ where
 }
 
 /// Parallel blocked matrix multiplication using Rayon
+#[allow(dead_code)]
 fn parallel_blocked_matmul<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -219,6 +222,7 @@ where
 }
 
 /// Cache-friendly blocked matrix multiplication with explicit workers parameter
+#[allow(dead_code)]
 pub fn blocked_matmul_with_workers<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -241,6 +245,7 @@ where
 }
 
 /// Optimized matrix transpose for better memory access patterns
+#[allow(dead_code)]
 pub fn optimized_transpose<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + Send + Sync,
@@ -249,6 +254,7 @@ where
 }
 
 /// Optimized matrix transpose with explicit workers parameter
+#[allow(dead_code)]
 pub fn optimized_transpose_with_workers<F>(
     a: &ArrayView2<F>,
     workers: Option<usize>,
@@ -284,6 +290,7 @@ where
 }
 
 /// Parallel matrix-vector multiplication for large matrices
+#[allow(dead_code)]
 pub fn parallel_matvec<F>(
     a: &ArrayView2<F>,
     x: &ArrayView2<F>,
@@ -337,6 +344,7 @@ where
 }
 
 /// Parallel matrix-vector multiplication with explicit workers parameter
+#[allow(dead_code)]
 pub fn parallel_matvec_with_workers<F>(
     a: &ArrayView2<F>,
     x: &ArrayView2<F>,
@@ -419,6 +427,7 @@ pub mod inplace {
 }
 
 /// Adaptive algorithm selection based on matrix properties
+#[allow(dead_code)]
 pub fn adaptive_matmul<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -427,6 +436,7 @@ where
 }
 
 /// Adaptive matrix multiplication with explicit workers parameter
+#[allow(dead_code)]
 pub fn adaptive_matmul_with_workers<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -465,6 +475,7 @@ where
 }
 
 /// Convenience function for in-place matrix addition
+#[allow(dead_code)]
 pub fn inplace_add<F>(a: &mut ndarray::ArrayViewMut2<F>, b: &ArrayView2<F>) -> LinalgResult<()>
 where
     F: Float + NumAssign + Send + Sync,
@@ -476,6 +487,7 @@ where
 }
 
 /// Convenience function for in-place scalar multiplication
+#[allow(dead_code)]
 pub fn inplace_scale<F>(a: &mut ndarray::ArrayViewMut2<F>, scalar: F) -> LinalgResult<()>
 where
     F: Float + NumAssign + Send + Sync,
@@ -487,6 +499,7 @@ where
 }
 
 /// Simple benchmarking utility for matrix multiplication
+#[allow(dead_code)]
 pub fn matmul_benchmark<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,

@@ -93,6 +93,7 @@ pub enum EdgeMode {
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
 /// let filtered = alpha_trimmed_filter(&signal, 3, 0.2).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn alpha_trimmed_filter(
     signal: &Array1<f64>,
     window_size: usize,
@@ -189,6 +190,7 @@ pub fn alpha_trimmed_filter(
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
 /// let (filtered, outliers) = hampel_filter(&signal, 3, 3.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn hampel_filter(
     signal: &Array1<f64>,
     window_size: usize,
@@ -297,6 +299,7 @@ pub fn hampel_filter(
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
 /// let filtered = winsorize_filter(&signal, 3, 10.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn winsorize_filter(
     signal: &Array1<f64>,
     window_size: usize,
@@ -392,6 +395,7 @@ pub fn winsorize_filter(
 /// let signal = Array1::from_vec(vec![1.0, 1.2, 10.0, 1.1, 1.3]);
 /// let filtered = huber_filter(&signal, 3, 1.35).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn huber_filter(
     signal: &Array1<f64>,
     window_size: usize,
@@ -495,6 +499,7 @@ pub fn huber_filter(
 /// # Returns
 ///
 /// * Filtered 2D array
+#[allow(dead_code)]
 pub fn robust_filter_2d<F>(
     image: &Array2<f64>,
     filter_fn: F,

@@ -922,6 +922,7 @@ impl PyGaussianMixture {
 /// Python-compatible clustering metrics
 #[cfg(feature = "pyo3")]
 #[pymodule]
+#[allow(dead_code)]
 fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
     /// Calculate silhouette score
     #[pyfn(m)]
@@ -1062,6 +1063,7 @@ fn metrics(py: Python, m: &PyModule) -> PyResult<()> {
 /// Main Python module
 #[cfg(feature = "pyo3")]
 #[pymodule]
+#[allow(dead_code)]
 fn scirs2_cluster(py: Python, m: &PyModule) -> PyResult<()> {
     // Core clustering algorithms
     m.add_class::<PyKMeans>()?;

@@ -406,6 +406,7 @@ impl ChunkedWriter {
 }
 
 /// Stream copy with progress tracking
+#[allow(dead_code)]
 pub fn copy_with_progress<R: Read, W: Write>(
     mut reader: R,
     mut writer: W,

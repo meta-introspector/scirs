@@ -125,6 +125,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn uniform_filter_chunked<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -164,6 +165,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn median_filter_chunked<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -194,6 +196,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn gaussian_filter_chunked<T, D>(
     input: &Array<T, D>,
     sigma: &[T],
@@ -212,6 +215,7 @@ where
 }
 
 /// Helper function to combine chunks with overlap handling
+#[allow(dead_code)]
 fn combine_chunks_with_overlap<T, D>(
     results: Vec<(Array<T, D>, ChunkPosition)>,
     output_shape: &[usize],

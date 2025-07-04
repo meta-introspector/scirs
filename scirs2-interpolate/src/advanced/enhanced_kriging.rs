@@ -1429,6 +1429,7 @@ where
 /// // The model is ready for making predictions
 /// println!("Enhanced kriging model created successfully");
 /// ```
+#[allow(dead_code)]
 pub fn make_enhanced_kriging<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1506,6 +1507,7 @@ where
 ///
 /// println!("Universal kriging model with linear trend created");
 /// ```
+#[allow(dead_code)]
 pub fn make_universal_kriging<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1587,6 +1589,7 @@ where
 ///
 /// println!("Bayesian kriging model created with 1000 posterior samples");
 /// ```
+#[allow(dead_code)]
 pub fn make_bayesian_kriging<F>(
     _points: &ArrayView2<F>,
     _values: &ArrayView1<F>,

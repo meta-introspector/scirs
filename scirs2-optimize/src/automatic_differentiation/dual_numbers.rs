@@ -476,11 +476,13 @@ impl Mul<f64> for MultiDual {
 }
 
 /// Create an array of dual numbers for gradient computation
+#[allow(dead_code)]
 pub fn create_dual_variables(x: &ArrayView1<f64>) -> Vec<Dual> {
     x.iter().map(|&xi| Dual::variable(xi)).collect()
 }
 
 /// Create multi-dual variables for a given point
+#[allow(dead_code)]
 pub fn create_multi_dual_variables(x: &ArrayView1<f64>) -> Vec<MultiDual> {
     let n = x.len();
     x.iter()

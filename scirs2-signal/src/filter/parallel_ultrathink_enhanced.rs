@@ -571,7 +571,7 @@ impl ParallelSpectralFilter {
                     windowed_frame[i] = frame[i].re * self.window[i] / self.fft_size as f64;
                 }
 
-                Ok((start, windowed_frame))
+                Ok::<(usize, Vec<f64>), SignalError>((start, windowed_frame))
             })
             .collect();
 
@@ -596,6 +596,7 @@ impl ParallelSpectralFilter {
 }
 
 /// High-performance parallel convolution with decimation
+#[allow(dead_code)]
 fn parallel_convolve_decimated(
     signal: &[f64],
     filter: &[f64],
@@ -609,7 +610,6 @@ fn parallel_convolve_decimated(
     }
 
     let output_len = signal.len() / decimation_factor;
-    let mut output = Vec::with_capacity(output_len);
 
     // Process only samples that will be kept after decimation
     let sample_indices: Vec<usize> = (0..output_len).map(|i| i * decimation_factor).collect();
@@ -626,7 +626,7 @@ fn parallel_convolve_decimated(
                     }
                 }
             }
-            Ok(convolution_result)
+            Ok::<f64, SignalError>(convolution_result)
         })
         .collect();
 
@@ -634,6 +634,7 @@ fn parallel_convolve_decimated(
 }
 
 /// Parallel interpolation and filtering
+#[allow(dead_code)]
 fn parallel_interpolate_filter(
     decimated: &[f64],
     filter: &[f64],
@@ -679,7 +680,7 @@ fn parallel_interpolate_filter(
                 }
             }
 
-            Ok(chunk_result)
+            Ok::<Vec<f64>, SignalError>(chunk_result)
         })
         .collect();
 
@@ -697,6 +698,7 @@ fn parallel_interpolate_filter(
 }
 
 /// Comprehensive parallel filtering benchmark
+#[allow(dead_code)]
 pub fn benchmark_parallel_filtering_operations(
     signal_lengths: &[usize],
     filter_lengths: &[usize],
@@ -753,6 +755,7 @@ pub fn benchmark_parallel_filtering_operations(
 }
 
 /// Validate parallel filtering performance and correctness
+#[allow(dead_code)]
 pub fn validate_parallel_filtering_accuracy(
     reference_implementations: &HashMap<String, Box<dyn Fn(&[f64]) -> Vec<f64>>>,
     test_signals: &[Vec<f64>],

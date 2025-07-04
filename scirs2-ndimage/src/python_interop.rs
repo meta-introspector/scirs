@@ -6,11 +6,10 @@
 //! Note: This module provides the foundation but requires PyO3 dependency to create
 //! actual Python bindings. See the documentation for setup instructions.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Dimension, Ix1, Ix2};
-use num_traits::{Float, FromPrimitive, ToPrimitive};
+use ndarray::Dimension;
 use std::collections::HashMap;
 
-use crate::error::{NdimageError, NdimageResult};
+use crate::error::NdimageError;
 
 /// Python-compatible array metadata
 #[derive(Debug, Clone)]
@@ -320,7 +319,6 @@ pub mod api_spec {
 
 /// Example Python binding signatures (would be used with PyO3)
 pub mod binding_examples {
-    use super::*;
 
     /// Example binding signature for Gaussian filter
     /// This shows what the actual PyO3 binding would look like
@@ -328,6 +326,7 @@ pub mod binding_examples {
         r#"
 #[pyfunction]
 #[pyo3(signature = (input, sigma, mode="reflect"))]
+#[allow(dead_code)]
 fn gaussian_filter(
     py: Python,
     input: &PyArray<f64, Ix2>,
@@ -359,6 +358,7 @@ fn gaussian_filter(
     pub fn example_median_filter_binding() -> String {
         r#"
 #[pyfunction]
+#[allow(dead_code)]
 fn median_filter(
     py: Python,
     input: &PyArray<f64, Ix2>,
@@ -380,6 +380,7 @@ fn median_filter(
     pub fn generate_module_definition() -> String {
         r#"
 #[pymodule]
+#[allow(dead_code)]
 fn scirs2_ndimage(_py: Python, m: &PyModule) -> PyResult<()> {
     // Filters submodule
     let filters_module = PyModule::new(_py, "filters")?;
@@ -408,7 +409,6 @@ fn scirs2_ndimage(_py: Python, m: &PyModule) -> PyResult<()> {
 
 /// Setup and installation utilities
 pub mod setup {
-    use super::*;
 
     /// Generate setup.py content for Python package
     pub fn generate_setup_py() -> String {

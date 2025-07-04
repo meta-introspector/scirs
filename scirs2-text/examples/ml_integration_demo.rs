@@ -4,6 +4,7 @@ use scirs2_text::{
     BatchTextProcessor, FeatureExtractionMode, MLTextPreprocessor, TextDataset, TextMLPipeline,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Machine Learning Integration Demo");
     println!("================================\n");

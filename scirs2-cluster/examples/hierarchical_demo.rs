@@ -1,6 +1,7 @@
 use ndarray::Array2;
 use scirs2_cluster::hierarchy::{fcluster, linkage, ClusterCriterion, LinkageMethod, Metric};
 
+#[allow(dead_code)]
 fn main() {
     println!("Hierarchical Clustering Example");
     println!("==============================");

@@ -46,6 +46,7 @@ use crate::error::{LinalgError, LinalgResult};
 ///
 /// assert_eq!(x.len(), 2);
 /// ```
+#[allow(dead_code)]
 pub fn mixed_precision_solve<A, B, C, H>(
     a: &ArrayView2<A>,
     b: &ArrayView1<B>,
@@ -183,6 +184,7 @@ where
 /// // The condition number should indicate poor conditioning
 /// println!("Condition number: {}", cond);
 /// ```
+#[allow(dead_code)]
 pub fn mixed_precision_cond<A, C, H>(a: &ArrayView2<A>, p: Option<H>) -> LinalgResult<C>
 where
     A: Clone + Debug + ToPrimitive + Copy,
@@ -280,6 +282,7 @@ where
 /// assert!((x[0] - 1.0).abs() < 1e-10);
 /// assert!((x[1] - 2.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn iterative_refinement_solve<A, B, C, H, W>(
     a: &ArrayView2<A>,
     b: &ArrayView1<B>,
@@ -431,6 +434,7 @@ where
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn mixed_precision_qr<A, C, H>(a: &ArrayView2<A>) -> LinalgResult<(Array2<C>, Array2<C>)>
 where
     A: Float + NumAssign + Debug + 'static,
@@ -568,6 +572,7 @@ where
 /// * `A` - Input matrix precision
 /// * `C` - Output matrices/values precision
 /// * `H` - Higher precision used for computation
+#[allow(dead_code)]
 pub fn mixed_precision_svd<A, C, H>(
     a: &ArrayView2<A>,
     full_matrices: bool,

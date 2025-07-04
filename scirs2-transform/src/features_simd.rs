@@ -383,6 +383,7 @@ impl<F: Float + NumCast + SimdUnifiedOps> SimdPolynomialFeatures<F> {
 }
 
 /// SIMD-accelerated power transformation (Box-Cox and Yeo-Johnson)
+#[allow(dead_code)]
 pub fn simd_power_transform<F>(data: &Array1<F>, lambda: F, method: &str) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -446,6 +447,7 @@ where
 }
 
 /// Helper function to compute element-wise power using SIMD where possible
+#[allow(dead_code)]
 fn simd_array_pow<F>(data: &Array1<F>, exponent: F) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -507,6 +509,7 @@ where
 }
 
 /// SIMD-accelerated binarization with validation
+#[allow(dead_code)]
 pub fn simd_binarize<F>(data: &Array2<F>, threshold: F) -> Result<Array2<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -563,6 +566,7 @@ where
 }
 
 /// Calculate adaptive chunk size for optimal SIMD performance
+#[allow(dead_code)]
 fn calculate_adaptive_chunk_size(n_rows: usize, n_cols: usize) -> usize {
     const L1_CACHE_SIZE: usize = 32_768;
     const F64_SIZE: usize = 8; // Conservative estimate for element size
@@ -587,6 +591,7 @@ fn calculate_adaptive_chunk_size(n_rows: usize, n_cols: usize) -> usize {
 }
 
 /// Advanced SIMD polynomial features with memory optimization
+#[allow(dead_code)]
 pub fn simd_polynomial_features_optimized<F>(
     data: &Array2<F>,
     degree: usize,
@@ -626,6 +631,7 @@ where
 }
 
 /// Chunked SIMD polynomial features for large datasets
+#[allow(dead_code)]
 fn simd_polynomial_features_chunked<F>(
     data: &Array2<F>,
     poly_features: &SimdPolynomialFeatures<F>,

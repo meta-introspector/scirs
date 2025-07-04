@@ -636,6 +636,7 @@ impl PerspectiveTransform {
 ///
 /// Uses SIMD operations for coordinate transformation and interpolation,
 /// providing 2-4x speedup compared to scalar implementation.
+#[allow(dead_code)]
 pub fn warp_perspective_simd(
     src: &DynamicImage,
     transform: &PerspectiveTransform,
@@ -745,6 +746,7 @@ pub fn warp_perspective_simd(
 /// # Returns
 ///
 /// * Result containing the warped image
+#[allow(dead_code)]
 pub fn warp_perspective(
     src: &DynamicImage,
     transform: &PerspectiveTransform,
@@ -827,6 +829,7 @@ pub fn warp_perspective(
 /// # Returns
 ///
 /// * Interpolated color value
+#[allow(dead_code)]
 pub fn bilinear_interpolate(img: &DynamicImage, x: f64, y: f64) -> Rgba<u8> {
     let (width, height) = img.dimensions();
 
@@ -883,6 +886,7 @@ pub fn bilinear_interpolate(img: &DynamicImage, x: f64, y: f64) -> Rgba<u8> {
 ///
 /// Uses SIMD operations for interpolation weights computation,
 /// providing 2-3x speedup for batch interpolation operations.
+#[allow(dead_code)]
 pub fn bilinear_interpolate_simd(
     img: &DynamicImage,
     x_coords: &ArrayView1<f64>,
@@ -988,6 +992,7 @@ pub fn bilinear_interpolate_simd(
 ///
 /// * The reflected coordinate
 #[must_use]
+#[allow(dead_code)]
 pub fn reflect_coordinate(coord: f64, size: f64) -> f64 {
     if coord < 0.0 {
         -coord
@@ -1009,6 +1014,7 @@ pub fn reflect_coordinate(coord: f64, size: f64) -> f64 {
 ///
 /// * The modulo result
 #[must_use]
+#[allow(dead_code)]
 pub fn modulo(a: f64, b: f64) -> f64 {
     ((a % b) + b) % b
 }
@@ -1032,6 +1038,7 @@ pub fn modulo(a: f64, b: f64) -> f64 {
 ///
 /// Uses SIMD-accelerated edge detection and vectorized contour processing
 /// for 2-3x speedup compared to scalar quad detection algorithms.
+#[allow(dead_code)]
 pub fn detect_quad(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]> {
     detect_quad_simd(src, threshold)
 }
@@ -1053,6 +1060,7 @@ pub fn detect_quad(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]>
 /// # Returns
 ///
 /// * Result containing the detected quadrilateral as 4 points
+#[allow(dead_code)]
 pub fn detect_quad_simd(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64); 4]> {
     use crate::feature::sobel_edges;
     use crate::preprocessing::gaussian_blur;
@@ -1145,6 +1153,7 @@ pub fn detect_quad_simd(src: &DynamicImage, threshold: u8) -> Result<[(f64, f64)
 /// # Returns
 ///
 /// * Result containing binary edge map
+#[allow(dead_code)]
 fn simd_binary_threshold(image: &DynamicImage, threshold: u8) -> Result<Array2<f64>> {
     let (width, height) = image.dimensions();
     let threshold_f64 = threshold as f64;
@@ -1195,6 +1204,7 @@ fn simd_binary_threshold(image: &DynamicImage, threshold: u8) -> Result<Array2<f
 /// # Returns
 ///
 /// * Result containing detected contours
+#[allow(dead_code)]
 fn find_contours_simd(binary_image: &Array2<f64>) -> Result<Vec<Vec<(f64, f64)>>> {
     let (height, width) = binary_image.dim();
     let mut contours = Vec::new();
@@ -1243,6 +1253,7 @@ fn find_contours_simd(binary_image: &Array2<f64>) -> Result<Vec<Vec<(f64, f64)>>
 /// # Returns
 ///
 /// * Result containing traced contour points
+#[allow(dead_code)]
 fn trace_contour_simd(
     binary_image: &Array2<f64>,
     visited: &mut Array2<bool>,
@@ -1332,6 +1343,7 @@ fn trace_contour_simd(
 /// # Returns
 ///
 /// * Option containing the quadrilateral if successfully approximated
+#[allow(dead_code)]
 fn approximate_polygon_to_quad_simd(contour: &[(f64, f64)]) -> Option<[(f64, f64); 4]> {
     if contour.len() < 4 {
         return None;
@@ -1382,6 +1394,7 @@ fn approximate_polygon_to_quad_simd(contour: &[(f64, f64)]) -> Option<[(f64, f64
 /// # Returns
 ///
 /// * Simplified polygon points
+#[allow(dead_code)]
 fn douglas_peucker_simd(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> {
     if points.len() < 3 {
         return points.to_vec();
@@ -1435,6 +1448,7 @@ fn douglas_peucker_simd(points: &[(f64, f64)], epsilon: f64) -> Vec<(f64, f64)> 
 /// # Returns
 ///
 /// * Vector of distances from each point to the line
+#[allow(dead_code)]
 fn point_to_line_distances_simd(
     x_coords: &[f64],
     y_coords: &[f64],
@@ -1512,6 +1526,7 @@ fn point_to_line_distances_simd(
 /// # Returns
 ///
 /// * Vector of detected corner points
+#[allow(dead_code)]
 fn find_corner_points_simd(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
     if contour.len() < 8 {
         return contour.to_vec();
@@ -1564,6 +1579,7 @@ fn find_corner_points_simd(contour: &[(f64, f64)]) -> Vec<(f64, f64)> {
 /// # Returns
 ///
 /// * Vector of curvature values for each point
+#[allow(dead_code)]
 fn compute_curvatures_simd(contour: &[(f64, f64)], window_size: usize) -> Vec<f64> {
     let n = contour.len();
     let mut curvatures = vec![0.0; n];
@@ -1648,6 +1664,7 @@ fn compute_curvatures_simd(contour: &[(f64, f64)], window_size: usize) -> Vec<f6
 /// # Returns
 ///
 /// * Total perimeter length
+#[allow(dead_code)]
 fn calculate_perimeter_simd(points: &[(f64, f64)]) -> f64 {
     if points.len() < 2 {
         return 0.0;
@@ -1690,6 +1707,7 @@ fn calculate_perimeter_simd(points: &[(f64, f64)]) -> f64 {
 /// # Returns
 ///
 /// * Area of the quadrilateral
+#[allow(dead_code)]
 fn calculate_quad_area_simd(quad: &[(f64, f64); 4]) -> f64 {
     // Extract coordinates
     let x_coords = Array1::from_vec(vec![quad[0].0, quad[1].0, quad[2].0, quad[3].0]);
@@ -1716,6 +1734,7 @@ fn calculate_quad_area_simd(quad: &[(f64, f64); 4]) -> f64 {
 /// # Returns
 ///
 /// * Quadrilateral points ordered clockwise from top-left
+#[allow(dead_code)]
 fn order_quad_points_simd(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
     let points = quad.to_vec();
 
@@ -2103,6 +2122,7 @@ fn order_quad_points(quad: [(f64, f64); 4]) -> [(f64, f64); 4] {
 ///
 /// Returns an error if the perspective transformation cannot be calculated
 /// or if the warping operation fails
+#[allow(dead_code)]
 pub fn correct_perspective(
     src: &DynamicImage,
     corners: [(f64, f64); 4],
@@ -2164,6 +2184,7 @@ pub fn correct_perspective(
 /// # Returns
 ///
 /// * The distance between the points
+#[allow(dead_code)]
 fn distance(p1: (f64, f64), p2: (f64, f64)) -> f64 {
     let (x1, y1) = p1;
     let (x2, y2) = p2;

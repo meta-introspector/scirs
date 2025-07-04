@@ -52,6 +52,7 @@ use crate::error::{Result, TimeSeriesError};
 /// // The trend should have the same length as the input
 /// assert_eq!(trend.len(), ts.len());
 /// ```
+#[allow(dead_code)]
 pub fn estimate_spline_trend<F>(ts: &Array1<F>, options: &SplineTrendOptions) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -112,6 +113,7 @@ where
 }
 
 /// Generates uniformly spaced knot positions
+#[allow(dead_code)]
 fn generate_uniform_knots(n: usize, num_knots: usize) -> Vec<usize> {
     let mut knots = Vec::with_capacity(num_knots);
 
@@ -131,6 +133,7 @@ fn generate_uniform_knots(n: usize, num_knots: usize) -> Vec<usize> {
 }
 
 /// Generates knots at quantile positions of the data
+#[allow(dead_code)]
 fn generate_quantile_knots(n: usize, num_knots: usize) -> Vec<usize> {
     let mut knots = Vec::with_capacity(num_knots);
 
@@ -150,6 +153,7 @@ fn generate_quantile_knots(n: usize, num_knots: usize) -> Vec<usize> {
 }
 
 /// Fits a cubic spline to the time series data
+#[allow(dead_code)]
 fn fit_cubic_spline<F>(ts: &Array1<F>, knots: &[usize], extrapolate: bool) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -250,6 +254,7 @@ where
 }
 
 /// Fits a natural cubic spline to the time series data
+#[allow(dead_code)]
 fn fit_natural_cubic_spline<F>(
     ts: &Array1<F>,
     knots: &[usize],
@@ -264,6 +269,7 @@ where
 }
 
 /// Fits a B-spline to the time series data
+#[allow(dead_code)]
 fn fit_bspline<F>(
     ts: &Array1<F>,
     knots: &[usize],
@@ -300,6 +306,7 @@ where
 }
 
 /// Fits a P-spline (penalized B-spline) to the time series data
+#[allow(dead_code)]
 fn fit_pspline<F>(
     ts: &Array1<F>,
     knots: &[usize],
@@ -337,6 +344,7 @@ where
 }
 
 /// Creates a B-spline basis matrix
+#[allow(dead_code)]
 fn create_bspline_basis<F>(x_values: Vec<F>, knots: &[usize], degree: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -415,6 +423,7 @@ where
 }
 
 /// Solves a linear system for spline coefficients
+#[allow(dead_code)]
 fn solve_spline_system<F>(basis: &Array2<F>, ts: &Array1<F>) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -449,6 +458,7 @@ where
 }
 
 /// Solves a regularized linear system for penalized spline coefficients
+#[allow(dead_code)]
 fn solve_regularized_system<F>(basis: Array2<F>, ts: &Array1<F>, lambda: F) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -510,6 +520,7 @@ where
 }
 
 /// Solves a linear system using Cholesky decomposition
+#[allow(dead_code)]
 fn solve_linear_system<F>(a: Array2<F>, b: Vec<F>) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -595,6 +606,7 @@ where
 /// # Returns
 ///
 /// A `TrendWithConfidenceInterval` struct containing the estimated trend and confidence bounds
+#[allow(dead_code)]
 pub fn estimate_spline_trend_with_ci<F>(
     ts: &Array1<F>,
     options: &SplineTrendOptions,

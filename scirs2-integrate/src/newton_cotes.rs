@@ -79,6 +79,7 @@ pub struct NewtonCotesResult<F: IntegrateFloat> {
 ///
 /// - Higher-order rules (n > 8) may have poor numerical properties due to
 ///   Runge's phenomenon and should be used with caution.
+#[allow(dead_code)]
 pub fn newton_cotes<F: IntegrateFloat>(
     n: usize,
     formula_type: NewtonCotesType,
@@ -169,6 +170,7 @@ pub fn newton_cotes<F: IntegrateFloat>(
 }
 
 /// Calculates the weights for a Newton-Cotes formula
+#[allow(dead_code)]
 fn calculate_weights<F: IntegrateFloat>(
     n: usize,
     formula_type: &NewtonCotesType,
@@ -297,6 +299,7 @@ fn calculate_weights<F: IntegrateFloat>(
 }
 
 /// Calculates weights for Newton-Cotes formulas of any order using general approach
+#[allow(dead_code)]
 fn calculate_weights_general<F: IntegrateFloat>(
     n: usize,
     formula_type: &NewtonCotesType,
@@ -389,6 +392,7 @@ fn calculate_weights_general<F: IntegrateFloat>(
 }
 
 /// Calculates error coefficient for error estimation
+#[allow(dead_code)]
 fn calculate_error_coefficient<F: IntegrateFloat>(
     n: usize,
     formula_type: &NewtonCotesType,
@@ -450,6 +454,7 @@ fn calculate_error_coefficient<F: IntegrateFloat>(
 /// # Returns
 ///
 /// Approximate value of the integral and an error estimate
+#[allow(dead_code)]
 pub fn newton_cotes_integrate<F, Func>(
     f: Func,
     a: F,

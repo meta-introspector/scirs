@@ -18,6 +18,7 @@ use scirs2_integrate::IntegrateError;
 
 type SolverFunction = Box<dyn Fn(&[f64]) -> Result<f64, IntegrateError>>;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Advanced Method of Manufactured Solutions Verification ===\n");
 
@@ -39,6 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn exponential_ode_verification() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧮 Exponential ODE Verification");
     println!("{}", "=".repeat(50));
@@ -107,6 +109,7 @@ fn exponential_ode_verification() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn combined_solution_verification() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔗 Combined Solution Verification");
     println!("{}", "=".repeat(50));
@@ -140,6 +143,7 @@ fn combined_solution_verification() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn three_d_pde_verification() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌐 3D PDE Verification");
     println!("{}", "=".repeat(50));
@@ -178,6 +182,7 @@ fn three_d_pde_verification() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn helmholtz_verification() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ Helmholtz Equation Verification");
     println!("{}", "=".repeat(50));
@@ -231,6 +236,7 @@ fn helmholtz_verification() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn automated_workflow_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🤖 Automated Verification Workflow");
     println!("{}", "=".repeat(50));

@@ -4,6 +4,7 @@ use rand::Rng;
 use rand::SeedableRng;
 use scirs2_neural::layers::{BatchNorm, Conv2D, Dense, Layer, PaddingMode};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Batch Normalization Example");
     // Initialize random number generator with a fixed seed for reproducibility
@@ -87,6 +88,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 // Helper function to compute mean of an array
+#[allow(dead_code)]
 fn compute_mean<F: num_traits::Float>(arr: &Array<F, ndarray::IxDyn>) -> F {
     let n = arr.len();
     let mut sum = F::zero();
@@ -94,6 +96,7 @@ fn compute_mean<F: num_traits::Float>(arr: &Array<F, ndarray::IxDyn>) -> F {
         sum = sum + val;
     sum / F::from(n).unwrap()
 // Helper function to compute standard deviation
+#[allow(dead_code)]
 fn compute_std<F: num_traits::Float>(arr: &Array<F, ndarray::IxDyn>, mean: F) -> F {
     let mut sum_sq = F::zero();
         let diff = val - mean;

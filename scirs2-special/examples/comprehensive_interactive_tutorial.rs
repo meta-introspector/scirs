@@ -2839,6 +2839,7 @@ impl ConceptualGraph {
 }
 
 // Utility functions
+#[allow(dead_code)]
 fn format_duration(duration: Duration) -> String {
     let total_seconds = duration.as_secs();
     let hours = total_seconds / 3600;
@@ -2851,6 +2852,7 @@ fn format_duration(duration: Duration) -> String {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎓 Initializing Comprehensive Interactive Tutorial System...\n");
 

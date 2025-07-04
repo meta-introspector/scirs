@@ -130,6 +130,7 @@ impl EventDrivenOptimizer {
 }
 
 /// Event-driven optimization function
+#[allow(dead_code)]
 pub fn event_driven_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

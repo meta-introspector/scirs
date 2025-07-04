@@ -89,6 +89,7 @@ use ndarray::Array2;
 /// # Returns
 ///
 /// * Result containing a 2D array of pixel intensities (grayscale)
+#[allow(dead_code)]
 pub fn image_to_array(img: &DynamicImage) -> Result<Array2<f32>> {
     // Convert to grayscale
     let gray = img.to_luma8();
@@ -117,6 +118,7 @@ pub fn image_to_array(img: &DynamicImage) -> Result<Array2<f32>> {
 /// # Returns
 ///
 /// * Result containing a grayscale image
+#[allow(dead_code)]
 pub fn array_to_image(array: &Array2<f32>) -> Result<GrayImage> {
     let height = array.shape()[0];
     let width = array.shape()[1];
@@ -143,6 +145,7 @@ pub fn array_to_image(array: &Array2<f32>) -> Result<GrayImage> {
 /// # Returns
 ///
 /// * Result containing an edge image
+#[allow(dead_code)]
 pub fn sobel_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
     let array = image_to_array(img)?;
     let (height, width) = array.dim();
@@ -203,6 +206,7 @@ pub fn sobel_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
 /// # References
 ///
 /// - Harris, C. and Stephens, M., 1988, August. A combined corner and edge detector. In Alvey vision conference (Vol. 15, No. 50, pp. 10-5244).
+#[allow(dead_code)]
 pub fn harris_corners(
     img: &DynamicImage,
     block_size: usize,
@@ -317,6 +321,7 @@ pub fn harris_corners(
 /// # Returns
 ///
 /// * Vector of (x, y) coordinates of features
+#[allow(dead_code)]
 pub fn extract_feature_coordinates(img: &GrayImage) -> Vec<(u32, u32)> {
     let mut coords = Vec::new();
     let (width, height) = img.dimensions();

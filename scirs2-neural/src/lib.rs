@@ -5,6 +5,7 @@ pub mod error;
 pub mod layers;
 pub mod losses;
 pub mod training;
+pub mod utils;
 
 pub use activations_minimal::{Activation, ReLU, Sigmoid, Softmax, Tanh, GELU};
 pub use error::{Error, NeuralError, Result};

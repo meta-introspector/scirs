@@ -29,6 +29,7 @@ use std::ops::{AddAssign, MulAssign, SubAssign};
 /// let result = gammainc_lower(2.0, 1.0).unwrap();
 /// assert!((result - 0.2642411176571153).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn gammainc_lower<T>(a: T, x: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display + AddAssign + MulAssign,
@@ -80,6 +81,7 @@ where
 ///
 /// # Returns
 /// The value of the upper incomplete gamma function
+#[allow(dead_code)]
 pub fn gammainc_upper<T>(a: T, x: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display + AddAssign + MulAssign,
@@ -144,6 +146,7 @@ where
 ///
 /// # Returns
 /// The regularized lower incomplete gamma function
+#[allow(dead_code)]
 pub fn gammainc<T>(a: T, x: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display + AddAssign + MulAssign,
@@ -171,6 +174,7 @@ where
 /// Regularized upper incomplete gamma function
 ///
 /// Computes Q(a, x) = Γ(a, x) / Γ(a)
+#[allow(dead_code)]
 pub fn gammaincc<T>(a: T, x: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display + AddAssign + MulAssign,
@@ -190,6 +194,7 @@ where
 /// Inverse of regularized lower incomplete gamma function
 ///
 /// Find x such that P(a, x) = p
+#[allow(dead_code)]
 pub fn gammaincinv<T>(a: T, p: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display + AddAssign + MulAssign + SubAssign,
@@ -239,6 +244,7 @@ where
 /// Inverse of regularized upper incomplete gamma function
 ///
 /// Find x such that Q(a, x) = q
+#[allow(dead_code)]
 pub fn gammainccinv<T>(a: T, q: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display + AddAssign + MulAssign + SubAssign,
@@ -252,6 +258,7 @@ where
 }
 
 /// Helper function for initial guess in gammaincinv
+#[allow(dead_code)]
 fn initial_guess_gammaincinv<T>(a: T, p: T) -> T
 where
     T: Float + FromPrimitive + Display,
@@ -274,6 +281,7 @@ where
 }
 
 /// Compute log of regularized incomplete gamma in log space to avoid overflow
+#[allow(dead_code)]
 fn compute_log_gammainc<T>(a: T, x: T, log_gamma_a: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + AddAssign + MulAssign,
@@ -302,6 +310,7 @@ where
 /// Gamma star function (used in some asymptotic expansions)
 ///
 /// gammastar(x) = Γ(x) / (sqrt(2π) * x^(x-1/2) * e^(-x))
+#[allow(dead_code)]
 pub fn gammastar<T>(x: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Debug + Display + AddAssign + MulAssign,
@@ -342,6 +351,7 @@ where
 /// Sign of the gamma function
 ///
 /// Returns 1.0 if gamma(x) > 0, -1.0 if gamma(x) < 0
+#[allow(dead_code)]
 pub fn gammasgn<T>(x: T) -> T
 where
     T: Float + FromPrimitive,

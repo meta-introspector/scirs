@@ -580,6 +580,7 @@ impl<F: Float + NumCast> Binomial<F> {
 /// let pmf_at_5 = b.pmf(5.0);
 /// assert!((pmf_at_5 - 0.24609375).abs() < 1e-7);
 /// ```
+#[allow(dead_code)]
 pub fn binom<F>(n: usize, p: F) -> StatsResult<Binomial<F>>
 where
     F: Float + NumCast,

@@ -63,6 +63,7 @@ impl Default for ParallelFilterConfig {
 /// # Returns
 ///
 /// * Zero-phase filtered signal with optimal performance
+#[allow(dead_code)]
 pub fn enhanced_parallel_filtfilt<T>(
     b: &[f64],
     a: &[f64],
@@ -97,6 +98,7 @@ where
 }
 
 /// Standard enhanced parallel filtfilt for moderate-sized signals
+#[allow(dead_code)]
 fn enhanced_filtfilt_standard<T>(
     b: &[f64],
     a: &[f64],
@@ -140,6 +142,7 @@ where
 }
 
 /// Memory-optimized parallel filtfilt for large signals
+#[allow(dead_code)]
 fn enhanced_filtfilt_memory_optimized<T>(
     b: &[f64],
     a: &[f64],
@@ -195,6 +198,7 @@ where
 }
 
 /// Adaptive parallel filter with intelligent load balancing
+#[allow(dead_code)]
 fn adaptive_parallel_filter(
     x: &[f64],
     b: &[f64],
@@ -240,6 +244,7 @@ fn adaptive_parallel_filter(
 }
 
 /// Apply IIR filter with optional SIMD acceleration
+#[allow(dead_code)]
 fn apply_iir_filter_simd(
     x: &[f64],
     b: &[f64],
@@ -267,6 +272,7 @@ fn apply_iir_filter_simd(
 }
 
 /// SIMD-optimized IIR filter implementation
+#[allow(dead_code)]
 fn apply_iir_filter_simd_optimized(
     y: &mut [f64],
     x: &[f64],
@@ -300,6 +306,7 @@ fn apply_iir_filter_simd_optimized(
 }
 
 /// Scalar IIR filter implementation
+#[allow(dead_code)]
 fn apply_iir_filter_scalar(y: &mut [f64], x: &[f64], b: &[f64], a: &[f64]) {
     let n = x.len();
     let nb = b.len();
@@ -327,6 +334,7 @@ fn apply_iir_filter_scalar(y: &mut [f64], x: &[f64], b: &[f64], a: &[f64]) {
 }
 
 /// Create overlapped chunks for parallel processing
+#[allow(dead_code)]
 fn create_overlapped_chunks(
     data: &[f64],
     chunk_size: usize,
@@ -351,6 +359,7 @@ fn create_overlapped_chunks(
 }
 
 /// Merge overlapped chunks back into complete signal
+#[allow(dead_code)]
 fn merge_overlapped_chunks(
     chunks: Vec<(Vec<f64>, usize)>,
     total_len: usize,
@@ -375,11 +384,13 @@ fn merge_overlapped_chunks(
 }
 
 /// Calculate optimal padding length for edge effects
+#[allow(dead_code)]
 fn calculate_optimal_padlen(nb: usize, na: usize) -> usize {
     3 * (nb.max(na))
 }
 
 /// Apply edge padding to minimize boundary effects
+#[allow(dead_code)]
 fn apply_edge_padding(x: &[f64], padlen: usize) -> SignalResult<Vec<f64>> {
     if x.len() < 2 {
         return Err(SignalError::ValueError(
@@ -408,6 +419,7 @@ fn apply_edge_padding(x: &[f64], padlen: usize) -> SignalResult<Vec<f64>> {
 }
 
 /// Estimate memory usage for filtering operation
+#[allow(dead_code)]
 fn estimate_memory_usage(signal_len: usize, nb: usize, na: usize) -> usize {
     // Rough estimate in MB
     let bytes_per_sample = 8; // f64
@@ -417,6 +429,7 @@ fn estimate_memory_usage(signal_len: usize, nb: usize, na: usize) -> usize {
 }
 
 /// Calculate adaptive chunk size based on signal and filter characteristics
+#[allow(dead_code)]
 fn calculate_adaptive_chunk_size(
     signal_len: usize,
     num_threads: usize,
@@ -439,6 +452,7 @@ fn calculate_adaptive_chunk_size(
 }
 
 /// Calculate memory-optimal chunk size for large signals
+#[allow(dead_code)]
 fn calculate_memory_optimal_chunk_size(
     signal_len: usize,
     nb: usize,
@@ -452,11 +466,10 @@ fn calculate_memory_optimal_chunk_size(
     max_chunk_samples.min(signal_len).max(1000) // Minimum chunk size for efficiency
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
     use ndarray::Array1;
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     #[test]

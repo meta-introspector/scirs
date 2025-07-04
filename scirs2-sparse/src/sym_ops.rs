@@ -56,6 +56,7 @@ use scirs2_core::parallel_ops::*;
 /// assert_eq!(y[1], 14.0);
 /// assert_eq!(y[2], 9.0);
 /// ```
+#[allow(dead_code)]
 pub fn sym_csr_matvec<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Send + Sync,
@@ -79,6 +80,7 @@ where
 }
 
 /// Parallel symmetric CSR matrix-vector multiplication
+#[allow(dead_code)]
 fn sym_csr_matvec_parallel<T>(
     matrix: &SymCsrMatrix<T>,
     x: &ArrayView1<T>,
@@ -136,6 +138,7 @@ where
 }
 
 /// Scalar fallback version of symmetric CSR matrix-vector multiplication
+#[allow(dead_code)]
 fn sym_csr_matvec_scalar<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T>,
@@ -201,6 +204,7 @@ where
 /// assert_eq!(y[1], 14.0);
 /// assert_eq!(y[2], 9.0);
 /// ```
+#[allow(dead_code)]
 pub fn sym_coo_matvec<T>(matrix: &SymCooMatrix<T>, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + Add<Output = T>,
@@ -252,6 +256,7 @@ where
 /// This operation preserves symmetry but may change the sparsity pattern of the matrix.
 /// Currently only implemented for dense updates (all elements of x*x^T are considered).
 /// For sparse updates, additional optimizations would be possible.
+#[allow(dead_code)]
 pub fn sym_csr_rank1_update<T>(
     matrix: &mut SymCsrMatrix<T>,
     x: &ArrayView1<T>,
@@ -344,6 +349,7 @@ where
 /// // Verify: [1,2,3] * [2,1,0; 1,2,3; 0,3,1] * [1;2;3] = [1,2,3] * [4,14,9] = 4 + 28 + 27 = 59
 /// assert_eq!(result, 59.0);
 /// ```
+#[allow(dead_code)]
 pub fn sym_csr_quadratic_form<T>(matrix: &SymCsrMatrix<T>, x: &ArrayView1<T>) -> SparseResult<T>
 where
     T: Float + Debug + Copy + Add<Output = T> + Mul<Output = T> + Send + Sync,
@@ -390,6 +396,7 @@ where
 /// // Verify: 2 + 2 + 1 = 5
 /// assert_eq!(trace, 5.0);
 /// ```
+#[allow(dead_code)]
 pub fn sym_csr_trace<T>(matrix: &SymCsrMatrix<T>) -> T
 where
     T: Float + Debug + Copy + Add<Output = T>,

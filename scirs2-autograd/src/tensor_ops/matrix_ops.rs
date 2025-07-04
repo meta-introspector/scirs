@@ -334,6 +334,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for GeneralDeterminantOp {
 }
 
 // Helper functions
+#[allow(dead_code)]
 fn compute_inverse<F: Float>(matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F>, OpError> {
     let n = matrix.shape()[0];
     let mut a = matrix.to_owned();
@@ -383,6 +384,7 @@ fn compute_inverse<F: Float>(matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F
     Ok(inv)
 }
 
+#[allow(dead_code)]
 fn compute_pseudo_inverse<F: Float>(matrix: &ndarray::ArrayView2<F>) -> Result<Array2<F>, OpError> {
     // Simplified pseudo-inverse using transpose
     // For a full implementation, use SVD
@@ -404,6 +406,7 @@ fn compute_pseudo_inverse<F: Float>(matrix: &ndarray::ArrayView2<F>) -> Result<A
     }
 }
 
+#[allow(dead_code)]
 fn compute_determinant_lu<F: Float>(matrix: &ndarray::ArrayView2<F>) -> Result<F, OpError> {
     let n = matrix.shape()[0];
     let mut a = matrix.to_owned();
@@ -546,6 +549,7 @@ impl<F: Float + ndarray::ScalarOperand + FromPrimitive> Op<F> for MatrixExp3Op {
 }
 
 /// Compute matrix exponential using Padé approximation
+#[allow(dead_code)]
 fn compute_matrix_exp_pade<F: Float + ndarray::ScalarOperand + FromPrimitive>(
     matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array2<F>, OpError> {
@@ -610,6 +614,7 @@ fn compute_matrix_exp_pade<F: Float + ndarray::ScalarOperand + FromPrimitive>(
 }
 
 /// Compute matrix exponential using eigendecomposition
+#[allow(dead_code)]
 fn compute_matrix_exp_eigen<F: Float + ndarray::ScalarOperand + FromPrimitive>(
     matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array2<F>, OpError> {
@@ -646,6 +651,7 @@ fn compute_matrix_exp_eigen<F: Float + ndarray::ScalarOperand + FromPrimitive>(
 }
 
 /// Compute matrix exponential using Taylor series
+#[allow(dead_code)]
 fn compute_matrix_exp_taylor<F: Float + ndarray::ScalarOperand>(
     matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array2<F>, OpError> {
@@ -670,6 +676,7 @@ fn compute_matrix_exp_taylor<F: Float + ndarray::ScalarOperand>(
 }
 
 /// Solve matrix equation AX = B
+#[allow(dead_code)]
 fn solve_matrix_equation<F: Float>(
     a: &ndarray::ArrayView2<F>,
     b: &ndarray::ArrayView2<F>,
@@ -735,6 +742,7 @@ fn solve_matrix_equation<F: Float>(
 }
 
 /// Check if matrix is symmetric
+#[allow(dead_code)]
 fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
     let n = matrix.shape()[0];
     for i in 0..n {
@@ -748,6 +756,7 @@ fn is_symmetric_matrix<F: Float>(matrix: &ndarray::ArrayView2<F>) -> bool {
 }
 
 /// Simple symmetric eigendecomposition
+#[allow(dead_code)]
 fn compute_symmetric_eigen_simple<F: Float + ndarray::ScalarOperand + FromPrimitive>(
     matrix: &ndarray::ArrayView2<F>,
 ) -> Result<(Array1<F>, Array2<F>), OpError> {
@@ -812,6 +821,7 @@ fn compute_symmetric_eigen_simple<F: Float + ndarray::ScalarOperand + FromPrimit
 }
 
 // Public API functions
+#[allow(dead_code)]
 pub fn matrix_inverse<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
 
@@ -825,6 +835,7 @@ pub fn matrix_inverse<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
         .build(MatrixInverseOp)
 }
 
+#[allow(dead_code)]
 pub fn pseudo_inverse<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
 
@@ -837,6 +848,7 @@ pub fn pseudo_inverse<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
         .build(PseudoInverseOp)
 }
 
+#[allow(dead_code)]
 pub fn determinant<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
 
@@ -851,6 +863,7 @@ pub fn determinant<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>
 }
 
 /// Matrix exponential using improved Padé approximation (method 2)
+#[allow(dead_code)]
 pub fn expm2<'g, F: Float + ndarray::ScalarOperand + FromPrimitive>(
     matrix: &Tensor<'g, F>,
 ) -> Tensor<'g, F> {
@@ -864,6 +877,7 @@ pub fn expm2<'g, F: Float + ndarray::ScalarOperand + FromPrimitive>(
 }
 
 /// Matrix exponential using eigendecomposition (method 3)  
+#[allow(dead_code)]
 pub fn expm3<'g, F: Float + ndarray::ScalarOperand + FromPrimitive>(
     matrix: &Tensor<'g, F>,
 ) -> Tensor<'g, F> {

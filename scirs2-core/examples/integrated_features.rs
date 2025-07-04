@@ -19,6 +19,7 @@ use scirs2_core::memory::{BufferPool, ZeroCopyView};
 #[cfg(feature = "types")]
 use scirs2_core::types::NumericConversion;
 
+#[allow(dead_code)]
 fn main() {
     println!("Integrated Features Example");
 
@@ -48,6 +49,7 @@ fn main() {
     feature = "memory_management",
     feature = "types"
 ))]
+#[allow(dead_code)]
 fn run_integrated_example() {
     use ndarray::IxDyn;
     use rand_distr::Normal;

@@ -48,6 +48,8 @@ pub enum MemoryStrategy {
 
 /// Execute sparse matrix-vector multiplication kernel on GPU
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn execute_spmv_kernel<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -135,6 +137,8 @@ where
 
 /// Execute symmetric sparse matrix-vector multiplication kernel on GPU
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn execute_symmetric_spmv_kernel<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -220,6 +224,7 @@ where
 }
 
 /// Calculate optimal grid and workgroup dimensions for GPU execution
+#[allow(dead_code)]
 fn calculate_optimal_dimensions(
     backend: GpuBackend,
     problem_size: usize,
@@ -269,6 +274,7 @@ fn calculate_optimal_dimensions(
 
 /// Execute CUDA-specific SpMV kernel with optimizations
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn execute_cuda_spmv<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -331,6 +337,7 @@ where
 
 /// Execute OpenCL-specific SpMV kernel
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn execute_opencl_spmv<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -393,6 +400,7 @@ where
 
 /// Execute Metal-specific SpMV kernel
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn execute_metal_spmv<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -459,6 +467,7 @@ where
 }
 
 /// CPU fallback implementation for SpMV
+#[allow(dead_code)]
 fn execute_cpu_spmv_fallback<T>(
     rows: usize,
     indptr_buffer: &GpuBuffer<u32>,
@@ -496,6 +505,7 @@ where
 
 /// Symmetric SpMV implementations
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn execute_cuda_symmetric_spmv<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -529,6 +539,7 @@ where
 }
 
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn execute_opencl_symmetric_spmv<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -561,6 +572,7 @@ where
 }
 
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn execute_metal_symmetric_spmv<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -592,6 +604,7 @@ where
     )
 }
 
+#[allow(dead_code)]
 fn execute_cpu_symmetric_spmv_fallback<T>(
     rows: usize,
     indptr_buffer: &GpuBuffer<u32>,
@@ -638,6 +651,8 @@ where
 
 /// Execute triangular solve kernel on GPU
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn execute_triangular_solve_kernel<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -702,6 +717,7 @@ where
 }
 
 /// CPU fallback for triangular solve
+#[allow(dead_code)]
 fn execute_cpu_triangular_solve_fallback<T>(
     n: usize,
     indptr_buffer: &GpuBuffer<u32>,
@@ -1151,6 +1167,7 @@ impl GpuMemoryManager {
 }
 
 /// Advanced GPU memory prefetching for sparse matrix operations
+#[allow(dead_code)]
 pub fn prefetch_matrix_data<T>(
     memory_manager: &mut GpuMemoryManager,
     matrix_data: &[T],
@@ -1183,6 +1200,7 @@ pub enum AccessPattern {
 }
 
 /// GPU memory bandwidth optimization utility
+#[allow(dead_code)]
 pub fn optimize_memory_bandwidth(
     backend: GpuBackend,
     data_size: usize,
@@ -1202,6 +1220,7 @@ pub fn optimize_memory_bandwidth(
 }
 
 /// Adaptive GPU workgroup sizing based on matrix characteristics
+#[allow(dead_code)]
 pub fn calculate_adaptive_workgroup_size(
     backend: GpuBackend,
     matrix_rows: usize,
@@ -1274,13 +1293,15 @@ pub fn calculate_adaptive_workgroup_size(
     GpuKernelConfig {
         workgroup_size,
         compute_units: 0,                   // Auto-detect
-        vectorization: avg_nnz_per_row > 8, // Enable vectorization for non-sparse patterns
+        vectorization: avg_nnz_per_row > 4, // Enable vectorization for non-sparse patterns
         memory_strategy,
     }
 }
 
 /// Fallback implementations when GPU feature is not enabled
 #[cfg(not(feature = "gpu"))]
+#[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn execute_spmv_kernel<T>(
     _device: &GpuDevice,
     _kernel: &GpuKernelHandle,
@@ -1307,6 +1328,8 @@ where
 }
 
 #[cfg(not(feature = "gpu"))]
+#[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn execute_symmetric_spmv_kernel<T>(
     _device: &GpuDevice,
     _kernel: &GpuKernelHandle,
@@ -1333,6 +1356,8 @@ where
 }
 
 #[cfg(not(feature = "gpu"))]
+#[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn execute_triangular_solve_kernel<T>(
     _device: &GpuDevice,
     _kernel: &GpuKernelHandle,

@@ -41,6 +41,7 @@ impl SimdOps for f64 {}
 /// # Returns
 ///
 /// * Result array after applying the operation
+#[allow(dead_code)]
 pub fn simd_binary_op<F, S1, S2, D>(
     a: &ndarray::ArrayBase<S1, D>,
     b: &ndarray::ArrayBase<S2, D>,
@@ -73,6 +74,7 @@ where
 /// # Returns
 ///
 /// * Element-wise maximum array
+#[allow(dead_code)]
 pub fn simd_maximum_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
     f32::simd_max(a, b)
 }
@@ -90,6 +92,7 @@ pub fn simd_maximum_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32>
 /// # Returns
 ///
 /// * Element-wise maximum array
+#[allow(dead_code)]
 pub fn simd_maximum_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
     f64::simd_max(a, b)
 }
@@ -107,6 +110,7 @@ pub fn simd_maximum_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64>
 /// # Returns
 ///
 /// * Element-wise minimum array
+#[allow(dead_code)]
 pub fn simd_minimum_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
     f32::simd_min(a, b)
 }
@@ -124,6 +128,7 @@ pub fn simd_minimum_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32>
 /// # Returns
 ///
 /// * Element-wise minimum array
+#[allow(dead_code)]
 pub fn simd_minimum_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
     f64::simd_min(a, b)
 }
@@ -141,61 +146,73 @@ pub fn simd_minimum_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64>
 /// # Returns
 ///
 /// * Element-wise sum array
+#[allow(dead_code)]
 pub fn simd_add_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
     f32::simd_add(a, b)
 }
 
 /// Compute element-wise addition of two f64 arrays using unified SIMD operations
+#[allow(dead_code)]
 pub fn simd_add_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
     f64::simd_add(a, b)
 }
 
 /// Compute element-wise subtraction of two f32 arrays using unified SIMD operations
+#[allow(dead_code)]
 pub fn simd_sub_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
     f32::simd_sub(a, b)
 }
 
 /// Compute element-wise subtraction of two f64 arrays using unified SIMD operations
+#[allow(dead_code)]
 pub fn simd_sub_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
     f64::simd_sub(a, b)
 }
 
 /// Compute element-wise multiplication of two f32 arrays using unified SIMD operations
+#[allow(dead_code)]
 pub fn simd_mul_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
     f32::simd_mul(a, b)
 }
 
 /// Compute element-wise multiplication of two f64 arrays using unified SIMD operations
+#[allow(dead_code)]
 pub fn simd_mul_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
     f64::simd_mul(a, b)
 }
 
 /// Compute element-wise division of two f32 arrays using unified SIMD operations
+#[allow(dead_code)]
 pub fn simd_div_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
     f32::simd_div(a, b)
 }
 
 /// Compute element-wise division of two f64 arrays using unified SIMD operations
+#[allow(dead_code)]
 pub fn simd_div_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
     f64::simd_div(a, b)
 }
 
 /// Compute dot product of two f32 arrays using unified SIMD operations
+#[allow(dead_code)]
 pub fn simd_dot_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> f32 {
     f32::simd_dot(a, b)
 }
 
 /// Compute dot product of two f64 arrays using unified SIMD operations
+#[allow(dead_code)]
 pub fn simd_dot_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
     f64::simd_dot(a, b)
 }
 
 /// Apply scalar multiplication to an f32 array using unified SIMD operations
+#[allow(dead_code)]
 pub fn simd_scalar_mul_f32(a: &ArrayView1<f32>, scalar: f32) -> Array1<f32> {
     f32::simd_scalar_mul(a, scalar)
 }
 
 /// Apply scalar multiplication to an f64 array using unified SIMD operations
+#[allow(dead_code)]
 pub fn simd_scalar_mul_f64(a: &ArrayView1<f64>, scalar: f64) -> Array1<f64> {
     f64::simd_scalar_mul(a, scalar)
 }
@@ -214,6 +231,7 @@ pub fn simd_scalar_mul_f64(a: &ArrayView1<f64>, scalar: f64) -> Array1<f64> {
 /// # Returns
 ///
 /// * Array of linearly spaced values
+#[allow(dead_code)]
 pub fn simd_linspace_f32(start: f32, end: f32, num: usize) -> Array1<f32> {
     if num < 2 {
         return Array1::from_vec(vec![start]);
@@ -236,6 +254,7 @@ pub fn simd_linspace_f32(start: f32, end: f32, num: usize) -> Array1<f32> {
 }
 
 /// SIMD accelerated linspace function for f64 values
+#[allow(dead_code)]
 pub fn simd_linspace_f64(start: f64, end: f64, num: usize) -> Array1<f64> {
     if num < 2 {
         return Array1::from_vec(vec![start]);
@@ -260,11 +279,13 @@ pub fn simd_linspace_f64(start: f64, end: f64, num: usize) -> Array1<f64> {
 /// Enhanced SIMD operations using the unified API
 ///
 /// Cache-optimized SIMD addition with unified interface
+#[allow(dead_code)]
 pub fn simd_add_cache_optimized_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
     f32::simd_add_cache_optimized(a, b)
 }
 
 /// Ultra-optimized fused multiply-add using unified interface
+#[allow(dead_code)]
 pub fn simd_fma_ultra_optimized_f32(
     a: &ArrayView1<f32>,
     b: &ArrayView1<f32>,
@@ -274,16 +295,19 @@ pub fn simd_fma_ultra_optimized_f32(
 }
 
 /// Adaptive SIMD operation selector using unified interface
+#[allow(dead_code)]
 pub fn simd_adaptive_add_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
     f32::simd_add_adaptive(a, b)
 }
 
 /// Cache-optimized SIMD addition for f64 using unified interface
+#[allow(dead_code)]
 pub fn simd_add_cache_optimized_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
     f64::simd_add_cache_optimized(a, b)
 }
 
 /// Ultra-optimized fused multiply-add for f64 using unified interface
+#[allow(dead_code)]
 pub fn simd_fma_ultra_optimized_f64(
     a: &ArrayView1<f64>,
     b: &ArrayView1<f64>,
@@ -293,21 +317,25 @@ pub fn simd_fma_ultra_optimized_f64(
 }
 
 /// Adaptive SIMD operation selector for f64 using unified interface
+#[allow(dead_code)]
 pub fn simd_adaptive_add_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> Array1<f64> {
     f64::simd_add_adaptive(a, b)
 }
 
 /// Enhanced reduction operation using unified SIMD interface
+#[allow(dead_code)]
 pub fn simd_sum_f32_enhanced(input: &ArrayView1<f32>) -> f32 {
     f32::simd_sum(input)
 }
 
 /// Enhanced reduction operation for f64 using unified SIMD interface
+#[allow(dead_code)]
 pub fn simd_sum_f64_enhanced(input: &ArrayView1<f64>) -> f64 {
     f64::simd_sum(input)
 }
 
 /// Fused multiply-add for f32 arrays using unified interface
+#[allow(dead_code)]
 pub fn simd_fused_multiply_add_f32(
     a: &ArrayView1<f32>,
     b: &ArrayView1<f32>,
@@ -317,6 +345,7 @@ pub fn simd_fused_multiply_add_f32(
 }
 
 /// Fused multiply-add for f64 arrays using unified interface
+#[allow(dead_code)]
 pub fn simd_fused_multiply_add_f64(
     a: &ArrayView1<f64>,
     b: &ArrayView1<f64>,
@@ -326,6 +355,7 @@ pub fn simd_fused_multiply_add_f64(
 }
 
 /// Cache-aware matrix-vector multiplication (GEMV) using unified interface
+#[allow(dead_code)]
 pub fn simd_gemv_cache_optimized_f32(
     alpha: f32,
     a: &ArrayView2<f32>,
@@ -378,11 +408,13 @@ impl Default for SimdCapabilities {
 }
 
 /// Get SIMD capabilities for the current system
+#[allow(dead_code)]
 pub fn detect_simd_capabilities() -> SimdCapabilities {
     SimdCapabilities::default()
 }
 
 /// Automatically select the best SIMD operation based on detected capabilities
+#[allow(dead_code)]
 pub fn simd_add_auto(a: &ArrayView1<f32>, b: &ArrayView1<f32>) -> Array1<f32> {
     simd_adaptive_add_f32(a, b)
 }

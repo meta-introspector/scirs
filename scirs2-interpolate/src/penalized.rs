@@ -570,6 +570,7 @@ where
 /// # Returns
 ///
 /// A new P-spline object fitted to the data with the custom penalty
+#[allow(dead_code)]
 pub fn pspline_with_custom_penalty<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -683,6 +684,7 @@ where
 /// # Returns
 ///
 /// A tuple containing the best lambda value and the corresponding cross-validation error
+#[allow(dead_code)]
 pub fn cross_validate_lambda<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,

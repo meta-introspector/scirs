@@ -14,6 +14,7 @@ use scirs2_cluster::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Comprehensive Ensemble Clustering Demonstration");
     println!("=============================================");
@@ -61,6 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Generate synthetic test data with multiple clusters
+#[allow(dead_code)]
 fn generate_test_data() -> Array2<f64> {
     let mut data = Vec::new();
 
@@ -86,6 +88,7 @@ fn generate_test_data() -> Array2<f64> {
 }
 
 /// Demonstrate basic ensemble clustering
+#[allow(dead_code)]
 fn demonstrate_basic_ensemble(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     let result = convenience::ensemble_clustering(data.view())?;
 
@@ -109,6 +112,7 @@ fn demonstrate_basic_ensemble(data: &Array2<f64>) -> Result<(), Box<dyn std::err
 }
 
 /// Demonstrate bootstrap ensemble clustering
+#[allow(dead_code)]
 fn demonstrate_bootstrap_ensemble(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     let result = convenience::bootstrap_ensemble(data.view(), 8, 0.75)?;
 
@@ -129,6 +133,7 @@ fn demonstrate_bootstrap_ensemble(data: &Array2<f64>) -> Result<(), Box<dyn std:
 }
 
 /// Demonstrate different consensus methods
+#[allow(dead_code)]
 fn demonstrate_consensus_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     let consensus_methods = vec![
         ("Majority Voting", ConsensusMethod::MajorityVoting),
@@ -179,6 +184,7 @@ fn demonstrate_consensus_methods(data: &Array2<f64>) -> Result<(), Box<dyn std::
 }
 
 /// Demonstrate multi-algorithm ensemble
+#[allow(dead_code)]
 fn demonstrate_multi_algorithm_ensemble(
     data: &Array2<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -220,6 +226,7 @@ fn demonstrate_multi_algorithm_ensemble(
 }
 
 /// Demonstrate meta-clustering ensemble
+#[allow(dead_code)]
 fn demonstrate_meta_clustering_ensemble(
     data: &Array2<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -269,6 +276,7 @@ fn demonstrate_meta_clustering_ensemble(
 }
 
 /// Demonstrate advanced ensemble techniques
+#[allow(dead_code)]
 fn demonstrate_advanced_ensemble_techniques(
     data: &Array2<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -382,6 +390,7 @@ fn demonstrate_advanced_ensemble_techniques(
 }
 
 /// Count unique labels in consensus result
+#[allow(dead_code)]
 fn count_unique_labels(labels: &ndarray::Array1<i32>) -> usize {
     use std::collections::HashSet;
     let unique_labels: HashSet<i32> = labels.iter().cloned().collect();

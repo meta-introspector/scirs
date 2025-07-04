@@ -175,6 +175,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// - Prefiltering is recommended for high-order interpolation to reduce artifacts
 /// - Consider using specialized functions like `rotate` or `zoom` for simple transformations
 #[allow(clippy::too_many_arguments)] // Necessary to match SciPy's API signature
+#[allow(dead_code)]
 pub fn affine_transform<T, D>(
     input: &Array<T, D>,
     matrix: &Array<T, ndarray::Ix2>,
@@ -330,6 +331,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Transformed array
+#[allow(dead_code)]
 pub fn geometric_transform<T, D, F>(
     input: &Array<T, D>,
     _mapping: F,

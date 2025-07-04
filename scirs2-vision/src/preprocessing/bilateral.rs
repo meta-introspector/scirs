@@ -53,6 +53,7 @@ impl Default for BilateralParams {
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn bilateral_filter_advanced(
     img: &DynamicImage,
     params: &BilateralParams,
@@ -72,6 +73,7 @@ pub fn bilateral_filter_advanced(
 }
 
 /// Apply bilateral filter to grayscale image
+#[allow(dead_code)]
 fn bilateral_filter_gray(img: &GrayImage, params: &BilateralParams) -> Result<GrayImage> {
     let (width, height) = img.dimensions();
     let radius = params.radius;
@@ -112,6 +114,7 @@ fn bilateral_filter_gray(img: &GrayImage, params: &BilateralParams) -> Result<Gr
 }
 
 /// Apply bilateral filter to RGB image
+#[allow(dead_code)]
 fn bilateral_filter_rgb(img: &RgbImage, params: &BilateralParams) -> Result<RgbImage> {
     let (width, height) = img.dimensions();
     let radius = params.radius;
@@ -146,6 +149,7 @@ fn bilateral_filter_rgb(img: &RgbImage, params: &BilateralParams) -> Result<RgbI
 }
 
 /// Compute spatial weights for the filter kernel
+#[allow(dead_code)]
 fn compute_spatial_weights(radius: usize, sigma: f32) -> Vec<Vec<f32>> {
     let size = 2 * radius + 1;
     let mut weights = vec![vec![0.0; size]; size];
@@ -164,6 +168,7 @@ fn compute_spatial_weights(radius: usize, sigma: f32) -> Vec<Vec<f32>> {
 }
 
 /// Apply bilateral filter to a single grayscale pixel
+#[allow(dead_code)]
 fn apply_bilateral_pixel_gray(
     img: &GrayImage,
     cx: u32,
@@ -209,6 +214,7 @@ fn apply_bilateral_pixel_gray(
 }
 
 /// Apply bilateral filter to a single RGB pixel
+#[allow(dead_code)]
 fn apply_bilateral_pixel_rgb(
     img: &RgbImage,
     cx: u32,
@@ -263,6 +269,7 @@ fn apply_bilateral_pixel_rgb(
 }
 
 /// Fast bilateral filter using integral histograms (simplified version)
+#[allow(dead_code)]
 pub fn fast_bilateral_filter(img: &DynamicImage, params: &BilateralParams) -> Result<DynamicImage> {
     // For simplicity, fall back to regular bilateral filter
     // A full implementation would use integral histograms for acceleration
@@ -280,6 +287,7 @@ pub fn fast_bilateral_filter(img: &DynamicImage, params: &BilateralParams) -> Re
 /// # Returns
 ///
 /// * Result containing filtered image
+#[allow(dead_code)]
 pub fn joint_bilateral_filter(
     img: &DynamicImage,
     guide: &DynamicImage,

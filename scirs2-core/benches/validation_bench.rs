@@ -15,6 +15,7 @@ use scirs2_core::validation::data::{
 };
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn bench_simple_validation(c: &mut Criterion) {
     let config = ValidationConfig::default();
     let validator = Validator::new(config).unwrap();
@@ -45,6 +46,7 @@ fn bench_simple_validation(c: &mut Criterion) {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn bench_complex_constraints(c: &mut Criterion) {
     let config = ValidationConfig::default();
     let validator = Validator::new(config).unwrap();
@@ -85,6 +87,7 @@ fn bench_complex_constraints(c: &mut Criterion) {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn bench_array_validation(c: &mut Criterion) {
     let config = ValidationConfig::default();
     let validator = Validator::new(config.clone()).unwrap();
@@ -108,6 +111,7 @@ fn bench_array_validation(c: &mut Criterion) {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn bench_pattern_matching(c: &mut Criterion) {
     let config = ValidationConfig::default();
     let validator = Validator::new(config).unwrap();
@@ -133,6 +137,7 @@ fn bench_pattern_matching(c: &mut Criterion) {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn bench_constraint_builder(c: &mut Criterion) {
     let mut group = c.benchmark_group("constraint_builder");
 
@@ -160,6 +165,7 @@ fn bench_constraint_builder(c: &mut Criterion) {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn bench_large_or_constraint(c: &mut Criterion) {
     let config = ValidationConfig::default();
     let validator = Validator::new(config).unwrap();
@@ -192,6 +198,7 @@ fn bench_large_or_constraint(c: &mut Criterion) {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn bench_cache_performance(c: &mut Criterion) {
     // Note: Cache configuration would be done through default config
     let config = ValidationConfig::default();
@@ -247,6 +254,7 @@ fn bench_cache_performance(c: &mut Criterion) {
 }
 
 #[cfg(feature = "data_validation")]
+#[allow(dead_code)]
 fn bench_quality_report_generation(c: &mut Criterion) {
     let config = ValidationConfig::default();
     let validator = Validator::new(config).unwrap();
@@ -287,6 +295,7 @@ criterion_group!(
 criterion_main!(benches);
 
 #[cfg(not(feature = "data_validation"))]
+#[allow(dead_code)]
 fn main() {
     // No benchmarks to run without data_validation feature
 }

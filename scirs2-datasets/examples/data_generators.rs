@@ -3,6 +3,7 @@ use scirs2_datasets::{
     utils::train_test_split,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Creating synthetic datasets...\n");
 

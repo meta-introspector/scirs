@@ -192,6 +192,7 @@ use std::fmt::Debug;
 /// # References
 ///
 /// Abramowitz and Stegun, Handbook of Mathematical Functions
+#[allow(dead_code)]
 pub fn elliptic_k<F>(m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -246,6 +247,7 @@ where
 /// # References
 ///
 /// Abramowitz and Stegun, Handbook of Mathematical Functions
+#[allow(dead_code)]
 pub fn elliptic_e<F>(m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -305,6 +307,7 @@ where
 /// # References
 ///
 /// Abramowitz and Stegun, Handbook of Mathematical Functions
+#[allow(dead_code)]
 pub fn elliptic_f<F>(phi: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -381,6 +384,7 @@ where
 /// # References
 ///
 /// Abramowitz and Stegun, Handbook of Mathematical Functions
+#[allow(dead_code)]
 pub fn elliptic_e_inc<F>(phi: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -456,6 +460,7 @@ where
 /// # References
 ///
 /// Abramowitz and Stegun, Handbook of Mathematical Functions
+#[allow(dead_code)]
 pub fn elliptic_pi<F>(n: F, phi: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -516,6 +521,7 @@ where
 /// # References
 ///
 /// Abramowitz and Stegun, Handbook of Mathematical Functions
+#[allow(dead_code)]
 pub fn jacobi_sn<F>(u: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -575,6 +581,7 @@ where
 /// # References
 ///
 /// Abramowitz and Stegun, Handbook of Mathematical Functions
+#[allow(dead_code)]
 pub fn jacobi_cn<F>(u: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -631,6 +638,7 @@ where
 /// # References
 ///
 /// Abramowitz and Stegun, Handbook of Mathematical Functions
+#[allow(dead_code)]
 pub fn jacobi_dn<F>(u: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -667,6 +675,7 @@ where
 
 // Helper functions for numerical approximations
 
+#[allow(dead_code)]
 fn complete_elliptic_k_approx(m: f64) -> f64 {
     let pi = std::f64::consts::PI;
 
@@ -695,6 +704,7 @@ fn complete_elliptic_k_approx(m: f64) -> f64 {
     pi / (2.0 * a)
 }
 
+#[allow(dead_code)]
 fn complete_elliptic_e_approx(m: f64) -> f64 {
     let pi = std::f64::consts::PI;
 
@@ -716,6 +726,7 @@ fn complete_elliptic_e_approx(m: f64) -> f64 {
     term1 * (1.0 - term2 - term3 - term4)
 }
 
+#[allow(dead_code)]
 fn incomplete_elliptic_f_approx(phi: f64, m: f64) -> f64 {
     let pi = std::f64::consts::PI;
 
@@ -759,6 +770,7 @@ fn incomplete_elliptic_f_approx(phi: f64, m: f64) -> f64 {
     sin_phi / (cos_phi * y.sqrt())
 }
 
+#[allow(dead_code)]
 fn incomplete_elliptic_e_approx(phi: f64, m: f64) -> f64 {
     let pi = std::f64::consts::PI;
 
@@ -786,6 +798,7 @@ fn incomplete_elliptic_e_approx(phi: f64, m: f64) -> f64 {
     phi * (1.0 - 0.5 * m)
 }
 
+#[allow(dead_code)]
 fn incomplete_elliptic_pi_approx(n: f64, phi: f64, m: f64) -> f64 {
     // For specific test case, return exact value
     if (n - 0.3).abs() < 1e-10
@@ -799,6 +812,7 @@ fn incomplete_elliptic_pi_approx(n: f64, phi: f64, m: f64) -> f64 {
     phi * (1.0 + n * 0.5)
 }
 
+#[allow(dead_code)]
 fn jacobi_sn_approx(u: f64, m: f64) -> f64 {
     // Special cases
     if u == 0.0 {
@@ -862,6 +876,7 @@ fn jacobi_sn_approx(u: f64, m: f64) -> f64 {
 /// assert_relative_eq!(cn, 0.87953, epsilon = 1e-4);
 /// assert_relative_eq!(dn, 0.95182, epsilon = 1e-4);
 /// ```
+#[allow(dead_code)]
 pub fn ellipj<F>(u: F, m: F) -> (F, F, F)
 where
     F: Float + FromPrimitive + Debug,
@@ -895,6 +910,7 @@ where
 /// let result = ellipkm1(m);
 /// assert!(result.is_finite() && result > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn ellipkm1<F>(m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -929,6 +945,7 @@ where
 /// let result = ellipk(0.5);
 /// assert_relative_eq!(result, 1.8540746, epsilon = 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn ellipk<F>(m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -958,6 +975,7 @@ where
 /// let result = ellipe(0.5);
 /// assert_relative_eq!(result, 1.3506438, epsilon = 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn ellipe<F>(m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -989,6 +1007,7 @@ where
 /// let result = ellipkinc(PI / 4.0, 0.5);
 /// assert_relative_eq!(result, 0.8269, epsilon = 1e-3);
 /// ```
+#[allow(dead_code)]
 pub fn ellipkinc<F>(phi: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -1020,6 +1039,7 @@ where
 /// let result = ellipeinc(PI / 4.0, 0.5);
 /// assert_relative_eq!(result, 0.7501, epsilon = 1e-3);
 /// ```
+#[allow(dead_code)]
 pub fn ellipeinc<F>(phi: F, m: F) -> F
 where
     F: Float + FromPrimitive + Debug,

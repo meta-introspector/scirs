@@ -215,6 +215,7 @@ pub struct WaveletPerformanceMetrics {
 }
 
 /// Ultra-high performance SIMD FFT implementation
+#[allow(dead_code)]
 pub fn ultrathink_simd_fft(
     input: &Array1<Complex64>,
     config: &UltrathinkSimdConfig,
@@ -268,6 +269,7 @@ pub fn ultrathink_simd_fft(
 }
 
 /// SIMD-optimized real FFT for real-valued signals
+#[allow(dead_code)]
 pub fn ultrathink_simd_rfft(
     input: &Array1<f64>,
     config: &UltrathinkSimdConfig,
@@ -310,6 +312,7 @@ pub fn ultrathink_simd_rfft(
 }
 
 /// Ultra-high performance SIMD STFT implementation
+#[allow(dead_code)]
 pub fn ultrathink_simd_stft(
     signal: &Array1<f64>,
     window_size: usize,
@@ -389,6 +392,7 @@ pub fn ultrathink_simd_stft(
 }
 
 /// SIMD-optimized Discrete Wavelet Transform
+#[allow(dead_code)]
 pub fn ultrathink_simd_dwt(
     signal: &Array1<f64>,
     wavelet: &str,
@@ -443,6 +447,7 @@ pub fn ultrathink_simd_dwt(
 }
 
 /// SIMD-optimized resampling with fractional rates
+#[allow(dead_code)]
 pub fn ultrathink_simd_resample(
     signal: &Array1<f64>,
     original_rate: f64,
@@ -466,6 +471,7 @@ pub fn ultrathink_simd_resample(
 // Implementation functions
 
 /// Radix-4 FFT with AVX2 optimization
+#[allow(dead_code)]
 fn simd_fft_radix4_avx2(
     input: &Array1<Complex64>,
     stats: &mut SimdUtilizationStats,
@@ -497,6 +503,7 @@ fn simd_fft_radix4_avx2(
 }
 
 /// SSE-optimized radix-2 FFT
+#[allow(dead_code)]
 fn simd_fft_radix2_sse(
     input: &Array1<Complex64>,
     stats: &mut SimdUtilizationStats,
@@ -531,6 +538,7 @@ fn simd_fft_radix2_sse(
 }
 
 /// Mixed-radix FFT for arbitrary sizes
+#[allow(dead_code)]
 fn simd_fft_mixed_radix(
     input: &Array1<Complex64>,
     stats: &mut SimdUtilizationStats,
@@ -551,6 +559,7 @@ fn simd_fft_mixed_radix(
 }
 
 /// Direct DFT with SIMD optimization
+#[allow(dead_code)]
 fn simd_dft_direct(
     input: &Array1<Complex64>,
     stats: &mut SimdUtilizationStats,
@@ -582,6 +591,7 @@ fn simd_dft_direct(
 }
 
 /// AVX2-optimized real FFT
+#[allow(dead_code)]
 fn simd_rfft_avx2(
     input: &Array1<f64>,
     stats: &mut SimdUtilizationStats,
@@ -604,6 +614,7 @@ fn simd_rfft_avx2(
 }
 
 /// SSE-optimized real FFT fallback
+#[allow(dead_code)]
 fn simd_rfft_sse(
     input: &Array1<f64>,
     stats: &mut SimdUtilizationStats,
@@ -613,6 +624,7 @@ fn simd_rfft_sse(
 }
 
 /// Process STFT frames in parallel
+#[allow(dead_code)]
 fn process_stft_frames_parallel(
     signal: &Array1<f64>,
     window: &Array1<f64>,
@@ -660,6 +672,7 @@ fn process_stft_frames_parallel(
 }
 
 /// Process STFT frames sequentially with SIMD
+#[allow(dead_code)]
 fn process_stft_frames_sequential(
     signal: &Array1<f64>,
     window: &Array1<f64>,
@@ -697,6 +710,7 @@ fn process_stft_frames_sequential(
 }
 
 /// SIMD-optimized DWT using lifting scheme
+#[allow(dead_code)]
 fn simd_dwt_lifting(
     signal: &Array1<f64>,
     h0: &Array1<f64>,
@@ -736,6 +750,7 @@ fn simd_dwt_lifting(
 }
 
 /// SIMD-optimized DWT using convolution
+#[allow(dead_code)]
 fn simd_dwt_convolution(
     signal: &Array1<f64>,
     h0: &Array1<f64>,
@@ -756,6 +771,7 @@ fn simd_dwt_convolution(
 }
 
 /// SIMD-optimized polyphase resampling
+#[allow(dead_code)]
 fn simd_resample_polyphase(
     signal: &Array1<f64>,
     ratio: f64,
@@ -792,6 +808,7 @@ fn simd_resample_polyphase(
 }
 
 /// SIMD-optimized direct interpolation resampling
+#[allow(dead_code)]
 fn simd_resample_interpolation(
     signal: &Array1<f64>,
     ratio: f64,
@@ -819,6 +836,7 @@ fn simd_resample_interpolation(
 // Helper functions
 
 /// Create SIMD-optimized Hann window
+#[allow(dead_code)]
 fn create_simd_hann_window(size: usize) -> SignalResult<Array1<f64>> {
     let mut window = Array1::<f64>::zeros(size);
 
@@ -831,6 +849,7 @@ fn create_simd_hann_window(size: usize) -> SignalResult<Array1<f64>> {
 }
 
 /// SIMD FFT for a single frame
+#[allow(dead_code)]
 fn simd_fft_frame(
     signal: &Array1<Complex64>,
     caps: &PlatformCapabilities,
@@ -851,6 +870,7 @@ fn simd_fft_frame(
 }
 
 /// SIMD convolution with valid output
+#[allow(dead_code)]
 fn simd_convolve_valid(signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResult<Array1<f64>> {
     let output_len = if signal.len() >= kernel.len() {
         signal.len() - kernel.len() + 1
@@ -872,6 +892,7 @@ fn simd_convolve_valid(signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResu
 }
 
 /// SIMD convolution with same output size
+#[allow(dead_code)]
 fn simd_convolve_same(signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Simplified implementation - would use actual SIMD convolution
     let mut output = Array1::<f64>::zeros(signal.len());
@@ -892,6 +913,7 @@ fn simd_convolve_same(signal: &Array1<f64>, kernel: &Array1<f64>) -> SignalResul
 }
 
 /// SIMD-optimized downsampling
+#[allow(dead_code)]
 fn downsample_simd(signal: &Array1<f64>, factor: usize) -> SignalResult<Array1<f64>> {
     let output_len = signal.len() / factor;
     let mut output = Array1::<f64>::zeros(output_len);
@@ -905,6 +927,7 @@ fn downsample_simd(signal: &Array1<f64>, factor: usize) -> SignalResult<Array1<f
 
 // Utility functions (simplified implementations)
 
+#[allow(dead_code)]
 fn bit_reverse_simd(data: &mut Array1<Complex64>) -> SignalResult<()> {
     let n = data.len();
     let mut j = 0;
@@ -925,6 +948,7 @@ fn bit_reverse_simd(data: &mut Array1<Complex64>) -> SignalResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn perform_radix4_butterfly_avx2(
     data: &mut Array1<Complex64>,
     start: usize,
@@ -934,21 +958,25 @@ fn perform_radix4_butterfly_avx2(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn twiddle_factor(k: usize, n: usize) -> Complex64 {
     let angle = -2.0 * PI * k as f64 / n as f64;
     Complex64::new(angle.cos(), angle.sin())
 }
 
+#[allow(dead_code)]
 fn estimate_scalar_fft_time(n: usize) -> u64 {
     // Rough estimate: O(n log n) with scalar operations
     (n as f64 * (n as f64).log2() * 10.0) as u64
 }
 
+#[allow(dead_code)]
 fn estimate_memory_bandwidth(n: usize, time_ns: u64) -> f64 {
     let bytes_processed = n * 16; // Complex64 = 16 bytes
     bytes_processed as f64 / (time_ns as f64 / 1e9) / 1e9 // GB/s
 }
 
+#[allow(dead_code)]
 fn estimate_cache_performance(n: usize) -> f64 {
     // Simple heuristic based on data size
     if n * 16 < 32768 {
@@ -960,25 +988,30 @@ fn estimate_cache_performance(n: usize) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn estimate_rfft_speedup(n: usize) -> f64 {
     // Real FFT is approximately 2x faster than complex FFT
     2.0 + (n as f64).log2() * 0.1
 }
 
+#[allow(dead_code)]
 fn estimate_fft_throughput(n: usize) -> f64 {
     // Operations per nanosecond
     n as f64 * (n as f64).log2() / 1000.0
 }
 
+#[allow(dead_code)]
 fn estimate_dft_throughput(n: usize) -> f64 {
     // DFT has O(n²) complexity
     (n * n) as f64 / 10000.0
 }
 
+#[allow(dead_code)]
 fn next_power_of_2(n: usize) -> usize {
     1 << (64 - (n - 1).leading_zeros())
 }
 
+#[allow(dead_code)]
 fn prime_factorization(mut n: usize) -> Vec<usize> {
     let mut factors = Vec::new();
     let mut d = 2;
@@ -998,11 +1031,13 @@ fn prime_factorization(mut n: usize) -> Vec<usize> {
     factors
 }
 
+#[allow(dead_code)]
 fn bluestein_fft(input: &Array1<Complex64>, padded_size: usize) -> SignalResult<Array1<Complex64>> {
     // Simplified Bluestein algorithm - would implement full algorithm
     Ok(input.clone())
 }
 
+#[allow(dead_code)]
 fn pack_real_to_complex(input: &Array1<f64>) -> Array1<Complex64> {
     let n = input.len();
     let complex_len = n / 2;
@@ -1014,6 +1049,7 @@ fn pack_real_to_complex(input: &Array1<f64>) -> Array1<Complex64> {
     })
 }
 
+#[allow(dead_code)]
 fn unpack_complex_to_real_fft(
     half_fft: &Array1<Complex64>,
     output_len: usize,
@@ -1027,11 +1063,13 @@ fn unpack_complex_to_real_fft(
     Ok(output)
 }
 
+#[allow(dead_code)]
 fn calculate_overlap_efficiency(window_size: usize, hop_size: usize) -> f64 {
     let overlap = window_size - hop_size;
     overlap as f64 / window_size as f64
 }
 
+#[allow(dead_code)]
 fn get_wavelet_filters(
     wavelet: &str,
 ) -> SignalResult<(Array1<f64>, Array1<f64>, Array1<f64>, Array1<f64>)> {
@@ -1051,16 +1089,19 @@ fn get_wavelet_filters(
     }
 }
 
+#[allow(dead_code)]
 fn calculate_wavelet_memory_efficiency(coefficients: &[Array1<f64>]) -> f64 {
     let total_samples: usize = coefficients.iter().map(|c| c.len()).sum();
     1.0 / total_samples as f64 // Simplified efficiency metric
 }
 
+#[allow(dead_code)]
 fn estimate_wavelet_simd_speedup(signal_len: usize, levels: usize) -> f64 {
     // Estimate based on signal length and decomposition levels
     2.0 + (signal_len as f64).log2() * 0.1 * levels as f64
 }
 
+#[allow(dead_code)]
 fn design_lowpass_filter(order: usize, cutoff: f64) -> SignalResult<Array1<f64>> {
     // Simplified low-pass filter design using windowed sinc
     let mut filter = Array1::<f64>::zeros(order);
@@ -1081,6 +1122,7 @@ fn design_lowpass_filter(order: usize, cutoff: f64) -> SignalResult<Array1<f64>>
     Ok(filter)
 }
 
+#[allow(dead_code)]
 fn sinc(x: f64) -> f64 {
     if x == 0.0 {
         1.0
@@ -1090,6 +1132,7 @@ fn sinc(x: f64) -> f64 {
 }
 
 /// Generate comprehensive SIMD performance report
+#[allow(dead_code)]
 pub fn generate_simd_performance_report(
     fft_result: Option<&SimdFftResult>,
     stft_result: Option<&SimdStftResult>,

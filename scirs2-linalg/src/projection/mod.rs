@@ -18,7 +18,7 @@
 
 use ndarray::{Array2, ArrayView2, ScalarOperand};
 use num_traits::{Float, NumAssign, Zero};
-use rand::Rng;
+use rand::{self, Rng};
 use std::iter::Sum;
 
 use crate::error::{LinalgError, LinalgResult};
@@ -48,6 +48,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// let projection_matrix = gaussian_random_matrix::<f64>(100, 1000).unwrap();
 /// assert_eq!(projection_matrix.shape(), &[1000, 100]);
 /// ```
+#[allow(dead_code)]
 pub fn gaussian_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
     n_components: usize,
     n_features: usize,
@@ -108,6 +109,7 @@ pub fn gaussian_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>
 /// let projection_matrix = sparse_random_matrix::<f64>(100, 1000, 0.1).unwrap();
 /// assert_eq!(projection_matrix.shape(), &[1000, 100]);
 /// ```
+#[allow(dead_code)]
 pub fn sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
     n_components: usize,
     n_features: usize,
@@ -179,6 +181,7 @@ pub fn sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
 /// let projection_matrix = very_sparse_random_matrix::<f64>(100, 1000).unwrap();
 /// assert_eq!(projection_matrix.shape(), &[1000, 100]);
 /// ```
+#[allow(dead_code)]
 pub fn very_sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
     n_components: usize,
     n_features: usize,
@@ -252,6 +255,7 @@ pub fn very_sparse_random_matrix<F: Float + NumAssign + Zero + Sum + ScalarOpera
 /// let X_projected = project(&X.view(), &components.view()).unwrap();
 /// assert_eq!(X_projected.shape(), &[n_samples, n_components]);
 /// ```
+#[allow(dead_code)]
 pub fn project<F: Float + NumAssign + Sum + ScalarOperand>(
     x: &ArrayView2<F>,
     components: &ArrayView2<F>,
@@ -304,6 +308,7 @@ pub fn project<F: Float + NumAssign + Sum + ScalarOperand>(
 /// // The number of dimensions is automatically determined
 /// assert!(X_projected.shape()[1] < n_features);
 /// ```
+#[allow(dead_code)]
 pub fn johnson_lindenstrauss_transform<F: Float + NumAssign + Zero + Sum + ScalarOperand>(
     x: &ArrayView2<F>,
     eps: f64,
@@ -354,6 +359,7 @@ pub fn johnson_lindenstrauss_transform<F: Float + NumAssign + Zero + Sum + Scala
 /// let min_dim = johnson_lindenstrauss_min_dim(10000, 0.1).unwrap();
 /// println!("Minimum dimensions needed: {}", min_dim);
 /// ```
+#[allow(dead_code)]
 pub fn johnson_lindenstrauss_min_dim(n_samples: usize, eps: f64) -> LinalgResult<usize> {
     if eps <= 0.0 || eps >= 1.0 {
         return Err(LinalgError::ValueError(format!(

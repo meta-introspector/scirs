@@ -345,6 +345,7 @@ impl AcquisitionFunction for ProbabilityOfImprovement {
 
 // Approximation of the error function (erf)
 // Abramowitz and Stegun formula 7.1.26
+#[allow(dead_code)]
 fn approx_erf(x: f64) -> f64 {
     // Constants
     let a1 = 0.254829592;
@@ -780,6 +781,7 @@ impl BayesianOptimizer {
 }
 
 /// Perform Bayesian optimization on a function
+#[allow(dead_code)]
 pub fn bayesian_optimization<F>(
     func: F,
     bounds: Vec<(f64, f64)>,

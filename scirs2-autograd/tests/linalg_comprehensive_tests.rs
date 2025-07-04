@@ -6,6 +6,7 @@ const EPSILON: f64 = 1e-5;
 const MATRIX_FUNC_EPSILON: f64 = 1e-2; // Larger tolerance for matrix function approximations
 
 #[test]
+#[allow(dead_code)]
 fn test_matrix_operations() {
     ag::run::<f64, _, _>(|g| {
         // Test matrix inverse
@@ -27,6 +28,7 @@ fn test_matrix_operations() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_matrix_functions() {
     ag::run::<f64, _, _>(|g| {
         // Test matrix exponential and logarithm
@@ -74,6 +76,7 @@ fn test_matrix_functions() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_special_matrices() {
     ag::run::<f64, _, _>(|g| {
         // Test Cholesky decomposition - SKIPPED until implementation
@@ -120,6 +123,7 @@ fn test_special_matrices() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_eigenvalue_decomposition() {
     ag::run::<f64, _, _>(|g| {
         // Test with symmetric matrix
@@ -159,6 +163,7 @@ fn test_eigenvalue_decomposition() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_linear_solvers() {
     ag::run::<f64, _, _>(|g| {
         // Test linear system solver
@@ -187,6 +192,7 @@ fn test_linear_solvers() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_gradient_computation() {
     ag::run::<f64, _, _>(|g| {
         // Test gradient through matrix operations
@@ -213,6 +219,7 @@ fn test_gradient_computation() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_complex_linear_algebra_pipeline() {
     ag::run::<f64, _, _>(|g| {
         // Create a complex pipeline using multiple operations

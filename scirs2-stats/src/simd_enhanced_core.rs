@@ -6,7 +6,7 @@
 
 use crate::error::StatsResult;
 use crate::error_standardization::ErrorMessages;
-use ndarray::{Array1, ArrayBase, Data, Ix1};
+use ndarray::{s, Array1, ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
 
@@ -35,6 +35,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps}
 /// let mean = mean_enhanced(&data.view()).unwrap();
 /// assert!((mean - 3.0).abs() < 1e-15);
 /// ```
+#[allow(dead_code)]
 pub fn mean_enhanced<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
@@ -76,6 +77,7 @@ where
 /// # Returns
 ///
 /// * The variance calculated with enhanced numerical stability
+#[allow(dead_code)]
 pub fn variance_enhanced<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
@@ -129,6 +131,7 @@ where
 /// # Returns
 ///
 /// * The Pearson correlation coefficient
+#[allow(dead_code)]
 pub fn correlation_simd_enhanced<F, D1, D2>(
     x: &ArrayBase<D1, Ix1>,
     y: &ArrayBase<D2, Ix1>,
@@ -173,6 +176,7 @@ where
 /// # Returns
 ///
 /// * A struct containing mean, variance, std, skewness, and kurtosis
+#[allow(dead_code)]
 pub fn comprehensive_stats_simd<F, D>(
     x: &ArrayBase<D, Ix1>,
     ddof: usize,
@@ -229,6 +233,7 @@ pub struct ComprehensiveStats<F> {
 // Helper functions for SIMD implementations
 
 /// Compensated summation using Kahan algorithm with SIMD acceleration
+#[allow(dead_code)]
 fn compensated_simd_sum<F, D>(x: &ArrayBase<D, Ix1>, optimizer: &AutoOptimizer) -> F
 where
     F: Float + NumCast + SimdUnifiedOps + Copy,
@@ -239,7 +244,12 @@ where
     let mut sum = F::zero();
     let mut compensation = F::zero();
 
-    for chunk in x.chunks(CHUNK_SIZE) {
+    // Process full chunks first
+    let n = x.len();
+    let num_full_chunks = n / CHUNK_SIZE;
+    let remainder = n % CHUNK_SIZE;
+
+    for chunk in x.exact_chunks(CHUNK_SIZE) {
         let chunk_sum = if optimizer.should_use_simd(chunk.len()) {
             F::simd_sum(&chunk.view())
         } else {
@@ -253,10 +263,25 @@ where
         sum = t;
     }
 
+    // Handle remainder elements
+    if remainder > 0 {
+        let remainder_start = num_full_chunks * CHUNK_SIZE;
+        let remainder_slice = x.slice(s![remainder_start..]);
+        let remainder_sum = remainder_slice
+            .iter()
+            .fold(F::zero(), |acc, &val| acc + val);
+
+        // Apply Kahan compensation for remainder
+        let y = remainder_sum - compensation;
+        let t = sum + y;
+        sum = t;
+    }
+
     sum
 }
 
 /// SIMD-optimized Welford's algorithm for variance
+#[allow(dead_code)]
 fn welford_variance_simd<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy,
@@ -298,6 +323,7 @@ where
 }
 
 /// SIMD-optimized sum of squared deviations
+#[allow(dead_code)]
 fn simd_sum_squared_deviations<F, D>(x: &ArrayBase<D, Ix1>, mean: F) -> F
 where
     F: Float + NumCast + SimdUnifiedOps + Copy,
@@ -309,6 +335,7 @@ where
 }
 
 /// Full SIMD correlation calculation
+#[allow(dead_code)]
 fn simd_correlation_full<F, D1, D2>(
     x: &ArrayBase<D1, Ix1>,
     y: &ArrayBase<D2, Ix1>,
@@ -350,6 +377,7 @@ where
 }
 
 /// Optimized scalar correlation for smaller arrays
+#[allow(dead_code)]
 fn scalar_correlation_optimized<F, D1, D2>(
     x: &ArrayBase<D1, Ix1>,
     y: &ArrayBase<D2, Ix1>,
@@ -395,6 +423,7 @@ where
 }
 
 /// Single-pass comprehensive statistics with SIMD
+#[allow(dead_code)]
 fn simd_comprehensive_single_pass<F, D>(
     x: &ArrayBase<D, Ix1>,
     ddof: usize,

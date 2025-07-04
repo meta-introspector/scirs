@@ -19,6 +19,7 @@ use scirs2_ndimage::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SCIRS2-NDIMAGE ULTRATHINK MODE SHOWCASE 🚀");
     println!("==============================================\n");
@@ -280,6 +281,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 use ndarray::array;
 
 /// Helper to generate binary structure for morphology
+#[allow(dead_code)]
 fn generate_binary_structure(
     rank: usize,
     structure_type: StructureType,

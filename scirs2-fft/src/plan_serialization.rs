@@ -319,6 +319,7 @@ impl PlanSerializationManager {
 }
 
 /// Convert SystemTime to milliseconds since epoch
+#[allow(dead_code)]
 fn system_time_as_millis() -> u64 {
     SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
@@ -327,6 +328,7 @@ fn system_time_as_millis() -> u64 {
 }
 
 /// Create a plan with timing measurement
+#[allow(dead_code)]
 pub fn create_and_time_plan(size: usize, forward: bool) -> (Arc<dyn rustfft::Fft<f64>>, u64) {
     let start = Instant::now();
     let mut planner = FftPlanner::new();

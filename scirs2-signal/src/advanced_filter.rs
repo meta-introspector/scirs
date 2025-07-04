@@ -111,6 +111,7 @@ pub struct FilterDesignResult {
 /// # Returns
 ///
 /// * Optimal FIR filter coefficients
+#[allow(dead_code)]
 pub fn parks_mcclellan(
     spec: &FilterSpec,
     config: &ParksMcClellanConfig,
@@ -195,6 +196,7 @@ pub fn parks_mcclellan(
 /// # Returns
 ///
 /// * Filter coefficients approximating the arbitrary response
+#[allow(dead_code)]
 pub fn arbitrary_magnitude_design(
     response: &ArbitraryResponse,
     order: usize,
@@ -287,6 +289,7 @@ pub fn arbitrary_magnitude_design(
 /// # Returns
 ///
 /// * Least squares optimal filter coefficients
+#[allow(dead_code)]
 pub fn least_squares_design(
     response: &ArbitraryResponse,
     order: usize,
@@ -393,6 +396,7 @@ pub fn least_squares_design(
 /// # Returns
 ///
 /// * Constrained optimal filter coefficients
+#[allow(dead_code)]
 pub fn constrained_least_squares_design(
     response: &ArbitraryResponse,
     order: usize,
@@ -493,6 +497,7 @@ pub fn constrained_least_squares_design(
 /// # Returns
 ///
 /// * Minimax optimal filter coefficients
+#[allow(dead_code)]
 pub fn minimax_design(
     response: &ArbitraryResponse,
     order: usize,
@@ -505,6 +510,7 @@ pub fn minimax_design(
 // Helper functions
 
 /// Estimate required filter order from specifications
+#[allow(dead_code)]
 fn estimate_filter_order(spec: &FilterSpec) -> SignalResult<usize> {
     if spec.passband_freqs.is_empty() || spec.stopband_freqs.is_empty() {
         return Err(SignalError::ValueError(
@@ -546,6 +552,7 @@ fn estimate_filter_order(spec: &FilterSpec) -> SignalResult<usize> {
 }
 
 /// Create frequency grid for filter design
+#[allow(dead_code)]
 fn create_design_grid(
     spec: &FilterSpec,
     config: &ParksMcClellanConfig,
@@ -638,6 +645,7 @@ fn create_design_grid(
 }
 
 /// Initialize extremal frequencies for Parks-McClellan algorithm
+#[allow(dead_code)]
 fn initialize_extremal_frequencies(freq_grid: &Array1<f64>, num_extremal: usize) -> Array1<f64> {
     let grid_len = freq_grid.len();
     let mut extremal = Array1::zeros(num_extremal);
@@ -652,6 +660,7 @@ fn initialize_extremal_frequencies(freq_grid: &Array1<f64>, num_extremal: usize)
 }
 
 /// Solve interpolation problem at extremal frequencies
+#[allow(dead_code)]
 fn solve_interpolation_problem(
     extremal_freqs: &Array1<f64>,
     desired_response: &Array1<f64>,
@@ -708,6 +717,7 @@ fn solve_interpolation_problem(
 }
 
 /// Compute error function on frequency grid
+#[allow(dead_code)]
 fn compute_error_function(
     coefficients: &Array1<f64>,
     freq_grid: &Array1<f64>,
@@ -731,6 +741,7 @@ fn compute_error_function(
 }
 
 /// Find extremal frequencies (peaks) in error function
+#[allow(dead_code)]
 fn find_extremal_frequencies(
     error_function: &Array1<f64>,
     freq_grid: &Array1<f64>,
@@ -779,6 +790,7 @@ fn find_extremal_frequencies(
 }
 
 /// Interpolate response values at new frequency points
+#[allow(dead_code)]
 fn interpolate_response(
     freq_points: &Array1<f64>,
     response_values: &Array1<f64>,
@@ -815,6 +827,7 @@ fn interpolate_response(
 }
 
 /// Compute frequency response of FIR filter
+#[allow(dead_code)]
 fn compute_frequency_response(
     coefficients: &Array1<f64>,
     num_points: usize,

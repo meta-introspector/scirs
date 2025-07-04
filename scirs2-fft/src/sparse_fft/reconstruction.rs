@@ -42,6 +42,7 @@ use super::algorithms::SparseFFTResult;
 /// // The reconstructed spectrum should have length n
 /// assert_eq!(full_spectrum.len(), n);
 /// ```
+#[allow(dead_code)]
 pub fn reconstruct_spectrum(
     sparse_result: &SparseFFTResult,
     n: usize,
@@ -91,6 +92,7 @@ pub fn reconstruct_spectrum(
 /// // The reconstructed signal should have the same length
 /// assert_eq!(reconstructed.len(), n);
 /// ```
+#[allow(dead_code)]
 pub fn reconstruct_time_domain(
     sparse_result: &SparseFFTResult,
     n: usize,
@@ -146,6 +148,7 @@ pub fn reconstruct_time_domain(
 /// // The high-resolution signal should have the target length
 /// assert_eq!(high_res.len(), 2 * n);
 /// ```
+#[allow(dead_code)]
 pub fn reconstruct_high_resolution(
     sparse_result: &SparseFFTResult,
     original_length: usize,
@@ -264,6 +267,7 @@ pub fn reconstruct_high_resolution(
 ///
 /// assert_eq!(filtered.len(), n);
 /// ```
+#[allow(dead_code)]
 pub fn reconstruct_filtered<F>(
     sparse_result: &SparseFFTResult,
     n: usize,

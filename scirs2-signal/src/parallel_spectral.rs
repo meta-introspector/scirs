@@ -740,6 +740,7 @@ impl ParallelSpectralProcessor {
 /// # Returns
 ///
 /// * Vector of (frequencies, power_spectrum) pairs for each signal
+#[allow(dead_code)]
 pub fn parallel_welch(
     signals: &[&[f64]],
     fs: f64,
@@ -766,6 +767,7 @@ pub fn parallel_welch(
 }
 
 /// Single signal Welch periodogram (helper function)
+#[allow(dead_code)]
 fn single_welch(
     signal: &[f64],
     fs: f64,
@@ -1375,11 +1377,10 @@ impl ParallelSpectralProcessor {
     }
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
     use rand::Rng;
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     #[test]

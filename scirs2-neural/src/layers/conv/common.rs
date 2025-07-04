@@ -53,6 +53,7 @@ impl PaddingMode {
 }
 
 /// Validate convolution parameters
+#[allow(dead_code)]
 pub fn validate_conv_params(
     in_channels: usize,
     out_channels: usize,
@@ -75,6 +76,7 @@ pub fn validate_conv_params(
 }
 
 /// Calculate output shape for convolution operations
+#[allow(dead_code)]
 pub fn calculate_output_shape(
     input_height: usize,
     input_width: usize,
@@ -93,6 +95,7 @@ pub fn calculate_output_shape(
 }
 
 /// Calculate adaptive pooling parameters
+#[allow(dead_code)]
 pub fn calculate_adaptive_pooling_params(
     input_size: usize,
     output_size: usize,

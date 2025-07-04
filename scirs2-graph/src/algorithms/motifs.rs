@@ -31,6 +31,7 @@ pub enum MotifType {
 }
 
 /// Find all occurrences of a specified motif in the graph
+#[allow(dead_code)]
 pub fn find_motifs<N, E, Ix>(graph: &Graph<N, E, Ix>, motif_type: MotifType) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
@@ -49,6 +50,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn find_triangles<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
@@ -71,7 +73,7 @@ where
                     if graph.has_edge(node_j, node_k) {
                         let mut triangles_guard = triangles.lock().unwrap();
                         let mut triangle = vec![node_i.clone(), node_j.clone(), node_k.clone()];
-                        triangle.sort_by(|a, b| format!("{:?}", a).cmp(&format!("{:?}", b)));
+                        triangle.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
 
                         // Avoid duplicates
                         if !triangles_guard.iter().any(|t| t == &triangle) {
@@ -86,6 +88,7 @@ where
     triangles.into_inner().unwrap()
 }
 
+#[allow(dead_code)]
 fn find_squares<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
@@ -126,6 +129,7 @@ where
     squares
 }
 
+#[allow(dead_code)]
 fn find_star3s<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
@@ -167,6 +171,7 @@ where
     stars
 }
 
+#[allow(dead_code)]
 fn find_clique4s<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
@@ -207,6 +212,7 @@ where
 }
 
 /// Find all path motifs of length 3 (4 nodes in a line)
+#[allow(dead_code)]
 fn find_path3s<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
@@ -245,9 +251,7 @@ where
                                         middle2.clone(),
                                         end_node.clone(),
                                     ];
-                                    path.sort_by(|a, b| {
-                                        format!("{:?}", a).cmp(&format!("{:?}", b))
-                                    });
+                                    path.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
 
                                     let mut paths_guard = paths.lock().unwrap();
                                     if !paths_guard.iter().any(|p| p == &path) {
@@ -266,6 +270,7 @@ where
 }
 
 /// Find bi-fan motifs (2 nodes connected to the same 2 other nodes)
+#[allow(dead_code)]
 fn find_bi_fans<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
@@ -299,7 +304,7 @@ where
                         for fan2 in common.iter().skip(j + 1) {
                             let mut bi_fan =
                                 vec![node1.clone(), node2.clone(), fan1.clone(), fan2.clone()];
-                            bi_fan.sort_by(|a, b| format!("{:?}", a).cmp(&format!("{:?}", b)));
+                            bi_fan.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
 
                             let mut bi_fans_guard = bi_fans.lock().unwrap();
                             if !bi_fans_guard.iter().any(|bf| bf == &bi_fan) {
@@ -316,6 +321,7 @@ where
 }
 
 /// Find feed-forward loop motifs (3 nodes with specific directed pattern)
+#[allow(dead_code)]
 fn find_feed_forward_loops<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
@@ -343,7 +349,7 @@ where
                             && !graph.has_edge(node_c, node_b)
                         {
                             let mut ffl = vec![node_a.clone(), node_b.clone(), node_c.clone()];
-                            ffl.sort_by(|a, b| format!("{:?}", a).cmp(&format!("{:?}", b)));
+                            ffl.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
 
                             let mut ffls_guard = ffls.lock().unwrap();
                             if !ffls_guard.iter().any(|f| f == &ffl) {
@@ -360,6 +366,7 @@ where
 }
 
 /// Find bi-directional motifs (mutual connections between pairs of nodes)
+#[allow(dead_code)]
 fn find_bidirectional_motifs<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Vec<Vec<N>>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
@@ -377,7 +384,7 @@ where
             // Check for bidirectional connection
             if graph.has_edge(node1, node2) && graph.has_edge(node2, node1) {
                 let mut motif = vec![node1.clone(), node2.clone()];
-                motif.sort_by(|a, b| format!("{:?}", a).cmp(&format!("{:?}", b)));
+                motif.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
 
                 let mut bidirectionals_guard = bidirectionals.lock().unwrap();
                 if !bidirectionals_guard.iter().any(|m| m == &motif) {
@@ -392,6 +399,7 @@ where
 
 /// Advanced motif counting with frequency analysis
 /// Returns a map of motif patterns to their occurrence counts
+#[allow(dead_code)]
 pub fn count_motif_frequencies<N, E, Ix>(graph: &Graph<N, E, Ix>) -> HashMap<MotifType, usize>
 where
     N: Node + Clone + Hash + Eq + std::fmt::Debug + Send + Sync,
@@ -422,6 +430,7 @@ where
 
 /// Efficient motif detection using sampling for large graphs
 /// Returns estimated motif counts based on random sampling
+#[allow(dead_code)]
 pub fn sample_motif_frequencies<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     sample_size: usize,

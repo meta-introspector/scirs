@@ -10,20 +10,24 @@ use scirs2_linalg::quantization::simd::{simd_quantized_matmul, simd_quantized_ma
 use std::hint::black_box;
 
 // Helper functions to generate test data
+#[allow(dead_code)]
 fn create_random_array2_f32(rows: usize, cols: usize) -> Array2<f32> {
     Array2::from_shape_fn((rows, cols), |(i, j)| ((i * cols + j) % 100) as f32 / 100.0)
 }
 
+#[allow(dead_code)]
 fn create_random_array1_f32(size: usize) -> Array1<f32> {
     Array1::from_iter((0..size).map(|i| (i % 100) as f32 / 100.0))
 }
 
 // Regular matrix multiplication for comparison
+#[allow(dead_code)]
 fn regular_matmul_f32(a: &ArrayView2<f32>, b: &ArrayView2<f32>) -> Array2<f32> {
     a.dot(b)
 }
 
 // Benchmark quantization and dequantization operations
+#[allow(dead_code)]
 fn bench_quantization(c: &mut Criterion) {
     let mut group = c.benchmark_group("Quantization");
     let sizes = [100, 500, 1000];
@@ -72,6 +76,7 @@ fn bench_quantization(c: &mut Criterion) {
 }
 
 // Benchmark quantized matrix operations
+#[allow(dead_code)]
 fn bench_quantized_ops(c: &mut Criterion) {
     let mut group = c.benchmark_group("QuantizedOps");
     let sizes = [100, 500];
@@ -158,6 +163,7 @@ fn bench_quantized_ops(c: &mut Criterion) {
 }
 
 // Benchmark calibration methods
+#[allow(dead_code)]
 fn bench_calibration(c: &mut Criterion) {
     let mut group = c.benchmark_group("Calibration");
     let sizes = [100, 500];

@@ -12,6 +12,7 @@ use super::finite_diff::{compute_step_sizes, SparseFiniteDiffOptions};
 use crate::error::OptimizeError;
 
 // Helper function to replace get_index and set_value_by_index which are not available in CsrArray
+#[allow(dead_code)]
 fn update_sparse_value(matrix: &mut CsrArray<f64>, row: usize, col: usize, value: f64) {
     // Only update if the position is non-zero in the sparsity pattern and set operation succeeds
     if matrix.get(row, col) != 0.0 && matrix.set(row, col, value).is_err() {
@@ -33,6 +34,7 @@ fn update_sparse_value(matrix: &mut CsrArray<f64>, row: usize, col: usize, value
 ///
 /// * `CsrArray<f64>` - Sparse Jacobian matrix in CSR format
 ///
+#[allow(dead_code)]
 pub fn sparse_jacobian<F>(
     func: F,
     x: &ArrayView1<f64>,
@@ -94,6 +96,7 @@ where
 }
 
 /// Computes Jacobian using 2-point finite differences
+#[allow(dead_code)]
 fn compute_jacobian_2point<F>(
     func: F,
     x: &ArrayView1<f64>,
@@ -207,6 +210,7 @@ where
 }
 
 /// Computes Jacobian using 3-point finite differences (more accurate but twice as expensive)
+#[allow(dead_code)]
 fn compute_jacobian_3point<F>(
     func: F,
     x: &ArrayView1<f64>,
@@ -329,6 +333,7 @@ where
 ///
 /// Note: This implementation uses a dual number approach to simulate complex step
 /// without requiring the function to actually support complex arithmetic.
+#[allow(dead_code)]
 fn compute_jacobian_complex_step<F>(
     func: F,
     x: &ArrayView1<f64>,
@@ -416,6 +421,7 @@ where
 }
 
 /// Computes a single column of the Jacobian using complex step method
+#[allow(dead_code)]
 fn compute_jacobian_column_complex_step<F>(
     func: &F,
     x: &ArrayView1<f64>,

@@ -14,6 +14,7 @@ use std::fs;
 use tempfile::tempdir;
 /// Test basic dense layer serialization roundtrip
 #[test]
+#[allow(dead_code)]
 fn test_dense_layer_serialization_roundtrip() -> Result<()> {
     let temp_dir = tempdir().expect("Failed to create temp directory");
     let model_path = temp_dir.path().join("test_dense_model.json");
@@ -38,6 +39,7 @@ fn test_dense_layer_serialization_roundtrip() -> Result<()> {
     Ok(())
 }
 /// Test CNN model serialization with various layer types
+#[allow(dead_code)]
 fn test_cnn_model_serialization() -> Result<()> {
     let model_path = temp_dir.path().join("test_cnn_model.json");
     // Create a CNN model
@@ -51,6 +53,7 @@ fn test_cnn_model_serialization() -> Result<()> {
     model.add(Box::new(Dropout::new(0.25, &mut rng)?));
     // Save and load
 /// Test different serialization formats
+#[allow(dead_code)]
 fn test_multiple_serialization_formats() -> Result<()> {
     // Create a simple model
     let mut rng = rand::rngs::SmallRng::seed_from_u64(456);
@@ -73,6 +76,7 @@ fn test_multiple_serialization_formats() -> Result<()> {
     assert!(cbor_path.exists());
     assert!(msgpack_path.exists());
 /// Test parameter preservation across serialization
+#[allow(dead_code)]
 fn test_parameter_preservation() -> Result<()> {
     let model_path = temp_dir.path().join("param_test_model.json");
     // Create model with known parameters
@@ -94,6 +98,7 @@ fn test_parameter_preservation() -> Result<()> {
         // but shapes should be identical
     }
 /// Test error handling for invalid files
+#[allow(dead_code)]
 fn test_error_handling() -> Result<()> {
     let invalid_path = temp_dir.path().join("invalid.json");
     // Try to load non-existent file
@@ -102,6 +107,7 @@ fn test_error_handling() -> Result<()> {
     // Create invalid JSON file
     fs::write(&invalid_path, "invalid json content")?;
 /// Test activation function serialization
+#[allow(dead_code)]
 fn test_activation_function_serialization() -> Result<()> {
     // Test activation function factory
     let activations = vec![
@@ -121,6 +127,7 @@ fn test_activation_function_serialization() -> Result<()> {
     let elu = ActivationFunction::from_name("elu(1.5)");
     assert!(elu.is_some());
 /// Test model with mixed layer types
+#[allow(dead_code)]
 fn test_mixed_layer_model() -> Result<()> {
     let model_path = temp_dir.path().join("mixed_model.json");
     let mut rng = rand::rngs::SmallRng::seed_from_u64(999);
@@ -133,6 +140,7 @@ fn test_mixed_layer_model() -> Result<()> {
     // Test forward pass
     let input = Array2::<f32>::ones((3, 10)).into_dyn();
 /// Test serialization with f64 precision
+#[allow(dead_code)]
 fn test_f64_model_serialization() -> Result<()> {
     let model_path = temp_dir.path().join("f64_model.json");
     let mut rng = rand::rngs::SmallRng::seed_from_u64(111);
@@ -143,12 +151,14 @@ fn test_f64_model_serialization() -> Result<()> {
     // Test with f64 input
     let input = Array2::<f64>::ones((2, 4)).into_dyn();
 /// Test serialization of empty model
+#[allow(dead_code)]
 fn test_empty_model_serialization() -> Result<()> {
     let model_path = temp_dir.path().join("empty_model.json");
     let model = Sequential::<f32>::new();
     // Save and load empty model
     assert_eq!(0, loaded_model.layers().len());
 /// Test large model serialization performance
+#[allow(dead_code)]
 fn test_large_model_serialization() -> Result<()> {
     let model_path = temp_dir.path().join("large_model.json");
     let mut rng = rand::rngs::SmallRng::seed_from_u64(222);
@@ -167,6 +177,7 @@ fn test_large_model_serialization() -> Result<()> {
     assert!(save_duration.as_secs() < 5, "Save should complete within 5 seconds");
     assert!(load_duration.as_secs() < 5, "Load should complete within 5 seconds");
 /// Test serialization format comparison
+#[allow(dead_code)]
 fn test_format_comparison() -> Result<()> {
     let mut rng = rand::rngs::SmallRng::seed_from_u64(333);
     model.add(Box::new(Dense::new(50, 100, Some("relu"), &mut rng)?));
@@ -182,6 +193,7 @@ fn test_format_comparison() -> Result<()> {
     assert!(msgpack_size > 0);
     println!("File sizes - JSON: {}, CBOR: {}, MessagePack: {}", json_size, cbor_size, msgpack_size);
 /// Helper function to create test model
+#[allow(dead_code)]
 fn create_test_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static>() -> Result<Sequential<F>> {
     let mut model = Sequential::<F>::new();
     model.add(Box::new(Dropout::new(0.2, &mut rng)?));
@@ -189,6 +201,7 @@ fn create_test_model<F: Float + Debug + ScalarOperand + Send + Sync + 'static>()
     model.add(Box::new(Dense::new(10, 5, Some("softmax"), &mut rng)?));
     Ok(model)
 /// Integration test for complete workflow
+#[allow(dead_code)]
 fn test_complete_workflow() -> Result<()> {
     let model_path = temp_dir.path().join("workflow_model.json");
     // Create, train (mock), save, load, and test

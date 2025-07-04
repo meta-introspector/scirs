@@ -351,6 +351,7 @@ impl ColumnTransformer {
 }
 
 /// Extracts specific columns from a 2D array
+#[allow(dead_code)]
 fn extract_columns(data: &Array2<f64>, columns: &[usize]) -> Array2<f64> {
     let n_samples = data.shape()[0];
     let n_cols = columns.len();
@@ -367,6 +368,7 @@ fn extract_columns(data: &Array2<f64>, columns: &[usize]) -> Array2<f64> {
 }
 
 /// Concatenates arrays horizontally
+#[allow(dead_code)]
 fn concatenate_horizontal(arrays: &[Array2<f64>]) -> Result<Array2<f64>> {
     if arrays.is_empty() {
         return Err(TransformError::InvalidInput(
@@ -403,6 +405,7 @@ fn concatenate_horizontal(arrays: &[Array2<f64>]) -> Result<Array2<f64>> {
 }
 
 /// Make a pipeline from a list of (name, transformer) tuples
+#[allow(dead_code)]
 pub fn make_pipeline(steps: Vec<(&str, Box<dyn Transformer>)>) -> Pipeline {
     let mut pipeline = Pipeline::new();
     for (name, transformer) in steps {
@@ -412,6 +415,7 @@ pub fn make_pipeline(steps: Vec<(&str, Box<dyn Transformer>)>) -> Pipeline {
 }
 
 /// Make a column transformer from a list of (name, transformer, columns) tuples
+#[allow(dead_code)]
 pub fn make_column_transformer(
     transformers: Vec<(&str, Box<dyn Transformer>, Vec<usize>)>,
     remainder: RemainderOption,

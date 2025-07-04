@@ -13,7 +13,7 @@
 //   of America, 119(1), 360-371.
 
 use ndarray::{s, Array1, Array2};
-#[cfg(test)]
+
 use std::f64::consts::PI;
 
 use crate::error::SignalResult;
@@ -125,6 +125,7 @@ pub struct ReassignedResult {
 /// // result.reassigned contains the reassigned spectrogram
 /// // result.spectrogram contains the original spectrogram (if requested)
 /// ```
+#[allow(dead_code)]
 pub fn reassigned_spectrogram(
     signal: &Array1<f64>,
     mut config: ReassignedConfig,
@@ -208,6 +209,7 @@ pub fn reassigned_spectrogram(
 }
 
 /// Compute a basic STFT without applying phase corrections
+#[allow(dead_code)]
 fn compute_stft(
     signal: &Array1<f64>,
     window: &Array1<f64>,
@@ -242,6 +244,7 @@ fn compute_stft(
 }
 
 /// Compute time and frequency reassignment operators
+#[allow(dead_code)]
 fn compute_reassignment_operators(
     stft: &Array2<Complex64>,
     stft_time: &Array2<Complex64>,
@@ -290,6 +293,7 @@ fn compute_reassignment_operators(
 }
 
 /// Apply reassignment to the STFT
+#[allow(dead_code)]
 fn apply_reassignment(
     stft: &Array2<Complex64>,
     time_shifts: &Array2<f64>,
@@ -330,6 +334,7 @@ fn apply_reassignment(
 }
 
 /// Find the next power of two greater than or equal to n
+#[allow(dead_code)]
 fn next_power_of_two(n: usize) -> usize {
     let mut power = 1;
     while power < n {
@@ -352,6 +357,7 @@ fn next_power_of_two(n: usize) -> usize {
 /// # Returns
 ///
 /// A `ReassignedResult` structure containing the smoothed reassigned spectrogram and metadata
+#[allow(dead_code)]
 pub fn smoothed_reassigned_spectrogram(
     signal: &Array1<f64>,
     config: ReassignedConfig,
@@ -370,6 +376,7 @@ pub fn smoothed_reassigned_spectrogram(
 }
 
 /// Apply a simple 2D box smoothing filter to the spectrogram
+#[allow(dead_code)]
 fn smooth_spectrogram(spectrogram: &Array2<f64>, width: usize) -> Array2<f64> {
     let (n_bins, n_frames) = (spectrogram.shape()[0], spectrogram.shape()[1]);
     let mut smoothed = Array2::zeros((n_bins, n_frames));
@@ -428,6 +435,7 @@ fn smooth_spectrogram(spectrogram: &Array2<f64>, width: usize) -> Array2<f64> {
 /// # Returns
 ///
 /// A vector of ridges, where each ridge is a vector of (time_index, frequency) pairs
+#[allow(dead_code)]
 pub fn extract_ridges(
     spectrogram: &Array2<f64>,
     frequencies: &Array1<f64>,
@@ -496,7 +504,6 @@ pub fn extract_ridges(
     ridges
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
 

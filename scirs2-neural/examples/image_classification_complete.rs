@@ -128,6 +128,7 @@ impl Dataset<f32> for SyntheticImageDataset {
 }
 
 /// Build a CNN model for image classification
+#[allow(dead_code)]
 fn build_cnn_model(
     input_channels: usize,
     num_classes: usize,
@@ -151,6 +152,7 @@ fn build_cnn_model(
 }
 
 /// Create training configuration with modern techniques
+#[allow(dead_code)]
 fn create_training_config() -> TrainingConfig {
     TrainingConfig {
         batch_size: 32,
@@ -171,6 +173,7 @@ fn create_training_config() -> TrainingConfig {
 }
 
 /// Calculate accuracy from predictions and targets
+#[allow(dead_code)]
 fn calculate_accuracy(predictions: &ArrayD<f32>, targets: &ArrayD<f32>) -> f32 {
     let batch_size = predictions.shape()[0];
     let mut correct = 0;
@@ -199,6 +202,7 @@ fn calculate_accuracy(predictions: &ArrayD<f32>, targets: &ArrayD<f32>) -> f32 {
 }
 
 /// Main training function
+#[allow(dead_code)]
 fn train_image_classifier() -> Result<()> {
     println!("🚀 Starting Image Classification Training Example");
     println!("{}", "=".repeat(60));
@@ -339,6 +343,7 @@ fn train_image_classifier() -> Result<()> {
 }
 
 /// Demonstrate data augmentation techniques
+#[allow(dead_code)]
 fn demonstrate_augmentation() -> Result<()> {
     println!("\n🔄 Data Augmentation Demo:");
     println!("{}", "-".repeat(30));
@@ -360,6 +365,7 @@ fn demonstrate_augmentation() -> Result<()> {
 }
 
 /// Demonstrate model saving and loading
+#[allow(dead_code)]
 fn demonstrate_model_persistence() -> Result<()> {
     println!("\n💾 Model Persistence Demo:");
     let mut rng = SmallRng::seed_from_u64(123);
@@ -375,6 +381,7 @@ fn demonstrate_model_persistence() -> Result<()> {
 }
 
 /// Main function
+#[allow(dead_code)]
 fn main() -> Result<()> {
     // Main training example
     train_image_classifier()?;

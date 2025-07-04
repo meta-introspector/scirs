@@ -49,6 +49,7 @@ use crate::error::{MetricsError, Result};
 /// let coverage = coverage_error(&y_true, &y_score).unwrap();
 /// assert_eq!(coverage, 2.0); // Since the last relevant label is at index 1
 /// ```
+#[allow(dead_code)]
 pub fn coverage_error<T, S, R>(
     y_true: &ArrayBase<S, Ix1>,
     y_score: &ArrayBase<R, Ix1>,
@@ -158,6 +159,7 @@ where
 /// // Calculate average coverage error
 /// let coverage = coverage_error_multiple(&y_true, &y_score).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn coverage_error_multiple<T, S, R>(
     y_true: &ArrayBase<S, Ix2>,
     y_score: &ArrayBase<R, Ix2>,
@@ -274,6 +276,7 @@ where
 /// // Calculate label ranking loss
 /// let loss = label_ranking_loss(&y_true, &y_score).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn label_ranking_loss<T, S, R>(
     y_true: &ArrayBase<S, Ix2>,
     y_score: &ArrayBase<R, Ix2>,
@@ -395,6 +398,7 @@ where
 /// // Calculate label ranking average precision score
 /// let score = label_ranking_average_precision_score(&y_true, &y_score).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn label_ranking_average_precision_score<T, S, R>(
     y_true: &ArrayBase<S, Ix2>,
     y_score: &ArrayBase<R, Ix2>,

@@ -29,6 +29,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 /// let result = mean(&data.view()).unwrap();
 /// assert!((result - 3.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn mean<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -76,6 +77,7 @@ where
 /// let result = weighted_mean(&data.view(), &weights.view()).unwrap();
 /// assert!((result - 2.333333333333).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn weighted_mean<F>(x: &ArrayView1<F>, weights: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + Signed,
@@ -145,6 +147,7 @@ where
 /// let result_even = median(&data_even.view()).unwrap();
 /// assert!((result_even - 2.5).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn median<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -206,6 +209,7 @@ where
 /// let sample_var_threaded = var(&data.view(), 1, Some(4)).unwrap();
 /// assert!((sample_var_threaded - 2.5).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn var<F>(x: &ArrayView1<F>, ddof: usize, workers: Option<usize>) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -295,6 +299,7 @@ where
 /// let sample_std = std(&data.view(), 1, None).unwrap();
 /// assert!((sample_std - 1.5811388300841898).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn std<F>(x: &ArrayView1<F>, ddof: usize, workers: Option<usize>) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -333,6 +338,7 @@ where
 /// // The bias correction increases the absolute value
 /// assert!(unbiased > biased);
 /// ```
+#[allow(dead_code)]
 pub fn skew<F>(x: &ArrayView1<F>, bias: bool, workers: Option<usize>) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -447,6 +453,7 @@ where
 /// let fisher_unbiased = kurtosis(&data.view(), true, false, None).unwrap();
 /// assert!((fisher_unbiased - (-1.2)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn kurtosis<F>(
     x: &ArrayView1<F>,
     fisher: bool,
@@ -594,6 +601,7 @@ where
 /// let second_central = moment(&data.view(), 2, true, None).unwrap();
 /// assert!((second_central - 2.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn moment<F>(
     x: &ArrayView1<F>,
     moment_order: usize,
@@ -675,6 +683,7 @@ where
     since = "0.1.0-beta.1",
     note = "Use var(x, ddof, workers) for consistent API"
 )]
+#[allow(dead_code)]
 pub fn var_compat<F>(x: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -689,6 +698,7 @@ where
     since = "0.1.0-beta.1",
     note = "Use std(x, ddof, workers) for consistent API"
 )]
+#[allow(dead_code)]
 pub fn std_compat<F>(x: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -703,6 +713,7 @@ where
     since = "0.1.0-beta.1",
     note = "Use skew(x, bias, workers) for consistent API"
 )]
+#[allow(dead_code)]
 pub fn skew_compat<F>(x: &ArrayView1<F>, bias: bool) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -717,6 +728,7 @@ where
     since = "0.1.0-beta.1",
     note = "Use kurtosis(x, fisher, bias, workers) for consistent API"
 )]
+#[allow(dead_code)]
 pub fn kurtosis_compat<F>(x: &ArrayView1<F>, fisher: bool, bias: bool) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -731,6 +743,7 @@ where
     since = "0.1.0-beta.1",
     note = "Use moment(x, moment_order, center, workers) for consistent API"
 )]
+#[allow(dead_code)]
 pub fn moment_compat<F>(x: &ArrayView1<F>, moment_order: usize, center: bool) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,

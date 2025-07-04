@@ -479,6 +479,12 @@ struct PerformanceRecord {
     data_characteristics: DataCharacteristics,
 }
 
+impl Default for AutoTuner {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AutoTuner {
     /// Create a new auto-tuner
     pub fn new() -> Self {
@@ -547,7 +553,7 @@ impl AutoTuner {
         success: bool,
         data_chars: DataCharacteristics,
     ) {
-        let config_hash = format!("{:?}", config); // Simplified hash
+        let config_hash = format!("{config:?}"); // Simplified hash
 
         let record = PerformanceRecord {
             config_hash: config_hash.clone(),
@@ -559,7 +565,7 @@ impl AutoTuner {
 
         self.performance_history
             .entry(transformation.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(record);
 
         // Keep only recent records (last 100)
@@ -769,6 +775,12 @@ pub struct AdaptiveParameterTuner {
     current_state: String,
 }
 
+impl Default for UltraThinkConfigOptimizer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UltraThinkConfigOptimizer {
     /// ✅ ULTRATHINK MODE: Create new ultra-intelligent configuration optimizer
     pub fn new() -> Self {
@@ -826,7 +838,7 @@ impl UltraThinkConfigOptimizer {
         // Store performance history
         self.performance_history
             .entry(transformation_type.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(performance.clone());
 
         // Update ML predictor
@@ -934,6 +946,12 @@ impl UltraThinkConfigOptimizer {
     }
 }
 
+impl Default for SystemMonitor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SystemMonitor {
     /// Create new system monitor
     pub fn new() -> Self {
@@ -981,6 +999,12 @@ impl SystemMonitor {
     fn read_cpu_temperature(&self) -> Result<f64> {
         // Simplified implementation - in practice, read from thermal zones
         Ok(55.0) // 55°C placeholder
+    }
+}
+
+impl Default for ConfigurationPredictor {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -1091,6 +1115,12 @@ impl ConfigurationPredictor {
         // In practice, this would perform full model retraining
         self.confidence_threshold = (self.confidence_threshold + 0.01).min(0.95);
         Ok(())
+    }
+}
+
+impl Default for AdaptiveParameterTuner {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

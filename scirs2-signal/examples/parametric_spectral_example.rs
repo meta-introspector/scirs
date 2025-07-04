@@ -10,6 +10,7 @@ use scirs2_signal::parametric::{
 };
 use scirs2_signal::spectral::periodogram;
 
+#[allow(dead_code)]
 fn main() {
     println!("Parametric Spectral Estimation Examples");
     println!("---------------------------------------");
@@ -43,6 +44,7 @@ fn main() {
 }
 
 /// Generates a test signal with two sinusoidal components and noise
+#[allow(dead_code)]
 fn generate_sinusoid_signal() -> Array1<f64> {
     let n_samples = 512;
     let fs = 1024.0;
@@ -72,6 +74,7 @@ fn generate_sinusoid_signal() -> Array1<f64> {
 }
 
 /// Generates a signal from an AR(4) process
+#[allow(dead_code)]
 fn generate_ar_signal() -> Array1<f64> {
     let n_samples = 1024;
     let n_warmup = 1000; // Extra samples to ensure stationarity
@@ -107,6 +110,7 @@ fn generate_ar_signal() -> Array1<f64> {
 }
 
 /// Analyzes a signal using different AR estimation methods
+#[allow(dead_code)]
 fn analyze_with_ar_methods(signal: &Array1<f64>, fs: f64) {
     let ar_order = 20; // Higher order to capture peaks well
 
@@ -173,6 +177,7 @@ fn analyze_with_ar_methods(signal: &Array1<f64>, fs: f64) {
 }
 
 /// Analyzes a signal using different AR model orders
+#[allow(dead_code)]
 fn analyze_with_different_orders(signal: &Array1<f64>, fs: f64) {
     // Array of different orders to try
     let orders = [2, 4, 8, 16, 32];
@@ -229,6 +234,7 @@ fn analyze_with_different_orders(signal: &Array1<f64>, fs: f64) {
 }
 
 /// Compares parametric methods with traditional periodogram
+#[allow(dead_code)]
 fn compare_with_periodogram(signal: &Array1<f64>, fs: f64) {
     // Compute periodogram (non-parametric)
     let (pxx_periodogram, f_periodogram) =
@@ -283,6 +289,7 @@ fn compare_with_periodogram(signal: &Array1<f64>, fs: f64) {
 }
 
 /// Demonstrates ARMA model on a mixed signal
+#[allow(dead_code)]
 fn demonstrate_arma_model() {
     // Generate an ARMA(2,2) process
     let n_samples = 1024;
@@ -400,6 +407,7 @@ fn demonstrate_arma_model() {
 }
 
 /// Demonstrates automatic model order selection
+#[allow(dead_code)]
 fn demonstrate_order_selection(signal: &Array1<f64>, fs: f64) {
     // Maximum order to consider
     let max_order = 50;
@@ -471,6 +479,7 @@ fn demonstrate_order_selection(signal: &Array1<f64>, fs: f64) {
 }
 
 /// Helper function to save PSD results to CSV
+#[allow(dead_code)]
 fn save_psd_to_csv(
     filename: &str,
     psd_arrays: &[Array1<f64>],

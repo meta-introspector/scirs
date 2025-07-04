@@ -575,6 +575,7 @@ where
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn tensor_train_decomposition<A, D>(
     tensor: &ArrayView<A, D>,
     max_rank: Option<usize>,
@@ -674,6 +675,7 @@ where
 }
 
 // Helper function for full SVD decomposition
+#[allow(dead_code)]
 fn svd<A>(matrix: &Array2<A>) -> LinalgResult<(Array2<A>, Array1<A>, Array2<A>)>
 where
     A: Clone
@@ -695,6 +697,7 @@ where
 }
 
 // Helper function for SVD with truncation based on relative error
+#[allow(dead_code)]
 fn svd_with_truncation<A>(
     matrix: &Array2<A>,
     epsilon: A,
@@ -742,6 +745,7 @@ where
 }
 
 // Helper function for SVD with maximum rank constraint
+#[allow(dead_code)]
 fn svd_with_max_rank<A>(
     matrix: &Array2<A>,
     max_rank: usize,
@@ -772,6 +776,7 @@ where
 }
 
 // Helper function for SVD with both truncation and maximum rank
+#[allow(dead_code)]
 fn svd_with_truncation_and_max_rank<A>(
     matrix: &Array2<A>,
     epsilon: A,
@@ -823,6 +828,7 @@ where
 }
 
 // Helper function for QR decomposition
+#[allow(dead_code)]
 fn qr_decomposition<A>(matrix: &Array2<A>) -> LinalgResult<(Array2<A>, Array2<A>)>
 where
     A: Clone

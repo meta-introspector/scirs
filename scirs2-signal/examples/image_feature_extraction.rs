@@ -7,6 +7,7 @@ use scirs2_signal::image_features::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() {
     println!("Image Feature Extraction Example");
     println!("================================\n");
@@ -135,6 +136,7 @@ fn main() {
 }
 
 // Helper function to print selected features
+#[allow(dead_code)]
 fn print_selected_features(features: &HashMap<String, f64>, image_type: &str) {
     println!("\nSelected features for {}:", image_type);
     println!("------------------------------");
@@ -235,6 +237,7 @@ fn print_selected_features(features: &HashMap<String, f64>, image_type: &str) {
 }
 
 // Helper function to compare features between two textures
+#[allow(dead_code)]
 fn compare_features(features1: &HashMap<String, f64>, features2: &HashMap<String, f64>) {
     // Define the features to compare
     let texture_features = [

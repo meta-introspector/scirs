@@ -6,6 +6,7 @@
 use ndarray::Array1;
 use scirs2_metrics::domains::*;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("Domain-Specific Metrics Example");
     println!("==============================");
@@ -59,6 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 /// Computer Vision - Object Detection Example
+#[allow(dead_code)]
 fn computer_vision_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use scirs2_metrics::domains::computer_vision::*;
 
@@ -91,6 +93,7 @@ fn computer_vision_example() -> Result<(), Box<dyn std::error::Error + Send + Sy
 }
 
 /// Natural Language Processing - Text Classification Example
+#[allow(dead_code)]
 fn nlp_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use scirs2_metrics::domains::nlp::*;
 
@@ -132,6 +135,7 @@ fn nlp_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 /// Time Series - Forecasting Example
+#[allow(dead_code)]
 fn time_series_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use scirs2_metrics::domains::time_series::*;
 
@@ -188,6 +192,7 @@ fn time_series_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
 }
 
 /// Recommender Systems - Ranking Example
+#[allow(dead_code)]
 fn recommender_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use scirs2_metrics::domains::recommender::*;
 
@@ -246,6 +251,7 @@ fn recommender_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
 }
 
 /// Anomaly Detection Example
+#[allow(dead_code)]
 fn anomaly_detection_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use scirs2_metrics::domains::anomaly_detection::*;
 
@@ -298,6 +304,7 @@ fn anomaly_detection_example() -> Result<(), Box<dyn std::error::Error + Send + 
 }
 
 /// Cross-Domain Evaluation Example
+#[allow(dead_code)]
 fn cross_domain_example() {
     let suite = create_domain_suite();
 

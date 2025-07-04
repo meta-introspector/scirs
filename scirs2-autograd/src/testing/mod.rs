@@ -573,6 +573,7 @@ pub enum StabilityError {
 
 /// Public API functions
 /// Test the numerical stability of a computation graph
+#[allow(dead_code)]
 pub fn test_numerical_stability<F: Float>(
     graph: &Graph<F>,
 ) -> Result<StabilityReport<F>, StabilityError> {
@@ -581,6 +582,7 @@ pub fn test_numerical_stability<F: Float>(
 }
 
 /// Test with custom configuration
+#[allow(dead_code)]
 pub fn test_numerical_stability_with_config<F: Float>(
     graph: &Graph<F>,
     config: StabilityTestConfig,
@@ -590,6 +592,7 @@ pub fn test_numerical_stability_with_config<F: Float>(
 }
 
 /// Quick gradient check for a specific computation
+#[allow(dead_code)]
 pub fn quick_gradient_check<F: Float>(
     _inputs: &[Tensor<F>],
     _output: &Tensor<F>,
@@ -599,6 +602,7 @@ pub fn quick_gradient_check<F: Float>(
 }
 
 /// Assess numerical conditioning of an operation
+#[allow(dead_code)]
 pub fn assess_conditioning<F: Float>(
     _operation_name: &str,
     _inputs: &[Tensor<F>],

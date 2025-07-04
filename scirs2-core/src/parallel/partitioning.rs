@@ -416,6 +416,7 @@ where
     }
 
     /// Range-based partitioning for sorted data
+    #[allow(dead_code)]
     fn partition_range_based(&self, data: &[T], boundaries: &[f64]) -> CoreResult<Vec<Vec<T>>>
     where
         T: PartialOrd + Into<f64> + Copy,
@@ -440,6 +441,7 @@ where
     }
 
     /// Hash-based partitioning
+    #[allow(dead_code)]
     fn partition_hash_based(&self, data: &[T], num_buckets: usize) -> CoreResult<Vec<Vec<T>>>
     where
         T: std::hash::Hash,

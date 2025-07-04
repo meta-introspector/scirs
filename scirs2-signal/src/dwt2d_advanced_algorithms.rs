@@ -150,6 +150,7 @@ impl Default for AdvancedDwt2dConfig {
 /// # Returns
 ///
 /// * Advanced decomposition result with multiple representations
+#[allow(dead_code)]
 pub fn advanced_dwt2d_decompose(
     data: &Array2<f64>,
     wavelet: Wavelet,
@@ -208,6 +209,7 @@ pub fn advanced_dwt2d_decompose(
 }
 
 /// Compute undecimated (stationary) 2D DWT
+#[allow(dead_code)]
 fn compute_undecimated_dwt2d(
     data: &Array2<f64>,
     wavelet: Wavelet,
@@ -248,6 +250,7 @@ fn compute_undecimated_dwt2d(
 }
 
 /// Apply undecimated DWT for a single level
+#[allow(dead_code)]
 fn undecimated_dwt2d_single_level(
     data: &Array2<f64>,
     filters: &WaveletFilters,
@@ -285,6 +288,7 @@ fn undecimated_dwt2d_single_level(
 }
 
 /// Compute directional 2D DWT for improved edge analysis
+#[allow(dead_code)]
 fn compute_directional_dwt2d(
     data: &Array2<f64>,
     wavelet: Wavelet,
@@ -360,6 +364,7 @@ fn compute_directional_dwt2d(
 }
 
 /// Compute dual-tree complex wavelet transform
+#[allow(dead_code)]
 fn compute_complex_dwt2d(
     data: &Array2<f64>,
     wavelet: Wavelet,
@@ -409,6 +414,7 @@ fn compute_complex_dwt2d(
 }
 
 /// Compute edge preservation metrics
+#[allow(dead_code)]
 fn compute_edge_preservation_metrics(
     original: &Array2<f64>,
     decomposition: &EnhancedDwt2dResult,
@@ -447,6 +453,7 @@ fn compute_edge_preservation_metrics(
 }
 
 /// Compute multi-scale analysis
+#[allow(dead_code)]
 fn compute_multiscale_analysis(
     data: &Array2<f64>,
     wavelet: Wavelet,
@@ -493,6 +500,7 @@ fn compute_multiscale_analysis(
 // Helper functions
 
 /// Dilate a filter by inserting zeros
+#[allow(dead_code)]
 fn dilate_filter(filter: &[f64], scale: usize) -> Vec<f64> {
     if scale <= 1 {
         return filter.to_vec();
@@ -509,6 +517,7 @@ fn dilate_filter(filter: &[f64], scale: usize) -> Vec<f64> {
 }
 
 /// Apply separable filter at a specific point with boundary handling
+#[allow(dead_code)]
 fn apply_separable_filter_at_point(
     data: &Array2<f64>,
     row: usize,
@@ -555,6 +564,7 @@ fn apply_separable_filter_at_point(
 }
 
 /// Extract approximation coefficients for undecimated transform
+#[allow(dead_code)]
 fn extract_approximation_undecimated(
     data: &Array2<f64>,
     filters: &WaveletFilters,
@@ -575,6 +585,7 @@ fn extract_approximation_undecimated(
 }
 
 /// Create directional filter bank
+#[allow(dead_code)]
 fn create_directional_filter_bank(
     wavelet: Wavelet,
     n_directions: usize,
@@ -592,6 +603,7 @@ fn create_directional_filter_bank(
 }
 
 /// Create steerable filter for specific direction
+#[allow(dead_code)]
 fn create_steerable_filter(base_filters: &WaveletFilters, angle: f64) -> SignalResult<Array2<f64>> {
     let filter_size = 7; // Standard size for directional filters
     let mut filter = Array2::zeros((filter_size, filter_size));
@@ -629,11 +641,13 @@ fn create_steerable_filter(base_filters: &WaveletFilters, angle: f64) -> SignalR
 
 // Additional helper function stubs (implementations would be quite extensive)
 
+#[allow(dead_code)]
 fn apply_directional_filter(data: &Array2<f64>, filter: &Array2<f64>) -> SignalResult<Array2<f64>> {
     // Stub implementation - would apply 2D convolution
     Ok(data.clone())
 }
 
+#[allow(dead_code)]
 fn downsample_2d(data: &Array2<f64>) -> Array2<f64> {
     let (rows, cols) = data.dim();
     let new_rows = (rows + 1) / 2;
@@ -649,12 +663,14 @@ fn downsample_2d(data: &Array2<f64>) -> Array2<f64> {
     result
 }
 
+#[allow(dead_code)]
 fn create_dual_tree_filters(wavelet: Wavelet) -> SignalResult<(WaveletFilters, WaveletFilters)> {
     // Stub - would create orthogonal filter pairs
     let filters = WaveletFilters::new(wavelet);
     Ok((filters.clone(), filters))
 }
 
+#[allow(dead_code)]
 fn apply_tree_decomposition(
     _data: &Array2<f64>,
     _filters: &WaveletFilters,
@@ -664,6 +680,7 @@ fn apply_tree_decomposition(
     Ok(Array3::zeros((1, 1, 1)))
 }
 
+#[allow(dead_code)]
 fn compute_translation_invariance(
     _data: &Array2<f64>,
     _coeffs: &[Array3<f64>],
@@ -671,10 +688,12 @@ fn compute_translation_invariance(
     Ok(0.95) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_shift_invariance(_coeffs: &Array3<Complex64>) -> SignalResult<f64> {
     Ok(0.92) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_edge_map(data: &Array2<f64>) -> SignalResult<Array2<f64>> {
     // Simple Sobel edge detection
     let (rows, cols) = data.dim();
@@ -699,6 +718,7 @@ fn compute_edge_map(data: &Array2<f64>) -> SignalResult<Array2<f64>> {
     Ok(edges)
 }
 
+#[allow(dead_code)]
 fn compute_structural_similarity(img1: &Array2<f64>, img2: &Array2<f64>) -> SignalResult<f64> {
     // Simplified SSIM computation
     let mean1 = img1.mean().unwrap_or(0.0);
@@ -724,14 +744,17 @@ fn compute_structural_similarity(img1: &Array2<f64>, img2: &Array2<f64>) -> Sign
 }
 
 // Additional placeholder implementations for comprehensive functionality
+#[allow(dead_code)]
 fn compute_edge_localization(_edges1: &Array2<f64>, _edges2: &Array2<f64>) -> SignalResult<f64> {
     Ok(0.85) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_edge_continuity(_edges1: &Array2<f64>, _edges2: &Array2<f64>) -> SignalResult<f64> {
     Ok(0.9) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_noise_suppression(
     _original: &Array2<f64>,
     _reconstructed: &Array2<f64>,
@@ -739,6 +762,7 @@ fn compute_noise_suppression(
     Ok(0.88) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_texture_preservation(
     _original: &Array2<f64>,
     _reconstructed: &Array2<f64>,
@@ -746,11 +770,13 @@ fn compute_texture_preservation(
     Ok(0.92) // Placeholder
 }
 
+#[allow(dead_code)]
 fn find_scale_space_extrema(_coeffs: &Array3<f64>, scale: usize) -> Vec<(usize, usize, usize)> {
     // Placeholder - would find local maxima/minima
     vec![(scale, 0, 0)]
 }
 
+#[allow(dead_code)]
 fn update_local_frequency_map(
     _freq_map: &mut Array2<f64>,
     _coeffs: &Array3<f64>,
@@ -759,6 +785,7 @@ fn update_local_frequency_map(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn find_optimal_decomposition_depth(scale_energy: &[f64]) -> usize {
     // Find the level with maximum energy ratio
     let mut max_ratio = 0.0;

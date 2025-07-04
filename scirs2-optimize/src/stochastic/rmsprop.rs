@@ -55,6 +55,7 @@ impl Default for RMSPropOptions {
 }
 
 /// RMSProp optimizer implementation
+#[allow(dead_code)]
 pub fn minimize_rmsprop<F>(
     mut grad_func: F,
     mut x: Array1<f64>,
@@ -259,6 +260,7 @@ where
 }
 
 /// Graves' RMSProp implementation with improved numerical stability
+#[allow(dead_code)]
 pub fn minimize_graves_rmsprop<F>(
     mut grad_func: F,
     mut x: Array1<f64>,

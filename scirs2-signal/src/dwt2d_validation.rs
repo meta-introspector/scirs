@@ -10,11 +10,11 @@ use crate::dwt2d_enhanced::{
     enhanced_dwt2d_decompose, wavedec2_enhanced, BoundaryMode, Dwt2dConfig, EnhancedDwt2dResult,
     MultilevelDwt2d,
 };
-use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array2, Array3, ArrayView2};
+use crate::error::{SignalResult};
+use ndarray::{s, Array2};
 use rand::prelude::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_shape};
+// use scirs2_core::simd_ops::SimdUnifiedOps;
+use scirs2_core::validation::{check_finite};
 use std::f64;
 
 /// 2D DWT validation result
@@ -102,6 +102,7 @@ pub struct PerformanceComparison {
 }
 
 /// Validate 2D DWT implementation
+#[allow(dead_code)]
 pub fn validate_dwt2d(
     test_image: &Array2<f64>,
     wavelet: Wavelet,
@@ -172,6 +173,7 @@ pub fn validate_dwt2d(
 }
 
 /// Test perfect reconstruction
+#[allow(dead_code)]
 fn test_perfect_reconstruction(
     image: &Array2<f64>,
     wavelet: Wavelet,
@@ -225,6 +227,7 @@ fn test_perfect_reconstruction(
 }
 
 /// Test energy conservation
+#[allow(dead_code)]
 fn test_energy_conservation(image: &Array2<f64>, wavelet: Wavelet) -> SignalResult<EnergyMetrics> {
     // Input energy
     let input_energy = compute_energy(image);
@@ -258,6 +261,7 @@ fn test_energy_conservation(image: &Array2<f64>, wavelet: Wavelet) -> SignalResu
 }
 
 /// Test boundary handling
+#[allow(dead_code)]
 fn test_boundary_handling(
     image: &Array2<f64>,
     wavelet: Wavelet,
@@ -330,6 +334,7 @@ fn test_boundary_handling(
 }
 
 /// Compare performance between implementations
+#[allow(dead_code)]
 fn compare_performance(
     image: &Array2<f64>,
     wavelet: Wavelet,
@@ -367,11 +372,13 @@ fn compare_performance(
 }
 
 /// Compute energy of 2D array
+#[allow(dead_code)]
 fn compute_energy(array: &Array2<f64>) -> f64 {
     array.iter().map(|&x| x * x).sum()
 }
 
 /// Compute structural similarity index (simplified)
+#[allow(dead_code)]
 fn compute_ssim(
     image1: &Array2<f64>,
     image2: &Array2<f64>,
@@ -422,6 +429,7 @@ fn compute_ssim(
 }
 
 /// Measure edge artifacts
+#[allow(dead_code)]
 fn measure_edge_artifacts(result: &EnhancedDwt2dResult) -> SignalResult<f64> {
     // Check for discontinuities at subband edges
     let mut total_artifacts = 0.0;
@@ -444,6 +452,7 @@ fn measure_edge_artifacts(result: &EnhancedDwt2dResult) -> SignalResult<f64> {
 }
 
 /// Measure boundary continuity
+#[allow(dead_code)]
 fn measure_boundary_continuity(result: &EnhancedDwt2dResult) -> SignalResult<f64> {
     // Measure smoothness of transitions
     let mut continuity_score = 0.0;
@@ -462,6 +471,7 @@ fn measure_boundary_continuity(result: &EnhancedDwt2dResult) -> SignalResult<f64
 }
 
 /// Check symmetry preservation
+#[allow(dead_code)]
 fn check_symmetry_preservation(
     original: &Array2<f64>,
     result: &EnhancedDwt2dResult,
@@ -510,11 +520,13 @@ fn check_symmetry_preservation(
 }
 
 /// Check if reconstruction is valid
+#[allow(dead_code)]
 fn is_valid_reconstruction(reconstructed: &Array2<f64>) -> bool {
     reconstructed.iter().all(|&x| x.is_finite())
 }
 
 /// Validate multilevel decomposition
+#[allow(dead_code)]
 pub fn validate_multilevel_dwt2d(
     image: &Array2<f64>,
     wavelet: Wavelet,
@@ -559,6 +571,7 @@ pub fn validate_multilevel_dwt2d(
 }
 
 /// Generate test images for validation
+#[allow(dead_code)]
 pub fn generate_test_images() -> Vec<(&'static str, Array2<f64>)> {
     let mut test_images = Vec::new();
 
@@ -602,7 +615,7 @@ pub fn generate_test_images() -> Vec<(&'static str, Array2<f64>)> {
     let mut rng = rand::rng();
     for i in 0..64 {
         for j in 0..64 {
-            noise[[i, j]] = rng.gen_range(0.0..1.0);
+            noise[[i, j]] = rng.random_range(0.0..1.0);
         }
     }
     test_images.push(("noise", noise));
@@ -611,6 +624,7 @@ pub fn generate_test_images() -> Vec<(&'static str, Array2<f64>)> {
 }
 
 /// Run comprehensive validation suite
+#[allow(dead_code)]
 pub fn run_comprehensive_validation(wavelet: Wavelet) -> SignalResult<()> {
     println!("Running comprehensive 2D DWT validation for {:?}", wavelet);
     println!("{}", "=".repeat(60));

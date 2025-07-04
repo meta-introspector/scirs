@@ -5,7 +5,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
-#[cfg(test)]
+
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
@@ -37,6 +37,7 @@ use std::fmt::Debug;
 ///
 /// let signal = chirp(&t, f0, t1, f1, "linear", 0.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn chirp<T>(
     t: &[T],
     f0: f64,
@@ -142,6 +143,7 @@ where
 /// let t = (0..100).map(|i| i as f64 / 10.0).collect::<Vec<_>>();
 /// let signal = sawtooth(&t, 1.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn sawtooth<T>(t: &[T], width: f64) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -213,6 +215,7 @@ where
 /// // Generate a square wave with 25% duty cycle
 /// let signal = square(&t, 0.25).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn square<T>(t: &[T], duty: f64) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -285,6 +288,7 @@ where
 ///
 /// let signal = gausspulse(&t, fc, bw, None, false).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn gausspulse<T>(
     t: &[T],
     fc: f64,
@@ -458,6 +462,7 @@ mod tests {
 /// let mls = mls_sequence(7, None, None).unwrap();
 /// assert_eq!(mls.len(), 127);
 /// ```
+#[allow(dead_code)]
 pub fn mls_sequence(
     register_length: usize,
     taps: Option<&[usize]>,
@@ -554,6 +559,7 @@ pub fn mls_sequence(
 /// # Returns
 ///
 /// * Vector containing the PRBS sequence (0/1 values)
+#[allow(dead_code)]
 pub fn prbs_sequence(
     length: usize,
     polynomial: Option<&[u32]>,
@@ -609,6 +615,7 @@ pub fn prbs_sequence(
 /// # Returns
 ///
 /// * Vector containing pink noise samples
+#[allow(dead_code)]
 pub fn pink_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
     if length == 0 {
         return Err(SignalError::ValueError(
@@ -665,6 +672,7 @@ pub fn pink_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
 /// # Returns
 ///
 /// * Vector containing brown noise samples
+#[allow(dead_code)]
 pub fn brown_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
     if length == 0 {
         return Err(SignalError::ValueError(
@@ -709,6 +717,7 @@ pub fn brown_noise(length: usize, seed: Option<u64>) -> SignalResult<Vec<f64>> {
 /// # Returns
 ///
 /// * Vector containing the exponential sweep
+#[allow(dead_code)]
 pub fn exponential_sweep<T>(t: &[T], f1: f64, f2: f64, length: f64) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -764,6 +773,7 @@ where
 /// # Returns
 ///
 /// * Tuple of (time_vector, sweep_signal)
+#[allow(dead_code)]
 pub fn synchronized_sweep(
     sample_rate: f64,
     duration: f64,
@@ -823,6 +833,7 @@ pub fn synchronized_sweep(
 /// # Returns
 ///
 /// * Vector containing the mark positions
+#[allow(dead_code)]
 pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
     if order < 2 {
         return Err(SignalError::ValueError(
@@ -917,6 +928,7 @@ pub fn golomb_ruler(order: usize, perfect: bool) -> SignalResult<Vec<usize>> {
 /// # Returns
 ///
 /// * Vector containing the perfect binary sequence (+1/-1 values)
+#[allow(dead_code)]
 pub fn perfect_binary_sequence(length: usize) -> SignalResult<Vec<f64>> {
     if length < 3 {
         return Err(SignalError::ValueError(
@@ -953,10 +965,12 @@ pub fn perfect_binary_sequence(length: usize) -> SignalResult<Vec<f64>> {
 // Helper functions for random number generation
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
+#[allow(dead_code)]
 fn _create_rng_from_seed(seed: u64) -> StdRng {
     StdRng::seed_from_u64(seed)
 }
 
+#[allow(dead_code)]
 fn _create_default_rng() -> StdRng {
     StdRng::seed_from_u64(rand::random())
 }

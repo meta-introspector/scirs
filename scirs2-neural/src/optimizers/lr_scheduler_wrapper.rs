@@ -96,6 +96,7 @@ impl<O, S, F> Optimizer<F> for LRSchedulerOptimizer<O, S, F>
     fn set_learning_rate(&mut self, lr: F) {
         self.optimizer.set_learning_rate(lr);
 /// Helper function to create an optimizer with a step decay learning rate schedule
+#[allow(dead_code)]
 pub fn with_step_decay<O, F>(
     initial_lr: F,
     factor: F,
@@ -111,6 +112,7 @@ pub fn with_step_decay<O, F>(
     );
     LRSchedulerOptimizer::new(optimizer, scheduler, total_steps)
 /// Helper function to create an optimizer with a cosine annealing learning rate schedule
+#[allow(dead_code)]
 pub fn with_cosine_annealing<O, F>(
     max_lr: F,
     cycle_epochs: usize,

@@ -42,6 +42,7 @@ use scirs2_core::parallel_ops::*;
 ///
 /// Requires the "parallel_jacobian" feature to be enabled for actual parallel execution.
 /// Falls back to serial execution if the feature is not enabled.
+#[allow(dead_code)]
 pub fn parallel_finite_difference_jacobian<F, Func>(
     f: &Func,
     t: F,
@@ -140,6 +141,7 @@ where
 ///
 /// Requires the "parallel_jacobian" feature to be enabled for actual parallel execution.
 /// Falls back to a serial implementation if the feature is not enabled.
+#[allow(dead_code)]
 pub fn parallel_sparse_jacobian<F, Func>(
     f: &Func,
     t: F,
@@ -299,6 +301,7 @@ where
 /// # Returns
 ///
 /// Vector of colors for each column
+#[allow(dead_code)]
 fn greedy_coloring(sparsity_pattern: &Array2<bool>) -> Vec<usize> {
     let (n_rows, n_cols) = sparsity_pattern.dim();
 
@@ -352,6 +355,7 @@ fn greedy_coloring(sparsity_pattern: &Array2<bool>) -> Vec<usize> {
 /// # Returns
 ///
 /// True if parallel computation is likely beneficial
+#[allow(dead_code)]
 pub fn should_use_parallel_jacobian(n_dim: usize, is_sparse: bool, num_threads: usize) -> bool {
     // Check if parallel_jacobian feature is enabled
     #[cfg(not(feature = "parallel_jacobian"))]

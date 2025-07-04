@@ -127,6 +127,7 @@ impl LebedevOrder {
 /// let weight_sum: f64 = rule.weights.sum();
 /// assert!((weight_sum - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn lebedev_rule<F: IntegrateFloat>(order: LebedevOrder) -> IntegrateResult<LebedevRule<F>> {
     // Generate the rule based on the requested order
     match order {
@@ -170,6 +171,7 @@ pub fn lebedev_rule<F: IntegrateFloat>(order: LebedevOrder) -> IntegrateResult<L
 /// let result: f64 = lebedev_integrate(|x, y, z| x*x + y*y + z*z, LebedevOrder::Order14).unwrap();
 /// assert!((result - 4.0 * PI).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn lebedev_integrate<F, Func>(f: Func, order: LebedevOrder) -> IntegrateResult<F>
 where
     F: IntegrateFloat,
@@ -198,6 +200,7 @@ where
 //////////////////////////////////////////////////
 
 /// Generates a 6th-order Lebedev rule with 6 points
+#[allow(dead_code)]
 fn generate_order6<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     // These are the 6 points along the Cartesian axes
     let points_data = [
@@ -232,6 +235,7 @@ fn generate_order6<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
 }
 
 /// Generates a 14th-order Lebedev rule with 26 points
+#[allow(dead_code)]
 fn generate_order14<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     // For 14th order, we need 26 points with specific symmetry
     let mut points = Vec::new();
@@ -318,6 +322,7 @@ fn generate_order14<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
 }
 
 /// Generates a 26th-order Lebedev rule with 50 points
+#[allow(dead_code)]
 fn generate_order26<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     // For a simplified 50-point rule, we'll use a symmetric distribution
     // This will at least integrate constants and low-order polynomials correctly
@@ -420,6 +425,7 @@ fn generate_order26<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
 }
 
 /// Generates a 38th-order Lebedev rule with 86 points
+#[allow(dead_code)]
 fn generate_order38<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     // Start with the points from order 26
     let order26 = generate_order26()?;
@@ -536,6 +542,7 @@ fn generate_order38<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
 }
 
 /// Generates a 50th-order Lebedev rule with 146 points
+#[allow(dead_code)]
 fn generate_order50<F: IntegrateFloat>() -> IntegrateResult<LebedevRule<F>> {
     // Start with the points from order 38
     let order38 = generate_order38()?;

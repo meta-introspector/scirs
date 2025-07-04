@@ -589,6 +589,7 @@ impl RobustConvergenceResult {
 }
 
 /// Create robust convergence options for specific problem types
+#[allow(dead_code)]
 pub fn create_robust_options_for_problem(
     problem_type: &str,
     problem_size: usize,

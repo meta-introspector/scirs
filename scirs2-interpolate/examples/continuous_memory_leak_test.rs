@@ -312,6 +312,7 @@ struct TestData {
     pub eval_points: Array1<f64>,
 }
 
+#[allow(dead_code)]
 fn main() -> InterpolateResult<()> {
     println!("SciRS2 Interpolation - Continuous Memory Leak Test");
     println!("This test runs various interpolation methods continuously to detect memory leaks.\n");

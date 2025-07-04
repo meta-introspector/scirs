@@ -804,6 +804,7 @@ pub enum PerformanceRecommendation {
 }
 
 /// Cache-aware matrix multiplication with adaptive blocking
+#[allow(dead_code)]
 pub fn cache_aware_matrix_multiply<T>(
     a: &Array2<T>,
     b: &Array2<T>,
@@ -836,6 +837,7 @@ where
     Ok(c)
 }
 
+#[allow(dead_code)]
 fn blocked_multiply<T>(
     a: &Array2<T>,
     b: &Array2<T>,
@@ -871,6 +873,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn blocked_parallel_multiply<T>(
     a: &Array2<T>,
     b: &Array2<T>,

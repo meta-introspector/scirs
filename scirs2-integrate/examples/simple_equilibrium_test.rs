@@ -4,6 +4,7 @@
 
 use scirs2_integrate::ode::chemical_equilibrium::{systems, ActivityModel};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Simple Chemical Equilibrium Test\n");
 

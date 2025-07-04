@@ -37,7 +37,7 @@ pub struct ArimaModel<F> {
 }
 
 /// ARIMA model configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ArimaConfig {
     /// AR order
     pub p: usize,
@@ -519,6 +519,7 @@ where
 }
 
 /// Automatic ARIMA order selection
+#[allow(dead_code)]
 pub fn auto_arima<S, F>(
     data: &ArrayBase<S, Ix1>,
     options: &ArimaSelectionOptions,
@@ -596,6 +597,7 @@ where
 }
 
 /// Stepwise search for optimal ARIMA parameters
+#[allow(dead_code)]
 fn stepwise_search<F>(
     data: &Array1<F>,
     d: usize,
@@ -667,6 +669,7 @@ where
 }
 
 /// Determine optimal differencing order
+#[allow(dead_code)]
 fn determine_differencing_order<S, F>(data: &ArrayBase<S, Ix1>, max_d: usize) -> Result<usize>
 where
     S: Data<Elem = F>,
@@ -696,6 +699,7 @@ where
 }
 
 /// Determine optimal seasonal differencing order
+#[allow(dead_code)]
 fn determine_seasonal_differencing_order<S, F>(
     data: &ArrayBase<S, Ix1>,
     period: usize,
@@ -727,6 +731,7 @@ where
 }
 
 /// Apply single differencing
+#[allow(dead_code)]
 fn apply_single_differencing<S, F>(data: &ArrayBase<S, Ix1>, d: usize) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
@@ -752,6 +757,7 @@ where
 }
 
 /// Apply seasonal differencing
+#[allow(dead_code)]
 fn apply_seasonal_differencing<S, F>(
     data: &ArrayBase<S, Ix1>,
     period: usize,
@@ -781,6 +787,7 @@ where
 }
 
 /// Apply both regular and seasonal differencing
+#[allow(dead_code)]
 fn apply_differencing<S, F>(
     data: &ArrayBase<S, Ix1>,
     d: usize,

@@ -6,6 +6,7 @@ use scirs2_neural::models::sequential::Sequential;
 use scirs2_neural::utils::colors::ColorOptions;
 use scirs2_neural::utils::{sequential_model_dataflow, sequential_model_summary, ModelVizOptions};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     // Initialize random number generator
     let mut rng = SmallRng::seed_from_u64(42);
@@ -38,6 +39,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 // Create a simple CNN model (VGG-like)
+#[allow(dead_code)]
 fn create_cnn_model<R: rand::Rng + Clone + Send + Sync + 'static>(
     rng: &mut R,
 ) -> Result<Sequential<f64>> {

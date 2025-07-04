@@ -52,6 +52,7 @@ type AdamUpdateReturn<F, D> = (Array<F, D>, Array<F, D>, Array<F, D>);
 /// ).unwrap();
 /// assert_eq!(h_next.shape(), &[batch_size, hidden_size]);
 /// assert_eq!(c_next.shape(), &[batch_size, hidden_size]);
+#[allow(dead_code)]
 pub fn lstm_cell<F>(
     x: &ArrayView2<F>,
     h_prev: &ArrayView2<F>,
@@ -136,6 +137,7 @@ where
     Ok((h_next, c_next, cache))
 }
 // Helper function for sigmoid activation
+#[allow(dead_code)]
 fn sigmoid<F: Float>(x: F) -> F {
     F::one() / (F::one() + (-x).exp())
 /// Performs dropout operation for regularizing neural networks.
@@ -160,6 +162,7 @@ fn sigmoid<F: Float>(x: F) -> F {
 /// let (y_test, _) = dropout(&x.view(), 0.5, &mut rng, false).unwrap();
 /// // In inference mode, no elements should be dropped
 /// assert_eq!(y_test, x);
+#[allow(dead_code)]
 pub fn dropout<F, D, R>(
     x: &ArrayView<F, D>,
     dropout_rate: F,
@@ -206,6 +209,7 @@ pub fn dropout<F, D, R>(
 /// // Backward pass
 /// let dx = dropout_backward(&dout.view(), &mask.view(), dropout_rate).unwrap();
 /// assert_eq!(dx.shape(), x.shape());
+#[allow(dead_code)]
 pub fn dropout_backward<F, D>(
     dout: &ArrayView<F, D>,
     mask: &ArrayView<F, D>,
@@ -238,6 +242,7 @@ pub fn dropout_backward<F, D>(
 ///     }
 ///     assert!((sum - 1.0).abs() < 1e-5);
 /// }
+#[allow(dead_code)]
 pub fn log_softmax<F, D>(x: &ArrayView<F, D>, dim: usize) -> Result<Array<F, D>>
     if dim >= x.ndim() {
             "Dimension out of bounds in log_softmax: dim={}, ndim={}",
@@ -295,6 +300,7 @@ pub fn log_softmax<F, D>(x: &ArrayView<F, D>, dim: usize) -> Result<Array<F, D>>
 /// assert_eq!(m_new.shape(), m.shape());
 /// assert_eq!(v_new.shape(), v.shape());
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn adam_update<F, D>(
     w: &ArrayView<F, D>,
     dw: &ArrayView<F, D>,
@@ -344,6 +350,7 @@ pub fn adam_update<F, D>(
         *w_val = *w_val - learning_rate * m_hat / (v_hat.sqrt() + epsilon);
     Ok((w_new, m_new, v_new))
 // Helper function to zip three iterators for convenience
+#[allow(dead_code)]
 fn zip3<I1, I2, I3>(i1: I1, i2: I2, i3: I3) -> impl Iterator<Item = (I1::Item, I2::Item, I3::Item)>
     I1: IntoIterator,
     I2: IntoIterator,

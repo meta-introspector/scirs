@@ -10,6 +10,7 @@ use scirs2_ndimage::features::{
 };
 use scirs2_ndimage::filters::BorderMode;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== scirs2-ndimage Advanced Edge Detection Example ===\n");
 
@@ -138,6 +139,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper function to print a float array in a grid format
+#[allow(dead_code)]
 fn print_array(array: &Array2<f32>) {
     let (rows, cols) = array.dim();
 
@@ -160,6 +162,7 @@ fn print_array(array: &Array2<f32>) {
 }
 
 // Helper function to print a binary edge array (using threshold)
+#[allow(dead_code)]
 fn print_binary_array(array: &Array2<f32>) {
     let (rows, cols) = array.dim();
 

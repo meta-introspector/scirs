@@ -60,6 +60,7 @@ use std::fmt::Debug;
 /// assert_eq!(result.len(), scales.len());
 /// assert_eq!(result[0].len(), signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn cwt<T, F, W>(data: &[T], wavelet: F, scales: &[f64]) -> SignalResult<Vec<Vec<Complex64>>>
 where
     T: NumCast + Debug + Copy,

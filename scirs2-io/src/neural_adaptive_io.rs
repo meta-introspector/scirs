@@ -82,12 +82,11 @@ impl AdamOptimizer {
         let v_bias_corrected = &self.v_bias / (1.0 - self.beta2.powf(t));
 
         // Update weights
-        *weights = weights
-            - &(learning_rate * &m_weights_corrected
-                / (v_weights_corrected.mapv(|x| x.sqrt()) + self.epsilon));
-        *bias = bias
-            - &(learning_rate * &m_bias_corrected
-                / (v_bias_corrected.mapv(|x| x.sqrt()) + self.epsilon));
+        let v_weights_sqrt = v_weights_corrected.mapv(|x| x.sqrt() + self.epsilon);
+        let v_bias_sqrt = v_bias_corrected.mapv(|x| x.sqrt() + self.epsilon);
+
+        *weights = &*weights - &(learning_rate * &m_weights_corrected / &v_weights_sqrt);
+        *bias = &*bias - &(learning_rate * &m_bias_corrected / &v_bias_sqrt);
     }
 }
 
@@ -234,7 +233,7 @@ impl NeuralIoNetwork {
         prediction: &Array1<f32>,
     ) -> Result<()> {
         // Compute loss gradient (mean squared error derivative)
-        let output_error = 2.0 * (prediction - target) / prediction.len() as f32;
+        let output_error = &(2.0 * (prediction - target)) / prediction.len() as f32;
 
         // Apply attention to input for gradient computation
         let attended_input = self.apply_attention(input);
@@ -251,7 +250,7 @@ impl NeuralIoNetwork {
         let output_bias_grad = output_error.clone();
 
         // Output layer weight gradients
-        let output_weight_grad = output_bias_grad
+        let _output_weight_grad = output_bias_grad
             .view()
             .to_shape((output_bias_grad.len(), 1))
             .unwrap()
@@ -277,7 +276,7 @@ impl NeuralIoNetwork {
         }
 
         // Input weight gradients
-        let input_weight_grad = input_bias_grad
+        let _input_weight_grad = input_bias_grad
             .view()
             .to_shape((input_bias_grad.len(), 1))
             .unwrap()
@@ -290,9 +289,31 @@ impl NeuralIoNetwork {
 
         // Update weights using Adam optimizer - simplified approach
         self.update_attention_weights(&output_error, input);
-        self.update_bias_with_momentum(&mut self.output_bias, &output_bias_grad);
-        self.update_bias_with_momentum(&mut self.hidden_bias, &hidden_bias_grad);
-        self.update_bias_with_momentum(&mut self.input_bias, &input_bias_grad);
+
+        // Update biases individually to avoid multiple mutable borrow issues
+        {
+            let momentum = 0.9;
+            let scaled_grad = self.learning_rate * &output_bias_grad;
+            for i in 0..self.output_bias.len() {
+                self.output_bias[i] = momentum * self.output_bias[i] - scaled_grad[i];
+            }
+        }
+
+        {
+            let momentum = 0.9;
+            let scaled_grad = self.learning_rate * &hidden_bias_grad;
+            for i in 0..self.hidden_bias.len() {
+                self.hidden_bias[i] = momentum * self.hidden_bias[i] - scaled_grad[i];
+            }
+        }
+
+        {
+            let momentum = 0.9;
+            let scaled_grad = self.learning_rate * &input_bias_grad;
+            for i in 0..self.input_bias.len() {
+                self.input_bias[i] = momentum * self.input_bias[i] - scaled_grad[i];
+            }
+        }
 
         Ok(())
     }
@@ -729,8 +750,11 @@ impl UltraThinkIoProcessor {
         let float_data: Vec<f32> = data.iter().map(|&x| x as f32).collect();
         let array = Array1::from(float_data);
 
-        // Apply SIMD operations
-        let processed = f32::simd_add(&array.view(), &Array1::ones(array.len()).view());
+        // Apply SIMD operations using the trait
+        let ones_array = Array1::ones(array.len());
+        let array_view = array.view();
+        let ones_view = ones_array.view();
+        let processed = f32::simd_add(&array_view, &ones_view);
 
         // Convert back to u8
         let result: Vec<u8> = processed.iter().map(|&x| x as u8).collect();
@@ -850,18 +874,20 @@ impl ReinforcementLearningAgent {
 
     /// Update Q-values based on reward
     pub fn update_q_value(&mut self, state: &str, action: &str, reward: f32, next_state: &str) {
+        // First, get the max next Q value
+        let max_next_q = self
+            .q_table
+            .get(next_state)
+            .map(|actions| actions.values().copied().fold(f32::NEG_INFINITY, f32::max))
+            .unwrap_or(0.0);
+
+        // Then get mutable reference to current Q value
         let current_q = self
             .q_table
             .entry(state.to_string())
             .or_default()
             .entry(action.to_string())
             .or_insert(0.0);
-
-        let max_next_q = self
-            .q_table
-            .get(next_state)
-            .map(|actions| actions.values().copied().fold(f32::NEG_INFINITY, f32::max))
-            .unwrap_or(0.0);
 
         let td_target = reward + self.discount_factor * max_next_q;
         let td_error = td_target - *current_q;
@@ -900,10 +926,15 @@ impl ReinforcementLearningAgent {
 /// Reinforcement learning statistics
 #[derive(Debug, Clone)]
 pub struct ReinforcementLearningStats {
+    /// Total number of states visited
     pub total_states: usize,
+    /// Total number of actions taken
     pub total_actions: usize,
+    /// Average reward received
     pub average_reward: f32,
+    /// Current exploration rate (epsilon)
     pub exploration_rate: f32,
+    /// Total size of Q-table
     pub q_table_size: usize,
 }
 
@@ -1013,9 +1044,13 @@ impl EnsembleNeuralNetwork {
 /// Ensemble learning statistics
 #[derive(Debug, Clone)]
 pub struct EnsembleStats {
+    /// Number of networks in the ensemble
     pub num_networks: usize,
+    /// Weights assigned to each network
     pub ensemble_weights: Array1<f32>,
+    /// Performance metrics for each network
     pub network_performance: Vec<f32>,
+    /// Entropy of the ensemble weights
     pub weight_entropy: f32,
 }
 

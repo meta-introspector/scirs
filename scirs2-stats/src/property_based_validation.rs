@@ -999,6 +999,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationSymmetry {
 }
 
 /// Convenience function to run comprehensive property-based validation
+#[allow(dead_code)]
 pub fn run_comprehensive_property_validation() -> StatsResult<ValidationReport> {
     let config = PropertyTestConfig {
         test_cases_per_property: 500, // Balanced for thoroughness and speed
@@ -1014,6 +1015,7 @@ pub fn run_comprehensive_property_validation() -> StatsResult<ValidationReport> 
 }
 
 /// Convenience function to run quick property-based validation
+#[allow(dead_code)]
 pub fn run_quick_property_validation() -> StatsResult<ValidationReport> {
     let config = PropertyTestConfig {
         test_cases_per_property: 100, // Faster for CI/CD

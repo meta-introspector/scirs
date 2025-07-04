@@ -71,6 +71,7 @@ pub struct OrbDescriptor {
 /// # Returns
 ///
 /// * Result containing vector of ORB descriptors
+#[allow(dead_code)]
 pub fn detect_and_compute_orb(
     img: &DynamicImage,
     config: &OrbConfig,
@@ -133,6 +134,7 @@ pub fn detect_and_compute_orb(
 }
 
 /// Create image pyramid for multi-scale detection
+#[allow(dead_code)]
 fn create_pyramid(image: &Array2<f32>, num_levels: usize, scale_factor: f32) -> Vec<Array2<f32>> {
     let mut pyramid = vec![image.clone()];
 
@@ -163,6 +165,7 @@ fn create_pyramid(image: &Array2<f32>, num_levels: usize, scale_factor: f32) -> 
 }
 
 /// FAST keypoint detection
+#[allow(dead_code)]
 fn detect_fast_keypoints(image: &Array2<f32>, threshold: u8) -> Result<Vec<KeyPoint>> {
     let (height, width) = image.dim();
     let mut keypoints = Vec::new();
@@ -225,6 +228,7 @@ fn detect_fast_keypoints(image: &Array2<f32>, threshold: u8) -> Result<Vec<KeyPo
 }
 
 /// Refine keypoints using Harris corner measure
+#[allow(dead_code)]
 fn refine_with_harris(image: &Array2<f32>, keypoints: Vec<KeyPoint>) -> Result<Vec<KeyPoint>> {
     let (height, width) = image.dim();
     let mut refined = Vec::new();
@@ -282,6 +286,7 @@ fn refine_with_harris(image: &Array2<f32>, keypoints: Vec<KeyPoint>) -> Result<V
 }
 
 /// Compute orientation for a keypoint using intensity centroid
+#[allow(dead_code)]
 fn compute_orientation(image: &Array2<f32>, keypoint: &KeyPoint) -> Result<f32> {
     let x = keypoint.x as usize;
     let y = keypoint.y as usize;
@@ -319,6 +324,7 @@ fn compute_orientation(image: &Array2<f32>, keypoint: &KeyPoint) -> Result<f32> 
 }
 
 /// Compute BRIEF descriptor with rotation
+#[allow(dead_code)]
 fn compute_brief_descriptor(
     image: &Array2<f32>,
     keypoint: &KeyPoint,
@@ -377,6 +383,7 @@ fn compute_brief_descriptor(
 }
 
 /// Generate BRIEF sampling pattern
+#[allow(dead_code)]
 fn generate_brief_pattern() -> Vec<(isize, isize, isize, isize)> {
     // In practice, use a pre-computed pattern
     // This is a simplified random pattern
@@ -410,6 +417,7 @@ fn generate_brief_pattern() -> Vec<(isize, isize, isize, isize)> {
 /// # Returns
 ///
 /// * Vector of matched descriptor indices
+#[allow(dead_code)]
 pub fn match_orb_descriptors(
     descriptors1: &[OrbDescriptor],
     descriptors2: &[OrbDescriptor],
@@ -444,6 +452,7 @@ pub fn match_orb_descriptors(
 }
 
 /// Calculate Hamming distance between binary descriptors
+#[allow(dead_code)]
 fn hamming_distance(desc1: &[u32], desc2: &[u32]) -> u32 {
     let mut distance = 0;
 

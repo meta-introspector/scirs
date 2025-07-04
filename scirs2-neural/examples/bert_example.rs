@@ -1,9 +1,15 @@
 use ndarray::{Array, IxDyn};
 use scirs2_neural::layers::Layer;
-use scirs2_neural::models::{BertConfig, BertModel};
+// use scirs2_neural::models::{BertConfig, BertModel}; // TODO: Implement models module
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("BERT Model Example");
+    println!("Note: BERT models are not yet implemented.");
+    println!("This example is a placeholder for future BERT functionality.");
+
+    // TODO: Implement BERT models module and uncomment the following code
+    /*
     // Create a small BERT model for demonstration
     println!("Creating a small BERT model...");
     let config = BertConfig::custom(
@@ -46,5 +52,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         base_pooled_output.shape()[1]
     );
     println!("\nBERT example completed successfully!");
+    */
     Ok(())
 }

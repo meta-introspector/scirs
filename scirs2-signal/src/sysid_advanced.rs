@@ -12,12 +12,13 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_shape};
 use scirs2_linalg::solve;
-#[cfg(test)]
+
 use std::f64::consts::PI;
 
 /// ARMAX model identification using iterative prediction error method
 ///
 /// ARMAX: A(q)y(t) = B(q)u(t) + C(q)e(t)
+#[allow(dead_code)]
 pub fn identify_armax_complete(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -113,6 +114,7 @@ pub fn identify_armax_complete(
 /// Output-Error model identification
 ///
 /// OE: y(t) = B(q)/F(q) * u(t) + e(t)
+#[allow(dead_code)]
 pub fn identify_oe_complete(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -195,6 +197,7 @@ pub fn identify_oe_complete(
 /// Box-Jenkins model identification
 ///
 /// BJ: y(t) = B(q)/F(q) * u(t) + C(q)/D(q) * e(t)
+#[allow(dead_code)]
 pub fn identify_bj_complete(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -301,6 +304,7 @@ pub fn identify_bj_complete(
 }
 
 /// State-space model identification using subspace methods
+#[allow(dead_code)]
 pub fn identify_state_space_complete(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -343,6 +347,7 @@ pub fn identify_state_space_complete(
 }
 
 /// N4SID algorithm for subspace identification
+#[allow(dead_code)]
 fn n4sid_algorithm(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -397,6 +402,7 @@ fn n4sid_algorithm(
 }
 
 /// Nonlinear ARX (NARX) model identification
+#[allow(dead_code)]
 pub fn identify_narx_complete(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -455,6 +461,7 @@ pub fn identify_narx_complete(
 // Helper functions
 
 /// Estimate ARX model using least squares
+#[allow(dead_code)]
 fn estimate_arx_ls(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -508,6 +515,7 @@ fn estimate_arx_ls(
 }
 
 /// Compute ARMAX residuals
+#[allow(dead_code)]
 fn compute_armax_residuals(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -550,6 +558,7 @@ fn compute_armax_residuals(
 }
 
 /// Update ARMAX parameters
+#[allow(dead_code)]
 fn update_armax_parameters(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -610,6 +619,7 @@ fn update_armax_parameters(
 }
 
 /// Simulate OE model
+#[allow(dead_code)]
 fn simulate_oe_model(
     input: &Array1<f64>,
     b: &Array1<f64>,
@@ -643,6 +653,7 @@ fn simulate_oe_model(
 }
 
 /// Compute OE model derivatives
+#[allow(dead_code)]
 fn compute_oe_derivatives(
     input: &Array1<f64>,
     y_sim: &Array1<f64>,
@@ -702,6 +713,7 @@ fn compute_oe_derivatives(
 }
 
 /// Backtracking line search
+#[allow(dead_code)]
 fn backtracking_line_search(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -748,6 +760,7 @@ fn backtracking_line_search(
 }
 
 /// Update OE parameters
+#[allow(dead_code)]
 fn update_oe_parameters(b: &mut Array1<f64>, f: &mut Array1<f64>, delta: &Array1<f64>, alpha: f64) {
     let nb = b.len();
 
@@ -761,6 +774,7 @@ fn update_oe_parameters(b: &mut Array1<f64>, f: &mut Array1<f64>, delta: &Array1
 }
 
 /// Estimate ARMA model for residuals
+#[allow(dead_code)]
 fn estimate_arma_for_residuals(
     residuals: &Array1<f64>,
     nc: usize,
@@ -803,6 +817,7 @@ fn estimate_arma_for_residuals(
 }
 
 /// Simulate Box-Jenkins model
+#[allow(dead_code)]
 fn simulate_bj_model(
     input: &Array1<f64>,
     b: &Array1<f64>,
@@ -823,7 +838,7 @@ fn simulate_bj_model(
     // Generate innovations (would be estimated in practice)
     let mut rng = rand::rng();
     for i in 0..n {
-        noise[i] = rng.gen_range(-0.1..0.1);
+        noise[i] = rng.random_range(-0.1..0.1);
     }
 
     // Filter through C/D
@@ -846,6 +861,7 @@ fn simulate_bj_model(
 }
 
 /// Update Box-Jenkins parameters
+#[allow(dead_code)]
 fn update_bj_parameters(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -880,6 +896,7 @@ fn update_bj_parameters(
 }
 
 /// Build Hankel matrices for subspace identification
+#[allow(dead_code)]
 fn build_hankel_matrices(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -908,6 +925,7 @@ fn build_hankel_matrices(
 }
 
 /// Oblique projection for subspace identification
+#[allow(dead_code)]
 fn oblique_projection(y_hankel: &Array2<f64>, u_hankel: &Array2<f64>) -> SignalResult<Array2<f64>> {
     // Simplified: orthogonal projection
     let u_pinv = compute_pseudoinverse(u_hankel)?;
@@ -917,6 +935,7 @@ fn oblique_projection(y_hankel: &Array2<f64>, u_hankel: &Array2<f64>) -> SignalR
 }
 
 /// Estimate B and D matrices for state space
+#[allow(dead_code)]
 fn estimate_bd_matrices(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -960,6 +979,7 @@ fn estimate_bd_matrices(
 }
 
 /// Build NARX regression matrix
+#[allow(dead_code)]
 fn build_narx_regression_matrix(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1025,6 +1045,7 @@ fn build_narx_regression_matrix(
 }
 
 /// Helper function to concatenate parameters
+#[allow(dead_code)]
 fn concatenate_params(a: &Array1<f64>, b: &Array1<f64>, c: &Array1<f64>) -> Array1<f64> {
     let mut params = Array1::zeros(a.len() + b.len() + c.len() - 2);
     params
@@ -1040,6 +1061,7 @@ fn concatenate_params(a: &Array1<f64>, b: &Array1<f64>, c: &Array1<f64>) -> Arra
 }
 
 /// Helper function to concatenate BJ parameters
+#[allow(dead_code)]
 fn concatenate_bj_params(
     b: &Array1<f64>,
     c: &Array1<f64>,
@@ -1069,6 +1091,7 @@ fn concatenate_bj_params(
 }
 
 /// Convert state-space matrices to parameter vector
+#[allow(dead_code)]
 fn state_space_to_params(
     a: &Array2<f64>,
     b: &Array2<f64>,
@@ -1087,6 +1110,7 @@ fn state_space_to_params(
 }
 
 /// Compute parameter statistics
+#[allow(dead_code)]
 fn compute_parameter_statistics(
     params: &Array1<f64>,
     residuals: &Array1<f64>,
@@ -1109,6 +1133,7 @@ fn compute_parameter_statistics(
 }
 
 /// Compute autocorrelation
+#[allow(dead_code)]
 fn compute_autocorrelation(signal: &Array1<f64>, max_lag: usize) -> SignalResult<Vec<f64>> {
     let n = signal.len();
     let mean = signal.mean().unwrap_or(0.0);
@@ -1128,6 +1153,7 @@ fn compute_autocorrelation(signal: &Array1<f64>, max_lag: usize) -> SignalResult
 }
 
 /// Compute pseudoinverse
+#[allow(dead_code)]
 fn compute_pseudoinverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let (u, s, vt) = matrix
         .svd(true, true)
@@ -1149,6 +1175,7 @@ fn compute_pseudoinverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
 }
 
 /// Simulate state-space model
+#[allow(dead_code)]
 fn simulate_state_space(
     ss: &StateSpace,
     input: &Array1<f64>,
@@ -1172,6 +1199,7 @@ fn simulate_state_space(
 }
 
 /// Simulate noise contribution for BJ model
+#[allow(dead_code)]
 fn simulate_noise_contribution(
     output: &Array1<f64>,
     c: &Array1<f64>,
@@ -1181,7 +1209,6 @@ fn simulate_noise_contribution(
     Ok(Array1::zeros(output.len()))
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -1194,11 +1221,11 @@ mod tests {
         // Generate test data
         let mut rng = rand::rng();
         for i in 2..n {
-            input[i] = rng.gen_range(-1.0..1.0);
+            input[i] = rng.random_range(-1.0..1.0);
             output[i] = 0.7 * output[i - 1] - 0.2 * output[i - 2]
                 + 0.5 * input[i - 1]
                 + 0.3 * input[i - 2]
-                + 0.1 * rng.gen_range(-1.0..1.0);
+                + 0.1 * rng.random_range(-1.0..1.0);
         }
 
         let (model, _, _, converged, _) =

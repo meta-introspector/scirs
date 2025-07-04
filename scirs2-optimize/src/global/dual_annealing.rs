@@ -289,6 +289,7 @@ where
 }
 
 /// Perform global optimization using dual annealing
+#[allow(dead_code)]
 pub fn dual_annealing<F>(
     func: F,
     x0: Array1<f64>,

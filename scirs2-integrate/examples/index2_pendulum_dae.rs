@@ -7,6 +7,7 @@ use scirs2_integrate::dae::{
 use scirs2_integrate::ode::ODEMethod;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Index-2 Pendulum DAE Example");
     println!("============================\n");

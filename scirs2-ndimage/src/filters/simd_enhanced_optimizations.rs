@@ -19,6 +19,7 @@ use crate::BoundaryMode;
 ///
 /// This implementation uses vectorized operations to compute LBP features
 /// which are commonly used in texture analysis and computer vision.
+#[allow(dead_code)]
 pub fn simd_local_binary_pattern<T>(
     input: ArrayView2<T>,
     radius: usize,
@@ -111,6 +112,7 @@ where
 ///
 /// This implementation computes gradient magnitude using Sobel, Scharr, or Prewitt
 /// operators with vectorized operations for maximum performance.
+#[allow(dead_code)]
 pub fn simd_gradient_magnitude<T>(
     input: ArrayView2<T>,
     operator: GradientOperator,
@@ -168,6 +170,7 @@ where
 ///
 /// This implementation uses vectorized operations to efficiently compute
 /// histograms with customizable bin ranges and counts.
+#[allow(dead_code)]
 pub fn simd_histogram<T>(
     input: ArrayView2<T>,
     bins: usize,
@@ -232,6 +235,7 @@ where
 ///
 /// Computes spatial moments up to specified order using vectorized operations
 /// for efficient shape analysis and feature extraction.
+#[allow(dead_code)]
 pub fn simd_image_moments<T>(input: ArrayView2<T>, max_order: usize) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
@@ -307,6 +311,7 @@ where
 ///
 /// This implementation provides vectorized morphological operations with
 /// support for custom structuring elements and boundary handling.
+#[allow(dead_code)]
 pub fn simd_morphological_operation<T>(
     input: ArrayView2<T>,
     structuring_element: ArrayView2<bool>,
@@ -431,6 +436,7 @@ pub enum MorphologicalOperation {
     Dilation,
 }
 
+#[allow(dead_code)]
 fn compute_circle_sampling_points(
     radius: usize,
     n_points: usize,
@@ -448,6 +454,7 @@ fn compute_circle_sampling_points(
     Ok(points)
 }
 
+#[allow(dead_code)]
 fn bilinear_interpolate<T>(input: &ArrayView2<T>, x: f64, y: f64) -> NdimageResult<T>
 where
     T: Float + FromPrimitive,
@@ -476,6 +483,7 @@ where
     Ok(interpolated)
 }
 
+#[allow(dead_code)]
 fn get_gradient_kernels<T>(operator: GradientOperator) -> NdimageResult<(Vec<T>, Vec<T>)>
 where
     T: Float + FromPrimitive,
@@ -519,6 +527,7 @@ where
     Ok((kernel_x, kernel_y))
 }
 
+#[allow(dead_code)]
 fn simd_separable_convolution_2d<T>(
     input: &ArrayView2<T>,
     kernel_x: &[T],
@@ -542,6 +551,7 @@ where
     Ok(output)
 }
 
+#[allow(dead_code)]
 fn find_min_max_simd<T>(data: &[T]) -> NdimageResult<(T, T)>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps + PartialOrd,
@@ -585,6 +595,7 @@ where
     Ok((min_val, max_val))
 }
 
+#[allow(dead_code)]
 fn get_boundary_value<T>(
     input: &ArrayView2<T>,
     y: isize,

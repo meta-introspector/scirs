@@ -22,6 +22,7 @@ use std::f64::consts::PI;
 /// // Generate a Ricker wavelet with 100 points and width parameter 4.0
 /// let wavelet = ricker(100, 4.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn ricker(points: usize, a: f64) -> SignalResult<Vec<f64>> {
     if points == 0 {
         return Err(SignalError::ValueError(

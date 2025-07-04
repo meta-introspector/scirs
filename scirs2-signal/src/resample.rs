@@ -35,6 +35,7 @@ use std::fmt::Debug;
 /// // Result should be approximately twice as long
 /// assert_eq!(resampled.len(), signal.len() * 2);
 /// ```
+#[allow(dead_code)]
 pub fn resample<T>(x: &[T], up: usize, down: usize, window: Option<&str>) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -190,6 +191,7 @@ where
 /// // Result should be approximately twice as long
 /// assert_eq!(upsampled.len(), signal.len() * 2);
 /// ```
+#[allow(dead_code)]
 pub fn upsample<T>(x: &[T], factor: usize) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -242,6 +244,7 @@ where
 /// // Result should be approximately half as long
 /// assert_eq!(downsampled.len(), (signal.len() + 1) / 2);
 /// ```
+#[allow(dead_code)]
 pub fn downsample<T>(x: &[T], factor: usize) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -293,6 +296,7 @@ where
 ///
 /// assert_eq!(resampled.len(), 150);
 /// ```
+#[allow(dead_code)]
 pub fn resample_poly<T>(x: &[T], num: usize) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -343,6 +347,7 @@ where
 }
 
 /// Find the greatest common divisor of two numbers.
+#[allow(dead_code)]
 fn gcd(mut a: usize, mut b: usize) -> usize {
     while b != 0 {
         let temp = b;
@@ -355,6 +360,7 @@ fn gcd(mut a: usize, mut b: usize) -> usize {
 /// Find a rational approximation of a floating point number.
 ///
 /// Returns a tuple (numerator, denominator) such that n/d ≈ x.
+#[allow(dead_code)]
 fn rational_approximation(x: f64) -> (usize, usize) {
     if x <= 0.0 {
         return (1, 1); // Invalid input, return 1/1

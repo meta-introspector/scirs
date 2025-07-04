@@ -182,7 +182,7 @@ impl ProgressRenderer {
             let clear_length = self.last_length - output_width;
             print!("\r{}{}", output, " ".repeat(clear_length));
         } else {
-            print!("\r{}", output);
+            print!("\r{output}");
         }
 
         let _ = io::stdout().flush();
@@ -201,6 +201,7 @@ impl Default for ProgressRenderer {
 }
 
 /// Calculate the display width of a string, accounting for Unicode
+#[allow(dead_code)]
 fn console_width(s: &str) -> usize {
     // This is a simplified implementation
     // For full Unicode support, you might want to use the `unicode-width` crate
@@ -208,6 +209,7 @@ fn console_width(s: &str) -> usize {
 }
 
 /// Generate a color-coded progress bar based on completion percentage
+#[allow(dead_code)]
 pub fn colored_progress_bar(percentage: f64, width: usize) -> String {
     let filled_width = ((percentage / 100.0) * width as f64) as usize;
     let empty_width = width.saturating_sub(filled_width);
@@ -233,6 +235,7 @@ pub fn colored_progress_bar(percentage: f64, width: usize) -> String {
 }
 
 /// Create an ASCII art progress visualization
+#[allow(dead_code)]
 pub fn ascii_art_progress(percentage: f64) -> String {
     let blocks = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"];
     let width = 20;

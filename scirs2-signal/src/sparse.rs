@@ -91,6 +91,7 @@ pub enum SparseRecoveryMethod {
 /// # Returns
 ///
 /// * Recovered sparse signal
+#[allow(dead_code)]
 pub fn omp(
     y: &Array1<f64>,
     phi: &Array2<f64>,
@@ -221,6 +222,7 @@ pub fn omp(
 /// # Returns
 ///
 /// * Recovered sparse signal
+#[allow(dead_code)]
 pub fn mp(
     y: &Array1<f64>,
     phi: &Array2<f64>,
@@ -331,6 +333,7 @@ pub fn mp(
 /// # Returns
 ///
 /// * Recovered sparse signal
+#[allow(dead_code)]
 pub fn ista(
     y: &Array1<f64>,
     phi: &Array2<f64>,
@@ -403,6 +406,7 @@ pub fn ista(
 /// # Returns
 ///
 /// * Recovered sparse signal
+#[allow(dead_code)]
 pub fn fista(
     y: &Array1<f64>,
     phi: &Array2<f64>,
@@ -487,6 +491,7 @@ pub fn fista(
 /// # Returns
 ///
 /// * Recovered sparse signal
+#[allow(dead_code)]
 pub fn cosamp(
     y: &Array1<f64>,
     phi: &Array2<f64>,
@@ -643,6 +648,7 @@ pub fn cosamp(
 /// # Returns
 ///
 /// * Recovered sparse signal
+#[allow(dead_code)]
 pub fn iht(
     y: &Array1<f64>,
     phi: &Array2<f64>,
@@ -745,6 +751,7 @@ pub fn iht(
 /// # Returns
 ///
 /// * Recovered sparse signal
+#[allow(dead_code)]
 pub fn subspace_pursuit(
     y: &Array1<f64>,
     phi: &Array2<f64>,
@@ -930,6 +937,7 @@ pub fn subspace_pursuit(
 /// # Returns
 ///
 /// * Recovered sparse signal
+#[allow(dead_code)]
 pub fn smooth_l0(
     y: &Array1<f64>,
     phi: &Array2<f64>,
@@ -1019,6 +1027,7 @@ pub fn smooth_l0(
 /// # Returns
 ///
 /// * Recovered sparse signal
+#[allow(dead_code)]
 pub fn basis_pursuit(
     y: &Array1<f64>,
     phi: &Array2<f64>,
@@ -1047,6 +1056,7 @@ pub fn basis_pursuit(
 /// # Returns
 ///
 /// * Recovered sparse signal
+#[allow(dead_code)]
 pub fn lasso(
     y: &Array1<f64>,
     phi: &Array2<f64>,
@@ -1068,6 +1078,7 @@ pub fn lasso(
 /// # Returns
 ///
 /// * Recovered sparse signal
+#[allow(dead_code)]
 pub fn compressed_sensing_recover(
     y: &Array1<f64>,
     phi: &Array2<f64>,
@@ -1102,6 +1113,7 @@ pub fn compressed_sensing_recover(
 /// # Returns
 ///
 /// * Recovered full signal
+#[allow(dead_code)]
 pub fn sparse_transform_recovery<F, G>(
     y: &Array1<f64>,
     _transform_forward: F,
@@ -1184,6 +1196,7 @@ where
 /// # Returns
 ///
 /// * Recovered full signal
+#[allow(dead_code)]
 pub fn recover_missing_samples(
     y: &Array1<f64>,
     method: SparseRecoveryMethod,
@@ -1268,6 +1281,7 @@ pub fn recover_missing_samples(
 /// # Returns
 ///
 /// * Recovered image
+#[allow(dead_code)]
 pub fn image_inpainting(
     image: &Array2<f64>,
     patch_size: usize,
@@ -1341,6 +1355,7 @@ pub fn image_inpainting(
 /// # Returns
 ///
 /// * Random sensing matrix with normalized columns
+#[allow(dead_code)]
 pub fn random_sensing_matrix(m: usize, n: usize, seed: Option<u64>) -> Array2<f64> {
     // Initialize with random Gaussian entries
     let mut rng = match seed {
@@ -1379,6 +1394,7 @@ pub fn random_sensing_matrix(m: usize, n: usize, seed: Option<u64>) -> Array2<f6
 /// # Returns
 ///
 /// * Coherence (maximum absolute inner product between normalized columns)
+#[allow(dead_code)]
 pub fn matrix_coherence(phi: &Array2<f64>) -> SignalResult<f64> {
     let (_, n) = phi.dim();
 
@@ -1414,6 +1430,7 @@ pub fn matrix_coherence(phi: &Array2<f64>) -> SignalResult<f64> {
 /// # Returns
 ///
 /// * Estimated RIP constant
+#[allow(dead_code)]
 pub fn estimate_rip_constant(phi: &Array2<f64>, s: usize) -> SignalResult<f64> {
     let (_m, n) = phi.dim();
 
@@ -1482,6 +1499,7 @@ pub fn estimate_rip_constant(phi: &Array2<f64>, s: usize) -> SignalResult<f64> {
 /// # Returns
 ///
 /// * Normalized sparsity measure (0 = dense, 1 = maximally sparse)
+#[allow(dead_code)]
 pub fn measure_sparsity(x: &Array1<f64>, threshold: f64) -> SignalResult<f64> {
     let n = x.len();
 
@@ -1518,6 +1536,7 @@ pub fn measure_sparsity(x: &Array1<f64>, threshold: f64) -> SignalResult<f64> {
 /// # Returns
 ///
 /// * Denoised signal
+#[allow(dead_code)]
 pub fn sparse_denoise(
     y: &Array1<f64>,
     transform: SparseTransform,

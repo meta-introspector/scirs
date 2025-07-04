@@ -1,5 +1,6 @@
 use scirs2_special::{pbdv, pbdv_seq, pbvv, pbvv_seq, pbwa};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Parabolic Cylinder Functions Example");
     println!("===================================\n");

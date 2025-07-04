@@ -20,6 +20,7 @@ use std::fmt::Debug;
 ///
 /// * `true` if the values are approximately equal, `false` otherwise
 #[must_use]
+#[allow(dead_code)]
 pub fn is_close<F: Float>(a: F, b: F, abs_tol: F, rel_tol: F) -> bool {
     let abs_diff = (a - b).abs();
 
@@ -63,6 +64,7 @@ pub fn is_close<F: Float>(a: F, b: F, abs_tol: F, rel_tol: F) -> bool {
 /// assert!(points_equal(&point1, &point3, Some(0.01)));
 /// ```
 #[must_use]
+#[allow(dead_code)]
 pub fn points_equal<T>(point1: &[T], point2: &[T], tol: Option<T>) -> bool
 where
     T: PartialOrd + std::ops::Sub<Output = T> + Copy + FromPrimitive + num_traits::Zero,
@@ -124,6 +126,7 @@ where
 /// assert!(arrays_equal(&arr1, &arr3, Some(0.01)));
 /// ```
 #[must_use]
+#[allow(dead_code)]
 pub fn arrays_equal<S1, S2, D, T>(
     array1: &ArrayBase<S1, D>,
     array2: &ArrayBase<S2, D>,
@@ -156,6 +159,7 @@ where
 ///
 /// * The modified matrix
 #[must_use]
+#[allow(dead_code)]
 pub fn fill_diagonal<T: Clone>(mut a: Array2<T>, val: T) -> Array2<T> {
     let min_dim = a.nrows().min(a.ncols());
 
@@ -176,6 +180,7 @@ pub fn fill_diagonal<T: Clone>(mut a: Array2<T>, val: T) -> Array2<T> {
 ///
 /// * Product of all elements
 #[must_use]
+#[allow(dead_code)]
 pub fn prod<I, T>(iter: I) -> T
 where
     I: IntoIterator<Item = T>,
@@ -195,6 +200,7 @@ where
 /// # Returns
 ///
 /// * Vector of values
+#[allow(dead_code)]
 pub fn arange<F: Float + std::iter::Sum>(start: F, end: F, step: F) -> CoreResult<Vec<F>> {
     if step == F::zero() {
         return Err(CoreError::ValueError(ErrorContext::new(
@@ -222,6 +228,7 @@ pub fn arange<F: Float + std::iter::Sum>(start: F, end: F, step: F) -> CoreResul
 
 /// Convenience function that provides the old behavior (panics on error)
 #[must_use]
+#[allow(dead_code)]
 pub fn arange_unchecked<F: Float + std::iter::Sum>(start: F, end: F, step: F) -> Vec<F> {
     arange(start, end, step).unwrap()
 }
@@ -237,6 +244,7 @@ pub fn arange_unchecked<F: Float + std::iter::Sum>(start: F, end: F, step: F) ->
 ///
 /// * `true` if all elements satisfy the predicate, `false` otherwise
 #[must_use]
+#[allow(dead_code)]
 pub fn all<I, T, F>(iter: I, predicate: F) -> bool
 where
     I: IntoIterator<Item = T>,
@@ -256,6 +264,7 @@ where
 ///
 /// * `true` if any element satisfies the predicate, `false` otherwise
 #[must_use]
+#[allow(dead_code)]
 pub fn any<I, T, F>(iter: I, predicate: F) -> bool
 where
     I: IntoIterator<Item = T>,
@@ -279,6 +288,7 @@ where
 ///
 /// * Array of linearly spaced values
 #[must_use]
+#[allow(dead_code)]
 pub fn linspace<F: Float + std::iter::Sum + Send + Sync>(
     start: F,
     end: F,
@@ -343,6 +353,7 @@ pub fn linspace<F: Float + std::iter::Sum + Send + Sync>(
 ///
 /// * Array of logarithmically spaced values
 #[must_use]
+#[allow(dead_code)]
 pub fn logspace<F: Float + std::iter::Sum + Send + Sync>(
     start: F,
     end: F,
@@ -376,6 +387,7 @@ pub fn logspace<F: Float + std::iter::Sum + Send + Sync>(
 ///
 /// * If the arrays have different shapes
 #[must_use]
+#[allow(dead_code)]
 pub fn maximum<S1, S2, D, T>(
     a: &ndarray::ArrayBase<S1, D>,
     b: &ndarray::ArrayBase<S2, D>,
@@ -451,6 +463,7 @@ where
 ///
 /// * If the arrays have different shapes
 #[must_use]
+#[allow(dead_code)]
 pub fn minimum<S1, S2, D, T>(
     a: &ndarray::ArrayBase<S1, D>,
     b: &ndarray::ArrayBase<S2, D>,
@@ -536,6 +549,7 @@ where
 /// # Errors
 ///
 /// Returns an error if the input signal is empty, has zero energy/peak/sum, or if a conversion fails.
+#[allow(dead_code)]
 pub fn normalize<T>(x: &[T], norm: &str) -> Result<Vec<f64>, &'static str>
 where
     T: Float + NumCast + Debug,
@@ -638,6 +652,7 @@ where
 ///
 /// Returns an error if the input array is 0-dimensional, if pad_width length doesn't match input dimensions,
 /// or if the padding mode is unsupported for the given array dimensionality.
+#[allow(dead_code)]
 pub fn pad_array<T, D>(
     input: &Array<T, D>,
     pad_width: &[(usize, usize)],
@@ -831,6 +846,7 @@ where
 /// # Errors
 ///
 /// Returns an error if the window length is zero or if the window type is unknown.
+#[allow(dead_code)]
 pub fn get_window(window_type: &str, length: usize, periodic: bool) -> Result<Vec<f64>, String> {
     if length == 0 {
         return Err("Window length must be positive".to_string());
@@ -923,6 +939,7 @@ pub fn get_window(window_type: &str, length: usize, periodic: bool) -> Result<Ve
 /// # Errors
 ///
 /// Returns an error if the evaluation function fails at either x+h or x-h.
+#[allow(dead_code)]
 pub fn differentiate<F, Func>(x: F, h: F, eval_fn: Func) -> Result<F, String>
 where
     F: Float + FromPrimitive + Debug,
@@ -964,6 +981,7 @@ where
 /// # Errors
 ///
 /// Returns an error if the number of intervals is less than 2, not even, or if the evaluation function fails.
+#[allow(dead_code)]
 pub fn integrate<F, Func>(a: F, b: F, n: usize, eval_fn: Func) -> Result<F, String>
 where
     F: Float + FromPrimitive + Debug,

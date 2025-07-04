@@ -15,11 +15,11 @@
 //! - **Multi-Modal Transfer**: Transfer between different types of image data
 //! - **Quantum-Enhanced Meta-Learning**: Leverage quantum algorithms for meta-learning
 
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::Array2;
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 
-use crate::error::{NdimageError, NdimageResult};
+use crate::error::NdimageResult;
 
 /// Enhanced Meta-Learning Configuration
 #[derive(Debug, Clone)]
@@ -422,6 +422,7 @@ pub enum ErrorMitigationStrategy {
 ///
 /// This function implements the complete enhanced meta-learning system
 /// for advanced image processing with few-shot and transfer learning capabilities.
+#[allow(dead_code)]
 pub fn enhanced_meta_learning_processing<T>(
     task_data: &[TaskData<T>],
     config: &UltrathinkMetaLearningConfig,

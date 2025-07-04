@@ -45,6 +45,7 @@ use std::cmp::Ordering;
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let equal_variances = p_value >= 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn levene<F>(
     samples: &[ArrayView1<F>],
     center: &str,
@@ -163,6 +164,7 @@ where
 }
 
 // Helper function to calculate the mean
+#[allow(dead_code)]
 fn calculate_mean<F>(data: &[F]) -> F
 where
     F: Float + std::iter::Sum<F>,
@@ -172,6 +174,7 @@ where
 }
 
 // Helper function to calculate the median
+#[allow(dead_code)]
 fn calculate_median<F>(data: &[F]) -> F
 where
     F: Float + Copy,
@@ -190,6 +193,7 @@ where
 }
 
 // Helper function to trim from both ends of a sorted array
+#[allow(dead_code)]
 fn trim_both<F>(sorted_data: &[F], proportion: F) -> Vec<F>
 where
     F: Float + Copy,
@@ -210,6 +214,7 @@ where
 }
 
 // Helper function: F-distribution survival function (1 - CDF)
+#[allow(dead_code)]
 fn f_distribution_sf<F: Float + NumCast>(f: F, df1: F, df2: F) -> F {
     let f_f64 = <f64 as NumCast>::from(f).unwrap();
     let df1_f64 = <f64 as NumCast>::from(df1).unwrap();
@@ -226,6 +231,7 @@ fn f_distribution_sf<F: Float + NumCast>(f: F, df1: F, df2: F) -> F {
 }
 
 // Regularized incomplete beta function (approximation)
+#[allow(dead_code)]
 fn beta_cdf(x: f64, a: f64, b: f64) -> f64 {
     if x <= 0.0 {
         return 0.0;
@@ -252,6 +258,7 @@ fn beta_cdf(x: f64, a: f64, b: f64) -> f64 {
 }
 
 // Continued fraction expansion for the incomplete beta function
+#[allow(dead_code)]
 fn beta_continued_fraction(x: f64, a: f64, b: f64, max_iter: usize, eps: f64) -> f64 {
     let qab = a + b;
     let qap = a + 1.0;
@@ -304,12 +311,14 @@ fn beta_continued_fraction(x: f64, a: f64, b: f64, max_iter: usize, eps: f64) ->
 }
 
 // Beta function
+#[allow(dead_code)]
 fn beta_function(a: f64, b: f64) -> f64 {
     // Use the relationship with the gamma function: B(a,b) = Γ(a)Γ(b)/Γ(a+b)
     gamma_function(a) * gamma_function(b) / gamma_function(a + b)
 }
 
 // Gamma function approximation
+#[allow(dead_code)]
 fn gamma_function(x: f64) -> f64 {
     if x <= 0.0 {
         panic!("Gamma function not defined for non-positive values");
@@ -378,6 +387,7 @@ fn gamma_function(x: f64) -> f64 {
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let equal_variances = p_value >= 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn bartlett<F>(samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Debug,
@@ -462,6 +472,7 @@ where
 }
 
 // Helper function: Chi-square survival function (1 - CDF)
+#[allow(dead_code)]
 fn chi_square_sf<F: Float + NumCast>(x: F, df: F) -> F {
     let x_f64 = <f64 as NumCast>::from(x).unwrap();
     let df_f64 = <f64 as NumCast>::from(df).unwrap();
@@ -478,6 +489,7 @@ fn chi_square_sf<F: Float + NumCast>(x: F, df: F) -> F {
 }
 
 // Chi-square cumulative distribution function approximation
+#[allow(dead_code)]
 fn chi_square_cdf(x: f64, df: f64) -> f64 {
     if x <= 0.0 {
         return 0.0;
@@ -492,6 +504,7 @@ fn chi_square_cdf(x: f64, df: f64) -> f64 {
 }
 
 // Regularized lower incomplete gamma function P(a,x) = gamma(a,x)/Gamma(a)
+#[allow(dead_code)]
 fn gamma_p(a: f64, x: f64) -> f64 {
     if x <= 0.0 {
         return 0.0;
@@ -523,6 +536,7 @@ fn gamma_p(a: f64, x: f64) -> f64 {
 }
 
 // Series expansion for the lower incomplete gamma function
+#[allow(dead_code)]
 fn gamma_series(a: f64, x: f64) -> f64 {
     if x <= 0.0 {
         return 0.0;
@@ -546,6 +560,7 @@ fn gamma_series(a: f64, x: f64) -> f64 {
 }
 
 // Continued fraction for the upper incomplete gamma function
+#[allow(dead_code)]
 fn gamma_continued_fraction(a: f64, x: f64) -> f64 {
     if x <= 0.0 {
         return gamma_function(a);
@@ -611,6 +626,7 @@ fn gamma_continued_fraction(a: f64, x: f64) -> f64 {
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let equal_variances = p_value >= 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn brown_forsythe<F>(samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Debug,

@@ -38,6 +38,7 @@ use std::f64::consts::PI;
 /// // Design a highpass filter
 /// let h = firwin(65, 0.3, "hamming", false).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn firwin<T>(numtaps: usize, cutoff: T, window: &str, pass_zero: bool) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -139,6 +140,7 @@ where
 /// let desired = vec![1.0, 1.0, 0.0, 0.0];
 /// let h = remez(65, &bands, &desired, None, None, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn remez(
     numtaps: usize,
     bands: &[f64],
@@ -356,6 +358,7 @@ pub fn remez(
 /// # Returns
 ///
 /// * Window coefficients as a vector
+#[allow(dead_code)]
 fn generate_window(length: usize, window_type: &str) -> SignalResult<Vec<f64>> {
     let mut window = vec![0.0; length];
 
@@ -399,6 +402,7 @@ fn generate_window(length: usize, window_type: &str) -> SignalResult<Vec<f64>> {
 /// Solve a linear system Ax = b using Gaussian elimination
 ///
 /// Internal helper function for the Remez exchange algorithm.
+#[allow(dead_code)]
 fn solve_linear_system(a: &[Vec<f64>], b: &[f64]) -> SignalResult<Vec<f64>> {
     let n = a.len();
     if n == 0 || a[0].len() != n || b.len() != n {

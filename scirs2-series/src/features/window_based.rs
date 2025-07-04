@@ -375,6 +375,7 @@ where
 /// # Returns
 ///
 /// WindowBasedFeatures containing comprehensive windowed analysis
+#[allow(dead_code)]
 pub fn calculate_window_based_features<F>(
     ts: &Array1<F>,
     config: &WindowConfig,
@@ -440,6 +441,7 @@ where
 // =============================================================================
 
 /// Calculate features for a specific window size
+#[allow(dead_code)]
 fn calculate_window_features<F>(ts: &Array1<F>, window_size: usize) -> Result<WindowFeatures<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -546,6 +548,7 @@ where
 }
 
 /// Calculate summary statistics for window features
+#[allow(dead_code)]
 fn calculate_window_summary_stats<F>(
     rolling_means: &[F],
     rolling_stds: &[F],
@@ -627,6 +630,7 @@ where
 // =============================================================================
 
 /// Calculate multi-scale variance features
+#[allow(dead_code)]
 fn calculate_multi_scale_variance<F>(ts: &Array1<F>, window_sizes: &[usize]) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -659,6 +663,7 @@ where
 }
 
 /// Calculate multi-scale trend features
+#[allow(dead_code)]
 fn calculate_multi_scale_trends<F>(ts: &Array1<F>, window_sizes: &[usize]) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -695,6 +700,7 @@ where
 // =============================================================================
 
 /// Calculate cross-window correlations
+#[allow(dead_code)]
 fn calculate_cross_window_correlations<F>(
     small: &WindowFeatures<F>,
     medium: &WindowFeatures<F>,
@@ -765,6 +771,7 @@ where
 // =============================================================================
 
 /// Calculate change detection features
+#[allow(dead_code)]
 fn calculate_change_detection_features<F>(
     ts: &Array1<F>,
     window_features: &WindowFeatures<F>,
@@ -855,6 +862,7 @@ where
 // =============================================================================
 
 /// Calculate rolling statistics including technical indicators
+#[allow(dead_code)]
 fn calculate_rolling_statistics<F>(
     ts: &Array1<F>,
     config: &WindowConfig,
@@ -891,6 +899,7 @@ where
 }
 
 /// Calculate Exponentially Weighted Moving Average
+#[allow(dead_code)]
 fn calculate_ewma<F>(ts: &Array1<F>, alpha: f64) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Clone,
@@ -914,6 +923,7 @@ where
 }
 
 /// Calculate Exponentially Weighted Moving Variance
+#[allow(dead_code)]
 fn calculate_ewmv<F>(ts: &Array1<F>, ewma: &[F], alpha: f64) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Clone,
@@ -938,6 +948,7 @@ where
 }
 
 /// Calculate Bollinger Bands
+#[allow(dead_code)]
 fn calculate_bollinger_bands<F>(
     ts: &Array1<F>,
     config: &WindowConfig,
@@ -1018,6 +1029,7 @@ where
 }
 
 /// Calculate MACD features
+#[allow(dead_code)]
 fn calculate_macd_features<F>(ts: &Array1<F>, config: &WindowConfig) -> Result<MACDFeatures<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -1086,6 +1098,7 @@ where
 }
 
 /// Calculate Relative Strength Index (RSI)
+#[allow(dead_code)]
 fn calculate_rsi<F>(ts: &Array1<F>, period: usize) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -1137,6 +1150,7 @@ where
 }
 
 /// Calculate normalized features
+#[allow(dead_code)]
 fn calculate_normalized_features<F>(
     ts: &Array1<F>,
     config: &WindowConfig,

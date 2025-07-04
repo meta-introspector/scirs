@@ -6,21 +6,12 @@
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, Zero};
-use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::BorderMode;
+use crate::utils::safe_f64_to_float;
 
-/// Helper function for safe conversion of hardcoded wavelet coefficients
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert wavelet coefficient {} to float type",
-            value
-        ))
-    })
-}
 
 /// Wavelet family enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -650,6 +641,7 @@ where
 }
 
 /// 1D Discrete Wavelet Transform
+#[allow(dead_code)]
 pub fn dwt_1d<T>(
     signal: &ArrayView1<T>,
     wavelet: &WaveletFilter<T>,
@@ -676,6 +668,7 @@ where
 }
 
 /// 1D Inverse Discrete Wavelet Transform
+#[allow(dead_code)]
 pub fn idwt_1d<T>(
     low: &ArrayView1<T>,
     high: &ArrayView1<T>,
@@ -704,6 +697,7 @@ where
 }
 
 /// 2D Discrete Wavelet Transform
+#[allow(dead_code)]
 pub fn dwt_2d<T>(
     image: &ArrayView2<T>,
     wavelet: &WaveletFilter<T>,
@@ -772,6 +766,7 @@ where
 }
 
 /// 2D Inverse Discrete Wavelet Transform
+#[allow(dead_code)]
 pub fn idwt_2d<T>(
     ll: &ArrayView2<T>,
     lh: &ArrayView2<T>,
@@ -832,6 +827,7 @@ where
 }
 
 /// Soft thresholding function
+#[allow(dead_code)]
 fn soft_threshold<T>(coeffs: &ArrayView2<T>, threshold: T) -> Array2<T>
 where
     T: Float + FromPrimitive,
@@ -848,6 +844,7 @@ where
 }
 
 /// Pad 1D signal for convolution
+#[allow(dead_code)]
 fn pad_signal_1d<T>(
     signal: &ArrayView1<T>,
     filter: &[T],
@@ -956,6 +953,7 @@ where
 }
 
 /// 1D convolution with downsampling
+#[allow(dead_code)]
 fn convolve_downsample_1d<T>(
     signal: &ArrayView1<T>,
     filter: &[T],
@@ -991,6 +989,7 @@ where
 }
 
 /// 1D upsampling with convolution
+#[allow(dead_code)]
 fn upsample_convolve_1d<T>(
     signal: &ArrayView1<T>,
     filter: &[T],
@@ -1161,6 +1160,7 @@ mod tests {
 ///
 /// Performs a multi-level discrete wavelet transform, producing a pyramid
 /// of coefficients at different scales and orientations.
+#[allow(dead_code)]
 pub fn wavelet_decompose<T>(
     image: &ArrayView2<T>,
     wavelet: &WaveletFilter<T>,
@@ -1173,7 +1173,7 @@ where
     let mut decomposition = WaveletDecomposition::new();
     let mut current = image.to_owned();
 
-    for level in 0..levels {
+    for _level in 0..levels {
         let (height, width) = current.dim();
 
         // Check minimum size constraint
@@ -1204,6 +1204,7 @@ where
 /// Multi-level wavelet reconstruction
 ///
 /// Reconstructs an image from its multi-level wavelet decomposition.
+#[allow(dead_code)]
 pub fn wavelet_reconstruct<T>(
     decomposition: &WaveletDecomposition<T>,
     wavelet: &WaveletFilter<T>,
@@ -1241,6 +1242,7 @@ where
 /// 1. Multi-level wavelet decomposition
 /// 2. Soft thresholding of detail coefficients
 /// 3. Wavelet reconstruction
+#[allow(dead_code)]
 pub fn wavelet_denoise<T>(
     image: &ArrayView2<T>,
     wavelet: &WaveletFilter<T>,
@@ -1299,6 +1301,7 @@ pub struct WaveletLevel<T> {
 }
 
 /// Apply soft thresholding to an array in-place
+#[allow(dead_code)]
 fn soft_threshold_inplace<T>(array: &mut Array2<T>, threshold: T)
 where
     T: Float + FromPrimitive + PartialOrd,
@@ -1323,6 +1326,7 @@ where
 /// Unlike the standard DWT, the stationary WT doesn't downsample,
 /// preserving translation invariance and producing redundant representations
 /// that are often better for denoising and feature detection.
+#[allow(dead_code)]
 pub fn stationary_wavelet_transform<T>(
     image: &ArrayView2<T>,
     wavelet: &WaveletFilter<T>,
@@ -1388,6 +1392,7 @@ pub struct StationaryWaveletLevel<T> {
 }
 
 /// Upsample a filter by inserting zeros
+#[allow(dead_code)]
 fn upsample_filter<T>(filter: &[T], factor: usize) -> Vec<T>
 where
     T: Float + FromPrimitive + Clone,
@@ -1405,6 +1410,7 @@ where
 }
 
 /// Stationary 2D DWT without downsampling
+#[allow(dead_code)]
 fn stationary_dwt_2d<T>(
     image: &ArrayView2<T>,
     low_filter: &[T],
@@ -1466,6 +1472,7 @@ where
 }
 
 /// Simple 1D convolution
+#[allow(dead_code)]
 fn convolve_1d<T>(signal: &ArrayView1<T>, filter: &[T]) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + Clone,

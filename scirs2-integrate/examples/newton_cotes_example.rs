@@ -1,6 +1,7 @@
 use scirs2_integrate::newton_cotes::{newton_cotes, newton_cotes_integrate, NewtonCotesType};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("Newton-Cotes Quadrature Examples");
     println!("================================\n");

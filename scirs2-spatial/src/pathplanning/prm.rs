@@ -745,6 +745,7 @@ impl PRM2DPlanner {
 }
 
 /// Check if a point is inside a polygon using the ray casting algorithm
+#[allow(dead_code)]
 fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
     let (x, y) = (point[0], point[1]);
     let mut inside = false;

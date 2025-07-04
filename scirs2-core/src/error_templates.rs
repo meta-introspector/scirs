@@ -6,36 +6,43 @@
 use std::fmt::Display;
 
 /// Generate an error message for dimension mismatch
+#[allow(dead_code)]
 pub fn dimension_mismatch(operation: &str, expected: impl Display, actual: impl Display) -> String {
     format!("{operation}: dimension mismatch (expected: {expected}, actual: {actual})")
 }
 
 /// Generate an error message for shape mismatch in array operations
+#[allow(dead_code)]
 pub fn shape_mismatch(operation: &str, shape1: &[usize], shape2: &[usize]) -> String {
     format!("{operation}: incompatible shapes ({shape1:?} vs {shape2:?})")
 }
 
 /// Generate an error message for invalid parameter values
+#[allow(dead_code)]
 pub fn invalid_parameter(param_name: &str, constraint: &str, actual_value: impl Display) -> String {
     format!("Parameter '{param_name}': {constraint} (got: {actual_value})")
 }
 
 /// Generate an error message for out of bounds access
+#[allow(dead_code)]
 pub fn index_out_of_bounds(index: usize, length: usize) -> String {
     format!("Index out of bounds: index {index} is invalid for length {length}")
 }
 
 /// Generate an error message for empty input
+#[allow(dead_code)]
 pub fn empty_input(operation: &str) -> String {
     format!("{operation}: input array/collection is empty")
 }
 
 /// Generate an error message for numerical computation errors
+#[allow(dead_code)]
 pub fn numerical_error(operation: &str, issue: &str) -> String {
     format!("{operation}: {issue} - check input values for numerical issues")
 }
 
 /// Generate an error message for convergence failures
+#[allow(dead_code)]
 pub fn convergence_failed(algorithm: &str, iterations: usize, tolerance: impl Display) -> String {
     format!(
         "{algorithm}: failed to converge after {iterations} iterations (tolerance: {tolerance})"
@@ -43,41 +50,49 @@ pub fn convergence_failed(algorithm: &str, iterations: usize, tolerance: impl Di
 }
 
 /// Generate an error message for not implemented features
+#[allow(dead_code)]
 pub fn not_implemented(feature: &str) -> String {
     format!("Feature not implemented: {feature}")
 }
 
 /// Generate an error message for invalid array dimensions
+#[allow(dead_code)]
 pub fn invalid_dimensions(operation: &str, requirement: &str, actual_dims: &[usize]) -> String {
     format!("{operation}: {requirement} (got: {actual_dims:?})")
 }
 
 /// Generate an error message for domain errors
+#[allow(dead_code)]
 pub fn domain_error(value_desc: &str, constraint: &str, value: impl Display) -> String {
     format!("{value_desc} must be {constraint} (got: {value})")
 }
 
 /// Generate an error message for allocation failures
+#[allow(dead_code)]
 pub fn allocation_failed(size: usize, element_type: &str) -> String {
     format!("Failed to allocate memory for {size} elements of type {element_type}")
 }
 
 /// Generate an error message for file I/O errors
+#[allow(dead_code)]
 pub fn io_error(operation: &str, path: &str, details: &str) -> String {
     format!("{operation} failed for '{path}': {details}")
 }
 
 /// Generate an error message for parse errors
+#[allow(dead_code)]
 pub fn parse_error(type_name: &str, input: &str, reason: &str) -> String {
     format!("Failed to parse '{input}' as {type_name}: {reason}")
 }
 
 /// Generate an error message for invalid state
+#[allow(dead_code)]
 pub fn invalid_state(object: &str, expected_state: &str, actual_state: &str) -> String {
     format!("{object} is in invalid state: expected {expected_state}, but was {actual_state}")
 }
 
 /// Generate an error message with recovery suggestion
+#[allow(dead_code)]
 pub fn with_suggestion(error_msg: &str, suggestion: &str) -> String {
     format!("{error_msg}\nSuggestion: {suggestion}")
 }

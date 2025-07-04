@@ -19,6 +19,7 @@ use scirs2_integrate::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Comparing DAE solver methods for a pendulum system");
 
@@ -370,6 +371,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Calculate the analytical solution for the pendulum
+#[allow(dead_code)]
 fn compute_analytical_solution(g: f64, length: f64, theta0: f64, times: &[f64]) -> Vec<(f64, f64)> {
     // For small oscillations, the solution is approximately:
     // theta(t) = theta0 * cos(omega * t)
@@ -389,6 +391,7 @@ fn compute_analytical_solution(g: f64, length: f64, theta0: f64, times: &[f64]) 
 }
 
 /// Compute error metrics for a DAE solution
+#[allow(dead_code)]
 fn compute_error_metrics<F>(
     result: &scirs2_integrate::DAEResult<f64>,
     g: f64,

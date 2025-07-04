@@ -15,6 +15,7 @@ use scirs2_metrics::{
 
 /// Test numerical precision with known reference values
 #[test]
+#[allow(dead_code)]
 fn test_mse_precision() {
     // Test case with known exact MSE
     let y_true = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -29,6 +30,7 @@ fn test_mse_precision() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_mae_precision() {
     // Test case with known exact MAE
     let y_true = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -43,6 +45,7 @@ fn test_mae_precision() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_r2_precision() {
     // Test case with known exact R²
     let y_true = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -63,6 +66,7 @@ fn test_r2_precision() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_accuracy_precision() {
     // Test with exact fractions
     let y_true = array![1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0];
@@ -74,6 +78,7 @@ fn test_accuracy_precision() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_precision_recall_f1_exact() {
     // Test case designed for exact arithmetic
     let y_true = array![1.0, 1.0, 0.0, 0.0, 1.0, 0.0];
@@ -94,6 +99,7 @@ fn test_precision_recall_f1_exact() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_stable_statistical_functions() {
     // Test stable mean computation
     let stable_metrics = StableMetrics::<f64>::new();
@@ -115,6 +121,7 @@ fn test_stable_statistical_functions() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_stable_metrics() {
     let stable_metrics = StableMetrics::<f64>::new();
 
@@ -132,6 +139,7 @@ fn test_stable_metrics() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_variance_precision() {
     let stable_metrics = StableMetrics::<f64>::new();
 
@@ -147,6 +155,7 @@ fn test_variance_precision() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_classification_edge_precision() {
     // Test with perfect predictions - should give exact 1.0
     let y_true = array![1.0, 0.0, 1.0, 0.0];
@@ -166,6 +175,7 @@ fn test_classification_edge_precision() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_wasserstein_distance_precision() {
     // Simple 1D case with known result
     let dist1 = array![0.0, 1.0, 2.0];
@@ -187,6 +197,7 @@ fn test_wasserstein_distance_precision() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_clustering_metrics_precision() {
     // Create a simple 2D dataset with known clustering structure
     let data = Array2::from_shape_vec(
@@ -216,6 +227,7 @@ fn test_clustering_metrics_precision() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_floating_point_edge_cases() {
     // Test with very close but not equal values
     let y_true = array![1.0, 2.0, 3.0];
@@ -241,6 +253,7 @@ fn test_floating_point_edge_cases() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_cancellation_errors() {
     // Test subtraction of nearly equal large numbers
     let large_base = 1e15;

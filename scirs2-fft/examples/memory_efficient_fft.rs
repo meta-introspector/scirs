@@ -12,6 +12,7 @@ use scirs2_fft::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Memory-Efficient FFT Examples ===\n");
 
@@ -31,6 +32,7 @@ fn main() {
 }
 
 /// Basic in-place FFT example
+#[allow(dead_code)]
 fn basic_inplace_example() {
     println!("\n--- Basic In-Place FFT ---");
 
@@ -102,6 +104,7 @@ fn basic_inplace_example() {
 }
 
 /// Processing large arrays in chunks
+#[allow(dead_code)]
 fn large_array_processing() {
     println!("\n--- Processing Large Arrays in Chunks ---");
 
@@ -178,6 +181,7 @@ fn large_array_processing() {
 }
 
 /// Memory-efficient 2D FFT example
+#[allow(dead_code)]
 fn memory_efficient_2d_fft() {
     println!("\n--- Memory-Efficient 2D FFT ---");
 
@@ -269,6 +273,7 @@ fn memory_efficient_2d_fft() {
 }
 
 /// Performance comparison for different FFT methods
+#[allow(dead_code)]
 fn performance_comparison() {
     println!("\n--- Performance Comparison ---");
 

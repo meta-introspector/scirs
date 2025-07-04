@@ -270,6 +270,7 @@ impl Default for SparseTfidfVectorizer {
 }
 
 /// Compute cosine similarity between sparse vectors
+#[allow(dead_code)]
 pub fn sparse_cosine_similarity(v1: &SparseVector, v2: &SparseVector) -> Result<f64> {
     if v1.size() != v2.size() {
         return Err(TextError::InvalidInput(format!(

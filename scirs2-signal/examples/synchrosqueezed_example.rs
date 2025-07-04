@@ -7,6 +7,7 @@ use std::io::Write;
 use scirs2_signal::sswt::{self, SynchroCwtConfig, SynchroCwtResult};
 use scirs2_signal::wavelets;
 
+#[allow(dead_code)]
 fn main() {
     println!("Synchrosqueezed Wavelet Transform Example");
     println!("----------------------------------------");
@@ -30,6 +31,7 @@ fn main() {
 }
 
 /// Generate a test signal with multiple chirp components
+#[allow(dead_code)]
 fn generate_test_signal() -> Array1<f64> {
     let n_samples = 1000;
     let duration = 10.0;
@@ -77,6 +79,7 @@ fn generate_test_signal() -> Array1<f64> {
 }
 
 /// Analyze the signal using both CWT and Synchrosqueezed Transform
+#[allow(dead_code)]
 fn analyze_signal(signal: &Array1<f64>) -> (Array2<f64>, SynchroCwtResult) {
     // Create logarithmically spaced scales for CWT
     let scales = sswt::log_scales(1.0, 24.0, 48);
@@ -129,6 +132,7 @@ fn analyze_signal(signal: &Array1<f64>) -> (Array2<f64>, SynchroCwtResult) {
 }
 
 /// Extract and analyze time-frequency ridges from the synchrosqueezed transform
+#[allow(dead_code)]
 fn extract_and_analyze_ridges(sst_result: &SynchroCwtResult) -> Vec<Vec<(usize, f64)>> {
     // Extract the top 3 ridges (we have 3 components in our signal)
     let ridges = sswt::extract_ridges(&sst_result.sst, &sst_result.frequencies, 3);
@@ -181,6 +185,7 @@ fn extract_and_analyze_ridges(sst_result: &SynchroCwtResult) -> Vec<Vec<(usize, 
 }
 
 /// Save the results to CSV files for external plotting
+#[allow(dead_code)]
 fn save_results_to_csv(
     signal: &Array1<f64>,
     cwt_power: &Array2<f64>,

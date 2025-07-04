@@ -3,6 +3,7 @@ use ag::tensor_ops as T;
 use scirs2_autograd as ag;
 
 #[test]
+#[allow(dead_code)]
 fn test_minimal_matmul() {
     ag::run::<f32, _, _>(|ctx| {
         // Create two simple test matrices

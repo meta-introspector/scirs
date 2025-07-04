@@ -53,6 +53,7 @@ use std::f64::consts::PI;
 /// // Using string parameter
 /// let (b, a) = butter(4, 0.2, "lowpass").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn butter<T>(
     order: usize,
     cutoff: T,
@@ -143,6 +144,7 @@ where
 /// // Design a 4th order bandpass Butterworth filter from 0.1 to 0.4 times Nyquist
 /// let (b, a) = butter_bandpass_bandstop(4, 0.1, 0.4, FilterType::Bandpass).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn butter_bandpass_bandstop(
     order: usize,
     low_freq: f64,
@@ -261,6 +263,7 @@ pub fn butter_bandpass_bandstop(
 /// // Design a 4th order Chebyshev I lowpass filter with 0.5 dB ripple
 /// let (b, a) = cheby1(4, 0.5, 0.3, "lowpass").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn cheby1<T>(
     order: usize,
     ripple: f64,
@@ -358,6 +361,7 @@ where
 /// // Design a 2nd order Chebyshev I bandpass filter (4 poles total)
 /// let (b, a) = cheby1_bandpass_bandstop(2, 0.5, 0.2, 0.6, FilterType::Bandpass).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn cheby1_bandpass_bandstop<T, U>(
     order: usize,
     ripple: f64,
@@ -499,6 +503,7 @@ where
 /// assert_eq!(b.len(), 5); // Order + 1 coefficients
 /// assert_eq!(a.len(), 5);
 /// ```
+#[allow(dead_code)]
 pub fn cheby2<T>(
     order: usize,
     attenuation: f64,
@@ -623,6 +628,7 @@ where
 /// assert_eq!(b.len(), 5); // Order + 1 coefficients
 /// assert_eq!(a.len(), 5);
 /// ```
+#[allow(dead_code)]
 pub fn ellip<T>(
     order: usize,
     passband_ripple: f64,
@@ -764,6 +770,7 @@ where
 /// assert_eq!(b.len(), 5); // Order + 1 coefficients
 /// assert_eq!(a.len(), 5);
 /// ```
+#[allow(dead_code)]
 pub fn bessel<T>(
     order: usize,
     cutoff: T,
@@ -905,6 +912,7 @@ where
 /// # Returns
 ///
 /// * Tuple of (numerator_coeffs, denominator_coeffs)
+#[allow(dead_code)]
 fn zpk_to_tf(
     zeros: &[Complex64],
     poles: &[Complex64],

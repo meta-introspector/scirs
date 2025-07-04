@@ -1,5 +1,6 @@
 use scirs2_signal::window::{bartlett, hamming, hann};
 
+#[allow(dead_code)]
 fn main() {
     let n = 10;
 
@@ -21,6 +22,7 @@ fn main() {
     print_window_analysis(&bartlett_win, "Bartlett");
 }
 
+#[allow(dead_code)]
 fn print_window_analysis(window: &[f64], name: &str) {
     // Print all values
     println!("Values:");

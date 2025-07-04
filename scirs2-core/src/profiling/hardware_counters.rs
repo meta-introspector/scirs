@@ -908,6 +908,7 @@ static GLOBAL_MANAGER: std::sync::OnceLock<Arc<Mutex<HardwareCounterManager>>> =
     std::sync::OnceLock::new();
 
 /// Get the global hardware counter manager
+#[allow(dead_code)]
 pub fn global_manager() -> Arc<Mutex<HardwareCounterManager>> {
     GLOBAL_MANAGER
         .get_or_init(|| Arc::new(Mutex::new(HardwareCounterManager::default())))

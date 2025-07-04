@@ -10,6 +10,7 @@ use scirs2_series::cloud_deployment::{
 use std::collections::HashMap;
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SciRS2 Cloud Deployment Demo");
     println!("================================");
@@ -31,6 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate development environment deployment
+#[allow(dead_code)]
 fn demo_development_deployment() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧪 Demo 1: Development Environment Deployment");
     println!("=" * 50);
@@ -63,6 +65,7 @@ fn demo_development_deployment() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate production environment deployment
+#[allow(dead_code)]
 fn demo_production_deployment() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🏭 Demo 2: Production Environment Deployment");
     println!("=" * 50);
@@ -109,6 +112,7 @@ fn demo_production_deployment() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate multi-cloud deployment
+#[allow(dead_code)]
 fn demo_multi_cloud_deployment() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n☁️ Demo 3: Multi-Cloud Deployment");
     println!("=" * 50);
@@ -144,6 +148,7 @@ fn demo_multi_cloud_deployment() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate auto-scaling behavior
+#[allow(dead_code)]
 fn demo_auto_scaling() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Demo 4: Auto-Scaling Demonstration");
     println!("=" * 50);
@@ -179,6 +184,7 @@ fn demo_auto_scaling() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Submit sample time series analysis jobs
+#[allow(dead_code)]
 fn submit_sample_jobs(
     orchestrator: &mut CloudDeploymentOrchestrator,
     count: usize,
@@ -257,6 +263,7 @@ fn submit_sample_jobs(
 }
 
 /// Print deployment metrics and status
+#[allow(dead_code)]
 fn print_deployment_metrics(orchestrator: &CloudDeploymentOrchestrator) {
     println!("\n📊 Deployment Metrics:");
     println!("   Status: {:?}", orchestrator.get_status());

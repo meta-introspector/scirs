@@ -3,6 +3,7 @@ use scirs2_neural::error::Result;
 use scirs2_neural::layers::Layer;
 use scirs2_neural::models::architectures::{MobileNet, MobileNetConfig};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("MobileNet Example");
     println!("----------------");

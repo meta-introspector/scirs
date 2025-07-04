@@ -405,6 +405,7 @@ impl MOLParabolicSolver2D {
 
 // Helper function to apply boundary conditions in 2D
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn apply_boundary_condition_2d(
     dudt: &mut Array2<f64>,
     u: &ArrayView2<f64>,
@@ -865,6 +866,7 @@ fn apply_boundary_condition_2d(
 }
 
 // Helper function to apply Dirichlet boundary conditions to initial condition
+#[allow(dead_code)]
 fn apply_dirichlet_conditions_to_initial(
     u0: &mut Array2<f64>,
     boundary_conditions: &[BoundaryCondition<f64>],

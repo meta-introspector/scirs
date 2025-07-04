@@ -8,6 +8,7 @@ use scirs2_cluster::ultrathink_visualization::{
     VisualizationExportFormat,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Testing Enhanced Ultrathink Clustering");
     println!("==========================================");
@@ -51,6 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_complex_test_data() -> Array2<f64> {
     // Create a multi-cluster dataset with varying densities and shapes
     let mut data_vec = Vec::new();
@@ -91,6 +93,7 @@ fn create_complex_test_data() -> Array2<f64> {
     Array2::from_shape_vec((45, 3), data_vec).expect("Failed to create test data")
 }
 
+#[allow(dead_code)]
 fn test_enhanced_ai_selection(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     let mut clusterer = UltrathinkClusterer::new().with_ai_algorithm_selection(true);
 
@@ -122,6 +125,7 @@ fn test_enhanced_ai_selection(data: &Array2<f64>) -> Result<(), Box<dyn std::err
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_quantum_neuromorphic_enhanced(
     data: &Array2<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -170,6 +174,7 @@ fn test_quantum_neuromorphic_enhanced(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_enhanced_meta_learning(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     let mut clusterer = UltrathinkClusterer::new()
         .with_meta_learning(true)
@@ -206,6 +211,7 @@ fn test_enhanced_meta_learning(data: &Array2<f64>) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_enhanced_visualization(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     // First run clustering
     let mut clusterer = UltrathinkClusterer::new()
@@ -271,6 +277,7 @@ fn test_enhanced_visualization(data: &Array2<f64>) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_full_enhanced_ultrathink(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     let mut clusterer = UltrathinkClusterer::new()
         .with_ai_algorithm_selection(true)

@@ -63,6 +63,7 @@ static GLOBAL_WORKERS: Mutex<Option<usize>> = Mutex::new(None);
 /// // Reset to system default
 /// set_global_workers(None);
 /// ```
+#[allow(dead_code)]
 pub fn set_global_workers(workers: Option<usize>) {
     if let Ok(mut global) = GLOBAL_WORKERS.lock() {
         *global = workers;
@@ -82,6 +83,7 @@ pub fn set_global_workers(workers: Option<usize>) {
 /// # Returns
 ///
 /// * Current global worker count (None = system default)
+#[allow(dead_code)]
 pub fn get_global_workers() -> Option<usize> {
     GLOBAL_WORKERS.lock().ok().and_then(|global| *global)
 }
@@ -98,6 +100,7 @@ pub fn get_global_workers() -> Option<usize> {
 /// # Returns
 ///
 /// * Effective worker count to use
+#[allow(dead_code)]
 pub fn configure_workers(workers: Option<usize>) -> Option<usize> {
     match workers {
         Some(count) => {

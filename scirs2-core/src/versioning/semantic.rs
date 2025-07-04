@@ -263,6 +263,7 @@ impl Ord for Version {
 }
 
 /// Compare pre-release versions according to `SemVer` rules
+#[allow(dead_code)]
 fn compare_pre_release(a: &str, b: &str) -> Ordering {
     let a_parts: Vec<&str> = a.split('.').collect();
     let b_parts: Vec<&str> = b.split('.').collect();

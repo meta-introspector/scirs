@@ -1053,6 +1053,7 @@ impl HDF5File {
 /// println!("Groups: {:?}", root_group.groups.keys().collect::<Vec<_>>());
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn read_hdf5<P: AsRef<Path>>(path: P) -> Result<Group> {
     let file = HDF5File::open(path, FileMode::ReadOnly)?;
     Ok(file.root)
@@ -1077,6 +1078,7 @@ pub fn read_hdf5<P: AsRef<Path>>(path: P) -> Result<Group> {
 /// write_hdf5("output.h5", datasets)?;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn write_hdf5<P: AsRef<Path>>(path: P, datasets: HashMap<String, ArrayD<f64>>) -> Result<()> {
     let mut file = HDF5File::create(path)?;
 
@@ -1116,6 +1118,7 @@ pub fn write_hdf5<P: AsRef<Path>>(path: P, datasets: HashMap<String, ArrayD<f64>
 /// })?;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn create_hdf5_with_structure<P, F>(path: P, builder: F) -> Result<()>
 where
     P: AsRef<Path>,

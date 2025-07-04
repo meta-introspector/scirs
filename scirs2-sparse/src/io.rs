@@ -46,6 +46,7 @@ const DOK_FORMAT: &str = "dok_array";
 /// let array = eye_array::<f64>(10, "csr").unwrap();
 /// save_npz(&*array, "identity.npz").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn save_npz<T, P>(array: &dyn SparseArray<T>, path: P) -> SparseResult<()>
 where
     T: Float
@@ -185,6 +186,7 @@ where
 /// let array = load_npz::<f64, _>("identity.npz").unwrap();
 /// assert_eq!(array.shape(), (10, 10));
 /// ```
+#[allow(dead_code)]
 pub fn load_npz<T, P>(path: P) -> SparseResult<Box<dyn SparseArray<T>>>
 where
     T: Float
@@ -254,6 +256,7 @@ where
 
 // Utility functions for reading/writing primitive types
 
+#[allow(dead_code)]
 fn write_string<W: Write>(writer: &mut W, s: &str) -> std::io::Result<()> {
     let bytes = s.as_bytes();
     let len = bytes.len() as u64;
@@ -262,6 +265,7 @@ fn write_string<W: Write>(writer: &mut W, s: &str) -> std::io::Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn read_string<R: Read>(reader: &mut R) -> std::io::Result<String> {
     let mut len_bytes = [0u8; 8];
     reader.read_exact(&mut len_bytes)?;
@@ -273,16 +277,19 @@ fn read_string<R: Read>(reader: &mut R) -> std::io::Result<String> {
     String::from_utf8(bytes).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
 }
 
+#[allow(dead_code)]
 fn write_usize<W: Write>(writer: &mut W, n: usize) -> std::io::Result<()> {
     writer.write_all(&(n as u64).to_le_bytes())
 }
 
+#[allow(dead_code)]
 fn read_usize<R: Read>(reader: &mut R) -> std::io::Result<usize> {
     let mut bytes = [0u8; 8];
     reader.read_exact(&mut bytes)?;
     Ok(u64::from_le_bytes(bytes) as usize)
 }
 
+#[allow(dead_code)]
 fn write_array<W: Write, T: Copy>(writer: &mut W, array: &Array1<T>) -> std::io::Result<()> {
     let len = array.len() as u64;
     writer.write_all(&len.to_le_bytes())?;
@@ -295,6 +302,7 @@ fn write_array<W: Write, T: Copy>(writer: &mut W, array: &Array1<T>) -> std::io:
     Ok(())
 }
 
+#[allow(dead_code)]
 fn read_array<R: Read, T: Copy>(reader: &mut R) -> std::io::Result<Array1<T>> {
     let mut len_bytes = [0u8; 8];
     reader.read_exact(&mut len_bytes)?;
@@ -337,7 +345,7 @@ where
 // Implement From<std::io::Error> for SparseError
 impl From<std::io::Error> for SparseError {
     fn from(error: std::io::Error) -> Self {
-        SparseError::ComputationError(format!("IO error: {}", error))
+        SparseError::ComputationError(format!("IO error: {error}"))
     }
 }
 

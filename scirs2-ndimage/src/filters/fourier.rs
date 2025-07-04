@@ -36,6 +36,7 @@ impl From<FFTError> for NdimageError {
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn fourier_gaussian<T, D>(
     input: &Array<T, D>,
     sigma: &[T],
@@ -100,6 +101,7 @@ where
 }
 
 /// Apply 1D Gaussian filter in Fourier domain
+#[allow(dead_code)]
 fn fourier_gaussian_1d<T>(input: &Array1<T>, sigma: T) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
@@ -142,6 +144,7 @@ where
 }
 
 /// Apply 2D Gaussian filter in Fourier domain
+#[allow(dead_code)]
 fn fourier_gaussian_2d<T>(input: &Array2<T>, sigma_y: T, sigma_x: T) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
@@ -194,6 +197,7 @@ where
 /// Apply N-dimensional Gaussian filter in Fourier domain
 ///
 /// This implementation uses separable 1D FFTs along each axis for efficiency
+#[allow(dead_code)]
 fn fourier_gaussian_nd<T, D>(input: &Array<T, D>, sigma: &[T]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
@@ -235,6 +239,7 @@ where
 }
 
 /// Apply 3D Gaussian filter in Fourier domain
+#[allow(dead_code)]
 fn fourier_gaussian_3d<T, D>(input: &Array<T, D>, sigma: &[T]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
@@ -270,7 +275,7 @@ where
     let freqs_z = fftfreq(nz, 1.0)?;
     for j in 0..ny {
         for k in 0..nx {
-            let mut slice: Vec<f64> = (0..nz).map(|i| input_f64[[i, j, k]]).collect();
+            let slice: Vec<f64> = (0..nz).map(|i| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
 
             for (i, &freq) in freqs_z.iter().enumerate() {
@@ -289,7 +294,7 @@ where
     let freqs_y = fftfreq(ny, 1.0)?;
     for i in 0..nz {
         for k in 0..nx {
-            let mut slice: Vec<f64> = (0..ny).map(|j| input_f64[[i, j, k]]).collect();
+            let slice: Vec<f64> = (0..ny).map(|j| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
 
             for (j, &freq) in freqs_y.iter().enumerate() {
@@ -308,7 +313,7 @@ where
     let freqs_x = fftfreq(nx, 1.0)?;
     for i in 0..nz {
         for j in 0..ny {
-            let mut slice: Vec<f64> = (0..nx).map(|k| input_f64[[i, j, k]]).collect();
+            let slice: Vec<f64> = (0..nx).map(|k| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
 
             for (k, &freq) in freqs_x.iter().enumerate() {
@@ -351,6 +356,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn fourier_uniform<T, D>(input: &Array<T, D>, size: &[usize]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
@@ -411,6 +417,7 @@ where
 }
 
 /// Apply 1D uniform filter in Fourier domain
+#[allow(dead_code)]
 fn fourier_uniform_1d<T>(input: &Array1<T>, size: usize) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
@@ -451,6 +458,7 @@ where
 }
 
 /// Apply 2D uniform filter in Fourier domain
+#[allow(dead_code)]
 fn fourier_uniform_2d<T>(
     input: &Array2<T>,
     size_y: usize,
@@ -513,6 +521,7 @@ where
 }
 
 /// Apply N-dimensional uniform filter in Fourier domain
+#[allow(dead_code)]
 fn fourier_uniform_nd<T, D>(input: &Array<T, D>, size: &[usize]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
@@ -549,6 +558,7 @@ where
 }
 
 /// Apply 3D uniform filter in Fourier domain
+#[allow(dead_code)]
 fn fourier_uniform_3d<T, D>(input: &Array<T, D>, size: &[usize]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
@@ -579,7 +589,7 @@ where
     let freqs_z = fftfreq(nz, 1.0)?;
     for j in 0..ny {
         for k in 0..nx {
-            let mut slice: Vec<f64> = (0..nz).map(|i| input_f64[[i, j, k]]).collect();
+            let slice: Vec<f64> = (0..nz).map(|i| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
 
             for (i, &freq) in freqs_z.iter().enumerate() {
@@ -599,7 +609,7 @@ where
     let freqs_y = fftfreq(ny, 1.0)?;
     for i in 0..nz {
         for k in 0..nx {
-            let mut slice: Vec<f64> = (0..ny).map(|j| input_f64[[i, j, k]]).collect();
+            let slice: Vec<f64> = (0..ny).map(|j| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
 
             for (j, &freq) in freqs_y.iter().enumerate() {
@@ -619,7 +629,7 @@ where
     let freqs_x = fftfreq(nx, 1.0)?;
     for i in 0..nz {
         for j in 0..ny {
-            let mut slice: Vec<f64> = (0..nx).map(|k| input_f64[[i, j, k]]).collect();
+            let slice: Vec<f64> = (0..nx).map(|k| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
 
             for (k, &freq) in freqs_x.iter().enumerate() {
@@ -666,6 +676,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn fourier_ellipsoid<T, D>(
     input: &Array<T, D>,
     size: &[T],
@@ -725,6 +736,7 @@ where
 }
 
 /// Apply 2D ellipsoid filter in Fourier domain
+#[allow(dead_code)]
 fn fourier_ellipsoid_2d<T>(
     input: &Array2<T>,
     size_y: T,
@@ -794,6 +806,7 @@ where
 }
 
 /// Apply N-dimensional ellipsoid filter in Fourier domain
+#[allow(dead_code)]
 fn fourier_ellipsoid_nd<T, D>(
     input: &Array<T, D>,
     size: &[T],
@@ -842,6 +855,7 @@ where
 }
 
 /// Apply 3D ellipsoid filter in Fourier domain
+#[allow(dead_code)]
 fn fourier_ellipsoid_3d<T, D>(
     input: &Array<T, D>,
     size: &[T],
@@ -885,7 +899,7 @@ where
     // Filter along z-axis first
     for j in 0..ny {
         for k in 0..nx {
-            let mut slice: Vec<f64> = (0..nz).map(|i| input_f64[[i, j, k]]).collect();
+            let slice: Vec<f64> = (0..nz).map(|i| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
 
             // Apply ellipsoid filter for this frequency component
@@ -913,7 +927,7 @@ where
     // Filter along y-axis
     for i in 0..nz {
         for k in 0..nx {
-            let mut slice: Vec<f64> = (0..ny).map(|j| input_f64[[i, j, k]]).collect();
+            let slice: Vec<f64> = (0..ny).map(|j| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
 
             for (j, &freq_y) in freqs_y.iter().enumerate() {
@@ -939,7 +953,7 @@ where
     // Filter along x-axis
     for i in 0..nz {
         for j in 0..ny {
-            let mut slice: Vec<f64> = (0..nx).map(|k| input_f64[[i, j, k]]).collect();
+            let slice: Vec<f64> = (0..nx).map(|k| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
 
             for (k, &freq_x) in freqs_x.iter().enumerate() {
@@ -993,6 +1007,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Shifted array
+#[allow(dead_code)]
 pub fn fourier_shift<T, D>(input: &Array<T, D>, shift: &[T]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
@@ -1045,6 +1060,7 @@ where
 }
 
 /// Apply 1D shift in Fourier domain
+#[allow(dead_code)]
 fn fourier_shift_1d<T>(input: &Array1<T>, shift: T) -> NdimageResult<Array1<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
@@ -1088,6 +1104,7 @@ where
 }
 
 /// Apply 2D shift in Fourier domain
+#[allow(dead_code)]
 fn fourier_shift_2d<T>(input: &Array2<T>, shift_y: T, shift_x: T) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone,
@@ -1139,6 +1156,7 @@ where
 }
 
 /// Apply N-dimensional shift in Fourier domain
+#[allow(dead_code)]
 fn fourier_shift_nd<T, D>(input: &Array<T, D>, shift: &[T]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
@@ -1175,6 +1193,7 @@ where
 }
 
 /// Apply 3D shift in Fourier domain
+#[allow(dead_code)]
 fn fourier_shift_3d<T, D>(input: &Array<T, D>, shift: &[T]) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
@@ -1211,7 +1230,7 @@ where
     let freqs_z = fftfreq(nz, 1.0)?;
     for j in 0..ny {
         for k in 0..nx {
-            let mut slice: Vec<f64> = (0..nz).map(|i| input_f64[[i, j, k]]).collect();
+            let slice: Vec<f64> = (0..nz).map(|i| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
 
             // Apply phase shift
@@ -1232,7 +1251,7 @@ where
     let freqs_y = fftfreq(ny, 1.0)?;
     for i in 0..nz {
         for k in 0..nx {
-            let mut slice: Vec<f64> = (0..ny).map(|j| input_f64[[i, j, k]]).collect();
+            let slice: Vec<f64> = (0..ny).map(|j| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
 
             for (j, &freq) in freqs_y.iter().enumerate() {
@@ -1252,7 +1271,7 @@ where
     let freqs_x = fftfreq(nx, 1.0)?;
     for i in 0..nz {
         for j in 0..ny {
-            let mut slice: Vec<f64> = (0..nx).map(|k| input_f64[[i, j, k]]).collect();
+            let slice: Vec<f64> = (0..nx).map(|k| input_f64[[i, j, k]]).collect();
             let mut spectrum = fft(&slice, None)?;
 
             for (k, &freq) in freqs_x.iter().enumerate() {
@@ -1461,6 +1480,7 @@ where
 }
 
 /// Process a large image file with Fourier Gaussian filter
+#[allow(dead_code)]
 pub fn fourier_gaussian_file<T>(
     input_path: &Path,
     output_path: &Path,
@@ -1526,6 +1546,7 @@ where
 }
 
 /// Process a large image file with Fourier uniform filter
+#[allow(dead_code)]
 pub fn fourier_uniform_file<T>(
     input_path: &Path,
     output_path: &Path,

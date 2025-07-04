@@ -488,6 +488,7 @@ where
 
 /// Auto SARIMA selection
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn auto_sarima<S, F>(
     data: &ArrayBase<S, Ix1>,
     period: usize,

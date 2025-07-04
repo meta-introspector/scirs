@@ -17,6 +17,7 @@ use scirs2_core::error::CoreResult;
 use scirs2_core::neural_architecture_search::*;
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧠 Neural Architecture Search Showcase");
     println!("=====================================\n");
@@ -36,6 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate evolutionary neural architecture search
+#[allow(dead_code)]
 fn demonstrate_evolutionary_nas() -> CoreResult<()> {
     println!("🧬 Evolutionary Neural Architecture Search");
     println!("========================================");
@@ -155,6 +157,7 @@ fn demonstrate_evolutionary_nas() -> CoreResult<()> {
 }
 
 /// Demonstrate quantum-enhanced neural architecture search
+#[allow(dead_code)]
 fn demonstrate_quantum_enhanced_nas() -> CoreResult<()> {
     println!("\n⚛️  Quantum-Enhanced Neural Architecture Search");
     println!("=============================================");
@@ -218,6 +221,7 @@ fn demonstrate_quantum_enhanced_nas() -> CoreResult<()> {
 }
 
 /// Demonstrate progressive neural architecture search
+#[allow(dead_code)]
 fn demonstrate_progressive_nas() -> CoreResult<()> {
     println!("\n📈 Progressive Neural Architecture Search");
     println!("======================================");
@@ -311,6 +315,7 @@ fn demonstrate_progressive_nas() -> CoreResult<()> {
 }
 
 /// Demonstrate multi-objective optimization
+#[allow(dead_code)]
 fn demonstrate_multi_objective_optimization() -> CoreResult<()> {
     println!("\n🎯 Multi-Objective Neural Architecture Optimization");
     println!("=================================================");
@@ -416,6 +421,7 @@ fn demonstrate_multi_objective_optimization() -> CoreResult<()> {
 }
 
 /// Demonstrate hardware-aware neural architecture search
+#[allow(dead_code)]
 fn demonstrate_hardware_aware_search() -> CoreResult<()> {
     println!("\n💻 Hardware-Aware Neural Architecture Search");
     println!("===========================================");
@@ -526,6 +532,7 @@ fn demonstrate_hardware_aware_search() -> CoreResult<()> {
 }
 
 /// Demonstrate meta-learning capabilities
+#[allow(dead_code)]
 fn demonstrate_meta_learning() -> CoreResult<()> {
     println!("\n🧠 Meta-Learning Neural Architecture Search");
     println!("==========================================");
@@ -641,6 +648,7 @@ fn demonstrate_meta_learning() -> CoreResult<()> {
 }
 
 /// Analyze and display comprehensive search results
+#[allow(dead_code)]
 fn analyze_search_results(results: &SearchResults) -> CoreResult<()> {
     println!("\n📊 Comprehensive Search Analysis:");
     println!("================================");
@@ -729,6 +737,7 @@ fn analyze_search_results(results: &SearchResults) -> CoreResult<()> {
 }
 
 /// Count layer types in an architecture
+#[allow(dead_code)]
 fn count_layer_types(architecture: &Architecture) -> std::collections::HashMap<LayerType, usize> {
     let mut counts = std::collections::HashMap::new();
 

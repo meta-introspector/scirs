@@ -848,6 +848,7 @@ static mut GLOBAL_ERROR_RECOVERY: Option<ErrorRecoverySystem> = None;
 static mut ERROR_RECOVERY_INITIALIZED: bool = false;
 
 /// Initialize global error recovery system
+#[allow(dead_code)]
 pub fn initialize_error_recovery(config: Option<ErrorRecoveryConfig>) {
     unsafe {
         if !ERROR_RECOVERY_INITIALIZED {
@@ -858,6 +859,7 @@ pub fn initialize_error_recovery(config: Option<ErrorRecoveryConfig>) {
 }
 
 /// Enhance error with recovery suggestions (global function)
+#[allow(dead_code)]
 pub fn enhance_error_with_recovery(
     error: StatsError,
     function_name: &str,

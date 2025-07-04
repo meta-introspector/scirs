@@ -43,7 +43,8 @@ where
         + std::ops::SubAssign
         + std::ops::MulAssign
         + std::ops::DivAssign
-        + std::ops::RemAssign,
+        + std::ops::RemAssign
+        + ndarray::ScalarOperand,
 {
     /// Control points defining the curve (n x dim)
     control_points: Array2<T>,
@@ -69,7 +70,8 @@ where
         + std::ops::SubAssign
         + std::ops::MulAssign
         + std::ops::DivAssign
-        + std::ops::RemAssign,
+        + std::ops::RemAssign
+        + ndarray::ScalarOperand,
 {
     /// Create a new NURBS curve from control points, weights, knots, and degree
     ///
@@ -305,7 +307,7 @@ where
         }
 
         // Apply the generalized quotient rule
-        let mut result = Array1::zeros(self.dimension);
+        let mut _result = Array1::<T>::zeros(self.dimension);
 
         // C^(k) = (1/w) * [A^(k) - sum_{i=1}^k (k choose i) * w^(i) * C^(k-i)]
         let mut c_derivs = vec![Array1::<T>::zeros(self.dimension); order + 1];
@@ -384,7 +386,7 @@ where
             if i % 2 == 1 {
                 let t = a + T::from(i).unwrap() * h;
                 let f_t = self.evaluate(t)?;
-                result = result + &(T::from(4.0).unwrap() * &f_t);
+                result = result + &f_t * T::from(4.0).unwrap();
             }
         }
 
@@ -393,12 +395,12 @@ where
             if i % 2 == 0 {
                 let t = a + T::from(i).unwrap() * h;
                 let f_t = self.evaluate(t)?;
-                result = result + &(T::from(2.0).unwrap() * &f_t);
+                result = result + &f_t * T::from(2.0).unwrap();
             }
         }
 
         // Apply Simpson's rule factor
-        result = (h / T::from(3.0).unwrap()) * result;
+        result = result * (h / T::from(3.0).unwrap());
 
         Ok(result)
     }
@@ -1153,7 +1155,8 @@ where
         + std::ops::SubAssign
         + std::ops::MulAssign
         + std::ops::DivAssign
-        + std::ops::RemAssign,
+        + std::ops::RemAssign
+        + ndarray::ScalarOperand,
 {
     /// Control points defining the surface (n_u * n_v x dim)
     control_points: Array2<T>,
@@ -1191,7 +1194,8 @@ where
         + std::ops::SubAssign
         + std::ops::MulAssign
         + std::ops::DivAssign
-        + std::ops::RemAssign,
+        + std::ops::RemAssign
+        + ndarray::ScalarOperand,
 {
     /// Create a new NURBS surface from control points, weights, knots, and degrees
     ///
@@ -2471,6 +2475,7 @@ where
 /// # Returns
 ///
 /// A NURBS curve representing the circle or arc
+#[allow(dead_code)]
 pub fn make_nurbs_circle<
     T: Float
         + FromPrimitive
@@ -2484,7 +2489,8 @@ pub fn make_nurbs_circle<
         + std::ops::SubAssign
         + std::ops::MulAssign
         + std::ops::DivAssign
-        + std::ops::RemAssign,
+        + std::ops::RemAssign
+        + ndarray::ScalarOperand,
 >(
     center: &ArrayView1<T>,
     radius: T,
@@ -2612,6 +2618,7 @@ pub fn make_nurbs_circle<
 /// # Returns
 ///
 /// A NURBS surface representing the sphere
+#[allow(dead_code)]
 pub fn make_nurbs_sphere<
     T: Float
         + FromPrimitive
@@ -2625,7 +2632,8 @@ pub fn make_nurbs_sphere<
         + std::ops::SubAssign
         + std::ops::MulAssign
         + std::ops::DivAssign
-        + std::ops::RemAssign,
+        + std::ops::RemAssign
+        + ndarray::ScalarOperand,
 >(
     center: &ArrayView1<T>,
     radius: T,

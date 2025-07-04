@@ -26,6 +26,7 @@ impl StochasticGradientFunction for QuadraticFunction {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_stochastic_optimization_integration() {
     // Test SGD
     let grad_func = QuadraticFunction;
@@ -52,6 +53,7 @@ fn test_stochastic_optimization_integration() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_adam_optimization_integration() {
     // Test Adam optimizer
     let grad_func = QuadraticFunction;
@@ -78,6 +80,7 @@ fn test_adam_optimization_integration() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_bfgs_optimization_integration() {
     // Test BFGS on a simple function
     let func = |x: &ArrayView1<f64>| -> f64 { x[0] * x[0] + x[1] * x[1] };
@@ -99,6 +102,7 @@ fn test_bfgs_optimization_integration() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_optimization_library_capabilities() {
     println!("\n🔬 scirs2-optimize Library Capabilities Test");
     println!("============================================");
@@ -135,6 +139,7 @@ fn test_optimization_library_capabilities() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_optimization_workflows() {
     println!("\n🔧 Comprehensive Optimization Workflows Test");
     println!("===========================================");
@@ -154,6 +159,7 @@ fn test_comprehensive_optimization_workflows() {
     println!("✅ All optimization workflows working correctly!");
 }
 
+#[allow(dead_code)]
 fn test_unconstrained_workflow() {
     use scirs2_optimize::unconstrained::{minimize_lbfgs, minimize_powell};
 
@@ -191,6 +197,7 @@ fn test_unconstrained_workflow() {
     println!("  ✅ Unconstrained optimization algorithms working");
 }
 
+#[allow(dead_code)]
 fn test_stochastic_workflow() {
     use scirs2_optimize::stochastic::{
         minimize_adamw, minimize_rmsprop, AdamWOptions, RMSPropOptions,
@@ -243,6 +250,7 @@ fn test_stochastic_workflow() {
     println!("  ✅ Stochastic optimization algorithms working");
 }
 
+#[allow(dead_code)]
 fn test_problem_types() {
     // Test different problem characteristics
 
@@ -284,6 +292,7 @@ fn test_problem_types() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_algorithm_robustness() {
     println!("\n🛡️  Testing Algorithm Robustness");
     println!("===============================");
@@ -295,6 +304,7 @@ fn test_algorithm_robustness() {
     println!("✅ All robustness tests passed!");
 }
 
+#[allow(dead_code)]
 fn test_challenging_problems() {
     use scirs2_optimize::unconstrained::minimize_nelder_mead;
 
@@ -322,6 +332,7 @@ fn test_challenging_problems() {
     println!("  ✅ Challenging multi-modal problems handled");
 }
 
+#[allow(dead_code)]
 fn test_edge_cases() {
     // Test with very small problems
     let simple_1d = |x: &ArrayView1<f64>| -> f64 { x[0] * x[0] };
@@ -350,6 +361,7 @@ fn test_edge_cases() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_stochastic_integration_comprehensive() {
     println!("\n📊 Comprehensive Stochastic Integration Test");
     println!("==========================================");
@@ -361,6 +373,7 @@ fn test_stochastic_integration_comprehensive() {
     println!("✅ Comprehensive stochastic integration completed!");
 }
 
+#[allow(dead_code)]
 fn test_machine_learning_workflow() {
     use scirs2_optimize::stochastic::{minimize_sgd_momentum, MomentumOptions};
 
@@ -454,6 +467,7 @@ fn test_machine_learning_workflow() {
     println!("  ✅ Machine learning workflow tested successfully");
 }
 
+#[allow(dead_code)]
 fn test_large_scale_optimization() {
     // Test with larger problem size to verify scalability
     struct LargeQuadratic {

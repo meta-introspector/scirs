@@ -5,6 +5,7 @@ use scirs2_integrate::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Poisson equation solver using Finite Element Method");
     println!("Solving: ∇²u = -2π² sin(πx) sin(πy)");

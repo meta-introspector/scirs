@@ -5,6 +5,7 @@ use scirs2_neural::error::Result;
 use std::fmt::Debug;
 
 // Simplified gradient clipping demo
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Gradient Clipping Example");
     println!("------------------------");
@@ -84,6 +85,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 // Create sample gradients with some large values
+#[allow(dead_code)]
 fn create_sample_gradients() -> Vec<Array<f32, IxDyn>> {
     let mut gradients = Vec::new();
     // First layer gradients (weight)
@@ -103,6 +105,7 @@ fn create_sample_gradients() -> Vec<Array<f32, IxDyn>> {
     gradients
 }
 // Compute global norm of gradients
+#[allow(dead_code)]
 fn compute_global_norm<A>(gradients: &[ArrayBase<OwnedRepr<A>, IxDyn>]) -> f64
 where
     A: Float + ScalarOperand + Debug,

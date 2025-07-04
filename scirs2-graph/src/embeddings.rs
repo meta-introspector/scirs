@@ -8,7 +8,7 @@
 use crate::base::{DiGraph, EdgeWeight, Graph, Node};
 use crate::error::{GraphError, Result};
 use rand::prelude::*;
-use rand::Rng;
+use rand::{rng, Rng};
 // use scirs2_core::parallel_ops::*; // Currently unused
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -231,6 +231,12 @@ pub struct OptimizerState {
     pub adam_v: HashMap<String, Vec<f64>>,
     /// Time step for bias correction
     pub time_step: usize,
+}
+
+impl Default for OptimizerState {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl OptimizerState {
@@ -590,6 +596,7 @@ impl<N: Node> EmbeddingModel<N> {
             let mut target_gradient = vec![0.0; self.dimensions];
             let mut context_gradient = vec![0.0; self.dimensions];
 
+            #[allow(clippy::needless_range_loop)]
             for i in 0..self.dimensions {
                 target_gradient[i] += positive_error * context_emb.vector[i];
                 context_gradient[i] += positive_error * target_emb.vector[i];
@@ -607,6 +614,8 @@ impl<N: Node> EmbeddingModel<N> {
                     // Negative sample error
                     let negative_error = -negative_prob;
 
+                    #[allow(clippy::needless_range_loop)]
+                    #[allow(clippy::needless_range_loop)]
                     for i in 0..self.dimensions {
                         target_gradient[i] += negative_error * neg_context_emb.vector[i];
                     }
@@ -620,6 +629,7 @@ impl<N: Node> EmbeddingModel<N> {
                     let negative_prob = Embedding::sigmoid(negative_score);
                     let negative_error = -negative_prob;
 
+                    #[allow(clippy::needless_range_loop)]
                     for i in 0..self.dimensions {
                         let neg_context_grad = negative_error * target_emb.vector[i];
                         neg_context_emb_mut.vector[i] -= learning_rate * neg_context_grad;
@@ -654,6 +664,7 @@ impl<N: Node> EmbeddingModel<N> {
         use scirs2_core::parallel_ops::*;
 
         // Use collect-reduce pattern for thread-safe parallel processing
+        #[allow(clippy::type_complexity)]
         let gradient_updates: Vec<(N, Vec<f64>, Vec<f64>)> = pairs
             .par_chunks(1000) // Process in chunks for better cache locality
             .map(|chunk| -> Result<Vec<(N, Vec<f64>, Vec<f64>)>> {
@@ -680,6 +691,7 @@ impl<N: Node> EmbeddingModel<N> {
                     let mut context_gradient = vec![0.0; self.dimensions];
 
                     // Gradient computation
+                    #[allow(clippy::needless_range_loop)]
                     for i in 0..self.dimensions {
                         target_gradient[i] += positive_error * context_emb.vector[i];
                         context_gradient[i] += positive_error * target_emb.vector[i];
@@ -700,6 +712,7 @@ impl<N: Node> EmbeddingModel<N> {
                             let negative_prob = Embedding::sigmoid(negative_score);
                             let negative_error = -negative_prob;
 
+                    #[allow(clippy::needless_range_loop)]
                             for i in 0..self.dimensions {
                                 target_gradient[i] += negative_error * neg_context_emb.vector[i];
                             }
@@ -789,6 +802,7 @@ impl<N: Node> EmbeddingModel<N> {
                         let positive_error = 1.0 - positive_prob;
 
                         // Add positive contribution
+                        #[allow(clippy::needless_range_loop)]
                         for i in 0..self.dimensions {
                             accumulated_gradient[i] += positive_error * context_emb.vector[i];
                         }
@@ -808,6 +822,7 @@ impl<N: Node> EmbeddingModel<N> {
                                 let negative_prob = Embedding::sigmoid(negative_score);
                                 let negative_error = -negative_prob;
 
+                                #[allow(clippy::needless_range_loop)]
                                 for i in 0..self.dimensions {
                                     accumulated_gradient[i] +=
                                         negative_error * neg_context_emb.vector[i];
@@ -1048,7 +1063,7 @@ impl<N: Node> EmbeddingModel<N> {
         N: Serialize,
     {
         let file = File::create(path)
-            .map_err(|e| GraphError::ComputationError(format!("Failed to create file: {}", e)))?;
+            .map_err(|e| GraphError::ComputationError(format!("Failed to create file: {e}")))?;
         let writer = BufWriter::new(file);
 
         // Create a serializable representation
@@ -1059,7 +1074,7 @@ impl<N: Node> EmbeddingModel<N> {
         };
 
         serde_json::to_writer_pretty(writer, &serializable_data).map_err(|e| {
-            GraphError::ComputationError(format!("Failed to serialize embeddings: {}", e))
+            GraphError::ComputationError(format!("Failed to serialize embeddings: {e}"))
         })?;
 
         Ok(())
@@ -1071,12 +1086,12 @@ impl<N: Node> EmbeddingModel<N> {
         N: for<'de> Deserialize<'de>,
     {
         let file = File::open(path)
-            .map_err(|e| GraphError::ComputationError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| GraphError::ComputationError(format!("Failed to open file: {e}")))?;
         let reader = BufReader::new(file);
 
         let serializable_data: SerializableEmbeddingModel<N> = serde_json::from_reader(reader)
             .map_err(|e| {
-                GraphError::ComputationError(format!("Failed to deserialize embeddings: {}", e))
+                GraphError::ComputationError(format!("Failed to deserialize embeddings: {e}"))
             })?;
 
         Ok(EmbeddingModel {
@@ -1092,7 +1107,7 @@ impl<N: Node> EmbeddingModel<N> {
         N: Serialize,
     {
         let file = File::create(path).map_err(|e| {
-            GraphError::ComputationError(format!("Failed to create binary file: {}", e))
+            GraphError::ComputationError(format!("Failed to create binary file: {e}"))
         })?;
         let writer = BufWriter::new(file);
 
@@ -1103,7 +1118,7 @@ impl<N: Node> EmbeddingModel<N> {
         };
 
         bincode::serialize_into(writer, &serializable_data).map_err(|e| {
-            GraphError::ComputationError(format!("Failed to serialize embeddings to binary: {}", e))
+            GraphError::ComputationError(format!("Failed to serialize embeddings to binary: {e}"))
         })?;
 
         Ok(())
@@ -1115,15 +1130,14 @@ impl<N: Node> EmbeddingModel<N> {
         N: for<'de> Deserialize<'de>,
     {
         let file = File::open(path).map_err(|e| {
-            GraphError::ComputationError(format!("Failed to open binary file: {}", e))
+            GraphError::ComputationError(format!("Failed to open binary file: {e}"))
         })?;
         let reader = BufReader::new(file);
 
         let serializable_data: SerializableEmbeddingModel<N> = bincode::deserialize_from(reader)
             .map_err(|e| {
                 GraphError::ComputationError(format!(
-                    "Failed to deserialize binary embeddings: {}",
-                    e
+                    "Failed to deserialize binary embeddings: {e}"
                 ))
             })?;
 
@@ -1139,22 +1153,22 @@ impl<N: Node> EmbeddingModel<N> {
     where
         N: std::fmt::Display,
     {
-        let mut file = File::create(path).map_err(|e| {
-            GraphError::ComputationError(format!("Failed to create CSV file: {}", e))
-        })?;
+        let mut file = File::create(path)
+            .map_err(|e| GraphError::ComputationError(format!("Failed to create CSV file: {e}")))?;
 
         // Write header
         write!(file, "node")?;
+        #[allow(clippy::needless_range_loop)]
         for i in 0..self.dimensions {
-            write!(file, ",dim_{}", i)?;
+            write!(file, ",dim_{i}")?;
         }
         writeln!(file)?;
 
         // Write embeddings
         for (node, embedding) in &self.embeddings {
-            write!(file, "{}", node)?;
+            write!(file, "{node}")?;
             for value in &embedding.vector {
-                write!(file, ",{}", value)?;
+                write!(file, ",{value}")?;
             }
             writeln!(file)?;
         }
@@ -1165,7 +1179,7 @@ impl<N: Node> EmbeddingModel<N> {
     /// Import embeddings from CSV format
     pub fn import_csv<P: AsRef<Path>>(path: P) -> Result<EmbeddingModel<String>> {
         let content = std::fs::read_to_string(path)
-            .map_err(|e| GraphError::ComputationError(format!("Failed to read CSV file: {}", e)))?;
+            .map_err(|e| GraphError::ComputationError(format!("Failed to read CSV file: {e}")))?;
 
         let lines: Vec<&str> = content.lines().collect();
         if lines.is_empty() {
@@ -2085,7 +2099,7 @@ impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
                 new_labels.insert(node.clone(), new_label.clone());
 
                 // Add pattern to vocabulary
-                patterns.insert(format!("WL_{}_{}", iteration, new_label));
+                patterns.insert(format!("WL_{iteration}_{new_label}"));
             }
 
             node_labels = new_labels;
@@ -2158,7 +2172,7 @@ impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
             // Decay learning rate
             let epoch_lr = learning_rate * (1.0 - epoch as f64 / epochs as f64);
             if epoch % 10 == 0 {
-                println!("Graph2Vec epoch {}: lr = {:.6}", epoch, epoch_lr);
+                println!("Graph2Vec epoch {epoch}: lr = {epoch_lr:.6}");
             }
         }
 

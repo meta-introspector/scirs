@@ -13,6 +13,7 @@ use scirs2_integrate::{
     bdf_semi_explicit_dae, DAEIndex, DAEOptions, DAEStructure, DAEType, ProjectionMethod,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Constants for the slider-crank mechanism
     let m1 = 1.0; // Mass of crank (kg)

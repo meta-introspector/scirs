@@ -7,7 +7,6 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
-#[cfg(test)]
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
@@ -36,8 +35,7 @@ use std::fmt::Debug;
 /// ```
 /// use scirs2_signal::lombscargle::{lombscargle, AutoFreqMethod};
 /// use ndarray::Array1;
-/// #[cfg(test)]
-use std::f64::consts::PI;
+/// use std::f64::consts::PI;
 /// use rand::prelude::*;
 ///
 /// // Generate unevenly sampled data with a 1 Hz sinusoid
@@ -46,7 +44,7 @@ use std::f64::consts::PI;
 /// let mut t = Array1::linspace(0.0, 10.0, n);
 /// // Add some random noise to make sampling uneven
 /// for i in 0..n {
-///     t[i] += 0.1 * rng.gen_range(0.0..1.0);
+///     t[i] += 0.1 * rng.random_range(0.0..1.0);
 /// }
 /// let y: Vec<f64> = t.iter().map(|&ti| (2.0 * PI * 1.0 * ti).sin()).collect();
 ///
@@ -76,6 +74,7 @@ use std::f64::consts::PI;
 /// assert!((freqs[max_idx] - 1.0).abs() < 0.1);
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn lombscargle<T, U>(
     x: &[T],
     y: &[U],
@@ -397,6 +396,7 @@ enum NormalizationMethod {
 /// # Returns
 ///
 /// * Array of frequencies
+#[allow(dead_code)]
 fn autofrequency(
     times: &[f64],
     nyquist_factor: f64,
@@ -497,6 +497,7 @@ fn autofrequency(
 }
 
 /// Compute the Lomb-Scargle periodogram (implementation)
+#[allow(dead_code)]
 fn _lombscargle_impl(
     t: &Array1<f64>,
     y: &Array1<f64>,
@@ -666,6 +667,7 @@ fn _lombscargle_impl(
 /// # Returns
 ///
 /// * Vector of power thresholds corresponding to the requested FAP levels
+#[allow(dead_code)]
 pub fn significance_levels(
     power: &[f64],
     fap_levels: &[f64],
@@ -743,6 +745,7 @@ pub fn significance_levels(
 /// # Returns
 ///
 /// * Tuple of (peak frequencies, peak powers)
+#[allow(dead_code)]
 pub fn find_peaks(
     frequency: &[f64],
     power: &[f64],
@@ -834,7 +837,7 @@ pub fn find_peaks(
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     #[test]

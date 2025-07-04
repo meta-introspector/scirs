@@ -5,6 +5,7 @@ use scirs2_integrate::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Chebyshev Spectral Method example for the Poisson equation");
     println!("Solving: d²u/dx² = f(x) with Dirichlet boundary conditions");

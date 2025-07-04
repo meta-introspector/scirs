@@ -9,6 +9,7 @@ use scirs2_cluster::vq::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SIMD Optimization Demonstration for Clustering Algorithms");
     println!("============================================================");
@@ -272,6 +273,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Generate synthetic clustered data for testing
+#[allow(dead_code)]
 fn generate_synthetic_data(
     n_samples: usize,
     n_features: usize,
@@ -316,6 +318,7 @@ fn generate_synthetic_data(
 }
 
 /// Generate random centroids for testing
+#[allow(dead_code)]
 fn generate_centroids(n_clusters: usize, n_features: usize) -> Array2<f64> {
     use rand::Rng;
 

@@ -474,6 +474,7 @@ pub enum SparsePattern {
 }
 
 /// Tensor core optimized matrix multiplication
+#[allow(dead_code)]
 pub fn tensor_core_gemm<T>(
     manager: &TensorCoreManager,
     a: &GpuBuffer<T>,
@@ -522,6 +523,7 @@ where
 }
 
 /// Generate optimized tensor core GEMM kernel source
+#[allow(dead_code)]
 fn generate_tensor_core_gemm_kernel(
     manager: &TensorCoreManager,
     m: usize,
@@ -547,6 +549,7 @@ fn generate_tensor_core_gemm_kernel(
 }
 
 /// Generate CUDA tensor core kernel
+#[allow(dead_code)]
 fn generate_cuda_tensor_core_kernel(
     data_type: &TensorDataType,
     tile_size: (usize, usize),
@@ -639,6 +642,7 @@ __global__ void tensor_core_gemm(
 }
 
 /// Generate ROCm matrix core kernel
+#[allow(dead_code)]
 fn generate_rocm_matrix_core_kernel(
     data_type: &TensorDataType,
     tile_size: (usize, usize),
@@ -744,6 +748,7 @@ __global__ void matrix_core_gemm(
 }
 
 /// Generate Metal Performance Shaders kernel
+#[allow(dead_code)]
 fn generate_metal_mps_kernel(
     data_type: &TensorDataType,
     tile_size: (usize, usize),
@@ -793,6 +798,7 @@ kernel void neural_engine_gemm(
 }
 
 /// Execute tensor core operation
+#[allow(dead_code)]
 fn execute_tensor_core_operation<T>(
     manager: &TensorCoreManager,
     kernel_source: &str,

@@ -39,12 +39,10 @@ impl DataChunker {
         let bytes_per_sample = n_features * std::mem::size_of::<f64>() + 64; // 64 bytes overhead
         let max_samples_in_memory = (self.max_memory_mb * 1024 * 1024) / bytes_per_sample;
 
-        let chunk_size = max_samples_in_memory
+        max_samples_in_memory
             .min(self.preferred_chunk_size)
             .max(self.min_chunk_size)
-            .min(n_samples);
-
-        chunk_size
+            .min(n_samples)
     }
 
     /// Iterator over data chunks
@@ -321,7 +319,7 @@ impl StatUtils {
                 }
             }
 
-            let diversity = if col.len() > 0 {
+            let diversity = if !col.is_empty() {
                 unique_values.len() as f64 / col.len() as f64
             } else {
                 0.0
@@ -338,7 +336,7 @@ impl StatUtils {
         // Combine scores with weights
         let quality_score = 0.7 * finite_ratio + 0.3 * avg_diversity;
 
-        Ok(quality_score.max(0.0).min(1.0))
+        Ok(quality_score.clamp(0.0, 1.0))
     }
 }
 
@@ -395,10 +393,7 @@ impl<T: Clone + Default> ArrayMemoryPool<T> {
         // Zero out the array for reuse
         array.fill(T::default());
 
-        let arrays = self
-            .available_arrays
-            .entry(size_key)
-            .or_insert_with(Vec::new);
+        let arrays = self.available_arrays.entry(size_key).or_default();
         if arrays.len() < self.max_per_size {
             arrays.push(array);
             self.current_memory += array_size;
@@ -430,15 +425,13 @@ impl ValidationUtils {
     ) -> Result<()> {
         if !value.is_finite() {
             return Err(TransformError::InvalidInput(format!(
-                "{} must be finite",
-                param_name
+                "{param_name} must be finite"
             )));
         }
 
         if value < min || value > max {
             return Err(TransformError::InvalidInput(format!(
-                "{} must be between {} and {}, got {}",
-                param_name, min, max, value
+                "{param_name} must be between {min} and {max}, got {value}"
             )));
         }
 
@@ -453,16 +446,14 @@ impl ValidationUtils {
     ) -> Result<()> {
         if shape1.len() != shape2.len() {
             return Err(TransformError::InvalidInput(format!(
-                "Incompatible dimensions for {}: {:?} vs {:?}",
-                operation, shape1, shape2
+                "Incompatible dimensions for {operation}: {shape1:?} vs {shape2:?}"
             )));
         }
 
         for (i, (&dim1, &dim2)) in shape1.iter().zip(shape2.iter()).enumerate() {
             if dim1 != dim2 {
                 return Err(TransformError::InvalidInput(format!(
-                    "Dimension {} mismatch for {}: {} vs {}",
-                    i, operation, dim1, dim2
+                    "Dimension {i} mismatch for {operation}: {dim1} vs {dim2}"
                 )));
             }
         }
@@ -508,8 +499,7 @@ impl ValidationUtils {
                     let variance = col.var(0.0);
                     if variance < 1e-15 {
                         return Err(TransformError::DataValidationError(format!(
-                            "Feature {} has zero variance and cannot be standardized",
-                            j
+                            "Feature {j} has zero variance and cannot be standardized"
                         )));
                     }
                 }
@@ -521,8 +511,7 @@ impl ValidationUtils {
                     let norm = row.iter().map(|&x| x * x).sum::<f64>().sqrt();
                     if norm < 1e-15 {
                         return Err(TransformError::DataValidationError(format!(
-                            "Sample {} has zero norm and cannot be normalized",
-                            i
+                            "Sample {i} has zero norm and cannot be normalized"
                         )));
                     }
                 }

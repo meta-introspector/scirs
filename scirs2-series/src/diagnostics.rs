@@ -119,6 +119,7 @@ pub struct CrossValidationResults<F> {
 }
 
 /// Perform residual diagnostics
+#[allow(dead_code)]
 pub fn residual_diagnostics<S, F>(
     residuals: &ArrayBase<S, Ix1>,
     max_lag: Option<usize>,
@@ -180,6 +181,7 @@ where
 }
 
 /// Calculate skewness and kurtosis
+#[allow(dead_code)]
 fn calculate_moments<S, F>(data: &ArrayBase<S, Ix1>) -> Result<(F, F)>
 where
     S: Data<Elem = F>,
@@ -211,6 +213,7 @@ where
 }
 
 /// Ljung-Box test for autocorrelation
+#[allow(dead_code)]
 pub fn ljung_box_test<S, F>(
     residuals: &ArrayBase<S, Ix1>,
     lags: usize,
@@ -256,6 +259,7 @@ where
 }
 
 /// Jarque-Bera test for normality
+#[allow(dead_code)]
 pub fn jarque_bera_test<S, F>(residuals: &ArrayBase<S, Ix1>, alpha: F) -> Result<JarqueBeraTest<F>>
 where
     S: Data<Elem = F>,
@@ -281,6 +285,7 @@ where
 }
 
 /// ARCH test for heteroskedasticity
+#[allow(dead_code)]
 pub fn arch_test<S, F>(residuals: &ArrayBase<S, Ix1>, lags: usize, alpha: F) -> Result<ArchTest<F>>
 where
     S: Data<Elem = F>,
@@ -372,6 +377,7 @@ where
 }
 
 /// Calculate fit statistics
+#[allow(dead_code)]
 pub fn calculate_fit_statistics<S, F>(
     actual: &ArrayBase<S, Ix1>,
     predicted: &ArrayBase<S, Ix1>,
@@ -460,6 +466,7 @@ where
 }
 
 /// Perform time series cross-validation
+#[allow(dead_code)]
 pub fn time_series_cv<S, F, Model, Fit, Predict>(
     data: &ArrayBase<S, Ix1>,
     n_folds: usize,
@@ -547,6 +554,7 @@ where
 }
 
 /// Simplified chi-squared p-value calculation
+#[allow(dead_code)]
 fn chi_squared_pvalue<F>(statistic: F, df: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Display,
@@ -596,6 +604,7 @@ where
 }
 
 /// Simple matrix solve using Gaussian elimination
+#[allow(dead_code)]
 fn matrix_solve<F>(a: &ndarray::Array2<F>, b: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + ScalarOperand,

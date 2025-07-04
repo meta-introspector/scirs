@@ -23,6 +23,7 @@ use crate::error::{GraphError, Result};
 ///
 /// # Space Complexity
 /// O(V) for the visited set and queue.
+#[allow(dead_code)]
 pub fn breadth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug + std::fmt::Debug,
@@ -31,8 +32,7 @@ where
 {
     if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Source node {:?} not found",
-            source
+            "Source node {source:?} not found"
         )));
     }
 
@@ -80,6 +80,7 @@ where
 ///
 /// # Space Complexity
 /// O(V) for the visited set and queue.
+#[allow(dead_code)]
 pub fn breadth_first_search_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,
@@ -91,8 +92,7 @@ where
 {
     if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Source node {:?} not found",
-            source
+            "Source node {source:?} not found"
         )));
     }
 
@@ -144,6 +144,7 @@ where
 /// # Space Complexity
 /// O(V) for the visited set and stack. In the worst case, the stack
 /// can contain all vertices (e.g., in a linear graph).
+#[allow(dead_code)]
 pub fn depth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug + std::fmt::Debug,
@@ -152,8 +153,7 @@ where
 {
     if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Source node {:?} not found",
-            source
+            "Source node {source:?} not found"
         )));
     }
 
@@ -197,6 +197,7 @@ where
 ///
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in DFS order
+#[allow(dead_code)]
 pub fn depth_first_search_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug + std::fmt::Debug,
@@ -205,8 +206,7 @@ where
 {
     if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Source node {:?} not found",
-            source
+            "Source node {source:?} not found"
         )));
     }
 
@@ -290,6 +290,7 @@ impl<N: Node + std::fmt::Debug, P: PartialOrd> Ord for PriorityState<N, P> {
 ///
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in priority order
+#[allow(dead_code)]
 pub fn priority_first_search<N, E, Ix, P, F>(
     graph: &Graph<N, E, Ix>,
     source: &N,
@@ -304,8 +305,7 @@ where
 {
     if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Source node {:?} not found",
-            source
+            "Source node {source:?} not found"
         )));
     }
 
@@ -366,6 +366,7 @@ where
 ///
 /// # Returns
 /// * `Result<Vec<N>>` - The nodes visited in priority order
+#[allow(dead_code)]
 pub fn priority_first_search_digraph<N, E, Ix, P, F>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,
@@ -380,8 +381,7 @@ where
 {
     if !graph.has_node(source) {
         return Err(GraphError::InvalidGraph(format!(
-            "Source node {:?} not found",
-            source
+            "Source node {source:?} not found"
         )));
     }
 
@@ -442,6 +442,7 @@ where
 ///
 /// # Returns
 /// * `Result<Option<Vec<N>>>` - The path from start to goal, or None if no path exists
+#[allow(dead_code)]
 pub fn bidirectional_search<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     source: &N,
@@ -548,6 +549,7 @@ where
 }
 
 /// Bidirectional search for directed graphs
+#[allow(dead_code)]
 pub fn bidirectional_search_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     source: &N,
@@ -660,6 +662,7 @@ where
 }
 
 /// Helper function to reconstruct path from bidirectional search
+#[allow(dead_code)]
 fn reconstruct_bidirectional_path<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     start_idx: petgraph::graph::NodeIndex<Ix>,
@@ -709,6 +712,7 @@ where
 }
 
 /// Helper function to reconstruct path from bidirectional search for directed graphs
+#[allow(dead_code)]
 fn reconstruct_bidirectional_path_digraph<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     start_idx: petgraph::graph::NodeIndex<Ix>,

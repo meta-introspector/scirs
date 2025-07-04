@@ -27,6 +27,7 @@ use scirs2_ndimage::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌌 Quantum-Inspired Image Processing Showcase");
     println!("==============================================");
@@ -95,6 +96,7 @@ struct TestImages {
     edge_features: Array2<f64>,
 }
 
+#[allow(dead_code)]
 fn create_test_images() -> TestImages {
     println!("🎨 Creating test images...");
 
@@ -172,6 +174,7 @@ fn create_test_images() -> TestImages {
     }
 }
 
+#[allow(dead_code)]
 fn demonstrate_quantum_superposition_filtering(
     image: &Array2<f64>,
     config: &QuantumConfig,
@@ -210,6 +213,7 @@ fn demonstrate_quantum_superposition_filtering(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_quantum_entanglement_correlation(
     image: &Array2<f64>,
     config: &QuantumConfig,
@@ -239,6 +243,7 @@ fn demonstrate_quantum_entanglement_correlation(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_quantum_walk_edge_detection(
     image: &Array2<f64>,
     config: &QuantumConfig,
@@ -272,6 +277,7 @@ fn demonstrate_quantum_walk_edge_detection(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_quantum_machine_learning(
     test_images: &TestImages,
     config: &QuantumConfig,
@@ -310,6 +316,7 @@ fn demonstrate_quantum_machine_learning(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_quantum_error_correction(
     noisy_image: &Array2<f64>,
     config: &QuantumConfig,
@@ -345,6 +352,7 @@ fn demonstrate_quantum_error_correction(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_quantum_tensor_networks(
     image: &Array2<f64>,
     config: &QuantumConfig,
@@ -384,6 +392,7 @@ fn demonstrate_quantum_tensor_networks(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_quantum_variational_enhancement(
     blurred_image: &Array2<f64>,
     config: &QuantumConfig,
@@ -415,6 +424,7 @@ fn demonstrate_quantum_variational_enhancement(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_quantum_fourier_transform(
     image: &Array2<f64>,
     config: &QuantumConfig,
@@ -445,6 +455,7 @@ fn demonstrate_quantum_fourier_transform(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_quantum_amplitude_amplification(
     image: &Array2<f64>,
     config: &QuantumConfig,
@@ -490,6 +501,7 @@ fn demonstrate_quantum_amplitude_amplification(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_quantum_annealing_segmentation(
     image: &Array2<f64>,
     config: &QuantumConfig,
@@ -530,12 +542,14 @@ fn demonstrate_quantum_annealing_segmentation(
 
 // Helper functions
 
+#[allow(dead_code)]
 fn calculate_image_variance(image: &Array2<f64>) -> f64 {
     let mean = image.sum() / image.len() as f64;
     let variance = image.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / image.len() as f64;
     variance
 }
 
+#[allow(dead_code)]
 fn calculate_phase_std(phases: &[f64]) -> f64 {
     if phases.is_empty() {
         return 0.0;

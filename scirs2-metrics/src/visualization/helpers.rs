@@ -20,6 +20,7 @@ use crate::visualization::{ColorMap, PlotType, VisualizationData, VisualizationM
 /// # Returns
 ///
 /// * `Box<dyn crate::visualization::MetricVisualizer>` - A visualizer for the confusion matrix
+#[allow(dead_code)]
 pub fn visualize_confusion_matrix<A>(
     confusion_matrix: ArrayView2<A>,
     class_names: Option<Vec<String>>,
@@ -52,6 +53,7 @@ where
 /// # Returns
 ///
 /// * `Box<dyn crate::visualization::MetricVisualizer>` - A visualizer for the ROC curve
+#[allow(dead_code)]
 pub fn visualize_roc_curve<A>(
     fpr: ArrayView1<A>,
     tpr: ArrayView1<A>,
@@ -88,6 +90,7 @@ where
 /// # Returns
 ///
 /// * `Box<dyn crate::visualization::MetricVisualizer>` - An interactive visualizer for the ROC curve
+#[allow(dead_code)]
 pub fn visualize_interactive_roc_curve<A>(
     fpr: ArrayView1<A>,
     tpr: ArrayView1<A>,
@@ -130,6 +133,7 @@ where
 /// # Returns
 ///
 /// * `Result<Box<dyn crate::visualization::MetricVisualizer>, Box<dyn Error>>` - An interactive visualizer for the ROC curve
+#[allow(dead_code)]
 pub fn visualize_interactive_roc_from_labels<A, B>(
     y_true: ArrayView1<A>,
     y_score: ArrayView1<B>,
@@ -180,6 +184,7 @@ where
 /// # Returns
 ///
 /// * `Box<dyn crate::visualization::MetricVisualizer>` - A visualizer for the precision-recall curve
+#[allow(dead_code)]
 pub fn visualize_precision_recall_curve<A>(
     precision: ArrayView1<A>,
     recall: ArrayView1<A>,
@@ -223,6 +228,7 @@ where
 /// # Returns
 ///
 /// * `Box<dyn crate::visualization::MetricVisualizer>` - A visualizer for the calibration curve
+#[allow(dead_code)]
 pub fn visualize_calibration_curve<A>(
     prob_true: ArrayView1<A>,
     prob_pred: ArrayView1<A>,
@@ -265,6 +271,7 @@ where
 ///
 /// * `Box<dyn crate::visualization::MetricVisualizer>` - A visualizer for the learning curve
 /// * `Result<Box<dyn crate::visualization::MetricVisualizer>, Box<dyn Error>>` - A visualizer for the learning curve, or an error
+#[allow(dead_code)]
 pub fn visualize_learning_curve(
     train_sizes: Vec<usize>,
     train_scores: Vec<Vec<f64>>,
@@ -298,6 +305,7 @@ pub fn visualize_learning_curve(
 /// # Returns
 ///
 /// * `Box<dyn crate::visualization::MetricVisualizer>` - A visualizer for the generic metric
+#[allow(dead_code)]
 pub fn visualize_metric<A, B>(
     x_values: ArrayView1<A>,
     y_values: ArrayView1<B>,
@@ -417,6 +425,7 @@ impl crate::visualization::MetricVisualizer for GenericMetricVisualizer {
 /// # Returns
 ///
 /// * `Box<dyn crate::visualization::MetricVisualizer>` - A visualizer for the multi-curve plot
+#[allow(dead_code)]
 pub fn visualize_multi_curve<A, B>(
     x_values: ArrayView1<A>,
     y_values_list: Vec<ArrayView1<B>>,
@@ -569,6 +578,7 @@ impl crate::visualization::MetricVisualizer for MultiCurveVisualizer {
 /// # Returns
 ///
 /// * `Box<dyn crate::visualization::MetricVisualizer>` - A visualizer for the heatmap
+#[allow(dead_code)]
 pub fn visualize_heatmap<A>(
     matrix: ArrayView2<A>,
     x_labels: Option<Vec<String>>,
@@ -699,6 +709,7 @@ impl crate::visualization::MetricVisualizer for HeatmapVisualizer {
 /// # Returns
 ///
 /// * `Box<dyn crate::visualization::MetricVisualizer>` - A visualizer for the histogram
+#[allow(dead_code)]
 pub fn visualize_histogram<A>(
     values: ArrayView1<A>,
     bins: usize,
@@ -737,6 +748,7 @@ where
 /// # Returns
 ///
 /// * `(Vec<f64>, Vec<f64>)` - Bin edges and bin counts
+#[allow(dead_code)]
 fn create_histogram_bins(values: &[f64], bins: usize) -> (Vec<f64>, Vec<f64>) {
     // Ensure we have at least one value and valid bins
     if values.is_empty() || bins == 0 {

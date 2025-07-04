@@ -24,7 +24,7 @@ use scirs2_graph::numerical_accuracy_validation::{
     create_comprehensive_validation_suite, run_quick_validation, ValidationConfig,
 };
 
-use rand::Rng;
+use rand::{rng, Rng};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -47,6 +47,7 @@ enum ValidationStatus {
 }
 
 /// Test different ultrathink processor configurations
+#[allow(dead_code)]
 fn test_processor_configurations() -> HashMap<String, bool> {
     println!("🔧 Testing advanced processor configurations...");
     let mut results = HashMap::new();
@@ -119,6 +120,7 @@ fn test_processor_configurations() -> HashMap<String, bool> {
 }
 
 /// Test algorithm execution with advanced mode
+#[allow(dead_code)]
 fn test_algorithm_execution() -> HashMap<String, Duration> {
     println!("🧮 Testing algorithm execution with ultrathink mode...");
     let mut results = HashMap::new();
@@ -209,6 +211,7 @@ fn test_algorithm_execution() -> HashMap<String, Duration> {
 }
 
 /// Test memory efficiency with advanced mode
+#[allow(dead_code)]
 fn test_memory_efficiency() -> f64 {
     println!("💾 Testing memory efficiency with ultrathink mode...");
 
@@ -277,6 +280,7 @@ fn test_memory_efficiency() -> f64 {
 }
 
 /// Test numerical accuracy with quick validation
+#[allow(dead_code)]
 fn test_numerical_accuracy() -> bool {
     println!("🔢 Testing numerical accuracy with advanced mode...");
 
@@ -309,6 +313,7 @@ fn test_numerical_accuracy() -> bool {
 }
 
 /// Compare performance with and without advanced mode
+#[allow(dead_code)]
 fn test_performance_improvements() -> HashMap<String, f64> {
     println!("⚡ Testing performance improvements with ultrathink mode...");
     let mut improvements = HashMap::new();
@@ -376,6 +381,7 @@ fn test_performance_improvements() -> HashMap<String, f64> {
 }
 
 /// Generate final validation report
+#[allow(dead_code)]
 fn generate_final_report(
     processor_tests: HashMap<String, bool>,
     algorithm_tests: HashMap<String, Duration>,
@@ -417,6 +423,7 @@ fn generate_final_report(
 }
 
 /// Print detailed validation report
+#[allow(dead_code)]
 fn print_validation_report(report: &UltrathinkValidationReport) {
     println!("\n" + "=".repeat(60).as_str());
     println!("🎯 ULTRATHINK MODE FINAL VALIDATION REPORT");
@@ -537,6 +544,7 @@ fn print_validation_report(report: &UltrathinkValidationReport) {
     println!("\n" + "=".repeat(60).as_str());
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Starting final advanced mode validation...");
     println!("=".repeat(60));

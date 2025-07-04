@@ -6,6 +6,7 @@
 use scirs2_signal::phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Phase Vocoder Example for Time Stretching and Pitch Shifting");
     println!("=========================================================");
@@ -143,6 +144,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Generate a chirp signal (frequency sweep)
+#[allow(dead_code)]
 fn generate_chirp(samples: usize, start_freq: f64, end_freq: f64, sample_rate: f64) -> Vec<f64> {
     let mut signal = Vec::with_capacity(samples);
 
@@ -164,12 +166,14 @@ fn generate_chirp(samples: usize, start_freq: f64, end_freq: f64, sample_rate: f
 }
 
 /// Calculate the RMS (Root Mean Square) value of a signal
+#[allow(dead_code)]
 fn calculate_rms(signal: &[f64]) -> f64 {
     let sum_squared: f64 = signal.iter().map(|&x| x * x).sum();
     (sum_squared / signal.len() as f64).sqrt()
 }
 
 /// Convert a semitone shift to a musical note name
+#[allow(dead_code)]
 fn semitone_to_note_name(semitones: f64) -> String {
     if semitones == 0.0 {
         return "unison".to_string();

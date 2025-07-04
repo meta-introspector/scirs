@@ -90,6 +90,7 @@ pub struct VariogramBin<F: Float> {
 ///              bin.distance, bin.semivariance, bin.count);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn compute_empirical_variogram<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -250,6 +251,7 @@ where
 /// println!("Fitted parameters: nugget={:.3}, sill={:.3}, range={:.3}",
 ///          nugget, sill, range);
 /// ```
+#[allow(dead_code)]
 pub fn fit_variogram_model<F>(
     bins: &[VariogramBin<F>],
     model: VariogramModel,
@@ -405,6 +407,7 @@ where
 }
 
 /// Convert variogram parameters to covariance parameters
+#[allow(dead_code)]
 pub fn variogram_to_covariance<F>(
     nugget: F,
     sill: F,

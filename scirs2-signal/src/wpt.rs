@@ -675,6 +675,7 @@ impl WaveletPacketTree {
 /// let level2 = wpt.get_level(2);
 /// assert_eq!(level2.len(), 4);
 /// ```
+#[allow(dead_code)]
 pub fn wp_decompose<T>(
     data: &[T],
     wavelet: Wavelet,
@@ -722,6 +723,7 @@ where
 /// // Check that we have coefficients from all 4 subbands at level 2
 /// assert_eq!(coeffs.len(), 4);
 /// ```
+#[allow(dead_code)]
 pub fn get_level_coefficients(tree: &WaveletPacketTree, level: usize) -> Vec<Vec<f64>> {
     let mut nodes = tree.get_level(level);
 
@@ -766,6 +768,7 @@ pub fn get_level_coefficients(tree: &WaveletPacketTree, level: usize) -> Vec<Vec
 /// // The reconstructed signal exists and has reasonable length
 /// assert!(reconstructed.len() >= signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn reconstruct_from_nodes(
     tree: &WaveletPacketTree,
     nodes: &[(usize, usize)],

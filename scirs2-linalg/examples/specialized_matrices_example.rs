@@ -13,6 +13,7 @@ use scirs2_linalg::{
     LinalgResult,
 };
 
+#[allow(dead_code)]
 fn main() -> LinalgResult<()> {
     println!("=== Specialized Matrices Example ===");
 
@@ -142,6 +143,7 @@ fn main() -> LinalgResult<()> {
 }
 
 // Helper function to print a matrix
+#[allow(dead_code)]
 fn print_matrix<T: std::fmt::Display>(matrix: &Array2<T>) {
     for i in 0..matrix.nrows() {
         print!("[");

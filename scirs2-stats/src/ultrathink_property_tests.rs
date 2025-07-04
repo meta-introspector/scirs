@@ -4,8 +4,8 @@
 //! featuring comprehensive mathematical invariant testing, numerical stability
 //! verification, SIMD consistency checks, and performance regression detection.
 
+use crate::advanced_simd_stats::{BatchOperation, UltraThinkSimdConfig, UltraThinkSimdOptimizer};
 use crate::ultrathink_parallel_enhancements::UltrathinkParallelConfig;
-use crate::ultrathink_simd_optimizations::{ultra_batch_statistics, UltrathinkSimdConfig};
 use crate::{kurtosis, mean, pearson_r, skew, std, var};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
@@ -13,7 +13,7 @@ use std::time::Instant;
 
 /// Ultra-comprehensive property testing framework
 pub struct UltrathinkPropertyTester {
-    simd_config: UltrathinkSimdConfig,
+    simd_config: UltraThinkSimdConfig,
     parallel_config: UltrathinkParallelConfig,
     numerical_tolerance: f64,
     performance_tolerance: f64,
@@ -22,7 +22,7 @@ pub struct UltrathinkPropertyTester {
 impl Default for UltrathinkPropertyTester {
     fn default() -> Self {
         Self {
-            simd_config: UltrathinkSimdConfig::default(),
+            simd_config: UltraThinkSimdConfig::default(),
             parallel_config: UltrathinkParallelConfig::default(),
             numerical_tolerance: 1e-12,
             performance_tolerance: 2.0, // 2x slowdown tolerance
@@ -33,7 +33,7 @@ impl Default for UltrathinkPropertyTester {
 impl UltrathinkPropertyTester {
     /// Create a new property tester with custom configuration
     pub fn new(
-        simd_config: UltrathinkSimdConfig,
+        simd_config: UltraThinkSimdConfig,
         parallel_config: UltrathinkParallelConfig,
     ) -> Self {
         Self {
@@ -57,19 +57,24 @@ impl UltrathinkPropertyTester {
         let mut errors = Vec::new();
 
         // Test batch statistics consistency
-        match ultra_batch_statistics(data, &self.simd_config) {
+        let optimizer = UltraThinkSimdOptimizer::new(self.simd_config.clone());
+        let data_arrays = vec![data.to_owned().view()];
+        let operations = vec![BatchOperation::Mean, BatchOperation::Variance];
+
+        match optimizer.ultra_batch_statistics(&data_arrays, &operations) {
             Ok(simd_result) => {
                 // Compare with scalar implementations
                 if let Ok(scalar_mean) = mean(data) {
-                    let mean_diff =
-                        (simd_result.mean.to_f64().unwrap() - scalar_mean.to_f64().unwrap()).abs();
+                    let mean_diff = (simd_result.means[0].to_f64().unwrap()
+                        - scalar_mean.to_f64().unwrap())
+                    .abs();
                     if mean_diff > self.numerical_tolerance {
                         errors.push(format!("SIMD mean differs from scalar: {}", mean_diff));
                     }
                 }
 
                 if let Ok(scalar_var) = var(data, 0) {
-                    let var_diff = (simd_result.variance.to_f64().unwrap()
+                    let var_diff = (simd_result.variances[0].to_f64().unwrap()
                         - scalar_var.to_f64().unwrap())
                     .abs();
                     if var_diff > self.numerical_tolerance {
@@ -349,7 +354,14 @@ impl UltrathinkPropertyTester {
 
         // Benchmark SIMD operations
         let start = Instant::now();
-        let _ = ultra_batch_statistics(data, &self.simd_config);
+        let optimizer = UltraThinkSimdOptimizer::new(self.simd_config.clone());
+        let data_arrays = vec![data.to_owned().view()];
+        let operations = vec![
+            BatchOperation::Mean,
+            BatchOperation::Variance,
+            BatchOperation::StandardDeviation,
+        ];
+        let _ = optimizer.ultra_batch_statistics(&data_arrays, &operations);
         let simd_time = start.elapsed();
 
         // Check for performance regression
@@ -526,6 +538,7 @@ impl ComprehensiveTestReport {
 }
 
 /// Create a default ultrathink property tester
+#[allow(dead_code)]
 pub fn create_ultrathink_property_tester() -> UltrathinkPropertyTester {
     UltrathinkPropertyTester::default()
 }

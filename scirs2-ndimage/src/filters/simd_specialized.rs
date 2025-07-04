@@ -10,19 +10,12 @@ use std::cmp;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
+use crate::utils::safe_f64_to_float;
 use crate::BoundaryMode;
 
-/// Helper function for safe conversion of hardcoded constants
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
 
 /// Helper function for safe float to usize conversion
+#[allow(dead_code)]
 fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
     value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert float to usize".to_string())
@@ -30,6 +23,7 @@ fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 }
 
 /// Helper function for safe isize conversion
+#[allow(dead_code)]
 fn safe_isize_to_float<T: Float + FromPrimitive>(value: isize) -> NdimageResult<T> {
     T::from_isize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert isize {} to float type", value))
@@ -37,6 +31,7 @@ fn safe_isize_to_float<T: Float + FromPrimitive>(value: isize) -> NdimageResult<
 }
 
 /// Helper function for safe usize conversion
+#[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
@@ -44,6 +39,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 }
 
 /// Helper function for safe partial comparison
+#[allow(dead_code)]
 fn safe_partial_cmp<T: PartialOrd>(a: &T, b: &T) -> NdimageResult<std::cmp::Ordering> {
     a.partial_cmp(b).ok_or_else(|| {
         NdimageError::ComputationError("Failed to compare values (NaN encountered)".to_string())
@@ -54,6 +50,7 @@ fn safe_partial_cmp<T: PartialOrd>(a: &T, b: &T) -> NdimageResult<std::cmp::Orde
 ///
 /// The bilateral filter is a non-linear filter that smooths an image while preserving edges.
 /// It considers both spatial distance and intensity difference when computing weights.
+#[allow(dead_code)]
 pub fn simd_bilateral_filter<T>(
     input: ArrayView2<T>,
     spatial_sigma: T,
@@ -111,6 +108,7 @@ where
 }
 
 /// Process a single row with SIMD optimization
+#[allow(dead_code)]
 fn simd_bilateral_filter_row<T>(
     input: &ArrayView2<T>,
     output_row: &mut ArrayViewMut1<T>,
@@ -231,6 +229,7 @@ where
 }
 
 /// Compute spatial weights for bilateral filter
+#[allow(dead_code)]
 fn compute_spatial_weights<T>(window_size: usize, sigma: T) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive,
@@ -252,6 +251,7 @@ where
 }
 
 /// SIMD approximation of exponential function
+#[allow(dead_code)]
 fn simd_exp_approx<T>(values: &[T]) -> Vec<T>
 where
     T: Float + FromPrimitive,
@@ -282,6 +282,7 @@ where
 ///
 /// Non-local means is a denoising algorithm that averages similar patches
 /// throughout the image, not just in a local neighborhood.
+#[allow(dead_code)]
 pub fn simd_non_local_means<T>(
     input: ArrayView2<T>,
     patch_size: usize,
@@ -333,6 +334,7 @@ where
 }
 
 /// Process a row with non-local means using SIMD
+#[allow(dead_code)]
 fn simd_nlm_process_row<T>(
     input: &ArrayView2<T>,
     output_row: &mut ArrayViewMut1<T>,
@@ -390,6 +392,7 @@ where
 }
 
 /// Compute L2 distance between patches using SIMD
+#[allow(dead_code)]
 fn simd_patch_distance<T>(patch1: &ArrayView2<T>, patch2: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + SimdUnifiedOps,
@@ -431,6 +434,7 @@ where
 ///
 /// This filter performs edge-preserving smoothing by varying the diffusion
 /// coefficient based on the local image gradient.
+#[allow(dead_code)]
 pub fn simd_anisotropic_diffusion<T>(
     input: ArrayView2<T>,
     iterations: usize,
@@ -469,6 +473,7 @@ where
 }
 
 /// Process a row with anisotropic diffusion using SIMD
+#[allow(dead_code)]
 fn simd_diffusion_row<T>(
     input: &ArrayView2<T>,
     output_row: &mut ArrayViewMut1<T>,
@@ -578,6 +583,7 @@ fn simd_diffusion_row<T>(
 }
 
 /// Compute diffusion coefficients for SIMD values
+#[allow(dead_code)]
 fn compute_diffusion_coeff<T>(gradients: &[T], kappa_sq: T, option: usize) -> Vec<T>
 where
     T: Float + FromPrimitive,
@@ -589,6 +595,7 @@ where
 }
 
 /// Compute single diffusion coefficient
+#[allow(dead_code)]
 fn compute_single_diffusion_coeff<T>(gradient: T, kappa_sq: T, option: usize) -> T
 where
     T: Float + FromPrimitive,
@@ -631,6 +638,7 @@ where
 ///
 /// The guided filter uses a guidance image to perform edge-aware filtering,
 /// making it effective for applications like flash/no-flash denoising and HDR compression.
+#[allow(dead_code)]
 pub fn simd_guided_filter<T>(
     input: ArrayView2<T>,
     guide: ArrayView2<T>,
@@ -674,6 +682,7 @@ where
 }
 
 /// SIMD-optimized box filter (mean filter)
+#[allow(dead_code)]
 fn simd_box_filter<T>(input: &ArrayView2<T>, radius: usize) -> NdimageResult<Array<T, Ix2>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
@@ -705,6 +714,7 @@ where
 }
 
 /// Process a row with box filter using SIMD
+#[allow(dead_code)]
 fn simd_box_filter_row<T>(
     input: &ArrayView2<T>,
     output_row: &mut ArrayViewMut1<T>,
@@ -758,6 +768,7 @@ where
 }
 
 /// SIMD-optimized box filter for product of two images
+#[allow(dead_code)]
 fn simd_box_filter_product<T>(
     input1: &ArrayView2<T>,
     input2: &ArrayView2<T>,
@@ -795,6 +806,7 @@ where
 }
 
 /// Process a row with box filter product using SIMD
+#[allow(dead_code)]
 fn simd_box_filter_product_row<T>(
     input1: &ArrayView2<T>,
     input2: &ArrayView2<T>,
@@ -860,6 +872,7 @@ where
 /// SIMD-optimized joint bilateral filter
 ///
 /// Similar to bilateral filter but uses a guidance image for edge detection
+#[allow(dead_code)]
 pub fn simd_joint_bilateral_filter<T>(
     input: ArrayView2<T>,
     guide: ArrayView2<T>,
@@ -925,6 +938,7 @@ where
 }
 
 /// Process a row with joint bilateral filter using SIMD
+#[allow(dead_code)]
 fn simd_joint_bilateral_row<T>(
     input: &ArrayView2<T>,
     guide: &ArrayView2<T>,
@@ -975,6 +989,7 @@ where
 /// SIMD-optimized adaptive median filter
 ///
 /// This filter adapts the window size based on local statistics to better preserve edges
+#[allow(dead_code)]
 pub fn simd_adaptive_median_filter<T>(
     input: ArrayView2<T>,
     max_window_size: usize,
@@ -1005,6 +1020,7 @@ where
 }
 
 /// Compute adaptive median at a single point
+#[allow(dead_code)]
 fn adaptive_median_at_point<T>(
     input: ArrayView2<T>,
     y: usize,

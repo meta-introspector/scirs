@@ -5,6 +5,7 @@ use std::io::Write;
 use std::path::Path;
 use tempfile::tempdir;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Memory-Mapped Array Slicing Example");
     println!("=====================================\n");
@@ -50,6 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_basic_slicing(mmap: &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Slicing Example");
     println!("------------------------");
@@ -86,6 +88,7 @@ fn demo_basic_slicing(mmap: &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_complex_slicing(mmap: &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Complex Slicing Example");
     println!("--------------------------");
@@ -131,6 +134,7 @@ fn demo_complex_slicing(mmap: &MemoryMappedArray<f64>) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_ndarray_syntax(mmap: &MemoryMappedArray<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Using ndarray Slice Syntax");
     println!("-----------------------------");
@@ -166,6 +170,7 @@ fn demo_ndarray_syntax(mmap: &MemoryMappedArray<f64>) -> Result<(), Box<dyn std:
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_slice_chaining(
     mmap: &MemoryMappedArray<f64>,
     base_path: &Path,

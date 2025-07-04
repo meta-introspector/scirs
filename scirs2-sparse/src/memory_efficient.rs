@@ -83,6 +83,7 @@ impl MemoryTracker {
 /// # Returns
 ///
 /// The result vector y = A * x
+#[allow(dead_code)]
 pub fn streaming_sparse_matvec<T, S>(
     matrix: &S,
     x: &ArrayView1<T>,

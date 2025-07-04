@@ -12,6 +12,7 @@ use scirs2_stats::{
     NullHandling,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌟 Enhanced Fluent API for Statistical Computing");
     println!("===============================================\n");
@@ -37,6 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_basic_fluent_api() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Basic Fluent API Usage");
     println!("========================\n");
@@ -77,6 +79,7 @@ fn demonstrate_basic_fluent_api() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_method_chaining() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔗 Advanced Method Chaining");
     println!("===========================\n");
@@ -131,6 +134,7 @@ fn demonstrate_method_chaining() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_intelligent_optimization() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🤖 Intelligent Optimization Features");
     println!("===================================\n");
@@ -176,6 +180,7 @@ fn demonstrate_intelligent_optimization() -> Result<(), Box<dyn std::error::Erro
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_quick_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚡ Quick Analysis Functions");
     println!("===========================\n");
@@ -204,6 +209,7 @@ fn demonstrate_quick_analysis() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_advanced_configuration() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔧 Advanced Configuration Options");
     println!("================================\n");
@@ -263,6 +269,7 @@ fn demonstrate_advanced_configuration() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_api_benefits() {
     println!("   🔗 **Method Chaining**: Fluent, readable statistical workflows");
     println!("   🤖 **Intelligent Optimization**: ML-based automatic optimization");

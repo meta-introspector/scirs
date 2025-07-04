@@ -6,6 +6,7 @@
 use scirs2_graph::algorithms::*;
 use scirs2_graph::generators::{create_digraph, create_graph};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== scirs2-graph Refactoring Demo ===\n");
 

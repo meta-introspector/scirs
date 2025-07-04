@@ -7,6 +7,7 @@ use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
 
+#[allow(dead_code)]
 fn main() -> SignalResult<()> {
     println!("Kalman Filter Examples");
 
@@ -32,6 +33,7 @@ fn main() -> SignalResult<()> {
 }
 
 /// Generate a noisy sine wave with optional outliers
+#[allow(dead_code)]
 fn generate_noisy_sine(
     n_samples: usize,
     amplitude: f64,
@@ -63,6 +65,7 @@ fn generate_noisy_sine(
 }
 
 /// Export signal data to CSV for external plotting
+#[allow(dead_code)]
 fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
     let mut file = File::create(file_name).map_err(|e| SignalError::Compute(e.to_string()))?;
 
@@ -92,6 +95,7 @@ fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
 }
 
 /// Basic Kalman filtering example
+#[allow(dead_code)]
 fn basic_kalman_filtering() -> SignalResult<()> {
     println!("Basic Kalman Filtering Example");
 
@@ -174,6 +178,7 @@ fn basic_kalman_filtering() -> SignalResult<()> {
 }
 
 /// Extended Kalman filter for nonlinear systems
+#[allow(dead_code)]
 fn extended_kalman_filtering() -> SignalResult<()> {
     println!("Extended Kalman Filtering Example");
 
@@ -288,6 +293,7 @@ fn extended_kalman_filtering() -> SignalResult<()> {
 }
 
 /// Unscented Kalman filter for nonlinear systems
+#[allow(dead_code)]
 fn unscented_kalman_filtering() -> SignalResult<()> {
     println!("Unscented Kalman Filtering Example");
 
@@ -391,6 +397,7 @@ fn unscented_kalman_filtering() -> SignalResult<()> {
 }
 
 /// Kalman filter for signal denoising
+#[allow(dead_code)]
 fn kalman_denoising() -> SignalResult<()> {
     println!("Kalman Denoising Example");
 
@@ -491,6 +498,7 @@ fn kalman_denoising() -> SignalResult<()> {
 }
 
 /// Example of adaptive Kalman filtering for time-varying noise
+#[allow(dead_code)]
 fn adaptive_kalman_filtering() -> SignalResult<()> {
     println!("Adaptive Kalman Filtering Example");
 
@@ -566,6 +574,7 @@ fn adaptive_kalman_filtering() -> SignalResult<()> {
 }
 
 /// Example of robust Kalman filtering for signals with outliers
+#[allow(dead_code)]
 fn robust_kalman_filtering() -> SignalResult<()> {
     println!("Robust Kalman Filtering Example");
 

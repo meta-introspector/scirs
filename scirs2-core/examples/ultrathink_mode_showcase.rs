@@ -4,17 +4,18 @@
 //! across multiple scirs2-core modules, showing how they work together
 //! to provide enhanced AI-driven scientific computing.
 
-use scirs2_core::distributed_compute::UltrathinkDistributedComputer;
-use scirs2_core::ecosystem_bridge::UltrathinkEcosystemCoordinator;
 use scirs2_core::error::CoreResult;
 use scirs2_core::neural_architecture_search::{
     HardwareConstraints, NASStrategy, NeuralArchitectureSearch, OptimizationObjectives,
     SearchConfig, SearchSpace,
 };
+use scirs2_core::ultrathink_distributed_computing::UltrathinkDistributedComputer;
+use scirs2_core::ultrathink_ecosystem_integration::UltrathinkEcosystemCoordinator;
 
 #[cfg(feature = "jit")]
-use scirs2_core::advanced_jit_compilation::UltrathinkJitCompiler;
+use scirs2_core::ultrathink_jit_compilation::UltrathinkJitCompiler;
 
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     println!("🚀 Ultrathink Mode Showcase - scirs2-core");
     println!("==========================================");
@@ -48,6 +49,7 @@ fn main() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn showcase_neural_architecture_search() -> CoreResult<()> {
     println!("   Initializing Neural Architecture Search engine...");
 
@@ -86,6 +88,7 @@ fn showcase_neural_architecture_search() -> CoreResult<()> {
 }
 
 #[cfg(feature = "jit")]
+#[allow(dead_code)]
 fn showcase_jit_compilation() -> CoreResult<()> {
     println!("   Initializing JIT Compilation Framework...");
 
@@ -100,6 +103,7 @@ fn showcase_jit_compilation() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn showcase_distributed_computing() -> CoreResult<()> {
     println!("   Initializing Distributed Computing Framework...");
 
@@ -112,6 +116,7 @@ fn showcase_distributed_computing() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn showcase_ecosystem_integration() -> CoreResult<()> {
     println!("   Initializing Ecosystem Integration...");
 

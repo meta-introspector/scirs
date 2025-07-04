@@ -138,6 +138,7 @@ use std::collections::{HashMap, VecDeque};
 ///
 /// Returns a vector of edges that form the minimum spanning tree.
 /// Only works on undirected graphs.
+#[allow(dead_code)]
 pub fn minimum_spanning_tree<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
 ) -> Result<Vec<crate::base::Edge<N, E>>>
@@ -221,6 +222,7 @@ where
 ///
 /// Returns nodes in topological order if the graph is a DAG,
 /// otherwise returns an error indicating a cycle was found.
+#[allow(dead_code)]
 pub fn topological_sort<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<Vec<N>>
 where
     N: Node + std::fmt::Debug,
@@ -246,6 +248,7 @@ where
 /// PageRank algorithm for computing node importance
 ///
 /// Returns a map from nodes to their PageRank scores.
+#[allow(dead_code)]
 pub fn pagerank<N, E, Ix>(
     graph: &DiGraph<N, E, Ix>,
     damping_factor: f64,
@@ -328,6 +331,7 @@ where
 /// Betweenness centrality for nodes
 ///
 /// Measures the extent to which a node lies on paths between other nodes.
+#[allow(dead_code)]
 pub fn betweenness_centrality<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     normalized: bool,
@@ -410,6 +414,7 @@ where
 /// Closeness centrality for nodes
 ///
 /// Measures how close a node is to all other nodes in the graph.
+#[allow(dead_code)]
 pub fn closeness_centrality<N, E, Ix>(graph: &Graph<N, E, Ix>, normalized: bool) -> HashMap<N, f64>
 where
     N: Node + std::fmt::Debug,
@@ -466,6 +471,7 @@ where
 /// Eigenvector centrality
 ///
 /// Computes the eigenvector centrality of nodes using power iteration.
+#[allow(dead_code)]
 pub fn eigenvector_centrality<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     max_iter: usize,

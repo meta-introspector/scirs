@@ -8,6 +8,7 @@ use scirs2_metrics::error::Result;
 use scirs2_metrics::optimization::hardware::*;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Hardware Acceleration Example");
     println!("===========================");
@@ -53,6 +54,7 @@ fn main() -> Result<()> {
 }
 
 /// Example of hardware capabilities detection
+#[allow(dead_code)]
 fn hardware_detection_example() {
     let capabilities = HardwareCapabilities::detect();
 
@@ -89,6 +91,7 @@ fn hardware_detection_example() {
 }
 
 /// Example of SIMD distance computations
+#[allow(dead_code)]
 fn simd_distance_example() -> Result<()> {
     let simd_metrics = SimdDistanceMetrics::new();
 
@@ -131,6 +134,7 @@ fn simd_distance_example() -> Result<()> {
 }
 
 /// Test accuracy of SIMD distance computations
+#[allow(dead_code)]
 fn test_distance_accuracy(simd_metrics: &SimdDistanceMetrics) -> Result<()> {
     // Test with small vectors (should use standard implementation)
     let small_a = Array1::from_vec(vec![1.0, 2.0, 3.0]);
@@ -167,6 +171,7 @@ fn test_distance_accuracy(simd_metrics: &SimdDistanceMetrics) -> Result<()> {
 }
 
 /// Example of SIMD statistical computations
+#[allow(dead_code)]
 fn simd_statistics_example() -> Result<()> {
     let simd_stats = SimdStatistics::new();
 
@@ -214,6 +219,7 @@ fn simd_statistics_example() -> Result<()> {
 }
 
 /// Test statistical computations with different distributions
+#[allow(dead_code)]
 fn test_statistical_distributions(simd_stats: &SimdStatistics) -> Result<()> {
     // Normal distribution approximation
     let normal_data = Array1::from_vec(
@@ -263,6 +269,7 @@ fn test_statistical_distributions(simd_stats: &SimdStatistics) -> Result<()> {
 }
 
 /// Example of hardware-accelerated matrix operations
+#[allow(dead_code)]
 fn hardware_matrix_example() -> Result<()> {
     let matrix_ops = HardwareAcceleratedMatrix::new();
 
@@ -325,6 +332,7 @@ fn hardware_matrix_example() -> Result<()> {
 }
 
 /// Performance benchmarking example
+#[allow(dead_code)]
 fn performance_benchmark_example() -> Result<()> {
     println!("Performance benchmarking of SIMD vs standard implementations:");
 
@@ -340,6 +348,7 @@ fn performance_benchmark_example() -> Result<()> {
 }
 
 /// Benchmark distance computation performance
+#[allow(dead_code)]
 fn benchmark_distance_performance(size: usize) -> Result<()> {
     let simd_metrics = SimdDistanceMetrics::new();
 
@@ -373,6 +382,7 @@ fn benchmark_distance_performance(size: usize) -> Result<()> {
 }
 
 /// Benchmark statistical computation performance
+#[allow(dead_code)]
 fn benchmark_statistics_performance(size: usize) -> Result<()> {
     let simd_stats = SimdStatistics::new();
 
@@ -406,6 +416,7 @@ fn benchmark_statistics_performance(size: usize) -> Result<()> {
 }
 
 /// Configuration and optimization example
+#[allow(dead_code)]
 fn configuration_example() -> Result<()> {
     println!("Testing different hardware acceleration configurations:");
 

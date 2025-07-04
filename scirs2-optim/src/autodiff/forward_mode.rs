@@ -3,7 +3,7 @@
 //! This module implements forward-mode automatic differentiation for computing
 //! directional derivatives and Jacobian-vector products efficiently.
 
-use ndarray::{Array1, Array2, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::HashMap;
 

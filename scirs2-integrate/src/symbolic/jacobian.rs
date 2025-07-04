@@ -11,14 +11,17 @@ use ndarray::{Array2, ArrayView1};
 use std::collections::HashMap;
 
 // Helper functions for creating symbolic expressions
+#[allow(dead_code)]
 fn var<F: IntegrateFloat>(name: &str) -> SymbolicExpression<F> {
     SymbolicExpression::var(name)
 }
 
+#[allow(dead_code)]
 fn indexed_var<F: IntegrateFloat>(name: &str, index: usize) -> SymbolicExpression<F> {
     SymbolicExpression::indexed_var(name, index)
 }
 
+#[allow(dead_code)]
 fn constant<F: IntegrateFloat>(value: F) -> SymbolicExpression<F> {
     SymbolicExpression::constant(value)
 }
@@ -100,6 +103,7 @@ impl<F: IntegrateFloat> SymbolicJacobian<F> {
 ///
 /// # Returns
 /// A symbolic Jacobian matrix where J[i,j] = ∂f[i]/∂y[j]
+#[allow(dead_code)]
 pub fn generate_jacobian<F: IntegrateFloat>(
     expressions: &[SymbolicExpression<F>],
     state_vars: &[Variable],
@@ -184,6 +188,7 @@ impl<F: IntegrateFloat> Default for SymbolicODEBuilder<F> {
 }
 
 /// Example: Create a symbolic Jacobian for the Van der Pol oscillator
+#[allow(dead_code)]
 pub fn example_van_der_pol<F: IntegrateFloat>(mu: F) -> IntegrateResult<SymbolicJacobian<F>> {
     use SymbolicExpression::*;
 
@@ -221,6 +226,7 @@ pub fn example_van_der_pol<F: IntegrateFloat>(mu: F) -> IntegrateResult<Symbolic
 }
 
 /// Example: Create a symbolic Jacobian for a stiff chemical reaction system
+#[allow(dead_code)]
 pub fn example_stiff_chemical<F: IntegrateFloat>() -> IntegrateResult<SymbolicJacobian<F>> {
     // Robertson's chemical reaction problem (stiff ODE)
     // dy1/dt = -0.04*y1 + 1e4*y2*y3
@@ -249,6 +255,7 @@ pub fn example_stiff_chemical<F: IntegrateFloat>() -> IntegrateResult<SymbolicJa
 }
 
 /// Example: Create a symbolic Jacobian for a predator-prey system with seasonal effects
+#[allow(dead_code)]
 pub fn example_seasonal_predator_prey<F: IntegrateFloat>() -> IntegrateResult<SymbolicJacobian<F>> {
     use SymbolicExpression::*;
 
@@ -284,6 +291,7 @@ pub fn example_seasonal_predator_prey<F: IntegrateFloat>() -> IntegrateResult<Sy
 
 /// Integration with the ODE solver autodiff module
 #[cfg(feature = "autodiff")]
+#[allow(dead_code)]
 pub fn create_autodiff_jacobian<F, Func>(
     symbolic_jacobian: &SymbolicJacobian<F>,
 ) -> impl Fn(F, ArrayView1<F>) -> IntegrateResult<Array2<F>>

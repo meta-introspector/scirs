@@ -224,6 +224,7 @@ impl<'a, T: Float + FromPrimitive + Debug + Clone> OptimizedBoundaryOps<T> for B
 }
 
 /// Optimized convolution for 2D arrays with specialized boundary handling
+#[allow(dead_code)]
 pub fn convolve2d_optimized<T>(
     input: &Array2<T>,
     kernel: &Array2<T>,
@@ -327,6 +328,7 @@ where
 }
 
 /// Optimized 1D convolution with boundary handling
+#[allow(dead_code)]
 pub fn convolve1d_optimized<T>(
     input: &Array1<T>,
     kernel: &Array1<T>,
@@ -400,6 +402,7 @@ where
 }
 
 /// Apply a generic filter with optimized boundary handling for 2D arrays
+#[allow(dead_code)]
 pub fn apply_filter2d_optimized<T, F>(
     input: &Array2<T>,
     kernel_shape: (usize, usize),

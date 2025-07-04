@@ -414,6 +414,7 @@ pub struct PlatformConsistencyResult {
 }
 
 /// Run comprehensive validation against SciPy reference implementations
+#[allow(dead_code)]
 pub fn run_comprehensive_scipy_validation() -> SignalResult<ComprehensiveSciPyValidationResult> {
     println!("🔬 Starting comprehensive SciPy validation...");
     let start_time = Instant::now();
@@ -467,6 +468,7 @@ pub fn run_comprehensive_scipy_validation() -> SignalResult<ComprehensiveSciPyVa
 }
 
 /// Validate filter implementations against SciPy
+#[allow(dead_code)]
 fn validate_filter_implementations() -> SignalResult<FilterValidationResult> {
     println!("🔧 Validating filter implementations...");
 
@@ -506,6 +508,7 @@ fn validate_filter_implementations() -> SignalResult<FilterValidationResult> {
 }
 
 /// Validate Butterworth filter implementation
+#[allow(dead_code)]
 fn validate_butterworth_filter() -> SignalResult<FilterTypeValidation> {
     // Test parameters
     let order = 4;
@@ -538,6 +541,7 @@ fn validate_butterworth_filter() -> SignalResult<FilterTypeValidation> {
 }
 
 /// Check filter stability by examining poles
+#[allow(dead_code)]
 fn check_filter_stability(denominator: &[f64]) -> SignalResult<bool> {
     // For a stable IIR filter, all poles must be inside the unit circle
     // This is a simplified check - in practice would use polynomial root finding
@@ -548,6 +552,7 @@ fn check_filter_stability(denominator: &[f64]) -> SignalResult<bool> {
 }
 
 /// Validate spectral analysis implementations
+#[allow(dead_code)]
 fn validate_spectral_implementations() -> SignalResult<SpectralValidationResult> {
     println!("📊 Validating spectral analysis implementations...");
 
@@ -595,6 +600,7 @@ fn validate_spectral_implementations() -> SignalResult<SpectralValidationResult>
 }
 
 /// Validate Welch method implementation
+#[allow(dead_code)]
 fn validate_welch_method(signal: &[f64], fs: f64) -> SignalResult<SpectralMethodValidation> {
     // Compute PSD using our Welch implementation
     let (freqs, psd) = welch(signal, fs, 256, None, 128)?;
@@ -613,6 +619,7 @@ fn validate_welch_method(signal: &[f64], fs: f64) -> SignalResult<SpectralMethod
 }
 
 /// Validate multitaper method implementation  
+#[allow(dead_code)]
 fn validate_multitaper_method(signal: &[f64], fs: f64) -> SignalResult<MultitaperValidation> {
     // Basic spectral validation
     let spectral_validation = SpectralMethodValidation {
@@ -646,6 +653,7 @@ fn validate_multitaper_method(signal: &[f64], fs: f64) -> SignalResult<Multitape
 }
 
 /// Estimate PSD accuracy relative to theoretical expectations
+#[allow(dead_code)]
 fn estimate_psd_accuracy(freqs: &[f64], psd: &[f64], fs: f64) -> SignalResult<f64> {
     // Find peaks at expected frequencies (50 Hz and 120 Hz)
     let expected_freqs = [50.0, 120.0];
@@ -685,6 +693,7 @@ fn estimate_psd_accuracy(freqs: &[f64], psd: &[f64], fs: f64) -> SignalResult<f6
 }
 
 /// Estimate frequency accuracy
+#[allow(dead_code)]
 fn estimate_frequency_accuracy(freqs: &[f64], fs: f64) -> SignalResult<f64> {
     // Check frequency spacing
     if freqs.len() < 2 {
@@ -699,6 +708,7 @@ fn estimate_frequency_accuracy(freqs: &[f64], fs: f64) -> SignalResult<f64> {
 }
 
 /// Validate wavelet implementations
+#[allow(dead_code)]
 fn validate_wavelet_implementations() -> SignalResult<WaveletValidationResult> {
     println!("🌊 Validating wavelet implementations...");
 
@@ -741,6 +751,7 @@ fn validate_wavelet_implementations() -> SignalResult<WaveletValidationResult> {
 }
 
 /// Validate DWT implementation
+#[allow(dead_code)]
 fn validate_dwt_implementation(signal: &[f64]) -> SignalResult<DwtValidation> {
     let wavelet = Wavelet::Daubechies(4);
 
@@ -782,6 +793,7 @@ fn validate_dwt_implementation(signal: &[f64]) -> SignalResult<DwtValidation> {
 }
 
 /// Validate system identification implementations
+#[allow(dead_code)]
 fn validate_sysid_implementations() -> SignalResult<SysIdValidationResult> {
     println!("🔧 Validating system identification implementations...");
 
@@ -793,7 +805,7 @@ fn validate_sysid_implementations() -> SignalResult<SysIdValidationResult> {
 
     // Generate AR(2) process
     for i in 2..n {
-        let noise = 0.1 * rng.gen_range(-1.0..1.0);
+        let noise = 0.1 * rng.random_range(-1.0..1.0);
         signal[i] = -true_ar_coeffs[1] * signal[i - 1] - true_ar_coeffs[2] * signal[i - 2] + noise;
     }
 
@@ -831,6 +843,7 @@ fn validate_sysid_implementations() -> SignalResult<SysIdValidationResult> {
 }
 
 /// Validate AR parameter estimation
+#[allow(dead_code)]
 fn validate_ar_estimation(signal: &[f64], true_coeffs: &[f64]) -> SignalResult<ArValidation> {
     let signal_array = Array1::from(signal.to_vec());
     let order = true_coeffs.len() - 1;
@@ -852,6 +865,7 @@ fn validate_ar_estimation(signal: &[f64], true_coeffs: &[f64]) -> SignalResult<A
 }
 
 /// Calculate coefficient accuracy
+#[allow(dead_code)]
 fn calculate_coefficient_accuracy(estimated: &[f64], true_coeffs: &[f64]) -> f64 {
     if estimated.len() != true_coeffs.len() {
         return 0.0;
@@ -870,6 +884,7 @@ fn calculate_coefficient_accuracy(estimated: &[f64], true_coeffs: &[f64]) -> f64
 }
 
 /// Validate signal processing utilities
+#[allow(dead_code)]
 fn validate_utilities_implementations() -> SignalResult<UtilitiesValidationResult> {
     println!("🛠️ Validating utilities implementations...");
 
@@ -910,6 +925,7 @@ fn validate_utilities_implementations() -> SignalResult<UtilitiesValidationResul
 }
 
 /// Benchmark performance against SciPy
+#[allow(dead_code)]
 fn benchmark_against_scipy() -> SignalResult<PerformanceComparisonResult> {
     println!("⚡ Benchmarking performance against SciPy...");
 
@@ -942,6 +958,7 @@ fn benchmark_against_scipy() -> SignalResult<PerformanceComparisonResult> {
 }
 
 /// Validate platform consistency
+#[allow(dead_code)]
 fn validate_platform_consistency() -> SignalResult<PlatformConsistencyResult> {
     println!("💻 Validating platform consistency...");
 
@@ -962,6 +979,7 @@ fn validate_platform_consistency() -> SignalResult<PlatformConsistencyResult> {
 }
 
 /// Compute overall validation metrics
+#[allow(dead_code)]
 fn compute_overall_metrics(
     filter_validation: &FilterValidationResult,
     spectral_validation: &SpectralValidationResult,
@@ -1062,6 +1080,7 @@ fn compute_overall_metrics(
 }
 
 /// Generate a comprehensive validation report
+#[allow(dead_code)]
 pub fn generate_validation_report(result: &ComprehensiveSciPyValidationResult) -> String {
     let mut report = String::new();
 

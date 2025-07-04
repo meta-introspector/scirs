@@ -125,6 +125,7 @@ pub enum DistanceMetric {
 /// // Print the results
 /// println!("Cluster assignments: {:?}", labels);
 /// ```
+#[allow(dead_code)]
 pub fn dbscan<F: Float + FromPrimitive + Debug + PartialOrd>(
     data: ArrayView2<F>,
     eps: F,
@@ -272,6 +273,7 @@ pub fn dbscan<F: Float + FromPrimitive + Debug + PartialOrd>(
 ///
 /// * `Result<Array1<i32>>` - Cluster labels from a default extraction (using DBSCAN-like extraction
 ///   with a reasonable epsilon value), or an error if the computation fails.
+#[allow(dead_code)]
 pub fn optics<F: Float + FromPrimitive + Debug + PartialOrd>(
     data: ArrayView2<F>,
     min_samples: usize,

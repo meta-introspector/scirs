@@ -23,6 +23,7 @@ use scirs2_linalg::eigh;
 /// # Returns
 ///
 /// * Tuple containing (extracted sources, unmixing matrix)
+#[allow(dead_code)]
 pub fn fast_ica(
     signals: &Array2<f64>,
     n_components: usize,

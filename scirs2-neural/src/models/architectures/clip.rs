@@ -11,7 +11,7 @@ use rand::rng;
 use crate::layers::{Dense, Layer, LayerNorm, Sequential};
 use crate::models::architectures::{ViTConfig, VisionTransformer};
 use crate::transformer::TransformerEncoderLayer;
-use crate::utils::positional_encoding::{PositionalEncoding, SinusoidalPositionalEncoding};
+// use crate::utils::positional_encoding::{PositionalEncoding, SinusoidalPositionalEncoding}; // Disabled - module is broken
 use ndarray::{Array, Axis, IxDyn, ScalarOperand};
 use num_traits::Float;
 use rand::{rngs::SmallRng,  SeedableRng};
@@ -366,6 +366,7 @@ pub struct CLIP<
             classifier.set_training(training);
         self.vision_encoder.is_training()
 /// Normalize feature vectors (L2 normalization)
+#[allow(dead_code)]
 fn normalize_features<F: Float + Debug + ScalarOperand>(
     features: &Array<F, IxDyn>,
 ) -> Result<Array<F, IxDyn>> {
@@ -392,6 +393,7 @@ fn normalize_features<F: Float + Debug + ScalarOperand>(
     // Reshape back to original shape
     Ok(normalized.into_shape_with_order(shape)?)
 /// Compute similarity matrix between two sets of features
+#[allow(dead_code)]
 fn compute_similarity<F: Float + Debug + ScalarOperand>(
     features_a: &Array<F, IxDyn>,
     features_b: &Array<F, IxDyn>,

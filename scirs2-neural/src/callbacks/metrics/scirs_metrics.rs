@@ -64,14 +64,22 @@ impl<F: Float + Debug + Display + FromPrimitive + Send + Sync + ScalarOperand>
     pub fn with_verbose(mut self, verbose: bool) -> Self {
         self.verbose = verbose;
         self
+    }
+
     /// Get the history of metric values
     pub fn history(&self) -> &[HashMap<String, F>] {
         &self.history
+    }
+
     /// Get the current epoch results
     pub fn epoch_results(&self) -> &HashMap<String, F> {
         &self.epoch_results
+    }
+}
+
 impl<F: Float + Debug + Display + FromPrimitive + Send + Sync + ScalarOperand> Callback<F>
     for ScirsMetricsCallback<F>
+{
     fn on_event(&mut self, timing: CallbackTiming, context: &mut CallbackContext<F>) -> Result<()> {
         match timing {
             CallbackTiming::AfterBatch => {

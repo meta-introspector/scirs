@@ -12,7 +12,7 @@
 #![allow(dead_code)]
 
 use crate::error::{InterpolateError, InterpolateResult};
-use ndarray::{Array1, Array2, ArrayView1, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use rand_distr::{Distribution, Normal, StandardNormal};
@@ -231,7 +231,7 @@ pub struct BayesianInterpolator<T: Float> {
     y_obs: Array1<T>,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display> BayesianInterpolator<T> {
+impl<T: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign + std::ops::RemAssign> BayesianInterpolator<T> {
     /// Create a new Bayesian interpolator
     pub fn new(
         x: &ArrayView1<T>,
@@ -282,7 +282,7 @@ impl<T: Float + FromPrimitive + Debug + Display> BayesianInterpolator<T> {
 
         // Solve the linear system K * weights = y_obs using Cholesky decomposition
         // This is more numerically stable than matrix inversion
-        let weights = match self.solve_gp_system(&k_xx, &self.y_obs.view()) {
+        let weights = match self.solve_gp_system(&k_xx.view(), &self.y_obs.view()) {
             Ok(w) => w,
             Err(_) => {
                 // Fallback to regularized system if Cholesky fails
@@ -290,7 +290,7 @@ impl<T: Float + FromPrimitive + Debug + Display> BayesianInterpolator<T> {
                 for i in 0..n {
                     k_xx[[i, i]] = k_xx[[i, i]] + regularization;
                 }
-                self.solve_gp_system(&k_xx, &self.y_obs.view())?
+                self.solve_gp_system(&k_xx.view(), &self.y_obs.view())?
             }
         };
 
@@ -321,7 +321,7 @@ impl<T: Float + FromPrimitive + Debug + Display> BayesianInterpolator<T> {
     /// Solve the GP linear system using available numerical methods
     fn solve_gp_system(
         &self,
-        k_matrix: &Array2<T>,
+        k_matrix: &ArrayView2<T>,
         y_obs: &ArrayView1<T>,
     ) -> InterpolateResult<Array1<T>> {
         use crate::structured_matrix::solve_dense_system;
@@ -675,6 +675,7 @@ impl<T: Float + FromPrimitive + Debug + Display> StochasticInterpolator<T> {
 
 /// Factory functions for creating statistical interpolators
 /// Create a bootstrap interpolator with linear base interpolation
+#[allow(dead_code)]
 pub fn make_bootstrap_linear_interpolator<
     T: Float + FromPrimitive + Debug + Display + 'static + std::iter::Sum,
 >(
@@ -708,6 +709,7 @@ pub fn make_bootstrap_linear_interpolator<
 }
 
 /// Create a Bayesian interpolator with default configuration
+#[allow(dead_code)]
 pub fn make_bayesian_interpolator<T: crate::traits::InterpolationFloat>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -716,6 +718,7 @@ pub fn make_bayesian_interpolator<T: crate::traits::InterpolationFloat>(
 }
 
 /// Create a median (0.5 quantile) interpolator
+#[allow(dead_code)]
 pub fn make_median_interpolator<T>(bandwidth: T) -> InterpolateResult<QuantileInterpolator<T>>
 where
     T: Float + FromPrimitive + Debug + Display + std::iter::Sum<T> + for<'a> std::iter::Sum<&'a T>,
@@ -724,11 +727,13 @@ where
 }
 
 /// Create a robust interpolator with default Huber tuning
+#[allow(dead_code)]
 pub fn make_robust_interpolator<T: crate::traits::InterpolationFloat>() -> RobustInterpolator<T> {
     RobustInterpolator::new(T::from(1.345).unwrap()) // Huber's recommended value
 }
 
 /// Create a stochastic interpolator with default parameters
+#[allow(dead_code)]
 pub fn make_stochastic_interpolator<T: crate::traits::InterpolationFloat>(
     correlation_length: T,
 ) -> StochasticInterpolator<T> {
@@ -933,7 +938,7 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
     }
 }
 
-impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum> Default
+impl<T: crate::traits::InterpolationFloat> Default
     for EnsembleInterpolator<T>
 {
     fn default() -> Self {
@@ -1128,8 +1133,9 @@ impl CrossValidationUncertainty {
 }
 
 /// Create an ensemble interpolator with linear and cubic methods
+#[allow(dead_code)]
 pub fn make_ensemble_interpolator<
-    T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum,
+    T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum + crate::traits::InterpolationFloat,
 >() -> EnsembleInterpolator<T> {
     EnsembleInterpolator::new()
         .add_linear_method(T::from(0.6).unwrap())
@@ -1137,11 +1143,13 @@ pub fn make_ensemble_interpolator<
 }
 
 /// Create a cross-validation uncertainty estimator with leave-one-out
+#[allow(dead_code)]
 pub fn make_loocv_uncertainty() -> CrossValidationUncertainty {
     CrossValidationUncertainty::new(0) // 0 means leave-one-out
 }
 
 /// Create a cross-validation uncertainty estimator with k-fold CV
+#[allow(dead_code)]
 pub fn make_kfold_uncertainty(k: usize) -> CrossValidationUncertainty {
     CrossValidationUncertainty::new(k)
 }
@@ -1547,6 +1555,7 @@ impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum>
 }
 
 /// Convenience function to create an isotonic interpolator (increasing)
+#[allow(dead_code)]
 pub fn make_isotonic_interpolator<
     T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum,
 >(
@@ -1557,6 +1566,7 @@ pub fn make_isotonic_interpolator<
 }
 
 /// Convenience function to create a decreasing isotonic interpolator
+#[allow(dead_code)]
 pub fn make_decreasing_isotonic_interpolator<
     T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum,
 >(
@@ -1567,6 +1577,7 @@ pub fn make_decreasing_isotonic_interpolator<
 }
 
 /// Convenience function to create a KDE interpolator with Gaussian kernel
+#[allow(dead_code)]
 pub fn make_kde_interpolator<T: crate::traits::InterpolationFloat + Copy>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -1576,6 +1587,7 @@ pub fn make_kde_interpolator<T: crate::traits::InterpolationFloat + Copy>(
 }
 
 /// Convenience function to create a KDE interpolator with automatic bandwidth selection
+#[allow(dead_code)]
 pub fn make_auto_kde_interpolator<
     T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum,
 >(
@@ -1596,6 +1608,7 @@ pub fn make_auto_kde_interpolator<
 }
 
 /// Convenience function to create an empirical Bayes interpolator
+#[allow(dead_code)]
 pub fn make_empirical_bayes_interpolator<
     T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum,
 >(

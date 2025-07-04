@@ -13,6 +13,7 @@ use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 ///
 /// Computes rolling statistics (mean, variance, min, max, custom functions) efficiently
 /// using SIMD operations and optimized sliding window algorithms.
+#[allow(dead_code)]
 pub fn rolling_statistics_simd<F>(
     data: &ArrayView1<F>,
     window_size: usize,
@@ -119,6 +120,7 @@ impl<F: Zero + Clone> RollingStatsResult<F> {
     }
 }
 
+#[allow(dead_code)]
 fn compute_window_statistics<F>(
     window: &ArrayView1<F>,
     statistics: &[RollingStatistic],
@@ -286,6 +288,7 @@ fn compute_window_statistics<F>(
 ///
 /// Computes statistics along specified axes of 2D matrices using SIMD operations
 /// and parallel processing for optimal performance.
+#[allow(dead_code)]
 pub fn matrix_statistics_simd<F>(
     data: &ArrayView2<F>,
     axis: Option<usize>,
@@ -357,6 +360,7 @@ pub struct MatrixStatsResult<F> {
     pub frobenius_norm: Option<F>,
 }
 
+#[allow(dead_code)]
 fn compute_column_wise_stats<F>(
     data: &ArrayView2<F>,
     operations: &[MatrixOperation],
@@ -394,6 +398,7 @@ where
     Ok(results)
 }
 
+#[allow(dead_code)]
 fn compute_row_wise_stats<F>(
     data: &ArrayView2<F>,
     operations: &[MatrixOperation],
@@ -431,6 +436,7 @@ where
     Ok(results)
 }
 
+#[allow(dead_code)]
 fn compute_global_matrix_stats<F>(
     data: &ArrayView2<F>,
     operations: &[MatrixOperation],
@@ -478,6 +484,7 @@ where
     Ok(results)
 }
 
+#[allow(dead_code)]
 fn compute_column_statistics<F>(
     column: &ArrayView1<F>,
     operations: &[MatrixOperation],
@@ -491,6 +498,7 @@ fn compute_column_statistics<F>(
     }
 }
 
+#[allow(dead_code)]
 fn compute_row_statistics<F>(
     row: &ArrayView1<F>,
     operations: &[MatrixOperation],
@@ -504,6 +512,7 @@ fn compute_row_statistics<F>(
     }
 }
 
+#[allow(dead_code)]
 fn compute_vector_operation<F>(
     data: &ArrayView1<F>,
     operation: &MatrixOperation,
@@ -760,6 +769,7 @@ impl<F: Zero + Clone> MatrixStatsResult<F> {
 ///
 /// Performs bootstrap resampling with SIMD-accelerated statistic computation
 /// and efficient confidence interval estimation.
+#[allow(dead_code)]
 pub fn bootstrap_confidence_interval_simd<F>(
     data: &ArrayView1<F>,
     statistic_fn: BootstrapStatistic,
@@ -880,6 +890,7 @@ pub struct BootstrapResult<F> {
     pub bootstrap_statistics: Array1<F>,
 }
 
+#[allow(dead_code)]
 fn generate_bootstrap_sample<F, R>(data: &ArrayView1<F>, rng: &mut R) -> Array1<F>
 where
     F: Copy,
@@ -896,6 +907,7 @@ where
     sample
 }
 
+#[allow(dead_code)]
 fn compute_bootstrap_statistic<F>(data: &ArrayView1<F>, statistic: &BootstrapStatistic) -> F
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display,
@@ -1115,6 +1127,7 @@ where
 ///
 /// Computes kernel density estimates using SIMD-accelerated operations
 /// for improved performance on large datasets.
+#[allow(dead_code)]
 pub fn kernel_density_estimation_simd<F>(
     data: &ArrayView1<F>,
     eval_points: &ArrayView1<F>,
@@ -1256,6 +1269,7 @@ pub enum KernelType {
     Cosine,
 }
 
+#[allow(dead_code)]
 fn kernel_function<F>(z: F, kernel: &KernelType) -> F
 where
     F: Float + NumCast,

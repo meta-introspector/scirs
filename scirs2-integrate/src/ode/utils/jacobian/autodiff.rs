@@ -27,6 +27,7 @@ use ndarray::{Array1, Array2, ArrayView1};
 ///
 /// Exact Jacobian matrix (∂f/∂y)
 #[cfg(feature = "autodiff")]
+#[allow(dead_code)]
 pub fn autodiff_jacobian<F, Func>(
     f: &Func,
     t: F,
@@ -86,6 +87,7 @@ where
 
 /// Fallback implementation when autodiff feature is not enabled
 #[cfg(not(feature = "autodiff"))]
+#[allow(dead_code)]
 pub fn autodiff_jacobian<F, Func>(
     _f: &Func,
     _t: F,
@@ -103,6 +105,7 @@ where
 }
 
 /// Check if autodiff is available
+#[allow(dead_code)]
 pub fn is_autodiff_available() -> bool {
     cfg!(feature = "autodiff")
 }
@@ -110,6 +113,7 @@ pub fn is_autodiff_available() -> bool {
 /// Jacobian strategy that uses autodiff when available and falls back
 /// to finite differences when not
 #[cfg(feature = "autodiff")]
+#[allow(dead_code)]
 pub fn adaptive_jacobian<F, Func>(
     f: &Func,
     t: F,
@@ -128,6 +132,7 @@ where
 /// Jacobian strategy that uses autodiff when available and falls back
 /// to finite differences when not
 #[cfg(not(feature = "autodiff"))]
+#[allow(dead_code)]
 pub fn adaptive_jacobian<F, Func>(
     f: &Func,
     t: F,

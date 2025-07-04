@@ -1312,16 +1312,19 @@ static GLOBAL_DISTANCE_POOL: std::sync::OnceLock<DistancePool> = std::sync::Once
 static GLOBAL_CLUSTERING_ARENA: std::sync::OnceLock<ClusteringArena> = std::sync::OnceLock::new();
 
 /// Get the global distance pool instance
+#[allow(dead_code)]
 pub fn global_distance_pool() -> &'static DistancePool {
     GLOBAL_DISTANCE_POOL.get_or_init(|| DistancePool::new(1000))
 }
 
 /// Get the global clustering arena instance
+#[allow(dead_code)]
 pub fn global_clustering_arena() -> &'static ClusteringArena {
     GLOBAL_CLUSTERING_ARENA.get_or_init(ClusteringArena::new)
 }
 
 /// Create a NUMA-optimized distance pool for the current thread
+#[allow(dead_code)]
 pub fn create_numa_optimized_pool(capacity: usize) -> DistancePool {
     let config = MemoryPoolConfig {
         numa_aware: true,
@@ -1334,11 +1337,13 @@ pub fn create_numa_optimized_pool(capacity: usize) -> DistancePool {
 }
 
 /// Get NUMA topology information
+#[allow(dead_code)]
 pub fn get_numa_topology() -> NumaTopology {
     DistancePool::get_numa_topology()
 }
 
 /// Test NUMA capabilities and return detailed information
+#[allow(dead_code)]
 pub fn test_numa_capabilities() -> NumaCapabilities {
     NumaCapabilities::detect()
 }

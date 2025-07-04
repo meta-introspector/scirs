@@ -32,6 +32,7 @@ use scirs2_datasets::{
 };
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SciRS2-Datasets Ultrathink Mode Showcase");
     println!("===========================================\n");
@@ -58,6 +59,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Create a sample dataset for demonstration
+#[allow(dead_code)]
 fn create_sample_dataset() -> Result<Dataset, Box<dyn std::error::Error>> {
     println!("🔧 Generating sample classification dataset...");
 
@@ -74,6 +76,7 @@ fn create_sample_dataset() -> Result<Dataset, Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate ultra-advanced analytics capabilities
+#[allow(dead_code)]
 fn demonstrate_ultra_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧠 Ultra-Advanced Analytics Demonstration");
     println!("==========================================");
@@ -133,6 +136,7 @@ fn demonstrate_ultra_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::err
 }
 
 /// Demonstrate ultra-GPU optimization capabilities
+#[allow(dead_code)]
 fn demonstrate_ultra_gpu_optimization() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚡ Ultra-GPU Optimization Demonstration");
     println!("=====================================");
@@ -196,6 +200,7 @@ fn demonstrate_ultra_gpu_optimization() -> Result<(), Box<dyn std::error::Error>
 }
 
 /// Demonstrate adaptive streaming capabilities
+#[allow(dead_code)]
 fn demonstrate_adaptive_streaming(dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 Adaptive Streaming Demonstration");
     println!("===================================");

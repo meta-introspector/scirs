@@ -77,6 +77,7 @@ pub struct SimdMemoryResult<T> {
 /// # Returns
 ///
 /// * SIMD-optimized convolution result
+#[allow(dead_code)]
 pub fn simd_optimized_convolution<T>(
     signal: &ArrayView1<T>,
     kernel: &ArrayView1<T>,
@@ -122,6 +123,7 @@ where
 ///
 /// Implements a memory-efficient FIR filter using SIMD operations
 /// and cache-friendly access patterns.
+#[allow(dead_code)]
 pub fn simd_optimized_fir_filter<T>(
     signal: &ArrayView1<T>,
     coefficients: &ArrayView1<T>,
@@ -163,6 +165,7 @@ where
 }
 
 /// SIMD-optimized matrix operations for 2D signal processing
+#[allow(dead_code)]
 pub fn simd_optimized_matrix_multiply<T>(
     a: &ArrayView2<T>,
     b: &ArrayView2<T>,
@@ -194,6 +197,7 @@ where
 }
 
 /// Memory-efficient FFT with SIMD optimizations
+#[allow(dead_code)]
 pub fn simd_memory_efficient_fft<T>(
     signal: &ArrayView1<T>,
     config: &SimdMemoryConfig,
@@ -230,6 +234,7 @@ where
 // Helper functions for SIMD implementations
 
 /// Cache-tiled SIMD convolution implementation
+#[allow(dead_code)]
 fn simd_convolution_tiled<T>(
     signal: &ArrayView1<T>,
     kernel: &ArrayView1<T>,
@@ -266,6 +271,7 @@ where
 }
 
 /// SIMD kernel multiplication
+#[allow(dead_code)]
 fn simd_kernel_multiply<T>(
     signal_val: T,
     kernel: &ArrayView1<T>,
@@ -311,6 +317,7 @@ where
 }
 
 /// SIMD multiply-add operation
+#[allow(dead_code)]
 fn simd_multiply_add<T>(
     kernel_chunk: &ArrayView1<T>,
     signal_val: T,
@@ -328,6 +335,7 @@ where
 }
 
 /// Scalar kernel multiplication fallback
+#[allow(dead_code)]
 fn scalar_kernel_multiply<T>(
     signal_val: T,
     kernel: &ArrayView1<T>,
@@ -347,6 +355,7 @@ where
 }
 
 /// Standard convolution fallback
+#[allow(dead_code)]
 fn standard_convolution<T>(
     signal: &ArrayView1<T>,
     kernel: &ArrayView1<T>,
@@ -367,6 +376,7 @@ where
 }
 
 /// Parallel SIMD FIR filter implementation
+#[allow(dead_code)]
 fn parallel_simd_fir_filter<T>(
     signal: &ArrayView1<T>,
     coefficients: &ArrayView1<T>,
@@ -410,6 +420,7 @@ where
 }
 
 /// Sequential SIMD FIR filter implementation
+#[allow(dead_code)]
 fn sequential_simd_fir_filter<T>(
     signal: &ArrayView1<T>,
     coefficients: &ArrayView1<T>,
@@ -443,6 +454,7 @@ where
 }
 
 /// Standard FIR filter fallback
+#[allow(dead_code)]
 fn standard_fir_filter<T>(
     signal: &ArrayView1<T>,
     coefficients: &ArrayView1<T>,
@@ -466,6 +478,7 @@ where
 }
 
 /// Cache-blocked SIMD matrix multiplication
+#[allow(dead_code)]
 fn cache_blocked_simd_multiply<T>(
     a: &ArrayView2<T>,
     b: &ArrayView2<T>,
@@ -505,6 +518,7 @@ where
 }
 
 /// Standard matrix multiplication fallback
+#[allow(dead_code)]
 fn standard_matrix_multiply<T>(
     a: &ArrayView2<T>,
     b: &ArrayView2<T>,
@@ -530,6 +544,7 @@ where
 }
 
 /// SIMD-accelerated in-place FFT
+#[allow(dead_code)]
 fn simd_fft_inplace<T>(
     _data: ArrayViewMut1<num_complex::Complex<T>>,
     _config: &SimdMemoryConfig,
@@ -543,6 +558,7 @@ where
 }
 
 /// Standard FFT fallback
+#[allow(dead_code)]
 fn standard_fft_inplace<T>(_data: ArrayViewMut1<num_complex::Complex<T>>) -> SignalResult<()>
 where
     T: Float + NumCast + Send + Sync + std::fmt::Debug,
@@ -552,6 +568,7 @@ where
 }
 
 /// Calculate memory efficiency score
+#[allow(dead_code)]
 fn calculate_memory_efficiency<T>(
     signal_len: usize,
     kernel_len: usize,
@@ -571,6 +588,7 @@ fn calculate_memory_efficiency<T>(
 }
 
 /// Estimate cache hit ratio
+#[allow(dead_code)]
 fn estimate_cache_hit_ratio(
     signal_len: usize,
     kernel_len: usize,
@@ -584,6 +602,7 @@ fn estimate_cache_hit_ratio(
 }
 
 /// Benchmark SIMD memory operations
+#[allow(dead_code)]
 pub fn benchmark_simd_memory_operations(
     signal_sizes: &[usize],
     config: &SimdMemoryConfig,

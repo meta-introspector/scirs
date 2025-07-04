@@ -81,7 +81,7 @@ pub enum MemoryStrategy {
 }
 
 /// GPU computation backend
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum GpuBackend {
     /// CUDA backend for NVIDIA GPUs
     Cuda,

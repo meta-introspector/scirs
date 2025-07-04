@@ -1041,6 +1041,7 @@ mod common;
 use common::*;
 
 #[test]
+#[allow(dead_code)]
 fn test_{}_basic_functionality() {{
     let config = {}Config::default();
     let mut optimizer = {}<f64>::new(config);
@@ -1058,6 +1059,7 @@ fn test_{}_basic_functionality() {{
 }}
 
 #[test]
+#[allow(dead_code)]
 fn test_{}_convergence() {{
     let config = {}Config::default();
     let mut optimizer = {}<f64>::new(config);
@@ -1085,6 +1087,7 @@ fn test_{}_convergence() {{
 }}
 
 #[test]
+#[allow(dead_code)]
 fn test_{}_state_serialization() {{
     let config = {}Config::default();
     let mut optimizer = {}<f64>::new(config);
@@ -1115,6 +1118,7 @@ fn test_{}_state_serialization() {{
 }}
 
 #[test]
+#[allow(dead_code)]
 fn test_{}_plugin_interface() {{
     let config = {}Config::default();
     let optimizer = {}<f64>::new(config);
@@ -1131,6 +1135,7 @@ fn test_{}_plugin_interface() {{
 }}
 
 #[test]
+#[allow(dead_code)]
 fn test_{}_factory() {{
     let factory = {}Factory;
     
@@ -1151,6 +1156,7 @@ fn test_{}_factory() {{
 }}
 
 #[test]
+#[allow(dead_code)]
 fn test_{}_performance_characteristics() {{
     let config = {}Config::default();
     let mut optimizer = {}<f64>::new(config);
@@ -1192,6 +1198,7 @@ use criterion::{{black_box, criterion_group, criterion_main, Criterion}};
 use scirs2_optim::plugin::*;
 use ndarray::Array1;
 
+#[allow(dead_code)]
 fn benchmark_{}_step(c: &mut Criterion) {{
     let config = {}Config::default();
     let mut optimizer = {}<f64>::new(config);
@@ -1206,6 +1213,7 @@ fn benchmark_{}_step(c: &mut Criterion) {{
     }});
 }}
 
+#[allow(dead_code)]
 fn benchmark_{}_scalability(c: &mut Criterion) {{
     let mut group = c.benchmark_group("{} scalability");
     

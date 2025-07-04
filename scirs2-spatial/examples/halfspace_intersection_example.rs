@@ -8,6 +8,7 @@
 use ndarray::arr1;
 use scirs2_spatial::halfspace::{Halfspace, HalfspaceIntersection};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Halfspace Intersection Example ===\n");
 
@@ -48,6 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn unit_square_example() -> Result<(), Box<dyn std::error::Error>> {
     // Define halfspaces for unit square: 0 ≤ x ≤ 1, 0 ≤ y ≤ 1
     let halfspaces = vec![
@@ -83,6 +85,7 @@ fn unit_square_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn triangle_example() -> Result<(), Box<dyn std::error::Error>> {
     // Define halfspaces for triangle: x ≥ 0, y ≥ 0, x + y ≤ 1
     let halfspaces = vec![
@@ -115,6 +118,7 @@ fn triangle_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn regular_polygon_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create a regular hexagon using halfspaces
     let n_sides = 6;
@@ -170,6 +174,7 @@ fn regular_polygon_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn cube_3d_example() -> Result<(), Box<dyn std::error::Error>> {
     // Define halfspaces for 3D unit cube: 0 ≤ x ≤ 1, 0 ≤ y ≤ 1, 0 ≤ z ≤ 1
     let halfspaces = vec![
@@ -217,6 +222,7 @@ fn cube_3d_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn unbounded_example() -> Result<(), Box<dyn std::error::Error>> {
     // Define halfspaces that form an unbounded region: x ≥ 0, y ≥ 0
     let halfspaces = vec![
@@ -253,6 +259,7 @@ fn unbounded_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn empty_intersection_example() -> Result<(), Box<dyn std::error::Error>> {
     // Define contradictory halfspaces: x ≤ 0 and x ≥ 1
     let halfspaces = vec![
@@ -285,6 +292,7 @@ fn empty_intersection_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn custom_polytope_example() -> Result<(), Box<dyn std::error::Error>> {
     // Create a more complex polytope
     let halfspaces = vec![

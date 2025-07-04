@@ -15,6 +15,7 @@ use scirs2_integrate::ode::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("=== Variable-Mass Pendulum with Event Detection ===");
 

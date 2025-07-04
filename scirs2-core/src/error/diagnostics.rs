@@ -991,11 +991,13 @@ impl fmt::Display for ErrorDiagnosticReport {
 }
 
 /// Convenience function to create a diagnostic report for an error
+#[allow(dead_code)]
 pub fn diagnose_error(error: &CoreError) -> ErrorDiagnosticReport {
     ErrorDiagnostics::global().analyze_error(error)
 }
 
 /// Convenience function to create a diagnostic report with context
+#[allow(dead_code)]
 pub fn diagnose_error_with_context(error: &CoreError, context: String) -> ErrorDiagnosticReport {
     let diagnostics = ErrorDiagnostics::global();
     diagnostics.record_error(error, context);

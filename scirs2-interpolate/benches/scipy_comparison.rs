@@ -25,6 +25,7 @@ use scirs2_interpolate::{
 use pyo3::prelude::*;
 
 /// Generate test data for 1D interpolation
+#[allow(dead_code)]
 fn generate_1d_data(n: usize, noise: bool) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::linspace(0.0, 10.0, n);
     let y = if noise {
@@ -38,6 +39,7 @@ fn generate_1d_data(n: usize, noise: bool) -> (Array1<f64>, Array1<f64>) {
 }
 
 /// Generate test data for 2D interpolation
+#[allow(dead_code)]
 fn generate_2d_data(n: usize, noise: bool) -> (Array2<f64>, Array1<f64>) {
     let mut points = Array2::zeros((n, 2));
     let mut values = Array1::zeros(n);
@@ -63,10 +65,12 @@ fn generate_2d_data(n: usize, noise: bool) -> (Array2<f64>, Array1<f64>) {
 }
 
 /// Generate query points for evaluation
+#[allow(dead_code)]
 fn generate_query_points_1d(n: usize) -> Array1<f64> {
     Array1::linspace(0.1, 9.9, n)
 }
 
+#[allow(dead_code)]
 fn generate_query_points_2d(n: usize) -> Array2<f64> {
     let sqrt_n = (n as f64).sqrt() as usize;
     let mut queries = Array2::zeros((n, 2));
@@ -85,6 +89,7 @@ fn generate_query_points_2d(n: usize) -> Array2<f64> {
 }
 
 /// Benchmark 1D linear interpolation
+#[allow(dead_code)]
 fn bench_linear_1d_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("linear_1d_comparison");
     group.sample_size(10);
@@ -129,6 +134,7 @@ fn bench_linear_1d_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark cubic spline interpolation
+#[allow(dead_code)]
 fn bench_cubic_spline_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("cubic_spline_comparison");
     group.sample_size(10);
@@ -203,6 +209,7 @@ fn bench_cubic_spline_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark RBF interpolation for 2D data
+#[allow(dead_code)]
 fn bench_rbf_2d_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("rbf_2d_comparison");
     group.sample_size(10);
@@ -282,6 +289,7 @@ fn bench_rbf_2d_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark scalability to large datasets
+#[allow(dead_code)]
 fn bench_large_scale_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("large_scale_performance");
     group.sample_size(10);
@@ -311,6 +319,7 @@ fn bench_large_scale_performance(c: &mut Criterion) {
 }
 
 /// Benchmark SIMD optimization effectiveness
+#[allow(dead_code)]
 fn bench_simd_effectiveness(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_effectiveness");
 
@@ -343,6 +352,7 @@ fn bench_simd_effectiveness(c: &mut Criterion) {
 }
 
 /// Benchmark parallel processing effectiveness
+#[allow(dead_code)]
 fn bench_parallel_effectiveness(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_effectiveness");
     group.sample_size(10);
@@ -370,6 +380,7 @@ fn bench_parallel_effectiveness(c: &mut Criterion) {
 }
 
 /// Benchmark memory efficiency
+#[allow(dead_code)]
 fn bench_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_efficiency");
 

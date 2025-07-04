@@ -17,7 +17,6 @@ use num_traits::Float;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
-#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Vector Autoregressive (VAR) model
@@ -120,6 +119,7 @@ impl Default for AdvancedParametricConfig {
 /// # Returns
 ///
 /// * VAR model with estimated parameters
+#[allow(dead_code)]
 pub fn estimate_var_model(
     data: &Array2<f64>,
     order: usize,
@@ -202,6 +202,7 @@ pub fn estimate_var_model(
 }
 
 /// Estimate VAR coefficients using regularized least squares
+#[allow(dead_code)]
 fn estimate_var_coefficients(
     y: &Array2<f64>,
     x: &Array2<f64>,
@@ -241,6 +242,7 @@ fn estimate_var_coefficients(
 }
 
 /// LASSO estimation using coordinate descent
+#[allow(dead_code)]
 fn estimate_lasso_coefficients(
     y: &Array2<f64>,
     x: &Array2<f64>,
@@ -303,6 +305,7 @@ fn estimate_lasso_coefficients(
 }
 
 /// Soft thresholding operator for LASSO
+#[allow(dead_code)]
 fn soft_threshold(x: f64, lambda: f64) -> f64 {
     if x > lambda {
         x - lambda
@@ -314,6 +317,7 @@ fn soft_threshold(x: f64, lambda: f64) -> f64 {
 }
 
 /// Elastic net estimation
+#[allow(dead_code)]
 fn estimate_elastic_net_coefficients(
     y: &Array2<f64>,
     x: &Array2<f64>,
@@ -380,6 +384,7 @@ fn estimate_elastic_net_coefficients(
 }
 
 /// Tikhonov regularization
+#[allow(dead_code)]
 fn estimate_tikhonov_coefficients(
     y: &Array2<f64>,
     x: &Array2<f64>,
@@ -410,6 +415,7 @@ fn estimate_tikhonov_coefficients(
 }
 
 /// Compute VAR residuals
+#[allow(dead_code)]
 fn compute_var_residuals(
     data: &Array2<f64>,
     ar_matrices: &[Array2<f64>],
@@ -447,6 +453,7 @@ fn compute_var_residuals(
 }
 
 /// Compute covariance matrix
+#[allow(dead_code)]
 fn compute_covariance_matrix(residuals: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let (n_vars, n_obs) = residuals.dim();
     let mut cov_matrix = Array2::zeros((n_vars, n_vars));
@@ -466,6 +473,7 @@ fn compute_covariance_matrix(residuals: &Array2<f64>) -> SignalResult<Array2<f64
 }
 
 /// Compute VAR log-likelihood
+#[allow(dead_code)]
 fn compute_var_log_likelihood(
     residuals: &Array2<f64>,
     innovation_cov: &Array2<f64>,
@@ -517,6 +525,7 @@ fn compute_var_log_likelihood(
 /// # Returns
 ///
 /// * High-resolution spectral estimate
+#[allow(dead_code)]
 pub fn high_resolution_spectral_estimation(
     signal: &Array1<f64>,
     n_signals: usize,
@@ -532,6 +541,7 @@ pub fn high_resolution_spectral_estimation(
 }
 
 /// MUSIC (Multiple Signal Classification) algorithm
+#[allow(dead_code)]
 fn music_spectrum(
     signal: &Array1<f64>,
     n_signals: usize,
@@ -612,6 +622,7 @@ fn music_spectrum(
 }
 
 /// Estimate covariance matrix using forward-backward averaging
+#[allow(dead_code)]
 fn estimate_covariance_matrix_fb(
     signal: &Array1<f64>,
     model_order: usize,
@@ -652,6 +663,7 @@ fn estimate_covariance_matrix_fb(
 }
 
 /// ESPRIT (Estimation of Signal Parameters via Rotational Invariance Techniques)
+#[allow(dead_code)]
 fn esprit_estimation(signal: &Array1<f64>, n_signals: usize) -> SignalResult<HighResolutionResult> {
     let n = signal.len();
     let model_order = (n / 3).min(50);
@@ -710,6 +722,7 @@ fn esprit_estimation(signal: &Array1<f64>, n_signals: usize) -> SignalResult<Hig
 }
 
 /// Minimum norm algorithm
+#[allow(dead_code)]
 fn min_norm_spectrum(
     signal: &Array1<f64>,
     n_signals: usize,
@@ -721,6 +734,7 @@ fn min_norm_spectrum(
 }
 
 /// Root-MUSIC algorithm
+#[allow(dead_code)]
 fn root_music_estimation(
     signal: &Array1<f64>,
     n_signals: usize,
@@ -731,6 +745,7 @@ fn root_music_estimation(
 }
 
 /// Helper function to solve linear system
+#[allow(dead_code)]
 fn solve_linear_system(a: &Array2<f64>, b: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let n = a.nrows();
     let m = b.ncols();
@@ -752,6 +767,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array2<f64>) -> SignalResult<Array2<
 }
 
 /// Helper function to solve least squares problem
+#[allow(dead_code)]
 fn solve_least_squares(a: &Array2<f64>, b: &Array2<f64>) -> SignalResult<Array2<f64>> {
     // Solve min ||Ax - b||^2 using normal equations: A^T A x = A^T b
     let ata = a.t().dot(a);
@@ -760,6 +776,7 @@ fn solve_least_squares(a: &Array2<f64>, b: &Array2<f64>) -> SignalResult<Array2<
 }
 
 /// Compute eigendecomposition (simplified)
+#[allow(dead_code)]
 pub fn compute_eigendecomposition(
     matrix: &Array2<f64>,
 ) -> SignalResult<(Array1<f64>, Array2<f64>)> {
@@ -773,6 +790,7 @@ pub fn compute_eigendecomposition(
 }
 
 /// Compute matrix determinant (simplified)
+#[allow(dead_code)]
 fn compute_matrix_determinant(matrix: &Array2<f64>) -> SignalResult<f64> {
     let n = matrix.nrows();
 
@@ -787,6 +805,7 @@ fn compute_matrix_determinant(matrix: &Array2<f64>) -> SignalResult<f64> {
 }
 
 /// Compute matrix inverse (simplified)
+#[allow(dead_code)]
 fn compute_matrix_inverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let n = matrix.nrows();
     let mut result = Array2::zeros((n, n));
@@ -814,7 +833,6 @@ fn compute_matrix_inverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
     Ok(result)
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
 

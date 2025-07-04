@@ -5,8 +5,6 @@
 //! changes. It includes parameter mapping, behavior matching, and compatibility
 //! warnings for any differences.
 
-use std::collections::HashMap;
-
 use ndarray::{Array, ArrayView2, Ix2, Ix3};
 use num_traits::{Float, FromPrimitive};
 
@@ -591,6 +589,7 @@ static mut SCIPY_COMPAT: Option<SciPyCompatLayer> = None;
 static INIT: std::sync::Once = std::sync::Once::new();
 
 /// Initialize global SciPy compatibility layer
+#[allow(dead_code)]
 pub fn init_scipy_compat() {
     INIT.call_once(|| unsafe {
         SCIPY_COMPAT = Some(SciPyCompatLayer::default());
@@ -598,6 +597,7 @@ pub fn init_scipy_compat() {
 }
 
 /// Get global SciPy compatibility layer
+#[allow(dead_code)]
 fn get_scipy_compat() -> &'static mut SciPyCompatLayer {
     init_scipy_compat();
     unsafe { SCIPY_COMPAT.as_mut().unwrap() }
@@ -606,6 +606,7 @@ fn get_scipy_compat() -> &'static mut SciPyCompatLayer {
 // Global convenience functions that match SciPy API exactly
 
 /// Gaussian filter (global function matching SciPy API)
+#[allow(dead_code)]
 pub fn gaussian_filter<T>(
     input: ArrayView2<T>,
     sigma: SigmaParam,
@@ -621,6 +622,7 @@ where
 }
 
 /// Median filter (global function matching SciPy API)
+#[allow(dead_code)]
 pub fn median_filter<T>(
     input: ArrayView2<T>,
     size: Option<SizeParam>,
@@ -636,6 +638,7 @@ where
 }
 
 /// Binary erosion (global function matching SciPy API)
+#[allow(dead_code)]
 pub fn binary_erosion<T>(
     input: ArrayView2<T>,
     structure: Option<ArrayView2<bool>>,
@@ -660,6 +663,7 @@ where
 }
 
 /// Distance transform EDT (global function matching SciPy API)
+#[allow(dead_code)]
 pub fn distance_transform_edt<T>(
     input: ArrayView2<T>,
     sampling: Option<SamplingParam>,
@@ -673,6 +677,7 @@ where
 }
 
 /// Center of mass (global function matching SciPy API)
+#[allow(dead_code)]
 pub fn center_of_mass<T>(
     input: ArrayView2<T>,
     labels: Option<ArrayView2<i32>>,
@@ -685,6 +690,7 @@ where
 }
 
 /// Label connected components (global function matching SciPy API)
+#[allow(dead_code)]
 pub fn label<T>(
     input: ArrayView2<T>,
     structure: Option<ArrayView2<bool>>,
@@ -696,16 +702,19 @@ where
 }
 
 /// Get migration warnings
+#[allow(dead_code)]
 pub fn get_migration_warnings() -> Vec<MigrationWarning> {
     get_scipy_compat().get_warnings().to_vec()
 }
 
 /// Clear migration warnings
+#[allow(dead_code)]
 pub fn clear_migration_warnings() {
     get_scipy_compat().clear_warnings();
 }
 
 /// Display migration guide
+#[allow(dead_code)]
 pub fn display_migration_guide() {
     println!(
         r#"

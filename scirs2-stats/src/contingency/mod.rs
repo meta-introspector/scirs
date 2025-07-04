@@ -39,6 +39,7 @@ use num_traits::Float;
 /// // Degrees of freedom for a 2x2 table is 1
 /// assert_eq!(dof, 1);
 /// ```
+#[allow(dead_code)]
 pub fn chi2_contingency<F>(
     observed: &ArrayView2<F>,
     correction: bool,
@@ -185,6 +186,7 @@ where
 /// // The p-value should be between 0 and 1
 /// assert!(p_value >= 0.0f64 && p_value <= 1.0f64);
 /// ```
+#[allow(dead_code)]
 pub fn fisher_exact<F>(table: &ArrayView2<F>, alternative: &str) -> StatsResult<(F, F)>
 where
     F: Float
@@ -340,6 +342,7 @@ where
 /// // Cramer's V is between 0 and 1
 /// assert!(cramer_v >= 0.0f64 && cramer_v <= 1.0f64);
 /// ```
+#[allow(dead_code)]
 pub fn association<F>(table: &ArrayView2<F>, measure: &str) -> StatsResult<F>
 where
     F: Float
@@ -433,6 +436,7 @@ where
 /// // In this example, the relative risk should be about 2.0
 /// assert!((rr - 2.0f64).abs() < 0.1f64);
 /// ```
+#[allow(dead_code)]
 pub fn relative_risk<F>(table: &ArrayView2<F>) -> StatsResult<F>
 where
     F: Float
@@ -548,6 +552,7 @@ where
 /// // In this example, the odds ratio should be about 4.3
 /// assert!((or - 4.33f64).abs() < 0.1f64);
 /// ```
+#[allow(dead_code)]
 pub fn odds_ratio<F>(table: &ArrayView2<F>) -> StatsResult<F>
 where
     F: Float

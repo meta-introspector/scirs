@@ -30,6 +30,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 /// # Returns
 ///
 /// Result containing the solution at different time points or an error
+#[allow(dead_code)]
 pub fn solve_semi_explicit_dae<F, FFunc, GFunc>(
     f: FFunc,
     g: GFunc,
@@ -207,6 +208,7 @@ where
 /// Compute the Jacobian of a constraint function g with respect to x
 ///
 /// This is a helper function for the semi-explicit DAE solver
+#[allow(dead_code)]
 fn compute_jacobian_x<F, GFunc>(
     g: &GFunc,
     t: F,
@@ -255,6 +257,7 @@ where
 /// Solve a linear system of equations using LU decomposition
 ///
 /// This is a helper function for the semi-explicit DAE solver
+#[allow(dead_code)]
 fn solve_matrix_system<F>(matrix: ArrayView2<F>, b: ArrayView1<F>) -> IntegrateResult<Array1<F>>
 where
     F: IntegrateFloat + std::default::Default,
@@ -286,6 +289,7 @@ where
 /// # Returns
 ///
 /// Result containing the solution at different time points or an error
+#[allow(dead_code)]
 pub fn solve_implicit_dae<F, FFunc>(
     f: FFunc,
     t_span: [F; 2],
@@ -773,6 +777,7 @@ where
 /// # Returns
 ///
 /// Result containing the solution at different time points or an error
+#[allow(dead_code)]
 pub fn solve_higher_index_dae<F, FFunc, GFunc>(
     f: FFunc,
     g: GFunc,
@@ -938,6 +943,7 @@ where
 ///
 /// This is an extension of solve_semi_explicit_dae that applies projection
 /// after each step to maintain constraint satisfaction for higher-index DAEs.
+#[allow(dead_code)]
 fn solve_semi_explicit_dae_with_projection<F, FFunc, GFunc>(
     f: FFunc,
     g: GFunc,
@@ -1035,6 +1041,7 @@ where
 /// # Returns
 ///
 /// Result containing the solution at different time points or an error
+#[allow(dead_code)]
 pub fn solve_ivp_dae<F, FFunc>(
     f: FFunc,
     t_span: [F; 2],
@@ -1078,6 +1085,7 @@ where
 }
 
 /// Solve an index-1 DAE system with reduced structure from Pantelides algorithm
+#[allow(dead_code)]
 fn solve_index1_dae_with_reduced_structure<F, FFunc, GFunc>(
     f: FFunc,
     g: GFunc,
@@ -1100,6 +1108,7 @@ where
 }
 
 /// Solve an index-2 DAE system using specialized BDF with constraint stabilization
+#[allow(dead_code)]
 fn solve_index2_dae_specialized<F, FFunc, GFunc>(
     f: FFunc,
     g: GFunc,
@@ -1130,6 +1139,7 @@ where
 }
 
 /// Solve an index-3 DAE system using projection method with dummy derivatives
+#[allow(dead_code)]
 fn solve_index3_dae_specialized<F, FFunc, GFunc>(
     f: FFunc,
     g: GFunc,
@@ -1163,6 +1173,7 @@ where
 }
 
 /// Apply dummy derivative method for index-3 DAE systems
+#[allow(dead_code)]
 fn apply_dummy_derivative_method<F, FFunc, GFunc>(
     f: FFunc,
     g: GFunc,
@@ -1215,6 +1226,7 @@ where
 ///
 /// For a DAE system F(t, y, y') = 0, the time Jacobian is:
 /// ∂F/∂t = lim(h→0) [F(t+h, y, y') - F(t, y, y')] / h
+#[allow(dead_code)]
 fn compute_time_jacobian<F, FFunc>(
     f: &FFunc,
     t: F,

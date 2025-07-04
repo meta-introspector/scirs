@@ -37,6 +37,7 @@ use std::fmt::Debug;
 ///
 /// // ESD is proportional to PSD but scaled by the sample interval
 /// ```
+#[allow(dead_code)]
 pub fn energy_spectral_density<T>(psd: &[T], fs: f64) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -94,6 +95,7 @@ where
 /// let sum: f64 = norm_psd.iter().sum();
 /// assert!((sum - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn normalized_psd<T>(psd: &[T]) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -156,6 +158,7 @@ where
 /// // Basic sanity check - centroid should be finite
 /// assert!(centroid.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn spectral_centroid<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -244,6 +247,7 @@ where
 /// // Spread should be non-negative
 /// assert!(spread >= 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn spectral_spread<T, U>(psd: &[T], freqs: &[U], centroid: Option<f64>) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -337,6 +341,7 @@ where
 /// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
 /// let skewness = spectral_skewness(&psd, &freqs, None, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn spectral_skewness<T, U>(
     psd: &[T],
     freqs: &[U],
@@ -450,6 +455,7 @@ where
 /// // Kurtosis should be greater than or equal to -2.0 (theoretical lower bound)
 /// assert!(kurtosis >= -2.0);
 /// ```
+#[allow(dead_code)]
 pub fn spectral_kurtosis<T, U>(
     psd: &[T],
     freqs: &[U],
@@ -562,6 +568,7 @@ where
 /// // Flatness should be between 0 and 1
 /// assert!(flatness >= 0.0 && flatness <= 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn spectral_flatness<T>(psd: &[T]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -641,6 +648,7 @@ where
 /// // Flux should be non-negative
 /// assert!(flux >= 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn spectral_flux<T, U>(psd1: &[T], psd2: &[U], norm: &str) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -738,6 +746,7 @@ where
 /// // Basic sanity check - rolloff should be finite
 /// assert!(rolloff.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn spectral_rolloff<T, U>(psd: &[T], freqs: &[U], percentage: f64) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -834,6 +843,7 @@ where
 /// // Crest factor should be greater than or equal to 1.0
 /// assert!(crest >= 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn spectral_crest<T>(psd: &[T]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -896,6 +906,7 @@ where
 /// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
 /// let decrease = spectral_decrease(&psd, &freqs).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn spectral_decrease<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -985,6 +996,7 @@ where
 /// let (psd, freqs) = periodogram(&signal, Some(fs), Some("hamming"), Some(16), None, None).unwrap();
 /// let slope = spectral_slope(&psd, &freqs).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn spectral_slope<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -1079,6 +1091,7 @@ where
 ///
 /// assert_eq!(contrast.len(), 4);
 /// ```
+#[allow(dead_code)]
 pub fn spectral_contrast<T, U>(psd: &[T], freqs: &[U], n_bands: usize) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -1216,6 +1229,7 @@ where
 /// // Basic sanity check - bandwidth should be finite
 /// assert!(bandwidth.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn spectral_bandwidth<T, U>(psd: &[T], freqs: &[U], threshold_db: f64) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -1322,6 +1336,7 @@ where
 /// assert!(dominant_freq.is_finite());
 /// assert!(magnitude >= 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn dominant_frequency<T, U>(psd: &[T], freqs: &[U]) -> SignalResult<(f64, f64)>
 where
     T: Float + NumCast + Debug,
@@ -1398,6 +1413,7 @@ where
 /// // There might be fewer than n peaks if not enough can be found
 /// assert!(peaks.len() <= 3);
 /// ```
+#[allow(dead_code)]
 pub fn dominant_frequencies<T, U>(
     psd: &[T],
     freqs: &[U],

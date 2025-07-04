@@ -68,6 +68,7 @@ impl Default for ClassificationMetrics {
 }
 
 /// Equivalent to sklearn.metrics.classification_report
+#[allow(dead_code)]
 pub fn classification_report_sklearn(
     y_true: &Array1<i32>,
     y_pred: &Array1<i32>,
@@ -200,6 +201,7 @@ pub fn classification_report_sklearn(
 }
 
 /// Calculate metrics for a specific class
+#[allow(dead_code)]
 fn calculate_class_metrics(
     y_true: &Array1<i32>,
     y_pred: &Array1<i32>,
@@ -246,6 +248,7 @@ fn calculate_class_metrics(
 }
 
 /// Equivalent to sklearn.metrics.accuracy_score
+#[allow(dead_code)]
 pub fn accuracy_score_sklearn(y_true: &Array1<i32>, y_pred: &Array1<i32>) -> Result<f64> {
     if y_true.len() != y_pred.len() {
         return Err(MetricsError::InvalidInput(
@@ -263,6 +266,7 @@ pub fn accuracy_score_sklearn(y_true: &Array1<i32>, y_pred: &Array1<i32>) -> Res
 }
 
 /// Equivalent to sklearn.metrics.precision_recall_fscore_support
+#[allow(dead_code)]
 pub fn precision_recall_fscore_support_sklearn(
     y_true: &Array1<i32>,
     y_pred: &Array1<i32>,
@@ -379,6 +383,7 @@ pub fn precision_recall_fscore_support_sklearn(
 }
 
 /// Calculate micro-averaged metrics
+#[allow(dead_code)]
 fn calculate_micro_average(
     y_true: &Array1<i32>,
     y_pred: &Array1<i32>,
@@ -437,6 +442,7 @@ fn calculate_micro_average(
 }
 
 /// Equivalent to sklearn.metrics.multilabel_confusion_matrix
+#[allow(dead_code)]
 pub fn multilabel_confusion_matrix_sklearn(
     y_true: &Array2<i32>,
     y_pred: &Array2<i32>,
@@ -514,6 +520,7 @@ pub fn multilabel_confusion_matrix_sklearn(
 }
 
 /// Equivalent to sklearn.metrics.cohen_kappa_score  
+#[allow(dead_code)]
 pub fn cohen_kappa_score_sklearn(
     y1: &Array1<i32>,
     y2: &Array1<i32>,
@@ -629,6 +636,7 @@ pub fn cohen_kappa_score_sklearn(
 }
 
 /// Equivalent to sklearn.metrics.hinge_loss
+#[allow(dead_code)]
 pub fn hinge_loss_sklearn(
     y_true: &Array1<i32>,
     y_pred: &Array2<f64>,
@@ -714,6 +722,7 @@ pub fn hinge_loss_sklearn(
 }
 
 /// Equivalent to sklearn.metrics.zero_one_loss
+#[allow(dead_code)]
 pub fn zero_one_loss_sklearn(
     y_true: &Array1<i32>,
     y_pred: &Array1<i32>,

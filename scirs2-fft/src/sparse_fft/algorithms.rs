@@ -520,6 +520,7 @@ impl SparseFFT {
 // Public API functions for backward compatibility
 
 /// Compute sparse FFT of a signal
+#[allow(dead_code)]
 pub fn sparse_fft<T>(
     signal: &[T],
     k: usize,
@@ -541,6 +542,7 @@ where
 }
 
 /// Adaptive sparse FFT with automatic sparsity estimation
+#[allow(dead_code)]
 pub fn adaptive_sparse_fft<T>(signal: &[T], threshold: f64) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -557,6 +559,7 @@ where
 }
 
 /// Frequency pruning sparse FFT
+#[allow(dead_code)]
 pub fn frequency_pruning_sparse_fft<T>(signal: &[T], sensitivity: f64) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -573,6 +576,7 @@ where
 }
 
 /// Spectral flatness sparse FFT
+#[allow(dead_code)]
 pub fn spectral_flatness_sparse_fft<T>(
     signal: &[T],
     flatness_threshold: f64,
@@ -594,6 +598,7 @@ where
 }
 
 /// 2D sparse FFT (placeholder implementation)
+#[allow(dead_code)]
 pub fn sparse_fft2<T>(
     _signal: &[Vec<T>],
     _k: usize,
@@ -609,6 +614,7 @@ where
 }
 
 /// N-dimensional sparse FFT (placeholder implementation)
+#[allow(dead_code)]
 pub fn sparse_fftn<T>(
     _signal: &[T],
     _shape: &[usize],

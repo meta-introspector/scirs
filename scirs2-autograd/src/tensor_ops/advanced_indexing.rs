@@ -405,6 +405,7 @@ impl<F: Float> Op<F> for AdvancedGatherOp {
 // Public API functions
 
 /// Boolean masking - select elements where mask is true
+#[allow(dead_code)]
 pub fn boolean_mask<'g, F: Float>(data: &Tensor<'g, F>, mask: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = data.graph();
     Tensor::builder(g)
@@ -414,6 +415,7 @@ pub fn boolean_mask<'g, F: Float>(data: &Tensor<'g, F>, mask: &Tensor<'g, F>) ->
 }
 
 /// Take elements from tensor using indices along specified axis
+#[allow(dead_code)]
 pub fn take<'g, F: Float>(
     data: &Tensor<'g, F>,
     indices: &Tensor<'g, F>,
@@ -427,6 +429,7 @@ pub fn take<'g, F: Float>(
 }
 
 /// Scatter values into a tensor at specified indices
+#[allow(dead_code)]
 pub fn scatter<'g, F: Float>(
     indices: &Tensor<'g, F>,
     updates: &Tensor<'g, F>,
@@ -441,6 +444,7 @@ pub fn scatter<'g, F: Float>(
 }
 
 /// Conditional selection - choose elements from x or y based on condition
+#[allow(dead_code)]
 pub fn where_op<'g, F: Float>(
     condition: &Tensor<'g, F>,
     x: &Tensor<'g, F>,
@@ -455,6 +459,7 @@ pub fn where_op<'g, F: Float>(
 }
 
 /// Advanced gather with multiple index arrays
+#[allow(dead_code)]
 pub fn advanced_gather<'g, F: Float>(
     data: &Tensor<'g, F>,
     indices: &[&Tensor<'g, F>],
@@ -476,6 +481,7 @@ pub fn advanced_gather<'g, F: Float>(
 /// Convenience functions for common indexing patterns
 ///
 /// Get elements at specific 2D coordinates
+#[allow(dead_code)]
 pub fn get_at_coords<'g, F: Float>(
     data: &Tensor<'g, F>,
     row_indices: &Tensor<'g, F>,
@@ -485,6 +491,7 @@ pub fn get_at_coords<'g, F: Float>(
 }
 
 /// Select rows from a 2D tensor
+#[allow(dead_code)]
 pub fn select_rows<'g, F: Float>(
     data: &Tensor<'g, F>,
     row_indices: &Tensor<'g, F>,
@@ -493,6 +500,7 @@ pub fn select_rows<'g, F: Float>(
 }
 
 /// Select columns from a 2D tensor  
+#[allow(dead_code)]
 pub fn select_columns<'g, F: Float>(
     data: &Tensor<'g, F>,
     col_indices: &Tensor<'g, F>,

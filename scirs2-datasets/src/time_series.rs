@@ -63,6 +63,7 @@ lazy_static::lazy_static! {
 /// let ecg = electrocardiogram().unwrap();
 /// println!("ECG data shape: ({}, {})", ecg.n_samples(), ecg.n_features());
 /// ```
+#[allow(dead_code)]
 pub fn electrocardiogram() -> Result<Dataset> {
     // Fetch the ECG data file
     let ecg_file = match fetch_data("ecg.dat", REGISTRY.get("ecg.dat")) {
@@ -164,6 +165,7 @@ struct StockPrice {
 /// let stock_data = stock_market(true).unwrap(); // Get price changes
 /// println!("Stock data shape: ({}, {})", stock_data.n_samples(), stock_data.n_features());
 /// ```
+#[allow(dead_code)]
 pub fn stock_market(returns: bool) -> Result<Dataset> {
     // Fetch the stock market data file
     let stock_file = match fetch_data("stock_market.csv", REGISTRY.get("stock_market.csv")) {
@@ -303,6 +305,7 @@ struct WeatherObservation {
 /// let all_weather = weather(None).unwrap();
 /// println!("All weather data shape: ({}, {})", all_weather.n_samples(), all_weather.n_features());
 /// ```
+#[allow(dead_code)]
 pub fn weather(feature: Option<&str>) -> Result<Dataset> {
     // Validate feature parameter
     let valid_features = vec![

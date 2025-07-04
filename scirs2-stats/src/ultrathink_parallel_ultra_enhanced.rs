@@ -1530,6 +1530,7 @@ impl<D> StreamingBuffer<D> {
 
 // System detection functions
 
+#[allow(dead_code)]
 fn detect_numa_topology() -> NumaTopology {
     // Placeholder implementation - in reality would query system NUMA topology
     NumaTopology {
@@ -1544,6 +1545,7 @@ fn detect_numa_topology() -> NumaTopology {
     }
 }
 
+#[allow(dead_code)]
 fn detect_memory_hierarchy() -> MemoryHierarchy {
     // Placeholder implementation - in reality would query system memory hierarchy
     MemoryHierarchy {
@@ -1558,11 +1560,13 @@ fn detect_memory_hierarchy() -> MemoryHierarchy {
 // Factory functions for easy creation
 
 /// Create default ultra-think parallel processor
+#[allow(dead_code)]
 pub fn create_ultra_think_parallel_processor() -> UltraThinkParallelProcessor {
     UltraThinkParallelProcessor::new(UltraThinkParallelConfig::default())
 }
 
 /// Create configured ultra-think parallel processor
+#[allow(dead_code)]
 pub fn create_configured_ultra_think_parallel_processor(
     config: UltraThinkParallelConfig,
 ) -> UltraThinkParallelProcessor {
@@ -1570,6 +1574,7 @@ pub fn create_configured_ultra_think_parallel_processor(
 }
 
 /// Create high-performance parallel processor optimized for large datasets
+#[allow(dead_code)]
 pub fn create_large_dataset_parallel_processor() -> UltraThinkParallelProcessor {
     let config = UltraThinkParallelConfig {
         enable_ml_optimization: true,
@@ -1586,6 +1591,7 @@ pub fn create_large_dataset_parallel_processor() -> UltraThinkParallelProcessor 
 }
 
 /// Create streaming-optimized parallel processor
+#[allow(dead_code)]
 pub fn create_streaming_parallel_processor() -> UltraThinkParallelProcessor {
     let config = UltraThinkParallelConfig {
         enable_ml_optimization: true,

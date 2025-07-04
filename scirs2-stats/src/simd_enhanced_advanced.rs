@@ -11,6 +11,7 @@ use scirs2_core::simd_ops::SimdUnifiedOps;
 /// SIMD-optimized t-test computation
 ///
 /// Performs a two-sample t-test using SIMD acceleration for large arrays.
+#[allow(dead_code)]
 pub fn ttest_ind_simd<F, D1, D2>(
     a: &ArrayBase<D1, Ix1>,
     b: &ArrayBase<D2, Ix1>,
@@ -107,6 +108,7 @@ where
 /// SIMD-optimized matrix multiplication for correlation matrices
 ///
 /// Efficiently computes correlation matrices using SIMD operations.
+#[allow(dead_code)]
 pub fn corrcoef_matrix_simd<F, D>(data: &ArrayBase<D, Ix2>) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + FromPrimitive + Clone,
@@ -183,6 +185,7 @@ where
 /// SIMD-optimized robust statistics computation
 ///
 /// Computes robust statistics using SIMD acceleration where applicable.
+#[allow(dead_code)]
 pub fn robust_statistics_simd<F, D>(data: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F)>
 // (median, mad, iqr)
 where
@@ -245,6 +248,7 @@ where
 /// SIMD-optimized bootstrap statistics
 ///
 /// Performs bootstrap resampling with SIMD-accelerated statistic computation.
+#[allow(dead_code)]
 pub fn bootstrap_mean_simd<F, D>(
     data: &ArrayBase<D, Ix1>,
     n_bootstrap: usize,
@@ -300,6 +304,7 @@ where
 /// SIMD-optimized linear regression
 ///
 /// Computes linear regression coefficients using SIMD acceleration.
+#[allow(dead_code)]
 pub fn linear_regression_simd<F, D1, D2>(
     x: &ArrayBase<D1, Ix1>,
     y: &ArrayBase<D2, Ix1>,
@@ -375,6 +380,7 @@ where
 }
 
 /// Simplified t-distribution p-value calculation
+#[allow(dead_code)]
 fn simplified_t_pvalue<F: Float>(t: F, df: F) -> F {
     // Very rough approximation - in practice would use proper t-distribution
     if df > F::from(30.0).unwrap() {
@@ -389,6 +395,7 @@ fn simplified_t_pvalue<F: Float>(t: F, df: F) -> F {
 }
 
 /// Simplified normal CDF approximation
+#[allow(dead_code)]
 fn normal_cdf<F: Float>(x: F) -> F {
     // Very rough approximation using erf
     let sqrt2 = F::from(1.4142135623730951).unwrap();
@@ -396,6 +403,7 @@ fn normal_cdf<F: Float>(x: F) -> F {
 }
 
 /// Error function approximation
+#[allow(dead_code)]
 fn erf_approx<F: Float>(x: F) -> F {
     // Simple rational approximation
     let a = F::from(0.3275911).unwrap();

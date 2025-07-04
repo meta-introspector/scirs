@@ -56,6 +56,7 @@ impl Default for ParallelVectorOptions {
 /// # Panics
 ///
 /// Panics if vectors have different lengths
+#[allow(dead_code)]
 pub fn parallel_dot<T>(x: &[T], y: &[T], options: Option<ParallelVectorOptions>) -> T
 where
     T: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps,
@@ -121,6 +122,7 @@ where
 /// # Returns
 ///
 /// The 2-norm of the vector
+#[allow(dead_code)]
 pub fn parallel_norm2<T>(x: &[T], options: Option<ParallelVectorOptions>) -> T
 where
     T: Float + NumAssign + Sum + Copy + Send + Sync + SimdUnifiedOps,
@@ -172,6 +174,7 @@ where
 /// # Panics
 ///
 /// Panics if vectors have different lengths
+#[allow(dead_code)]
 pub fn parallel_vector_add<T>(x: &[T], y: &[T], z: &mut [T], options: Option<ParallelVectorOptions>)
 where
     T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
@@ -238,6 +241,7 @@ where
 /// # Panics
 ///
 /// Panics if vectors have different lengths
+#[allow(dead_code)]
 pub fn parallel_vector_sub<T>(x: &[T], y: &[T], z: &mut [T], options: Option<ParallelVectorOptions>)
 where
     T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
@@ -303,6 +307,7 @@ where
 /// # Panics
 ///
 /// Panics if vectors have different lengths
+#[allow(dead_code)]
 pub fn parallel_axpy<T>(a: T, x: &[T], y: &mut [T], options: Option<ParallelVectorOptions>)
 where
     T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
@@ -367,6 +372,7 @@ where
 /// # Panics
 ///
 /// Panics if vectors have different lengths
+#[allow(dead_code)]
 pub fn parallel_vector_scale<T>(a: T, x: &[T], y: &mut [T], options: Option<ParallelVectorOptions>)
 where
     T: Float + NumAssign + Send + Sync + Copy + SimdUnifiedOps,
@@ -426,6 +432,7 @@ where
 /// # Panics
 ///
 /// Panics if vectors have different lengths
+#[allow(dead_code)]
 pub fn parallel_vector_copy<T>(x: &[T], y: &mut [T], options: Option<ParallelVectorOptions>)
 where
     T: Float + NumAssign + Send + Sync + Copy,
@@ -471,6 +478,8 @@ where
 /// # Panics
 ///
 /// Panics if vectors have different lengths
+#[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn parallel_linear_combination<T>(
     a: T,
     x: &[T],
@@ -549,6 +558,8 @@ pub fn parallel_linear_combination<T>(
 /// # Panics
 ///
 /// Panics if array dimensions are inconsistent
+#[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn parallel_sparse_matvec_csr<T>(
     y: &mut [T],
     rows: usize,
@@ -669,6 +680,8 @@ pub fn parallel_sparse_matvec_csr<T>(
 /// - Cache-aware memory access patterns
 /// - NUMA-aware thread scheduling
 /// - Vectorized inner loops with prefetching
+#[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn ultrathink_sparse_matvec_csr<T>(
     y: &mut [T],
     rows: usize,
@@ -716,6 +729,7 @@ pub fn ultrathink_sparse_matvec_csr<T>(
 }
 
 /// Adaptive load-balanced SpMV for matrices with irregular sparsity patterns
+#[allow(dead_code)]
 fn ultrathink_adaptive_load_balanced_spmv<T>(
     y: &mut [T],
     rows: usize,
@@ -775,6 +789,7 @@ fn ultrathink_adaptive_load_balanced_spmv<T>(
 }
 
 /// Vectorized SpMV for dense-ish matrices
+#[allow(dead_code)]
 fn ultrathink_vectorized_spmv<T>(
     y: &mut [T],
     rows: usize,
@@ -841,6 +856,7 @@ fn ultrathink_vectorized_spmv<T>(
 }
 
 /// Cache-optimized SpMV for sparse matrices
+#[allow(dead_code)]
 fn ultrathink_cache_optimized_spmv<T>(
     y: &mut [T],
     rows: usize,

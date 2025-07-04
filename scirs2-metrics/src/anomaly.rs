@@ -133,6 +133,7 @@ use crate::error::{MetricsError, Result};
 /// let accuracy = detection_accuracy(&y_true, &y_pred).unwrap();
 /// assert!(accuracy >= 0.0 && accuracy <= 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn detection_accuracy<T, S, R>(
     y_true: &ArrayBase<S, Ix1>,
     y_pred: &ArrayBase<R, Ix1>,
@@ -198,6 +199,7 @@ where
 /// let far = false_alarm_rate(&y_true, &y_pred).unwrap();
 /// assert!(far >= 0.0 && far <= 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn false_alarm_rate<T, S, R>(
     y_true: &ArrayBase<S, Ix1>,
     y_pred: &ArrayBase<R, Ix1>,
@@ -272,6 +274,7 @@ where
 /// let mdr = miss_detection_rate(&y_true, &y_pred).unwrap();
 /// assert!(mdr >= 0.0 && mdr <= 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn miss_detection_rate<T, S, R>(
     y_true: &ArrayBase<S, Ix1>,
     y_pred: &ArrayBase<R, Ix1>,
@@ -346,6 +349,7 @@ where
 /// let auc = anomaly_auc_score(&y_true, &y_score).unwrap();
 /// assert!(auc >= 0.0 && auc <= 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn anomaly_auc_score<T, S, R>(
     y_true: &ArrayBase<S, Ix1>,
     y_score: &ArrayBase<R, Ix1>,
@@ -458,6 +462,7 @@ where
 /// let ap = anomaly_average_precision_score(&y_true, &y_score).unwrap();
 /// assert!(ap > 0.0 && ap <= 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn anomaly_average_precision_score<T, S, R>(
     y_true: &ArrayBase<S, Ix1>,
     y_score: &ArrayBase<R, Ix1>,
@@ -557,6 +562,7 @@ where
 /// // Calculate KL divergence
 /// let kl = kl_divergence(&p, &q).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn kl_divergence<T, S, R>(p: &ArrayBase<S, Ix1>, q: &ArrayBase<R, Ix1>) -> Result<f64>
 where
     T: Real + PartialOrd + Clone,
@@ -634,6 +640,7 @@ where
 /// let js = js_divergence(&p, &q).unwrap();
 /// assert!(js >= 0.0 && js <= 0.693);
 /// ```
+#[allow(dead_code)]
 pub fn js_divergence<T, S, R>(p: &ArrayBase<S, Ix1>, q: &ArrayBase<R, Ix1>) -> Result<f64>
 where
     T: Real + PartialOrd + Clone,
@@ -730,6 +737,7 @@ where
 ///     assert!(w_dist >= 0.0);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn wasserstein_distance<T, S, R>(
     u_values: &ArrayBase<S, Ix1>,
     v_values: &ArrayBase<R, Ix1>,
@@ -828,6 +836,7 @@ where
 ///
 /// The lower the MMD value, the more similar the distributions.
 /// A value close to 0 suggests the samples come from the same distribution.
+#[allow(dead_code)]
 pub fn maximum_mean_discrepancy<T, S, R>(
     x: &ArrayBase<S, Ix1>,
     y: &ArrayBase<R, Ix1>,
@@ -983,6 +992,7 @@ where
 /// let (precision_strict, recall_strict, f1_strict) =
 ///     precision_recall_with_tolerance(&y_true, &y_pred, 0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn precision_recall_with_tolerance<T, S, R>(
     y_true: &ArrayBase<S, Ix1>,
     y_pred: &ArrayBase<R, Ix1>,
@@ -1124,6 +1134,7 @@ where
 /// // Point-adjusted evaluation considers both anomaly sequences correctly detected
 /// let (pa_precision, pa_recall, pa_f1) = point_adjusted_precision_recall(&y_true, &y_pred).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn point_adjusted_precision_recall<T, S, R>(
     y_true: &ArrayBase<S, Ix1>,
     y_pred: &ArrayBase<R, Ix1>,
@@ -1287,6 +1298,7 @@ where
 /// // Calculate NAB score with custom parameters
 /// let custom_score = nab_score(&y_true, &y_pred, Some(5), Some(2.0), Some(-1.0)).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn nab_score<T, S, R>(
     y_true: &ArrayBase<S, Ix1>,
     y_pred: &ArrayBase<R, Ix1>,

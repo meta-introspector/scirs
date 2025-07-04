@@ -903,6 +903,7 @@ where
 }
 
 /// Convenience function to create an ultra-advanced streaming processor
+#[allow(dead_code)]
 pub fn create_ultra_streaming_processor<F>() -> UltraAdvancedStreamingProcessor<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
@@ -911,6 +912,7 @@ where
 }
 
 /// Convenience function to create a streaming processor with custom configuration
+#[allow(dead_code)]
 pub fn create_streaming_processor_with_config<F>(
     config: UltraStreamingConfig,
 ) -> UltraAdvancedStreamingProcessor<F>

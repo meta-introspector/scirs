@@ -3,6 +3,7 @@ use scirs2_integrate::pde::implicit::{ImplicitOptions, ADI2D};
 use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Define 2D domain: (x,y) ∈ [0,1]×[0,1]
     let domain = Domain::new(vec![0.0..1.0, 0.0..1.0], vec![51, 51])?;
@@ -89,11 +90,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Analytical solution for the 2D heat equation with given initial and boundary conditions
+#[allow(dead_code)]
 fn analytical_solution(x: f64, y: f64, t: f64) -> f64 {
     (PI * x).sin() * (PI * y).sin() * (-2.0 * PI * PI * t).exp()
 }
 
 /// Compare numerical and analytical solutions
+#[allow(dead_code)]
 fn compare_with_analytical(
     result: &scirs2_integrate::pde::implicit::ADIResult,
     domain: &Domain,

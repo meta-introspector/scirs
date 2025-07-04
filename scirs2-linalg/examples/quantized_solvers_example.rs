@@ -14,6 +14,7 @@ use scirs2_linalg::quantization::{
     QuantizationMethod,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Quantized Matrix Solvers Example ===");
 
@@ -39,6 +40,7 @@ fn main() {
 }
 
 /// Example of using conjugate gradient with a quantized matrix
+#[allow(dead_code)]
 fn example_conjugate_gradient() {
     // Create a small symmetric positive definite matrix
     let matrix = array![[4.0f32, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 5.0]];
@@ -98,6 +100,7 @@ fn example_conjugate_gradient() {
 }
 
 /// Example of using GMRES with a quantized matrix
+#[allow(dead_code)]
 fn example_gmres() {
     // Create a small non-symmetric matrix
     let matrix = array![[3.0f32, 1.0, 0.5], [1.0, 4.0, 2.0], [0.5, 1.0, 3.0]];
@@ -150,6 +153,7 @@ fn example_gmres() {
 }
 
 /// Example of using preconditioned conjugate gradient with a quantized matrix
+#[allow(dead_code)]
 fn example_preconditioned_cg() {
     // Create a small symmetric positive definite matrix
     let matrix = array![[10.0f32, 1.0, 0.0], [1.0, 8.0, 3.0], [0.0, 3.0, 15.0]];
@@ -198,6 +202,7 @@ fn example_preconditioned_cg() {
 }
 
 /// Example of solving a system with a tridiagonal matrix (banded structure)
+#[allow(dead_code)]
 fn example_banded_matrix() {
     // Define a tridiagonal matrix using its bands
     let n = 10;
@@ -241,6 +246,7 @@ fn example_banded_matrix() {
 }
 
 /// Example demonstrating adaptive precision for ill-conditioned matrices
+#[allow(dead_code)]
 fn example_adaptive_precision() {
     // Create an ill-conditioned matrix
     let matrix = array![[100.0f32, 99.0, 0.0], [99.0, 100.0, 0.01], [0.0, 0.01, 1.0]];
@@ -275,6 +281,7 @@ fn example_adaptive_precision() {
 }
 
 /// Helper function to compute L2 norm of a vector
+#[allow(dead_code)]
 fn l2_norm(v: &Array1<f32>) -> f32 {
     v.dot(v).sqrt()
 }

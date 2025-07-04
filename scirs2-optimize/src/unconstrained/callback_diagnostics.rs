@@ -157,6 +157,7 @@ impl DiagnosticOptimizer {
 }
 
 /// Optimization wrapper that integrates diagnostics
+#[allow(dead_code)]
 pub fn optimize_with_diagnostics<F, O>(
     optimizer_fn: O,
     fun: F,
@@ -189,6 +190,7 @@ where
 }
 
 /// Example of integrating diagnostics into an optimization algorithm
+#[allow(dead_code)]
 pub fn minimize_with_diagnostics<F>(
     mut fun: F,
     x0: Array1<f64>,
@@ -289,6 +291,7 @@ where
 }
 
 /// Simple finite difference gradient
+#[allow(dead_code)]
 fn finite_diff_gradient<F>(fun: &mut F, x: &ArrayView1<f64>, eps: f64) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,

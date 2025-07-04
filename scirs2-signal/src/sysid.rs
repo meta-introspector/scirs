@@ -73,7 +73,7 @@ use crate::window::get_window;
 
 use ndarray::{s, Array1, Array2, Axis};
 use num_complex::Complex64;
-#[cfg(test)]
+
 use std::f64::consts::PI;
 
 /// Methods for transfer function estimation
@@ -239,6 +239,7 @@ pub struct ModelValidation {
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn estimate_transfer_function(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -276,6 +277,7 @@ pub fn estimate_transfer_function(
 }
 
 /// Least squares transfer function estimation
+#[allow(dead_code)]
 fn estimate_tf_least_squares(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -363,6 +365,7 @@ fn estimate_tf_least_squares(
 }
 
 /// Frequency domain transfer function estimation using spectral methods
+#[allow(dead_code)]
 fn estimate_tf_frequency_domain(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -389,6 +392,7 @@ fn estimate_tf_frequency_domain(
 }
 
 /// Instrumental variable method for transfer function estimation
+#[allow(dead_code)]
 fn estimate_tf_instrumental_variable(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -476,6 +480,7 @@ fn estimate_tf_instrumental_variable(
 }
 
 /// Simplified subspace-based transfer function estimation
+#[allow(dead_code)]
 fn estimate_tf_subspace(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -499,6 +504,7 @@ fn estimate_tf_subspace(
 ///
 /// # Returns
 /// * Frequency response estimation result
+#[allow(dead_code)]
 pub fn estimate_frequency_response(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -526,6 +532,7 @@ pub fn estimate_frequency_response(
 }
 
 /// Frequency response estimation using Welch's method
+#[allow(dead_code)]
 fn estimate_freq_response_welch(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -590,6 +597,7 @@ fn estimate_freq_response_welch(
 }
 
 /// Cross-spectral density estimation using Welch's method
+#[allow(dead_code)]
 fn cross_spectral_density_welch(
     x: &Array1<f64>,
     y: &Array1<f64>,
@@ -659,6 +667,7 @@ fn cross_spectral_density_welch(
 }
 
 /// Simple periodogram-based frequency response estimation
+#[allow(dead_code)]
 fn estimate_freq_response_periodogram(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -702,6 +711,7 @@ fn estimate_freq_response_periodogram(
 }
 
 /// H1 estimator (minimizes input noise effects)
+#[allow(dead_code)]
 fn estimate_freq_response_h1(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -713,6 +723,7 @@ fn estimate_freq_response_h1(
 }
 
 /// H2 estimator (minimizes output noise effects)  
+#[allow(dead_code)]
 fn estimate_freq_response_h2(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -767,6 +778,7 @@ fn estimate_freq_response_h2(
 }
 
 /// Coherence-weighted frequency response estimation
+#[allow(dead_code)]
 fn estimate_freq_response_coherence_weighted(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -794,6 +806,7 @@ fn estimate_freq_response_coherence_weighted(
 }
 
 /// Fit parametric model to frequency response data
+#[allow(dead_code)]
 fn fit_parametric_to_frequency_response(
     freq_response: &Array1<Complex64>,
     frequencies: &Array1<f64>,
@@ -887,6 +900,7 @@ fn fit_parametric_to_frequency_response(
 ///
 /// # Returns
 /// * Parametric model identification result
+#[allow(dead_code)]
 pub fn identify_ar_model(
     signal: &Array1<f64>,
     max_order: usize,
@@ -920,6 +934,7 @@ pub fn identify_ar_model(
 ///
 /// # Returns
 /// * Parametric model identification result
+#[allow(dead_code)]
 pub fn identify_arma_model(
     signal: &Array1<f64>,
     max_ar_order: usize,
@@ -982,6 +997,7 @@ pub fn identify_arma_model(
 ///
 /// # Returns
 /// * Model validation results
+#[allow(dead_code)]
 pub fn validate_model(
     predicted: &Array1<f64>,
     actual: &Array1<f64>,
@@ -1054,6 +1070,7 @@ pub fn validate_model(
 /// # Returns
 /// * State-space matrices (A, B, C, D)
 #[allow(clippy::type_complexity)]
+#[allow(dead_code)]
 pub fn n4sid_identification(
     input: &Array1<f64>,
     _output: &Array1<f64>,
@@ -1179,6 +1196,7 @@ impl RecursiveLeastSquares {
 }
 
 /// Helper function to calculate model fit percentage
+#[allow(dead_code)]
 fn calculate_fit_percentage(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
     let mean_actual = actual.mean().unwrap_or(0.0);
     let ss_tot = actual.mapv(|y| (y - mean_actual).powi(2)).sum();
@@ -1194,6 +1212,7 @@ fn calculate_fit_percentage(actual: &Array1<f64>, predicted: &Array1<f64>) -> f6
 }
 
 /// Simple Ljung-Box test for residual whiteness
+#[allow(dead_code)]
 fn ljung_box_test(residuals: &Array1<f64>, max_lag: usize) -> f64 {
     let n = residuals.len();
     if n <= max_lag {
@@ -1227,6 +1246,7 @@ fn ljung_box_test(residuals: &Array1<f64>, max_lag: usize) -> f64 {
 }
 
 /// Solve linear system using LU decomposition
+#[allow(dead_code)]
 fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     match scirs2_linalg::solve(&a.view(), &b.view(), None) {
         Ok(solution) => Ok(solution),
@@ -1237,6 +1257,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<
 }
 
 /// Solve complex least squares problem by separating real and imaginary parts
+#[allow(dead_code)]
 fn solve_complex_least_squares(
     a: &Array2<Complex64>,
     b: &Array1<Complex64>,
@@ -1275,6 +1296,7 @@ fn solve_complex_least_squares(
 }
 
 /// Compute FFT (simplified implementation)
+#[allow(dead_code)]
 fn compute_fft(signal: &Array1<f64>) -> Array1<Complex64> {
     let n = signal.len();
 
@@ -1295,6 +1317,7 @@ fn compute_fft(signal: &Array1<f64>) -> Array1<Complex64> {
 }
 
 /// Find next power of 2
+#[allow(dead_code)]
 fn next_power_of_2(n: usize) -> usize {
     if n == 0 {
         return 1;
@@ -1379,6 +1402,7 @@ pub struct RobustSysIdResult {
 /// # Returns
 ///
 /// * Robust system identification result
+#[allow(dead_code)]
 pub fn robust_least_squares(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1469,6 +1493,7 @@ pub fn robust_least_squares(
 ///
 /// This function performs system identification while automatically detecting
 /// and rejecting outliers, faults, and measurement errors.
+#[allow(dead_code)]
 pub fn fault_tolerant_identification(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1537,6 +1562,7 @@ pub fn fault_tolerant_identification(
 }
 
 /// Adaptive robust system identification that automatically selects the best method
+#[allow(dead_code)]
 pub fn adaptive_robust_identification(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1579,6 +1605,7 @@ pub fn adaptive_robust_identification(
 
 // Helper functions for robust estimation
 
+#[allow(dead_code)]
 fn solve_least_squares(regressor: &Array2<f64>, target: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Simple normal equations solution (A^T A)^-1 A^T b
     let at = regressor.t();
@@ -1596,6 +1623,7 @@ fn solve_least_squares(regressor: &Array2<f64>, target: &Array1<f64>) -> SignalR
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn solve_weighted_least_squares(
     regressor: &Array2<f64>,
     target: &Array1<f64>,
@@ -1619,6 +1647,7 @@ fn solve_weighted_least_squares(
     solve_least_squares(&weighted_regressor, &weighted_target)
 }
 
+#[allow(dead_code)]
 fn update_huber_weights(
     residuals: &Array1<f64>,
     scale: f64,
@@ -1635,6 +1664,7 @@ fn update_huber_weights(
     }
 }
 
+#[allow(dead_code)]
 pub fn estimate_robust_scale(
     target: &Array1<f64>,
     regressor: &Array2<f64>,
@@ -1655,6 +1685,7 @@ pub fn estimate_robust_scale(
     Ok(mad * 1.4826) // Scale factor for normal distribution
 }
 
+#[allow(dead_code)]
 pub fn detect_outliers(residuals: &Array1<f64>, scale: f64, threshold: f64) -> Vec<usize> {
     residuals
         .iter()
@@ -1669,6 +1700,7 @@ pub fn detect_outliers(residuals: &Array1<f64>, scale: f64, threshold: f64) -> V
         .collect()
 }
 
+#[allow(dead_code)]
 fn calculate_robust_fit(
     target: &Array1<f64>,
     regressor: &Array2<f64>,
@@ -1689,6 +1721,7 @@ fn calculate_robust_fit(
     }
 }
 
+#[allow(dead_code)]
 fn calculate_median(data: &Array1<f64>) -> f64 {
     let mut sorted: Vec<f64> = data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());

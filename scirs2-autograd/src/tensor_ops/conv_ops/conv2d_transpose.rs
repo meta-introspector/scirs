@@ -27,6 +27,7 @@ struct Conv2DTransposeParams {
 
 // Panics for invalid inputs
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn conv2d_transpose_extract_params<F: Float>(
     gy: &NdArrayView<F>,
     w: &NdArrayView<F>,
@@ -86,6 +87,7 @@ fn conv2d_transpose_extract_params<F: Float>(
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn conv2d_transpose_impl<F: Float>(
     gy: &NdArrayView<F>,
     w: &NdArrayView<F>,
@@ -296,6 +298,7 @@ impl<T: Float> crate::op::Op<T> for Conv2DTranspose {
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn conv2d_transpose_filter_grad_impl<F: Float>(
     x: &NdArrayView<F>,
     w: &NdArrayView<F>,
@@ -476,6 +479,7 @@ impl<T: Float> crate::op::Op<T> for Conv2DTransposeFilterGrad {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_deconv() {
     use crate::tensor_ops as T;
 

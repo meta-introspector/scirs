@@ -22,6 +22,7 @@ use crate::specialized::BandedMatrix;
 /// # Returns
 ///
 /// * Tuple containing eigenvalues and eigenvectors
+#[allow(dead_code)]
 pub fn banded_eigh<F>(a: &ArrayView2<F>, bandwidth: usize) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
     F: Float
@@ -156,6 +157,7 @@ where
 /// # Returns
 ///
 /// * Vector of eigenvalues
+#[allow(dead_code)]
 pub fn banded_eigvalsh<F>(a: &ArrayView2<F>, bandwidth: usize) -> LinalgResult<Array1<F>>
 where
     F: Float

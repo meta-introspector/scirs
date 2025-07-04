@@ -22,6 +22,7 @@ use scirs2_core::validation::*;
 ///
 /// # Returns
 /// * `Array2<f64>` - Matrix of shape (n, d) with samples in [0, 1]^d
+#[allow(dead_code)]
 pub fn sobol(n: usize, d: usize, scramble: bool, seed: Option<u64>) -> StatsResult<Array2<f64>> {
     check_positive(n, "n")?;
     check_positive(d, "d")?;
@@ -49,6 +50,7 @@ pub fn sobol(n: usize, d: usize, scramble: bool, seed: Option<u64>) -> StatsResu
 ///
 /// # Returns
 /// * `Array2<f64>` - Matrix of shape (n, d) with samples in [0, 1]^d
+#[allow(dead_code)]
 pub fn halton(n: usize, d: usize, scramble: bool, seed: Option<u64>) -> StatsResult<Array2<f64>> {
     check_positive(n, "n")?;
     check_positive(d, "d")?;
@@ -75,6 +77,7 @@ pub fn halton(n: usize, d: usize, scramble: bool, seed: Option<u64>) -> StatsRes
 ///
 /// # Returns
 /// * `Array2<f64>` - Matrix of shape (n, d) with samples in [0, 1]^d
+#[allow(dead_code)]
 pub fn latin_hypercube(n: usize, d: usize, seed: Option<u64>) -> StatsResult<Array2<f64>> {
     check_positive(n, "n")?;
     check_positive(d, "d")?;
@@ -468,6 +471,7 @@ impl HaltonSequence {
 }
 
 /// Discrepancy measures for QMC sequences
+#[allow(dead_code)]
 pub fn star_discrepancy(samples: &ArrayView1<Array1<f64>>) -> StatsResult<f64> {
     if samples.is_empty() {
         return Err(StatsError::InvalidArgument(

@@ -9,6 +9,7 @@ use scirs2_interpolate::{
     ValidationStatus,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Documentation Enhancement Demo ===\n");
 
@@ -159,6 +160,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Analyze the generated content from documentation enhancement
+#[allow(dead_code)]
 fn analyze_generated_content(report: &scirs2_interpolate::DocumentationReport) {
     println!("Generated Content Analysis:");
 
@@ -224,6 +226,7 @@ fn analyze_generated_content(report: &scirs2_interpolate::DocumentationReport) {
 }
 
 /// Analyze documentation by target audience
+#[allow(dead_code)]
 fn analyze_by_audience_level(report: &scirs2_interpolate::DocumentationReport) {
     use std::collections::HashMap;
 
@@ -261,6 +264,7 @@ fn analyze_by_audience_level(report: &scirs2_interpolate::DocumentationReport) {
 }
 
 /// Analyze example validation results
+#[allow(dead_code)]
 fn analyze_example_validation(report: &scirs2_interpolate::DocumentationReport) {
     println!("Example Validation Results:");
 
@@ -330,6 +334,7 @@ fn analyze_example_validation(report: &scirs2_interpolate::DocumentationReport) 
 }
 
 /// Assess overall documentation quality
+#[allow(dead_code)]
 fn assess_documentation_quality(report: &scirs2_interpolate::DocumentationReport) {
     println!("Documentation Quality Assessment:");
 
@@ -409,6 +414,7 @@ fn assess_documentation_quality(report: &scirs2_interpolate::DocumentationReport
 }
 
 /// Provide actionable documentation improvement plan
+#[allow(dead_code)]
 fn provide_documentation_action_plan(report: &scirs2_interpolate::DocumentationReport) {
     match report.readiness {
         DocumentationReadiness::Ready => {

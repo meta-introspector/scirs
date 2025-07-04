@@ -9,6 +9,7 @@ use scirs2_transform::{
     UltraThinkQuantumOptimizer,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 ULTRATHINK MODE Showcase - Advanced Data Transformation Optimization");
     println!("========================================================================");
@@ -31,6 +32,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_neuromorphic_adaptation() -> Result<()> {
     // Create ultra-fast neuromorphic processor
     let mut processor = UltraThinkNeuromorphicProcessor::new(10, 20, 10);
@@ -139,6 +141,7 @@ fn demonstrate_neuromorphic_adaptation() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_quantum_optimization() -> Result<()> {
     // Create quantum-inspired optimizer for transformation parameter tuning
     let dimension = 5;
@@ -234,6 +237,7 @@ fn demonstrate_quantum_optimization() -> Result<()> {
 }
 
 #[cfg(not(feature = "std"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires std feature to be enabled.");
 }

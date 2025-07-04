@@ -2,6 +2,7 @@ use ndarray::{array, Array2};
 use rand::prelude::*;
 use scirs2_spatial::{Octree, OctreeBoundingBox as BoundingBox};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Octree Example");
     println!("==============\n");
@@ -80,8 +81,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let search_radius = 0.7;
     println!(
-        "Finding points within radius {:.1} of query point:",
-        search_radius
+        "Finding points within radius {search_radius:.1} of query point:"
     );
 
     let (indices, distances) = octree.query_radius(&query_point.view(), search_radius)?;
@@ -115,8 +115,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let collision_threshold = 0.2;
     println!(
-        "Checking for collision with threshold {:.1}:",
-        collision_threshold
+        "Checking for collision with threshold {collision_threshold:.1}:"
     );
     println!("  Object points:");
     for i in 0..object_points.nrows() {
@@ -125,14 +124,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let collision = octree.check_collision(&object_points.view(), collision_threshold)?;
-    println!("  Collision detected: {}", collision);
+    println!("  Collision detected: {collision}");
 
     // Demonstrate performance with larger dataset
     println!("\nPerformance with Larger Dataset");
     println!("-----------------------------");
 
     let n_points = 100000;
-    println!("Creating a random dataset with {} points...", n_points);
+    println!("Creating a random dataset with {n_points} points...");
 
     let mut rng = rand::rng();
     let mut large_points = Array2::zeros((n_points, 3));
@@ -148,7 +147,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let large_octree = Octree::new(&large_points.view())?;
     let build_time = start.elapsed();
 
-    println!("  Built octree in {:.2?}", build_time);
+    println!("  Built octree in {build_time:.2?}");
     println!("  Maximum depth: {}", large_octree.max_depth());
 
     // Test nearest neighbor query performance
@@ -159,7 +158,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (_indices, _) = large_octree.query_nearest(&query_point.view(), 10)?;
     let query_time = start.elapsed();
 
-    println!("  Found 10 nearest neighbors in {:.2?}", query_time);
+    println!("  Found 10 nearest neighbors in {query_time:.2?}");
 
     // Test radius search performance
     let start = std::time::Instant::now();

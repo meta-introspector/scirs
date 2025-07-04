@@ -549,6 +549,7 @@ where
 }
 
 /// Convenience function to create a memory-mapped array from an ndarray
+#[allow(dead_code)]
 pub fn create_mmap_array<P, S, D, T>(path: P, array: &ArrayBase<S, D>) -> Result<()>
 where
     P: AsRef<Path>,
@@ -560,6 +561,7 @@ where
 }
 
 /// Convenience function to read a memory-mapped array as an ndarray
+#[allow(dead_code)]
 pub fn read_mmap_array<P, T>(path: P) -> Result<ArrayD<T>>
 where
     P: AsRef<Path>,

@@ -526,6 +526,7 @@ mod integration_tests {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_mode_comprehensive() {
     // Run a subset of the most important tests
     gpu_acceleration_tests::test_ultra_gpu_accelerator_creation();

@@ -37,6 +37,7 @@ pub struct LstsqResult {
 
 /// Simple least squares solver (A * x = b)
 /// Returns the solution x that minimizes ||A * x - b||^2
+#[allow(dead_code)]
 fn lstsq(
     a: &ArrayView2<f64>,
     b: &ArrayView1<f64>,
@@ -73,6 +74,7 @@ fn lstsq(
 }
 
 /// Simple linear system solver using Gaussian elimination
+#[allow(dead_code)]
 fn solve_linear_system(
     a: &ArrayView2<f64>,
     b: &ArrayView1<f64>,
@@ -138,6 +140,7 @@ fn solve_linear_system(
 }
 
 /// Simple wrapper around solve_linear_system for compatibility
+#[allow(dead_code)]
 fn solve(
     a: &ArrayView2<f64>,
     b: &ArrayView1<f64>,
@@ -238,11 +241,13 @@ pub enum TransformType {
 }
 
 /// Create identity transformation matrix
+#[allow(dead_code)]
 pub fn identity_transform() -> TransformMatrix {
     Array2::eye(3)
 }
 
 /// Apply transformation to a point
+#[allow(dead_code)]
 pub fn transform_point(point: Point2D, transform: &TransformMatrix) -> Point2D {
     let homogeneous = Array1::from(vec![point.x, point.y, 1.0]);
     let transformed = transform.dot(&homogeneous);
@@ -258,6 +263,7 @@ pub fn transform_point(point: Point2D, transform: &TransformMatrix) -> Point2D {
 }
 
 /// Apply transformation to multiple points
+#[allow(dead_code)]
 pub fn transform_points(points: &[Point2D], transform: &TransformMatrix) -> Vec<Point2D> {
     points
         .iter()
@@ -266,6 +272,7 @@ pub fn transform_points(points: &[Point2D], transform: &TransformMatrix) -> Vec<
 }
 
 /// Invert a transformation matrix
+#[allow(dead_code)]
 pub fn invert_transform(transform: &TransformMatrix) -> Result<TransformMatrix> {
     // Uses optimized 3x3 matrix inversion for transformation matrices
     // This implementation is sufficient for homogeneous transformation matrices
@@ -274,11 +281,13 @@ pub fn invert_transform(transform: &TransformMatrix) -> Result<TransformMatrix> 
 }
 
 /// Compose two transformations (T2 * T1)
+#[allow(dead_code)]
 pub fn compose_transforms(t1: &TransformMatrix, t2: &TransformMatrix) -> TransformMatrix {
     t2.dot(t1)
 }
 
 /// Decompose affine transformation into components
+#[allow(dead_code)]
 pub fn decompose_affine(transform: &TransformMatrix) -> Result<AffineComponents> {
     if transform.shape() != [3, 3] {
         return Err(VisionError::InvalidParameter(
@@ -322,6 +331,7 @@ pub struct AffineComponents {
 }
 
 /// Estimate transformation robustly using RANSAC
+#[allow(dead_code)]
 pub fn ransac_estimate_transform(
     matches: &[PointMatch],
     transform_type: TransformType,
@@ -345,8 +355,8 @@ pub fn ransac_estimate_transform(
     let mut best_cost = f64::INFINITY;
 
     use rand::prelude::*;
-    use rand::rngs::StdRng;
     use rand::rng;
+    use rand::rngs::StdRng;
     let mut base_rng = rng();
     let mut rng = StdRng::from_rng(&mut base_rng);
 
@@ -418,6 +428,7 @@ pub fn ransac_estimate_transform(
 }
 
 /// Estimate rigid transformation (translation + rotation)
+#[allow(dead_code)]
 fn estimate_rigid_transform(matches: &[PointMatch]) -> Result<TransformMatrix> {
     if matches.len() < 2 {
         return Err(VisionError::InvalidParameter(
@@ -476,6 +487,7 @@ fn estimate_rigid_transform(matches: &[PointMatch]) -> Result<TransformMatrix> {
 }
 
 /// Estimate similarity transformation (translation + rotation + uniform scale)
+#[allow(dead_code)]
 fn estimate_similarity_transform(matches: &[PointMatch]) -> Result<TransformMatrix> {
     if matches.len() < 2 {
         return Err(VisionError::InvalidParameter(
@@ -544,6 +556,7 @@ fn estimate_similarity_transform(matches: &[PointMatch]) -> Result<TransformMatr
 }
 
 /// Estimate affine transformation
+#[allow(dead_code)]
 fn estimate_affine_transform(matches: &[PointMatch]) -> Result<TransformMatrix> {
     if matches.len() < 3 {
         return Err(VisionError::InvalidParameter(
@@ -593,6 +606,7 @@ fn estimate_affine_transform(matches: &[PointMatch]) -> Result<TransformMatrix> 
 }
 
 /// Normalize points for homography estimation
+#[allow(dead_code)]
 fn normalize_points_homography(points: Vec<Point2D>) -> (Vec<Point2D>, TransformMatrix) {
     let n = points.len() as f64;
 
@@ -639,6 +653,7 @@ fn normalize_points_homography(points: Vec<Point2D>) -> (Vec<Point2D>, Transform
 }
 
 /// Estimate homography transformation
+#[allow(dead_code)]
 fn estimate_homography_transform(matches: &[PointMatch]) -> Result<TransformMatrix> {
     if matches.len() < 4 {
         return Err(VisionError::InvalidParameter(
@@ -752,6 +767,7 @@ fn estimate_homography_transform(matches: &[PointMatch]) -> Result<TransformMatr
 
 /// Simple 3x3 matrix inversion for TransformMatrix
 /// Optimized implementation for 3x3 homogeneous transformation matrices
+#[allow(dead_code)]
 fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
     if matrix.shape() != [3, 3] {
         return Err(VisionError::InvalidParameter(

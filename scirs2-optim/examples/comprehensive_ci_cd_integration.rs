@@ -610,6 +610,7 @@ pub struct FrameworkTestResult {
     pub execution_time: std::time::Duration,
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 scirs2-optim CI/CD Integration Example");
 

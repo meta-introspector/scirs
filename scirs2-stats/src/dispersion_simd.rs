@@ -23,6 +23,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 /// # Returns
 ///
 /// The mean absolute deviation
+#[allow(dead_code)]
 pub fn mad_simd<F, D>(x: &mut ArrayBase<D, Ix1>, scale: F, nan_policy: &str) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -105,6 +106,7 @@ where
 /// # Returns
 ///
 /// The interquartile range
+#[allow(dead_code)]
 pub fn iqr_simd<F, D>(
     x: &mut ArrayBase<D, Ix1>,
     _rng: F,
@@ -141,6 +143,7 @@ where
 /// # Returns
 ///
 /// The coefficient of variation (std/mean)
+#[allow(dead_code)]
 pub fn coefficient_of_variation_simd<F, D>(
     x: &ArrayBase<D, Ix1>,
     nan_policy: &str,
@@ -195,6 +198,7 @@ where
 ///
 /// Computes the range (max - min) using SIMD operations for finding
 /// minimum and maximum values.
+#[allow(dead_code)]
 pub fn range_simd<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -235,6 +239,7 @@ where
 ///
 /// Computes the Gini coefficient using SIMD operations for sorting
 /// and cumulative sum calculations.
+#[allow(dead_code)]
 pub fn gini_simd<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -301,6 +306,7 @@ where
 /// SIMD-optimized standard error of the mean
 ///
 /// Computes SEM = std / sqrt(n) using SIMD operations
+#[allow(dead_code)]
 pub fn sem_simd<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -322,6 +328,7 @@ where
 /// SIMD-optimized median absolute deviation from median (MAD)
 ///
 /// Alternative implementation that allows choosing the center (mean or median)
+#[allow(dead_code)]
 pub fn median_abs_deviation_simd<F, D>(
     x: &mut ArrayBase<D, Ix1>,
     center: Option<F>,
@@ -367,6 +374,7 @@ where
 /// SIMD-optimized percentile range
 ///
 /// Computes the range between two percentiles
+#[allow(dead_code)]
 pub fn percentile_range_simd<F, D>(
     x: &mut ArrayBase<D, Ix1>,
     lower_pct: F,

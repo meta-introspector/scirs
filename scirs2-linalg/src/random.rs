@@ -44,7 +44,7 @@
 
 use ndarray::{Array1, Array2};
 use num_traits::{Float, FromPrimitive, NumAssign, One, Zero};
-use rand::{Rng, SeedableRng};
+use rand::{self, Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use std::iter::Sum;
 
@@ -78,6 +78,7 @@ use crate::error::LinalgResult;
 /// let rand_mat = uniform::<f32>(2, 2, -10.0, 10.0, None);
 /// assert_eq!(rand_mat.shape(), &[2, 2]);
 /// ```
+#[allow(dead_code)]
 pub fn uniform<F>(rows: usize, cols: usize, low: F, high: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
@@ -146,6 +147,7 @@ where
 /// # Returns
 ///
 /// A rows×cols matrix with standard normal distribution
+#[allow(dead_code)]
 pub fn random_normal_matrix<F>(shape: (usize, usize), seed: Option<u64>) -> LinalgResult<Array2<F>>
 where
     F: Float + Zero + One + Copy + num_traits::FromPrimitive + NumAssign + 'static,
@@ -153,6 +155,7 @@ where
     Ok(normal(shape.0, shape.1, F::zero(), F::one(), seed))
 }
 
+#[allow(dead_code)]
 pub fn normal<F>(rows: usize, cols: usize, mean: F, std: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
@@ -220,6 +223,7 @@ where
 /// let identity = Array2::<f64>::eye(4);
 /// assert!(close_l2(&result, &identity, 1e-10));
 /// ```
+#[allow(dead_code)]
 pub fn orthogonal<F>(n: usize, seed: Option<u64>) -> Array2<F>
 where
     F: Float
@@ -278,6 +282,7 @@ where
 /// let result = cholesky(&a.view(), None);
 /// assert!(result.is_ok());
 /// ```
+#[allow(dead_code)]
 pub fn spd<F>(n: usize, min_eigenval: F, max_eigenval: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float
@@ -351,6 +356,7 @@ where
 /// assert_eq!(d[[1, 2]], 0.0);
 /// assert_eq!(d[[2, 1]], 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn diagonal<F>(n: usize, low: F, high: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
@@ -410,6 +416,7 @@ where
 /// assert_eq!(tri[[0, 2]], 0.0); // Outside upper bandwidth
 /// assert_eq!(tri[[2, 0]], 0.0); // Outside lower bandwidth
 /// ```
+#[allow(dead_code)]
 pub fn banded<F>(
     rows: usize,
     cols: usize,
@@ -478,6 +485,7 @@ where
 /// // With a larger matrix, we expect the density to be closer to the target
 /// assert!((non_zero_count as f64 - expected_count as f64).abs() < expected_count as f64 * 0.2);
 /// ```
+#[allow(dead_code)]
 pub fn sparse<F>(
     rows: usize,
     cols: usize,
@@ -548,6 +556,7 @@ where
 /// assert_eq!(t[[0, 1]], t[[1, 2]]);
 /// assert_eq!(t[[1, 0]], t[[2, 1]]);
 /// ```
+#[allow(dead_code)]
 pub fn toeplitz<F>(n: usize, low: F, high: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
@@ -627,6 +636,7 @@ where
 /// // it might not be implemented for all configurations)
 /// assert_eq!(a.shape(), &[4, 4]);
 /// ```
+#[allow(dead_code)]
 pub fn with_condition_number<F>(n: usize, condition_number: F, seed: Option<u64>) -> Array2<F>
 where
     F: Float
@@ -711,6 +721,7 @@ where
 /// // But eigenvalues could be complex and sorting may be challenging in doctests
 /// // So we just verify the matrix size here
 /// ```
+#[allow(dead_code)]
 pub fn with_eigenvalues<F>(eigenvalues: &Array1<F>, seed: Option<u64>) -> Array2<F>
 where
     F: Float
@@ -771,6 +782,7 @@ where
 /// assert!((h[[0, 1]] - 0.5).abs() < 1e-10);
 /// assert!((h[[1, 1]] - 1.0/3.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn hilbert<F>(n: usize) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
@@ -820,6 +832,7 @@ where
 /// assert_eq!(v[[1, 1]], 2.0);  // 2^1
 /// assert_eq!(v[[1, 2]], 4.0);  // 2^2
 /// ```
+#[allow(dead_code)]
 pub fn vandermonde<F>(points: &Array1<F>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,
@@ -883,6 +896,7 @@ where
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn random_correlation<F>(n: usize, seed: Option<u64>) -> Array2<F>
 where
     F: Float
@@ -954,6 +968,7 @@ where
 /// // For a more comprehensive test, we'd check the ratio between singular values
 /// // but this can be unstable in different test environments, so we omit it here.
 /// ```
+#[allow(dead_code)]
 pub fn low_rank<F>(rows: usize, cols: usize, rank: usize, seed: Option<u64>) -> Array2<F>
 where
     F: Float
@@ -1081,6 +1096,7 @@ where
 ///     assert!((col_sum - 1.0).abs() < 1e-10);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn permutation<F>(n: usize, seed: Option<u64>) -> Array2<F>
 where
     F: Float + NumAssign + FromPrimitive + Clone + 'static,

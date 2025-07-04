@@ -18,6 +18,7 @@ use scirs2_stats::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Mode Comprehensive Demo");
     println!("=====================================\n");

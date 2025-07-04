@@ -733,6 +733,7 @@ impl SpecializedHardwareManager {
 }
 
 /// Convenience function for specialized hardware sparse FFT
+#[allow(dead_code)]
 pub fn specialized_hardware_sparse_fft<T>(
     signal: &[T],
     config: SparseFFTConfig,

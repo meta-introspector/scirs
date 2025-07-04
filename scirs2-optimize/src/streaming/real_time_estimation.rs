@@ -10,7 +10,8 @@ use super::{
 };
 use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::CoreResult;
+// Unused import
+// use scirs2_core::error::CoreResult;
 use std::time::{Duration, Instant};
 
 /// Real-time estimation methods
@@ -364,6 +365,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for RealTimeEstimator<T> 
 }
 
 /// Create a Recursive Least Squares estimator
+#[allow(dead_code)]
 pub fn recursive_least_squares<T: StreamingObjective>(
     initial_parameters: Array1<f64>,
     objective: T,
@@ -383,6 +385,7 @@ pub fn recursive_least_squares<T: StreamingObjective>(
 }
 
 /// Create an Exponentially Weighted RLS estimator
+#[allow(dead_code)]
 pub fn exponentially_weighted_rls<T: StreamingObjective>(
     initial_parameters: Array1<f64>,
     objective: T,
@@ -404,6 +407,7 @@ pub fn exponentially_weighted_rls<T: StreamingObjective>(
 }
 
 /// Create a Kalman Filter estimator
+#[allow(dead_code)]
 pub fn kalman_filter_estimator<T: StreamingObjective>(
     initial_parameters: Array1<f64>,
     objective: T,
@@ -431,6 +435,7 @@ pub fn kalman_filter_estimator<T: StreamingObjective>(
 }
 
 /// Convenience function for real-time linear regression
+#[allow(dead_code)]
 pub fn real_time_linear_regression(
     n_features: usize,
     method: RealTimeMethod,

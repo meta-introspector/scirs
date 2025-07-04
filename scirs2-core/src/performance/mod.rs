@@ -14,12 +14,14 @@ pub use advanced_optimization::{
 };
 
 /// Initialize the global performance optimizer
+#[allow(dead_code)]
 pub fn initialize_performance_optimizer() -> crate::error::CoreResult<()> {
     let _optimizer = AdvancedPerformanceOptimizer::global();
     Ok(())
 }
 
 /// Get performance recommendations for the current system
+#[allow(dead_code)]
 pub fn get_system_performance_recommendations() -> Vec<String> {
     let optimizer = AdvancedPerformanceOptimizer::new();
     let profile = optimizer.profile();

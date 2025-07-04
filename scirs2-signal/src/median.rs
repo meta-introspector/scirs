@@ -102,6 +102,7 @@ impl Default for MedianConfig {
 /// let config = MedianConfig::default();
 /// let filtered = median_filter_1d(&signal, 3, &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn median_filter_1d(
     signal: &Array1<f64>,
     kernel_size: usize,
@@ -137,6 +138,7 @@ pub fn median_filter_1d(
 }
 
 /// Applies standard median filtering to a 1D signal
+#[allow(dead_code)]
 fn standard_median_filter_1d(
     signal: &Array1<f64>,
     padded_signal: &Array1<f64>,
@@ -170,6 +172,7 @@ fn standard_median_filter_1d(
 }
 
 /// Applies center-weighted median filtering to a 1D signal
+#[allow(dead_code)]
 fn center_weighted_median_filter_1d(
     signal: &Array1<f64>,
     padded_signal: &Array1<f64>,
@@ -222,6 +225,7 @@ fn center_weighted_median_filter_1d(
 }
 
 /// Applies adaptive median filtering to a 1D signal
+#[allow(dead_code)]
 fn adaptive_median_filter_1d(
     signal: &Array1<f64>,
     padded_signal: &Array1<f64>,
@@ -321,6 +325,7 @@ fn adaptive_median_filter_1d(
 /// let config = MedianConfig::default();
 /// let filtered = median_filter_2d(&image, 3, &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn median_filter_2d(
     image: &Array2<f64>,
     kernel_size: usize,
@@ -356,6 +361,7 @@ pub fn median_filter_2d(
 }
 
 /// Applies standard median filtering to a 2D image
+#[allow(dead_code)]
 fn standard_median_filter_2d(
     image: &Array2<f64>,
     padded_image: &Array2<f64>,
@@ -400,6 +406,7 @@ fn standard_median_filter_2d(
 }
 
 /// Applies center-weighted median filtering to a 2D image
+#[allow(dead_code)]
 fn center_weighted_median_filter_2d(
     image: &Array2<f64>,
     padded_image: &Array2<f64>,
@@ -462,6 +469,7 @@ fn center_weighted_median_filter_2d(
 }
 
 /// Applies adaptive median filtering to a 2D image
+#[allow(dead_code)]
 fn adaptive_median_filter_2d(
     image: &Array2<f64>,
     padded_image: &Array2<f64>,
@@ -563,6 +571,7 @@ fn adaptive_median_filter_2d(
 ///
 /// # Returns
 /// * The filtered color image
+#[allow(dead_code)]
 pub fn median_filter_color(
     image: &Array3<f64>,
     kernel_size: usize,
@@ -610,6 +619,7 @@ pub fn median_filter_color(
 ///
 /// # Returns
 /// * The filtered color image
+#[allow(dead_code)]
 fn vector_median_filter(
     image: &Array3<f64>,
     kernel_size: usize,
@@ -696,6 +706,7 @@ fn vector_median_filter(
 ///
 /// The vector median is the vector that minimizes the sum of
 /// distances to all other vectors in the collection.
+#[allow(dead_code)]
 fn find_vector_median(vectors: &[Vec<f64>]) -> Vec<f64> {
     if vectors.is_empty() {
         return Vec::new();
@@ -728,6 +739,7 @@ fn find_vector_median(vectors: &[Vec<f64>]) -> Vec<f64> {
 }
 
 /// Computes the Euclidean distance between two vectors
+#[allow(dead_code)]
 fn euclidean_distance(v1: &[f64], v2: &[f64]) -> f64 {
     if v1.len() != v2.len() {
         return f64::INFINITY;
@@ -755,6 +767,7 @@ fn euclidean_distance(v1: &[f64], v2: &[f64]) -> f64 {
 ///
 /// # Returns
 /// * The filtered signal
+#[allow(dead_code)]
 pub fn rank_filter_1d(
     signal: &Array1<f64>,
     kernel_size: usize,
@@ -828,6 +841,7 @@ pub fn rank_filter_1d(
 ///
 /// # Returns
 /// * The filtered image
+#[allow(dead_code)]
 pub fn hybrid_median_filter_2d(
     image: &Array2<f64>,
     kernel_size: usize,
@@ -927,6 +941,7 @@ pub fn hybrid_median_filter_2d(
 }
 
 /// Helper function to pad a 1D signal for edge handling
+#[allow(dead_code)]
 fn pad_signal_1d(signal: &Array1<f64>, pad_size: usize, edge_mode: EdgeMode) -> Array1<f64> {
     let n = signal.len();
     let mut padded = Array1::zeros(n + 2 * pad_size);
@@ -978,6 +993,7 @@ fn pad_signal_1d(signal: &Array1<f64>, pad_size: usize, edge_mode: EdgeMode) -> 
 }
 
 /// Helper function to pad a 2D image for edge handling
+#[allow(dead_code)]
 fn pad_image_2d(image: &Array2<f64>, pad_size: usize, edge_mode: EdgeMode) -> Array2<f64> {
     let (height, width) = image.dim();
     let mut padded = Array2::zeros((height + 2 * pad_size, width + 2 * pad_size));

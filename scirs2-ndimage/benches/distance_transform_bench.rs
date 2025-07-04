@@ -7,6 +7,7 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use ndarray::{Array2, Array3, IxDyn};
 use scirs2_ndimage::morphology::{distance_transform_bf, distance_transform_edt};
 
+#[allow(dead_code)]
 fn create_test_pattern_2d(rows: usize, cols: usize) -> Array2<bool> {
     Array2::from_shape_fn((rows, cols), |(i, j)| {
         // Create a pattern with some foreground regions
@@ -18,6 +19,7 @@ fn create_test_pattern_2d(rows: usize, cols: usize) -> Array2<bool> {
     })
 }
 
+#[allow(dead_code)]
 fn create_test_pattern_3d(size_x: usize, size_y: usize, size_z: usize) -> Array3<bool> {
     Array3::from_shape_fn((size_x, size_y, size_z), |(i, j, k)| {
         // Create a 3D pattern with some complexity
@@ -32,6 +34,7 @@ fn create_test_pattern_3d(size_x: usize, size_y: usize, size_z: usize) -> Array3
     })
 }
 
+#[allow(dead_code)]
 fn bench_distance_transform_2d(c: &mut Criterion) {
     let mut group = c.benchmark_group("distance_transform_2d");
 
@@ -80,6 +83,7 @@ fn bench_distance_transform_2d(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_distance_transform_3d(c: &mut Criterion) {
     let mut group = c.benchmark_group("distance_transform_3d");
 
@@ -127,6 +131,7 @@ fn bench_distance_transform_3d(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_distance_metrics(c: &mut Criterion) {
     let mut group = c.benchmark_group("distance_metrics");
 
@@ -153,6 +158,7 @@ fn bench_distance_metrics(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_sampling_effects(c: &mut Criterion) {
     let mut group = c.benchmark_group("sampling_effects");
 
@@ -185,6 +191,7 @@ fn bench_sampling_effects(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_return_modes(c: &mut Criterion) {
     let mut group = c.benchmark_group("return_modes");
 

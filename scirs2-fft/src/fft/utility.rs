@@ -43,6 +43,7 @@ pub(crate) fn try_as_complex<T: Copy + Debug + 'static>(val: T) -> Option<Comple
 ///
 /// `true` if the number is a power of 2, `false` otherwise
 #[inline]
+#[allow(dead_code)]
 pub fn is_power_of_two(n: usize) -> bool {
     n != 0 && (n & (n - 1)) == 0
 }
@@ -57,6 +58,7 @@ pub fn is_power_of_two(n: usize) -> bool {
 ///
 /// The next power of 2 that is greater than or equal to `n`
 #[inline]
+#[allow(dead_code)]
 pub fn next_power_of_two(n: usize) -> usize {
     if n == 0 {
         return 1;
@@ -88,6 +90,7 @@ pub fn next_power_of_two(n: usize) -> usize {
 /// # Errors
 ///
 /// Returns an error if the input size is zero or n is zero
+#[allow(dead_code)]
 pub fn validate_fft_size(input_size: usize, n: Option<usize>) -> FFTResult<usize> {
     if input_size == 0 {
         return Err(FFTError::ValueError("Input cannot be empty".to_string()));
@@ -114,6 +117,7 @@ pub fn validate_fft_size(input_size: usize, n: Option<usize>) -> FFTResult<usize
 /// # Errors
 ///
 /// Returns an error if the dimensions don't match
+#[allow(dead_code)]
 pub fn validate_fft_shapes(
     input_shape: &[usize],
     shape: Option<&[usize]>,
@@ -145,6 +149,7 @@ pub fn validate_fft_shapes(
 /// # Errors
 ///
 /// Returns an error if any axis is out of bounds
+#[allow(dead_code)]
 pub fn validate_fft_axes(ndim: usize, axes: Option<&[usize]>) -> FFTResult<Vec<usize>> {
     match axes {
         Some(axes) => {
@@ -186,6 +191,7 @@ pub fn zeros_like_complex(shape: &[usize]) -> ArrayD<Complex64> {
 /// # Returns
 ///
 /// A complex array with the same shape
+#[allow(dead_code)]
 pub fn real_to_complex<D>(real_array: &Array<f64, D>) -> Array<Complex64, D>
 where
     D: ndarray::Dimension,
@@ -202,6 +208,7 @@ where
 /// # Returns
 ///
 /// A real array with the same shape
+#[allow(dead_code)]
 pub fn complex_to_real<D>(complex_array: &Array<Complex64, D>) -> Array<f64, D>
 where
     D: ndarray::Dimension,
@@ -218,6 +225,7 @@ where
 /// # Returns
 ///
 /// A real array with the magnitude (absolute value) of each element
+#[allow(dead_code)]
 pub fn complex_magnitude<D>(complex_array: &Array<Complex64, D>) -> Array<f64, D>
 where
     D: ndarray::Dimension,
@@ -234,6 +242,7 @@ where
 /// # Returns
 ///
 /// A real array with the phase angle of each element
+#[allow(dead_code)]
 pub fn complex_angle<D>(complex_array: &Array<Complex64, D>) -> Array<f64, D>
 where
     D: ndarray::Dimension,
@@ -250,6 +259,7 @@ where
 /// # Returns
 ///
 /// A real array with the power spectrum (squared magnitude) of each element
+#[allow(dead_code)]
 pub fn power_spectrum<D>(complex_array: &Array<Complex64, D>) -> Array<f64, D>
 where
     D: ndarray::Dimension,

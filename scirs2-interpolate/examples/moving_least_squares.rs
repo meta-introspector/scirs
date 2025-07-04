@@ -2,6 +2,7 @@ use ndarray::{Array1, Array2};
 use scirs2_interpolate::local::mls::{MovingLeastSquares, PolynomialBasis, WeightFunction};
 use std::error::Error;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Moving Least Squares Interpolation Example");
     println!("------------------------------------------\n");
@@ -188,6 +189,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 // Compute mean squared error between predicted and true values
+#[allow(dead_code)]
 fn compute_mse(predicted: &Array1<f64>, actual: &Array1<f64>) -> f64 {
     let n = predicted.len();
     let mut sum_squared_error = 0.0;

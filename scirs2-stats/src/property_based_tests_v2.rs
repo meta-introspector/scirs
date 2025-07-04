@@ -978,18 +978,21 @@ where
 }
 
 /// Convenience functions for property-based testing
+#[allow(dead_code)]
 pub fn test_basic_statistics_properties() -> StatsResult<TestSuiteResult> {
     let config = PropertyTestConfig::default();
     let mut framework = PropertyBasedTestFramework::<f64>::new(config);
     framework.test_descriptive_statistics_invariants()
 }
 
+#[allow(dead_code)]
 pub fn test_correlation_properties() -> StatsResult<TestSuiteResult> {
     let config = PropertyTestConfig::default();
     let mut framework = PropertyBasedTestFramework::<f64>::new(config);
     framework.test_correlation_invariants()
 }
 
+#[allow(dead_code)]
 pub fn test_all_mathematical_invariants() -> StatsResult<Vec<TestSuiteResult>> {
     let config = PropertyTestConfig::default();
     let mut framework = PropertyBasedTestFramework::<f64>::new(config);

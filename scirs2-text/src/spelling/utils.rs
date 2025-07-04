@@ -11,6 +11,7 @@ use std::path::Path;
 
 /// Normalizes a string based on case sensitivity settings
 #[inline]
+#[allow(dead_code)]
 pub fn normalize_string(text: &str, case_sensitive: bool) -> String {
     if !case_sensitive {
         text.to_lowercase()
@@ -20,6 +21,7 @@ pub fn normalize_string(text: &str, case_sensitive: bool) -> String {
 }
 
 /// Extract words from text, normalizing and filtering empty words
+#[allow(dead_code)]
 pub fn extract_words(text: &str) -> Vec<String> {
     text.split_whitespace()
         .map(|s| {
@@ -31,6 +33,7 @@ pub fn extract_words(text: &str) -> Vec<String> {
 }
 
 /// Split text into sentences
+#[allow(dead_code)]
 pub fn split_sentences(text: &str) -> Vec<&str> {
     text.split(['.', '?', '!'])
         .map(|s| s.trim())
@@ -40,12 +43,14 @@ pub fn split_sentences(text: &str) -> Vec<&str> {
 
 /// Check if two words are within the edit distance threshold based on length
 #[inline]
+#[allow(dead_code)]
 pub fn is_within_length_threshold(word1: &str, word2: &str, max_edit_distance: usize) -> bool {
     word1.len() <= word2.len() + max_edit_distance && word1.len() + max_edit_distance >= word2.len()
 }
 
 /// Check if a word exists in a dictionary with optional case sensitivity
 #[inline]
+#[allow(dead_code)]
 pub fn dictionary_contains(
     dictionary: &HashMap<String, usize>,
     word: &str,

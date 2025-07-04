@@ -48,6 +48,7 @@ pub enum BoundaryMethod {
 /// # Returns
 ///
 /// * Result containing the warped image
+#[allow(dead_code)]
 pub fn warp_image(
     image: &GrayImage,
     transform: &TransformMatrix,
@@ -84,6 +85,7 @@ pub fn warp_image(
 /// # Returns
 ///
 /// * Result containing the GPU-warped image
+#[allow(dead_code)]
 pub fn warp_image_gpu(
     image: &GrayImage,
     transform: &TransformMatrix,
@@ -164,6 +166,7 @@ pub fn warp_image_gpu(
 /// # Returns
 ///
 /// * Result containing the warped image
+#[allow(dead_code)]
 fn warp_image_cpu(
     image: &GrayImage,
     transform: &TransformMatrix,
@@ -221,6 +224,7 @@ fn warp_image_cpu(
 /// # Returns
 ///
 /// * Result containing GPU operation
+#[allow(dead_code)]
 fn create_image_warp_operation(
     in_width: u32,
     in_height: u32,
@@ -259,6 +263,7 @@ fn create_image_warp_operation(
 /// # Returns
 ///
 /// * Compute shader source code as string
+#[allow(dead_code)]
 fn generate_warp_shader_code(
     in_width: u32,
     in_height: u32,
@@ -343,6 +348,7 @@ fn generate_warp_shader_code(
 }
 
 /// Generate nearest neighbor interpolation shader code
+#[allow(dead_code)]
 fn generate_nearest_neighbor_code() -> String {
     r#"
     float sample_image(float x, float y) {
@@ -355,6 +361,7 @@ fn generate_nearest_neighbor_code() -> String {
 }
 
 /// Generate bilinear interpolation shader code
+#[allow(dead_code)]
 fn generate_bilinear_code() -> String {
     r#"
     float sample_image(float x, float y) {
@@ -381,6 +388,7 @@ fn generate_bilinear_code() -> String {
 }
 
 /// Generate bicubic interpolation shader code
+#[allow(dead_code)]
 fn generate_bicubic_code() -> String {
     r#"
     float cubic_kernel(float t) {
@@ -417,6 +425,7 @@ fn generate_bicubic_code() -> String {
 }
 
 /// Generate reflection boundary handling code
+#[allow(dead_code)]
 fn generate_reflect_boundary_code() -> String {
     r#"
     int reflect_coord(int coord, int size) {
@@ -439,6 +448,7 @@ fn generate_reflect_boundary_code() -> String {
 }
 
 /// Generate wrap boundary handling code
+#[allow(dead_code)]
 fn generate_wrap_boundary_code() -> String {
     r#"
     int nx = ((x % int(IN_WIDTH)) + int(IN_WIDTH)) % int(IN_WIDTH);
@@ -449,6 +459,7 @@ fn generate_wrap_boundary_code() -> String {
 }
 
 /// Generate clamp boundary handling code
+#[allow(dead_code)]
 fn generate_clamp_boundary_code() -> String {
     r#"
     int nx = clamp(x, 0, int(IN_WIDTH) - 1);
@@ -459,6 +470,7 @@ fn generate_clamp_boundary_code() -> String {
 }
 
 /// Sample a grayscale image at fractional coordinates
+#[allow(dead_code)]
 fn sample_image(
     image: &GrayImage,
     x: f32,
@@ -516,6 +528,7 @@ fn sample_image(
 }
 
 /// Warp an RGB image using a transformation matrix
+#[allow(dead_code)]
 pub fn warp_rgb_image(
     image: &RgbImage,
     transform: &TransformMatrix,
@@ -582,6 +595,7 @@ pub fn warp_rgb_image(
 }
 
 /// Sample an RGB image at fractional coordinates for a specific channel
+#[allow(dead_code)]
 fn sample_rgb_image(
     image: &RgbImage,
     channel: usize,
@@ -647,6 +661,7 @@ fn sample_rgb_image(
 }
 
 /// Get pixel value with boundary handling
+#[allow(dead_code)]
 fn get_pixel_value(
     image: &GrayImage,
     x: i32,
@@ -669,6 +684,7 @@ fn get_pixel_value(
 }
 
 /// Get RGB pixel value with boundary handling
+#[allow(dead_code)]
 fn get_rgb_pixel_value(
     image: &RgbImage,
     channel: usize,
@@ -692,6 +708,7 @@ fn get_rgb_pixel_value(
 }
 
 /// Handle boundary conditions
+#[allow(dead_code)]
 fn handle_boundary(
     x: i32,
     y: i32,
@@ -733,6 +750,7 @@ fn handle_boundary(
 }
 
 /// Cubic interpolation kernel
+#[allow(dead_code)]
 fn cubic_kernel(t: f32) -> f32 {
     let t = t.abs();
     if t <= 1.0 {
@@ -745,6 +763,7 @@ fn cubic_kernel(t: f32) -> f32 {
 }
 
 /// Create a mesh grid for transformation mapping
+#[allow(dead_code)]
 pub fn create_mesh_grid(width: u32, height: u32) -> (Array2<f64>, Array2<f64>) {
     let mut x_grid = Array2::zeros((height as usize, width as usize));
     let mut y_grid = Array2::zeros((height as usize, width as usize));
@@ -760,6 +779,7 @@ pub fn create_mesh_grid(width: u32, height: u32) -> (Array2<f64>, Array2<f64>) {
 }
 
 /// Apply perspective correction to an image
+#[allow(dead_code)]
 pub fn perspective_correct(
     image: &DynamicImage,
     corners: &[Point2D; 4],
@@ -848,6 +868,7 @@ pub fn perspective_correct(
 /// 1. Compute epipoles from fundamental matrix
 /// 2. Calculate rectification transforms to align epipolar lines
 /// 3. Apply transforms to both images
+#[allow(dead_code)]
 pub fn rectify_stereo_pair(
     left_image: &DynamicImage,
     right_image: &DynamicImage,
@@ -902,6 +923,7 @@ pub fn rectify_stereo_pair(
 /// The epipoles are the null spaces of F and F^T respectively.
 /// For left epipole: F * e_left = 0
 /// For right epipole: F^T * e_right = 0
+#[allow(dead_code)]
 fn compute_epipoles(fundamental_matrix: &TransformMatrix) -> Result<(Point2D, Point2D)> {
     // Find left epipole (null space of F^T)
     let left_epipole = find_null_space(&transpose_matrix(fundamental_matrix))?;
@@ -913,6 +935,7 @@ fn compute_epipoles(fundamental_matrix: &TransformMatrix) -> Result<(Point2D, Po
 }
 
 /// Transpose a 3x3 matrix
+#[allow(dead_code)]
 fn transpose_matrix(matrix: &TransformMatrix) -> TransformMatrix {
     let mut transposed = Array2::zeros((3, 3));
     for i in 0..3 {
@@ -924,6 +947,7 @@ fn transpose_matrix(matrix: &TransformMatrix) -> TransformMatrix {
 }
 
 /// Find the null space of a 3x3 matrix (the eigenvector corresponding to the smallest eigenvalue)
+#[allow(dead_code)]
 fn find_null_space(matrix: &TransformMatrix) -> Result<Point2D> {
     // Use power iteration to find the smallest eigenvalue and corresponding eigenvector
     // We solve (A^T * A) * v = lambda * v where lambda is the smallest eigenvalue
@@ -986,6 +1010,7 @@ fn find_null_space(matrix: &TransformMatrix) -> Result<Point2D> {
 }
 
 /// Compute rectification transforms using Hartley's method
+#[allow(dead_code)]
 fn compute_rectification_transforms(
     left_epipole: Point2D,
     right_epipole: Point2D,
@@ -1014,6 +1039,7 @@ fn compute_rectification_transforms(
 }
 
 /// Compute rectification transform for a single image
+#[allow(dead_code)]
 fn compute_single_rectification_transform(
     epipole: Point2D,
     center: (f64, f64),
@@ -1069,6 +1095,7 @@ fn compute_single_rectification_transform(
 }
 
 /// Compute right rectification transform that aligns with the left transform
+#[allow(dead_code)]
 fn compute_right_rectification_transform(
     right_epipole: Point2D,
     center: (f64, f64),
@@ -1100,6 +1127,7 @@ fn compute_right_rectification_transform(
 }
 
 /// Compute vertical adjustment to align epipolar lines between left and right images
+#[allow(dead_code)]
 fn compute_vertical_alignment(
     left_transform: &TransformMatrix,
     _right_transform: &TransformMatrix,
@@ -1143,6 +1171,7 @@ fn compute_vertical_alignment(
 }
 
 /// Compute epipolar line in the right image corresponding to a point in the left image
+#[allow(dead_code)]
 fn compute_epipolar_line(point: Point2D, fundamental_matrix: &TransformMatrix) -> (f64, f64, f64) {
     // Epipolar line l = F * p where p is in homogeneous coordinates
     let p = [point.x, point.y, 1.0];
@@ -1158,6 +1187,7 @@ fn compute_epipolar_line(point: Point2D, fundamental_matrix: &TransformMatrix) -
 }
 
 /// Compute y-intercept of an epipolar line at a given x coordinate
+#[allow(dead_code)]
 fn compute_epipolar_line_y_intercept(line: &(f64, f64, f64), x: f64) -> f64 {
     let (a, b, c) = *line;
 
@@ -1169,6 +1199,7 @@ fn compute_epipolar_line_y_intercept(line: &(f64, f64, f64), x: f64) -> f64 {
 }
 
 /// Multiply two 3x3 matrices
+#[allow(dead_code)]
 fn matrix_multiply(a: &TransformMatrix, b: &TransformMatrix) -> Result<TransformMatrix> {
     let mut result = Array2::zeros((3, 3));
 
@@ -1184,6 +1215,7 @@ fn matrix_multiply(a: &TransformMatrix, b: &TransformMatrix) -> Result<Transform
 }
 
 /// Create a panorama by stitching multiple images
+#[allow(dead_code)]
 pub fn stitch_images(
     images: &[DynamicImage],
     transforms: &[TransformMatrix],
@@ -1217,6 +1249,7 @@ pub fn stitch_images(
 /// # Returns
 ///
 /// * Result containing the stitched panorama
+#[allow(dead_code)]
 pub fn stitch_images_streaming(
     images: &[DynamicImage],
     transforms: &[TransformMatrix],
@@ -1257,6 +1290,7 @@ pub fn stitch_images_streaming(
 /// # Returns
 ///
 /// * Result containing the stitched panorama
+#[allow(dead_code)]
 fn stitch_images_traditional(
     images: &[DynamicImage],
     transforms: &[TransformMatrix],
@@ -1804,6 +1838,7 @@ impl TileCache {
 
 /// Simple 3x3 matrix inversion for TransformMatrix
 /// Optimized implementation for 3x3 homogeneous transformation matrices
+#[allow(dead_code)]
 fn invert_3x3_matrix(matrix: &TransformMatrix) -> Result<TransformMatrix> {
     if matrix.shape() != [3, 3] {
         return Err(VisionError::InvalidParameter(
@@ -1988,6 +2023,7 @@ impl Default for SgmParams {
 /// # Returns
 ///
 /// * Result containing depth map with disparity and confidence
+#[allow(dead_code)]
 pub fn compute_depth_map(
     left_image: &GrayImage,
     right_image: &GrayImage,
@@ -2074,6 +2110,7 @@ pub fn compute_depth_map(
 }
 
 /// Convert GrayImage to Array2<f32>
+#[allow(dead_code)]
 fn image_to_array2(image: &GrayImage) -> Array2<f32> {
     let (width, height) = image.dimensions();
     Array2::from_shape_fn((height as usize, width as usize), |(y, x)| {
@@ -2097,6 +2134,7 @@ fn image_to_array2(image: &GrayImage) -> Array2<f32> {
 /// # Returns
 ///
 /// * Result containing 3D cost volume (height, width, disparity)
+#[allow(dead_code)]
 fn compute_cost_volume(
     left_image: &Array2<f32>,
     right_image: &Array2<f32>,
@@ -2207,6 +2245,7 @@ fn compute_cost_volume(
 }
 
 /// Compute Sum of Absolute Differences (SAD) cost with SIMD acceleration
+#[allow(dead_code)]
 fn compute_sad_cost_simd(
     left_image: &Array2<f32>,
     right_image: &Array2<f32>,
@@ -2255,6 +2294,7 @@ fn compute_sad_cost_simd(
 }
 
 /// Compute Sum of Squared Differences (SSD) cost with SIMD acceleration
+#[allow(dead_code)]
 fn compute_ssd_cost_simd(
     left_image: &Array2<f32>,
     right_image: &Array2<f32>,
@@ -2301,6 +2341,7 @@ fn compute_ssd_cost_simd(
 }
 
 /// Compute Normalized Cross-Correlation (NCC) cost with SIMD acceleration
+#[allow(dead_code)]
 fn compute_ncc_cost_simd(
     left_image: &Array2<f32>,
     right_image: &Array2<f32>,
@@ -2365,6 +2406,7 @@ fn compute_ncc_cost_simd(
 }
 
 /// Compute Census transform cost with SIMD acceleration
+#[allow(dead_code)]
 fn compute_census_cost_simd(
     left_image: &Array2<f32>,
     right_image: &Array2<f32>,
@@ -2391,6 +2433,7 @@ fn compute_census_cost_simd(
 }
 
 /// Compute Census transform for a block
+#[allow(dead_code)]
 fn compute_census_transform(image: &Array2<f32>, x: usize, y: usize, block_size: usize) -> u32 {
     let half_block = block_size / 2;
     let center_value = image[[y, x]];
@@ -2417,6 +2460,7 @@ fn compute_census_transform(image: &Array2<f32>, x: usize, y: usize, block_size:
 }
 
 /// Compute Mutual Information cost (simplified implementation)
+#[allow(dead_code)]
 fn compute_mi_cost_simd(
     left_image: &Array2<f32>,
     right_image: &Array2<f32>,
@@ -2431,6 +2475,7 @@ fn compute_mi_cost_simd(
 }
 
 /// Compute hybrid cost combining multiple cost functions
+#[allow(dead_code)]
 fn compute_hybrid_cost_simd(
     left_image: &Array2<f32>,
     right_image: &Array2<f32>,
@@ -2462,6 +2507,7 @@ fn compute_hybrid_cost_simd(
 /// # Returns
 ///
 /// * Result containing aggregated cost volume
+#[allow(dead_code)]
 fn aggregate_costs_sgm(cost_volume: &Array3<f32>, sgm_params: &SgmParams) -> Result<Array3<f32>> {
     let (height, width, num_disparities) = cost_volume.dim();
     let mut aggregated_costs = Array3::zeros((height, width, num_disparities));
@@ -2504,6 +2550,7 @@ fn aggregate_costs_sgm(cost_volume: &Array3<f32>, sgm_params: &SgmParams) -> Res
 }
 
 /// Aggregate costs in a single direction using dynamic programming
+#[allow(dead_code)]
 fn aggregate_costs_direction(
     cost_volume: &Array3<f32>,
     dy: i32,
@@ -2596,6 +2643,7 @@ fn aggregate_costs_direction(
 }
 
 /// Aggregate costs for a single pixel using SGM smoothness constraints
+#[allow(dead_code)]
 fn aggregate_pixel_costs(
     direction_costs: &mut Array3<f32>,
     y: usize,
@@ -2634,6 +2682,7 @@ fn aggregate_pixel_costs(
 }
 
 /// Compute disparity map using Winner-Takes-All optimization
+#[allow(dead_code)]
 fn compute_disparity_wta(
     cost_volume: &Array3<f32>,
     params: &StereoMatchingParams,
@@ -2677,6 +2726,7 @@ fn compute_disparity_wta(
 }
 
 /// Compute right disparity map for left-right consistency check
+#[allow(dead_code)]
 fn compute_right_disparity(
     left_image: &Array2<f32>,
     right_image: &Array2<f32>,
@@ -2695,6 +2745,7 @@ fn compute_right_disparity(
 }
 
 /// Apply left-right consistency check
+#[allow(dead_code)]
 fn apply_lr_consistency_check(
     left_disparity: &Array2<f32>,
     right_disparity: &Array2<f32>,
@@ -2724,6 +2775,7 @@ fn apply_lr_consistency_check(
 }
 
 /// Apply sub-pixel disparity refinement
+#[allow(dead_code)]
 fn apply_subpixel_refinement(
     disparity_map: &Array2<f32>,
     cost_volume: &Array3<f32>,
@@ -2757,6 +2809,7 @@ fn apply_subpixel_refinement(
 }
 
 /// Fill holes and apply median filtering
+#[allow(dead_code)]
 fn fill_holes_and_filter(
     disparity_map: &Array2<f32>,
     sgm_params: &SgmParams,
@@ -2813,6 +2866,7 @@ fn fill_holes_and_filter(
 }
 
 /// Apply median filter to disparity map
+#[allow(dead_code)]
 fn apply_median_filter(disparity_map: &Array2<f32>, window_size: usize) -> Result<Array2<f32>> {
     let (height, width) = disparity_map.dim();
     let mut filtered = disparity_map.clone();
@@ -2842,6 +2896,7 @@ fn apply_median_filter(disparity_map: &Array2<f32>, window_size: usize) -> Resul
 }
 
 /// Apply speckle filter to remove small isolated regions
+#[allow(dead_code)]
 fn apply_speckle_filter(
     disparity_map: &Array2<f32>,
     sgm_params: &SgmParams,
@@ -2880,6 +2935,7 @@ fn apply_speckle_filter(
 }
 
 /// Flood fill to compute region size
+#[allow(dead_code)]
 fn flood_fill_region_size(
     disparity_map: &Array2<f32>,
     visited: &mut Array2<bool>,
@@ -2924,6 +2980,7 @@ fn flood_fill_region_size(
 }
 
 /// Flood fill to mark small regions as invalid
+#[allow(dead_code)]
 fn flood_fill_mark_invalid(
     disparity_map: &mut Array2<f32>,
     start_x: usize,
@@ -2963,6 +3020,7 @@ fn flood_fill_mark_invalid(
 }
 
 /// Compute statistics for depth map result
+#[allow(dead_code)]
 fn compute_depth_map_stats(
     disparity_map: &Array2<f32>,
     confidence_map: &Array2<f32>,
@@ -2995,6 +3053,7 @@ fn compute_depth_map_stats(
 /// # Returns
 ///
 /// * Depth map in meters
+#[allow(dead_code)]
 pub fn disparity_to_depth(
     disparity_map: &Array2<f32>,
     focal_length: f32,

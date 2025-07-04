@@ -6,12 +6,14 @@ use scirs2_interpolate::bspline::{
 use scirs2_interpolate::cache::{BSplineCache, CacheConfig, CachedBSpline};
 use scirs2_interpolate::fast_bspline::make_fast_bspline_evaluator;
 
+#[allow(dead_code)]
 fn generate_test_data(n: usize) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::linspace(0.0, 10.0, n);
     let y = x.mapv(|xi| (xi * 0.5_f64).sin() + 0.1 * xi + 0.05 * (3.0 * xi).cos());
     (x, y)
 }
 
+#[allow(dead_code)]
 fn generate_bspline(degree: usize, n_coeffs: usize) -> BSpline<f64> {
     let knots = Array1::linspace(0.0, 10.0, n_coeffs + degree + 1);
     let coeffs = Array1::linspace(-1.0, 1.0, n_coeffs);
@@ -24,6 +26,7 @@ fn generate_bspline(degree: usize, n_coeffs: usize) -> BSpline<f64> {
     .unwrap()
 }
 
+#[allow(dead_code)]
 fn bench_bspline_evaluation(c: &mut Criterion) {
     let mut group = c.benchmark_group("bspline_evaluation");
 
@@ -50,6 +53,7 @@ fn bench_bspline_evaluation(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_fast_bspline_vs_standard(c: &mut Criterion) {
     let mut group = c.benchmark_group("fast_vs_standard_bspline");
 
@@ -84,6 +88,7 @@ fn bench_fast_bspline_vs_standard(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_cached_bspline(c: &mut Criterion) {
     let mut group = c.benchmark_group("cached_bspline");
 
@@ -149,6 +154,7 @@ fn bench_cached_bspline(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_bspline_derivatives(c: &mut Criterion) {
     let mut group = c.benchmark_group("bspline_derivatives");
 
@@ -169,6 +175,7 @@ fn bench_bspline_derivatives(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_bspline_construction(c: &mut Criterion) {
     let mut group = c.benchmark_group("bspline_construction");
 
@@ -218,6 +225,7 @@ fn bench_bspline_construction(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_knot_generation(c: &mut Criterion) {
     let mut group = c.benchmark_group("knot_generation");
 
@@ -246,6 +254,7 @@ fn bench_knot_generation(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_bspline_integration(c: &mut Criterion) {
     let mut group = c.benchmark_group("bspline_integration");
 
@@ -262,6 +271,7 @@ fn bench_bspline_integration(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_basis_element_evaluation(c: &mut Criterion) {
     let mut group = c.benchmark_group("basis_element_evaluation");
 

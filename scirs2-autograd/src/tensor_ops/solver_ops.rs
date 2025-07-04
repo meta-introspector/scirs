@@ -244,6 +244,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LinearSolveOp {
 }
 
 // Enhanced version of solve_transpose_system with better error handling
+#[allow(dead_code)]
 fn solve_transpose_system<F: Float>(
     a: &ndarray::ArrayView2<F>,
     b: &ndarray::ArrayView1<F>,
@@ -253,6 +254,7 @@ fn solve_transpose_system<F: Float>(
 }
 
 // Enhanced version of solve_transpose_system_2d with better error handling
+#[allow(dead_code)]
 fn solve_transpose_system_2d<F: Float>(
     a: &ndarray::ArrayView2<F>,
     b: &ndarray::ArrayView2<F>,
@@ -480,6 +482,7 @@ impl<F: Float> Op<F> for LeastSquaresSolveOp {
 }
 
 // Helper functions
+#[allow(dead_code)]
 fn solve_linear_system_1d<F: Float>(
     a: &ndarray::ArrayView2<F>,
     b: &ndarray::ArrayView1<F>,
@@ -539,6 +542,7 @@ fn solve_linear_system_1d<F: Float>(
     Ok(x.into_dyn())
 }
 
+#[allow(dead_code)]
 fn solve_linear_system_2d<F: Float>(
     a: &ndarray::ArrayView2<F>,
     b: &ndarray::ArrayView2<F>,
@@ -561,6 +565,7 @@ fn solve_linear_system_2d<F: Float>(
     Ok(x.into_dyn())
 }
 
+#[allow(dead_code)]
 fn solve_symmetric_system<F: Float>(
     a: &ndarray::ArrayView2<F>,
     b: &ndarray::ArrayViewD<F>,
@@ -660,6 +665,7 @@ fn solve_symmetric_system<F: Float>(
     }
 }
 
+#[allow(dead_code)]
 fn compute_outer_product_gradient<F: Float>(
     a: &ndarray::ArrayViewD<F>,
     b: &ndarray::ArrayViewD<F>,
@@ -732,6 +738,7 @@ fn compute_outer_product_gradient<F: Float>(
 }
 
 // Public API functions
+#[allow(dead_code)]
 pub fn solve<'g, F: Float + ndarray::ScalarOperand>(
     a: &Tensor<'g, F>,
     b: &Tensor<'g, F>,
@@ -748,6 +755,7 @@ pub fn solve<'g, F: Float + ndarray::ScalarOperand>(
         .build(LinearSolveOp)
 }
 
+#[allow(dead_code)]
 pub fn lstsq<'g, F: Float + ndarray::ScalarOperand>(
     a: &Tensor<'g, F>,
     b: &Tensor<'g, F>,

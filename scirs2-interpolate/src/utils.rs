@@ -52,6 +52,7 @@ use std::fmt::{Debug, Display};
 /// let rmse = error_estimate(&x.view(), &y.view(), linear_interp).unwrap();
 /// println!("Cross-validation RMSE: {}", rmse);
 /// ```
+#[allow(dead_code)]
 pub fn error_estimate<F, Func>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -134,6 +135,7 @@ where
 /// # Returns
 ///
 /// The parameter value that minimizes the cross-validation error
+#[allow(dead_code)]
 pub fn optimize_parameter<F, Func, BuilderFunc>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -207,6 +209,7 @@ where
 /// let derivative_at_pi_2 = differentiate(std::f64::consts::PI / 2.0, 0.0001, sin_fn).unwrap();
 /// assert!(derivative_at_pi_2.abs() < 0.01); // Should be close to 0
 /// ```
+#[allow(dead_code)]
 pub fn differentiate<F, Func>(x: F, h: F, eval_fn: Func) -> InterpolateResult<F>
 where
     F: Float + FromPrimitive + Debug + Display,
@@ -273,6 +276,7 @@ where
 /// let integral_sin = integrate(0.0, std::f64::consts::PI, 200, sin_fn).unwrap();
 /// assert!((integral_sin - 2.0).abs() < 0.001);
 /// ```
+#[allow(dead_code)]
 pub fn integrate<F, Func>(a: F, b: F, n: usize, eval_fn: Func) -> InterpolateResult<F>
 where
     F: Float + FromPrimitive + Debug + Display,
@@ -377,6 +381,7 @@ where
 ///
 /// Vector of roots found in the interval
 ///
+#[allow(dead_code)]
 pub fn find_roots_bisection<F, Func>(
     a: F,
     b: F,
@@ -462,6 +467,7 @@ where
 ///
 /// Vector of roots found in the interval
 ///
+#[allow(dead_code)]
 pub fn find_multiple_roots<F, Func>(
     a: F,
     b: F,

@@ -6,6 +6,7 @@ use scirs2_neural::models::sequential::Sequential;
 use scirs2_neural::utils::colors::ColorOptions;
 use scirs2_neural::utils::{sequential_model_dataflow, sequential_model_summary, ModelVizOptions};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Model Architecture Visualization Example");
     println!("=======================================\n");
@@ -59,6 +60,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 // Create a simple MLP model
+#[allow(dead_code)]
 fn create_mlp_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
     // Hidden layers with decreasing sizes
@@ -77,6 +79,7 @@ fn create_mlp_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     model.add_layer(dense4);
     Ok(model)
 // Create a simple CNN model for MNIST
+#[allow(dead_code)]
 fn create_cnn_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     // First convolutional block
     let conv1 = Conv2D::new(
@@ -107,6 +110,7 @@ fn create_cnn_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let dense2 = Dense::new(128, 10, Some("softmax"), rng)?;
 // Create a simple RNN (LSTM) model - Currently disabled due to thread safety constraints
 /*
+#[allow(dead_code)]
 fn create_rnn_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     // LSTM layers
     let lstm1 = LSTM::new(

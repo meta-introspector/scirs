@@ -282,6 +282,7 @@ where
 }
 
 /// Compute Kalman gain
+#[allow(dead_code)]
 fn compute_kalman_gain<F>(
     covariance: &Array2<F>,
     observation_matrix: &Array2<F>,
@@ -299,6 +300,7 @@ where
 }
 
 /// Matrix inversion using LU decomposition with partial pivoting
+#[allow(dead_code)]
 fn matrix_inverse<F>(matrix: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
@@ -424,6 +426,7 @@ where
 }
 
 /// Pseudo-inverse implementation using the matrix inverse with regularization
+#[allow(dead_code)]
 fn pseudo_inverse<F>(matrix: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
@@ -456,6 +459,7 @@ where
 }
 
 /// Calculate outer product of two vectors
+#[allow(dead_code)]
 fn outer_product<F>(a: &Array1<F>, b: &Array1<F>) -> Array2<F>
 where
     F: Float + Clone,
@@ -470,6 +474,7 @@ where
 }
 
 /// Calculate log determinant of a matrix using LU decomposition
+#[allow(dead_code)]
 fn matrix_log_determinant<F>(matrix: &Array2<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,

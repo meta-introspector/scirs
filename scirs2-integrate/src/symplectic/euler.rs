@@ -112,6 +112,7 @@ impl<F: IntegrateFloat> SymplecticIntegrator<F> for SymplecticEulerB<F> {
 ///
 /// Provides a simple functional interface to the Symplectic Euler A algorithm,
 /// which updates position first, then momentum.
+#[allow(dead_code)]
 pub fn symplectic_euler<F: IntegrateFloat>(
     system: &dyn HamiltonianFn<F>,
     t: F,
@@ -123,6 +124,7 @@ pub fn symplectic_euler<F: IntegrateFloat>(
 }
 
 /// Convenience function for the Symplectic Euler A method (position first)
+#[allow(dead_code)]
 pub fn symplectic_euler_a<F: IntegrateFloat>(
     system: &dyn HamiltonianFn<F>,
     t: F,
@@ -134,6 +136,7 @@ pub fn symplectic_euler_a<F: IntegrateFloat>(
 }
 
 /// Convenience function for the Symplectic Euler B method (momentum first)
+#[allow(dead_code)]
 pub fn symplectic_euler_b<F: IntegrateFloat>(
     system: &dyn HamiltonianFn<F>,
     t: F,

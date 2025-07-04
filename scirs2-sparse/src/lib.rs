@@ -380,6 +380,7 @@ pub struct SparseEfficiencyWarning;
 pub struct SparseWarning;
 
 /// Check if an object is a sparse array
+#[allow(dead_code)]
 pub fn is_sparse_array<T>(obj: &dyn SparseArray<T>) -> bool
 where
     T: num_traits::Float
@@ -395,6 +396,7 @@ where
 }
 
 /// Check if an object is a symmetric sparse array
+#[allow(dead_code)]
 pub fn is_sym_sparse_array<T>(obj: &dyn SymSparseArray<T>) -> bool
 where
     T: num_traits::Float
@@ -410,6 +412,7 @@ where
 }
 
 /// Check if an object is a sparse matrix (legacy API)
+#[allow(dead_code)]
 pub fn is_sparse_matrix(obj: &dyn std::any::Any) -> bool {
     obj.is::<CsrMatrix<f64>>()
         || obj.is::<CscMatrix<f64>>()

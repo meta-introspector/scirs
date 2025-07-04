@@ -8,6 +8,7 @@ use std::error::Error;
 use std::time::Instant;
 
 // Simple loss function for demonstration: linear regression with L2 loss
+#[allow(dead_code)]
 fn compute_loss_and_gradient(
     weights: &Array1<f64>,
     bias: &f64,
@@ -33,6 +34,7 @@ fn compute_loss_and_gradient(
     (loss, grad_w, grad_b)
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     // Create a synthetic dataset for linear regression
     let n_samples = 10000;

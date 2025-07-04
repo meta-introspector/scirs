@@ -5,7 +5,6 @@
 //! fault tolerance, and cost optimization.
 
 use crate::error::{Result, TimeSeriesError};
-use ndarray::Array1;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -167,6 +166,7 @@ pub struct InstanceInfo {
     pub cpu_utilization: f64,
     pub memory_utilization: f64,
     pub network_throughput: f64,
+    #[serde(skip, default = "Instant::now")]
     pub start_time: Instant,
     pub cost_per_hour: f64,
 }
@@ -562,7 +562,7 @@ impl CloudDeploymentOrchestrator {
     /// Execute forecasting job
     fn execute_forecasting_job(
         &self,
-        job: &CloudTimeSeriesJob,
+        _job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!("🔮 Executing forecasting job on {}", instance.instance_id);
@@ -574,7 +574,7 @@ impl CloudDeploymentOrchestrator {
     /// Execute anomaly detection job
     fn execute_anomaly_detection_job(
         &self,
-        job: &CloudTimeSeriesJob,
+        _job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!(
@@ -588,7 +588,7 @@ impl CloudDeploymentOrchestrator {
     /// Execute decomposition job
     fn execute_decomposition_job(
         &self,
-        job: &CloudTimeSeriesJob,
+        _job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!("🔍 Executing decomposition job on {}", instance.instance_id);
@@ -599,7 +599,7 @@ impl CloudDeploymentOrchestrator {
     /// Execute feature extraction job
     fn execute_feature_extraction_job(
         &self,
-        job: &CloudTimeSeriesJob,
+        _job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!(
@@ -613,7 +613,7 @@ impl CloudDeploymentOrchestrator {
     /// Execute clustering job
     fn execute_clustering_job(
         &self,
-        job: &CloudTimeSeriesJob,
+        _job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!("🎯 Executing clustering job on {}", instance.instance_id);
@@ -624,7 +624,7 @@ impl CloudDeploymentOrchestrator {
     /// Execute change point detection job
     fn execute_changepoint_job(
         &self,
-        job: &CloudTimeSeriesJob,
+        _job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!(
@@ -638,7 +638,7 @@ impl CloudDeploymentOrchestrator {
     /// Execute neural training job
     fn execute_neural_training_job(
         &self,
-        job: &CloudTimeSeriesJob,
+        _job: &CloudTimeSeriesJob,
         instance: &InstanceInfo,
     ) -> Result<()> {
         println!(

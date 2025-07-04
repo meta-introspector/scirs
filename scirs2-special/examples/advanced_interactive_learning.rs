@@ -573,6 +573,7 @@ impl AdaptiveLearningSession {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎓 Advanced Interactive Learning Module for Special Functions");
     println!("============================================================\n");
@@ -619,6 +620,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_or_load_profile() -> Result<LearningProfile, Box<dyn std::error::Error>> {
     // In a real implementation, this would load from a file or database
     let user_id = get_user_input("Enter your name or user ID: ")?;
@@ -645,6 +647,7 @@ fn create_or_load_profile() -> Result<LearningProfile, Box<dyn std::error::Error
     })
 }
 
+#[allow(dead_code)]
 fn display_learning_dashboard(profile: &LearningProfile) {
     println!("\n📊 Your Learning Dashboard");
     println!("==========================");
@@ -687,6 +690,7 @@ fn display_learning_dashboard(profile: &LearningProfile) {
     }
 }
 
+#[allow(dead_code)]
 fn run_adaptive_learning(
     session: &mut AdaptiveLearningSession,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -746,6 +750,7 @@ fn run_adaptive_learning(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_learning_module(
     topic: &str,
     node: &ConceptNode,
@@ -793,6 +798,7 @@ fn run_learning_module(
     Ok(final_score)
 }
 
+#[allow(dead_code)]
 fn present_visual_content(
     topic: &str,
     node: &ConceptNode,
@@ -868,6 +874,7 @@ fn present_visual_content(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn present_analytical_content(
     topic: &str,
     node: &ConceptNode,
@@ -944,6 +951,7 @@ fn present_analytical_content(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn present_practical_content(
     topic: &str,
     node: &ConceptNode,
@@ -1028,6 +1036,7 @@ fn present_practical_content(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn present_intuitive_content(
     topic: &str,
     node: &ConceptNode,
@@ -1113,6 +1122,7 @@ fn present_intuitive_content(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn present_historical_content(
     topic: &str,
     node: &ConceptNode,
@@ -1191,6 +1201,7 @@ fn present_historical_content(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_assessment_question(
     question: &AssessmentQuestion,
 ) -> Result<f64, Box<dyn std::error::Error>> {
@@ -1273,6 +1284,7 @@ fn run_assessment_question(
     }
 }
 
+#[allow(dead_code)]
 fn offer_hints_and_retry(question: &AssessmentQuestion) -> Result<f64, Box<dyn std::error::Error>> {
     if !question.hints.is_empty() {
         let want_hint = get_user_input("Would you like a hint? (y/n): ")?;
@@ -1287,6 +1299,7 @@ fn offer_hints_and_retry(question: &AssessmentQuestion) -> Result<f64, Box<dyn s
     Ok(0.3) // Partial credit for wrong answer
 }
 
+#[allow(dead_code)]
 fn explore_topics(session: &mut AdaptiveLearningSession) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔍 Topic Explorer");
     println!("=================\n");
@@ -1350,6 +1363,7 @@ fn explore_topics(session: &mut AdaptiveLearningSession) -> Result<(), Box<dyn s
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_comprehensive_assessment(
     session: &mut AdaptiveLearningSession,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1452,6 +1466,7 @@ fn run_comprehensive_assessment(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_learning_analytics(profile: &LearningProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Learning Analytics Dashboard");
     println!("===============================\n");
@@ -1533,6 +1548,7 @@ fn display_learning_analytics(profile: &LearningProfile) -> Result<(), Box<dyn s
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_interactive_visualizations() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎨 Interactive Visualizations");
     println!("=============================\n");
@@ -1575,6 +1591,7 @@ fn run_interactive_visualizations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn visualize_gamma_function() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎲 Gamma Function Visualization");
     println!("===============================\n");
@@ -1617,6 +1634,7 @@ fn visualize_gamma_function() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn visualize_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 Bessel Function Visualization");
     println!("================================\n");
@@ -1660,6 +1678,7 @@ fn visualize_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn visualize_error_function() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Error Function Visualization");
     println!("===============================\n");
@@ -1696,6 +1715,7 @@ fn visualize_error_function() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn visualize_complex_plane() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌀 Complex Plane Visualization");
     println!("==============================\n");
@@ -1713,6 +1733,7 @@ fn visualize_complex_plane() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn animate_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎵 Bessel Function Animation");
     println!("============================\n");
@@ -1764,6 +1785,7 @@ fn animate_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn visualize_3d_surfaces() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 3D Surface Visualization");
     println!("===========================\n");
@@ -1811,6 +1833,7 @@ fn visualize_3d_surfaces() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn show_geometric_interpretations() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📐 Geometric Interpretations");
     println!("============================\n");
@@ -1842,6 +1865,7 @@ fn show_geometric_interpretations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_proof_exploration() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧠 Interactive Proof Exploration");
     println!("=================================\n");
@@ -1865,6 +1889,7 @@ fn run_proof_exploration() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_gamma_half_proof() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎲 Exploring the proof of Γ(1/2) = √π");
     println!("======================================\n");
@@ -1937,6 +1962,7 @@ fn explore_gamma_half_proof() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_reflection_formula_proof() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔄 Exploring the Gamma Function Reflection Formula");
     println!("=================================================\n");
@@ -1990,6 +2016,7 @@ fn explore_reflection_formula_proof() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_bessel_generating_function_proof() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 Bessel Function Generating Function");
     println!("=====================================\n");
@@ -2005,6 +2032,7 @@ fn explore_bessel_generating_function_proof() -> Result<(), Box<dyn std::error::
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_error_function_series_proof() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Error Function Series Expansion");
     println!("==================================\n");
@@ -2020,6 +2048,7 @@ fn explore_error_function_series_proof() -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
+#[allow(dead_code)]
 fn adjust_learning_preferences(
     profile: &mut LearningProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -2058,6 +2087,7 @@ fn adjust_learning_preferences(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn save_profile(_profile: &LearningProfile) -> Result<(), Box<dyn std::error::Error>> {
     // In a real implementation, this would save to a file or database
     println!("💾 Profile saved successfully!");
@@ -2065,6 +2095,7 @@ fn save_profile(_profile: &LearningProfile) -> Result<(), Box<dyn std::error::Er
 }
 
 // Helper functions for creating assessment questions
+#[allow(dead_code)]
 fn create_gamma_basic_questions() -> Vec<AssessmentQuestion> {
     vec![
         AssessmentQuestion {
@@ -2112,6 +2143,7 @@ fn create_gamma_basic_questions() -> Vec<AssessmentQuestion> {
     ]
 }
 
+#[allow(dead_code)]
 fn create_gamma_advanced_questions() -> Vec<AssessmentQuestion> {
     vec![AssessmentQuestion {
         question_type: QuestionType::MultipleChoice {
@@ -2138,6 +2170,7 @@ fn create_gamma_advanced_questions() -> Vec<AssessmentQuestion> {
     }]
 }
 
+#[allow(dead_code)]
 fn create_bessel_basic_questions() -> Vec<AssessmentQuestion> {
     vec![AssessmentQuestion {
         question_type: QuestionType::MultipleChoice {
@@ -2164,6 +2197,7 @@ fn create_bessel_basic_questions() -> Vec<AssessmentQuestion> {
     }]
 }
 
+#[allow(dead_code)]
 fn create_hypergeometric_questions() -> Vec<AssessmentQuestion> {
     vec![AssessmentQuestion {
         question_type: QuestionType::NumericalAnswer {
@@ -2186,6 +2220,7 @@ fn create_hypergeometric_questions() -> Vec<AssessmentQuestion> {
     }]
 }
 
+#[allow(dead_code)]
 fn create_wright_function_questions() -> Vec<AssessmentQuestion> {
     vec![AssessmentQuestion {
         question_type: QuestionType::MultipleChoice {
@@ -2212,11 +2247,13 @@ fn create_wright_function_questions() -> Vec<AssessmentQuestion> {
     }]
 }
 
+#[allow(dead_code)]
 fn wait_for_user_input() -> Result<(), Box<dyn std::error::Error>> {
     get_user_input("Press Enter to continue...")?;
     Ok(())
 }
 
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
     print!("{}", prompt);
     io::stdout().flush()?;

@@ -71,6 +71,7 @@ impl Default for ParallelCorrelationConfig {
 /// let config = ParallelCorrelationConfig::default();
 /// let corr_matrix = corrcoef_parallel_enhanced(&data.view(), "pearson", &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn corrcoef_parallel_enhanced<F>(
     data: &ArrayView2<F>,
     method: &str,
@@ -214,6 +215,7 @@ where
 ///
 /// Optimized version of Pearson correlation using SIMD operations
 /// for improved performance on large datasets.
+#[allow(dead_code)]
 pub fn pearson_r_simd_enhanced<F, D>(x: &ArrayBase<D, Ix1>, y: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + std::iter::Sum<F>,
@@ -322,6 +324,7 @@ where
 /// # Returns
 ///
 /// * Vector of correlation coefficients in the same order as input pairs
+#[allow(dead_code)]
 pub fn batch_correlations_parallel<'a, F>(
     pairs: &[(ArrayView1<'a, F>, ArrayView1<'a, F>)],
     method: &str,
@@ -434,6 +437,7 @@ where
 ///
 /// Computes rolling correlations between two time series using
 /// parallel processing for multiple windows.
+#[allow(dead_code)]
 pub fn rolling_correlation_parallel<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -492,6 +496,7 @@ where
 }
 
 // Helper function for 2D array validation
+#[allow(dead_code)]
 fn check_array_finite_2d<F, D>(arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
 where
     F: Float,

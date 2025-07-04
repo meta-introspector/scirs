@@ -691,6 +691,7 @@ impl Default for DefaultMetricsCollector {
 
 /// Convenience functions for common validation scenarios
 /// Validate a positive number
+#[allow(dead_code)]
 pub fn validate_positive<T>(value: T, field_name: Option<String>) -> CoreResult<T>
 where
     T: PartialOrd + Copy + fmt::Debug + fmt::Display + Default,
@@ -716,6 +717,7 @@ where
 }
 
 /// Validate array dimensions
+#[allow(dead_code)]
 pub fn validate_array_dimensions(dims: &[usize], max_dimensions: usize) -> CoreResult<()> {
     if dims.is_empty() {
         return Err(CoreError::ValidationError(ErrorContext::new(
@@ -765,6 +767,7 @@ pub fn validate_array_dimensions(dims: &[usize], max_dimensions: usize) -> CoreR
 }
 
 /// Validate file path for security
+#[allow(dead_code)]
 pub fn validate_file_path(path: &str) -> CoreResult<()> {
     // Check for path traversal attempts
     if path.contains("..") {

@@ -4,14 +4,16 @@
 //! using separable algorithms, particularly the Felzenszwalb & Huttenlocher
 //! method for Euclidean distance transforms.
 
-use ndarray::{Array, Array1, Array2, ArrayView2, Dimension, Ix2, IxDyn};
+use ndarray::{Array, Array1, Array2, IxDyn};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::parallel_ops;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
+use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe conversion from usize to float
+#[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
@@ -19,19 +21,10 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 }
 
 /// Helper function for safe conversion from i32 to float
+#[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
     T::from_i32(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
-    })
-}
-
-/// Helper function for safe conversion from f64 to float
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
     })
 }
 
@@ -48,6 +41,7 @@ fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
 /// # Returns
 ///
 /// * Squared distance transform where each pixel contains the squared distance to nearest background
+#[allow(dead_code)]
 pub fn euclidean_distance_transform_separable<T>(
     input: &Array2<bool>,
     sampling: Option<&[T]>,
@@ -141,6 +135,7 @@ where
 /// Perform 1D squared distance transform using the Felzenszwalb & Huttenlocher algorithm
 ///
 /// This is the core 1D algorithm that runs in O(n) time.
+#[allow(dead_code)]
 fn distance_transform_1d_squared<T>(f: &Array1<T>, spacing: T) -> Vec<T>
 where
     T: Float + FromPrimitive + Debug,
@@ -200,6 +195,7 @@ where
 }
 
 /// Compute intersection point of two parabolas
+#[allow(dead_code)]
 fn compute_intersection_safe<T>(f: &Array1<T>, p: usize, q: usize, spacing: T) -> NdimageResult<T>
 where
     T: Float + FromPrimitive,
@@ -215,6 +211,7 @@ where
 /// Compute the Euclidean distance transform (not squared)
 ///
 /// This is a convenience wrapper that computes the square root of the squared distance transform.
+#[allow(dead_code)]
 pub fn euclidean_distance_transform<T>(
     input: &Array2<bool>,
     sampling: Option<&[T]>,
@@ -229,6 +226,7 @@ where
 /// Compute the distance transform with both distances and indices
 ///
 /// This returns both the distance transform and the indices of the nearest background pixels.
+#[allow(dead_code)]
 pub fn distance_transform_edt_full<T>(
     input: &Array2<bool>,
     sampling: Option<&[T]>,
@@ -308,6 +306,7 @@ where
 /// Optimized city-block (Manhattan) distance transform
 ///
 /// Uses a two-pass algorithm that runs in O(n) time.
+#[allow(dead_code)]
 pub fn cityblock_distance_transform<T>(
     input: &Array2<bool>,
     sampling: Option<&[T]>,
@@ -381,6 +380,7 @@ where
 /// Optimized chessboard distance transform
 ///
 /// Uses a similar two-pass algorithm adapted for the L∞ metric.
+#[allow(dead_code)]
 pub fn chessboard_distance_transform<T>(input: &Array2<bool>) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Send + Sync + 'static,

@@ -40,6 +40,7 @@ use crate::error::{SpecialError, SpecialResult};
 /// let (s, c) = fresnel(1.0).unwrap();
 /// println!("S(1.0) = {}, C(1.0) = {}", s, c);
 /// ```
+#[allow(dead_code)]
 pub fn fresnel(x: f64) -> SpecialResult<(f64, f64)> {
     if x.is_nan() {
         return Err(SpecialError::DomainError(
@@ -82,6 +83,7 @@ pub fn fresnel(x: f64) -> SpecialResult<(f64, f64)> {
 /// println!("S({} + {}i) = {} + {}i", z.re, z.im, s.re, s.im);
 /// println!("C({} + {}i) = {} + {}i", z.re, z.im, c.re, c.im);
 /// ```
+#[allow(dead_code)]
 pub fn fresnel_complex(z: Complex64) -> SpecialResult<(Complex64, Complex64)> {
     if z.is_nan() {
         return Err(SpecialError::DomainError(
@@ -104,6 +106,7 @@ pub fn fresnel_complex(z: Complex64) -> SpecialResult<(Complex64, Complex64)> {
 }
 
 /// Implementation of Fresnel integrals using power series for small x.
+#[allow(dead_code)]
 fn fresnel_power_series(x: f64) -> SpecialResult<(f64, f64)> {
     let sign = x.signum();
     let x = x.abs();
@@ -264,6 +267,7 @@ fn fresnel_power_series(x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Implementation of Fresnel integrals using asymptotic expansions for large x.
+#[allow(dead_code)]
 fn fresnel_asymptotic(x: f64) -> SpecialResult<(f64, f64)> {
     let sign = x.signum();
     let x = x.abs();
@@ -410,6 +414,7 @@ fn fresnel_asymptotic(x: f64) -> SpecialResult<(f64, f64)> {
 }
 
 /// Implementation of complex Fresnel integrals using power series.
+#[allow(dead_code)]
 fn fresnel_complex_power_series(z: Complex64) -> SpecialResult<(Complex64, Complex64)> {
     // Special case for very small |z|
     if z.norm() < 1e-100 {
@@ -578,6 +583,7 @@ fn fresnel_complex_power_series(z: Complex64) -> SpecialResult<(Complex64, Compl
 }
 
 /// Implementation of complex Fresnel integrals using asymptotic expansions.
+#[allow(dead_code)]
 fn fresnel_complex_asymptotic(z: Complex64) -> SpecialResult<(Complex64, Complex64)> {
     // Special cases for extreme values
     if !z.is_finite() {
@@ -753,6 +759,7 @@ fn fresnel_complex_asymptotic(z: Complex64) -> SpecialResult<(Complex64, Complex
 /// let s = fresnels(1.0).unwrap();
 /// println!("S(1.0) = {}", s);
 /// ```
+#[allow(dead_code)]
 pub fn fresnels(x: f64) -> SpecialResult<f64> {
     let (s, _) = fresnel(x)?;
     Ok(s)
@@ -782,6 +789,7 @@ pub fn fresnels(x: f64) -> SpecialResult<f64> {
 /// let c = fresnelc(1.0).unwrap();
 /// println!("C(1.0) = {}", c);
 /// ```
+#[allow(dead_code)]
 pub fn fresnelc(x: f64) -> SpecialResult<f64> {
     let (_, c) = fresnel(x)?;
     Ok(c)
@@ -813,6 +821,7 @@ pub fn fresnelc(x: f64) -> SpecialResult<f64> {
 /// println!("F₊(1.0) = {} + {}i", f_plus.re, f_plus.im);
 /// println!("K₊(1.0) = {} + {}i", k_plus.re, k_plus.im);
 /// ```
+#[allow(dead_code)]
 pub fn mod_fresnel_plus(x: f64) -> SpecialResult<(Complex64, Complex64)> {
     if x.is_nan() {
         return Err(SpecialError::DomainError(
@@ -967,6 +976,7 @@ pub fn mod_fresnel_plus(x: f64) -> SpecialResult<(Complex64, Complex64)> {
 /// println!("F₋(1.0) = {} + {}i", f_minus.re, f_minus.im);
 /// println!("K₋(1.0) = {} + {}i", k_minus.re, k_minus.im);
 /// ```
+#[allow(dead_code)]
 pub fn mod_fresnel_minus(x: f64) -> SpecialResult<(Complex64, Complex64)> {
     if x.is_nan() {
         return Err(SpecialError::DomainError(

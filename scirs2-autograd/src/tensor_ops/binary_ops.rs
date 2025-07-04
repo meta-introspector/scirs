@@ -286,6 +286,7 @@ impl<T: Float> op::Op<T> for DivOp {
     }
 }
 
+#[allow(dead_code)]
 fn maybe_reduce<'g, T: Float>(
     target_shape: &Tensor<'g, T>,
     x: &Tensor<'g, T>,

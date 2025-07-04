@@ -58,6 +58,7 @@ use std::ops::{Add, Div, Mul, Sub};
 /// let pred = kriging.predict(&query_point.view()).unwrap();
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn make_local_kriging<
     F: Float
         + FromPrimitive
@@ -139,6 +140,7 @@ pub fn make_local_kriging<
 /// let pred = kriging.predict(&query_point.view()).unwrap();
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn make_fixed_rank_kriging<
     F: Float
         + FromPrimitive
@@ -219,6 +221,7 @@ pub fn make_fixed_rank_kriging<
 /// let pred = kriging.predict(&query_point.view()).unwrap();
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn make_tapered_kriging<
     F: Float
         + FromPrimitive
@@ -299,6 +302,7 @@ pub fn make_tapered_kriging<
 /// let pred = kriging.predict(&query_point.view()).unwrap();
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn make_hodlr_kriging<
     F: Float
         + FromPrimitive
@@ -372,6 +376,7 @@ pub fn make_hodlr_kriging<
 ///     _ => println!("Using approximation method"),
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn select_approximation_method(n_points: usize) -> FastKrigingMethod {
     if n_points < 500 {
         // For small datasets, local kriging is accurate and fast enough
@@ -451,6 +456,7 @@ pub struct KrigingPerformanceStats {
 /// # }
 /// ```
 #[cfg(feature = "std")]
+#[allow(dead_code)]
 pub fn benchmark_methods<
     F: Float
         + FromPrimitive

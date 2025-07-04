@@ -138,6 +138,7 @@ impl Ord for Subinterval {
 }
 
 /// Compute a norm for error estimation
+#[allow(dead_code)]
 fn compute_norm(array: &Array1<f64>, norm_type: NormType) -> f64 {
     match norm_type {
         NormType::Max => {
@@ -190,6 +191,7 @@ fn compute_norm(array: &Array1<f64>, norm_type: NormType) -> f64 {
 /// assert!((result.integral[0] - 2.0).abs() < 1e-10);
 /// assert!(result.integral[1].abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn quad_vec<F>(
     f: F,
     a: f64,
@@ -374,6 +376,7 @@ where
 }
 
 /// Compute a property of all intervals combined
+#[allow(dead_code)]
 fn get_total<F, T>(heap: &BinaryHeap<Subinterval>, extra: &Subinterval, extract: F) -> Array1<T>
 where
     F: Fn(&Subinterval) -> &Array1<T>,
@@ -393,6 +396,7 @@ where
 }
 
 /// Evaluate the integral on a specific interval
+#[allow(dead_code)]
 fn evaluate_interval<F>(
     f: &F,
     a: f64,
@@ -562,6 +566,7 @@ where
 }
 
 /// Evaluate a Gauss-Kronrod rule on an interval
+#[allow(dead_code)]
 fn evaluate_rule<F>(
     f: &F,
     a: f64,

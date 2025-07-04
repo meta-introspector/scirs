@@ -44,6 +44,7 @@ use num_traits::{Float, FromPrimitive};
 /// assert_eq!(col_means[1], 3.5);
 /// assert_eq!(col_means[2], 4.5);
 /// ```
+#[allow(dead_code)]
 pub fn mean_2d<T>(
     array: &ArrayView<T, Ix2>,
     axis: Option<Axis>,
@@ -143,6 +144,7 @@ where
 /// assert_eq!(col_medians[1], 3.5);
 /// assert_eq!(col_medians[2], 5.5);
 /// ```
+#[allow(dead_code)]
 pub fn median_2d<T>(
     array: &ArrayView<T, Ix2>,
     axis: Option<Axis>,
@@ -262,6 +264,7 @@ where
 /// let col_stds = std_dev_2d(&a.view(), Some(Axis(0)), 1).unwrap();
 /// assert_eq!(col_stds.len(), 3);
 /// ```
+#[allow(dead_code)]
 pub fn std_dev_2d<T>(
     array: &ArrayView<T, Ix2>,
     axis: Option<Axis>,
@@ -310,6 +313,7 @@ where
 /// let col_vars = variance_2d(&a.view(), Some(Axis(0)), 1).unwrap();
 /// assert_eq!(col_vars.len(), 3);
 /// ```
+#[allow(dead_code)]
 pub fn variance_2d<T>(
     array: &ArrayView<T, Ix2>,
     axis: Option<Axis>,
@@ -417,6 +421,7 @@ where
 /// # Returns
 ///
 /// The minimum value(s) of the array elements
+#[allow(dead_code)]
 pub fn min_2d<T>(
     array: &ArrayView<T, Ix2>,
     axis: Option<Axis>,
@@ -497,6 +502,7 @@ where
 /// # Returns
 ///
 /// The maximum value(s) of the array elements
+#[allow(dead_code)]
 pub fn max_2d<T>(
     array: &ArrayView<T, Ix2>,
     axis: Option<Axis>,
@@ -577,6 +583,7 @@ where
 /// # Returns
 ///
 /// The sum of the array elements
+#[allow(dead_code)]
 pub fn sum_2d<T>(
     array: &ArrayView<T, Ix2>,
     axis: Option<Axis>,
@@ -651,6 +658,7 @@ where
 /// # Returns
 ///
 /// The product of the array elements
+#[allow(dead_code)]
 pub fn product_2d<T>(
     array: &ArrayView<T, Ix2>,
     axis: Option<Axis>,
@@ -726,6 +734,7 @@ where
 /// # Returns
 ///
 /// The percentile value(s) of the array elements
+#[allow(dead_code)]
 pub fn percentile_2d<T>(
     array: &ArrayView<T, Ix2>,
     q: f64,
@@ -857,6 +866,7 @@ where
 /// # Returns
 ///
 /// The mean of the array elements
+#[allow(dead_code)]
 pub fn mean<T, D>(
     array: &ArrayView<T, D>,
     axis: Option<Axis>,
@@ -931,6 +941,7 @@ where
 /// # Panics
 ///
 /// Panics if type conversion or partial comparison fails.
+#[allow(dead_code)]
 pub fn median<T, D>(
     array: &ArrayView<T, D>,
     axis: Option<Axis>,
@@ -985,6 +996,7 @@ where
 /// # Panics
 ///
 /// Panics if type conversion from usize fails.
+#[allow(dead_code)]
 pub fn variance<T, D>(
     array: &ArrayView<T, D>,
     axis: Option<Axis>,
@@ -1069,6 +1081,7 @@ where
 /// # Panics
 ///
 /// Panics if variance calculation panics.
+#[allow(dead_code)]
 pub fn std_dev<T, D>(
     array: &ArrayView<T, D>,
     axis: Option<Axis>,
@@ -1096,6 +1109,7 @@ where
 /// # Errors
 ///
 /// Returns an error if the array is empty.
+#[allow(dead_code)]
 pub fn min<T, D>(array: &ArrayView<T, D>, axis: Option<Axis>) -> Result<Array<T, Ix1>, &'static str>
 where
     T: Clone + Float,
@@ -1161,6 +1175,7 @@ where
 /// # Errors
 ///
 /// Returns an error if the array is empty.
+#[allow(dead_code)]
 pub fn max<T, D>(array: &ArrayView<T, D>, axis: Option<Axis>) -> Result<Array<T, Ix1>, &'static str>
 where
     T: Clone + Float,
@@ -1231,6 +1246,7 @@ where
 /// # Panics
 ///
 /// Panics if type conversion or partial comparison fails.
+#[allow(dead_code)]
 pub fn percentile<T, D>(
     array: &ArrayView<T, D>,
     q: f64,

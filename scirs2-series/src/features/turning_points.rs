@@ -346,6 +346,7 @@ where
 /// # Returns
 ///
 /// Comprehensive turning points features structure
+#[allow(dead_code)]
 pub fn calculate_turning_points_features<F>(
     ts: &Array1<F>,
     config: &TurningPointsConfig,
@@ -500,6 +501,7 @@ where
 // =============================================================================
 
 /// Analyze directional changes in the time series
+#[allow(dead_code)]
 fn analyze_directional_changes<F>(
     ts: &Array1<F>,
     turning_points: &[usize],
@@ -584,6 +586,7 @@ where
 }
 
 /// Analyze momentum and persistence patterns
+#[allow(dead_code)]
 fn analyze_momentum_persistence<F>(
     ts: &Array1<F>,
     config: &TurningPointsConfig,
@@ -673,6 +676,7 @@ where
 }
 
 /// Characterize local extrema (peaks and valleys)
+#[allow(dead_code)]
 fn characterize_local_extrema<F>(
     ts: &Array1<F>,
     local_maxima: &[usize],
@@ -775,6 +779,7 @@ where
 }
 
 /// Detect trend reversals
+#[allow(dead_code)]
 fn detect_trend_reversals<F>(
     ts: &Array1<F>,
     turning_points: &[usize],
@@ -843,6 +848,7 @@ where
 }
 
 /// Analyze temporal patterns in turning points
+#[allow(dead_code)]
 fn analyze_temporal_patterns<F>(
     turning_points: &[usize],
     config: &TurningPointsConfig,
@@ -901,6 +907,7 @@ where
 }
 
 /// Calculate stability and volatility measures
+#[allow(dead_code)]
 fn calculate_stability_measures<F>(
     ts: &Array1<F>,
     turning_points: &[usize],
@@ -978,6 +985,7 @@ where
 }
 
 /// Detect advanced patterns (double peaks, head-shoulders, etc.)
+#[allow(dead_code)]
 fn detect_advanced_patterns<F>(
     ts: &Array1<F>,
     local_maxima: &[usize],
@@ -1008,6 +1016,7 @@ where
 }
 
 /// Analyze relative positions of turning points
+#[allow(dead_code)]
 fn analyze_turning_point_positions<F>(
     ts: &Array1<F>,
     turning_points: &[usize],
@@ -1081,6 +1090,7 @@ where
 }
 
 /// Analyze multi-scale turning points
+#[allow(dead_code)]
 fn analyze_multiscale_turning_points<F>(
     ts: &Array1<F>,
     config: &TurningPointsConfig,
@@ -1175,6 +1185,7 @@ where
 // =============================================================================
 
 /// Apply simple moving average smoothing
+#[allow(dead_code)]
 fn apply_moving_average<F>(ts: &Array1<F>, window_size: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Clone,
@@ -1200,6 +1211,7 @@ where
 }
 
 /// Calculate clustering coefficient for intervals
+#[allow(dead_code)]
 fn calculate_clustering_coefficient<F>(intervals: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -1231,6 +1243,7 @@ where
 }
 
 /// Calculate periodicity strength
+#[allow(dead_code)]
 fn calculate_periodicity_strength<F>(intervals: &[F]) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -1244,6 +1257,7 @@ where
 }
 
 /// Calculate autocorrelation at specific lag
+#[allow(dead_code)]
 fn calculate_autocorrelation_at_lag<F>(data: &[F], lag: usize) -> Result<F>
 where
     F: Float + FromPrimitive,
@@ -1277,6 +1291,7 @@ where
 }
 
 // Pattern detection functions (simplified implementations)
+#[allow(dead_code)]
 fn detect_double_peaks<F>(_ts: &Array1<F>, local_maxima: &[usize]) -> Result<usize>
 where
     F: Float + FromPrimitive + PartialOrd,
@@ -1298,6 +1313,7 @@ where
     Ok(count)
 }
 
+#[allow(dead_code)]
 fn detect_double_bottoms<F>(_ts: &Array1<F>, local_minima: &[usize]) -> Result<usize>
 where
     F: Float + FromPrimitive + PartialOrd,
@@ -1319,6 +1335,7 @@ where
     Ok(count)
 }
 
+#[allow(dead_code)]
 fn detect_head_and_shoulders<F>(
     _ts: &Array1<F>,
     local_maxima: &[usize],
@@ -1344,6 +1361,7 @@ where
     Ok(count)
 }
 
+#[allow(dead_code)]
 fn detect_triangular_patterns<F>(
     _ts: &Array1<F>,
     local_maxima: &[usize],

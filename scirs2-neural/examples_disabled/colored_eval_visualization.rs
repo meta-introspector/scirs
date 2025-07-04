@@ -7,6 +7,7 @@ use scirs2_neural::utils::{
     ROCCurve, Style,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!(
         "{}",

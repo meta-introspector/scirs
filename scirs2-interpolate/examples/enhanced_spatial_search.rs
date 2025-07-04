@@ -15,6 +15,7 @@ use scirs2_interpolate::spatial::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Enhanced Spatial Search Optimizations Example");
     println!("=============================================");
@@ -47,6 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn generate_test_data(
     n_points: usize,
     n_queries: usize,
@@ -89,6 +91,7 @@ fn generate_test_data(
     Ok((points, queries))
 }
 
+#[allow(dead_code)]
 fn compare_knn_methods(
     points: &Array2<f64>,
     queries: &Array2<f64>,
@@ -141,6 +144,7 @@ fn compare_knn_methods(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_simd_distances(
     points: &Array2<f64>,
     queries: &Array2<f64>,
@@ -200,6 +204,7 @@ fn demonstrate_simd_distances(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_cache_friendly_search(
     points: &Array2<f64>,
     queries: &Array2<f64>,
@@ -239,6 +244,7 @@ fn demonstrate_cache_friendly_search(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_batch_processing(
     points: &Array2<f64>,
     queries: &Array2<f64>,
@@ -314,6 +320,7 @@ fn demonstrate_batch_processing(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn performance_scaling_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n5. Performance Scaling Analysis");
     println!("-------------------------------");

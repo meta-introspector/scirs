@@ -3,6 +3,7 @@ use crate::measurements;
 use std::collections::HashMap;
 
 /// Extract peak-based features from a time series
+#[allow(dead_code)]
 pub fn extract_peak_features(
     signal: &[f64],
     features: &mut HashMap<String, f64>,

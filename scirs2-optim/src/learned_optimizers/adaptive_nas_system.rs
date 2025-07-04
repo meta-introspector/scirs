@@ -11,9 +11,7 @@ use std::time::{Duration, Instant};
 
 use crate::error::{OptimError, Result};
 use crate::learned_optimizers::neural_architecture_search::ArchitectureSearchSpace;
-use crate::neural_architecture_search::{
-    ArchitectureController, MultiObjectiveOptimizer, NASConfig, SearchStrategy,
-};
+use crate::neural_architecture_search::{NASConfig, SearchStrategy};
 
 /// Adaptive NAS System that learns from optimization performance
 pub struct AdaptiveNASSystem<T: Float> {

@@ -229,6 +229,7 @@ impl Dataset<f32> for TextDataset {
     fn box_clone(&self) -> Box<dyn Dataset<f32> + Send + Sync> {
         Box::new(self.clone())
 /// Build a text classification model using embeddings and LSTM
+#[allow(dead_code)]
 fn build_text_model(
     _vocab_size: usize,
     embedding_dim: usize,
@@ -260,6 +261,7 @@ fn build_text_model(
         Some("softmax"),
     Ok(model)
 /// Build an advanced text model with attention
+#[allow(dead_code)]
 fn build_attention_text_model(
     // Simplified attention-based model using dense layers
     let input_size = max_length;
@@ -271,6 +273,7 @@ fn build_attention_text_model(
     model.add(Dense::new(hidden_dim, hidden_dim, Some("relu"), rng)?);
     // Global pooling simulation
 /// Calculate text classification metrics
+#[allow(dead_code)]
 fn calculate_text_metrics(
     predictions: &ArrayD<f32>,
     targets: &ArrayD<f32>,
@@ -305,6 +308,7 @@ fn calculate_text_metrics(
             metrics.insert(format!("class_{}_accuracy", i), class_acc);
     metrics
 /// Train text classification model
+#[allow(dead_code)]
 fn train_text_classifier() -> StdResult<()> {
     println!("📝 Starting Text Classification Training Example");
     println!("{}", "=".repeat(60));
@@ -420,6 +424,7 @@ fn train_text_classifier() -> StdResult<()> {
     for (metric, value) in &detailed_metrics {
     Ok(())
 /// Demonstrate advanced text model with attention
+#[allow(dead_code)]
 fn demonstrate_attention_model() -> StdResult<()> {
     println!("\n🎯 Attention-Based Model Demo:");
     let mut rng = SmallRng::seed_from_u64(123);
@@ -430,6 +435,7 @@ fn demonstrate_attention_model() -> StdResult<()> {
         model.params().iter().map(|p| p.len()).sum::<usize>()
     println!("   ✅ Attention mechanism simulation completed");
 /// Demonstrate text preprocessing
+#[allow(dead_code)]
 fn demonstrate_text_preprocessing() -> StdResult<()> {
     println!("\n🔤 Text Preprocessing Demo:");
     println!("{}", "-".repeat(30));
@@ -450,6 +456,7 @@ fn demonstrate_text_preprocessing() -> StdResult<()> {
             println!("     [{}] -> \"{}\"", token_id, word);
     println!("   ✅ Text preprocessing completed");
 /// Main function
+#[allow(dead_code)]
 fn main() -> StdResult<()> {
     // Main training example
     train_text_classifier()?;

@@ -9,7 +9,7 @@
 
 use ndarray::{s, Array1, Array2};
 use num_traits::Float;
-#[cfg(test)]
+
 use std::f64::consts::PI;
 
 use crate::error::{SignalError, SignalResult};
@@ -104,6 +104,7 @@ pub struct SynchroCwtResult {
 ///
 /// // The result.sst contains the synchrosqueezed transform
 /// ```
+#[allow(dead_code)]
 pub fn synchrosqueezed_cwt<F, W>(
     signal: &Array1<f64>,
     scales: &Array1<f64>,
@@ -166,6 +167,7 @@ where
 ///
 /// This function calculates the instantaneous frequency at each time-scale point
 /// by computing the derivative of the phase of the CWT coefficients.
+#[allow(dead_code)]
 fn compute_instantaneous_frequencies(
     cwt: &Array2<Complex64>,
     scales: &Array1<f64>,
@@ -251,6 +253,7 @@ fn compute_instantaneous_frequencies(
 }
 
 /// Perform the synchrosqueezing operation to reassign energy in the time-frequency plane
+#[allow(dead_code)]
 fn perform_synchrosqueezing(
     cwt: &Array2<Complex64>,
     omega: &Array2<f64>,
@@ -299,6 +302,7 @@ fn perform_synchrosqueezing(
 }
 
 /// Find the index of the closest frequency bin
+#[allow(dead_code)]
 fn find_closest_freq_bin(freq: f64, frequencies: &Array1<f64>) -> usize {
     let mut closest_idx = 0;
     let mut min_diff = f64::INFINITY;
@@ -336,6 +340,7 @@ fn find_closest_freq_bin(freq: f64, frequencies: &Array1<f64>) -> usize {
 /// assert!(scales[0] >= 1.0 && scales[0] <= scales[1]);
 /// assert!(scales[31] <= 64.0 && scales[31] >= scales[30]);
 /// ```
+#[allow(dead_code)]
 pub fn log_scales(min_scale: f64, max_scale: f64, n_scales: usize) -> Array1<f64> {
     if min_scale <= 0.0 || max_scale <= 0.0 || min_scale >= max_scale {
         panic!("Scales must be positive with min_scale < max_scale");
@@ -370,6 +375,7 @@ pub fn log_scales(min_scale: f64, max_scale: f64, n_scales: usize) -> Array1<f64
 /// assert!(freqs[0] >= 1.0 && freqs[0] <= freqs[1]);
 /// assert!(freqs[63] <= 64.0 && freqs[63] >= freqs[62]);
 /// ```
+#[allow(dead_code)]
 pub fn frequency_bins(min_freq: f64, max_freq: f64, n_freqs: usize) -> Array1<f64> {
     if min_freq < 0.0 || max_freq <= 0.0 || min_freq >= max_freq {
         panic!("Frequencies must be non-negative with min_freq < max_freq");
@@ -392,6 +398,7 @@ pub fn frequency_bins(min_freq: f64, max_freq: f64, n_freqs: usize) -> Array1<f6
 /// # Returns
 ///
 /// A vector of ridges, where each ridge is a vector of (time_index, frequency) pairs
+#[allow(dead_code)]
 pub fn extract_ridges(
     sst: &Array2<Complex64>,
     frequencies: &Array1<f64>,
@@ -481,6 +488,7 @@ pub fn extract_ridges(
 /// # Returns
 ///
 /// A reconstructed signal following the time-frequency ridge
+#[allow(dead_code)]
 pub fn reconstruct_from_ridge(
     sst: &Array2<Complex64>,
     ridge: &[(usize, f64)],

@@ -79,6 +79,7 @@ pub struct ComparisonSummary {
 /// # Returns
 ///
 /// * A MetricComparison
+#[allow(dead_code)]
 pub fn compare_metrics(
     metric1: &MetricResult,
     metric2: &MetricResult,
@@ -124,6 +125,7 @@ pub fn compare_metrics(
 /// # Returns
 ///
 /// * A CollectionComparison
+#[allow(dead_code)]
 pub fn compare_collections(
     collection1: &MetricCollection,
     collection2: &MetricCollection,
@@ -229,6 +231,7 @@ pub fn compare_collections(
 /// # Returns
 ///
 /// * Vector of significantly different metrics
+#[allow(dead_code)]
 pub fn find_significant_differences(
     collection1: &MetricCollection,
     collection2: &MetricCollection,
@@ -254,6 +257,7 @@ pub fn find_significant_differences(
 /// # Returns
 ///
 /// * A combined MetricCollection
+#[allow(dead_code)]
 pub fn combine_collections(
     collections: &[MetricCollection],
     name: &str,
@@ -303,6 +307,7 @@ pub fn combine_collections(
 /// # Returns
 ///
 /// * A new collection with filtered metrics
+#[allow(dead_code)]
 pub fn filter_metrics<F>(collection: &MetricCollection, filter_fn: F) -> MetricCollection
 where
     F: Fn(&MetricResult) -> bool,
@@ -331,6 +336,7 @@ where
 /// # Returns
 ///
 /// * A new collection with filtered metrics
+#[allow(dead_code)]
 pub fn filter_by_name(collection: &MetricCollection, pattern: &str) -> MetricCollection {
     filter_metrics(collection, |metric| metric.name.contains(pattern))
 }
@@ -346,6 +352,7 @@ pub fn filter_by_name(collection: &MetricCollection, pattern: &str) -> MetricCol
 /// # Returns
 ///
 /// * A new collection with filtered metrics
+#[allow(dead_code)]
 pub fn filter_by_time_range(
     collection: &MetricCollection,
     start_age: Duration,

@@ -51,6 +51,7 @@ pub struct LstsqResult<F: Float> {
 /// assert!((x[0] - 2.0).abs() < 1e-10);
 /// assert!((x[1] - 3.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn solve<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,
@@ -136,6 +137,7 @@ where
 /// assert!((x[0] - 2.0).abs() < 1e-10);
 /// assert!((x[1] - 4.0/3.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn solve_triangular<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,
@@ -231,6 +233,7 @@ where
 /// let result = lstsq(&a.view(), &b.view(), None).unwrap();
 /// // result.x should be approximately [3.0, 3.0]
 /// ```
+#[allow(dead_code)]
 pub fn lstsq<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,
@@ -369,6 +372,7 @@ where
 /// // First column of x should be [2.0, 3.0]
 /// // Second column of x should be [4.0, 5.0]
 /// ```
+#[allow(dead_code)]
 pub fn solve_multiple<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -432,6 +436,7 @@ where
 // Convenience wrapper functions for backward compatibility
 
 /// Solve linear system using default thread count
+#[allow(dead_code)]
 pub fn solve_default<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + One + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -440,6 +445,7 @@ where
 }
 
 /// Compute least-squares solution using default thread count
+#[allow(dead_code)]
 pub fn lstsq_default<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> LinalgResult<LstsqResult<F>>
 where
     F: Float + NumAssign + Sum + One + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -448,6 +454,7 @@ where
 }
 
 /// Solve multiple linear systems using default thread count
+#[allow(dead_code)]
 pub fn solve_multiple_default<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + One + Sum + Send + Sync + ndarray::ScalarOperand + 'static,

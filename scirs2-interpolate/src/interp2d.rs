@@ -298,6 +298,7 @@ where
 }
 
 /// Check if array is sorted in ascending order
+#[allow(dead_code)]
 fn is_sorted<F: PartialOrd>(arr: &ArrayView1<F>) -> bool {
     for window in arr.windows(2) {
         if window[0] > window[1] {
@@ -308,6 +309,7 @@ fn is_sorted<F: PartialOrd>(arr: &ArrayView1<F>) -> bool {
 }
 
 /// Find interval containing the value using binary search
+#[allow(dead_code)]
 fn find_interval<F: PartialOrd>(arr: &ArrayView1<F>, value: F) -> usize {
     // Convert to slice to use binary_search_by
     let slice: &[F] = arr.as_slice().unwrap();
@@ -345,6 +347,7 @@ fn find_interval<F: PartialOrd>(arr: &ArrayView1<F>, value: F) -> usize {
 /// let result = interp.evaluate(1.5, 0.5)?;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[allow(dead_code)]
 pub fn interp2d<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,

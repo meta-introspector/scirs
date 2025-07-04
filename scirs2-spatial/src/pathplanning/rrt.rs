@@ -695,6 +695,7 @@ impl RRTPlanner {
 }
 
 /// Helper function to calculate Euclidean distance between points
+#[allow(dead_code)]
 fn euclidean_distance(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
     let mut sum = 0.0;
     for i in 0..a.len() {

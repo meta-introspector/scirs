@@ -103,6 +103,7 @@ pub struct InvarianceResult {
 /// # Returns
 ///
 /// * A result containing group-specific performance metrics and an overall invariance score
+#[allow(dead_code)]
 pub fn performance_invariance<T, S1, S2, S3, F>(
     y_true: &ArrayBase<S1, Ix1>,
     y_pred: &ArrayBase<S2, Ix1>,
@@ -253,6 +254,7 @@ where
 ///     println!("Sample {}: influence = {:.4}", i, score);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn influence_function<T, F>(
     y_true: &Array1<T>,
     y_pred: &Array1<T>,
@@ -428,6 +430,7 @@ pub struct SensitivityResult {
 ///
 /// * Information about fairness metric sensitivity to perturbations
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn perturbation_sensitivity<T, F>(
     y_true: &Array1<T>,
     y_pred: &Array1<T>,
@@ -527,6 +530,7 @@ where
 }
 
 // Helper function to perturb by flipping labels randomly
+#[allow(dead_code)]
 fn perturb_by_label_flip<T>(
     y_pred: &Array1<T>,
     flip_prob: f64,
@@ -563,6 +567,7 @@ where
 }
 
 // Helper function to perturb by subsampling
+#[allow(dead_code)]
 fn perturb_by_subsample<T>(
     y_pred: &Array1<T>,
     protected_group: &Array1<T>,
@@ -626,6 +631,7 @@ where
 }
 
 // Helper function to perturb by adding noise
+#[allow(dead_code)]
 fn perturb_by_noise<T>(
     y_pred: &Array1<T>,
     noise_level: f64,

@@ -1792,6 +1792,7 @@ impl NeuralAdaptiveOptimizer {
 }
 
 /// Convenience function for neural adaptive optimization
+#[allow(dead_code)]
 pub fn neural_adaptive_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

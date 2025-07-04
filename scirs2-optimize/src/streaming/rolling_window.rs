@@ -10,7 +10,8 @@ use super::{
 };
 use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::error::CoreResult;
+// Unused import
+// use scirs2_core::error::CoreResult;
 use std::collections::VecDeque;
 
 /// Rolling window optimizer that maintains a sliding window of recent data
@@ -374,6 +375,7 @@ impl<T: StreamingObjective + Clone> StreamingOptimizer for RollingWindowOptimize
 }
 
 /// Create a rolling window optimizer with gradient descent
+#[allow(dead_code)]
 pub fn rolling_window_gradient_descent<T: StreamingObjective>(
     initial_parameters: Array1<f64>,
     objective: T,
@@ -391,6 +393,7 @@ pub fn rolling_window_gradient_descent<T: StreamingObjective>(
 }
 
 /// Create a rolling window optimizer with least squares (for linear problems)
+#[allow(dead_code)]
 pub fn rolling_window_least_squares<T: StreamingObjective>(
     initial_parameters: Array1<f64>,
     objective: T,
@@ -409,6 +412,7 @@ pub fn rolling_window_least_squares<T: StreamingObjective>(
 }
 
 /// Create a rolling window optimizer with weighted least squares
+#[allow(dead_code)]
 pub fn rolling_window_weighted_least_squares<T: StreamingObjective>(
     initial_parameters: Array1<f64>,
     objective: T,
@@ -430,6 +434,7 @@ pub fn rolling_window_weighted_least_squares<T: StreamingObjective>(
 }
 
 /// Convenience function for rolling window linear regression
+#[allow(dead_code)]
 pub fn rolling_window_linear_regression(
     n_features: usize,
     window_size: usize,

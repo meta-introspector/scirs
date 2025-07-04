@@ -218,6 +218,7 @@ pub struct BoundaryQualityMetrics {
 }
 
 /// Perform enhanced 2D DWT decomposition with advanced boundary handling
+#[allow(dead_code)]
 pub fn dwt2d_decompose_enhanced<T>(
     data: &Array2<T>,
     wavelet: Wavelet,
@@ -275,6 +276,7 @@ where
 }
 
 /// Reconstruct from enhanced 2D DWT decomposition with boundary correction
+#[allow(dead_code)]
 pub fn dwt2d_reconstruct_enhanced<T>(
     enhanced_decomp: &EnhancedDWT2DDecomposition,
     wavelet: Wavelet,
@@ -310,6 +312,7 @@ where
 }
 
 /// Multi-level enhanced 2D DWT decomposition
+#[allow(dead_code)]
 pub fn wavedec2_enhanced<T>(
     data: &Array2<T>,
     wavelet: Wavelet,
@@ -343,6 +346,7 @@ where
 }
 
 /// Multi-level enhanced 2D DWT reconstruction
+#[allow(dead_code)]
 pub fn waverec2_enhanced<T>(
     decompositions: &[EnhancedDWT2DDecomposition],
     wavelet: Wavelet,
@@ -383,6 +387,7 @@ where
 }
 
 /// Extend image with enhanced 2D boundary handling
+#[allow(dead_code)]
 fn extend_image_2d<T>(
     data: &Array2<T>,
     wavelet: Wavelet,
@@ -420,6 +425,7 @@ where
 }
 
 /// Symmetric extension without edge repetition
+#[allow(dead_code)]
 fn extend_symmetric_2d<T>(
     data: &Array2<T>,
     ext_rows: usize,
@@ -481,6 +487,7 @@ where
 }
 
 /// Symmetric reflection extension (with edge repetition)
+#[allow(dead_code)]
 fn extend_symmetric_reflect_2d<T>(
     data: &Array2<T>,
     ext_rows: usize,
@@ -534,6 +541,7 @@ where
 }
 
 /// Periodic extension (wrap around)
+#[allow(dead_code)]
 fn extend_periodic_2d<T>(
     data: &Array2<T>,
     ext_rows: usize,
@@ -587,6 +595,7 @@ where
 }
 
 /// Zero padding extension
+#[allow(dead_code)]
 fn extend_zero_2d<T>(data: &Array2<T>, ext_rows: usize, ext_cols: usize) -> SignalResult<Array2<T>>
 where
     T: Float + NumCast + Debug + Zero + Copy,
@@ -606,6 +615,7 @@ where
 }
 
 /// Constant extension (replicate edge values)
+#[allow(dead_code)]
 fn extend_constant_2d<T>(
     data: &Array2<T>,
     ext_rows: usize,
@@ -667,6 +677,7 @@ where
 }
 
 /// Antisymmetric extension
+#[allow(dead_code)]
 fn extend_antisymmetric_2d<T>(
     data: &Array2<T>,
     ext_rows: usize,
@@ -728,6 +739,7 @@ where
 }
 
 /// Smooth extension using polynomial extrapolation
+#[allow(dead_code)]
 fn extend_smooth_2d<T>(
     data: &Array2<T>,
     ext_rows: usize,
@@ -824,6 +836,7 @@ where
 }
 
 /// Adaptive extension based on local image characteristics
+#[allow(dead_code)]
 fn extend_adaptive_2d<T>(
     data: &Array2<T>,
     ext_rows: usize,
@@ -852,6 +865,7 @@ where
 }
 
 /// Minimum phase extension optimized for specific wavelets
+#[allow(dead_code)]
 fn extend_min_phase_2d<T>(
     data: &Array2<T>,
     ext_rows: usize,
@@ -867,6 +881,7 @@ where
 }
 
 /// Biorthogonal extension optimized for biorthogonal wavelets
+#[allow(dead_code)]
 fn extend_biorthogonal_2d<T>(
     data: &Array2<T>,
     ext_rows: usize,
@@ -882,6 +897,7 @@ where
 }
 
 /// Analyze edge strength for adaptive boundary handling
+#[allow(dead_code)]
 fn analyze_edge_strength<T>(data: &Array2<T>, params: &AdaptiveBoundaryParams) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug + Zero + Copy,
@@ -924,6 +940,7 @@ where
 }
 
 /// Apply boundary preprocessing
+#[allow(dead_code)]
 fn preprocess_for_boundaries<T>(
     data: &Array2<T>,
     preprocessing: &BoundaryPreprocessing,
@@ -949,6 +966,7 @@ where
 }
 
 /// Simple 2D detrending (remove linear trends)
+#[allow(dead_code)]
 fn detrend_2d<T>(data: &Array2<T>) -> SignalResult<Array2<T>>
 where
     T: Float + NumCast + Debug + Zero + Copy,
@@ -959,6 +977,7 @@ where
 }
 
 /// Apply windowing near boundaries
+#[allow(dead_code)]
 fn apply_boundary_windowing<T>(
     data: &Array2<T>,
     config: &WindowingConfig,
@@ -999,6 +1018,7 @@ where
 }
 
 /// Correct boundary bias (simplified implementation)
+#[allow(dead_code)]
 fn correct_boundary_bias<T>(data: &Array2<T>) -> SignalResult<Array2<T>>
 where
     T: Float + NumCast + Debug + Zero + Copy,
@@ -1009,6 +1029,7 @@ where
 }
 
 /// Get wavelet filter length for extension calculation
+#[allow(dead_code)]
 fn get_wavelet_filter_length(wavelet: Wavelet) -> usize {
     match wavelet {
         Wavelet::Haar => 2,
@@ -1021,6 +1042,7 @@ fn get_wavelet_filter_length(wavelet: Wavelet) -> usize {
 }
 
 /// Create boundary information for reconstruction
+#[allow(dead_code)]
 fn create_boundary_info<T>(
     original: &Array2<T>,
     extended: &Array2<T>,
@@ -1063,6 +1085,7 @@ where
 }
 
 /// Compute boundary quality metrics
+#[allow(dead_code)]
 fn compute_boundary_quality<T>(
     _decomposition: &DWT2DDecomposition,
     _boundary_info: &BoundaryInfo2D,
@@ -1080,6 +1103,7 @@ where
 }
 
 /// Extract original region and apply boundary correction
+#[allow(dead_code)]
 fn extract_and_correct_boundaries<T>(
     extended_data: &Array2<T>,
     original_shape: (usize, usize),
@@ -1109,6 +1133,7 @@ where
 }
 
 /// Generate boundary handling report
+#[allow(dead_code)]
 pub fn generate_boundary_report(decomp: &EnhancedDWT2DDecomposition) -> String {
     let mut report = String::new();
 

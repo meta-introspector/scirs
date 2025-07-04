@@ -180,6 +180,7 @@ impl GpuVisionContext {
 /// - 10-50x faster than CPU for large images
 /// - Optimal for kernels larger than 5x5
 /// - Batch processing support for multiple images
+#[allow(dead_code)]
 pub fn gpu_convolve_2d(
     ctx: &GpuVisionContext,
     image: &ArrayView2<f32>,
@@ -258,6 +259,7 @@ pub fn gpu_convolve_2d(
 }
 
 /// Custom GPU convolution implementation when standard kernel is not available
+#[allow(dead_code)]
 fn gpu_convolve_2d_custom(
     ctx: &GpuVisionContext,
     image: &ArrayView2<f32>,
@@ -315,6 +317,7 @@ struct Params {
 @group(0) @binding(3) var<uniform> params: Params;
 
 @compute @workgroup_size(16, 16)
+#[allow(dead_code)]
 fn conv2d_vision(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let y = global_id.y;
     let x = global_id.x;
@@ -436,6 +439,7 @@ fn conv2d_vision(@builtin(global_invocation_id) global_id: vec3<u32>) {
 /// # Returns
 ///
 /// * Tuple of (gradient_x, gradient_y, magnitude)
+#[allow(dead_code)]
 pub fn gpu_sobel_gradients(
     ctx: &GpuVisionContext,
     image: &ArrayView2<f32>,
@@ -458,6 +462,7 @@ pub fn gpu_sobel_gradients(
 /// GPU-accelerated gradient magnitude computation
 ///
 /// Computes sqrt(gx^2 + gy^2) on GPU.
+#[allow(dead_code)]
 fn gpu_gradient_magnitude(
     ctx: &GpuVisionContext,
     grad_x: &ArrayView2<f32>,
@@ -509,6 +514,7 @@ extern "C" __global__ void gradient_magnitude(
 @group(0) @binding(3) var<uniform> size: u32;
 
 @compute @workgroup_size(256)
+#[allow(dead_code)]
 fn gradient_magnitude(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let idx = global_id.x;
     if (idx >= size) {
@@ -581,6 +587,7 @@ fn gradient_magnitude(@builtin(global_invocation_id) global_id: vec3<u32>) {
 /// # Returns
 ///
 /// * Blurred image
+#[allow(dead_code)]
 pub fn gpu_gaussian_blur(
     ctx: &GpuVisionContext,
     image: &ArrayView2<f32>,
@@ -595,6 +602,7 @@ pub fn gpu_gaussian_blur(
 }
 
 /// Generate 1D Gaussian kernel
+#[allow(dead_code)]
 fn generate_gaussian_kernel(size: usize, sigma: f32) -> Vec<f32> {
     let half = size / 2;
     let mut kernel = vec![0.0f32; size];
@@ -618,6 +626,7 @@ fn generate_gaussian_kernel(size: usize, sigma: f32) -> Vec<f32> {
 /// GPU-accelerated separable convolution
 ///
 /// Performs convolution with a separable kernel (horizontal then vertical).
+#[allow(dead_code)]
 fn gpu_separable_convolution(
     ctx: &GpuVisionContext,
     image: &ArrayView2<f32>,
@@ -659,6 +668,7 @@ fn gpu_separable_convolution(
 }
 
 /// Perform a single 1D convolution pass (horizontal or vertical)
+#[allow(dead_code)]
 fn gpu_separable_1d_pass(
     ctx: &GpuVisionContext,
     input: &[f32],
@@ -728,6 +738,7 @@ struct SeparableParams {
 @group(0) @binding(3) var<uniform> params: SeparableParams;
 
 @compute @workgroup_size(256)
+#[allow(dead_code)]
 fn separable_conv_1d(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let idx = global_id.x;
     let total_size = params.height * params.width;
@@ -830,6 +841,7 @@ fn separable_conv_1d(@builtin(global_invocation_id) global_id: vec3<u32>) {
 /// # Returns
 ///
 /// * Corner response map
+#[allow(dead_code)]
 pub fn gpu_harris_corners(
     ctx: &GpuVisionContext,
     image: &ArrayView2<f32>,
@@ -855,6 +867,7 @@ pub fn gpu_harris_corners(
 }
 
 /// GPU element-wise multiplication
+#[allow(dead_code)]
 fn gpu_element_wise_multiply(
     ctx: &GpuVisionContext,
     a: &ArrayView2<f32>,
@@ -897,6 +910,7 @@ extern "C" __global__ void element_wise_multiply(
 @group(0) @binding(3) var<uniform> size: u32;
 
 @compute @workgroup_size(256)
+#[allow(dead_code)]
 fn element_wise_multiply(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let idx = global_id.x;
     if (idx >= size) {
@@ -940,6 +954,7 @@ fn element_wise_multiply(@builtin(global_invocation_id) global_id: vec3<u32>) {
 }
 
 /// Compute Harris corner response
+#[allow(dead_code)]
 fn gpu_harris_response(
     ctx: &GpuVisionContext,
     sxx: &ArrayView2<f32>,
@@ -1006,6 +1021,7 @@ extern "C" __global__ void harris_response(
 @group(0) @binding(6) var<uniform> size: u32;
 
 @compute @workgroup_size(256)
+#[allow(dead_code)]
 fn harris_response(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let idx = global_id.x;
     if (idx >= size) {
@@ -1091,6 +1107,7 @@ fn harris_response(@builtin(global_invocation_id) global_id: vec3<u32>) {
 /// # Returns
 ///
 /// * Vector of processed images
+#[allow(dead_code)]
 pub fn gpu_batch_process<F>(
     ctx: &GpuVisionContext,
     images: &[ArrayView2<f32>],
@@ -1219,6 +1236,7 @@ impl GpuMemoryPool {
 /// # Performance
 ///
 /// 3-5x faster than processing images individually for batches of 4+ images.
+#[allow(dead_code)]
 pub fn gpu_batch_convolve_2d(
     ctx: &GpuVisionContext,
     images: &[ArrayView2<f32>],
@@ -1323,6 +1341,7 @@ struct BatchParams {
 @group(0) @binding(3) var<uniform> params: BatchParams;
 
 @compute @workgroup_size(8, 8, 4)
+#[allow(dead_code)]
 fn batch_conv2d(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let batch = global_id.z;
     let y = global_id.y;
@@ -1630,6 +1649,7 @@ mod tests {
 /// # Performance
 ///
 /// 5-15x speedup over CPU implementation for large sequences.
+#[allow(dead_code)]
 pub fn gpu_multi_head_attention(
     ctx: &GpuVisionContext,
     queries: &ArrayView2<f32>,
@@ -1790,6 +1810,7 @@ pub fn gpu_multi_head_attention(
 /// # Performance
 ///
 /// 8-20x speedup for large matrices, especially on tensor core capable GPUs.
+#[allow(dead_code)]
 pub fn gpu_batch_matmul_transformer(
     ctx: &GpuVisionContext,
     a: &ArrayView2<f32>,
@@ -1933,6 +1954,7 @@ pub fn gpu_batch_matmul_transformer(
 /// # Performance
 ///
 /// 10-50x speedup for large descriptor sets (>1000 features).
+#[allow(dead_code)]
 pub fn gpu_feature_matching_ultra(
     ctx: &GpuVisionContext,
     descriptors1: &ArrayView2<f32>,
@@ -2083,6 +2105,7 @@ pub fn gpu_feature_matching_ultra(
 /// # Performance
 ///
 /// 20-100x speedup for neural inference on large images.
+#[allow(dead_code)]
 pub fn gpu_neural_feature_extraction(
     ctx: &GpuVisionContext,
     image: &ArrayView2<f32>,
@@ -2177,6 +2200,7 @@ pub enum LayerType {
 }
 
 /// Helper functions for GPU neural layers (simplified implementations)
+#[allow(dead_code)]
 fn gpu_conv_layer(
     ctx: &GpuVisionContext,
     _input: &scirs2_core::gpu::GpuBuffer<f32>,
@@ -2195,6 +2219,7 @@ fn gpu_conv_layer(
     Ok(output_buffer)
 }
 
+#[allow(dead_code)]
 fn gpu_maxpool_layer(
     ctx: &GpuVisionContext,
     _input: &scirs2_core::gpu::GpuBuffer<f32>,
@@ -2208,6 +2233,7 @@ fn gpu_maxpool_layer(
     Ok(output_buffer)
 }
 
+#[allow(dead_code)]
 fn gpu_dense_layer(
     ctx: &GpuVisionContext,
     _input: &scirs2_core::gpu::GpuBuffer<f32>,
@@ -2218,6 +2244,7 @@ fn gpu_dense_layer(
     Ok(output_buffer)
 }
 
+#[allow(dead_code)]
 fn gpu_relu_layer(
     ctx: &GpuVisionContext,
     _input: &scirs2_core::gpu::GpuBuffer<f32>,
@@ -2228,6 +2255,7 @@ fn gpu_relu_layer(
     Ok(output_buffer)
 }
 
+#[allow(dead_code)]
 fn compute_conv_output_shape(input_shape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
     let (h, w) = input_shape;
     let out_h = (h + 2 * config.padding - config.kernel_size) / config.stride + 1;
@@ -2235,6 +2263,7 @@ fn compute_conv_output_shape(input_shape: (usize, usize), config: &LayerConfig) 
     (out_h, out_w)
 }
 
+#[allow(dead_code)]
 fn compute_pool_output_shape(input_shape: (usize, usize), config: &LayerConfig) -> (usize, usize) {
     let (h, w) = input_shape;
     let out_h = h / config.stride;
@@ -2243,6 +2272,7 @@ fn compute_pool_output_shape(input_shape: (usize, usize), config: &LayerConfig) 
 }
 
 /// Fallback implementation for multi-head attention using SIMD
+#[allow(dead_code)]
 fn fallback_multi_head_attention(
     queries: &ArrayView2<f32>,
     keys: &ArrayView2<f32>,

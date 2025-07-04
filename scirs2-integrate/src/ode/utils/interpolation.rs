@@ -31,6 +31,7 @@ pub enum ContinuousOutputMethod {
 /// # Returns
 ///
 /// The index where value would be inserted to keep the array sorted
+#[allow(dead_code)]
 pub fn find_index<F: Float>(sorted_array: &[F], value: F) -> usize {
     // Binary search
     let mut left = 0;
@@ -59,6 +60,7 @@ pub fn find_index<F: Float>(sorted_array: &[F], value: F) -> usize {
 /// # Returns
 ///
 /// Linearly interpolated value at x_new
+#[allow(dead_code)]
 pub fn linear_interpolation<F: IntegrateFloat>(x: &[F], y: &[Array1<F>], x_new: F) -> Array1<F> {
     let i = find_index(x, x_new);
 
@@ -98,6 +100,7 @@ pub fn linear_interpolation<F: IntegrateFloat>(x: &[F], y: &[Array1<F>], x_new: 
 /// # Returns
 ///
 /// Cubic interpolated value at x_new
+#[allow(dead_code)]
 pub fn cubic_hermite_interpolation<F: IntegrateFloat>(
     x: &[F],
     y: &[Array1<F>],

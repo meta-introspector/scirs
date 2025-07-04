@@ -59,6 +59,7 @@ pub use attention::{
 /// assert_eq!(result[[1, 0, 0]], 170.0);
 /// assert_eq!(result[[1, 1, 0]], 230.0);
 /// ```
+#[allow(dead_code)]
 pub fn batch_matmul<F>(batch_a: &ArrayView3<F>, b: &ArrayView2<F>) -> LinalgResult<Array3<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -135,6 +136,7 @@ where
 /// assert_eq!(result[[1, 0]], 170.0);
 /// assert_eq!(result[[1, 1]], 230.0);
 /// ```
+#[allow(dead_code)]
 pub fn batch_matvec<F>(batch_a: &ArrayView3<F>, x: &ArrayView1<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -215,6 +217,7 @@ where
 /// assert_eq!(result[[1, 1, 0]], 17.0);
 /// assert_eq!(result[[1, 1, 1]], 28.0);
 /// ```
+#[allow(dead_code)]
 pub fn batch_add<F>(
     batch_a: &ArrayView3<F>,
     v: &ArrayView1<F>,
@@ -320,6 +323,7 @@ where
 /// assert_eq!(result[[1, 0]], 10.0);
 /// assert_eq!(result[[1, 1]], 12.0);
 /// ```
+#[allow(dead_code)]
 pub fn batch_sum<F>(batch_a: &ArrayView3<F>) -> Array2<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,

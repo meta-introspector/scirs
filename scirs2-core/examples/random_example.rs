@@ -2,6 +2,7 @@ use ndarray::IxDyn;
 use rand_distr::{Bernoulli, Normal, Uniform};
 use scirs2_core::random::{get_rng, sampling, DistributionExt, Random};
 
+#[allow(dead_code)]
 fn main() {
     println!("Random Number Generation Example");
 
@@ -32,6 +33,7 @@ fn main() {
 }
 
 #[cfg(feature = "random")]
+#[allow(dead_code)]
 fn basic_random_example() {
     // Create a random number generator
     let mut rng = Random::default();
@@ -57,6 +59,7 @@ fn basic_random_example() {
 }
 
 #[cfg(feature = "random")]
+#[allow(dead_code)]
 fn distribution_examples() {
     let mut rng = Random::default();
 
@@ -81,6 +84,7 @@ fn distribution_examples() {
 }
 
 #[cfg(feature = "random")]
+#[allow(dead_code)]
 fn random_array_example() {
     let mut rng = Random::default();
 
@@ -103,6 +107,7 @@ fn random_array_example() {
 }
 
 #[cfg(feature = "random")]
+#[allow(dead_code)]
 fn seeded_random_example() {
     // Create two random generators with the same seed
     let mut rng1 = Random::with_seed(42);
@@ -128,6 +133,7 @@ fn seeded_random_example() {
 }
 
 #[cfg(feature = "random")]
+#[allow(dead_code)]
 fn thread_local_random_example() {
     // Access the thread-local random generator
     let values = get_rng(|rng| {
@@ -143,6 +149,7 @@ fn thread_local_random_example() {
 }
 
 #[cfg(feature = "random")]
+#[allow(dead_code)]
 fn sampling_functions_example() {
     let mut rng = Random::default();
 

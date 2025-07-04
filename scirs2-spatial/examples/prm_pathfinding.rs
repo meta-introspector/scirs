@@ -2,6 +2,7 @@ use ndarray::Array1;
 use scirs2_spatial::pathplanning::{PRM2DPlanner, PRMConfig, PRMPlanner};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Probabilistic Roadmap (PRM) Pathfinding Examples");
     println!("===============================================\n");
@@ -36,7 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     planner.build_roadmap()?;
     let build_time = start_time.elapsed();
 
-    println!("Roadmap built in {:.2?}", build_time);
+    println!("Roadmap built in {build_time:.2?}");
 
     // Find path from start to goal
     let start = Array1::from_vec(vec![1.0, 1.0]);
@@ -56,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             for (i, point) in path.nodes.iter().enumerate() {
                 println!("  {}: [{:.2}, {:.2}]", i, point[0], point[1]);
             }
-            println!("Path finding time: {:.2?}", path_find_time);
+            println!("Path finding time: {path_find_time:.2?}");
 
             // Simple ASCII visualization
             print_ascii_visualization_circle(&path.nodes, 5.0, 5.0, 2.0);
@@ -99,7 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     planner.build_roadmap()?;
     let build_time = start_time.elapsed();
 
-    println!("Roadmap built in {:.2?}", build_time);
+    println!("Roadmap built in {build_time:.2?}");
 
     // Find path from start to goal
     let start = [1.0, 5.0];
@@ -124,7 +125,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             for (i, point) in path.nodes.iter().enumerate() {
                 println!("  {}: [{:.2}, {:.2}]", i, point[0], point[1]);
             }
-            println!("Path finding time: {:.2?}", path_find_time);
+            println!("Path finding time: {path_find_time:.2?}");
 
             // Simple ASCII visualization
             print_ascii_visualization_polygons(&path.nodes, planner.obstacles());
@@ -163,7 +164,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     planner.build_roadmap()?;
     let build_time = start_time.elapsed();
 
-    println!("Roadmap built in {:.2?}", build_time);
+    println!("Roadmap built in {build_time:.2?}");
 
     // Find path from left to right through the narrow passage
     let start = [2.0, 5.0];
@@ -188,7 +189,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             for (i, point) in path.nodes.iter().enumerate() {
                 println!("  {}: [{:.2}, {:.2}]", i, point[0], point[1]);
             }
-            println!("Path finding time: {:.2?}", path_find_time);
+            println!("Path finding time: {path_find_time:.2?}");
 
             // Simple ASCII visualization
             print_ascii_visualization_polygons(&path.nodes, planner.obstacles());
@@ -200,6 +201,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Simple ASCII visualization of a path with a circle obstacle
+#[allow(dead_code)]
 fn print_ascii_visualization_circle(
     path: &[Array1<f64>],
     circle_x: f64,
@@ -288,6 +290,7 @@ fn print_ascii_visualization_circle(
 }
 
 /// Simple ASCII visualization of a path with polygon obstacles
+#[allow(dead_code)]
 fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f64; 2]>]) {
     const SIZE: usize = 20;
     let mut grid = vec![vec![' '; SIZE]; SIZE];
@@ -370,6 +373,7 @@ fn print_ascii_visualization_polygons(path: &[Array1<f64>], obstacles: &[Vec<[f6
 }
 
 /// Check if a point is inside a polygon using the ray casting algorithm
+#[allow(dead_code)]
 fn point_in_polygon(point: &[f64; 2], polygon: &[[f64; 2]]) -> bool {
     let (x, y) = (point[0], point[1]);
     let mut inside = false;

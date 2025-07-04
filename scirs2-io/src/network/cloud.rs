@@ -489,6 +489,7 @@ impl CloudProvider {
 
 /// Cloud storage utility functions
 /// Create a mock file metadata for testing
+#[allow(dead_code)]
 pub fn create_mock_metadata(name: &str, size: u64) -> FileMetadata {
     FileMetadata {
         name: name.to_string(),
@@ -501,6 +502,7 @@ pub fn create_mock_metadata(name: &str, size: u64) -> FileMetadata {
 }
 
 /// Validate cloud provider configuration
+#[allow(dead_code)]
 pub fn validate_config(provider: &CloudProvider) -> Result<()> {
     match provider {
         CloudProvider::S3(config) => {
@@ -559,6 +561,7 @@ pub fn validate_config(provider: &CloudProvider) -> Result<()> {
 }
 
 /// Generate signed URL for cloud storage access
+#[allow(dead_code)]
 pub fn generate_signed_url(
     provider: &CloudProvider,
     path: &str,

@@ -21,6 +21,7 @@ use rand_distr::{Distribution, Normal};
 /// # Returns
 ///
 /// * Tuple containing (extracted sources, unmixing matrix)
+#[allow(dead_code)]
 pub fn infomax_ica(
     signals: &Array2<f64>,
     n_components: usize,
@@ -122,6 +123,7 @@ pub fn infomax_ica(
 /// # Returns
 ///
 /// * Tuple containing (extracted sources, unmixing matrix)
+#[allow(dead_code)]
 pub fn extended_infomax_ica(
     signals: &Array2<f64>,
     n_components: usize,

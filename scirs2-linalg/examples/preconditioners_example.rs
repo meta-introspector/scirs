@@ -27,6 +27,7 @@ use scirs2_linalg::preconditioners::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 ADVANCED PRECONDITIONERS - ULTRATHINK DEMONSTRATION");
     println!("====================================================");
@@ -503,6 +504,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Estimate matrix sparsity ratio
+#[allow(dead_code)]
 fn estimate_sparsity(matrix: &ArrayView2<f64>) -> f64 {
     let (m, n) = matrix.dim();
     let total_elements = m * n;
@@ -513,6 +515,7 @@ fn estimate_sparsity(matrix: &ArrayView2<f64>) -> f64 {
 }
 
 /// Check if matrix is symmetric
+#[allow(dead_code)]
 fn check_symmetry(matrix: &ArrayView2<f64>) -> bool {
     let (m, n) = matrix.dim();
     if m != n {

@@ -439,6 +439,7 @@ impl<F: Float> Default for CanonicalFormConverter<F> {
 /// Utility functions for expression simplification
 
 /// Create common simplification patterns
+#[allow(dead_code)]
 pub fn create_standard_rules<F: Float>() -> Vec<SimplificationRule<F>> {
     // This would create the standard set of simplification rules
     // that most users would want
@@ -446,21 +447,25 @@ pub fn create_standard_rules<F: Float>() -> Vec<SimplificationRule<F>> {
 }
 
 /// Check if an operation is commutative
+#[allow(dead_code)]
 pub fn is_commutative(op_name: &str) -> bool {
     matches!(op_name, "Add" | "Mul" | "Min" | "Max")
 }
 
 /// Check if an operation is associative
+#[allow(dead_code)]
 pub fn is_associative(op_name: &str) -> bool {
     matches!(op_name, "Add" | "Mul" | "Min" | "Max")
 }
 
 /// Check if an operation has an identity element
+#[allow(dead_code)]
 pub fn has_identity(op_name: &str) -> bool {
     matches!(op_name, "Add" | "Mul")
 }
 
 /// Get the identity element for an operation
+#[allow(dead_code)]
 pub fn get_identity<F: Float>(op_name: &str) -> Option<F> {
     match op_name {
         "Add" => Some(F::zero()),

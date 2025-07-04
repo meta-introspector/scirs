@@ -1,6 +1,6 @@
 //! Connected component operations for binary and labeled arrays
 
-use ndarray::{Array, ArrayView, Axis, Dimension, IxDyn, Zip};
+use ndarray::{Array, Dimension, IxDyn};
 use std::collections::HashMap;
 
 use super::Connectivity;
@@ -61,6 +61,7 @@ impl UnionFind {
 }
 
 /// Get neighbors for a given position based on connectivity
+#[allow(dead_code)]
 fn get_neighbors(
     position: &[usize],
     shape: &[usize],
@@ -114,6 +115,7 @@ fn get_neighbors(
 }
 
 /// Generate all possible offsets for corner connectivity
+#[allow(dead_code)]
 fn generate_all_offsets(ndim: usize) -> Vec<Vec<isize>> {
     let mut offsets = Vec::new();
     let total_combinations = 3_usize.pow(ndim as u32);
@@ -138,6 +140,7 @@ fn generate_all_offsets(ndim: usize) -> Vec<Vec<isize>> {
 }
 
 /// Convert multi-dimensional index to flat index
+#[allow(dead_code)]
 fn ravel_index(indices: &[usize], shape: &[usize]) -> usize {
     let mut flat_index = 0;
     let mut stride = 1;
@@ -151,6 +154,7 @@ fn ravel_index(indices: &[usize], shape: &[usize]) -> usize {
 }
 
 /// Convert flat index to multi-dimensional index
+#[allow(dead_code)]
 fn unravel_index(flat_index: usize, shape: &[usize]) -> Vec<usize> {
     let mut indices = vec![0; shape.len()];
     let mut remaining = flat_index;
@@ -176,6 +180,7 @@ fn unravel_index(flat_index: usize, shape: &[usize]) -> Vec<usize> {
 /// # Returns
 ///
 /// * `Result<(Array<usize, D>, usize)>` - Labeled array and number of labels
+#[allow(dead_code)]
 pub fn label<D>(
     input: &Array<bool, D>,
     structure: Option<&Array<bool, D>>,
@@ -274,6 +279,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<bool, D>>` - Binary array with boundaries
+#[allow(dead_code)]
 pub fn find_boundaries<D>(
     input: &Array<usize, D>,
     connectivity: Option<Connectivity>,
@@ -372,6 +378,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<bool, D>>` - Binary array with small objects removed
+#[allow(dead_code)]
 pub fn remove_small_objects<D>(
     input: &Array<bool, D>,
     min_size: usize,
@@ -438,6 +445,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<bool, D>>` - Binary array with small holes removed
+#[allow(dead_code)]
 pub fn remove_small_holes<D>(
     input: &Array<bool, D>,
     min_size: usize,

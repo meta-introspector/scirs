@@ -8,6 +8,7 @@ use ndarray::{Array1, Array2};
 use scirs2_metrics::bayesian::*;
 use scirs2_metrics::error::Result;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Bayesian Evaluation Metrics Example");
     println!("==================================");
@@ -53,6 +54,7 @@ fn main() -> Result<()> {
 }
 
 /// Example of Bayesian model comparison using Bayes factors
+#[allow(dead_code)]
 fn bayesian_model_comparison_example() -> Result<()> {
     let comparison = BayesianModelComparison::new()
         .with_evidence_method(EvidenceMethod::HarmonicMean)
@@ -116,6 +118,7 @@ fn bayesian_model_comparison_example() -> Result<()> {
 }
 
 /// Example of Bayesian information criteria calculation
+#[allow(dead_code)]
 fn bayesian_information_criteria_example() -> Result<()> {
     let bic_calc = BayesianInformationCriteria::new().with_num_samples(1000);
 
@@ -166,6 +169,7 @@ fn bayesian_information_criteria_example() -> Result<()> {
 }
 
 /// Example of posterior predictive checks
+#[allow(dead_code)]
 fn posterior_predictive_check_example() -> Result<()> {
     // Create observed data
     let observed_data = Array1::from_vec(vec![
@@ -213,6 +217,7 @@ fn posterior_predictive_check_example() -> Result<()> {
 }
 
 /// Example of credible interval calculation
+#[allow(dead_code)]
 fn credible_interval_example() -> Result<()> {
     // Simulate posterior samples for a parameter (e.g., treatment effect)
     let posterior_samples = Array1::from_vec(vec![
@@ -251,6 +256,7 @@ fn credible_interval_example() -> Result<()> {
 }
 
 /// Example of Bayesian model averaging
+#[allow(dead_code)]
 fn bayesian_model_averaging_example() -> Result<()> {
     // Simulate predictions from 4 different models for 10 test cases
     let predictions = Array2::from_shape_vec(
@@ -308,6 +314,7 @@ fn bayesian_model_averaging_example() -> Result<()> {
 }
 
 /// Comprehensive Bayesian evaluation workflow
+#[allow(dead_code)]
 fn comprehensive_bayesian_workflow() -> Result<()> {
     println!("This example demonstrates a complete Bayesian evaluation workflow");
     println!("for comparing two regression models on a synthetic dataset.");

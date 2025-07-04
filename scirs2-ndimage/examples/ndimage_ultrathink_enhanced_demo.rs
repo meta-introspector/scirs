@@ -22,6 +22,7 @@ use scirs2_ndimage::{
 };
 
 /// Comprehensive enhanced ultrathink demonstration
+#[allow(dead_code)]
 pub fn enhanced_ultrathink_demo() -> NdimageResult<()> {
     println!("🚀 Enhanced Ultrathink Mode Demonstration");
     println!("========================================");
@@ -98,6 +99,7 @@ pub fn enhanced_ultrathink_demo() -> NdimageResult<()> {
 }
 
 /// Create diverse test dataset
+#[allow(dead_code)]
 fn create_test_dataset() -> Vec<(String, Array2<f64>)> {
     vec![
         ("Small Uniform", Array2::ones((32, 32))),
@@ -109,6 +111,7 @@ fn create_test_dataset() -> Vec<(String, Array2<f64>)> {
 }
 
 /// Create random test image
+#[allow(dead_code)]
 fn create_random_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
     for y in 0..height {
@@ -122,6 +125,7 @@ fn create_random_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 /// Create structured test image with multiple patterns
+#[allow(dead_code)]
 fn create_structured_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
 
@@ -148,6 +152,7 @@ fn create_structured_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 /// Create high frequency test image
+#[allow(dead_code)]
 fn create_high_frequency_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
 
@@ -169,6 +174,7 @@ fn create_high_frequency_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 /// Create edge case test image (extreme values, discontinuities)
+#[allow(dead_code)]
 fn create_edge_case_image(height: usize, width: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
 
@@ -194,6 +200,7 @@ fn create_edge_case_image(height: usize, width: usize) -> Array2<f64> {
 }
 
 /// Create enhanced ultrathink configuration
+#[allow(dead_code)]
 fn create_enhanced_config() -> UltrathinkConfig {
     use scirs2_ndimage::{
         neuromorphic_computing::NeuromorphicConfig, quantum_inspired::QuantumConfig,
@@ -222,6 +229,7 @@ fn create_enhanced_config() -> UltrathinkConfig {
 }
 
 /// Validate output properties
+#[allow(dead_code)]
 fn validate_output_properties<T>(output: &Array2<T>, test_name: &str) -> NdimageResult<()>
 where
     T: num_traits::Float + Copy,
@@ -250,6 +258,7 @@ where
 }
 
 /// Print comprehensive performance summary
+#[allow(dead_code)]
 fn print_performance_summary(summary: &scirs2_ndimage::PerformanceSummary) {
     println!("\n📈 Performance Summary");
     println!("=====================");
@@ -273,6 +282,7 @@ fn print_performance_summary(summary: &scirs2_ndimage::PerformanceSummary) {
 }
 
 /// Run stress tests with various configurations
+#[allow(dead_code)]
 fn run_stress_tests(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
     println!("Running stress tests...");
 
@@ -304,6 +314,7 @@ fn run_stress_tests(validator: &mut UltrathinkValidator) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_low_intensity_config() -> UltrathinkConfig {
     let mut config = create_enhanced_config();
     config.consciousness_depth = 1;
@@ -312,6 +323,7 @@ fn create_low_intensity_config() -> UltrathinkConfig {
     config
 }
 
+#[allow(dead_code)]
 fn create_high_intensity_config() -> UltrathinkConfig {
     let mut config = create_enhanced_config();
     config.consciousness_depth = 5;
@@ -320,6 +332,7 @@ fn create_high_intensity_config() -> UltrathinkConfig {
     config
 }
 
+#[allow(dead_code)]
 fn create_maximum_features_config() -> UltrathinkConfig {
     let mut config = create_enhanced_config();
     config.consciousness_depth = 8;
@@ -331,6 +344,7 @@ fn create_maximum_features_config() -> UltrathinkConfig {
 }
 
 /// Main demonstration function
+#[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("🎯 Enhanced Ultrathink Mode Demonstration");
     println!("==========================================");

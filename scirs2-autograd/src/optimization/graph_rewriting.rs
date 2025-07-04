@@ -496,6 +496,7 @@ pub struct MemoryAccessProfile {
 /// Utility functions for graph rewriting
 
 /// Check if two operations can be fused
+#[allow(dead_code)]
 pub fn can_fuse_operations(op1: &str, op2: &str) -> bool {
     match (op1, op2) {
         // Element-wise operations can often be fused
@@ -513,6 +514,7 @@ pub fn can_fuse_operations(op1: &str, op2: &str) -> bool {
 }
 
 /// Estimate the benefit of fusing operations
+#[allow(dead_code)]
 pub fn estimate_fusion_benefit(operations: &[&str]) -> f32 {
     // Simple heuristic: more operations fused = higher benefit
     // In practice, this would consider:
@@ -523,6 +525,7 @@ pub fn estimate_fusion_benefit(operations: &[&str]) -> f32 {
 }
 
 /// Check if operations have compatible memory layouts
+#[allow(dead_code)]
 pub fn check_memory_layout_compatibility<F: Float>(_nodes: &[TensorID]) -> bool {
     // Check if all nodes have compatible tensor layouts for fusion
     true

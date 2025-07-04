@@ -915,6 +915,7 @@ pub struct PrecisionSensitivityAnalysis {
 
 /// Public API functions
 /// Analyze the condition number of a computation
+#[allow(dead_code)]
 pub fn analyze_conditioning<F: Float, Func>(
     function: Func,
     input: &Tensor<F>,
@@ -927,6 +928,7 @@ where
 }
 
 /// Analyze error propagation through a computation
+#[allow(dead_code)]
 pub fn analyze_error_propagation<'a, F: Float, Func>(
     _function: Func,
     _input: &'a Tensor<'a, F>,
@@ -955,6 +957,7 @@ where
 }
 
 /// Quick stability check
+#[allow(dead_code)]
 pub fn quick_stability_check<F: Float, Func>(
     function: Func,
     input: &Tensor<F>,

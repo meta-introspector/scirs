@@ -8,6 +8,7 @@ use scirs2_neural::models::{Model, Sequential};
 use scirs2_neural::optimizers::{Adam, AdamW, Optimizer, RAdam, RMSprop, SGD};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Advanced Optimizers Example");
     // Initialize random number generator

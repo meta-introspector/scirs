@@ -3,7 +3,7 @@
 //! This example shows how to use ultrathink mode optimizations
 //! for graph processing algorithms.
 
-use rand::Rng;
+use rand::{rng, Rng};
 use scirs2_graph::advanced::{
     create_ultrathink_processor, execute_with_ultrathink, UltrathinkConfig, UltrathinkProcessor,
 };
@@ -16,6 +16,7 @@ use scirs2_graph::measures::pagerank_centrality;
 use std::collections::HashMap;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SciRS2 Ultrathink Mode Demonstration");
     println!("========================================");

@@ -9,6 +9,7 @@ use std::time::Duration;
 use crate::memory::metrics::collector::MemoryReport;
 
 /// Format bytes in human-readable format
+#[allow(dead_code)]
 pub fn format_bytes(bytes: usize) -> String {
     const KB: usize = 1024;
     const MB: usize = KB * 1024;
@@ -26,24 +27,25 @@ pub fn format_bytes(bytes: usize) -> String {
 }
 
 /// Format duration in human-readable format
+#[allow(dead_code)]
 pub fn format_duration(duration: Duration) -> String {
     let total_secs = duration.as_secs();
 
     if total_secs < 60 {
-        return format!("{}s", total_secs);
+        return format!("{total_secs}s");
     }
 
     let mins = total_secs / 60;
     let secs = total_secs % 60;
 
     if mins < 60 {
-        return format!("{}m {}s", mins, secs);
+        return format!("{mins}m {secs}s");
     }
 
     let hours = mins / 60;
     let mins = mins % 60;
 
-    format!("{}h {}m {}s", hours, mins, secs)
+    format!("{hours}h {mins}m {secs}s")
 }
 
 impl MemoryReport {
@@ -79,7 +81,7 @@ impl MemoryReport {
         components.sort_by(|a, b| b.1.peak_usage.cmp(&a.1.peak_usage));
 
         for (component, stats) in components {
-            output.push_str(&format!("\n  {}\n", component));
+            output.push_str(&format!("\n  {component}\n"));
             output.push_str(&format!(
                 "    Current Usage: {}\n",
                 format_bytes(stats.current_usage)
@@ -104,13 +106,13 @@ impl MemoryReport {
             // Calculate reuse ratio (if peak is non-zero)
             if stats.peak_usage > 0 {
                 let reuse_ratio = stats.total_allocated as f64 / stats.peak_usage as f64;
-                output.push_str(&format!("    Memory Reuse Ratio: {:.2}\n", reuse_ratio));
+                output.push_str(&format!("    Memory Reuse Ratio: {reuse_ratio:.2}\n"));
             }
 
             // Calculate allocation frequency
             if self.duration.as_secs_f64() > 0.0 {
                 let alloc_per_sec = stats.allocation_count as f64 / self.duration.as_secs_f64();
-                output.push_str(&format!("    Allocations/sec: {:.2}\n", alloc_per_sec));
+                output.push_str(&format!("    Allocations/sec: {alloc_per_sec:.2}\n"));
             }
         }
 

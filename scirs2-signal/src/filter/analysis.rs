@@ -111,6 +111,7 @@ impl Default for FilterStability {
 /// println!("3dB cutoff: {:.3}", analysis.cutoff_3db);
 /// println!("Stopband attenuation: {:.1} dB", analysis.stopband_attenuation);
 /// ```
+#[allow(dead_code)]
 pub fn analyze_filter(
     b: &[f64],
     a: &[f64],
@@ -240,6 +241,7 @@ pub fn analyze_filter(
 /// println!("Filter is stable: {}", stability.is_stable);
 /// println!("Stability margin: {:.6}", stability.stability_margin);
 /// ```
+#[allow(dead_code)]
 pub fn check_filter_stability(a: &[f64]) -> SignalResult<FilterStability> {
     if a.is_empty() || a[0].abs() < 1e-15 {
         return Err(SignalError::ValueError(
@@ -300,6 +302,7 @@ pub fn check_filter_stability(a: &[f64]) -> SignalResult<FilterStability> {
 /// let freqs = vec![0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
 /// let (mag, phase) = frequency_response(&b, &a, &freqs).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn frequency_response(
     b: &[f64],
     a: &[f64],
@@ -356,6 +359,7 @@ pub fn frequency_response(
 /// println!("Number of zeros: {}", zeros.len());
 /// println!("Number of poles: {}", poles.len());
 /// ```
+#[allow(dead_code)]
 pub fn find_poles_zeros(b: &[f64], a: &[f64]) -> SignalResult<(Vec<Complex64>, Vec<Complex64>)> {
     if a.is_empty() || a[0].abs() < 1e-15 {
         return Err(SignalError::ValueError(
@@ -399,6 +403,7 @@ pub fn find_poles_zeros(b: &[f64], a: &[f64]) -> SignalResult<(Vec<Complex64>, V
 /// let q = compute_q_factor(&b, &a, 512).unwrap();
 /// println!("Q factor: {:.2}", q);
 /// ```
+#[allow(dead_code)]
 pub fn compute_q_factor(b: &[f64], a: &[f64], num_points: usize) -> SignalResult<f64> {
     let analysis = analyze_filter(b, a, Some(num_points))?;
 
@@ -446,6 +451,7 @@ pub fn compute_q_factor(b: &[f64], a: &[f64], num_points: usize) -> SignalResult
 // Helper functions
 
 /// Find the frequency where magnitude drops to a specific dB level
+#[allow(dead_code)]
 fn find_cutoff_frequency(frequencies: &[f64], magnitude_db: &[f64], target_db: f64) -> f64 {
     // Find the index where magnitude first drops below target
     for (i, &mag_db) in magnitude_db.iter().enumerate() {

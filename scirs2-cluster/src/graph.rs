@@ -215,6 +215,7 @@ impl<F: Float + FromPrimitive + Debug> Graph<F> {
 /// let graph = Graph::from_adjacency_matrix(adjacency.view()).unwrap();
 /// let communities = louvain(&graph, 1.0, 100).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn louvain<F>(graph: &Graph<F>, resolution: f64, max_iterations: usize) -> Result<Array1<usize>>
 where
     F: Float + FromPrimitive + Debug + 'static,
@@ -274,6 +275,7 @@ where
 }
 
 /// Calculate modularity gain from moving a node to a different community
+#[allow(dead_code)]
 fn modularity_gain<F>(
     graph: &Graph<F>,
     communities: &Array1<usize>,
@@ -323,6 +325,7 @@ where
 }
 
 /// Calculate total weight of a community
+#[allow(dead_code)]
 fn calculate_community_weight<F>(
     graph: &Graph<F>,
     communities: &Array1<usize>,
@@ -354,6 +357,7 @@ where
 /// # Returns
 ///
 /// Community assignments for each node
+#[allow(dead_code)]
 pub fn label_propagation<F>(
     graph: &Graph<F>,
     max_iterations: usize,
@@ -436,6 +440,7 @@ where
 /// # Returns
 ///
 /// Community assignments for each node
+#[allow(dead_code)]
 pub fn girvan_newman<F>(graph: &Graph<F>, n_communities: usize) -> Result<Array1<usize>>
 where
     F: Float + FromPrimitive + Debug + 'static,
@@ -472,6 +477,7 @@ where
 }
 
 /// Calculate edge betweenness centrality for all edges
+#[allow(dead_code)]
 fn calculate_edge_betweenness<F>(graph: &Graph<F>) -> Result<HashMap<(usize, usize), f64>>
 where
     F: Float + FromPrimitive + Debug + 'static,
@@ -515,6 +521,7 @@ where
 }
 
 /// Find all shortest paths between two nodes using BFS
+#[allow(dead_code)]
 fn find_all_shortest_paths<F>(graph: &Graph<F>, source: usize, target: usize) -> Vec<Vec<usize>>
 where
     F: Float + FromPrimitive + Debug + 'static,
@@ -576,6 +583,7 @@ where
 }
 
 /// Remove an edge from the graph
+#[allow(dead_code)]
 fn remove_edge<F>(graph: &mut Graph<F>, node1: usize, node2: usize)
 where
     F: Float + FromPrimitive + Debug + 'static,
@@ -585,6 +593,7 @@ where
 }
 
 /// Check if the graph has any edges
+#[allow(dead_code)]
 fn has_edges<F>(graph: &Graph<F>) -> bool
 where
     F: Float + FromPrimitive + Debug + 'static,
@@ -596,6 +605,7 @@ where
 }
 
 /// Find connected components in the graph
+#[allow(dead_code)]
 fn find_connected_components<F>(graph: &Graph<F>) -> Vec<usize>
 where
     F: Float + FromPrimitive + Debug + 'static,
@@ -615,6 +625,7 @@ where
 }
 
 /// Depth-first search to mark connected component
+#[allow(dead_code)]
 fn dfs_component<F>(
     graph: &Graph<F>,
     node: usize,
@@ -635,6 +646,7 @@ fn dfs_component<F>(
 }
 
 /// Count the number of unique communities
+#[allow(dead_code)]
 fn count_communities(communities: &[usize]) -> usize {
     let mut unique: HashSet<usize> = HashSet::new();
     for &community in communities {
@@ -644,6 +656,7 @@ fn count_communities(communities: &[usize]) -> usize {
 }
 
 /// Helper function to calculate Euclidean distance between two points
+#[allow(dead_code)]
 fn euclidean_distance<F>(a: ArrayView1<F>, b: ArrayView1<F>) -> F
 where
     F: Float + std::iter::Sum,
@@ -702,6 +715,7 @@ impl Default for GraphClusteringConfig {
 /// # Returns
 ///
 /// Community assignments for each node
+#[allow(dead_code)]
 pub fn graph_clustering<F>(
     graph: &Graph<F>,
     config: &GraphClusteringConfig,

@@ -4,7 +4,8 @@
 
 use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
-use scirs2_core::error::CoreResult;
+// Unused import
+// use scirs2_core::error::CoreResult;
 
 /// Multi-armed bandit for optimization strategy selection
 #[derive(Debug, Clone)]
@@ -66,6 +67,7 @@ impl BanditOptimizer {
 }
 
 /// Bandit-based optimization function
+#[allow(dead_code)]
 pub fn bandit_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

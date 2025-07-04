@@ -355,6 +355,7 @@ impl<F: IntegrateFloat> SparseJacobian<F> {
 }
 
 /// Detect sparsity pattern by probing with finite differences
+#[allow(dead_code)]
 pub fn detect_sparsity<F, Func>(f: Func, x: ArrayView1<F>, eps: F) -> IntegrateResult<SparsePattern>
 where
     F: IntegrateFloat + Send + Sync,
@@ -483,6 +484,7 @@ impl<F: IntegrateFloat + Send + Sync> CSRJacobian<F> {
 }
 
 /// Compress a dense Jacobian using a sparsity pattern
+#[allow(dead_code)]
 pub fn compress_jacobian<F: IntegrateFloat>(
     dense: ArrayView2<F>,
     pattern: &SparsePattern,
@@ -497,6 +499,7 @@ pub fn compress_jacobian<F: IntegrateFloat>(
 }
 
 /// Compute sparse Jacobian using coloring
+#[allow(dead_code)]
 pub fn colored_jacobian<F, Func>(
     f: Func,
     x: ArrayView1<F>,
@@ -535,6 +538,7 @@ where
 }
 
 /// Example: Create a tridiagonal sparsity pattern
+#[allow(dead_code)]
 pub fn example_tridiagonal_pattern(n: usize) -> SparsePattern {
     let mut pattern = SparsePattern::new(n, n);
 
@@ -588,6 +592,7 @@ impl<F: IntegrateFloat> SparseJacobianUpdater<F> {
 }
 
 /// Adaptive sparsity detection with multiple perturbation sizes
+#[allow(dead_code)]
 pub fn detect_sparsity_adaptive<F, Func>(
     f: Func,
     x: ArrayView1<F>,

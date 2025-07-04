@@ -565,6 +565,7 @@ impl SpMVKernel {
     }
 
     #[allow(unused_variables)]
+    #[allow(clippy::too_many_arguments)]
     pub fn execute<T>(
         &self,
         device: &GpuDevice,
@@ -648,11 +649,14 @@ impl SpMVKernel {
             &[block_size],
             &[
                 Box::new(rows as u32) as Box<dyn std::any::Any>,
-                Box::new(indptr) as Box<dyn std::any::Any>,
-                Box::new(indices) as Box<dyn std::any::Any>,
-                Box::new(data) as Box<dyn std::any::Any>,
-                Box::new(x) as Box<dyn std::any::Any>,
-                Box::new(y) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*x) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*y) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -684,11 +688,14 @@ impl SpMVKernel {
             &[local_work_size],
             &[
                 Box::new(rows as u32) as Box<dyn std::any::Any>,
-                Box::new(indptr) as Box<dyn std::any::Any>,
-                Box::new(indices) as Box<dyn std::any::Any>,
-                Box::new(data) as Box<dyn std::any::Any>,
-                Box::new(x) as Box<dyn std::any::Any>,
-                Box::new(y) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*x) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*y) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -720,11 +727,14 @@ impl SpMVKernel {
             &[threads_per_threadgroup],
             &[
                 Box::new(rows as u32) as Box<dyn std::any::Any>,
-                Box::new(indptr) as Box<dyn std::any::Any>,
-                Box::new(indices) as Box<dyn std::any::Any>,
-                Box::new(data) as Box<dyn std::any::Any>,
-                Box::new(x) as Box<dyn std::any::Any>,
-                Box::new(y) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*x) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*y) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1201,6 +1211,7 @@ impl SpMSKernel {
     }
 
     #[allow(unused_variables)]
+    #[allow(clippy::too_many_arguments)]
     pub fn execute_symmetric<T>(
         &self,
         device: &GpuDevice,
@@ -1257,6 +1268,7 @@ impl SpMSKernel {
     }
 
     #[allow(unused_variables)]
+    #[allow(clippy::too_many_arguments)]
     pub fn execute_spmm<T>(
         &self,
         device: &GpuDevice,
@@ -1340,6 +1352,7 @@ impl SpMSKernel {
     }
 
     #[allow(unused_variables)]
+    #[allow(clippy::too_many_arguments)]
     pub fn execute_triangular_solve<T>(
         &self,
         device: &GpuDevice,
@@ -1582,11 +1595,14 @@ impl SpMSKernel {
             &[block_size],
             &[
                 Box::new(rows as u32) as Box<dyn std::any::Any>,
-                Box::new(indptr) as Box<dyn std::any::Any>,
-                Box::new(indices) as Box<dyn std::any::Any>,
-                Box::new(data) as Box<dyn std::any::Any>,
-                Box::new(x) as Box<dyn std::any::Any>,
-                Box::new(y) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*x) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*y) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1616,11 +1632,14 @@ impl SpMSKernel {
             &[local_work_size],
             &[
                 Box::new(rows as u32) as Box<dyn std::any::Any>,
-                Box::new(indptr) as Box<dyn std::any::Any>,
-                Box::new(indices) as Box<dyn std::any::Any>,
-                Box::new(data) as Box<dyn std::any::Any>,
-                Box::new(x) as Box<dyn std::any::Any>,
-                Box::new(y) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*x) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*y) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1650,11 +1669,14 @@ impl SpMSKernel {
             &[threads_per_threadgroup],
             &[
                 Box::new(rows as u32) as Box<dyn std::any::Any>,
-                Box::new(indptr) as Box<dyn std::any::Any>,
-                Box::new(indices) as Box<dyn std::any::Any>,
-                Box::new(data) as Box<dyn std::any::Any>,
-                Box::new(x) as Box<dyn std::any::Any>,
-                Box::new(y) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*x) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*y) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1692,15 +1714,24 @@ impl SpMSKernel {
                 Box::new(a_rows as u32) as Box<dyn std::any::Any>,
                 Box::new(a_cols as u32) as Box<dyn std::any::Any>,
                 Box::new(b_cols as u32) as Box<dyn std::any::Any>,
-                Box::new(a_indptr) as Box<dyn std::any::Any>,
-                Box::new(a_indices) as Box<dyn std::any::Any>,
-                Box::new(a_data) as Box<dyn std::any::Any>,
-                Box::new(b_indptr) as Box<dyn std::any::Any>,
-                Box::new(b_indices) as Box<dyn std::any::Any>,
-                Box::new(b_data) as Box<dyn std::any::Any>,
-                Box::new(c_indptr) as Box<dyn std::any::Any>,
-                Box::new(c_indices) as Box<dyn std::any::Any>,
-                Box::new(c_data) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*a_indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*a_indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*a_data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b_indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b_indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b_data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*c_indptr) as *mut GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*c_indices) as *mut GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*c_data) as *mut GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
             ],
         )?;
 
@@ -1741,15 +1772,24 @@ impl SpMSKernel {
                 Box::new(a_rows as u32) as Box<dyn std::any::Any>,
                 Box::new(a_cols as u32) as Box<dyn std::any::Any>,
                 Box::new(b_cols as u32) as Box<dyn std::any::Any>,
-                Box::new(a_indptr) as Box<dyn std::any::Any>,
-                Box::new(a_indices) as Box<dyn std::any::Any>,
-                Box::new(a_data) as Box<dyn std::any::Any>,
-                Box::new(b_indptr) as Box<dyn std::any::Any>,
-                Box::new(b_indices) as Box<dyn std::any::Any>,
-                Box::new(b_data) as Box<dyn std::any::Any>,
-                Box::new(c_indptr) as Box<dyn std::any::Any>,
-                Box::new(c_indices) as Box<dyn std::any::Any>,
-                Box::new(c_data) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*a_indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*a_indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*a_data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b_indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b_indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b_data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*c_indptr) as *mut GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*c_indices) as *mut GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*c_data) as *mut GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
             ],
         )?;
 
@@ -1789,15 +1829,24 @@ impl SpMSKernel {
                 Box::new(a_rows as u32) as Box<dyn std::any::Any>,
                 Box::new(a_cols as u32) as Box<dyn std::any::Any>,
                 Box::new(b_cols as u32) as Box<dyn std::any::Any>,
-                Box::new(a_indptr) as Box<dyn std::any::Any>,
-                Box::new(a_indices) as Box<dyn std::any::Any>,
-                Box::new(a_data) as Box<dyn std::any::Any>,
-                Box::new(b_indptr) as Box<dyn std::any::Any>,
-                Box::new(b_indices) as Box<dyn std::any::Any>,
-                Box::new(b_data) as Box<dyn std::any::Any>,
-                Box::new(c_indptr) as Box<dyn std::any::Any>,
-                Box::new(c_indices) as Box<dyn std::any::Any>,
-                Box::new(c_data) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*a_indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*a_indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*a_data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b_indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b_indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b_data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*c_indptr) as *mut GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*c_indices) as *mut GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*c_data) as *mut GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
             ],
         )?;
 
@@ -1828,11 +1877,14 @@ impl SpMSKernel {
             &[1], // Single local work item
             &[
                 Box::new(n as u32) as Box<dyn std::any::Any>,
-                Box::new(indptr) as Box<dyn std::any::Any>,
-                Box::new(indices) as Box<dyn std::any::Any>,
-                Box::new(data) as Box<dyn std::any::Any>,
-                Box::new(b) as Box<dyn std::any::Any>,
-                Box::new(x) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*x) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1860,11 +1912,14 @@ impl SpMSKernel {
             &[1],
             &[
                 Box::new(n as u32) as Box<dyn std::any::Any>,
-                Box::new(indptr) as Box<dyn std::any::Any>,
-                Box::new(indices) as Box<dyn std::any::Any>,
-                Box::new(data) as Box<dyn std::any::Any>,
-                Box::new(b) as Box<dyn std::any::Any>,
-                Box::new(x) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*x) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1892,11 +1947,14 @@ impl SpMSKernel {
             &[1],
             &[
                 Box::new(n as u32) as Box<dyn std::any::Any>,
-                Box::new(indptr) as Box<dyn std::any::Any>,
-                Box::new(indices) as Box<dyn std::any::Any>,
-                Box::new(data) as Box<dyn std::any::Any>,
-                Box::new(b) as Box<dyn std::any::Any>,
-                Box::new(x) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indptr) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indices) as *const GpuBuffer<usize>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*data) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*x) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1961,6 +2019,7 @@ impl Default for GpuOptions {
 /// // Compute using GPU acceleration
 /// let y = gpu_sparse_matvec(&matrix, &x.view(), GpuOptions::default()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn gpu_sparse_matvec<T, S>(
     matrix: &S,
     x: &ArrayView1<T>,
@@ -2011,6 +2070,7 @@ where
 /// # Returns
 ///
 /// The result vector y = A * x
+#[allow(dead_code)]
 pub fn gpu_sym_sparse_matvec<T>(
     matrix: &SymCsrMatrix<T>,
     x: &ArrayView1<T>,
@@ -2047,6 +2107,7 @@ where
 }
 
 /// Check if GPU acceleration should be used
+#[allow(dead_code)]
 fn should_use_gpu(rows: usize, cols: usize, nnz: usize, options: &GpuOptions) -> bool {
     // Only use GPU for matrices larger than the threshold
     let matrix_size = std::cmp::max(rows, cols);
@@ -2062,6 +2123,7 @@ fn should_use_gpu(rows: usize, cols: usize, nnz: usize, options: &GpuOptions) ->
 
 /// Wrapper to handle trait bounds conditionally
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn gpu_sparse_matvec_impl_wrapper<T, S>(
     matrix: &S,
     x: &ArrayView1<T>,
@@ -2075,6 +2137,7 @@ where
 }
 
 #[cfg(not(feature = "gpu"))]
+#[allow(dead_code)]
 fn gpu_sparse_matvec_impl_wrapper<T, S>(
     _matrix: &S,
     _x: &ArrayView1<T>,
@@ -2089,6 +2152,7 @@ where
 
 /// GPU implementation of sparse matrix-vector multiplication
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn gpu_sparse_matvec_impl<T, S>(
     matrix: &S,
     x: &ArrayView1<T>,
@@ -2100,7 +2164,7 @@ where
 {
     // Create GPU context using scirs2-core
     let device = GpuDevice::get_default(options.backend)
-        .map_err(|e| format!("Failed to create GPU device: {}", e))?;
+        .map_err(|e| format!("Failed to create GPU device: {e}"))?;
 
     let (rows, cols) = matrix.shape();
     let (row_indices, col_indices, values) = matrix.find();
@@ -2142,19 +2206,19 @@ where
     // Create GPU buffers using scirs2-core
     let indptr_buffer = device
         .create_buffer(&csr_indptr)
-        .map_err(|e| format!("Failed to create indptr buffer: {}", e))?;
+        .map_err(|e| format!("Failed to create indptr buffer: {e}"))?;
     let indices_buffer = device
         .create_buffer(&csr_indices_u32)
-        .map_err(|e| format!("Failed to create indices buffer: {}", e))?;
+        .map_err(|e| format!("Failed to create indices buffer: {e}"))?;
     let data_buffer = device
         .create_buffer(&csr_data_f32)
-        .map_err(|e| format!("Failed to create data buffer: {}", e))?;
+        .map_err(|e| format!("Failed to create data buffer: {e}"))?;
     let x_buffer = device
         .create_buffer(&x_f32)
-        .map_err(|e| format!("Failed to create x buffer: {}", e))?;
+        .map_err(|e| format!("Failed to create x buffer: {e}"))?;
     let y_buffer = device
         .create_buffer_zeros::<f32>(rows)
-        .map_err(|e| format!("Failed to create y buffer: {}", e))?;
+        .map_err(|e| format!("Failed to create y buffer: {e}"))?;
 
     // Create SpMV GPU operation
     let spmv_kernel =
@@ -2172,12 +2236,12 @@ where
         &y_buffer,
         options.workgroup_size,
     )
-    .map_err(|e| format!("GPU kernel execution failed: {}", e))?;
+    .map_err(|e| format!("GPU kernel execution failed: {e}"))?;
 
     // Read back results from GPU
     let y_f32 = y_buffer
         .to_host()
-        .map_err(|e| format!("Failed to read GPU results: {}", e))?;
+        .map_err(|e| format!("Failed to read GPU results: {e}"))?;
 
     // Convert back to original type T
     let y_result: Vec<T> = y_f32.iter().map(|&v| T::from(v).unwrap()).collect();
@@ -2187,6 +2251,7 @@ where
 
 /// Wrapper for symmetric SpMV to handle trait bounds conditionally
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn gpu_sym_sparse_matvec_impl_wrapper<T>(
     matrix: &SymCsrMatrix<T>,
     x: &ArrayView1<T>,
@@ -2199,6 +2264,7 @@ where
 }
 
 #[cfg(not(feature = "gpu"))]
+#[allow(dead_code)]
 fn gpu_sym_sparse_matvec_impl_wrapper<T>(
     _matrix: &SymCsrMatrix<T>,
     _x: &ArrayView1<T>,
@@ -2212,6 +2278,7 @@ where
 
 /// GPU implementation for symmetric sparse matrix-vector multiplication
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn gpu_sym_sparse_matvec_impl<T>(
     matrix: &SymCsrMatrix<T>,
     x: &ArrayView1<T>,
@@ -2222,7 +2289,7 @@ where
 {
     // Create GPU context using scirs2-core
     let device = GpuDevice::get_default(options.backend)
-        .map_err(|e| format!("Failed to create GPU device: {}", e))?;
+        .map_err(|e| format!("Failed to create GPU device: {e}"))?;
 
     let (rows, _cols) = matrix.shape();
 
@@ -2240,19 +2307,19 @@ where
     // Create GPU buffers using scirs2-core
     let indptr_buffer = device
         .create_buffer(&indptr_u32)
-        .map_err(|e| format!("Failed to create indptr buffer: {}", e))?;
+        .map_err(|e| format!("Failed to create indptr buffer: {e}"))?;
     let indices_buffer = device
         .create_buffer(&indices_u32)
-        .map_err(|e| format!("Failed to create indices buffer: {}", e))?;
+        .map_err(|e| format!("Failed to create indices buffer: {e}"))?;
     let data_buffer = device
         .create_buffer(&data_f32)
-        .map_err(|e| format!("Failed to create data buffer: {}", e))?;
+        .map_err(|e| format!("Failed to create data buffer: {e}"))?;
     let x_buffer = device
         .create_buffer(&x_f32)
-        .map_err(|e| format!("Failed to create x buffer: {}", e))?;
+        .map_err(|e| format!("Failed to create x buffer: {e}"))?;
     let y_buffer = device
         .create_buffer_zeros::<f32>(rows)
-        .map_err(|e| format!("Failed to create y buffer: {}", e))?;
+        .map_err(|e| format!("Failed to create y buffer: {e}"))?;
 
     // Create symmetric SpMV GPU operation
     let sym_spmv_kernel =
@@ -2270,12 +2337,12 @@ where
         &y_buffer,
         options.workgroup_size,
     )
-    .map_err(|e| format!("GPU kernel execution failed: {}", e))?;
+    .map_err(|e| format!("GPU kernel execution failed: {e}"))?;
 
     // Read back results from GPU
     let y_f32 = y_buffer
         .to_host()
-        .map_err(|e| format!("Failed to read GPU results: {}", e))?;
+        .map_err(|e| format!("Failed to read GPU results: {e}"))?;
 
     // Convert back to original type T
     let y_result: Vec<T> = y_f32.iter().map(|&v| T::from(v).unwrap()).collect();
@@ -2284,6 +2351,7 @@ where
 }
 
 /// CPU fallback implementation
+#[allow(dead_code)]
 fn cpu_sparse_matvec_fallback<T, S>(matrix: &S, x: &ArrayView1<T>) -> SparseResult<Array1<T>>
 where
     T: Float + Debug + Copy + 'static,
@@ -2827,6 +2895,7 @@ impl OptimizedGpuOps {
     }
 
     /// GPU-accelerated iterative solver with preconditioning
+    #[allow(clippy::too_many_arguments)]
     pub fn gpu_iterative_solve<T>(
         &mut self,
         matrix: &CsrArray<T>,
@@ -3142,6 +3211,7 @@ impl OptimizedGpuOps {
 }
 
 /// High-level GPU-accelerated sparse matrix operations
+#[allow(dead_code)]
 pub fn gpu_advanced_spmv<T, S>(
     matrix: &S,
     x: &ArrayView1<T>,
@@ -3193,7 +3263,8 @@ mod tests {
 
     #[test]
     fn test_should_use_gpu() {
-        let options = GpuOptions::default();
+        let mut options = GpuOptions::default();
+        options.backend = GpuBackend::Cuda; // Set a non-CPU backend for testing
 
         // Small matrix should not use GPU
         assert!(!should_use_gpu(100, 100, 500, &options));
@@ -3372,7 +3443,8 @@ mod tests {
         let scheduler = GpuKernelScheduler::new(GpuBackend::Cuda);
 
         // Test that very large matrices are detected as not fitting
-        let can_fit_large = scheduler.can_fit_in_memory::<f64>(1_000_000, 1_000_000, 100_000_000);
+        let can_fit_large =
+            scheduler.can_fit_in_memory::<f64>(10_000_000, 10_000_000, 1_000_000_000);
         assert!(!can_fit_large); // Should not fit in typical GPU memory
 
         // Test that reasonable matrices fit

@@ -11,6 +11,7 @@ use scirs2_special::{
     ellip_normal,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌍 Ellipsoidal Harmonics Functions Demo");
     println!("==========================================");

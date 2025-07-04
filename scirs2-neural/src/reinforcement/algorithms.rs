@@ -499,6 +499,7 @@ impl RLAlgorithm for RLAlgorithmImpl {
     fn load(&mut self, _path: &str) -> Result<()> {
         // Simplified - no loading implementation
 /// Helper function to create common RL algorithms
+#[allow(dead_code)]
 pub fn create_algorithm(
     algorithm_name: &str,
     state_dim: usize,

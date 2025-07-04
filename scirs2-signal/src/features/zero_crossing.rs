@@ -3,6 +3,7 @@ use crate::features::options::FeatureOptions;
 use std::collections::HashMap;
 
 /// Extract zero-crossing-based features from a time series
+#[allow(dead_code)]
 pub fn extract_zero_crossing_features(
     signal: &[f64],
     options: &FeatureOptions,

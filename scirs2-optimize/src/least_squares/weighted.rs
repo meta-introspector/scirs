@@ -121,6 +121,7 @@ impl Default for WeightedOptions {
 /// # Returns
 ///
 /// * `OptimizeResults` containing the optimization results
+#[allow(dead_code)]
 pub fn weighted_least_squares<F, J, D, S1, S2, S3>(
     residuals: F,
     x0: &ArrayBase<S1, Ix1>,
@@ -155,6 +156,7 @@ where
 }
 
 /// Weighted Gauss-Newton implementation
+#[allow(dead_code)]
 fn weighted_gauss_newton<F, J, D, S1, S2, S3>(
     residuals: F,
     x0: &ArrayBase<S1, Ix1>,
@@ -243,7 +245,7 @@ where
 
         // Check convergence on gradient
         if gradient.iter().all(|&g| g.abs() < options.gtol) {
-            let mut result = OptimizeResults::default();
+            let mut result = OptimizeResults::<f64>::default();
             result.x = x;
             result.fun = cost;
             result.nfev = nfev;
@@ -288,7 +290,7 @@ where
                 let x_norm = x.iter().map(|&xi| xi * xi).sum::<f64>().sqrt();
 
                 if step_norm < options.xtol * (1.0 + x_norm) {
-                    let mut result = OptimizeResults::default();
+                    let mut result = OptimizeResults::<f64>::default();
                     result.x = best_x;
                     result.fun = best_cost;
                     result.nfev = nfev;
@@ -301,7 +303,7 @@ where
 
                 // Check convergence on cost function
                 if (cost - best_cost).abs() < options.ftol * cost {
-                    let mut result = OptimizeResults::default();
+                    let mut result = OptimizeResults::<f64>::default();
                     result.x = best_x;
                     result.fun = best_cost;
                     result.nfev = nfev;
@@ -316,7 +318,7 @@ where
             }
             None => {
                 // Singular matrix, terminate
-                let mut result = OptimizeResults::default();
+                let mut result = OptimizeResults::<f64>::default();
                 result.x = x;
                 result.fun = cost;
                 result.nfev = nfev;
@@ -336,7 +338,7 @@ where
     let weighted_res_final = &res_final * &sqrt_weights;
     let final_cost = 0.5 * weighted_res_final.iter().map(|&r| r * r).sum::<f64>();
 
-    let mut result = OptimizeResults::default();
+    let mut result = OptimizeResults::<f64>::default();
     result.x = x;
     result.fun = final_cost;
     result.nfev = nfev;
@@ -349,6 +351,7 @@ where
 }
 
 /// Simple linear system solver (same as in robust.rs)
+#[allow(dead_code)]
 fn solve(a: &Array2<f64>, b: &Array1<f64>) -> Option<Array1<f64>> {
     use scirs2_linalg::solve;
 

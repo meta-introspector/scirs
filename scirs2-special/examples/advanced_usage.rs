@@ -8,6 +8,7 @@ use ndarray::Array1;
 use scirs2_special::*;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Advanced Usage Patterns ===\n");
 
@@ -27,6 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn numerical_analysis_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Numerical Analysis Applications");
     println!("==================================");
@@ -66,6 +68,7 @@ fn numerical_analysis_demo() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn statistical_computing_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("2. Statistical Computing");
     println!("========================");
@@ -120,6 +123,7 @@ fn statistical_computing_demo() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn physics_applications_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("3. Physics and Engineering Applications");
     println!("=======================================");
@@ -167,6 +171,7 @@ fn physics_applications_demo() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn optimization_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("4. Optimization and Root Finding");
     println!("===============================");

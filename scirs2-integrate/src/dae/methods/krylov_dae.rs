@@ -36,6 +36,7 @@ const GMRES_TOL: f64 = 1e-8;
 /// The semi-explicit form is:
 /// x' = f(x, y, t)
 /// 0 = g(x, y, t)
+#[allow(dead_code)]
 pub fn krylov_bdf_semi_explicit_dae<F, FFunc, GFunc>(
     f: FFunc,
     g: GFunc,
@@ -562,6 +563,7 @@ where
 ///
 /// The fully implicit form is:
 /// F(t, y, y') = 0
+#[allow(dead_code)]
 pub fn krylov_bdf_implicit_dae<F, FFunc>(
     f: FFunc,
     t_span: [F; 2],
@@ -1024,6 +1026,7 @@ where
 ///
 /// # Returns
 /// * The solution vector and the number of iterations taken
+#[allow(dead_code)]
 fn gmres_solver<F>(
     matvec: impl Fn(&Array1<F>) -> Array1<F>,
     b: &Array1<F>,
@@ -1125,6 +1128,7 @@ where
 ///
 /// # Returns
 /// * Upper Hessenberg matrix, Krylov vectors, residual norm, iteration count
+#[allow(dead_code)]
 fn arnoldi_process<F>(
     matvec: &impl Fn(&Array1<F>) -> Array1<F>,
     preconditioner: &Option<impl Fn(&Array1<F>) -> Array1<F>>,
@@ -1216,6 +1220,7 @@ where
 }
 
 /// Compute the dot product of two vectors
+#[allow(dead_code)]
 fn dot<F>(a: &Array1<F>, b: &Array1<F>) -> F
 where
     F: IntegrateFloat,
@@ -1226,6 +1231,7 @@ where
 }
 
 /// Compute a Givens rotation matrix that zeros out an entry
+#[allow(dead_code)]
 fn givens_rotation<F>(a: F, b: F) -> (F, F)
 where
     F: IntegrateFloat,
@@ -1246,6 +1252,7 @@ where
 }
 
 /// Solve an upper triangular system Rx = b
+#[allow(dead_code)]
 fn solve_upper_triangular<F>(r: &Array2<F>, g: &F, n: usize) -> Array1<F>
 where
     F: IntegrateFloat,
@@ -1266,6 +1273,7 @@ where
 }
 
 /// Predict the next state for semi-explicit DAE using extrapolation
+#[allow(dead_code)]
 fn predict_step<F>(
     x_history: &[Array1<F>],
     y_history: &[Array1<F>],
@@ -1330,6 +1338,7 @@ where
 }
 
 /// Predict the next state for fully implicit DAE
+#[allow(dead_code)]
 fn predict_fully_implicit<F>(y_history: &[Array1<F>], order: usize) -> Array1<F>
 where
     F: IntegrateFloat,
@@ -1358,6 +1367,7 @@ where
 }
 
 /// Compute the Jacobian of a function with respect to x variables
+#[allow(dead_code)]
 fn compute_jacobian_x<F, Func>(
     f: &Func,
     t: F,
@@ -1405,6 +1415,7 @@ where
 }
 
 /// Compute the Jacobian of a function with respect to y variables
+#[allow(dead_code)]
 fn compute_jacobian_y<F, Func>(
     f: &Func,
     t: F,
@@ -1452,6 +1463,7 @@ where
 }
 
 /// Compute the Jacobian of a function with respect to y for implicit DAE
+#[allow(dead_code)]
 fn compute_jacobian_y_implicit<F, Func>(
     f: &Func,
     t: F,
@@ -1499,6 +1511,7 @@ where
 }
 
 /// Compute the Jacobian of a function with respect to y' for implicit DAE
+#[allow(dead_code)]
 fn compute_jacobian_yprime_implicit<F, Func>(
     f: &Func,
     t: F,

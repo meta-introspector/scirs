@@ -508,6 +508,7 @@ impl LearnedOptimizer for MetaLearningOptimizer {
 }
 
 /// Convenience function for meta-learning optimization
+#[allow(dead_code)]
 pub fn meta_learning_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

@@ -314,6 +314,7 @@ impl Sequential {
     }
 }
 
+#[allow(dead_code)]
 fn test_activations() -> Result<()> {
     println!("🧮 Testing Activation Functions");
     println!("{}", "-".repeat(30));
@@ -338,6 +339,7 @@ fn test_activations() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_layers() -> Result<()> {
     println!("\n🔧 Testing Individual Layers");
     println!("{}", "-".repeat(30));
@@ -362,6 +364,7 @@ fn test_layers() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_sequential_model() -> Result<()> {
     println!("\n🏗️ Testing Sequential Model");
     println!("{}", "-".repeat(30));
@@ -404,6 +407,7 @@ fn test_sequential_model() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_training_vs_inference() -> Result<()> {
     println!("\n🎯 Testing Training vs Inference Mode");
     println!("{}", "-".repeat(40));
@@ -428,6 +432,7 @@ fn test_training_vs_inference() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🧠 SciRS2 Neural Network Infrastructure Demo");
     println!("{}", "=".repeat(50));

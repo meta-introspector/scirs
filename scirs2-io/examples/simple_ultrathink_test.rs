@@ -7,6 +7,7 @@ use scirs2_io::error::Result;
 use scirs2_io::ultrathink_coordinator::UltraThinkCoordinator;
 use scirs2_io::ultrathink_enhanced_algorithms::AdvancedPatternRecognizer;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🧪 Simple Ultra-Think Test");
     println!("========================\n");

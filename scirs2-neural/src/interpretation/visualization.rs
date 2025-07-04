@@ -199,6 +199,7 @@ where
                 flow_scores.push(0.0);
         Ok(flow_scores)
 /// Generate feature visualization using specified method
+#[allow(dead_code)]
 pub fn generate_feature_visualization<F>(
     method: &VisualizationMethod,
     input_shape: &[usize],
@@ -266,6 +267,7 @@ pub fn generate_feature_visualization<F>(
                 visualization_data: dissection_result,
                 quality_score: 0.75,
 /// Perform network dissection analysis
+#[allow(dead_code)]
 pub fn perform_network_dissection(
     layer_name: String,
     layer_activations: &ArrayD<f32>,
@@ -307,6 +309,7 @@ pub fn perform_network_dissection(
         concept_coverage,
     })
 /// Create attention heatmap for visualization
+#[allow(dead_code)]
 pub fn create_attention_heatmap<F>(
     attention_weights: &ArrayD<F>,
     token_labels: &[String],

@@ -5,6 +5,7 @@ use scirs2_interpolate::{
     HermiteSpline,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Hermite Splines Example");
     println!("======================\n");

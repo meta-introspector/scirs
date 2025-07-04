@@ -781,6 +781,7 @@ impl Dataset {
 }
 
 /// Create a multi-layer neural network
+#[allow(dead_code)]
 fn create_neural_network(
     input_dim: usize,
     hidden_dims: &[usize],
@@ -831,6 +832,7 @@ fn create_neural_network(
 }
 
 /// Create synthetic dataset for testing
+#[allow(dead_code)]
 fn create_synthetic_dataset(
     n_samples: usize,
     input_dim: usize,
@@ -853,6 +855,7 @@ fn create_synthetic_dataset(
 }
 
 /// Benchmark different optimizers on neural networks
+#[allow(dead_code)]
 fn benchmark_burn_optimizers() -> Result<()> {
     println!("\n🏁 Benchmarking Burn integration optimizers...");
 
@@ -948,6 +951,7 @@ fn benchmark_burn_optimizers() -> Result<()> {
 }
 
 /// Advanced Burn features demonstration
+#[allow(dead_code)]
 fn demonstrate_burn_advanced_features() -> Result<()> {
     println!("\n🔬 Demonstrating advanced Burn integration features...");
 
@@ -1035,6 +1039,7 @@ fn demonstrate_burn_advanced_features() -> Result<()> {
 }
 
 /// Performance comparison with different architectures
+#[allow(dead_code)]
 fn architecture_performance_comparison() -> Result<()> {
     println!("\n📈 Architecture Performance Comparison:");
 
@@ -1094,6 +1099,7 @@ fn architecture_performance_comparison() -> Result<()> {
 }
 
 /// Test Burn framework compatibility
+#[allow(dead_code)]
 fn test_burn_compatibility() -> Result<()> {
     println!("\n🔧 Burn Framework Compatibility Testing:");
 
@@ -1126,6 +1132,7 @@ fn test_burn_compatibility() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🔥 Scirs2-Optim + Burn Framework Integration Example");
     println!("====================================================");

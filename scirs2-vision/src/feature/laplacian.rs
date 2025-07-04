@@ -36,6 +36,7 @@ use ndarray::Array2;
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn laplacian_edges(
     img: &DynamicImage,
     threshold: f32,
@@ -99,6 +100,7 @@ pub fn laplacian_edges(
 /// # Returns
 ///
 /// * Result containing an edge image
+#[allow(dead_code)]
 pub fn laplacian_of_gaussian(img: &DynamicImage, sigma: f32, threshold: f32) -> Result<GrayImage> {
     use crate::preprocessing::gaussian_blur;
 
@@ -121,6 +123,7 @@ pub fn laplacian_of_gaussian(img: &DynamicImage, sigma: f32, threshold: f32) -> 
 /// # Returns
 ///
 /// * Result containing an edge image with zero-crossings marked
+#[allow(dead_code)]
 pub fn laplacian_zero_crossing(img: &DynamicImage, use_diagonal: bool) -> Result<GrayImage> {
     let array = image_to_array(img)?;
     let (height, width) = array.dim();

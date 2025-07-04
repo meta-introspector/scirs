@@ -272,6 +272,7 @@ impl PerformanceMonitor {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Starting Performance Monitor for scirs2-special");
     println!("This will benchmark core special functions for regression detection.\n");
@@ -376,6 +377,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_ci_analysis(monitor: &PerformanceMonitor) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📋 Creating CI/CD analysis...");
 

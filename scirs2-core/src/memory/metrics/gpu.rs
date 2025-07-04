@@ -196,6 +196,7 @@ impl TrackedGpuContext {
 ///
 /// This sets up tracking hooks for CUDA, WebGPU, Metal, and OpenCL backends
 /// and reports memory allocations and deallocations to the memory metrics system.
+#[allow(dead_code)]
 pub fn setup_gpu_memory_tracking() {
     // In a real implementation, this would set up hooks to track GPU memory
     // This would be different for each backend

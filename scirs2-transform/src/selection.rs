@@ -860,7 +860,7 @@ mod tests {
 
     // Helper function for correlation
     fn pearson_correlation(x: &Array1<f64>, y: &Array1<f64>) -> f64 {
-        #[allow(dead_code)]
+        #[allow(unused_variables)]
         let n = x.len() as f64;
         let x_mean = x.mean().unwrap_or(0.0);
         let y_mean = y.mean().unwrap_or(0.0);

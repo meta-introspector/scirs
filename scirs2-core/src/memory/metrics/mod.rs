@@ -78,23 +78,27 @@ static GLOBAL_METRICS_COLLECTOR: Lazy<Arc<MemoryMetricsCollector>> =
     Lazy::new(|| Arc::new(MemoryMetricsCollector::new(MemoryMetricsConfig::default())));
 
 /// Get the global memory metrics collector
+#[allow(dead_code)]
 pub fn global_metrics_collector() -> Arc<MemoryMetricsCollector> {
     GLOBAL_METRICS_COLLECTOR.clone()
 }
 
 /// Track a memory allocation event in the global collector
+#[allow(dead_code)]
 pub fn track_allocation(component: impl Into<String>, size: usize, address: usize) {
     let event = MemoryEvent::new(MemoryEventType::Allocation, component, size, address);
     GLOBAL_METRICS_COLLECTOR.record_event(event);
 }
 
 /// Track a memory deallocation event in the global collector
+#[allow(dead_code)]
 pub fn track_deallocation(component: impl Into<String>, size: usize, address: usize) {
     let event = MemoryEvent::new(MemoryEventType::Deallocation, component, size, address);
     GLOBAL_METRICS_COLLECTOR.record_event(event);
 }
 
 /// Track a memory resize event in the global collector
+#[allow(dead_code)]
 pub fn track_resize(
     component: impl Into<String>,
     new_size: usize,
@@ -107,16 +111,19 @@ pub fn track_resize(
 }
 
 /// Generate a memory report from the global collector
+#[allow(dead_code)]
 pub fn generate_memory_report() -> MemoryReport {
     GLOBAL_METRICS_COLLECTOR.generate_report()
 }
 
 /// Format the current memory report as a string
+#[allow(dead_code)]
 pub fn format_memory_report() -> String {
     GLOBAL_METRICS_COLLECTOR.generate_report().format()
 }
 
 /// Reset the global memory metrics collector
+#[allow(dead_code)]
 pub fn reset_memory_metrics() {
     GLOBAL_METRICS_COLLECTOR.reset();
 }

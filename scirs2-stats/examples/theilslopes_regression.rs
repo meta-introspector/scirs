@@ -2,6 +2,7 @@ use ndarray::array;
 use plotters::prelude::*;
 use scirs2_stats::theilslopes;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Theil-Sen Robust Regression Example");
     println!("===================================\n");

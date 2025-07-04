@@ -280,8 +280,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for GRU<
         let input_shape = input.shape();
         if input_shape.len() != 3 {
             return Err(NeuralError::InferenceError(format!(
-                "Expected 3D input [batch_size, seq_len, features], got {:?}",
-                input_shape
+                "Expected 3D input [batch_size, seq_len, features], got {input_shape:?}"
             )));
         }
         let batch_size = input_shape[0];
@@ -459,8 +458,8 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> ParamLayer<F> for
 mod tests {
     use super::*;
     use ndarray::Array3;
-    use rand::rngs::SmallRng;
-    use rand::SeedableRng;
+    use ndarray_rand::rand::rngs::SmallRng;
+    use ndarray_rand::rand::SeedableRng;
 
     #[test]
     fn test_gru_shape() {

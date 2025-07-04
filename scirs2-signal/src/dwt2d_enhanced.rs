@@ -136,6 +136,7 @@ impl Default for Dwt2dConfig {
 /// # Returns
 ///
 /// * Enhanced decomposition result
+#[allow(dead_code)]
 pub fn enhanced_dwt2d_decompose(
     data: &Array2<f64>,
     wavelet: Wavelet,
@@ -233,6 +234,7 @@ pub fn enhanced_dwt2d_decompose(
 }
 
 /// Parallel 2D DWT decomposition
+#[allow(dead_code)]
 fn parallel_dwt2d_decompose(
     data: &Array2<f64>,
     filters: &WaveletFilters,
@@ -341,6 +343,7 @@ fn parallel_dwt2d_decompose(
 }
 
 /// SIMD-optimized 2D DWT decomposition
+#[allow(dead_code)]
 fn simd_dwt2d_decompose(
     data: &Array2<f64>,
     filters: &WaveletFilters,
@@ -434,6 +437,7 @@ fn simd_dwt2d_decompose(
 }
 
 /// Standard 2D DWT decomposition (fallback)
+#[allow(dead_code)]
 fn standard_dwt2d_decompose(
     data: &Array2<f64>,
     filters: &WaveletFilters,
@@ -444,6 +448,7 @@ fn standard_dwt2d_decompose(
 }
 
 /// Apply filters using advanced SIMD operations with production optimizations
+#[allow(dead_code)]
 fn apply_filters_simd(
     signal: &[f64],
     lo_filter: &[f64],
@@ -619,6 +624,7 @@ fn apply_filters_scalar_optimized(
 }
 
 /// Apply boundary padding based on mode
+#[allow(dead_code)]
 fn apply_boundary_padding(signal: &[f64], filter_len: usize, mode: BoundaryMode) -> Vec<f64> {
     let pad_len = filter_len / 2;
     let n = signal.len();
@@ -700,6 +706,7 @@ fn apply_boundary_padding(signal: &[f64], filter_len: usize, mode: BoundaryMode)
 }
 
 /// Downsample by factor of 2
+#[allow(dead_code)]
 fn downsample(signal: &[f64]) -> Vec<f64> {
     signal.iter().step_by(2).cloned().collect()
 }
@@ -719,6 +726,7 @@ pub struct MultilevelDwt2d {
 }
 
 /// Perform multilevel 2D DWT decomposition
+#[allow(dead_code)]
 pub fn wavedec2_enhanced(
     data: &Array2<f64>,
     wavelet: Wavelet,
@@ -761,6 +769,7 @@ pub fn wavedec2_enhanced(
 }
 
 /// Memory-optimized 2D DWT decomposition for large images
+#[allow(dead_code)]
 fn memory_optimized_dwt2d_decompose(
     data: &Array2<f64>,
     filters: &WaveletFilters,
@@ -864,6 +873,7 @@ fn memory_optimized_dwt2d_decompose(
 }
 
 /// Process a single block for memory-optimized DWT
+#[allow(dead_code)]
 fn process_dwt2d_block(
     block: &Array2<f64>,
     filters: &WaveletFilters,
@@ -893,6 +903,7 @@ fn process_dwt2d_block(
 }
 
 /// Process a single block with ArrayView for memory-optimized DWT (zero-copy when possible)
+#[allow(dead_code)]
 fn process_dwt2d_block_view(
     block: &ArrayView2<f64>,
     filters: &WaveletFilters,
@@ -906,6 +917,7 @@ fn process_dwt2d_block_view(
 }
 
 /// Compute quality metrics for 2D DWT
+#[allow(dead_code)]
 fn compute_dwt2d_quality_metrics(
     original: &Array2<f64>,
     result: &EnhancedDwt2dResult,
@@ -965,6 +977,7 @@ fn compute_dwt2d_quality_metrics(
 }
 
 /// Compute edge preservation metric
+#[allow(dead_code)]
 fn compute_edge_preservation_metric(
     original: &Array2<f64>,
     result: &EnhancedDwt2dResult,
@@ -1014,6 +1027,7 @@ fn compute_edge_preservation_metric(
 }
 
 /// Enhanced 2D DWT reconstruction with error correction
+#[allow(dead_code)]
 pub fn enhanced_dwt2d_reconstruct(
     result: &EnhancedDwt2dResult,
     wavelet: Wavelet,
@@ -1034,6 +1048,7 @@ pub fn enhanced_dwt2d_reconstruct(
 }
 
 /// Parallel enhanced reconstruction
+#[allow(dead_code)]
 fn enhanced_parallel_dwt2d_reconstruct(
     result: &EnhancedDwt2dResult,
     filters: &WaveletFilters,
@@ -1132,6 +1147,7 @@ fn enhanced_parallel_dwt2d_reconstruct(
 }
 
 /// SIMD enhanced reconstruction
+#[allow(dead_code)]
 fn enhanced_simd_dwt2d_reconstruct(
     result: &EnhancedDwt2dResult,
     filters: &WaveletFilters,
@@ -1213,6 +1229,7 @@ fn enhanced_simd_dwt2d_reconstruct(
 }
 
 /// Enhanced 1D reconstruction with advanced SIMD optimization
+#[allow(dead_code)]
 fn reconstruct_1d_simd(lo: &[f64], hi: &[f64], lo_filter: &[f64], hi_filter: &[f64]) -> Vec<f64> {
     use ndarray::ArrayView1;
 
@@ -1272,6 +1289,7 @@ fn reconstruct_1d_simd(lo: &[f64], hi: &[f64], lo_filter: &[f64], hi_filter: &[f
 }
 
 /// SIMD-optimized convolution with accumulation
+#[allow(dead_code)]
 fn simd_convolution_accumulate(
     signal: &ArrayView1<f64>,
     filter: &ArrayView1<f64>,
@@ -1357,6 +1375,7 @@ fn simd_convolution_accumulate(
 }
 
 /// Upsample signal by inserting zeros
+#[allow(dead_code)]
 fn upsample(signal: &[f64]) -> Vec<f64> {
     let mut upsampled = Vec::with_capacity(signal.len() * 2);
 
@@ -1369,6 +1388,7 @@ fn upsample(signal: &[f64]) -> Vec<f64> {
 }
 
 /// Enhanced edge preservation metric computation
+#[allow(dead_code)]
 fn compute_enhanced_edge_preservation_metric(
     original: &Array2<f64>,
     result: &EnhancedDwt2dResult,
@@ -1402,6 +1422,7 @@ fn compute_enhanced_edge_preservation_metric(
 }
 
 /// Enhanced multilevel reconstruction with error correction
+#[allow(dead_code)]
 pub fn waverec2_enhanced(decomp: &MultilevelDwt2d) -> SignalResult<Array2<f64>> {
     let mut current = decomp.approx.clone();
 
@@ -1448,6 +1469,7 @@ pub fn waverec2_enhanced(decomp: &MultilevelDwt2d) -> SignalResult<Array2<f64>> 
 }
 
 /// Enhanced 2D DWT with sophisticated adaptive decomposition depth
+#[allow(dead_code)]
 pub fn enhanced_dwt2d_adaptive(
     data: &Array2<f64>,
     wavelet: Wavelet,
@@ -1589,6 +1611,7 @@ pub fn enhanced_dwt2d_adaptive(
 }
 
 /// Calculate maximum reasonable decomposition levels based on image size
+#[allow(dead_code)]
 fn calculate_max_decomposition_levels(shape: (usize, usize)) -> usize {
     let (rows, cols) = shape;
     let min_dim = rows.min(cols);
@@ -1599,6 +1622,7 @@ fn calculate_max_decomposition_levels(shape: (usize, usize)) -> usize {
 }
 
 /// Compute entropy of subband coefficients for adaptive stopping
+#[allow(dead_code)]
 fn compute_subband_entropy(
     detail_h: &Array2<f64>,
     detail_v: &Array2<f64>,
@@ -1645,6 +1669,7 @@ fn compute_subband_entropy(
 }
 
 /// Compute enhanced 2D DWT statistics for analysis
+#[allow(dead_code)]
 pub fn compute_enhanced_dwt2d_statistics(
     decomp: &MultilevelDwt2d,
 ) -> SignalResult<Dwt2dStatistics> {
@@ -1699,6 +1724,7 @@ pub struct Dwt2dStatistics {
 }
 
 /// Compute Shannon entropy of wavelet coefficients
+#[allow(dead_code)]
 fn compute_coefficient_entropy(
     detail_h: &Array2<f64>,
     detail_v: &Array2<f64>,
@@ -1735,6 +1761,7 @@ fn compute_coefficient_entropy(
 }
 
 /// Compute sparsity measure of wavelet coefficients
+#[allow(dead_code)]
 fn compute_coefficient_sparsity(
     detail_h: &Array2<f64>,
     detail_v: &Array2<f64>,
@@ -1754,6 +1781,7 @@ fn compute_coefficient_sparsity(
 }
 
 /// Compute gradient magnitude using Sobel operator
+#[allow(dead_code)]
 fn compute_gradient_magnitude(image: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let (rows, cols) = image.dim();
     let mut magnitude = Array2::zeros((rows, cols));
@@ -1784,6 +1812,7 @@ fn compute_gradient_magnitude(image: &Array2<f64>) -> SignalResult<Array2<f64>> 
 }
 
 /// Simplified reconstruction for edge analysis
+#[allow(dead_code)]
 fn reconstruct_for_edge_analysis(result: &EnhancedDwt2dResult) -> SignalResult<Array2<f64>> {
     // Simple reconstruction by upsampling and combining subbands
     let (sub_rows, sub_cols) = result.approx.dim();
@@ -1822,6 +1851,7 @@ fn reconstruct_for_edge_analysis(result: &EnhancedDwt2dResult) -> SignalResult<A
 }
 
 /// Resize array to match target dimensions
+#[allow(dead_code)]
 fn resize_to_match(source: &Array2<f64>, target_dim: (usize, usize)) -> SignalResult<Array2<f64>> {
     let (src_rows, src_cols) = source.dim();
     let (target_rows, target_cols) = target_dim;
@@ -1841,6 +1871,7 @@ fn resize_to_match(source: &Array2<f64>, target_dim: (usize, usize)) -> SignalRe
 }
 
 /// Compute correlation between edge maps
+#[allow(dead_code)]
 fn compute_edge_correlation(edges1: &Array2<f64>, edges2: &Array2<f64>) -> SignalResult<f64> {
     use ndarray::ArrayView1;
 
@@ -1884,6 +1915,7 @@ fn compute_edge_correlation(edges1: &Array2<f64>, edges2: &Array2<f64>) -> Signa
 /// - Soft/hard thresholding with interpolation
 /// - Edge-preserving algorithms
 /// - Multi-scale analysis
+#[allow(dead_code)]
 pub fn adaptive_wavelet_denoising(
     data: &Array2<f64>,
     wavelet: Wavelet,
@@ -1946,6 +1978,7 @@ pub enum DenoisingMethod {
 }
 
 /// Estimate noise standard deviation from subband coefficients
+#[allow(dead_code)]
 fn estimate_noise_std_from_subbands(
     detail_h: &Array2<f64>,
     detail_v: &Array2<f64>,
@@ -1970,6 +2003,7 @@ fn estimate_noise_std_from_subbands(
 }
 
 /// Apply adaptive thresholding to coefficients
+#[allow(dead_code)]
 fn apply_adaptive_threshold(
     coeffs: &mut Array2<f64>,
     sigma: f64,
@@ -2004,6 +2038,7 @@ fn apply_adaptive_threshold(
 }
 
 /// Soft thresholding function
+#[allow(dead_code)]
 fn soft_threshold(coeffs: &mut Array2<f64>, threshold: f64) {
     for coeff in coeffs.iter_mut() {
         if coeff.abs() > threshold {
@@ -2015,6 +2050,7 @@ fn soft_threshold(coeffs: &mut Array2<f64>, threshold: f64) {
 }
 
 /// Hard thresholding function
+#[allow(dead_code)]
 fn hard_threshold(coeffs: &mut Array2<f64>, threshold: f64) {
     for coeff in coeffs.iter_mut() {
         if coeff.abs() <= threshold {
@@ -2024,6 +2060,7 @@ fn hard_threshold(coeffs: &mut Array2<f64>, threshold: f64) {
 }
 
 /// SURE threshold estimation
+#[allow(dead_code)]
 fn sure_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
     let n = coeffs.len() as f64;
     let mut sorted_coeffs: Vec<f64> = coeffs.iter().map(|x| x.abs()).collect();
@@ -2045,6 +2082,7 @@ fn sure_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
 }
 
 /// Compute SURE risk for given threshold
+#[allow(dead_code)]
 fn compute_sure_risk(sorted_coeffs: &[f64], threshold: f64, sigma: f64, n: f64, k: usize) -> f64 {
     let retained = n - k as f64;
     let sum_sqr: f64 = sorted_coeffs.iter().skip(k).map(|&x| x * x).sum();
@@ -2054,6 +2092,7 @@ fn compute_sure_risk(sorted_coeffs: &[f64], threshold: f64, sigma: f64, n: f64, 
 }
 
 /// BayesShrink threshold estimation
+#[allow(dead_code)]
 fn bayes_shrink_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64> {
     // Estimate signal variance
     let signal_var = coeffs.iter().map(|&x| x * x).sum::<f64>() / coeffs.len() as f64;
@@ -2070,6 +2109,7 @@ fn bayes_shrink_threshold(coeffs: &Array2<f64>, sigma: f64) -> SignalResult<f64>
 }
 
 /// BiShrink (bivariate shrinkage) for edge preservation
+#[allow(dead_code)]
 fn bishrink_threshold(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult<()> {
     let (rows, cols) = coeffs.dim();
     let mut result = coeffs.clone();
@@ -2088,6 +2128,7 @@ fn bishrink_threshold(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult<()> 
 }
 
 /// Get 2x2 neighborhood for BiShrink
+#[allow(dead_code)]
 fn get_neighborhood(coeffs: &Array2<f64>, i: usize, j: usize) -> Vec<f64> {
     let (rows, cols) = coeffs.dim();
     let mut neighborhood = Vec::new();
@@ -2104,6 +2145,7 @@ fn get_neighborhood(coeffs: &Array2<f64>, i: usize, j: usize) -> Vec<f64> {
 }
 
 /// Apply BiShrink to neighborhood
+#[allow(dead_code)]
 fn bishrink_neighborhood(neighborhood: &[f64], sigma: f64) -> f64 {
     let x = neighborhood[0]; // Center coefficient
     let energy: f64 = neighborhood.iter().map(|&val| val * val).sum();
@@ -2120,6 +2162,7 @@ fn bishrink_neighborhood(neighborhood: &[f64], sigma: f64) -> f64 {
 }
 
 /// Non-local means in wavelet domain
+#[allow(dead_code)]
 fn non_local_means_wavelet(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult<()> {
     let (rows, cols) = coeffs.dim();
     let mut result = Array2::zeros((rows, cols));
@@ -2163,6 +2206,7 @@ fn non_local_means_wavelet(coeffs: &mut Array2<f64>, sigma: f64) -> SignalResult
 }
 
 /// Extract patch around given position
+#[allow(dead_code)]
 fn extract_patch(data: &Array2<f64>, i: usize, j: usize, size: usize) -> Vec<f64> {
     let (rows, cols) = data.dim();
     let half_size = size / 2;
@@ -2180,6 +2224,7 @@ fn extract_patch(data: &Array2<f64>, i: usize, j: usize, size: usize) -> Vec<f64
 }
 
 /// Compute L2 distance between patches
+#[allow(dead_code)]
 fn patch_distance(patch1: &[f64], patch2: &[f64]) -> f64 {
     patch1
         .iter()
@@ -2189,6 +2234,7 @@ fn patch_distance(patch1: &[f64], patch2: &[f64]) -> f64 {
 }
 
 /// Enhanced content-aware boundary padding
+#[allow(dead_code)]
 pub fn enhanced_boundary_padding(data: &[f64], pad_length: usize, mode: BoundaryMode) -> Vec<f64> {
     match mode {
         BoundaryMode::ContentAware => {
@@ -2218,6 +2264,7 @@ pub fn enhanced_boundary_padding(data: &[f64], pad_length: usize, mode: Boundary
 }
 
 /// Content-aware padding based on local image structure
+#[allow(dead_code)]
 fn content_aware_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>> {
     let n = data.len();
     let mut result = vec![0.0; n + 2 * pad_length];
@@ -2257,6 +2304,7 @@ fn content_aware_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f6
 }
 
 /// Estimate local trend from data points using robust linear regression
+#[allow(dead_code)]
 fn estimate_trend(data: &[f64]) -> f64 {
     if data.len() < 2 {
         return 0.0;
@@ -2314,6 +2362,7 @@ fn estimate_trend(data: &[f64]) -> f64 {
 }
 
 /// Mirror padding with edge correction
+#[allow(dead_code)]
 fn mirror_correct_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>> {
     let n = data.len();
     let mut result = vec![0.0; n + 2 * pad_length];
@@ -2347,6 +2396,7 @@ fn mirror_correct_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f
 }
 
 /// Extrapolation padding using local gradients
+#[allow(dead_code)]
 fn extrapolate_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>> {
     let n = data.len();
     let mut result = vec![0.0; n + 2 * pad_length];
@@ -2383,6 +2433,7 @@ fn extrapolate_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f64>
 }
 
 /// Apply boundary padding for enhanced modes
+#[allow(dead_code)]
 fn apply_enhanced_boundary_padding(
     data: &[f64],
     pad_length: usize,
@@ -2443,6 +2494,7 @@ fn apply_enhanced_boundary_padding(
 }
 
 /// Validate 2D DWT decomposition result
+#[allow(dead_code)]
 fn validate_dwt2d_result(
     result: &EnhancedDwt2dResult,
     original_shape: (usize, usize),
@@ -2562,6 +2614,7 @@ fn validate_dwt2d_result(
 }
 
 /// Analyze image characteristics and select optimal boundary mode
+#[allow(dead_code)]
 fn analyze_and_select_boundary_mode(
     data: &Array2<f64>,
     filters: &WaveletFilters,
@@ -2586,6 +2639,7 @@ fn analyze_and_select_boundary_mode(
 }
 
 /// Calculate edge variance to determine image characteristics
+#[allow(dead_code)]
 fn calculate_edge_variance(data: &Array2<f64>) -> f64 {
     let (rows, cols) = data.dim();
 
@@ -2606,6 +2660,7 @@ fn calculate_edge_variance(data: &Array2<f64>) -> f64 {
 }
 
 /// Calculate smoothness metric for the image
+#[allow(dead_code)]
 fn calculate_smoothness(data: &Array2<f64>) -> f64 {
     let (rows, cols) = data.dim();
 
@@ -2640,6 +2695,7 @@ fn calculate_smoothness(data: &Array2<f64>) -> f64 {
 }
 
 /// Estimate periodicity of the image
+#[allow(dead_code)]
 fn estimate_periodicity(data: &Array2<f64>) -> f64 {
     let (rows, cols) = data.dim();
 
@@ -2676,6 +2732,7 @@ fn estimate_periodicity(data: &Array2<f64>) -> f64 {
 }
 
 /// Production-ready enhanced validation of DWT2D result
+#[allow(dead_code)]
 fn validate_dwt2d_result_enhanced(
     result: &EnhancedDwt2dResult,
     original_shape: (usize, usize),
@@ -2817,6 +2874,7 @@ impl WaveletCoefficientStats {
 }
 
 /// Validate cross-subband properties
+#[allow(dead_code)]
 fn validate_cross_subband_properties(
     stats: &WaveletCoefficientStats,
     config: &Dwt2dConfig,
@@ -2857,6 +2915,7 @@ fn validate_cross_subband_properties(
 }
 
 /// Validate energy conservation
+#[allow(dead_code)]
 fn validate_energy_conservation(
     result: &EnhancedDwt2dResult,
     original_shape: (usize, usize),
@@ -3038,7 +3097,7 @@ mod tests {
 
         let mut noisy_data = clean_data.clone();
         for val in noisy_data.iter_mut() {
-            *val += 0.1 * rng.gen_range(-1.0..1.0);
+            *val += 0.1 * rng.random_range(-1.0..1.0);
         }
 
         // Test different denoising methods

@@ -5,6 +5,7 @@
 //! Supports CUDA, OpenCL, and WebGPU backends with automatic fallback.
 
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::uninlined_format_args)]
 #![allow(dead_code)]
 
 use crate::error::{MetricsError, Result};
@@ -1081,6 +1082,7 @@ var<workgroup> local_y: array<f32, {workgroup_size}>;
 var<workgroup> local_results: array<f32, {workgroup_size}>;
 
 @compute @workgroup_size({workgroup_size}, 1, 1)
+#[allow(dead_code)]
 fn compute_correlation(@builtin(local_invocation_id) local_id: vec3<u32>,
                       @builtin(global_invocation_id) global_id: vec3<u32>,
                       @builtin(workgroup_id) workgroup_id: vec3<u32>) {{

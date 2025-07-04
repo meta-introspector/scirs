@@ -52,6 +52,7 @@ pub struct BriefDescriptor {
 /// # Returns
 ///
 /// * Result containing vector of BRIEF descriptors
+#[allow(dead_code)]
 pub fn compute_brief_descriptors(
     img: &DynamicImage,
     keypoints: Vec<KeyPoint>,
@@ -91,6 +92,7 @@ pub fn compute_brief_descriptors(
 }
 
 /// Compute BRIEF descriptor at a single keypoint
+#[allow(dead_code)]
 fn compute_descriptor_at_keypoint(
     image: &Array2<f32>,
     keypoint: &KeyPoint,
@@ -152,6 +154,7 @@ fn compute_descriptor_at_keypoint(
 }
 
 /// Generate test pattern for BRIEF descriptor
+#[allow(dead_code)]
 fn generate_test_pattern(
     descriptor_size: usize,
     patch_size: usize,
@@ -209,6 +212,7 @@ fn generate_test_pattern(
 /// # Returns
 ///
 /// * Vector of matched descriptor indices with distances
+#[allow(dead_code)]
 pub fn match_brief_descriptors(
     descriptors1: &[BriefDescriptor],
     descriptors2: &[BriefDescriptor],
@@ -246,6 +250,7 @@ pub fn match_brief_descriptors(
 }
 
 /// Calculate Hamming distance between binary descriptors
+#[allow(dead_code)]
 pub fn hamming_distance(desc1: &[u32], desc2: &[u32]) -> u32 {
     desc1
         .iter()
@@ -255,6 +260,7 @@ pub fn hamming_distance(desc1: &[u32], desc2: &[u32]) -> u32 {
 }
 
 /// Convert Hamming distance to normalized similarity score
+#[allow(dead_code)]
 pub fn hamming_to_similarity(distance: u32, descriptor_bits: usize) -> f32 {
     1.0 - (distance as f32) / (descriptor_bits as f32)
 }

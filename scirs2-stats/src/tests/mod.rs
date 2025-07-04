@@ -3,7 +3,7 @@
 //! This module provides functions for statistical hypothesis testing,
 //! following SciPy's `stats` module.
 
-use crate::distributions::t;
+use crate::distributions;
 use crate::error::{StatsError, StatsResult};
 use crate::tests::ttest::{Alternative, TTestResult};
 use crate::{mean, std};
@@ -67,6 +67,7 @@ pub use ttest::{
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let significant = p_value < 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn ttest_1samp<F>(
     x: &ArrayView1<F>,
     popmean: F,
@@ -123,6 +124,7 @@ where
 ///
 /// println!("Welch's t-test: t-statistic: {}, p-value: {}", welch_t, welch_p);
 /// ```
+#[allow(dead_code)]
 pub fn ttest_ind<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -196,7 +198,7 @@ where
     }
 
     // Create a Student's t-distribution with df degrees of freedom
-    let t_dist = t(df, F::zero(), F::one())?;
+    let t_dist = distributions::t(df, F::zero(), F::one())?;
 
     // Calculate the p-value (two-tailed test)
     let abs_t = t_stat.abs();
@@ -242,6 +244,7 @@ where
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let significant = p_value < 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn ttest_rel<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -322,6 +325,7 @@ where
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let is_normal = p_value >= 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn kstest<F, G>(x: &ArrayView1<F>, cdf: G) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast,
@@ -381,6 +385,7 @@ where
 }
 
 /// Calculate the p-value for the Kolmogorov-Smirnov test
+#[allow(dead_code)]
 fn calculate_ks_p_value<F: Float + NumCast>(ks_stat: F, n: F) -> F {
     // Use the asymptotic distribution approximation
     // valid for large n (typically n > 35)
@@ -454,6 +459,7 @@ fn calculate_ks_p_value<F: Float + NumCast>(ks_stat: F, n: F) -> F {
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let is_normal = p_value >= 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn shapiro<F>(x: &ArrayView1<F>) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast,
@@ -514,6 +520,7 @@ where
 }
 
 /// Returns the coefficients for the Shapiro-Wilk test
+#[allow(dead_code)]
 fn get_shapiro_coefficients(n: usize) -> StatsResult<Vec<f64>> {
     // Simplified implementation of the Shapiro-Wilk coefficients
     // These coefficients are normally derived from expected values of order statistics
@@ -565,6 +572,7 @@ fn get_shapiro_coefficients(n: usize) -> StatsResult<Vec<f64>> {
 }
 
 /// Calculate the p-value for the Shapiro-Wilk test
+#[allow(dead_code)]
 fn calculate_shapiro_p_value<F: Float + NumCast>(w: F, n: usize) -> F {
     // Royston's approximation for p-value calculation
 

@@ -15,6 +15,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process;
 
+#[allow(dead_code)]
 fn main() {
     let matches = Command::new("performance-regression-detector")
         .version("0.1.0")
@@ -231,6 +232,7 @@ fn main() {
     }
 }
 
+#[allow(dead_code)]
 fn run_regression_detection(
     benchmark_results: &str,
     baseline_dir: &str,
@@ -338,6 +340,7 @@ fn run_regression_detection(
     Ok(has_regressions)
 }
 
+#[allow(dead_code)]
 fn load_benchmark_results(path: &str) -> Result<serde_json::Value> {
     let content = fs::read_to_string(path)
         .map_err(|e| OptimError::IoError(format!("Failed to read benchmark results: {}", e)))?;
@@ -349,6 +352,7 @@ fn load_benchmark_results(path: &str) -> Result<serde_json::Value> {
     Ok(data)
 }
 
+#[allow(dead_code)]
 fn convert_benchmark_data_to_measurements(
     data: &serde_json::Value,
     features: &str,

@@ -19,6 +19,7 @@ use super::{pad_array, BorderMode};
 use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function for safe conversion from numeric values to float
+#[allow(dead_code)]
 fn safe_to_float<T: Float + FromPrimitive>(value: f64) -> T {
     T::from(value).unwrap_or_else(|| T::zero())
 }
@@ -59,6 +60,7 @@ fn safe_to_float<T: Float + FromPrimitive>(value: f64) -> T {
 /// let input = Array2::from_shape_fn((5, 5), |(i, j)| (i + j) as f64);
 /// let result = generic_filter(&input, range_func, &[3, 3], None, None)?;
 /// ```
+#[allow(dead_code)]
 pub fn generic_filter<T, D, F>(
     input: &Array<T, D>,
     function: F,
@@ -135,6 +137,7 @@ where
 }
 
 /// Apply a generic filter to a 1D array
+#[allow(dead_code)]
 fn generic_filter_1d<T, F>(
     input: &Array1<T>,
     function: F,
@@ -169,6 +172,7 @@ where
 }
 
 /// Apply a generic filter to a 2D array
+#[allow(dead_code)]
 fn generic_filter_2d<T, F>(
     input: &Array2<T>,
     function: F,
@@ -228,6 +232,7 @@ where
 
 /// Parallel version of generic_filter_2d for large arrays
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn generic_filter_2d_parallel<T, F>(
     input: &Array2<T>,
     function: F,
@@ -292,6 +297,7 @@ where
 }
 
 /// Apply a generic filter to an n-dimensional array
+#[allow(dead_code)]
 fn generic_filter_nd<T, F>(
     input: &Array<T, IxDyn>,
     function: F,
@@ -351,6 +357,7 @@ where
 }
 
 /// Helper function to extract neighborhood values from n-dimensional array
+#[allow(dead_code)]
 fn extract_neighborhood_nd<T>(
     padded: &Array<T, IxDyn>,
     center_indices: &[usize],

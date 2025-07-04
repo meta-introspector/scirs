@@ -6,6 +6,7 @@ use scirs2_optimize::unconstrained::{
     Options,
 };
 
+#[allow(dead_code)]
 fn main() {
     // Rosenbrock function
     let rosenbrock = |x: &ArrayView1<f64>| -> f64 {

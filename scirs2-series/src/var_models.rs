@@ -393,6 +393,7 @@ where
 }
 
 /// Helper function to solve normal equations (X'X)β = X'Y
+#[allow(dead_code)]
 fn solve_normal_equations<F>(xtx: &Array2<F>, xty: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
@@ -422,6 +423,7 @@ where
 }
 
 /// Solve using Cholesky decomposition
+#[allow(dead_code)]
 fn solve_cholesky<F>(a: &Array2<F>, b: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
@@ -491,6 +493,7 @@ where
 }
 
 /// Solve using LU decomposition with partial pivoting
+#[allow(dead_code)]
 fn solve_lu_decomposition<F>(a: &Array2<F>, b: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,
@@ -591,6 +594,7 @@ pub enum SelectionCriterion {
 }
 
 /// Select optimal VAR order
+#[allow(dead_code)]
 pub fn select_var_order<S, F>(
     data: &ArrayBase<S, Ix2>,
     max_order: usize,
@@ -647,6 +651,7 @@ where
 }
 
 /// Calculate log determinant of a matrix using LU decomposition
+#[allow(dead_code)]
 fn matrix_log_determinant<F>(matrix: &Array2<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + ScalarOperand,

@@ -5,28 +5,19 @@
 //! analysis reports. Designed for scientific documentation and
 //! presentation of image analysis workflows.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, ToPrimitive, Zero};
-use std::collections::HashMap;
 use std::fmt::{Debug, Write};
 
 use crate::analysis::{ImageQualityMetrics, TextureMetrics};
 use crate::error::{NdimageError, NdimageResult};
+use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe conversion from usize to float
+#[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
-    })
-}
-
-/// Helper function for safe conversion from f64 to float
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
     })
 }
 
@@ -158,6 +149,7 @@ impl RgbColor {
 }
 
 /// Create a color map for visualization
+#[allow(dead_code)]
 pub fn create_colormap(colormap: ColorMap, num_colors: usize) -> Vec<RgbColor> {
     let mut colors = Vec::with_capacity(num_colors);
 
@@ -186,6 +178,7 @@ pub fn create_colormap(colormap: ColorMap, num_colors: usize) -> Vec<RgbColor> {
 }
 
 /// Generate a histogram plot representation
+#[allow(dead_code)]
 pub fn plot_histogram<T>(data: &ArrayView1<T>, config: &PlotConfig) -> NdimageResult<String>
 where
     T: Float + FromPrimitive + ToPrimitive + Debug + Clone,
@@ -299,6 +292,7 @@ where
 }
 
 /// Generate a profile plot (line plot) representation
+#[allow(dead_code)]
 pub fn plot_profile<T>(
     x_data: &ArrayView1<T>,
     y_data: &ArrayView1<T>,
@@ -412,6 +406,7 @@ where
 }
 
 /// Visualize gradient information as a vector field
+#[allow(dead_code)]
 pub fn visualize_gradient<T>(
     gradient_x: &ArrayView2<T>,
     gradient_y: &ArrayView2<T>,
@@ -545,6 +540,7 @@ where
 }
 
 /// Generate a comprehensive analysis report
+#[allow(dead_code)]
 pub fn generate_report<T>(
     image: &ArrayView2<T>,
     quality_metrics: Option<&ImageQualityMetrics<T>>,
@@ -632,6 +628,7 @@ where
     Ok(report)
 }
 
+#[allow(dead_code)]
 fn add_image_info(
     report: &mut String,
     width: usize,
@@ -693,6 +690,7 @@ fn add_image_info(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn add_basic_statistics<T>(
     report: &mut String,
     image: &ArrayView2<T>,
@@ -820,6 +818,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn add_quality_metrics<T>(
     report: &mut String,
     metrics: &ImageQualityMetrics<T>,
@@ -941,6 +940,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn add_texture_metrics<T>(
     report: &mut String,
     metrics: &TextureMetrics<T>,
@@ -1078,6 +1078,7 @@ where
 }
 
 // Color map implementations
+#[allow(dead_code)]
 fn jet_colormap(t: f64) -> RgbColor {
     let r = (1.5 - 4.0 * (t - 0.75).abs()).max(0.0).min(1.0);
     let g = (1.5 - 4.0 * (t - 0.5).abs()).max(0.0).min(1.0);
@@ -1086,6 +1087,7 @@ fn jet_colormap(t: f64) -> RgbColor {
     RgbColor::new((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8)
 }
 
+#[allow(dead_code)]
 fn viridis_colormap(t: f64) -> RgbColor {
     // Simplified viridis approximation
     let r = (0.267 + 0.005 * t + 2.817 * t * t - 2.088 * t * t * t)
@@ -1099,6 +1101,7 @@ fn viridis_colormap(t: f64) -> RgbColor {
     RgbColor::new((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8)
 }
 
+#[allow(dead_code)]
 fn plasma_colormap(t: f64) -> RgbColor {
     // Simplified plasma approximation
     let r = (0.054 + 2.192 * t + 0.063 * t * t - 1.309 * t * t * t)
@@ -1114,6 +1117,7 @@ fn plasma_colormap(t: f64) -> RgbColor {
     RgbColor::new((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8)
 }
 
+#[allow(dead_code)]
 fn inferno_colormap(t: f64) -> RgbColor {
     // Simplified inferno approximation
     let r = (0.077 + 2.081 * t + 0.866 * t * t - 1.024 * t * t * t)
@@ -1127,6 +1131,7 @@ fn inferno_colormap(t: f64) -> RgbColor {
     RgbColor::new((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8)
 }
 
+#[allow(dead_code)]
 fn hot_colormap(t: f64) -> RgbColor {
     let r = (3.0 * t).min(1.0);
     let g = (3.0 * t - 1.0).max(0.0).min(1.0);
@@ -1135,14 +1140,17 @@ fn hot_colormap(t: f64) -> RgbColor {
     RgbColor::new((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8)
 }
 
+#[allow(dead_code)]
 fn cool_colormap(t: f64) -> RgbColor {
     RgbColor::new(((1.0 - t) * 255.0) as u8, (t * 255.0) as u8, 255)
 }
 
+#[allow(dead_code)]
 fn spring_colormap(t: f64) -> RgbColor {
     RgbColor::new(255, (t * 255.0) as u8, ((1.0 - t) * 255.0) as u8)
 }
 
+#[allow(dead_code)]
 fn summer_colormap(t: f64) -> RgbColor {
     RgbColor::new(
         (t * 255.0) as u8,
@@ -1151,15 +1159,18 @@ fn summer_colormap(t: f64) -> RgbColor {
     )
 }
 
+#[allow(dead_code)]
 fn autumn_colormap(t: f64) -> RgbColor {
     RgbColor::new(255, (t * 255.0) as u8, 0)
 }
 
+#[allow(dead_code)]
 fn winter_colormap(t: f64) -> RgbColor {
     RgbColor::new(0, (t * 255.0) as u8, ((1.0 - 0.5 * t) * 255.0) as u8)
 }
 
 /// Generate a 3D surface plot representation of a 2D array
+#[allow(dead_code)]
 pub fn plot_surface<T>(data: &ArrayView2<T>, config: &PlotConfig) -> NdimageResult<String>
 where
     T: Float + FromPrimitive + ToPrimitive + Debug + Clone,
@@ -1285,6 +1296,7 @@ where
 }
 
 /// Generate a contour plot representation of a 2D array
+#[allow(dead_code)]
 pub fn plot_contour<T>(
     data: &ArrayView2<T>,
     num_levels: usize,
@@ -1406,6 +1418,7 @@ where
 }
 
 /// Generate a heatmap visualization of a 2D array
+#[allow(dead_code)]
 pub fn plot_heatmap<T>(data: &ArrayView2<T>, config: &PlotConfig) -> NdimageResult<String>
 where
     T: Float + FromPrimitive + ToPrimitive + Debug + Clone,
@@ -1537,6 +1550,7 @@ where
 }
 
 /// Create an image montage/grid from multiple 2D arrays
+#[allow(dead_code)]
 pub fn create_image_montage<T>(
     images: &[ArrayView2<T>],
     grid_cols: usize,
@@ -1701,6 +1715,7 @@ where
 }
 
 /// Generate a comparative statistical plot for multiple datasets
+#[allow(dead_code)]
 pub fn plot_statistical_comparison<T>(
     datasets: &[(&str, ArrayView1<T>)],
     config: &PlotConfig,

@@ -41,6 +41,7 @@ struct ComparisonSummary {
 }
 
 /// Generate test data with controlled properties
+#[allow(dead_code)]
 fn generate_test_data(size: usize) -> (Array2<f64>, Array1<f64>) {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
     let matrix = Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng);
@@ -49,6 +50,7 @@ fn generate_test_data(size: usize) -> (Array2<f64>, Array1<f64>) {
 }
 
 /// Generate positive definite matrix for stable operations
+#[allow(dead_code)]
 fn generate_spd_matrix(size: usize) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
     let a = Array2::random_using((size, size), Uniform::new(-1.0, 1.0), &mut rng);
@@ -57,6 +59,7 @@ fn generate_spd_matrix(size: usize) -> Array2<f64> {
 }
 
 /// Benchmark comparison for basic operations
+#[allow(dead_code)]
 fn bench_basic_operations_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("scipy_basic_comparison");
     let mut results = Vec::new();
@@ -140,6 +143,7 @@ fn bench_basic_operations_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark comparison for decompositions
+#[allow(dead_code)]
 fn bench_decomposition_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("scipy_decomposition_comparison");
     let mut results = Vec::new();
@@ -229,6 +233,7 @@ fn bench_decomposition_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark comparison for linear solvers
+#[allow(dead_code)]
 fn bench_solver_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("scipy_solver_comparison");
     let mut results = Vec::new();
@@ -292,6 +297,7 @@ fn bench_solver_comparison(c: &mut Criterion) {
 }
 
 /// Cross-platform performance comparison
+#[allow(dead_code)]
 fn bench_cross_platform_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("cross_platform_performance");
 
@@ -322,6 +328,7 @@ fn bench_cross_platform_performance(c: &mut Criterion) {
 }
 
 /// Save Rust benchmark results to file for Python comparison
+#[allow(dead_code)]
 fn save_rust_results(results: &[BenchmarkResult]) {
     let json = serde_json::to_string_pretty(results).unwrap();
     fs::write("target/rust_benchmark_results.json", json).unwrap_or_else(|e| {
@@ -371,6 +378,7 @@ fn print_comparison_analysis(report: &ComparisonReport) {
 }
 
 /// Benchmark that outputs performance characteristics
+#[allow(dead_code)]
 fn bench_performance_characteristics(c: &mut Criterion) {
     let group = c.benchmark_group("performance_characteristics");
 

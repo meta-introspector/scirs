@@ -32,6 +32,7 @@ use crate::error::{ClusteringError, Result};
 /// 4. Cluster sizes are consistent and >= 2
 /// 5. No self-merges (cluster merging with itself)
 /// 6. All values are finite
+#[allow(dead_code)]
 pub fn validate_linkage_matrix<
     F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display,
 >(
@@ -130,6 +131,7 @@ pub fn validate_linkage_matrix<
 /// # Returns
 ///
 /// * `Result<()>` - Ok if monotonic, error otherwise
+#[allow(dead_code)]
 pub fn validate_monotonic_distances<
     F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display,
 >(
@@ -173,6 +175,7 @@ pub fn validate_monotonic_distances<
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
+#[allow(dead_code)]
 pub fn validate_cluster_extraction_params<
     F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display,
 >(
@@ -232,6 +235,7 @@ pub fn validate_cluster_extraction_params<
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
+#[allow(dead_code)]
 pub fn validate_distance_matrix<
     F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display,
 >(
@@ -293,6 +297,7 @@ pub fn validate_distance_matrix<
 /// # Returns
 ///
 /// * `Result<()>` - Ok if valid, error otherwise
+#[allow(dead_code)]
 pub fn validate_square_distance_matrix<
     F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display,
 >(
@@ -404,6 +409,7 @@ pub fn validate_square_distance_matrix<
 /// # Returns
 ///
 /// * `Result<()>` - Ok if consistent, error otherwise
+#[allow(dead_code)]
 pub fn validate_cluster_consistency<
     F: Float + FromPrimitive + Debug + PartialOrd + std::fmt::Display,
 >(

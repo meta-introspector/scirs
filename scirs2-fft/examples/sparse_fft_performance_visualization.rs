@@ -12,6 +12,7 @@ use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Create a sparse signal with known frequencies in the spectrum
+#[allow(dead_code)]
 fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
     let mut signal = vec![0.0; n];
 
@@ -26,6 +27,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 }
 
 /// Benchmark all sparse FFT algorithms and visualize the results
+#[allow(dead_code)]
 fn benchmark_and_visualize() {
     println!("Running performance benchmarks for sparse FFT algorithms...");
 
@@ -205,6 +207,7 @@ fn benchmark_and_visualize() {
 }
 
 /// Compare algorithm accuracy on noisy signals
+#[allow(dead_code)]
 fn benchmark_accuracy() {
     println!("\nComparing algorithm accuracy with noisy signals...");
 
@@ -312,6 +315,7 @@ fn benchmark_accuracy() {
     println!("\nAccuracy plot saved as sparse_fft_accuracy.html");
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Sparse FFT Performance Visualization Tool");
     println!("=======================================");

@@ -247,6 +247,7 @@ impl<F: IntegrateFloat> StiffnessDetector<F> {
 /// - Increasing `rtol` and `atol` can improve performance for less demanding accuracy
 /// - For problems known to be stiff, consider specifying a larger initial step size
 /// - The solver automatically detects when to switch methods, but benefits from good initial settings
+#[allow(dead_code)]
 pub fn lsoda_method<F, Func>(
     f: Func,
     t_span: [F; 2],
@@ -430,6 +431,7 @@ where
 }
 
 /// Take a step using Adams method (predictor-corrector) for non-stiff regions
+#[allow(dead_code)]
 fn adams_step<F, Func>(
     state: &mut LsodaState<F>,
     f: &Func,
@@ -820,6 +822,7 @@ where
 }
 
 /// Take a step using Bdf method for stiff regions
+#[allow(dead_code)]
 fn bdf_step<F, Func>(
     state: &mut LsodaState<F>,
     f: &Func,

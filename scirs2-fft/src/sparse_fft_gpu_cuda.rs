@@ -73,6 +73,7 @@ impl GpuMemoryManager {
 }
 
 /// Placeholder for global memory manager - to be implemented with core GPU abstractions
+#[allow(dead_code)]
 pub fn get_global_memory_manager() -> FFTResult<GpuMemoryManager> {
     Err(FFTError::NotImplementedError(
         "GPU memory management needs to be implemented with scirs2-core::gpu abstractions"
@@ -81,6 +82,7 @@ pub fn get_global_memory_manager() -> FFTResult<GpuMemoryManager> {
 }
 
 /// Check if GPU is available through core platform capabilities
+#[allow(dead_code)]
 pub fn ensure_gpu_available() -> FFTResult<bool> {
     let caps = PlatformCapabilities::detect();
     Ok(caps.cuda_available || caps.gpu_available)
@@ -411,6 +413,7 @@ impl Drop for GpuSparseFFT {
 ///
 /// * Sparse FFT result containing frequency components, indices, and timing information
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn cuda_sparse_fft<T>(
     signal: &[T],
     k: usize,
@@ -461,6 +464,7 @@ where
 ///
 /// * List of sparse FFT results for each input signal
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn cuda_batch_sparse_fft<T>(
     signals: &[Vec<T>],
     k: usize,
@@ -493,6 +497,7 @@ where
 }
 
 /// Initialize GPU subsystem and get available GPU devices
+#[allow(dead_code)]
 pub fn get_cuda_devices() -> FFTResult<Vec<GpuDeviceInfo>> {
     // In a real implementation, this would query all available GPU devices through scirs2-core
 

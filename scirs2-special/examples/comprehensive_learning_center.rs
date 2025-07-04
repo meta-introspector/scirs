@@ -773,6 +773,7 @@ impl AssessmentEngine {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎓 Comprehensive Learning Center for Special Functions");
     println!("=====================================================");
@@ -823,6 +824,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_new_user(learning_center: &mut LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🆕 Creating new user profile...");
 
@@ -887,6 +889,7 @@ fn create_new_user(learning_center: &mut LearningCenter) -> Result<(), Box<dyn s
     Ok(())
 }
 
+#[allow(dead_code)]
 fn load_or_create_user(
     learning_center: &mut LearningCenter,
     username: String,
@@ -911,6 +914,7 @@ fn load_or_create_user(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn recommend_starting_track(
     learning_center: &LearningCenter,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -945,6 +949,7 @@ fn recommend_starting_track(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_dashboard(learning_center: &LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n{}", "=".repeat(60));
     println!("🎓 LEARNING DASHBOARD");
@@ -1016,6 +1021,7 @@ fn display_dashboard(learning_center: &LearningCenter) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn calculate_track_progress(learning_center: &LearningCenter, track_id: &str) -> f64 {
     if let Some(username) = &learning_center.current_user {
         if let Some(profile) = learning_center.user_profiles.get(username) {
@@ -1036,6 +1042,7 @@ fn calculate_track_progress(learning_center: &LearningCenter, track_id: &str) ->
     0.0
 }
 
+#[allow(dead_code)]
 fn display_detailed_progress(
     learning_center: &LearningCenter,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1088,6 +1095,7 @@ fn display_detailed_progress(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_resources(learning_center: &LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📚 RESOURCE CATALOG");
     println!("{}", "=".repeat(30));
@@ -1130,6 +1138,7 @@ fn explore_resources(learning_center: &LearningCenter) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn launch_resource(
     learning_center: &LearningCenter,
     resource_id: &str,
@@ -1170,6 +1179,7 @@ fn launch_resource(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn enter_learning_track(
     learning_center: &mut LearningCenter,
     track_index: usize,
@@ -1249,6 +1259,7 @@ fn enter_learning_track(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn get_module_status(learning_center: &LearningCenter, module_id: &str) -> &'static str {
     if let Some(username) = &learning_center.current_user {
         if let Some(profile) = learning_center.user_profiles.get(username) {
@@ -1262,6 +1273,7 @@ fn get_module_status(learning_center: &LearningCenter, module_id: &str) -> &'sta
     "⏳"
 }
 
+#[allow(dead_code)]
 fn start_learning_module(
     learning_center: &mut LearningCenter,
     module: &LearningModule,
@@ -1307,6 +1319,7 @@ fn start_learning_module(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_module_completion(
     learning_center: &mut LearningCenter,
     module: &LearningModule,
@@ -1371,6 +1384,7 @@ fn simulate_module_completion(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_assessment(assessment: &Assessment) -> Result<f64, Box<dyn std::error::Error>> {
     println!("\n📝 Assessment: {}", assessment.title);
     println!(
@@ -1406,6 +1420,7 @@ fn simulate_assessment(assessment: &Assessment) -> Result<f64, Box<dyn std::erro
     Ok(score)
 }
 
+#[allow(dead_code)]
 fn check_for_achievements(
     learning_center: &mut LearningCenter,
     username: &str,
@@ -1460,6 +1475,7 @@ fn check_for_achievements(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn check_certification_eligibility(
     learning_center: &LearningCenter,
     track: &LearningTrack,
@@ -1534,6 +1550,7 @@ fn check_certification_eligibility(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_help() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n❓ HELP & GUIDANCE");
     println!("{}", "=".repeat(20));
@@ -1571,6 +1588,7 @@ fn display_help() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn save_user_progress(_learning_center: &LearningCenter) -> Result<(), Box<dyn std::error::Error>> {
     // In a real implementation, this would save to persistent storage
     println!("💾 Saving progress...");
@@ -1579,6 +1597,7 @@ fn save_user_progress(_learning_center: &LearningCenter) -> Result<(), Box<dyn s
     Ok(())
 }
 
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> io::Result<String> {
     print!("{}", prompt);
     io::stdout().flush()?;

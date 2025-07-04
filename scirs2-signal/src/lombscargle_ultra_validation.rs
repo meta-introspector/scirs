@@ -17,7 +17,6 @@ use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
-#[cfg(test)]
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -198,6 +197,7 @@ impl Default for UltraValidationConfig {
 ///     ValidationStatus::NotRun => println!("Validation was not run"),
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn run_ultra_validation(config: &UltraValidationConfig) -> SignalResult<UltraValidationResult> {
     let start_time = Instant::now();
     let mut issues = Vec::new();
@@ -278,6 +278,7 @@ pub fn run_ultra_validation(config: &UltraValidationConfig) -> SignalResult<Ultr
 }
 
 /// Validate accuracy comprehensively across multiple test scenarios
+#[allow(dead_code)]
 fn validate_accuracy_comprehensive(
     config: &UltraValidationConfig,
     issues: &mut Vec<ValidationIssue>,
@@ -341,6 +342,7 @@ fn validate_accuracy_comprehensive(
 }
 
 /// Validate performance across different signal sizes and configurations
+#[allow(dead_code)]
 fn validate_performance_comprehensive(
     config: &UltraValidationConfig,
     issues: &mut Vec<ValidationIssue>,
@@ -390,6 +392,7 @@ fn validate_performance_comprehensive(
 }
 
 /// Validate SIMD operations comprehensively
+#[allow(dead_code)]
 fn validate_simd_operations_comprehensive(
     config: &UltraValidationConfig,
     issues: &mut Vec<ValidationIssue>,
@@ -460,6 +463,7 @@ fn validate_simd_operations_comprehensive(
 }
 
 /// Validate memory usage patterns
+#[allow(dead_code)]
 fn validate_memory_usage_comprehensive(
     config: &UltraValidationConfig,
     issues: &mut Vec<ValidationIssue>,
@@ -501,6 +505,7 @@ fn validate_memory_usage_comprehensive(
 }
 
 /// Validate cross-platform consistency
+#[allow(dead_code)]
 fn validate_cross_platform_consistency(
     config: &UltraValidationConfig,
     issues: &mut Vec<ValidationIssue>,
@@ -527,6 +532,7 @@ fn validate_cross_platform_consistency(
 }
 
 /// Determine overall validation status from issues
+#[allow(dead_code)]
 fn determine_validation_status(issues: &[ValidationIssue]) -> ValidationStatus {
     let has_critical = issues.iter().any(|i| i.severity == IssueSeverity::Critical);
     let has_warnings = issues.iter().any(|i| i.severity == IssueSeverity::Warning);
@@ -569,6 +575,7 @@ struct MemoryResult {
 
 // Implementation of helper functions (simplified for brevity)
 
+#[allow(dead_code)]
 fn validate_pure_sinusoid_accuracy(
     size: usize,
     tolerance: f64,
@@ -623,6 +630,7 @@ fn validate_pure_sinusoid_accuracy(
     })
 }
 
+#[allow(dead_code)]
 fn validate_multicomponent_accuracy(
     size: usize,
     tolerance: f64,
@@ -636,16 +644,19 @@ fn validate_multicomponent_accuracy(
     })
 }
 
+#[allow(dead_code)]
 fn validate_noise_floor_estimation(size: usize, tolerance: f64) -> SignalResult<f64> {
     // Simplified implementation
     Ok(0.01) // Placeholder noise floor
 }
 
+#[allow(dead_code)]
 fn validate_dynamic_range_handling(tolerance: f64) -> SignalResult<f64> {
     // Simplified implementation
     Ok(0.95) // Good dynamic range handling score
 }
 
+#[allow(dead_code)]
 fn benchmark_signal_size(size: usize, iterations: usize) -> SignalResult<BenchmarkResult> {
     let freq = 10.0;
     let fs = 100.0;
@@ -668,6 +679,7 @@ fn benchmark_signal_size(size: usize, iterations: usize) -> SignalResult<Benchma
     })
 }
 
+#[allow(dead_code)]
 fn benchmark_simd_performance(config: &UltraValidationConfig) -> SignalResult<SimdBenchmarkResult> {
     // Simplified implementation
     Ok(SimdBenchmarkResult {
@@ -675,12 +687,14 @@ fn benchmark_simd_performance(config: &UltraValidationConfig) -> SignalResult<Si
     })
 }
 
+#[allow(dead_code)]
 fn validate_simd_scalar_accuracy(config: &UltraValidationConfig) -> SignalResult<f64> {
     // Compare SIMD and scalar results
     // Simplified implementation
     Ok(1e-14) // Very high accuracy
 }
 
+#[allow(dead_code)]
 fn validate_individual_simd_operations(
     config: &UltraValidationConfig,
 ) -> SignalResult<HashMap<String, bool>> {
@@ -691,11 +705,13 @@ fn validate_individual_simd_operations(
     Ok(results)
 }
 
+#[allow(dead_code)]
 fn measure_simd_performance_gain(config: &UltraValidationConfig) -> SignalResult<f64> {
     // Simplified implementation
     Ok(2.8) // Good SIMD performance gain
 }
 
+#[allow(dead_code)]
 fn measure_memory_usage(size: usize) -> SignalResult<MemoryResult> {
     let peak_mb = (size * 24) as f64 / (1024.0 * 1024.0); // Rough estimate
     Ok(MemoryResult {
@@ -704,20 +720,24 @@ fn measure_memory_usage(size: usize) -> SignalResult<MemoryResult> {
     })
 }
 
+#[allow(dead_code)]
 fn measure_cache_efficiency() -> SignalResult<f64> {
     Ok(0.75) // Placeholder cache efficiency score
 }
 
+#[allow(dead_code)]
 fn estimate_expected_time(size: usize) -> f64 {
     // O(n log n) expected performance
     (size as f64 * (size as f64).log2()) / 1e6
 }
 
+#[allow(dead_code)]
 fn estimate_expected_memory(size: usize) -> f64 {
     // Linear memory usage expected
     (size * 16) as f64 / (1024.0 * 1024.0)
 }
 
+#[allow(dead_code)]
 fn calculate_scalability_factor(execution_times: &HashMap<usize, f64>) -> f64 {
     // Analyze how execution time scales with input size
     // Ideal O(n log n) would give factor of 1.0
@@ -743,6 +763,7 @@ fn calculate_scalability_factor(execution_times: &HashMap<usize, f64>) -> f64 {
     theoretical_ratio / actual_ratio // Closer to 1.0 is better
 }
 
+#[allow(dead_code)]
 fn calculate_throughput(execution_times: &HashMap<usize, f64>) -> f64 {
     // Calculate samples per second throughput
     execution_times

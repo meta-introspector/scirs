@@ -1660,6 +1660,7 @@ where
 
 // System detection functions
 
+#[allow(dead_code)]
 fn detect_numa_topology() -> NumaTopology {
     NumaTopology {
         nodes: vec![NumaNode {
@@ -1671,6 +1672,7 @@ fn detect_numa_topology() -> NumaTopology {
     }
 }
 
+#[allow(dead_code)]
 fn detect_cache_hierarchy() -> CacheHierarchy {
     CacheHierarchy {
         l1_size: 32 * 1024,       // 32KB
@@ -1683,11 +1685,13 @@ fn detect_cache_hierarchy() -> CacheHierarchy {
 // Factory functions
 
 /// Create default ultra-think memory manager
+#[allow(dead_code)]
 pub fn create_ultra_think_memory_manager() -> UltraThinkMemoryManager {
     UltraThinkMemoryManager::new(UltraThinkMemoryConfig::default())
 }
 
 /// Create configured ultra-think memory manager
+#[allow(dead_code)]
 pub fn create_configured_ultra_think_memory_manager(
     config: UltraThinkMemoryConfig,
 ) -> UltraThinkMemoryManager {
@@ -1695,6 +1699,7 @@ pub fn create_configured_ultra_think_memory_manager(
 }
 
 /// Create high-performance memory manager for large datasets
+#[allow(dead_code)]
 pub fn create_large_dataset_memory_manager() -> UltraThinkMemoryManager {
     let config = UltraThinkMemoryConfig {
         enable_memory_profiling: true,
@@ -1714,6 +1719,7 @@ pub fn create_large_dataset_memory_manager() -> UltraThinkMemoryManager {
 }
 
 /// Create streaming-optimized memory manager
+#[allow(dead_code)]
 pub fn create_streaming_memory_manager() -> UltraThinkMemoryManager {
     let config = UltraThinkMemoryConfig {
         enable_memory_profiling: true,

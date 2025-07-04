@@ -42,6 +42,7 @@ use ndarray::Array2;
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn shi_tomasi_corners(
     img: &DynamicImage,
     block_size: usize,
@@ -198,6 +199,7 @@ pub fn shi_tomasi_corners(
 /// # Returns
 ///
 /// * Result containing corner points
+#[allow(dead_code)]
 pub fn shi_tomasi_corners_simple(img: &DynamicImage, max_corners: usize) -> Result<GrayImage> {
     shi_tomasi_corners(img, 3, 0.01, max_corners, 10)
 }
@@ -217,6 +219,7 @@ pub fn shi_tomasi_corners_simple(img: &DynamicImage, max_corners: usize) -> Resu
 /// # Returns
 ///
 /// * Result containing vector of (x, y, score) tuples
+#[allow(dead_code)]
 pub fn good_features_to_track(
     img: &DynamicImage,
     block_size: usize,

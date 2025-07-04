@@ -9,6 +9,7 @@ use scirs2_linalg::matrix_functions::{
     spectral_radius, tikhonov_regularization,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Advanced Matrix Functions Demonstration");
     println!("{}", "=".repeat(50));

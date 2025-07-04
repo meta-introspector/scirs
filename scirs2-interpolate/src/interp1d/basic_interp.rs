@@ -338,6 +338,7 @@ pub(crate) fn cubic_interp<F: Float + FromPrimitive>(
 /// assert!(diff1 < 1e-10);  // Nearest value to x=1.5 is y=1.0
 /// assert!(diff2 < 1e-10);  // Nearest value to x=2.5 is y=4.0
 /// ```
+#[allow(dead_code)]
 pub fn nearest_interpolate<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -379,6 +380,7 @@ pub fn nearest_interpolate<F: crate::traits::InterpolationFloat>(
 /// assert!(diff1 < 1e-10);  // Linear interpolation at x=1.5
 /// assert!(diff2 < 1e-10);  // Linear interpolation at x=2.5
 /// ```
+#[allow(dead_code)]
 pub fn linear_interpolate<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -421,6 +423,7 @@ pub fn linear_interpolate<F: crate::traits::InterpolationFloat>(
 /// assert!(diff1 < 0.3);  // as the specific implementation may vary
 /// assert!(diff2 < 0.3);
 /// ```
+#[allow(dead_code)]
 pub fn cubic_interpolate<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,

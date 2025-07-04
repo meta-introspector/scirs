@@ -35,6 +35,7 @@ use scirs2_linalg::solve;
 /// let result = cubic_spline_interpolate(&signal, &config).unwrap();
 /// // Result will contain smoothly interpolated values
 /// ```
+#[allow(dead_code)]
 pub fn cubic_spline_interpolate(
     signal: &Array1<f64>,
     config: &InterpolationConfig,
@@ -211,6 +212,7 @@ pub fn cubic_spline_interpolate(
 /// let result = cubic_hermite_interpolate(&signal, &config).unwrap();
 /// // Result will preserve monotonicity and avoid overshooting
 /// ```
+#[allow(dead_code)]
 pub fn cubic_hermite_interpolate(
     signal: &Array1<f64>,
     config: &InterpolationConfig,

@@ -15,6 +15,7 @@ use scirs2_special::*;
 use std::f64::consts::{E, PI};
 use std::io::{self, Write};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧮 Mathematical Derivation Studio");
     println!("=================================");
@@ -45,6 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_main_menu() {
     println!("📖 Choose a mathematical derivation to explore:");
     println!("1. 🎯 Gamma Function Reflection Formula");
@@ -59,6 +61,7 @@ fn display_main_menu() {
     println!();
 }
 
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> io::Result<String> {
     print!("{}", prompt);
     io::stdout().flush()?;
@@ -67,6 +70,7 @@ fn get_user_input(prompt: &str) -> io::Result<String> {
     Ok(input.trim().to_string())
 }
 
+#[allow(dead_code)]
 fn gamma_reflection_formula_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎯 GAMMA FUNCTION REFLECTION FORMULA DERIVATION");
     println!("===============================================\n");
@@ -155,6 +159,7 @@ fn gamma_reflection_formula_derivation() -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
+#[allow(dead_code)]
 fn stirling_asymptotic_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 STIRLING'S ASYMPTOTIC EXPANSION DERIVATION");
     println!("==============================================\n");
@@ -237,6 +242,7 @@ fn stirling_asymptotic_derivation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bessel_orthogonality_proof() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 BESSEL FUNCTION ORTHOGONALITY PROOF");
     println!("======================================\n");
@@ -334,6 +340,7 @@ fn bessel_orthogonality_proof() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn hypergeometric_transformations() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔄 HYPERGEOMETRIC FUNCTION TRANSFORMATIONS");
     println!("==========================================\n");
@@ -419,6 +426,7 @@ fn hypergeometric_transformations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn elliptic_integral_connections() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🥧 ELLIPTIC INTEGRAL CONNECTIONS");
     println!("================================\n");
@@ -512,6 +520,7 @@ fn elliptic_integral_connections() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn wright_function_asymptotic_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌀 WRIGHT FUNCTION ASYMPTOTIC ANALYSIS");
     println!("======================================\n");
@@ -597,6 +606,7 @@ fn wright_function_asymptotic_analysis() -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
+#[allow(dead_code)]
 fn information_theory_inequalities() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 INFORMATION THEORY INEQUALITIES");
     println!("===================================\n");
@@ -680,6 +690,7 @@ fn information_theory_inequalities() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn quantum_mechanics_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚛️ QUANTUM MECHANICS APPLICATIONS");
     println!("=================================\n");
@@ -793,6 +804,7 @@ fn quantum_mechanics_applications() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper functions
+#[allow(dead_code)]
 fn pause_for_user() -> Result<(), Box<dyn std::error::Error>> {
     print!("Press Enter to continue...");
     io::stdout().flush()?;
@@ -801,6 +813,7 @@ fn pause_for_user() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_reflection_formula_values() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing reflection formula for various values:");
     let test_values = vec![0.1, 0.3, 0.7, 0.9, 1.3, 1.7];
@@ -824,6 +837,7 @@ fn test_reflection_formula_values() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn numerical_bessel_orthogonality_integral(
     nu: i32,
     alpha1: f64,
@@ -844,6 +858,7 @@ fn numerical_bessel_orthogonality_integral(
     Ok(sum)
 }
 
+#[allow(dead_code)]
 fn find_radial_maximum(n: i32, l: i32) -> f64 {
     // Approximate formula for radial maximum
     // Exact calculation would require numerical optimization
@@ -855,6 +870,7 @@ fn find_radial_maximum(n: i32, l: i32) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn kl_divergence(p: &[f64], q: &[f64]) -> Result<f64, Box<dyn std::error::Error>> {
     if p.len() != q.len() {
         return Err("Probability vectors must have same length".into());
@@ -870,24 +886,28 @@ fn kl_divergence(p: &[f64], q: &[f64]) -> Result<f64, Box<dyn std::error::Error>
 }
 
 // Placeholder implementations for functions that might not exist
+#[allow(dead_code)]
 fn hypergeometric_2f1(a: f64, b: f64, c: f64, z: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // This would need to be implemented or use the actual function from the library
     // For now, returning a placeholder
     Ok(1.0 + (a * b / c) * z) // First-order approximation
 }
 
+#[allow(dead_code)]
 fn elliptic_k(k: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // Complete elliptic integral of the first kind
     // Placeholder implementation
     Ok(PI / 2.0 * hypergeometric_2f1(0.5, 0.5, 1.0, k * k)?)
 }
 
+#[allow(dead_code)]
 fn elliptic_e(k: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // Complete elliptic integral of the second kind
     // Placeholder implementation
     Ok(PI / 2.0 * hypergeometric_2f1(-0.5, 0.5, 1.0, k * k)?)
 }
 
+#[allow(dead_code)]
 fn wright_phi(alpha: f64, beta: f64, z: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // Wright function - would use actual implementation
     // Placeholder: sum first few terms

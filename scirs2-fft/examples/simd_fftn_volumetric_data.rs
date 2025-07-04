@@ -9,6 +9,7 @@ use scirs2_fft::{fftn_adaptive, ifftn_adaptive, simd_support_available};
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("SIMD-accelerated N-dimensional FFT Volumetric Data Example");
     println!("-------------------------------------------------------");
@@ -66,6 +67,7 @@ fn main() {
 }
 
 /// Generate a test volume with various frequency components
+#[allow(dead_code)]
 fn generate_test_volume(width: usize, height: usize, depth: usize) -> Vec<f64> {
     let mut volume = vec![0.0; width * height * depth];
 
@@ -105,6 +107,7 @@ fn generate_test_volume(width: usize, height: usize, depth: usize) -> Vec<f64> {
 }
 
 /// Apply a frequency domain filter to volumetric (3D) data
+#[allow(dead_code)]
 fn frequency_domain_filter_3d(volume: &[f64], shape: &[usize], filter_type: &str) -> Vec<f64> {
     // Step 1: Compute the N-dimensional FFT of the volume
     let spectrum = fftn_adaptive(volume, Some(shape), None, None).unwrap();

@@ -27,6 +27,7 @@ use scirs2_fft::{
 use std::f64::consts::PI;
 
 /// Create a test signal with specified sparse frequency components
+#[allow(dead_code)]
 fn create_sparse_signal(n: usize, sparsity: usize) -> Vec<f64> {
     let mut signal = vec![0.0; n];
 
@@ -54,6 +55,7 @@ fn create_sparse_signal(n: usize, sparsity: usize) -> Vec<f64> {
 }
 
 /// Benchmark CPU sparse FFT implementation
+#[allow(dead_code)]
 fn bench_cpu_sparse_fft(c: &mut Criterion) {
     let mut group = c.benchmark_group("cpu_sparse_fft");
 
@@ -98,6 +100,7 @@ fn bench_cpu_sparse_fft(c: &mut Criterion) {
 }
 
 /// Benchmark GPU sparse FFT implementations
+#[allow(dead_code)]
 fn bench_gpu_sparse_fft(c: &mut Criterion) {
     let mut group = c.benchmark_group("gpu_sparse_fft");
 
@@ -154,6 +157,7 @@ fn bench_gpu_sparse_fft(c: &mut Criterion) {
 }
 
 /// Benchmark multi-GPU sparse FFT processing
+#[allow(dead_code)]
 fn bench_multi_gpu_sparse_fft(c: &mut Criterion) {
     let mut group = c.benchmark_group("multi_gpu_sparse_fft");
 
@@ -183,6 +187,7 @@ fn bench_multi_gpu_sparse_fft(c: &mut Criterion) {
 }
 
 /// Benchmark specialized hardware acceleration
+#[allow(dead_code)]
 fn bench_specialized_hardware(c: &mut Criterion) {
     let mut group = c.benchmark_group("specialized_hardware");
 
@@ -213,6 +218,7 @@ fn bench_specialized_hardware(c: &mut Criterion) {
 }
 
 /// Benchmark scaling behavior across different sparsity levels
+#[allow(dead_code)]
 fn bench_sparsity_scaling(c: &mut Criterion) {
     let mut group = c.benchmark_group("sparsity_scaling");
 
@@ -275,6 +281,7 @@ fn bench_sparsity_scaling(c: &mut Criterion) {
 }
 
 /// Benchmark algorithm comparison across acceleration methods
+#[allow(dead_code)]
 fn bench_algorithm_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("algorithm_comparison");
 
@@ -348,6 +355,7 @@ fn bench_algorithm_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark memory efficiency across different acceleration methods
+#[allow(dead_code)]
 fn bench_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_efficiency");
 

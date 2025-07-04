@@ -37,6 +37,7 @@ use std::ops::{Add, AddAssign, Div, Mul, Sub};
 /// assert_eq!(c.get(0, 2), 1.0);
 /// assert_eq!(c.get(1, 3), 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn hstack<'a, T>(
     arrays: &[&'a dyn SparseArray<T>],
     format: &str,
@@ -134,6 +135,7 @@ where
 /// assert_eq!(c.get(2, 0), 1.0);
 /// assert_eq!(c.get(3, 1), 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn vstack<'a, T>(
     arrays: &[&'a dyn SparseArray<T>],
     format: &str,
@@ -237,6 +239,7 @@ where
 /// assert_eq!(c.get(0, 2), 0.0);
 /// assert_eq!(c.get(2, 0), 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn block_diag<'a, T>(
     arrays: &[&'a dyn SparseArray<T>],
     format: &str,
@@ -329,6 +332,7 @@ where
 /// let c = tril(&*a, 1, "csr").unwrap();
 /// assert_eq!(c.get(0, 1), 0.0);  // Nothing in superdiagonal of identity matrix
 /// ```
+#[allow(dead_code)]
 pub fn tril<T>(
     array: &dyn SparseArray<T>,
     k: isize,
@@ -404,6 +408,7 @@ where
 /// let c = triu(&*a, -1, "csr").unwrap();
 /// assert_eq!(c.get(1, 0), 0.0);  // Nothing in subdiagonal of identity matrix
 /// ```
+#[allow(dead_code)]
 pub fn triu<T>(
     array: &dyn SparseArray<T>,
     k: isize,
@@ -484,6 +489,7 @@ where
 /// assert_eq!(c.get(2, 2), 1.0);
 /// assert_eq!(c.get(3, 3), 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn kron<'a, T>(
     a: &'a dyn SparseArray<T>,
     b: &'a dyn SparseArray<T>,
@@ -615,6 +621,7 @@ where
 /// assert!(rows.len() > 0);
 /// assert!(data.len() > 0);
 /// ```
+#[allow(dead_code)]
 pub fn kronsum<'a, T>(
     a: &'a dyn SparseArray<T>,
     b: &'a dyn SparseArray<T>,
@@ -790,6 +797,7 @@ where
 /// assert_eq!(c.get(2, 2), 1.0);
 /// assert_eq!(c.get(3, 3), 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn bmat<'a, T>(
     blocks: &[Vec<Option<&'a dyn SparseArray<T>>>],
     format: &str,
@@ -963,6 +971,7 @@ where
 }
 
 // Helper function to check if a sparse array is an identity matrix
+#[allow(dead_code)]
 fn is_identity_matrix<T>(array: &dyn SparseArray<T>) -> bool
 where
     T: Float + Debug + Copy + 'static,

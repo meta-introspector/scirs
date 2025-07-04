@@ -478,6 +478,7 @@ impl StreamingStats {
 }
 
 /// Process a file using a streaming reader with progress tracking
+#[allow(dead_code)]
 pub fn process_file_chunked<P, F, T>(
     path: P,
     config: StreamingConfig,
@@ -514,6 +515,7 @@ where
 }
 
 /// Process a CSV file using streaming with progress tracking
+#[allow(dead_code)]
 pub fn process_csv_chunked<P, F, T>(
     path: P,
     config: StreamingConfig,

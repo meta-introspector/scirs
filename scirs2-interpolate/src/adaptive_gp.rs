@@ -980,6 +980,7 @@ where
 /// # Returns
 ///
 /// A fitted adaptive Gaussian process
+#[allow(dead_code)]
 pub fn make_adaptive_gp<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,

@@ -8,6 +8,7 @@ use num_complex::Complex64;
 use scirs2_fft::{frft, frft_dft, frft_stable};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("Fractional Fourier Transform Numerical Stability Comparison");
     println!("=========================================================\n");
@@ -22,6 +23,7 @@ fn main() {
     test_cascaded_transforms();
 }
 
+#[allow(dead_code)]
 fn test_additivity_property() {
     println!("1. Additivity Property Test");
     println!("---------------------------");
@@ -96,6 +98,7 @@ fn test_additivity_property() {
     }
 }
 
+#[allow(dead_code)]
 fn test_energy_conservation() {
     println!("2. Energy Conservation Test");
     println!("---------------------------");
@@ -134,6 +137,7 @@ fn test_energy_conservation() {
     println!();
 }
 
+#[allow(dead_code)]
 fn test_cascaded_transforms() {
     println!("3. Cascaded Transforms Test");
     println!("---------------------------");

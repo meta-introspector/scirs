@@ -35,6 +35,7 @@ use std::collections::HashMap;
 /// Workflow 1: Basic Graph Operations and Analysis
 ///
 /// Demonstrates fundamental graph creation, modification, and basic analysis.
+#[allow(dead_code)]
 fn workflow_basic_operations() -> Result<()> {
     println!("🔹 Workflow 1: Basic Graph Operations");
 
@@ -94,6 +95,7 @@ fn workflow_basic_operations() -> Result<()> {
 ///
 /// Demonstrates working with larger graphs and leveraging performance optimizations
 /// like parallel processing for computationally intensive algorithms.
+#[allow(dead_code)]
 fn workflow_large_graph_analysis() -> Result<()> {
     println!("🔹 Workflow 2: Large Graph Analysis");
 
@@ -158,6 +160,7 @@ fn workflow_large_graph_analysis() -> Result<()> {
 /// Workflow 3: Community Detection and Network Analysis
 ///
 /// Demonstrates community detection algorithms and network structure analysis.
+#[allow(dead_code)]
 fn workflow_community_detection() -> Result<()> {
     println!("🔹 Workflow 3: Community Detection");
 
@@ -206,6 +209,7 @@ fn workflow_community_detection() -> Result<()> {
 /// Workflow 4: Multi-Graph Comparison and Benchmarking
 ///
 /// Demonstrates comparing different graph types and their properties.
+#[allow(dead_code)]
 fn workflow_graph_comparison() -> Result<()> {
     println!("🔹 Workflow 4: Graph Type Comparison");
 
@@ -262,6 +266,7 @@ fn workflow_graph_comparison() -> Result<()> {
 /// Workflow 5: Directed Graph Analysis
 ///
 /// Demonstrates working with directed graphs and specific directed graph algorithms.
+#[allow(dead_code)]
 fn workflow_directed_graph_analysis() -> Result<()> {
     println!("🔹 Workflow 5: Directed Graph Analysis");
 
@@ -329,6 +334,7 @@ fn workflow_directed_graph_analysis() -> Result<()> {
 ///
 /// Demonstrates using advanced mode for automatic performance optimization.
 #[cfg(feature = "ultrathink")]
+#[allow(dead_code)]
 fn workflow_advanced_optimization() -> Result<()> {
     use scirs2_graph::advanced::{
         create_enhanced_advanced_processor, execute_with_enhanced_advanced,
@@ -399,6 +405,7 @@ fn workflow_advanced_optimization() -> Result<()> {
 /// Workflow 7: Social Network Analysis Pipeline
 ///
 /// Demonstrates a complete social network analysis workflow.
+#[allow(dead_code)]
 fn workflow_social_network_analysis() -> Result<()> {
     println!("🔹 Workflow 7: Social Network Analysis Pipeline");
 
@@ -490,6 +497,7 @@ fn workflow_social_network_analysis() -> Result<()> {
 /// Workflow 8: Graph Machine Learning Pipeline
 ///
 /// Demonstrates graph-based machine learning workflows.
+#[allow(dead_code)]
 fn workflow_graph_machine_learning() -> Result<()> {
     println!("🔹 Workflow 8: Graph Machine Learning Pipeline");
 
@@ -598,6 +606,7 @@ fn workflow_graph_machine_learning() -> Result<()> {
 /// Workflow 9: Graph I/O and Persistence
 ///
 /// Demonstrates loading, saving, and format conversion workflows.
+#[allow(dead_code)]
 fn workflow_graph_io_operations() -> Result<()> {
     println!("🔹 Workflow 9: Graph I/O and Format Conversion");
 
@@ -658,6 +667,7 @@ fn workflow_graph_io_operations() -> Result<()> {
 }
 
 /// Main function demonstrating all workflows
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 SciRS2-Graph Comprehensive Workflow Examples");
     println!("===============================================\n");

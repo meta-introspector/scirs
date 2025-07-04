@@ -825,6 +825,7 @@ where
 }
 
 /// Convenience function to create a physics-informed interpolator with mass conservation
+#[allow(dead_code)]
 pub fn make_mass_conserving_interpolator<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -856,6 +857,7 @@ where
 }
 
 /// Convenience function to create a monotonic physics-informed interpolator
+#[allow(dead_code)]
 pub fn make_monotonic_physics_interpolator<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -890,6 +892,7 @@ where
 }
 
 /// Convenience function to create a smooth physics-informed interpolator
+#[allow(dead_code)]
 pub fn make_smooth_physics_interpolator<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,

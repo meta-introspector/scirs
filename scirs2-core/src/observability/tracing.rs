@@ -1444,6 +1444,7 @@ impl TraceExporter for HttpExporter {
 
 /// Utility function to get current memory usage
 #[cfg(feature = "memory_metrics")]
+#[allow(dead_code)]
 fn get_current_memory_usage() -> Result<u64, CoreError> {
     // This is a simplified implementation
     // In production, you'd use proper memory monitoring
@@ -1457,6 +1458,7 @@ fn get_current_memory_usage() -> Result<u64, CoreError> {
 static GLOBAL_TRACER: std::sync::OnceLock<Arc<TracingSystem>> = std::sync::OnceLock::new();
 
 /// Initialize global tracing system
+#[allow(dead_code)]
 pub fn init_tracing(config: TracingConfig) -> Result<(), CoreError> {
     let tracer = TracingSystem::new(config)?;
     match GLOBAL_TRACER.set(Arc::new(tracer)) {
@@ -1469,6 +1471,7 @@ pub fn init_tracing(config: TracingConfig) -> Result<(), CoreError> {
 }
 
 /// Get global tracing system
+#[allow(dead_code)]
 pub fn global_tracer() -> Option<Arc<TracingSystem>> {
     GLOBAL_TRACER.get().cloned()
 }
@@ -1680,6 +1683,7 @@ impl EnhancedSpanMetrics {
 
 /// Integration with existing metrics system
 #[cfg(feature = "observability")]
+#[allow(dead_code)]
 pub fn integrate_with_metrics_system() -> Result<(), CoreError> {
     // Get global metrics registry and add tracing-specific metrics
     let registry = crate::metrics::global_metrics_registry();
@@ -1715,6 +1719,7 @@ pub fn integrate_with_metrics_system() -> Result<(), CoreError> {
 }
 
 /// Real-world usage example: Matrix computation with distributed tracing
+#[allow(dead_code)]
 pub fn example_matrix_computation_with_tracing() -> Result<(), CoreError> {
     // Initialize tracing with adaptive sampling
     let config = TracingConfig {

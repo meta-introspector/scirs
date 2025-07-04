@@ -41,6 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Scenario 1: High-dimensional sparse data optimization
+#[allow(dead_code)]
 fn demonstrate_high_dimensional_sparse_optimization() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Scenario 1: High-Dimensional Sparse Data Optimization");
     println!("=========================================================");
@@ -97,6 +98,7 @@ fn demonstrate_high_dimensional_sparse_optimization() -> Result<(), Box<dyn std:
 }
 
 /// Scenario 2: Real-time streaming data adaptation
+#[allow(dead_code)]
 fn demonstrate_real_time_adaptation() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Scenario 2: Real-Time Streaming Data Adaptation");
     println!("==================================================");
@@ -176,6 +178,7 @@ fn demonstrate_real_time_adaptation() -> Result<(), Box<dyn std::error::Error>> 
 }
 
 /// Scenario 3: Multi-modal data fusion
+#[allow(dead_code)]
 fn demonstrate_multimodal_fusion() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔀 Scenario 3: Multi-Modal Data Fusion");
     println!("======================================");
@@ -260,6 +263,7 @@ fn demonstrate_multimodal_fusion() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Scenario 4: Production monitoring and drift detection
+#[allow(dead_code)]
 fn demonstrate_production_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔍 Scenario 4: Production Monitoring & Drift Detection");
     println!("=====================================================");
@@ -347,6 +351,7 @@ fn demonstrate_production_monitoring() -> Result<(), Box<dyn std::error::Error>>
 }
 
 /// Scenario 5: Performance benchmark against traditional methods
+#[allow(dead_code)]
 fn demonstrate_performance_benchmark() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ Scenario 5: Performance Benchmark");
     println!("====================================");
@@ -368,7 +373,7 @@ fn demonstrate_performance_benchmark() -> Result<(), Box<dyn std::error::Error>>
 
         // UltraThink method timing
         let advanced_start = Instant::now();
-        let advanced_result = advanced_optimization(&data.view())?;
+        let advanced_result = ultrathink_optimization(&data.view())?;
         let advanced_time = advanced_start.elapsed();
 
         let speedup = traditional_time.as_secs_f64() / advanced_time.as_secs_f64();
@@ -406,6 +411,7 @@ struct AdaptationRecord {
     recommendations: usize,
 }
 
+#[allow(dead_code)]
 fn create_sparse_dataset(
     n_samples: usize,
     n_features: usize,
@@ -426,6 +432,7 @@ fn create_sparse_dataset(
     Ok(data)
 }
 
+#[allow(dead_code)]
 fn create_drifting_dataset(
     n_samples: usize,
     n_features: usize,
@@ -446,6 +453,7 @@ fn create_drifting_dataset(
     Ok(data)
 }
 
+#[allow(dead_code)]
 fn create_numerical_features(
     n_samples: usize,
     n_features: usize,
@@ -463,6 +471,7 @@ fn create_numerical_features(
     Ok(data)
 }
 
+#[allow(dead_code)]
 fn create_categorical_features(
     n_samples: usize,
     n_features: usize,
@@ -480,6 +489,7 @@ fn create_categorical_features(
     Ok(data)
 }
 
+#[allow(dead_code)]
 fn create_temporal_features(
     n_samples: usize,
     n_features: usize,
@@ -500,6 +510,7 @@ fn create_temporal_features(
     Ok(data)
 }
 
+#[allow(dead_code)]
 fn create_production_dataset(
     n_samples: usize,
     n_features: usize,
@@ -508,6 +519,7 @@ fn create_production_dataset(
     create_drifting_dataset(n_samples, n_features, drift)
 }
 
+#[allow(dead_code)]
 fn create_benchmark_dataset(
     n_samples: usize,
     n_features: usize,
@@ -525,6 +537,7 @@ fn create_benchmark_dataset(
     Ok(data)
 }
 
+#[allow(dead_code)]
 fn optimize_for_sparsity(
     quantum_pipeline: Vec<TransformationConfig>,
     neuro_pipeline: Vec<TransformationConfig>,
@@ -553,6 +566,7 @@ fn optimize_for_sparsity(
     Ok(combined.into_iter().take(3).collect())
 }
 
+#[allow(dead_code)]
 fn adapt_to_concept_drift(
     _meta_features: &DatasetMetaFeatures,
     _history: &[AdaptationRecord],
@@ -576,6 +590,7 @@ fn adapt_to_concept_drift(
     ])
 }
 
+#[allow(dead_code)]
 fn traditional_optimization(
     _data: &ndarray::ArrayView2<f64>,
 ) -> Result<Vec<TransformationConfig>, Box<dyn std::error::Error>> {
@@ -589,6 +604,7 @@ fn traditional_optimization(
     }])
 }
 
+#[allow(dead_code)]
 fn ultrathink_optimization(
     data: &ndarray::ArrayView2<f64>,
 ) -> Result<Vec<TransformationConfig>, Box<dyn std::error::Error>> {
@@ -597,6 +613,7 @@ fn ultrathink_optimization(
     quantum_optimizer.optimize_pipeline(data, 0.8)
 }
 
+#[allow(dead_code)]
 fn evaluate_pipeline_quality(pipeline: &[TransformationConfig]) -> f64 {
     if pipeline.is_empty() {
         return 0.0;

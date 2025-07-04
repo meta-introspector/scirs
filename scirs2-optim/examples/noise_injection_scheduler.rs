@@ -19,6 +19,7 @@ type OptimizationResult = Result<(Array1<f64>, Vec<(f64, f64, f64)>), Box<dyn Er
 
 /// A simple 2D function with multiple local minima
 /// f(x, y) = x^2 + 5*sin(y) + (x*y)^2
+#[allow(dead_code)]
 fn multimodal_function(point: &Array1<f64>) -> f64 {
     let x = point[0];
     let y = point[1];
@@ -27,6 +28,7 @@ fn multimodal_function(point: &Array1<f64>) -> f64 {
 }
 
 /// Compute the gradient of the multimodal function
+#[allow(dead_code)]
 fn multimodal_gradient(point: &Array1<f64>) -> Array1<f64> {
     let x = point[0];
     let y = point[1];
@@ -41,6 +43,7 @@ fn multimodal_gradient(point: &Array1<f64>) -> Array1<f64> {
 }
 
 /// Run optimization with the given scheduler and return the optimization trajectory
+#[allow(dead_code)]
 fn optimize<S: LearningRateScheduler<f64>>(
     initial_point: &Array1<f64>,
     scheduler: S,
@@ -74,6 +77,7 @@ fn optimize<S: LearningRateScheduler<f64>>(
     Ok((point, trajectory))
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Noise Injection Scheduler Example");
     println!("=================================");

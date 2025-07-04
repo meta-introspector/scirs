@@ -15,6 +15,7 @@ use scirs2_linalg::prelude::*;
 use std::time::Duration;
 
 /// Create a well-conditioned test matrix scaled for matrix functions
+#[allow(dead_code)]
 fn create_matrix_function_test_matrix(n: usize, scale: f64) -> Array2<f64> {
     let mut matrix = Array2::zeros((n, n));
     for i in 0..n {
@@ -30,12 +31,14 @@ fn create_matrix_function_test_matrix(n: usize, scale: f64) -> Array2<f64> {
 }
 
 /// Create a symmetric positive definite matrix for matrix functions
+#[allow(dead_code)]
 fn create_spd_matrix_scaled(n: usize, scale: f64) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1 * scale).sin());
     a.t().dot(&a) * scale + Array2::<f64>::eye(n) * (n as f64 * scale)
 }
 
 /// Create a nilpotent matrix for testing convergent series
+#[allow(dead_code)]
 fn create_nilpotent_matrix(n: usize) -> Array2<f64> {
     let mut matrix = Array2::zeros((n, n));
     // Upper triangular with small entries
@@ -48,6 +51,7 @@ fn create_nilpotent_matrix(n: usize) -> Array2<f64> {
 }
 
 /// Create a matrix with specific eigenvalue distribution
+#[allow(dead_code)]
 fn create_eigenvalue_controlled_matrix(n: usize, min_eig: f64, max_eig: f64) -> Array2<f64> {
     // Create a diagonal matrix with controlled eigenvalues
     let mut diag = Array2::zeros((n, n));
@@ -62,6 +66,7 @@ fn create_eigenvalue_controlled_matrix(n: usize, min_eig: f64, max_eig: f64) -> 
 }
 
 /// Create an orthogonal matrix for transformations
+#[allow(dead_code)]
 fn orthogonal_matrix(n: usize) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     let (q, _) = qr(&a.view(), None).unwrap();
@@ -69,6 +74,7 @@ fn orthogonal_matrix(n: usize) -> Array2<f64> {
 }
 
 /// Benchmark matrix exponential variants
+#[allow(dead_code)]
 fn bench_matrix_exponential(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_exponential");
     group.sample_size(10); // Matrix functions are expensive
@@ -140,6 +146,7 @@ fn bench_matrix_exponential(c: &mut Criterion) {
 }
 
 /// Benchmark matrix logarithm variants
+#[allow(dead_code)]
 fn bench_matrix_logarithm(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_logarithm");
     group.sample_size(10);
@@ -189,6 +196,7 @@ fn bench_matrix_logarithm(c: &mut Criterion) {
 }
 
 /// Benchmark matrix power functions
+#[allow(dead_code)]
 fn bench_matrix_power(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_power");
     group.sample_size(15);
@@ -264,6 +272,7 @@ fn bench_matrix_power(c: &mut Criterion) {
 }
 
 /// Benchmark matrix square root variants
+#[allow(dead_code)]
 fn bench_matrix_sqrt(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_sqrt");
     group.sample_size(15);
@@ -327,6 +336,7 @@ fn bench_matrix_sqrt(c: &mut Criterion) {
 }
 
 /// Benchmark matrix sign function
+#[allow(dead_code)]
 fn bench_matrix_sign(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_sign");
     group.sample_size(15);
@@ -373,6 +383,7 @@ fn bench_matrix_sign(c: &mut Criterion) {
 }
 
 /// Benchmark trigonometric matrix functions
+#[allow(dead_code)]
 fn bench_matrix_trigonometric(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_trigonometric");
     group.sample_size(15);
@@ -417,6 +428,7 @@ fn bench_matrix_trigonometric(c: &mut Criterion) {
 }
 
 /// Benchmark inverse trigonometric matrix functions
+#[allow(dead_code)]
 fn bench_matrix_inverse_trigonometric(c: &mut Criterion) {
     let mut group = c.benchmark_group("matrix_inverse_trigonometric");
     group.sample_size(10);
@@ -490,6 +502,7 @@ fn bench_matrix_inverse_trigonometric(c: &mut Criterion) {
 }
 
 /// Benchmark general matrix function evaluation
+#[allow(dead_code)]
 fn bench_general_matrix_function(c: &mut Criterion) {
     let mut group = c.benchmark_group("general_matrix_function");
     group.sample_size(10);
@@ -544,6 +557,7 @@ fn bench_general_matrix_function(c: &mut Criterion) {
 }
 
 /// Benchmark accuracy vs performance trade-offs
+#[allow(dead_code)]
 fn bench_accuracy_performance_tradeoffs(c: &mut Criterion) {
     let mut group = c.benchmark_group("accuracy_performance_tradeoffs");
     group.sample_size(20);
@@ -580,6 +594,7 @@ fn bench_accuracy_performance_tradeoffs(c: &mut Criterion) {
 }
 
 /// Benchmark condition number effects on matrix functions
+#[allow(dead_code)]
 fn bench_conditioning_effects(c: &mut Criterion) {
     let mut group = c.benchmark_group("conditioning_effects");
     group.sample_size(15);

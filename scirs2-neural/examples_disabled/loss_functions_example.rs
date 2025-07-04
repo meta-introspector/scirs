@@ -3,6 +3,7 @@ use scirs2_neural::losses::{
     ContrastiveLoss, CrossEntropyLoss, FocalLoss, Loss, MeanSquaredError, TripletLoss,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Loss functions example");
     // Mean Squared Error example

@@ -9,6 +9,7 @@ use std::fmt::Display;
 use crate::error::{Result, TimeSeriesError};
 
 /// Validate that a value is positive
+#[allow(dead_code)]
 pub fn check_positive<F: Float + Display>(value: F, name: &str) -> Result<()> {
     if value <= F::zero() {
         return Err(TimeSeriesError::InvalidParameter {
@@ -20,6 +21,7 @@ pub fn check_positive<F: Float + Display>(value: F, name: &str) -> Result<()> {
 }
 
 /// Validate that a value is non-negative
+#[allow(dead_code)]
 pub fn check_non_negative<F: Float + Display>(value: F, name: &str) -> Result<()> {
     if value < F::zero() {
         return Err(TimeSeriesError::InvalidParameter {
@@ -31,6 +33,7 @@ pub fn check_non_negative<F: Float + Display>(value: F, name: &str) -> Result<()
 }
 
 /// Validate that a value is in range [0, 1]
+#[allow(dead_code)]
 pub fn check_probability<F: Float + Display>(value: F, name: &str) -> Result<()> {
     if value < F::zero() || value > F::one() {
         return Err(TimeSeriesError::InvalidParameter {
@@ -42,6 +45,7 @@ pub fn check_probability<F: Float + Display>(value: F, name: &str) -> Result<()>
 }
 
 /// Validate that a value is in a given range
+#[allow(dead_code)]
 pub fn check_in_range<F: Float + Display>(value: F, min: F, max: F, name: &str) -> Result<()> {
     if value < min || value > max {
         return Err(TimeSeriesError::InvalidParameter {
@@ -53,6 +57,7 @@ pub fn check_in_range<F: Float + Display>(value: F, min: F, max: F, name: &str) 
 }
 
 /// Validate that an array has sufficient length
+#[allow(dead_code)]
 pub fn check_array_length<S, F>(
     data: &ArrayBase<S, Ix1>,
     min_length: usize,
@@ -73,6 +78,7 @@ where
 }
 
 /// Validate that two arrays have the same length
+#[allow(dead_code)]
 pub fn check_same_length<S1, S2, F>(
     arr1: &ArrayBase<S1, Ix1>,
     arr2: &ArrayBase<S2, Ix1>,
@@ -94,6 +100,7 @@ where
 }
 
 /// Validate ARIMA orders
+#[allow(dead_code)]
 pub fn validate_arima_orders(p: usize, d: usize, q: usize) -> Result<()> {
     if p > 10 {
         return Err(TimeSeriesError::InvalidParameter {
@@ -117,6 +124,7 @@ pub fn validate_arima_orders(p: usize, d: usize, q: usize) -> Result<()> {
 }
 
 /// Validate seasonal ARIMA orders
+#[allow(dead_code)]
 pub fn validate_seasonal_arima_orders(
     p: usize,
     d: usize,
@@ -163,6 +171,7 @@ pub fn validate_seasonal_arima_orders(
 }
 
 /// Validate forecast horizon
+#[allow(dead_code)]
 pub fn validate_forecast_horizon(steps: usize, max_reasonable: Option<usize>) -> Result<()> {
     if steps == 0 {
         return Err(TimeSeriesError::InvalidParameter {
@@ -183,6 +192,7 @@ pub fn validate_forecast_horizon(steps: usize, max_reasonable: Option<usize>) ->
 }
 
 /// Validate window size for rolling operations
+#[allow(dead_code)]
 pub fn validate_window_size(window: usize, data_length: usize) -> Result<()> {
     if window == 0 {
         return Err(TimeSeriesError::InvalidParameter {
@@ -202,6 +212,7 @@ pub fn validate_window_size(window: usize, data_length: usize) -> Result<()> {
 }
 
 /// Validate lag for time series operations
+#[allow(dead_code)]
 pub fn validate_lag(lag: usize, data_length: usize) -> Result<()> {
     if lag >= data_length {
         return Err(TimeSeriesError::InvalidParameter {
@@ -213,6 +224,7 @@ pub fn validate_lag(lag: usize, data_length: usize) -> Result<()> {
 }
 
 /// Check if array has no missing values
+#[allow(dead_code)]
 pub fn check_no_missing<S, F>(data: &ArrayBase<S, Ix1>) -> Result<()>
 where
     S: Data<Elem = F>,
@@ -230,6 +242,7 @@ where
 }
 
 /// Check if array is stationary (basic check)
+#[allow(dead_code)]
 pub fn check_stationarity_basic<S, F>(data: &ArrayBase<S, Ix1>) -> Result<bool>
 where
     S: Data<Elem = F>,

@@ -52,6 +52,7 @@ pub enum NormalizationMethod {
 /// // Normalize columns (axis 0) using min-max normalization
 /// let normalized = normalize_array(&data, NormalizationMethod::MinMax, 0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn normalize_array<S>(
     array: &ArrayBase<S, Ix2>,
     method: NormalizationMethod,
@@ -294,6 +295,7 @@ where
 /// // Normalize vector using min-max normalization
 /// let normalized = normalize_vector(&data, NormalizationMethod::MinMax).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn normalize_vector<S>(
     array: &ArrayBase<S, Ix1>,
     method: NormalizationMethod,

@@ -553,6 +553,7 @@ impl Transformer {
                 break;
         decoded_tokens
 // Helper functions for creating translation dataset and processing
+#[allow(dead_code)]
 fn create_toy_translation_dataset() -> (Vec<Vec<String>>, Vec<Vec<String>>) {
     // Simple English-French pairs (similar to previous examples but expanded)
     let pairs = vec![
@@ -587,6 +588,7 @@ fn create_toy_translation_dataset() -> (Vec<Vec<String>>, Vec<Vec<String>>) {
         french.push(fr.split_whitespace().map(|s| s.to_string()).collect());
     (english, french)
 // Create vocabularies for source and target languages
+#[allow(dead_code)]
 fn create_vocabulary(
     sentences: &[Vec<String>],
 ) -> (HashMap<String, usize>, HashMap<usize, String>) {
@@ -608,6 +610,7 @@ fn create_vocabulary(
                 idx += 1;
     (word_to_idx, idx_to_word)
 // Convert sentences to token IDs with padding
+#[allow(dead_code)]
 fn tokenize_sentences(
     word_to_idx: &HashMap<String, usize>,
     max_len: usize,
@@ -638,6 +641,7 @@ fn tokenize_sentences(
             tokens[[i, pos]] = eos_idx;
     tokens
 // Simplified training function (without actual parameter updates)
+#[allow(dead_code)]
 fn train_transformer(
     model: &mut Transformer,
     src_tokens: &Array2<usize>,
@@ -691,6 +695,7 @@ fn train_transformer(
         // 2. Update parameters using an optimizer
         // 3. Validate on a separate dataset
 // Evaluate the model
+#[allow(dead_code)]
 fn evaluate_transformer(
     src_idx_to_word: &HashMap<usize, String>,
     tgt_idx_to_word: &HashMap<usize, String>,
@@ -763,6 +768,7 @@ fn evaluate_transformer(
     println!("Precision: {:.4}", precision);
     println!("Recall:    {:.4}", recall);
     println!("F1 Score:  {:.4}", f1);
+#[allow(dead_code)]
 fn main() {
     println!("Neural Machine Translation with Transformer");
     println!("==========================================");

@@ -1058,6 +1058,7 @@ where
 }
 
 /// Create a new zero-copy stream processor with default configuration
+#[allow(dead_code)]
 pub fn create_zero_copy_processor<T, U, F>(
     process_fn: F,
 ) -> CoreResult<ZeroCopyStreamProcessor<T, U>>

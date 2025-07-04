@@ -138,7 +138,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Drop
             };
 
             for elem in mask.iter_mut() {
-                if F::from((**rng_guard).gen::<f64>()).unwrap() < self.p {
+                if F::from((**rng_guard).random::<f64>()).unwrap() < self.p {
                     *elem = zero;
                 }
             }

@@ -67,6 +67,7 @@ pub struct IterativeSolverResult<A> {
 /// let result = conjugate_gradient(&a.view(), &b.view(), None, &options).unwrap();
 /// assert!(result.converged);
 /// ```
+#[allow(dead_code)]
 pub fn conjugate_gradient<A>(
     a: &ArrayView2<A>,
     b: &ArrayView1<A>,
@@ -190,6 +191,7 @@ where
 /// * `preconditioner` - Function that applies M^{-1} to a vector
 /// * `x0` - Initial guess (optional)
 /// * `options` - Solver options
+#[allow(dead_code)]
 pub fn preconditioned_conjugate_gradient<A, F>(
     a: &ArrayView2<A>,
     b: &ArrayView1<A>,
@@ -314,6 +316,7 @@ where
 /// * `b` - Right-hand side vector
 /// * `x0` - Initial guess (optional)
 /// * `options` - Solver options (restart parameter can be specified)
+#[allow(dead_code)]
 pub fn gmres<A>(
     a: &ArrayView2<A>,
     b: &ArrayView1<A>,
@@ -455,6 +458,7 @@ where
 /// * `b` - Right-hand side vector
 /// * `x0` - Initial guess (optional)
 /// * `options` - Solver options
+#[allow(dead_code)]
 pub fn bicgstab<A>(
     a: &ArrayView2<A>,
     b: &ArrayView1<A>,
@@ -598,6 +602,7 @@ where
 }
 
 /// Helper function to solve least squares problem for GMRES
+#[allow(dead_code)]
 fn solve_least_squares_gmres<A>(h: &ArrayView2<A>, beta: A) -> LinalgResult<Array1<A>>
 where
     A: Float + NumAssign + Debug + Display + ndarray::ScalarOperand + 'static,

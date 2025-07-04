@@ -22,6 +22,7 @@ type QRWorkItem<F> = WorkItem<(usize, Array1<F>, Array2<F>)>;
 type BandSolveWorkItem<F> = WorkItem<(usize, usize, usize, Array2<F>, Array1<F>)>;
 
 /// Simple parallel map utility function using rayon
+#[allow(dead_code)]
 fn parallel_map<T, U, F>(items: &[T], func: F) -> Vec<U>
 where
     T: Sync,
@@ -1975,6 +1976,7 @@ pub mod matrix_ops {
 }
 
 /// Sequential SVD fallback for small matrices
+#[allow(dead_code)]
 fn sequential_svd<F>(matrix: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
@@ -2078,6 +2080,7 @@ where
 // Helper functions for the new parallel algorithms
 
 /// Parallel Householder tridiagonalization for symmetric matrices
+#[allow(dead_code)]
 fn parallel_householder_tridiagonalization<F>(
     a: &ArrayView2<F>,
     workers: usize,
@@ -2345,6 +2348,7 @@ impl<T: Clone + Send + 'static> CacheAwareWorkStealer<T> {
 }
 
 /// Advanced parallel matrix multiplication with cache-aware optimization
+#[allow(dead_code)]
 pub fn parallel_gemm_cache_aware<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -2460,6 +2464,7 @@ struct BlockMultiplyResult<F> {
 }
 
 /// Create Householder vector for reflection
+#[allow(dead_code)]
 fn create_householder_vector<F>(x: &ArrayView1<F>) -> Option<Array1<F>>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
@@ -2492,6 +2497,7 @@ where
 }
 
 /// Apply Householder transformation in parallel
+#[allow(dead_code)]
 fn apply_householder_parallel<F>(
     matrix: &mut Array2<F>,
     v: &Array1<F>,
@@ -2549,6 +2555,7 @@ where
 }
 
 /// Apply Householder transformation to Q matrix in parallel
+#[allow(dead_code)]
 fn apply_householder_to_q_parallel<F>(
     q: &mut Array2<F>,
     v: &Array1<F>,
@@ -2602,6 +2609,7 @@ where
 }
 
 /// Parallel tridiagonal QR algorithm
+#[allow(dead_code)]
 fn parallel_tridiagonal_qr<F>(
     tridiag: &mut Array2<F>,
     q: &mut Array2<F>,
@@ -2671,6 +2679,7 @@ where
 }
 
 /// Parallel QR step with Wilkinson shift for tridiagonal matrices
+#[allow(dead_code)]
 fn parallel_qr_step_with_shift<F>(
     diagonal: &mut Array1<F>,
     sub_diagonal: &mut Array1<F>,
@@ -2749,6 +2758,7 @@ where
 }
 
 /// Sequential QR step with Wilkinson shift
+#[allow(dead_code)]
 fn sequential_qr_step_with_shift<F>(
     diagonal: &mut Array1<F>,
     sub_diagonal: &mut Array1<F>,
@@ -2795,6 +2805,7 @@ where
 }
 
 /// Apply a single Givens rotation to eliminate sub-diagonal element
+#[allow(dead_code)]
 fn apply_givens_rotation<F>(
     diagonal: &mut Array1<F>,
     sub_diagonal: &mut Array1<F>,
@@ -2862,6 +2873,7 @@ fn apply_givens_rotation<F>(
 }
 
 /// Parallel Padé approximation
+#[allow(dead_code)]
 fn parallel_pade_approximation<F>(
     _matrix: &ArrayView2<F>,
     _order: usize,
@@ -2876,6 +2888,7 @@ where
 }
 
 /// Parallel Frobenius norm
+#[allow(dead_code)]
 fn parallel_frobenius_norm<F>(a: &ArrayView2<F>, _workers: usize) -> LinalgResult<F>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
@@ -2885,6 +2898,7 @@ where
 }
 
 /// Parallel nuclear norm
+#[allow(dead_code)]
 fn parallel_nuclear_norm<F>(a: &ArrayView2<F>, workers: usize) -> LinalgResult<F>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
@@ -2894,6 +2908,7 @@ where
 }
 
 /// Parallel matrix 1-norm
+#[allow(dead_code)]
 fn parallel_matrix_1_norm<F>(a: &ArrayView2<F>, _workers: usize) -> LinalgResult<F>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
@@ -2910,6 +2925,7 @@ where
 }
 
 /// Parallel spectral norm
+#[allow(dead_code)]
 fn parallel_spectral_norm<F>(a: &ArrayView2<F>, _workers: usize) -> LinalgResult<F>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
@@ -2919,6 +2935,7 @@ where
 }
 
 /// Parallel matrix infinity norm
+#[allow(dead_code)]
 fn parallel_matrix_inf_norm<F>(a: &ArrayView2<F>, _workers: usize) -> LinalgResult<F>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,

@@ -54,6 +54,7 @@ use scirs2_core::validation::clustering::*;
 ///
 /// let (centroids, labels, inertia) = kmeans_simd(data.view(), 2, None, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn kmeans_simd<F>(
     data: ArrayView2<F>,
     k: usize,
@@ -138,6 +139,7 @@ where
 }
 
 /// Single run of SIMD-accelerated K-means
+#[allow(dead_code)]
 fn simd_kmeans_single<F>(
     data: ArrayView2<F>,
     init_centroids: ArrayView2<F>,
@@ -197,6 +199,7 @@ where
 }
 
 /// Compute the shift in centroids between iterations using SIMD
+#[allow(dead_code)]
 fn compute_centroid_shift_simd<F>(
     old_centroids: ArrayView2<F>,
     new_centroids: ArrayView2<F>,
@@ -285,6 +288,7 @@ where
 /// # Returns
 ///
 /// * Tuple of (centroids, labels, inertia)
+#[allow(dead_code)]
 pub fn mini_batch_kmeans_simd<F>(
     data: ArrayView2<F>,
     k: usize,
@@ -395,6 +399,7 @@ where
 /// # Returns
 ///
 /// * Array of initial centroids (k × n_features)
+#[allow(dead_code)]
 pub fn kmeans_plus_plus_simd<F>(
     data: ArrayView2<F>,
     k: usize,

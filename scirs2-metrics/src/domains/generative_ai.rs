@@ -1582,10 +1582,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand> Multim
         // Create ground truth lookup
         let mut gt_map: HashMap<usize, Vec<usize>> = HashMap::new();
         for &(query_idx, candidate_idx) in ground_truth_pairs {
-            gt_map
-                .entry(query_idx)
-                .or_insert_with(Vec::new)
-                .push(candidate_idx);
+            gt_map.entry(query_idx).or_default().push(candidate_idx);
         }
 
         // Compute recall at k for each k value

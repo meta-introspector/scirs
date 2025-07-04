@@ -4,9 +4,8 @@
 //! analysis ecosystem, enabling interoperability with ts, forecast, and other R packages.
 
 #[cfg(feature = "r")]
-use std::collections::HashMap;
 #[cfg(feature = "r")]
-use std::ffi::{CStr, CString};
+use std::ffi::CString;
 #[cfg(feature = "r")]
 use std::os::raw::{c_char, c_double, c_int, c_void};
 #[cfg(feature = "r")]
@@ -15,15 +14,13 @@ use std::slice;
 #[cfg(feature = "r")]
 use crate::{
     anomaly::{detect_anomalies, AnomalyMethod, AnomalyOptions},
-    arima_models::{ArimaConfig, ArimaModel},
-    decomposition::{stl_decomposition, STLOptions},
-    error::{Result, TimeSeriesError},
-    forecasting::neural::NeuralForecaster,
-    streaming::StreamingAnomalyDetector,
+    arima_models::{ArimaConfig, ArimaModel, ArimaSelectionOptions},
+    forecasting::neural::{LSTMConfig, LSTMForecaster, NeuralForecaster},
+    streaming::advanced::StreamingAnomalyDetector,
     utils::*,
 };
 #[cfg(feature = "r")]
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 
 /// Error codes for R integration
 #[cfg(feature = "r")]
@@ -394,7 +391,7 @@ pub extern "C" fn scirs_forecast_arima(
                 let output_length = std::cmp::min(forecasts.len(), max_length as usize);
                 let output_slice = slice::from_raw_parts_mut(output, output_length);
 
-                for (i, &val) in forecasts.iter().take(output_length).enumerate() {
+                for (i, &val) in forecasts.forecast.iter().take(output_length).enumerate() {
                     output_slice[i] = val;
                 }
 
@@ -496,12 +493,18 @@ pub extern "C" fn scirs_detect_anomalies_iqr(
             return R_ERROR_INVALID_PARAMS;
         }
 
-        let anomaly_detector = &*(detector_ref.handle as *const AnomalyDetector);
         let values_slice = slice::from_raw_parts(ts_ref.values, ts_ref.length as usize);
         let values_array = Array1::from_vec(values_slice.to_vec());
 
-        match anomaly_detector.detect_iqr(&values_array, multiplier) {
-            Ok(anomalies) => {
+        let options = AnomalyOptions {
+            method: AnomalyMethod::InterquartileRange,
+            threshold: Some(multiplier),
+            ..Default::default()
+        };
+
+        match detect_anomalies(&values_array, &options) {
+            Ok(result) => {
+                let anomalies = result.anomaly_indices;
                 let anomaly_count = std::cmp::min(anomalies.len(), max_anomalies as usize);
                 let indices_slice = slice::from_raw_parts_mut(anomaly_indices, anomaly_count);
 
@@ -538,12 +541,18 @@ pub extern "C" fn scirs_detect_anomalies_zscore(
             return R_ERROR_INVALID_PARAMS;
         }
 
-        let anomaly_detector = &*(detector_ref.handle as *const AnomalyDetector);
         let values_slice = slice::from_raw_parts(ts_ref.values, ts_ref.length as usize);
         let values_array = Array1::from_vec(values_slice.to_vec());
 
-        match anomaly_detector.detect_zscore(&values_array, threshold) {
-            Ok(anomalies) => {
+        let options = AnomalyOptions {
+            method: AnomalyMethod::ZScore,
+            threshold: Some(threshold),
+            ..Default::default()
+        };
+
+        match detect_anomalies(&values_array, &options) {
+            Ok(result) => {
+                let anomalies = result.anomaly_indices;
                 let anomaly_count = std::cmp::min(anomalies.len(), max_anomalies as usize);
                 let indices_slice = slice::from_raw_parts_mut(anomaly_indices, anomaly_count);
 
@@ -564,10 +573,9 @@ pub extern "C" fn scirs_detect_anomalies_zscore(
 pub extern "C" fn scirs_free_anomaly_detector(detector: *mut RAnomalyDetector) {
     if !detector.is_null() {
         unsafe {
-            let detector_box = Box::from_raw(detector);
-            if !detector_box.handle.is_null() {
-                Box::from_raw(detector_box.handle as *mut AnomalyDetector);
-            }
+            let _detector_box = Box::from_raw(detector);
+            // Since we're using functional API, no need to free the handle
+            // The handle is not storing an actual detector object
         }
     }
 }
@@ -612,7 +620,7 @@ pub extern "C" fn scirs_decompose_stl(
             return R_ERROR_INVALID_PARAMS;
         }
 
-        let stl_decomposition = &*(decomp_ref.handle as *const STLDecomposition);
+        let stl_decomposition = &*(decomp_ref.handle as *const RSTLDecomposition);
         let values_slice = slice::from_raw_parts(ts_ref.values, ts_ref.length as usize);
         let values_array = Array1::from_vec(values_slice.to_vec());
 
@@ -651,7 +659,7 @@ pub extern "C" fn scirs_free_stl_decomposition(decomposition: *mut RSTLDecomposi
         unsafe {
             let decomp_box = Box::from_raw(decomposition);
             if !decomp_box.handle.is_null() {
-                Box::from_raw(decomp_box.handle as *mut STLDecomposition);
+                Box::from_raw(decomp_box.handle as *mut RSTLDecomposition);
             }
         }
     }
@@ -722,33 +730,46 @@ pub extern "C" fn scirs_auto_arima(
 
         let seasonal_bool = seasonal != 0;
 
-        match crate::arima_models::auto_arima(
-            &values_array,
-            max_p as usize,
-            max_d as usize,
-            max_q as usize,
-            seasonal_bool,
-            max_seasonal_p as usize,
-            max_seasonal_d as usize,
-            max_seasonal_q as usize,
-            seasonal_period as usize,
-        ) {
-            Ok(best_config) => match ARIMAModel::new(best_config.clone()) {
-                Ok(model) => {
-                    let r_model = Box::new(RARIMAModel {
-                        handle: Box::into_raw(Box::new(model)) as *mut c_void,
-                        p: best_config.p as c_int,
-                        d: best_config.d as c_int,
-                        q: best_config.q as c_int,
-                        seasonal_p: best_config.seasonal_p as c_int,
-                        seasonal_d: best_config.seasonal_d as c_int,
-                        seasonal_q: best_config.seasonal_q as c_int,
-                        seasonal_period: best_config.seasonal_period as c_int,
-                    });
-                    Box::into_raw(r_model)
+        let options = crate::arima_models::ArimaSelectionOptions {
+            max_p: max_p as usize,
+            max_d: max_d as usize,
+            max_q: max_q as usize,
+            seasonal: seasonal_bool,
+            max_seasonal_p: max_seasonal_p as usize,
+            max_seasonal_d: max_seasonal_d as usize,
+            max_seasonal_q: max_seasonal_q as usize,
+            seasonal_period: Some(seasonal_period as usize),
+            ..Default::default()
+        };
+
+        match crate::arima_models::auto_arima(&values_array, &options) {
+            Ok((arima_model, sarima_params)) => {
+                let config = ArimaConfig {
+                    p: sarima_params.pdq.0,
+                    d: sarima_params.pdq.1,
+                    q: sarima_params.pdq.2,
+                    seasonal_p: sarima_params.seasonal_pdq.0,
+                    seasonal_d: sarima_params.seasonal_pdq.1,
+                    seasonal_q: sarima_params.seasonal_pdq.2,
+                    seasonal_period: sarima_params.seasonal_period,
+                };
+                match ArimaModel::new(config.p, config.d, config.q) {
+                    Ok(model) => {
+                        let r_model = Box::new(RARIMAModel {
+                            handle: Box::into_raw(Box::new(model)) as *mut c_void,
+                            p: config.p as c_int,
+                            d: config.d as c_int,
+                            q: config.q as c_int,
+                            seasonal_p: config.seasonal_p as c_int,
+                            seasonal_d: config.seasonal_d as c_int,
+                            seasonal_q: config.seasonal_q as c_int,
+                            seasonal_period: config.seasonal_period as c_int,
+                        });
+                        Box::into_raw(r_model)
+                    }
+                    Err(_) => std::ptr::null_mut(),
                 }
-                Err(_) => std::ptr::null_mut(),
-            },
+            }
             Err(_) => std::ptr::null_mut(),
         }
     }
@@ -779,11 +800,8 @@ pub extern "C" fn scirs_create_neural_forecaster(
         return std::ptr::null_mut();
     }
 
-    let forecaster = NeuralForecaster::new(
-        input_size as usize,
-        hidden_size as usize,
-        output_size as usize,
-    );
+    let forecaster =
+        Box::new(LSTMForecaster::new(LSTMConfig::default())) as Box<dyn NeuralForecaster<f64>>;
 
     let r_forecaster = Box::new(RNeuralForecaster {
         handle: Box::into_raw(Box::new(forecaster)) as *mut c_void,
@@ -816,11 +834,11 @@ pub extern "C" fn scirs_train_neural_forecaster(
             return R_ERROR_INVALID_PARAMS;
         }
 
-        let neural_forecaster = &mut *(forecaster_ref.handle as *mut NeuralForecaster);
+        let neural_forecaster = &mut *(forecaster_ref.handle as *mut dyn NeuralForecaster<f64>);
         let values_slice = slice::from_raw_parts(ts_ref.values, ts_ref.length as usize);
         let values_array = Array1::from_vec(values_slice.to_vec());
 
-        match neural_forecaster.train(&values_array, epochs as usize, learning_rate) {
+        match neural_forecaster.fit(&values_array) {
             Ok(_) => R_SUCCESS,
             Err(_) => R_ERROR_COMPUTATION,
         }
@@ -849,16 +867,16 @@ pub extern "C" fn scirs_forecast_neural(
             return R_ERROR_NOT_FITTED;
         }
 
-        let neural_forecaster = &*(forecaster_ref.handle as *const NeuralForecaster);
+        let neural_forecaster = &*(forecaster_ref.handle as *const dyn NeuralForecaster<f64>);
         let input_slice = slice::from_raw_parts(input, input_length as usize);
         let input_array = Array1::from_vec(input_slice.to_vec());
 
-        match neural_forecaster.forecast(&input_array, steps as usize) {
+        match neural_forecaster.predict(steps as usize) {
             Ok(forecasts) => {
-                let output_length = std::cmp::min(forecasts.len(), max_length as usize);
+                let output_length = std::cmp::min(forecasts.forecast.len(), max_length as usize);
                 let output_slice = slice::from_raw_parts_mut(output, output_length);
 
-                for (i, &val) in forecasts.iter().take(output_length).enumerate() {
+                for (i, &val) in forecasts.forecast.iter().take(output_length).enumerate() {
                     output_slice[i] = val;
                 }
 
@@ -877,7 +895,7 @@ pub extern "C" fn scirs_free_neural_forecaster(forecaster: *mut RNeuralForecaste
         unsafe {
             let forecaster_box = Box::from_raw(forecaster);
             if !forecaster_box.handle.is_null() {
-                Box::from_raw(forecaster_box.handle as *mut NeuralForecaster);
+                Box::from_raw(forecaster_box.handle as *mut dyn NeuralForecaster<f64>);
             }
         }
     }

@@ -374,6 +374,7 @@ impl<F: Float + NumAssign + Sum + Debug + 'static> LinearOperator<F> for ILU0Pre
 }
 
 // Helper function to find diagonal index in CSR format
+#[allow(dead_code)]
 fn find_diagonal_index(indices: &[usize], indptr: &[usize], row: usize) -> SparseResult<usize> {
     let row_start = indptr[row];
     let row_end = indptr[row + 1];

@@ -6,6 +6,7 @@
 use ndarray::Array2;
 
 // Simple demo without external dependencies
+#[allow(dead_code)]
 fn main() {
     println!("=== QUICK VALIDATION DEMO ===");
 
@@ -16,6 +17,7 @@ fn main() {
     println!("\n✓ Quick validation demo completed successfully!");
 }
 
+#[allow(dead_code)]
 fn demo_array_operations() {
     println!("\n1. BASIC ARRAY OPERATIONS");
     println!("=========================");
@@ -46,6 +48,7 @@ fn demo_array_operations() {
     println!("   Mean difference: {:.6}", mean_diff);
 }
 
+#[allow(dead_code)]
 fn demo_validation_concepts() {
     println!("\n2. VALIDATION CONCEPTS");
     println!("======================");

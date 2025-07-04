@@ -3,6 +3,7 @@
 use scirs2_special::*;
 
 #[test]
+#[allow(dead_code)]
 fn test_airy_function_variants() {
     // Test exponentially scaled Airy functions
     let x = 1.0;
@@ -32,6 +33,7 @@ fn test_airy_function_variants() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_combinatorial_functions() {
     // Test comb function (SciPy compatibility)
     let result = comb(5, 2).expect("Should compute combination");
@@ -42,6 +44,7 @@ fn test_combinatorial_functions() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_wright_bessel_log() {
     // Test log_wright_bessel function
     let result = log_wright_bessel(0.5, 1.0, 1.0).expect("Should compute log Wright Bessel");
@@ -54,6 +57,7 @@ fn test_wright_bessel_log() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_distribution_inverse_functions() {
     // Test some basic inverse distribution functions
 

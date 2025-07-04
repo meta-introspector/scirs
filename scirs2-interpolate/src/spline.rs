@@ -1332,7 +1332,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
             }
             crate::interp1d::ExtrapolateMode::Extrapolate => {
                 // Linear extrapolation using derivative at left endpoint
-                let derivative = self.derivative(x_min, 1)?;
+                let derivative = self.derivative(x_min)?;
                 // Integrate: y_min + derivative * (x - x_min) from a to b
                 let linear_term = y_min * (b - a);
                 let quadratic_term = derivative
@@ -1366,7 +1366,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
             }
             crate::interp1d::ExtrapolateMode::Extrapolate => {
                 // Linear extrapolation using derivative at right endpoint
-                let derivative = self.derivative(x_max, 1)?;
+                let derivative = self.derivative(x_max)?;
                 // Integrate: y_max + derivative * (x - x_max) from a to b
                 let linear_term = y_max * (b - a);
                 let quadratic_term = derivative
@@ -2466,6 +2466,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
 /// Compute the coefficients for a natural cubic spline
 ///
 /// Natural boundary conditions: second derivative is zero at the endpoints
+#[allow(dead_code)]
 fn compute_natural_cubic_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -2597,6 +2598,7 @@ fn compute_natural_cubic_spline<F: crate::traits::InterpolationFloat>(
 ///
 /// Not-a-knot boundary conditions: third derivative is continuous across the
 /// first and last interior knots
+#[allow(dead_code)]
 fn compute_not_a_knot_cubic_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -2756,6 +2758,7 @@ fn compute_not_a_knot_cubic_spline<F: crate::traits::InterpolationFloat>(
 /// Compute the coefficients for a clamped cubic spline
 ///
 /// Clamped boundary conditions: first derivative specified at endpoints
+#[allow(dead_code)]
 fn compute_clamped_cubic_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -2873,6 +2876,7 @@ fn compute_clamped_cubic_spline<F: crate::traits::InterpolationFloat>(
 /// Compute the coefficients for a periodic cubic spline
 ///
 /// Periodic boundary conditions: function and derivatives match at endpoints
+#[allow(dead_code)]
 fn compute_periodic_cubic_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -2979,6 +2983,7 @@ fn compute_periodic_cubic_spline<F: crate::traits::InterpolationFloat>(
 }
 
 /// Compute the coefficients for a cubic spline with specified second derivatives
+#[allow(dead_code)]
 fn compute_second_derivative_cubic_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -3086,6 +3091,7 @@ fn compute_second_derivative_cubic_spline<F: crate::traits::InterpolationFloat>(
 }
 
 /// Compute the coefficients for a parabolic runout cubic spline
+#[allow(dead_code)]
 fn compute_parabolic_runout_cubic_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -3190,6 +3196,7 @@ fn compute_parabolic_runout_cubic_spline<F: crate::traits::InterpolationFloat>(
 /// Integrate a cubic polynomial segment from a to b
 ///
 /// The polynomial is defined as: p(x) = a + b*(x-x0) + c*(x-x0)^2 + d*(x-x0)^3
+#[allow(dead_code)]
 fn integrate_segment<F: crate::traits::InterpolationFloat>(
     coeffs: &Array1<F>,
     x0: F,
@@ -3228,6 +3235,7 @@ fn integrate_segment<F: crate::traits::InterpolationFloat>(
 }
 
 /// Check if a root is far enough from existing roots
+#[allow(dead_code)]
 fn root_far_enough<F: Float>(roots: &[F], candidate: F, tolerance: F) -> bool {
     for &existing_root in roots {
         if (candidate - existing_root).abs() < tolerance {
@@ -3275,6 +3283,7 @@ fn root_far_enough<F: Float>(roots: &[F], candidate: F, tolerance: F) -> bool {
 /// let y_interp = spline.evaluate(1.5).unwrap();
 /// println!("Interpolated value at x=1.5: {}", y_interp);
 /// ```
+#[allow(dead_code)]
 pub fn make_interp_spline<F: InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -3504,6 +3513,7 @@ where
 /// // Integrate over interval
 /// let integral = cs.integrate_scipy(0.0, 3.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn cubic_spline_scipy<F: InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -3547,6 +3557,7 @@ pub fn cubic_spline_scipy<F: InterpolationFloat>(
 /// # Returns
 ///
 /// A closure that can interpolate values
+#[allow(dead_code)]
 pub fn interp1d_scipy<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,

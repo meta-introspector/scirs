@@ -1885,11 +1885,13 @@ impl CrossPlatformResultAggregator {
 // Factory functions
 
 /// Create default ultra-think cross-platform tester
+#[allow(dead_code)]
 pub fn create_ultra_think_cross_platform_tester() -> UltraThinkCrossPlatformTester {
     UltraThinkCrossPlatformTester::new(UltraThinkCrossPlatformConfig::default())
 }
 
 /// Create configured ultra-think cross-platform tester
+#[allow(dead_code)]
 pub fn create_configured_ultra_think_cross_platform_tester(
     config: UltraThinkCrossPlatformConfig,
 ) -> UltraThinkCrossPlatformTester {
@@ -1897,6 +1899,7 @@ pub fn create_configured_ultra_think_cross_platform_tester(
 }
 
 /// Create comprehensive cross-platform tester for production
+#[allow(dead_code)]
 pub fn create_comprehensive_cross_platform_tester() -> UltraThinkCrossPlatformTester {
     let config = UltraThinkCrossPlatformConfig {
         enable_platform_detection: true,
@@ -1917,6 +1920,7 @@ pub fn create_comprehensive_cross_platform_tester() -> UltraThinkCrossPlatformTe
 }
 
 /// Create fast cross-platform tester for development
+#[allow(dead_code)]
 pub fn create_fast_cross_platform_tester() -> UltraThinkCrossPlatformTester {
     let config = UltraThinkCrossPlatformConfig {
         enable_platform_detection: true,

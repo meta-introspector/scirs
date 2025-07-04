@@ -267,6 +267,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> Interp1d<F> {
 /// # Returns
 ///
 /// The interpolated value
+#[allow(dead_code)]
 fn nearest_interp<F: Float>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -296,6 +297,7 @@ fn nearest_interp<F: Float>(
 /// # Returns
 ///
 /// The interpolated value
+#[allow(dead_code)]
 fn linear_interp<F: Float>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -328,6 +330,7 @@ fn linear_interp<F: Float>(
 /// # Returns
 ///
 /// The interpolated value
+#[allow(dead_code)]
 fn cubic_interp<F: Float + FromPrimitive>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,

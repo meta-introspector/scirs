@@ -39,6 +39,7 @@ use scirs2_ndimage::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔬 ADVANCED SCIENTIFIC COMPUTING WITH SCIRS2-NDIMAGE 🔬");
     println!("=========================================================\n");
@@ -492,6 +493,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper functions to generate synthetic data
 
+#[allow(dead_code)]
 fn generate_synthetic_medical_volume() -> Array3<f32> {
     Array3::from_shape_fn((128, 128, 64), |(i, j, k)| {
         let x = i as f32 / 128.0;
@@ -508,6 +510,7 @@ fn generate_synthetic_medical_volume() -> Array3<f32> {
     })
 }
 
+#[allow(dead_code)]
 fn generate_synthetic_microscopy_image() -> Array3<f32> {
     Array3::from_shape_fn((256, 256, 3), |(i, j, _channel)| {
         let x = i as f32 / 256.0;
@@ -522,6 +525,7 @@ fn generate_synthetic_microscopy_image() -> Array3<f32> {
     })
 }
 
+#[allow(dead_code)]
 fn generate_synthetic_satellite_image() -> Array3<f32> {
     Array3::from_shape_fn((512, 512, 5), |(i, j, band)| {
         let x = i as f32 / 512.0;
@@ -538,6 +542,7 @@ fn generate_synthetic_satellite_image() -> Array3<f32> {
     })
 }
 
+#[allow(dead_code)]
 fn generate_feature_rich_image() -> Array2<f32> {
     Array2::from_shape_fn((256, 256), |(i, j)| {
         let x = i as f32 / 256.0;
@@ -560,6 +565,7 @@ fn generate_feature_rich_image() -> Array2<f32> {
     })
 }
 
+#[allow(dead_code)]
 fn generate_segmentation_test_image() -> Array2<f32> {
     Array2::from_shape_fn((128, 128), |(i, j)| {
         let x = i as f32 / 128.0 - 0.5;
@@ -577,6 +583,7 @@ fn generate_segmentation_test_image() -> Array2<f32> {
     })
 }
 
+#[allow(dead_code)]
 fn generate_noisy_image() -> Array2<f32> {
     Array2::from_shape_fn((128, 128), |(i, j)| {
         let x = i as f32 / 128.0;
@@ -589,6 +596,7 @@ fn generate_noisy_image() -> Array2<f32> {
     })
 }
 
+#[allow(dead_code)]
 fn generate_texture_image() -> Array2<f32> {
     Array2::from_shape_fn((128, 128), |(i, j)| {
         let x = i as f32;
@@ -603,6 +611,7 @@ fn generate_texture_image() -> Array2<f32> {
     })
 }
 
+#[allow(dead_code)]
 fn generate_reference_image() -> Array2<f32> {
     Array2::from_shape_fn((64, 64), |(i, j)| {
         let x = i as f32 / 64.0;
@@ -612,10 +621,12 @@ fn generate_reference_image() -> Array2<f32> {
     })
 }
 
+#[allow(dead_code)]
 fn add_degradation(image: &Array2<f32>) -> Array2<f32> {
     image.mapv(|x| (x + 0.1 * (x * 100.0).sin()).max(-1.0).min(1.0))
 }
 
+#[allow(dead_code)]
 fn create_circular_contour(
     center_x: usize,
     center_y: usize,
@@ -632,18 +643,22 @@ fn create_circular_contour(
 }
 
 // Helper functions for counting results
+#[allow(dead_code)]
 fn count_structures(array: &Array3<f32>) -> usize {
     array.iter().filter(|&&x| x > 0.5).count()
 }
 
+#[allow(dead_code)]
 fn count_water_regions(mask: &Array2<u8>) -> usize {
     mask.iter().filter(|&&x| x > 0).count() / 100 // Approximate region count
 }
 
+#[allow(dead_code)]
 fn count_ml_features(edges: &Array2<f32>) -> usize {
     edges.iter().filter(|&&x| x > 0.1).count()
 }
 
+#[allow(dead_code)]
 fn count_regions(array: &Array2<i32>) -> usize {
     let max_label = array.iter().cloned().max().unwrap_or(0);
     max_label as usize

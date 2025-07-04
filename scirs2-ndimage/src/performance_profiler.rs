@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 use ndarray::{Array, ArrayView, Dimension};
 use num_traits::{Float, FromPrimitive};
 
-use crate::error::{NdimageError, NdimageResult};
+use crate::error::NdimageResult;
 
 /// Comprehensive performance profiler for ndimage operations
 #[derive(Debug)]
@@ -760,6 +760,7 @@ impl PerformanceReport {
 
 // Helper functions
 
+#[allow(dead_code)]
 fn get_current_memory_usage() -> usize {
     // In a real implementation, this would use platform-specific APIs
     // to get actual memory usage (e.g., /proc/self/status on Linux,
@@ -768,6 +769,7 @@ fn get_current_memory_usage() -> usize {
     1024 * 1024 * 100 // 100MB placeholder
 }
 
+#[allow(dead_code)]
 fn calculate_throughput(array_size: &[usize], execution_time: Duration) -> f64 {
     let total_elements: usize = array_size.iter().product();
     let time_seconds = execution_time.as_secs_f64();

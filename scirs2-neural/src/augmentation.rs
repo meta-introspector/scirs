@@ -242,7 +242,7 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         for transform in &self.image_transforms {
             augmented = self.apply_image_transform(&augmented, transform)?;
             // Update statistics
-            let transform_name = format!("{:?}", transform)
+            let transform_name = format!("{transform:?}")
                 .split(' ')
                 .next()
                 .unwrap_or("unknown")

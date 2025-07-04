@@ -638,11 +638,13 @@ static GLOBAL_ERROR_MAPPER: std::sync::OnceLock<std::sync::Mutex<ErrorMapper>> =
     std::sync::OnceLock::new();
 
 /// Initialize global error mapper
+#[allow(dead_code)]
 pub fn init_error_mapper() -> &'static std::sync::Mutex<ErrorMapper> {
     GLOBAL_ERROR_MAPPER.get_or_init(|| std::sync::Mutex::new(ErrorMapper::new()))
 }
 
 /// Map error using global mapper
+#[allow(dead_code)]
 pub fn map_module_error(
     source_module: &str,
     source_error: &dyn std::error::Error,
@@ -658,6 +660,7 @@ pub fn map_module_error(
 }
 
 /// Push error context
+#[allow(dead_code)]
 pub fn push_error_context(context: ErrorContext) -> Result<(), IntegrationError> {
     let mapper = init_error_mapper();
     let mut mapper_guard = mapper.lock().map_err(|_| {
@@ -668,6 +671,7 @@ pub fn push_error_context(context: ErrorContext) -> Result<(), IntegrationError>
 }
 
 /// Pop error context
+#[allow(dead_code)]
 pub fn pop_error_context() -> Result<Option<ErrorContext>, IntegrationError> {
     let mapper = init_error_mapper();
     let mut mapper_guard = mapper.lock().map_err(|_| {
@@ -677,6 +681,7 @@ pub fn pop_error_context() -> Result<Option<ErrorContext>, IntegrationError> {
 }
 
 /// Generate error report
+#[allow(dead_code)]
 pub fn generate_error_report(error: &IntegrationError) -> Result<ErrorReport, IntegrationError> {
     let mapper = init_error_mapper();
     let mapper_guard = mapper.lock().map_err(|_| {
@@ -686,6 +691,7 @@ pub fn generate_error_report(error: &IntegrationError) -> Result<ErrorReport, In
 }
 
 /// Attempt error recovery
+#[allow(dead_code)]
 pub fn attempt_error_recovery(
     error: &IntegrationError,
 ) -> Result<RecoveryAction, IntegrationError> {

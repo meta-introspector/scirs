@@ -12,6 +12,7 @@ use std::time::Duration;
 use tempfile::tempdir;
 
 /// Generate a test signal of the given size
+#[allow(dead_code)]
 fn generate_test_signal(size: usize) -> Vec<Complex64> {
     let mut signal = Vec::with_capacity(size);
     for i in 0..size {
@@ -22,6 +23,7 @@ fn generate_test_signal(size: usize) -> Vec<Complex64> {
 }
 
 /// Benchmark the cost of creating a new plan each time
+#[allow(dead_code)]
 fn bench_always_new(c: &mut Criterion) {
     let mut group = c.benchmark_group("AlwaysNew");
     group.measurement_time(Duration::from_secs(10));
@@ -52,6 +54,7 @@ fn bench_always_new(c: &mut Criterion) {
 }
 
 /// Benchmark the performance of the cache-first approach
+#[allow(dead_code)]
 fn bench_cache_first(c: &mut Criterion) {
     let mut group = c.benchmark_group("CacheFirst");
     group.measurement_time(Duration::from_secs(10));
@@ -87,6 +90,7 @@ fn bench_cache_first(c: &mut Criterion) {
 }
 
 /// Benchmark the performance of serialized plans
+#[allow(dead_code)]
 fn bench_serialized(c: &mut Criterion) {
     let mut group = c.benchmark_group("SerializedFirst");
     group.measurement_time(Duration::from_secs(10));
@@ -133,6 +137,7 @@ fn bench_serialized(c: &mut Criterion) {
 }
 
 /// Compare repeated executions with different planning strategies
+#[allow(dead_code)]
 fn bench_repeated_execution(c: &mut Criterion) {
     let mut group = c.benchmark_group("RepeatedExecution");
     group.measurement_time(Duration::from_secs(15));
@@ -216,6 +221,7 @@ fn bench_repeated_execution(c: &mut Criterion) {
 }
 
 /// Benchmark different cache sizes
+#[allow(dead_code)]
 fn bench_cache_sizes(c: &mut Criterion) {
     let mut group = c.benchmark_group("CacheSizes");
     group.measurement_time(Duration::from_secs(15));

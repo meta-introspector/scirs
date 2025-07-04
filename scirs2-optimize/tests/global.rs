@@ -7,6 +7,7 @@ use scirs2_optimize::global::{
 };
 
 #[test]
+#[allow(dead_code)]
 fn test_global_optimization_on_rosenbrock() {
     // Test all three global optimization algorithms on the Rosenbrock function
     let rosenbrock = |x: &ndarray::ArrayView1<f64>| {
@@ -58,6 +59,7 @@ fn test_global_optimization_on_rosenbrock() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_global_optimization_with_constraints() {
     // Test global optimization on a function with bounded constraints
     let func = |x: &ndarray::ArrayView1<f64>| (x[0] + 1.0).powi(2) + (x[1] + 1.0).powi(2);
@@ -80,6 +82,7 @@ fn test_global_optimization_with_constraints() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_global_optimization_multimodal() {
     // Test on a multimodal function with many local minima
     let ackley = |x: &ndarray::ArrayView1<f64>| {

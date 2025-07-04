@@ -94,6 +94,7 @@ pub struct MonteCarloResult<F: IntegrateFloat> {
 /// // Should be close to 2/3, but Monte Carlo has statistical error
 /// assert!((result.value - 2.0/3.0).abs() < 0.01);
 /// ```
+#[allow(dead_code)]
 pub fn monte_carlo<F, Func>(
     f: Func,
     ranges: &[(F, F)],
@@ -130,7 +131,7 @@ where
         StdRng::seed_from_u64(seed)
     } else {
         // In rand 0.9.0, from_entropy is replaced by building from OsRng
-        // Note: thread_rng() was renamed to rng() in rand 0.9.0
+        // Note: rng() was renamed to rng() in rand 0.9.0
         let mut rng = rand::rng();
         StdRng::from_rng(&mut rng)
     };
@@ -285,6 +286,7 @@ where
 ///
 /// assert!((result.value - 1.0/3.0).abs() < 0.01);
 /// ```
+#[allow(dead_code)]
 pub fn importance_sampling<F, Func, Pdf, Sampler>(
     f: Func,
     g: Pdf,
@@ -319,7 +321,7 @@ where
         StdRng::seed_from_u64(seed)
     } else {
         // In rand 0.9.0, from_entropy is replaced by building from OsRng
-        // Note: thread_rng() was renamed to rng() in rand 0.9.0
+        // Note: rng() was renamed to rng() in rand 0.9.0
         let mut rng = rand::rng();
         StdRng::from_rng(&mut rng)
     };
@@ -432,6 +434,7 @@ where
 ///     Some(4)
 /// ).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn monte_carlo_parallel<F, Func>(
     f: Func,
     ranges: &[(F, F)],

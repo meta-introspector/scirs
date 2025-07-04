@@ -356,6 +356,7 @@ impl NeuralAdaptiveSparseProcessor {
     }
 
     /// Neural-adaptive sparse matrix-vector multiplication
+    #[allow(clippy::too_many_arguments)]
     pub fn adaptive_spmv<T>(
         &mut self,
         rows: usize,

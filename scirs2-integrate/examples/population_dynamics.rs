@@ -8,6 +8,7 @@ use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 
 /// Exponential growth model: dN/dt = rN
 /// State vector: [N] (population size)
+#[allow(dead_code)]
 fn exponential_growth(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let n = y[0]; // Population size
     let r = 0.5; // Growth rate
@@ -19,6 +20,7 @@ fn exponential_growth(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 
 /// Logistic growth model: dN/dt = rN(1 - N/K)
 /// State vector: [N] (population size)
+#[allow(dead_code)]
 fn logistic_growth(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let n = y[0]; // Population size
     let r = 1.0; // Intrinsic growth rate
@@ -32,6 +34,7 @@ fn logistic_growth(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// Lotka-Volterra predator-prey model
 /// dN/dt = aN - bNP, dP/dt = cbNP - dP
 /// State vector: [N, P] (prey, predator populations)
+#[allow(dead_code)]
 fn lotka_volterra(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let n = y[0]; // Prey population
     let p = y[1]; // Predator population
@@ -51,6 +54,7 @@ fn lotka_volterra(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// dN₁/dt = r₁N₁(1 - (N₁ + α₁₂N₂)/K₁)
 /// dN₂/dt = r₂N₂(1 - (N₂ + α₂₁N₁)/K₂)
 /// State vector: [N1, N2] (competing species populations)
+#[allow(dead_code)]
 fn competitive_lotka_volterra(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let n1 = y[0]; // Species 1 population
     let n2 = y[1]; // Species 2 population
@@ -70,6 +74,7 @@ fn competitive_lotka_volterra(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 
 /// SIR epidemic model: dS/dt = -βSI/N, dI/dt = βSI/N - γI, dR/dt = γI
 /// State vector: [S, I, R] (susceptible, infected, recovered)
+#[allow(dead_code)]
 fn sir_model(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let s = y[0]; // Susceptible
     let i = y[1]; // Infected
@@ -89,6 +94,7 @@ fn sir_model(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// SEIR epidemic model (with exposed/incubation class)
 /// dS/dt = -βSI/N, dE/dt = βSI/N - σE, dI/dt = σE - γI, dR/dt = γI
 /// State vector: [S, E, I, R] (susceptible, exposed, infected, recovered)
+#[allow(dead_code)]
 fn seir_model(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let s = y[0]; // Susceptible
     let e = y[1]; // Exposed (incubating)
@@ -111,6 +117,7 @@ fn seir_model(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// SIRS model (with immunity loss)
 /// dS/dt = -βSI/N + ωR, dI/dt = βSI/N - γI, dR/dt = γI - ωR
 /// State vector: [S, I, R] with immunity waning
+#[allow(dead_code)]
 fn sirs_model(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let s = y[0]; // Susceptible
     let i = y[1]; // Infected
@@ -131,6 +138,7 @@ fn sirs_model(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// SIS model (no immunity)
 /// dS/dt = -βSI/N + γI, dI/dt = βSI/N - γI
 /// State vector: [S, I] (susceptible, infected)
+#[allow(dead_code)]
 fn sis_model(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let s = y[0]; // Susceptible
     let i = y[1]; // Infected
@@ -148,6 +156,7 @@ fn sis_model(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// Metapopulation model (two connected populations)
 /// Models disease spread between cities/regions
 /// State vector: [S1, I1, R1, S2, I2, R2]
+#[allow(dead_code)]
 fn metapopulation_sir(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let s1 = y[0];
     let i1 = y[1];
@@ -185,6 +194,7 @@ fn metapopulation_sir(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     array![ds1_dt, di1_dt, dr1_dt, ds2_dt, di2_dt, dr2_dt]
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Population Dynamics and Epidemiological Models\n");
 

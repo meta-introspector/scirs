@@ -2,6 +2,7 @@
 use num_complex::Complex64;
 use scirs2_special::*;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing implemented functions...");
 

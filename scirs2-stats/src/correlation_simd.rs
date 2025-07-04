@@ -35,6 +35,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 /// let corr = pearson_r_simd(&x.view(), &y.view()).unwrap();
 /// assert!((corr - (-1.0)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn pearson_r_simd<F, D>(x: &ArrayBase<D, Ix1>, y: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -129,6 +130,7 @@ where
 /// # Returns
 ///
 /// Correlation matrix
+#[allow(dead_code)]
 pub fn corrcoef_simd<F, D>(
     data: &ArrayBase<D, ndarray::Ix2>,
     rowvar: bool,
@@ -183,6 +185,7 @@ where
 ///
 /// Helper function for correlation calculations that computes covariance
 /// with SIMD acceleration.
+#[allow(dead_code)]
 pub fn covariance_simd<F, D>(
     x: &ArrayBase<D, Ix1>,
     y: &ArrayBase<D, Ix1>,

@@ -6,6 +6,7 @@ use scirs2_text::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Parallel Text Processing Demo");
     println!("============================\n");
@@ -217,6 +218,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_test_texts(size: usize) -> Vec<String> {
     // Sample text fragments to combine randomly
     let subjects = [

@@ -474,6 +474,7 @@ pub struct ApiCompatibilityChecker {
     /// Frozen API surface for comparison
     frozen_apis: Vec<ApiSignature>,
     /// Compatibility rules
+    #[allow(dead_code)]
     compatibility_rules: Vec<CompatibilityRule>,
 }
 
@@ -972,6 +973,7 @@ static REGISTRY: OnceLock<Mutex<VersionRegistry>> = OnceLock::new();
 static API_CHECKER: OnceLock<Mutex<ApiCompatibilityChecker>> = OnceLock::new();
 
 /// Get the global registry for modification
+#[allow(dead_code)]
 pub fn global_registry_mut() -> std::sync::MutexGuard<'static, VersionRegistry> {
     REGISTRY
         .get_or_init(|| Mutex::new(VersionRegistry::new()))
@@ -980,11 +982,13 @@ pub fn global_registry_mut() -> std::sync::MutexGuard<'static, VersionRegistry> 
 }
 
 /// Get the global registry for reading
+#[allow(dead_code)]
 pub fn global_registry() -> &'static Mutex<VersionRegistry> {
     REGISTRY.get_or_init(|| Mutex::new(VersionRegistry::new()))
 }
 
 /// Get the global API checker for modification
+#[allow(dead_code)]
 pub fn global_api_checker_mut() -> std::sync::MutexGuard<'static, ApiCompatibilityChecker> {
     API_CHECKER
         .get_or_init(|| Mutex::new(ApiCompatibilityChecker::for_beta1()))
@@ -993,11 +997,13 @@ pub fn global_api_checker_mut() -> std::sync::MutexGuard<'static, ApiCompatibili
 }
 
 /// Get the global API checker for reading
+#[allow(dead_code)]
 pub fn global_api_checker() -> &'static Mutex<ApiCompatibilityChecker> {
     API_CHECKER.get_or_init(|| Mutex::new(ApiCompatibilityChecker::for_beta1()))
 }
 
 /// Helper function to create API signature from function metadata
+#[allow(dead_code)]
 pub fn create_api_signature(
     name: impl Into<String>,
     module: impl Into<String>,
@@ -1031,6 +1037,7 @@ pub fn create_api_signature(
 }
 
 /// Initialize Beta 1 API freeze with core scirs2 APIs
+#[allow(dead_code)]
 pub fn initialize_beta1_freeze() -> Result<(), String> {
     let mut checker = global_api_checker_mut();
 
@@ -1041,6 +1048,7 @@ pub fn initialize_beta1_freeze() -> Result<(), String> {
 }
 
 /// Get the frozen API signatures for testing
+#[allow(dead_code)]
 fn get_test_frozen_apis() -> Vec<ApiSignature> {
     vec![
         create_api_signature(
@@ -1175,6 +1183,7 @@ fn get_test_frozen_apis() -> Vec<ApiSignature> {
 }
 
 /// Convenience function to check current API compatibility
+#[allow(dead_code)]
 pub fn check_current_compatibility() -> Result<CompatibilityCheckResult, String> {
     let checker = global_api_checker();
     let checker_guard = checker.lock().map_err(|e| e.to_string())?;

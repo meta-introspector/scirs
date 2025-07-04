@@ -93,6 +93,7 @@ impl std::str::FromStr for SplineOrder {
 /// // Verify that we got the expected number of values
 /// assert_eq!(y.len(), x.len());
 /// ```
+#[allow(dead_code)]
 pub fn bspline_basis<T>(x: &[T], n: SplineOrder) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -295,6 +296,7 @@ fn spline_filter_coeffs(n: SplineOrder) -> (Vec<f64>, Vec<f64>) {
 /// # Returns
 ///
 /// * Initial coefficient
+#[allow(dead_code)]
 fn get_initial_causal_coefficient(c: &[f64], n: SplineOrder, tolerance: f64) -> f64 {
     // Calculate poles of the IIR filter
     let poles = match n {
@@ -347,6 +349,7 @@ fn get_initial_causal_coefficient(c: &[f64], n: SplineOrder, tolerance: f64) -> 
 /// # Returns
 ///
 /// * Initial coefficient
+#[allow(dead_code)]
 fn get_initial_anticausal_coefficient(c: &[f64], n: SplineOrder) -> f64 {
     let len = c.len();
     if len < 2 {
@@ -384,6 +387,7 @@ fn get_initial_anticausal_coefficient(c: &[f64], n: SplineOrder) -> f64 {
 /// # Returns
 ///
 /// * Filtered signal
+#[allow(dead_code)]
 fn apply_causal_filter(c: &mut [f64], n: SplineOrder) {
     let len = c.len();
     if len < 2 {
@@ -425,6 +429,7 @@ fn apply_causal_filter(c: &mut [f64], n: SplineOrder) {
 /// # Returns
 ///
 /// * Filtered signal
+#[allow(dead_code)]
 fn apply_anticausal_filter(c: &mut [f64], n: SplineOrder) {
     let len = c.len();
     if len < 2 {
@@ -481,6 +486,7 @@ fn apply_anticausal_filter(c: &mut [f64], n: SplineOrder) {
 /// // Filtered signal should be smoother
 /// assert_eq!(filtered.len(), signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn bspline_filter<T>(signal: &[T], order: SplineOrder) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -531,6 +537,7 @@ where
 /// // Coefficients should have the same length as input
 /// assert_eq!(coeffs.len(), signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn bspline_coefficients<T>(signal: &[T], order: SplineOrder) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -614,6 +621,7 @@ where
 /// // Should get same number of output values as input positions
 /// assert_eq!(values.len(), x.len());
 /// ```
+#[allow(dead_code)]
 pub fn bspline_evaluate<T, U>(coeffs: &[T], x: &[U], order: SplineOrder) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -798,6 +806,7 @@ where
 /// // Smoothed signal should have the same length
 /// assert_eq!(smoothed.len(), signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn bspline_smooth<T>(signal: &[T], order: SplineOrder, lam: f64) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -887,6 +896,7 @@ where
 /// // Should get same number of output values as input positions
 /// assert_eq!(deriv.len(), x.len());
 /// ```
+#[allow(dead_code)]
 pub fn bspline_derivative<T, U>(
     coeffs: &[T],
     x: &[U],

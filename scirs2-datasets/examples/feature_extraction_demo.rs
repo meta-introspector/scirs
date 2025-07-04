@@ -9,6 +9,7 @@ use scirs2_datasets::{
     statistical_features, BinningStrategy,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Feature Extraction Utilities Demonstration ===\n");
 
@@ -180,6 +181,7 @@ fn main() {
 }
 
 /// Print a summary of data statistics
+#[allow(dead_code)]
 fn print_data_summary(data: &Array2<f64>, title: &str) {
     println!("{}: shape=({}, {})", title, data.nrows(), data.ncols());
     for j in 0..data.ncols() {
@@ -195,6 +197,7 @@ fn print_data_summary(data: &Array2<f64>, title: &str) {
 }
 
 /// Print a data matrix with feature names
+#[allow(dead_code)]
 fn print_data_matrix(data: &Array2<f64>, feature_names: &[&str]) {
     // Print header
     print!("     ");
@@ -214,6 +217,7 @@ fn print_data_matrix(data: &Array2<f64>, feature_names: &[&str]) {
 }
 
 /// Print statistical features with labels
+#[allow(dead_code)]
 fn print_statistical_features(stats: Array1<f64>) {
     let labels = [
         "mean", "std", "min", "max", "median", "q25", "q75", "skewness", "kurtosis",

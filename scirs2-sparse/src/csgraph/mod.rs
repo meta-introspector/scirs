@@ -126,6 +126,7 @@ where
 /// # Returns
 ///
 /// Result indicating if the matrix is a valid graph
+#[allow(dead_code)]
 pub fn validate_graph<T, S>(matrix: &S, directed: bool) -> SparseResult<()>
 where
     T: Float + Debug + Copy + 'static,
@@ -179,6 +180,7 @@ where
 /// # Returns
 ///
 /// Adjacency list as a vector of vectors of (neighbor, weight) pairs
+#[allow(dead_code)]
 pub fn to_adjacency_list<T, S>(matrix: &S, directed: bool) -> SparseResult<Vec<Vec<(usize, T)>>>
 where
     T: Float + Debug + Copy + 'static,
@@ -214,6 +216,7 @@ where
 }
 
 /// Get the number of vertices in a graph matrix
+#[allow(dead_code)]
 pub fn num_vertices<T, S>(matrix: &S) -> usize
 where
     T: Float + Debug + Copy + 'static,
@@ -223,6 +226,7 @@ where
 }
 
 /// Get the number of edges in a graph matrix
+#[allow(dead_code)]
 pub fn num_edges<T, S>(matrix: &S, directed: bool) -> SparseResult<usize>
 where
     T: Float + Debug + Copy + 'static,

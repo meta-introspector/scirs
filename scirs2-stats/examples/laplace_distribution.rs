@@ -2,6 +2,7 @@ use scirs2_stats::distributions::laplace::Laplace;
 use scirs2_stats::traits::distribution::{ContinuousDistribution, Distribution};
 use std::error::Error;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Laplace (Double Exponential) Distribution Example");
     println!("------------------------------------------------");

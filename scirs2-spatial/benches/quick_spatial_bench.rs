@@ -10,12 +10,14 @@ use std::hint::black_box;
 use std::time::Duration;
 
 // Simple data generator
+#[allow(dead_code)]
 fn generate_test_data(n_points: usize, dimensions: usize) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(42);
     Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
 }
 
 // Quick performance validation
+#[allow(dead_code)]
 fn bench_performance_validation(c: &mut Criterion) {
     let mut group = c.benchmark_group("quick_performance");
     group.measurement_time(Duration::from_secs(5));
@@ -80,6 +82,7 @@ fn bench_performance_validation(c: &mut Criterion) {
 }
 
 // System performance characterization
+#[allow(dead_code)]
 fn bench_system_characterization(c: &mut Criterion) {
     let mut group = c.benchmark_group("system_performance");
     group.measurement_time(Duration::from_secs(3));
@@ -121,6 +124,7 @@ fn bench_system_characterization(c: &mut Criterion) {
 }
 
 // Report performance metrics
+#[allow(dead_code)]
 fn report_performance_metrics(c: &mut Criterion) {
     let mut group = c.benchmark_group("performance_report");
     group.measurement_time(Duration::from_secs(2));

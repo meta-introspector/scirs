@@ -8,6 +8,7 @@ use scirs2_signal::robust::{
     alpha_trimmed_filter, hampel_filter, huber_filter, robust_filter_2d, winsorize_filter,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Robust Filtering Examples");
     println!("=========================\n");

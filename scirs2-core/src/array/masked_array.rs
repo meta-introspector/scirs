@@ -561,6 +561,7 @@ where
 }
 
 /// Helper function to create a default fill value for a given type
+#[allow(dead_code)]
 fn default_fill_value<A, S, D>(data: &ArrayBase<S, D>) -> A
 where
     A: Clone,
@@ -589,6 +590,7 @@ where
 }
 
 /// Create a masked array with elements equal to a given value masked
+#[allow(dead_code)]
 pub fn masked_equal<A, S, D>(data: ArrayBase<S, D>, value: A) -> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq,
@@ -606,6 +608,7 @@ where
 }
 
 /// Create a masked array with NaN and infinite values masked
+#[allow(dead_code)]
 pub fn masked_invalid<A, S, D>(data: ArrayBase<S, D>) -> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq + Float,
@@ -628,6 +631,7 @@ where
 ///
 /// # Errors
 /// Returns `ArrayError::ShapeMismatch` if the mask shape doesn't match the data shape.
+#[allow(dead_code)]
 pub fn mask_array<A, S, D>(
     data: ArrayBase<S, D>,
     mask: Option<Array<bool, D>>,
@@ -642,6 +646,7 @@ where
 }
 
 /// Create a masked array with values outside a range masked
+#[allow(dead_code)]
 pub fn masked_outside<A, S, D>(
     data: ArrayBase<S, D>,
     min_val: &A,
@@ -666,6 +671,7 @@ where
 }
 
 /// Create a masked array with values inside a range masked
+#[allow(dead_code)]
 pub fn masked_inside<A, S, D>(
     data: ArrayBase<S, D>,
     min_val: &A,
@@ -690,6 +696,7 @@ where
 }
 
 /// Create a masked array with values greater than a given value masked
+#[allow(dead_code)]
 pub fn masked_greater<A, S, D>(data: ArrayBase<S, D>, value: &A) -> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq + PartialOrd,
@@ -710,6 +717,7 @@ where
 }
 
 /// Create a masked array with values less than a given value masked
+#[allow(dead_code)]
 pub fn masked_less<A, S, D>(data: ArrayBase<S, D>, value: &A) -> MaskedArray<A, S, D>
 where
     A: Clone + PartialEq + PartialOrd,
@@ -730,6 +738,7 @@ where
 }
 
 /// Create a masked array with values where a condition is true
+#[allow(dead_code)]
 pub fn masked_where<A, S, D, F>(
     condition: F,
     data: ArrayBase<S, D>,

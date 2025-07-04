@@ -337,6 +337,7 @@ where
 }
 
 /// Apply weight function to a normalized distance
+#[allow(dead_code)]
 fn apply_weight<F: Float + FromPrimitive>(r: F, weight_fn: WeightFunction) -> F {
     match weight_fn {
         WeightFunction::Gaussian => (-r * r).exp(),
@@ -382,6 +383,7 @@ fn apply_weight<F: Float + FromPrimitive>(r: F, weight_fn: WeightFunction) -> F 
 /// # Returns
 ///
 /// The fitted value at the query point
+#[allow(dead_code)]
 fn fit_local_polynomial<F: Float + FromPrimitive + 'static>(
     local_points: &ArrayView2<F>,
     local_values: &Array1<F>,
@@ -490,6 +492,7 @@ fn fit_local_polynomial<F: Float + FromPrimitive + 'static>(
 /// # Returns
 ///
 /// A ParallelLocalPolynomialRegression model
+#[allow(dead_code)]
 pub fn make_parallel_loess<F>(
     points: Array2<F>,
     values: Array1<F>,
@@ -515,6 +518,7 @@ where
 /// # Returns
 ///
 /// A ParallelLocalPolynomialRegression model with robust error estimates
+#[allow(dead_code)]
 pub fn make_parallel_robust_loess<F>(
     points: Array2<F>,
     values: Array1<F>,

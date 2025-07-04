@@ -48,6 +48,7 @@ pub enum ActivationFunc {
 }
 
 /// Apply an activation function to an array.
+#[allow(dead_code)]
 fn apply_activation(
     x: &ndarray::ArrayBase<ndarray::ViewRepr<&f64>, IxDyn>,
     func: ActivationFunc,

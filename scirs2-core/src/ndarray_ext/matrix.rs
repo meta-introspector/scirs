@@ -29,6 +29,7 @@ use num_traits::{One, Zero};
 /// assert_eq!(id3[[2, 2]], 1.0);
 /// assert_eq!(id3[[0, 1]], 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn eye<T>(n: usize) -> Array<T, Ix2>
 where
     T: Clone + Zero + One,
@@ -73,6 +74,7 @@ where
 /// assert_eq!(super_diag[[1, 2]], 1.0);
 /// assert_eq!(super_diag[[2, 3]], 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn eye_offset<T>(n: usize, m: usize, k: isize) -> Array<T, Ix2>
 where
     T: Clone + Zero + One,
@@ -116,6 +118,7 @@ where
 /// assert_eq!(diag_matrix[[2, 2]], 3);
 /// assert_eq!(diag_matrix[[0, 1]], 0);
 /// ```
+#[allow(dead_code)]
 pub fn diag<T>(diag_values: ArrayView<T, Ix1>) -> Array<T, Ix2>
 where
     T: Clone + Zero,
@@ -161,6 +164,7 @@ where
 /// let sub_diag = diagonal(a.view(), -1).unwrap();
 /// assert_eq!(sub_diag, array![4, 8]);
 /// ```
+#[allow(dead_code)]
 pub fn diagonal<T>(array: ArrayView<T, Ix2>, k: isize) -> Result<Array<T, Ix1>, &'static str>
 where
     T: Clone + Zero,
@@ -215,6 +219,7 @@ where
 /// assert_eq!(filled[[0, 0]], 7);
 /// assert_eq!(filled[[1, 2]], 7);
 /// ```
+#[allow(dead_code)]
 pub fn full<T>(rows: usize, cols: usize, value: T) -> Array<T, Ix2>
 where
     T: Clone,
@@ -243,6 +248,7 @@ where
 /// assert_eq!(ones_mat[[0, 0]], 1.0);
 /// assert_eq!(ones_mat[[1, 2]], 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn ones<T>(rows: usize, cols: usize) -> Array<T, Ix2>
 where
     T: Clone + One,
@@ -271,6 +277,7 @@ where
 /// assert_eq!(zeros_mat[[0, 0]], 0.0);
 /// assert_eq!(zeros_mat[[1, 2]], 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn zeros<T>(rows: usize, cols: usize) -> Array<T, Ix2>
 where
     T: Clone + Zero,
@@ -307,6 +314,7 @@ where
 ///     [18, 21, 24, 28]
 /// ]);
 /// ```
+#[allow(dead_code)]
 pub fn kron<T>(a: ArrayView<T, Ix2>, b: ArrayView<T, Ix2>) -> Array<T, Ix2>
 where
     T: Clone + Zero + std::ops::Mul<Output = T>,
@@ -360,6 +368,7 @@ where
 ///     [5, 4, 1]
 /// ]);
 /// ```
+#[allow(dead_code)]
 pub fn toeplitz<T>(
     first_row: ArrayView<T, Ix1>,
     first_col: ArrayView<T, Ix1>,
@@ -424,6 +433,7 @@ where
 ///     [0, 0, 7, 8]
 /// ]);
 /// ```
+#[allow(dead_code)]
 pub fn block_diag<T>(arrays: &[ArrayView<T, Ix2>]) -> Array<T, Ix2>
 where
     T: Clone + Zero,
@@ -493,6 +503,7 @@ where
 ///     [0, 5, 3]
 /// ]);
 /// ```
+#[allow(dead_code)]
 pub fn tridiagonal<T>(
     diag: ArrayView<T, Ix1>,
     lower_diag: ArrayView<T, Ix1>,
@@ -556,6 +567,7 @@ where
 ///     [3, 4, 5]
 /// ]);
 /// ```
+#[allow(dead_code)]
 pub fn hankel<T>(
     first_col: ArrayView<T, Ix1>,
     last_row: ArrayView<T, Ix1>,
@@ -621,6 +633,7 @@ where
 /// let tr = trace(a.view()).unwrap();
 /// assert_eq!(tr, 15);  // 1 + 5 + 9 = 15
 /// ```
+#[allow(dead_code)]
 pub fn trace<T>(array: ArrayView<T, Ix2>) -> Result<T, &'static str>
 where
     T: Clone + Zero + std::ops::Add<Output = T>,
@@ -690,6 +703,7 @@ where
 ///     [27.0, 9.0, 3.0, 1.0]
 /// ]);
 /// ```
+#[allow(dead_code)]
 pub fn vander<T>(
     x: ArrayView<T, Ix1>,
     n: Option<usize>,

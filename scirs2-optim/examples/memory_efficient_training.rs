@@ -36,6 +36,7 @@ impl Layer {
 }
 
 // Memory-efficient training function
+#[allow(dead_code)]
 fn train_memory_efficient(
     layer: &mut Layer,
     training_data: &Array2<f64>,
@@ -86,6 +87,7 @@ fn train_memory_efficient(
 }
 
 // Advanced memory-efficient training with custom gradient processing
+#[allow(dead_code)]
 fn train_with_custom_processing(
     layer: &mut Layer,
     training_data: &Array2<f64>,
@@ -138,6 +140,7 @@ fn train_with_custom_processing(
     Ok(losses)
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     // Create synthetic dataset
     let n_samples = 1000;

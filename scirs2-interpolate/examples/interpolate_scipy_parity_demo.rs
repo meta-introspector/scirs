@@ -9,6 +9,7 @@ use scirs2_interpolate::{
     SciPyBSpline, SciPyCubicSpline, SciPyInterpolate,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("SciPy Parity Completion Demo");
     println!("=".repeat(50));
@@ -46,6 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_enhanced_cubic_spline() -> Result<(), Box<dyn std::error::Error>> {
     println!("Creating SciPy-compatible CubicSpline...");
 
@@ -83,6 +85,7 @@ fn demo_enhanced_cubic_spline() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_ppoly_interface() -> Result<(), Box<dyn std::error::Error>> {
     println!("Creating SciPy-compatible PPoly...");
 
@@ -127,6 +130,7 @@ fn demo_ppoly_interface() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_enhanced_bspline() -> Result<(), Box<dyn std::error::Error>> {
     println!("Creating SciPy-compatible BSpline...");
 
@@ -161,6 +165,7 @@ fn demo_enhanced_bspline() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_complete_api_compatibility() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing complete API compatibility...");
 

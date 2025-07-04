@@ -271,6 +271,7 @@ impl<F: Float + FromPrimitive + Debug> AkimaSpline<F> {
 /// let y_interp = spline.evaluate(2.5).unwrap();
 /// println!("Interpolated value at x=2.5: {}", y_interp);
 /// ```
+#[allow(dead_code)]
 pub fn make_akima_spline<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -279,6 +280,7 @@ pub fn make_akima_spline<F: crate::traits::InterpolationFloat>(
 }
 
 /// Convenience function for Akima interpolation
+#[allow(dead_code)]
 pub fn akima_interpolate<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,

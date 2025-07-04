@@ -647,6 +647,7 @@ impl IdlReader {
 }
 
 /// Read variables from an IDL save file
+#[allow(dead_code)]
 pub fn read_idl<P: AsRef<Path>>(path: P) -> Result<HashMap<String, IdlType>> {
     let mut reader = IdlReader::new(path)?;
     reader.read_all()
@@ -949,6 +950,7 @@ impl IdlWriter {
 }
 
 /// Write variables to an IDL save file
+#[allow(dead_code)]
 pub fn write_idl<P: AsRef<Path>>(path: P, variables: &HashMap<String, IdlType>) -> Result<()> {
     let mut writer = IdlWriter::new(path)?;
     writer.write_all(variables)

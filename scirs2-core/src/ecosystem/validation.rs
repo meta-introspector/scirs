@@ -1434,6 +1434,7 @@ impl EcosystemHealth {
 }
 
 /// Initialize ecosystem validation with detected modules
+#[allow(dead_code)]
 pub fn initialize_ecosystem_validation() -> CoreResult<()> {
     let validator = EcosystemValidator::global()?;
 
@@ -1445,6 +1446,7 @@ pub fn initialize_ecosystem_validation() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_core_module_info() -> ModuleInfo {
     ModuleInfo {
         name: "scirs2-core".to_string(),

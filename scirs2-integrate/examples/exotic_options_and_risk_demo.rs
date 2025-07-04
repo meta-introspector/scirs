@@ -7,6 +7,7 @@ use ndarray::{Array1, Array2};
 use scirs2_integrate::specialized::finance::OptionType;
 use scirs2_integrate::specialized::*;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Exotic Options and Risk Management Demo");
     println!("==========================================\n");
@@ -195,6 +196,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Generate sample returns for demonstration purposes
+#[allow(dead_code)]
 fn generate_sample_returns(annual_mean: f64, annual_vol: f64, n_periods: usize) -> Vec<f64> {
     use rand::prelude::*;
     use rand::rngs::StdRng;

@@ -371,6 +371,7 @@ pub struct MemoryStats {
 }
 
 /// Simple DFT implementation for demonstration
+#[allow(dead_code)]
 fn simple_dft(input: &[num_complex::Complex<f64>]) -> Vec<num_complex::Complex<f64>> {
     let n = input.len();
     let mut output = vec![num_complex::Complex::zero(); n];

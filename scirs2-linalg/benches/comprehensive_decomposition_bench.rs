@@ -12,6 +12,7 @@ use scirs2_linalg::*;
 use std::time::Duration;
 
 /// Create a well-conditioned test matrix
+#[allow(dead_code)]
 fn create_test_matrix(n: usize) -> Array2<f64> {
     let mut matrix = Array2::zeros((n, n));
     for i in 0..n {
@@ -27,12 +28,14 @@ fn create_test_matrix(n: usize) -> Array2<f64> {
 }
 
 /// Create a symmetric positive definite matrix
+#[allow(dead_code)]
 fn create_spd_matrix(n: usize) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     a.t().dot(&a) + Array2::<f64>::eye(n) * (n as f64)
 }
 
 /// Create a rectangular matrix for testing overdetermined/underdetermined systems
+#[allow(dead_code)]
 fn create_rect_matrix(m: usize, n: usize) -> Array2<f64> {
     Array2::from_shape_fn((m, n), |(i, j)| {
         ((i + j + 1) as f64 * 0.1).sin() + 0.01 * (i as f64)
@@ -40,6 +43,7 @@ fn create_rect_matrix(m: usize, n: usize) -> Array2<f64> {
 }
 
 /// Create a complex matrix for complex decomposition benchmarks
+#[allow(dead_code)]
 fn create_complex_matrix(n: usize) -> Array2<num_complex::Complex64> {
     use num_complex::Complex64;
     Array2::from_shape_fn((n, n), |(i, j)| {
@@ -51,6 +55,7 @@ fn create_complex_matrix(n: usize) -> Array2<num_complex::Complex64> {
 }
 
 /// Benchmark LU decomposition variants
+#[allow(dead_code)]
 fn bench_lu_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("lu_decomposition");
     group.sample_size(20);
@@ -96,6 +101,7 @@ fn bench_lu_decomposition(c: &mut Criterion) {
 }
 
 /// Benchmark QR decomposition variants
+#[allow(dead_code)]
 fn bench_qr_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("qr_decomposition");
     group.sample_size(20);
@@ -144,6 +150,7 @@ fn bench_qr_decomposition(c: &mut Criterion) {
 }
 
 /// Benchmark SVD variants
+#[allow(dead_code)]
 fn bench_svd_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("svd_decomposition");
     group.sample_size(10); // SVD is expensive
@@ -193,6 +200,7 @@ fn bench_svd_decomposition(c: &mut Criterion) {
 }
 
 /// Benchmark Cholesky decomposition variants
+#[allow(dead_code)]
 fn bench_cholesky_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("cholesky_decomposition");
     group.sample_size(25);
@@ -242,6 +250,7 @@ fn bench_cholesky_decomposition(c: &mut Criterion) {
 }
 
 /// Benchmark eigenvalue decompositions
+#[allow(dead_code)]
 fn bench_eigenvalue_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("eigenvalue_decomposition");
     group.sample_size(10); // Eigenvalue problems are expensive
@@ -300,6 +309,7 @@ fn bench_eigenvalue_decomposition(c: &mut Criterion) {
 }
 
 /// Benchmark Schur decomposition
+#[allow(dead_code)]
 fn bench_schur_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("schur_decomposition");
     group.sample_size(10);
@@ -336,6 +346,7 @@ fn bench_schur_decomposition(c: &mut Criterion) {
 }
 
 /// Benchmark polar decomposition
+#[allow(dead_code)]
 fn bench_polar_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("polar_decomposition");
     group.sample_size(15);
@@ -377,6 +388,7 @@ fn bench_polar_decomposition(c: &mut Criterion) {
 }
 
 /// Benchmark QZ decomposition (generalized eigenvalue)
+#[allow(dead_code)]
 fn bench_qz_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("qz_decomposition");
     group.sample_size(10);
@@ -430,6 +442,7 @@ fn bench_qz_decomposition(c: &mut Criterion) {
 }
 
 /// Benchmark complex matrix decompositions
+#[allow(dead_code)]
 fn bench_complex_decompositions(c: &mut Criterion) {
     let mut group = c.benchmark_group("complex_decompositions");
     group.sample_size(15);
@@ -474,6 +487,7 @@ fn bench_complex_decompositions(c: &mut Criterion) {
 }
 
 /// Benchmark specialized factorizations
+#[allow(dead_code)]
 fn bench_specialized_factorizations(c: &mut Criterion) {
     let mut group = c.benchmark_group("specialized_factorizations");
     group.sample_size(15);
@@ -520,6 +534,7 @@ fn bench_specialized_factorizations(c: &mut Criterion) {
 }
 
 /// Memory efficiency benchmark for decompositions
+#[allow(dead_code)]
 fn bench_decomposition_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("decomposition_memory_efficiency");
     group.sample_size(20);

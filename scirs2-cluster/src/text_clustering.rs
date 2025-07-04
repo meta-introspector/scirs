@@ -1019,6 +1019,7 @@ impl TopicBasedClustering {
 /// Convenience functions for text clustering
 
 /// Perform semantic K-means clustering on text data
+#[allow(dead_code)]
 pub fn semantic_kmeans(
     text_repr: &TextRepresentation,
     n_clusters: usize,
@@ -1046,6 +1047,7 @@ pub fn semantic_kmeans(
 }
 
 /// Perform hierarchical clustering on text data
+#[allow(dead_code)]
 pub fn semantic_hierarchical(
     text_repr: &TextRepresentation,
     similarity_metric: SemanticSimilarity,
@@ -1067,6 +1069,7 @@ pub fn semantic_hierarchical(
 }
 
 /// Perform topic-based clustering on text data
+#[allow(dead_code)]
 pub fn topic_clustering(
     text_repr: &TextRepresentation,
     n_topics: usize,

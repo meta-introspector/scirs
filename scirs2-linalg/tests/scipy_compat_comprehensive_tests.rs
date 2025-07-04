@@ -13,6 +13,7 @@ use scirs2_linalg::compat;
 const TEST_TOL: f64 = 1e-10;
 
 /// Helper function to check if two arrays are approximately equal
+#[allow(dead_code)]
 fn arrays_close(a: &Array2<f64>, b: &Array2<f64>, tol: f64) -> bool {
     if a.shape() != b.shape() {
         return false;
@@ -24,6 +25,7 @@ fn arrays_close(a: &Array2<f64>, b: &Array2<f64>, tol: f64) -> bool {
 }
 
 /// Helper function to check if two vectors are approximately equal
+#[allow(dead_code)]
 fn vectors_close(a: &Array1<f64>, b: &Array1<f64>, tol: f64) -> bool {
     if a.len() != b.len() {
         return false;
@@ -35,6 +37,7 @@ fn vectors_close(a: &Array1<f64>, b: &Array1<f64>, tol: f64) -> bool {
 }
 
 /// Helper function to check if two scalars are approximately equal
+#[allow(dead_code)]
 fn scalars_close(a: f64, b: f64, tol: f64) -> bool {
     (a - b).abs() < tol || (a.is_nan() && b.is_nan())
 }

@@ -10,6 +10,7 @@ use scirs2_integrate::ultrathink_mode_coordinator::{
 };
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("🚀 Ultrathink Mode Demonstration");
 

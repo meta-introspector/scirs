@@ -5,6 +5,7 @@ use scirs2_neural::{
     prelude::*,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("ConvNeXt Example");
     println!("----------------");

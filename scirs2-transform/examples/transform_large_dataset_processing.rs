@@ -17,6 +17,7 @@ use scirs2_transform::{
 use std::fs::File;
 use std::io::Write;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Large Dataset Processing Examples ===\n");
 
@@ -36,6 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate out-of-core processing on a large CSV file
+#[allow(dead_code)]
 fn example_out_of_core_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Out-of-Core Processing Example");
     println!("---------------------------------");
@@ -70,6 +72,7 @@ fn example_out_of_core_processing() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate streaming transformations
+#[allow(dead_code)]
 fn example_streaming_transformations() -> Result<(), Box<dyn std::error::Error>> {
     println!("2. Streaming Transformations Example");
     println!("-----------------------------------");
@@ -108,6 +111,7 @@ fn example_streaming_transformations() -> Result<(), Box<dyn std::error::Error>>
 }
 
 /// Demonstrate windowed streaming transformations
+#[allow(dead_code)]
 fn example_windowed_streaming() -> Result<(), Box<dyn std::error::Error>> {
     println!("3. Windowed Streaming Example");
     println!("-----------------------------");
@@ -153,6 +157,7 @@ fn example_windowed_streaming() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate streaming quantile tracking
+#[allow(dead_code)]
 fn example_streaming_quantiles() -> Result<(), Box<dyn std::error::Error>> {
     println!("4. Streaming Quantile Tracking Example");
     println!("-------------------------------------");
@@ -208,6 +213,7 @@ fn example_streaming_quantiles() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Helper function to create a sample CSV file
+#[allow(dead_code)]
 fn create_sample_csv(
     path: &str,
     n_rows: usize,

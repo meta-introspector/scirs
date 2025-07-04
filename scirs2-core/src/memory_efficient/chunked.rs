@@ -868,6 +868,7 @@ where
 /// # Returns
 ///
 /// The result array after applying the operation to all chunks
+#[allow(dead_code)]
 pub fn chunk_wise_op<A, F, B, S, D>(
     array: &ArrayBase<S, D>,
     op: F,
@@ -923,6 +924,7 @@ where
 /// # Returns
 ///
 /// The result array after applying the binary operation to all chunk pairs
+#[allow(dead_code)]
 pub fn chunk_wise_binary_op<A, B, F, C, S1, S2, D>(
     lhs: &ArrayBase<S1, D>,
     rhs: &ArrayBase<S2, D>,
@@ -981,6 +983,7 @@ where
 /// # Returns
 ///
 /// The result of applying the reduction operation to all chunks
+#[allow(dead_code)]
 pub fn chunk_wise_reduce<A, F, G, B, S, D>(
     array: &ArrayBase<S, D>,
     op: F,

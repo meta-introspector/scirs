@@ -4,6 +4,7 @@ use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use scirs2_neural::layers::{BatchNorm, Conv2D, Dense, Dropout, Layer, PaddingMode};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Dropout Example");
     // Initialize random number generator with a fixed seed for reproducibility

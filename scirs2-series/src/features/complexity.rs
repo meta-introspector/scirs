@@ -1031,6 +1031,7 @@ where
 // =================================
 
 /// Calculate joint entropy for two variables
+#[allow(dead_code)]
 fn calculate_joint_entropy<F>(ts: &Array1<F>, lag: usize, n_bins: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -1063,6 +1064,7 @@ where
 }
 
 /// Calculate block entropy
+#[allow(dead_code)]
 fn calculate_block_entropy<F>(ts: &Array1<F>, block_size: usize, n_bins: usize) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -1097,6 +1099,7 @@ where
 }
 
 /// Estimate fractal dimension using box counting
+#[allow(dead_code)]
 fn estimate_fractal_dimension<F>(ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -1145,6 +1148,7 @@ where
 }
 
 /// Estimate DFA exponent
+#[allow(dead_code)]
 fn estimate_dfa_exponent<F>(ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,
@@ -1224,6 +1228,7 @@ where
 }
 
 /// Estimate Hurst exponent using R/S analysis
+#[allow(dead_code)]
 fn estimate_hurst_exponent<F>(ts: &Array1<F>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + Clone,

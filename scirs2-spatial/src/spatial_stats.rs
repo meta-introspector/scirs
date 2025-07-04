@@ -74,6 +74,7 @@ use crate::error::{SpatialError, SpatialResult};
 /// let moran = morans_i(&values.view(), &weights.view()).unwrap();
 /// println!("Moran's I: {:.3}", moran);
 /// ```
+#[allow(dead_code)]
 pub fn morans_i<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> SpatialResult<T> {
     let n = values.len();
 
@@ -156,6 +157,7 @@ pub fn morans_i<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
 /// let geary = gearys_c(&values.view(), &weights.view()).unwrap();
 /// println!("Geary's C: {:.3}", geary);
 /// ```
+#[allow(dead_code)]
 pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> SpatialResult<T> {
     let n = values.len();
 
@@ -243,6 +245,7 @@ pub fn gearys_c<T: Float>(values: &ArrayView1<T>, weights: &ArrayView2<T>) -> Sp
 /// let local_i = local_morans_i(&values.view(), &weights.view()).unwrap();
 /// println!("Local Moran's I values: {:?}", local_i);
 /// ```
+#[allow(dead_code)]
 pub fn local_morans_i<T: Float>(
     values: &ArrayView1<T>,
     weights: &ArrayView2<T>,
@@ -326,6 +329,7 @@ pub fn local_morans_i<T: Float>(
 /// let gi_stats = getis_ord_gi(&values.view(), &weights.view(), false).unwrap();
 /// println!("Gi statistics: {:?}", gi_stats);
 /// ```
+#[allow(dead_code)]
 pub fn getis_ord_gi<T: Float>(
     values: &ArrayView1<T>,
     weights: &ArrayView2<T>,
@@ -434,6 +438,7 @@ pub fn getis_ord_gi<T: Float>(
 ///
 /// println!("Distance-based weights matrix: {:?}", weights);
 /// ```
+#[allow(dead_code)]
 pub fn distance_weights_matrix<T: Float>(
     coordinates: &ArrayView2<T>,
     max_distance: T,
@@ -519,6 +524,7 @@ pub fn distance_weights_matrix<T: Float>(
 /// let ce_index = clark_evans_index(&coords.view(), 4.0).unwrap();
 /// println!("Clark-Evans index: {:.3}", ce_index);
 /// ```
+#[allow(dead_code)]
 pub fn clark_evans_index<T: Float>(coordinates: &ArrayView2<T>, study_area: T) -> SpatialResult<T> {
     let n = coordinates.shape()[0];
 

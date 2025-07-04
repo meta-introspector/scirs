@@ -7,6 +7,7 @@ use scirs2_signal::spectral::periodogram;
 use scirs2_signal::utilities::spectral::*;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Spectral Descriptors Example");
     println!("----------------------------");

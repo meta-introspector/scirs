@@ -10,6 +10,7 @@ use scirs2_special::bessel::*;
 use scirs2_special::{j0_zeros, j1_zeros};
 use std::io::{self, Write};
 
+#[allow(dead_code)]
 fn main() {
     println!("🚀 Welcome to the Interactive Bessel Functions Tutorial!");
     println!("════════════════════════════════════════════════════════");
@@ -39,6 +40,7 @@ fn main() {
     }
 }
 
+#[allow(dead_code)]
 fn show_introduction() {
     println!("📚 BESSEL FUNCTIONS: Mathematical Foundations");
     println!("─────────────────────────────────────────────");
@@ -62,6 +64,7 @@ fn show_introduction() {
     println!();
 }
 
+#[allow(dead_code)]
 fn show_menu() {
     println!("🎯 Choose a topic to explore:");
     println!("1. 📖 Mathematical Theory Overview");
@@ -77,6 +80,7 @@ fn show_menu() {
     io::stdout().flush().unwrap();
 }
 
+#[allow(dead_code)]
 fn get_user_choice() -> i32 {
     let mut input = String::new();
     io::stdin()
@@ -85,6 +89,7 @@ fn get_user_choice() -> i32 {
     input.trim().parse().unwrap_or(0)
 }
 
+#[allow(dead_code)]
 fn theory_overview() {
     println!("\n📖 MATHEMATICAL THEORY OF BESSEL FUNCTIONS");
     println!("══════════════════════════════════════════════");
@@ -132,6 +137,7 @@ fn theory_overview() {
     );
 }
 
+#[allow(dead_code)]
 fn explore_bessel_j() {
     println!("\n🟢 BESSEL FUNCTIONS OF THE FIRST KIND (Jₙ)");
     println!("═══════════════════════════════════════════════");
@@ -160,6 +166,7 @@ fn explore_bessel_j() {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_bessel_j_values() {
     println!("\n🧮 Calculate Jₙ(x) for specific values");
     println!("────────────────────────────────────────");
@@ -202,6 +209,7 @@ fn calculate_bessel_j_values() {
     }
 }
 
+#[allow(dead_code)]
 fn explore_bessel_zeros() {
     println!("\n🎯 Zeros of Bessel Functions");
     println!("────────────────────────────");
@@ -270,6 +278,7 @@ fn explore_bessel_zeros() {
     }
 }
 
+#[allow(dead_code)]
 fn explore_recurrence_relations() {
     println!("\n🔄 Recurrence Relations");
     println!("──────────────────────");
@@ -308,6 +317,7 @@ fn explore_recurrence_relations() {
     }
 }
 
+#[allow(dead_code)]
 fn compare_bessel_orders() {
     println!("\n📊 Comparing Different Orders");
     println!("─────────────────────────────");
@@ -344,6 +354,7 @@ fn compare_bessel_orders() {
     println!("• J₀ starts at 1, while Jₙ (n>0) start at 0");
 }
 
+#[allow(dead_code)]
 fn explore_bessel_y() {
     println!("\n🔴 BESSEL FUNCTIONS OF THE SECOND KIND (Yₙ)");
     println!("═══════════════════════════════════════════════");
@@ -379,6 +390,7 @@ fn explore_bessel_y() {
     }
 }
 
+#[allow(dead_code)]
 fn explore_modified_bessel() {
     println!("\n🟡 MODIFIED BESSEL FUNCTIONS (Iₙ, Kₙ)");
     println!("═══════════════════════════════════════");
@@ -404,6 +416,7 @@ fn explore_modified_bessel() {
     println!("• Mathematical physics (especially diffusion)");
 }
 
+#[allow(dead_code)]
 fn explore_spherical_bessel() {
     println!("\n🔵 SPHERICAL BESSEL FUNCTIONS");
     println!("═════════════════════════════");
@@ -461,6 +474,7 @@ fn explore_spherical_bessel() {
     }
 }
 
+#[allow(dead_code)]
 fn practical_applications() {
     println!("\n🔧 PRACTICAL APPLICATIONS OF BESSEL FUNCTIONS");
     println!("══════════════════════════════════════════════");
@@ -485,6 +499,7 @@ fn practical_applications() {
     }
 }
 
+#[allow(dead_code)]
 fn drum_vibration_demo() {
     println!("\n🥁 VIBRATING CIRCULAR MEMBRANE (DRUM)");
     println!("════════════════════════════════════");
@@ -551,6 +566,7 @@ fn drum_vibration_demo() {
     );
 }
 
+#[allow(dead_code)]
 fn heat_conduction_demo() {
     println!("\n🌡️ HEAT CONDUCTION IN A CYLINDER");
     println!("═══════════════════════════════════");
@@ -600,6 +616,7 @@ fn heat_conduction_demo() {
     }
 }
 
+#[allow(dead_code)]
 fn waveguide_demo() {
     println!("\n📡 ELECTROMAGNETIC WAVES IN CIRCULAR WAVEGUIDE");
     println!("══════════════════════════════════════════════");
@@ -654,6 +671,7 @@ fn waveguide_demo() {
     );
 }
 
+#[allow(dead_code)]
 fn quantum_mechanics_demo() {
     println!("\n⚛️ QUANTUM MECHANICS: PARTICLE IN CYLINDRICAL BOX");
     println!("═══════════════════════════════════════════════");
@@ -732,6 +750,7 @@ fn quantum_mechanics_demo() {
     }
 }
 
+#[allow(dead_code)]
 fn interactive_plotting() {
     println!("\n📊 INTERACTIVE PLOTTING");
     println!("═══════════════════════");
@@ -754,6 +773,7 @@ fn interactive_plotting() {
     }
 }
 
+#[allow(dead_code)]
 fn plot_regular_bessel() {
     println!("\n📈 Plotting Regular Bessel Functions");
     println!("─────────────────────────────────────");
@@ -842,6 +862,7 @@ fn plot_regular_bessel() {
     }
 }
 
+#[allow(dead_code)]
 fn plot_modified_bessel() {
     println!("\n📈 Plotting Modified Bessel Functions");
     println!("──────────────────────────────────────");
@@ -883,6 +904,7 @@ fn plot_modified_bessel() {
     println!("For large x: I₀(x) ≈ e^x/√(2πx), K₀(x) ≈ √(π/2x) e^(-x)");
 }
 
+#[allow(dead_code)]
 fn plot_spherical_bessel() {
     println!("\n📈 Plotting Spherical Bessel Functions");
     println!("───────────────────────────────────────");
@@ -918,6 +940,7 @@ fn plot_spherical_bessel() {
     }
 }
 
+#[allow(dead_code)]
 fn plot_custom_comparison() {
     println!("\n📊 Custom Function Comparison");
     println!("─────────────────────────────");
@@ -973,6 +996,7 @@ fn plot_custom_comparison() {
     }
 }
 
+#[allow(dead_code)]
 fn quiz_section() {
     println!("\n🧠 BESSEL FUNCTIONS KNOWLEDGE QUIZ");
     println!("═════════════════════════════════════");
@@ -1082,6 +1106,7 @@ fn quiz_section() {
 }
 
 // Helper functions
+#[allow(dead_code)]
 fn get_user_input() -> String {
     let mut input = String::new();
     io::stdin()
@@ -1090,6 +1115,7 @@ fn get_user_input() -> String {
     input.trim().to_string()
 }
 
+#[allow(dead_code)]
 fn pause() {
     print!("\nPress Enter to continue...");
     io::stdout().flush().unwrap();
@@ -1099,6 +1125,7 @@ fn pause() {
         .expect("Failed to read input");
 }
 
+#[allow(dead_code)]
 fn factorial(n: usize) -> f64 {
     (1..=n).map(|x| x as f64).product()
 }

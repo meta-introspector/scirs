@@ -88,6 +88,7 @@ pub use sparse::{arnoldi, eigs_gen, lanczos, svds};
 /// let a = array![[2.0_f64, 1.0], [1.0, 3.0]];
 /// let w = eigvalsh(&a.view(), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn eigvalsh<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -129,6 +130,7 @@ where
 ///
 /// This function currently delegates to the standard `eigh` implementation.
 /// Full ultra-precision algorithms will be implemented in future versions.
+#[allow(dead_code)]
 pub fn ultra_precision_eig<F>(
     a: &ArrayView2<F>,
     tolerance: F,
@@ -239,6 +241,7 @@ where
 /// - Newton's method eigenvalue correction for final accuracy verification
 /// - Enhanced Gram-Schmidt orthogonalization with multiple passes
 /// - Residual verification and eigenvalue correction
+#[allow(dead_code)]
 fn ultra_precision_symmetric_eigensolver<F>(
     a: &ArrayView2<F>,
     tolerance: F,
@@ -349,6 +352,7 @@ where
 }
 
 /// Ultra-precision general eigenvalue solver for non-symmetric matrices
+#[allow(dead_code)]
 fn ultra_precision_general_eigensolver<F>(
     a: &ArrayView2<F>,
     tolerance: F,
@@ -390,6 +394,7 @@ where
 // Helper functions for ultra-precision algorithms
 
 /// Kahan summation algorithm for numerically stable matrix-vector multiplication
+#[allow(dead_code)]
 fn kahan_matrix_vector_product<F>(a: &ArrayView2<F>, v: &ArrayView1<F>) -> Array1<F>
 where
     F: Float + Sum,
@@ -415,6 +420,7 @@ where
 }
 
 /// Kahan summation algorithm for numerically stable vector subtraction
+#[allow(dead_code)]
 fn kahan_vector_subtraction<F>(a: &Array1<F>, b: &Array1<F>) -> Array1<F>
 where
     F: Float,
@@ -433,6 +439,7 @@ where
 }
 
 /// Kahan summation algorithm for numerically stable dot product
+#[allow(dead_code)]
 fn kahan_dot_product<F>(a: &Array1<F>, b: &Array1<F>) -> F
 where
     F: Float + Sum,
@@ -451,6 +458,7 @@ where
 }
 
 /// Newton's method for eigenvalue correction to achieve ultra-high precision
+#[allow(dead_code)]
 fn newton_eigenvalue_correction<F>(a: &ArrayView2<F>, v: &Array1<F>, lambda: F, tolerance: F) -> F
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -486,6 +494,7 @@ where
 }
 
 /// Enhanced inverse iteration for eigenvector refinement
+#[allow(dead_code)]
 fn enhanced_inverse_iteration<F>(
     a: &ArrayView2<F>,
     lambda: F,
@@ -523,6 +532,7 @@ where
 }
 
 /// Enhanced Gram-Schmidt orthogonalization with multiple passes
+#[allow(dead_code)]
 fn enhanced_gram_schmidt_orthogonalization<F>(vectors: &mut Array2<F>, tolerance: F)
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -557,6 +567,7 @@ where
 }
 
 /// Verify eigenvalue accuracy by checking the eigenvalue equation
+#[allow(dead_code)]
 fn verify_eigenvalue_accuracy<F>(
     a: &ArrayView2<F>,
     eigenvalues: &Array1<F>,
@@ -586,6 +597,7 @@ where
 }
 
 /// Sort eigenvalues and eigenvectors by eigenvalue magnitude
+#[allow(dead_code)]
 fn sort_eigenvalues_and_vectors<F>(
     eigenvalues: Array1<F>,
     eigenvectors: Array2<F>,
@@ -640,6 +652,7 @@ where
 /// let cond = estimate_condition_number(&a.view());
 /// assert!(cond > 1e10); // Very ill-conditioned
 /// ```
+#[allow(dead_code)]
 pub fn estimate_condition_number<F>(a: &ArrayView2<F>) -> F
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -746,6 +759,7 @@ where
 /// let tol = adaptive_tolerance_selection(cond);
 /// assert!(tol > 1e-13); // Looser tolerance for ill-conditioned matrix
 /// ```
+#[allow(dead_code)]
 pub fn adaptive_tolerance_selection<F>(condition_number: F) -> F
 where
     F: Float + NumAssign,

@@ -7,16 +7,19 @@ use scirs2_optim::{
 };
 
 /// Simple quadratic loss function for demonstration
+#[allow(dead_code)]
 fn quadratic_loss(x: &Array1<f64>) -> f64 {
     x.iter().map(|&xi| xi * xi).sum()
 }
 
 /// Compute gradient of quadratic loss
+#[allow(dead_code)]
 fn quadratic_gradient(x: &Array1<f64>) -> Array1<f64> {
     x * 2.0
 }
 
 /// Visualize learning rate and momentum over time
+#[allow(dead_code)]
 fn plot_schedule(initial_lr: f64, max_lr: f64, total_steps: usize, warmup_frac: f64, name: &str) {
     println!("\n{} Schedule:", name);
     println!("Step | Learning Rate | Progress");
@@ -36,6 +39,7 @@ fn plot_schedule(initial_lr: f64, max_lr: f64, total_steps: usize, warmup_frac: 
     }
 }
 
+#[allow(dead_code)]
 fn main() {
     // Initialize parameters
     let initial_params = Array1::from_vec(vec![5.0, -3.0, 2.0, -4.0]);
@@ -135,6 +139,7 @@ fn main() {
     );
 }
 
+#[allow(dead_code)]
 fn run_one_cycle_optimization(
     initial_params: Array1<f64>,
     mut scheduler: OneCycle<f64>,

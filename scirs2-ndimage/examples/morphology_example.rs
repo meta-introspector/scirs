@@ -4,6 +4,7 @@ use scirs2_ndimage::morphology::{
     Connectivity,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Binary Morphology Examples\n");
 
@@ -99,6 +100,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper function to print a binary image in a readable format
+#[allow(dead_code)]
 fn print_binary_image(image: &Array2<bool>) {
     for i in 0..image.shape()[0] {
         for j in 0..image.shape()[1] {

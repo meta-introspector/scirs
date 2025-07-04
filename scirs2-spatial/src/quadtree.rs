@@ -884,6 +884,7 @@ impl Quadtree {
 /// # Returns
 ///
 /// The squared Euclidean distance
+#[allow(dead_code)]
 fn squared_distance(p1: &ArrayView1<f64>, p2: &ArrayView1<f64>) -> f64 {
     let mut sum_sq = 0.0;
     for i in 0..p1.len().min(p2.len()) {

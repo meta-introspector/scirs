@@ -13,9 +13,10 @@ use std::time::{Duration, Instant};
 use ndarray::Array2;
 use num_traits::{Float, FromPrimitive};
 
+use crate::filters::BorderMode;
+
 use crate::error::{NdimageError, NdimageResult};
-use crate::filters::{gaussian_filter, median_filter, uniform_filter};
-use crate::interpolation::BoundaryMode;
+use crate::filters::{median_filter, uniform_filter};
 use crate::performance_profiler::{PerformanceProfiler, ProfilerConfig};
 
 /// Comprehensive benchmark suite for comparing with SciPy
@@ -287,7 +288,7 @@ impl SciPyBenchmarkSuite {
     where
         T: Float + FromPrimitive + Clone + Default + std::fmt::Debug + Send + Sync,
     {
-        let (height, width) = array_size;
+        let (_height, _width) = array_size;
 
         // Generate test data
         let input_data = self.generate_test_data::<T>(array_size, operation);
@@ -377,13 +378,13 @@ impl SciPyBenchmarkSuite {
     {
         match operation {
             BenchmarkOperation::GaussianFilter => {
-                gaussian_filter(input_data.view(), (1.0, 1.0), BoundaryMode::Reflect)
+                crate::filters::gaussian_filter_chunked(&input_data, &[T::from(1.0).unwrap(), T::from(1.0).unwrap()], Some(T::from(4.0).unwrap()), BorderMode::Reflect, None)
             }
             BenchmarkOperation::MedianFilter => {
-                median_filter(input_data.view(), (3, 3), BoundaryMode::Reflect)
+                median_filter(&input_data, &[3, 3], Some(BorderMode::Reflect))
             }
             BenchmarkOperation::UniformFilter => {
-                uniform_filter(input_data.view(), (3, 3), BoundaryMode::Reflect)
+                uniform_filter(&input_data, &[3, 3], Some(BorderMode::Reflect))
             }
             _ => {
                 // For other operations, return a dummy result
@@ -896,6 +897,7 @@ impl BenchmarkReport {
 }
 
 /// Convenience function to run a quick benchmark comparison
+#[allow(dead_code)]
 pub fn quick_scipy_benchmark() -> NdimageResult<BenchmarkReport> {
     let config = BenchmarkConfig {
         array_sizes: vec![(256, 256), (512, 512)],

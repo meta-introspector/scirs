@@ -16,7 +16,7 @@ use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
 use std::collections::HashMap;
-use std::f64::consts::PI;
+// use std::f64::consts::PI;
 
 /// Advanced adaptive denoising configuration
 #[derive(Debug, Clone)]
@@ -187,6 +187,7 @@ pub struct AdaptiveParameters {
 /// # Returns
 ///
 /// * Comprehensive denoising results with quality metrics
+#[allow(dead_code)]
 pub fn adaptive_denoise_ultra<T>(
     signal: &[T],
     config: &AdaptiveDenoisingConfig,
@@ -308,6 +309,7 @@ enum ProcessingMode {
 }
 
 /// Analyze signal characteristics for adaptive parameter selection
+#[allow(dead_code)]
 fn analyze_signal_characteristics(
     signal: &Array1<f64>,
     config: &AdaptiveDenoisingConfig,
@@ -360,6 +362,7 @@ fn analyze_signal_characteristics(
 }
 
 /// Estimate noise variance using robust methods
+#[allow(dead_code)]
 fn estimate_noise_variance(signal: &Array1<f64>, analysis: &SignalAnalysis) -> SignalResult<f64> {
     let n = signal.len();
 
@@ -405,6 +408,7 @@ fn estimate_noise_variance(signal: &Array1<f64>, analysis: &SignalAnalysis) -> S
 }
 
 /// Estimate noise from wavelet coefficients
+#[allow(dead_code)]
 fn estimate_noise_from_wavelets(signal: &Array1<f64>) -> SignalResult<Option<f64>> {
     if signal.len() < 64 {
         return Ok(None);
@@ -436,6 +440,7 @@ fn estimate_noise_from_wavelets(signal: &Array1<f64>) -> SignalResult<Option<f64
 }
 
 /// Estimate local noise variance in smooth regions
+#[allow(dead_code)]
 fn estimate_local_noise_variance(
     signal: &Array1<f64>,
     analysis: &SignalAnalysis,
@@ -474,6 +479,7 @@ fn estimate_local_noise_variance(
 }
 
 /// Select optimal denoising strategy based on signal analysis
+#[allow(dead_code)]
 fn select_denoising_strategy(
     analysis: &SignalAnalysis,
     noise_variance: f64,
@@ -533,6 +539,7 @@ fn select_denoising_strategy(
 }
 
 /// Calculate adaptive parameters for each algorithm
+#[allow(dead_code)]
 fn calculate_adaptive_parameters(
     analysis: &SignalAnalysis,
     noise_variance: f64,
@@ -566,6 +573,7 @@ fn calculate_adaptive_parameters(
 }
 
 /// Calculate adaptive wavelet threshold
+#[allow(dead_code)]
 fn calculate_adaptive_wavelet_threshold(
     noise_std: f64,
     analysis: &SignalAnalysis,
@@ -586,6 +594,7 @@ fn calculate_adaptive_wavelet_threshold(
 }
 
 /// Calculate NLM bandwidth
+#[allow(dead_code)]
 fn calculate_nlm_bandwidth(noise_std: f64, analysis: &SignalAnalysis) -> f64 {
     // Bandwidth should be proportional to noise level
     let base_bandwidth = noise_std * 1.5;
@@ -597,6 +606,7 @@ fn calculate_nlm_bandwidth(noise_std: f64, analysis: &SignalAnalysis) -> f64 {
 }
 
 /// Calculate TV lambda parameter
+#[allow(dead_code)]
 fn calculate_tv_lambda(
     noise_std: f64,
     analysis: &SignalAnalysis,
@@ -616,6 +626,7 @@ fn calculate_tv_lambda(
 }
 
 /// Apply fusion denoising using multiple algorithms
+#[allow(dead_code)]
 fn apply_fusion_denoising(
     signal: &Array1<f64>,
     strategy: &DenoisingStrategy,
@@ -653,6 +664,7 @@ fn apply_fusion_denoising(
 }
 
 /// Apply single algorithm denoising
+#[allow(dead_code)]
 fn apply_single_algorithm_denoising(
     signal: &Array1<f64>,
     config: &AdaptiveDenoisingConfig,
@@ -665,6 +677,7 @@ fn apply_single_algorithm_denoising(
 }
 
 /// Apply a specific denoising algorithm
+#[allow(dead_code)]
 fn apply_single_denoising_algorithm(
     signal: &Array1<f64>,
     algorithm: DenoisingAlgorithm,
@@ -684,6 +697,7 @@ fn apply_single_denoising_algorithm(
 }
 
 /// Apply adaptive wavelet denoising
+#[allow(dead_code)]
 fn apply_adaptive_wavelet_denoising(
     signal: &Array1<f64>,
     strategy: &DenoisingStrategy,
@@ -718,6 +732,7 @@ fn apply_adaptive_wavelet_denoising(
 }
 
 /// Apply non-local means denoising
+#[allow(dead_code)]
 fn apply_nlm_denoising(
     signal: &Array1<f64>,
     strategy: &DenoisingStrategy,
@@ -734,6 +749,7 @@ fn apply_nlm_denoising(
 }
 
 /// Apply total variation denoising
+#[allow(dead_code)]
 fn apply_tv_denoising(
     signal: &Array1<f64>,
     strategy: &DenoisingStrategy,
@@ -750,6 +766,7 @@ fn apply_tv_denoising(
 }
 
 /// Apply Wiener filtering
+#[allow(dead_code)]
 fn apply_wiener_denoising(
     signal: &Array1<f64>,
     strategy: &DenoisingStrategy,
@@ -765,6 +782,7 @@ fn apply_wiener_denoising(
 }
 
 /// Simple smoothing fallback
+#[allow(dead_code)]
 fn apply_simple_smoothing(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     let window_size = 5;
     let mut smoothed = signal.clone();
@@ -781,6 +799,7 @@ fn apply_simple_smoothing(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
 }
 
 /// Soft thresholding function
+#[allow(dead_code)]
 fn soft_threshold(x: f64, threshold: f64) -> f64 {
     if x > threshold {
         x - threshold
@@ -792,6 +811,7 @@ fn soft_threshold(x: f64, threshold: f64) -> f64 {
 }
 
 /// Validate and post-process denoising results
+#[allow(dead_code)]
 fn validate_and_postprocess(
     original: &Array1<f64>,
     denoised: &Array1<f64>,
@@ -836,6 +856,7 @@ fn validate_and_postprocess(
 }
 
 /// Compute comprehensive quality metrics
+#[allow(dead_code)]
 fn compute_quality_metrics(
     original: &Array1<f64>,
     denoised: &Array1<f64>,
@@ -875,6 +896,7 @@ fn compute_quality_metrics(
 }
 
 /// Calculate correlation between two signals
+#[allow(dead_code)]
 fn calculate_correlation(x: &Array1<f64>, y: &Array1<f64>) -> f64 {
     let n = x.len() as f64;
     let mean_x = x.mean().unwrap_or(0.0);
@@ -900,12 +922,14 @@ fn calculate_correlation(x: &Array1<f64>, y: &Array1<f64>) -> f64 {
 }
 
 /// Calculate variance of a signal
+#[allow(dead_code)]
 fn calculate_variance(signal: &Array1<f64>) -> f64 {
     let mean = signal.mean().unwrap_or(0.0);
     signal.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / signal.len() as f64
 }
 
 /// Calculate edge preservation metric
+#[allow(dead_code)]
 fn calculate_edge_preservation(original: &Array1<f64>, denoised: &Array1<f64>) -> f64 {
     let mut original_edges = 0.0;
     let mut preserved_edges = 0.0;
@@ -932,6 +956,7 @@ fn calculate_edge_preservation(original: &Array1<f64>, denoised: &Array1<f64>) -
 }
 
 /// Estimate SNR improvement
+#[allow(dead_code)]
 fn estimate_snr_improvement(
     original: &Array1<f64>,
     denoised: &Array1<f64>,
@@ -951,6 +976,7 @@ fn estimate_snr_improvement(
 // Helper functions for signal analysis
 
 /// Estimate wavelet sparsity
+#[allow(dead_code)]
 fn estimate_wavelet_sparsity(signal: &Array1<f64>) -> SignalResult<f64> {
     match dwt_decompose(signal.as_slice().unwrap(), Wavelet::DB(4), None) {
         Ok((_, detail_coeffs)) => {
@@ -974,6 +1000,7 @@ fn estimate_wavelet_sparsity(signal: &Array1<f64>) -> SignalResult<f64> {
 }
 
 /// Estimate oscillatory content
+#[allow(dead_code)]
 fn estimate_oscillatory_content(signal: &Array1<f64>) -> SignalResult<f64> {
     // Simple measure based on zero-crossings and local extrema
     let mut zero_crossings = 0;
@@ -1000,6 +1027,7 @@ fn estimate_oscillatory_content(signal: &Array1<f64>) -> SignalResult<f64> {
 }
 
 /// Estimate effective bandwidth
+#[allow(dead_code)]
 fn estimate_effective_bandwidth(signal: &Array1<f64>) -> SignalResult<f64> {
     // Simplified bandwidth estimation based on signal variation
     let mut high_freq_content = 0.0;
@@ -1031,7 +1059,7 @@ mod tests {
         let mut rng = rand::rng();
         let noisy_signal: Vec<f64> = clean_signal
             .iter()
-            .map(|&s| s + 0.1 * rng.gen_range(-1.0..1.0))
+            .map(|&s| s + 0.1 * rng.random_range(-1.0..1.0))
             .collect();
 
         let config = AdaptiveDenoisingConfig::default();

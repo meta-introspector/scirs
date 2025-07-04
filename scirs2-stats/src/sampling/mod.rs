@@ -40,6 +40,7 @@ pub trait SampleableDistribution<T> {
 /// let samples = sampling::sample_distribution(&normal, 100).unwrap();
 /// assert_eq!(samples.len(), 100);
 /// ```
+#[allow(dead_code)]
 pub fn sample_distribution<T, D>(dist: &D, size: usize) -> StatsResult<Array1<T>>
 where
     T: Float + std::iter::Sum<T> + std::ops::Div<Output = T>,
@@ -80,6 +81,7 @@ where
 /// let samples = sampling::bootstrap(&data.view(), 10, Some(42)).unwrap();
 /// assert_eq!(samples.shape(), &[10, 5]);
 /// ```
+#[allow(dead_code)]
 pub fn bootstrap<T>(
     x: &ArrayView1<T>,
     n_resamples: usize,
@@ -115,6 +117,7 @@ where
 /// let perm = sampling::permutation(&data.view(), Some(42)).unwrap();
 /// assert_eq!(perm.len(), 5);
 /// ```
+#[allow(dead_code)]
 pub fn permutation<T>(x: &ArrayView1<T>, seed: Option<u64>) -> StatsResult<Array1<T>>
 where
     T: Copy,
@@ -149,6 +152,7 @@ where
 /// let indices = sampling::stratified_sample(&data.view(), &groups.view(), 1, Some(42)).unwrap();
 /// assert_eq!(indices.len(), 3);  // 3 groups with 1 sample each
 /// ```
+#[allow(dead_code)]
 pub fn stratified_sample<T, G>(
     x: &ArrayView1<T>,
     groups: &ArrayView1<G>,
@@ -248,6 +252,7 @@ where
 /// let samples = sampling::stratified_bootstrap(&data.view(), &groups.view(), 5, Some(42)).unwrap();
 /// assert_eq!(samples.shape(), &[5, 6]);
 /// ```
+#[allow(dead_code)]
 pub fn stratified_bootstrap<T, G>(
     x: &ArrayView1<T>,
     groups: &ArrayView1<G>,
@@ -333,6 +338,7 @@ where
 /// let samples = sampling::block_bootstrap(&data.view(), 3, 5, true, Some(42)).unwrap();
 /// assert_eq!(samples.shape(), &[5, 8]);
 /// ```
+#[allow(dead_code)]
 pub fn block_bootstrap<T>(
     x: &ArrayView1<T>,
     block_size: usize,
@@ -428,6 +434,7 @@ where
 ///
 /// # Returns
 /// * Moving block bootstrap samples
+#[allow(dead_code)]
 pub fn moving_block_bootstrap<T>(
     x: &ArrayView1<T>,
     block_size: usize,
@@ -513,6 +520,7 @@ where
 ///
 /// # Returns
 /// * Stationary bootstrap samples
+#[allow(dead_code)]
 pub fn stationary_bootstrap<T>(
     x: &ArrayView1<T>,
     p: f64,
@@ -600,6 +608,7 @@ where
 ///
 /// # Returns
 /// * Tuple of (bias-corrected estimate, bootstrap samples, bias estimate)
+#[allow(dead_code)]
 pub fn double_bootstrap<T, F>(
     x: &ArrayView1<T>,
     statistic: F,
@@ -688,6 +697,7 @@ where
 ///
 /// # Returns
 /// * Tuple of (percentile CI, BC CI, BCa CI) where each CI is (lower, upper)
+#[allow(dead_code)]
 pub fn bootstrap_confidence_intervals<T, F>(
     x: &ArrayView1<T>,
     statistic: F,
@@ -800,11 +810,13 @@ where
 }
 
 /// Approximate normal CDF (for BCa intervals)
+#[allow(dead_code)]
 fn normal_cdf(x: f64) -> f64 {
     0.5 * (1.0 + erf(x / std::f64::consts::SQRT_2))
 }
 
 /// Error function approximation
+#[allow(dead_code)]
 fn erf(x: f64) -> f64 {
     // Abramowitz and Stegun approximation
     let a1 = 0.254829592;

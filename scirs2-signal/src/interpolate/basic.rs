@@ -31,6 +31,7 @@ use ndarray::Array1;
 /// let result = linear_interpolate(&signal).unwrap();
 /// // Result will be approximately [1.0, 2.0, 3.0, 4.0, 5.0]
 /// ```
+#[allow(dead_code)]
 pub fn linear_interpolate(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     let n = signal.len();
 
@@ -142,6 +143,7 @@ pub fn linear_interpolate(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
 /// // Result will be [1.0, 1.0, 3.0, 3.0, 5.0] or [1.0, 3.0, 3.0, 5.0, 5.0]
 /// // depending on which valid point is closer
 /// ```
+#[allow(dead_code)]
 pub fn nearest_neighbor_interpolate(signal: &Array1<f64>) -> SignalResult<Array1<f64>> {
     let n = signal.len();
 

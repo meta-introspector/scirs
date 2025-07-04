@@ -2,6 +2,7 @@ use ag::tensor_ops::*;
 use ndarray::array;
 use scirs2_autograd as ag;
 
+#[allow(dead_code)]
 fn main() {
     ag::run::<f64, _, _>(|g| {
         // Test 2x2 matrix

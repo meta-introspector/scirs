@@ -16,6 +16,7 @@ use scirs2_vision::{
 
 /// Test that neural feature detection integrates properly with tracking
 #[test]
+#[allow(dead_code)]
 fn test_neural_features_tracking_integration() -> Result<()> {
     // Create test image
     let image = create_test_image((480, 640));
@@ -57,6 +58,7 @@ fn test_neural_features_tracking_integration() -> Result<()> {
 
 /// Test HDR processing with super-resolution pipeline
 #[test]
+#[allow(dead_code)]
 fn test_hdr_super_resolution_pipeline() -> Result<()> {
     // Create multi-exposure images
     let base_image = create_test_image((240, 320));
@@ -88,13 +90,11 @@ fn test_hdr_super_resolution_pipeline() -> Result<()> {
 
     assert!(
         min_val >= -0.1,
-        "Minimum value {} should be close to valid range",
-        min_val
+        "Minimum value {min_val} should be close to valid range"
     );
     assert!(
         max_val <= 1.1,
-        "Maximum value {} should be close to valid range",
-        max_val
+        "Maximum value {max_val} should be close to valid range"
     );
 
     Ok(())
@@ -102,6 +102,7 @@ fn test_hdr_super_resolution_pipeline() -> Result<()> {
 
 /// Test denoising with neural feature detection
 #[test]
+#[allow(dead_code)]
 fn test_denoising_feature_detection_pipeline() -> Result<()> {
     // Create noisy image
     let clean_image = create_test_image((240, 320));
@@ -142,6 +143,7 @@ fn test_denoising_feature_detection_pipeline() -> Result<()> {
 
 /// Test attention-based matching with neural descriptors
 #[test]
+#[allow(dead_code)]
 fn test_attention_matching_neural_descriptors() -> Result<()> {
     let image1 = create_test_image((240, 320));
     let image2 = create_transformed_image(&image1)?;
@@ -188,6 +190,7 @@ fn test_attention_matching_neural_descriptors() -> Result<()> {
 
 /// Test complete multi-frame tracking workflow
 #[test]
+#[allow(dead_code)]
 fn test_complete_tracking_workflow() -> Result<()> {
     // Create sequence of images with moving objects
     let mut tracker = DeepSORT::new();
@@ -223,6 +226,7 @@ fn test_complete_tracking_workflow() -> Result<()> {
 
 /// Test performance characteristics of neural features
 #[test]
+#[allow(dead_code)]
 fn test_neural_features_performance() -> Result<()> {
     let image = create_test_image((480, 640));
 
@@ -276,6 +280,7 @@ fn test_neural_features_performance() -> Result<()> {
 
 /// Test error handling and edge cases
 #[test]
+#[allow(dead_code)]
 fn test_advanced_features_error_handling() -> Result<()> {
     // Test with empty image
     let _empty_image: Array2<f32> = Array2::zeros((0, 0));
@@ -320,6 +325,7 @@ fn test_advanced_features_error_handling() -> Result<()> {
 
 // Helper functions
 
+#[allow(dead_code)]
 fn create_test_image(size: (usize, usize)) -> Array2<f32> {
     let (height, width) = size;
     Array2::from_shape_fn((height, width), |(y, x)| {
@@ -333,6 +339,7 @@ fn create_test_image(size: (usize, usize)) -> Array2<f32> {
     })
 }
 
+#[allow(dead_code)]
 fn create_transformed_image(image: &Array2<f32>) -> Result<Array2<f32>> {
     let (height, width) = image.dim();
     let mut transformed = Array2::zeros((height, width));
@@ -355,6 +362,7 @@ fn create_transformed_image(image: &Array2<f32>) -> Result<Array2<f32>> {
     Ok(transformed)
 }
 
+#[allow(dead_code)]
 fn add_noise(image: &Array2<f32>, noise_level: f32) -> Array2<f32> {
     image.mapv(|x| {
         let noise = (rand::random::<f32>() - 0.5) * noise_level;
@@ -362,6 +370,7 @@ fn add_noise(image: &Array2<f32>, noise_level: f32) -> Array2<f32> {
     })
 }
 
+#[allow(dead_code)]
 fn create_synthetic_detections(frame_idx: usize) -> Vec<Detection> {
     let mut detections = Vec::new();
 

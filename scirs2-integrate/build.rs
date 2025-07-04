@@ -1,3 +1,4 @@
+#[allow(dead_code)]
 fn main() {
     // Link with BLAS libraries for ndarray operations
     if cfg!(target_os = "linux") {

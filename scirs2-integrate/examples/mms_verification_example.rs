@@ -13,6 +13,7 @@ use scirs2_integrate::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Method of Manufactured Solutions Verification ===\n");
 
@@ -28,6 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn ode_verification_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧮 ODE Method Verification");
     println!("{}", "=".repeat(50));
@@ -90,6 +92,7 @@ fn ode_verification_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn pde_verification_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌊 PDE Method Verification");
     println!("{}", "=".repeat(50));
@@ -172,6 +175,7 @@ fn pde_verification_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn convergence_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("📈 Convergence Analysis Example");
     println!("{}", "=".repeat(50));

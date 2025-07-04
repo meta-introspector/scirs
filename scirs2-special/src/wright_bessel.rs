@@ -96,6 +96,7 @@ fn wright_bessel_asymptotic(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
 /// where sigma = rho * (1/rho)^{1/rho}
 ///
 /// This is valid for |z| → ∞ and rho > 0
+#[allow(dead_code)]
 fn wright_bessel_complex_asymptotic(
     rho: f64,
     beta: Complex64,
@@ -176,6 +177,7 @@ fn wright_bessel_complex_asymptotic(
 /// let result = wright_bessel(1.0, 1.0, 1.0).unwrap();
 /// assert!((result - 0.2239).abs() < 1e-4);
 /// ```
+#[allow(dead_code)]
 pub fn wright_bessel(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
     // Enhanced parameter validation for numerical stability
     if rho <= 0.0 {
@@ -256,6 +258,7 @@ pub fn wright_bessel(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
 /// # Returns
 ///
 /// * `SpecialResult<Complex64>` - The Wright Bessel function value
+#[allow(dead_code)]
 pub fn wright_bessel_complex(rho: f64, beta: Complex64, z: Complex64) -> SpecialResult<Complex64> {
     // Enhanced parameter validation for numerical stability
     if rho <= 0.0 {
@@ -327,6 +330,7 @@ pub fn wright_bessel_complex(rho: f64, beta: Complex64, z: Complex64) -> Special
 ///
 /// * `SpecialResult<Vec<f64>>` - The zeros of the Wright Bessel function
 #[allow(unused_assignments)]
+#[allow(dead_code)]
 pub fn wright_bessel_zeros(rho: f64, _beta: f64, n: usize) -> SpecialResult<Vec<f64>> {
     // Parameter validation
     if rho <= 0.0 {
@@ -456,6 +460,7 @@ pub fn wright_bessel_zeros(rho: f64, _beta: f64, n: usize) -> SpecialResult<Vec<
 /// Enhanced series computation for Wright Bessel functions with convergence acceleration
 ///
 /// Implements Aitken's Δ² process for convergence acceleration and adaptive precision control
+#[allow(dead_code)]
 fn compute_wright_bessel_series(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
     let max_terms = 200;
     let tolerance = 1e-15;
@@ -542,6 +547,7 @@ fn compute_wright_bessel_series(rho: f64, beta: f64, z: f64) -> SpecialResult<f6
 }
 
 /// Enhanced series computation for Wright Bessel functions with complex arguments
+#[allow(dead_code)]
 fn compute_wright_bessel_complex_series(
     rho: f64,
     beta: Complex64,
@@ -631,6 +637,7 @@ fn compute_wright_bessel_complex_series(
 /// Aitken's Δ² convergence acceleration for real sequences
 ///
 /// Given a sequence s_n, computes s_n - (s_{n+1} - s_n)² / (s_{n+2} - 2s_{n+1} + s_n)
+#[allow(dead_code)]
 fn aitken_acceleration(partial_sums: &[f64], n: usize) -> SpecialResult<Option<f64>> {
     if n < 3 || partial_sums.len() < 3 * n {
         return Ok(None);
@@ -657,6 +664,7 @@ fn aitken_acceleration(partial_sums: &[f64], n: usize) -> SpecialResult<Option<f
 }
 
 /// Aitken's Δ² convergence acceleration for complex sequences
+#[allow(dead_code)]
 fn aitken_acceleration_complex(
     partial_sums: &[Complex64],
     n: usize,
@@ -689,6 +697,7 @@ fn aitken_acceleration_complex(
 ///
 /// Uses the series relation: d/dz J_{rho, beta}(z) = J_{rho, beta+rho}(z) / rho
 /// This is derived from the series definition and provides exact analytical derivatives.
+#[allow(dead_code)]
 pub fn wright_bessel_derivative(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
     // Parameter validation
     if rho <= 0.0 {
@@ -718,6 +727,7 @@ pub fn wright_bessel_derivative(rho: f64, beta: f64, z: f64) -> SpecialResult<f6
 }
 
 /// Enhanced asymptotic expansion with better error estimates and stability
+#[allow(dead_code)]
 fn wright_bessel_asymptotic_enhanced(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
     if rho <= 0.0 {
         return Err(SpecialError::DomainError(
@@ -791,6 +801,7 @@ fn wright_bessel_asymptotic_enhanced(rho: f64, beta: f64, z: f64) -> SpecialResu
 /// Computes log(J_{ρ,β}(z)) accurately for all parameter ranges
 /// Useful when the Wright Bessel function is very large or very small
 #[allow(unused_imports)]
+#[allow(dead_code)]
 pub fn log_wright_bessel(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
     if rho <= 0.0 || rho > 1.0 {
         return Err(SpecialError::DomainError(

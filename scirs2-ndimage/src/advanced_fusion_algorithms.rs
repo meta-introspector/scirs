@@ -10,16 +10,14 @@
 //! - **Quantum Consciousness Simulation**: Computational models of awareness and perception
 //! - **Ultra-Efficient Resource Management**: Optimal utilization of all available compute resources
 
-use ndarray::{
-    Array, Array1, Array2, Array3, Array4, Array5, ArrayView2, ArrayViewMut2, Axis, Zip,
-};
+use ndarray::{Array1, Array2, Array3, Array4, Array5, ArrayView2};
 use num_complex::Complex;
-use num_traits::{Float, FromPrimitive, One, Zero};
+use num_traits::{Float, FromPrimitive, Zero};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::f64::consts::PI;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, RwLock};
 
-use crate::error::{NdimageError, NdimageResult};
+use crate::error::NdimageResult;
 use crate::neuromorphic_computing::NeuromorphicConfig;
 use crate::quantum_inspired::QuantumConfig;
 use crate::quantum_neuromorphic_fusion::QuantumNeuromorphicConfig;
@@ -263,6 +261,7 @@ pub struct EfficiencyMetrics {
 ///
 /// This is the ultimate image processing function that combines all advanced paradigms:
 /// quantum computing, neuromorphic processing, consciousness simulation, and self-organization.
+#[allow(dead_code)]
 pub fn ultrathink_fusion_processing<T>(
     image: ArrayView2<T>,
     config: &UltrathinkConfig,
@@ -328,6 +327,7 @@ where
 ///
 /// Extracts features in multiple dimensions beyond traditional spatial dimensions,
 /// including temporal, frequency, quantum, and consciousness dimensions.
+#[allow(dead_code)]
 pub fn extract_ultra_dimensional_features<T>(
     image: &ArrayView2<T>,
     ultra_state: &mut UltrathinkState,
@@ -410,6 +410,7 @@ where
 ///
 /// Simulates consciousness-like processing using quantum mechanical principles
 /// including superposition, entanglement, and quantum interference effects.
+#[allow(dead_code)]
 pub fn simulate_quantum_consciousness(
     ultra_features: &Array5<f64>,
     ultra_state: &mut UltrathinkState,
@@ -452,8 +453,10 @@ where
                 )?;
 
                 // Update consciousness amplitudes
-                ultra_state.consciousness_amplitudes[(y, x, c, 0)] = quantum_state.re;
-                ultra_state.consciousness_amplitudes[(y, x, c, 1)] = quantum_state.im;
+                ultra_state.consciousness_amplitudes[(y, x, c, 0)] =
+                    Complex::new(quantum_state.re, 0.0);
+                ultra_state.consciousness_amplitudes[(y, x, c, 1)] =
+                    Complex::new(quantum_state.im, 0.0);
 
                 // Accumulate consciousness response
                 consciousness_amplitude += quantum_state;
@@ -475,6 +478,7 @@ where
 ///
 /// Implements neural networks that reorganize their own structure based on input patterns
 /// and processing requirements, inspired by biological neural plasticity.
+#[allow(dead_code)]
 pub fn self_organizing_neural_processing(
     ultra_features: &Array5<f64>,
     ultra_state: &mut UltrathinkState,
@@ -555,6 +559,7 @@ where
 ///
 /// Analyzes temporal patterns and causal relationships in image sequences
 /// to understand the flow of information and causality over time.
+#[allow(dead_code)]
 pub fn analyze_temporal_causality<T>(
     image: &ArrayView2<T>,
     ultra_state: &mut UltrathinkState,
@@ -617,6 +622,7 @@ where
 ///
 /// Implements meta-learning algorithms that learn how to learn, adapting
 /// the processing strategies based on the type of input and desired outcomes.
+#[allow(dead_code)]
 pub fn meta_learning_adaptation(
     consciousness_response: &Array2<f64>,
     neural_response: &Array2<f64>,
@@ -673,6 +679,7 @@ where
 // Placeholder implementations for complex helper functions
 // (In a real implementation, these would be fully developed)
 
+#[allow(dead_code)]
 fn initialize_or_update_state(
     _previous_state: Option<UltrathinkState>,
     shape: (usize, usize),
@@ -723,6 +730,7 @@ fn initialize_or_update_state(
 
 use ndarray::s;
 
+#[allow(dead_code)]
 fn extract_spatial_features<T>(
     pixel_value: f64,
     position: (usize, usize),
@@ -808,6 +816,7 @@ where
     Ok(features)
 }
 
+#[allow(dead_code)]
 fn extract_temporal_features(
     pixel_value: f64,
     temporal_memory: &VecDeque<Array3<f64>>,
@@ -932,6 +941,7 @@ fn extract_temporal_features(
     Ok(features)
 }
 
+#[allow(dead_code)]
 fn extract_frequency_features<T>(
     pixel_value: f64,
     position: (usize, usize),
@@ -1062,6 +1072,7 @@ where
     Ok(features)
 }
 
+#[allow(dead_code)]
 fn extract_quantum_features(
     _pixel_value: f64,
     _consciousness_amplitudes: &Array4<Complex<f64>>,
@@ -1070,6 +1081,7 @@ fn extract_quantum_features(
     Ok(vec![0.0; 8])
 }
 
+#[allow(dead_code)]
 fn extract_consciousness_features(
     _pixel_value: f64,
     _ultra_state: &UltrathinkState,
@@ -1078,6 +1090,7 @@ fn extract_consciousness_features(
     Ok(vec![0.0; 8])
 }
 
+#[allow(dead_code)]
 fn extract_causal_features(
     _pixel_value: f64,
     _causal_graph: &BTreeMap<usize, Vec<CausalRelation>>,
@@ -1086,6 +1099,7 @@ fn extract_causal_features(
     Ok(vec![0.0; 8])
 }
 
+#[allow(dead_code)]
 fn combine_dimensional_features(
     _spatial: &[f64],
     _temporal: &[f64],
@@ -1101,6 +1115,7 @@ fn combine_dimensional_features(
     Ok(0.0)
 }
 
+#[allow(dead_code)]
 fn apply_quantum_consciousness_operators(
     feature_vector: &[f64],
     consciousness_state: &ndarray::ArrayView1<Complex<f64>>,
@@ -1149,7 +1164,8 @@ fn apply_quantum_consciousness_operators(
     quantum_state *= entanglement_rotation;
 
     // Apply consciousness-specific quantum effects
-    let consciousness_depth_factor = 1.0 / (1.0 + (-config.consciousness_depth as f64 * 0.1).exp());
+    let consciousness_depth_factor =
+        1.0 / (1.0 + (-(config.consciousness_depth as f64) * 0.1).exp());
     quantum_state *= consciousness_depth_factor;
 
     // Quantum decoherence simulation
@@ -1165,6 +1181,7 @@ fn apply_quantum_consciousness_operators(
     Ok(quantum_state)
 }
 
+#[allow(dead_code)]
 fn apply_global_consciousness_coherence(
     _consciousness_output: &mut Array2<f64>,
     _ultra_state: &UltrathinkState,
@@ -1173,6 +1190,7 @@ fn apply_global_consciousness_coherence(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn reorganize_network_structure(
     _topology: &mut NetworkTopology,
     _ultra_features: &Array5<f64>,
@@ -1181,6 +1199,7 @@ fn reorganize_network_structure(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn calculate_connection_input(
     _source_node: &NetworkNode,
     _connection: &Connection,
@@ -1191,6 +1210,7 @@ fn calculate_connection_input(
     Ok(0.0)
 }
 
+#[allow(dead_code)]
 fn apply_activation_function(
     input: f64,
     activation_type: &ActivationType,
@@ -1245,6 +1265,7 @@ fn apply_activation_function(
     Ok(output.clamp(-10.0, 10.0))
 }
 
+#[allow(dead_code)]
 fn update_node_state(
     _node: &mut NetworkNode,
     _output: f64,
@@ -1255,6 +1276,7 @@ fn update_node_state(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn apply_self_organization_learning(
     _node: &mut NetworkNode,
     _connections: &mut HashMap<usize, Vec<Connection>>,
@@ -1264,6 +1286,7 @@ fn apply_self_organization_learning(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn apply_self_organization_learning_safe(
     _topology: &mut NetworkTopology,
     _node_id: usize,
@@ -1273,6 +1296,7 @@ fn apply_self_organization_learning_safe(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_global_network_properties(
     _topology: &mut NetworkTopology,
     _config: &UltrathinkConfig,
@@ -1280,6 +1304,7 @@ fn update_global_network_properties(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn image_to_temporal_representation<T>(_image: &ArrayView2<T>) -> NdimageResult<Array3<f64>>
 where
     T: Float + FromPrimitive + Copy,
@@ -1287,6 +1312,7 @@ where
     Ok(Array3::zeros((1, 1, 1)))
 }
 
+#[allow(dead_code)]
 fn extract_pixel_temporal_sequence(
     _temporal_memory: &VecDeque<Array3<f64>>,
     _position: (usize, usize),
@@ -1294,6 +1320,7 @@ fn extract_pixel_temporal_sequence(
     Ok(vec![0.0; 8])
 }
 
+#[allow(dead_code)]
 fn detect_causal_relationships(
     temporal_sequence: &[f64],
     pixel_id: usize,
@@ -1437,6 +1464,7 @@ fn detect_causal_relationships(
     Ok(causal_relations)
 }
 
+#[allow(dead_code)]
 fn calculate_window_variance(window: &[f64]) -> f64 {
     if window.is_empty() {
         return 0.0;
@@ -1448,6 +1476,7 @@ fn calculate_window_variance(window: &[f64]) -> f64 {
     variance
 }
 
+#[allow(dead_code)]
 fn calculate_causal_influence(
     _relationships: &[CausalRelation],
     _causal_graph: &BTreeMap<usize, Vec<CausalRelation>>,
@@ -1456,6 +1485,7 @@ fn calculate_causal_influence(
     Ok(0.0)
 }
 
+#[allow(dead_code)]
 fn analyze_input_patterns(
     _consciousness: &Array2<f64>,
     _neural: &Array2<f64>,
@@ -1465,6 +1495,7 @@ fn analyze_input_patterns(
     Ok(Array2::zeros((1, 1)))
 }
 
+#[allow(dead_code)]
 fn update_meta_learning_parameters(
     _meta_params: &mut Array2<f64>,
     _pattern_analysis: &Array2<f64>,
@@ -1473,6 +1504,7 @@ fn update_meta_learning_parameters(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn determine_optimal_weights(
     _inputs: (f64, f64, f64),
     _meta_params: &Array2<f64>,
@@ -1482,6 +1514,7 @@ fn determine_optimal_weights(
     Ok((0.33, 0.33, 0.34))
 }
 
+#[allow(dead_code)]
 fn apply_meta_learning_update(
     _ultra_state: &mut UltrathinkState,
     _output: &Array2<f64>,
@@ -1490,6 +1523,7 @@ fn apply_meta_learning_update(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn optimize_resource_allocation(
     ultra_state: &mut UltrathinkState,
     config: &UltrathinkConfig,
@@ -1673,6 +1707,7 @@ fn optimize_resource_allocation(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn multi_scale_integration(
     input: &Array2<f64>,
     ultra_state: &mut UltrathinkState,
@@ -1845,6 +1880,7 @@ fn multi_scale_integration(
     Ok(integrated_output)
 }
 
+#[allow(dead_code)]
 fn generate_consciousness_guided_output<T>(
     _original_image: &ArrayView2<T>,
     _processed_response: &Array2<f64>,
@@ -1867,6 +1903,7 @@ where
     Ok(output)
 }
 
+#[allow(dead_code)]
 fn update_efficiency_metrics(
     ultra_state: &mut UltrathinkState,
     config: &UltrathinkConfig,
@@ -1968,6 +2005,7 @@ fn update_efficiency_metrics(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn predict_future_load(history: &VecDeque<AllocationSnapshot>) -> f64 {
     if history.len() < 2 {
         return 0.5; // Default moderate load
@@ -2112,6 +2150,7 @@ impl Default for QuantumConsciousnessEvolution {
 /// This advanced function extends the existing quantum consciousness simulation
 /// with evolutionary dynamics, allowing consciousness to adapt and emerge
 /// over time through quantum-inspired evolutionary processes.
+#[allow(dead_code)]
 pub fn enhanced_quantum_consciousness_evolution<T>(
     image: ArrayView2<T>,
     ultra_features: &Array5<f64>,
@@ -2155,8 +2194,10 @@ where
                 )?;
 
                 // Update consciousness amplitudes with evolution
-                ultra_state.consciousness_amplitudes[(y, x, c, 0)] = evolved_quantum_state.re;
-                ultra_state.consciousness_amplitudes[(y, x, c, 1)] = evolved_quantum_state.im;
+                ultra_state.consciousness_amplitudes[(y, x, c, 0)] =
+                    Complex::new(evolved_quantum_state.re, 0.0);
+                ultra_state.consciousness_amplitudes[(y, x, c, 1)] =
+                    Complex::new(evolved_quantum_state.im, 0.0);
 
                 // Accumulate evolved consciousness response
                 evolved_consciousness_amplitude += evolved_quantum_state;
@@ -2189,6 +2230,7 @@ where
 }
 
 /// Analyze current consciousness state for evolutionary adaptation
+#[allow(dead_code)]
 fn analyze_consciousness_state(
     ultra_state: &UltrathinkState,
     config: &UltrathinkConfig,
@@ -2243,6 +2285,7 @@ fn analyze_consciousness_state(
 }
 
 /// Calculate simplified Phi measure for integrated information
+#[allow(dead_code)]
 fn calculate_simplified_phi_measure(
     ultra_state: &UltrathinkState,
     config: &UltrathinkConfig,
@@ -2267,6 +2310,7 @@ fn calculate_simplified_phi_measure(
 }
 
 /// Evolve consciousness parameters based on performance feedback
+#[allow(dead_code)]
 fn evolve_consciousness_parameters(
     evolution_system: &mut QuantumConsciousnessEvolution,
     current_state: &ConsciousnessState,
@@ -2306,6 +2350,7 @@ fn evolve_consciousness_parameters(
 }
 
 /// Evolve quantum coherence optimization strategies
+#[allow(dead_code)]
 fn evolve_coherence_strategies(
     optimizer: &mut QuantumCoherenceOptimizer,
     fitness: f64,
@@ -2365,6 +2410,7 @@ fn evolve_coherence_strategies(
 }
 
 /// Apply evolved quantum consciousness operators with evolutionary enhancements
+#[allow(dead_code)]
 fn apply_evolved_quantum_consciousness_operators(
     feature_vector: &[f64],
     consciousness_state: &ndarray::ArrayView1<Complex<f64>>,
@@ -2415,6 +2461,7 @@ fn apply_evolved_quantum_consciousness_operators(
 }
 
 /// Apply consciousness evolution and selection mechanisms
+#[allow(dead_code)]
 fn apply_consciousness_evolution_selection(
     consciousness_amplitude: Complex<f64>,
     evolution_system: &QuantumConsciousnessEvolution,
@@ -2443,6 +2490,7 @@ fn apply_consciousness_evolution_selection(
 }
 
 /// Calculate spatial consciousness factor
+#[allow(dead_code)]
 fn calculate_spatial_consciousness_factor(
     _position: (usize, usize),
     _config: &UltrathinkConfig,
@@ -2452,6 +2500,7 @@ fn calculate_spatial_consciousness_factor(
 }
 
 /// Calculate temporal evolution factor
+#[allow(dead_code)]
 fn calculate_temporal_evolution_factor(evolution_system: &QuantumConsciousnessEvolution) -> f64 {
     let history_length = evolution_system.evolution_history.len() as f64;
     let evolution_strength = evolution_system.evolution_rate * history_length.sqrt();
@@ -2460,6 +2509,7 @@ fn calculate_temporal_evolution_factor(evolution_system: &QuantumConsciousnessEv
 }
 
 /// Apply evolved global consciousness coherence
+#[allow(dead_code)]
 fn apply_evolved_global_consciousness_coherence(
     consciousness_output: &mut Array2<f64>,
     _ultra_state: &UltrathinkState,
@@ -2490,6 +2540,7 @@ fn apply_evolved_global_consciousness_coherence(
 }
 
 /// Update consciousness evolution history
+#[allow(dead_code)]
 fn update_consciousness_evolution_history(
     evolution_system: &mut QuantumConsciousnessEvolution,
     current_state: &ConsciousnessState,
@@ -2964,6 +3015,7 @@ impl Default for EnhancedMetaLearningSystem {
 /// This advanced function implements sophisticated meta-learning that incorporates
 /// temporal memory patterns, hierarchical learning, and evolutionary strategy optimization
 /// to achieve superior learning performance and generalization.
+#[allow(dead_code)]
 pub fn enhanced_meta_learning_with_temporal_fusion(
     consciousness_response: &Array2<f64>,
     neural_response: &Array2<f64>,
@@ -3044,17 +3096,13 @@ pub fn enhanced_meta_learning_with_temporal_fusion(
     }
 
     // Step 8: Update meta-parameters for future learning
-    update_meta_learning_parameters(
-        &mut ultra_state.meta_parameters,
-        &enhanced_output,
-        meta_learning_system,
-        config,
-    )?;
+    update_meta_learning_parameters(&mut ultra_state.meta_parameters, &enhanced_output, config)?;
 
     Ok(enhanced_output)
 }
 
 /// Apply temporal memory fusion to integrate past learning experiences
+#[allow(dead_code)]
 fn apply_temporal_memory_fusion(
     consciousness_response: &Array2<f64>,
     neural_response: &Array2<f64>,
@@ -3116,6 +3164,7 @@ fn apply_temporal_memory_fusion(
 }
 
 /// Create a memory trace from current processing results
+#[allow(dead_code)]
 fn create_memory_trace(
     consciousness_response: &Array2<f64>,
     neural_response: &Array2<f64>,
@@ -3142,8 +3191,13 @@ fn create_memory_trace(
     let context = MemoryContext {
         operation_type: task_context.to_string(),
         data_characteristics: vec![
-            content.mean().unwrap_or(0.0),
-            content.var(0.0).mean().unwrap_or(0.0),
+            content.sum() / content.len() as f64,
+            {
+                let mean_val = content.sum() / content.len() as f64;
+                let variance = content.iter().map(|&x| (x - mean_val).powi(2)).sum::<f64>()
+                    / content.len() as f64;
+                variance
+            },
             content.iter().map(|&x| x.abs()).sum::<f64>() / content.len() as f64,
         ],
         performance_outcome: importance,
@@ -3160,9 +3214,10 @@ fn create_memory_trace(
 }
 
 /// Calculate importance score for memory trace
+#[allow(dead_code)]
 fn calculate_memory_importance(content: &Array2<f64>) -> NdimageResult<f64> {
-    let mean = content.mean().unwrap_or(0.0);
-    let variance = content.var(0.0).mean().unwrap_or(0.0);
+    let mean = content.sum() / content.len() as f64;
+    let variance = content.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / content.len() as f64;
     let max_val = content.iter().fold(0.0f64, |acc, &x| acc.max(x.abs()));
 
     // Importance combines magnitude, variance, and extremeness
@@ -3174,6 +3229,7 @@ fn calculate_memory_importance(content: &Array2<f64>) -> NdimageResult<f64> {
 /// Additional helper functions would be implemented here...
 /// (For brevity, I'm showing the structure but not implementing all helpers)
 
+#[allow(dead_code)]
 fn consolidate_to_long_term_memory(
     _trace: &MemoryTrace,
     _long_term_memory: &mut HashMap<String, ConsolidatedMemory>,
@@ -3182,6 +3238,7 @@ fn consolidate_to_long_term_memory(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn retrieve_relevant_memories(
     _short_term: &VecDeque<MemoryTrace>,
     _long_term: &HashMap<String, ConsolidatedMemory>,
@@ -3192,6 +3249,7 @@ fn retrieve_relevant_memories(
     Ok(vec![0.0; 5]) // Placeholder
 }
 
+#[allow(dead_code)]
 fn apply_memory_fusion(
     current_val: f64,
     _memories: &[f64],
@@ -3202,6 +3260,7 @@ fn apply_memory_fusion(
     Ok(current_val) // Simplified for now
 }
 
+#[allow(dead_code)]
 fn update_memory_attention(
     _attention: &mut MemoryAttention,
     _output: &Array2<f64>,
@@ -3210,6 +3269,7 @@ fn update_memory_attention(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn apply_hierarchical_learning(
     _input: &Array2<f64>,
     _hierarchical_learner: &mut HierarchicalLearner,
@@ -3220,6 +3280,7 @@ fn apply_hierarchical_learning(
     Ok(_input.clone()) // Simplified for now
 }
 
+#[allow(dead_code)]
 fn evolve_learning_strategies(
     _strategy_evolution: &mut StrategyEvolution,
     _temporal_output: &Array2<f64>,
@@ -3230,6 +3291,7 @@ fn evolve_learning_strategies(
     Ok(Vec::new()) // Placeholder
 }
 
+#[allow(dead_code)]
 fn apply_evolved_strategies(
     input: &Array2<f64>,
     _strategies: &[EvolutionaryStrategy],
@@ -3240,6 +3302,7 @@ fn apply_evolved_strategies(
     Ok(input.clone()) // Simplified for now
 }
 
+#[allow(dead_code)]
 fn perform_adaptive_memory_consolidation(
     _consolidation: &mut AdaptiveMemoryConsolidation,
     _output: &Array2<f64>,
@@ -3249,6 +3312,7 @@ fn perform_adaptive_memory_consolidation(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_meta_learning_performance(
     _tracker: &mut MetaLearningTracker,
     _output: &Array2<f64>,
@@ -3258,6 +3322,7 @@ fn update_meta_learning_performance(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn calculate_adaptive_fusion_weights(
     _values: (f64, f64, f64),
     _meta_system: &EnhancedMetaLearningSystem,
@@ -3968,6 +4033,7 @@ impl Default for QuantumAwareResourceScheduler {
 /// This advanced function implements quantum-inspired resource scheduling that
 /// leverages quantum computing principles for optimal resource allocation,
 /// load balancing, and performance optimization with quantum coherence preservation.
+#[allow(dead_code)]
 pub fn quantum_aware_resource_scheduling_optimization(
     ultra_state: &mut UltrathinkState,
     config: &UltrathinkConfig,
@@ -4190,6 +4256,7 @@ pub struct CircuitOptimization {
 
 /// Helper functions for quantum scheduling (simplified implementations)
 
+#[allow(dead_code)]
 fn analyze_quantum_resource_state(
     _ultra_state: &UltrathinkState,
     _scheduler: &QuantumAwareResourceScheduler,
@@ -4198,6 +4265,7 @@ fn analyze_quantum_resource_state(
     Ok(HashMap::new())
 }
 
+#[allow(dead_code)]
 fn predict_quantum_workload(
     _predictor: &QuantumLoadPredictor,
     _workload: &WorkloadCharacteristics,
@@ -4206,6 +4274,7 @@ fn predict_quantum_workload(
     Ok(vec![0.5; 10])
 }
 
+#[allow(dead_code)]
 fn quantum_optimize_resource_allocation(
     _engine: &mut QuantumOptimizationEngine,
     _current_state: &HashMap<String, f64>,
@@ -4221,6 +4290,7 @@ fn quantum_optimize_resource_allocation(
     })
 }
 
+#[allow(dead_code)]
 fn apply_quantum_load_balancing(
     _balancer: &mut QuantumLoadBalancer,
     _allocation: &QuantumResourceAllocation,
@@ -4235,6 +4305,7 @@ fn apply_quantum_load_balancing(
     })
 }
 
+#[allow(dead_code)]
 fn quantum_schedule_tasks(
     _algorithms: &[QuantumSchedulingAlgorithm],
     _load_balancing: &QuantumLoadBalancingDecision,
@@ -4249,6 +4320,7 @@ fn quantum_schedule_tasks(
     })
 }
 
+#[allow(dead_code)]
 fn update_quantum_entanglement_graph(
     _graph: &mut ResourceEntanglementGraph,
     _schedule: &QuantumTaskSchedule,
@@ -4258,6 +4330,7 @@ fn update_quantum_entanglement_graph(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn quantum_performance_monitoring(
     _monitor: &mut QuantumPerformanceMonitor,
     _schedule: &QuantumTaskSchedule,
@@ -4281,6 +4354,7 @@ pub struct QuantumMonitoringFeedback {
     pub optimization_recommendations: Vec<String>,
 }
 
+#[allow(dead_code)]
 fn apply_quantum_optimization_feedback(
     _scheduler: &mut QuantumAwareResourceScheduler,
     _feedback: &QuantumMonitoringFeedback,
@@ -4290,6 +4364,7 @@ fn apply_quantum_optimization_feedback(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn calculate_coherence_preservation(_graph: &ResourceEntanglementGraph) -> NdimageResult<f64> {
     // Implementation would calculate quantum coherence preservation level
     Ok(0.85)

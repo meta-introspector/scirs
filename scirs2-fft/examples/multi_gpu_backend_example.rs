@@ -15,6 +15,7 @@ use scirs2_fft::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> FFTResult<()> {
     println!("Multi-GPU Backend Example");
     println!("=========================");
@@ -32,6 +33,7 @@ fn main() -> FFTResult<()> {
 }
 
 /// Test GPU backend detection and initialization
+#[allow(dead_code)]
 fn test_gpu_backend_detection() -> FFTResult<()> {
     println!("\n--- GPU Backend Detection ---");
 
@@ -69,6 +71,7 @@ fn test_gpu_backend_detection() -> FFTResult<()> {
 }
 
 /// Test memory management across different backends
+#[allow(dead_code)]
 fn test_memory_management() -> FFTResult<()> {
     println!("\n--- Memory Management Test ---");
 
@@ -128,6 +131,7 @@ fn test_memory_management() -> FFTResult<()> {
 }
 
 /// Test performance comparison between backends
+#[allow(dead_code)]
 fn test_performance_comparison() -> FFTResult<()> {
     println!("\n--- Performance Comparison ---");
 
@@ -171,6 +175,7 @@ fn test_performance_comparison() -> FFTResult<()> {
 }
 
 /// Helper function to create and test a buffer
+#[allow(dead_code)]
 fn create_and_test_buffer(size: usize, backend: GPUBackend) -> FFTResult<std::time::Duration> {
     let start = Instant::now();
 

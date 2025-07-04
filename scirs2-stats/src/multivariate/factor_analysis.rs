@@ -762,6 +762,7 @@ pub mod efa {
 }
 
 /// Approximate survival function for chi-square distribution
+#[allow(dead_code)]
 fn chi2_survival(x: f64, df: f64) -> f64 {
     if x <= 0.0 {
         return 1.0;
@@ -783,6 +784,7 @@ fn chi2_survival(x: f64, df: f64) -> f64 {
 }
 
 /// Error function approximation
+#[allow(dead_code)]
 fn erf(x: f64) -> f64 {
     // Abramowitz and Stegun approximation
     let a1 = 0.254829592;

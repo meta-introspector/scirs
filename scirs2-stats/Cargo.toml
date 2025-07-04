@@ -11,7 +11,7 @@ categories = ["science", "mathematics", "algorithms"]
 
 [dependencies]
 # Core dependencies
-ndarray = { workspace = true }
+ndarray = { workspace = true, features = ["std", "serde", "rayon"] }
 num-traits = { workspace = true }
 num-complex = { workspace = true }
 thiserror = { workspace = true }
@@ -34,9 +34,10 @@ either = { workspace = true }
 chrono = { workspace = true }
 memmap2 = "0.9"
 quickcheck = "1.0"
+crossbeam = { workspace = true }
 
 [dev-dependencies]
-approx = { workspace = true }
+# approx = { workspace = true } # Temporarily removed due to incompatibility
 criterion = { workspace = true }
 plotters = { workspace = true }
 quickcheck = "1.0"

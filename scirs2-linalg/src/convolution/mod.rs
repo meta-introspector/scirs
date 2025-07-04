@@ -52,6 +52,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// // Each column represents a 3x3 patch across all 3 channels
 /// assert_eq!(cols.shape(), &[27, 4]);
 /// ```
+#[allow(dead_code)]
 pub fn im2col<F>(
     input: &ArrayView4<F>,
     kernel_size: (usize, usize),
@@ -186,6 +187,7 @@ where
 /// // Verify output shape
 /// assert_eq!(output.shape(), &[1, 3, 4, 4]);
 /// ```
+#[allow(dead_code)]
 pub fn col2im<F>(
     cols: &ndarray::ArrayView2<F>,
     output_shape: (usize, usize, usize, usize),
@@ -328,6 +330,7 @@ where
 /// // Resulting tensor has shape (1, 1, 2, 2)
 /// assert_eq!(output.shape(), &[1, 1, 2, 2]);
 /// ```
+#[allow(dead_code)]
 pub fn max_pool2d<F>(
     input: &ArrayView4<F>,
     pool_size: (usize, usize),
@@ -449,6 +452,7 @@ where
 /// // Verify shape
 /// assert_eq!(grad_input.shape(), &[1, 1, 4, 4]);
 /// ```
+#[allow(dead_code)]
 pub fn max_pool2d_backward<F>(
     grad_output: &ArrayView4<F>,
     indices: &ndarray::ArrayView4<usize>,
@@ -530,6 +534,7 @@ where
 /// // So we should have 3*3*4*5 = 180 values in the indices array
 /// assert_eq!(indices.len() % 5, 0); // Should be multiple of 5
 /// ```
+#[allow(dead_code)]
 pub fn compute_conv_indices(
     input_shape: (usize, usize, usize, usize),
     kernel_shape: (usize, usize, usize, usize),
@@ -668,6 +673,7 @@ pub fn compute_conv_indices(
 /// // Output shape is (2, 16, 32, 32)
 /// assert_eq!(output.shape(), &[2, 16, 32, 32]);
 /// ```
+#[allow(dead_code)]
 pub fn conv2d_im2col<F>(
     input: &ArrayView4<F>,
     kernel: &ArrayView4<F>,
@@ -801,6 +807,7 @@ where
 /// // Gradient shape matches input shape
 /// assert_eq!(grad_input.shape(), &[2, 3, 32, 32]);
 /// ```
+#[allow(dead_code)]
 pub fn conv2d_backward_input<F>(
     grad_output: &ArrayView4<F>,
     kernel: &ArrayView4<F>,
@@ -924,6 +931,7 @@ where
 /// // Gradient shape matches kernel shape
 /// assert_eq!(grad_kernel.shape(), &[1, 1, 2, 2]);
 /// ```
+#[allow(dead_code)]
 pub fn conv2d_backward_kernel<F>(
     input: &ArrayView4<F>,
     grad_output: &ArrayView4<F>,
@@ -1003,6 +1011,7 @@ where
 /// // Gradient shape matches bias shape
 /// assert_eq!(grad_bias.shape(), &[16]);
 /// ```
+#[allow(dead_code)]
 pub fn conv2d_backward_bias<F>(grad_output: &ArrayView4<F>) -> LinalgResult<ndarray::Array1<F>>
 where
     F: Float + NumAssign + Sum + Zero,
@@ -1074,6 +1083,7 @@ where
 /// // output_w = (3 - 1) * 1 - 2 * 0 + 1 * (2 - 1) + 0 + 1 = 2 + 1 + 1 = 4
 /// assert_eq!(output.shape(), &[1, 1, 4, 4]);
 /// ```
+#[allow(dead_code)]
 pub fn conv_transpose2d<F>(
     input: &ArrayView4<F>,
     kernel: &ArrayView4<F>,

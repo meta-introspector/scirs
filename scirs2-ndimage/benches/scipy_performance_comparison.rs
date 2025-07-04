@@ -12,6 +12,7 @@ use scirs2_ndimage::morphology::*;
 use std::time::Duration;
 
 /// Benchmark filters against baseline implementations
+#[allow(dead_code)]
 fn bench_filter_performance_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("filter_performance_comparison");
     group.measurement_time(Duration::from_secs(15));
@@ -81,6 +82,7 @@ fn bench_filter_performance_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark morphological operations scaling
+#[allow(dead_code)]
 fn bench_morphology_performance_scaling(c: &mut Criterion) {
     let mut group = c.benchmark_group("morphology_performance_scaling");
     group.measurement_time(Duration::from_secs(10));
@@ -132,6 +134,7 @@ fn bench_morphology_performance_scaling(c: &mut Criterion) {
 }
 
 /// Benchmark measurement operations on labeled arrays
+#[allow(dead_code)]
 fn bench_measurements_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("measurements_performance");
     group.measurement_time(Duration::from_secs(8));
@@ -183,6 +186,7 @@ fn bench_measurements_performance(c: &mut Criterion) {
 }
 
 /// Benchmark interpolation operations at different scales
+#[allow(dead_code)]
 fn bench_interpolation_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("interpolation_performance");
     group.measurement_time(Duration::from_secs(10));
@@ -262,6 +266,7 @@ fn bench_interpolation_performance(c: &mut Criterion) {
 }
 
 /// Benchmark 3D operations to test multi-dimensional scaling
+#[allow(dead_code)]
 fn bench_3d_operations_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("3d_operations_performance");
     group.measurement_time(Duration::from_secs(12));
@@ -306,6 +311,7 @@ fn bench_3d_operations_performance(c: &mut Criterion) {
 }
 
 /// Benchmark memory efficiency with different border modes
+#[allow(dead_code)]
 fn bench_border_mode_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("border_mode_performance");
     group.measurement_time(Duration::from_secs(8));
@@ -353,6 +359,7 @@ fn bench_border_mode_performance(c: &mut Criterion) {
 }
 
 /// Benchmark high-dimensional array operations (4D+)
+#[allow(dead_code)]
 fn bench_high_dimensional_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("high_dimensional_performance");
     group.measurement_time(Duration::from_secs(10));
@@ -392,6 +399,7 @@ fn bench_high_dimensional_performance(c: &mut Criterion) {
 }
 
 /// Benchmark distance transform performance with optimized algorithms
+#[allow(dead_code)]
 fn bench_distance_transform_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("distance_transform_performance");
     group.measurement_time(Duration::from_secs(12));
@@ -468,6 +476,7 @@ fn bench_distance_transform_performance(c: &mut Criterion) {
 }
 
 /// Benchmark edge detection filter performance
+#[allow(dead_code)]
 fn bench_edge_detection_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("edge_detection_performance");
     group.measurement_time(Duration::from_secs(10));
@@ -526,6 +535,7 @@ fn bench_edge_detection_performance(c: &mut Criterion) {
 }
 
 /// Benchmark data type performance (f32 vs f64)
+#[allow(dead_code)]
 fn bench_data_type_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("data_type_performance");
     group.measurement_time(Duration::from_secs(8));
@@ -575,6 +585,7 @@ fn bench_data_type_performance(c: &mut Criterion) {
 }
 
 /// Benchmark memory-intensive operations for large arrays
+#[allow(dead_code)]
 fn bench_memory_intensive_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_intensive_operations");
     group.measurement_time(Duration::from_secs(15));
@@ -619,6 +630,7 @@ fn bench_memory_intensive_operations(c: &mut Criterion) {
 }
 
 /// Benchmark small array performance to test overhead
+#[allow(dead_code)]
 fn bench_small_array_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("small_array_performance");
     group.measurement_time(Duration::from_secs(5));

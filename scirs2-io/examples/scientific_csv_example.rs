@@ -6,6 +6,7 @@ use std::io::{BufWriter, Write};
 
 /// This example demonstrates using CSV functionality for scientific data
 /// with various units, metadata, and mixed types.
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("=== Scientific Data CSV Example ===\n");
 
@@ -26,6 +27,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 /// Create a sample scientific data file with metadata
+#[allow(dead_code)]
 fn create_sample_scientific_data() -> Result<(), Box<dyn Error>> {
     println!("Creating sample scientific data file...");
 
@@ -81,6 +83,7 @@ fn create_sample_scientific_data() -> Result<(), Box<dyn Error>> {
 }
 
 /// Extract metadata from comment lines
+#[allow(dead_code)]
 fn extract_metadata_from_file(file_path: &str) -> Result<HashMap<String, String>, Box<dyn Error>> {
     let file = File::open(file_path)?;
     let reader = std::io::BufReader::new(file);
@@ -104,6 +107,7 @@ fn extract_metadata_from_file(file_path: &str) -> Result<HashMap<String, String>
 }
 
 /// Read scientific data file with metadata
+#[allow(dead_code)]
 fn read_scientific_data_with_metadata() -> Result<(), Box<dyn Error>> {
     println!("\nReading scientific data file with metadata...");
 
@@ -207,6 +211,7 @@ fn read_scientific_data_with_metadata() -> Result<(), Box<dyn Error>> {
 }
 
 /// Convert scientific data with unit conversions
+#[allow(dead_code)]
 fn convert_scientific_data_with_units() -> Result<(), Box<dyn Error>> {
     println!("\nConverting scientific data with unit conversions...");
 
@@ -309,6 +314,7 @@ fn convert_scientific_data_with_units() -> Result<(), Box<dyn Error>> {
 }
 
 /// Process time series data from CSV
+#[allow(dead_code)]
 fn process_time_series_data() -> Result<(), Box<dyn Error>> {
     println!("\nProcessing time series data...");
 

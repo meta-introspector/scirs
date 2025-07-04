@@ -8,6 +8,7 @@ use scirs2_fft::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("FFT Context Managers Example");
     println!("===========================");

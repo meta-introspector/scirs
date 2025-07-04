@@ -14,6 +14,7 @@ use scirs2_ndimage::{
     },
 };
 
+#[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("🎨 Advanced Visualization Features Demo");
     println!("=====================================");
@@ -172,6 +173,7 @@ fn main() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_sample_image(size: usize) -> Array2<f64> {
     Array2::from_shape_fn((size, size), |(i, j)| {
         let x = i as f64 / size as f64;
@@ -186,6 +188,7 @@ fn create_sample_image(size: usize) -> Array2<f64> {
     })
 }
 
+#[allow(dead_code)]
 fn add_noise(image: &Array2<f64>) -> Array2<f64> {
     let mut rng = ndarray_rand::rand::rng();
     image.mapv(|x| x + (ndarray_rand::rand::Rng::gen::<f64>(&mut rng) - 0.5) * 0.1)
@@ -198,6 +201,7 @@ struct ImageStats {
     std_dev: f64,
 }
 
+#[allow(dead_code)]
 fn compute_image_stats(image: &ArrayView2<f64>) -> ImageStats {
     let mean = image.mean().unwrap_or(0.0);
     let min = image.iter().cloned().fold(f64::INFINITY, f64::min);

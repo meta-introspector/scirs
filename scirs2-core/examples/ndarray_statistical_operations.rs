@@ -4,6 +4,7 @@ use scirs2_core::ndarray_ext::stats::{
     std_dev_2d, sum_2d, variance_2d,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Demonstrating SciPy-like Statistical Functions in scirs2-core\n");
 
@@ -172,6 +173,7 @@ fn main() {
 }
 
 // Helper function to print a 2D array
+#[allow(dead_code)]
 fn print_array2<T: std::fmt::Display>(arr: &Array2<T>) {
     for row in arr.rows() {
         for item in row.iter() {

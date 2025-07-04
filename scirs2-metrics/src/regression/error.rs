@@ -78,6 +78,7 @@ use crate::error::{MetricsError, Result};
 /// // Expecting: ((3.0-2.5)² + (-0.5-0.0)² + (2.0-2.0)² + (7.0-8.0)²) / 4
 /// assert!(mse < 0.38 && mse > 0.37);
 /// ```
+#[allow(dead_code)]
 pub fn mean_squared_error<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -145,6 +146,7 @@ where
 /// // RMSE is the square root of MSE
 /// assert!(rmse < 0.62 && rmse > 0.61);
 /// ```
+#[allow(dead_code)]
 pub fn root_mean_squared_error<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -187,6 +189,7 @@ where
 /// // Expecting: (|3.0-2.5| + |-0.5-0.0| + |2.0-2.0| + |7.0-8.0|) / 4 = 0.5
 /// assert!(mae > 0.499 && mae < 0.501);
 /// ```
+#[allow(dead_code)]
 pub fn mean_absolute_error<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -260,6 +263,7 @@ where
 /// // Example calculation: (|3.0-2.7|/3.0 + |0.5-0.4|/0.5 + |2.0-1.8|/2.0 + |7.0-7.7|/7.0) / 4 * 100
 /// assert!(mape < 13.0 && mape > 9.0);
 /// ```
+#[allow(dead_code)]
 pub fn mean_absolute_percentage_error<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -320,6 +324,7 @@ where
 /// let smape = symmetric_mean_absolute_percentage_error(&y_true, &y_pred).unwrap();
 /// assert!(smape > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn symmetric_mean_absolute_percentage_error<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -382,6 +387,7 @@ where
 /// // Maximum of [|3.0-2.5|, |-0.5-0.0|, |2.0-2.0|, |7.0-8.0|]
 /// assert_eq!(me, 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn max_error<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -434,6 +440,7 @@ where
 /// // Median of [|3.0-2.5|, |-0.5-0.0|, |2.0-2.0|, |7.0-8.0|] = Median of [0.5, 0.5, 0.0, 1.0]
 /// assert_eq!(medae, 0.5);
 /// ```
+#[allow(dead_code)]
 pub fn median_absolute_error<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -500,6 +507,7 @@ where
 /// let msle = mean_squared_log_error(&y_true, &y_pred).unwrap();
 /// assert!(msle > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn mean_squared_log_error<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -574,6 +582,7 @@ where
 /// let loss = huber_loss(&y_true, &y_pred, delta).unwrap();
 /// assert!(loss > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn huber_loss<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -641,6 +650,7 @@ where
 /// assert!(nrmse_mean > 0.0);
 /// assert!(nrmse_range > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn normalized_root_mean_squared_error<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -745,6 +755,7 @@ where
 /// let rae = relative_absolute_error(&y_true, &y_pred).unwrap();
 /// assert!(rae > 0.0 && rae < 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn relative_absolute_error<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -806,6 +817,7 @@ where
 /// let rse = relative_squared_error(&y_true, &y_pred).unwrap();
 /// assert!(rse > 0.0 && rse < 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn relative_squared_error<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,

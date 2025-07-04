@@ -61,6 +61,7 @@ struct StatisticalSummary {
     quality_score: f64,
 }
 
+#[allow(dead_code)]
 fn main() {
     let matches = Command::new("performance-baseline-manager")
         .version("0.1.0")
@@ -249,6 +250,7 @@ fn main() {
     }
 }
 
+#[allow(dead_code)]
 fn handle_create_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
     let results_file = matches.get_one::<String>("results-file").unwrap();
     let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
@@ -299,6 +301,7 @@ fn handle_create_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn handle_update_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
     let results_file = matches.get_one::<String>("results-file").unwrap();
     let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
@@ -369,6 +372,7 @@ fn handle_update_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn handle_validate_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
     let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
     let features = matches.get_one::<String>("features").unwrap();
@@ -434,6 +438,7 @@ fn handle_validate_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn handle_list_baselines(matches: &ArgMatches, verbose: bool) -> Result<()> {
     let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
 
@@ -484,6 +489,7 @@ fn handle_list_baselines(matches: &ArgMatches, verbose: bool) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn handle_show_baseline_info(matches: &ArgMatches, verbose: bool) -> Result<()> {
     let baseline_dir = matches.get_one::<String>("baseline-dir").unwrap();
     let features = matches.get_one::<String>("features").unwrap();
@@ -560,6 +566,7 @@ fn handle_show_baseline_info(matches: &ArgMatches, verbose: bool) -> Result<()> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn load_performance_results(path: &str) -> Result<serde_json::Value> {
     let content = fs::read_to_string(path)
         .map_err(|e| OptimError::IoError(format!("Failed to read results file: {}", e)))?;
@@ -568,6 +575,7 @@ fn load_performance_results(path: &str) -> Result<serde_json::Value> {
         .map_err(|e| OptimError::SerializationError(format!("Failed to parse results: {}", e)))
 }
 
+#[allow(dead_code)]
 fn load_baseline(path: &PathBuf) -> Result<BaselineMetrics> {
     let content = fs::read_to_string(path)
         .map_err(|e| OptimError::IoError(format!("Failed to read baseline file: {}", e)))?;
@@ -576,6 +584,7 @@ fn load_baseline(path: &PathBuf) -> Result<BaselineMetrics> {
         .map_err(|e| OptimError::SerializationError(format!("Failed to parse baseline: {}", e)))
 }
 
+#[allow(dead_code)]
 fn save_baseline(baseline: &BaselineMetrics, path: &PathBuf) -> Result<()> {
     let content = serde_json::to_string_pretty(baseline).map_err(|e| {
         OptimError::SerializationError(format!("Failed to serialize baseline: {}", e))
@@ -585,6 +594,7 @@ fn save_baseline(baseline: &BaselineMetrics, path: &PathBuf) -> Result<()> {
         .map_err(|e| OptimError::IoError(format!("Failed to write baseline file: {}", e)))
 }
 
+#[allow(dead_code)]
 fn create_baseline_from_results(
     results: &serde_json::Value,
     features: &str,
@@ -642,6 +652,7 @@ fn create_baseline_from_results(
     })
 }
 
+#[allow(dead_code)]
 fn merge_baseline_with_results(
     existing: &BaselineMetrics,
     results: &serde_json::Value,
@@ -766,6 +777,7 @@ fn merge_baseline_with_results(
     })
 }
 
+#[allow(dead_code)]
 fn extract_numeric_value(value: &serde_json::Value) -> Option<f64> {
     match value {
         serde_json::Value::Number(n) => n.as_f64(),
@@ -782,6 +794,7 @@ fn extract_numeric_value(value: &serde_json::Value) -> Option<f64> {
     }
 }
 
+#[allow(dead_code)]
 fn validate_baseline(baseline: &BaselineMetrics) -> Result<bool> {
     // Basic validation checks
     if baseline.metrics.is_empty() {
@@ -819,6 +832,7 @@ fn validate_baseline(baseline: &BaselineMetrics) -> Result<bool> {
     Ok(true)
 }
 
+#[allow(dead_code)]
 fn find_baseline_files(baseline_dir: &str) -> Result<Vec<PathBuf>> {
     let dir_path = PathBuf::from(baseline_dir);
 
@@ -850,6 +864,7 @@ fn find_baseline_files(baseline_dir: &str) -> Result<Vec<PathBuf>> {
     Ok(baseline_files)
 }
 
+#[allow(dead_code)]
 fn get_platform_info() -> PlatformInfo {
     PlatformInfo {
         os: std::env::consts::OS.to_string(),

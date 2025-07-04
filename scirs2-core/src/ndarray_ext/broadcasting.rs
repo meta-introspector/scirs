@@ -26,6 +26,7 @@ use ndarray::{Array, ArrayView, Dimension, IxDyn};
 /// assert!(is_broadcast_compatible(&[5, 1, 4], &[3, 1, 1]));
 /// assert!(!is_broadcast_compatible(&[2, 3], &[4]));
 /// ```
+#[allow(dead_code)]
 pub fn is_broadcast_compatible(shape1: &[usize], shape2: &[usize]) -> bool {
     // Align shapes to have the same dimensionality by prepending with 1s
     let max_dim = shape1.len().max(shape2.len());
@@ -74,6 +75,7 @@ pub fn is_broadcast_compatible(shape1: &[usize], shape2: &[usize]) -> bool {
 /// assert_eq!(broadcast_shape(&[5, 1, 4], &[3, 1, 1]), Some(vec![5, 3, 4]));
 /// assert_eq!(broadcast_shape(&[2, 3], &[4]), None);
 /// ```
+#[allow(dead_code)]
 pub fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Option<Vec<usize>> {
     if !is_broadcast_compatible(shape1, shape2) {
         return None;
@@ -128,6 +130,7 @@ pub fn broadcast_shape(shape1: &[usize], shape2: &[usize]) -> Option<Vec<usize>>
 /// assert_eq!(a_broad.shape(), &[2, 3]);
 /// assert_eq!(b_broad.shape(), &[2, 3]);
 /// ```
+#[allow(dead_code)]
 pub fn broadcast_arrays<D1, D2, T>(
     a: ArrayView<T, D1>,
     b: ArrayView<T, D2>,
@@ -226,6 +229,7 @@ where
 /// assert_eq!(result[[0, 0]], 11);
 /// assert_eq!(result[[1, 2]], 36);
 /// ```
+#[allow(dead_code)]
 pub fn broadcast_apply<D1, D2, T, F, R>(
     a: ArrayView<T, D1>,
     b: ArrayView<T, D2>,

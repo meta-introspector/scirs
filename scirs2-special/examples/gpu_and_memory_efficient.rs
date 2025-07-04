@@ -11,6 +11,7 @@ use scirs2_special::gpu_ops::{erf_gpu, gamma_gpu, j0_gpu};
 
 use scirs2_special::memory_efficient::{erf_chunked, gamma_chunked, j0_chunked, ChunkedConfig};
 
+#[allow(dead_code)]
 fn main() -> SpecialResult<()> {
     println!("Special Functions: GPU Acceleration and Memory-Efficient Processing Demo");
     println!("=====================================================================\n");
@@ -41,6 +42,7 @@ fn main() -> SpecialResult<()> {
 }
 
 /// Test memory-efficient chunked processing
+#[allow(dead_code)]
 fn test_chunked_processing(input: &Array1<f64>) -> SpecialResult<()> {
     use std::time::Instant;
 
@@ -69,6 +71,7 @@ fn test_chunked_processing(input: &Array1<f64>) -> SpecialResult<()> {
 
 /// Test GPU acceleration (only compiled with gpu feature)
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn test_gpu_acceleration(input: &Array1<f64>) -> SpecialResult<()> {
     use std::time::Instant;
 
@@ -116,6 +119,7 @@ fn test_gpu_acceleration(input: &Array1<f64>) -> SpecialResult<()> {
 }
 
 /// Demonstrate custom chunking configuration
+#[allow(dead_code)]
 fn demonstrate_custom_chunking() -> SpecialResult<()> {
     println!("\nCustom Chunking Configuration:");
     println!("==============================");
@@ -169,6 +173,7 @@ fn demonstrate_custom_chunking() -> SpecialResult<()> {
 }
 
 /// Compare accuracy between different methods
+#[allow(dead_code)]
 fn compare_accuracy() -> SpecialResult<()> {
     println!("\nAccuracy Comparison:");
     println!("===================");

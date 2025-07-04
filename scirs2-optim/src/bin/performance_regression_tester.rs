@@ -17,6 +17,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     let matches = Command::new("performance_regression_tester")
         .version("0.1.0")
@@ -150,6 +151,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn parse_config(matches: &ArgMatches) -> Result<RegressionConfig> {
     let baseline_dir = PathBuf::from(matches.get_one::<String>("baseline-dir").unwrap());
 
@@ -191,6 +193,7 @@ fn parse_config(matches: &ArgMatches) -> Result<RegressionConfig> {
     })
 }
 
+#[allow(dead_code)]
 fn parse_report_format(format_str: &str) -> Result<CiReportFormat> {
     match format_str.to_lowercase().as_str() {
         "json" => Ok(CiReportFormat::Json),
@@ -204,6 +207,7 @@ fn parse_report_format(format_str: &str) -> Result<CiReportFormat> {
     }
 }
 
+#[allow(dead_code)]
 fn run_comprehensive_benchmarks(verbose: bool) -> Result<Vec<BenchmarkResult<f64>>> {
     let mut benchmark = OptimizerBenchmark::new();
     benchmark.add_standard_test_functions();
@@ -238,11 +242,13 @@ fn run_comprehensive_benchmarks(verbose: bool) -> Result<Vec<BenchmarkResult<f64
 }
 
 // Helper functions to create optimizer step functions
+#[allow(dead_code)]
 fn create_sgd_step_function() -> Box<dyn FnMut(&Array1<f64>, &Array1<f64>) -> Array1<f64>> {
     let learning_rate = 0.01;
     Box::new(move |x: &Array1<f64>, grad: &Array1<f64>| x - &(grad * learning_rate))
 }
 
+#[allow(dead_code)]
 fn create_adam_step_function() -> Box<dyn FnMut(&Array1<f64>, &Array1<f64>) -> Array1<f64>> {
     let mut m = Array1::zeros(0);
     let mut v = Array1::zeros(0);
@@ -279,6 +285,7 @@ fn create_adam_step_function() -> Box<dyn FnMut(&Array1<f64>, &Array1<f64>) -> A
     })
 }
 
+#[allow(dead_code)]
 fn create_adagrad_step_function() -> Box<dyn FnMut(&Array1<f64>, &Array1<f64>) -> Array1<f64>> {
     let mut g = Array1::zeros(0);
     let learning_rate = 0.01;
@@ -299,6 +306,7 @@ fn create_adagrad_step_function() -> Box<dyn FnMut(&Array1<f64>, &Array1<f64>) -
     })
 }
 
+#[allow(dead_code)]
 fn create_rmsprop_step_function() -> Box<dyn FnMut(&Array1<f64>, &Array1<f64>) -> Array1<f64>> {
     let mut s = Array1::zeros(0);
     let learning_rate = 0.001;
@@ -320,6 +328,7 @@ fn create_rmsprop_step_function() -> Box<dyn FnMut(&Array1<f64>, &Array1<f64>) -
     })
 }
 
+#[allow(dead_code)]
 fn create_lamb_step_function() -> Box<dyn FnMut(&Array1<f64>, &Array1<f64>) -> Array1<f64>> {
     let mut m = Array1::zeros(0);
     let mut v = Array1::zeros(0);
@@ -394,12 +403,14 @@ struct CiRegressionReport {
     pub environment_info: HashMap<String, String>,
 }
 
+#[allow(dead_code)]
 fn has_critical_regressions(results: &[RegressionTestResult]) -> bool {
     results
         .iter()
         .any(|r| r.is_regression && r.regression_severity == "critical")
 }
 
+#[allow(dead_code)]
 fn generate_ci_report(
     regression_results: &[RegressionTestResult],
     _benchmark_results: &[BenchmarkResult<f64>],
@@ -449,6 +460,7 @@ fn generate_ci_report(
     }
 }
 
+#[allow(dead_code)]
 fn generate_junit_xml_report(report: &CiRegressionReport) -> Result<String> {
     let mut xml = String::new();
     xml.push_str(r#"<?xml version="1.0" encoding="UTF-8"?>"#);
@@ -487,6 +499,7 @@ fn generate_junit_xml_report(report: &CiRegressionReport) -> Result<String> {
     Ok(xml)
 }
 
+#[allow(dead_code)]
 fn generate_markdown_report(report: &CiRegressionReport) -> Result<String> {
     let mut md = String::new();
 
@@ -525,6 +538,7 @@ fn generate_markdown_report(report: &CiRegressionReport) -> Result<String> {
     Ok(md)
 }
 
+#[allow(dead_code)]
 fn generate_github_actions_report(report: &CiRegressionReport) -> Result<String> {
     // GitHub Actions format is JSON with additional workflow commands
     let json_report = serde_json::to_string_pretty(&report)

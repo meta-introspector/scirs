@@ -7,11 +7,17 @@ use ndarray::Array3;
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
 use scirs2_neural::layers::Layer;
-use scirs2_neural::transformer::{Transformer, TransformerConfig};
-use scirs2_neural::utils::PositionalEncodingType;
+// use scirs2_neural::transformer::{Transformer, TransformerConfig};
+// use scirs2_neural::utils::PositionalEncodingType;
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Transformer Model Example");
     println!("========================");
+    println!("Note: Transformer module is not yet implemented.");
+    println!("This example is a placeholder for future transformer functionality.");
+
+    // TODO: Implement transformer module and uncomment the following code
+    /*
     // Create a seeded RNG for reproducibility
     let mut rng = SmallRng::seed_from_u64(42);
     // Create a small transformer configuration for demonstration
@@ -68,5 +74,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let output_inference = transformer.forward_inference(&src_embeddings_dyn, &first_token_dyn)?;
     println!("Inference output shape: {:?}", output_inference.shape());
     println!("\nExample completed successfully");
+    */
     Ok(())
 }

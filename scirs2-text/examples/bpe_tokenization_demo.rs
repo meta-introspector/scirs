@@ -1,5 +1,6 @@
 use scirs2_text::{BpeConfig, BpeTokenizer, Result, Tokenizer};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Byte Pair Encoding (BPE) Tokenization Demo");
     println!("===========================================\n");

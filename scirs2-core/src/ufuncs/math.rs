@@ -10,6 +10,7 @@ use std::sync::Once;
 static INIT: Once = Once::new();
 
 // Initialize the ufunc registry with mathematical functions
+#[allow(dead_code)]
 fn init_math_ufuncs() {
     INIT.call_once(|| {
         // Register all the mathematical ufuncs
@@ -225,6 +226,7 @@ impl UFunc for AbsUFunc {
 /// assert!((result[1] - 1.0).abs() < 1e-10);
 /// assert!((result[2] - 0.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn sin<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
@@ -265,6 +267,7 @@ where
 /// assert!((result[1] - 0.0).abs() < 1e-10);
 /// assert!((result[2] + 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn cos<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
@@ -304,6 +307,7 @@ where
 /// assert!((result[0] - 0.0).abs() < 1e-10);
 /// assert!((result[1] - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn tan<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
@@ -342,6 +346,7 @@ where
 /// assert!((result[0] - 1.0).abs() < 1e-10);
 /// assert!((result[1] - std::f64::consts::E).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn exp<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
@@ -380,6 +385,7 @@ where
 /// assert!((result[0] - 0.0).abs() < 1e-10);
 /// assert!((result[1] - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn log<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
@@ -417,6 +423,7 @@ where
 /// let result = sqrt(&a);
 /// assert_eq!(result, array![1.0, 2.0, 3.0]);
 /// ```
+#[allow(dead_code)]
 pub fn sqrt<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,
@@ -454,6 +461,7 @@ where
 /// let result = abs(&a);
 /// assert_eq!(result, array![1.0, 0.0, 1.0]);
 /// ```
+#[allow(dead_code)]
 pub fn abs<D>(array: &ndarray::ArrayBase<ndarray::Data, D>) -> Array<f64, D>
 where
     D: Dimension,

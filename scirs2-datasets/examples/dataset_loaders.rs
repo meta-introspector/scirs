@@ -3,6 +3,7 @@ use scirs2_datasets::utils::{train_test_split, Dataset};
 use std::env;
 use std::path::Path;
 
+#[allow(dead_code)]
 fn main() {
     // Check if a CSV file is provided as a command-line argument
     let args: Vec<String> = env::args().collect();
@@ -58,6 +59,7 @@ fn main() {
     }
 }
 
+#[allow(dead_code)]
 fn print_dataset_info(dataset: &Dataset, name: &str) {
     println!("=== {} Dataset ===", name);
     println!("Number of samples: {}", dataset.n_samples());

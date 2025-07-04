@@ -1196,11 +1196,13 @@ impl SmLmsFilter {
 // Helper functions for matrix operations
 
 /// Compute dot product of two vectors
+#[allow(dead_code)]
 fn dot_product(a: &[f64], b: &[f64]) -> f64 {
     a.iter().zip(b.iter()).map(|(&x, &y)| x * y).sum()
 }
 
 /// Multiply matrix by vector
+#[allow(dead_code)]
 fn matrix_vector_multiply(matrix: &[Vec<f64>], vector: &[f64]) -> Vec<f64> {
     let mut result = vec![0.0; matrix.len()];
     for i in 0..matrix.len() {
@@ -1210,11 +1212,13 @@ fn matrix_vector_multiply(matrix: &[Vec<f64>], vector: &[f64]) -> Vec<f64> {
 }
 
 /// Get column from matrix
+#[allow(dead_code)]
 fn get_column(matrix: &[Vec<f64>], col: usize) -> Vec<f64> {
     matrix.iter().map(|row| row[col]).collect()
 }
 
 /// Solve small linear system using Gaussian elimination (for APA)
+#[allow(dead_code)]
 fn solve_linear_system_small(matrix: &[Vec<f64>], rhs: &[f64]) -> SignalResult<Vec<f64>> {
     let n = matrix.len();
     if n != rhs.len() {

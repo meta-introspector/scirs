@@ -7,6 +7,7 @@ use ndarray::{Array1, ArrayView1};
 use scirs2_integrate::acceleration::{AcceleratorOptions, AitkenAccelerator, AndersonAccelerator};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Anderson Acceleration Examples ===\n");
 
@@ -25,6 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn scalar_fixed_point_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Scalar Fixed-Point Iteration");
     println!("{}", "=".repeat(50));
@@ -79,6 +81,7 @@ fn scalar_fixed_point_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn nonlinear_system_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Nonlinear System Solving");
     println!("{}", "=".repeat(50));
@@ -137,6 +140,7 @@ fn nonlinear_system_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn performance_comparison_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ Performance Comparison");
     println!("{}", "=".repeat(50));
@@ -176,6 +180,7 @@ fn performance_comparison_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn aitken_acceleration_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("📈 Aitken Acceleration for Sequences");
     println!("{}", "=".repeat(50));
@@ -211,6 +216,7 @@ fn aitken_acceleration_example() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper functions for performance comparison
 
+#[allow(dead_code)]
 fn linear_fixed_point(x: ArrayView1<f64>) -> Array1<f64> {
     // x₁ = 0.7*x₁ + 0.1*x₂ + 1.0
     // x₂ = 0.2*x₁ + 0.6*x₂ + 0.5
@@ -220,6 +226,7 @@ fn linear_fixed_point(x: ArrayView1<f64>) -> Array1<f64> {
     ])
 }
 
+#[allow(dead_code)]
 fn nonlinear_fixed_point(x: ArrayView1<f64>) -> Array1<f64> {
     // More challenging nonlinear system
     Array1::from_vec(vec![
@@ -228,6 +235,7 @@ fn nonlinear_fixed_point(x: ArrayView1<f64>) -> Array1<f64> {
     ])
 }
 
+#[allow(dead_code)]
 fn stiff_fixed_point(x: ArrayView1<f64>) -> Array1<f64> {
     // Stiff problem with large Jacobian eigenvalues
     Array1::from_vec(vec![
@@ -238,6 +246,7 @@ fn stiff_fixed_point(x: ArrayView1<f64>) -> Array1<f64> {
 
 type IterationFunction = Box<dyn Fn(ArrayView1<f64>) -> Array1<f64>>;
 
+#[allow(dead_code)]
 fn solve_standard(problem: &IterationFunction, max_iters: usize, tolerance: f64) -> usize {
     let mut x = Array1::from_vec(vec![0.0, 0.0]);
 
@@ -255,6 +264,7 @@ fn solve_standard(problem: &IterationFunction, max_iters: usize, tolerance: f64)
     max_iters
 }
 
+#[allow(dead_code)]
 fn solve_anderson(problem: &IterationFunction, max_iters: usize, tolerance: f64) -> usize {
     let mut accelerator = AndersonAccelerator::new(2, AcceleratorOptions::default());
     let mut x = Array1::from_vec(vec![0.0, 0.0]);

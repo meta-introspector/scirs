@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use tempfile::TempDir;
 
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_security_audit_integration() {
     // Create a temporary directory for testing
     let temp_dir = TempDir::new().expect("Failed to create temp directory");
@@ -42,6 +43,7 @@ tempfile = "3.0"
     let main_rs_content = r#"
 use std::process::Command;
 
+#[allow(dead_code)]
 fn main() {
     println!("Hello, world!");
     
@@ -110,11 +112,13 @@ pub unsafe fn dangerous_operation(ptr: *mut u8, len: usize) {
 }
 
 // Function that uses expect (panic-prone)
+#[allow(dead_code)]
 pub fn risky_function(data: Option<String>) -> String {
     data.expect("Data should always be Some")
 }
 
 // Weak crypto usage
+#[allow(dead_code)]
 pub fn weak_hash(input: &str) -> String {
     use sha1::{Sha1, Digest};
     let mut hasher = Sha1::new();
@@ -376,6 +380,7 @@ rate_limit = 1000
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_dependency_parsing() {
     let cargo_content = r#"
 [package]
@@ -410,6 +415,7 @@ tempfile = "3.0"
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_secret_detection_patterns() {
     let config = SecurityAuditConfig::default();
     let auditor = ComprehensiveSecurityAuditor::new(config);
@@ -436,6 +442,7 @@ fn test_secret_detection_patterns() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_weak_crypto_detection() {
     let config = SecurityAuditConfig::default();
     let auditor = ComprehensiveSecurityAuditor::new(config);
@@ -461,6 +468,7 @@ fn test_weak_crypto_detection() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_security_score_calculation() {
     let config = SecurityAuditConfig::default();
     let auditor = ComprehensiveSecurityAuditor::new(config);
@@ -546,6 +554,7 @@ fn test_security_score_calculation() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_risk_assessment() {
     let config = SecurityAuditConfig::default();
     let auditor = ComprehensiveSecurityAuditor::new(config);
@@ -627,6 +636,7 @@ fn test_risk_assessment() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_remediation_suggestions() {
     let config = SecurityAuditConfig::default();
     let auditor = ComprehensiveSecurityAuditor::new(config);

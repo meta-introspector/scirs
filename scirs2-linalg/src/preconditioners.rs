@@ -827,6 +827,7 @@ where
 }
 
 /// Create a preconditioner based on configuration
+#[allow(dead_code)]
 pub fn create_preconditioner<F>(
     matrix: &ArrayView2<F>,
     config: &PreconditionerConfig,
@@ -872,6 +873,7 @@ where
 }
 
 /// Preconditioned conjugate gradient solver
+#[allow(dead_code)]
 pub fn preconditioned_conjugate_gradient<F>(
     matrix: &ArrayView2<F>,
     rhs: &ArrayView1<F>,
@@ -931,6 +933,7 @@ where
 }
 
 /// Preconditioned GMRES solver  
+#[allow(dead_code)]
 pub fn preconditioned_gmres<F>(
     matrix: &ArrayView2<F>,
     rhs: &ArrayView1<F>,
@@ -1040,6 +1043,7 @@ impl Default for PreconditionerAnalysis {
 }
 
 /// Analyze preconditioner performance and effectiveness
+#[allow(dead_code)]
 pub fn analyze_preconditioner<F>(
     matrix: &ArrayView2<F>,
     _preconditioner: &dyn PreconditionerOp<F>,

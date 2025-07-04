@@ -4,6 +4,7 @@ use rand::{Rng, SeedableRng};
 use scirs2_neural::error::Result;
 use scirs2_neural::utils::{ConfusionMatrix, FeatureImportance, LearningCurve, ROCCurve};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Neural Network Model Evaluation Visualization Example\n");
     // Generate some example data

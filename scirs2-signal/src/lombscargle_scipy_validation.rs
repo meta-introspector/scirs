@@ -163,6 +163,7 @@ pub struct ValidationSummary {
 }
 
 /// Run comprehensive Lomb-Scargle validation against SciPy
+#[allow(dead_code)]
 pub fn validate_lombscargle_against_scipy(
     config: &ScipyValidationConfig,
 ) -> SignalResult<ScipyValidationResult> {
@@ -228,6 +229,7 @@ pub fn validate_lombscargle_against_scipy(
 }
 
 /// Validate basic accuracy against SciPy implementation
+#[allow(dead_code)]
 fn validate_basic_accuracy(
     config: &ScipyValidationConfig,
 ) -> SignalResult<AccuracyValidationResult> {
@@ -291,6 +293,7 @@ fn validate_basic_accuracy(
 }
 
 /// Validate a single test case against SciPy implementation
+#[allow(dead_code)]
 fn validate_single_case(
     n: usize,
     fs: f64,
@@ -306,14 +309,14 @@ fn validate_single_case(
     // Create irregularly sampled signal with known frequency content
     for i in 0..n {
         let base_time = i as f64 * duration / n as f64;
-        let jitter = rng.gen_range(-0.1..0.1) * duration / n as f64;
+        let jitter = rng.random_range(-0.1..0.1) * duration / n as f64;
         let time = (base_time + jitter).max(0.0).min(duration);
         t.push(time);
 
         // Add signal with multiple frequency components
         let signal_val = (2.0 * PI * test_freq * time).sin()
             + 0.3 * (2.0 * PI * test_freq * 2.0 * time).sin()
-            + 0.1 * rng.gen_range(-1.0..1.0); // Add some noise
+            + 0.1 * rng.random_range(-1.0..1.0); // Add some noise
         signal.push(signal_val);
     }
 
@@ -349,6 +352,7 @@ fn validate_single_case(
 
 /// Compute reference Lomb-Scargle using high-precision algorithm
 /// This implements the exact algorithm used by SciPy for validation
+#[allow(dead_code)]
 fn compute_reference_lombscargle(t: &[f64], y: &[f64], freqs: &[f64]) -> SignalResult<Vec<f64>> {
     let n = t.len();
     let mut periodogram = vec![0.0; freqs.len()];
@@ -408,6 +412,7 @@ fn compute_reference_lombscargle(t: &[f64], y: &[f64], freqs: &[f64]) -> SignalR
 }
 
 /// Validate different normalization methods
+#[allow(dead_code)]
 fn validate_normalization_methods(
     config: &ScipyValidationConfig,
 ) -> SignalResult<NormalizationValidationResult> {
@@ -472,6 +477,7 @@ fn validate_normalization_methods(
 }
 
 /// Validate a single normalization method case
+#[allow(dead_code)]
 fn validate_single_normalization_case(
     n: usize,
     fs: f64,
@@ -510,6 +516,7 @@ fn validate_single_normalization_case(
 }
 
 /// Validate edge cases
+#[allow(dead_code)]
 fn validate_edge_cases(config: &ScipyValidationConfig) -> SignalResult<EdgeCaseValidationResult> {
     let sparse_sampling = test_sparse_sampling(config)?;
     let extreme_dynamic_range = test_extreme_dynamic_range(config)?;
@@ -533,6 +540,7 @@ fn validate_edge_cases(config: &ScipyValidationConfig) -> SignalResult<EdgeCaseV
 }
 
 /// Test sparse sampling edge case
+#[allow(dead_code)]
 fn test_sparse_sampling(_config: &ScipyValidationConfig) -> SignalResult<bool> {
     // Test with very sparse sampling (10 points over long duration)
     let t: Vec<f64> = vec![0.0, 1.0, 2.5, 4.0, 6.2, 8.1, 10.0, 12.3, 15.0, 20.0];
@@ -562,6 +570,7 @@ fn test_sparse_sampling(_config: &ScipyValidationConfig) -> SignalResult<bool> {
 }
 
 /// Test extreme dynamic range
+#[allow(dead_code)]
 fn test_extreme_dynamic_range(_config: &ScipyValidationConfig) -> SignalResult<bool> {
     let n = 100;
     let fs = 10.0;
@@ -596,6 +605,7 @@ fn test_extreme_dynamic_range(_config: &ScipyValidationConfig) -> SignalResult<b
 }
 
 /// Test short time series
+#[allow(dead_code)]
 fn test_short_time_series(_config: &ScipyValidationConfig) -> SignalResult<bool> {
     // Test with minimum viable data (5 points)
     let t: Vec<f64> = vec![0.0, 0.1, 0.2, 0.3, 0.4];
@@ -618,6 +628,7 @@ fn test_short_time_series(_config: &ScipyValidationConfig) -> SignalResult<bool>
 }
 
 /// Test high frequency resolution
+#[allow(dead_code)]
 fn test_high_frequency_resolution(_config: &ScipyValidationConfig) -> SignalResult<bool> {
     let n = 1000;
     let fs = 100.0;
@@ -654,6 +665,7 @@ fn test_high_frequency_resolution(_config: &ScipyValidationConfig) -> SignalResu
 }
 
 /// Validate statistical properties
+#[allow(dead_code)]
 fn validate_statistical_properties(
     config: &ScipyValidationConfig,
 ) -> SignalResult<StatisticalValidationResult> {
@@ -672,6 +684,7 @@ fn validate_statistical_properties(
 }
 
 /// Estimate false alarm rate
+#[allow(dead_code)]
 fn estimate_false_alarm_rate(config: &ScipyValidationConfig) -> SignalResult<f64> {
     let mut false_alarms = 0;
     let trials = config.monte_carlo_trials.min(50); // Limit for performance
@@ -681,7 +694,7 @@ fn estimate_false_alarm_rate(config: &ScipyValidationConfig) -> SignalResult<f64
         let mut rng = rand::rng();
         let n = 100;
         let t: Vec<f64> = (0..n).map(|i| i as f64 / 10.0).collect();
-        let signal: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
+        let signal: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
 
         let freqs: Vec<f64> = Array1::linspace(0.1, 5.0, 50).to_vec();
 
@@ -706,6 +719,7 @@ fn estimate_false_alarm_rate(config: &ScipyValidationConfig) -> SignalResult<f64
 }
 
 /// Estimate detection power
+#[allow(dead_code)]
 fn estimate_detection_power(config: &ScipyValidationConfig) -> SignalResult<f64> {
     let mut detections = 0;
     let trials = config.monte_carlo_trials.min(50);
@@ -719,7 +733,7 @@ fn estimate_detection_power(config: &ScipyValidationConfig) -> SignalResult<f64>
         let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
         let signal: Vec<f64> = t
             .iter()
-            .map(|&time| (2.0 * PI * signal_freq * time).sin() + 0.1 * rng.gen_range(-1.0..1.0))
+            .map(|&time| (2.0 * PI * signal_freq * time).sin() + 0.1 * rng.random_range(-1.0..1.0))
             .collect();
 
         let freqs: Vec<f64> = Array1::linspace(0.1, fs / 2.0, 50).to_vec();
@@ -753,6 +767,7 @@ fn estimate_detection_power(config: &ScipyValidationConfig) -> SignalResult<f64>
 }
 
 /// Validate confidence intervals
+#[allow(dead_code)]
 fn validate_confidence_intervals(_config: &ScipyValidationConfig) -> SignalResult<f64> {
     // Placeholder implementation for confidence interval validation
     // In practice, this would test bootstrap confidence intervals
@@ -760,6 +775,7 @@ fn validate_confidence_intervals(_config: &ScipyValidationConfig) -> SignalResul
 }
 
 /// Validate performance characteristics
+#[allow(dead_code)]
 fn validate_performance_characteristics(
     _config: &ScipyValidationConfig,
 ) -> SignalResult<PerformanceValidationResult> {
@@ -773,6 +789,7 @@ fn validate_performance_characteristics(
 }
 
 /// Calculate overall validation summary
+#[allow(dead_code)]
 fn calculate_overall_summary(
     accuracy: &AccuracyValidationResult,
     normalization: &Option<NormalizationValidationResult>,
@@ -805,6 +822,7 @@ fn calculate_overall_summary(
 
 // Helper functions
 
+#[allow(dead_code)]
 fn calculate_error_metrics(result1: &[f64], result2: &[f64]) -> SignalResult<(f64, f64, f64)> {
     if result1.len() != result2.len() {
         return Err(SignalError::ValueError(
@@ -835,6 +853,7 @@ fn calculate_error_metrics(result1: &[f64], result2: &[f64]) -> SignalResult<(f6
     Ok((max_abs_error, max_rel_error, rmse))
 }
 
+#[allow(dead_code)]
 fn calculate_correlation(x: &[f64], y: &[f64]) -> SignalResult<f64> {
     if x.len() != y.len() || x.is_empty() {
         return Ok(0.0);
@@ -863,6 +882,7 @@ fn calculate_correlation(x: &[f64], y: &[f64]) -> SignalResult<f64> {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_normalization_consistency(
     method_results: &HashMap<String, AccuracyValidationResult>,
 ) -> f64 {
@@ -885,6 +905,7 @@ fn calculate_normalization_consistency(
     (1.0 - variance).max(0.0) // High consistency = low variance
 }
 
+#[allow(dead_code)]
 fn calculate_edge_case_stability_score(
     sparse: bool,
     dynamic_range: bool,
@@ -896,6 +917,7 @@ fn calculate_edge_case_stability_score(
     passed as f64 / scores.len() as f64
 }
 
+#[allow(dead_code)]
 fn find_peaks(data: &[f64], threshold: f64) -> Vec<usize> {
     let mut peaks = Vec::new();
     let n = data.len();
@@ -1036,6 +1058,7 @@ pub struct FrequencyResolutionResult {
 }
 
 /// Run advanced Lomb-Scargle validation with extended testing
+#[allow(dead_code)]
 pub fn validate_lombscargle_advanced(
     config: &AdvancedValidationConfig,
 ) -> SignalResult<AdvancedValidationResult> {
@@ -1094,6 +1117,7 @@ pub fn validate_lombscargle_advanced(
 }
 
 /// Test numerical conditioning of Lomb-Scargle normal equations
+#[allow(dead_code)]
 fn test_numerical_conditioning(
     config: &ScipyValidationConfig,
 ) -> SignalResult<ConditioningTestResult> {
@@ -1138,6 +1162,7 @@ fn test_numerical_conditioning(
 }
 
 /// Test aliasing effects in Lomb-Scargle
+#[allow(dead_code)]
 fn test_aliasing_effects(config: &ScipyValidationConfig) -> SignalResult<AliasingTestResult> {
     let mut rng = rand::rng();
 
@@ -1162,6 +1187,7 @@ fn test_aliasing_effects(config: &ScipyValidationConfig) -> SignalResult<Aliasin
 }
 
 /// Test with realistic astronomical scenarios
+#[allow(dead_code)]
 fn test_astronomical_scenarios(
     config: &ScipyValidationConfig,
 ) -> SignalResult<AstronomicalTestResult> {
@@ -1188,6 +1214,7 @@ fn test_astronomical_scenarios(
 }
 
 /// Test phase coherence preservation
+#[allow(dead_code)]
 fn test_phase_coherence(config: &ScipyValidationConfig) -> SignalResult<PhaseCoherenceResult> {
     let mut rng = rand::rng();
 
@@ -1223,6 +1250,7 @@ fn test_phase_coherence(config: &ScipyValidationConfig) -> SignalResult<PhaseCoh
 }
 
 /// Quantify uncertainty using bootstrap methods
+#[allow(dead_code)]
 fn quantify_uncertainty(
     config: &ScipyValidationConfig,
     n_bootstrap: usize,
@@ -1296,6 +1324,7 @@ fn quantify_uncertainty(
 }
 
 /// Test frequency resolution limits
+#[allow(dead_code)]
 fn test_frequency_resolution(
     config: &ScipyValidationConfig,
 ) -> SignalResult<FrequencyResolutionResult> {
@@ -1318,6 +1347,7 @@ fn test_frequency_resolution(
 }
 
 /// Run comprehensive validation and print detailed report
+#[allow(dead_code)]
 pub fn run_comprehensive_validation() -> SignalResult<()> {
     println!("Running comprehensive Lomb-Scargle validation against SciPy...");
 
@@ -1451,6 +1481,7 @@ pub fn run_comprehensive_validation() -> SignalResult<()> {
 // Helper function implementations for advanced validation
 
 /// Estimate condition number of the Lomb-Scargle normal equations
+#[allow(dead_code)]
 fn estimate_condition_number(times: &[f64], freqs: &[f64]) -> SignalResult<f64> {
     // Simplified condition number estimation
     // In practice, this would compute the condition number of the design matrix
@@ -1474,6 +1505,7 @@ fn estimate_condition_number(times: &[f64], freqs: &[f64]) -> SignalResult<f64> 
     Ok(condition_estimate.max(1.0))
 }
 
+#[allow(dead_code)]
 fn estimate_sampling_irregularity(times: &[f64]) -> f64 {
     if times.len() < 3 {
         return 1.0;
@@ -1486,6 +1518,7 @@ fn estimate_sampling_irregularity(times: &[f64]) -> f64 {
     (var_diff.sqrt() / mean_diff).max(1.0)
 }
 
+#[allow(dead_code)]
 fn test_perturbation_stability(times: &[f64], values: &[f64], freqs: &[f64]) -> SignalResult<f64> {
     // Test stability under small perturbations to the data
     let perturbation_level = 1e-8;
@@ -1518,6 +1551,7 @@ fn test_perturbation_stability(times: &[f64], values: &[f64], freqs: &[f64]) -> 
     Ok(1.0 - max_relative_change.min(1.0)) // Higher score = more stable
 }
 
+#[allow(dead_code)]
 fn test_gradient_stability(times: &[f64], values: &[f64], freqs: &[f64]) -> SignalResult<f64> {
     // Test gradient-based stability measure
     // Simplified implementation
@@ -1545,6 +1579,7 @@ fn test_gradient_stability(times: &[f64], values: &[f64], freqs: &[f64]) -> Sign
     Ok(stability_scores.iter().sum::<f64>() / stability_scores.len() as f64)
 }
 
+#[allow(dead_code)]
 fn test_nyquist_aliasing_detection(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test detection of Nyquist aliasing
     let n = 100;
@@ -1578,6 +1613,7 @@ fn test_nyquist_aliasing_detection(rng: &mut impl Rng) -> SignalResult<f64> {
     Ok((1.0 - error * 10.0).max(0.0)) // Score based on detection accuracy
 }
 
+#[allow(dead_code)]
 fn test_sub_nyquist_handling(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test handling of frequencies below Nyquist
     let n = 200;
@@ -1606,6 +1642,7 @@ fn test_sub_nyquist_handling(rng: &mut impl Rng) -> SignalResult<f64> {
     Ok((1.0 - error * 20.0).max(0.0))
 }
 
+#[allow(dead_code)]
 fn test_false_peak_suppression(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test ability to suppress false peaks
     let n = 150;
@@ -1633,6 +1670,7 @@ fn test_false_peak_suppression(rng: &mut impl Rng) -> SignalResult<f64> {
     Ok(1.0 - false_peak_ratio)
 }
 
+#[allow(dead_code)]
 fn test_spectral_leakage_mitigation(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test mitigation of spectral leakage
     // Use windowing or other techniques to reduce leakage
@@ -1662,6 +1700,7 @@ fn test_spectral_leakage_mitigation(rng: &mut impl Rng) -> SignalResult<f64> {
     Ok(if resolved_both { 0.8 } else { 0.3 })
 }
 
+#[allow(dead_code)]
 fn test_variable_star_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
     // Simulate variable star light curve
     let n = 500;
@@ -1700,6 +1739,7 @@ fn test_variable_star_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
     Ok((1.0 - period_error * 5.0).max(0.0))
 }
 
+#[allow(dead_code)]
 fn test_exoplanet_transit_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
     // Simulate exoplanet transit detection
     let n = 1000;
@@ -1746,6 +1786,7 @@ fn test_exoplanet_transit_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
     Ok((detection_strength * 50.0).min(1.0))
 }
 
+#[allow(dead_code)]
 fn test_rr_lyrae_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
     // Simulate RR Lyrae star
     let n = 800;
@@ -1788,6 +1829,7 @@ fn test_rr_lyrae_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
     Ok((1.0 - period_error * 10.0).max(0.0))
 }
 
+#[allow(dead_code)]
 fn test_multi_periodic_source(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test detection of multiple periods
     let n = 1200;
@@ -1830,6 +1872,7 @@ fn test_multi_periodic_source(rng: &mut impl Rng) -> SignalResult<f64> {
     Ok(detections as f64 / expected_freqs.len() as f64)
 }
 
+#[allow(dead_code)]
 fn test_phase_preservation(
     times: &[f64],
     values: &[f64],
@@ -1847,6 +1890,7 @@ fn test_phase_preservation(
     Ok((peak_strength * 2.0).min(1.0))
 }
 
+#[allow(dead_code)]
 fn test_coherence_stability(times: &[f64], values: &[f64]) -> SignalResult<f64> {
     // Test stability of coherence over time windows
     let window_size = times.len() / 4;
@@ -1882,6 +1926,7 @@ fn test_coherence_stability(times: &[f64], values: &[f64]) -> SignalResult<f64> 
     Ok((1.0 - variance / mean_coherence.max(1e-12)).max(0.0))
 }
 
+#[allow(dead_code)]
 fn test_phase_wrapping(times: &[f64], values: &[f64]) -> SignalResult<f64> {
     // Test handling of phase wrapping
     // Simplified test based on periodogram consistency
@@ -1895,6 +1940,7 @@ fn test_phase_wrapping(times: &[f64], values: &[f64]) -> SignalResult<f64> {
     Ok(consistency_score)
 }
 
+#[allow(dead_code)]
 fn test_min_frequency_separation(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test minimum resolvable frequency separation
     let separations = vec![0.01, 0.005, 0.002, 0.001];
@@ -1935,6 +1981,7 @@ fn test_min_frequency_separation(rng: &mut impl Rng) -> SignalResult<f64> {
     }
 }
 
+#[allow(dead_code)]
 fn test_resolution_scaling(rng: &mut impl Rng) -> SignalResult<f64> {
     // Test how resolution scales with baseline length
     let baselines = vec![10.0, 20.0, 40.0, 80.0];
@@ -1986,6 +2033,7 @@ fn test_resolution_scaling(rng: &mut impl Rng) -> SignalResult<f64> {
     }
 }
 
+#[allow(dead_code)]
 fn characterize_spectral_window(rng: &mut impl Rng) -> SignalResult<f64> {
     // Characterize the spectral window function
     let n = 200;

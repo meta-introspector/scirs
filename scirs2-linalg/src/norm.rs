@@ -37,6 +37,7 @@ use crate::validation::{
 /// let norm_fro = matrix_norm(&a.view(), "fro", None).unwrap();
 /// assert!((norm_fro - 5.477225575051661).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn matrix_norm<F>(a: &ArrayView2<F>, ord: &str, workers: Option<usize>) -> LinalgResult<F>
 where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -120,6 +121,7 @@ where
 /// let norm_2 = vector_norm(&x.view(), 2).unwrap();
 /// assert!((norm_2 - 5.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn vector_norm<F>(x: &ArrayView1<F>, ord: usize) -> LinalgResult<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -184,6 +186,7 @@ where
 /// let norm2 = vector_norm_parallel(&x.view(), 2, Some(4)).unwrap();
 /// assert!((norm2 - 5.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn vector_norm_parallel<F>(
     x: &ArrayView1<F>,
     ord: usize,
@@ -265,6 +268,7 @@ where
 /// let c = cond(&a.view(), None, None).unwrap();
 /// assert!((c - 2.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn cond<F>(a: &ArrayView2<F>, p: Option<&str>, workers: Option<usize>) -> LinalgResult<F>
 where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -358,6 +362,7 @@ where
 /// let r = matrix_rank(&a.view(), None, None).unwrap();
 /// assert_eq!(r, 2);
 /// ```
+#[allow(dead_code)]
 pub fn matrix_rank<F>(
     a: &ArrayView2<F>,
     tol: Option<F>,
@@ -412,6 +417,7 @@ where
     since = "0.1.0",
     note = "Use matrix_norm with workers parameter instead"
 )]
+#[allow(dead_code)]
 pub fn matrix_norm_default<F>(a: &ArrayView2<F>, ord: &str) -> LinalgResult<F>
 where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -421,6 +427,7 @@ where
 
 /// Compute the condition number without workers parameter (deprecated - use cond with workers)
 #[deprecated(since = "0.1.0", note = "Use cond with workers parameter instead")]
+#[allow(dead_code)]
 pub fn cond_default<F>(a: &ArrayView2<F>, p: Option<&str>) -> LinalgResult<F>
 where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,
@@ -433,6 +440,7 @@ where
     since = "0.1.0",
     note = "Use matrix_rank with workers parameter instead"
 )]
+#[allow(dead_code)]
 pub fn matrix_rank_default<F>(a: &ArrayView2<F>, tol: Option<F>) -> LinalgResult<usize>
 where
     F: Float + NumAssign + Sum + ndarray::ScalarOperand + Send + Sync + 'static,

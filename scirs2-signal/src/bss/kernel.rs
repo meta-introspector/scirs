@@ -23,6 +23,7 @@ use scirs2_linalg::{eigh, svd};
 /// # Returns
 ///
 /// * Tuple containing (extracted sources, mixing matrix)
+#[allow(dead_code)]
 pub fn kernel_ica(
     signals: &Array2<f64>,
     n_components: usize,

@@ -33,6 +33,7 @@ use std::fmt::Debug;
 /// let points = czt_points(10, None, None).unwrap();
 /// assert_eq!(points.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn czt_points(
     m: usize,
     w: Option<Complex64>,
@@ -89,8 +90,6 @@ pub fn czt_points(
 ///
 /// ```
 /// use scirs2_signal::czt::czt;
-/// #[cfg(test)]
-use std::f64::consts::PI;
 ///
 /// // Generate a simple signal
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
@@ -101,6 +100,7 @@ use std::f64::consts::PI;
 /// let result = czt(&signal, Some(16), Some(w), None, None).unwrap();
 /// assert_eq!(result.len(), 16);
 /// ```
+#[allow(dead_code)]
 pub fn czt<T>(
     x: &[T],
     m: Option<usize>,
@@ -158,6 +158,7 @@ where
 ///
 /// Where the chirp terms w^{±n(n-1)/2} allow us to express this as a convolution,
 /// which can be efficiently computed using FFTs.
+#[allow(dead_code)]
 fn czt_bluestein(
     x: &[Complex64],
     m: usize,
@@ -223,6 +224,7 @@ fn czt_bluestein(
 }
 
 /// Find the next power of 2 greater than or equal to n
+#[allow(dead_code)]
 fn next_power_of_two(n: usize) -> usize {
     let mut p = 1;
     while p < n {
@@ -234,6 +236,7 @@ fn next_power_of_two(n: usize) -> usize {
 /// Compute Fast Fourier Transform (FFT) of a complex sequence
 ///
 /// This is an implementation for complex inputs using rustfft directly
+#[allow(dead_code)]
 fn fft(x: &[Complex64]) -> SignalResult<Vec<Complex64>> {
     use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
 
@@ -266,6 +269,7 @@ fn fft(x: &[Complex64]) -> SignalResult<Vec<Complex64>> {
 /// Compute Inverse Fast Fourier Transform (IFFT) of a complex sequence
 ///
 /// This is an implementation for complex inputs using rustfft directly
+#[allow(dead_code)]
 fn ifft(x: &[Complex64]) -> SignalResult<Vec<Complex64>> {
     use rustfft::{num_complex::Complex as RustComplex, FftPlanner};
 

@@ -67,6 +67,7 @@ impl ZeroCopySerializable for Complex64 {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Memory-Mapped Array Zero-Copy Serialization Example");
     println!("==================================================\n");
@@ -98,6 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Example demonstrating custom type serialization with zero-copy operations
+#[allow(dead_code)]
 fn custom_type_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n6. Custom Type Serialization Example");
     println!("-----------------------------------");
@@ -209,6 +211,7 @@ fn custom_type_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>
 }
 
 /// Basic example of zero-copy serialization and deserialization
+#[allow(dead_code)]
 fn basic_serialization_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Zero-Copy Serialization Example");
     println!("-----------------------------------------");
@@ -274,6 +277,7 @@ fn basic_serialization_example(temp_dir: &Path) -> Result<(), Box<dyn std::error
 }
 
 /// Example demonstrating working with metadata in zero-copy serialized files
+#[allow(dead_code)]
 fn metadata_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Working with Metadata Example");
     println!("--------------------------------");
@@ -362,6 +366,7 @@ fn metadata_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Example demonstrating zero-copy serialization with multidimensional arrays
+#[allow(dead_code)]
 fn multidimensional_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Multidimensional Array Example");
     println!("---------------------------------");
@@ -448,6 +453,7 @@ fn multidimensional_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::E
 }
 
 /// Example comparing performance of zero-copy serialization with traditional methods
+#[allow(dead_code)]
 fn performance_comparison(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n4. Performance Comparison Example");
     println!("--------------------------------");
@@ -588,6 +594,7 @@ fn performance_comparison(temp_dir: &Path) -> Result<(), Box<dyn std::error::Err
 }
 
 /// Example demonstrating updating data in a zero-copy serialized file
+#[allow(dead_code)]
 fn updating_data_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n5. Updating Data Example");
     println!("------------------------");

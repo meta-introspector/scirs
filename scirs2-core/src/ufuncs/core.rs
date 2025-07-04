@@ -56,6 +56,7 @@ static UFUNC_REGISTRY: Lazy<RwLock<HashMap<String, Box<dyn UFunc>>>> =
     Lazy::new(|| RwLock::new(HashMap::new()));
 
 /// Register a universal function in the global registry
+#[allow(dead_code)]
 pub fn register_ufunc(ufunc: Box<dyn UFunc>) -> Result<(), &'static str> {
     let name = ufunc.name().to_string();
 
@@ -70,6 +71,7 @@ pub fn register_ufunc(ufunc: Box<dyn UFunc>) -> Result<(), &'static str> {
 }
 
 /// Get a universal function from the registry by name
+#[allow(dead_code)]
 pub fn get_ufunc(name: &str) -> Option<Box<dyn UFunc>> {
     let registry = UFUNC_REGISTRY.read().unwrap();
 
@@ -116,6 +118,7 @@ impl UFunc for UFuncWrapper {
 }
 
 /// Helper function to apply a unary operation element-wise
+#[allow(dead_code)]
 pub fn apply_unary<T, F, O, D>(
     input: &ArrayBase<Data, D>,
     output: &mut ArrayBase<Data, D>,
@@ -158,6 +161,7 @@ where
 }
 
 /// Helper function to apply a binary operation element-wise with broadcasting
+#[allow(dead_code)]
 pub fn apply_binary<T, F, O, D>(
     input1: &ArrayBase<Data, D>,
     input2: &ArrayBase<Data, D>,
@@ -205,6 +209,7 @@ where
 }
 
 /// Helper function to apply a reduction operation along an axis
+#[allow(dead_code)]
 pub fn apply_reduction<T, F, O, D>(
     input: &ArrayBase<Data, D>,
     output: &mut ArrayBase<Data, Ix1>,

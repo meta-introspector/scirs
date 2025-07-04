@@ -351,6 +351,7 @@ pub use padding::{
 /// assert_eq!(times.len(), result.shape()[1]);
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn stft<T>(
     x: &[T],
     window: Window,
@@ -424,6 +425,7 @@ where
 ///   IEEE Transactions on Signal Processing, Vol. 47, No. 9, 1999.
 
 /// Helper function to try and extract a Complex value
+#[allow(dead_code)]
 fn try_as_complex<U: 'static + Copy>(val: U) -> Option<num_complex::Complex64> {
     use num_complex::Complex64;
     use std::any::Any;
@@ -441,6 +443,7 @@ fn try_as_complex<U: 'static + Copy>(val: U) -> Option<num_complex::Complex64> {
     None
 }
 
+#[allow(dead_code)]
 pub fn hilbert<T>(x: &[T]) -> FFTResult<Vec<num_complex::Complex64>>
 where
     T: num_traits::NumCast + Copy + std::fmt::Debug + 'static,
@@ -544,6 +547,7 @@ where
 /// assert_eq!(bounds, vec![(-2, 2), (-1, 1)]);
 /// ```
 #[must_use]
+#[allow(dead_code)]
 pub fn fft_bounds(shape: &[usize]) -> Vec<(i32, i32)> {
     shape
         .iter()

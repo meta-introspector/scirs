@@ -192,7 +192,8 @@ where
         + Sync
         + Send
         + std::fmt::Display
-        + std::fmt::Debug,
+        + std::fmt::Debug
+        + 'static,
 {
     /// Create a new descriptive statistics builder
     pub fn new() -> Self {
@@ -316,14 +317,15 @@ where
             ));
         }
 
+        let finite_count = finite_data.len();
         match self.config.null_handling {
-            NullHandling::Exclude => Ok((Array1::from_vec(finite_data), finite_data.len())),
-            NullHandling::Fail if finite_data.len() != data.len() => {
+            NullHandling::Exclude => Ok((Array1::from_vec(finite_data), finite_count)),
+            NullHandling::Fail if finite_count != data.len() => {
                 Err(StatsError::InvalidArgument(
                     "Null values encountered with Fail strategy".to_string(),
                 ))
             }
-            _ => Ok((Array1::from_vec(finite_data), finite_data.len())),
+            _ => Ok((Array1::from_vec(finite_data), finite_count)),
         }
     }
 
@@ -525,7 +527,8 @@ where
         + std::iter::Sum<F>
         + std::ops::Div<Output = F>
         + Send
-        + Sync,
+        + Sync
+        + 'static,
 {
     /// Create a new correlation analysis builder
     pub fn new() -> Self {
@@ -574,10 +577,10 @@ where
     }
 
     /// Compute correlation between two variables
-    pub fn compute(
+    pub fn compute<'a>(
         &self,
-        x: ArrayView1<F>,
-        y: ArrayView1<F>,
+        x: ArrayView1<'a, F>,
+        y: ArrayView1<'a, F>,
     ) -> StatsResult<StandardizedResult<CorrelationResult<F>>> {
         let start_time = std::time::Instant::now();
         let mut warnings = Vec::new();
@@ -663,7 +666,7 @@ where
         data: ArrayView2<F>,
     ) -> StatsResult<StandardizedResult<Array2<F>>> {
         let start_time = std::time::Instant::now();
-        let mut warnings = Vec::new();
+        let warnings = Vec::new();
 
         // Use optimized correlation matrix computation
         let correlation_matrix = if self.config.auto_optimize {
@@ -708,7 +711,7 @@ where
         let se_z = F::one() / F::from(n - 3).unwrap().sqrt();
 
         // Critical value for given confidence level (simplified - would use proper t-distribution)
-        let alpha = F::one() - F::from(self.config.confidence_level).unwrap();
+        let _alpha = F::one() - F::from(self.config.confidence_level).unwrap();
         let z_critical = F::from(1.96).unwrap(); // Approximate for 95% confidence
 
         let z_lower = z - z_critical * se_z;
@@ -722,7 +725,7 @@ where
         let r_upper = (r_upper - F::one()) / (r_upper + F::one());
 
         // Simplified p-value calculation (would use proper statistical test)
-        let t_stat = correlation * F::from(n - 2).unwrap().sqrt()
+        let _t_stat = correlation * F::from(n - 2).unwrap().sqrt()
             / (F::one() - correlation * correlation).sqrt();
         let p_value = F::from(2.0).unwrap() * (F::one() - F::from(0.95).unwrap()); // Simplified
 
@@ -750,7 +753,8 @@ where
         + Sync
         + Send
         + std::fmt::Display
-        + std::fmt::Debug,
+        + std::fmt::Debug
+        + 'static,
 {
     /// Create a new unified stats analyzer
     pub fn new() -> Self {
@@ -780,10 +784,10 @@ where
     }
 
     /// Perform correlation analysis
-    pub fn correlate(
+    pub fn correlate<'a>(
         &self,
-        x: ArrayView1<F>,
-        y: ArrayView1<F>,
+        x: ArrayView1<'a, F>,
+        y: ArrayView1<'a, F>,
         method: CorrelationMethod,
     ) -> StatsResult<StandardizedResult<CorrelationResult<F>>> {
         CorrelationBuilder::new()
@@ -822,7 +826,8 @@ where
         + Sync
         + Send
         + std::fmt::Display
-        + std::fmt::Debug,
+        + std::fmt::Debug
+        + 'static,
 {
     fn default() -> Self {
         Self::new()
@@ -840,7 +845,8 @@ where
         + std::iter::Sum<F>
         + std::ops::Div<Output = F>
         + Send
-        + Sync,
+        + Sync
+        + 'static,
 {
     fn default() -> Self {
         Self::new()
@@ -858,7 +864,8 @@ where
         + Sync
         + Send
         + std::fmt::Display
-        + std::fmt::Debug,
+        + std::fmt::Debug
+        + 'static,
 {
     fn default() -> Self {
         Self::new()

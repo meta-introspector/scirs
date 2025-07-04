@@ -1,6 +1,7 @@
 use scirs2_stats::distributions::lognormal::Lognormal;
 use std::error::Error;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Lognormal Distribution Example");
     println!("-----------------------------");

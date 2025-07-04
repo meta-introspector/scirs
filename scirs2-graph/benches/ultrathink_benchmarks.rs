@@ -14,11 +14,11 @@ use scirs2_graph::advanced::{
 };
 use scirs2_graph::algorithms::community::louvain_communities;
 use scirs2_graph::algorithms::connectivity::connected_components;
-use scirs2_graph::algorithms::paths::shortest_path_dijkstra;
+use scirs2_graph::algorithms::shortest_path::dijkstra_path;
 use scirs2_graph::algorithms::properties::betweenness_centrality;
 use scirs2_graph::base::Graph;
 use scirs2_graph::generators::random_graph;
-use scirs2_graph::measures::pagerank;
+use scirs2_graph::measures::pagerank_centrality;
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -108,12 +108,14 @@ impl BenchmarkResults {
 }
 
 /// Generate test graphs for benchmarking
+#[allow(dead_code)]
 fn generate_test_graph(size: usize, density: f64) -> Graph<i32, f64> {
     let num_edges = ((size * (size - 1)) as f64 * density / 2.0) as usize;
     random_graph(size, num_edges, false).unwrap()
 }
 
 /// Benchmark connected components with and without ultrathink
+#[allow(dead_code)]
 fn benchmark_connected_components(c: &mut Criterion) {
     let config = UltrathinkBenchmarkConfig::default();
     let mut group = c.benchmark_group("connected_components");
@@ -156,6 +158,7 @@ fn benchmark_connected_components(c: &mut Criterion) {
 }
 
 /// Benchmark shortest path algorithms with and without advanced
+#[allow(dead_code)]
 fn benchmark_shortest_paths(c: &mut Criterion) {
     let config = UltrathinkBenchmarkConfig::default();
     let mut group = c.benchmark_group("shortest_paths");
@@ -202,6 +205,7 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
 }
 
 /// Benchmark PageRank with and without advanced
+#[allow(dead_code)]
 fn benchmark_pagerank(c: &mut Criterion) {
     let config = UltrathinkBenchmarkConfig::default();
     let mut group = c.benchmark_group("pagerank");
@@ -241,6 +245,7 @@ fn benchmark_pagerank(c: &mut Criterion) {
 }
 
 /// Benchmark community detection with and without advanced
+#[allow(dead_code)]
 fn benchmark_community_detection(c: &mut Criterion) {
     let config = UltrathinkBenchmarkConfig::default();
     let mut group = c.benchmark_group("community_detection");
@@ -283,6 +288,7 @@ fn benchmark_community_detection(c: &mut Criterion) {
 }
 
 /// Benchmark centrality measures with and without advanced
+#[allow(dead_code)]
 fn benchmark_centrality(c: &mut Criterion) {
     let config = UltrathinkBenchmarkConfig::default();
     let mut group = c.benchmark_group("centrality");
@@ -326,6 +332,7 @@ fn benchmark_centrality(c: &mut Criterion) {
 }
 
 /// Comprehensive advanced performance benchmark
+#[allow(dead_code)]
 fn benchmark_advanced_comprehensive(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultrathink_comprehensive");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
@@ -395,6 +402,7 @@ fn benchmark_advanced_comprehensive(c: &mut Criterion) {
 }
 
 /// Memory efficiency benchmarks for advanced
+#[allow(dead_code)]
 fn benchmark_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_efficiency");
 
@@ -441,6 +449,7 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
 }
 
 /// Generate performance comparison report
+#[allow(dead_code)]
 pub fn generate_performance_report(
     results: &[BenchmarkResults],
     output_path: &str,

@@ -8,6 +8,7 @@ use scirs2_autograd as ag;
 use scirs2_linalg::{basic, decomposition, norm};
 
 #[test]
+#[allow(dead_code)]
 fn test_autograd_linalg_integration() {
     // Test that autograd can work with linalg operations
     ag::run(|ctx: &mut ag::Context<f64>| {
@@ -27,6 +28,7 @@ fn test_autograd_linalg_integration() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_linalg_norm_matrix_operations() {
     // Test that linalg and norm modules work together
     let matrix = array![[3.0, 4.0], [0.0, 5.0]];
@@ -47,6 +49,7 @@ fn test_linalg_norm_matrix_operations() {
 }
 
 #[test] 
+#[allow(dead_code)]
 fn test_core_memory_efficiency() {
     // Test core memory management functionality
     use scirs2_core::memory::BufferPool;
@@ -70,6 +73,7 @@ fn test_core_memory_efficiency() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_scientific_computing_pipeline() {
     // Test a realistic scientific computing pipeline using multiple modules
     
@@ -122,6 +126,7 @@ fn test_scientific_computing_pipeline() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_error_handling_across_modules() {
     // Test that error handling works consistently across modules
     
@@ -146,6 +151,7 @@ fn test_error_handling_across_modules() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_numerical_stability() {
     // Test numerical stability across different module combinations
     

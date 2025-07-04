@@ -16,6 +16,7 @@ pub fn safe_from<T: Float>(value: f64, context: &str) -> SpatialResult<T> {
 }
 
 /// Safely convert usize to type T
+#[allow(dead_code)]
 pub fn safe_from_usize<T: Float>(value: usize, context: &str) -> SpatialResult<T> {
     T::from(value).ok_or_else(|| {
         SpatialError::ComputationError(format!(
@@ -25,6 +26,7 @@ pub fn safe_from_usize<T: Float>(value: usize, context: &str) -> SpatialResult<T
 }
 
 /// Safely perform partial comparison with proper error handling
+#[allow(dead_code)]
 pub fn safe_partial_cmp<T: PartialOrd>(
     a: &T,
     b: &T,

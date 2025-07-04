@@ -130,6 +130,7 @@ pub enum ClusterCriterion {
 }
 
 /// Computes distances between observations
+#[allow(dead_code)]
 fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metric) -> Array1<F> {
     let n_samples = data.shape()[0];
     let n_features = data.shape()[1];
@@ -221,6 +222,7 @@ fn compute_distances<F: Float + FromPrimitive>(data: ArrayView2<F>, metric: Metr
 }
 
 /// Converts a condensed distance matrix index to (i, j) coordinates
+#[allow(dead_code)]
 pub fn condensed_index_to_coords(n: usize, idx: usize) -> (usize, usize) {
     // Find i and j from the condensed index
     let mut i = 0;
@@ -246,6 +248,7 @@ pub fn condensed_index_to_coords(n: usize, idx: usize) -> (usize, usize) {
 }
 
 /// Converts (i, j) coordinates to a condensed distance matrix index
+#[allow(dead_code)]
 pub fn coords_to_condensed_index(n: usize, i: usize, j: usize) -> Result<usize> {
     if i == j {
         return Err(ClusteringError::InvalidInput(
@@ -275,6 +278,7 @@ pub fn coords_to_condensed_index(n: usize, i: usize, j: usize) -> Result<usize> 
 /// # Returns
 ///
 /// * `Result<Array2<F>>` - The linkage matrix, which describes the dendrogram
+#[allow(dead_code)]
 pub fn linkage<
     F: Float + FromPrimitive + Debug + PartialOrd + Send + Sync + ndarray::ScalarOperand + 'static,
 >(
@@ -344,6 +348,7 @@ pub fn linkage<
 ///
 /// println!("Linkage matrix shape: {:?}", linkage_matrix.shape());
 /// ```
+#[allow(dead_code)]
 pub fn parallel_linkage<
     F: Float
         + FromPrimitive
@@ -401,6 +406,7 @@ pub fn parallel_linkage<
 ///
 /// For Distance and Inconsistent criteria, consider using `fcluster_generic` which accepts
 /// float thresholds directly.
+#[allow(dead_code)]
 pub fn fcluster<F: Float + FromPrimitive + PartialOrd + Debug>(
     z: &Array2<F>,
     t: usize,
@@ -473,6 +479,7 @@ pub fn fcluster<F: Float + FromPrimitive + PartialOrd + Debug>(
 /// // Cut at inconsistency threshold 0.8
 /// let labels2 = fcluster_generic(&linkage_matrix, 0.8, ClusterCriterion::Inconsistent).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn fcluster_generic<F: Float + FromPrimitive + PartialOrd + Debug>(
     z: &Array2<F>,
     t: F,

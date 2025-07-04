@@ -887,11 +887,13 @@ impl QuantumNeuromorphicFusion {
 }
 
 /// Convenience function to create quantum-neuromorphic fusion processor
+#[allow(dead_code)]
 pub fn create_quantum_neuromorphic_fusion() -> QuantumNeuromorphicFusion {
     QuantumNeuromorphicFusion::default()
 }
 
 /// Convenience function to create quantum-neuromorphic fusion with custom parameters
+#[allow(dead_code)]
 pub fn create_fusion_with_params(
     quantum_coupling: f64,
     coherence_time_ms: u64,

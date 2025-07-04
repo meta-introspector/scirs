@@ -7,6 +7,7 @@ use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Function with a very sharp peak
+#[allow(dead_code)]
 fn very_sharp_peak(x: ArrayView1<f64>) -> f64 {
     // A Gaussian peak centered at (0.5, 0.5) with very small width
     let dx = x[0] - 0.5;
@@ -15,6 +16,7 @@ fn very_sharp_peak(x: ArrayView1<f64>) -> f64 {
 }
 
 /// Heavy-tailed function with multiple peaks
+#[allow(dead_code)]
 fn multi_peak_function(x: ArrayView1<f64>) -> f64 {
     // Create a function with three peaks of different heights
     let peak1 = {
@@ -44,6 +46,7 @@ fn multi_peak_function(x: ArrayView1<f64>) -> f64 {
 /// 2. Analyzing function characteristics to determine the best approach
 /// 3. For smooth functions: using standard QMC with more points
 /// 4. For peaked functions: using importance sampling in high-contribution regions
+#[allow(dead_code)]
 fn adaptive_qmc_with_importance<F>(
     f: F,
     ranges: &[(f64, f64)],
@@ -535,6 +538,7 @@ where
     (total_integral, total_variance.sqrt())
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Hybrid Adaptive Monte Carlo Integration Example");
     println!("==============================================\n");

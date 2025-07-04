@@ -4,7 +4,7 @@
 //! algorithms designed for real-time data processing and low-latency inference.
 
 use crate::error::{OptimError, Result};
-use ndarray::{Array1, Dimension};
+use ndarray::Array1;
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};

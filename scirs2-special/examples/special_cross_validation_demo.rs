@@ -10,6 +10,7 @@ use scirs2_special::{
     digamma, erf, erfc, gamma,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Special Functions Cross-Validation Demo");
     println!("======================================\n");
@@ -26,6 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn basic_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Basic Cross-Validation");
     println!("------------------------\n");
@@ -51,6 +53,7 @@ fn basic_validation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn python_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n\n2. Python/SciPy Validation");
     println!("--------------------------\n");
@@ -107,6 +110,7 @@ fn python_validation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn comprehensive_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n\n3. Comprehensive Validation Report");
     println!("----------------------------------\n");
@@ -142,6 +146,7 @@ fn comprehensive_validation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn print_summary(summary: &scirs2_special::cross_validation::ValidationSummary) {
     println!("  Total tests: {}", summary.total_tests);
     println!(
@@ -155,6 +160,7 @@ fn print_summary(summary: &scirs2_special::cross_validation::ValidationSummary) 
     println!("  Max ULP error: {}", summary.max_ulp_error);
 }
 
+#[allow(dead_code)]
 fn print_detailed_summary(summary: &scirs2_special::cross_validation::ValidationSummary) {
     println!("\n{} Validation:", summary.function);
     println!(

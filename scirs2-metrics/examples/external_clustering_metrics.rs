@@ -7,6 +7,7 @@ use scirs2_metrics::clustering::{
     homogeneity_completeness_v_measure, normalized_mutual_info_score,
 };
 
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     // Create a sample dataset with simulated clusters
     let _data = Array2::from_shape_vec(
@@ -59,6 +60,7 @@ fn main() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn evaluate_clustering<T, U, S1, S2, D1, D2>(
     true_labels: &ndarray::ArrayBase<S1, D1>,
     pred_labels: &ndarray::ArrayBase<S2, D2>,

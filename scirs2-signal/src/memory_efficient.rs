@@ -151,6 +151,7 @@ impl StreamingProcessor {
 /// # Returns
 ///
 /// * Streaming FFT results
+#[allow(dead_code)]
 pub fn memory_efficient_fft<I>(
     signal_iter: I,
     chunk_size: usize,
@@ -215,6 +216,7 @@ pub struct StreamingFFTResult {
 }
 
 /// Compute FFT for a single chunk
+#[allow(dead_code)]
 fn compute_fft_chunk(data: &[f64], _chunk_size: usize) -> SignalResult<Vec<f64>> {
     // Convert to ndarray and compute FFT
     let signal = Array1::from(data.to_vec());
@@ -251,6 +253,7 @@ fn compute_fft_chunk(data: &[f64], _chunk_size: usize) -> SignalResult<Vec<f64>>
 /// # Returns
 ///
 /// * Filtered signal chunks
+#[allow(dead_code)]
 pub fn memory_efficient_filter<I>(
     mut signal_iter: I,
     b: &[f64],
@@ -337,6 +340,7 @@ pub struct StreamingFilterResult {
 }
 
 /// Apply filter with state preservation
+#[allow(dead_code)]
 fn apply_filter_with_state(
     input: &[f64],
     b: &[f64],
@@ -400,6 +404,7 @@ fn apply_filter_with_state(
 /// # Returns
 ///
 /// * Streaming spectrogram result
+#[allow(dead_code)]
 pub fn memory_efficient_spectrogram<I>(
     signal_iter: I,
     window_size: usize,
@@ -488,6 +493,7 @@ pub struct StreamingSpectrogramResult {
 /// # Returns
 ///
 /// * Cross-correlation result
+#[allow(dead_code)]
 pub fn memory_efficient_correlation<I1, I2>(
     signal1_iter: I1,
     signal2_iter: I2,

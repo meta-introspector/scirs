@@ -68,6 +68,7 @@ pub struct RiskAssessment {
 /// 2. Contagion modeling  
 /// 3. Critical institution identification
 /// 4. Stress testing simulation
+#[allow(dead_code)]
 fn financial_risk_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> {
     println!("💰 Financial Risk Analysis Workflow");
     println!("===================================");
@@ -214,6 +215,7 @@ fn financial_risk_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> 
 }
 
 /// Create a realistic financial network with various institution types and connections
+#[allow(dead_code)]
 fn create_financial_network(
     num_institutions: usize,
     base_probability: f64,
@@ -256,6 +258,7 @@ fn create_financial_network(
 }
 
 /// Assess systemic risk using multiple centrality measures and network analysis
+#[allow(dead_code)]
 fn assess_systemic_risk(
     processor: &mut UltrathinkProcessor,
     graph: &Graph<usize, f64>,
@@ -335,6 +338,7 @@ fn assess_systemic_risk(
 }
 
 /// Analyze critical institutions using centrality measures
+#[allow(dead_code)]
 fn analyze_critical_institutions(
     processor: &mut UltrathinkProcessor,
     graph: &Graph<usize, f64>,
@@ -360,6 +364,7 @@ fn analyze_critical_institutions(
 }
 
 /// Model contagion spread from critical institutions
+#[allow(dead_code)]
 fn model_contagion_spread(
     processor: &mut UltrathinkProcessor,
     graph: &Graph<usize, f64>,
@@ -426,6 +431,7 @@ fn model_contagion_spread(
 }
 
 /// Analyze financial clusters and sectoral concentrations
+#[allow(dead_code)]
 fn analyze_financial_clusters(
     processor: &mut UltrathinkProcessor,
     graph: &Graph<usize, f64>,
@@ -444,6 +450,7 @@ fn analyze_financial_clusters(
 }
 
 /// Run various stress testing scenarios
+#[allow(dead_code)]
 fn run_stress_tests(
     processor: &mut UltrathinkProcessor,
     graph: &Graph<usize, f64>,
@@ -517,6 +524,7 @@ fn run_stress_tests(
     Ok(results)
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     financial_risk_analysis_workflow()
 }

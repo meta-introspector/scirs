@@ -598,6 +598,7 @@ pub struct JitStats {
 }
 
 /// Create an optimized function wrapper with JIT compilation
+#[allow(dead_code)]
 pub fn optimize_function<F>(
     fun: F,
     n_vars: usize,

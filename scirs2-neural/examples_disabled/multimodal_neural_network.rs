@@ -118,9 +118,11 @@ impl MaxPool2D {
                                 max_val = max_val.max(x[[b, c, h_pos, w_pos]]);
                         output[[b, c, out_h, out_w]] = max_val;
 // ReLU Activation
+#[allow(dead_code)]
 fn relu(x: &Array4<f32>) -> Array4<f32> {
     x.mapv(|v| v.max(0.0))
 // Flatten Layer (for connecting CNN to FC layers)
+#[allow(dead_code)]
 fn flatten(x: &Array4<f32>) -> Array2<f32> {
     let batch_size = x.shape()[0];
     let flat_size: usize = x.shape()[1..].iter().product();
@@ -285,6 +287,7 @@ impl Linear {
             for j in 0..output.shape()[1] {
                 output[[i, j]] += self.bias[j];
 // Softmax for classification
+#[allow(dead_code)]
 fn softmax(x: &Array2<f32>) -> Array2<f32> {
     let mut result = Array2::<f32>::zeros(x.raw_dim());
     for (i, row) in x.outer_iter().enumerate() {
@@ -302,6 +305,7 @@ fn softmax(x: &Array2<f32>) -> Array2<f32> {
             result[[i, j]] = exp_val / sum;
     result
 // ReLU activation for FC layers
+#[allow(dead_code)]
 fn fc_relu(x: &Array2<f32>) -> Array2<f32> {
 // MultiModal Model combining CNN and RNN
 // --------------------------------------
@@ -400,6 +404,7 @@ impl MultiModalModel {
 // Data Generation and Helper Functions
 // -----------------------------------
 // Generate synthetic image data (simple geometric shapes)
+#[allow(dead_code)]
 fn generate_synthetic_images(
     num_samples: usize,
     channels: usize,
@@ -455,6 +460,7 @@ fn generate_synthetic_images(
             _ => {}
     images
 // Generate synthetic text descriptions
+#[allow(dead_code)]
 fn generate_synthetic_text(
     _vocab_size: usize,
     max_len: usize,
@@ -488,6 +494,7 @@ fn generate_synthetic_text(
         // Pad the rest with 0s (already initialized to 0)
     (text_data, word_map)
 // Create labels for the synthetic data
+#[allow(dead_code)]
 fn generate_labels(num_samples: usize, num_classes: usize) -> (Array2<f32>, Array1<usize>) {
     let mut one_hot = Array2::<f32>::zeros((num_samples, num_classes));
     let mut indices = Array1::<usize>::zeros(num_samples);
@@ -496,6 +503,7 @@ fn generate_labels(num_samples: usize, num_classes: usize) -> (Array2<f32>, Arra
         indices[n] = class;
     (one_hot, indices)
 // Calculate accuracy
+#[allow(dead_code)]
 fn calculate_accuracy(predictions: &Array2<f32>, targets: &Array1<usize>) -> f32 {
     let num_samples = predictions.shape()[0];
     let mut correct = 0;
@@ -510,6 +518,7 @@ fn calculate_accuracy(predictions: &Array2<f32>, targets: &Array1<usize>) -> f32
         if max_idx == targets[n] {
             correct += 1;
     correct as f32 / num_samples as f32
+#[allow(dead_code)]
 fn main() {
     println!("Multi-Modal Neural Network (CNN + RNN) Example");
     println!("=============================================");

@@ -6,6 +6,7 @@ use scirs2_cluster::ultrathink_clustering::{UltrathinkClusterer, UltrathinkConfi
 use scirs2_cluster::vq::{kmeans2, whiten, MinitMethod, MissingMethod};
 
 #[test]
+#[allow(dead_code)]
 fn test_whiten() {
     let data =
         Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 1.5, 2.5, 0.5, 1.5, 2.0, 3.0]).unwrap();
@@ -17,6 +18,7 @@ fn test_whiten() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_kmeans2_init_methods() {
     let data = Array2::from_shape_vec((20, 2), (0..40).map(|i| i as f64 / 10.0).collect()).unwrap();
 
@@ -46,6 +48,7 @@ fn test_kmeans2_init_methods() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_silhouette_score_basic() {
     // Create two well-separated clusters
     let data = array![
@@ -68,6 +71,7 @@ fn test_silhouette_score_basic() {
 // Ultrathink Clustering Integration Tests
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_clusterer_basic() {
     // Create test data with clear clusters
     let data = Array2::from_shape_vec(
@@ -95,6 +99,7 @@ fn test_ultrathink_clusterer_basic() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_clusterer_with_ai_selection() {
     let data = Array2::from_shape_vec(
         (12, 3),
@@ -126,6 +131,7 @@ fn test_ultrathink_clusterer_with_ai_selection() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_clusterer_with_all_features() {
     let data = Array2::from_shape_vec(
         (16, 4),
@@ -163,6 +169,7 @@ fn test_ultrathink_clusterer_with_all_features() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_clusterer_error_handling() {
     let mut clusterer = UltrathinkClusterer::new();
 
@@ -185,6 +192,7 @@ fn test_ultrathink_clusterer_error_handling() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_clusterer_different_data_sizes() {
     let mut clusterer = UltrathinkClusterer::new().with_ai_algorithm_selection(true);
 
@@ -214,6 +222,7 @@ fn test_ultrathink_clusterer_different_data_sizes() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_clusterer_high_dimensional() {
     // Test with higher dimensional data
     let data = Array2::from_shape_vec(
@@ -241,6 +250,7 @@ fn test_ultrathink_clusterer_high_dimensional() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_clusterer_noisy_data() {
     // Create data with noise
     let mut data_vec = Vec::new();
@@ -271,6 +281,7 @@ fn test_ultrathink_clusterer_noisy_data() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_config_defaults() {
     let config = UltrathinkConfig::default();
 
@@ -285,6 +296,7 @@ fn test_ultrathink_config_defaults() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_ultrathink_performance_metrics() {
     let data = Array2::from_shape_vec(
         (6, 2),

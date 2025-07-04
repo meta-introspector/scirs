@@ -922,6 +922,7 @@ where x₁, x₂ are the classical turning points.
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧪 Physics Applications Interactive Laboratory");
     println!("==============================================");
@@ -956,6 +957,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_main_menu(experiments: &[PhysicsExperiment]) {
     println!("🔬 Available Physics Experiments:");
     println!();
@@ -975,6 +977,7 @@ fn display_main_menu(experiments: &[PhysicsExperiment]) {
     println!();
 }
 
+#[allow(dead_code)]
 fn display_theory_overview() {
     println!("\n🎯 Theoretical Foundations\n");
     println!("Special functions arise naturally in physics through:");
@@ -1001,6 +1004,7 @@ fn display_theory_overview() {
     let _ = io::stdin().read_line(&mut String::new());
 }
 
+#[allow(dead_code)]
 fn run_experiment(
     lab: &mut PhysicsLab,
     experiment_index: usize,
@@ -1060,6 +1064,7 @@ fn run_experiment(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_current_parameters(parameters: &HashMap<String, ExperimentParameter>) {
     println!("🎛️  **Current Parameters:**");
     for (_, param) in parameters {
@@ -1070,6 +1075,7 @@ fn display_current_parameters(parameters: &HashMap<String, ExperimentParameter>)
     }
 }
 
+#[allow(dead_code)]
 fn display_detailed_theory(experiment: &PhysicsExperiment) {
     println!("\n📚 **Detailed Mathematical Theory**");
     println!("=".repeat(35));
@@ -1123,6 +1129,7 @@ fn display_detailed_theory(experiment: &PhysicsExperiment) {
     let _ = io::stdin().read_line(&mut String::new());
 }
 
+#[allow(dead_code)]
 fn run_simulation(experiment: &PhysicsExperiment) -> Result<(), Box<dyn std::error::Error>> {
     match experiment.id.as_str() {
         "quantum_harmonic_oscillator" => run_quantum_oscillator_simulation(),
@@ -1140,6 +1147,7 @@ fn run_simulation(experiment: &PhysicsExperiment) -> Result<(), Box<dyn std::err
     }
 }
 
+#[allow(dead_code)]
 fn run_quantum_oscillator_simulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌀 Computing quantum harmonic oscillator wave functions...");
 
@@ -1180,6 +1188,7 @@ fn run_quantum_oscillator_simulation() -> Result<(), Box<dyn std::error::Error>>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_wave_propagation_simulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("📡 Simulating electromagnetic wave propagation in cylindrical waveguide...");
 
@@ -1223,6 +1232,7 @@ fn run_wave_propagation_simulation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_heat_diffusion_simulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔥 Simulating heat diffusion using error functions...");
 
@@ -1260,6 +1270,7 @@ fn run_heat_diffusion_simulation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_membrane_simulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("🥁 Simulating vibrating circular membrane...");
 
@@ -1310,6 +1321,7 @@ fn run_membrane_simulation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_statistical_simulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Computing statistical mechanics distributions...");
 
@@ -1354,6 +1366,7 @@ fn run_statistical_simulation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_signal_processing_simulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("📡 Analyzing Fresnel diffraction and chirp signals...");
 
@@ -1398,6 +1411,7 @@ fn run_signal_processing_simulation() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_scattering_simulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("💫 Computing Mie scattering cross-sections...");
 
@@ -1465,6 +1479,7 @@ fn run_scattering_simulation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_tunneling_simulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌊 Simulating quantum tunneling with Airy functions...");
 
@@ -1530,6 +1545,7 @@ fn run_tunneling_simulation() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper functions for special function evaluations
+#[allow(dead_code)]
 fn fresnel_c_integral(x: f64) -> f64 {
     // Simplified implementation - in practice, use scirs2_special::fresnel
     let t_max = x.abs();
@@ -1555,6 +1571,7 @@ fn fresnel_c_integral(x: f64) -> f64 {
     sum * pi_half
 }
 
+#[allow(dead_code)]
 fn fresnel_s_integral(x: f64) -> f64 {
     // Simplified implementation - in practice, use scirs2_special::fresnel
     let t_max = x.abs();
@@ -1580,6 +1597,7 @@ fn fresnel_s_integral(x: f64) -> f64 {
     sum * pi_half
 }
 
+#[allow(dead_code)]
 fn spherical_j(n: f64, x: f64) -> f64 {
     // Simplified spherical Bessel function - use scirs2_special in practice
     if x.abs() < 1e-10 {
@@ -1590,6 +1608,7 @@ fn spherical_j(n: f64, x: f64) -> f64 {
     (PI / (2.0 * x)).sqrt() * j_bessel
 }
 
+#[allow(dead_code)]
 fn spherical_y(n: f64, x: f64) -> f64 {
     // Simplified spherical Neumann function - use scirs2_special in practice
     if x.abs() < 1e-10 {
@@ -1600,6 +1619,7 @@ fn spherical_y(n: f64, x: f64) -> f64 {
     (PI / (2.0 * x)).sqrt() * y_bessel
 }
 
+#[allow(dead_code)]
 fn hermite_physicist(n: usize, x: f64) -> f64 {
     // Physicist's Hermite polynomials - use scirs2_special in practice
     match n {
@@ -1624,6 +1644,7 @@ fn hermite_physicist(n: usize, x: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn j_n(n: i32, x: f64) -> f64 {
     // Placeholder for Bessel function of first kind - use scirs2_special in practice
     match n {
@@ -1633,6 +1654,7 @@ fn j_n(n: i32, x: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn y_n(n: i32, x: f64) -> f64 {
     // Placeholder for Bessel function of second kind - use scirs2_special in practice
     match n {
@@ -1642,6 +1664,7 @@ fn y_n(n: i32, x: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> io::Result<String> {
     print!("{}", prompt);
     io::stdout().flush()?;

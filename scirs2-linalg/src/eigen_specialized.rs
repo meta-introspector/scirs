@@ -7,11 +7,12 @@
 use crate::error::{LinalgError, LinalgResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::{Float, NumAssign, One, Zero};
-use rand::Rng;
+use rand::{self, Rng};
 use std::iter::Sum;
 
 // Compatibility wrapper functions for the compat module
 /// Wrapper for banded matrix eigenvalues and eigenvectors (SciPy-style)
+#[allow(dead_code)]
 pub fn banded_eigh<F>(
     matrix: &ArrayView2<F>,
     bandwidth: usize,
@@ -27,6 +28,7 @@ where
 }
 
 /// Wrapper for banded matrix eigenvalues only (SciPy-style)
+#[allow(dead_code)]
 pub fn banded_eigvalsh<F>(matrix: &ArrayView2<F>, bandwidth: usize) -> LinalgResult<Array1<F>>
 where
     F: Float + NumAssign + Zero + One + Sum + Send + Sync + ScalarOperand + 'static,
@@ -36,6 +38,7 @@ where
 }
 
 /// Wrapper for tridiagonal matrix eigenvalues and eigenvectors (SciPy-style)
+#[allow(dead_code)]
 pub fn tridiagonal_eigh<F>(
     diagonal: &ArrayView1<F>,
     sub_diagonal: &ArrayView1<F>,
@@ -51,6 +54,7 @@ where
 }
 
 /// Wrapper for tridiagonal matrix eigenvalues only (SciPy-style)
+#[allow(dead_code)]
 pub fn tridiagonal_eigvalsh<F>(
     diagonal: &ArrayView1<F>,
     sub_diagonal: &ArrayView1<F>,
@@ -76,6 +80,7 @@ where
 /// # Returns
 ///
 /// * k largest eigenvalues and corresponding eigenvectors
+#[allow(dead_code)]
 pub fn largest_k_eigh<F>(
     matrix: &ArrayView2<F>,
     k: usize,
@@ -107,6 +112,7 @@ where
 /// # Returns
 ///
 /// * k smallest eigenvalues and corresponding eigenvectors
+#[allow(dead_code)]
 pub fn smallest_k_eigh<F>(
     matrix: &ArrayView2<F>,
     k: usize,
@@ -150,6 +156,7 @@ where
 /// let (eigenvals, eigenvecs) = tridiagonal_eigen(&diagonal.view(), &sub_diagonal.view(), true).unwrap();
 /// assert_eq!(eigenvals.len(), 3);
 /// ```
+#[allow(dead_code)]
 pub fn tridiagonal_eigen<F>(
     diagonal: &ArrayView1<F>,
     sub_diagonal: &ArrayView1<F>,
@@ -316,6 +323,7 @@ where
 /// # Returns
 ///
 /// * Tuple (eigenvalues, eigenvectors)
+#[allow(dead_code)]
 pub fn banded_eigen<F>(
     matrix: &ArrayView2<F>,
     bandwidth: usize,
@@ -370,6 +378,7 @@ where
 /// # Returns
 ///
 /// * Complex eigenvalues of the circulant matrix
+#[allow(dead_code)]
 pub fn circulant_eigenvalues<F>(
     first_column: &ArrayView1<F>,
 ) -> LinalgResult<Array1<num_complex::Complex<F>>>
@@ -418,6 +427,7 @@ where
 /// # Returns
 ///
 /// * k eigenvalues and corresponding eigenvectors
+#[allow(dead_code)]
 pub fn partial_eigen<F>(
     matrix: &ArrayView2<F>,
     k: usize,
@@ -613,6 +623,7 @@ where
 type TridiagonalReduction<F> = LinalgResult<(Array1<F>, Array1<F>, Option<Array2<F>>)>;
 
 /// Helper function to reduce banded matrix to tridiagonal form
+#[allow(dead_code)]
 fn reduce_banded_to_tridiagonal<F>(
     matrix: &ArrayView2<F>,
     bandwidth: usize,

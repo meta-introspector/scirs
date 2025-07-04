@@ -489,6 +489,7 @@ where
 /// let pred = kriging.predict(&query_point.view()).unwrap();
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn make_local_kriging<
     F: Float
         + FromPrimitive
@@ -561,6 +562,7 @@ pub fn make_local_kriging<
 /// let pred = kriging.predict(&query_point.view()).unwrap();
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn make_fixed_rank_kriging<
     F: Float
         + FromPrimitive
@@ -633,6 +635,7 @@ pub fn make_fixed_rank_kriging<
 /// let pred = kriging.predict(&query_point.view()).unwrap();
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn make_tapered_kriging<
     F: Float
         + FromPrimitive
@@ -705,6 +708,7 @@ pub fn make_tapered_kriging<
 /// let pred = kriging.predict(&query_point.view()).unwrap();
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn make_hodlr_kriging<
     F: Float
         + FromPrimitive
@@ -750,6 +754,7 @@ pub fn make_hodlr_kriging<
 /// // Get recommended method for a dataset with 10,000 points
 /// let method = select_approximation_method(10_000);
 /// ```
+#[allow(dead_code)]
 pub fn select_approximation_method(n_points: usize) -> FastKrigingMethod {
     if n_points < 500 {
         // For small datasets, local kriging is accurate and fast enough

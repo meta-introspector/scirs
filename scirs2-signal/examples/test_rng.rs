@@ -1,5 +1,6 @@
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
+#[allow(dead_code)]
 fn main() {
     // Test from_rng
     let mut system_rng = rand::rng();

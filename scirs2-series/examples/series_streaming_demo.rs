@@ -14,6 +14,7 @@ use scirs2_series::streaming::{
 use std::thread;
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Real-time Streaming Analysis Demo ===\n");
 
@@ -44,6 +45,7 @@ fn main() {
     println!("\n=== Streaming Analysis Complete ===");
 }
 
+#[allow(dead_code)]
 fn basic_streaming_demo() {
     let config = StreamConfig {
         window_size: 100,
@@ -137,6 +139,7 @@ fn basic_streaming_demo() {
     );
 }
 
+#[allow(dead_code)]
 fn generate_streaming_value(time: f64, pattern: i32) -> f64 {
     let base = 50.0;
 
@@ -158,6 +161,7 @@ fn generate_streaming_value(time: f64, pattern: i32) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn rand_noise() -> f64 {
     // Simple pseudo-random noise generator
     let time_ns = std::time::SystemTime::now()
@@ -169,6 +173,7 @@ fn rand_noise() -> f64 {
     2.0 * (normalized - 0.5) // Range [-1, 1]
 }
 
+#[allow(dead_code)]
 fn multi_series_demo() {
     let config = StreamConfig {
         window_size: 50,
@@ -254,6 +259,7 @@ fn multi_series_demo() {
     }
 }
 
+#[allow(dead_code)]
 fn streaming_forecasting_demo() {
     println!("  Setting up streaming forecaster with Holt-Winters method...");
 
@@ -306,6 +312,7 @@ fn streaming_forecasting_demo() {
     }
 }
 
+#[allow(dead_code)]
 fn anomaly_detection_demo() {
     let mut detector = StreamingAnomalyDetector::<f64>::new(
         100, // max buffer size
@@ -355,6 +362,7 @@ fn anomaly_detection_demo() {
     }
 }
 
+#[allow(dead_code)]
 fn pattern_matching_demo() {
     let mut matcher = StreamingPatternMatcher::<f64>::new(200, 0.7);
 
@@ -406,6 +414,7 @@ fn pattern_matching_demo() {
     }
 }
 
+#[allow(dead_code)]
 fn circular_buffer_demo() {
     let mut buffer = CircularBuffer::<f64>::new(20);
 

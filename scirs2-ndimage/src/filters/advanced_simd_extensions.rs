@@ -12,18 +12,11 @@ use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
+use crate::utils::safe_f64_to_float;
 
-/// Helper function for safe conversion of hardcoded constants
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
 
 /// Helper function for safe usize conversion
+#[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
@@ -37,6 +30,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 /// - Cache-aware multi-scale processing
 /// - SIMD-optimized subsampling with anti-aliasing
 /// - Memory-efficient pyramid storage
+#[allow(dead_code)]
 pub fn ultra_simd_wavelet_pyramid<T>(
     input: ArrayView2<T>,
     levels: usize,
@@ -102,6 +96,7 @@ pub enum WaveletType {
 }
 
 /// Ultra-SIMD wavelet decomposition
+#[allow(dead_code)]
 fn ultra_simd_wavelet_decomposition<T>(
     input: ArrayView2<T>,
     low_pass: &[T],
@@ -153,6 +148,7 @@ where
 }
 
 /// SIMD-optimized horizontal filtering with downsampling
+#[allow(dead_code)]
 fn ultra_simd_horizontal_filter_downsample<T>(
     input: &ArrayView2<T>,
     output_low: &mut ArrayViewMut2<T>,
@@ -233,6 +229,7 @@ where
 }
 
 /// SIMD-optimized vertical filtering with downsampling
+#[allow(dead_code)]
 fn ultra_simd_vertical_filter_downsample<T>(
     input: &ArrayView2<T>,
     output_low: &mut ArrayViewMut2<T>,
@@ -288,6 +285,7 @@ where
 }
 
 /// Generate wavelet filter coefficients
+#[allow(dead_code)]
 fn generate_wavelet_filters<T>(wavelet_type: WaveletType) -> NdimageResult<(Vec<T>, Vec<T>)>
 where
     T: Float + FromPrimitive,
@@ -342,6 +340,7 @@ where
 /// - Rotation-invariant patterns
 /// - SIMD-optimized histogram computation
 /// - Uniform pattern detection
+#[allow(dead_code)]
 pub fn ultra_simd_multi_scale_lbp<T>(
     input: ArrayView2<T>,
     radii: &[usize],
@@ -374,6 +373,7 @@ where
 }
 
 /// SIMD-optimized LBP computation for single scale
+#[allow(dead_code)]
 fn ultra_simd_lbp_single_scale<T>(
     input: &ArrayView2<T>,
     radius: usize,
@@ -414,6 +414,7 @@ where
 }
 
 /// Compute LBP sampling coordinates
+#[allow(dead_code)]
 fn compute_lbp_coordinates(radius: usize, n_points: usize) -> NdimageResult<Vec<(isize, isize)>> {
     let mut coords = Vec::with_capacity(n_points);
     let radius_f = radius as f64;
@@ -429,6 +430,7 @@ fn compute_lbp_coordinates(radius: usize, n_points: usize) -> NdimageResult<Vec<
 }
 
 /// Convert LBP code to rotation-invariant uniform pattern
+#[allow(dead_code)]
 fn lbp_to_uniform_pattern(code: u32, n_points: usize) -> u32 {
     // Count transitions (uniform patterns have <= 2 transitions)
     let mut transitions = 0u32;
@@ -456,6 +458,7 @@ fn lbp_to_uniform_pattern(code: u32, n_points: usize) -> u32 {
 /// - SIMD-optimized gradient magnitude and direction
 /// - Non-maximum suppression with sub-pixel accuracy
 /// - Adaptive thresholding based on local statistics
+#[allow(dead_code)]
 pub fn ultra_simd_advanced_edge_detection<T>(
     input: ArrayView2<T>,
     sigma: T,
@@ -490,6 +493,7 @@ where
 }
 
 /// SIMD-optimized Gaussian smoothing
+#[allow(dead_code)]
 fn ultra_simd_gaussian_smooth<T>(input: &ArrayView2<T>, sigma: T) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
@@ -510,6 +514,7 @@ where
 }
 
 /// Generate 1D Gaussian kernel
+#[allow(dead_code)]
 fn generate_gaussian_kernel_1d<T>(sigma: T, size: usize) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive,
@@ -541,6 +546,7 @@ where
 }
 
 /// Multi-directional gradient computation
+#[allow(dead_code)]
 fn ultra_simd_multi_directional_gradients<T>(input: &ArrayView2<T>) -> NdimageResult<Vec<Array2<T>>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
@@ -615,6 +621,7 @@ where
 }
 
 /// Compute gradient magnitude and direction from multi-directional gradients
+#[allow(dead_code)]
 fn ultra_simd_gradient_magnitude_direction<T>(
     gradients: &[Array2<T>],
 ) -> NdimageResult<(Array2<T>, Array2<T>)>
@@ -648,6 +655,7 @@ where
 }
 
 /// Non-maximum suppression with sub-pixel accuracy
+#[allow(dead_code)]
 fn ultra_simd_non_maximum_suppression<T>(
     magnitude: &ArrayView2<T>,
     direction: &ArrayView2<T>,
@@ -683,6 +691,7 @@ where
 }
 
 /// Adaptive double thresholding based on local statistics
+#[allow(dead_code)]
 fn ultra_simd_adaptive_double_threshold<T>(
     magnitude: &ArrayView2<T>,
     low_factor: T,

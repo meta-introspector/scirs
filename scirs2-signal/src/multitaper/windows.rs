@@ -38,6 +38,7 @@ use std::f64::consts::PI;
 /// assert!(eigenvalues.len() >= 2);
 /// assert!(eigenvalues[0] > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn dpss(
     n: usize,
     nw: f64,
@@ -155,6 +156,7 @@ pub fn dpss(
 /// # Returns
 ///
 /// * Tuple of (eigenvalues, eigenvectors)
+#[allow(dead_code)]
 fn tridiagonal_eig(diag: &[f64], offdiag: &[f64]) -> SignalResult<(Vec<f64>, Array2<f64>)> {
     if diag.is_empty() {
         return Err(SignalError::ValueError(

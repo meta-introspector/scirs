@@ -12,6 +12,7 @@ use std::error::Error;
 #[cfg(feature = "optim_integration")]
 use scirs2_metrics::integration::optim::MetricLRScheduler;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     #[cfg(not(feature = "optim_integration"))]
     {

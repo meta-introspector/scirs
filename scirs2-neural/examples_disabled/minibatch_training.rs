@@ -281,6 +281,7 @@ impl NeuralNetwork {
             .sum();
         println!("Total parameters: {}", total_params);
 /// Helper function to create a mini-batch from indices
+#[allow(dead_code)]
 fn create_batch(data: &Array2<f32>, indices: &[usize]) -> Array2<f32> {
     let batch_size = indices.len();
     let feature_dim = data.shape()[1];
@@ -290,6 +291,7 @@ fn create_batch(data: &Array2<f32>, indices: &[usize]) -> Array2<f32> {
         batch.slice_mut(s![batch_idx, ..]).assign(&row);
     batch
 /// Simple print function for a loss curve
+#[allow(dead_code)]
 fn print_loss_curve(losses: &[f32], width: usize) {
     // Skip the first few values which might be very high
     let start_idx = losses.len().min(10);
@@ -320,6 +322,7 @@ fn print_loss_curve(losses: &[f32], width: usize) {
         print!("{:.6} ", loss);
         println!("{}", "#".repeat(bar_len));
 /// Generate a synthetic dataset for binary classification
+#[allow(dead_code)]
 fn generate_classification_dataset(n_samples: usize, seed: u64) -> (Array2<f32>, Array2<f32>) {
     let mut rng = SmallRng::seed_from_u64(seed);
     // Generate two clusters of points
@@ -348,6 +351,7 @@ fn generate_regression_dataset(n_samples: usize) -> (Array2<f32>, Array2<f32>) {
         y[[i, 0]] = x_val.sin();
     (x, y)
 /// Demonstrate mini-batch training on the XOR problem
+#[allow(dead_code)]
 fn train_xor_minibatch() -> Result<()> {
     // XOR dataset
     let x = Array2::from_shape_vec((4, 2), vec![0.0f32, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0])?;
@@ -395,6 +399,7 @@ fn train_xor_minibatch() -> Result<()> {
                 0.0
     Ok(())
 /// Demonstrate mini-batch training on a larger dataset
+#[allow(dead_code)]
 fn train_classification_minibatch() -> Result<()> {
     let n_samples = 500;
     // Generate synthetic dataset
@@ -428,6 +433,7 @@ fn train_classification_minibatch() -> Result<()> {
             "Accuracy with batch size {}: {:.2}%",
             batch_size,
             accuracy * 100.0
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Mini-Batch Training Example");
     println!("==========================\n");

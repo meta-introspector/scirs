@@ -21,6 +21,7 @@ use scirs2_optim::{
 use std::path::PathBuf;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🎯 SciRS2 Comprehensive Audit Suite");
     println!("===================================\n");
@@ -51,6 +52,7 @@ fn main() -> Result<()> {
 }
 
 /// Initialize the audit environment
+#[allow(dead_code)]
 fn initialize_audit_environment() -> Result<()> {
     println!("🔧 INITIALIZING AUDIT ENVIRONMENT");
     println!("=================================");
@@ -76,6 +78,7 @@ fn initialize_audit_environment() -> Result<()> {
 }
 
 /// Run comprehensive performance analysis
+#[allow(dead_code)]
 fn run_performance_analysis() -> Result<()> {
     println!("\n⚡ PERFORMANCE ANALYSIS");
     println!("======================");
@@ -154,6 +157,7 @@ fn run_performance_analysis() -> Result<()> {
 }
 
 /// Run comprehensive security audit
+#[allow(dead_code)]
 fn run_security_audit() -> Result<()> {
     println!("\n🔒 SECURITY AUDIT");
     println!("=================");
@@ -228,6 +232,7 @@ fn run_security_audit() -> Result<()> {
 }
 
 /// Run memory optimization analysis
+#[allow(dead_code)]
 fn run_memory_analysis() -> Result<()> {
     println!("\n🧠 MEMORY OPTIMIZATION ANALYSIS");
     println!("===============================");
@@ -305,6 +310,7 @@ fn run_memory_analysis() -> Result<()> {
 }
 
 /// Run cross-platform compatibility testing
+#[allow(dead_code)]
 fn run_cross_platform_testing() -> Result<()> {
     println!("\n🌍 CROSS-PLATFORM COMPATIBILITY TESTING");
     println!("=======================================");
@@ -359,6 +365,7 @@ fn run_cross_platform_testing() -> Result<()> {
 }
 
 /// Run documentation analysis
+#[allow(dead_code)]
 fn run_documentation_analysis() -> Result<()> {
     println!("\n📚 DOCUMENTATION ANALYSIS");
     println!("=========================");
@@ -444,6 +451,7 @@ fn run_documentation_analysis() -> Result<()> {
 }
 
 /// Generate comprehensive audit report
+#[allow(dead_code)]
 fn generate_comprehensive_audit_report() -> Result<()> {
     println!("\n📋 COMPREHENSIVE AUDIT REPORT");
     println!("=============================");
@@ -637,6 +645,7 @@ fn generate_comprehensive_audit_report() -> Result<()> {
 
 // Helper functions
 
+#[allow(dead_code)]
 fn create_adam_optimizer() -> Box<dyn Optimizer<f64, ndarray::Ix1>> {
     Box::new(Adam::new(AdamConfig {
         learning_rate: 0.001,
@@ -648,6 +657,7 @@ fn create_adam_optimizer() -> Box<dyn Optimizer<f64, ndarray::Ix1>> {
     }))
 }
 
+#[allow(dead_code)]
 fn create_sgd_optimizer() -> Box<dyn Optimizer<f64, ndarray::Ix1>> {
     Box::new(SGD::new(SGDConfig {
         learning_rate: 0.01,
@@ -658,11 +668,13 @@ fn create_sgd_optimizer() -> Box<dyn Optimizer<f64, ndarray::Ix1>> {
     }))
 }
 
+#[allow(dead_code)]
 fn simulate_gradients(params: &Array1<f64>, step: usize) -> Array1<f64> {
     let noise_factor = 1.0 + 0.1 * (step as f64 * 0.1).sin();
     params.mapv(|x| 2.0 * x * noise_factor + 0.01 * (step as f64).cos())
 }
 
+#[allow(dead_code)]
 fn simulate_memory_workload(memory_optimizer: &mut MemoryOptimizer) -> Result<()> {
     println!("  Simulating mixed workload with memory tracking...");
 
@@ -692,21 +704,25 @@ fn simulate_memory_workload(memory_optimizer: &mut MemoryOptimizer) -> Result<()
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_optimization_step() {
     // Simulate an optimization step workload
     std::thread::sleep(std::time::Duration::from_millis(2));
 }
 
+#[allow(dead_code)]
 fn simulate_gradient_computation() {
     // Simulate gradient computation workload
     std::thread::sleep(std::time::Duration::from_millis(3));
 }
 
+#[allow(dead_code)]
 fn simulate_parameter_update() {
     // Simulate parameter update workload
     std::thread::sleep(std::time::Duration::from_millis(1));
 }
 
+#[allow(dead_code)]
 fn simulate_memory_intensive_operation() {
     // Simulate memory-intensive operation
     std::thread::sleep(std::time::Duration::from_millis(4));

@@ -147,6 +147,7 @@ impl<F: Float + SampleUniform + Debug + 'static> VonMises<F> {
 /// Custom von Mises CDF calculation
 /// This function calculates the CDF of the von Mises distribution
 /// It's complicated due to the lack of a simple closed-form expression
+#[allow(dead_code)]
 fn von_mises_cdf<F: Float + 'static>(kappa: F, x: F) -> F {
     // Convert to f64 for calculation
     let kappa_f64 = kappa.to_f64().unwrap();
@@ -332,6 +333,7 @@ impl<F: Float + SampleUniform + Debug + 'static> CircularDistribution<F> for Von
 /// # Returns
 ///
 /// A new von Mises distribution
+#[allow(dead_code)]
 pub fn von_mises<F: Float + SampleUniform + Debug + 'static>(
     mu: F,
     kappa: F,

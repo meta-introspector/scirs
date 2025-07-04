@@ -24,6 +24,7 @@ use crate::stats::distributions::{MatrixNormalParams, WishartParams};
 /// # Returns
 ///
 /// * Matrix with samples as rows
+#[allow(dead_code)]
 pub fn sample_multivariate_normal<F>(
     mean: &ArrayView1<F>,
     cov: &ArrayView2<F>,
@@ -85,6 +86,7 @@ where
 /// # Returns
 ///
 /// * Vector of matrix samples
+#[allow(dead_code)]
 pub fn sample_matrix_normal_multiple<F>(
     params: &MatrixNormalParams<F>,
     n_samples: usize,
@@ -126,6 +128,7 @@ where
 /// # Returns
 ///
 /// * Vector of positive definite matrix samples
+#[allow(dead_code)]
 pub fn sample_wishart_multiple<F>(
     params: &WishartParams<F>,
     n_samples: usize,
@@ -168,6 +171,7 @@ where
 /// # Returns
 ///
 /// * Vector of positive definite matrix samples
+#[allow(dead_code)]
 pub fn sample_inverse_wishart<F>(
     scale: &ArrayView2<F>,
     dof: F,
@@ -226,6 +230,7 @@ where
 /// # Returns
 ///
 /// * Vector of matrix samples
+#[allow(dead_code)]
 pub fn sample_matrix_t<F>(
     mean: &ArrayView2<F>,
     row_cov: &ArrayView2<F>,
@@ -292,6 +297,7 @@ where
 /// # Returns
 ///
 /// * Vector of bootstrap sample matrices
+#[allow(dead_code)]
 pub fn bootstrap_sample<F>(
     data: &ArrayView2<F>,
     n_bootstrap: usize,
@@ -341,6 +347,7 @@ where
 /// # Returns
 ///
 /// * Vector of permuted sample matrices
+#[allow(dead_code)]
 pub fn permutation_sample<F>(
     data: &ArrayView2<F>,
     n_permutations: usize,
@@ -393,6 +400,7 @@ where
 /// # Returns
 ///
 /// * Vector of samples from the target distribution
+#[allow(dead_code)]
 pub fn metropolis_hastings_sample<F>(
     log_density: impl Fn(&ArrayView2<F>) -> LinalgResult<F>,
     initial_value: Array2<F>,

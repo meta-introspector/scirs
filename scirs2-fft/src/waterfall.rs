@@ -70,6 +70,7 @@ use num_traits::NumCast;
 /// assert_eq!(data.shape()[1], freqs.len());    // Frequency dimension
 /// assert_eq!(data.shape()[2], 3);              // X, Y, Z coordinates
 /// ```
+#[allow(dead_code)]
 pub fn waterfall_3d<T>(
     x: &[T],
     fs: Option<f64>,
@@ -181,6 +182,7 @@ where
 /// assert_eq!(time_mesh.shape(), freq_mesh.shape());
 /// assert_eq!(time_mesh.shape(), amplitudes.shape());
 /// ```
+#[allow(dead_code)]
 pub fn waterfall_mesh<T>(
     x: &[T],
     fs: Option<f64>,
@@ -297,6 +299,7 @@ where
 /// assert_eq!(lines.shape()[2], 2);                // [frequency, amplitude] pairs
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn waterfall_lines<T>(
     x: &[T],
     fs: Option<f64>,
@@ -433,6 +436,7 @@ where
 /// assert_eq!(colors.shape()[1], 3);    // [r,g,b] values
 /// assert_eq!(vertices.shape()[0], colors.shape()[0]);  // Same number of vertices and colors
 /// ```
+#[allow(dead_code)]
 pub fn waterfall_mesh_colored<T>(
     x: &[T],
     fs: Option<f64>,
@@ -571,6 +575,7 @@ where
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn apply_colormap(amplitudes: &Array1<f64>, colormap: &str) -> FFTResult<Array2<f64>> {
     // Verify that amplitudes are in range [0, 1]
     for &amp in amplitudes.iter() {

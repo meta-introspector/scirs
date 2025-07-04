@@ -1,6 +1,7 @@
 use ndarray::{Array, Array1, Array2};
 use scirs2_neural::activations::{Activation, Mish, ReLU, Sigmoid, Swish, Tanh, GELU};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Activation Functions Demonstration");
     // Create a set of input values
@@ -135,5 +136,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             );
     Ok(())
 }
+#[allow(dead_code)]
 fn convert_to_vec<F: Clone>(array: &Array<F, ndarray::IxDyn>) -> Vec<F> {
     array.iter().cloned().collect()

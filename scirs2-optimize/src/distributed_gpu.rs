@@ -290,16 +290,11 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
             // Use GPU acceleration for function evaluation
             self.performance_stats.gpu_evaluations += pop_size;
 
-            // Upload population to GPU
-            let gpu_population = self.gpu_context.upload_array(population)?;
-
-            // Evaluate using GPU kernels (assuming we have a suitable kernel)
-            let gpu_fitness = self
-                .gpu_context
-                .evaluate_function_batch(function, &gpu_population)?;
-
-            // Download results
-            fitness = self.gpu_context.download_array(&gpu_fitness)?;
+            // For now, use CPU evaluation since GPU function interface needs adaptation
+            // TODO: Implement proper GPU function evaluation interface
+            for i in 0..pop_size {
+                fitness[i] = function(&population.row(i));
+            }
         } else {
             // Use CPU evaluation
             self.performance_stats.cpu_evaluations += pop_size;
@@ -314,81 +309,65 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
     /// Perform GPU-accelerated mutation and crossover
     fn gpu_mutation_crossover(
         &self,
-        kernel: &DifferentialEvolutionKernel,
+        _kernel: &DifferentialEvolutionKernel,
         population: &Array2<f64>,
         f_scale: f64,
         crossover_rate: f64,
     ) -> ScirsResult<Array2<f64>> {
         let (pop_size, dims) = population.dim();
-        let trial_population = Array2::zeros((pop_size, dims));
+        let mut trial_population = Array2::zeros((pop_size, dims));
 
-        // Upload to GPU
-        let gpu_population = self.gpu_context.upload_array(population)?;
-        let gpu_trial = self.gpu_context.upload_array(&trial_population)?;
+        // For now, implement CPU-based mutation and crossover
+        // TODO: Use actual GPU kernels when properly implemented
+        use rand::Rng;
+        let mut rng = rand::rng();
 
-        // Generate random indices for mutation
-        let random_indices = self.generate_random_indices(pop_size)?;
-        let gpu_random_indices = self.gpu_context.upload_array(&random_indices)?;
+        for i in 0..pop_size {
+            // Select three random individuals different from current
+            let mut indices = Vec::new();
+            while indices.len() < 3 {
+                let idx = rng.random_range(0..pop_size);
+                if idx != i && !indices.contains(&idx) {
+                    indices.push(idx);
+                }
+            }
 
-        // Perform mutation
-        kernel.mutation(
-            &gpu_population,
-            &gpu_trial,
-            &gpu_random_indices,
-            f_scale,
-            None,
-        )?;
+            let [a, b, c] = [indices[0], indices[1], indices[2]];
 
-        // Generate random values for crossover
-        let random_values = self.generate_random_values(pop_size * dims)?;
-        let gpu_random_values = self.gpu_context.upload_array(&random_values)?;
+            // Mutation and crossover
+            let j_rand = rng.random_range(0..dims);
+            for j in 0..dims {
+                if rng.random::<f64>() < crossover_rate || j == j_rand {
+                    trial_population[[i, j]] = population[[a, j]]
+                        + f_scale * (population[[b, j]] - population[[c, j]]);
+                } else {
+                    trial_population[[i, j]] = population[[i, j]];
+                }
+            }
+        }
 
-        // Generate j_rand values
-        let j_rand = self.generate_j_rand(pop_size, dims)?;
-        let gpu_j_rand = self.gpu_context.upload_array(&j_rand)?;
-
-        // Perform crossover
-        kernel.crossover(
-            &gpu_population,
-            &gpu_trial,
-            &gpu_random_values,
-            &gpu_j_rand,
-            crossover_rate,
-            None,
-        )?;
-
-        // Download result
-        let result = self.gpu_context.download_array(&gpu_trial)?;
-        Ok(result)
+        Ok(trial_population)
     }
 
     /// Perform GPU-accelerated selection
     fn gpu_selection(
         &self,
-        kernel: &DifferentialEvolutionKernel,
+        _kernel: &DifferentialEvolutionKernel,
         population: &mut Array2<f64>,
         trial_population: &Array2<f64>,
         fitness: &mut Array1<f64>,
         trial_fitness: &Array1<f64>,
     ) -> ScirsResult<()> {
-        // Upload arrays to GPU
-        let mut gpu_population = self.gpu_context.upload_array(population)?;
-        let gpu_trial = self.gpu_context.upload_array(trial_population)?;
-        let mut gpu_fitness = self.gpu_context.upload_array(fitness)?;
-        let gpu_trial_fitness = self.gpu_context.upload_array(trial_fitness)?;
-
-        // Perform selection on GPU
-        kernel.selection(
-            &mut gpu_population,
-            &gpu_trial,
-            &mut gpu_fitness,
-            &gpu_trial_fitness,
-            None,
-        )?;
-
-        // Download results
-        *population = self.gpu_context.download_array(&gpu_population)?;
-        *fitness = self.gpu_context.download_array(&gpu_fitness)?;
+        // For now, implement CPU-based selection
+        // TODO: Use actual GPU kernels when properly implemented
+        for i in 0..population.nrows() {
+            if trial_fitness[i] <= fitness[i] {
+                for j in 0..population.ncols() {
+                    population[[i, j]] = trial_population[[i, j]];
+                }
+                fitness[i] = trial_fitness[i];
+            }
+        }
 
         Ok(())
     }

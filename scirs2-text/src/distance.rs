@@ -21,6 +21,7 @@ use std::collections::{HashMap, HashSet};
 /// # Returns
 ///
 /// * The Levenshtein distance between the two strings
+#[allow(dead_code)]
 pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     // Use SIMD-accelerated version when available
     #[cfg(feature = "simd")]
@@ -91,6 +92,7 @@ pub fn levenshtein_distance(s1: &str, s2: &str) -> usize {
 /// # Returns
 ///
 /// * The normalized Levenshtein distance between the two strings
+#[allow(dead_code)]
 pub fn normalized_levenshtein_distance(s1: &str, s2: &str) -> f64 {
     let distance = levenshtein_distance(s1, s2) as f64;
     let max_length = std::cmp::max(s1.chars().count(), s2.chars().count()) as f64;
@@ -116,6 +118,7 @@ pub fn normalized_levenshtein_distance(s1: &str, s2: &str) -> f64 {
 /// # Returns
 ///
 /// * Result containing the Jaccard similarity between the two strings
+#[allow(dead_code)]
 pub fn jaccard_similarity(s1: &str, s2: &str, tokenizer: Option<&dyn Tokenizer>) -> Result<f64> {
     // Use the provided tokenizer or default to word tokenizer
     let tokenizer = match tokenizer {
@@ -154,6 +157,7 @@ pub fn jaccard_similarity(s1: &str, s2: &str, tokenizer: Option<&dyn Tokenizer>)
 /// # Returns
 ///
 /// * Result containing the cosine similarity between the two vectors
+#[allow(dead_code)]
 pub fn cosine_similarity(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> Result<f64> {
     if v1.len() != v2.len() {
         return Err(TextError::DistanceError(format!(
@@ -207,6 +211,7 @@ pub fn cosine_similarity(v1: ArrayView1<f64>, v2: ArrayView1<f64>) -> Result<f64
 /// # Returns
 ///
 /// * Result containing the cosine similarity between the two texts
+#[allow(dead_code)]
 pub fn text_cosine_similarity(
     s1: &str,
     s2: &str,
@@ -274,6 +279,7 @@ pub fn text_cosine_similarity(
 /// # Returns
 ///
 /// * The Jaro-Winkler similarity between the two strings (0.0 to 1.0)
+#[allow(dead_code)]
 pub fn jaro_winkler_similarity(s1: &str, s2: &str) -> f64 {
     // Compute Jaro similarity first
     let jaro_sim = jaro_similarity(s1, s2);
@@ -311,6 +317,7 @@ pub fn jaro_winkler_similarity(s1: &str, s2: &str) -> f64 {
 /// # Returns
 ///
 /// * The Jaro similarity between the two strings (0.0 to 1.0)
+#[allow(dead_code)]
 fn jaro_similarity(s1: &str, s2: &str) -> f64 {
     if s1.is_empty() && s2.is_empty() {
         return 1.0;

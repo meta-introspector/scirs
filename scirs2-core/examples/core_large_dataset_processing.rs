@@ -6,12 +6,14 @@ use std::time::Instant;
 use tempfile::tempdir;
 
 /// Simulates loading a chunk of a large dataset
+#[allow(dead_code)]
 fn load_data_chunk(_chunk_idx: usize, chunk_size: usize, n_features: usize) -> Array2<f64> {
     let mut rng = rand::rng();
     Array2::from_shape_fn((chunk_size, n_features), |_| rng.random_range(0.0..100.0))
 }
 
 /// Normalizes data (center and scale)
+#[allow(dead_code)]
 fn normalize_chunk(chunk: &Array2<f64>) -> Array2<f64> {
     let mut normalized = chunk.clone();
     for col in 0..chunk.shape()[1] {
@@ -29,6 +31,7 @@ fn normalize_chunk(chunk: &Array2<f64>) -> Array2<f64> {
 }
 
 /// Find outliers in data (values > threshold standard deviations from mean)
+#[allow(dead_code)]
 fn mask_outliers(
     chunk: &Array2<f64>,
     threshold: f64,
@@ -55,6 +58,7 @@ fn mask_outliers(
 }
 
 /// Compute correlation matrix for a dataset
+#[allow(dead_code)]
 fn compute_correlation(data: &Array2<f64>) -> Array2<f64> {
     let n_features = data.shape()[1];
     let mut corr = Array2::zeros((n_features, n_features));
@@ -87,6 +91,7 @@ fn compute_correlation(data: &Array2<f64>) -> Array2<f64> {
     corr
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Large Dataset Processing Example");
     println!("================================\n");

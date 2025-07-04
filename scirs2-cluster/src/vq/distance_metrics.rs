@@ -289,6 +289,7 @@ where
 }
 
 /// Compute the covariance matrix of the given data
+#[allow(dead_code)]
 fn compute_covariance_matrix<F>(data: ArrayView2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand,
@@ -319,6 +320,7 @@ where
 }
 
 /// Simple matrix inversion using LU decomposition
+#[allow(dead_code)]
 fn invert_matrix<F>(matrix: Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand,
@@ -416,6 +418,7 @@ pub enum MetricType {
 }
 
 /// Create a distance metric instance from the metric type
+#[allow(dead_code)]
 pub fn create_metric<F>(
     metric_type: MetricType,
     data: Option<ArrayView2<F>>,

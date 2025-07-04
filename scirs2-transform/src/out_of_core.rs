@@ -531,6 +531,7 @@ impl OutOfCoreTransformer for OutOfCoreNormalizer {
 }
 
 /// Create chunks from a large CSV file
+#[allow(dead_code)]
 pub fn csv_chunks<P: AsRef<Path>>(
     path: P,
     chunk_size: usize,

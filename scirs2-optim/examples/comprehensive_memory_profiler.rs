@@ -45,6 +45,7 @@ struct ProfilingResults {
     efficiency_score: f64,
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     let matches = Command::new("Comprehensive Memory Profiler")
         .version("1.0")
@@ -181,6 +182,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn profile_optimizer(
     optimizer_type: &str,
     problem_size: usize,
@@ -291,6 +293,7 @@ fn profile_optimizer(
     })
 }
 
+#[allow(dead_code)]
 fn simulate_training_step(
     detector: &mut MemoryLeakDetector,
     allocation_id: &mut usize,
@@ -352,6 +355,7 @@ fn simulate_training_step(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_cleanup(
     detector: &mut MemoryLeakDetector,
     current_allocation_id: usize,
@@ -365,6 +369,7 @@ fn simulate_cleanup(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_memory_snapshot(
     detector: &MemoryLeakDetector,
     elapsed: Duration,
@@ -382,6 +387,7 @@ fn create_memory_snapshot(
     })
 }
 
+#[allow(dead_code)]
 fn estimate_optimizer_state_size(optimizer_type: &str, problem_size: usize) -> usize {
     let base_size = problem_size * std::mem::size_of::<f32>();
 
@@ -393,6 +399,7 @@ fn estimate_optimizer_state_size(optimizer_type: &str, problem_size: usize) -> u
     }
 }
 
+#[allow(dead_code)]
 fn calculate_performance_metrics(
     snapshots: &[MemorySnapshot],
     session: &ProfilingSession,
@@ -438,6 +445,7 @@ fn calculate_performance_metrics(
     metrics
 }
 
+#[allow(dead_code)]
 fn calculate_std_dev(values: &[f64]) -> f64 {
     if values.len() <= 1 {
         return 0.0;
@@ -449,6 +457,7 @@ fn calculate_std_dev(values: &[f64]) -> f64 {
     variance.sqrt()
 }
 
+#[allow(dead_code)]
 fn calculate_efficiency_score(snapshots: &[MemorySnapshot], metrics: &HashMap<String, f64>) -> f64 {
     let mut score = 1.0;
 
@@ -481,6 +490,7 @@ fn calculate_efficiency_score(snapshots: &[MemorySnapshot], metrics: &HashMap<St
     score.max(0.0).min(1.0)
 }
 
+#[allow(dead_code)]
 fn display_profiling_summary(results: &ProfilingResults) {
     println!("  📋 Session: {}", results.session.session_id);
     println!("  ⚙️  Optimizer: {}", results.session.optimizer_type);
@@ -502,6 +512,7 @@ fn display_profiling_summary(results: &ProfilingResults) {
     }
 }
 
+#[allow(dead_code)]
 fn generate_comparative_analysis(results: &[ProfilingResults]) {
     println!("🏆 Comparative Analysis");
     println!("======================");

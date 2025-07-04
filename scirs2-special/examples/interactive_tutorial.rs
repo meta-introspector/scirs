@@ -10,6 +10,7 @@ use num_complex::Complex64;
 use scirs2_special::*;
 use std::io::{self, Write};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎓 Welcome to the Interactive Special Functions Tutorial!");
     println!("=====================================\n");
@@ -41,6 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_main_menu() {
     println!("📚 Choose a topic to explore:");
     println!("1. 🎲 Gamma and Beta Functions");
@@ -57,6 +59,7 @@ fn display_main_menu() {
     println!();
 }
 
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> io::Result<String> {
     print!("{}", prompt);
     io::stdout().flush()?;
@@ -65,6 +68,7 @@ fn get_user_input(prompt: &str) -> io::Result<String> {
     Ok(input.trim().to_string())
 }
 
+#[allow(dead_code)]
 fn gamma_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎲 GAMMA FUNCTION TUTORIAL");
     println!("==========================\n");
@@ -132,6 +136,7 @@ fn gamma_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bessel_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 BESSEL FUNCTION TUTORIAL");
     println!("===========================\n");
@@ -232,6 +237,7 @@ fn bessel_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn error_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 ERROR FUNCTION TUTORIAL");
     println!("==========================\n");
@@ -344,6 +350,7 @@ fn error_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn orthogonal_polynomial_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 ORTHOGONAL POLYNOMIALS TUTORIAL");
     println!("==================================\n");
@@ -433,6 +440,7 @@ fn orthogonal_polynomial_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn evaluate_polynomial<F>(name: &str, func: F) -> Result<(), Box<dyn std::error::Error>>
 where
     F: Fn(usize, f64) -> f64,
@@ -454,6 +462,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn hypergeometric_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔢 HYPERGEOMETRIC FUNCTIONS TUTORIAL");
     println!("====================================\n");
@@ -561,6 +570,7 @@ fn hypergeometric_function_tutorial() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn wright_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌀 WRIGHT FUNCTIONS TUTORIAL");
     println!("============================\n");
@@ -703,6 +713,7 @@ fn wright_function_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn elliptic_integral_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🥧 ELLIPTIC INTEGRALS TUTORIAL");
     println!("==============================\n");
@@ -889,6 +900,7 @@ fn elliptic_integral_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn spherical_harmonics_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌐 SPHERICAL HARMONICS TUTORIAL");
     println!("===============================\n");
@@ -1111,6 +1123,7 @@ fn spherical_harmonics_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn array_operations_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📋 ARRAY OPERATIONS TUTORIAL");
     println!("============================\n");
@@ -1421,6 +1434,7 @@ fn array_operations_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn advanced_features_tutorial() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚡ ADVANCED FEATURES TUTORIAL");
     println!("=============================\n");
@@ -1723,6 +1737,7 @@ fn advanced_features_tutorial() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Simple ASCII plotting function for demonstrations
+#[allow(dead_code)]
 fn plot_function_ascii<F>(title: &str, x_min: f64, x_max: f64, width: usize, f: F)
 where
     F: Fn(f64) -> f64,

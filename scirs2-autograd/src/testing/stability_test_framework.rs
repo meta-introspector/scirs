@@ -955,6 +955,7 @@ pub struct PerformanceSummary {
 
 /// Public API functions
 /// Run a comprehensive stability test suite
+#[allow(dead_code)]
 pub fn run_comprehensive_stability_tests<F: Float>() -> Result<TestSummary, StabilityError> {
     use crate::VariableEnvironment;
 
@@ -965,6 +966,7 @@ pub fn run_comprehensive_stability_tests<F: Float>() -> Result<TestSummary, Stab
 }
 
 /// Run stability tests with custom configuration
+#[allow(dead_code)]
 pub fn run_stability_tests_with_config<F: Float>(
     config: TestConfig,
 ) -> Result<TestSummary, StabilityError> {
@@ -977,6 +979,7 @@ pub fn run_stability_tests_with_config<F: Float>(
 }
 
 /// Run basic stability tests only
+#[allow(dead_code)]
 pub fn run_basic_stability_tests<F: Float>() -> Result<TestSummary, StabilityError> {
     let config = TestConfig {
         run_basic_tests: true,
@@ -991,6 +994,7 @@ pub fn run_basic_stability_tests<F: Float>() -> Result<TestSummary, StabilityErr
 }
 
 /// Test a specific function for stability
+#[allow(dead_code)]
 pub fn test_function_stability<'a, F: Float, Func>(
     function: Func,
     input: &'a Tensor<'a, F>,
@@ -1014,6 +1018,7 @@ where
 }
 
 /// Create a test scenario for domain-specific testing
+#[allow(dead_code)]
 pub fn create_test_scenario<'a, F: Float, Func>(
     name: String,
     description: String,

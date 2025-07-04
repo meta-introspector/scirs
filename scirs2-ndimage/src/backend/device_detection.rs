@@ -246,6 +246,7 @@ impl DeviceManager {
 static DEVICE_MANAGER: OnceLock<Arc<Mutex<DeviceManager>>> = OnceLock::new();
 
 /// Get the global device manager instance
+#[allow(dead_code)]
 pub fn get_device_manager() -> NdimageResult<Arc<Mutex<DeviceManager>>> {
     DEVICE_MANAGER
         .get_or_try_init(|| {
@@ -257,6 +258,7 @@ pub fn get_device_manager() -> NdimageResult<Arc<Mutex<DeviceManager>>> {
 
 /// Detect CUDA devices
 #[cfg(feature = "cuda")]
+#[allow(dead_code)]
 fn detect_cuda_devices() -> NdimageResult<Vec<DeviceCapability>> {
     // For a production implementation, this would use proper CUDA bindings
     // like cudarc, candle-core, or similar. This is a simplified fallback
@@ -337,6 +339,7 @@ fn detect_cuda_devices() -> NdimageResult<Vec<DeviceCapability>> {
 }
 
 #[cfg(feature = "cuda")]
+#[allow(dead_code)]
 fn estimate_gpu_capabilities(name: &str) -> (Option<(u32, u32)>, Option<usize>, Option<usize>) {
     let name_lower = name.to_lowercase();
 
@@ -363,6 +366,7 @@ fn estimate_gpu_capabilities(name: &str) -> (Option<(u32, u32)>, Option<usize>, 
 }
 
 #[cfg(feature = "cuda")]
+#[allow(dead_code)]
 fn estimate_memory_bandwidth(name: &str) -> Option<f64> {
     let name_lower = name.to_lowercase();
 
@@ -389,6 +393,7 @@ fn estimate_memory_bandwidth(name: &str) -> Option<f64> {
 
 /// Detect OpenCL devices
 #[cfg(feature = "opencl")]
+#[allow(dead_code)]
 fn detect_opencl_devices() -> NdimageResult<Vec<DeviceCapability>> {
     // For a production implementation, this would use proper OpenCL bindings
     // like opencl3, ocl, or similar. This is a simplified fallback.
@@ -483,6 +488,7 @@ fn detect_opencl_devices() -> NdimageResult<Vec<DeviceCapability>> {
 }
 
 #[cfg(feature = "opencl")]
+#[allow(dead_code)]
 fn estimate_opencl_capabilities(name: &str) -> (usize, usize, usize) {
     let name_lower = name.to_lowercase();
 
@@ -519,6 +525,7 @@ fn estimate_opencl_capabilities(name: &str) -> (usize, usize, usize) {
 }
 
 #[cfg(feature = "opencl")]
+#[allow(dead_code)]
 fn estimate_opencl_bandwidth(name: &str) -> Option<f64> {
     let name_lower = name.to_lowercase();
 
@@ -541,6 +548,7 @@ fn estimate_opencl_bandwidth(name: &str) -> Option<f64> {
 
 /// Detect Metal devices (macOS only)
 #[cfg(all(target_os = "macos", feature = "metal"))]
+#[allow(dead_code)]
 fn detect_metal_devices() -> NdimageResult<Vec<DeviceCapability>> {
     use std::ffi::{c_char, c_int, c_uint, c_ulong, c_void, CStr};
     use std::ptr;
@@ -569,6 +577,7 @@ fn detect_metal_devices() -> NdimageResult<Vec<DeviceCapability>> {
 }
 
 #[cfg(all(target_os = "macos", feature = "metal"))]
+#[allow(dead_code)]
 fn detect_macos_integrated_gpu() -> NdimageResult<DeviceCapability> {
     use std::process::Command;
 
@@ -625,6 +634,7 @@ fn detect_macos_integrated_gpu() -> NdimageResult<DeviceCapability> {
 }
 
 #[cfg(all(target_os = "macos", feature = "metal"))]
+#[allow(dead_code)]
 fn detect_macos_discrete_gpus() -> NdimageResult<Vec<DeviceCapability>> {
     use std::process::Command;
 

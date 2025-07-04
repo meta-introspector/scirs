@@ -28,6 +28,7 @@ use scirs2_ndimage::filters::{
     WaveletType,
 };
 
+#[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("=== Advanced scirs2-ndimage Features Demo ===\n");
 
@@ -105,6 +106,7 @@ fn main() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_test_image() -> Array2<f64> {
     let size = 256;
     let mut image = Array2::zeros((size, size));
@@ -135,6 +137,7 @@ fn create_test_image() -> Array2<f64> {
 }
 
 #[cfg(feature = "cuda")]
+#[allow(dead_code)]
 fn demo_gpu_acceleration(image: &Array2<f64>) -> NdimageResult<()> {
     use scirs2_ndimage::backend::cuda::CudaOperations;
 
@@ -171,11 +174,13 @@ fn demo_gpu_acceleration(image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[cfg(not(feature = "cuda"))]
+#[allow(dead_code)]
 fn demo_gpu_acceleration(_image: &Array2<f64>) -> NdimageResult<()> {
     println!("GPU acceleration not available (compile with --features cuda)");
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
     // 1. Bilateral filter - edge-preserving smoothing
     println!("Running SIMD bilateral filter...");
@@ -208,6 +213,7 @@ fn demo_simd_filters(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_scipy_compat(image: &Array2<f64>) -> NdimageResult<()> {
     // 1. Gaussian filter with SciPy-style API
     println!("Running Gaussian filter (SciPy API)...");
@@ -258,6 +264,7 @@ fn demo_scipy_compat(image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn demo_ultra_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
     println!("Demonstrating ultra-advanced SIMD extensions...");
 
@@ -360,6 +367,7 @@ fn demo_ultra_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[cfg(not(feature = "simd"))]
+#[allow(dead_code)]
 fn demo_ultra_simd_extensions(_image: &Array2<f64>) -> NdimageResult<()> {
     println!("Ultra-advanced SIMD extensions not available (compile with --features simd)");
     Ok(())

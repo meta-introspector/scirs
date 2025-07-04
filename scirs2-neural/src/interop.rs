@@ -484,7 +484,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 "dims": tensor.shape().to_vec(),
                 "data_type": self.datatype_to_onnx_type(&DataType::Float32),
                 "raw_data": tensor_data,
-                "doc_string": format!("Weight tensor {}", name)
+                "doc_string": format!("Weight tensor {name}")
         // Create ONNX model structure
         let onnx_model = json!({
             "ir_version": 7,
@@ -517,10 +517,10 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         // Write ONNX model to file in JSON format
         // In a real implementation, this would be protobuf binary format
         let json_string = serde_json::to_string_pretty(&onnx_model).map_err(|e| {
-            NeuralError::ComputationError(format!("JSON serialization error: {}", e))
+            NeuralError::ComputationError(format!("JSON serialization error: {e}"))
         })?;
         std::fs::write(output_path, json_string).map_err(|e| {
-            NeuralError::ComputationError(format!("Failed to write ONNX model: {}", e))
+            NeuralError::ComputationError(format!("Failed to write ONNX model: {e}"))
     /// Convert DataType to ONNX tensor element type
     fn datatype_to_onnx_type(&self, dtype: &DataType) -> i32 {
         match dtype {
@@ -549,10 +549,10 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
             _ => DataType::Float32,  // Default fallback
     fn parse_onnx_file(&self, model_path: &Path) -> Result<ONNXModel<F>> {
         let contents = std::fs::read_to_string(model_path).map_err(|e| {
-            NeuralError::ComputationError(format!("Failed to read ONNX file: {}", e))
+            NeuralError::ComputationError(format!("Failed to read ONNX file: {e}"))
         // Parse JSON-formatted ONNX model
         let onnx_json: serde_json::Value = serde_json::from_str(&contents).map_err(|e| {
-            NeuralError::ComputationError(format!("Failed to parse ONNX JSON: {}", e))
+            NeuralError::ComputationError(format!("Failed to parse ONNX JSON: {e}"))
         // Extract opset version
         let opset_version = onnx_json["opset_import"][0]["version"]
             .as_u64()
@@ -585,7 +585,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                         shape,
                         dtype,
                         value_range: None,
-                        description: format!("Input tensor {}", name),
+                        description: format!("Input tensor {name}"),
                     });
         // Parse graph outputs
         let mut outputs = Vec::new();
@@ -594,7 +594,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                     output["name"].as_str(),
                     output["type"]["tensor_type"].as_object(),
                     outputs.push(TensorSpec {
-                        description: format!("Output tensor {}", name),
+                        description: format!("Output tensor {name}"),
         // Parse initializers (weights)
         let mut initializers = HashMap::new();
         if let Some(graph_initializers) = onnx_json["graph"]["initializer"].as_array() {
@@ -763,7 +763,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
                 "parameter_names": state_dict.keys().collect::<Vec<_>>()
         // Write to file in PyTorch .pth format (JSON representation)
         let json_string = serde_json::to_string_pretty(&checkpoint).map_err(|e| {
-            NeuralError::ComputationError(format!("Failed to write PyTorch state dict: {}", e))
+            NeuralError::ComputationError(format!("Failed to write PyTorch state dict: {e}"))
     fn convert_to_tensorflow_model(
         _model: &ConvertedModel<F>,
     ) -> Result<TensorFlowModel<F>> {
@@ -814,7 +814,7 @@ impl<F: Float + Debug + 'static + num_traits::FromPrimitive + ndarray::ScalarOpe
         // Write SavedModel to directory structure
         if let Some(parent) = output_path.parent() {
             std::fs::create_dir_all(parent).map_err(|e| {
-                NeuralError::ComputationError(format!("Failed to create directory: {}", e))
+                NeuralError::ComputationError(format!("Failed to create directory: {e}"))
             })?;
         let json_string = serde_json::to_string_pretty(&saved_model).map_err(|e| {
             NeuralError::ComputationError(format!("Failed to write TensorFlow model: {}", e))

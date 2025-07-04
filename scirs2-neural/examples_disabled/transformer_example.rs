@@ -9,6 +9,7 @@ use rand::SeedableRng;
 use scirs2_neural::layers::Layer;
 use scirs2_neural::transformer::{Transformer, TransformerConfig};
 use scirs2_neural::utils::PositionalEncodingType;
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Transformer Model Example");
     println!("========================");

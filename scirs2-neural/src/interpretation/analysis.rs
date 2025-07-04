@@ -56,6 +56,7 @@ pub struct InterpretationSummary {
     /// Overall interpretation confidence score
     pub interpretation_confidence: f64,
 /// Analyze layer activations and compute comprehensive statistics
+#[allow(dead_code)]
 pub fn analyze_layer_activations<F>(
     interpreter: &mut ModelInterpreter<F>,
     layer_name: &str,
@@ -82,6 +83,7 @@ where
     interpreter.cache_layer_statistics(layer_name.to_string(), stats.clone());
     Ok(stats)
 /// Compute detailed statistics for layer activations
+#[allow(dead_code)]
 pub fn compute_layer_statistics<F>(activations: &ArrayD<F>) -> Result<LayerAnalysisStats<F>>
     let mean_activation = activations.mean().unwrap_or(F::zero());
     let variance = activations
@@ -133,6 +135,7 @@ pub fn compute_layer_statistics<F>(activations: &ArrayD<F>) -> Result<LayerAnaly
         bin_edges,
     })
 /// Compute attribution statistics for a single attribution method
+#[allow(dead_code)]
 pub fn compute_attribution_statistics<F>(attribution: &ArrayD<F>) -> AttributionStatistics<F>
     let mean = attribution.mean().unwrap_or(F::zero());
     let abs_attribution = attribution.mapv(|x| x.abs());
@@ -153,6 +156,7 @@ pub fn compute_attribution_statistics<F>(attribution: &ArrayD<F>) -> Attribution
         total_negative_attribution: attribution
             .filter(|&&x| x < F::zero())
 /// Generate interpretation summary across multiple attribution methods
+#[allow(dead_code)]
 pub fn generate_interpretation_summary<F>(
     attributions: &HashMap<String, ArrayD<F>>,
 ) -> InterpretationSummary
@@ -188,6 +192,7 @@ pub fn generate_interpretation_summary<F>(
         most_important_features: find_most_important_features(attributions, 10),
         interpretation_confidence: compute_interpretation_confidence(attributions),
 /// Find the most important features based on average attribution magnitude
+#[allow(dead_code)]
 pub fn find_most_important_features<F>(
     top_k: usize,
 ) -> Vec<usize>
@@ -211,6 +216,7 @@ pub fn find_most_important_features<F>(
         .map(|(i, _)| i)
         .collect()
 /// Compute interpretation confidence based on method consistency
+#[allow(dead_code)]
 pub fn compute_interpretation_confidence<F>(attributions: &HashMap<String, ArrayD<F>>) -> f64
     if attributions.len() < 2 {
         return 1.0; // Single method, assume full confidence
@@ -229,6 +235,7 @@ pub fn compute_interpretation_confidence<F>(attributions: &HashMap<String, Array
         correlations.iter().sum::<f64>() / correlations.len() as f64
         0.5
 /// Compute Pearson correlation coefficient between two attribution arrays
+#[allow(dead_code)]
 pub fn compute_correlation<F>(x: &ArrayD<F>, y: &ArrayD<F>) -> f64
     let n = x.len() as f64;
     if n == 0.0 {
@@ -248,6 +255,7 @@ pub fn compute_correlation<F>(x: &ArrayD<F>, y: &ArrayD<F>) -> f64
     if denominator > 0.0 {
         numerator / denominator
 /// Analyze activation distribution patterns
+#[allow(dead_code)]
 pub fn analyze_activation_distribution<F>(stats: &LayerAnalysisStats<F>) -> HashMap<String, f64>
     F: Float + Debug,
     let mut analysis = HashMap::new();
@@ -278,6 +286,7 @@ pub fn analyze_activation_distribution<F>(stats: &LayerAnalysisStats<F>) -> Hash
         );
     analysis
 /// Compare activation statistics between layers
+#[allow(dead_code)]
 pub fn compare_layer_statistics<F>(
     stats1: &LayerAnalysisStats<F>,
     stats2: &LayerAnalysisStats<F>,

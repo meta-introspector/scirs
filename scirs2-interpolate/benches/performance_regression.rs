@@ -23,6 +23,7 @@ use std::time::Duration;
 const BENCHMARK_SEED: u64 = 42;
 
 /// Generate reproducible test data for regression testing
+#[allow(dead_code)]
 fn generate_regression_data_1d(n: usize) -> (Array1<f64>, Array1<f64>) {
     let x = Array1::linspace(0.0, 10.0, n);
     let y = x.mapv(|xi| {
@@ -33,6 +34,7 @@ fn generate_regression_data_1d(n: usize) -> (Array1<f64>, Array1<f64>) {
 }
 
 /// Generate reproducible 2D test data
+#[allow(dead_code)]
 fn generate_regression_data_2d(n: usize) -> (Array2<f64>, Array1<f64>) {
     let mut points = Array2::zeros((n, 2));
     let mut values = Array1::zeros(n);
@@ -56,6 +58,7 @@ fn generate_regression_data_2d(n: usize) -> (Array2<f64>, Array1<f64>) {
 }
 
 /// Core 1D interpolation methods regression test
+#[allow(dead_code)]
 fn bench_core_1d_regression(c: &mut Criterion) {
     let mut group = c.benchmark_group("core_1d_regression");
     group.measurement_time(Duration::from_secs(5));
@@ -102,6 +105,7 @@ fn bench_core_1d_regression(c: &mut Criterion) {
 }
 
 /// Spline methods regression test
+#[allow(dead_code)]
 fn bench_spline_regression(c: &mut Criterion) {
     let mut group = c.benchmark_group("spline_regression");
     group.measurement_time(Duration::from_secs(5));
@@ -154,6 +158,7 @@ fn bench_spline_regression(c: &mut Criterion) {
 }
 
 /// B-spline regression test
+#[allow(dead_code)]
 fn bench_bspline_regression(c: &mut Criterion) {
     let mut group = c.benchmark_group("bspline_regression");
     group.measurement_time(Duration::from_secs(5));
@@ -201,6 +206,7 @@ fn bench_bspline_regression(c: &mut Criterion) {
 }
 
 /// RBF methods regression test
+#[allow(dead_code)]
 fn bench_rbf_regression(c: &mut Criterion) {
     let mut group = c.benchmark_group("rbf_regression");
     group.measurement_time(Duration::from_secs(8));
@@ -247,6 +253,7 @@ fn bench_rbf_regression(c: &mut Criterion) {
 }
 
 /// Kriging regression test
+#[allow(dead_code)]
 fn bench_kriging_regression(c: &mut Criterion) {
     let mut group = c.benchmark_group("kriging_regression");
     group.measurement_time(Duration::from_secs(10));
@@ -287,6 +294,7 @@ fn bench_kriging_regression(c: &mut Criterion) {
 }
 
 /// Memory allocation regression test
+#[allow(dead_code)]
 fn bench_memory_regression(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_regression");
     group.measurement_time(Duration::from_secs(5));
@@ -321,6 +329,7 @@ fn bench_memory_regression(c: &mut Criterion) {
 }
 
 /// Performance consistency test
+#[allow(dead_code)]
 fn bench_performance_consistency(c: &mut Criterion) {
     let mut group = c.benchmark_group("performance_consistency");
     group.measurement_time(Duration::from_secs(3));

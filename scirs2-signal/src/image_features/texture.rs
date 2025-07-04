@@ -6,6 +6,7 @@ use ndarray::Array2;
 use std::collections::HashMap;
 
 /// Extract texture features from an image
+#[allow(dead_code)]
 pub fn extract_texture_features(
     image: &Array2<f64>,
     _options: &ImageFeatureOptions, // Unused, but kept for consistency with other extraction functions

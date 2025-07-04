@@ -195,6 +195,7 @@ impl RuleCache {
 /// let result = tanhsinh(|x| x * x, 0.0, 1.0, None).unwrap();
 /// assert!((result.integral - 1.0/3.0).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn tanhsinh<F>(
     f: F,
     a: f64,
@@ -331,6 +332,7 @@ enum TransformType {
 }
 
 /// Determine the appropriate transform for improper integrals
+#[allow(dead_code)]
 fn determine_transform(a: f64, b: f64) -> TransformType {
     if a.is_finite() && b.is_infinite() && b.is_sign_positive() {
         // [a, ∞) -> [a, 1] via x = a + t/(1-t)
@@ -345,6 +347,7 @@ fn determine_transform(a: f64, b: f64) -> TransformType {
 }
 
 /// Evaluate integral with the given rule
+#[allow(dead_code)]
 fn evaluate_with_rule<F>(
     state: &mut IntegrationState,
     rule: &TanhSinhRule,
@@ -438,6 +441,7 @@ fn evaluate_with_rule<F>(
 }
 
 /// Compute the weighted sum of function values
+#[allow(dead_code)]
 fn compute_sum<F>(
     state: &mut IntegrationState,
     points: &[f64],
@@ -535,6 +539,7 @@ fn estimate_error(state: &mut IntegrationState) {
 /// Special case for infinite range integrals (-∞, ∞)
 /// This implementation avoids recursively calling tanhsinh by directly implementing
 /// the integration method with a tangent transformation.
+#[allow(dead_code)]
 fn infinite_range_integral<F>(
     f: F,
     options: TanhSinhOptions,
@@ -698,6 +703,7 @@ where
 /// let pi_squared_over_six = std::f64::consts::PI * std::f64::consts::PI / 6.0;
 /// assert!((result.integral - pi_squared_over_six).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn nsum<F>(
     f: F,
     a: f64,

@@ -165,6 +165,7 @@ impl Default for AttentionConfig {
 /// # Returns
 ///
 /// * Output tensor of shape [batch_size, seq_len_q, d_model]
+#[allow(dead_code)]
 pub fn attention<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -267,6 +268,7 @@ where
 }
 
 /// Apply attention mask to scores
+#[allow(dead_code)]
 fn apply_mask<F>(scores: &mut Array2<F>, mask: &AttentionMask, batch_idx: usize) -> LinalgResult<()>
 where
     F: Float + Add + Mul + Div + Sub + NumAssignOps + Zero + std::fmt::Debug,
@@ -376,6 +378,7 @@ where
 /// # Returns
 ///
 /// * Output tensor of shape [batch_size, seq_len_q, d_model]
+#[allow(dead_code)]
 pub fn scaled_dot_product_attention<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -396,6 +399,7 @@ where
 }
 
 /// Try to use an optimized implementation for f32 type
+#[allow(dead_code)]
 fn try_f32_attention<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -431,6 +435,7 @@ where
 /// BLAS-accelerated attention implementation for f32
 ///
 /// Uses BLAS for matrix multiplications to speed up the attention computation
+#[allow(dead_code)]
 fn blas_attention_f32(
     query: &ArrayView3<f32>,
     key: &ArrayView3<f32>,
@@ -539,6 +544,7 @@ fn blas_attention_f32(
 ///
 /// * Output tensor of shape [batch_size, seq_len_q, d_model]
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn multi_head_attention<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -719,6 +725,7 @@ where
 /// # Returns
 ///
 /// * Output tensor of shape [batch_size, seq_len_q, d_model]
+#[allow(dead_code)]
 pub fn flash_attention<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -898,6 +905,7 @@ where
 /// # Returns
 ///
 /// * Output tensor of shape [batch_size, seq_len_q, d_model]
+#[allow(dead_code)]
 pub fn sparse_attention<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -1011,6 +1019,7 @@ where
 /// # Returns
 ///
 /// * Output tensor of shape [batch_size, seq_len_q, d_model]
+#[allow(dead_code)]
 pub fn masked_attention<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -1039,6 +1048,7 @@ where
 /// # Returns
 ///
 /// * Output tensor of shape [batch_size, seq_len_q, d_model]
+#[allow(dead_code)]
 pub fn causal_attention<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -1069,6 +1079,7 @@ where
 /// # Returns
 ///
 /// * Output tensor of shape [batch_size, seq_len_q, d_model]
+#[allow(dead_code)]
 pub fn attention_with_alibi<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -1193,6 +1204,7 @@ where
 /// # Returns
 ///
 /// * Tensor with rotary position embeddings applied
+#[allow(dead_code)]
 pub fn rotary_embedding<F>(x: &ArrayView3<F>, freq_base: F) -> LinalgResult<Array3<F>>
 where
     F: Float + Add + Mul + Div + Sub + NumAssignOps + Zero + std::fmt::Debug,
@@ -1270,6 +1282,7 @@ where
 /// # Returns
 ///
 /// * Output tensor of shape [batch_size, seq_len_q, d_model]
+#[allow(dead_code)]
 pub fn linear_attention<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -1382,6 +1395,7 @@ where
 /// # Returns
 ///
 /// * Output tensor of shape [batch_size, seq_len_q, d_model]
+#[allow(dead_code)]
 pub fn relative_position_attention<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -1509,6 +1523,7 @@ where
 ///
 /// * Output tensor of shape [batch_size, seq_len_q, d_model]
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn grouped_query_attention<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,
@@ -1666,6 +1681,7 @@ where
 /// # Returns
 ///
 /// * Output tensor of shape [batch_size, seq_len_q, d_model]
+#[allow(dead_code)]
 pub fn attention_with_rpe<F>(
     query: &ArrayView3<F>,
     key: &ArrayView3<F>,

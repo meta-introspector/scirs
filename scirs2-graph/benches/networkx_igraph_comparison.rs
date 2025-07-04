@@ -273,6 +273,7 @@ print("SUCCESS:true")
 }
 
 /// Benchmark graph creation with advanced optimizations
+#[allow(dead_code)]
 fn bench_creation_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("creation_comparison");
     let external_runner = ExternalBenchmarkRunner::new();
@@ -336,6 +337,7 @@ fn bench_creation_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark traversal algorithms comparison
+#[allow(dead_code)]
 fn bench_traversal_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("traversal_comparison");
     let external_runner = ExternalBenchmarkRunner::new();
@@ -374,6 +376,7 @@ fn bench_traversal_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark centrality measures comparison
+#[allow(dead_code)]
 fn bench_centrality_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("centrality_comparison");
     let external_runner = ExternalBenchmarkRunner::new();
@@ -431,6 +434,7 @@ fn bench_centrality_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark shortest path algorithms comparison
+#[allow(dead_code)]
 fn bench_shortest_path_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("shortest_path_comparison");
     let external_runner = ExternalBenchmarkRunner::new();
@@ -469,6 +473,7 @@ fn bench_shortest_path_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark community detection comparison
+#[allow(dead_code)]
 fn bench_community_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("community_comparison");
     let external_runner = ExternalBenchmarkRunner::new();
@@ -507,6 +512,7 @@ fn bench_community_comparison(c: &mut Criterion) {
 }
 
 /// Generate comprehensive comparison report
+#[allow(dead_code)]
 pub fn generate_comparison_report() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔬 Generating NetworkX/igraph comparison report...");
 
@@ -566,6 +572,7 @@ pub fn generate_comparison_report() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn measure_scirs2_algorithm(algorithm: &str, size: usize, graph_type: &str) -> f64 {
     let mut rng = StdRng::seed_from_u64(42);
 
@@ -604,6 +611,7 @@ fn measure_scirs2_algorithm(algorithm: &str, size: usize, graph_type: &str) -> f
 }
 
 /// Measure scirs2-graph algorithm performance with advanced optimizations
+#[allow(dead_code)]
 fn measure_scirs2_algorithm_with_advanced<N: Node, E: EdgeWeight, Ix>(
     algorithm: &str,
     graph: &Graph<N, E, Ix>,
@@ -659,6 +667,7 @@ where
 }
 
 /// Measure scirs2-graph algorithm performance without advanced optimizations (standard mode)
+#[allow(dead_code)]
 fn measure_scirs2_algorithm_standard<N: Node, E: EdgeWeight, Ix>(
     algorithm: &str,
     graph: &Graph<N, E, Ix>,
@@ -700,6 +709,7 @@ where
     start.elapsed().as_millis() as f64
 }
 
+#[allow(dead_code)]
 fn generate_markdown_report(results: &[(String, String, usize, ComparisonMetrics)]) -> String {
     let mut report = String::new();
 
@@ -777,6 +787,7 @@ fn generate_markdown_report(results: &[(String, String, usize, ComparisonMetrics
 }
 
 /// Comprehensive advanced performance comparison
+#[allow(dead_code)]
 fn bench_advanced_comprehensive_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultrathink_comprehensive_comparison");
     let external_runner = ExternalBenchmarkRunner::new();
@@ -861,6 +872,7 @@ fn bench_advanced_comprehensive_comparison(c: &mut Criterion) {
 }
 
 /// Memory efficiency comparison benchmark  
+#[allow(dead_code)]
 fn bench_memory_efficiency_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_efficiency_comparison");
     group.sample_size(10); // Fewer samples for memory-intensive tests

@@ -1026,6 +1026,7 @@ where
 }
 
 /// Compute the centroid (center) of a set of points
+#[allow(dead_code)]
 fn compute_centroid<F: Float + FromPrimitive>(points: &Array2<F>, indices: &[usize]) -> Vec<F> {
     let n_points = indices.len();
     let n_dims = points.shape()[1];
@@ -1054,6 +1055,7 @@ fn compute_centroid<F: Float + FromPrimitive>(points: &Array2<F>, indices: &[usi
 }
 
 /// Compute the radius of a ball containing all points
+#[allow(dead_code)]
 fn compute_radius<F: Float>(points: &Array2<F>, indices: &[usize], center: &[F]) -> F {
     let n_points = indices.len();
 
@@ -1077,6 +1079,7 @@ fn compute_radius<F: Float>(points: &Array2<F>, indices: &[usize], center: &[F])
 }
 
 /// Find the dimension with the largest spread of values
+#[allow(dead_code)]
 fn find_max_spread_dimension<F: Float>(points: &Array2<F>, indices: &[usize]) -> (usize, F) {
     let n_points = indices.len();
     let n_dims = points.shape()[1];
@@ -1117,6 +1120,7 @@ fn find_max_spread_dimension<F: Float>(points: &Array2<F>, indices: &[usize]) ->
 }
 
 /// Find two points that are far apart along a given dimension
+#[allow(dead_code)]
 fn find_distant_points<F: Float>(
     points: &Array2<F>,
     indices: &[usize],
@@ -1152,6 +1156,7 @@ fn find_distant_points<F: Float>(
 }
 
 /// Partition points based on which of two seed points they're closer to
+#[allow(dead_code)]
 fn partition_by_seeds<F: Float>(
     points: &Array2<F>,
     indices: &[usize],
@@ -1196,6 +1201,7 @@ fn partition_by_seeds<F: Float>(
 }
 
 /// Calculate Euclidean distance between two points
+#[allow(dead_code)]
 fn euclidean_distance<F: Float>(a: &[F], b: &[F]) -> F {
     debug_assert_eq!(a.len(), b.len());
 

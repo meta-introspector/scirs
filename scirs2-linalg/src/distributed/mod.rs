@@ -1991,11 +1991,13 @@ pub enum RiskLevel {
 }
 
 /// Initialize distributed computing environment
+#[allow(dead_code)]
 pub fn initialize_distributed(config: DistributedConfig) -> LinalgResult<DistributedContext> {
     DistributedContext::new(config)
 }
 
 /// Shutdown distributed computing environment
+#[allow(dead_code)]
 pub fn finalize_distributed(context: DistributedContext) -> LinalgResult<DistributedStats> {
     context.finalize()
 }

@@ -44,6 +44,7 @@ use std::fmt::Debug;
 /// // Y₀(1) ≈ 0.0883
 /// assert!((y0(1.0f64) - 0.0883).abs() < 1e-4);
 /// ```
+#[allow(dead_code)]
 pub fn y0<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // Y₀ is singular at x = 0
     if x <= F::zero() {
@@ -148,6 +149,7 @@ pub fn y0<F: Float + FromPrimitive + Debug>(x: F) -> F {
 
 /// Enhanced asymptotic approximation for Y0 with very large arguments.
 /// Provides better accuracy compared to the standard formula.
+#[allow(dead_code)]
 fn enhanced_asymptotic_y0<F: Float + FromPrimitive>(x: F) -> F {
     let theta = x - F::from(constants::f64::PI_4).unwrap();
 
@@ -209,6 +211,7 @@ fn enhanced_asymptotic_y0<F: Float + FromPrimitive>(x: F) -> F {
 /// let y1_1 = y1(1.0f64);
 /// assert!(y1_1 < -0.5 && y1_1 > -1.0);
 /// ```
+#[allow(dead_code)]
 pub fn y1<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // Y₁ is singular at x = 0
     if x <= F::zero() {
@@ -259,6 +262,7 @@ pub fn y1<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// // Y₁(x) comparison
 /// assert!((yn(1, x) - y1(x)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn yn<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     // Y_n is singular at x = 0
     if x <= F::zero() {
@@ -355,6 +359,7 @@ fn enhanced_asymptotic_yn<F: Float + FromPrimitive>(n: i32, x: F) -> F {
 /// let result = y0e(x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn y0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
     // Therefore y0e(x) = y0(x) for real x
@@ -386,6 +391,7 @@ pub fn y0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let result = y1e(x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn y1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
     // Therefore y1e(x) = y1(x) for real x
@@ -418,6 +424,7 @@ pub fn y1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let result = yne(3, x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn yne<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     // For real arguments, the imaginary part is zero, so exp(-abs(0)) = 1
     // Therefore yne(n, x) = yn(n, x) for real x

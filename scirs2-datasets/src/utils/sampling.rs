@@ -42,6 +42,7 @@ use std::collections::HashMap;
 /// let bootstrap_indices = random_sample(10, 15, true, Some(42)).unwrap();
 /// assert_eq!(bootstrap_indices.len(), 15);
 /// ```
+#[allow(dead_code)]
 pub fn random_sample(
     n_samples: usize,
     sample_size: usize,
@@ -125,6 +126,7 @@ pub fn random_sample(
 ///     *class_counts.entry(class).or_insert(0) += 1;
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn stratified_sample(
     targets: &Array1<f64>,
     sample_size: usize,
@@ -245,6 +247,7 @@ pub fn stratified_sample(
 /// // This should be true with high probability
 /// assert!(high_weight_count >= 1);
 /// ```
+#[allow(dead_code)]
 pub fn importance_sample(
     weights: &Array1<f64>,
     sample_size: usize,
@@ -369,6 +372,7 @@ pub fn importance_sample(
 /// unique_indices.dedup();
 /// assert!(unique_indices.len() < bootstrap_indices.len());
 /// ```
+#[allow(dead_code)]
 pub fn bootstrap_sample(
     n_samples: usize,
     n_bootstrap_samples: usize,
@@ -402,6 +406,7 @@ pub fn bootstrap_sample(
 /// assert_eq!(bootstrap_samples.len(), 10);
 /// assert!(bootstrap_samples.iter().all(|sample| sample.len() == 50));
 /// ```
+#[allow(dead_code)]
 pub fn multiple_bootstrap_samples(
     n_samples: usize,
     sample_size: usize,

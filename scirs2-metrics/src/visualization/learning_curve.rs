@@ -238,6 +238,7 @@ impl MetricVisualizer for LearningCurveVisualizer {
 /// # Returns
 ///
 /// * A LearningCurveVisualizer
+#[allow(dead_code)]
 pub fn learning_curve_visualization(
     train_sizes: Vec<usize>,
     train_scores: Vec<Vec<f64>>,
@@ -327,6 +328,7 @@ impl Default for LearningCurveConfig {
 /// # Returns
 ///
 /// * A LearningCurveVisualizer with realistic learning curves
+#[allow(dead_code)]
 pub fn learning_curve_realistic<T, S1, S2>(
     _x: &ArrayBase<S1, Ix2>,
     _y: &ArrayBase<S2, Ix1>,
@@ -436,6 +438,7 @@ where
 /// # Returns
 ///
 /// * A LearningCurveVisualizer with real performance curves
+#[allow(dead_code)]
 pub fn learning_curve<T, S1, S2>(
     x: &ArrayBase<S1, Ix2>,
     y: &ArrayBase<S2, Ix1>,
@@ -563,6 +566,7 @@ pub trait ModelPredictor<T> {
 }
 
 /// Extract specific rows from a 2D array
+#[allow(dead_code)]
 fn extract_rows<T, S>(arr: &ArrayBase<S, Ix2>, indices: &[usize]) -> Array2<T>
 where
     T: Clone + num_traits::Zero,
@@ -576,6 +580,7 @@ where
 }
 
 /// Extract specific elements from a 1D array
+#[allow(dead_code)]
 fn extract_elements<T, S>(arr: &ArrayBase<S, Ix1>, indices: &[usize]) -> Array1<T>
 where
     T: Clone + num_traits::Zero,
@@ -589,6 +594,7 @@ where
 }
 
 /// Evaluate predictions using the specified scoring metric
+#[allow(dead_code)]
 fn evaluate_predictions<T>(y_true: &Array1<T>, y_pred: &Array1<T>, scoring: &str) -> Result<f64>
 where
     T: Clone + num_traits::Float + Send + Sync + std::fmt::Debug + std::ops::Sub<Output = T>,
@@ -673,6 +679,7 @@ where
 /// # Returns
 ///
 /// * A vector of LearningCurveVisualizer instances for each scenario
+#[allow(dead_code)]
 pub fn learning_curve_scenarios(
     train_sizes: &[usize],
     scoring: impl Into<String>,

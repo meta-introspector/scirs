@@ -9,6 +9,7 @@ use scirs2_text::{
     preprocess::TextCleaner,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Enhanced Text Vectorization Demo ===\n");
 

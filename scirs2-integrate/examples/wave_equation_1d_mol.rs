@@ -5,6 +5,7 @@ use scirs2_integrate::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Method of Lines example: 1D Wave equation solver");
     println!("Solving: ∂²u/∂t² = c² ∂²u/∂x²");

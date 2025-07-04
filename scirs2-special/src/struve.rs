@@ -42,6 +42,7 @@ const LN_PI: f64 = 1.1447298858494002; // ln(π)
 /// let h0_1 = struve(0.0, 1.0).unwrap();
 /// println!("H_0(1.0) = {}", h0_1);
 /// ```
+#[allow(dead_code)]
 pub fn struve(v: f64, x: f64) -> SpecialResult<f64> {
     if x.is_nan() || v.is_nan() {
         return Err(SpecialError::DomainError("NaN input to struve".to_string()));
@@ -78,6 +79,7 @@ pub fn struve(v: f64, x: f64) -> SpecialResult<f64> {
 }
 
 /// Struve function H_0(x) for order v=0.
+#[allow(dead_code)]
 fn struve_h0(x: f64) -> SpecialResult<f64> {
     if x.abs() < 20.0 {
         // Use the series expansion for small x
@@ -105,6 +107,7 @@ fn struve_h0(x: f64) -> SpecialResult<f64> {
 }
 
 /// Struve function H_1(x) for order v=1.
+#[allow(dead_code)]
 fn struve_h1(x: f64) -> SpecialResult<f64> {
     if x.abs() < 20.0 {
         // Use the series expansion for small x
@@ -132,6 +135,7 @@ fn struve_h1(x: f64) -> SpecialResult<f64> {
 }
 
 /// Compute the Struve function H_v(x) using series expansion.
+#[allow(dead_code)]
 fn struve_series(v: f64, x: f64) -> SpecialResult<f64> {
     let z = 0.5 * x;
     let z_squared = z * z;
@@ -257,6 +261,7 @@ fn struve_series(v: f64, x: f64) -> SpecialResult<f64> {
 }
 
 /// Compute the Struve function H_v(x) using asymptotic approximation for large x.
+#[allow(dead_code)]
 fn struve_asymptotic(v: f64, x: f64) -> SpecialResult<f64> {
     // Enhanced asymptotic expansion for large x
     // Uses multiple approaches based on the parameter regime
@@ -288,6 +293,7 @@ fn struve_asymptotic(v: f64, x: f64) -> SpecialResult<f64> {
 }
 
 /// Full asymptotic series expansion for Struve functions
+#[allow(dead_code)]
 fn struve_asymptotic_series(v: f64, x: f64) -> SpecialResult<f64> {
     // For large x, use the complete asymptotic expansion:
     // H_v(x) = Y_v(x) + (2/π) * Σ_{k=0}^∞ (-1)^k * U_k(v) / x^{2k+1}
@@ -339,6 +345,7 @@ fn struve_asymptotic_series(v: f64, x: f64) -> SpecialResult<f64> {
 }
 
 /// Bessel-based approximation with higher-order corrections
+#[allow(dead_code)]
 fn struve_asymptotic_bessel_based(v: f64, x: f64) -> SpecialResult<f64> {
     // Get the Bessel Y function
     let bessel_y = if v == 0.0 {
@@ -358,6 +365,7 @@ fn struve_asymptotic_bessel_based(v: f64, x: f64) -> SpecialResult<f64> {
 }
 
 /// Asymptotic form of Y_v(x) for non-integer v
+#[allow(dead_code)]
 fn struve_bessel_y_asymptotic(v: f64, x: f64) -> SpecialResult<f64> {
     // For large x: Y_v(x) ~ sqrt(2/(πx)) * sin(x - vπ/2 - π/4)
     if x < 10.0 {
@@ -376,6 +384,7 @@ fn struve_bessel_y_asymptotic(v: f64, x: f64) -> SpecialResult<f64> {
 }
 
 /// Compute asymptotic coefficients U_k(v) for the Struve function expansion
+#[allow(dead_code)]
 fn struve_asymptotic_coefficient(k: usize, v: f64) -> f64 {
     // The coefficients U_k(v) in the asymptotic expansion
     // These are related to the Euler polynomials and Bernoulli numbers
@@ -424,6 +433,7 @@ fn struve_asymptotic_coefficient(k: usize, v: f64) -> f64 {
 }
 
 /// Enhanced correction term with multiple orders
+#[allow(dead_code)]
 fn struve_correction_term_enhanced(v: f64, x: f64) -> SpecialResult<f64> {
     if v == 0.0 {
         // H_0(x) special case with higher-order corrections
@@ -463,6 +473,7 @@ fn struve_correction_term_enhanced(v: f64, x: f64) -> SpecialResult<f64> {
 }
 
 /// Compute factorial ratios efficiently to avoid overflow
+#[allow(dead_code)]
 fn factorial_ratio(n: usize, k: usize) -> f64 {
     if k > n {
         return 0.0;
@@ -476,6 +487,7 @@ fn factorial_ratio(n: usize, k: usize) -> f64 {
 }
 
 /// Enhanced asymptotic approximation for integrated modified Struve function of order 1
+#[allow(dead_code)]
 fn it_mod_struve_1_asymptotic(x: f64) -> SpecialResult<f64> {
     // For large x, use the more sophisticated asymptotic expansion
     // that properly accounts for the oscillatory behavior and higher-order terms
@@ -505,6 +517,7 @@ fn it_mod_struve_1_asymptotic(x: f64) -> SpecialResult<f64> {
 
 /// Calculate the logarithm of the gamma function for large arguments.
 /// This is more stable than calling gamma and then taking the log.
+#[allow(dead_code)]
 fn log_gamma(x: f64) -> SpecialResult<f64> {
     if x <= 0.0 {
         return Err(SpecialError::DomainError(
@@ -547,6 +560,7 @@ fn log_gamma(x: f64) -> SpecialResult<f64> {
 /// let l0_1 = mod_struve(0.0, 1.0).unwrap();
 /// println!("L_0(1.0) = {}", l0_1);
 /// ```
+#[allow(dead_code)]
 pub fn mod_struve(v: f64, x: f64) -> SpecialResult<f64> {
     if x.is_nan() || v.is_nan() {
         return Err(SpecialError::DomainError(
@@ -809,6 +823,7 @@ pub fn mod_struve(v: f64, x: f64) -> SpecialResult<f64> {
 }
 
 /// Helper function to approximate the modified Bessel function I_v(x) for large arguments.
+#[allow(dead_code)]
 fn bessel_i_approximation(v: f64, x: f64) -> SpecialResult<f64> {
     // Modified Bessel function I_v(x) for large x
     // Using the asymptotic expansion I_v(x) ~ e^x / sqrt(2πx) * (1 + O(1/x))
@@ -912,6 +927,7 @@ fn bessel_i_approximation(v: f64, x: f64) -> SpecialResult<f64> {
 ///
 /// Returns (n!)² but computed in a way that avoids overflow for larger values of n.
 /// Uses a log-space calculation for large values of n.
+#[allow(dead_code)]
 fn fact_squared(n: usize) -> f64 {
     if n == 0 {
         return 1.0;
@@ -962,6 +978,7 @@ fn fact_squared(n: usize) -> f64 {
 /// let its0_1 = it_struve0(1.0).unwrap();
 /// println!("∫_0^1 H_0(t) dt = {}", its0_1);
 /// ```
+#[allow(dead_code)]
 pub fn it_struve0(x: f64) -> SpecialResult<f64> {
     if x.is_nan() {
         return Err(SpecialError::DomainError(
@@ -1078,6 +1095,7 @@ pub fn it_struve0(x: f64) -> SpecialResult<f64> {
 }
 
 /// Compute the logarithm of the squared factorial for larger values
+#[allow(dead_code)]
 fn fact_squared_log(n: usize) -> f64 {
     if n == 0 {
         return 0.0; // log(1) = 0
@@ -1111,6 +1129,7 @@ fn fact_squared_log(n: usize) -> f64 {
 /// let it2s0_1 = it2_struve0(1.0).unwrap();
 /// println!("∫_0^x ∫_0^t H_0(s) ds dt = {}", it2s0_1);
 /// ```
+#[allow(dead_code)]
 pub fn it2_struve0(x: f64) -> SpecialResult<f64> {
     if x.is_nan() {
         return Err(SpecialError::DomainError(
@@ -1168,6 +1187,7 @@ pub fn it2_struve0(x: f64) -> SpecialResult<f64> {
 /// let itl0_1 = it_mod_struve0(1.0).unwrap();
 /// println!("∫_0^1 L_0(t) dt = {}", itl0_1);
 /// ```
+#[allow(dead_code)]
 pub fn it_mod_struve0(x: f64) -> SpecialResult<f64> {
     if x.is_nan() {
         return Err(SpecialError::DomainError(

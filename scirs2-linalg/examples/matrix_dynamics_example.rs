@@ -28,6 +28,7 @@ use scirs2_linalg::matrix_dynamics::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 MATRIX DIFFERENTIAL EQUATIONS - ULTRATHINK DEMONSTRATION");
     println!("===========================================================");

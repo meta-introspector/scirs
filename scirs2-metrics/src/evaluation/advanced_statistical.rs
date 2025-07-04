@@ -594,6 +594,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
 }
 
 /// Multi-dimensional effect size calculation
+#[allow(dead_code)]
 pub fn multi_dimensional_effect_size<F: Float + num_traits::FromPrimitive + std::iter::Sum>(
     metrics_a: &HashMap<String, Array1<F>>,
     metrics_b: &HashMap<String, Array1<F>>,

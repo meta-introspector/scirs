@@ -3,6 +3,7 @@ use scirs2_integrate::dae::{create_block_ilu_preconditioner, create_block_jacobi
 use std::time::Instant;
 
 // Test helper: Create a test matrix with block structure
+#[allow(dead_code)]
 fn create_test_matrix(
     n_x: usize,
     n_y: usize,
@@ -54,6 +55,7 @@ fn create_test_matrix(
 }
 
 // Test helper: Create a right-hand side vector
+#[allow(dead_code)]
 fn create_rhs(n_x: usize, n_y: usize) -> Array1<f64> {
     let mut rhs = Array1::zeros(n_x + n_y);
 
@@ -69,6 +71,7 @@ fn create_rhs(n_x: usize, n_y: usize) -> Array1<f64> {
 }
 
 // Test helper: Apply the full Jacobian matrix to a vector
+#[allow(dead_code)]
 fn matrix_vector_product(
     f_x: &Array2<f64>,
     f_y: &Array2<f64>,
@@ -124,6 +127,7 @@ fn matrix_vector_product(
 // Test helper: Simple GMRES solver to check preconditioner effectiveness
 type PreconditionerFn = Box<dyn Fn(&Array1<f64>) -> Array1<f64>>;
 
+#[allow(dead_code)]
 fn simple_gmres<F>(
     matvec: F,
     b: &Array1<f64>,
@@ -275,6 +279,7 @@ where
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_block_ilu_preconditioner() {
     // Small problem to verify correctness
     let n_x = 5;
@@ -327,6 +332,7 @@ fn test_block_ilu_preconditioner() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_block_jacobi_preconditioner() {
     // Create a larger test case
     let n_x = 10;
@@ -415,6 +421,7 @@ fn test_block_jacobi_preconditioner() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_preconditioner_performance() {
     // Create a large test case for performance comparison
     let n_x = 50;

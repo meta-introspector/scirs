@@ -22,6 +22,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Zoomed array
+#[allow(dead_code)]
 pub fn zoom<T, D>(
     input: &Array<T, D>,
     zoom_factor: T,
@@ -123,6 +124,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Shifted array
+#[allow(dead_code)]
 pub fn shift<T, D>(
     input: &Array<T, D>,
     shift: &[T],
@@ -222,6 +224,7 @@ where
 ///
 /// * `Result<Array<T, D>>` - Rotated array
 #[allow(clippy::too_many_arguments)] // Necessary to match SciPy's API signature
+#[allow(dead_code)]
 pub fn rotate<T, D>(
     input: &Array<T, D>,
     angle: T,

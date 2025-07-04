@@ -8,6 +8,7 @@ use ndarray::{Array1, Array2};
 use scirs2_integrate::ode::mechanical::{systems, MechanicalIntegrator, PositionIntegrationMethod};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Mechanical Systems Integration Demo\n");
 
@@ -42,6 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate basic rigid body dynamics
+#[allow(dead_code)]
 fn demonstrate_rigid_body() -> Result<(), Box<dyn std::error::Error>> {
     // Create a simple rigid body
     let mass = 2.0;
@@ -103,6 +105,7 @@ fn demonstrate_rigid_body() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate damped harmonic oscillator
+#[allow(dead_code)]
 fn demonstrate_damped_oscillator() -> Result<(), Box<dyn std::error::Error>> {
     let mass = 1.0f64;
     let stiffness = 10.0f64; // k = 10 N/m
@@ -169,6 +172,7 @@ fn demonstrate_damped_oscillator() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate double pendulum system
+#[allow(dead_code)]
 fn demonstrate_double_pendulum() -> Result<(), Box<dyn std::error::Error>> {
     let m1 = 1.0; // Mass of first pendulum
     let m2 = 0.5; // Mass of second pendulum
@@ -249,6 +253,7 @@ fn demonstrate_double_pendulum() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate energy conservation with different integrators
+#[allow(dead_code)]
 fn demonstrate_energy_conservation() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Comparing energy conservation for different integration methods");
 
@@ -309,6 +314,7 @@ fn demonstrate_energy_conservation() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate comparison of different integration methods
+#[allow(dead_code)]
 fn demonstrate_integration_methods() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Comparing accuracy and stability of integration methods");
 

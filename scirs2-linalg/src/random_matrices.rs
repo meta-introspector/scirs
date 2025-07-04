@@ -56,6 +56,7 @@ pub enum MatrixType {
 }
 
 /// Generate a random matrix of the specified type
+#[allow(dead_code)]
 pub fn random_matrix<F, R>(
     rows: usize,
     cols: usize,
@@ -88,6 +89,7 @@ where
 }
 
 /// Generate a general random matrix
+#[allow(dead_code)]
 fn random_general<F, R>(
     rows: usize,
     cols: usize,
@@ -129,6 +131,7 @@ where
 }
 
 /// Generate a symmetric random matrix
+#[allow(dead_code)]
 fn random_symmetric<F, R>(
     size: usize,
     distribution: Distribution1D,
@@ -153,6 +156,7 @@ where
 }
 
 /// Generate a positive definite matrix
+#[allow(dead_code)]
 fn random_positive_definite<F, R>(
     size: usize,
     eigenvalue_min: f64,
@@ -197,6 +201,7 @@ where
 }
 
 /// Generate a random orthogonal matrix using QR decomposition
+#[allow(dead_code)]
 fn random_orthogonal<F, R>(size: usize, rng: &mut R) -> LinalgResult<Array2<F>>
 where
     F: Float + Debug + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -214,6 +219,7 @@ where
 }
 
 /// Generate a random correlation matrix
+#[allow(dead_code)]
 fn random_correlation<F, R>(size: usize, rng: &mut R) -> LinalgResult<Array2<F>>
 where
     F: Float + Debug + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -241,6 +247,7 @@ where
 }
 
 /// Generate a sparse random matrix
+#[allow(dead_code)]
 fn random_sparse<F, R>(
     rows: usize,
     cols: usize,
@@ -284,6 +291,7 @@ where
 }
 
 /// Generate a random diagonal matrix
+#[allow(dead_code)]
 fn random_diagonal<F, R>(
     size: usize,
     distribution: Distribution1D,
@@ -324,6 +332,7 @@ where
 }
 
 /// Generate a random triangular matrix
+#[allow(dead_code)]
 fn random_triangular<F, R>(
     rows: usize,
     cols: usize,
@@ -360,6 +369,7 @@ where
 }
 
 /// Generate a random complex matrix
+#[allow(dead_code)]
 pub fn random_complex_matrix<F, R>(
     rows: usize,
     cols: usize,
@@ -385,6 +395,7 @@ where
 }
 
 /// Generate a random Hermitian matrix
+#[allow(dead_code)]
 pub fn random_hermitian<F, R>(
     size: usize,
     real_dist: Distribution1D,

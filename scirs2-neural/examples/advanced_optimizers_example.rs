@@ -1,15 +1,20 @@
 use ndarray::Array2;
-use rand::prelude::*;
-use rand::rngs::SmallRng;
-use rand::SeedableRng;
+use ndarray_rand::rand::rngs::SmallRng;
+use ndarray_rand::rand::SeedableRng;
 use scirs2_neural::layers::{Dense, Dropout};
 use scirs2_neural::losses::CrossEntropyLoss;
-use scirs2_neural::models::{Model, Sequential};
-use scirs2_neural::optimizers::{Adam, AdamW, Optimizer, RAdam, RMSprop, SGD};
+// use scirs2_neural::models::{Model, Sequential};
+// use scirs2_neural::optimizers::{Adam, AdamW, Optimizer, RAdam, RMSprop, SGD};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Advanced Optimizers Example");
+    println!("Note: Optimizers and models modules are not yet implemented.");
+    println!("This example is a placeholder for future optimizer functionality.");
+
+    // TODO: Implement optimizers and models modules and uncomment the following code
+    /*
     // Initialize random number generator
     let mut rng = SmallRng::seed_from_u64(42);
     // Create a synthetic binary classification dataset
@@ -257,5 +262,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         rmsprop_losses.first().unwrap() / rmsprop_losses.last().unwrap()
     );
     println!("\nAdvanced optimizers demo completed successfully!");
+    */
     Ok(())
 }

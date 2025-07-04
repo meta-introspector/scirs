@@ -41,6 +41,7 @@ pub type GradientResult<T> = Result<(Array<T, Ix2>, Array<T, Ix2>), &'static str
 /// let flipped_both = flip_2d(a.view(), true, true);
 /// assert_eq!(flipped_both, array![[6, 5, 4], [3, 2, 1]]);
 /// ```
+#[allow(dead_code)]
 pub fn flip_2d<T>(array: ArrayView<T, Ix2>, flip_axis_0: bool, flip_axis_1: bool) -> Array<T, Ix2>
 where
     T: Clone + Zero,
@@ -88,6 +89,7 @@ where
 /// let rolled_cols = roll_2d(a.view(), 0, -1);
 /// assert_eq!(rolled_cols, array![[2, 3, 1], [5, 6, 4]]);
 /// ```
+#[allow(dead_code)]
 pub fn roll_2d<T>(
     array: ArrayView<T, Ix2>,
     shift_axis_0: isize,
@@ -162,6 +164,7 @@ where
 ///     ]
 /// );
 /// ```
+#[allow(dead_code)]
 pub fn tile_2d<T>(array: ArrayView<T, Ix2>, reps_axis_0: usize, reps_axis_1: usize) -> Array<T, Ix2>
 where
     T: Clone + Default + Zero,
@@ -229,6 +232,7 @@ where
 ///     ]
 /// );
 /// ```
+#[allow(dead_code)]
 pub fn repeat_2d<T>(
     array: ArrayView<T, Ix2>,
     repeats_axis_0: usize,
@@ -301,6 +305,7 @@ where
 /// let swapped_cols = swap_axes_2d(a.view(), 0, 1, 1).unwrap();
 /// assert_eq!(swapped_cols, array![[2, 1, 3], [5, 4, 6], [8, 7, 9]]);
 /// ```
+#[allow(dead_code)]
 pub fn swap_axes_2d<T>(
     array: ArrayView<T, Ix2>,
     index1: usize,
@@ -386,6 +391,7 @@ where
 ///     ]
 /// );
 /// ```
+#[allow(dead_code)]
 pub fn pad_2d<T>(
     array: ArrayView<T, Ix2>,
     pad_width: ((usize, usize), (usize, usize)),
@@ -444,6 +450,7 @@ where
 /// assert_eq!(horizontal.shape(), &[2, 4]);
 /// assert_eq!(horizontal, array![[1, 2, 5, 6], [3, 4, 7, 8]]);
 /// ```
+#[allow(dead_code)]
 pub fn concatenate_2d<T>(
     arrays: &[ArrayView<T, Ix2>],
     axis: usize,
@@ -544,6 +551,7 @@ where
 /// assert_eq!(stacked.shape(), &[3, 3]);
 /// assert_eq!(stacked, array![[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
 /// ```
+#[allow(dead_code)]
 pub fn vstack_1d<T>(arrays: &[ArrayView<T, Ix1>]) -> Result<Array<T, Ix2>, &'static str>
 where
     T: Clone + Zero,
@@ -598,6 +606,7 @@ where
 /// assert_eq!(stacked.shape(), &[3, 2]);
 /// assert_eq!(stacked, array![[1, 4], [2, 5], [3, 6]]);
 /// ```
+#[allow(dead_code)]
 pub fn hstack_1d<T>(arrays: &[ArrayView<T, Ix1>]) -> Result<Array<T, Ix2>, &'static str>
 where
     T: Clone + Zero,
@@ -659,6 +668,7 @@ where
 /// assert_eq!(squeezed_b.shape(), &[3]);
 /// assert_eq!(squeezed_b, array![1, 2, 3]);
 /// ```
+#[allow(dead_code)]
 pub fn squeeze_2d<T>(array: ArrayView<T, Ix2>, axis: usize) -> Result<Array<T, Ix1>, &'static str>
 where
     T: Clone + Zero,
@@ -722,6 +732,7 @@ where
 /// assert_eq!(x_grid, array![[1, 2, 3], [1, 2, 3]]);
 /// assert_eq!(y_grid, array![[4, 4, 4], [5, 5, 5]]);
 /// ```
+#[allow(dead_code)]
 pub fn meshgrid<T>(x: ArrayView<T, Ix1>, y: ArrayView<T, Ix1>) -> GradientResult<T>
 where
     T: Clone + Zero,
@@ -768,6 +779,7 @@ where
 /// let result = unique(a.view()).unwrap();
 /// assert_eq!(result, array![1, 2, 3, 4]);
 /// ```
+#[allow(dead_code)]
 pub fn unique<T>(array: ArrayView<T, Ix1>) -> Result<Array<T, Ix1>, &'static str>
 where
     T: Clone + Ord,
@@ -818,6 +830,7 @@ where
 /// let result = argmin(a.view(), None).unwrap();
 /// assert_eq!(result[0], 4); // The index of the minimum value in the flattened array (row 1, col 1)
 /// ```
+#[allow(dead_code)]
 pub fn argmin<T>(
     array: ArrayView<T, Ix2>,
     axis: Option<usize>,
@@ -923,6 +936,7 @@ where
 /// let result = argmax(a.view(), None).unwrap();
 /// assert_eq!(result[0], 5); // The index of the maximum value in the flattened array (row 1, col 2)
 /// ```
+#[allow(dead_code)]
 pub fn argmax<T>(
     array: ArrayView<T, Ix2>,
     axis: Option<usize>,
@@ -1023,6 +1037,7 @@ where
 /// // Horizontal gradient (x-direction)
 /// assert_eq!(grad_x.shape(), &[2, 3]);
 /// ```
+#[allow(dead_code)]
 pub fn gradient<T>(array: ArrayView<T, Ix2>, spacing: Option<(T, T)>) -> GradientResult<T>
 where
     T: Clone + num_traits::Float,

@@ -48,6 +48,7 @@
 //! ```
 
 use crate::error::{IoError, Result};
+#[cfg(feature = "async")]
 use futures::{SinkExt, Stream, StreamExt};
 use ndarray::{Array1, Array2, ArrayD, ArrayView1, IxDyn};
 use scirs2_core::numeric::ScientificNumber;
@@ -56,14 +57,16 @@ use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+#[cfg(feature = "async")]
 use tokio::sync::{broadcast, mpsc, RwLock};
+#[cfg(feature = "async")]
 use tokio::time::{interval, sleep};
 use url;
 
 #[cfg(feature = "websocket")]
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
-#[cfg(feature = "sse")]
+#[cfg(all(feature = "sse", feature = "async"))]
 use futures::StreamExt;
 
 /// Streaming protocol types

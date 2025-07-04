@@ -51,6 +51,7 @@ use std::fmt::Debug;
 /// assert_eq!(ca.len(), signal.len());
 /// assert_eq!(cd.len(), signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn swt_decompose<T>(
     data: &[T],
     wavelet: Wavelet,
@@ -177,6 +178,7 @@ where
 /// assert!(rec_energy > 0.0);
 /// assert!(rec_energy / orig_energy > 0.5); // At least 50% energy preserved
 /// ```
+#[allow(dead_code)]
 pub fn swt_reconstruct(
     approx: &[f64],
     detail: &[f64],
@@ -291,6 +293,7 @@ pub fn swt_reconstruct(
 ///     assert_eq!(detail.len(), signal.len());
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn swt<T>(
     data: &[T],
     wavelet: Wavelet,
@@ -384,6 +387,7 @@ where
 /// assert!(rec_energy > 0.0);
 /// assert!(rec_energy / orig_energy > 0.5); // At least 50% energy preserved
 /// ```
+#[allow(dead_code)]
 pub fn iswt(details: &[Vec<f64>], approx: &[f64], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
     if details.is_empty() {
         return Err(SignalError::ValueError(
@@ -422,6 +426,7 @@ pub fn iswt(details: &[Vec<f64>], approx: &[f64], wavelet: Wavelet) -> SignalRes
 }
 
 /// Helper function to extend the signal for filtering
+#[allow(dead_code)]
 fn extend_signal(signal: &[f64], filter_len: usize, mode: &str) -> SignalResult<Vec<f64>> {
     let n = signal.len();
     let pad = filter_len - 1;
@@ -501,6 +506,7 @@ fn extend_signal(signal: &[f64], filter_len: usize, mode: &str) -> SignalResult<
 /// # Returns
 ///
 /// * The upsampled filter
+#[allow(dead_code)]
 fn upsample_filter(filter: &[f64], level: usize) -> Vec<f64> {
     if level == 1 {
         // At level 1, return the original filter
@@ -521,6 +527,7 @@ fn upsample_filter(filter: &[f64], level: usize) -> Vec<f64> {
 }
 
 /// Helper function to upsample filter pairs
+#[allow(dead_code)]
 fn upsample_filters(dec_lo: &[f64], dec_hi: &[f64], level: usize) -> (Vec<f64>, Vec<f64>) {
     (
         upsample_filter(dec_lo, level),

@@ -78,6 +78,7 @@ const TOLERANCE: f64 = 1e-15;
 /// let result = elliprc(1.0, 1.0).unwrap();
 /// assert!((result - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn elliprc<T>(x: T, y: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -174,6 +175,7 @@ where
 /// let rf2 = elliprf(y, z, x).unwrap();
 /// assert!((rf1 - rf2).abs() < 1e-12);
 /// ```
+#[allow(dead_code)]
 pub fn elliprf<T>(x: T, y: T, z: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -270,6 +272,7 @@ where
 /// let expected = 3.0 * std::f64::consts::PI / (4.0 * std::f64::consts::SQRT_2);
 /// assert!((result - expected).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn elliprd<T>(x: T, y: T, z: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -371,6 +374,7 @@ where
 /// let result = elliprg(1.0, 2.0, 3.0).unwrap();
 /// assert!(result > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn elliprg<T>(x: T, y: T, z: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -441,6 +445,7 @@ where
 /// let result = elliprj(1.0, 2.0, 3.0, 4.0).unwrap();
 /// assert!(result > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn elliprj<T>(x: T, y: T, z: T, p: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy + Debug,
@@ -550,6 +555,7 @@ where
 }
 
 /// Array versions of Carlson elliptic integrals
+#[allow(dead_code)]
 pub fn elliprf_array<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,

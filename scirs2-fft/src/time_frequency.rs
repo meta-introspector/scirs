@@ -126,6 +126,7 @@ pub struct TFResult {
 }
 
 /// Compute a time-frequency representation of a signal
+#[allow(dead_code)]
 pub fn time_frequency_transform<T>(
     signal: &[T],
     config: &TFConfig,
@@ -170,6 +171,7 @@ where
 }
 
 /// Compute Short-Time Fourier Transform (STFT)
+#[allow(dead_code)]
 fn compute_stft<T>(signal: &[T], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult>
 where
     T: NumCast + Copy + Debug,
@@ -284,6 +286,7 @@ where
 }
 
 /// Compute Continuous Wavelet Transform (CWT)
+#[allow(dead_code)]
 fn compute_cwt<T>(signal: &[T], config: &TFConfig, sample_rate: Option<f64>) -> FFTResult<TFResult>
 where
     T: NumCast + Copy + Debug,
@@ -385,6 +388,7 @@ where
 }
 
 /// Create the FFT of a wavelet at a given scale/frequency
+#[allow(dead_code)]
 fn create_wavelet_fft(
     wavelet_type: WaveletType,
     scale_freq: f64,
@@ -469,6 +473,7 @@ fn create_wavelet_fft(
 }
 
 /// Compute reassigned spectrogram
+#[allow(dead_code)]
 fn compute_reassigned_spectrogram(
     signal: &[f64],
     config: &TFConfig,
@@ -559,6 +564,7 @@ fn compute_reassigned_spectrogram(
 }
 
 /// Compute synchrosqueezed wavelet transform
+#[allow(dead_code)]
 fn compute_synchrosqueezed_wt(
     signal: &[f64],
     config: &TFConfig,
@@ -640,6 +646,7 @@ fn compute_synchrosqueezed_wt(
 }
 
 /// Calculate the spectrogram (magnitude squared of STFT)
+#[allow(dead_code)]
 pub fn spectrogram<T>(
     signal: &[T],
     config: &TFConfig,
@@ -658,6 +665,7 @@ where
 }
 
 /// Calculate the scalogram (magnitude squared of CWT)
+#[allow(dead_code)]
 pub fn scalogram<T>(
     signal: &[T],
     config: &TFConfig,
@@ -676,6 +684,7 @@ where
 }
 
 /// Extract ridge (maximum energy path) from a time-frequency representation
+#[allow(dead_code)]
 pub fn extract_ridge(tf_result: &TFResult) -> Vec<(f64, f64)> {
     let num_times = tf_result.times.len();
     let num_freqs = tf_result.frequencies.len();

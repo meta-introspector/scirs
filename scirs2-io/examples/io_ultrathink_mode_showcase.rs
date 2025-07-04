@@ -16,6 +16,7 @@ use scirs2_io::neural_adaptive_io::{
 use scirs2_io::quantum_inspired_io::QuantumParallelProcessor;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 SciRS2-IO Ultrathink Mode Comprehensive Showcase");
     println!("====================================================\n");
@@ -47,6 +48,7 @@ fn main() -> Result<()> {
 }
 
 /// Demonstrate neural adaptive I/O controller capabilities
+#[allow(dead_code)]
 fn demonstrate_neural_adaptive_io() -> Result<()> {
     println!("🧠 Neural Adaptive I/O Controller Demo");
     println!("=====================================");
@@ -184,6 +186,7 @@ fn demonstrate_neural_adaptive_io() -> Result<()> {
 }
 
 /// Demonstrate quantum-inspired parallel processing
+#[allow(dead_code)]
 fn demonstrate_quantum_parallel_processing() -> Result<()> {
     println!("\n\n⚛️  Quantum-Inspired Parallel Processing Demo");
     println!("============================================");
@@ -255,6 +258,7 @@ fn demonstrate_quantum_parallel_processing() -> Result<()> {
 }
 
 /// Demonstrate ultra-think integrated processor
+#[allow(dead_code)]
 fn demonstrate_ultra_think_processor() -> Result<()> {
     println!("\n\n🚀 Ultra-Think Integrated Processor Demo");
     println!("=======================================");
@@ -311,6 +315,7 @@ fn demonstrate_ultra_think_processor() -> Result<()> {
 }
 
 /// Demonstrate performance comparison between approaches
+#[allow(dead_code)]
 fn demonstrate_performance_comparison() -> Result<()> {
     println!("\n\n⚡ Performance Comparison Demo");
     println!("=============================");
@@ -377,6 +382,7 @@ fn demonstrate_performance_comparison() -> Result<()> {
 }
 
 /// Demonstrate adaptive learning over time
+#[allow(dead_code)]
 fn demonstrate_adaptive_learning() -> Result<()> {
     println!("\n\n📚 Adaptive Learning Showcase");
     println!("============================");
@@ -455,27 +461,33 @@ fn demonstrate_adaptive_learning() -> Result<()> {
 
 // Helper functions for generating test data
 
+#[allow(dead_code)]
 fn generate_random_data(size: usize) -> Vec<u8> {
     (0..size).map(|i| ((i * 17 + 23) % 256) as u8).collect()
 }
 
+#[allow(dead_code)]
 fn generate_structured_data(size: usize) -> Vec<u8> {
     (0..size).map(|i| (i % 64) as u8).collect()
 }
 
+#[allow(dead_code)]
 fn generate_compressed_pattern(size: usize) -> Vec<u8> {
     let pattern = vec![1, 2, 3, 4];
     (0..size).map(|i| pattern[i % pattern.len()]).collect()
 }
 
+#[allow(dead_code)]
 fn generate_high_entropy_data(size: usize) -> Vec<u8> {
     (0..size).map(|i| ((i * 157 + 73) % 256) as u8).collect()
 }
 
+#[allow(dead_code)]
 fn generate_low_entropy_data(size: usize) -> Vec<u8> {
     vec![42; size]
 }
 
+#[allow(dead_code)]
 fn generate_mixed_pattern_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -488,10 +500,12 @@ fn generate_mixed_pattern_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_benchmark_data(size: usize) -> Vec<u8> {
     (0..size).map(|i| ((i * 31 + i * i) % 256) as u8).collect()
 }
 
+#[allow(dead_code)]
 fn calculate_entropy(data: &[u8]) -> f32 {
     let mut frequency = [0u32; 256];
     for &byte in data {

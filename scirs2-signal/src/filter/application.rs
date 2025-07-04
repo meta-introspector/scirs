@@ -37,6 +37,7 @@ use std::fmt::Debug;
 /// let signal = vec![1.0, 2.0, 3.0, 2.0, 1.0];
 /// let filtered = filtfilt(&b, &a, &signal).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn filtfilt<T>(b: &[f64], a: &[f64], x: &[T]) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -101,6 +102,7 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 2.0, 1.0];
 /// let filtered = lfilter(&b, &a, &signal).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn lfilter<T>(b: &[f64], a: &[f64], x: &[T]) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -200,6 +202,7 @@ where
 /// let b = vec![1.0, -2.0, 1.0]; // (z-1)^2, has zeros at z=1 (outside unit circle)
 /// let b_min = minimum_phase(&b, true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn minimum_phase(b: &[f64], discrete_time: bool) -> SignalResult<Vec<f64>> {
     if b.is_empty() {
         return Err(SignalError::ValueError(
@@ -290,6 +293,7 @@ pub fn minimum_phase(b: &[f64], discrete_time: bool) -> SignalResult<Vec<f64>> {
 /// let frequencies = (0..128).map(|i| std::f64::consts::PI * i as f64 / 127.0).collect::<Vec<_>>();
 /// let gd = group_delay(&b, &a, &frequencies).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn group_delay(b: &[f64], a: &[f64], w: &[f64]) -> SignalResult<Vec<f64>> {
     if a.is_empty() || a[0].abs() < 1e-10 {
         return Err(SignalError::ValueError(
@@ -350,6 +354,7 @@ pub fn group_delay(b: &[f64], a: &[f64], w: &[f64]) -> SignalResult<Vec<f64>> {
 /// let template = vec![1.0, 1.0, 1.0, 0.0, 0.0];
 /// let mf = matched_filter(&template, true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn matched_filter(template: &[f64], normalize: bool) -> SignalResult<Vec<f64>> {
     if template.is_empty() {
         return Err(SignalError::ValueError(
@@ -398,6 +403,7 @@ pub fn matched_filter(template: &[f64], normalize: bool) -> SignalResult<Vec<f64
 /// let template = vec![1.0, 1.0, 1.0];
 /// let output = matched_filter_detect(&signal, &template, true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn matched_filter_detect(
     signal: &[f64],
     template: &[f64],
@@ -422,6 +428,7 @@ pub fn matched_filter_detect(
 // Helper functions for internal use
 
 /// Evaluate transfer function H(z) = B(z)/A(z) at a frequency
+#[allow(dead_code)]
 pub fn evaluate_transfer_function(b: &[f64], a: &[f64], w: f64) -> Complex64 {
     let z = Complex64::new(w.cos(), w.sin());
 
@@ -450,6 +457,7 @@ pub fn evaluate_transfer_function(b: &[f64], a: &[f64], w: f64) -> Complex64 {
 ///
 /// This is a basic implementation for demonstration purposes.
 /// Production code would use more robust algorithms like Jenkins-Traub or eigenvalue methods.
+#[allow(dead_code)]
 pub fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
     if coeffs.is_empty() {
         return Ok(Vec::new());
@@ -544,6 +552,7 @@ pub fn find_polynomial_roots(coeffs: &[f64]) -> SignalResult<Vec<Complex64>> {
 }
 
 /// Evaluate polynomial and its derivative at a complex point
+#[allow(dead_code)]
 fn evaluate_polynomial_and_derivative(coeffs: &[f64], z: Complex64) -> (Complex64, Complex64) {
     if coeffs.is_empty() {
         return (Complex64::zero(), Complex64::zero());
@@ -563,6 +572,7 @@ fn evaluate_polynomial_and_derivative(coeffs: &[f64], z: Complex64) -> (Complex6
 }
 
 /// Reconstruct polynomial coefficients from roots
+#[allow(dead_code)]
 fn polynomial_from_roots(roots: &[Complex64]) -> Vec<f64> {
     if roots.is_empty() {
         return vec![1.0];

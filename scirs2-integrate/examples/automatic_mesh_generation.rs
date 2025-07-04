@@ -9,6 +9,7 @@ use scirs2_integrate::pde::mesh_generation::{
     AutoMeshGenerator, BoundarySpecification, Domain, MeshGenerationParams,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Automatic Mesh Generation Examples\n");
 

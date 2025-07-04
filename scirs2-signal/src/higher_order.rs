@@ -139,6 +139,7 @@ impl Default for HigherOrderConfig {
 /// let signal = Array1::from_vec(vec![1.0, 2.0, 1.0, 0.0, -1.0, -2.0, -1.0, 0.0]);
 /// let (bis, f1, f2) = bispectrum(&signal, 16, Some("hann"), None, 1.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn bispectrum(
     signal: &Array1<f64>,
     nfft: usize,
@@ -189,6 +190,7 @@ pub fn bispectrum(
 /// let signal = Array1::from_vec(vec![1.0, 2.0, 1.0, 0.0, -1.0, -2.0, -1.0, 0.0]);
 /// let (bic, (f1, f2)) = bicoherence(&signal, 16, Some("hann"), None, 1.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn bicoherence(
     signal: &Array1<f64>,
     nfft: usize,
@@ -247,6 +249,7 @@ pub fn bicoherence(
 }
 
 /// Internal function to compute the bispectrum
+#[allow(dead_code)]
 fn compute_bispectrum(
     signal: &Array1<f64>,
     config: &HigherOrderConfig,
@@ -286,6 +289,7 @@ fn compute_bispectrum(
 }
 
 /// Computes the bispectrum using the direct FFT-based method
+#[allow(dead_code)]
 fn compute_direct_bispectrum(
     signal: &Array1<f64>,
     nfft: usize,
@@ -331,6 +335,7 @@ fn compute_direct_bispectrum(
 }
 
 /// Computes the bispectrum using the indirect method via triple correlation
+#[allow(dead_code)]
 fn compute_indirect_bispectrum(
     signal: &Array1<f64>,
     nfft: usize,
@@ -356,6 +361,7 @@ fn compute_indirect_bispectrum(
 }
 
 /// Computes the bispectrum using the Welch-like method (segment averaging)
+#[allow(dead_code)]
 fn compute_welch_bispectrum(
     signal: &Array1<f64>,
     nfft: usize,
@@ -430,6 +436,7 @@ fn compute_welch_bispectrum(
 }
 
 /// Apply a window function to a signal
+#[allow(dead_code)]
 fn apply_window(signal: &Array1<f64>, window_name: &str) -> SignalResult<Array1<f64>> {
     let n = signal.len();
 
@@ -444,6 +451,7 @@ fn apply_window(signal: &Array1<f64>, window_name: &str) -> SignalResult<Array1<
 }
 
 /// Compute the Fast Fourier Transform of a signal
+#[allow(dead_code)]
 fn compute_fft(signal: &Array1<f64>, nfft: usize) -> SignalResult<Vec<Complex64>> {
     let signal_vec = signal.to_vec();
 
@@ -461,6 +469,7 @@ fn compute_fft(signal: &Array1<f64>, nfft: usize) -> SignalResult<Vec<Complex64>
 }
 
 /// Compute the power spectrum of a signal
+#[allow(dead_code)]
 fn compute_power_spectrum(
     signal: &Array1<f64>,
     config: &HigherOrderConfig,
@@ -508,6 +517,7 @@ fn compute_power_spectrum(
 }
 
 /// Compute the triple correlation (third-order cumulant) of a signal
+#[allow(dead_code)]
 fn compute_triple_correlation(signal: &Array1<f64>, size: usize) -> SignalResult<Array2<f64>> {
     let n = signal.len();
 
@@ -556,6 +566,7 @@ fn compute_triple_correlation(signal: &Array1<f64>, size: usize) -> SignalResult
 }
 
 /// Compute 2D FFT of a matrix
+#[allow(dead_code)]
 fn compute_2d_fft(matrix: &Array2<f64>, nfft: usize) -> SignalResult<Array2<Complex64>> {
     let (rows, cols) = matrix.dim();
 
@@ -635,6 +646,7 @@ fn compute_2d_fft(matrix: &Array2<f64>, nfft: usize) -> SignalResult<Array2<Comp
 ///
 /// # Returns
 /// * A structure containing the trispectrum values (partial implementation)
+#[allow(dead_code)]
 pub fn trispectrum(
     signal: &Array1<f64>,
     nfft: usize,
@@ -695,6 +707,7 @@ pub fn trispectrum(
 /// # Returns
 /// * `biamplitude` - 2D array containing the biamplitude values
 /// * `frequency_axes` - (f1_axis, f2_axis) frequency axes
+#[allow(dead_code)]
 pub fn biamplitude(
     signal: &Array1<f64>,
     nfft: usize,
@@ -759,6 +772,7 @@ pub fn biamplitude(
 /// # Returns
 /// * `cumulative_bispectrum` - Array containing the cumulative bispectrum values
 /// * `bandwidth` - Array of bandwidth values used for integration
+#[allow(dead_code)]
 pub fn cumulative_bispectrum(
     signal: &Array1<f64>,
     nfft: usize,
@@ -815,6 +829,7 @@ pub fn cumulative_bispectrum(
 /// # Returns
 /// * `skewness_spectrum` - Array containing the skewness spectrum values
 /// * `frequency` - Frequency axis
+#[allow(dead_code)]
 pub fn skewness_spectrum(
     signal: &Array1<f64>,
     nfft: usize,
@@ -865,6 +880,7 @@ pub fn skewness_spectrum(
 ///
 /// # Returns
 /// * Vector of (f1, f2, bicoherence_value) tuples for detected peaks
+#[allow(dead_code)]
 pub fn detect_phase_coupling(
     signal: &Array1<f64>,
     nfft: usize,

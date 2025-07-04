@@ -113,6 +113,7 @@ pub struct WaveletEnergy {
 /// // The arranged array has the same shape as the original image
 /// assert_eq!(arranged.shape(), image.shape());
 /// ```
+#[allow(dead_code)]
 pub fn arrange_coefficients_2d(decomposition: &Dwt2dResult) -> Array2<f64> {
     let approx = &decomposition.approx;
     let detail_h = &decomposition.detail_h;
@@ -193,6 +194,7 @@ pub fn arrange_coefficients_2d(decomposition: &Dwt2dResult) -> Array2<f64> {
 /// // The arranged array has the same shape as the original image
 /// assert_eq!(arranged.shape(), image.shape());
 /// ```
+#[allow(dead_code)]
 pub fn arrange_multilevel_coefficients_2d(
     decompositions: &[Dwt2dResult],
 ) -> SignalResult<Array2<f64>> {
@@ -334,6 +336,7 @@ pub fn arrange_multilevel_coefficients_2d(
 /// // Check that energy percentages sum to 100%
 /// assert!((energy.approximation_percent + energy.detail_percent - 100.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn calculate_energy_2d(decomposition: &Dwt2dResult) -> WaveletEnergy {
     let approx = &decomposition.approx;
     let detail_h = &decomposition.detail_h;
@@ -409,6 +412,7 @@ pub fn calculate_energy_2d(decomposition: &Dwt2dResult) -> WaveletEnergy {
 /// // Check that energy percentages sum to 100%
 /// assert!((energy.approximation_percent + energy.detail_percent - 100.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn calculate_energy_swt2d(decomposition: &Swt2dResult) -> WaveletEnergy {
     let approx = &decomposition.approx;
     let detail_h = &decomposition.detail_h;
@@ -482,6 +486,7 @@ pub fn calculate_energy_swt2d(decomposition: &Swt2dResult) -> WaveletEnergy {
 /// // Check that energy percentages sum to 100%
 /// assert!((energy.approximation_percent + energy.detail_percent - 100.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn calculate_energy_1d(approx: &[f64], detail: &[f64]) -> WaveletEnergy {
     // Calculate energy (sum of squared coefficients)
     let energy_approx = approx.iter().map(|&x| x * x).sum::<f64>();
@@ -552,6 +557,7 @@ pub fn calculate_energy_1d(approx: &[f64], detail: &[f64]) -> WaveletEnergy {
 ///     assert!(value >= 0.0 && value <= 1.0);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn normalize_coefficients(
     coefficients: &Array2<f64>,
     strategy: NormalizationStrategy,
@@ -707,6 +713,7 @@ pub enum NormalizationStrategy {
 /// assert_eq!(counts.total,
 ///            counts.approximation + counts.horizontal + counts.vertical + counts.diagonal);
 /// ```
+#[allow(dead_code)]
 pub fn count_nonzero_coefficients(
     decomposition: &Dwt2dResult,
     threshold: Option<f64>,
@@ -815,6 +822,7 @@ pub struct WaveletCoeffCount {
 /// assert_eq!(heatmap.shape()[1], decomp.approx.shape()[1]);
 /// assert_eq!(heatmap.shape()[2], 3); // RGB
 /// ```
+#[allow(dead_code)]
 pub fn create_coefficient_heatmap<F>(
     coefficients: &Array2<f64>,
     colormap: F,

@@ -119,6 +119,7 @@ where
 }
 
 /// Get machine epsilon for floating point type
+#[allow(dead_code)]
 pub fn machine_epsilon<F: Float + FromPrimitive>() -> F {
     match std::mem::size_of::<F>() {
         4 => F::from_f64(f32::EPSILON as f64).unwrap_or_else(|| {
@@ -136,6 +137,7 @@ pub fn machine_epsilon<F: Float + FromPrimitive>() -> F {
 }
 
 /// Assess the numerical condition of a matrix
+#[allow(dead_code)]
 pub fn assess_matrix_condition<F>(matrix: &ArrayView2<F>) -> InterpolateResult<ConditionReport<F>>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
@@ -189,6 +191,7 @@ where
 }
 
 /// Check if a matrix is symmetric within numerical tolerance
+#[allow(dead_code)]
 fn check_symmetry<F>(matrix: &ArrayView2<F>) -> bool
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
@@ -210,6 +213,7 @@ where
 }
 
 /// Estimate condition number using different methods based on availability
+#[allow(dead_code)]
 fn estimate_condition_number<F>(
     matrix: &ArrayView2<F>,
     #[cfg_attr(not(feature = "linalg"), allow(unused_variables))]
@@ -235,6 +239,7 @@ where
 
 /// Estimate condition number using SVD (requires linalg feature)
 #[cfg(feature = "linalg")]
+#[allow(dead_code)]
 fn estimate_condition_svd<F>(
     matrix: &ArrayView2<F>,
     diagnostics: &mut StabilityDiagnostics<F>,
@@ -296,6 +301,7 @@ where
 }
 
 /// Fallback condition number estimation using matrix norms
+#[allow(dead_code)]
 fn estimate_condition_norm_based<F>(matrix: &ArrayView2<F>) -> InterpolateResult<F>
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
@@ -341,6 +347,7 @@ where
 }
 
 /// Classify stability level based on condition number
+#[allow(dead_code)]
 fn classify_stability<F>(condition_number: F) -> StabilityLevel
 where
     F: Float + FromPrimitive,
@@ -366,6 +373,7 @@ where
 }
 
 /// Suggest regularization parameter based on condition number and diagnostics
+#[allow(dead_code)]
 fn suggest_regularization<F>(condition_number: F, diagnostics: &StabilityDiagnostics<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
@@ -387,17 +395,18 @@ where
             // Moderate regularization
             base_reg
                 * F::from_f64(10.0)
-                    .unwrap_or_else(|| F::from(10.0 as f32).unwrap_or_else(|| F::from(10)))
+                    .unwrap_or_else(|| F::from(10.0 as f32).unwrap_or_else(|| F::from(10).unwrap()))
         }
     } else {
         // Conservative regularization when no singular value information
         base_reg
             * F::from_f64(1000.0)
-                .unwrap_or_else(|| F::from(1000.0 as f32).unwrap_or_else(|| F::from(1000)))
+                .unwrap_or_else(|| F::from(1000.0 as f32).unwrap_or_else(|| F::from(1000).unwrap()))
     }
 }
 
 /// Check if a division operation is numerically safe
+#[allow(dead_code)]
 pub fn check_safe_division<F>(numerator: F, denominator: F) -> InterpolateResult<F>
 where
     F: Float
@@ -411,7 +420,7 @@ where
     let eps = machine_epsilon::<F>();
     let safe_threshold = eps
         * F::from_f64(1e6)
-            .unwrap_or_else(|| F::from(1e6 as f32).unwrap_or_else(|| F::from(1000000)));
+            .unwrap_or_else(|| F::from(1e6 as f32).unwrap_or_else(|| F::from(1000000).unwrap()));
 
     if denominator.abs() < safe_threshold {
         Err(InterpolateError::NumericalError(format!(
@@ -424,6 +433,7 @@ where
 }
 
 /// Check if reciprocal operation is numerically safe
+#[allow(dead_code)]
 pub fn safe_reciprocal<F>(value: F) -> InterpolateResult<F>
 where
     F: Float
@@ -438,6 +448,7 @@ where
 }
 
 /// Apply Tikhonov regularization to a matrix
+#[allow(dead_code)]
 pub fn apply_tikhonov_regularization<F>(
     matrix: &mut Array2<F>,
     regularization: F,
@@ -471,6 +482,7 @@ where
 }
 
 /// Apply adaptive regularization based on matrix characteristics
+#[allow(dead_code)]
 pub fn apply_adaptive_regularization<F>(
     matrix: &mut Array2<F>,
     condition_report: &ConditionReport<F>,
@@ -482,7 +494,8 @@ where
         StabilityLevel::Excellent | StabilityLevel::Good => F::zero(),
         StabilityLevel::Marginal => {
             // Use moderate regularization
-            let base_reg = machine_epsilon::<F>() * F::from_f64(1e8).unwrap_or(F::from(100000000));
+            let base_reg =
+                machine_epsilon::<F>() * F::from_f64(1e8).unwrap_or(F::from(100000000).unwrap());
             base_reg * condition_report.condition_number.sqrt()
         }
         StabilityLevel::Poor => {
@@ -490,7 +503,8 @@ where
             condition_report
                 .recommended_regularization
                 .unwrap_or_else(|| {
-                    machine_epsilon::<F>() * F::from_f64(1e12).unwrap_or(F::from(1000000000000))
+                    machine_epsilon::<F>()
+                        * F::from_f64(1e12).unwrap_or(F::from(1000000000000).unwrap())
                 })
         }
     };
@@ -503,6 +517,7 @@ where
 }
 
 /// Enhanced edge case detection for numerical stability
+#[allow(dead_code)]
 pub fn detect_edge_cases<F>(
     matrix: &ArrayView2<F>,
     rhs: Option<&ArrayView1<F>>,
@@ -538,7 +553,8 @@ where
     report.has_extreme_values = if !min_val.is_infinite() && !max_val.is_infinite() {
         let dynamic_range = max_val / min_val;
         dynamic_range
-            > F::from_f64(1e15).unwrap_or(F::from(1e15 as f32).unwrap_or(F::from(1000000000000000)))
+            > F::from_f64(1e15)
+                .unwrap_or(F::from(1e15 as f32).unwrap_or(F::from(1000000000000000).unwrap()))
     } else {
         false
     };
@@ -562,6 +578,7 @@ where
 }
 
 /// Check if matrix is diagonally dominant
+#[allow(dead_code)]
 fn check_diagonal_dominance<F>(matrix: &ArrayView2<F>) -> bool
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
@@ -582,12 +599,14 @@ where
 }
 
 /// Count zero elements on the diagonal
+#[allow(dead_code)]
 fn count_zero_diagonal_elements<F>(matrix: &ArrayView2<F>) -> usize
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign,
 {
     let n = matrix.nrows();
-    let zero_threshold = machine_epsilon::<F>() * F::from_f64(1e6).unwrap_or(F::from(1000000));
+    let zero_threshold =
+        machine_epsilon::<F>() * F::from_f64(1e6).unwrap_or(F::from(1000000).unwrap());
 
     (0..n)
         .filter(|&i| matrix[[i, i]].abs() < zero_threshold)
@@ -637,6 +656,7 @@ where
 }
 
 /// Enhanced solve with comprehensive stability monitoring and edge case detection
+#[allow(dead_code)]
 pub fn solve_with_enhanced_monitoring<F>(
     matrix: &Array2<F>,
     rhs: &Array1<F>,
@@ -697,6 +717,7 @@ where
 }
 
 /// Monitor and report numerical issues during matrix solve
+#[allow(dead_code)]
 pub fn solve_with_stability_monitoring<F>(
     matrix: &Array2<F>,
     rhs: &Array1<F>,
@@ -716,6 +737,7 @@ where
 }
 
 /// Solve linear system with iterative refinement for enhanced accuracy
+#[allow(dead_code)]
 fn solve_with_iterative_refinement<F>(
     matrix: &Array2<F>,
     rhs: &Array1<F>,
@@ -733,7 +755,7 @@ where
 {
     let mut solution = solve_system(matrix, rhs)?;
     let max_iterations = 5;
-    let tolerance = machine_epsilon::<F>() * F::from_f64(1e6).unwrap_or(F::from(1000000));
+    let tolerance = machine_epsilon::<F>() * F::from_f64(1e6).unwrap_or(F::from(1000000).unwrap());
 
     let mut convergence_info = ConvergenceInfo {
         iterations: 0,
@@ -827,6 +849,7 @@ where
 }
 
 /// Internal function to solve linear system
+#[allow(dead_code)]
 fn solve_system<F>(matrix: &Array2<F>, rhs: &Array1<F>) -> InterpolateResult<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
@@ -867,6 +890,7 @@ where
 
 /// Simple Gaussian elimination for small systems (fallback)
 #[cfg(not(feature = "linalg"))]
+#[allow(dead_code)]
 fn gaussian_elimination_small<F>(
     matrix: &Array2<F>,
     rhs: &Array1<F>,
@@ -903,8 +927,9 @@ where
         // Check for near-zero pivot
         if a[[i, i]].abs()
             < machine_epsilon::<F>()
-                * F::from_f64(1e6)
-                    .unwrap_or_else(|| F::from(1e6 as f32).unwrap_or_else(|| F::from(1000000)))
+                * F::from_f64(1e6).unwrap_or_else(|| {
+                    F::from(1e6 as f32).unwrap_or_else(|| F::from(1000000).unwrap())
+                })
         {
             return Err(InterpolateError::ComputationError(
                 "Matrix is singular or nearly singular".to_string(),
@@ -937,6 +962,7 @@ where
 }
 
 /// Analyze distances between data points to detect clustering issues
+#[allow(dead_code)]
 fn analyze_point_distances<F>(points: &ArrayView2<F>) -> InterpolateResult<(F, F, usize)>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -948,7 +974,7 @@ where
 
     let cluster_threshold = machine_epsilon::<F>()
         * F::from_f64(1e6)
-            .unwrap_or_else(|| F::from(1e6 as f32).unwrap_or_else(|| F::from(1000000)));
+            .unwrap_or_else(|| F::from(1e6 as f32).unwrap_or_else(|| F::from(1000000).unwrap()));
 
     for i in 0..n_points {
         for j in (i + 1)..n_points {
@@ -977,6 +1003,7 @@ where
 }
 
 /// Check for near-linear dependencies in data points
+#[allow(dead_code)]
 fn check_near_linear_dependencies<F>(points: &ArrayView2<F>) -> InterpolateResult<bool>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + 'static,
@@ -1009,7 +1036,7 @@ where
         // If condition number is very high, likely have linear dependencies
         Ok(condition_report.condition_number
             > F::from_f64(1e14).unwrap_or_else(|| {
-                F::from(1e14 as f32).unwrap_or_else(|| F::from(100000000000000))
+                F::from(1e14 as f32).unwrap_or_else(|| F::from(100000000000000).unwrap())
             }))
     } else {
         // For larger matrices, use a simpler heuristic
@@ -1018,6 +1045,7 @@ where
 }
 
 /// Compute Gram matrix A^T A for rank analysis
+#[allow(dead_code)]
 fn compute_gram_matrix<F>(points: &ArrayView2<F>) -> Array2<F>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -1040,6 +1068,7 @@ where
 }
 
 /// Suggest regularization parameter based on data characteristics
+#[allow(dead_code)]
 fn suggest_data_based_regularization<F>(min_distance: F, distance_ratio: F) -> F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -1051,24 +1080,27 @@ where
 
     // Scale by distance ratio (more ill-conditioned data needs more regularization)
     let ratio_factor = if distance_ratio
-        > F::from_f64(1e12)
-            .unwrap_or_else(|| F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000)))
-    {
+        > F::from_f64(1e12).unwrap_or_else(|| {
+            F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000).unwrap())
+        }) {
         F::from_f64(1000.0)
-            .unwrap_or_else(|| F::from(1000.0 as f32).unwrap_or_else(|| F::from(1000)))
+            .unwrap_or_else(|| F::from(1000.0 as f32).unwrap_or_else(|| F::from(1000).unwrap()))
     } else if distance_ratio
         > F::from_f64(1e8)
-            .unwrap_or_else(|| F::from(1e8 as f32).unwrap_or_else(|| F::from(100000000)))
+            .unwrap_or_else(|| F::from(1e8 as f32).unwrap_or_else(|| F::from(100000000).unwrap()))
     {
-        F::from_f64(100.0).unwrap_or_else(|| F::from(100.0 as f32).unwrap_or_else(|| F::from(100)))
+        F::from_f64(100.0)
+            .unwrap_or_else(|| F::from(100.0 as f32).unwrap_or_else(|| F::from(100).unwrap()))
     } else {
-        F::from_f64(10.0).unwrap_or_else(|| F::from(10.0 as f32).unwrap_or_else(|| F::from(10)))
+        F::from_f64(10.0)
+            .unwrap_or_else(|| F::from(10.0 as f32).unwrap_or_else(|| F::from(10).unwrap()))
     };
 
     distance_based * ratio_factor
 }
 
 /// Analyze boundary effects for interpolation stability  
+#[allow(dead_code)]
 fn analyze_boundary_effects<F>(points: &ArrayView2<F>) -> InterpolateResult<BoundaryAnalysis<F>>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -1078,10 +1110,10 @@ where
 
     if n_points == 0 {
         return Ok(BoundaryAnalysis {
-            boundary_well_distributed: false,
-            min_boundary_distance: F::zero(),
-            extrapolation_stable: false,
-            convex_hull_volume: None,
+            boundary_has_issues: false,
+            extrapolation_stability: StabilityLevel::Good,
+            has_natural_boundaries: true,
+            boundary_gradient_norm: F::zero(),
         });
     }
 
@@ -1118,24 +1150,30 @@ where
     // Simple heuristic for boundary distribution
     let domain_sizes: Vec<F> = (0..dim).map(|j| max_coords[j] - min_coords[j]).collect();
     let avg_domain_size = domain_sizes.iter().fold(F::zero(), |a, &b| a + b)
-        / F::from_usize(dim).unwrap_or_else(|| F::from(dim as f32).unwrap_or_else(|| F::from(dim)));
+        / F::from_usize(dim)
+            .unwrap_or_else(|| F::from(dim as f32).unwrap_or_else(|| F::from(dim).unwrap()));
     let well_distributed = min_boundary_dist
         > avg_domain_size
             / F::from_f64(10.0)
-                .unwrap_or_else(|| F::from(10.0 as f32).unwrap_or_else(|| F::from(10)));
+                .unwrap_or_else(|| F::from(10.0 as f32).unwrap_or_else(|| F::from(10).unwrap()));
 
     // Extrapolation stability heuristic
     let extrapolation_stable = well_distributed && n_points > 2 * dim;
 
     Ok(BoundaryAnalysis {
-        boundary_well_distributed: well_distributed,
-        min_boundary_distance: min_boundary_dist,
-        extrapolation_stable,
-        convex_hull_volume: None, // Could implement convex hull volume calculation
+        boundary_has_issues: !well_distributed,
+        extrapolation_stability: if extrapolation_stable {
+            StabilityLevel::Good
+        } else {
+            StabilityLevel::Marginal
+        },
+        has_natural_boundaries: well_distributed,
+        boundary_gradient_norm: min_boundary_dist,
     })
 }
 
 /// Comprehensive edge case analysis for interpolation stability
+#[allow(dead_code)]
 pub fn analyze_interpolation_edge_cases<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1332,6 +1370,7 @@ where
 }
 
 /// Analyze data points for numerical issues
+#[allow(dead_code)]
 fn analyze_data_points<F>(points: &ArrayView2<F>) -> InterpolateResult<DataPointsAnalysis<F>>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -1373,7 +1412,7 @@ where
             }
 
             // Check for near-duplicates
-            if dist < machine_epsilon::<F>() * F::from(1000.0).unwrap_or(F::from(1000)) {
+            if dist < machine_epsilon::<F>() * F::from(1000.0).unwrap_or(F::from(1000).unwrap()) {
                 has_duplicates = true;
             }
         }
@@ -1395,6 +1434,7 @@ where
 }
 
 /// Analyze function values for stability issues
+#[allow(dead_code)]
 fn analyze_function_values<F>(
     values: &ArrayView1<F>,
 ) -> InterpolateResult<FunctionValuesAnalysis<F>>
@@ -1441,6 +1481,7 @@ where
 }
 
 /// Analyze boundary conditions
+#[allow(dead_code)]
 fn analyze_boundary_conditions<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1512,6 +1553,7 @@ where
 }
 
 /// Check if 2D points are collinear
+#[allow(dead_code)]
 fn check_collinearity_2d<F>(points: &ArrayView2<F>) -> bool
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -1521,7 +1563,7 @@ where
         return true;
     }
 
-    let tolerance = machine_epsilon::<F>() * F::from(1000.0).unwrap_or(F::from(1000));
+    let tolerance = machine_epsilon::<F>() * F::from(1000.0).unwrap_or(F::from(1000).unwrap());
 
     // Use cross product to check collinearity
     for i in 2..n {
@@ -1540,6 +1582,7 @@ where
 }
 
 /// Calculate clustering score for point distribution
+#[allow(dead_code)]
 fn calculate_clustering_score<F>(points: &ArrayView2<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -1596,6 +1639,7 @@ where
 }
 
 /// Estimate smoothness of function values
+#[allow(dead_code)]
 fn estimate_smoothness<F>(values: &ArrayView1<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -1629,6 +1673,7 @@ where
 }
 
 /// Check if values are monotonic
+#[allow(dead_code)]
 fn check_monotonicity<F>(values: &ArrayView1<F>) -> bool
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -1638,7 +1683,7 @@ where
         return true;
     }
 
-    let tolerance = machine_epsilon::<F>() * F::from(100.0).unwrap_or(F::from(100));
+    let tolerance = machine_epsilon::<F>() * F::from(100.0).unwrap_or(F::from(100).unwrap());
 
     // Check for monotonic increasing
     let mut increasing = true;
@@ -1658,6 +1703,7 @@ where
 }
 
 /// Estimate noise level in function values
+#[allow(dead_code)]
 fn estimate_noise_level<F>(values: &ArrayView1<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -1678,13 +1724,15 @@ where
     let median_idx = first_diffs.len() / 2;
 
     if median_idx < first_diffs.len() {
-        first_diffs[median_idx] * F::from(1.4826).unwrap_or(F::from(1.4826)) // MAD scale factor
+        first_diffs[median_idx] * F::from(1.4826).unwrap_or(F::from(1.4826).unwrap())
+    // MAD scale factor
     } else {
         F::zero()
     }
 }
 
 /// Assess overall interpolation stability based on analysis
+#[allow(dead_code)]
 fn assess_overall_interpolation_stability<F>(analysis: &EdgeCaseAnalysis<F>) -> StabilityLevel
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -1723,6 +1771,7 @@ where
 }
 
 /// Generate stability improvement recommendations
+#[allow(dead_code)]
 fn generate_stability_recommendations<F>(analysis: &EdgeCaseAnalysis<F>) -> Vec<String>
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -1803,6 +1852,7 @@ where
 }
 
 /// Early numerical warning system for proactive issue detection
+#[allow(dead_code)]
 pub fn early_numerical_warning_system<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1846,7 +1896,7 @@ where
     let min_separation = calculate_minimum_point_separation(points);
     let machine_eps = machine_epsilon::<F>();
 
-    if min_separation < machine_eps * F::from(1000.0).unwrap_or(F::from(1000)) {
+    if min_separation < machine_eps * F::from(1000.0).unwrap_or(F::from(1000).unwrap()) {
         warnings
             .push("WARNING: Very small point separations may cause numerical issues".to_string());
     }
@@ -1886,6 +1936,7 @@ where
 }
 
 /// Calculate minimum separation between any two points
+#[allow(dead_code)]
 fn calculate_minimum_point_separation<F>(points: &ArrayView2<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -1913,6 +1964,7 @@ where
 }
 
 /// Calculate range of function values
+#[allow(dead_code)]
 fn calculate_value_range<F>(values: &ArrayView1<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign,
@@ -2047,6 +2099,7 @@ mod tests {
 }
 
 /// Enhanced matrix condition assessment with improved diagnostics
+#[allow(dead_code)]
 pub fn assess_enhanced_matrix_condition<F>(
     matrix: &ArrayView2<F>,
 ) -> InterpolateResult<ConditionReport<F>>
@@ -2064,7 +2117,8 @@ where
             enhanced_diagnostics
                 .suggested_regularization
                 .unwrap_or_else(|| {
-                    machine_epsilon::<F>() * F::from_f64(1e6).unwrap_or_else(|| F::from(1000000))
+                    machine_epsilon::<F>()
+                        * F::from_f64(1e6).unwrap_or_else(|| F::from(1000000).unwrap())
                 }),
         );
     }
@@ -2091,6 +2145,7 @@ struct EnhancedDiagnostics<F: Float> {
 }
 
 /// Compute enhanced diagnostics for matrix stability in interpolation context
+#[allow(dead_code)]
 fn compute_enhanced_diagnostics<F>(
     matrix: &ArrayView2<F>,
 ) -> InterpolateResult<EnhancedDiagnostics<F>>
@@ -2110,7 +2165,7 @@ where
         min_diagonal = min_diagonal.min(diag_val);
         max_diagonal = max_diagonal.max(diag_val);
 
-        if diag_val < eps * F::from_f64(1e6).unwrap_or_else(|| F::from(1000000)) {
+        if diag_val < eps * F::from_f64(1e6).unwrap_or_else(|| F::from(1000000).unwrap()) {
             has_tiny_eigenvalues = true;
         }
     }
@@ -2123,8 +2178,9 @@ where
     };
 
     let interpolation_risky = diagonal_ratio
-        > F::from_f64(1e12)
-            .unwrap_or_else(|| F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000)));
+        > F::from_f64(1e12).unwrap_or_else(|| {
+            F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000).unwrap())
+        });
 
     // Suggest adaptive regularization
     let suggested_regularization = if has_tiny_eigenvalues || interpolation_risky {
@@ -2144,6 +2200,7 @@ where
 }
 
 /// Compute adaptive regularization parameter based on matrix characteristics
+#[allow(dead_code)]
 pub fn compute_adaptive_regularization<F>(min_value: F, condition_estimate: F) -> F
 where
     F: Float + FromPrimitive + Debug + Display,
@@ -2155,20 +2212,21 @@ where
 
     // Scale by condition number estimate
     let condition_factor = if condition_estimate
-        > F::from_f64(1e15)
-            .unwrap_or_else(|| F::from(1e15 as f32).unwrap_or_else(|| F::from(1000000000000000)))
-    {
-        F::from_f64(1000.0).unwrap_or_else(|| F::from(1000))
+        > F::from_f64(1e15).unwrap_or_else(|| {
+            F::from(1e15 as f32).unwrap_or_else(|| F::from(1000000000000000).unwrap())
+        }) {
+        F::from_f64(1000.0).unwrap_or_else(|| F::from(1000).unwrap())
     } else if condition_estimate
-        > F::from_f64(1e12)
-            .unwrap_or_else(|| F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000)))
+        > F::from_f64(1e12).unwrap_or_else(|| {
+            F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000).unwrap())
+        })
     {
-        F::from_f64(100.0).unwrap_or_else(|| F::from(100))
+        F::from_f64(100.0).unwrap_or_else(|| F::from(100).unwrap())
     } else if condition_estimate
         > F::from_f64(1e8)
-            .unwrap_or_else(|| F::from(1e8 as f32).unwrap_or_else(|| F::from(100000000)))
+            .unwrap_or_else(|| F::from(1e8 as f32).unwrap_or_else(|| F::from(100000000).unwrap()))
     {
-        F::from_f64(10.0).unwrap_or_else(|| F::from(10))
+        F::from_f64(10.0).unwrap_or_else(|| F::from(10).unwrap())
     } else {
         F::one()
     };
@@ -2177,6 +2235,7 @@ where
 }
 
 /// Perform matrix operations with enhanced stability monitoring
+#[allow(dead_code)]
 pub fn enhanced_matrix_multiply<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -2213,7 +2272,7 @@ where
     let max_product =
         max_a * max_b * F::from_usize(k).unwrap_or_else(|| F::from(k as f64).unwrap_or(F::one()));
 
-    if max_product > F::max_value() / F::from_f64(2.0).unwrap_or_else(|| F::from(2)) {
+    if max_product > F::max_value() / F::from_f64(2.0).unwrap_or_else(|| F::from(2).unwrap()) {
         return Err(InterpolateError::NumericalError(
             "Potential overflow in matrix multiplication".to_string(),
         ));

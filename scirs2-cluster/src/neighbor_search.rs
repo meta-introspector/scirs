@@ -820,6 +820,7 @@ impl<F: Float + FromPrimitive + Debug> BallTree<F> {
 }
 
 /// Create the appropriate neighbor searcher based on configuration
+#[allow(dead_code)]
 pub fn create_neighbor_searcher<F: Float + FromPrimitive + Debug + 'static>(
     config: NeighborSearchConfig,
 ) -> Box<dyn NeighborSearcher<F>> {
@@ -839,6 +840,7 @@ pub fn create_neighbor_searcher<F: Float + FromPrimitive + Debug + 'static>(
 }
 
 /// Calculate Euclidean distance between two points
+#[allow(dead_code)]
 fn euclidean_distance<F: Float + FromPrimitive>(a: ArrayView1<F>, b: ArrayView1<F>) -> f64 {
     let mut sum = 0.0;
     for (x, y) in a.iter().zip(b.iter()) {
@@ -849,6 +851,7 @@ fn euclidean_distance<F: Float + FromPrimitive>(a: ArrayView1<F>, b: ArrayView1<
 }
 
 /// Calculate Euclidean distance between two f64 vectors
+#[allow(dead_code)]
 fn euclidean_distance_vec(a: &[f64], b: &[f64]) -> f64 {
     let mut sum = 0.0;
     for (x, y) in a.iter().zip(b.iter()) {

@@ -21,6 +21,7 @@ use crate::tensor::Tensor;
 /// # Returns
 ///
 /// A new tensor containing the element-wise sum.
+#[allow(dead_code)]
 pub fn add<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
     b: &Tensor<F>,
@@ -47,6 +48,7 @@ pub fn add<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor containing the element-wise difference.
+#[allow(dead_code)]
 pub fn sub<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
     b: &Tensor<F>,
@@ -73,6 +75,7 @@ pub fn sub<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor containing the element-wise product.
+#[allow(dead_code)]
 pub fn mul<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
     b: &Tensor<F>,
@@ -99,6 +102,7 @@ pub fn mul<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor containing the element-wise quotient.
+#[allow(dead_code)]
 pub fn div<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
     b: &Tensor<F>,
@@ -125,6 +129,7 @@ pub fn div<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor containing the matrix product.
+#[allow(dead_code)]
 pub fn matmul<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
     b: &Tensor<F>,
@@ -187,6 +192,7 @@ pub fn matmul<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor with ReLU applied element-wise.
+#[allow(dead_code)]
 pub fn relu<F: Float + Debug + Send + Sync + 'static>(x: &Tensor<F>) -> Result<Tensor<F>> {
     let result_data = x.data.mapv(|v| if v > F::zero() { v } else { F::zero() });
 
@@ -207,6 +213,7 @@ pub fn relu<F: Float + Debug + Send + Sync + 'static>(x: &Tensor<F>) -> Result<T
 /// # Returns
 ///
 /// A new tensor with sigmoid applied element-wise.
+#[allow(dead_code)]
 pub fn sigmoid<F: Float + Debug + Send + Sync + 'static>(x: &Tensor<F>) -> Result<Tensor<F>> {
     let result_data = x.data.mapv(|v| F::one() / (F::one() + (-v).exp()));
 
@@ -227,6 +234,7 @@ pub fn sigmoid<F: Float + Debug + Send + Sync + 'static>(x: &Tensor<F>) -> Resul
 /// # Returns
 ///
 /// A new tensor with tanh applied element-wise.
+#[allow(dead_code)]
 pub fn tanh<F: Float + Debug + Send + Sync + 'static>(x: &Tensor<F>) -> Result<Tensor<F>> {
     let result_data = x.data.mapv(|v| v.tanh());
 
@@ -248,6 +256,7 @@ pub fn tanh<F: Float + Debug + Send + Sync + 'static>(x: &Tensor<F>) -> Result<T
 /// # Returns
 ///
 /// A new tensor with the sum results.
+#[allow(dead_code)]
 pub fn sum<F: Float + Debug + Send + Sync + 'static>(
     x: &Tensor<F>,
     axis: Option<usize>,
@@ -287,6 +296,7 @@ pub fn sum<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor with the mean results.
+#[allow(dead_code)]
 pub fn mean<F: Float + Debug + Send + Sync + 'static>(
     x: &Tensor<F>,
     axis: Option<usize>,
@@ -331,6 +341,7 @@ pub fn mean<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor with the same data but reshaped.
+#[allow(dead_code)]
 pub fn reshape<F: Float + Debug + Send + Sync + 'static>(
     x: &Tensor<F>,
     shape: &[usize],
@@ -392,6 +403,7 @@ pub fn reshape<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor with the dimensions swapped.
+#[allow(dead_code)]
 pub fn transpose<F: Float + Debug + Send + Sync + 'static>(
     x: &Tensor<F>,
     dim0: usize,
@@ -461,6 +473,7 @@ pub fn transpose<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor with the natural logarithm applied element-wise.
+#[allow(dead_code)]
 pub fn log<F: Float + Debug + Send + Sync + 'static>(x: &Tensor<F>) -> Result<Tensor<F>> {
     let result_data = x.data.mapv(|v| v.ln());
 
@@ -488,6 +501,7 @@ pub fn log<F: Float + Debug + Send + Sync + 'static>(x: &Tensor<F>) -> Result<Te
 /// # Returns
 ///
 /// A new tensor with the exponential applied element-wise.
+#[allow(dead_code)]
 pub fn exp<F: Float + Debug + Send + Sync + 'static>(x: &Tensor<F>) -> Result<Tensor<F>> {
     let result_data = x.data.mapv(|v| v.exp());
 
@@ -516,6 +530,7 @@ pub fn exp<F: Float + Debug + Send + Sync + 'static>(x: &Tensor<F>) -> Result<Te
 /// # Returns
 ///
 /// A new tensor with softmax applied along the specified dimension.
+#[allow(dead_code)]
 pub fn softmax<F: Float + Debug + Send + Sync + 'static>(
     x: &Tensor<F>,
     dim: usize,
@@ -642,6 +657,7 @@ pub fn softmax<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor that is the concatenation of the input tensors.
+#[allow(dead_code)]
 pub fn cat<F: Float + Debug + Send + Sync + 'static>(
     tensors: &[&Tensor<F>],
     dim: usize,

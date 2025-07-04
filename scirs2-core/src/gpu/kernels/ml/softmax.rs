@@ -172,6 +172,7 @@ struct Uniforms {
 var<workgroup> sdata: array<f32, 256>;
 
 @compute @workgroup_size(256)
+#[allow(dead_code)]
 fn softmax_find_max(
     @builtin(global_invocation_id) global_id: vec3<u32>,
     @builtin(local_invocation_id) local_id: vec3<u32>,
@@ -210,6 +211,7 @@ fn softmax_find_max(
 }
 
 @compute @workgroup_size(256)
+#[allow(dead_code)]
 fn softmax_compute_sum(
     @builtin(global_invocation_id) global_id: vec3<u32>,
     @builtin(local_invocation_id) local_id: vec3<u32>,
@@ -247,6 +249,7 @@ fn softmax_compute_sum(
 }
 
 @compute @workgroup_size(256)
+#[allow(dead_code)]
 fn softmax_finalize(
     @builtin(global_invocation_id) global_id: vec3<u32>,
     @builtin(workgroup_id) workgroup_id: vec3<u32>

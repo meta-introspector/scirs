@@ -6,6 +6,7 @@
 #![allow(unused_imports)]
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use rand::rng;
 use scirs2_graph::{algorithms, generators, measures, DiGraph, EdgeWeight, Graph, Node};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -133,6 +134,7 @@ mod memory {
 }
 
 /// Benchmark large graph generation
+#[allow(dead_code)]
 fn bench_graph_generation(c: &mut Criterion) {
     let mut group = c.benchmark_group("large_graph_generation");
     group.sample_size(10);
@@ -180,6 +182,7 @@ fn bench_graph_generation(c: &mut Criterion) {
 }
 
 /// Benchmark algorithms on large graphs
+#[allow(dead_code)]
 fn bench_large_algorithms(c: &mut Criterion) {
     let mut group = c.benchmark_group("large_graph_algorithms");
     group.sample_size(10);
@@ -252,6 +255,7 @@ fn bench_large_algorithms(c: &mut Criterion) {
 }
 
 /// Stress test streaming operations
+#[allow(dead_code)]
 fn bench_streaming_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("streaming_operations");
     group.sample_size(10);
@@ -290,6 +294,7 @@ fn bench_streaming_operations(c: &mut Criterion) {
 }
 
 /// Run comprehensive stress test suite
+#[allow(dead_code)]
 fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
     let start_time = Instant::now();
     let mut results = StressTestResults {
@@ -373,6 +378,7 @@ fn run_stress_test_suite(config: StressTestConfig) -> StressTestResults {
     results
 }
 
+#[allow(dead_code)]
 fn test_algorithm(
     graph: &Graph<usize, f64>,
     algorithm: &str,
@@ -407,10 +413,12 @@ fn test_algorithm(
             use rand::prelude::*;
             let mut rng = rng();
             let mut sum = 0.0;
-            for _ in 0..config.sample_size.min(graph.node_count()) {
-                let node = rng.random_range(0..graph.node_count());
-                if let Ok(cc) = measures::local_clustering_coefficient(graph, node) {
-                    sum += cc;
+            if let Ok(coefficients) = measures::clustering_coefficient(graph) {
+                for _ in 0..config.sample_size.min(graph.node_count()) {
+                    let node = rng.random_range(0..graph.node_count());
+                    if let Some(cc) = coefficients.get(&node) {
+                        sum += cc;
+                    }
                 }
             }
             format!(
@@ -435,6 +443,7 @@ fn test_algorithm(
 }
 
 /// Print stress test report
+#[allow(dead_code)]
 fn print_stress_test_report(results: &StressTestResults) {
     println!("\n========== STRESS TEST REPORT ==========");
     println!(
@@ -507,6 +516,7 @@ fn print_stress_test_report(results: &StressTestResults) {
 }
 
 /// Save results to JSON file
+#[allow(dead_code)]
 fn save_results(results: &StressTestResults, filename: &str) -> std::io::Result<()> {
     let json = serde_json::to_string_pretty(results)?;
     std::fs::write(filename, json)?;

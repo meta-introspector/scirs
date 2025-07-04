@@ -1247,6 +1247,7 @@ impl LieAlgebra for Gln {
 }
 
 /// Helper function for matrix exponential
+#[allow(dead_code)]
 fn matrix_exponential(a: &Array2<f64>) -> Array2<f64> {
     let n = a.nrows();
     let mut result = Array2::eye(n);
@@ -1265,6 +1266,7 @@ fn matrix_exponential(a: &Array2<f64>) -> Array2<f64> {
 }
 
 /// Helper function for matrix logarithm
+#[allow(dead_code)]
 fn matrix_logarithm(a: &Array2<f64>) -> Array2<f64> {
     let n = a.nrows();
     let i = Array2::<f64>::eye(n);

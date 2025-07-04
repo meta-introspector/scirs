@@ -846,6 +846,7 @@ struct FunctionAnalysis {
     analysis_timestamp: Instant,
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧪 Interactive Mathematics Laboratory for Special Functions");
     println!("=========================================================\n");
@@ -883,6 +884,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn setup_laboratory_session(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 Laboratory Setup");
     println!("===================\n");
@@ -924,6 +926,7 @@ fn setup_laboratory_session(lab: &mut MathLaboratory) -> Result<(), Box<dyn std:
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_laboratory_menu() {
     println!("\n🧪 Mathematics Laboratory - Main Menu");
     println!("=====================================");
@@ -939,6 +942,7 @@ fn display_laboratory_menu() {
     println!();
 }
 
+#[allow(dead_code)]
 fn run_expression_evaluator(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚡ Expression Evaluator & Calculator");
     println!("=====================================\n");
@@ -999,6 +1003,7 @@ fn run_expression_evaluator(lab: &mut MathLaboratory) -> Result<(), Box<dyn std:
     Ok(())
 }
 
+#[allow(dead_code)]
 fn provide_mathematical_insights(expression: &str, result: f64) {
     // Provide context and insights about the result
 
@@ -1040,6 +1045,7 @@ fn provide_mathematical_insights(expression: &str, result: f64) {
     }
 }
 
+#[allow(dead_code)]
 fn suggest_corrections(input: &str) {
     println!("💡 Suggestions:");
 
@@ -1069,6 +1075,7 @@ fn suggest_corrections(input: &str) {
     }
 }
 
+#[allow(dead_code)]
 fn explore_theorems_interactively(
     lab: &mut MathLaboratory,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1101,6 +1108,7 @@ fn explore_theorems_interactively(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_specific_theorem(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📚 Theorem: {}", theorem.theorem_name);
     println!("=".repeat(theorem.theorem_name.len() + 10));
@@ -1148,6 +1156,7 @@ fn explore_specific_theorem(theorem: &TheoremExplorer) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn step_through_proof(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Proof of: {}", theorem.theorem_name);
     println!("=".repeat(theorem.theorem_name.len() + 12));
@@ -1219,6 +1228,7 @@ fn step_through_proof(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
+#[allow(dead_code)]
 fn provide_step_explanation(question: &str, step: &ProofStep) {
     // Provide context-aware explanations based on the question
     let question_lower = question.to_lowercase();
@@ -1244,6 +1254,7 @@ fn provide_step_explanation(question: &str, step: &ProofStep) {
     }
 }
 
+#[allow(dead_code)]
 fn work_with_examples(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧮 Working with Examples");
     println!("========================\n");
@@ -1297,6 +1308,7 @@ fn work_with_examples(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
+#[allow(dead_code)]
 fn calculate_theorem_result(
     theorem: &TheoremExplorer,
     input_values: &HashMap<String, f64>,
@@ -1335,6 +1347,7 @@ fn calculate_theorem_result(
     }
 }
 
+#[allow(dead_code)]
 fn interactive_verification(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧪 Interactive Verification");
     println!("===========================\n");
@@ -1381,6 +1394,7 @@ fn interactive_verification(theorem: &TheoremExplorer) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_visualizations(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Mathematical Visualizations");
     println!("==============================\n");
@@ -1408,6 +1422,7 @@ fn create_visualizations(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_function_plots(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Function Plotting");
     println!("===================\n");
@@ -1433,6 +1448,7 @@ fn create_function_plots(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_function_analysis(analysis: &FunctionAnalysis) {
     println!("\n🔍 Function Analysis: {}", analysis.function_expr);
     println!("=".repeat(30));
@@ -1472,6 +1488,7 @@ fn display_function_analysis(analysis: &FunctionAnalysis) {
     }
 }
 
+#[allow(dead_code)]
 fn create_complex_visualizations(
     _lab: &mut MathLaboratory,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1490,6 +1507,7 @@ fn create_complex_visualizations(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_animations(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎵 Animation Sequences");
     println!("=====================\n");
@@ -1513,6 +1531,7 @@ fn create_animations(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error
     Ok(())
 }
 
+#[allow(dead_code)]
 fn animate_bessel_family() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 Animating Bessel Function Family");
     println!("===================================\n");
@@ -1558,6 +1577,7 @@ fn animate_bessel_family() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn animate_gamma_poles() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎲 Gamma Function Pole Animation");
     println!("================================\n");
@@ -1568,6 +1588,7 @@ fn animate_gamma_poles() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn animate_error_convergence() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Error Function Series Convergence");
     println!("====================================\n");
@@ -1612,10 +1633,12 @@ fn animate_error_convergence() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn factorial(n: u32) -> f64 {
     (1..=n).map(|i| i as f64).product()
 }
 
+#[allow(dead_code)]
 fn animate_parameter_variation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎛️ Parameter Variation Animation");
     println!("===============================\n");
@@ -1629,6 +1652,7 @@ fn animate_parameter_variation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_comparative_plots(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Comparative Analysis Plots");
     println!("=============================\n");
@@ -1656,6 +1680,7 @@ fn create_comparative_plots(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn interactive_parameter_exploration(
     _lab: &mut MathLaboratory,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1679,6 +1704,7 @@ fn interactive_parameter_exploration(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_bessel_parameters() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 Bessel Function Parameter Exploration");
     println!("========================================\n");
@@ -1722,6 +1748,7 @@ fn explore_bessel_parameters() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_gamma_parameters() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎲 Gamma Function Parameter Exploration");
     println!("=======================================\n");
@@ -1769,6 +1796,7 @@ fn explore_gamma_parameters() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_erf_parameters() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Error Function Parameter Exploration");
     println!("=======================================\n");
@@ -1810,6 +1838,7 @@ fn explore_erf_parameters() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_function_analysis(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔍 Function Analysis Tools");
     println!("==========================\n");
@@ -1835,6 +1864,7 @@ fn run_function_analysis(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::e
     Ok(())
 }
 
+#[allow(dead_code)]
 fn find_zeros_and_extrema() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Zeros and Extrema Finder");
     println!("===========================\n");
@@ -1887,6 +1917,7 @@ fn find_zeros_and_extrema() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bisection_method<F>(f: F, mut a: f64, mut b: f64, tolerance: f64) -> Option<f64>
 where
     F: Fn(f64) -> f64,
@@ -1920,6 +1951,7 @@ where
     Some((a + b) / 2.0)
 }
 
+#[allow(dead_code)]
 fn analyze_symmetry() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔄 Symmetry and Periodicity Analysis");
     println!("====================================\n");
@@ -1967,6 +1999,7 @@ fn analyze_symmetry() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn study_asymptotic_behavior() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Asymptotic Behavior Study");
     println!("============================\n");
@@ -2012,6 +2045,7 @@ fn study_asymptotic_behavior() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn investigate_numerical_properties() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧮 Numerical Properties Investigation");
     println!("====================================\n");
@@ -2051,6 +2085,7 @@ fn investigate_numerical_properties() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_function_relationships() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔗 Function Relationship Explorer");
     println!("=================================\n");
@@ -2095,6 +2130,7 @@ fn explore_function_relationships() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_mathematical_discovery(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔬 Mathematical Discovery Engine");
     println!("================================\n");
@@ -2132,6 +2168,7 @@ fn run_mathematical_discovery(lab: &mut MathLaboratory) -> Result<(), Box<dyn st
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_proof_assistant(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧠 Proof Assistant");
     println!("==================\n");
@@ -2149,6 +2186,7 @@ fn run_proof_assistant(_lab: &mut MathLaboratory) -> Result<(), Box<dyn std::err
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_computational_experiments(
     _lab: &mut MathLaboratory,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -2176,6 +2214,7 @@ fn run_computational_experiments(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn study_convergence_rates() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Convergence Rate Studies");
     println!("===========================\n");
@@ -2222,6 +2261,7 @@ fn study_convergence_rates() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn run_monte_carlo_experiments() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎲 Monte Carlo Investigations");
     println!("=============================\n");
@@ -2254,6 +2294,7 @@ fn run_monte_carlo_experiments() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn analyze_parameter_sensitivity() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔍 Parameter Sensitivity Analysis");
     println!("=================================\n");
@@ -2301,6 +2342,7 @@ fn analyze_parameter_sensitivity() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn benchmark_performance() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚡ Performance Benchmarking");
     println!("==========================\n");
@@ -2372,6 +2414,7 @@ fn benchmark_performance() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn analyze_precision_requirements() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧮 Precision Requirement Analysis");
     println!("=================================\n");
@@ -2416,6 +2459,7 @@ fn analyze_precision_requirements() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_session_summary(lab: &MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Laboratory Session Summary");
     println!("=============================\n");
@@ -2464,6 +2508,7 @@ fn display_session_summary(lab: &MathLaboratory) -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
+#[allow(dead_code)]
 fn analyze_session_patterns(lab: &MathLaboratory) {
     // Analyze patterns in the user's exploration
     let mut function_usage = HashMap::new();
@@ -2511,6 +2556,7 @@ fn analyze_session_patterns(lab: &MathLaboratory) {
     }
 }
 
+#[allow(dead_code)]
 fn save_laboratory_session(_lab: &MathLaboratory) -> Result<(), Box<dyn std::error::Error>> {
     // In a real implementation, this would save to file/database
     println!("💾 Session data saved successfully!");
@@ -2519,6 +2565,7 @@ fn save_laboratory_session(_lab: &MathLaboratory) -> Result<(), Box<dyn std::err
 }
 
 // Helper functions for proof steps
+#[allow(dead_code)]
 fn create_reflection_formula_proof_steps() -> Vec<ProofStep> {
     vec![
         ProofStep {
@@ -2571,6 +2618,7 @@ fn create_reflection_formula_proof_steps() -> Vec<ProofStep> {
     ]
 }
 
+#[allow(dead_code)]
 fn create_bessel_generating_proof_steps() -> Vec<ProofStep> {
     vec![
         ProofStep {
@@ -2595,6 +2643,7 @@ fn create_bessel_generating_proof_steps() -> Vec<ProofStep> {
     ]
 }
 
+#[allow(dead_code)]
 fn create_stirling_proof_steps() -> Vec<ProofStep> {
     vec![ProofStep {
         step_number: 1,
@@ -2607,6 +2656,7 @@ fn create_stirling_proof_steps() -> Vec<ProofStep> {
     }]
 }
 
+#[allow(dead_code)]
 fn create_wright_asymptotic_proof_steps() -> Vec<ProofStep> {
     vec![ProofStep {
         step_number: 1,
@@ -2620,11 +2670,13 @@ fn create_wright_asymptotic_proof_steps() -> Vec<ProofStep> {
     }]
 }
 
+#[allow(dead_code)]
 fn wait_for_enter() -> Result<(), Box<dyn std::error::Error>> {
     get_user_input("Press Enter to continue...")?;
     Ok(())
 }
 
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
     print!("{}", prompt);
     io::stdout().flush()?;

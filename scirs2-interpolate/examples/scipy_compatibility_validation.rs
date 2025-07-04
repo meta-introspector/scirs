@@ -11,6 +11,7 @@ use scirs2_interpolate::{
     InterpolateResult,
 };
 
+#[allow(dead_code)]
 fn main() -> InterpolateResult<()> {
     println!("=== SciPy Compatibility Validation Demo ===\n");
 
@@ -213,6 +214,7 @@ fn main() -> InterpolateResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn get_compatibility_level(score: f64) -> &'static str {
     match score {
         s if s >= 0.95 => "Excellent - Full production ready",
@@ -224,6 +226,7 @@ fn get_compatibility_level(score: f64) -> &'static str {
     }
 }
 
+#[allow(dead_code)]
 fn print_migration_guidance(report: &scirs2_interpolate::CompatibilityReport) {
     println!("   When migrating from SciPy to scirs2-interpolate:");
 
@@ -265,6 +268,7 @@ fn print_migration_guidance(report: &scirs2_interpolate::CompatibilityReport) {
     }
 }
 
+#[allow(dead_code)]
 fn print_performance_considerations() {
     println!("   Performance benefits of scirs2-interpolate:");
     println!("   ✓ SIMD optimizations provide 2-4x speedup for supported operations");
@@ -281,6 +285,7 @@ fn print_performance_considerations() {
 }
 
 /// Example function showing how to validate specific functionality
+#[allow(dead_code)]
 fn validate_specific_function() -> InterpolateResult<()> {
     println!("\n=== Validating Specific Function Compatibility ===");
 

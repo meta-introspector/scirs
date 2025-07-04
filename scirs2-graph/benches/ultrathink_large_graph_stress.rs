@@ -4,7 +4,7 @@
 //! (>1M nodes) using ultrathink mode for optimization.
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use rand::Rng;
+use rand::{rng, Rng};
 use scirs2_graph::advanced::{
     create_enhanced_ultrathink_processor, create_large_graph_ultrathink_processor,
     create_realtime_ultrathink_processor, execute_with_enhanced_ultrathink, UltrathinkConfig,
@@ -22,6 +22,7 @@ const MAX_STRESS_TEST_TIME: Duration = Duration::from_secs(600); // 10 minutes m
 const MEMORY_PRESSURE_THRESHOLD: usize = 8 * 1024 * 1024 * 1024; // 8GB threshold
 
 /// Generate a large random graph for stress testing with memory optimization
+#[allow(dead_code)]
 fn generate_large_random_graph(num_nodes: usize, edge_probability: f64) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
@@ -69,6 +70,7 @@ fn generate_large_random_graph(num_nodes: usize, edge_probability: f64) -> Graph
 }
 
 /// Generate a scale-free graph using preferential attachment
+#[allow(dead_code)]
 fn generate_scale_free_graph(num_nodes: usize, initial_edges: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
@@ -131,6 +133,7 @@ fn generate_scale_free_graph(num_nodes: usize, initial_edges: usize) -> Graph<us
 }
 
 /// Memory-efficient large graph generator with progressive construction
+#[allow(dead_code)]
 fn generate_memory_efficient_graph(num_nodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
@@ -195,6 +198,7 @@ fn generate_memory_efficient_graph(num_nodes: usize) -> Graph<usize, f64> {
 }
 
 /// Generate a biological network-like graph (power-law degree distribution)
+#[allow(dead_code)]
 fn generate_biological_network(num_nodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
@@ -236,6 +240,7 @@ fn generate_biological_network(num_nodes: usize) -> Graph<usize, f64> {
 }
 
 /// Generate a social network-like graph (small-world properties)
+#[allow(dead_code)]
 fn generate_social_network(num_nodes: usize) -> Graph<usize, f64> {
     let mut graph = Graph::new();
     let mut rng = rand::rng();
@@ -290,6 +295,7 @@ fn generate_social_network(num_nodes: usize) -> Graph<usize, f64> {
 }
 
 /// Select a node with power-law probability distribution
+#[allow(dead_code)]
 fn select_powerlaw_node(rng: &mut impl Rng, num_nodes: usize) -> usize {
     // Simple approximation of power-law distribution
     let r = rng.random::<f64>();
@@ -299,6 +305,7 @@ fn select_powerlaw_node(rng: &mut impl Rng, num_nodes: usize) -> usize {
 }
 
 /// Comprehensive stress test for different graph algorithms
+#[allow(dead_code)]
 fn stress_test_algorithms(
     graph: &Graph<usize, f64>,
     processor: &mut UltrathinkProcessor,
@@ -421,6 +428,7 @@ fn stress_test_algorithms(
 }
 
 /// Extreme stress test for very large graphs (>5M nodes)
+#[allow(dead_code)]
 fn extreme_stress_test(
     graph: &Graph<usize, f64>,
     processor: &mut UltrathinkProcessor,
@@ -575,6 +583,7 @@ fn extreme_stress_test(
 }
 
 /// Get current memory usage (simplified - in practice would use system calls)
+#[allow(dead_code)]
 fn get_memory_usage() -> usize {
     // This is a placeholder - in a real implementation, we'd query the system
     // For now, we'll simulate memory usage based on time
@@ -586,6 +595,7 @@ fn get_memory_usage() -> usize {
 }
 
 /// Failure recovery stress test
+#[allow(dead_code)]
 fn failure_recovery_stress_test(
     graph: &Graph<usize, f64>,
     processor: &mut UltrathinkProcessor,
@@ -685,6 +695,7 @@ fn failure_recovery_stress_test(
 }
 
 /// Concurrent stress test with multiple processors
+#[allow(dead_code)]
 fn concurrent_processor_stress_test(
     graphs: &[Graph<usize, f64>],
 ) -> HashMap<String, (Duration, String)> {
@@ -794,6 +805,7 @@ fn concurrent_processor_stress_test(
 }
 
 /// Benchmark large graph creation performance
+#[allow(dead_code)]
 fn bench_large_graph_creation(c: &mut Criterion) {
     let mut group = c.benchmark_group("large_graph_creation");
     group.measurement_time(Duration::from_secs(60));
@@ -818,6 +830,7 @@ fn bench_large_graph_creation(c: &mut Criterion) {
 }
 
 /// Benchmark advanced processors on large graphs
+#[allow(dead_code)]
 fn bench_advanced_processors(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultrathink_large_graphs");
     group.measurement_time(Duration::from_secs(120));
@@ -854,6 +867,7 @@ fn bench_advanced_processors(c: &mut Criterion) {
 }
 
 /// Memory usage benchmarking for large graphs
+#[allow(dead_code)]
 fn bench_memory_usage(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_usage");
     group.measurement_time(Duration::from_secs(90));
@@ -883,6 +897,7 @@ fn bench_memory_usage(c: &mut Criterion) {
 }
 
 /// Adaptive performance benchmarking
+#[allow(dead_code)]
 fn bench_adaptive_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("adaptive_performance");
     group.measurement_time(Duration::from_secs(60));
@@ -916,6 +931,7 @@ fn bench_adaptive_performance(c: &mut Criterion) {
 }
 
 /// Concurrent processing benchmarking
+#[allow(dead_code)]
 fn bench_concurrent_processing(c: &mut Criterion) {
     let mut group = c.benchmark_group("concurrent_processing");
     group.measurement_time(Duration::from_secs(90));
@@ -953,6 +969,7 @@ fn bench_concurrent_processing(c: &mut Criterion) {
 }
 
 /// Configuration comparison benchmarking
+#[allow(dead_code)]
 fn bench_configuration_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("configuration_comparison");
     group.measurement_time(Duration::from_secs(60));
@@ -1020,6 +1037,7 @@ fn bench_configuration_comparison(c: &mut Criterion) {
 }
 
 /// Dedicated stress test for very large graphs (>1M nodes)
+#[allow(dead_code)]
 fn bench_very_large_graphs(c: &mut Criterion) {
     let mut group = c.benchmark_group("very_large_graphs");
     group.measurement_time(Duration::from_secs(300)); // 5 minutes max
@@ -1061,6 +1079,7 @@ fn bench_very_large_graphs(c: &mut Criterion) {
 }
 
 /// Memory usage analysis for large graphs
+#[allow(dead_code)]
 fn bench_memory_usage_analysis(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_usage_analysis");
     group.measurement_time(Duration::from_secs(180));
@@ -1115,6 +1134,7 @@ fn bench_memory_usage_analysis(c: &mut Criterion) {
 }
 
 /// Scaling analysis: how does performance scale with graph size?
+#[allow(dead_code)]
 fn bench_scaling_analysis(c: &mut Criterion) {
     let mut group = c.benchmark_group("scaling_analysis");
     group.measurement_time(Duration::from_secs(240));
@@ -1163,6 +1183,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
 }
 
 /// Ultra-comprehensive stress test runner for extreme large graphs
+#[allow(dead_code)]
 pub fn run_ultra_comprehensive_stress_tests() {
     println!("🎯 Starting ULTRA-COMPREHENSIVE large graph stress tests...");
     println!("==========================================================");
@@ -1328,6 +1349,7 @@ pub fn run_ultra_comprehensive_stress_tests() {
 }
 
 /// Comprehensive stress test runner for large graphs
+#[allow(dead_code)]
 pub fn run_comprehensive_stress_tests() {
     println!("🎯 Starting comprehensive large graph stress tests...");
     println!("=================================================");

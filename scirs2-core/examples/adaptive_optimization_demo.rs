@@ -11,6 +11,7 @@ use scirs2_core::CoreResult;
 use std::thread;
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     println!("🧠 SciRS2 Core Adaptive Optimization Demo");
     println!("==========================================\n");
@@ -53,6 +54,7 @@ fn main() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_optimization_configurations() -> CoreResult<()> {
     println!("⚙️  Optimization Configuration Examples");
     println!("-------------------------------------");
@@ -141,6 +143,7 @@ fn demo_optimization_configurations() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_workload_profiling() -> CoreResult<()> {
     println!("📊 Workload Profiling and Registration");
     println!("-------------------------------------");
@@ -277,6 +280,7 @@ fn demo_workload_profiling() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_basic_adaptive_optimization() -> CoreResult<()> {
     println!("🚀 Basic Adaptive Optimization");
     println!("-----------------------------");
@@ -413,6 +417,7 @@ fn demo_basic_adaptive_optimization() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_multi_objective_optimization() -> CoreResult<()> {
     println!("🎯 Multi-Objective Optimization Demo");
     println!("-----------------------------------");
@@ -534,6 +539,7 @@ fn demo_multi_objective_optimization() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_real_time_adaptation() -> CoreResult<()> {
     println!("⚡ Real-time Adaptation Demo");
     println!("--------------------------");
@@ -660,6 +666,7 @@ fn demo_real_time_adaptation() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_enterprise_features() -> CoreResult<()> {
     println!("🏢 Enterprise Features Demo");
     println!("-------------------------");

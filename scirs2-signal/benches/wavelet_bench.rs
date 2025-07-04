@@ -5,6 +5,7 @@ use scirs2_signal::waveforms::chirp;
 use scirs2_signal::wpt::{reconstruct_from_nodes, wp_decompose};
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn generate_signal(size: usize) -> Vec<f64> {
     // Generate a chirp signal with increasing frequency
     let fs = 1000.0; // Sample rate in Hz
@@ -13,6 +14,7 @@ fn generate_signal(size: usize) -> Vec<f64> {
     chirp(&t, 0.0, 1.0, 100.0, "linear", 0.5).unwrap()
 }
 
+#[allow(dead_code)]
 fn bench_wavelets_single_level(c: &mut Criterion) {
     let mut group = c.benchmark_group("single_level_dwt");
     group.measurement_time(Duration::from_secs(5));

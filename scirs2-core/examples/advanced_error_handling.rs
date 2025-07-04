@@ -15,6 +15,7 @@ use scirs2_core::error::async_handling::{
     retry_with_exponential_backoff, with_timeout, AsyncCircuitBreaker, AsyncProgressTracker,
 };
 
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     println!("🚀 SciRS2 Advanced Error Handling Demo\n");
 
@@ -46,6 +47,7 @@ fn main() -> CoreResult<()> {
 }
 
 /// Demonstrate basic error handling with rich context
+#[allow(dead_code)]
 fn basic_error_handling_demo() -> CoreResult<()> {
     println!("📋 1. Basic Error Handling with Context");
 
@@ -69,6 +71,7 @@ fn basic_error_handling_demo() -> CoreResult<()> {
 }
 
 /// Demonstrate retry mechanisms with different backoff strategies
+#[allow(dead_code)]
 fn retry_mechanisms_demo() -> CoreResult<()> {
     println!("🔄 2. Retry Mechanisms with Backoff Strategies");
 
@@ -122,6 +125,7 @@ fn retry_mechanisms_demo() -> CoreResult<()> {
 }
 
 /// Demonstrate circuit breaker pattern for fault tolerance
+#[allow(dead_code)]
 fn circuit_breaker_demo() -> CoreResult<()> {
     println!("⚡ 3. Circuit Breaker Pattern for Fault Tolerance");
 
@@ -163,6 +167,7 @@ fn circuit_breaker_demo() -> CoreResult<()> {
 }
 
 /// Demonstrate error aggregation for batch operations
+#[allow(dead_code)]
 fn error_aggregation_demo() -> CoreResult<()> {
     println!("📦 4. Error Aggregation for Batch Operations");
 
@@ -212,6 +217,7 @@ fn error_aggregation_demo() -> CoreResult<()> {
 }
 
 /// Demonstrate advanced error diagnostics and pattern analysis
+#[allow(dead_code)]
 fn error_diagnostics_demo() -> CoreResult<()> {
     println!("🔍 5. Advanced Error Diagnostics and Analysis");
 
@@ -387,6 +393,7 @@ fn scientific_computing_scenario() -> CoreResult<()> {
 }
 
 /// Simulate an iterative solver that might fail
+#[allow(dead_code)]
 fn simulate_iterative_solver(matrix_size: usize, max_iterations: usize) -> CoreResult<String> {
     // Simulate different failure modes
     use rand::Rng;

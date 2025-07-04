@@ -654,6 +654,7 @@ where
 }
 
 /// Build cluster tree for hierarchical matrix construction
+#[allow(dead_code)]
 pub fn build_cluster_tree(start: usize, end: usize, min_size: usize) -> ClusterNode {
     if end - start <= min_size {
         return ClusterNode::new(start, end, 0);
@@ -681,6 +682,7 @@ pub fn build_cluster_tree(start: usize, end: usize, min_size: usize) -> ClusterN
 /// # Returns
 ///
 /// * Tuple (U, V) such that matrix ≈ U * V^T, or None if low-rank approximation fails
+#[allow(dead_code)]
 pub fn adaptive_block_lowrank<F>(
     matrix: &ArrayView2<F>,
     tolerance: F,

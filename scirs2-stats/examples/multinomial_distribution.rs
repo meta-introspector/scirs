@@ -2,6 +2,7 @@ use ndarray::{array, Array1};
 use scirs2_stats::distributions::multivariate::multinomial::Multinomial;
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Multinomial Distribution Example");
     println!("-------------------------------");

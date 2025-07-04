@@ -8,6 +8,7 @@ use std::env;
 use std::path::Path;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Get command line arguments
     let args: Vec<String> = env::args().collect();
@@ -333,7 +334,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Save each result
     for (name, img) in &methods {
-        img.save(format!("output/edge_test_{}.png", name))?;
+        img.save(format!("output/edge_test_{name}.png"))?;
     }
 
     println!("  Saved edge-preservation examples to output/edge_test_*.png");
@@ -381,6 +382,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Draw simple text on an image
+#[allow(dead_code)]
 fn draw_text(img: &mut image::RgbaImage, text: &str, x: u32, y: u32) {
     let color = image::Rgba([255, 255, 255, 255]);
     let shadow_color = image::Rgba([0, 0, 0, 192]);
@@ -401,6 +403,7 @@ fn draw_text(img: &mut image::RgbaImage, text: &str, x: u32, y: u32) {
 }
 
 /// Draw a single character (simple bitmap font)
+#[allow(dead_code)]
 fn draw_char(img: &mut image::RgbaImage, c: char, x: u32, y: u32, color: image::Rgba<u8>) {
     let (width, height) = img.dimensions();
 

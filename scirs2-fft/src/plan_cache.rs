@@ -223,11 +223,13 @@ impl std::fmt::Display for CacheStats {
 static GLOBAL_PLAN_CACHE: std::sync::OnceLock<PlanCache> = std::sync::OnceLock::new();
 
 /// Get the global plan cache instance
+#[allow(dead_code)]
 pub fn get_global_cache() -> &'static PlanCache {
     GLOBAL_PLAN_CACHE.get_or_init(PlanCache::new)
 }
 
 /// Initialize the global plan cache with custom settings
+#[allow(dead_code)]
 pub fn init_global_cache(max_entries: usize, max_age: Duration) -> Result<(), &'static str> {
     GLOBAL_PLAN_CACHE
         .set(PlanCache::with_config(max_entries, max_age))

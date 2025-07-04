@@ -7,7 +7,7 @@
 use crate::base::{EdgeWeight, Graph, Node};
 use crate::error::Result;
 use crate::performance::{PerformanceMonitor, PerformanceReport};
-use rand::Rng;
+use rand::{rng, Rng};
 use std::collections::{HashMap, VecDeque};
 
 /// Ultrathink mode configuration for graph processing
@@ -166,7 +166,7 @@ impl AdaptiveMemoryManager {
         buffer.clear();
         self.memory_pools
             .entry(operation.to_string())
-            .or_insert_with(VecDeque::new)
+            .or_default()
             .push_back(buffer);
     }
 }
@@ -434,7 +434,7 @@ impl NeuralRLAgent {
     pub fn update_algorithm_performance(&mut self, algorithm: usize, reward: f64) {
         self.algorithm_performance
             .entry(algorithm)
-            .or_insert_with(VecDeque::new)
+            .or_default()
             .push_back(reward);
 
         // Keep history manageable
@@ -641,7 +641,7 @@ impl GPUAccelerationContext {
     fn calculate_utilization(&self, execution_time: std::time::Duration) -> f64 {
         // Simplified utilization calculation
         let time_ratio = execution_time.as_secs_f64() / 0.001; // Assume 1ms baseline
-        time_ratio.min(1.0).max(0.0)
+        time_ratio.clamp(0.0, 1.0)
     }
 
     /// Get average GPU utilization
@@ -753,6 +753,7 @@ impl NeuromorphicProcessor {
         let current_time = self.get_current_time();
         let mut new_potentials = self.neuron_potentials.clone();
 
+        #[allow(clippy::needless_range_loop)]
         for i in 0..self.neuron_potentials.len() {
             // Decay potential
             new_potentials[i] *= 0.95;
@@ -801,7 +802,7 @@ impl NeuromorphicProcessor {
 
                         self.synaptic_weights[i][spiked_neuron] += weight_change;
                         self.synaptic_weights[i][spiked_neuron] =
-                            self.synaptic_weights[i][spiked_neuron].max(-1.0).min(1.0);
+                            self.synaptic_weights[i][spiked_neuron].clamp(-1.0, 1.0);
                     }
                 }
             }
@@ -920,7 +921,7 @@ impl UltrathinkProcessor {
             }
         }
 
-        let monitor = PerformanceMonitor::start(format!("ultrathink_enhanced_{}", algorithm_name));
+        let monitor = PerformanceMonitor::start(format!("ultrathink_enhanced_{algorithm_name}"));
 
         // 1. Enhanced neural RL algorithm selection
         let selected_strategy = if self.config.enable_neural_rl {
@@ -951,7 +952,7 @@ impl UltrathinkProcessor {
 
             // Update GPU utilization metrics manually
             let utilization = execution_time.as_secs_f64() / 0.001; // Assume 1ms baseline
-            let utilization = utilization.min(1.0).max(0.0);
+            let utilization = utilization.clamp(0.0, 1.0);
             self.gpu_context.utilization_history.push(utilization);
 
             // Keep history manageable
@@ -1025,12 +1026,10 @@ impl UltrathinkProcessor {
             // Allocate working memory from pool
             let _working_buffer = self.memory_manager.allocate(algorithm_name, chunk_size);
 
-            let result = algorithm(graph);
-
             // Return memory to pool (would be done in Drop implementation in practice)
             // self.memory_manager.deallocate(algorithm_name, working_buffer);
 
-            result
+            algorithm(graph)
         } else {
             algorithm(graph)
         }
@@ -1099,25 +1098,21 @@ impl UltrathinkProcessor {
         neuromorphic_features: &[f64],
         _selected_strategy: usize,
     ) -> AlgorithmMetrics {
-        let base_metrics = AlgorithmMetrics {
+        AlgorithmMetrics {
             execution_time_us: report.duration.as_micros() as u64,
             memory_usage_bytes: report.memory_metrics.peak_bytes,
             accuracy_score: self.calculate_accuracy_score(neuromorphic_features),
             cache_hit_rate: self.calculate_cache_hit_rate(),
             simd_utilization: self.calculate_simd_utilization(),
             gpu_utilization: self.gpu_context.get_average_utilization(),
-        };
-
-        base_metrics
+        }
     }
 
     /// Calculate accuracy score based on neuromorphic features
     fn calculate_accuracy_score(&self, neuromorphic_features: &[f64]) -> f64 {
         // Use neuromorphic features to estimate solution quality
         let feature_sum = neuromorphic_features.iter().sum::<f64>();
-        (1.0 / (1.0 + (-feature_sum / 10.0).exp()))
-            .max(0.7)
-            .min(1.0)
+        (1.0 / (1.0 + (-feature_sum / 10.0).exp())).clamp(0.7, 1.0)
     }
 
     /// Calculate cache hit rate
@@ -1158,7 +1153,7 @@ impl UltrathinkProcessor {
                 .map(|m| self.calculate_reward(m))
                 .collect();
             let variance = self.calculate_variance(&recent_rewards);
-            (1.0 / (1.0 + variance)).max(0.0).min(0.2)
+            (1.0 / (1.0 + variance)).clamp(0.0, 0.2)
         } else {
             0.0
         };
@@ -1224,7 +1219,7 @@ impl UltrathinkProcessor {
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
-        let monitor = PerformanceMonitor::start(format!("ultrathink_{}", algorithm_name));
+        let monitor = PerformanceMonitor::start(format!("ultrathink_{algorithm_name}"));
 
         // 1. Neural RL algorithm selection
         let selected_strategy = if self.config.enable_neural_rl {
@@ -1373,11 +1368,13 @@ pub struct UltrathinkStats {
 }
 
 /// Convenience function to create an advanced processor with default config
+#[allow(dead_code)]
 pub fn create_advanced_processor() -> UltrathinkProcessor {
     UltrathinkProcessor::new(UltrathinkConfig::default())
 }
 
 /// Convenience function to create an enhanced advanced processor with advanced features
+#[allow(dead_code)]
 pub fn create_enhanced_advanced_processor() -> UltrathinkProcessor {
     let config = UltrathinkConfig {
         enable_neural_rl: true,
@@ -1394,6 +1391,7 @@ pub fn create_enhanced_advanced_processor() -> UltrathinkProcessor {
 }
 
 /// Convenience function to execute algorithm with advanced optimizations
+#[allow(dead_code)]
 pub fn execute_with_advanced<N, E, Ix, T>(
     processor: &mut UltrathinkProcessor,
     graph: &Graph<N, E, Ix>,
@@ -1409,6 +1407,7 @@ where
 }
 
 /// Convenience function to execute algorithm with enhanced advanced optimizations
+#[allow(dead_code)]
 pub fn execute_with_enhanced_advanced<N, E, Ix, T>(
     processor: &mut UltrathinkProcessor,
     graph: &Graph<N, E, Ix>,
@@ -1424,6 +1423,7 @@ where
 }
 
 /// Create an advanced processor optimized for large graphs
+#[allow(dead_code)]
 pub fn create_large_graph_advanced_processor() -> UltrathinkProcessor {
     let config = UltrathinkConfig {
         enable_neural_rl: true,
@@ -1440,6 +1440,7 @@ pub fn create_large_graph_advanced_processor() -> UltrathinkProcessor {
 }
 
 /// Create an advanced processor optimized for real-time applications
+#[allow(dead_code)]
 pub fn create_realtime_advanced_processor() -> UltrathinkProcessor {
     let config = UltrathinkConfig {
         enable_neural_rl: true,
@@ -1456,6 +1457,7 @@ pub fn create_realtime_advanced_processor() -> UltrathinkProcessor {
 }
 
 /// Create an advanced processor optimized for maximum performance
+#[allow(dead_code)]
 pub fn create_performance_advanced_processor() -> UltrathinkProcessor {
     let config = UltrathinkConfig {
         enable_neural_rl: true,
@@ -1472,6 +1474,7 @@ pub fn create_performance_advanced_processor() -> UltrathinkProcessor {
 }
 
 /// Create an advanced processor optimized for memory-constrained environments
+#[allow(dead_code)]
 pub fn create_memory_efficient_advanced_processor() -> UltrathinkProcessor {
     let config = UltrathinkConfig {
         enable_neural_rl: true,
@@ -1488,6 +1491,7 @@ pub fn create_memory_efficient_advanced_processor() -> UltrathinkProcessor {
 }
 
 /// Create an advanced processor with adaptive configuration based on system resources
+#[allow(dead_code)]
 pub fn create_adaptive_advanced_processor() -> UltrathinkProcessor {
     let system_memory = get_system_memory_mb();
     let has_gpu = detect_gpu_support();
@@ -1538,6 +1542,7 @@ pub fn create_adaptive_advanced_processor() -> UltrathinkProcessor {
 }
 
 /// Get available system memory in MB
+#[allow(dead_code)]
 fn get_system_memory_mb() -> usize {
     #[cfg(feature = "sysinfo")]
     {
@@ -1553,6 +1558,7 @@ fn get_system_memory_mb() -> usize {
 }
 
 /// Detect GPU support availability
+#[allow(dead_code)]
 fn detect_gpu_support() -> bool {
     // Simple GPU detection - in practice would check for CUDA, OpenCL, etc.
     std::env::var("ULTRATHINK_GPU_ENABLE").unwrap_or_default() == "1"
@@ -1974,7 +1980,7 @@ mod tests {
 
         // Test memory allocation and deallocation
         for i in 0..10 {
-            let operation = format!("operation_{}", i);
+            let operation = format!("operation_{i}");
             let buffer = memory_manager.allocate(&operation, 1024);
             assert_eq!(buffer.len(), 1024);
             memory_manager.deallocate(&operation, buffer);
@@ -2093,7 +2099,7 @@ mod tests {
                 let result = execute_with_enhanced_advanced(
                     &mut processor,
                     &*graph_clone,
-                    &format!("concurrent_test_{}", i),
+                    &format!("concurrent_test_{i}"),
                     |g| Ok(g.node_count()),
                 )
                 .unwrap();

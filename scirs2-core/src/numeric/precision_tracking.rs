@@ -538,6 +538,7 @@ impl TrackedFloat<f64> {
 }
 
 /// Error estimation functions
+#[allow(dead_code)]
 fn estimate_addition_error(a: f64, b: f64) -> f64 {
     let result = a + b;
     if result == 0.0 {
@@ -547,10 +548,12 @@ fn estimate_addition_error(a: f64, b: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn estimate_multiplication_error(_a: f64, _b: f64) -> f64 {
     2.0 * f64::EPSILON // Relative error for multiplication
 }
 
+#[allow(dead_code)]
 fn estimate_division_error(a: f64, b: f64) -> f64 {
     let rel_error_a = f64::EPSILON;
     let rel_error_b = f64::EPSILON;
@@ -688,6 +691,7 @@ static GLOBAL_PRECISION_REGISTRY: std::sync::LazyLock<PrecisionRegistry> =
     std::sync::LazyLock::new(PrecisionRegistry::new);
 
 /// Get the global precision registry
+#[allow(dead_code)]
 pub fn global_precision_registry() -> &'static PrecisionRegistry {
     &GLOBAL_PRECISION_REGISTRY
 }

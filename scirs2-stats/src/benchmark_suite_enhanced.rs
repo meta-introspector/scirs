@@ -564,7 +564,7 @@ impl EnhancedBenchmarkSuite {
     /// Run comprehensive enhanced benchmark suite
     pub fn run_enhanced_benchmarks(&mut self) -> StatsResult<EnhancedBenchmarkReport> {
         // Run base benchmarks
-        let base_suite =
+        let _base_suite =
             crate::benchmark_suite::BenchmarkSuite::with_config(self.config.base_config.clone());
 
         // For now, create a placeholder base report until we can run the actual benchmarks
@@ -644,7 +644,7 @@ impl EnhancedBenchmarkSuite {
     /// Perform AI-driven performance analysis
     fn perform_ai_analysis(
         &self,
-        metrics: &[BenchmarkMetrics],
+        _metrics: &[BenchmarkMetrics],
     ) -> StatsResult<AIPerformanceAnalysis> {
         // Placeholder implementation - would use actual ML models
         Ok(AIPerformanceAnalysis {
@@ -743,7 +743,7 @@ impl EnhancedBenchmarkSuite {
     /// Perform regression analysis
     fn perform_regression_analysis(
         &self,
-        metrics: &[BenchmarkMetrics],
+        _metrics: &[BenchmarkMetrics],
     ) -> StatsResult<RegressionAnalysis> {
         // Placeholder implementation
         Ok(RegressionAnalysis {
@@ -857,11 +857,13 @@ impl PerformanceMLModel {
 }
 
 /// Create enhanced benchmark suite with default configuration
+#[allow(dead_code)]
 pub fn create_enhanced_benchmark_suite() -> EnhancedBenchmarkSuite {
     EnhancedBenchmarkSuite::new(EnhancedBenchmarkConfig::default())
 }
 
 /// Create enhanced benchmark suite with custom configuration
+#[allow(dead_code)]
 pub fn create_configured_enhanced_benchmark_suite(
     config: EnhancedBenchmarkConfig,
 ) -> EnhancedBenchmarkSuite {
@@ -869,9 +871,10 @@ pub fn create_configured_enhanced_benchmark_suite(
 }
 
 /// Run quick performance analysis with AI insights
+#[allow(dead_code)]
 pub fn run_quick_ai_analysis(
     data_size: usize,
-    operation: &str,
+    _operation: &str,
 ) -> StatsResult<Vec<IntelligentRecommendation>> {
     let config = EnhancedBenchmarkConfig {
         base_config: BenchmarkConfig {

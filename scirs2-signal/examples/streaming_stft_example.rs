@@ -8,6 +8,7 @@ use ndarray::Array1;
 use scirs2_signal::streaming_stft::{RealTimeStft, StreamingStft, StreamingStftConfig};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Streaming STFT Example ===\n");
 

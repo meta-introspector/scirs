@@ -468,6 +468,7 @@ impl KernelFactoryExt for KernelFactory {
 }
 
 /// Get optimal algorithm for a given signal
+#[allow(dead_code)]
 pub fn get_optimal_algorithm<T>(signal: &[T]) -> SparseFFTAlgorithm
 where
     T: NumCast + Copy + Debug + 'static,
@@ -487,6 +488,7 @@ where
 }
 
 /// Get optimal window function for a given signal
+#[allow(dead_code)]
 pub fn get_optimal_window_function<T>(signal: &[T]) -> WindowFunction
 where
     T: NumCast + Copy + Debug + 'static,
@@ -606,6 +608,7 @@ impl PerformanceManager {
 /// # Returns
 ///
 /// * Auto-tuning result
+#[allow(dead_code)]
 pub fn auto_tune_sparse_fft<T>(
     reference_signals: &[Vec<T>],
     gpu_arch: &str,
@@ -648,6 +651,7 @@ where
 /// # Returns
 ///
 /// * Optimized sparse FFT result
+#[allow(dead_code)]
 pub fn optimized_sparse_fft<T>(
     signal: &[T],
     sparsity: usize,

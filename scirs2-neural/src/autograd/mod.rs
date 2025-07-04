@@ -7,6 +7,7 @@
 // We re-export the autograd crate
 pub extern crate autograd;
 /// Example function showing how autograd can be used
+#[allow(dead_code)]
 pub fn autograd_example() {
     // This demonstrates basic usage of autograd for a simple neural network operation
     println!("To use autograd in your code, import it directly:");

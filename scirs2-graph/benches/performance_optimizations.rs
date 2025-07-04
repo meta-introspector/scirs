@@ -18,6 +18,7 @@ use std::time::Duration;
 use tempfile::NamedTempFile;
 
 /// Benchmark SIMD operations vs scalar fallbacks
+#[allow(dead_code)]
 fn bench_simd_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_operations");
 
@@ -118,6 +119,7 @@ fn bench_simd_operations(c: &mut Criterion) {
 }
 
 /// Benchmark parallel vs sequential algorithms
+#[allow(dead_code)]
 fn bench_parallel_vs_sequential(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_vs_sequential");
     group.sample_size(10);
@@ -207,6 +209,7 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
 }
 
 /// Benchmark memory-mapped graph operations
+#[allow(dead_code)]
 fn bench_memmap_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("memmap_operations");
     group.sample_size(10);
@@ -298,6 +301,7 @@ fn bench_memmap_operations(c: &mut Criterion) {
 }
 
 /// Benchmark lazy graph metrics
+#[allow(dead_code)]
 fn bench_lazy_metrics(c: &mut Criterion) {
     let mut group = c.benchmark_group("lazy_metrics");
 
@@ -396,6 +400,7 @@ fn bench_lazy_metrics(c: &mut Criterion) {
 }
 
 /// Benchmark large graph iterators
+#[allow(dead_code)]
 fn bench_large_graph_iterators(c: &mut Criterion) {
     let mut group = c.benchmark_group("large_graph_iterators");
 
@@ -487,6 +492,7 @@ fn bench_large_graph_iterators(c: &mut Criterion) {
 }
 
 /// Benchmark platform-specific optimizations
+#[allow(dead_code)]
 fn bench_platform_optimizations(c: &mut Criterion) {
     let mut group = c.benchmark_group("platform_optimizations");
 

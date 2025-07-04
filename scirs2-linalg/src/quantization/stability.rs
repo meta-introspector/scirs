@@ -87,6 +87,7 @@ impl std::fmt::Display for QuantizationStabilityReport {
 /// # Returns
 ///
 /// * A detailed stability report with error metrics and suggestions
+#[allow(dead_code)]
 pub fn analyze_quantization_stability<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -287,6 +288,7 @@ where
 /// # Returns
 ///
 /// * Ok(()) if the configuration is valid, or an error with suggestions
+#[allow(dead_code)]
 pub fn validate_quantization_config<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -342,6 +344,7 @@ where
 /// # Returns
 ///
 /// * Recommended bit width and quantization method
+#[allow(dead_code)]
 pub fn recommend_quantization_params<F>(
     matrix: &ArrayView2<F>,
     target_sqnr_db: Option<f32>,
@@ -439,6 +442,7 @@ where
 /// Estimate the variability across columns in a matrix
 ///
 /// This helps determine if per-channel quantization would be beneficial
+#[allow(dead_code)]
 fn estimate_column_variability(matrix: &Array2<f32>) -> f32 {
     let (_, cols) = matrix.dim();
 
@@ -468,6 +472,7 @@ fn estimate_column_variability(matrix: &Array2<f32>) -> f32 {
 }
 
 /// Count the number of values in a matrix that are close to zero
+#[allow(dead_code)]
 fn count_near_zero_values(matrix: &Array2<f32>, threshold: f32) -> usize {
     let mut count = 0;
 

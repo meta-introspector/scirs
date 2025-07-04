@@ -47,6 +47,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// let distances = inter_cluster_distances(&x, &labels, "euclidean").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn inter_cluster_distances<F, S1, S2, D>(
     x: &ArrayBase<S1, Ix2>,
     labels: &ArrayBase<S2, D>,
@@ -67,8 +68,7 @@ where
     // Check that the metric is supported
     if !["euclidean", "manhattan", "cosine"].contains(&metric) {
         return Err(MetricsError::InvalidInput(format!(
-            "Unsupported metric: {}. Supported metrics are 'euclidean', 'manhattan', and 'cosine'.",
-            metric
+            "Unsupported metric: {metric}. Supported metrics are 'euclidean', 'manhattan', and 'cosine'."
         )));
     }
 
@@ -129,8 +129,7 @@ where
                 "cosine" => cosine_distance(centroid_i, centroid_j),
                 _ => {
                     return Err(MetricsError::InvalidInput(format!(
-                        "Unsupported metric: {}",
-                        metric
+                        "Unsupported metric: {metric}"
                     )))
                 }
             };
@@ -178,6 +177,7 @@ where
 ///
 /// let distances = intra_cluster_distances(&x, &labels, "euclidean").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn intra_cluster_distances<F, S1, S2, D>(
     x: &ArrayBase<S1, Ix2>,
     labels: &ArrayBase<S2, D>,
@@ -198,8 +198,7 @@ where
     // Check that the metric is supported
     if !["euclidean", "manhattan", "cosine"].contains(&metric) {
         return Err(MetricsError::InvalidInput(format!(
-            "Unsupported metric: {}. Supported metrics are 'euclidean', 'manhattan', and 'cosine'.",
-            metric
+            "Unsupported metric: {metric}. Supported metrics are 'euclidean', 'manhattan', and 'cosine'."
         )));
     }
 
@@ -264,8 +263,7 @@ where
                     "cosine" => cosine_distance(&sample, centroid),
                     _ => {
                         return Err(MetricsError::InvalidInput(format!(
-                            "Unsupported metric: {}",
-                            metric
+                            "Unsupported metric: {metric}"
                         )))
                     }
                 };
@@ -320,6 +318,7 @@ where
 ///
 /// let index = distance_ratio_index(&x, &labels, "euclidean").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn distance_ratio_index<F, S1, S2, D>(
     x: &ArrayBase<S1, Ix2>,
     labels: &ArrayBase<S2, D>,
@@ -429,6 +428,7 @@ where
 ///
 /// let index = isolation_index(&x, &labels, "euclidean").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn isolation_index<F, S1, S2, D>(
     x: &ArrayBase<S1, Ix2>,
     labels: &ArrayBase<S2, D>,
@@ -505,6 +505,7 @@ where
 
 // Distance metric functions
 
+#[allow(dead_code)]
 fn euclidean_distance<F, S1, S2>(x: &ArrayBase<S1, Ix1>, y: &ArrayBase<S2, Ix1>) -> F
 where
     F: Float + ndarray::ScalarOperand + SimdUnifiedOps,
@@ -527,6 +528,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn manhattan_distance<F, S1, S2>(x: &ArrayBase<S1, Ix1>, y: &ArrayBase<S2, Ix1>) -> F
 where
     F: Float + ndarray::ScalarOperand + SimdUnifiedOps,
@@ -549,6 +551,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn cosine_distance<F, S1, S2>(x: &ArrayBase<S1, Ix1>, y: &ArrayBase<S2, Ix1>) -> F
 where
     F: Float + ndarray::ScalarOperand + SimdUnifiedOps,

@@ -16,6 +16,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// This implementation is automatically selected when the "parallel" feature is enabled.
 /// Uses advanced blocked algorithms with parallel processing for optimal performance.
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn mixed_precision_matmul_f64_parallel<A, B, C, H>(
     a: &ArrayView2<A>,
     b: &ArrayView2<B>,
@@ -162,6 +163,7 @@ where
 /// This implementation is automatically selected when the "parallel" feature is disabled.
 /// Uses efficient blocked algorithms optimized for f64 precision computations.
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 pub fn mixed_precision_matmul_f64_serial<A, B, C, H>(
     a: &ArrayView2<A>,
     b: &ArrayView2<B>,
@@ -277,6 +279,7 @@ where
 ///
 /// Automatically chooses between parallel and serial implementations based
 /// on compile-time feature flags.
+#[allow(dead_code)]
 pub fn mixed_precision_matmul_f64<A, B, C, H>(
     a: &ArrayView2<A>,
     b: &ArrayView2<B>,

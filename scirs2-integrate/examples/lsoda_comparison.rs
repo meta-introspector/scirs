@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::Write;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("LSODA Method Comparison Example");
     println!("-------------------------------");
@@ -383,6 +384,7 @@ fn main() {
 }
 
 // Helper function to save solution trajectory to a CSV file
+#[allow(dead_code)]
 fn save_trajectory(result: &ODEResult<f64>, filename: &str) {
     let mut file = File::create(filename).unwrap();
     writeln!(

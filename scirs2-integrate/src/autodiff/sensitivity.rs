@@ -96,6 +96,7 @@ impl<F: IntegrateFloat> SensitivityAnalysis<F> {
 }
 
 /// Compute sensitivities using forward sensitivity analysis
+#[allow(dead_code)]
 pub fn compute_sensitivities<F, SysFunc, ParamFunc>(
     system: SysFunc,
     _parameters: ParamFunc,
@@ -233,6 +234,7 @@ where
 }
 
 /// Compute local sensitivity indices at a specific time
+#[allow(dead_code)]
 pub fn local_sensitivity_indices<F: IntegrateFloat>(
     analysis: &SensitivityAnalysis<F>,
     time_index: usize,
@@ -559,6 +561,7 @@ impl<F: IntegrateFloat> EFAST<F> {
 }
 
 /// Parameter sensitivity ranking
+#[allow(dead_code)]
 pub fn rank_parameters<F: IntegrateFloat>(analysis: &SensitivityAnalysis<F>) -> Vec<(String, F)> {
     let averaged = analysis.time_averaged_sensitivities();
     let mut rankings: Vec<(String, F)> = Vec::new();
@@ -580,6 +583,7 @@ pub fn rank_parameters<F: IntegrateFloat>(analysis: &SensitivityAnalysis<F>) -> 
 }
 
 /// Compute sensitivity-based parameter subset selection
+#[allow(dead_code)]
 pub fn select_important_parameters<F: IntegrateFloat>(
     analysis: &SensitivityAnalysis<F>,
     threshold: F,

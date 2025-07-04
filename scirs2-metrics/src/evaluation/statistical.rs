@@ -47,6 +47,7 @@ use crate::error::{MetricsError, Result};
 /// // Calculate McNemar's test p-value
 /// let p_value = mcnemars_test(&table, true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn mcnemars_test<T>(
     table: &ArrayBase<impl Data<Elem = T>, Ix2>,
     correction: bool,
@@ -138,6 +139,7 @@ where
 /// // Run Cochran's Q test
 /// let (q_statistic, p_value) = cochrans_q_test(&binary_predictions).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn cochrans_q_test<T>(
     binary_predictions: &ArrayBase<impl Data<Elem = T>, Ix2>,
 ) -> Result<(f64, f64)>
@@ -258,6 +260,7 @@ where
 /// // Run Friedman test
 /// let (test_statistic, p_value) = friedman_test(&performance_metrics).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn friedman_test<T>(
     performance_metrics: &ArrayBase<impl Data<Elem = T>, Ix2>,
 ) -> Result<(f64, f64)>
@@ -396,6 +399,7 @@ where
 /// ).unwrap();
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn wilcoxon_signed_rank_test<T>(
     x: &ArrayBase<impl Data<Elem = T>, Ix1>,
     y: &ArrayBase<impl Data<Elem = T>, Ix1>,
@@ -593,6 +597,7 @@ where
 /// ).unwrap();
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn bootstrap_confidence_interval<T, S, F>(
     data: &ArrayBase<S, Ix1>,
     statistic_fn: F,
@@ -717,6 +722,7 @@ where
 /// # Returns
 ///
 /// * CDF value at x
+#[allow(dead_code)]
 fn chi2_cdf(x: f64, df: usize) -> f64 {
     if x <= 0.0 {
         return 0.0;
@@ -746,6 +752,7 @@ fn chi2_cdf(x: f64, df: usize) -> f64 {
 /// # Returns
 ///
 /// * CDF value at x
+#[allow(dead_code)]
 fn f_cdf(x: f64, d1: usize, d2: usize) -> f64 {
     if x <= 0.0 {
         return 0.0;
@@ -772,6 +779,7 @@ fn f_cdf(x: f64, d1: usize, d2: usize) -> f64 {
 /// # Returns
 ///
 /// * CDF value at x
+#[allow(dead_code)]
 fn normal_cdf(x: f64, mu: f64, sigma: f64) -> f64 {
     if sigma <= 0.0 {
         if x < mu {
@@ -797,6 +805,7 @@ fn normal_cdf(x: f64, mu: f64, sigma: f64) -> f64 {
 /// # Returns
 ///
 /// * Error function value at x
+#[allow(dead_code)]
 fn erf(x: f64) -> f64 {
     // Early return for zero
     if x == 0.0 {
@@ -827,6 +836,7 @@ fn erf(x: f64) -> f64 {
 /// # Returns
 ///
 /// * Gamma function value at x
+#[allow(dead_code)]
 fn gamma(x: f64) -> f64 {
     if x <= 0.0 {
         return f64::INFINITY;
@@ -867,6 +877,7 @@ fn gamma(x: f64) -> f64 {
 /// # Returns
 ///
 /// * Incomplete gamma function value
+#[allow(dead_code)]
 fn incomplete_gamma(a: f64, x: f64) -> f64 {
     if x <= 0.0 || a <= 0.0 {
         return 0.0;
@@ -928,6 +939,7 @@ fn incomplete_gamma(a: f64, x: f64) -> f64 {
 /// # Returns
 ///
 /// * Incomplete beta function value
+#[allow(dead_code)]
 fn incomplete_beta(a: f64, b: f64, x: f64) -> f64 {
     if x <= 0.0 {
         return 0.0;

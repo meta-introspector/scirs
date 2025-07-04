@@ -766,6 +766,7 @@ impl<T: Float> op::Op<T> for SplitGrad {
 }
 
 #[inline]
+#[allow(dead_code)]
 fn make_indices_for_split<T: Float>(
     x: &NdArrayView<T>,
     start_index: isize,

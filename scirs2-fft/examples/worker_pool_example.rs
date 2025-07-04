@@ -7,6 +7,7 @@ use num_complex::Complex64;
 use scirs2_fft::{fft2, get_global_pool, get_workers, with_workers};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("FFT Worker Pool Management Example");
     println!("==================================");

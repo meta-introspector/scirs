@@ -20,6 +20,7 @@ use scirs2_integrate::ode::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     // Pendulum parameters
     let g: f64 = 9.81; // acceleration due to gravity (m/s²)

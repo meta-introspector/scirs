@@ -291,6 +291,7 @@ trait VisualizationExporter {
 }
 
 /// Get appropriate exporter for format
+#[allow(dead_code)]
 fn get_exporter(format: VisualizationFormat) -> Box<dyn VisualizationExporter> {
     match format {
         VisualizationFormat::PlotlyJson => Box::new(PlotlyExporter),
@@ -1233,6 +1234,7 @@ impl VisualizationExporter for BokehExporter {
 }
 
 /// Get appropriate 3D exporter
+#[allow(dead_code)]
 fn get_3d_exporter(format: VisualizationFormat) -> Box<dyn Visualization3DExporter> {
     match format {
         VisualizationFormat::PlotlyJson => Box::new(Plotly3DExporter),

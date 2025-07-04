@@ -432,6 +432,7 @@ impl<F: Float + NumCast> Laplace<F> {
 /// let pdf_at_zero = l.pdf(0.0);
 /// assert!((pdf_at_zero - 0.5).abs() < 1e-7);
 /// ```
+#[allow(dead_code)]
 pub fn laplace<F>(loc: F, scale: F) -> StatsResult<Laplace<F>>
 where
     F: Float + NumCast,

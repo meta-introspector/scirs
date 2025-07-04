@@ -9,6 +9,7 @@ use scirs2_signal::separation::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Signal Separation Examples");
     println!("==========================\n");
@@ -180,6 +181,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Calculate RMS (Root Mean Square) of a signal
+#[allow(dead_code)]
 fn calculate_rms(signal: &Array1<f64>) -> f64 {
     let mean_square: f64 = signal.iter().map(|&x| x * x).sum::<f64>() / signal.len() as f64;
     mean_square.sqrt()

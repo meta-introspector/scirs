@@ -47,16 +47,19 @@ impl Default for ChanVeseParams {
 }
 
 /// Heaviside function (smoothed step function)
+#[allow(dead_code)]
 fn heaviside(x: f64, epsilon: f64) -> f64 {
     0.5 * (1.0 + (2.0 / std::f64::consts::PI) * (x / epsilon).atan())
 }
 
 /// Derivative of Heaviside function (Dirac delta)
+#[allow(dead_code)]
 fn dirac(x: f64, epsilon: f64) -> f64 {
     epsilon / (std::f64::consts::PI * (epsilon * epsilon + x * x))
 }
 
 /// Compute curvature of level set function
+#[allow(dead_code)]
 fn compute_curvature(phi: &ArrayView2<f64>) -> Array2<f64> {
     let (height, width) = phi.dim();
     let mut curvature = Array2::zeros((height, width));
@@ -85,6 +88,7 @@ fn compute_curvature(phi: &ArrayView2<f64>) -> Array2<f64> {
 }
 
 /// Reinitialize level set function to signed distance function
+#[allow(dead_code)]
 fn reinitialize_level_set(phi: &mut Array2<f64>, iterations: usize) {
     let (height, width) = phi.dim();
     let dt = 0.5;
@@ -143,6 +147,7 @@ fn reinitialize_level_set(phi: &mut Array2<f64>, iterations: usize) {
 ///
 /// # Returns
 /// Binary segmentation mask where true indicates inside the contour
+#[allow(dead_code)]
 pub fn chan_vese<T>(
     image: &ArrayView2<T>,
     initial_level_set: Option<&ArrayView2<f64>>,
@@ -250,6 +255,7 @@ where
 ///
 /// # Returns
 /// Label array where each pixel is assigned to a region (0 to 2^num_phases - 1)
+#[allow(dead_code)]
 pub fn chan_vese_multiphase<T>(
     image: &ArrayView2<T>,
     num_phases: usize,
@@ -443,6 +449,7 @@ where
 }
 
 /// Initialize level set from binary mask
+#[allow(dead_code)]
 pub fn mask_to_level_set(
     mask: &ArrayView2<bool>,
     smoothing: Option<f64>,
@@ -506,6 +513,7 @@ pub fn mask_to_level_set(
 }
 
 /// Create checkerboard initialization for multi-phase segmentation
+#[allow(dead_code)]
 pub fn checkerboard_level_set(shape: (usize, usize), square_size: usize) -> Array2<f64> {
     let (height, width) = shape;
 

@@ -1491,6 +1491,7 @@ impl<F: Float + FromPrimitive> LSHIndex<F> {
 /// let points = Array2::from_shape_vec((100, 3), (0..300).map(|x| x as f64).collect()).unwrap();
 /// let searcher = make_enhanced_searcher(points, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn make_enhanced_searcher<F>(
     points: Array2<F>,
     config: Option<SearchConfig>,
@@ -1516,6 +1517,7 @@ where
 /// # Returns
 ///
 /// A high-performance nearest neighbor searcher
+#[allow(dead_code)]
 pub fn make_high_performance_searcher<F>(
     points: Array2<F>,
     approximation_factor: f64,

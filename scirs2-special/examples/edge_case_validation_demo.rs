@@ -8,6 +8,7 @@ use scirs2_special::edge_case_tests::{
     EdgeCaseConfig,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔬 Special Functions Edge Case Validation Demo");
     println!("==============================================");
@@ -72,8 +73,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate custom edge case scenarios
+#[allow(dead_code)]
 fn demonstrate_custom_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
-    use scirs2_special::{bessel, erf, gamma};
+    use scirs2_special::{bessel, erf, erfc, gamma};
 
     println!("Testing challenging numerical scenarios:");
 
@@ -81,7 +83,7 @@ fn demonstrate_custom_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Gamma function near poles:");
     let near_poles = vec![-0.000001, -0.999999, -1.000001, -1.999999];
     for value in near_poles {
-        let result = gamma::gamma(value);
+        let result: f64 = gamma(value);
         println!(
             "  γ({:.6}) = {:.6e} (finite: {})",
             value,
@@ -106,10 +108,10 @@ fn demonstrate_custom_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Error function saturation:");
     let erf_args = vec![0.0, 1.0, 5.0, 10.0, 100.0, 1000.0];
     for arg in erf_args {
-        let erf_result = erf::erf(arg);
-        let erfc_result = erf::erfc(arg);
+        let erf_result = erf(arg);
+        let erfc_result = erfc(arg);
         println!(
-            "  erf({:.1}) = {:.10f}, erfc({:.1}) = {:.2e}",
+            "  erf({:.1}) = {:.10}, erfc({:.1}) = {:.2e}",
             arg, erf_result, arg, erfc_result
         );
     }
@@ -118,6 +120,7 @@ fn demonstrate_custom_edge_cases() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Analyze performance impact of edge cases
+#[allow(dead_code)]
 fn analyze_edge_case_performance() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_special::gamma;
     use std::time::Instant;
@@ -127,7 +130,7 @@ fn analyze_edge_case_performance() -> Result<(), Box<dyn std::error::Error>> {
     // Normal values
     let normal_values: Vec<f64> = (1..1000).map(|i| i as f64 * 0.01).collect();
     let start = Instant::now();
-    let _: Vec<_> = normal_values.iter().map(|&x| gamma::gamma(x)).collect();
+    let _: Vec<_> = normal_values.iter().map(|&x| gamma(x)).collect();
     let normal_time = start.elapsed();
 
     // Edge case values
@@ -135,7 +138,7 @@ fn analyze_edge_case_performance() -> Result<(), Box<dyn std::error::Error>> {
         1e-15, 1e-10, 1e-5, 0.1, 0.5, 1.0, 1.5, 2.0, 10.0, 50.0, 100.0, 170.0,
     ];
     let start = Instant::now();
-    let _: Vec<_> = edge_values.iter().map(|&x| gamma::gamma(x)).collect();
+    let _: Vec<_> = edge_values.iter().map(|&x| gamma(x)).collect();
     let edge_time = start.elapsed();
 
     println!("  Normal values (1000 items): {:.2?}", normal_time);
@@ -156,6 +159,7 @@ fn analyze_edge_case_performance() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Test robustness against various inputs
+#[allow(dead_code)]
 fn test_robustness() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_special::{bessel, erf, gamma};
 
@@ -176,9 +180,9 @@ fn test_robustness() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n1. IEEE 754 special values:");
     for value in special_values {
-        let gamma_result = gamma::gamma(value);
+        let gamma_result = gamma(value);
         let j0_result = bessel::j0(value);
-        let erf_result = erf::erf(value);
+        let erf_result = erf(value);
 
         println!("  Input: {:.2e}", value);
         println!(
@@ -211,6 +215,7 @@ fn test_robustness() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Test gamma function monotonicity in valid ranges
+#[allow(dead_code)]
 fn test_gamma_monotonicity() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_special::gamma;
 
@@ -221,8 +226,8 @@ fn test_gamma_monotonicity() -> Result<(), Box<dyn std::error::Error>> {
     let mut monotonic = true;
 
     for i in 1..test_points.len() {
-        let prev = gamma::gamma(test_points[i - 1]);
-        let curr = gamma::gamma(test_points[i]);
+        let prev = gamma(test_points[i - 1]);
+        let curr = gamma(test_points[i]);
 
         if curr <= prev {
             monotonic = false;
@@ -242,6 +247,7 @@ fn test_gamma_monotonicity() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Test error function monotonicity
+#[allow(dead_code)]
 fn test_erf_monotonicity() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_special::erf;
 
@@ -251,8 +257,8 @@ fn test_erf_monotonicity() -> Result<(), Box<dyn std::error::Error>> {
     let mut monotonic = true;
 
     for i in 1..test_points.len() {
-        let prev = erf::erf(test_points[i - 1]);
-        let curr = erf::erf(test_points[i]);
+        let prev = erf(test_points[i - 1]);
+        let curr = erf(test_points[i]);
 
         if curr <= prev {
             monotonic = false;
@@ -272,6 +278,7 @@ fn test_erf_monotonicity() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Test error function symmetry: erf(-x) = -erf(x)
+#[allow(dead_code)]
 fn test_erf_symmetry() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_special::erf;
 
@@ -279,13 +286,13 @@ fn test_erf_symmetry() -> Result<(), Box<dyn std::error::Error>> {
 
     let test_values = vec![0.1, 0.5, 1.0, 2.0, 5.0, 10.0];
     let mut symmetric = true;
-    let mut max_error = 0.0;
+    let mut max_error: f64 = 0.0;
 
     for value in test_values {
-        let pos_erf = erf::erf(value);
-        let neg_erf = erf::erf(-value);
-        let expected_neg = -pos_erf;
-        let error = (neg_erf - expected_neg).abs();
+        let pos_erf: f64 = erf(value);
+        let neg_erf: f64 = erf(-value);
+        let expected_neg: f64 = -pos_erf;
+        let error: f64 = (neg_erf - expected_neg).abs();
         max_error = max_error.max(error);
 
         if error > 1e-14 {

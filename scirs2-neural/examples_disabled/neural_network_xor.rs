@@ -7,6 +7,7 @@ use scirs2_neural::losses::MeanSquaredError;
 use scirs2_neural::models::{Model, Sequential};
 use scirs2_neural::optimizers::SGD;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Simple Neural Network Example");
     // Create a simple dataset for XOR problem
@@ -67,6 +68,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 // Create a simple feed-forward neural network for the XOR problem
+#[allow(dead_code)]
 fn create_model<R: Rng>(rng: &mut R) -> Result<impl Model<f32>> {
     // Create a sequential model
     let mut model = Sequential::new();

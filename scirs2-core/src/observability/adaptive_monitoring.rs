@@ -19,6 +19,7 @@ static GLOBAL_MONITORING: std::sync::OnceLock<Arc<AdaptiveMonitoringSystem>> =
     std::sync::OnceLock::new();
 
 /// Comprehensive adaptive monitoring and optimization system
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct AdaptiveMonitoringSystem {
     performance_monitor: Arc<RwLock<PerformanceMonitor>>,
@@ -280,6 +281,7 @@ impl AdaptiveMonitoringSystem {
 }
 
 /// Advanced performance monitoring with adaptive capabilities
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct PerformanceMonitor {
     metrics_history: VecDeque<ComprehensivePerformanceMetrics>,
@@ -415,6 +417,7 @@ impl PerformanceMonitor {
 }
 
 /// Intelligent optimization engine with adaptive learning
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct OptimizationEngine {
     optimization_history: Vec<OptimizationAction>,
@@ -692,6 +695,7 @@ impl OptimizationEngine {
 }
 
 /// Predictive performance analysis engine
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct PredictionEngine {
     time_series_models: HashMap<String, TimeSeriesModel>,
@@ -799,6 +803,7 @@ impl PredictionEngine {
 }
 
 /// Comprehensive alerting system
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct AlertingSystem {
     active_alerts: Vec<PerformanceAlert>,
@@ -1053,6 +1058,7 @@ impl AlertingSystem {
 }
 
 /// Comprehensive metrics collector
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct MetricsCollector {
     last_collection_time: Option<Instant>,
@@ -2442,6 +2448,7 @@ impl MetricsCollector {
 
 // Supporting types and structures
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ComprehensivePerformanceMetrics {
     pub timestamp: Instant,
@@ -2458,6 +2465,7 @@ pub struct ComprehensivePerformanceMetrics {
     pub custom_metrics: HashMap<String, f64>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct MonitoringConfiguration {
     pub monitoring_enabled: bool,
@@ -2483,6 +2491,7 @@ impl Default for MonitoringConfiguration {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct MonitoringDashboard {
     pub performance: ComprehensivePerformanceMetrics,
@@ -2492,6 +2501,7 @@ pub struct MonitoringDashboard {
     pub timestamp: Instant,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct PerformanceTrend {
     data_points: VecDeque<(f64, Instant)>,
@@ -2557,6 +2567,7 @@ impl PerformanceTrend {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TrendDirection {
     Increasing,
@@ -2564,9 +2575,12 @@ pub enum TrendDirection {
     Stable,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct AnomalyDetector {
+    #[allow(dead_code)]
     detection_window: Duration,
+    #[allow(dead_code)]
     sensitivity: f64,
 }
 
@@ -2628,6 +2642,7 @@ impl AnomalyDetector {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct PerformanceAnomaly {
     pub metric_name: String,
@@ -2638,6 +2653,7 @@ pub struct PerformanceAnomaly {
     pub detected_at: Instant,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AnomalySeverity {
     Info,
@@ -2645,6 +2661,7 @@ pub enum AnomalySeverity {
     Critical,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct PerformanceBaseline {
     pub cpu_utilization: f64,
@@ -2666,9 +2683,11 @@ impl PerformanceBaseline {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct PerformanceLearningModel {
     learned_patterns: Vec<PerformancePattern>,
+    #[allow(dead_code)]
     model_accuracy: f64,
 }
 
@@ -2706,6 +2725,7 @@ impl PerformanceLearningModel {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct PerformancePattern {
     pub cpu_range: (f64, f64),
@@ -2714,6 +2734,7 @@ pub struct PerformancePattern {
     pub confidence: f64,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OptimizationStrategy {
     Conservative,
@@ -2721,6 +2742,7 @@ pub enum OptimizationStrategy {
     Aggressive,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct OptimizationAction {
     pub actions: Vec<OptimizationActionType>,
@@ -2729,6 +2751,7 @@ pub struct OptimizationAction {
     pub priority: OptimizationPriority,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum OptimizationActionType {
     ReduceThreads,
@@ -2739,6 +2762,7 @@ pub enum OptimizationActionType {
     PreemptiveMemoryOptimization,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OptimizationPriority {
     Low,
@@ -2747,6 +2771,7 @@ pub enum OptimizationPriority {
     Critical,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct OptimizationRecommendation {
     pub category: RecommendationCategory,
@@ -2756,6 +2781,7 @@ pub struct OptimizationRecommendation {
     pub estimated_impact: ImpactLevel,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RecommendationCategory {
     Optimization,
@@ -2764,6 +2790,7 @@ pub enum RecommendationCategory {
     Performance,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RecommendationPriority {
     Low,
@@ -2771,6 +2798,7 @@ pub enum RecommendationPriority {
     High,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ImpactLevel {
     Low,
@@ -2778,6 +2806,7 @@ pub enum ImpactLevel {
     High,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct PerformancePredictions {
     pub predicted_cpu_spike: bool,
@@ -2791,10 +2820,12 @@ pub struct PerformancePredictions {
     pub generated_at: Instant,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct TimeSeriesModel {
     data: VecDeque<f64>,
     trend: f64,
+    #[allow(dead_code)]
     seasonal_component: Vec<f64>,
 }
 
@@ -2861,6 +2892,7 @@ impl TimeSeriesModel {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct CorrelationAnalyzer {
     correlations: HashMap<(String, String), f64>,
@@ -2936,6 +2968,7 @@ impl CorrelationAnalyzer {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct PatternDetector {
     detected_patterns: Vec<DetectedPattern>,
@@ -3027,6 +3060,7 @@ impl PatternDetector {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct DetectedPattern {
     pub pattern_type: PatternType,
@@ -3036,6 +3070,7 @@ pub struct DetectedPattern {
     pub detected_at: Instant,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PatternType {
     Periodic,
@@ -3043,6 +3078,7 @@ pub enum PatternType {
     Seasonal,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct PerformanceAlert {
     pub id: String,
@@ -3054,6 +3090,7 @@ pub struct PerformanceAlert {
     pub resolved: bool,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct AlertRule {
     pub name: String,
@@ -3062,6 +3099,7 @@ pub struct AlertRule {
     pub duration: Duration,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum AlertCondition {
     Threshold {
@@ -3076,6 +3114,7 @@ pub enum AlertCondition {
     },
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ComparisonOperator {
     GreaterThan,
@@ -3083,6 +3122,7 @@ pub enum ComparisonOperator {
     Equal,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AlertSeverity {
     Info,
@@ -3090,6 +3130,7 @@ pub enum AlertSeverity {
     Critical,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct AlertEvent {
     pub alert: PerformanceAlert,
@@ -3097,6 +3138,7 @@ pub struct AlertEvent {
     pub timestamp: Instant,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AlertEventType {
     Triggered,
@@ -3104,9 +3146,11 @@ pub enum AlertEventType {
     Resolved,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct NotificationChannel {
     channel_type: NotificationChannelType,
+    #[allow(dead_code)]
     endpoint: String,
     enabled: bool,
 }
@@ -3136,6 +3180,7 @@ impl NotificationChannel {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum NotificationChannelType {
     Email,
@@ -3144,6 +3189,7 @@ pub enum NotificationChannelType {
 }
 
 /// Initialize adaptive monitoring system
+#[allow(dead_code)]
 pub fn initialize_adaptive_monitoring() -> CoreResult<()> {
     let monitoring_system = AdaptiveMonitoringSystem::global()?;
     monitoring_system.start()?;
@@ -3151,6 +3197,7 @@ pub fn initialize_adaptive_monitoring() -> CoreResult<()> {
 }
 
 /// Get current monitoring dashboard
+#[allow(dead_code)]
 pub fn get_monitoring_dashboard() -> CoreResult<MonitoringDashboard> {
     let monitoring_system = AdaptiveMonitoringSystem::global()?;
     monitoring_system.get_dashboard_data()

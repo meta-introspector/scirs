@@ -224,6 +224,7 @@ pub fn wright_omega_real(x: f64, tol: Option<f64>) -> SpecialResult<f64> {
 /// let check = omega + omega.ln();
 /// assert_relative_eq!(check, x, epsilon = 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn wright_omega_real_optimized(x: f64, tol: Option<f64>) -> SpecialResult<f64> {
     let tolerance = tol.unwrap_or(1e-10);
 
@@ -362,6 +363,7 @@ pub fn wright_omega_real_optimized(x: f64, tol: Option<f64>) -> SpecialResult<f6
 /// assert_relative_eq!(omega.re, 0.567143, epsilon = 1e-6);
 /// assert!(omega.im.abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn wright_omega_optimized(z: Complex64, tol: Option<f64>) -> SpecialResult<Complex64> {
     let tolerance = tol.unwrap_or(1e-10);
 
@@ -487,6 +489,7 @@ pub fn wright_omega_optimized(z: Complex64, tol: Option<f64>) -> SpecialResult<C
 /// 2. Asymptotic expansion for large |z|
 /// 3. Modified Newton with different initial guesses
 /// 4. Branch-aware computation near singularities
+#[allow(dead_code)]
 fn wright_omega_fallback_methods(z: Complex64, tolerance: f64) -> SpecialResult<Complex64> {
     // Method 1: Series expansion for small |z|
     if z.norm() < 0.5 {
@@ -552,6 +555,7 @@ fn wright_omega_fallback_methods(z: Complex64, tolerance: f64) -> SpecialResult<
 }
 
 /// Series expansion for Wright Omega function around z = 0
+#[allow(dead_code)]
 fn wright_omega_series_expansion(z: Complex64, tolerance: f64) -> SpecialResult<Complex64> {
     // For small z, use the series expansion:
     // W(z) = z - z² + (3/2)z³ - (8/3)z⁴ + (125/24)z⁵ - ...
@@ -594,6 +598,7 @@ fn wright_omega_series_expansion(z: Complex64, tolerance: f64) -> SpecialResult<
 }
 
 /// Asymptotic expansion for Wright Omega function for large |z|
+#[allow(dead_code)]
 fn wright_omega_asymptotic(z: Complex64, tolerance: f64) -> SpecialResult<Complex64> {
     if z.norm() < 5.0 {
         return Err(SpecialError::DomainError(
@@ -634,6 +639,7 @@ fn wright_omega_asymptotic(z: Complex64, tolerance: f64) -> SpecialResult<Comple
 }
 
 /// Enhanced Newton method with better step control
+#[allow(dead_code)]
 fn wright_omega_enhanced_newton(
     z: Complex64,
     initial_guess: Complex64,
@@ -682,6 +688,7 @@ fn wright_omega_enhanced_newton(
 }
 
 /// Branch-aware computation for values near branch cuts and singularities
+#[allow(dead_code)]
 fn wright_omega_branch_aware(z: Complex64, tolerance: f64) -> SpecialResult<Complex64> {
     // Handle the branch cuts more carefully
     // The Wright Omega function has branch points at z = -1 ± 2πki for integer k

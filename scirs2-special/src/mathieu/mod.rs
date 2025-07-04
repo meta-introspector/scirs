@@ -36,6 +36,7 @@ use std::fmt::Debug;
 /// let a_value = mathieu_a(0, 0.1f64).unwrap();
 /// assert!((a_value - (-0.466)).abs() < 1e-2);
 /// ```
+#[allow(dead_code)]
 pub fn mathieu_a<F>(m: usize, q: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -78,6 +79,7 @@ where
 /// let b_value = mathieu_b(1, 0.1f64).unwrap();
 /// assert!((b_value - 1.133).abs() < 1e-2);
 /// ```
+#[allow(dead_code)]
 pub fn mathieu_b<F>(m: usize, q: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -126,6 +128,7 @@ where
 /// assert!((coeffs[0] - 0.977).abs() < 1e-2);
 /// assert!((coeffs[1] - 0.209).abs() < 1e-2);
 /// ```
+#[allow(dead_code)]
 pub fn mathieu_even_coef<F>(m: usize, q: F) -> SpecialResult<Vec<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -161,6 +164,7 @@ where
 /// let coeffs = mathieu_odd_coef(1, 1.0f64).unwrap();
 /// assert!((coeffs[0] - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn mathieu_odd_coef<F>(m: usize, q: F) -> SpecialResult<Vec<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -202,6 +206,7 @@ where
 /// assert!((ce - 1.006).abs() < 1e-2);
 /// assert!((ce_prime - (-0.413)).abs() < 1e-2);
 /// ```
+#[allow(dead_code)]
 pub fn mathieu_cem<F>(m: usize, q: F, x: F) -> SpecialResult<(F, F)>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -241,6 +246,7 @@ where
 /// assert!((se - 0.707).abs() < 1e-2);
 /// assert!((se_prime - 0.707).abs() < 1e-2);
 /// ```
+#[allow(dead_code)]
 pub fn mathieu_sem<F>(m: usize, q: F, x: F) -> SpecialResult<(F, F)>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -261,6 +267,7 @@ where
 }
 
 // Helper function for small q approximation of even characteristic values
+#[allow(dead_code)]
 fn small_q_approximation_even<F>(m: usize, q: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -284,6 +291,7 @@ where
 }
 
 // Helper function for small q approximation of odd characteristic values
+#[allow(dead_code)]
 fn small_q_approximation_odd<F>(m: usize, q: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -304,6 +312,7 @@ where
 }
 
 // Helper function to compute even characteristic values using continued fractions
+#[allow(dead_code)]
 fn continued_fraction_even<F>(m: usize, q: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -339,6 +348,7 @@ where
 }
 
 // Helper function to compute odd characteristic values using continued fractions
+#[allow(dead_code)]
 fn continued_fraction_odd<F>(m: usize, q: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug,
@@ -370,6 +380,7 @@ where
 }
 
 // Refine the characteristic value for even Mathieu functions using robust continued fraction
+#[allow(dead_code)]
 fn refine_even_characteristic_value<F>(m: usize, q: F, a: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -434,6 +445,7 @@ where
 }
 
 // Refine the characteristic value for odd Mathieu functions using robust continued fraction
+#[allow(dead_code)]
 fn refine_odd_characteristic_value<F>(m: usize, q: F, b: F) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -506,6 +518,7 @@ where
 }
 
 // Compute even Fourier coefficients for Mathieu functions
+#[allow(dead_code)]
 fn compute_even_coefficients<F>(m: usize, q: F, a: F) -> SpecialResult<Vec<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -640,6 +653,7 @@ where
 }
 
 // Compute odd Fourier coefficients for Mathieu functions
+#[allow(dead_code)]
 fn compute_odd_coefficients<F>(m: usize, q: F, b: F) -> SpecialResult<Vec<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -776,6 +790,7 @@ where
 }
 
 // Evaluate even Mathieu function and its derivative
+#[allow(dead_code)]
 fn evaluate_even_mathieu<F>(m: usize, x: F, coeffs: &[F]) -> SpecialResult<(F, F)>
 where
     F: Float + FromPrimitive + Debug,
@@ -803,6 +818,7 @@ where
 }
 
 // Evaluate odd Mathieu function and its derivative
+#[allow(dead_code)]
 fn evaluate_odd_mathieu<F>(m: usize, x: F, coeffs: &[F]) -> SpecialResult<(F, F)>
 where
     F: Float + FromPrimitive + Debug,

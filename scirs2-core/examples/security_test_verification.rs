@@ -14,6 +14,7 @@ use scirs2_core::testing::security::{
 use std::time::Duration;
 
 #[cfg(feature = "testing")]
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     println!("🔒 Security Testing Framework Verification");
     println!("==========================================");
@@ -162,6 +163,7 @@ fn main() -> CoreResult<()> {
 }
 
 #[cfg(not(feature = "testing"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'testing' feature to be enabled.");
     println!("Run with: cargo run --example security_test_verification --features testing");

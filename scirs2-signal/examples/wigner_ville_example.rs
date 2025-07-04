@@ -11,6 +11,7 @@ use scirs2_signal::wvd::{
     wigner_ville, WvdConfig,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Wigner-Ville Distribution Examples");
     println!("---------------------------------");
@@ -53,6 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Generate a test signal with multiple chirp components and a transient
+#[allow(dead_code)]
 fn generate_test_signal() -> Array1<f64> {
     let n_samples = 1024;
     let fs = 1024.0;
@@ -90,6 +92,7 @@ fn generate_test_signal() -> Array1<f64> {
 }
 
 /// Analyze a signal with the standard Wigner-Ville Distribution
+#[allow(dead_code)]
 fn analyze_with_standard_wvd(signal: &Array1<f64>) -> (Array2<f64>, Array1<f64>, Array1<f64>) {
     // Configure the transform
     let fs = 1024.0;
@@ -121,6 +124,7 @@ fn analyze_with_standard_wvd(signal: &Array1<f64>) -> (Array2<f64>, Array1<f64>,
 type AnalysisResult = Result<(Array2<f64>, Vec<Vec<(usize, f64)>>), Box<dyn std::error::Error>>;
 
 /// Analyze a signal with the Smoothed Pseudo Wigner-Ville Distribution
+#[allow(dead_code)]
 fn analyze_with_smoothed_wvd(
     signal: &Array1<f64>,
     _t_axis: &Array1<f64>,
@@ -161,6 +165,7 @@ fn analyze_with_smoothed_wvd(
 }
 
 /// Compare standard WVD and SPWVD on a multi-component signal
+#[allow(dead_code)]
 fn compare_wvd_spwvd_multicomponent(
 ) -> Result<(Array2<f64>, Array2<f64>), Box<dyn std::error::Error>> {
     let n_samples = 512;
@@ -204,6 +209,7 @@ fn compare_wvd_spwvd_multicomponent(
 }
 
 /// Demonstrate cross-Wigner-Ville Distribution between related signals
+#[allow(dead_code)]
 fn demonstrate_cross_wvd() -> Array2<f64> {
     let n_samples = 512;
     let fs = 512.0;
@@ -238,6 +244,7 @@ fn demonstrate_cross_wvd() -> Array2<f64> {
 }
 
 /// Extract and analyze ridges from the time-frequency representation
+#[allow(dead_code)]
 fn extract_and_analyze_ridges(
     tf_repr: &Array2<f64>,
     freq_axis: &Array1<f64>,
@@ -279,6 +286,7 @@ fn extract_and_analyze_ridges(
 }
 
 /// Save all results to CSV files for external plotting
+#[allow(dead_code)]
 fn save_results_to_csv(
     signal: &Array1<f64>,
     wvd: &Array2<f64>,
@@ -316,6 +324,7 @@ fn save_results_to_csv(
 }
 
 /// Save a time-frequency matrix to CSV
+#[allow(dead_code)]
 fn save_matrix_to_csv(
     filename: &str,
     matrix: &Array2<f64>,

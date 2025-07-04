@@ -4,7 +4,6 @@
 //! analysis of the Gaussian mechanism with subsampling, providing tight
 //! privacy loss bounds for DP-SGD and related algorithms.
 
-use num_traits::Float;
 use std::collections::HashMap;
 
 use crate::error::{OptimError, Result};
@@ -786,6 +785,7 @@ pub struct PrivacyAnalysisSummary {
 // Utility functions
 
 /// Compute log(exp(a) + exp(b)) numerically stable
+#[allow(dead_code)]
 fn log_sum_exp(a: f64, b: f64) -> f64 {
     let max_val = a.max(b);
     let min_val = a.min(b);
@@ -798,6 +798,7 @@ fn log_sum_exp(a: f64, b: f64) -> f64 {
 }
 
 /// Compute binomial coefficient C(n, k)
+#[allow(dead_code)]
 fn binomial_coefficient(n: usize, k: usize) -> f64 {
     if k > n {
         return 0.0;
@@ -818,6 +819,7 @@ fn binomial_coefficient(n: usize, k: usize) -> f64 {
 }
 
 /// Stirling's approximation for log factorial
+#[allow(dead_code)]
 fn stirling_log_factorial(n: usize) -> f64 {
     if n == 0 {
         return 0.0;

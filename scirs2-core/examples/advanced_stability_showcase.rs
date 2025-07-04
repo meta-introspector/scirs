@@ -15,6 +15,7 @@ use scirs2_core::stability::*;
 use std::thread;
 use std::time::{Duration, SystemTime};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Advanced Stability Framework Showcase");
     println!("========================================\n");
@@ -49,6 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate advanced contract registration with cryptographic hashing
+#[allow(dead_code)]
 fn demonstrate_advanced_contract_registration(
     manager: &mut StabilityGuaranteeManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -129,6 +131,7 @@ fn demonstrate_advanced_contract_registration(
 }
 
 /// Demonstrate formal verification capabilities
+#[allow(dead_code)]
 fn demonstrate_formal_verification(
     manager: &StabilityGuaranteeManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -154,6 +157,7 @@ fn demonstrate_formal_verification(
 }
 
 /// Demonstrate runtime validation with chaos engineering
+#[allow(dead_code)]
 fn demonstrate_runtime_validation(
     manager: &StabilityGuaranteeManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -205,6 +209,7 @@ fn demonstrate_runtime_validation(
 }
 
 /// Demonstrate advanced performance modeling
+#[allow(dead_code)]
 fn demonstrate_performance_modeling(
     manager: &StabilityGuaranteeManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -264,6 +269,7 @@ fn demonstrate_performance_modeling(
 }
 
 /// Demonstrate cryptographic audit trail
+#[allow(dead_code)]
 fn demonstrate_audit_trail(
     manager: &StabilityGuaranteeManager,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -306,6 +312,7 @@ fn demonstrate_audit_trail(
 }
 
 /// Generate comprehensive stability report
+#[allow(dead_code)]
 fn generate_advanced_report(
     manager: &StabilityGuaranteeManager,
 ) -> Result<(), Box<dyn std::error::Error>> {

@@ -64,6 +64,7 @@ impl TraversalOrder {
 /// // Perform BFS from vertex 0
 /// let (order, _) = traverse_graph(&graph, 0, false, "bfs", false).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn traverse_graph<T, S>(
     graph: &S,
     start: usize,
@@ -97,6 +98,7 @@ where
 }
 
 /// Breadth-first search traversal
+#[allow(dead_code)]
 pub fn breadth_first_search<T, S>(
     graph: &S,
     start: usize,
@@ -143,6 +145,7 @@ where
 }
 
 /// Depth-first search traversal
+#[allow(dead_code)]
 pub fn depth_first_search<T, S>(
     graph: &S,
     start: usize,
@@ -200,6 +203,7 @@ where
 }
 
 /// Recursive depth-first search traversal
+#[allow(dead_code)]
 pub fn depth_first_search_recursive<T, S>(
     graph: &S,
     start: usize,
@@ -233,6 +237,7 @@ where
 }
 
 /// Helper function for recursive DFS
+#[allow(dead_code)]
 fn dfs_recursive_helper<T>(
     node: usize,
     adj_list: &[Vec<(usize, T)>],
@@ -280,6 +285,7 @@ fn dfs_recursive_helper<T>(
 ///
 /// let distances = bfs_distances(&graph, 0, false).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn bfs_distances<T, S>(graph: &S, start: usize, directed: bool) -> SparseResult<Array1<isize>>
 where
     T: Float + Debug + Copy + 'static,
@@ -341,6 +347,7 @@ where
 ///
 /// assert!(has_path(&graph, 0, 2, false).unwrap());
 /// ```
+#[allow(dead_code)]
 pub fn has_path<T, S>(graph: &S, source: usize, target: usize, directed: bool) -> SparseResult<bool>
 where
     T: Float + Debug + Copy + 'static,
@@ -387,6 +394,7 @@ where
 ///
 /// let reachable = reachable_vertices(&graph, 0, false).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn reachable_vertices<T, S>(
     graph: &S,
     source: usize,
@@ -424,6 +432,7 @@ where
 ///
 /// let topo_order = topological_sort(&graph).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn topological_sort<T, S>(graph: &S) -> SparseResult<Vec<usize>>
 where
     T: Float + Debug + Copy + 'static,

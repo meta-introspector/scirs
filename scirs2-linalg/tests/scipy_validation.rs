@@ -11,6 +11,7 @@ use scirs2_linalg::{cholesky, det, inv, lu, matrix_norm, qr, solve, svd};
 const TOLERANCE: f64 = 1e-10;
 
 #[test]
+#[allow(dead_code)]
 fn test_determinant_against_scipy() {
     // Test case 1: Simple 2x2 matrix
     let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
@@ -32,6 +33,7 @@ fn test_determinant_against_scipy() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_inverse_against_scipy() {
     // Test case: 2x2 matrix
     let a = array![[4.0_f64, 2.0], [2.0, 5.0]];
@@ -47,6 +49,7 @@ fn test_inverse_against_scipy() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_lu_decomposition_against_scipy() {
     // Test case: 3x3 matrix
     let a = array![[2.0_f64, 1.0, 1.0], [4.0, -6.0, 0.0], [-2.0, 7.0, 2.0]];
@@ -75,6 +78,7 @@ fn test_lu_decomposition_against_scipy() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_qr_decomposition_against_scipy() {
     // Test case: 3x2 matrix
     let a = array![[1.0_f64, 2.0], [3.0, 4.0], [5.0, 6.0]];
@@ -99,6 +103,7 @@ fn test_qr_decomposition_against_scipy() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_svd_against_scipy() {
     // Test case: 3x2 matrix
     let a = array![[1.0_f64, 2.0], [3.0, 4.0], [5.0, 6.0]];
@@ -147,6 +152,7 @@ fn test_svd_against_scipy() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_cholesky_against_scipy() {
     // Test case: symmetric positive definite matrix
     let a = array![
@@ -170,6 +176,7 @@ fn test_cholesky_against_scipy() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_norm_against_scipy() {
     // Test case: 3x3 matrix
     let a = array![[1.0_f64, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
@@ -194,6 +201,7 @@ fn test_norm_against_scipy() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_solve_against_scipy() {
     // Test case: solving Ax = b
     let a = array![[3.0_f64, 1.0], [1.0, 2.0]];
@@ -207,6 +215,7 @@ fn test_solve_against_scipy() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_edge_cases() {
     // Test singular matrix determinant
     let singular = array![[1.0_f64, 2.0], [2.0, 4.0]];
@@ -227,6 +236,7 @@ fn test_edge_cases() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_numerical_stability() {
     // Test with a poorly conditioned matrix
     let a = array![[1.0_f64, 1.0], [1.0, 1.000001]];
@@ -244,6 +254,7 @@ fn test_numerical_stability() {
 
 // Helper test to verify our test matrices match SciPy inputs
 #[test]
+#[allow(dead_code)]
 fn test_matrix_creation() {
     let a = array![[1.0_f64, 2.0], [3.0, 4.0]];
     assert_eq!(a.shape(), &[2, 2]);

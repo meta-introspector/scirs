@@ -119,6 +119,7 @@ use num_traits::{Float, FromPrimitive};
 /// // erf is an odd function: erf(-x) = -erf(x)
 /// assert!((erf(0.5f64) + erf(-0.5f64)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn erf<F: Float + FromPrimitive>(x: F) -> F {
     // Special cases
     if x == F::zero() {
@@ -183,6 +184,7 @@ pub fn erf<F: Float + FromPrimitive>(x: F) -> F {
 /// let x = 0.5f64;
 /// assert!((erfc(x) - (1.0 - erf(x))).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn erfc<F: Float + FromPrimitive>(x: F) -> F {
     // Special cases
     if x == F::zero() {
@@ -245,6 +247,7 @@ pub fn erfc<F: Float + FromPrimitive>(x: F) -> F {
 /// // Using a larger tolerance since the approximation isn't exact
 /// assert!((erf_x - y).abs() < 0.2);
 /// ```
+#[allow(dead_code)]
 pub fn erfinv<F: Float + FromPrimitive>(y: F) -> F {
     // Special cases
     if y == F::zero() {
@@ -310,6 +313,7 @@ pub fn erfinv<F: Float + FromPrimitive>(y: F) -> F {
 /// // Using a larger tolerance since the approximation isn't exact
 /// assert!((erfc_x - y).abs() < 0.2);
 /// ```
+#[allow(dead_code)]
 pub fn erfcinv<F: Float + FromPrimitive>(y: F) -> F {
     // Special cases
     if y == F::from(2.0).unwrap() {
@@ -809,6 +813,7 @@ pub mod complex {
 /// let d1 = dawsn(1.0f64);
 /// assert!((d1 - 0.53807950691276841).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn dawsn<F: Float + FromPrimitive>(x: F) -> F {
     // Special cases
     if x == F::zero() {
@@ -949,6 +954,7 @@ pub fn dawsn<F: Float + FromPrimitive>(x: F) -> F {
 /// let asymptotic = 1.0 / (std::f64::consts::PI.sqrt() * large_x);
 /// assert!((erfcx(large_x) - asymptotic).abs() / asymptotic < 0.1);
 /// ```
+#[allow(dead_code)]
 pub fn erfcx<F: Float + FromPrimitive>(x: F) -> F {
     // For the real-valued version, we can use the complex implementation
     // with zero imaginary part and take the real part
@@ -985,6 +991,7 @@ pub fn erfcx<F: Float + FromPrimitive>(x: F) -> F {
 /// let x = 1.0;
 /// assert!((erfi(-x) + erfi(x)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn erfi<F: Float + FromPrimitive>(x: F) -> F {
     // erfi(x) = -i * erf(i*x) = (2/√π) * ∫₀ˣ exp(t²) dt
     // For implementation, we can use series expansion or the relation to Dawson's function
@@ -1056,6 +1063,7 @@ pub fn erfi<F: Float + FromPrimitive>(x: F) -> F {
 /// // wofz(0) = 1
 /// assert!((wofz(0.0) - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn wofz<F: Float + FromPrimitive>(x: F) -> F {
     // For real arguments, use the complex implementation and take the real part
     use crate::erf::complex::faddeeva_complex;

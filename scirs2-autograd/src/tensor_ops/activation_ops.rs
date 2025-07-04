@@ -28,6 +28,7 @@ pub struct Softmax {
 }
 
 #[cfg(feature = "blas")]
+#[allow(dead_code)]
 fn fast_sigmoid_impl<F: Float>(x: &NdArrayView<F>) -> NdArray<F> {
     let half = F::from(0.5).unwrap();
     unsafe {
@@ -56,6 +57,7 @@ fn fast_sigmoid_impl<F: Float>(x: &NdArrayView<F>) -> NdArray<F> {
 }
 
 #[inline]
+#[allow(dead_code)]
 pub fn softmax_impl<T: Float>(x: &NdArrayView<T>, axis: isize) -> NdArray<T> {
     let axis = if axis < 0 {
         (x.ndim() as isize + axis) as usize

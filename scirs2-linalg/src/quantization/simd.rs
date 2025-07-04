@@ -28,6 +28,7 @@ use scirs2_core::simd_ops::SimdUnifiedOps;
 /// # Returns
 ///
 /// * Result vector of the multiplication
+#[allow(dead_code)]
 pub fn simd_quantized_matvec(
     qmatrix: &QuantizedMatrix,
     qparams: &QuantizationParams,
@@ -269,6 +270,7 @@ pub fn simd_quantized_matvec(
 /// # Returns
 ///
 /// * Result matrix of the multiplication
+#[allow(dead_code)]
 pub fn simd_quantized_matmul(
     a: &QuantizedMatrix,
     a_params: &QuantizationParams,
@@ -521,6 +523,7 @@ pub fn simd_quantized_matmul(
 /// # Returns
 ///
 /// * Dot product result
+#[allow(dead_code)]
 pub fn simd_quantized_dot(
     a: &QuantizedVector,
     a_params: &QuantizationParams,

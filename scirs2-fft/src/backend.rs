@@ -278,11 +278,13 @@ impl std::fmt::Display for BackendInfo {
 static GLOBAL_BACKEND_MANAGER: OnceLock<BackendManager> = OnceLock::new();
 
 /// Get the global backend manager
+#[allow(dead_code)]
 pub fn get_backend_manager() -> &'static BackendManager {
     GLOBAL_BACKEND_MANAGER.get_or_init(BackendManager::new)
 }
 
 /// Initialize global backend manager with custom configuration
+#[allow(dead_code)]
 pub fn init_backend_manager(manager: BackendManager) -> Result<(), &'static str> {
     GLOBAL_BACKEND_MANAGER
         .set(manager)
@@ -290,21 +292,25 @@ pub fn init_backend_manager(manager: BackendManager) -> Result<(), &'static str>
 }
 
 /// List available backends
+#[allow(dead_code)]
 pub fn list_backends() -> Vec<String> {
     get_backend_manager().list_backends()
 }
 
 /// Set the current backend
+#[allow(dead_code)]
 pub fn set_backend(name: &str) -> FFTResult<()> {
     get_backend_manager().set_backend(name)
 }
 
 /// Get current backend name
+#[allow(dead_code)]
 pub fn get_backend_name() -> String {
     get_backend_manager().get_backend_name()
 }
 
 /// Get backend information
+#[allow(dead_code)]
 pub fn get_backend_info(name: &str) -> Option<BackendInfo> {
     get_backend_manager().get_backend_info(name)
 }

@@ -468,6 +468,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> KrigingInterpolator<F
 /// println!("Interpolated value at (0.25, 0.25): {}", result.value[0]);
 /// println!("Prediction variance: {}", result.variance[0]);
 /// ```
+#[allow(dead_code)]
 pub fn make_kriging_interpolator<F: crate::traits::InterpolationFloat>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,

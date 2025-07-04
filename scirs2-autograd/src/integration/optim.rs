@@ -659,6 +659,7 @@ impl<F: Float> SciRS2Integration for OptimizerState<'_, F> {
 }
 
 /// Convert optimizer state to SciRS2Data
+#[allow(dead_code)]
 pub fn optimizer_to_scirs2_data<'a, F: Float>(
     optimizer: &dyn AutogradOptimizer<F>,
 ) -> SciRS2Data<'a, F> {

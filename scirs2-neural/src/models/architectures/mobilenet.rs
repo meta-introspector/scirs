@@ -18,17 +18,20 @@ use num_traits::Float;
 use rand::SeedableRng;
 use std::fmt::Debug;
 /// ReLU6 activation function (min(max(x, 0), 6))
+#[allow(dead_code)]
 pub fn relu6<F: Float>(x: F) -> F {
     let zero = F::zero();
     let six = F::from(6.0).unwrap();
     x.max(zero).min(six)
 }
 /// Hard Sigmoid activation function used in MobileNetV3
+#[allow(dead_code)]
 pub fn hard_sigmoid<F: Float>(x: F) -> F {
     let _one = F::one(); // Not used but kept for consistency
     let three = F::from(3.0).unwrap();
     (x + three).max(zero).min(six) / six
 /// Hard Swish activation function used in MobileNetV3
+#[allow(dead_code)]
 pub fn hard_swish<F: Float>(x: F) -> F {
     x * hard_sigmoid(x)
 /// Version of MobileNet
@@ -276,6 +279,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync> Layer<F> for SqueezeExcitat
         self
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
 /// Activation function
+#[allow(dead_code)]
 fn get_activation<F: Float + Debug + ScalarOperand + Send + Sync>(
     name: &str,
 ) -> Box<dyn Fn(F) -> F + Send + Sync> {

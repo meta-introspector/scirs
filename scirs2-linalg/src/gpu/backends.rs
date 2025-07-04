@@ -312,6 +312,7 @@ pub mod cuda {
     }
 
     /// Comprehensive CUDA context with cuBLAS and cuSOLVER integration
+    #[derive(Debug)]
     pub struct CudaContext {
         device_info: CudaDeviceInfo,
         device_id: i32,
@@ -1597,6 +1598,7 @@ impl GpuBackend for CpuFallbackBackend {
 }
 
 /// CPU fallback context implementation
+#[derive(Debug)]
 struct CpuFallbackContext {
     device_info: GpuDeviceInfo,
 }
@@ -1627,6 +1629,7 @@ impl GpuContextAlloc for CpuFallbackContext {
 }
 
 /// CPU buffer implementation that just wraps a Vec
+#[derive(Debug)]
 struct CpuBuffer<T> {
     data: Vec<T>,
 }

@@ -2,6 +2,7 @@ use ndarray::array;
 use scirs2_linalg::{matrix_rank, svd};
 
 #[test]
+#[allow(dead_code)]
 fn debug_nearly_singular_matrix_rank() {
     // Create a nearly singular matrix (rank should be 1)
     let matrix = array![

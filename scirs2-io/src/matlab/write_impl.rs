@@ -25,6 +25,7 @@ const MI_INT64: i32 = 12;
 const MI_UINT64: i32 = 13;
 
 /// Write MAT file header (simplified version)
+#[allow(dead_code)]
 pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
     // Write "MATLAB" magic string
     writer
@@ -65,6 +66,7 @@ pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
 }
 
 /// Write a variable (simplified version that only handles basic types)
+#[allow(dead_code)]
 pub fn write_variable<W: Write + Seek>(
     writer: &mut W,
     name: &str,
@@ -139,6 +141,7 @@ pub fn write_variable<W: Write + Seek>(
 }
 
 /// Write matrix header content (flags, dimensions, name) without the outer matrix element header
+#[allow(dead_code)]
 fn write_matrix_header_content<W: Write + Seek>(
     writer: &mut W,
     name: &str,
@@ -214,6 +217,7 @@ fn write_matrix_header_content<W: Write + Seek>(
 }
 
 /// Write double precision data
+#[allow(dead_code)]
 fn write_double_data<W: Write>(writer: &mut W, array: &ArrayD<f64>) -> Result<()> {
     let data_size = (array.len() * 8) as i32;
     writer
@@ -241,6 +245,7 @@ fn write_double_data<W: Write>(writer: &mut W, array: &ArrayD<f64>) -> Result<()
 }
 
 /// Write single precision data
+#[allow(dead_code)]
 fn write_single_data<W: Write>(writer: &mut W, array: &ArrayD<f32>) -> Result<()> {
     let data_size = (array.len() * 4) as i32;
     writer
@@ -268,6 +273,7 @@ fn write_single_data<W: Write>(writer: &mut W, array: &ArrayD<f32>) -> Result<()
 }
 
 /// Write int32 data
+#[allow(dead_code)]
 fn write_int32_data<W: Write>(writer: &mut W, array: &ArrayD<i32>) -> Result<()> {
     let data_size = (array.len() * 4) as i32;
     writer
@@ -295,6 +301,7 @@ fn write_int32_data<W: Write>(writer: &mut W, array: &ArrayD<i32>) -> Result<()>
 }
 
 /// Write logical data (as uint8)
+#[allow(dead_code)]
 fn write_logical_data<W: Write>(writer: &mut W, array: &ArrayD<bool>) -> Result<()> {
     let data_size = array.len() as i32;
     writer
@@ -322,6 +329,7 @@ fn write_logical_data<W: Write>(writer: &mut W, array: &ArrayD<bool>) -> Result<
 }
 
 /// Write character data content (without outer matrix header)
+#[allow(dead_code)]
 fn write_char_data_content<W: Write + Seek>(
     writer: &mut W,
     name: &str,

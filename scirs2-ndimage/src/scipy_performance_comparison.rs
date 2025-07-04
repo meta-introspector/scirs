@@ -5,14 +5,12 @@
 //! It includes timing comparisons, numerical accuracy validation, and
 //! comprehensive API compatibility verification.
 
-use crate::error::NdimageResult;
-
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 use crate::filters::*;
 use crate::interpolation::*;
 use crate::measurements::*;
 use crate::morphology::*;
-use ndarray::{Array1, Array2, Array3, ArrayD, ArrayView2, ArrayViewD};
+use ndarray::{Array2, ArrayView2};
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -585,11 +583,13 @@ impl SciPyBenchmarkSuite {
 }
 
 /// Estimate memory usage for given shape and data type size
+#[allow(dead_code)]
 fn estimate_memory_usage(shape: &[usize], dtype_size: usize) -> usize {
     shape.iter().product::<usize>() * dtype_size
 }
 
 /// Calculate numerical accuracy metrics between two arrays
+#[allow(dead_code)]
 pub fn calculate_accuracy_metrics<T>(
     reference: &ArrayView2<T>,
     computed: &ArrayView2<T>,
@@ -641,6 +641,7 @@ where
 }
 
 /// Validate API compatibility for a specific function
+#[allow(dead_code)]
 pub fn validate_api_compatibility(
     function_name: &str,
     parameter_tests: &[(String, fn() -> bool, Option<String>)],

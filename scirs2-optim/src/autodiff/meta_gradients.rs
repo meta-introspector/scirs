@@ -4,7 +4,7 @@
 //! Reptile, and other meta-learning approaches that require gradients of
 //! gradients with respect to meta-parameters.
 
-use ndarray::{Array1, Array2, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 
@@ -405,7 +405,7 @@ pub enum CheckpointPolicy {
     None,
 }
 
-impl<T: Float + Default + Clone> MetaGradientEngine<T> {
+impl<T: Float + Default + Clone + 'static> MetaGradientEngine<T> {
     /// Create a new meta-gradient engine
     pub fn new(
         algorithm: MetaLearningAlgorithm,
@@ -439,7 +439,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         engine.advanced_config = advanced_config;
 
         // Configure higher-order engine based on advanced config
-        if advanced_config.use_higher_order_hessian {
+        if engine.advanced_config.use_higher_order_hessian {
             engine.higher_order_engine.set_mixed_mode(true);
         }
 
@@ -453,7 +453,7 @@ impl<T: Float + Default + Clone> MetaGradientEngine<T> {
         tasks: &[MetaTask<T>],
         objective_fn: impl Fn(&Array1<T>, &Array1<T>, &[(Array1<T>, Array1<T>)]) -> T,
     ) -> Result<MetaGradientResult<T>> {
-        let start_time = std::time::Instant::now();
+        let _start_time = std::time::Instant::now();
 
         match self.algorithm {
             MetaLearningAlgorithm::MAML => {

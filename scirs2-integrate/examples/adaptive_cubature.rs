@@ -47,6 +47,7 @@ struct SubRegion {
 /// * `tol` - Desired absolute tolerance
 /// * `max_evals` - Maximum number of function evaluations
 /// * `max_depth` - Maximum recursion depth
+#[allow(dead_code)]
 pub fn adaptive_cubature<F>(
     f: F,
     a: &Array1<f64>,
@@ -225,6 +226,7 @@ where
 ///
 /// # Returns
 /// Tuple containing (integral estimate, error estimate, number of evaluations)
+#[allow(dead_code)]
 fn integrate_region<F>(
     f: &F,
     a: &Array1<f64>,
@@ -337,6 +339,7 @@ where
 }
 
 /// Function with a single sharp peak at the center
+#[allow(dead_code)]
 fn peak_function(x: ArrayView1<f64>) -> f64 {
     let mut sum_sq = 0.0;
     for i in 0..x.len() {
@@ -346,6 +349,7 @@ fn peak_function(x: ArrayView1<f64>) -> f64 {
 }
 
 /// Function with multiple peaks
+#[allow(dead_code)]
 fn multi_peak_function(x: ArrayView1<f64>) -> f64 {
     let d = x.len() as f64;
     let p1 = {
@@ -368,6 +372,7 @@ fn multi_peak_function(x: ArrayView1<f64>) -> f64 {
 }
 
 /// Function with a sharp ridge (challenging for adaptive methods)
+#[allow(dead_code)]
 fn ridge_function(x: ArrayView1<f64>) -> f64 {
     if x.len() < 2 {
         return 0.0;
@@ -382,6 +387,7 @@ fn ridge_function(x: ArrayView1<f64>) -> f64 {
 }
 
 /// Function with a discontinuity
+#[allow(dead_code)]
 fn discontinuous_function(x: ArrayView1<f64>) -> f64 {
     if x.len() < 2 {
         return 0.0;
@@ -398,6 +404,7 @@ fn discontinuous_function(x: ArrayView1<f64>) -> f64 {
 }
 
 /// Run a test case and report results with reference solution
+#[allow(dead_code)]
 fn run_test<F>(
     f: F,
     a: &Array1<f64>,
@@ -429,6 +436,7 @@ fn run_test<F>(
     }
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Adaptive Cubature Integration Examples");
     println!("=====================================");

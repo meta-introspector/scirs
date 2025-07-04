@@ -654,6 +654,7 @@ impl OnnxExporter {
 }
 
 /// Create a model checkpoint.
+#[allow(dead_code)]
 pub fn save_checkpoint(
     model: &Sequential,
     optimizer: &dyn Optimizer,
@@ -694,6 +695,7 @@ pub type ModelCheckpoint = (Sequential, Box<dyn Optimizer>, usize, HashMap<Strin
 
 /// Load a model checkpoint.
 #[cfg(feature = "serialization")]
+#[allow(dead_code)]
 pub fn load_checkpoint(path: impl AsRef<Path>) -> CoreResult<ModelCheckpoint> {
     // Load metadata
     let metadata_path = path.as_ref().with_extension("json");

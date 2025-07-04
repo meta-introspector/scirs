@@ -3,6 +3,7 @@ use scirs2_neural::layers::{
     Embedding, EmbeddingConfig, Layer, PatchEmbedding, PositionalEmbedding,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Running embedding examples...");
     // Example 1: Basic Embedding

@@ -11,6 +11,7 @@ use scirs2_integrate::ode::{
     ODEOptions, ODEOptionsWithEvents,
 };
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("=== Event Detection Flowchart Example ===");
     println!("This example will demonstrate the event detection system flow\n");

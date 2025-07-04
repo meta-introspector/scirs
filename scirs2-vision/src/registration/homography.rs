@@ -9,6 +9,7 @@ use crate::registration::{
 };
 
 /// Homography registration using point matches
+#[allow(dead_code)]
 pub fn register_homography_points(
     source_points: &[(f64, f64)],
     target_points: &[(f64, f64)],
@@ -66,6 +67,7 @@ pub fn register_homography_points(
 }
 
 /// Homography registration with iterative refinement
+#[allow(dead_code)]
 pub fn register_homography_iterative(
     source_points: &[(f64, f64)],
     target_points: &[(f64, f64)],

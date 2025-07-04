@@ -590,6 +590,7 @@ impl Default for UltraSimdConfig {
 /// Convenience functions for creating optimized SIMD processors
 ///
 /// Create an ultra-enhanced SIMD processor with default configuration
+#[allow(dead_code)]
 pub fn create_ultra_simd_processor<F>() -> StatsResult<UltraEnhancedSimdProcessor<F>>
 where
     F: Float + NumCast + Copy + Send + Sync + 'static,
@@ -598,6 +599,7 @@ where
 }
 
 /// Create SIMD processor optimized for specific hardware platform
+#[allow(dead_code)]
 pub fn create_platform_optimized_simd_processor<F>(
     target_platform: TargetPlatform,
 ) -> StatsResult<UltraEnhancedSimdProcessor<F>>
@@ -640,6 +642,7 @@ pub enum TargetPlatform {
 }
 
 /// Create an ultra-enhanced SIMD processor optimized for performance
+#[allow(dead_code)]
 pub fn create_performance_optimized_simd_processor<F>() -> StatsResult<UltraEnhancedSimdProcessor<F>>
 where
     F: Float + NumCast + Copy + Send + Sync + 'static,
@@ -661,6 +664,7 @@ where
 }
 
 /// Create an ultra-enhanced SIMD processor optimized for numerical stability
+#[allow(dead_code)]
 pub fn create_stability_optimized_simd_processor<F>() -> StatsResult<UltraEnhancedSimdProcessor<F>>
 where
     F: Float + NumCast + Copy + Send + Sync + 'static,

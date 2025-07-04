@@ -392,6 +392,7 @@ impl PCA {
 }
 
 /// Compute the optimal number of components using Minka's MLE
+#[allow(dead_code)]
 pub fn mle_components(data: ArrayView2<f64>, max_components: Option<usize>) -> Result<usize> {
     check_array_finite(&data, "data")?;
     let (n_samples, n_features) = data.dim();

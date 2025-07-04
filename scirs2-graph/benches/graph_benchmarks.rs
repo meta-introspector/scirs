@@ -30,6 +30,7 @@ use scirs2_graph::{
 use std::collections::HashSet;
 
 /// Benchmark graph creation and basic operations
+#[allow(dead_code)]
 fn bench_graph_creation(c: &mut Criterion) {
     let mut group = c.benchmark_group("graph_creation");
 
@@ -70,6 +71,7 @@ fn bench_graph_creation(c: &mut Criterion) {
 }
 
 /// Benchmark traversal algorithms
+#[allow(dead_code)]
 fn bench_traversal(c: &mut Criterion) {
     let mut group = c.benchmark_group("traversal");
 
@@ -96,6 +98,7 @@ fn bench_traversal(c: &mut Criterion) {
 }
 
 /// Benchmark shortest path algorithms
+#[allow(dead_code)]
 fn bench_shortest_paths(c: &mut Criterion) {
     let mut group = c.benchmark_group("shortest_paths");
 
@@ -120,6 +123,7 @@ fn bench_shortest_paths(c: &mut Criterion) {
 }
 
 /// Benchmark connectivity algorithms
+#[allow(dead_code)]
 fn bench_connectivity(c: &mut Criterion) {
     let mut group = c.benchmark_group("connectivity");
 
@@ -168,6 +172,7 @@ fn bench_connectivity(c: &mut Criterion) {
 }
 
 /// Benchmark centrality algorithms
+#[allow(dead_code)]
 fn bench_centrality(c: &mut Criterion) {
     let mut group = c.benchmark_group("centrality");
     group.sample_size(10); // Reduce sample size for expensive algorithms
@@ -201,6 +206,7 @@ fn bench_centrality(c: &mut Criterion) {
 }
 
 /// Benchmark minimum spanning tree algorithms
+#[allow(dead_code)]
 fn bench_mst(c: &mut Criterion) {
     let mut group = c.benchmark_group("minimum_spanning_tree");
 
@@ -220,6 +226,7 @@ fn bench_mst(c: &mut Criterion) {
 }
 
 /// Benchmark graph I/O operations
+#[allow(dead_code)]
 fn bench_io(c: &mut Criterion) {
     let mut group = c.benchmark_group("io");
 
@@ -253,6 +260,7 @@ fn bench_io(c: &mut Criterion) {
 }
 
 /// Benchmark graph generators
+#[allow(dead_code)]
 fn bench_generators(c: &mut Criterion) {
     let mut group = c.benchmark_group("generators");
 

@@ -31,6 +31,7 @@ const SAMPLE_TRAINING_TEXT: &str =
     The museum display had many historical artifacts. The ancient artifacts were well preserved. \
     The display was impressive and educational.";
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Statistical Spelling Correction Demo\n");
 
@@ -65,6 +66,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Function to train the language model with sample text
+#[allow(dead_code)]
 fn train_language_model(corrector: &mut StatisticalCorrector) {
     println!("Training language model with sample text...");
 
@@ -113,6 +115,7 @@ fn train_language_model(corrector: &mut StatisticalCorrector) {
 }
 
 // Function to add specific words for consistent example behavior
+#[allow(dead_code)]
 fn add_example_words(corrector: &mut StatisticalCorrector) {
     // Add specific words to the dictionary
     let word_frequencies = [
@@ -145,6 +148,7 @@ fn add_example_words(corrector: &mut StatisticalCorrector) {
 }
 
 // Compare dictionary-based and statistical spelling correction
+#[allow(dead_code)]
 fn compare_correctors(
     dict_corrector: &DictionaryCorrector,
     stat_corrector: &StatisticalCorrector,
@@ -191,6 +195,7 @@ fn compare_correctors(
 }
 
 // Demonstrate context-aware correction
+#[allow(dead_code)]
 fn context_aware_correction_demo(
     corrector: &StatisticalCorrector,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -239,6 +244,7 @@ fn context_aware_correction_demo(
 }
 
 // Test performance of different correctors and configurations
+#[allow(dead_code)]
 fn performance_test(
     dict_corrector: &DictionaryCorrector,
     stat_corrector: &StatisticalCorrector,
@@ -286,6 +292,7 @@ fn performance_test(
 }
 
 // Demonstrate different configurations for statistical correction
+#[allow(dead_code)]
 fn configuration_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Configuration Options Demo ===\n");
 
@@ -376,6 +383,7 @@ fn configuration_demo() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Demonstrate the error model (noisy channel model)
+#[allow(dead_code)]
 fn noise_model_demo() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Error Model Demo ===\n");
 

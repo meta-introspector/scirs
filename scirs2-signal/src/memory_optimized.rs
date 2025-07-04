@@ -110,6 +110,7 @@ pub enum MemoryOptimizedData<T> {
 ///
 /// Processes signals that may not fit in memory by using chunked processing
 /// with proper overlap handling to maintain filter continuity.
+#[allow(dead_code)]
 pub fn memory_optimized_fir_filter(
     input_file: &str,
     output_file: &str,
@@ -290,6 +291,7 @@ pub fn memory_optimized_fir_filter(
 ///
 /// Computes FFT of signals larger than available memory using disk-based
 /// radix-2 algorithms with minimal memory footprint.
+#[allow(dead_code)]
 pub fn memory_optimized_fft(
     input_file: &str,
     output_file: &str,
@@ -335,6 +337,7 @@ pub fn memory_optimized_fft(
 }
 
 /// In-core FFT for moderately large signals
+#[allow(dead_code)]
 fn memory_fft_in_core(
     input_file: &str,
     output_file: &str,
@@ -431,6 +434,7 @@ fn memory_fft_in_core(
 }
 
 /// Out-of-core FFT for very large signals
+#[allow(dead_code)]
 fn memory_fft_out_of_core(
     input_file: &str,
     output_file: &str,
@@ -540,6 +544,7 @@ fn memory_fft_out_of_core(
 }
 
 /// Process a single FFT stage with disk I/O
+#[allow(dead_code)]
 fn process_fft_stage_disk(
     input_file: &str,
     output_file: &str,
@@ -686,6 +691,7 @@ fn process_fft_stage_disk(
 }
 
 /// Process remaining FFT stages in memory
+#[allow(dead_code)]
 fn process_fft_stages_memory(
     input_file: &str,
     output_file: &str,
@@ -703,6 +709,7 @@ fn process_fft_stages_memory(
 ///
 /// Computes spectrograms of very large signals using sliding window approach
 /// with minimal memory footprint.
+#[allow(dead_code)]
 pub fn memory_optimized_spectrogram(
     input_file: &str,
     output_file: &str,

@@ -182,6 +182,7 @@ impl Default for ICOptions {
 ///
 /// let lu_result = lu_decomposition(&matrix, 0.1).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn lu_decomposition<T, S>(matrix: &S, pivot_threshold: f64) -> SparseResult<LUResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
@@ -377,6 +378,7 @@ where
 ///
 /// let qr_result = qr_decomposition(&matrix).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn qr_decomposition<T, S>(matrix: &S) -> SparseResult<QRResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
@@ -463,6 +465,7 @@ where
 ///
 /// let chol_result = cholesky_decomposition(&matrix).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn cholesky_decomposition<T, S>(matrix: &S) -> SparseResult<CholeskyResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
@@ -803,6 +806,7 @@ where
 }
 
 /// Find pivot for LDLT decomposition using Bunch-Kaufman strategy
+#[allow(dead_code)]
 fn find_ldlt_pivot<T>(
     matrix: &SparseWorkingMatrix<T>,
     k: usize,
@@ -835,6 +839,7 @@ where
 }
 
 /// Extract unit lower triangular matrix from working matrix
+#[allow(dead_code)]
 fn extract_unit_lower_triangular<T>(
     matrix: &SparseWorkingMatrix<T>,
     perm: &[usize],
@@ -882,6 +887,7 @@ where
 /// # Returns
 ///
 /// Incomplete LU decomposition result
+#[allow(dead_code)]
 pub fn incomplete_lu<T, S>(matrix: &S, options: Option<ILUOptions>) -> SparseResult<LUResult<T>>
 where
     T: Float + Debug + Copy + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T>,
@@ -974,6 +980,7 @@ where
 /// # Returns
 ///
 /// Incomplete Cholesky decomposition result
+#[allow(dead_code)]
 pub fn incomplete_cholesky<T, S>(
     matrix: &S,
     options: Option<ICOptions>,
@@ -1162,6 +1169,7 @@ where
 }
 
 /// Enhanced pivoting function supporting multiple strategies
+#[allow(dead_code)]
 fn find_enhanced_pivot<T>(
     matrix: &SparseWorkingMatrix<T>,
     k: usize,
@@ -1325,6 +1333,7 @@ type LuFactors<T> = (
     Vec<T>,     // U values
 );
 
+#[allow(dead_code)]
 fn extract_lu_factors<T>(matrix: &SparseWorkingMatrix<T>, p: &[usize], n: usize) -> LuFactors<T>
 where
     T: Float + Debug + Copy,
@@ -1367,6 +1376,7 @@ where
 }
 
 /// Extract lower triangular matrix
+#[allow(dead_code)]
 fn extract_lower_triangular<T>(
     matrix: &SparseWorkingMatrix<T>,
     n: usize,
@@ -1393,6 +1403,7 @@ where
 }
 
 /// Convert dense matrix to sparse
+#[allow(dead_code)]
 fn dense_to_sparse<T>(matrix: &Array2<T>) -> SparseResult<CsrArray<T>>
 where
     T: Float + Debug + Copy,

@@ -22,11 +22,18 @@ pub mod learned_hyperparameter_tuner;
 pub mod meta_learning_optimizer;
 pub mod neural_adaptive_optimizer;
 
+// Use glob re-exports with allow for ambiguous names
+#[allow(ambiguous_glob_reexports)]
 pub use adaptive_nas_system::*;
+#[allow(ambiguous_glob_reexports)]
 pub use adaptive_transformer_enhancement::*;
+#[allow(ambiguous_glob_reexports)]
 pub use few_shot_learning_enhancement::*;
+#[allow(ambiguous_glob_reexports)]
 pub use learned_hyperparameter_tuner::*;
+#[allow(ambiguous_glob_reexports)]
 pub use meta_learning_optimizer::*;
+#[allow(ambiguous_glob_reexports)]
 pub use neural_adaptive_optimizer::*;
 
 /// Configuration for learned optimizers
@@ -588,6 +595,7 @@ impl ProblemEncoder {
 }
 
 /// Convenience function for learned optimization
+#[allow(dead_code)]
 pub fn learned_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

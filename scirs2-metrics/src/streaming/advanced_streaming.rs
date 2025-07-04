@@ -8,6 +8,10 @@
 //! - Ensemble-based drift detection
 
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::uninlined_format_args)]
+#![allow(clippy::new_without_default)]
+#![allow(clippy::let_and_return)]
+#![allow(clippy::assign_op_pattern)]
 #![allow(dead_code)]
 
 use crate::error::{MetricsError, Result};
@@ -178,7 +182,9 @@ pub enum AlertSeverity {
 }
 
 /// Concept drift detector trait
-pub trait ConceptDriftDetector<F: Float + std::fmt::Debug + Send + Sync>: std::fmt::Debug {
+pub trait ConceptDriftDetector<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum>:
+    std::fmt::Debug
+{
     /// Update detector with new prediction
     fn update(&mut self, prediction_correct: bool, error: F) -> Result<DriftDetectionResult>;
 
@@ -1109,7 +1115,9 @@ impl<F: Float + std::fmt::Debug + Send + Sync> DdmDetector<F> {
     }
 }
 
-impl<F: Float + std::fmt::Debug + Send + Sync> ConceptDriftDetector<F> for DdmDetector<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDetector<F>
+    for DdmDetector<F>
+{
     fn update(&mut self, prediction_correct: bool, _error: F) -> Result<DriftDetectionResult> {
         self.num_instances += 1;
         if !prediction_correct {
@@ -1207,7 +1215,9 @@ impl<F: Float + std::fmt::Debug + Send + Sync> PageHinkleyDetector<F> {
     }
 }
 
-impl<F: Float + std::fmt::Debug + Send + Sync> ConceptDriftDetector<F> for PageHinkleyDetector<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDetector<F>
+    for PageHinkleyDetector<F>
+{
     fn update(&mut self, prediction_correct: bool, _error: F) -> Result<DriftDetectionResult> {
         self.samples_count += 1;
 
@@ -1830,7 +1840,7 @@ impl<F: Float + std::iter::Sum + std::fmt::Debug + Send + Sync> AnomalyDetector<
             self.statistics.detection_latency = detection_latency;
             self.statistics.last_anomaly = Some(Instant::now());
 
-            let type_name = format!("{:?}", anomaly_type);
+            let type_name = format!("{anomaly_type:?}");
             *self
                 .statistics
                 .anomalies_by_type
@@ -2176,7 +2186,13 @@ impl AlertsManager {
 /// tune streaming parameters for optimal performance across different data patterns.
 #[derive(Debug)]
 pub struct NeuralAdaptiveStreaming<
-    F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand + std::ops::AddAssign,
+    F: Float
+        + std::fmt::Debug
+        + Send
+        + Sync
+        + ndarray::ScalarOperand
+        + std::ops::AddAssign
+        + std::iter::Sum,
 > {
     /// Neural parameter optimizer
     parameter_optimizer: NeuralParameterOptimizer<F>,
@@ -2230,6 +2246,20 @@ pub struct NetworkConfig {
     pub learning_rate: f64,
     /// Weight decay for regularization
     pub weight_decay: f64,
+}
+
+impl Default for NetworkConfig {
+    fn default() -> Self {
+        Self {
+            optimizer_hidden_layers: vec![128, 64, 32],
+            predictor_hidden_layers: vec![64, 32, 16],
+            activation: ActivationFunction::ReLU,
+            dropout_rate: 0.1,
+            batch_norm: true,
+            learning_rate: 0.001,
+            weight_decay: 0.0001,
+        }
+    }
 }
 
 /// Reinforcement learning configuration
@@ -2345,7 +2375,7 @@ pub enum FeatureNormalization {
 }
 
 /// Optimization configuration
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OptimizationConfig {
     /// Optimization algorithm
     pub algorithm: OptimizationAlgorithm,
@@ -2359,6 +2389,21 @@ pub struct OptimizationConfig {
     pub patience: usize,
     /// Enable hyperparameter tuning
     pub enable_hyperparameter_tuning: bool,
+}
+
+impl Default for OptimizationConfig {
+    fn default() -> Self {
+        Self {
+            algorithm: OptimizationAlgorithm::BayesianOptimization {
+                acquisition_function: "ucb".to_string(),
+            },
+            max_iterations: 100,
+            tolerance: 1e-6,
+            early_stopping: true,
+            patience: 10,
+            enable_hyperparameter_tuning: true,
+        }
+    }
 }
 
 /// Optimization algorithms
@@ -2627,7 +2672,65 @@ pub struct AdaptiveControlAgent<F: Float + std::fmt::Debug> {
     training_metrics: Vec<RLTrainingMetrics<F>>,
 }
 
-impl<F: Float + std::fmt::Debug> AdaptiveControlAgent<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> AdaptiveControlAgent<F> {
+    /// Create a new adaptive control agent
+    pub fn new(_config: RLConfig) -> Result<Self> {
+        // Create a simple reward function
+        struct SimpleRewardFunction<F: Float> {
+            _phantom: std::marker::PhantomData<F>,
+        }
+
+        impl<F: Float> RewardFunction<F> for SimpleRewardFunction<F> {
+            fn compute_reward(
+                &self,
+                _state: &Array1<F>,
+                _action: &Array1<F>,
+                _next_state: &Array1<F>,
+                _performance_metrics: &HashMap<String, F>,
+            ) -> F {
+                F::zero()
+            }
+
+            fn update_parameters(&mut self, _feedback: F) -> Result<()> {
+                Ok(())
+            }
+        }
+
+        Ok(Self {
+            current_state: Array1::zeros(32),
+            action_space: ActionSpace {
+                continuous_bounds: vec![],
+                discrete_actions: vec![vec![F::zero(); 4]],
+                action_type: ActionType::Discrete,
+            },
+            q_network: NeuralParameterOptimizer::new(
+                NetworkConfig::default(),
+                OptimizationConfig::default(),
+            )?,
+            target_network: None,
+            replay_buffer: ExperienceReplayBuffer::new(1000),
+            policy: Policy {
+                policy_type: PolicyType::EpsilonGreedy,
+                parameters: HashMap::new(),
+                history: VecDeque::new(),
+            },
+            exploration_strategy: ExplorationStrategy {
+                strategy_type: ExplorationStrategyType::EpsilonGreedy,
+                current_rate: F::from(0.1).unwrap(),
+                decay_parameters: ExplorationDecay {
+                    initial_rate: F::from(0.1).unwrap(),
+                    final_rate: F::from(0.01).unwrap(),
+                    decay_rate: F::from(0.995).unwrap(),
+                    decay_steps: 1000,
+                },
+            },
+            reward_function: Box::new(SimpleRewardFunction {
+                _phantom: std::marker::PhantomData,
+            }),
+            training_metrics: Vec::new(),
+        })
+    }
+
     /// Get training metrics
     pub fn get_training_metrics(&self) -> HashMap<String, F> {
         let mut metrics = HashMap::new();
@@ -2755,6 +2858,17 @@ pub struct ExperienceReplayBuffer<F: Float + std::fmt::Debug> {
     position: usize,
 }
 
+impl<F: Float + std::fmt::Debug> ExperienceReplayBuffer<F> {
+    /// Create a new experience replay buffer
+    pub fn new(capacity: usize) -> Self {
+        Self {
+            capacity,
+            experiences: VecDeque::new(),
+            position: 0,
+        }
+    }
+}
+
 /// Experience tuple for replay buffer
 #[derive(Debug, Clone)]
 pub struct Experience<F: Float + std::fmt::Debug> {
@@ -2852,7 +2966,8 @@ pub struct RLTrainingMetrics<F: Float + std::fmt::Debug> {
 }
 
 /// Online learning system for pattern recognition and adaptation
-pub struct OnlineLearningSystem<F: Float + std::fmt::Debug + Send + Sync> {
+pub struct OnlineLearningSystem<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum>
+{
     /// Current model parameters
     model_parameters: Array1<F>,
     /// Feature buffer for online learning
@@ -2879,7 +2994,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
             learning_rate: F,
         }
 
-        impl<F: Float> OnlineOptimizer<F> for PlaceholderOptimizer<F> {
+        impl<F: Float + std::iter::Sum> OnlineOptimizer<F> for PlaceholderOptimizer<F> {
             fn update(
                 &mut self,
                 _parameters: &mut Array1<F>,
@@ -2904,7 +3019,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
             threshold: F,
         }
 
-        impl<F: Float + std::fmt::Debug + Send + Sync> ConceptDriftDetector<F>
+        impl<F: Float + std::fmt::Debug + Send + Sync + std::iter::Sum> ConceptDriftDetector<F>
             for PlaceholderDriftDetector<F>
         {
             fn update(
@@ -3007,7 +3122,9 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Online
     }
 }
 
-impl<F: Float + std::fmt::Debug + Send + Sync> std::fmt::Debug for OnlineLearningSystem<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> std::fmt::Debug
+    for OnlineLearningSystem<F>
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("OnlineLearningSystem")
             .field("model_parameters", &self.model_parameters)
@@ -3021,7 +3138,9 @@ impl<F: Float + std::fmt::Debug + Send + Sync> std::fmt::Debug for OnlineLearnin
     }
 }
 
-impl<F: Float + std::fmt::Debug + Send + Sync> Clone for OnlineLearningSystem<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Clone
+    for OnlineLearningSystem<F>
+{
     fn clone(&self) -> Self {
         // Note: Cannot clone the trait objects
         // This is a limitation of the current design
@@ -3030,7 +3149,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync> Clone for OnlineLearningSystem<F>
 }
 
 /// Online optimizer trait
-pub trait OnlineOptimizer<F: Float> {
+pub trait OnlineOptimizer<F: Float + std::iter::Sum> {
     /// Update model with single sample
     fn update(
         &mut self,
@@ -3379,7 +3498,7 @@ pub struct CalibrationPoint<F: Float + std::fmt::Debug> {
 }
 
 /// Uncertainty quantifier
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct UncertaintyQuantifier<F: Float + std::fmt::Debug> {
     /// Aleatoric uncertainty (data noise)
     aleatoric_estimator: AleatoricUncertaintyEstimator<F>,
@@ -3530,15 +3649,21 @@ pub struct RegretTracker<F: Float + std::fmt::Debug> {
     pub theoretical_bound: F,
 }
 
-impl<F: Float + std::fmt::Debug> RegretTracker<F> {
-    /// Create a new regret tracker
-    pub fn new() -> Self {
+impl<F: Float + std::fmt::Debug> Default for RegretTracker<F> {
+    fn default() -> Self {
         Self {
             cumulative_regret: F::zero(),
             regret_history: VecDeque::new(),
             optimal_performance: F::zero(),
             theoretical_bound: F::zero(),
         }
+    }
+}
+
+impl<F: Float + std::fmt::Debug> RegretTracker<F> {
+    /// Create a new regret tracker
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -3609,7 +3734,9 @@ impl<F: Float + std::fmt::Debug + std::ops::AddAssign> MultiArmedBandit<F> {
         // Fallback: return random arm
         let arm_idx = 0; // Simple selection
         if !self.arms.is_empty() {
-            Ok(self.arms[arm_idx].parameters.clone())
+            // Convert HashMap to Array1
+            let param_values: Vec<F> = self.arms[arm_idx].parameters.values().cloned().collect();
+            Ok(Array1::from_vec(param_values))
         } else {
             // Return default parameters
             Ok(Array1::zeros(5))
@@ -3618,7 +3745,7 @@ impl<F: Float + std::fmt::Debug + std::ops::AddAssign> MultiArmedBandit<F> {
 }
 
 /// Neural feature extractor
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NeuralFeatureExtractor<F: Float + std::fmt::Debug> {
     /// Autoencoder for feature extraction
     autoencoder: AutoencoderNetwork<F>,
@@ -3722,16 +3849,14 @@ impl<F: Float + std::fmt::Debug> AdaptiveLearningScheduler<F> {
             initial_lr,
             scheduler_type: SchedulerType::ExponentialDecay {
                 decay_rate: F::from(0.9).unwrap(),
-                decay_steps: 1000,
             },
             performance_history: VecDeque::new(),
             lr_history: VecDeque::new(),
             adaptation_params: SchedulerAdaptationParams {
-                patience: 10,
                 min_lr: F::from(1e-6).unwrap(),
                 max_lr: F::from(1.0).unwrap(),
-                factor: F::from(0.5).unwrap(),
-                threshold: F::from(1e-4).unwrap(),
+                adaptation_speed: F::from(0.1).unwrap(),
+                monitoring_window: 10,
             },
         })
     }
@@ -3807,7 +3932,7 @@ pub struct SchedulerAdaptationParams<F: Float + std::fmt::Debug> {
     pub monitoring_window: usize,
 }
 
-impl<F: Float + std::fmt::Debug> AutoencoderNetwork<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> AutoencoderNetwork<F> {
     /// Create a new autoencoder network
     pub fn new() -> Result<Self> {
         Ok(Self {
@@ -3832,25 +3957,28 @@ impl<F: Float + std::fmt::Debug> AttentionMechanism<F> {
             query_matrix: Array2::zeros((64, 32)),
             key_matrix: Array2::zeros((64, 32)),
             value_matrix: Array2::zeros((64, 32)),
-            attention_weights: Array2::zeros((64, 64)),
-            temperature: F::from(0.1).unwrap(),
+            attention_scores: Array2::zeros((64, 64)),
+            attention_type: AttentionType::SelfAttention,
         })
     }
 }
 
-impl<F: Float + std::fmt::Debug> FeatureSelectionNetwork<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> FeatureSelectionNetwork<F> {
     /// Create a new feature selection network
     pub fn new() -> Result<Self> {
         Ok(Self {
-            selection_weights: Array1::ones(64),
-            threshold: F::from(0.5).unwrap(),
-            learned_features: HashMap::new(),
+            selection_network: NeuralParameterOptimizer::new(
+                NetworkConfig::default(),
+                OptimizationConfig::default(),
+            )?,
             importance_scores: Array1::zeros(64),
+            selection_threshold: F::from(0.5).unwrap(),
+            selected_features: Array1::from_elem(64, false),
         })
     }
 }
 
-impl<F: Float + std::fmt::Debug> NeuralFeatureExtractor<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand> NeuralFeatureExtractor<F> {
     /// Create a new neural feature extractor
     pub fn new(_config: FeatureConfig) -> Result<Self> {
         Ok(Self {
@@ -3895,8 +4023,15 @@ impl<F: Float + std::fmt::Debug> NeuralFeatureExtractor<F> {
 
 // Implementation methods for NeuralAdaptiveStreaming
 
-impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand + std::ops::AddAssign>
-    NeuralAdaptiveStreaming<F>
+impl<
+        F: Float
+            + std::fmt::Debug
+            + Send
+            + Sync
+            + ndarray::ScalarOperand
+            + std::ops::AddAssign
+            + std::iter::Sum,
+    > NeuralAdaptiveStreaming<F>
 {
     /// Create a new neural-adaptive streaming system
     pub fn new(config: NeuralAdaptiveConfig) -> Result<Self> {

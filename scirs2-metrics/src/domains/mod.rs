@@ -190,6 +190,7 @@ impl Default for DomainEvaluationResult {
 }
 
 /// Helper function to create metric collections for multiple domains
+#[allow(dead_code)]
 pub fn create_domain_suite() -> DomainSuite {
     DomainSuite::new()
 }

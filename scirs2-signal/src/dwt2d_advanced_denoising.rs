@@ -185,6 +185,7 @@ pub struct QuantumOptimizationResult {
 /// # Returns
 ///
 /// * Advanced denoising result with metrics and optimization details
+#[allow(dead_code)]
 pub fn advanced_wavelet_denoise_2d(
     image: &ArrayView2<f64>,
     config: &AdvancedDenoisingConfig,
@@ -269,6 +270,7 @@ pub fn advanced_wavelet_denoise_2d(
 }
 
 /// SIMD-optimized 2D wavelet decomposition
+#[allow(dead_code)]
 fn simd_dwt2d_decompose(
     image: &ArrayView2<f64>,
     wavelet: Wavelet,
@@ -321,6 +323,7 @@ fn simd_dwt2d_decompose(
 }
 
 /// Standard 2D wavelet decomposition (fallback)
+#[allow(dead_code)]
 fn standard_dwt2d_decompose(
     image: &ArrayView2<f64>,
     wavelet: Wavelet,
@@ -340,6 +343,7 @@ fn standard_dwt2d_decompose(
 }
 
 /// SIMD-optimized coefficient normalization
+#[allow(dead_code)]
 fn simd_normalize_coefficients(coeffs: &mut Array2<f64>) -> SignalResult<()> {
     let data = coeffs
         .as_slice_mut()
@@ -360,6 +364,7 @@ fn simd_normalize_coefficients(coeffs: &mut Array2<f64>) -> SignalResult<()> {
 }
 
 /// SIMD mean calculation
+#[allow(dead_code)]
 fn simd_calculate_mean(data: &[f64]) -> SignalResult<f64> {
     let data_view = ndarray::ArrayView1::from(data);
     let sum = f64::simd_sum(&data_view);
@@ -367,6 +372,7 @@ fn simd_calculate_mean(data: &[f64]) -> SignalResult<f64> {
 }
 
 /// SIMD standard deviation calculation
+#[allow(dead_code)]
 fn simd_calculate_std_dev(data: &[f64], mean: f64) -> SignalResult<f64> {
     let mean_array = vec![mean; data.len()];
     let data_view = ndarray::ArrayView1::from(data);
@@ -380,6 +386,7 @@ fn simd_calculate_std_dev(data: &[f64], mean: f64) -> SignalResult<f64> {
 }
 
 /// SIMD normalization
+#[allow(dead_code)]
 fn simd_normalize_data(data: &mut [f64], mean: f64, std_dev: f64) -> SignalResult<()> {
     let mean_array = vec![mean; data.len()];
     let std_array = vec![std_dev; data.len()];
@@ -399,6 +406,7 @@ fn simd_normalize_data(data: &mut [f64], mean: f64, std_dev: f64) -> SignalResul
 }
 
 /// Quantum-inspired threshold selection
+#[allow(dead_code)]
 fn quantum_inspired_threshold_selection(
     decomposition: &[Array2<f64>],
     noise_variance: f64,
@@ -428,6 +436,7 @@ fn quantum_inspired_threshold_selection(
 }
 
 /// Calculate quantum energy states for wavelet coefficients
+#[allow(dead_code)]
 fn calculate_quantum_energy_states(coeffs: &Array2<f64>) -> SignalResult<Vec<f64>> {
     let mut energy_states = Vec::new();
     let (rows, cols) = coeffs.dim();
@@ -449,6 +458,7 @@ fn calculate_quantum_energy_states(coeffs: &Array2<f64>) -> SignalResult<Vec<f64
 }
 
 /// Calculate quantum coherence factor
+#[allow(dead_code)]
 fn calculate_quantum_coherence_factor(energy_states: &[f64]) -> SignalResult<f64> {
     let mean_energy = energy_states.iter().sum::<f64>() / energy_states.len() as f64;
     let variance = energy_states
@@ -463,6 +473,7 @@ fn calculate_quantum_coherence_factor(energy_states: &[f64]) -> SignalResult<f64
 }
 
 /// Quantum annealing optimization for threshold selection
+#[allow(dead_code)]
 fn quantum_annealing_optimization(
     initial_threshold: f64,
     energy_states: &[f64],
@@ -503,6 +514,7 @@ fn quantum_annealing_optimization(
 }
 
 /// Evaluate threshold energy for quantum optimization
+#[allow(dead_code)]
 fn evaluate_threshold_energy(threshold: f64, energy_states: &[f64]) -> SignalResult<f64> {
     // Energy function balancing noise removal and signal preservation
     let preserved_energy = energy_states
@@ -519,6 +531,7 @@ fn evaluate_threshold_energy(threshold: f64, energy_states: &[f64]) -> SignalRes
 }
 
 /// Calculate adaptive thresholds (standard method)
+#[allow(dead_code)]
 fn calculate_adaptive_thresholds(
     decomposition: &[Array2<f64>],
     noise_variance: f64,
@@ -547,6 +560,7 @@ fn calculate_adaptive_thresholds(
 }
 
 /// Calculate Bayes threshold
+#[allow(dead_code)]
 fn calculate_bayes_threshold(coeffs: &Array2<f64>, noise_variance: f64) -> SignalResult<f64> {
     let signal_variance = coeffs.mapv(|x| x * x).mean().unwrap_or(0.0) - noise_variance;
     let signal_variance = signal_variance.max(0.0);
@@ -559,6 +573,7 @@ fn calculate_bayes_threshold(coeffs: &Array2<f64>, noise_variance: f64) -> Signa
 }
 
 /// Calculate SURE threshold
+#[allow(dead_code)]
 fn calculate_sure_threshold(coeffs: &Array2<f64>, noise_variance: f64) -> SignalResult<f64> {
     let coeffs_vec: Vec<f64> = coeffs.iter().cloned().collect();
     let mut sorted_coeffs = coeffs_vec.clone();
@@ -582,6 +597,7 @@ fn calculate_sure_threshold(coeffs: &Array2<f64>, noise_variance: f64) -> Signal
 }
 
 /// Calculate SURE risk
+#[allow(dead_code)]
 fn calculate_sure_risk(coeffs: &[f64], threshold: f64, noise_variance: f64) -> f64 {
     let n = coeffs.len() as f64;
     let mut risk = n * noise_variance;
@@ -599,6 +615,7 @@ fn calculate_sure_risk(coeffs: &[f64], threshold: f64, noise_variance: f64) -> f
 }
 
 /// SIMD-optimized threshold application
+#[allow(dead_code)]
 pub fn simd_threshold_coefficients(
     decomposition: &mut [Array2<f64>],
     thresholds: &[Vec<f64>],
@@ -627,6 +644,7 @@ pub fn simd_threshold_coefficients(
 }
 
 /// SIMD soft thresholding
+#[allow(dead_code)]
 fn simd_soft_threshold(data: &mut [f64], threshold: f64) -> SignalResult<()> {
     let threshold_vec = vec![threshold; data.len()];
     let neg_threshold_vec = vec![-threshold; data.len()];
@@ -650,6 +668,7 @@ fn simd_soft_threshold(data: &mut [f64], threshold: f64) -> SignalResult<()> {
 }
 
 /// SIMD hard thresholding
+#[allow(dead_code)]
 fn simd_hard_threshold(data: &mut [f64], threshold: f64) -> SignalResult<()> {
     for val in data.iter_mut() {
         if val.abs() < threshold {
@@ -660,6 +679,7 @@ fn simd_hard_threshold(data: &mut [f64], threshold: f64) -> SignalResult<()> {
 }
 
 /// Quantum probabilistic thresholding
+#[allow(dead_code)]
 fn quantum_probabilistic_threshold(data: &mut [f64], threshold: f64) -> SignalResult<()> {
     for val in data.iter_mut() {
         let abs_val = val.abs();
@@ -675,6 +695,7 @@ fn quantum_probabilistic_threshold(data: &mut [f64], threshold: f64) -> SignalRe
 }
 
 /// Apply standard thresholding (fallback)
+#[allow(dead_code)]
 fn apply_standard_thresholding(
     decomposition: &mut [Array2<f64>],
     thresholds: &[Vec<f64>],
@@ -718,6 +739,7 @@ fn apply_standard_thresholding(
 }
 
 /// Context-adaptive enhancement
+#[allow(dead_code)]
 fn context_adaptive_enhancement(
     decomposition: &mut [Array2<f64>],
     original_image: &ArrayView2<f64>,
@@ -736,6 +758,7 @@ fn context_adaptive_enhancement(
 }
 
 /// Calculate edge map for context adaptation
+#[allow(dead_code)]
 fn calculate_edge_map(image: &ArrayView2<f64>) -> SignalResult<Array2<f64>> {
     let (rows, cols) = image.dim();
     let mut edge_map = Array2::zeros((rows, cols));
@@ -759,6 +782,7 @@ fn calculate_edge_map(image: &ArrayView2<f64>) -> SignalResult<Array2<f64>> {
 }
 
 /// Calculate texture map for context adaptation
+#[allow(dead_code)]
 fn calculate_texture_map(image: &ArrayView2<f64>) -> SignalResult<Array2<f64>> {
     let (rows, cols) = image.dim();
     let mut texture_map = Array2::zeros((rows, cols));
@@ -792,6 +816,7 @@ fn calculate_texture_map(image: &ArrayView2<f64>) -> SignalResult<Array2<f64>> {
 }
 
 /// Apply context-adaptive weights
+#[allow(dead_code)]
 fn apply_context_adaptive_weights(
     coeffs: &mut Array2<f64>,
     edge_map: &Array2<f64>,
@@ -825,6 +850,7 @@ fn apply_context_adaptive_weights(
 }
 
 /// SIMD-optimized 2D wavelet reconstruction
+#[allow(dead_code)]
 fn simd_dwt2d_reconstruct(
     decomposition: &[Array2<f64>],
     wavelet: Wavelet,
@@ -854,6 +880,7 @@ fn simd_dwt2d_reconstruct(
 }
 
 /// Standard 2D wavelet reconstruction (fallback)
+#[allow(dead_code)]
 fn standard_dwt2d_reconstruct(
     decomposition: &[Array2<f64>],
     wavelet: Wavelet,
@@ -862,6 +889,7 @@ fn standard_dwt2d_reconstruct(
 }
 
 /// Estimate noise variance from 2D image
+#[allow(dead_code)]
 fn estimate_noise_variance_2d(
     image: &ArrayView2<f64>,
     method: NoiseEstimationMethod,
@@ -876,6 +904,7 @@ fn estimate_noise_variance_2d(
 }
 
 /// Robust MAD noise estimation
+#[allow(dead_code)]
 fn estimate_noise_robust_mad_2d(image: &ArrayView2<f64>) -> SignalResult<f64> {
     // Apply high-pass filter to extract noise
     let (rows, cols) = image.dim();
@@ -909,6 +938,7 @@ fn estimate_noise_robust_mad_2d(image: &ArrayView2<f64>) -> SignalResult<f64> {
 }
 
 /// Wavelet-based noise estimation
+#[allow(dead_code)]
 fn estimate_noise_wavelet_based_2d(image: &ArrayView2<f64>) -> SignalResult<f64> {
     // Single level DWT to estimate noise from HH coefficients
     let result = dwt2d_decompose(image, Wavelet::Daubechies(4))?;
@@ -928,6 +958,7 @@ fn estimate_noise_wavelet_based_2d(image: &ArrayView2<f64>) -> SignalResult<f64>
 }
 
 /// Local variance noise estimation
+#[allow(dead_code)]
 fn estimate_noise_local_variance_2d(image: &ArrayView2<f64>) -> SignalResult<f64> {
     let (rows, cols) = image.dim();
     let mut local_variances = Vec::new();
@@ -963,6 +994,7 @@ fn estimate_noise_local_variance_2d(image: &ArrayView2<f64>) -> SignalResult<f64
 }
 
 /// Quantum-inspired noise estimation
+#[allow(dead_code)]
 fn estimate_noise_quantum_inspired_2d(image: &ArrayView2<f64>) -> SignalResult<f64> {
     // Use quantum block-based analysis
     let (rows, cols) = image.dim();
@@ -993,6 +1025,7 @@ fn estimate_noise_quantum_inspired_2d(image: &ArrayView2<f64>) -> SignalResult<f
 }
 
 /// Calculate comprehensive denoising metrics
+#[allow(dead_code)]
 fn calculate_denoising_metrics(
     original: &ArrayView2<f64>,
     denoised: &Array2<f64>,
@@ -1039,6 +1072,7 @@ fn calculate_denoising_metrics(
 }
 
 /// Calculate SSIM (Structural Similarity Index)
+#[allow(dead_code)]
 fn calculate_ssim_2d(img1: &ArrayView2<f64>, img2: &ArrayView2<f64>) -> SignalResult<f64> {
     let c1 = 0.01_f64.powi(2);
     let c2 = 0.03_f64.powi(2);
@@ -1063,6 +1097,7 @@ fn calculate_ssim_2d(img1: &ArrayView2<f64>, img2: &ArrayView2<f64>) -> SignalRe
 }
 
 /// Calculate edge preservation index
+#[allow(dead_code)]
 fn calculate_edge_preservation_index(
     original: &ArrayView2<f64>,
     denoised: &ArrayView2<f64>,
@@ -1081,6 +1116,7 @@ fn calculate_edge_preservation_index(
 }
 
 /// Calculate texture preservation
+#[allow(dead_code)]
 fn calculate_texture_preservation(
     original: &ArrayView2<f64>,
     denoised: &ArrayView2<f64>,
@@ -1100,6 +1136,7 @@ fn calculate_texture_preservation(
 }
 
 /// Calculate smoothness measure
+#[allow(dead_code)]
 fn calculate_smoothness_measure(image: &ArrayView2<f64>) -> SignalResult<f64> {
     let (rows, cols) = image.dim();
     let mut smoothness = 0.0;
@@ -1118,6 +1155,7 @@ fn calculate_smoothness_measure(image: &ArrayView2<f64>) -> SignalResult<f64> {
 }
 
 /// Estimate SIMD acceleration factor
+#[allow(dead_code)]
 fn estimate_simd_acceleration(total_elements: usize, levels: usize) -> f64 {
     let capabilities = PlatformCapabilities::detect();
 
@@ -1133,6 +1171,7 @@ fn estimate_simd_acceleration(total_elements: usize, levels: usize) -> f64 {
 }
 
 /// Context-adaptive denoising for specific regions
+#[allow(dead_code)]
 pub fn context_adaptive_denoise(
     image: &ArrayView2<f64>,
     region_mask: &ArrayView2<bool>,
@@ -1161,6 +1200,7 @@ pub fn context_adaptive_denoise(
 }
 
 /// Calculate edge region ratio
+#[allow(dead_code)]
 fn calculate_edge_regions(image: &ArrayView2<f64>, mask: &ArrayView2<bool>) -> SignalResult<f64> {
     let edge_map = calculate_edge_map(image)?;
     let threshold = edge_map.mean().unwrap_or(0.0) * 2.0;
@@ -1176,6 +1216,7 @@ fn calculate_edge_regions(image: &ArrayView2<f64>, mask: &ArrayView2<bool>) -> S
 }
 
 /// Calculate texture region ratio
+#[allow(dead_code)]
 fn calculate_texture_regions(
     image: &ArrayView2<f64>,
     mask: &ArrayView2<bool>,
@@ -1194,6 +1235,7 @@ fn calculate_texture_regions(
 }
 
 /// Multi-scale edge-preserving denoising
+#[allow(dead_code)]
 pub fn multiscale_edge_preserving_denoise(
     image: &ArrayView2<f64>,
     scales: &[f64],

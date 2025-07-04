@@ -796,6 +796,7 @@ impl<F: Float + FromPrimitive + Debug> AdaptiveOnlineClustering<F> {
 }
 
 /// Convenience function for quantum K-means clustering
+#[allow(dead_code)]
 pub fn quantum_kmeans<F: Float + FromPrimitive + Debug>(
     data: ArrayView2<F>,
     n_clusters: usize,
@@ -815,6 +816,7 @@ pub fn quantum_kmeans<F: Float + FromPrimitive + Debug>(
 }
 
 /// Convenience function for adaptive online clustering
+#[allow(dead_code)]
 pub fn adaptive_online_clustering<F: Float + FromPrimitive + Debug>(
     data: ArrayView2<F>,
     config: Option<AdaptiveOnlineConfig>,
@@ -1566,6 +1568,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
 }
 
 /// Convenience function for reinforcement learning clustering
+#[allow(dead_code)]
 pub fn rl_clustering<F: Float + FromPrimitive + Debug>(
     data: ArrayView2<F>,
     config: Option<RLClusteringConfig>,
@@ -1584,6 +1587,7 @@ pub fn rl_clustering<F: Float + FromPrimitive + Debug>(
 }
 
 /// Convenience function for transfer learning clustering
+#[allow(dead_code)]
 pub fn transfer_learning_clustering<F: Float + FromPrimitive + Debug>(
     source_centroids: Option<Array2<F>>,
     target_data: ArrayView2<F>,
@@ -2032,6 +2036,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
 }
 
 /// Deep clustering using autoencoder with clustering objective
+#[allow(dead_code)]
 pub fn deep_embedded_clustering<F: Float + FromPrimitive + Debug + 'static>(
     data: ArrayView2<F>,
     config: Option<DeepClusteringConfig>,
@@ -2084,6 +2089,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> VariationalDeepEmbedding<F> {
 }
 
 /// Variational deep embedding clustering
+#[allow(dead_code)]
 pub fn variational_deep_embedding<F: Float + FromPrimitive + Debug + 'static>(
     data: ArrayView2<F>,
     config: Option<DeepClusteringConfig>,
@@ -2481,6 +2487,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
 }
 
 /// QAOA-based clustering function
+#[allow(dead_code)]
 pub fn qaoa_clustering<F: Float + FromPrimitive + Debug + 'static>(
     data: ArrayView2<F>,
     n_clusters: usize,
@@ -2796,6 +2803,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
 }
 
 /// VQE-based clustering function
+#[allow(dead_code)]
 pub fn vqe_clustering<F: Float + FromPrimitive + Debug + 'static>(
     data: ArrayView2<F>,
     n_clusters: usize,

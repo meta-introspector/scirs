@@ -549,6 +549,7 @@ impl RegressionTestUtils {
 }
 
 // Simplified error function approximation
+#[allow(dead_code)]
 fn erf(x: f64) -> f64 {
     // Abramowitz and Stegun approximation
     let a1 = 0.254829592;

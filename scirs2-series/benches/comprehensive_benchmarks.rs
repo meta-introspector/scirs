@@ -40,6 +40,7 @@ use scirs2_series::{
 };
 
 /// Generate synthetic time series data for benchmarking
+#[allow(dead_code)]
 fn generate_synthetic_data(size: usize, noise_level: f64) -> Array1<f64> {
     let mut data = Array1::zeros(size);
     let mut rng_state = 42u64; // Simple LCG for reproducible random numbers
@@ -61,6 +62,7 @@ fn generate_synthetic_data(size: usize, noise_level: f64) -> Array1<f64> {
 }
 
 /// Generate multivariate time series data
+#[allow(dead_code)]
 fn generate_multivariate_data(size: usize, dimensions: usize) -> Array2<f64> {
     let mut data = Array2::zeros((size, dimensions));
     let mut rng_state = 42u64;
@@ -83,6 +85,7 @@ fn generate_multivariate_data(size: usize, dimensions: usize) -> Array2<f64> {
 }
 
 /// Benchmark anomaly detection algorithms
+#[allow(dead_code)]
 fn bench_anomaly_detection(c: &mut Criterion) {
     let mut group = c.benchmark_group("anomaly_detection");
 
@@ -112,6 +115,7 @@ fn bench_anomaly_detection(c: &mut Criterion) {
 }
 
 /// Benchmark time series decomposition methods
+#[allow(dead_code)]
 fn bench_decomposition(c: &mut Criterion) {
     let mut group = c.benchmark_group("decomposition");
 
@@ -132,6 +136,7 @@ fn bench_decomposition(c: &mut Criterion) {
 }
 
 /// Benchmark forecasting algorithms
+#[allow(dead_code)]
 fn bench_forecasting(c: &mut Criterion) {
     let mut group = c.benchmark_group("forecasting");
 
@@ -161,6 +166,7 @@ fn bench_forecasting(c: &mut Criterion) {
 }
 
 /// Benchmark change point detection
+#[allow(dead_code)]
 fn bench_change_point_detection(c: &mut Criterion) {
     let mut group = c.benchmark_group("change_point_detection");
 
@@ -181,6 +187,7 @@ fn bench_change_point_detection(c: &mut Criterion) {
 }
 
 /// Benchmark correlation analysis
+#[allow(dead_code)]
 fn bench_correlation(c: &mut Criterion) {
     let mut group = c.benchmark_group("correlation");
 
@@ -209,6 +216,7 @@ fn bench_correlation(c: &mut Criterion) {
 }
 
 /// Benchmark feature extraction
+#[allow(dead_code)]
 fn bench_feature_extraction(c: &mut Criterion) {
     let mut group = c.benchmark_group("feature_extraction");
 
@@ -233,6 +241,7 @@ fn bench_feature_extraction(c: &mut Criterion) {
 }
 
 /// Benchmark clustering algorithms
+#[allow(dead_code)]
 fn bench_clustering(c: &mut Criterion) {
     let mut group = c.benchmark_group("clustering");
 
@@ -260,6 +269,7 @@ fn bench_clustering(c: &mut Criterion) {
 }
 
 /// Benchmark state space models
+#[allow(dead_code)]
 fn bench_state_space(c: &mut Criterion) {
     let mut group = c.benchmark_group("state_space");
 
@@ -289,6 +299,7 @@ fn bench_state_space(c: &mut Criterion) {
 }
 
 /// Benchmark financial models
+#[allow(dead_code)]
 fn bench_financial(c: &mut Criterion) {
     let mut group = c.benchmark_group("financial");
 
@@ -308,6 +319,7 @@ fn bench_financial(c: &mut Criterion) {
 }
 
 /// Benchmark streaming analysis
+#[allow(dead_code)]
 fn bench_streaming(c: &mut Criterion) {
     let mut group = c.benchmark_group("streaming");
 
@@ -334,6 +346,7 @@ fn bench_streaming(c: &mut Criterion) {
 }
 
 /// Benchmark distributed processing
+#[allow(dead_code)]
 fn bench_distributed(c: &mut Criterion) {
     let mut group = c.benchmark_group("distributed");
 
@@ -359,6 +372,7 @@ fn bench_distributed(c: &mut Criterion) {
 }
 
 /// Benchmark out-of-core processing
+#[allow(dead_code)]
 fn bench_out_of_core(c: &mut Criterion) {
     let mut group = c.benchmark_group("out_of_core");
 
@@ -390,6 +404,7 @@ fn bench_out_of_core(c: &mut Criterion) {
 }
 
 /// Benchmark trend analysis
+#[allow(dead_code)]
 fn bench_trend_analysis(c: &mut Criterion) {
     let mut group = c.benchmark_group("trend_analysis");
 
@@ -410,6 +425,7 @@ fn bench_trend_analysis(c: &mut Criterion) {
 }
 
 /// Benchmark validation and cross-validation
+#[allow(dead_code)]
 fn bench_validation(c: &mut Criterion) {
     let mut group = c.benchmark_group("validation");
 
@@ -430,6 +446,7 @@ fn bench_validation(c: &mut Criterion) {
 }
 
 /// Benchmark data transformations
+#[allow(dead_code)]
 fn bench_transformations(c: &mut Criterion) {
     let mut group = c.benchmark_group("transformations");
 
@@ -450,6 +467,7 @@ fn bench_transformations(c: &mut Criterion) {
 }
 
 /// Benchmark causality analysis
+#[allow(dead_code)]
 fn bench_causality(c: &mut Criterion) {
     let mut group = c.benchmark_group("causality");
 
@@ -471,6 +489,7 @@ fn bench_causality(c: &mut Criterion) {
 }
 
 /// Benchmark dimensionality reduction
+#[allow(dead_code)]
 fn bench_dimensionality_reduction(c: &mut Criterion) {
     let mut group = c.benchmark_group("dimensionality_reduction");
 

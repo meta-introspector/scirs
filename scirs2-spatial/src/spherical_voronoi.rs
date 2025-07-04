@@ -1123,6 +1123,7 @@ impl SphericalVoronoi {
 // Helper functions
 
 /// Computes the Euclidean norm of a vector.
+#[allow(dead_code)]
 fn norm<T: Float>(v: &Array1<T>) -> T {
     v.iter()
         .map(|&x| x * x)
@@ -1131,6 +1132,7 @@ fn norm<T: Float>(v: &Array1<T>) -> T {
 }
 
 /// Computes the dot product of two vectors.
+#[allow(dead_code)]
 fn dot<T: Float, S1, S2>(
     a: &ArrayBase<S1, Dim<[usize; 1]>>,
     b: &ArrayBase<S2, Dim<[usize; 1]>>,
@@ -1191,6 +1193,7 @@ where
 }
 
 /// Computes hyperplane normal for high dimensions using generalized cross product
+#[allow(dead_code)]
 fn compute_hyperplane_normal_nd<T, S1, S2, S3>(
     a: &ArrayBase<S1, Dim<[usize; 1]>>,
     b: &ArrayBase<S2, Dim<[usize; 1]>>,
@@ -1268,6 +1271,7 @@ where
 }
 
 /// Helper function for generic dot product
+#[allow(dead_code)]
 fn dot_generic<T, S1, S2>(
     a: &ArrayBase<S1, Dim<[usize; 1]>>,
     b: &ArrayBase<S2, Dim<[usize; 1]>>,
@@ -1284,6 +1288,7 @@ where
 }
 
 /// Computes the cross product of two 3D vectors.
+#[allow(dead_code)]
 fn cross_3d<T, S1, S2>(
     a: &ArrayBase<S1, Dim<[usize; 1]>>,
     b: &ArrayBase<S2, Dim<[usize; 1]>>,
@@ -1304,6 +1309,7 @@ where
 }
 
 /// Computes the determinant of a 3x3 matrix formed by three 3D vectors.
+#[allow(dead_code)]
 fn determinant_3d<T, S1, S2, S3>(
     a: &ArrayBase<S1, Dim<[usize; 1]>>,
     b: &ArrayBase<S2, Dim<[usize; 1]>>,

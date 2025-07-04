@@ -7,6 +7,7 @@ use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix1};
 
 /// Implements the SLSQP algorithm for constrained optimization
 #[allow(clippy::many_single_char_names)]
+#[allow(dead_code)]
 pub fn minimize_slsqp<F, S>(
     func: F,
     x0: &ArrayBase<S, Ix1>,

@@ -4,9 +4,10 @@
 //! automatically adapt to system characteristics and data patterns for
 //! optimal performance across different hardware configurations.
 
-use crate::error::StatsResult;
+use crate::error::{StatsError, StatsResult};
 use crate::error_standardization::ErrorMessages;
 use crate::simd_enhanced_core::{mean_enhanced, variance_enhanced, ComprehensiveStats};
+use crossbeam;
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
@@ -316,7 +317,9 @@ where
         }
 
         let partial_sums: Arc<Mutex<Vec<F>>> = Arc::new(Mutex::new(Vec::new()));
-        let data_ptr = x.as_ptr();
+        let data_slice = x
+            .as_slice()
+            .ok_or(StatsError::InvalidInput("Data not contiguous".to_string()))?;
 
         crossbeam::scope(|s| {
             for _ in 0..num_threads {
@@ -327,13 +330,9 @@ where
                     let mut local_sum = F::zero();
 
                     while let Some((start, end)) = work_queue.lock().unwrap().pop_front() {
-                        // Process chunk
-                        unsafe {
-                            let slice =
-                                std::slice::from_raw_parts(data_ptr.add(start), end - start);
-                            for &val in slice {
-                                local_sum = local_sum + val;
-                            }
+                        // Process chunk safely
+                        for &val in &data_slice[start..end] {
+                            local_sum = local_sum + val;
                         }
 
                         // Split remaining work if chunk was large
@@ -379,7 +378,7 @@ where
         };
 
         let num_chunks = (n + chunk_size - 1) / chunk_size;
-        let num_threads = self
+        let _num_threads = self
             .config
             .num_threads
             .unwrap_or_else(|| self.optimal_thread_count());
@@ -448,15 +447,10 @@ where
             let sum = slice.iter().fold(F::zero(), |acc, &val| acc + val);
             Ok(sum / F::from(len).unwrap())
         } else {
-            // Divide and conquer
+            // Divide and conquer (sequential to avoid lifetime issues)
             let mid = len / 2;
-            let left_future = std::thread::spawn({
-                let x = x.clone(); // Clone the array view
-                move || Self::mean_cache_oblivious_static(&x, start, mid)
-            });
-
+            let left_result = Self::mean_cache_oblivious_static(x, start, mid)?;
             let right_result = Self::mean_cache_oblivious_static(x, start + mid, len - mid)?;
-            let left_result = left_future.join().unwrap()?;
 
             // Combine results weighted by size
             let left_weight = F::from(mid).unwrap();
@@ -533,7 +527,7 @@ where
             .collect();
 
         // Combine results using parallel reduction
-        let (final_mean, final_m2) = results.into_iter().fold(
+        let (_final_mean, final_m2, _final_count) = results.into_iter().fold(
             (F::zero(), F::zero(), 0),
             |(mean_a, m2_a, count_a), (mean_b, m2_b, count_b)| {
                 if count_b == 0 {
@@ -557,7 +551,7 @@ where
             },
         );
 
-        Ok(final_m2.1 / F::from(n - ddof).unwrap())
+        Ok(final_m2 / F::from(n - ddof).unwrap())
     }
 
     fn correlation_matrix_parallel_upper_triangle<D>(
@@ -665,7 +659,7 @@ where
             .collect();
 
         // Combine results
-        let (total_mean, total_m2, total_m3, total_m4) = results.into_iter().fold(
+        let (total_mean, total_m2, total_m3, total_m4, _total_count) = results.into_iter().fold(
             (F::zero(), F::zero(), F::zero(), F::zero(), 0),
             |(mean_acc, m2_acc, m3_acc, m4_acc, count_acc), (mean, m2, m3, m4, count)| {
                 if count == 0 {
@@ -737,7 +731,7 @@ where
             .config
             .num_threads
             .unwrap_or_else(|| self.optimal_thread_count());
-        let mut results = Vec::with_capacity(n_samples);
+        let _results: Vec<F> = Vec::with_capacity(n_samples);
 
         let data_vec: Vec<F> = x.iter().cloned().collect();
         let data_arc = Arc::new(data_vec);
@@ -809,7 +803,7 @@ impl ThreadPool {
         let receiver = Arc::new(Mutex::new(receiver));
         let mut workers = Vec::with_capacity(size);
 
-        for id in 0..size {
+        for _id in 0..size {
             let receiver = Arc::clone(&receiver);
 
             let worker = thread::spawn(move || loop {
@@ -847,7 +841,7 @@ impl Drop for ThreadPool {
         }
 
         for worker in &mut self.workers {
-            if let Ok(handle) = worker.thread().name() {
+            if let Some(handle) = worker.thread().name() {
                 println!("Shutting down worker {}", handle);
             }
         }
@@ -855,6 +849,7 @@ impl Drop for ThreadPool {
 }
 
 /// Convenience function to create an advanced parallel processor
+#[allow(dead_code)]
 pub fn create_advanced_parallel_processor<F>() -> AdvancedParallelProcessor<F>
 where
     F: Float
@@ -872,6 +867,7 @@ where
 }
 
 /// Convenience function to create a processor with custom configuration
+#[allow(dead_code)]
 pub fn create_configured_parallel_processor<F>(
     config: AdvancedParallelConfig,
 ) -> AdvancedParallelProcessor<F>

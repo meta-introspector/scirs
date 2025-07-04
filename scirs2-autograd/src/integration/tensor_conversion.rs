@@ -362,11 +362,13 @@ static GLOBAL_CONVERTER: std::sync::OnceLock<std::sync::Mutex<TensorConverter>> 
     std::sync::OnceLock::new();
 
 /// Initialize global tensor converter
+#[allow(dead_code)]
 pub fn init_tensor_converter() -> &'static std::sync::Mutex<TensorConverter> {
     GLOBAL_CONVERTER.get_or_init(|| std::sync::Mutex::new(TensorConverter::new()))
 }
 
 /// Convert tensor using global converter
+#[allow(dead_code)]
 pub fn convert_tensor_to<F: Float>(
     tensor: &Tensor<F>,
     target_format: &str,
@@ -379,6 +381,7 @@ pub fn convert_tensor_to<F: Float>(
 }
 
 /// Convert from format using global converter
+#[allow(dead_code)]
 pub fn convert_tensor_from<F: Float>(
     _data: &[u8],
     _metadata: &TensorMetadata,
@@ -393,6 +396,7 @@ pub fn convert_tensor_from<F: Float>(
 }
 
 /// Convert precision using global converter
+#[allow(dead_code)]
 pub fn convert_tensor_precision<F1: Float, F2: Float>(
     _tensor: &Tensor<F1>,
 ) -> Result<(), IntegrationError> {
@@ -406,6 +410,7 @@ pub fn convert_tensor_precision<F1: Float, F2: Float>(
 }
 
 /// Quick conversion from ndarray
+#[allow(dead_code)]
 pub fn from_ndarray<F: Float>(_array: ArrayD<F>) -> Result<(), IntegrationError> {
     let _converter = init_tensor_converter();
     let _converter_guard = _converter.lock().map_err(|_| {
@@ -417,6 +422,7 @@ pub fn from_ndarray<F: Float>(_array: ArrayD<F>) -> Result<(), IntegrationError>
 }
 
 /// Quick conversion to ndarray
+#[allow(dead_code)]
 pub fn to_ndarray<F: Float>(tensor: &Tensor<F>) -> Result<ArrayD<F>, IntegrationError> {
     let converter = init_tensor_converter();
     let converter_guard = converter.lock().map_err(|_| {

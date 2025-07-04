@@ -71,6 +71,7 @@ impl Default for HoughParams {
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn hough_lines(edges: &GrayImage, params: &HoughParams) -> Result<Vec<HoughLine>> {
     let (width, height) = edges.dimensions();
 
@@ -168,6 +169,7 @@ pub struct LineSegment {
 /// # Returns
 ///
 /// * Result containing detected line segments
+#[allow(dead_code)]
 pub fn hough_lines_p(edges: &GrayImage, params: &HoughParams) -> Result<Vec<LineSegment>> {
     let (width, height) = edges.dimensions();
     let mut segments = Vec::new();
@@ -186,9 +188,9 @@ pub fn hough_lines_p(edges: &GrayImage, params: &HoughParams) -> Result<Vec<Line
     }
 
     // Process edge points randomly
+
     use rand::seq::SliceRandom;
-    use rand::rng;
-    let mut rng = rng();
+    let mut rng = rand::rng();
     edge_points.shuffle(&mut rng);
 
     for &(x, y) in &edge_points {
@@ -243,6 +245,7 @@ pub fn hough_lines_p(edges: &GrayImage, params: &HoughParams) -> Result<Vec<Line
 }
 
 /// Extract a line segment from edge map
+#[allow(dead_code)]
 fn extract_line_segment(
     edge_map: &mut GrayImage,
     rho: f32,
@@ -332,6 +335,7 @@ fn extract_line_segment(
 }
 
 /// Calculate segment length
+#[allow(dead_code)]
 fn segment_length(segment: &LineSegment) -> f32 {
     ((segment.x2 - segment.x1).powi(2) + (segment.y2 - segment.y1).powi(2)).sqrt()
 }
@@ -347,6 +351,7 @@ fn segment_length(segment: &LineSegment) -> f32 {
 /// # Returns
 ///
 /// * Image with lines drawn
+#[allow(dead_code)]
 pub fn draw_lines(img: &DynamicImage, lines: &[HoughLine], color: [u8; 3]) -> RgbImage {
     let mut result = img.to_rgb8();
     let (width, height) = result.dimensions();
@@ -359,6 +364,7 @@ pub fn draw_lines(img: &DynamicImage, lines: &[HoughLine], color: [u8; 3]) -> Rg
 }
 
 /// Draw detected line segments on an image
+#[allow(dead_code)]
 pub fn draw_line_segments(
     img: &DynamicImage,
     segments: &[LineSegment],
@@ -374,6 +380,7 @@ pub fn draw_line_segments(
 }
 
 /// Draw a single line in Hough space representation
+#[allow(dead_code)]
 fn draw_hough_line(
     img: &mut RgbImage,
     rho: f32,
@@ -408,6 +415,7 @@ fn draw_hough_line(
 }
 
 /// Draw a line segment
+#[allow(dead_code)]
 fn draw_line_segment(img: &mut RgbImage, segment: &LineSegment, color: [u8; 3]) {
     let rgb_color = Rgb(color);
 

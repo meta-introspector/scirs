@@ -4,7 +4,7 @@
 //! affine transforms, including perspective transforms, non-rigid deformations,
 //! and multi-resolution approaches.
 
-use ndarray::{Array, Array2, Dimension};
+use ndarray::{Array2, Dimension};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::parallel_ops;
 use std::fmt::Debug;
@@ -46,6 +46,7 @@ use crate::error::{NdimageError, NdimageResult};
 ///
 /// let transformed = perspective_transform(&image, &matrix, None, None, None, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn perspective_transform<T>(
     input: &Array2<T>,
     matrix: &Array2<T>,
@@ -195,6 +196,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Transformed array
+#[allow(dead_code)]
 pub fn thin_plate_spline_transform<T>(
     input: &Array2<T>,
     source_points: &Array2<T>,
@@ -280,6 +282,7 @@ where
 }
 
 /// Compute thin-plate spline coefficients
+#[allow(dead_code)]
 fn compute_tps_coefficients<T>(
     source_points: &Array2<T>,
     target_points: &Array2<T>,
@@ -340,6 +343,7 @@ where
 }
 
 /// Apply TPS mapping to a single point
+#[allow(dead_code)]
 fn apply_tps_mapping<T>(
     x: T,
     y: T,
@@ -374,6 +378,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Transformed array
+#[allow(dead_code)]
 pub fn pyramid_transform<T, F>(
     input: &Array2<T>,
     mut transform_fn: F,
@@ -455,6 +460,7 @@ where
 }
 
 /// Upsample an array to a target shape using bilinear interpolation
+#[allow(dead_code)]
 fn upsample_array<T>(input: &Array2<T>, target_shape: (usize, usize)) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug,

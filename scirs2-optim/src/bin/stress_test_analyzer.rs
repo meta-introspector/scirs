@@ -390,6 +390,7 @@ struct StressTestRecommendation {
     pub testing_requirements: Vec<String>,
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     let matches = Command::new("stress_test_analyzer")
         .version("0.1.0")
@@ -564,6 +565,7 @@ struct ResourceEvent {
     event_type: String,
 }
 
+#[allow(dead_code)]
 fn load_stress_test_results(path: &Path, verbose: bool) -> Result<StressTestData> {
     if verbose {
         println!("  Loading stress test data from: {}", path.display());
@@ -584,6 +586,7 @@ fn load_stress_test_results(path: &Path, verbose: bool) -> Result<StressTestData
     Ok(create_mock_stress_test_data())
 }
 
+#[allow(dead_code)]
 fn create_mock_stress_test_data() -> StressTestData {
     let duration = 600.0; // 10 minutes
     let samples = 120; // Every 5 seconds
@@ -640,6 +643,7 @@ fn create_mock_stress_test_data() -> StressTestData {
     }
 }
 
+#[allow(dead_code)]
 fn analyze_stress_test_results(
     data: StressTestData,
     performance_threshold: f64,
@@ -743,6 +747,7 @@ fn analyze_stress_test_results(
     })
 }
 
+#[allow(dead_code)]
 fn analyze_performance_stress(data: &StressTestData) -> PerformanceStressAnalysis {
     let timeline = &data.performance_timeline;
 
@@ -835,6 +840,7 @@ fn analyze_performance_stress(data: &StressTestData) -> PerformanceStressAnalysi
     }
 }
 
+#[allow(dead_code)]
 fn create_utilization_timeline(timeline: &[(u64, f64)]) -> UtilizationTimeline {
     let initial = timeline.first().map(|(_, val)| *val).unwrap_or(0.0);
     let peak = timeline.iter().map(|(_, val)| *val).fold(0.0, f64::max);
@@ -855,6 +861,7 @@ fn create_utilization_timeline(timeline: &[(u64, f64)]) -> UtilizationTimeline {
     }
 }
 
+#[allow(dead_code)]
 fn analyze_memory_stress(data: &StressTestData) -> MemoryStressAnalysis {
     let memory_timeline = &data.memory_timeline;
 
@@ -938,6 +945,7 @@ fn analyze_memory_stress(data: &StressTestData) -> MemoryStressAnalysis {
     }
 }
 
+#[allow(dead_code)]
 fn analyze_stability(data: &StressTestData) -> StabilityAnalysis {
     let crash_incidents: Vec<CrashIncident> = data
         .crash_events
@@ -1056,6 +1064,7 @@ fn analyze_stability(data: &StressTestData) -> StabilityAnalysis {
     }
 }
 
+#[allow(dead_code)]
 fn analyze_concurrency(data: &StressTestData) -> ConcurrencyAnalysis {
     let contention_analysis = ContentionAnalysis {
         contention_incidents: vec![ContentionIncident {
@@ -1131,6 +1140,7 @@ fn analyze_concurrency(data: &StressTestData) -> ConcurrencyAnalysis {
     }
 }
 
+#[allow(dead_code)]
 fn generate_stress_test_recommendations(
     performance: &PerformanceStressAnalysis,
     memory: &MemoryStressAnalysis,
@@ -1234,20 +1244,24 @@ fn generate_stress_test_recommendations(
     recommendations
 }
 
+#[allow(dead_code)]
 fn calculate_stability_score(stability: &StabilityAnalysis) -> f64 {
     stability.performance_consistency.stability_score
 }
 
+#[allow(dead_code)]
 fn calculate_performance_degradation(performance: &PerformanceStressAnalysis) -> f64 {
     performance
         .performance_degradation_analysis
         .degradation_rate_percent_per_hour
 }
 
+#[allow(dead_code)]
 fn generate_json_report(report: &StressTestAnalysisReport) -> Result<String> {
     serde_json::to_string_pretty(report).map_err(|e| OptimError::SerializationError(e.to_string()))
 }
 
+#[allow(dead_code)]
 fn generate_markdown_report(report: &StressTestAnalysisReport) -> Result<String> {
     let mut md = String::new();
 
@@ -1353,6 +1367,7 @@ fn generate_markdown_report(report: &StressTestAnalysisReport) -> Result<String>
     Ok(md)
 }
 
+#[allow(dead_code)]
 fn generate_github_actions_report(report: &StressTestAnalysisReport) -> Result<String> {
     let json_report = generate_json_report(report)?;
     let mut output = String::new();

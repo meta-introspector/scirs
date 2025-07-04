@@ -781,6 +781,7 @@ impl UltraSTDPNetwork {
 }
 
 /// STDP-based parameter optimization
+#[allow(dead_code)]
 pub fn stdp_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
@@ -815,6 +816,7 @@ where
 }
 
 /// Ultra-advanced STDP optimization with full network simulation
+#[allow(dead_code)]
 pub fn ultra_stdp_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

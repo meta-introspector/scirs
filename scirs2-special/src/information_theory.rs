@@ -177,6 +177,7 @@ use std::fmt::{Debug, Display};
 /// let h = entr(0.5);
 /// assert!((h - 0.34657359027997264).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn entr<T>(x: T) -> T
 where
     T: Float + FromPrimitive + Zero,
@@ -203,6 +204,7 @@ where
 ///
 /// # Returns
 /// The relative entropy term x * log(x/y)
+#[allow(dead_code)]
 pub fn rel_entr<T>(x: T, y: T) -> T
 where
     T: Float + FromPrimitive + Zero,
@@ -227,6 +229,7 @@ where
 ///
 /// # Returns
 /// The KL divergence value
+#[allow(dead_code)]
 pub fn kl_div<T>(x: T, y: T) -> T
 where
     T: Float + FromPrimitive + Zero,
@@ -254,6 +257,7 @@ where
 ///
 /// # Returns
 /// The Huber loss value
+#[allow(dead_code)]
 pub fn huber<T>(delta: T, r: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display,
@@ -287,6 +291,7 @@ where
 ///
 /// # Returns
 /// The pseudo-Huber loss value
+#[allow(dead_code)]
 pub fn pseudo_huber<T>(delta: T, r: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display,
@@ -309,6 +314,7 @@ where
 /// Apply entropy function to array
 ///
 /// Computes -x * log(x) element-wise for an array.
+#[allow(dead_code)]
 pub fn entr_array<T>(x: &ArrayView1<T>) -> Array1<T>
 where
     T: Float + FromPrimitive + Zero + Send + Sync,
@@ -325,6 +331,7 @@ where
 ///
 /// # Returns
 /// The Shannon entropy of the distribution
+#[allow(dead_code)]
 pub fn entropy<T>(p: &ArrayView1<T>) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Zero + Display + Debug,
@@ -353,6 +360,7 @@ where
 ///
 /// # Returns
 /// The KL divergence from q to p
+#[allow(dead_code)]
 pub fn kl_divergence<T>(p: &ArrayView1<T>, q: &ArrayView1<T>) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Zero + Display + Debug,
@@ -378,6 +386,7 @@ where
 /// * `predictions` - Predicted values
 /// * `targets` - True values
 /// * `output` - Output array for losses
+#[allow(dead_code)]
 pub fn huber_loss<T>(
     delta: T,
     predictions: &ArrayView1<T>,
@@ -410,6 +419,7 @@ where
 ///
 /// # Returns
 /// The binary entropy
+#[allow(dead_code)]
 pub fn binary_entropy<T>(p: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display,
@@ -433,6 +443,7 @@ where
 ///
 /// # Returns
 /// The cross entropy
+#[allow(dead_code)]
 pub fn cross_entropy<T>(p: &ArrayView1<T>, q: &ArrayView1<T>) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Zero + Display + Debug,
@@ -535,7 +546,7 @@ mod tests {
         assert_eq!(binary_entropy(1.0).unwrap(), 0.0);
         assert_relative_eq!(
             binary_entropy(0.5).unwrap(),
-            0.6931471805599453,
+            std::f64::consts::LN_2,
             epsilon = 1e-10
         ); // log(2)
     }

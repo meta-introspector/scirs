@@ -1,6 +1,7 @@
 use ndarray::array;
 use scirs2_stats::linear_regression;
 
+#[allow(dead_code)]
 fn main() {
     // Create a simple design matrix with an intercept column
     let x = ndarray::Array2::from_shape_vec((5, 3), vec![

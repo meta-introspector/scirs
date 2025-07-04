@@ -46,6 +46,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// assert_eq!(result[[1, 0]], 139.0); // 4*7 + 5*9 + 6*11
 /// assert_eq!(result[[1, 1]], 154.0); // 4*8 + 5*10 + 6*12
 /// ```
+#[allow(dead_code)]
 pub fn block_matmul<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -150,6 +151,7 @@ where
 /// assert_eq!(result[[1, 0]], 43.0); // 3*5 + 4*7
 /// assert_eq!(result[[1, 1]], 50.0); // 3*6 + 4*8
 /// ```
+#[allow(dead_code)]
 pub fn strassen_matmul<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -193,6 +195,7 @@ where
 }
 
 /// Pad a matrix to the specified dimensions
+#[allow(dead_code)]
 fn pad_matrix<F>(a: &ArrayView2<F>, new_rows: usize, new_cols: usize) -> Array2<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -211,6 +214,7 @@ where
 }
 
 /// Internal recursive implementation of the Strassen algorithm
+#[allow(dead_code)]
 fn strassen_recursive<F>(a: &ArrayView2<F>, b: &ArrayView2<F>, cutoff: usize) -> Array2<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand,
@@ -265,6 +269,7 @@ where
 }
 
 /// Standard matrix multiplication implementation
+#[allow(dead_code)]
 fn standard_matmul<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + ScalarOperand + Send + Sync + 'static,
@@ -329,6 +334,7 @@ where
 /// assert_eq!(result[[1, 0]], 139.0); // 4*7 + 5*9 + 6*11
 /// assert_eq!(result[[1, 1]], 154.0); // 4*8 + 5*10 + 6*12
 /// ```
+#[allow(dead_code)]
 pub fn tiled_matmul<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,

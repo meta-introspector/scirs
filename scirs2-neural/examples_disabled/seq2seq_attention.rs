@@ -609,6 +609,7 @@ impl Seq2SeqModel {
                 seq.remove(0);
         (decoded_tokens, all_attention)
 // Create a mini parallel corpus for testing
+#[allow(dead_code)]
 fn create_mini_translation_corpus() -> (Vec<Vec<String>>, Vec<Vec<String>>) {
     // Simple English-French pairs
     let pairs = vec![
@@ -630,6 +631,7 @@ fn create_mini_translation_corpus() -> (Vec<Vec<String>>, Vec<Vec<String>>) {
         french.push(fr.split_whitespace().map(|s| s.to_string()).collect());
     (english, french)
 // Create vocabularies and token mappings
+#[allow(dead_code)]
 fn create_vocabularies(
     src_sentences: &[Vec<String>],
     tgt_sentences: &[Vec<String>],
@@ -669,6 +671,7 @@ fn create_vocabularies(
         tgt_idx_to_word,
     )
 // Convert sentences to token IDs
+#[allow(dead_code)]
 fn tokenize_sentences(
     sentences: &[Vec<String>],
     word_to_idx: &HashMap<String, usize>,
@@ -701,6 +704,7 @@ fn tokenize_sentences(
             tokens[[i, pos]] = *eos_idx;
     tokens
 // Training loop for Seq2Seq model
+#[allow(dead_code)]
 fn train_seq2seq(
     model: &mut Seq2SeqModel,
     src_tokens: &Array2<usize>,
@@ -739,6 +743,7 @@ fn train_seq2seq(
         // For simplicity, we're skipping the actual parameter updates
         // as implementing backpropagation for this complex model would require significant code
 // Evaluate the model on test data
+#[allow(dead_code)]
 fn evaluate_seq2seq(
     src_idx_to_word: &HashMap<usize, String>,
     tgt_idx_to_word: &HashMap<usize, String>,
@@ -776,6 +781,7 @@ fn evaluate_seq2seq(
         println!("  Reference: {}", ref_sentence.trim());
         println!("  Generated: {}", model_sentence.trim());
         println!();
+#[allow(dead_code)]
 fn main() {
     println!("Sequence-to-Sequence Model with Attention");
     println!("=========================================");

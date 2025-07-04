@@ -118,6 +118,7 @@ struct Uniforms {
 @group(0) @binding(2) var<storage, write> output: array<f32>;
 
 @compute @workgroup_size(16, 16)
+#[allow(dead_code)]
 fn max_pool2d(
     @builtin(global_invocation_id) global_id: vec3<u32>
 ) {
@@ -412,6 +413,7 @@ struct Uniforms {
 @group(0) @binding(2) var<storage, write> output: array<f32>;
 
 @compute @workgroup_size(16, 16)
+#[allow(dead_code)]
 fn avg_pool2d(@builtin(global_invocation_id) global_id: vec3<u32>) {
     // Implementation similar to max pooling but computing average
 }

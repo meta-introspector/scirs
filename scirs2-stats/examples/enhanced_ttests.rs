@@ -4,6 +4,7 @@ use scirs2_stats::{
     Alternative, TTestResult,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Enhanced T-test Examples");
     println!("=======================");
@@ -136,6 +137,7 @@ fn main() {
     }
 }
 
+#[allow(dead_code)]
 fn print_ttest_result<F: std::fmt::Display + num_traits::Float>(
     result: &TTestResult<F>,
     title: &str,

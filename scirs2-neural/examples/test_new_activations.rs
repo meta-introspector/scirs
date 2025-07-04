@@ -5,6 +5,7 @@
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 // Minimal test for activation functions logic
+#[allow(dead_code)]
 fn test_activation_logic() -> Result<()> {
     println!("Testing activation function logic...");
 
@@ -62,6 +63,7 @@ fn test_activation_logic() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     test_activation_logic()?;
     println!("✅ Activation functions mathematical logic verified!");

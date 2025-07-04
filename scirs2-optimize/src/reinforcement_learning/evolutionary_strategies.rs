@@ -4,7 +4,8 @@
 
 use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
-use scirs2_core::error::CoreResult;
+// Unused import
+// use scirs2_core::error::CoreResult;
 
 /// Evolutionary strategy optimizer
 #[derive(Debug, Clone)]
@@ -87,6 +88,7 @@ impl EvolutionaryStrategy {
 }
 
 /// Evolutionary strategy optimization
+#[allow(dead_code)]
 pub fn evolutionary_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

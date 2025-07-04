@@ -105,6 +105,7 @@ impl<T: Copy> MaskedArray2<T> {
 /// let mean = masked_mean(&masked_arr, None).unwrap();
 /// assert!((mean - 3.0).abs() < 1e-10); // Mean of [1, 2, 4, 5] = 3.0
 /// ```
+#[allow(dead_code)]
 pub fn masked_mean<T>(masked_array: &MaskedArray<T>, _axis: Option<usize>) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
@@ -129,6 +130,7 @@ where
 ///
 /// # Returns
 /// * Variance of valid values
+#[allow(dead_code)]
 pub fn masked_var<T>(
     masked_array: &MaskedArray<T>,
     ddof: usize,
@@ -173,6 +175,7 @@ where
 ///
 /// # Returns
 /// * Standard deviation of valid values
+#[allow(dead_code)]
 pub fn masked_std<T>(
     masked_array: &MaskedArray<T>,
     ddof: usize,
@@ -192,6 +195,7 @@ where
 ///
 /// # Returns
 /// * Median of valid values
+#[allow(dead_code)]
 pub fn masked_median<T>(masked_array: &MaskedArray<T>) -> StatsResult<f64>
 where
     T: Copy + Into<f64> + PartialOrd,
@@ -225,6 +229,7 @@ where
 ///
 /// # Returns
 /// * Array of quantiles
+#[allow(dead_code)]
 pub fn masked_quantile<T>(
     masked_array: &MaskedArray<T>,
     q: ArrayView1<f64>,
@@ -279,6 +284,7 @@ where
 ///
 /// # Returns
 /// * Correlation coefficient
+#[allow(dead_code)]
 pub fn masked_corrcoef<T>(x: &MaskedArray<T>, y: &MaskedArray<T>, method: &str) -> StatsResult<f64>
 where
     T: Copy + Into<f64> + PartialOrd,
@@ -440,6 +446,7 @@ where
 ///
 /// # Returns
 /// * Covariance
+#[allow(dead_code)]
 pub fn masked_cov<T>(x: &MaskedArray<T>, y: &MaskedArray<T>, ddof: usize) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
@@ -505,6 +512,7 @@ where
 ///
 /// # Returns
 /// * Skewness of valid values
+#[allow(dead_code)]
 pub fn masked_skew<T>(masked_array: &MaskedArray<T>, bias: bool) -> StatsResult<f64>
 where
     T: Copy + Into<f64>,
@@ -558,6 +566,7 @@ where
 ///
 /// # Returns
 /// * Kurtosis of valid values
+#[allow(dead_code)]
 pub fn masked_kurtosis<T>(
     masked_array: &MaskedArray<T>,
     fisher: bool,
@@ -623,6 +632,7 @@ where
 ///
 /// # Returns
 /// * Trimmed mean of valid values
+#[allow(dead_code)]
 pub fn masked_tmean<T>(masked_array: &MaskedArray<T>, proportiontocut: f64) -> StatsResult<f64>
 where
     T: Copy + Into<f64> + PartialOrd,

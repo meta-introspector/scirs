@@ -32,6 +32,7 @@ use std::fmt::Debug;
 /// // Full convolution: [0.5, 1.5, 2.5, 1.5]
 /// assert_eq!(result.len(), a.len() + v.len() - 1);
 /// ```
+#[allow(dead_code)]
 pub fn convolve<T, U>(a: &[T], v: &[U], mode: &str) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -123,6 +124,7 @@ where
 /// // Full correlation: [1.5, 2.5, 1.5, 0.0]
 /// assert_eq!(result.len(), a.len() + v.len() - 1);
 /// ```
+#[allow(dead_code)]
 pub fn correlate<T, U>(a: &[T], v: &[U], mode: &str) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -157,6 +159,7 @@ where
 /// # Returns
 ///
 /// * Deconvolution result (approximation of the original input that was convolved with v)
+#[allow(dead_code)]
 pub fn deconvolve<T, U>(a: &[T], v: &[U], epsilon: Option<f64>) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -274,6 +277,7 @@ where
 }
 
 /// Find next power of two greater than or equal to n
+#[allow(dead_code)]
 fn next_power_of_two(n: usize) -> usize {
     if n == 0 {
         return 1;
@@ -296,6 +300,7 @@ fn next_power_of_two(n: usize) -> usize {
 /// # Returns
 ///
 /// * 2D convolution result
+#[allow(dead_code)]
 pub fn convolve2d(
     a: &ndarray::Array2<f64>,
     v: &ndarray::Array2<f64>,

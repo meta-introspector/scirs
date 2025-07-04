@@ -68,6 +68,7 @@ pub enum InitMethod {
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn kmeans_quantize(img: &DynamicImage, params: &KMeansParams) -> Result<DynamicImage> {
     let rgb = img.to_rgb8();
     let (width, height) = rgb.dimensions();
@@ -157,6 +158,7 @@ pub fn kmeans_quantize(img: &DynamicImage, params: &KMeansParams) -> Result<Dyna
 }
 
 /// Initialize cluster centers
+#[allow(dead_code)]
 fn initialize_centers(colors: &[[f32; 3]], params: &KMeansParams) -> Vec<[f32; 3]> {
     match params.init_method {
         InitMethod::Random => initialize_random(colors, params.k),
@@ -166,6 +168,7 @@ fn initialize_centers(colors: &[[f32; 3]], params: &KMeansParams) -> Vec<[f32; 3
 }
 
 /// Random initialization
+#[allow(dead_code)]
 fn initialize_random(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
     let mut rng = rng();
     let mut centers = Vec::new();
@@ -178,6 +181,7 @@ fn initialize_random(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
 }
 
 /// K-means++ initialization
+#[allow(dead_code)]
 fn initialize_kmeans_plus_plus(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
     let mut rng = rng();
     let mut centers = Vec::new();
@@ -222,6 +226,7 @@ fn initialize_kmeans_plus_plus(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
 }
 
 /// Frequency-based initialization
+#[allow(dead_code)]
 fn initialize_frequency(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
     // Count color frequencies
     let mut color_counts = HashMap::new();
@@ -251,6 +256,7 @@ fn initialize_frequency(colors: &[[f32; 3]], k: usize) -> Vec<[f32; 3]> {
 }
 
 /// Update cluster centers
+#[allow(dead_code)]
 fn update_centers(colors: &[[f32; 3]], assignments: &[usize], k: usize) -> Vec<[f32; 3]> {
     let mut new_centers = vec![[0.0, 0.0, 0.0]; k];
     let mut counts = vec![0; k];
@@ -279,6 +285,7 @@ fn update_centers(colors: &[[f32; 3]], assignments: &[usize], k: usize) -> Vec<[
 }
 
 /// Compute squared Euclidean distance between colors
+#[allow(dead_code)]
 fn color_distance(a: &[f32; 3], b: &[f32; 3]) -> f32 {
     let dr = a[0] - b[0];
     let dg = a[1] - b[1];
@@ -296,6 +303,7 @@ fn color_distance(a: &[f32; 3], b: &[f32; 3]) -> f32 {
 /// # Returns
 ///
 /// * Result containing quantized image
+#[allow(dead_code)]
 pub fn median_cut_quantize(img: &DynamicImage, n_colors: usize) -> Result<DynamicImage> {
     let rgb = img.to_rgb8();
     let (width, height) = rgb.dimensions();
@@ -430,6 +438,7 @@ impl ColorBox {
 }
 
 /// Compute squared distance between u8 colors
+#[allow(dead_code)]
 fn color_distance_u8(a: &[u8; 3], b: &[u8; 3]) -> u32 {
     let dr = a[0] as i32 - b[0] as i32;
     let dg = a[1] as i32 - b[1] as i32;

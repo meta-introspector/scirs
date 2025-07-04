@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 // Helper function to create a test array with an impulse
+#[allow(dead_code)]
 fn create_test_array(size: usize) -> Array2<Complex64> {
     let mut array = Array2::zeros((size, size).f());
     array[[size / 4, size / 4]] = Complex64::new(1.0, 0.0);
@@ -16,6 +17,7 @@ fn create_test_array(size: usize) -> Array2<Complex64> {
 }
 
 // Helper function to benchmark a strategy with multiple sizes
+#[allow(dead_code)]
 fn benchmark_strategy(
     strategy: PlanningStrategy,
     sizes: &[usize],
@@ -64,6 +66,7 @@ fn benchmark_strategy(
     results
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Advanced FFT Planning Strategies Benchmark");
     println!("==========================================\n");

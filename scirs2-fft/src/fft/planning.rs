@@ -45,6 +45,7 @@ use scirs2_core::parallel_ops::*;
 /// ```
 #[cfg(feature = "parallel")]
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn fft2_parallel<T>(
     input: &Array2<T>,
     shape: Option<(usize, usize)>,
@@ -202,6 +203,7 @@ where
 
 /// Non-parallel fallback implementation of fft2_parallel for when the parallel feature is disabled
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 pub fn fft2_parallel<T>(
     input: &Array2<T>,
     shape: Option<(usize, usize)>,
@@ -231,6 +233,7 @@ where
 /// A 2D array of complex values representing the inverse FFT result
 #[cfg(feature = "parallel")]
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn ifft2_parallel<T>(
     input: &Array2<T>,
     shape: Option<(usize, usize)>,
@@ -388,6 +391,7 @@ where
 
 /// Non-parallel fallback implementation of ifft2_parallel for when the parallel feature is disabled
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 pub fn ifft2_parallel<T>(
     input: &Array2<T>,
     shape: Option<(usize, usize)>,

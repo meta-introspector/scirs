@@ -27,6 +27,7 @@ use image::{DynamicImage, GrayImage, Luma};
 /// let img = open("examples/input/input.jpg").unwrap();
 /// let corrected = gamma_correction(&img, 2.2).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn gamma_correction(img: &DynamicImage, gamma: f32) -> Result<DynamicImage> {
     if gamma <= 0.0 {
         return Err(VisionError::InvalidParameter(
@@ -85,6 +86,7 @@ pub fn gamma_correction(img: &DynamicImage, gamma: f32) -> Result<DynamicImage> 
 /// # Returns
 ///
 /// * Result containing the auto gamma-corrected image
+#[allow(dead_code)]
 pub fn auto_gamma_correction(img: &DynamicImage, target_brightness: f32) -> Result<DynamicImage> {
     if target_brightness <= 0.0 || target_brightness >= 1.0 {
         return Err(VisionError::InvalidParameter(
@@ -132,6 +134,7 @@ pub fn auto_gamma_correction(img: &DynamicImage, target_brightness: f32) -> Resu
 /// # Returns
 ///
 /// * Result containing the adaptively gamma-corrected image
+#[allow(dead_code)]
 pub fn adaptive_gamma_correction(
     img: &DynamicImage,
     window_size: u32,

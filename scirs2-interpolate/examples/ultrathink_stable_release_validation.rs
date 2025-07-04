@@ -38,6 +38,7 @@ pub struct UltrathinkMetrics {
 }
 
 /// Simplified validation that works around compilation issues
+#[allow(dead_code)]
 pub fn validate_stable_release_readiness() -> Result<StableReleaseValidation, String> {
     println!("🚀 Starting Ultrathink Stable Release Validation...");
     println!("=".repeat(60));
@@ -89,6 +90,7 @@ pub fn validate_stable_release_readiness() -> Result<StableReleaseValidation, St
     Ok(validation)
 }
 
+#[allow(dead_code)]
 fn validate_performance_characteristics(
     critical_issues: &mut Vec<String>,
     recommendations: &mut Vec<String>,
@@ -159,6 +161,7 @@ fn validate_performance_characteristics(
     Ok(score)
 }
 
+#[allow(dead_code)]
 fn validate_stability_characteristics(
     critical_issues: &mut Vec<String>,
     recommendations: &mut Vec<String>,
@@ -218,6 +221,7 @@ fn validate_stability_characteristics(
     Ok(score)
 }
 
+#[allow(dead_code)]
 fn validate_compatibility_characteristics(
     critical_issues: &mut Vec<String>,
     recommendations: &mut Vec<String>,
@@ -266,6 +270,7 @@ fn validate_compatibility_characteristics(
     Ok(score)
 }
 
+#[allow(dead_code)]
 fn assess_overall_readiness(
     performance: f64,
     stability: f64,
@@ -285,6 +290,7 @@ fn assess_overall_readiness(
     }
 }
 
+#[allow(dead_code)]
 fn print_validation_summary(validation: &StableReleaseValidation) {
     println!("\n" + "=".repeat(60));
     println!("🎯 STABLE RELEASE VALIDATION SUMMARY");
@@ -358,43 +364,56 @@ fn print_validation_summary(validation: &StableReleaseValidation) {
 }
 
 // Simulation functions (replace with actual tests when compilation issues are resolved)
+#[allow(dead_code)]
 fn simulate_throughput_test() -> bool {
     true
 } // Simulated: > 1M ops/sec
+#[allow(dead_code)]
 fn simulate_memory_efficiency() -> bool {
     true
 } // Simulated: < 10MB for 1M points
+#[allow(dead_code)]
 fn simulate_simd_validation() -> bool {
     true
 } // Simulated: 2-4x speedup detected
+#[allow(dead_code)]
 fn simulate_parallel_scaling() -> bool {
     true
 } // Simulated: 7.2x speedup on 8 cores
+#[allow(dead_code)]
 fn simulate_numerical_accuracy() -> bool {
     true
 } // Simulated: < 1e-14 relative error
+#[allow(dead_code)]
 fn simulate_error_handling() -> bool {
     true
 } // Simulated: All errors handled gracefully
+#[allow(dead_code)]
 fn simulate_edge_cases() -> bool {
     true
 } // Simulated: Edge cases handled
+#[allow(dead_code)]
 fn simulate_memory_safety() -> bool {
     true
 } // Simulated: No memory issues
+#[allow(dead_code)]
 fn simulate_thread_safety() -> bool {
     true
 } // Simulated: Thread-safe
+#[allow(dead_code)]
 fn simulate_scipy_compatibility() -> bool {
     true
 } // Simulated: 92% compatibility
+#[allow(dead_code)]
 fn simulate_cross_platform() -> bool {
     true
 } // Simulated: All platforms work
+#[allow(dead_code)]
 fn simulate_version_compatibility() -> bool {
     true
 } // Simulated: API stable
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     match validate_stable_release_readiness() {
         Ok(validation) => {

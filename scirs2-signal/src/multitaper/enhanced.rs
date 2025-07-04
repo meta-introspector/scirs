@@ -101,7 +101,7 @@ use num_complex::Complex64;
 ///
 /// ```
 /// use scirs2_signal::multitaper::enhanced::{enhanced_pmtm, MultitaperConfig};
-/// #[cfg(test)]
+///
 use std::f64::consts::PI;
 ///
 /// // Generate test signal
@@ -111,7 +111,7 @@ use std::f64::consts::PI;
 /// use rand::prelude::*;
 /// let mut rng = rand::rng();
 /// let signal: Vec<f64> = t.iter()
-///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.gen_range(0.0..1.0))
+///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(0.0..1.0))
 ///     .collect();
 ///
 /// // Configure multitaper estimation
@@ -128,6 +128,7 @@ use std::f64::consts::PI;
 /// assert!(result.frequencies.len() > 0);
 /// assert!(result.confidence_intervals.is_some());
 /// ```
+#[allow(dead_code)]
 pub fn enhanced_pmtm<T>(
     x: &[T],
     config: &MultitaperConfig,
@@ -338,6 +339,7 @@ where
 }
 
 /// Compute tapered FFTs using enhanced SIMD operations
+#[allow(dead_code)]
 fn compute_tapered_ffts_simd(
     signal: &[f64],
     tapers: &Array2<f64>,
@@ -391,6 +393,7 @@ fn compute_tapered_ffts_simd(
 }
 
 /// Compute single tapered FFT with enhanced SIMD operations and robust fallbacks
+#[allow(dead_code)]
 fn compute_single_tapered_fft_simd(
     signal: &[f64],
     taper: ArrayView1<f64>,
@@ -439,6 +442,7 @@ fn compute_single_tapered_fft_simd(
 }
 
 /// Validate spectral matrix for numerical stability
+#[allow(dead_code)]
 fn validate_spectral_matrix(spectra: &Array2<f64>) -> SignalResult<()> {
     let (k, nfft) = spectra.dim();
 
@@ -493,6 +497,7 @@ fn validate_spectral_matrix(spectra: &Array2<f64>) -> SignalResult<()> {
 }
 
 /// Compute tapered FFTs using parallel processing
+#[allow(dead_code)]
 fn compute_tapered_ffts_parallel(
     signal: &[f64],
     tapers: &Array2<f64>,
@@ -537,6 +542,7 @@ fn compute_tapered_ffts_parallel(
 }
 
 /// Try advanced SIMD tapering with comprehensive error handling
+#[allow(dead_code)]
 fn try_advanced_simd_tapering(
     signal: &[f64],
     taper: &ArrayView1<f64>,
@@ -551,6 +557,7 @@ fn try_advanced_simd_tapering(
 }
 
 /// Try basic SIMD tapering with error recovery
+#[allow(dead_code)]
 fn try_basic_simd_tapering(
     signal: &[f64],
     taper: &ArrayView1<f64>,
@@ -568,6 +575,7 @@ fn try_basic_simd_tapering(
 }
 
 /// Try chunked SIMD tapering for edge cases
+#[allow(dead_code)]
 fn try_chunked_simd_tapering(
     signal: &[f64],
     taper: &ArrayView1<f64>,
@@ -597,6 +605,7 @@ fn try_chunked_simd_tapering(
 }
 
 /// Optimized scalar tapering fallback
+#[allow(dead_code)]
 fn scalar_tapering_optimized(signal: &[f64], taper: &ArrayView1<f64>, tapered: &mut [f64]) {
     // Unrolled loop for better performance
     let taper_slice = taper.as_slice().unwrap();
@@ -618,6 +627,7 @@ fn scalar_tapering_optimized(signal: &[f64], taper: &ArrayView1<f64>, tapered: &
 }
 
 /// Validate tapered signal with efficient bulk checking
+#[allow(dead_code)]
 fn validate_tapered_signal(tapered: &[f64]) -> SignalResult<()> {
     // Use SIMD-optimized validation when possible
     for (i, &val) in tapered.iter().enumerate() {
@@ -632,6 +642,7 @@ fn validate_tapered_signal(tapered: &[f64]) -> SignalResult<()> {
 }
 
 /// Enhanced FFT using SIMD operations and optimized planning
+#[allow(dead_code)]
 fn enhanced_simd_fft(x: &[f64], nfft: usize) -> SignalResult<Vec<Complex64>> {
     // Comprehensive input validation
     if nfft == 0 {
@@ -733,6 +744,7 @@ fn enhanced_simd_fft(x: &[f64], nfft: usize) -> SignalResult<Vec<Complex64>> {
 }
 
 /// Compute validated power spectrum with comprehensive error checking
+#[allow(dead_code)]
 fn compute_validated_power_spectrum(spectrum: &[Complex64]) -> SignalResult<Vec<f64>> {
     let mut power_spectrum = Vec::with_capacity(spectrum.len());
     let mut max_power = 0.0;
@@ -789,6 +801,7 @@ fn compute_validated_power_spectrum(spectrum: &[Complex64]) -> SignalResult<Vec<
 }
 
 /// Combine spectra using standard eigenvalue weighting
+#[allow(dead_code)]
 fn combine_spectra_standard(
     spectra: &Array2<f64>,
     eigenvalues: &Array1<f64>,
@@ -843,6 +856,7 @@ fn combine_spectra_standard(
 /// - Enhanced numerical stability for extreme values
 /// - Adaptive regularization based on signal characteristics
 /// - Better memory management for large frequency grids
+#[allow(dead_code)]
 fn combine_spectra_adaptive(
     spectra: &Array2<f64>,
     eigenvalues: &Array1<f64>,
@@ -1111,6 +1125,7 @@ fn combine_spectra_adaptive(
 ///
 /// This implementation includes improved DOF calculation and better handling
 /// of edge cases for more accurate confidence intervals.
+#[allow(dead_code)]
 fn compute_confidence_intervals(
     spectra: &Array2<f64>,
     eigenvalues: &Array1<f64>,
@@ -1175,6 +1190,7 @@ fn compute_confidence_intervals(
 }
 
 /// Compute effective degrees of freedom with enhanced numerical stability
+#[allow(dead_code)]
 fn compute_effective_dof(eigenvalues: &Array1<f64>) -> f64 {
     let sum_lambda: f64 = eigenvalues.sum();
     let sum_lambda_sq: f64 = eigenvalues.iter().map(|&x| x * x).sum();
@@ -1211,6 +1227,7 @@ fn compute_effective_dof(eigenvalues: &Array1<f64>) -> f64 {
 /// - Improved overlap strategy for spectral continuity
 /// - Enhanced statistical combination with variance tracking
 /// - Better memory management and error recovery
+#[allow(dead_code)]
 fn compute_pmtm_chunked(
     signal: &[f64],
     config: &MultitaperConfig,
@@ -1360,6 +1377,7 @@ fn compute_pmtm_chunked(
 }
 
 /// Simple linear interpolation for PSD values
+#[allow(dead_code)]
 fn interpolate_psd(
     source_freqs: &[f64],
     source_psd: &[f64],
@@ -1415,6 +1433,7 @@ fn interpolate_psd(
 /// - Spectral entropy
 /// - Dynamic range
 /// - High-frequency content
+#[allow(dead_code)]
 fn estimate_signal_complexity(signal: &[f64]) -> f64 {
     if signal.len() < 64 {
         return 1.0; // Simple case for short signals
@@ -1451,6 +1470,7 @@ fn estimate_signal_complexity(signal: &[f64]) -> f64 {
 }
 
 /// Find the next power of two greater than or equal to n
+#[allow(dead_code)]
 fn next_power_of_two(n: usize) -> usize {
     if n == 0 {
         return 1;
@@ -1476,6 +1496,7 @@ fn next_power_of_two(n: usize) -> usize {
 /// # Returns
 ///
 /// * Tuple of (times, frequencies, spectrogram)
+#[allow(dead_code)]
 pub fn enhanced_multitaper_spectrogram<T>(
     x: &[T],
     config: &SpectrogramConfig,
@@ -1600,7 +1621,6 @@ pub struct SpectrogramConfig {
     pub multitaper: MultitaperConfig,
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
 

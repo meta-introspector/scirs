@@ -9,6 +9,7 @@ use crate::registration::{
 };
 
 /// Rigid registration using point matches
+#[allow(dead_code)]
 pub fn register_rigid_points(
     source_points: &[(f64, f64)],
     target_points: &[(f64, f64)],
@@ -66,6 +67,7 @@ pub fn register_rigid_points(
 }
 
 /// Rigid registration with iterative closest point (ICP)
+#[allow(dead_code)]
 pub fn register_rigid_icp(
     source_points: &[(f64, f64)],
     target_points: &[(f64, f64)],

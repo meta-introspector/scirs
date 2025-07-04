@@ -17,6 +17,7 @@ const MATRIX_SIZE: usize = 100;
 const NUM_ITERATIONS: usize = 10;
 const BITS: u8 = 8;
 
+#[allow(dead_code)]
 fn main() {
     println!("Quantization Calibration Benchmark");
     println!("==================================\n");
@@ -68,6 +69,7 @@ fn main() {
 }
 
 /// Generate a matrix with uniform distribution
+#[allow(dead_code)]
 fn generate_uniform_data(size: usize) -> Array2<f32> {
     let mut rng = rng();
     let uniform = Uniform::new(-1.0, 1.0).unwrap();
@@ -83,6 +85,7 @@ fn generate_uniform_data(size: usize) -> Array2<f32> {
 }
 
 /// Generate a matrix with normal distribution
+#[allow(dead_code)]
 fn generate_normal_data(size: usize) -> Array2<f32> {
     let mut rng = rng();
     let normal = Normal::new(0.0, 1.0).unwrap();
@@ -98,6 +101,7 @@ fn generate_normal_data(size: usize) -> Array2<f32> {
 }
 
 /// Generate a matrix with log-normal distribution
+#[allow(dead_code)]
 fn generate_lognormal_data(size: usize) -> Array2<f32> {
     let mut rng = rng();
     let lognormal = LogNormal::new(0.0, 1.0).unwrap();
@@ -113,6 +117,7 @@ fn generate_lognormal_data(size: usize) -> Array2<f32> {
 }
 
 /// Generate a matrix with bimodal distribution
+#[allow(dead_code)]
 fn generate_bimodal_data(size: usize) -> Array2<f32> {
     let mut rng = rng();
     let normal1 = Normal::new(-2.0, 0.5).unwrap();
@@ -134,6 +139,7 @@ fn generate_bimodal_data(size: usize) -> Array2<f32> {
 }
 
 /// Generate a matrix with mixed scales in different columns
+#[allow(dead_code)]
 fn generate_mixed_scale_data(size: usize) -> Array2<f32> {
     let mut rng = rng();
 
@@ -174,6 +180,7 @@ fn generate_mixed_scale_data(size: usize) -> Array2<f32> {
 }
 
 /// Generate a matrix with heavy-tailed distribution (Cauchy)
+#[allow(dead_code)]
 fn generate_heavy_tailed_data(size: usize) -> Array2<f32> {
     let mut rng = rng();
     let cauchy = Cauchy::new(0.0, 1.0).unwrap();
@@ -192,6 +199,7 @@ fn generate_heavy_tailed_data(size: usize) -> Array2<f32> {
 }
 
 /// Benchmark different calibration methods on various distributions
+#[allow(dead_code)]
 fn benchmark_methods(
     distributions: &[(&str, &Array2<f32>)],
     methods: &[(CalibrationMethod, &str)],
@@ -257,6 +265,7 @@ fn benchmark_methods(
 }
 
 /// Benchmark different bit widths using entropy calibration
+#[allow(dead_code)]
 fn benchmark_bit_widths(distributions: &[(&str, &Array2<f32>)]) {
     let bit_widths = [4, 8, 16];
 
@@ -312,6 +321,7 @@ fn benchmark_bit_widths(distributions: &[(&str, &Array2<f32>)]) {
 }
 
 /// Benchmark hardware-friendly quantization formats
+#[allow(dead_code)]
 fn benchmark_hardware_friendly(distributions: &[(&str, &Array2<f32>)]) {
     // Define hardware-friendly formats to test
     let formats = [

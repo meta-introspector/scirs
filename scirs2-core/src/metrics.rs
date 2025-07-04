@@ -738,11 +738,13 @@ static GLOBAL_HEALTH_MONITOR: std::sync::LazyLock<HealthMonitor> = std::sync::La
 });
 
 /// Get the global metrics registry
+#[allow(dead_code)]
 pub fn global_metrics_registry() -> &'static MetricsRegistry {
     &GLOBAL_METRICS_REGISTRY
 }
 
 /// Get the global health monitor
+#[allow(dead_code)]
 pub fn global_health_monitor() -> &'static HealthMonitor {
     &GLOBAL_HEALTH_MONITOR
 }

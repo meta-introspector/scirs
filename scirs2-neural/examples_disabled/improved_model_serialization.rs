@@ -10,6 +10,7 @@ use scirs2_neural::serialization::{self, SerializationFormat};
 use std::path::Path;
 
 // Create a simple neural network model for the XOR problem
+#[allow(dead_code)]
 fn create_xor_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
     // XOR problem requires a hidden layer
@@ -28,6 +29,7 @@ fn create_xor_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     Ok(model)
 }
 // Create XOR dataset
+#[allow(dead_code)]
 fn create_xor_dataset() -> (Array2<f32>, Array2<f32>) {
     // XOR truth table inputs
     let x = Array2::from_shape_vec(
@@ -49,6 +51,7 @@ fn create_xor_dataset() -> (Array2<f32>, Array2<f32>) {
             0.0, // 1 XOR 1 = 0
     (x, y)
 // Train the model on XOR problem
+#[allow(dead_code)]
 fn train_model(
     model: &mut Sequential<f32>,
     x: &Array2<f32>,
@@ -74,6 +77,7 @@ fn train_model(
     println!("Training completed.");
     Ok(())
 // Evaluate model performance on XOR problem
+#[allow(dead_code)]
 fn evaluate_model(model: &Sequential<f32>, x: &Array2<f32>, y: &Array2<f32>) -> Result<f32> {
     let predictions = model.forward(&x.clone().into_dyn())?;
     let binary_thresh = 0.5;
@@ -107,6 +111,7 @@ fn evaluate_model(model: &Sequential<f32>, x: &Array2<f32>, y: &Array2<f32>) -> 
     );
     Ok(accuracy)
 // A more realistic dataset with noise to better test serialization
+#[allow(dead_code)]
 fn create_noisy_xor_dataset(
     size: usize,
     noise_level: f32,
@@ -123,6 +128,7 @@ fn create_noisy_xor_dataset(
         x[[i, 1]] = x2 + rng.random_range(-noise_level / 2.0..noise_level / 2.0);
         // Standard XOR calculation for target
         y[[i, 0]] = (x1 as i32 ^ x2 as i32) as f32;
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Improved Model Serialization and Loading Example");
     println!("===============================================\n");

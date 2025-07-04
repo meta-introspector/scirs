@@ -228,6 +228,7 @@ pub mod data_generators {
 }
 
 /// Ultra-comprehensive anomaly detection benchmarks
+#[allow(dead_code)]
 fn ultra_bench_anomaly_detection(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultra_anomaly_detection");
     group.sample_size(50);
@@ -293,6 +294,7 @@ fn ultra_bench_anomaly_detection(c: &mut Criterion) {
 }
 
 /// Ultra-comprehensive forecasting benchmarks with multiple models
+#[allow(dead_code)]
 fn ultra_bench_forecasting(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultra_forecasting");
     group.sample_size(30);
@@ -380,6 +382,7 @@ fn ultra_bench_forecasting(c: &mut Criterion) {
 }
 
 /// Advanced meta-learning and neural ODE benchmarks
+#[allow(dead_code)]
 fn ultra_bench_advanced_training(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultra_advanced_training");
     group.sample_size(20);
@@ -487,6 +490,7 @@ fn ultra_bench_advanced_training(c: &mut Criterion) {
 }
 
 /// Comprehensive scalability and stress testing
+#[allow(dead_code)]
 fn ultra_bench_scalability(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultra_scalability");
     group.sample_size(20);
@@ -543,6 +547,7 @@ fn ultra_bench_scalability(c: &mut Criterion) {
 }
 
 /// Cross-domain application benchmarks
+#[allow(dead_code)]
 fn ultra_bench_domain_applications(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultra_domain_applications");
     group.sample_size(30);
@@ -602,6 +607,7 @@ fn ultra_bench_domain_applications(c: &mut Criterion) {
 }
 
 /// Comparative performance analysis across different implementations
+#[allow(dead_code)]
 fn ultra_bench_comparative_analysis(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultra_comparative_analysis");
     group.sample_size(50);
@@ -664,6 +670,7 @@ fn ultra_bench_comparative_analysis(c: &mut Criterion) {
 }
 
 /// Memory usage profiling benchmarks
+#[allow(dead_code)]
 fn ultra_bench_memory_profiling(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultra_memory_profiling");
     group.sample_size(20);
@@ -704,6 +711,7 @@ fn ultra_bench_memory_profiling(c: &mut Criterion) {
 }
 
 /// Error handling and robustness benchmarks
+#[allow(dead_code)]
 fn ultra_bench_robustness(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultra_robustness");
     group.sample_size(30);
@@ -758,6 +766,7 @@ fn ultra_bench_robustness(c: &mut Criterion) {
 }
 
 /// Utility function to generate synthetic data with various patterns
+#[allow(dead_code)]
 fn generate_synthetic_data(size: usize, noise_level: f64) -> Array1<f64> {
     let mut data = Array1::zeros(size);
     let mut rng_state = 42u64; // Simple LCG for reproducible random numbers

@@ -13,18 +13,10 @@ use scirs2_core::simd::{simd_add_f32, simd_add_f64, simd_scalar_mul_f32, simd_sc
 
 use super::{pad_array, BorderMode};
 use crate::error::{NdimageError, NdimageResult};
-
-/// Helper function for safe conversion of hardcoded constants
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
+use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe i32 conversion
+#[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
     T::from_i32(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
@@ -32,6 +24,7 @@ fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
 }
 
 /// Helper function for safe float to usize conversion
+#[allow(dead_code)]
 fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
     value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert float to usize".to_string())
@@ -53,6 +46,7 @@ fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn bilateral_filter<T, D>(
     input: &Array<T, D>,
     sigma_spatial: T,
@@ -89,6 +83,7 @@ where
 }
 
 /// Apply bilateral filter to a 1D array with SIMD optimization for f32/f64
+#[allow(dead_code)]
 fn bilateral_filter_1d<T, D>(
     input: &Array<T, D>,
     sigma_spatial: T,
@@ -161,6 +156,7 @@ where
 }
 
 /// Apply bilateral filter to a 2D array
+#[allow(dead_code)]
 fn bilateral_filter_2d<T, D>(
     input: &Array<T, D>,
     sigma_spatial: T,
@@ -247,6 +243,7 @@ where
 }
 
 /// Apply bilateral filter to an n-dimensional array
+#[allow(dead_code)]
 fn bilateral_filter_nd<T, D>(
     input: &Array<T, D>,
     sigma_spatial: T,
@@ -325,6 +322,7 @@ where
 }
 
 /// Helper function to iterate through neighborhood offsets
+#[allow(dead_code)]
 fn iterate_neighborhood<F>(_center_idx: &[usize], radius: usize, ndim: usize, mut callback: F)
 where
     F: FnMut(&[i32]),
@@ -362,6 +360,7 @@ where
 
 /// SIMD-accelerated bilateral filter for f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn bilateral_filter_simd_f32<D>(
     input: &Array<f32, D>,
     sigma_spatial: f32,
@@ -396,6 +395,7 @@ where
 
 /// SIMD-accelerated bilateral filter for f64 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn bilateral_filter_simd_f64<D>(
     input: &Array<f64, D>,
     sigma_spatial: f64,
@@ -430,6 +430,7 @@ where
 
 /// SIMD-accelerated 1D bilateral filter for f32
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn bilateral_filter_1d_simd_f32<D>(
     input: &Array<f32, D>,
     sigma_spatial: f32,
@@ -520,6 +521,7 @@ where
 
 /// SIMD-accelerated 1D bilateral filter for f64
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn bilateral_filter_1d_simd_f64<D>(
     input: &Array<f64, D>,
     sigma_spatial: f64,
@@ -606,6 +608,7 @@ where
 
 /// SIMD-accelerated 2D bilateral filter for f32
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn bilateral_filter_2d_simd_f32<D>(
     input: &Array<f32, D>,
     sigma_spatial: f32,
@@ -683,6 +686,7 @@ where
 
 /// SIMD-accelerated 2D bilateral filter for f64
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn bilateral_filter_2d_simd_f64<D>(
     input: &Array<f64, D>,
     sigma_spatial: f64,
@@ -965,6 +969,7 @@ impl Default for MultiScaleBilateralConfig {
 /// let config = MultiScaleBilateralConfig::default();
 /// let result = multi_scale_bilateral_filter(&image, &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn multi_scale_bilateral_filter<T, D>(
     input: &Array<T, D>,
     config: &MultiScaleBilateralConfig,
@@ -1055,6 +1060,7 @@ where
 /// let image = Array2::from_elem((32, 32), 1.0);
 /// let result = adaptive_bilateral_filter(&image, 1.0, 1.0, 0.5, Some(BorderMode::Reflect)).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn adaptive_bilateral_filter<T, D>(
     input: &Array<T, D>,
     base_spatial_sigma: T,
@@ -1107,6 +1113,7 @@ where
 }
 
 /// Specialized adaptive bilateral filter for 2D arrays
+#[allow(dead_code)]
 fn adaptive_bilateral_filter_2d<T, D>(
     input: &Array<T, D>,
     base_spatial_sigma: T,
@@ -1179,6 +1186,7 @@ where
 }
 
 /// Compute local variance in a 2D array using a sliding window
+#[allow(dead_code)]
 fn compute_local_variance<T>(input: &Array2<T>, window_size: usize) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
@@ -1222,6 +1230,7 @@ where
 }
 
 /// Apply bilateral filtering to a single pixel with given parameters
+#[allow(dead_code)]
 fn apply_bilateral_window<T>(
     padded_input: &ndarray::ArrayView2<T>,
     center_y: usize,
@@ -1272,6 +1281,7 @@ where
 }
 
 /// Downsample an image by the given factor
+#[allow(dead_code)]
 fn downsample_image<T, D>(input: &Array<T, D>, factor: f64) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
@@ -1322,6 +1332,7 @@ where
 }
 
 /// Upsample an image to match the target shape
+#[allow(dead_code)]
 fn upsample_image<T, D>(input: &Array<T, D>, target: &Array<T, D>) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,
@@ -1365,6 +1376,7 @@ where
 }
 
 /// Blend two arrays with the given alpha factor
+#[allow(dead_code)]
 fn blend_arrays<T, D>(a: &Array<T, D>, b: &Array<T, D>, alpha: T) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + Clone + 'static,

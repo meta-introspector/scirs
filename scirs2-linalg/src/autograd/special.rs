@@ -22,6 +22,7 @@ use scirs2_autograd::variable::Variable;
 /// # Returns
 ///
 /// A new tensor containing the pseudo-inverse with gradient tracking.
+#[allow(dead_code)]
 pub fn pinv<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
     rcond: Option<F>,
@@ -256,6 +257,7 @@ pub fn pinv<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor containing the matrix square root with gradient tracking.
+#[allow(dead_code)]
 pub fn sqrtm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> AutogradResult<Tensor<F>> {
     // Ensure input is a square 2D tensor
     if a.data.ndim() != 2 {
@@ -502,6 +504,7 @@ pub fn sqrtm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> Autogra
 /// # Returns
 ///
 /// A new tensor containing the matrix logarithm with gradient tracking.
+#[allow(dead_code)]
 pub fn logm<F: Float + Debug + Send + Sync + 'static>(a: &Tensor<F>) -> AutogradResult<Tensor<F>> {
     // Ensure input is a square 2D tensor
     if a.data.ndim() != 2 {

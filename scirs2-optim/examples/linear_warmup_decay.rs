@@ -6,6 +6,7 @@ use scirs2_optim::schedulers::{DecayStrategy, LearningRateScheduler, LinearWarmu
 use scirs2_optim::Optimizer;
 
 /// Generate synthetic data for linear regression
+#[allow(dead_code)]
 fn generate_data<A: Float>(n_samples: usize, n_features: usize) -> (Array2<A>, Array1<A>) {
     let mut rng = rand::rng();
     let mut x = Array2::<A>::zeros((n_samples, n_features));
@@ -37,6 +38,7 @@ fn generate_data<A: Float>(n_samples: usize, n_features: usize) -> (Array2<A>, A
 }
 
 /// Calculate mean squared error
+#[allow(dead_code)]
 fn mean_squared_error<A: Float>(y_true: &Array1<A>, y_pred: &Array1<A>) -> A {
     let diff = y_pred - y_true;
     let squared = diff.mapv(|x| x * x);
@@ -45,10 +47,12 @@ fn mean_squared_error<A: Float>(y_true: &Array1<A>, y_pred: &Array1<A>) -> A {
 }
 
 /// Predict values using linear model
+#[allow(dead_code)]
 fn predict<A: Float + 'static>(x: &Array2<A>, weights: &Array1<A>) -> Array1<A> {
     x.dot(weights)
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Generate synthetic data
     let n_samples = 100;

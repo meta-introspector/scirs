@@ -931,6 +931,7 @@ impl NetCDFFile {
 /// create_netcdf4_with_data("weather.nc", datasets, global_attrs)?;
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn create_netcdf4_with_data<P: AsRef<Path>>(
     path: P,
     datasets: HashMap<String, (ArrayD<f64>, Vec<String>)>,
@@ -972,6 +973,7 @@ pub fn create_netcdf4_with_data<P: AsRef<Path>>(
 /// println!("Variables: {:?}", file.variables());
 /// # Ok::<(), scirs2_io::error::IoError>(())
 /// ```
+#[allow(dead_code)]
 pub fn read_netcdf<P: AsRef<Path>>(path: P) -> Result<NetCDFFile> {
     let path_ref = path.as_ref();
 

@@ -14,6 +14,7 @@ use scirs2_metrics::{
 };
 
 // Helper function to print what would be rendered
+#[allow(dead_code)]
 fn print_visualization_info(title: &str, plot_type: &PlotType, filename: &str) {
     println!(
         "Would render a {:?} plot titled '{}' to {}",
@@ -21,6 +22,7 @@ fn print_visualization_info(title: &str, plot_type: &PlotType, filename: &str) {
     );
 }
 
+#[allow(dead_code)]
 fn main() {
     // Example 1: Confusion Matrix Visualization
     println!("\n===== Example 1: Confusion Matrix Visualization =====");

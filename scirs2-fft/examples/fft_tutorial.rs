@@ -11,6 +11,7 @@ use scirs2_fft::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("=== FFT Tutorial ===\n");
 
@@ -48,6 +49,7 @@ fn main() {
 }
 
 /// Basic 1D FFT and IFFT operations
+#[allow(dead_code)]
 fn basic_fft_example() {
     println!("\n--- Basic FFT and IFFT ---");
 
@@ -79,6 +81,7 @@ fn basic_fft_example() {
 }
 
 /// Real-to-complex and complex-to-real FFT
+#[allow(dead_code)]
 fn real_fft_example() {
     println!("\n--- Real FFT (RFFT) ---");
 
@@ -115,6 +118,7 @@ fn real_fft_example() {
 }
 
 /// 2D FFT for images or matrices
+#[allow(dead_code)]
 fn multi_dimensional_fft_example() {
     println!("\n--- 2D FFT Example ---");
 
@@ -167,6 +171,7 @@ fn multi_dimensional_fft_example() {
 }
 
 /// Zero padding for increased frequency resolution
+#[allow(dead_code)]
 fn zero_padding_example() {
     println!("\n--- Zero Padding Example ---");
 
@@ -227,6 +232,7 @@ fn zero_padding_example() {
 }
 
 /// Windowing functions to reduce spectral leakage
+#[allow(dead_code)]
 fn windowing_example() {
     println!("\n--- Windowing Example ---");
 
@@ -297,6 +303,7 @@ fn windowing_example() {
 }
 
 /// Frequency analysis of signals
+#[allow(dead_code)]
 fn frequency_analysis_example() {
     println!("\n--- Frequency Analysis Example ---");
 
@@ -357,6 +364,7 @@ fn frequency_analysis_example() {
 }
 
 /// Signal filtering in the frequency domain
+#[allow(dead_code)]
 fn frequency_domain_filtering() {
     println!("\n--- Frequency Domain Filtering ---");
 
@@ -436,6 +444,7 @@ fn frequency_domain_filtering() {
 }
 
 /// Hilbert transform for analytic signal
+#[allow(dead_code)]
 fn hilbert_transform_example() {
     println!("\n--- Hilbert Transform Example ---");
 
@@ -545,6 +554,7 @@ fn fractional_fourier_transform_example() {
 }
 
 /// Time-frequency analysis with spectrograms
+#[allow(dead_code)]
 fn time_frequency_analysis() {
     println!("\n--- Time-Frequency Analysis Example ---");
 

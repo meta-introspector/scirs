@@ -100,6 +100,7 @@ pub static MIXED_PRECISION_CONFIG: LazyLock<RwLock<MixedPrecisionConfig>> = Lazy
 });
 
 /// Set the global mixed-precision configuration.
+#[allow(dead_code)]
 pub fn set_mixed_precision_config(config: MixedPrecisionConfig) {
     if let Ok(mut global_config) = MIXED_PRECISION_CONFIG.write() {
         *global_config = config;
@@ -107,6 +108,7 @@ pub fn set_mixed_precision_config(config: MixedPrecisionConfig) {
 }
 
 /// Get the current mixed-precision configuration.
+#[allow(dead_code)]
 pub fn get_mixed_precision_config() -> MixedPrecisionConfig {
     MIXED_PRECISION_CONFIG
         .read()
@@ -115,6 +117,7 @@ pub fn get_mixed_precision_config() -> MixedPrecisionConfig {
 }
 
 /// Determine the optimal precision for an array based on its size.
+#[allow(dead_code)]
 pub fn determine_optimal_precision<T, D>(array: &Array<T, D>) -> Precision
 where
     T: Clone + 'static,
@@ -481,6 +484,7 @@ where
 ///
 /// This function automatically converts arrays to the specified precision
 /// before executing the operation.
+#[allow(dead_code)]
 pub fn execute_with_precision<F, R>(
     arrays: &[&dyn MixedPrecisionSupport],
     precision: Precision,

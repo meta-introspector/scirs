@@ -1244,6 +1244,7 @@ impl CrossDeviceManager {
 }
 
 /// Create a cross-device manager with default settings
+#[allow(dead_code)]
 pub fn create_cross_device_manager() -> CoreResult<CrossDeviceManager> {
     CrossDeviceManager::new(true, 1024 * 1024 * 1024) // 1 GB cache by default
 }
@@ -1300,6 +1301,7 @@ where
 // Convenience functions
 
 /// Create a device array on the CPU
+#[allow(dead_code)]
 pub fn create_cpu_array<T, S, D>(array: &ArrayBase<S, D>) -> DeviceArray<T, D>
 where
     T: GpuDataType,
@@ -1310,6 +1312,7 @@ where
 }
 
 /// Create a device array on the GPU
+#[allow(dead_code)]
 pub fn create_gpu_array<T, S, D>(
     array: &ArrayBase<S, D>,
     manager: &CrossDeviceManager,
@@ -1333,6 +1336,7 @@ where
 }
 
 /// Transfer an array to the best available device
+#[allow(dead_code)]
 pub fn to_best_device<T, S, D>(
     array: &ArrayBase<S, D>,
     manager: &CrossDeviceManager,

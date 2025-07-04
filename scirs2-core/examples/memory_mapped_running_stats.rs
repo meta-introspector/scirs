@@ -22,6 +22,7 @@ use std::time::Instant;
 use tempfile::tempdir;
 
 #[cfg(not(feature = "memory_efficient"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the memory_efficient feature.");
     println!(
@@ -110,6 +111,7 @@ impl OnlineStats {
 }
 
 #[cfg(feature = "memory_efficient")]
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Memory-Mapped Running Statistics Example");
     println!("========================================\n");
@@ -133,6 +135,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Create a large dataset for demonstration purposes
 #[cfg(feature = "memory_efficient")]
+#[allow(dead_code)]
 fn create_large_dataset(
     temp_dir: &Path,
 ) -> Result<MemoryMappedArray<f64>, Box<dyn std::error::Error>> {
@@ -222,6 +225,7 @@ fn create_large_dataset(
 
 /// Calculate running statistics on the large dataset
 #[cfg(feature = "memory_efficient")]
+#[allow(dead_code)]
 fn calculate_statistics(
     mmap: &mut MemoryMappedArray<f64>,
 ) -> Result<OnlineStats, Box<dyn std::error::Error>> {
@@ -284,6 +288,7 @@ fn calculate_statistics(
 
 /// Normalize the data using the calculated statistics
 #[cfg(feature = "memory_efficient")]
+#[allow(dead_code)]
 fn normalize_data(
     mmap: &mut MemoryMappedArray<f64>,
     mean: f64,
@@ -369,6 +374,7 @@ fn normalize_data(
 
 /// Calculate verification statistics on the normalized data
 #[cfg(feature = "memory_efficient")]
+#[allow(dead_code)]
 fn calculate_verification_stats(
     mmap: &MemoryMappedArray<f64>,
 ) -> Result<OnlineStats, Box<dyn std::error::Error>> {

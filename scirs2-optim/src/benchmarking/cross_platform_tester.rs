@@ -5,7 +5,6 @@
 //! and runtime environments.
 
 use crate::error::Result;
-use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
@@ -811,8 +810,11 @@ impl CrossPlatformTester {
                         let test_result = test.run_test(platform_info);
                         let execution_time = start_time.elapsed();
 
+                        // Get test name before mutable borrow
+                        let test_name_owned = test.name().to_string();
+
                         // Store result
-                        self.store_test_result(test.name(), test_result, execution_time);
+                        self.store_test_result(&test_name_owned, test_result, execution_time);
 
                         // Check timeout
                         if execution_time > self.config.timeout_settings.test_timeout {

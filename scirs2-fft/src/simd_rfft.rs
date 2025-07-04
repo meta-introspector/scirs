@@ -41,6 +41,7 @@ use std::fmt::Debug;
 /// // RFFT produces n//2 + 1 complex values
 /// assert_eq!(spectrum.len(), signal.len() / 2 + 1);
 /// ```
+#[allow(dead_code)]
 pub fn rfft_simd<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -107,6 +108,7 @@ where
 ///     assert!((x - y).abs() < 1e-10);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn irfft_simd<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -140,6 +142,7 @@ where
 }
 
 /// Adaptive RFFT that automatically chooses the best implementation
+#[allow(dead_code)]
 pub fn rfft_adaptive<T>(
     input: &[T],
     n: Option<usize>,
@@ -167,6 +170,7 @@ where
 }
 
 /// Adaptive IRFFT that automatically chooses the best implementation
+#[allow(dead_code)]
 pub fn irfft_adaptive<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -191,6 +195,7 @@ where
 
 /// GPU-accelerated RFFT implementation
 #[cfg(feature = "cuda")]
+#[allow(dead_code)]
 fn rfft_gpu<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -251,6 +256,7 @@ where
 
 /// GPU-accelerated IRFFT implementation
 #[cfg(feature = "cuda")]
+#[allow(dead_code)]
 fn irfft_gpu<T>(input: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -315,6 +321,7 @@ where
 
 /// Fallback implementations when GPU feature is not enabled
 #[cfg(not(feature = "cuda"))]
+#[allow(dead_code)]
 fn rfft_gpu<T>(_input: &[T], _n: Option<usize>, _norm: Option<&str>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -325,6 +332,7 @@ where
 }
 
 #[cfg(not(feature = "cuda"))]
+#[allow(dead_code)]
 fn irfft_gpu<T>(_input: &[T], _n: Option<usize>, _norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,

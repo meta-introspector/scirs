@@ -134,6 +134,7 @@ mod quadrature_problems {
 }
 
 /// Benchmark ODE solvers
+#[allow(dead_code)]
 fn bench_ode_solvers(c: &mut Criterion) {
     let mut group = c.benchmark_group("ODE Solvers");
 
@@ -257,6 +258,7 @@ fn bench_ode_solvers(c: &mut Criterion) {
 }
 
 /// Benchmark quadrature methods
+#[allow(dead_code)]
 fn bench_quadrature_methods(c: &mut Criterion) {
     let mut group = c.benchmark_group("Quadrature Methods");
 
@@ -304,6 +306,7 @@ fn bench_quadrature_methods(c: &mut Criterion) {
 }
 
 /// Benchmark multidimensional integration
+#[allow(dead_code)]
 fn bench_multidimensional_integration(c: &mut Criterion) {
     let mut group = c.benchmark_group("Multidimensional Integration");
 
@@ -378,6 +381,7 @@ fn bench_multidimensional_integration(c: &mut Criterion) {
 
 /// Benchmark parallel operations
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn bench_parallel_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("Parallel Operations");
 
@@ -452,6 +456,7 @@ fn bench_parallel_operations(c: &mut Criterion) {
 }
 
 /// Memory usage benchmark
+#[allow(dead_code)]
 fn bench_memory_usage(c: &mut Criterion) {
     let mut group = c.benchmark_group("Memory Usage");
 
@@ -499,6 +504,7 @@ fn bench_memory_usage(c: &mut Criterion) {
 }
 
 /// Accuracy vs performance trade-off benchmark
+#[allow(dead_code)]
 fn bench_accuracy_performance_tradeoff(c: &mut Criterion) {
     let mut group = c.benchmark_group("Accuracy vs Performance");
 

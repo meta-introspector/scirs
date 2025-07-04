@@ -499,6 +499,7 @@ impl QRNGEngine for Faure {
 }
 
 /// Scale samples from unit hypercube to the integration range [a, b]
+#[allow(dead_code)]
 pub fn scale<T: Float + FromPrimitive>(
     sample: &Array2<T>,
     a: &Array1<T>,
@@ -548,6 +549,7 @@ pub fn scale<T: Float + FromPrimitive>(
 /// let result = qmc_quad(f, &a, &b, None, None, Some(Box::new(qrng)), false).unwrap();
 /// println!("Integral: {}, Error: {}", result.integral, result.standard_error);
 /// ```
+#[allow(dead_code)]
 pub fn qmc_quad<F>(
     func: F,
     a: &Array1<f64>,
@@ -759,6 +761,7 @@ where
 /// ).unwrap();
 /// println!("Integral: {}, Error: {}", result.integral, result.standard_error);
 /// ```
+#[allow(dead_code)]
 pub fn qmc_quad_parallel<F>(
     func: F,
     a: &Array1<f64>,
@@ -885,6 +888,7 @@ where
 }
 
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn parallel_qmc_integration_impl<F>(
     func: F,
     a: &Array1<f64>,
@@ -947,6 +951,7 @@ where
 }
 
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 fn sequential_qmc_integration<F>(
     func: F,
     a: &Array1<f64>,
@@ -1003,6 +1008,7 @@ where
     compute_qmc_result(estimates, log, sign)
 }
 
+#[allow(dead_code)]
 fn compute_qmc_result(
     estimates: Vec<f64>,
     log: bool,

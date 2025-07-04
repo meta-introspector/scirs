@@ -11,16 +11,8 @@ use std::fmt::Debug;
 
 use super::BorderMode;
 use crate::error::{NdimageError, NdimageResult};
+use crate::utils::safe_f64_to_float;
 
-/// Helper function for safe conversion from f64 to float
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
 
 /// Optimized Sobel filter for detecting edges in 2D arrays
 ///
@@ -39,6 +31,7 @@ fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Gradient array
+#[allow(dead_code)]
 pub fn sobel_2d_optimized<T>(
     input: &ArrayView2<T>,
     axis: usize,
@@ -78,6 +71,7 @@ where
 }
 
 /// Sequential Sobel implementation with SIMD where possible
+#[allow(dead_code)]
 fn sobel_sequential<T>(
     input: &ArrayView2<T>,
     output: &mut Array2<T>,
@@ -162,6 +156,7 @@ where
 }
 
 /// Parallel Sobel implementation
+#[allow(dead_code)]
 fn sobel_parallel<T>(
     input: &ArrayView2<T>,
     output: &mut Array2<T>,
@@ -285,6 +280,7 @@ where
 }
 
 /// Get pixel value with border handling
+#[allow(dead_code)]
 fn get_pixel_value<T>(
     input: &ArrayView2<T>,
     i: isize,
@@ -370,6 +366,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Laplacian filtered array
+#[allow(dead_code)]
 pub fn laplace_2d_optimized<T>(
     input: &ArrayView2<T>,
     use_diagonal: bool,
@@ -398,6 +395,7 @@ where
 }
 
 /// Sequential Laplacian implementation
+#[allow(dead_code)]
 fn laplace_sequential<T>(
     input: &ArrayView2<T>,
     output: &mut Array2<T>,
@@ -453,6 +451,7 @@ where
 }
 
 /// Parallel Laplacian implementation
+#[allow(dead_code)]
 fn laplace_parallel<T>(
     input: &ArrayView2<T>,
     output: &mut Array2<T>,
@@ -547,6 +546,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Gradient magnitude
+#[allow(dead_code)]
 pub fn gradient_magnitude_optimized<T>(
     grad_x: &ArrayView2<T>,
     grad_y: &ArrayView2<T>,

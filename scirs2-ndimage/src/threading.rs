@@ -36,6 +36,7 @@ impl Default for ThreadPoolConfig {
 }
 
 /// Initialize the global thread pool configuration
+#[allow(dead_code)]
 pub fn init_thread_pool(config: ThreadPoolConfig) -> Result<(), String> {
     THREAD_POOL_CONFIG
         .set(Arc::new(Mutex::new(config)))
@@ -43,6 +44,7 @@ pub fn init_thread_pool(config: ThreadPoolConfig) -> Result<(), String> {
 }
 
 /// Get the current thread pool configuration
+#[allow(dead_code)]
 pub fn get_thread_pool_config() -> ThreadPoolConfig {
     THREAD_POOL_CONFIG
         .get()
@@ -51,6 +53,7 @@ pub fn get_thread_pool_config() -> ThreadPoolConfig {
 }
 
 /// Update thread pool configuration
+#[allow(dead_code)]
 pub fn update_thread_pool_config<F>(update_fn: F) -> Result<(), String>
 where
     F: FnOnce(&mut ThreadPoolConfig),
@@ -80,11 +83,13 @@ thread_local! {
 }
 
 /// Get current worker information
+#[allow(dead_code)]
 pub fn current_worker_info() -> Option<WorkerInfo> {
     WORKER_INFO.with(|info| info.borrow().clone())
 }
 
 /// Set worker information for the current thread
+#[allow(dead_code)]
 pub fn set_worker_info(info: WorkerInfo) {
     WORKER_INFO.with(|cell| {
         *cell.borrow_mut() = Some(info);

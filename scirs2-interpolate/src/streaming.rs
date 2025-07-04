@@ -538,6 +538,7 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
 }
 
 /// Create a new online spline interpolator
+#[allow(dead_code)]
 pub fn make_online_spline_interpolator<T: Float + Debug + FromPrimitive + Zero>(
     config: Option<StreamingConfig>,
 ) -> OnlineSplineInterpolator<T> {
@@ -790,6 +791,7 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
 }
 
 /// Create a new streaming RBF interpolator
+#[allow(dead_code)]
 pub fn make_streaming_rbf_interpolator<T: Float + Debug + FromPrimitive + Zero>(
     config: Option<StreamingConfig>,
     kernel_width: Option<T>,
@@ -937,6 +939,7 @@ impl<T: Float + Debug + FromPrimitive + Zero> StreamingInterpolator<T>
 }
 
 /// Create a new ensemble streaming interpolator with default methods
+#[allow(dead_code)]
 pub fn make_ensemble_streaming_interpolator<T: Float + Debug + FromPrimitive + Zero + 'static>(
     config: Option<StreamingConfig>,
     weights: Option<Array1<f64>>,

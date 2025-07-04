@@ -98,6 +98,7 @@ impl Default for PeriodDetectionOptions {
 ///     println!("Period: {}, Strength: {}", period, strength);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn detect_periods<F>(
     ts: &Array1<F>,
     options: &PeriodDetectionOptions,
@@ -168,6 +169,7 @@ where
 }
 
 /// Detects seasonal periods using the autocorrelation function (ACF)
+#[allow(dead_code)]
 fn detect_periods_acf<F>(
     ts: &Array1<F>,
     options: &PeriodDetectionOptions,
@@ -235,6 +237,7 @@ where
 }
 
 /// Detects seasonal periods using spectral analysis (DFT-based periodogram)
+#[allow(dead_code)]
 fn detect_periods_fft<F>(
     ts: &Array1<F>,
     options: &PeriodDetectionOptions,
@@ -332,6 +335,7 @@ where
 }
 
 /// Detects seasonal periods using a combination of ACF and FFT
+#[allow(dead_code)]
 fn detect_periods_combined<F>(
     ts: &Array1<F>,
     options: &PeriodDetectionOptions,
@@ -375,6 +379,7 @@ where
 }
 
 /// Filters out harmonic periods from a list of candidate periods
+#[allow(dead_code)]
 fn filter_harmonics<F>(periods: Vec<(usize, F)>, _threshold_factor: f64) -> Vec<(usize, F)>
 where
     F: Float + FromPrimitive + Debug,
@@ -506,6 +511,7 @@ pub enum AutoDecomposition<F> {
 }
 
 /// Detects seasonal periods and performs decomposition in one step
+#[allow(dead_code)]
 pub fn detect_and_decompose<F>(
     ts: &Array1<F>,
     detection_options: &PeriodDetectionOptions,

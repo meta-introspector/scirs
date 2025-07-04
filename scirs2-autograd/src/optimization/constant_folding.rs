@@ -166,18 +166,21 @@ impl ConstantPattern {
 /// Utility functions for constant folding
 
 /// Check if a tensor represents a literal constant
+#[allow(dead_code)]
 pub fn is_literal_constant<F: Float>(_tensor_internal: &TensorInternal<F>) -> bool {
     // Check if this is a constant tensor created from a literal value
     false
 }
 
 /// Extract constant value from a tensor if possible
+#[allow(dead_code)]
 pub fn extract_constant_value<F: Float>(_tensor_internal: &TensorInternal<F>) -> Option<ConstantValue<F>> {
     // Try to extract a constant value from various tensor types
     None
 }
 
 /// Create a constant tensor with the given value
+#[allow(dead_code)]
 pub fn create_constant_tensor<F: Float>(
     _graph: &mut Graph<F>,
     _value: ConstantValue<F>,

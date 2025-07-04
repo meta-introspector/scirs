@@ -11,6 +11,7 @@ use scirs2_linalg::quantization::calibration::{
 };
 use scirs2_linalg::quantization::{dequantize_matrix, quantize_matrix};
 
+#[allow(dead_code)]
 fn main() {
     println!("Quantization Calibration Example");
     println!("================================\n");
@@ -42,6 +43,7 @@ fn main() {
 }
 
 /// Create a matrix with uniform distribution
+#[allow(dead_code)]
 fn create_uniform_data() -> Array2<f32> {
     let mut rng = rng();
     let uniform = Uniform::new(-1.0, 1.0).unwrap();
@@ -57,6 +59,7 @@ fn create_uniform_data() -> Array2<f32> {
 }
 
 /// Create a matrix with normal distribution
+#[allow(dead_code)]
 fn create_normal_data() -> Array2<f32> {
     let mut rng = rng();
     let normal = Normal::new(0.0, 1.0).unwrap();
@@ -72,6 +75,7 @@ fn create_normal_data() -> Array2<f32> {
 }
 
 /// Create a matrix with bimodal distribution
+#[allow(dead_code)]
 fn create_bimodal_data() -> Array2<f32> {
     let mut rng = rng();
     let normal1 = Normal::new(-2.0, 0.5).unwrap();
@@ -93,6 +97,7 @@ fn create_bimodal_data() -> Array2<f32> {
 }
 
 /// Create a matrix with mixed scales in different columns
+#[allow(dead_code)]
 fn create_mixed_scale_data() -> Array2<f32> {
     let mut rng = rng();
 
@@ -117,6 +122,7 @@ fn create_mixed_scale_data() -> Array2<f32> {
 }
 
 /// Compare different calibration methods on the same data
+#[allow(dead_code)]
 fn compare_calibration_methods(data: &Array2<f32>, bits: u8) {
     let methods = [
         CalibrationMethod::MinMax,
@@ -172,6 +178,7 @@ fn compare_calibration_methods(data: &Array2<f32>, bits: u8) {
 }
 
 /// Compare per-channel vs standard quantization
+#[allow(dead_code)]
 fn compare_per_channel_quantization(data: &Array2<f32>, bits: u8) {
     println!("Standard Symmetric Quantization:");
     let config_std = CalibrationConfig {
@@ -238,6 +245,7 @@ fn compare_per_channel_quantization(data: &Array2<f32>, bits: u8) {
 }
 
 /// Compare different bit-widths using entropy calibration
+#[allow(dead_code)]
 fn compare_bit_widths(data: &Array2<f32>) {
     let bits = [4, 8, 16];
 

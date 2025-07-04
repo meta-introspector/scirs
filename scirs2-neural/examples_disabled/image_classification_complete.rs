@@ -112,6 +112,7 @@ impl Dataset<f32> for SyntheticImageDataset {
     fn box_clone(&self) -> Box<dyn Dataset<f32> + Send + Sync> {
         Box::new(self.clone())
 /// Build a CNN model for image classification
+#[allow(dead_code)]
 fn build_cnn_model(
     input_channels: usize,
     rng: &mut SmallRng,
@@ -132,6 +133,7 @@ fn build_cnn_model(
     model.add(Dense::new(128, num_classes, Some("softmax"), rng)?);
     Ok(model)
 /// Create training configuration with modern techniques
+#[allow(dead_code)]
 fn create_training_config() -> TrainingConfig {
     TrainingConfig {
         batch_size: 32,
@@ -149,6 +151,7 @@ fn create_training_config() -> TrainingConfig {
         mixed_precision: None,
         num_workers: 0,
 /// Calculate accuracy from predictions and targets
+#[allow(dead_code)]
 fn calculate_accuracy(predictions: &ArrayD<f32>, targets: &ArrayD<f32>) -> f32 {
     let batch_size = predictions.shape()[0];
     let mut correct = 0;
@@ -167,6 +170,7 @@ fn calculate_accuracy(predictions: &ArrayD<f32>, targets: &ArrayD<f32>) -> f32 {
             correct += 1;
     correct as f32 / batch_size as f32
 /// Main training function
+#[allow(dead_code)]
 fn train_image_classifier() -> Result<()> {
     println!("🚀 Starting Image Classification Training Example");
     println!("{}", "=".repeat(60));
@@ -279,6 +283,7 @@ fn train_image_classifier() -> Result<()> {
     println!("\n🎉 Image classification example completed successfully!");
     Ok(())
 /// Demonstrate data augmentation techniques
+#[allow(dead_code)]
 fn demonstrate_augmentation() -> Result<()> {
     println!("\n🔄 Data Augmentation Demo:");
     println!("{}", "-".repeat(30));
@@ -297,6 +302,7 @@ fn demonstrate_augmentation() -> Result<()> {
     println!("   - Augmentation functionality available (API being finalized)");
     println!("   ✅ Augmentation framework initialized successfully");
 /// Demonstrate model saving and loading
+#[allow(dead_code)]
 fn demonstrate_model_persistence() -> Result<()> {
     println!("\n💾 Model Persistence Demo:");
     let mut rng = SmallRng::seed_from_u64(123);
@@ -307,6 +313,7 @@ fn demonstrate_model_persistence() -> Result<()> {
         model.params().iter().map(|p| p.len()).sum::<usize>()
     println!("   ✅ Model persistence simulation completed");
 /// Main function
+#[allow(dead_code)]
 fn main() -> Result<()> {
     // Main training example
     train_image_classifier()?;

@@ -34,6 +34,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps}
 /// let mean = mean_simd(&data.view()).unwrap();
 /// assert!((mean - 3.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn mean_simd<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -71,6 +72,7 @@ where
 /// # Returns
 ///
 /// * The variance of the input data
+#[allow(dead_code)]
 pub fn variance_simd<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -124,6 +126,7 @@ where
 /// # Returns
 ///
 /// * The standard deviation of the input data
+#[allow(dead_code)]
 pub fn std_simd<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -144,6 +147,7 @@ where
 /// # Returns
 ///
 /// * A tuple containing (mean, variance, min, max)
+#[allow(dead_code)]
 pub fn descriptive_stats_simd<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F, F)>
 where
     F: Float + NumCast + SimdUnifiedOps,

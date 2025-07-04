@@ -11,6 +11,7 @@ use crate::{
 use approx::assert_relative_eq;
 
 /// Test exponentially scaled Bessel functions against their unscaled counterparts
+#[allow(dead_code)]
 pub fn test_exponentially_scaled_bessel_consistency() -> Result<(), String> {
     println!("Testing exponentially scaled Bessel function consistency...");
 
@@ -53,6 +54,7 @@ pub fn test_exponentially_scaled_bessel_consistency() -> Result<(), String> {
 }
 
 /// Test Dawson's integral properties
+#[allow(dead_code)]
 pub fn test_dawson_integral_properties() -> Result<(), String> {
     println!("Testing Dawson's integral mathematical properties...");
 
@@ -97,6 +99,7 @@ pub fn test_dawson_integral_properties() -> Result<(), String> {
 }
 
 /// Test polygamma function properties
+#[allow(dead_code)]
 pub fn test_polygamma_properties() -> Result<(), String> {
     println!("Testing polygamma function mathematical properties...");
 
@@ -145,6 +148,7 @@ pub fn test_polygamma_properties() -> Result<(), String> {
 }
 
 /// Test numerical stability for extreme values
+#[allow(dead_code)]
 pub fn test_numerical_stability() -> Result<(), String> {
     println!("Testing numerical stability for extreme values...");
 
@@ -190,6 +194,7 @@ pub fn test_numerical_stability() -> Result<(), String> {
 }
 
 /// Test against reference implementations where available
+#[allow(dead_code)]
 pub fn test_reference_values() -> Result<(), String> {
     println!("Testing against known reference values...");
 
@@ -221,6 +226,7 @@ pub fn test_reference_values() -> Result<(), String> {
 }
 
 /// Run all extended validation tests
+#[allow(dead_code)]
 pub fn run_extended_validation_tests() -> Result<(), String> {
     println!("=== Running Extended Validation Tests ===\n");
 

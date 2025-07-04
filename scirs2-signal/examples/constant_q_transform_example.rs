@@ -7,6 +7,7 @@ use scirs2_signal::cqt::{
     chromagram, constant_q_transform, cqt_magnitude, inverse_constant_q_transform, CqtConfig,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Constant-Q Transform Examples");
     println!("----------------------------");
@@ -44,6 +45,7 @@ fn main() {
 
 /// Generate various test signals for the examples
 #[allow(clippy::type_complexity)]
+#[allow(dead_code)]
 fn generate_test_signals() -> (
     Array1<f64>,
     Array1<f64>,
@@ -116,6 +118,7 @@ fn generate_test_signals() -> (
 }
 
 /// Analyze a single tone with the Constant-Q Transform
+#[allow(dead_code)]
 fn analyze_single_tone(signal: &Array1<f64>) {
     // Configure CQT for single tone analysis
     let config = CqtConfig {
@@ -156,6 +159,7 @@ fn analyze_single_tone(signal: &Array1<f64>) {
 }
 
 /// Analyze a musical chord with the Constant-Q Transform
+#[allow(dead_code)]
 fn analyze_chord(signal: &Array1<f64>) {
     // Configure CQT
     let config = CqtConfig {
@@ -215,6 +219,7 @@ fn analyze_chord(signal: &Array1<f64>) {
 }
 
 /// Analyze a chirp signal to demonstrate time-frequency analysis
+#[allow(dead_code)]
 fn analyze_chirp(signal: &Array1<f64>) {
     // Configure CQT for spectrogram
     let config = CqtConfig {
@@ -269,6 +274,7 @@ fn analyze_chirp(signal: &Array1<f64>) {
 }
 
 /// Compare CQT's logarithmic frequency resolution with linear resolution
+#[allow(dead_code)]
 fn compare_frequency_resolution(signal: &Array1<f64>) {
     // CQT with high resolution
     let cqt_config = CqtConfig {
@@ -356,6 +362,7 @@ fn compare_frequency_resolution(signal: &Array1<f64>) {
 }
 
 /// Test signal reconstruction from CQT coefficients
+#[allow(dead_code)]
 fn test_reconstruction(signal: &Array1<f64>) {
     // Configure CQT
     let config = CqtConfig {
@@ -398,6 +405,7 @@ fn test_reconstruction(signal: &Array1<f64>) {
 }
 
 /// Analyze a chord progression using a chromagram
+#[allow(dead_code)]
 fn analyze_chord_progression(signal: &Array1<f64>) {
     // Configure CQT for chromagram
     let config = CqtConfig {

@@ -1384,6 +1384,7 @@ where
 /// # Returns
 ///
 /// An enhanced RBF interpolator with automatically selected parameters
+#[allow(dead_code)]
 pub fn make_auto_rbf<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1454,6 +1455,7 @@ where
 /// # Returns
 ///
 /// An enhanced RBF interpolator optimized for accuracy
+#[allow(dead_code)]
 pub fn make_accurate_rbf<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1495,6 +1497,7 @@ where
 /// # Returns
 ///
 /// An enhanced RBF interpolator optimized for efficiency
+#[allow(dead_code)]
 pub fn make_fast_rbf<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -1535,6 +1538,7 @@ where
 /// # Returns
 ///
 /// An enhanced RBF interpolator with equivalent functionality
+#[allow(dead_code)]
 pub fn enhance_rbf<F>(rbf: &RBFInterpolator<F>) -> InterpolateResult<EnhancedRBFInterpolator<F>>
 where
     F: Float

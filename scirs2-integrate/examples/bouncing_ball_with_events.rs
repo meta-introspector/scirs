@@ -20,6 +20,7 @@ use scirs2_integrate::ode::{
 use std::fs::File;
 use std::io::Write;
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     // Physical parameters
     let g = 9.81; // acceleration due to gravity, m/s^2
@@ -173,6 +174,7 @@ fn main() -> IntegrateResult<()> {
 }
 
 /// Print a summary of the trajectory
+#[allow(dead_code)]
 fn print_trajectory_summary(result: &ODEResultWithEvents<f64>) {
     println!("  Integration results:");
     println!("    Number of time steps: {}", result.base_result.t.len());
@@ -197,6 +199,7 @@ fn print_trajectory_summary(result: &ODEResultWithEvents<f64>) {
 }
 
 /// Save the results to a CSV file for plotting
+#[allow(dead_code)]
 fn save_results_to_csv(
     times: &[f64],
     heights: &[f64],

@@ -325,6 +325,7 @@ impl OptimizerKernel {
     }
 
     /// Launch Adam optimizer kernel
+    #[allow(clippy::too_many_arguments)]
     pub fn launch_adam_kernel<T: Float>(
         &self,
         params: *mut T,
@@ -386,6 +387,7 @@ impl OptimizerKernel {
     }
 
     /// Launch LAMB optimizer kernel
+    #[allow(clippy::too_many_arguments)]
     pub fn launch_lamb_kernel<T: Float>(
         &self,
         params: *mut T,
@@ -438,6 +440,7 @@ impl OptimizerKernel {
     }
 
     /// Launch AdamW optimizer kernel with improved weight decay
+    #[allow(clippy::too_many_arguments)]
     pub fn launch_adamw_kernel<T: Float>(
         &self,
         params: *mut T,
@@ -1377,6 +1380,7 @@ impl OptimizerKernel {
     }
 
     /// Launch fused tensor core matrix operations for large gradient updates  
+    #[allow(clippy::too_many_arguments)]
     pub fn launch_fused_tensor_core_update<T: Float>(
         &self,
         weight_matrices: &[*mut T],
@@ -1459,6 +1463,7 @@ impl OptimizerKernel {
     }
 
     /// Adaptive tensor core kernel selection based on problem size and hardware
+    #[allow(clippy::too_many_arguments)]
     pub fn launch_adaptive_optimizer_kernel<T: Float>(
         &self,
         params: *mut T,

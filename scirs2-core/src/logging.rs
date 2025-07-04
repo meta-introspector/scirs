@@ -136,18 +136,21 @@ impl Default for LoggerConfig {
 static LOGGER_CONFIG: Lazy<Mutex<LoggerConfig>> = Lazy::new(|| Mutex::new(LoggerConfig::default()));
 
 /// Configure the global logger
+#[allow(dead_code)]
 pub fn configure_logger(config: LoggerConfig) {
     let mut global_config = LOGGER_CONFIG.lock().unwrap();
     *global_config = config;
 }
 
 /// Set the global minimum log level
+#[allow(dead_code)]
 pub fn set_min_log_level(level: LogLevel) {
     let mut config = LOGGER_CONFIG.lock().unwrap();
     config.min_level = level;
 }
 
 /// Set a module-specific log level
+#[allow(dead_code)]
 pub fn set_module_log_level(module: &str, level: LogLevel) {
     let mut config = LOGGER_CONFIG.lock().unwrap();
     config.module_levels.insert(module.to_string(), level);
@@ -202,8 +205,8 @@ impl LogHandler for ConsoleLogHandler {
 
         // Print to the appropriate output stream based on level
         match entry.level {
-            LogLevel::Error | LogLevel::Critical => eprintln!("{}", output),
-            _ => println!("{}", output),
+            LogLevel::Error | LogLevel::Critical => eprintln!("{output}"),
+            _ => println!("{output}"),
         }
     }
 }
@@ -254,7 +257,7 @@ impl LogHandler for FileLogHandler {
             .open(&self.file_path)
         {
             use std::io::Write;
-            let _ = writeln!(file, "{}", output);
+            let _ = writeln!(file, "{output}");
         }
     }
 }
@@ -266,18 +269,21 @@ static LOG_HANDLERS: Lazy<Mutex<Vec<Arc<dyn LogHandler>>>> = Lazy::new(|| {
 });
 
 /// Register a log handler
+#[allow(dead_code)]
 pub fn register_log_handler(handler: Arc<dyn LogHandler>) {
     let mut handlers = LOG_HANDLERS.lock().unwrap();
     handlers.push(handler);
 }
 
 /// Clear all log handlers
+#[allow(dead_code)]
 pub fn clear_log_handlers() {
     let mut handlers = LOG_HANDLERS.lock().unwrap();
     handlers.clear();
 }
 
 /// Reset log handlers to the default configuration
+#[allow(dead_code)]
 pub fn reset_log_handlers() {
     let mut handlers = LOG_HANDLERS.lock().unwrap();
     handlers.clear();
@@ -548,6 +554,7 @@ impl ProgressTracker {
 }
 
 /// Initialize the default logging system
+#[allow(dead_code)]
 pub fn init() {
     // Register the default console handler if not already done
     let handlers = LOG_HANDLERS.lock().unwrap();

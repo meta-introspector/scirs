@@ -1,6 +1,7 @@
 use ndarray::{array, Array1, Array2};
 use scirs2_stats::distributions::multivariate::multivariate_lognormal::MultivariateLognormal;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Multivariate Lognormal Distribution Example");
     println!("------------------------------------------");
@@ -119,6 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper function to calculate mean of samples
+#[allow(dead_code)]
 fn calculate_mean(samples: &Array2<f64>, n_samples: usize) -> Array1<f64> {
     let mut mean = Array1::zeros(samples.shape()[1]);
 
@@ -132,6 +134,7 @@ fn calculate_mean(samples: &Array2<f64>, n_samples: usize) -> Array1<f64> {
 }
 
 // Helper function to calculate median of samples
+#[allow(dead_code)]
 fn calculate_median(samples: &Array2<f64>, n_samples: usize) -> Array1<f64> {
     let dim = samples.shape()[1];
     let mut median = Array1::zeros(dim);
@@ -153,6 +156,7 @@ fn calculate_median(samples: &Array2<f64>, n_samples: usize) -> Array1<f64> {
 }
 
 // Helper function to calculate covariance matrix of samples
+#[allow(dead_code)]
 fn calculate_covariance(
     samples: &Array2<f64>,
     mean: &Array1<f64>,

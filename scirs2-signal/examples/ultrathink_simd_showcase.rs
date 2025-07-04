@@ -13,6 +13,7 @@ use scirs2_signal::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Enhanced SIMD Operations Showcase");
     println!("================================================");
@@ -359,6 +360,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Create comprehensive test signals for SIMD validation
+#[allow(dead_code)]
 fn create_test_signals() -> TestSignals {
     let mut test_signals = TestSignals {
         real_signals: Vec::new(),
@@ -409,6 +411,7 @@ fn create_test_signals() -> TestSignals {
 }
 
 /// Create a test signal with multiple frequency components
+#[allow(dead_code)]
 fn create_test_signal_real(n: usize, frequencies: &[f64], sample_rate: f64) -> Array1<f64> {
     let mut signal = Array1::<f64>::zeros(n);
     let dt = 1.0 / sample_rate;
@@ -432,6 +435,7 @@ fn create_test_signal_real(n: usize, frequencies: &[f64], sample_rate: f64) -> A
 }
 
 /// Convert real signal to complex for FFT testing
+#[allow(dead_code)]
 fn convert_real_to_complex(real_signal: &Array1<f64>) -> Array1<Complex64> {
     real_signal.mapv(|x| Complex64::new(x, 0.0))
 }
@@ -443,6 +447,7 @@ struct TestSignals {
 }
 
 /// Convert real array to complex
+#[allow(dead_code)]
 fn real_to_complex(real: &Array1<f64>) -> Array1<Complex64> {
     real.mapv(|x| Complex64::new(x, 0.0))
 }

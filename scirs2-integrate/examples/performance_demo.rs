@@ -10,6 +10,7 @@ use scirs2_integrate::quad::{quad, QuadOptions};
 use std::time::Instant;
 
 /// Simple timing utility
+#[allow(dead_code)]
 fn time_function<F, R>(f: F, name: &str) -> (f64, R)
 where
     F: FnOnce() -> R,
@@ -48,32 +49,39 @@ where
 }
 
 // Test problems
+#[allow(dead_code)]
 fn exponential_decay(_t: f64, y: ndarray::ArrayView1<f64>) -> Array1<f64> {
     Array1::from_vec(vec![-y[0]])
 }
 
+#[allow(dead_code)]
 fn harmonic_oscillator(_t: f64, y: ndarray::ArrayView1<f64>) -> Array1<f64> {
     Array1::from_vec(vec![y[1], -y[0]])
 }
 
+#[allow(dead_code)]
 fn van_der_pol_stiff(_t: f64, y: ndarray::ArrayView1<f64>) -> Array1<f64> {
     let mu = 100.0; // Stiff parameter
     Array1::from_vec(vec![y[1], mu * (1.0 - y[0] * y[0]) * y[1] - y[0]])
 }
 
+#[allow(dead_code)]
 fn polynomial_cubic(x: f64) -> f64 {
     x * x * x
 }
 
+#[allow(dead_code)]
 fn oscillatory_integrand(x: f64) -> f64 {
     (10.0 * x).sin()
 }
 
+#[allow(dead_code)]
 fn gaussian_2d(x: ndarray::ArrayView1<f64>) -> f64 {
     let r2 = x[0] * x[0] + x[1] * x[1];
     (-r2).exp()
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("scirs2-integrate Performance Demonstration");
     println!("==========================================");

@@ -294,6 +294,7 @@ where
 }
 
 /// Solve a block diagonal linear system
+#[allow(dead_code)]
 pub fn solve_block_diagonal<A>(
     matrix: &BlockDiagonalMatrix<A>,
     b: &ArrayView1<A>,
@@ -305,6 +306,7 @@ where
 }
 
 /// Compute the determinant of a block diagonal matrix
+#[allow(dead_code)]
 pub fn block_diagonal_determinant<A>(matrix: &BlockDiagonalMatrix<A>) -> LinalgResult<A>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,
@@ -313,6 +315,7 @@ where
 }
 
 /// Create a block diagonal matrix from a list of arrays
+#[allow(dead_code)]
 pub fn create_block_diagonal<A>(blocks: Vec<Array2<A>>) -> LinalgResult<BlockDiagonalMatrix<A>>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug,

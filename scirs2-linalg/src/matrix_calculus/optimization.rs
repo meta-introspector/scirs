@@ -88,6 +88,7 @@ pub struct OptimizationResult<F: Float> {
 /// let result = matrix_gradient_descent(&f, &x0.view(), &config).unwrap();
 /// // Should converge to the target matrix
 /// ```
+#[allow(dead_code)]
 pub fn matrix_gradient_descent<F>(
     f: &impl Fn(&ArrayView2<F>) -> LinalgResult<F>,
     x0: &ArrayView2<F>,
@@ -200,6 +201,7 @@ where
 ///
 /// let result = matrix_newton_method(&f, &x0.view(), &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn matrix_newton_method<F>(
     f: &impl Fn(&ArrayView2<F>) -> LinalgResult<F>,
     x0: &ArrayView2<F>,
@@ -319,6 +321,7 @@ where
 ///
 /// let result = projected_gradient_descent(&f, project, &x0.view(), &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn projected_gradient_descent<F>(
     f: &impl Fn(&ArrayView2<F>) -> LinalgResult<F>,
     project: impl Fn(&ArrayView2<F>) -> LinalgResult<Array2<F>>,
@@ -426,6 +429,7 @@ where
 /// # Returns
 ///
 /// * Gradient matrix of same shape as input
+#[allow(dead_code)]
 fn matrix_finite_difference_gradient<F>(
     f: &impl Fn(&ArrayView2<F>) -> LinalgResult<F>,
     x: &ArrayView2<F>,

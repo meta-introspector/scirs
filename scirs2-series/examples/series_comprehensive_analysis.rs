@@ -24,6 +24,7 @@ use scirs2_series::{
     validation::{cross_validate, CrossValidationConfig, ValidationMetric},
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Comprehensive Time Series Analysis Demo ===\n");
 
@@ -68,6 +69,7 @@ fn main() {
     println!("\n=== Analysis Complete ===");
 }
 
+#[allow(dead_code)]
 fn generate_synthetic_data() -> Array1<f64> {
     let n = 200;
     let mut data = Array1::zeros(n);
@@ -94,6 +96,7 @@ fn generate_synthetic_data() -> Array1<f64> {
     data
 }
 
+#[allow(dead_code)]
 fn preprocess_data(data: &Array1<f64>) -> (Array1<f64>, BoxCoxTransformer<f64>) {
     // Apply Box-Cox transformation
     let mut transformer = BoxCoxTransformer::new();
@@ -110,6 +113,7 @@ fn preprocess_data(data: &Array1<f64>) -> (Array1<f64>, BoxCoxTransformer<f64>) 
     (transformed, transformer)
 }
 
+#[allow(dead_code)]
 fn decompose_series(data: &Array1<f64>) -> (Array1<f64>, Array1<f64>, Array1<f64>) {
     let options = StlOptions {
         seasonal_period: 12,
@@ -136,6 +140,7 @@ fn decompose_series(data: &Array1<f64>) -> (Array1<f64>, Array1<f64>, Array1<f64
     })
 }
 
+#[allow(dead_code)]
 fn analyze_decomposition(result: &(Array1<f64>, Array1<f64>, Array1<f64>)) {
     let (trend, seasonal, residual) = result;
 
@@ -159,6 +164,7 @@ fn analyze_decomposition(result: &(Array1<f64>, Array1<f64>, Array1<f64>)) {
     );
 }
 
+#[allow(dead_code)]
 fn calculate_variance(data: &Array1<f64>) -> f64 {
     if data.len() < 2 {
         return 0.0;
@@ -167,6 +173,7 @@ fn calculate_variance(data: &Array1<f64>) -> f64 {
     data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (data.len() - 1) as f64
 }
 
+#[allow(dead_code)]
 fn extract_and_analyze_features(data: &Array1<f64>) {
     let config = FeatureConfig::comprehensive();
     let mut extractor = FeatureExtractor::new(config);
@@ -187,6 +194,7 @@ fn extract_and_analyze_features(data: &Array1<f64>) {
     }
 }
 
+#[allow(dead_code)]
 fn detect_changes_and_anomalies(data: &Array1<f64>) {
     // Change point detection
     let mut pelt_detector = PeltDetector::new(2.0, 5);
@@ -212,6 +220,7 @@ fn detect_changes_and_anomalies(data: &Array1<f64>) {
     }
 }
 
+#[allow(dead_code)]
 fn compare_forecasting_methods(data: &Array1<f64>) {
     let forecast_horizon = 10;
     let train_size = data.len() - forecast_horizon;
@@ -297,6 +306,7 @@ fn compare_forecasting_methods(data: &Array1<f64>) {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_mse(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
     let min_len = actual.len().min(predicted.len());
     if min_len == 0 {
@@ -311,6 +321,7 @@ fn calculate_mse(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
     sum_sq_error / min_len as f64
 }
 
+#[allow(dead_code)]
 fn advanced_analysis(data: &Array1<f64>) {
     // Correlation analysis
     let mut corr_analyzer = CrossCorrelationAnalyzer::new();
@@ -363,6 +374,7 @@ fn advanced_analysis(data: &Array1<f64>) {
     }
 }
 
+#[allow(dead_code)]
 fn streaming_analysis_demo(data: &Array1<f64>) {
     let config = StreamConfig {
         window_size: 50,
@@ -409,6 +421,7 @@ fn streaming_analysis_demo(data: &Array1<f64>) {
     }
 }
 
+#[allow(dead_code)]
 fn validate_models(data: &Array1<f64>) {
     let cv_config = CrossValidationConfig {
         n_folds: 5,

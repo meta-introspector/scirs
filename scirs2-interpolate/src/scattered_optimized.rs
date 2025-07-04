@@ -727,6 +727,7 @@ where
 /// # Returns
 ///
 /// An optimized scattered data interpolator
+#[allow(dead_code)]
 pub fn make_optimized_scattered_interpolator<F>(
     points: Array2<F>,
     values: Array1<F>,

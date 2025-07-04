@@ -7,6 +7,7 @@ use scirs2_signal::{deconvolution, SignalError, SignalResult};
 use std::fs::File;
 use std::io::Write;
 
+#[allow(dead_code)]
 fn main() -> SignalResult<()> {
     println!("Running deconvolution examples...\n");
 
@@ -21,6 +22,7 @@ fn main() -> SignalResult<()> {
 }
 
 /// Basic deconvolution example showing different methods
+#[allow(dead_code)]
 fn basic_deconvolution() -> SignalResult<()> {
     println!("=== Basic Deconvolution ===");
 
@@ -139,6 +141,7 @@ fn basic_deconvolution() -> SignalResult<()> {
 }
 
 /// Compare deconvolution performance on synthetic signals
+#[allow(dead_code)]
 fn compare_synthetic_signals() -> SignalResult<()> {
     println!("=== Compare Synthetic Signals ===");
 
@@ -259,6 +262,7 @@ fn compare_synthetic_signals() -> SignalResult<()> {
 }
 
 /// Demonstrate deconvolution with different PSF types
+#[allow(dead_code)]
 fn demonstration_with_different_psfs() -> SignalResult<()> {
     println!("=== Different PSF Types ===");
 
@@ -378,6 +382,7 @@ fn demonstration_with_different_psfs() -> SignalResult<()> {
 }
 
 /// Demonstrate blind deconvolution (when PSF is unknown)
+#[allow(dead_code)]
 fn blind_deconvolution_example() -> SignalResult<()> {
     println!("=== Blind Deconvolution ===");
 
@@ -473,6 +478,7 @@ fn blind_deconvolution_example() -> SignalResult<()> {
 }
 
 /// Demonstrate optimal regularization parameter selection
+#[allow(dead_code)]
 fn regularization_parameter_selection() -> SignalResult<()> {
     println!("=== Regularization Parameter Selection ===");
 
@@ -607,6 +613,7 @@ fn regularization_parameter_selection() -> SignalResult<()> {
 }
 
 /// Calculate mean squared error between two signals
+#[allow(dead_code)]
 fn calculate_mse(estimate: &Array1<f64>, true_signal: &Array1<f64>) -> f64 {
     estimate
         .iter()
@@ -617,6 +624,7 @@ fn calculate_mse(estimate: &Array1<f64>, true_signal: &Array1<f64>) -> f64 {
 }
 
 /// Export signals to CSV file for external plotting
+#[allow(dead_code)]
 fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
     let mut file = File::create(file_name).map_err(|e| {
         scirs2_signal::error::SignalError::Compute(format!("Failed to create file: {}", e))

@@ -108,6 +108,7 @@ impl RiffChunk {
 /// println!("Channels: {}", header.channels);
 /// println!("Samples per channel: {}", header.samples_per_channel);
 /// ```
+#[allow(dead_code)]
 pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
     let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut reader = BufReader::new(file);
@@ -325,6 +326,7 @@ pub fn read_wav<P: AsRef<Path>>(path: P) -> Result<(WavHeader, ArrayD<f32>)> {
 ///
 /// write_wav(Path::new("sine_wave.wav"), sample_rate, &samples.into_dyn()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn write_wav<P: AsRef<Path>>(path: P, sample_rate: u32, data: &ArrayD<f32>) -> Result<()> {
     let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);

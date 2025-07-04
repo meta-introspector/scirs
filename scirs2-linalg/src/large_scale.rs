@@ -36,6 +36,7 @@ use std::fmt::{Debug, Display};
 /// let b = array![1.0, 2.0, 3.0];
 /// let x = randomized_least_squares(&a.view(), &b.view(), 2, 3).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn randomized_least_squares<A>(
     a: &ArrayView2<A>,
     b: &ArrayView1<A>,
@@ -134,6 +135,7 @@ where
 /// let a = array![[1.0, 2.0], [3.0, 4.0]];
 /// let norm = randomized_norm(&a.view(), "2", 10, 2).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn randomized_norm<A>(
     a: &ArrayView2<A>,
     norm_type: &str,
@@ -240,6 +242,7 @@ where
 ///
 /// # Returns
 /// * Updated SVD factors (U, S, Vt)
+#[allow(dead_code)]
 pub fn incremental_svd<A>(
     current_u: &ArrayView2<A>,
     current_s: &ArrayView1<A>,
@@ -350,6 +353,7 @@ where
 ///
 /// # Returns
 /// * Solution matrix X such that AX ≈ B
+#[allow(dead_code)]
 pub fn block_krylov_solve<A>(
     a: &ArrayView2<A>,
     b: &ArrayView2<A>,
@@ -425,6 +429,7 @@ where
 ///
 /// # Returns
 /// * Solution vector x such that Ax ≈ b
+#[allow(dead_code)]
 pub fn ca_gmres<A>(
     a: &ArrayView2<A>,
     b: &ArrayView1<A>,
@@ -470,6 +475,7 @@ where
 ///
 /// # Returns
 /// * Tuple (eigenvalues, eigenvectors)
+#[allow(dead_code)]
 pub fn randomized_block_lanczos<A>(
     a: &ArrayView2<A>,
     k: usize,

@@ -5,6 +5,7 @@
 
 use scirs2_interpolate::stress_testing::{extreme_data, stress_tests, StressTestConfig};
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Interpolation Stress Testing Demo ===\n");
 

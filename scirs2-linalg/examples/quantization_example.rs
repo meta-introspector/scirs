@@ -9,6 +9,7 @@ use scirs2_linalg::quantization::{
     quantized_dot, quantized_matmul, quantized_matvec, QuantizationMethod, QuantizedData2D,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Quantization-aware Linear Algebra Example");
     println!("=======================================\n");

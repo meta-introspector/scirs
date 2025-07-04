@@ -2167,6 +2167,7 @@ impl<F: Float + FromPrimitive> GpuKMeans<F> {
 }
 
 /// High-level GPU-accelerated DBSCAN implementation
+#[allow(dead_code)]
 pub fn gpu_dbscan<F: Float + FromPrimitive + Send + Sync>(
     data: ArrayView2<F>,
     eps: F,
@@ -2186,6 +2187,7 @@ pub fn gpu_dbscan<F: Float + FromPrimitive + Send + Sync>(
 }
 
 /// GPU DBSCAN implementation with spatial indexing
+#[allow(dead_code)]
 fn gpu_dbscan_impl<F: Float + FromPrimitive + Send + Sync>(
     data: ArrayView2<F>,
     eps: F,
@@ -2249,6 +2251,7 @@ fn gpu_dbscan_impl<F: Float + FromPrimitive + Send + Sync>(
 }
 
 /// GPU-accelerated neighbor finding with spatial indexing
+#[allow(dead_code)]
 fn gpu_find_neighbors<F: Float + FromPrimitive + Send + Sync>(
     gpu_data: &GpuArray<F>,
     eps: F,

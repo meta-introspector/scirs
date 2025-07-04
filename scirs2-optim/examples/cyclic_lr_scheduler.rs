@@ -6,6 +6,7 @@ use scirs2_optim::{
     schedulers::{CyclicLR, LearningRateScheduler},
 };
 
+#[allow(dead_code)]
 fn simulate_loss(x: &Array1<f64>) -> f64 {
     // Rosenbrock function
     let a = 1.0;
@@ -22,6 +23,7 @@ fn simulate_loss(x: &Array1<f64>) -> f64 {
     loss
 }
 
+#[allow(dead_code)]
 fn compute_gradient(x: &Array1<f64>) -> Array1<f64> {
     // Numerical gradient computation
     let mut grad = Array1::zeros(x.len());
@@ -40,6 +42,7 @@ fn compute_gradient(x: &Array1<f64>) -> Array1<f64> {
     grad
 }
 
+#[allow(dead_code)]
 fn main() {
     // Initialize parameters
     let params = Array1::from_vec(vec![-1.0, 1.5, 2.0, -2.5]);
@@ -86,6 +89,7 @@ fn main() {
     run_optimization(params.clone(), &mut optimizer, &mut custom_scheduler, 200);
 }
 
+#[allow(dead_code)]
 fn run_optimization<LR: LearningRateScheduler<f64>>(
     mut params: Array1<f64>,
     optimizer: &mut SGD<f64>,

@@ -1,6 +1,7 @@
 use ndarray::array;
 use scirs2_stats::gini_coefficient;
 
+#[allow(dead_code)]
 fn main() {
     // Example with income data - perfect equality
     let equal_data = array![100.0, 100.0, 100.0, 100.0, 100.0];

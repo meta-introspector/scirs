@@ -8,6 +8,7 @@ use ndarray::array;
 use scirs2_linalg::compat;
 use scirs2_linalg::error::LinalgResult;
 
+#[allow(dead_code)]
 fn main() -> LinalgResult<()> {
     println!("=== SciPy-compatible Linear Algebra API Showcase ===\n");
 

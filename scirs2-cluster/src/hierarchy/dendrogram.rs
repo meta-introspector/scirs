@@ -21,6 +21,7 @@ use crate::error::{ClusteringError, Result};
 /// # Returns
 ///
 /// * `Result<F>` - The cophenetic correlation coefficient
+#[allow(dead_code)]
 pub fn cophenet<F: Float + FromPrimitive>(z: &Array2<F>, d: &Array1<F>) -> Result<F> {
     let n_samples = z.shape()[0] + 1;
 
@@ -81,6 +82,7 @@ pub fn cophenet<F: Float + FromPrimitive>(z: &Array2<F>, d: &Array1<F>) -> Resul
 }
 
 /// Finds the height of the lowest common ancestor in the dendrogram
+#[allow(dead_code)]
 fn find_lca_height<F: Float>(i: usize, j: usize, z: &Array2<F>, cluster_height: &[F]) -> F {
     let n_samples = z.shape()[0] + 1;
 
@@ -130,6 +132,7 @@ fn find_lca_height<F: Float>(i: usize, j: usize, z: &Array2<F>, cluster_height: 
 /// # Returns
 ///
 /// * `Result<Array2<F>>` - The inconsistency matrix
+#[allow(dead_code)]
 pub fn inconsistent<F: Float + FromPrimitive + Debug>(
     z: &Array2<F>,
     d: Option<usize>,
@@ -186,6 +189,7 @@ pub fn inconsistent<F: Float + FromPrimitive + Debug>(
 }
 
 /// Gets the descendants of a node in the dendrogram within a specified depth
+#[allow(dead_code)]
 fn get_descendants<F: Float>(z: &Array2<F>, idx: usize, depth: usize) -> Result<Vec<usize>> {
     let n_samples = z.shape()[0] + 1;
     let mut result = Vec::new();
@@ -239,6 +243,7 @@ fn get_descendants<F: Float>(z: &Array2<F>, idx: usize, depth: usize) -> Result<
 /// # Returns
 ///
 /// * `Result<Array1<usize>>` - The optimal leaf ordering
+#[allow(dead_code)]
 pub fn optimal_leaf_ordering<F: Float + FromPrimitive + PartialOrd + Debug>(
     z: &Array2<F>,
     d: &Array1<F>,
@@ -256,6 +261,7 @@ pub fn optimal_leaf_ordering<F: Float + FromPrimitive + PartialOrd + Debug>(
 /// # Returns
 ///
 /// * `Result<Vec<(usize, usize, F, usize)>>` - The dendrogram data
+#[allow(dead_code)]
 pub fn dendrogram<F: Float + FromPrimitive + Clone>(
     z: &Array2<F>,
 ) -> Result<Vec<(usize, usize, F, usize)>> {

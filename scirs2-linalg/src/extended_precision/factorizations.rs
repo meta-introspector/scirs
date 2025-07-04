@@ -49,6 +49,7 @@ use crate::error::LinalgResult;
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn extended_lu<A, I>(a: &ArrayView2<A>) -> LinalgResult<(Array2<A>, Array2<A>, Array2<A>)>
 where
     A: Float + Zero + One + PromotableTo<I> + DemotableTo<A> + Copy,
@@ -225,6 +226,7 @@ where
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn extended_qr<A, I>(a: &ArrayView2<A>) -> LinalgResult<(Array2<A>, Array2<A>)>
 where
     A: Float + Zero + One + PromotableTo<I> + DemotableTo<A> + Copy,
@@ -380,6 +382,7 @@ where
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn extended_cholesky<A, I>(a: &ArrayView2<A>) -> LinalgResult<Array2<A>>
 where
     A: Float + Zero + One + PromotableTo<I> + DemotableTo<A> + Copy,
@@ -501,6 +504,7 @@ where
 /// assert!((s[1] - 0.5).abs() < 1e-5);
 /// assert!((s[2] - 0.2).abs() < 1e-5);
 /// ```
+#[allow(dead_code)]
 pub fn extended_svd<A, I>(
     a: &ArrayView2<A>,
     full_matrices: bool,
@@ -751,6 +755,7 @@ where
 }
 
 // Helper function for QR decomposition using Householder reflections
+#[allow(dead_code)]
 fn householder_qr_high_precision<I>(a: &ArrayView2<I>) -> (Array2<I>, Array2<I>)
 where
     I: Float

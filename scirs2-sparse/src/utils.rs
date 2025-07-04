@@ -24,6 +24,7 @@ use num_traits::Zero;
 /// // Create a 3x3 identity matrix
 /// let eye = identity(3).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn identity(n: usize) -> SparseResult<CsrMatrix<f64>> {
     if n == 0 {
         return Err(SparseError::ValueError(

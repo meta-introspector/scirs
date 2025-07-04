@@ -196,8 +196,7 @@ where
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot expand to 1D from dimensions: {:?}",
-                            expanded_dims
+                            "Cannot expand to 1D from dimensions: {expanded_dims:?}"
                         ))))
                     }
                 }

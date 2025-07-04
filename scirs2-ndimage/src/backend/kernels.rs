@@ -9,18 +9,11 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
+use crate::utils::safe_f64_to_float;
 
-/// Helper function for safe conversion of hardcoded constants
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
 
 /// Helper function for safe usize conversion
+#[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
@@ -28,6 +21,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 }
 
 /// Helper function for safe array to slice conversion
+#[allow(dead_code)]
 fn safe_as_slice<'a, T, D: Dimension>(array: &'a ArrayView<T, D>) -> NdimageResult<&'a [T]> {
     array.as_slice().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert array to contiguous slice".to_string())
@@ -836,6 +830,7 @@ where
 }
 
 /// GPU-accelerated Gaussian filter implementation
+#[allow(dead_code)]
 pub fn gpu_gaussian_filter_2d<T>(
     input: &ArrayView2<T>,
     sigma: [T; 2],
@@ -882,6 +877,7 @@ where
 }
 
 /// GPU-accelerated convolution implementation
+#[allow(dead_code)]
 pub fn gpu_convolve_2d<T>(
     input: &ArrayView2<T>,
     kernel: &ArrayView2<T>,
@@ -929,6 +925,7 @@ where
 }
 
 /// GPU-accelerated median filter implementation
+#[allow(dead_code)]
 pub fn gpu_median_filter_2d<T>(
     input: &ArrayView2<T>,
     size: [usize; 2],
@@ -974,6 +971,7 @@ where
 }
 
 /// GPU-accelerated morphological erosion
+#[allow(dead_code)]
 pub fn gpu_erosion_2d<T>(
     input: &ArrayView2<T>,
     structure: &ArrayView2<bool>,
@@ -1027,6 +1025,7 @@ where
 }
 
 /// GPU-accelerated separable Gaussian filter implementation
+#[allow(dead_code)]
 pub fn gpu_separable_gaussian_filter_2d<T>(
     input: &ArrayView2<T>,
     sigma: [T; 2],
@@ -1126,6 +1125,7 @@ where
 }
 
 /// GPU-accelerated bilateral filter implementation
+#[allow(dead_code)]
 pub fn gpu_bilateral_filter_2d<T>(
     input: &ArrayView2<T>,
     sigma_spatial: T,
@@ -1174,6 +1174,7 @@ where
 }
 
 /// GPU-accelerated Sobel filter implementation
+#[allow(dead_code)]
 pub fn gpu_sobel_filter_2d<T>(
     input: &ArrayView2<T>,
     executor: &dyn GpuKernelExecutor<T>,
@@ -1232,6 +1233,7 @@ where
 }
 
 /// GPU-accelerated Laplacian filter implementation
+#[allow(dead_code)]
 pub fn gpu_laplacian_filter_2d<T>(
     input: &ArrayView2<T>,
     connectivity: usize,
@@ -1277,6 +1279,7 @@ where
 
 // GPU buffer allocation functions that delegate to backend-specific implementations
 
+#[allow(dead_code)]
 fn allocate_gpu_buffer<T>(data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
     T: 'static,
@@ -1293,6 +1296,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn allocate_gpu_buffer_empty<T>(size: usize) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
     T: 'static,

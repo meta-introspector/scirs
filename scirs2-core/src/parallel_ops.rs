@@ -190,24 +190,28 @@ mod sequential_fallbacks {
 pub use sequential_fallbacks::*;
 
 /// Helper function to create a parallel iterator from a range
+#[allow(dead_code)]
 pub fn par_range(start: usize, end: usize) -> impl ParallelIterator<Item = usize> {
     (start..end).into_par_iter()
 }
 
 /// Helper function for parallel chunks processing
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn par_chunks<T: Sync>(slice: &[T], chunk_size: usize) -> rayon::slice::Chunks<'_, T> {
     slice.par_chunks(chunk_size)
 }
 
 /// Sequential fallback for par_chunks
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 pub fn par_chunks<T>(slice: &[T], chunk_size: usize) -> std::slice::Chunks<'_, T> {
     slice.chunks(chunk_size)
 }
 
 /// Helper function for parallel mutable chunks processing
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn par_chunks_mut<T: Send>(
     slice: &mut [T],
     chunk_size: usize,
@@ -217,12 +221,14 @@ pub fn par_chunks_mut<T: Send>(
 
 /// Sequential fallback for par_chunks_mut
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 pub fn par_chunks_mut<T>(slice: &mut [T], chunk_size: usize) -> std::slice::ChunksMut<'_, T> {
     slice.chunks_mut(chunk_size)
 }
 
 /// Simple parallel map function that returns Result type
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn parallel_map<T, U, F>(items: &[T], f: F) -> Vec<U>
 where
     T: Sync,
@@ -235,6 +241,7 @@ where
 
 /// Sequential fallback for parallel_map
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 pub fn parallel_map<T, U, F>(items: &[T], f: F) -> Vec<U>
 where
     F: Fn(&T) -> U,
@@ -244,6 +251,7 @@ where
 
 /// Parallel map function that handles Results
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn parallel_map_result<T, U, E, F>(items: &[T], f: F) -> Result<Vec<U>, E>
 where
     T: Sync,
@@ -257,6 +265,7 @@ where
 
 /// Sequential fallback for parallel_map_result
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 pub fn parallel_map_result<T, U, E, F>(items: &[T], f: F) -> Result<Vec<U>, E>
 where
     F: Fn(&T) -> Result<U, E>,
@@ -265,29 +274,34 @@ where
 }
 
 /// Check if parallel processing is available
+#[allow(dead_code)]
 pub fn is_parallel_enabled() -> bool {
     cfg!(feature = "parallel")
 }
 
 /// Get the number of threads that would be used for parallel operations
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn num_threads() -> usize {
     rayon::current_num_threads()
 }
 
 /// Sequential fallback returns 1
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 pub fn num_threads() -> usize {
     1
 }
 
 /// Alias for num_threads() for compatibility
+#[allow(dead_code)]
 pub fn get_num_threads() -> usize {
     num_threads()
 }
 
 /// Set the number of threads for parallel operations
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn set_num_threads(num_threads: usize) {
     rayon::ThreadPoolBuilder::new()
         .num_threads(num_threads)
@@ -297,6 +311,7 @@ pub fn set_num_threads(num_threads: usize) {
 
 /// Sequential fallback does nothing
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 pub fn set_num_threads(_num_threads: usize) {
     // No-op for sequential fallback
 }

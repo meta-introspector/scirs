@@ -13,6 +13,7 @@ use super::communication::DistributedCommunicator;
 use super::coordination::DistributedCoordinator;
 
 /// Solve distributed linear system Ax = b
+#[allow(dead_code)]
 pub fn solve_linear_system<T>(
     a: &DistributedMatrix<T>,
     b: &DistributedVector<T>,
@@ -40,6 +41,7 @@ where
 }
 
 /// Distributed Conjugate Gradient solver for symmetric positive definite systems
+#[allow(dead_code)]
 pub fn distributed_conjugate_gradient<T>(
     a: &DistributedMatrix<T>,
     b: &DistributedVector<T>,
@@ -111,6 +113,7 @@ where
 }
 
 /// Distributed GMRES solver for general linear systems
+#[allow(dead_code)]
 pub fn distributed_gmres<T>(
     a: &DistributedMatrix<T>,
     b: &DistributedVector<T>,
@@ -249,6 +252,7 @@ where
 }
 
 /// Distributed BiCGSTAB solver for general linear systems
+#[allow(dead_code)]
 pub fn distributed_bicgstab<T>(
     a: &DistributedMatrix<T>,
     b: &DistributedVector<T>,
@@ -351,6 +355,7 @@ where
 }
 
 /// Distributed matrix-vector multiplication
+#[allow(dead_code)]
 fn distributed_matvec<T>(
     a: &DistributedMatrix<T>,
     x: &DistributedVector<T>,
@@ -371,6 +376,7 @@ where
 }
 
 /// Scale a distributed vector by a scalar
+#[allow(dead_code)]
 fn scale_vector<T>(
     vector: &DistributedVector<T>,
     scalar: T,
@@ -383,6 +389,7 @@ where
 }
 
 /// Distributed preconditioned conjugate gradient
+#[allow(dead_code)]
 pub fn distributed_pcg<T>(
     a: &DistributedMatrix<T>,
     b: &DistributedVector<T>,

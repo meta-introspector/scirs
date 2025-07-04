@@ -3,6 +3,7 @@
 
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("GPU Kernel Optimization Example");
     println!("===============================\n");

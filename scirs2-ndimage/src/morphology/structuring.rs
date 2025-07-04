@@ -36,6 +36,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// assert!(!structure[[2, 0]]);  // Bottom-left
 /// assert!(!structure[[2, 2]]);  // Bottom-right
 /// ```
+#[allow(dead_code)]
 pub fn generate_binary_structure(
     rank: usize,
     connectivity: Connectivity,
@@ -82,6 +83,7 @@ pub fn generate_binary_structure(
 }
 
 /// Recursively add connected indices to the structure
+#[allow(dead_code)]
 fn add_connected_indices(
     structure: &mut Array<bool, IxDyn>,
     indices: &mut Vec<usize>,
@@ -151,6 +153,7 @@ fn add_connected_indices(
 /// # Returns
 ///
 /// * `Result<Array<bool, D>>` - Iterated structuring element
+#[allow(dead_code)]
 pub fn iterate_structure<D>(
     structure: &Array<bool, D>,
     iterations: usize,
@@ -183,6 +186,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<bool, IxDyn>>` - Box structuring element
+#[allow(dead_code)]
 pub fn box_structure(shape: &[usize]) -> NdimageResult<Array<bool, IxDyn>> {
     // Validate inputs
     if shape.is_empty() {
@@ -212,6 +216,7 @@ pub fn box_structure(shape: &[usize]) -> NdimageResult<Array<bool, IxDyn>> {
 /// # Returns
 ///
 /// * `Result<Array<bool, IxDyn>>` - Disk structuring element
+#[allow(dead_code)]
 pub fn disk_structure(radius: f64, dimension: Option<usize>) -> NdimageResult<Array<bool, IxDyn>> {
     // Validate inputs
     if radius <= 0.0 {

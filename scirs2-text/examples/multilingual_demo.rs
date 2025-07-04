@@ -2,6 +2,7 @@
 
 use scirs2_text::{Language, LanguageDetector, MultilingualProcessor, StopWords};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Multilingual Text Processing Demo");
     println!("================================\n");

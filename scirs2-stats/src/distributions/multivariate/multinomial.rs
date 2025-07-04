@@ -11,6 +11,7 @@ use scirs2_core::validation::{check_probabilities, check_probabilities_sum_to_on
 use std::fmt::Debug;
 
 /// Implementation of the factorial function
+#[allow(dead_code)]
 fn factorial(n: u64) -> f64 {
     if n <= 1 {
         return 1.0;
@@ -26,6 +27,7 @@ fn factorial(n: u64) -> f64 {
 /// Compute the multinomial coefficient
 ///
 /// (n choose n₁, n₂, ..., nₖ) = n! / (n₁! * n₂! * ... * nₖ!)
+#[allow(dead_code)]
 fn multinomial_coef(n: u64, xs: &[u64]) -> f64 {
     let mut denominator = 1.0;
     for &x in xs {
@@ -407,6 +409,7 @@ impl Multinomial {
 /// let p = array![0.2, 0.3, 0.5]; // Probabilities for each outcome
 /// let multinomial = multivariate::multinomial(n, p).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn multinomial<D>(n: u64, p: ArrayBase<D, Ix1>) -> StatsResult<Multinomial>
 where
     D: Data<Elem = f64>,

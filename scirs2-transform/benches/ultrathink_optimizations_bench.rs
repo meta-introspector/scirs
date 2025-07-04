@@ -5,16 +5,18 @@
 //!
 //! Run with: cargo bench --bench ultrathink_optimizations_bench
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array2, ArrayView2};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use ndarray::Array2;
+use ndarray_rand::rand::distributions::Uniform;
 use ndarray_rand::RandomExt;
-use rand::distributions::Uniform;
 use scirs2_transform::*;
+use std::hint::black_box;
 
 const SAMPLE_SIZES: &[usize] = &[100, 1000, 10_000];
 const FEATURE_SIZES: &[usize] = &[10, 50, 100];
 
 /// Benchmark adaptive SIMD normalization vs standard normalization
+#[allow(dead_code)]
 fn bench_adaptive_simd_normalization(c: &mut Criterion) {
     let mut group = c.benchmark_group("Adaptive SIMD Normalization");
 
@@ -76,6 +78,7 @@ fn bench_adaptive_simd_normalization(c: &mut Criterion) {
 }
 
 /// Benchmark enhanced standard scaler with different processing strategies
+#[allow(dead_code)]
 fn bench_enhanced_standard_scaler(c: &mut Criterion) {
     let mut group = c.benchmark_group("Enhanced Standard Scaler");
 
@@ -115,6 +118,7 @@ fn bench_enhanced_standard_scaler(c: &mut Criterion) {
 }
 
 /// Benchmark enhanced PCA with different algorithms
+#[allow(dead_code)]
 fn bench_enhanced_pca(c: &mut Criterion) {
     let mut group = c.benchmark_group("Enhanced PCA");
 
@@ -157,6 +161,7 @@ fn bench_enhanced_pca(c: &mut Criterion) {
 
 #[cfg(feature = "simd")]
 /// Benchmark SIMD polynomial features with optimizations
+#[allow(dead_code)]
 fn bench_simd_polynomial_features(c: &mut Criterion) {
     let mut group = c.benchmark_group("SIMD Polynomial Features");
 
@@ -213,6 +218,7 @@ fn bench_simd_polynomial_features(c: &mut Criterion) {
 }
 
 /// Benchmark memory pool performance
+#[allow(dead_code)]
 fn bench_memory_pool_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("Memory Pool Performance");
 
@@ -228,6 +234,7 @@ fn bench_memory_pool_performance(c: &mut Criterion) {
 }
 
 /// Comprehensive performance comparison
+#[allow(dead_code)]
 fn bench_comprehensive_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("Comprehensive Performance");
 
@@ -303,13 +310,23 @@ fn bench_comprehensive_performance(c: &mut Criterion) {
     group.finish();
 }
 
+#[cfg(feature = "simd")]
 criterion_group!(
     benches,
     bench_adaptive_simd_normalization,
     bench_enhanced_standard_scaler,
     bench_enhanced_pca,
-    #[cfg(feature = "simd")]
     bench_simd_polynomial_features,
+    bench_memory_pool_performance,
+    bench_comprehensive_performance,
+);
+
+#[cfg(not(feature = "simd"))]
+criterion_group!(
+    benches,
+    bench_adaptive_simd_normalization,
+    bench_enhanced_standard_scaler,
+    bench_enhanced_pca,
     bench_memory_pool_performance,
     bench_comprehensive_performance,
 );

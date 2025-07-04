@@ -8,6 +8,7 @@ use scirs2_signal::{
     EnhancedTestSignalConfig, TestSignalType,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Enhanced Multitaper Spectral Estimation - Comprehensive Validation");
     println!("================================================================");

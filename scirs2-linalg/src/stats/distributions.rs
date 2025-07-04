@@ -120,6 +120,7 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> Wishart
 /// # Returns
 ///
 /// * Log probability density
+#[allow(dead_code)]
 pub fn matrix_normal_logpdf<F>(x: &ArrayView2<F>, params: &MatrixNormalParams<F>) -> LinalgResult<F>
 where
     F: Float
@@ -181,6 +182,7 @@ where
 /// # Returns
 ///
 /// * Log probability density
+#[allow(dead_code)]
 pub fn wishart_logpdf<F>(x: &ArrayView2<F>, params: &WishartParams<F>) -> LinalgResult<F>
 where
     F: Float
@@ -247,6 +249,7 @@ where
 /// # Returns
 ///
 /// * Random matrix sample
+#[allow(dead_code)]
 pub fn sample_matrix_normal<F>(
     params: &MatrixNormalParams<F>,
     rng_seed: Option<u64>,
@@ -291,6 +294,7 @@ where
 /// # Returns
 ///
 /// * Random positive definite matrix sample
+#[allow(dead_code)]
 pub fn sample_wishart<F>(
     params: &WishartParams<F>,
     rng_seed: Option<u64>,
@@ -349,6 +353,7 @@ where
 /// Compute the multivariate log gamma function
 ///
 /// Γ_p(x) = π^{p(p-1)/4} * ∏_{j=1}^p Γ(x + (1-j)/2)
+#[allow(dead_code)]
 fn multivariate_log_gamma<F>(x: F, p: usize) -> LinalgResult<F>
 where
     F: Float + Zero + One + Copy + std::fmt::Debug + num_traits::FromPrimitive,
@@ -480,6 +485,7 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> Inverse
 /// # Returns
 ///
 /// * Log probability density
+#[allow(dead_code)]
 pub fn inverse_wishart_logpdf<F>(
     x: &ArrayView2<F>,
     params: &InverseWishartParams<F>,
@@ -611,6 +617,7 @@ impl<F: Float + Zero + One + Copy + std::fmt::Debug + std::fmt::Display> MatrixT
 /// # Returns
 ///
 /// * Log probability density
+#[allow(dead_code)]
 pub fn matrix_t_logpdf<F>(x: &ArrayView2<F>, params: &MatrixTParams<F>) -> LinalgResult<F>
 where
     F: Float

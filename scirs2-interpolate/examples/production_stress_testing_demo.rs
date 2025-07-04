@@ -8,6 +8,7 @@ use scirs2_interpolate::{
     IssueSeverity, ProductionReadiness, StressTestConfig, TestStatus,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Production Stress Testing Demo ===\n");
 
@@ -135,6 +136,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Analyze stress test results in detail
+#[allow(dead_code)]
 fn analyze_stress_test_results(report: &scirs2_interpolate::StressTestReport) {
     println!("Detailed Analysis:");
 
@@ -208,6 +210,7 @@ fn analyze_stress_test_results(report: &scirs2_interpolate::StressTestReport) {
 }
 
 /// Analyze results by test category
+#[allow(dead_code)]
 fn analyze_by_category(report: &scirs2_interpolate::StressTestReport) {
     use scirs2_interpolate::StressTestCategory;
     use std::collections::HashMap;
@@ -247,6 +250,7 @@ fn analyze_by_category(report: &scirs2_interpolate::StressTestReport) {
 }
 
 /// Provide production deployment guidance
+#[allow(dead_code)]
 fn provide_deployment_guidance(report: &scirs2_interpolate::StressTestReport) {
     match report.production_readiness {
         ProductionReadiness::Ready => {

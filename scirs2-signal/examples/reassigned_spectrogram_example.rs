@@ -11,6 +11,7 @@ use scirs2_signal::reassigned::{
 use scirs2_signal::spectral;
 use scirs2_signal::window;
 
+#[allow(dead_code)]
 fn main() {
     println!("Reassigned Spectrogram Examples");
     println!("-------------------------------");
@@ -51,6 +52,7 @@ fn main() {
 }
 
 /// Generate a test signal with multiple components
+#[allow(dead_code)]
 fn generate_test_signal() -> Array1<f64> {
     let n_samples = 2048;
     let fs = 2048.0;
@@ -87,6 +89,7 @@ fn generate_test_signal() -> Array1<f64> {
 }
 
 /// Compute a standard STFT spectrogram
+#[allow(dead_code)]
 fn compute_standard_spectrogram(signal: &Array1<f64>) -> Array2<f64> {
     let fs = 2048.0;
     let window_size = 256;
@@ -130,6 +133,7 @@ fn compute_standard_spectrogram(signal: &Array1<f64>) -> Array2<f64> {
 }
 
 /// Compute a reassigned spectrogram
+#[allow(dead_code)]
 fn compute_reassigned_spectrogram(signal: &Array1<f64>) -> ReassignedResult {
     let fs = 2048.0;
 
@@ -154,6 +158,7 @@ fn compute_reassigned_spectrogram(signal: &Array1<f64>) -> ReassignedResult {
 }
 
 /// Compute a smoothed reassigned spectrogram
+#[allow(dead_code)]
 fn compute_smoothed_reassigned_spectrogram(signal: &Array1<f64>) -> ReassignedResult {
     let fs = 2048.0;
 
@@ -178,6 +183,7 @@ fn compute_smoothed_reassigned_spectrogram(signal: &Array1<f64>) -> ReassignedRe
 }
 
 /// Analyze a multi-component signal to highlight the advantages of reassignment
+#[allow(dead_code)]
 fn analyze_multicomponent_signal() -> (Array2<f64>, Array2<f64>, Array2<f64>) {
     let n_samples = 2048;
     let fs = 2048.0;
@@ -253,6 +259,7 @@ fn analyze_multicomponent_signal() -> (Array2<f64>, Array2<f64>, Array2<f64>) {
 }
 
 /// Extract and analyze ridges from a reassigned spectrogram
+#[allow(dead_code)]
 fn extract_and_analyze_ridges(result: &ReassignedResult) -> Vec<Vec<(usize, f64)>> {
     // Extract the ridges (maximum 2 components)
     let ridges = extract_ridges(&result.reassigned, &result.frequencies, 2, 0.2);
@@ -291,6 +298,7 @@ fn extract_and_analyze_ridges(result: &ReassignedResult) -> Vec<Vec<(usize, f64)
 }
 
 /// Save results to CSV files for external plotting
+#[allow(dead_code)]
 fn save_results_to_csv(
     signal: &Array1<f64>,
     stft_result: &Array2<f64>,
@@ -359,6 +367,7 @@ fn save_results_to_csv(
 }
 
 /// Save a matrix to CSV with time and frequency labels
+#[allow(dead_code)]
 fn save_matrix_to_csv(
     filename: &str,
     matrix: &Array2<f64>,

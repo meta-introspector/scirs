@@ -82,6 +82,7 @@ pub enum ARMethod {
 /// let (ar_coeffs, reflection_coeffs, variance) =
 ///     estimate_ar(&signal, order, ARMethod::Burg).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn estimate_ar(
     signal: &Array1<f64>,
     order: usize,
@@ -114,6 +115,7 @@ pub fn estimate_ar(
 /// * `ar_coeffs` - AR coefficients [1, a1, a2, ..., ap]
 /// * `reflection_coeffs` - Reflection coefficients (Levinson-Durbin algorithm byproduct)
 /// * `variance` - Estimated noise variance
+#[allow(dead_code)]
 pub fn yule_walker(
     signal: &Array1<f64>,
     order: usize,
@@ -169,6 +171,7 @@ pub fn yule_walker(
 /// * `ar_coeffs` - AR coefficients [a1, a2, ..., ap]
 /// * `reflection_coeffs` - Reflection coefficients (partial correlation coefficients)
 /// * `variance` - Estimated prediction error variance
+#[allow(dead_code)]
 fn levinson_durbin(
     autocorr: &Array1<f64>,
     order: usize,
@@ -227,6 +230,7 @@ fn levinson_durbin(
 /// * `ar_coeffs` - AR coefficients [1, a1, a2, ..., ap]
 /// * `reflection_coeffs` - Reflection coefficients
 /// * `variance` - Estimated noise variance
+#[allow(dead_code)]
 pub fn burg_method(
     signal: &Array1<f64>,
     order: usize,
@@ -314,6 +318,7 @@ pub fn burg_method(
 /// * `ar_coeffs` - AR coefficients [1, a1, a2, ..., ap]
 /// * `reflection_coeffs` - None (not computed in this method)
 /// * `variance` - Estimated noise variance
+#[allow(dead_code)]
 pub fn covariance_method(
     signal: &Array1<f64>,
     order: usize,
@@ -385,6 +390,7 @@ pub fn covariance_method(
 /// * `ar_coeffs` - AR coefficients [1, a1, a2, ..., ap]
 /// * `reflection_coeffs` - None (not computed in this method)
 /// * `variance` - Estimated noise variance
+#[allow(dead_code)]
 pub fn modified_covariance_method(
     signal: &Array1<f64>,
     order: usize,
@@ -479,6 +485,7 @@ pub fn modified_covariance_method(
 /// * `ar_coeffs` - AR coefficients [1, a1, a2, ..., ap]
 /// * `reflection_coeffs` - None (not computed in this method)
 /// * `variance` - Estimated noise variance
+#[allow(dead_code)]
 pub fn least_squares_method(
     signal: &Array1<f64>,
     order: usize,
@@ -532,6 +539,7 @@ pub fn least_squares_method(
 }
 
 /// Solves a linear system Ax = b using QR decomposition (more stable than direct inversion)
+#[allow(dead_code)]
 fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Use scirs2-linalg for linear system solving
     let a_view = a.view();
@@ -555,6 +563,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<
 ///
 /// # Returns
 /// * Power spectral density at the specified frequencies
+#[allow(dead_code)]
 pub fn ar_spectrum(
     ar_coeffs: &Array1<f64>,
     variance: f64,
@@ -610,6 +619,7 @@ pub fn ar_spectrum(
 /// * `ar_coeffs` - AR coefficients [1, a1, a2, ..., ap]
 /// * `ma_coeffs` - MA coefficients [1, b1, b2, ..., bq]
 /// * `variance` - Estimated noise variance
+#[allow(dead_code)]
 pub fn estimate_arma(
     signal: &Array1<f64>,
     ar_order: usize,
@@ -709,6 +719,7 @@ pub fn estimate_arma(
 ///
 /// # Returns
 /// * Power spectral density at the specified frequencies
+#[allow(dead_code)]
 pub fn arma_spectrum(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -792,6 +803,7 @@ pub enum OrderSelection {
 /// # Returns
 /// * Optimal order
 /// * Criterion values for all tested orders
+#[allow(dead_code)]
 pub fn select_ar_order(
     signal: &Array1<f64>,
     max_order: usize,
@@ -873,6 +885,7 @@ pub fn select_ar_order(
 /// - Kalman filter for likelihood computation
 /// - Levenberg-Marquardt optimization
 /// - Enhanced numerical stability
+#[allow(dead_code)]
 pub fn estimate_arma_enhanced(
     signal: &Array1<f64>,
     ar_order: usize,
@@ -918,6 +931,7 @@ pub fn estimate_arma_enhanced(
 /// - Innovations algorithm
 /// - Maximum Likelihood Estimation
 /// - Durbin's method for high-order models
+#[allow(dead_code)]
 pub fn estimate_ma(signal: &Array1<f64>, order: usize, method: MAMethod) -> SignalResult<MAResult> {
     validate_ma_parameters(signal, order)?;
 
@@ -935,6 +949,7 @@ pub fn estimate_ma(signal: &Array1<f64>, order: usize, method: MAMethod) -> Sign
 /// - Bootstrap uncertainty estimation
 /// - Pole-zero analysis
 /// - Spectral peak detection
+#[allow(dead_code)]
 pub fn arma_spectrum_enhanced(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -987,6 +1002,7 @@ pub fn arma_spectrum_enhanced(
 /// - Cointegration analysis
 /// - Granger causality testing
 /// - Impulse response functions
+#[allow(dead_code)]
 pub fn estimate_varma(
     signals: &Array2<f64>,
     ar_order: usize,
@@ -1023,6 +1039,7 @@ pub fn estimate_varma(
 /// - Information criteria with penalty adjustments
 /// - Prediction error criteria
 /// - Stability analysis
+#[allow(dead_code)]
 pub fn select_arma_order_enhanced(
     signal: &Array1<f64>,
     max_ar_order: usize,
@@ -1094,6 +1111,7 @@ pub fn select_arma_order_enhanced(
 /// - Forgetting factors for non-stationary data
 /// - Change point detection
 /// - Computational efficiency for real-time applications
+#[allow(dead_code)]
 pub fn adaptive_arma_estimator(
     initial_signal: &Array1<f64>,
     ar_order: usize,
@@ -1502,6 +1520,7 @@ pub struct StabilityTests {
 
 // Implementation functions
 
+#[allow(dead_code)]
 fn validate_ma_parameters(signal: &Array1<f64>, order: usize) -> SignalResult<()> {
     if order >= signal.len() / 2 {
         return Err(SignalError::ValueError(format!(
@@ -1513,6 +1532,7 @@ fn validate_ma_parameters(signal: &Array1<f64>, order: usize) -> SignalResult<()
     Ok(())
 }
 
+#[allow(dead_code)]
 fn estimate_ma_innovations(signal: &Array1<f64>, order: usize) -> SignalResult<MAResult> {
     let n = signal.len();
     let mut ma_coeffs = Array1::zeros(order + 1);
@@ -1530,6 +1550,7 @@ fn estimate_ma_innovations(signal: &Array1<f64>, order: usize) -> SignalResult<M
     })
 }
 
+#[allow(dead_code)]
 fn estimate_ma_ml(signal: &Array1<f64>, order: usize) -> SignalResult<MAResult> {
     // Maximum Likelihood estimation for MA models using iterative optimization
     let n = signal.len();
@@ -1639,6 +1660,7 @@ fn estimate_ma_ml(signal: &Array1<f64>, order: usize) -> SignalResult<MAResult> 
     })
 }
 
+#[allow(dead_code)]
 fn estimate_ma_durbin(signal: &Array1<f64>, order: usize) -> SignalResult<MAResult> {
     // Durbin's method for MA parameter estimation
     // This method uses the autocovariance function to estimate MA parameters
@@ -1719,6 +1741,7 @@ fn estimate_ma_durbin(signal: &Array1<f64>, order: usize) -> SignalResult<MAResu
     })
 }
 
+#[allow(dead_code)]
 fn compute_arma_spectrum_basic(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -1729,6 +1752,7 @@ fn compute_arma_spectrum_basic(
     arma_spectrum(ar_coeffs, ma_coeffs, variance, freqs, fs)
 }
 
+#[allow(dead_code)]
 fn analyze_poles_zeros(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -1784,6 +1808,7 @@ fn analyze_poles_zeros(
 }
 
 /// Find roots of a polynomial using companion matrix eigenvalues
+#[allow(dead_code)]
 fn find_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
     let n = coeffs.len();
     if n == 0 {
@@ -1825,6 +1850,7 @@ fn find_polynomial_roots(coeffs: &Array1<f64>) -> SignalResult<Vec<Complex64>> {
 }
 
 /// Simplified QR algorithm for eigenvalue computation
+#[allow(dead_code)]
 fn eigenvalues_qr(matrix: &Array2<f64>) -> SignalResult<Vec<Complex64>> {
     let n = matrix.nrows();
     let mut a = matrix.to_owned();
@@ -1896,6 +1922,7 @@ fn eigenvalues_qr(matrix: &Array2<f64>) -> SignalResult<Vec<Complex64>> {
 }
 
 /// Simplified QR decomposition using Givens rotations
+#[allow(dead_code)]
 fn qr_decomposition(matrix: &Array2<f64>) -> SignalResult<(Array2<f64>, Array2<f64>)> {
     let (m, n) = matrix.dim();
     let mut q = Array2::eye(m);
@@ -1933,6 +1960,7 @@ fn qr_decomposition(matrix: &Array2<f64>) -> SignalResult<(Array2<f64>, Array2<f
     Ok((q, r))
 }
 
+#[allow(dead_code)]
 fn compute_spectrum_confidence_bands(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -1948,6 +1976,7 @@ fn compute_spectrum_confidence_bands(
     Ok((lower, upper))
 }
 
+#[allow(dead_code)]
 pub fn detect_spectral_peaks(
     spectrum: &Array1<f64>,
     freqs: &Array1<f64>,
@@ -1973,6 +2002,7 @@ pub fn detect_spectral_peaks(
     Ok(peaks)
 }
 
+#[allow(dead_code)]
 fn compute_spectrum_metrics(
     spectrum: &Array1<f64>,
     freqs: &Array1<f64>,
@@ -1993,6 +2023,7 @@ fn compute_spectrum_metrics(
     })
 }
 
+#[allow(dead_code)]
 fn validate_varma_parameters(
     signals: &Array2<f64>,
     ar_order: usize,
@@ -2007,6 +2038,7 @@ fn validate_varma_parameters(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn estimate_var_for_varma(
     signals: &Array2<f64>,
     ar_order: usize,
@@ -2023,6 +2055,7 @@ fn estimate_var_for_varma(
     })
 }
 
+#[allow(dead_code)]
 fn extend_var_to_varma(
     signals: &Array2<f64>,
     var_result: VARMAResult,
@@ -2034,6 +2067,7 @@ fn extend_var_to_varma(
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn compute_order_criterion(
     signal: &Array1<f64>,
     result: &EnhancedARMAResult,
@@ -2047,6 +2081,7 @@ fn compute_order_criterion(
     }
 }
 
+#[allow(dead_code)]
 fn compute_cross_validation_score(
     signal: &Array1<f64>,
     ar_order: usize,
@@ -2057,6 +2092,7 @@ fn compute_cross_validation_score(
     Ok(1.0 / (ar_order + ma_order + 1) as f64)
 }
 
+#[allow(dead_code)]
 fn analyze_model_stability(result: &EnhancedARMAResult) -> SignalResult<StabilityAnalysis> {
     Ok(StabilityAnalysis {
         is_stable: true,
@@ -2065,6 +2101,7 @@ fn analyze_model_stability(result: &EnhancedARMAResult) -> SignalResult<Stabilit
     })
 }
 
+#[allow(dead_code)]
 fn select_best_models(
     candidates: Vec<OrderSelectionCandidate>,
     criteria: &[OrderSelectionCriterion],
@@ -2085,6 +2122,7 @@ fn select_best_models(
     Ok(best)
 }
 
+#[allow(dead_code)]
 fn generate_order_recommendations(
     best_models: &std::collections::HashMap<OrderSelectionCriterion, OrderSelectionCandidate>,
     opts: &OrderSelectionOptions,
@@ -2110,6 +2148,7 @@ fn generate_order_recommendations(
 /// Placeholder implementations for the helper functions
 /// (In a full implementation, these would contain the actual algorithms)
 
+#[allow(dead_code)]
 fn validate_arma_parameters(
     signal: &Array1<f64>,
     ar_order: usize,
@@ -2124,6 +2163,7 @@ fn validate_arma_parameters(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn initialize_arma_parameters(
     signal: &Array1<f64>,
     ar_order: usize,
@@ -2158,6 +2198,7 @@ struct ARMAParameters {
 
 // Additional placeholder implementations would follow...
 
+#[allow(dead_code)]
 fn optimize_arma_parameters(
     signal: &Array1<f64>,
     initial: ARMAParameters,
@@ -2270,6 +2311,7 @@ fn optimize_arma_parameters(
 }
 
 /// Compute parameter gradient for optimization
+#[allow(dead_code)]
 fn compute_parameter_gradient(
     signal: &Array1<f64>,
     params: &ARMAParameters,
@@ -2312,6 +2354,7 @@ fn compute_parameter_gradient(
 }
 
 /// Check if ARMA model is stable
+#[allow(dead_code)]
 fn is_stable(params: &ARMAParameters) -> bool {
     // Check AR stability: roots of AR polynomial should be outside unit circle
     let ar_stable = check_ar_stability(&params.ar_coeffs);
@@ -2323,6 +2366,7 @@ fn is_stable(params: &ARMAParameters) -> bool {
 }
 
 /// Check AR polynomial stability
+#[allow(dead_code)]
 fn check_ar_stability(ar_coeffs: &Array1<f64>) -> bool {
     if ar_coeffs.is_empty() {
         return true;
@@ -2340,6 +2384,7 @@ fn check_ar_stability(ar_coeffs: &Array1<f64>) -> bool {
 }
 
 /// Check MA polynomial invertibility
+#[allow(dead_code)]
 fn check_ma_invertibility(ma_coeffs: &Array1<f64>) -> bool {
     if ma_coeffs.is_empty() {
         return true;
@@ -2351,6 +2396,7 @@ fn check_ma_invertibility(ma_coeffs: &Array1<f64>) -> bool {
 }
 
 /// Project parameters onto stable region
+#[allow(dead_code)]
 fn project_to_stable_region(params: &ARMAParameters) -> SignalResult<ARMAParameters> {
     let mut stable_params = params.clone();
 
@@ -2375,6 +2421,7 @@ fn project_to_stable_region(params: &ARMAParameters) -> SignalResult<ARMAParamet
 }
 
 /// Compute stability margin
+#[allow(dead_code)]
 fn compute_stability_margin(params: &ARMAParameters) -> f64 {
     let ar_sum: f64 = params.ar_coeffs.iter().map(|&x| x.abs()).sum();
     let ma_sum: f64 = params.ma_coeffs.iter().map(|&x| x.abs()).sum();
@@ -2386,6 +2433,7 @@ fn compute_stability_margin(params: &ARMAParameters) -> f64 {
 }
 
 /// Compute log-likelihood for ARMA model
+#[allow(dead_code)]
 fn compute_log_likelihood(signal: &Array1<f64>, params: &ARMAParameters) -> SignalResult<f64> {
     let n = signal.len();
     let residuals = compute_residuals(signal, params)?;
@@ -2402,6 +2450,7 @@ fn compute_log_likelihood(signal: &Array1<f64>, params: &ARMAParameters) -> Sign
 }
 
 /// Compute residuals for ARMA model
+#[allow(dead_code)]
 fn compute_residuals(signal: &Array1<f64>, params: &ARMAParameters) -> SignalResult<Array1<f64>> {
     let n = signal.len();
     let mut residuals = Array1::zeros(n);
@@ -2440,6 +2489,7 @@ fn compute_residuals(signal: &Array1<f64>, params: &ARMAParameters) -> SignalRes
     Ok(residuals)
 }
 
+#[allow(dead_code)]
 fn compute_arma_diagnostics(
     signal: &Array1<f64>,
     params: &ARMAParameters,
@@ -2485,6 +2535,7 @@ fn compute_arma_diagnostics(
 }
 
 /// Compute Ljung-Box test for serial correlation
+#[allow(dead_code)]
 fn compute_ljung_box_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<LjungBoxTest> {
     let n = residuals.len();
     if n <= lags + 1 {
@@ -2529,6 +2580,7 @@ fn compute_ljung_box_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<
 }
 
 /// Compute Jarque-Bera test for normality
+#[allow(dead_code)]
 fn compute_jarque_bera_test(residuals: &Array1<f64>) -> SignalResult<JarqueBeraTest> {
     let n = residuals.len() as f64;
     if n < 4.0 {
@@ -2571,6 +2623,7 @@ fn compute_jarque_bera_test(residuals: &Array1<f64>) -> SignalResult<JarqueBeraT
 }
 
 /// Compute ARCH test for heteroskedasticity
+#[allow(dead_code)]
 fn compute_arch_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<ARCHTest> {
     let n = residuals.len();
     if n <= lags + 1 {
@@ -2634,6 +2687,7 @@ fn compute_arch_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<ARCHT
 }
 
 /// Simplified chi-squared CDF approximation
+#[allow(dead_code)]
 fn chi_squared_cdf(x: f64, df: f64) -> f64 {
     if x <= 0.0 {
         return 0.0;
@@ -2654,6 +2708,7 @@ fn chi_squared_cdf(x: f64, df: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn validate_arma_model(
     signal: &Array1<f64>,
     params: &ARMAParameters,
@@ -2704,6 +2759,7 @@ fn validate_arma_model(
 ///
 /// # Returns
 /// * Robust AR model parameters with outlier detection results
+#[allow(dead_code)]
 pub fn robust_ar_estimation(
     signal: &Array1<f64>,
     order: usize,
@@ -2790,6 +2846,7 @@ pub fn robust_ar_estimation(
 ///
 /// # Returns
 /// * State-space model parameters and Kalman filter results
+#[allow(dead_code)]
 pub fn state_space_parametric_estimation(
     signal: &Array1<f64>,
     state_order: usize,
@@ -2906,6 +2963,7 @@ pub fn state_space_parametric_estimation(
 ///
 /// # Returns
 /// * FARIMA model parameters including fractional differencing parameter
+#[allow(dead_code)]
 pub fn estimate_farima(
     signal: &Array1<f64>,
     ar_order: usize,
@@ -2968,6 +3026,7 @@ pub fn estimate_farima(
 ///
 /// # Returns
 /// * VAR model parameters and multivariate spectral measures
+#[allow(dead_code)]
 pub fn estimate_var(
     signals: &Array2<f64>,
     order: usize,
@@ -3214,6 +3273,7 @@ pub struct VARResult {
 
 // Helper function implementations (stubs for the comprehensive implementation)
 
+#[allow(dead_code)]
 fn compute_ar_residuals(
     signal: &Array1<f64>,
     ar_coeffs: &Array1<f64>,
@@ -3233,6 +3293,7 @@ fn compute_ar_residuals(
     Ok(residuals)
 }
 
+#[allow(dead_code)]
 fn robust_scale_estimation(residuals: &Array1<f64>, method: RobustScaleMethod) -> f64 {
     match method {
         RobustScaleMethod::MAD => {
@@ -3250,6 +3311,7 @@ fn robust_scale_estimation(residuals: &Array1<f64>, method: RobustScaleMethod) -
     }
 }
 
+#[allow(dead_code)]
 pub fn update_robust_weights(
     weights: &mut Array1<f64>,
     residuals: &Array1<f64>,
@@ -3281,6 +3343,7 @@ pub fn update_robust_weights(
     }
 }
 
+#[allow(dead_code)]
 fn weighted_ar_estimation(
     signal: &Array1<f64>,
     order: usize,
@@ -3294,10 +3357,12 @@ fn weighted_ar_estimation(
     Ok((result.coefficients, result.variance))
 }
 
+#[allow(dead_code)]
 pub fn compute_parameter_change(old_params: &Array1<f64>, new_params: &Array1<f64>) -> f64 {
     (old_params - new_params).mapv(|x| x.abs()).sum()
 }
 
+#[allow(dead_code)]
 fn compute_efficiency(weights: &Array1<f64>) -> f64 {
     // Compute statistical efficiency of the robust estimator
     let mean_weight = weights.mean().unwrap_or(1.0);
@@ -3305,6 +3370,7 @@ fn compute_efficiency(weights: &Array1<f64>) -> f64 {
 }
 
 // State-space helper functions (stubs)
+#[allow(dead_code)]
 fn kalman_filter(
     _signal: &Array1<f64>,
     _state_transition: &Array2<f64>,
@@ -3318,6 +3384,7 @@ fn kalman_filter(
     ))
 }
 
+#[allow(dead_code)]
 fn kalman_smoother(
     _filtered_states: &Array2<f64>,
     _filtered_covs: &[Array2<f64>],
@@ -3330,6 +3397,7 @@ fn kalman_smoother(
     ))
 }
 
+#[allow(dead_code)]
 fn compute_state_space_log_likelihood(
     _innovations: &Array1<f64>,
     _innov_covs: &Array1<f64>,
@@ -3337,6 +3405,7 @@ fn compute_state_space_log_likelihood(
     0.0 // Placeholder
 }
 
+#[allow(dead_code)]
 fn update_state_space_parameters(
     _smoothed_states: &Array2<f64>,
     _smoothed_covs: &[Array2<f64>],
@@ -3351,6 +3420,7 @@ fn update_state_space_parameters(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn state_space_to_arma(
     _state_transition: &Array2<f64>,
     _observation: &Array1<f64>,
@@ -3361,6 +3431,7 @@ fn state_space_to_arma(
 }
 
 // FARIMA helper functions (stubs)
+#[allow(dead_code)]
 fn estimate_fractional_differencing_parameter(
     _signal: &Array1<f64>,
     _bandwidth: Option<usize>,
@@ -3368,6 +3439,7 @@ fn estimate_fractional_differencing_parameter(
     Ok(0.0) // Placeholder
 }
 
+#[allow(dead_code)]
 fn fractional_differencing(
     _signal: &Array1<f64>,
     _d: f64,
@@ -3376,6 +3448,7 @@ fn fractional_differencing(
     Ok(Array1::zeros(1)) // Placeholder
 }
 
+#[allow(dead_code)]
 fn farima_spectrum(
     _ar_coeffs: &Array1<f64>,
     _ma_coeffs: &Array1<f64>,
@@ -3386,6 +3459,7 @@ fn farima_spectrum(
     Ok(Array1::zeros(_points)) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_farima_residuals(
     _signal: &Array1<f64>,
     _ar_coeffs: &Array1<f64>,
@@ -3395,15 +3469,18 @@ fn compute_farima_residuals(
     Ok(Array1::zeros(1)) // Placeholder
 }
 
+#[allow(dead_code)]
 fn estimate_hurst_exponent(_signal: &Array1<f64>) -> SignalResult<f64> {
     Ok(0.5) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_d_standard_error(_signal: &Array1<f64>, _d: f64) -> SignalResult<f64> {
     Ok(0.1) // Placeholder
 }
 
 // VAR helper functions (stubs)
+#[allow(dead_code)]
 fn construct_var_matrices(
     _signals: &Array2<f64>,
     _order: usize,
@@ -3411,19 +3488,23 @@ fn construct_var_matrices(
     Ok((Array2::zeros((1, 1)), Array2::zeros((1, 1)))) // Placeholder
 }
 
+#[allow(dead_code)]
 fn solve_normal_equations(_xtx: &Array2<f64>, _xty: &Array2<f64>) -> SignalResult<Array2<f64>> {
     Ok(Array2::zeros((1, 1))) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_var_error_covariance(_residuals: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let (_, n_vars) = _residuals.dim();
     Ok(Array2::eye(n_vars)) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_var_log_likelihood(_residuals: &Array2<f64>, _error_cov: &Array2<f64>) -> f64 {
     0.0 // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_granger_causality_tests(
     _y: &Array2<f64>,
     _x: &Array2<f64>,
@@ -3434,6 +3515,7 @@ fn compute_granger_causality_tests(
     Ok(Array2::zeros((n_vars, n_vars))) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_var_impulse_responses(
     _coeffs: &Array2<f64>,
     _error_cov: &Array2<f64>,
@@ -3442,6 +3524,7 @@ fn compute_var_impulse_responses(
     Ok(Array2::zeros((_horizon, 1))) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_var_cross_spectrum(
     _coeffs: &Array2<f64>,
     _error_cov: &Array2<f64>,
@@ -3451,6 +3534,7 @@ fn compute_var_cross_spectrum(
     Ok(Array2::zeros((_points, n_vars * n_vars))) // Placeholder
 }
 
+#[allow(dead_code)]
 fn reshape_var_coefficients(
     _coeff_matrix: &Array2<f64>,
     _n_vars: usize,
@@ -3459,6 +3543,7 @@ fn reshape_var_coefficients(
     Ok(vec![Array2::zeros((1, 1))]) // Placeholder
 }
 
+#[allow(dead_code)]
 fn compute_var_stability_eigenvalues(
     _coeffs: &Array2<f64>,
     _n_vars: usize,
@@ -3538,6 +3623,7 @@ pub fn validate_parametric_methods() -> SignalResult<()> {
     }
 }
 
+#[allow(dead_code)]
 fn test_ar_estimation() -> SignalResult<bool> {
     // Generate known AR(2) process: x[n] = 0.5*x[n-1] - 0.3*x[n-2] + w[n]
     let n = 1000;
@@ -3585,6 +3671,7 @@ fn test_ar_estimation() -> SignalResult<bool> {
     Ok(true)
 }
 
+#[allow(dead_code)]
 fn test_ma_estimation() -> SignalResult<bool> {
     // Generate known MA(2) process: x[n] = w[n] + 0.4*w[n-1] + 0.2*w[n-2]
     let n = 500;
@@ -3630,6 +3717,7 @@ fn test_ma_estimation() -> SignalResult<bool> {
     Ok(true)
 }
 
+#[allow(dead_code)]
 fn test_arma_estimation() -> SignalResult<bool> {
     // Generate a simple ARMA(1,1) process for testing
     let n = 800;
@@ -3675,6 +3763,7 @@ fn test_arma_estimation() -> SignalResult<bool> {
     Ok(true)
 }
 
+#[allow(dead_code)]
 fn test_spectrum_computation() -> SignalResult<bool> {
     // Test spectrum computation for a simple AR(1) model
     let ar_coeffs = Array1::from_vec(vec![1.0, -0.8]); // AR(1) with coefficient 0.8
@@ -3704,6 +3793,7 @@ fn test_spectrum_computation() -> SignalResult<bool> {
     Ok(true)
 }
 
+#[allow(dead_code)]
 fn test_pole_zero_analysis() -> SignalResult<bool> {
     // Test pole-zero analysis for known ARMA model
     let ar_coeffs = Array1::from_vec(vec![1.0, -0.6]); // AR(1): stable pole at 0.6

@@ -82,6 +82,7 @@ impl Default for KalmanConfig {
 /// # Returns
 ///
 /// * Estimated state at each time step
+#[allow(dead_code)]
 pub fn kalman_filter(
     z: &Array1<f64>,
     f: &Array2<f64>,
@@ -269,6 +270,7 @@ pub fn kalman_filter(
 /// # Returns
 ///
 /// * Estimated state at each time step
+#[allow(dead_code)]
 pub fn extended_kalman_filter<F, H, FJ, HJ>(
     z: &Array2<f64>,
     f_func: F,
@@ -385,6 +387,7 @@ where
 /// # Returns
 ///
 /// * Estimated state at each time step
+#[allow(dead_code)]
 pub fn unscented_kalman_filter<F, H>(
     z: &Array2<f64>,
     f_func: F,
@@ -566,6 +569,7 @@ where
 /// # Returns
 ///
 /// * Vector of sigma points
+#[allow(dead_code)]
 fn generate_sigma_points(
     x: &Array1<f64>,
     p: &Array2<f64>,
@@ -617,6 +621,7 @@ fn generate_sigma_points(
 /// # Returns
 ///
 /// * Estimated state at each time step
+#[allow(dead_code)]
 pub fn ensemble_kalman_filter<F, H>(
     z: &Array2<f64>,
     f_func: F,
@@ -801,6 +806,7 @@ where
 /// # Returns
 ///
 /// * Denoised signal
+#[allow(dead_code)]
 pub fn kalman_denoise_1d(
     signal: &Array1<f64>,
     process_variance: Option<f64>,
@@ -858,6 +864,7 @@ pub fn kalman_denoise_1d(
 /// # Returns
 ///
 /// * Denoised image
+#[allow(dead_code)]
 pub fn kalman_denoise_2d(
     image: &Array2<f64>,
     process_variance: Option<f64>,
@@ -899,6 +906,7 @@ pub fn kalman_denoise_2d(
 /// # Returns
 ///
 /// * Denoised color image
+#[allow(dead_code)]
 pub fn kalman_denoise_color(
     image: &Array3<f64>,
     process_variance: Option<f64>,
@@ -1006,6 +1014,7 @@ pub fn kalman_denoise_color(
 /// # Returns
 ///
 /// * Filtered state history
+#[allow(dead_code)]
 fn kalman_filter_vector_measurement(
     z: &Array2<f64>,
     f: &Array2<f64>,
@@ -1127,6 +1136,7 @@ fn kalman_filter_vector_measurement(
 /// # Returns
 ///
 /// * (process_variance, measurement_variance)
+#[allow(dead_code)]
 pub fn estimate_noise_parameters(
     signal: &Array1<f64>,
     window_size: usize,
@@ -1186,6 +1196,7 @@ pub fn estimate_noise_parameters(
 /// # Returns
 ///
 /// * Smoothed signal
+#[allow(dead_code)]
 pub fn kalman_smooth(
     signal: &Array1<f64>,
     f: &Array2<f64>,
@@ -1296,6 +1307,7 @@ pub fn kalman_smooth(
 /// # Returns
 ///
 /// * Filtered signal
+#[allow(dead_code)]
 pub fn adaptive_kalman_filter(
     signal: &Array1<f64>,
     adaptive_window: usize,
@@ -1332,6 +1344,7 @@ pub fn adaptive_kalman_filter(
 /// # Returns
 ///
 /// * Filtered signal
+#[allow(dead_code)]
 pub fn robust_kalman_filter(
     signal: &Array1<f64>,
     outlier_threshold: f64,

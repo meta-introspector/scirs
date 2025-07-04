@@ -12,6 +12,7 @@ use num_traits::Float;
 use rand::{rngs::SmallRng, SeedableRng};
 use std::fmt::Debug;
 /// Swish activation function used in EfficientNet
+#[allow(dead_code)]
 pub fn swish<F: Float>(x: F) -> F {
     x * (F::one() + (-x).exp()).recip()
 }

@@ -16,6 +16,7 @@ pub struct LstsqResult {
 
 /// Simple least squares solver (A * x = b)
 /// Returns the solution x that minimizes ||A * x - b||^2
+#[allow(dead_code)]
 fn lstsq(
     a: &ArrayView2<f64>,
     b: &ArrayView1<f64>,
@@ -52,6 +53,7 @@ fn lstsq(
 }
 
 /// Simple linear system solver using Gaussian elimination
+#[allow(dead_code)]
 fn solve_linear_system(
     a: &ArrayView2<f64>,
     b: &ArrayView1<f64>,
@@ -241,6 +243,7 @@ impl ThinPlateSpline {
 }
 
 /// Non-rigid registration using Thin Plate Splines
+#[allow(dead_code)]
 pub fn register_non_rigid_points(
     source_points: &[(f64, f64)],
     target_points: &[(f64, f64)],
@@ -298,6 +301,7 @@ pub fn register_non_rigid_points(
 }
 
 /// Non-rigid registration with regularization
+#[allow(dead_code)]
 pub fn register_non_rigid_regularized(
     source_points: &[(f64, f64)],
     target_points: &[(f64, f64)],

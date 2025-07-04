@@ -11,11 +11,11 @@ use super::{
     utils, Experience, ImprovementReward, OptimizationAction, OptimizationState,
     RLOptimizationConfig, RLOptimizer, RewardFunction,
 };
-use crate::error::OptimizeError;
+// use crate::error::OptimizeError; // Unused import
 use crate::result::OptimizeResults;
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2};
-use scirs2_core::error::CoreResult;
-use scirs2_core::simd_ops::SimdUnifiedOps;
+use ndarray::{Array1, Array2, Array3, ArrayView1};
+// use scirs2_core::error::CoreResult; // Unused import
+// use scirs2_core::simd_ops::SimdUnifiedOps; // Unused import
 use std::collections::{HashMap, VecDeque};
 
 /// Ultra-Advanced Neural Network with Meta-Learning Capabilities
@@ -986,6 +986,7 @@ impl RLOptimizer for UltraAdvancedPolicyGradientOptimizer {
 }
 
 /// Convenience function for ultra-advanced meta-learning policy gradient optimization
+#[allow(dead_code)]
 pub fn ultra_advanced_policy_gradient_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
@@ -1010,6 +1011,7 @@ where
 }
 
 /// Legacy convenience function for backward compatibility
+#[allow(dead_code)]
 pub fn policy_gradient_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

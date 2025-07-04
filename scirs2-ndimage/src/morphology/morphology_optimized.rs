@@ -31,6 +31,7 @@ use crate::error::NdimageResult;
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Eroded array
+#[allow(dead_code)]
 pub fn grey_erosion_2d_optimized<T>(
     input: &Array2<T>,
     structure: Option<&Array2<bool>>,
@@ -104,6 +105,7 @@ where
 }
 
 /// Perform a single erosion iteration using SIMD operations
+#[allow(dead_code)]
 fn erosion_iteration_simd<T>(
     src: &Array2<T>,
     dst: &mut Array2<T>,
@@ -145,6 +147,7 @@ fn erosion_iteration_simd<T>(
 }
 
 /// Perform a single erosion iteration using parallel processing
+#[allow(dead_code)]
 fn erosion_iteration_parallel<T>(
     src: &Array2<T>,
     dst: &mut Array2<T>,
@@ -210,6 +213,7 @@ fn erosion_iteration_parallel<T>(
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Dilated array
+#[allow(dead_code)]
 pub fn grey_dilation_2d_optimized<T>(
     input: &Array2<T>,
     structure: Option<&Array2<bool>>,
@@ -284,6 +288,7 @@ where
 }
 
 /// Perform a single dilation iteration using SIMD operations
+#[allow(dead_code)]
 fn dilation_iteration_simd<T>(
     src: &Array2<T>,
     dst: &mut Array2<T>,
@@ -324,6 +329,7 @@ fn dilation_iteration_simd<T>(
 }
 
 /// Perform a single dilation iteration using parallel processing
+#[allow(dead_code)]
 fn dilation_iteration_parallel<T>(
     src: &Array2<T>,
     dst: &mut Array2<T>,
@@ -374,6 +380,7 @@ fn dilation_iteration_parallel<T>(
 ///
 /// This function provides optimized binary erosion using bit-level operations
 /// and parallel processing for improved performance.
+#[allow(dead_code)]
 pub fn binary_erosion_2d_optimized(
     input: &Array2<bool>,
     structure: Option<&Array2<bool>>,
@@ -440,6 +447,7 @@ pub fn binary_erosion_2d_optimized(
 }
 
 /// Sequential binary erosion iteration
+#[allow(dead_code)]
 fn binary_erosion_iteration_sequential(
     src: &Array2<bool>,
     dst: &mut Array2<bool>,
@@ -482,6 +490,7 @@ fn binary_erosion_iteration_sequential(
 }
 
 /// Parallel binary erosion iteration
+#[allow(dead_code)]
 fn binary_erosion_iteration_parallel(
     src: &Array2<bool>,
     dst: &mut Array2<bool>,
@@ -536,6 +545,7 @@ fn binary_erosion_iteration_parallel(
 }
 
 /// Optimized binary dilation for 2D arrays
+#[allow(dead_code)]
 pub fn binary_dilation_2d_optimized(
     input: &Array2<bool>,
     structure: Option<&Array2<bool>>,
@@ -603,6 +613,7 @@ pub fn binary_dilation_2d_optimized(
 }
 
 /// Sequential binary dilation iteration
+#[allow(dead_code)]
 fn binary_dilation_iteration_sequential(
     src: &Array2<bool>,
     dst: &mut Array2<bool>,
@@ -641,6 +652,7 @@ fn binary_dilation_iteration_sequential(
 }
 
 /// Parallel binary dilation iteration
+#[allow(dead_code)]
 fn binary_dilation_iteration_parallel(
     src: &Array2<bool>,
     dst: &mut Array2<bool>,
@@ -814,6 +826,7 @@ impl Default for MultiScaleMorphConfig {
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Geodesic erosion result
+#[allow(dead_code)]
 pub fn geodesic_erosion_2d<T>(
     marker: &Array2<T>,
     mask: &Array2<T>,
@@ -881,6 +894,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Geodesic dilation result
+#[allow(dead_code)]
 pub fn geodesic_dilation_2d<T>(
     marker: &Array2<T>,
     mask: &Array2<T>,
@@ -949,6 +963,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Reconstructed image
+#[allow(dead_code)]
 pub fn morphological_reconstruction_2d<T>(
     marker: &Array2<T>,
     mask: &Array2<T>,
@@ -981,6 +996,7 @@ where
 /// # Returns
 ///
 /// * `Result<Vec<Array2<T>>>` - Results at each scale
+#[allow(dead_code)]
 pub fn multi_scale_morphology_2d<T>(
     input: &Array2<T>,
     config: &MultiScaleMorphConfig,
@@ -1077,6 +1093,7 @@ where
 /// # Returns
 ///
 /// * `Result<Vec<f64>>` - Granulometry curve (size distribution)
+#[allow(dead_code)]
 pub fn granulometry_2d<T>(
     input: &Array2<T>,
     scales: &[usize],
@@ -1166,6 +1183,7 @@ where
 }
 
 /// Helper function to create structuring elements of different types
+#[allow(dead_code)]
 fn create_structuring_element(
     structure_type: StructureType,
     size: usize,
@@ -1217,6 +1235,7 @@ fn create_structuring_element(
 }
 
 /// Helper function to normalize an array to [0, 1] range
+#[allow(dead_code)]
 fn normalize_array<T>(array: &mut Array2<T>) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Debug + 'static,
@@ -1235,6 +1254,7 @@ where
 }
 
 /// Helper function to compute threshold for area opening
+#[allow(dead_code)]
 fn compute_threshold_for_area<T>(input: &Array2<T>, _area_threshold: usize) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug + 'static,

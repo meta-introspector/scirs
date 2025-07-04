@@ -613,6 +613,7 @@ impl RecurrentLayer for GRU {
         if let Some(db_n) = &self.db_n {
             self.b_n = &self.b_n - &(db_n * learning_rate);
 // Example of using recurrent layers for a simple task - learning to predict the next element in a sequence
+#[allow(dead_code)]
 fn sequence_prediction_example() {
     // Create a simple sequence: [0, 1, 2, 3, 4, 5, ...]
     let seq_len = 10;
@@ -698,6 +699,7 @@ fn sequence_prediction_example() {
     println!("LSTM prediction: {:.6}", lstm_pred * max_val);
     println!("GRU prediction: {:.6}", gru_pred * max_val);
 // Function to compare recurrent network performance on time series prediction
+#[allow(dead_code)]
 fn compare_recurrent_networks() {
     // Generate sine wave data
     let seq_len = 20;
@@ -855,6 +857,7 @@ fn compare_recurrent_networks() {
             lstm_val,
             gru_val
         );
+#[allow(dead_code)]
 fn main() {
     println!("Recurrent Neural Network Layers Example");
     println!("=======================================");

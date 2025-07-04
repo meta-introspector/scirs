@@ -10,6 +10,7 @@ use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLo
 ///
 /// The Fisher-KPP equation is a nonlinear PDE that models the spread of a gene
 /// in a population. It combines diffusion with logistic growth.
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Define domain: x ∈ [0, 10]
     let domain = Domain::new(vec![0.0..10.0], vec![201])?;
@@ -121,6 +122,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Analyze the propagation of the traveling wave solution
+#[allow(dead_code)]
 fn analyze_wave_propagation(
     result: &ImplicitResult,
     domain: &Domain,
@@ -221,6 +223,7 @@ fn analyze_wave_propagation(
 }
 
 /// Compare the two solutions
+#[allow(dead_code)]
 fn compare_solutions(
     cn_result: &ImplicitResult,
     be_result: &ImplicitResult,

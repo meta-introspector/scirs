@@ -5,13 +5,14 @@
 //! analysis, performance prediction, and multi-objective ensemble selection.
 
 use ndarray::Array1;
-use scirs2_optim::learned_optimizers::ultrathink_coordinator::{
+use scirs2_optim::learned_optimizers::optimization_coordinator::{
     OptimizationContext, OptimizationObjective, OptimizationState, ProblemCharacteristics,
     ResourceConstraints, TimeConstraints, UltraThinkConfig, UltraThinkCoordinator,
 };
 use std::collections::HashMap;
 use std::time::{Duration, SystemTime};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 UltraThink Coordinator Advanced Demo");
     println!("=======================================");

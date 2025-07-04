@@ -20,6 +20,7 @@ use scirs2_metrics::integration::traits::MetricComputation;
 #[cfg(feature = "neural_common")]
 use scirs2_metrics::regression::{mean_absolute_error, mean_squared_error, r2_score};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(not(feature = "neural_common"))]
     {

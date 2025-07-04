@@ -10,6 +10,7 @@ use std::collections::HashMap;
 
 /// Test the MetricOptimizer
 #[test]
+#[allow(dead_code)]
 fn test_metric_optimizer() {
     let mut optimizer = MetricOptimizer::new("accuracy", true);
 
@@ -45,6 +46,7 @@ fn test_metric_optimizer() {
 
 /// Test the MetricScheduler
 #[test]
+#[allow(dead_code)]
 fn test_metric_scheduler() {
     // Create a scheduler for minimizing a loss metric
     let mut scheduler = MetricLRScheduler::new(
@@ -103,6 +105,7 @@ fn test_metric_scheduler() {
 
 /// Test the HyperParameter
 #[test]
+#[allow(dead_code)]
 fn test_hyperparameter() {
     // Test continuous hyperparameter
     let mut hp_continuous = HyperParameter::new("learning_rate", 0.01, 0.001, 0.1);
@@ -134,6 +137,7 @@ fn test_hyperparameter() {
 
 /// Test the HyperParameterTuner
 #[test]
+#[allow(dead_code)]
 fn test_hyperparameter_tuner() {
     // Create hyperparameters
     let params = vec![
@@ -173,6 +177,7 @@ fn test_hyperparameter_tuner() {
 
 /// Test the HyperParameterSearchResult
 #[test]
+#[allow(dead_code)]
 fn test_hyperparameter_search_result() {
     // Create a result
     let mut params = HashMap::new();

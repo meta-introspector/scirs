@@ -121,6 +121,7 @@ impl DenseLayer {
 }
 
 // GELU activation for testing
+#[allow(dead_code)]
 fn gelu(x: f64) -> f64 {
     let sqrt_2_over_pi = 0.7978845608028654;
     let coeff = 0.044715;
@@ -128,6 +129,7 @@ fn gelu(x: f64) -> f64 {
     0.5 * x * (1.0 + inner.tanh())
 }
 
+#[allow(dead_code)]
 fn apply_gelu(input: &Matrix) -> Matrix {
     let mut output = Matrix::new(input.rows, input.cols);
     for i in 0..input.rows {
@@ -138,6 +140,7 @@ fn apply_gelu(input: &Matrix) -> Matrix {
     output
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🧠 Testing Dense Layer Implementation");
     println!("{}", "=".repeat(40));

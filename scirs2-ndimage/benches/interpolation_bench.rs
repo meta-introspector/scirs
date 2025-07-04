@@ -6,6 +6,7 @@ use scirs2_ndimage::interpolation::{
 use std::time::Duration;
 
 /// Benchmark basic interpolation operations
+#[allow(dead_code)]
 fn bench_interpolation_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("interpolation_operations");
     group.measurement_time(Duration::from_secs(10));
@@ -32,6 +33,7 @@ fn bench_interpolation_operations(c: &mut Criterion) {
 }
 
 /// Benchmark affine transformations
+#[allow(dead_code)]
 fn bench_affine_transform(c: &mut Criterion) {
     let mut group = c.benchmark_group("affine_transform");
     group.measurement_time(Duration::from_secs(10));
@@ -104,6 +106,7 @@ fn bench_affine_transform(c: &mut Criterion) {
 }
 
 /// Benchmark different interpolation orders
+#[allow(dead_code)]
 fn bench_interpolation_orders(c: &mut Criterion) {
     let mut group = c.benchmark_group("interpolation_orders");
     group.measurement_time(Duration::from_secs(10));
@@ -130,6 +133,7 @@ fn bench_interpolation_orders(c: &mut Criterion) {
 }
 
 /// Benchmark map_coordinates for direct coordinate mapping
+#[allow(dead_code)]
 fn bench_map_coordinates(c: &mut Criterion) {
     let mut group = c.benchmark_group("map_coordinates");
     group.measurement_time(Duration::from_secs(10));
@@ -172,6 +176,7 @@ fn bench_map_coordinates(c: &mut Criterion) {
 }
 
 /// Benchmark 3D interpolation operations
+#[allow(dead_code)]
 fn bench_3d_interpolation(c: &mut Criterion) {
     let mut group = c.benchmark_group("3d_interpolation");
     group.measurement_time(Duration::from_secs(15));
@@ -191,6 +196,7 @@ fn bench_3d_interpolation(c: &mut Criterion) {
 }
 
 /// Benchmark different array sizes for scaling behavior
+#[allow(dead_code)]
 fn bench_scaling_behavior(c: &mut Criterion) {
     let mut group = c.benchmark_group("scaling_behavior");
     group.measurement_time(Duration::from_secs(10));

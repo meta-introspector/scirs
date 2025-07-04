@@ -2,6 +2,7 @@ use ndarray::Array2;
 use scirs2_signal::dwt::Wavelet;
 use scirs2_signal::dwt2d_image::{compress_image, denoise_image, detect_edges, DenoisingMethod};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Wavelet-based Image Processing Example");
     println!("======================================\n");
@@ -134,6 +135,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper function to create a test image
+#[allow(dead_code)]
 fn create_test_image(width: usize, height: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
 
@@ -162,6 +164,7 @@ fn create_test_image(width: usize, height: usize) -> Array2<f64> {
 }
 
 // Helper function to create an image with edges
+#[allow(dead_code)]
 fn create_edge_test_image(width: usize, height: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
 
@@ -191,6 +194,7 @@ fn create_edge_test_image(width: usize, height: usize) -> Array2<f64> {
 }
 
 // Helper function to create a more complex image
+#[allow(dead_code)]
 fn create_complex_image(width: usize, height: usize) -> Array2<f64> {
     let mut image = Array2::zeros((height, width));
 
@@ -212,6 +216,7 @@ fn create_complex_image(width: usize, height: usize) -> Array2<f64> {
 }
 
 // Helper function to print image statistics
+#[allow(dead_code)]
 fn print_image_stats(image: &Array2<f64>, label: &str) {
     let min_val = image.iter().cloned().fold(f64::INFINITY, f64::min);
     let max_val = image.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
@@ -244,6 +249,7 @@ fn print_image_stats(image: &Array2<f64>, label: &str) {
 }
 
 // Calculate mean squared error between two images
+#[allow(dead_code)]
 fn calculate_mse(original: &Array2<f64>, processed: &Array2<f64>) -> f64 {
     if original.shape() != processed.shape() {
         return f64::NAN;
@@ -261,6 +267,7 @@ fn calculate_mse(original: &Array2<f64>, processed: &Array2<f64>) -> f64 {
 }
 
 // Calculate peak signal-to-noise ratio
+#[allow(dead_code)]
 fn calculate_psnr(original: &Array2<f64>, processed: &Array2<f64>) -> f64 {
     let mse = calculate_mse(original, processed);
     if mse <= 1e-10 {

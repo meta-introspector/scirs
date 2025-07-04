@@ -764,6 +764,7 @@ static GLOBAL_CONFIG: std::sync::LazyLock<ProductionConfig> = std::sync::LazyLoc
 });
 
 /// Get the global configuration instance
+#[allow(dead_code)]
 pub fn global_config() -> &'static ProductionConfig {
     &GLOBAL_CONFIG
 }

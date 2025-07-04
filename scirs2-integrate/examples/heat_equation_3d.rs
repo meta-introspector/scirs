@@ -6,6 +6,7 @@ use scirs2_integrate::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("3D Heat Equation Example");
     println!("Solving: ∂u/∂t = D(∂²u/∂x² + ∂²u/∂y² + ∂²u/∂z²)");
@@ -321,6 +322,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper function to find the index of the closest value in an array
+#[allow(dead_code)]
 fn find_closest_index(arr: &Array1<f64>, value: f64) -> usize {
     let mut min_dist = f64::MAX;
     let mut min_idx = 0;

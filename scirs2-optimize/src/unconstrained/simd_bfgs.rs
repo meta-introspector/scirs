@@ -163,6 +163,7 @@ impl SimdBfgsState {
 }
 
 /// SIMD-accelerated BFGS minimization
+#[allow(dead_code)]
 pub fn minimize_simd_bfgs<F>(
     mut fun: F,
     x0: Array1<f64>,
@@ -331,6 +332,7 @@ where
 }
 
 /// Compute gradient using finite differences
+#[allow(dead_code)]
 fn compute_gradient_finite_diff<F>(fun: &mut F, x: &Array1<f64>, nfev: &mut usize) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,
@@ -354,6 +356,7 @@ where
 }
 
 /// Apply bounds constraints to the position vector
+#[allow(dead_code)]
 fn apply_bounds(x: &mut Array1<f64>, bounds: &Bounds) {
     for (i, xi) in x.iter_mut().enumerate() {
         if i < bounds.lower.len() {
@@ -374,6 +377,7 @@ fn apply_bounds(x: &mut Array1<f64>, bounds: &Bounds) {
 }
 
 /// Convenience function for SIMD BFGS with default options
+#[allow(dead_code)]
 pub fn minimize_simd_bfgs_default<F>(
     fun: F,
     x0: Array1<f64>,

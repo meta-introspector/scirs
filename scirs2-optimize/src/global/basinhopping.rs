@@ -12,6 +12,7 @@ use rand::prelude::*;
 use rand::rngs::StdRng;
 
 /// Enforce bounds using reflection method for better exploration
+#[allow(dead_code)]
 fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f64) -> f64 {
     if val >= lb && val <= ub {
         // Value is within bounds
@@ -40,6 +41,7 @@ fn enforce_bounds_with_reflection<R: Rng>(rng: &mut R, val: f64, lb: f64, ub: f6
 }
 
 /// Validate bounds to ensure they are properly specified
+#[allow(dead_code)]
 fn validate_bounds(bounds: &[(f64, f64)]) -> Result<(), OptimizeError> {
     for (i, &(lb, ub)) in bounds.iter().enumerate() {
         if !lb.is_finite() || !ub.is_finite() {
@@ -327,6 +329,7 @@ where
 }
 
 /// Perform global optimization using basin-hopping
+#[allow(dead_code)]
 pub fn basinhopping<F>(
     func: F,
     x0: Array1<f64>,

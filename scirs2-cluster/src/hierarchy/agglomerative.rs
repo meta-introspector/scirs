@@ -67,6 +67,7 @@ pub(crate) fn cut_tree<F: Float + FromPrimitive + PartialOrd>(
 }
 
 /// Cuts the dendrogram at a specific distance threshold
+#[allow(dead_code)]
 pub fn cut_tree_by_distance<F: Float + FromPrimitive + PartialOrd>(
     z: &Array2<F>,
     threshold: F,
@@ -125,6 +126,7 @@ pub fn cut_tree_by_distance<F: Float + FromPrimitive + PartialOrd>(
 /// # Returns
 ///
 /// * `Result<Array1<usize>>` - Cluster assignments (0-indexed)
+#[allow(dead_code)]
 pub fn cut_tree_by_inconsistency<F: Float + FromPrimitive + PartialOrd>(
     z: &Array2<F>,
     threshold: F,

@@ -171,6 +171,7 @@ impl RegressionMetric<f64> for Mase {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("Custom Metrics Example");
     println!("=====================");

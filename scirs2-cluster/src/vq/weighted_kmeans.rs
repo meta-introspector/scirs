@@ -76,6 +76,7 @@ impl<F: Float + FromPrimitive> Default for WeightedKMeansOptions<F> {
 ///
 /// let (centroids, labels) = weighted_kmeans(data.view(), weights.view(), 2, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn weighted_kmeans<F>(
     data: ArrayView2<F>,
     weights: ArrayView1<F>,
@@ -145,6 +146,7 @@ where
 }
 
 /// Run a single weighted k-means clustering iteration
+#[allow(dead_code)]
 fn weighted_kmeans_single<F>(
     data: ArrayView2<F>,
     weights: ArrayView1<F>,
@@ -241,6 +243,7 @@ where
 }
 
 /// Assign samples to nearest centroids (same as regular assignment)
+#[allow(dead_code)]
 fn weighted_assign_labels<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
@@ -292,6 +295,7 @@ where
 /// # Returns
 ///
 /// * Array of shape (k × n_features) with initial centroids
+#[allow(dead_code)]
 pub fn weighted_kmeans_plus_plus<F>(
     data: ArrayView2<F>,
     weights: ArrayView1<F>,

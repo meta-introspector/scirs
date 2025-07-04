@@ -40,6 +40,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// let nmi = normalized_mutual_info_score(&labels_true, &labels_pred, "arithmetic").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn normalized_mutual_info_score<T, U, S1, S2, D1, D2>(
     labels_true: &ArrayBase<S1, D1>,
     labels_pred: &ArrayBase<S2, D2>,
@@ -74,8 +75,7 @@ where
         "arithmetic" | "geometric" | "min" | "max" => {}
         _ => {
             return Err(MetricsError::InvalidInput(format!(
-                "Invalid average_method: {}. Must be one of 'arithmetic', 'geometric', 'min', or 'max'",
-                average_method
+                "Invalid average_method: {average_method}. Must be one of 'arithmetic', 'geometric', 'min', or 'max'"
             )));
         }
     }
@@ -83,20 +83,20 @@ where
     // Compute contingency matrix (using strings for label values to handle different types)
     let mut contingency: HashMap<(String, String), usize> = HashMap::new();
     for (lt, lp) in labels_true.iter().zip(labels_pred.iter()) {
-        let key = (format!("{:?}", lt), format!("{:?}", lp));
+        let key = (format!("{lt:?}"), format!("{lp:?}"));
         *contingency.entry(key).or_insert(0) += 1;
     }
 
     // Count labels
     let mut true_counts: HashMap<String, usize> = HashMap::new();
     for lt in labels_true.iter() {
-        let key = format!("{:?}", lt);
+        let key = format!("{lt:?}");
         *true_counts.entry(key).or_insert(0) += 1;
     }
 
     let mut pred_counts: HashMap<String, usize> = HashMap::new();
     for lp in labels_pred.iter() {
-        let key = format!("{:?}", lp);
+        let key = format!("{lp:?}");
         *pred_counts.entry(key).or_insert(0) += 1;
     }
 
@@ -165,8 +165,7 @@ where
         }
         _ => {
             return Err(MetricsError::InvalidInput(format!(
-                "Invalid average_method: {}",
-                average_method
+                "Invalid average_method: {average_method}"
             )))
         }
     };
@@ -211,6 +210,7 @@ where
 ///
 /// let ami = adjusted_mutual_info_score(&labels_true, &labels_pred, "arithmetic").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn adjusted_mutual_info_score<T, U, S1, S2, D1, D2>(
     labels_true: &ArrayBase<S1, D1>,
     labels_pred: &ArrayBase<S2, D2>,
@@ -245,8 +245,7 @@ where
         "arithmetic" | "geometric" | "min" | "max" => {}
         _ => {
             return Err(MetricsError::InvalidInput(format!(
-                "Invalid average_method: {}. Must be one of 'arithmetic', 'geometric', 'min', or 'max'",
-                average_method
+                "Invalid average_method: {average_method}. Must be one of 'arithmetic', 'geometric', 'min', or 'max'"
             )));
         }
     }
@@ -254,7 +253,7 @@ where
     // Compute contingency matrix (using strings for label values to handle different types)
     let mut contingency: HashMap<(String, String), usize> = HashMap::new();
     for (lt, lp) in labels_true.iter().zip(labels_pred.iter()) {
-        let key = (format!("{:?}", lt), format!("{:?}", lp));
+        let key = (format!("{lt:?}"), format!("{lp:?}"));
         *contingency.entry(key).or_insert(0) += 1;
     }
 
@@ -262,7 +261,7 @@ where
     let mut true_labels: Vec<String> = Vec::new();
     let mut true_counts: HashMap<String, usize> = HashMap::new();
     for lt in labels_true.iter() {
-        let key = format!("{:?}", lt);
+        let key = format!("{lt:?}");
         if !true_labels.contains(&key) {
             true_labels.push(key.clone());
         }
@@ -272,7 +271,7 @@ where
     let mut pred_labels: Vec<String> = Vec::new();
     let mut pred_counts: HashMap<String, usize> = HashMap::new();
     for lp in labels_pred.iter() {
-        let key = format!("{:?}", lp);
+        let key = format!("{lp:?}");
         if !pred_labels.contains(&key) {
             pred_labels.push(key.clone());
         }
@@ -379,8 +378,7 @@ where
         }
         _ => {
             return Err(MetricsError::InvalidInput(format!(
-                "Invalid average_method: {}",
-                average_method
+                "Invalid average_method: {average_method}"
             )))
         }
     };

@@ -12,12 +12,14 @@ use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 // This example requires the metrics_integration feature
 #[cfg(not(feature = "metrics_integration"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'metrics_integration' feature.");
     println!("Run it with: cargo run --example metrics_integration_example --features metrics_integration");
 }
 
 #[cfg(feature = "metrics_integration")]
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_metrics::integration::neural::NeuralMetricAdapter;
     use scirs2_neural::activations_minimal::{ReLU, Sigmoid};
@@ -132,6 +134,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "metrics_integration")]
+#[allow(dead_code)]
 fn generate_binary_classification_data(
     n_samples: usize,
     n_features: usize,
@@ -155,6 +158,7 @@ fn generate_binary_classification_data(
 }
 
 #[cfg(feature = "metrics_integration")]
+#[allow(dead_code)]
 fn shuffle_indices(mut indices: Vec<usize>) -> Vec<usize> {
     use rand::rngs::ThreadRng;
     let mut rng = rand::rng();
@@ -163,6 +167,7 @@ fn shuffle_indices(mut indices: Vec<usize>) -> Vec<usize> {
 }
 
 #[cfg(feature = "metrics_integration")]
+#[allow(dead_code)]
 fn create_batch(data: &Array2<f64>, indices: &[usize]) -> Array2<f64> {
     let n_samples = indices.len();
     let n_features = data.shape()[1];

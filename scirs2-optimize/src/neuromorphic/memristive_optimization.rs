@@ -771,6 +771,7 @@ impl MemristiveOptimizer {
 }
 
 /// Memristive gradient descent with basic crossbar
+#[allow(dead_code)]
 pub fn memristive_gradient_descent<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
@@ -796,6 +797,7 @@ where
 }
 
 /// Advanced memristive optimization with custom configuration
+#[allow(dead_code)]
 pub fn advanced_memristive_optimization<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
@@ -819,6 +821,7 @@ where
 }
 
 /// Memristive Neural Network Optimizer for ML problems
+#[allow(dead_code)]
 pub fn memristive_neural_optimizer<F>(
     objective: F,
     initial_weights: &ArrayView2<f64>,

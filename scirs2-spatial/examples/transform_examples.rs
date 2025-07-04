@@ -3,6 +3,7 @@ use scirs2_spatial::transform::{RigidTransform, Rotation, RotationSpline, Slerp}
 use scirs2_spatial::SpatialResult;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> SpatialResult<()> {
     println!("Spatial Transformations Examples");
     println!("==============================\n");
@@ -22,6 +23,7 @@ fn main() -> SpatialResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn rotation_examples() -> SpatialResult<()> {
     println!("Rotation Examples");
     println!("-----------------");
@@ -126,6 +128,7 @@ fn rotation_examples() -> SpatialResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn rigid_transform_examples() -> SpatialResult<()> {
     println!("RigidTransform Examples");
     println!("----------------------");
@@ -204,6 +207,7 @@ fn rigid_transform_examples() -> SpatialResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn slerp_examples() -> SpatialResult<()> {
     println!("Slerp (Spherical Linear Interpolation) Examples");
     println!("---------------------------------------------");
@@ -246,6 +250,7 @@ fn slerp_examples() -> SpatialResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn rotation_spline_examples() -> SpatialResult<()> {
     println!("RotationSpline Examples");
     println!("---------------------");

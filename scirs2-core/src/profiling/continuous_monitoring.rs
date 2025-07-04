@@ -1063,6 +1063,7 @@ static GLOBAL_MONITOR: std::sync::OnceLock<Arc<Mutex<ContinuousPerformanceMonito
     std::sync::OnceLock::new();
 
 /// Get the global continuous performance monitor
+#[allow(dead_code)]
 pub fn global_monitor() -> Arc<Mutex<ContinuousPerformanceMonitor>> {
     GLOBAL_MONITOR
         .get_or_init(|| {

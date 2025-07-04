@@ -15,10 +15,8 @@
 //!
 //! Run with: cargo run --example enhanced_derivation_studio
 
-use ndarray::{Array1, Array2, ArrayView1};
 use num_complex::Complex64;
 use scirs2_special::*;
-use std::collections::{HashMap, VecDeque};
 use std::f64::consts::{E, PI};
 use std::io::{self, Write};
 use std::time::{Duration, Instant};
@@ -45,7 +43,7 @@ struct DerivationModule {
     computational_verification: Vec<VerificationTest>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 enum DifficultyLevel {
     Elementary,   // High school / early undergraduate
     Intermediate, // Advanced undergraduate
@@ -1612,7 +1610,7 @@ impl DerivationStudio {
         println!("\n📊 Error Function Series Verification");
         println!("======================================\n");
 
-        let x = 1.0;
+        let x: f64 = 1.0;
         let exact = erf(x);
 
         // Compute series approximation
@@ -1655,7 +1653,7 @@ impl DerivationStudio {
 
         for n in [10, 20, 50, 100] {
             let exact = gamma(n as f64);
-            let stirling = ((2.0 * PI / n as f64).sqrt() * (n as f64 / E).powf(n as f64));
+            let stirling = (2.0 * PI / n as f64).sqrt() * (n as f64 / E).powf(n as f64);
             let rel_error = ((exact - stirling) / exact).abs();
 
             println!(
@@ -1766,7 +1764,7 @@ impl DerivationStudio {
 
         println!("Watching erf(1) series converge...");
 
-        let x = 1.0;
+        let x: f64 = 1.0;
         let exact = erf(x);
         let mut sum = 0.0;
         let prefactor = 2.0 / PI.sqrt();
@@ -2208,11 +2206,13 @@ impl DerivationStudio {
     }
 }
 
+#[allow(dead_code)]
 fn wait_for_user_input() -> Result<(), Box<dyn std::error::Error>> {
     get_user_input("Press Enter to continue...")?;
     Ok(())
 }
 
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
     print!("{}", prompt);
     io::stdout().flush()?;
@@ -2221,6 +2221,7 @@ fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
     Ok(input.trim().to_string())
 }
 
+#[allow(dead_code)]
 fn gamma_complex(z: Complex64) -> Complex64 {
     // Complex gamma function implementation using Lanczos approximation
     if z.re > 0.0 {
@@ -2248,7 +2249,7 @@ fn gamma_complex(z: Complex64) -> Complex64 {
         let t = z_shifted + Complex64::new(g + 0.5, 0.0);
         let sqrt_2pi = Complex64::new((2.0 * PI).sqrt(), 0.0);
 
-        sqrt_2pi * t.powf(z_shifted + Complex64::new(0.5, 0.0)) * (-t).exp() * x
+        sqrt_2pi * t.powf((z_shifted + Complex64::new(0.5, 0.0)).re) * (-t).exp() * x
     } else {
         // Use reflection formula for negative real part
         let pi_z = Complex64::new(PI, 0.0) * z;
@@ -2263,6 +2264,7 @@ fn gamma_complex(z: Complex64) -> Complex64 {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut studio = DerivationStudio::new();
     studio.run()

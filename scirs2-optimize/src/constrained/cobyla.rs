@@ -25,6 +25,7 @@ use scirs2_core::validation::check_finite;
 /// Powell, M. J. D. (1994). "A Direct Search Optimization Method That Models
 /// the Objective and Constraint Functions by Linear Interpolation."
 /// In Advances in Optimization and Numerical Analysis, pp. 51-67.
+#[allow(dead_code)]
 pub fn minimize_cobyla<F, S>(
     func: F,
     x0: &ArrayBase<S, Ix1>,
@@ -242,6 +243,7 @@ where
 
 /// Build linear models for the objective function and constraints
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn build_linear_models(
     xpt: &Array2<f64>,
     fval: &Array1<f64>,
@@ -276,6 +278,7 @@ fn build_linear_models(
 }
 
 /// Solve the trust region subproblem
+#[allow(dead_code)]
 fn solve_trust_region_subproblem(
     grad_f: &Array1<f64>,
     grad_c: &Array2<f64>,
@@ -325,6 +328,7 @@ fn solve_trust_region_subproblem(
 
 /// Update the interpolation set with a new point
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn update_interpolation_set(
     xpt: &mut Array2<f64>,
     fval: &mut Array1<f64>,

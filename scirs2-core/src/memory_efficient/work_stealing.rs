@@ -974,11 +974,13 @@ impl Default for WorkStealingConfigBuilder {
 }
 
 /// Create a default work-stealing scheduler
+#[allow(dead_code)]
 pub fn create_work_stealing_scheduler() -> CoreResult<WorkStealingScheduler> {
     WorkStealingScheduler::new(WorkStealingConfig::default())
 }
 
 /// Create a work-stealing scheduler optimized for CPU-intensive tasks
+#[allow(dead_code)]
 pub fn create_cpu_intensive_scheduler() -> CoreResult<WorkStealingScheduler> {
     let config = WorkStealingConfigBuilder::new()
         .num_workers(
@@ -995,6 +997,7 @@ pub fn create_cpu_intensive_scheduler() -> CoreResult<WorkStealingScheduler> {
 }
 
 /// Create a work-stealing scheduler optimized for I/O-intensive tasks
+#[allow(dead_code)]
 pub fn create_io_intensive_scheduler() -> CoreResult<WorkStealingScheduler> {
     let num_workers = std::thread::available_parallelism()
         .map(|n| n.get() * 2) // More threads for I/O

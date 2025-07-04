@@ -8,6 +8,7 @@ use ndarray::{Array1, ArrayView1};
 use scirs2_optimize::prelude::*;
 
 /// Complex multi-modal test function for demonstrating Ultrathink capabilities
+#[allow(dead_code)]
 fn complex_optimization_problem(x: &ArrayView1<f64>) -> f64 {
     let n = x.len();
     let mut result = 0.0;
@@ -33,6 +34,7 @@ fn complex_optimization_problem(x: &ArrayView1<f64>) -> f64 {
 }
 
 /// Demonstration of different Ultrathink strategies
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧠 Ultrathink Mode Optimization Demonstration 🧠");
     println!("=================================================");

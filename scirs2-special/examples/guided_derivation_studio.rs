@@ -70,6 +70,7 @@ impl DerivationSession {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("📚 Guided Derivation Studio for Special Functions");
     println!("================================================\n");
@@ -103,6 +104,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_derivation_menu() {
     println!("📖 Available Derivations:");
     println!("1. 🎲 Γ(1/2) = √π (Beginner)");
@@ -116,6 +118,7 @@ fn display_derivation_menu() {
     println!();
 }
 
+#[allow(dead_code)]
 fn gamma_half_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎲 Derivation: Γ(1/2) = √π");
     println!("===========================\n");
@@ -216,6 +219,7 @@ fn gamma_half_derivation() -> Result<(), Box<dyn std::error::Error>> {
     run_derivation_session(session)
 }
 
+#[allow(dead_code)]
 fn stirling_approximation_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Derivation: Stirling's Approximation");
     println!("=======================================\n");
@@ -317,6 +321,7 @@ fn stirling_approximation_derivation() -> Result<(), Box<dyn std::error::Error>>
     run_derivation_session(session)
 }
 
+#[allow(dead_code)]
 fn bessel_generating_function_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 Derivation: Bessel Function Generating Function");
     println!("=================================================\n");
@@ -419,6 +424,7 @@ fn bessel_generating_function_derivation() -> Result<(), Box<dyn std::error::Err
     run_derivation_session(session)
 }
 
+#[allow(dead_code)]
 fn error_function_series_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Derivation: Error Function Series Expansion");
     println!("===============================================\n");
@@ -521,6 +527,7 @@ fn error_function_series_derivation() -> Result<(), Box<dyn std::error::Error>> 
     run_derivation_session(session)
 }
 
+#[allow(dead_code)]
 fn legendre_orthogonality_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📐 Derivation: Legendre Polynomial Orthogonality");
     println!("================================================\n");
@@ -623,6 +630,7 @@ fn legendre_orthogonality_derivation() -> Result<(), Box<dyn std::error::Error>>
     run_derivation_session(session)
 }
 
+#[allow(dead_code)]
 fn hypergeometric_integral_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔢 Derivation: Hypergeometric Integral Representation");
     println!("====================================================\n");
@@ -725,6 +733,7 @@ fn hypergeometric_integral_derivation() -> Result<(), Box<dyn std::error::Error>
     run_derivation_session(session)
 }
 
+#[allow(dead_code)]
 fn spherical_harmonics_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌍 Expert Derivation: Spherical Harmonics from Laplace Equation");
     println!("===============================================================\n");
@@ -852,6 +861,7 @@ fn spherical_harmonics_derivation() -> Result<(), Box<dyn std::error::Error>> {
     run_derivation_session(session)
 }
 
+#[allow(dead_code)]
 fn wright_function_asymptotic_derivation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧮 Expert Derivation: Wright Function Asymptotic Behavior");
     println!("=========================================================\n");
@@ -956,6 +966,7 @@ fn wright_function_asymptotic_derivation() -> Result<(), Box<dyn std::error::Err
     run_derivation_session(session)
 }
 
+#[allow(dead_code)]
 fn run_derivation_session(
     mut session: DerivationSession,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1044,6 +1055,7 @@ fn run_derivation_session(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_session_status(session: &DerivationSession) {
     println!(
         "📊 Progress: {:.1}% ({}/{} steps completed)",
@@ -1071,6 +1083,7 @@ fn display_session_status(session: &DerivationSession) {
     println!("]\n");
 }
 
+#[allow(dead_code)]
 fn show_hints(step: &DerivationStep, session: &mut DerivationSession) {
     println!("\n💡 Hints for this step:");
     for (i, hint) in step.hints.iter().enumerate() {
@@ -1080,6 +1093,7 @@ fn show_hints(step: &DerivationStep, session: &mut DerivationSession) {
     println!();
 }
 
+#[allow(dead_code)]
 fn show_alternatives(step: &DerivationStep) {
     println!("\n🔄 Alternative approaches:");
     for (i, approach) in step.alternative_approaches.iter().enumerate() {
@@ -1088,6 +1102,7 @@ fn show_alternatives(step: &DerivationStep) {
     println!();
 }
 
+#[allow(dead_code)]
 fn run_validation_questions(step: &DerivationStep) -> Result<(), Box<dyn std::error::Error>> {
     if step.validation_questions.is_empty() {
         println!("ℹ️ No validation questions for this step.");
@@ -1126,6 +1141,7 @@ fn run_validation_questions(step: &DerivationStep) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn show_session_progress(session: &DerivationSession) {
     println!("\n📊 Session Progress Report");
     println!("=========================");
@@ -1164,6 +1180,7 @@ fn show_session_progress(session: &DerivationSession) {
     println!();
 }
 
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
     print!("{}", prompt);
     io::stdout().flush()?;

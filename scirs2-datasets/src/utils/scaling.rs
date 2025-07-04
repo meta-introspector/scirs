@@ -26,6 +26,7 @@ use ndarray::Array2;
 /// normalize(&mut data);
 /// // data is now normalized with zero mean and unit variance for each feature
 /// ```
+#[allow(dead_code)]
 pub fn normalize(data: &mut Array2<f64>) {
     let n_features = data.ncols();
 
@@ -63,6 +64,7 @@ pub fn normalize(data: &mut Array2<f64>) {
 /// min_max_scale(&mut data, (0.0, 1.0));
 /// // Features are now scaled to [0, 1] range
 /// ```
+#[allow(dead_code)]
 pub fn min_max_scale(data: &mut Array2<f64>, feature_range: (f64, f64)) {
     let (range_min, range_max) = feature_range;
     let range_size = range_max - range_min;
@@ -104,6 +106,7 @@ pub fn min_max_scale(data: &mut Array2<f64>, feature_range: (f64, f64)) {
 /// robust_scale(&mut data);
 /// // Features are now robustly scaled using median and IQR
 /// ```
+#[allow(dead_code)]
 pub fn robust_scale(data: &mut Array2<f64>) {
     for j in 0..data.ncols() {
         let mut column_values: Vec<f64> = data.column(j).to_vec();

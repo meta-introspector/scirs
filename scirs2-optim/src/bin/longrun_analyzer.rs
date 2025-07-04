@@ -489,6 +489,7 @@ struct LongRunRecommendation {
     pub monitoring_requirements: Vec<String>,
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     let matches = Command::new("longrun_analyzer")
         .version("0.1.0")
@@ -667,6 +668,7 @@ struct SystemEvent {
     impact_level: f64,
 }
 
+#[allow(dead_code)]
 fn load_longrun_test_results(path: &Path, verbose: bool) -> Result<LongRunTestData> {
     if verbose {
         println!("  Loading long-running test data from: {}", path.display());
@@ -687,6 +689,7 @@ fn load_longrun_test_results(path: &Path, verbose: bool) -> Result<LongRunTestDa
     Ok(create_mock_longrun_data())
 }
 
+#[allow(dead_code)]
 fn create_mock_longrun_data() -> LongRunTestData {
     let duration = 43200.0; // 12 hours
     let sampling_interval = 60.0; // Every minute
@@ -757,6 +760,7 @@ fn create_mock_longrun_data() -> LongRunTestData {
     }
 }
 
+#[allow(dead_code)]
 fn analyze_longrun_test_results(
     data: LongRunTestData,
     stability_threshold: f64,
@@ -875,6 +879,7 @@ fn analyze_longrun_test_results(
     })
 }
 
+#[allow(dead_code)]
 fn analyze_endurance(data: &LongRunTestData) -> EnduranceAnalysis {
     // Analyze performance sustainability
     let perf_timeline = &data.performance_timeline;
@@ -1031,6 +1036,7 @@ fn analyze_endurance(data: &LongRunTestData) -> EnduranceAnalysis {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_stability_coefficient(timeline: &[(u64, f64)]) -> f64 {
     if timeline.len() < 2 {
         return 1.0;
@@ -1051,6 +1057,7 @@ fn calculate_stability_coefficient(timeline: &[(u64, f64)]) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_sustainability_score(degradation_rate: f64) -> f64 {
     if degradation_rate <= 0.0 {
         1.0
@@ -1059,6 +1066,7 @@ fn calculate_sustainability_score(degradation_rate: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_endurance_score(
     performance: &PerformanceSustainabilityAnalysis,
     memory: &MemorySustainabilityAnalysis,
@@ -1071,6 +1079,7 @@ fn calculate_endurance_score(
     (perf_score + mem_score + error_score) / 3.0
 }
 
+#[allow(dead_code)]
 fn analyze_trends(_data: &LongRunTestData) -> TrendAnalysis {
     // Simplified trend analysis
     TrendAnalysis {
@@ -1098,6 +1107,7 @@ fn analyze_trends(_data: &LongRunTestData) -> TrendAnalysis {
     }
 }
 
+#[allow(dead_code)]
 fn analyze_reliability(data: &LongRunTestData) -> ReliabilityAnalysis {
     let failures = &data.failure_events;
     let total_failures = failures.len();
@@ -1183,6 +1193,7 @@ fn analyze_reliability(data: &LongRunTestData) -> ReliabilityAnalysis {
     }
 }
 
+#[allow(dead_code)]
 fn calculate_reliability_score(
     availability: &AvailabilityAnalysis,
     _mtbf: &MtbfAnalysis,
@@ -1194,6 +1205,7 @@ fn calculate_reliability_score(
     (availability_score + fault_tolerance_score) / 2.0
 }
 
+#[allow(dead_code)]
 fn analyze_longterm_resources(data: &LongRunTestData) -> LongTermResourceAnalysis {
     let cpu_trends = analyze_resource_trends(&data.cpu_timeline);
     let memory_trends = analyze_resource_trends(&data.memory_timeline);
@@ -1236,6 +1248,7 @@ fn analyze_longterm_resources(data: &LongRunTestData) -> LongTermResourceAnalysi
     }
 }
 
+#[allow(dead_code)]
 fn analyze_resource_trends(timeline: &[(u64, f64)]) -> ResourceTrendAnalysis {
     if timeline.is_empty() {
         return ResourceTrendAnalysis {
@@ -1285,6 +1298,7 @@ fn analyze_resource_trends(timeline: &[(u64, f64)]) -> ResourceTrendAnalysis {
     }
 }
 
+#[allow(dead_code)]
 fn analyze_longterm_degradation(data: &LongRunTestData) -> LongTermDegradationAnalysis {
     let performance_timeline = &data.performance_timeline;
     let initial_perf = performance_timeline
@@ -1343,6 +1357,7 @@ fn analyze_longterm_degradation(data: &LongRunTestData) -> LongTermDegradationAn
     }
 }
 
+#[allow(dead_code)]
 fn generate_longrun_recommendations(
     endurance: &EnduranceAnalysis,
     reliability: &ReliabilityAnalysis,
@@ -1431,6 +1446,7 @@ fn generate_longrun_recommendations(
     recommendations
 }
 
+#[allow(dead_code)]
 fn calculate_overall_stability_score(
     reliability: &ReliabilityAnalysis,
     endurance: &EnduranceAnalysis,
@@ -1438,6 +1454,7 @@ fn calculate_overall_stability_score(
     (reliability.system_reliability_score + endurance.system_endurance_score) / 2.0
 }
 
+#[allow(dead_code)]
 fn count_critical_issues(
     data: &LongRunTestData,
     endurance: &EnduranceAnalysis,
@@ -1471,6 +1488,7 @@ fn count_critical_issues(
     issues
 }
 
+#[allow(dead_code)]
 fn determine_test_status(
     stability_score: f64,
     uptime_percentage: f64,
@@ -1487,10 +1505,12 @@ fn determine_test_status(
     }
 }
 
+#[allow(dead_code)]
 fn generate_json_report(report: &LongRunAnalysisReport) -> Result<String> {
     serde_json::to_string_pretty(report).map_err(|e| OptimError::SerializationError(e.to_string()))
 }
 
+#[allow(dead_code)]
 fn generate_markdown_report(report: &LongRunAnalysisReport) -> Result<String> {
     let mut md = String::new();
 
@@ -1643,6 +1663,7 @@ fn generate_markdown_report(report: &LongRunAnalysisReport) -> Result<String> {
     Ok(md)
 }
 
+#[allow(dead_code)]
 fn generate_github_actions_report(report: &LongRunAnalysisReport) -> Result<String> {
     let json_report = generate_json_report(report)?;
     let mut output = String::new();

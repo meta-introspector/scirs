@@ -13,6 +13,7 @@ use std::time::Instant;
 /// Creates a system of n coupled oscillators, where each oscillator is
 /// influenced by several neighbors. This produces a large system with a
 /// sparse Jacobian structure.
+#[allow(dead_code)]
 fn coupled_oscillators(n: usize) -> impl Fn(f64, ArrayView1<f64>) -> Array1<f64> + Clone {
     move |_t: f64, y: ArrayView1<f64>| {
         // Each oscillator has position and velocity (y[2i], y[2i+1])
@@ -50,6 +51,7 @@ fn coupled_oscillators(n: usize) -> impl Fn(f64, ArrayView1<f64>) -> Array1<f64>
 }
 
 /// Generate a large but sparse reaction-diffusion system
+#[allow(dead_code)]
 fn reaction_diffusion(n: usize) -> impl Fn(f64, ArrayView1<f64>) -> Array1<f64> + Clone {
     move |_t: f64, y: ArrayView1<f64>| {
         // Two species (u, v) on a 1D grid of n points
@@ -88,6 +90,7 @@ fn reaction_diffusion(n: usize) -> impl Fn(f64, ArrayView1<f64>) -> Array1<f64> 
 }
 
 /// Solve a large system with different Jacobian strategies and compare performance
+#[allow(dead_code)]
 fn benchmark_jacobian_strategies(
     system_name: &str,
     system_function: impl Fn(f64, ArrayView1<f64>) -> Array1<f64> + Clone + Sync,
@@ -260,6 +263,7 @@ fn benchmark_jacobian_strategies(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("Parallel Jacobian Computation Benchmark");
     println!("======================================");

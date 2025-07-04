@@ -539,6 +539,7 @@ impl<F: IntegrateFloat> BlockJacobiPreconditioner<F> {
 ///
 /// # Returns
 /// * A function that applies the preconditioner to a vector
+#[allow(dead_code)]
 pub fn create_block_ilu_preconditioner<F>(
     f_x: &Array2<F>,
     f_y: &Array2<F>,
@@ -568,6 +569,7 @@ where
 ///
 /// # Returns
 /// * A function that applies the preconditioner to a vector
+#[allow(dead_code)]
 pub fn create_block_jacobi_preconditioner<F>(
     jacobian: &Array2<F>,
     block_size: usize,

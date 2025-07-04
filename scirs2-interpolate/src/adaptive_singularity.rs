@@ -618,6 +618,7 @@ where
 /// # Returns
 ///
 /// The number of refinements applied and the detected singularities
+#[allow(dead_code)]
 pub fn apply_singularity_handling<T>(
     spline: &mut MultiscaleBSpline<T>,
     detector: &SingularityDetector<T>,

@@ -46,6 +46,7 @@ pub enum GridTransformMethod {
 /// assert_eq!(grid_coords[0].len(), 10);
 /// assert_eq!(grid_coords[1].len(), 20);
 /// ```
+#[allow(dead_code)]
 pub fn create_regular_grid<F>(
     bounds: &[(F, F)],
     shape: &[usize],
@@ -111,6 +112,7 @@ where
 /// A tuple containing:
 /// * The grid coordinates for each dimension (vector of arrays)
 /// * The resampled values on the regular grid
+#[allow(dead_code)]
 pub fn resample_to_grid<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -175,6 +177,7 @@ where
 }
 
 /// Resample using nearest neighbor interpolation
+#[allow(dead_code)]
 fn resample_nearest_neighbor<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -230,6 +233,7 @@ where
 }
 
 /// Resample using RBF interpolation for smooth results
+#[allow(dead_code)]
 fn resample_rbf<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -289,6 +293,7 @@ where
 }
 
 /// Linear interpolation for grid resampling (simplified implementation)
+#[allow(dead_code)]
 fn resample_linear<F>(
     points: &ArrayView2<F>,
     values: &ArrayView1<F>,
@@ -305,6 +310,7 @@ where
 }
 
 /// Helper function to increment multi-dimensional indices
+#[allow(dead_code)]
 fn increment_indices(indices: &mut [usize], shape: &[usize]) -> bool {
     for i in (0..indices.len()).rev() {
         indices[i] += 1;
@@ -329,6 +335,7 @@ fn increment_indices(indices: &mut [usize], shape: &[usize]) -> bool {
 /// # Returns
 ///
 /// Resampled values on the destination grid
+#[allow(dead_code)]
 pub fn resample_grid_to_grid<F, D>(
     src_coords: &[Array1<F>],
     src_values: &ndarray::ArrayView<F, D>,
@@ -397,6 +404,7 @@ where
 }
 
 /// Convert multi-dimensional indices to linear index
+#[allow(dead_code)]
 fn ravel_multi_index(indices: &[usize], shape: &[usize]) -> usize {
     let mut linear_idx = 0;
     let mut stride = 1;
@@ -410,6 +418,7 @@ fn ravel_multi_index(indices: &[usize], shape: &[usize]) -> usize {
 }
 
 /// Grid-to-grid resampling using nearest neighbor
+#[allow(dead_code)]
 fn grid_to_grid_nearest<F, D>(
     src_coords: &[Array1<F>],
     src_values: &ndarray::ArrayView<F, D>,
@@ -477,6 +486,7 @@ where
 }
 
 /// Grid-to-grid resampling using linear interpolation
+#[allow(dead_code)]
 fn grid_to_grid_linear<F, D>(
     src_coords: &[Array1<F>],
     src_values: &ndarray::ArrayView<F, D>,
@@ -515,6 +525,7 @@ where
 }
 
 /// Perform multilinear interpolation at a single point
+#[allow(dead_code)]
 fn multilinear_interpolate<F, D>(
     coords: &[Array1<F>],
     values: &ndarray::ArrayView<F, D>,
@@ -602,6 +613,7 @@ where
 /// # Returns
 ///
 /// Values at the query points
+#[allow(dead_code)]
 pub fn map_grid_to_points<F, D>(
     grid_coords: &[Array1<F>],
     grid_values: &ndarray::ArrayView<F, D>,
@@ -657,6 +669,7 @@ where
 }
 
 /// Find the nearest grid point value
+#[allow(dead_code)]
 fn grid_nearest_neighbor<F, D>(
     grid_coords: &[Array1<F>],
     grid_values: &ndarray::ArrayView<F, D>,
@@ -694,6 +707,7 @@ where
 }
 
 /// Efficient grid coordinate range checking
+#[allow(dead_code)]
 fn point_in_grid_bounds<F>(grid_coords: &[Array1<F>], point: &[F]) -> bool
 where
     F: Float + PartialOrd,
@@ -714,6 +728,7 @@ where
 ///
 /// This function creates all combinations of coordinates from the input arrays,
 /// useful for creating meshgrids for evaluation.
+#[allow(dead_code)]
 pub fn create_meshgrid<F>(coords: &[Array1<F>]) -> InterpolateResult<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + Zero,
@@ -749,6 +764,7 @@ where
 }
 
 /// Calculate grid spacing for each dimension
+#[allow(dead_code)]
 pub fn calculate_grid_spacing<F>(coords: &[Array1<F>]) -> InterpolateResult<Vec<F>>
 where
     F: Float + FromPrimitive + Debug + Clone,

@@ -864,6 +864,7 @@ impl GpuBenchmarkResults {
 
 /// Utility functions for GPU operations
 /// Check if CUDA is available on the system
+#[allow(dead_code)]
 pub fn is_cuda_available() -> bool {
     // 1. Check for CUDA environment variables
     let cuda_env_available = std::env::var("CUDA_VISIBLE_DEVICES").is_ok()
@@ -901,6 +902,7 @@ pub fn is_cuda_available() -> bool {
 }
 
 /// Check if OpenCL is available on the system
+#[allow(dead_code)]
 pub fn is_opencl_available() -> bool {
     // 1. Check for common OpenCL library paths (cross-platform)
     let opencl_paths = [
@@ -945,6 +947,7 @@ pub fn is_opencl_available() -> bool {
 }
 
 /// Get optimal GPU configuration for the current system
+#[allow(dead_code)]
 pub fn get_optimal_gpu_config() -> GpuConfig {
     if is_cuda_available() {
         GpuConfig {
@@ -973,6 +976,7 @@ pub fn get_optimal_gpu_config() -> GpuConfig {
 }
 
 /// List available GPU devices
+#[allow(dead_code)]
 pub fn list_gpu_devices() -> Result<Vec<GpuDeviceInfo>> {
     let mut devices = Vec::new();
 
@@ -1014,6 +1018,7 @@ pub fn list_gpu_devices() -> Result<Vec<GpuDeviceInfo>> {
 /// Convenience functions for GPU-accelerated data generation
 ///
 /// Generate classification dataset with automatic GPU detection
+#[allow(dead_code)]
 pub fn make_classification_auto_gpu(
     n_samples: usize,
     n_features: usize,
@@ -1035,6 +1040,7 @@ pub fn make_classification_auto_gpu(
 }
 
 /// Generate regression dataset with automatic GPU detection
+#[allow(dead_code)]
 pub fn make_regression_auto_gpu(
     n_samples: usize,
     n_features: usize,
@@ -1048,6 +1054,7 @@ pub fn make_regression_auto_gpu(
 }
 
 /// Generate blobs dataset with automatic GPU detection
+#[allow(dead_code)]
 pub fn make_blobs_auto_gpu(
     n_samples: usize,
     n_features: usize,

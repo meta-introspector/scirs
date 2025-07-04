@@ -115,7 +115,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Dense<F> {
 
         let weights =
             Array::from_shape_vec(IxDyn(&[input_dim, output_dim]), weights_vec).map_err(|e| {
-                NeuralError::InvalidArchitecture(format!("Failed to create weights array: {}", e))
+                NeuralError::InvalidArchitecture(format!("Failed to create weights array: {e}"))
             })?;
 
         // Initialize biases with zeros
@@ -182,9 +182,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
             input
                 .clone()
                 .into_shape_with_order(IxDyn(&[1, self.input_dim]))
-                .map_err(|e| {
-                    NeuralError::InferenceError(format!("Failed to reshape input: {}", e))
-                })?
+                .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape input: {e}")))?
         } else {
             input.clone()
         };
@@ -249,7 +247,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
             grad_pre_activation
                 .into_shape_with_order(IxDyn(&[1, self.output_dim]))
                 .map_err(|e| {
-                    NeuralError::InferenceError(format!("Failed to reshape gradient: {}", e))
+                    NeuralError::InferenceError(format!("Failed to reshape gradient: {e}"))
                 })?
         } else {
             grad_pre_activation
@@ -259,7 +257,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Dens
             cached_input
                 .into_shape_with_order(IxDyn(&[1, self.input_dim]))
                 .map_err(|e| {
-                    NeuralError::InferenceError(format!("Failed to reshape cached input: {}", e))
+                    NeuralError::InferenceError(format!("Failed to reshape cached input: {e}"))
                 })?
         } else {
             cached_input

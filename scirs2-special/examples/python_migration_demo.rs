@@ -6,6 +6,7 @@
 use ndarray::Array1;
 use scirs2_special::python_interop::{codegen, compat, examples, MigrationGuide};
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Python/SciPy Migration Assistant Demo ===\n");
 

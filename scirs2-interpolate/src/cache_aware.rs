@@ -607,6 +607,7 @@ where
 /// # Returns
 ///
 /// A cache-optimized RBF interpolator
+#[allow(dead_code)]
 pub fn make_cache_aware_rbf<F>(
     points: Array2<F>,
     values: Array1<F>,

@@ -97,6 +97,7 @@ pub use adaptive::{
 /// assert!((y[0] - 1.5f32).abs() < 1e-6);
 /// assert!((y[1] - 3.5f32).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn mixed_precision_matvec<A, B, C, H>(
     a: &ArrayView2<A>,
     x: &ArrayView1<B>,
@@ -151,6 +152,7 @@ where
 /// assert!((c[[1, 0]] - 43.0f32).abs() < 1e-5);
 /// assert!((c[[1, 1]] - 50.0f32).abs() < 1e-5);
 /// ```
+#[allow(dead_code)]
 pub fn mixed_precision_matmul<A, B, C, H>(
     a: &ArrayView2<A>,
     b: &ArrayView2<B>,
@@ -213,6 +215,7 @@ where
 ///
 /// // The mixed precision version may be more accurate
 /// ```
+#[allow(dead_code)]
 pub fn mixed_precision_dot<A, B, C, H>(a: &ArrayView1<A>, b: &ArrayView1<B>) -> LinalgResult<C>
 where
     A: Clone + Debug + ToPrimitive + Copy,
@@ -239,6 +242,7 @@ where
 /// * `A` - Input matrix precision
 /// * `C` - Output matrix precision
 /// * `H` - High precision used for computation
+#[allow(dead_code)]
 pub fn mixed_precision_inv<A, C, H>(a: &ArrayView2<A>) -> LinalgResult<Array2<C>>
 where
     A: Clone + Debug + ToPrimitive + Copy,
@@ -349,6 +353,7 @@ where
 /// * `A` - Input matrix precision
 /// * `C` - Output scalar precision
 /// * `H` - High precision used for computation
+#[allow(dead_code)]
 pub fn mixed_precision_det<A, C, H>(a: &ArrayView2<A>) -> LinalgResult<C>
 where
     A: Clone + Debug + ToPrimitive + Copy,

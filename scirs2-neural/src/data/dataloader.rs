@@ -122,6 +122,7 @@ impl<
     fn next(&mut self) -> Option<Self::Item> {
         self.next_batch()
 /// Helper function to create an iterator over the dataset in batches
+#[allow(dead_code)]
 pub fn iter_batches<
 >(
     dataset: D,

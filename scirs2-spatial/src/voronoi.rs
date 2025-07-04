@@ -642,6 +642,7 @@ impl Voronoi {
 ///
 /// let vor = voronoi(&points.view(), false).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn voronoi(points: &ArrayView2<'_, f64>, furthest_site: bool) -> SpatialResult<Voronoi> {
     Voronoi::new(points, furthest_site)
 }

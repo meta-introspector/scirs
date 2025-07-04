@@ -6,6 +6,7 @@
 use ndarray::Array1;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Enhanced Parametric Spectral Estimation Validation");
     println!("=================================================");
@@ -30,6 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_ar_estimation() -> Result<(), Box<dyn std::error::Error>> {
     // Generate a known AR(2) process for testing
     let n = 500;
@@ -88,6 +90,7 @@ fn test_ar_estimation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_ma_estimation() -> Result<(), Box<dyn std::error::Error>> {
     // Generate a known MA(2) process for testing
     let n = 400;
@@ -142,6 +145,7 @@ fn test_ma_estimation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_arma_estimation() -> Result<(), Box<dyn std::error::Error>> {
     // Generate ARMA(1,1) process for testing
     let n = 600;
@@ -188,6 +192,7 @@ fn test_arma_estimation() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn test_spectral_analysis() -> Result<(), Box<dyn std::error::Error>> {
     // Test spectral computation for AR model
     println!("  Testing AR spectral analysis...");

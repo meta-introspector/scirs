@@ -1,6 +1,7 @@
 use scirs2_neural::prelude::*;
 use ndarray::Array;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Testing activation functions...");
     

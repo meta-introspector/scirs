@@ -125,6 +125,7 @@ impl Default for AttributionConfig {
         }
     }
 /// Batch attribution computation with parallel processing
+#[allow(dead_code)]
 pub fn compute_batch_attribution<F, M>(
     model: &M,
     inputs: &ArrayD<F>,
@@ -170,6 +171,7 @@ where
     // Concatenate results
     concatenate_attribution_results(results)
 /// Compute attribution for a single batch
+#[allow(dead_code)]
 fn compute_single_attribution<F, M>(
     input: &ArrayD<F>,
     F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
@@ -188,11 +190,13 @@ fn compute_single_attribution<F, M>(
             let interpreter = create_mock_interpreter();
             compute_saliency_attribution(&interpreter, input, None)
 /// Create a mock interpreter for compatibility
+#[allow(dead_code)]
 fn create_mock_interpreter<F>() -> ModelInterpreter<F>
     ModelInterpreter {
         cached_gradients: Arc::new(RwLock::new(HashMap::new())),
         cached_activations: Arc::new(RwLock::new(HashMap::new())),
 /// Optimized saliency attribution with real gradient computation
+#[allow(dead_code)]
 pub fn compute_saliency_attribution_optimized<F, M>(
     target_class: Option<usize>,
     // Compute real gradients using model's backward pass
@@ -204,6 +208,7 @@ pub fn compute_saliency_attribution_optimized<F, M>(
     };
     Ok(attribution)
 /// Compute simple gradient-based saliency attribution (original function kept for compatibility)
+#[allow(dead_code)]
 pub fn compute_saliency_attribution<F>(
     interpreter: &ModelInterpreter<F>,
     F: Float
@@ -221,6 +226,7 @@ pub fn compute_saliency_attribution<F>(
         // Compute numerical gradients if no cached gradients available
         compute_numerical_gradient(interpreter, input, target_class)
 /// Compute model gradients using actual forward and backward passes
+#[allow(dead_code)]
 fn compute_model_gradients<F, M>(
     // Forward pass to get model output
     let output = model.forward(input)?;
@@ -249,6 +255,7 @@ fn compute_model_gradients<F, M>(
     // Backward pass to compute gradients
     model.backward(input, &target_gradient)
 /// Compute numerical gradients using finite differences
+#[allow(dead_code)]
 fn compute_numerical_gradient<F>(
     _target_class: Option<usize>,
     let epsilon = F::from(1e-5).unwrap();
@@ -315,6 +322,7 @@ fn compute_numerical_gradient<F>(
                 *grad_elem = grad_val;
     Ok(gradient.mapv(|x| x.abs()))
 /// Enhanced pseudo output computation with more realistic neural network patterns
+#[allow(dead_code)]
 fn compute_enhanced_pseudo_output<F>(input: &ArrayD<F>) -> F
     // Multi-layer pseudo neural network computation
     let input_flat = input.as_slice().unwrap_or(&[]);
@@ -347,9 +355,11 @@ fn compute_enhanced_pseudo_output<F>(input: &ArrayD<F>) -> F
     periodic_component * F::from(0.2).unwrap() +
     (layer1_out * layer1_out) * F::from(0.1).unwrap()
 /// Compute pseudo output value for numerical gradient computation (kept for compatibility)
+#[allow(dead_code)]
 fn compute_pseudo_output_value<F>(input: &ArrayD<F>) -> F
     compute_enhanced_pseudo_output(input)
 /// Improved numerical gradient computation with adaptive step size
+#[allow(dead_code)]
 fn compute_adaptive_numerical_gradient<F>(
     // Adaptive step size based on input magnitude
     let input_magnitude = (input.mapv(|x| x * x).sum()).sqrt();
@@ -386,6 +396,7 @@ fn compute_adaptive_numerical_gradient<F>(
         if let Some(grad_elem) = gradient.get_mut(&indices[..]) {
             *grad_elem = grad_val;
 /// Optimized integrated gradients with model integration
+#[allow(dead_code)]
 pub fn compute_integrated_gradients_optimized<F, M>(
     baseline: &BaselineMethod,
     num_steps: usize,
@@ -404,6 +415,7 @@ pub fn compute_integrated_gradients_optimized<F, M>(
     }?;
     Ok(integration_result)
 /// Parallel integrated gradients computation
+#[allow(dead_code)]
 fn compute_integrated_gradients_parallel<F, M>(
     baseline: &ArrayD<F>,
     diff: &ArrayD<F>,
@@ -429,6 +441,7 @@ fn compute_integrated_gradients_parallel<F, M>(
         integrated_gradients = integrated_gradients + gradient * weight;
     Ok(diff * integrated_gradients)
 /// Gaussian quadrature integration with model
+#[allow(dead_code)]
 fn compute_integrated_gradients_gaussian_model<F, M>(
     // Gaussian quadrature nodes and weights
     let (nodes, weights) = match num_steps {
@@ -449,6 +462,7 @@ fn compute_integrated_gradients_gaussian_model<F, M>(
         let weight_f = F::from(weight).unwrap();
         integrated_gradients = integrated_gradients + gradient * weight_f;
 /// Simpson's rule integration with model
+#[allow(dead_code)]
 fn compute_integrated_gradients_simpson_model<F, M>(
     let n = if num_steps % 2 == 0 { num_steps + 1 } else { num_steps };
     let h = F::one() / F::from(n - 1).unwrap();
@@ -462,6 +476,7 @@ fn compute_integrated_gradients_simpson_model<F, M>(
     let simpson_factor = h / F::from(3.0).unwrap();
     Ok(diff * integrated_gradients * simpson_factor)
 /// Adaptive integration with model
+#[allow(dead_code)]
 fn compute_integrated_gradients_adaptive_model<F, M>(
     let mut last_gradient = Array::zeros(input.raw_dim());
     let mut adaptive_weight_sum = F::zero();
@@ -478,6 +493,7 @@ fn compute_integrated_gradients_adaptive_model<F, M>(
     if adaptive_weight_sum > F::zero() {
         integrated_gradients = integrated_gradients / adaptive_weight_sum;
 /// Compute integrated gradients attribution with enhanced numerical integration (kept for compatibility)
+#[allow(dead_code)]
 pub fn compute_integrated_gradients<F>(
     let mut accumulated_gradients = Array::zeros(input.raw_dim());
     // Use enhanced integration methods for better accuracy
@@ -491,6 +507,7 @@ pub fn compute_integrated_gradients<F>(
             // For many steps, use adaptive Riemann integration
             compute_integrated_gradients_adaptive(interpreter, input, &baseline_input, num_steps, target_class)
 /// Integrated gradients using Gaussian quadrature
+#[allow(dead_code)]
 fn compute_integrated_gradients_gaussian<F>(
     // Gaussian quadrature nodes and weights for better numerical integration
             // Fall back to uniform spacing for higher orders
@@ -501,17 +518,20 @@ fn compute_integrated_gradients_gaussian<F>(
         let gradient = compute_enhanced_gradient_at_point(interpreter, &interpolated_input)?;
     Ok(&diff * integrated_gradients)
 /// Integrated gradients using Simpson's rule
+#[allow(dead_code)]
 fn compute_integrated_gradients_simpson<F>(
     // Ensure odd number of points for Simpson's rule
         // Simpson's rule weights: 1, 4, 2, 4, 2, ..., 4, 1
     Ok(&diff * integrated_gradients * simpson_factor)
 /// Adaptive Riemann integration for high step counts
+#[allow(dead_code)]
 fn compute_integrated_gradients_adaptive<F>(
     // Adaptive step size based on gradient magnitude changes
         let current_gradient = compute_enhanced_gradient_at_point(interpreter, &interpolated_input)?;
         // Compute adaptive weight based on gradient change
     // Normalize by adaptive weights
 /// Enhanced gradient computation at a specific point
+#[allow(dead_code)]
 fn compute_enhanced_gradient_at_point<F>(
     // Try to use cached gradients first
     if let Some(gradient) = interpreter.get_cached_gradients("input_gradient") {
@@ -519,6 +539,7 @@ fn compute_enhanced_gradient_at_point<F>(
         // Use adaptive numerical gradient computation
         compute_adaptive_numerical_gradient(interpreter, input, None)
 /// Compute GradCAM attribution
+#[allow(dead_code)]
 pub fn compute_gradcam_attribution<F>(
     target_layer: &str,
     // Get activations and gradients for target layer
@@ -564,6 +585,7 @@ pub fn compute_gradcam_attribution<F>(
         resize_attribution(&gradcam_relu, input.raw_dim())
         Ok(gradcam_relu)
 /// Compute guided backpropagation attribution
+#[allow(dead_code)]
 pub fn compute_guided_backprop_attribution<F>(
     // Guided backpropagation - simplified implementation
     // In practice, this would modify the backward pass to zero negative gradients
@@ -571,12 +593,14 @@ pub fn compute_guided_backprop_attribution<F>(
         Ok(gradient.mapv(|x| x.max(F::zero())))
         Ok(input.mapv(|_| F::zero()))
 /// Compute DeepLIFT attribution
+#[allow(dead_code)]
 pub fn compute_deeplift_attribution<F>(
     // DeepLIFT attribution - simplified implementation
     // In practice, this would require special backward pass rules
         Ok(&diff * gradient)
         Ok(diff)
 /// Compute SHAP attribution
+#[allow(dead_code)]
 pub fn compute_shap_attribution<F>(
     _interpreter: &ModelInterpreter<F>,
     background_samples: usize,
@@ -598,6 +622,7 @@ pub fn compute_shap_attribution<F>(
         total_attribution = total_attribution + marginal_contribution;
     Ok(total_attribution / F::from(num_samples).unwrap())
 /// Compute Layer-wise Relevance Propagation attribution
+#[allow(dead_code)]
 pub fn compute_lrp_attribution<F>(
     rule: &LRPRule,
     epsilon: f64,
@@ -634,6 +659,7 @@ pub fn compute_lrp_attribution<F>(
                 let clamped_input = input.mapv(|x| x.max(low_val).min(high_val));
                 Ok(clamped_input * gradient)
 /// Create baseline input based on baseline method
+#[allow(dead_code)]
 pub fn create_baseline<F>(input: &ArrayD<F>, baseline: &BaselineMethod) -> Result<ArrayD<F>>
     match baseline {
         BaselineMethod::Zero => Ok(Array::zeros(input.raw_dim())),
@@ -656,6 +682,7 @@ pub fn create_baseline<F>(input: &ArrayD<F>, baseline: &BaselineMethod) -> Resul
                     "Custom baseline dimensions do not match input dimensions".to_string(),
                 ))
 /// Helper function to resize attribution maps
+#[allow(dead_code)]
 fn resize_attribution<F>(attribution: &ArrayD<F>, target_dim: IxDyn) -> Result<ArrayD<F>>
     // Simplified resize that preserves attribution values
     let mut result = Array::zeros(target_dim.clone());
@@ -693,6 +720,7 @@ fn resize_attribution<F>(attribution: &ArrayD<F>, target_dim: IxDyn) -> Result<A
                         .min(attr_shape[i] - 1);
     Ok(result)
 /// Compute SmoothGrad attribution by adding noise and averaging
+#[allow(dead_code)]
 pub fn compute_smoothgrad_attribution<F>(
     base_method: &AttributionMethod,
     noise_std: f64,
@@ -718,12 +746,14 @@ use rand::rng;
     let num_samples_f = F::from(num_samples).unwrap();
     Ok(accumulated_attribution / num_samples_f)
 /// Compute Input x Gradient attribution
+#[allow(dead_code)]
 pub fn compute_input_x_gradient_attribution<F>(
     // First compute the gradient
     let gradient = compute_saliency_attribution(interpreter, input, target_class)?;
     // Then multiply by input (element-wise)
     Ok(input * &gradient)
 /// Compute Expected Gradients attribution with enhanced sampling
+#[allow(dead_code)]
 pub fn compute_expected_gradients_attribution<F>(
     num_references: usize,
     // Use different sampling strategies for references
@@ -759,6 +789,7 @@ pub fn compute_expected_gradients_attribution<F>(
     let num_references_f = F::from(num_references).unwrap();
     Ok(accumulated_attribution / num_references_f)
 /// Compute Gradient x Input with enhanced normalization
+#[allow(dead_code)]
 pub fn compute_enhanced_gradient_x_input_attribution<F>(
     // Compute gradient using enhanced method
     let gradient = compute_enhanced_gradient_at_point(interpreter, input)?;
@@ -778,6 +809,7 @@ pub fn compute_enhanced_gradient_x_input_attribution<F>(
         Ok(saturated_attribution * attribution_magnitude)
         Ok(raw_attribution)
 /// Compute Occlusion-based attribution
+#[allow(dead_code)]
 pub fn compute_occlusion_attribution<F>(
     window_size: &[usize],
     stride: &[usize],
@@ -828,6 +860,7 @@ pub fn compute_occlusion_attribution<F>(
                                 *attr = *attr + importance;
                     // For higher dimensions, apply simplified attribution
 /// Generate occlusion window positions recursively
+#[allow(dead_code)]
 fn generate_occlusion_positions(
     shape: &[usize],
     positions: &mut Vec<Vec<usize>>,
@@ -890,12 +923,14 @@ mod tests {
         assert!(config.use_cache);
 /// Additional optimized attribution functions
 /// Optimized Input x Gradient attribution
+#[allow(dead_code)]
 pub fn compute_input_x_gradient_attribution_optimized<F, M>(
     // Compute gradients using the model
     // Element-wise multiplication with input (optimized)
         input.mapv(|x| x) * gradients.mapv(|g| g)
         input * &gradients
 /// Optimized SmoothGrad attribution
+#[allow(dead_code)]
 pub fn compute_smoothgrad_attribution_optimized<F, M>(
     use rand_distr::StandardNormal;
     // Generate all noise samples upfront for better parallelization
@@ -926,6 +961,7 @@ pub fn compute_smoothgrad_attribution_optimized<F, M>(
         accumulated = accumulated + attribution;
     Ok(accumulated / num_samples_f)
 /// Concatenate attribution results from batch processing
+#[allow(dead_code)]
 fn concatenate_attribution_results<F>(
     results: Vec<ArrayD<F>>,
     if results.is_empty() {
@@ -967,6 +1003,7 @@ pub struct AttributionStatistics<F> {
     /// Total negative attribution
     pub negative_sum: F,
 /// Generate comprehensive attribution report
+#[allow(dead_code)]
 pub fn generate_attribution_report<F, M>(
 ) -> Result<AttributionReport<F>>
     // Compute attribution

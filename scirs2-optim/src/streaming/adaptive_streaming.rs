@@ -4,7 +4,7 @@
 //! that automatically adjust to changing data characteristics, concept drift,
 //! and varying computational constraints.
 
-use ndarray::{Array1, Dimension};
+use ndarray::Array1;
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};

@@ -1330,6 +1330,7 @@ impl BackwardEuler1D {
 }
 
 /// Helper function to apply Dirichlet boundary conditions to initial condition
+#[allow(dead_code)]
 fn apply_dirichlet_conditions_to_initial_1d(
     u0: &mut Array1<f64>,
     boundary_conditions: &[BoundaryCondition<f64>],

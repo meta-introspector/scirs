@@ -23,6 +23,7 @@ use scirs2_core::simd_ops::SimdUnifiedOps;
 ///
 /// * Transposed matrix
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_transpose_f32(matrix: &ArrayView2<f32>) -> LinalgResult<Array2<f32>> {
     // Use unified SIMD transpose operation
     Ok(f32::simd_transpose(matrix))
@@ -40,6 +41,7 @@ pub fn simd_transpose_f32(matrix: &ArrayView2<f32>) -> LinalgResult<Array2<f32>>
 ///
 /// * Transposed matrix
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_transpose_f64(matrix: &ArrayView2<f64>) -> LinalgResult<Array2<f64>> {
     // Use unified SIMD transpose operation
     Ok(f64::simd_transpose(matrix))
@@ -60,6 +62,7 @@ pub fn simd_transpose_f64(matrix: &ArrayView2<f64>) -> LinalgResult<Array2<f64>>
 ///
 /// * Result indicating success or failure
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_transpose_inplace_f32(matrix: &mut Array2<f32>) -> LinalgResult<()> {
     let (rows, cols) = matrix.dim();
 
@@ -96,6 +99,7 @@ pub fn simd_transpose_inplace_f32(matrix: &mut Array2<f32>) -> LinalgResult<()> 
 ///
 /// * Result indicating success or failure
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_transpose_inplace_f64(matrix: &mut Array2<f64>) -> LinalgResult<()> {
     let (rows, cols) = matrix.dim();
 

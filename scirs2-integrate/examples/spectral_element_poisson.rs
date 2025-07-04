@@ -5,6 +5,7 @@ use scirs2_integrate::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Spectral Element Method example for the 2D Poisson equation");
     println!("Solving: ∇²u = f(x,y) with Dirichlet boundary conditions");

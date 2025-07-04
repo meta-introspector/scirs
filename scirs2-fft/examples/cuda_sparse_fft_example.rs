@@ -10,6 +10,7 @@ use scirs2_fft::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("CUDA-Accelerated Sparse FFT Example");
     println!("==================================\n");
@@ -202,6 +203,7 @@ fn main() {
 }
 
 // Helper function to create a sparse signal
+#[allow(dead_code)]
 fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
     let mut signal = vec![0.0; n];
 
@@ -216,6 +218,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 }
 
 // Create visualization plots comparing CPU and CUDA results
+#[allow(dead_code)]
 fn create_comparison_plot(
     signal: &[f64],
     cpu_result: &scirs2_fft::sparse_fft::SparseFFTResult,

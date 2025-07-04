@@ -19,6 +19,7 @@ use num_traits::Float;
 ///
 /// * `Ok(())` if the matrix is not empty
 /// * `Err(LinalgError)` if the matrix is empty
+#[allow(dead_code)]
 pub fn validate_not_empty_matrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
@@ -42,6 +43,7 @@ where
 ///
 /// * `Ok(())` if the vector is not empty
 /// * `Err(LinalgError)` if the vector is empty
+#[allow(dead_code)]
 pub fn validate_not_empty_vector<F>(vector: &ArrayView1<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
@@ -65,6 +67,7 @@ where
 ///
 /// * `Ok(())` if the matrix is square
 /// * `Err(LinalgError)` if the matrix is not square
+#[allow(dead_code)]
 pub fn validate_square_matrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
@@ -90,6 +93,7 @@ where
 ///
 /// * `Ok(())` if dimensions are compatible
 /// * `Err(LinalgError)` if dimensions are incompatible
+#[allow(dead_code)]
 pub fn validate_matrix_vector_dimensions<F>(
     matrix: &ArrayView2<F>,
     vector: &ArrayView1<F>,
@@ -120,6 +124,7 @@ where
 ///
 /// * `Ok(())` if dimensions are compatible
 /// * `Err(LinalgError)` if dimensions are incompatible
+#[allow(dead_code)]
 pub fn validate_matrix_matrix_dimensions<F>(
     matrix_a: &ArrayView2<F>,
     matrix_b: &ArrayView2<F>,
@@ -149,6 +154,7 @@ where
 ///
 /// * `Ok(())` if all values are finite
 /// * `Err(LinalgError)` if any value is non-finite
+#[allow(dead_code)]
 pub fn validate_finite_matrix<F>(matrix: &ArrayView2<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
@@ -174,6 +180,7 @@ where
 ///
 /// * `Ok(())` if all values are finite
 /// * `Err(LinalgError)` if any value is non-finite
+#[allow(dead_code)]
 pub fn validate_finite_vector<F>(vector: &ArrayView1<F>, operation: &str) -> LinalgResult<()>
 where
     F: Float,
@@ -206,6 +213,7 @@ where
 ///
 /// * `Ok(())` if all validations pass
 /// * `Err(LinalgError)` if any validation fails
+#[allow(dead_code)]
 pub fn validate_linear_system<F>(
     matrix: &ArrayView2<F>,
     vector: &ArrayView1<F>,
@@ -240,6 +248,7 @@ where
 ///
 /// * `Ok(())` if all validations pass
 /// * `Err(LinalgError)` if any validation fails
+#[allow(dead_code)]
 pub fn validate_least_squares<F>(
     matrix: &ArrayView2<F>,
     vector: &ArrayView1<F>,
@@ -273,6 +282,7 @@ where
 ///
 /// * `Ok(())` if all validations pass
 /// * `Err(LinalgError)` if any validation fails
+#[allow(dead_code)]
 pub fn validate_decomposition<F>(
     matrix: &ArrayView2<F>,
     operation: &str,
@@ -307,6 +317,7 @@ where
 ///
 /// * `Ok(())` if all validations pass
 /// * `Err(LinalgError)` if any validation fails
+#[allow(dead_code)]
 pub fn validate_multiple_linear_systems<F>(
     coeff_matrix: &ArrayView2<F>,
     rhs_matrix: &ArrayView2<F>,

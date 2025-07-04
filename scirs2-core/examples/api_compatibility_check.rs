@@ -8,6 +8,7 @@ use scirs2_core::api_freeze::{
 };
 use scirs2_core::api_versioning::Version;
 
+#[allow(dead_code)]
 fn main() {
     // Initialize the API freeze registry
     initialize_api_freeze();
@@ -62,6 +63,7 @@ fn main() {
     }
 }
 
+#[allow(dead_code)]
 fn check_api(name: &str, module: &str) {
     if is_api_available(name, module) {
         println!("✓ {module}::{name} is available");

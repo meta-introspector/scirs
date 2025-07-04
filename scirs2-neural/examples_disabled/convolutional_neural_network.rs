@@ -617,6 +617,7 @@ impl Sequential {
             );
         println!("Total parameters: {}", total_params);
 /// Create an MNIST-like synthetic dataset (small 4x4 images, 10 classes)
+#[allow(dead_code)]
 fn create_synthetic_dataset(
     num_samples: usize,
     num_classes: usize,
@@ -651,6 +652,7 @@ fn create_synthetic_dataset(
         labels[[i, class]] = 1.0;
     (images, labels)
 // Helper function to find index of maximum value in array
+#[allow(dead_code)]
 fn argmax(arr: ArrayView1<f32>) -> usize {
     let mut max_idx = 0;
     let mut max_val = arr[0];
@@ -660,6 +662,7 @@ fn argmax(arr: ArrayView1<f32>) -> usize {
             max_idx = idx;
     max_idx
 /// Train and evaluate a simple CNN model
+#[allow(dead_code)]
 fn train_cnn_example() -> Result<()> {
     // Set up RNG
     let mut rng = SmallRng::seed_from_u64(42);
@@ -745,6 +748,7 @@ fn train_cnn_example() -> Result<()> {
             predicted_class
     Ok(())
 /// Main function
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Convolutional Neural Network Implementation Example\n");
     train_cnn_example()?;

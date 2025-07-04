@@ -45,9 +45,19 @@ pub enum StatsError {
     /// Core error (propagated from scirs2-core)
     #[error("{0}")]
     CoreError(#[from] CoreError),
+
+    /// Random distribution error
+    #[error("Random distribution error: {0}")]
+    DistributionError(String),
 }
 
 // The #[from] attribute in the CoreError variant handles the conversion automatically
+
+impl From<rand_distr::uniform::Error> for StatsError {
+    fn from(err: rand_distr::uniform::Error) -> Self {
+        StatsError::DistributionError(format!("Uniform distribution error: {}", err))
+    }
+}
 
 /// Helper trait for adding context and recovery suggestions to errors
 pub trait StatsErrorExt {
@@ -215,6 +225,7 @@ Suggestion: {}",
 pub type StatsResult<T> = Result<T, StatsError>;
 
 /// Create a function to convert from StatsResult to CoreError::ValidationError
+#[allow(dead_code)]
 pub fn convert_to_validation_error<T, S: Into<String>>(
     result: StatsResult<T>,
     message: S,

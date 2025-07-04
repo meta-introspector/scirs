@@ -19,6 +19,7 @@ use scirs2_autograd::visualization::{GraphVisualizer, OutputFormat, Visualizatio
 
 /// Test the complete ultrathink feature integration pipeline
 #[test]
+#[allow(dead_code)]
 fn test_complete_ultrathink_pipeline() {
     // Initialize advanced thread pool
     let thread_config = ThreadPoolConfig {
@@ -96,6 +97,7 @@ fn test_complete_ultrathink_pipeline() {
 
 /// Test graph optimization with various levels
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_graph_optimization() {
     // Test different optimization levels
     let optimization_levels = [
@@ -139,6 +141,7 @@ fn test_comprehensive_graph_optimization() {
 
 /// Test visualization with different output formats
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_graph_visualization() {
     let output_formats = [
         OutputFormat::Dot,
@@ -167,6 +170,7 @@ fn test_comprehensive_graph_visualization() {
 
 /// Test memory optimization features
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_memory_optimization() {
     let configs = [
         MemoryOptimizationConfig {
@@ -210,6 +214,7 @@ fn test_comprehensive_memory_optimization() {
 
 /// Test parallel operations with different configurations
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_parallel_operations() {
     use scirs2_autograd::parallel::parallel_ops::{
         ParallelConfig, ParallelElementWise, ParallelReduction,
@@ -255,6 +260,7 @@ fn test_comprehensive_parallel_operations() {
 
 /// Test custom activation functions with performance optimizations
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_custom_activations() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         let test_data = Array::from_shape_vec(
@@ -303,6 +309,7 @@ fn test_comprehensive_custom_activations() {
 
 /// Test efficient operations integration
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_efficient_operations() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Test efficient tensor creation
@@ -340,6 +347,7 @@ fn test_comprehensive_efficient_operations() {
 
 /// Test SIMD operations performance
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_simd_operations() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         // Create test data that benefits from SIMD
@@ -399,6 +407,7 @@ fn test_comprehensive_simd_operations() {
 
 /// Test graph enhancement features
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_graph_enhancements() {
     ag::run(|ctx: &mut ag::Context<f32>| {
         let x = T::efficient_ones(&[100], ctx);
@@ -468,6 +477,7 @@ fn test_comprehensive_graph_enhancements() {
 
 /// Integration test combining all features in a realistic ML scenario
 #[test]
+#[allow(dead_code)]
 fn test_realistic_ml_workflow_integration() {
     // Initialize optimized environment
     let thread_config = ThreadPoolConfig {
@@ -579,6 +589,7 @@ fn test_realistic_ml_workflow_integration() {
 
 /// Performance comparison test
 #[test]
+#[allow(dead_code)]
 fn test_performance_optimizations_effectiveness() {
     println!("🔥 Testing performance optimization effectiveness...");
 
@@ -609,6 +620,7 @@ fn test_performance_optimizations_effectiveness() {
 
 /// Final integration test summary
 #[test]
+#[allow(dead_code)]
 fn test_integration_summary() {
     println!("\n🎉 ULTRATHINK MODE INTEGRATION SUMMARY");
     println!("=====================================");

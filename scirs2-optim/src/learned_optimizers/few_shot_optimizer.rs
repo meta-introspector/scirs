@@ -4,7 +4,7 @@
 //! for quickly adapting optimizers to new tasks with minimal data. It includes
 //! prototypical networks, meta-learning approaches, and rapid adaptation mechanisms.
 
-use ndarray::{Array1, Array2, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};

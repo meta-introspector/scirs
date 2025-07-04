@@ -3486,6 +3486,7 @@ where
 }
 
 /// Error function approximation for statistical calculations
+#[allow(dead_code)]
 fn erf(x: f64) -> f64 {
     // Abramowitz and Stegun approximation
     let a1 = 0.254829592;
@@ -5756,6 +5757,7 @@ impl<F: Float + FromPrimitive + Send + Sync + Debug> AutoClusteringSelector<F> {
 }
 
 /// High-level convenience function for automatic algorithm selection
+#[allow(dead_code)]
 pub fn auto_select_clustering_algorithm<F: Float + FromPrimitive + Send + Sync + Debug>(
     data: ArrayView2<F>,
     config: Option<TuningConfig>,
@@ -5770,6 +5772,7 @@ pub fn auto_select_clustering_algorithm<F: Float + FromPrimitive + Send + Sync +
 }
 
 /// Quick algorithm selection with default parameters
+#[allow(dead_code)]
 pub fn quick_algorithm_selection<F: Float + FromPrimitive + Send + Sync + Debug>(
     data: ArrayView2<F>,
 ) -> Result<AlgorithmSelectionResult> {

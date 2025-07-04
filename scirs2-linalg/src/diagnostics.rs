@@ -391,6 +391,7 @@ where
 
 /// Compute the maximum Gershgorin circle radius
 /// This gives an estimate of how far eigenvalues can be from diagonal elements
+#[allow(dead_code)]
 fn compute_gershgorin_radius<F: Float + NumAssign>(a: &ArrayView2<F>) -> Option<F> {
     if a.nrows() != a.ncols() {
         return None;
@@ -414,6 +415,7 @@ fn compute_gershgorin_radius<F: Float + NumAssign>(a: &ArrayView2<F>) -> Option<
 
 /// Estimate the number of near-zero eigenvalues using Sylvester's criterion
 /// This is an approximation for symmetric matrices
+#[allow(dead_code)]
 fn estimate_near_zero_eigenvalues<
     F: Float + NumAssign + std::iter::Sum + Send + Sync + ndarray::ScalarOperand,
 >(

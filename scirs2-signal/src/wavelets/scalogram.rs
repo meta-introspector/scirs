@@ -47,6 +47,7 @@ use std::fmt::Debug;
 /// assert_eq!(scalo.len(), scales.len());
 /// assert_eq!(scalo[0].len(), signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn scalogram<T, F, W>(
     signal: &[T],
     wavelet_fn: F,
@@ -135,6 +136,7 @@ where
 /// assert_eq!(mag.len(), scales.len());
 /// assert_eq!(mag[0].len(), signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn cwt_magnitude<T, F, W>(
     signal: &[T],
     wavelet_fn: F,
@@ -228,6 +230,7 @@ where
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn cwt_phase<T, F, W>(
     signal: &[T],
     wavelet_fn: F,
@@ -288,6 +291,7 @@ where
 ///     assert!(freqs[i] < freqs[i-1]);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn scale_to_frequency(
     scales: &[f64],
     central_frequency: f64,

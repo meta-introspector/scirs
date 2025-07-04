@@ -5,6 +5,7 @@ use scirs2_interpolate::advanced::enhanced_rbf::{
 };
 use scirs2_interpolate::advanced::rbf::{RBFInterpolator, RBFKernel};
 
+#[allow(dead_code)]
 fn main() {
     println!("Enhanced RBF Interpolation Examples");
     println!("==================================\n");

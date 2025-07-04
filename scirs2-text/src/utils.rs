@@ -17,6 +17,7 @@ use std::collections::HashMap;
 /// # Returns
 ///
 /// * Result containing a HashMap of token frequencies
+#[allow(dead_code)]
 pub fn count_tokens(text: &str, tokenizer: &dyn Tokenizer) -> Result<HashMap<String, usize>> {
     let tokens = tokenizer.tokenize(text)?;
     let mut counts = HashMap::new();
@@ -38,6 +39,7 @@ pub fn count_tokens(text: &str, tokenizer: &dyn Tokenizer) -> Result<HashMap<Str
 /// # Returns
 ///
 /// * Result containing a HashMap of token frequencies
+#[allow(dead_code)]
 pub fn count_tokens_batch(
     texts: &[&str],
     tokenizer: &dyn Tokenizer,
@@ -65,6 +67,7 @@ pub fn count_tokens_batch(
 /// # Returns
 ///
 /// * Result containing a HashMap of token frequencies
+#[allow(dead_code)]
 pub fn count_tokens_batch_parallel<T>(
     texts: &[&str],
     tokenizer: &T,
@@ -108,6 +111,7 @@ where
 /// # Returns
 ///
 /// * Result containing the filtered text
+#[allow(dead_code)]
 pub fn filter_tokens<F>(text: &str, tokenizer: &dyn Tokenizer, predicate: F) -> Result<String>
 where
     F: Fn(&str) -> bool,
@@ -133,6 +137,7 @@ where
 /// # Returns
 ///
 /// * Result containing a vector of n-grams
+#[allow(dead_code)]
 pub fn extract_ngrams(text: &str, tokenizer: &dyn Tokenizer, n: usize) -> Result<Vec<String>> {
     if n == 0 {
         return Err(TextError::InvalidInput(
@@ -165,6 +170,7 @@ pub fn extract_ngrams(text: &str, tokenizer: &dyn Tokenizer, n: usize) -> Result
 /// # Returns
 ///
 /// * Result containing a HashMap of collocations and their frequencies
+#[allow(dead_code)]
 pub fn extract_collocations(
     text: &str,
     tokenizer: &dyn Tokenizer,
@@ -205,6 +211,7 @@ pub fn extract_collocations(
 /// # Returns
 ///
 /// * `(Vec<String>, Vec<String>)` - Training and testing sets
+#[allow(dead_code)]
 pub fn train_test_split(
     texts: &[String],
     test_size: f64,

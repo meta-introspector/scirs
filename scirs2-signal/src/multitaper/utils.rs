@@ -44,12 +44,12 @@ use std::fmt::Debug;
 /// use rand::Rng;
 /// let mut rng = rand::rng();
 /// let signal1: Vec<f64> = t.iter()
-///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.gen_range(0.0..1.0))
+///     .map(|&ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(0.0..1.0))
 ///     .collect();
 ///     
 /// // Signal 2: 10 Hz cosine (highly coherent with signal1 at 10 Hz)
 /// let signal2: Vec<f64> = t.iter()
-///     .map(|&ti| (2.0 * PI * 10.0 * ti).cos() + 0.1 * rng.gen_range(0.0..1.0))
+///     .map(|&ti| (2.0 * PI * 10.0 * ti).cos() + 0.1 * rng.random_range(0.0..1.0))
 ///     .collect();
 ///
 /// // Compute coherence
@@ -71,6 +71,7 @@ use std::fmt::Debug;
 /// assert!(coh[f10_idx] >= 0.0); // Coherence should be non-negative
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn coherence<T, U>(
     x: &[T],
     y: &[U],
@@ -274,6 +275,7 @@ where
 /// // The higher frequency component should be attenuated
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn multitaper_filtfilt<T>(
     b: &[f64],
     a: &[f64],
@@ -388,6 +390,7 @@ where
 /// # Returns
 ///
 /// * Complex FFT result
+#[allow(dead_code)]
 pub fn compute_fft(x: &[Complex64]) -> SignalResult<Vec<Complex64>> {
     let n = x.len();
 
@@ -450,6 +453,7 @@ pub fn compute_fft(x: &[Complex64]) -> SignalResult<Vec<Complex64>> {
 /// # Returns
 ///
 /// * true if n is a power of 2, false otherwise
+#[allow(dead_code)]
 pub fn is_power_of_two(n: usize) -> bool {
     n > 0 && (n & (n - 1)) == 0
 }

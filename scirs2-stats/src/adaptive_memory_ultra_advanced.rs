@@ -2654,6 +2654,7 @@ pub type F64AdaptiveMemoryManager = AdaptiveMemoryManager<f64>;
 pub type F32AdaptiveMemoryManager = AdaptiveMemoryManager<f32>;
 
 /// Factory functions
+#[allow(dead_code)]
 pub fn create_adaptive_memory_manager<F>() -> AdaptiveMemoryManager<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
@@ -2661,6 +2662,7 @@ where
     AdaptiveMemoryManager::new()
 }
 
+#[allow(dead_code)]
 pub fn create_optimized_memory_manager<F>(config: AdaptiveMemoryConfig) -> AdaptiveMemoryManager<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,

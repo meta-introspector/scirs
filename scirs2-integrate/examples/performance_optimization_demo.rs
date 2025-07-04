@@ -27,6 +27,7 @@ use scirs2_integrate::{
 use std::time::Instant;
 
 /// Benchmark different integration methods with performance monitoring
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("=== Performance Optimization Demo ===\n");
 
@@ -46,6 +47,7 @@ fn main() -> IntegrateResult<()> {
 }
 
 /// Benchmark different ODE solving methods
+#[allow(dead_code)]
 fn benchmark_ode_methods() -> IntegrateResult<()> {
     println!("1. ODE Methods Performance Comparison");
     println!("   Solving stiff Van der Pol oscillator...\n");
@@ -121,6 +123,7 @@ fn benchmark_ode_methods() -> IntegrateResult<()> {
 }
 
 /// Benchmark quadrature methods
+#[allow(dead_code)]
 fn benchmark_quadrature_methods() -> IntegrateResult<()> {
     println!("\n2. Quadrature Methods Performance Comparison");
     println!("   Integrating oscillatory function...\n");
@@ -191,6 +194,7 @@ fn benchmark_quadrature_methods() -> IntegrateResult<()> {
 }
 
 /// Benchmark parallel operations
+#[allow(dead_code)]
 fn benchmark_parallel_operations() -> IntegrateResult<()> {
     println!("\n3. Parallel Operations Performance Benchmark");
     println!("   Testing vectorized operations with different configurations...\n");
@@ -263,6 +267,7 @@ fn benchmark_parallel_operations() -> IntegrateResult<()> {
 }
 
 /// Benchmark memory efficiency
+#[allow(dead_code)]
 fn benchmark_memory_efficiency() -> IntegrateResult<()> {
     println!("4. Memory Efficiency Analysis");
     println!("   Comparing memory usage patterns...\n");
@@ -323,6 +328,7 @@ fn benchmark_memory_efficiency() -> IntegrateResult<()> {
 }
 
 /// Print performance metrics for a method
+#[allow(dead_code)]
 fn print_method_performance(
     method_name: &str,
     metrics: &scirs2_integrate::performance_monitor::PerformanceMetrics,
@@ -353,6 +359,7 @@ fn print_method_performance(
 }
 
 /// Estimate current memory usage (simplified)
+#[allow(dead_code)]
 fn estimate_memory_usage() -> usize {
     // This is a simplified memory estimation
     // In a real application, you might use system calls or memory profiling tools

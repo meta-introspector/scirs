@@ -1,6 +1,6 @@
 //! Spline-based interpolation functions
 
-use ndarray::{Array, ArrayBase, Axis, Data, Dimension, Ix1};
+use ndarray::{Array, Axis, Dimension};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use std::fmt::Debug;
 
@@ -8,6 +8,7 @@ use crate::error::{NdimageError, NdimageResult};
 
 /// B-spline poles for different orders
 /// Based on the theory of B-spline interpolation
+#[allow(dead_code)]
 fn get_spline_poles<T: Float + FromPrimitive>(order: usize) -> Vec<T> {
     match order {
         0 | 1 => vec![], // No poles for constant or linear
@@ -40,6 +41,7 @@ fn get_spline_poles<T: Float + FromPrimitive>(order: usize) -> Vec<T> {
 }
 
 /// Compute initial causal coefficient for B-spline filtering
+#[allow(dead_code)]
 fn get_initial_causal_coefficient<T: Float + FromPrimitive>(
     coeffs: &[T],
     pole: T,
@@ -61,6 +63,7 @@ fn get_initial_causal_coefficient<T: Float + FromPrimitive>(
 }
 
 /// Compute initial anti-causal coefficient for B-spline filtering
+#[allow(dead_code)]
 fn get_initial_anti_causal_coefficient<T: Float + FromPrimitive>(coeffs: &[T], pole: T) -> T {
     let n = coeffs.len();
     if n < 2 {
@@ -72,6 +75,7 @@ fn get_initial_anti_causal_coefficient<T: Float + FromPrimitive>(coeffs: &[T], p
 }
 
 /// Apply causal filtering (forward pass)
+#[allow(dead_code)]
 fn apply_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T, initial_coeff: T) {
     if coeffs.is_empty() {
         return;
@@ -85,6 +89,7 @@ fn apply_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T, init
 }
 
 /// Apply anti-causal filtering (backward pass)
+#[allow(dead_code)]
 fn apply_anti_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T, initial_coeff: T) {
     if coeffs.is_empty() {
         return;
@@ -108,6 +113,7 @@ fn apply_anti_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T,
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn spline_filter<T, D>(input: &Array<T, D>, order: Option<usize>) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug,
@@ -156,6 +162,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn spline_filter1d<T, D>(
     input: &Array<T, D>,
     order: Option<usize>,
@@ -215,6 +222,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, ndarray::Ix1>>` - B-spline values
+#[allow(dead_code)]
 pub fn bspline<T>(
     positions: &Array<T, ndarray::Ix1>,
     order: Option<usize>,
@@ -252,6 +260,7 @@ where
 }
 
 /// Apply B-spline filtering along a specific axis
+#[allow(dead_code)]
 fn spline_filter_axis<T, D>(data: &mut Array<T, D>, order: usize, axis: usize) -> NdimageResult<()>
 where
     T: Float + FromPrimitive + Clone,
@@ -290,6 +299,7 @@ where
 }
 
 /// Evaluate B-spline basis function at a given position
+#[allow(dead_code)]
 fn evaluate_bspline_basis<T: Float + FromPrimitive>(x: T, order: usize, derivative: usize) -> T {
     if derivative > order {
         return T::zero();

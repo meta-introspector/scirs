@@ -10,6 +10,9 @@
 //! in compliance with the project-wide SIMD policy.
 
 use crate::bspline::{BSpline, BSplineWorkspace};
+
+#[cfg(test)]
+use crate::bspline::ExtrapolateMode;
 use crate::error::InterpolateResult;
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive, Zero};

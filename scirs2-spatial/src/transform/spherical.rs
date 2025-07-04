@@ -48,6 +48,7 @@ use std::f64::consts::{PI, TAU};
 /// # Errors
 ///
 /// Returns an error if the input array doesn't have exactly 3 elements
+#[allow(dead_code)]
 pub fn cart_to_spherical(cart: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
     if cart.len() != 3 {
         return Err(SpatialError::DimensionError(format!(
@@ -122,6 +123,7 @@ pub fn cart_to_spherical(cart: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
 /// # Errors
 ///
 /// Returns an error if the input array doesn't have exactly 3 elements
+#[allow(dead_code)]
 pub fn spherical_to_cart(spherical: &ArrayView1<f64>) -> SpatialResult<Array1<f64>> {
     if spherical.len() != 3 {
         return Err(SpatialError::DimensionError(format!(
@@ -183,6 +185,7 @@ pub fn spherical_to_cart(spherical: &ArrayView1<f64>) -> SpatialResult<Array1<f6
 /// # Errors
 ///
 /// Returns an error if any row of the input array doesn't have exactly 3 elements
+#[allow(dead_code)]
 pub fn cart_to_spherical_batch(cart: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
     if cart.ncols() != 3 {
         return Err(SpatialError::DimensionError(format!(
@@ -230,6 +233,7 @@ pub fn cart_to_spherical_batch(cart: &ArrayView2<'_, f64>) -> SpatialResult<Arra
 /// # Errors
 ///
 /// Returns an error if any row of the input array doesn't have exactly 3 elements
+#[allow(dead_code)]
 pub fn spherical_to_cart_batch(spherical: &ArrayView2<'_, f64>) -> SpatialResult<Array2<f64>> {
     if spherical.ncols() != 3 {
         return Err(SpatialError::DimensionError(format!(
@@ -278,6 +282,7 @@ pub fn spherical_to_cart_batch(spherical: &ArrayView2<'_, f64>) -> SpatialResult
 /// # Errors
 ///
 /// Returns an error if the input arrays don't have exactly 3 elements
+#[allow(dead_code)]
 pub fn geodesic_distance(
     spherical1: &ArrayView1<f64>,
     spherical2: &ArrayView1<f64>,
@@ -356,6 +361,7 @@ pub fn geodesic_distance(
 /// // This forms a spherical triangle with area π/2 steradians
 /// let area = spherical_triangle_area(&p1.view(), &p2.view(), &p3.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn spherical_triangle_area(
     p1: &ArrayView1<f64>,
     p2: &ArrayView1<f64>,

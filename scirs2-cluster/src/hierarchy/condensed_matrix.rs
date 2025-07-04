@@ -39,6 +39,7 @@ use crate::error::{ClusteringError, Result};
 /// let condensed = square_to_condensed(square.view()).unwrap();
 /// assert_eq!(condensed.to_vec(), vec![1.0, 2.0, 3.0]);
 /// ```
+#[allow(dead_code)]
 pub fn square_to_condensed<F: Float + Zero + Copy>(
     square_matrix: ArrayView2<F>,
 ) -> Result<Array1<F>> {
@@ -101,6 +102,7 @@ pub fn square_to_condensed<F: Float + Zero + Copy>(
 /// assert_eq!(square[[1, 2]], 3.0);
 /// assert_eq!(square[[2, 1]], 3.0);
 /// ```
+#[allow(dead_code)]
 pub fn condensed_to_square<F: Float + Zero + Copy>(
     condensed_matrix: ArrayView1<F>,
 ) -> Result<Array2<F>> {
@@ -158,6 +160,7 @@ pub fn condensed_to_square<F: Float + Zero + Copy>(
 /// let distance = get_distance(condensed.view(), 0, 2, 3).unwrap();
 /// assert_eq!(distance, 2.0);
 /// ```
+#[allow(dead_code)]
 pub fn get_distance<F: Float + Zero + Copy>(
     condensed_matrix: ArrayView1<F>,
     i: usize,
@@ -218,6 +221,7 @@ pub fn get_distance<F: Float + Zero + Copy>(
 /// # Returns
 ///
 /// * `Result<()>` - Ok if successful, error otherwise
+#[allow(dead_code)]
 pub fn set_distance<F: Float + Zero + Copy>(
     condensed_matrix: ArrayView1<F>,
     i: usize,
@@ -284,6 +288,7 @@ pub fn set_distance<F: Float + Zero + Copy>(
 /// # Returns
 ///
 /// * `usize` - Size of condensed matrix (n*(n-1)/2)
+#[allow(dead_code)]
 pub fn condensed_size(n: usize) -> usize {
     n * (n - 1) / 2
 }
@@ -300,6 +305,7 @@ pub fn condensed_size(n: usize) -> usize {
 /// # Returns
 ///
 /// * `Result<usize>` - Number of points, or error if size is invalid
+#[allow(dead_code)]
 pub fn points_from_condensed_size(condensed_len: usize) -> Result<usize> {
     let n_float = (1.0 + (1.0 + 8.0 * condensed_len as f64).sqrt()) / 2.0;
     let n = n_float as usize;
@@ -326,6 +332,7 @@ pub fn points_from_condensed_size(condensed_len: usize) -> Result<usize> {
 /// # Returns
 ///
 /// * `Result<usize>` - Number of points if valid, error otherwise
+#[allow(dead_code)]
 pub fn validate_condensed_matrix<F: Float + FromPrimitive + Debug + PartialOrd>(
     condensed_matrix: ArrayView1<F>,
 ) -> Result<usize> {

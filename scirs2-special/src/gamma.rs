@@ -206,6 +206,7 @@ mod constants {
 /// - Whittaker & Watson, "A Course of Modern Analysis", Ch. 12
 /// - Lanczos, C. "A Precision Approximation of the Gamma Function" (1964)
 /// - Press et al., "Numerical Recipes", Ch. 6.1
+#[allow(dead_code)]
 pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F {
     // Special cases
     if x.is_nan() {
@@ -441,6 +442,7 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
 /// let result = gamma_safe(-1.0);
 /// assert!(result.is_err());
 /// ```
+#[allow(dead_code)]
 pub fn gamma_safe<F>(x: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign,
@@ -504,6 +506,7 @@ where
 ///
 /// assert!((log_gamma_x - gamma_x.ln()).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn gammaln<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F {
     if x <= F::zero() {
         // For negative x or zero, logarithm of gamma is not defined
@@ -570,6 +573,7 @@ pub fn gammaln<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> 
 }
 
 /// Alias for gammaln function.
+#[allow(dead_code)]
 pub fn loggamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F {
     gammaln(x)
 }
@@ -758,6 +762,7 @@ pub fn loggamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) ->
 /// let gamma = 0.5772156649015329;
 /// assert!((digamma(1.0f64) + gamma).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn digamma<
     F: Float
         + FromPrimitive
@@ -896,6 +901,7 @@ pub fn digamma<
 /// let result = digamma_safe(-1.0);
 /// assert!(result.is_err());
 /// ```
+#[allow(dead_code)]
 pub fn digamma_safe<F>(x: F) -> SpecialResult<F>
 where
     F: Float
@@ -935,6 +941,7 @@ where
 }
 
 /// Rational approximation for digamma function with x in (1,2)
+#[allow(dead_code)]
 fn rational_digamma_1_to_2<F: Float + FromPrimitive>(z: F) -> F {
     // From Boost's implementation: rational approximation for x in [1, 2]
     let r1 = F::from(-0.5772156649015329).unwrap();
@@ -951,6 +958,7 @@ fn rational_digamma_1_to_2<F: Float + FromPrimitive>(z: F) -> F {
 }
 
 /// Asymptotic expansion for digamma function with large arguments
+#[allow(dead_code)]
 fn asymptotic_digamma<F: Float + FromPrimitive>(x: F) -> F {
     // For large x: ψ(x) ≈ ln(x) - 1/(2x) - 1/(12x²) + 1/(120x⁴) - ...
     let x2 = x * x;
@@ -1146,6 +1154,7 @@ fn asymptotic_digamma<F: Float + FromPrimitive>(x: F) -> F {
 ///
 /// assert!((beta_value - gamma_ratio).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn beta<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(a: F, b: F) -> F {
     // Special cases
     if a <= F::zero() || b <= F::zero() {
@@ -1240,6 +1249,7 @@ pub fn beta<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(a: F, b: F) 
 /// let result = beta_safe(-1.0, 2.0);
 /// assert!(result.is_err());
 /// ```
+#[allow(dead_code)]
 pub fn beta_safe<F>(a: F, b: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + Display + std::ops::AddAssign,
@@ -1292,6 +1302,7 @@ where
 ///
 /// assert!((log_beta_ab - beta_ab.ln()).abs() < 1e-10f64);
 /// ```
+#[allow(dead_code)]
 pub fn betaln<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(a: F, b: F) -> F {
     if a <= F::zero() || b <= F::zero() {
         return F::nan();
@@ -1323,6 +1334,7 @@ pub fn betaln<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(a: F, b: F
 /// Used for large positive arguments to avoid overflow.
 ///
 /// Enhanced Stirling's formula with improved overflow protection and extreme value handling
+#[allow(dead_code)]
 fn stirling_approximation<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) -> F {
     let x_f64 = x.to_f64().unwrap();
 
@@ -1443,6 +1455,7 @@ fn stirling_approximation<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) 
 /// - Abramowitz & Stegun, "Handbook", §6.1.40-41  
 /// - Olver, "Asymptotics and Special Functions", Ch. 3
 /// - de Bruijn, "Asymptotic Methods", Ch. 4
+#[allow(dead_code)]
 fn stirling_approximation_ln<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) -> F {
     let x_f64 = x.to_f64().unwrap();
 
@@ -1646,6 +1659,7 @@ fn stirling_approximation_ln<F: Float + FromPrimitive + std::ops::AddAssign>(x: 
 /// - Boost C++ Libraries: Math Toolkit Documentation
 /// - Press et al., "Numerical Recipes", §6.1
 /// - Toth, V.T. "Programmable Calculators: The Gamma Function" (2005)
+#[allow(dead_code)]
 fn improved_lanczos_gamma<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) -> F {
     // Use the Lanczos approximation coefficients from Boost C++
     // These provide better accuracy across a wide range of values
@@ -1693,6 +1707,7 @@ fn improved_lanczos_gamma<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) 
 ///
 /// This implementation uses carefully selected coefficients for increased precision,
 /// particularly for arguments in the range [0.5, 20.0].
+#[allow(dead_code)]
 fn improved_lanczos_gammaln<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) -> F {
     // Use the improved Lanczos approximation coefficients from Boost C++
     let g = F::from(10.900511).unwrap();
@@ -1773,6 +1788,7 @@ fn improved_lanczos_gammaln<F: Float + FromPrimitive + std::ops::AddAssign>(x: F
 /// let incomplete_beta = betainc(x, a, b).unwrap();
 /// assert!((incomplete_beta - 0.0208333).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn betainc<
     F: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign,
 >(
@@ -1885,6 +1901,7 @@ pub fn betainc<
 /// let reg_inc_beta = betainc_regularized(x, a, b).unwrap();
 /// assert!((reg_inc_beta - 0.5f64).abs() < 1e-10f64);
 /// ```
+#[allow(dead_code)]
 pub fn betainc_regularized<
     F: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign,
 >(
@@ -1965,6 +1982,7 @@ pub fn betainc_regularized<
 }
 
 /// Asymptotic gamma function for large negative values to avoid overflow
+#[allow(dead_code)]
 fn asymptotic_gamma_large_negative<F: Float + FromPrimitive + std::ops::AddAssign>(x: F) -> F {
     // For very large negative x, use the reflection formula with asymptotic expansions
     // to avoid catastrophic cancellation
@@ -1997,6 +2015,7 @@ fn asymptotic_gamma_large_negative<F: Float + FromPrimitive + std::ops::AddAssig
 }
 
 /// Stable computation for gamma near large negative integers
+#[allow(dead_code)]
 fn stable_gamma_near_large_negative_integer<F: Float + FromPrimitive + std::ops::AddAssign>(
     x: F,
     n: i32,
@@ -2031,6 +2050,7 @@ fn stable_gamma_near_large_negative_integer<F: Float + FromPrimitive + std::ops:
 }
 
 /// Enhanced computation of log(|sin(πx)|) for better numerical stability
+#[allow(dead_code)]
 fn enhanced_log_sin_pi_x<F: Float + FromPrimitive>(x: F) -> F {
     let pi = F::from(std::f64::consts::PI).unwrap();
     let x_f64 = x.to_f64().unwrap();
@@ -2051,6 +2071,7 @@ fn enhanced_log_sin_pi_x<F: Float + FromPrimitive>(x: F) -> F {
 }
 
 /// Enhanced sign computation for reflection formula with extreme values
+#[allow(dead_code)]
 fn enhanced_reflection_sign<F: Float + FromPrimitive>(x_f64: f64) -> F {
     // For the reflection formula Γ(x) = π / (sin(πx) * Γ(1-x))
     // The sign depends on both sin(πx) and the parity
@@ -2192,6 +2213,7 @@ fn estimate_gamma_condition_number<
 ///
 /// Uses an improved version of Lentz's algorithm with better handling of convergence
 /// and numerical stability issues.
+#[allow(dead_code)]
 fn improved_continued_fraction_betainc<
     F: Float + FromPrimitive + Debug + std::ops::MulAssign + std::ops::AddAssign,
 >(
@@ -2308,6 +2330,7 @@ fn improved_continued_fraction_betainc<
 /// let x = betaincinv(y, a, b).unwrap();
 /// assert!((x - 0.38).abs() < 1e-2);
 /// ```
+#[allow(dead_code)]
 pub fn betaincinv<
     F: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign,
 >(
@@ -2442,6 +2465,7 @@ pub fn betaincinv<
 
 /// Improved initial guess for the inverse regularized incomplete beta function.
 /// This function provides a better starting point for numerical methods.
+#[allow(dead_code)]
 fn improved_initial_guess<F: Float + FromPrimitive>(y: F, a: F, b: F) -> F {
     let a_f64 = a.to_f64().unwrap();
     let b_f64 = b.to_f64().unwrap();
@@ -2921,6 +2945,7 @@ pub mod complex {
 /// let psi1_1 = polygamma(1, 1.0f64);
 /// assert!((psi1_1 - 1.6449340668).abs() < 1e-8);
 /// ```
+#[allow(dead_code)]
 pub fn polygamma<
     F: Float
         + FromPrimitive
@@ -2982,6 +3007,7 @@ pub fn polygamma<
 }
 
 /// Helper function to compute factorial as f64
+#[allow(dead_code)]
 fn factorial_f(n: u32) -> f64 {
     match n {
         0 | 1 => 1.0,

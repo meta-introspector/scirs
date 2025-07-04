@@ -40,6 +40,7 @@ use std::fmt::Debug;
 /// let peaks = find_peaks(&signal, Some(1.5), None, None, None, None).unwrap();
 /// assert_eq!(peaks, vec![3, 5, 7]);
 /// ```
+#[allow(dead_code)]
 pub fn find_peaks<T>(
     x: &[T],
     height: Option<T>,
@@ -207,6 +208,7 @@ where
 /// // Calculate prominences
 /// let prominences = peak_prominences(&signal, &peaks).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn peak_prominences<T>(x: &[T], peaks: &[usize]) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -319,6 +321,7 @@ where
 /// // Calculate peak widths at half height
 /// let (widths, left_ips, right_ips) = peak_widths(&signal, &peaks, Some(0.5)).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn peak_widths<T>(
     x: &[T],
     peaks: &[usize],

@@ -19,6 +19,7 @@ use super::shapes::{Box3D, Circle, Sphere, Triangle3D};
 ///
 /// `Some((time, pos1, pos2))` if the spheres will collide within the time step, where pos1 and pos2 are
 /// the positions of the spheres at the time of collision, `None` otherwise
+#[allow(dead_code)]
 pub fn continuous_sphere_sphere_collision(
     sphere1: &Sphere,
     velocity1: &[f64; 3],
@@ -122,6 +123,7 @@ pub fn continuous_sphere_sphere_collision(
 /// # Returns
 ///
 /// `Some(time)` if the circles will collide within the time step, `None` otherwise
+#[allow(dead_code)]
 pub fn continuous_circle_circle_collision(
     circle1: &Circle,
     velocity1: &[f64; 2],
@@ -197,6 +199,7 @@ pub fn continuous_circle_circle_collision(
 /// # Returns
 ///
 /// `Some(time)` if the point will collide with the triangle within the time step, `None` otherwise
+#[allow(dead_code)]
 pub fn continuous_point_triangle3d_collision(
     point: &[f64; 3],
     velocity: &[f64; 3],
@@ -251,6 +254,7 @@ pub fn continuous_point_triangle3d_collision(
 /// # Returns
 ///
 /// `Some(time)` if the boxes will collide within the time step, `None` otherwise
+#[allow(dead_code)]
 pub fn continuous_box3d_box3d_collision(
     box1: &Box3D,
     velocity1: &[f64; 3],
@@ -308,6 +312,7 @@ pub fn continuous_box3d_box3d_collision(
 /// # Returns
 ///
 /// `Some(time)` if the triangle will collide with the sphere within the time step, `None` otherwise
+#[allow(dead_code)]
 pub fn continuous_triangle3d_sphere_collision(
     triangle: &Triangle3D,
     velocity: &[f64; 3],
@@ -551,6 +556,7 @@ pub fn continuous_triangle3d_sphere_collision(
 /// # Returns
 ///
 /// `Some(time)` if the sphere will collide with the triangle within the time step, `None` otherwise
+#[allow(dead_code)]
 pub fn continuous_sphere_triangle3d_collision(
     sphere: &Sphere,
     velocity: &[f64; 3],

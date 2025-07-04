@@ -381,6 +381,7 @@ pub struct ScalabilityAnalysisResult {
 /// # Returns
 ///
 /// * Comprehensive validation results with detailed analysis
+#[allow(dead_code)]
 pub fn run_wpt_ultrathink_validation(
     config: &WptUltrathinkConfig,
 ) -> SignalResult<WptUltrathinkResult> {
@@ -622,6 +623,7 @@ pub fn run_wpt_ultrathink_validation(
 
 // Helper validation functions (implementation placeholders)
 
+#[allow(dead_code)]
 fn validate_tree_structure(
     _config: &WptUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -642,6 +644,7 @@ fn validate_tree_structure(
     })
 }
 
+#[allow(dead_code)]
 fn validate_coefficient_organization(
     _config: &WptUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -668,6 +671,7 @@ fn validate_coefficient_organization(
     })
 }
 
+#[allow(dead_code)]
 fn validate_reconstruction_fidelity(
     _config: &WptUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -682,6 +686,7 @@ fn validate_reconstruction_fidelity(
     })
 }
 
+#[allow(dead_code)]
 fn validate_best_basis_selection(
     _config: &WptUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -697,6 +702,7 @@ fn validate_best_basis_selection(
     })
 }
 
+#[allow(dead_code)]
 fn validate_compression_performance(
     _config: &WptUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -716,6 +722,7 @@ fn validate_compression_performance(
     })
 }
 
+#[allow(dead_code)]
 fn validate_denoising_performance(
     _config: &WptUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -731,6 +738,7 @@ fn validate_denoising_performance(
     })
 }
 
+#[allow(dead_code)]
 fn validate_2d_wavelet_packets(
     _config: &WptUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -745,6 +753,7 @@ fn validate_2d_wavelet_packets(
     })
 }
 
+#[allow(dead_code)]
 fn validate_numerical_stability(
     _config: &WptUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -764,6 +773,7 @@ fn validate_numerical_stability(
     })
 }
 
+#[allow(dead_code)]
 fn analyze_performance(
     _config: &WptUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -784,6 +794,7 @@ fn analyze_performance(
     })
 }
 
+#[allow(dead_code)]
 fn analyze_memory_usage(
     _config: &WptUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -798,6 +809,7 @@ fn analyze_memory_usage(
     })
 }
 
+#[allow(dead_code)]
 fn validate_consistency(
     _config: &WptUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -814,6 +826,7 @@ fn validate_consistency(
 
 // Scoring functions
 
+#[allow(dead_code)]
 fn calculate_tree_score(result: &TreeValidationResult) -> f64 {
     (result.construction_accuracy
         + result.indexing_consistency
@@ -823,6 +836,7 @@ fn calculate_tree_score(result: &TreeValidationResult) -> f64 {
         / 5.0
 }
 
+#[allow(dead_code)]
 fn calculate_coefficient_score(result: &CoefficientValidationResult) -> f64 {
     (result.ordering_accuracy
         + result.frequency_localization
@@ -831,6 +845,7 @@ fn calculate_coefficient_score(result: &CoefficientValidationResult) -> f64 {
         / 4.0
 }
 
+#[allow(dead_code)]
 fn calculate_reconstruction_score(result: &ReconstructionValidationResult) -> f64 {
     let error_score = (-20.0 * (result.reconstruction_error + 1e-15).log10())
         .min(100.0)
@@ -838,6 +853,7 @@ fn calculate_reconstruction_score(result: &ReconstructionValidationResult) -> f6
     (error_score + result.partial_reconstruction_accuracy + result.energy_conservation) / 3.0
 }
 
+#[allow(dead_code)]
 fn calculate_best_basis_score(result: &BestBasisValidationResult) -> f64 {
     (result.selection_accuracy
         + result.selection_consistency
@@ -846,14 +862,17 @@ fn calculate_best_basis_score(result: &BestBasisValidationResult) -> f64 {
         / 4.0
 }
 
+#[allow(dead_code)]
 fn calculate_compression_score(result: &CompressionValidationResult) -> f64 {
     result.threshold_selection_accuracy
 }
 
+#[allow(dead_code)]
 fn calculate_denoising_score(result: &DenoisingValidationResult) -> f64 {
     (result.edge_preservation + result.artifact_suppression + result.optimal_denoising_basis) / 3.0
 }
 
+#[allow(dead_code)]
 fn calculate_2d_score(result: &TwoDValidationResult) -> f64 {
     (result.construction_accuracy_2d
         + result.reconstruction_fidelity_2d
@@ -863,6 +882,7 @@ fn calculate_2d_score(result: &TwoDValidationResult) -> f64 {
         / 5.0
 }
 
+#[allow(dead_code)]
 fn calculate_stability_score(result: &StabilityValidationResult) -> f64 {
     (result.precision_maintenance
         + result.condition_number_analysis.stability_score
@@ -872,6 +892,7 @@ fn calculate_stability_score(result: &StabilityValidationResult) -> f64 {
         / 5.0
 }
 
+#[allow(dead_code)]
 fn calculate_performance_score(result: &PerformanceAnalysisResult) -> f64 {
     (result.decomposition_efficiency
         + result.reconstruction_efficiency
@@ -879,6 +900,7 @@ fn calculate_performance_score(result: &PerformanceAnalysisResult) -> f64 {
         / 3.0
 }
 
+#[allow(dead_code)]
 fn calculate_memory_score(result: &MemoryAnalysisResult) -> f64 {
     (result.efficiency_score
         + result.access_pattern_efficiency
@@ -887,6 +909,7 @@ fn calculate_memory_score(result: &MemoryAnalysisResult) -> f64 {
         / 4.0
 }
 
+#[allow(dead_code)]
 fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
     (result.wavelet_consistency
         + result.tree_structure_consistency
@@ -897,6 +920,7 @@ fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
 }
 
 /// Generate a comprehensive report of wavelet packet validation results
+#[allow(dead_code)]
 pub fn generate_wpt_ultrathink_report(result: &WptUltrathinkResult) -> String {
     let mut report = String::new();
 
@@ -1037,6 +1061,7 @@ pub fn generate_wpt_ultrathink_report(result: &WptUltrathinkResult) -> String {
 
 #[allow(dead_code)]
 /// Quick wavelet packet validation for development
+#[allow(dead_code)]
 pub fn run_quick_wpt_validation() -> SignalResult<WptUltrathinkResult> {
     let config = WptUltrathinkConfig {
         test_lengths: vec![64, 128],

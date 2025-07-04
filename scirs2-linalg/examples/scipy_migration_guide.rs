@@ -21,6 +21,7 @@ use scirs2_linalg::{
     svd,
 };
 
+#[allow(dead_code)]
 fn main() -> LinalgResult<()> {
     println!("=== SciPy to scirs2-linalg Migration Guide ===\n");
 
@@ -54,6 +55,7 @@ fn main() -> LinalgResult<()> {
 }
 
 /// Demonstrates migration of basic matrix operations
+#[allow(dead_code)]
 fn basic_operations_migration() -> LinalgResult<()> {
     println!("📊 Basic Matrix Operations Migration");
     println!("{}", "=".repeat(50));
@@ -116,6 +118,7 @@ fn basic_operations_migration() -> LinalgResult<()> {
 }
 
 /// Demonstrates migration of matrix decompositions
+#[allow(dead_code)]
 fn decompositions_migration() -> LinalgResult<()> {
     println!("🔬 Matrix Decompositions Migration");
     println!("{}", "=".repeat(50));
@@ -184,6 +187,7 @@ fn decompositions_migration() -> LinalgResult<()> {
 }
 
 /// Demonstrates migration of linear system solving
+#[allow(dead_code)]
 fn linear_solving_migration() -> LinalgResult<()> {
     println!("🎯 Linear System Solving Migration");
     println!("{}", "=".repeat(50));
@@ -250,6 +254,7 @@ fn linear_solving_migration() -> LinalgResult<()> {
 }
 
 /// Demonstrates migration of eigenvalue computations
+#[allow(dead_code)]
 fn eigenvalue_migration() -> LinalgResult<()> {
     println!("🌀 Eigenvalue Computations Migration");
     println!("{}", "=".repeat(50));
@@ -316,6 +321,7 @@ fn eigenvalue_migration() -> LinalgResult<()> {
 }
 
 /// Demonstrates migration of matrix properties
+#[allow(dead_code)]
 fn matrix_properties_migration() -> LinalgResult<()> {
     println!("📏 Matrix Properties Migration");
     println!("{}", "=".repeat(50));
@@ -382,6 +388,7 @@ fn matrix_properties_migration() -> LinalgResult<()> {
 }
 
 /// Demonstrates advanced features and key differences
+#[allow(dead_code)]
 fn advanced_features_differences() -> LinalgResult<()> {
     println!("🚀 Advanced Features and Key Differences");
     println!("{}", "=".repeat(50));

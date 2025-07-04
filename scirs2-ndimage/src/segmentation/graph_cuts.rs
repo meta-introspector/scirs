@@ -3,7 +3,7 @@
 //! This module implements the graph cuts segmentation algorithm, which formulates
 //! image segmentation as a min-cut/max-flow problem on a graph.
 
-use ndarray::{Array2, ArrayView2, Dimension};
+use ndarray::{Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
@@ -172,6 +172,7 @@ impl Default for GraphCutsParams {
 ///
 /// # Returns
 /// Binary segmentation mask where true indicates foreground
+#[allow(dead_code)]
 pub fn graph_cuts<T>(
     image: &ArrayView2<T>,
     foreground_seeds: &ArrayView2<bool>,
@@ -279,6 +280,7 @@ where
 }
 
 /// Compute K constant for terminal edges
+#[allow(dead_code)]
 fn compute_k_constant<T: Float>(image: &ArrayView2<T>) -> f64 {
     // K should be larger than any possible sum of edge weights
     let max_val = image
@@ -291,6 +293,7 @@ fn compute_k_constant<T: Float>(image: &ArrayView2<T>) -> f64 {
 }
 
 /// Compute data weights for a pixel
+#[allow(dead_code)]
 fn compute_data_weights<T: Float>(
     image: &ArrayView2<T>,
     y: usize,
@@ -345,6 +348,7 @@ fn compute_data_weights<T: Float>(
 }
 
 /// Compute smoothness weight between neighboring pixels
+#[allow(dead_code)]
 fn compute_smoothness_weight<T: Float>(val1: T, val2: T, lambda: f64, sigma: f64) -> f64 {
     let diff = (val1 - val2).to_f64().unwrap_or(0.0);
     let weight = lambda * (-diff * diff / (2.0 * sigma * sigma)).exp();
@@ -352,6 +356,7 @@ fn compute_smoothness_weight<T: Float>(val1: T, val2: T, lambda: f64, sigma: f64
 }
 
 /// Get neighbor offsets based on connectivity
+#[allow(dead_code)]
 fn get_neighbors(connectivity: u8) -> Vec<(i32, i32)> {
     match connectivity {
         4 => vec![(0, 1), (1, 0), (0, -1), (-1, 0)],

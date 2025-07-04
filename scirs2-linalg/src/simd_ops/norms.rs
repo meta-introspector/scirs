@@ -22,6 +22,7 @@ use scirs2_core::simd_ops::SimdUnifiedOps;
 ///
 /// * Frobenius norm of the matrix
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_frobenius_norm_f32(matrix: &ArrayView2<f32>) -> f32 {
     let mut sum_sq = 0.0f32;
 
@@ -47,6 +48,7 @@ pub fn simd_frobenius_norm_f32(matrix: &ArrayView2<f32>) -> f32 {
 ///
 /// * Frobenius norm of the matrix
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_frobenius_norm_f64(matrix: &ArrayView2<f64>) -> f64 {
     let mut sum_sq = 0.0f64;
 
@@ -69,6 +71,7 @@ pub fn simd_frobenius_norm_f64(matrix: &ArrayView2<f64>) -> f64 {
 ///
 /// * Euclidean norm of the vector
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_vector_norm_f32(vector: &ArrayView1<f32>) -> f32 {
     // Use unified SIMD norm operation
     f32::simd_norm(vector)
@@ -84,6 +87,7 @@ pub fn simd_vector_norm_f32(vector: &ArrayView1<f32>) -> f32 {
 ///
 /// * Euclidean norm of the vector
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_vector_norm_f64(vector: &ArrayView1<f64>) -> f64 {
     // Use unified SIMD norm operation
     f64::simd_norm(vector)
@@ -99,6 +103,7 @@ pub fn simd_vector_norm_f64(vector: &ArrayView1<f64>) -> f64 {
 ///
 /// * 1-norm (sum of absolute values) of the vector
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_vector_norm1_f32(vector: &ArrayView1<f32>) -> f32 {
     // Compute absolute values then sum
     let abs_vec = f32::simd_abs(vector);
@@ -115,6 +120,7 @@ pub fn simd_vector_norm1_f32(vector: &ArrayView1<f32>) -> f32 {
 ///
 /// * 1-norm (sum of absolute values) of the vector
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_vector_norm1_f64(vector: &ArrayView1<f64>) -> f64 {
     // Compute absolute values then sum
     let abs_vec = f64::simd_abs(vector);
@@ -131,6 +137,7 @@ pub fn simd_vector_norm1_f64(vector: &ArrayView1<f64>) -> f64 {
 ///
 /// * Infinity norm (maximum absolute value) of the vector
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_vector_norm_inf_f32(vector: &ArrayView1<f32>) -> f32 {
     // Compute absolute values then find maximum
     let abs_vec = f32::simd_abs(vector);
@@ -147,6 +154,7 @@ pub fn simd_vector_norm_inf_f32(vector: &ArrayView1<f32>) -> f32 {
 ///
 /// * Infinity norm (maximum absolute value) of the vector
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_vector_norm_inf_f64(vector: &ArrayView1<f64>) -> f64 {
     // Compute absolute values then find maximum
     let abs_vec = f64::simd_abs(vector);
@@ -163,6 +171,7 @@ pub fn simd_vector_norm_inf_f64(vector: &ArrayView1<f64>) -> f64 {
 ///
 /// * 1-norm of the matrix
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_matrix_norm1_f32(matrix: &ArrayView2<f32>) -> f32 {
     let mut max_col_sum = 0.0f32;
 
@@ -185,6 +194,7 @@ pub fn simd_matrix_norm1_f32(matrix: &ArrayView2<f32>) -> f32 {
 ///
 /// * 1-norm of the matrix
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_matrix_norm1_f64(matrix: &ArrayView2<f64>) -> f64 {
     let mut max_col_sum = 0.0f64;
 
@@ -207,6 +217,7 @@ pub fn simd_matrix_norm1_f64(matrix: &ArrayView2<f64>) -> f64 {
 ///
 /// * Infinity norm of the matrix
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_matrix_norm_inf_f32(matrix: &ArrayView2<f32>) -> f32 {
     let mut max_row_sum = 0.0f32;
 
@@ -229,6 +240,7 @@ pub fn simd_matrix_norm_inf_f32(matrix: &ArrayView2<f32>) -> f32 {
 ///
 /// * Infinity norm of the matrix
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn simd_matrix_norm_inf_f64(matrix: &ArrayView2<f64>) -> f64 {
     let mut max_row_sum = 0.0f64;
 

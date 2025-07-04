@@ -648,6 +648,7 @@ impl EnhancedMatFile {
 
 /// Enhanced convenience functions
 /// Write variables to a MAT file with automatic format selection
+#[allow(dead_code)]
 pub fn write_mat_enhanced<P: AsRef<Path>>(
     path: P,
     vars: &HashMap<String, MatType>,
@@ -659,6 +660,7 @@ pub fn write_mat_enhanced<P: AsRef<Path>>(
 }
 
 /// Read variables from a MAT file with enhanced format support
+#[allow(dead_code)]
 pub fn read_mat_enhanced<P: AsRef<Path>>(
     path: P,
     config: Option<MatFileConfig>,
@@ -669,6 +671,7 @@ pub fn read_mat_enhanced<P: AsRef<Path>>(
 }
 
 /// Create a complex number MatType
+#[allow(dead_code)]
 pub fn create_complex_array(real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatType> {
     use num_complex::Complex64;
 
@@ -692,11 +695,13 @@ pub fn create_complex_array(real: ArrayD<f64>, imag: ArrayD<f64>) -> Result<MatT
 }
 
 /// Create a cell array MatType
+#[allow(dead_code)]
 pub fn create_cell_array(cells: Vec<MatType>) -> MatType {
     MatType::Cell(cells)
 }
 
 /// Create a structure MatType
+#[allow(dead_code)]
 pub fn create_struct(fields: HashMap<String, MatType>) -> MatType {
     MatType::Struct(fields)
 }

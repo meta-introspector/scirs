@@ -66,6 +66,7 @@ use std::f64::consts::PI;
 /// let result = ellip_harm(h2, k2, n, p, s);
 /// println!("E_{}^{}({}) = {:?}", n, p, s, result);
 /// ```
+#[allow(dead_code)]
 pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult<f64> {
     // Validate input parameters
     if h2 < 0.0 || k2 < 0.0 {
@@ -192,6 +193,7 @@ pub fn ellip_harm(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult
 /// let result = ellip_harm_2(h2, k2, n, p, s);
 /// println!("F_{}^{}({}) = {:?}", n, p, s, result);
 /// ```
+#[allow(dead_code)]
 pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResult<f64> {
     // Validate input parameters
     if h2 < 0.0 || k2 < 0.0 {
@@ -306,6 +308,7 @@ pub fn ellip_harm_2(h2: f64, k2: f64, n: usize, p: usize, s: f64) -> SpecialResu
 /// let norm = ellip_normal(h2, k2, n, p);
 /// println!("N_{}^{}({}, {}) = {:?}", n, p, h2, k2, norm);
 /// ```
+#[allow(dead_code)]
 pub fn ellip_normal(h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> {
     // Validate input parameters
     if h2 < 0.0 || k2 < 0.0 {
@@ -373,6 +376,7 @@ pub fn ellip_normal(h2: f64, k2: f64, n: usize, p: usize) -> SpecialResult<f64> 
 /// let result = ellip_harm_array(h2, k2, n, p, &s_values.view());
 /// println!("Ellipsoidal harmonics: {:?}", result);
 /// ```
+#[allow(dead_code)]
 pub fn ellip_harm_array(
     h2: f64,
     k2: f64,
@@ -424,6 +428,7 @@ pub fn ellip_harm_array(
 /// let coeffs = ellip_harm_coefficients(h2, k2, max_n, max_p);
 /// println!("Expansion coefficients shape: {:?}", coeffs.unwrap().dim());
 /// ```
+#[allow(dead_code)]
 pub fn ellip_harm_coefficients(
     h2: f64,
     k2: f64,
@@ -492,6 +497,7 @@ pub fn ellip_harm_coefficients(
 /// let result = ellip_harm_complex(h2, k2, n, p, z);
 /// println!("Complex ellipsoidal harmonic: {:?}", result);
 /// ```
+#[allow(dead_code)]
 pub fn ellip_harm_complex(
     h2: Complex64,
     k2: Complex64,
@@ -534,6 +540,7 @@ pub fn ellip_harm_complex(
 // Helper functions
 
 /// Factorial function for integer values
+#[allow(dead_code)]
 fn factorial(n: usize) -> usize {
     match n {
         0 | 1 => 1,
@@ -542,6 +549,7 @@ fn factorial(n: usize) -> usize {
 }
 
 /// Complex Legendre polynomial P_n(z)
+#[allow(dead_code)]
 fn legendre_polynomial_complex(n: usize, z: Complex64) -> Complex64 {
     match n {
         0 => Complex64::new(1.0, 0.0),
@@ -563,6 +571,7 @@ fn legendre_polynomial_complex(n: usize, z: Complex64) -> Complex64 {
 }
 
 /// Associated Legendre function P_n^p(z) for complex z
+#[allow(dead_code)]
 fn associated_legendre_complex(n: usize, p: usize, z: Complex64) -> Complex64 {
     if p == 0 {
         return legendre_polynomial_complex(n, z);

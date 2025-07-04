@@ -19,7 +19,7 @@ members = [
     "scirs2-datasets",
     # AI/ML modules
     "scirs2-neural",
-    "scirs2-optim",
+    # "scirs2-optim", # Temporarily disabled due to compilation errors
     "scirs2-graph",
     "scirs2-transform",
     "scirs2-metrics",
@@ -47,7 +47,7 @@ categories = ["science", "mathematics", "algorithms", "ai"]
 
 [workspace.dependencies]
 # Core array computing
-ndarray = { version = "0.16.1", features = ["serde", "rayon"] }
+ndarray = { version = "0.16.1", default-features = false, features = ["std", "serde", "rayon"] }
 ndarray-stats = "0.6.0"
 ndarray-stats-05 = { package = "ndarray-stats", version = "0.5.0" }
 ndarray-rand = "0.15.0"

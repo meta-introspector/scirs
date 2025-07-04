@@ -35,6 +35,7 @@ use num_complex::Complex64;
 /// // Create H(s) = (s + 1) / (s^2 + 2s + 1)
 /// let sys = tf(vec![1.0, 1.0], vec![1.0, 2.0, 1.0], None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn tf(num: Vec<f64>, den: Vec<f64>, dt: Option<bool>) -> SignalResult<TransferFunction> {
     TransferFunction::new(num, den, dt)
 }
@@ -69,6 +70,7 @@ pub fn tf(num: Vec<f64>, den: Vec<f64>, dt: Option<bool>) -> SignalResult<Transf
 ///     None
 /// ).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn zpk(
     zeros: Vec<Complex64>,
     poles: Vec<Complex64>,
@@ -110,6 +112,7 @@ pub fn zpk(
 ///     None
 /// ).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn ss(
     a: Vec<f64>,
     b: Vec<f64>,
@@ -142,6 +145,7 @@ pub fn ss(
 /// let sys_ct = tf(vec![1.0], vec![1.0, 1.0], Some(false)).unwrap();
 /// let sys_dt = c2d(&sys_ct, 0.1).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn c2d<T: LtiSystem>(system: &T, _dt: f64) -> SignalResult<StateSpace> {
     // Convert to state-space first
     let ss_sys = system.to_ss()?;
@@ -191,6 +195,7 @@ pub fn c2d<T: LtiSystem>(system: &T, _dt: f64) -> SignalResult<StateSpace> {
 /// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();   // 2/(s+2)
 /// let series_sys = series(&g1, &g2).unwrap();              // 2/((s+1)(s+2))
 /// ```
+#[allow(dead_code)]
 pub fn series<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
     let tf1 = g1.to_tf()?;
     let tf2 = g2.to_tf()?;
@@ -233,6 +238,7 @@ pub fn series<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<Tr
 /// let g2 = tf(vec![2.0], vec![1.0, 2.0], None).unwrap();   // 2/(s+2)
 /// let parallel_sys = parallel(&g1, &g2).unwrap();          // (3s+4)/((s+1)(s+2))
 /// ```
+#[allow(dead_code)]
 pub fn parallel<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<TransferFunction> {
     let tf1 = g1.to_tf()?;
     let tf2 = g2.to_tf()?;
@@ -278,6 +284,7 @@ pub fn parallel<T1: LtiSystem, T2: LtiSystem>(g1: &T1, g2: &T2) -> SignalResult<
 /// let h = tf(vec![1.0], vec![1.0], None).unwrap(); // Unity feedback
 /// let closed_loop = feedback(&g, Some(&h), 1).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn feedback<T1: LtiSystem>(
     g: &T1,
     h: Option<&dyn LtiSystem>,
@@ -342,6 +349,7 @@ pub fn feedback<T1: LtiSystem>(
 /// let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap();
 /// let sens = sensitivity(&g, None).unwrap(); // Unity feedback
 /// ```
+#[allow(dead_code)]
 pub fn sensitivity<T1: LtiSystem>(
     g: &T1,
     h: Option<&dyn LtiSystem>,
@@ -399,6 +407,7 @@ pub fn sensitivity<T1: LtiSystem>(
 /// let g = tf(vec![10.0], vec![1.0, 1.0], None).unwrap();
 /// let comp_sens = complementary_sensitivity(&g, None).unwrap(); // Unity feedback
 /// ```
+#[allow(dead_code)]
 pub fn complementary_sensitivity<T1: LtiSystem>(
     g: &T1,
     h: Option<&dyn LtiSystem>,
@@ -457,6 +466,7 @@ pub fn complementary_sensitivity<T1: LtiSystem>(
 /// let result = multiply_polynomials(&p1, &p2); // x^2 + 5x + 6
 /// assert_eq!(result, vec![1.0, 5.0, 6.0]);
 /// ```
+#[allow(dead_code)]
 pub fn multiply_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
     if p1.is_empty() || p2.is_empty() {
         return vec![0.0];
@@ -498,6 +508,7 @@ pub fn multiply_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
 /// let result = add_polynomials(&p1, &p2); // 2x + 5
 /// assert_eq!(result, vec![2.0, 5.0]);
 /// ```
+#[allow(dead_code)]
 pub fn add_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
     let max_len = p1.len().max(p2.len());
     let mut result = vec![0.0; max_len];
@@ -542,6 +553,7 @@ pub fn add_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
 /// let result = subtract_polynomials(&p1, &p2); // x + 2
 /// assert_eq!(result, vec![1.0, 2.0]);
 /// ```
+#[allow(dead_code)]
 pub fn subtract_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
     let max_len = p1.len().max(p2.len());
     let mut result = vec![0.0; max_len];
@@ -574,6 +586,7 @@ pub fn subtract_polynomials(p1: &[f64], p2: &[f64]) -> Vec<f64> {
 /// # Returns
 ///
 /// Tuple of (quotient, remainder) polynomial coefficients
+#[allow(dead_code)]
 pub fn divide_polynomials(dividend: &[f64], divisor: &[f64]) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     if divisor.is_empty() || divisor.iter().all(|&x| x.abs() < 1e-10) {
         return Err(SignalError::ValueError(
@@ -638,6 +651,7 @@ pub fn divide_polynomials(dividend: &[f64], divisor: &[f64]) -> SignalResult<(Ve
 /// # Returns
 ///
 /// Value of the polynomial at x
+#[allow(dead_code)]
 pub fn evaluate_polynomial(coeffs: &[f64], x: f64) -> f64 {
     if coeffs.is_empty() {
         return 0.0;
@@ -664,6 +678,7 @@ pub fn evaluate_polynomial(coeffs: &[f64], x: f64) -> f64 {
 /// # Returns
 ///
 /// Derivative polynomial coefficients
+#[allow(dead_code)]
 pub fn polynomial_derivative(coeffs: &[f64]) -> Vec<f64> {
     if coeffs.len() <= 1 {
         return vec![0.0];

@@ -8,6 +8,7 @@
 use ndarray::{Array1, Array2};
 use scirs2_integrate::pde::finite_difference::{BoundaryCondition, IrregularGrid, PointType};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Poisson Equation on Circular Domain ===");
 
@@ -162,6 +163,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Simple Jacobi iterative solver for demonstration
 /// In practice, use more sophisticated methods like CG, GMRES, or multigrid
+#[allow(dead_code)]
 fn solve_jacobi(
     matrix: &Array2<f64>,
     rhs: &Array1<f64>,

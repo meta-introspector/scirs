@@ -1384,6 +1384,7 @@ impl SLAMKnowledgeBase {
 }
 
 /// High-level function for visual SLAM processing
+#[allow(dead_code)]
 pub fn process_visual_slam(
     frames: &[ArrayView3<f32>],
     timestamps: &[f64],
@@ -1402,6 +1403,7 @@ pub fn process_visual_slam(
 }
 
 /// Real-time SLAM processing function
+#[allow(dead_code)]
 pub fn process_visual_slam_realtime(
     frame: &ArrayView3<f32>,
     timestamp: f64,

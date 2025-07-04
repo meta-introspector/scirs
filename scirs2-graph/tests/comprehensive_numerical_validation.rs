@@ -12,6 +12,7 @@ const TOLERANCE: f64 = 1e-6;
 const LOOSE_TOLERANCE: f64 = 1e-4;
 
 /// Load Zachary's Karate Club graph for testing
+#[allow(dead_code)]
 fn karate_club_graph() -> Graph<usize, f64> {
     let mut g = Graph::new();
 
@@ -110,6 +111,7 @@ fn karate_club_graph() -> Graph<usize, f64> {
 }
 
 /// Create a simple path graph for testing
+#[allow(dead_code)]
 fn simple_path_graph(n: usize) -> Graph<usize, f64> {
     let mut g = Graph::new();
     for i in 0..n {
@@ -122,6 +124,7 @@ fn simple_path_graph(n: usize) -> Graph<usize, f64> {
 }
 
 /// Create a complete graph for testing
+#[allow(dead_code)]
 fn simple_complete_graph(n: usize) -> Graph<usize, f64> {
     let mut g = Graph::new();
     for i in 0..n {
@@ -136,6 +139,7 @@ fn simple_complete_graph(n: usize) -> Graph<usize, f64> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_pagerank_numerical_properties() {
     let g = karate_club_graph();
     let pr = pagerank(&g, 0.85, Some(1e-8)).unwrap();
@@ -165,6 +169,7 @@ fn test_pagerank_numerical_properties() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_betweenness_centrality_properties() {
     let path = simple_path_graph(5);
     let bc = betweenness_centrality(&path, true).unwrap();
@@ -181,6 +186,7 @@ fn test_betweenness_centrality_properties() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_closeness_centrality_properties() {
     let star = star_graph(5); // Center + 4 leaves
     let cc = closeness_centrality(&star).unwrap();
@@ -198,6 +204,7 @@ fn test_closeness_centrality_properties() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_eigenvector_centrality_properties() {
     let g = karate_club_graph();
     let ec = eigenvector_centrality(&g).unwrap();
@@ -222,6 +229,7 @@ fn test_eigenvector_centrality_properties() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_clustering_coefficient_known_values() {
     // Triangle: clustering coefficient should be 1.0 for all nodes
     let mut triangle = Graph::new();
@@ -244,6 +252,7 @@ fn test_clustering_coefficient_known_values() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_shortest_path_properties() {
     let path = simple_path_graph(10);
 
@@ -269,6 +278,7 @@ fn test_shortest_path_properties() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_connected_components_correctness() {
     // Create disconnected graph: two triangles
     let mut g = Graph::new();
@@ -301,6 +311,7 @@ fn test_connected_components_correctness() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_minimum_spanning_tree_properties() {
     let complete = simple_complete_graph(5);
     let mst = minimum_spanning_tree(&complete).unwrap();
@@ -318,6 +329,7 @@ fn test_minimum_spanning_tree_properties() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_community_detection_modularity() {
     let g = karate_club_graph();
 
@@ -344,6 +356,7 @@ fn test_community_detection_modularity() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_k_core_decomposition_properties() {
     let g = karate_club_graph();
     let k_cores = k_core_decomposition(&g).unwrap();
@@ -374,6 +387,7 @@ fn test_k_core_decomposition_properties() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_graph_density_calculation() {
     // Empty graph
     let empty = Graph::<usize, f64>::new();
@@ -395,6 +409,7 @@ fn test_graph_density_calculation() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_random_walk_properties() {
     let g = karate_club_graph();
     let mut rng = StdRng::seed_from_u64(42);
@@ -446,6 +461,7 @@ fn test_random_walk_properties() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_bipartite_detection() {
     // Create a bipartite graph
     let mut bipartite = Graph::new();
@@ -480,6 +496,7 @@ fn test_bipartite_detection() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_graph_isomorphism_simple_cases() {
     // Two identical paths should be isomorphic
     let path1 = simple_path_graph(5);
@@ -498,6 +515,7 @@ fn test_graph_isomorphism_simple_cases() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_numerical_stability_large_values() {
     // Test with large edge weights
     let mut g = Graph::new();
@@ -521,6 +539,7 @@ fn test_numerical_stability_large_values() {
 }
 
 /// Helper function to compute Pearson correlation coefficient
+#[allow(dead_code)]
 fn compute_correlation(x: &HashMap<usize, f64>, y: &HashMap<usize, f64>) -> f64 {
     let common_keys: Vec<_> = x.keys().filter(|k| y.contains_key(k)).collect();
     if common_keys.is_empty() {
@@ -546,6 +565,7 @@ fn compute_correlation(x: &HashMap<usize, f64>, y: &HashMap<usize, f64>) -> f64 
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_algorithm_determinism() {
     // Algorithms with fixed seeds should produce identical results
     let mut rng1 = StdRng::seed_from_u64(12345);
@@ -568,6 +588,7 @@ fn test_algorithm_determinism() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_edge_cases() {
     // Single node graph
     let mut single = Graph::new();

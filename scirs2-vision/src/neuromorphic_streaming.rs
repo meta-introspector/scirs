@@ -238,6 +238,7 @@ impl PlasticSynapse {
 }
 
 /// Neuromorphic spiking neural network
+#[derive(Debug)]
 pub struct SpikingNeuralNetwork {
     /// Network neurons
     neurons: Vec<SpikingNeuron>,
@@ -434,6 +435,7 @@ pub struct NetworkActivityStats {
 }
 
 /// Neuromorphic edge detection stage using spiking neurons
+#[derive(Debug)]
 pub struct NeuromorphicEdgeDetector {
     /// Spiking neural network for edge detection
     snn: SpikingNeuralNetwork,
@@ -608,6 +610,7 @@ impl ProcessingStage for NeuromorphicEdgeDetector {
 }
 
 /// Event-driven sparse processing stage
+#[derive(Debug)]
 pub struct EventDrivenProcessor {
     /// Sparse event representation
     event_buffer: VecDeque<PixelEvent>,
@@ -930,6 +933,7 @@ pub struct EventStats {
 }
 
 /// Adaptive neuromorphic pipeline that combines multiple neuromorphic stages
+#[derive(Debug)]
 pub struct AdaptiveNeuromorphicPipeline {
     /// Neuromorphic edge detector
     edge_detector: NeuromorphicEdgeDetector,

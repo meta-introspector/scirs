@@ -6,6 +6,7 @@
 use scirs2_signal::wavelets::{cwt_magnitude, morlet, paul, scale_to_frequency, scalogram};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Continuous Wavelet Transform (CWT) and Scalogram Example");
     println!("======================================================");

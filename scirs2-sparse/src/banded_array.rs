@@ -857,6 +857,7 @@ where
 }
 
 /// Apply permutation to a vector
+#[allow(dead_code)]
 fn apply_permutation<T: Copy + Zero>(p: &[usize], v: &ArrayView1<T>) -> Array1<T> {
     let mut result = Array1::zeros(v.len());
     for (i, &pi) in p.iter().enumerate() {
@@ -866,6 +867,7 @@ fn apply_permutation<T: Copy + Zero>(p: &[usize], v: &ArrayView1<T>) -> Array1<T
 }
 
 /// Convert dense array to triplet format
+#[allow(dead_code)]
 fn array_to_triplets<T: Float + Debug + Copy + Zero>(
     array: &Array2<T>,
 ) -> (Vec<usize>, Vec<usize>, Vec<T>) {

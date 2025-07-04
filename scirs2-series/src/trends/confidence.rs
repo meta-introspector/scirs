@@ -59,6 +59,7 @@ use crate::error::{Result, TimeSeriesError};
 /// assert_eq!(lower.len(), ts.len());
 /// assert_eq!(upper.len(), ts.len());
 /// ```
+#[allow(dead_code)]
 pub fn compute_trend_confidence_interval<F>(
     ts: &Array1<F>,
     trend: &Array1<F>,
@@ -95,6 +96,7 @@ where
 }
 
 /// Calculates bootstrap confidence intervals
+#[allow(dead_code)]
 fn bootstrap_confidence_interval<F>(
     ts: &Array1<F>,
     trend: &Array1<F>,
@@ -188,6 +190,7 @@ where
 }
 
 /// Calculates parametric confidence intervals
+#[allow(dead_code)]
 fn parametric_confidence_interval<F>(
     ts: &Array1<F>,
     trend: &Array1<F>,
@@ -243,6 +246,7 @@ where
 }
 
 /// Calculates prediction intervals
+#[allow(dead_code)]
 fn prediction_interval<F>(
     ts: &Array1<F>,
     trend: &Array1<F>,
@@ -306,6 +310,7 @@ where
 }
 
 /// Approximation of the normal quantile function
+#[allow(dead_code)]
 fn normal_quantile(p: f64) -> Result<f64> {
     if p <= 0.0 || p >= 1.0 {
         return Err(TimeSeriesError::InvalidInput(format!(
@@ -418,6 +423,7 @@ fn normal_quantile(p: f64) -> Result<f64> {
 /// assert_eq!(result.lower.len(), ts.len());
 /// assert_eq!(result.upper.len(), ts.len());
 /// ```
+#[allow(dead_code)]
 pub fn create_trend_with_ci<F, E>(
     ts: &Array1<F>,
     trend_estimator: E,

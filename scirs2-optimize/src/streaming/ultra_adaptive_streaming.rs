@@ -1101,6 +1101,7 @@ impl UltraPerformanceTracker {
 }
 
 /// Create ultra-adaptive streaming optimizer
+#[allow(dead_code)]
 pub fn create_ultra_adaptive_optimizer<T: StreamingObjective>(
     initial_parameters: Array1<f64>,
     objective: T,

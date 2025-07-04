@@ -1,6 +1,7 @@
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBackend, GpuContext};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("GPU Acceleration Example");
 
@@ -15,6 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn run_gpu_example() -> Result<(), Box<dyn std::error::Error>> {
     // Try to create a GPU context with the default backend
     let ctx = match GpuContext::new(GpuBackend::default()) {

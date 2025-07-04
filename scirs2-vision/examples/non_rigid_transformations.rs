@@ -6,6 +6,7 @@ use scirs2_vision::transform::{
 use std::error::Error;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     // Create output directory if it doesn't exist
     std::fs::create_dir_all("output")?;
@@ -38,6 +39,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 /// Example 1: Thin-Plate Spline transformation (smile effect)
+#[allow(dead_code)]
 fn thin_plate_spline_example(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
     let (width, height) = img.dimensions();
 
@@ -100,7 +102,7 @@ fn thin_plate_spline_example(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
         println!("  Lambda = {}: {}ms", lambda, duration.as_millis());
 
         // Save individual result
-        result.save(format!("output/tps_smile_lambda_{}.png", lambda))?;
+        result.save(format!("output/tps_smile_lambda_{lambda}.png"))?;
 
         // Add to composite
         let pos_x = if i == 0 {
@@ -128,6 +130,7 @@ fn thin_plate_spline_example(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
 }
 
 /// Example 2: Elastic deformation
+#[allow(dead_code)]
 fn elastic_deformation_example(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
     let (width, height) = img.dimensions();
 
@@ -174,10 +177,7 @@ fn elastic_deformation_example(img: &DynamicImage) -> Result<(), Box<dyn Error>>
             );
 
             // Save individual result
-            result.save(format!(
-                "output/elastic_alpha_{}_sigma_{}.png",
-                alpha, sigma
-            ))?;
+            result.save(format!("output/elastic_alpha_{alpha}_sigma_{sigma}.png"))?;
 
             // Add to composite
             let pos_x = (idx % 3) as u32 * width;
@@ -204,6 +204,7 @@ fn elastic_deformation_example(img: &DynamicImage) -> Result<(), Box<dyn Error>>
 }
 
 /// Example 3: Grid deformation
+#[allow(dead_code)]
 fn grid_deformation_example() -> Result<(), Box<dyn Error>> {
     // Create a grid image
     let width = 400;
@@ -276,6 +277,7 @@ fn grid_deformation_example() -> Result<(), Box<dyn Error>> {
 }
 
 /// Example 4: Compare border modes
+#[allow(dead_code)]
 fn compare_border_modes(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
     let (width, height) = img.dimensions();
 
@@ -304,7 +306,7 @@ fn compare_border_modes(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
         println!("  Border mode {}: {}ms", name, duration.as_millis());
 
         // Save individual result
-        result.save(format!("output/border_mode_{}.png", name))?;
+        result.save(format!("output/border_mode_{name}.png"))?;
 
         // Add to composite
         let pos_x = (i % 3) as u32 * width;
@@ -325,6 +327,7 @@ fn compare_border_modes(img: &DynamicImage) -> Result<(), Box<dyn Error>> {
 }
 
 /// Create an animation showing the thin-plate spline transformation
+#[allow(dead_code)]
 fn create_tps_animation(
     img: &DynamicImage,
     source_points: Vec<(f64, f64)>,
@@ -358,7 +361,7 @@ fn create_tps_animation(
         )?;
 
         // Save frame
-        result.save(format!("output/animation/tps_frame_{:02}.png", frame))?;
+        result.save(format!("output/animation/tps_frame_{frame:02}.png"))?;
     }
 
     println!("  Animation frames saved to output/animation/");
@@ -366,6 +369,7 @@ fn create_tps_animation(
 }
 
 /// Create an animation showing elastic deformation
+#[allow(dead_code)]
 fn create_elastic_animation(img: &DynamicImage, frames: usize) -> Result<(), Box<dyn Error>> {
     let (width, height) = img.dimensions();
 
@@ -386,7 +390,7 @@ fn create_elastic_animation(img: &DynamicImage, frames: usize) -> Result<(), Box
         let result = warp_non_rigid(img, &elastic, BorderMode::Replicate)?;
 
         // Save frame
-        result.save(format!("output/animation/elastic_frame_{:02}.png", frame))?;
+        result.save(format!("output/animation/elastic_frame_{frame:02}.png"))?;
     }
 
     println!("  Animation frames saved to output/animation/");

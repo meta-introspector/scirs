@@ -888,6 +888,7 @@ pub struct RecoveryStatistics {
 }
 
 /// Convenience functions for error recovery
+#[allow(dead_code)]
 pub fn create_advanced_error_recovery<F>() -> AdvancedIntelligentErrorRecovery<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync,
@@ -895,6 +896,7 @@ where
     AdvancedIntelligentErrorRecovery::new(AdvancedErrorRecoveryConfig::default())
 }
 
+#[allow(dead_code)]
 pub fn recover_computation<F, T>(
     operation: impl Fn() -> StatsResult<T> + Send + Sync + Clone,
     error: StatsError,

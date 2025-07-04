@@ -3,9 +3,6 @@
 //! This module provides the highest level of AI integration, combining quantum-inspired
 //! processing, neuromorphic computing, advanced AI optimization, and next-generation
 //! computer vision techniques into a unified ultrathink processing framework.
-
-#![allow(missing_docs)]
-#![allow(dead_code)]
 //!
 //! # Features
 //!
@@ -17,6 +14,9 @@
 //! - Advanced Meta-Learning
 //! - Emergent Behavior Detection
 //! - Quantum-Enhanced Neural Networks
+
+#![allow(missing_docs)]
+#![allow(dead_code)]
 
 use crate::activity_recognition::*;
 use crate::ai_optimization::*;
@@ -34,6 +34,7 @@ use std::time::{Duration, Instant};
 /// Ultra-Advanced Neural-Quantum Hybrid Processor
 /// Combines quantum-inspired algorithms with neuromorphic computing
 /// for unprecedented processing capabilities
+#[derive(Debug)]
 pub struct NeuralQuantumHybridProcessor {
     /// Quantum processing core
     quantum_core: QuantumStreamProcessor,
@@ -88,6 +89,7 @@ pub enum FusionStrategy {
 /// Cross-Module Ultrathink Coordinator
 /// Coordinates ultrathink capabilities across all SciRS2 modules
 /// for unified AI-driven scientific computing
+#[derive(Debug)]
 pub struct UltrathinkCrossModuleCoordinator {
     /// Vision processing core
     vision_core: NeuralQuantumHybridProcessor,
@@ -2066,12 +2068,14 @@ pub struct UncertaintyQuantification {
 }
 
 /// High-level ultrathink processing function
+#[allow(dead_code)]
 pub fn process_with_ultrathink_mode(frame: Frame) -> Result<UltrathinkProcessingResult> {
     let mut processor = NeuralQuantumHybridProcessor::new();
     processor.process_ultrathink(frame)
 }
 
 /// Batch processing with ultrathink capabilities
+#[allow(dead_code)]
 pub fn batch_process_ultrathink(frames: Vec<Frame>) -> Result<Vec<UltrathinkProcessingResult>> {
     let mut processor = NeuralQuantumHybridProcessor::new();
     let mut results = Vec::with_capacity(frames.len());
@@ -2090,6 +2094,7 @@ pub fn batch_process_ultrathink(frames: Vec<Frame>) -> Result<Vec<UltrathinkProc
 }
 
 /// Real-time ultrathink processing with adaptive optimization
+#[allow(dead_code)]
 pub fn realtime_ultrathink_stream(
     frame_stream: impl Iterator<Item = Frame>,
     target_fps: f64,

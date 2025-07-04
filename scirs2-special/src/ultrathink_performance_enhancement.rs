@@ -74,6 +74,7 @@ static J0_LOOKUP_TABLE: LazyLock<Vec<f64>> = LazyLock::new(|| {
 });
 
 /// High-precision Stirling approximation for gamma function
+#[allow(dead_code)]
 fn gamma_stirling_precise(x: f64) -> f64 {
     if x < 0.5 {
         // Use reflection formula: Γ(z)Γ(1-z) = π/sin(πz)
@@ -97,6 +98,7 @@ fn gamma_stirling_precise(x: f64) -> f64 {
 }
 
 /// High-precision series expansion for J0 Bessel function
+#[allow(dead_code)]
 fn j0_series_precise(x: f64) -> f64 {
     if x == 0.0 {
         return 1.0;
@@ -127,6 +129,7 @@ fn j0_series_precise(x: f64) -> f64 {
 }
 
 /// Ultra-fast gamma function with optimized lookup table
+#[allow(dead_code)]
 pub fn gamma_ultrafast(x: f64) -> SpecialResult<f64> {
     const MIN_X: f64 = 0.5;
     const MAX_X: f64 = 2.5;
@@ -163,6 +166,7 @@ pub fn gamma_ultrafast(x: f64) -> SpecialResult<f64> {
 }
 
 /// Ultra-fast J0 Bessel function with lookup table
+#[allow(dead_code)]
 pub fn j0_ultrafast(x: f64) -> SpecialResult<f64> {
     let x_abs = x.abs();
     const MAX_X: f64 = 20.0;
@@ -192,6 +196,7 @@ pub fn j0_ultrafast(x: f64) -> SpecialResult<f64> {
 }
 
 /// Ultra-fast array processing with adaptive optimization
+#[allow(dead_code)]
 pub fn gamma_array_ultrafast(input: &ArrayView1<f64>, config: &PerformanceConfig) -> SpecialResult<Array1<f64>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
@@ -259,6 +264,7 @@ pub struct PerformanceMetrics {
 }
 
 /// Benchmark specific function with detailed metrics
+#[allow(dead_code)]
 pub fn benchmark_function<F>(
     function_name: &str,
     test_function: F,
@@ -295,6 +301,7 @@ where
 }
 
 /// Advanced error function optimization using rational approximations
+#[allow(dead_code)]
 pub fn erf_ultrafast(x: f64) -> SpecialResult<f64> {
     let abs_x = x.abs();
     

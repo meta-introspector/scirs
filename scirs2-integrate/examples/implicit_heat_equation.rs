@@ -5,6 +5,7 @@ use scirs2_integrate::pde::implicit::{
 use scirs2_integrate::pde::{BoundaryCondition, BoundaryConditionType, BoundaryLocation, Domain};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Define domain: x ∈ [0, 1]
     let domain = Domain::new(vec![0.0..1.0], vec![101])?;
@@ -87,11 +88,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Analytical solution for the heat equation with given initial and boundary conditions
+#[allow(dead_code)]
 fn analytical_solution(x: f64, t: f64) -> f64 {
     (PI * x).sin() * (-PI * PI * t).exp()
 }
 
 /// Compare numerical solutions with the analytical solution
+#[allow(dead_code)]
 fn compare_solutions(
     cn_result: &ImplicitResult,
     be_result: &ImplicitResult,

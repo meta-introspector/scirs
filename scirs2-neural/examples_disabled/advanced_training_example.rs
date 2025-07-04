@@ -17,6 +17,7 @@ use std::fmt::Debug;
 use std::marker::{Send, Sync};
 
 // Simple sequential model for regression
+#[allow(dead_code)]
 fn create_regression_model<
     F: Float + Debug + ScalarOperand + Send + Sync + FromPrimitive + 'static,
 >(
@@ -45,6 +46,7 @@ fn create_regression_model<
     Ok(model)
 }
 // Generate synthetic regression dataset
+#[allow(dead_code)]
 fn generate_regression_dataset<
     F: Float + Debug + ScalarOperand + FromPrimitive + Send + Sync + 'static,
     n_samples: usize,
@@ -91,6 +93,7 @@ impl<F: Float + Debug + ScalarOperand> LearningRateScheduler<F> for CosineAnneal
         let cosine = (1.0 + (std::f64::consts::PI * progress).cos()) / 2.0;
         let lr = self.min_lr + (self.initial_lr - self.min_lr) * F::from(cosine).unwrap();
         Ok(lr)
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Advanced Training Examples");
     println!("-------------------------");

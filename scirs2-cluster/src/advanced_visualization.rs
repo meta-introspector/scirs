@@ -1095,6 +1095,7 @@ impl Default for AISelectionInsights {
 }
 
 /// Convenience function to create ultrathink visualization
+#[allow(dead_code)]
 pub fn visualize_ultrathink_results(
     data: &ArrayView2<f64>,
     result: &UltrathinkClusteringResult,
@@ -1106,6 +1107,7 @@ pub fn visualize_ultrathink_results(
 }
 
 /// Convenience function to create and export ultrathink visualization
+#[allow(dead_code)]
 pub fn create_ultrathink_visualization_report(
     data: &ArrayView2<f64>,
     result: &UltrathinkClusteringResult,

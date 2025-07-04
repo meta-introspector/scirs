@@ -167,6 +167,7 @@ impl Default for EnhancedTestSignalConfig {
 }
 
 /// Run comprehensive SciPy validation for multitaper methods
+#[allow(dead_code)]
 pub fn run_scipy_multitaper_validation() -> SignalResult<MultitaperScipyValidationResult> {
     let mut test_results = HashMap::new();
     let mut critical_issues = Vec::new();
@@ -252,6 +253,7 @@ pub fn run_scipy_multitaper_validation() -> SignalResult<MultitaperScipyValidati
 }
 
 /// Validate sinusoid estimation accuracy
+#[allow(dead_code)]
 fn validate_sinusoid_estimation() -> SignalResult<TestResult> {
     let config = EnhancedTestSignalConfig {
         signal_type: TestSignalType::Sinusoid {
@@ -305,6 +307,7 @@ fn validate_sinusoid_estimation() -> SignalResult<TestResult> {
 }
 
 /// Validate multi-tone signal estimation
+#[allow(dead_code)]
 fn validate_multitone_estimation() -> SignalResult<TestResult> {
     let config = EnhancedTestSignalConfig {
         signal_type: TestSignalType::MultiTone {
@@ -368,6 +371,7 @@ fn validate_multitone_estimation() -> SignalResult<TestResult> {
 }
 
 /// Validate chirp signal estimation
+#[allow(dead_code)]
 fn validate_chirp_estimation() -> SignalResult<TestResult> {
     let config = EnhancedTestSignalConfig {
         signal_type: TestSignalType::Chirp {
@@ -417,6 +421,7 @@ fn validate_chirp_estimation() -> SignalResult<TestResult> {
 }
 
 /// Validate colored noise estimation
+#[allow(dead_code)]
 fn validate_colored_noise_estimation() -> SignalResult<TestResult> {
     let config = EnhancedTestSignalConfig {
         signal_type: TestSignalType::ColoredNoise {
@@ -479,6 +484,7 @@ fn validate_colored_noise_estimation() -> SignalResult<TestResult> {
 }
 
 /// Enhanced DPSS validation
+#[allow(dead_code)]
 fn validate_dpss_implementation_enhanced() -> SignalResult<TestResult> {
     use crate::multitaper::windows::dpss;
 
@@ -534,6 +540,7 @@ fn validate_dpss_implementation_enhanced() -> SignalResult<TestResult> {
 }
 
 /// Enhanced numerical stability validation
+#[allow(dead_code)]
 fn validate_numerical_stability_enhanced() -> SignalResult<TestResult> {
     let mut stability_tests_passed = 0;
     let total_tests = 5;
@@ -589,6 +596,7 @@ fn validate_numerical_stability_enhanced() -> SignalResult<TestResult> {
 }
 
 /// Test signal processing with a given signal
+#[allow(dead_code)]
 fn test_signal_processing(signal: &Array1<f64>) -> SignalResult<()> {
     let config = MultitaperConfig {
         fs: 1000.0,
@@ -603,6 +611,7 @@ fn test_signal_processing(signal: &Array1<f64>) -> SignalResult<()> {
 }
 
 /// Generate test signal based on configuration
+#[allow(dead_code)]
 fn generate_test_signal(config: &EnhancedTestSignalConfig) -> SignalResult<Array1<f64>> {
     let mut rng = rand::rng();
     let dt = 1.0 / config.fs;
@@ -642,7 +651,7 @@ fn generate_test_signal(config: &EnhancedTestSignalConfig) -> SignalResult<Array
                 _ => {
                     // White noise fallback
                     Array1::from_shape_fn(config.n_samples, |_| {
-                        amplitude * rng.gen_range(-1.0..1.0)
+                        amplitude * rng.random_range(-1.0..1.0)
                     })
                 }
             }
@@ -657,6 +666,7 @@ fn generate_test_signal(config: &EnhancedTestSignalConfig) -> SignalResult<Array
 }
 
 /// Benchmark performance against reference implementation
+#[allow(dead_code)]
 fn benchmark_against_reference() -> SignalResult<PerformanceComparison> {
     // Placeholder implementation - would benchmark against actual reference
     Ok(PerformanceComparison {
@@ -668,6 +678,7 @@ fn benchmark_against_reference() -> SignalResult<PerformanceComparison> {
 }
 
 /// Perform statistical validation
+#[allow(dead_code)]
 fn perform_statistical_validation() -> SignalResult<StatisticalValidationMetrics> {
     // Placeholder implementation - would perform actual statistical tests
     Ok(StatisticalValidationMetrics {
@@ -680,6 +691,7 @@ fn perform_statistical_validation() -> SignalResult<StatisticalValidationMetrics
 }
 
 /// Validate SIMD implementation
+#[allow(dead_code)]
 fn validate_simd_implementation() -> SignalResult<SimdValidationMetrics> {
     // Test SIMD operations if available
     let test_data = Array1::from_shape_fn(1024, |i| i as f64);
@@ -705,6 +717,7 @@ fn validate_simd_implementation() -> SignalResult<SimdValidationMetrics> {
 }
 
 /// Analyze numerical precision
+#[allow(dead_code)]
 fn analyze_numerical_precision() -> SignalResult<PrecisionAnalysisResult> {
     Ok(PrecisionAnalysisResult {
         epsilon_analysis: f64::EPSILON,
@@ -715,6 +728,7 @@ fn analyze_numerical_precision() -> SignalResult<PrecisionAnalysisResult> {
 }
 
 /// Calculate overall validation score
+#[allow(dead_code)]
 fn calculate_overall_score(test_results: &HashMap<String, TestResult>) -> f64 {
     let total_tests = test_results.len() as f64;
     let passed_tests = test_results.values().filter(|result| result.passed).count() as f64;
@@ -723,6 +737,7 @@ fn calculate_overall_score(test_results: &HashMap<String, TestResult>) -> f64 {
 }
 
 /// Generate recommendations based on test results
+#[allow(dead_code)]
 fn generate_recommendations(
     test_results: &HashMap<String, TestResult>,
     recommendations: &mut Vec<String>,
@@ -748,6 +763,7 @@ fn generate_recommendations(
 }
 
 /// Identify critical issues that need immediate attention
+#[allow(dead_code)]
 fn identify_critical_issues(
     test_results: &HashMap<String, TestResult>,
     critical_issues: &mut Vec<String>,
@@ -763,6 +779,7 @@ fn identify_critical_issues(
 }
 
 /// Generate comprehensive validation report
+#[allow(dead_code)]
 pub fn generate_multitaper_validation_report(result: &MultitaperScipyValidationResult) -> String {
     let mut report = String::new();
 

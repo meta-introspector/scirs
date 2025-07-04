@@ -41,6 +41,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// // Apply 3x3 minimum filter
 /// let filtered = minimum_filter(&input, &[3, 3], None, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn minimum_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -83,6 +84,7 @@ where
 /// // Apply 3x3 maximum filter
 /// let filtered = maximum_filter(&input, &[3, 3], None, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn maximum_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -104,6 +106,7 @@ enum FilterType {
 }
 
 /// Generic extrema filter (handles both min and max filters)
+#[allow(dead_code)]
 fn extrema_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -219,6 +222,7 @@ where
 }
 
 /// Apply an extrema filter to a 1D array
+#[allow(dead_code)]
 fn extrema_filter_1d<T>(
     input: &Array1<T>,
     size: usize,
@@ -269,6 +273,7 @@ where
 }
 
 /// Apply an extrema filter to a 2D array
+#[allow(dead_code)]
 fn extrema_filter_2d<T>(
     input: &Array2<T>,
     size: &[usize],
@@ -328,6 +333,7 @@ where
 }
 
 /// Apply an extrema filter to an n-dimensional array with arbitrary dimensionality
+#[allow(dead_code)]
 fn extrema_filter_nd<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -472,11 +478,12 @@ where
 }
 
 /// Apply an extrema filter to an n-dimensional array (general case)
+#[allow(dead_code)]
 fn extrema_filter_nd_general<T, D>(
     input: &Array<T, D>,
     size: &[usize],
     mode: &BorderMode,
-    origin: &[isize],
+    _origin: &[isize],
     filter_type: FilterType,
     pad_width: &[(usize, usize)],
 ) -> NdimageResult<Array<T, D>>
@@ -494,7 +501,7 @@ where
     let input_shape = input.shape();
 
     // Generate all possible coordinate combinations for the input
-    let total_elements = input.len();
+    let _total_elements = input.len();
 
     // Use parallel iteration if the array is large enough
     #[cfg(feature = "parallel")]
@@ -524,6 +531,7 @@ where
 }
 
 /// Sequential n-dimensional extrema filter implementation
+#[allow(dead_code)]
 fn extrema_filter_nd_sequential<T, D>(
     input: &Array<T, D>,
     padded_input: &Array<T, D>,
@@ -608,6 +616,7 @@ where
 
 /// Parallel n-dimensional extrema filter implementation
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn extrema_filter_nd_parallel<T, D>(
     input: &Array<T, D>,
     padded_input: &Array<T, D>,

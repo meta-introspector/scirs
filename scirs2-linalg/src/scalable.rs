@@ -129,6 +129,7 @@ impl ScalableConfig {
 /// # Returns
 ///
 /// * Aspect ratio classification
+#[allow(dead_code)]
 pub fn classify_aspect_ratio<F>(matrix: &ArrayView2<F>, threshold: f64) -> AspectRatio {
     let (m, n) = matrix.dim();
     let ratio = m as f64 / n as f64;
@@ -169,6 +170,7 @@ pub fn classify_aspect_ratio<F>(matrix: &ArrayView2<F>, threshold: f64) -> Aspec
 /// let config = ScalableConfig::default();
 /// let (q, r) = tsqr(&tall_matrix.view(), &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn tsqr<F>(
     matrix: &ArrayView2<F>,
     config: &ScalableConfig,
@@ -204,6 +206,7 @@ where
 /// # Returns
 ///
 /// * (U, S, Vt) approximate SVD with rank columns/rows
+#[allow(dead_code)]
 pub fn randomized_svd<F>(
     matrix: &ArrayView2<F>,
     rank: usize,
@@ -268,6 +271,7 @@ where
 /// # Returns
 ///
 /// * (L, Q) where L is lower triangular and Q is orthogonal
+#[allow(dead_code)]
 pub fn lq_decomposition<F>(
     matrix: &ArrayView2<F>,
     config: &ScalableConfig,
@@ -329,6 +333,7 @@ where
 /// let result = adaptive_decomposition(&tall_matrix.view(), &config).unwrap();
 /// assert_eq!(result.aspect_ratio, AspectRatio::TallSkinny);
 /// ```
+#[allow(dead_code)]
 pub fn adaptive_decomposition<F>(
     matrix: &ArrayView2<F>,
     config: &ScalableConfig,
@@ -435,6 +440,7 @@ impl Default for PerformanceMetrics {
 ///
 /// This function uses block algorithms to minimize cache misses and
 /// improve performance for tall-skinny or short-fat matrices.
+#[allow(dead_code)]
 pub fn blocked_matmul<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -483,22 +489,26 @@ where
 
 // Helper functions for complexity and performance estimation
 
+#[allow(dead_code)]
 fn estimate_tsqr_complexity(m: usize, n: usize) -> usize {
     // TSQR complexity: O(mn^2) but with reduced communication
     // Communication complexity: O(n^2) instead of O(mn^2)
     2 * m * n * n + n * n * n / 3
 }
 
+#[allow(dead_code)]
 fn estimate_lq_complexity(m: usize, n: usize) -> usize {
     // LQ complexity similar to QR but for transposed matrix
     2 * m * m * n - 2 * m * m * m / 3
 }
 
+#[allow(dead_code)]
 fn estimate_qr_complexity(m: usize, n: usize) -> usize {
     // Standard QR complexity
     2 * m * n * n - 2 * n * n * n / 3
 }
 
+#[allow(dead_code)]
 fn estimate_memory_usage(m: usize, n: usize, aspect_ratio: &AspectRatio) -> usize {
     let element_size = std::mem::size_of::<f64>(); // Assume f64
 
@@ -518,6 +528,7 @@ fn estimate_memory_usage(m: usize, n: usize, aspect_ratio: &AspectRatio) -> usiz
     }
 }
 
+#[allow(dead_code)]
 fn calculate_performance_metrics(
     m: usize,
     n: usize,

@@ -62,6 +62,7 @@ impl Default for BatchConfig {
 ///
 /// * Vector of sparse FFT results, one for each input signal
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn batch_sparse_fft<T>(
     signals: &[Vec<T>],
     k: usize,
@@ -162,6 +163,7 @@ where
 ///
 /// * Vector of sparse FFT results, one for each input signal
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn gpu_batch_sparse_fft<T>(
     signals: &[Vec<T>],
     k: usize,
@@ -267,6 +269,7 @@ where
 ///
 /// * Vector of sparse FFT results, one for each input signal
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn spectral_flatness_batch_sparse_fft<T>(
     signals: &[Vec<T>],
     flatness_threshold: f64,

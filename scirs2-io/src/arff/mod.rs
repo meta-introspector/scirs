@@ -71,6 +71,7 @@ impl ArffValue {
 }
 
 /// Parse attribute definition from ARFF file
+#[allow(dead_code)]
 fn parse_attribute(line: &str) -> Result<(String, AttributeType)> {
     // Expected format: @attribute name type
     let line = line.trim();
@@ -136,6 +137,7 @@ fn parse_attribute(line: &str) -> Result<(String, AttributeType)> {
 }
 
 /// Parse an ARFF data line into ArffValue instances
+#[allow(dead_code)]
 fn parse_data_line(line: &str, attributes: &[(String, AttributeType)]) -> Result<Vec<ArffValue>> {
     let line = line.trim();
     if line.is_empty() {
@@ -235,6 +237,7 @@ fn parse_data_line(line: &str, attributes: &[(String, AttributeType)]) -> Result
 /// println!("Number of attributes: {}", arff_data.attributes.len());
 /// println!("Number of instances: {}", arff_data.data.shape()[0]);
 /// ```
+#[allow(dead_code)]
 pub fn read_arff<P: AsRef<Path>>(path: P) -> Result<ArffData> {
     let file = File::open(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let reader = BufReader::new(file);
@@ -357,6 +360,7 @@ pub fn read_arff<P: AsRef<Path>>(path: P) -> Result<ArffData> {
 /// let matrix = get_numeric_matrix(&arff_data, &numeric_attrs).unwrap();
 /// println!("Matrix shape: {:?}", matrix.shape());
 /// ```
+#[allow(dead_code)]
 pub fn get_numeric_matrix(
     arff_data: &ArffData,
     numeric_attributes: &[String],
@@ -454,6 +458,7 @@ pub fn get_numeric_matrix(
 ///
 /// write_arff(Path::new("weather.arff"), &arff_data).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
     let file = File::create(path).map_err(|e| IoError::FileError(e.to_string()))?;
     let mut writer = BufWriter::new(file);
@@ -563,6 +568,7 @@ pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
 /// use scirs2_io::arff::write_arff;
 /// write_arff(Path::new("simple_data.arff"), &arff_data).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn numeric_matrix_to_arff(
     relation: &str,
     attribute_names: &[String],
@@ -601,6 +607,7 @@ pub fn numeric_matrix_to_arff(
 }
 
 /// Format a string for ARFF output, adding quotes if needed
+#[allow(dead_code)]
 fn format_arff_string(s: &str) -> String {
     if s.contains(' ')
         || s.contains(',')

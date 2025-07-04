@@ -51,6 +51,7 @@ pub enum BalancingStrategy {
 /// let (balanced_data, balanced_targets) = random_oversample(&data, &targets, Some(42)).unwrap();
 /// // Now both classes have 4 samples each
 /// ```
+#[allow(dead_code)]
 pub fn random_oversample(
     data: &Array2<f64>,
     targets: &Array1<f64>,
@@ -138,6 +139,7 @@ pub fn random_oversample(
 /// let (balanced_data, balanced_targets) = random_undersample(&data, &targets, Some(42)).unwrap();
 /// // Now both classes have 2 samples each
 /// ```
+#[allow(dead_code)]
 pub fn random_undersample(
     data: &Array2<f64>,
     targets: &Array1<f64>,
@@ -224,6 +226,7 @@ pub fn random_undersample(
 /// assert_eq!(synthetic_data.nrows(), 2);
 /// assert_eq!(synthetic_targets.len(), 2);
 /// ```
+#[allow(dead_code)]
 pub fn generate_synthetic_samples(
     data: &Array2<f64>,
     targets: &Array1<f64>,
@@ -346,6 +349,7 @@ pub fn generate_synthetic_samples(
 /// let targets = Array1::from(vec![0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
 /// let (balanced_data, balanced_targets) = create_balanced_dataset(&data, &targets, BalancingStrategy::RandomOversample, Some(42)).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn create_balanced_dataset(
     data: &Array2<f64>,
     targets: &Array1<f64>,

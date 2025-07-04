@@ -1,5 +1,6 @@
 use scirs2_autograd as ag;
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing tensor shape handling (DEBUGGING):");
 

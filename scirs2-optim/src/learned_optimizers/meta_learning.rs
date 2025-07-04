@@ -1196,11 +1196,12 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
             }
         }
 
+        let total_epochs = training_history.len();
         Ok(MetaTrainingResults {
             final_parameters: meta_parameters.parameters,
             training_history,
             best_performance,
-            total_epochs: training_history.len(),
+            total_epochs,
         })
     }
 

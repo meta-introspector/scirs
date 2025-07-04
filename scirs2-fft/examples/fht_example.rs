@@ -15,6 +15,7 @@ fn bessel_j0(x: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Fast Hankel Transform Example");
     println!("============================");
@@ -33,6 +34,7 @@ fn main() {
     example_optimal_offset();
 }
 
+#[allow(dead_code)]
 fn example_basic_fht() {
     println!("Example 1: Basic FHT with order 0");
     println!("---------------------------------");
@@ -81,6 +83,7 @@ fn example_basic_fht() {
     println!();
 }
 
+#[allow(dead_code)]
 fn example_different_orders() {
     println!("Example 2: FHT with different orders");
     println!("-----------------------------------");
@@ -112,6 +115,7 @@ fn example_different_orders() {
     println!();
 }
 
+#[allow(dead_code)]
 fn example_biased_transform() {
     println!("Example 3: Biased transform for power laws");
     println!("-----------------------------------------");
@@ -145,6 +149,7 @@ fn example_biased_transform() {
     println!();
 }
 
+#[allow(dead_code)]
 fn example_optimal_offset() {
     println!("Example 4: Optimal offset calculation");
     println!("------------------------------------");

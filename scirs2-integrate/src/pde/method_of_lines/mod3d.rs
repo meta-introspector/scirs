@@ -513,6 +513,7 @@ impl MOLParabolicSolver3D {
 
 // Helper function to apply boundary conditions in 3D
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn apply_boundary_condition_3d(
     dudt: &mut Array3<f64>,
     u: &ArrayView3<f64>,
@@ -1382,6 +1383,7 @@ fn apply_boundary_condition_3d(
 }
 
 // Helper function to apply Dirichlet boundary conditions to initial condition
+#[allow(dead_code)]
 fn apply_dirichlet_conditions_to_initial_3d(
     u0: &mut Array3<f64>,
     boundary_conditions: &[BoundaryCondition<f64>],

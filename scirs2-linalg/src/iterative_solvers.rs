@@ -42,6 +42,7 @@ use crate::validation::validate_linear_system;
 /// assert!((ax[0] - b[0]).abs() < 1e-8);
 /// assert!((ax[1] - b[1]).abs() < 1e-8);
 /// ```
+#[allow(dead_code)]
 pub fn conjugate_gradient<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,
@@ -201,6 +202,7 @@ where
 /// assert!((ax[0] - b[0]).abs() < 1e-8);
 /// assert!((ax[1] - b[1]).abs() < 1e-8);
 /// ```
+#[allow(dead_code)]
 pub fn jacobi_method<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,
@@ -317,6 +319,7 @@ where
 /// assert!((ax[0] - b[0]).abs() < 1e-8);
 /// assert!((ax[1] - b[1]).abs() < 1e-8);
 /// ```
+#[allow(dead_code)]
 pub fn gauss_seidel<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,
@@ -438,6 +441,7 @@ where
 /// assert!((ax[0] - b[0]).abs() < 1e-8);
 /// assert!((ax[1] - b[1]).abs() < 1e-8);
 /// ```
+#[allow(dead_code)]
 pub fn successive_over_relaxation<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,
@@ -573,6 +577,7 @@ where
 /// // Solve using multigrid method
 /// let x = geometric_multigrid(&a.view(), &b.view(), 3, 10, 2, 2, 1e-6, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn geometric_multigrid<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,
@@ -731,6 +736,7 @@ where
 
 /// Performs a single V-cycle of the multigrid method.
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn v_cycle<F>(
     grid_matrices: &[Array2<F>],
     b: &ArrayView1<F>,
@@ -867,6 +873,7 @@ where
 /// assert!((ax[0] - b[0]).abs() < 1e-8);
 /// assert!((ax[1] - b[1]).abs() < 1e-8);
 /// ```
+#[allow(dead_code)]
 pub fn bicgstab<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,
@@ -1067,6 +1074,7 @@ where
 /// assert!((ax[0] - b[0]).abs() < 1e-6);
 /// assert!((ax[1] - b[1]).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn minres<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,
@@ -1243,6 +1251,7 @@ where
 }
 
 /// Compute residual r = b - Ax
+#[allow(dead_code)]
 fn compute_residual<F>(a: &ArrayView2<F>, x: &ArrayView1<F>, b: &ArrayView1<F>) -> Array1<F>
 where
     F: Float + NumAssign + Sum + One + 'static + ScalarOperand + Send + Sync,
@@ -1258,6 +1267,7 @@ where
 }
 
 /// Perform a single Gauss-Seidel smoothing step
+#[allow(dead_code)]
 fn gauss_seidel_step<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,
@@ -1299,6 +1309,7 @@ where
 ///
 /// This is a convenience function that calls `conjugate_gradient` with `workers = None`.
 /// For new code, prefer using `conjugate_gradient` directly with explicit workers parameter.
+#[allow(dead_code)]
 pub fn conjugate_gradient_default<F>(
     a: &ArrayView2<F>,
     b: &ArrayView1<F>,

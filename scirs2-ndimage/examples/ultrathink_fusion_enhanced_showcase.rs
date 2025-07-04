@@ -51,6 +51,7 @@ use scirs2_ndimage::{
 use std::collections::HashMap;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌟🧠🌟 ENHANCED ULTRATHINK FUSION SHOWCASE 🌟🧠🌟");
     println!("========================================================");
@@ -118,6 +119,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Phase 1: Demonstrate Advanced Quantum Consciousness Evolution
+#[allow(dead_code)]
 fn demonstrate_consciousness_evolution(
     image: &Array2<f64>,
     config: &UltrathinkConfig,
@@ -218,6 +220,7 @@ fn demonstrate_consciousness_evolution(
 }
 
 /// Phase 2: Demonstrate Enhanced Meta-Learning with Temporal Fusion
+#[allow(dead_code)]
 fn demonstrate_enhanced_meta_learning(
     image: &Array2<f64>,
     config: &UltrathinkConfig,
@@ -306,6 +309,7 @@ fn demonstrate_enhanced_meta_learning(
 }
 
 /// Phase 3: Demonstrate Quantum Resource Scheduling Optimization
+#[allow(dead_code)]
 fn demonstrate_quantum_resource_scheduling(
     config: &UltrathinkConfig,
     resource_scheduler: &mut QuantumAwareResourceScheduler,
@@ -408,6 +412,7 @@ fn demonstrate_quantum_resource_scheduling(
 }
 
 /// Phase 4: Integrated Ultrathink Fusion Processing
+#[allow(dead_code)]
 fn demonstrate_integrated_ultrathink_processing(
     image: &Array2<f64>,
     config: &UltrathinkConfig,
@@ -471,6 +476,7 @@ fn demonstrate_integrated_ultrathink_processing(
 }
 
 /// Phase 5: Performance Analysis and Insights
+#[allow(dead_code)]
 fn analyze_ultrathink_performance(
     consciousness_evolution: &QuantumConsciousnessEvolution,
     meta_learning_system: &EnhancedMetaLearningSystem,
@@ -515,6 +521,7 @@ fn analyze_ultrathink_performance(
 
 // Helper functions for creating mock data and configurations
 
+#[allow(dead_code)]
 fn create_complex_test_image() -> Array2<f64> {
     let size = 128;
     let mut image = Array2::zeros((size, size));
@@ -536,6 +543,7 @@ fn create_complex_test_image() -> Array2<f64> {
     image
 }
 
+#[allow(dead_code)]
 fn create_advanced_ultrathink_config() -> UltrathinkConfig {
     UltrathinkConfig {
         quantum: QuantumConfig {
@@ -573,12 +581,14 @@ fn create_advanced_ultrathink_config() -> UltrathinkConfig {
     }
 }
 
+#[allow(dead_code)]
 fn create_mock_ultra_features(image: &Array2<f64>, config: &UltrathinkConfig) -> Array3<f64> {
     // Simplified mock ultra-features for demonstration
     let (height, width) = image.dim();
     Array3::zeros((height, width, config.ultra_dimensions))
 }
 
+#[allow(dead_code)]
 fn create_mock_ultra_state(shape: (usize, usize), config: &UltrathinkConfig) -> UltrathinkState {
     // Create a simplified mock state for demonstration
     let mut state = UltrathinkState {
@@ -621,6 +631,7 @@ fn create_mock_ultra_state(shape: (usize, usize), config: &UltrathinkConfig) -> 
     state
 }
 
+#[allow(dead_code)]
 fn create_mock_response(shape: (usize, usize)) -> Array2<f64> {
     let mut response = Array2::zeros(shape);
 
@@ -635,6 +646,7 @@ fn create_mock_response(shape: (usize, usize)) -> Array2<f64> {
     response
 }
 
+#[allow(dead_code)]
 fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
     let mut task_types = HashMap::new();
     task_types.insert(
@@ -666,6 +678,7 @@ fn create_mock_workload_characteristics() -> WorkloadCharacteristics {
 
 // Analysis helper functions
 
+#[allow(dead_code)]
 fn analyze_consciousness_insights(evolution: &QuantumConsciousnessEvolution) -> Vec<String> {
     let mut insights = Vec::new();
 
@@ -695,6 +708,7 @@ fn analyze_consciousness_insights(evolution: &QuantumConsciousnessEvolution) -> 
     insights
 }
 
+#[allow(dead_code)]
 fn analyze_meta_learning_insights(system: &EnhancedMetaLearningSystem) -> Vec<String> {
     let mut insights = Vec::new();
 
@@ -725,6 +739,7 @@ fn analyze_meta_learning_insights(system: &EnhancedMetaLearningSystem) -> Vec<St
     insights
 }
 
+#[allow(dead_code)]
 fn analyze_scheduling_insights(scheduler: &QuantumAwareResourceScheduler) -> Vec<String> {
     let mut insights = Vec::new();
 

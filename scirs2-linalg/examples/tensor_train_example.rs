@@ -124,6 +124,7 @@ mod tensor_train_example {
     }
 }
 
+#[allow(dead_code)]
 fn main() {
     #[cfg(feature = "tensor_contraction")]
     {

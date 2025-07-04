@@ -309,6 +309,7 @@ impl CrossValidator {
 }
 
 /// Compute ULP (Units in Last Place) error
+#[allow(dead_code)]
 fn compute_ulp_error(a: f64, b: f64) -> i64 {
     if a == b {
         return 0;
@@ -376,6 +377,7 @@ print(result)
 }
 
 /// Automated test generation from reference implementations
+#[allow(dead_code)]
 pub fn generate_test_suite() -> SpecialResult<()> {
     let mut validator = CrossValidator::new();
     validator.load_test_cases()?;

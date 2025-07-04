@@ -30,6 +30,7 @@ use scirs2_fft::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> FFTResult<()> {
     println!("🚀 SciRS2-FFT Comprehensive Acceleration Showcase");
     println!("================================================");
@@ -63,6 +64,7 @@ fn main() -> FFTResult<()> {
 }
 
 /// Create test signals of different characteristics
+#[allow(dead_code)]
 fn create_test_signals() -> Vec<(String, Vec<f64>)> {
     let mut signals = Vec::new();
 
@@ -117,6 +119,7 @@ fn create_test_signals() -> Vec<(String, Vec<f64>)> {
 }
 
 /// Create a sparse signal with specified frequency components
+#[allow(dead_code)]
 fn create_sparse_signal(n: usize, components: &[(usize, f64)]) -> Vec<f64> {
     let mut signal = vec![0.0; n];
 
@@ -140,6 +143,7 @@ fn create_sparse_signal(n: usize, components: &[(usize, f64)]) -> Vec<f64> {
 }
 
 /// Compare acceleration methods for a given signal
+#[allow(dead_code)]
 fn perform_acceleration_comparison(signal: &[f64]) -> FFTResult<()> {
     let sparsity = (signal.len() / 64).max(4).min(32); // Adaptive sparsity
     let config = SparseFFTConfig {
@@ -198,6 +202,7 @@ fn perform_acceleration_comparison(signal: &[f64]) -> FFTResult<()> {
 }
 
 /// Demonstrate multi-GPU processing capabilities
+#[allow(dead_code)]
 fn demonstrate_multi_gpu_processing(signal: &[f64]) -> FFTResult<()> {
     println!("\n  🔄 Multi-GPU Processing:");
 
@@ -221,6 +226,7 @@ fn demonstrate_multi_gpu_processing(signal: &[f64]) -> FFTResult<()> {
 }
 
 /// Demonstrate specialized hardware capabilities
+#[allow(dead_code)]
 fn demonstrate_specialized_hardware(signal: &[f64]) -> FFTResult<()> {
     println!("\n  ⚡ Specialized Hardware:");
 
@@ -262,6 +268,7 @@ fn demonstrate_specialized_hardware(signal: &[f64]) -> FFTResult<()> {
 }
 
 /// Helper function to measure and print performance results
+#[allow(dead_code)]
 fn print_performance_result<F, R>(name: &str, f: F)
 where
     F: FnOnce() -> FFTResult<R>,
@@ -284,6 +291,7 @@ where
 }
 
 /// Display comprehensive hardware capabilities
+#[allow(dead_code)]
 fn display_hardware_capabilities() -> FFTResult<()> {
     println!("\n🔧 Hardware Capabilities Overview");
     println!("================================");
@@ -356,6 +364,7 @@ fn display_hardware_capabilities() -> FFTResult<()> {
 }
 
 /// Display performance recommendations based on use cases
+#[allow(dead_code)]
 fn display_performance_recommendations() {
     println!("\n💡 Performance Recommendations");
     println!("==============================");

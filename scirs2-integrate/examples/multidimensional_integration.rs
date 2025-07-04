@@ -4,6 +4,7 @@ use std::f64::consts::PI;
 use std::time::Instant;
 
 /// A helper function to time and report the result of an integration method
+#[allow(dead_code)]
 fn time_integration<F, R>(name: &str, f: F) -> R
 where
     F: FnOnce() -> R,
@@ -15,6 +16,7 @@ where
     result
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Multidimensional Integration Examples\n");
 

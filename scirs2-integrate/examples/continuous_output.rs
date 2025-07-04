@@ -14,6 +14,7 @@ use std::io::Write;
 /// We convert this to a system of first-order ODEs:
 /// dθ/dt = ω
 /// dω/dt = -(g/L)·sin(θ)
+#[allow(dead_code)]
 fn pendulum(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = θ (angle from vertical, radians)
@@ -35,6 +36,7 @@ fn pendulum(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// dvy/dt = -μ·y/r³
 ///
 /// Where r = sqrt(x² + y²) is the distance from the origin
+#[allow(dead_code)]
 fn two_body(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = x (position x)
@@ -74,6 +76,7 @@ fn two_body(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 /// We convert to first-order system:
 /// dx/dt = y
 /// dy/dt = μ·(1 - x²)·y - x
+#[allow(dead_code)]
 fn van_der_pol(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     // State variables:
     // y[0] = x (position)
@@ -86,6 +89,7 @@ fn van_der_pol(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
 }
 
 /// Writes a CSV file with the solution
+#[allow(dead_code)]
 fn write_solution_csv(
     filename: &str,
     solution: &DenseSolution<f64>,
@@ -123,6 +127,7 @@ fn write_solution_csv(
 }
 
 /// Pendulum simulation with continuous output
+#[allow(dead_code)]
 fn pendulum_simulation() -> IntegrateResult<()> {
     println!("\n=== Pendulum Simulation ===");
 
@@ -188,6 +193,7 @@ fn pendulum_simulation() -> IntegrateResult<()> {
 }
 
 /// Two-body problem simulation (planet orbiting a star)
+#[allow(dead_code)]
 fn two_body_simulation() -> IntegrateResult<()> {
     println!("\n=== Two-Body Simulation ===");
 
@@ -268,6 +274,7 @@ fn two_body_simulation() -> IntegrateResult<()> {
 }
 
 /// Van der Pol oscillator simulation with continuous output
+#[allow(dead_code)]
 fn van_der_pol_simulation() -> IntegrateResult<()> {
     println!("\n=== Van der Pol Simulation ===");
 
@@ -427,6 +434,7 @@ fn van_der_pol_simulation() -> IntegrateResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("Continuous Output Demonstrations");
     println!("================================");

@@ -313,6 +313,7 @@ impl<T: Float> fmt::Debug for Graph<T> {
 /// Creates and runs a computation graph.
 ///
 /// See [Context].
+#[allow(dead_code)]
 pub fn run<F, FN, R>(f: FN) -> R
 where
     F: Float,
@@ -523,6 +524,7 @@ pub(crate) fn assert_same_graph<F: Float>(a: &impl AsGraph<F>, b: &impl AsGraph<
 
 #[test]
 #[should_panic]
+#[allow(dead_code)]
 fn test_mixed_graph() {
     VariableEnvironment::<f32>::new().run(|g| {
         let a = T::zeros(&[1], g);

@@ -143,7 +143,7 @@ use num_complex::Complex64;
 /// ```
 /// use scirs2_signal::parametric_ultra_enhanced::{ultra_enhanced_arma, UltraEnhancedConfig};
 /// use ndarray::Array1;
-/// #[cfg(test)]
+///
 use std::f64::consts::PI;
 ///
 /// // Generate test signal with two sinusoids plus noise
@@ -156,7 +156,7 @@ use std::f64::consts::PI;
 /// let signal: Array1<f64> = t.mapv(|ti| {
 ///     (2.0 * PI * 5.0 * ti).sin() +
 ///     0.5 * (2.0 * PI * 15.0 * ti).sin() +
-///     0.1 * rng.gen_range(-1.0..1.0)
+///     0.1 * rng.random_range(-1.0..1.0)
 /// });
 ///
 /// let config = UltraEnhancedConfig::default();
@@ -166,6 +166,7 @@ use std::f64::consts::PI;
 /// assert!(result.diagnostics.is_stable);
 /// assert!(result.noise_variance > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn ultra_enhanced_arma<T>(
     signal: &Array1<T>,
     ar_order: usize,
@@ -312,6 +313,7 @@ where
 ///
 /// This function estimates AR parameters that adapt to non-stationary signals
 /// using sliding windows and exponential forgetting
+#[allow(dead_code)]
 pub fn adaptive_ar_spectral_estimation(
     signal: &[f64],
     initial_order: usize,
@@ -386,6 +388,7 @@ pub fn adaptive_ar_spectral_estimation(
 ///
 /// This function provides robust AR/ARMA estimation that is resistant to outliers
 /// and non-Gaussian noise using M-estimators and iterative reweighting
+#[allow(dead_code)]
 pub fn robust_parametric_spectral_estimation(
     signal: &[f64],
     ar_order: usize,
@@ -467,6 +470,7 @@ pub fn robust_parametric_spectral_estimation(
 ///
 /// This function implements MUSIC, ESPRIT, and other eigenvalue-based methods
 /// for high-resolution spectral estimation beyond traditional AR/MA methods
+#[allow(dead_code)]
 pub fn high_resolution_spectral_estimation(
     signal: &[f64],
     config: &HighResolutionConfig,
@@ -539,6 +543,7 @@ pub fn high_resolution_spectral_estimation(
 ///
 /// This function combines the robustness of multitaper methods with the
 /// high resolution of parametric methods
+#[allow(dead_code)]
 pub fn multitaper_parametric_estimation(
     signal: &[f64],
     config: &MultitaperParametricConfig,
@@ -824,6 +829,7 @@ pub struct MultitaperParametricResult {
 }
 
 /// Enhanced Burg method with SIMD acceleration
+#[allow(dead_code)]
 fn enhanced_burg_method_simd(
     signal: &Array1<f64>,
     order: usize,
@@ -932,6 +938,7 @@ fn enhanced_burg_method_simd(
 }
 
 /// SIMD-accelerated prediction error updates
+#[allow(dead_code)]
 fn update_prediction_errors_simd(
     forward_errors: &[f64],
     backward_errors: &[f64],
@@ -969,6 +976,7 @@ fn update_prediction_errors_simd(
 }
 
 /// Enhanced Burg method without SIMD (fallback)
+#[allow(dead_code)]
 fn enhanced_burg_method_standard(
     signal: &Array1<f64>,
     order: usize,
@@ -979,6 +987,7 @@ fn enhanced_burg_method_standard(
 }
 
 /// Enhanced ARMA estimation with parallel processing
+#[allow(dead_code)]
 fn enhanced_arma_estimation_parallel(
     signal: &Array1<f64>,
     initial_ar_coeffs: &Array1<f64>,
@@ -992,6 +1001,7 @@ fn enhanced_arma_estimation_parallel(
 }
 
 /// Enhanced ARMA estimation with sequential processing  
+#[allow(dead_code)]
 fn enhanced_arma_estimation_sequential(
     signal: &Array1<f64>,
     initial_ar_coeffs: &Array1<f64>,
@@ -1066,6 +1076,7 @@ fn enhanced_arma_estimation_sequential(
 }
 
 /// Estimate MA parameters given AR parameters
+#[allow(dead_code)]
 fn estimate_ma_given_ar(
     signal: &Array1<f64>,
     ar_coeffs: &Array1<f64>,
@@ -1080,6 +1091,7 @@ fn estimate_ma_given_ar(
 }
 
 /// Estimate AR parameters given MA parameters
+#[allow(dead_code)]
 fn estimate_ar_given_ma(
     signal: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -1092,6 +1104,7 @@ fn estimate_ar_given_ma(
 }
 
 /// Estimate MA parameters from residuals
+#[allow(dead_code)]
 fn estimate_ma_from_residuals(
     residuals: &Array1<f64>,
     ma_order: usize,
@@ -1119,6 +1132,7 @@ fn estimate_ma_from_residuals(
 }
 
 /// Compute autocorrelation function
+#[allow(dead_code)]
 fn compute_autocorrelation(signal: &Array1<f64>, max_lag: usize) -> SignalResult<Array1<f64>> {
     let n = signal.len();
     let mean = signal.mean().unwrap_or(0.0);
@@ -1149,6 +1163,7 @@ fn compute_autocorrelation(signal: &Array1<f64>, max_lag: usize) -> SignalResult
 }
 
 /// Compute AR residuals
+#[allow(dead_code)]
 fn compute_ar_residuals(
     signal: &Array1<f64>,
     ar_coeffs: &Array1<f64>,
@@ -1176,6 +1191,7 @@ fn compute_ar_residuals(
 }
 
 /// Compute ARMA residuals
+#[allow(dead_code)]
 fn compute_arma_residuals(
     signal: &Array1<f64>,
     ar_coeffs: &Array1<f64>,
@@ -1216,6 +1232,7 @@ fn compute_arma_residuals(
 }
 
 /// Compute comprehensive model diagnostics
+#[allow(dead_code)]
 fn compute_comprehensive_diagnostics(
     signal: &Array1<f64>,
     ar_coeffs: &Array1<f64>,
@@ -1257,6 +1274,7 @@ fn compute_comprehensive_diagnostics(
 }
 
 /// Compute basic model diagnostics
+#[allow(dead_code)]
 fn compute_basic_diagnostics(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -1277,6 +1295,7 @@ fn compute_basic_diagnostics(
 }
 
 /// Check if ARMA model is stable (roots inside unit circle)
+#[allow(dead_code)]
 fn check_model_stability(ar_coeffs: &Array1<f64>, ma_coeffs: &Array1<f64>) -> SignalResult<bool> {
     // Check AR polynomial roots
     let ar_stable = if ar_coeffs.len() > 1 {
@@ -1296,6 +1315,7 @@ fn check_model_stability(ar_coeffs: &Array1<f64>, ma_coeffs: &Array1<f64>) -> Si
 }
 
 /// Check if polynomial roots are inside unit circle
+#[allow(dead_code)]
 fn check_polynomial_stability(coeffs: &Array1<f64>) -> SignalResult<bool> {
     if coeffs.is_empty() {
         return Ok(true);
@@ -1308,6 +1328,7 @@ fn check_polynomial_stability(coeffs: &Array1<f64>) -> SignalResult<bool> {
 }
 
 /// Estimate condition number of the coefficient matrix
+#[allow(dead_code)]
 fn estimate_condition_number(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -1334,6 +1355,7 @@ fn estimate_condition_number(
 }
 
 /// Compute Ljung-Box test for residual autocorrelation
+#[allow(dead_code)]
 fn compute_ljung_box_test(residuals: &Array1<f64>, max_lag: usize) -> Option<f64> {
     // Simplified implementation - full version would use proper statistical test
     let autocorr = compute_autocorrelation(residuals, max_lag).ok()?;
@@ -1354,6 +1376,7 @@ fn compute_ljung_box_test(residuals: &Array1<f64>, max_lag: usize) -> Option<f64
 }
 
 /// Estimate memory usage in MB
+#[allow(dead_code)]
 fn estimate_memory_usage(n: usize, ar_order: usize, ma_order: usize) -> f64 {
     let floats_used = n * 4 + ar_order + ma_order + 100; // Rough estimate
     (floats_used * 8) as f64 / (1024.0 * 1024.0) // Convert to MB
@@ -1376,6 +1399,7 @@ fn estimate_memory_usage(n: usize, ar_order: usize, ma_order: usize) -> f64 {
 /// # Returns
 ///
 /// * Power spectral density values
+#[allow(dead_code)]
 pub fn ultra_enhanced_arma_spectrum<T>(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -1427,6 +1451,7 @@ where
 }
 
 /// SIMD-accelerated ARMA spectrum computation
+#[allow(dead_code)]
 fn ultra_enhanced_arma_spectrum_simd(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -1484,6 +1509,7 @@ fn ultra_enhanced_arma_spectrum_simd(
 }
 
 /// Compute polynomial values for a chunk of frequencies using SIMD
+#[allow(dead_code)]
 fn compute_polynomial_chunk_simd(
     coeffs: &Array1<f64>,
     omega_chunk: &ndarray::ArrayView1<f64>,
@@ -1513,6 +1539,7 @@ fn compute_polynomial_chunk_simd(
 }
 
 /// Scalar fallback for ARMA spectrum computation
+#[allow(dead_code)]
 fn ultra_enhanced_arma_spectrum_scalar(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -1533,6 +1560,7 @@ fn ultra_enhanced_arma_spectrum_scalar(
 /// - Numerical stability analysis
 /// - Performance benchmarking with regression detection
 /// - Statistical significance testing
+#[allow(dead_code)]
 pub fn comprehensive_parametric_validation(
     signal: &Array1<f64>,
     max_ar_order: usize,
@@ -1657,6 +1685,7 @@ pub struct ComprehensiveParametricValidationResult {
 }
 
 /// Cross-validation order selection with SIMD acceleration
+#[allow(dead_code)]
 fn cross_validation_order_selection(
     signal: &Array1<f64>,
     max_ar_order: usize,
@@ -1728,6 +1757,7 @@ fn cross_validation_order_selection(
 }
 
 /// Information criterion-based order selection
+#[allow(dead_code)]
 fn information_criterion_order_selection(
     signal: &Array1<f64>,
     max_ar_order: usize,
@@ -1761,6 +1791,7 @@ pub struct StabilityAnalysisResult {
     pub condition_number: f64,
 }
 
+#[allow(dead_code)]
 fn analyze_model_stability(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -1801,6 +1832,7 @@ pub struct ParametricPerformanceResult {
     pub performance_score: f64,
 }
 
+#[allow(dead_code)]
 fn benchmark_parametric_performance(
     signal: &Array1<f64>,
     ar_order: usize,
@@ -1839,6 +1871,7 @@ pub struct SimdUtilizationResult {
     pub simd_speedup: f64,
 }
 
+#[allow(dead_code)]
 fn analyze_simd_utilization(
     performance_stats: &PerformanceStats,
 ) -> SignalResult<SimdUtilizationResult> {
@@ -1855,12 +1888,11 @@ fn analyze_simd_utilization(
     })
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
     use ndarray::Array1;
     use num_complex::Complex64;
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     #[test]
@@ -1932,6 +1964,7 @@ mod tests {
 /// # Returns
 ///
 /// * Power spectral density values
+#[allow(dead_code)]
 fn compute_ar_psd(
     ar_coeffs: &Array1<f64>,
     noise_variance: f64,
@@ -1985,6 +2018,7 @@ fn compute_ar_psd(
 /// # Returns
 ///
 /// * Power spectral density values
+#[allow(dead_code)]
 fn compute_arma_psd(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
@@ -2050,6 +2084,7 @@ fn compute_arma_psd(
 /// # Returns
 ///
 /// * Frequency vector
+#[allow(dead_code)]
 fn generate_frequency_grid(n_freqs: usize, fs: f64) -> Vec<f64> {
     let nyquist = fs / 2.0;
     (0..n_freqs)
@@ -2070,6 +2105,7 @@ fn generate_frequency_grid(n_freqs: usize, fs: f64) -> Vec<f64> {
 /// # Returns
 ///
 /// * Combined PSD estimate
+#[allow(dead_code)]
 fn combine_multitaper_spectra(
     spectral_estimates: &[Vec<f64>],
     combination_method: CombinationMethod,
@@ -2149,6 +2185,7 @@ fn combine_multitaper_spectra(
 /// # Returns
 ///
 /// * Tuple of (lower bounds, upper bounds)
+#[allow(dead_code)]
 fn compute_multitaper_confidence_intervals(
     spectral_estimates: &[Vec<f64>],
     confidence_level: f64,
@@ -2186,6 +2223,7 @@ fn compute_multitaper_confidence_intervals(
 ///
 /// This is a simplified approximation suitable for confidence intervals.
 /// For production use, consider using a more accurate implementation.
+#[allow(dead_code)]
 fn chi_squared_inverse_cdf(p: f64, dof: f64) -> f64 {
     // Wilson-Hilferty approximation for chi-squared distribution
     let h = 2.0 / (9.0 * dof);
@@ -2196,6 +2234,7 @@ fn chi_squared_inverse_cdf(p: f64, dof: f64) -> f64 {
 }
 
 /// Simple approximation for standard normal inverse CDF
+#[allow(dead_code)]
 fn normal_inverse_cdf(p: f64) -> f64 {
     // Beasley-Springer-Moro algorithm approximation
     let a0 = 2.50662823884;
@@ -2234,6 +2273,7 @@ fn normal_inverse_cdf(p: f64) -> f64 {
 /// # Returns
 ///
 /// * Vector of eigenvalues
+#[allow(dead_code)]
 fn extract_taper_eigenvalues(tapers: &Array2<f64>, nw: f64) -> SignalResult<Vec<f64>> {
     let k = tapers.nrows();
 

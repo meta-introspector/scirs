@@ -10,6 +10,7 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 /// Load a dataset from a CSV file (legacy API)
+#[allow(dead_code)]
 pub fn load_csv_legacy<P: AsRef<Path>>(
     path: P,
     has_header: bool,
@@ -22,6 +23,7 @@ pub fn load_csv_legacy<P: AsRef<Path>>(
 }
 
 /// Load a dataset from a JSON file
+#[allow(dead_code)]
 pub fn load_json<P: AsRef<Path>>(path: P) -> Result<Dataset> {
     let file = File::open(path).map_err(DatasetsError::IoError)?;
     let reader = BufReader::new(file);
@@ -33,6 +35,7 @@ pub fn load_json<P: AsRef<Path>>(path: P) -> Result<Dataset> {
 }
 
 /// Save a dataset to a JSON file
+#[allow(dead_code)]
 pub fn save_json<P: AsRef<Path>>(dataset: &Dataset, path: P) -> Result<()> {
     let file = File::create(path).map_err(DatasetsError::IoError)?;
 
@@ -43,6 +46,7 @@ pub fn save_json<P: AsRef<Path>>(dataset: &Dataset, path: P) -> Result<()> {
 }
 
 /// Load raw data from a file
+#[allow(dead_code)]
 pub fn load_raw<P: AsRef<Path>>(path: P) -> Result<Vec<u8>> {
     let mut file = File::open(path).map_err(DatasetsError::IoError)?;
     let mut buffer = Vec::new();
@@ -378,6 +382,7 @@ impl Iterator for DatasetChunkIterator {
 }
 
 /// Load a CSV file using streaming with configurable chunking
+#[allow(dead_code)]
 pub fn load_csv_streaming<P: AsRef<Path>>(
     path: P,
     csv_config: CsvConfig,
@@ -387,6 +392,7 @@ pub fn load_csv_streaming<P: AsRef<Path>>(
 }
 
 /// Load a large CSV file efficiently by processing in parallel chunks
+#[allow(dead_code)]
 pub fn load_csv_parallel<P: AsRef<Path>>(
     path: P,
     csv_config: CsvConfig,
@@ -507,6 +513,7 @@ pub fn load_csv_parallel<P: AsRef<Path>>(
 
 /// Load CSV using parallel chunks
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn load_csv_parallel_chunks<P: AsRef<Path>>(
     path: P,
     csv_config: CsvConfig,
@@ -540,6 +547,7 @@ fn load_csv_parallel_chunks<P: AsRef<Path>>(
 
 /// Process a single CSV chunk
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn process_csv_chunk<P: AsRef<Path>>(
     path: P,
     csv_config: &CsvConfig,
@@ -610,6 +618,7 @@ fn process_csv_chunk<P: AsRef<Path>>(
 }
 
 /// Load CSV sequentially (fallback)
+#[allow(dead_code)]
 fn load_csv_sequential<P: AsRef<Path>>(
     path: P,
     csv_config: CsvConfig,
@@ -668,6 +677,7 @@ fn load_csv_sequential<P: AsRef<Path>>(
 }
 
 /// Enhanced CSV loader with improved configuration
+#[allow(dead_code)]
 pub fn load_csv<P: AsRef<Path>>(path: P, config: CsvConfig) -> Result<Dataset> {
     let file = File::open(path).map_err(DatasetsError::IoError)?;
     let mut reader = ReaderBuilder::new()

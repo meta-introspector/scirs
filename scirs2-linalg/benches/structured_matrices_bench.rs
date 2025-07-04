@@ -21,16 +21,19 @@ use scirs2_linalg::structured::{
 use std::hint::black_box;
 
 /// Create a test vector
+#[allow(dead_code)]
 fn create_test_vector(n: usize) -> Array1<f64> {
     Array1::from_shape_fn(n, |i| ((i + 1) as f64 * 0.1).sin())
 }
 
 /// Create a general test matrix for comparison
+#[allow(dead_code)]
 fn create_general_matrix(n: usize) -> Array2<f64> {
     Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin())
 }
 
 /// Create block matrices for testing
+#[allow(dead_code)]
 fn create_block_matrices(block_size: usize, num_blocks: usize) -> Vec<Array2<f64>> {
     (0..num_blocks)
         .map(|k| {
@@ -42,6 +45,7 @@ fn create_block_matrices(block_size: usize, num_blocks: usize) -> Vec<Array2<f64
 }
 
 /// Benchmark Toeplitz matrix operations
+#[allow(dead_code)]
 fn bench_toeplitz_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("toeplitz_operations");
     group.sample_size(20);
@@ -152,6 +156,7 @@ fn bench_toeplitz_operations(c: &mut Criterion) {
 }
 
 /// Benchmark Circulant matrix operations
+#[allow(dead_code)]
 fn bench_circulant_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("circulant_operations");
     group.sample_size(25);
@@ -249,6 +254,7 @@ fn bench_circulant_operations(c: &mut Criterion) {
 }
 
 /// Benchmark Hankel matrix operations
+#[allow(dead_code)]
 fn bench_hankel_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("hankel_operations");
     group.sample_size(20);
@@ -330,6 +336,7 @@ fn bench_hankel_operations(c: &mut Criterion) {
 }
 
 /// Benchmark tridiagonal matrix operations
+#[allow(dead_code)]
 fn bench_tridiagonal_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("tridiagonal_operations");
     group.sample_size(30);
@@ -470,6 +477,7 @@ fn bench_tridiagonal_operations(c: &mut Criterion) {
 }
 
 /// Benchmark banded matrix operations
+#[allow(dead_code)]
 fn bench_banded_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("banded_operations");
     group.sample_size(25);
@@ -571,6 +579,7 @@ fn bench_banded_operations(c: &mut Criterion) {
 }
 
 /// Benchmark block diagonal matrix operations
+#[allow(dead_code)]
 fn bench_block_diagonal_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("block_diagonal_operations");
     group.sample_size(20);
@@ -677,6 +686,7 @@ fn bench_block_diagonal_operations(c: &mut Criterion) {
 }
 
 /// Benchmark block tridiagonal matrix operations
+#[allow(dead_code)]
 fn bench_block_tridiagonal_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("block_tridiagonal_operations");
     group.sample_size(20);
@@ -789,6 +799,7 @@ fn bench_block_tridiagonal_operations(c: &mut Criterion) {
 }
 
 /// Benchmark structured vs general matrix operations comparison
+#[allow(dead_code)]
 fn bench_structured_vs_general_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("structured_vs_general_comparison");
     group.sample_size(20);
@@ -866,6 +877,7 @@ fn bench_structured_vs_general_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark specialized algorithms for structured matrices
+#[allow(dead_code)]
 fn bench_specialized_algorithms(c: &mut Criterion) {
     let mut group = c.benchmark_group("specialized_algorithms");
     group.sample_size(15);

@@ -885,11 +885,13 @@ impl SciPyInterpolate {
 }
 
 /// Convenience functions for SciPy parity validation
+#[allow(dead_code)]
 pub fn validate_scipy_parity<T: InterpolationFloat>() -> InterpolateResult<CompatibilityReport> {
     SciPyInterpolate::compatibility_report::<T>()
 }
 
 /// Create a complete SciPy compatibility interface
+#[allow(dead_code)]
 pub fn create_scipy_interface<T: InterpolationFloat>() -> SciPyCompatInterface<T> {
     SciPyCompatInterface::new()
 }

@@ -2,6 +2,7 @@ use ndarray::{Array2, ArrayView2};
 use scirs2_signal::dwt::Wavelet;
 use scirs2_signal::dwt2d::{dwt2d_decompose, dwt2d_reconstruct, wavedec2, waverec2, Dwt2dResult};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("2D Wavelet Transform Example");
     println!("===========================\n");
@@ -145,6 +146,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper function to print a 2D array in a nicely formatted way
+#[allow(dead_code)]
 fn print_image(image: ArrayView2<f64>) {
     let (rows, cols) = image.dim();
 
@@ -157,6 +159,7 @@ fn print_image(image: ArrayView2<f64>) {
 }
 
 // Apply a threshold to the detail coefficients of a decomposition
+#[allow(dead_code)]
 fn threshold_coefficients(decomp: &mut Dwt2dResult, threshold: f64) {
     // Apply threshold to all detail coefficients
     for h in decomp.detail_h.iter_mut() {
@@ -179,6 +182,7 @@ fn threshold_coefficients(decomp: &mut Dwt2dResult, threshold: f64) {
 }
 
 // Count non-zero coefficients in a decomposition
+#[allow(dead_code)]
 fn count_nonzero_coefficients(coeffs: &[Dwt2dResult]) -> usize {
     let mut count = 0;
 

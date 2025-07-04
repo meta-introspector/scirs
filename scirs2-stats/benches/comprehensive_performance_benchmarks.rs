@@ -15,18 +15,21 @@ use scirs2_stats::{
 use std::time::Duration;
 
 /// Generate test data of various sizes for benchmarking
+#[allow(dead_code)]
 fn generate_test_data(size: usize, seed: u64) -> Array1<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
     Array1::from_iter((0..size).map(|_| rng.random::<f64>() * 100.0 - 50.0))
 }
 
 /// Generate matrix test data for multivariate benchmarks
+#[allow(dead_code)]
 fn generate_matrix_data(rows: usize, cols: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
     Array2::from_shape_fn((rows, cols), |_| rng.random::<f64>() * 100.0 - 50.0)
 }
 
 /// Generate correlated data for correlation benchmarks
+#[allow(dead_code)]
 fn generate_correlated_data(
     size: usize,
     correlation: f64,
@@ -43,6 +46,7 @@ fn generate_correlated_data(
 }
 
 /// Benchmark basic descriptive statistics
+#[allow(dead_code)]
 fn bench_descriptive_stats(c: &mut Criterion) {
     let mut group = c.benchmark_group("descriptive_statistics");
 
@@ -95,6 +99,7 @@ fn bench_descriptive_stats(c: &mut Criterion) {
 }
 
 /// Benchmark quantile computations
+#[allow(dead_code)]
 fn bench_quantile_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("quantile_operations");
 
@@ -143,6 +148,7 @@ fn bench_quantile_operations(c: &mut Criterion) {
 }
 
 /// Benchmark correlation computations
+#[allow(dead_code)]
 fn bench_correlation_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("correlation_operations");
 
@@ -190,6 +196,7 @@ fn bench_correlation_operations(c: &mut Criterion) {
 }
 
 /// Benchmark linear regression operations
+#[allow(dead_code)]
 fn bench_regression_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("regression_operations");
 
@@ -246,6 +253,7 @@ fn bench_regression_operations(c: &mut Criterion) {
 }
 
 /// Benchmark statistical tests
+#[allow(dead_code)]
 fn bench_statistical_tests(c: &mut Criterion) {
     let mut group = c.benchmark_group("statistical_tests");
 
@@ -301,6 +309,7 @@ fn bench_statistical_tests(c: &mut Criterion) {
 }
 
 /// Benchmark distribution operations
+#[allow(dead_code)]
 fn bench_distribution_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("distribution_operations");
 
@@ -393,6 +402,7 @@ fn bench_distribution_operations(c: &mut Criterion) {
 }
 
 /// Benchmark memory efficiency and cache performance
+#[allow(dead_code)]
 fn bench_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_efficiency");
 
@@ -443,6 +453,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
 }
 
 /// Benchmark parallel processing efficiency
+#[allow(dead_code)]
 fn bench_parallel_processing(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_processing");
 
@@ -473,6 +484,7 @@ fn bench_parallel_processing(c: &mut Criterion) {
 }
 
 /// Benchmark numerical stability
+#[allow(dead_code)]
 fn bench_numerical_stability(c: &mut Criterion) {
     let mut group = c.benchmark_group("numerical_stability");
 
@@ -513,6 +525,7 @@ fn bench_numerical_stability(c: &mut Criterion) {
 }
 
 /// Benchmark SIMD vs scalar implementations
+#[allow(dead_code)]
 fn bench_simd_vs_scalar(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_vs_scalar");
 
@@ -561,6 +574,7 @@ fn bench_simd_vs_scalar(c: &mut Criterion) {
 }
 
 /// Comprehensive benchmark comparing against baseline implementations
+#[allow(dead_code)]
 fn bench_comprehensive_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("comprehensive_comparison");
     group.measurement_time(Duration::from_secs(10));

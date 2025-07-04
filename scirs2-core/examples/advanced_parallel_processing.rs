@@ -17,6 +17,7 @@ use scirs2_core::parallel::{
 use scirs2_core::parallel_ops::*;
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     #[cfg(not(feature = "parallel"))]
     {
@@ -50,6 +51,7 @@ fn main() -> CoreResult<()> {
 
 /// Example 1: Demonstrate custom partitioning strategies
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn example_custom_partitioning() -> CoreResult<()> {
     println!("Example 1: Custom Partitioning Strategies");
     println!("{}", "-".repeat(40));
@@ -104,6 +106,7 @@ fn example_custom_partitioning() -> CoreResult<()> {
 
 /// Example 2: Demonstrate work-stealing scheduler
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn example_work_stealing_scheduler() -> CoreResult<()> {
     println!("Example 2: Work-Stealing Scheduler");
     println!("{}", "-".repeat(40));
@@ -160,6 +163,7 @@ fn example_work_stealing_scheduler() -> CoreResult<()> {
 
 /// Example 3: Demonstrate nested parallelism
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn example_nested_parallelism() -> CoreResult<()> {
     println!("Example 3: Nested Parallelism");
     println!("{}", "-".repeat(40));
@@ -215,6 +219,7 @@ fn example_nested_parallelism() -> CoreResult<()> {
 
 /// Example 4: Demonstrate load balancing
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn example_load_balancing() -> CoreResult<()> {
     println!("Example 4: Load Balancing");
     println!("{}", "-".repeat(40));
@@ -254,6 +259,7 @@ fn example_load_balancing() -> CoreResult<()> {
 
 /// Example 5: Complex nested computation with different policies
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn example_complex_nested_computation() -> CoreResult<()> {
     println!("Example 5: Complex Nested Computation");
     println!("{}", "-".repeat(40));
@@ -324,6 +330,7 @@ fn example_complex_nested_computation() -> CoreResult<()> {
 
 /// Helper function to print partition information
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn print_partition_info<T>(partitions: &[Vec<T>]) {
     println!("  Partition sizes:");
     for (i, partition) in partitions.iter().enumerate() {

@@ -6,7 +6,7 @@
 //! storing and inverting the full Fisher information matrix.
 
 use crate::error::{OptimError, Result};
-use ndarray::{s, Array1, Array2, Axis, Dimension};
+use ndarray::{s, Array1, Array2, Axis};
 use num_traits::Float;
 use std::collections::HashMap;
 use std::fmt::Debug;

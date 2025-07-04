@@ -246,6 +246,7 @@ var<workgroup> As: array<array<f32, 16>, 16>;
 var<workgroup> Bs: array<array<f32, 16>, 16>;
 
 @compute @workgroup_size(16, 16)
+#[allow(dead_code)]
 fn gemm_standard(@builtin(global_invocation_id) global_id: vec3<u32>,
                  @builtin(workgroup_id) workgroup_id: vec3<u32>,
                  @builtin(local_invocation_id) local_id: vec3<u32>) {

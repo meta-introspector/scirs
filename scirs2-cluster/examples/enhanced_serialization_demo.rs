@@ -22,6 +22,7 @@ use scirs2_cluster::{
 use std::collections::HashMap;
 use tempfile::TempDir;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Enhanced Serialization and Workflow Demo");
     println!("===========================================\n");
@@ -48,6 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Create sample clustering data with clear cluster structure
+#[allow(dead_code)]
 fn create_sample_data() -> Result<Array2<f64>, Box<dyn std::error::Error>> {
     // Create three distinct clusters
     let mut data = Vec::new();
@@ -76,6 +78,7 @@ fn create_sample_data() -> Result<Array2<f64>, Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate unified clustering workflow management
+#[allow(dead_code)]
 fn demo_unified_workflow(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 Demo 1: Unified Clustering Workflow Management");
     println!("=================================================");
@@ -177,6 +180,7 @@ fn demo_unified_workflow(data: &Array2<f64>) -> Result<(), Box<dyn std::error::E
 }
 
 /// Demonstrate enhanced dendrogram JSON export
+#[allow(dead_code)]
 fn demo_dendrogram_json_export(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("🌳 Demo 2: Enhanced Dendrogram JSON Export");
     println!("==========================================");
@@ -241,6 +245,7 @@ fn demo_dendrogram_json_export(data: &Array2<f64>) -> Result<(), Box<dyn std::er
 }
 
 /// Demonstrate scikit-learn and SciPy compatibility
+#[allow(dead_code)]
 fn demo_sklearn_scipy_compatibility(data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("🐍 Demo 3: Scikit-learn/SciPy Compatibility");
     println!("===========================================");
@@ -305,6 +310,7 @@ fn demo_sklearn_scipy_compatibility(data: &Array2<f64>) -> Result<(), Box<dyn st
 }
 
 /// Initialize random centroids for K-means
+#[allow(dead_code)]
 fn initialize_centroids(
     data: &Array2<f64>,
     k: usize,
@@ -326,6 +332,7 @@ fn initialize_centroids(
 }
 
 /// Create test scikit-learn compatible JSON data
+#[allow(dead_code)]
 fn create_sklearn_test_data(centroids: &Array2<f64>) -> String {
     use serde_json::json;
 

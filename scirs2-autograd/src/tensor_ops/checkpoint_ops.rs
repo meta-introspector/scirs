@@ -189,6 +189,7 @@ impl<F: Float> Op<F> for CheckpointOp {
 ///
 /// # Returns
 /// A new tensor with the same value but with gradient checkpointing enabled
+#[allow(dead_code)]
 pub fn checkpoint<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = tensor.graph();
 
@@ -208,6 +209,7 @@ pub fn checkpoint<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 ///
 /// # Returns
 /// A new tensor with the same value but detached from the gradient computation
+#[allow(dead_code)]
 pub fn detach<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = tensor.graph();
 
@@ -232,6 +234,7 @@ pub fn detach<'g, F: Float>(tensor: &Tensor<'g, F>) -> Tensor<'g, F> {
 ///
 /// # Returns
 /// The checkpointed output tensors
+#[allow(dead_code)]
 pub fn checkpoint_segment<'g, F: Float, Func, const N: usize>(
     _ctx: &'g crate::graph::Context<'g, F>,
     input_tensors: [&Tensor<'g, F>; N],
@@ -271,6 +274,7 @@ where
 ///
 /// # Returns
 /// The checkpointed output tensor
+#[allow(dead_code)]
 pub fn checkpoint_segment_flex<'g, F: Float, Func>(
     _ctx: &'g crate::graph::Context<'g, F>,
     input_tensors: &[&Tensor<'g, F>],
@@ -510,6 +514,7 @@ impl<'g, F: Float> CheckpointOutput<'g, F> for Vec<Tensor<'g, F>> {
 ///
 /// # Returns
 /// Either the original tensor or a checkpointed version depending on the memory usage
+#[allow(dead_code)]
 pub fn adaptive_checkpoint<'g, F: Float>(
     tensor: &Tensor<'g, F>,
     mut memory_threshold_bytes: usize,

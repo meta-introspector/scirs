@@ -9,6 +9,7 @@ use ndarray_rand::RandomExt;
 use scirs2_linalg::prelude::*;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Performance Optimization Example");
     println!("================================\n");
@@ -31,6 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_blocked_matmul() -> Result<(), Box<dyn std::error::Error>> {
     println!("Blocked Matrix Multiplication");
     println!("----------------------------");
@@ -76,6 +78,7 @@ fn demo_blocked_matmul() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_inplace_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("In-place Operations");
     println!("------------------");
@@ -134,6 +137,7 @@ fn demo_inplace_operations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_optimized_transpose() -> Result<(), Box<dyn std::error::Error>> {
     println!("Optimized Transpose");
     println!("------------------");
@@ -162,6 +166,7 @@ fn demo_optimized_transpose() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_adaptive_algorithm() -> Result<(), Box<dyn std::error::Error>> {
     println!("Adaptive Algorithm Selection");
     println!("---------------------------");
@@ -191,6 +196,7 @@ fn demo_adaptive_algorithm() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_parallel_control() -> Result<(), Box<dyn std::error::Error>> {
     println!("Parallel Processing Control");
     println!("--------------------------");

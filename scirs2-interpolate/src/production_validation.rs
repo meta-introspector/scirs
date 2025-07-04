@@ -120,7 +120,7 @@ impl ProductionValidator {
     /// Run comprehensive production validation
     pub fn validate_production_readiness<F>(&self) -> InterpolateResult<ProductionValidationReport>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static,
+        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let mut test_results = Vec::new();
@@ -172,7 +172,7 @@ impl ProductionValidator {
     /// Test edge cases that could cause production issues
     fn test_edge_cases<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static,
+        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let mut errors = Vec::new();
@@ -215,7 +215,7 @@ impl ProductionValidator {
     /// Test for memory leaks over extended operation
     fn test_memory_leaks<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static,
+        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let iterations = 1000;
@@ -248,7 +248,7 @@ impl ProductionValidator {
     /// Test performance under stress conditions
     fn test_performance_under_stress<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static,
+        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let timeout = Duration::from_secs(self.config.max_computation_time_secs);
@@ -366,7 +366,7 @@ impl ProductionValidator {
     /// Test error recovery and graceful degradation
     fn test_error_recovery<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static,
+        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let mut recovery_tests_passed = 0;
@@ -419,7 +419,7 @@ impl ProductionValidator {
     /// Test resource exhaustion handling
     fn test_resource_exhaustion<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static,
+        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
 
@@ -435,8 +435,8 @@ impl ProductionValidator {
                 Ok(data) => {
                     match self.create_and_test_interpolator::<F>(&data) {
                         Ok(_) => continue,
-                        Err(InterpolateError::OutOfMemory(_))
-                        | Err(InterpolateError::ComputationError(_)) => {
+                        Err(InterpolateError::ComputationError(_))
+                        | Err(InterpolateError::NumericalError(_)) => {
                             // Expected graceful failure
                             break;
                         }
@@ -471,7 +471,7 @@ impl ProductionValidator {
     /// Test numerical stability under extreme conditions
     fn test_numerical_stability_extreme<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static,
+        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let mut stability_tests_passed = 0;
@@ -744,12 +744,14 @@ impl Default for ErrorHandlingResults {
 }
 
 /// Convenience function to run production validation with default config
+#[allow(dead_code)]
 pub fn validate_production_readiness() -> InterpolateResult<ProductionValidationReport> {
     let validator = ProductionValidator::new(ProductionValidationConfig::default());
     validator.validate_production_readiness::<f64>()
 }
 
 /// Convenience function to run production validation with custom config
+#[allow(dead_code)]
 pub fn validate_production_readiness_with_config(
     config: ProductionValidationConfig,
 ) -> InterpolateResult<ProductionValidationReport> {

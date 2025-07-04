@@ -6,6 +6,7 @@ use ndarray::array;
 use scirs2_autograd as ag;
 
 #[test]
+#[allow(dead_code)]
 fn test_advanced_svd() {
     ag::run(|g| {
         // Test Jacobi SVD
@@ -24,6 +25,7 @@ fn test_advanced_svd() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_iterative_solvers() {
     ag::run(|g| {
         // Test Conjugate Gradient
@@ -55,6 +57,7 @@ fn test_iterative_solvers() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_matrix_trig_functions() {
     ag::run(|g| {
         // Test matrix sine
@@ -88,6 +91,7 @@ fn test_matrix_trig_functions() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_generalized_eigen() {
     ag::run(|g| {
         // Test generalized eigenvalue problem
@@ -102,6 +106,7 @@ fn test_generalized_eigen() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_qr_with_pivoting() {
     ag::run(|g| {
         // Test QR decomposition with column pivoting
@@ -114,6 +119,7 @@ fn test_qr_with_pivoting() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_preconditioned_cg() {
     ag::run(|g| {
         // Test Preconditioned Conjugate Gradient
@@ -141,6 +147,7 @@ fn test_preconditioned_cg() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_matrix_sign_function() {
     ag::run(|g| {
         // Test matrix sign function
@@ -160,6 +167,7 @@ fn test_matrix_sign_function() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_general_matrix_function() {
     ag::run(|g| {
         // Test general matrix function with exponential on a symmetric matrix
@@ -184,6 +192,7 @@ fn test_general_matrix_function() {
     });
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Running tests for advanced linear algebra implementations...");
 }

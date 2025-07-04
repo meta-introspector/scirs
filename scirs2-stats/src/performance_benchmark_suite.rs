@@ -8,7 +8,7 @@
 
 use crate::benchmark_suite::{BenchmarkConfig, BenchmarkMetrics};
 use crate::error::StatsResult;
-use crate::ultrathink_error_enhancements_v2::CompatibilityImpact;
+// use crate::ultrathink_error_enhancements_v2::CompatibilityImpact; // Commented out temporarily
 use ndarray::Array1;
 use num_traits::Float;
 use rand::rng;
@@ -16,6 +16,16 @@ use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
+
+/// Compatibility impact levels (local definition)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum CompatibilityImpact {
+    None,
+    Minor,
+    Moderate,
+    Major,
+    Breaking,
+}
 
 /// Ultra-Think Benchmark Configuration with Advanced Analytics
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -279,7 +289,7 @@ pub struct UltraThinkBenchmarkSuite {
 }
 
 /// Performance prediction model
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceModel {
     pub model_type: ModelType,
     pub coefficients: Vec<f64>,
@@ -288,7 +298,7 @@ pub struct PerformanceModel {
 }
 
 /// Types of performance models
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ModelType {
     Linear,
     Polynomial(usize), // degree
@@ -298,7 +308,7 @@ pub enum ModelType {
 }
 
 /// Model accuracy metrics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelAccuracyMetrics {
     pub r_squared: f64,
     pub mean_absolute_error: f64,
@@ -307,7 +317,7 @@ pub struct ModelAccuracyMetrics {
 }
 
 /// Platform performance profile
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlatformProfile {
     pub platform: TargetPlatform,
     pub performance_characteristics: PerformanceCharacteristics,
@@ -315,7 +325,7 @@ pub struct PlatformProfile {
 }
 
 /// Performance characteristics for a platform
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PerformanceCharacteristics {
     pub compute_capability: ComputeCapability,
     pub memory_characteristics: MemoryCharacteristics,
@@ -323,7 +333,7 @@ pub struct PerformanceCharacteristics {
 }
 
 /// Compute capability assessment
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ComputeCapability {
     pub peak_operations_per_second: f64,
     pub simd_efficiency: f64,
@@ -332,7 +342,7 @@ pub struct ComputeCapability {
 }
 
 /// Memory characteristics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MemoryCharacteristics {
     pub bandwidth_utilization_efficiency: f64,
     pub cache_hierarchy_efficiency: f64,
@@ -341,7 +351,7 @@ pub struct MemoryCharacteristics {
 }
 
 /// Thermal characteristics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThermalCharacteristics {
     pub thermal_design_power: f64,
     pub thermal_throttling_threshold: f64,
@@ -472,12 +482,12 @@ impl UltraThinkBenchmarkSuite {
 
                 // Benchmark standard deviation
                 let std_metrics =
-                    self.benchmark_function("std", &data, |d| crate::std(&d.view(), 1))?;
+                    self.benchmark_function("std", &data, |d| crate::std(&d.view(), 1, None))?;
                 metrics.push(std_metrics);
 
                 // Benchmark variance
                 let var_metrics =
-                    self.benchmark_function("var", &data, |d| crate::var(&d.view(), 1))?;
+                    self.benchmark_function("var", &data, |d| crate::var(&d.view(), 1, None))?;
                 metrics.push(var_metrics);
             }
         }
@@ -564,7 +574,7 @@ impl UltraThinkBenchmarkSuite {
 
             // Test with mixed scales
             let mut mixed_data = Array1::zeros(size);
-            for (i, mut val) in mixed_data.iter_mut().enumerate() {
+            for (i, val) in mixed_data.iter_mut().enumerate() {
                 *val = if i % 2 == 0 { 1e-50 } else { 1e50 };
             }
             let mixed_metrics = self.benchmark_stability("mean_mixed_scales", &mixed_data)?;
@@ -632,7 +642,7 @@ impl UltraThinkBenchmarkSuite {
 
         match distribution {
             DataDistribution::Uniform => {
-                let uniform = Uniform::new(0.0, 1.0);
+                let uniform = Uniform::new(0.0, 1.0)?;
                 for val in data.iter_mut() {
                     *val = uniform.sample(&mut rng);
                 }
@@ -663,7 +673,7 @@ impl UltraThinkBenchmarkSuite {
             }
             DataDistribution::Sparse(sparsity) => {
                 let normal = Normal::new(0.0, 1.0).unwrap();
-                let uniform = Uniform::new(0.0, 1.0);
+                let uniform = Uniform::new(0.0, 1.0)?;
                 for val in data.iter_mut() {
                     if uniform.sample(&mut rng) < *sparsity {
                         *val = 0.0;
@@ -1015,7 +1025,7 @@ impl UltraThinkBenchmarkSuite {
     fn calculate_stability_metrics(&self, data: &Array1<f64>) -> NumericalStabilityMetrics {
         // Simplified stability analysis
         let mean = data.iter().sum::<f64>() / data.len() as f64;
-        let variance = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64;
+        let _variance = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / data.len() as f64;
 
         NumericalStabilityMetrics {
             relative_error: 1e-15,       // Machine epsilon for f64
@@ -1253,6 +1263,7 @@ if data.len() > 10_000 {
             code_example: Some(
                 r#"
 // Kahan summation for improved accuracy
+#[allow(dead_code)]
 fn kahan_sum(data: &[f64]) -> f64 {
     let mut sum = 0.0;
     let mut c = 0.0;
@@ -1304,7 +1315,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
     }
 
     /// Assess scalability characteristics
-    fn assess_scalability(&self, metrics: &[UltraThinkBenchmarkMetrics]) -> ScalabilityAssessment {
+    fn assess_scalability(&self, _metrics: &[UltraThinkBenchmarkMetrics]) -> ScalabilityAssessment {
         ScalabilityAssessment {
             scaling_efficiency: 0.85, // Average efficiency across data sizes
             memory_efficiency: 0.90,
@@ -1560,6 +1571,7 @@ impl Default for UltraThinkBenchmarkConfig {
 }
 
 /// Convenience function to run ultra-think benchmarks
+#[allow(dead_code)]
 pub fn run_ultrathink_benchmarks(
     config: Option<UltraThinkBenchmarkConfig>,
 ) -> StatsResult<UltraThinkBenchmarkReport> {

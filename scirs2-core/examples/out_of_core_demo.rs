@@ -5,6 +5,7 @@
 //! and persistence.
 
 #[cfg(not(feature = "memory_management"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'memory_management' feature to be enabled.");
     println!("Run with: cargo run --example out_of_core_demo --features memory_management");
@@ -22,6 +23,7 @@ use std::sync::Arc;
 use tempfile::TempDir;
 
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Out-of-Core Memory Management Demo ===\n");
 

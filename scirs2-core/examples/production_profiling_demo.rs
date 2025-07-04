@@ -8,6 +8,7 @@ use scirs2_core::CoreResult;
 use std::thread;
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     println!("🚀 SciRS2 Core Production Profiling System Demo");
     println!("================================================\n");
@@ -49,6 +50,7 @@ fn main() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_configuration_examples() -> CoreResult<()> {
     println!("📋 Configuration Examples for Different Environments");
     println!("---------------------------------------------------");
@@ -121,6 +123,7 @@ fn demo_configuration_examples() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_basic_workload_analysis() -> CoreResult<()> {
     println!("⚡ Basic Workload Analysis");
     println!("-------------------------");
@@ -197,6 +200,7 @@ fn demo_basic_workload_analysis() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_enterprise_features() -> CoreResult<()> {
     println!("🏢 Enterprise Features Demo");
     println!("---------------------------");
@@ -264,6 +268,7 @@ fn demo_enterprise_features() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_bottleneck_identification() -> CoreResult<()> {
     println!("🔍 Bottleneck Identification Demo");
     println!("---------------------------------");
@@ -314,6 +319,7 @@ fn demo_bottleneck_identification() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_regression_detection() -> CoreResult<()> {
     println!("📈 Performance Regression Detection Demo");
     println!("---------------------------------------");
@@ -362,6 +368,7 @@ fn demo_regression_detection() -> CoreResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_resource_monitoring() -> CoreResult<()> {
     println!("🖥️  Resource Utilization Monitoring Demo");
     println!("----------------------------------------");
@@ -398,6 +405,7 @@ fn demo_resource_monitoring() -> CoreResult<()> {
 
 // Simulation functions for different workload types
 
+#[allow(dead_code)]
 fn simulate_matrix_operations() {
     // Simulate CPU-intensive matrix operations
     for _ in 0..1000 {
@@ -406,6 +414,7 @@ fn simulate_matrix_operations() {
     thread::sleep(Duration::from_millis(10));
 }
 
+#[allow(dead_code)]
 fn simulate_compute_work() {
     // Simulate compute-intensive work
     for _ in 0..500 {
@@ -414,22 +423,26 @@ fn simulate_compute_work() {
     thread::sleep(Duration::from_millis(5));
 }
 
+#[allow(dead_code)]
 fn simulate_memory_work() {
     // Simulate memory-intensive work
     let _large_vec: Vec<u64> = (0..10000).collect();
     thread::sleep(Duration::from_millis(8));
 }
 
+#[allow(dead_code)]
 fn simulate_io_work() {
     // Simulate I/O-bound work
     thread::sleep(Duration::from_millis(15));
 }
 
+#[allow(dead_code)]
 fn simulate_network_work() {
     // Simulate network-bound work
     thread::sleep(Duration::from_millis(12));
 }
 
+#[allow(dead_code)]
 fn simulate_mixed_work() {
     // Simulate mixed workload
     simulate_compute_work();
@@ -437,6 +450,7 @@ fn simulate_mixed_work() {
     thread::sleep(Duration::from_millis(3));
 }
 
+#[allow(dead_code)]
 fn simulate_bottleneck_workload() {
     // Simulate a workload with clear bottlenecks
 

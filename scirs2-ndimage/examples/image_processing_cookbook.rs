@@ -48,6 +48,7 @@ use scirs2_ndimage::{
     morphology::*, segmentation::*,
 };
 
+#[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("📚 Image Processing Cookbook");
     println!("============================\n");
@@ -78,6 +79,7 @@ fn main() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn image_cleanup_recipes() -> NdimageResult<()> {
     println!("========================================");
 
@@ -212,6 +214,7 @@ fn image_cleanup_recipes() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn object_detection_recipes() -> NdimageResult<()> {
     println!("========================================");
 
@@ -386,6 +389,7 @@ fn object_detection_recipes() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn measurement_recipes() -> NdimageResult<()> {
     println!("========================================");
 
@@ -621,6 +625,7 @@ fn measurement_recipes() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn transformation_recipes() -> NdimageResult<()> {
     println!("========================================");
 
@@ -857,6 +862,7 @@ fn transformation_recipes() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn enhancement_recipes() -> NdimageResult<()> {
     println!("========================================");
 
@@ -1119,6 +1125,7 @@ struct ImageComparison {
     correlation: f64,
 }
 
+#[allow(dead_code)]
 fn interpolate_missing_pixels(
     image: &Array2<f64>,
     mask: &Array2<u8>,
@@ -1127,11 +1134,13 @@ fn interpolate_missing_pixels(
     Ok(image.clone())
 }
 
+#[allow(dead_code)]
 fn estimate_perimeter(prop: &crate::measurements::RegionProperties) -> f64 {
     // Simplified perimeter estimation
     4.0 * (prop.area / std::f64::consts::PI).sqrt()
 }
 
+#[allow(dead_code)]
 fn find_local_maxima(image: &Array2<f64>, threshold: f64) -> Array2<u32> {
     let mut markers = Array2::zeros(image.dim());
     let mut label = 1u32;
@@ -1154,6 +1163,7 @@ fn find_local_maxima(image: &Array2<f64>, threshold: f64) -> Array2<u32> {
     markers
 }
 
+#[allow(dead_code)]
 fn apply_perspective_correction(
     image: &Array2<f64>,
     _src_corners: &[(f64, f64)],
@@ -1163,6 +1173,7 @@ fn apply_perspective_correction(
     Ok(image.clone())
 }
 
+#[allow(dead_code)]
 fn calculate_correlation(img1: &Array2<f64>, img2: &Array2<f64>) -> f64 {
     let mean1 = img1.sum() / img1.len() as f64;
     let mean2 = img2.sum() / img2.len() as f64;
@@ -1179,6 +1190,7 @@ fn calculate_correlation(img1: &Array2<f64>, img2: &Array2<f64>) -> f64 {
     numerator / (var1 * var2).sqrt()
 }
 
+#[allow(dead_code)]
 fn hot_colormap(value: f64) -> (f64, f64, f64) {
     let v = value.clamp(0.0, 1.0);
     if v < 1.0 / 3.0 {
@@ -1190,6 +1202,7 @@ fn hot_colormap(value: f64) -> (f64, f64, f64) {
     }
 }
 
+#[allow(dead_code)]
 fn viridis_colormap(value: f64) -> (f64, f64, f64) {
     let v = value.clamp(0.0, 1.0);
     // Simplified viridis approximation

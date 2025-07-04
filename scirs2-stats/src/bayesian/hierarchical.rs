@@ -782,6 +782,7 @@ impl HierarchicalANOVAResults {
 // Helper functions
 
 /// Sample from multivariate normal distribution
+#[allow(dead_code)]
 fn sample_multivariate_normal<R: Rng + ?Sized>(
     mean: &Array1<f64>,
     covariance: &Array2<f64>,
@@ -804,6 +805,7 @@ fn sample_multivariate_normal<R: Rng + ?Sized>(
 }
 
 /// Compute outer product of a vector
+#[allow(dead_code)]
 fn outer_product(v: &Array1<f64>) -> Array2<f64> {
     let n = v.len();
     let mut result = Array2::zeros((n, n));

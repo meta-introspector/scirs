@@ -617,8 +617,8 @@ pub mod algorithms {
 
             for i in 0..swarm_size {
                 for j in 0..dims {
-                    let r1: f64 = rng.random();
-                    let r2: f64 = rng.random();
+                    let r1: f64 = rng.gen();
+                    let r2: f64 = rng.gen();
 
                     // Update velocity
                     velocities[[i, j]] = self.w * velocities[[i, j]]

@@ -45,6 +45,7 @@ pub enum DSTType {
 /// // Compute DST-II of the signal
 /// let dst_coeffs = dst(&signal, Some(DSTType::Type2), Some("ortho")).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn dst<T>(x: &[T], dst_type: Option<DSTType>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
@@ -100,6 +101,7 @@ where
 ///     assert!((val - recovered[i]).abs() < 1e-10);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn idst<T>(x: &[T], dst_type: Option<DSTType>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug,
@@ -149,6 +151,7 @@ where
 /// // Compute 2D DST-II
 /// let dst_coeffs = dst2(&signal.view(), Some(DSTType::Type2), Some("ortho")).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn dst2<T>(
     x: &ArrayView2<T>,
     dst_type: Option<DSTType>,
@@ -219,6 +222,7 @@ where
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn idst2<T>(
     x: &ArrayView2<T>,
     dst_type: Option<DSTType>,
@@ -281,6 +285,7 @@ where
 /// ```text
 /// // Example will be expanded when the function is fully implemented
 /// ```
+#[allow(dead_code)]
 pub fn dstn<T>(
     x: &ArrayView<T, IxDyn>,
     dst_type: Option<DSTType>,
@@ -351,6 +356,7 @@ where
 /// ```text
 /// // Example will be expanded when the function is fully implemented
 /// ```
+#[allow(dead_code)]
 pub fn idstn<T>(
     x: &ArrayView<T, IxDyn>,
     dst_type: Option<DSTType>,
@@ -406,6 +412,7 @@ where
 // ---------------------- Implementation Functions ----------------------
 
 /// Compute the Type-I discrete sine transform (DST-I).
+#[allow(dead_code)]
 fn dst1(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
     let n = x.len();
 
@@ -447,6 +454,7 @@ fn dst1(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
 }
 
 /// Inverse of Type-I DST
+#[allow(dead_code)]
 fn idst1(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
     let n = x.len();
 
@@ -481,6 +489,7 @@ fn idst1(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
 }
 
 /// Compute the Type-II discrete sine transform (DST-II).
+#[allow(dead_code)]
 fn dst2_impl(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
     let n = x.len();
 
@@ -517,6 +526,7 @@ fn dst2_impl(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
 }
 
 /// Inverse of Type-II DST (which is Type-III DST)
+#[allow(dead_code)]
 fn idst2_impl(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
     let n = x.len();
 
@@ -546,6 +556,7 @@ fn idst2_impl(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
 }
 
 /// Compute the Type-III discrete sine transform (DST-III).
+#[allow(dead_code)]
 fn dst3(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
     let n = x.len();
 
@@ -593,6 +604,7 @@ fn dst3(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
 }
 
 /// Inverse of Type-III DST (which is Type-II DST)
+#[allow(dead_code)]
 fn idst3(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
     let n = x.len();
 
@@ -627,6 +639,7 @@ fn idst3(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
 }
 
 /// Compute the Type-IV discrete sine transform (DST-IV).
+#[allow(dead_code)]
 fn dst4(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
     let n = x.len();
 
@@ -668,6 +681,7 @@ fn dst4(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
 }
 
 /// Inverse of Type-IV DST (Type-IV is its own inverse with proper scaling)
+#[allow(dead_code)]
 fn idst4(x: &[f64], norm: Option<&str>) -> FFTResult<Vec<f64>> {
     let n = x.len();
 

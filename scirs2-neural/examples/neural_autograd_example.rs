@@ -1,5 +1,6 @@
 use scirs2_neural::autograd;
 
+#[allow(dead_code)]
 fn main() {
     println!("# Autograd Example");
     println!();

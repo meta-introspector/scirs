@@ -249,11 +249,13 @@ impl<T: Float + NumCast> F<T> {
 }
 
 /// Beta function B(a,b) = Γ(a)Γ(b)/Γ(a+b)
+#[allow(dead_code)]
 fn beta_function<T: Float>(a: T, b: T) -> T {
     gamma_function(a) * gamma_function(b) / gamma_function(a + b)
 }
 
 /// Regularized incomplete beta function I_x(a,b)
+#[allow(dead_code)]
 fn regularized_beta<T: Float>(x: T, a: T, b: T) -> T {
     // Implementation of the regularized incomplete beta function
     // Using a continued fraction approach for improved numerical stability
@@ -326,6 +328,7 @@ fn regularized_beta<T: Float>(x: T, a: T, b: T) -> T {
 }
 
 /// Approximation of the gamma function for floating point types
+#[allow(dead_code)]
 fn gamma_function<T: Float>(x: T) -> T {
     if x == T::one() {
         return T::one();

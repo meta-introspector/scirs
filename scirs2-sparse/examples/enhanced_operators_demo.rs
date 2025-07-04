@@ -9,6 +9,7 @@ use scirs2_sparse::{
     EnhancedOperatorOptions, LinearOperator,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Enhanced Linear Operators Demo");
     println!("==============================");

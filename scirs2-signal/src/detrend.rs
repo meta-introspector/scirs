@@ -62,6 +62,7 @@ use std::fmt::Debug;
 /// let mean: f64 = detrended.iter().sum::<f64>() / detrended.len() as f64;
 /// assert!(mean.abs() < 1e-12);
 /// ```
+#[allow(dead_code)]
 pub fn detrend<T>(x: &[T], detrend_type: Option<&str>) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -174,6 +175,7 @@ where
 ///     assert!(trend_measure.abs() < 1e-10);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn detrend_axis(
     x: &Array2<f64>,
     detrend_type: Option<&str>,
@@ -297,6 +299,7 @@ pub fn detrend_axis(
 ///     assert!(detrended_linear[i].abs() > 1e-10);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn detrend_poly<T>(x: &[T], order: usize) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -363,6 +366,7 @@ where
 }
 
 /// Helper function to solve a small linear system Ax = b
+#[allow(dead_code)]
 fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Vec<f64>> {
     // Check dimensions
     let (n, m) = a.dim();

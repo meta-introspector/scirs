@@ -34,6 +34,7 @@ use std::fmt::Debug;
 /// let x = 2.0f64;
 /// assert!((j0_prime(x) + j1(x)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn j0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
     -j1(x)
 }
@@ -62,6 +63,7 @@ pub fn j0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// // Allow a slightly larger epsilon due to potential numerical differences
 /// assert!((j1_prime(x) - expected).abs() < 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn j1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x == F::zero() {
         return F::from(0.5).unwrap(); // Limit as x approaches 0
@@ -102,6 +104,7 @@ pub fn j1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let expected = (jn(1, x) - jn(3, x))/2.0;
 /// assert!((jn_prime(2, x) - expected).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn jn_prime<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     if n == 0 {
         return -j1(x);
@@ -151,6 +154,7 @@ pub fn jn_prime<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// let expected = (jv(v - 1.0, x) - jv(v + 1.0, x))/2.0;
 /// assert!((jv_prime(v, x) - expected).abs() < 1e-8);
 /// ```
+#[allow(dead_code)]
 pub fn jv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -> F {
     if v == F::zero() {
         return -j1(x);
@@ -197,6 +201,7 @@ pub fn jv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x:
 /// let x = 2.0f64;
 /// assert!((y0_prime(x) + y1(x)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn y0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x <= F::zero() {
         return F::nan();
@@ -228,6 +233,7 @@ pub fn y0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let expected = y0(x) - y1(x)/x;
 /// assert!((y1_prime(x) - expected).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn y1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x <= F::zero() {
         return F::nan();
@@ -264,6 +270,7 @@ pub fn y1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let expected = y0(x) - y1(x)/x;
 /// assert!((yn_prime(1, x) - expected).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn yn_prime<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
     if x <= F::zero() {
         return F::nan();
@@ -299,6 +306,7 @@ pub fn yn_prime<F: Float + FromPrimitive + Debug>(n: i32, x: F) -> F {
 /// let x = 2.0f64;
 /// assert!((i0_prime(x) - i1(x)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn i0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
     i1(x)
 }
@@ -326,6 +334,7 @@ pub fn i0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let expected = i0(x) - i1(x)/x;
 /// assert!((i1_prime(x) - expected).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn i1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x == F::zero() {
         return F::from(0.5).unwrap(); // Limit as x approaches 0
@@ -361,6 +370,7 @@ pub fn i1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let expected = (iv(v - 1.0, x) + iv(v + 1.0, x))/2.0;
 /// assert!((iv_prime(v, x) - expected).abs() < 1e-8);
 /// ```
+#[allow(dead_code)]
 pub fn iv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -> F {
     if v == F::zero() {
         return i1(x);
@@ -406,6 +416,7 @@ pub fn iv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x:
 /// let x = 2.0f64;
 /// assert!((k0_prime(x) + k1(x)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn k0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x <= F::zero() {
         return F::nan();
@@ -437,6 +448,7 @@ pub fn k0_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let expected = -k0(x) - k1(x)/x;
 /// assert!((k1_prime(x) - expected).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn k1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x <= F::zero() {
         return F::nan();
@@ -473,6 +485,7 @@ pub fn k1_prime<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let expected = -(kv(v - 1.0, x) + kv(v + 1.0, x))/2.0;
 /// assert!((kv_prime(v, x) - expected).abs() < 1e-8);
 /// ```
+#[allow(dead_code)]
 pub fn kv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -> F {
     if x <= F::zero() {
         return F::nan();
@@ -513,6 +526,7 @@ pub fn kv_prime<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x:
 /// let result = jvp(0.0, 2.0, Some(1));
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn jvp<F>(v: F, x: F, n: Option<i32>) -> F
 where
     F: Float + FromPrimitive + Debug + std::ops::AddAssign,
@@ -554,6 +568,7 @@ where
 /// let result = yvp(0.0, 2.0, Some(1));
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn yvp<F>(v: F, x: F, n: Option<i32>) -> F
 where
     F: Float + FromPrimitive + Debug + std::ops::AddAssign,
@@ -614,6 +629,7 @@ where
 /// let result = ivp(0.0, 2.0, Some(1));
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn ivp<F>(v: F, x: F, n: Option<i32>) -> F
 where
     F: Float + FromPrimitive + Debug + std::ops::AddAssign,
@@ -654,6 +670,7 @@ where
 /// let result = kvp(0.0, 2.0, Some(1));
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn kvp<F>(v: F, x: F, n: Option<i32>) -> F
 where
     F: Float + FromPrimitive + Debug + std::ops::AddAssign,
@@ -683,6 +700,7 @@ where
 /// # Returns
 ///
 /// The nth derivative of H1v(x) (returns NaN for now as Hankel derivatives need implementation)
+#[allow(dead_code)]
 pub fn h1vp<F>(_v: F, _x: F, n: Option<i32>) -> F
 where
     F: Float + FromPrimitive + Debug + std::ops::AddAssign,
@@ -706,6 +724,7 @@ where
 /// # Returns
 ///
 /// The nth derivative of H2v(x) (returns NaN for now as Hankel derivatives need implementation)
+#[allow(dead_code)]
 pub fn h2vp<F>(_v: F, _x: F, n: Option<i32>) -> F
 where
     F: Float + FromPrimitive + Debug + std::ops::AddAssign,

@@ -2,6 +2,7 @@ use ndarray::{Array, IxDyn};
 use scirs2_neural::layers::Layer;
 use scirs2_neural::models::{ResNet, ResNetConfig};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("ResNet Example");
     // Create a simple ResNet-18 model for image classification

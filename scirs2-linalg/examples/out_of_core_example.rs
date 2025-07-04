@@ -10,6 +10,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Out-of-Core Quantized Matrix Operations Example ===");
 
@@ -35,6 +36,7 @@ fn main() {
 }
 
 /// Example using a small matrix to demonstrate basic functionality
+#[allow(dead_code)]
 fn example_small_matrix(file_path: &Path) {
     println!("Creating a small 10x10 matrix...");
     let matrix = create_random_spd_matrix(10);
@@ -79,6 +81,7 @@ fn example_small_matrix(file_path: &Path) {
 }
 
 /// Example solving a linear system with a medium-sized matrix
+#[allow(dead_code)]
 fn example_medium_matrix(file_path: &Path) {
     let size = 100;
     println!("Creating a medium {}x{} matrix...", size, size);
@@ -127,6 +130,7 @@ fn example_medium_matrix(file_path: &Path) {
 }
 
 /// Example comparing performance with a large matrix
+#[allow(dead_code)]
 fn example_large_matrix_performance(file_path: &Path) {
     let size = 1000;
     println!(
@@ -243,6 +247,7 @@ fn example_large_matrix_performance(file_path: &Path) {
 }
 
 /// Create a random symmetric positive definite matrix of the given size
+#[allow(dead_code)]
 fn create_random_spd_matrix(size: usize) -> Array2<f32> {
     // Create a random matrix with values in the range [-1.0, 1.0)
     let mut rng = rand::rng();
@@ -270,6 +275,7 @@ fn create_random_spd_matrix(size: usize) -> Array2<f32> {
 }
 
 /// Helper to get a temporary file path
+#[allow(dead_code)]
 fn get_temp_file_path(name: &str) -> PathBuf {
     let mut path = env::temp_dir();
     path.push(format!("quantized_matrix_{}.bin", name));

@@ -17,6 +17,7 @@ pub struct RegistrationMetrics {
 }
 
 /// Compute registration quality metrics
+#[allow(dead_code)]
 pub fn compute_registration_metrics(
     reference: &GrayImage,
     registered: &GrayImage,
@@ -51,6 +52,7 @@ pub fn compute_registration_metrics(
 }
 
 /// Compute Mean Squared Error
+#[allow(dead_code)]
 pub fn compute_mse_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     use crate::error::VisionError;
 
@@ -76,6 +78,7 @@ pub fn compute_mse_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64>
 }
 
 /// Compute Peak Signal-to-Noise Ratio
+#[allow(dead_code)]
 pub fn compute_psnr_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     // First compute MSE
     let mse = compute_mse_metric(image1, image2)?;
@@ -97,6 +100,7 @@ pub fn compute_psnr_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64
 }
 
 /// Compute Structural Similarity Index (simplified version)
+#[allow(dead_code)]
 pub fn compute_ssim_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     use crate::error::VisionError;
 
@@ -150,6 +154,7 @@ pub fn compute_ssim_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64
 }
 
 /// Compute Normalized Cross-Correlation
+#[allow(dead_code)]
 pub fn compute_ncc_metric(image1: &GrayImage, image2: &GrayImage) -> Result<f64> {
     use crate::error::VisionError;
 

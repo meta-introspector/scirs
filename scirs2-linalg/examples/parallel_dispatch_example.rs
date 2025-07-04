@@ -8,6 +8,7 @@ use ndarray::{array, Array2};
 use scirs2_linalg::parallel::set_global_workers;
 use scirs2_linalg::parallel_dispatch::{ParallelDecomposition, ParallelOperations, ParallelSolver};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Set global worker count for all operations
     set_global_workers(Some(4));
@@ -105,6 +106,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Create a symmetric positive definite matrix
+#[allow(dead_code)]
 fn create_spd_matrix(n: usize) -> Array2<f64> {
     let a = Array2::from_shape_fn((n, n), |(i, j)| ((i + j + 1) as f64 * 0.1).sin());
     // Make it symmetric positive definite

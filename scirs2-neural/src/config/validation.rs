@@ -7,6 +7,7 @@ use super::ModelConfig;
 use crate::error::{Error, Result};
 use crate::models::architectures::*;
 /// Validate a model configuration
+#[allow(dead_code)]
 pub fn validate_model_config(config: &ModelConfig) -> Result<()> {
     match config {
         ModelConfig::ResNet(config) => validate_resnet_config(config),
@@ -22,6 +23,7 @@ pub fn validate_model_config(config: &ModelConfig) -> Result<()> {
     }
 }
 /// Validate a ResNet configuration
+#[allow(dead_code)]
 fn validate_resnet_config(config: &ResNetConfig) -> Result<()> {
     // Validate number of layers
     if !vec![18, 34, 50, 101, 152].contains(&config.num_layers) {
@@ -39,6 +41,7 @@ fn validate_resnet_config(config: &ResNetConfig) -> Result<()> {
             "Invalid number of classes: must be greater than 0".to_string(),
     Ok(())
 /// Validate a Vision Transformer configuration
+#[allow(dead_code)]
 fn validate_vit_config(config: &ViTConfig) -> Result<()> {
     // Validate image size
     if config.image_size % config.patch_size != 0 {
@@ -63,6 +66,7 @@ fn validate_vit_config(config: &ViTConfig) -> Result<()> {
             "Invalid classifier type: {}. Expected 'token' or 'gap'",
             config.classifier
 /// Validate a BERT configuration
+#[allow(dead_code)]
 fn validate_bert_config(config: &BertConfig) -> Result<()> {
     // Validate vocab size
     if config.vocab_size == 0 {
@@ -86,6 +90,7 @@ fn validate_bert_config(config: &BertConfig) -> Result<()> {
             "Invalid attention dropout probability: {}. Must be between 0.0 and 1.0",
             config.attention_probs_dropout_prob
 /// Validate a GPT configuration
+#[allow(dead_code)]
 fn validate_gpt_config(config: &GPTConfig) -> Result<()> {
     if config.n_embd % config.n_head != 0 {
             "Embedding dimension ({}) must be divisible by number of heads ({})",
@@ -103,6 +108,7 @@ fn validate_gpt_config(config: &GPTConfig) -> Result<()> {
             "Invalid residual dropout probability: {}. Must be between 0.0 and 1.0",
             config.resid_pdrop
 /// Validate an EfficientNet configuration
+#[allow(dead_code)]
 fn validate_efficientnet_config(config: &EfficientNetConfig) -> Result<()> {
     // Validate width multiplier
     if config.width_multiplier <= 0.0 {
@@ -125,8 +131,10 @@ fn validate_efficientnet_config(config: &EfficientNetConfig) -> Result<()> {
             )));
         }
 /// Validate a MobileNet configuration
+#[allow(dead_code)]
 fn validate_mobilenet_config(config: &MobileNetConfig) -> Result<()> {
 /// Validate a ConvNeXt configuration
+#[allow(dead_code)]
 fn validate_convnext_config(config: &ConvNeXtConfig) -> Result<()> {
     // Validate depths
     if config.depths.is_empty() {
@@ -144,6 +152,7 @@ fn validate_convnext_config(config: &ConvNeXtConfig) -> Result<()> {
             "Invalid layer scale initialization value: {}. Must be non-negative",
             config.layer_scale_init_value
 /// Validate a CLIP configuration
+#[allow(dead_code)]
 fn validate_clip_config(config: &CLIPConfig) -> Result<()> {
     // Validate vision config
     validate_vit_config(&config.vision_config)?;
@@ -161,6 +170,7 @@ fn validate_clip_config(config: &CLIPConfig) -> Result<()> {
     if config.include_head && config.num_classes == 0 {
             "Invalid number of classes: must be greater than 0 when include_head is true"
 /// Validate a Feature Fusion configuration
+#[allow(dead_code)]
 fn validate_feature_fusion_config(config: &FeatureFusionConfig) -> Result<()> {
     // Validate input dimensions
     if config.input_dims.is_empty() {
@@ -184,6 +194,7 @@ fn validate_feature_fusion_config(config: &FeatureFusionConfig) -> Result<()> {
             }
         _ => {}
 /// Validate a Seq2Seq configuration
+#[allow(dead_code)]
 fn validate_seq2seq_config(config: &Seq2SeqConfig) -> Result<()> {
     // Validate vocabulary sizes
     if config.input_vocab_size == 0 {

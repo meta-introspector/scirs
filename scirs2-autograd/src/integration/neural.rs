@@ -544,6 +544,7 @@ impl<F: Float> SciRS2Integration for AutogradNetwork<'_, F> {
 
 /// Utility functions for neural integration
 /// Create a simple neural network for autograd
+#[allow(dead_code)]
 pub fn create_simple_network<'a, F: Float>(
     input_shape: Vec<usize>,
     hidden_units: &[usize],
@@ -561,6 +562,7 @@ pub fn create_simple_network<'a, F: Float>(
 }
 
 /// Convert neural network to computation graph
+#[allow(dead_code)]
 pub fn network_to_graph<F: Float>(
     _network: &AutogradNetwork<'_, F>,
 ) -> Result<Graph<F>, IntegrationError> {

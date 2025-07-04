@@ -529,6 +529,7 @@ fn improved_deflation<F: Float + ndarray::ScalarOperand>(
 ///
 /// # Returns
 /// A tuple of tensors (Q, R) representing the decomposition
+#[allow(dead_code)]
 pub fn qr<'g, F: Float>(matrix: &Tensor<'g, F>) -> (Tensor<'g, F>, Tensor<'g, F>) {
     let g = matrix.graph();
 
@@ -556,6 +557,7 @@ pub fn qr<'g, F: Float>(matrix: &Tensor<'g, F>) -> (Tensor<'g, F>, Tensor<'g, F>
 ///
 /// # Returns
 /// A tuple of tensors (U, S, V) representing the decomposition
+#[allow(dead_code)]
 pub fn svd<'g, F: Float + ndarray::ScalarOperand>(
     matrix: &Tensor<'g, F>,
 ) -> (Tensor<'g, F>, Tensor<'g, F>, Tensor<'g, F>) {
@@ -685,6 +687,7 @@ impl<F: Float> Op<F> for CholeskyOp {
 }
 
 /// Compute gradient for Cholesky decomposition
+#[allow(dead_code)]
 fn compute_cholesky_gradient<F: Float>(
     input: &ndarray::ArrayView2<F>,
     grad_output: &ndarray::ArrayView2<F>,
@@ -878,6 +881,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for SymmetricEigenOp {
 }
 
 /// Compute eigenvalues for symmetric matrix using iterative method
+#[allow(dead_code)]
 fn compute_symmetric_eigenvalues<F: Float + ndarray::ScalarOperand>(
     matrix: &ndarray::ArrayView2<F>,
 ) -> Array1<F> {
@@ -906,6 +910,7 @@ fn compute_symmetric_eigenvalues<F: Float + ndarray::ScalarOperand>(
 }
 
 /// Compute eigenvectors for symmetric matrix
+#[allow(dead_code)]
 fn compute_symmetric_eigenvectors<F: Float + ndarray::ScalarOperand>(
     matrix: &ndarray::ArrayView2<F>,
     _eigenvalues: &Array1<F>,
@@ -1078,6 +1083,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for MatrixPowerOp {
 }
 
 /// Compute matrix exponential using Padé approximation
+#[allow(dead_code)]
 fn compute_matrix_exp<F: Float + ndarray::ScalarOperand>(
     matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array2<F>, OpError> {
@@ -1107,6 +1113,7 @@ fn compute_matrix_exp<F: Float + ndarray::ScalarOperand>(
 }
 
 /// Compute matrix logarithm
+#[allow(dead_code)]
 fn compute_matrix_log<F: Float + ndarray::ScalarOperand>(
     matrix: &ndarray::ArrayView2<F>,
 ) -> Result<Array2<F>, OpError> {
@@ -1137,6 +1144,7 @@ fn compute_matrix_log<F: Float + ndarray::ScalarOperand>(
 }
 
 /// Compute matrix power
+#[allow(dead_code)]
 fn compute_matrix_power<F: Float + ndarray::ScalarOperand>(
     matrix: &ndarray::ArrayView2<F>,
     power: f64,
@@ -1414,6 +1422,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for LUExtractOp {
 /// - P is the permutation matrix
 /// - L is lower triangular with ones on diagonal
 /// - U is upper triangular
+#[allow(dead_code)]
 pub fn lu<'g, F: Float + ndarray::ScalarOperand>(
     matrix: &Tensor<'g, F>,
 ) -> (Tensor<'g, F>, Tensor<'g, F>, Tensor<'g, F>) {

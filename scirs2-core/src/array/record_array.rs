@@ -847,6 +847,7 @@ impl fmt::Display for RecordArray {
 ///
 /// # Errors
 /// Returns `ArrayError::ValueError` if field names don't match arrays count or arrays have different lengths.
+#[allow(dead_code)]
 pub fn record_array_from_arrays(
     field_names: &[&str],
     arrays: &[Vec<FieldValue>],
@@ -895,6 +896,7 @@ pub fn record_array_from_arrays(
 ///
 /// # Errors
 /// Returns `ArrayError::ValueError` if field names don't match 3 arrays or arrays have different lengths.
+#[allow(dead_code)]
 pub fn record_array_from_typed_arrays<A, B, C>(
     field_names: &[&str],
     arrays: (&[A], &[B], &[C]),
@@ -942,6 +944,7 @@ where
 ///
 /// # Errors
 /// Returns `ArrayError::ValueError` if field names don't match 3 tuple elements.
+#[allow(dead_code)]
 pub fn record_array_from_records<A, B, C>(
     field_names: &[&str],
     tuples: &[(A, B, C)],

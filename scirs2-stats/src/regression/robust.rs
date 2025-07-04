@@ -149,6 +149,7 @@ where
 /// # Returns
 ///
 /// The weight to apply to this residual in the next IRLS iteration
+#[allow(dead_code)]
 fn huber_weight<F>(r: F, t: F) -> F
 where
     F: Float + 'static,
@@ -194,6 +195,7 @@ where
 /// assert!(result.slope > 0.0f64);  // Slope should be positive
 /// assert!(result.intercept > -100.0f64);  // Intercept should exist
 /// ```
+#[allow(dead_code)]
 pub fn theilslopes<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -323,6 +325,7 @@ where
 }
 
 /// Compute the median of an array
+#[allow(dead_code)]
 fn compute_median<F>(x: &ArrayView1<F>) -> F
 where
     F: Float + 'static,
@@ -441,6 +444,7 @@ where
 /// // Check that we got coefficients
 /// assert!(result.coefficients.len() > 0);
 /// ```
+#[allow(dead_code)]
 pub fn ransac<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
@@ -674,6 +678,7 @@ where
 }
 
 /// Helper function to fit a simple linear model for RANSAC
+#[allow(dead_code)]
 fn fit_linear_model<F>(x: &ArrayView2<F>, y: &ArrayView1<F>) -> StatsResult<Array1<F>>
 where
     F: Float
@@ -694,6 +699,7 @@ where
 }
 
 /// Helper function for simple linear regression with detailed statistics
+#[allow(dead_code)]
 fn simple_linear_regression<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
@@ -906,6 +912,7 @@ where
 /// assert!(result.r_squared >= 0.0 && result.r_squared <= 1.0);
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn huber_regression<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
@@ -1131,6 +1138,7 @@ where
 }
 
 /// Fit OLS model
+#[allow(dead_code)]
 fn fit_ols<F>(x: &ArrayView2<F>, y: &ArrayView1<F>) -> StatsResult<Array1<F>>
 where
     F: Float
@@ -1151,6 +1159,7 @@ where
 }
 
 /// Calculate robust standard errors for Huber regression
+#[allow(dead_code)]
 fn calculate_huber_std_errors<F>(
     x: &ArrayView2<F>,
     _residuals: &ArrayView1<F>,

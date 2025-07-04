@@ -696,9 +696,8 @@ impl CreditRiskMetrics {
 
         // Count observations in each bucket for baseline and current
         let baseline_counts =
-            self.count_observations_in_buckets(&baseline_scores, &bucket_boundaries);
-        let current_counts =
-            self.count_observations_in_buckets(&current_scores, &bucket_boundaries);
+            self.count_observations_in_buckets(baseline_scores, &bucket_boundaries);
+        let current_counts = self.count_observations_in_buckets(current_scores, &bucket_boundaries);
 
         // Calculate PSI
         let mut psi = F::zero();

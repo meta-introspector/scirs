@@ -9,6 +9,7 @@ use scirs2_core::versioning::{
 };
 use scirs2_core::CoreResult;
 
+#[allow(dead_code)]
 fn main() -> CoreResult<()> {
     println!("🔧 SciRS2 Core API Versioning System Demo");
     println!("==========================================\n");

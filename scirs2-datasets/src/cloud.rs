@@ -753,6 +753,7 @@ impl CloudClient {
 }
 
 /// Helper function to format Azure timestamp in RFC2822 format
+#[allow(dead_code)]
 fn format_azure_timestamp(unix_timestamp: u64) -> String {
     // This is a simplified timestamp formatter
     // In production, you'd use chrono or time crate for proper RFC2822 formatting
@@ -836,6 +837,7 @@ fn hmac_sha256(key: &[u8], data: &[u8]) -> std::result::Result<Vec<u8>, String> 
 }
 
 /// Helper function to decode base64 strings
+#[allow(dead_code)]
 fn base64_decode(input: &str) -> std::result::Result<Vec<u8>, String> {
     // Simple base64 decoder - in production you'd use base64 crate
     const BASE64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

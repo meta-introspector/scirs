@@ -30,6 +30,7 @@ use std::fmt::Debug;
 /// // RMS of a sine wave with amplitude 1 is 1/√2 ≈ 0.707
 /// assert!((rms_value - 0.707).abs() < 0.01);
 /// ```
+#[allow(dead_code)]
 pub fn rms<T>(x: &[T]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -77,6 +78,7 @@ where
 ///
 /// assert_eq!(pp_value, 2.5); // Max 1.0 - Min -1.5 = 2.5
 /// ```
+#[allow(dead_code)]
 pub fn peak_to_peak<T>(x: &[T]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -127,6 +129,7 @@ where
 /// // Crest factor of a sine wave is √2 ≈ 1.414
 /// assert!((crest_factor - 1.414).abs() < 0.01);
 /// ```
+#[allow(dead_code)]
 pub fn peak_to_rms<T>(x: &[T]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -172,7 +175,7 @@ where
 ///
 /// ```
 /// use scirs2_signal::measurements::snr;
-/// use rand::Rng;  // Import the Rng trait to access gen_range
+/// use rand::Rng;  // Import the Rng trait to access random_range
 ///
 /// // Create a clean signal
 /// let clean = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
@@ -180,12 +183,13 @@ where
 /// // Add noise to create signal_plus_noise
 /// let mut rng = rand::rng();
 /// let noisy: Vec<f64> = clean.iter()
-///     .map(|&x| x + rng.gen_range(-0.1f64..0.1f64))
+///     .map(|&x| x + rng.random_range(-0.1f64..0.1f64))
 ///     .collect();
 ///
 /// // Calculate SNR
 /// let snr_db = snr(&clean, &noisy).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn snr<T, U>(signal: &[T], signal_plus_noise: &[U]) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -286,6 +290,7 @@ where
 /// // THD should be approximately sqrt(0.1² + 0.05²)/1.0 ≈ 0.112
 /// assert!((thd_val - 0.112).abs() < 0.01);
 /// ```
+#[allow(dead_code)]
 pub fn thd<T>(signal: &[T], fs: f64, f0: f64, n_harmonics: Option<usize>) -> SignalResult<f64>
 where
     T: Float + NumCast + Debug,
@@ -397,7 +402,7 @@ where
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     #[test]
@@ -459,7 +464,7 @@ mod tests {
         let mut rng = rand::rng();
         let noisy: Vec<f64> = clean
             .iter()
-            .map(|&x| x + noise_amplitude * (2.0 * PI * rng.gen_range(0.0..1.0)).sin())
+            .map(|&x| x + noise_amplitude * (2.0 * PI * rng.random_range(0.0..1.0)).sin())
             .collect();
 
         // Calculate SNR

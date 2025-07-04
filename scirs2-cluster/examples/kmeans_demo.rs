@@ -3,6 +3,7 @@ use scirs2_cluster::vq::{
     kmeans2, kmeans_plus_plus, kmeans_with_options, KMeansOptions, MinitMethod, MissingMethod,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("K-means Clustering Example");
     println!("=========================");

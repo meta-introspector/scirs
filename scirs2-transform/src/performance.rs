@@ -82,7 +82,7 @@ impl EnhancedStandardScaler {
         for (start_idx, end_idx) in chunker.chunk_indices(n_samples, n_features) {
             let chunk = x.slice(ndarray::s![start_idx..end_idx, ..]);
 
-            for (_i, row) in chunk.rows().into_iter().enumerate() {
+            for row in chunk.rows().into_iter() {
                 count += 1;
                 let delta = &row - &means;
                 means = &means + &delta / count as f64;
@@ -288,7 +288,7 @@ impl EnhancedStandardScaler {
         for (start_idx, end_idx) in chunker.chunk_indices(n_samples, n_features) {
             let chunk = x.slice(ndarray::s![start_idx..end_idx, ..]);
             let transformed_chunk =
-                (&chunk - &means.view().insert_axis(Axis(0))) / &stds.view().insert_axis(Axis(0));
+                (&chunk - &means.view().insert_axis(Axis(0))) / stds.view().insert_axis(Axis(0));
 
             result
                 .slice_mut(ndarray::s![start_idx..end_idx, ..])
@@ -343,7 +343,7 @@ impl EnhancedStandardScaler {
         means: &Array1<f64>,
         stds: &Array1<f64>,
     ) -> Result<Array2<f64>> {
-        let result = (x - &means.view().insert_axis(Axis(0))) / &stds.view().insert_axis(Axis(0));
+        let result = (x - &means.view().insert_axis(Axis(0))) / stds.view().insert_axis(Axis(0));
         Ok(result)
     }
 
@@ -2924,10 +2924,7 @@ impl UltraFastMemoryPool {
         ];
 
         for (rows, cols) in common_matrix_sizes {
-            let pool = self
-                .matrix_pools
-                .entry((rows, cols))
-                .or_insert_with(Vec::new);
+            let pool = self.matrix_pools.entry((rows, cols)).or_default();
             for _ in 0..(self.max_matrices_per_size / 4) {
                 pool.push(Array2::zeros((rows, cols)));
                 self.stats.current_matrices += 1;
@@ -2937,7 +2934,7 @@ impl UltraFastMemoryPool {
         // Common vector sizes
         let common_vector_sizes = vec![10, 20, 50, 100, 200, 500, 1000, 5000];
         for size in common_vector_sizes {
-            let pool = self.vector_pools.entry(size).or_insert_with(Vec::new);
+            let pool = self.vector_pools.entry(size).or_default();
             for _ in 0..(self.max_vectors_per_size / 4) {
                 pool.push(Array1::zeros(size));
                 self.stats.current_vectors += 1;
@@ -2988,7 +2985,7 @@ impl UltraFastMemoryPool {
     /// ✅ ULTRATHINK OPTIMIZATION: Return matrix to pool for reuse
     pub fn return_matrix(&mut self, matrix: Array2<f64>) {
         let shape = (matrix.nrows(), matrix.ncols());
-        let pool = self.matrix_pools.entry(shape).or_insert_with(Vec::new);
+        let pool = self.matrix_pools.entry(shape).or_default();
 
         if pool.len() < self.max_matrices_per_size {
             pool.push(matrix);
@@ -3000,7 +2997,7 @@ impl UltraFastMemoryPool {
     /// ✅ ULTRATHINK OPTIMIZATION: Return vector to pool for reuse
     pub fn return_vector(&mut self, vector: Array1<f64>) {
         let size = vector.len();
-        let pool = self.vector_pools.entry(size).or_insert_with(Vec::new);
+        let pool = self.vector_pools.entry(size).or_default();
 
         if pool.len() < self.max_vectors_per_size {
             pool.push(vector);

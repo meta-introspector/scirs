@@ -760,7 +760,8 @@ print(json.dumps(info))
             cpu: "Generic CPU".to_string(), // Would use proper CPU detection
             memory_gb: 8.0,                 // Placeholder
             rust_version: std::env::var("RUSTC_VERSION").unwrap_or_else(|_| "unknown".to_string()),
-            scirs2_version: env!("CARGO_PKG_VERSION").to_string(),
+            scirs2_version: std::env::var("CARGO_PKG_VERSION")
+                .unwrap_or_else(|_| "unknown".to_string()),
         }
     }
 
@@ -844,19 +845,24 @@ print(json.dumps(info))
                 vec![crate::descriptive::mean(&test_data.primary.view())?]
             }
             "std" => {
-                vec![crate::descriptive::std(&test_data.primary.view(), 1)?]
+                vec![crate::descriptive::std(&test_data.primary.view(), 1, None)?]
             }
             "var" => {
-                vec![crate::descriptive::var(&test_data.primary.view(), 1)?]
+                vec![crate::descriptive::var(&test_data.primary.view(), 1, None)?]
             }
             "skew" => {
-                vec![crate::descriptive::skew(&test_data.primary.view(), false)?]
+                vec![crate::descriptive::skew(
+                    &test_data.primary.view(),
+                    false,
+                    None,
+                )?]
             }
             "kurtosis" => {
                 vec![crate::descriptive::kurtosis(
                     &test_data.primary.view(),
                     true,
                     false,
+                    None,
                 )?]
             }
             "pearsonr" => {
@@ -1427,12 +1433,14 @@ struct BenchmarkResult {
 }
 
 /// Convenience function to run SciPy comparison
+#[allow(dead_code)]
 pub fn run_scipy_comparison() -> StatsResult<ScipyComparisonReport> {
     let comparison = ScipyBenchmarkComparison::default()?;
     comparison.run_comprehensive_comparison()
 }
 
 /// Run comparison for specific functions
+#[allow(dead_code)]
 pub fn run_function_comparison(functions: Vec<String>) -> StatsResult<ScipyComparisonReport> {
     let mut config = ScipyComparisonConfig::default();
     config.functions_to_test = functions;

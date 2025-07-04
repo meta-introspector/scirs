@@ -32,6 +32,7 @@ use std::ops::{AddAssign, MulAssign, SubAssign};
 /// let p = ndtr(0.0);
 /// assert!((p - 0.5).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn ndtr<T: Float + FromPrimitive>(x: T) -> T {
     // Use the error function: ndtr(x) = 0.5 * (1 + erf(x/sqrt(2)))
     let sqrt2 = T::from_f64(std::f64::consts::SQRT_2).unwrap();
@@ -50,6 +51,7 @@ pub fn ndtr<T: Float + FromPrimitive>(x: T) -> T {
 ///
 /// # Returns
 /// log(P(X <= x)) where X ~ N(0, 1)
+#[allow(dead_code)]
 pub fn log_ndtr<T: Float + FromPrimitive>(x: T) -> T {
     if x >= T::zero() {
         ndtr(x).ln()
@@ -74,6 +76,7 @@ pub fn log_ndtr<T: Float + FromPrimitive>(x: T) -> T {
 ///
 /// # Errors
 /// Returns an error if p is not in [0, 1]
+#[allow(dead_code)]
 pub fn ndtri<T: Float + FromPrimitive + Display>(p: T) -> SpecialResult<T> {
     check_probability(p, "p")?;
 
@@ -88,6 +91,7 @@ pub fn ndtri<T: Float + FromPrimitive + Display>(p: T) -> SpecialResult<T> {
 /// Exponentially scaled inverse normal CDF
 ///
 /// Computes ndtri(exp(y)) for y in [-infinity, 0], useful for log-probability calculations.
+#[allow(dead_code)]
 pub fn ndtri_exp<T: Float + FromPrimitive + Display>(y: T) -> SpecialResult<T> {
     if y > T::zero() {
         return Err(SpecialError::DomainError(
@@ -112,6 +116,7 @@ pub fn ndtri_exp<T: Float + FromPrimitive + Display>(y: T) -> SpecialResult<T> {
 ///
 /// # Returns
 /// P(X <= k) where X ~ Binomial(n, p)
+#[allow(dead_code)]
 pub fn bdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign>(
     k: usize,
     n: usize,
@@ -141,6 +146,7 @@ pub fn bdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign +
 ///
 /// # Returns
 /// P(X > k) where X ~ Binomial(n, p)
+#[allow(dead_code)]
 pub fn bdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign>(
     k: usize,
     n: usize,
@@ -162,6 +168,7 @@ pub fn bdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign 
 /// Inverse of binomial CDF with respect to k
 ///
 /// Find k such that bdtr(k, n, p) = y
+#[allow(dead_code)]
 pub fn bdtri<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign>(
     n: usize,
     p: T,
@@ -198,6 +205,7 @@ pub fn bdtri<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign 
 ///
 /// # Returns
 /// P(X <= k) where X ~ Poisson(lambda)
+#[allow(dead_code)]
 pub fn pdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign>(
     k: usize,
     lambda: T,
@@ -221,6 +229,7 @@ pub fn pdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign>(
 ///
 /// # Returns
 /// P(X > k) where X ~ Poisson(lambda)
+#[allow(dead_code)]
 pub fn pdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign>(
     k: usize,
     lambda: T,
@@ -249,6 +258,7 @@ pub fn pdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign>
 ///
 /// # Returns
 /// P(X <= x) where X ~ Chi-square(df)
+#[allow(dead_code)]
 pub fn chdtr<T: Float + FromPrimitive + Display + Debug + AddAssign>(
     df: T,
     x: T,
@@ -277,6 +287,7 @@ pub fn chdtr<T: Float + FromPrimitive + Display + Debug + AddAssign>(
 }
 
 /// Chi-square survival function
+#[allow(dead_code)]
 pub fn chdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign>(
     df: T,
     x: T,
@@ -295,6 +306,7 @@ pub fn chdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign>(
 ///
 /// # Returns
 /// P(X <= t) where X ~ t(df)
+#[allow(dead_code)]
 pub fn stdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign>(
     df: T,
     t: T,
@@ -330,6 +342,7 @@ pub fn stdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign 
 ///
 /// # Returns
 /// P(X <= x) where X ~ F(dfn, dfd)
+#[allow(dead_code)]
 pub fn fdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign>(
     dfn: T,
     dfd: T,
@@ -358,6 +371,7 @@ pub fn fdtr<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign +
 }
 
 /// F survival function
+#[allow(dead_code)]
 pub fn fdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign>(
     dfn: T,
     dfd: T,
@@ -377,6 +391,7 @@ pub fn fdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign 
 ///
 /// # Returns
 /// P(X <= x) where X ~ Gamma(a, 1) (scale = 1)
+#[allow(dead_code)]
 pub fn gdtr<T: Float + FromPrimitive + Display + Debug + AddAssign>(
     a: T,
     x: T,
@@ -402,6 +417,7 @@ pub fn gdtr<T: Float + FromPrimitive + Display + Debug + AddAssign>(
 }
 
 /// Gamma survival function  
+#[allow(dead_code)]
 pub fn gdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign>(
     a: T,
     x: T,
@@ -421,6 +437,7 @@ pub fn gdtrc<T: Float + FromPrimitive + Display + Debug + AddAssign>(
 ///
 /// # Returns
 /// P(D_n * sqrt(n) <= x) where D_n is the Kolmogorov-Smirnov statistic
+#[allow(dead_code)]
 pub fn kolmogorov<T: Float + FromPrimitive>(x: T) -> T {
     if x <= T::zero() {
         return T::zero();
@@ -460,6 +477,7 @@ pub fn kolmogorov<T: Float + FromPrimitive>(x: T) -> T {
 }
 
 /// Inverse of Kolmogorov distribution with sophisticated root-finding
+#[allow(dead_code)]
 pub fn kolmogi<T: Float + FromPrimitive + Display>(p: T) -> SpecialResult<T> {
     check_probability(p, "p")?;
 
@@ -500,6 +518,7 @@ pub fn kolmogi<T: Float + FromPrimitive + Display>(p: T) -> SpecialResult<T> {
 }
 
 /// Get a good initial guess for Kolmogorov inverse using asymptotic approximations
+#[allow(dead_code)]
 fn kolmogorov_inverse_initial_guess<T: Float + FromPrimitive>(p: T) -> SpecialResult<T> {
     let zero = T::zero();
     let one = T::one();
@@ -545,6 +564,7 @@ fn kolmogorov_inverse_initial_guess<T: Float + FromPrimitive>(p: T) -> SpecialRe
 }
 
 /// Halley's method for Kolmogorov inverse (cubic convergence)
+#[allow(dead_code)]
 fn kolmogorov_inverse_halley<T: Float + FromPrimitive + Display>(
     target_p: T,
     initial_x: T,
@@ -607,6 +627,7 @@ fn kolmogorov_inverse_halley<T: Float + FromPrimitive + Display>(
 }
 
 /// Improved Newton's method with better derivative estimation
+#[allow(dead_code)]
 fn kolmogorov_inverse_newton_improved<T: Float + FromPrimitive + Display>(
     target_p: T,
     initial_x: T,
@@ -665,6 +686,7 @@ fn kolmogorov_inverse_newton_improved<T: Float + FromPrimitive + Display>(
 }
 
 /// Bracketed Newton method (combines Newton with bisection for robustness)
+#[allow(dead_code)]
 fn kolmogorov_inverse_bracketed_newton<T: Float + FromPrimitive + Display>(
     target_p: T,
     tolerance: T,
@@ -733,6 +755,7 @@ fn kolmogorov_inverse_bracketed_newton<T: Float + FromPrimitive + Display>(
 }
 
 /// Enhanced bisection with better bounds (fallback method)
+#[allow(dead_code)]
 fn kolmogorov_inverse_enhanced_bisection<T: Float + FromPrimitive + Display>(
     target_p: T,
     tolerance: T,
@@ -769,6 +792,7 @@ fn kolmogorov_inverse_enhanced_bisection<T: Float + FromPrimitive + Display>(
 
 // Note: Obsolete helper functions removed - now using proper incomplete_gamma module
 
+#[allow(dead_code)]
 fn gamma_incomplete_lower<T: Float + FromPrimitive + Debug + AddAssign>(
     a: T,
     x: T,
@@ -799,6 +823,7 @@ fn gamma_incomplete_lower<T: Float + FromPrimitive + Debug + AddAssign>(
     }
 }
 
+#[allow(dead_code)]
 fn gamma_incomplete_upper<T: Float + FromPrimitive + Debug + AddAssign>(
     a: T,
     x: T,
@@ -847,6 +872,7 @@ fn gamma_incomplete_upper<T: Float + FromPrimitive + Debug + AddAssign>(
 // Array operations for distribution functions
 
 /// Apply normal CDF to array
+#[allow(dead_code)]
 pub fn ndtr_array<T>(x: &ArrayView1<T>) -> Array1<T>
 where
     T: Float + FromPrimitive + Send + Sync + Debug,
@@ -875,6 +901,7 @@ where
 }
 
 /// Apply binomial CDF to arrays
+#[allow(dead_code)]
 pub fn bdtr_array<T>(k: &[usize], n: usize, p: T) -> SpecialResult<Array1<T>>
 where
     T: Float + FromPrimitive + Send + Sync + Debug + Display + AddAssign + SubAssign + MulAssign,
@@ -889,6 +916,7 @@ where
 /// Inverse of binomial distribution CDF with respect to k
 ///
 /// Given n and p, finds k such that bdtr(k, n, p) = y
+#[allow(dead_code)]
 pub fn bdtrik<T>(y: T, n: T, p: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign,
@@ -922,6 +950,7 @@ where
 /// Inverse of binomial distribution CDF with respect to n
 ///
 /// Given k and p, finds n such that bdtr(k, n, p) = y
+#[allow(dead_code)]
 pub fn bdtrin<T>(y: T, k: T, p: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign,
@@ -969,6 +998,7 @@ where
 /// Inverse of incomplete beta function with respect to a
 ///
 /// Given x and b, finds a such that betainc(a, b, x) = y
+#[allow(dead_code)]
 pub fn btdtria<T>(y: T, x: T, b: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign,
@@ -1016,6 +1046,7 @@ where
 /// Inverse of incomplete beta function with respect to b
 ///
 /// Given x and a, finds b such that betainc(a, b, x) = y
+#[allow(dead_code)]
 pub fn btdtrib<T>(y: T, x: T, a: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign,
@@ -1063,6 +1094,7 @@ where
 /// Inverse of F distribution CDF with respect to dfn
 ///
 /// Given dfd and x, finds dfn such that fdtr(dfn, dfd, x) = y
+#[allow(dead_code)]
 pub fn fdtridfd<T>(y: T, x: T, dfd: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign,
@@ -1109,6 +1141,7 @@ where
 /// Inverse of gamma distribution CDF with respect to a
 ///
 /// Given x, finds a such that gdtr(a, x) = y
+#[allow(dead_code)]
 pub fn gdtria<T>(y: T, x: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign,
@@ -1156,6 +1189,7 @@ where
 ///
 /// Given a, finds x such that gdtr(a, x) = y  
 /// Note: This replaces the previous gdtrib function since we now use 2-parameter gamma
+#[allow(dead_code)]
 pub fn gdtrib<T>(y: T, a: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign,
@@ -1203,6 +1237,7 @@ where
 ///
 /// Given a, finds x such that gdtr(a, x) = y
 /// Note: This is now equivalent to gdtrib for compatibility
+#[allow(dead_code)]
 pub fn gdtrix<T>(y: T, a: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign,
@@ -1268,6 +1303,7 @@ where
 /// let x = chdtri(0.95, 2.0).unwrap();
 /// assert!(x > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn chdtri<T>(p: T, v: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign,
@@ -1323,6 +1359,7 @@ where
 /// let m = pdtri(0.5, 2.0).unwrap();
 /// assert!(m > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn pdtri<T>(p: T, k: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign,
@@ -1380,6 +1417,7 @@ where
 /// let k = pdtrik(0.5, 2.0).unwrap();
 /// assert!(k >= 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn pdtrik<T>(p: T, m: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + MulAssign,
@@ -1434,6 +1472,7 @@ where
 /// let cdf = nbdtr(2.0, 3.0, 0.5).unwrap();
 /// assert!(cdf >= 0.0 && cdf <= 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn nbdtr<T>(k: T, r: T, p: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign,
@@ -1464,6 +1503,7 @@ where
 ///
 /// # Returns
 /// P(X > k) where X ~ NegBin(r, p)
+#[allow(dead_code)]
 pub fn nbdtrc<T>(k: T, r: T, p: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign,
@@ -1483,6 +1523,7 @@ where
 ///
 /// # Returns
 /// The success probability p such that nbdtr(k, r, p) = y
+#[allow(dead_code)]
 pub fn nbdtri<T>(y: T, k: T, r: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug + AddAssign + SubAssign + MulAssign,

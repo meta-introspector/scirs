@@ -1038,21 +1038,25 @@ pub enum ProcessingStrategy {
 static GLOBAL_GPU_DEVICE: std::sync::OnceLock<GpuDevice> = std::sync::OnceLock::new();
 
 /// Get the global GPU device instance
+#[allow(dead_code)]
 pub fn global_gpu_device() -> &'static GpuDevice {
     GLOBAL_GPU_DEVICE.get_or_init(GpuDevice::default)
 }
 
 /// Check if GPU acceleration is available globally
+#[allow(dead_code)]
 pub fn is_gpu_acceleration_available() -> bool {
     global_gpu_device().is_gpu_available()
 }
 
 /// Get GPU capabilities
+#[allow(dead_code)]
 pub fn get_gpu_capabilities() -> &'static GpuCapabilities {
     global_gpu_device().capabilities()
 }
 
 /// Report GPU acceleration status
+#[allow(dead_code)]
 pub fn report_gpu_status() {
     let device = global_gpu_device();
     let caps = device.capabilities();

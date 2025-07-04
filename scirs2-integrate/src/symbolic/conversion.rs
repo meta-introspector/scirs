@@ -111,6 +111,7 @@ impl<F: IntegrateFloat> FirstOrderSystem<F> {
 /// - y[1] = x'
 /// - dy[0]/dt = y[1]
 /// - dy[1]/dt = -y[0] - 0.1*y[1]
+#[allow(dead_code)]
 pub fn higher_order_to_first_order<F: IntegrateFloat>(
     ode: &HigherOrderODE<F>,
 ) -> IntegrateResult<FirstOrderSystem<F>> {
@@ -153,6 +154,7 @@ pub fn higher_order_to_first_order<F: IntegrateFloat>(
 }
 
 /// Substitute derivative notation with state variables in an expression
+#[allow(dead_code)]
 fn substitute_derivatives<F: IntegrateFloat>(
     expr: &SymbolicExpression<F>,
     variable_map: &HashMap<String, Variable>,
@@ -199,6 +201,7 @@ fn substitute_derivatives<F: IntegrateFloat>(
 }
 
 /// Example: Convert a damped harmonic oscillator to first-order system
+#[allow(dead_code)]
 pub fn example_damped_oscillator<F: IntegrateFloat>(
     omega: F,
     damping: F,
@@ -233,6 +236,7 @@ pub fn example_damped_oscillator<F: IntegrateFloat>(
 }
 
 /// Example: Convert a driven pendulum equation to first-order system
+#[allow(dead_code)]
 pub fn example_driven_pendulum<F: IntegrateFloat>(
     g: F,     // gravity
     l: F,     // length
@@ -264,6 +268,7 @@ pub fn example_driven_pendulum<F: IntegrateFloat>(
 }
 
 /// Example: Convert a beam equation (4th order) to first-order system
+#[allow(dead_code)]
 pub fn example_euler_bernoulli_beam<F: IntegrateFloat>(
     ei: F,     // flexural rigidity
     _rho_a: F, // mass per unit length

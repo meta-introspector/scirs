@@ -12,6 +12,7 @@ use scirs2_integrate::symplectic::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Symplectic Integrators Example");
     println!("==============================\n");
@@ -26,6 +27,7 @@ fn main() {
 }
 
 /// Simple harmonic oscillator example
+#[allow(dead_code)]
 fn simple_harmonic_oscillator() {
     println!("1. Simple Harmonic Oscillator");
     println!("-----------------------------");
@@ -71,6 +73,7 @@ fn simple_harmonic_oscillator() {
 }
 
 /// Pendulum example
+#[allow(dead_code)]
 fn pendulum() {
     println!("2. Pendulum System");
     println!("------------------");
@@ -127,6 +130,7 @@ fn pendulum() {
 }
 
 /// Kepler orbit (planetary motion) example
+#[allow(dead_code)]
 fn kepler_orbit() {
     println!("3. Kepler Problem (Planetary Orbit)");
     println!("----------------------------------");
@@ -187,6 +191,7 @@ fn kepler_orbit() {
 }
 
 /// Compare different symplectic methods
+#[allow(dead_code)]
 fn compare_methods() {
     println!("4. Comparison of Symplectic Methods");
     println!("---------------------------------");
@@ -265,6 +270,7 @@ struct MethodResult {
 }
 
 /// Helper function to integrate with a specific method
+#[allow(dead_code)]
 fn integrate_with_method<S: SymplecticIntegrator<f64>>(
     method: &S,
     system: &SeparableHamiltonian<f64>,
@@ -289,6 +295,7 @@ fn integrate_with_method<S: SymplecticIntegrator<f64>>(
 }
 
 /// Helper function to integrate with velocity_verlet
+#[allow(dead_code)]
 fn integrate_with_velocity_verlet(
     system: &SeparableHamiltonian<f64>,
     t0: f64,
@@ -357,6 +364,7 @@ fn integrate_with_velocity_verlet(
 }
 
 /// Helper function to integrate with position_verlet
+#[allow(dead_code)]
 fn integrate_with_position_verlet(
     system: &SeparableHamiltonian<f64>,
     t0: f64,
@@ -425,6 +433,7 @@ fn integrate_with_position_verlet(
 }
 
 /// Helper function to integrate with composition methods
+#[allow(dead_code)]
 fn integrate_with_composition(
     system: &SeparableHamiltonian<f64>,
     t0: f64,

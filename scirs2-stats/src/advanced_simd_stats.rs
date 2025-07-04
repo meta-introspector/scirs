@@ -1528,6 +1528,7 @@ impl Default for UltraThinkSimdConfig {
 }
 
 /// Convenience function to create ultra-think SIMD optimizer
+#[allow(dead_code)]
 pub fn create_ultra_simd_optimizer(
     config: Option<UltraThinkSimdConfig>,
 ) -> UltraThinkSimdOptimizer {

@@ -88,6 +88,7 @@ impl_max_pool!(f32, max_pool_f32);
 impl_max_pool!(f64, max_pool_f64);
 
 #[test]
+#[allow(dead_code)]
 fn test_max_pool() {
     let x = [0., 1., 2., 5., 4., 3., 6., 7., 8.];
     let (output, argmax) = unsafe {

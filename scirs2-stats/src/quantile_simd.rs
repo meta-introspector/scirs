@@ -11,6 +11,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 /// SIMD-optimized quickselect algorithm for finding the k-th smallest element
 ///
 /// This implementation uses SIMD operations for partitioning when beneficial.
+#[allow(dead_code)]
 pub fn quickselect_simd<F>(arr: &mut [F], k: usize) -> F
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -39,6 +40,7 @@ where
 }
 
 /// SIMD-optimized partition function for quickselect
+#[allow(dead_code)]
 fn partition_simd<F>(arr: &mut [F], left: usize, right: usize, optimizer: &AutoOptimizer) -> usize
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -118,6 +120,7 @@ where
 }
 
 /// Helper function to find median of three values
+#[allow(dead_code)]
 fn median_of_three<F: Float>(a: F, b: F, c: F) -> F {
     if a <= b {
         if b <= c {
@@ -150,6 +153,7 @@ fn median_of_three<F: Float>(a: F, b: F, c: F) -> F {
 /// # Returns
 ///
 /// The q-th quantile of the input data
+#[allow(dead_code)]
 pub fn quantile_simd<F, D>(x: &mut ArrayBase<D, Ix1>, q: F, method: &str) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -228,6 +232,7 @@ where
 /// # Returns
 ///
 /// Array containing the computed quantiles
+#[allow(dead_code)]
 pub fn quantiles_simd<F, D1, D2>(
     x: &mut ArrayBase<D1, Ix1>,
     quantiles: &ArrayBase<D2, Ix1>,
@@ -300,6 +305,7 @@ where
 }
 
 /// Insertion sort for small arrays
+#[allow(dead_code)]
 fn insertion_sort<F: Float>(data: &mut [F]) {
     for i in 1..data.len() {
         let key = data[i];
@@ -315,6 +321,7 @@ fn insertion_sort<F: Float>(data: &mut [F]) {
 }
 
 /// Introsort with SIMD optimizations
+#[allow(dead_code)]
 fn introsort_simd<F>(
     data: &mut [F],
     left: usize,
@@ -354,6 +361,7 @@ fn introsort_simd<F>(
 }
 
 /// Heapsort fallback for worst-case scenarios
+#[allow(dead_code)]
 fn heapsort<F: Float>(data: &mut [F]) {
     let n = data.len();
 
@@ -369,6 +377,7 @@ fn heapsort<F: Float>(data: &mut [F]) {
     }
 }
 
+#[allow(dead_code)]
 fn heapify<F: Float>(data: &mut [F], n: usize, i: usize) {
     let mut largest = i;
     let left = 2 * i + 1;
@@ -389,6 +398,7 @@ fn heapify<F: Float>(data: &mut [F], n: usize, i: usize) {
 }
 
 /// Compute quantile from sorted array
+#[allow(dead_code)]
 fn compute_quantile_from_sorted<F>(sorted_data: &[F], q: F, method: &str) -> StatsResult<F>
 where
     F: Float + NumCast,
@@ -436,6 +446,7 @@ where
 /// SIMD-optimized median computation
 ///
 /// Computes the median using SIMD-accelerated selection
+#[allow(dead_code)]
 pub fn median_simd<F, D>(x: &mut ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -447,6 +458,7 @@ where
 /// SIMD-optimized percentile computation
 ///
 /// Computes the p-th percentile (0-100) using SIMD acceleration
+#[allow(dead_code)]
 pub fn percentile_simd<F, D>(x: &mut ArrayBase<D, Ix1>, p: F, method: &str) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,

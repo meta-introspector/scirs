@@ -112,6 +112,7 @@ pub struct ValidationSummary {
 }
 
 /// Run advanced validation suite
+#[allow(dead_code)]
 pub fn run_advanced_validation(tolerance: f64) -> SignalResult<AdvancedValidationResult> {
     // Run edge case tests
     let edge_cases = test_edge_cases(tolerance)?;
@@ -143,6 +144,7 @@ pub fn run_advanced_validation(tolerance: f64) -> SignalResult<AdvancedValidatio
 }
 
 /// Test edge cases
+#[allow(dead_code)]
 fn test_edge_cases(tolerance: f64) -> SignalResult<EdgeCaseResults> {
     let mut issues = Vec::new();
 
@@ -272,6 +274,7 @@ fn test_edge_cases(tolerance: f64) -> SignalResult<EdgeCaseResults> {
 }
 
 /// Test numerical accuracy
+#[allow(dead_code)]
 fn test_numerical_accuracy(tolerance: f64) -> SignalResult<NumericalAccuracyResults> {
     // Test signal parameters
     let n = 1000;
@@ -325,6 +328,7 @@ fn test_numerical_accuracy(tolerance: f64) -> SignalResult<NumericalAccuracyResu
 }
 
 /// Test algorithm consistency
+#[allow(dead_code)]
 fn test_algorithm_consistency(tolerance: f64) -> SignalResult<ConsistencyResults> {
     // Generate test signal
     let n = 512;
@@ -424,6 +428,7 @@ fn test_algorithm_consistency(tolerance: f64) -> SignalResult<ConsistencyResults
 }
 
 /// Run stress tests
+#[allow(dead_code)]
 fn run_stress_tests() -> SignalResult<StressTestResults> {
     let mut max_data_size = 0;
     let mut performance_samples = Vec::new();
@@ -494,6 +499,7 @@ fn run_stress_tests() -> SignalResult<StressTestResults> {
 
 // Helper functions
 
+#[allow(dead_code)]
 fn find_closest_frequency(freqs: &[f64], target: f64) -> usize {
     freqs
         .iter()
@@ -503,6 +509,7 @@ fn find_closest_frequency(freqs: &[f64], target: f64) -> usize {
         .unwrap_or(0)
 }
 
+#[allow(dead_code)]
 fn find_peak_frequency(freqs: &[f64], psd: &[f64]) -> usize {
     psd.iter()
         .enumerate()
@@ -511,6 +518,7 @@ fn find_peak_frequency(freqs: &[f64], psd: &[f64]) -> usize {
         .unwrap_or(0)
 }
 
+#[allow(dead_code)]
 fn test_phase_accuracy(t: &[f64], tolerance: f64) -> SignalResult<f64> {
     // Test with known phase
     let phase_true = PI / 4.0;
@@ -530,6 +538,7 @@ fn test_phase_accuracy(t: &[f64], tolerance: f64) -> SignalResult<f64> {
     Ok(accuracy)
 }
 
+#[allow(dead_code)]
 fn test_amplitude_recovery(t: &[f64], tolerance: f64) -> SignalResult<f64> {
     let amplitude_true = 3.5;
     let freq = 7.0;
@@ -548,6 +557,7 @@ fn test_amplitude_recovery(t: &[f64], tolerance: f64) -> SignalResult<f64> {
     Ok(accuracy)
 }
 
+#[allow(dead_code)]
 fn test_frequency_bin_accuracy(t: &[f64], tolerance: f64) -> SignalResult<f64> {
     // Test multiple frequencies
     let test_freqs = vec![1.0, 5.5, 10.25, 15.7, 20.0];
@@ -566,6 +576,7 @@ fn test_frequency_bin_accuracy(t: &[f64], tolerance: f64) -> SignalResult<f64> {
     Ok(accuracies.iter().sum::<f64>() / accuracies.len() as f64)
 }
 
+#[allow(dead_code)]
 fn test_floating_point_stability() -> SignalResult<f64> {
     // Test with various numerical edge cases
     let mut stability_score = 1.0;
@@ -597,6 +608,7 @@ fn test_floating_point_stability() -> SignalResult<f64> {
     Ok(stability_score)
 }
 
+#[allow(dead_code)]
 fn compute_agreement(psd1: &[f64], psd2: &[f64]) -> f64 {
     let n = psd1.len().min(psd2.len());
     let mut sum_diff = 0.0;
@@ -614,6 +626,7 @@ fn compute_agreement(psd1: &[f64], psd2: &[f64]) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn compare_at_common_frequencies(
     f1: &[f64],
     p1: &[f64],
@@ -660,6 +673,7 @@ fn compare_at_common_frequencies(
     Ok(agreements.iter().sum::<f64>() / agreements.len() as f64)
 }
 
+#[allow(dead_code)]
 fn interpolate_psd(freqs: &[f64], psd: &[f64], f: f64) -> f64 {
     // Simple linear interpolation
     for i in 1..freqs.len() {
@@ -671,6 +685,7 @@ fn interpolate_psd(freqs: &[f64], psd: &[f64], f: f64) -> f64 {
     psd[psd.len() - 1]
 }
 
+#[allow(dead_code)]
 fn test_window_consistency_metric(psd_no_window: &[f64], psd_window: &[f64]) -> SignalResult<f64> {
     // Find peaks in both
     let peaks_no_window = find_peaks(psd_no_window, 0.1);
@@ -691,6 +706,7 @@ fn test_window_consistency_metric(psd_no_window: &[f64], psd_window: &[f64]) -> 
     Ok(consistency)
 }
 
+#[allow(dead_code)]
 fn find_peaks(data: &[f64], threshold: f64) -> Vec<usize> {
     let mut peaks = Vec::new();
     let max_val = data.iter().cloned().fold(0.0, f64::max);
@@ -704,6 +720,7 @@ fn find_peaks(data: &[f64], threshold: f64) -> Vec<usize> {
     peaks
 }
 
+#[allow(dead_code)]
 fn test_frequency_shift_invariance(freqs: &[f64], psd: &[f64], shift: f64) -> SignalResult<f64> {
     // The spectrum should show the shift in peak location
     let peak_idx = find_peak_frequency(freqs, psd);
@@ -714,6 +731,7 @@ fn test_frequency_shift_invariance(freqs: &[f64], psd: &[f64], shift: f64) -> Si
     Ok(invariance.max(0.0))
 }
 
+#[allow(dead_code)]
 fn generate_validation_summary(
     edge_cases: &EdgeCaseResults,
     numerical: &NumericalAccuracyResults,

@@ -8,6 +8,7 @@ use scirs2_interpolate::{
 };
 
 // Helper to run extrapolation for example points and display results
+#[allow(dead_code)]
 fn demonstrate_extrapolation<F>(name: &str, extrap_values: &[(f64, f64)], f: F)
 where
     F: Fn(f64) -> Result<f64, String>,
@@ -31,6 +32,7 @@ where
     println!();
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Advanced Extrapolation and Boundary Handling Examples");
     println!("====================================================\n");

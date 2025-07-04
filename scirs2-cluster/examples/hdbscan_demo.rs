@@ -1,6 +1,7 @@
 use ndarray::Array2;
 use scirs2_cluster::{hdbscan, ClusterSelectionMethod, HDBSCANOptions};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("HDBSCAN Clustering Example");
     println!("=========================\n");

@@ -12,6 +12,7 @@ use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 ///
 /// Computes multiple statistics in a single pass with SIMD acceleration.
 /// This is more efficient than computing statistics separately.
+#[allow(dead_code)]
 pub fn comprehensive_stats_simd<F>(data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
@@ -129,6 +130,7 @@ pub struct ComprehensiveStats<F> {
 ///
 /// Computes statistics over sliding windows efficiently using SIMD operations
 /// and incremental updates where possible.
+#[allow(dead_code)]
 pub fn sliding_window_stats_simd<F>(
     data: &ArrayView1<F>,
     window_size: usize,
@@ -217,6 +219,7 @@ pub struct SlidingWindowStats<F> {
 /// SIMD-optimized batch covariance matrix computation
 ///
 /// Computes the full covariance matrix using SIMD operations for maximum efficiency.
+#[allow(dead_code)]
 pub fn covariance_matrix_simd<F>(data: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
@@ -296,6 +299,7 @@ where
 /// SIMD-optimized quantile computation using partitioning
 ///
 /// Computes multiple quantiles efficiently using SIMD-accelerated partitioning.
+#[allow(dead_code)]
 pub fn quantiles_batch_simd<F>(data: &ArrayView1<F>, quantiles: &[f64]) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy,
@@ -352,6 +356,7 @@ where
 ///
 /// Computes exponential moving average with SIMD acceleration for the
 /// element-wise operations.
+#[allow(dead_code)]
 pub fn exponential_moving_average_simd<F>(data: &ArrayView1<F>, alpha: F) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display,
@@ -396,6 +401,7 @@ where
 /// SIMD-optimized batch normalization
 ///
 /// Normalizes data to have zero mean and unit variance using SIMD operations.
+#[allow(dead_code)]
 pub fn batch_normalize_simd<F>(data: &ArrayView2<F>, axis: Option<usize>) -> StatsResult<Array2<F>>
 where
     F: Float
@@ -498,6 +504,7 @@ where
 /// SIMD-optimized outlier detection using Z-score
 ///
 /// Detects outliers based on Z-scores with configurable threshold.
+#[allow(dead_code)]
 pub fn outlier_detection_zscore_simd<F>(
     data: &ArrayView1<F>,
     threshold: F,
@@ -542,6 +549,7 @@ where
 /// SIMD-optimized robust statistics using median-based methods
 ///
 /// Computes robust center and scale estimates that are less sensitive to outliers.
+#[allow(dead_code)]
 pub fn robust_statistics_simd<F>(data: &ArrayView1<F>) -> StatsResult<RobustStats<F>>
 where
     F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy + std::fmt::Display,

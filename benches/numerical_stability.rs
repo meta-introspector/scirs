@@ -23,6 +23,7 @@ struct StabilityTestResult {
 }
 
 /// Generate matrices with specific condition numbers for stability testing
+#[allow(dead_code)]
 fn generate_conditioned_matrix(size: usize, condition_number: f64) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
 
@@ -55,6 +56,7 @@ fn generate_conditioned_matrix(size: usize, condition_number: f64) -> Array2<f64
 }
 
 /// Generate matrices with specific pathological properties
+#[allow(dead_code)]
 fn generate_pathological_matrix(size: usize, test_type: &str) -> Array2<f64> {
     match test_type {
         "hilbert" => {
@@ -101,6 +103,7 @@ fn generate_pathological_matrix(size: usize, test_type: &str) -> Array2<f64> {
 }
 
 /// Test numerical accuracy of linear solvers
+#[allow(dead_code)]
 fn test_solve_accuracy(matrix: &ArrayView2<f64>, known_solution: &Array1<f64>) -> (bool, f64) {
     let rhs = matrix.dot(known_solution);
 
@@ -118,6 +121,7 @@ fn test_solve_accuracy(matrix: &ArrayView2<f64>, known_solution: &Array1<f64>) -
 }
 
 /// Test numerical accuracy of matrix inversion
+#[allow(dead_code)]
 fn test_inverse_accuracy(matrix: &ArrayView2<f64>) -> (bool, f64) {
     match inv(matrix, None) {
         Ok(inv_matrix) => {
@@ -135,6 +139,7 @@ fn test_inverse_accuracy(matrix: &ArrayView2<f64>) -> (bool, f64) {
 }
 
 /// Test numerical accuracy of matrix decompositions
+#[allow(dead_code)]
 fn test_decomposition_accuracy(matrix: &ArrayView2<f64>, decomp_type: &str) -> (bool, f64) {
     match decomp_type {
         "lu" => match lu(matrix, None) {
@@ -176,6 +181,7 @@ fn test_decomposition_accuracy(matrix: &ArrayView2<f64>, decomp_type: &str) -> (
 }
 
 /// Benchmark numerical stability with well-conditioned matrices
+#[allow(dead_code)]
 fn bench_well_conditioned_stability(c: &mut Criterion) {
     let mut group = c.benchmark_group("well_conditioned_stability");
     let mut results = Vec::new();
@@ -257,6 +263,7 @@ fn bench_well_conditioned_stability(c: &mut Criterion) {
 }
 
 /// Benchmark numerical stability with pathological matrices
+#[allow(dead_code)]
 fn bench_pathological_matrices(c: &mut Criterion) {
     let mut group = c.benchmark_group("pathological_matrices");
     let mut results = Vec::new();
@@ -303,6 +310,7 @@ fn bench_pathological_matrices(c: &mut Criterion) {
 }
 
 /// Benchmark decomposition stability
+#[allow(dead_code)]
 fn bench_decomposition_stability(c: &mut Criterion) {
     let mut group = c.benchmark_group("decomposition_stability");
     let mut results = Vec::new();
@@ -349,6 +357,7 @@ fn bench_decomposition_stability(c: &mut Criterion) {
 }
 
 /// Test edge cases and extreme values
+#[allow(dead_code)]
 fn bench_edge_cases(c: &mut Criterion) {
     let mut group = c.benchmark_group("edge_cases");
     let mut results = Vec::new();
@@ -406,6 +415,7 @@ fn bench_edge_cases(c: &mut Criterion) {
 }
 
 /// Estimate condition number using singular values
+#[allow(dead_code)]
 fn estimate_condition_number(matrix: &ArrayView2<f64>) -> f64 {
     match svd(matrix, false, None) {
         Ok((_, s, _)) => {
@@ -422,6 +432,7 @@ fn estimate_condition_number(matrix: &ArrayView2<f64>) -> f64 {
 }
 
 /// Save stability test results to JSON file
+#[allow(dead_code)]
 fn save_stability_results(results: &[StabilityTestResult]) {
     std::fs::create_dir_all("target").unwrap_or_default();
 

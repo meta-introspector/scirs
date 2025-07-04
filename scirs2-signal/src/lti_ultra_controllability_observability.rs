@@ -895,6 +895,7 @@ impl Default for UltraAnalysisConfig {
 /// # Returns
 ///
 /// * Comprehensive ultra-enhanced analysis results
+#[allow(dead_code)]
 pub fn ultra_controllability_observability_analysis(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -994,6 +995,7 @@ pub fn ultra_controllability_observability_analysis(
 }
 
 /// Perform ultra-enhanced controllability analysis
+#[allow(dead_code)]
 fn perform_ultra_controllability_analysis(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1032,6 +1034,7 @@ fn perform_ultra_controllability_analysis(
 }
 
 /// Perform ultra-enhanced observability analysis
+#[allow(dead_code)]
 fn perform_ultra_observability_analysis(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1074,6 +1077,7 @@ fn perform_ultra_observability_analysis(
 
 // Implementation of helper functions (simplified for this demonstration)
 
+#[allow(dead_code)]
 fn compute_quantum_coherence(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1089,6 +1093,7 @@ fn compute_quantum_coherence(
     })
 }
 
+#[allow(dead_code)]
 fn create_default_quantum_coherence() -> QuantumCoherence {
     QuantumCoherence {
         entanglement_measure: 0.0,
@@ -1099,6 +1104,7 @@ fn create_default_quantum_coherence() -> QuantumCoherence {
     }
 }
 
+#[allow(dead_code)]
 fn compute_geometric_controllability(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1120,6 +1126,7 @@ fn compute_geometric_controllability(
     })
 }
 
+#[allow(dead_code)]
 fn compute_temporal_controllability(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1136,6 +1143,7 @@ fn compute_temporal_controllability(
     })
 }
 
+#[allow(dead_code)]
 fn perform_reachability_analysis(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1156,6 +1164,7 @@ fn perform_reachability_analysis(
     })
 }
 
+#[allow(dead_code)]
 fn perform_energy_optimal_analysis(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1172,6 +1181,7 @@ fn perform_energy_optimal_analysis(
     })
 }
 
+#[allow(dead_code)]
 fn compute_neuromorphic_observability(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1200,6 +1210,7 @@ fn compute_neuromorphic_observability(
     })
 }
 
+#[allow(dead_code)]
 fn create_default_neuromorphic_observability() -> NeuromorphicObservability {
     NeuromorphicObservability {
         spike_observability: 0.0,
@@ -1225,6 +1236,7 @@ fn create_default_neuromorphic_observability() -> NeuromorphicObservability {
     }
 }
 
+#[allow(dead_code)]
 fn compute_information_theoretic_observability(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1245,6 +1257,7 @@ fn compute_information_theoretic_observability(
     })
 }
 
+#[allow(dead_code)]
 fn compute_temporal_observability(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1261,6 +1274,7 @@ fn compute_temporal_observability(
     })
 }
 
+#[allow(dead_code)]
 fn perform_observable_set_analysis(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1285,6 +1299,7 @@ fn perform_observable_set_analysis(
     })
 }
 
+#[allow(dead_code)]
 fn perform_estimation_theoretic_analysis(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1317,6 +1332,7 @@ fn perform_estimation_theoretic_analysis(
 
 // Additional helper functions for creating default structures
 
+#[allow(dead_code)]
 fn create_default_reachable_set_characterization(n: usize) -> ReachableSetCharacterization {
     ReachableSetCharacterization {
         polytope_vertices: Array2::ones((2_usize.pow(n as u32).min(100), n)),
@@ -1341,6 +1357,7 @@ fn create_default_reachable_set_characterization(n: usize) -> ReachableSetCharac
     }
 }
 
+#[allow(dead_code)]
 fn create_default_invariant_set_characterization(n: usize) -> InvariantSetCharacterization {
     InvariantSetCharacterization {
         set_representation: create_default_reachable_set_characterization(n),
@@ -1349,6 +1366,7 @@ fn create_default_invariant_set_characterization(n: usize) -> InvariantSetCharac
     }
 }
 
+#[allow(dead_code)]
 fn create_default_null_controllable_set_characterization(
     n: usize,
 ) -> NullControllableSetCharacterization {
@@ -1359,6 +1377,7 @@ fn create_default_null_controllable_set_characterization(
     }
 }
 
+#[allow(dead_code)]
 fn perform_geometric_analysis(
     ss: &StateSpace,
     controllability: &UltraControllabilityAnalysis,
@@ -1402,6 +1421,7 @@ fn perform_geometric_analysis(
     })
 }
 
+#[allow(dead_code)]
 fn create_default_set_geometry() -> SetGeometry {
     SetGeometry {
         volume: 1.0,
@@ -1413,6 +1433,7 @@ fn create_default_set_geometry() -> SetGeometry {
     }
 }
 
+#[allow(dead_code)]
 fn create_default_enhanced_kalman_decomposition(n: usize) -> EnhancedKalmanDecomposition {
     EnhancedKalmanDecomposition {
         base_decomposition: KalmanDecomposition {
@@ -1446,6 +1467,7 @@ fn create_default_enhanced_kalman_decomposition(n: usize) -> EnhancedKalmanDecom
     }
 }
 
+#[allow(dead_code)]
 fn create_default_geometric_analysis(n: usize) -> GeometricAnalysis {
     GeometricAnalysis {
         controllability_geometry: ControllabilityGeometry {
@@ -1482,6 +1504,7 @@ fn create_default_geometric_analysis(n: usize) -> GeometricAnalysis {
     }
 }
 
+#[allow(dead_code)]
 fn perform_temporal_dynamics_analysis(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1522,6 +1545,7 @@ fn perform_temporal_dynamics_analysis(
     })
 }
 
+#[allow(dead_code)]
 fn create_default_temporal_analysis(n: usize) -> TemporalDynamicsAnalysis {
     TemporalDynamicsAnalysis {
         time_scale_separation: TimeScaleSeparation {
@@ -1559,6 +1583,7 @@ fn create_default_temporal_analysis(n: usize) -> TemporalDynamicsAnalysis {
     }
 }
 
+#[allow(dead_code)]
 fn perform_multi_scale_analysis(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1598,6 +1623,7 @@ fn perform_multi_scale_analysis(
     })
 }
 
+#[allow(dead_code)]
 fn create_default_multi_scale_analysis(n: usize) -> MultiScaleAnalysis {
     MultiScaleAnalysis {
         microscale: MicroscaleAnalysis {
@@ -1632,6 +1658,7 @@ fn create_default_multi_scale_analysis(n: usize) -> MultiScaleAnalysis {
     }
 }
 
+#[allow(dead_code)]
 fn setup_real_time_monitoring(
     ss: &StateSpace,
     config: &UltraAnalysisConfig,
@@ -1667,6 +1694,7 @@ fn setup_real_time_monitoring(
     })
 }
 
+#[allow(dead_code)]
 fn create_default_real_time_monitoring() -> RealTimeMonitoring {
     RealTimeMonitoring {
         online_controllability: OnlineEstimation {
@@ -1698,6 +1726,7 @@ fn create_default_real_time_monitoring() -> RealTimeMonitoring {
     }
 }
 
+#[allow(dead_code)]
 fn compute_quantum_inspired_metrics(
     ss: &StateSpace,
     controllability: &UltraControllabilityAnalysis,
@@ -1717,6 +1746,7 @@ fn compute_quantum_inspired_metrics(
     })
 }
 
+#[allow(dead_code)]
 fn create_default_quantum_metrics() -> QuantumInspiredMetrics {
     QuantumInspiredMetrics {
         quantum_controllability: 0.0,
@@ -1731,6 +1761,7 @@ fn create_default_quantum_metrics() -> QuantumInspiredMetrics {
     }
 }
 
+#[allow(dead_code)]
 fn estimate_analysis_memory_usage(n: usize) -> f64 {
     // Estimate memory usage in MB based on state dimension
     let base_usage = 50.0; // Base algorithm overhead
@@ -1738,6 +1769,7 @@ fn estimate_analysis_memory_usage(n: usize) -> f64 {
     base_usage + state_dependent
 }
 
+#[allow(dead_code)]
 fn estimate_numerical_accuracy(config: &UltraAnalysisConfig) -> f64 {
     match config.optimization_level {
         OptimizationLevel::MaxAccuracy => 0.999,

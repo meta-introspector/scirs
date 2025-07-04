@@ -612,6 +612,7 @@ where
 }
 
 /// Example usage with different ML frameworks
+#[allow(dead_code)]
 fn example_usage() {
     println!("🎯 Universal SciRS2 Integration Examples\n");
 
@@ -776,6 +777,7 @@ impl Default for SchedulerConfig {
     }
 }
 
+#[allow(dead_code)]
 fn main() {
     example_usage();
 }

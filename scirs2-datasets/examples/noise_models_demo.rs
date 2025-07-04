@@ -10,6 +10,7 @@ use scirs2_datasets::{
     make_time_series, MissingPattern, OutlierType,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Realistic Noise Models Demonstration ===\n");
 
@@ -36,6 +37,7 @@ fn main() {
     println!("\n=== Noise Models Demo Complete ===================");
 }
 
+#[allow(dead_code)]
 fn demonstrate_missing_data_patterns() {
     println!("Testing different missing data patterns on a sample dataset:");
 
@@ -87,6 +89,7 @@ fn demonstrate_missing_data_patterns() {
     }
 }
 
+#[allow(dead_code)]
 fn demonstrate_outlier_injection() {
     println!("Testing different outlier types on a sample dataset:");
 
@@ -145,6 +148,7 @@ fn demonstrate_outlier_injection() {
     }
 }
 
+#[allow(dead_code)]
 fn demonstrate_time_series_noise() {
     println!("Testing different time series noise types:");
 
@@ -188,6 +192,7 @@ fn demonstrate_time_series_noise() {
     }
 }
 
+#[allow(dead_code)]
 fn demonstrate_comprehensive_corruption() {
     println!("Testing comprehensive dataset corruption:");
 
@@ -246,6 +251,7 @@ fn demonstrate_comprehensive_corruption() {
     }
 }
 
+#[allow(dead_code)]
 fn demonstrate_real_world_applications() {
     println!("Real-world application scenarios:");
 
@@ -334,6 +340,7 @@ fn demonstrate_real_world_applications() {
 }
 
 /// Calculate basic statistics for a 2D array
+#[allow(dead_code)]
 fn calculate_basic_stats(data: &Array2<f64>) -> (f64, f64, f64, f64) {
     let valid_values: Vec<f64> = data.iter().filter(|&&x| !x.is_nan()).cloned().collect();
 

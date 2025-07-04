@@ -566,6 +566,7 @@ where
 }
 
 /// Create a disk-backed array from the given data and file path
+#[allow(dead_code)]
 pub fn create_disk_array<A, S, D>(
     data: &ArrayBase<S, D>,
     file_path: &Path,
@@ -581,6 +582,7 @@ where
 }
 
 /// Load chunks of an out-of-core array into memory
+#[allow(dead_code)]
 pub fn load_chunks<A, D>(
     array: &OutOfCoreArray<A, D>,
     chunk_indices: &[usize],

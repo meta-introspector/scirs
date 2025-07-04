@@ -27,6 +27,7 @@ use std::f64::consts::PI;
 /// let energy = filter_energy(&filter);
 /// assert!((energy - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn filter_energy(filter: &[f64]) -> f64 {
     filter.iter().map(|&x| x * x).sum()
 }
@@ -57,6 +58,7 @@ pub fn filter_energy(filter: &[f64]) -> f64 {
 /// let is_perfect = check_perfect_reconstruction(&filters, Some(1e-10)).unwrap();
 /// assert!(is_perfect);
 /// ```
+#[allow(dead_code)]
 pub fn check_perfect_reconstruction(
     filters: &WaveletFilters,
     tol: Option<f64>,
@@ -134,6 +136,7 @@ pub fn check_perfect_reconstruction(
 /// // Haar wavelet highpass filter has center frequency close to 0.25
 /// assert!((center_freq - 0.25).abs() < 0.1);
 /// ```
+#[allow(dead_code)]
 pub fn center_frequency(filter: &[f64]) -> f64 {
     let pi = std::f64::consts::PI;
     let n = filter.len();
@@ -195,6 +198,7 @@ pub fn center_frequency(filter: &[f64]) -> f64 {
 /// let moments = estimate_vanishing_moments(&filters.dec_hi, None);
 /// assert_eq!(moments, 4); // DB4 has 4 vanishing moments
 /// ```
+#[allow(dead_code)]
 pub fn estimate_vanishing_moments(highpass_filter: &[f64], tol: Option<f64>) -> usize {
     let tolerance = tol.unwrap_or(1e-10);
     let mut n_moments = 0;
@@ -238,6 +242,7 @@ pub fn estimate_vanishing_moments(highpass_filter: &[f64], tol: Option<f64>) -> 
 /// let length = effective_filter_length(&filter, None);
 /// assert_eq!(length, 3); // Effective length is 3, not 6
 /// ```
+#[allow(dead_code)]
 pub fn effective_filter_length(filter: &[f64], tol: Option<f64>) -> usize {
     let tolerance = tol.unwrap_or(1e-10);
     let n = filter.len();

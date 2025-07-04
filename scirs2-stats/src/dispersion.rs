@@ -43,6 +43,7 @@ use std::cmp::Ordering;
 /// let mad_from_3 = mean_abs_deviation(&data.view(), Some(3.0)).unwrap();
 /// println!("Mean absolute deviation from 3.0: {}", mad_from_3);
 /// ```
+#[allow(dead_code)]
 pub fn mean_abs_deviation<F>(x: &ArrayView1<F>, center: Option<F>) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + SimdUnifiedOps,
@@ -105,6 +106,7 @@ where
 /// let mad_scaled = median_abs_deviation(&data.view(), None, Some(1.4826)).unwrap();
 /// println!("Scaled median absolute deviation: {}", mad_scaled);
 /// ```
+#[allow(dead_code)]
 pub fn median_abs_deviation<F>(
     x: &ArrayView1<F>,
     center: Option<F>,
@@ -163,6 +165,7 @@ where
 /// let iqr_val = iqr(&data.view(), None).unwrap();
 /// println!("Interquartile range: {}", iqr_val);  // Should be 4.0
 /// ```
+#[allow(dead_code)]
 pub fn iqr<F>(x: &ArrayView1<F>, interpolation: Option<&str>) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -208,6 +211,7 @@ where
 /// let range_val = data_range(&data.view()).unwrap();
 /// println!("Range: {}", range_val);  // Should be 8.0 (10.0 - 2.0)
 /// ```
+#[allow(dead_code)]
 pub fn data_range<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + SimdUnifiedOps,
@@ -262,6 +266,7 @@ where
 /// let cv = coef_variation(&data.view(), 1).unwrap();
 /// println!("Coefficient of variation: {}", cv);
 /// ```
+#[allow(dead_code)]
 pub fn coef_variation<F>(x: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -301,6 +306,7 @@ where
 }
 
 /// Helper function to compute percentiles
+#[allow(dead_code)]
 fn percentile<F>(x: &ArrayView1<F>, q: F, interpolation: &str) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,
@@ -394,6 +400,7 @@ where
 /// println!("Gini coefficient (perfect inequality): {}", gini_unequal);
 /// // Should be close to 0.8 (1 - 1/n, where n=5)
 /// ```
+#[allow(dead_code)]
 pub fn gini_coefficient<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>,

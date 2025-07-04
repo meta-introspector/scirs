@@ -165,7 +165,7 @@ impl MultiProgress {
 
         // Show overall progress
         let overall = self.overall_progress();
-        print!("Overall: {:.1}% | ", overall);
+        print!("Overall: {overall:.1}% | ");
 
         // Show active trackers
         let active_trackers: Vec<_> = self

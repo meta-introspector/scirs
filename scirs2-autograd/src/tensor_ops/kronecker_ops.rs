@@ -162,6 +162,7 @@ impl<F: Float> Op<F> for KroneckerOp {
 ///     assert_eq!(c.eval(g).unwrap().shape(), &[4, 4]);
 /// });
 /// ```
+#[allow(dead_code)]
 pub fn kron<'g, F: Float>(a: &Tensor<'g, F>, b: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = a.graph();
 

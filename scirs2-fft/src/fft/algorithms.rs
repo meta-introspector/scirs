@@ -41,6 +41,7 @@ impl From<&str> for NormMode {
 }
 
 /// Convert a normalization mode string to NormMode enum
+#[allow(dead_code)]
 pub fn parse_norm_mode(norm: Option<&str>, is_inverse: bool) -> NormMode {
     match norm {
         Some(s) => NormMode::from(s),
@@ -50,6 +51,7 @@ pub fn parse_norm_mode(norm: Option<&str>, is_inverse: bool) -> NormMode {
 }
 
 /// Apply normalization to FFT results based on the specified mode
+#[allow(dead_code)]
 fn apply_normalization(data: &mut [Complex64], n: usize, mode: NormMode) -> FFTResult<()> {
     match mode {
         NormMode::None => {} // No normalization
@@ -88,6 +90,7 @@ fn apply_normalization(data: &mut [Complex64], n: usize, mode: NormMode) -> FFTR
 }
 
 /// Convert a single value to Complex64
+#[allow(dead_code)]
 fn convert_to_complex<T>(val: T) -> FFTResult<Complex64>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -114,6 +117,7 @@ where
 }
 
 /// Convert input data to complex values
+#[allow(dead_code)]
 fn to_complex<T>(input: &[T]) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -148,6 +152,7 @@ where
 /// assert!((spectrum[0].re - 10.0).abs() < 1e-10);
 /// assert!(spectrum[0].im.abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn fft<T>(input: &[T], n: Option<usize>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -227,6 +232,7 @@ where
 ///     assert!(reconstructed[i].im.abs() < 1e-10);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn ifft<T>(input: &[T], n: Option<usize>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -310,6 +316,7 @@ where
 /// // The DC component should be the sum of all elements
 /// assert!((result[[0, 0]].re - 10.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn fft2<T>(
     input: &Array2<T>,
     shape: Option<(usize, usize)>,
@@ -456,6 +463,7 @@ where
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn ifft2<T>(
     input: &Array2<T>,
     shape: Option<(usize, usize)>,
@@ -593,6 +601,7 @@ where
 /// assert_eq!(result.shape(), &[2, 2, 2]);
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn fftn<T>(
     input: &ArrayD<T>,
     shape: Option<Vec<usize>>,
@@ -773,6 +782,7 @@ where
 /// }
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn ifftn<T>(
     input: &ArrayD<T>,
     shape: Option<Vec<usize>>,

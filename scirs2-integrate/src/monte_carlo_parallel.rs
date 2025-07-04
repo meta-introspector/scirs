@@ -112,6 +112,7 @@ impl<F: IntegrateFloat> From<MonteCarloOptions<F>> for ParallelMonteCarloOptions
 /// ).unwrap();
 /// ```
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn parallel_monte_carlo<F, Func>(
     f: Func,
     ranges: &[(F, F)],
@@ -162,6 +163,7 @@ where
 
 /// Chunk-based parallel Monte Carlo integration
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn parallel_monte_carlo_chunked<F, Func>(
     f: &Func,
     ranges: &[(F, F)],
@@ -271,6 +273,7 @@ where
 
 /// Batch-based parallel Monte Carlo integration
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn parallel_monte_carlo_batched<F, Func>(
     f: &Func,
     ranges: &[(F, F)],
@@ -390,6 +393,7 @@ where
 }
 
 /// Compute final Monte Carlo result from accumulated statistics
+#[allow(dead_code)]
 fn compute_final_result<F: IntegrateFloat>(
     sum: F,
     sum_sq: F,
@@ -429,6 +433,7 @@ fn compute_final_result<F: IntegrateFloat>(
 /// This advanced method automatically adjusts sampling strategies based on
 /// the variance observed in different regions of the integration domain.
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn adaptive_parallel_monte_carlo<F, Func>(
     f: Func,
     ranges: &[(F, F)],
@@ -490,6 +495,7 @@ where
 
 /// Fallback implementations when parallel feature is not enabled
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 pub fn parallel_monte_carlo<F, Func>(
     f: Func,
     ranges: &[(F, F)],
@@ -513,6 +519,7 @@ where
 }
 
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 pub fn adaptive_parallel_monte_carlo<F, Func>(
     f: Func,
     ranges: &[(F, F)],

@@ -10,6 +10,7 @@ use num_complex::Complex64;
 use scirs2_special::*;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎓 Educational Applications of Special Functions");
     println!("===============================================\n");
@@ -36,6 +37,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn physics_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚛️ PHYSICS APPLICATIONS");
     println!("=======================\n");
@@ -156,6 +158,7 @@ fn physics_applications() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn engineering_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 ENGINEERING APPLICATIONS");
     println!("===========================\n");
@@ -335,6 +338,7 @@ fn engineering_applications() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn statistics_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 STATISTICS AND PROBABILITY");
     println!("=============================\n");
@@ -491,6 +495,7 @@ fn statistics_applications() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn signal_processing_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("📡 SIGNAL PROCESSING APPLICATIONS");
     println!("=================================\n");
@@ -643,6 +648,7 @@ fn signal_processing_applications() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn computer_graphics_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎨 COMPUTER GRAPHICS APPLICATIONS");
     println!("=================================\n");
@@ -839,6 +845,7 @@ fn computer_graphics_applications() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn financial_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("💰 FINANCIAL MATHEMATICS");
     println!("========================\n");
@@ -1042,6 +1049,7 @@ fn financial_applications() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper functions for the applications
+#[allow(dead_code)]
 fn hydrogen_radial_probability(n: usize, l: usize, r: f64) -> f64 {
     // Simplified hydrogen radial wavefunction probability density
     // This is a basic approximation for demonstration
@@ -1060,12 +1068,14 @@ fn hydrogen_radial_probability(n: usize, l: usize, r: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn quadrupole_field_strength(theta: f64, phi: f64, moment: f64, distance: f64) -> f64 {
     // Electric field from quadrupole moment
     let y_20 = sph_harm(2, 0, theta, phi).re;
     moment * y_20 / (distance.powi(4))
 }
 
+#[allow(dead_code)]
 fn maxwell_boltzmann_speed(v: f64, mass: f64, temperature: f64) -> f64 {
     // Maxwell-Boltzmann speed distribution
     let k_b = 1.380649e-23; // Boltzmann constant
@@ -1075,6 +1085,7 @@ fn maxwell_boltzmann_speed(v: f64, mass: f64, temperature: f64) -> f64 {
     coeff * v * v * (-m * v * v / (2.0 * k_b * temperature)).exp()
 }
 
+#[allow(dead_code)]
 fn step_response_characteristics(wn: f64, zeta: f64) -> (f64, f64, f64) {
     // Second-order system step response characteristics
     if zeta < 1.0 {
@@ -1088,6 +1099,7 @@ fn step_response_characteristics(wn: f64, zeta: f64) -> (f64, f64, f64) {
     }
 }
 
+#[allow(dead_code)]
 fn array_radiation_pattern(n: usize, d: f64, lambda: f64, theta: f64) -> f64 {
     // Linear antenna array radiation pattern
     let beta = 2.0 * PI / lambda;
@@ -1102,6 +1114,7 @@ fn array_radiation_pattern(n: usize, d: f64, lambda: f64, theta: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn beam_deflection_distributed(x: f64, l: f64, w: f64, e: f64, i: f64) -> (f64, f64) {
     // Simply supported beam with uniform distributed load
     let deflection = w * x / (24.0 * e * i) * (l.powi(3) - 2.0 * l * x * x + x.powi(3));
@@ -1109,6 +1122,7 @@ fn beam_deflection_distributed(x: f64, l: f64, w: f64, e: f64, i: f64) -> (f64, 
     (deflection, slope)
 }
 
+#[allow(dead_code)]
 fn blasius_velocity_profile(eta: f64) -> f64 {
     // Blasius boundary layer velocity profile (approximation)
     if eta >= 5.0 {
@@ -1120,6 +1134,7 @@ fn blasius_velocity_profile(eta: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn chi_square_cdf(x: f64, df: f64) -> f64 {
     // Chi-square cumulative distribution function
     if x <= 0.0 {
@@ -1129,6 +1144,7 @@ fn chi_square_cdf(x: f64, df: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn t_inverse_cdf(p: f64, df: f64) -> f64 {
     // Student's t-distribution inverse CDF (approximation)
     // This is a simplified version; real implementation would be more complex
@@ -1143,6 +1159,7 @@ fn t_inverse_cdf(p: f64, df: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn beta_density(x: f64, alpha: f64, beta_param: f64) -> f64 {
     // Beta distribution probability density function
     if x <= 0.0 || x >= 1.0 {
@@ -1153,16 +1170,19 @@ fn beta_density(x: f64, alpha: f64, beta_param: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn weibull_reliability(t: f64, k: f64, lambda: f64) -> f64 {
     // Weibull reliability function
     (-(t / lambda).powf(k)).exp()
 }
 
+#[allow(dead_code)]
 fn weibull_hazard_rate(t: f64, k: f64, lambda: f64) -> f64 {
     // Weibull hazard rate function
     (k / lambda) * (t / lambda).powf(k - 1.0)
 }
 
+#[allow(dead_code)]
 fn bessel_filter_response(freq: f64, fc: f64, order: usize) -> (f64, f64, f64) {
     // Bessel filter frequency response (simplified)
     let s = Complex64::new(0.0, 2.0 * PI * freq / fc);
@@ -1177,6 +1197,7 @@ fn bessel_filter_response(freq: f64, fc: f64, order: usize) -> (f64, f64, f64) {
     (magnitude_db, phase_deg, group_delay)
 }
 
+#[allow(dead_code)]
 fn radar_detection_probability(snr: f64, pfa: f64) -> f64 {
     // Radar detection probability for Swerling I target
     let threshold = ndtri(1.0 - pfa); // Detection threshold
@@ -1184,6 +1205,7 @@ fn radar_detection_probability(snr: f64, pfa: f64) -> f64 {
     pd.max(0.0).min(1.0)
 }
 
+#[allow(dead_code)]
 fn psychoacoustic_masking(freq: f64, masker_freq: f64, masker_level: f64) -> (f64, f64) {
     // Simplified psychoacoustic masking model
     let freq_ratio = freq / masker_freq;
@@ -1195,12 +1217,14 @@ fn psychoacoustic_masking(freq: f64, masker_freq: f64, masker_level: f64) -> (f6
     (threshold.max(0.0), spread)
 }
 
+#[allow(dead_code)]
 fn gaussian_kernel_weight(x: f64, sigma: f64) -> f64 {
     // Gaussian kernel weight
     let coefficient = 1.0 / (sigma * (2.0 * PI).sqrt());
     coefficient * (-x * x / (2.0 * sigma * sigma)).exp()
 }
 
+#[allow(dead_code)]
 fn morlet_wavelet(t: f64, fc: f64) -> Complex64 {
     // Morlet wavelet
     let sigma = 1.0;
@@ -1209,6 +1233,7 @@ fn morlet_wavelet(t: f64, fc: f64) -> Complex64 {
     gaussian * complex_exp
 }
 
+#[allow(dead_code)]
 fn gradient_noise_2d(x: f64, y: f64) -> f64 {
     // Simplified gradient noise (Perlin-like)
     let xi = x.floor() as i32;
@@ -1236,6 +1261,7 @@ fn gradient_noise_2d(x: f64, y: f64) -> f64 {
     n0 * (1.0 - v) + n1 * v
 }
 
+#[allow(dead_code)]
 fn fractal_noise_2d(x: f64, y: f64, octaves: usize) -> f64 {
     // Fractal noise using multiple octaves
     let mut value = 0.0;
@@ -1251,6 +1277,7 @@ fn fractal_noise_2d(x: f64, y: f64, octaves: usize) -> f64 {
     value
 }
 
+#[allow(dead_code)]
 fn evaluate_cubic_bezier(control_points: &[(f64, f64)], t: f64) -> (f64, f64, f64) {
     // Evaluate cubic Bezier curve and curvature
     let p0 = control_points[0];
@@ -1282,6 +1309,7 @@ fn evaluate_cubic_bezier(control_points: &[(f64, f64)], t: f64) -> (f64, f64, f6
     (x, y, curvature)
 }
 
+#[allow(dead_code)]
 fn b_spline_basis(i: usize, p: usize, u: f64, knots: &[f64]) -> f64 {
     // B-spline basis function (Cox-de Boor recursion)
     if p == 0 {
@@ -1310,6 +1338,7 @@ fn b_spline_basis(i: usize, p: usize, u: f64, knots: &[f64]) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn cosine_weighted_hemisphere_sample(u1: f64, u2: f64) -> (f64, f64, f64) {
     // Cosine-weighted hemisphere sampling for ray tracing
     let theta = (u1).sqrt().acos();
@@ -1318,6 +1347,7 @@ fn cosine_weighted_hemisphere_sample(u1: f64, u2: f64) -> (f64, f64, f64) {
     (theta, phi, pdf)
 }
 
+#[allow(dead_code)]
 fn bounce_easing(t: f64) -> f64 {
     // Bounce easing function
     if t < 1.0 / 2.75 {
@@ -1334,6 +1364,7 @@ fn bounce_easing(t: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn black_scholes_option(s: f64, k: f64, r: f64, sigma: f64, t: f64) -> (f64, f64, f64, f64) {
     // Black-Scholes option pricing
     let d1 = ((s / k).ln() + (r + 0.5 * sigma * sigma) * t) / (sigma * t.sqrt());
@@ -1353,6 +1384,7 @@ fn black_scholes_option(s: f64, k: f64, r: f64, sigma: f64, t: f64) -> (f64, f64
     (call_price, put_price, call_delta, put_delta)
 }
 
+#[allow(dead_code)]
 fn merton_default_probability(v: f64, d: f64, r: f64, sigma: f64, t: f64) -> (f64, f64) {
     // Merton model default probability
     let distance_to_default = ((v / d).ln() + (r - 0.5 * sigma * sigma) * t) / (sigma * t.sqrt());
@@ -1360,6 +1392,7 @@ fn merton_default_probability(v: f64, d: f64, r: f64, sigma: f64, t: f64) -> (f6
     (default_prob, distance_to_default)
 }
 
+#[allow(dead_code)]
 fn vasicek_bond_pricing(r: f64, a: f64, b: f64, sigma: f64, t: f64) -> (f64, f64, f64) {
     // Vasicek model bond pricing
     let bt = (1.0 - (-a * t).exp()) / a;
@@ -1373,6 +1406,7 @@ fn vasicek_bond_pricing(r: f64, a: f64, b: f64, sigma: f64, t: f64) -> (f64, f64
     (bond_price, yield_rate, duration)
 }
 
+#[allow(dead_code)]
 fn efficient_frontier_point(
     target_return: f64,
     returns: &[f64],
@@ -1418,6 +1452,7 @@ fn efficient_frontier_point(
     (min_risk, sharpe_ratio)
 }
 
+#[allow(dead_code)]
 fn asian_option_monte_carlo(
     s: f64,
     k: f64,

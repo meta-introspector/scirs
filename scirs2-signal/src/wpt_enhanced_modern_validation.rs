@@ -478,6 +478,7 @@ impl Default for EnhancedModernValidationConfig {
 }
 
 /// Run enhanced modern validation for WPT
+#[allow(dead_code)]
 pub fn run_enhanced_modern_validation(
     signal: &[f64],
     wavelet: Wavelet,
@@ -590,6 +591,7 @@ pub fn run_enhanced_modern_validation(
 }
 
 /// Run core WPT validation
+#[allow(dead_code)]
 fn run_core_validation(
     signal: &[f64],
     _wavelet: &Wavelet,
@@ -624,6 +626,7 @@ fn run_core_validation(
 }
 
 /// Run GPU acceleration validation
+#[allow(dead_code)]
 fn run_gpu_validation(
     _signal: &[f64],
     _wavelet: &Wavelet,
@@ -635,6 +638,7 @@ fn run_gpu_validation(
 }
 
 /// Run streaming performance validation
+#[allow(dead_code)]
 fn run_streaming_validation(
     signal: &[f64],
     _wavelet: &Wavelet,
@@ -727,6 +731,7 @@ fn run_streaming_validation(
 }
 
 /// Run anomaly detection
+#[allow(dead_code)]
 fn run_anomaly_detection(
     signal: &[f64],
     _wavelet: &Wavelet,
@@ -772,6 +777,7 @@ fn run_anomaly_detection(
 }
 
 /// Run cross-framework compatibility validation
+#[allow(dead_code)]
 fn run_cross_framework_validation(
     _signal: &[f64],
     _wavelet: &Wavelet,
@@ -782,6 +788,7 @@ fn run_cross_framework_validation(
 }
 
 /// Run precision validation
+#[allow(dead_code)]
 fn run_precision_validation(
     _signal: &[f64],
     _wavelet: &Wavelet,
@@ -817,6 +824,7 @@ fn run_precision_validation(
 }
 
 /// Run edge case validation
+#[allow(dead_code)]
 fn run_edge_case_validation(
     _signal: &[f64],
     _wavelet: &Wavelet,
@@ -827,6 +835,7 @@ fn run_edge_case_validation(
 }
 
 /// Run resource validation
+#[allow(dead_code)]
 fn run_resource_validation(
     signal: &[f64],
     _wavelet: &Wavelet,
@@ -856,6 +865,7 @@ fn run_resource_validation(
 }
 
 /// Run optimization validation
+#[allow(dead_code)]
 fn run_optimization_validation(
     _signal: &[f64],
     _wavelet: &Wavelet,
@@ -866,6 +876,7 @@ fn run_optimization_validation(
 }
 
 /// Calculate overall validation score
+#[allow(dead_code)]
 fn calculate_overall_score(results: &EnhancedModernValidationResult) -> f64 {
     let mut total_score = 0.0;
     let mut weight_sum = 0.0;
@@ -918,6 +929,7 @@ fn calculate_overall_score(results: &EnhancedModernValidationResult) -> f64 {
 }
 
 /// Identify critical findings that need attention
+#[allow(dead_code)]
 fn identify_critical_findings(results: &EnhancedModernValidationResult) -> Vec<String> {
     let mut findings = Vec::new();
 
@@ -968,6 +980,7 @@ fn identify_critical_findings(results: &EnhancedModernValidationResult) -> Vec<S
 }
 
 // Placeholder functions for creating default validation results
+#[allow(dead_code)]
 fn create_placeholder_gpu_validation() -> GpuValidationResult {
     GpuValidationResult {
         gpu_cpu_accuracy: 0.9999,
@@ -992,6 +1005,7 @@ fn create_placeholder_gpu_validation() -> GpuValidationResult {
     }
 }
 
+#[allow(dead_code)]
 fn create_placeholder_streaming_validation() -> StreamingValidationResult {
     StreamingValidationResult {
         realtime_metrics: RealtimeMetrics {
@@ -1024,6 +1038,7 @@ fn create_placeholder_streaming_validation() -> StreamingValidationResult {
     }
 }
 
+#[allow(dead_code)]
 fn create_placeholder_anomaly_detection() -> AnomalyDetectionResult {
     AnomalyDetectionResult {
         coefficient_anomalies: CoefficientAnomalies {
@@ -1045,6 +1060,7 @@ fn create_placeholder_anomaly_detection() -> AnomalyDetectionResult {
     }
 }
 
+#[allow(dead_code)]
 fn create_placeholder_cross_framework_validation() -> CrossFrameworkValidationResult {
     CrossFrameworkValidationResult {
         compatibility_matrix: HashMap::new(),
@@ -1061,6 +1077,7 @@ fn create_placeholder_cross_framework_validation() -> CrossFrameworkValidationRe
     }
 }
 
+#[allow(dead_code)]
 fn create_placeholder_precision_validation() -> PrecisionValidationResult {
     PrecisionValidationResult {
         precision_analysis: PrecisionAnalysis {
@@ -1081,6 +1098,7 @@ fn create_placeholder_precision_validation() -> PrecisionValidationResult {
     }
 }
 
+#[allow(dead_code)]
 fn create_placeholder_edge_case_validation() -> EdgeCaseValidationResult {
     EdgeCaseValidationResult {
         extreme_inputs: ExtremeInputHandling {
@@ -1101,6 +1119,7 @@ fn create_placeholder_edge_case_validation() -> EdgeCaseValidationResult {
     }
 }
 
+#[allow(dead_code)]
 fn create_placeholder_resource_validation() -> ResourceValidationResult {
     ResourceValidationResult {
         memory_leaks: MemoryLeakDetection {
@@ -1121,6 +1140,7 @@ fn create_placeholder_resource_validation() -> ResourceValidationResult {
     }
 }
 
+#[allow(dead_code)]
 fn create_placeholder_optimization_validation() -> OptimizationValidationResult {
     OptimizationValidationResult {
         basis_optimization: BasisOptimizationMetrics {
@@ -1142,6 +1162,7 @@ fn create_placeholder_optimization_validation() -> OptimizationValidationResult 
 }
 
 /// Generate comprehensive validation report
+#[allow(dead_code)]
 pub fn generate_enhanced_modern_validation_report(
     results: &EnhancedModernValidationResult,
 ) -> String {

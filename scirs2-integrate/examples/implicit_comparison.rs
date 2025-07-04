@@ -16,6 +16,7 @@ use std::time::Instant;
 /// ∂u/∂t = ε∂²u/∂x² - v∂u/∂x + ku(1-u)
 ///
 /// For small ε, this equation becomes stiff, making it challenging for explicit methods.
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Domain and time range
     let domain = Domain::new(vec![0.0..1.0], vec![101])?;
@@ -235,6 +236,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Helper function to try solving with explicit MOL method
+#[allow(dead_code)]
 fn try_explicit_method(
     domain: &Domain,
     time_range: [f64; 2],
@@ -268,6 +270,7 @@ fn try_explicit_method(
 }
 
 /// Compare the solutions from different methods
+#[allow(dead_code)]
 fn compare_solutions(
     mol_solution: &Array2<f64>,
     cn_solution: &Array2<f64>,

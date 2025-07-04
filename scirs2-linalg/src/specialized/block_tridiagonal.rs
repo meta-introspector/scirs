@@ -496,6 +496,7 @@ where
 /// # Returns
 ///
 /// A tuple containing the L and U factors as separate block tridiagonal matrices
+#[allow(dead_code)]
 pub fn block_tridiagonal_lu<A>(
     matrix: &BlockTridiagonalMatrix<A>,
 ) -> LinalgResult<(BlockTridiagonalMatrix<A>, BlockTridiagonalMatrix<A>)>

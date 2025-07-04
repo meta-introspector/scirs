@@ -29,11 +29,13 @@ use scirs2_core::ufuncs::{
 };
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn print_section(title: &str) {
     println!("\n{}", title);
     println!("{}", "=".repeat(title.len()));
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("SciRS2-Core Advanced ndarray_ext and ufuncs Example");
     println!("===================================================\n");

@@ -1,6 +1,7 @@
 use ndarray::{array, Array2, ArrayView2};
 use scirs2_spatial::{error::SpatialResult, procrustes, procrustes_extended};
 
+#[allow(dead_code)]
 fn main() -> SpatialResult<()> {
     println!("Procrustes Analysis Example");
     println!("==========================\n");
@@ -125,6 +126,7 @@ fn main() -> SpatialResult<()> {
 }
 
 /// Utility function to print a matrix
+#[allow(dead_code)]
 fn print_matrix(mat: &ArrayView2<f64>) {
     for row in mat.rows() {
         print!("  [");
@@ -144,6 +146,7 @@ fn print_matrix(mat: &ArrayView2<f64>) {
 /// 1. Scale by scale_factor
 /// 2. Rotate around z-axis by angle_degrees
 /// 3. Translate by translation_vector
+#[allow(dead_code)]
 fn apply_transform(
     points: &ArrayView2<f64>,
     scale_factor: f64,

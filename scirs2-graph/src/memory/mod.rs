@@ -229,6 +229,12 @@ pub struct OptimizedGraphBuilder {
     estimated_edges_per_node: Option<usize>,
 }
 
+impl Default for OptimizedGraphBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl OptimizedGraphBuilder {
     /// Create a new optimized graph builder
     pub fn new() -> Self {
@@ -289,7 +295,7 @@ impl OptimizedGraphBuilder {
         for (from, to, weight) in self.edges {
             graph
                 .add_edge(from, to, weight)
-                .map_err(|e| format!("Failed to add edge: {:?}", e))?;
+                .map_err(|e| format!("Failed to add edge: {e:?}"))?;
         }
 
         Ok(graph)
@@ -304,6 +310,7 @@ pub struct OptimizationSuggestions {
 }
 
 /// Analyze a graph and provide memory optimization suggestions
+#[allow(dead_code)]
 pub fn suggest_optimizations(
     stats: &MemoryStats,
     fragmentation: &FragmentationReport,
@@ -407,6 +414,12 @@ pub struct MemoryMetrics {
     pub sample_count: usize,
     /// Memory variance (indicates stability)
     pub memory_variance: f64,
+}
+
+impl Default for RealTimeMemoryProfiler {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl RealTimeMemoryProfiler {
@@ -674,7 +687,7 @@ impl AdvancedMemoryAnalyzer {
             0.0
         };
 
-        println!("Memory improvement: {:.1}%", memory_improvement);
+        println!("Memory improvement: {memory_improvement:.1}%");
 
         (metrics1, metrics2)
     }
@@ -690,12 +703,12 @@ impl AdvancedMemoryAnalyzer {
     {
         let mut results = Vec::new();
 
-        println!("\n=== Scaling Analysis for {} ===", algorithm_name);
+        println!("\n=== Scaling Analysis for {algorithm_name} ===");
         for scale in scales {
             let operation = algorithm_factory(scale);
             let (_, metrics) = Self::analyze_operation_memory(
-                &format!("{} (n={})", algorithm_name, scale),
-                || operation(),
+                &format!("{algorithm_name} (n={scale})"),
+                operation,
                 Duration::from_millis(5),
             );
             results.push((scale, metrics));

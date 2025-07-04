@@ -8,6 +8,7 @@ use num_complex::Complex;
 use scirs2_fft::{auto_pad_complex, fft, remove_padding_1d, AutoPadConfig, PaddingMode};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Automatic Padding Example");
     println!("========================\n");

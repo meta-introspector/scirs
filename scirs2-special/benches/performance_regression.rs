@@ -4,10 +4,11 @@
 //! special function implementations. It covers critical paths and common
 //! usage patterns that must maintain stable performance.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_special::*;
+use std::hint::black_box;
 use std::time::Duration;
 
 // Benchmark configuration
@@ -17,6 +18,7 @@ const LARGE_ARRAY_SIZE: usize = 10_000;
 const XLARGE_ARRAY_SIZE: usize = 100_000;
 
 /// Core single-value benchmarks for critical functions
+#[allow(dead_code)]
 fn core_single_value_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("core_single_value");
     group.measurement_time(Duration::from_secs(5));
@@ -59,6 +61,7 @@ fn core_single_value_benchmarks(c: &mut Criterion) {
 }
 
 /// Array operation benchmarks - critical for SIMD/vectorization
+#[allow(dead_code)]
 fn array_operation_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("array_operations");
     group.measurement_time(Duration::from_secs(10));
@@ -66,7 +69,7 @@ fn array_operation_benchmarks(c: &mut Criterion) {
     // Test different array sizes
     for &size in &[SMALL_ARRAY_SIZE, MEDIUM_ARRAY_SIZE, LARGE_ARRAY_SIZE] {
         let data: Vec<f64> = (0..size).map(|i| 1.0 + i as f64 * 0.01).collect();
-        let array = Array1::from(data.clone());
+        let _array = Array1::from(data.clone());
 
         group.throughput(Throughput::Elements(size as u64));
 
@@ -120,6 +123,7 @@ fn array_operation_benchmarks(c: &mut Criterion) {
 }
 
 /// Memory allocation and large array benchmarks
+#[allow(dead_code)]
 fn memory_intensive_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_intensive");
     group.measurement_time(Duration::from_secs(15));
@@ -157,6 +161,7 @@ fn memory_intensive_benchmarks(c: &mut Criterion) {
 }
 
 /// Algorithm switching benchmarks - test boundary conditions
+#[allow(dead_code)]
 fn algorithm_switching_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("algorithm_switching");
     group.measurement_time(Duration::from_secs(8));
@@ -198,6 +203,7 @@ fn algorithm_switching_benchmarks(c: &mut Criterion) {
 }
 
 /// Edge case and extreme value benchmarks
+#[allow(dead_code)]
 fn edge_case_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("edge_cases");
     group.measurement_time(Duration::from_secs(5));
@@ -234,6 +240,7 @@ fn edge_case_benchmarks(c: &mut Criterion) {
 }
 
 /// Critical path benchmarks - functions used in hot paths
+#[allow(dead_code)]
 fn critical_path_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("critical_paths");
     group.measurement_time(Duration::from_secs(8));
@@ -282,6 +289,7 @@ fn critical_path_benchmarks(c: &mut Criterion) {
 }
 
 /// Regression-prone areas - functions that historically had issues
+#[allow(dead_code)]
 fn regression_prone_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("regression_prone");
     group.measurement_time(Duration::from_secs(6));
@@ -329,6 +337,7 @@ fn regression_prone_benchmarks(c: &mut Criterion) {
 
 /// SIMD and parallel processing benchmarks
 #[cfg(any(feature = "simd", feature = "parallel"))]
+#[allow(dead_code)]
 fn acceleration_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("acceleration");
     group.measurement_time(Duration::from_secs(10));
@@ -397,12 +406,13 @@ fn acceleration_benchmarks(c: &mut Criterion) {
 }
 
 /// CI/CD integration benchmarks with performance thresholds
+#[allow(dead_code)]
 fn ci_integration_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("ci_integration");
     group.measurement_time(Duration::from_secs(8));
 
     // Define performance thresholds (these should be updated based on baseline measurements)
-    let performance_thresholds = std::collections::HashMap::from([
+    let _performance_thresholds = std::collections::HashMap::from([
         ("gamma_baseline", Duration::from_nanos(50)),
         ("erf_baseline", Duration::from_nanos(30)),
         ("bessel_j0_baseline", Duration::from_nanos(100)),
@@ -434,6 +444,7 @@ fn ci_integration_benchmarks(c: &mut Criterion) {
 }
 
 /// Memory safety and stability benchmarks
+#[allow(dead_code)]
 fn stability_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("stability");
     group.measurement_time(Duration::from_secs(6));
@@ -479,9 +490,10 @@ fn stability_benchmarks(c: &mut Criterion) {
 }
 
 // Helper functions for complex benchmarks
-fn gamma_complex(z: Complex64) -> Complex64 {
+#[allow(dead_code)]
+fn gamma_complex_wrapper(z: Complex64) -> Complex64 {
     // Use actual complex gamma implementation from the library
-    gamma::complex::gamma_complex(z)
+    gamma_complex(z)
 }
 
 // Benchmark groups

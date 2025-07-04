@@ -10,6 +10,7 @@ use crate::error::{Result, TimeSeriesError};
 ///
 /// A stationary time series has constant mean, variance, and autocovariance over time.
 /// Calculate autocovariance at a given lag
+#[allow(dead_code)]
 pub fn autocovariance<S, F>(data: &ArrayBase<S, Ix1>, lag: usize) -> Result<F>
 where
     S: Data<Elem = F>,
@@ -55,6 +56,7 @@ where
 /// // If p_value < 0.05, we can reject the null hypothesis (time series is stationary)
 /// println!("ADF Statistic: {}, p-value: {}", adf_stat, p_value);
 /// ```
+#[allow(dead_code)]
 pub fn is_stationary<F>(ts: &Array1<F>, lags: Option<usize>) -> Result<(F, F)>
 where
     F: Float + FromPrimitive + Debug,
@@ -146,6 +148,7 @@ where
 /// // Seasonal differencing with period 4
 /// let seasonal_diff_ts = transform_to_stationary(&ts, "seasonal_diff", Some(4)).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn transform_to_stationary<F>(
     ts: &Array1<F>,
     method: &str,
@@ -234,6 +237,7 @@ where
 /// let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 /// let ma = moving_average(&ts, 3).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn moving_average<F>(ts: &Array1<F>, window_size: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -310,6 +314,7 @@ where
 /// let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 /// let acf = autocorrelation(&ts, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn autocorrelation<F>(ts: &Array1<F>, max_lag: Option<usize>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -374,6 +379,7 @@ where
 /// let y = array![2.0, 3.0, 4.0, 5.0, 6.0];
 /// let ccf = cross_correlation(&x, &y, Some(3)).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn cross_correlation<F>(
     x: &Array1<F>,
     y: &Array1<F>,
@@ -435,6 +441,7 @@ where
 /// let ts = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 /// let pacf = partial_autocorrelation(&ts, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn partial_autocorrelation<F>(ts: &Array1<F>, max_lag: Option<usize>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -524,6 +531,7 @@ where
 /// let detrended = detrend(&x.view(), 0, "constant", None).unwrap();
 /// println!("Detrended: {:?}", detrended);
 /// ```
+#[allow(dead_code)]
 pub fn detrend<S, F>(
     data: &ArrayBase<S, Ix1>,
     axis: usize,
@@ -590,6 +598,7 @@ where
 }
 
 /// Detrend 2D data along an axis
+#[allow(dead_code)]
 pub fn detrend_2d<S, F>(
     data: &ArrayBase<S, Ix2>,
     axis: usize,
@@ -628,6 +637,7 @@ where
 }
 
 /// Compute linear trend for data
+#[allow(dead_code)]
 fn linear_trend<S, F>(data: &ArrayBase<S, Ix1>, offset: usize) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
@@ -690,6 +700,7 @@ where
 /// let resampled = resample(&x.view(), 10, 0, None).unwrap();
 /// assert_eq!(resampled.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn resample<S, F>(
     x: &ArrayBase<S, Ix1>,
     num: usize,
@@ -758,6 +769,7 @@ where
 /// let decimated = decimate(&x.view(), 2, Some(4), Some("iir"), 0).unwrap();
 /// assert_eq!(decimated.len(), 4);
 /// ```
+#[allow(dead_code)]
 pub fn decimate<S, F>(
     x: &ArrayBase<S, Ix1>,
     q: usize,
@@ -817,6 +829,7 @@ where
 }
 
 /// Apply Chebyshev Type I filter (simplified implementation)
+#[allow(dead_code)]
 fn apply_chebyshev_filter<S, F>(
     x: &ArrayBase<S, Ix1>,
     order: usize,
@@ -851,6 +864,7 @@ where
 }
 
 /// Apply FIR filter using windowed sinc (simplified implementation)
+#[allow(dead_code)]
 fn apply_fir_filter<S, F>(x: &ArrayBase<S, Ix1>, order: usize, cutoff: F) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
@@ -888,6 +902,7 @@ where
 }
 
 /// Simple 1D convolution
+#[allow(dead_code)]
 fn convolve_1d<S, T, F>(x: &ArrayBase<S, Ix1>, kernel: &ArrayBase<T, Ix1>) -> Result<Array1<F>>
 where
     S: Data<Elem = F>,
@@ -934,6 +949,7 @@ where
 /// let values = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
 /// let (dates, ts) = create_time_series("2023-01-01", "2023-01-07", &values).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn create_time_series<F>(
     start_date: &str,
     end_date: &str,
@@ -1052,6 +1068,83 @@ where
     let time_series = values.clone();
 
     Ok((dates, time_series))
+}
+
+/// Calculate basic statistics for a time series
+pub fn calculate_basic_stats<F>(data: &Array1<F>) -> Result<std::collections::HashMap<String, f64>>
+where
+    F: Float + FromPrimitive + Into<f64>,
+{
+    let mut stats = std::collections::HashMap::new();
+
+    if data.is_empty() {
+        return Err(TimeSeriesError::InvalidInput(
+            "Data array is empty".to_string(),
+        ));
+    }
+
+    let n = data.len() as f64;
+    let mean = data.mean().unwrap_or(F::zero()).into();
+    let variance = data
+        .iter()
+        .map(|x| {
+            let diff = (*x).into() - mean;
+            diff * diff
+        })
+        .sum::<f64>()
+        / n;
+
+    stats.insert("mean".to_string(), mean);
+    stats.insert("variance".to_string(), variance);
+    stats.insert("std".to_string(), variance.sqrt());
+    stats.insert(
+        "min".to_string(),
+        data.iter()
+            .map(|x| (*x).into())
+            .fold(f64::INFINITY, f64::min),
+    );
+    stats.insert(
+        "max".to_string(),
+        data.iter()
+            .map(|x| (*x).into())
+            .fold(f64::NEG_INFINITY, f64::max),
+    );
+    stats.insert("count".to_string(), n);
+
+    Ok(stats)
+}
+
+/// Apply differencing to a time series
+pub fn difference_series<F>(data: &Array1<F>, periods: usize) -> Result<Array1<F>>
+where
+    F: Float + FromPrimitive + Clone,
+{
+    if periods == 0 {
+        return Err(TimeSeriesError::InvalidInput(
+            "Periods must be greater than 0".to_string(),
+        ));
+    }
+
+    if data.len() <= periods {
+        return Err(TimeSeriesError::InvalidInput(
+            "Data length must be greater than periods".to_string(),
+        ));
+    }
+
+    let mut result = Vec::new();
+    for i in periods..data.len() {
+        result.push(data[i] - data[i - periods]);
+    }
+
+    Ok(Array1::from_vec(result))
+}
+
+/// Apply seasonal differencing to a time series
+pub fn seasonal_difference_series<F>(data: &Array1<F>, periods: usize) -> Result<Array1<F>>
+where
+    F: Float + FromPrimitive + Clone,
+{
+    difference_series(data, periods)
 }
 
 #[cfg(test)]

@@ -110,6 +110,7 @@ pub struct SpectralResult {
 ///
 /// This matrix D satisfies Du = u' where u is a vector of function values
 /// at Chebyshev points x_j = cos(jπ/n), j=0...n
+#[allow(dead_code)]
 pub fn chebyshev_diff_matrix(n: usize) -> Array2<f64> {
     let mut d = Array2::zeros((n, n));
 
@@ -146,12 +147,14 @@ pub fn chebyshev_diff_matrix(n: usize) -> Array2<f64> {
 }
 
 /// Create a second-derivative Chebyshev differentiation matrix
+#[allow(dead_code)]
 pub fn chebyshev_diff2_matrix(n: usize) -> Array2<f64> {
     let d1 = chebyshev_diff_matrix(n);
     d1.dot(&d1) // D^2 = D * D
 }
 
 /// Generate Chebyshev grid points x_j = cos(jπ/n), j=0...n-1
+#[allow(dead_code)]
 pub fn chebyshev_points(n: usize) -> Array1<f64> {
     let mut x = Array1::zeros(n);
     for j in 0..n {
@@ -161,6 +164,7 @@ pub fn chebyshev_points(n: usize) -> Array1<f64> {
 }
 
 /// Transform from physical space to Chebyshev coefficient space
+#[allow(dead_code)]
 pub fn chebyshev_transform(u: &ArrayView1<f64>) -> Array1<f64> {
     let n = u.len();
     let mut coeffs = Array1::zeros(n);
@@ -185,6 +189,7 @@ pub fn chebyshev_transform(u: &ArrayView1<f64>) -> Array1<f64> {
 }
 
 /// Transform from Chebyshev coefficient space to physical space
+#[allow(dead_code)]
 pub fn chebyshev_inverse_transform(coeffs: &ArrayView1<f64>) -> Array1<f64> {
     let n = coeffs.len();
     let mut u = Array1::zeros(n);
@@ -208,6 +213,7 @@ pub fn chebyshev_inverse_transform(coeffs: &ArrayView1<f64>) -> Array1<f64> {
 ///
 /// These are the zeros of (1-x²)P'ₙ₋₁(x) in [-1, 1] where Pₙ is the
 /// Legendre polynomial of degree n. The points include the endpoints ±1.
+#[allow(dead_code)]
 pub fn legendre_points(n: usize) -> (Array1<f64>, Array1<f64>) {
     if n <= 1 {
         return (Array1::zeros(1), Array1::ones(1));
@@ -309,6 +315,7 @@ pub fn legendre_points(n: usize) -> (Array1<f64>, Array1<f64>) {
 }
 
 /// Evaluate the Legendre polynomial of degree n at point x
+#[allow(dead_code)]
 fn legendre_polynomial(n: usize, x: f64) -> f64 {
     if n == 0 {
         return 1.0;
@@ -333,6 +340,7 @@ fn legendre_polynomial(n: usize, x: f64) -> f64 {
 }
 
 /// Evaluate the derivative of the Legendre polynomial of degree n at point x
+#[allow(dead_code)]
 fn legendre_polynomial_derivative(n: usize, x: f64) -> f64 {
     if n == 0 {
         return 0.0;
@@ -365,6 +373,7 @@ fn legendre_polynomial_derivative(n: usize, x: f64) -> f64 {
 ///
 /// This matrix D satisfies Du = u' where u is a vector of function values
 /// at Legendre-Gauss-Lobatto points
+#[allow(dead_code)]
 pub fn legendre_diff_matrix(n: usize) -> Array2<f64> {
     let mut d = Array2::zeros((n, n));
 
@@ -401,12 +410,14 @@ pub fn legendre_diff_matrix(n: usize) -> Array2<f64> {
 }
 
 /// Create a second-derivative Legendre differentiation matrix
+#[allow(dead_code)]
 pub fn legendre_diff2_matrix(n: usize) -> Array2<f64> {
     let d1 = legendre_diff_matrix(n);
     d1.dot(&d1) // D^2 = D * D
 }
 
 /// Transform from physical space to Legendre coefficient space
+#[allow(dead_code)]
 pub fn legendre_transform(u: &ArrayView1<f64>) -> Array1<f64> {
     let n = u.len();
     let mut coeffs = Array1::zeros(n);
@@ -431,6 +442,7 @@ pub fn legendre_transform(u: &ArrayView1<f64>) -> Array1<f64> {
 }
 
 /// Transform from Legendre coefficient space to physical space
+#[allow(dead_code)]
 pub fn legendre_inverse_transform(
     coeffs: &ArrayView1<f64>,
     x_points: Option<&ArrayView1<f64>>,
@@ -1323,6 +1335,7 @@ impl From<SpectralResult> for PDESolution<f64> {
 ///
 /// # Returns
 /// * A complex-valued array containing the FFT result
+#[allow(dead_code)]
 fn fft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
     // Convert to complex array
     let mut input: Vec<num_complex::Complex<f64>> = x
@@ -1338,6 +1351,7 @@ fn fft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
 }
 
 /// Cooley-Tukey FFT algorithm for complex input (in-place)
+#[allow(dead_code)]
 fn fft_complex(x: &mut [num_complex::Complex<f64>]) {
     let n = x.len();
 
@@ -1355,6 +1369,7 @@ fn fft_complex(x: &mut [num_complex::Complex<f64>]) {
 }
 
 /// Radix-2 Cooley-Tukey FFT for power-of-2 lengths
+#[allow(dead_code)]
 fn fft_radix2(x: &mut [num_complex::Complex<f64>]) {
     let n = x.len();
 
@@ -1402,6 +1417,7 @@ fn fft_radix2(x: &mut [num_complex::Complex<f64>]) {
 }
 
 /// Mixed-radix FFT for non-power-of-2 lengths
+#[allow(dead_code)]
 fn fft_mixed_radix(x: &mut [num_complex::Complex<f64>]) {
     let n = x.len();
 
@@ -1429,6 +1445,7 @@ fn fft_mixed_radix(x: &mut [num_complex::Complex<f64>]) {
 ///
 /// # Returns
 /// * A complex-valued array containing the IFFT result
+#[allow(dead_code)]
 fn ifft(x: &Array1<num_complex::Complex<f64>>) -> Array1<num_complex::Complex<f64>> {
     let n = x.len();
     let mut input: Vec<num_complex::Complex<f64>> = x.to_vec();
@@ -1457,6 +1474,7 @@ fn ifft(x: &Array1<num_complex::Complex<f64>>) -> Array1<num_complex::Complex<f6
 ///
 /// # Returns
 /// * A complex-valued array containing the RFFT result (only positive frequencies)
+#[allow(dead_code)]
 fn rfft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
     let n = x.len();
     let full_fft = fft(x);
@@ -1481,6 +1499,7 @@ fn rfft(x: &Array1<f64>) -> Array1<num_complex::Complex<f64>> {
 ///
 /// # Returns
 /// * A real-valued array containing the IRFFT result
+#[allow(dead_code)]
 fn irfft_with_size(x: &Array1<num_complex::Complex<f64>>, n: usize) -> Array1<f64> {
     // Reconstruct the full complex spectrum using Hermitian symmetry
     let mut full_spectrum = Array1::zeros(n);
@@ -1515,6 +1534,7 @@ fn irfft_with_size(x: &Array1<num_complex::Complex<f64>>, n: usize) -> Array1<f6
 ///
 /// # Returns
 /// * A real-valued array containing the IRFFT result
+#[allow(dead_code)]
 fn irfft(x: &Array1<num_complex::Complex<f64>>) -> Array1<f64> {
     // Infer the output size from the input size
     // For RFFT output of size k, the original input was size 2*(k-1)

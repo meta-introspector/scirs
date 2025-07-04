@@ -29,6 +29,7 @@ use scirs2_core::array_protocol::{
     training::{CrossEntropyLoss, DataLoader, InMemoryDataset, Trainer},
 };
 
+#[allow(dead_code)]
 fn main() {
     // Initialize the array protocol system
     array_protocol::init();
@@ -216,6 +217,7 @@ fn main() {
 }
 
 /// Create a simple model for demonstration purposes.
+#[allow(dead_code)]
 fn create_model() -> Sequential {
     let mut model = Sequential::new("SimpleModel", Vec::new());
 
@@ -277,6 +279,7 @@ fn create_model() -> Sequential {
 }
 
 /// Create a simple dataset for demonstration purposes.
+#[allow(dead_code)]
 fn create_dataset() -> (InMemoryDataset, InMemoryDataset) {
     // Generate random data
     let num_samples = 1000;

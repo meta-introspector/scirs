@@ -50,6 +50,7 @@ pub struct Circle {
 }
 
 /// Detect circles using Hough Transform
+#[allow(dead_code)]
 pub fn hough_circles(img: &DynamicImage, config: HoughCircleConfig) -> Result<Vec<Circle>> {
     let gray = img.to_luma8();
     let (width, height) = (gray.width() as usize, gray.height() as usize);
@@ -127,6 +128,7 @@ pub fn hough_circles(img: &DynamicImage, config: HoughCircleConfig) -> Result<Ve
 }
 
 /// Draw circles on an image
+#[allow(dead_code)]
 pub fn draw_circles(img: &mut GrayImage, circles: &[Circle], intensity: u8) {
     for circle in circles {
         draw_circle(
@@ -141,6 +143,7 @@ pub fn draw_circles(img: &mut GrayImage, circles: &[Circle], intensity: u8) {
 
 // Helper functions
 
+#[allow(dead_code)]
 fn compute_edges(img: &GrayImage) -> Result<(Array2<f32>, Array2<f32>, Array2<f32>)> {
     let (height, width) = (img.height() as usize, img.width() as usize);
     let mut edges = Array2::<f32>::zeros((height, width));
@@ -183,6 +186,7 @@ fn compute_edges(img: &GrayImage) -> Result<(Array2<f32>, Array2<f32>, Array2<f3
     Ok((edges, grad_x, grad_y))
 }
 
+#[allow(dead_code)]
 fn find_circles(accumulator: &Array3<f32>, threshold: f32) -> Result<Vec<Circle>> {
     let (height, width, num_radii) = accumulator.dim();
     let mut circles = Vec::new();
@@ -240,6 +244,7 @@ fn find_circles(accumulator: &Array3<f32>, threshold: f32) -> Result<Vec<Circle>
     Ok(circles)
 }
 
+#[allow(dead_code)]
 fn non_max_suppression(mut circles: Vec<Circle>, min_distance: usize) -> Vec<Circle> {
     // Sort by confidence
     circles.sort_by(|a, b| {
@@ -277,6 +282,7 @@ fn non_max_suppression(mut circles: Vec<Circle>, min_distance: usize) -> Vec<Cir
     kept
 }
 
+#[allow(dead_code)]
 fn draw_circle(img: &mut GrayImage, cx: i32, cy: i32, radius: i32, intensity: u8) {
     let (width, height) = (img.width() as i32, img.height() as i32);
 
@@ -306,6 +312,7 @@ fn draw_circle(img: &mut GrayImage, cx: i32, cy: i32, radius: i32, intensity: u8
     }
 }
 
+#[allow(dead_code)]
 fn set_pixel(img: &mut GrayImage, x: i32, y: i32, intensity: u8, width: i32, height: i32) {
     if x >= 0 && x < width && y >= 0 && y < height {
         img.put_pixel(x as u32, y as u32, Luma([intensity]));

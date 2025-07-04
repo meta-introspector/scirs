@@ -31,7 +31,7 @@
 //! let mut rng = rand::rng();
 //! let mut noisy_signal = clean_signal.clone();
 //! for i in 0..noisy_signal.len() {
-//!     noisy_signal[i] += 0.5 * rng.gen_range(-1.0..1.0);
+//!     noisy_signal[i] += 0.5 * rng.random_range(-1.0..1.0);
 //! }
 //!
 //! // Apply Wiener filter
@@ -107,6 +107,7 @@ impl Default for WienerConfig {
 /// let result = wiener_filter(&noisy_signal, Some(0.1), None);
 /// assert!(result.is_ok());
 /// ```
+#[allow(dead_code)]
 pub fn wiener_filter(
     signal: &Array1<f64>,
     noise_power: Option<f64>,
@@ -134,6 +135,7 @@ pub fn wiener_filter(
 ///
 /// # Returns
 /// * The denoised signal
+#[allow(dead_code)]
 pub fn wiener_filter_freq(
     signal: &Array1<f64>,
     config: &WienerConfig,
@@ -205,6 +207,7 @@ pub fn wiener_filter_freq(
 ///
 /// # Returns
 /// * The denoised signal
+#[allow(dead_code)]
 pub fn wiener_filter_time(
     signal: &Array1<f64>,
     config: &WienerConfig,
@@ -301,6 +304,7 @@ pub fn wiener_filter_time(
 ///
 /// # Returns
 /// * The denoised signal
+#[allow(dead_code)]
 pub fn iterative_wiener_filter(
     signal: &Array1<f64>,
     config: &WienerConfig,
@@ -353,6 +357,7 @@ pub fn iterative_wiener_filter(
 ///
 /// # Returns
 /// * The denoised image
+#[allow(dead_code)]
 pub fn wiener_filter_2d(
     image: &Array2<f64>,
     noise_power: Option<f64>,
@@ -436,6 +441,7 @@ pub fn wiener_filter_2d(
 ///
 /// # Returns
 /// * The denoised signal
+#[allow(dead_code)]
 pub fn spectral_subtraction(
     signal: &Array1<f64>,
     noise_power: Option<&Array1<f64>>,
@@ -557,6 +563,7 @@ pub fn spectral_subtraction(
 ///
 /// # Returns
 /// * The denoised signal
+#[allow(dead_code)]
 pub fn psd_wiener_filter(
     signal: &Array1<f64>,
     signal_psd: Option<&Array1<f64>>,
@@ -666,6 +673,7 @@ pub fn psd_wiener_filter(
 ///
 /// # Returns
 /// * The denoised signal
+#[allow(dead_code)]
 pub fn kalman_wiener_filter(
     signal: &Array1<f64>,
     process_var: f64,
@@ -706,6 +714,7 @@ pub fn kalman_wiener_filter(
 }
 
 /// Helper function to estimate the noise power from a signal
+#[allow(dead_code)]
 fn estimate_noise_power(signal: &Array1<f64>) -> SignalResult<f64> {
     // Compute signal median
     let mut values = signal.to_vec();
@@ -739,6 +748,7 @@ fn estimate_noise_power(signal: &Array1<f64>) -> SignalResult<f64> {
 }
 
 /// Helper function to estimate the signal power
+#[allow(dead_code)]
 fn estimate_signal_power(signal: &Array1<f64>) -> SignalResult<f64> {
     // Compute mean
     let mean = signal.mean().unwrap_or(0.0);
@@ -750,6 +760,7 @@ fn estimate_signal_power(signal: &Array1<f64>) -> SignalResult<f64> {
 }
 
 /// Helper function to pad a signal for boundary handling
+#[allow(dead_code)]
 fn pad_signal(signal: &Array1<f64>, pad_size: usize) -> Array1<f64> {
     let n = signal.len();
     let mut padded = Array1::zeros(n + 2 * pad_size);
@@ -772,6 +783,7 @@ fn pad_signal(signal: &Array1<f64>, pad_size: usize) -> Array1<f64> {
 }
 
 /// Helper function to smooth a power spectral density estimate
+#[allow(dead_code)]
 fn smooth_psd(psd: &Array1<f64>) -> Array1<f64> {
     let n = psd.len();
     let mut smoothed = Array1::zeros(n);

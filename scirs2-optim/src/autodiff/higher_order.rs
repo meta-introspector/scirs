@@ -4,7 +4,7 @@
 //! Hessians, third-order derivatives, and mixed partial derivatives for
 //! advanced optimization algorithms.
 
-use ndarray::{Array1, Array2, Array3, Dimension};
+use ndarray::{Array1, Array2, Array3};
 use num_traits::Float;
 use std::collections::HashMap;
 
@@ -184,7 +184,7 @@ pub enum LayerType {
     Attention,
 }
 
-impl<T: Float + Default + Clone> HigherOrderEngine<T> {
+impl<T: Float + Default + Clone + 'static> HigherOrderEngine<T> {
     /// Create a new higher-order differentiation engine
     pub fn new(max_order: usize) -> Self {
         Self {
@@ -288,7 +288,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
         &mut self,
         function: impl Fn(&Array1<T>) -> T,
         point: &Array1<T>,
-        config: &HessianConfig,
+        _config: &HessianConfig,
     ) -> Result<Array2<T>> {
         let n = point.len();
         let mut hessian = Array2::zeros((n, n));
@@ -375,12 +375,13 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
             }
         }
 
+        let nnz = values.len();
         Ok(SparseHessian {
             rows,
             cols,
             values,
             shape: dense_hessian.dim(),
-            nnz: values.len(),
+            nnz,
         })
     }
 
@@ -581,7 +582,7 @@ impl<T: Float + Default + Clone> HigherOrderEngine<T> {
     ) -> Result<Array2<T>> {
         let mut kfac_blocks = Vec::new();
 
-        for (i, layer) in layers.iter().enumerate() {
+        for (i, _layer) in layers.iter().enumerate() {
             let activation = &activations[i];
             let gradient = &gradients[i];
 

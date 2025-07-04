@@ -32,6 +32,7 @@ use statrs::distribution::{ContinuousCDF, FisherSnedecor};
 ///
 /// Thomson, D.J. (1982). Spectrum estimation and harmonic analysis.
 /// Proceedings of the IEEE, 70(9), 1055-1096.
+#[allow(dead_code)]
 pub fn multitaper_ftest(
     eigenspectra: &Array2<f64>,
     eigenvalues: &Array1<f64>,
@@ -127,6 +128,7 @@ pub fn multitaper_ftest(
 /// * `f_statistic` - F-statistic values
 /// * `line_amplitudes` - Estimated complex amplitudes of line components
 /// * `significant` - Boolean significance indicators
+#[allow(dead_code)]
 pub fn multitaper_ftest_complex(
     eigenspectra: &Array2<num_complex::Complex64>,
     tapers: &Array2<f64>,
@@ -256,6 +258,7 @@ pub fn multitaper_ftest_complex(
 /// * `fundamental_freq` - Detected fundamental frequency (if any)
 /// * `harmonic_amplitudes` - Amplitudes of detected harmonics
 /// * `combined_significance` - Overall significance of harmonic series
+#[allow(dead_code)]
 pub fn harmonic_ftest(
     eigenspectra: &Array2<f64>,
     eigenvalues: &Array1<f64>,

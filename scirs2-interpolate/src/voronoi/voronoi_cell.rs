@@ -335,6 +335,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand> VoronoiCell<F> {
 }
 
 /// Returns true if a point is inside an edge (to the left of the edge in 2D)
+#[allow(dead_code)]
 fn inside_edge<F: Float + Debug>(
     point: &Array1<F>,
     edge_start: &Array1<F>,
@@ -352,6 +353,7 @@ fn inside_edge<F: Float + Debug>(
 }
 
 /// Computes the intersection of two line segments
+#[allow(dead_code)]
 fn compute_intersection<F: Float + FromPrimitive + Debug>(
     s1: &Array1<F>,
     s2: &Array1<F>,
@@ -386,6 +388,7 @@ fn compute_intersection<F: Float + FromPrimitive + Debug>(
 /// Computes the bounding box of a set of points
 ///
 /// Returns the minimum and maximum coordinates as Arrays
+#[allow(dead_code)]
 fn compute_bounding_box<F: Float + Debug>(points: ArrayView2<F>) -> (Array1<F>, Array1<F>) {
     let dim = points.ncols();
     let n_points = points.nrows();
@@ -993,6 +996,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
 }
 
 /// Computes the intersection of two line segments if it exists
+#[allow(dead_code)]
 fn line_segment_intersection<F: Float + FromPrimitive + Debug>(
     a1: &Array1<F>,
     a2: &Array1<F>,

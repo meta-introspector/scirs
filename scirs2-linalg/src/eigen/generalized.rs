@@ -54,6 +54,7 @@ use super::standard::{eig, eigh, EigenResult};
 /// This function uses the QZ decomposition to solve the generalized eigenvalue problem.
 /// For symmetric matrices with positive definite B, consider using `eigh_gen` for better
 /// numerical properties.
+#[allow(dead_code)]
 pub fn eig_gen<F>(a: &ArrayView2<F>, b: &ArrayView2<F>, workers: Option<usize>) -> EigenResult<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -168,6 +169,7 @@ where
 /// - Matrix B should be symmetric and positive definite
 /// - The eigenvalues are returned in ascending order
 /// - The eigenvectors satisfy x_i^T B x_j = δ_ij (B-orthogonality condition)
+#[allow(dead_code)]
 pub fn eigh_gen<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -293,6 +295,7 @@ where
 /// let b = array![[1.0_f64, 0.0], [0.0, 1.0]];
 /// let w = eigvals_gen(&a.view(), &b.view(), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn eigvals_gen<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -329,6 +332,7 @@ where
 /// let b = array![[1.0_f64, 0.0], [0.0, 2.0]];
 /// let w = eigvalsh_gen(&a.view(), &b.view(), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn eigvalsh_gen<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -342,6 +346,7 @@ where
 }
 
 /// Helper function to check if a matrix is the identity matrix
+#[allow(dead_code)]
 fn check_identity_matrix<F>(b: &ArrayView2<F>) -> bool
 where
     F: Float + NumAssign,
@@ -361,6 +366,7 @@ where
 }
 
 /// Helper function to check matrix symmetry
+#[allow(dead_code)]
 fn check_matrix_symmetry<F>(matrix: &ArrayView2<F>, name: &str) -> LinalgResult<()>
 where
     F: Float + NumAssign,

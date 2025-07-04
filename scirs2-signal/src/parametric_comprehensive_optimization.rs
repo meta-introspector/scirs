@@ -195,6 +195,7 @@ impl Default for ComprehensiveOptimizationConfig {
 }
 
 /// Run comprehensive parametric spectral estimation optimization
+#[allow(dead_code)]
 pub fn run_comprehensive_parametric_optimization(
     signal: &[f64],
     config: &ComprehensiveOptimizationConfig,
@@ -249,6 +250,7 @@ pub fn run_comprehensive_parametric_optimization(
 }
 
 /// Intelligent order selection using multiple criteria
+#[allow(dead_code)]
 fn intelligent_order_selection(
     signal: &[f64],
     config: &ComprehensiveOptimizationConfig,
@@ -311,6 +313,7 @@ struct OrderSelectionResult {
     cv_score: f64,
 }
 
+#[allow(dead_code)]
 fn evaluate_model_order(
     signal: &[f64],
     order: usize,
@@ -343,6 +346,7 @@ fn evaluate_model_order(
     Ok(OrderSelectionResult { aic, bic, cv_score })
 }
 
+#[allow(dead_code)]
 fn quick_cross_validation(
     signal: &[f64],
     order: usize,
@@ -400,6 +404,7 @@ fn quick_cross_validation(
     Ok(cv_score)
 }
 
+#[allow(dead_code)]
 fn evaluate_prediction_error(ar_coeffs: &Array1<f64>, test_data: &[f64]) -> f64 {
     let order = ar_coeffs.len() - 1;
     if test_data.len() <= order {
@@ -429,6 +434,7 @@ fn evaluate_prediction_error(ar_coeffs: &Array1<f64>, test_data: &[f64]) -> f64 
     }
 }
 
+#[allow(dead_code)]
 fn select_optimal_order(
     orders: &[usize],
     aic_scores: &[f64],
@@ -479,6 +485,7 @@ fn select_optimal_order(
     Ok(best_order)
 }
 
+#[allow(dead_code)]
 fn automatic_model_type_selection(
     signal: &[f64],
     order: usize,
@@ -512,6 +519,7 @@ fn automatic_model_type_selection(
     Ok(best_model)
 }
 
+#[allow(dead_code)]
 fn evaluate_model_type(
     signal: &[f64],
     model_order: &ModelOrder,
@@ -533,6 +541,7 @@ fn evaluate_model_type(
 }
 
 /// Advanced parameter estimation with numerical stabilization
+#[allow(dead_code)]
 fn advanced_parameter_estimation(
     signal: &[f64],
     model_order: &ModelOrder,
@@ -593,6 +602,7 @@ struct AdvancedEstimationResult {
     metrics: OptimizationMetrics,
 }
 
+#[allow(dead_code)]
 fn calculate_optimization_metrics(
     signal: &[f64],
     ar_coeffs: &Array1<f64>,
@@ -631,6 +641,7 @@ fn calculate_optimization_metrics(
     })
 }
 
+#[allow(dead_code)]
 fn compute_residuals(
     signal: &[f64],
     ar_coeffs: &Array1<f64>,
@@ -652,6 +663,7 @@ fn compute_residuals(
 }
 
 /// Enhanced cross-validation with multiple metrics
+#[allow(dead_code)]
 fn enhanced_cross_validation(
     signal: &[f64],
     model_order: &ModelOrder,
@@ -718,6 +730,7 @@ fn enhanced_cross_validation(
 }
 
 /// Comprehensive stability analysis
+#[allow(dead_code)]
 fn comprehensive_stability_analysis(
     result: &AdvancedEstimationResult,
     _config: &ComprehensiveOptimizationConfig,
@@ -762,6 +775,7 @@ fn comprehensive_stability_analysis(
     })
 }
 
+#[allow(dead_code)]
 fn check_ar_stability(ar_coeffs: &Array1<f64>) -> bool {
     // For AR model stability, all roots of characteristic polynomial must be inside unit circle
     // This is a simplified check - could be improved with actual root finding
@@ -769,6 +783,7 @@ fn check_ar_stability(ar_coeffs: &Array1<f64>) -> bool {
     sum_abs_coeffs < 1.0 // Sufficient but not necessary condition
 }
 
+#[allow(dead_code)]
 fn calculate_condition_number(ar_coeffs: &Array1<f64>) -> f64 {
     // Simplified condition number calculation
     let max_coeff = ar_coeffs
@@ -789,6 +804,7 @@ fn calculate_condition_number(ar_coeffs: &Array1<f64>) -> f64 {
 }
 
 /// Analyze performance statistics
+#[allow(dead_code)]
 fn analyze_performance_statistics(
     signal: &[f64],
     result: &AdvancedEstimationResult,
@@ -832,6 +848,7 @@ fn analyze_performance_statistics(
 }
 
 /// Generate comprehensive optimization report
+#[allow(dead_code)]
 pub fn generate_comprehensive_optimization_report(
     result: &ComprehensiveParametricResult,
 ) -> String {

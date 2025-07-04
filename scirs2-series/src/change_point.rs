@@ -130,6 +130,7 @@ pub struct ChangePointResult {
 /// let result = detect_change_points(&ts, &options).unwrap();
 /// println!("Change points detected at: {:?}", result.change_points);
 /// ```
+#[allow(dead_code)]
 pub fn detect_change_points<F>(
     ts: &Array1<F>,
     options: &ChangePointOptions,
@@ -168,6 +169,7 @@ where
 }
 
 /// PELT (Pruned Exact Linear Time) algorithm for change point detection
+#[allow(dead_code)]
 fn detect_change_points_pelt<F>(
     ts: &Array1<F>,
     options: &ChangePointOptions,
@@ -240,6 +242,7 @@ where
 }
 
 /// Binary segmentation algorithm for change point detection
+#[allow(dead_code)]
 fn detect_change_points_binary<F>(
     ts: &Array1<F>,
     options: &ChangePointOptions,
@@ -300,6 +303,7 @@ where
 }
 
 /// CUSUM method for change point detection
+#[allow(dead_code)]
 fn detect_change_points_cusum<F>(
     ts: &Array1<F>,
     options: &ChangePointOptions,
@@ -371,6 +375,7 @@ where
 }
 
 /// Bayesian online change point detection (simplified version)
+#[allow(dead_code)]
 fn detect_change_points_bayesian<F>(
     ts: &Array1<F>,
     options: &ChangePointOptions,
@@ -455,6 +460,7 @@ where
 }
 
 /// Kernel-based change point detection (simplified version)
+#[allow(dead_code)]
 fn detect_change_points_kernel<F>(
     ts: &Array1<F>,
     options: &ChangePointOptions,
@@ -519,6 +525,7 @@ where
 }
 
 /// Calculate the cost of a segment using the specified cost function
+#[allow(dead_code)]
 fn calculate_segment_cost<F>(
     ts: &Array1<F>,
     start: usize,
@@ -584,6 +591,7 @@ where
 }
 
 /// Calculate the score for splitting a segment at a given point
+#[allow(dead_code)]
 fn calculate_split_score<F>(
     ts: &Array1<F>,
     start: usize,
@@ -603,6 +611,7 @@ where
 }
 
 /// Calculate variance of a segment
+#[allow(dead_code)]
 fn calculate_variance<F>(segment: &Array1<F>, mean: F) -> F
 where
     F: Float + FromPrimitive + Debug + NumCast + std::iter::Sum,

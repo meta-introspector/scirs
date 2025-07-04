@@ -60,6 +60,7 @@ pub struct CompressedArray {
 /// # Returns
 ///
 /// Result indicating success or failure
+#[allow(dead_code)]
 pub fn compress_array<P, A, S, D>(
     path: P,
     array: &ArrayBase<S, D>,
@@ -121,6 +122,7 @@ where
 /// # Returns
 ///
 /// The decompressed array
+#[allow(dead_code)]
 pub fn decompress_array<P, A, D>(path: P) -> Result<ArrayBase<OwnedRepr<A>, D>>
 where
     P: AsRef<Path>,
@@ -179,6 +181,7 @@ where
 /// # Returns
 ///
 /// Result indicating success or failure
+#[allow(dead_code)]
 pub fn compress_array_chunked<P, A, S>(
     path: P,
     array: &ArrayBase<S, IxDyn>,
@@ -289,6 +292,7 @@ where
 /// # Returns
 ///
 /// The decompressed array and its metadata
+#[allow(dead_code)]
 pub fn decompress_array_chunked<P, A>(
     path: P,
 ) -> Result<(ArrayBase<OwnedRepr<A>, IxDyn>, CompressedArrayMetadata)>
@@ -384,6 +388,7 @@ where
 /// # Returns
 ///
 /// A vector of (algorithm, ratio, compressed_size) tuples
+#[allow(dead_code)]
 pub fn compare_compression_algorithms<A, S, D>(
     array: &ArrayBase<S, D>,
     algorithms: &[CompressionAlgorithm],
@@ -438,6 +443,7 @@ where
 /// # Note
 ///
 /// This function requires the array to be in standard (C-contiguous) layout.
+#[allow(dead_code)]
 pub fn compress_array_zero_copy<A, S>(
     array: &ArrayBase<S, IxDyn>,
     algorithm: CompressionAlgorithm,
@@ -566,6 +572,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<A, IxDyn>>` - Decompressed array or error
+#[allow(dead_code)]
 pub fn decompress_array_zero_copy<A>(
     compressed: &CompressedArray,
 ) -> Result<ndarray::Array<A, IxDyn>>

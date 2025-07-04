@@ -349,6 +349,7 @@ pub struct ConfidenceIntervals {
 /// # Returns
 ///
 /// * Comprehensive robust analysis results
+#[allow(dead_code)]
 pub fn robust_control_observability_analysis(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,
@@ -450,6 +451,7 @@ impl Default for RobustAnalysisConfig {
 }
 
 /// Enhanced controllability analysis with SVD-based robustness
+#[allow(dead_code)]
 pub fn enhanced_controllability_analysis(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,
@@ -485,6 +487,7 @@ pub fn enhanced_controllability_analysis(
 }
 
 /// Enhanced observability analysis with SVD-based robustness
+#[allow(dead_code)]
 fn enhanced_observability_analysis(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,
@@ -520,6 +523,7 @@ fn enhanced_observability_analysis(
 }
 
 /// Build controllability matrix with enhanced numerical robustness
+#[allow(dead_code)]
 fn build_controllability_matrix_robust(ss: &StateSpace) -> SignalResult<Array2<f64>> {
     let n = ss.n_states;
     let m = ss.n_inputs;
@@ -565,6 +569,7 @@ fn build_controllability_matrix_robust(ss: &StateSpace) -> SignalResult<Array2<f
 }
 
 /// Build observability matrix with enhanced numerical robustness
+#[allow(dead_code)]
 fn build_observability_matrix_robust(ss: &StateSpace) -> SignalResult<Array2<f64>> {
     let n = ss.n_states;
     let p = ss.n_outputs;
@@ -610,6 +615,7 @@ fn build_observability_matrix_robust(ss: &StateSpace) -> SignalResult<Array2<f64
 }
 
 /// SVD-based controllability analysis for enhanced numerical robustness
+#[allow(dead_code)]
 fn svd_controllability_analysis(
     controllability_matrix: &Array2<f64>,
     config: &RobustAnalysisConfig,
@@ -682,6 +688,7 @@ fn svd_controllability_analysis(
 }
 
 /// SVD-based observability analysis for enhanced numerical robustness
+#[allow(dead_code)]
 fn svd_observability_analysis(
     observability_matrix: &Array2<f64>,
     config: &RobustAnalysisConfig,
@@ -753,6 +760,7 @@ fn svd_observability_analysis(
 }
 
 /// Assess numerical conditioning of matrix
+#[allow(dead_code)]
 fn assess_numerical_conditioning(
     matrix: &Array2<f64>,
     config: &RobustAnalysisConfig,
@@ -792,6 +800,7 @@ fn assess_numerical_conditioning(
 }
 
 /// Estimate 2-norm condition number
+#[allow(dead_code)]
 fn estimate_condition_number_2_norm(matrix: &Array2<f64>) -> f64 {
     let (m, n) = matrix.dim();
 
@@ -843,6 +852,7 @@ fn estimate_condition_number_2_norm(matrix: &Array2<f64>) -> f64 {
 }
 
 /// Estimate smallest singular value (simplified)
+#[allow(dead_code)]
 fn estimate_smallest_singular_value(matrix: &Array2<f64>) -> f64 {
     let (m, n) = matrix.dim();
 
@@ -859,6 +869,7 @@ fn estimate_smallest_singular_value(matrix: &Array2<f64>) -> f64 {
 }
 
 /// Compute mode-specific controllability degrees
+#[allow(dead_code)]
 fn compute_mode_controllability_degrees(
     ss: &StateSpace,
     _config: &RobustAnalysisConfig,
@@ -906,6 +917,7 @@ fn compute_mode_controllability_degrees(
 }
 
 /// Compute mode-specific observability degrees
+#[allow(dead_code)]
 fn compute_mode_observability_degrees(
     ss: &StateSpace,
     _config: &RobustAnalysisConfig,
@@ -953,6 +965,7 @@ fn compute_mode_observability_degrees(
 }
 
 /// Compute minimum energy control analysis
+#[allow(dead_code)]
 fn compute_minimum_energy_analysis(
     ss: &StateSpace,
     _config: &RobustAnalysisConfig,
@@ -977,6 +990,7 @@ fn compute_minimum_energy_analysis(
 }
 
 /// Compute minimum variance estimation analysis
+#[allow(dead_code)]
 fn compute_minimum_variance_analysis(
     ss: &StateSpace,
     _config: &RobustAnalysisConfig,
@@ -1001,6 +1015,7 @@ fn compute_minimum_variance_analysis(
 }
 
 /// Compute sensitivity analysis to parameter perturbations
+#[allow(dead_code)]
 fn compute_sensitivity_analysis(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,
@@ -1060,6 +1075,7 @@ fn compute_sensitivity_analysis(
 }
 
 /// Compute simplified controllability measure
+#[allow(dead_code)]
 fn compute_controllability_measure(ss: &StateSpace) -> SignalResult<f64> {
     let controllability_matrix = build_controllability_matrix_robust(ss)?;
 
@@ -1076,6 +1092,7 @@ fn compute_controllability_measure(ss: &StateSpace) -> SignalResult<f64> {
 }
 
 /// Structured perturbation analysis for real-world robustness
+#[allow(dead_code)]
 fn structured_perturbation_analysis(
     _ss: &StateSpace,
     config: &RobustAnalysisConfig,
@@ -1160,6 +1177,7 @@ fn structured_perturbation_analysis(
 }
 
 /// Compute performance-oriented metrics
+#[allow(dead_code)]
 fn compute_performance_oriented_metrics(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,
@@ -1200,6 +1218,7 @@ fn compute_performance_oriented_metrics(
 }
 
 /// Frequency-domain controllability and observability analysis
+#[allow(dead_code)]
 fn frequency_domain_analysis(
     _ss: &StateSpace,
     config: &RobustAnalysisConfig,
@@ -1230,6 +1249,7 @@ fn frequency_domain_analysis(
 }
 
 /// Calculate overall robustness score
+#[allow(dead_code)]
 fn calculate_robustness_score(
     controllability: &EnhancedControllabilityAnalysis,
     observability: &EnhancedObservabilityAnalysis,
@@ -1268,6 +1288,7 @@ fn calculate_robustness_score(
 }
 
 /// Identify critical robustness issues
+#[allow(dead_code)]
 fn identify_robustness_issues(
     controllability: &EnhancedControllabilityAnalysis,
     observability: &EnhancedObservabilityAnalysis,

@@ -284,7 +284,7 @@ impl InterpolationFloat for f64 {
     }
 }
 
-impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
+impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerformanceValidator<T> {
     /// Create a new SIMD performance validator
     pub fn new(config: SimdValidationConfig) -> Self {
         let platform_caps = PlatformCapabilities::detect();
@@ -311,7 +311,11 @@ impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
             "Platform: {} - {}",
             self.session_info.cpu_info.brand, self.session_info.cpu_info.architecture
         );
-        println!("SIMD Support: {:?}", self.platform_caps);
+        println!("SIMD Support: SIMD={}, AVX2={}, AVX512={}, NEON={}", 
+                 self.platform_caps.simd_available,
+                 self.platform_caps.avx2_available,
+                 self.platform_caps.avx512_available,
+                 self.platform_caps.neon_available);
 
         // Validate RBF operations
         self.validate_rbf_operations()?;
@@ -761,7 +765,7 @@ impl<T: InterpolationFloat> SimdPerformanceValidator<T> {
         let min_time = *times.first().unwrap();
         let max_time = *times.last().unwrap();
         let mean_time = Duration::from_nanos(
-            times.iter().map(|d| d.as_nanos()).sum::<u128>() / times.len() as u128,
+            (times.iter().map(|d| d.as_nanos()).sum::<u128>() / times.len() as u128) as u64,
         );
         let median_time = times[times.len() / 2];
 
@@ -1044,7 +1048,7 @@ pub struct ValidationSummary<T: InterpolationFloat> {
     pub validation_duration: Duration,
 }
 
-impl<T: InterpolationFloat> ValidationSummary<T> {
+impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> ValidationSummary<T> {
     /// Print a comprehensive validation report
     pub fn print_report(&self) {
         println!("\n{}", "=".repeat(80));
@@ -1152,13 +1156,15 @@ impl<T: InterpolationFloat> ValidationSummary<T> {
 }
 
 /// Convenience function to run SIMD validation with default configuration
-pub fn run_simd_validation<T: InterpolationFloat>() -> InterpolateResult<ValidationSummary<T>> {
+#[allow(dead_code)]
+pub fn run_simd_validation<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps>() -> InterpolateResult<ValidationSummary<T>> {
     let mut validator = SimdPerformanceValidator::new(SimdValidationConfig::default());
     validator.run_comprehensive_validation()
 }
 
 /// Convenience function to run SIMD validation with custom configuration
-pub fn run_simd_validation_with_config<T: InterpolationFloat>(
+#[allow(dead_code)]
+pub fn run_simd_validation_with_config<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps>(
     config: SimdValidationConfig,
 ) -> InterpolateResult<ValidationSummary<T>> {
     let mut validator = SimdPerformanceValidator::new(config);

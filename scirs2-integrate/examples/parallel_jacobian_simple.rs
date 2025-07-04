@@ -10,6 +10,7 @@ use std::fmt::Debug;
 use std::time::Instant;
 
 /// Compute Jacobian matrix using standard (serial) finite differences
+#[allow(dead_code)]
 fn finite_difference_jacobian<F, Func>(
     f: &Func,
     t: F,
@@ -49,6 +50,7 @@ where
 }
 
 /// Compute Jacobian matrix using parallel finite differences (if parallel_jacobian feature is enabled)
+#[allow(dead_code)]
 fn parallel_finite_difference_jacobian<F, Func>(
     f: &Func,
     t: F,
@@ -112,6 +114,7 @@ where
 }
 
 // A large ODE system for demonstration
+#[allow(dead_code)]
 fn large_ode_system(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     let n = y.len();
     let mut result = Array1::zeros(n);
@@ -131,6 +134,7 @@ fn large_ode_system(_t: f64, y: ArrayView1<f64>) -> Array1<f64> {
     result
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Simple Parallel Jacobian Example");
     println!("================================");

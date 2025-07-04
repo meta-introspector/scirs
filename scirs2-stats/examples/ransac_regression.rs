@@ -2,6 +2,7 @@ use ndarray::array;
 use plotters::prelude::*;
 use scirs2_stats::ransac;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("RANSAC Robust Regression Example");
     println!("===============================\n");

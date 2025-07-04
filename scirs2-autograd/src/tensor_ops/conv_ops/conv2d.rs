@@ -22,6 +22,7 @@ pub struct Conv2DWithCols {
 }
 
 #[cfg(feature = "blas")]
+#[allow(dead_code)]
 fn fast_im2col_gemm_fused_kernel<F: Float>(
     x: &[F], // 4-dimensional
     filter: &[F],
@@ -113,6 +114,7 @@ fn fast_im2col_gemm_fused_kernel<F: Float>(
 
 #[cfg(not(feature = "blas"))]
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn slow_im2col_gemm_fused_kernel<F: Float>(
     x: &[F], // 4-dimensional
     filter: &[F],
@@ -213,6 +215,7 @@ fn slow_im2col_gemm_fused_kernel<F: Float>(
 
 #[cfg(feature = "blas")]
 // inputs must be row-major matrices
+#[allow(dead_code)]
 fn fast_col_x_filter_kernel<F: Float>(
     cols: &[F],
     filter: &[F],
@@ -273,6 +276,7 @@ fn fast_col_x_filter_kernel<F: Float>(
 
 #[cfg(not(feature = "blas"))]
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn slow_col_x_filter_kernel<F: Float>(
     cols: &[F],
     filter: &[F],
@@ -343,6 +347,7 @@ struct Conv2DParams {
 
 // Panics for invalid inputs
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn conv2d_extract_params<F: Float>(
     x: &NdArrayView<F>,
     w: &NdArrayView<F>,
@@ -400,6 +405,7 @@ fn conv2d_extract_params<F: Float>(
 
 /// Returns: (conv result, im2col result)
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn conv2d_impl<F: Float>(
     x: &NdArrayView<F>,
     w: &NdArrayView<F>,
@@ -481,6 +487,7 @@ fn conv2d_impl<F: Float>(
     Ok((y, cols))
 }
 
+#[allow(dead_code)]
 fn conv2d_with_cols_impl<F: Float>(cols: &NdArrayView<F>, w: &NdArrayView<F>) -> NdArray<F> {
     // Extract size params
     let cols_shape = cols.shape();
@@ -623,6 +630,7 @@ impl<T: Float> crate::op::Op<T> for Conv2DWithCols {
     }
 }
 
+#[allow(dead_code)]
 fn conv2d_filter_grad_impl<F: Float>(
     cols: &NdArrayView<F>,
     gy: &NdArrayView<F>,

@@ -117,6 +117,7 @@ where
 }
 
 /// Convert a structured matrix to a matrix-free operator
+#[allow(dead_code)]
 pub fn structured_to_operator<A, M>(matrix: &M) -> LinearOperator<A>
 where
     A: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync + Debug + 'static,

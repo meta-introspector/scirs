@@ -324,6 +324,7 @@ impl<F: IntegrateFloat> RadauInterpolant<F> {
 }
 
 /// Convert an ODE result to a dense solution for continuous evaluation
+#[allow(dead_code)]
 pub fn create_dense_solution<F, Func>(
     t: Vec<F>,
     y: Vec<Array1<F>>,

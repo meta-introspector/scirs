@@ -21,6 +21,7 @@ use std::f64::consts::PI;
 ///
 /// # Returns
 /// Array of complex points where z-transform is evaluated
+#[allow(dead_code)]
 pub fn czt_points(
     m: usize,
     a: Option<Complex<f64>>,
@@ -278,6 +279,7 @@ impl CZT {
 /// - `w`: Ratio between points (default: exp(-2j*pi/m))
 /// - `a`: Starting point in complex plane (default: 1+0j)
 /// - `axis`: Axis along which to compute CZT (default: -1)
+#[allow(dead_code)]
 pub fn czt<S, D>(
     x: &ArrayBase<S, D>,
     m: Option<usize>,
@@ -314,6 +316,7 @@ where
 /// - `f0`: Starting normalized frequency (0 to 1)
 /// - `f1`: Ending normalized frequency (0 to 1)
 /// - `oversampling`: Oversampling factor for frequency resolution
+#[allow(dead_code)]
 pub fn zoom_fft<S, D>(
     x: &ArrayBase<S, D>,
     m: usize,

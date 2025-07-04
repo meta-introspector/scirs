@@ -55,6 +55,7 @@ use super::utility::try_as_complex;
 ///     assert!(val.is_finite());
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn hfft<T>(x: &[T], n: Option<usize>, norm: Option<&str>) -> FFTResult<Vec<f64>>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -109,6 +110,7 @@ where
 }
 
 /// Internal implementation for Complex64 input
+#[allow(dead_code)]
 fn _hfft_complex(x: &[Complex64], n: Option<usize>, _norm: Option<&str>) -> FFTResult<Vec<f64>> {
     let n_fft = n.unwrap_or(x.len());
 
@@ -146,6 +148,7 @@ fn _hfft_complex(x: &[Complex64], n: Option<usize>, _norm: Option<&str>) -> FFTR
 /// # Returns
 ///
 /// * The real-valued 2D Fourier transform of the Hermitian-symmetric input array
+#[allow(dead_code)]
 pub fn hfft2<T>(
     x: &ArrayView2<T>,
     shape: Option<(usize, usize)>,
@@ -200,6 +203,7 @@ where
 }
 
 /// Internal implementation for complex input
+#[allow(dead_code)]
 fn _hfft2_complex(
     x: &ArrayView2<Complex64>,
     shape: Option<(usize, usize)>,
@@ -282,6 +286,7 @@ fn _hfft2_complex(
 /// # Returns
 ///
 /// * The real-valued N-dimensional Fourier transform of the Hermitian-symmetric input array
+#[allow(dead_code)]
 pub fn hfftn<T>(
     x: &ArrayView<T, IxDyn>,
     shape: Option<Vec<usize>>,
@@ -339,6 +344,7 @@ where
 }
 
 /// Internal implementation for complex input
+#[allow(dead_code)]
 fn _hfftn_complex(
     x: &ArrayView<Complex64, IxDyn>,
     shape: Option<Vec<usize>>,

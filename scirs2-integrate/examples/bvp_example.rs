@@ -2,6 +2,7 @@ use ndarray::{array, ArrayView1};
 use scirs2_integrate::bvp::solve_bvp;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("Boundary Value Problem Solver Example");
     println!("--------------------------------------");

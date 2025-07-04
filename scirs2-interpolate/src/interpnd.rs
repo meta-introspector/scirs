@@ -912,6 +912,7 @@ impl<
 /// let result = interp.__call__(&points_to_interp.view()).unwrap();
 /// assert!((result[0] - 9.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn make_interp_nd<F: crate::traits::InterpolationFloat>(
     points: Vec<Array1<F>>,
     values: Array<F, IxDyn>,
@@ -938,6 +939,7 @@ pub fn make_interp_nd<F: crate::traits::InterpolationFloat>(
 /// # Errors
 ///
 /// * If points and values dimensions don't match
+#[allow(dead_code)]
 pub fn make_interp_scattered<F: crate::traits::InterpolationFloat>(
     points: Array2<F>,
     values: Array1<F>,
@@ -965,6 +967,7 @@ pub fn make_interp_scattered<F: crate::traits::InterpolationFloat>(
 ///
 /// * If dimensions don't match
 /// * If any dimension has less than 2 points
+#[allow(dead_code)]
 pub fn map_coordinates<F: crate::traits::InterpolationFloat>(
     old_grid: Vec<Array1<F>>,
     old_values: Array<F, IxDyn>,

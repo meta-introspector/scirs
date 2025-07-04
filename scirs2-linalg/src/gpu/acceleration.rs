@@ -152,7 +152,7 @@ where
                     {
                         if let Ok(context) = backend.create_context(device_id) {
                             let context_key = format!("{}_{}", backend_name, device_id);
-                            self.contexts.insert(context_key, Arc::new(context));
+                            self.contexts.insert(context_key, Arc::from(context));
                         }
                     }
                 }
@@ -182,7 +182,8 @@ where
                 self.dispatcher.gpu_matvec(context.as_ref(), a, x)
             }
             ExecutionStrategy::MultiGpu {
-                primary_context, ..
+                ref primary_context,
+                ..
             } => {
                 // For now, use primary GPU
                 self.dispatcher.gpu_matvec(primary_context.as_ref(), a, x)
@@ -217,7 +218,8 @@ where
                 self.dispatcher.gpu_matmul(context.as_ref(), a, b)
             }
             ExecutionStrategy::MultiGpu {
-                primary_context, ..
+                ref primary_context,
+                ..
             } => {
                 // For large matrices, could implement multi-GPU GEMM
                 self.dispatcher.gpu_matmul(primary_context.as_ref(), a, b)
@@ -299,7 +301,7 @@ where
         let mut best_context = None;
         let mut best_score = 0.0f64;
 
-        for (context_name, context) in &self.contexts {
+        for (_context_name, context) in &self.contexts {
             let score = self.calculate_context_score(context.as_ref(), operation, problem_size);
 
             if score > best_score {
@@ -316,7 +318,7 @@ where
         &self,
         context: &dyn GpuContext,
         operation: &str,
-        problem_size: usize,
+        _problem_size: usize,
     ) -> f64 {
         let device_info = context.device_info();
         let mut score = 0.0;
@@ -473,7 +475,6 @@ where
 }
 
 /// Execution strategy for an operation
-#[derive(Debug)]
 enum ExecutionStrategy {
     /// Execute on CPU
     Cpu,
@@ -487,6 +488,24 @@ enum ExecutionStrategy {
         primary_context: Arc<dyn GpuContext>,
         secondary_contexts: Vec<Arc<dyn GpuContext>>,
     },
+}
+
+impl std::fmt::Debug for ExecutionStrategy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ExecutionStrategy::Cpu => f.debug_tuple("Cpu").finish(),
+            ExecutionStrategy::Gpu { kernel_variant, .. } => f
+                .debug_struct("Gpu")
+                .field("kernel_variant", kernel_variant)
+                .field("context", &"<GpuContext>")
+                .finish(),
+            ExecutionStrategy::MultiGpu { .. } => f
+                .debug_struct("MultiGpu")
+                .field("primary_context", &"<GpuContext>")
+                .field("secondary_contexts", &"<Vec<GpuContext>>")
+                .finish(),
+        }
+    }
 }
 
 /// GPU kernel variant selection
@@ -534,6 +553,7 @@ static GLOBAL_GPU_FRAMEWORK: std::sync::OnceLock<
 > = std::sync::OnceLock::new();
 
 /// Initialize global GPU acceleration (call once at startup)
+#[allow(dead_code)]
 pub fn initialize_global_gpu_acceleration() -> LinalgResult<()> {
     let mut framework = GpuAccelerationFramework::new()?;
     framework.initialize_contexts()?;
@@ -566,7 +586,6 @@ where
 }
 
 /// GPU memory pool for efficient allocation and reuse
-#[derive(Debug)]
 pub struct GpuMemoryPool<T> {
     free_buffers: HashMap<usize, Vec<Box<dyn super::GpuBuffer<T>>>>,
     allocated_buffers: Vec<Box<dyn super::GpuBuffer<T>>>,
@@ -574,6 +593,19 @@ pub struct GpuMemoryPool<T> {
     peak_usage: usize,
     allocation_count: usize,
     deallocation_count: usize,
+}
+
+impl<T> std::fmt::Debug for GpuMemoryPool<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GpuMemoryPool")
+            .field("free_buffers_count", &self.free_buffers.len())
+            .field("allocated_buffers_count", &self.allocated_buffers.len())
+            .field("total_allocated", &self.total_allocated)
+            .field("peak_usage", &self.peak_usage)
+            .field("allocation_count", &self.allocation_count)
+            .field("deallocation_count", &self.deallocation_count)
+            .finish()
+    }
 }
 
 /// GPU stream manager for asynchronous operations
@@ -813,7 +845,7 @@ where
     /// Process very large matrix multiplication using out-of-core techniques
     pub fn out_of_core_matmul(
         &mut self,
-        context: &dyn super::GpuContext,
+        _context: &dyn super::GpuContext,
         a_shape: (usize, usize),
         b_shape: (usize, usize),
         load_a: impl Fn(usize, usize, usize, usize) -> LinalgResult<Array2<T>>,
@@ -862,7 +894,7 @@ where
     /// Asynchronous matrix operations with streaming
     pub fn async_matmul_streamed(
         &mut self,
-        context: &dyn super::GpuContext,
+        _context: &dyn super::GpuContext,
         a: &ArrayView2<T>,
         b: &ArrayView2<T>,
     ) -> LinalgResult<StreamHandle<Array2<T>>> {
@@ -898,7 +930,7 @@ where
     }
 
     /// Optimize memory layout for better performance
-    pub fn optimize_memory_layout(&mut self, context: &dyn super::GpuContext) -> LinalgResult<()> {
+    pub fn optimize_memory_layout(&mut self, _context: &dyn super::GpuContext) -> LinalgResult<()> {
         // Implement memory defragmentation and layout optimization
         for (_, pool) in self.memory_pools.iter_mut() {
             pool.defragment()?;
@@ -932,7 +964,7 @@ where
 
     fn gpu_tile_matmul(
         &self,
-        context: &dyn super::GpuContext,
+        _context: &dyn super::GpuContext,
         a: &Array2<T>,
         b: &Array2<T>,
     ) -> LinalgResult<Array2<T>> {
@@ -1009,7 +1041,7 @@ impl<T> StreamHandle<T> {
 }
 
 impl<T> GpuMemoryPool<T> {
-    fn new(max_size: usize) -> Self {
+    fn new(_max_size: usize) -> Self {
         Self {
             free_buffers: HashMap::new(),
             allocated_buffers: Vec::new(),
@@ -1160,6 +1192,7 @@ impl<T> CompressionEngine<T> {
 }
 
 /// Mock GPU buffer implementation for testing
+#[derive(Debug)]
 struct MockGpuBuffer<T> {
     size: usize,
     _phantom: std::marker::PhantomData<T>,
@@ -1196,6 +1229,7 @@ where
 }
 
 /// Get reference to global GPU acceleration framework
+#[allow(dead_code)]
 pub fn get_global_gpu_framework(
 ) -> Option<std::sync::MutexGuard<'static, Option<GpuAccelerationFramework<f64>>>> {
     GLOBAL_GPU_FRAMEWORK.get()?.try_lock().ok()

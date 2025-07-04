@@ -66,6 +66,7 @@ pub struct GpuDetectionResult {
 }
 
 /// Detect available GPU backends and devices
+#[allow(dead_code)]
 pub fn detect_gpu_backends() -> GpuDetectionResult {
     let mut devices = Vec::new();
 
@@ -135,6 +136,7 @@ pub fn detect_gpu_backends() -> GpuDetectionResult {
 }
 
 /// Detect ROCm devices using rocm-smi
+#[allow(dead_code)]
 fn detect_rocm_devices() -> Result<Vec<GpuInfo>, GpuError> {
     let mut devices = Vec::new();
 
@@ -196,6 +198,7 @@ fn detect_rocm_devices() -> Result<Vec<GpuInfo>, GpuError> {
 }
 
 /// Detect CUDA devices using nvidia-ml-py or nvidia-smi
+#[allow(dead_code)]
 fn detect_cuda_devices() -> Result<Vec<GpuInfo>, GpuError> {
     let mut devices = Vec::new();
 
@@ -255,6 +258,7 @@ fn detect_cuda_devices() -> Result<Vec<GpuInfo>, GpuError> {
 
 /// Detect Metal devices (macOS only)
 #[cfg(target_os = "macos")]
+#[allow(dead_code)]
 fn detect_metal_devices() -> Result<Vec<GpuInfo>, GpuError> {
     use std::str::FromStr;
 
@@ -403,6 +407,7 @@ fn detect_metal_devices() -> Result<Vec<GpuInfo>, GpuError> {
 }
 
 /// Detect OpenCL devices
+#[allow(dead_code)]
 fn detect_opencl_devices() -> Result<Vec<GpuInfo>, GpuError> {
     let mut devices = Vec::new();
 
@@ -439,6 +444,7 @@ fn detect_opencl_devices() -> Result<Vec<GpuInfo>, GpuError> {
 }
 
 /// Check if a specific backend is properly installed and functional
+#[allow(dead_code)]
 pub fn check_backend_installation(backend: GpuBackend) -> Result<bool, GpuError> {
     match backend {
         GpuBackend::Cuda => {
@@ -488,6 +494,7 @@ pub fn check_backend_installation(backend: GpuBackend) -> Result<bool, GpuError>
 }
 
 /// Get detailed information about a specific GPU device
+#[allow(dead_code)]
 pub fn get_device_info(backend: GpuBackend, device_id: usize) -> Result<GpuInfo, GpuError> {
     let detection_result = detect_gpu_backends();
 
@@ -504,6 +511,7 @@ pub fn get_device_info(backend: GpuBackend, device_id: usize) -> Result<GpuInfo,
 }
 
 /// Initialize the optimal GPU backend for the current system
+#[allow(dead_code)]
 pub fn initialize_optimal_backend() -> Result<GpuBackend, GpuError> {
     let detection_result = detect_gpu_backends();
 

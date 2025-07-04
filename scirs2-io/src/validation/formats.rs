@@ -74,6 +74,7 @@ impl DataFormat {
 }
 
 /// Get a registry with all scientific data format validators
+#[allow(dead_code)]
 pub fn get_scientific_format_validators() -> FormatValidatorRegistry {
     let mut registry = FormatValidatorRegistry::new();
 
@@ -246,6 +247,7 @@ pub fn get_scientific_format_validators() -> FormatValidatorRegistry {
 }
 
 /// Validate a file against a specific format
+#[allow(dead_code)]
 pub fn validate_format<P: AsRef<Path>>(path: P, format: DataFormat) -> Result<bool> {
     let path = path.as_ref();
 
@@ -276,6 +278,7 @@ pub fn validate_format<P: AsRef<Path>>(path: P, format: DataFormat) -> Result<bo
 }
 
 /// Detect the format of a file
+#[allow(dead_code)]
 pub fn detect_file_format<P: AsRef<Path>>(path: P) -> Result<Option<String>> {
     let path = path.as_ref();
 
@@ -301,6 +304,7 @@ pub struct FormatValidationResult {
 ///
 /// This function performs format-specific validation beyond
 /// just the basic format detection.
+#[allow(dead_code)]
 pub fn validate_file_format<P: AsRef<Path>>(
     path: P,
     format: DataFormat,
@@ -338,6 +342,7 @@ pub fn validate_file_format<P: AsRef<Path>>(
 }
 
 /// Validate CSV file structure in detail
+#[allow(dead_code)]
 fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult> {
     let path = path.as_ref();
 
@@ -442,6 +447,7 @@ fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
 }
 
 /// Count fields in a CSV line, accounting for quoted fields
+#[allow(dead_code)]
 fn count_csv_fields(line: &[u8]) -> usize {
     let mut count = 1; // Start at 1 because field count = comma count + 1
     let mut in_quotes = false;
@@ -466,6 +472,7 @@ fn count_csv_fields(line: &[u8]) -> usize {
 }
 
 /// Validate JSON file structure in detail
+#[allow(dead_code)]
 fn validate_json_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult> {
     let path = path.as_ref();
 
@@ -492,6 +499,7 @@ fn validate_json_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResul
 }
 
 /// Validate ARFF file structure in detail
+#[allow(dead_code)]
 fn validate_arff_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult> {
     let path = path.as_ref();
 
@@ -552,6 +560,7 @@ fn validate_arff_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResul
 }
 
 /// Validate WAV file structure in detail
+#[allow(dead_code)]
 fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult> {
     let path = path.as_ref();
 

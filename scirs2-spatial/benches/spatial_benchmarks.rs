@@ -33,12 +33,14 @@ const KNN_K_VALUES: &[usize] = &[1, 5, 10, 20, 50];
 const BENCHMARK_SEED: u64 = 12345;
 
 /// Generate reproducible random points for benchmarking
+#[allow(dead_code)]
 fn generate_points(n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
     Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
 }
 
 /// Generate two sets of random points for cross-distance benchmarks
+#[allow(dead_code)]
 fn generate_point_pairs(
     n1: usize,
     n2: usize,
@@ -52,6 +54,7 @@ fn generate_point_pairs(
 }
 
 /// Benchmark SIMD vs scalar distance calculations for different data sizes
+#[allow(dead_code)]
 fn bench_simd_vs_scalar_distance(c: &mut Criterion) {
     let mut group = c.benchmark_group("simd_vs_scalar_distance");
     group
@@ -119,6 +122,7 @@ fn bench_simd_vs_scalar_distance(c: &mut Criterion) {
 }
 
 /// Benchmark parallel vs sequential spatial operations
+#[allow(dead_code)]
 fn bench_parallel_vs_sequential(c: &mut Criterion) {
     let mut group = c.benchmark_group("parallel_vs_sequential");
     group
@@ -157,6 +161,7 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
 }
 
 /// Benchmark memory efficiency for large datasets
+#[allow(dead_code)]
 fn bench_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_efficiency");
     group.measurement_time(Duration::from_secs(20));
@@ -209,6 +214,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
 }
 
 /// Benchmark different distance metrics performance comparison
+#[allow(dead_code)]
 fn bench_distance_metrics_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("distance_metrics_comparison");
 
@@ -245,6 +251,7 @@ fn bench_distance_metrics_comparison(c: &mut Criterion) {
 }
 
 /// Benchmark cross-architecture performance
+#[allow(dead_code)]
 fn bench_cross_architecture_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("cross_architecture_performance");
 
@@ -297,6 +304,7 @@ fn bench_cross_architecture_performance(c: &mut Criterion) {
 }
 
 /// Benchmark spatial data structure performance
+#[allow(dead_code)]
 fn bench_spatial_data_structures(c: &mut Criterion) {
     let mut group = c.benchmark_group("spatial_data_structures");
     group.measurement_time(Duration::from_secs(15));
@@ -356,6 +364,7 @@ fn bench_spatial_data_structures(c: &mut Criterion) {
 }
 
 /// Benchmark KNN search performance and scaling
+#[allow(dead_code)]
 fn bench_knn_performance_scaling(c: &mut Criterion) {
     let mut group = c.benchmark_group("knn_performance_scaling");
 
@@ -400,6 +409,7 @@ fn bench_knn_performance_scaling(c: &mut Criterion) {
 }
 
 /// Benchmark scaling behavior with problem size
+#[allow(dead_code)]
 fn bench_scaling_analysis(c: &mut Criterion) {
     let mut group = c.benchmark_group("scaling_analysis");
     group
@@ -450,6 +460,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
 }
 
 /// Benchmark memory allocation patterns
+#[allow(dead_code)]
 fn bench_memory_allocation_patterns(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_allocation_patterns");
 
@@ -502,6 +513,7 @@ fn bench_memory_allocation_patterns(c: &mut Criterion) {
 }
 
 /// Generate performance report
+#[allow(dead_code)]
 fn bench_performance_report(c: &mut Criterion) {
     let mut group = c.benchmark_group("performance_report");
 

@@ -111,6 +111,7 @@ pub(crate) fn parallel_hierarchical_clustering<
 }
 
 /// Parallel version of finding the two closest clusters
+#[allow(dead_code)]
 fn parallel_find_closest_clusters<
     F: Float + FromPrimitive + Debug + PartialOrd + Send + Sync + std::iter::Sum,
 >(
@@ -339,18 +340,21 @@ pub(crate) fn parallel_weighted_linkage<F: Float + FromPrimitive + Send + Sync>(
 }
 
 /// Centroid linkage (not parallelized - used as-is from linkage.rs)
+#[allow(dead_code)]
 fn centroid_linkage<F: Float>(_cluster_i: usize, _cluster_j: usize, _centroids: &Array2<F>) -> F {
     // Placeholder implementation - would need actual centroid calculation
     F::zero()
 }
 
 /// Median linkage (not parallelized - used as-is from linkage.rs)
+#[allow(dead_code)]
 fn median_linkage<F: Float>(_cluster_i: usize, _cluster_j: usize, _centroids: &Array2<F>) -> F {
     // Placeholder implementation - would need actual median calculation
     F::zero()
 }
 
 /// Update centroid (not parallelized - used as-is from linkage.rs)
+#[allow(dead_code)]
 fn update_centroid<F: Float>(
     _centroids: &mut Array2<F>,
     _method: LinkageMethod,

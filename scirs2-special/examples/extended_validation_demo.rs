@@ -6,6 +6,7 @@
 
 use scirs2_special::extended_scipy_validation::run_extended_validation_tests;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("SciRS2-Special Extended Validation Demo");
     println!("=====================================\n");

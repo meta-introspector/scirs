@@ -1,6 +1,7 @@
 use scirs2_text::{BpeConfig, BpeTokenizer, Result, Tokenizer};
 use std::path::Path;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     // Example corpus for training the tokenizer
     let corpus = [

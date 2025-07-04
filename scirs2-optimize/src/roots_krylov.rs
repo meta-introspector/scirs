@@ -8,6 +8,7 @@ use ndarray::{s, Array1, Array2, ArrayBase, Data, Ix1};
 /// This method uses Krylov subspace techniques to accelerate the convergence
 /// of root finding algorithms, particularly for large-scale systems. It combines
 /// the Levenberg-Marquardt approach with Krylov subspace methods for the linear solve.
+#[allow(dead_code)]
 pub fn root_krylov<F, J, S>(
     func: F,
     x0: &ArrayBase<S, Ix1>,
@@ -170,6 +171,7 @@ where
 
 /// Implements a simplified GMRES (Generalized Minimal Residual) method
 /// for solving linear systems Ax = b with Levenberg-Marquardt regularization
+#[allow(dead_code)]
 fn gmres_solve(a: &Array2<f64>, b: &Array1<f64>, lambda: f64, max_iter: usize) -> Array1<f64> {
     let (_m, n) = a.dim();
 
@@ -274,6 +276,7 @@ fn gmres_solve(a: &Array2<f64>, b: &Array1<f64>, lambda: f64, max_iter: usize) -
 }
 
 /// Solves the normal equations A^T A x = A^T b for least squares problems
+#[allow(dead_code)]
 fn solve_normal_equations(a: &Array2<f64>, b: &Array1<f64>) -> Array1<f64> {
     let n = a.dim().0;
     let mut x = Array1::zeros(n);

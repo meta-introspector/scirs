@@ -118,6 +118,7 @@ pub use spectral::polynomial::{
 /// let result = linear(&signal).unwrap();
 /// assert_eq!(result[1], 2.0); // Linear interpolation between 1.0 and 3.0
 /// ```
+#[allow(dead_code)]
 pub fn linear(signal: &ndarray::Array1<f64>) -> crate::error::SignalResult<ndarray::Array1<f64>> {
     linear_interpolate(signal)
 }
@@ -144,6 +145,7 @@ pub fn linear(signal: &ndarray::Array1<f64>) -> crate::error::SignalResult<ndarr
 /// let result = cubic_spline(&signal).unwrap();
 /// // Result contains smooth interpolated values
 /// ```
+#[allow(dead_code)]
 pub fn cubic_spline(
     signal: &ndarray::Array1<f64>,
 ) -> crate::error::SignalResult<ndarray::Array1<f64>> {
@@ -173,6 +175,7 @@ pub fn cubic_spline(
 /// let (result, method) = auto(&signal).unwrap();
 /// println!("Selected method: {:?}", method);
 /// ```
+#[allow(dead_code)]
 pub fn auto(
     signal: &ndarray::Array1<f64>,
 ) -> crate::error::SignalResult<(ndarray::Array1<f64>, InterpolationMethod)> {

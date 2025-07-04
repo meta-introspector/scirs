@@ -9,6 +9,7 @@ use scirs2_cluster::{
     QuantumAnnealingConfig,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔬 Quantum Annealing Clustering Demonstration");
     println!("===========================================");

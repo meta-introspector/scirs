@@ -321,6 +321,7 @@ where
 ///
 /// For 2D, the kernel is r^2 * ln(r)
 /// For higher dimensions, it depends on the dimension
+#[allow(dead_code)]
 fn tps_kernel<T: Float + FromPrimitive>(r: T) -> T {
     if r == T::zero() {
         return T::zero();
@@ -347,6 +348,7 @@ fn tps_kernel<T: Float + FromPrimitive>(r: T) -> T {
 /// # Returns
 ///
 /// A new `ThinPlateSpline` interpolator
+#[allow(dead_code)]
 pub fn make_thinplate_interpolator<T>(
     points: &ArrayView2<T>,
     values: &ArrayView1<T>,

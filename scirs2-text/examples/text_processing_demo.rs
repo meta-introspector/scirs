@@ -10,6 +10,7 @@ use scirs2_text::{
     vectorize::{CountVectorizer, TfidfVectorizer, Vectorizer},
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== SciRS2 Text Processing Demo ===\n");
 

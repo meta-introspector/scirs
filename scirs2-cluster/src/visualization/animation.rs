@@ -533,6 +533,7 @@ pub struct StreamingFrame {
 }
 
 /// Calculate maximum centroid movement between iterations
+#[allow(dead_code)]
 fn calculate_max_centroid_movement(
     prev_centroids: &Array2<f64>,
     current_centroids: &Array2<f64>,
@@ -557,6 +558,7 @@ fn calculate_max_centroid_movement(
 }
 
 /// Interpolate between two animation frames
+#[allow(dead_code)]
 fn interpolate_frames(
     frame1: &AnimationFrame,
     frame2: &AnimationFrame,
@@ -609,6 +611,7 @@ fn interpolate_frames(
 }
 
 /// Apply easing function to interpolation parameter
+#[allow(dead_code)]
 fn apply_easing(t: f64, easing: EasingFunction) -> f64 {
     let t = t.clamp(0.0, 1.0);
 

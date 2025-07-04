@@ -12,6 +12,7 @@ use scirs2_optim::{
     sgd::{SGDConfig, SGD},
 };
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🔍 SciRS2 Memory Optimization and Leak Detection Demo");
     println!("=====================================================\n");
@@ -36,6 +37,7 @@ fn main() -> Result<()> {
 }
 
 /// Demonstrate memory optimization capabilities
+#[allow(dead_code)]
 fn run_memory_optimization_demo() -> Result<()> {
     println!("🚀 MEMORY OPTIMIZATION DEMONSTRATION");
     println!("====================================");
@@ -103,6 +105,7 @@ fn run_memory_optimization_demo() -> Result<()> {
 }
 
 /// Demonstrate memory leak detection
+#[allow(dead_code)]
 fn run_memory_leak_detection() -> Result<()> {
     println!("\n🔍 MEMORY LEAK DETECTION");
     println!("========================");
@@ -150,6 +153,7 @@ fn run_memory_leak_detection() -> Result<()> {
 }
 
 /// Demonstrate fragmentation analysis
+#[allow(dead_code)]
 fn run_fragmentation_analysis() -> Result<()> {
     println!("\n🧩 FRAGMENTATION ANALYSIS");
     println!("=========================");
@@ -204,6 +208,7 @@ fn run_fragmentation_analysis() -> Result<()> {
 }
 
 /// Demonstrate optimization recommendations
+#[allow(dead_code)]
 fn run_optimization_recommendations() -> Result<()> {
     println!("\n💡 OPTIMIZATION RECOMMENDATIONS");
     println!("===============================");
@@ -311,6 +316,7 @@ fn run_optimization_recommendations() -> Result<()> {
 }
 
 /// Demonstrate real-time monitoring
+#[allow(dead_code)]
 fn run_realtime_monitoring() -> Result<()> {
     println!("\n📡 REAL-TIME MEMORY MONITORING");
     println!("==============================");
@@ -385,6 +391,7 @@ fn run_realtime_monitoring() -> Result<()> {
 
 // Helper functions to simulate different memory patterns
 
+#[allow(dead_code)]
 fn simulate_optimization_workload(memory_optimizer: &mut MemoryOptimizer) -> Result<()> {
     println!("  Running optimization workload with memory tracking...");
 
@@ -430,6 +437,7 @@ fn simulate_optimization_workload(memory_optimizer: &mut MemoryOptimizer) -> Res
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_memory_leak_patterns(memory_optimizer: &mut MemoryOptimizer) -> Result<()> {
     println!("  Simulating potential memory leak patterns...");
 
@@ -454,6 +462,7 @@ fn simulate_memory_leak_patterns(memory_optimizer: &mut MemoryOptimizer) -> Resu
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_fragmentation_patterns(memory_optimizer: &mut MemoryOptimizer) -> Result<()> {
     println!("  Simulating memory fragmentation patterns...");
 
@@ -486,6 +495,7 @@ fn simulate_fragmentation_patterns(memory_optimizer: &mut MemoryOptimizer) -> Re
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_suboptimal_patterns(memory_optimizer: &mut MemoryOptimizer) -> Result<()> {
     println!("  Simulating suboptimal memory patterns...");
 
@@ -507,6 +517,7 @@ fn simulate_suboptimal_patterns(memory_optimizer: &mut MemoryOptimizer) -> Resul
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_alert_scenarios(memory_optimizer: &mut MemoryOptimizer) -> Result<()> {
     println!("  Simulating scenarios that may trigger alerts...");
 
@@ -532,6 +543,7 @@ fn simulate_alert_scenarios(memory_optimizer: &mut MemoryOptimizer) -> Result<()
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_gradients(params: &Array1<f64>, step: usize) -> Array1<f64> {
     let noise_factor = 1.0 + 0.1 * (step as f64 * 0.1).sin();
     params.mapv(|x| 2.0 * x * noise_factor + 0.01 * (step as f64).cos())

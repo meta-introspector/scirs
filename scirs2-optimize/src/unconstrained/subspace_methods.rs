@@ -187,6 +187,7 @@ impl SubspaceState {
 }
 
 /// Orthogonalize basis vectors using modified Gram-Schmidt
+#[allow(dead_code)]
 fn orthogonalize_basis(basis: &mut Vec<Array1<f64>>) {
     for i in 0..basis.len() {
         // Normalize current vector
@@ -209,6 +210,7 @@ fn orthogonalize_basis(basis: &mut Vec<Array1<f64>>) {
 }
 
 /// Random coordinate descent method
+#[allow(dead_code)]
 pub fn minimize_random_coordinate_descent<F>(
     mut fun: F,
     x0: Array1<f64>,
@@ -302,6 +304,7 @@ where
 }
 
 /// Block coordinate descent method
+#[allow(dead_code)]
 pub fn minimize_block_coordinate_descent<F>(
     mut fun: F,
     x0: Array1<f64>,
@@ -375,6 +378,7 @@ where
 }
 
 /// Random subspace gradient method
+#[allow(dead_code)]
 pub fn minimize_random_subspace<F>(
     mut fun: F,
     x0: Array1<f64>,
@@ -487,6 +491,7 @@ where
 }
 
 /// Adaptive subspace method using gradient history
+#[allow(dead_code)]
 pub fn minimize_adaptive_subspace<F>(
     mut fun: F,
     x0: Array1<f64>,
@@ -592,6 +597,7 @@ where
 }
 
 /// Minimize using subspace methods
+#[allow(dead_code)]
 pub fn minimize_subspace<F>(
     fun: F,
     x0: Array1<f64>,
@@ -617,6 +623,7 @@ where
 }
 
 /// Cyclical coordinate descent method
+#[allow(dead_code)]
 pub fn minimize_cyclical_coordinate_descent<F>(
     mut fun: F,
     x0: Array1<f64>,
@@ -705,6 +712,7 @@ where
 }
 
 /// Helper function to find step size along a coordinate direction
+#[allow(dead_code)]
 fn find_step_size<F>(
     fun: &mut F,
     x: &Array1<f64>,
@@ -764,6 +772,7 @@ where
 }
 
 /// Optimize within a block of coordinates
+#[allow(dead_code)]
 fn optimize_block<F>(
     fun: &mut F,
     x: &mut Array1<f64>,
@@ -834,6 +843,7 @@ where
 }
 
 /// Compute finite difference gradient
+#[allow(dead_code)]
 fn compute_finite_diff_gradient<F>(fun: &mut F, x: &Array1<f64>, nfev: &mut usize) -> Array1<f64>
 where
     F: FnMut(&ArrayView1<f64>) -> f64,

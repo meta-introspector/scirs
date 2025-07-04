@@ -293,6 +293,7 @@ impl MultivariateNormal {
 }
 
 /// Compute the Cholesky decomposition L of a positive definite matrix A such that A = L·L^T
+#[allow(dead_code)]
 pub fn compute_cholesky(a: &Array2<f64>) -> Result<Array2<f64>, String> {
     let n = a.shape()[0];
     let mut l = Array2::<f64>::zeros((n, n));
@@ -326,6 +327,7 @@ pub fn compute_cholesky(a: &Array2<f64>) -> Result<Array2<f64>, String> {
 }
 
 /// Compute the inverse of a symmetric positive definite matrix A from its Cholesky decomposition L
+#[allow(dead_code)]
 pub fn compute_inverse_from_cholesky(l: &Array2<f64>) -> Result<Array2<f64>, String> {
     let n = l.shape()[0];
     let mut inv = Array2::<f64>::zeros((n, n));
@@ -390,6 +392,7 @@ pub fn compute_inverse_from_cholesky(l: &Array2<f64>) -> Result<Array2<f64>, Str
 /// let mvn = multivariate::multivariate_normal(mean, cov).unwrap();
 /// let pdf_at_origin = mvn.pdf(&array![0.0, 0.0]);
 /// ```
+#[allow(dead_code)]
 pub fn multivariate_normal<D1, D2>(
     mean: ArrayBase<D1, Ix1>,
     cov: ArrayBase<D2, Ix2>,

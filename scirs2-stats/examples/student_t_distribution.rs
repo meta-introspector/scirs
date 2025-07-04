@@ -2,6 +2,7 @@ use scirs2_stats::distributions::student_t::StudentT;
 use scirs2_stats::traits::distribution::{ContinuousDistribution, Distribution};
 use std::f64;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Student's t Distribution Example");
     println!("==============================\n");

@@ -121,6 +121,7 @@ impl Default for ExportConfig {
 /// # Returns
 ///
 /// * `Result<()>` - Success or error
+#[allow(dead_code)]
 pub fn export_scatter_2d_to_file<P: AsRef<Path>>(
     plot: &ScatterPlot2D,
     output_path: P,
@@ -154,6 +155,7 @@ pub fn export_scatter_2d_to_file<P: AsRef<Path>>(
 /// # Returns
 ///
 /// * `Result<()>` - Success or error
+#[allow(dead_code)]
 pub fn export_scatter_3d_to_file<P: AsRef<Path>>(
     plot: &ScatterPlot3D,
     output_path: P,
@@ -187,6 +189,7 @@ pub fn export_scatter_3d_to_file<P: AsRef<Path>>(
 /// # Returns
 ///
 /// * `Result<()>` - Success or error
+#[allow(dead_code)]
 pub fn export_animation_to_file<P: AsRef<Path>>(
     frames: &[AnimationFrame],
     output_path: P,
@@ -208,6 +211,7 @@ pub fn export_animation_to_file<P: AsRef<Path>>(
 }
 
 /// Export 2D scatter plot to JSON format
+#[allow(dead_code)]
 pub fn export_scatter_2d_to_json<P: AsRef<Path>>(
     plot: &ScatterPlot2D,
     output_path: P,
@@ -241,6 +245,7 @@ pub fn export_scatter_2d_to_json<P: AsRef<Path>>(
 }
 
 /// Export 3D scatter plot to JSON format
+#[allow(dead_code)]
 pub fn export_scatter_3d_to_json<P: AsRef<Path>>(
     plot: &ScatterPlot3D,
     output_path: P,
@@ -274,6 +279,7 @@ pub fn export_scatter_3d_to_json<P: AsRef<Path>>(
 }
 
 /// Export 2D scatter plot to HTML format with interactive visualization
+#[allow(dead_code)]
 pub fn export_scatter_2d_to_html<P: AsRef<Path>>(
     plot: &ScatterPlot2D,
     output_path: P,
@@ -288,6 +294,7 @@ pub fn export_scatter_2d_to_html<P: AsRef<Path>>(
 }
 
 /// Export 3D scatter plot to HTML format with WebGL visualization
+#[allow(dead_code)]
 pub fn export_scatter_3d_to_html<P: AsRef<Path>>(
     plot: &ScatterPlot3D,
     output_path: P,
@@ -302,6 +309,7 @@ pub fn export_scatter_3d_to_html<P: AsRef<Path>>(
 }
 
 /// Save visualization to file with automatic format detection
+#[allow(dead_code)]
 pub fn save_visualization_to_file<P: AsRef<Path>>(
     plot_2d: Option<&ScatterPlot2D>,
     plot_3d: Option<&ScatterPlot3D>,
@@ -343,6 +351,7 @@ pub fn save_visualization_to_file<P: AsRef<Path>>(
 }
 
 /// Generate HTML content for 2D scatter plot
+#[allow(dead_code)]
 fn generate_scatter_2d_html(plot: &ScatterPlot2D, config: &ExportConfig) -> Result<String> {
     let plot_data_json = serde_json::to_string(plot).map_err(|e| {
         ClusteringError::ComputationError(format!("JSON serialization failed: {}", e))
@@ -492,6 +501,7 @@ fn generate_scatter_2d_html(plot: &ScatterPlot2D, config: &ExportConfig) -> Resu
 }
 
 /// Generate HTML content for 3D scatter plot with Three.js
+#[allow(dead_code)]
 fn generate_scatter_3d_html(plot: &ScatterPlot3D, config: &ExportConfig) -> Result<String> {
     let plot_data_json = serde_json::to_string(plot).map_err(|e| {
         ClusteringError::ComputationError(format!("JSON serialization failed: {}", e))
@@ -684,6 +694,7 @@ fn generate_scatter_3d_html(plot: &ScatterPlot3D, config: &ExportConfig) -> Resu
 }
 
 // Placeholder implementations for other export formats
+#[allow(dead_code)]
 fn export_scatter_2d_to_csv<P: AsRef<Path>>(
     plot: &ScatterPlot2D,
     output_path: P,
@@ -707,6 +718,7 @@ fn export_scatter_2d_to_csv<P: AsRef<Path>>(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn export_scatter_2d_to_plotly<P: AsRef<Path>>(
     _plot: &ScatterPlot2D,
     _output_path: P,
@@ -717,6 +729,7 @@ fn export_scatter_2d_to_plotly<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_scatter_2d_to_d3<P: AsRef<Path>>(
     _plot: &ScatterPlot2D,
     _output_path: P,
@@ -727,6 +740,7 @@ fn export_scatter_2d_to_d3<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_scatter_2d_to_svg<P: AsRef<Path>>(
     _plot: &ScatterPlot2D,
     _output_path: P,
@@ -737,6 +751,7 @@ fn export_scatter_2d_to_svg<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_scatter_2d_to_png<P: AsRef<Path>>(
     _plot: &ScatterPlot2D,
     _output_path: P,
@@ -747,6 +762,7 @@ fn export_scatter_2d_to_png<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_scatter_3d_to_threejs<P: AsRef<Path>>(
     _plot: &ScatterPlot3D,
     _output_path: P,
@@ -757,6 +773,7 @@ fn export_scatter_3d_to_threejs<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_scatter_3d_to_gltf<P: AsRef<Path>>(
     _plot: &ScatterPlot3D,
     _output_path: P,
@@ -767,6 +784,7 @@ fn export_scatter_3d_to_gltf<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_scatter_3d_to_webgl<P: AsRef<Path>>(
     _plot: &ScatterPlot3D,
     _output_path: P,
@@ -777,6 +795,7 @@ fn export_scatter_3d_to_webgl<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_scatter_3d_to_unity<P: AsRef<Path>>(
     _plot: &ScatterPlot3D,
     _output_path: P,
@@ -787,6 +806,7 @@ fn export_scatter_3d_to_unity<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_scatter_3d_to_blender<P: AsRef<Path>>(
     _plot: &ScatterPlot3D,
     _output_path: P,
@@ -797,6 +817,7 @@ fn export_scatter_3d_to_blender<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_animation_to_gif<P: AsRef<Path>>(
     _frames: &[AnimationFrame],
     _output_path: P,
@@ -807,6 +828,7 @@ fn export_animation_to_gif<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_animation_to_mp4<P: AsRef<Path>>(
     _frames: &[AnimationFrame],
     _output_path: P,
@@ -817,6 +839,7 @@ fn export_animation_to_mp4<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_animation_to_webm<P: AsRef<Path>>(
     _frames: &[AnimationFrame],
     _output_path: P,
@@ -827,6 +850,7 @@ fn export_animation_to_webm<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_animation_to_html<P: AsRef<Path>>(
     _frames: &[AnimationFrame],
     _output_path: P,
@@ -837,6 +861,7 @@ fn export_animation_to_html<P: AsRef<Path>>(
     ))
 }
 
+#[allow(dead_code)]
 fn export_animation_to_json<P: AsRef<Path>>(
     frames: &[AnimationFrame],
     output_path: P,
@@ -863,6 +888,7 @@ fn export_animation_to_json<P: AsRef<Path>>(
 }
 
 /// Create metadata for exports
+#[allow(dead_code)]
 fn create_metadata() -> ExportMetadata {
     ExportMetadata {
         created_at: chrono::Utc::now().to_rfc3339(),

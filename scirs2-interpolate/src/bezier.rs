@@ -521,6 +521,7 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BezierSurface<F> {
 /// # Returns
 ///
 /// The value of the Bernstein polynomial at parameter t
+#[allow(dead_code)]
 pub fn bernstein<F: Float + FromPrimitive + std::fmt::Display>(
     t: F,
     i: usize,
@@ -572,6 +573,7 @@ pub fn bernstein<F: Float + FromPrimitive + std::fmt::Display>(
 /// # Returns
 ///
 /// An array containing all n+1 Bernstein polynomials of degree n at parameter t
+#[allow(dead_code)]
 pub fn compute_bernstein_all<F: Float + FromPrimitive>(
     t: F,
     n: usize,

@@ -69,6 +69,7 @@ impl Default for GLCMParams {
 /// # Returns
 ///
 /// * Result containing the GLCM as a 2D array
+#[allow(dead_code)]
 pub fn compute_glcm(img: &DynamicImage, params: &GLCMParams) -> Result<Array2<f64>> {
     let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
@@ -115,6 +116,7 @@ pub fn compute_glcm(img: &DynamicImage, params: &GLCMParams) -> Result<Array2<f6
 }
 
 /// Quantize image to specified number of levels
+#[allow(dead_code)]
 fn quantize_image(img: &GrayImage, levels: usize) -> Array2<usize> {
     let (width, height) = img.dimensions();
     let mut quantized = Array2::zeros((height as usize, width as usize));
@@ -160,6 +162,7 @@ pub struct HaralickFeatures {
 /// # Returns
 ///
 /// * Haralick features
+#[allow(dead_code)]
 pub fn compute_haralick_features(glcm: &Array2<f64>) -> HaralickFeatures {
     let (rows, cols) = glcm.dim();
 
@@ -239,6 +242,7 @@ pub fn compute_haralick_features(glcm: &Array2<f64>) -> HaralickFeatures {
 /// # Returns
 ///
 /// * Average Haralick features across all directions
+#[allow(dead_code)]
 pub fn compute_multi_direction_glcm_features(
     img: &DynamicImage,
     distance: i32,
@@ -302,6 +306,7 @@ pub struct ExtendedGLCMFeatures {
 }
 
 /// Compute extended GLCM features
+#[allow(dead_code)]
 pub fn compute_extended_glcm_features(glcm: &Array2<f64>) -> ExtendedGLCMFeatures {
     let haralick = compute_haralick_features(glcm);
     let (n, _) = glcm.dim();
@@ -380,6 +385,7 @@ pub fn compute_extended_glcm_features(glcm: &Array2<f64>) -> ExtendedGLCMFeature
 }
 
 /// Compute marginal probabilities and means
+#[allow(dead_code)]
 fn compute_marginals(glcm: &Array2<f64>) -> (Vec<f64>, Vec<f64>, f64, f64) {
     let (n, _) = glcm.dim();
 

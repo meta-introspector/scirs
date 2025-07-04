@@ -19,6 +19,7 @@ use scirs2_linalg::quantization::{
 };
 
 /// Create a random matrix with specified dimensions
+#[allow(dead_code)]
 fn create_random_array2_f32(rows: usize, cols: usize) -> Array2<f32> {
     let mut rng = rand::rng();
     let mut matrix = Array2::zeros((rows, cols));
@@ -48,6 +49,7 @@ fn create_random_array2_f32(rows: usize, cols: usize) -> Array2<f32> {
 }
 
 /// Benchmark conjugate gradient solver with different matrix representations
+#[allow(dead_code)]
 fn bench_conjugate_gradient(c: &mut Criterion) {
     let mut group = c.benchmark_group("Conjugate Gradient Solver");
     let sizes = [10, 50, 100];
@@ -218,6 +220,7 @@ fn bench_conjugate_gradient(c: &mut Criterion) {
 }
 
 /// Benchmark GMRES solver with different matrix representations
+#[allow(dead_code)]
 fn bench_gmres(c: &mut Criterion) {
     let mut group = c.benchmark_group("GMRES Solver");
     let sizes = [10, 50, 100];
@@ -338,6 +341,7 @@ fn bench_gmres(c: &mut Criterion) {
 }
 
 /// Benchmark special case: large sparse banded matrix
+#[allow(dead_code)]
 fn bench_large_banded_matrix(c: &mut Criterion) {
     let mut group = c.benchmark_group("Large Banded Matrix");
 
@@ -455,6 +459,7 @@ fn bench_large_banded_matrix(c: &mut Criterion) {
 }
 
 /// Benchmark memory usage by solving progressively larger problems
+#[allow(dead_code)]
 fn bench_memory_usage(c: &mut Criterion) {
     let mut group = c.benchmark_group("Memory Usage");
     let sizes = [100, 500, 1000];

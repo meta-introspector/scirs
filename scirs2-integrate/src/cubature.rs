@@ -71,6 +71,7 @@ impl<F: IntegrateFloat> Bound<F> {
 }
 
 /// Function to handle the transformation of infinite bounds
+#[allow(dead_code)]
 fn transform_for_infinite_bounds<F: IntegrateFloat>(x: F, a: &Bound<F>, b: &Bound<F>) -> (F, F) {
     match (a, b) {
         // Finite bounds - no transformation needed
@@ -165,6 +166,7 @@ fn transform_for_infinite_bounds<F: IntegrateFloat>(x: F, a: &Bound<F>, b: &Boun
 /// // Exact result is 0.25
 /// assert!((result.value - 0.25).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn cubature<F, Func>(
     f: Func,
     bounds: &[(Bound<F>, Bound<F>)],
@@ -251,6 +253,7 @@ where
 
 /// Internal recursive implementation of cubature algorithm
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn adaptive_cubature_impl<F, Func>(
     f: &Func,
     mapped_bounds: &[(F, F)],
@@ -313,6 +316,7 @@ where
 }
 
 /// Helper function for integrating with finite bounds
+#[allow(dead_code)]
 fn integrate_with_finite_bounds<F, Func>(
     f: &Func,
     mapped_bounds: &[(F, F)],
@@ -411,6 +415,7 @@ where
 }
 
 /// Helper function for integrating with infinite bounds
+#[allow(dead_code)]
 fn integrate_with_infinite_bounds<F, Func>(
     f: &Func,
     mapped_bounds: &[(F, F)],
@@ -557,6 +562,7 @@ where
 /// // Exact result is 0.25
 /// assert!((result.value - 0.25).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn nquad<F, Func>(
     func: Func,
     ranges: &[(F, F)],

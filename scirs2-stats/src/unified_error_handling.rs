@@ -244,6 +244,7 @@ static GLOBAL_HANDLER: Once = Once::new();
 static mut GLOBAL_HANDLER_INSTANCE: Option<UnifiedErrorHandler> = None;
 
 /// Get the global unified error handler instance
+#[allow(dead_code)]
 pub fn global_error_handler() -> &'static UnifiedErrorHandler {
     unsafe {
         GLOBAL_HANDLER.call_once(|| {
@@ -291,6 +292,7 @@ macro_rules! validate_or_error {
 }
 
 /// Helper function to create standardized error messages
+#[allow(dead_code)]
 pub fn create_standardized_error(
     error_type: &str,
     parameter: &str,

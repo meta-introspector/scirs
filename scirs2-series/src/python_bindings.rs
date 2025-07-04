@@ -7,13 +7,13 @@
 use pyo3::prelude::*;
 
 #[cfg(feature = "python")]
-use pyo3::types::{PyAny, PyDict, PyFloat, PyList, PyType};
+use pyo3::types::{PyAny, PyDict, PyType};
 
 #[cfg(feature = "python")]
-use numpy::{PyArray1, PyReadonlyArray1, ToPyArray};
+use numpy::{PyArray1, PyReadonlyArray1};
 
 #[cfg(feature = "python")]
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 
 #[cfg(feature = "python")]
 use std::collections::HashMap;
@@ -21,7 +21,6 @@ use std::collections::HashMap;
 #[cfg(feature = "python")]
 use crate::{
     arima_models::{ArimaConfig, ArimaModel},
-    error::{Result, TimeSeriesError},
     utils::*,
 };
 
@@ -269,6 +268,7 @@ impl PyARIMA {
 /// Utility functions for Python integration
 #[cfg(feature = "python")]
 #[pyfunction]
+#[allow(dead_code)]
 fn calculate_statistics(data: &PyTimeSeries) -> PyResult<HashMap<String, f64>> {
     let stats = calculate_basic_stats(&data.values)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
@@ -277,6 +277,7 @@ fn calculate_statistics(data: &PyTimeSeries) -> PyResult<HashMap<String, f64>> {
 
 #[cfg(feature = "python")]
 #[pyfunction]
+#[allow(dead_code)]
 fn check_stationarity(data: &PyTimeSeries) -> PyResult<bool> {
     let stationary = is_stationary(&data.values)
         .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
@@ -285,6 +286,7 @@ fn check_stationarity(data: &PyTimeSeries) -> PyResult<bool> {
 
 #[cfg(feature = "python")]
 #[pyfunction]
+#[allow(dead_code)]
 fn apply_differencing<'py>(
     py: Python<'py>,
     data: &PyTimeSeries,
@@ -297,6 +299,7 @@ fn apply_differencing<'py>(
 
 #[cfg(feature = "python")]
 #[pyfunction]
+#[allow(dead_code)]
 fn apply_seasonal_differencing<'py>(
     py: Python<'py>,
     data: &PyTimeSeries,
@@ -310,6 +313,7 @@ fn apply_seasonal_differencing<'py>(
 /// Auto-ARIMA functionality for Python
 #[cfg(feature = "python")]
 #[pyfunction]
+#[allow(dead_code)]
 fn auto_arima(
     data: &PyTimeSeries,
     max_p: usize,
@@ -348,6 +352,7 @@ fn auto_arima(
 /// Python module definition
 #[cfg(feature = "python")]
 #[pymodule]
+#[allow(dead_code)]
 fn scirs2_series(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyTimeSeries>()?;
     m.add_class::<PyARIMA>()?;
@@ -363,6 +368,7 @@ fn scirs2_series(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
 // Helper functions for pandas integration
 #[cfg(feature = "python")]
+#[allow(dead_code)]
 pub fn create_pandas_dataframe(
     py: Python,
     data: HashMap<String, Array1<f64>>,
@@ -379,6 +385,7 @@ pub fn create_pandas_dataframe(
 }
 
 #[cfg(feature = "python")]
+#[allow(dead_code)]
 pub fn create_pandas_series(
     py: Python,
     data: Array1<f64>,

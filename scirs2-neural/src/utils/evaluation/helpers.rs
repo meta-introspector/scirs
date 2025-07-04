@@ -47,14 +47,17 @@ pub(crate) fn draw_line_with_coords(
         if e2 > -dy {
             err -= dy;
             x += sx;
+        }
         if e2 < dx {
             err += dx;
             y += sy;
+        }
     }
     // Add the endpoint if in bounds
     let end_in_bounds = (max_width.is_none() || x2 < max_width.unwrap())
         && (max_height.is_none() || y2 < max_height.unwrap());
     if end_in_bounds {
         coords.push((x2, y2));
+    }
     coords
 }

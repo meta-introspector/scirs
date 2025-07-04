@@ -37,6 +37,7 @@ use std::ops::{Add, Div, Mul, Sub};
 /// assert_eq!(eye.get(2, 2), 1.0);
 /// assert_eq!(eye.get(0, 1), 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn eye_sym_array<T>(n: usize, format: &str) -> SparseResult<Box<dyn SymSparseArray<T>>>
 where
     T: Float
@@ -131,6 +132,7 @@ where
 /// assert_eq!(tri.get(1, 2), 1.0);
 /// assert_eq!(tri.get(0, 2), 0.0); // Zero element
 /// ```
+#[allow(dead_code)]
 pub fn tridiagonal_sym_array<T>(
     diag: &[T],
     offdiag: &[T],
@@ -303,6 +305,7 @@ where
 /// assert_eq!(banded.get(0, 2), 0.5);  // Second off-diagonal
 /// assert_eq!(banded.get(0, 3), 0.0);  // Outside band
 /// ```
+#[allow(dead_code)]
 pub fn banded_sym_array<T>(
     diagonals: &[Vec<T>],
     n: usize,
@@ -434,6 +437,7 @@ where
 ///
 /// // The actual density may vary slightly due to randomness
 /// ```
+#[allow(dead_code)]
 pub fn random_sym_array<T>(
     n: usize,
     density: f64,

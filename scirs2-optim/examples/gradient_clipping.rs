@@ -6,6 +6,7 @@ use scirs2_optim::{
     optimizers::{Adam, Optimizer},
 };
 
+#[allow(dead_code)]
 fn main() {
     // Create example parameters and large gradients (simulating gradient explosion)
     let params = Array1::zeros(5);

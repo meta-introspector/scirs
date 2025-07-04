@@ -67,6 +67,7 @@ use crate::error::{Result, TimeSeriesError};
 /// // The trend should have the same length as the input
 /// assert_eq!(trend.len(), ts.len());
 /// ```
+#[allow(dead_code)]
 pub fn estimate_piecewise_trend<F>(
     ts: &Array1<F>,
     options: &PiecewiseTrendOptions,
@@ -143,6 +144,7 @@ where
 }
 
 /// Detects breakpoints using the binary segmentation algorithm
+#[allow(dead_code)]
 fn detect_breakpoints_binary_segmentation<F>(
     ts: &Array1<F>,
     options: &PiecewiseTrendOptions,
@@ -227,6 +229,7 @@ where
 }
 
 /// Detects breakpoints using the PELT (Pruned Exact Linear Time) algorithm
+#[allow(dead_code)]
 fn detect_breakpoints_pelt<F>(ts: &Array1<F>, options: &PiecewiseTrendOptions) -> Result<Vec<usize>>
 where
     F: Float + FromPrimitive + Debug,
@@ -319,6 +322,7 @@ where
 }
 
 /// Detects breakpoints using the bottom-up segmentation algorithm
+#[allow(dead_code)]
 fn detect_breakpoints_bottom_up<F>(
     ts: &Array1<F>,
     options: &PiecewiseTrendOptions,
@@ -392,6 +396,7 @@ where
 }
 
 /// Calculates the improvement in criterion from splitting a segment
+#[allow(dead_code)]
 fn calculate_split_improvement<F>(
     segment_ts: &ArrayView1<F>,
     left_ts: &ArrayView1<F>,
@@ -468,6 +473,7 @@ where
 }
 
 /// Calculates the cost of a single segment using the specified criterion
+#[allow(dead_code)]
 fn calculate_segment_cost<F>(
     segment_ts: &ArrayView1<F>,
     model_type: SegmentModelType,
@@ -560,6 +566,7 @@ where
 }
 
 /// Fits a linear model to a segment
+#[allow(dead_code)]
 fn fit_linear_model<F>(segment_ts: &ArrayView1<F>) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -604,6 +611,7 @@ where
 }
 
 /// Fits a polynomial model of specified degree to a segment
+#[allow(dead_code)]
 fn fit_polynomial_model<F>(segment_ts: &ArrayView1<F>, degree: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -676,6 +684,7 @@ where
 }
 
 /// Solves a linear system using LU decomposition
+#[allow(dead_code)]
 fn solve_linear_system<F>(a: Array2<F>, b: Vec<F>) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -755,6 +764,7 @@ where
 }
 
 /// Fits a piecewise model to segments defined by breakpoints
+#[allow(dead_code)]
 fn fit_piecewise_model<F>(
     ts: &Array1<F>,
     breakpoints: &[usize],
@@ -835,6 +845,7 @@ where
 /// # Returns
 ///
 /// A `TrendWithConfidenceInterval` struct containing the estimated trend and confidence bounds
+#[allow(dead_code)]
 pub fn estimate_piecewise_trend_with_ci<F>(
     ts: &Array1<F>,
     options: &PiecewiseTrendOptions,

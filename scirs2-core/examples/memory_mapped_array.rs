@@ -11,6 +11,7 @@ use std::path::Path;
 use std::time::Instant;
 use tempfile::tempdir;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Memory-Mapped Arrays Example");
     println!("============================\n");
@@ -37,6 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Basic example of creating and using memory-mapped arrays
+#[allow(dead_code)]
 fn basic_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n1. Basic Memory-Mapped Array Example");
     println!("----------------------------------");
@@ -69,6 +71,7 @@ fn basic_example(temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Example showing how to work with large arrays using memory mapping
+#[allow(dead_code)]
 fn large_array_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n2. Large Array Processing Example");
     println!("-------------------------------");
@@ -117,6 +120,7 @@ fn large_array_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error::Error
 }
 
 /// Example showing how to work with multi-dimensional arrays
+#[allow(dead_code)]
 fn multi_dimensional_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n3. Multi-Dimensional Array Example");
     println!("---------------------------------");
@@ -148,6 +152,7 @@ fn multi_dimensional_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error:
 }
 
 /// Example comparing performance between memory-mapped and in-memory arrays
+#[allow(dead_code)]
 fn performance_comparison_example(_temp_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n4. Performance Comparison Example");
     println!("--------------------------------");

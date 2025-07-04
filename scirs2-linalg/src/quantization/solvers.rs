@@ -30,6 +30,7 @@ use std::iter::Sum;
 /// # Returns
 ///
 /// * Solution vector x
+#[allow(dead_code)]
 pub fn quantized_conjugate_gradient<F>(
     a: &QuantizedMatrixFreeOp<F>,
     b: &Array1<F>,
@@ -203,6 +204,7 @@ where
 /// # Returns
 ///
 /// * Solution vector x
+#[allow(dead_code)]
 pub fn quantized_gmres<F>(
     a: &QuantizedMatrixFreeOp<F>,
     b: &Array1<F>,
@@ -403,6 +405,7 @@ where
 ///
 /// This function computes the cosine and sine values for a Givens rotation
 /// matrix that eliminates the subdiagonal element in the Hessenberg matrix.
+#[allow(dead_code)]
 fn givens_rotation<F>(a: F, b: F) -> (F, F)
 where
     F: Float + NumAssign + Zero + Sum + One + ScalarOperand + Send + Sync,
@@ -434,6 +437,7 @@ where
 /// # Returns
 ///
 /// A quantized matrix-free operator representing the preconditioner
+#[allow(dead_code)]
 pub fn quantized_jacobi_preconditioner<F>(
     a: &QuantizedMatrixFreeOp<F>,
 ) -> LinalgResult<QuantizedMatrixFreeOp<F>>
@@ -527,6 +531,7 @@ where
 /// # Returns
 ///
 /// * Solution vector x
+#[allow(dead_code)]
 pub fn quantized_preconditioned_conjugate_gradient<F>(
     a: &QuantizedMatrixFreeOp<F>,
     m: &QuantizedMatrixFreeOp<F>,

@@ -41,6 +41,7 @@ use scirs2_series::{
 use std::collections::HashMap;
 
 /// Generate synthetic time series with known properties for testing
+#[allow(dead_code)]
 fn generate_test_series(
     length: usize,
     trend: f64,
@@ -68,6 +69,7 @@ fn generate_test_series(
 }
 
 /// Generate time series with known change points
+#[allow(dead_code)]
 fn generate_change_point_series(length: usize, change_points: &[usize]) -> Array1<f64> {
     let mut series = Array1::zeros(length);
     let mut current_mean = 10.0;
@@ -89,6 +91,7 @@ fn generate_change_point_series(length: usize, change_points: &[usize]) -> Array
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_end_to_end_forecasting_pipeline() {
     // Create synthetic data with trend and seasonality
     let data = generate_test_series(500, 0.01, 12, 1.0);
@@ -124,6 +127,7 @@ fn test_end_to_end_forecasting_pipeline() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_anomaly_detection_and_change_point_integration() {
     // Create data with anomalies and change points
     let mut data = generate_test_series(200, 0.0, 10, 1.0);
@@ -155,6 +159,7 @@ fn test_anomaly_detection_and_change_point_integration() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_feature_extraction_and_classification_pipeline() {
     // Generate multiple time series with different characteristics
     let series1 = generate_test_series(300, 0.02, 12, 0.5); // High trend, low noise
@@ -193,6 +198,7 @@ fn test_feature_extraction_and_classification_pipeline() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_causality_and_correlation_analysis() {
     let length = 300;
 
@@ -226,6 +232,7 @@ fn test_causality_and_correlation_analysis() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_distributed_processing_workflow() {
     // Large dataset for distributed processing
     let large_data = generate_test_series(50000, 0.01, 12, 1.0);
@@ -254,6 +261,7 @@ fn test_distributed_processing_workflow() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_streaming_analysis_pipeline() {
     let data = generate_test_series(1000, 0.005, 10, 1.0);
 
@@ -289,6 +297,7 @@ fn test_streaming_analysis_pipeline() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_financial_analysis_integration() {
     // Generate financial return series
     let returns = generate_test_series(500, 0.0, 1, 0.02); // Daily returns with volatility
@@ -320,6 +329,7 @@ fn test_financial_analysis_integration() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_biomedical_signal_processing() {
     // Generate ECG-like signal
     let fs = 1000.0; // 1000 Hz sampling rate
@@ -367,6 +377,7 @@ fn test_biomedical_signal_processing() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_iot_environmental_monitoring() {
     let length = 1000;
 
@@ -406,6 +417,7 @@ fn test_iot_environmental_monitoring() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_out_of_core_processing_integration() {
     // Configure out-of-core processing
     let config = ProcessingConfig::new()
@@ -447,6 +459,7 @@ fn test_out_of_core_processing_integration() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_cross_validation_workflow() {
     let data = generate_test_series(200, 0.01, 12, 1.0);
 
@@ -492,6 +505,7 @@ fn test_cross_validation_workflow() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_dimensionality_reduction_workflow() {
     // Generate multivariate time series
     let n_series = 10;
@@ -525,6 +539,7 @@ fn test_dimensionality_reduction_workflow() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_trend_analysis_integration() {
     // Generate data with multiple trend regimes
     let mut data = Array1::zeros(500);
@@ -560,6 +575,7 @@ fn test_trend_analysis_integration() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_comprehensive_workflow() {
     // This test combines multiple modules in a realistic analysis workflow
 

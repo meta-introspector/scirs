@@ -754,6 +754,7 @@ impl VariationalARDResult {
 // Helper functions
 
 /// Compute outer product of a vector with itself
+#[allow(dead_code)]
 fn outer_product(v: &Array1<f64>) -> Array2<f64> {
     let n = v.len();
     let mut result = Array2::zeros((n, n));
@@ -766,6 +767,7 @@ fn outer_product(v: &Array1<f64>) -> Array2<f64> {
 }
 
 /// Approximate normal PPF using rational approximation
+#[allow(dead_code)]
 fn normal_ppf(p: f64) -> Result<f64> {
     if p <= 0.0 || p >= 1.0 {
         return Err(StatsError::InvalidArgument(
@@ -833,6 +835,7 @@ fn normal_ppf(p: f64) -> Result<f64> {
 }
 
 /// Digamma function (approximate)
+#[allow(dead_code)]
 fn digamma(x: f64) -> f64 {
     if x <= 0.0 {
         return f64::NEG_INFINITY;
@@ -850,6 +853,7 @@ fn digamma(x: f64) -> f64 {
 }
 
 /// Log gamma function (approximate)
+#[allow(dead_code)]
 fn lgamma(x: f64) -> f64 {
     if x <= 0.0 {
         return f64::NEG_INFINITY;

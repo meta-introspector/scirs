@@ -21,6 +21,7 @@ use std::vec::Vec;
 /// # Returns
 ///
 /// * `Result<S::Ok, S::Error>` - Serialization result
+#[allow(dead_code)]
 pub fn serialize_array2<S>(array: &Array2<f64>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -51,6 +52,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<f64>, D::Error>` - Deserialized 2D array
+#[allow(dead_code)]
 pub fn deserialize_array2<'de, D>(deserializer: D) -> Result<Array2<f64>, D::Error>
 where
     D: Deserializer<'de>,
@@ -99,6 +101,7 @@ where
 /// # Returns
 ///
 /// * `Result<S::Ok, S::Error>` - Serialization result
+#[allow(dead_code)]
 pub fn serialize_array1<S>(array: &Array1<f64>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -118,6 +121,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array1<f64>, D::Error>` - Deserialized 1D array
+#[allow(dead_code)]
 pub fn deserialize_array1<'de, D>(deserializer: D) -> Result<Array1<f64>, D::Error>
 where
     D: Deserializer<'de>,

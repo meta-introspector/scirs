@@ -161,6 +161,7 @@ impl<F: IntegrateFloat> ExtendedBoundaryConditions<F> {
 }
 
 /// Solve BVP with extended boundary condition support
+#[allow(dead_code)]
 pub fn solve_bvp_extended<F, FunType>(
     fun: FunType,
     x_span: [F; 2],
@@ -224,6 +225,7 @@ where
 }
 
 /// Create boundary condition function for extended boundary conditions
+#[allow(dead_code)]
 fn create_extended_bc_function<F, FunType>(
     boundary_conditions: ExtendedBoundaryConditions<F>,
     fun: FunType,
@@ -353,6 +355,7 @@ impl<F: IntegrateFloat> MultipointBVP<F> {
 }
 
 /// Solve multipoint boundary value problem
+#[allow(dead_code)]
 pub fn solve_multipoint_bvp<F, FunType>(
     fun: FunType,
     x_span: [F; 2],
@@ -494,6 +497,7 @@ where
 }
 
 /// Apply initial boundary values to solution array
+#[allow(dead_code)]
 fn apply_initial_boundary_values<F: IntegrateFloat>(
     boundary_conditions: &ExtendedBoundaryConditions<F>,
     y_solution: &mut Array2<F>,
@@ -515,6 +519,7 @@ fn apply_initial_boundary_values<F: IntegrateFloat>(
 }
 
 /// Compute residuals for multipoint BVP
+#[allow(dead_code)]
 fn compute_multipoint_residuals<F: IntegrateFloat, FunType>(
     fun: &FunType,
     mesh: &[F],
@@ -565,6 +570,7 @@ where
 }
 
 /// Apply boundary condition residuals
+#[allow(dead_code)]
 fn apply_boundary_residuals<F: IntegrateFloat>(
     boundary_conditions: &ExtendedBoundaryConditions<F>,
     y_solution: &Array2<F>,
@@ -594,6 +600,7 @@ fn apply_boundary_residuals<F: IntegrateFloat>(
 }
 
 /// Apply interior point condition residuals
+#[allow(dead_code)]
 fn apply_interior_residuals<F: IntegrateFloat>(
     multipoint: &MultipointBVP<F>,
     mesh: &[F],
@@ -641,6 +648,7 @@ fn apply_interior_residuals<F: IntegrateFloat>(
 }
 
 /// Compute Jacobian for multipoint BVP (simplified version)
+#[allow(dead_code)]
 fn compute_multipoint_jacobian<F: IntegrateFloat, FunType>(
     fun: &FunType,
     mesh: &[F],
@@ -707,6 +715,7 @@ where
 }
 
 /// Solve sparse linear system (simplified dense solver)
+#[allow(dead_code)]
 fn solve_sparse_system<F: IntegrateFloat>(
     jacobian: &[Vec<F>],
     residuals: &[F],
@@ -732,6 +741,7 @@ fn solve_sparse_system<F: IntegrateFloat>(
 }
 
 /// Simple Gaussian elimination solver
+#[allow(dead_code)]
 fn gaussian_elimination<F: IntegrateFloat>(
     mut a: Array2<F>,
     mut b: Array1<F>,
@@ -791,6 +801,7 @@ fn gaussian_elimination<F: IntegrateFloat>(
 }
 
 /// Transpose solution from row-major to column-major format
+#[allow(dead_code)]
 fn transpose_solution<F: IntegrateFloat>(y_solution: Array2<F>) -> Vec<Array1<F>> {
     let n_points = y_solution.nrows();
     let _n_dim = y_solution.ncols();

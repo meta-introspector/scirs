@@ -4,7 +4,7 @@
 //! multiple advanced AI optimization techniques including learned optimizers,
 //! neural architecture search, few-shot learning, and adaptive strategies.
 
-use ndarray::{Array1, Array2, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant, SystemTime};
@@ -267,23 +267,6 @@ pub struct PerformanceSnapshot<T: Float> {
 }
 
 /// Optimization context
-#[derive(Debug, Clone)]
-pub struct OptimizationContext<T: Float> {
-    /// Problem characteristics
-    pub problem_characteristics: ProblemCharacteristics<T>,
-
-    /// Current optimization state
-    pub optimization_state: OptimizationState<T>,
-
-    /// Historical performance
-    pub historical_performance: Vec<T>,
-
-    /// Resource constraints
-    pub resource_constraints: ResourceConstraints<T>,
-
-    /// Time constraints
-    pub time_constraints: TimeConstraints,
-}
 
 /// Landscape features
 #[derive(Debug, Clone)]
@@ -334,15 +317,6 @@ pub enum ResourceAllocationStrategy {
 }
 
 /// Optimization objectives
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum OptimizationObjective {
-    ConvergenceSpeed,
-    FinalPerformance,
-    ResourceEfficiency,
-    Robustness,
-    Adaptability,
-    Scalability,
-}
 
 /// Ensemble strategies
 #[derive(Debug, Clone, Copy)]
@@ -901,6 +875,37 @@ pub enum NoiseType {
     Uniform,
     Structured,
     Adversarial,
+}
+
+/// Optimization objectives for multi-objective optimization
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub enum OptimizationObjective {
+    FinalPerformance,
+    ConvergenceSpeed,
+    ResourceEfficiency,
+    Robustness,
+    Adaptability,
+    MemoryUsage,
+    ComputationalCost,
+}
+
+/// Context information for optimization process
+#[derive(Debug, Clone)]
+pub struct OptimizationContext<T: Float> {
+    /// Current optimization state
+    pub state: OptimizationState<T>,
+    /// Problem characteristics
+    pub problem_characteristics: ProblemCharacteristics<T>,
+    /// Resource constraints
+    pub resource_constraints: ResourceConstraints<T>,
+    /// Time constraints
+    pub time_constraints: TimeConstraints,
+    /// Current optimization phase
+    pub current_phase: OptimizationPhase,
+    /// Performance history
+    pub performance_history: VecDeque<T>,
+    /// Gradient characteristics
+    pub gradient_characteristics: GradientCharacteristics<T>,
 }
 
 #[derive(Debug, Clone)]

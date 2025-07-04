@@ -13,6 +13,7 @@ use ndarray::{ArrayView2, ArrayViewMut2};
 //
 // **Panics** if `A` and `B` are not the same type
 #[inline]
+#[allow(dead_code)]
 fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B {
     assert!(same_type::<A, B>());
     unsafe { ::std::ptr::read(a as *const _ as *const B) }
@@ -21,6 +22,7 @@ fn cast_as<A: 'static + Copy, B: 'static + Copy>(a: &A) -> B {
 // Note: mat_mul_impl and batch_mat_mul_impl removed as they were unused wrappers
 
 /// C ← α A B + β C
+#[allow(dead_code)]
 fn mat_mul_impl_slow<F: Float>(
     alpha: F,
     lhs: &ArrayView2<'_, F>,
@@ -65,6 +67,7 @@ fn mat_mul_impl_slow<F: Float>(
 /// C ← α A B + β C
 #[allow(unused_assignments)]
 #[allow(unused)]
+#[allow(dead_code)]
 fn batch_mat_mul_impl_slow<F: Float>(
     alpha: F,
     lhs: &NdArrayView<'_, F>,
@@ -162,6 +165,7 @@ fn batch_mat_mul_impl_slow<F: Float>(
 }
 
 #[inline]
+#[allow(dead_code)]
 fn batch_mat_mul_requires_copy(stride: &[ndarray::Ixs]) -> bool {
     let rank = stride.len();
     // unwrap is ok since stride.len() > 2
@@ -171,6 +175,7 @@ fn batch_mat_mul_requires_copy(stride: &[ndarray::Ixs]) -> bool {
     min_str < row_str || min_str < col_str
 }
 
+#[allow(dead_code)]
 fn dot_shape_error(m: usize, k: usize, k2: usize, n: usize) -> String {
     match m.checked_mul(n) {
         Some(len) if len <= isize::MAX as usize => {}
@@ -423,6 +428,7 @@ impl<T: Float> op::Op<T> for BatchMatMul {
 pub struct TensordotPreprocess;
 
 #[inline]
+#[allow(dead_code)]
 fn tensordot_preprocess<T: Float>(
     shape: &[usize],
     axes: &[usize],

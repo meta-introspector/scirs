@@ -7,6 +7,7 @@ use std::fmt::Debug;
 use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function for safe conversion from usize to float
+#[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
@@ -125,6 +126,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 /// - If the total mass (sum of all values) is zero, returns the geometric center of the array
 /// - For binary images, equivalent to finding the centroid of the foreground region
 /// - Subpixel precision is maintained for accurate localization
+#[allow(dead_code)]
 pub fn center_of_mass<T, D>(input: &Array<T, D>) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
@@ -194,6 +196,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, ndarray::Ix2>>` - Moment of inertia tensor
+#[allow(dead_code)]
 pub fn moments_inertia_tensor<T, D>(input: &Array<T, D>) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
@@ -221,6 +224,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, ndarray::Ix1>>` - Array of moments
+#[allow(dead_code)]
 pub fn moments<T, D>(input: &Array<T, D>, order: usize) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
     T: Float + FromPrimitive + Debug + NumAssign,
@@ -313,6 +317,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, ndarray::Ix1>>` - Array of central moments
+#[allow(dead_code)]
 pub fn central_moments<T, D>(
     input: &Array<T, D>,
     order: usize,
@@ -455,6 +460,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, ndarray::Ix1>>` - Array of normalized moments
+#[allow(dead_code)]
 pub fn normalized_moments<T, D>(
     input: &Array<T, D>,
     order: usize,

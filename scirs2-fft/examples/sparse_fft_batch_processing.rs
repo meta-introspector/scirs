@@ -12,6 +12,7 @@ use std::f64::consts::PI;
 use std::time::Instant;
 
 // Helper function to create a sparse signal with specified frequencies
+#[allow(dead_code)]
 fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
     let mut signal = vec![0.0; n];
     for (i, sample) in signal.iter_mut().enumerate().take(n) {
@@ -24,6 +25,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 }
 
 // Helper to add noise to signals
+#[allow(dead_code)]
 fn add_noise(signal: &[f64], noise_level: f64) -> Vec<f64> {
     let mut rng = rand::rng();
     signal
@@ -33,6 +35,7 @@ fn add_noise(signal: &[f64], noise_level: f64) -> Vec<f64> {
 }
 
 // Helper to create a batch of signals with varying parameters
+#[allow(dead_code)]
 fn create_test_batch(count: usize) -> Vec<Vec<f64>> {
     let mut signals = Vec::with_capacity(count);
     let _rng = rand::rng();
@@ -59,6 +62,7 @@ fn create_test_batch(count: usize) -> Vec<Vec<f64>> {
     signals
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Sparse FFT Batch Processing Example");
     println!("===================================\n");
@@ -164,6 +168,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Process signals sequentially (baseline)
+#[allow(dead_code)]
 fn process_signals_sequentially(
     signals: &[Vec<f64>],
 ) -> Result<Vec<scirs2_fft::sparse_fft::SparseFFTResult>, Box<dyn std::error::Error>> {
@@ -190,6 +195,7 @@ fn process_signals_sequentially(
 }
 
 // Verify that different processing methods give similar results
+#[allow(dead_code)]
 fn verify_results(
     baseline_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
     test_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
@@ -243,6 +249,7 @@ fn verify_results(
 }
 
 // Analyze results from different processing methods
+#[allow(dead_code)]
 fn analyze_results(
     sequential_results: &[scirs2_fft::sparse_fft::SparseFFTResult],
     parallel_results: &[scirs2_fft::sparse_fft::SparseFFTResult],

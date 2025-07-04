@@ -379,6 +379,7 @@ impl<F: Float + FromPrimitive + Debug> PchipInterpolator<F> {
 ///
 /// let y_interp = pchip_interpolate(&x.view(), &y.view(), &x_new.view(), true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn pchip_interpolate<F: crate::traits::InterpolationFloat>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,

@@ -227,6 +227,7 @@ impl<F: Float + NumCast + Send + Sync> ParallelHistogram<F> {
 }
 
 /// Parallel kernel density estimation
+#[allow(dead_code)]
 pub fn kde_parallel<F, D>(
     data: &ArrayBase<D, Ix1>,
     eval_points: &Array1<F>,
@@ -426,6 +427,7 @@ impl<F: Float + NumCast + Send + Sync + SimdUnifiedOps> ParallelMovingStats<F> {
 }
 
 /// Parallel computation of pairwise distances
+#[allow(dead_code)]
 pub fn pairwise_distances_parallel<F, D>(
     x: &ArrayBase<D, Ix2>,
     metric: &str,

@@ -82,6 +82,7 @@ pub struct HrSpectralResult {
 /// # Returns
 ///
 /// * High-resolution spectral estimate using MUSIC algorithm
+#[allow(dead_code)]
 pub fn music(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSpectralResult> {
     let (n_samples, n_snapshots) = data.dim();
 
@@ -152,6 +153,7 @@ pub fn music(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSp
 /// # Returns
 ///
 /// * High-resolution spectral estimate using ESPRIT algorithm
+#[allow(dead_code)]
 pub fn esprit(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSpectralResult> {
     let (n_samples, _n_snapshots) = data.dim();
 
@@ -253,6 +255,7 @@ pub fn esprit(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrS
 /// # Returns
 ///
 /// * High-resolution spectral estimate using MVDR method
+#[allow(dead_code)]
 pub fn minimum_variance(
     data: &Array2<f64>,
     config: &HrSpectralConfig,
@@ -305,6 +308,7 @@ pub fn minimum_variance(
 /// # Returns
 ///
 /// * High-resolution spectral estimate using Pisarenko method
+#[allow(dead_code)]
 pub fn pisarenko(
     data: &Array1<f64>,
     order: usize,
@@ -382,6 +386,7 @@ pub fn pisarenko(
 /// # Returns
 ///
 /// * Parameters of exponential model and spectral estimate
+#[allow(dead_code)]
 pub fn prony(
     data: &Array1<f64>,
     order: usize,
@@ -450,6 +455,7 @@ pub fn prony(
 // Helper functions
 
 /// Estimate correlation matrix from data
+#[allow(dead_code)]
 fn estimate_correlation_matrix(data: &Array2<Complex64>) -> SignalResult<Array2<Complex64>> {
     let (n_samples, n_snapshots) = data.dim();
     let mut correlation = Array2::zeros((n_samples, n_samples));
@@ -474,6 +480,7 @@ fn estimate_correlation_matrix(data: &Array2<Complex64>) -> SignalResult<Array2<
 }
 
 /// Determine signal subspace dimension from eigenvalues
+#[allow(dead_code)]
 fn determine_signal_dimension(
     eigen_pairs: &[(f64, ArrayView1<Complex64>)],
     config: &HrSpectralConfig,
@@ -502,12 +509,14 @@ fn determine_signal_dimension(
 }
 
 /// Create frequency grid for spectrum evaluation
+#[allow(dead_code)]
 fn create_frequency_grid(config: &HrSpectralConfig) -> Array1<f64> {
     let [start, end] = config.freq_range;
     Array1::linspace(start, end, config.num_freqs)
 }
 
 /// Compute MUSIC pseudospectrum
+#[allow(dead_code)]
 fn compute_music_spectrum(
     noise_eigenvectors: &Array2<Complex64>,
     frequencies: &Array1<f64>,
@@ -545,6 +554,7 @@ fn compute_music_spectrum(
 }
 
 /// Compute MVDR spectrum
+#[allow(dead_code)]
 fn compute_mvdr_spectrum(
     inv_correlation: &Array2<Complex64>,
     frequencies: &Array1<f64>,
@@ -579,6 +589,7 @@ fn compute_mvdr_spectrum(
 }
 
 /// Solve ESPRIT equation S2 = S1 * Phi
+#[allow(dead_code)]
 fn solve_esprit_equation(
     s1: &Array2<Complex64>,
     s2: &Array2<Complex64>,
@@ -595,6 +606,7 @@ fn solve_esprit_equation(
 }
 
 /// Create line spectrum from estimated frequencies
+#[allow(dead_code)]
 fn create_line_spectrum(
     frequency_grid: &Array1<f64>,
     source_frequencies: &[f64],
@@ -621,6 +633,7 @@ fn create_line_spectrum(
 }
 
 /// Create autocorrelation matrix
+#[allow(dead_code)]
 fn create_autocorrelation_matrix(
     data: &Array1<f64>,
     order: usize,
@@ -658,6 +671,7 @@ fn create_autocorrelation_matrix(
 }
 
 /// Find roots of polynomial (simplified implementation)
+#[allow(dead_code)]
 fn find_polynomial_roots(coeffs: &[Complex64]) -> SignalResult<Vec<Complex64>> {
     let n = coeffs.len() - 1;
 
@@ -725,6 +739,7 @@ fn find_polynomial_roots(coeffs: &[Complex64]) -> SignalResult<Vec<Complex64>> {
 }
 
 /// Solve linear system Ax = b
+#[allow(dead_code)]
 fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Use scirs2_linalg solve
     compute_solve(&a.view(), &b.view(), None)

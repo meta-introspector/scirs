@@ -102,7 +102,7 @@ use num_complex::Complex64;
 /// use scirs2_signal::stft::{ShortTimeFft, StftConfig};
 /// use scirs2_signal::window;
 /// use ndarray::Array1;
-/// #[cfg(test)]
+///
 use std::f64::consts::PI;
 ///
 /// // Create a signal with varying frequency
@@ -1212,6 +1212,7 @@ impl ShortTimeFft {
 /// # Returns
 ///
 /// * Dual window as Array1<f64>
+#[allow(dead_code)]
 fn calc_dual_window_internal(win: &[f64], hop: usize) -> SignalResult<Array1<f64>> {
     if hop > win.len() {
         return Err(SignalError::ValueError(format!(
@@ -1261,6 +1262,7 @@ fn calc_dual_window_internal(win: &[f64], hop: usize) -> SignalResult<Array1<f64
 /// # Returns
 ///
 /// * Tuple of (dual window, scaling factor)
+#[allow(dead_code)]
 pub fn closest_stft_dual_window(
     win: &[f64],
     hop: usize,
@@ -1344,6 +1346,7 @@ pub fn closest_stft_dual_window(
 /// # Returns
 ///
 /// * COLA window
+#[allow(dead_code)]
 pub fn create_cola_window(m: usize, hop: usize) -> SignalResult<Vec<f64>> {
     // Create initial rectangular window
     let rect_win = vec![1.0; m];
@@ -1360,7 +1363,7 @@ mod tests {
     #[allow(unused_imports)]
     use approx::assert_relative_eq;
     use num_complex::Complex64;
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     #[test]
@@ -1938,11 +1941,10 @@ pub struct MemoryInfo {
     pub memory_reduction_factor: f64,
 }
 
-#[cfg(test)]
 mod memory_efficient_tests {
     use super::*;
     use num_complex::Complex64;
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     #[test]

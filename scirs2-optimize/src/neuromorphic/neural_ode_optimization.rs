@@ -74,6 +74,7 @@ impl NeuralODE {
 }
 
 /// Neural ODE-based optimization
+#[allow(dead_code)]
 pub fn neural_ode_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
@@ -99,6 +100,7 @@ where
 }
 
 /// Compute finite difference gradient
+#[allow(dead_code)]
 fn compute_finite_difference_gradient<F>(objective: &F, params: &ArrayView1<f64>) -> Array1<f64>
 where
     F: Fn(&ArrayView1<f64>) -> f64,

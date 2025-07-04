@@ -6,6 +6,7 @@
 use scirs2_metrics::selection::{AggregationStrategy, ModelSelectionBuilder, ModelSelector};
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Automated Model Selection Example");
     println!("================================");
@@ -200,6 +201,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Creates a comprehensive set of model evaluation results
+#[allow(dead_code)]
 fn create_model_scores() -> HashMap<String, Vec<(&'static str, f64)>> {
     let mut scores = HashMap::new();
 

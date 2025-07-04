@@ -56,8 +56,7 @@ pub enum ThresholdSelect {
 /// ```rust
 /// use scirs2_signal::denoise::{denoise_wavelet, ThresholdMethod, ThresholdSelect};
 /// use scirs2_signal::dwt::Wavelet;
-/// #[cfg(test)]
-use std::f64::consts::PI;
+///
 ///
 /// // Create a clean signal
 /// let time: Vec<f64> = (0..1000).map(|i| i as f64 / 100.0).collect();
@@ -92,6 +91,7 @@ use std::f64::consts::PI;
 ///     .map(|(&d, &n)| (d - n).abs()).sum::<f64>();
 /// assert!(diff > 0.01);
 /// ```
+#[allow(dead_code)]
 pub fn denoise_wavelet<T>(
     data: &[T],
     wavelet: Wavelet,
@@ -171,6 +171,7 @@ where
 /// Apply hard thresholding to wavelet coefficients
 ///
 /// Sets coefficients with absolute value less than the threshold to zero.
+#[allow(dead_code)]
 fn hard_threshold(coeffs: &[f64], threshold: f64) -> Vec<f64> {
     coeffs
         .iter()
@@ -181,6 +182,7 @@ fn hard_threshold(coeffs: &[f64], threshold: f64) -> Vec<f64> {
 /// Apply soft thresholding to wavelet coefficients
 ///
 /// Shrinks coefficients above the threshold toward zero by the threshold amount.
+#[allow(dead_code)]
 fn soft_threshold(coeffs: &[f64], threshold: f64) -> Vec<f64> {
     coeffs
         .iter()
@@ -197,6 +199,7 @@ fn soft_threshold(coeffs: &[f64], threshold: f64) -> Vec<f64> {
 /// Apply garrote thresholding to wavelet coefficients
 ///
 /// A compromise between hard and soft thresholding.
+#[allow(dead_code)]
 fn garrote_threshold(coeffs: &[f64], threshold: f64) -> Vec<f64> {
     coeffs
         .iter()
@@ -211,6 +214,7 @@ fn garrote_threshold(coeffs: &[f64], threshold: f64) -> Vec<f64> {
 }
 
 /// Apply threshold to wavelet coefficients using specified method
+#[allow(dead_code)]
 pub fn threshold_coefficients(coeffs: &[f64], threshold: f64, method: ThresholdMethod) -> Vec<f64> {
     check_finite(coeffs, "coefficients").unwrap_or_else(|_| {
         // If finite check fails, proceed anyway but log it
@@ -229,6 +233,7 @@ pub fn threshold_coefficients(coeffs: &[f64], threshold: f64, method: ThresholdM
 }
 
 /// SIMD-optimized threshold function for wavelet coefficients
+#[allow(dead_code)]
 fn simd_threshold_coefficients(
     coeffs: &[f64],
     threshold: f64,
@@ -250,6 +255,7 @@ fn simd_threshold_coefficients(
 
 /// AVX2-optimized thresholding implementation for denoising
 #[cfg(target_arch = "x86_64")]
+#[allow(dead_code)]
 fn simd_threshold_avx2(coeffs: &[f64], threshold: f64, method: ThresholdMethod) -> Vec<f64> {
     use std::arch::x86_64::*;
 
@@ -330,6 +336,7 @@ fn simd_threshold_avx2(coeffs: &[f64], threshold: f64, method: ThresholdMethod) 
 
 /// Fallback scalar thresholding for non-x86_64 architectures
 #[cfg(not(target_arch = "x86_64"))]
+#[allow(dead_code)]
 fn simd_threshold_avx2(coeffs: &[f64], threshold: f64, method: ThresholdMethod) -> Vec<f64> {
     match method {
         ThresholdMethod::Hard => hard_threshold(coeffs, threshold),
@@ -339,6 +346,7 @@ fn simd_threshold_avx2(coeffs: &[f64], threshold: f64, method: ThresholdMethod) 
 }
 
 /// Compute the median absolute deviation of a vector
+#[allow(dead_code)]
 fn median_abs_deviation(data: &[f64]) -> f64 {
     if data.is_empty() {
         return 0.0;
@@ -353,6 +361,7 @@ fn median_abs_deviation(data: &[f64]) -> f64 {
 }
 
 /// SIMD-optimized median absolute deviation computation
+#[allow(dead_code)]
 fn simd_median_abs_deviation(data: &[f64]) -> f64 {
     let caps = PlatformCapabilities::detect();
 
@@ -365,6 +374,7 @@ fn simd_median_abs_deviation(data: &[f64]) -> f64 {
 
 /// AVX2-optimized absolute value computation for MAD
 #[cfg(target_arch = "x86_64")]
+#[allow(dead_code)]
 fn simd_mad_avx2(data: &[f64]) -> f64 {
     use std::arch::x86_64::*;
 
@@ -427,11 +437,13 @@ fn simd_mad_avx2(data: &[f64]) -> f64 {
 
 /// Fallback scalar MAD for non-x86_64 architectures
 #[cfg(not(target_arch = "x86_64"))]
+#[allow(dead_code)]
 fn simd_mad_avx2(data: &[f64]) -> f64 {
     scalar_median_abs_deviation(data)
 }
 
 /// Scalar implementation of median absolute deviation
+#[allow(dead_code)]
 fn scalar_median_abs_deviation(data: &[f64]) -> f64 {
     // Create a copy to avoid modifying the original
     let mut values: Vec<f64> = data.iter().map(|&x| x.abs()).collect();
@@ -461,14 +473,15 @@ fn scalar_median_abs_deviation(data: &[f64]) -> f64 {
     }
 }
 
-#[cfg(test)]
 mod tests {
+    #[allow(unused_imports)]
     use super::*;
+    #[allow(unused_imports)]
     use crate::dwt::Wavelet;
+    #[allow(unused_imports)]
     use rand::Rng;
-    #[cfg(test)]
-    use std::f64::consts::PI;
 
+    
     #[test]
     fn test_thresholding_methods() {
         let data = vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0];
@@ -513,7 +526,7 @@ mod tests {
         let mut rng = rand::rng();
         let mut noisy_signal = clean_signal.clone();
         for val in noisy_signal.iter_mut() {
-            *val += 0.2 * rng.gen_range(-1.0..1.0);
+            *val += 0.2 * rng.random_range(-1.0..1.0);
         }
 
         // Denoise using wavelet thresholding with limited decomposition level

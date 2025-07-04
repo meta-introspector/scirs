@@ -82,6 +82,7 @@ impl<F: IntegrateFloat> SymplecticIntegrator<F> for StormerVerlet<F> {
 /// For separable Hamiltonians, this simplifies to:
 /// 1. q_{n+1} = q_n + dt * p_n/m
 /// 2. p_{n+1} = p_n - dt * ∇V(q_{n+1})
+#[allow(dead_code)]
 pub fn velocity_verlet<F: IntegrateFloat>(
     system: &dyn HamiltonianFn<F>,
     t: F,
@@ -116,6 +117,7 @@ pub fn velocity_verlet<F: IntegrateFloat>(
 /// 1. p_{n+1/2} = p_n + (dt/2) * dp/dt(t_n, q_n, p_n)
 /// 2. q_{n+1} = q_n + dt * dq/dt(t_n+dt/2, q_n, p_{n+1/2})
 /// 3. p_{n+1} = p_{n+1/2} + (dt/2) * dp/dt(t_n+dt, q_{n+1}, p_{n+1/2})
+#[allow(dead_code)]
 pub fn position_verlet<F: IntegrateFloat>(
     system: &dyn HamiltonianFn<F>,
     t: F,

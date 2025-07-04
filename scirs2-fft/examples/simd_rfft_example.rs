@@ -10,6 +10,7 @@ use scirs2_fft::simd_rfft::rfft_adaptive;
 use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() {
     println!("SIMD-accelerated Real FFT Example");
     println!("=================================");
@@ -95,6 +96,7 @@ fn main() {
 }
 
 /// Generate a test signal with multiple frequency components
+#[allow(dead_code)]
 fn generate_test_signal(n: usize) -> Vec<f64> {
     // Signal with three frequency components: 10 Hz, 50 Hz, and 100 Hz
     let signal: Vec<f64> = (0..n)
@@ -110,6 +112,7 @@ fn generate_test_signal(n: usize) -> Vec<f64> {
 }
 
 /// Benchmark standard RFFT implementation
+#[allow(dead_code)]
 fn benchmark_standard_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
     let start = Instant::now();
     let spectrum = rfft(signal, None).unwrap();
@@ -119,6 +122,7 @@ fn benchmark_standard_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
 }
 
 /// Benchmark SIMD-accelerated RFFT implementation
+#[allow(dead_code)]
 fn benchmark_simd_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
     let start = Instant::now();
     let spectrum = rfft_adaptive(signal, None, None).unwrap();
@@ -128,6 +132,7 @@ fn benchmark_simd_rfft(signal: &[f64]) -> (Vec<Complex64>, Duration) {
 }
 
 /// Analyze and print information about the signal's frequencies
+#[allow(dead_code)]
 fn analyze_frequencies(spectrum: &[Complex64], n: usize) {
     println!("\nFrequency Analysis:");
 

@@ -79,6 +79,7 @@ impl AdaptiveBlockSizer {
 }
 
 /// SIMD-accelerated min-max normalization for 1D arrays
+#[allow(dead_code)]
 pub fn simd_minmax_normalize_1d<F>(array: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -108,6 +109,7 @@ where
 }
 
 /// SIMD-accelerated Z-score normalization for 1D arrays
+#[allow(dead_code)]
 pub fn simd_zscore_normalize_1d<F>(array: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -141,6 +143,7 @@ where
 }
 
 /// SIMD-accelerated L2 normalization for 1D arrays
+#[allow(dead_code)]
 pub fn simd_l2_normalize_1d<F>(array: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -166,6 +169,7 @@ where
 }
 
 /// SIMD-accelerated max absolute scaling for 1D arrays
+#[allow(dead_code)]
 pub fn simd_maxabs_normalize_1d<F>(array: &Array1<F>) -> Result<Array1<F>>
 where
     F: Float + NumCast + SimdUnifiedOps,
@@ -192,6 +196,7 @@ where
 }
 
 /// Advanced SIMD-accelerated normalization for 2D arrays with optimized memory access patterns
+#[allow(dead_code)]
 pub fn simd_normalize_array<S, F>(
     array: &ArrayBase<S, Ix2>,
     method: NormalizationMethod,
@@ -241,6 +246,7 @@ where
 }
 
 /// Block-wise SIMD min-max normalization with optimized memory access
+#[allow(dead_code)]
 fn simd_normalize_block_minmax<S, F>(
     array: &ArrayBase<S, Ix2>,
     normalized: &mut Array2<F>,
@@ -319,6 +325,7 @@ where
 }
 
 /// Block-wise SIMD Z-score normalization with optimized memory access
+#[allow(dead_code)]
 fn simd_normalize_block_zscore<S, F>(
     array: &ArrayBase<S, Ix2>,
     normalized: &mut Array2<F>,
@@ -410,6 +417,7 @@ where
 }
 
 /// Block-wise SIMD L2 normalization with optimized memory access
+#[allow(dead_code)]
 fn simd_normalize_block_l2<S, F>(
     array: &ArrayBase<S, Ix2>,
     normalized: &mut Array2<F>,
@@ -470,6 +478,7 @@ where
 }
 
 /// Block-wise SIMD max-absolute normalization with optimized memory access
+#[allow(dead_code)]
 fn simd_normalize_block_maxabs<S, F>(
     array: &ArrayBase<S, Ix2>,
     normalized: &mut Array2<F>,
@@ -531,6 +540,7 @@ where
 }
 
 /// Advanced SIMD normalization with automatic optimization selection
+#[allow(dead_code)]
 pub fn simd_normalize_adaptive<S, F>(
     array: &ArrayBase<S, Ix2>,
     method: NormalizationMethod,
@@ -560,6 +570,7 @@ where
 }
 
 /// Memory-efficient batch processing for ultra-large datasets
+#[allow(dead_code)]
 pub fn simd_normalize_batch<S, F>(
     array: &ArrayBase<S, Ix2>,
     method: NormalizationMethod,
@@ -615,6 +626,7 @@ where
 }
 
 /// Chunked SIMD normalization for large datasets
+#[allow(dead_code)]
 fn simd_normalize_chunked<S, F>(
     array: &ArrayBase<S, Ix2>,
     method: NormalizationMethod,
@@ -662,6 +674,7 @@ where
 }
 
 /// Optimized SIMD normalization for tall matrices (many rows, few columns)
+#[allow(dead_code)]
 fn simd_normalize_optimized_tall<S, F>(
     array: &ArrayBase<S, Ix2>,
     method: NormalizationMethod,
@@ -711,6 +724,7 @@ where
 }
 
 /// Optimized SIMD normalization for wide matrices (few rows, many columns)
+#[allow(dead_code)]
 fn simd_normalize_optimized_wide<S, F>(
     array: &ArrayBase<S, Ix2>,
     method: NormalizationMethod,

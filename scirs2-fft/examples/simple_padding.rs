@@ -4,6 +4,7 @@ use ndarray::Array1;
 use num_complex::Complex;
 use scirs2_fft::{auto_pad_complex, AutoPadConfig, PaddingMode};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing automatic padding");
 

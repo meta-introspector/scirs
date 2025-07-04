@@ -52,6 +52,7 @@ use std::f64::consts::PI;
 /// let sigma_zero = coulomb_phase_shift(0.0, 0.0).unwrap();
 /// assert_eq!(sigma_zero, 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn coulomb_phase_shift(l: f64, eta: f64) -> SpecialResult<f64> {
     // Parameter validation
     if l < 0.0 || (l - l.round()).abs() > 1e-10 {
@@ -95,6 +96,7 @@ pub fn coulomb_phase_shift(l: f64, eta: f64) -> SpecialResult<f64> {
 }
 
 /// Compute the Coulomb phase shift for L=0
+#[allow(dead_code)]
 fn coulomb_phase_shift_l0(eta: f64) -> SpecialResult<f64> {
     if eta == 0.0 {
         return Ok(0.0);
@@ -156,6 +158,7 @@ fn coulomb_phase_shift_l0(eta: f64) -> SpecialResult<f64> {
 }
 
 /// Compute the Coulomb phase shift for intermediate η values using improved methods
+#[allow(dead_code)]
 fn coulomb_phase_shift_intermediate(eta: f64) -> SpecialResult<f64> {
     // Use the complex gamma function to compute σ_0(η) = arg Γ(1 + iη)
     // For intermediate values, combine multiple approaches for best accuracy
@@ -207,6 +210,7 @@ fn coulomb_phase_shift_intermediate(eta: f64) -> SpecialResult<f64> {
 }
 
 /// Series correction for Coulomb phase shift near integer values
+#[allow(dead_code)]
 fn coulomb_phase_shift_near_integer(eta_int: f64, eta_frac: f64) -> SpecialResult<f64> {
     // Use Taylor expansion around integer values
     // σ_0(n + δ) ≈ σ_0(n) + σ_0'(n) * δ + σ_0''(n) * δ²/2 + ...
@@ -244,6 +248,7 @@ fn coulomb_phase_shift_near_integer(eta_int: f64, eta_frac: f64) -> SpecialResul
 }
 
 /// Improved asymptotic approximation for intermediate η values
+#[allow(dead_code)]
 fn coulomb_phase_shift_improved_asymptotic(eta: f64) -> SpecialResult<f64> {
     // Enhanced asymptotic series with more terms
     // σ_0(η) ≈ η * [ln(2|η|) - 1 + γ] + corrections
@@ -289,6 +294,7 @@ fn coulomb_phase_shift_improved_asymptotic(eta: f64) -> SpecialResult<f64> {
 /// // For η=0, F_L(0,ρ) = ρ j_L(ρ) where j_L is the spherical Bessel function
 /// assert!((f - 0.8415).abs() < 1e-4);
 /// ```
+#[allow(dead_code)]
 pub fn coulomb_f(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     // Parameter validation
     if l < 0.0 || (l - l.round()).abs() > 1e-10 {
@@ -327,6 +333,7 @@ pub fn coulomb_f(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
 }
 
 /// Coulomb F function for η=0 (spherical Bessel functions)
+#[allow(dead_code)]
 fn coulomb_f_eta_zero(l: f64, rho: f64) -> SpecialResult<f64> {
     // F_L(0,ρ) = ρ j_L(ρ) where j_L is the spherical Bessel function
     match l as i32 {
@@ -351,6 +358,7 @@ fn coulomb_f_eta_zero(l: f64, rho: f64) -> SpecialResult<f64> {
 }
 
 /// Coulomb F function using series expansion for small ρ
+#[allow(dead_code)]
 fn coulomb_f_series(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     let c_l = coulomb_normalization_constant(l, eta)?;
 
@@ -382,6 +390,7 @@ fn coulomb_f_series(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
 }
 
 /// Compute the confluent hypergeometric function 1F1(a; b; z) for complex a and z
+#[allow(dead_code)]
 fn confluent_hypergeometric_1f1_complex(
     a: Complex64,
     b: f64,
@@ -408,6 +417,7 @@ fn confluent_hypergeometric_1f1_complex(
 }
 
 /// Series expansion of 1F1(a; b; z) for complex parameters
+#[allow(dead_code)]
 fn confluent_hypergeometric_series_complex(
     a: Complex64,
     b: f64,
@@ -448,6 +458,7 @@ fn confluent_hypergeometric_series_complex(
 }
 
 /// Asymptotic expansion of 1F1(a; b; z) for large |z|
+#[allow(dead_code)]
 fn confluent_hypergeometric_asymptotic_complex(
     a: Complex64,
     b: f64,
@@ -483,6 +494,7 @@ fn confluent_hypergeometric_asymptotic_complex(
 }
 
 /// Coulomb F function using asymptotic expansion for large ρ
+#[allow(dead_code)]
 fn coulomb_f_asymptotic(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     // For large ρ:
     // F_L(η,ρ) ~ sin(ρ - η ln(2ρ) - Lπ/2 + σ_L(η))
@@ -494,6 +506,7 @@ fn coulomb_f_asymptotic(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
 }
 
 /// Coulomb F function using continued fraction method (Steed's method)
+#[allow(dead_code)]
 fn coulomb_f_continued_fraction(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     // Use Steed's method for computing Coulomb functions
     // This method is numerically stable for intermediate values of ρ
@@ -588,6 +601,7 @@ fn coulomb_f_continued_fraction(l: f64, eta: f64, rho: f64) -> SpecialResult<f64
 ///     Err(_) => panic!("Unexpected error"),
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn coulomb_g(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     // Parameter validation
     if l < 0.0 || (l - l.round()).abs() > 1e-10 {
@@ -626,6 +640,7 @@ pub fn coulomb_g(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
 }
 
 /// Coulomb G function for η=0 (spherical Neumann functions)
+#[allow(dead_code)]
 fn coulomb_g_eta_zero(l: f64, rho: f64) -> SpecialResult<f64> {
     // G_L(0,ρ) = -ρ y_L(ρ) where y_L is the spherical Neumann function
     match l as i32 {
@@ -650,6 +665,7 @@ fn coulomb_g_eta_zero(l: f64, rho: f64) -> SpecialResult<f64> {
 }
 
 /// Coulomb G function using series expansion for small ρ
+#[allow(dead_code)]
 fn coulomb_g_series(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     // G_L(η,ρ) has a different behavior for L=0 vs L>0
 
@@ -679,6 +695,7 @@ fn coulomb_g_series(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
 }
 
 /// Coulomb G function using asymptotic expansion for large ρ
+#[allow(dead_code)]
 fn coulomb_g_asymptotic(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     // For large ρ:
     // G_L(η,ρ) ~ cos(ρ - η ln(2ρ) - Lπ/2 + σ_L(η))
@@ -690,6 +707,7 @@ fn coulomb_g_asymptotic(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
 }
 
 /// Coulomb G function using continued fraction method
+#[allow(dead_code)]
 fn coulomb_g_continued_fraction(l: f64, eta: f64, rho: f64) -> SpecialResult<f64> {
     // Use the Wronskian relation to compute G from F
     // W[F_L, G_L] = 1, so G_L can be computed from F_L and its derivative
@@ -757,6 +775,7 @@ fn coulomb_g_continued_fraction(l: f64, eta: f64, rho: f64) -> SpecialResult<f64
 /// # Returns
 ///
 /// * `SpecialResult<Complex64>` - The outgoing Coulomb wave function
+#[allow(dead_code)]
 pub fn coulomb_h_plus(l: f64, eta: f64, rho: f64) -> SpecialResult<Complex64> {
     // Get real and imaginary parts
     let real_part = coulomb_g(l, eta, rho)?;
@@ -778,6 +797,7 @@ pub fn coulomb_h_plus(l: f64, eta: f64, rho: f64) -> SpecialResult<Complex64> {
 /// # Returns
 ///
 /// * `SpecialResult<Complex64>` - The incoming Coulomb wave function
+#[allow(dead_code)]
 pub fn coulomb_h_minus(l: f64, eta: f64, rho: f64) -> SpecialResult<Complex64> {
     // Get real and imaginary parts
     let real_part = coulomb_g(l, eta, rho)?;
@@ -796,6 +816,7 @@ pub fn coulomb_h_minus(l: f64, eta: f64, rho: f64) -> SpecialResult<Complex64> {
 /// # Returns
 ///
 /// * `SpecialResult<f64>` - The Coulomb normalization constant
+#[allow(dead_code)]
 fn coulomb_normalization_constant(l: f64, eta: f64) -> SpecialResult<f64> {
     // Parameter validation
     if l < 0.0 || (l - l.round()).abs() > 1e-10 {
@@ -863,6 +884,7 @@ fn coulomb_normalization_constant(l: f64, eta: f64) -> SpecialResult<f64> {
 
 /// Compute the magnitude of the complex gamma function |Γ(a + ib)|
 /// using accurate asymptotic expansion
+#[allow(dead_code)]
 fn complex_gamma_magnitude(a: f64, b: f64) -> f64 {
     if b.abs() < 1e-10 {
         return gamma(a);
@@ -920,9 +942,9 @@ mod tests {
         }
 
         // For l=0, eta=0, G_0(0,ρ) = cos(ρ)
-        match coulomb_g(0.0, 0.0, rho) {
-            Ok(g) => assert_relative_eq!(g, rho.cos(), epsilon = 1e-10),
-            Err(_) => {} // Allow this to fail for now as it's not fully implemented
+        if let Ok(g) = coulomb_g(0.0, 0.0, rho) {
+            assert_relative_eq!(g, rho.cos(), epsilon = 1e-10);
+            // Allow this to fail for now as it's not fully implemented
         }
     }
 

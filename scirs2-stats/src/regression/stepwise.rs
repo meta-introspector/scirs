@@ -152,6 +152,7 @@ where
 /// assert!(results.selected_indices.contains(&1));
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn stepwise_regression<F>(
     x: &ArrayView2<F>,
     y: &ArrayView1<F>,
@@ -367,6 +368,7 @@ where
 }
 
 // Helper functions
+#[allow(dead_code)]
 fn create_model_matrix<F>(
     x: &ArrayView2<F>,
     indices: &HashSet<usize>,
@@ -396,6 +398,7 @@ where
     x_model
 }
 
+#[allow(dead_code)]
 fn find_var_position<F>(
     current_x: &Array2<F>,
     x: &ArrayView2<F>,
@@ -424,6 +427,7 @@ where
     current_x.ncols() - 1
 }
 
+#[allow(dead_code)]
 fn calculate_criterion<F>(
     model: &RegressionResults<F>,
     n: usize,
@@ -472,6 +476,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn is_criterion_better<F>(new_value: F, old_value: F, criterion: StepwiseCriterion) -> bool
 where
     F: Float,
@@ -488,6 +493,7 @@ where
 }
 
 // Internal helper function for linear regression
+#[allow(dead_code)]
 fn linear_regression<F>(x: &ArrayView2<F>, y: &ArrayView1<F>) -> StatsResult<RegressionResults<F>>
 where
     F: Float

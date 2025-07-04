@@ -4,17 +4,16 @@
 //! including timing measurements, memory usage tracking, performance analysis, backend
 //! comparison, and automatic optimization recommendations.
 
-use ndarray::{Array, ArrayBase, ArrayView, Data, Dimension};
-use num_traits::{Float, FromPrimitive};
-use std::collections::{HashMap, VecDeque};
+use num_traits::Float;
+use std::collections::HashMap;
 use std::fmt::{self, Debug, Display};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use crate::backend::{Backend, BackendConfig};
-use crate::error::{NdimageError, NdimageResult};
+use crate::backend::Backend;
+use crate::error::NdimageResult;
 
-/// Global profiler instance
+// Global profiler instance
 lazy_static::lazy_static! {
     static ref PROFILER: Arc<Mutex<Profiler>> = Arc::new(Mutex::new(Profiler::new()));
 }
@@ -301,6 +300,7 @@ impl PerformanceReport {
 }
 
 /// Generate performance recommendations
+#[allow(dead_code)]
 fn generate_recommendations(
     operation_breakdown: &HashMap<String, OperationSummary>,
     backend_usage: &HashMap<String, usize>,
@@ -413,6 +413,7 @@ macro_rules! profile_op {
 }
 
 /// Enable global profiling
+#[allow(dead_code)]
 pub fn enable_profiling() {
     PROFILER
         .lock()
@@ -421,6 +422,7 @@ pub fn enable_profiling() {
 }
 
 /// Disable global profiling
+#[allow(dead_code)]
 pub fn disable_profiling() {
     PROFILER
         .lock()
@@ -429,6 +431,7 @@ pub fn disable_profiling() {
 }
 
 /// Enable memory tracking
+#[allow(dead_code)]
 pub fn enable_memory_tracking() {
     PROFILER
         .lock()
@@ -437,6 +440,7 @@ pub fn enable_memory_tracking() {
 }
 
 /// Clear all profiling data
+#[allow(dead_code)]
 pub fn clear_profiling_data() {
     PROFILER
         .lock()
@@ -445,6 +449,7 @@ pub fn clear_profiling_data() {
 }
 
 /// Get performance report
+#[allow(dead_code)]
 pub fn get_performance_report() -> PerformanceReport {
     PROFILER
         .lock()
@@ -453,6 +458,7 @@ pub fn get_performance_report() -> PerformanceReport {
 }
 
 /// Display performance report
+#[allow(dead_code)]
 pub fn display_performance_report() {
     let report = get_performance_report();
     report.display();
@@ -740,10 +746,13 @@ impl OptimizationAdvisor {
         // Analyze GPU offloading opportunities
         recommendations.extend(self.analyze_gpu_opportunities());
 
+        let estimated_speedup = self.estimate_speedup(&recommendations);
+        let implementation_difficulty = self.assess_difficulty(&recommendations);
+
         OptimizationReport {
             recommendations,
-            estimated_speedup: self.estimate_speedup(&recommendations),
-            implementation_difficulty: self.assess_difficulty(&recommendations),
+            estimated_speedup,
+            implementation_difficulty,
         }
     }
 
@@ -1123,24 +1132,27 @@ impl MemoryReport {
     }
 }
 
-/// Global memory profiler instance
+// Global memory profiler instance
 lazy_static::lazy_static! {
     static ref MEMORY_PROFILER: Arc<MemoryProfiler> = Arc::new(MemoryProfiler::new());
 }
 
+#[allow(dead_code)]
 pub fn enable_memory_profiling() {
     MEMORY_PROFILER.enable();
 }
 
+#[allow(dead_code)]
 pub fn disable_memory_profiling() {
     MEMORY_PROFILER.disable();
 }
 
+#[allow(dead_code)]
 pub fn get_memory_report() -> MemoryReport {
     MEMORY_PROFILER.report()
 }
 
-use std::sync::atomic::{AtomicBool, AtomicUsize};
+use std::sync::atomic::AtomicBool;
 
 #[cfg(test)]
 mod tests {

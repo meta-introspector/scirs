@@ -72,6 +72,7 @@ use std::fmt::Debug;
 ///
 /// * Marple, S. L. "Computing the Discrete-Time Analytic Signal via FFT."
 ///   IEEE Transactions on Signal Processing, Vol. 47, No. 9, 1999.
+#[allow(dead_code)]
 pub fn hilbert<T>(x: &[T]) -> SignalResult<Vec<Complex64>>
 where
     T: Float + NumCast + Debug,
@@ -202,6 +203,7 @@ where
 /// assert!(envelope.iter().all(|&x| x >= 0.0));
 /// assert!(envelope.iter().any(|&x| x > 0.5));
 /// ```
+#[allow(dead_code)]
 pub fn envelope<T>(x: &[T]) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -257,6 +259,7 @@ where
 /// assert!(inst_freq[n/2] > inst_freq[n/4]);
 /// assert!(inst_freq[3*n/4] > inst_freq[n/2]);
 /// ```
+#[allow(dead_code)]
 pub fn instantaneous_frequency<T>(x: &[T], fs: f64) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -363,6 +366,7 @@ where
 /// let avg_diff = total_diff / count as f64;
 /// assert!((avg_diff - expected_phase_diff).abs() < 0.2); // Allow some error
 /// ```
+#[allow(dead_code)]
 pub fn instantaneous_phase<T>(x: &[T], unwrap: bool) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,

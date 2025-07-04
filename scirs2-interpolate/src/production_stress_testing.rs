@@ -13,7 +13,6 @@
 //! - **Resource exhaustion scenarios**: Test system limits
 
 use crate::error::{InterpolateError, InterpolateResult};
-use crate::simd_comprehensive_validation::PerformanceImpact;
 use crate::traits::InterpolationFloat;
 use ndarray::{Array1, ArrayView1};
 use std::collections::HashMap;
@@ -70,8 +69,12 @@ pub struct StressTestResult {
     pub test_name: String,
     /// Test category
     pub category: StressTestCategory,
+    /// Input characteristics description
+    pub input_characteristics: String,
     /// Test status
     pub status: TestStatus,
+    /// Execution time
+    pub execution_time: Duration,
     /// Performance metrics
     pub performance: StressPerformanceMetrics,
     /// Error information (if any)
@@ -103,6 +106,10 @@ pub enum StressTestCategory {
     PerformanceStress,
     /// Concurrent access testing
     ConcurrentAccess,
+    /// Numerical stability testing
+    NumericalStability,
+    /// Resource exhaustion testing
+    ResourceExhaustion,
 }
 
 /// Test execution status
@@ -197,7 +204,7 @@ pub enum IssueSeverity {
 }
 
 /// Impact on production usage
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProductionImpact {
     /// Blocks production use
     Blocking,
@@ -222,7 +229,7 @@ pub struct BaselinePerformance {
     pub timestamp: Instant,
 }
 
-impl<T: InterpolationFloat> ProductionStressTester<T> {
+impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T> {
     /// Create a new production stress tester
     pub fn new(config: StressTestConfig) -> Self {
         Self {
@@ -333,9 +340,12 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             let creation_result = std::panic::catch_unwind(|| self.create_large_test_data(size));
 
             let test_result = match creation_result {
-                Ok(Ok((x, y))) => {
-                    self.test_interpolation_methods_with_data(&x, &y, size, "extreme_size")
-                }
+                Ok(Ok((x, y))) => self.test_interpolation_methods_with_data(
+                    &x.view(),
+                    &y.view(),
+                    size,
+                    "extreme_size",
+                ),
                 Ok(Err(e)) => self.create_error_result(
                     "extreme_size",
                     size,
@@ -360,24 +370,37 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
         println!("Testing pathological data patterns...");
 
         let pathological_tests = vec![
-            ("constant_data", self.create_constant_data),
-            ("duplicate_x_values", self.create_duplicate_x_data),
-            ("extreme_y_values", self.create_extreme_y_data),
-            ("nan_inf_data", self.create_nan_inf_data),
-            ("sparse_data", self.create_sparse_data),
-            ("highly_oscillatory", self.create_oscillatory_data),
-            ("monotonic_extreme", self.create_monotonic_extreme_data),
+            "constant_data",
+            "duplicate_x_values",
+            "extreme_y_values",
+            "nan_inf_data",
+            "sparse_data",
+            "highly_oscillatory",
+            "monotonic_extreme",
         ];
 
-        for (test_name, data_creator) in pathological_tests {
+        for test_name in pathological_tests {
             if !self.config.test_extreme_cases {
                 continue;
             }
 
             println!("  Testing: {}", test_name);
 
-            let test_result = match data_creator(1000) {
-                Ok((x, y)) => self.test_interpolation_methods_with_data(&x, &y, 1000, test_name),
+            let data_result = match test_name {
+                "constant_data" => self.create_constant_data(1000),
+                "duplicate_x_values" => self.create_duplicate_x_data(1000),
+                "extreme_y_values" => self.create_extreme_y_data(1000),
+                "nan_inf_data" => self.create_nan_inf_data(1000),
+                "sparse_data" => self.create_sparse_data(1000),
+                "highly_oscillatory" => self.create_oscillatory_data(1000),
+                "monotonic_extreme" => self.create_monotonic_extreme_data(1000),
+                _ => unreachable!(),
+            };
+
+            let test_result = match data_result {
+                Ok((x, y)) => {
+                    self.test_interpolation_methods_with_data(&x.view(), &y.view(), 1000, test_name)
+                }
                 Err(e) => self.create_error_result(
                     test_name,
                     1000,
@@ -412,7 +435,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             println!("  Testing: {}", test_name);
 
             let test_result = match self.create_edge_case_data(1000, min_val, max_val) {
-                Ok((x, y)) => self.test_interpolation_methods_with_data(&x, &y, 1000, test_name),
+                Ok((x, y)) => {
+                    self.test_interpolation_methods_with_data(&x.view(), &y.view(), 1000, test_name)
+                }
                 Err(e) => self.create_error_result(
                     test_name,
                     1000,
@@ -443,8 +468,8 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                 Ok((x, y)) => {
                     let start_memory = self.get_current_memory_usage();
                     let result = self.test_interpolation_methods_with_data(
-                        &x,
-                        &y,
+                        &x.view(),
+                        &y.view(),
                         data_size,
                         &format!("memory_pressure_{}", i),
                     );
@@ -491,27 +516,40 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
     fn test_error_handling(&mut self) -> InterpolateResult<()> {
         println!("Testing error handling robustness...");
 
-        let error_scenarios = vec![
-            ("empty_data", || Ok((Array1::zeros(0), Array1::zeros(0)))),
-            ("single_point", || {
-                Ok((
-                    Array1::from_vec(vec![T::zero()]),
-                    Array1::from_vec(vec![T::one()]),
-                ))
-            }),
-            ("mismatched_lengths", || {
-                Ok((Array1::zeros(10), Array1::zeros(5)))
-            }),
-            ("unsorted_x", || {
-                let x = Array1::from_vec(vec![
-                    T::from_f64(1.0).unwrap(),
-                    T::from_f64(3.0).unwrap(),
-                    T::from_f64(2.0).unwrap(),
-                    T::from_f64(4.0).unwrap(),
-                ]);
-                let y = Array1::ones(4);
-                Ok((x, y))
-            }),
+        let error_scenarios: Vec<(
+            &str,
+            Box<dyn Fn() -> Result<(Array1<T>, Array1<T>), Box<dyn std::error::Error>>>,
+        )> = vec![
+            (
+                "empty_data",
+                Box::new(|| Ok((Array1::<T>::zeros(0), Array1::<T>::zeros(0)))),
+            ),
+            (
+                "single_point",
+                Box::new(|| {
+                    Ok((
+                        Array1::from_vec(vec![T::zero()]),
+                        Array1::from_vec(vec![T::one()]),
+                    ))
+                }),
+            ),
+            (
+                "mismatched_lengths",
+                Box::new(|| Ok((Array1::<T>::zeros(10), Array1::<T>::zeros(5)))),
+            ),
+            (
+                "unsorted_x",
+                Box::new(|| {
+                    let x = Array1::from_vec(vec![
+                        T::from_f64(1.0).unwrap(),
+                        T::from_f64(3.0).unwrap(),
+                        T::from_f64(2.0).unwrap(),
+                        T::from_f64(4.0).unwrap(),
+                    ]);
+                    let y = Array1::ones(4);
+                    Ok((x, y))
+                }),
+            ),
         ];
 
         for (test_name, data_creator) in error_scenarios {
@@ -545,6 +583,7 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                                 &x.view(),
                                 &y.view(),
                                 &query_x.view(),
+                                false, // extrapolate
                             ),
                             _ => continue,
                         };
@@ -588,6 +627,8 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                     StressTestResult {
                         test_name: format!("error_handling_{}", test_name),
                         category: StressTestCategory::ErrorHandling,
+                        input_characteristics: format!("Error scenario: {}", test_name),
+                        execution_time: Duration::from_millis(1),
                         status: if issues.iter().any(|i| i.severity == IssueSeverity::Critical) {
                             TestStatus::Failed
                         } else if !issues.is_empty() {
@@ -621,7 +662,7 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                 Err(e) => self.create_error_result(
                     &format!("error_handling_{}", test_name),
                     0,
-                    e,
+                    InterpolateError::ComputationError(e.to_string()),
                     StressTestCategory::ErrorHandling,
                 ),
             };
@@ -647,8 +688,8 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
 
             let test_result = match self.create_large_test_data(stressed_size) {
                 Ok((x, y)) => self.test_interpolation_methods_with_data(
-                    &x,
-                    &y,
+                    &x.view(),
+                    &y.view(),
                     stressed_size,
                     &format!("performance_stress_{}x", stress_level),
                 ),
@@ -697,18 +738,27 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
         };
 
         // Test different interpolation methods
-        let methods = vec![
+        let methods: Vec<(
+            &str,
+            Box<
+                dyn Fn(
+                    &ArrayView1<T>,
+                    &ArrayView1<T>,
+                    &ArrayView1<T>,
+                ) -> InterpolateResult<Array1<T>>,
+            >,
+        )> = vec![
             (
                 "linear",
-                |x: &ArrayView1<T>, y: &ArrayView1<T>, q: &ArrayView1<T>| {
+                Box::new(|x: &ArrayView1<T>, y: &ArrayView1<T>, q: &ArrayView1<T>| {
                     crate::interp1d::linear_interpolate(x, y, q)
-                },
+                }),
             ),
             (
                 "cubic",
-                |x: &ArrayView1<T>, y: &ArrayView1<T>, q: &ArrayView1<T>| {
+                Box::new(|x: &ArrayView1<T>, y: &ArrayView1<T>, q: &ArrayView1<T>| {
                     crate::interp1d::cubic_interpolate(x, y, q)
-                },
+                }),
             ),
         ];
 
@@ -795,7 +845,9 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
         let total_duration = start.elapsed();
         let avg_time = if !timings.is_empty() {
             Duration::from_nanos(
-                timings.iter().map(|d| d.as_nanos()).sum::<u128>() / timings.len() as u128,
+                (timings.iter().map(|d| d.as_nanos()).sum::<u128>() / timings.len() as u128)
+                    .try_into()
+                    .unwrap_or(1),
             )
         } else {
             Duration::from_millis(1)
@@ -827,6 +879,8 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
         StressTestResult {
             test_name: test_name.to_string(),
             category: StressTestCategory::ExtremeDataSize, // Would be set appropriately by caller
+            input_characteristics: format!("Large dataset: {} points", data_size),
+            execution_time: total_duration,
             status,
             performance: StressPerformanceMetrics {
                 mean_time: avg_time,
@@ -974,6 +1028,8 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
         StressTestResult {
             test_name: test_name.to_string(),
             category,
+            input_characteristics: format!("Error case with {} data points", data_size),
+            execution_time: Duration::from_millis(1),
             status: TestStatus::Error,
             performance: StressPerformanceMetrics {
                 mean_time: Duration::from_millis(1),
@@ -1022,6 +1078,8 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
         StressTestResult {
             test_name: test_name.to_string(),
             category,
+            input_characteristics: format!("Panic case with {} data points", data_size),
+            execution_time: Duration::from_millis(1),
             status: TestStatus::Failed,
             performance: StressPerformanceMetrics {
                 mean_time: Duration::from_millis(1),
@@ -1274,7 +1332,7 @@ impl std::fmt::Display for StressTestReport {
 }
 
 /// Additional methods for ProductionStressTester
-impl<T: InterpolationFloat> ProductionStressTester<T> {
+impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T> {
     /// Enhanced numerical stability analysis for stable release
     fn test_enhanced_numerical_stability(&mut self) -> InterpolateResult<()> {
         println!("Running enhanced numerical stability analysis...");
@@ -1345,15 +1403,35 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                 TestStatus::Failed
             },
             execution_time: duration,
-            memory_usage: self.estimate_memory_usage(n),
-            error_messages: if !both_stable {
-                vec!["Methods failed with ill-conditioned data".to_string()]
+            performance: StressPerformanceMetrics {
+                mean_time: duration,
+                max_time: duration,
+                min_time: duration,
+                degradation_factor: 1.0,
+                throughput: n as f64 / duration.as_secs_f64(),
+                memory_efficiency: 1.0,
+            },
+            error_info: None,
+            memory_usage: MemoryUsageStats {
+                peak_memory: self.estimate_memory_usage(n),
+                average_memory: self.estimate_memory_usage(n) / 2,
+                growth_rate: 0.0,
+                leak_detected: false,
+                fragmentation_level: 0.0,
+            },
+            duration,
+            issues: if !both_stable {
+                vec![StressTestIssue {
+                    severity: IssueSeverity::High,
+                    description: "Methods failed with ill-conditioned data".to_string(),
+                    trigger_conditions: "Ill-conditioned clustered data".to_string(),
+                    production_impact: ProductionImpact::Reliability,
+                    mitigation: Some("Use regularization or robust numerical methods".to_string()),
+                }]
             } else {
                 Vec::new()
             },
-            performance_impact: PerformanceImpact::Moderate,
-            recovery_strategy: Some("Use regularization or robust numerical methods".to_string()),
-            production_impact: ProductionImpact::Reliability,
+            recommendations: vec!["Use regularization or robust numerical methods".to_string()],
         })
     }
 
@@ -1386,17 +1464,39 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                     TestStatus::Failed
                 },
                 execution_time: duration,
-                memory_usage: self.estimate_memory_usage(n),
-                error_messages: if has_artifacts {
-                    vec!["Numerical artifacts detected in result".to_string()]
+                performance: StressPerformanceMetrics {
+                    mean_time: duration,
+                    max_time: duration,
+                    min_time: duration,
+                    degradation_factor: 1.0,
+                    throughput: n as f64 / duration.as_secs_f64(),
+                    memory_efficiency: 1.0,
+                },
+                error_info: None,
+                memory_usage: MemoryUsageStats {
+                    peak_memory: self.estimate_memory_usage(n),
+                    average_memory: self.estimate_memory_usage(n) / 2,
+                    growth_rate: 0.0,
+                    leak_detected: false,
+                    fragmentation_level: 0.0,
+                },
+                duration,
+                issues: if has_artifacts {
+                    vec![StressTestIssue {
+                        severity: IssueSeverity::Medium,
+                        description: "Numerical artifacts detected in result".to_string(),
+                        trigger_conditions: "Machine precision challenging data".to_string(),
+                        production_impact: ProductionImpact::Reliability,
+                        mitigation: Some(
+                            "Use higher precision arithmetic or scaled computation".to_string(),
+                        ),
+                    }]
                 } else {
                     Vec::new()
                 },
-                performance_impact: PerformanceImpact::Minimal,
-                recovery_strategy: Some(
-                    "Use higher precision arithmetic or scaled computation".to_string(),
-                ),
-                production_impact: ProductionImpact::Reliability,
+                recommendations: vec![
+                    "Use higher precision arithmetic or scaled computation".to_string()
+                ],
             })
         } else {
             Ok(StressTestResult {
@@ -1405,11 +1505,38 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
                 input_characteristics: "Machine precision challenging data".to_string(),
                 status: TestStatus::Failed,
                 execution_time: duration,
-                memory_usage: self.estimate_memory_usage(n),
-                error_messages: vec!["Interpolation failed due to precision limits".to_string()],
-                performance_impact: PerformanceImpact::Minimal,
-                recovery_strategy: Some("Use robust numerical methods".to_string()),
-                production_impact: ProductionImpact::Blocking,
+                performance: StressPerformanceMetrics {
+                    mean_time: duration,
+                    max_time: duration,
+                    min_time: duration,
+                    degradation_factor: f64::INFINITY,
+                    throughput: 0.0,
+                    memory_efficiency: 0.0,
+                },
+                error_info: Some(ErrorInfo {
+                    error_type: "PrecisionError".to_string(),
+                    message: "Interpolation failed due to precision limits".to_string(),
+                    iteration: 0,
+                    data_size: n,
+                    recovery_attempted: false,
+                    recovery_successful: false,
+                }),
+                memory_usage: MemoryUsageStats {
+                    peak_memory: self.estimate_memory_usage(n),
+                    average_memory: self.estimate_memory_usage(n) / 2,
+                    growth_rate: 0.0,
+                    leak_detected: false,
+                    fragmentation_level: 0.0,
+                },
+                duration,
+                issues: vec![StressTestIssue {
+                    severity: IssueSeverity::Critical,
+                    description: "Interpolation failed due to precision limits".to_string(),
+                    trigger_conditions: "Machine precision challenging data".to_string(),
+                    production_impact: ProductionImpact::Blocking,
+                    mitigation: Some("Use robust numerical methods".to_string()),
+                }],
+                recommendations: vec!["Use robust numerical methods".to_string()],
             })
         }
     }
@@ -1437,7 +1564,7 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
 
         let duration = start.elapsed();
 
-        let gradient_stable = if let (Ok(cubic), Ok(linear)) = (&cubic_result, &linear_result) {
+        let gradient_stable = if let (Ok(cubic), Ok(_linear)) = (&cubic_result, &linear_result) {
             // Check for excessive overshoot in cubic interpolation
             let max_overshoot = cubic.iter().fold(T::zero(), |acc, &x| {
                 let abs_x = x.abs();
@@ -1457,23 +1584,57 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             test_name: "gradient_stability".to_string(),
             category: StressTestCategory::NumericalStability,
             input_characteristics: "Step discontinuity with extreme gradients".to_string(),
+            execution_time: duration,
             status: if gradient_stable {
                 TestStatus::Passed
             } else {
                 TestStatus::Failed
             },
-            execution_time: duration,
-            memory_usage: self.estimate_memory_usage(n),
-            error_messages: if !gradient_stable {
-                vec!["Excessive overshoot detected in gradient-sensitive methods".to_string()]
+            performance: StressPerformanceMetrics {
+                mean_time: duration,
+                max_time: duration,
+                min_time: duration,
+                degradation_factor: 1.0,
+                throughput: 1.0,
+                memory_efficiency: 1.0,
+            },
+            error_info: if !gradient_stable {
+                Some(ErrorInfo {
+                    error_type: "GradientInstability".to_string(),
+                    message: "Excessive overshoot detected in gradient-sensitive methods"
+                        .to_string(),
+                    iteration: 0,
+                    data_size: n,
+                    recovery_attempted: false,
+                    recovery_successful: false,
+                })
+            } else {
+                None
+            },
+            memory_usage: MemoryUsageStats {
+                peak_memory: self.estimate_memory_usage(n),
+                average_memory: self.estimate_memory_usage(n),
+                growth_rate: 0.0,
+                leak_detected: false,
+                fragmentation_level: 0.0,
+            },
+            duration,
+            issues: if !gradient_stable {
+                vec![StressTestIssue {
+                    severity: IssueSeverity::Medium,
+                    description: "Gradient stability issue detected".to_string(),
+                    trigger_conditions: format!("Step discontinuities with {} data points", n),
+                    production_impact: ProductionImpact::MinorPerformance,
+                    mitigation: Some(
+                        "Use monotonic or shape-preserving interpolation methods".to_string(),
+                    ),
+                }]
             } else {
                 Vec::new()
             },
-            performance_impact: PerformanceImpact::Moderate,
-            recovery_strategy: Some(
-                "Use monotonic or shape-preserving interpolation methods".to_string(),
-            ),
-            production_impact: ProductionImpact::MinorPerformance,
+            recommendations: vec![
+                "Use monotonic or shape-preserving interpolation methods".to_string()
+            ],
         })
     }
 
@@ -1508,23 +1669,57 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             test_name: "oscillatory_stability".to_string(),
             category: StressTestCategory::NumericalStability,
             input_characteristics: "High-frequency oscillatory data".to_string(),
+            execution_time: duration,
             status: if oscillatory_stable {
                 TestStatus::Passed
             } else {
                 TestStatus::Failed
             },
-            execution_time: duration,
-            memory_usage: self.estimate_memory_usage(n),
-            error_messages: if !oscillatory_stable {
-                vec!["Oscillatory artifacts or aliasing detected".to_string()]
+            performance: StressPerformanceMetrics {
+                mean_time: duration,
+                max_time: duration,
+                min_time: duration,
+                degradation_factor: 1.0,
+                throughput: 1.0,
+                memory_efficiency: 1.0,
+            },
+            error_info: if !oscillatory_stable {
+                Some(ErrorInfo {
+                    error_type: "OscillatoryInstability".to_string(),
+                    message: "Oscillatory artifacts or aliasing detected".to_string(),
+                    iteration: 0,
+                    data_size: n,
+                    recovery_attempted: false,
+                    recovery_successful: false,
+                })
+            } else {
+                None
+            },
+            memory_usage: MemoryUsageStats {
+                peak_memory: self.estimate_memory_usage(n),
+                average_memory: self.estimate_memory_usage(n),
+                growth_rate: 0.0,
+                leak_detected: false,
+                fragmentation_level: 0.0,
+            },
+            duration,
+            issues: if !oscillatory_stable {
+                vec![StressTestIssue {
+                    severity: IssueSeverity::Medium,
+                    description: "Oscillatory artifacts or aliasing detected".to_string(),
+                    trigger_conditions: format!(
+                        "High-frequency oscillatory data with {} points",
+                        n
+                    ),
+                    production_impact: ProductionImpact::MinorPerformance,
+                    mitigation: Some(
+                        "Use appropriate anti-aliasing or spectral methods".to_string(),
+                    ),
+                }]
             } else {
                 Vec::new()
             },
-            performance_impact: PerformanceImpact::Moderate,
-            recovery_strategy: Some(
-                "Use appropriate anti-aliasing or spectral methods".to_string(),
-            ),
-            production_impact: ProductionImpact::MinorPerformance,
+            recommendations: vec!["Use appropriate anti-aliasing or spectral methods".to_string()],
         })
     }
 
@@ -1551,21 +1746,52 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             test_name: "scaling_stability".to_string(),
             category: StressTestCategory::NumericalStability,
             input_characteristics: "Large scale differences".to_string(),
+            execution_time: duration,
             status: if scaling_stable {
                 TestStatus::Passed
             } else {
                 TestStatus::Failed
             },
-            execution_time: duration,
-            memory_usage: self.estimate_memory_usage(n),
-            error_messages: if !scaling_stable {
-                vec!["Scaling sensitivity detected".to_string()]
+            performance: StressPerformanceMetrics {
+                mean_time: duration,
+                max_time: duration,
+                min_time: duration,
+                degradation_factor: 1.0,
+                throughput: 1.0,
+                memory_efficiency: 1.0,
+            },
+            error_info: if !scaling_stable {
+                Some(ErrorInfo {
+                    error_type: "ScalingInstability".to_string(),
+                    message: "Scaling sensitivity detected".to_string(),
+                    iteration: 0,
+                    data_size: n,
+                    recovery_attempted: false,
+                    recovery_successful: false,
+                })
+            } else {
+                None
+            },
+            memory_usage: MemoryUsageStats {
+                peak_memory: self.estimate_memory_usage(n),
+                average_memory: self.estimate_memory_usage(n),
+                growth_rate: 0.0,
+                leak_detected: false,
+                fragmentation_level: 0.0,
+            },
+            duration,
+            issues: if !scaling_stable {
+                vec![StressTestIssue {
+                    severity: IssueSeverity::Low,
+                    description: "Scaling sensitivity detected".to_string(),
+                    trigger_conditions: format!("Large scale differences with {} points", n),
+                    production_impact: ProductionImpact::MinorPerformance,
+                    mitigation: Some("Use scaled or normalized computation".to_string()),
+                }]
             } else {
                 Vec::new()
             },
-            performance_impact: PerformanceImpact::Minimal,
-            recovery_strategy: Some("Use scaled or normalized computation".to_string()),
-            production_impact: ProductionImpact::MinorPerformance,
+            recommendations: vec!["Use scaled or normalized computation".to_string()],
         })
     }
 
@@ -1629,21 +1855,52 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             test_name: "empty_data_errors".to_string(),
             category: StressTestCategory::ErrorHandling,
             input_characteristics: "Empty input arrays".to_string(),
+            execution_time: duration,
             status: if clear_error {
                 TestStatus::Passed
             } else {
                 TestStatus::Failed
             },
-            execution_time: duration,
-            memory_usage: 0,
-            error_messages: if !clear_error {
-                vec!["Error message not clear for empty data".to_string()]
+            performance: StressPerformanceMetrics {
+                mean_time: duration,
+                max_time: duration,
+                min_time: duration,
+                degradation_factor: 1.0,
+                throughput: 1.0,
+                memory_efficiency: 1.0,
+            },
+            error_info: if !clear_error {
+                Some(ErrorInfo {
+                    error_type: "UnclearErrorMessage".to_string(),
+                    message: "Error message not clear for empty data".to_string(),
+                    iteration: 0,
+                    data_size: 0,
+                    recovery_attempted: false,
+                    recovery_successful: false,
+                })
+            } else {
+                None
+            },
+            memory_usage: MemoryUsageStats {
+                peak_memory: 0,
+                average_memory: 0,
+                growth_rate: 0.0,
+                leak_detected: false,
+                fragmentation_level: 0.0,
+            },
+            duration,
+            issues: if !clear_error {
+                vec![StressTestIssue {
+                    severity: IssueSeverity::Low,
+                    description: "Error message not clear for empty data".to_string(),
+                    trigger_conditions: "Empty input arrays".to_string(),
+                    production_impact: ProductionImpact::Cosmetic,
+                    mitigation: Some("Improve error message clarity".to_string()),
+                }]
             } else {
                 Vec::new()
             },
-            performance_impact: PerformanceImpact::Minimal,
-            recovery_strategy: Some("Improve error message clarity".to_string()),
-            production_impact: ProductionImpact::Cosmetic,
+            recommendations: vec!["Improve error message clarity".to_string()],
         })
     }
 
@@ -1672,21 +1929,52 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             test_name: "dimension_mismatch_errors".to_string(),
             category: StressTestCategory::ErrorHandling,
             input_characteristics: "Mismatched array dimensions".to_string(),
+            execution_time: duration,
             status: if clear_error {
                 TestStatus::Passed
             } else {
                 TestStatus::Failed
             },
-            execution_time: duration,
-            memory_usage: self.estimate_memory_usage(10),
-            error_messages: if !clear_error {
-                vec!["Error message not clear for dimension mismatch".to_string()]
+            performance: StressPerformanceMetrics {
+                mean_time: duration,
+                max_time: duration,
+                min_time: duration,
+                degradation_factor: 1.0,
+                throughput: 1.0,
+                memory_efficiency: 1.0,
+            },
+            error_info: if !clear_error {
+                Some(ErrorInfo {
+                    error_type: "DimensionMismatchError".to_string(),
+                    message: "Error message not clear for dimension mismatch".to_string(),
+                    iteration: 0,
+                    data_size: 10,
+                    recovery_attempted: false,
+                    recovery_successful: false,
+                })
+            } else {
+                None
+            },
+            memory_usage: MemoryUsageStats {
+                peak_memory: self.estimate_memory_usage(10),
+                average_memory: self.estimate_memory_usage(10),
+                growth_rate: 0.0,
+                leak_detected: false,
+                fragmentation_level: 0.0,
+            },
+            duration,
+            issues: if !clear_error {
+                vec![StressTestIssue {
+                    severity: IssueSeverity::Low,
+                    description: "Error message not clear for dimension mismatch".to_string(),
+                    trigger_conditions: "Mismatched array dimensions".to_string(),
+                    production_impact: ProductionImpact::Cosmetic,
+                    mitigation: Some("Enhance error message specificity".to_string()),
+                }]
             } else {
                 Vec::new()
             },
-            performance_impact: PerformanceImpact::Minimal,
-            recovery_strategy: Some("Enhance error message specificity".to_string()),
-            production_impact: ProductionImpact::Cosmetic,
+            recommendations: vec!["Enhance error message specificity".to_string()],
         })
     }
 
@@ -1700,11 +1988,25 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             input_characteristics: "Invalid parameter values".to_string(),
             status: TestStatus::Passed,
             execution_time: Duration::from_millis(1),
-            memory_usage: 0,
-            error_messages: Vec::new(),
-            performance_impact: PerformanceImpact::Minimal,
-            recovery_strategy: Some("Parameter validation is working correctly".to_string()),
-            production_impact: ProductionImpact::Cosmetic,
+            performance: StressPerformanceMetrics {
+                mean_time: Duration::from_millis(1),
+                max_time: Duration::from_millis(1),
+                min_time: Duration::from_millis(1),
+                degradation_factor: 1.0,
+                throughput: 1000.0,
+                memory_efficiency: 1.0,
+            },
+            error_info: None,
+            memory_usage: MemoryUsageStats {
+                peak_memory: 0,
+                average_memory: 0,
+                growth_rate: 0.0,
+                leak_detected: false,
+                fragmentation_level: 0.0,
+            },
+            duration: Duration::from_millis(1),
+            issues: Vec::new(),
+            recommendations: vec!["Parameter validation is working correctly".to_string()],
         })
     }
 
@@ -1718,11 +2020,25 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             input_characteristics: "Numerical computation failures".to_string(),
             status: TestStatus::Passed,
             execution_time: Duration::from_millis(1),
-            memory_usage: 0,
-            error_messages: Vec::new(),
-            performance_impact: PerformanceImpact::Minimal,
-            recovery_strategy: Some("Numerical error handling is adequate".to_string()),
-            production_impact: ProductionImpact::Cosmetic,
+            performance: StressPerformanceMetrics {
+                mean_time: Duration::from_millis(1),
+                max_time: Duration::from_millis(1),
+                min_time: Duration::from_millis(1),
+                degradation_factor: 1.0,
+                throughput: 1000.0,
+                memory_efficiency: 1.0,
+            },
+            error_info: None,
+            memory_usage: MemoryUsageStats {
+                peak_memory: 0,
+                average_memory: 0,
+                growth_rate: 0.0,
+                leak_detected: false,
+                fragmentation_level: 0.0,
+            },
+            duration: Duration::from_millis(1),
+            issues: Vec::new(),
+            recommendations: vec!["Numerical error handling is adequate".to_string()],
         })
     }
 
@@ -1754,14 +2070,14 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
 
         let result = if large_size * std::mem::size_of::<T>() > 1_000_000_000 {
             // Simulate memory exhaustion
-            Err(InterpolateError::InvalidInput(
-                "Insufficient memory".to_string(),
-            ))
+            Err(InterpolateError::InvalidInput {
+                message: "Insufficient memory".to_string(),
+            })
         } else {
             // Actually try the allocation if reasonable
-            match Array1::zeros(large_size).to_owned() {
+            match Array1::<T>::zeros(large_size).to_owned() {
                 x_data => {
-                    let y_data = Array1::zeros(large_size);
+                    let y_data = Array1::<T>::zeros(large_size);
                     crate::interp1d::linear_interpolate(
                         &x_data.view(),
                         &y_data.view(),
@@ -1787,27 +2103,62 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             test_name: "memory_exhaustion_recovery".to_string(),
             category: StressTestCategory::ResourceExhaustion,
             input_characteristics: "Very large data size".to_string(),
+            execution_time: duration,
             status: if graceful_handling {
                 TestStatus::Passed
             } else {
                 TestStatus::Failed
             },
-            execution_time: duration,
-            memory_usage: if result.is_ok() {
-                large_size * std::mem::size_of::<T>() as u64
-            } else {
-                0
+            performance: StressPerformanceMetrics {
+                mean_time: duration,
+                max_time: duration,
+                min_time: duration,
+                degradation_factor: 2.0,
+                throughput: 0.5,
+                memory_efficiency: 0.5,
             },
-            error_messages: if !graceful_handling {
-                vec!["Memory exhaustion not handled gracefully".to_string()]
+            error_info: if !graceful_handling {
+                Some(ErrorInfo {
+                    error_type: "MemoryExhaustion".to_string(),
+                    message: "Memory exhaustion not handled gracefully".to_string(),
+                    iteration: 0,
+                    data_size: large_size,
+                    recovery_attempted: true,
+                    recovery_successful: graceful_handling,
+                })
+            } else {
+                None
+            },
+            memory_usage: MemoryUsageStats {
+                peak_memory: if result.is_ok() {
+                    (large_size * std::mem::size_of::<T>()) as u64
+                } else {
+                    0
+                },
+                average_memory: if result.is_ok() {
+                    (large_size * std::mem::size_of::<T>()) as u64
+                } else {
+                    0
+                },
+                growth_rate: 0.0,
+                leak_detected: false,
+                fragmentation_level: 0.0,
+            },
+            duration,
+            issues: if !graceful_handling {
+                vec![StressTestIssue {
+                    severity: IssueSeverity::High,
+                    description: "Memory exhaustion not handled gracefully".to_string(),
+                    trigger_conditions: format!("Very large data size: {} points", large_size),
+                    production_impact: ProductionImpact::Reliability,
+                    mitigation: Some(
+                        "Implement graceful degradation for large datasets".to_string(),
+                    ),
+                }]
             } else {
                 Vec::new()
             },
-            performance_impact: PerformanceImpact::Significant,
-            recovery_strategy: Some(
-                "Implement graceful degradation for large datasets".to_string(),
-            ),
-            production_impact: ProductionImpact::Reliability,
+            recommendations: vec!["Implement graceful degradation for large datasets".to_string()],
         })
     }
 
@@ -1820,25 +2171,43 @@ impl<T: InterpolationFloat> ProductionStressTester<T> {
             input_characteristics: "Long-running computation".to_string(),
             status: TestStatus::Passed,
             execution_time: Duration::from_millis(100),
-            memory_usage: 1024,
-            error_messages: Vec::new(),
-            performance_impact: PerformanceImpact::Moderate,
-            recovery_strategy: Some("Timeout handling is appropriate".to_string()),
-            production_impact: ProductionImpact::MinorPerformance,
+            performance: StressPerformanceMetrics {
+                mean_time: Duration::from_millis(100),
+                max_time: Duration::from_millis(100),
+                min_time: Duration::from_millis(100),
+                degradation_factor: 1.0,
+                throughput: 10.0,
+                memory_efficiency: 1.0,
+            },
+            error_info: None,
+            memory_usage: MemoryUsageStats {
+                peak_memory: 1024,
+                average_memory: 1024,
+                growth_rate: 0.0,
+                leak_detected: false,
+                fragmentation_level: 0.0,
+            },
+            duration: Duration::from_millis(100),
+            issues: Vec::new(),
+            recommendations: vec!["Timeout handling is appropriate".to_string()],
         })
     }
 }
 
 /// Convenience functions
 /// Run comprehensive production stress tests with default configuration
-pub fn run_production_stress_tests<T: InterpolationFloat>() -> InterpolateResult<StressTestReport> {
+#[allow(dead_code)]
+pub fn run_production_stress_tests<T: InterpolationFloat + std::panic::RefUnwindSafe>(
+) -> InterpolateResult<StressTestReport> {
     let config = StressTestConfig::default();
     let mut tester = ProductionStressTester::<T>::new(config);
     tester.run_comprehensive_stress_tests()
 }
 
 /// Run quick stress tests for development
-pub fn run_quick_stress_tests<T: InterpolationFloat>() -> InterpolateResult<StressTestReport> {
+#[allow(dead_code)]
+pub fn run_quick_stress_tests<T: InterpolationFloat + std::panic::RefUnwindSafe>(
+) -> InterpolateResult<StressTestReport> {
     let config = StressTestConfig {
         max_data_size: 100_000,
         stress_iterations: 10,
@@ -1852,7 +2221,8 @@ pub fn run_quick_stress_tests<T: InterpolationFloat>() -> InterpolateResult<Stre
 }
 
 /// Run stress tests with custom configuration
-pub fn run_stress_tests_with_config<T: InterpolationFloat>(
+#[allow(dead_code)]
+pub fn run_stress_tests_with_config<T: InterpolationFloat + std::panic::RefUnwindSafe>(
     config: StressTestConfig,
 ) -> InterpolateResult<StressTestReport> {
     let mut tester = ProductionStressTester::<T>::new(config);

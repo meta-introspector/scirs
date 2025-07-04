@@ -954,6 +954,7 @@ pub struct ContinualLearningDataset {
 /// Convenience functions for advanced data generation
 ///
 /// Generate adversarial examples from a base dataset
+#[allow(dead_code)]
 pub fn make_adversarial_examples(
     base_dataset: &Dataset,
     config: AdversarialConfig,
@@ -963,6 +964,7 @@ pub fn make_adversarial_examples(
 }
 
 /// Generate anomaly detection dataset
+#[allow(dead_code)]
 pub fn make_anomaly_dataset(
     n_samples: usize,
     n_features: usize,
@@ -973,6 +975,7 @@ pub fn make_anomaly_dataset(
 }
 
 /// Generate multi-task learning dataset
+#[allow(dead_code)]
 pub fn make_multitask_dataset(
     n_samples: usize,
     config: MultiTaskConfig,
@@ -982,6 +985,7 @@ pub fn make_multitask_dataset(
 }
 
 /// Generate domain adaptation dataset
+#[allow(dead_code)]
 pub fn make_domain_adaptation_dataset(
     n_samples_per_domain: usize,
     n_features: usize,
@@ -993,6 +997,7 @@ pub fn make_domain_adaptation_dataset(
 }
 
 /// Generate few-shot learning dataset
+#[allow(dead_code)]
 pub fn make_few_shot_dataset(
     n_way: usize,
     k_shot: usize,
@@ -1005,6 +1010,7 @@ pub fn make_few_shot_dataset(
 }
 
 /// Generate continual learning dataset
+#[allow(dead_code)]
 pub fn make_continual_learning_dataset(
     n_tasks: usize,
     n_samples_per_task: usize,

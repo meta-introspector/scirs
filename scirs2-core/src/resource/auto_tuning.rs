@@ -155,6 +155,7 @@ impl ResourceManager {
 /// Adaptive memory allocator with performance optimization
 #[derive(Debug)]
 pub struct AdaptiveAllocator {
+    #[allow(dead_code)]
     performance_profile: PerformanceProfile,
     allocation_patterns: HashMap<WorkloadType, AllocationPattern>,
     memory_pools: HashMap<String, MemoryPool>,
@@ -164,7 +165,9 @@ pub struct AdaptiveAllocator {
 
 #[derive(Debug, Clone)]
 struct AllocationPattern {
+    #[allow(dead_code)]
     typical_size: usize,
+    #[allow(dead_code)]
     typical_lifetime: Duration,
     access_pattern: AccessPattern,
     alignment_requirement: usize,
@@ -174,6 +177,7 @@ struct AllocationPattern {
 enum AccessPattern {
     Sequential,
     Random,
+    #[allow(dead_code)]
     Strided,
     Temporal,
 }
@@ -358,7 +362,9 @@ pub struct OptimizedAllocation<T> {
 #[derive(Debug)]
 enum AllocationType {
     Direct(std::alloc::Layout),
+    #[allow(dead_code)]
     Pool(String),
+    #[allow(dead_code)]
     MemoryMapped,
 }
 
@@ -467,6 +473,7 @@ impl MemoryPool {
         Ok(self.blocks.pop_front().unwrap())
     }
 
+    #[allow(dead_code)]
     fn deallocate(&mut self, ptr: *mut u8) {
         self.blocks.push_back(ptr);
     }
@@ -489,15 +496,21 @@ pub struct AutoTuner {
     performance_profile: PerformanceProfile,
     optimization_history: VecDeque<OptimizationEvent>,
     current_settings: OptimizationSettings,
+    #[allow(dead_code)]
     learning_rate: f64,
+    #[allow(dead_code)]
     stability_threshold: f64,
 }
 
 #[derive(Debug, Clone)]
 struct OptimizationEvent {
+    #[allow(dead_code)]
     timestamp: Instant,
+    #[allow(dead_code)]
     metrics_before: ResourceMetrics,
+    #[allow(dead_code)]
     metrics_after: ResourceMetrics,
+    #[allow(dead_code)]
     settings_applied: OptimizationSettings,
     performance_delta: f64,
 }

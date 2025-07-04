@@ -2,6 +2,7 @@
 use scirs2_special::{sici, shichi, spence, erfcx, erfi, wofz, expit, logit, expit_array, logit_array};
 use ndarray::array;
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing new SciPy parity functions (advanced mode)...");
     

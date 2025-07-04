@@ -16,6 +16,7 @@ use scirs2_io::ultrathink_enhanced_algorithms::AdvancedPatternRecognizer;
 use scirs2_io::zero_copy::{AsyncConfig, AsyncZeroCopyProcessor};
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🌟 SciRS2-IO Ultra-Think Comprehensive Integration Demo");
     println!("=====================================================\n");
@@ -50,6 +51,7 @@ fn main() -> Result<()> {
 }
 
 /// Demonstrate intelligent system initialization with capability assessment
+#[allow(dead_code)]
 fn demonstrate_intelligent_initialization() -> Result<()> {
     println!("🚀 Phase 1: Intelligent System Initialization");
     println!("==============================================");
@@ -87,6 +89,7 @@ fn demonstrate_intelligent_initialization() -> Result<()> {
 }
 
 /// Demonstrate adaptive multi-system processing with intelligent coordination
+#[allow(dead_code)]
 fn demonstrate_adaptive_multi_system_processing() -> Result<()> {
     println!("🧠 Phase 2: Adaptive Multi-System Processing");
     println!("=============================================");
@@ -143,6 +146,7 @@ fn demonstrate_adaptive_multi_system_processing() -> Result<()> {
 }
 
 /// Demonstrate emergent optimization discovery through pattern correlation
+#[allow(dead_code)]
 fn demonstrate_emergent_optimization_discovery() -> Result<()> {
     println!("🔍 Phase 3: Emergent Optimization Discovery");
     println!("===========================================");
@@ -202,6 +206,7 @@ fn demonstrate_emergent_optimization_discovery() -> Result<()> {
 }
 
 /// Demonstrate cross-system meta-learning and knowledge transfer
+#[allow(dead_code)]
 fn demonstrate_cross_system_meta_learning() -> Result<()> {
     println!("🎓 Phase 4: Cross-System Meta-Learning");
     println!("======================================");
@@ -258,6 +263,7 @@ fn demonstrate_cross_system_meta_learning() -> Result<()> {
 }
 
 /// Demonstrate real-world workflow optimization scenarios
+#[allow(dead_code)]
 fn demonstrate_real_world_workflow_optimization() -> Result<()> {
     println!("🏭 Phase 5: Real-World Workflow Optimization");
     println!("============================================");
@@ -316,6 +322,7 @@ fn demonstrate_real_world_workflow_optimization() -> Result<()> {
 }
 
 /// Demonstrate autonomous system evolution and self-improvement
+#[allow(dead_code)]
 fn demonstrate_autonomous_system_evolution() -> Result<()> {
     println!("🔄 Phase 6: Autonomous System Evolution");
     println!("======================================");
@@ -393,19 +400,23 @@ fn demonstrate_autonomous_system_evolution() -> Result<()> {
 
 // Helper functions for generating test data
 
+#[allow(dead_code)]
 fn generate_repetitive_data(size: usize) -> Vec<u8> {
     let pattern = vec![1, 2, 3, 4, 5];
     (0..size).map(|i| pattern[i % pattern.len()]).collect()
 }
 
+#[allow(dead_code)]
 fn generate_random_data(size: usize) -> Vec<u8> {
     (0..size).map(|_| rand::random::<u8>()).collect()
 }
 
+#[allow(dead_code)]
 fn generate_sequential_data(size: usize) -> Vec<u8> {
     (0..size).map(|i| (i % 256) as u8).collect()
 }
 
+#[allow(dead_code)]
 fn generate_fractal_data(size: usize) -> Vec<u8> {
     let mut data = Vec::with_capacity(size);
     for i in 0..size {
@@ -415,6 +426,7 @@ fn generate_fractal_data(size: usize) -> Vec<u8> {
     data
 }
 
+#[allow(dead_code)]
 fn generate_mixed_pattern_data(size: usize) -> Vec<u8> {
     let mut data = Vec::with_capacity(size);
     for i in 0..size {
@@ -429,12 +441,14 @@ fn generate_mixed_pattern_data(size: usize) -> Vec<u8> {
     data
 }
 
+#[allow(dead_code)]
 fn generate_correlated_data_sequence(size: usize, sequence_id: usize) -> Vec<u8> {
     (0..size)
         .map(|i| ((i + sequence_id * 100) % 256) as u8)
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_scientific_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -444,6 +458,7 @@ fn generate_scientific_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_financial_data(size: usize) -> Vec<u8> {
     let mut data = Vec::with_capacity(size);
     let mut value = 128.0;
@@ -455,6 +470,7 @@ fn generate_financial_data(size: usize) -> Vec<u8> {
     data
 }
 
+#[allow(dead_code)]
 fn generate_image_like_data(size: usize) -> Vec<u8> {
     let width = (size as f64).sqrt() as usize;
     let mut data = Vec::with_capacity(size);
@@ -471,6 +487,7 @@ fn generate_image_like_data(size: usize) -> Vec<u8> {
     data
 }
 
+#[allow(dead_code)]
 fn generate_network_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
@@ -484,6 +501,7 @@ fn generate_network_data(size: usize) -> Vec<u8> {
         .collect()
 }
 
+#[allow(dead_code)]
 fn generate_hybrid_domain_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| match i % 5 {
@@ -497,22 +515,27 @@ fn generate_hybrid_domain_data(size: usize) -> Vec<u8> {
 
 // Workflow simulation functions
 
+#[allow(dead_code)]
 fn simulate_large_file_workflow() -> Vec<u8> {
     generate_mixed_pattern_data(50000)
 }
 
+#[allow(dead_code)]
 fn simulate_streaming_workflow() -> Vec<u8> {
     generate_sequential_data(20000)
 }
 
+#[allow(dead_code)]
 fn simulate_batch_computing_workflow() -> Vec<u8> {
     generate_scientific_data(30000)
 }
 
+#[allow(dead_code)]
 fn simulate_realtime_analytics_workflow() -> Vec<u8> {
     generate_financial_data(15000)
 }
 
+#[allow(dead_code)]
 fn generate_varied_workload(size: usize) -> Vec<u8> {
     let mut data = Vec::with_capacity(size);
     for i in 0..size {

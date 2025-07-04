@@ -68,6 +68,7 @@ mod data_generators {
 }
 
 /// Benchmark descriptive statistics
+#[allow(dead_code)]
 fn bench_descriptive_stats(c: &mut Criterion) {
     let config = BenchConfig::default();
     let mut group = c.benchmark_group("descriptive_statistics");
@@ -115,6 +116,7 @@ fn bench_descriptive_stats(c: &mut Criterion) {
 }
 
 /// Benchmark correlation functions
+#[allow(dead_code)]
 fn bench_correlation(c: &mut Criterion) {
     let config = BenchConfig::default();
     let mut group = c.benchmark_group("correlation");
@@ -147,6 +149,7 @@ fn bench_correlation(c: &mut Criterion) {
 }
 
 /// Benchmark statistical tests
+#[allow(dead_code)]
 fn bench_statistical_tests(c: &mut Criterion) {
     let config = BenchConfig::default();
     let mut group = c.benchmark_group("statistical_tests");
@@ -219,6 +222,7 @@ fn bench_statistical_tests(c: &mut Criterion) {
 }
 
 /// Benchmark distribution functions
+#[allow(dead_code)]
 fn bench_distributions(c: &mut Criterion) {
     let config = BenchConfig::default();
     let mut group = c.benchmark_group("distributions");
@@ -274,6 +278,7 @@ fn bench_distributions(c: &mut Criterion) {
 }
 
 /// Benchmark regression functions
+#[allow(dead_code)]
 fn bench_regression(c: &mut Criterion) {
     let config = BenchConfig::default();
     let mut group = c.benchmark_group("regression");
@@ -317,6 +322,7 @@ fn bench_regression(c: &mut Criterion) {
 }
 
 /// Benchmark quantile functions
+#[allow(dead_code)]
 fn bench_quantiles(c: &mut Criterion) {
     let config = BenchConfig::default();
     let mut group = c.benchmark_group("quantiles");
@@ -356,6 +362,7 @@ fn bench_quantiles(c: &mut Criterion) {
 }
 
 /// Benchmark dispersion measures
+#[allow(dead_code)]
 fn bench_dispersion(c: &mut Criterion) {
     let config = BenchConfig::default();
     let mut group = c.benchmark_group("dispersion");
@@ -396,6 +403,7 @@ fn bench_dispersion(c: &mut Criterion) {
 }
 
 /// Benchmark random sampling functions
+#[allow(dead_code)]
 fn bench_random_sampling(c: &mut Criterion) {
     let config = BenchConfig::default();
     let mut group = c.benchmark_group("random_sampling");

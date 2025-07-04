@@ -185,6 +185,7 @@ where
 /// # Returns
 ///
 /// A sparse matrix view in CSR format
+#[allow(dead_code)]
 pub fn sparse_from_ndarray<T, F>(
     array: &ArrayView2<T>,
     threshold: F,
@@ -236,6 +237,7 @@ where
 /// # Returns
 ///
 /// A dense matrix containing the result
+#[allow(dead_code)]
 pub fn sparse_dense_matmul<T>(
     sparse: &SparseMatrixView<T>,
     dense: &ArrayView2<T>,
@@ -287,6 +289,7 @@ where
 /// # Returns
 ///
 /// A dense matrix containing the result
+#[allow(dead_code)]
 pub fn dense_sparse_matmul<T>(
     dense: &ArrayView2<T>,
     sparse: &SparseMatrixView<T>,
@@ -350,6 +353,7 @@ where
 /// # Returns
 ///
 /// A dense vector containing the result
+#[allow(dead_code)]
 pub fn sparse_dense_matvec<T>(
     sparse: &SparseMatrixView<T>,
     vector: &ArrayView1<T>,
@@ -395,6 +399,7 @@ where
 /// # Returns
 ///
 /// A dense vector containing the result
+#[allow(dead_code)]
 pub fn dense_sparse_matvec<T>(
     dense: &ArrayView2<T>,
     sparse: &SparseMatrixView<T>,
@@ -446,6 +451,7 @@ where
 /// # Returns
 ///
 /// A dense matrix containing the result
+#[allow(dead_code)]
 pub fn sparse_dense_add<T>(
     sparse: &SparseMatrixView<T>,
     dense: &ArrayView2<T>,
@@ -488,6 +494,7 @@ where
 /// # Returns
 ///
 /// A dense matrix containing the result (sparse - dense)
+#[allow(dead_code)]
 pub fn sparse_dense_sub<T>(
     sparse: &SparseMatrixView<T>,
     dense: &ArrayView2<T>,
@@ -530,6 +537,7 @@ where
 /// # Returns
 ///
 /// A sparse matrix containing the result
+#[allow(dead_code)]
 pub fn sparse_dense_elementwise_mul<T>(
     sparse: &SparseMatrixView<T>,
     dense: &ArrayView2<T>,
@@ -585,6 +593,7 @@ where
 /// # Returns
 ///
 /// A transposed sparse matrix
+#[allow(dead_code)]
 pub fn sparse_transpose<T>(sparse: &SparseMatrixView<T>) -> LinalgResult<SparseMatrixView<T>>
 where
     T: Clone + Copy + Debug + Zero,

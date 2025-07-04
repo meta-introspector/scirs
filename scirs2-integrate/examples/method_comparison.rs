@@ -10,6 +10,7 @@ use std::marker::PhantomData;
 use std::time::Instant;
 
 /// A helper function to time and report the result of an integration method
+#[allow(dead_code)]
 fn time_integration<F, R>(name: &str, f: F) -> R
 where
     F: FnOnce() -> R,
@@ -21,6 +22,7 @@ where
     result
 }
 
+#[allow(dead_code)]
 fn main() {
     // Define a test function with a known analytical result
     // f(x) = x^2, which has the integral ∫x^2 dx = x^3/3

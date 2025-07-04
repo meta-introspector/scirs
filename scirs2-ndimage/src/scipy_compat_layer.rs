@@ -6,9 +6,6 @@
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::*;
-use crate::interpolation::*;
-use crate::measurements::*;
-use crate::morphology::*;
 use ndarray::{Array, ArrayView, ArrayViewMut, Dimension};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;

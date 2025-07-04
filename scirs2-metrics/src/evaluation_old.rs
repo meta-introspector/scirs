@@ -46,6 +46,7 @@ pub type TrainTestSplitResult<T> = (Vec<Array1<T>>, Vec<Array1<T>>);
 /// assert_eq!(x_train.len(), 7);  // 70% of the data
 /// assert_eq!(x_test.len(), 3);   // 30% of the data
 /// ```
+#[allow(dead_code)]
 pub fn train_test_split<T>(
     arrays: &[&ArrayBase<impl Data<Elem = T>, impl Dimension>],
     test_size: f64,
@@ -184,6 +185,7 @@ where
 /// assert_eq!(train_indices.len(), 7); // 7 samples in training
 /// assert_eq!(test_indices.len(), 3);  // 3 samples in testing
 /// ```
+#[allow(dead_code)]
 pub fn k_fold_cross_validation(
     n: usize,
     n_folds: usize,
@@ -277,6 +279,7 @@ pub fn k_fold_cross_validation(
 /// assert_eq!(test_indices.len(), 1);  // 1 sample in testing
 /// assert_eq!(test_indices[0], 0);     // First sample in test set
 /// ```
+#[allow(dead_code)]
 pub fn leave_one_out_cv(n: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
     if n <= 1 {
         return Err(MetricsError::InvalidInput(
@@ -329,6 +332,7 @@ pub fn leave_one_out_cv(n: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
 /// let splits = stratified_k_fold(&y, 3, true, Some(42)).unwrap();
 /// assert_eq!(splits.len(), 3); // 3 folds
 /// ```
+#[allow(dead_code)]
 pub fn stratified_k_fold<T>(
     y: &ArrayBase<impl Data<Elem = T>, impl Dimension>,
     n_folds: usize,

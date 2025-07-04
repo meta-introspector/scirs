@@ -549,10 +549,12 @@ impl NeuralOps {
 impl Default for NeuralOps {
         Self::new().expect("Failed to create default NeuralOps")
 /// Helper function to create neural operations with automatic backend detection
+#[allow(dead_code)]
 pub fn create_neural_ops() -> Result<NeuralOps> {
     // For now, always use CPU. Future versions will detect GPU availability
     NeuralOps::new()
 /// Helper function to create neural operations with preferred backend
+#[allow(dead_code)]
 pub fn create_neural_ops_with_backend(backend: &str) -> Result<NeuralOps> {
     NeuralOps::with_backend(backend)
 #[cfg(test)]

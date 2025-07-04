@@ -66,6 +66,7 @@ impl Default for DeconvolutionConfig {
 /// # Returns
 ///
 /// * The deconvolved signal
+#[allow(dead_code)]
 pub fn wiener_deconvolution_1d(
     signal: &Array1<f64>,
     psf: &Array1<f64>,
@@ -195,6 +196,7 @@ pub fn wiener_deconvolution_1d(
 /// # Returns
 ///
 /// * The deconvolved signal
+#[allow(dead_code)]
 pub fn tikhonov_deconvolution_1d(
     signal: &Array1<f64>,
     psf: &Array1<f64>,
@@ -337,6 +339,7 @@ pub fn tikhonov_deconvolution_1d(
 /// # Returns
 ///
 /// * The deconvolved signal
+#[allow(dead_code)]
 pub fn richardson_lucy_deconvolution_1d(
     signal: &Array1<f64>,
     psf: &Array1<f64>,
@@ -470,6 +473,7 @@ pub fn richardson_lucy_deconvolution_1d(
 /// # Returns
 ///
 /// * The deconvolved signal
+#[allow(dead_code)]
 pub fn clean_deconvolution_1d(
     signal: &Array1<f64>,
     psf: &Array1<f64>,
@@ -608,6 +612,7 @@ pub fn clean_deconvolution_1d(
 /// # Returns
 ///
 /// * The deconvolved signal
+#[allow(dead_code)]
 pub fn mem_deconvolution_1d(
     signal: &Array1<f64>,
     psf: &Array1<f64>,
@@ -753,6 +758,7 @@ pub fn mem_deconvolution_1d(
 /// # Returns
 ///
 /// * Tuple containing (deconvolved signal, estimated PSF)
+#[allow(dead_code)]
 pub fn blind_deconvolution_1d(
     signal: &Array1<f64>,
     psf_size: usize,
@@ -879,6 +885,7 @@ pub fn blind_deconvolution_1d(
 /// # Returns
 ///
 /// * The deconvolved image
+#[allow(dead_code)]
 pub fn wiener_deconvolution_2d(
     image: &Array2<f64>,
     psf: &Array2<f64>,
@@ -1012,6 +1019,7 @@ pub fn wiener_deconvolution_2d(
 /// # Returns
 ///
 /// * The deconvolved image
+#[allow(dead_code)]
 pub fn richardson_lucy_deconvolution_2d(
     image: &Array2<f64>,
     psf: &Array2<f64>,
@@ -1146,6 +1154,7 @@ pub fn richardson_lucy_deconvolution_2d(
 /// # Returns
 ///
 /// * The deconvolved image
+#[allow(dead_code)]
 pub fn tv_deconvolution_2d(
     image: &Array2<f64>,
     psf: &Array2<f64>,
@@ -1309,6 +1318,7 @@ pub fn tv_deconvolution_2d(
 /// # Returns
 ///
 /// * Tuple containing (deconvolved image, estimated PSF)
+#[allow(dead_code)]
 pub fn blind_deconvolution_2d(
     image: &Array2<f64>,
     psf_size_h: usize,
@@ -1441,6 +1451,7 @@ pub fn blind_deconvolution_2d(
 }
 
 /// Helper function to create a Gaussian kernel for a PSF
+#[allow(dead_code)]
 fn create_gaussian_kernel(size: usize) -> Array1<f64> {
     let half_size = size as isize / 2;
     let mut kernel = Array1::<f64>::zeros(size);
@@ -1463,6 +1474,7 @@ fn create_gaussian_kernel(size: usize) -> Array1<f64> {
 }
 
 /// Helper function to create a 2D Gaussian kernel for a PSF
+#[allow(dead_code)]
 fn create_gaussian_kernel_2d(height: usize, width: usize) -> Array2<f64> {
     let half_h = height as isize / 2;
     let half_w = width as isize / 2;
@@ -1491,6 +1503,7 @@ fn create_gaussian_kernel_2d(height: usize, width: usize) -> Array2<f64> {
 }
 
 /// Helper function to apply Gaussian filtering to a 1D signal
+#[allow(dead_code)]
 fn gaussian_filter_1d(signal: &Array1<f64>, sigma: f64) -> Array1<f64> {
     let _n = signal.len();
     let kernel_size = (6.0 * sigma).ceil() as usize;
@@ -1509,6 +1522,7 @@ fn gaussian_filter_1d(signal: &Array1<f64>, sigma: f64) -> Array1<f64> {
 }
 
 /// Helper function to apply Gaussian filtering to a 2D image
+#[allow(dead_code)]
 fn gaussian_filter_2d(image: &Array2<f64>, sigma: f64) -> Array2<f64> {
     let (_height, _width) = image.dim();
     let kernel_size = (6.0 * sigma).ceil() as usize;
@@ -1534,6 +1548,7 @@ fn gaussian_filter_2d(image: &Array2<f64>, sigma: f64) -> Array2<f64> {
 /// # Returns
 ///
 /// * The deconvolved color image
+#[allow(dead_code)]
 pub fn wiener_deconvolution_color(
     image: &Array3<f64>,
     psf: &Array2<f64>,
@@ -1572,6 +1587,7 @@ pub fn wiener_deconvolution_color(
 /// # Returns
 ///
 /// * The deconvolved color image
+#[allow(dead_code)]
 pub fn richardson_lucy_deconvolution_color(
     image: &Array3<f64>,
     psf: &Array2<f64>,
@@ -1612,6 +1628,7 @@ pub fn richardson_lucy_deconvolution_color(
 /// # Returns
 ///
 /// * The optimal regularization parameter based on GCV
+#[allow(dead_code)]
 pub fn estimate_regularization_param(
     signal: &Array1<f64>,
     psf: &Array1<f64>,
@@ -1740,6 +1757,7 @@ pub fn estimate_regularization_param(
 /// # Returns
 ///
 /// * The deconvolved signal
+#[allow(dead_code)]
 pub fn optimal_deconvolution_1d(
     signal: &Array1<f64>,
     psf: &Array1<f64>,

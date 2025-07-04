@@ -4,6 +4,7 @@ use scirs2_linalg::batch::attention::{
     batch_flash_attention, batch_multi_head_attention, batch_multi_query_attention,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Batch Attention Mechanism Examples");
     println!("==================================\n");

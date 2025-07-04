@@ -240,6 +240,7 @@ impl Drop for UltraScaleState {
 }
 
 /// Create variable blocks for progressive processing
+#[allow(dead_code)]
 fn create_variable_blocks(n: usize, block_size: usize) -> Vec<VariableBlock> {
     let mut blocks = Vec::new();
     let num_blocks = n.div_ceil(block_size);
@@ -261,6 +262,7 @@ fn create_variable_blocks(n: usize, block_size: usize) -> Vec<VariableBlock> {
 }
 
 /// Ultra-large-scale optimization using progressive refinement and memory management
+#[allow(dead_code)]
 pub fn minimize_ultra_scale<F, S>(
     fun: F,
     x0: Array1<f64>,
@@ -397,6 +399,7 @@ where
 }
 
 /// Optimize a single block of variables
+#[allow(dead_code)]
 fn optimize_block<F, S>(
     fun: &F,
     full_x: &Array1<f64>,
@@ -422,6 +425,7 @@ where
 }
 
 /// Update block priorities based on gradient magnitude
+#[allow(dead_code)]
 fn update_block_priorities(blocks: &mut [VariableBlock], gradient: &CsrArray<f64>) {
     for block in blocks {
         // Compute average gradient magnitude in this block
@@ -445,6 +449,7 @@ fn update_block_priorities(blocks: &mut [VariableBlock], gradient: &CsrArray<f64
 }
 
 /// Estimate sparse gradient norm efficiently
+#[allow(dead_code)]
 fn estimate_sparse_gradient_norm<F, S>(
     fun: &F,
     x: &ArrayView1<f64>,
@@ -488,6 +493,7 @@ where
 }
 
 /// Compute sparse gradient norm using finite differences
+#[allow(dead_code)]
 fn compute_sparse_gradient_norm<F, S>(
     fun: &F,
     x: &ArrayView1<f64>,
@@ -526,6 +532,7 @@ where
 }
 
 /// Create ultra-scale optimizer with automatic parameter selection
+#[allow(dead_code)]
 pub fn create_ultra_scale_optimizer(
     problem_size: usize,
     available_memory_mb: usize,

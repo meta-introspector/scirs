@@ -1060,6 +1060,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
 }
 
 /// Create a new functional data analysis interpolator
+#[allow(dead_code)]
 pub fn make_fda_interpolator<T: crate::traits::InterpolationFloat + ScalarOperand>(
     config: Option<FDAConfig>,
 ) -> FunctionalDataInterpolator<T> {
@@ -1067,6 +1068,7 @@ pub fn make_fda_interpolator<T: crate::traits::InterpolationFloat + ScalarOperan
 }
 
 /// Create a new multi-output interpolator
+#[allow(dead_code)]
 pub fn make_multi_output_interpolator<T: crate::traits::InterpolationFloat + ScalarOperand>(
     input_dim: usize,
     output_dim: usize,
@@ -1076,6 +1078,7 @@ pub fn make_multi_output_interpolator<T: crate::traits::InterpolationFloat + Sca
 }
 
 /// Create a new piecewise polynomial interpolator
+#[allow(dead_code)]
 pub fn make_piecewise_polynomial_interpolator<
     T: crate::traits::InterpolationFloat + ScalarOperand,
 >(

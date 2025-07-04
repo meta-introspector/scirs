@@ -164,6 +164,7 @@ impl Default for FftContextBuilder {
 }
 
 /// Create an FFT context with specific settings
+#[allow(dead_code)]
 pub fn fft_context() -> FftContextBuilder {
     FftContextBuilder::new()
 }
@@ -180,6 +181,7 @@ impl FftSettingsGuard {
 }
 
 /// Use specific FFT settings within a scope
+#[allow(dead_code)]
 pub fn with_fft_settings<F, R>(builder: FftContextBuilder, f: F) -> FFTResult<R>
 where
     F: FnOnce() -> R,
@@ -190,6 +192,7 @@ where
 }
 
 /// Convenience function for using a specific backend
+#[allow(dead_code)]
 pub fn with_backend<F, R>(backend: &str, f: F) -> FFTResult<R>
 where
     F: FnOnce() -> R,
@@ -198,6 +201,7 @@ where
 }
 
 /// Convenience function for using specific number of workers
+#[allow(dead_code)]
 pub fn with_workers<F, R>(workers: usize, f: F) -> FFTResult<R>
 where
     F: FnOnce() -> R,
@@ -206,6 +210,7 @@ where
 }
 
 /// Convenience function for running without cache
+#[allow(dead_code)]
 pub fn without_cache<F, R>(f: F) -> FFTResult<R>
 where
     F: FnOnce() -> R,

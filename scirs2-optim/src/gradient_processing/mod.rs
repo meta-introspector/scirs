@@ -156,6 +156,7 @@ impl<A: Float + ScalarOperand + Debug> GradientProcessor<A> {
 }
 
 /// Clip gradient values to a specified range
+#[allow(dead_code)]
 pub fn clip_gradients_by_value<A, D>(
     gradients: &mut Array<A, D>,
     min_value: A,
@@ -178,6 +179,7 @@ where
 }
 
 /// Clip gradient L2 norm (global gradient clipping)
+#[allow(dead_code)]
 pub fn clip_gradient_norm<A, D>(
     gradients: &mut Array<A, D>,
     max_norm: A,
@@ -208,6 +210,7 @@ where
 }
 
 /// Clip gradient L1 norm
+#[allow(dead_code)]
 pub fn clip_gradient_l1_norm<A, D>(
     gradients: &mut Array<A, D>,
     max_l1_norm: A,
@@ -235,6 +238,7 @@ where
 }
 
 /// Compute gradient centralization
+#[allow(dead_code)]
 pub fn gradient_centralization<A, D>(gradients: &mut Array<A, D>) -> &mut Array<A, D>
 where
     A: Float + ScalarOperand,
@@ -251,6 +255,7 @@ where
 }
 
 /// Zero out small gradient values
+#[allow(dead_code)]
 pub fn zero_small_gradients<A, D>(gradients: &mut Array<A, D>, threshold: A) -> &mut Array<A, D>
 where
     A: Float + ScalarOperand,
@@ -365,6 +370,7 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GradientAccumulator<A, D> {
 ///
 /// Clips gradients based on the ratio of gradient norm to parameter norm.
 /// This is particularly useful for transformer models.
+#[allow(dead_code)]
 pub fn adaptive_gradient_clipping<'a, A, D>(
     gradients: &'a mut Array<A, D>,
     parameters: &Array<A, D>,
@@ -408,6 +414,7 @@ where
 /// * `gradients` - Gradients to add noise to
 /// * `noise_std` - Standard deviation of Gaussian noise to add
 /// * `seed` - Optional seed for reproducible results
+#[allow(dead_code)]
 pub fn add_gradient_noise<A, D>(
     gradients: &mut Array<A, D>,
     noise_std: A,

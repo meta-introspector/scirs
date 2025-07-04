@@ -18,6 +18,7 @@ use ndarray::{Array1, ArrayView1};
 /// # Returns
 ///
 /// The normalized error
+#[allow(dead_code)]
 pub fn error_norm<F: IntegrateFloat>(error: &Array1<F>, y: &Array1<F>, rtol: F, atol: F) -> F {
     // Calculate the denominator for normalization
     let scale = y
@@ -48,6 +49,7 @@ pub fn error_norm<F: IntegrateFloat>(error: &Array1<F>, y: &Array1<F>, rtol: F, 
 /// # Returns
 ///
 /// The suggested new step size
+#[allow(dead_code)]
 pub fn calculate_new_step_size<F: IntegrateFloat>(
     h_current: F,
     error_norm: F,
@@ -96,6 +98,7 @@ pub fn calculate_new_step_size<F: IntegrateFloat>(
 /// # Returns
 ///
 /// Suggested initial step size
+#[allow(dead_code)]
 pub fn select_initial_step<F, Func>(
     f: &Func,
     t: F,

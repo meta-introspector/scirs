@@ -1,6 +1,7 @@
 use ndarray::array;
 use scirs2_spatial::rtree::RTree;
 
+#[allow(dead_code)]
 fn main() {
     // Create a new 2D R-tree with min entries 2 and max entries 5
     let mut rtree: RTree<String> = RTree::new(2, 2, 5).unwrap();

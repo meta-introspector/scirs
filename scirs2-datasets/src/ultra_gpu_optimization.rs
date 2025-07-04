@@ -993,6 +993,7 @@ impl PerformanceBenchmarkResults {
 }
 
 /// Convenience function for ultra-optimized matrix generation
+#[allow(dead_code)]
 pub fn generate_ultra_matrix(
     gpu_context: &GpuContext,
     rows: usize,
@@ -1004,6 +1005,7 @@ pub fn generate_ultra_matrix(
 }
 
 /// Convenience function for performance benchmarking
+#[allow(dead_code)]
 pub fn benchmark_ultra_performance(
     gpu_context: &GpuContext,
     operation: &str,

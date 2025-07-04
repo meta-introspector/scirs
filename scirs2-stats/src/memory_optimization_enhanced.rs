@@ -504,7 +504,7 @@ impl EnhancedMemoryOptimizer {
     }
 
     fn initialize_smart_cache(&self) -> StatsResult<()> {
-        let cache_manager = self.cache_manager.write().unwrap();
+        let _cache_manager = self.cache_manager.write().unwrap();
         // Initialize cache with optimal settings based on available memory
         Ok(())
     }
@@ -568,7 +568,7 @@ impl EnhancedMemoryOptimizer {
         }
     }
 
-    fn recommend_cache_strategy(&self, data_size: usize, operation: &str) -> CacheStrategy {
+    fn recommend_cache_strategy(&self, data_size: usize, _operation: &str) -> CacheStrategy {
         if data_size < 1024 * 1024 {
             // 1MB
             CacheStrategy::Aggressive
@@ -580,7 +580,7 @@ impl EnhancedMemoryOptimizer {
         }
     }
 
-    fn predict_performance(&self, data_size: usize, operation: &str) -> PerformanceScore {
+    fn predict_performance(&self, _data_size: usize, _operation: &str) -> PerformanceScore {
         // Implement performance prediction based on historical data
         PerformanceScore {
             time_score: 85.0,
@@ -804,7 +804,7 @@ impl MemoryAwareSelector {
     fn select_algorithm(
         &self,
         operation: &str,
-        data_size: usize,
+        _data_size: usize,
         conditions: &MemoryConditions,
     ) -> String {
         // Select optimal algorithm based on memory conditions
@@ -885,11 +885,13 @@ impl Default for MemoryConditions {
 }
 
 /// Create an enhanced memory optimizer with default configuration
+#[allow(dead_code)]
 pub fn create_enhanced_memory_optimizer() -> EnhancedMemoryOptimizer {
     EnhancedMemoryOptimizer::new(MemoryOptimizationConfig::default())
 }
 
 /// Create an enhanced memory optimizer with custom configuration
+#[allow(dead_code)]
 pub fn create_configured_memory_optimizer(
     config: MemoryOptimizationConfig,
 ) -> EnhancedMemoryOptimizer {

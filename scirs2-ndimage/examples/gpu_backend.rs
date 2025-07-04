@@ -6,6 +6,7 @@ use scirs2_ndimage::{
     BackendOp, GaussianFilterOp, NdimageResult,
 };
 
+#[allow(dead_code)]
 fn main() {
     // Example 1: Automatic backend selection
     automatic_backend_selection();
@@ -21,6 +22,7 @@ fn main() {
 }
 
 /// Automatic backend selection based on array size
+#[allow(dead_code)]
 fn automatic_backend_selection() {
     println!("Example 1: Automatic backend selection");
 
@@ -41,6 +43,7 @@ fn automatic_backend_selection() {
 }
 
 /// Force GPU backend for all operations
+#[allow(dead_code)]
 fn force_gpu_backend() {
     println!("\nExample 2: Force GPU backend");
 
@@ -69,6 +72,7 @@ fn force_gpu_backend() {
 }
 
 /// Custom backend configuration
+#[allow(dead_code)]
 fn custom_backend_config() {
     println!("\nExample 3: Custom backend configuration");
 
@@ -96,6 +100,7 @@ fn custom_backend_config() {
 }
 
 /// GPU with CPU fallback
+#[allow(dead_code)]
 fn gpu_with_fallback() {
     println!("\nExample 4: GPU with CPU fallback");
 

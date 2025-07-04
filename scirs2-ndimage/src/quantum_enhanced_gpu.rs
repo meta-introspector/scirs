@@ -15,10 +15,10 @@
 //! - **Quantum Sensing Enhancement**: Quantum-enhanced image sensors simulation
 //! - **Adaptive Quantum Computing**: Dynamic quantum-classical resource allocation
 
-use ndarray::{Array, Array1, Array2, Array3, Array4, ArrayView2, ArrayViewMut2, Axis, Zip};
+use ndarray::{Array1, Array2, ArrayView2};
 use num_complex::Complex;
-use num_traits::{Float, FromPrimitive, One, Zero};
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use num_traits::{Float, FromPrimitive, Zero};
+use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
@@ -561,6 +561,7 @@ pub struct ErrorStatistics {
 ///
 /// Applies quantum-enhanced algorithms using GPU acceleration for
 /// unprecedented image processing performance and capabilities.
+#[allow(dead_code)]
 pub fn quantum_enhanced_image_processing<T>(
     image: ArrayView2<T>,
     processing_type: QuantumImageProcessingType,
@@ -570,7 +571,7 @@ pub fn quantum_enhanced_image_processing<T>(
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
 {
-    let (height, width) = image.dim();
+    let (_height, _width) = image.dim();
 
     // Create quantum-GPU task
     let task = create_quantum_image_processing_task(&image, &processing_type, config)?;
@@ -625,6 +626,7 @@ pub enum QuantumImageProcessingType {
 ///
 /// Simulates quantum circuits using GPU acceleration with optimized
 /// quantum state vector operations.
+#[allow(dead_code)]
 pub fn quantum_circuit_simulation_gpu(
     circuit: &QuantumCircuit,
     initial_state: &Array1<Complex<f64>>,
@@ -663,6 +665,7 @@ pub fn quantum_circuit_simulation_gpu(
 ///
 /// Implements quantum machine learning algorithms with GPU acceleration
 /// for enhanced performance and scalability.
+#[allow(dead_code)]
 pub fn quantum_machine_learning_gpu<T>(
     training_data: &[ArrayView2<T>],
     labels: &[usize],
@@ -696,6 +699,7 @@ where
 ///
 /// Dynamically manages quantum and classical GPU resources based on
 /// workload characteristics and performance metrics.
+#[allow(dead_code)]
 pub fn adaptive_quantum_classical_management(
     context: &QuantumGPUContext,
     config: &QuantumGPUConfig,
@@ -762,6 +766,7 @@ pub struct ResourcePrediction {
 
 // Helper function implementations (simplified for brevity)
 
+#[allow(dead_code)]
 fn create_quantum_image_processing_task<T>(
     _image: &ArrayView2<T>,
     _processing_type: &QuantumImageProcessingType,
@@ -782,6 +787,7 @@ where
     })
 }
 
+#[allow(dead_code)]
 fn schedule_quantum_gpu_task(
     _context: &QuantumGPUContext,
     _task: QuantumGPUTask,
@@ -790,6 +796,7 @@ fn schedule_quantum_gpu_task(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn quantum_fourier_image_processing<T>(
     _image: &ArrayView2<T>,
     _context: &QuantumGPUContext,
@@ -803,6 +810,7 @@ where
     Ok(Array2::zeros((height, width)))
 }
 
+#[allow(dead_code)]
 fn quantum_superposition_image_processing<T>(
     _image: &ArrayView2<T>,
     _context: &QuantumGPUContext,
@@ -816,6 +824,7 @@ where
     Ok(Array2::zeros((height, width)))
 }
 
+#[allow(dead_code)]
 fn quantum_entanglement_image_processing<T>(
     _image: &ArrayView2<T>,
     _context: &QuantumGPUContext,
@@ -829,6 +838,7 @@ where
     Ok(Array2::zeros((height, width)))
 }
 
+#[allow(dead_code)]
 fn quantum_ml_image_processing<T>(
     _image: &ArrayView2<T>,
     _context: &QuantumGPUContext,
@@ -842,6 +852,7 @@ where
     Ok(Array2::zeros((height, width)))
 }
 
+#[allow(dead_code)]
 fn quantum_sensing_image_processing<T>(
     _image: &ArrayView2<T>,
     _context: &QuantumGPUContext,
@@ -855,6 +866,7 @@ where
     Ok(Array2::zeros((height, width)))
 }
 
+#[allow(dead_code)]
 fn apply_quantum_error_correction<T>(
     _result: &Array2<T>,
     _context: &QuantumGPUContext,
@@ -867,6 +879,7 @@ where
     Ok(_result.clone())
 }
 
+#[allow(dead_code)]
 fn update_performance_metrics(
     _context: &QuantumGPUContext,
     _task: &QuantumGPUTask,
@@ -876,6 +889,7 @@ fn update_performance_metrics(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn execute_quantum_gate_gpu(
     _gate: &QuantumGate,
     current_state: Array1<Complex<f64>>,
@@ -886,6 +900,7 @@ fn execute_quantum_gate_gpu(
     Ok(current_state)
 }
 
+#[allow(dead_code)]
 fn apply_gate_level_error_correction(
     current_state: &Array1<Complex<f64>>,
     _gate: &QuantumGate,
@@ -895,11 +910,13 @@ fn apply_gate_level_error_correction(
     Ok(current_state.clone())
 }
 
+#[allow(dead_code)]
 fn validate_quantum_state(_state: &Array1<Complex<f64>>) -> NdimageResult<()> {
     // Implementation would validate quantum state normalization
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_quantum_feature_maps<T>(
     _training_data: &[ArrayView2<T>],
     _context: &QuantumGPUContext,
@@ -912,6 +929,7 @@ where
     Ok(vec![Array1::zeros(64)])
 }
 
+#[allow(dead_code)]
 fn create_quantum_feature_map<T>(
     _data: &ArrayView2<T>,
     _context: &QuantumGPUContext,
@@ -924,6 +942,7 @@ where
     Ok(Array1::zeros(64))
 }
 
+#[allow(dead_code)]
 fn train_quantum_classifier_gpu(
     _feature_maps: &[Array1<Complex<f64>>],
     _labels: &[usize],
@@ -945,6 +964,7 @@ pub struct QuantumClassifier {
     pub quantum_parameters: Vec<f64>,
 }
 
+#[allow(dead_code)]
 fn classify_quantum_sample_gpu(
     _features: &Array1<Complex<f64>>,
     _classifier: &QuantumClassifier,
@@ -955,6 +975,7 @@ fn classify_quantum_sample_gpu(
     Ok((0, 0.8))
 }
 
+#[allow(dead_code)]
 fn analyze_current_workload(_context: &QuantumGPUContext) -> NdimageResult<WorkloadAnalysis> {
     Ok(WorkloadAnalysis {
         quantum_task_ratio: 0.3,
@@ -967,6 +988,7 @@ fn analyze_current_workload(_context: &QuantumGPUContext) -> NdimageResult<Workl
     })
 }
 
+#[allow(dead_code)]
 fn predict_resource_requirements(
     _workload: &WorkloadAnalysis,
     _context: &QuantumGPUContext,
@@ -980,6 +1002,7 @@ fn predict_resource_requirements(
     })
 }
 
+#[allow(dead_code)]
 fn optimize_resource_allocation(
     _workload: &WorkloadAnalysis,
     _prediction: &ResourcePrediction,
@@ -995,6 +1018,7 @@ fn optimize_resource_allocation(
     })
 }
 
+#[allow(dead_code)]
 fn apply_resource_allocation(
     _decision: &ResourceAllocationDecision,
     _context: &QuantumGPUContext,
@@ -1002,6 +1026,7 @@ fn apply_resource_allocation(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_performance_predictions(
     _context: &QuantumGPUContext,
     _decision: &ResourceAllocationDecision,

@@ -351,28 +351,25 @@ impl ImageNormalizer {
 
     /// Fit the normalizer on a batch of images
     pub fn fit(&mut self, images: &Array4<f64>) -> Result<()> {
-        match self.method {
-            ImageNormMethod::Standard => {
-                let n_channels = images.shape()[3];
-                let mut means = Array1::zeros(n_channels);
-                let mut stds = Array1::zeros(n_channels);
+        if let ImageNormMethod::Standard = self.method {
+            let n_channels = images.shape()[3];
+            let mut means = Array1::zeros(n_channels);
+            let mut stds = Array1::zeros(n_channels);
 
-                // Compute channel-wise statistics
-                for c in 0..n_channels {
-                    let channel_data = images.slice(s![.., .., .., c]);
-                    let flat_data: Vec<f64> = channel_data.iter().cloned().collect();
+            // Compute channel-wise statistics
+            for c in 0..n_channels {
+                let channel_data = images.slice(s![.., .., .., c]);
+                let flat_data: Vec<f64> = channel_data.iter().cloned().collect();
 
-                    let mean = flat_data.iter().sum::<f64>() / flat_data.len() as f64;
-                    let variance = flat_data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>()
-                        / flat_data.len() as f64;
+                let mean = flat_data.iter().sum::<f64>() / flat_data.len() as f64;
+                let variance = flat_data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>()
+                    / flat_data.len() as f64;
 
-                    means[c] = mean;
-                    stds[c] = variance.sqrt();
-                }
-
-                self.channel_stats = Some((means, stds));
+                means[c] = mean;
+                stds[c] = variance.sqrt();
             }
-            _ => {} // Other methods don't require fitting
+
+            self.channel_stats = Some((means, stds));
         }
 
         Ok(())
@@ -451,6 +448,7 @@ impl ImageNormalizer {
 }
 
 /// Convert RGB images to grayscale
+#[allow(dead_code)]
 pub fn rgb_to_grayscale(images: &Array4<f64>) -> Result<Array3<f64>> {
     let shape = images.shape();
     if shape[3] != 3 {
@@ -481,6 +479,7 @@ pub fn rgb_to_grayscale(images: &Array4<f64>) -> Result<Array3<f64>> {
 }
 
 /// Resize images using bilinear interpolation
+#[allow(dead_code)]
 pub fn resize_images(images: &Array4<f64>, new_size: (usize, usize)) -> Result<Array4<f64>> {
     let (n_samples, old_h, old_w, n_channels) = {
         let shape = images.shape();

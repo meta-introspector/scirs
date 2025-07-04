@@ -73,6 +73,7 @@ impl Default for SSAOptions {
 /// println!("Seasonal: {:?}", result.seasonal);
 /// println!("Residual: {:?}", result.residual);
 /// ```
+#[allow(dead_code)]
 pub fn ssa_decomposition<F>(ts: &Array1<F>, options: &SSAOptions) -> Result<DecompositionResult<F>>
 where
     F: Float + FromPrimitive + Debug + ScalarOperand + NumCast,
@@ -276,6 +277,7 @@ where
 }
 
 /// Compute w-correlation between two principal components
+#[allow(dead_code)]
 fn compute_w_correlation<F>(
     u: &Array2<F>,
     vt: &Array2<F>,
@@ -341,6 +343,7 @@ where
 }
 
 /// Reconstruct a component from SVD results using diagonal averaging
+#[allow(dead_code)]
 fn reconstruct_component<F>(
     u: &Array2<F>,
     vt: &Array2<F>,

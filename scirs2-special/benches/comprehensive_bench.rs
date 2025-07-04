@@ -3,16 +3,13 @@
 //! This module provides extensive benchmarks covering all major function families
 //! and includes utilities for comparing with SciPy performance data.
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use ndarray::Array1;
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use scirs2_special::{
     // Airy functions
     ai,
     // Gamma functions
     beta,
     bi,
-    chi,
-    ci,
     dawsn,
     digamma,
     // Error functions
@@ -31,23 +28,22 @@ use scirs2_special::{
     // Lambert W
     lambert_w_real,
     polygamma,
-    shi,
     shichi,
-    // Logarithmic integrals
-    si,
     sici,
     spence,
     spherical_jn,
     wofz,
 };
-use std::fs;
+use std::hint::black_box;
 use std::path::Path;
 
 /// Check if SciPy benchmark results exist
+#[allow(dead_code)]
 fn scipy_results_exist() -> bool {
     Path::new("benches/scipy_benchmark_results.json").exists()
 }
 
+#[allow(dead_code)]
 fn bench_bessel_comprehensive(c: &mut Criterion) {
     let mut group = c.benchmark_group("bessel_comprehensive");
 
@@ -104,7 +100,7 @@ fn bench_bessel_comprehensive(c: &mut Criterion) {
     // jv with different orders
     for v in [0.0, 1.0, 2.0, 0.5, 1.5, 2.5] {
         group.bench_with_input(
-            BenchmarkId::new("jv_order", format!("{:.1}", v)),
+            BenchmarkId::new("jv_order", format!("{v:.1}")),
             &v,
             |b, &v| {
                 b.iter(|| {
@@ -149,6 +145,7 @@ fn bench_bessel_comprehensive(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_gamma_comprehensive(c: &mut Criterion) {
     let mut group = c.benchmark_group("gamma_comprehensive");
 
@@ -198,6 +195,7 @@ fn bench_gamma_comprehensive(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_error_functions(c: &mut Criterion) {
     let mut group = c.benchmark_group("error_functions");
 
@@ -224,6 +222,7 @@ fn bench_error_functions(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_airy_functions(c: &mut Criterion) {
     let mut group = c.benchmark_group("airy_functions");
 
@@ -250,6 +249,7 @@ fn bench_airy_functions(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_lambert_w(c: &mut Criterion) {
     let mut group = c.benchmark_group("lambert_w");
 
@@ -257,7 +257,7 @@ fn bench_lambert_w(c: &mut Criterion) {
         b.iter(|| {
             for i in 0..100 {
                 let x = i as f64 * 0.1 + 0.1;
-                black_box(lambert_w_real(black_box(x), 1e-8));
+                let _ = black_box(lambert_w_real(black_box(x), 1e-8));
             }
         })
     });
@@ -265,6 +265,7 @@ fn bench_lambert_w(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_array_like_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("array_like_operations");
 
@@ -289,6 +290,7 @@ fn bench_array_like_operations(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_array_vs_scalar(c: &mut Criterion) {
     let mut group = c.benchmark_group("array_vs_scalar");
 
@@ -314,6 +316,7 @@ fn bench_array_vs_scalar(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_memory_usage(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_usage");
 
@@ -336,6 +339,7 @@ fn bench_memory_usage(c: &mut Criterion) {
     group.finish();
 }
 
+#[allow(dead_code)]
 fn bench_advanced_functions(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultrathink_functions");
 
@@ -393,7 +397,7 @@ fn bench_advanced_functions(c: &mut Criterion) {
         b.iter(|| {
             for i in 1..101 {
                 let x = i as f64 * 0.1;
-                black_box(sici(black_box(x)));
+                let _ = black_box(sici(black_box(x)));
             }
         })
     });
@@ -402,7 +406,7 @@ fn bench_advanced_functions(c: &mut Criterion) {
         b.iter(|| {
             for i in 1..101 {
                 let x = i as f64 * 0.1;
-                black_box(shichi(black_box(x)));
+                let _ = black_box(shichi(black_box(x)));
             }
         })
     });
@@ -412,7 +416,7 @@ fn bench_advanced_functions(c: &mut Criterion) {
         b.iter(|| {
             for i in 1..51 {
                 let x = i as f64 * 0.1 + 0.1;
-                black_box(spence(black_box(x)));
+                let _ = black_box(spence(black_box(x)));
             }
         })
     });
@@ -427,7 +431,6 @@ criterion_group!(
     bench_error_functions,
     bench_airy_functions,
     bench_lambert_w,
-    bench_ultrathink_functions,
     bench_array_like_operations,
     bench_array_vs_scalar,
     bench_memory_usage

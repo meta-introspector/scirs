@@ -113,6 +113,7 @@ impl LiquidStateMachine {
 }
 
 /// LSM-based optimization
+#[allow(dead_code)]
 pub fn lsm_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,

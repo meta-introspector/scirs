@@ -10,6 +10,7 @@ use scirs2_neural::optimizers::{with_cosine_annealing, with_step_decay, Adam, Op
 use std::time::Instant;
 
 // Create XOR dataset
+#[allow(dead_code)]
 fn create_xor_dataset() -> (Array2<f32>, Array2<f32>) {
     // XOR truth table inputs
     let x = Array2::from_shape_vec(
@@ -32,6 +33,7 @@ fn create_xor_dataset() -> (Array2<f32>, Array2<f32>) {
     (x, y)
 }
 // Create a simple neural network model for the XOR problem
+#[allow(dead_code)]
 fn create_xor_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
     // Input layer with 2 neurons (XOR has 2 inputs)
@@ -45,6 +47,7 @@ fn create_xor_model(rng: &mut SmallRng) -> Result<Sequential<f32>> {
     model.add_layer(dense3);
     Ok(model)
 // Evaluate model by printing predictions for the XOR problem
+#[allow(dead_code)]
 fn evaluate_model(model: &Sequential<f32>, x: &Array2<f32>, y: &Array2<f32>) -> Result<f32> {
     let predictions = model.forward(&x.clone().into_dyn())?;
     let binary_thresh = 0.5;
@@ -79,6 +82,7 @@ fn evaluate_model(model: &Sequential<f32>, x: &Array2<f32>, y: &Array2<f32>) -> 
         x.shape()[0]
     );
     Ok(accuracy)
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Learning Rate Scheduler Integration Example");
     println!("===========================================\n");
@@ -94,6 +98,7 @@ fn main() -> Result<()> {
     println!("\nAll training examples completed successfully!");
     Ok(())
 // Train with step decay learning rate scheduling
+#[allow(dead_code)]
 fn train_with_step_decay(rng: &mut SmallRng, x: &Array2<f32>, y: &Array2<f32>) -> Result<()> {
     println!("\n1. Training with Step Decay Learning Rate Scheduling");
     println!("--------------------------------------------------");
@@ -144,6 +149,7 @@ fn train_with_step_decay(rng: &mut SmallRng, x: &Array2<f32>, y: &Array2<f32>) -
     // Evaluate the model
     evaluate_model(&model, x, y)?;
 // Train with cosine annealing learning rate scheduling
+#[allow(dead_code)]
 fn train_with_cosine_annealing(rng: &mut SmallRng, x: &Array2<f32>, y: &Array2<f32>) -> Result<()> {
     println!("\n2. Training with Cosine Annealing Learning Rate Scheduling");
     println!("--------------------------------------------------------");
@@ -168,6 +174,7 @@ fn train_with_cosine_annealing(rng: &mut SmallRng, x: &Array2<f32>, y: &Array2<f
     println!("\nLearning rate samples (showing cosine curve):");
     for (epoch, lr) in lr_samples {
 // Train with manual scheduler integration
+#[allow(dead_code)]
 fn train_with_manual_scheduler_integration(
     rng: &mut SmallRng,
     x: &Array2<f32>,

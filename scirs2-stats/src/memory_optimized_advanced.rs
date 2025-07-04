@@ -136,6 +136,7 @@ pub struct MemoryStatistics {
 ///
 /// Computes correlation matrices using adaptive chunking based on available memory.
 /// For very large matrices, uses block-wise computation to stay within memory constraints.
+#[allow(dead_code)]
 pub fn corrcoef_memory_aware<F>(
     data: &ArrayView2<F>,
     method: &str,
@@ -194,6 +195,7 @@ where
 }
 
 /// Cache-oblivious matrix multiplication for large correlation computations
+#[allow(dead_code)]
 pub fn cache_oblivious_matrix_mult<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -252,6 +254,7 @@ where
 }
 
 /// Streaming covariance computation for large datasets
+#[allow(dead_code)]
 pub fn streaming_covariance_matrix<'a, F>(
     data_chunks: impl Iterator<Item = ArrayView2<'a, F>>,
     manager: &mut AdaptiveMemoryManager,
@@ -336,6 +339,7 @@ where
 }
 
 /// Memory-efficient principal component analysis
+#[allow(dead_code)]
 pub fn pca_memory_efficient<F>(
     data: &ArrayView2<F>,
     n_components: Option<usize>,
@@ -409,6 +413,7 @@ pub struct PCAResult<F> {
 }
 
 /// Streaming principal component analysis for very large datasets
+#[allow(dead_code)]
 pub fn streaming_pca_enhanced<'a, F>(
     data_chunks: impl Iterator<Item = ArrayView2<'a, F>>,
     n_components: usize,
@@ -496,6 +501,7 @@ where
 }
 
 /// Enhanced streaming histogram computation with adaptive binning
+#[allow(dead_code)]
 pub fn streaming_histogram_adaptive<'a, F>(
     data_chunks: impl Iterator<Item = ArrayView1<'a, F>>,
     manager: &mut AdaptiveMemoryManager,
@@ -589,6 +595,7 @@ where
 }
 
 /// Memory-efficient streaming quantile computation using P² algorithm
+#[allow(dead_code)]
 pub fn streaming_quantiles_p2<'a, F>(
     data_chunks: impl Iterator<Item = ArrayView1<'a, F>>,
     quantiles: &[f64],
@@ -772,6 +779,7 @@ where
 }
 
 /// Enhanced streaming regression for large datasets with regularization
+#[allow(dead_code)]
 pub fn streaming_regression_enhanced<'a, F>(
     data_chunks: impl Iterator<Item = (ArrayView2<'a, F>, ArrayView1<'a, F>)>,
     regularization: F,
@@ -861,6 +869,7 @@ where
 }
 
 /// Simple linear system solver (would use proper LU decomposition in production)
+#[allow(dead_code)]
 fn solve_linear_system<F>(a: &ArrayView2<F>, b: &ArrayView1<F>) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Zero + One + Copy,
@@ -936,6 +945,7 @@ where
 
 // Helper functions (simplified implementations)
 
+#[allow(dead_code)]
 fn compute_correlation_matrix_standard<F>(
     data: &ArrayView2<F>,
     method: &str,
@@ -947,6 +957,7 @@ where
     crate::corrcoef(data, method)
 }
 
+#[allow(dead_code)]
 fn compute_correlation_matrix_blocked<F>(
     data: &ArrayView2<F>,
     method: &str,
@@ -998,6 +1009,7 @@ where
     Ok(corr_matrix)
 }
 
+#[allow(dead_code)]
 fn compute_covariance_from_centered<F>(data: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + Zero + Copy,
@@ -1021,6 +1033,7 @@ where
     Ok(cov_matrix)
 }
 
+#[allow(dead_code)]
 fn compute_eigendecomposition<F>(
     matrix: &ArrayView2<F>,
     n_components: usize,
@@ -1114,6 +1127,7 @@ where
     Ok((eigenvalues, eigenvectors))
 }
 
+#[allow(dead_code)]
 fn matrix_multiply<F>(a: &ArrayView2<F>, b: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + Zero + Copy,
@@ -1142,6 +1156,7 @@ where
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn incremental_pca<F>(
     data: &ArrayView2<F>,
     n_components: usize,
@@ -1248,6 +1263,7 @@ where
     })
 }
 
+#[allow(dead_code)]
 fn check_array_finite_2d<F, D>(arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
 where
     F: Float,

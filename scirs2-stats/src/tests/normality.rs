@@ -39,6 +39,7 @@ use num_traits::{Float, NumCast};
 /// // For a significance level of 0.05, we would reject normality if p < 0.05
 /// let is_normal = p_value >= 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn shapiro_wilk<F>(x: &ArrayView1<F>) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast,
@@ -93,6 +94,7 @@ where
 }
 
 // Helper function to compute the Shapiro-Wilk test statistic and p-value
+#[allow(dead_code)]
 fn compute_shapiro_wilk_statistic<F>(sorted_data: &[F], n: usize) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast,
@@ -123,6 +125,7 @@ where
 }
 
 // Calculate the a coefficients for the Shapiro-Wilk test
+#[allow(dead_code)]
 fn calculate_shapiro_wilk_coefficients(n: usize) -> StatsResult<Vec<f64>> {
     if n > 5000 {
         return Err(StatsError::InvalidArgument(
@@ -235,6 +238,7 @@ fn calculate_shapiro_wilk_coefficients(n: usize) -> StatsResult<Vec<f64>> {
 }
 
 // Calculate the p-value for the Shapiro-Wilk test
+#[allow(dead_code)]
 fn calculate_shapiro_wilk_p_value<F: Float + NumCast>(w: F, n: usize) -> F {
     // Royston's algorithm for p-value calculation
     let w_f64 = <f64 as NumCast>::from(w).unwrap();
@@ -286,6 +290,7 @@ fn calculate_shapiro_wilk_p_value<F: Float + NumCast>(w: F, n: usize) -> F {
 }
 
 // Approximate the standard normal CDF
+#[allow(dead_code)]
 fn approx_normal_cdf(z: f64) -> f64 {
     // Hart's algorithm with rational approximation
     if z < -38.0 {
@@ -344,6 +349,7 @@ fn approx_normal_cdf(z: f64) -> f64 {
 /// // For a significance level of 0.05, we would reject normality if p < 0.05
 /// let is_normal = p_value >= 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn anderson_darling<F>(x: &ArrayView1<F>) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast,
@@ -395,6 +401,7 @@ where
 }
 
 // Helper function to compute the Anderson-Darling test statistic and p-value
+#[allow(dead_code)]
 fn compute_anderson_darling_statistic<F>(z_data: &[F], n: usize) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast,
@@ -433,6 +440,7 @@ where
 }
 
 // Calculate the p-value for the Anderson-Darling test
+#[allow(dead_code)]
 fn calculate_anderson_darling_p_value<F: Float + NumCast>(a_squared: F) -> F {
     let a2 = <f64 as NumCast>::from(a_squared).unwrap();
 
@@ -484,6 +492,7 @@ fn calculate_anderson_darling_p_value<F: Float + NumCast>(a_squared: F) -> F {
 /// // For a significance level of 0.05, we would reject normality if p < 0.05
 /// let is_normal = p_value >= 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn dagostino_k2<F>(x: &ArrayView1<F>) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast,
@@ -541,6 +550,7 @@ where
 }
 
 // Calculate the standardized test statistics for D'Agostino's K² test
+#[allow(dead_code)]
 fn calculate_dagostino_test_statistics<F>(g1: F, g2: F, n: usize) -> StatsResult<(F, F)>
 where
     F: Float + NumCast,
@@ -578,6 +588,7 @@ where
 }
 
 // Chi-square cumulative distribution function
+#[allow(dead_code)]
 fn chi2_cdf(x: f64, df: f64) -> f64 {
     if x <= 0.0 {
         return 0.0;
@@ -592,6 +603,7 @@ fn chi2_cdf(x: f64, df: f64) -> f64 {
 }
 
 // Lower incomplete gamma function
+#[allow(dead_code)]
 fn lower_gamma_incomplete(s: f64, x: f64) -> f64 {
     if x <= 0.0 {
         return 0.0;
@@ -637,6 +649,7 @@ fn lower_gamma_incomplete(s: f64, x: f64) -> f64 {
 }
 
 // Gamma function approximation
+#[allow(dead_code)]
 fn gamma_function(x: f64) -> f64 {
     if x <= 0.0 {
         panic!("Gamma function not defined for non-positive values");
@@ -706,6 +719,7 @@ fn gamma_function(x: f64) -> f64 {
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let same_distribution = p_value >= 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn ks_2samp<F>(x: &ArrayView1<F>, y: &ArrayView1<F>, alternative: &str) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
@@ -837,6 +851,7 @@ where
 }
 
 // Calculate the p-value for the two-sample KS test
+#[allow(dead_code)]
 fn calculate_ks_2samp_p_value<F: Float + NumCast>(
     d: F,
     n1: usize,

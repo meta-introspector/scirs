@@ -7,6 +7,7 @@
 use scirs2_signal::emd::{eemd, emd, hilbert_huang_spectrum, EmdConfig};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Empirical Mode Decomposition (EMD) Example");
     println!("===========================================");

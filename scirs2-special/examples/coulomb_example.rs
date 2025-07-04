@@ -1,6 +1,7 @@
 use scirs2_special::{coulomb_f, coulomb_g, coulomb_h_minus, coulomb_h_plus, coulomb_phase_shift};
 use std::error::Error;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Coulomb Wave Functions Example");
     println!("=============================\n");

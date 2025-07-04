@@ -880,7 +880,6 @@ impl RealTimeMemoryMonitor {
                 }
 
                 last_sample_time = now;
-                let _ = last_sample_time; // Use the variable to avoid warning
             }
         });
 

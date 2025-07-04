@@ -7,6 +7,7 @@ use crate::api_versioning::{global_registry_mut, Version};
 use crate::error::{CoreError, CoreResult, ErrorContext};
 
 /// Check if a specific API is available in the current version
+#[allow(dead_code)]
 pub fn is_api_available(api_name: &str, module: &str) -> bool {
     let registry = global_registry_mut();
     let current_version = current_library_version();
@@ -18,6 +19,7 @@ pub fn is_api_available(api_name: &str, module: &str) -> bool {
 }
 
 /// Check if a set of APIs are all available
+#[allow(dead_code)]
 pub fn check_apis_available(apis: &[(&str, &str)]) -> CoreResult<()> {
     let mut missing = Vec::new();
 
@@ -38,6 +40,7 @@ pub fn check_apis_available(apis: &[(&str, &str)]) -> CoreResult<()> {
 }
 
 /// Get the current library version
+#[allow(dead_code)]
 pub fn current_library_version() -> Version {
     // Read version from Cargo.toml at compile time
     let version_str = env!("CARGO_PKG_VERSION");
@@ -48,6 +51,7 @@ pub fn current_library_version() -> Version {
 }
 
 /// Check if the current version is compatible with a required version
+#[allow(dead_code)]
 pub fn is_version_compatible(required: &Version) -> bool {
     let current = current_library_version();
     current.is_compatible_with(required)

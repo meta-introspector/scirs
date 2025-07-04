@@ -732,12 +732,14 @@ impl UltraDatasetAnalyzer {
 }
 
 /// Convenience function for ultra-advanced dataset analysis
+#[allow(dead_code)]
 pub fn analyze_dataset_ultra(dataset: &Dataset) -> Result<UltraQualityMetrics> {
     let analyzer = UltraDatasetAnalyzer::new();
     analyzer.analyze_dataset_quality(dataset)
 }
 
 /// Convenience function for quick quality assessment
+#[allow(dead_code)]
 pub fn quick_quality_assessment(dataset: &Dataset) -> Result<f64> {
     let analyzer = UltraDatasetAnalyzer::new().with_ultra_precision(false);
     let metrics = analyzer.analyze_dataset_quality(dataset)?;

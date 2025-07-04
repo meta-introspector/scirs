@@ -740,6 +740,7 @@ impl<T: Float + Display> BenchmarkReport<T> {
 }
 
 /// Create and run a comprehensive benchmark suite
+#[allow(dead_code)]
 pub fn run_comprehensive_benchmarks<T>() -> InterpolateResult<BenchmarkReport<T>>
 where
     T: Float
@@ -757,6 +758,7 @@ where
 }
 
 /// Create and run benchmarks with custom configuration
+#[allow(dead_code)]
 pub fn run_benchmarks_with_config<T>(
     config: BenchmarkConfig,
 ) -> InterpolateResult<BenchmarkReport<T>>
@@ -775,6 +777,7 @@ where
 }
 
 /// Run quick performance validation (subset of benchmarks)
+#[allow(dead_code)]
 pub fn run_quick_validation<T>() -> InterpolateResult<BenchmarkReport<T>>
 where
     T: Float
@@ -802,6 +805,7 @@ where
 }
 
 /// Enhanced SciPy 1.13+ compatibility validation suite
+#[allow(dead_code)]
 pub fn validate_scipy_1_13_compatibility<T>() -> InterpolateResult<SciPyCompatibilityReport<T>>
 where
     T: crate::traits::InterpolationFloat + std::fmt::LowerExp,
@@ -822,6 +826,7 @@ where
 }
 
 /// Enhanced stress testing for production readiness
+#[allow(dead_code)]
 pub fn run_stress_testing<T>() -> InterpolateResult<StressTestReport<T>>
 where
     T: crate::traits::InterpolationFloat

@@ -4,7 +4,7 @@
 //! and formal verification components for privacy-preserving machine learning.
 
 use crate::error::{OptimError, Result};
-use ndarray::{Array1, Dimension};
+use ndarray::Array1;
 use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};

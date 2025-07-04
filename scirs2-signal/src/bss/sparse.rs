@@ -21,6 +21,7 @@ use scirs2_linalg::solve;
 /// # Returns
 ///
 /// * Tuple containing (extracted sources, mixing matrix)
+#[allow(dead_code)]
 pub fn sparse_component_analysis(
     signals: &Array2<f64>,
     n_components: usize,

@@ -14,6 +14,7 @@ use std::collections::HashMap;
 const STABILITY_TOL: f64 = 1e-12;
 
 /// Helper function to check if two results are consistently equal
+#[allow(dead_code)]
 fn results_consistent<T: PartialEq + std::fmt::Debug>(
     result1: &LinalgResult<T>,
     result2: &LinalgResult<T>,
@@ -42,6 +43,7 @@ fn results_consistent<T: PartialEq + std::fmt::Debug>(
 }
 
 /// Helper function to check if two arrays are consistently equal
+#[allow(dead_code)]
 fn arrays_consistent(a: &Array2<f64>, b: &Array2<f64>, tol: f64) -> bool {
     if a.shape() != b.shape() {
         return false;
@@ -52,6 +54,7 @@ fn arrays_consistent(a: &Array2<f64>, b: &Array2<f64>, tol: f64) -> bool {
 }
 
 /// Helper function to check if two vectors are consistently equal
+#[allow(dead_code)]
 fn vectors_consistent(a: &Array1<f64>, b: &Array1<f64>, tol: f64) -> bool {
     if a.len() != b.len() {
         return false;

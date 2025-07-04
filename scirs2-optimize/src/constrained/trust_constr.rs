@@ -6,6 +6,7 @@ use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix1};
 
 #[allow(clippy::many_single_char_names)]
+#[allow(dead_code)]
 pub fn minimize_trust_constr<F, S>(
     func: F,
     x0: &ArrayBase<S, Ix1>,
@@ -310,6 +311,7 @@ where
 
 /// Compute a trust-region step for constrained optimization
 #[allow(clippy::many_single_char_names)]
+#[allow(dead_code)]
 fn compute_trust_region_step_constrained(
     g: &Array1<f64>,
     b: &Array2<f64>,
@@ -452,6 +454,7 @@ fn compute_trust_region_step_constrained(
 }
 
 /// Compute the unconstrained Cauchy point (steepest descent to trust region boundary)
+#[allow(dead_code)]
 fn compute_unconstrained_cauchy_point(g: &Array1<f64>, b: &Array2<f64>, delta: f64) -> Array1<f64> {
     let n = g.len();
 

@@ -11,6 +11,7 @@ use scirs2_fft::{fft2_adaptive, ifft2_adaptive, simd_support_available};
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("SIMD-accelerated 2D FFT Image Processing Example");
     println!("------------------------------------------------");
@@ -70,6 +71,7 @@ fn main() {
 }
 
 /// Generate a test image with various frequency components
+#[allow(dead_code)]
 fn generate_test_image(width: usize, height: usize) -> Vec<f64> {
     let mut image = vec![0.0; width * height];
 
@@ -92,6 +94,7 @@ fn generate_test_image(width: usize, height: usize) -> Vec<f64> {
 }
 
 /// Apply a frequency domain filter to an image
+#[allow(dead_code)]
 fn frequency_domain_filter(
     image: &[f64],
     width: usize,

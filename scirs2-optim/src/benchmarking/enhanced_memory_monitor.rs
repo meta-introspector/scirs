@@ -4,9 +4,7 @@
 //! machine learning-based anomaly detection, system profiling integration,
 //! and intelligent alert generation for production environments.
 
-use crate::benchmarking::memory_leak_detector::{
-    AnomalyDetector, LeakDetector, MemoryLeakDetector, MemoryUsageSnapshot, PatternDetector,
-};
+use crate::benchmarking::memory_leak_detector::{MemoryLeakDetector, MemoryUsageSnapshot};
 use crate::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, VecDeque};

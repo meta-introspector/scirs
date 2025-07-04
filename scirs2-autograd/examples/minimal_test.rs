@@ -2,6 +2,7 @@ extern crate scirs2_autograd as ag;
 use ag::tensor_ops as T;
 use ndarray::array;
 
+#[allow(dead_code)]
 fn main() {
     println!("Running basic shape tests");
 

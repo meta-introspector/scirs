@@ -130,6 +130,7 @@ mod example {
     }
 }
 
+#[allow(dead_code)]
 fn main() {
     #[cfg(feature = "autograd")]
     {

@@ -4,14 +4,14 @@
 //! capabilities for ultrathink mode operations, ensuring robust
 //! and reliable performance in production environments.
 
-use ndarray::{Array2, ArrayView2, Dimension};
+use ndarray::{Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
+use crate::advanced_fusion_algorithms::{UltrathinkConfig, UltrathinkState};
 use crate::error::{NdimageError, NdimageResult};
-use crate::ultrathink_fusion_core::{UltrathinkConfig, UltrathinkState};
 
 /// Comprehensive validation framework for ultrathink operations
 #[derive(Debug, Clone)]
@@ -396,6 +396,7 @@ impl PerformanceSummary {
 }
 
 /// Enhanced ultrathink processing with validation
+#[allow(dead_code)]
 pub fn validated_ultrathink_processing<T>(
     image: ArrayView2<T>,
     config: &UltrathinkConfig,
@@ -412,8 +413,11 @@ where
     let start_time = Instant::now();
 
     // Perform ultrathink processing
-    let (output, state) =
-        crate::ultrathink_fusion_core::ultrathink_fusion_processing(image, config, previous_state)?;
+    let (output, state) = crate::advanced_fusion_algorithms::ultrathink_fusion_processing(
+        image,
+        config,
+        previous_state,
+    )?;
 
     let processing_time = start_time.elapsed();
 

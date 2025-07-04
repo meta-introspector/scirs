@@ -52,6 +52,7 @@ pub struct PerformanceImprovements {
 }
 
 /// Run comprehensive validation in ultrathink mode
+#[allow(dead_code)]
 pub fn run_ultrathink_comprehensive_validation() -> SignalResult<UltrathinkValidationResult> {
     println!("🚀 Starting ULTRATHINK MODE comprehensive validation...");
     let start_time = Instant::now();
@@ -132,6 +133,7 @@ pub fn run_ultrathink_comprehensive_validation() -> SignalResult<UltrathinkValid
 }
 
 /// Compute overall ultrathink score from all validation results
+#[allow(dead_code)]
 fn compute_ultrathink_score(
     edge_case: &EdgeCaseValidationResult,
     scipy: &ComprehensiveSciPyValidationResult,
@@ -167,6 +169,7 @@ fn compute_ultrathink_score(
 }
 
 /// Estimate performance improvements in ultrathink mode
+#[allow(dead_code)]
 fn estimate_performance_improvements() -> PerformanceImprovements {
     // These would typically be measured from actual benchmarks
     // For now, providing realistic estimates based on SIMD and parallel capabilities
@@ -180,6 +183,7 @@ fn estimate_performance_improvements() -> PerformanceImprovements {
 }
 
 /// Generate comprehensive ultrathink validation report
+#[allow(dead_code)]
 pub fn generate_ultrathink_report(result: &UltrathinkValidationResult) -> String {
     let mut report = String::new();
 

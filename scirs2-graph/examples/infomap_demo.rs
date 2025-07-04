@@ -5,6 +5,7 @@
 
 use scirs2_graph::{generators::create_graph, infomap_communities, louvain_communities};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a graph with two clear communities connected by a weak bridge
     let mut graph = create_graph::<&str, f64>();

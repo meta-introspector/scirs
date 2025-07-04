@@ -722,11 +722,13 @@ static GLOBAL_UNIT_REGISTRY: std::sync::LazyLock<std::sync::RwLock<UnitRegistry>
     std::sync::LazyLock::new(|| std::sync::RwLock::new(UnitRegistry::new()));
 
 /// Get the global unit registry
+#[allow(dead_code)]
 pub fn global_unit_registry() -> &'static std::sync::RwLock<UnitRegistry> {
     &GLOBAL_UNIT_REGISTRY
 }
 
 /// Convert a value between units using the global registry
+#[allow(dead_code)]
 pub fn convert(value: f64, from_unit: &str, to_unit: &str) -> CoreResult<f64> {
     let registry = global_unit_registry().read().map_err(|_| {
         CoreError::ComputationError(ErrorContext::new(
@@ -737,6 +739,7 @@ pub fn convert(value: f64, from_unit: &str, to_unit: &str) -> CoreResult<f64> {
 }
 
 /// Create a UnitValue
+#[allow(dead_code)]
 pub fn unit_value<T: ScientificNumber>(value: T, unit: &str) -> UnitValue<T> {
     UnitValue::new(value, unit.to_string())
 }

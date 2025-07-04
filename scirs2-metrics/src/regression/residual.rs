@@ -51,6 +51,7 @@ pub struct ErrorHistogram<F: Float> {
 /// assert_eq!(hist.bin_edges.len(), 5);
 /// assert_eq!(hist.n_observations, 8);
 /// ```
+#[allow(dead_code)]
 pub fn error_histogram<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -164,6 +165,7 @@ pub struct QQPlotData<F: Float> {
 /// let qq_data = qq_plot_data(&y_true, &y_pred, 20).unwrap();
 /// assert_eq!(qq_data.theoretical_quantiles.len(), qq_data.sample_quantiles.len());
 /// ```
+#[allow(dead_code)]
 pub fn qq_plot_data<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -250,6 +252,7 @@ where
 }
 
 /// Approximation of the normal quantile function (inverse CDF)
+#[allow(dead_code)]
 fn normal_quantile(p: f64) -> f64 {
     if p <= 0.0 || p >= 1.0 {
         // Return a reasonable default value instead of panicking
@@ -371,6 +374,7 @@ pub struct ResidualAnalysis<F: Float> {
 /// println!("Durbin-Watson statistic: {}", analysis.durbin_watson);
 /// println!("Number of residuals: {}", analysis.residuals.len());
 /// ```
+#[allow(dead_code)]
 pub fn residual_analysis<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -628,6 +632,7 @@ where
 /// let bp_stat = test_heteroscedasticity(&y_true, &y_pred).unwrap();
 /// assert!(bp_stat >= 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn test_heteroscedasticity<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -700,6 +705,7 @@ where
 /// // DW statistic ranges from 0 to 4, with 2 being no autocorrelation
 /// assert!(dw_stat >= 0.0 && dw_stat <= 4.0);
 /// ```
+#[allow(dead_code)]
 pub fn test_autocorrelation<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -771,6 +777,7 @@ where
 /// // SW statistic ranges from 0 to 1, with values close to 1 indicating normality
 /// assert!(sw_stat >= 0.0 && sw_stat <= 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn test_normality<F, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,

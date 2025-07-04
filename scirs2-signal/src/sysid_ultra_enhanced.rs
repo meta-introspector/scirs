@@ -738,7 +738,7 @@ impl Default for UltraEnhancedSysIdConfig {
 /// ```
 /// use scirs2_signal::sysid_ultra_enhanced::{ultra_enhanced_system_identification, UltraEnhancedSysIdConfig};
 /// use ndarray::Array1;
-/// #[cfg(test)]
+///
 use std::f64::consts::PI;
 ///
 /// // Generate system input/output data
@@ -758,6 +758,7 @@ use std::f64::consts::PI;
 /// assert!(result.base_result.validation.fit_percentage > 80.0);
 /// assert!(result.model_ensemble.models.len() > 0);
 /// ```
+#[allow(dead_code)]
 pub fn ultra_enhanced_system_identification(
     input_signal: &Array1<f64>,
     output_signal: &Array1<f64>,
@@ -884,6 +885,7 @@ pub fn ultra_enhanced_system_identification(
 /// - Change detection and model switching
 /// - Memory-bounded operation for embedded systems
 /// - Low-latency processing with quality guarantees
+#[allow(dead_code)]
 pub fn ultra_enhanced_real_time_identification(
     new_input: f64,
     new_output: f64,
@@ -918,6 +920,7 @@ pub fn ultra_enhanced_real_time_identification(
 // Core identification algorithm implementations
 
 /// Deep neural network-based system identification
+#[allow(dead_code)]
 fn identify_with_deep_neural_network(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -952,6 +955,7 @@ fn identify_with_deep_neural_network(
 }
 
 /// Bayesian inference-based system identification
+#[allow(dead_code)]
 fn identify_with_bayesian_inference(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -971,6 +975,7 @@ fn identify_with_bayesian_inference(
 }
 
 /// Gaussian process-based system identification
+#[allow(dead_code)]
 fn identify_with_gaussian_process(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -989,6 +994,7 @@ fn identify_with_gaussian_process(
 }
 
 /// Physics-informed neural network identification
+#[allow(dead_code)]
 fn identify_with_physics_informed_nn(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1136,7 +1142,7 @@ impl Default for SpecializationDomain {
 }
 
 impl SystemModel {
-    fn from_neural_network(network: FeedforwardNetwork) -> SignalResult<Self> {
+    fn from_neural_network(_network: FeedforwardNetwork) -> SignalResult<Self> {
         // Convert neural network to ARX model (simplified)
         Ok(SystemModel::ARX {
             a: Array1::ones(3),
@@ -1209,6 +1215,7 @@ impl RealTimeTracker {
 
 // Implementation of helper functions (simplified for brevity)
 
+#[allow(dead_code)]
 fn validate_identification_signals(input: &Array1<f64>, output: &Array1<f64>) -> SignalResult<()> {
     if input.len() != output.len() {
         return Err(SignalError::ValueError(
@@ -1228,6 +1235,7 @@ fn validate_identification_signals(input: &Array1<f64>, output: &Array1<f64>) ->
     Ok(())
 }
 
+#[allow(dead_code)]
 fn search_optimal_architecture(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1241,6 +1249,7 @@ fn search_optimal_architecture(
     })
 }
 
+#[allow(dead_code)]
 fn train_feedforward_network(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1285,11 +1294,12 @@ fn train_feedforward_network(
     })
 }
 
+#[allow(dead_code)]
 fn perform_bayesian_estimation(
-    input: &Array1<f64>,
-    output: &Array1<f64>,
-    config: &UncertaintyConfig,
-    simd_enabled: bool,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
+    _config: &UncertaintyConfig,
+    _simd_enabled: bool,
 ) -> SignalResult<SystemModel> {
     // Bayesian parameter estimation (simplified)
     Ok(SystemModel::ARX {
@@ -1299,10 +1309,11 @@ fn perform_bayesian_estimation(
     })
 }
 
+#[allow(dead_code)]
 fn train_gaussian_process(
-    input: &Array1<f64>,
-    output: &Array1<f64>,
-    simd_enabled: bool,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
+    _simd_enabled: bool,
 ) -> SignalResult<SystemModel> {
     // Gaussian process training (simplified)
     Ok(SystemModel::ARX {
@@ -1312,9 +1323,10 @@ fn train_gaussian_process(
     })
 }
 
+#[allow(dead_code)]
 fn train_physics_informed_network(
-    input: &Array1<f64>,
-    output: &Array1<f64>,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
     _config: &NeuralNetworkConfig,
     _simd_enabled: bool,
 ) -> SignalResult<SystemModel> {
@@ -1326,9 +1338,10 @@ fn train_physics_informed_network(
     })
 }
 
+#[allow(dead_code)]
 fn build_model_ensemble(
     models: Vec<WeightedModel>,
-    _config: &EnsembleConfig,
+    config: &EnsembleConfig,
 ) -> SignalResult<ModelEnsemble> {
     let selection_criteria = ModelSelectionCriteria {
         multi_objective_scores: HashMap::new(),
@@ -1356,6 +1369,7 @@ fn build_model_ensemble(
     })
 }
 
+#[allow(dead_code)]
 fn build_single_model_ensemble(models: Vec<WeightedModel>) -> SignalResult<ModelEnsemble> {
     // Select best single model
     let best_model = models
@@ -1365,6 +1379,7 @@ fn build_single_model_ensemble(models: Vec<WeightedModel>) -> SignalResult<Model
     build_model_ensemble(vec![best_model], &EnsembleConfig::default())
 }
 
+#[allow(dead_code)]
 fn initialize_real_time_tracker(
     _input: &Array1<f64>,
     _output: &Array1<f64>,
@@ -1375,6 +1390,7 @@ fn initialize_real_time_tracker(
     Ok(RealTimeTracker::default())
 }
 
+#[allow(dead_code)]
 fn perform_uncertainty_quantification(
     _ensemble: &ModelEnsemble,
     _config: &UncertaintyConfig,
@@ -1383,6 +1399,7 @@ fn perform_uncertainty_quantification(
     Ok(UncertaintyAnalysis::default())
 }
 
+#[allow(dead_code)]
 fn extract_neural_models(_models: &[WeightedModel]) -> NeuralModelCollection {
     // Extract neural models from candidate models
     NeuralModelCollection {
@@ -1398,6 +1415,7 @@ fn extract_neural_models(_models: &[WeightedModel]) -> NeuralModelCollection {
     }
 }
 
+#[allow(dead_code)]
 fn select_best_base_model(models: &[WeightedModel]) -> SignalResult<EnhancedSysIdResult> {
     // Select best model for base result (simplified)
     // This would normally convert the best WeightedModel to EnhancedSysIdResult
@@ -1423,10 +1441,9 @@ fn select_best_base_model(models: &[WeightedModel]) -> SignalResult<EnhancedSysI
     })
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     #[test]

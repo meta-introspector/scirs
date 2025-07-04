@@ -929,6 +929,7 @@ where
 }
 
 /// Helper function to read the header from a file
+#[allow(dead_code)]
 fn read_header<A: Clone + Copy + 'static + Send + Sync>(
     file_path: &Path,
 ) -> Result<(MemoryMappedHeader, usize), CoreError> {
@@ -1054,6 +1055,7 @@ fn read_header<A: Clone + Copy + 'static + Send + Sync>(
 /// # Returns
 ///
 /// A new memory-mapped array
+#[allow(dead_code)]
 pub fn open_mmap<A, D>(
     file_path: &Path,
     mode: AccessMode,
@@ -1097,6 +1099,7 @@ where
 /// # Returns
 ///
 /// A new memory-mapped array
+#[allow(dead_code)]
 pub fn create_mmap<A, S, D>(
     data: &ArrayBase<S, D>,
     file_path: &Path,
@@ -1122,6 +1125,7 @@ where
 /// # Returns
 ///
 /// A new memory-mapped array backed by a temporary file
+#[allow(dead_code)]
 pub fn create_temp_mmap<A, S, D>(
     data: &ArrayBase<S, D>,
     mode: AccessMode,

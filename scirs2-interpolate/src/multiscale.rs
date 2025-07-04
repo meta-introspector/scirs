@@ -544,6 +544,7 @@ impl<
 ///
 /// A `Result` containing the adaptively refined multiscale B-spline.
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn make_adaptive_bspline<
     T: Float
         + FromPrimitive

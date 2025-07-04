@@ -751,6 +751,7 @@ impl KnownShape {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_topo_order() {
     use crate::tensor_ops as T;
     crate::run(|g| {

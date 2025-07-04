@@ -248,6 +248,7 @@ impl QuantileTransformer {
 /// Approximation of the inverse normal cumulative distribution function
 ///
 /// This uses the Beasley-Springer-Moro algorithm for approximating the inverse normal CDF
+#[allow(dead_code)]
 fn inverse_normal_cdf(u: f64) -> f64 {
     // Constants for the Beasley-Springer-Moro algorithm
     const A0: f64 = 2.50662823884;

@@ -19,6 +19,7 @@ use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Create a sparse signal with known frequencies in the spectrum
+#[allow(dead_code)]
 fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)], noise_level: f64) -> Vec<f64> {
     // Create deterministic RNG for reproducible results
     let mut rng = StdRng::seed_from_u64(42);
@@ -45,6 +46,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)], noise_level: f64
 }
 
 /// Evaluate the accuracy of sparse FFT results given the ground truth frequencies
+#[allow(dead_code)]
 fn evaluate_accuracy(
     result: &SparseFFTResult,
     true_frequencies: &[(usize, f64)],
@@ -82,6 +84,7 @@ fn evaluate_accuracy(
 }
 
 /// Run sparse FFT with multiple algorithms and compare results
+#[allow(dead_code)]
 fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
     println!("\nRunning algorithm comparison:");
     println!("  Signal size: {n}");
@@ -260,6 +263,7 @@ fn run_algorithm_comparison(n: usize, sparsity: usize, noise_level: f64) {
 }
 
 /// Run benchmark for different signal sizes
+#[allow(dead_code)]
 fn run_size_benchmark() {
     println!("\nRunning size benchmark:");
 
@@ -327,6 +331,7 @@ fn run_size_benchmark() {
 }
 
 /// Run noise tolerance benchmark
+#[allow(dead_code)]
 fn run_noise_benchmark() {
     println!("\nRunning noise tolerance benchmark:");
 
@@ -390,6 +395,7 @@ fn run_noise_benchmark() {
 }
 
 /// Demonstrate the impact of iterations on iterative sparse FFT accuracy
+#[allow(dead_code)]
 fn run_iteration_comparison() {
     println!("\nDemonstrating impact of iterations on Iterative Sparse FFT:");
 
@@ -592,6 +598,7 @@ fn run_iteration_comparison() {
     }
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("GPU-Accelerated Iterative Sparse FFT Example");
     println!("============================================");

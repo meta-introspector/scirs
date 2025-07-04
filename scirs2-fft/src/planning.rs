@@ -459,11 +459,13 @@ static GLOBAL_FFT_PLANNER: std::sync::OnceLock<Mutex<AdvancedFftPlanner>> =
     std::sync::OnceLock::new();
 
 /// Get the global FFT planner instance
+#[allow(dead_code)]
 pub fn get_global_planner() -> &'static Mutex<AdvancedFftPlanner> {
     GLOBAL_FFT_PLANNER.get_or_init(|| Mutex::new(AdvancedFftPlanner::new()))
 }
 
 /// Initialize the global FFT planner with custom configuration
+#[allow(dead_code)]
 pub fn init_global_planner(config: PlanningConfig) -> Result<(), &'static str> {
     GLOBAL_FFT_PLANNER
         .set(Mutex::new(AdvancedFftPlanner::with_config(config)))
@@ -668,6 +670,7 @@ impl Default for PlanBuilder {
 /// # Returns
 ///
 /// Result indicating success or failure
+#[allow(dead_code)]
 pub fn plan_ahead_of_time(sizes: &[usize], db_path: Option<&str>) -> FFTResult<()> {
     let mut config = PlanningConfig::default();
     if let Some(path) = db_path {

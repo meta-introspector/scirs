@@ -29,6 +29,7 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 
 /// Central coordinator for advanced mode ecosystem
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct UltrathinkEcosystemCoordinator {
     /// Registered advanced modules
@@ -46,6 +47,7 @@ pub struct UltrathinkEcosystemCoordinator {
 }
 
 /// Configuration for advanced ecosystem
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UltrathinkEcosystemConfig {
@@ -80,6 +82,7 @@ impl Default for UltrathinkEcosystemConfig {
 }
 
 /// Status of the advanced ecosystem
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct EcosystemStatus {
@@ -99,6 +102,7 @@ pub struct EcosystemStatus {
 }
 
 /// Health status of the ecosystem
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum EcosystemHealth {
@@ -110,6 +114,7 @@ pub enum EcosystemHealth {
 }
 
 /// Resource utilization metrics
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ResourceUtilization {
@@ -160,6 +165,7 @@ pub trait UltrathinkModule: std::fmt::Debug {
 }
 
 /// Input for advanced processing
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct UltrathinkInput {
     /// Data payload
@@ -173,6 +179,7 @@ pub struct UltrathinkInput {
 }
 
 /// Output from advanced processing
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct UltrathinkOutput {
     /// Processed data
@@ -186,6 +193,7 @@ pub struct UltrathinkOutput {
 }
 
 /// Processing context for advanced operations
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ProcessingContext {
     /// Operation type
@@ -199,6 +207,7 @@ pub struct ProcessingContext {
 }
 
 /// Priority levels for processing
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Priority {
@@ -210,6 +219,7 @@ pub enum Priority {
 }
 
 /// Processing strategy for advanced operations
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ProcessingStrategy {
@@ -220,6 +230,7 @@ pub enum ProcessingStrategy {
 }
 
 /// Processing plan for advanced operations
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ProcessingPlan {
     pub strategy: ProcessingStrategy,
@@ -231,6 +242,7 @@ pub struct ProcessingPlan {
 }
 
 /// Cross-module optimization configuration
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct CrossModuleOptimizationConfig {
@@ -242,6 +254,7 @@ pub struct CrossModuleOptimizationConfig {
 }
 
 /// Optimization level for cross-module operations
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum OptimizationLevel {
@@ -252,6 +265,7 @@ pub enum OptimizationLevel {
 }
 
 /// Distributed workflow specification
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct DistributedWorkflow {
     pub name: String,
@@ -262,6 +276,7 @@ pub struct DistributedWorkflow {
 }
 
 /// Workflow stage specification
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WorkflowStage {
@@ -273,6 +288,7 @@ pub struct WorkflowStage {
 }
 
 /// Result of workflow execution
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct WorkflowResult {
@@ -284,6 +300,7 @@ pub struct WorkflowResult {
 }
 
 /// Result of a single workflow stage
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct StageResult {
@@ -295,6 +312,7 @@ pub struct StageResult {
 }
 
 /// State of workflow execution
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct WorkflowState {
     /// Completed stages
@@ -347,6 +365,7 @@ impl WorkflowState {
 }
 
 /// Performance metrics for operations
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct PerformanceMetrics {
@@ -358,6 +377,7 @@ pub struct PerformanceMetrics {
 }
 
 /// Pipeline stage configuration
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct PipelineStage {
     pub name: String,
@@ -367,6 +387,7 @@ pub struct PipelineStage {
 }
 
 /// Context for optimization operations
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct OptimizationContext {
     pub learning_rate: f64,
@@ -410,6 +431,7 @@ impl OptimizationContext {
 }
 
 /// Optimized processing pipeline
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct OptimizedPipeline {
     pub stages: Vec<PipelineStage>,
@@ -418,6 +440,7 @@ pub struct OptimizedPipeline {
 }
 
 /// Workflow execution plan
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct WorkflowExecutionPlan {
     pub stages: Vec<WorkflowStage>,
@@ -425,6 +448,7 @@ pub struct WorkflowExecutionPlan {
 }
 
 /// Quality requirements for processing
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct QualityRequirements {
     /// Minimum accuracy required
@@ -436,6 +460,7 @@ pub struct QualityRequirements {
 }
 
 /// Timing constraints for processing
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct TimingConstraints {
     /// Maximum processing time
@@ -447,6 +472,7 @@ pub struct TimingConstraints {
 }
 
 /// Processing metrics
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ProcessingMetrics {
     /// Processing time
@@ -460,6 +486,7 @@ pub struct ProcessingMetrics {
 }
 
 /// Performance metrics for a module
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ModulePerformanceMetrics {
     /// Average processing time
@@ -475,6 +502,7 @@ pub struct ModulePerformanceMetrics {
 }
 
 /// Resource usage for a module
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ModuleResourceUsage {
     /// Memory usage (MB)
@@ -488,6 +516,7 @@ pub struct ModuleResourceUsage {
 }
 
 /// Context for ecosystem operations
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct EcosystemContext {
     /// Available resources
@@ -501,6 +530,7 @@ pub struct EcosystemContext {
 }
 
 /// Performance targets for the ecosystem
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct PerformanceTargets {
     /// Target latency (ms)
@@ -514,6 +544,7 @@ pub struct PerformanceTargets {
 }
 
 /// Inter-module communication message
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct InterModuleMessage {
     /// Source module
@@ -529,6 +560,7 @@ pub struct InterModuleMessage {
 }
 
 /// Types of inter-module messages
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum MessageType {
     DataTransfer,
@@ -540,6 +572,7 @@ pub enum MessageType {
 }
 
 /// Performance monitor for the ecosystem
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct EcosystemPerformanceMonitor {
     /// Module performance history
@@ -549,10 +582,12 @@ pub struct EcosystemPerformanceMonitor {
     /// Performance alerts
     alerts: Vec<PerformanceAlert>,
     /// Monitoring configuration
+    #[allow(dead_code)]
     config: MonitoringConfig,
 }
 
 /// System-wide performance metrics
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct SystemMetrics {
     /// Total throughput
@@ -568,6 +603,7 @@ pub struct SystemMetrics {
 }
 
 /// Performance alert
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct PerformanceAlert {
     /// Alert level
@@ -581,6 +617,7 @@ pub struct PerformanceAlert {
 }
 
 /// Alert levels
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum AlertLevel {
     Info,
@@ -590,6 +627,7 @@ pub enum AlertLevel {
 }
 
 /// Monitoring configuration
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct MonitoringConfig {
     /// Sampling rate (Hz)
@@ -601,6 +639,7 @@ pub struct MonitoringConfig {
 }
 
 /// Alert thresholds
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct AlertThresholds {
     /// Latency threshold (ms)
@@ -614,6 +653,7 @@ pub struct AlertThresholds {
 }
 
 /// Resource manager for the ecosystem
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct EcosystemResourceManager {
     /// Available resources
@@ -621,12 +661,15 @@ pub struct EcosystemResourceManager {
     /// Resource allocations
     allocations: HashMap<String, ResourceAllocation>,
     /// Load balancer
+    #[allow(dead_code)]
     load_balancer: LoadBalancer,
     /// Resource monitoring
+    #[allow(dead_code)]
     resource_monitor: ResourceMonitor,
 }
 
 /// Pool of available resources
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ResourcePool {
     /// CPU cores available
@@ -640,6 +683,7 @@ pub struct ResourcePool {
 }
 
 /// Resource allocation for a module
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ResourceAllocation {
     /// Allocated CPU cores
@@ -655,17 +699,22 @@ pub struct ResourceAllocation {
 }
 
 /// Load balancer for distributing work
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct LoadBalancer {
     /// Current load distribution
+    #[allow(dead_code)]
     load_distribution: HashMap<String, f64>,
     /// Balancing strategy
+    #[allow(dead_code)]
     strategy: LoadBalancingStrategy,
     /// Performance history
+    #[allow(dead_code)]
     performance_history: Vec<LoadBalancingMetrics>,
 }
 
 /// Load balancing strategies
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum LoadBalancingStrategy {
     RoundRobin,
@@ -677,6 +726,7 @@ pub enum LoadBalancingStrategy {
 }
 
 /// Load balancing metrics
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct LoadBalancingMetrics {
     /// Distribution efficiency
@@ -690,17 +740,22 @@ pub struct LoadBalancingMetrics {
 }
 
 /// Resource monitor
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ResourceMonitor {
     /// Current resource usage
+    #[allow(dead_code)]
     current_usage: ResourceUtilization,
     /// Usage history
+    #[allow(dead_code)]
     usage_history: Vec<ResourceSnapshot>,
     /// Prediction model
+    #[allow(dead_code)]
     prediction_model: Option<ResourcePredictionModel>,
 }
 
 /// Snapshot of resource usage at a point in time
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ResourceSnapshot {
     /// Resource utilization
@@ -712,28 +767,35 @@ pub struct ResourceSnapshot {
 }
 
 /// Model for predicting resource usage
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ResourcePredictionModel {
     /// Model parameters
+    #[allow(dead_code)]
     parameters: Vec<f64>,
     /// Prediction accuracy
+    #[allow(dead_code)]
     accuracy: f64,
     /// Last training time
+    #[allow(dead_code)]
     last_training: Instant,
 }
 
 /// Communication hub for inter-module messaging
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct ModuleCommunicationHub {
     /// Message queues for each module
     message_queues: HashMap<String, Vec<InterModuleMessage>>,
     /// Communication statistics
+    #[allow(dead_code)]
     comm_stats: CommunicationStatistics,
     /// Routing table
     routing_table: HashMap<String, Vec<String>>,
 }
 
 /// Communication statistics
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct CommunicationStatistics {
     /// Total messages sent
@@ -747,6 +809,7 @@ pub struct CommunicationStatistics {
 }
 
 /// Optimization opportunity identified by the ecosystem
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct OptimizationOpportunity {
@@ -1066,6 +1129,7 @@ impl UltrathinkEcosystemCoordinator {
 
     // Private helper methods
 
+    #[allow(dead_code)]
     fn select_optimal_module(&self, input: &UltrathinkInput) -> CoreResult<String> {
         let modules = self.modules.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -1084,6 +1148,7 @@ impl UltrathinkEcosystemCoordinator {
         Ok(optimal_module)
     }
 
+    #[allow(dead_code)]
     fn analyze_input_and_select_module(
         &self,
         input: &UltrathinkInput,
@@ -1134,6 +1199,7 @@ impl UltrathinkEcosystemCoordinator {
             })
     }
 
+    #[allow(dead_code)]
     fn score_operation_compatibility(&self, operation_type: &str, capabilities: &[String]) -> f64 {
         match operation_type {
             "matrix_multiply" | "linear_algebra" => {
@@ -1185,6 +1251,7 @@ impl UltrathinkEcosystemCoordinator {
         }
     }
 
+    #[allow(dead_code)]
     fn score_performance_fit(
         &self,
         priority: &Priority,
@@ -1227,6 +1294,7 @@ impl UltrathinkEcosystemCoordinator {
         score
     }
 
+    #[allow(dead_code)]
     fn score_resource_availability(&self, resource_usage: &ModuleResourceUsage) -> f64 {
         let mut score = 0.0;
 
@@ -1242,6 +1310,7 @@ impl UltrathinkEcosystemCoordinator {
         score
     }
 
+    #[allow(dead_code)]
     fn score_data_size_fit(&self, data_size: usize, capabilities: &[String]) -> f64 {
         let data_size_mb = data_size as f64 / (1024.0 * 1024.0);
 
@@ -1269,6 +1338,7 @@ impl UltrathinkEcosystemCoordinator {
         }
     }
 
+    #[allow(dead_code)]
     fn update_performance_metrics(&self, module_name: &str, duration: Duration) -> CoreResult<()> {
         let mut performance_monitor = self.performance_monitor.lock().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -2116,6 +2186,7 @@ impl UltrathinkEcosystemCoordinator {
 }
 
 /// Performance report for the ecosystem
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct EcosystemPerformanceReport {
     /// System-wide metrics

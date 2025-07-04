@@ -79,6 +79,7 @@ pub struct HogDescriptor {
 /// # Returns
 ///
 /// * Result containing HOG descriptor
+#[allow(dead_code)]
 pub fn compute_hog(img: &DynamicImage, config: &HogConfig) -> Result<HogDescriptor> {
     // Convert to grayscale
     let array = image_to_array(img)?;
@@ -142,6 +143,7 @@ pub fn compute_hog(img: &DynamicImage, config: &HogConfig) -> Result<HogDescript
 }
 
 /// Compute image gradients
+#[allow(dead_code)]
 fn compute_gradients(image: &Array2<f32>) -> Result<(Array2<f32>, Array2<f32>)> {
     let (height, width) = image.dim();
     let mut magnitudes = Array2::zeros((height, width));
@@ -162,6 +164,7 @@ fn compute_gradients(image: &Array2<f32>) -> Result<(Array2<f32>, Array2<f32>)> 
 }
 
 /// Compute histogram for a single cell
+#[allow(dead_code)]
 fn compute_cell_histogram(
     magnitudes: &Array2<f32>,
     orientations: &Array2<f32>,
@@ -219,6 +222,7 @@ fn compute_cell_histogram(
 }
 
 /// Compute features for a single block
+#[allow(dead_code)]
 fn compute_block_features(
     cell_histograms: &Array3<f32>,
     block_y: usize,
@@ -260,6 +264,7 @@ fn compute_block_features(
 }
 
 /// Compute Gaussian weights for block cells
+#[allow(dead_code)]
 fn compute_gaussian_weights(block_size: usize) -> Vec<f32> {
     let mut weights = vec![0.0; block_size * block_size];
     let sigma = block_size as f32 * 0.5;
@@ -284,6 +289,7 @@ fn compute_gaussian_weights(block_size: usize) -> Vec<f32> {
 }
 
 /// Normalize block features
+#[allow(dead_code)]
 fn normalize_block_features(features: &mut [f32], method: HogNormalization) {
     match method {
         HogNormalization::L2 => {
@@ -343,6 +349,7 @@ fn normalize_block_features(features: &mut [f32], method: HogNormalization) {
 }
 
 /// Visualize HOG features
+#[allow(dead_code)]
 pub fn visualize_hog(
     descriptor: &HogDescriptor,
     cell_size: usize,

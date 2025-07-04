@@ -2075,6 +2075,7 @@ impl<T: Float> ResourceMonitor<T> {
 }
 
 /// Example optimizer architecture factory
+#[allow(dead_code)]
 pub fn create_example_architectures<T: Float>() -> Vec<OptimizerArchitecture<T>> {
     vec![
         // Simple SGD architecture

@@ -115,6 +115,7 @@ pub struct Swt2dResult {
 /// // Check the shape of the result (should be same as original image)
 /// assert_eq!(result.approx.shape(), data.shape());
 /// ```
+#[allow(dead_code)]
 pub fn swt2d_decompose<T>(
     data: &Array2<T>,
     wavelet: Wavelet,
@@ -303,6 +304,7 @@ where
 ///     assert_eq!(level.approx.shape(), image.shape());
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn swt2d<T>(
     data: &Array2<T>,
     wavelet: Wavelet,
@@ -383,6 +385,7 @@ where
 /// // Check that reconstruction has the same shape as original
 /// assert_eq!(reconstructed.shape(), data.shape());
 /// ```
+#[allow(dead_code)]
 pub fn swt2d_reconstruct(
     decomposition: &Swt2dResult,
     wavelet: Wavelet,
@@ -568,6 +571,7 @@ pub fn swt2d_reconstruct(
 /// // Check that reconstruction has the same shape as original
 /// assert_eq!(reconstructed.shape(), image.shape());
 /// ```
+#[allow(dead_code)]
 pub fn iswt2d(
     decompositions: &[Swt2dResult],
     wavelet: Wavelet,

@@ -236,7 +236,7 @@ impl<
         let layers = self.model.layers();
         for (index, layer) in layers.iter().enumerate() {
             let layer_type = layer.layer_type().to_string();
-            let layer_name = format!("{}_{}", layer_type, index);
+            let layer_name = format!("{layer_type}_{index}");
             layer_info.push(LayerInfo {
                 layer_name,
                 layer_index: index,
@@ -568,22 +568,22 @@ impl<
         let svg_content = self.create_svg_content(layout)?;
         // Write to file
         fs::write(&output_path, svg_content)
-            .map_err(|e| NeuralError::IOError(format!("Failed to write SVG file: {}", e)))?;
+            .map_err(|e| NeuralError::IOError(format!("Failed to write SVG file: {e}")))?;
         Ok(output_path)
     fn generate_html_visualization(&self, layout: &NetworkLayout) -> Result<PathBuf> {
         let output_path = self.config.output_dir.join("network_architecture.html");
         // Generate HTML content with interactive features
         let html_content = self.create_html_content(layout)?;
         fs::write(&output_path, html_content)
-            .map_err(|e| NeuralError::IOError(format!("Failed to write HTML file: {}", e)))?;
+            .map_err(|e| NeuralError::IOError(format!("Failed to write HTML file: {e}")))?;
     fn generate_json_visualization(&self, layout: &NetworkLayout) -> Result<PathBuf> {
         let output_path = self.config.output_dir.join("network_architecture.json");
         // Serialize layout to JSON
         let json_content = serde_json::to_string_pretty(&layout).map_err(|e| {
-            NeuralError::SerializationError(format!("Failed to serialize layout: {}", e))
+            NeuralError::SerializationError(format!("Failed to serialize layout: {e}"))
         })?;
         fs::write(&output_path, json_content)
-            .map_err(|e| NeuralError::IOError(format!("Failed to write JSON file: {}", e)))?;
+            .map_err(|e| NeuralError::IOError(format!("Failed to write JSON file: {e}")))?;
     fn create_svg_content(&self, layout: &NetworkLayout) -> Result<String> {
         let bounds = &layout.bounds;
         let margin = 50.0;

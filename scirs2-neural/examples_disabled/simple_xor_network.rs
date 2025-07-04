@@ -101,6 +101,7 @@ impl XORNetwork {
             }
             // Backward pass and parameter update
             self.backward(x, y, learning_rate);
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Simple XOR Neural Network Example");
     // Create XOR dataset

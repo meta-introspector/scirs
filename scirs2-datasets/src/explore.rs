@@ -849,19 +849,19 @@ impl DatasetExplorer {
                 type_str,
                 feature
                     .mean
-                    .map(|x| format!("{:.3}", x))
+                    .map(|x| format!("{x:.3}"))
                     .unwrap_or_else(|| "-".to_string()),
                 feature
                     .std
-                    .map(|x| format!("{:.3}", x))
+                    .map(|x| format!("{x:.3}"))
                     .unwrap_or_else(|| "-".to_string()),
                 feature
                     .min
-                    .map(|x| format!("{:.3}", x))
+                    .map(|x| format!("{x:.3}"))
                     .unwrap_or_else(|| "-".to_string()),
                 feature
                     .max
-                    .map(|x| format!("{:.3}", x))
+                    .map(|x| format!("{x:.3}"))
                     .unwrap_or_else(|| "-".to_string()),
                 feature.missing_count
             );
@@ -883,7 +883,7 @@ impl DatasetExplorer {
             println!("\nMissing by feature:");
             for (feature, count, percentage) in &missing_data.feature_missing {
                 if *count > 0 {
-                    println!("  {}: {} ({:.1}%)", feature, count, percentage);
+                    println!("  {feature}: {count} ({percentage:.1}%)");
                 }
             }
         }
@@ -1002,19 +1002,19 @@ impl DatasetExplorer {
                 feature.data_type,
                 feature
                     .mean
-                    .map(|x| format!("{:.3}", x))
+                    .map(|x| format!("{x:.3}"))
                     .unwrap_or_else(|| "-".to_string()),
                 feature
                     .std
-                    .map(|x| format!("{:.3}", x))
+                    .map(|x| format!("{x:.3}"))
                     .unwrap_or_else(|| "-".to_string()),
                 feature
                     .min
-                    .map(|x| format!("{:.3}", x))
+                    .map(|x| format!("{x:.3}"))
                     .unwrap_or_else(|| "-".to_string()),
                 feature
                     .max
-                    .map(|x| format!("{:.3}", x))
+                    .map(|x| format!("{x:.3}"))
                     .unwrap_or_else(|| "-".to_string()),
                 feature.missing_count
             );

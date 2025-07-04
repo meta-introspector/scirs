@@ -13,6 +13,7 @@ use super::normal::{compute_cholesky, compute_inverse_from_cholesky};
 
 // Implementation of the natural logarithm of the gamma function
 // This is a workaround for the unstable gamma function in Rust
+#[allow(dead_code)]
 fn lgamma(x: f64) -> f64 {
     if x <= 0.0 {
         panic!("lgamma requires positive input");
@@ -414,6 +415,7 @@ impl MultivariateT {
 /// let mvt = multivariate::multivariate_t(mean, scale, 5.0).unwrap();
 /// let pdf_at_origin = mvt.pdf(&array![0.0, 0.0]);
 /// ```
+#[allow(dead_code)]
 pub fn multivariate_t<D1, D2>(
     mean: ArrayBase<D1, Ix1>,
     scale: ArrayBase<D2, Ix2>,

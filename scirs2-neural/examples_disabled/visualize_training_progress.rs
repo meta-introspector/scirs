@@ -14,10 +14,12 @@ use std::collections::HashMap;
 use std::f32::consts::PI;
 
 // Helper function to generate random noise
+#[allow(dead_code)]
 fn generate_noise(rng: &mut SmallRng) -> f32 {
     rng.random_range(-0.05..0.05)
 }
 // Generate a simple nonlinear dataset (sine wave with noise)
+#[allow(dead_code)]
 fn generate_nonlinear_data(num_samples: usize, rng: &mut SmallRng) -> (Array2<f32>, Array2<f32>) {
     // Generate x values evenly spaced in [0, 4π]
     let x_values: Vec<f32> = (0..num_samples)
@@ -37,6 +39,7 @@ fn generate_nonlinear_data(num_samples: usize, rng: &mut SmallRng) -> (Array2<f3
     let y = Array2::from_shape_vec((num_samples, 1), y_values).unwrap();
     (x, y)
 // Split data into training and validation sets
+#[allow(dead_code)]
 fn train_val_split(
     x: &Array2<f32>,
     y: &Array2<f32>,
@@ -50,6 +53,7 @@ fn train_val_split(
     let y_val = y.slice(ndarray::s![num_train.., ..]).to_owned();
     (x_train, y_train, x_val, y_val)
 // Create a simple regression model
+#[allow(dead_code)]
 fn create_regression_model(input_dim: usize, rng: &mut SmallRng) -> Result<Sequential<f32>> {
     let mut model = Sequential::new();
     // Hidden layer with 16 neurons and ReLU activation
@@ -62,6 +66,7 @@ fn create_regression_model(input_dim: usize, rng: &mut SmallRng) -> Result<Seque
     let dense3 = Dense::new(8, 1, None, rng)?;
     model.add_layer(dense3);
     Ok(model)
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Training Visualization Example");
     println!("==============================\n");

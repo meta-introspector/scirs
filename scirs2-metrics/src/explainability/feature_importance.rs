@@ -761,6 +761,7 @@ pub struct AdvancedImportanceResults<F: Float> {
 }
 
 /// Compute comprehensive feature importance using multiple methods
+#[allow(dead_code)]
 pub fn comprehensive_feature_importance<F, M, S>(
     calculator: &FeatureImportanceCalculator<F>,
     model: &M,
@@ -843,6 +844,7 @@ where
 }
 
 /// Compute mutual information based feature importance with improved estimation
+#[allow(dead_code)]
 pub fn mutual_information_importance<F: Float + num_traits::FromPrimitive + std::iter::Sum>(
     x: &Array2<F>,
     y: &Array1<F>,
@@ -864,6 +866,7 @@ pub fn mutual_information_importance<F: Float + num_traits::FromPrimitive + std:
 }
 
 /// Compute mutual information between two variables (improved with binning)
+#[allow(dead_code)]
 fn compute_mutual_information_improved<F: Float + num_traits::FromPrimitive + std::iter::Sum>(
     x: &ndarray::ArrayView1<F>,
     y: &Array1<F>,
@@ -907,6 +910,7 @@ fn compute_mutual_information_improved<F: Float + num_traits::FromPrimitive + st
 }
 
 /// Create bins for a variable
+#[allow(dead_code)]
 fn create_bins<F: Float + num_traits::FromPrimitive>(
     values: &ndarray::ArrayView1<F>,
     n_bins: usize,
@@ -932,6 +936,7 @@ fn create_bins<F: Float + num_traits::FromPrimitive>(
 }
 
 /// Compute joint histogram
+#[allow(dead_code)]
 fn compute_joint_histogram<F: Float + num_traits::FromPrimitive>(
     x_bins: &[usize],
     y_bins: &[usize],
@@ -947,6 +952,7 @@ fn compute_joint_histogram<F: Float + num_traits::FromPrimitive>(
 }
 
 /// Compute marginal histogram
+#[allow(dead_code)]
 fn compute_marginal_histogram<F: Float + num_traits::FromPrimitive>(
     bins: &[usize],
     n_bins: usize,
@@ -961,6 +967,7 @@ fn compute_marginal_histogram<F: Float + num_traits::FromPrimitive>(
 }
 
 /// Compute correlation coefficient
+#[allow(dead_code)]
 fn compute_correlation<F: Float + std::iter::Sum>(
     x: &ndarray::ArrayView1<F>,
     y: &Array1<F>,

@@ -7,6 +7,7 @@ use ndarray::Array2;
 use scirs2_ndimage::filters::{filter_functions, generic_filter, BorderMode};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("🚀 SciRS2-ndimage Performance Showcase");
     println!("=======================================\n");
@@ -57,6 +58,7 @@ fn main() {
     println!("⚠️  Parallel processing: DISABLED (enable with --features parallel)");
 }
 
+#[allow(dead_code)]
 fn benchmark_filter<F>(input: &Array2<f64>, name: &str, filter_fn: F)
 where
     F: Fn(&[f64]) -> f64 + Send + Sync + Clone + 'static,

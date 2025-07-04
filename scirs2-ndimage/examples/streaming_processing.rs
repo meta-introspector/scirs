@@ -8,6 +8,7 @@ use scirs2_ndimage::{
 use std::path::Path;
 
 /// Example: Processing very large images that don't fit in memory
+#[allow(dead_code)]
 fn main() {
     // Example 1: Process a large image file with streaming Gaussian filter
     process_large_image_gaussian();
@@ -20,6 +21,7 @@ fn main() {
 }
 
 /// Process a large image with streaming Gaussian filter
+#[allow(dead_code)]
 fn process_large_image_gaussian() {
     println!("Processing large image with streaming Gaussian filter...");
 
@@ -53,6 +55,7 @@ fn process_large_image_gaussian() {
 }
 
 /// Process with Fourier domain filters
+#[allow(dead_code)]
 fn process_large_image_fourier() {
     println!("\nProcessing with Fourier domain filters...");
 
@@ -79,6 +82,7 @@ fn process_large_image_fourier() {
 }
 
 /// Custom streaming operation
+#[allow(dead_code)]
 fn process_with_custom_op() {
     println!("\nProcessing with custom streaming operation...");
 

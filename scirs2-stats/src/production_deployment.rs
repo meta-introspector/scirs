@@ -136,7 +136,7 @@ pub struct CpuFeatures {
 }
 
 /// SIMD instruction set features
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SimdFeature {
     SSE,
     SSE2,
@@ -237,7 +237,7 @@ pub enum CheckStatus {
 }
 
 /// Check severity levels
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum CheckSeverity {
     Critical,
     High,
@@ -954,10 +954,7 @@ impl ProductionDeploymentValidator {
         let start_time = Instant::now();
 
         // Check encryption configuration
-        let encryption_enabled = match &self.config.security {
-            Some(security_config) => security_config.encryption_enabled,
-            None => false,
-        };
+        let encryption_enabled = self.config.security.encryption_enabled;
 
         let status = if encryption_enabled {
             CheckStatus::Pass
@@ -1209,10 +1206,28 @@ pub struct MemoryConfig {
     pub numa_nodes: usize,
 }
 
+impl Default for MemoryConfig {
+    fn default() -> Self {
+        Self {
+            total_gb: 16,
+            numa_nodes: 1,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkConfig {
     pub bandwidth_gbps: f64,
     pub latency_ms: f64,
+}
+
+impl Default for NetworkConfig {
+    fn default() -> Self {
+        Self {
+            bandwidth_gbps: 10.0,
+            latency_ms: 1.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1222,12 +1237,28 @@ pub struct StorageConfig {
     pub iops: usize,
 }
 
+impl Default for StorageConfig {
+    fn default() -> Self {
+        Self {
+            storage_type: StorageType::default(),
+            capacity_gb: 1000,
+            iops: 10000,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum StorageType {
     SSD,
     NVMe,
     HDD,
     Network,
+}
+
+impl Default for StorageType {
+    fn default() -> Self {
+        Self::SSD
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1442,7 +1473,7 @@ impl Default for ProductionConfig {
             reliability: ReliabilityConfig::default(),
             monitoring: MonitoringConfig::default(),
             resource_limits: ResourceLimits::default(),
-            security: Some(SecurityConfig::default()),
+            security: SecurityConfig::default(),
             deployment_strategy: DeploymentStrategy::default(),
         }
     }
@@ -1733,6 +1764,7 @@ impl HealthChecker {
 }
 
 // Utility functions for creating production configurations
+#[allow(dead_code)]
 pub fn create_cloud_production_config(cloud_provider: CloudProvider) -> ProductionConfig {
     let mut config = ProductionConfig::default();
 
@@ -1745,16 +1777,17 @@ pub fn create_cloud_production_config(cloud_provider: CloudProvider) -> Producti
     // Cloud-specific optimizations
     config.performance_requirements.max_latency_ms = 500.0;
     config.monitoring.metrics_enabled = true;
-    config.security = Some(SecurityConfig {
+    config.security = SecurityConfig {
         encryption_enabled: true,
         tls_version: "1.3".to_string(),
         authentication_required: true,
         audit_logging_enabled: true,
-    });
+    };
 
     config
 }
 
+#[allow(dead_code)]
 pub fn create_container_production_config(container_runtime: ContainerRuntime) -> ProductionConfig {
     let mut config = ProductionConfig::default();
 

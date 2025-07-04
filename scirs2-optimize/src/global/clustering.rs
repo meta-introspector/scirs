@@ -111,6 +111,7 @@ pub struct ClusterCentroid {
 }
 
 /// Multi-start optimization with clustering
+#[allow(dead_code)]
 pub fn multi_start_with_clustering<F, S>(
     fun: F,
     start_points: &[Array1<f64>],
@@ -189,6 +190,7 @@ where
 }
 
 /// Cluster local minima using the specified algorithm
+#[allow(dead_code)]
 fn cluster_minima<S>(
     minima: &mut [LocalMinimum<S>],
     options: &ClusteringOptions,
@@ -209,6 +211,7 @@ where
 }
 
 /// Hierarchical clustering implementation
+#[allow(dead_code)]
 fn hierarchical_clustering<S>(
     minima: &mut [LocalMinimum<S>],
     options: &ClusteringOptions,
@@ -311,6 +314,7 @@ where
 }
 
 /// K-means clustering implementation
+#[allow(dead_code)]
 fn kmeans_clustering<S>(
     minima: &mut [LocalMinimum<S>],
     options: &ClusteringOptions,
@@ -417,6 +421,7 @@ where
 }
 
 /// Density-based clustering (DBSCAN-like)
+#[allow(dead_code)]
 fn density_clustering<S>(
     minima: &mut [LocalMinimum<S>],
     options: &ClusteringOptions,
@@ -497,6 +502,7 @@ where
 }
 
 /// Simple threshold-based clustering
+#[allow(dead_code)]
 fn threshold_clustering<S>(
     minima: &mut [LocalMinimum<S>],
     options: &ClusteringOptions,
@@ -547,6 +553,7 @@ where
 }
 
 /// Compute distance matrix between all minima
+#[allow(dead_code)]
 fn compute_distance_matrix<S>(
     minima: &[LocalMinimum<S>],
     options: &ClusteringOptions,
@@ -569,6 +576,7 @@ where
 }
 
 /// Compute distance between two local minima
+#[allow(dead_code)]
 fn compute_distance<S>(
     min1: &LocalMinimum<S>,
     min2: &LocalMinimum<S>,
@@ -592,6 +600,7 @@ where
 }
 
 /// Compute distance between two clusters (single linkage)
+#[allow(dead_code)]
 fn compute_cluster_distance(
     cluster1: &[usize],
     cluster2: &[usize],
@@ -612,6 +621,7 @@ fn compute_cluster_distance(
 }
 
 /// Extract feature vectors for clustering
+#[allow(dead_code)]
 fn extract_features<S>(minima: &[LocalMinimum<S>], options: &ClusteringOptions) -> Array2<f64>
 where
     S: Clone,
@@ -650,6 +660,7 @@ where
 }
 
 /// Normalize feature matrix
+#[allow(dead_code)]
 fn normalize_features(features: &mut Array2<f64>, coord_dim: usize) {
     let (n, _) = features.dim();
     if n == 0 {
@@ -671,6 +682,7 @@ fn normalize_features(features: &mut Array2<f64>, coord_dim: usize) {
 }
 
 /// Initialize centroids using k-means++ algorithm
+#[allow(dead_code)]
 fn initialize_centroids_plus_plus(features: &Array2<f64>, k: usize) -> Array2<f64> {
     let (n, dim) = features.dim();
     let mut centroids = Array2::zeros((k, dim));
@@ -712,11 +724,13 @@ fn initialize_centroids_plus_plus(features: &Array2<f64>, k: usize) -> Array2<f6
 }
 
 /// Compute Euclidean distance between two points
+#[allow(dead_code)]
 fn euclidean_distance(a: &ArrayView1<f64>, b: &ArrayView1<f64>) -> f64 {
     (a - b).mapv(|x| x.powi(2)).sum().sqrt()
 }
 
 /// Compute cluster centroids and statistics
+#[allow(dead_code)]
 fn compute_cluster_centroids<S>(
     minima: &[LocalMinimum<S>],
 ) -> Result<Vec<ClusterCentroid>, OptimizeError>
@@ -779,6 +793,7 @@ where
 }
 
 /// Compute within-cluster sum of squares
+#[allow(dead_code)]
 fn compute_wcss<S>(minima: &[LocalMinimum<S>], centroids: &[ClusterCentroid]) -> f64
 where
     S: Clone,
@@ -799,6 +814,7 @@ where
 }
 
 /// Compute silhouette score for clustering quality
+#[allow(dead_code)]
 fn compute_silhouette_score<S>(minima: &[LocalMinimum<S>]) -> Option<f64>
 where
     S: Clone,
@@ -866,6 +882,7 @@ where
 }
 
 /// Generate diverse starting points for multi-start optimization
+#[allow(dead_code)]
 pub fn generate_diverse_start_points(
     bounds: &[(f64, f64)],
     num_points: usize,
@@ -889,6 +906,7 @@ pub enum StartPointStrategy {
 }
 
 /// Generate random starting points
+#[allow(dead_code)]
 fn generate_random_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
     let dim = bounds.len();
     let mut points = Vec::new();
@@ -908,6 +926,7 @@ fn generate_random_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array
 }
 
 /// Generate Latin Hypercube sampling points
+#[allow(dead_code)]
 fn generate_latin_hypercube_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
     let dim = bounds.len();
     let mut points = Vec::new();
@@ -926,6 +945,7 @@ fn generate_latin_hypercube_points(bounds: &[(f64, f64)], num_points: usize) -> 
 }
 
 /// Generate grid points
+#[allow(dead_code)]
 fn generate_grid_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
     let dim = bounds.len();
     if dim == 0 {
@@ -969,6 +989,7 @@ fn generate_grid_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<
 }
 
 /// Generate Sobol sequence points (simplified)
+#[allow(dead_code)]
 fn generate_sobol_points(bounds: &[(f64, f64)], num_points: usize) -> Vec<Array1<f64>> {
     // Simplified Sobol sequence (in practice, use proper implementation)
     let dim = bounds.len();

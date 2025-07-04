@@ -134,6 +134,7 @@ impl Default for SeasonalDecompositionOptions {
 /// assert_eq!(decomp.seasonal.len(), n);
 /// assert_eq!(decomp.residual.len(), n);
 /// ```
+#[allow(dead_code)]
 pub fn seasonal_decomposition<F>(
     ts: &Array1<F>,
     options: &SeasonalDecompositionOptions,
@@ -164,6 +165,7 @@ where
 }
 
 /// Performs classical seasonal decomposition
+#[allow(dead_code)]
 fn classical_decomposition<F>(
     ts: &Array1<F>,
     options: &SeasonalDecompositionOptions,
@@ -229,6 +231,7 @@ where
 }
 
 /// Performs STL (Seasonal and Trend decomposition using Loess) decomposition
+#[allow(dead_code)]
 fn stl_decomposition<F>(
     ts: &Array1<F>,
     options: &SeasonalDecompositionOptions,
@@ -265,6 +268,7 @@ where
 }
 
 /// Inner implementation of STL decomposition for additive model
+#[allow(dead_code)]
 fn stl_decomposition_inner<F>(
     ts: &Array1<F>,
     period: usize,
@@ -361,6 +365,7 @@ where
 }
 
 /// Performs X-11 seasonal decomposition
+#[allow(dead_code)]
 fn x11_decomposition<F>(
     ts: &Array1<F>,
     options: &SeasonalDecompositionOptions,
@@ -447,6 +452,7 @@ where
 }
 
 /// Performs SEATS (Seasonal Extraction in ARIMA Time Series) decomposition
+#[allow(dead_code)]
 fn seats_decomposition<F>(
     _ts: &Array1<F>,
     _options: &SeasonalDecompositionOptions,
@@ -463,6 +469,7 @@ where
 }
 
 /// Estimates trend component using centered moving average
+#[allow(dead_code)]
 fn estimate_trend_by_moving_average<F>(
     ts: &Array1<F>,
     period: usize,
@@ -519,6 +526,7 @@ where
 }
 
 /// Estimates seasonal component by averaging over each period
+#[allow(dead_code)]
 fn estimate_seasonal_component<F>(detrended: &Array1<F>, period: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -557,6 +565,7 @@ where
 }
 
 /// Normalizes seasonal component to ensure it sums/averages to zero/one
+#[allow(dead_code)]
 fn normalize_seasonal_component<F>(seasonal: &Array1<F>, is_additive: bool) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -609,6 +618,7 @@ where
 }
 
 /// Applies a moving average filter to a time series
+#[allow(dead_code)]
 fn moving_average_filter<F>(ts: &Array1<F>, window_size: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -634,6 +644,7 @@ where
 }
 
 /// Applies a Henderson filter to a time series
+#[allow(dead_code)]
 fn henderson_filter<F>(ts: &Array1<F>, window_size: usize) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -685,6 +696,7 @@ where
 }
 
 /// Calculates Henderson filter weights
+#[allow(dead_code)]
 fn calculate_henderson_weights<F>(window_size: usize) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -725,6 +737,7 @@ where
 }
 
 /// Applies LOESS (locally weighted regression) smoothing
+#[allow(dead_code)]
 fn loess_smooth<F>(ts: &Array1<F>, window_size: usize, robust: bool) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -818,6 +831,7 @@ where
 }
 
 /// Applies LOESS smoothing with additional external weights
+#[allow(dead_code)]
 fn loess_smooth_weighted<F>(
     ts: &Array1<F>,
     window_size: usize,
@@ -893,6 +907,7 @@ where
 }
 
 /// Fits a weighted polynomial to data
+#[allow(dead_code)]
 fn weighted_polynomial_fit<F>(x: &[F], y: &[F], weights: &[F], degree: usize) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -962,6 +977,7 @@ where
 }
 
 /// Calculates robust weights using bisquare function
+#[allow(dead_code)]
 fn calculate_robust_weights<F>(residuals: &[F], c: F) -> Result<Vec<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -1020,6 +1036,7 @@ where
 }
 
 /// Interpolates NaN values in a time series
+#[allow(dead_code)]
 fn interpolate_nan_values<F>(ts: &mut Array1<F>) -> Result<()>
 where
     F: Float + FromPrimitive + Debug,

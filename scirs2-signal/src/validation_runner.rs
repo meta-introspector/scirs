@@ -6,7 +6,7 @@
 //! production validation.
 
 use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
-use crate::error::{SignalError, SignalResult};
+use crate::error::{SignalResult};
 use crate::filter::{butter, FilterType};
 use crate::lombscargle_scipy_validation::{
     run_comprehensive_validation, validate_lombscargle_against_scipy, ScipyValidationConfig,
@@ -21,7 +21,7 @@ use ndarray::{Array1, Array2};
 use rand::prelude::*;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
-#[cfg(test)]
+
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -198,6 +198,7 @@ pub struct FilterValidationResult {
 /// # Returns
 ///
 /// * Comprehensive validation results
+#[allow(dead_code)]
 pub fn validate_signal_processing_library(
     config: &ValidationConfig,
 ) -> SignalResult<LibraryValidationResult> {
@@ -361,6 +362,7 @@ pub fn validate_signal_processing_library(
 }
 
 /// Validate multitaper module
+#[allow(dead_code)]
 fn validate_multitaper_module(
     config: &ValidationConfig,
     _rng: &mut StdRng,
@@ -385,6 +387,7 @@ fn validate_multitaper_module(
 }
 
 /// Validate Lomb-Scargle module
+#[allow(dead_code)]
 fn validate_lombscargle_module(
     config: &ValidationConfig,
     _rng: &mut StdRng,
@@ -405,6 +408,7 @@ fn validate_lombscargle_module(
 }
 
 /// Validate parametric estimation module
+#[allow(dead_code)]
 fn validate_parametric_module(
     config: &ValidationConfig,
     rng: &mut StdRng,
@@ -428,7 +432,7 @@ fn validate_parametric_module(
         let mut prev2 = 0.0;
 
         for i in 0..n {
-            let innovation = rng.gen_range(-1.0..1.0);
+            let innovation = rng.random_range(-1.0..1.0);
             signal[i] = a1 * prev1 + a2 * prev2 + innovation;
             prev2 = prev1;
             prev1 = signal[i];
@@ -480,6 +484,7 @@ fn validate_parametric_module(
 }
 
 /// Validate 2D wavelet module
+#[allow(dead_code)]
 fn validate_wavelet2d_module(
     config: &ValidationConfig,
     _rng: &mut StdRng,
@@ -535,6 +540,7 @@ fn validate_wavelet2d_module(
 }
 
 /// Validate system identification module
+#[allow(dead_code)]
 fn validate_sysid_module(
     config: &ValidationConfig,
     rng: &mut StdRng,
@@ -549,7 +555,7 @@ fn validate_sysid_module(
     let a = 0.9; // System pole
 
     // Generate test input (random signal)
-    let input: Array1<f64> = Array1::from_iter((0..n).map(|_| rng.gen_range(-1.0..1.0)));
+    let input: Array1<f64> = Array1::from_iter((0..n).map(|_| rng.random_range(-1.0..1.0)));
 
     // Generate system output
     let mut output = Array1::zeros(n);
@@ -592,6 +598,7 @@ fn validate_sysid_module(
 }
 
 /// Validate filter module
+#[allow(dead_code)]
 fn validate_filter_module(
     config: &ValidationConfig,
     _rng: &mut StdRng,
@@ -644,6 +651,7 @@ fn validate_filter_module(
 }
 
 /// Run performance benchmarks
+#[allow(dead_code)]
 fn run_performance_benchmarks(
     config: &ValidationConfig,
     rng: &mut StdRng,
@@ -651,7 +659,7 @@ fn run_performance_benchmarks(
     let mut module_benchmarks = HashMap::new();
 
     // Benchmark multitaper
-    let signal: Array1<f64> = Array1::from_iter((0..1024).map(|_| rng.gen_range(-1.0..1.0)));
+    let signal: Array1<f64> = Array1::from_iter((0..1024).map(|_| rng.random_range(-1.0..1.0)));
     let start = Instant::now();
 
     let mt_config = crate::multitaper::enhanced::MultitaperConfig::default();
@@ -684,6 +692,7 @@ fn run_performance_benchmarks(
 }
 
 /// Validate if comprehensive implementation is production-ready
+#[allow(dead_code)]
 pub fn validate_production_readiness(config: &ValidationConfig) -> SignalResult<bool> {
     let results = validate_signal_processing_library(config)?;
 
@@ -728,7 +737,6 @@ pub fn validate_production_readiness(config: &ValidationConfig) -> SignalResult<
     Ok(production_ready)
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
 

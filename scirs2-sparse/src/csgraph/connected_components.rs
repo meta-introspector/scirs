@@ -40,6 +40,7 @@ use std::fmt::Debug;
 /// let (n_components, labels) = connected_components(&graph, false, "weak", true).unwrap();
 /// assert_eq!(n_components, 2);
 /// ```
+#[allow(dead_code)]
 pub fn connected_components<T, S>(
     graph: &S,
     directed: bool,
@@ -83,6 +84,7 @@ enum ConnectionType {
 }
 
 /// Find connected components in an undirected graph using DFS
+#[allow(dead_code)]
 pub fn undirected_connected_components<T, S>(
     graph: &S,
     return_labels: bool,
@@ -115,6 +117,7 @@ where
 }
 
 /// Find weakly connected components in a directed graph
+#[allow(dead_code)]
 pub fn weakly_connected_components<T, S>(
     graph: &S,
     return_labels: bool,
@@ -128,6 +131,7 @@ where
 }
 
 /// Find strongly connected components in a directed graph using Tarjan's algorithm
+#[allow(dead_code)]
 pub fn strongly_connected_components<T, S>(
     graph: &S,
     return_labels: bool,
@@ -151,6 +155,7 @@ where
 }
 
 /// DFS helper for finding a connected component
+#[allow(dead_code)]
 fn dfs_component<T>(
     adj_list: &[Vec<(usize, T)>],
     start: usize,
@@ -282,6 +287,7 @@ where
 ///
 /// assert!(is_connected(&graph, false).unwrap());
 /// ```
+#[allow(dead_code)]
 pub fn is_connected<T, S>(graph: &S, directed: bool) -> SparseResult<bool>
 where
     T: Float + Debug + Copy + 'static,
@@ -319,6 +325,7 @@ where
 ///
 /// let (size, indices) = largest_component(&graph, false, "weak").unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn largest_component<T, S>(
     graph: &S,
     directed: bool,
@@ -377,6 +384,7 @@ where
 /// - The subgraph as a sparse matrix
 /// - Mapping from new vertex indices to original vertex indices
 ///
+#[allow(dead_code)]
 pub fn extract_largest_component<T, S>(
     graph: &S,
     directed: bool,

@@ -4,6 +4,7 @@
 //! over time and detect potential memory leaks.
 
 #[cfg(not(feature = "memory_management"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'memory_management' feature to be enabled.");
     println!("Run with: cargo run --example memory_metrics_snapshots --features memory_management");
@@ -23,6 +24,7 @@ use scirs2_core::memory::metrics::{
 };
 
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn main() {
     println!("Memory Snapshots and Leak Detection Example");
     println!("===========================================\n");
@@ -155,6 +157,7 @@ fn main() {
 
 // Simulate doing some work
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn simulate_work() {
     println!("  Performing operations...");
 

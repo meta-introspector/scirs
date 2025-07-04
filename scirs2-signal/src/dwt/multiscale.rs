@@ -35,6 +35,7 @@ use std::fmt::Debug;
 /// // coeffs[1] contains level-2 detail
 /// // coeffs[2] contains level-1 detail
 /// ```
+#[allow(dead_code)]
 pub fn wavedec<T>(
     data: &[T],
     wavelet: Wavelet,
@@ -132,6 +133,7 @@ where
 ///     assert!((signal[i] - reconstructed[i]).abs() < 1e-10);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn waverec(coeffs: &[Vec<f64>], wavelet: Wavelet) -> SignalResult<Vec<f64>> {
     if coeffs.is_empty() {
         return Err(SignalError::ValueError(

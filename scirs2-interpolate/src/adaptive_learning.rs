@@ -818,6 +818,7 @@ where
 /// # Returns
 ///
 /// A configured `ActiveLearner` ready for adaptive sampling
+#[allow(dead_code)]
 pub fn make_active_learner<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,

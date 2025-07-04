@@ -595,6 +595,7 @@ where
 /// # Returns
 ///
 /// A trained GPU RBF interpolator
+#[allow(dead_code)]
 pub fn make_gpu_rbf_interpolator<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -628,11 +629,13 @@ where
 }
 
 /// Check if GPU acceleration features are available
+#[allow(dead_code)]
 pub fn is_gpu_acceleration_available() -> bool {
     GpuRBFInterpolator::<f64>::is_gpu_available()
 }
 
 /// Get GPU device information
+#[allow(dead_code)]
 pub fn get_gpu_device_info() -> Option<GpuDeviceInfo> {
     // In a real implementation, this would query CUDA/OpenCL devices
     // For now, return None since GPU acceleration is not implemented

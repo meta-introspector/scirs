@@ -114,6 +114,7 @@ async fn demo_multidimensional_arrays() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_broadcasting() -> Result<(), Box<dyn std::error::Error>> {
     println!("3. Broadcasting Operations");
     println!("==========================");
@@ -156,6 +157,7 @@ fn demo_broadcasting() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_complex_arrays() -> Result<(), Box<dyn std::error::Error>> {
     println!("4. Complex Number Array Operations");
     println!("==================================");
@@ -196,6 +198,7 @@ fn demo_complex_arrays() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demo_memory_efficiency() -> Result<(), Box<dyn std::error::Error>> {
     println!("5. Memory-Efficient Processing");
     println!("==============================");

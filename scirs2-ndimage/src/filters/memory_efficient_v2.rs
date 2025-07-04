@@ -11,12 +11,12 @@ use scirs2_core::error::CoreResult;
 use scirs2_core::memory_efficient::AdaptiveChunking;
 use scirs2_core::memory_efficient::MemoryMappedArray;
 
-use crate::chunked_v2::{ChunkConfigBuilder, ChunkConfigV2};
+use crate::chunked_v2::ChunkConfigV2;
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::{
-    bilateral_filter, convolve, gaussian_filter, median_filter, uniform_filter, BorderMode,
+    bilateral_filter, gaussian_filter, median_filter, uniform_filter, BorderMode,
 };
-use crate::mmap_io::{create_temp_mmap, load_image_mmap, save_image_mmap};
+use crate::mmap_io::create_temp_mmap;
 
 /// Advanced configuration for memory-efficient filtering
 #[derive(Debug, Clone)]
@@ -46,6 +46,7 @@ impl Default for MemoryEfficientConfig {
 }
 
 /// Apply a filter to a memory-mapped image
+#[allow(dead_code)]
 pub fn filter_mmap<T, F>(
     input_mmap: &MemoryMappedArray<T>,
     filter_fn: F,
@@ -100,6 +101,7 @@ where
 }
 
 /// Memory-efficient Gaussian filter with automatic optimization
+#[allow(dead_code)]
 pub fn gaussian_filter_auto<T, D>(
     input: &Array<T, D>,
     sigma: &[T],
@@ -129,6 +131,7 @@ where
 }
 
 /// Gaussian filter using memory-mapped arrays
+#[allow(dead_code)]
 fn gaussian_filter_mmap<T, D>(
     input: &Array<T, D>,
     sigma: &[T],
@@ -171,6 +174,7 @@ where
 }
 
 /// Gaussian filter with adaptive chunking
+#[allow(dead_code)]
 fn gaussian_filter_chunked_adaptive<T, D>(
     input: &Array<T, D>,
     sigma: &[T],
@@ -224,6 +228,7 @@ impl<T: Float + Send + Sync, D: Dimension> crate::chunked_v2::ChunkProcessorV2<T
 }
 
 /// Check if separable filtering can be used
+#[allow(dead_code)]
 fn can_use_separable<T: Float>(sigma: &[T]) -> bool {
     // Separable filtering is beneficial when all sigmas are reasonably large
     sigma.iter().all(|&s| {
@@ -233,6 +238,7 @@ fn can_use_separable<T: Float>(sigma: &[T]) -> bool {
 }
 
 /// Gaussian filter using separable convolution with zero-copy operations
+#[allow(dead_code)]
 fn gaussian_filter_separable_zerocopy<T, D>(
     input: &Array<T, D>,
     sigma: &[T],
@@ -260,6 +266,7 @@ where
 }
 
 /// Generate 1D Gaussian kernel
+#[allow(dead_code)]
 fn generate_gaussian_kernel_1d<T>(sigma: T) -> Array<T, Ix1>
 where
     T: Float + FromPrimitive,
@@ -288,10 +295,11 @@ where
 }
 
 /// Apply 1D convolution along a specific axis
+#[allow(dead_code)]
 fn convolve_1d_along_axis<T, D>(
     input: &Array<T, D>,
-    kernel: &Array<T, Ix1>,
-    axis: usize,
+    _kernel: &Array<T, Ix1>,
+    _axis: usize,
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync,
@@ -303,6 +311,7 @@ where
 }
 
 /// Memory-efficient bilateral filter
+#[allow(dead_code)]
 pub fn bilateral_filter_efficient<T>(
     input: &Array<T, Ix2>,
     spatial_sigma: T,
@@ -366,6 +375,7 @@ impl<T: Float + Send + Sync> crate::chunked_v2::ChunkProcessorV2<T, Ix2> for Bil
 }
 
 /// Process a filter pipeline efficiently
+#[allow(dead_code)]
 pub fn filter_pipeline<T, D>(
     input: &Array<T, D>,
     operations: Vec<FilterOp<T>>,

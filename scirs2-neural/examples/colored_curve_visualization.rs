@@ -1,10 +1,11 @@
 use ndarray::{Array1, Array2};
-use rand::prelude::*;
-use rand::rngs::SmallRng;
-use rand_distr::StandardNormal;
+use ndarray_rand::rand::prelude::*;
+use ndarray_rand::rand::rngs::SmallRng;
+use ndarray_rand::rand_distr::StandardNormal;
 use scirs2_neural::utils::colors::ColorOptions;
 use scirs2_neural::utils::evaluation::{LearningCurve, ROCCurve};
 
+#[allow(dead_code)]
 fn main() {
     // Create a reproducible random number generator
     let mut rng = SmallRng::seed_from_u64(42);

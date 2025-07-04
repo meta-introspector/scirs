@@ -129,6 +129,7 @@ where
 /// // Compute 2 largest singular values
 /// let result = svds(&matrix, Some(2), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn svds<T, S>(
     matrix: &S,
     k: Option<usize>,
@@ -165,6 +166,7 @@ where
 }
 
 /// Compute truncated SVD using a specific method and parameters
+#[allow(dead_code)]
 pub fn svd_truncated<T, S>(
     matrix: &S,
     k: usize,
@@ -198,6 +200,7 @@ where
 }
 
 /// Lanczos bidiagonalization SVD algorithm
+#[allow(dead_code)]
 fn lanczos_bidiag_svd<T, S>(
     matrix: &S,
     k: usize,
@@ -343,6 +346,7 @@ where
 }
 
 /// Randomized SVD algorithm
+#[allow(dead_code)]
 fn randomized_svd<T, S>(matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
 where
     T: Float
@@ -444,6 +448,7 @@ where
 }
 
 /// Power method SVD (simplified implementation)
+#[allow(dead_code)]
 fn power_method_svd<T, S>(matrix: &S, k: usize, options: &SVDOptions) -> SparseResult<SVDResult<T>>
 where
     T: Float
@@ -463,6 +468,7 @@ where
 }
 
 /// Cross-approximation SVD (simplified implementation)
+#[allow(dead_code)]
 fn cross_approximation_svd<T, S>(
     matrix: &S,
     k: usize,
@@ -486,6 +492,7 @@ where
 }
 
 /// Matrix-vector product: y = A * x
+#[allow(dead_code)]
 fn matrix_vector_product<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
     T: Float
@@ -518,6 +525,7 @@ where
 }
 
 /// Matrix-transpose-vector product: y = A^T * x
+#[allow(dead_code)]
 fn matrix_transpose_vector_product<T, S>(matrix: &S, vector: &Array1<T>) -> SparseResult<Array1<T>>
 where
     T: Float
@@ -550,6 +558,7 @@ where
 }
 
 /// Solve SVD of a bidiagonal matrix (simplified implementation)
+#[allow(dead_code)]
 fn solve_bidiagonal_svd<T>(
     alpha: &[T],
     beta: &[T],
@@ -607,6 +616,7 @@ where
 }
 
 /// QR decomposition returning only Q (simplified implementation)
+#[allow(dead_code)]
 fn qr_decomposition_orthogonal<T>(matrix: &Array2<T>) -> SparseResult<Array2<T>>
 where
     T: Float
@@ -654,6 +664,7 @@ where
 }
 
 /// Dense SVD (placeholder implementation)
+#[allow(dead_code)]
 fn dense_svd<T>(matrix: &Array2<T>, k: usize) -> SparseResult<SVDResult<T>>
 where
     T: Float

@@ -46,6 +46,7 @@ use std::fmt::Debug;
 ///
 /// let (leaders, labels) = leader_clustering(data.view(), 1.0, euclidean_distance).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn leader_clustering<F, D>(
     data: ArrayView2<F>,
     threshold: F,
@@ -110,6 +111,7 @@ where
 }
 
 /// Euclidean distance function
+#[allow(dead_code)]
 pub fn euclidean_distance<F: Float>(a: ArrayView1<F>, b: ArrayView1<F>) -> F {
     a.iter()
         .zip(b.iter())
@@ -119,6 +121,7 @@ pub fn euclidean_distance<F: Float>(a: ArrayView1<F>, b: ArrayView1<F>) -> F {
 }
 
 /// Manhattan distance function
+#[allow(dead_code)]
 pub fn manhattan_distance<F: Float>(a: ArrayView1<F>, b: ArrayView1<F>) -> F {
     a.iter()
         .zip(b.iter())

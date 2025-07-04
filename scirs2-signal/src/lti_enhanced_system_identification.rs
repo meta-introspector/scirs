@@ -326,6 +326,7 @@ impl Default for UltraEnhancedSysIdConfig {
 /// # Returns
 ///
 /// * Comprehensive identification results with uncertainty quantification
+#[allow(dead_code)]
 pub fn ultra_enhanced_system_identification(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -411,6 +412,7 @@ pub fn ultra_enhanced_system_identification(
 }
 
 /// Perform automatic model structure selection
+#[allow(dead_code)]
 fn perform_structure_selection(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -470,6 +472,7 @@ fn perform_structure_selection(
 }
 
 /// Quantum-inspired parameter estimation
+#[allow(dead_code)]
 fn quantum_inspired_parameter_estimation(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -523,6 +526,7 @@ fn quantum_inspired_parameter_estimation(
 }
 
 /// Classical parameter estimation fallback
+#[allow(dead_code)]
 fn classical_parameter_estimation(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -555,6 +559,7 @@ fn classical_parameter_estimation(
 }
 
 /// Build system model from parameter estimates
+#[allow(dead_code)]
 fn build_system_model(
     parameters: &[ParameterWithUncertainty],
     order: usize,
@@ -598,6 +603,7 @@ fn build_system_model(
 }
 
 /// Perform ultra-comprehensive validation
+#[allow(dead_code)]
 fn perform_ultra_validation(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -672,6 +678,7 @@ fn perform_ultra_validation(
 
 // Helper functions (simplified implementations)
 
+#[allow(dead_code)]
 fn quick_parameter_estimation(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -696,6 +703,7 @@ fn quick_parameter_estimation(
         .collect()
 }
 
+#[allow(dead_code)]
 fn regularized_least_squares(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -747,6 +755,7 @@ fn regularized_least_squares(
     Ok((params, uncertainties))
 }
 
+#[allow(dead_code)]
 fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     let n = a.nrows();
     if n != a.ncols() || n != b.len() {
@@ -779,6 +788,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn initialize_quantum_states(n_params: usize) -> Array2<Complex64> {
     // Initialize quantum superposition states
     Array2::from_shape_fn((n_params, 8), |(i, j)| {
@@ -789,6 +799,7 @@ fn initialize_quantum_states(n_params: usize) -> Array2<Complex64> {
     })
 }
 
+#[allow(dead_code)]
 fn measure_quantum_state(quantum_states: &Array2<Complex64>) -> Array1<f64> {
     let (n_params, _) = quantum_states.dim();
     let mut params = Array1::zeros(n_params);
@@ -805,6 +816,7 @@ fn measure_quantum_state(quantum_states: &Array2<Complex64>) -> Array1<f64> {
     params
 }
 
+#[allow(dead_code)]
 fn evolve_quantum_states(
     quantum_states: &mut Array2<Complex64>,
     cost: f64,
@@ -838,6 +850,7 @@ fn evolve_quantum_states(
     }
 }
 
+#[allow(dead_code)]
 fn compute_identification_cost(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -868,6 +881,7 @@ fn compute_identification_cost(
     }
 }
 
+#[allow(dead_code)]
 fn compute_parameter_uncertainties(
     params: &Array1<f64>,
     input: &Array1<f64>,
@@ -903,6 +917,7 @@ fn compute_parameter_uncertainties(
     Ok(uncertainties)
 }
 
+#[allow(dead_code)]
 fn compute_parameter_sensitivity(
     param: f64,
     all_params: &Array1<f64>,
@@ -926,6 +941,7 @@ fn compute_parameter_sensitivity(
     Ok((perturbed_cost - original_cost).abs() / perturbation)
 }
 
+#[allow(dead_code)]
 fn simulate_model_response(
     tf: &TransferFunction,
     input: &Array1<f64>,
@@ -964,6 +980,7 @@ fn simulate_model_response(
 
 // Additional helper functions for metrics computation
 
+#[allow(dead_code)]
 fn compute_mse(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
     let n = actual.len() as f64;
     actual
@@ -974,6 +991,7 @@ fn compute_mse(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
         / n
 }
 
+#[allow(dead_code)]
 fn compute_mae(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
     let n = actual.len() as f64;
     actual
@@ -984,12 +1002,14 @@ fn compute_mae(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
         / n
 }
 
+#[allow(dead_code)]
 fn compute_fit_percentage(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
     let mse = compute_mse(actual, predicted);
     let actual_var = compute_variance(actual);
     (1.0 - mse / actual_var).max(0.0) * 100.0
 }
 
+#[allow(dead_code)]
 fn compute_r_squared(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
     let actual_mean = actual.mean().unwrap_or(0.0);
     let ss_tot: f64 = actual.iter().map(|&y| (y - actual_mean).powi(2)).sum();
@@ -1006,12 +1026,14 @@ fn compute_r_squared(actual: &Array1<f64>, predicted: &Array1<f64>) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn compute_variance(data: &Array1<f64>) -> f64 {
     let mean = data.mean().unwrap_or(0.0);
     let n = data.len() as f64;
     data.iter().map(|&x| (x - mean).powi(2)).sum::<f64>() / n
 }
 
+#[allow(dead_code)]
 fn compute_aic(
     model: &SystemModel,
     input: &Array1<f64>,
@@ -1028,6 +1050,7 @@ fn compute_aic(
     }
 }
 
+#[allow(dead_code)]
 fn compute_bic(
     model: &SystemModel,
     input: &Array1<f64>,
@@ -1044,6 +1067,7 @@ fn compute_bic(
     }
 }
 
+#[allow(dead_code)]
 fn compute_mdl(
     model: &SystemModel,
     input: &Array1<f64>,
@@ -1053,6 +1077,7 @@ fn compute_mdl(
     compute_bic(model, input, output) // Simplified - MDL often similar to BIC
 }
 
+#[allow(dead_code)]
 fn compute_cross_validation_score(
     model: &SystemModel,
     input: &Array1<f64>,
@@ -1079,6 +1104,7 @@ fn compute_cross_validation_score(
     Ok(cv_errors.iter().sum::<f64>() / cv_errors.len() as f64)
 }
 
+#[allow(dead_code)]
 fn compute_stability_score(model: &SystemModel) -> SignalResult<f64> {
     if let Some(tf) = &model.transfer_function {
         // Check if all poles are inside unit circle (for discrete) or left half-plane (for continuous)
@@ -1100,6 +1126,7 @@ fn compute_stability_score(model: &SystemModel) -> SignalResult<f64> {
     }
 }
 
+#[allow(dead_code)]
 fn analyze_complexity_accuracy_tradeoff(
     order_criteria: &HashMap<usize, ModelCriteria>,
 ) -> ComplexityAccuracyTradeoff {
@@ -1132,6 +1159,7 @@ fn analyze_complexity_accuracy_tradeoff(
     }
 }
 
+#[allow(dead_code)]
 fn compute_order_confidence(
     order_criteria: &HashMap<usize, ModelCriteria>,
     best_order: usize,
@@ -1154,6 +1182,7 @@ fn compute_order_confidence(
     }
 }
 
+#[allow(dead_code)]
 fn find_alternative_orders(
     order_criteria: &HashMap<usize, ModelCriteria>,
     best_order: usize,
@@ -1168,6 +1197,7 @@ fn find_alternative_orders(
     alternatives.into_iter().take(3).collect()
 }
 
+#[allow(dead_code)]
 fn analyze_convergence(
     parameters: &[ParameterWithUncertainty],
     config: &UltraEnhancedSysIdConfig,
@@ -1187,6 +1217,7 @@ fn analyze_convergence(
     })
 }
 
+#[allow(dead_code)]
 fn setup_real_time_adaptation(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1221,6 +1252,7 @@ fn setup_real_time_adaptation(
     })
 }
 
+#[allow(dead_code)]
 fn perform_cross_validation(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1236,6 +1268,7 @@ fn perform_cross_validation(
     }
 }
 
+#[allow(dead_code)]
 fn validate_frequency_domain(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1251,6 +1284,7 @@ fn validate_frequency_domain(
     })
 }
 
+#[allow(dead_code)]
 fn validate_time_domain(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1274,6 +1308,7 @@ fn validate_time_domain(
     })
 }
 
+#[allow(dead_code)]
 fn compute_stability_margin(tf: &TransferFunction) -> SignalResult<f64> {
     let poles = tf.poles()?;
     if tf.dt.is_some() {
@@ -1294,6 +1329,7 @@ fn compute_stability_margin(tf: &TransferFunction) -> SignalResult<f64> {
     }
 }
 
+#[allow(dead_code)]
 fn estimate_noise_robustness(
     input: &Array1<f64>,
     output: &Array1<f64>,
@@ -1311,6 +1347,7 @@ fn estimate_noise_robustness(
     }
 }
 
+#[allow(dead_code)]
 fn compute_model_confidence(parameters: &[ParameterWithUncertainty]) -> f64 {
     let avg_relative_uncertainty = parameters
         .iter()
@@ -1321,6 +1358,7 @@ fn compute_model_confidence(parameters: &[ParameterWithUncertainty]) -> f64 {
     (1.0 - avg_relative_uncertainty).max(0.0).min(1.0)
 }
 
+#[allow(dead_code)]
 fn estimate_memory_usage(parameters: &[ParameterWithUncertainty]) -> f64 {
     // Simplified memory usage estimate in MB
     let base_usage = 10.0; // Base algorithm overhead
@@ -1328,6 +1366,7 @@ fn estimate_memory_usage(parameters: &[ParameterWithUncertainty]) -> f64 {
     base_usage + param_usage
 }
 
+#[allow(dead_code)]
 fn estimate_flop_count(n_samples: usize, order: usize) -> u64 {
     // Simplified FLOP count estimate
     let matrix_ops = (n_samples * order * order) as u64;

@@ -32,6 +32,7 @@ use scirs2_cluster::{
     SpectralClusteringOptions,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Comprehensive Clustering Algorithm Test");
     println!("======================================\n");
@@ -162,6 +163,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn print_results(labels: &ndarray::Array1<usize>, data: &Array2<f64>) {
     // Count unique labels
     let mut unique_labels = std::collections::HashSet::new();

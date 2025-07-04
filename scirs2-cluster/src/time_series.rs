@@ -40,6 +40,7 @@ use crate::error::{ClusteringError, Result};
 ///
 /// let distance = dtw_distance(series1.view(), series2.view(), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn dtw_distance<F>(
     series1: ArrayView1<F>,
     series2: ArrayView1<F>,
@@ -105,6 +106,7 @@ where
 /// # Returns
 ///
 /// DTW distance using the custom local distance function
+#[allow(dead_code)]
 pub fn dtw_distance_custom<F, D>(
     series1: ArrayView1<F>,
     series2: ArrayView1<F>,
@@ -167,6 +169,7 @@ where
 /// # Returns
 ///
 /// Soft DTW distance
+#[allow(dead_code)]
 pub fn soft_dtw_distance<F>(series1: ArrayView1<F>, series2: ArrayView1<F>, gamma: F) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + 'static,
@@ -228,6 +231,7 @@ where
 /// # Returns
 ///
 /// Tuple of (medoid_indices, cluster_assignments)
+#[allow(dead_code)]
 pub fn dtw_k_medoids<F>(
     time_series: ArrayView2<F>,
     k: usize,
@@ -341,6 +345,7 @@ where
 /// # Returns
 ///
 /// Linkage matrix in the format compatible with scipy.cluster.hierarchy
+#[allow(dead_code)]
 pub fn dtw_hierarchical_clustering<F>(
     time_series: ArrayView2<F>,
     window: Option<usize>,
@@ -459,6 +464,7 @@ where
 /// # Returns
 ///
 /// Tuple of (cluster_centers, cluster_assignments)
+#[allow(dead_code)]
 pub fn dtw_k_means<F>(
     time_series: ArrayView2<F>,
     k: usize,
@@ -562,6 +568,7 @@ where
 /// # Returns
 ///
 /// Barycenter time series
+#[allow(dead_code)]
 pub fn dtw_barycenter_averaging<F>(
     time_series: &Array2<F>,
     max_iterations: usize,
@@ -619,6 +626,7 @@ where
 }
 
 /// Align a time series with a reference using DTW and return weighted average
+#[allow(dead_code)]
 fn dtw_align_series<F>(
     series: ArrayView1<F>,
     reference: ArrayView1<F>,
@@ -727,6 +735,7 @@ impl Default for TimeSeriesClusteringConfig {
 /// # Returns
 ///
 /// Cluster assignments for each time series
+#[allow(dead_code)]
 pub fn time_series_clustering<F>(
     time_series: ArrayView2<F>,
     config: &TimeSeriesClusteringConfig,

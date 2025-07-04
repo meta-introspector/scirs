@@ -175,7 +175,7 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Graph<N, E, Ix> {
             Ok(neighbors)
         } else {
             Err(GraphError::node_not_found_with_context(
-                format!("{:?}", node),
+                format!("{node:?}"),
                 self.node_count(),
                 "neighbors",
             ))

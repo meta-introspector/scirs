@@ -4,11 +4,11 @@
 //! transforms, covering all aspects from mathematical correctness to performance
 //! optimization and numerical stability.
 
-use crate::error::{SignalError, SignalResult};
-use ndarray::{Array2, Array3, ArrayView2, ArrayViewMut2};
+use crate::error::{SignalResult};
+use ndarray::{Array2};
 use rand::prelude::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive};
+// use scirs2_core::simd_ops::SimdUnifiedOps;
+// use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::Instant;
@@ -315,6 +315,7 @@ pub struct ScalingBehaviorResult {
 /// # Returns
 ///
 /// * Comprehensive validation results with detailed analysis
+#[allow(dead_code)]
 pub fn run_dwt2d_ultrathink_validation(
     config: &Dwt2dUltrathinkConfig,
 ) -> SignalResult<Dwt2dUltrathinkResult> {
@@ -514,6 +515,7 @@ pub fn run_dwt2d_ultrathink_validation(
 
 // Helper validation functions (implementation placeholders)
 
+#[allow(dead_code)]
 fn validate_perfect_reconstruction(
     config: &Dwt2dUltrathinkConfig,
     rng: &mut rand_chacha::ChaCha8Rng,
@@ -564,6 +566,7 @@ fn validate_perfect_reconstruction(
     })
 }
 
+#[allow(dead_code)]
 fn validate_orthogonality(
     config: &Dwt2dUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -578,6 +581,7 @@ fn validate_orthogonality(
     })
 }
 
+#[allow(dead_code)]
 fn validate_energy_conservation(
     config: &Dwt2dUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -591,6 +595,7 @@ fn validate_energy_conservation(
     })
 }
 
+#[allow(dead_code)]
 fn validate_boundary_conditions(
     config: &Dwt2dUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -605,6 +610,7 @@ fn validate_boundary_conditions(
     })
 }
 
+#[allow(dead_code)]
 fn validate_multilevel_decomposition(
     config: &Dwt2dUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -618,6 +624,7 @@ fn validate_multilevel_decomposition(
     })
 }
 
+#[allow(dead_code)]
 fn validate_denoising_performance(
     config: &Dwt2dUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -634,6 +641,7 @@ fn validate_denoising_performance(
     })
 }
 
+#[allow(dead_code)]
 fn validate_compression_performance(
     config: &Dwt2dUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -648,6 +656,7 @@ fn validate_compression_performance(
     })
 }
 
+#[allow(dead_code)]
 fn validate_numerical_stability(
     config: &Dwt2dUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -667,6 +676,7 @@ fn validate_numerical_stability(
     })
 }
 
+#[allow(dead_code)]
 fn analyze_performance(
     config: &Dwt2dUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -686,6 +696,7 @@ fn analyze_performance(
     })
 }
 
+#[allow(dead_code)]
 fn validate_simd_optimizations(
     config: &Dwt2dUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -699,6 +710,7 @@ fn validate_simd_optimizations(
     })
 }
 
+#[allow(dead_code)]
 fn analyze_memory_usage(
     config: &Dwt2dUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -712,6 +724,7 @@ fn analyze_memory_usage(
     })
 }
 
+#[allow(dead_code)]
 fn validate_consistency(
     config: &Dwt2dUltrathinkConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
@@ -727,6 +740,7 @@ fn validate_consistency(
 
 // Helper functions for generating test data and scoring
 
+#[allow(dead_code)]
 fn generate_test_image(
     height: usize,
     width: usize,
@@ -744,7 +758,7 @@ fn generate_test_image(
             // Sinusoidal patterns
             let value = (2.0 * PI * 3.0 * x).sin() * (2.0 * PI * 2.0 * y).cos()
                 + 0.5 * (2.0 * PI * 8.0 * x).cos() * (2.0 * PI * 5.0 * y).sin()
-                + 0.1 * rng.gen_range(-1.0..1.0); // Add noise
+                + 0.1 * rng.random_range(-1.0..1.0); // Add noise
 
             image[[i, j]] = value;
         }
@@ -753,6 +767,7 @@ fn generate_test_image(
     image
 }
 
+#[allow(dead_code)]
 fn simulate_reconstruction_test(
     image: &Array2<f64>,
     _wavelet: &str,
@@ -761,12 +776,13 @@ fn simulate_reconstruction_test(
 ) -> SignalResult<f64> {
     // Simulate perfect reconstruction test
     // In real implementation, this would perform actual DWT and IDWT
-    let error = 1e-14 * (1.0 + rand::rng().gen_range(0.0..1.0));
+    let error = 1e-14 * (1.0 + rand::rng().random_range(0.0..1.0));
     Ok(error)
 }
 
 // Scoring functions
 
+#[allow(dead_code)]
 fn calculate_reconstruction_score(result: &ReconstructionValidationResult) -> f64 {
     let error_score = (-20.0 * (result.max_reconstruction_error + 1e-15).log10())
         .min(100.0)
@@ -779,6 +795,7 @@ fn calculate_reconstruction_score(result: &ReconstructionValidationResult) -> f6
     (error_score + perfect_score) / 2.0
 }
 
+#[allow(dead_code)]
 fn calculate_orthogonality_score(result: &OrthogonalityValidationResult) -> f64 {
     let error_score = (-20.0 * (result.max_orthogonality_error + 1e-15).log10())
         .min(100.0)
@@ -786,19 +803,23 @@ fn calculate_orthogonality_score(result: &OrthogonalityValidationResult) -> f64 
     (error_score + result.filter_orthogonality) / 2.0
 }
 
+#[allow(dead_code)]
 fn calculate_energy_score(result: &EnergyConservationResult) -> f64 {
     result.parseval_validation
 }
 
+#[allow(dead_code)]
 fn calculate_boundary_score(result: &BoundaryValidationResult) -> f64 {
     (result.artifact_score + result.edge_preservation) / 2.0
 }
 
+#[allow(dead_code)]
 fn calculate_multilevel_score(result: &MultilevelValidationResult) -> f64 {
     (result.coefficient_consistency + result.scaling_consistency + result.frequency_localization)
         / 3.0
 }
 
+#[allow(dead_code)]
 fn calculate_denoising_score(result: &DenoisingValidationResult) -> f64 {
     (result.edge_preservation_score
         + result.texture_preservation_score
@@ -806,10 +827,12 @@ fn calculate_denoising_score(result: &DenoisingValidationResult) -> f64 {
         / 3.0
 }
 
+#[allow(dead_code)]
 fn calculate_compression_score(result: &CompressionValidationResult) -> f64 {
     result.rate_distortion_performance
 }
 
+#[allow(dead_code)]
 fn calculate_stability_score(result: &StabilityValidationResult) -> f64 {
     (result.condition_number_analysis.stability_score
         + result.error_propagation
@@ -819,14 +842,17 @@ fn calculate_stability_score(result: &StabilityValidationResult) -> f64 {
         / 5.0
 }
 
+#[allow(dead_code)]
 fn calculate_performance_score(result: &PerformanceAnalysisResult) -> f64 {
     (result.cache_efficiency + result.computational_intensity) / 2.0
 }
 
+#[allow(dead_code)]
 fn calculate_simd_score(result: &SimdOptimizationResult) -> f64 {
     (result.simd_accuracy + result.vector_utilization + result.alignment_efficiency) / 3.0
 }
 
+#[allow(dead_code)]
 fn calculate_memory_score(result: &MemoryAnalysisResult) -> f64 {
     (result.memory_efficiency
         + result.access_pattern_efficiency
@@ -834,6 +860,7 @@ fn calculate_memory_score(result: &MemoryAnalysisResult) -> f64 {
         / 3.0
 }
 
+#[allow(dead_code)]
 fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
     (result.cross_wavelet_consistency
         + result.implementation_consistency
@@ -843,6 +870,7 @@ fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
 }
 
 /// Generate a comprehensive report of 2D wavelet validation results
+#[allow(dead_code)]
 pub fn generate_dwt2d_ultrathink_report(result: &Dwt2dUltrathinkResult) -> String {
     let mut report = String::new();
 
@@ -939,6 +967,7 @@ pub fn generate_dwt2d_ultrathink_report(result: &Dwt2dUltrathinkResult) -> Strin
 
 #[allow(dead_code)]
 /// Quick 2D wavelet validation for development
+#[allow(dead_code)]
 pub fn run_quick_dwt2d_validation() -> SignalResult<Dwt2dUltrathinkResult> {
     let config = Dwt2dUltrathinkConfig {
         test_sizes: vec![(32, 32), (64, 64)],

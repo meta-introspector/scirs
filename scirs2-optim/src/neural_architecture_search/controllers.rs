@@ -3,7 +3,7 @@
 //! Implements various controllers for generating and managing optimizer architectures
 //! during the search process.
 
-use ndarray::{s, Array1, Array2, Dimension};
+use ndarray::{s, Array1, Array2};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 
@@ -920,7 +920,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T>
 
 impl<T: Float + Default + Clone + Send + Sync> RandomController<T> {
     /// Create new random controller
-    pub fn new(vocab_size: usize) -> Result<Self> {
+    pub fn new(_vocab_size: usize) -> Result<Self> {
         Ok(Self {
             component_types: vec![
                 ComponentType::Adam,

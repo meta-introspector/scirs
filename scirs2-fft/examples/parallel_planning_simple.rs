@@ -7,6 +7,7 @@ use num_complex::Complex64;
 use scirs2_fft::{ParallelExecutor, ParallelPlanner, ParallelPlanningConfig};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Simple Parallel FFT Planning Example");
     println!("===================================\n");
@@ -76,6 +77,7 @@ fn main() {
 }
 
 // Create a simple test signal
+#[allow(dead_code)]
 fn create_signal(size: usize) -> Vec<Complex64> {
     (0..size)
         .map(|i| {

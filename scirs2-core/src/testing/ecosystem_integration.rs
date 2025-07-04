@@ -2015,6 +2015,7 @@ impl EcosystemTestRunner {
 }
 
 /// Create a comprehensive ecosystem test suite
+#[allow(dead_code)]
 pub fn create_ecosystem_test_suite(config: EcosystemTestConfig) -> CoreResult<TestSuite> {
     let base_config = config.base.clone();
     let mut suite = TestSuite::new("SciRS2 Ecosystem Integration - 1.0 Release", base_config);

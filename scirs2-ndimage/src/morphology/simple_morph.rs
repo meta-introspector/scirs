@@ -44,17 +44,9 @@ use ndarray::Array2;
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
-use crate::error::{NdimageError, NdimageResult};
+use crate::error::NdimageResult;
+use crate::utils::safe_f64_to_float;
 
-/// Helper function for safe conversion of hardcoded constants
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
 
 /// Erode a 2D grayscale array using a structuring element
 ///
@@ -72,6 +64,7 @@ fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Eroded array
+#[allow(dead_code)]
 pub fn grey_erosion_2d<T>(
     input: &Array2<T>,
     structure: Option<&Array2<bool>>,
@@ -184,6 +177,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Dilated array
+#[allow(dead_code)]
 pub fn grey_dilation_2d<T>(
     input: &Array2<T>,
     structure: Option<&Array2<bool>>,
@@ -297,6 +291,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Opened array
+#[allow(dead_code)]
 pub fn grey_opening_2d<T>(
     input: &Array2<T>,
     structure: Option<&Array2<bool>>,
@@ -331,6 +326,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Closed array
+#[allow(dead_code)]
 pub fn grey_closing_2d<T>(
     input: &Array2<T>,
     structure: Option<&Array2<bool>>,
@@ -365,6 +361,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Gradient array
+#[allow(dead_code)]
 pub fn morphological_gradient_2d<T>(
     input: &Array2<T>,
     structure: Option<&Array2<bool>>,
@@ -421,6 +418,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - White tophat array
+#[allow(dead_code)]
 pub fn white_tophat_2d<T>(
     input: &Array2<T>,
     structure: Option<&Array2<bool>>,
@@ -466,6 +464,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<T>>` - Black tophat array
+#[allow(dead_code)]
 pub fn black_tophat_2d<T>(
     input: &Array2<T>,
     structure: Option<&Array2<bool>>,
@@ -509,6 +508,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array2<bool>>` - Eroded array
+#[allow(dead_code)]
 pub fn binary_erosion_2d(
     input: &Array2<bool>,
     structure: Option<&Array2<bool>>,
@@ -603,6 +603,7 @@ pub fn binary_erosion_2d(
 /// # Returns
 ///
 /// * `Result<Array2<bool>>` - Dilated array
+#[allow(dead_code)]
 pub fn binary_dilation_2d(
     input: &Array2<bool>,
     structure: Option<&Array2<bool>>,
@@ -700,6 +701,7 @@ pub fn binary_dilation_2d(
 /// # Returns
 ///
 /// * `Result<Array2<bool>>` - Opened array
+#[allow(dead_code)]
 pub fn binary_opening_2d(
     input: &Array2<bool>,
     structure: Option<&Array2<bool>>,
@@ -729,6 +731,7 @@ pub fn binary_opening_2d(
 /// # Returns
 ///
 /// * `Result<Array2<bool>>` - Closed array
+#[allow(dead_code)]
 pub fn binary_closing_2d(
     input: &Array2<bool>,
     structure: Option<&Array2<bool>>,

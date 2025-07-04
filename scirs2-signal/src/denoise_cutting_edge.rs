@@ -12,7 +12,7 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2, ArrayView1};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
-use std::f64::consts::PI;
+// use std::f64::consts::PI;
 
 /// Dictionary learning denoising configuration
 #[derive(Debug, Clone)]
@@ -125,6 +125,7 @@ pub struct DictionaryLearnResult {
 /// This implements the K-SVD algorithm for dictionary learning followed by
 /// sparse coding for denoising. The method learns an overcomplete dictionary
 /// adapted to the signal characteristics.
+#[allow(dead_code)]
 pub fn denoise_dictionary_learning(
     signal: &Array1<f64>,
     config: &DictionaryDenoiseConfig,
@@ -159,6 +160,7 @@ pub fn denoise_dictionary_learning(
 ///
 /// This method groups similar patches and applies sparse coding in a collaborative
 /// manner, inspired by BM3D but using sparse coding instead of wavelet transforms.
+#[allow(dead_code)]
 pub fn denoise_nlsc(signal: &Array1<f64>, config: &NLSCConfig) -> SignalResult<Array1<f64>> {
     check_finite(signal.as_slice().unwrap(), "signal")?;
 
@@ -206,6 +208,7 @@ pub fn denoise_nlsc(signal: &Array1<f64>, config: &NLSCConfig) -> SignalResult<A
 ///
 /// Learned Iterative Shrinkage Thresholding Algorithm for denoising.
 /// This uses a learned unfolded network structure for sparse coding.
+#[allow(dead_code)]
 pub fn denoise_lista(signal: &Array1<f64>, config: &LISTAConfig) -> SignalResult<Array1<f64>> {
     check_finite(signal.as_slice().unwrap(), "signal")?;
 
@@ -243,6 +246,7 @@ pub fn denoise_lista(signal: &Array1<f64>, config: &LISTAConfig) -> SignalResult
 }
 
 /// Extract overlapping patches from signal
+#[allow(dead_code)]
 fn extract_patches(
     signal: &Array1<f64>,
     patch_size: usize,
@@ -267,6 +271,7 @@ fn extract_patches(
 }
 
 /// K-SVD dictionary learning algorithm
+#[allow(dead_code)]
 fn ksvd_dictionary_learning(
     patches: &Array2<f64>,
     config: &DictionaryDenoiseConfig,
@@ -350,6 +355,7 @@ fn ksvd_dictionary_learning(
 }
 
 /// Orthogonal Matching Pursuit for sparse coding
+#[allow(dead_code)]
 fn orthogonal_matching_pursuit(
     dictionary: &Array2<f64>,
     signal: &ArrayView1<f64>,
@@ -407,6 +413,7 @@ fn orthogonal_matching_pursuit(
 }
 
 /// Solve least squares for a subset of dictionary atoms
+#[allow(dead_code)]
 fn solve_least_squares_subset(
     dictionary: &Array2<f64>,
     signal: &ArrayView1<f64>,
@@ -437,6 +444,7 @@ fn solve_least_squares_subset(
 }
 
 /// Solve small linear system using Gaussian elimination
+#[allow(dead_code)]
 fn solve_linear_system_small(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     let n = a.nrows();
     if n != a.ncols() || n != b.len() {
@@ -474,6 +482,7 @@ fn solve_linear_system_small(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<A
 }
 
 /// Update dictionary atom using simplified SVD approach
+#[allow(dead_code)]
 fn update_dictionary_atom(
     dictionary: &mut Array2<f64>,
     sparse_codes: &mut Array2<f64>,
@@ -537,6 +546,7 @@ fn update_dictionary_atom(
 }
 
 /// Sparse coding denoising for patches
+#[allow(dead_code)]
 fn sparse_coding_denoise(
     patches: &Array2<f64>,
     dictionary: &Array2<f64>,
@@ -565,6 +575,7 @@ fn sparse_coding_denoise(
 }
 
 /// Reconstruct signal from overlapping patches
+#[allow(dead_code)]
 fn reconstruct_from_patches(
     patches: &Array2<f64>,
     signal_length: usize,
@@ -603,6 +614,7 @@ fn reconstruct_from_patches(
 }
 
 /// Find similar patches for non-local sparse coding
+#[allow(dead_code)]
 fn find_similar_patches(
     signal: &Array1<f64>,
     reference_patch: &ArrayView1<f64>,
@@ -641,12 +653,14 @@ fn find_similar_patches(
 }
 
 /// Compute distance between two patches
+#[allow(dead_code)]
 fn compute_patch_distance(patch1: &ArrayView1<f64>, patch2: &ArrayView1<f64>) -> f64 {
     let diff = patch1.to_owned() - patch2.to_owned();
     diff.dot(&diff)
 }
 
 /// Collaborative sparse coding for grouped patches
+#[allow(dead_code)]
 fn collaborative_sparse_coding(
     patch_group: &Array2<f64>,
     config: &NLSCConfig,
@@ -679,6 +693,7 @@ fn collaborative_sparse_coding(
 }
 
 /// Create DCT (Discrete Cosine Transform) dictionary
+#[allow(dead_code)]
 fn create_dct_dictionary(signal_size: usize, dict_size: usize) -> SignalResult<Array2<f64>> {
     let mut dictionary = Array2::zeros((signal_size, dict_size));
 
@@ -700,6 +715,7 @@ fn create_dct_dictionary(signal_size: usize, dict_size: usize) -> SignalResult<A
 }
 
 /// Soft thresholding in-place
+#[allow(dead_code)]
 fn soft_threshold_inplace(coeffs: &mut Array1<f64>, threshold: f64) {
     for coeff in coeffs.iter_mut() {
         if coeff.abs() > threshold {
@@ -712,6 +728,7 @@ fn soft_threshold_inplace(coeffs: &mut Array1<f64>, threshold: f64) {
 
 #[allow(dead_code)]
 /// Adaptive dictionary denoising that learns dictionary from the signal itself
+#[allow(dead_code)]
 pub fn denoise_adaptive_dictionary(
     signal: &Array1<f64>,
     noise_level: f64,

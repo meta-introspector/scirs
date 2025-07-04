@@ -94,7 +94,7 @@ use crate::dwt::{self, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
 use num_traits::{Float, NumCast};
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+use scirs2_core::simd_ops::{PlatformCapabilities};
 use scirs2_core::validation::{check_finite, check_positive};
 use std::fmt::Debug;
 use std::time::Instant;
@@ -102,6 +102,7 @@ use std::time::Instant;
 /// Helper function for ceiling division (divide and round up)
 /// This replaces the unstable div_ceil method
 #[inline]
+#[allow(dead_code)]
 fn div_ceil(a: usize, b: usize) -> usize {
     (a + b - 1) / b
 }
@@ -109,6 +110,7 @@ fn div_ceil(a: usize, b: usize) -> usize {
 /// SIMD-optimized threshold function for wavelet coefficients
 /// Applies thresholding to a slice of coefficients using SIMD operations when available
 #[inline]
+#[allow(dead_code)]
 fn simd_threshold_coefficients(coeffs: &mut [f64], threshold: f64, method: ThresholdMethod) {
     let caps = PlatformCapabilities::detect();
     let simd_threshold = 64; // Minimum length for SIMD optimization
@@ -126,6 +128,7 @@ fn simd_threshold_coefficients(coeffs: &mut [f64], threshold: f64, method: Thres
 /// AVX2-optimized thresholding implementation
 #[cfg(target_arch = "x86_64")]
 #[inline]
+#[allow(dead_code)]
 fn simd_threshold_avx2(coeffs: &mut [f64], threshold: f64, method: ThresholdMethod) {
     use std::arch::x86_64::*;
 
@@ -183,6 +186,7 @@ fn simd_threshold_avx2(coeffs: &mut [f64], threshold: f64, method: ThresholdMeth
 /// Fallback scalar thresholding for non-x86_64 architectures
 #[cfg(not(target_arch = "x86_64"))]
 #[inline]
+#[allow(dead_code)]
 fn simd_threshold_avx2(coeffs: &mut [f64], threshold: f64, method: ThresholdMethod) {
     for coeff in coeffs.iter_mut() {
         *coeff = apply_threshold(*coeff, threshold, method);
@@ -191,6 +195,7 @@ fn simd_threshold_avx2(coeffs: &mut [f64], threshold: f64, method: ThresholdMeth
 
 /// SIMD-optimized energy calculation for large arrays
 #[inline]
+#[allow(dead_code)]
 fn simd_calculate_energy(data: &[f64]) -> f64 {
     let caps = PlatformCapabilities::detect();
     let simd_threshold = 64;
@@ -206,6 +211,7 @@ fn simd_calculate_energy(data: &[f64]) -> f64 {
 /// AVX2-optimized energy calculation
 #[cfg(target_arch = "x86_64")]
 #[inline]
+#[allow(dead_code)]
 fn simd_energy_avx2(data: &[f64]) -> f64 {
     use std::arch::x86_64::*;
 
@@ -235,6 +241,7 @@ fn simd_energy_avx2(data: &[f64]) -> f64 {
 /// Fallback scalar energy calculation for non-x86_64 architectures
 #[cfg(not(target_arch = "x86_64"))]
 #[inline]
+#[allow(dead_code)]
 fn simd_energy_avx2(data: &[f64]) -> f64 {
     data.iter().map(|&x| x * x).sum()
 }
@@ -302,11 +309,13 @@ thread_local! {
 }
 
 /// Get a temporary buffer from the thread-local memory pool
+#[allow(dead_code)]
 fn get_temp_buffer(size: usize) -> Vec<f64> {
     MEMORY_POOL.with(|pool| pool.borrow_mut().get_buffer(size))
 }
 
 /// Return a temporary buffer to the thread-local memory pool
+#[allow(dead_code)]
 fn return_temp_buffer(buffer: Vec<f64>) {
     MEMORY_POOL.with(|pool| pool.borrow_mut().return_buffer(buffer));
 }
@@ -474,6 +483,7 @@ pub struct Dwt2dResult {
 /// // The output size depends on the input size and the wavelet length
 /// assert_eq!(result.approx.shape(), &[8, 8]);
 /// ```
+#[allow(dead_code)]
 pub fn dwt2d_decompose<T>(
     data: &Array2<T>,
     wavelet: Wavelet,
@@ -769,6 +779,7 @@ where
 /// let config = Dwt2dConfig::default();
 /// let result = dwt2d_decompose_optimized(&data, Wavelet::Haar, None, &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn dwt2d_decompose_optimized<T>(
     data: &Array2<T>,
     wavelet: Wavelet,
@@ -1089,6 +1100,7 @@ where
 /// // Reconstruct from modified coefficients
 /// let denoised = dwt2d_reconstruct(&decomposition, Wavelet::Haar, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn dwt2d_reconstruct(
     decomposition: &Dwt2dResult,
     wavelet: Wavelet,
@@ -1341,6 +1353,7 @@ pub fn dwt2d_reconstruct(
 /// let coeffs = wavedec2(&data, Wavelet::DB(4), 2, None).unwrap();
 /// assert_eq!(coeffs.len(), 2);
 /// ```
+#[allow(dead_code)]
 pub fn wavedec2<T>(
     data: &Array2<T>,
     wavelet: Wavelet,
@@ -1491,6 +1504,7 @@ where
 /// // Reconstruct from thresholded coefficients
 /// let compressed = waverec2(&coeffs, Wavelet::DB(4), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn waverec2(
     coeffs: &[Dwt2dResult],
     wavelet: Wavelet,
@@ -1570,6 +1584,7 @@ pub enum ThresholdMethod {
 /// // Reconstruct the denoised image
 /// let denoised = dwt2d_reconstruct(&decomposition, Wavelet::DB(4), None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn threshold_dwt2d(decomposition: &mut Dwt2dResult, threshold: f64, method: ThresholdMethod) {
     // Apply SIMD-optimized thresholding to detail coefficients
     // Note: ndarray's as_slice_mut() gives us direct access to the underlying data
@@ -1640,6 +1655,7 @@ pub fn threshold_dwt2d(decomposition: &mut Dwt2dResult, threshold: f64, method: 
 /// // Reconstruct from thresholded coefficients
 /// let result = waverec2(&coeffs, Wavelet::Haar, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn threshold_wavedec2(coeffs: &mut [Dwt2dResult], threshold: &[f64], method: ThresholdMethod) {
     for (i, level) in coeffs.iter_mut().enumerate() {
         // Get the appropriate threshold for this level
@@ -1656,6 +1672,7 @@ pub fn threshold_wavedec2(coeffs: &mut [Dwt2dResult], threshold: &[f64], method:
 }
 
 /// Helper function to apply a threshold to a single coefficient.
+#[allow(dead_code)]
 fn apply_threshold(x: f64, threshold: f64, method: ThresholdMethod) -> f64 {
     let abs_x = x.abs();
 
@@ -1723,6 +1740,7 @@ fn apply_threshold(x: f64, threshold: f64, method: ThresholdMethod) -> f64 {
 /// assert!(energy_by_subband.approx > energy_by_subband.detail_v);
 /// assert!(energy_by_subband.approx > energy_by_subband.detail_d);
 /// ```
+#[allow(dead_code)]
 pub fn calculate_energy(decomposition: &Dwt2dResult, include_approx: bool) -> (f64, WaveletEnergy) {
     // Calculate energy for each subband using SIMD-optimized functions
     let approx_energy = if include_approx {
@@ -1824,6 +1842,7 @@ pub struct WaveletEnergy {
 /// // After thresholding, there should be fewer non-zero coefficients
 /// assert!(after_total <= before_total);
 /// ```
+#[allow(dead_code)]
 pub fn count_nonzeros(decomposition: &Dwt2dResult, include_approx: bool) -> (usize, WaveletCounts) {
     // Count non-zero coefficients in each subband
     let approx_count = if include_approx {
@@ -1954,6 +1973,7 @@ impl Default for Dwt2dValidationConfig {
 /// - Performance benchmarking
 /// - Memory efficiency analysis
 /// - Numerical stability testing
+#[allow(dead_code)]
 pub fn validate_dwt2d_comprehensive(
     config: &Dwt2dValidationConfig,
 ) -> SignalResult<Dwt2dValidationResult> {
@@ -2103,6 +2123,7 @@ pub fn validate_dwt2d_comprehensive(
 }
 
 /// Calculate energy from a 2D array
+#[allow(dead_code)]
 fn calculate_energy_from_array(data: &Array2<f64>) -> (f64, f64) {
     let total_energy = if let Some(data_slice) = data.as_slice() {
         simd_calculate_energy(data_slice)
@@ -2113,6 +2134,7 @@ fn calculate_energy_from_array(data: &Array2<f64>) -> (f64, f64) {
 }
 
 /// Test orthogonality of wavelet decomposition
+#[allow(dead_code)]
 fn test_orthogonality(decomp: &Dwt2dResult) -> f64 {
     // Simplified orthogonality test - check if subbands are approximately uncorrelated
     let mut correlation_sum = 0.0;
@@ -2137,6 +2159,7 @@ fn test_orthogonality(decomp: &Dwt2dResult) -> f64 {
 }
 
 /// Calculate correlation between two 2D arrays
+#[allow(dead_code)]
 fn calculate_correlation(a: &Array2<f64>, b: &Array2<f64>) -> f64 {
     if a.shape() != b.shape() {
         return 0.0;
@@ -2173,6 +2196,7 @@ fn calculate_correlation(a: &Array2<f64>, b: &Array2<f64>) -> f64 {
 }
 
 /// Estimate SIMD utilization based on data size
+#[allow(dead_code)]
 fn estimate_simd_utilization(data_size: usize) -> f64 {
     if data_size < 64 {
         0.0 // Too small for SIMD
@@ -2184,6 +2208,7 @@ fn estimate_simd_utilization(data_size: usize) -> f64 {
 }
 
 /// Estimate parallel efficiency
+#[allow(dead_code)]
 fn estimate_parallel_efficiency(rows: usize, cols: usize) -> f64 {
     let total_ops = rows * cols;
     if total_ops < 1024 {
@@ -2196,6 +2221,7 @@ fn estimate_parallel_efficiency(rows: usize, cols: usize) -> f64 {
 }
 
 /// Estimate peak memory usage
+#[allow(dead_code)]
 fn estimate_peak_memory(rows: usize, cols: usize) -> usize {
     // Rough estimation: original + decomposition + temporaries
     let base_size = rows * cols * 8; // 8 bytes per f64
@@ -2203,6 +2229,7 @@ fn estimate_peak_memory(rows: usize, cols: usize) -> usize {
 }
 
 /// Estimate allocation count
+#[allow(dead_code)]
 fn estimate_allocation_count(rows: usize, cols: usize) -> usize {
     // Estimation based on typical decomposition operations
     if rows * cols < 1024 {
@@ -2213,6 +2240,7 @@ fn estimate_allocation_count(rows: usize, cols: usize) -> usize {
 }
 
 /// Estimate cache miss ratio
+#[allow(dead_code)]
 fn estimate_cache_miss_ratio(rows: usize, cols: usize) -> f64 {
     let data_size_kb = (rows * cols * 8) / 1024;
     if data_size_kb < 32 {
@@ -2225,6 +2253,7 @@ fn estimate_cache_miss_ratio(rows: usize, cols: usize) -> f64 {
 }
 
 /// Estimate access pattern efficiency
+#[allow(dead_code)]
 fn estimate_access_pattern_efficiency(rows: usize, cols: usize) -> f64 {
     // Row-major access patterns are efficient in our implementation
     if rows > 64 && cols > 64 {
@@ -2235,6 +2264,7 @@ fn estimate_access_pattern_efficiency(rows: usize, cols: usize) -> f64 {
 }
 
 /// Average performance metrics
+#[allow(dead_code)]
 fn average_performance_metrics(metrics: &[PerformanceMetrics2d]) -> PerformanceMetrics2d {
     if metrics.is_empty() {
         return PerformanceMetrics2d {
@@ -2263,6 +2293,7 @@ fn average_performance_metrics(metrics: &[PerformanceMetrics2d]) -> PerformanceM
 }
 
 /// Average memory metrics
+#[allow(dead_code)]
 fn average_memory_metrics(metrics: &[MemoryEfficiencyMetrics]) -> MemoryEfficiencyMetrics {
     if metrics.is_empty() {
         return MemoryEfficiencyMetrics {
@@ -2290,6 +2321,7 @@ fn average_memory_metrics(metrics: &[MemoryEfficiencyMetrics]) -> MemoryEfficien
 ///
 /// This function automatically selects the best implementation strategy based on
 /// input characteristics, hardware capabilities, and performance requirements.
+#[allow(dead_code)]
 pub fn dwt2d_decompose_adaptive<T>(
     data: &Array2<T>,
     wavelet: Wavelet,
@@ -2353,6 +2385,7 @@ where
 ///
 /// This function provides enhanced error checking and validation at each decomposition level,
 /// making it more robust for production use.
+#[allow(dead_code)]
 pub fn wavedec2_enhanced<T>(
     data: &Array2<T>,
     wavelet: Wavelet,
@@ -2422,6 +2455,7 @@ where
 }
 
 /// Validate a single decomposition level
+#[allow(dead_code)]
 fn validate_decomposition_level(
     decomp: &Dwt2dResult,
     level: usize,
@@ -2470,6 +2504,7 @@ fn validate_decomposition_level(
 ///
 /// This function automatically estimates optimal thresholds for each subband based on
 /// noise characteristics and applies adaptive thresholding for improved denoising.
+#[allow(dead_code)]
 pub fn denoise_dwt2d_adaptive(
     noisy_image: &Array2<f64>,
     wavelet: Wavelet,
@@ -2511,6 +2546,7 @@ pub fn denoise_dwt2d_adaptive(
 }
 
 /// Multi-level adaptive denoising
+#[allow(dead_code)]
 pub fn denoise_wavedec2_adaptive(
     noisy_image: &Array2<f64>,
     wavelet: Wavelet,
@@ -2554,6 +2590,7 @@ pub fn denoise_wavedec2_adaptive(
 }
 
 /// Estimate noise variance from wavelet coefficients (using robust MAD estimator)
+#[allow(dead_code)]
 fn estimate_noise_variance(decomp: &Dwt2dResult) -> f64 {
     // Use the diagonal detail coefficients from the finest level to estimate noise
     // This is based on the assumption that the finest diagonal details are mostly noise
@@ -2594,6 +2631,7 @@ fn estimate_noise_variance(decomp: &Dwt2dResult) -> f64 {
 }
 
 /// Apply adaptive thresholding to a 2D array
+#[allow(dead_code)]
 fn apply_adaptive_thresholding(data: &mut Array2<f64>, threshold: f64, method: ThresholdMethod) {
     if let Some(data_slice) = data.as_slice_mut() {
         simd_threshold_coefficients(data_slice, threshold, method);
@@ -2605,6 +2643,7 @@ fn apply_adaptive_thresholding(data: &mut Array2<f64>, threshold: f64, method: T
 }
 
 /// Calculate compression ratio after thresholding
+#[allow(dead_code)]
 pub fn calculate_compression_ratio(original: &Dwt2dResult, compressed: &Dwt2dResult) -> f64 {
     let (_, original_counts) = count_nonzeros(original, true);
     let (_, compressed_counts) = count_nonzeros(compressed, true);
@@ -2626,6 +2665,7 @@ pub fn calculate_compression_ratio(original: &Dwt2dResult, compressed: &Dwt2dRes
 }
 
 /// Calculate Peak Signal-to-Noise Ratio (PSNR) between original and reconstructed images
+#[allow(dead_code)]
 pub fn calculate_psnr(original: &Array2<f64>, reconstructed: &Array2<f64>) -> SignalResult<f64> {
     if original.shape() != reconstructed.shape() {
         return Err(SignalError::ValueError(
@@ -2666,6 +2706,7 @@ pub fn calculate_psnr(original: &Array2<f64>, reconstructed: &Array2<f64>) -> Si
 }
 
 /// Calculate Structural Similarity Index (SSIM) between two images
+#[allow(dead_code)]
 pub fn calculate_ssim(
     original: &Array2<f64>,
     reconstructed: &Array2<f64>,

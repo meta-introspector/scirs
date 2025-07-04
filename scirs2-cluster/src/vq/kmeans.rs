@@ -73,6 +73,7 @@ impl<F: Float + FromPrimitive> Default for KMeansOptions<F> {
 /// let (centroids, distortion) = kmeans(data.view(), 2, Some(20), Some(1e-5), Some(true), Some(42)).unwrap();
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn kmeans<F>(
     obs: ArrayView2<F>,
     k_or_guess: usize,
@@ -151,6 +152,7 @@ where
 ///
 /// let (centroids, labels) = kmeans_with_options(data.view(), 2, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn kmeans_with_options<F>(
     data: ArrayView2<F>,
     k: usize,
@@ -211,6 +213,7 @@ where
 }
 
 /// Calculate distortion (sum of squared distances to centroids)
+#[allow(dead_code)]
 fn calculate_distortion<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,
@@ -235,6 +238,7 @@ where
 }
 
 /// Run a single k-means clustering iteration
+#[allow(dead_code)]
 fn _kmeans_single<F>(
     data: ArrayView2<F>,
     init_centroids: ArrayView2<F>,
@@ -352,6 +356,7 @@ pub enum KMeansInit {
 /// # Returns
 ///
 /// * Array of shape (k × n_features) with initial centroids
+#[allow(dead_code)]
 pub fn kmeans_init<F>(
     data: ArrayView2<F>,
     k: usize,
@@ -379,6 +384,7 @@ where
 /// # Returns
 ///
 /// * Array of shape (k × n_features) with initial centroids
+#[allow(dead_code)]
 pub fn random_init<F>(data: ArrayView2<F>, k: usize, _random_seed: Option<u64>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -426,6 +432,7 @@ where
 /// # Returns
 ///
 /// * Array of shape (k × n_features) with initial centroids
+#[allow(dead_code)]
 pub fn kmeans_plus_plus<F>(
     data: ArrayView2<F>,
     k: usize,
@@ -532,6 +539,7 @@ where
 /// # References
 ///
 /// * [Scalable K-means++ by Bahmani et al.](https://theory.stanford.edu/~sergei/papers/vldb12-kmpar.pdf)
+#[allow(dead_code)]
 pub fn kmeans_parallel<F>(
     data: ArrayView2<F>,
     k: usize,
@@ -712,6 +720,7 @@ where
 }
 
 /// Run a single weighted k-means clustering iteration
+#[allow(dead_code)]
 fn _weighted_kmeans_single<F>(
     data: ArrayView2<F>,
     weights: ArrayView1<F>,
@@ -838,6 +847,7 @@ where
 /// let metric = Box::new(EuclideanDistance);
 /// let (centroids, labels) = kmeans_with_metric(data.view(), 2, metric, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn kmeans_with_metric<F>(
     data: ArrayView2<F>,
     k: usize,
@@ -899,6 +909,7 @@ where
 }
 
 /// Run a single k-means clustering iteration with custom distance metric
+#[allow(dead_code)]
 fn _kmeans_single_with_metric<F>(
     data: ArrayView2<F>,
     init_centroids: ArrayView2<F>,
@@ -993,6 +1004,7 @@ where
 }
 
 /// Vector quantization with custom distance metric
+#[allow(dead_code)]
 fn _vq_with_metric<F>(
     data: ArrayView2<F>,
     centroids: ArrayView2<F>,

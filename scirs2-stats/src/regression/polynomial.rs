@@ -39,6 +39,7 @@ use scirs2_linalg::lstsq;
 /// // Check that the fit is good (high R^2 value)
 /// assert!(result.r_squared > 0.95);
 /// ```
+#[allow(dead_code)]
 pub fn polyfit<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,

@@ -2,6 +2,7 @@
 
 use scirs2_signal::filter::ellip;
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing Elliptic Filter Design");
 
@@ -39,6 +40,7 @@ fn main() {
 }
 
 /// Format coefficients for display
+#[allow(dead_code)]
 fn format_coeffs(coeffs: &[f64]) -> String {
     coeffs
         .iter()

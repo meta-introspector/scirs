@@ -10,6 +10,7 @@ use scirs2_special::*;
 use std::f64::consts::{E, PI};
 use std::io::{self, Write};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Interactive Statistical Functions Learning Laboratory");
     println!("════════════════════════════════════════════════════════");
@@ -44,6 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn show_welcome() {
     println!("Welcome to the comprehensive study of statistical functions!");
     println!("This tutorial combines rigorous mathematical theory with");
@@ -57,6 +59,7 @@ fn show_welcome() {
     println!();
 }
 
+#[allow(dead_code)]
 fn show_main_menu() {
     println!("🏠 MAIN MENU - Choose Your Learning Path:");
     println!("─────────────────────────────────────────");
@@ -71,6 +74,7 @@ fn show_main_menu() {
     println!();
 }
 
+#[allow(dead_code)]
 fn mathematical_foundations_module() -> Result<(), Box<dyn std::error::Error>> {
     println!("📐 MATHEMATICAL FOUNDATIONS");
     println!("═══════════════════════════");
@@ -119,6 +123,7 @@ fn mathematical_foundations_module() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn logistic_function_deep_dive() -> Result<(), Box<dyn std::error::Error>> {
     println!("📈 LOGISTIC FUNCTION DEEP DIVE");
     println!("══════════════════════════════");
@@ -171,6 +176,7 @@ fn logistic_function_deep_dive() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn softmax_comprehensive_study() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 SOFTMAX FUNCTION COMPREHENSIVE STUDY");
     println!("═══════════════════════════════════════");
@@ -243,6 +249,7 @@ fn softmax_comprehensive_study() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn numerical_stability_experiments() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚖️ NUMERICAL STABILITY EXPERIMENTS");
     println!("══════════════════════════════════");
@@ -298,6 +305,7 @@ fn numerical_stability_experiments() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn machine_learning_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("🤖 MACHINE LEARNING APPLICATIONS");
     println!("════════════════════════════════");
@@ -363,6 +371,7 @@ fn machine_learning_applications() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn interactive_proofs_section() -> Result<(), Box<dyn std::error::Error>> {
     println!("📋 INTERACTIVE MATHEMATICAL PROOFS");
     println!("══════════════════════════════════");
@@ -406,6 +415,7 @@ fn interactive_proofs_section() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn computational_experiments() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧪 COMPUTATIONAL EXPERIMENTS");
     println!("════════════════════════════");
@@ -453,6 +463,7 @@ fn computational_experiments() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn quiz_and_challenges() -> Result<(), Box<dyn std::error::Error>> {
     println!("🏆 QUIZ & CHALLENGES");
     println!("════════════════════");
@@ -496,6 +507,7 @@ fn quiz_and_challenges() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper functions
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
     print!("{}", prompt);
     io::stdout().flush()?;
@@ -504,6 +516,7 @@ fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
     Ok(input.trim().to_string())
 }
 
+#[allow(dead_code)]
 fn pause() {
     print!("\nPress Enter to continue...");
     io::stdout().flush().unwrap();

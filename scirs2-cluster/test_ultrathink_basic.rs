@@ -9,6 +9,7 @@
 
 use ndarray::{Array2, array};
 
+#[allow(dead_code)]
 fn main() {
     println!("🚀 Basic Ultrathink Clustering Verification");
     println!("==========================================");
@@ -30,6 +31,7 @@ fn main() {
     println!("📋 Ready for comprehensive ultrathink clustering tests");
 }
 
+#[allow(dead_code)]
 fn create_test_data() -> Array2<f64> {
     // Create a simple 2D dataset with clear clusters
     array![
@@ -45,6 +47,7 @@ fn create_test_data() -> Array2<f64> {
     ]
 }
 
+#[allow(dead_code)]
 fn verify_data_structure(data: &Array2<f64>) {
     assert!(data.nrows() > 0, "Data should have rows");
     assert!(data.ncols() > 0, "Data should have columns");
@@ -57,6 +60,7 @@ fn verify_data_structure(data: &Array2<f64>) {
     println!("   📊 Data validation: {} points in {}D space", data.nrows(), data.ncols());
 }
 
+#[allow(dead_code)]
 fn test_clustering_concepts() {
     println!("   🧠 AI Algorithm Selection: Ready");
     println!("   ⚛️  Quantum-Neuromorphic Fusion: Ready");

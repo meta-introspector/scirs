@@ -13,6 +13,7 @@ use scirs2_datasets::{
 use std::collections::HashMap;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Streaming Datasets Demonstration");
     println!("===================================\n");
@@ -39,6 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_basic_streaming() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 BASIC STREAMING OPERATIONS");
     println!("-".repeat(40));
@@ -126,6 +128,7 @@ fn demonstrate_basic_streaming() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_memory_efficient_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("💾 MEMORY-EFFICIENT PROCESSING");
     println!("-".repeat(40));
@@ -216,6 +219,7 @@ fn demonstrate_memory_efficient_processing() -> Result<(), Box<dyn std::error::E
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_stream_transformations() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 STREAM TRANSFORMATIONS");
     println!("-".repeat(40));
@@ -281,6 +285,7 @@ fn demonstrate_stream_transformations() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ PARALLEL STREAM PROCESSING");
     println!("-".repeat(40));
@@ -382,6 +387,7 @@ fn demonstrate_parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 PERFORMANCE COMPARISON");
     println!("-".repeat(40));
@@ -445,6 +451,7 @@ fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_real_world_scenarios() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌍 REAL-WORLD STREAMING SCENARIOS");
     println!("-".repeat(40));
@@ -465,6 +472,7 @@ fn demonstrate_real_world_scenarios() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_training_scenario() -> Result<(), Box<dyn std::error::Error>> {
     println!("  • Dataset: 500K samples, 100 features");
     println!("  • Memory limit: 200MB");
@@ -516,6 +524,7 @@ fn simulate_training_scenario() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_preprocessing_pipeline() -> Result<(), Box<dyn std::error::Error>> {
     println!("  • Raw data → Clean → Scale → Feature selection");
     println!("  • Process 200K samples in chunks");
@@ -562,6 +571,7 @@ fn simulate_preprocessing_pipeline() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_model_evaluation() -> Result<(), Box<dyn std::error::Error>> {
     println!("  • Evaluate model on 1M test samples");
     println!("  • Compute accuracy in streaming fashion");
@@ -611,6 +621,7 @@ fn simulate_model_evaluation() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Get actual memory usage of the current process in MB
+#[allow(dead_code)]
 fn get_memory_usage() -> f64 {
     get_process_memory_usage().unwrap_or_else(|_| {
         // Fallback to a placeholder if real memory usage cannot be determined
@@ -620,6 +631,7 @@ fn get_memory_usage() -> f64 {
 
 /// Platform-specific memory usage implementation
 #[cfg(target_os = "linux")]
+#[allow(dead_code)]
 fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
     use std::fs;
 
@@ -640,6 +652,7 @@ fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
 }
 
 #[cfg(target_os = "macos")]
+#[allow(dead_code)]
 fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
     use std::mem;
     use std::ptr;
@@ -687,6 +700,7 @@ fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
 }
 
 #[cfg(target_os = "windows")]
+#[allow(dead_code)]
 fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
     use std::mem;
     use std::ptr;
@@ -730,6 +744,7 @@ fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+#[allow(dead_code)]
 fn get_process_memory_usage() -> Result<f64, Box<dyn std::error::Error>> {
     Err("Memory usage monitoring not implemented for this platform".into())
 }

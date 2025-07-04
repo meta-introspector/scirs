@@ -20,6 +20,7 @@ use scirs2_linalg::{eigh, svd};
 /// # Returns
 ///
 /// * Tuple containing (vector of extracted sources, vector of mixing matrices)
+#[allow(dead_code)]
 pub fn joint_bss(
     datasets: &[Array2<f64>],
     n_components: usize,
@@ -146,6 +147,7 @@ pub fn joint_bss(
 /// # Returns
 ///
 /// * Tuple containing (extracted sources, mixing matrix)
+#[allow(dead_code)]
 pub fn joint_diagonalization(
     signals: &Array2<f64>,
     n_components: usize,

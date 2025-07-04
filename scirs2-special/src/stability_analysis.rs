@@ -536,6 +536,7 @@ pub mod erf_stability {
 }
 
 /// Generate stability report for all functions
+#[allow(dead_code)]
 pub fn generate_stability_report() -> String {
     let mut report = String::from("# Numerical Stability Analysis Report\n\n");
 
@@ -613,6 +614,7 @@ pub fn generate_stability_report() -> String {
     report
 }
 
+#[allow(dead_code)]
 fn format_issue(issue: &StabilityIssue) -> String {
     match issue {
         StabilityIssue::Overflow { params } => {
@@ -664,6 +666,7 @@ fn format_issue(issue: &StabilityIssue) -> String {
     }
 }
 
+#[allow(dead_code)]
 fn format_params(params: &[(String, f64)]) -> String {
     params
         .iter()
@@ -673,6 +676,7 @@ fn format_params(params: &[(String, f64)]) -> String {
 }
 
 /// Run comprehensive stability tests
+#[allow(dead_code)]
 pub fn run_stability_tests() -> SpecialResult<()> {
     println!("Running numerical stability analysis...\n");
 

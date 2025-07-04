@@ -158,6 +158,7 @@ impl LinalgScalar for f64 {
 }
 
 /// Generic matrix multiplication - wrapper using ndarray's dot
+#[allow(dead_code)]
 pub fn gemm<T>(a: &ArrayView2<T>, b: &ArrayView2<T>) -> LinalgResult<Array2<T>>
 where
     T: LinalgScalar + ndarray::LinalgScalar,
@@ -176,6 +177,7 @@ where
 }
 
 /// Generic matrix-vector multiplication - wrapper using ndarray's dot
+#[allow(dead_code)]
 pub fn gemv<T>(a: &ArrayView2<T>, x: &ndarray::ArrayView1<T>) -> LinalgResult<ndarray::Array1<T>>
 where
     T: LinalgScalar + ndarray::LinalgScalar,
@@ -193,16 +195,19 @@ where
 }
 
 /// Generic determinant calculation (only for real floats)
+#[allow(dead_code)]
 pub fn gdet<T: LinalgScalar + Float + Send + Sync>(a: &ArrayView2<T>) -> LinalgResult<T> {
     crate::basic::det(a, None)
 }
 
 /// Generic matrix inversion (only for real floats)
+#[allow(dead_code)]
 pub fn ginv<T: LinalgScalar + Float + Send + Sync>(a: &ArrayView2<T>) -> LinalgResult<Array2<T>> {
     crate::basic::inv(a, None)
 }
 
 /// Generic matrix norm (only for real floats)
+#[allow(dead_code)]
 pub fn gnorm<T: LinalgScalar + Float + Send + Sync>(
     a: &ArrayView2<T>,
     norm_type: &str,
@@ -218,6 +223,7 @@ pub struct GenericSVD<T: LinalgScalar> {
 }
 
 /// Generic SVD decomposition (only for real floats)  
+#[allow(dead_code)]
 pub fn gsvd<T: LinalgScalar + Float + Send + Sync>(
     a: &ArrayView2<T>,
     full_matrices: bool,
@@ -237,6 +243,7 @@ pub struct GenericQR<T: LinalgScalar> {
 }
 
 /// Generic QR decomposition (only for real floats)
+#[allow(dead_code)]
 pub fn gqr<T: LinalgScalar + Float + Send + Sync>(a: &ArrayView2<T>) -> LinalgResult<GenericQR<T>> {
     let result = crate::lapack::qr_factor(a)?;
     Ok(GenericQR {
@@ -252,6 +259,7 @@ pub struct GenericEigen<T: LinalgScalar> {
 }
 
 /// Generic eigendecomposition (only for real floats, returns complex)
+#[allow(dead_code)]
 pub fn geig<T: LinalgScalar + Float + Send + Sync>(
     a: &ArrayView2<T>,
 ) -> LinalgResult<GenericEigen<T>> {
@@ -263,6 +271,7 @@ pub fn geig<T: LinalgScalar + Float + Send + Sync>(
 }
 
 /// Generic linear solve (only for real floats)
+#[allow(dead_code)]
 pub fn gsolve<T: LinalgScalar + Float + Send + Sync>(
     a: &ArrayView2<T>,
     b: &ArrayView2<T>,

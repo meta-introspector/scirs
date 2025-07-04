@@ -11,6 +11,7 @@ use scirs2_metrics::dashboard::{server::start_http_server, DashboardConfig, Inte
 use std::{thread, time::Duration};
 
 #[cfg(feature = "dashboard_server")]
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create dashboard configuration
     let mut config = DashboardConfig::default();
@@ -78,6 +79,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(not(feature = "dashboard_server"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'dashboard_server' feature to be enabled.");
     println!("Run with: cargo run --example dashboard_server --features dashboard_server");

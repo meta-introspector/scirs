@@ -11,7 +11,6 @@ use crate::stft::{ShortTimeFft, StftConfig};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rustfft;
-#[cfg(test)]
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
@@ -68,8 +67,7 @@ impl Default for PhaseVocoderConfig {
 ///
 /// ```
 /// use scirs2_signal::phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
-/// #[cfg(test)]
-use std::f64::consts::PI;
+/// use std::f64::consts::PI;
 ///
 /// // Generate a simple test signal (a sine wave)
 /// let n = 48000; // 1 second at 48kHz
@@ -88,6 +86,7 @@ use std::f64::consts::PI;
 /// // Basic verification - function should succeed
 /// assert!(result.len() > 0);
 /// ```
+#[allow(dead_code)]
 pub fn phase_vocoder<T>(signal: &[T], config: &PhaseVocoderConfig) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -277,6 +276,7 @@ where
 /// # Returns
 ///
 /// * Pitch-shifted signal
+#[allow(dead_code)]
 fn pitch_shift<T>(signal: &[T], config: &PhaseVocoderConfig) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -340,6 +340,7 @@ where
 /// # Returns
 ///
 /// * Resampled signal
+#[allow(dead_code)]
 fn resample(signal: &[f64], factor: f64) -> SignalResult<Vec<f64>> {
     if signal.is_empty() {
         return Err(SignalError::ValueError("Input signal is empty".to_string()));
@@ -389,6 +390,7 @@ fn resample(signal: &[f64], factor: f64) -> SignalResult<Vec<f64>> {
 /// # Returns
 ///
 /// * Signal with preserved formants
+#[allow(dead_code)]
 fn preserve_formants(
     signal: &[f64],
     pitch_factor: f64,
@@ -508,6 +510,7 @@ fn preserve_formants(
 /// # Returns
 ///
 /// * Spectral envelope
+#[allow(dead_code)]
 fn compute_spectral_envelope(
     frame: &[Complex64],
     smoothing_width: usize,
@@ -557,6 +560,7 @@ fn compute_spectral_envelope(
 /// # Returns
 ///
 /// * Frame with phase locking applied
+#[allow(dead_code)]
 fn apply_phase_locking(frame: Vec<Complex64>) -> Vec<Complex64> {
     let n = frame.len();
     let mut output = vec![Complex64::new(0.0, 0.0); n];
@@ -605,6 +609,7 @@ fn apply_phase_locking(frame: Vec<Complex64>) -> Vec<Complex64> {
 /// # Returns
 ///
 /// * Window function values
+#[allow(dead_code)]
 fn create_window(window_type: &str, length: usize) -> SignalResult<Vec<f64>> {
     if length == 0 {
         return Err(SignalError::ValueError(
@@ -656,6 +661,7 @@ fn create_window(window_type: &str, length: usize) -> SignalResult<Vec<f64>> {
 /// # Returns
 ///
 /// * Real-valued result of the inverse FFT
+#[allow(dead_code)]
 fn compute_ifft(signal: &[Complex64]) -> SignalResult<Vec<f64>> {
     // Instead of using the library FFT implementation directly, which might have issues with
     // numerical stability, use a more robust approach with rustfft

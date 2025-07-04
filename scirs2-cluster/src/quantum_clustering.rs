@@ -1076,6 +1076,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
 /// Convenience functions for quantum clustering
 
 /// QAOA clustering with default configuration
+#[allow(dead_code)]
 pub fn qaoa_clustering<F: Float + FromPrimitive + Debug>(
     data: ArrayView2<F>,
     n_clusters: usize,
@@ -1091,6 +1092,7 @@ pub fn qaoa_clustering<F: Float + FromPrimitive + Debug>(
 }
 
 /// VQE clustering with default configuration
+#[allow(dead_code)]
 pub fn vqe_clustering<F: Float + FromPrimitive + Debug>(
     data: ArrayView2<F>,
     n_clusters: usize,
@@ -1426,6 +1428,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
 }
 
 /// Quantum annealing clustering with default configuration
+#[allow(dead_code)]
 pub fn quantum_annealing_clustering<F: Float + FromPrimitive + Debug>(
     data: ArrayView2<F>,
     n_clusters: usize,

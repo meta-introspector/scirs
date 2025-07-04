@@ -12,8 +12,8 @@ use crate::dwt::{wavedec, waverec, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
-#[cfg(test)]
-use std::f64::consts::PI;
+
+// use std::f64::consts::PI;
 use std::sync::Arc;
 
 /// Advanced denoising configuration
@@ -97,6 +97,7 @@ pub struct AdvancedDenoiseResult {
 /// # Returns
 ///
 /// * Advanced denoising result
+#[allow(dead_code)]
 pub fn advanced_denoise(
     signal: &[f64],
     config: &AdvancedDenoiseConfig,
@@ -135,6 +136,7 @@ pub fn advanced_denoise(
 }
 
 /// Translation Invariant Wavelet Denoising (Cycle Spinning)
+#[allow(dead_code)]
 fn translation_invariant_denoise(
     signal: &[f64],
     config: &AdvancedDenoiseConfig,
@@ -214,6 +216,7 @@ fn translation_invariant_denoise(
 }
 
 /// Bayesian wavelet denoising
+#[allow(dead_code)]
 fn bayesian_denoise(
     signal: &[f64],
     config: &AdvancedDenoiseConfig,
@@ -251,6 +254,7 @@ fn bayesian_denoise(
 }
 
 /// Block thresholding
+#[allow(dead_code)]
 fn block_threshold_denoise(
     signal: &[f64],
     config: &AdvancedDenoiseConfig,
@@ -307,6 +311,7 @@ fn block_threshold_denoise(
 }
 
 /// Standard wavelet denoising (baseline)
+#[allow(dead_code)]
 fn standard_denoise(
     signal: &[f64],
     config: &AdvancedDenoiseConfig,
@@ -349,6 +354,7 @@ fn standard_denoise(
 }
 
 /// Estimate noise level from signal
+#[allow(dead_code)]
 fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> SignalResult<f64> {
     match config.noise_estimation {
         NoiseEstimation::MAD => {
@@ -413,6 +419,7 @@ fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> Signa
 }
 
 /// Estimate signal variance for Bayesian denoising
+#[allow(dead_code)]
 fn estimate_signal_variance(coeffs: &[f64], noise_level: f64) -> f64 {
     let n = coeffs.len() as f64;
     let empirical_var = coeffs.iter().map(|&x| x * x).sum::<f64>() / n;
@@ -425,6 +432,7 @@ fn estimate_signal_variance(coeffs: &[f64], noise_level: f64) -> f64 {
 }
 
 /// Estimate SNR improvement
+#[allow(dead_code)]
 fn estimate_snr_improvement(original: &[f64], denoised: &[f64]) -> Option<f64> {
     if original.len() != denoised.len() {
         return None;
@@ -449,6 +457,7 @@ fn estimate_snr_improvement(original: &[f64], denoised: &[f64]) -> Option<f64> {
 }
 
 /// Adaptive wavelet packet denoising
+#[allow(dead_code)]
 pub fn wavelet_packet_denoise(
     signal: &[f64],
     config: &AdvancedDenoiseConfig,
@@ -479,8 +488,8 @@ pub fn wavelet_packet_denoise(
     reconstruct_from_nodes(&denoised_tree, &leaf_nodes)
 }
 
-#[cfg(test)]
 mod tests {
+    #[allow(unused_imports)]
     use super::*;
 
     #[test]

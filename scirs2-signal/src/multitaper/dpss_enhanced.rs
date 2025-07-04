@@ -8,7 +8,6 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, ArrayView1, Axis};
 use rustfft::{num_complex::Complex, FftPlanner};
 use scirs2_core::validation::{check_finite, check_positive};
-#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Enhanced DPSS computation with proper SciPy-compatible implementation
@@ -26,6 +25,7 @@ use std::f64::consts::PI;
 /// # Returns
 ///
 /// * Tuple of (tapers, concentration_ratios)
+#[allow(dead_code)]
 pub fn dpss_enhanced(
     n: usize,
     nw: f64,
@@ -101,6 +101,7 @@ pub fn dpss_enhanced(
 }
 
 /// Build the tridiagonal matrix for the eigenvalue problem
+#[allow(dead_code)]
 fn build_tridiagonal_matrix(n: usize, w: f64) -> (Vec<f64>, Vec<f64>) {
     let cos_2pi_w = (2.0 * PI * w).cos();
 
@@ -119,6 +120,7 @@ fn build_tridiagonal_matrix(n: usize, w: f64) -> (Vec<f64>, Vec<f64>) {
 }
 
 /// Solve symmetric tridiagonal eigenvalue problem using QR algorithm
+#[allow(dead_code)]
 fn solve_tridiagonal_symmetric(
     diagonal: &[f64],
     off_diagonal: &[f64],
@@ -175,6 +177,7 @@ fn solve_tridiagonal_symmetric(
 }
 
 /// Compute Wilkinson shift for better convergence
+#[allow(dead_code)]
 fn wilkinson_shift(diag: &[f64], off_diag: &[f64]) -> f64 {
     if diag.len() < 2 || off_diag.is_empty() {
         return 0.0;
@@ -191,6 +194,7 @@ fn wilkinson_shift(diag: &[f64], off_diag: &[f64]) -> f64 {
 }
 
 /// Perform one QR step on tridiagonal matrix
+#[allow(dead_code)]
 fn qr_step(diag: &mut [f64], off_diag: &mut [f64], q: &mut Array2<f64>) -> SignalResult<()> {
     let n = diag.len();
     if n <= 1 {
@@ -240,6 +244,7 @@ fn qr_step(diag: &mut [f64], off_diag: &mut [f64], q: &mut Array2<f64>) -> Signa
 }
 
 /// Compute Givens rotation parameters
+#[allow(dead_code)]
 fn givens_rotation(a: f64, b: f64) -> (f64, f64) {
     if b.abs() < 1e-15 {
         return (1.0, 0.0);
@@ -254,6 +259,7 @@ fn givens_rotation(a: f64, b: f64) -> (f64, f64) {
 }
 
 /// Normalize eigenvector to unit norm
+#[allow(dead_code)]
 fn normalize_eigenvector(eigvec: &mut Array1<f64>) {
     let norm = eigvec.dot(eigvec).sqrt();
     if norm > 1e-10 {
@@ -262,6 +268,7 @@ fn normalize_eigenvector(eigvec: &mut Array1<f64>) {
 }
 
 /// Apply sign convention to ensure consistency
+#[allow(dead_code)]
 fn apply_sign_convention(eigvec: &mut Array1<f64>, order: usize) {
     let n = eigvec.len();
 
@@ -281,6 +288,7 @@ fn apply_sign_convention(eigvec: &mut Array1<f64>, order: usize) {
 }
 
 /// Compute concentration ratios using autocorrelation method
+#[allow(dead_code)]
 fn compute_concentration_ratios(
     tapers: &Array2<f64>,
     w: f64,
@@ -346,6 +354,7 @@ fn compute_concentration_ratios(
 }
 
 /// Validate DPSS computation against known values
+#[allow(dead_code)]
 pub fn validate_dpss_implementation() -> SignalResult<bool> {
     // Test case from SciPy documentation
     let n = 64;
@@ -405,6 +414,7 @@ pub fn validate_dpss_implementation() -> SignalResult<bool> {
 }
 
 /// Generate reference values for testing
+#[allow(dead_code)]
 pub fn generate_reference_values() -> SignalResult<()> {
     println!("DPSS Reference Values:");
     println!("======================");

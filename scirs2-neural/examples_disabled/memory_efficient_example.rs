@@ -14,6 +14,7 @@ use scirs2_neural::memory_efficient::{
     MemoryEfficientLayer, MemoryPool, MemoryUsage, PoolStatistics,
 };
 use std::time::Instant;
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Memory-Efficient Neural Network Operations Demo");
     println!("===============================================");
@@ -31,6 +32,7 @@ fn main() -> Result<()> {
     demo_memory_usage_tracking()?;
     Ok(())
 }
+#[allow(dead_code)]
 fn demo_memory_pool() -> Result<()> {
     println!("\n🔄 Memory Pool Demo");
     println!("------------------");
@@ -57,6 +59,7 @@ fn demo_memory_pool() -> Result<()> {
     let reuse_time = start.elapsed();
     println!("Reuse time: {:?}", reuse_time);
     println!("Final pool stats:");
+#[allow(dead_code)]
 fn demo_gradient_checkpointing() -> Result<()> {
     println!("\n📊 Gradient Checkpointing Demo");
     println!("------------------------------");
@@ -85,6 +88,7 @@ fn demo_gradient_checkpointing() -> Result<()> {
     println!("Clearing checkpoints...");
     checkpointing.clear_checkpoints();
     println!("Memory usage after clearing:");
+#[allow(dead_code)]
 fn demo_in_place_operations() -> Result<()> {
     println!("\n⚡ In-place Operations Demo");
     println!("--------------------------");
@@ -123,6 +127,7 @@ fn demo_in_place_operations() -> Result<()> {
     println!("\nScaling test - before: {:?}", scale_test);
     InPlaceOperations::scale_inplace(&mut scale_test, 3.0);
     println!("Scaling test - after: {:?}", scale_test);
+#[allow(dead_code)]
 fn demo_memory_aware_batch_processing() -> Result<()> {
     println!("\n🔀 Memory-Aware Batch Processing Demo");
     println!("------------------------------------");
@@ -154,6 +159,7 @@ fn demo_memory_aware_batch_processing() -> Result<()> {
     let stats = processor.get_stats();
     println!("Batch processor statistics:");
     print_batch_processor_stats(&stats);
+#[allow(dead_code)]
 fn demo_memory_efficient_layer() -> Result<()> {
     println!("\n🧠 Memory-Efficient Layer Demo");
     // Create a memory-efficient layer
@@ -186,6 +192,7 @@ fn demo_memory_efficient_layer() -> Result<()> {
         output.iter().cloned().fold(f32::INFINITY, f32::min)
         "  Max: {:.6}",
         output.iter().cloned().fold(f32::NEG_INFINITY, f32::max)
+#[allow(dead_code)]
 fn demo_memory_usage_tracking() -> Result<()> {
     println!("\n📈 Memory Usage Tracking Demo");
     println!("-----------------------------");
@@ -213,16 +220,19 @@ fn demo_memory_usage_tracking() -> Result<()> {
             println!("After {} deallocations:", i);
     println!("\nFinal state (note peak is preserved):");
 // Helper functions for pretty printing
+#[allow(dead_code)]
 fn print_pool_stats(stats: &PoolStatistics) {
     println!("  Cached tensors: {}", stats.total_cached_tensors);
     println!("  Unique shapes: {}", stats.unique_shapes);
         "  Pool size: {:.2}/{:.2} MB",
         stats.current_pool_size_mb, stats.max_pool_size_mb
+#[allow(dead_code)]
 fn print_memory_usage(usage: &MemoryUsage) {
     println!("  Current: {:.2} MB", usage.current_mb());
     println!("  Peak: {:.2} MB", usage.peak_mb());
     println!("  Active allocations: {}", usage.active_allocations);
     println!("  Total allocations: {}", usage.total_allocations);
+#[allow(dead_code)]
 fn print_batch_processor_stats(stats: &BatchProcessorStats) {
     println!("  Max batch size: {}", stats.max_batch_size);
     println!("  Current memory: {:.2} MB", stats.current_memory_mb);

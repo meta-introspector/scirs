@@ -120,6 +120,7 @@ impl std::fmt::Display for StableReleaseValidationReport {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Starting Comprehensive Stable Release Validation ===\n");
 
@@ -370,6 +371,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
+#[allow(dead_code)]
 fn determine_overall_readiness(
     api: &ApiReadiness,
     perf: &PerfReadiness,
@@ -415,6 +417,7 @@ fn determine_overall_readiness(
     }
 }
 
+#[allow(dead_code)]
 fn generate_summary(
     readiness: &OverallReadiness,
     critical_count: usize,

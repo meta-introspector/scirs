@@ -45,6 +45,7 @@ pub type CrossValidationFolds = Vec<(Vec<usize>, Vec<usize>)>;
 /// let (train, test) = train_test_split(&dataset, 0.3, Some(42)).unwrap();
 /// assert_eq!(train.n_samples() + test.n_samples(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn train_test_split(
     dataset: &Dataset,
     test_size: f64,
@@ -143,6 +144,7 @@ pub fn train_test_split(
 ///     assert_eq!(train_idx.len() + val_idx.len(), 10);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn k_fold_split(
     n_samples: usize,
     n_folds: usize,
@@ -225,6 +227,7 @@ pub fn k_fold_split(
 ///     assert_eq!(train_idx.len() + val_idx.len(), 6);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn stratified_k_fold_split(
     targets: &Array1<f64>,
     n_folds: usize,
@@ -330,6 +333,7 @@ pub fn stratified_k_fold_split(
 ///     assert!(folds[i].0.len() > folds[i-1].0.len());
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn time_series_split(
     n_samples: usize,
     n_splits: usize,

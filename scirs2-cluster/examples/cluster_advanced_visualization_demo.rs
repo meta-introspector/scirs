@@ -36,6 +36,7 @@ use scirs2_cluster::{
 };
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎨 Advanced Visualization Features Demonstration");
     println!("===============================================");
@@ -438,6 +439,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Generate 2D clustering test data
+#[allow(dead_code)]
 fn generate_2d_clustering_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
     let data = Array2::from_shape_vec(
         (60, 2),
@@ -464,6 +466,7 @@ fn generate_2d_clustering_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
 }
 
 /// Generate 2D clustering test data with specified size
+#[allow(dead_code)]
 fn generate_2d_clustering_data_size(size: usize) -> (Array2<f64>, Array1<i32>, Array2<f64>) {
     use rand::Rng;
 
@@ -499,6 +502,7 @@ fn generate_2d_clustering_data_size(size: usize) -> (Array2<f64>, Array1<i32>, A
 }
 
 /// Generate 3D clustering test data
+#[allow(dead_code)]
 fn generate_3d_clustering_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
     let data = Array2::from_shape_vec(
         (30, 3),
@@ -522,6 +526,7 @@ fn generate_3d_clustering_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
 }
 
 /// Generate high-dimensional test data for dimensionality reduction
+#[allow(dead_code)]
 fn generate_high_dimensional_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
     use rand::Rng;
 
@@ -554,6 +559,7 @@ fn generate_high_dimensional_data() -> (Array2<f64>, Array1<i32>, Array2<f64>) {
 }
 
 /// Generate random centroids for animation demo
+#[allow(dead_code)]
 fn generate_random_centroids(k: usize, n_features: usize) -> Array2<f64> {
     use rand::Rng;
 

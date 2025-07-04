@@ -9,6 +9,7 @@ use scirs2_ndimage::morphology::{
     distance_transform_bf, distance_transform_cdt, distance_transform_edt,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Demonstrating distance transform functions\n");
 
@@ -96,6 +97,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper function to print a 2D binary array
+#[allow(dead_code)]
 fn print_binary_2d(arr: &Array2<bool>) {
     for i in 0..arr.shape()[0] {
         for j in 0..arr.shape()[1] {
@@ -110,6 +112,7 @@ fn print_binary_2d(arr: &Array2<bool>) {
 }
 
 // Helper function to print a 2D floating-point distance array
+#[allow(dead_code)]
 fn print_distance_2d(arr: &Array2<f64>) {
     for i in 0..arr.shape()[0] {
         for j in 0..arr.shape()[1] {
@@ -125,6 +128,7 @@ fn print_distance_2d(arr: &Array2<f64>) {
 }
 
 // Helper function to print a 2D integer distance array
+#[allow(dead_code)]
 fn print_integer_distance_2d(arr: &Array2<i32>) {
     for i in 0..arr.shape()[0] {
         for j in 0..arr.shape()[1] {
@@ -136,6 +140,7 @@ fn print_integer_distance_2d(arr: &Array2<i32>) {
 }
 
 // Helper function to print indices from a distance transform
+#[allow(dead_code)]
 fn print_indices_2d(indices: &ndarray::ArrayBase<ndarray::OwnedRepr<i32>, IxDyn>, dim: usize) {
     // The indices array has an extra dimension: [dimension, rows, columns]
     for i in 0..indices.shape()[1] {

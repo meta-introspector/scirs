@@ -973,6 +973,7 @@ impl<T: Float + std::fmt::Display + FromPrimitive> TensionSpline<T> {
 /// # Returns
 ///
 /// A `Result` containing the tension spline interpolator.
+#[allow(dead_code)]
 pub fn make_tension_spline<T: Float + std::fmt::Display + num_traits::FromPrimitive>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,

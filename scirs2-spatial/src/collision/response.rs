@@ -32,6 +32,7 @@ pub struct CollisionInfo {
 /// # Returns
 ///
 /// A tuple containing the impulse vectors for the first and second spheres
+#[allow(dead_code)]
 pub fn sphere_sphere_impulse(
     sphere1_pos: &[f64; 3],
     sphere1_vel: &[f64; 3],
@@ -122,6 +123,7 @@ pub fn sphere_sphere_impulse(
 /// # Returns
 ///
 /// A tuple containing the position adjustments for the first and second spheres
+#[allow(dead_code)]
 pub fn resolve_sphere_sphere_penetration(
     sphere1: &Sphere,
     sphere1_mass: f64,
@@ -204,6 +206,7 @@ pub fn resolve_sphere_sphere_penetration(
 ///
 /// A tuple containing the impulse vectors for the sphere and the box
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn sphere_box_impulse(
     _sphere_pos: &[f64; 3],
     sphere_vel: &[f64; 3],
@@ -269,6 +272,7 @@ pub fn sphere_box_impulse(
 /// # Returns
 ///
 /// Collision information if a collision occurs, None otherwise
+#[allow(dead_code)]
 pub fn find_sphere_box_collision(sphere: &Sphere, box3d: &Box3D) -> Option<CollisionInfo> {
     // Find the closest point on the box to the sphere center
     let closest_x = sphere.center[0].max(box3d.min[0]).min(box3d.max[0]);
@@ -338,6 +342,7 @@ pub fn find_sphere_box_collision(sphere: &Sphere, box3d: &Box3D) -> Option<Colli
 /// # Returns
 ///
 /// Collision information if a collision occurs, None otherwise
+#[allow(dead_code)]
 pub fn find_sphere_triangle_collision(
     sphere: &Sphere,
     triangle: &Triangle3D,

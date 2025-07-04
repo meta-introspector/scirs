@@ -646,6 +646,7 @@ impl MemoryReport {
 
 /// Global memory monitoring functions
 /// Start global memory monitoring
+#[allow(dead_code)]
 pub fn start_monitoring() {
     let _ = GLOBAL_MONITOR.set(Arc::new(Mutex::new(GlobalMemoryMonitor {
         monitors: HashMap::new(),
@@ -656,6 +657,7 @@ pub fn start_monitoring() {
 }
 
 /// Stop global memory monitoring
+#[allow(dead_code)]
 pub fn stop_monitoring() {
     if let Some(monitor) = GLOBAL_MONITOR.get() {
         if let Ok(mut global) = monitor.lock() {
@@ -666,6 +668,7 @@ pub fn stop_monitoring() {
 }
 
 /// Register a memory monitor with the global system
+#[allow(dead_code)]
 fn register_monitor(name: &str, monitor: MemoryMonitor) {
     if let Some(global_monitor) = GLOBAL_MONITOR.get() {
         if let Ok(mut global) = global_monitor.lock() {
@@ -680,6 +683,7 @@ fn register_monitor(name: &str, monitor: MemoryMonitor) {
 }
 
 /// Update global memory statistics
+#[allow(dead_code)]
 fn update_global_stats(size_bytes: usize, is_allocation: bool) {
     if let Some(global_monitor) = GLOBAL_MONITOR.get() {
         if let Ok(mut global) = global_monitor.lock() {
@@ -704,6 +708,7 @@ fn update_global_stats(size_bytes: usize, is_allocation: bool) {
 }
 
 /// Get global memory statistics
+#[allow(dead_code)]
 pub fn get_global_stats() -> Option<GlobalMemoryStats> {
     GLOBAL_MONITOR
         .get()
@@ -712,6 +717,7 @@ pub fn get_global_stats() -> Option<GlobalMemoryStats> {
 }
 
 /// Get report for a specific monitor
+#[allow(dead_code)]
 pub fn get_monitor_report(name: &str) -> Option<MemoryReport> {
     GLOBAL_MONITOR
         .get()
@@ -725,6 +731,7 @@ pub fn get_monitor_report(name: &str) -> Option<MemoryReport> {
 }
 
 /// Get reports for all active monitors
+#[allow(dead_code)]
 pub fn get_all_reports() -> Vec<MemoryReport> {
     if let Some(global_monitor) = GLOBAL_MONITOR.get() {
         if let Ok(global) = global_monitor.lock() {
@@ -1349,11 +1356,13 @@ pub enum StressPerformanceGrade {
 }
 
 /// Create a stress memory profiler for testing
+#[allow(dead_code)]
 pub fn create_stress_profiler(name: impl Into<String>) -> StressMemoryProfiler {
     StressMemoryProfiler::new(name, None)
 }
 
 /// Create a stress memory profiler with custom configuration
+#[allow(dead_code)]
 pub fn create_stress_profiler_with_config(
     name: impl Into<String>,
     config: StressProfilingConfig,

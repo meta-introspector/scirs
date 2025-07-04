@@ -10,6 +10,7 @@ use scirs2_fft::{
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> FFTResult<()> {
     println!("Multi-GPU Device Enumeration and Management Example");
     println!("===================================================");
@@ -30,6 +31,7 @@ fn main() -> FFTResult<()> {
 }
 
 /// Test device enumeration and selection
+#[allow(dead_code)]
 fn test_device_enumeration() -> FFTResult<()> {
     println!("\n--- Device Enumeration Test ---");
 
@@ -70,6 +72,7 @@ fn test_device_enumeration() -> FFTResult<()> {
 }
 
 /// Test different workload distribution strategies
+#[allow(dead_code)]
 fn test_workload_distribution_strategies() -> FFTResult<()> {
     println!("\n--- Workload Distribution Strategies Test ---");
 
@@ -131,6 +134,7 @@ fn test_workload_distribution_strategies() -> FFTResult<()> {
 }
 
 /// Test strategy helper function
+#[allow(dead_code)]
 fn test_strategy(
     config: MultiGPUConfig,
     signal: &[f64],
@@ -155,6 +159,7 @@ fn test_strategy(
 }
 
 /// Test performance scaling with different numbers of devices
+#[allow(dead_code)]
 fn test_performance_scaling() -> FFTResult<()> {
     println!("\n--- Performance Scaling Test ---");
 
@@ -200,6 +205,7 @@ fn test_performance_scaling() -> FFTResult<()> {
 }
 
 /// Test adaptive load balancing
+#[allow(dead_code)]
 fn test_adaptive_load_balancing() -> FFTResult<()> {
     println!("\n--- Adaptive Load Balancing Test ---");
 
@@ -266,6 +272,7 @@ fn test_adaptive_load_balancing() -> FFTResult<()> {
 }
 
 /// Create a test signal with sparse frequency components
+#[allow(dead_code)]
 fn create_test_signal(n: usize) -> Vec<f64> {
     let mut signal = vec![0.0; n];
 

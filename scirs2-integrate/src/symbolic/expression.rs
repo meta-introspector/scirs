@@ -364,6 +364,7 @@ pub enum Pattern<F: IntegrateFloat> {
 }
 
 /// Pattern matching for common mathematical expressions
+#[allow(dead_code)]
 pub fn match_pattern<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> Option<Pattern<F>> {
     use Pattern::*;
     use SymbolicExpression::*;
@@ -417,6 +418,7 @@ pub fn match_pattern<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> Option<
 }
 
 /// Helper function to check if two expressions match structurally
+#[allow(dead_code)]
 fn match_expressions<F: IntegrateFloat>(
     expr1: &SymbolicExpression<F>,
     expr2: &SymbolicExpression<F>,
@@ -431,6 +433,7 @@ fn match_expressions<F: IntegrateFloat>(
 }
 
 /// Apply pattern-based simplifications
+#[allow(dead_code)]
 pub fn pattern_simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
     use Pattern::*;
     use SymbolicExpression::*;
@@ -471,6 +474,7 @@ pub fn pattern_simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> Symb
 }
 
 /// Simplify a symbolic expression
+#[allow(dead_code)]
 pub fn simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
     use SymbolicExpression::*;
 
@@ -607,6 +611,7 @@ pub fn simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpr
 }
 
 /// Enhanced simplify that combines algebraic and pattern-based simplification
+#[allow(dead_code)]
 pub fn deep_simplify<F: IntegrateFloat>(expr: &SymbolicExpression<F>) -> SymbolicExpression<F> {
     // First apply algebraic simplification
     let algebraic_simplified = simplify(expr);

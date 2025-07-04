@@ -342,6 +342,7 @@ pub struct SymbolicApproximationResult {
 /// let config = PCAConfig::default();
 /// let result = apply_pca(&data, &config).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn apply_pca<F>(data: &Array2<F>, config: &PCAConfig) -> Result<PCAResult<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + ScalarOperand + 'static,
@@ -433,6 +434,7 @@ where
 /// # Returns
 ///
 /// Functional PCA result including functional components and scores
+#[allow(dead_code)]
 pub fn apply_functional_pca<F>(
     functional_data: &Array2<F>,
     config: &FunctionalPCAConfig,
@@ -526,6 +528,7 @@ where
 /// # Returns
 ///
 /// DTW barycenter result including the computed barycenter and alignment information
+#[allow(dead_code)]
 pub fn compute_dtw_barycenter<F>(
     time_series: &[Array1<F>],
     config: &DTWBarycenterConfig,
@@ -612,6 +615,7 @@ where
 /// # Returns
 ///
 /// Symbolic approximation result including symbolic sequence and reconstruction information
+#[allow(dead_code)]
 pub fn apply_symbolic_approximation(
     time_series: &Array1<f64>,
     config: &SymbolicApproximationConfig,
@@ -632,6 +636,7 @@ pub fn apply_symbolic_approximation(
 
 // Helper functions for PCA computation
 
+#[allow(dead_code)]
 fn compute_pca_svd<F>(data: &Array2<F>, config: &PCAConfig) -> Result<PCAResultData<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + ScalarOperand + 'static,
@@ -646,6 +651,7 @@ where
     compute_pca_eigendecomposition(data, config)
 }
 
+#[allow(dead_code)]
 fn compute_pca_eigendecomposition<F>(
     data: &Array2<F>,
     config: &PCAConfig,
@@ -687,6 +693,7 @@ where
     Ok((final_eigenvectors, final_eigenvalues, None))
 }
 
+#[allow(dead_code)]
 fn compute_covariance_matrix<F>(data: &Array2<F>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + ScalarOperand + 'static,
@@ -700,6 +707,7 @@ where
     Ok(covariance)
 }
 
+#[allow(dead_code)]
 fn compute_eigendecomposition<F>(matrix: &Array2<F>) -> Result<(Array1<F>, Array2<F>)>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -720,6 +728,7 @@ where
     Ok((eigenvalues, eigenvectors))
 }
 
+#[allow(dead_code)]
 fn sort_eigen_pairs<F>(
     eigenvalues: Array1<F>,
     eigenvectors: Array2<F>,
@@ -745,6 +754,7 @@ where
     Ok((sorted_eigenvalues, sorted_eigenvectors))
 }
 
+#[allow(dead_code)]
 fn determine_n_components<F>(explained_variance: &Array1<F>, config: &PCAConfig) -> usize
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -779,6 +789,7 @@ where
 
 // Helper functions for Functional PCA
 
+#[allow(dead_code)]
 fn create_basis_functions<F>(n_points: usize, config: &FunctionalPCAConfig) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -791,6 +802,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn create_bspline_basis<F>(n_points: usize, n_basis: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -815,6 +827,7 @@ where
     Ok(basis)
 }
 
+#[allow(dead_code)]
 fn create_fourier_basis<F>(n_points: usize, n_basis: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -840,6 +853,7 @@ where
     Ok(basis)
 }
 
+#[allow(dead_code)]
 fn create_polynomial_basis<F>(n_points: usize, n_basis: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -858,6 +872,7 @@ where
     Ok(basis)
 }
 
+#[allow(dead_code)]
 fn create_wavelet_basis<F>(n_points: usize, n_basis: usize) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -893,6 +908,7 @@ where
     Ok(basis)
 }
 
+#[allow(dead_code)]
 fn project_onto_basis<F>(
     functional_data: &Array2<F>,
     basis_evaluation: &Array2<F>,
@@ -907,6 +923,7 @@ where
     Ok(coefficients)
 }
 
+#[allow(dead_code)]
 fn apply_smoothness_regularization<F>(
     coefficients: &Array2<F>,
     lambda: f64,
@@ -928,6 +945,7 @@ where
     Ok(regularized)
 }
 
+#[allow(dead_code)]
 fn compute_smoothness_measures<F>(
     components: &Array2<F>,
     _basis_evaluation: &Array2<F>,
@@ -958,6 +976,7 @@ where
 
 // Helper functions for DTW barycenter
 
+#[allow(dead_code)]
 fn initialize_barycenter<F>(time_series: &[Array1<F>], method: &BarycenterInit) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -974,6 +993,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn compute_medoid<F>(time_series: &[Array1<F>]) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -1000,6 +1020,7 @@ where
     Ok(time_series[medoid_idx].clone())
 }
 
+#[allow(dead_code)]
 fn compute_mean_series<F>(time_series: &[Array1<F>]) -> Result<Array1<F>>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -1025,6 +1046,7 @@ where
     Ok(mean_series)
 }
 
+#[allow(dead_code)]
 fn compute_dtw_alignment<F>(
     series1: &Array1<F>,
     series2: &Array1<F>,
@@ -1071,6 +1093,7 @@ where
     Ok((total_cost, path))
 }
 
+#[allow(dead_code)]
 fn compute_point_distance<F>(point1: F, point2: F, metric: &DTWDistance) -> F
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -1084,6 +1107,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn backtrack_dtw_path<F>(dtw_matrix: &Array2<F>, n1: usize, n2: usize) -> Vec<(usize, usize)>
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -1114,6 +1138,7 @@ where
     path
 }
 
+#[allow(dead_code)]
 fn update_barycenter_from_alignments<F>(
     time_series: &[Array1<F>],
     alignment_paths: &[Vec<(usize, usize)>],
@@ -1156,6 +1181,7 @@ where
     Ok(new_barycenter)
 }
 
+#[allow(dead_code)]
 fn compute_barycenter_difference<F>(barycenter1: &Array1<F>, barycenter2: &Array1<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -1171,6 +1197,7 @@ where
     sum_sq_diff.sqrt()
 }
 
+#[allow(dead_code)]
 fn compute_euclidean_distance<F>(series1: &Array1<F>, series2: &Array1<F>) -> F
 where
     F: Float + FromPrimitive + Debug + Clone + 'static,
@@ -1188,6 +1215,7 @@ where
 
 // Helper functions for symbolic approximation
 
+#[allow(dead_code)]
 fn apply_sax(
     time_series: &Array1<f64>,
     config: &SymbolicApproximationConfig,
@@ -1227,6 +1255,7 @@ fn apply_sax(
     })
 }
 
+#[allow(dead_code)]
 fn apply_apca(
     _time_series: &Array1<f64>,
     _config: &SymbolicApproximationConfig,
@@ -1237,6 +1266,7 @@ fn apply_apca(
     ))
 }
 
+#[allow(dead_code)]
 fn apply_pla(
     _time_series: &Array1<f64>,
     _config: &SymbolicApproximationConfig,
@@ -1247,6 +1277,7 @@ fn apply_pla(
     ))
 }
 
+#[allow(dead_code)]
 fn apply_persist(
     _time_series: &Array1<f64>,
     _config: &SymbolicApproximationConfig,
@@ -1257,6 +1288,7 @@ fn apply_persist(
     ))
 }
 
+#[allow(dead_code)]
 fn normalize_time_series(time_series: &Array1<f64>) -> Result<Array1<f64>> {
     let mean = time_series.mean().unwrap_or(0.0);
     let std = time_series.std(0.0);
@@ -1269,6 +1301,7 @@ fn normalize_time_series(time_series: &Array1<f64>) -> Result<Array1<f64>> {
     Ok(normalized)
 }
 
+#[allow(dead_code)]
 fn compute_paa(time_series: &Array1<f64>, n_segments: usize) -> Result<Array1<f64>> {
     let n = time_series.len();
     let segment_size = n as f64 / n_segments as f64;
@@ -1289,6 +1322,7 @@ fn compute_paa(time_series: &Array1<f64>, n_segments: usize) -> Result<Array1<f6
     Ok(paa_values)
 }
 
+#[allow(dead_code)]
 fn compute_gaussian_breakpoints(alphabet_size: usize) -> Array1<f64> {
     // Compute breakpoints based on Gaussian distribution
     // This is a simplified version - would use proper quantile function
@@ -1309,6 +1343,7 @@ fn compute_gaussian_breakpoints(alphabet_size: usize) -> Array1<f64> {
     breakpoints
 }
 
+#[allow(dead_code)]
 fn paa_to_symbols(paa_values: &Array1<f64>, breakpoints: &Array1<f64>) -> Result<Vec<char>> {
     let alphabet_chars: Vec<char> = "abcdefghijklmnopqrstuvwxyz".chars().collect();
     let mut symbols = Vec::new();

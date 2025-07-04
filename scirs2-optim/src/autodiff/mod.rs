@@ -450,7 +450,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
             .ok_or_else(|| OptimError::InvalidConfig("Empty L-BFGS history".to_string()))?
             .len();
 
-        let mut result = Array2::eye(n);
+        let result = Array2::eye(n);
 
         // Two-loop recursion would be implemented here
         // This is a placeholder returning identity matrix

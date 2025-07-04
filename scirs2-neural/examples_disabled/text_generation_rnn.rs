@@ -466,6 +466,7 @@ impl LSTM {
                 result.push(next_char);
         result
 // Function to create character mappings from the text
+#[allow(dead_code)]
 fn create_char_mappings(text: &str) -> (HashMap<char, usize>, HashMap<usize, char>) {
     let mut char_to_idx = HashMap::new();
     let mut idx_to_char = HashMap::new();
@@ -481,6 +482,7 @@ fn create_char_mappings(text: &str) -> (HashMap<char, usize>, HashMap<usize, cha
         idx_to_char.insert(i, c);
     (char_to_idx, idx_to_char)
 // Function to prepare training batches
+#[allow(dead_code)]
 fn prepare_batches(
     text: &str,
     char_to_idx: &HashMap<char, usize>,
@@ -513,6 +515,7 @@ fn prepare_batches(
         inputs.push(batch_input);
         targets.push(batch_target);
     (inputs, targets)
+#[allow(dead_code)]
 fn text_generation_example() {
     // Simple training text
     let training_text = "
@@ -567,6 +570,7 @@ fn text_generation_example() {
         println!("\nTemperature = {}", temp);
         println!("Seed: \"{}\"", seed);
         println!("Generated: \"{}\"", sample);
+#[allow(dead_code)]
 fn main() {
     println!("Character-level LSTM for Text Generation");
     println!("========================================");

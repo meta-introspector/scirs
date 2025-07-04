@@ -73,6 +73,8 @@ impl ShortestPathMethod {
 ///     &graph, Some(0), None, "dijkstra", true, false
 /// ).unwrap();
 /// ```
+#[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn shortest_path<T, S>(
     graph: &S,
     from_vertex: Option<usize>,
@@ -143,6 +145,7 @@ where
 }
 
 /// Single source shortest paths
+#[allow(dead_code)]
 pub fn single_source_shortest_path<T, S>(
     graph: &S,
     source: usize,
@@ -189,6 +192,7 @@ where
 }
 
 /// All pairs shortest paths
+#[allow(dead_code)]
 pub fn all_pairs_shortest_path<T, S>(
     graph: &S,
     method: ShortestPathMethod,
@@ -246,6 +250,7 @@ where
 }
 
 /// Dijkstra's algorithm for single source shortest paths
+#[allow(dead_code)]
 pub fn dijkstra_single_source<T, S>(
     graph: &S,
     source: usize,
@@ -314,6 +319,7 @@ where
 }
 
 /// Bellman-Ford algorithm for single source shortest paths
+#[allow(dead_code)]
 pub fn bellman_ford_single_source<T, S>(
     graph: &S,
     source: usize,
@@ -389,6 +395,7 @@ where
 }
 
 /// Floyd-Warshall algorithm for all pairs shortest paths
+#[allow(dead_code)]
 pub fn floyd_warshall<T, S>(
     graph: &S,
     directed: bool,
@@ -458,6 +465,7 @@ where
 }
 
 /// Reconstruct shortest path from predecessor information
+#[allow(dead_code)]
 pub fn reconstruct_path(
     predecessors: &Array1<isize>,
     source: usize,

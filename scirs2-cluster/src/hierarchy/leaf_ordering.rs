@@ -97,6 +97,7 @@ impl TreeNode {
 }
 
 /// Builds a tree representation from a linkage matrix
+#[allow(dead_code)]
 fn build_tree_from_linkage<F: Float + FromPrimitive + Debug + PartialOrd>(
     linkage_matrix: ArrayView2<F>,
 ) -> Result<TreeNode> {
@@ -148,6 +149,7 @@ fn build_tree_from_linkage<F: Float + FromPrimitive + Debug + PartialOrd>(
 }
 
 /// Calculates the cost of a given leaf ordering
+#[allow(dead_code)]
 fn calculate_ordering_cost<F: Float + FromPrimitive + Debug + PartialOrd>(
     ordering: &[usize],
     distance_matrix: ArrayView1<F>,
@@ -195,6 +197,7 @@ fn calculate_ordering_cost<F: Float + FromPrimitive + Debug + PartialOrd>(
 ///
 /// This is an exact algorithm with exponential time complexity. For large
 /// dendrograms (>15 leaves), consider using the heuristic version.
+#[allow(dead_code)]
 pub fn optimal_leaf_ordering_exact<F: Float + FromPrimitive + Debug + PartialOrd>(
     linkage_matrix: ArrayView2<F>,
     distance_matrix: ArrayView1<F>,
@@ -242,6 +245,7 @@ pub fn optimal_leaf_ordering_exact<F: Float + FromPrimitive + Debug + PartialOrd
 /// # Returns
 ///
 /// * `Result<Array1<usize>>` - Heuristic leaf ordering
+#[allow(dead_code)]
 pub fn optimal_leaf_ordering_heuristic<F: Float + FromPrimitive + Debug + PartialOrd>(
     linkage_matrix: ArrayView2<F>,
     distance_matrix: ArrayView1<F>,
@@ -320,6 +324,7 @@ pub fn optimal_leaf_ordering_heuristic<F: Float + FromPrimitive + Debug + Partia
 /// # Returns
 ///
 /// * `Result<Array1<usize>>` - Optimal (or near-optimal) leaf ordering
+#[allow(dead_code)]
 pub fn optimal_leaf_ordering<F: Float + FromPrimitive + Debug + PartialOrd>(
     linkage_matrix: ArrayView2<F>,
     distance_matrix: ArrayView1<F>,
@@ -350,6 +355,7 @@ pub fn optimal_leaf_ordering<F: Float + FromPrimitive + Debug + PartialOrd>(
 /// # Returns
 ///
 /// * `Result<Array2<F>>` - Reordered linkage matrix
+#[allow(dead_code)]
 pub fn apply_leaf_ordering<F: Float + FromPrimitive + Debug + PartialOrd + Clone>(
     linkage_matrix: ArrayView2<F>,
     leaf_ordering: ArrayView1<usize>,

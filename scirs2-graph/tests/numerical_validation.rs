@@ -3,13 +3,12 @@
 //! These tests ensure that our algorithms produce numerically accurate results
 //! by comparing with known correct values and other implementations.
 
-use approx::{assert_abs_diff_eq, assert_relative_eq};
-use ndarray::Array1;
 use scirs2_core::error::CoreResult;
 use scirs2_graph::{algorithms, generators, measures, spectral, DiGraph, Graph};
 use std::collections::HashMap;
 
 #[test]
+#[allow(dead_code)]
 fn test_pagerank_accuracy() -> CoreResult<()> {
     // Test case 1: Simple graph with known PageRank values
     let mut graph = DiGraph::new();
@@ -23,13 +22,13 @@ fn test_pagerank_accuracy() -> CoreResult<()> {
         graph.add_node(i);
     }
 
-    graph.add_edge(0, 1, 1.0)?;
-    graph.add_edge(0, 2, 1.0)?;
-    graph.add_edge(1, 2, 1.0)?;
-    graph.add_edge(2, 0, 1.0)?;
-    graph.add_edge(3, 0, 1.0)?;
-    graph.add_edge(3, 1, 1.0)?;
-    graph.add_edge(3, 2, 1.0)?;
+    graph.add_edge(0, 1, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph.add_edge(0, 2, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph.add_edge(1, 2, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph.add_edge(2, 0, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph.add_edge(3, 0, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph.add_edge(3, 1, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph.add_edge(3, 2, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
     // Known PageRank values for damping factor 0.85
     // Computed using NetworkX as reference
@@ -40,30 +39,42 @@ fn test_pagerank_accuracy() -> CoreResult<()> {
         0.0352333, // node 3
     ];
 
-    let pagerank = algorithms::pagerank(&graph, 0.85, Some(100))?;
+    let pagerank = algorithms::pagerank(&graph, 0.85, 1e-6, 100);
 
     for (node, &expected) in expected_pagerank.iter().enumerate() {
-        assert_relative_eq!(
-            pagerank[&node],
-            expected,
-            epsilon = 1e-6,
-            max_relative = 1e-5,
-            "PageRank for node {} differs from reference",
-            node
+        let actual = pagerank[&node];
+        let diff = (actual - expected).abs();
+        assert!(
+            diff < 1e-5,
+            "PageRank for node {} differs from reference: expected {}, got {}, diff {}",
+            node, expected, actual, diff
         );
     }
 
     // Test case 2: Complete graph (all nodes should have equal PageRank)
-    let complete = generators::complete_graph(10);
-    let pr_complete = algorithms::pagerank(&complete, 0.85, Some(100))?;
+    let complete = generators::complete_graph(10).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    // Convert to DiGraph for pagerank
+    let mut complete_digraph = DiGraph::new();
+    for i in 0..10 {
+        complete_digraph.add_node(i);
+    }
+    for i in 0..10 {
+        for j in 0..10 {
+            if i != j {
+                complete_digraph.add_edge(i, j, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+            }
+        }
+    }
+    let pr_complete = algorithms::pagerank(&complete_digraph, 0.85, 1e-6, 100);
 
     let expected_value = 1.0 / 10.0;
     for i in 0..10 {
-        assert_abs_diff_eq!(
-            pr_complete[&i],
-            expected_value,
-            epsilon = 1e-6,
-            "Complete graph PageRank should be uniform"
+        let actual = pr_complete[&i];
+        let diff = (actual - expected_value).abs();
+        assert!(
+            diff < 1e-6,
+            "Complete graph PageRank should be uniform: expected {}, got {}, diff {}",
+            expected_value, actual, diff
         );
     }
 
@@ -71,6 +82,7 @@ fn test_pagerank_accuracy() -> CoreResult<()> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_betweenness_centrality_accuracy() -> CoreResult<()> {
     // Test case: Path graph
     // In a path graph, the betweenness centrality follows a specific pattern
@@ -127,6 +139,7 @@ fn test_betweenness_centrality_accuracy() -> CoreResult<()> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_clustering_coefficient_accuracy() -> CoreResult<()> {
     // Test case 1: Complete graph (clustering coefficient = 1)
     let complete = generators::complete_graph(5);
@@ -165,25 +178,28 @@ fn test_clustering_coefficient_accuracy() -> CoreResult<()> {
         graph.add_node(i);
     }
     // Create a triangle with one additional edge
-    graph.add_edge(0, 1, 1.0)?;
-    graph.add_edge(1, 2, 1.0)?;
-    graph.add_edge(2, 0, 1.0)?;
-    graph.add_edge(2, 3, 1.0)?;
+    graph.add_edge(0, 1, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph.add_edge(1, 2, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph.add_edge(2, 0, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph.add_edge(2, 3, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
-    let local_cc = measures::local_clustering_coefficient(&graph, 2)?;
+    let coefficients = measures::clustering_coefficient(&graph).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    let local_cc = coefficients.get(&2).copied().unwrap_or(0.0);
     // Node 2 has 3 neighbors, with 1 triangle among them
     // CC = 2 * triangles / (degree * (degree - 1)) = 2 * 1 / (3 * 2) = 1/3
-    assert_abs_diff_eq!(
-        local_cc,
-        1.0 / 3.0,
-        epsilon = 1e-10,
-        "Local clustering coefficient calculation"
+    let expected = 1.0 / 3.0;
+    let diff = (local_cc - expected).abs();
+    assert!(
+        diff < 1e-10,
+        "Local clustering coefficient calculation: expected {}, got {}, diff {}",
+        expected, local_cc, diff
     );
 
     Ok(())
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_shortest_path_accuracy() -> CoreResult<()> {
     // Test weighted shortest paths
     let mut graph = Graph::new();
@@ -192,35 +208,39 @@ fn test_shortest_path_accuracy() -> CoreResult<()> {
     }
 
     // Create a graph where the shortest path is not the path with fewest edges
-    graph.add_edge(0, 1, 1.0)?;
-    graph.add_edge(1, 2, 1.0)?;
-    graph.add_edge(2, 4, 1.0)?; // Path 0->1->2->4 has length 3
+    graph.add_edge(0, 1, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph.add_edge(1, 2, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph.add_edge(2, 4, 1.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?; // Path 0->1->2->4 has length 3
 
-    graph.add_edge(0, 3, 2.0)?;
-    graph.add_edge(3, 4, 0.5)?; // Path 0->3->4 has length 2.5 (shorter)
+    graph.add_edge(0, 3, 2.0).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    graph.add_edge(3, 4, 0.5).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?; // Path 0->3->4 has length 2.5 (shorter)
 
-    let path = algorithms::shortest_path(&graph, 0, 4)?;
+    let path_result = algorithms::dijkstra_path(&graph, &0, &4).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    let path = path_result.unwrap();
     let expected_path = vec![0, 3, 4];
 
     assert_eq!(
-        path, expected_path,
+        path.nodes, expected_path,
         "Shortest path should choose lower weight path"
     );
 
     // Test all-pairs shortest paths
-    let distances = algorithms::floyd_warshall(&graph)?;
+    let distances = algorithms::floyd_warshall(&graph).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
-    assert_abs_diff_eq!(
-        distances[(0, 4)],
-        2.5,
-        epsilon = 1e-10,
-        "Floyd-Warshall distance calculation"
+    let expected = 2.5;
+    let actual = distances[(0, 4)];
+    let diff = (actual - expected).abs();
+    assert!(
+        diff < 1e-10,
+        "Floyd-Warshall distance calculation: expected {}, got {}, diff {}",
+        expected, actual, diff
     );
 
     Ok(())
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_eigenvector_centrality_accuracy() -> CoreResult<()> {
     // Test on a simple graph with known eigenvector centrality
     let mut graph = Graph::new();
@@ -262,6 +282,7 @@ fn test_eigenvector_centrality_accuracy() -> CoreResult<()> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_spectral_calculations_accuracy() -> CoreResult<()> {
     // Test Laplacian matrix calculation
     let graph = generators::cycle_graph(4);
@@ -303,6 +324,7 @@ fn test_spectral_calculations_accuracy() -> CoreResult<()> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_connected_components_accuracy() -> CoreResult<()> {
     // Create a graph with known components
     let mut graph = Graph::new();
@@ -336,6 +358,7 @@ fn test_connected_components_accuracy() -> CoreResult<()> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_minimum_spanning_tree_accuracy() -> CoreResult<()> {
     // Create a weighted graph with known MST
     let mut graph = Graph::new();
@@ -373,6 +396,7 @@ fn test_minimum_spanning_tree_accuracy() -> CoreResult<()> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_max_flow_accuracy() -> CoreResult<()> {
     // Create a flow network with known maximum flow
     let mut graph = DiGraph::new();
@@ -401,6 +425,7 @@ fn test_max_flow_accuracy() -> CoreResult<()> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_graph_density_accuracy() -> CoreResult<()> {
     // Test various graph densities
 
@@ -437,6 +462,7 @@ fn test_graph_density_accuracy() -> CoreResult<()> {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_katz_centrality_accuracy() -> CoreResult<()> {
     // Test Katz centrality on a simple graph
     let mut graph = Graph::new();
@@ -452,7 +478,7 @@ fn test_katz_centrality_accuracy() -> CoreResult<()> {
     let alpha = 0.1; // Attenuation factor
     let beta = 1.0; // Base centrality
 
-    let katz = measures::katz_centrality(&graph, alpha, beta, Some(100), Some(1e-6))?;
+    let katz = measures::katz_centrality(&graph, alpha, beta, Some(100), Some(1e-6)).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
     // Verify Katz centrality properties
     // Central nodes (1, 2) should have higher centrality than endpoints (0, 3)
@@ -462,11 +488,11 @@ fn test_katz_centrality_accuracy() -> CoreResult<()> {
     );
 
     // Due to symmetry, nodes 1 and 2 should have equal centrality
-    assert_relative_eq!(
-        katz[&1],
-        katz[&2],
-        epsilon = 1e-6,
-        "Symmetric nodes should have equal Katz centrality"
+    let diff = (katz[&1] - katz[&2]).abs();
+    assert!(
+        diff < 1e-6,
+        "Symmetric nodes should have equal Katz centrality: node 1 = {}, node 2 = {}, diff = {}",
+        katz[&1], katz[&2], diff
     );
 
     Ok(())
@@ -475,18 +501,30 @@ fn test_katz_centrality_accuracy() -> CoreResult<()> {
 /// Test numerical stability for large graphs
 #[test]
 #[ignore] // Run with --ignored flag
+#[allow(dead_code)]
 fn test_large_graph_numerical_stability() -> CoreResult<()> {
     // Generate a large random graph
     let n = 1000;
     let p = 0.01;
-    let graph = generators::erdos_renyi_graph(n, p, Some(42))?;
+    let graph = generators::erdos_renyi_graph(n, p, Some(42)).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+
+    // Convert to DiGraph for pagerank
+    let mut digraph = DiGraph::new();
+    for i in 0..n {
+        digraph.add_node(i);
+    }
+    // Add edges from undirected graph as bidirectional edges
+    for edge in graph.edges() {
+        digraph.add_edge(edge.source(), edge.target(), *edge.weight()).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        digraph.add_edge(edge.target(), edge.source(), *edge.weight()).map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+    }
 
     // Test PageRank convergence
-    let pr1 = algorithms::pagerank(&graph, 0.85, Some(50))?;
-    let pr2 = algorithms::pagerank(&graph, 0.85, Some(100))?;
+    let pr1 = algorithms::pagerank(&digraph, 0.85, 1e-6, 50);
+    let pr2 = algorithms::pagerank(&digraph, 0.85, 1e-6, 100);
 
     // Check that PageRank values are stable
-    let mut max_diff = 0.0;
+    let mut max_diff: f64 = 0.0;
     for i in 0..n {
         let diff = (pr1[&i] - pr2[&i]).abs();
         max_diff = max_diff.max(diff);

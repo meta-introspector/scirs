@@ -7,6 +7,7 @@ use scirs2_integrate::ode::utils::linear_solvers::{solve_linear_system, LinearSo
 use std::time::Instant;
 
 // Creates a banded test matrix with specified bandwidth
+#[allow(dead_code)]
 fn create_banded_matrix(n: usize, lower: usize, upper: usize) -> Array2<f64> {
     let mut a = Array2::<f64>::zeros((n, n));
 
@@ -27,6 +28,7 @@ fn create_banded_matrix(n: usize, lower: usize, upper: usize) -> Array2<f64> {
 }
 
 // Creates a dense test matrix
+#[allow(dead_code)]
 fn create_dense_matrix(n: usize) -> Array2<f64> {
     let mut a = Array2::<f64>::zeros((n, n));
 
@@ -47,6 +49,7 @@ fn create_dense_matrix(n: usize) -> Array2<f64> {
 }
 
 // Creates a structured test matrix (Toeplitz)
+#[allow(dead_code)]
 fn create_structured_matrix(n: usize) -> Array2<f64> {
     let mut a = Array2::<f64>::zeros((n, n));
 
@@ -68,6 +71,7 @@ fn create_structured_matrix(n: usize) -> Array2<f64> {
 }
 
 // Compare performance of different linear solvers
+#[allow(dead_code)]
 fn benchmark_solvers(
     matrix_type: &str,
     n: usize,
@@ -179,6 +183,7 @@ fn benchmark_solvers(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("Linear Solver Performance Comparison");
     println!("====================================");

@@ -865,6 +865,7 @@ where
 /// # Returns
 ///
 /// A LocalPolynomialRegression model with common default settings
+#[allow(dead_code)]
 pub fn make_loess<F>(
     points: Array2<F>,
     values: Array1<F>,
@@ -890,6 +891,7 @@ where
 /// # Returns
 ///
 /// A LocalPolynomialRegression model with robust error estimates
+#[allow(dead_code)]
 pub fn make_robust_loess<F>(
     points: Array2<F>,
     values: Array1<F>,

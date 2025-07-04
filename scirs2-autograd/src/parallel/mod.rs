@@ -528,6 +528,7 @@ pub enum ThreadPoolError {
 
 /// Public API functions for thread pool management
 /// Initialize the global thread pool with default configuration
+#[allow(dead_code)]
 pub fn init_thread_pool() -> Result<(), ThreadPoolError> {
     let mut pool = GLOBAL_THREAD_POOL.lock().unwrap();
     if pool.is_none() {
@@ -537,6 +538,7 @@ pub fn init_thread_pool() -> Result<(), ThreadPoolError> {
 }
 
 /// Initialize the global thread pool with custom configuration
+#[allow(dead_code)]
 pub fn init_thread_pool_with_config(config: ThreadPoolConfig) -> Result<(), ThreadPoolError> {
     let mut pool = GLOBAL_THREAD_POOL.lock().unwrap();
     *pool = Some(ThreadPool::with_config(config));
@@ -544,6 +546,7 @@ pub fn init_thread_pool_with_config(config: ThreadPoolConfig) -> Result<(), Thre
 }
 
 /// Execute a task on the global thread pool
+#[allow(dead_code)]
 pub fn execute_global<F>(f: F) -> Result<(), ThreadPoolError>
 where
     F: FnOnce() + Send + 'static,
@@ -559,6 +562,7 @@ where
 }
 
 /// Execute a task and wait for completion on the global thread pool
+#[allow(dead_code)]
 pub fn execute_and_wait_global<F, R>(f: F) -> Result<R, ThreadPoolError>
 where
     F: FnOnce() -> R + Send + 'static,
@@ -575,12 +579,14 @@ where
 }
 
 /// Get global thread pool statistics
+#[allow(dead_code)]
 pub fn get_global_thread_pool_stats() -> Option<ThreadPoolStats> {
     let pool = GLOBAL_THREAD_POOL.lock().unwrap();
     pool.as_ref().map(|p| p.get_stats())
 }
 
 /// Shutdown the global thread pool
+#[allow(dead_code)]
 pub fn shutdown_global_thread_pool() -> Result<(), ThreadPoolError> {
     let mut pool = GLOBAL_THREAD_POOL.lock().unwrap();
     if let Some(pool) = pool.take() {
@@ -591,6 +597,7 @@ pub fn shutdown_global_thread_pool() -> Result<(), ThreadPoolError> {
 }
 
 /// Set the number of threads for the global thread pool
+#[allow(dead_code)]
 pub fn set_global_thread_count(count: usize) -> Result<(), ThreadPoolError> {
     let config = ThreadPoolConfig {
         num_threads: count,
@@ -600,6 +607,7 @@ pub fn set_global_thread_count(count: usize) -> Result<(), ThreadPoolError> {
 }
 
 /// Get the current number of threads in the global thread pool
+#[allow(dead_code)]
 pub fn get_global_thread_count() -> usize {
     let pool = GLOBAL_THREAD_POOL.lock().unwrap();
     pool.as_ref()
@@ -608,6 +616,7 @@ pub fn get_global_thread_count() -> usize {
 }
 
 /// Check if the global thread pool is initialized
+#[allow(dead_code)]
 pub fn is_thread_pool_initialized() -> bool {
     let pool = GLOBAL_THREAD_POOL.lock().unwrap();
     pool.is_some()

@@ -7,6 +7,7 @@ use std::fmt::Debug;
 use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function for safe usize conversion
+#[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
@@ -94,6 +95,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 /// let total_intensities = sum_labels(&intensity_image, &segmentation, None).unwrap();
 /// // Each element contains total intensity for that segment
 /// ```
+#[allow(dead_code)]
 pub fn sum_labels<T, D>(
     input: &Array<T, D>,
     labels: &Array<usize, D>,
@@ -304,6 +306,7 @@ where
 /// - Input array is 0-dimensional
 /// - Input and labels arrays have different shapes
 /// - Region has zero pixels (should not occur with valid labels)
+#[allow(dead_code)]
 pub fn mean_labels<T, D>(
     input: &Array<T, D>,
     labels: &Array<usize, D>,
@@ -392,6 +395,7 @@ where
 /// // Region 2: variance of [10.0, 10.5]
 /// // Region 3: variance of [5.0, 5.0, 5.0] = 0.0 (no variation)
 /// ```
+#[allow(dead_code)]
 pub fn variance_labels<T, D>(
     input: &Array<T, D>,
     labels: &Array<usize, D>,
@@ -672,6 +676,7 @@ where
 /// Returns an error if:
 /// - Label array is 0-dimensional
 /// - No valid labels found (returns empty array, not error)
+#[allow(dead_code)]
 pub fn count_labels<D>(
     labels: &Array<usize, D>,
     index: Option<&[usize]>,
@@ -934,6 +939,7 @@ where
 /// - min >= max (invalid range)
 /// - bins = 0 (invalid bin count)
 /// - Labels array shape doesn't match input array shape
+#[allow(dead_code)]
 pub fn histogram<T, D>(
     input: &Array<T, D>,
     min: T,

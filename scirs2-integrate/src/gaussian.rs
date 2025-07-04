@@ -419,6 +419,7 @@ impl<F: IntegrateFloat> GaussLegendreQuadrature<F> {
 /// let result = gauss_legendre(|x: f64| x * x, 0.0, 1.0, 5).unwrap();
 /// assert!((result - 1.0/3.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn gauss_legendre<F, Func>(f: Func, a: F, b: F, n: usize) -> IntegrateResult<F>
 where
     F: IntegrateFloat,
@@ -454,6 +455,7 @@ where
 /// ).unwrap();
 /// assert!((result - 2.0/3.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn multi_gauss_legendre<F, Func>(
     f: Func,
     ranges: &[(F, F)],
@@ -530,6 +532,7 @@ where
 /// - Integral estimate
 /// - Error estimate
 /// - Number of function evaluations
+#[allow(dead_code)]
 pub fn gauss_kronrod15<F, Func>(f: Func, a: F, b: F) -> (F, F, usize)
 where
     F: IntegrateFloat,
@@ -639,6 +642,7 @@ where
 /// - Integral estimate
 /// - Error estimate
 /// - Number of function evaluations
+#[allow(dead_code)]
 pub fn gauss_kronrod21<F, Func>(f: Func, a: F, b: F) -> (F, F, usize)
 where
     F: IntegrateFloat,

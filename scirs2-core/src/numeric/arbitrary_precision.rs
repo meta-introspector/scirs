@@ -34,11 +34,13 @@ use std::sync::RwLock;
 static DEFAULT_PRECISION: RwLock<u32> = RwLock::new(256);
 
 /// Get the default precision for arbitrary precision operations
+#[allow(dead_code)]
 pub fn get_default_precision() -> u32 {
     *DEFAULT_PRECISION.read().unwrap()
 }
 
 /// Set the default precision for arbitrary precision operations
+#[allow(dead_code)]
 pub fn set_default_precision(prec: u32) -> CoreResult<()> {
     check_positive(prec as f64, "precision")?;
     *DEFAULT_PRECISION.write().unwrap() = prec;

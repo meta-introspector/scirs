@@ -18,6 +18,7 @@ use scirs2_special::{
 use std::f64::consts::PI;
 
 /// Educational demonstration of characteristic value behavior
+#[allow(dead_code)]
 fn demonstrate_characteristic_values() {
     println!("\n📚 PART 1: CHARACTERISTIC VALUES");
     println!("═══════════════════════════════════════════════════════════");
@@ -69,6 +70,7 @@ fn demonstrate_characteristic_values() {
 }
 
 /// Demonstrate perturbation theory for small c
+#[allow(dead_code)]
 fn demonstrate_perturbation_theory() {
     println!("\n📚 PART 2: PERTURBATION THEORY");
     println!("═══════════════════════════════════════════════════════════");
@@ -108,6 +110,7 @@ fn demonstrate_perturbation_theory() {
 }
 
 /// Demonstrate asymptotic behavior for large c
+#[allow(dead_code)]
 fn demonstrate_asymptotic_behavior() {
     println!("\n📚 PART 3: ASYMPTOTIC BEHAVIOR");
     println!("═══════════════════════════════════════════════════════════");
@@ -145,6 +148,7 @@ fn demonstrate_asymptotic_behavior() {
 }
 
 /// Demonstrate angular and radial functions
+#[allow(dead_code)]
 fn demonstrate_spheroidal_functions() {
     println!("\n📚 PART 4: SPHEROIDAL FUNCTIONS");
     println!("═══════════════════════════════════════════════════════════");
@@ -203,6 +207,7 @@ fn demonstrate_spheroidal_functions() {
 }
 
 /// Compare prolate vs oblate spheroidal functions
+#[allow(dead_code)]
 fn compare_prolate_oblate() {
     println!("\n📚 PART 5: PROLATE vs OBLATE COMPARISON");
     println!("═══════════════════════════════════════════════════════════");
@@ -239,6 +244,7 @@ fn compare_prolate_oblate() {
 }
 
 /// Demonstrate physical applications
+#[allow(dead_code)]
 fn demonstrate_physical_applications() {
     println!("\n📚 PART 6: PHYSICAL APPLICATIONS");
     println!("═══════════════════════════════════════════════════════════");
@@ -320,6 +326,7 @@ fn demonstrate_physical_applications() {
 }
 
 /// Demonstrate numerical challenges and solutions
+#[allow(dead_code)]
 fn demonstrate_numerical_challenges() {
     println!("\n📚 PART 7: NUMERICAL CONSIDERATIONS");
     println!("═══════════════════════════════════════════════════════════");
@@ -382,6 +389,7 @@ fn demonstrate_numerical_challenges() {
 }
 
 /// Main tutorial function
+#[allow(dead_code)]
 fn main() {
     println!("🌟 SPHEROIDAL WAVE FUNCTIONS: COMPREHENSIVE TUTORIAL");
     println!("════════════════════════════════════════════════════════════════");

@@ -11,7 +11,6 @@ use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
-#[cfg(test)]
 use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -81,6 +80,7 @@ pub struct ValidationMetrics {
 /// let result = simd_lombscargle(&times, &values, &config).unwrap();
 /// assert!(result.validation.snr > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn simd_lombscargle<T, U>(
     times: &[T],
     values: &[U],
@@ -146,6 +146,7 @@ where
 }
 
 /// Enhanced input validation
+#[allow(dead_code)]
 fn validate_inputs<T, U>(times: &[T], values: &[U]) -> SignalResult<()>
 where
     T: Float + NumCast + Debug,
@@ -188,6 +189,7 @@ where
 }
 
 /// Validate time series properties
+#[allow(dead_code)]
 fn validate_time_series(times: &[f64]) -> SignalResult<()> {
     // Check if times are sorted
     for i in 1..times.len() {
@@ -227,6 +229,7 @@ fn validate_time_series(times: &[f64]) -> SignalResult<()> {
 }
 
 /// Convert numeric array to f64
+#[allow(dead_code)]
 fn convert_to_f64<T>(arr: &[T]) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -241,6 +244,7 @@ where
 }
 
 /// Apply window function
+#[allow(dead_code)]
 fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
     let n = values.len();
 
@@ -281,6 +285,7 @@ fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<
 }
 
 /// Compute frequency grid
+#[allow(dead_code)]
 fn compute_frequency_grid(times: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
     let n = times.len();
     let t_span = times[n - 1] - times[0];
@@ -324,6 +329,7 @@ fn compute_frequency_grid(times: &[f64], config: &LombScargleConfig) -> SignalRe
 }
 
 /// SIMD-optimized fast Lomb-Scargle algorithm
+#[allow(dead_code)]
 fn compute_simd_fast_lombscargle(
     times: &[f64],
     values: &[f64],
@@ -372,6 +378,7 @@ fn compute_simd_fast_lombscargle(
 }
 
 /// Compute tau offset using SIMD
+#[allow(dead_code)]
 fn compute_tau_simd(times: &[f64], omega: f64) -> f64 {
     let n = times.len();
     let mut sin_sum = 0.0;
@@ -407,6 +414,7 @@ fn compute_tau_simd(times: &[f64], omega: f64) -> f64 {
 }
 
 /// Compute power at a single frequency using SIMD
+#[allow(dead_code)]
 fn compute_power_simd(
     times: &[f64],
     values: &[f64],
@@ -445,6 +453,7 @@ fn compute_power_simd(
 }
 
 /// Standard Lomb-Scargle (fallback for non-SIMD)
+#[allow(dead_code)]
 fn compute_standard_lombscargle(
     times: &[f64],
     values: &[f64],
@@ -456,6 +465,7 @@ fn compute_standard_lombscargle(
 }
 
 /// Compute validation metrics
+#[allow(dead_code)]
 fn compute_validation_metrics(
     frequencies: &[f64],
     power: &[f64],
@@ -524,6 +534,7 @@ fn compute_validation_metrics(
 }
 
 /// Parallel bootstrap confidence intervals
+#[allow(dead_code)]
 fn compute_parallel_bootstrap_ci(
     times: &[f64],
     values: &[f64],
@@ -556,7 +567,7 @@ fn compute_parallel_bootstrap_ci(
             let mut resampled_values = vec![0.0; n];
 
             for i in 0..n {
-                let idx = rng.gen_range(0..n);
+                let idx = rng.random_range(0..n);
                 resampled_times[i] = times_ref[idx];
                 resampled_values[i] = values_ref[idx];
             }
@@ -599,6 +610,7 @@ fn compute_parallel_bootstrap_ci(
 }
 
 /// Compute false alarm probability
+#[allow(dead_code)]
 fn compute_false_alarm_probability(power: &[f64], n_data: usize) -> SignalResult<Vec<f64>> {
     let n_freq = power.len();
     let n_eff = n_freq as f64; // Simplified; could use more sophisticated estimate

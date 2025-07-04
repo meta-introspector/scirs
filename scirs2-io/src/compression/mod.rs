@@ -109,6 +109,7 @@ impl CompressionAlgorithm {
 }
 
 /// Convert a compression level (0-9) to the appropriate internal level for each algorithm
+#[allow(dead_code)]
 fn normalize_compression_level(level: Option<u32>, algorithm: CompressionAlgorithm) -> Result<u32> {
     let level = level.unwrap_or(6); // Default compression level
 
@@ -149,6 +150,7 @@ fn normalize_compression_level(level: Option<u32>, algorithm: CompressionAlgorit
 /// # Returns
 ///
 /// The compressed data as a `Vec<u8>`
+#[allow(dead_code)]
 pub fn compress_data(
     mut data: &[u8],
     algorithm: CompressionAlgorithm,
@@ -229,6 +231,7 @@ pub fn compress_data(
 /// # Returns
 ///
 /// The decompressed data as a `Vec<u8>`
+#[allow(dead_code)]
 pub fn decompress_data(mut data: &[u8], algorithm: CompressionAlgorithm) -> Result<Vec<u8>> {
     match algorithm {
         CompressionAlgorithm::Gzip => {
@@ -296,6 +299,7 @@ pub fn decompress_data(mut data: &[u8], algorithm: CompressionAlgorithm) -> Resu
 /// # Returns
 ///
 /// The path to the compressed file
+#[allow(dead_code)]
 pub fn compress_file<P: AsRef<Path>>(
     input_path: P,
     output_path: Option<P>,
@@ -355,6 +359,7 @@ pub fn compress_file<P: AsRef<Path>>(
 /// # Returns
 ///
 /// The path to the decompressed file
+#[allow(dead_code)]
 pub fn decompress_file<P: AsRef<Path>>(
     input_path: P,
     output_path: Option<P>,
@@ -427,6 +432,7 @@ pub fn decompress_file<P: AsRef<Path>>(
 /// # Returns
 ///
 /// The compression ratio (original size / compressed size)
+#[allow(dead_code)]
 pub fn compression_ratio(
     data: &[u8],
     algorithm: CompressionAlgorithm,
@@ -463,6 +469,7 @@ pub struct CompressionInfo {
 }
 
 /// Get information about a specific compression algorithm
+#[allow(dead_code)]
 pub fn algorithm_info(algorithm: CompressionAlgorithm) -> CompressionInfo {
     match algorithm {
         CompressionAlgorithm::Gzip => CompressionInfo {
@@ -543,6 +550,7 @@ const FPZIP_MAGIC: &[u8] = &[0x46, 0x50, 0x5a, 0x49]; // "FPZI"
 const DELTA_LZ4_MAGIC: &[u8] = &[0x44, 0x4c, 0x5a, 0x34]; // "DLZ4"
 
 /// Detect compression algorithm from magic bytes
+#[allow(dead_code)]
 pub fn detect_compression_from_bytes(data: &[u8]) -> Option<CompressionAlgorithm> {
     if data.starts_with(GZIP_MAGIC) {
         Some(CompressionAlgorithm::Gzip)
@@ -775,26 +783,31 @@ pub struct FileCompressionInfo {
 static GLOBAL_HANDLER: std::sync::OnceLock<TransparentFileHandler> = std::sync::OnceLock::new();
 
 /// Initialize the global transparent file handler
+#[allow(dead_code)]
 pub fn init_global_handler(handler: TransparentFileHandler) {
     let _ = GLOBAL_HANDLER.set(handler);
 }
 
 /// Get a reference to the global transparent file handler
+#[allow(dead_code)]
 pub fn global_handler() -> &'static TransparentFileHandler {
     GLOBAL_HANDLER.get_or_init(TransparentFileHandler::default)
 }
 
 /// Convenient function to read a file with automatic decompression using global handler
+#[allow(dead_code)]
 pub fn read_file_transparent<P: AsRef<Path>>(path: P) -> Result<Vec<u8>> {
     global_handler().read_file(path)
 }
 
 /// Convenient function to write a file with automatic compression using global handler
+#[allow(dead_code)]
 pub fn write_file_transparent<P: AsRef<Path>>(path: P, data: &[u8]) -> Result<()> {
     global_handler().write_file(path, data)
 }
 
 /// Convenient function to copy a file with transparent compression/decompression using global handler
+#[allow(dead_code)]
 pub fn copy_file_transparent<P: AsRef<Path>, Q: AsRef<Path>>(
     source: P,
     destination: Q,
@@ -803,6 +816,7 @@ pub fn copy_file_transparent<P: AsRef<Path>, Q: AsRef<Path>>(
 }
 
 /// Convenient function to get file compression info using global handler
+#[allow(dead_code)]
 pub fn file_info_transparent<P: AsRef<Path>>(path: P) -> Result<FileCompressionInfo> {
     global_handler().file_info(path)
 }
@@ -812,6 +826,7 @@ pub fn file_info_transparent<P: AsRef<Path>>(path: P) -> Result<FileCompressionI
 //
 
 /// Compress floating-point data using specialized techniques
+#[allow(dead_code)]
 fn compress_fpzip(data: &[u8], _level: u32) -> Result<Vec<u8>> {
     // Simple implementation: magic header + floating-point optimized compression
     let mut result = Vec::with_capacity(FPZIP_MAGIC.len() + data.len());
@@ -873,6 +888,7 @@ fn compress_fpzip(data: &[u8], _level: u32) -> Result<Vec<u8>> {
 }
 
 /// Decompress floating-point data
+#[allow(dead_code)]
 fn decompress_fpzip(data: &[u8]) -> Result<Vec<u8>> {
     if !data.starts_with(FPZIP_MAGIC) {
         return Err(IoError::DecompressionError(
@@ -927,6 +943,7 @@ fn decompress_fpzip(data: &[u8]) -> Result<Vec<u8>> {
 }
 
 /// Compress time series data using delta encoding + LZ4
+#[allow(dead_code)]
 fn compress_delta_lz4(data: &[u8], level: u32) -> Result<Vec<u8>> {
     let mut result = Vec::with_capacity(DELTA_LZ4_MAGIC.len() + data.len());
 
@@ -984,6 +1001,7 @@ fn compress_delta_lz4(data: &[u8], level: u32) -> Result<Vec<u8>> {
 }
 
 /// Decompress delta-encoded time series data
+#[allow(dead_code)]
 fn decompress_delta_lz4(data: &[u8]) -> Result<Vec<u8>> {
     if !data.starts_with(DELTA_LZ4_MAGIC) {
         return Err(IoError::DecompressionError(
@@ -1094,6 +1112,7 @@ pub struct ParallelCompressionStats {
 }
 
 /// Compress data in parallel using multiple threads
+#[allow(dead_code)]
 pub fn compress_data_parallel(
     data: &[u8],
     algorithm: CompressionAlgorithm,
@@ -1179,6 +1198,7 @@ pub fn compress_data_parallel(
 }
 
 /// Decompress data in parallel using multiple threads
+#[allow(dead_code)]
 pub fn decompress_data_parallel(
     data: &[u8],
     algorithm: CompressionAlgorithm,
@@ -1310,6 +1330,7 @@ pub fn decompress_data_parallel(
 }
 
 /// Compress a file in parallel and save it to a new file
+#[allow(dead_code)]
 pub fn compress_file_parallel<P: AsRef<Path>>(
     input_path: P,
     output_path: Option<P>,
@@ -1354,6 +1375,7 @@ pub fn compress_file_parallel<P: AsRef<Path>>(
 }
 
 /// Decompress a file in parallel and save it to a new file
+#[allow(dead_code)]
 pub fn decompress_file_parallel<P: AsRef<Path>>(
     input_path: P,
     output_path: Option<P>,
@@ -1413,6 +1435,7 @@ pub fn decompress_file_parallel<P: AsRef<Path>>(
 }
 
 /// Benchmark compression performance for different algorithms and configurations
+#[allow(dead_code)]
 pub fn benchmark_compression_algorithms(
     data: &[u8],
     algorithms: &[CompressionAlgorithm],

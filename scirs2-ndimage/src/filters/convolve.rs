@@ -18,6 +18,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn uniform_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -69,6 +70,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Convolved array
+#[allow(dead_code)]
 pub fn convolve<T, D, E>(
     input: &Array<T, D>,
     weights: &Array<T, E>,
@@ -176,7 +178,7 @@ where
                     )
                 })
             }
-            (n, _) => {
+            (_n, _) => {
                 // Generic n-dimensional convolution
                 convolve_nd(input, weights, &border_mode)
             }
@@ -185,6 +187,7 @@ where
 }
 
 /// Perform 2D convolution with a kernel
+#[allow(dead_code)]
 fn convolve_2d<T>(
     input: &Array<T, ndarray::Ix2>,
     weights: &Array<T, ndarray::Ix2>,
@@ -254,6 +257,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Convolved array
+#[allow(dead_code)]
 pub fn convolve_fast<T, D, E>(
     input: &Array<T, D>,
     weights: &Array<T, E>,
@@ -275,6 +279,7 @@ where
 }
 
 /// Apply a 1D correlation along the specified axis
+#[allow(dead_code)]
 pub fn correlate1d<T, D>(
     input: &Array<T, D>,
     weights: &Array1<T>,
@@ -343,6 +348,7 @@ where
 }
 
 /// Perform 1D convolution with a kernel
+#[allow(dead_code)]
 fn convolve_1d<T>(
     input: &Array<T, ndarray::Ix1>,
     weights: &Array<T, ndarray::Ix1>,
@@ -415,6 +421,7 @@ where
 }
 
 /// Perform 3D convolution with a kernel
+#[allow(dead_code)]
 fn convolve_3d<T>(
     input: &Array<T, ndarray::Ix3>,
     weights: &Array<T, ndarray::Ix3>,
@@ -465,6 +472,7 @@ where
 }
 
 /// Helper function to get padded values for 3D arrays
+#[allow(dead_code)]
 fn get_padded_value_3d<T>(
     input: &Array<T, ndarray::Ix3>,
     z: isize,
@@ -536,6 +544,7 @@ where
 }
 
 /// Generic n-dimensional convolution
+#[allow(dead_code)]
 fn convolve_nd<T, D, E>(
     input: &Array<T, D>,
     weights: &Array<T, E>,
@@ -596,6 +605,7 @@ where
 }
 
 /// Helper function to get padded values for n-dimensional arrays
+#[allow(dead_code)]
 fn get_padded_value_nd<T, D>(input: &Array<T, D>, coords: &[isize], mode: &BorderMode) -> T
 where
     T: Float + Clone,

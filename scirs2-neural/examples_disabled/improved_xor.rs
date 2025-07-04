@@ -53,6 +53,7 @@ impl XORNetwork {
             custom_update_layer(&mut self.output_layer, learning_rate)?;
         }
         Ok(())
+#[allow(dead_code)]
 fn custom_update_layer(layer: &mut Dense<f32>, learning_rate: f32) -> Result<()> {
     // Use the ParamLayer trait methods to access weights and gradients
     let params = layer.get_parameters();
@@ -67,6 +68,7 @@ fn custom_update_layer(layer: &mut Dense<f32>, learning_rate: f32) -> Result<()>
     // Set the updated parameters
     layer.set_parameters(vec![new_weights, new_biases])?;
     Ok(())
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("Improved XOR Neural Network Example");
     // Create XOR dataset

@@ -95,6 +95,7 @@ pub enum InterpolationMethod {
 /// # Returns
 ///
 /// * Interpolated signal
+#[allow(dead_code)]
 pub fn interpolate(
     signal: &Array1<f64>,
     method: InterpolationMethod,
@@ -140,6 +141,7 @@ pub fn interpolate(
 /// # Returns
 ///
 /// * Interpolated image
+#[allow(dead_code)]
 pub fn interpolate_2d(
     image: &Array2<f64>,
     method: InterpolationMethod,
@@ -210,6 +212,7 @@ pub fn interpolate_2d(
 /// # Returns
 ///
 /// * Interpolated image
+#[allow(dead_code)]
 pub fn nearest_neighbor_interpolate_2d(image: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let (n_rows, n_cols) = image.dim();
 
@@ -272,6 +275,7 @@ pub fn nearest_neighbor_interpolate_2d(image: &Array2<f64>) -> SignalResult<Arra
 /// # Returns
 ///
 /// * Smoothed signal
+#[allow(dead_code)]
 pub fn smooth_signal(signal: &Array1<f64>, factor: f64) -> Array1<f64> {
     let n = signal.len();
     let window_size = (n as f64 * factor).ceil() as usize;
@@ -313,6 +317,7 @@ pub fn smooth_signal(signal: &Array1<f64>, factor: f64) -> Array1<f64> {
 /// # Returns
 ///
 /// * Signal with enforced monotonicity
+#[allow(dead_code)]
 pub fn enforce_monotonicity(signal: &Array1<f64>) -> Array1<f64> {
     let n = signal.len();
     let mut result = signal.clone();
@@ -383,6 +388,7 @@ pub fn enforce_monotonicity(signal: &Array1<f64>) -> Array1<f64> {
 /// # Returns
 ///
 /// * Index in valid_indices array of nearest valid point
+#[allow(dead_code)]
 pub fn find_nearest_valid_index(idx: usize, valid_indices: &[usize]) -> usize {
     if valid_indices.is_empty() {
         return 0;

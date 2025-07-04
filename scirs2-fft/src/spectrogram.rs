@@ -73,6 +73,7 @@ use std::f64::consts::PI;
 /// assert_eq!(t.len(), zxx.shape()[1]);
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn stft<T>(
     x: &[T],
     window: Window,
@@ -309,6 +310,7 @@ where
 /// assert_eq!(t.len(), sxx.shape()[1]);
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn spectrogram<T>(
     x: &[T],
     fs: Option<f64>,
@@ -455,6 +457,7 @@ where
 ///     }
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn spectrogram_normalized<T>(
     x: &[T],
     fs: Option<f64>,

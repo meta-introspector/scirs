@@ -169,7 +169,7 @@ struct XLAComputationGraph<A: Float> {
 
 /// XLA computation node
 #[derive(Debug, Clone)]
-struct XLANode<A: Float> {
+struct XLANode<A: Float + Clone> {
     /// Operation type
     operation: XLAOperation,
 
@@ -613,7 +613,7 @@ struct MemoryRequirements {
 
 impl<O, A> TPUOptimizer<O, A>
 where
-    A: Float + Default + Clone + Send + Sync,
+    A: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug,
     O: Optimizer<A> + Send + Sync,
 {
     /// Create a new TPU optimizer
@@ -1078,7 +1078,7 @@ impl XLAComputationBuilder {
     }
 }
 
-impl<A> Clone for XLAComputationGraph<A> {
+impl<A: Float> Clone for XLAComputationGraph<A> {
     fn clone(&self) -> Self {
         Self {
             nodes: self.nodes.clone(),

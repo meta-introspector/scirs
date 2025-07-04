@@ -364,6 +364,7 @@ pub struct SolverStatistics {
 }
 
 /// Initial concentration for species u
+#[allow(dead_code)]
 fn initial_concentration_u(x: f64, y: f64, domain_size: f64) -> f64 {
     let center_x = domain_size * 0.5;
     let center_y = domain_size * 0.5;
@@ -379,6 +380,7 @@ fn initial_concentration_u(x: f64, y: f64, domain_size: f64) -> f64 {
 }
 
 /// Initial concentration for species v
+#[allow(dead_code)]
 fn initial_concentration_v(x: f64, y: f64, domain_size: f64) -> f64 {
     let center_x = domain_size * 0.5;
     let center_y = domain_size * 0.5;
@@ -393,6 +395,7 @@ fn initial_concentration_v(x: f64, y: f64, domain_size: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("=== Adaptive PDE Solver Example ===\n");
     println!("Solving 2D Gray-Scott reaction-diffusion system with:");

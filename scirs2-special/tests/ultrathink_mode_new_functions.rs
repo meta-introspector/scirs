@@ -2,6 +2,7 @@
 use scirs2_special::{erfcx, erfi, shichi, sici, spence, wofz};
 
 #[test]
+#[allow(dead_code)]
 fn test_sici_function() {
     // Test sici function - should return tuple of (Si(x), Ci(x))
     let (si_val, ci_val) = sici(1.0).unwrap();
@@ -24,6 +25,7 @@ fn test_sici_function() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_shichi_function() {
     // Test shichi function - should return tuple of (Shi(x), Chi(x))
     let (shi_val, chi_val) = shichi(1.0).unwrap();
@@ -46,6 +48,7 @@ fn test_shichi_function() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_spence_function() {
     // Test special values of Spence function
 
@@ -71,6 +74,7 @@ fn test_spence_function() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_erfcx_function() {
     // Test scaled complementary error function
 
@@ -89,6 +93,7 @@ fn test_erfcx_function() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_erfi_function() {
     // Test imaginary error function
 
@@ -107,6 +112,7 @@ fn test_erfi_function() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_wofz_function() {
     // Test Faddeeva function for real arguments
 
@@ -116,6 +122,7 @@ fn test_wofz_function() {
 }
 
 #[test]
+#[allow(dead_code)]
 fn test_function_consistency() {
     // Test that sici returns the same values as individual si and ci functions
     use scirs2_special::{ci, si};

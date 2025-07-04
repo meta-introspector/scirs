@@ -38,6 +38,7 @@ use std::f32::consts::PI;
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn sobel_edges_oriented(
     img: &DynamicImage,
     threshold: f32,
@@ -106,6 +107,7 @@ pub fn sobel_edges_oriented(
 /// # Returns
 ///
 /// * Result containing edge image
+#[allow(dead_code)]
 pub fn sobel_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
     let (edges, _) = sobel_edges_oriented(img, threshold, false)?;
     Ok(edges)
@@ -129,6 +131,7 @@ pub fn sobel_edges(img: &DynamicImage, threshold: f32) -> Result<GrayImage> {
 /// # Performance
 ///
 /// 2-4x faster than regular implementation on SIMD-capable hardware.
+#[allow(dead_code)]
 pub fn sobel_edges_simd(
     img: &DynamicImage,
     threshold: f32,
@@ -182,6 +185,7 @@ pub fn sobel_edges_simd(
 /// # Returns
 ///
 /// * Result containing tuple of (magnitude_map, orientation_map)
+#[allow(dead_code)]
 pub fn compute_gradients(img: &DynamicImage) -> Result<(Array2<f32>, Array2<f32>)> {
     let array = image_to_array(img)?;
     let (height, width) = array.dim();
@@ -233,6 +237,7 @@ pub fn compute_gradients(img: &DynamicImage) -> Result<(Array2<f32>, Array2<f32>
 /// # Returns
 ///
 /// * Result containing RGB visualization image
+#[allow(dead_code)]
 pub fn visualize_gradient_orientation(
     magnitude: &Array2<f32>,
     orientation: &Array2<f32>,
@@ -272,6 +277,7 @@ pub fn visualize_gradient_orientation(
 }
 
 /// Convert HSV to RGB
+#[allow(dead_code)]
 fn hsv_to_rgb(h: f32, s: f32, v: f32) -> (u8, u8, u8) {
     let c = v * s;
     let x = c * (1.0 - ((h / 60.0) % 2.0 - 1.0).abs());
@@ -309,6 +315,7 @@ fn hsv_to_rgb(h: f32, s: f32, v: f32) -> (u8, u8, u8) {
 /// # Returns
 ///
 /// * Histogram of oriented gradients
+#[allow(dead_code)]
 pub fn compute_hog_histogram(
     magnitude: &Array2<f32>,
     orientation: &Array2<f32>,

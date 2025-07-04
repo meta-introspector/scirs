@@ -6,6 +6,7 @@
 
 use scirs2_stats::{create_cross_platform_validator, CompatibilityRating, CrossPlatformValidator};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌐 Ultrathink Cross-Platform Validation");
     println!("=======================================\n");

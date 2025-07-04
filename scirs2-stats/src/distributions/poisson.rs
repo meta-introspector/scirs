@@ -189,6 +189,7 @@ impl<F: Float + NumCast> Poisson<F> {
 }
 
 /// Check if a floating-point value is (close to) an integer
+#[allow(dead_code)]
 fn is_integer<F: Float>(x: F) -> bool {
     (x - x.round()).abs() < F::from(1e-10).unwrap()
 }
@@ -263,6 +264,7 @@ impl<F: Float + NumCast> DiscreteDistribution<F> for Poisson<F> {
 }
 
 /// Compute natural logarithm of factorial
+#[allow(dead_code)]
 fn ln_factorial<F: Float + NumCast>(n: u64) -> F {
     if n <= 1 {
         return F::zero();
@@ -291,6 +293,7 @@ impl<F: Float + NumCast> SampleableDistribution<F> for Poisson<F> {
 }
 
 /// Calculate the factorial of a non-negative integer
+#[allow(dead_code)]
 fn factorial(n: u64) -> u64 {
     if n <= 1 {
         1

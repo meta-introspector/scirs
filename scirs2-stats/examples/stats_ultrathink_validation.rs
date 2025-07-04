@@ -4,6 +4,7 @@
 use ndarray::Array1;
 
 // Since we can't run full tests due to build locks, let's validate the API structure
+#[allow(dead_code)]
 fn main() {
     println!("🔍 Ultrathink Mode Validation");
     println!("============================\n");

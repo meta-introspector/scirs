@@ -82,6 +82,7 @@ impl Default for LombScargleConfig {
 /// * `frequencies` - Frequency array
 /// * `power` - Periodogram power
 /// * `confidence_intervals` - Optional bootstrap confidence intervals
+#[allow(dead_code)]
 pub fn lombscargle_enhanced<T, U>(
     times: &[T],
     values: &[U],
@@ -167,6 +168,7 @@ where
 }
 
 /// Apply window function to values
+#[allow(dead_code)]
 fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
     let n = values.len();
 
@@ -222,6 +224,7 @@ fn apply_window(values: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<
 }
 
 /// Compute frequency grid with oversampling
+#[allow(dead_code)]
 fn compute_frequency_grid(times: &[f64], config: &LombScargleConfig) -> SignalResult<Vec<f64>> {
     let n = times.len();
     let t_span = times[n - 1] - times[0];
@@ -253,6 +256,7 @@ fn compute_frequency_grid(times: &[f64], config: &LombScargleConfig) -> SignalRe
 }
 
 /// Fast Lomb-Scargle algorithm (Press & Rybicki 1989)
+#[allow(dead_code)]
 fn compute_fast_lombscargle(
     times: &[f64],
     values: &[f64],
@@ -324,6 +328,7 @@ fn compute_fast_lombscargle(
 }
 
 /// Standard Lomb-Scargle algorithm (for comparison)
+#[allow(dead_code)]
 fn compute_standard_lombscargle(
     times: &[f64],
     values: &[f64],
@@ -366,6 +371,7 @@ fn compute_standard_lombscargle(
 }
 
 /// Bootstrap confidence intervals for Lomb-Scargle periodogram
+#[allow(dead_code)]
 fn bootstrap_confidence_intervals(
     times: &[f64],
     values: &[f64],
@@ -389,7 +395,7 @@ fn bootstrap_confidence_intervals(
         let mut boot_values = Vec::with_capacity(n);
 
         for _ in 0..n {
-            let idx = rng.gen_range(0..n);
+            let idx = rng.random_range(0..n);
             boot_times.push(times[idx]);
             boot_values.push(values[idx]);
         }
@@ -438,6 +444,7 @@ fn bootstrap_confidence_intervals(
 /// # Returns
 ///
 /// * False alarm probability
+#[allow(dead_code)]
 pub fn false_alarm_probability(
     peak_power: f64,
     n_samples: usize,
@@ -494,6 +501,7 @@ pub fn false_alarm_probability(
 /// # Returns
 ///
 /// * Power threshold for the given FAP
+#[allow(dead_code)]
 pub fn significance_threshold(
     fap: f64,
     n_samples: usize,

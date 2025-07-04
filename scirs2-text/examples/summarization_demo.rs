@@ -2,6 +2,7 @@
 
 use scirs2_text::{CentroidSummarizer, KeywordExtractor, TextRank};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Text Summarization Demo");
     println!("======================\n");

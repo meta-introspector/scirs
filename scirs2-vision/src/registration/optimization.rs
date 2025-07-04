@@ -17,6 +17,7 @@ pub struct OptimizationResult {
 }
 
 /// Gradient descent optimization
+#[allow(dead_code)]
 pub fn gradient_descent_optimize(
     initial_params: &Array1<f64>,
     cost_function: &dyn Fn(&Array1<f64>) -> Result<f64>,
@@ -70,6 +71,7 @@ pub fn gradient_descent_optimize(
 }
 
 /// Powell's method optimization
+#[allow(dead_code)]
 pub fn powell_optimize(
     initial_params: &Array1<f64>,
     cost_function: &dyn Fn(&Array1<f64>) -> Result<f64>,
@@ -143,6 +145,7 @@ pub fn powell_optimize(
 }
 
 /// Perform line search along a direction
+#[allow(dead_code)]
 fn line_search(
     start_point: &Array1<f64>,
     direction: &Array1<f64>,

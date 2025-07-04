@@ -124,6 +124,7 @@ impl Default for LearningPreferences {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎓 Advanced Interactive Special Functions Tutor");
     println!("===============================================\n");
@@ -156,6 +157,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn setup_user_profile() -> Result<UserProfile, Box<dyn std::error::Error>> {
     println!("👋 Welcome to the Advanced Special Functions Tutor!");
     let name = get_user_input("What's your name? ")?;
@@ -192,6 +194,7 @@ fn setup_user_profile() -> Result<UserProfile, Box<dyn std::error::Error>> {
     Ok(profile)
 }
 
+#[allow(dead_code)]
 fn run_quick_assessment() -> Result<u32, Box<dyn std::error::Error>> {
     let mut score = 0;
 
@@ -279,6 +282,7 @@ fn run_quick_assessment() -> Result<u32, Box<dyn std::error::Error>> {
     Ok(score)
 }
 
+#[allow(dead_code)]
 fn adaptive_learning_session(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧠 Adaptive Learning Session");
     println!("============================\n");
@@ -296,6 +300,7 @@ fn adaptive_learning_session(profile: &mut UserProfile) -> Result<(), Box<dyn st
     }
 }
 
+#[allow(dead_code)]
 fn gamma_adaptive_session(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎲 Gamma Function Deep Dive");
     println!("===========================\n");
@@ -431,6 +436,7 @@ fn gamma_adaptive_session(profile: &mut UserProfile) -> Result<(), Box<dyn std::
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bessel_adaptive_session(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🌊 Bessel Function Mastery");
     println!("==========================\n");
@@ -493,6 +499,7 @@ fn bessel_adaptive_session(profile: &mut UserProfile) -> Result<(), Box<dyn std:
     Ok(())
 }
 
+#[allow(dead_code)]
 fn error_function_adaptive_session(
     profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -558,6 +565,7 @@ fn error_function_adaptive_session(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn orthogonal_polynomial_adaptive_session(
     profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -642,6 +650,7 @@ fn orthogonal_polynomial_adaptive_session(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn advanced_topic_session(
     profile: &mut UserProfile,
     topic: &str,
@@ -661,6 +670,7 @@ fn advanced_topic_session(
     }
 }
 
+#[allow(dead_code)]
 fn wright_functions_session(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("📖 Wright functions are generalizations defined by:");
     println!("   W(α,β;z) = Σ_{{n=0}}^∞ z^n / (n! Γ(αn + β))");
@@ -689,6 +699,7 @@ fn wright_functions_session(profile: &mut UserProfile) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn spheroidal_functions_session(
     profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -716,6 +727,7 @@ fn spheroidal_functions_session(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn mathieu_functions_session(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("📖 Mathieu functions are solutions to Mathieu's differential equation:");
     println!("   y'' + (a - 2q cos(2z))y = 0");
@@ -742,6 +754,7 @@ fn mathieu_functions_session(profile: &mut UserProfile) -> Result<(), Box<dyn st
     Ok(())
 }
 
+#[allow(dead_code)]
 fn mathematical_proof_walkthrough(
     profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -768,6 +781,7 @@ fn mathematical_proof_walkthrough(
     }
 }
 
+#[allow(dead_code)]
 fn gamma_half_proof(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Proof that Γ(1/2) = √π");
     println!("===========================\n");
@@ -820,6 +834,7 @@ fn gamma_half_proof(profile: &mut UserProfile) -> Result<(), Box<dyn std::error:
     Ok(())
 }
 
+#[allow(dead_code)]
 fn stirling_approximation_proof(
     profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -865,6 +880,7 @@ fn stirling_approximation_proof(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bessel_orthogonality_proof(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Bessel Function Orthogonality");
     println!("=================================\n");
@@ -906,6 +922,7 @@ fn bessel_orthogonality_proof(profile: &mut UserProfile) -> Result<(), Box<dyn s
     Ok(())
 }
 
+#[allow(dead_code)]
 fn error_function_series_proof(
     profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -956,6 +973,7 @@ fn error_function_series_proof(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn interactive_problem_solver(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎯 Interactive Problem Solver");
     println!("=============================\n");
@@ -982,6 +1000,7 @@ fn interactive_problem_solver(profile: &mut UserProfile) -> Result<(), Box<dyn s
     }
 }
 
+#[allow(dead_code)]
 fn solve_probability_problems(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Probability Problem Solver");
     println!("==============================\n");
@@ -1028,6 +1047,7 @@ fn solve_probability_problems(profile: &mut UserProfile) -> Result<(), Box<dyn s
     Ok(())
 }
 
+#[allow(dead_code)]
 fn solve_physics_problems(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("⚛️ Physics Problem Solver");
     println!("=========================\n");
@@ -1091,6 +1111,7 @@ fn solve_physics_problems(profile: &mut UserProfile) -> Result<(), Box<dyn std::
     Ok(())
 }
 
+#[allow(dead_code)]
 fn solve_engineering_problems(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🔧 Engineering Problem Solver");
     println!("==============================\n");
@@ -1140,6 +1161,7 @@ fn solve_engineering_problems(profile: &mut UserProfile) -> Result<(), Box<dyn s
     Ok(())
 }
 
+#[allow(dead_code)]
 fn solve_financial_problems(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("💰 Financial Mathematics Problem");
     println!("=================================\n");
@@ -1200,6 +1222,7 @@ fn solve_financial_problems(profile: &mut UserProfile) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn solve_custom_problem(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Custom Problem Solver");
     println!("========================\n");
@@ -1232,6 +1255,7 @@ fn solve_custom_problem(profile: &mut UserProfile) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn visual_function_explorer(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📈 Visual Function Explorer");
     println!("===========================\n");
@@ -1261,6 +1285,7 @@ fn visual_function_explorer(profile: &mut UserProfile) -> Result<(), Box<dyn std
     }
 }
 
+#[allow(dead_code)]
 fn explore_gamma_visual(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎲 Gamma Function Visualization");
     println!("===============================\n");
@@ -1300,6 +1325,7 @@ fn explore_gamma_visual(profile: &mut UserProfile) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_bessel_visual(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🌊 Bessel Function Visualization");
     println!("=================================\n");
@@ -1332,6 +1358,7 @@ fn explore_bessel_visual(profile: &mut UserProfile) -> Result<(), Box<dyn std::e
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_error_visual(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Error Function Visualization");
     println!("===============================\n");
@@ -1361,6 +1388,7 @@ fn explore_error_visual(profile: &mut UserProfile) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn explore_polynomial_visual(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("📐 Orthogonal Polynomial Visualization");
     println!("======================================\n");
@@ -1410,6 +1438,7 @@ fn explore_polynomial_visual(profile: &mut UserProfile) -> Result<(), Box<dyn st
     Ok(())
 }
 
+#[allow(dead_code)]
 fn real_world_applications_lab(
     profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1438,6 +1467,7 @@ fn real_world_applications_lab(
     }
 }
 
+#[allow(dead_code)]
 fn signal_processing_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🌐 Signal Processing Laboratory");
     println!("===============================\n");
@@ -1480,6 +1510,7 @@ fn signal_processing_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::e
     Ok(())
 }
 
+#[allow(dead_code)]
 fn computer_graphics_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎮 Computer Graphics Laboratory");
     println!("===============================\n");
@@ -1531,6 +1562,7 @@ fn computer_graphics_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::e
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bioinformatics_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🧬 Bioinformatics Laboratory");
     println!("============================\n");
@@ -1577,6 +1609,7 @@ fn bioinformatics_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
+#[allow(dead_code)]
 fn climate_science_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🌍 Climate Science Laboratory");
     println!("=============================\n");
@@ -1622,6 +1655,7 @@ fn climate_science_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::err
     Ok(())
 }
 
+#[allow(dead_code)]
 fn aerospace_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Aerospace Engineering Laboratory");
     println!("===================================\n");
@@ -1674,6 +1708,7 @@ fn aerospace_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn mastery_challenge(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🏆 Mastery Challenge");
     println!("====================\n");
@@ -1691,6 +1726,7 @@ fn mastery_challenge(profile: &mut UserProfile) -> Result<(), Box<dyn std::error
     }
 }
 
+#[allow(dead_code)]
 fn determine_challenge_level(profile: &UserProfile) -> u32 {
     let avg_mastery: f64 = if profile.mastery_scores.is_empty() {
         0.5
@@ -1724,6 +1760,7 @@ fn determine_challenge_level(profile: &UserProfile) -> u32 {
     }
 }
 
+#[allow(dead_code)]
 fn basic_mastery_challenge(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Basic Mastery Challenge");
     println!("==========================\n");
@@ -1810,6 +1847,7 @@ fn basic_mastery_challenge(profile: &mut UserProfile) -> Result<(), Box<dyn std:
     Ok(())
 }
 
+#[allow(dead_code)]
 fn intermediate_mastery_challenge(
     profile: &mut UserProfile,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -1896,6 +1934,7 @@ fn intermediate_mastery_challenge(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn advanced_mastery_challenge(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Advanced Mastery Challenge");
     println!("=============================\n");
@@ -1968,6 +2007,7 @@ fn advanced_mastery_challenge(profile: &mut UserProfile) -> Result<(), Box<dyn s
     Ok(())
 }
 
+#[allow(dead_code)]
 fn expert_mastery_challenge(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Expert Mastery Challenge");
     println!("===========================\n");
@@ -2006,6 +2046,7 @@ fn expert_mastery_challenge(profile: &mut UserProfile) -> Result<(), Box<dyn std
     Ok(())
 }
 
+#[allow(dead_code)]
 fn peer_comparison_mode(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n👥 Peer Comparison Mode");
     println!("========================\n");
@@ -2072,6 +2113,7 @@ fn peer_comparison_mode(profile: &mut UserProfile) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
+#[allow(dead_code)]
 fn profile_settings(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚙️ Profile Settings");
     println!("===================\n");
@@ -2142,6 +2184,7 @@ fn profile_settings(profile: &mut UserProfile) -> Result<(), Box<dyn std::error:
 }
 
 // Helper functions for adaptive learning
+#[allow(dead_code)]
 fn select_adaptive_topic(profile: &UserProfile) -> String {
     // Find the topic with lowest mastery score
     if profile.mastery_scores.is_empty() {
@@ -2207,6 +2250,7 @@ fn select_adaptive_topic(profile: &UserProfile) -> String {
     }
 }
 
+#[allow(dead_code)]
 fn check_gamma_achievements(profile: &mut UserProfile, score: f64, hints_used: u32) {
     if score >= 1.0 && hints_used == 0 {
         profile.earn_achievement(Achievement {
@@ -2235,6 +2279,7 @@ fn check_gamma_achievements(profile: &mut UserProfile, score: f64, hints_used: u
 }
 
 // Display functions
+#[allow(dead_code)]
 fn display_personalized_menu(profile: &UserProfile) {
     println!(
         "\n🎓 Welcome back, {}! (Level {}, {} XP)",
@@ -2257,6 +2302,7 @@ fn display_personalized_menu(profile: &UserProfile) {
     println!("9. Press 'q' to quit");
 }
 
+#[allow(dead_code)]
 fn display_session_summary(profile: &UserProfile) {
     println!("\n📊 Session Summary");
     println!("==================");
@@ -2278,6 +2324,7 @@ fn display_session_summary(profile: &UserProfile) {
 }
 
 // Visualization functions (ASCII art representations)
+#[allow(dead_code)]
 fn display_gamma_visualization(x: f64) {
     println!("\n📊 Gamma function visualization around x = {}", x);
     println!("     |");
@@ -2292,6 +2339,7 @@ fn display_gamma_visualization(x: f64) {
     println!("Note: Γ(x) has a minimum around x ≈ 1.46");
 }
 
+#[allow(dead_code)]
 fn display_bessel_visualization(x: f64) {
     println!("\n📊 Bessel function behavior at x = {}", x);
     println!("  J_n(x)");
@@ -2305,6 +2353,7 @@ fn display_bessel_visualization(x: f64) {
     println!("Note: Oscillatory with decreasing amplitude");
 }
 
+#[allow(dead_code)]
 fn ascii_plot_gamma() {
     println!("  Γ(x)");
     println!("  10 +");
@@ -2318,6 +2367,7 @@ fn ascii_plot_gamma() {
     println!("      1  2  3  4  5");
 }
 
+#[allow(dead_code)]
 fn ascii_plot_bessel() {
     println!("  J_n(x)");
     println!("   1 +");
@@ -2329,6 +2379,7 @@ fn ascii_plot_bessel() {
     println!("  * = J₀(x), / = J₁(x)");
 }
 
+#[allow(dead_code)]
 fn ascii_plot_error_function() {
     println!("  erf(x)");
     println!("   1 +      ****");
@@ -2340,6 +2391,7 @@ fn ascii_plot_error_function() {
     println!("    -3 -1  0  1  3");
 }
 
+#[allow(dead_code)]
 fn ascii_plot_legendre() {
     println!("  P_n(x)");
     println!("   1 +  ****    P₀");
@@ -2351,6 +2403,7 @@ fn ascii_plot_legendre() {
     println!("    -1  0  1");
 }
 
+#[allow(dead_code)]
 fn ascii_plot_chebyshev() {
     println!("  T_n(x)");
     println!("   1 +*\\  /*\\  /*");
@@ -2362,6 +2415,7 @@ fn ascii_plot_chebyshev() {
     println!("    -1  0  1");
 }
 
+#[allow(dead_code)]
 fn ascii_plot_hermite() {
     println!("  H_n(x)");
     println!("  10 +    *     *");
@@ -2374,6 +2428,7 @@ fn ascii_plot_hermite() {
 }
 
 // Utility functions
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
     print!("{}", prompt);
     io::stdout().flush()?;
@@ -2382,12 +2437,14 @@ fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
     Ok(input.trim().to_string())
 }
 
+#[allow(dead_code)]
 fn get_yes_no_input(prompt: &str) -> Result<bool, Box<dyn std::error::Error>> {
     let input = get_user_input(prompt)?;
     Ok(input.to_lowercase().starts_with('y'))
 }
 
 // Mathematical utility functions
+#[allow(dead_code)]
 fn factorial(n: u64) -> u64 {
     if n <= 1 {
         1
@@ -2396,14 +2453,17 @@ fn factorial(n: u64) -> u64 {
     }
 }
 
+#[allow(dead_code)]
 fn poisson_pmf(k: u32, lambda: f64) -> f64 {
     (lambda.powi(k as i32) * (-lambda).exp()) / factorial(k as u64) as f64
 }
 
+#[allow(dead_code)]
 fn poisson_cdf(k: u32, lambda: f64) -> f64 {
     (0..=k).map(|i| poisson_pmf(i, lambda)).sum()
 }
 
+#[allow(dead_code)]
 fn numerical_orthogonality_check(n: u32, m: u32) -> f64 {
     // Numerical integration of Legendre polynomial orthogonality
     let num_points = 1000;
@@ -2418,6 +2478,7 @@ fn numerical_orthogonality_check(n: u32, m: u32) -> f64 {
     integral
 }
 
+#[allow(dead_code)]
 fn numerical_bessel_orthogonality(nu: u32, alpha_m: f64, alpha_n: f64) -> f64 {
     // Numerical integration for Bessel function orthogonality
     let num_points = 1000;
@@ -2433,6 +2494,7 @@ fn numerical_bessel_orthogonality(nu: u32, alpha_m: f64, alpha_n: f64) -> f64 {
 }
 
 // Placeholder for jn function (Bessel function of order nu)
+#[allow(dead_code)]
 fn jn(nu: u32, x: f64) -> f64 {
     match nu {
         0 => j0(x),

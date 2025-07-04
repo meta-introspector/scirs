@@ -33,6 +33,7 @@ use std::fmt::Debug;
 /// assert_eq!(padded.len(), 10);
 /// assert_eq!(padded, vec![0.0, 0.0, 0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0]);
 /// ```
+#[allow(dead_code)]
 pub fn zero_pad<T>(
     x: &[T],
     length: usize,
@@ -224,6 +225,7 @@ where
 /// assert!(window[0] > 0.0 && window[0] < 1.0);
 /// assert!(window[window.len() / 2] > 0.9);
 /// ```
+#[allow(dead_code)]
 pub fn get_window(window_type: &str, length: usize, periodic: bool) -> SignalResult<Vec<f64>> {
     // Re-export from the window module
     crate::window::get_window(window_type, length, periodic)
@@ -253,6 +255,7 @@ pub fn get_window(window_type: &str, length: usize, periodic: bool) -> SignalRes
 /// let sum_of_squares: f64 = normalized.iter().map(|&x| x * x).sum();
 /// assert!((sum_of_squares - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn normalize<T>(x: &[T], norm: &str) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -344,6 +347,7 @@ where
 ///
 /// assert!(!is_real(&signal, 1e-10));
 /// ```
+#[allow(dead_code)]
 pub fn is_real(x: &[num_complex::Complex64], tol: f64) -> bool {
     if x.is_empty() {
         return true;

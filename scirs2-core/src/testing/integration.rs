@@ -1456,6 +1456,7 @@ pub struct IntegrationChainResult {
 }
 
 /// Create a comprehensive ecosystem integration test suite
+#[allow(dead_code)]
 pub fn create_comprehensive_ecosystem_suite() -> CoreResult<TestSuite> {
     let config = TestConfig::default().with_timeout(Duration::from_secs(300));
     let mut suite = TestSuite::new("SciRS2 Comprehensive Ecosystem Integration", config);
@@ -1487,6 +1488,7 @@ pub fn create_comprehensive_ecosystem_suite() -> CoreResult<TestSuite> {
 }
 
 /// Create a default integration test suite for all scirs2 modules
+#[allow(dead_code)]
 pub fn create_default_integration_suite() -> CoreResult<TestSuite> {
     let config = TestConfig::default().with_timeout(Duration::from_secs(120));
     let mut suite = TestSuite::new("SciRS2 Integration Tests", config);

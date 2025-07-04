@@ -172,6 +172,7 @@ impl MessageCompressor {
                 decompress_random_sparse(&compressed.data)
             CompressionMethod::GradientCompression => decompress_gradients(&compressed.data),
 /// Estimate message size in bytes
+#[allow(dead_code)]
 fn estimate_message_size(message: &Message) -> usize {
     match message {
         Message::ModelParameters(weights) => weights.iter().map(|w| w.len() * 4).sum(),
@@ -181,6 +182,7 @@ fn estimate_message_size(message: &Message) -> usize {
         Message::Control(_) => 32,
         Message::Compressed(c) => c.data.len(),
 /// Serialize weights to bytes
+#[allow(dead_code)]
 fn serialize_weights(weights: &[Array2<f32>]) -> Result<Vec<u8>> {
     let mut bytes = Vec::new();
     for weight in weights {
@@ -192,6 +194,7 @@ fn serialize_weights(weights: &[Array2<f32>]) -> Result<Vec<u8>> {
             bytes.extend(&val.to_le_bytes());
     Ok(bytes)
 /// Deserialize weights from bytes
+#[allow(dead_code)]
 fn deserialize_weights(data: &[u8]) -> Result<Vec<Array2<f32>>> {
     let mut weights = Vec::new();
     let mut cursor = 0;
@@ -219,6 +222,7 @@ fn deserialize_weights(data: &[u8]) -> Result<Vec<Array2<f32>>> {
         weights.push(Array2::from_shape_vec((rows, cols), values)?);
     Ok(weights)
 /// Quantization compression
+#[allow(dead_code)]
 fn compress_quantization(weights: &[Array2<f32>], bits: u8) -> Result<Vec<u8>> {
     // Simplified quantization
     let mut compressed = Vec::new();
@@ -237,6 +241,7 @@ fn compress_quantization(weights: &[Array2<f32>], bits: u8) -> Result<Vec<u8>> {
             compressed.push(quantized);
     Ok(compressed)
 /// Quantization decompression
+#[allow(dead_code)]
 fn decompress_quantization(data: &[u8], bits: u8) -> Result<Vec<Array2<f32>>> {
         // Read metadata
         let min = f32::from_le_bytes([
@@ -247,19 +252,25 @@ fn decompress_quantization(data: &[u8], bits: u8) -> Result<Vec<Array2<f32>>> {
             values.push(min + quantized * scale);
             cursor += 1;
 /// Top-K sparsification compression
+#[allow(dead_code)]
 fn compress_topk(weights: &[Array2<f32>], k: usize) -> Result<Vec<u8>> {
     // Placeholder implementation
     serialize_weights(weights)
 /// Top-K decompression
+#[allow(dead_code)]
 fn decompress_topk(data: &[u8]) -> Result<Vec<Array2<f32>>> {
     deserialize_weights(data)
 /// Random sparsification compression
+#[allow(dead_code)]
 fn compress_random_sparse(weights: &[Array2<f32>], ratio: f32) -> Result<Vec<u8>> {
 /// Random sparse decompression
+#[allow(dead_code)]
 fn decompress_random_sparse(data: &[u8]) -> Result<Vec<Array2<f32>>> {
 /// Gradient compression
+#[allow(dead_code)]
 fn compress_gradients(weights: &[Array2<f32>]) -> Result<Vec<u8>> {
 /// Gradient decompression
+#[allow(dead_code)]
 fn decompress_gradients(data: &[u8]) -> Result<Vec<Array2<f32>>> {
 #[cfg(test)]
 mod tests {

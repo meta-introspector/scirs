@@ -385,6 +385,7 @@ impl InverseWishart {
 /// let df = 5.0;
 /// let inv_wishart = multivariate::inverse_wishart(scale, df).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn inverse_wishart<D>(scale: ArrayBase<D, Ix2>, df: f64) -> StatsResult<InverseWishart>
 where
     D: Data<Elem = f64>,

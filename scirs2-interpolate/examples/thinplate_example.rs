@@ -2,6 +2,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use scirs2_interpolate::make_thinplate_interpolator;
 
 /// Generate a grid of points in the 2D square [min, max] x [min, max]
+#[allow(dead_code)]
 fn generate_grid(min: f64, max: f64, resolution: usize) -> Array2<f64> {
     let step = (max - min) / (resolution as f64 - 1.0);
     let mut grid = Array2::zeros((resolution * resolution, 2));
@@ -20,6 +21,7 @@ fn generate_grid(min: f64, max: f64, resolution: usize) -> Array2<f64> {
 }
 
 /// Generate scattered data points with an underlying function f(x,y) = x^2 + sin(y)
+#[allow(dead_code)]
 fn generate_scattered_data(n_points: usize, add_noise: bool) -> (Array2<f64>, Array1<f64>) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
@@ -53,6 +55,7 @@ fn generate_scattered_data(n_points: usize, add_noise: bool) -> (Array2<f64>, Ar
 }
 
 /// Compute function values for given points: f(x,y) = x^2 + sin(y)
+#[allow(dead_code)]
 fn true_function(points: &ArrayView2<f64>) -> Array1<f64> {
     let n_points = points.nrows();
     let mut values = Array1::zeros(n_points);
@@ -67,6 +70,7 @@ fn true_function(points: &ArrayView2<f64>) -> Array1<f64> {
 }
 
 /// Compute mean squared error between prediction and truth
+#[allow(dead_code)]
 fn compute_mse(pred: &ArrayView1<f64>, truth: &ArrayView1<f64>) -> f64 {
     let n = pred.len();
     let mut sum_sq_error = 0.0;
@@ -79,6 +83,7 @@ fn compute_mse(pred: &ArrayView1<f64>, truth: &ArrayView1<f64>) -> f64 {
     sum_sq_error / (n as f64)
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Thin-Plate Spline Interpolation Example");
     println!("======================================\n");
@@ -93,6 +98,7 @@ fn main() {
     noisy_data_example();
 }
 
+#[allow(dead_code)]
 fn basic_tps_example() {
     println!("1. Basic Thin-Plate Spline Interpolation");
     println!("---------------------------------------");
@@ -151,6 +157,7 @@ fn basic_tps_example() {
     println!();
 }
 
+#[allow(dead_code)]
 fn smoothing_tps_example() {
     println!("2. Effect of Smoothing Parameter");
     println!("------------------------------");
@@ -191,6 +198,7 @@ fn smoothing_tps_example() {
     println!();
 }
 
+#[allow(dead_code)]
 fn noisy_data_example() {
     println!("3. Handling Noisy Data");
     println!("--------------------");

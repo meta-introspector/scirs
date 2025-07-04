@@ -197,6 +197,7 @@ pub mod prelude {
 
 // Public API
 /// SciRS2 version information
+#[allow(dead_code)]
 pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }

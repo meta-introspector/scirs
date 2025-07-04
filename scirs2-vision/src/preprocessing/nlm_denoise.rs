@@ -35,6 +35,7 @@ use std::sync::Mutex;
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn nlm_denoise(
     input: &Array2<f32>,
     h: f32,
@@ -145,6 +146,7 @@ pub fn nlm_denoise(
 /// # Returns
 ///
 /// * Result containing the denoised color image
+#[allow(dead_code)]
 pub fn nlm_denoise_color(
     input: &Array3<f32>,
     h: f32,
@@ -185,6 +187,7 @@ pub fn nlm_denoise_color(
 /// # Returns
 ///
 /// * Result containing the denoised image
+#[allow(dead_code)]
 pub fn nlm_denoise_parallel(
     input: &Array2<f32>,
     h: f32,
@@ -290,6 +293,7 @@ pub fn nlm_denoise_parallel(
 }
 
 /// Pad an array with reflected boundary conditions
+#[allow(dead_code)]
 fn pad_reflect(array: &Array2<f32>, pad_size: usize) -> Array2<f32> {
     let (height, width) = array.dim();
     let new_height = height + 2 * pad_size;

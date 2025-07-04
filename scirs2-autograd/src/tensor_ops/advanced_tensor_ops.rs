@@ -147,6 +147,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for EinsumOp {
 
 // Helper functions
 
+#[allow(dead_code)]
 fn validate_tensor_solve_shapes(
     a_shape: &[usize],
     b_shape: &[usize],
@@ -186,6 +187,7 @@ fn validate_tensor_solve_shapes(
     Ok((prod_x, prod_b))
 }
 
+#[allow(dead_code)]
 fn reshape_for_solve<F: Float>(
     tensor: &ndarray::ArrayViewD<F>,
     rows: usize,
@@ -206,6 +208,7 @@ fn reshape_for_solve<F: Float>(
     Ok(matrix)
 }
 
+#[allow(dead_code)]
 fn reshape_vector<F: Float>(
     tensor: &ndarray::ArrayViewD<F>,
     size: usize,
@@ -217,6 +220,7 @@ fn reshape_vector<F: Float>(
         .map(|v| v.to_owned())
 }
 
+#[allow(dead_code)]
 fn solve_linear_system<F: Float>(
     a: &Array2<F>,
     b: &ndarray::Array1<F>,
@@ -242,6 +246,7 @@ fn solve_linear_system<F: Float>(
     solve_square_system(a, b)
 }
 
+#[allow(dead_code)]
 fn solve_square_system<F: Float>(
     a: &Array2<F>,
     b: &ndarray::Array1<F>,
@@ -301,6 +306,7 @@ fn solve_square_system<F: Float>(
     Ok(x)
 }
 
+#[allow(dead_code)]
 fn compute_solution_shape(
     a_shape: &[usize],
     _b_shape: &[usize],
@@ -333,6 +339,7 @@ fn compute_solution_shape(
     Ok(x_shape)
 }
 
+#[allow(dead_code)]
 fn reshape_solution<F: Float>(
     flat: &ndarray::Array1<F>,
     shape: &[usize],
@@ -351,6 +358,7 @@ fn reshape_solution<F: Float>(
         .map(|v| v.to_owned())
 }
 
+#[allow(dead_code)]
 fn compute_grad_b<F: Float>(
     _a: &ArrayD<F>,
     grad_x: &ArrayD<F>,
@@ -360,6 +368,7 @@ fn compute_grad_b<F: Float>(
     grad_x.clone()
 }
 
+#[allow(dead_code)]
 fn compute_grad_a<F: Float>(
     _grad_x: &ArrayD<F>,
     _x: &ArrayD<F>,
@@ -373,6 +382,7 @@ fn compute_grad_a<F: Float>(
 
 // Einsum helpers
 
+#[allow(dead_code)]
 fn parse_einsum_pattern(pattern: &str) -> Result<(Vec<String>, String), OpError> {
     let parts: Vec<&str> = pattern.split("->").collect();
     if parts.len() != 2 {
@@ -387,6 +397,7 @@ fn parse_einsum_pattern(pattern: &str) -> Result<(Vec<String>, String), OpError>
     Ok((input_specs, output_part.to_string()))
 }
 
+#[allow(dead_code)]
 fn compute_matmul<F: Float>(
     a: &ndarray::ArrayViewD<F>,
     b: &ndarray::ArrayViewD<F>,
@@ -403,6 +414,7 @@ fn compute_matmul<F: Float>(
     Ok(a_2d.dot(&b_2d).into_dyn())
 }
 
+#[allow(dead_code)]
 fn compute_dot_product<F: Float>(
     a: &ndarray::ArrayViewD<F>,
     b: &ndarray::ArrayViewD<F>,
@@ -421,6 +433,7 @@ fn compute_dot_product<F: Float>(
     Ok(ndarray::arr0(sum).into_dyn())
 }
 
+#[allow(dead_code)]
 fn compute_elementwise_mul<F: Float>(
     a: &ndarray::ArrayViewD<F>,
     b: &ndarray::ArrayViewD<F>,
@@ -434,6 +447,7 @@ fn compute_elementwise_mul<F: Float>(
     Ok((a * b).into_owned())
 }
 
+#[allow(dead_code)]
 fn compute_general_einsum<F: Float>(
     a: &ndarray::ArrayViewD<F>,
     _b: &ndarray::ArrayViewD<F>,
@@ -447,6 +461,7 @@ fn compute_general_einsum<F: Float>(
 // Public API functions
 
 /// Solve tensor equation a @ x = b for x
+#[allow(dead_code)]
 pub fn tensor_solve<'g, F: Float + ndarray::ScalarOperand>(
     a: &Tensor<'g, F>,
     b: &Tensor<'g, F>,
@@ -461,6 +476,7 @@ pub fn tensor_solve<'g, F: Float + ndarray::ScalarOperand>(
 }
 
 /// Einstein summation convention
+#[allow(dead_code)]
 pub fn einsum<'g, F: Float + ndarray::ScalarOperand>(
     pattern: &str,
     operands: &[&Tensor<'g, F>],
@@ -480,6 +496,7 @@ pub fn einsum<'g, F: Float + ndarray::ScalarOperand>(
 }
 
 /// Kronecker product (tensor product of matrices)
+#[allow(dead_code)]
 pub fn kron<'g, F: Float>(a: &Tensor<'g, F>, b: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = a.graph();
 

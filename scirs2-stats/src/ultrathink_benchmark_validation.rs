@@ -484,11 +484,13 @@ impl UltrathinkBenchmarkValidator {
 }
 
 /// Create a default ultrathink benchmark validator  
+#[allow(dead_code)]
 pub fn create_ultrathink_validator() -> UltrathinkBenchmarkValidator {
     UltrathinkBenchmarkValidator::new(ValidationConfig::default())
 }
 
 /// Create a custom ultrathink benchmark validator
+#[allow(dead_code)]
 pub fn create_custom_ultrathink_validator(
     config: ValidationConfig,
 ) -> UltrathinkBenchmarkValidator {

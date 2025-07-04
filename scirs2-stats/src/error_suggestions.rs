@@ -294,6 +294,7 @@ let log_transformed = data.mapv(|x| x.ln());
                     example: Some(
                         r#"
 // Log-sum-exp trick
+#[allow(dead_code)]
 fn log_sum_exp(values: &[f64]) -> f64 {
     let max_val = values.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
     let sum = values.iter().map(|&x| (x - max_val).exp()).sum::<f64>();
@@ -399,6 +400,7 @@ impl ErrorFormatter {
 }
 
 /// Quick error diagnosis tool
+#[allow(dead_code)]
 pub fn diagnose_error(error: &StatsError) -> DiagnosisReport {
     let error_str = error.to_string().to_lowercase();
 

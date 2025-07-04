@@ -309,6 +309,7 @@ impl Default for KernelRegistry {
 }
 
 /// Create RK4 Stage 1 kernel for advanced mode GPU acceleration
+#[allow(dead_code)]
 fn create_rk4_stage1_kernel() -> BaseKernel {
     let cuda_source = include_str!("rk4_stage1.cu");
     let metadata = KernelMetadata {
@@ -331,6 +332,7 @@ fn create_rk4_stage1_kernel() -> BaseKernel {
 }
 
 /// Create RK4 Stage 2 kernel for advanced mode GPU acceleration
+#[allow(dead_code)]
 fn create_rk4_stage2_kernel() -> BaseKernel {
     let cuda_source = include_str!("rk4_stage2.cu");
     let metadata = KernelMetadata {
@@ -353,6 +355,7 @@ fn create_rk4_stage2_kernel() -> BaseKernel {
 }
 
 /// Create RK4 Stage 3 kernel for advanced mode GPU acceleration
+#[allow(dead_code)]
 fn create_rk4_stage3_kernel() -> BaseKernel {
     let cuda_source = include_str!("rk4_stage3.cu");
     let metadata = KernelMetadata {
@@ -375,6 +378,7 @@ fn create_rk4_stage3_kernel() -> BaseKernel {
 }
 
 /// Create RK4 Stage 4 kernel for advanced mode GPU acceleration
+#[allow(dead_code)]
 fn create_rk4_stage4_kernel() -> BaseKernel {
     let cuda_source = include_str!("rk4_stage4.cu");
     let metadata = KernelMetadata {
@@ -397,6 +401,7 @@ fn create_rk4_stage4_kernel() -> BaseKernel {
 }
 
 /// Create RK4 Combination kernel for advanced mode GPU acceleration
+#[allow(dead_code)]
 fn create_rk4_combine_kernel() -> BaseKernel {
     let cuda_source = include_str!("rk4_combine.cu");
     let metadata = KernelMetadata {
@@ -419,6 +424,7 @@ fn create_rk4_combine_kernel() -> BaseKernel {
 }
 
 /// Create Error Estimation kernel for adaptive step size control
+#[allow(dead_code)]
 fn create_error_estimate_kernel() -> BaseKernel {
     let cuda_source = include_str!("error_estimate.cu");
     let metadata = KernelMetadata {

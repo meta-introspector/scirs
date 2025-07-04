@@ -13,12 +13,14 @@ use scirs2_special::visualization::{
 };
 
 #[cfg(not(feature = "plotting"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'plotting' feature.");
     println!("Run with: cargo run --example visualization_demo --features plotting");
 }
 
 #[cfg(feature = "plotting")]
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Special Functions Visualization Demo");
     println!("===================================\n");
@@ -67,6 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "plotting")]
+#[allow(dead_code)]
 fn create_custom_plot() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_special::{ai, bi, ci, si};
 
@@ -89,6 +92,7 @@ fn create_custom_plot() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "plotting")]
+#[allow(dead_code)]
 fn export_examples() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_special::gamma;
 
@@ -106,6 +110,7 @@ fn export_examples() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(feature = "plotting")]
+#[allow(dead_code)]
 fn demonstrate_advanced_features() {
     println!("\nAdvanced Visualization Features:");
     println!("================================");

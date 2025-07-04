@@ -25,6 +25,7 @@ use crate::error::{SciRS2Error, SciRS2Result, check_domain};
 /// let result = gamma(5.0);
 /// assert!((result - 24.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn gamma<T: Float + FromPrimitive + FloatConst>(x: T) -> T {
     // Simple implementation for integer and half-integer arguments
     // A more comprehensive implementation would use a series expansion or numerical approximation
@@ -71,6 +72,7 @@ pub fn gamma<T: Float + FromPrimitive + FloatConst>(x: T) -> T {
 /// # Returns
 ///
 /// * Natural logarithm of the gamma function at x
+#[allow(dead_code)]
 pub fn lgamma<T: Float + FromPrimitive + FloatConst>(x: T) -> T {
     if x <= T::zero() {
         return T::nan();
@@ -112,6 +114,7 @@ pub fn lgamma<T: Float + FromPrimitive + FloatConst>(x: T) -> T {
 /// let result = beta(2.0, 3.0).unwrap();
 /// assert!((result - 1.0/12.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn beta<T: Float + FromPrimitive + FloatConst>(a: T, b: T) -> SciRS2Result<T> {
     // Beta function defined in terms of the gamma function
     // B(a, b) = Γ(a) * Γ(b) / Γ(a + b)
@@ -157,6 +160,7 @@ pub fn beta<T: Float + FromPrimitive + FloatConst>(a: T, b: T) -> SciRS2Result<T
 /// let result = erf(0.0);
 /// assert!((result - 0.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn erf<T: Float + FromPrimitive>(x: T) -> T {
     // Simple approximation of the error function
     // For a more accurate implementation, use a series expansion or numerical approximation
@@ -187,6 +191,7 @@ pub fn erf<T: Float + FromPrimitive>(x: T) -> T {
 /// # Returns
 ///
 /// * Complementary error function value at x
+#[allow(dead_code)]
 pub fn erfc<T: Float + FromPrimitive>(x: T) -> T {
     T::one() - erf(x)
 }
@@ -213,6 +218,7 @@ pub fn erfc<T: Float + FromPrimitive>(x: T) -> T {
 /// let result = i0(1.0);
 /// assert!((result - 1.2660658777520084).abs() < 1e-12);
 /// ```
+#[allow(dead_code)]
 pub fn i0<T: Float + FromPrimitive>(x: T) -> T {
     let abs_x = x.abs();
     
@@ -269,6 +275,7 @@ pub fn i0<T: Float + FromPrimitive>(x: T) -> T {
 /// let result = sinc(0.0);
 /// assert!((result - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn sinc<T: Float>(x: T) -> T {
     if x.abs() < T::epsilon() {
         T::one()
@@ -300,6 +307,7 @@ pub fn sinc<T: Float>(x: T) -> T {
 /// let result = jn(1, 1.0);
 /// assert!((result - 0.44005058574493355).abs() < 1e-12);
 /// ```
+#[allow(dead_code)]
 pub fn jn<T: Float + FromPrimitive>(n: i32, x: T) -> T {
     if n < 0 {
         // For negative orders, use J_{-n}(x) = (-1)^n * J_n(x)
@@ -337,6 +345,7 @@ pub fn jn<T: Float + FromPrimitive>(n: i32, x: T) -> T {
 }
 
 /// Helper function for J_0(x)
+#[allow(dead_code)]
 fn bessel_j0<T: Float + FromPrimitive>(x: T) -> T {
     let abs_x = x.abs();
     
@@ -371,6 +380,7 @@ fn bessel_j0<T: Float + FromPrimitive>(x: T) -> T {
 }
 
 /// Helper function for J_1(x)
+#[allow(dead_code)]
 fn bessel_j1<T: Float + FromPrimitive>(x: T) -> T {
     let abs_x = x.abs();
     
@@ -410,6 +420,7 @@ fn bessel_j1<T: Float + FromPrimitive>(x: T) -> T {
 }
 
 /// Helper function for J_n(x) using recurrence relation
+#[allow(dead_code)]
 fn bessel_jn_recurrence<T: Float + FromPrimitive>(n: i32, x: T) -> T {
     if n == 0 {
         return bessel_j0(x);
@@ -443,6 +454,7 @@ fn bessel_jn_recurrence<T: Float + FromPrimitive>(n: i32, x: T) -> T {
 /// # Returns
 ///
 /// * Bessel function value at x
+#[allow(dead_code)]
 pub fn yn<T: Float + FromPrimitive>(n: i32, x: T) -> T {
     // Placeholder implementation
     // A proper implementation would use a series expansion or numerical approximation
@@ -458,6 +470,7 @@ pub fn yn<T: Float + FromPrimitive>(n: i32, x: T) -> T {
 /// # Returns
 ///
 /// * Complete elliptic integral value
+#[allow(dead_code)]
 pub fn ellipk<T: Float + FromPrimitive>(m: T) -> SciRS2Result<T> {
     check_domain(m < T::one(), "Parameter m must be less than 1")?;
     
@@ -475,6 +488,7 @@ pub fn ellipk<T: Float + FromPrimitive>(m: T) -> SciRS2Result<T> {
 /// # Returns
 ///
 /// * Complete elliptic integral value
+#[allow(dead_code)]
 pub fn ellipe<T: Float + FromPrimitive>(m: T) -> SciRS2Result<T> {
     check_domain(m < T::one(), "Parameter m must be less than 1")?;
     

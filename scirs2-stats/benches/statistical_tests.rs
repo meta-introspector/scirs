@@ -29,6 +29,7 @@ use scirs2_stats::{
 };
 
 /// Generate random normal data
+#[allow(dead_code)]
 fn generate_normal_data(n: usize, mean: f64, std: f64) -> Array1<f64> {
     let mut rng = rng();
     let normal = Normal::new(mean, std).unwrap();
@@ -36,6 +37,7 @@ fn generate_normal_data(n: usize, mean: f64, std: f64) -> Array1<f64> {
 }
 
 /// Benchmark t-tests
+#[allow(dead_code)]
 fn bench_t_tests(c: &mut Criterion) {
     let mut group = c.benchmark_group("t_tests");
 
@@ -112,6 +114,7 @@ fn bench_t_tests(c: &mut Criterion) {
 }
 
 /// Benchmark non-parametric tests
+#[allow(dead_code)]
 fn bench_nonparametric_tests(c: &mut Criterion) {
     let mut group = c.benchmark_group("nonparametric_tests");
 
@@ -163,6 +166,7 @@ fn bench_nonparametric_tests(c: &mut Criterion) {
 }
 
 /// Benchmark normality tests
+#[allow(dead_code)]
 fn bench_normality_tests(c: &mut Criterion) {
     let mut group = c.benchmark_group("normality_tests");
 
@@ -211,6 +215,7 @@ fn bench_normality_tests(c: &mut Criterion) {
 }
 
 /// Benchmark correlation functions
+#[allow(dead_code)]
 fn bench_correlations(c: &mut Criterion) {
     let mut group = c.benchmark_group("correlations");
 
@@ -263,6 +268,7 @@ fn bench_correlations(c: &mut Criterion) {
 }
 
 /// Benchmark ANOVA tests
+#[allow(dead_code)]
 fn bench_anova(c: &mut Criterion) {
     let mut group = c.benchmark_group("anova");
 

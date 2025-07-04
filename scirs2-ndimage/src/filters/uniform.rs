@@ -3,10 +3,8 @@
 //! This module provides functions for applying uniform filters (also known as box filters)
 //! to n-dimensional arrays.
 
-use ndarray::{s, Array, Array1, Array2, ArrayView1, ArrayView2, Dimension};
+use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::{Float, FromPrimitive};
-use scirs2_core::parallel_ops;
-use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_1d, check_2d, check_positive};
 use std::fmt::Debug;
 
@@ -46,6 +44,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// // Apply 3x3 uniform filter
 /// let filtered = uniform_filter(&input, &[3, 3], None, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn uniform_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -154,6 +153,7 @@ where
 }
 
 /// Apply a uniform filter to a 1D array
+#[allow(dead_code)]
 fn uniform_filter_1d<T>(
     input: &Array1<T>,
     size: usize,
@@ -161,7 +161,7 @@ fn uniform_filter_1d<T>(
     origin: isize,
 ) -> NdimageResult<Array1<T>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     // Check if we can use SIMD optimizations for f32 type
     if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f32>() && input.len() > 64 && size >= 3
@@ -204,6 +204,7 @@ where
 
 /// SIMD-optimized uniform filter for f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn uniform_filter_1d_simd_f32<T>(
     input: &Array1<T>,
     size: usize,
@@ -263,6 +264,7 @@ where
 
 /// Fallback implementation when SIMD feature is not enabled
 #[cfg(not(feature = "simd"))]
+#[allow(dead_code)]
 fn uniform_filter_1d_simd_f32<T>(
     input: &Array1<T>,
     size: usize,
@@ -307,6 +309,7 @@ where
 }
 
 /// Apply a uniform filter to a 2D array
+#[allow(dead_code)]
 fn uniform_filter_2d<T>(
     input: &Array2<T>,
     size: &[usize],
@@ -314,7 +317,7 @@ fn uniform_filter_2d<T>(
     origin: &[isize],
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let rows = input.shape()[0];
     let cols = input.shape()[1];
@@ -370,6 +373,7 @@ where
 
 /// SIMD-optimized uniform filter for 2D f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn uniform_filter_2d_simd_f32<T>(
     input: &Array2<T>,
     size: &[usize],
@@ -430,6 +434,7 @@ where
 
 /// Fallback implementation when SIMD feature is not enabled
 #[cfg(not(feature = "simd"))]
+#[allow(dead_code)]
 fn uniform_filter_2d_simd_f32<T>(
     input: &Array2<T>,
     size: &[usize],
@@ -483,6 +488,7 @@ where
 }
 
 /// Apply a uniform filter to an n-dimensional array with arbitrary dimensionality
+#[allow(dead_code)]
 fn uniform_filter_nd<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -592,11 +598,12 @@ where
 }
 
 /// Apply a uniform filter to an n-dimensional array (general case)
+#[allow(dead_code)]
 fn uniform_filter_nd_general<T, D>(
     input: &Array<T, D>,
     size: &[usize],
     mode: &BorderMode,
-    origin: &[isize],
+    _origin: &[isize],
     pad_width: &[(usize, usize)],
     norm_factor: T,
 ) -> NdimageResult<Array<T, D>>
@@ -614,7 +621,7 @@ where
     let input_shape = input.shape();
 
     // Generate all possible coordinate combinations for the input
-    let total_elements = input.len();
+    let _total_elements = input.len();
 
     // Use parallel iteration if the array is large enough
     #[cfg(feature = "parallel")]
@@ -644,6 +651,7 @@ where
 }
 
 /// Sequential n-dimensional uniform filter implementation
+#[allow(dead_code)]
 fn uniform_filter_nd_sequential<T, D>(
     input: &Array<T, D>,
     padded_input: &Array<T, D>,
@@ -714,6 +722,7 @@ where
 
 /// Parallel n-dimensional uniform filter implementation
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 fn uniform_filter_nd_parallel<T, D>(
     input: &Array<T, D>,
     padded_input: &Array<T, D>,
@@ -806,6 +815,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn uniform_filter_separable<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -853,6 +863,7 @@ where
 }
 
 /// Apply a 1D uniform filter along a specific axis of an n-dimensional array
+#[allow(dead_code)]
 fn uniform_filter_along_axis<T, D>(
     input: &Array<T, D>,
     axis: usize,
@@ -1065,10 +1076,11 @@ where
 /// Chunked uniform filter for very large 2D arrays
 /// This function processes the input in chunks to optimize memory usage and cache performance
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn uniform_filter_chunked<T>(
     input: &Array2<T>,
     size: &[usize],
-    chunk_size: usize,
+    _chunk_size: usize,
     mode: Option<BorderMode>,
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array2<T>>
@@ -1172,10 +1184,11 @@ where
 
 /// Non-parallel version of chunked uniform filter
 #[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
 pub fn uniform_filter_chunked<T>(
     input: &Array2<T>,
     size: &[usize],
-    chunk_size: usize,
+    _chunk_size: usize,
     mode: Option<BorderMode>,
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array2<T>>

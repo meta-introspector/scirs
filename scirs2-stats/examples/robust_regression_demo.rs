@@ -3,6 +3,7 @@ use scirs2_stats::regression::{
     huber_regression, linear_regression, ransac, theilslopes, HuberT, RegressionResults,
 };
 
+#[allow(dead_code)]
 fn generate_data_with_outliers() -> (Array2<f64>, Array1<f64>) {
     // Generate simple linear data with slope ~2, intercept ~1
     let x_values = vec![0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0];
@@ -23,6 +24,7 @@ fn generate_data_with_outliers() -> (Array2<f64>, Array1<f64>) {
     (x, y)
 }
 
+#[allow(dead_code)]
 fn print_regression_summary(name: &str, results: &RegressionResults<f64>) {
     println!("\n{} Regression Results:", name);
     println!("Coefficients: {:?}", results.coefficients);
@@ -49,6 +51,7 @@ fn print_regression_summary(name: &str, results: &RegressionResults<f64>) {
     }
 }
 
+#[allow(dead_code)]
 fn main() {
     // Generate data with outliers
     let (x, y) = generate_data_with_outliers();

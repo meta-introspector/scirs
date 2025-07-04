@@ -22,6 +22,7 @@ use scirs2_special::*;
 use std::f64::consts::{E, PI};
 use std::io::{self, Write};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧬 Experimental Physics Applications Laboratory");
     println!("===============================================");
@@ -54,6 +55,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn display_main_menu() {
     println!("🔬 Choose an experimental physics application:");
     println!("1.  🌟 Quantum Optics & Photon Statistics");
@@ -70,6 +72,7 @@ fn display_main_menu() {
     println!();
 }
 
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> io::Result<String> {
     print!("{}", prompt);
     io::stdout().flush()?;
@@ -78,6 +81,7 @@ fn get_user_input(prompt: &str) -> io::Result<String> {
     Ok(input.trim().to_string())
 }
 
+#[allow(dead_code)]
 fn quantum_optics_photon_statistics() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌟 QUANTUM OPTICS & PHOTON STATISTICS");
     println!("=====================================\n");
@@ -210,6 +214,7 @@ fn quantum_optics_photon_statistics() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn nuclear_physics_cross_sections() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚛️ NUCLEAR PHYSICS CROSS-SECTIONS");
     println!("==================================\n");
@@ -368,6 +373,7 @@ fn nuclear_physics_cross_sections() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn condensed_matter_phase_transitions() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧊 CONDENSED MATTER PHASE TRANSITIONS");
     println!("======================================\n");
@@ -524,6 +530,7 @@ fn condensed_matter_phase_transitions() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn gravitational_wave_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🌊 GRAVITATIONAL WAVE ANALYSIS");
     println!("===============================\n");
@@ -684,6 +691,7 @@ fn gravitational_wave_analysis() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn plasma_physics_fusion() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔥 PLASMA PHYSICS & FUSION");
     println!("==========================\n");
@@ -834,6 +842,7 @@ fn plasma_physics_fusion() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn atomic_spectroscopy() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📡 ATOMIC & MOLECULAR SPECTROSCOPY");
     println!("===================================\n");
@@ -1039,6 +1048,7 @@ fn atomic_spectroscopy() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn statistical_mechanics_mesoscopic() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎲 MESOSCOPIC STATISTICAL MECHANICS");
     println!("====================================\n");
@@ -1222,6 +1232,7 @@ fn statistical_mechanics_mesoscopic() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn nonlinear_optics_solitons() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n💫 NONLINEAR OPTICS & SOLITONS");
     println!("===============================\n");
@@ -1402,6 +1413,7 @@ fn nonlinear_optics_solitons() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn cosmic_ray_physics() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🚀 COSMIC RAY PHYSICS");
     println!("======================\n");
@@ -1587,6 +1599,7 @@ fn cosmic_ray_physics() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn quantum_information_experiments() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔒 QUANTUM INFORMATION EXPERIMENTS");
     println!("===================================\n");
@@ -1791,6 +1804,7 @@ fn quantum_information_experiments() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper functions for pause and calculations
+#[allow(dead_code)]
 fn pause_for_user() -> Result<(), Box<dyn std::error::Error>> {
     print!("Press Enter to continue...");
     io::stdout().flush()?;
@@ -1800,17 +1814,20 @@ fn pause_for_user() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Physics calculation helper functions
+#[allow(dead_code)]
 fn poisson_probability(n: usize, mean: f64) -> f64 {
     let n_factorial = (1..=n).map(|i| i as f64).product::<f64>();
     mean.powi(n as i32) * (-mean).exp() / n_factorial
 }
 
+#[allow(dead_code)]
 fn negative_binomial_probability(n: usize, modes: f64, mean: f64) -> f64 {
     let p = modes / (modes + mean);
     let gamma_ratio = gamma(n as f64 + modes) / (gamma(n as f64 + 1.0) * gamma(modes));
     gamma_ratio * p.powf(modes) * (1.0 - p).powi(n as i32)
 }
 
+#[allow(dead_code)]
 fn neutron_wave_number(energy_mev: f64) -> f64 {
     // k = √(2mE)/ħ in fm^-1
     let mass_mev = 939.565; // neutron mass in MeV
@@ -1818,11 +1835,13 @@ fn neutron_wave_number(energy_mev: f64) -> f64 {
     (2.0 * mass_mev * energy_mev).sqrt() / hbar_c
 }
 
+#[allow(dead_code)]
 fn calculate_hard_sphere_phase_shift(kr: f64) -> f64 {
     // Simple hard sphere approximation
     -kr * 180.0 / PI
 }
 
+#[allow(dead_code)]
 fn calculate_barrier_penetration(excitation: f64, barrier_height: f64) -> f64 {
     if excitation >= barrier_height {
         1.0
@@ -1832,17 +1851,20 @@ fn calculate_barrier_penetration(excitation: f64, barrier_height: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn nuclear_level_density(energy: f64, a: f64) -> f64 {
     let sqrt_term = (PI / a).sqrt();
     let exp_term = (2.0 * (a * energy).sqrt()).exp();
     sqrt_term * exp_term / (12.0 * energy.powf(1.25))
 }
 
+#[allow(dead_code)]
 fn cumulative_levels(energy: f64, a: f64) -> f64 {
     // Approximate integral of level density
     nuclear_level_density(energy, a) * energy / 2.0
 }
 
+#[allow(dead_code)]
 fn ising_magnetization(t: f64, t_c: f64) -> f64 {
     if t >= t_c {
         0.0
@@ -1851,10 +1873,12 @@ fn ising_magnetization(t: f64, t_c: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn ising_correlation_length(t: f64, t_c: f64) -> f64 {
     (t - t_c).abs().powf(-1.0)
 }
 
+#[allow(dead_code)]
 fn ising_heat_capacity(t: f64, t_c: f64) -> f64 {
     if (t - t_c).abs() < 1e-6 {
         1000.0 // Divergent at critical point
@@ -1863,6 +1887,7 @@ fn ising_heat_capacity(t: f64, t_c: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn bcs_gap_ratio(t: f64, t_c: f64) -> f64 {
     if t >= t_c {
         0.0
@@ -1871,6 +1896,7 @@ fn bcs_gap_ratio(t: f64, t_c: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn bcs_heat_capacity(t: f64, t_c: f64) -> f64 {
     if t >= t_c {
         t / t_c // Normal state
@@ -1880,6 +1906,7 @@ fn bcs_heat_capacity(t: f64, t_c: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn bcs_critical_field(t: f64, t_c: f64) -> f64 {
     if t >= t_c {
         0.0
@@ -1888,18 +1915,22 @@ fn bcs_critical_field(t: f64, t_c: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn quantum_susceptibility(g: f64) -> f64 {
     g.abs().powf(-0.75) // Critical exponent γ/ν
 }
 
+#[allow(dead_code)]
 fn quantum_correlation_length(g: f64) -> f64 {
     g.abs().powf(-1.0) // Critical exponent ν
 }
 
+#[allow(dead_code)]
 fn quantum_scaling_function(g: f64) -> f64 {
     (-g.abs()).exp() // Simplified scaling function
 }
 
+#[allow(dead_code)]
 fn chirp_time(mass_solar: f64, f0_hz: f64) -> f64 {
     // Simplified formula for binary inspiral time
     let total_mass_kg = mass_solar * 1.989e30;
@@ -1910,16 +1941,19 @@ fn chirp_time(mass_solar: f64, f0_hz: f64) -> f64 {
         / f0_hz.powf(8.0 / 3.0)
 }
 
+#[allow(dead_code)]
 fn inspiral_frequency(t: f64, f0: f64, tau: f64) -> f64 {
     f0 * (1.0 - t / tau).powf(-3.0 / 8.0)
 }
 
+#[allow(dead_code)]
 fn inspiral_strain(t: f64, mass: f64, tau: f64) -> f64 {
     // Simplified strain calculation
     let distance = 410e6 * 3.086e16; // 410 Mpc in meters
     1e-21 * (mass / 30.0) * (100e6 * 3.086e16 / distance) * (1.0 - t / tau).powf(-1.0 / 4.0)
 }
 
+#[allow(dead_code)]
 fn detection_probability(snr: f64, threshold: f64) -> f64 {
     if snr >= threshold {
         0.999
@@ -1928,62 +1962,74 @@ fn detection_probability(snr: f64, threshold: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn false_alarm_rate_from_snr(snr: f64) -> f64 {
     (-snr.powi(2) / 2.0).exp() / 1e6
 }
 
+#[allow(dead_code)]
 fn gaussian_significance(snr: f64) -> f64 {
     snr / (2.0_f64).sqrt()
 }
 
+#[allow(dead_code)]
 fn parameter_uncertainty_mass(m1: f64, m2: f64, distance: f64) -> f64 {
     // Simplified Fisher matrix estimate
     0.1 / (distance / 100.0).sqrt()
 }
 
+#[allow(dead_code)]
 fn parameter_uncertainty_distance(m1: f64, m2: f64, distance: f64) -> f64 {
     // Simplified distance uncertainty
     0.5 * (distance / 100.0).sqrt()
 }
 
+#[allow(dead_code)]
 fn average_thermal_velocity(temp_k: f64, mass_kg: f64) -> f64 {
     let k_b = 1.381e-23;
     (8.0 * k_b * temp_k / (PI * mass_kg)).sqrt()
 }
 
+#[allow(dead_code)]
 fn thermal_velocity(temp_k: f64, mass_kg: f64) -> f64 {
     let k_b = 1.381e-23;
     (k_b * temp_k / mass_kg).sqrt()
 }
 
+#[allow(dead_code)]
 fn most_probable_velocity(temp_k: f64, mass_kg: f64) -> f64 {
     let k_b = 1.381e-23;
     (2.0 * k_b * temp_k / mass_kg).sqrt()
 }
 
+#[allow(dead_code)]
 fn fusion_reaction_rate(temp_kev: f64, z1: f64, z2: f64) -> f64 {
     // Simplified Gamow peak calculation
     let gamow_energy = gamow_peak_energy(temp_kev, z1, z2);
     1e-16 * (gamow_energy / temp_kev).exp() // cm³/s
 }
 
+#[allow(dead_code)]
 fn gamow_peak_energy(temp_kev: f64, z1: f64, z2: f64) -> f64 {
     // Energy at Gamow peak
     1.22 * (z1 * z2).powf(2.0 / 3.0) * temp_kev.powf(1.0 / 3.0)
 }
 
+#[allow(dead_code)]
 fn fusion_power_density(temp_kev: f64, rate: f64, q_value: f64) -> f64 {
     // Power density in MW/m³
     let density = 1e20; // particles/m³
     rate * 1e-6 * density * density * q_value * 1.602e-13 * 1e-6
 }
 
+#[allow(dead_code)]
 fn plasma_dispersion_function(zeta: Complex64) -> Complex64 {
     // Simplified plasma dispersion function
     // This would need proper implementation of Faddeeva function
     Complex64::new(1.0 / zeta.re, -PI.sqrt() * (-zeta.re.powi(2)).exp())
 }
 
+#[allow(dead_code)]
 fn larmor_radius_cm(energy_kev: f64, b_field_t: f64) -> f64 {
     let mass_kg = 3.34e-27; // deuteron
     let charge = 1.602e-19;
@@ -1991,23 +2037,27 @@ fn larmor_radius_cm(energy_kev: f64, b_field_t: f64) -> f64 {
     mass_kg * velocity / (charge * b_field_t) * 100.0 // convert to cm
 }
 
+#[allow(dead_code)]
 fn cyclotron_frequency_mhz(b_field_t: f64) -> f64 {
     let charge = 1.602e-19;
     let mass_kg = 3.34e-27;
     charge * b_field_t / (2.0 * PI * mass_kg) / 1e6
 }
 
+#[allow(dead_code)]
 fn banana_orbit_width(energy_kev: f64, b_field_t: f64) -> f64 {
     // Simplified banana orbit width
     larmor_radius_cm(energy_kev, b_field_t) * 2.0
 }
 
+#[allow(dead_code)]
 fn hydrogen_wavelength(n1: i32, n2: i32) -> f64 {
     let rydberg = 1.097e7; // m^-1
     let wavelength_m = 1.0 / (rydberg * (1.0 / (n1 * n1) as f64 - 1.0 / (n2 * n2) as f64));
     wavelength_m * 1e9 // convert to nm
 }
 
+#[allow(dead_code)]
 fn sodium_d_line_wavelength(line: &str) -> f64 {
     match line {
         "D₁" => 589.6,
@@ -2016,6 +2066,7 @@ fn sodium_d_line_wavelength(line: &str) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn fine_structure_splitting(n: i32, l: i32) -> f64 {
     // Simplified fine structure splitting in meV
     let alpha = 1.0 / 137.0;
@@ -2023,65 +2074,79 @@ fn fine_structure_splitting(n: i32, l: i32) -> f64 {
     alpha * alpha * rydberg_ev * 1000.0 / (n as f64).powi(3)
 }
 
+#[allow(dead_code)]
 fn vibrational_rotational_energy(v: i32, j: i32, constants: (f64, f64, f64)) -> f64 {
     let (omega_e, b_e, alpha_e) = constants;
     omega_e * (v as f64 + 0.5) + b_e * j as f64 * (j + 1) as f64
         - alpha_e * (v as f64 + 0.5) * j as f64 * (j + 1) as f64
 }
 
+#[allow(dead_code)]
 fn co_fundamental_p_branch(j: i32) -> f64 {
     2170.2 - 2.0 * 1.931 * j as f64
 }
 
+#[allow(dead_code)]
 fn co_fundamental_r_branch(j: i32) -> f64 {
     2170.2 + 2.0 * 1.931 * (j + 1) as f64
 }
 
+#[allow(dead_code)]
 fn charging_energy_mev(capacitance: f64) -> f64 {
     let e = 1.602e-19;
     e * e / (2.0 * capacitance) / 1.602e-16 // convert to meV
 }
 
+#[allow(dead_code)]
 fn max_electrons_thermal(charging_energy_mev: f64, temp_k: f64) -> f64 {
     let k_b_mev = 8.617e-5 * 1000.0; // k_B in meV/K
     charging_energy_mev / (k_b_mev * temp_k)
 }
 
+#[allow(dead_code)]
 fn wigner_surmise_goe(s: f64) -> f64 {
     (PI / 2.0) * s * (-PI * s * s / 4.0).exp()
 }
 
+#[allow(dead_code)]
 fn wigner_surmise_gue(s: f64) -> f64 {
     (32.0 / (PI * PI)) * s * s * (-4.0 * s * s / PI).exp()
 }
 
+#[allow(dead_code)]
 fn shot_noise_tunnel_junction(current: f64) -> f64 {
     2.0 * 1.602e-19 * current // 2eI in A²/Hz
 }
 
+#[allow(dead_code)]
 fn diffusion_coefficient(radius: f64, temp: f64, viscosity: f64) -> f64 {
     let k_b = 1.381e-23;
     k_b * temp / (6.0 * PI * viscosity * radius)
 }
 
+#[allow(dead_code)]
 fn momentum_correlation_time(radius: f64, viscosity: f64) -> f64 {
     let mass = 4.0 / 3.0 * PI * radius.powi(3) * 1000.0; // assume water density
     mass / (6.0 * PI * viscosity * radius)
 }
 
+#[allow(dead_code)]
 fn finite_size_correlation(size: f64, nu: f64) -> f64 {
     1.0 / size.powf(1.0 / nu)
 }
 
+#[allow(dead_code)]
 fn finite_size_susceptibility(size: f64, exponents: (f64, f64, f64)) -> f64 {
     let (nu, gamma, _beta) = exponents;
     size.powf(-gamma / nu)
 }
 
+#[allow(dead_code)]
 fn finite_size_order_parameter(size: f64, beta: f64) -> f64 {
     size.powf(-beta)
 }
 
+#[allow(dead_code)]
 fn jacobi_cn(u: f64, m: f64) -> f64 {
     // Simplified Jacobi cn function - would need proper implementation
     if m < 0.1 {
@@ -2093,6 +2158,7 @@ fn jacobi_cn(u: f64, m: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn complete_elliptic_k(m: f64) -> f64 {
     // Simplified complete elliptic integral K(m)
     if m < 0.1 {
@@ -2102,21 +2168,25 @@ fn complete_elliptic_k(m: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn peregrine_amplitude_squared(z: f64, t: f64) -> f64 {
     let denominator = 1.0 + 4.0 * z * z + 4.0 * t * t;
     let numerator = 4.0 * (1.0 + 2.0 * z);
     (1.0 - numerator / denominator).powi(2)
 }
 
+#[allow(dead_code)]
 fn peregrine_phase(z: f64, t: f64) -> f64 {
     z + 2.0 * (2.0 * z / (1.0 + 4.0 * z * z + 4.0 * t * t)).atan()
 }
 
+#[allow(dead_code)]
 fn kerr_comb_threshold(detuning: f64) -> f64 {
     // Simplified threshold calculation
     1.0 + detuning.abs()
 }
 
+#[allow(dead_code)]
 fn estimate_comb_lines(detuning: f64, power: f64) -> f64 {
     if detuning < 0.0 && power > kerr_comb_threshold(detuning) {
         10.0 * (-detuning).sqrt()
@@ -2125,11 +2195,13 @@ fn estimate_comb_lines(detuning: f64, power: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn cosmic_ray_flux(energy: f64, gamma: f64) -> f64 {
     // Flux in particles/(m²·s·sr·eV)
     1e4 * energy.powf(-gamma)
 }
 
+#[allow(dead_code)]
 fn werner_state_entropy(p: f64) -> f64 {
     if p == 0.0 || p == 1.0 {
         0.0
@@ -2140,6 +2212,7 @@ fn werner_state_entropy(p: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn werner_state_concurrence(p: f64) -> f64 {
     if p > 1.0 / 3.0 {
         3.0 * p - 1.0
@@ -2148,11 +2221,13 @@ fn werner_state_concurrence(p: f64) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn shor_classical_complexity(n: f64) -> f64 {
     // Classical factoring complexity ~ exp(n^(1/3))
     (n.powf(1.0 / 3.0)).exp()
 }
 
+#[allow(dead_code)]
 fn shor_quantum_complexity(n: f64) -> f64 {
     // Quantum factoring complexity ~ n³
     n.powi(3)

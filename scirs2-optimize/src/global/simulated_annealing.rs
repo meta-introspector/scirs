@@ -247,6 +247,7 @@ where
 }
 
 /// Perform global optimization using simulated annealing
+#[allow(dead_code)]
 pub fn simulated_annealing<F>(
     func: F,
     x0: Array1<f64>,

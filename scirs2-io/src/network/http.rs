@@ -112,7 +112,7 @@ impl HttpClient {
     }
 
     /// Download a file from URL to local path
-    #[cfg(feature = "reqwest")]
+    #[cfg(all(feature = "reqwest", feature = "async"))]
     pub async fn download<P: AsRef<Path>>(&self, url: &str, local_path: P) -> Result<()> {
         let client = self.get_client()?;
         let local_path = local_path.as_ref();
@@ -145,13 +145,14 @@ impl HttpClient {
                         delay.as_millis(),
                         e
                     );
+                    #[cfg(feature = "async")]
                     tokio::time::sleep(delay).await;
                 }
             }
         }
     }
 
-    #[cfg(feature = "reqwest")]
+    #[cfg(all(feature = "reqwest", feature = "async"))]
     async fn download_with_retry(
         &self,
         client: &reqwest::Client,
@@ -202,7 +203,7 @@ impl HttpClient {
     }
 
     /// Upload a file from local path to URL
-    #[cfg(feature = "reqwest")]
+    #[cfg(all(feature = "reqwest", feature = "async"))]
     pub async fn upload<P: AsRef<Path>>(&self, local_path: P, url: &str) -> Result<()> {
         let client = self.get_client()?;
         let local_path = local_path.as_ref();
@@ -239,13 +240,14 @@ impl HttpClient {
 
                     let delay = Duration::from_millis(100 * 2_u64.pow(retries - 1));
                     log::warn!("Upload failed, retrying in {}ms: {}", delay.as_millis(), e);
+                    #[cfg(feature = "async")]
                     tokio::time::sleep(delay).await;
                 }
             }
         }
     }
 
-    #[cfg(feature = "reqwest")]
+    #[cfg(all(feature = "reqwest", feature = "async"))]
     async fn upload_with_retry(
         &self,
         client: &reqwest::Client,
@@ -274,7 +276,7 @@ impl HttpClient {
     }
 
     /// Make a custom HTTP request
-    #[cfg(feature = "reqwest")]
+    #[cfg(all(feature = "reqwest", feature = "async"))]
     pub async fn request(
         &self,
         method: HttpMethod,
@@ -330,7 +332,7 @@ impl HttpClient {
     }
 
     /// Check if a URL is accessible (HEAD request)
-    #[cfg(feature = "reqwest")]
+    #[cfg(all(feature = "reqwest", feature = "async"))]
     pub async fn check_url(&self, url: &str) -> Result<bool> {
         match self.request(HttpMethod::HEAD, url, None).await {
             Ok(response) => Ok(response.status >= 200 && response.status < 300),
@@ -339,7 +341,7 @@ impl HttpClient {
     }
 
     /// Get file size from URL without downloading (HEAD request)
-    #[cfg(feature = "reqwest")]
+    #[cfg(all(feature = "reqwest", feature = "async"))]
     pub async fn get_remote_file_size(&self, url: &str) -> Result<Option<u64>> {
         let response = self.request(HttpMethod::HEAD, url, None).await?;
         Ok(response.content_length)
@@ -401,7 +403,7 @@ impl HttpClient {
 
 /// Utility functions
 /// Download multiple files concurrently
-#[cfg(feature = "reqwest")]
+#[cfg(all(feature = "reqwest", feature = "async"))]
 pub async fn download_concurrent(
     downloads: Vec<(String, String)>,
     max_concurrent: usize,
@@ -410,6 +412,7 @@ pub async fn download_concurrent(
 
     let client = HttpClient::new(NetworkConfig::default());
 
+    #[cfg(feature = "async")]
     let semaphore = std::sync::Arc::new(tokio::sync::Semaphore::new(max_concurrent));
     let mut futures = FuturesUnordered::new();
 
@@ -418,6 +421,7 @@ pub async fn download_concurrent(
         let semaphore_clone = semaphore.clone();
 
         futures.push(async move {
+            #[cfg(feature = "async")]
             let _permit = semaphore_clone.acquire().await.unwrap();
             client_clone.download(&url, &local_path).await
         });
@@ -432,6 +436,7 @@ pub async fn download_concurrent(
 }
 
 /// Calculate download speed
+#[allow(dead_code)]
 pub fn calculate_speed(bytes: u64, duration: Duration) -> f64 {
     if duration.as_secs_f64() > 0.0 {
         bytes as f64 / duration.as_secs_f64()
@@ -441,6 +446,7 @@ pub fn calculate_speed(bytes: u64, duration: Duration) -> f64 {
 }
 
 /// Format file size in human-readable format
+#[allow(dead_code)]
 pub fn format_file_size(bytes: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB", "TB"];
     let mut size = bytes as f64;
@@ -455,6 +461,7 @@ pub fn format_file_size(bytes: u64) -> String {
 }
 
 /// Format download speed in human-readable format
+#[allow(dead_code)]
 pub fn format_speed(bytes_per_second: f64) -> String {
     format!("{}/s", format_file_size(bytes_per_second as u64))
 }

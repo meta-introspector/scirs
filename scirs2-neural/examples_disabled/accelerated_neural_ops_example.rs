@@ -7,6 +7,7 @@
 use ndarray::{array, Array2};
 use scirs2_neural::error::Result;
 use scirs2_neural::gpu::{create_neural_ops, create_neural_ops_with_backend};
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("=== Accelerated Neural Operations Demo ===\n");
     // Create neural operations context
@@ -88,6 +89,7 @@ fn main() -> Result<()> {
     println!("=== Demo Complete ===");
     Ok(())
 }
+#[allow(dead_code)]
 fn demonstrate_performance_scaling() -> Result<()> {
     // Create progressively larger matrices to show scaling
     let sizes = vec![10, 50, 100];

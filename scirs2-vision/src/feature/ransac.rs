@@ -93,6 +93,7 @@ pub trait RansacModel: Sized + Clone {
 /// # Returns
 ///
 /// * Result containing RANSAC estimation results
+#[allow(dead_code)]
 pub fn run_ransac<M: RansacModel>(
     data: &[M::DataPoint],
     config: &RansacConfig,

@@ -666,10 +666,12 @@ impl ErrorAnalysis {
 }
 
 /// Convenience functions for creating common exact solutions
+#[allow(dead_code)]
 pub fn polynomial_solution<F: IntegrateFloat>(coefficients: Vec<F>) -> PolynomialSolution<F> {
     PolynomialSolution::new(coefficients)
 }
 
+#[allow(dead_code)]
 pub fn trigonometric_solution_2d<F: IntegrateFloat>(
     freq_x: F,
     freq_y: F,
@@ -1099,6 +1101,7 @@ impl<F: IntegrateFloat> Default for VerificationWorkflow<F> {
     }
 }
 
+#[allow(dead_code)]
 pub fn exponential_solution<F: IntegrateFloat>(
     amplitude: F,
     decay_rate: F,
@@ -1106,6 +1109,7 @@ pub fn exponential_solution<F: IntegrateFloat>(
     ExponentialSolution::simple(amplitude, decay_rate)
 }
 
+#[allow(dead_code)]
 pub fn trigonometric_solution_3d<F: IntegrateFloat>(
     freq_x: F,
     freq_y: F,
@@ -1114,6 +1118,7 @@ pub fn trigonometric_solution_3d<F: IntegrateFloat>(
     TrigonometricSolution3D::simple(freq_x, freq_y, freq_z)
 }
 
+#[allow(dead_code)]
 pub fn combined_solution<F: IntegrateFloat>(dimension: usize) -> CombinedSolution<F> {
     CombinedSolution::new(dimension)
 }

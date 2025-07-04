@@ -19,6 +19,7 @@ use scirs2_stats::{
 };
 
 /// Helper function to generate valid statistical data
+#[allow(dead_code)]
 fn generate_valid_data(size: usize, gen: &mut Gen) -> Array1<f64> {
     let mut data = Array1::zeros(size);
     for i in 0..size {
@@ -28,6 +29,7 @@ fn generate_valid_data(size: usize, gen: &mut Gen) -> Array1<f64> {
 }
 
 /// Helper function to generate valid correlation data (finite, not all equal)
+#[allow(dead_code)]
 fn generate_correlation_data(size: usize, gen: &mut Gen) -> (Array1<f64>, Array1<f64>) {
     let mut x = Array1::zeros(size);
     let mut y = Array1::zeros(size);

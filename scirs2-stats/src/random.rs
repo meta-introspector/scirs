@@ -34,6 +34,7 @@ use rand_distr::{Distribution, StandardNormal};
 /// let samples = random_sample(10, &uniform_dist, Some(42)).unwrap();
 /// assert_eq!(samples.len(), 10);
 /// ```
+#[allow(dead_code)]
 pub fn random_sample<T, D>(
     size: usize,
     distribution: &D,
@@ -94,6 +95,7 @@ where
 ///     assert!(val >= 0.0 && val < 10.0);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn uniform<F>(low: F, high: F, size: usize, seed: Option<u64>) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Zero + SampleUniform,
@@ -143,6 +145,7 @@ where
 ///     assert!(val >= 1 && val <= 100);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn randint(low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsResult<Array1<i64>> {
     if size == 0 {
         return Err(StatsError::InvalidArgument(
@@ -189,6 +192,7 @@ pub fn randint(low: i64, high: i64, size: usize, seed: Option<u64>) -> StatsResu
 /// // Mean should be reasonably close to 0 for 100 samples
 /// assert!(mean.abs() < 0.3);
 /// ```
+#[allow(dead_code)]
 pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
     if size == 0 {
         return Err(StatsError::InvalidArgument(
@@ -246,6 +250,7 @@ pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
 /// let choices_no_replace = choice(&options.view(), 2, false, None, Some(123)).unwrap();
 /// assert_eq!(choices_no_replace.len(), 2);
 /// ```
+#[allow(dead_code)]
 pub fn choice<T>(
     a: &ArrayView1<T>,
     size: usize,
@@ -437,6 +442,7 @@ where
 ///     assert!(perm.iter().any(|&x| x == val));
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn permutation<T>(x: &ArrayView1<T>, seed: Option<u64>) -> StatsResult<Array1<T>>
 where
     T: Copy,
@@ -498,6 +504,7 @@ where
 ///     assert!(perm.iter().any(|&x| x == i));
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>> {
     if n == 0 {
         return Err(StatsError::InvalidArgument(
@@ -556,6 +563,7 @@ pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>
 ///     assert!(val == 0 || val == 1);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn random_binary_matrix(
     n_rows: usize,
     n_cols: usize,
@@ -624,6 +632,7 @@ pub fn random_binary_matrix(
 /// // Each bootstrap sample should have the same length as the original data
 /// assert_eq!(samples.shape(), &[10, 5]);
 /// ```
+#[allow(dead_code)]
 pub fn bootstrap_sample<T>(
     x: &ArrayView1<T>,
     n_samples: usize,

@@ -475,6 +475,13 @@ pub mod repositories {
             })
         }
 
+        /// Loads a dataset from the UCI Machine Learning Repository.
+        ///
+        /// # Arguments
+        /// * `name` - The name of the dataset to load
+        ///
+        /// # Returns
+        /// A `Dataset` containing the loaded data
         #[cfg(feature = "download")]
         pub async fn load_dataset(&self, name: &str) -> Result<Dataset> {
             let url = match name {
@@ -549,6 +556,13 @@ pub mod repositories {
             })
         }
 
+        /// Loads competition data from Kaggle.
+        ///
+        /// # Arguments
+        /// * `competition` - The name of the Kaggle competition
+        ///
+        /// # Returns
+        /// A `Dataset` containing the competition data
         #[cfg(feature = "download")]
         pub async fn load_competition_data(&self, competition: &str) -> Result<Dataset> {
             if self.api_key.is_none() {
@@ -578,6 +592,15 @@ pub mod repositories {
             })
         }
 
+        /// Loads a dataset from a GitHub repository.
+        ///
+        /// # Arguments
+        /// * `user` - The GitHub username
+        /// * `repo` - The repository name
+        /// * `path` - The path to the dataset file within the repository
+        ///
+        /// # Returns
+        /// A `Dataset` containing the loaded data
         #[cfg(feature = "download")]
         pub async fn load_from_repo(&self, user: &str, repo: &str, path: &str) -> Result<Dataset> {
             let url = format!(

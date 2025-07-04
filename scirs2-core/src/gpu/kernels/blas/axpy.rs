@@ -79,6 +79,7 @@ struct Uniforms {
 @group(0) @binding(2) var<storage, read_write> y: array<f32>;
 
 @compute @workgroup_size(256)
+#[allow(dead_code)]
 fn axpy(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let i = global_id.x;
 

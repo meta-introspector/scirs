@@ -1016,10 +1016,12 @@ pub struct HardwareUtilization {
 }
 
 /// Convenience functions for adaptive SIMD optimization
+#[allow(dead_code)]
 pub fn create_adaptive_simd_optimizer() -> StatsResult<AdaptiveSimdOptimizer> {
     AdaptiveSimdOptimizer::default()
 }
 
+#[allow(dead_code)]
 pub fn optimize_simd_operation<F, T>(
     operation_name: &str,
     data: ArrayView1<F>,

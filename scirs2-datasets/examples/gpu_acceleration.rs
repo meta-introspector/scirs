@@ -14,6 +14,7 @@ use scirs2_datasets::{
 use std::collections::HashMap;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 GPU Acceleration Demonstration");
     println!("=================================\n");
@@ -40,6 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_gpu_detection() {
     println!("🔍 GPU DETECTION AND AVAILABILITY");
     println!("{}", "-".repeat(40));
@@ -94,6 +96,7 @@ fn demonstrate_gpu_detection() {
     println!();
 }
 
+#[allow(dead_code)]
 fn demonstrate_device_listing() -> Result<(), Box<dyn std::error::Error>> {
     println!("📋 AVAILABLE GPU DEVICES");
     println!("{}", "-".repeat(40));
@@ -134,6 +137,7 @@ fn demonstrate_device_listing() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_backend_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ GPU BACKEND COMPARISON");
     println!("{}", "-".repeat(40));
@@ -216,6 +220,7 @@ fn demonstrate_backend_comparison() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_performance_benchmarks() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 PERFORMANCE BENCHMARKS");
     println!("{}", "-".repeat(40));
@@ -239,6 +244,7 @@ fn demonstrate_performance_benchmarks() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_cpu_gpu_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let dataset_sizes = vec![10_000, 50_000, 100_000];
 
@@ -273,6 +279,7 @@ fn demonstrate_cpu_gpu_comparison() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_memory_management() -> Result<(), Box<dyn std::error::Error>> {
     println!("💾 GPU MEMORY MANAGEMENT");
     println!("{}", "-".repeat(40));
@@ -343,6 +350,7 @@ fn demonstrate_memory_management() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_real_world_scenarios() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌍 REAL-WORLD GPU SCENARIOS");
     println!("{}", "-".repeat(40));
@@ -362,6 +370,7 @@ fn demonstrate_real_world_scenarios() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_large_scale_generation() -> Result<(), Box<dyn std::error::Error>> {
     println!("  🎯 Goal: Generate 1M samples across multiple datasets");
     println!("  📊 Using GPU acceleration for maximum throughput");
@@ -419,6 +428,7 @@ fn demonstrate_large_scale_generation() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_rapid_prototyping() -> Result<(), Box<dyn std::error::Error>> {
     println!("  🎯 Goal: Quickly test different dataset configurations");
     println!("  ⚡ Using GPU for instant feedback");
@@ -459,6 +469,7 @@ fn demonstrate_rapid_prototyping() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_batch_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("  🎯 Goal: Process multiple dataset requests in parallel");
     println!("  🔄 Simulating production workload");
@@ -516,6 +527,7 @@ fn demonstrate_batch_processing() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Helper function to format large numbers
+#[allow(dead_code)]
 fn format_number(n: usize) -> String {
     if n >= 1_000_000 {
         format!("{:.1}M", n as f64 / 1_000_000.0)

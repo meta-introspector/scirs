@@ -88,6 +88,7 @@ pub trait SparseMatrix<F> {
 /// # Note
 ///
 /// This function implements a parallel Lanczos algorithm for symmetric sparse matrices.
+#[allow(dead_code)]
 pub fn lanczos<F, M>(
     matrix: &M,
     k: usize,
@@ -193,6 +194,7 @@ where
 }
 
 // Helper function to check Lanczos convergence
+#[allow(dead_code)]
 fn check_lanczos_convergence<F: Float>(_alpha: &[F], beta: &[F], k: usize, tol: F) -> bool {
     // Simple convergence check based on beta values
     if beta.len() < k {
@@ -206,6 +208,7 @@ fn check_lanczos_convergence<F: Float>(_alpha: &[F], beta: &[F], k: usize, tol: 
 }
 
 // Helper function to solve tridiagonal eigenvalue problem
+#[allow(dead_code)]
 fn solve_tridiagonal_eigenproblem<F: Float + NumAssign + Sum + Send + Sync + 'static>(
     alpha: &[F],
     beta: &[F],
@@ -256,6 +259,7 @@ fn solve_tridiagonal_eigenproblem<F: Float + NumAssign + Sum + Send + Sync + 'st
 }
 
 // Helper function for QR algorithm on tridiagonal matrices
+#[allow(dead_code)]
 fn qr_algorithm_tridiagonal<F: Float + NumAssign + Sum + 'static>(
     matrix: &Array2<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)> {
@@ -293,6 +297,7 @@ fn qr_algorithm_tridiagonal<F: Float + NumAssign + Sum + 'static>(
 }
 
 // Simplified QR decomposition for tridiagonal matrices
+#[allow(dead_code)]
 fn qr_decomposition_tridiagonal<F: Float + NumAssign + Sum>(
     matrix: &Array2<F>,
 ) -> LinalgResult<(Array2<F>, Array2<F>)> {
@@ -320,6 +325,7 @@ fn qr_decomposition_tridiagonal<F: Float + NumAssign + Sum>(
 }
 
 // Helper function for Givens rotation
+#[allow(dead_code)]
 fn givens_rotation<F: Float>(a: F, b: F) -> (F, F) {
     if b.abs() < F::from(1e-15).unwrap() {
         (F::one(), F::zero())
@@ -330,6 +336,7 @@ fn givens_rotation<F: Float>(a: F, b: F) -> (F, F) {
 }
 
 // Apply Givens rotation to matrix
+#[allow(dead_code)]
 fn apply_givens_rotation<F: Float + NumAssign>(
     matrix: &mut Array2<F>,
     i: usize,
@@ -347,6 +354,7 @@ fn apply_givens_rotation<F: Float + NumAssign>(
 }
 
 // Apply Givens rotation transpose to matrix
+#[allow(dead_code)]
 fn apply_givens_rotation_transpose<F: Float + NumAssign>(
     matrix: &mut Array2<F>,
     i: usize,
@@ -364,6 +372,7 @@ fn apply_givens_rotation_transpose<F: Float + NumAssign>(
 }
 
 // Helper function to select eigenvalues based on criteria
+#[allow(dead_code)]
 fn select_eigenvalues<F: Float>(
     eigenvals: &Array1<F>,
     which: &str,
@@ -434,6 +443,7 @@ fn select_eigenvalues<F: Float>(
 /// # Note
 ///
 /// This function implements a parallel Arnoldi method for non-symmetric sparse matrices.
+#[allow(dead_code)]
 pub fn arnoldi<F, M>(
     matrix: &M,
     k: usize,
@@ -565,6 +575,7 @@ where
 }
 
 // Helper function to check Arnoldi convergence
+#[allow(dead_code)]
 fn check_arnoldi_convergence<F: Float>(h_matrix: &Array2<F>, m: usize, k: usize, tol: F) -> bool {
     // Simple convergence check based on subdiagonal elements
     if m < k + 1 {
@@ -584,6 +595,7 @@ fn check_arnoldi_convergence<F: Float>(h_matrix: &Array2<F>, m: usize, k: usize,
 }
 
 // Helper function to solve Hessenberg eigenvalue problem
+#[allow(dead_code)]
 fn solve_hessenberg_eigenproblem<F: Float + NumAssign + Sum + 'static>(
     h_matrix: &Array2<F>,
 ) -> SparseEigenResult<F> {
@@ -603,6 +615,7 @@ fn solve_hessenberg_eigenproblem<F: Float + NumAssign + Sum + 'static>(
 }
 
 // Simplified QR algorithm for complex matrices
+#[allow(dead_code)]
 fn qr_algorithm_complex<F: Float + NumAssign + Sum + 'static>(
     matrix: &Array2<Complex<F>>,
 ) -> SparseEigenResult<F> {
@@ -640,6 +653,7 @@ fn qr_algorithm_complex<F: Float + NumAssign + Sum + 'static>(
 }
 
 // Simplified Householder QR for complex matrices
+#[allow(dead_code)]
 fn householder_qr_complex<F: Float + NumAssign + Sum>(matrix: &Array2<Complex<F>>) -> QrResult<F> {
     let (m, n) = matrix.dim();
     let mut q = Array2::<Complex<F>>::eye(m);
@@ -663,6 +677,7 @@ fn householder_qr_complex<F: Float + NumAssign + Sum>(matrix: &Array2<Complex<F>
 }
 
 // Helper function for complex Householder vector
+#[allow(dead_code)]
 fn householder_vector_complex<F: Float + NumAssign + Sum>(
     x: &Array1<Complex<F>>,
 ) -> (Array1<Complex<F>>, Complex<F>) {
@@ -696,6 +711,7 @@ fn householder_vector_complex<F: Float + NumAssign + Sum>(
 }
 
 // Apply Householder reflection from left
+#[allow(dead_code)]
 fn apply_householder_left_complex<F: Float + NumAssign>(
     matrix: &mut Array2<Complex<F>>,
     house_vec: &Array1<Complex<F>>,
@@ -722,6 +738,7 @@ fn apply_householder_left_complex<F: Float + NumAssign>(
 }
 
 // Apply Householder reflection from right
+#[allow(dead_code)]
 fn apply_householder_right_complex<F: Float + NumAssign>(
     matrix: &mut Array2<Complex<F>>,
     house_vec: &Array1<Complex<F>>,
@@ -748,6 +765,7 @@ fn apply_householder_right_complex<F: Float + NumAssign>(
 }
 
 // Helper functions for eigenvalue selection
+#[allow(dead_code)]
 fn select_closest_real_eigenvalues<F: Float>(
     eigenvals: &Array1<Complex<F>>,
     target: F,
@@ -773,6 +791,7 @@ fn select_closest_real_eigenvalues<F: Float>(
         .collect()
 }
 
+#[allow(dead_code)]
 fn select_closest_complex_eigenvalues<F: Float>(
     eigenvals: &Array1<Complex<F>>,
     target: Complex<F>,
@@ -827,6 +846,7 @@ fn select_closest_complex_eigenvalues<F: Float>(
 /// # Note
 ///
 /// This function is currently a placeholder and will be implemented in a future version.
+#[allow(dead_code)]
 pub fn eigs_gen<F, M1, M2>(
     _a: &M1,
     _b: &M2,
@@ -876,6 +896,7 @@ where
 /// # Note
 ///
 /// This function is currently a placeholder and will be implemented in a future version.
+#[allow(dead_code)]
 pub fn svds<F, M>(
     _matrix: &M,
     _k: usize,
@@ -921,6 +942,7 @@ where
 /// # Note
 ///
 /// This function is currently a placeholder and will be implemented in a future version.
+#[allow(dead_code)]
 pub fn dense_to_sparse<F>(
     _dense_matrix: &ArrayView2<F>,
     _threshold: F,

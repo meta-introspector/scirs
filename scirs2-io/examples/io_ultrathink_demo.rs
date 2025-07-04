@@ -7,6 +7,7 @@ use scirs2_io::ultrathink_coordinator::UltraThinkCoordinator;
 use scirs2_io::ultrathink_enhanced_algorithms::AdvancedPatternRecognizer;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultra-Think Mode I/O Processing Demonstration");
     println!("================================================\n");
@@ -116,6 +117,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Create various sample datasets with different characteristics for testing
+#[allow(dead_code)]
 fn create_sample_datasets() -> Vec<(String, Vec<u8>)> {
     vec![
         // Highly repetitive data (good for compression)
@@ -151,6 +153,7 @@ fn create_sample_datasets() -> Vec<(String, Vec<u8>)> {
 }
 
 /// Generate fractal-like pattern data
+#[allow(dead_code)]
 fn generate_fractal_pattern(size: usize) -> Vec<u8> {
     let mut data = Vec::with_capacity(size);
     for i in 0..size {
@@ -161,6 +164,7 @@ fn generate_fractal_pattern(size: usize) -> Vec<u8> {
 }
 
 /// Generate pseudo-random data
+#[allow(dead_code)]
 fn generate_pseudo_random_data(size: usize) -> Vec<u8> {
     let mut data = Vec::with_capacity(size);
     let mut state = 12345u32;
@@ -173,6 +177,7 @@ fn generate_pseudo_random_data(size: usize) -> Vec<u8> {
 }
 
 /// Generate mixed pattern data combining different characteristics
+#[allow(dead_code)]
 fn generate_mixed_pattern_data(size: usize) -> Vec<u8> {
     let mut data = Vec::with_capacity(size);
 

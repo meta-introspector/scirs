@@ -74,6 +74,7 @@ impl BenchmarkDatasets {
 }
 
 /// Benchmark clustering algorithms
+#[allow(dead_code)]
 fn benchmark_clustering(c: &mut Criterion) {
     let datasets = BenchmarkDatasets::new();
 
@@ -151,6 +152,7 @@ fn benchmark_clustering(c: &mut Criterion) {
 }
 
 /// Benchmark nearest neighbor search algorithms
+#[allow(dead_code)]
 fn benchmark_nearest_neighbor(c: &mut Criterion) {
     let datasets = BenchmarkDatasets::new();
 
@@ -202,6 +204,7 @@ fn benchmark_nearest_neighbor(c: &mut Criterion) {
 }
 
 /// Benchmark distance computation methods
+#[allow(dead_code)]
 fn benchmark_distance_computation(c: &mut Criterion) {
     let datasets = BenchmarkDatasets::new();
 
@@ -250,6 +253,7 @@ fn benchmark_distance_computation(c: &mut Criterion) {
 }
 
 /// Benchmark memory efficiency and optimization
+#[allow(dead_code)]
 fn benchmark_memory_optimization(c: &mut Criterion) {
     let datasets = BenchmarkDatasets::new();
 
@@ -288,6 +292,7 @@ fn benchmark_memory_optimization(c: &mut Criterion) {
 }
 
 /// Benchmark scalability across different problem sizes
+#[allow(dead_code)]
 fn benchmark_scalability(c: &mut Criterion) {
     let mut group = c.benchmark_group("Scalability");
     group.measurement_time(Duration::from_secs(25));
@@ -337,6 +342,7 @@ fn benchmark_scalability(c: &mut Criterion) {
 }
 
 /// Benchmark GPU acceleration if available
+#[allow(dead_code)]
 fn benchmark_gpu_acceleration(c: &mut Criterion) {
     if !is_gpu_acceleration_available() {
         println!("GPU acceleration not available, skipping GPU benchmarks");
@@ -367,6 +373,7 @@ fn benchmark_gpu_acceleration(c: &mut Criterion) {
 }
 
 /// Benchmark high-dimensional performance
+#[allow(dead_code)]
 fn benchmark_high_dimensional(c: &mut Criterion) {
     let datasets = BenchmarkDatasets::new();
 

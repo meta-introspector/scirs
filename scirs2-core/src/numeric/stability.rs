@@ -117,6 +117,7 @@ impl<T: Float> Default for KahanSum<T> {
 ///
 /// This is an improved version of Kahan summation that handles the case
 /// where the next item to be added is larger in absolute value than the running sum.
+#[allow(dead_code)]
 pub fn neumaier_sum<T: Float>(values: &[T]) -> T {
     if values.is_empty() {
         return T::zero();
@@ -142,6 +143,7 @@ pub fn neumaier_sum<T: Float>(values: &[T]) -> T {
 ///
 /// Recursively splits the array and sums pairs, reducing rounding error
 /// compared to sequential summation.
+#[allow(dead_code)]
 pub fn pairwise_sum<T: Float>(values: &[T]) -> T {
     const SEQUENTIAL_THRESHOLD: usize = 128;
 
@@ -164,6 +166,7 @@ pub fn pairwise_sum<T: Float>(values: &[T]) -> T {
 }
 
 /// Stable mean calculation using compensated summation
+#[allow(dead_code)]
 pub fn stable_mean<T: Float>(values: &[T]) -> CoreResult<T> {
     if values.is_empty() {
         return Err(CoreError::ValidationError(ErrorContext::new(
@@ -246,6 +249,7 @@ impl<T: Float> Default for WelfordVariance<T> {
 }
 
 /// Stable two-pass algorithm for variance calculation
+#[allow(dead_code)]
 pub fn stable_variance<T: Float>(values: &[T], ddof: usize) -> CoreResult<T> {
     let n = values.len();
     if n <= ddof {
@@ -280,6 +284,7 @@ pub fn stable_variance<T: Float>(values: &[T], ddof: usize) -> CoreResult<T> {
 /// Log-sum-exp trick for stable computation of log(sum(exp(x)))
 ///
 /// This prevents overflow when computing the log of a sum of exponentials.
+#[allow(dead_code)]
 pub fn log_sum_exp<T: Float>(values: &[T]) -> T {
     if values.is_empty() {
         return T::neg_infinity();
@@ -304,6 +309,7 @@ pub fn log_sum_exp<T: Float>(values: &[T]) -> T {
 /// Stable softmax computation
 ///
 /// Computes softmax(x) = exp(x) / sum(exp(x)) in a numerically stable way.
+#[allow(dead_code)]
 pub fn stable_softmax<T: Float>(values: &[T]) -> Vec<T> {
     if values.is_empty() {
         return vec![];
@@ -331,6 +337,7 @@ pub fn stable_softmax<T: Float>(values: &[T]) -> Vec<T> {
 }
 
 /// Stable computation of log(1 + x) for small x
+#[allow(dead_code)]
 pub fn log1p_stable<T: Float>(x: T) -> T {
     // Use built-in log1p if available, otherwise use series expansion for small x
     if x.abs() < cast::<f64, T>(0.5).unwrap_or(T::zero()) {
@@ -347,6 +354,7 @@ pub fn log1p_stable<T: Float>(x: T) -> T {
 }
 
 /// Stable computation of exp(x) - 1 for small x
+#[allow(dead_code)]
 pub fn expm1_stable<T: Float>(x: T) -> T {
     if x.abs() < cast::<f64, T>(0.5).unwrap_or(T::zero()) {
         // Use Taylor series: exp(x) - 1 ≈ x + x²/2 + x³/6 + ...
@@ -362,6 +370,7 @@ pub fn expm1_stable<T: Float>(x: T) -> T {
 }
 
 /// Stable computation of sqrt(x² + y²) avoiding overflow
+#[allow(dead_code)]
 pub fn hypot_stable<T: Float>(x: T, y: T) -> T {
     let x_abs = x.abs();
     let y_abs = y.abs();
@@ -384,6 +393,7 @@ pub fn hypot_stable<T: Float>(x: T, y: T) -> T {
 /// Stable angle reduction for trigonometric functions
 ///
 /// Reduces angle to [-π, π] range while preserving precision for large angles.
+#[allow(dead_code)]
 pub fn reduce_angle<T: Float>(angle: T) -> T {
     let two_pi = cast::<f64, T>(2.0).unwrap_or(T::one())
         * cast::<f64, T>(std::f64::consts::PI).unwrap_or(T::one());
@@ -406,6 +416,7 @@ pub fn reduce_angle<T: Float>(angle: T) -> T {
 }
 
 /// Stable computation of (a*b) % m avoiding overflow
+#[allow(dead_code)]
 pub fn mulmod_stable<T: Float>(a: T, b: T, m: T) -> CoreResult<T> {
     let m_f64 = m.to_f64().ok_or_else(|| {
         CoreError::TypeError(ErrorContext::new(
@@ -450,6 +461,7 @@ pub fn mulmod_stable<T: Float>(a: T, b: T, m: T) -> CoreResult<T> {
 }
 
 /// Numerically stable sigmoid function
+#[allow(dead_code)]
 pub fn sigmoid_stable<T: Float>(x: T) -> T {
     if x >= T::zero() {
         let exp_neg_x = (-x).exp();
@@ -461,6 +473,7 @@ pub fn sigmoid_stable<T: Float>(x: T) -> T {
 }
 
 /// Numerically stable log-sigmoid function
+#[allow(dead_code)]
 pub fn log_sigmoid_stable<T: Float>(x: T) -> T {
     if x >= T::zero() {
         -log1p_stable((-x).exp())
@@ -470,6 +483,7 @@ pub fn log_sigmoid_stable<T: Float>(x: T) -> T {
 }
 
 /// Cross entropy loss with numerical stability
+#[allow(dead_code)]
 pub fn cross_entropy_stable<T: Float>(predictions: &[T], targets: &[T]) -> CoreResult<T> {
     if predictions.len() != targets.len() {
         return Err(CoreError::ValidationError(ErrorContext::new(
@@ -491,6 +505,7 @@ pub fn cross_entropy_stable<T: Float>(predictions: &[T], targets: &[T]) -> CoreR
 }
 
 /// Stable matrix norm computation
+#[allow(dead_code)]
 pub fn stable_matrix_norm<T: Float>(matrix: &ArrayView2<T>, ord: MatrixNorm) -> CoreResult<T> {
     validate_matrix_not_empty(matrix)?;
 
@@ -547,6 +562,7 @@ pub enum MatrixNorm {
 }
 
 /// Stable L1 norm computation
+#[allow(dead_code)]
 fn stable_norm_1<T: Float>(values: &[T]) -> T {
     let mut sum = T::zero();
     let mut compensation = T::zero();
@@ -563,6 +579,7 @@ fn stable_norm_1<T: Float>(values: &[T]) -> T {
 }
 
 /// Stable L2 norm computation avoiding overflow/underflow
+#[allow(dead_code)]
 pub fn stable_norm_2<T: Float>(values: &[T]) -> T {
     if values.is_empty() {
         return T::zero();
@@ -586,6 +603,7 @@ pub fn stable_norm_2<T: Float>(values: &[T]) -> T {
 }
 
 /// Condition number estimation using 1-norm
+#[allow(dead_code)]
 pub fn condition_number_estimate<T: Float>(matrix: &ArrayView2<T>) -> CoreResult<T> {
     validate_matrix_not_empty(matrix)?;
 
@@ -636,6 +654,7 @@ pub fn condition_number_estimate<T: Float>(matrix: &ArrayView2<T>) -> CoreResult
 }
 
 /// Helper function to validate matrix is not empty
+#[allow(dead_code)]
 fn validate_matrix_not_empty<T>(matrix: &ArrayView2<T>) -> CoreResult<()> {
     if matrix.is_empty() {
         return Err(CoreError::ValidationError(ErrorContext::new(
@@ -646,6 +665,7 @@ fn validate_matrix_not_empty<T>(matrix: &ArrayView2<T>) -> CoreResult<()> {
 }
 
 /// Stable computation of binomial coefficients
+#[allow(dead_code)]
 pub fn binomial_stable(n: u64, k: u64) -> CoreResult<f64> {
     if k > n {
         return Ok(0.0);
@@ -681,6 +701,7 @@ pub fn binomial_stable(n: u64, k: u64) -> CoreResult<f64> {
 }
 
 /// Numerically stable factorial computation
+#[allow(dead_code)]
 pub fn factorial_stable(n: u64) -> CoreResult<f64> {
     if n == 0 || n == 1 {
         return Ok(1.0);

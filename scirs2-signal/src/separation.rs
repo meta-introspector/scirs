@@ -21,8 +21,7 @@
 use crate::error::{SignalError, SignalResult};
 use crate::filter::{butter, lfilter, FilterType};
 use ndarray::Array1;
-#[cfg(test)]
-#[cfg(test)]
+
 use std::f64::consts::PI;
 
 /// Configuration for multi-band separation
@@ -100,6 +99,7 @@ impl Default for HarmonicPercussiveConfig {
 /// let bands = multiband_separation(&signal, &cutoffs, 1000.0, None).unwrap();
 /// assert_eq!(bands.len(), 4); // Number of bands = cutoffs.len() + 1
 /// ```
+#[allow(dead_code)]
 pub fn multiband_separation(
     signal: &Array1<f64>,
     cutoff_freqs: &[f64],
@@ -198,6 +198,7 @@ pub fn multiband_separation(
 /// assert_eq!(harmonic.len(), signal.len());
 /// assert_eq!(percussive.len(), signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn harmonic_percussive_separation(
     signal: &Array1<f64>,
     _sample_rate: f64,
@@ -239,7 +240,6 @@ pub fn harmonic_percussive_separation(
     ))
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
 

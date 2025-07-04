@@ -13,6 +13,7 @@ use super::communication::{DistributedCommunicator, MessageTag};
 use super::coordination::DistributedCoordinator;
 
 /// Distributed LU decomposition: A = L * U
+#[allow(dead_code)]
 pub fn lu_decomposition<T>(
     matrix: &DistributedMatrix<T>,
 ) -> LinalgResult<(DistributedMatrix<T>, DistributedMatrix<T>)>
@@ -32,6 +33,7 @@ where
 }
 
 /// Distributed LU decomposition with partial pivoting
+#[allow(dead_code)]
 fn distributed_lu_partial_pivoting<T>(
     matrix: &DistributedMatrix<T>,
 ) -> LinalgResult<(DistributedMatrix<T>, DistributedMatrix<T>)>
@@ -79,6 +81,7 @@ where
 }
 
 /// Distributed QR decomposition: A = Q * R
+#[allow(dead_code)]
 pub fn qr_decomposition<T>(
     matrix: &DistributedMatrix<T>,
 ) -> LinalgResult<(DistributedMatrix<T>, DistributedMatrix<T>)>
@@ -90,6 +93,7 @@ where
 }
 
 /// Distributed QR using Householder reflections
+#[allow(dead_code)]
 fn distributed_householder_qr<T>(
     matrix: &DistributedMatrix<T>,
 ) -> LinalgResult<(DistributedMatrix<T>, DistributedMatrix<T>)>
@@ -128,6 +132,7 @@ where
 }
 
 /// Distributed Cholesky decomposition: A = L * L^T
+#[allow(dead_code)]
 pub fn cholesky_decomposition<T>(
     matrix: &DistributedMatrix<T>,
 ) -> LinalgResult<DistributedMatrix<T>>
@@ -146,6 +151,7 @@ where
 }
 
 /// Distributed block Cholesky factorization
+#[allow(dead_code)]
 fn distributed_cholesky_block<T>(
     matrix: &DistributedMatrix<T>,
 ) -> LinalgResult<DistributedMatrix<T>>
@@ -192,6 +198,7 @@ where
 }
 
 /// Distributed SVD decomposition: A = U * Σ * V^T
+#[allow(dead_code)]
 pub fn svd_decomposition<T>(
     matrix: &DistributedMatrix<T>,
 ) -> LinalgResult<(DistributedMatrix<T>, Array1<T>, DistributedMatrix<T>)>
@@ -203,6 +210,7 @@ where
 }
 
 /// Distributed two-phase SVD algorithm
+#[allow(dead_code)]
 fn distributed_two_phase_svd<T>(
     matrix: &DistributedMatrix<T>,
 ) -> LinalgResult<(DistributedMatrix<T>, Array1<T>, DistributedMatrix<T>)>
@@ -227,6 +235,7 @@ where
 
 // Helper functions for distributed decompositions
 
+#[allow(dead_code)]
 fn find_pivot_row<T>(matrix: &DistributedMatrix<T>, k: usize) -> LinalgResult<usize>
 where
     T: Float + Send + Sync,
@@ -235,6 +244,7 @@ where
     Ok(k)
 }
 
+#[allow(dead_code)]
 fn swap_rows<T>(matrix: &mut DistributedMatrix<T>, i: usize, j: usize) -> LinalgResult<()>
 where
     T: Float + Send + Sync,
@@ -244,6 +254,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn eliminate_column<T>(
     l: &mut DistributedMatrix<T>,
     u: &mut DistributedMatrix<T>,
@@ -257,6 +268,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn initialize_identity<T>(matrix: &mut DistributedMatrix<T>) -> LinalgResult<()>
 where
     T: Float + Send + Sync,
@@ -274,6 +286,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compute_householder_vector<T>(
     matrix: &DistributedMatrix<T>,
     k: usize,
@@ -287,6 +300,7 @@ where
     Ok(Array1::zeros(m))
 }
 
+#[allow(dead_code)]
 fn apply_householder_reflection<T>(
     matrix: &mut DistributedMatrix<T>,
     householder: &Array1<T>,
@@ -300,6 +314,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn zero_upper_triangle<T>(matrix: &mut DistributedMatrix<T>) -> LinalgResult<()>
 where
     T: Float + Send + Sync,
@@ -313,6 +328,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn factor_diagonal_block<T>(
     matrix: &mut DistributedMatrix<T>,
     k_start: usize,
@@ -326,6 +342,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn solve_triangular_block<T>(
     matrix: &mut DistributedMatrix<T>,
     k_start: usize,
@@ -341,6 +358,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn update_block<T>(
     matrix: &mut DistributedMatrix<T>,
     i_start: usize,
@@ -358,6 +376,7 @@ where
     Ok(())
 }
 
+#[allow(dead_code)]
 fn reduce_to_bidiagonal<T>(
     matrix: &DistributedMatrix<T>,
 ) -> LinalgResult<(DistributedMatrix<T>, DistributedMatrix<T>)>
@@ -371,6 +390,7 @@ where
     Ok((q, bidiag))
 }
 
+#[allow(dead_code)]
 fn diagonalize_bidiagonal<T>(
     matrix: &DistributedMatrix<T>,
 ) -> LinalgResult<(DistributedMatrix<T>, Array1<T>, DistributedMatrix<T>)>
@@ -386,6 +406,7 @@ where
     Ok((u, s, vt))
 }
 
+#[allow(dead_code)]
 fn multiply_distributed_matrices<T>(
     a: &DistributedMatrix<T>,
     b: &DistributedMatrix<T>,
@@ -398,6 +419,7 @@ where
 }
 
 /// Distributed eigenvalue decomposition (simplified interface)
+#[allow(dead_code)]
 pub fn eigenvalue_decomposition<T>(
     matrix: &DistributedMatrix<T>,
 ) -> LinalgResult<(Array1<T>, DistributedMatrix<T>)>
@@ -409,6 +431,7 @@ where
 }
 
 /// Distributed QR algorithm for eigenvalues
+#[allow(dead_code)]
 fn distributed_qr_eigenvalue_algorithm<T>(
     matrix: &DistributedMatrix<T>,
 ) -> LinalgResult<(Array1<T>, DistributedMatrix<T>)>
@@ -455,6 +478,7 @@ where
     Ok((eigenvalues, q_total))
 }
 
+#[allow(dead_code)]
 fn check_convergence<T>(matrix: &DistributedMatrix<T>, tolerance: T) -> LinalgResult<bool>
 where
     T: Float + Send + Sync,
@@ -464,6 +488,7 @@ where
     Ok(false) // Always return false for now
 }
 
+#[allow(dead_code)]
 fn extract_diagonal<T>(matrix: &DistributedMatrix<T>) -> LinalgResult<Array1<T>>
 where
     T: Float + Send + Sync,
@@ -481,6 +506,7 @@ where
 }
 
 /// Distributed matrix rank computation
+#[allow(dead_code)]
 pub fn matrix_rank<T>(matrix: &DistributedMatrix<T>, tolerance: Option<T>) -> LinalgResult<usize>
 where
     T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,
@@ -498,6 +524,7 @@ where
 }
 
 /// Distributed matrix condition number
+#[allow(dead_code)]
 pub fn condition_number<T>(matrix: &DistributedMatrix<T>) -> LinalgResult<T>
 where
     T: Float + Send + Sync + serde::Serialize + for<'de> serde::Deserialize<'de> + 'static,

@@ -11,6 +11,7 @@ use scirs2_stats::distributions::{
 };
 
 /// Benchmark PDF calculations for continuous distributions
+#[allow(dead_code)]
 fn bench_continuous_pdf(c: &mut Criterion) {
     let mut group = c.benchmark_group("continuous_pdf");
 
@@ -57,6 +58,7 @@ fn bench_continuous_pdf(c: &mut Criterion) {
 }
 
 /// Benchmark CDF calculations for continuous distributions
+#[allow(dead_code)]
 fn bench_continuous_cdf(c: &mut Criterion) {
     let mut group = c.benchmark_group("continuous_cdf");
 
@@ -91,6 +93,7 @@ fn bench_continuous_cdf(c: &mut Criterion) {
 }
 
 /// Benchmark random number generation
+#[allow(dead_code)]
 fn bench_random_generation(c: &mut Criterion) {
     let mut group = c.benchmark_group("random_generation");
 
@@ -134,6 +137,7 @@ fn bench_random_generation(c: &mut Criterion) {
 }
 
 /// Benchmark statistical moments calculation
+#[allow(dead_code)]
 fn bench_moments(c: &mut Criterion) {
     let mut group = c.benchmark_group("moments");
 
@@ -169,6 +173,7 @@ fn bench_moments(c: &mut Criterion) {
 }
 
 /// Benchmark discrete distributions
+#[allow(dead_code)]
 fn bench_discrete_distributions(c: &mut Criterion) {
     let mut group = c.benchmark_group("discrete_distributions");
 

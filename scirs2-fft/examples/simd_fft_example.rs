@@ -9,6 +9,7 @@ use scirs2_fft::{fft, fft_adaptive, fft_simd, simd_support_available};
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("SIMD-accelerated FFT Example");
     println!("----------------------------");
@@ -65,6 +66,7 @@ fn main() {
     benchmark_performance();
 }
 
+#[allow(dead_code)]
 fn benchmark_performance() {
     let sizes = [1024, 4096, 16384, 65536];
 

@@ -91,6 +91,7 @@ use ndarray::{Array1, ArrayView1};
 ///     }),
 /// ).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn solve_ivp<F, Func>(
     f: Func,
     t_span: [F; 2],
@@ -203,6 +204,7 @@ where
 /// This function handles the case where a mass matrix is provided.
 /// It transforms the ODE system if possible, or selects an appropriate
 /// solver that can handle the mass matrix.
+#[allow(dead_code)]
 fn solve_ivp_with_mass_internal<F, Func>(
     f: Func,
     t_span: [F; 2],
@@ -447,6 +449,7 @@ where
 ///     println!("Event at t = {}: y = {:?}", event.time, event.state);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn solve_ivp_with_events<F, Func, EventFunc>(
     f: Func,
     t_span: [F; 2],
@@ -584,6 +587,7 @@ where
 ///
 /// This function properly handles the combination of mass matrices and event detection
 /// by integrating event detection directly into the mass matrix ODE solving process.
+#[allow(dead_code)]
 fn solve_ivp_with_events_and_mass<F, Func, EventFunc>(
     f: Func,
     t_span: [F; 2],
@@ -679,6 +683,7 @@ where
 ///
 /// This function integrates event detection directly into the Radau method
 /// for mass matrix systems, providing proper handling of both features together.
+#[allow(dead_code)]
 fn solve_ivp_with_events_radau_mass<F, Func, EventFunc>(
     f: Func,
     t_span: [F; 2],
@@ -809,6 +814,7 @@ where
 }
 
 /// Solve ODE with BDF method and mass matrix support
+#[allow(dead_code)]
 fn solve_bdf_with_mass_matrix<F, FFunc>(
     f: FFunc,
     t_span: [F; 2],
@@ -859,6 +865,7 @@ where
 }
 
 /// Solve ODE with BDF method and state-dependent mass matrix support
+#[allow(dead_code)]
 fn solve_bdf_with_state_dependent_mass_matrix<F, FFunc>(
     f: FFunc,
     t_span: [F; 2],

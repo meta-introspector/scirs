@@ -665,6 +665,7 @@ pub struct AttributeSummary {
 }
 
 /// Helper function to compare attribute values with flexible type matching
+#[allow(dead_code)]
 fn matches_attribute_value(attr_value: &AttributeValue, target_value: &AttributeValue) -> bool {
     match (attr_value, target_value) {
         (AttributeValue::String(a), AttributeValue::String(b)) => a == b,

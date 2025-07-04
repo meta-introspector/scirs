@@ -882,6 +882,7 @@ where
 }
 
 /// Convenience functions for ultra-advanced SIMD operations
+#[allow(dead_code)]
 pub fn ultra_simd_multiple_regression<F>(
     y: &ArrayView1<F>,
     x: &ArrayView2<F>,
@@ -894,6 +895,7 @@ where
     processor.simd_multiple_regression(y, x, include_intercept)
 }
 
+#[allow(dead_code)]
 pub fn ultra_simd_covariance_analysis<F>(
     data: &ArrayView2<F>,
     bias_correction: bool,
@@ -905,6 +907,7 @@ where
     processor.simd_multivariate_covariance(data, bias_correction)
 }
 
+#[allow(dead_code)]
 pub fn ultra_simd_batch_tests<F>(
     group1: &ArrayView2<F>,
     group2: &ArrayView2<F>,

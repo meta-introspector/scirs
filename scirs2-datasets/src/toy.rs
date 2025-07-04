@@ -10,6 +10,7 @@ use rand::prelude::*;
 use rand::rng;
 
 /// Generate the classic Iris dataset
+#[allow(dead_code)]
 pub fn load_iris() -> Result<Dataset> {
     // Define the data
     #[rustfmt::skip]
@@ -102,6 +103,7 @@ Target:
 }
 
 /// Generate the breast cancer dataset
+#[allow(dead_code)]
 pub fn load_breast_cancer() -> Result<Dataset> {
     // This is a simplified version with only 30 samples
     // In a real implementation, include the full dataset
@@ -181,6 +183,7 @@ Target:
 }
 
 /// Generate the digits dataset
+#[allow(dead_code)]
 pub fn load_digits() -> Result<Dataset> {
     // Use a simplified version with fewer samples and features
     // Each digit is represented as a 4x4 image flattened to 16 features
@@ -293,6 +296,7 @@ Target: Digit identity (0-9)"
 }
 
 /// Generate the Boston housing dataset
+#[allow(dead_code)]
 pub fn load_boston() -> Result<Dataset> {
     // Simplified version with fewer samples and features
     let n_samples = 30;
@@ -378,6 +382,7 @@ This is a regression dataset."
 ///
 /// This is a simplified version of the classic diabetes dataset with 442 samples
 /// and 10 features, suitable for regression tasks.
+#[allow(dead_code)]
 pub fn load_diabetes() -> Result<Dataset> {
     // Use a fixed seed for reproducibility
     let mut rng = StdRng::seed_from_u64(42);

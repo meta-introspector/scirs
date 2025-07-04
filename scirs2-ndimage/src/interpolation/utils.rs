@@ -8,23 +8,16 @@ use super::BoundaryMode;
 use crate::error::{NdimageError, NdimageResult};
 
 /// Helper function for safe conversion from usize to float
+#[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
     })
 }
 
-/// Helper function for safe conversion from f64 to float
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
 
 /// Helper function for safe conversion from float to usize
+#[allow(dead_code)]
 fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
     value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert float value to usize"))
@@ -42,6 +35,7 @@ fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 /// # Returns
 ///
 /// * `Result<T>` - Processed coordinate
+#[allow(dead_code)]
 pub fn handle_boundary<T>(coord: T, size: usize, mode: BoundaryMode) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug,
@@ -98,6 +92,7 @@ where
 /// # Returns
 ///
 /// * `(usize, usize, T)` - (left index, right index, right weight)
+#[allow(dead_code)]
 pub fn linear_weights<T>(x: T) -> (usize, usize, T)
 where
     T: Float + FromPrimitive + Debug,
@@ -118,6 +113,7 @@ where
 /// # Returns
 ///
 /// * `(usize, [T; 4])` - (starting index, weights for 4 points)
+#[allow(dead_code)]
 pub fn cubic_weights<T>(x: T) -> (usize, [T; 4])
 where
     T: Float + FromPrimitive + Debug,
@@ -193,6 +189,7 @@ mod tests {
 }
 
 /// Helper function for nearest neighbor interpolation
+#[allow(dead_code)]
 pub fn interpolate_nearest<T>(
     input: &Array<T, ndarray::IxDyn>,
     coords: &[T],
@@ -234,6 +231,7 @@ where
 }
 
 /// Helper function for linear interpolation  
+#[allow(dead_code)]
 pub fn interpolate_linear<T>(
     input: &Array<T, ndarray::IxDyn>,
     coords: &[T],
@@ -332,6 +330,7 @@ where
 }
 
 /// Apply boundary condition to a coordinate
+#[allow(dead_code)]
 pub fn apply_boundary_condition(coord: isize, dim_size: isize, mode: &BoundaryMode) -> usize {
     match mode {
         BoundaryMode::Constant => {

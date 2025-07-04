@@ -77,6 +77,7 @@ pub struct RombergResult<F: IntegrateFloat> {
 /// assert!((result.value - 1.0/3.0).abs() < 1e-10);
 /// assert!(result.converged);
 /// ```
+#[allow(dead_code)]
 pub fn romberg<F, Func>(
     f: Func,
     a: F,
@@ -209,6 +210,7 @@ pub enum IntegrationMethod {
     MonteCarlo,
 }
 
+#[allow(dead_code)]
 pub fn multi_romberg<F, Func>(
     f: Func,
     ranges: &[(F, F)],
@@ -226,6 +228,7 @@ where
 /// using the most appropriate method based on the dimension
 ///
 /// Returns the full result structure with error estimates and method information
+#[allow(dead_code)]
 pub fn multi_romberg_with_details<F, Func>(
     f: Func,
     ranges: &[(F, F)],
@@ -273,6 +276,7 @@ where
 }
 
 /// Integrate a function using adaptive nested integration for dimensions 2-3
+#[allow(dead_code)]
 fn integrate_adaptive_nested<F, Func>(
     f: Func,
     ranges: &[(F, F)],
@@ -448,6 +452,7 @@ where
 }
 
 /// High-dimensional integration using Monte Carlo with variance reduction techniques
+#[allow(dead_code)]
 fn monte_carlo_high_dimensions<F, Func>(
     f: Func,
     ranges: &[(F, F)],

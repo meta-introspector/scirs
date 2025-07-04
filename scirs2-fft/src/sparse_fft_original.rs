@@ -16,6 +16,7 @@ use std::fmt::Debug;
 use std::time::Instant;
 
 /// Helper function to extract complex values from various types (for doctests)
+#[allow(dead_code)]
 pub fn try_as_complex<T: 'static + Copy>(val: T) -> Option<Complex64> {
     use std::any::Any;
 
@@ -1426,6 +1427,7 @@ impl SparseFFT {
 /// assert_eq!(result.values.len(), 3);
 /// assert_eq!(result.indices.len(), 3);
 /// ```
+#[allow(dead_code)]
 pub fn sparse_fft<T>(
     x: &[T],
     k: usize,
@@ -1483,6 +1485,7 @@ where
 /// // The reconstructed spectrum should have length n
 /// assert_eq!(full_spectrum.len(), n);
 /// ```
+#[allow(dead_code)]
 pub fn reconstruct_spectrum(
     sparse_result: &SparseFFTResult,
     n: usize,
@@ -1532,6 +1535,7 @@ pub fn reconstruct_spectrum(
 /// let rms_error = (sum_squared_error / n as f64).sqrt();
 /// assert!(rms_error < 0.5, "RMS error: {}", rms_error);
 /// ```
+#[allow(dead_code)]
 pub fn reconstruct_time_domain(
     sparse_result: &SparseFFTResult,
     n: usize,
@@ -1577,6 +1581,7 @@ pub fn reconstruct_time_domain(
 /// // The reconstructed signal should have the target length
 /// assert_eq!(high_res.len(), 2*n);
 /// ```
+#[allow(dead_code)]
 pub fn reconstruct_high_resolution(
     sparse_result: &SparseFFTResult,
     original_length: usize,
@@ -1635,6 +1640,7 @@ pub fn reconstruct_high_resolution(
 /// // The filtered signal should have the same length as the original
 /// assert_eq!(filtered.len(), n);
 /// ```
+#[allow(dead_code)]
 pub fn reconstruct_filtered<F>(
     sparse_result: &SparseFFTResult,
     n: usize,
@@ -1678,6 +1684,7 @@ where
 /// // (2 for each sinusoid due to positive and negative frequencies)
 /// assert!(result.values.len() >= 3);
 /// ```
+#[allow(dead_code)]
 pub fn adaptive_sparse_fft<T>(x: &[T], threshold: f64) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -1722,6 +1729,7 @@ where
 /// // The result should contain the primary frequency components
 /// assert!(result.values.len() >= 3);
 /// ```
+#[allow(dead_code)]
 pub fn frequency_pruning_sparse_fft<T>(x: &[T], sensitivity: f64) -> FFTResult<SparseFFTResult>
 where
     T: NumCast + Copy + Debug + 'static,
@@ -1776,6 +1784,7 @@ where
 /// // The result should contain the primary frequency components
 /// assert!(result.values.len() >= 3);
 /// ```
+#[allow(dead_code)]
 pub fn spectral_flatness_sparse_fft<T>(
     x: &[T],
     flatness_threshold: f64,
@@ -1879,6 +1888,7 @@ where
 /// // The result should contain 4 frequency components
 /// assert_eq!(result.values.len(), 4);
 /// ```
+#[allow(dead_code)]
 pub fn sparse_fft2<T>(
     x: &[T],
     shape: (usize, usize),
@@ -1972,6 +1982,7 @@ where
 /// // The result should contain 6 frequency components
 /// assert_eq!(result.values.len(), 6);
 /// ```
+#[allow(dead_code)]
 pub fn sparse_fftn<T>(
     x: &[T],
     shape: &[usize],

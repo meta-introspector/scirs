@@ -7,7 +7,7 @@
 //! Loss functions serve two main purposes in neural networks:
 //! 1. **Forward pass**: Calculate the scalar loss value between predictions and targets
 //! 2. **Backward pass**: Calculate gradients needed for backpropagation
-//! The choice of loss function depends on your task type and requirements.
+//!    The choice of loss function depends on your task type and requirements.
 //! # Available Loss Functions
 //! - **MeanSquaredError**: For regression tasks, measures squared differences
 //! - **CrossEntropyLoss**: For classification tasks, combines softmax and negative log-likelihood
@@ -154,12 +154,12 @@ pub trait Loss<F: Float + Debug> {
     /// to update the model parameters.
     /// * `predictions` - Model predictions (same as used in forward pass)
     /// * `targets` - Ground truth target values (same as used in forward pass)
-    /// Gradient tensor with the same shape as predictions
-    /// let targets = Array::from_vec(vec![0.0, 1.0]).into_dyn();
-    /// let gradients = mse.backward(&predictions, &targets)?;
-    /// // MSE gradient = 2 * (predictions - targets) / n
-    /// // For our example: [2*(1-0)/2, 2*(2-1)/2] = [1.0, 1.0]
-    /// assert_eq!(gradients.as_slice().unwrap(), &[1.0, 1.0]);
+    ///   Gradient tensor with the same shape as predictions
+    ///   let targets = Array::from_vec(vec![0.0, 1.0]).into_dyn();
+    ///   let gradients = mse.backward(&predictions, &targets)?;
+    ///   // MSE gradient = 2 * (predictions - targets) / n
+    ///   // For our example: [2*(1-0)/2, 2*(2-1)/2] = [1.0, 1.0]
+    ///   assert_eq!(gradients.as_slice().unwrap(), &[1.0, 1.0]);
     fn backward(
         &self,
         predictions: &Array<F, ndarray::IxDyn>,

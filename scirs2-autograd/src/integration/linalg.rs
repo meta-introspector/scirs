@@ -974,6 +974,7 @@ impl<F: Float> SciRS2Integration for LinalgResult<'_, F> {
 
 /// Utility functions for linear algebra integration
 /// Create a matrix multiplication context
+#[allow(dead_code)]
 pub fn create_matmul_context<'a, F: Float>(
     a: Tensor<'a, F>,
     b: Tensor<'a, F>,
@@ -985,6 +986,7 @@ pub fn create_matmul_context<'a, F: Float>(
 }
 
 /// Create an SVD context
+#[allow(dead_code)]
 pub fn create_svd_context<F: Float>(input: Tensor<F>, full_matrices: bool) -> LinalgContext<F> {
     LinalgContext::new(LinalgOperation::SVD)
         .add_input(input)
@@ -996,6 +998,7 @@ pub fn create_svd_context<F: Float>(input: Tensor<F>, full_matrices: bool) -> Li
 }
 
 /// Create a solve context
+#[allow(dead_code)]
 pub fn create_solve_context<'a, F: Float>(
     a: Tensor<'a, F>,
     b: Tensor<'a, F>,
@@ -1007,6 +1010,7 @@ pub fn create_solve_context<'a, F: Float>(
 }
 
 /// Execute linear algebra operation with error handling
+#[allow(dead_code)]
 pub fn execute_linalg_operation<'a, F: Float>(
     context: &LinalgContext<'a, F>,
 ) -> Result<LinalgResult<'a, F>, IntegrationError> {
@@ -1014,6 +1018,7 @@ pub fn execute_linalg_operation<'a, F: Float>(
 }
 
 /// Convert LinalgResult to SciRS2Data
+#[allow(dead_code)]
 pub fn linalg_result_to_scirs2_data<'a, F: Float>(
     result: &LinalgResult<'a, F>,
 ) -> SciRS2Data<'a, F> {

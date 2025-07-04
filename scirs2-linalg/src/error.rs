@@ -221,6 +221,7 @@ impl From<CoreError> for LinalgError {
 ///
 /// * `Ok(())` if the condition is true
 /// * `Err(LinalgError::DomainError)` if the condition is false
+#[allow(dead_code)]
 pub fn check_domain<S: AsRef<str>>(condition: bool, message: S) -> LinalgResult<()> {
     if condition {
         Ok(())
@@ -245,6 +246,7 @@ pub fn check_domain<S: AsRef<str>>(condition: bool, message: S) -> LinalgResult<
 ///
 /// This is a linalg-specific wrapper around scirs2_core::validation functions.
 /// For new code, consider using scirs2_core::validation functions directly when possible.
+#[allow(dead_code)]
 pub fn check_dimensions<S: AsRef<str>>(condition: bool, message: S) -> LinalgResult<()> {
     if condition {
         Ok(())
@@ -269,6 +271,7 @@ pub fn check_dimensions<S: AsRef<str>>(condition: bool, message: S) -> LinalgRes
 ///
 /// This is a linalg-specific wrapper around scirs2_core::validation functions.
 /// For new code, consider using scirs2_core::validation functions directly when possible.
+#[allow(dead_code)]
 pub fn check_value<S: AsRef<str>>(condition: bool, message: S) -> LinalgResult<()> {
     if condition {
         Ok(())

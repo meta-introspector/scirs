@@ -8,6 +8,7 @@ use scirs2_core::gpu::kernels::{DataType, KernelParams};
 #[cfg(feature = "gpu")]
 use scirs2_core::gpu::{GpuBackend, GpuContext, GpuError};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(feature = "gpu")]
     {
@@ -56,6 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Example demonstrating matrix multiplication with the GEMM kernel
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn matrix_multiply_example(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create two matrices
     let a = Array2::from_shape_vec(
@@ -150,6 +152,7 @@ fn matrix_multiply_example(ctx: &GpuContext) -> Result<(), GpuError> {
 
 /// Example demonstrating vector addition with the AXPY kernel
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn vector_addition_example(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create two vectors
     let x = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
@@ -197,6 +200,7 @@ fn vector_addition_example(ctx: &GpuContext) -> Result<(), GpuError> {
 
 /// Example demonstrating vector sum reduction
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn vector_sum_example(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create a vector
     let x = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
@@ -238,6 +242,7 @@ fn vector_sum_example(ctx: &GpuContext) -> Result<(), GpuError> {
 
 /// Example demonstrating vector L2 norm
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn vector_norm_example(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create a vector
     let x = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
@@ -279,6 +284,7 @@ fn vector_norm_example(ctx: &GpuContext) -> Result<(), GpuError> {
 
 /// Example demonstrating neural network activation functions
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn activation_functions_example(ctx: &GpuContext) -> Result<(), GpuError> {
     // Create an input vector
     let x = Array1::from_vec(vec![-2.0f32, -1.0, 0.0, 1.0, 2.0]);

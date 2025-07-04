@@ -102,6 +102,7 @@ impl MemoryEvent {
 
 /// Capture a call stack (simplified implementation)
 #[cfg(feature = "memory_call_stack")]
+#[allow(dead_code)]
 fn capture_call_stack(_skip_frames: usize) -> Vec<String> {
     // This is a placeholder. In a real implementation, we would use
     // the backtrace crate to capture the call stack.
@@ -109,6 +110,7 @@ fn capture_call_stack(_skip_frames: usize) -> Vec<String> {
 }
 
 #[cfg(not(feature = "memory_call_stack"))]
+#[allow(dead_code)]
 fn capture_call_stack(_skip_frames: usize) -> Vec<String> {
     Vec::new()
 }

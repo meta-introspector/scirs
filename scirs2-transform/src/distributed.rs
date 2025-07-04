@@ -1654,6 +1654,7 @@ pub struct ClusterHealthSummary {
     pub auto_scaling_enabled: bool,
 }
 
+#[allow(dead_code)]
 fn current_timestamp() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

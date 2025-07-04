@@ -42,6 +42,7 @@ pub type NestedCVResult = Vec<(Vec<usize>, Vec<usize>, Vec<(Vec<usize>, Vec<usiz
 /// assert_eq!(train_indices.len(), 6); // 6 or 7 samples in training (depending on split)
 /// assert_eq!(test_indices.len(), 4);  // 3 or 4 samples in testing (depending on split)
 /// ```
+#[allow(dead_code)]
 pub fn k_fold_cross_validation(
     n: usize,
     n_folds: usize,
@@ -136,6 +137,7 @@ pub fn k_fold_cross_validation(
 /// assert_eq!(test_indices.len(), 1);  // 1 sample in testing
 /// assert_eq!(test_indices[0], 0);     // First sample in test set
 /// ```
+#[allow(dead_code)]
 pub fn leave_one_out_cv(n: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
     if n <= 1 {
         return Err(MetricsError::InvalidInput(
@@ -188,6 +190,7 @@ pub fn leave_one_out_cv(n: usize) -> Result<Vec<(Vec<usize>, Vec<usize>)>> {
 /// let splits = stratified_k_fold(&y, 3, true, Some(42)).unwrap();
 /// assert_eq!(splits.len(), 3); // 3 folds
 /// ```
+#[allow(dead_code)]
 pub fn stratified_k_fold<T>(
     y: &ArrayBase<impl ndarray::Data<Elem = T>, impl ndarray::Dimension>,
     n_folds: usize,
@@ -327,6 +330,7 @@ where
 /// assert_eq!(test_indices, &[6, 7]);
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn time_series_split(
     n: usize,
     n_splits: usize,
@@ -443,6 +447,7 @@ pub fn time_series_split(
 ///     assert!(!has_overlap);
 /// }
 /// ```
+#[allow(dead_code)]
 pub fn grouped_k_fold<T>(
     groups: &ArrayBase<impl ndarray::Data<Elem = T>, impl ndarray::Dimension>,
     n_folds: usize,
@@ -568,6 +573,7 @@ where
 /// assert_eq!(inner_splits.len(), 3); // 3 inner folds
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn nested_cross_validation(
     n: usize,
     outer_n_folds: usize,

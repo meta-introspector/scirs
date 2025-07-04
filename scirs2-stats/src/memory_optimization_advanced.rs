@@ -363,7 +363,7 @@ pub struct StreamingStatistics<F> {
 
 impl<F> CacheOptimizedMatrix<F>
 where
-    F: Float + NumCast + Zero + One + Clone,
+    F: Float + NumCast + Zero + One + Clone + 'static,
 {
     /// Create a cache-optimized matrix with specified layout
     pub fn new(data: Array2<F>, layout: MatrixLayout, cache_line_size: usize) -> Self {
@@ -408,7 +408,7 @@ where
 
     /// Cache-optimized correlation computation
     pub fn correlation_matrix(&self) -> StatsResult<CacheOptimizedMatrix<F>> {
-        let (n_samples, n_features) = self.data.dim();
+        let (_n_samples, n_features) = self.data.dim();
 
         // Compute means using cache-friendly access patterns
         let means = self.compute_column_means_optimized()?;
@@ -478,7 +478,7 @@ where
     }
 
     /// Convert matrix to blocked layout
-    fn convert_to_blocked_layout(&self, row_major: bool) -> Array2<F> {
+    fn convert_to_blocked_layout(&self, _row_major: bool) -> Array2<F> {
         // Simplified blocked layout conversion
         self.data.clone() // Placeholder implementation
     }
@@ -559,7 +559,7 @@ where
         }
 
         let n_samples = self.data.nrows();
-        let n_samples_f = F::from(n_samples).unwrap();
+        let _n_samples_f = F::from(n_samples).unwrap();
 
         let mean_i = means[col_i];
         let mean_j = means[col_j];
@@ -648,7 +648,7 @@ impl AdaptiveStatsAllocator {
     }
 
     /// Predict optimal memory pool for allocation
-    fn predict_optimal_pool(&self, size: usize, alignment: usize, operation_type: &str) -> String {
+    fn predict_optimal_pool(&self, size: usize, _alignment: usize, operation_type: &str) -> String {
         if let Ok(analyzer) = self.allocation_patterns.read() {
             if let Some(pattern) = analyzer.get_pattern(operation_type) {
                 // Use pattern analysis to select optimal pool
@@ -945,7 +945,7 @@ impl MemoryOptimizationSuite {
     /// Optimize correlation computation for large matrices
     pub fn optimized_correlation_matrix<F>(&mut self, data: ArrayView2<F>) -> StatsResult<Array2<F>>
     where
-        F: Float + NumCast + Zero + One + Clone + Send + Sync,
+        F: Float + NumCast + Zero + One + Clone + Send + Sync + 'static,
     {
         let (n_samples, n_features) = data.dim();
         let data_size = n_samples * n_features * mem::size_of::<F>();
@@ -969,14 +969,14 @@ impl MemoryOptimizationSuite {
     /// Streaming correlation matrix computation for large datasets
     fn streaming_correlation_matrix<F>(&mut self, data: ArrayView2<F>) -> StatsResult<Array2<F>>
     where
-        F: Float + NumCast + Zero + One + Clone,
+        F: Float + NumCast + Zero + One + Clone + 'static,
     {
         let (n_samples, n_features) = data.dim();
         let chunk_size = self.config.streaming_chunk_size;
 
         // Initialize streaming calculators for each feature pair
         let mut means = vec![F::zero(); n_features];
-        let mut variances = vec![F::zero(); n_features];
+        let _variances = vec![F::zero(); n_features];
 
         // First pass: compute means
         for chunk_start in (0..n_samples).step_by(chunk_size) {

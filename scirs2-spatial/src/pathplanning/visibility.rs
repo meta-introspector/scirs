@@ -620,6 +620,7 @@ impl VisibilityGraphPlanner {
 /// # Returns
 ///
 /// * `true` if the segments intersect, `false` otherwise
+#[allow(dead_code)]
 fn segments_intersect(a1: &[f64], a2: &[f64], b1: &[f64], b2: &[f64]) -> bool {
     const EPSILON: f64 = 1e-10;
 

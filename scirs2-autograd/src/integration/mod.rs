@@ -246,6 +246,7 @@ static GLOBAL_REGISTRY: std::sync::OnceLock<std::sync::Mutex<IntegrationRegistry
     std::sync::OnceLock::new();
 
 /// Initialize the global integration registry
+#[allow(dead_code)]
 pub fn init_integration_registry() -> &'static std::sync::Mutex<IntegrationRegistry> {
     GLOBAL_REGISTRY.get_or_init(|| {
         let mut registry = IntegrationRegistry::new();
@@ -267,6 +268,7 @@ pub fn init_integration_registry() -> &'static std::sync::Mutex<IntegrationRegis
 }
 
 /// Register a module with the global registry
+#[allow(dead_code)]
 pub fn register_module(info: ModuleInfo) -> Result<(), IntegrationError> {
     let registry = init_integration_registry();
     let mut registry_guard = registry.lock().map_err(|_| {
@@ -276,6 +278,7 @@ pub fn register_module(info: ModuleInfo) -> Result<(), IntegrationError> {
 }
 
 /// Get module information from the global registry
+#[allow(dead_code)]
 pub fn get_module_info(name: &str) -> Result<Option<ModuleInfo>, IntegrationError> {
     let registry = init_integration_registry();
     let registry_guard = registry.lock().map_err(|_| {
@@ -285,6 +288,7 @@ pub fn get_module_info(name: &str) -> Result<Option<ModuleInfo>, IntegrationErro
 }
 
 /// Check compatibility between two modules
+#[allow(dead_code)]
 pub fn check_compatibility(module1: &str, module2: &str) -> Result<bool, IntegrationError> {
     let registry = init_integration_registry();
     let registry_guard = registry.lock().map_err(|_| {
@@ -294,6 +298,7 @@ pub fn check_compatibility(module1: &str, module2: &str) -> Result<bool, Integra
 }
 
 /// Update global integration configuration
+#[allow(dead_code)]
 pub fn update_global_config(config: IntegrationConfig) -> Result<(), IntegrationError> {
     let registry = init_integration_registry();
     let mut registry_guard = registry.lock().map_err(|_| {
@@ -304,6 +309,7 @@ pub fn update_global_config(config: IntegrationConfig) -> Result<(), Integration
 }
 
 /// Get current global integration configuration
+#[allow(dead_code)]
 pub fn get_global_config() -> Result<IntegrationConfig, IntegrationError> {
     let registry = init_integration_registry();
     let registry_guard = registry.lock().map_err(|_| {
@@ -313,6 +319,7 @@ pub fn get_global_config() -> Result<IntegrationConfig, IntegrationError> {
 }
 
 /// List all registered modules
+#[allow(dead_code)]
 pub fn list_registered_modules() -> Result<Vec<ModuleInfo>, IntegrationError> {
     let registry = init_integration_registry();
     let registry_guard = registry.lock().map_err(|_| {

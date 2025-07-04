@@ -43,6 +43,7 @@ use std::cmp::Ordering;
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let significant = p_value < 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn wilcoxon<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -210,6 +211,7 @@ where
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let significant = p_value < 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn mann_whitney<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -403,6 +405,7 @@ where
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let significant = p_value < 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn kruskal_wallis<F>(samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast,
@@ -549,6 +552,7 @@ where
 /// // For a significance level of 0.05, we would reject the null hypothesis if p < 0.05
 /// let significant = p_value < 0.05;
 /// ```
+#[allow(dead_code)]
 pub fn friedman<F>(data: &ndarray::ArrayView2<F>) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::ops::AddAssign,
@@ -636,6 +640,7 @@ where
 }
 
 // Helper function: Standard normal CDF approximation
+#[allow(dead_code)]
 fn normal_cdf<F: Float + NumCast>(x: F) -> F {
     let x_f64 = <f64 as NumCast>::from(x).unwrap();
 
@@ -664,6 +669,7 @@ fn normal_cdf<F: Float + NumCast>(x: F) -> F {
 }
 
 // Helper function: Chi-square survival function (1 - CDF)
+#[allow(dead_code)]
 fn chi_square_sf<F: Float + NumCast>(x: F, df: F) -> F {
     let x_f64 = <f64 as NumCast>::from(x).unwrap();
     let df_f64 = <f64 as NumCast>::from(df).unwrap();

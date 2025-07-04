@@ -3,6 +3,7 @@ use scirs2_interpolate::{
     cubic_interpolate, linear_interpolate, pchip_interpolate, PchipInterpolator,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("PCHIP Interpolation Demonstration");
     println!("================================");
@@ -17,6 +18,7 @@ fn main() {
     monotonicity_preservation_example();
 }
 
+#[allow(dead_code)]
 fn basic_pchip_example() {
     println!("\n1. Basic PCHIP Usage");
     println!("-------------------");
@@ -58,6 +60,7 @@ fn basic_pchip_example() {
     }
 }
 
+#[allow(dead_code)]
 fn shape_preservation_example() {
     println!("\n2. Shape Preservation Comparison");
     println!("-------------------------------");
@@ -133,6 +136,7 @@ fn shape_preservation_example() {
     println!("      oscillations might be physically unrealistic.");
 }
 
+#[allow(dead_code)]
 fn monotonicity_preservation_example() {
     println!("\n3. Monotonicity Preservation");
     println!("--------------------------");

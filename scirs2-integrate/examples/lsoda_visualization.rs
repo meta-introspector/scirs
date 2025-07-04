@@ -3,6 +3,7 @@ use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::fs::File;
 use std::io::Write;
 
+#[allow(dead_code)]
 fn main() {
     println!("LSODA Method Switching Visualization Example");
     println!("-------------------------------------------");

@@ -14,6 +14,7 @@ static INIT: Once = Once::new();
 static mut SIMD_CAPS: Option<PlatformCapabilities> = None;
 
 /// Get cached SIMD capabilities
+#[allow(dead_code)]
 fn get_simd_caps() -> &'static PlatformCapabilities {
     unsafe {
         INIT.call_once(|| {
@@ -34,6 +35,7 @@ fn get_simd_caps() -> &'static PlatformCapabilities {
 /// # Returns
 ///
 /// * Convolution result
+#[allow(dead_code)]
 pub fn simd_convolve_f32(signal: &[f32], kernel: &[f32], mode: &str) -> SignalResult<Vec<f32>> {
     let caps = get_simd_caps();
 
@@ -59,6 +61,7 @@ pub fn simd_convolve_f32(signal: &[f32], kernel: &[f32], mode: &str) -> SignalRe
 }
 
 /// Direct SIMD convolution for small kernels
+#[allow(dead_code)]
 fn simd_convolve_direct_f32(
     signal: &ArrayView1<f32>,
     kernel: &ArrayView1<f32>,
@@ -96,6 +99,7 @@ fn simd_convolve_direct_f32(
 }
 
 /// Overlap-save SIMD convolution for large kernels
+#[allow(dead_code)]
 fn simd_convolve_overlap_save_f32(
     signal: &ArrayView1<f32>,
     kernel: &ArrayView1<f32>,
@@ -156,6 +160,7 @@ fn simd_convolve_overlap_save_f32(
 /// # Returns
 ///
 /// * Filtered signal
+#[allow(dead_code)]
 pub fn simd_fir_filter_f32(signal: &[f32], coeffs: &[f32]) -> SignalResult<Vec<f32>> {
     if signal.is_empty() || coeffs.is_empty() {
         return Ok(vec![]);
@@ -202,6 +207,7 @@ pub fn simd_fir_filter_f32(signal: &[f32], coeffs: &[f32]) -> SignalResult<Vec<f
 /// # Returns
 ///
 /// * Cross-correlation result
+#[allow(dead_code)]
 pub fn simd_correlate_f32(signal1: &[f32], signal2: &[f32], mode: &str) -> SignalResult<Vec<f32>> {
     // Correlation is convolution with reversed second signal
     let mut reversed = signal2.to_vec();
@@ -219,6 +225,7 @@ pub fn simd_correlate_f32(signal1: &[f32], signal2: &[f32], mode: &str) -> Signa
 /// # Returns
 ///
 /// * RMS value
+#[allow(dead_code)]
 pub fn simd_rms_f32(signal: &[f32]) -> f32 {
     if signal.is_empty() {
         return 0.0;
@@ -245,6 +252,7 @@ pub fn simd_rms_f32(signal: &[f32]) -> f32 {
 /// # Returns
 ///
 /// * Indices of detected peaks
+#[allow(dead_code)]
 pub fn simd_find_peaks_f32(
     signal: &[f32],
     min_distance: usize,
@@ -294,6 +302,7 @@ pub fn simd_find_peaks_f32(
 /// # Returns
 ///
 /// * Windowed signal
+#[allow(dead_code)]
 pub fn simd_apply_window_f32(signal: &[f32], window: &[f32]) -> SignalResult<Vec<f32>> {
     if signal.len() != window.len() {
         return Err(SignalError::ShapeMismatch(
@@ -319,6 +328,7 @@ pub fn simd_apply_window_f32(signal: &[f32], window: &[f32]) -> SignalResult<Vec
 /// # Returns
 ///
 /// * Signal envelope (magnitude of analytic signal)
+#[allow(dead_code)]
 pub fn simd_envelope_f32(signal: &[f32]) -> SignalResult<Vec<f32>> {
     use crate::hilbert::hilbert;
 
@@ -357,6 +367,7 @@ pub fn simd_envelope_f32(signal: &[f32]) -> SignalResult<Vec<f32>> {
 }
 
 // Helper function to apply convolution mode
+#[allow(dead_code)]
 fn apply_mode_f32(
     result: Vec<f32>,
     signal_len: usize,
@@ -402,6 +413,7 @@ fn apply_mode_f32(
 /// # Returns
 ///
 /// * Windowed signal
+#[allow(dead_code)]
 pub fn simd_apply_window_f64(
     signal: &Array1<f64>,
     window: &Array1<f64>,
@@ -431,6 +443,7 @@ pub fn simd_apply_window_f64(
 /// # Returns
 ///
 /// * Autocorrelation function
+#[allow(dead_code)]
 pub fn simd_autocorrelation_f64(
     signal: &Array1<f64>,
     max_lag: Option<usize>,
@@ -474,6 +487,7 @@ pub fn simd_autocorrelation_f64(
 /// # Returns
 ///
 /// * Enhanced autocorrelation function with performance metrics
+#[allow(dead_code)]
 pub fn simd_autocorrelation_enhanced(
     signal: &Array1<f64>,
     max_lag: Option<usize>,
@@ -582,6 +596,7 @@ pub struct AutocorrelationMetrics {
 }
 
 /// Estimate memory usage for autocorrelation computation
+#[allow(dead_code)]
 fn estimate_memory_usage(signal_length: usize, max_lag: usize) -> f64 {
     let signal_memory = signal_length * 8; // 8 bytes per f64
     let autocorr_memory = (max_lag + 1) * 8;
@@ -601,6 +616,7 @@ fn estimate_memory_usage(signal_length: usize, max_lag: usize) -> f64 {
 /// # Returns
 ///
 /// * Cross-correlation function
+#[allow(dead_code)]
 pub fn simd_cross_correlation_f64(
     signal1: &Array1<f64>,
     signal2: &Array1<f64>,
@@ -623,6 +639,7 @@ pub fn simd_cross_correlation_f64(
 /// # Returns
 ///
 /// * Total energy (sum of squares)
+#[allow(dead_code)]
 pub fn simd_energy_f64(signal: &Array1<f64>) -> f64 {
     f64::simd_dot(&signal.view(), &signal.view())
 }
@@ -636,6 +653,7 @@ pub fn simd_energy_f64(signal: &Array1<f64>) -> f64 {
 /// # Returns
 ///
 /// * RMS value
+#[allow(dead_code)]
 pub fn simd_rms_f64(signal: &Array1<f64>) -> f64 {
     if signal.is_empty() {
         return 0.0;
@@ -646,12 +664,14 @@ pub fn simd_rms_f64(signal: &Array1<f64>) -> f64 {
 }
 
 /// SIMD-optimized signal energy calculation
+#[allow(dead_code)]
 pub fn simd_energy_f32(signal: &[f32]) -> f32 {
     let signal_view = ArrayView1::from(signal);
     f32::simd_dot(&signal_view, &signal_view)
 }
 
 /// SIMD-optimized signal power calculation
+#[allow(dead_code)]
 pub fn simd_power_f32(signal: &[f32]) -> f32 {
     if signal.is_empty() {
         return 0.0;
@@ -668,6 +688,7 @@ pub fn simd_power_f32(signal: &[f32]) -> f32 {
 /// # Returns
 ///
 /// * Magnitude spectrum
+#[allow(dead_code)]
 pub fn simd_complex_magnitude_f32(complex_data: &[f32]) -> SignalResult<Vec<f32>> {
     if complex_data.len() % 2 != 0 {
         return Err(SignalError::ShapeMismatch(
@@ -699,6 +720,7 @@ pub fn simd_complex_magnitude_f32(complex_data: &[f32]) -> SignalResult<Vec<f32>
 /// # Returns
 ///
 /// * Power spectral density
+#[allow(dead_code)]
 pub fn simd_power_spectrum_f32(
     complex_data: &[f32],
     fs: f32,
@@ -732,6 +754,7 @@ pub fn simd_power_spectrum_f32(
 ///
 /// * Filtered signal and final coefficients
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn simd_adaptive_filter_f32(
     signal: &[f32],
     reference: &[f32],
@@ -776,6 +799,7 @@ pub fn simd_adaptive_filter_f32(
 // Double precision versions for f64
 
 /// SIMD-optimized convolution for f64
+#[allow(dead_code)]
 pub fn simd_convolve_f64(signal: &[f64], kernel: &[f64], mode: &str) -> SignalResult<Vec<f64>> {
     let caps = get_simd_caps();
 
@@ -796,6 +820,7 @@ pub fn simd_convolve_f64(signal: &[f64], kernel: &[f64], mode: &str) -> SignalRe
 }
 
 /// Direct SIMD convolution for small kernels (f64)
+#[allow(dead_code)]
 fn simd_convolve_direct_f64(
     signal: &ArrayView1<f64>,
     kernel: &ArrayView1<f64>,
@@ -827,6 +852,7 @@ fn simd_convolve_direct_f64(
 }
 
 /// Overlap-save SIMD convolution for large kernels (f64)
+#[allow(dead_code)]
 fn simd_convolve_overlap_save_f64(
     signal: &ArrayView1<f64>,
     kernel: &ArrayView1<f64>,
@@ -874,6 +900,7 @@ fn simd_convolve_overlap_save_f64(
 }
 
 // Helper function to apply convolution mode (f64)
+#[allow(dead_code)]
 fn apply_mode_f64(
     result: Vec<f64>,
     signal_len: usize,
@@ -919,6 +946,7 @@ fn apply_mode_f64(
 /// # Returns
 ///
 /// * Autocorrelation coefficients
+#[allow(dead_code)]
 pub fn simd_autocorrelation_slice_f64(signal: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
     let n = signal.len();
     if n == 0 || max_lag >= n {
@@ -946,6 +974,7 @@ pub fn simd_autocorrelation_slice_f64(signal: &[f64], max_lag: usize) -> SignalR
 }
 
 /// SIMD-optimized spectral feature extraction
+#[allow(dead_code)]
 pub fn simd_spectral_features_f64(
     signal: &[f64],
     window_size: usize,
@@ -976,6 +1005,7 @@ pub fn simd_spectral_features_f64(
 /// # Returns
 ///
 /// * Spectral centroid in Hz
+#[allow(dead_code)]
 pub fn simd_spectral_centroid_f64(spectrum: &[f64], frequencies: &[f64]) -> SignalResult<f64> {
     if spectrum.len() != frequencies.len() {
         return Err(SignalError::ShapeMismatch(
@@ -1014,6 +1044,7 @@ pub fn simd_spectral_centroid_f64(spectrum: &[f64], frequencies: &[f64]) -> Sign
 /// # Returns
 ///
 /// * Rolloff frequency in Hz
+#[allow(dead_code)]
 pub fn simd_spectral_rolloff_f64(
     spectrum: &[f64],
     frequencies: &[f64],
@@ -1054,6 +1085,7 @@ pub fn simd_spectral_rolloff_f64(
 /// # Returns
 ///
 /// * Zero-crossing rate (crossings per sample)
+#[allow(dead_code)]
 pub fn simd_zero_crossing_rate_f64(signal: &[f64]) -> f64 {
     if signal.len() < 2 {
         return 0.0;
@@ -1082,6 +1114,7 @@ pub fn simd_zero_crossing_rate_f64(signal: &[f64]) -> f64 {
 /// # Returns
 ///
 /// * Spectral flatness (0.0 to 1.0)
+#[allow(dead_code)]
 pub fn simd_spectral_flatness_f64(spectrum: &[f64]) -> SignalResult<f64> {
     if spectrum.is_empty() {
         return Ok(0.0);
@@ -1131,6 +1164,7 @@ pub fn simd_spectral_flatness_f64(spectrum: &[f64]) -> SignalResult<f64> {
 /// # Returns
 ///
 /// * Mel-frequency energies
+#[allow(dead_code)]
 pub fn simd_mel_filterbank_f64(
     spectrum: &[f64],
     frequencies: &[f64],
@@ -1198,6 +1232,7 @@ pub fn simd_mel_filterbank_f64(
 /// # Returns
 ///
 /// * Filtered output sample
+#[allow(dead_code)]
 pub fn simd_realtime_iir_f64(input: f64, coeffs: &[f64], delays: &mut [f64]) -> SignalResult<f64> {
     if coeffs.len() % 5 != 0 {
         return Err(SignalError::ValueError(
@@ -1247,6 +1282,7 @@ pub fn simd_realtime_iir_f64(input: f64, coeffs: &[f64], delays: &mut [f64]) -> 
 /// # Returns
 ///
 /// * Decimated/interpolated output
+#[allow(dead_code)]
 pub fn simd_polyphase_filter_f64(
     signal: &[f64],
     polyphase_filters: &[Vec<f64>],
@@ -1314,6 +1350,7 @@ pub fn simd_polyphase_filter_f64(
 /// # Returns
 ///
 /// * Filtered output block
+#[allow(dead_code)]
 pub fn simd_overlap_add_f64(
     input_block: &[f64],
     impulse_response: &[f64],
@@ -1373,6 +1410,7 @@ pub fn simd_overlap_add_f64(
 /// # Returns
 ///
 /// * Features for each window
+#[allow(dead_code)]
 pub fn simd_sliding_window_features_f64<F>(
     signal: &[f64],
     window_size: usize,
@@ -1416,6 +1454,7 @@ where
 /// # Returns
 ///
 /// * Cepstral coefficients
+#[allow(dead_code)]
 pub fn simd_cepstral_analysis_f64(log_spectrum: &[f64], n_coeffs: usize) -> SignalResult<Vec<f64>> {
     if log_spectrum.is_empty() || n_coeffs == 0 || n_coeffs > log_spectrum.len() {
         return Err(SignalError::ValueError(

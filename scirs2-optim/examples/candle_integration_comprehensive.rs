@@ -1008,6 +1008,7 @@ pub struct DeploymentPackage {
 }
 
 /// Create a sample neural network for Candle
+#[allow(dead_code)]
 fn create_candle_network<D: Device>(
     input_dim: usize,
     hidden_dims: &[usize],
@@ -1051,6 +1052,7 @@ fn create_candle_network<D: Device>(
 }
 
 /// Create synthetic dataset for Candle testing
+#[allow(dead_code)]
 fn create_candle_dataset<D: Device>(
     n_samples: usize,
     input_dim: usize,
@@ -1074,6 +1076,7 @@ fn create_candle_dataset<D: Device>(
 }
 
 /// Benchmark Candle optimizers
+#[allow(dead_code)]
 fn benchmark_candle_optimizers() -> Result<()> {
     println!("\n🏁 Benchmarking Candle integration optimizers...");
 
@@ -1204,6 +1207,7 @@ fn benchmark_candle_optimizers() -> Result<()> {
 }
 
 /// Demonstrate advanced Candle features
+#[allow(dead_code)]
 fn demonstrate_candle_advanced_features() -> Result<()> {
     println!("\n🔬 Demonstrating advanced Candle integration features...");
 
@@ -1294,6 +1298,7 @@ fn demonstrate_candle_advanced_features() -> Result<()> {
 }
 
 /// Test WebAssembly deployment compatibility
+#[allow(dead_code)]
 fn test_wasm_deployment() -> Result<()> {
     println!("\n🌐 WebAssembly Deployment Testing:");
 
@@ -1337,6 +1342,7 @@ fn test_wasm_deployment() -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🕯️  Scirs2-Optim + Candle Framework Integration Example");
     println!("======================================================");

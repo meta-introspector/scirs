@@ -2,6 +2,7 @@ use ag::tensor_ops::*;
 use ndarray::{array, Ix2};
 use scirs2_autograd as ag;
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing SVD with a simple matrix...");
 

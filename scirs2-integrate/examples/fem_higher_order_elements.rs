@@ -10,6 +10,7 @@ use scirs2_integrate::pde::{
     BoundaryCondition as GenericBoundaryCondition, BoundaryConditionType, BoundaryLocation,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Higher-Order Finite Elements for Poisson Equation ===");
 
@@ -141,6 +142,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Compute L2 and maximum errors against exact solution
+#[allow(dead_code)]
 fn compute_errors(
     result: &scirs2_integrate::pde::finite_element::FEMResult,
     exact_solution: &dyn Fn(f64, f64) -> f64,

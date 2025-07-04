@@ -58,6 +58,7 @@ lazy_static::lazy_static! {
 /// # Returns
 ///
 /// * `f64` - Value of the constant
+#[allow(dead_code)]
 pub fn get_constant(name: &'static str) -> f64 {
     if let Some(value) = SPECIAL_VALUES.lock().unwrap().get(name) {
         return *value;
@@ -87,6 +88,7 @@ pub fn get_constant(name: &'static str) -> f64 {
 /// # Returns
 ///
 /// * `Option<f64>` - Cached value if available, None otherwise
+#[allow(dead_code)]
 pub fn get_cached_polylog(s: f64, x: f64) -> Option<f64> {
     // We only cache for integer s and discretized x (to avoid filling memory)
     let s_int = s.round() as i32;
@@ -109,6 +111,7 @@ pub fn get_cached_polylog(s: f64, x: f64) -> Option<f64> {
 /// * `s` - Order of the polylogarithm
 /// * `x` - Argument value
 /// * `value` - Result to cache
+#[allow(dead_code)]
 pub fn cache_polylog(s: f64, x: f64, value: f64) {
     // We only cache for integer s and discretized x (to avoid filling memory)
     let s_int = s.round() as i32;
@@ -134,6 +137,7 @@ pub fn cache_polylog(s: f64, x: f64, value: f64) {
 /// # Returns
 ///
 /// * `f64` - ln(1+x) computed accurately
+#[allow(dead_code)]
 pub fn ln_1p_optimized(x: f64) -> f64 {
     if x.abs() < 1e-4 {
         // Use series expansion for very small x
@@ -153,6 +157,7 @@ pub fn ln_1p_optimized(x: f64) -> f64 {
 /// # Returns
 ///
 /// * `f64` - Exponential integral
+#[allow(dead_code)]
 pub fn exponential_integral_pade(x: f64) -> f64 {
     // Only use Pade approximation for x > 0
     if x <= 0.0 {
@@ -205,6 +210,7 @@ pub fn exponential_integral_pade(x: f64) -> f64 {
 /// # Returns
 ///
 /// * `f64` - Exponential integral E₁(x)
+#[allow(dead_code)]
 pub fn exponential_integral_e1_pade(x: f64) -> f64 {
     assert!(x > 0.0, "E₁(x) is only defined for x > 0");
 
@@ -781,6 +787,7 @@ pub mod vectorized {
 }
 
 /// Fast Bessel J0 series computation for lookup table initialization
+#[allow(dead_code)]
 fn bessel_j0_series(x: f64) -> f64 {
     if x.abs() < 1e-14 {
         return 1.0;
@@ -807,6 +814,7 @@ fn bessel_j0_series(x: f64) -> f64 {
 }
 
 /// Fast Gamma function using Stirling's approximation for lookup table
+#[allow(dead_code)]
 fn gamma_stirling(x: f64) -> f64 {
     if x < 0.5 {
         // Use reflection formula
@@ -821,6 +829,7 @@ fn gamma_stirling(x: f64) -> f64 {
 }
 
 /// Fast lookup-based Bessel J0 function
+#[allow(dead_code)]
 pub fn bessel_j0_fast(x: f64) -> f64 {
     let abs_x = x.abs();
 
@@ -841,6 +850,7 @@ pub fn bessel_j0_fast(x: f64) -> f64 {
 }
 
 /// Fast lookup-based Gamma function
+#[allow(dead_code)]
 pub fn gamma_fast(x: f64) -> f64 {
     if x > 0.1 && x < 10.1 {
         let index = ((x - 0.1) * 100.0) as usize;

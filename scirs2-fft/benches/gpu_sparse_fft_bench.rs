@@ -8,6 +8,7 @@ use scirs2_fft::{
 use std::f64::consts::PI;
 
 // Helper function to create a sparse signal
+#[allow(dead_code)]
 fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
     let mut signal = vec![0.0; n];
 
@@ -22,6 +23,7 @@ fn create_sparse_signal(n: usize, frequencies: &[(usize, f64)]) -> Vec<f64> {
 }
 
 // Helper function to create a noisy sparse signal
+#[allow(dead_code)]
 fn create_noisy_sparse_signal(
     n: usize,
     frequencies: &[(usize, f64)],
@@ -40,6 +42,7 @@ fn create_noisy_sparse_signal(
 }
 
 // Benchmark CPU sparse FFT with different signal sizes
+#[allow(dead_code)]
 fn bench_cpu_sparse_fft_small(b: &mut Bencher) {
     let n = 1024;
     let frequencies = vec![(10, 1.0), (50, 0.5), (100, 0.3)];
@@ -57,6 +60,7 @@ fn bench_cpu_sparse_fft_small(b: &mut Bencher) {
     });
 }
 
+#[allow(dead_code)]
 fn bench_cpu_sparse_fft_medium(b: &mut Bencher) {
     let n = 8192;
     let frequencies = vec![(100, 1.0), (500, 0.5), (1000, 0.3)];
@@ -74,6 +78,7 @@ fn bench_cpu_sparse_fft_medium(b: &mut Bencher) {
     });
 }
 
+#[allow(dead_code)]
 fn bench_cpu_sparse_fft_large(b: &mut Bencher) {
     let n = 65536;
     let frequencies = vec![(1000, 1.0), (5000, 0.5), (10000, 0.3)];
@@ -92,6 +97,7 @@ fn bench_cpu_sparse_fft_large(b: &mut Bencher) {
 }
 
 // Benchmark GPU sparse FFT with different algorithms
+#[allow(dead_code)]
 fn bench_gpu_sparse_fft_sublinear(b: &mut Bencher) {
     let n = 8192;
     let frequencies = vec![(100, 1.0), (500, 0.5), (1000, 0.3)];
@@ -110,6 +116,7 @@ fn bench_gpu_sparse_fft_sublinear(b: &mut Bencher) {
     });
 }
 
+#[allow(dead_code)]
 fn bench_gpu_sparse_fft_iterative(b: &mut Bencher) {
     let n = 8192;
     let frequencies = vec![(100, 1.0), (500, 0.5), (1000, 0.3)];
@@ -128,6 +135,7 @@ fn bench_gpu_sparse_fft_iterative(b: &mut Bencher) {
     });
 }
 
+#[allow(dead_code)]
 fn bench_gpu_sparse_fft_compressed_sensing(b: &mut Bencher) {
     let n = 8192;
     let frequencies = vec![(100, 1.0), (500, 0.5), (1000, 0.3)];
@@ -147,6 +155,7 @@ fn bench_gpu_sparse_fft_compressed_sensing(b: &mut Bencher) {
 }
 
 // Benchmark noisy signals
+#[allow(dead_code)]
 fn bench_gpu_sparse_fft_noisy(b: &mut Bencher) {
     let n = 8192;
     let frequencies = vec![(100, 1.0), (500, 0.5), (1000, 0.3)];
@@ -166,6 +175,7 @@ fn bench_gpu_sparse_fft_noisy(b: &mut Bencher) {
 }
 
 // Benchmark batch operations
+#[allow(dead_code)]
 fn bench_gpu_batch_sparse_fft(b: &mut Bencher) {
     let n = 4096;
     let batch_size = 16;
@@ -191,6 +201,7 @@ fn bench_gpu_batch_sparse_fft(b: &mut Bencher) {
 }
 
 // Benchmark different window functions
+#[allow(dead_code)]
 fn bench_gpu_sparse_fft_hann_window(b: &mut Bencher) {
     let n = 8192;
     let frequencies = vec![(100, 1.0), (500, 0.5), (1000, 0.3)];
@@ -209,6 +220,7 @@ fn bench_gpu_sparse_fft_hann_window(b: &mut Bencher) {
     });
 }
 
+#[allow(dead_code)]
 fn bench_gpu_sparse_fft_hamming_window(b: &mut Bencher) {
     let n = 8192;
     let frequencies = vec![(100, 1.0), (500, 0.5), (1000, 0.3)];
@@ -227,6 +239,7 @@ fn bench_gpu_sparse_fft_hamming_window(b: &mut Bencher) {
     });
 }
 
+#[allow(dead_code)]
 fn gpu_sparse_fft_benches(c: &mut Criterion) {
     c.bench_function("cpu_sparse_fft_small", bench_cpu_sparse_fft_small);
     c.bench_function("cpu_sparse_fft_medium", bench_cpu_sparse_fft_medium);

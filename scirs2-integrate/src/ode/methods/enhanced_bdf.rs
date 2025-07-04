@@ -31,6 +31,7 @@ use ndarray::{Array1, ArrayView1};
 /// # Returns
 ///
 /// The solution as an ODEResult or an error
+#[allow(dead_code)]
 pub fn enhanced_bdf_method<F, Func>(
     f: Func,
     t_span: [F; 2],

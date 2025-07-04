@@ -456,12 +456,27 @@ impl MultiFileCorpus {
         }
 
         // Find which file contains this document
-        let file_idx = self
-            .file_boundaries
-            .binary_search(&(global_index + 1))
-            .unwrap_or_else(|x| x - 1);
+        let file_idx = match self.file_boundaries.binary_search(&(global_index + 1)) {
+            Ok(idx) => {
+                // Found exact match, means we're at a boundary
+                // The document belongs to the previous file
+                if idx == 0 {
+                    0
+                } else {
+                    idx - 1
+                }
+            }
+            Err(idx) => {
+                // Not found, idx is insertion point
+                if idx == 0 {
+                    0
+                } else {
+                    idx - 1
+                }
+            }
+        };
 
-        let local_index = global_index - self.file_boundaries[file_idx];
+        let local_index = global_index.saturating_sub(self.file_boundaries[file_idx]);
         self.files[file_idx].get_document(local_index)
     }
 

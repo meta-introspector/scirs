@@ -5,6 +5,7 @@ use scirs2_spatial::collision::{
     Sphere, Triangle2D, Triangle3D,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("Collision Detection Examples");
     println!("===========================\n");
@@ -314,8 +315,8 @@ fn main() {
                     moving_sphere2.center[2] + velocity2[2] * collision_time_float,
                 ];
 
-                println!("  Sphere1 position at collision: {:?}", position1);
-                println!("  Sphere2 position at collision: {:?}", position2);
+                println!("  Sphere1 position at collision: {position1:?}");
+                println!("  Sphere2 position at collision: {position2:?}");
 
                 // Calculate distance between centers at collision
                 let dx = position1[0] - position2[0];
@@ -323,7 +324,7 @@ fn main() {
                 let dz = position1[2] - position2[2];
                 let distance = (dx * dx + dy * dy + dz * dz).sqrt();
 
-                println!("  Distance between centers: {:.2}", distance);
+                println!("  Distance between centers: {distance:.2}");
                 println!(
                     "  Sum of radii: {:.2}",
                     moving_sphere1.radius + moving_sphere2.radius

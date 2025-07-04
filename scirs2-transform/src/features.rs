@@ -307,6 +307,7 @@ impl PolynomialFeatures {
 ///                   
 /// let binarized = binarize(&data, 0.0).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn binarize<S>(array: &ArrayBase<S, Ix2>, threshold: f64) -> Result<Array2<f64>>
 where
     S: Data,
@@ -368,6 +369,7 @@ where
 /// # Returns
 /// * `Result<Array2<f64>>` - Array of quantiles with shape (n_features, n_quantiles) if axis=0,
 ///   or (n_samples, n_quantiles) if axis=1
+#[allow(dead_code)]
 fn compute_quantiles<S>(
     array: &ArrayBase<S, Ix2>,
     n_quantiles: usize,
@@ -428,6 +430,7 @@ where
 ///
 /// # Returns
 /// * `Result<Array2<f64>>` - The discretized array
+#[allow(dead_code)]
 pub fn discretize_equal_width<S>(
     array: &ArrayBase<S, Ix2>,
     n_bins: usize,
@@ -572,6 +575,7 @@ where
 ///
 /// # Returns
 /// * `Result<Array2<f64>>` - The discretized array
+#[allow(dead_code)]
 pub fn discretize_equal_frequency<S>(
     array: &ArrayBase<S, Ix2>,
     n_bins: usize,
@@ -696,6 +700,7 @@ where
 ///                   
 /// let transformed = power_transform(&data, "yeo-johnson", true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn power_transform<S>(
     array: &ArrayBase<S, Ix2>,
     method: &str,
@@ -785,6 +790,7 @@ where
 }
 
 /// Estimate optimal lambda parameter using maximum likelihood estimation
+#[allow(dead_code)]
 fn estimate_optimal_lambda(data: &[f64], method: &str) -> Result<f64> {
     if data.is_empty() {
         return Err(TransformError::InvalidInput(
@@ -832,6 +838,7 @@ fn estimate_optimal_lambda(data: &[f64], method: &str) -> Result<f64> {
 }
 
 /// Compute log-likelihood for given lambda parameter
+#[allow(dead_code)]
 fn compute_log_likelihood(data: &[f64], lambda: f64, method: &str) -> Result<f64> {
     let n = data.len() as f64;
     let mut transformed_data = Vec::with_capacity(data.len());
@@ -906,6 +913,7 @@ fn compute_log_likelihood(data: &[f64], lambda: f64, method: &str) -> Result<f64
 }
 
 /// Golden section search for optimal lambda
+#[allow(dead_code)]
 fn golden_section_search(
     data: &[f64],
     method: &str,
@@ -1440,6 +1448,7 @@ impl Default for PowerTransformer {
 }
 
 /// Apply Yeo-Johnson inverse transformation to a single value
+#[allow(dead_code)]
 fn yeo_johnson_inverse_transform(y: f64, lambda: f64) -> f64 {
     if y >= 0.0 {
         if (lambda - 0.0).abs() < EPSILON {
@@ -1455,6 +1464,7 @@ fn yeo_johnson_inverse_transform(y: f64, lambda: f64) -> f64 {
 }
 
 /// Apply Box-Cox inverse transformation to a single value
+#[allow(dead_code)]
 fn box_cox_inverse_transform(y: f64, lambda: f64) -> f64 {
     if (lambda - 0.0).abs() < EPSILON {
         y.exp()
@@ -1464,6 +1474,7 @@ fn box_cox_inverse_transform(y: f64, lambda: f64) -> f64 {
 }
 
 /// Compute the log of the Jacobian for Yeo-Johnson transformation
+#[allow(dead_code)]
 fn yeo_johnson_log_jacobian(x: f64, lambda: f64) -> f64 {
     if x >= 0.0 {
         (lambda - 1.0) * (x + 1.0).ln()
@@ -1473,6 +1484,7 @@ fn yeo_johnson_log_jacobian(x: f64, lambda: f64) -> f64 {
 }
 
 /// Compute the log of the Jacobian for Box-Cox transformation
+#[allow(dead_code)]
 fn box_cox_log_jacobian(x: f64, lambda: f64) -> f64 {
     (lambda - 1.0) * x.ln()
 }
@@ -1486,6 +1498,7 @@ fn box_cox_log_jacobian(x: f64, lambda: f64) -> f64 {
 ///
 /// # Returns
 /// * `Result<Array2<f64>>` - The log-transformed array
+#[allow(dead_code)]
 pub fn log_transform<S>(array: &ArrayBase<S, Ix2>, epsilon: f64) -> Result<Array2<f64>>
 where
     S: Data,

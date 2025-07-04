@@ -63,6 +63,7 @@ where
     }
 }
 
+#[allow(dead_code)]
 fn normalize_minmax<T>(mut array: Array2<T>, new_min: T, new_max: T) -> Array2<T>
 where
     T: Float + FromPrimitive,
@@ -79,6 +80,7 @@ where
     array
 }
 
+#[allow(dead_code)]
 fn normalize_zscore<T>(mut array: Array2<T>) -> Array2<T>
 where
     T: Float + FromPrimitive,
@@ -98,6 +100,7 @@ where
     array
 }
 
+#[allow(dead_code)]
 fn normalize_l1<T>(mut array: Array2<T>) -> Array2<T>
 where
     T: Float,
@@ -111,6 +114,7 @@ where
     array
 }
 
+#[allow(dead_code)]
 fn normalize_l2<T>(mut array: Array2<T>) -> Array2<T>
 where
     T: Float,
@@ -124,6 +128,7 @@ where
     array
 }
 
+#[allow(dead_code)]
 fn normalize_maxabs<T>(mut array: Array2<T>) -> Array2<T>
 where
     T: Float,

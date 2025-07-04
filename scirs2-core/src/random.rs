@@ -53,6 +53,7 @@ pub use rand::{Rng, RngCore};
 /// Compatibility wrapper for updated rand API
 /// In rand 0.9, provides a convenient alias for rng() wrapped in Random
 /// This allows usage like: scirs2_core::random::rng().random_range(0, 100)
+#[allow(dead_code)]
 pub fn rng() -> Random<rand::rngs::ThreadRng> {
     Random { rng: rand::rng() }
 }
@@ -167,6 +168,7 @@ thread_local! {
 }
 
 /// Get a reference to the thread-local random number generator
+#[allow(dead_code)]
 pub fn get_rng<F, R>(f: F) -> R
 where
     F: FnOnce(&mut Random) -> R,

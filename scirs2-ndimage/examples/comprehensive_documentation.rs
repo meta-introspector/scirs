@@ -14,6 +14,7 @@ use scirs2_ndimage::{
     visualization::*,
 };
 
+#[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("=== Comprehensive scirs2-ndimage Documentation & Examples ===\n");
 
@@ -84,6 +85,7 @@ fn main() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_test_image_2d(height: usize, width: usize) -> Array2<f64> {
     Array2::from_shape_fn((height, width), |(i, j)| {
         let x = i as f64 / height as f64;
@@ -98,6 +100,7 @@ fn create_test_image_2d(height: usize, width: usize) -> Array2<f64> {
     })
 }
 
+#[allow(dead_code)]
 fn create_test_image_3d(height: usize, width: usize, depth: usize) -> Array3<f64> {
     Array3::from_shape_fn((height, width, depth), |(i, j, k)| {
         let x = i as f64 / height as f64;
@@ -111,6 +114,7 @@ fn create_test_image_3d(height: usize, width: usize, depth: usize) -> Array3<f64
     })
 }
 
+#[allow(dead_code)]
 fn add_noise(image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
     image
         + &Array2::from_shape_fn(image.dim(), |(i, j)| {
@@ -127,6 +131,7 @@ fn add_noise(image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
         })
 }
 
+#[allow(dead_code)]
 fn create_edge_test_image(height: usize, width: usize) -> Array2<f64> {
     Array2::from_shape_fn((height, width), |(i, j)| {
         // Create step edges and lines
@@ -146,6 +151,7 @@ fn create_edge_test_image(height: usize, width: usize) -> Array2<f64> {
     })
 }
 
+#[allow(dead_code)]
 fn demonstrate_filtering(image: &Array2<f64>, noisy_image: &Array2<f64>) -> NdimageResult<()> {
     println!("🔍 Filtering Operations");
 
@@ -193,6 +199,7 @@ fn demonstrate_filtering(image: &Array2<f64>, noisy_image: &Array2<f64>) -> Ndim
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_feature_detection(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🎯 Feature Detection");
 
@@ -221,6 +228,7 @@ fn demonstrate_feature_detection(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_morphology(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🔬 Morphological Operations");
 
@@ -281,6 +289,7 @@ fn demonstrate_morphology(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_interpolation(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🔄 Interpolation & Transformations");
 
@@ -348,6 +357,7 @@ fn demonstrate_interpolation(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_measurements(image: &Array2<f64>) -> NdimageResult<()> {
     println!("📊 Measurements & Analysis");
 
@@ -384,6 +394,7 @@ fn demonstrate_measurements(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_segmentation(image: &Array2<f64>) -> NdimageResult<()> {
     println!("✂️ Segmentation");
 
@@ -428,6 +439,7 @@ fn demonstrate_segmentation(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_domain_specific(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🏥 Domain-Specific Functions");
 
@@ -458,6 +470,7 @@ fn demonstrate_domain_specific(image: &Array2<f64>) -> NdimageResult<()> {
 }
 
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn demonstrate_ultra_simd(image: &Array2<f64>) -> NdimageResult<()> {
     println!("⚡ Ultra-Advanced SIMD Extensions");
 
@@ -482,6 +495,7 @@ fn demonstrate_ultra_simd(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_backends(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🖥️ Backend & Performance Optimization");
 
@@ -513,6 +527,7 @@ fn demonstrate_backends(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_streaming() -> NdimageResult<()> {
     println!("🌊 Streaming for Large Datasets");
 
@@ -540,6 +555,7 @@ fn demonstrate_streaming() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_memory_management(image: &Array2<f64>) -> NdimageResult<()> {
     println!("🧠 Memory Management");
 
@@ -574,6 +590,7 @@ fn demonstrate_memory_management(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_visualization(image: &Array2<f64>) -> NdimageResult<()> {
     println!("📊 Visualization");
 
@@ -601,6 +618,7 @@ fn demonstrate_visualization(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_best_practices() -> NdimageResult<()> {
     println!("💡 Best Practices & Optimization Tips");
 
@@ -635,6 +653,7 @@ fn demonstrate_best_practices() -> NdimageResult<()> {
 }
 
 #[cfg(not(feature = "simd"))]
+#[allow(dead_code)]
 fn demonstrate_ultra_simd(_image: &Array2<f64>) -> NdimageResult<()> {
     println!("⚡ Ultra-Advanced SIMD Extensions");
     println!("  Note: SIMD features not available (compile with --features simd)");

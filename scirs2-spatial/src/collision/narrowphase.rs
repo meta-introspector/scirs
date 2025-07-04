@@ -21,6 +21,7 @@ use super::shapes::{
 /// # Returns
 ///
 /// `true` if the point is inside or on the boundary of the circle, `false` otherwise
+#[allow(dead_code)]
 pub fn point_circle_collision(point: &[f64; 2], circle: &Circle) -> bool {
     let dx = point[0] - circle.center[0];
     let dy = point[1] - circle.center[1];
@@ -39,6 +40,7 @@ pub fn point_circle_collision(point: &[f64; 2], circle: &Circle) -> bool {
 /// # Returns
 ///
 /// `true` if the point is inside or on the boundary of the box, `false` otherwise
+#[allow(dead_code)]
 pub fn point_box2d_collision(point: &[f64; 2], box2d: &Box2D) -> bool {
     point[0] >= box2d.min[0]
         && point[0] <= box2d.max[0]
@@ -56,6 +58,7 @@ pub fn point_box2d_collision(point: &[f64; 2], box2d: &Box2D) -> bool {
 /// # Returns
 ///
 /// `true` if the point is inside or on the boundary of the triangle, `false` otherwise
+#[allow(dead_code)]
 pub fn point_triangle2d_collision(point: &[f64; 2], triangle: &Triangle2D) -> bool {
     // Compute barycentric coordinates
     let area = 0.5
@@ -104,6 +107,7 @@ pub fn point_triangle2d_collision(point: &[f64; 2], triangle: &Triangle2D) -> bo
 /// # Returns
 ///
 /// `true` if the point is inside or on the boundary of the sphere, `false` otherwise
+#[allow(dead_code)]
 pub fn point_sphere_collision(point: &[f64; 3], sphere: &Sphere) -> bool {
     let dx = point[0] - sphere.center[0];
     let dy = point[1] - sphere.center[1];
@@ -123,6 +127,7 @@ pub fn point_sphere_collision(point: &[f64; 3], sphere: &Sphere) -> bool {
 /// # Returns
 ///
 /// `true` if the point is inside or on the boundary of the box, `false` otherwise
+#[allow(dead_code)]
 pub fn point_box3d_collision(point: &[f64; 3], box3d: &Box3D) -> bool {
     point[0] >= box3d.min[0]
         && point[0] <= box3d.max[0]
@@ -142,6 +147,7 @@ pub fn point_box3d_collision(point: &[f64; 3], box3d: &Box3D) -> bool {
 /// # Returns
 ///
 /// `true` if the point is on the triangle, `false` otherwise
+#[allow(dead_code)]
 pub fn point_triangle3d_collision(point: &[f64; 3], triangle: &Triangle3D) -> bool {
     // For a 3D triangle, we need to check if the point is on the plane of the triangle
     // and then check if it's inside the triangle
@@ -270,6 +276,7 @@ pub fn point_triangle3d_collision(point: &[f64; 3], triangle: &Triangle3D) -> bo
 /// # Returns
 ///
 /// `true` if the circles intersect, `false` otherwise
+#[allow(dead_code)]
 pub fn circle_circle_collision(circle1: &Circle, circle2: &Circle) -> bool {
     let dx = circle1.center[0] - circle2.center[0];
     let dy = circle1.center[1] - circle2.center[1];
@@ -289,6 +296,7 @@ pub fn circle_circle_collision(circle1: &Circle, circle2: &Circle) -> bool {
 /// # Returns
 ///
 /// `true` if the circle and box intersect, `false` otherwise
+#[allow(dead_code)]
 pub fn circle_box2d_collision(circle: &Circle, box2d: &Box2D) -> bool {
     // Find the closest point on the box to the circle center
     let closest_x = circle.center[0].max(box2d.min[0]).min(box2d.max[0]);
@@ -313,6 +321,7 @@ pub fn circle_box2d_collision(circle: &Circle, box2d: &Box2D) -> bool {
 /// # Returns
 ///
 /// `true` if the line segments intersect, `false` otherwise
+#[allow(dead_code)]
 pub fn line2d_line2d_collision(line1: &LineSegment2D, line2: &LineSegment2D) -> bool {
     // Calculate the orientation of three points
     let orientation = |p: &[f64; 2], q: &[f64; 2], r: &[f64; 2]| -> i32 {
@@ -372,6 +381,7 @@ pub fn line2d_line2d_collision(line1: &LineSegment2D, line2: &LineSegment2D) -> 
 /// # Returns
 ///
 /// `true` if the boxes intersect, `false` otherwise
+#[allow(dead_code)]
 pub fn box2d_box2d_collision(box1: &Box2D, box2: &Box2D) -> bool {
     // Check if the boxes overlap in both x and y dimensions
     box1.min[0] <= box2.max[0]
@@ -390,6 +400,7 @@ pub fn box2d_box2d_collision(box1: &Box2D, box2: &Box2D) -> bool {
 /// # Returns
 ///
 /// `true` if the triangle and circle intersect, `false` otherwise
+#[allow(dead_code)]
 pub fn triangle2d_circle_collision(triangle: &Triangle2D, circle: &Circle) -> bool {
     // Check if the circle center is inside the triangle
     if point_triangle2d_collision(&circle.center, triangle) {
@@ -465,6 +476,7 @@ pub fn triangle2d_circle_collision(triangle: &Triangle2D, circle: &Circle) -> bo
 /// # Returns
 ///
 /// `true` if the spheres intersect, `false` otherwise
+#[allow(dead_code)]
 pub fn sphere_sphere_collision(sphere1: &Sphere, sphere2: &Sphere) -> bool {
     let dx = sphere1.center[0] - sphere2.center[0];
     let dy = sphere1.center[1] - sphere2.center[1];
@@ -485,6 +497,7 @@ pub fn sphere_sphere_collision(sphere1: &Sphere, sphere2: &Sphere) -> bool {
 /// # Returns
 ///
 /// `true` if the sphere and box intersect, `false` otherwise
+#[allow(dead_code)]
 pub fn sphere_box3d_collision(sphere: &Sphere, box3d: &Box3D) -> bool {
     // Find the closest point on the box to the sphere center
     let closest_x = sphere.center[0].max(box3d.min[0]).min(box3d.max[0]);
@@ -511,6 +524,7 @@ pub fn sphere_box3d_collision(sphere: &Sphere, box3d: &Box3D) -> bool {
 /// # Returns
 ///
 /// `true` if the boxes intersect, `false` otherwise
+#[allow(dead_code)]
 pub fn box3d_box3d_collision(box1: &Box3D, box2: &Box3D) -> bool {
     // Check if the boxes overlap in all three dimensions
     box1.min[0] <= box2.max[0]
@@ -531,6 +545,7 @@ pub fn box3d_box3d_collision(box1: &Box3D, box2: &Box3D) -> bool {
 /// # Returns
 ///
 /// `true` if the line segments intersect, `false` otherwise
+#[allow(dead_code)]
 pub fn line3d_line3d_collision(line1: &LineSegment3D, line2: &LineSegment3D) -> bool {
     // 3D line segment intersection is more complex than 2D
     // We need to find the closest points on both lines and check their distance
@@ -667,6 +682,7 @@ pub fn line3d_line3d_collision(line1: &LineSegment3D, line2: &LineSegment3D) -> 
 /// # Returns
 ///
 /// `true` if the sphere and triangle intersect, `false` otherwise
+#[allow(dead_code)]
 pub fn sphere_triangle3d_collision(sphere: &Sphere, triangle: &Triangle3D) -> bool {
     // First, find the closest point on the triangle to the sphere center
 
@@ -823,6 +839,7 @@ pub fn sphere_triangle3d_collision(sphere: &Sphere, triangle: &Triangle3D) -> bo
 /// # Returns
 ///
 /// `Some((distance, hit_point))` if the ray intersects the sphere, `None` otherwise
+#[allow(dead_code)]
 pub fn ray_sphere_collision(
     ray_origin: &[f64; 3],
     ray_direction: &[f64; 3],
@@ -897,6 +914,7 @@ pub fn ray_sphere_collision(
 /// # Returns
 ///
 /// `Some((t_enter, t_exit, hit_point))` if the ray intersects the box, `None` otherwise
+#[allow(dead_code)]
 pub fn ray_box3d_collision(
     ray_origin: &[f64; 3],
     ray_direction: &[f64; 3],
@@ -977,6 +995,7 @@ pub fn ray_box3d_collision(
 /// # Returns
 ///
 /// `Some((distance, hit_point, barycentric))` if the ray intersects the triangle, `None` otherwise
+#[allow(dead_code)]
 pub fn ray_triangle3d_collision(
     ray_origin: &[f64; 3],
     ray_direction: &[f64; 3],
@@ -1163,6 +1182,7 @@ impl GJKSimplex {
 }
 
 /// Compute the Minkowski difference support point
+#[allow(dead_code)]
 fn support_minkowski_difference<T1: GJKShape, T2: GJKShape>(
     shape1: &T1,
     shape2: &T2,
@@ -1180,10 +1200,12 @@ fn support_minkowski_difference<T1: GJKShape, T2: GJKShape>(
 }
 
 /// Vector operations helper functions
+#[allow(dead_code)]
 fn dot_product(a: &[f64; 3], b: &[f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
+#[allow(dead_code)]
 fn cross_product(a: &[f64; 3], b: &[f64; 3]) -> [f64; 3] {
     [
         a[1] * b[2] - a[2] * b[1],
@@ -1192,15 +1214,18 @@ fn cross_product(a: &[f64; 3], b: &[f64; 3]) -> [f64; 3] {
     ]
 }
 
+#[allow(dead_code)]
 fn subtract_vectors(a: &[f64; 3], b: &[f64; 3]) -> [f64; 3] {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
+#[allow(dead_code)]
 fn negate_vector(a: &[f64; 3]) -> [f64; 3] {
     [-a[0], -a[1], -a[2]]
 }
 
 /// Handle line simplex (2 points)
+#[allow(dead_code)]
 fn handle_line_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
     let a = simplex.get_point(1).unwrap(); // Latest point
     let b = simplex.get_point(0).unwrap(); // Previous point
@@ -1221,6 +1246,7 @@ fn handle_line_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bo
 }
 
 /// Handle triangle simplex (3 points)
+#[allow(dead_code)]
 fn handle_triangle_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
     let a = simplex.get_point(2).unwrap(); // Latest point
     let b = simplex.get_point(1).unwrap();
@@ -1255,6 +1281,7 @@ fn handle_triangle_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -
 }
 
 /// Helper function for handling line simplex from specific points
+#[allow(dead_code)]
 fn handle_line_simplex_from_points(
     simplex: &mut GJKSimplex,
     direction: &mut [f64; 3],
@@ -1276,6 +1303,7 @@ fn handle_line_simplex_from_points(
 }
 
 /// Handle tetrahedron simplex (4 points)
+#[allow(dead_code)]
 fn handle_tetrahedron_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
     let a = simplex.get_point(3).unwrap(); // Latest point
     let b = simplex.get_point(2).unwrap();
@@ -1312,6 +1340,7 @@ fn handle_tetrahedron_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]
 }
 
 /// Handle simplex evolution based on current size
+#[allow(dead_code)]
 fn handle_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
     match simplex.size() {
         2 => handle_line_simplex(simplex, direction),
@@ -1351,6 +1380,7 @@ fn handle_simplex(simplex: &mut GJKSimplex, direction: &mut [f64; 3]) -> bool {
 /// let colliding = gjk_collision_detection(&sphere, &bbox, 64);
 /// println!("Are the shapes colliding? {}", colliding);
 /// ```
+#[allow(dead_code)]
 pub fn gjk_collision_detection<T1: GJKShape, T2: GJKShape>(
     shape1: &T1,
     shape2: &T2,
@@ -1402,6 +1432,7 @@ pub fn gjk_collision_detection<T1: GJKShape, T2: GJKShape>(
 /// # Returns
 ///
 /// `true` if the spheres are colliding, `false` otherwise
+#[allow(dead_code)]
 pub fn gjk_sphere_sphere_collision(sphere1: &Sphere, sphere2: &Sphere) -> bool {
     gjk_collision_detection(sphere1, sphere2, 64)
 }
@@ -1416,6 +1447,7 @@ pub fn gjk_sphere_sphere_collision(sphere1: &Sphere, sphere2: &Sphere) -> bool {
 /// # Returns
 ///
 /// `true` if the boxes are colliding, `false` otherwise
+#[allow(dead_code)]
 pub fn gjk_box_box_collision(box1: &Box3D, box2: &Box3D) -> bool {
     gjk_collision_detection(box1, box2, 64)
 }
@@ -1430,6 +1462,7 @@ pub fn gjk_box_box_collision(box1: &Box3D, box2: &Box3D) -> bool {
 /// # Returns
 ///
 /// `true` if the sphere and box are colliding, `false` otherwise
+#[allow(dead_code)]
 pub fn gjk_sphere_box_collision(sphere: &Sphere, bbox: &Box3D) -> bool {
     gjk_collision_detection(sphere, bbox, 64)
 }

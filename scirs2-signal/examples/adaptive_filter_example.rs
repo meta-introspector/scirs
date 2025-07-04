@@ -9,6 +9,7 @@
 use scirs2_signal::adaptive::{LmsFilter, NlmsFilter, RlsFilter};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("Adaptive Filter Example");
     println!("======================\n");
@@ -293,6 +294,7 @@ fn main() {
 }
 
 /// Calculate Signal-to-Noise Ratio in dB
+#[allow(dead_code)]
 fn calculate_snr(signal: &[f64], noise: &[f64]) -> f64 {
     let signal_power: f64 = signal.iter().map(|&x| x * x).sum::<f64>() / signal.len() as f64;
     let noise_power: f64 = noise.iter().map(|&x| x * x).sum::<f64>() / noise.len() as f64;
@@ -305,6 +307,7 @@ fn calculate_snr(signal: &[f64], noise: &[f64]) -> f64 {
 }
 
 /// Extract noise from difference between clean estimate and true clean signal
+#[allow(dead_code)]
 fn get_noise_from_clean(clean_estimate: &[f64], true_clean: &[f64]) -> Vec<f64> {
     clean_estimate
         .iter()
@@ -314,6 +317,7 @@ fn get_noise_from_clean(clean_estimate: &[f64], true_clean: &[f64]) -> Vec<f64> 
 }
 
 /// Find convergence point (sample number where error drops below threshold)
+#[allow(dead_code)]
 fn find_convergence_point(errors: &[f64], threshold_ratio: f64) -> usize {
     if errors.is_empty() {
         return 0;

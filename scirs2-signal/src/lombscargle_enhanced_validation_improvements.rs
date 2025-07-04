@@ -96,6 +96,7 @@ pub struct CrossImplementationResult {
 }
 
 /// Run enhanced bootstrap validation for confidence intervals
+#[allow(dead_code)]
 pub fn validate_bootstrap_confidence_intervals(
     signal: &[f64],
     time: &[f64],
@@ -124,7 +125,7 @@ pub fn validate_bootstrap_confidence_intervals(
         let mut bootstrap_time = vec![0.0; n];
 
         for i in 0..n {
-            let idx = rng.gen_range(0..n);
+            let idx = rng.random_range(0..n);
             bootstrap_signal[i] = signal[idx];
             bootstrap_time[i] = time[idx];
         }
@@ -175,6 +176,7 @@ pub fn validate_bootstrap_confidence_intervals(
 }
 
 /// Analyze numerical precision across different floating point types
+#[allow(dead_code)]
 pub fn analyze_numerical_precision(
     signal: &[f64],
     time: &[f64],
@@ -251,6 +253,7 @@ pub fn analyze_numerical_precision(
 }
 
 /// Analyze memory performance with large signals
+#[allow(dead_code)]
 pub fn analyze_memory_performance(
     signal_sizes: &[usize],
     test_iterations: usize,
@@ -262,7 +265,7 @@ pub fn analyze_memory_performance(
     for &size in signal_sizes {
         // Generate test signal
         let mut rng = rand::rng();
-        let signal: Vec<f64> = (0..size).map(|_| rng.gen_range(-1.0..1.0)).collect();
+        let signal: Vec<f64> = (0..size).map(|_| rng.random_range(-1.0..1.0)).collect();
         let time: Vec<f64> = (0..size).map(|i| i as f64).collect();
 
         for iter in 0..test_iterations {
@@ -314,6 +317,7 @@ pub fn analyze_memory_performance(
 }
 
 /// Perform statistical power analysis
+#[allow(dead_code)]
 pub fn analyze_statistical_power(
     signal_length: usize,
     target_frequency: f64,
@@ -343,7 +347,7 @@ pub fn analyze_statistical_power(
                 .iter()
                 .map(|&t| {
                     signal_amplitude * (2.0 * PI * target_frequency * t).sin()
-                        + noise_std * rng.gen_range(-1.0..1.0)
+                        + noise_std * rng.random_range(-1.0..1.0)
                 })
                 .collect();
 
@@ -400,6 +404,7 @@ pub fn analyze_statistical_power(
 }
 
 /// Compare different Lomb-Scargle implementations for consistency
+#[allow(dead_code)]
 pub fn validate_cross_implementation_consistency(
     signal: &[f64],
     time: &[f64],
@@ -458,6 +463,7 @@ pub fn validate_cross_implementation_consistency(
 
 // Helper functions
 
+#[allow(dead_code)]
 fn compute_bootstrap_coverage(
     bootstrap_powers: &[Vec<f64>],
     confidence_level: f64,
@@ -484,6 +490,7 @@ fn compute_bootstrap_coverage(
     Ok(coverage_count as f64 / n_points as f64)
 }
 
+#[allow(dead_code)]
 fn compute_bootstrap_bias(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
     if bootstrap_powers.is_empty() {
         return Ok(0.0);
@@ -502,6 +509,7 @@ fn compute_bootstrap_bias(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
     Ok(total_bias / n_points as f64)
 }
 
+#[allow(dead_code)]
 fn compute_bootstrap_variance(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
     if bootstrap_powers.is_empty() {
         return Ok(0.0);
@@ -521,6 +529,7 @@ fn compute_bootstrap_variance(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64
     Ok(total_variance / n_points as f64)
 }
 
+#[allow(dead_code)]
 fn compute_consistency_score(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64> {
     if bootstrap_powers.len() < 2 {
         return Ok(0.0);
@@ -540,6 +549,7 @@ fn compute_consistency_score(bootstrap_powers: &[Vec<f64>]) -> SignalResult<f64>
     Ok(consistency_sum / n_comparisons.max(1) as f64 * 100.0)
 }
 
+#[allow(dead_code)]
 fn compute_percentile_interval(values: &[f64], confidence_level: f64) -> (f64, f64) {
     let mut sorted_values = values.to_vec();
     sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -551,6 +561,7 @@ fn compute_percentile_interval(values: &[f64], confidence_level: f64) -> (f64, f
     (sorted_values[lower_idx], sorted_values[upper_idx])
 }
 
+#[allow(dead_code)]
 fn compute_median(values: &[f64]) -> f64 {
     let mut sorted_values = values.to_vec();
     sorted_values.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -563,6 +574,7 @@ fn compute_median(values: &[f64]) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn compute_correlation(x: &[f64], y: &[f64]) -> f64 {
     if x.len() != y.len() || x.is_empty() {
         return 0.0;
@@ -601,6 +613,7 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> f64 {
 /// - Edge case robustness testing
 /// - Performance regression detection
 /// - Memory efficiency validation
+#[allow(dead_code)]
 pub fn comprehensive_lombscargle_validation(
     test_signal_length: usize,
     test_frequencies: &[f64],
@@ -763,6 +776,7 @@ pub struct PerformanceAnalysisResult {
 }
 
 /// Test edge case robustness
+#[allow(dead_code)]
 fn test_edge_case_robustness() -> SignalResult<f64> {
     let mut score = 100.0;
 
@@ -833,6 +847,7 @@ fn test_edge_case_robustness() -> SignalResult<f64> {
 }
 
 /// Benchmark Lomb-Scargle performance
+#[allow(dead_code)]
 fn benchmark_lombscargle_performance(
     signal: &[f64],
     time: &[f64],
@@ -869,6 +884,7 @@ fn benchmark_lombscargle_performance(
 }
 
 /// Analyze memory efficiency
+#[allow(dead_code)]
 fn analyze_memory_efficiency(signal_length: usize) -> SignalResult<MemoryPerformanceResult> {
     // Estimate memory usage based on signal length
     let estimated_memory = signal_length * 16; // Rough estimate: 2 f64 arrays
@@ -890,6 +906,7 @@ fn analyze_memory_efficiency(signal_length: usize) -> SignalResult<MemoryPerform
 }
 
 /// Validate SIMD vs scalar consistency
+#[allow(dead_code)]
 fn validate_simd_scalar_consistency(signal: &[f64], time: &[f64]) -> SignalResult<f64> {
     // For now, return a high score as we'd need actual SIMD implementation to test
     // In a real implementation, this would compare SIMD-accelerated vs scalar versions
@@ -908,10 +925,9 @@ fn validate_simd_scalar_consistency(signal: &[f64], time: &[f64]) -> SignalResul
     }
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     #[test]

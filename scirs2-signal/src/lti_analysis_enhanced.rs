@@ -10,7 +10,6 @@ use ndarray::{s, Array1, Array2, ArrayView2, Axis};
 // Enhanced with robust controllability/observability analysis
 use num_complex::Complex64;
 use scirs2_core::validation::{check_finite, check_shape};
-#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Comprehensive LTI system analysis result
@@ -138,6 +137,7 @@ pub struct ModalAnalysis {
 }
 
 /// Perform comprehensive LTI system analysis
+#[allow(dead_code)]
 pub fn analyze_lti_system(ss: &StateSpace) -> SignalResult<LtiAnalysisResult> {
     // Validate system
     validate_state_space(ss)?;
@@ -161,6 +161,7 @@ pub fn analyze_lti_system(ss: &StateSpace) -> SignalResult<LtiAnalysisResult> {
 }
 
 /// Analyze controllability
+#[allow(dead_code)]
 fn analyze_controllability(ss: &StateSpace) -> SignalResult<ControllabilityResult> {
     let n = ss.a.nrows();
     let m = ss.b.ncols();
@@ -214,6 +215,7 @@ fn analyze_controllability(ss: &StateSpace) -> SignalResult<ControllabilityResul
 }
 
 /// Analyze observability
+#[allow(dead_code)]
 fn analyze_observability(ss: &StateSpace) -> SignalResult<ObservabilityResult> {
     let n = ss.a.nrows();
     let p = ss.c.nrows();
@@ -267,6 +269,7 @@ fn analyze_observability(ss: &StateSpace) -> SignalResult<ObservabilityResult> {
 }
 
 /// Analyze stability
+#[allow(dead_code)]
 fn analyze_stability(ss: &StateSpace) -> SignalResult<StabilityResult> {
     // Compute eigenvalues
     let eigenvalues =
@@ -304,6 +307,7 @@ fn analyze_stability(ss: &StateSpace) -> SignalResult<StabilityResult> {
 }
 
 /// Build controllability matrix
+#[allow(dead_code)]
 fn build_controllability_matrix(a: &Array2<f64>, b: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let n = a.nrows();
     let m = b.ncols();
@@ -325,6 +329,7 @@ fn build_controllability_matrix(a: &Array2<f64>, b: &Array2<f64>) -> SignalResul
 }
 
 /// Build observability matrix
+#[allow(dead_code)]
 fn build_observability_matrix(a: &Array2<f64>, c: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let n = a.nrows();
     let p = c.nrows();
@@ -345,6 +350,7 @@ fn build_observability_matrix(a: &Array2<f64>, c: &Array2<f64>) -> SignalResult<
 }
 
 /// Compute discrete-time controllability Gramian
+#[allow(dead_code)]
 fn compute_discrete_controllability_gramian(
     a: &Array2<f64>,
     b: &Array2<f64>,
@@ -354,6 +360,7 @@ fn compute_discrete_controllability_gramian(
 }
 
 /// Compute continuous-time controllability Gramian
+#[allow(dead_code)]
 fn compute_continuous_controllability_gramian(
     a: &Array2<f64>,
     b: &Array2<f64>,
@@ -363,6 +370,7 @@ fn compute_continuous_controllability_gramian(
 }
 
 /// Compute discrete-time observability Gramian
+#[allow(dead_code)]
 fn compute_discrete_observability_gramian(
     a: &Array2<f64>,
     c: &Array2<f64>,
@@ -372,6 +380,7 @@ fn compute_discrete_observability_gramian(
 }
 
 /// Compute continuous-time observability Gramian
+#[allow(dead_code)]
 fn compute_continuous_observability_gramian(
     a: &Array2<f64>,
     c: &Array2<f64>,
@@ -381,6 +390,7 @@ fn compute_continuous_observability_gramian(
 }
 
 /// Solve discrete Lyapunov equation X = A*X*A' + Q
+#[allow(dead_code)]
 fn solve_discrete_lyapunov(a: &Array2<f64>, q: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let n = a.nrows();
     let max_iter = 100;
@@ -409,6 +419,7 @@ fn solve_discrete_lyapunov(a: &Array2<f64>, q: &Array2<f64>) -> SignalResult<Arr
 }
 
 /// Solve continuous Lyapunov equation A*X + X*A' + Q = 0
+#[allow(dead_code)]
 fn solve_continuous_lyapunov(a: &Array2<f64>, q: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let n = a.nrows();
 
@@ -432,6 +443,7 @@ fn solve_continuous_lyapunov(a: &Array2<f64>, q: &Array2<f64>) -> SignalResult<A
 }
 
 /// Kronecker product
+#[allow(dead_code)]
 fn kronecker_product(a: &Array2<f64>, b: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let (m, n) = a.dim();
     let (p, q) = b.dim();
@@ -453,6 +465,7 @@ fn kronecker_product(a: &Array2<f64>, b: &Array2<f64>) -> SignalResult<Array2<f6
 }
 
 /// Find uncontrollable modes
+#[allow(dead_code)]
 fn find_uncontrollable_modes(ss: &StateSpace, ctrl_rank: usize) -> SignalResult<Vec<Complex64>> {
     if ctrl_rank == ss.a.nrows() {
         return Ok(Vec::new()); // All modes are controllable
@@ -484,6 +497,7 @@ fn find_uncontrollable_modes(ss: &StateSpace, ctrl_rank: usize) -> SignalResult<
 }
 
 /// Find unobservable modes
+#[allow(dead_code)]
 fn find_unobservable_modes(ss: &StateSpace, obs_rank: usize) -> SignalResult<Vec<Complex64>> {
     if obs_rank == ss.a.nrows() {
         return Ok(Vec::new());
@@ -515,6 +529,7 @@ fn find_unobservable_modes(ss: &StateSpace, obs_rank: usize) -> SignalResult<Vec
 }
 
 /// Build PBH test matrix for controllability
+#[allow(dead_code)]
 fn build_pbh_test_matrix(
     a: &Array2<f64>,
     b: &Array2<f64>,
@@ -547,6 +562,7 @@ fn build_pbh_test_matrix(
 }
 
 /// Build PBH test matrix for observability
+#[allow(dead_code)]
 fn build_pbh_observability_test_matrix(
     a: &Array2<f64>,
     c: &Array2<f64>,
@@ -579,6 +595,7 @@ fn build_pbh_observability_test_matrix(
 }
 
 /// Check continuous-time stability
+#[allow(dead_code)]
 fn check_continuous_stability(eigenvalues: &Array1<Complex64>) -> (bool, bool) {
     let mut is_stable = true;
     let mut is_marginally_stable = true;
@@ -597,6 +614,7 @@ fn check_continuous_stability(eigenvalues: &Array1<Complex64>) -> (bool, bool) {
 }
 
 /// Check discrete-time stability
+#[allow(dead_code)]
 fn check_discrete_stability(eigenvalues: &Array1<Complex64>) -> (bool, bool) {
     let mut is_stable = true;
     let mut is_marginally_stable = true;
@@ -616,6 +634,7 @@ fn check_discrete_stability(eigenvalues: &Array1<Complex64>) -> (bool, bool) {
 }
 
 /// Compute stability margin
+#[allow(dead_code)]
 fn compute_stability_margin(eigenvalues: &Array1<Complex64>, is_discrete: bool) -> f64 {
     if is_discrete {
         // Distance to unit circle
@@ -633,6 +652,7 @@ fn compute_stability_margin(eigenvalues: &Array1<Complex64>, is_discrete: bool) 
 }
 
 /// Extract modal properties
+#[allow(dead_code)]
 fn extract_modal_properties(
     eigenvalues: &Array1<Complex64>,
     is_discrete: bool,
@@ -662,6 +682,7 @@ fn extract_modal_properties(
 }
 
 /// Compute continuous-time modal properties
+#[allow(dead_code)]
 fn continuous_modal_properties(s: Complex64) -> (f64, f64, f64) {
     let sigma = s.re;
     let omega = s.im.abs();
@@ -683,6 +704,7 @@ fn continuous_modal_properties(s: Complex64) -> (f64, f64, f64) {
 }
 
 /// Analyze system properties
+#[allow(dead_code)]
 fn analyze_system_properties(ss: &StateSpace) -> SignalResult<SystemProperties> {
     let num_states = ss.a.nrows();
     let num_inputs = ss.b.ncols();
@@ -726,6 +748,7 @@ fn analyze_system_properties(ss: &StateSpace) -> SignalResult<SystemProperties> 
 }
 
 /// Compute system zeros
+#[allow(dead_code)]
 fn compute_system_zeros(ss: &StateSpace) -> SignalResult<Vec<Complex64>> {
     // For SISO systems, zeros are eigenvalues of [A B; C D] with constraint
     // For MIMO, this is more complex
@@ -766,6 +789,7 @@ fn compute_system_zeros(ss: &StateSpace) -> SignalResult<Vec<Complex64>> {
 }
 
 /// Compute DC gain
+#[allow(dead_code)]
 fn compute_dc_gain(ss: &StateSpace) -> SignalResult<Array2<f64>> {
     if ss.dt.is_some() {
         // Discrete: G(1) = C(I - A)^(-1)B + D
@@ -784,6 +808,7 @@ fn compute_dc_gain(ss: &StateSpace) -> SignalResult<Array2<f64>> {
 }
 
 /// Classify system type
+#[allow(dead_code)]
 fn classify_system_type(zeros: &[Complex64], poles: &[Complex64]) -> SystemType {
     // Check stability
     let unstable_poles = poles.iter().any(|&p| p.re > 1e-10);
@@ -807,6 +832,7 @@ fn classify_system_type(zeros: &[Complex64], poles: &[Complex64]) -> SystemType 
 }
 
 /// Compute bandwidth for SISO system
+#[allow(dead_code)]
 fn compute_bandwidth(ss: &StateSpace) -> SignalResult<f64> {
     // Find -3dB frequency
     let freqs = Array1::logspace(10.0, -3.0, 3.0, 1000);
@@ -825,6 +851,7 @@ fn compute_bandwidth(ss: &StateSpace) -> SignalResult<f64> {
 }
 
 /// Evaluate frequency response at a single frequency
+#[allow(dead_code)]
 fn evaluate_frequency_response(ss: &StateSpace, freq: f64) -> SignalResult<f64> {
     let s = Complex64::new(0.0, 2.0 * PI * freq);
     let eye = Array2::eye(ss.a.nrows());
@@ -837,6 +864,7 @@ fn evaluate_frequency_response(ss: &StateSpace, freq: f64) -> SignalResult<f64> 
 }
 
 /// Analyze Gramians
+#[allow(dead_code)]
 fn analyze_gramians(
     ss: &StateSpace,
     wc: &Array2<f64>,
@@ -871,6 +899,7 @@ fn analyze_gramians(
 }
 
 /// Compute cross-Gramian for SISO systems
+#[allow(dead_code)]
 fn compute_cross_gramian(ss: &StateSpace) -> SignalResult<Array2<f64>> {
     // For continuous: A*X + X*A + B*C = 0
     // For discrete: X = A*X*A + B*C
@@ -885,6 +914,7 @@ fn compute_cross_gramian(ss: &StateSpace) -> SignalResult<Array2<f64>> {
 }
 
 /// Perform modal analysis
+#[allow(dead_code)]
 fn perform_modal_analysis(ss: &StateSpace) -> SignalResult<ModalAnalysis> {
     // Eigenvalue decomposition
     let (eigenvalues, eigenvectors) = ss.a.eig().map_err(|e| {
@@ -930,6 +960,7 @@ fn perform_modal_analysis(ss: &StateSpace) -> SignalResult<ModalAnalysis> {
 }
 
 /// Validate state-space system
+#[allow(dead_code)]
 fn validate_state_space(ss: &StateSpace) -> SignalResult<()> {
     let n = ss.a.nrows();
     let m = ss.b.ncols();
@@ -951,6 +982,7 @@ fn validate_state_space(ss: &StateSpace) -> SignalResult<()> {
 }
 
 /// Compute controllability canonical form
+#[allow(dead_code)]
 pub fn controllability_canonical_form(ss: &StateSpace) -> SignalResult<(StateSpace, Array2<f64>)> {
     let ctrl_matrix = build_controllability_matrix(&ss.a, &ss.b)?;
 
@@ -991,6 +1023,7 @@ pub fn controllability_canonical_form(ss: &StateSpace) -> SignalResult<(StateSpa
 }
 
 /// Compute observability canonical form
+#[allow(dead_code)]
 pub fn observability_canonical_form(ss: &StateSpace) -> SignalResult<(StateSpace, Array2<f64>)> {
     let obs_matrix = build_observability_matrix(&ss.a, &ss.c)?;
 
@@ -1142,6 +1175,7 @@ pub struct UncertaintyBounds {
 /// - Uncertainty in system parameters
 /// - Sensitivity to perturbations
 /// - Robust measures for near-singular systems
+#[allow(dead_code)]
 pub fn robust_controllability_analysis(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,
@@ -1178,6 +1212,7 @@ pub fn robust_controllability_analysis(
 }
 
 /// Robust observability analysis with numerical stability and uncertainty handling
+#[allow(dead_code)]
 pub fn robust_observability_analysis(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,
@@ -1214,6 +1249,7 @@ pub fn robust_observability_analysis(
 }
 
 /// Build controllability matrix with enhanced numerical stability
+#[allow(dead_code)]
 fn build_robust_controllability_matrix(
     a: &Array2<f64>,
     b: &Array2<f64>,
@@ -1248,6 +1284,7 @@ fn build_robust_controllability_matrix(
 }
 
 /// Build observability matrix with enhanced numerical stability
+#[allow(dead_code)]
 fn build_robust_observability_matrix(
     a: &Array2<f64>,
     c: &Array2<f64>,
@@ -1281,6 +1318,7 @@ fn build_robust_observability_matrix(
 }
 
 /// Robust matrix multiplication with overflow detection
+#[allow(dead_code)]
 fn robust_matrix_multiply(
     a: &Array2<f64>,
     b: &Array2<f64>,
@@ -1319,6 +1357,7 @@ fn robust_matrix_multiply(
 }
 
 /// Analyze numerical conditioning of a matrix
+#[allow(dead_code)]
 fn analyze_numerical_conditioning(
     matrix: &Array2<f64>,
     config: &RobustAnalysisConfig,
@@ -1349,6 +1388,7 @@ fn analyze_numerical_conditioning(
 }
 
 /// Simplified singular value computation
+#[allow(dead_code)]
 fn compute_singular_values(matrix: &Array2<f64>) -> SignalResult<Array1<f64>> {
     // Simplified implementation using power iteration for largest singular value
     let m = matrix.nrows();
@@ -1376,6 +1416,7 @@ fn compute_singular_values(matrix: &Array2<f64>) -> SignalResult<Array1<f64>> {
 }
 
 /// Compute SVD for small matrices
+#[allow(dead_code)]
 fn compute_small_matrix_svd(matrix: &Array2<f64>) -> SignalResult<Array1<f64>> {
     // For 1x1 matrix
     if matrix.nrows() == 1 && matrix.ncols() == 1 {
@@ -1390,6 +1431,7 @@ fn compute_small_matrix_svd(matrix: &Array2<f64>) -> SignalResult<Array1<f64>> {
 }
 
 /// Power iteration for largest singular value
+#[allow(dead_code)]
 fn power_iteration_svd(matrix: &Array2<f64>, max_iter: usize, tol: f64) -> SignalResult<f64> {
     let n = matrix.ncols();
     let mut v = Array1::ones(n) / (n as f64).sqrt();
@@ -1432,6 +1474,7 @@ fn power_iteration_svd(matrix: &Array2<f64>, max_iter: usize, tol: f64) -> Signa
 }
 
 /// Compute robust controllability measure
+#[allow(dead_code)]
 fn compute_robust_controllability_measure(
     ctrl_matrix: &Array2<f64>,
     conditioning: &NumericalConditioning,
@@ -1452,6 +1495,7 @@ fn compute_robust_controllability_measure(
 }
 
 /// Compute robust observability measure
+#[allow(dead_code)]
 fn compute_robust_observability_measure(
     obs_matrix: &Array2<f64>,
     conditioning: &NumericalConditioning,
@@ -1460,6 +1504,7 @@ fn compute_robust_observability_measure(
 }
 
 /// Analyze controllability sensitivity
+#[allow(dead_code)]
 fn analyze_controllability_sensitivity(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,
@@ -1501,6 +1546,7 @@ fn analyze_controllability_sensitivity(
 }
 
 /// Analyze observability sensitivity
+#[allow(dead_code)]
 fn analyze_observability_sensitivity(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,
@@ -1542,6 +1588,7 @@ fn analyze_observability_sensitivity(
 }
 
 /// Analyze controllability uncertainty using Monte Carlo
+#[allow(dead_code)]
 fn analyze_controllability_uncertainty(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,
@@ -1560,7 +1607,7 @@ fn analyze_controllability_uncertainty(
         for i in 0..perturbed_a.nrows() {
             for j in 0..perturbed_a.ncols() {
                 let noise =
-                    rng.gen_range(-config.perturbation_magnitude..config.perturbation_magnitude);
+                    rng.random_range(-config.perturbation_magnitude..config.perturbation_magnitude);
                 perturbed_a[[i, j]] += noise;
             }
         }
@@ -1568,7 +1615,7 @@ fn analyze_controllability_uncertainty(
         for i in 0..perturbed_b.nrows() {
             for j in 0..perturbed_b.ncols() {
                 let noise =
-                    rng.gen_range(-config.perturbation_magnitude..config.perturbation_magnitude);
+                    rng.random_range(-config.perturbation_magnitude..config.perturbation_magnitude);
                 perturbed_b[[i, j]] += noise;
             }
         }
@@ -1621,6 +1668,7 @@ fn analyze_controllability_uncertainty(
 }
 
 /// Analyze observability uncertainty using Monte Carlo
+#[allow(dead_code)]
 fn analyze_observability_uncertainty(
     ss: &StateSpace,
     config: &RobustAnalysisConfig,

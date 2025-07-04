@@ -20,6 +20,7 @@ use scirs2_ndimage::morphology::{
 use std::time::Duration;
 
 /// Benchmark binary morphological operations
+#[allow(dead_code)]
 fn bench_binary_morphology(c: &mut Criterion) {
     let mut group = c.benchmark_group("binary_morphology");
     group.measurement_time(Duration::from_secs(10));
@@ -77,6 +78,7 @@ fn bench_binary_morphology(c: &mut Criterion) {
 }
 
 /// Benchmark grayscale morphological operations
+#[allow(dead_code)]
 fn bench_grayscale_morphology(c: &mut Criterion) {
     let mut group = c.benchmark_group("grayscale_morphology");
     group.measurement_time(Duration::from_secs(10));
@@ -119,6 +121,7 @@ fn bench_grayscale_morphology(c: &mut Criterion) {
 }
 
 /// Benchmark hit-or-miss transform
+#[allow(dead_code)]
 fn bench_hit_or_miss(c: &mut Criterion) {
     let mut group = c.benchmark_group("hit_or_miss");
     group.measurement_time(Duration::from_secs(10));
@@ -150,6 +153,7 @@ fn bench_hit_or_miss(c: &mut Criterion) {
 }
 
 /// Benchmark different structuring element sizes
+#[allow(dead_code)]
 fn bench_structuring_sizes(c: &mut Criterion) {
     let mut group = c.benchmark_group("structuring_sizes");
     group.measurement_time(Duration::from_secs(10));
@@ -174,6 +178,7 @@ fn bench_structuring_sizes(c: &mut Criterion) {
 }
 
 /// Benchmark 3D morphological operations
+#[allow(dead_code)]
 fn bench_3d_morphology(c: &mut Criterion) {
     let mut group = c.benchmark_group("3d_morphology");
     group.measurement_time(Duration::from_secs(15));
@@ -219,6 +224,7 @@ fn bench_3d_morphology(c: &mut Criterion) {
 }
 
 /// Benchmark optimized vs simple morphological operations
+#[allow(dead_code)]
 fn bench_optimized_vs_simple(c: &mut Criterion) {
     let mut group = c.benchmark_group("optimized_vs_simple");
     group.measurement_time(Duration::from_secs(10));

@@ -2,6 +2,7 @@ use ndarray::{array, ArrayView1};
 use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Enhanced LSODA Solver Example");
     println!("----------------------------");

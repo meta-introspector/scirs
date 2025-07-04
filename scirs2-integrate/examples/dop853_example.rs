@@ -4,6 +4,7 @@ use ndarray::{array, ArrayView1};
 use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     println!("DOP853 High-Order Runge-Kutta Solver Example");
     println!("--------------------------------------------");

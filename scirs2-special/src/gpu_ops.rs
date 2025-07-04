@@ -47,6 +47,7 @@ use log;
 
 /// Advanced GPU-accelerated gamma function with intelligent fallback and performance monitoring
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 pub fn gamma_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float
@@ -147,6 +148,7 @@ where
 
 /// GPU-accelerated Bessel J0 function for arrays
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 pub fn j0_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + Send + Sync + 'static,
@@ -167,6 +169,7 @@ where
 
 /// GPU-accelerated error function (erf) for arrays
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 pub fn erf_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float + num_traits::FromPrimitive + Send + Sync + 'static,
@@ -187,6 +190,7 @@ where
 
 /// GPU-accelerated digamma function for arrays
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 pub fn digamma_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float
@@ -216,6 +220,7 @@ where
 
 /// GPU-accelerated log gamma function for arrays
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 pub fn log_gamma_gpu<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float
@@ -242,6 +247,7 @@ where
 
 /// CPU fallback implementation for gamma function
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn gamma_cpu_fallback<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float
@@ -282,6 +288,7 @@ where
 
 /// CPU fallback implementation for Bessel J0 function
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn j0_cpu_fallback<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + Send + Sync,
@@ -315,6 +322,7 @@ where
 
 /// CPU fallback implementation for error function
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn erf_cpu_fallback<F>(input: &ArrayView1<F>, output: &mut ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float + num_traits::FromPrimitive + Send + Sync,
@@ -348,6 +356,7 @@ where
 
 /// CPU fallback for digamma function
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn digamma_cpu_fallback<F>(
     input: &ArrayView1<F>,
     output: &mut ArrayViewMut1<F>,
@@ -392,6 +401,7 @@ where
 
 /// CPU fallback for log gamma function
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn log_gamma_cpu_fallback<F>(
     input: &ArrayView1<F>,
     output: &mut ArrayViewMut1<F>,
@@ -472,6 +482,7 @@ mod tests {
 
 /// Enhanced GPU execution for gamma function with advanced error handling and backend selection
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn try_gamma_gpu_execution_enhanced<F>(
     input: &ArrayView1<F>,
     output: &mut ArrayViewMut1<F>,
@@ -533,6 +544,7 @@ where
 
 /// Try GPU execution for Bessel J0 function
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn try_j0_gpu_execution<F>(
     input: &ArrayView1<F>,
     output: &mut ArrayViewMut1<F>,
@@ -576,6 +588,7 @@ where
 
 /// Try GPU execution for error function
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn try_erf_gpu_execution<F>(
     input: &ArrayView1<F>,
     output: &mut ArrayViewMut1<F>,
@@ -619,6 +632,7 @@ where
 
 /// Try GPU execution for digamma function
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn try_digamma_gpu_execution<F>(
     input: &ArrayView1<F>,
     output: &mut ArrayViewMut1<F>,
@@ -671,6 +685,7 @@ where
 
 /// Try GPU execution for log gamma function
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn try_log_gamma_gpu_execution<F>(
     input: &ArrayView1<F>,
     output: &mut ArrayViewMut1<F>,
@@ -720,6 +735,7 @@ where
 
 /// Helper function to create GPU context using the context manager
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn create_gpu_context() -> Result<Arc<GpuContext>, GpuError> {
     use crate::gpu_context_manager::get_best_gpu_context;
 
@@ -741,6 +757,7 @@ fn create_gpu_context() -> Result<Arc<GpuContext>, GpuError> {
 
 /// Helper function to create GPU buffer from slice with enhanced error handling
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn create_gpu_buffer<T>(
     ctx: &GpuContext,
     data: &[T],
@@ -754,6 +771,7 @@ where
 
 /// Type-specific GPU buffer creation with validation
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn create_gpu_buffer_typed<T>(
     ctx: &GpuContext,
     data: &[T],
@@ -786,6 +804,7 @@ where
 
 /// Helper function to create empty GPU buffer
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn create_empty_gpu_buffer(
     ctx: &GpuContext,
     size: usize,
@@ -797,6 +816,7 @@ fn create_empty_gpu_buffer(
 
 /// Type-specific empty GPU buffer creation
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn create_empty_gpu_buffer_typed<T>(
     ctx: &GpuContext,
     size: usize,
@@ -820,6 +840,7 @@ where
 
 /// Helper function to create compute pipeline
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn create_compute_pipeline(
     ctx: &GpuContext,
     shader_source: &str,
@@ -831,6 +852,7 @@ fn create_compute_pipeline(
 
 /// Helper function to execute compute shader
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn execute_compute_shader(
     ctx: &GpuContext,
     pipeline: &scirs2_core::gpu::GpuKernelHandle,
@@ -852,6 +874,7 @@ fn execute_compute_shader(
 
 /// Enhanced compute shader execution with performance monitoring and validation
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn execute_compute_shader_enhanced(
     ctx: &GpuContext,
     pipeline: &scirs2_core::gpu::GpuKernelHandle,
@@ -892,6 +915,7 @@ fn execute_compute_shader_enhanced(
 
 /// Helper function to read GPU buffer to array
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn read_gpu_buffer_to_array<T>(
     ctx: &GpuContext,
     buffer: &scirs2_core::gpu::GpuBuffer<f64>,
@@ -917,6 +941,7 @@ where
 
 /// Type-specific GPU buffer reading with enhanced validation
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn read_gpu_buffer_to_array_typed<T>(
     ctx: &GpuContext,
     buffer: &scirs2_core::gpu::GpuBuffer<f64>,
@@ -957,6 +982,7 @@ struct GpuBufferCache {
 static GPU_BUFFER_CACHE: std::sync::OnceLock<GpuBufferCache> = std::sync::OnceLock::new();
 
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn get_buffer_cache() -> &'static GpuBufferCache {
     GPU_BUFFER_CACHE.get_or_init(|| GpuBufferCache {
         input_buffers: Mutex::new(HashMap::new()),
@@ -967,6 +993,7 @@ fn get_buffer_cache() -> &'static GpuBufferCache {
 
 /// Create GPU buffer with intelligent caching and memory reuse
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn create_gpu_buffer_with_caching<T>(
     ctx: &GpuContext,
     data: &[T],
@@ -1026,6 +1053,7 @@ where
 
 /// Create empty GPU buffer with caching
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn create_empty_gpu_buffer_with_caching<T>(
     ctx: &GpuContext,
     size: usize,
@@ -1078,6 +1106,7 @@ where
 
 /// Get or create shader pipeline with intelligent caching
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn get_or_create_shader_pipeline(
     ctx: &GpuContext,
     shader_name: &str,
@@ -1116,6 +1145,7 @@ fn get_or_create_shader_pipeline(
 
 /// Execute compute shader with enhanced validation and error recovery
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn execute_compute_shader_with_validation(
     ctx: &GpuContext,
     pipeline: &scirs2_core::gpu::GpuKernelHandle,
@@ -1205,6 +1235,7 @@ fn execute_compute_shader_with_validation(
 
 /// Read GPU buffer with comprehensive validation and error handling
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn read_gpu_buffer_with_validation<T>(
     ctx: &GpuContext,
     buffer: &scirs2_core::gpu::GpuBuffer<f64>,
@@ -1255,6 +1286,7 @@ where
 
 /// Validate gamma function results with mathematical properties
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn validate_gamma_results<F>(input: &ArrayView1<F>, output: &ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float + std::fmt::Debug + num_traits::FromPrimitive,
@@ -1310,6 +1342,7 @@ where
 
 /// General GPU computation results validation with enhanced statistics
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn validate_gpu_results<F>(output: &ArrayViewMut1<F>) -> SpecialResult<()>
 where
     F: num_traits::Float + std::fmt::Debug,

@@ -15,6 +15,7 @@
 
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
@@ -66,6 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn print_header() {
     println!("🎯 SciRS2 Signal Processing - Comprehensive Ultrathink Mode Demonstration");
     println!("========================================================================");
@@ -83,6 +85,7 @@ fn print_header() {
     println!("");
 }
 
+#[allow(dead_code)]
 fn showcase_validation_overview() -> Result<(), Box<dyn std::error::Error>> {
     println!("The ultrathink validation suite includes:");
     println!("");
@@ -121,6 +124,7 @@ fn showcase_validation_overview() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_multitaper_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("Enhanced multitaper spectral estimation validation includes:");
     println!("");
@@ -149,6 +153,7 @@ fn demonstrate_multitaper_validation() -> Result<(), Box<dyn std::error::Error>>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_dpss_validation() {
     println!("  • Orthogonality verification: 99.98% accuracy");
     println!("  • Eigenvalue ordering validation: ✓ Correct");
@@ -157,6 +162,7 @@ fn simulate_dpss_validation() {
     println!("  • Numerical precision: 1e-14 relative error");
 }
 
+#[allow(dead_code)]
 fn simulate_spectral_accuracy_validation() {
     println!("  • Bias estimation: < 0.01% for pure tones");
     println!("  • Variance reduction: 8.2x compared to periodogram");
@@ -165,6 +171,7 @@ fn simulate_spectral_accuracy_validation() {
     println!("  • Dynamic range: 80 dB operational range");
 }
 
+#[allow(dead_code)]
 fn simulate_stability_testing() {
     println!("  • Condition number analysis: Well-conditioned for all test cases");
     println!("  • Extreme input handling: ✓ Stable for 1e-300 to 1e+300 range");
@@ -173,6 +180,7 @@ fn simulate_stability_testing() {
     println!("  • Memory consistency: ✓ No memory leaks detected");
 }
 
+#[allow(dead_code)]
 fn simulate_performance_benchmarking() {
     println!("  • Time complexity: O(N log N) verified empirically");
     println!("  • Memory complexity: O(NK) where N=length, K=tapers");
@@ -181,6 +189,7 @@ fn simulate_performance_benchmarking() {
     println!("  • Cache utilization: 88% L1 cache hit rate");
 }
 
+#[allow(dead_code)]
 fn demonstrate_lombscargle_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("Comprehensive Lomb-Scargle periodogram testing includes:");
     println!("");
@@ -208,6 +217,7 @@ fn demonstrate_lombscargle_validation() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_lombscargle_accuracy() {
     println!("  • Pure sinusoid detection: 99.7% accuracy");
     println!("  • Multiple frequency resolution: 94.2% success rate");
@@ -216,6 +226,7 @@ fn simulate_lombscargle_accuracy() {
     println!("  • Frequency precision: < 0.01% frequency error");
 }
 
+#[allow(dead_code)]
 fn simulate_noise_robustness() {
     println!("  • SNR 40 dB: 99.5% detection accuracy");
     println!("  • SNR 20 dB: 97.2% detection accuracy");
@@ -224,6 +235,7 @@ fn simulate_noise_robustness() {
     println!("  • Graceful degradation: ✓ Predictable performance drop");
 }
 
+#[allow(dead_code)]
 fn simulate_uneven_sampling() {
     println!("  • Random sampling: 93.2% effectiveness");
     println!("  • Burst sampling: 88.7% effectiveness");
@@ -232,6 +244,7 @@ fn simulate_uneven_sampling() {
     println!("  • Adaptive window sizing: ✓ Optimized automatically");
 }
 
+#[allow(dead_code)]
 fn simulate_false_alarm_control() {
     println!("  • Type I error control: 92.1% within confidence bounds");
     println!("  • Bootstrap significance: 94.7% accurate p-values");
@@ -240,6 +253,7 @@ fn simulate_false_alarm_control() {
     println!("  • Power analysis: 91.5% statistical power achieved");
 }
 
+#[allow(dead_code)]
 fn demonstrate_wavelet2d_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("2D wavelet transform validation and refinement includes:");
     println!("");
@@ -267,6 +281,7 @@ fn demonstrate_wavelet2d_validation() -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_2d_reconstruction() {
     println!("  • Perfect reconstruction error: 1.2e-14 (machine precision)");
     println!("  • Multi-level accuracy: 99.8% across all decomposition levels");
@@ -275,6 +290,7 @@ fn simulate_2d_reconstruction() {
     println!("  • Separability validation: ✓ Separable wavelets work correctly");
 }
 
+#[allow(dead_code)]
 fn simulate_boundary_analysis() {
     println!("  • Symmetric extension: 96.2% artifact suppression");
     println!("  • Periodic extension: 94.1% boundary handling");
@@ -283,6 +299,7 @@ fn simulate_boundary_analysis() {
     println!("  • Adaptive boundaries: 97.8% optimal selection");
 }
 
+#[allow(dead_code)]
 fn simulate_denoising_evaluation() {
     println!("  • Gaussian noise: 15.2 dB SNR improvement");
     println!("  • Salt-and-pepper: 18.7 dB improvement");
@@ -291,6 +308,7 @@ fn simulate_denoising_evaluation() {
     println!("  • Texture preservation: 85.7% fine detail retention");
 }
 
+#[allow(dead_code)]
 fn simulate_compression_testing() {
     println!("  • Compression ratio: 8.5:1 at 95% quality");
     println!("  • Rate-distortion: Near-optimal performance curve");
@@ -299,6 +317,7 @@ fn simulate_compression_testing() {
     println!("  • Perceptual quality: 94.2% subjective score");
 }
 
+#[allow(dead_code)]
 fn demonstrate_wavelet_packet_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("Wavelet packet transform validation includes:");
     println!("");
@@ -326,6 +345,7 @@ fn demonstrate_wavelet_packet_validation() -> Result<(), Box<dyn std::error::Err
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_tree_validation() {
     println!("  • Tree construction: 96.3% structural accuracy");
     println!("  • Node indexing: 98.7% consistency maintained");
@@ -334,6 +354,7 @@ fn simulate_tree_validation() {
     println!("  • Traversal algorithms: O(log N) complexity verified");
 }
 
+#[allow(dead_code)]
 fn simulate_best_basis_selection() {
     println!("  • Shannon entropy: 87.2% optimal basis detection");
     println!("  • Log-energy entropy: 89.6% selection accuracy");
@@ -342,6 +363,7 @@ fn simulate_best_basis_selection() {
     println!("  • Adaptive selection: 94.7% automatic optimization");
 }
 
+#[allow(dead_code)]
 fn simulate_coefficient_organization() {
     println!("  • Frequency localization: 92.8% accuracy");
     println!("  • Spatial localization: 89.4% precision");
@@ -350,6 +372,7 @@ fn simulate_coefficient_organization() {
     println!("  • Dynamic range: 58.7 dB coefficient range");
 }
 
+#[allow(dead_code)]
 fn simulate_adaptive_compression() {
     println!("  • Adaptive thresholding: 89.2% optimal threshold selection");
     println!("  • Context-aware compression: 12.3:1 average ratio");
@@ -358,6 +381,7 @@ fn simulate_adaptive_compression() {
     println!("  • Real-time capability: 78.3% real-time feasibility");
 }
 
+#[allow(dead_code)]
 fn demonstrate_performance_optimization() -> Result<(), Box<dyn std::error::Error>> {
     println!("Performance optimization and SIMD validation includes:");
     println!("");
@@ -385,6 +409,7 @@ fn demonstrate_performance_optimization() -> Result<(), Box<dyn std::error::Erro
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simulate_simd_validation() {
     println!("  • AVX2 acceleration: 3.2x speedup achieved");
     println!("  • SSE4.2 fallback: 2.1x speedup on older CPUs");
@@ -393,6 +418,7 @@ fn simulate_simd_validation() {
     println!("  • Memory alignment: 92.4% optimal alignment achieved");
 }
 
+#[allow(dead_code)]
 fn simulate_parallel_analysis() {
     println!("  • Thread scalability: 85% efficiency up to 8 cores");
     println!("  • Load balancing: 91.7% work distribution equality");
@@ -401,6 +427,7 @@ fn simulate_parallel_analysis() {
     println!("  • Lock-free algorithms: 97.2% contention-free execution");
 }
 
+#[allow(dead_code)]
 fn simulate_memory_optimization() {
     println!("  • Cache utilization: 88.3% L1 cache hit rate");
     println!("  • Memory bandwidth: 92.1% theoretical maximum achieved");
@@ -409,6 +436,7 @@ fn simulate_memory_optimization() {
     println!("  • Garbage collection: Zero GC pressure (Rust advantage)");
 }
 
+#[allow(dead_code)]
 fn simulate_platform_consistency() {
     println!("  • x86_64 Linux: ✓ Reference implementation");
     println!("  • x86_64 Windows: 99.97% numerical consistency");
@@ -417,6 +445,7 @@ fn simulate_platform_consistency() {
     println!("  • Cross-compiler: ✓ GCC/Clang/MSVC compatibility");
 }
 
+#[allow(dead_code)]
 fn print_summary_and_recommendations() {
     println!("📋 VALIDATION SUMMARY AND RECOMMENDATIONS");
     println!("==========================================");

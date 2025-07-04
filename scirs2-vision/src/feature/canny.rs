@@ -44,6 +44,7 @@ pub enum PreprocessMode {
 }
 
 /// Convert image to array with proper normalization
+#[allow(dead_code)]
 fn image_to_array_normalized(img: &DynamicImage) -> Result<Array2<f32>> {
     let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
@@ -60,6 +61,7 @@ fn image_to_array_normalized(img: &DynamicImage) -> Result<Array2<f32>> {
 }
 
 /// Convert array to image with proper scaling
+#[allow(dead_code)]
 fn array_to_binary_image(array: &Array2<bool>) -> Result<GrayImage> {
     let (height, width) = array.dim();
     let mut img = GrayImage::new(width as u32, height as u32);
@@ -75,6 +77,7 @@ fn array_to_binary_image(array: &Array2<bool>) -> Result<GrayImage> {
 }
 
 /// Simple Gaussian kernel generation
+#[allow(dead_code)]
 fn gaussian_kernel(sigma: f32, size: usize) -> Vec<f32> {
     let mut kernel = vec![0.0; size];
     let center = (size as f32 - 1.0) / 2.0;
@@ -96,6 +99,7 @@ fn gaussian_kernel(sigma: f32, size: usize) -> Vec<f32> {
 }
 
 /// Apply Gaussian filter to an array
+#[allow(dead_code)]
 fn gaussian_filter(image: &Array2<f32>, sigma: f32) -> Array2<f32> {
     if sigma <= 0.0 {
         return image.clone();
@@ -147,6 +151,7 @@ fn gaussian_filter(image: &Array2<f32>, sigma: f32) -> Array2<f32> {
 }
 
 /// Connected component labeling using flood fill
+#[allow(dead_code)]
 fn label(binary: &Array2<bool>) -> Result<(Array2<u32>, usize)> {
     let (height, width) = binary.dim();
     let mut labels = Array2::zeros((height, width));
@@ -193,6 +198,7 @@ fn label(binary: &Array2<bool>) -> Result<(Array2<u32>, usize)> {
 }
 
 /// Preprocess image with Gaussian smoothing
+#[allow(dead_code)]
 fn preprocess(
     image: &Array2<f32>,
     mask: Option<&Array2<bool>>,
@@ -250,6 +256,7 @@ fn preprocess(
 }
 
 /// Compute Sobel gradients
+#[allow(dead_code)]
 fn compute_gradients(image: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
     let (height, width) = image.dim();
     let mut gx = Array2::zeros((height, width));
@@ -280,6 +287,7 @@ fn compute_gradients(image: &Array2<f32>) -> (Array2<f32>, Array2<f32>) {
 }
 
 /// Non-maximum suppression using bilinear interpolation
+#[allow(dead_code)]
 fn nonmaximum_suppression(
     gx: &Array2<f32>,
     gy: &Array2<f32>,
@@ -361,6 +369,7 @@ fn nonmaximum_suppression(
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn canny(
     image: &DynamicImage,
     sigma: f32,
@@ -464,6 +473,7 @@ pub fn canny(
 /// # Returns
 ///
 /// * Result containing binary edge map
+#[allow(dead_code)]
 pub fn canny_simple(image: &DynamicImage, sigma: f32) -> Result<GrayImage> {
     canny(
         image,

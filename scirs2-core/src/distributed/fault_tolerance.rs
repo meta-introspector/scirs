@@ -106,7 +106,9 @@ impl NodeInfo {
 pub struct FaultToleranceManager {
     nodes: Arc<Mutex<HashMap<String, NodeInfo>>>,
     detection_strategy: FaultDetectionStrategy,
+    #[allow(dead_code)]
     max_failures: usize,
+    #[allow(dead_code)]
     failure_threshold: Duration,
 }
 
@@ -319,6 +321,7 @@ impl ClusterHealthSummary {
 }
 
 /// Initialize fault tolerance system
+#[allow(dead_code)]
 pub fn initialize_fault_tolerance() -> CoreResult<()> {
     let _manager = FaultToleranceManager::new(
         FaultDetectionStrategy::Heartbeat {

@@ -27,6 +27,7 @@ pub type SpectrogramResult = SignalResult<(Vec<f64>, Vec<f64>, Vec<Vec<f64>>)>;
 /// # Returns
 ///
 /// * Window function as a vector of length `nperseg`
+#[allow(dead_code)]
 fn get_window(window_type: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
     match window_type.to_lowercase().as_str() {
         "hann" => {
@@ -72,6 +73,7 @@ fn get_window(window_type: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
 /// # Returns
 ///
 /// * Detrended signal
+#[allow(dead_code)]
 fn apply_detrend(x: &[f64], detrend_type: &str) -> SignalResult<Vec<f64>> {
     match detrend_type {
         "constant" => {
@@ -125,6 +127,7 @@ fn apply_detrend(x: &[f64], detrend_type: &str) -> SignalResult<Vec<f64>> {
 /// # Returns
 ///
 /// * A tuple containing (frequencies, power spectral density)
+#[allow(dead_code)]
 pub fn periodogram<T>(
     x: &[T],
     fs: Option<f64>,
@@ -252,6 +255,7 @@ where
 ///
 /// * A tuple containing (frequencies, power spectral density)
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn welch<T>(
     x: &[T],
     fs: Option<f64>,
@@ -416,6 +420,7 @@ where
 /// # Returns
 ///
 /// * Padded signal
+#[allow(dead_code)]
 fn apply_boundary(x: &[f64], nperseg: usize, boundary: &str) -> SignalResult<Vec<f64>> {
     match boundary {
         "zeros" => {
@@ -463,6 +468,7 @@ fn apply_boundary(x: &[f64], nperseg: usize, boundary: &str) -> SignalResult<Vec
 ///
 /// * A tuple containing (frequencies, time segments, STFT values)
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn stft<T>(
     x: &[T],
     fs: Option<f64>,
@@ -639,6 +645,7 @@ where
 ///
 /// * A tuple containing (frequencies, time segments, spectrogram values)
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn spectrogram<T>(
     x: &[T],
     fs: Option<f64>,
@@ -736,7 +743,7 @@ mod tests {
     use super::*;
     use approx::assert_relative_eq;
     use rand::Rng;
-    #[cfg(test)]
+
     use std::f64::consts::PI;
 
     #[test]
@@ -779,7 +786,7 @@ mod tests {
         // Add noise
         let mut rng = rand::rng();
         x.iter_mut().for_each(|val| {
-            *val += rng.gen_range(-0.1..0.1);
+            *val += rng.random_range(-0.1..0.1);
         });
 
         // Compute Welch's periodogram

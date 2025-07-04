@@ -17,6 +17,7 @@ use scirs2_optim::{
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 Enhanced SciRS2 Benchmarking Suite");
     println!("=====================================\n");
@@ -41,6 +42,7 @@ fn main() -> Result<()> {
 }
 
 /// Demonstrate performance profiling capabilities
+#[allow(dead_code)]
 fn run_performance_profiling_demo() -> Result<()> {
     println!("🔍 PERFORMANCE PROFILING DEMONSTRATION");
     println!("=====================================");
@@ -215,6 +217,7 @@ fn run_performance_profiling_demo() -> Result<()> {
 }
 
 /// Demonstrate documentation analysis capabilities
+#[allow(dead_code)]
 fn run_documentation_analysis_demo() -> Result<()> {
     println!("\n📚 DOCUMENTATION ANALYSIS DEMONSTRATION");
     println!("=======================================");
@@ -382,6 +385,7 @@ fn run_documentation_analysis_demo() -> Result<()> {
 }
 
 /// Run enhanced cross-framework benchmarking
+#[allow(dead_code)]
 fn run_enhanced_cross_framework_benchmarking() -> Result<()> {
     println!("\n🏆 ENHANCED CROSS-FRAMEWORK BENCHMARKING");
     println!("=========================================");
@@ -463,6 +467,7 @@ fn run_enhanced_cross_framework_benchmarking() -> Result<()> {
 }
 
 /// Demonstrate memory leak detection
+#[allow(dead_code)]
 fn run_memory_leak_detection_demo() -> Result<()> {
     println!("\n🔍 MEMORY LEAK DETECTION DEMONSTRATION");
     println!("======================================");
@@ -553,6 +558,7 @@ fn run_memory_leak_detection_demo() -> Result<()> {
 }
 
 /// Generate comprehensive benchmark report
+#[allow(dead_code)]
 fn generate_comprehensive_benchmark_report() -> Result<()> {
     println!("\n📋 COMPREHENSIVE BENCHMARK REPORT");
     println!("==================================");
@@ -587,16 +593,19 @@ fn generate_comprehensive_benchmark_report() -> Result<()> {
 
 // Helper functions
 
+#[allow(dead_code)]
 fn simulate_gradient_computation(params: &Array1<f64>, step: usize) -> Array1<f64> {
     // Simulate quadratic loss: f(x) = x^T * x
     let noise_factor = 1.0 + 0.1 * (step as f64 * 0.1).sin();
     params.mapv(|x| 2.0 * x * noise_factor)
 }
 
+#[allow(dead_code)]
 fn calculate_loss(params: &Array1<f64>) -> f64 {
     params.mapv(|x| x * x).sum()
 }
 
+#[allow(dead_code)]
 fn prepare_enhanced_optimizers() -> Vec<(
     String,
     Box<dyn Fn(&Array1<f64>, &Array1<f64>) -> Array1<f64>>,
@@ -667,6 +676,7 @@ fn prepare_enhanced_optimizers() -> Vec<(
     optimizers
 }
 
+#[allow(dead_code)]
 fn simulate_cross_framework_results() -> Result<Vec<CrossFrameworkBenchmarkResult<f64>>> {
     // Simulate realistic benchmark results
     let mut results = Vec::new();

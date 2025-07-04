@@ -15,7 +15,7 @@
 
 use ndarray::{s, Array1, Array2, ArrayView2};
 use num_traits::{Float, NumAssign, One, Zero};
-use rand::Rng;
+use rand::{self, Rng};
 use std::fmt::Debug;
 use std::iter::Sum;
 
@@ -75,6 +75,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// error = error.sqrt();
 /// assert!(error / 9.0_f64 < 0.5_f64); // Average error per element
 /// ```
+#[allow(dead_code)]
 pub fn nmf<F>(
     a: &ArrayView2<F>,
     rank: usize,
@@ -231,6 +232,7 @@ where
 /// let approx = c.dot(&z);
 /// assert_eq!(approx.shape(), a.shape());
 /// ```
+#[allow(dead_code)]
 pub fn interpolative_decomposition<F>(
     a: &ArrayView2<F>,
     k: usize,
@@ -513,6 +515,7 @@ where
 /// let approx = c.dot(&u).dot(&r);
 /// assert_eq!(approx.shape(), a.shape());
 /// ```
+#[allow(dead_code)]
 pub fn cur_decomposition<F>(
     a: &ArrayView2<F>,
     k: usize,
@@ -864,6 +867,7 @@ where
 /// assert!(r[[1, 1]].abs() > 1e-10_f64);
 /// assert!(r[[2, 2]].abs() < 1e-10_f64 || r[[2, 2]].abs() / r[[0, 0]].abs() < 1e-10_f64);
 /// ```
+#[allow(dead_code)]
 pub fn rank_revealing_qr<F>(
     a: &ArrayView2<F>,
     tol: F,
@@ -1066,6 +1070,7 @@ where
 /// error = error.sqrt();
 /// assert!(error < 1e-10_f64);
 /// ```
+#[allow(dead_code)]
 pub fn utv_decomposition<F>(
     a: &ArrayView2<F>,
     variant: &str,

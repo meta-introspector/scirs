@@ -1310,10 +1310,9 @@ impl CoverageAnalyzer {
         let output_path = self.config.output_directory.join("coverage_report.html");
 
         std::fs::write(output_path, html_content).map_err(|e| {
-            CoreError::from(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to write HTML report: {e}"),
-            ))
+            CoreError::from(std::io::Error::other(format!(
+                "Failed to write HTML report: {e}"
+            )))
         })?;
 
         Ok(())
@@ -1324,26 +1323,23 @@ impl CoverageAnalyzer {
         #[cfg(feature = "serde")]
         {
             let json_content = serde_json::to_string_pretty(report).map_err(|e| {
-                CoreError::from(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Failed to serialize JSON report: {e}"),
-                ))
+                CoreError::from(std::io::Error::other(format!(
+                    "Failed to serialize JSON report: {e}"
+                )))
             })?;
 
             let output_path = self.config.output_directory.join("coverage_report.json");
             std::fs::write(output_path, json_content).map_err(|e| {
-                CoreError::from(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Failed to write JSON report: {e}"),
-                ))
+                CoreError::from(std::io::Error::other(format!(
+                    "Failed to write JSON report: {e}"
+                )))
             })?;
         }
 
         #[cfg(not(feature = "serde"))]
         {
             let _ = report; // Suppress unused warning
-            return Err(CoreError::from(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            return Err(CoreError::from(std::io::Error::other(
                 "JSON report requires serde feature",
             )));
         }
@@ -1357,10 +1353,9 @@ impl CoverageAnalyzer {
         let output_path = self.config.output_directory.join("coverage_report.xml");
 
         std::fs::write(output_path, xml_content).map_err(|e| {
-            CoreError::from(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to write XML report: {e}"),
-            ))
+            CoreError::from(std::io::Error::other(format!(
+                "Failed to write XML report: {e}"
+            )))
         })?;
 
         Ok(())
@@ -1372,10 +1367,9 @@ impl CoverageAnalyzer {
         let output_path = self.config.output_directory.join("coverage.lcov");
 
         std::fs::write(output_path, lcov_content).map_err(|e| {
-            CoreError::from(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to write LCOV report: {e}"),
-            ))
+            CoreError::from(std::io::Error::other(format!(
+                "Failed to write LCOV report: {e}"
+            )))
         })?;
 
         Ok(())
@@ -1387,10 +1381,9 @@ impl CoverageAnalyzer {
         let output_path = self.config.output_directory.join("coverage_summary.txt");
 
         std::fs::write(output_path, text_content).map_err(|e| {
-            CoreError::from(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to write text report: {e}"),
-            ))
+            CoreError::from(std::io::Error::other(format!(
+                "Failed to write text report: {e}"
+            )))
         })?;
 
         Ok(())
@@ -1402,10 +1395,9 @@ impl CoverageAnalyzer {
         let output_path = self.config.output_directory.join("coverage_data.csv");
 
         std::fs::write(output_path, csv_content).map_err(|e| {
-            CoreError::from(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to write CSV report: {e}"),
-            ))
+            CoreError::from(std::io::Error::other(format!(
+                "Failed to write CSV report: {e}"
+            )))
         })?;
 
         Ok(())
@@ -1585,10 +1577,7 @@ impl CoverageAnalyzer {
                     cov.branch_coverage_percentage() / 100.0,
                     cov.line_hits
                         .iter()
-                        .map(|(&line, &hits)| format!(
-                            r#"<line number="{}" hits="{}" />"#,
-                            line, hits
-                        ))
+                        .map(|(&line, &hits)| format!(r#"<line number="{line}" hits="{hits}" />"#))
                         .collect::<Vec<_>>()
                         .join("\n                                    ")
                 ))
@@ -1658,7 +1647,7 @@ impl CoverageAnalyzer {
 
             // Line data
             for (&line, &hits) in &cov.line_hits {
-                lcov_content.push_str(&format!("DA:{},{}\n", line, hits));
+                lcov_content.push_str(&format!("DA:{line},{hits}\n"));
             }
 
             lcov_content.push_str(&format!("LF:{}\n", cov.total_lines));

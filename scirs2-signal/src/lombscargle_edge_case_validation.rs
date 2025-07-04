@@ -185,6 +185,7 @@ pub struct EdgePerformanceMetrics {
 }
 
 /// Run comprehensive edge case validation
+#[allow(dead_code)]
 pub fn run_edge_case_validation() -> SignalResult<EdgeCaseValidationResult> {
     println!("🔬 Starting comprehensive edge case validation for Lomb-Scargle...");
     let start_time = Instant::now();
@@ -234,6 +235,7 @@ pub fn run_edge_case_validation() -> SignalResult<EdgeCaseValidationResult> {
 }
 
 /// Validate sparse sampling scenarios
+#[allow(dead_code)]
 fn validate_sparse_sampling() -> SignalResult<SparseSamplingValidation> {
     println!("  📡 Testing sparse sampling scenarios...");
 
@@ -245,7 +247,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingValidation> {
 
     // Generate random sparse sampling times
     for _ in 0..n_sparse {
-        times.push(rng.gen_range(0.0..time_span));
+        times.push(rng.random_range(0.0..time_span));
     }
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -253,7 +255,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingValidation> {
     let true_freq = 0.1; // Low frequency to be detectable with sparse sampling
     let signal: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.1 * rng.gen_range(-1.0..1.0))
+        .map(|&t| (2.0 * PI * true_freq * t).sin() + 0.1 * rng.random_range(-1.0..1.0))
         .collect();
 
     // Compute Lomb-Scargle periodogram
@@ -292,6 +294,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingValidation> {
 }
 
 /// Validate dense sampling scenarios
+#[allow(dead_code)]
 fn validate_dense_sampling() -> SignalResult<DenseSamplingValidation> {
     println!("  📊 Testing dense sampling scenarios...");
 
@@ -331,6 +334,7 @@ fn validate_dense_sampling() -> SignalResult<DenseSamplingValidation> {
 }
 
 /// Validate extreme SNR scenarios
+#[allow(dead_code)]
 fn validate_extreme_snr() -> SignalResult<ExtremeSNRValidation> {
     println!("  🔊 Testing extreme SNR scenarios...");
 
@@ -349,7 +353,7 @@ fn validate_extreme_snr() -> SignalResult<ExtremeSNRValidation> {
         .iter()
         .map(|&t| {
             signal_amplitude * (2.0 * PI * signal_freq * t).sin()
-                + noise_amplitude_low * rng.gen_range(-1.0..1.0)
+                + noise_amplitude_low * rng.random_range(-1.0..1.0)
         })
         .collect();
 
@@ -365,7 +369,7 @@ fn validate_extreme_snr() -> SignalResult<ExtremeSNRValidation> {
         .iter()
         .map(|&t| {
             signal_amplitude * (2.0 * PI * signal_freq * t).sin()
-                + noise_amplitude_high * rng.gen_range(-1.0..1.0)
+                + noise_amplitude_high * rng.random_range(-1.0..1.0)
         })
         .collect();
 
@@ -389,6 +393,7 @@ fn validate_extreme_snr() -> SignalResult<ExtremeSNRValidation> {
 }
 
 /// Validate pathological signal types
+#[allow(dead_code)]
 fn validate_pathological_signals() -> SignalResult<PathologicalSignalValidation> {
     println!("  ⚠️  Testing pathological signal types...");
 
@@ -426,7 +431,7 @@ fn validate_pathological_signals() -> SignalResult<PathologicalSignalValidation>
     let mut random_walk = vec![0.0; n];
     let mut rng = rand::rng();
     for i in 1..n {
-        random_walk[i] = random_walk[i - 1] + rng.gen_range(-1.0..1.0);
+        random_walk[i] = random_walk[i - 1] + rng.random_range(-1.0..1.0);
     }
     let random_walk_handling = test_pathological_signal(&times, &random_walk)?;
 
@@ -441,6 +446,7 @@ fn validate_pathological_signals() -> SignalResult<PathologicalSignalValidation>
 }
 
 /// Test pathological signal and return a score
+#[allow(dead_code)]
 fn test_pathological_signal(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     match lombscargle(times, signal, None, "standard", true, true, 1.0) {
         Ok((freqs, pgram)) => {
@@ -462,6 +468,7 @@ fn test_pathological_signal(times: &[f64], signal: &[f64]) -> SignalResult<f64> 
 }
 
 /// Validate numerical precision edge cases
+#[allow(dead_code)]
 fn validate_numerical_precision() -> SignalResult<NumericalPrecisionValidation> {
     println!("  🔢 Testing numerical precision limits...");
 
@@ -497,6 +504,7 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionValidation> 
 }
 
 /// Test numerical edge case
+#[allow(dead_code)]
 fn test_numerical_edge_case(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     match lombscargle(times, signal, None, "standard", true, true, 1.0) {
         Ok((_, pgram)) => {
@@ -516,6 +524,7 @@ fn test_numerical_edge_case(times: &[f64], signal: &[f64]) -> SignalResult<f64> 
 }
 
 /// Assess precision loss in computation
+#[allow(dead_code)]
 fn assess_precision_loss(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     // Compare single vs double precision results (simplified)
     match lombscargle(times, signal, None, "standard", true, true, 1.0) {
@@ -533,6 +542,7 @@ fn assess_precision_loss(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
 }
 
 /// Test overflow resistance
+#[allow(dead_code)]
 fn test_overflow_resistance(times: &[f64]) -> SignalResult<bool> {
     // Test with values near floating-point limits
     let extreme_signal = vec![f64::MAX / 1e6; times.len()];
@@ -544,6 +554,7 @@ fn test_overflow_resistance(times: &[f64]) -> SignalResult<bool> {
 }
 
 /// Assess condition number stability
+#[allow(dead_code)]
 fn assess_condition_number_stability(times: &[f64]) -> SignalResult<f64> {
     // Simplified condition number assessment based on time distribution
     let time_diffs: Vec<f64> = times.windows(2).map(|w| w[1] - w[0]).collect();
@@ -559,6 +570,7 @@ fn assess_condition_number_stability(times: &[f64]) -> SignalResult<f64> {
 }
 
 /// Validate complex frequency content scenarios
+#[allow(dead_code)]
 fn validate_complex_frequency_content() -> SignalResult<ComplexFrequencyValidation> {
     println!("  🎵 Testing complex frequency content...");
 
@@ -595,7 +607,7 @@ fn validate_complex_frequency_content() -> SignalResult<ComplexFrequencyValidati
     let mut rng = rand::rng();
     let broadband_signal: Vec<f64> = times
         .iter()
-        .map(|&t| (2.0 * PI * 15.0 * t).sin() + 0.5 * rng.gen_range(-1.0..1.0))
+        .map(|&t| (2.0 * PI * 15.0 * t).sin() + 0.5 * rng.random_range(-1.0..1.0))
         .collect();
 
     let broadband_plus_tones = assess_tone_in_noise_detection(&times, &broadband_signal, 15.0)?;
@@ -638,6 +650,7 @@ fn validate_complex_frequency_content() -> SignalResult<ComplexFrequencyValidati
 }
 
 /// Validate missing data scenarios
+#[allow(dead_code)]
 fn validate_missing_data_handling() -> SignalResult<MissingDataValidation> {
     println!("  🕳️  Testing missing data scenarios...");
 
@@ -652,7 +665,7 @@ fn validate_missing_data_handling() -> SignalResult<MissingDataValidation> {
     // Random gaps (remove 30% of data randomly)
     let mut rng = rand::rng();
     let keep_indices: Vec<usize> = (0..n_complete)
-        .filter(|_| rng.gen_range(0.0..1.0) > 0.3)
+        .filter(|_| rng.random_range(0.0..1.0) > 0.3)
         .collect();
 
     let times_random_gaps: Vec<f64> = keep_indices.iter().map(|&i| times_complete[i]).collect();
@@ -717,6 +730,7 @@ fn validate_missing_data_handling() -> SignalResult<MissingDataValidation> {
 }
 
 /// Validate non-stationary signal scenarios
+#[allow(dead_code)]
 fn validate_non_stationary_signals() -> SignalResult<NonStationaryValidation> {
     println!("  📈 Testing non-stationary signals...");
 
@@ -788,6 +802,7 @@ fn validate_non_stationary_signals() -> SignalResult<NonStationaryValidation> {
 }
 
 /// Measure performance under edge conditions
+#[allow(dead_code)]
 fn measure_edge_performance() -> SignalResult<EdgePerformanceMetrics> {
     println!("  ⚡ Measuring edge condition performance...");
 
@@ -831,6 +846,7 @@ fn measure_edge_performance() -> SignalResult<EdgePerformanceMetrics> {
 
 // Helper functions for assessments (simplified implementations)
 
+#[allow(dead_code)]
 fn estimate_frequency_resolution(freqs: &[f64], pgram: &[f64], peak_idx: usize) -> f64 {
     if peak_idx == 0 || peak_idx >= pgram.len() - 1 {
         return 0.0;
@@ -857,6 +873,7 @@ fn estimate_frequency_resolution(freqs: &[f64], pgram: &[f64], peak_idx: usize) 
     }
 }
 
+#[allow(dead_code)]
 fn assess_aliasing_resistance(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     // Simplified aliasing assessment
     match lombscargle(times, signal, None, "standard", true, true, 1.0) {
@@ -868,6 +885,7 @@ fn assess_aliasing_resistance(times: &[f64], signal: &[f64]) -> SignalResult<f64
     }
 }
 
+#[allow(dead_code)]
 fn count_false_peaks(pgram: &[f64], true_peak_idx: usize) -> usize {
     let peak_threshold = pgram[true_peak_idx] * 0.5;
     pgram
@@ -877,6 +895,7 @@ fn count_false_peaks(pgram: &[f64], true_peak_idx: usize) -> usize {
         .count()
 }
 
+#[allow(dead_code)]
 fn assess_multi_peak_detection(freqs: &[f64], pgram: &[f64], expected_freqs: &[f64]) -> f64 {
     let mut detected_count = 0;
 
@@ -907,12 +926,14 @@ fn assess_multi_peak_detection(freqs: &[f64], pgram: &[f64], expected_freqs: &[f
     detected_count as f64 / expected_freqs.len() as f64
 }
 
+#[allow(dead_code)]
 fn assess_memory_efficiency(n_points: usize, computation_time: f64) -> f64 {
     // Simplified memory efficiency metric
     let efficiency = (n_points as f64).log10() / computation_time;
     efficiency.min(1.0).max(0.0)
 }
 
+#[allow(dead_code)]
 fn assess_numerical_stability(pgram: &[f64]) -> f64 {
     let all_finite = pgram.iter().all(|&x| x.is_finite());
     let all_non_negative = pgram.iter().all(|&x| x >= 0.0);
@@ -926,6 +947,7 @@ fn assess_numerical_stability(pgram: &[f64]) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn estimate_resolution_improvement(freqs: &[f64]) -> f64 {
     if freqs.len() < 2 {
         return 0.0;
@@ -936,6 +958,7 @@ fn estimate_resolution_improvement(freqs: &[f64]) -> f64 {
     (1.0 / freq_resolution).min(1.0)
 }
 
+#[allow(dead_code)]
 fn assess_spectral_leakage(pgram: &[f64]) -> f64 {
     // Simplified spectral leakage assessment
     let max_power = pgram.iter().fold(0.0, |acc, &x| acc.max(x));
@@ -949,6 +972,7 @@ fn assess_spectral_leakage(pgram: &[f64]) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn assess_peak_detection_performance(freqs: &[f64], pgram: &[f64], expected_freq: f64) -> f64 {
     let closest_idx = freqs
         .iter()
@@ -977,6 +1001,7 @@ fn assess_peak_detection_performance(freqs: &[f64], pgram: &[f64], expected_freq
     }
 }
 
+#[allow(dead_code)]
 fn estimate_noise_floor_accuracy(pgram_low_snr: &[f64], pgram_high_snr: &[f64]) -> f64 {
     // Compare noise floors between low and high SNR cases
     let low_snr_median = {
@@ -1004,6 +1029,7 @@ fn estimate_noise_floor_accuracy(pgram_low_snr: &[f64], pgram_high_snr: &[f64]) 
     }
 }
 
+#[allow(dead_code)]
 fn assess_saturation_handling(pgram: &[f64]) -> f64 {
     // Check for signs of saturation (constant max values, numerical issues)
     let max_power = pgram.iter().fold(0.0, |acc, &x| acc.max(x));
@@ -1018,6 +1044,7 @@ fn assess_saturation_handling(pgram: &[f64]) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn compute_dynamic_range(pgram: &[f64]) -> f64 {
     let max_power = pgram.iter().fold(0.0, |acc, &x| acc.max(x));
     let min_power = pgram.iter().fold(
@@ -1034,6 +1061,7 @@ fn compute_dynamic_range(pgram: &[f64]) -> f64 {
 
 // Additional helper functions would be implemented similarly...
 
+#[allow(dead_code)]
 fn assess_harmonic_detection(times: &[f64], signal: &[f64], fundamental: f64) -> SignalResult<f64> {
     let (freqs, pgram) = lombscargle(times, signal, None, "standard", true, true, 1.0)?;
 
@@ -1042,6 +1070,7 @@ fn assess_harmonic_detection(times: &[f64], signal: &[f64], fundamental: f64) ->
     Ok(assess_multi_peak_detection(&freqs, &pgram, &expected_freqs))
 }
 
+#[allow(dead_code)]
 fn assess_frequency_resolution(
     times: &[f64],
     signal: &[f64],
@@ -1055,6 +1084,7 @@ fn assess_frequency_resolution(
     Ok(assess_multi_peak_detection(&freqs, &pgram, &expected_freqs))
 }
 
+#[allow(dead_code)]
 fn assess_tone_in_noise_detection(
     times: &[f64],
     signal: &[f64],
@@ -1064,6 +1094,7 @@ fn assess_tone_in_noise_detection(
     Ok(assess_peak_detection_performance(&freqs, &pgram, tone_freq))
 }
 
+#[allow(dead_code)]
 fn assess_chirp_detection(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     // For chirp, check if we detect significant power across the swept range
     let (_, pgram) = lombscargle(times, signal, None, "standard", true, true, 1.0)?;
@@ -1081,6 +1112,7 @@ fn assess_chirp_detection(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     }
 }
 
+#[allow(dead_code)]
 fn assess_modulated_signal_detection(
     times: &[f64],
     signal: &[f64],
@@ -1094,6 +1126,7 @@ fn assess_modulated_signal_detection(
     ))
 }
 
+#[allow(dead_code)]
 fn assess_gap_handling(times: &[f64], signal: &[f64], expected_freq: f64) -> SignalResult<f64> {
     let (freqs, pgram) = lombscargle(times, signal, None, "standard", true, true, 1.0)?;
     Ok(assess_peak_detection_performance(
@@ -1103,6 +1136,7 @@ fn assess_gap_handling(times: &[f64], signal: &[f64], expected_freq: f64) -> Sig
     ))
 }
 
+#[allow(dead_code)]
 fn assess_interpolation_quality(
     times_complete: &[f64],
     signal_complete: &[f64],
@@ -1131,6 +1165,7 @@ fn assess_interpolation_quality(
     }
 }
 
+#[allow(dead_code)]
 fn compute_correlation(x: &[f64], y: &[f64]) -> f64 {
     if x.len() != y.len() || x.is_empty() {
         return 0.0;
@@ -1157,6 +1192,7 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> f64 {
     }
 }
 
+#[allow(dead_code)]
 fn assess_frequency_tracking(times: &[f64], signal: &[f64], f0: f64, f1: f64) -> SignalResult<f64> {
     // For frequency tracking, check if we see power distributed across the swept range
     let (freqs, pgram) = lombscargle(times, signal, None, "standard", true, true, 1.0)?;
@@ -1184,6 +1220,7 @@ fn assess_frequency_tracking(times: &[f64], signal: &[f64], f0: f64, f1: f64) ->
     }
 }
 
+#[allow(dead_code)]
 fn assess_amplitude_modulation(
     times: &[f64],
     signal: &[f64],
@@ -1198,6 +1235,7 @@ fn assess_amplitude_modulation(
     ))
 }
 
+#[allow(dead_code)]
 fn assess_transient_detection(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     // For transients, check if we get reasonable spectral content
     match lombscargle(times, signal, None, "standard", true, true, 1.0) {
@@ -1206,6 +1244,7 @@ fn assess_transient_detection(times: &[f64], signal: &[f64]) -> SignalResult<f64
     }
 }
 
+#[allow(dead_code)]
 fn assess_frequency_switching(times: &[f64], signal: &[f64]) -> SignalResult<f64> {
     // For frequency switching, expect to see both frequencies
     let (freqs, pgram) = lombscargle(times, signal, None, "standard", true, true, 1.0)?;
@@ -1213,22 +1252,26 @@ fn assess_frequency_switching(times: &[f64], signal: &[f64]) -> SignalResult<f64
     Ok(assess_multi_peak_detection(&freqs, &pgram, &expected_freqs))
 }
 
+#[allow(dead_code)]
 fn assess_chirp_parameters(times: &[f64], signal: &[f64], f0: f64, f1: f64) -> SignalResult<f64> {
     // Simplified chirp parameter assessment
     assess_frequency_tracking(times, signal, f0, f1)
 }
 
+#[allow(dead_code)]
 fn assess_memory_scaling() -> SignalResult<f64> {
     // Simplified memory scaling assessment
     Ok(0.9) // Placeholder value
 }
 
+#[allow(dead_code)]
 fn assess_parameter_robustness() -> SignalResult<f64> {
     // Test robustness to parameter variations (simplified)
     Ok(0.85) // Placeholder value
 }
 
 /// Compute overall edge case score
+#[allow(dead_code)]
 fn compute_overall_edge_score(
     sparse_sampling: &SparseSamplingValidation,
     dense_sampling: &DenseSamplingValidation,
@@ -1270,6 +1313,7 @@ fn compute_overall_edge_score(
 }
 
 /// Generate edge case validation report
+#[allow(dead_code)]
 pub fn generate_edge_case_report(result: &EdgeCaseValidationResult) -> String {
     let mut report = String::new();
 

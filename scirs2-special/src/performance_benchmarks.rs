@@ -824,6 +824,7 @@ impl BenchmarkSuite {
 }
 
 /// Run a quick benchmark with default settings
+#[allow(dead_code)]
 pub fn quick_benchmark() -> SpecialResult<BenchmarkSuite> {
     let config = BenchmarkConfig {
         array_sizes: vec![1000, 10000],
@@ -836,6 +837,7 @@ pub fn quick_benchmark() -> SpecialResult<BenchmarkSuite> {
 }
 
 /// Run a comprehensive benchmark with all features
+#[allow(dead_code)]
 pub fn comprehensive_benchmark() -> SpecialResult<BenchmarkSuite> {
     let config = BenchmarkConfig::default();
     GammaBenchmarks::run_comprehensive_benchmark(&config)

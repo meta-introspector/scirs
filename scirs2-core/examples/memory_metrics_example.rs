@@ -4,6 +4,7 @@
 //! and analyze memory usage in a scientific computing application.
 
 #[cfg(not(feature = "memory_management"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'memory_management' feature to be enabled.");
     println!("Run with: cargo run --example memory_metrics_example --features memory_management");
@@ -23,6 +24,7 @@ use std::thread;
 use std::time::Duration;
 
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn main() {
     println!("Memory Metrics Example");
     println!("======================\n");
@@ -126,6 +128,7 @@ fn main() {
 
 // Simulate matrix operations with memory tracking
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn simulate_matrix_operations(collector: &MemoryMetricsCollector) {
     // Track memory for matrix A
     let matrix_a_size = 8 * 1024 * 1024; // 8MB
@@ -209,6 +212,7 @@ fn simulate_matrix_operations(collector: &MemoryMetricsCollector) {
 
 // Create and track actual ndarray arrays
 #[cfg(feature = "memory_management")]
+#[allow(dead_code)]
 fn create_arrays() {
     // Create a 2D array (1000 x 1000 f64 values = ~8MB)
     let dims = (1000, 1000);

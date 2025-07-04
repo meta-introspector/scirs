@@ -2,6 +2,7 @@
 //!
 //! This example demonstrates and validates basic ultrathink mode functionality.
 
+use rand::rng;
 use scirs2_graph::{
     algorithms::{connected_components, dijkstra_path},
     base::Graph,
@@ -12,6 +13,7 @@ use scirs2_graph::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🧪 Simple Ultrathink Mode Validation");
     println!("====================================");

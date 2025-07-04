@@ -38,6 +38,7 @@ enum HeaterMode {
     Off,
 }
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("=== Hybrid System (Thermostat) with Event Detection ===");
 
@@ -300,6 +301,7 @@ fn main() -> IntegrateResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn save_to_csv(
     times: &[f64],
     temperatures: &[f64],

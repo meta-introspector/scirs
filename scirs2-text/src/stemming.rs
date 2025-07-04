@@ -124,11 +124,13 @@ pub use self::rule_lemmatizer::{
 /// # Ok(())
 /// # }
 /// ```
+#[allow(dead_code)]
 pub fn create_pos_aware_lemmatizer() -> crate::pos_tagging::PosAwareLemmatizer {
     crate::pos_tagging::PosAwareLemmatizer::new()
 }
 
 /// Create a POS-aware lemmatizer with custom configurations
+#[allow(dead_code)]
 pub fn create_pos_aware_lemmatizer_with_config(
     pos_config: crate::pos_tagging::PosTaggerConfig,
     lemma_config: LemmatizerConfig,

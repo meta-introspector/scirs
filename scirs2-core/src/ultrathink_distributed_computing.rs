@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 //! Ultrathink Distributed Computing Framework
 //!
 //! This module provides a comprehensive distributed computing framework for
@@ -28,6 +30,7 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 
 // Helper function for serde default
+#[allow(dead_code)]
 fn default_instant() -> Instant {
     Instant::now()
 }
@@ -42,12 +45,15 @@ pub struct UltrathinkDistributedComputer {
     /// Communication layer
     communication: Arc<Mutex<DistributedCommunication>>,
     /// Resource manager
+    #[allow(dead_code)]
     resource_manager: Arc<Mutex<DistributedResourceManager>>,
     /// Load balancer
+    #[allow(dead_code)]
     load_balancer: Arc<Mutex<IntelligentLoadBalancer>>,
     /// Fault tolerance manager
     fault_tolerance: Arc<Mutex<FaultToleranceManager>>,
     /// Configuration
+    #[allow(dead_code)]
     config: DistributedComputingConfig,
     /// Cluster statistics
     statistics: Arc<RwLock<ClusterStatistics>>,
@@ -271,12 +277,16 @@ pub struct ClusterManager {
     /// Registered nodes
     nodes: HashMap<NodeId, ComputeNode>,
     /// Node discovery service
+    #[allow(dead_code)]
     discovery_service: NodeDiscoveryService,
     /// Node health monitor
+    #[allow(dead_code)]
     health_monitor: NodeHealthMonitor,
     /// Cluster topology
+    #[allow(dead_code)]
     topology: ClusterTopology,
     /// Cluster metadata
+    #[allow(dead_code)]
     metadata: ClusterMetadata,
 }
 
@@ -548,10 +558,13 @@ pub struct SecurityCredentials {
 #[derive(Debug)]
 pub struct NodeDiscoveryService {
     /// Discovery methods
+    #[allow(dead_code)]
     discovery_methods: Vec<DiscoveryMethod>,
     /// Known nodes cache
+    #[allow(dead_code)]
     known_nodes: HashMap<NodeId, DiscoveredNode>,
     /// Discovery statistics
+    #[allow(dead_code)]
     discovery_stats: DiscoveryStatistics,
 }
 
@@ -612,12 +625,16 @@ pub struct DiscoveryStatistics {
 #[derive(Debug)]
 pub struct NodeHealthMonitor {
     /// Health checks
+    #[allow(dead_code)]
     health_checks: Vec<HealthCheck>,
     /// Health history
+    #[allow(dead_code)]
     health_history: HashMap<NodeId, Vec<HealthRecord>>,
     /// Alert thresholds
+    #[allow(dead_code)]
     alert_thresholds: HealthThresholds,
     /// Monitoring configuration
+    #[allow(dead_code)]
     monitoring_config: HealthMonitoringConfig,
 }
 
@@ -818,14 +835,18 @@ pub struct ResourceLimits {
 #[derive(Debug)]
 pub struct AdaptiveTaskScheduler {
     /// Scheduling algorithm
+    #[allow(dead_code)]
     algorithm: SchedulingAlgorithm,
     /// Task queue
     task_queue: TaskQueue,
     /// Execution history
+    #[allow(dead_code)]
     execution_history: ExecutionHistory,
     /// Performance predictor
+    #[allow(dead_code)]
     performance_predictor: PerformancePredictor,
     /// Scheduler configuration
+    #[allow(dead_code)]
     config: SchedulerConfig,
 }
 
@@ -850,8 +871,10 @@ pub struct TaskQueue {
     /// Running tasks
     running_tasks: HashMap<TaskId, RunningTask>,
     /// Completed tasks
+    #[allow(dead_code)]
     completed_tasks: Vec<CompletedTask>,
     /// Priority queues
+    #[allow(dead_code)]
     priority_queues: HashMap<TaskPriority, Vec<DistributedTask>>,
 }
 
@@ -1107,10 +1130,13 @@ pub enum ErrorCategory {
 #[derive(Debug)]
 pub struct ExecutionHistory {
     /// Task execution records
+    #[allow(dead_code)]
     records: Vec<ExecutionRecord>,
     /// Performance trends
+    #[allow(dead_code)]
     performance_trends: PerformanceTrends,
     /// Resource utilization patterns
+    #[allow(dead_code)]
     utilization_patterns: UtilizationPatterns,
 }
 
@@ -1200,10 +1226,13 @@ pub struct DataPoint {
 #[derive(Debug)]
 pub struct PerformancePredictor {
     /// Prediction models
+    #[allow(dead_code)]
     models: HashMap<String, PredictionModel>,
     /// Historical data
+    #[allow(dead_code)]
     historical_data: Vec<ExecutionRecord>,
     /// Prediction accuracy metrics
+    #[allow(dead_code)]
     accuracy_metrics: AccuracyMetrics,
 }
 
@@ -1275,12 +1304,16 @@ pub struct SchedulerConfig {
 #[derive(Debug)]
 pub struct DistributedCommunication {
     /// Communication protocols
+    #[allow(dead_code)]
     protocols: Vec<CommunicationProtocol>,
     /// Message routing
+    #[allow(dead_code)]
     routing: MessageRouting,
     /// Security layer
+    #[allow(dead_code)]
     security: CommunicationSecurity,
     /// Performance optimization
+    #[allow(dead_code)]
     optimization: CommunicationOptimization,
 }
 
@@ -1300,10 +1333,13 @@ pub enum CommunicationProtocol {
 #[derive(Debug)]
 pub struct MessageRouting {
     /// Routing table
+    #[allow(dead_code)]
     routing_table: HashMap<NodeId, RoutingEntry>,
     /// Message queues
+    #[allow(dead_code)]
     message_queues: HashMap<NodeId, MessageQueue>,
     /// Routing algorithms
+    #[allow(dead_code)]
     routing_algorithms: Vec<RoutingAlgorithm>,
 }
 
@@ -1324,10 +1360,13 @@ pub struct RoutingEntry {
 #[derive(Debug)]
 pub struct MessageQueue {
     /// Pending messages
+    #[allow(dead_code)]
     pending_messages: Vec<Message>,
     /// Priority queues
+    #[allow(dead_code)]
     priority_queues: HashMap<MessagePriority, Vec<Message>>,
     /// Queue statistics
+    #[allow(dead_code)]
     statistics: QueueStatistics,
 }
 
@@ -1407,12 +1446,16 @@ pub enum RoutingAlgorithm {
 #[derive(Debug)]
 pub struct CommunicationSecurity {
     /// Encryption settings
+    #[allow(dead_code)]
     encryption: EncryptionSettings,
     /// Authentication settings
+    #[allow(dead_code)]
     authentication: AuthenticationSettings,
     /// Certificate management
+    #[allow(dead_code)]
     certificates: CertificateManager,
     /// Security policies
+    #[allow(dead_code)]
     policies: SecurityPolicies,
 }
 
@@ -1474,10 +1517,13 @@ pub enum AuthenticationMethod {
 #[derive(Debug)]
 pub struct CertificateManager {
     /// Root certificates
+    #[allow(dead_code)]
     root_certificates: Vec<Certificate>,
     /// Node certificates
+    #[allow(dead_code)]
     node_certificates: HashMap<NodeId, Certificate>,
     /// Certificate revocation list
+    #[allow(dead_code)]
     revocation_list: Vec<String>,
 }
 
@@ -1525,12 +1571,16 @@ pub enum SecurityLevel {
 #[derive(Debug)]
 pub struct CommunicationOptimization {
     /// Compression settings
+    #[allow(dead_code)]
     compression: CompressionSettings,
     /// Bandwidth optimization
+    #[allow(dead_code)]
     bandwidth_optimization: BandwidthOptimization,
     /// Latency optimization
+    #[allow(dead_code)]
     latency_optimization: LatencyOptimization,
     /// Connection pooling
+    #[allow(dead_code)]
     connection_pooling: ConnectionPooling,
 }
 
@@ -1600,12 +1650,16 @@ pub struct ConnectionPooling {
 #[derive(Debug)]
 pub struct DistributedResourceManager {
     /// Resource pools
+    #[allow(dead_code)]
     resource_pools: HashMap<String, ResourcePool>,
     /// Allocation tracker
+    #[allow(dead_code)]
     allocation_tracker: AllocationTracker,
     /// Resource optimizer
+    #[allow(dead_code)]
     optimizer: ResourceOptimizer,
     /// Usage predictor
+    #[allow(dead_code)]
     usage_predictor: ResourceUsagePredictor,
 }
 
@@ -1702,10 +1756,13 @@ pub struct AutoScalingPolicy {
 #[derive(Debug)]
 pub struct AllocationTracker {
     /// Current allocations
+    #[allow(dead_code)]
     allocations: HashMap<AllocationId, ResourceAllocation>,
     /// Allocation history
+    #[allow(dead_code)]
     history: Vec<AllocationRecord>,
     /// Usage statistics
+    #[allow(dead_code)]
     statistics: AllocationStatistics,
 }
 
@@ -1773,10 +1830,13 @@ pub struct AllocationStatistics {
 #[derive(Debug)]
 pub struct ResourceOptimizer {
     /// Optimization algorithms
+    #[allow(dead_code)]
     algorithms: Vec<OptimizationAlgorithm>,
     /// Optimization history
+    #[allow(dead_code)]
     history: Vec<OptimizationResult>,
     /// Performance baselines
+    #[allow(dead_code)]
     baselines: HashMap<String, f64>,
 }
 
@@ -1809,10 +1869,13 @@ pub struct OptimizationResult {
 #[derive(Debug)]
 pub struct ResourceUsagePredictor {
     /// Prediction models
+    #[allow(dead_code)]
     models: HashMap<String, UsagePredictionModel>,
     /// Historical usage data
+    #[allow(dead_code)]
     historical_data: Vec<UsageDataPoint>,
     /// Prediction accuracy
+    #[allow(dead_code)]
     accuracy: PredictionAccuracy,
 }
 
@@ -1870,12 +1933,16 @@ pub struct PredictionAccuracy {
 #[derive(Debug)]
 pub struct IntelligentLoadBalancer {
     /// Load balancing algorithms
+    #[allow(dead_code)]
     algorithms: Vec<LoadBalancingAlgorithm>,
     /// Current load distribution
+    #[allow(dead_code)]
     load_distribution: HashMap<NodeId, f64>,
     /// Load balancing metrics
+    #[allow(dead_code)]
     metrics: LoadBalancingMetrics,
     /// Balancer configuration
+    #[allow(dead_code)]
     config: LoadBalancerConfig,
 }
 
@@ -1922,12 +1989,16 @@ pub struct LoadBalancerConfig {
 #[derive(Debug)]
 pub struct FaultToleranceManager {
     /// Failure detection
+    #[allow(dead_code)]
     failure_detection: FailureDetection,
     /// Recovery strategies
+    #[allow(dead_code)]
     recovery_strategies: Vec<RecoveryStrategy>,
     /// Redundancy management
+    #[allow(dead_code)]
     redundancy: RedundancyManager,
     /// Checkpointing system
+    #[allow(dead_code)]
     checkpointing: CheckpointingSystem,
 }
 
@@ -1935,10 +2006,13 @@ pub struct FaultToleranceManager {
 #[derive(Debug)]
 pub struct FailureDetection {
     /// Detection algorithms
+    #[allow(dead_code)]
     algorithms: Vec<FailureDetectionAlgorithm>,
     /// Failure patterns
+    #[allow(dead_code)]
     patterns: HashMap<String, FailurePattern>,
     /// Detection thresholds
+    #[allow(dead_code)]
     thresholds: FailureThresholds,
 }
 
@@ -1993,10 +2067,13 @@ pub enum RecoveryStrategy {
 #[derive(Debug)]
 pub struct RedundancyManager {
     /// Replication factor
+    #[allow(dead_code)]
     replication_factor: u32,
     /// Replica placement strategy
+    #[allow(dead_code)]
     placement_strategy: ReplicaPlacementStrategy,
     /// Consistency level
+    #[allow(dead_code)]
     consistency_level: ConsistencyLevel,
 }
 
@@ -2023,10 +2100,13 @@ pub enum ConsistencyLevel {
 #[derive(Debug)]
 pub struct CheckpointingSystem {
     /// Checkpoint storage
+    #[allow(dead_code)]
     storage: CheckpointStorage,
     /// Checkpoint frequency
+    #[allow(dead_code)]
     frequency: CheckpointFrequency,
     /// Compression settings
+    #[allow(dead_code)]
     compression: CompressionSettings,
 }
 

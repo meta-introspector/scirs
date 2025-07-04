@@ -12,6 +12,7 @@ use scirs2_cluster::vq::kmeans;
 use scirs2_cluster::VisualizationConfig;
 use std::path::Path;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Animated K-means Clustering Demo");
     println!("===============================");
@@ -86,6 +87,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Run animated K-means clustering with full convergence tracking
+#[allow(dead_code)]
 fn run_animated_kmeans(
     data: ndarray::ArrayView2<f64>,
     k: usize,
@@ -239,6 +241,7 @@ fn run_animated_kmeans(
 }
 
 /// Demonstrate streaming visualization capabilities
+#[allow(dead_code)]
 fn demonstrate_streaming_visualization(
     data: &Array2<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -285,6 +288,7 @@ fn demonstrate_streaming_visualization(
 }
 
 /// Demonstrate 3D animation capabilities
+#[allow(dead_code)]
 fn demonstrate_3d_animation() -> Result<(), Box<dyn std::error::Error>> {
     // Generate 3D data
     let data_3d = generate_3d_cluster_data();
@@ -317,6 +321,7 @@ fn demonstrate_3d_animation() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Generate multi-cluster 2D data for demonstration
+#[allow(dead_code)]
 fn generate_multi_cluster_data() -> Array2<f64> {
     let mut data = Vec::new();
 
@@ -348,6 +353,7 @@ fn generate_multi_cluster_data() -> Array2<f64> {
 }
 
 /// Generate 3D cluster data for demonstration
+#[allow(dead_code)]
 fn generate_3d_cluster_data() -> Array2<f64> {
     let mut data = Vec::new();
 

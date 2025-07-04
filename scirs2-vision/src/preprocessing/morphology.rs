@@ -26,6 +26,7 @@ pub enum StructuringElement {
 /// # Returns
 ///
 /// * Result containing a binary kernel
+#[allow(dead_code)]
 fn create_structuring_element(shape: StructuringElement) -> Result<Vec<Vec<bool>>> {
     match shape {
         StructuringElement::Rectangle(width, height) => {
@@ -105,6 +106,7 @@ fn create_structuring_element(shape: StructuringElement) -> Result<Vec<Vec<bool>
 /// # Returns
 ///
 /// * Result containing the eroded image
+#[allow(dead_code)]
 pub fn erode(img: &DynamicImage, kernel_shape: StructuringElement) -> Result<DynamicImage> {
     let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
@@ -166,6 +168,7 @@ pub fn erode(img: &DynamicImage, kernel_shape: StructuringElement) -> Result<Dyn
 /// # Returns
 ///
 /// * Result containing the dilated image
+#[allow(dead_code)]
 pub fn dilate(img: &DynamicImage, kernel_shape: StructuringElement) -> Result<DynamicImage> {
     let gray = img.to_luma8();
     let (width, height) = gray.dimensions();
@@ -227,6 +230,7 @@ pub fn dilate(img: &DynamicImage, kernel_shape: StructuringElement) -> Result<Dy
 /// # Returns
 ///
 /// * Result containing the opened image
+#[allow(dead_code)]
 pub fn opening(img: &DynamicImage, kernel_shape: StructuringElement) -> Result<DynamicImage> {
     let eroded = erode(img, kernel_shape)?;
     dilate(&eroded, kernel_shape)
@@ -242,6 +246,7 @@ pub fn opening(img: &DynamicImage, kernel_shape: StructuringElement) -> Result<D
 /// # Returns
 ///
 /// * Result containing the closed image
+#[allow(dead_code)]
 pub fn closing(img: &DynamicImage, kernel_shape: StructuringElement) -> Result<DynamicImage> {
     let dilated = dilate(img, kernel_shape)?;
     erode(&dilated, kernel_shape)
@@ -257,6 +262,7 @@ pub fn closing(img: &DynamicImage, kernel_shape: StructuringElement) -> Result<D
 /// # Returns
 ///
 /// * Result containing the gradient image
+#[allow(dead_code)]
 pub fn morphological_gradient(
     img: &DynamicImage,
     kernel_shape: StructuringElement,
@@ -297,6 +303,7 @@ pub fn morphological_gradient(
 /// # Returns
 ///
 /// * Result containing the top-hat transformed image
+#[allow(dead_code)]
 pub fn top_hat(img: &DynamicImage, kernel_shape: StructuringElement) -> Result<DynamicImage> {
     let opened = opening(img, kernel_shape)?;
 
@@ -333,6 +340,7 @@ pub fn top_hat(img: &DynamicImage, kernel_shape: StructuringElement) -> Result<D
 /// # Returns
 ///
 /// * Result containing the black-hat transformed image
+#[allow(dead_code)]
 pub fn black_hat(img: &DynamicImage, kernel_shape: StructuringElement) -> Result<DynamicImage> {
     let closed = closing(img, kernel_shape)?;
 

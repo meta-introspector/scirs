@@ -183,7 +183,7 @@ impl Default for GpuAccelerationStrategy {
 }
 
 /// GPU memory buffer abstraction
-pub trait GpuBuffer<T>: Send + Sync {
+pub trait GpuBuffer<T>: Send + Sync + std::fmt::Debug {
     /// Get the size of the buffer in elements
     fn len(&self) -> usize;
 
@@ -203,7 +203,7 @@ pub trait GpuBuffer<T>: Send + Sync {
 }
 
 /// GPU context abstraction for managing device state (dyn compatible)
-pub trait GpuContext: Send + Sync {
+pub trait GpuContext: Send + Sync + std::fmt::Debug {
     /// Get device information
     fn device_info(&self) -> &GpuDeviceInfo;
 
@@ -635,6 +635,7 @@ impl GpuBackendManager {
 }
 
 /// Initialize GPU manager with all available backends
+#[allow(dead_code)]
 pub fn initialize_gpu_manager() -> LinalgResult<GpuBackendManager> {
     let mut manager = GpuBackendManager::new();
 
@@ -674,6 +675,7 @@ pub fn initialize_gpu_manager() -> LinalgResult<GpuBackendManager> {
 }
 
 /// Determine if GPU acceleration should be used based on problem size
+#[allow(dead_code)]
 pub fn should_use_gpu(
     matrix_elements: usize,
     threshold: usize,

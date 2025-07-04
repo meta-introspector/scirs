@@ -8,6 +8,7 @@ use scirs2_stats::distributions::{vonmises, wrapcauchy};
 use scirs2_stats::traits::CircularDistribution;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() {
     // Von Mises distribution
     println!("Von Mises Distribution Example");

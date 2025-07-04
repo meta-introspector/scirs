@@ -27,6 +27,7 @@ pub enum EulerianType {
 ///
 /// # Returns
 /// * The type of Eulerian structure in the graph
+#[allow(dead_code)]
 pub fn eulerian_type<N, E, Ix>(graph: &Graph<N, E, Ix>) -> EulerianType
 where
     N: Node + std::fmt::Debug,
@@ -86,6 +87,7 @@ where
 ///
 /// # Returns
 /// * `bool` - True if a Hamiltonian path exists
+#[allow(dead_code)]
 pub fn has_hamiltonian_path<N, E, Ix>(graph: &Graph<N, E, Ix>) -> bool
 where
     N: Node + std::fmt::Debug,
@@ -113,6 +115,7 @@ where
 }
 
 /// DFS helper for Hamiltonian path
+#[allow(dead_code)]
 fn hamiltonian_path_dfs<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     current: petgraph::graph::NodeIndex<Ix>,
@@ -151,6 +154,7 @@ where
 ///
 /// # Returns
 /// * `bool` - True if a Hamiltonian circuit exists
+#[allow(dead_code)]
 pub fn has_hamiltonian_circuit<N, E, Ix>(graph: &Graph<N, E, Ix>) -> bool
 where
     N: Node + std::fmt::Debug,
@@ -175,6 +179,7 @@ where
 }
 
 /// DFS helper for Hamiltonian circuit
+#[allow(dead_code)]
 fn hamiltonian_circuit_dfs<N, E, Ix>(
     graph: &Graph<N, E, Ix>,
     current: petgraph::graph::NodeIndex<Ix>,

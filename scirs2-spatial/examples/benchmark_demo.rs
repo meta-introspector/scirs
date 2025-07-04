@@ -12,6 +12,7 @@ use scirs2_spatial::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("SCIRS2-Spatial Benchmark Demonstration");
     println!("======================================");
@@ -49,6 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn report_simd_capabilities() {
     #[cfg(target_arch = "x86_64")]
     {
@@ -74,11 +76,13 @@ fn report_simd_capabilities() {
     }
 }
 
+#[allow(dead_code)]
 fn generate_test_data(n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
     Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
 }
 
+#[allow(dead_code)]
 fn benchmark_distance_calculations() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Comparing SIMD vs Scalar distance calculations:");
     println!(
@@ -113,6 +117,7 @@ fn benchmark_distance_calculations() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn benchmark_distance_matrices() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Distance matrix computation performance:");
     println!(
@@ -142,6 +147,7 @@ fn benchmark_distance_matrices() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn benchmark_spatial_structures() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Spatial data structure performance:");
     println!(
@@ -172,6 +178,7 @@ fn benchmark_spatial_structures() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn analyze_memory_scaling() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Memory usage analysis:");
     println!(
@@ -202,6 +209,7 @@ fn analyze_memory_scaling() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn generate_recommendations() {
     println!("  Based on benchmark results:");
     println!();

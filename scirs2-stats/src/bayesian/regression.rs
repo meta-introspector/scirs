@@ -586,6 +586,7 @@ pub struct ARDRegressionResult {
 // Helper functions for statistical distributions
 
 /// Log of gamma function (simplified implementation)
+#[allow(dead_code)]
 fn gamma_log(x: f64) -> f64 {
     // Using Stirling's approximation for simplicity
     // In practice, you'd use a more accurate implementation
@@ -601,6 +602,7 @@ fn gamma_log(x: f64) -> f64 {
 }
 
 /// Normal distribution percent point function (inverse CDF)
+#[allow(dead_code)]
 fn normal_ppf(p: f64) -> Result<f64> {
     if p <= 0.0 || p >= 1.0 {
         return Err(StatsError::InvalidArgument(
@@ -632,6 +634,7 @@ fn normal_ppf(p: f64) -> Result<f64> {
 }
 
 /// Student's t distribution percent point function (simplified)
+#[allow(dead_code)]
 fn t_ppf(p: f64, df: f64) -> Result<f64> {
     if p <= 0.0 || p >= 1.0 {
         return Err(StatsError::InvalidArgument(

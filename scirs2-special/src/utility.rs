@@ -141,6 +141,7 @@ use std::fmt::{Debug, Display};
 /// assert_eq!(cbrt(8.0), 2.0);
 /// assert_eq!(cbrt(-8.0), -2.0);
 /// ```
+#[allow(dead_code)]
 pub fn cbrt<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
@@ -161,6 +162,7 @@ where
 ///
 /// # Returns
 /// 10 raised to the power x
+#[allow(dead_code)]
 pub fn exp10<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
@@ -177,6 +179,7 @@ where
 ///
 /// # Returns
 /// 2 raised to the power x
+#[allow(dead_code)]
 pub fn exp2<T>(x: T) -> T
 where
     T: Float,
@@ -191,6 +194,7 @@ where
 ///
 /// # Returns
 /// Angle in radians
+#[allow(dead_code)]
 pub fn radian<T>(degrees: T) -> T
 where
     T: Float + FromPrimitive,
@@ -206,6 +210,7 @@ where
 ///
 /// # Returns
 /// cos(x) where x is in degrees
+#[allow(dead_code)]
 pub fn cosdg<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
@@ -220,6 +225,7 @@ where
 ///
 /// # Returns
 /// sin(x) where x is in degrees
+#[allow(dead_code)]
 pub fn sindg<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
@@ -234,6 +240,7 @@ where
 ///
 /// # Returns
 /// tan(x) where x is in degrees
+#[allow(dead_code)]
 pub fn tandg<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
@@ -248,6 +255,7 @@ where
 ///
 /// # Returns
 /// cot(x) = 1/tan(x) where x is in degrees
+#[allow(dead_code)]
 pub fn cotdg<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
@@ -265,6 +273,7 @@ where
 ///
 /// # Returns
 /// cos(x) - 1
+#[allow(dead_code)]
 pub fn cosm1<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
@@ -299,6 +308,7 @@ where
 ///
 /// # Returns
 /// (1 + x)^y - 1
+#[allow(dead_code)]
 pub fn powm1<T>(x: T, y: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display,
@@ -324,6 +334,7 @@ where
 ///
 /// # Returns
 /// x * log(y) with special handling for x = 0
+#[allow(dead_code)]
 pub fn xlogy<T>(x: T, y: T) -> T
 where
     T: Float + Zero,
@@ -347,6 +358,7 @@ where
 ///
 /// # Returns
 /// x * log(1 + y) with special handling
+#[allow(dead_code)]
 pub fn xlog1py<T>(x: T, y: T) -> T
 where
     T: Float + Zero,
@@ -367,6 +379,7 @@ where
 ///
 /// # Returns
 /// (exp(x) - 1) / x
+#[allow(dead_code)]
 pub fn exprel<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
@@ -400,6 +413,7 @@ where
 ///
 /// # Returns
 /// Rounded value
+#[allow(dead_code)]
 pub fn round<T>(x: T) -> T
 where
     T: Float,
@@ -417,6 +431,7 @@ where
 ///
 /// # Returns
 /// The Dirichlet kernel value
+#[allow(dead_code)]
 pub fn diric<T>(x: T, n: i32) -> T
 where
     T: Float + FromPrimitive,
@@ -448,6 +463,7 @@ where
 ///
 /// # Returns
 /// The arithmetic-geometric mean
+#[allow(dead_code)]
 pub fn agm<T>(a: T, b: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display,
@@ -484,6 +500,7 @@ where
 ///
 /// # Returns
 /// log(expit(x))
+#[allow(dead_code)]
 pub fn log_expit<T>(x: T) -> T
 where
     T: Float,
@@ -504,6 +521,7 @@ where
 ///
 /// # Returns
 /// log(1 + exp(x))
+#[allow(dead_code)]
 pub fn softplus<T>(x: T) -> T
 where
     T: Float + FromPrimitive,
@@ -533,6 +551,7 @@ where
 /// # Algorithm
 /// Uses a combination of series expansion for small |h|, asymptotic expansion
 /// for large |h|, and numerical integration for intermediate values.
+#[allow(dead_code)]
 pub fn owens_t<T>(h: T, a: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Debug,
@@ -579,6 +598,7 @@ where
 }
 
 /// Owen's T function using series expansion for small h
+#[allow(dead_code)]
 fn owens_t_series<T>(h: T, a: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive,
@@ -631,6 +651,7 @@ where
 }
 
 /// Owen's T function using asymptotic expansion for large h
+#[allow(dead_code)]
 fn owens_t_asymptotic<T>(h: T, a: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive,
@@ -657,6 +678,7 @@ where
 }
 
 /// Owen's T function using numerical integration
+#[allow(dead_code)]
 fn owens_t_numerical<T>(h: T, a: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive,
@@ -694,6 +716,7 @@ where
 }
 
 /// Apply utility function to arrays
+#[allow(dead_code)]
 pub fn cbrt_array<T>(x: &ArrayView1<T>) -> Array1<T>
 where
     T: Float + FromPrimitive + Send + Sync,
@@ -701,6 +724,7 @@ where
     x.mapv(cbrt)
 }
 
+#[allow(dead_code)]
 pub fn exp10_array<T>(x: &ArrayView1<T>) -> Array1<T>
 where
     T: Float + FromPrimitive + Send + Sync,
@@ -708,6 +732,7 @@ where
     x.mapv(exp10)
 }
 
+#[allow(dead_code)]
 pub fn round_array<T>(x: &ArrayView1<T>) -> Array1<T>
 where
     T: Float + Send + Sync,
@@ -730,6 +755,7 @@ where
 /// assert!(expit(10.0) > 0.99);
 /// assert!(expit(-10.0) < 0.01);
 /// ```
+#[allow(dead_code)]
 pub fn expit<T>(x: T) -> T
 where
     T: Float + FromPrimitive + Copy,
@@ -757,6 +783,7 @@ where
 /// assert!(logit(0.0).is_err());
 /// assert!(logit(1.0).is_err());
 /// ```
+#[allow(dead_code)]
 pub fn logit<T>(p: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Copy + Debug,
@@ -788,6 +815,7 @@ where
 /// let result = expit_array(&input.view());
 /// assert!((result[0] - 0.5).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn expit_array<T>(x: &ArrayView1<T>) -> Array1<T>
 where
     T: Float + FromPrimitive + Copy,
@@ -811,6 +839,7 @@ where
 /// let result = logit_array(&input.view());
 /// assert!((result[1] - 0.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn logit_array<T>(x: &ArrayView1<T>) -> Array1<T>
 where
     T: Float + FromPrimitive + Copy + Debug,
@@ -829,6 +858,7 @@ where
 ///
 /// # Returns
 /// x * log1p(y) with special handling
+#[allow(dead_code)]
 pub fn xlog1py_scalar<T>(x: T, y: T) -> T
 where
     T: Float + Zero,
@@ -852,6 +882,7 @@ where
 /// let result = log1p_array_utility(&input.view());
 /// assert!((result[0] - 0.0).abs() < 1e-15);
 /// ```
+#[allow(dead_code)]
 pub fn log1p_array_utility<T>(x: &ArrayView1<T>) -> Array1<T>
 where
     T: Float + Copy,
@@ -875,6 +906,7 @@ where
 /// let result = expm1_array_utility(&input.view());
 /// assert!((result[0] - 0.0).abs() < 1e-15);
 /// ```
+#[allow(dead_code)]
 pub fn expm1_array_utility<T>(x: &ArrayView1<T>) -> Array1<T>
 where
     T: Float + Copy,
@@ -895,6 +927,7 @@ where
 ///
 /// # Returns
 /// Angular distance in radians
+#[allow(dead_code)]
 pub fn spherical_distance<T>(lat1: T, lon1: T, lat2: T, lon2: T) -> SpecialResult<T>
 where
     T: Float + FromPrimitive + Display + Copy,
@@ -923,6 +956,7 @@ where
 ///
 /// # Returns
 /// Gradient array
+#[allow(dead_code)]
 pub fn gradient<T>(y: &ArrayView1<T>, x: Option<&ArrayView1<T>>) -> SpecialResult<Array1<T>>
 where
     T: Float + FromPrimitive + Copy,

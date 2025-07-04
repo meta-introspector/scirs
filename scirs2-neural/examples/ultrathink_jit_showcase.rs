@@ -44,6 +44,7 @@ fn main() -> Result<()> {
     println!("\\n🎉 Ultrathink JIT showcase completed successfully!");
     Ok(())
 }
+#[allow(dead_code)]
 fn demonstrate_elementwise_operations(compiler: &JITCompiler) -> Result<()> {
     println!("\\n🧮 Element-wise Operations with SIMD Acceleration");
     println!("-------------------------------------------------");
@@ -91,6 +92,7 @@ fn demonstrate_elementwise_operations(compiler: &JITCompiler) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_matmul_optimization(compiler: &JITCompiler) -> Result<()> {
     println!("\\n🔢 Matrix Multiplication with Cache Blocking");
     println!("--------------------------------------------");
@@ -123,6 +125,7 @@ fn demonstrate_matmul_optimization(compiler: &JITCompiler) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_operation_fusion(compiler: &JITCompiler) -> Result<()> {
     println!("\\n🔗 Operation Fusion Optimization");
     println!("--------------------------------");
@@ -188,6 +191,7 @@ fn demonstrate_operation_fusion(compiler: &JITCompiler) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn show_performance_statistics(compiler: &JITCompiler) {
     println!("\n📊 JIT Performance Statistics");
     println!("-----------------------------");

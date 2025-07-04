@@ -10,6 +10,7 @@ use scirs2_io::hdf5::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== HDF5 File Format Example ===\n");
 
@@ -28,6 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn simple_dataset_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. Simple Dataset Example");
     println!("-------------------------");
@@ -60,6 +62,7 @@ fn simple_dataset_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn structured_file_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("2. Structured File Example");
     println!("--------------------------");
@@ -137,6 +140,7 @@ fn structured_file_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn compression_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("3. Compression Example");
     println!("----------------------");
@@ -191,6 +195,7 @@ fn compression_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn scientific_data_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("4. Scientific Data Example");
     println!("--------------------------");

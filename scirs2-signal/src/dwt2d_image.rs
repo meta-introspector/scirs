@@ -98,6 +98,7 @@ pub enum DenoisingMethod {
 /// // The denoised image should have the same shape as the input
 /// assert_eq!(denoised.shape(), image.shape());
 /// ```
+#[allow(dead_code)]
 pub fn denoise_image<T>(
     image: &Array2<T>,
     wavelet: Wavelet,
@@ -231,6 +232,7 @@ where
 /// // The edge image should have the same dimensions as the input
 /// assert_eq!(edges.shape(), image.shape());
 /// ```
+#[allow(dead_code)]
 pub fn detect_edges<T>(
     image: &Array2<T>,
     wavelet: Wavelet,
@@ -302,6 +304,7 @@ where
 /// // Check that the achieved compression ratio is greater than 0
 /// assert!(ratio > 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn compress_image<T>(
     image: &Array2<T>,
     wavelet: Wavelet,
@@ -386,6 +389,7 @@ where
 }
 
 /// Helper function to calculate statistics of detail coefficients.
+#[allow(dead_code)]
 fn calculate_detail_stats(decomp: &Dwt2dResult) -> (usize, WaveletEnergy) {
     let detail_h_count = decomp.detail_h.iter().filter(|&&x| x != 0.0).count();
     let detail_v_count = decomp.detail_v.iter().filter(|&&x| x != 0.0).count();
@@ -408,6 +412,7 @@ fn calculate_detail_stats(decomp: &Dwt2dResult) -> (usize, WaveletEnergy) {
 }
 
 /// Helper function to estimate noise variance from detail coefficients.
+#[allow(dead_code)]
 fn estimate_noise_variance(coeffs: &Array2<f64>) -> f64 {
     // Median Absolute Deviation (MAD) estimator
     let mut abs_coeffs: Vec<f64> = coeffs.iter().map(|&x| x.abs()).collect();
@@ -438,6 +443,7 @@ fn estimate_noise_variance(coeffs: &Array2<f64>) -> f64 {
 }
 
 /// Apply thresholding to wavelet coefficients.
+#[allow(dead_code)]
 fn threshold_coefficients(
     coeffs: &mut [Dwt2dResult],
     thresholds: &[f64],
@@ -475,6 +481,7 @@ fn threshold_coefficients(
 }
 
 /// Helper function to apply threshold to a coefficient.
+#[allow(dead_code)]
 fn apply_threshold(x: f64, threshold: f64, method: ThresholdMethod) -> f64 {
     let abs_x = x.abs();
 
@@ -493,6 +500,7 @@ fn apply_threshold(x: f64, threshold: f64, method: ThresholdMethod) -> f64 {
 }
 
 /// Count non-zero coefficients in a multi-level wavelet decomposition.
+#[allow(dead_code)]
 fn count_nonzeros_multilevel(coeffs: &[Dwt2dResult], include_approx: bool) -> (usize, Vec<usize>) {
     let mut total_nonzeros = 0;
     let mut level_counts = Vec::with_capacity(coeffs.len());

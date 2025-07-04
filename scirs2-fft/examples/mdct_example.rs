@@ -5,6 +5,7 @@ use scirs2_fft::mdct::{imdct, imdst, mdct, mdct_overlap_add, mdst};
 use scirs2_fft::window::Window;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== MDCT/MDST Example ===");
     println!();

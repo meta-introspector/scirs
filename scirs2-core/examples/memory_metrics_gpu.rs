@@ -4,6 +4,7 @@
 //! memory metrics system.
 
 #[cfg(not(all(feature = "memory_management", feature = "gpu")))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires both 'memory_management' and 'gpu' features to be enabled.");
     println!("Run with: cargo run --example memory_metrics_gpu --features memory_management,gpu");
@@ -20,6 +21,7 @@ use scirs2_core::memory::metrics::{
 use std::time::Instant;
 
 #[cfg(all(feature = "memory_management", feature = "gpu"))]
+#[allow(dead_code)]
 fn main() {
     println!("Memory Metrics with GPU Operations Example");
     println!("==========================================\n");
@@ -129,6 +131,7 @@ fn main() {
 
 // Simulates a GPU matrix multiplication operation
 #[cfg(all(feature = "memory_management", feature = "gpu"))]
+#[allow(dead_code)]
 fn simulate_matrix_multiplication(context: &TrackedGpuContext) {
     let start = Instant::now();
 

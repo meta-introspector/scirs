@@ -4,9 +4,9 @@
 //! run through ultrathink optimizations compared to reference implementations.
 
 use scirs2_graph::advanced::{
-    create_adaptive_ultrathink_processor, create_enhanced_ultrathink_processor,
-    create_memory_efficient_ultrathink_processor, create_performance_ultrathink_processor,
-    execute_with_enhanced_ultrathink, UltrathinkProcessor, UltrathinkStats,
+    create_adaptive_advanced_processor, create_enhanced_advanced_processor,
+    create_memory_efficient_advanced_processor, create_performance_advanced_processor,
+    execute_with_enhanced_advanced, UltrathinkProcessor, UltrathinkStats,
 };
 use scirs2_graph::base::Graph;
 use std::collections::HashMap;
@@ -25,6 +25,7 @@ struct ValidationTestCase {
 }
 
 /// Generate a set of reference test graphs with known properties
+#[allow(dead_code)]
 fn generate_reference_test_graphs() -> Vec<ValidationTestCase> {
     let mut test_cases = Vec::new();
 
@@ -109,6 +110,7 @@ fn generate_reference_test_graphs() -> Vec<ValidationTestCase> {
 }
 
 /// Calculate reference graph properties directly (without optimization)
+#[allow(dead_code)]
 fn calculate_reference_properties(graph: &Graph<usize, f64>) -> HashMap<String, f64> {
     let mut properties = HashMap::new();
 
@@ -156,6 +158,7 @@ fn calculate_reference_properties(graph: &Graph<usize, f64>) -> HashMap<String, 
 }
 
 /// Test numerical accuracy of a single test case
+#[allow(dead_code)]
 fn test_numerical_accuracy(
     test_case: &ValidationTestCase,
     processor: &mut UltrathinkProcessor,
@@ -215,6 +218,7 @@ fn test_numerical_accuracy(
 }
 
 /// Calculate numerical accuracy between expected, reference, and optimized values
+#[allow(dead_code)]
 fn calculate_accuracy(expected: f64, reference: f64, optimized: f64, tolerance: f64) -> f64 {
     if (expected - reference).abs() < tolerance && (reference - optimized).abs() < tolerance {
         1.0 // Perfect accuracy
@@ -312,6 +316,7 @@ impl ValidationResult {
 }
 
 /// Comprehensive numerical validation suite
+#[allow(dead_code)]
 fn run_comprehensive_validation() -> Vec<ValidationResult> {
     let test_cases = generate_reference_test_graphs();
     let mut all_results = Vec::new();
@@ -338,6 +343,7 @@ fn run_comprehensive_validation() -> Vec<ValidationResult> {
 }
 
 /// Generate validation report
+#[allow(dead_code)]
 fn generate_validation_report(results: &[ValidationResult]) -> String {
     let mut report = String::new();
     report.push_str("=== Ultrathink Numerical Validation Report ===\n\n");
@@ -399,6 +405,7 @@ fn generate_validation_report(results: &[ValidationResult]) -> String {
 }
 
 /// Advanced algorithm-specific validation tests
+#[allow(dead_code)]
 fn generate_algorithm_validation_tests() -> Vec<AlgorithmValidationTest> {
     let mut tests = Vec::new();
 
@@ -442,6 +449,7 @@ enum ValidationOutput {
 }
 
 /// Create PageRank validation test
+#[allow(dead_code)]
 fn create_pagerank_validation_test() -> AlgorithmValidationTest {
     // Create a simple 4-node graph with known PageRank values
     let mut graph = Graph::new();
@@ -489,8 +497,8 @@ fn create_pagerank_validation_test() -> AlgorithmValidationTest {
         advanced_implementation: |g, processor| {
             let result =
                 execute_with_enhanced_advanced(processor, g, "pagerank_validation", |graph| {
-                    use scirs2_graph::measures::pagerank;
-                    pagerank(graph, 0.85, Some(100), Some(1e-8))
+                    use scirs2_graph::measures::pagerank_centrality;
+                    pagerank_centrality(graph, 0.85, 1e-8)
                 });
 
             match result {
@@ -512,6 +520,7 @@ fn create_pagerank_validation_test() -> AlgorithmValidationTest {
 }
 
 /// Create centrality measures validation test
+#[allow(dead_code)]
 fn create_centrality_validation_test() -> AlgorithmValidationTest {
     // Create a star graph for centrality testing
     let mut graph = Graph::new();
@@ -531,8 +540,8 @@ fn create_centrality_validation_test() -> AlgorithmValidationTest {
         advanced_implementation: |g, processor| {
             let result =
                 execute_with_enhanced_advanced(processor, g, "centrality_validation", |graph| {
-                    use scirs2_graph::algorithms::centrality::degree_centrality;
-                    degree_centrality(graph)
+                    use scirs2_graph::measures::{centrality, CentralityType};
+                    centrality(graph, CentralityType::Degree)
                 });
 
             match result {
@@ -553,6 +562,7 @@ fn create_centrality_validation_test() -> AlgorithmValidationTest {
 }
 
 /// Create shortest path validation test
+#[allow(dead_code)]
 fn create_shortest_path_validation_test() -> AlgorithmValidationTest {
     // Create a simple path graph
     let mut graph = Graph::new();
@@ -606,8 +616,24 @@ fn create_shortest_path_validation_test() -> AlgorithmValidationTest {
         advanced_implementation: |g, processor| {
             let result =
                 execute_with_enhanced_advanced(processor, g, "shortest_path_validation", |graph| {
-                    use scirs2_graph::algorithms::paths::shortest_path_dijkstra;
-                    shortest_path_dijkstra(graph, 0)
+                    use scirs2_graph::algorithms::shortest_path::dijkstra_path;
+                    use std::collections::HashMap;
+                    
+                    // Compute shortest paths from node 0 to all other nodes
+                    let mut distances = HashMap::new();
+                    let nodes: Vec<_> = graph.nodes().collect();
+                    
+                    for &target in &nodes {
+                        if target != 0 {
+                            if let Ok(Some(path)) = dijkstra_path(graph, &0, &target) {
+                                distances.insert(target, path.total_weight);
+                            }
+                        } else {
+                            distances.insert(0, Default::default()); // Distance to self is 0
+                        }
+                    }
+                    
+                    Ok(distances)
                 });
 
             match result {
@@ -624,6 +650,7 @@ fn create_shortest_path_validation_test() -> AlgorithmValidationTest {
 }
 
 /// Create community detection validation test
+#[allow(dead_code)]
 fn create_community_detection_validation_test() -> AlgorithmValidationTest {
     // Create a graph with two obvious communities
     let mut graph = Graph::new();
@@ -689,6 +716,7 @@ fn create_community_detection_validation_test() -> AlgorithmValidationTest {
 }
 
 /// Create connected components validation test
+#[allow(dead_code)]
 fn create_connected_components_validation_test() -> AlgorithmValidationTest {
     // Create a graph with multiple disconnected components
     let mut graph = Graph::new();
@@ -751,6 +779,7 @@ fn create_connected_components_validation_test() -> AlgorithmValidationTest {
 }
 
 /// Run comprehensive algorithm validation
+#[allow(dead_code)]
 fn run_algorithm_validation() -> Vec<AlgorithmValidationResult> {
     let tests = generate_algorithm_validation_tests();
     let mut results = Vec::new();
@@ -796,6 +825,7 @@ struct AlgorithmValidationResult {
 }
 
 /// Validate a single algorithm test
+#[allow(dead_code)]
 fn validate_algorithm(
     test: &AlgorithmValidationTest,
     processor: &mut UltrathinkProcessor,
@@ -838,6 +868,7 @@ fn validate_algorithm(
 }
 
 /// Calculate accuracy between two validation outputs
+#[allow(dead_code)]
 fn calculate_validation_accuracy(
     reference: &ValidationOutput,
     optimized: &ValidationOutput,
@@ -879,6 +910,7 @@ fn calculate_validation_accuracy(
 }
 
 /// Generate comprehensive algorithm validation report
+#[allow(dead_code)]
 fn generate_algorithm_validation_report(results: &[AlgorithmValidationResult]) -> String {
     let mut report = String::new();
     report.push_str("=== Comprehensive Algorithm Validation Report ===\n\n");
@@ -1046,7 +1078,7 @@ mod tests {
 
         // Check that we have results for all processor types
         let processor_names: std::collections::HashSet<_> =
-            results.iter().map(|r| &r.processor_name).collect();
+            results.iter().map(|r| r.processor_name.as_str()).collect();
         assert!(processor_names.contains("enhanced"));
         assert!(processor_names.contains("performance"));
         assert!(processor_names.contains("memory_efficient"));
@@ -1086,6 +1118,7 @@ mod tests {
 
 /// Integration test that can be run manually
 #[test]
+#[allow(dead_code)]
 fn integration_test_numerical_validation() {
     let results = run_comprehensive_validation();
     let report = generate_validation_report(&results);

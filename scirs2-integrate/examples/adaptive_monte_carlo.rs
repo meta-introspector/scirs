@@ -6,6 +6,7 @@ use scirs2_integrate::qmc::{qmc_quad, Halton, QRNGEngine, Sobol};
 use std::f64::consts::PI;
 
 /// Function with a singularity at (1,0) for demonstrating adaptive integration
+#[allow(dead_code)]
 fn singular_function(x: ArrayView1<f64>) -> f64 {
     // Function with singularity at x=1, y=0
     let r_squared = (x[0] - 1.0).powi(2) + x[1].powi(2);
@@ -19,11 +20,13 @@ fn singular_function(x: ArrayView1<f64>) -> f64 {
 }
 
 /// Heavy-tailed function that benefits from adaptive techniques
+#[allow(dead_code)]
 fn heavy_tailed_function(x: ArrayView1<f64>) -> f64 {
     1.0 / (1.0 + 10.0 * (x[0] - 0.5).powi(2) + 10.0 * (x[1] - 0.5).powi(2)).powi(3)
 }
 
 /// Adaptive importance sampling using domain decomposition
+#[allow(dead_code)]
 fn adaptive_importance_sampling<F>(
     f: F,
     ranges: &[(f64, f64)],
@@ -244,6 +247,7 @@ where
 }
 
 /// Adaptive QMC integration using domain decomposition
+#[allow(dead_code)]
 fn adaptive_qmc<F>(
     f: F,
     ranges: &[(f64, f64)],
@@ -491,6 +495,7 @@ where
     (total_integral, total_error)
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("Advanced Adaptive Monte Carlo Integration Examples");
     println!("================================================\n");

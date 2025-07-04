@@ -251,6 +251,7 @@ impl MemoryOptimizer {
 }
 
 /// Check if a given operation fits in GPU memory
+#[allow(dead_code)]
 pub fn check_memory_requirements(
     context: &dyn GpuContext,
     matrices_sizes: &[(usize, usize)],
@@ -266,6 +267,7 @@ pub fn check_memory_requirements(
 }
 
 /// Suggest optimal memory strategy for given problem characteristics
+#[allow(dead_code)]
 pub fn suggest_memory_strategy(
     problem_size: usize,
     available_memory: usize,

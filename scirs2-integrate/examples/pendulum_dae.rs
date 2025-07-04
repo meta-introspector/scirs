@@ -3,6 +3,7 @@ use scirs2_integrate::dae::{solve_semi_explicit_dae, DAEOptions};
 use scirs2_integrate::ode::ODEMethod;
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Pendulum as a DAE System Example");
     println!("================================\n");
@@ -158,6 +159,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Analyze the period of the pendulum by detecting zero crossings
+#[allow(dead_code)]
 fn analyze_period(t: &[f64], x: &[Array1<f64>]) {
     let mut crossings = Vec::new();
 

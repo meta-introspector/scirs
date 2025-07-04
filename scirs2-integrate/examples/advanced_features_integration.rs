@@ -26,6 +26,7 @@ use scirs2_integrate::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("=== Advanced Features Integration Example ===\n");
 
@@ -55,6 +56,7 @@ fn main() -> IntegrateResult<()> {
 }
 
 /// Demonstrate Advanced Adaptive Mesh Refinement
+#[allow(dead_code)]
 fn demonstrate_advanced_amr(profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
     profiler.start_phase("amr_demonstration");
     println!("1. Advanced AMR Demonstration");
@@ -130,6 +132,7 @@ fn demonstrate_advanced_amr(profiler: &mut PerformanceProfiler) -> IntegrateResu
 }
 
 /// Demonstrate advanced error estimation techniques
+#[allow(dead_code)]
 fn demonstrate_error_estimation(profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
     profiler.start_phase("error_estimation_demo");
     println!("\n2. Advanced Error Estimation Demonstration");
@@ -176,6 +179,7 @@ fn demonstrate_error_estimation(profiler: &mut PerformanceProfiler) -> Integrate
 }
 
 /// Demonstrate parallel optimization with vectorized operations
+#[allow(dead_code)]
 fn demonstrate_parallel_optimization(profiler: &mut PerformanceProfiler) -> IntegrateResult<()> {
     profiler.start_phase("parallel_optimization_demo");
     println!("\n3. Parallel Optimization Demonstration");
@@ -236,6 +240,7 @@ fn demonstrate_parallel_optimization(profiler: &mut PerformanceProfiler) -> Inte
 }
 
 /// Initial temperature distribution for heat equation
+#[allow(dead_code)]
 fn initial_temperature(x: f64, y: f64) -> f64 {
     // Gaussian heat source
     let center_x = 0.5;
@@ -250,6 +255,7 @@ fn initial_temperature(x: f64, y: f64) -> f64 {
 }
 
 /// Analytical solution for heat equation (simplified)
+#[allow(dead_code)]
 fn heat_equation_solution(x: f64, y: f64, t: f64) -> f64 {
     // Simplified analytical solution for demonstration
     let center_x = 0.5;

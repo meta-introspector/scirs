@@ -127,13 +127,13 @@ impl PlotlyInteractiveBackend {
                     let y = current_y[0];
 
                     // Collect metrics
-                    let mut metrics_text = format!("Threshold: {}", threshold);
+                    let mut metrics_text = format!("Threshold: {threshold}");
 
                     for (key, value) in &data.auxiliary_metadata {
                         if key.starts_with("metric_") {
                             let metric_name = key.strip_prefix("metric_").unwrap_or(key);
                             if metric_name != "threshold" {
-                                metrics_text.push_str(&format!("<br>{}: {}", metric_name, value));
+                                metrics_text.push_str(&format!("<br>{metric_name}: {value}"));
                             }
                         }
                     }

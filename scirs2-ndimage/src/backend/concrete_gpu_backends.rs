@@ -763,6 +763,7 @@ __kernel void convolution_2d(
 }
 
 /// Factory function to create appropriate GPU backend
+#[allow(dead_code)]
 pub fn create_gpu_backend() -> NdimageResult<Box<dyn GpuBackend>> {
     #[cfg(feature = "cuda")]
     {

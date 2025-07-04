@@ -117,6 +117,7 @@ pub struct CrossValidationMetrics {
 /// # Returns
 ///
 /// * Comprehensive validation results
+#[allow(dead_code)]
 pub fn validate_multitaper_comprehensive(
     test_signals: &TestSignalConfig,
     tolerance: f64,
@@ -237,6 +238,7 @@ impl Default for TestSignalConfig {
 }
 
 /// Validate DPSS implementation comprehensively
+#[allow(dead_code)]
 fn validate_dpss_comprehensive(n: usize, nw: f64, k: usize) -> SignalResult<DpssValidationMetrics> {
     // Basic validation using existing dpss implementation
     let (tapers, eigenvalues) = super::windows::dpss(n, nw, k, true)?;
@@ -322,7 +324,7 @@ fn validate_spectral_accuracy(
         let noise_std = 1.0 / snr_linear.sqrt();
         let noisy_signal: Vec<f64> = signal
             .iter()
-            .map(|&s| s + noise_std * rng.gen_range(-1.0..1.0))
+            .map(|&s| s + noise_std * rng.random_range(-1.0..1.0))
             .collect();
 
         let result = enhanced_pmtm(&noisy_signal, &config)?;
@@ -363,6 +365,7 @@ fn validate_spectral_accuracy(
 }
 
 /// Enhanced numerical stability testing with comprehensive edge cases and SIMD validation
+#[allow(dead_code)]
 fn test_numerical_stability_enhanced() -> SignalResult<NumericalStabilityMetrics> {
     let mut numerical_issues = 0;
     let mut condition_numbers = Vec::new();
@@ -521,6 +524,7 @@ fn test_numerical_stability_enhanced() -> SignalResult<NumericalStabilityMetrics
 }
 
 /// Benchmark performance
+#[allow(dead_code)]
 fn benchmark_performance(test_signals: &TestSignalConfig) -> SignalResult<PerformanceMetrics> {
     // Generate test signal
     let signal: Vec<f64> = (0..test_signals.n).map(|i| (i as f64).sin()).collect();
@@ -586,6 +590,7 @@ fn benchmark_performance(test_signals: &TestSignalConfig) -> SignalResult<Perfor
 }
 
 /// Cross-validate with reference implementation
+#[allow(dead_code)]
 fn cross_validate_with_reference(
     test_signals: &TestSignalConfig,
     tolerance: f64,
@@ -653,6 +658,7 @@ fn cross_validate_with_reference(
 
 // Helper functions
 
+#[allow(dead_code)]
 fn estimate_frequency_resolution(frequencies: &[f64], psd: &[f64], peak_idx: usize) -> f64 {
     let _peak_power = psd[peak_idx];
     let half_power = _peak_power / 2.0;
@@ -671,6 +677,7 @@ fn estimate_frequency_resolution(frequencies: &[f64], psd: &[f64], peak_idx: usi
     frequencies[right_idx] - frequencies[left_idx]
 }
 
+#[allow(dead_code)]
 fn estimate_spectral_leakage(psd: &[f64], peak_idx: usize) -> f64 {
     let peak_power = psd[peak_idx];
     let total_power: f64 = psd.iter().sum();
@@ -683,6 +690,7 @@ fn estimate_spectral_leakage(psd: &[f64], peak_idx: usize) -> f64 {
     (total_power - lobe_power) / total_power
 }
 
+#[allow(dead_code)]
 fn estimate_condition_number(signal: &[f64]) -> f64 {
     let max_val = signal.iter().cloned().fold(0.0, f64::max);
     let min_val = signal
@@ -693,6 +701,7 @@ fn estimate_condition_number(signal: &[f64]) -> f64 {
     max_val / min_val
 }
 
+#[allow(dead_code)]
 fn estimate_memory_efficiency(n: usize, k: usize) -> f64 {
     // Estimate memory efficiency based on problem size
     // Larger problems tend to be less memory efficient
@@ -704,6 +713,7 @@ fn estimate_memory_efficiency(n: usize, k: usize) -> f64 {
     base_efficiency * size_factor
 }
 
+#[allow(dead_code)]
 fn calculate_correlation(x: &[f64], y: &[f64]) -> f64 {
     let n = x.len().min(y.len()) as f64;
     let mean_x = x.iter().sum::<f64>() / n;
@@ -724,6 +734,7 @@ fn calculate_correlation(x: &[f64], y: &[f64]) -> f64 {
     cov / (var_x * var_y).sqrt()
 }
 
+#[allow(dead_code)]
 fn validate_confidence_intervals(
     signal: &[f64],
     config: &MultitaperConfig,
@@ -738,7 +749,7 @@ fn validate_confidence_intervals(
         // Add noise
         let noisy_signal: Vec<f64> = signal
             .iter()
-            .map(|&s| s + 0.1 * rng.gen_range(-1.0..1.0))
+            .map(|&s| s + 0.1 * rng.random_range(-1.0..1.0))
             .collect();
 
         let result = enhanced_pmtm(&noisy_signal, config)?;
@@ -753,6 +764,7 @@ fn validate_confidence_intervals(
     Ok(coverage_count as f64 / n_trials as f64)
 }
 
+#[allow(dead_code)]
 fn calculate_overall_score(
     dpss: &DpssValidationMetrics,
     spectral: &SpectralAccuracyMetrics,
@@ -804,6 +816,7 @@ fn calculate_overall_score(
 }
 
 /// Generate test signals for comprehensive validation
+#[allow(dead_code)]
 pub fn generate_test_signal(
     config: &TestSignalConfig,
     signal_type: TestSignalType,
@@ -848,7 +861,7 @@ pub fn generate_test_signal(
 
         TestSignalType::WhiteNoise => {
             // White Gaussian noise
-            (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect()
+            (0..n).map(|_| rng.random_range(-1.0..1.0)).collect()
         }
 
         TestSignalType::ColoredNoise => {
@@ -860,7 +873,7 @@ pub fn generate_test_signal(
             let mut prev2 = 0.0;
 
             for i in 0..n {
-                let innovation = rng.gen_range(-1.0..1.0);
+                let innovation = rng.random_range(-1.0..1.0);
                 signal[i] = a1 * prev1 + a2 * prev2 + innovation;
                 prev2 = prev1;
                 prev1 = signal[i];
@@ -912,7 +925,7 @@ pub fn generate_test_signal(
 
         Ok(signal
             .into_iter()
-            .map(|s| s + noise_std * rng.gen_range(-1.0..1.0))
+            .map(|s| s + noise_std * rng.random_range(-1.0..1.0))
             .collect())
     } else {
         Ok(signal)
@@ -920,6 +933,7 @@ pub fn generate_test_signal(
 }
 
 /// Enhanced spectral accuracy validation with multiple signal types
+#[allow(dead_code)]
 fn validate_spectral_accuracy_enhanced(
     test_signals: &TestSignalConfig,
     tolerance: f64,
@@ -958,6 +972,7 @@ fn validate_spectral_accuracy_enhanced(
 }
 
 /// Validate spectral accuracy for a single signal type
+#[allow(dead_code)]
 fn validate_single_signal_type(
     test_signals: &TestSignalConfig,
     signal_type: TestSignalType,
@@ -1006,6 +1021,7 @@ fn validate_single_signal_type(
 }
 
 /// Calculate metrics for sinusoidal signals
+#[allow(dead_code)]
 fn calculate_sinusoidal_metrics(
     psd_estimates: &[Vec<f64>],
     test_signals: &TestSignalConfig,
@@ -1046,6 +1062,7 @@ fn calculate_sinusoidal_metrics(
 }
 
 /// Calculate metrics for noise signals
+#[allow(dead_code)]
 fn calculate_noise_metrics(
     psd_estimates: &[Vec<f64>],
     is_white: bool,
@@ -1093,6 +1110,7 @@ fn calculate_noise_metrics(
 }
 
 /// Calculate general metrics for other signal types
+#[allow(dead_code)]
 fn calculate_general_metrics(psd_estimates: &[Vec<f64>]) -> SignalResult<SpectralAccuracyMetrics> {
     let n_freqs = psd_estimates[0].len();
     let mut total_variance = 0.0;
@@ -1118,6 +1136,7 @@ fn calculate_general_metrics(psd_estimates: &[Vec<f64>]) -> SignalResult<Spectra
 }
 
 /// Enhanced cross-validation with multiple reference methods
+#[allow(dead_code)]
 fn cross_validate_with_multiple_references(
     test_signals: &TestSignalConfig,
     tolerance: f64,
@@ -1184,6 +1203,7 @@ fn cross_validate_with_multiple_references(
 }
 
 /// Compute relative errors between two PSD estimates
+#[allow(dead_code)]
 fn compute_relative_errors(ref_psd: &[f64], test_psd: &[f64]) -> Vec<f64> {
     ref_psd
         .iter()
@@ -1211,6 +1231,7 @@ fn compute_relative_errors(ref_psd: &[f64], test_psd: &[f64]) -> Vec<f64> {
 /// # Returns
 ///
 /// * Enhanced validation results with additional metrics
+#[allow(dead_code)]
 pub fn validate_multitaper_robustness(
     test_signals: &TestSignalConfig,
     tolerance: f64,
@@ -1373,6 +1394,7 @@ pub struct ConvergenceMetrics {
 }
 
 /// Validate extreme parameter cases
+#[allow(dead_code)]
 fn validate_extreme_case(config: &TestSignalConfig, tolerance: f64) -> SignalResult<f64> {
     // Generate a simple test signal
     let signal: Vec<f64> = (0..config.n)
@@ -1420,6 +1442,7 @@ fn validate_extreme_case(config: &TestSignalConfig, tolerance: f64) -> SignalRes
 }
 
 /// Validate numerical consistency across different implementations
+#[allow(dead_code)]
 fn validate_numerical_consistency(config: &TestSignalConfig, tolerance: f64) -> SignalResult<f64> {
     // Generate test signal
     let signal: Vec<f64> = (0..config.n)
@@ -1462,6 +1485,7 @@ fn validate_numerical_consistency(config: &TestSignalConfig, tolerance: f64) -> 
 }
 
 /// Validate memory scaling characteristics
+#[allow(dead_code)]
 fn validate_memory_scaling(config: &TestSignalConfig) -> SignalResult<f64> {
     // Test different signal sizes and measure memory efficiency
     let sizes = vec![1024, 4096, 16384];
@@ -1501,6 +1525,7 @@ fn validate_memory_scaling(config: &TestSignalConfig) -> SignalResult<f64> {
 }
 
 /// Analyze performance scaling characteristics
+#[allow(dead_code)]
 fn analyze_performance_scaling(
     config: &TestSignalConfig,
 ) -> SignalResult<PerformanceScalingMetrics> {
@@ -1510,6 +1535,7 @@ fn analyze_performance_scaling(
 }
 
 /// Test convergence stability of adaptive algorithms
+#[allow(dead_code)]
 fn test_convergence_stability(
     config: &TestSignalConfig,
     _tolerance: f64,
@@ -1556,6 +1582,7 @@ fn test_convergence_stability(
 }
 
 /// Test robustness against various noise conditions
+#[allow(dead_code)]
 fn test_noise_robustness(config: &TestSignalConfig, _tolerance: f64) -> SignalResult<f64> {
     let noise_levels = vec![0.1, 0.5, 1.0, 2.0]; // Different SNR conditions
     let mut robustness_scores = Vec::new();
@@ -1605,6 +1632,7 @@ fn test_noise_robustness(config: &TestSignalConfig, _tolerance: f64) -> SignalRe
 }
 
 /// Validate SIMD operations used in multitaper implementation
+#[allow(dead_code)]
 pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult<f64> {
     let mut simd_score = 100.0;
     let mut validation_errors = Vec::new();
@@ -1795,6 +1823,7 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
 }
 
 /// Enhanced validation with SIMD performance testing
+#[allow(dead_code)]
 pub fn validate_multitaper_with_simd(
     test_signals: &TestSignalConfig,
     tolerance: f64,
@@ -1819,6 +1848,7 @@ pub fn validate_multitaper_with_simd(
 
 /// Enhanced numerical precision validation for multitaper methods
 /// Tests edge cases and numerical stability across different parameter ranges
+#[allow(dead_code)]
 pub fn validate_numerical_precision_enhanced(test_signals: &TestSignalConfig) -> SignalResult<f64> {
     let mut total_score = 0.0;
     let mut test_count = 0;
@@ -1907,6 +1937,7 @@ pub fn validate_numerical_precision_enhanced(test_signals: &TestSignalConfig) ->
 }
 
 /// Validate spectral estimation consistency across different parameter combinations
+#[allow(dead_code)]
 pub fn validate_parameter_consistency(test_signals: &TestSignalConfig) -> SignalResult<f64> {
     let test_signal: Vec<f64> = (0..test_signals.n)
         .map(|i| {
@@ -1969,6 +2000,7 @@ pub fn validate_parameter_consistency(test_signals: &TestSignalConfig) -> Signal
 }
 
 /// Helper function to validate expected spectral peaks
+#[allow(dead_code)]
 fn validate_expected_peaks(
     result: &EnhancedMultitaperResult,
     expected_freqs: &[f64],
@@ -2007,6 +2039,7 @@ fn validate_expected_peaks(
 }
 
 /// Comprehensive validation runner that includes all enhanced tests
+#[allow(dead_code)]
 pub fn run_comprehensive_enhanced_validation(
     test_signals: &TestSignalConfig,
     tolerance: f64,
@@ -2047,6 +2080,7 @@ pub fn run_comprehensive_enhanced_validation(
 }
 
 /// Generate recommendations based on validation results
+#[allow(dead_code)]
 fn generate_recommendations(
     overall_score: f64,
     precision_score: f64,

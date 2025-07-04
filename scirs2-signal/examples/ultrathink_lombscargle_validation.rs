@@ -8,6 +8,7 @@ use scirs2_signal::{
     generate_ultrathink_lombscargle_report, run_ultrathink_lombscargle_validation,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Enhanced Lomb-Scargle Validation Suite");
     println!("==================================================");

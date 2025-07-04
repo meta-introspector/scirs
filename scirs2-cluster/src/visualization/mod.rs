@@ -273,6 +273,7 @@ pub struct ClusterBoundary {
 /// # Returns
 ///
 /// * `Result<ScatterPlot2D>` - 2D scatter plot data
+#[allow(dead_code)]
 pub fn create_scatter_plot_2d<F: Float + FromPrimitive + Debug>(
     data: ArrayView2<F>,
     labels: &Array1<i32>,
@@ -362,6 +363,7 @@ pub fn create_scatter_plot_2d<F: Float + FromPrimitive + Debug>(
 /// # Returns
 ///
 /// * `Result<ScatterPlot3D>` - 3D scatter plot data
+#[allow(dead_code)]
 pub fn create_scatter_plot_3d<F: Float + FromPrimitive + Debug>(
     data: ArrayView2<F>,
     labels: &Array1<i32>,
@@ -440,6 +442,7 @@ pub fn create_scatter_plot_3d<F: Float + FromPrimitive + Debug>(
 }
 
 /// Apply dimensionality reduction for 2D visualization
+#[allow(dead_code)]
 fn apply_dimensionality_reduction_2d<F: Float + FromPrimitive + Debug>(
     data: ArrayView2<F>,
     method: DimensionalityReduction,
@@ -474,6 +477,7 @@ fn apply_dimensionality_reduction_2d<F: Float + FromPrimitive + Debug>(
 }
 
 /// Apply dimensionality reduction for 3D visualization
+#[allow(dead_code)]
 fn apply_dimensionality_reduction_3d<F: Float + FromPrimitive + Debug>(
     data: ArrayView2<F>,
     method: DimensionalityReduction,
@@ -505,6 +509,7 @@ fn apply_dimensionality_reduction_3d<F: Float + FromPrimitive + Debug>(
 }
 
 /// Apply PCA for 2D visualization
+#[allow(dead_code)]
 fn apply_pca_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     let n_samples = data.nrows();
     let n_features = data.ncols();
@@ -532,6 +537,7 @@ fn apply_pca_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
 }
 
 /// Apply PCA for 3D visualization
+#[allow(dead_code)]
 fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
     let n_samples = data.nrows();
     let n_features = data.ncols();
@@ -560,22 +566,26 @@ fn apply_pca_3d(data: &Array2<f64>) -> Result<Array2<f64>> {
 
 /// Simplified implementation of other dimensionality reduction methods
 /// These would ideally use proper implementations from specialized libraries
+#[allow(dead_code)]
 fn apply_tsne_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     // For now, fall back to PCA
     apply_pca_2d(data)
 }
 
+#[allow(dead_code)]
 fn apply_umap_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     // For now, fall back to PCA
     apply_pca_2d(data)
 }
 
+#[allow(dead_code)]
 fn apply_mds_2d(data: &Array2<f64>) -> Result<Array2<f64>> {
     // For now, fall back to PCA
     apply_pca_2d(data)
 }
 
 /// Compute top eigenvectors using power iteration
+#[allow(dead_code)]
 fn compute_top_eigenvectors(
     matrix: &Array2<f64>,
     num_components: usize,
@@ -616,6 +626,7 @@ fn compute_top_eigenvectors(
 }
 
 /// Generate cluster colors based on color scheme
+#[allow(dead_code)]
 fn generate_cluster_colors(labels: &[i32], scheme: ColorScheme) -> HashMap<i32, String> {
     let mut colors = HashMap::new();
 
@@ -655,6 +666,7 @@ fn generate_cluster_colors(labels: &[i32], scheme: ColorScheme) -> HashMap<i32, 
 }
 
 /// Calculate 2D plot bounds
+#[allow(dead_code)]
 fn calculate_2d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64) {
     if data.is_empty() {
         return (0.0, 1.0, 0.0, 1.0);
@@ -685,6 +697,7 @@ fn calculate_2d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64) {
 }
 
 /// Calculate 3D plot bounds
+#[allow(dead_code)]
 fn calculate_3d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64, f64, f64) {
     if data.is_empty() {
         return (0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
@@ -723,6 +736,7 @@ fn calculate_3d_bounds(data: &Array2<f64>) -> (f64, f64, f64, f64, f64, f64) {
 }
 
 /// Create legend entries
+#[allow(dead_code)]
 fn create_legend(
     labels: &[i32],
     colors: &HashMap<i32, String>,

@@ -234,6 +234,7 @@ impl OctreeQuantizer {
 }
 
 /// Calculate squared distance between two colors
+#[allow(dead_code)]
 fn color_distance_squared(r1: u8, g1: u8, b1: u8, r2: u8, g2: u8, b2: u8) -> u32 {
     let dr = r1 as i32 - r2 as i32;
     let dg = g1 as i32 - g2 as i32;
@@ -275,6 +276,7 @@ fn color_distance_squared(r1: u8, g1: u8, b1: u8, r2: u8, g2: u8, b2: u8) -> u32
 /// assert_eq!(quantized.width(), 4);
 /// assert_eq!(quantized.height(), 4);
 /// ```
+#[allow(dead_code)]
 pub fn octree_quantize(img: &DynamicImage, max_colors: usize) -> Result<DynamicImage> {
     let rgb = img.to_rgb8();
     let (width, height) = rgb.dimensions();
@@ -311,6 +313,7 @@ pub fn octree_quantize(img: &DynamicImage, max_colors: usize) -> Result<DynamicI
 /// # Returns
 ///
 /// * Result containing the quantized image
+#[allow(dead_code)]
 pub fn adaptive_octree_quantize(
     img: &DynamicImage,
     max_colors: usize,
@@ -366,6 +369,7 @@ pub fn adaptive_octree_quantize(
 /// # Returns
 ///
 /// * Vector of RGB colors
+#[allow(dead_code)]
 pub fn extract_palette(img: &DynamicImage, palette_size: usize) -> Vec<[u8; 3]> {
     let rgb = img.to_rgb8();
 

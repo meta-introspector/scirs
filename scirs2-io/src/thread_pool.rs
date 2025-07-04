@@ -405,16 +405,19 @@ impl ThreadPool {
 static GLOBAL_THREAD_POOL: std::sync::OnceLock<ThreadPool> = std::sync::OnceLock::new();
 
 /// Initialize the global thread pool
+#[allow(dead_code)]
 pub fn init_global_thread_pool(config: ThreadPoolConfig) {
     let _ = GLOBAL_THREAD_POOL.set(ThreadPool::new(config));
 }
 
 /// Get a reference to the global thread pool
+#[allow(dead_code)]
 pub fn global_thread_pool() -> &'static ThreadPool {
     GLOBAL_THREAD_POOL.get_or_init(|| ThreadPool::new(ThreadPoolConfig::default()))
 }
 
 /// Execute a task on the global thread pool
+#[allow(dead_code)]
 pub fn execute<F>(work_type: WorkType, task: F) -> Result<()>
 where
     F: FnOnce() -> Result<()> + Send + 'static,
@@ -423,6 +426,7 @@ where
 }
 
 /// Utility function to determine optimal thread pool configuration based on system
+#[allow(dead_code)]
 pub fn optimal_config() -> ThreadPoolConfig {
     let available_cores = thread::available_parallelism()
         .map(|n| n.get())

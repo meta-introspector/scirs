@@ -29,6 +29,7 @@ use ndarray::{Array, ArrayView, Axis, Dimension, ShapeError};
 /// assert_eq!(b[[0, 0]], 1);
 /// assert_eq!(b[[3, 0]], 4);
 /// ```
+#[allow(dead_code)]
 pub fn reshape<D1, D2, T>(array: ArrayView<T, D1>, shape: D2) -> Result<Array<T, D2::Dim>, &'static str>
 where
     D1: Dimension,
@@ -71,6 +72,7 @@ where
 /// let c = stack(&[a.view(), b.view()], Axis(0)).unwrap();
 /// assert_eq!(c.shape(), &[4, 2]);
 /// ```
+#[allow(dead_code)]
 pub fn stack<D, T>(arrays: &[ArrayView<T, D>], axis: Axis) -> Result<Array<T, D>, &'static str>
 where
     D: Dimension,
@@ -157,6 +159,7 @@ where
 /// assert_eq!(b[[0, 0]], 1);
 /// assert_eq!(b[[0, 1]], 4);
 /// ```
+#[allow(dead_code)]
 pub fn swapaxes<D, T>(array: ArrayView<T, D>, axis1: usize, axis2: usize) -> Result<Array<T, D>, &'static str>
 where
     D: Dimension,
@@ -202,6 +205,7 @@ where
 /// assert_eq!(result[0].shape(), &[2, 2]);
 /// assert_eq!(result[1].shape(), &[2, 2]);
 /// ```
+#[allow(dead_code)]
 pub fn split<D, T>(
     array: ArrayView<T, D>,
     indices: &[usize],

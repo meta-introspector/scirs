@@ -14,6 +14,7 @@ use scirs2_integrate::ode::{
     ODEMethod, ODEOptions, ODEOptionsWithEvents,
 };
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("=== Bead on Rotating Wire with Event Detection ===");
 

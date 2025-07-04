@@ -52,6 +52,7 @@ use scirs2_vision::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("🚀 Scirs2-Vision Ultrathink Mode Comprehensive Demonstration");
     println!("============================================================");
@@ -130,7 +131,7 @@ fn main() -> Result<()> {
 
         let reasoning_result = reasoning_engine.process_query(&query, &scene_analysis, None)?;
 
-        println!("❓ Question: {}", question);
+        println!("❓ Question: {question}");
         println!("💡 Answer: {:?}", reasoning_result.answer);
         println!("🎯 Confidence: {:.2}", reasoning_result.confidence);
         println!(
@@ -205,11 +206,8 @@ fn main() -> Result<()> {
             None
         };
 
-        let realtime_result = monitor_activities_realtime(
-            &frame.view(),
-            &scene_analyses[i],
-            history.as_ref().map(|h| h.as_slice()),
-        )?;
+        let realtime_result =
+            monitor_activities_realtime(&frame.view(), &scene_analyses[i], history.as_deref())?;
 
         println!(
             "  Frame {}: {} activities detected",
@@ -394,7 +392,7 @@ fn main() -> Result<()> {
     let (quantum_processed_frame, quantum_decision) =
         quantum_processor.process_quantum_frame(test_frame)?;
     println!("✓ Quantum processing completed");
-    println!("  - Quantum decision: {:?}", quantum_decision);
+    println!("  - Quantum decision: {quantum_decision:?}");
     println!("  - Frame processed with quantum optimization");
     println!(
         "  - Output frame dimensions: {}x{}",
@@ -542,6 +540,7 @@ fn main() -> Result<()> {
 }
 
 /// Create a sequence of test images for demonstration
+#[allow(dead_code)]
 fn create_test_image_sequence() -> Result<Vec<Array3<f32>>> {
     let mut images = Vec::new();
 
@@ -570,6 +569,7 @@ fn create_test_image_sequence() -> Result<Vec<Array3<f32>>> {
 }
 
 /// Create camera calibration matrix for SLAM
+#[allow(dead_code)]
 fn create_camera_calibration() -> Array2<f64> {
     let mut calibration = Array2::<f64>::zeros((3, 3));
 
@@ -584,6 +584,7 @@ fn create_camera_calibration() -> Array2<f64> {
 }
 
 /// Estimate memory usage for benchmarking
+#[allow(dead_code)]
 fn estimate_memory_usage() -> f64 {
     // Rough estimate based on typical usage patterns
     // Scene understanding: ~50MB

@@ -126,6 +126,7 @@ pub struct CrossPlatformValidator {
     /// Current platform information
     platform_info: PlatformInfo,
     /// Validation context
+    #[allow(dead_code)]
     context: ValidationContext,
     /// Cached validation results for performance
     cache: HashMap<String, ValidationResult>,
@@ -740,6 +741,7 @@ impl Default for CrossPlatformValidator {
 
 /// Convenience functions for common cross-platform validations
 /// Validate that a path is appropriate for the current platform
+#[allow(dead_code)]
 pub fn validate_path_cross_platform(path: &str) -> CoreResult<()> {
     let mut validator = CrossPlatformValidator::new()?;
     let result = validator.validate_file_path(path);
@@ -755,6 +757,7 @@ pub fn validate_path_cross_platform(path: &str) -> CoreResult<()> {
 }
 
 /// Validate SIMD capability for an operation
+#[allow(dead_code)]
 pub fn validate_simd_capability(operation: &str, vector_size: usize) -> CoreResult<()> {
     let mut validator = CrossPlatformValidator::new()?;
     let result = validator.validate_simd_operation(operation, vector_size);
@@ -770,6 +773,7 @@ pub fn validate_simd_capability(operation: &str, vector_size: usize) -> CoreResu
 }
 
 /// Get platform information
+#[allow(dead_code)]
 pub fn get_platform_info() -> CoreResult<PlatformInfo> {
     CrossPlatformValidator::detect_platform_info()
 }

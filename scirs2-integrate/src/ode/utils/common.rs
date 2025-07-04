@@ -47,6 +47,7 @@ pub enum ODEType {
 }
 
 /// Calculate a safe step size based on function derivatives
+#[allow(dead_code)]
 pub fn estimate_initial_step<F, Func>(
     f: &Func,
     t: F,
@@ -109,6 +110,7 @@ where
 }
 
 /// Calculate finite difference approximation of the jacobian matrix
+#[allow(dead_code)]
 pub fn finite_difference_jacobian<F, Func>(
     f: &Func,
     t: F,
@@ -147,6 +149,7 @@ where
 }
 
 /// Apply a scaled norm to an array
+#[allow(dead_code)]
 pub fn scaled_norm<F: IntegrateFloat>(v: &Array1<F>, scale: &Array1<F>) -> F {
     let mut max_err = F::zero();
     for i in 0..v.len() {
@@ -157,6 +160,7 @@ pub fn scaled_norm<F: IntegrateFloat>(v: &Array1<F>, scale: &Array1<F>) -> F {
 }
 
 /// Calculate scaling factors for error control
+#[allow(dead_code)]
 pub fn calculate_error_weights<F: IntegrateFloat>(y: &Array1<F>, atol: F, rtol: F) -> Array1<F> {
     let mut weights = Array1::<F>::zeros(y.len());
     for i in 0..y.len() {
@@ -166,6 +170,7 @@ pub fn calculate_error_weights<F: IntegrateFloat>(y: &Array1<F>, atol: F, rtol: 
 }
 
 /// Solve a linear system Ax = b using Gaussian elimination with partial pivoting
+#[allow(dead_code)]
 pub fn solve_linear_system<F: IntegrateFloat>(
     a: &Array2<F>,
     b: &Array1<F>,
@@ -243,6 +248,7 @@ pub fn solve_linear_system<F: IntegrateFloat>(
 }
 
 /// Extrapolate solution values for use as initial guess
+#[allow(dead_code)]
 pub fn extrapolate<F: IntegrateFloat>(
     times: &[F],
     values: &[Array1<F>],

@@ -103,6 +103,7 @@ impl Default for CalibrationConfig {
 /// # Returns
 ///
 /// * Calibrated quantization parameters
+#[allow(dead_code)]
 pub fn calibrate_matrix<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -198,6 +199,7 @@ where
 /// # Returns
 ///
 /// * Calibrated quantization parameters
+#[allow(dead_code)]
 pub fn calibrate_vector<F>(
     vector: &ArrayView1<F>,
     bits: u8,
@@ -247,6 +249,7 @@ where
 /// # Returns
 ///
 /// Calibration configuration optimized for neural network weights
+#[allow(dead_code)]
 pub fn get_weight_calibration_config(_bits: u8, aggressive: bool) -> CalibrationConfig {
     if aggressive {
         // More aggressive calibration - clips outliers more
@@ -283,6 +286,7 @@ pub fn get_weight_calibration_config(_bits: u8, aggressive: bool) -> Calibration
 /// # Returns
 ///
 /// Calibration configuration optimized for neural network activations
+#[allow(dead_code)]
 pub fn get_activation_calibration_config(
     _bits: u8,
     non_negative: bool,
@@ -318,6 +322,7 @@ pub fn get_activation_calibration_config(
 // -------------------------------------------------------------------------
 
 /// Simple min-max calibration for matrices
+#[allow(dead_code)]
 fn calibrate_matrix_minmax<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -355,6 +360,7 @@ where
 }
 
 /// Moving average min-max calibration for matrices
+#[allow(dead_code)]
 fn calibrate_matrix_moving_average<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -403,6 +409,7 @@ where
 }
 
 /// Percentile-based calibration for matrices
+#[allow(dead_code)]
 fn calibrate_matrix_percentile<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -453,6 +460,7 @@ where
 }
 
 /// Entropy-based calibration for matrices
+#[allow(dead_code)]
 fn calibrate_matrix_entropy<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -477,6 +485,7 @@ where
 }
 
 /// MSE-based calibration for matrices
+#[allow(dead_code)]
 fn calibrate_matrix_mse<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -512,6 +521,7 @@ where
 // -------------------------------------------------------------------------
 
 /// Per-channel min-max calibration for matrices
+#[allow(dead_code)]
 fn calibrate_matrix_per_channel_minmax<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -599,6 +609,7 @@ where
 }
 
 /// Per-channel moving average calibration for matrices
+#[allow(dead_code)]
 fn calibrate_matrix_per_channel_moving_average<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -700,6 +711,7 @@ where
 }
 
 /// Per-channel percentile calibration for matrices
+#[allow(dead_code)]
 fn calibrate_matrix_per_channel_percentile<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -804,6 +816,7 @@ where
 }
 
 /// Per-channel entropy calibration for matrices
+#[allow(dead_code)]
 fn calibrate_matrix_per_channel_entropy<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -879,6 +892,7 @@ where
 }
 
 /// Per-channel MSE calibration for matrices
+#[allow(dead_code)]
 fn calibrate_matrix_per_channel_mse<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -958,6 +972,7 @@ where
 // -------------------------------------------------------------------------
 
 /// Simple min-max calibration for vectors
+#[allow(dead_code)]
 fn calibrate_vector_minmax<F>(
     vector: &ArrayView1<F>,
     bits: u8,
@@ -995,6 +1010,7 @@ where
 }
 
 /// Moving average min-max calibration for vectors
+#[allow(dead_code)]
 fn calibrate_vector_moving_average<F>(
     vector: &ArrayView1<F>,
     bits: u8,
@@ -1043,6 +1059,7 @@ where
 }
 
 /// Percentile-based calibration for vectors
+#[allow(dead_code)]
 fn calibrate_vector_percentile<F>(
     vector: &ArrayView1<F>,
     bits: u8,
@@ -1093,6 +1110,7 @@ where
 }
 
 /// Entropy-based calibration for vectors
+#[allow(dead_code)]
 fn calibrate_vector_entropy<F>(
     vector: &ArrayView1<F>,
     bits: u8,
@@ -1117,6 +1135,7 @@ where
 }
 
 /// MSE-based calibration for vectors
+#[allow(dead_code)]
 fn calibrate_vector_mse<F>(
     vector: &ArrayView1<F>,
     bits: u8,
@@ -1152,6 +1171,7 @@ where
 // -------------------------------------------------------------------------
 
 /// Find the minimum and maximum values in a matrix
+#[allow(dead_code)]
 pub fn find_min_max<F>(matrix: &ArrayView2<F>) -> (f32, f32)
 where
     F: num_traits::Float + num_traits::AsPrimitive<f32>,
@@ -1182,6 +1202,7 @@ where
 }
 
 /// Find the minimum and maximum values in a vector
+#[allow(dead_code)]
 pub fn find_min_max_vec<F>(vector: &ArrayView1<F>) -> (f32, f32)
 where
     F: num_traits::Float + num_traits::AsPrimitive<f32>,
@@ -1212,6 +1233,7 @@ where
 }
 
 /// Create a histogram of values from a matrix
+#[allow(dead_code)]
 fn create_histogram<F>(
     matrix: &ArrayView2<F>,
     min_val: f32,
@@ -1243,6 +1265,7 @@ where
 }
 
 /// Create a histogram of values from a vector
+#[allow(dead_code)]
 fn create_histogram_vec<F>(
     vector: &ArrayView1<F>,
     min_val: f32,
@@ -1274,6 +1297,7 @@ where
 }
 
 /// Optimize thresholds using KL divergence
+#[allow(dead_code)]
 fn optimize_thresholds_kl_divergence(
     histogram: &[usize],
     min_val: f32,
@@ -1380,6 +1404,7 @@ fn optimize_thresholds_kl_divergence(
 }
 
 /// Calculate KL divergence for symmetric quantization
+#[allow(dead_code)]
 fn calculate_kl_divergence_symmetric(
     distribution: &[f32],
     min_val: f32,
@@ -1428,6 +1453,7 @@ fn calculate_kl_divergence_symmetric(
 }
 
 /// Calculate KL divergence for asymmetric quantization
+#[allow(dead_code)]
 fn calculate_kl_divergence_asymmetric(
     distribution: &[f32],
     min_val: f32,
@@ -1478,6 +1504,7 @@ fn calculate_kl_divergence_asymmetric(
 }
 
 /// Optimize symmetric scale factor using MSE
+#[allow(dead_code)]
 fn optimize_symmetric_scale<F>(matrix: &ArrayView2<F>, bits: u8, base_scale: f32) -> f32
 where
     F: num_traits::Float + Debug + num_traits::AsPrimitive<f32> + num_traits::FromPrimitive,
@@ -1539,6 +1566,7 @@ where
 }
 
 /// Optimize symmetric scale factor for vectors using MSE
+#[allow(dead_code)]
 fn optimize_symmetric_scale_vec<F>(vector: &ArrayView1<F>, bits: u8, base_scale: f32) -> f32
 where
     F: num_traits::Float + Debug + num_traits::AsPrimitive<f32> + num_traits::FromPrimitive,
@@ -1600,6 +1628,7 @@ where
 }
 
 /// Optimize affine quantization parameters (scale and zero point) using MSE
+#[allow(dead_code)]
 fn optimize_affine_params<F>(
     matrix: &ArrayView2<F>,
     bits: u8,
@@ -1686,6 +1715,7 @@ where
 }
 
 /// Optimize affine quantization parameters for vectors using MSE
+#[allow(dead_code)]
 fn optimize_affine_params_vec<F>(
     vector: &ArrayView1<F>,
     bits: u8,
@@ -1772,6 +1802,7 @@ where
 }
 
 /// Create QuantizationParams from a min-max range
+#[allow(dead_code)]
 pub fn create_params_from_range(
     bits: u8,
     min_val: f32,
@@ -1803,6 +1834,7 @@ pub fn create_params_from_range(
 }
 
 /// Determine the appropriate data type based on bit width
+#[allow(dead_code)]
 pub fn determine_data_type(bits: u8) -> super::QuantizedDataType {
     use super::QuantizedDataType;
 

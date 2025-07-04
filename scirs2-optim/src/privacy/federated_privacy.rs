@@ -11,7 +11,7 @@ use super::noise_mechanisms::{
 };
 use super::{AccountingMethod, DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
 use crate::error::{OptimError, Result};
-use ndarray::{Array1, Array2, Dimension};
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
@@ -3901,7 +3901,6 @@ impl Default for CommunicationPrivacyConfig {
 /// Enhanced Secure Aggregation Protocols
 pub mod secure_aggregation_protocols {
     use super::*;
-    use ndarray_rand::rand::distributions::Distribution;
     use sha2::{Digest, Sha256};
     use std::time::Instant;
 

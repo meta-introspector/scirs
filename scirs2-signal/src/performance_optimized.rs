@@ -52,6 +52,7 @@ impl Default for OptimizationConfig {
 /// SIMD-optimized convolution for 1D signals
 ///
 /// Uses scirs2-core SIMD abstractions for efficient computation
+#[allow(dead_code)]
 pub fn simd_convolve_1d(
     signal: &Array1<f64>,
     kernel: &Array1<f64>,
@@ -141,6 +142,7 @@ pub fn simd_convolve_1d(
 /// Memory-optimized FFT-based convolution for large signals
 ///
 /// Uses overlap-save method with efficient memory management
+#[allow(dead_code)]
 pub fn memory_efficient_fft_convolve(
     signal: &Array1<f64>,
     kernel: &Array1<f64>,
@@ -208,6 +210,7 @@ pub fn memory_efficient_fft_convolve(
 /// Parallel and SIMD-optimized filtering
 ///
 /// Combines parallel processing with SIMD operations for maximum performance
+#[allow(dead_code)]
 pub fn optimized_filter(
     signal: &Array1<f64>,
     b: &Array1<f64>,
@@ -279,6 +282,7 @@ pub fn optimized_filter(
 }
 
 /// Direct filtering with SIMD optimization
+#[allow(dead_code)]
 fn filter_direct_simd(
     signal: &Array1<f64>,
     b: &Array1<f64>,
@@ -399,6 +403,7 @@ impl StreamingFilter {
 }
 
 /// Optimized 2D convolution with SIMD and cache-aware access
+#[allow(dead_code)]
 pub fn optimized_convolve_2d(
     image: &Array2<f64>,
     kernel: &Array2<f64>,
@@ -486,6 +491,7 @@ pub fn optimized_convolve_2d(
 }
 
 /// Process a tile independently for parallel processing
+#[allow(dead_code)]
 fn process_tile_simd_independent(
     image: &Array2<f64>,
     kernel: &Array2<f64>,
@@ -526,6 +532,7 @@ fn process_tile_simd_independent(
 }
 
 /// Process a tile with SIMD operations
+#[allow(dead_code)]
 fn process_tile_simd(
     image: &Array2<f64>,
     kernel: &Array2<f64>,
@@ -563,6 +570,7 @@ fn process_tile_simd(
 }
 
 /// Optimized wavelet transform with SIMD
+#[allow(dead_code)]
 pub fn optimized_dwt_1d(
     signal: &Array1<f64>,
     wavelet: Wavelet,
@@ -602,6 +610,7 @@ pub fn optimized_dwt_1d(
 }
 
 /// SIMD-optimized single level decomposition
+#[allow(dead_code)]
 fn decompose_level_simd(
     signal: &Array1<f64>,
     filters: &WaveletFilters,
@@ -644,6 +653,7 @@ fn decompose_level_simd(
 }
 
 /// Standard single level decomposition
+#[allow(dead_code)]
 fn decompose_level_standard(
     signal: &Array1<f64>,
     filters: &WaveletFilters,
@@ -674,6 +684,7 @@ fn decompose_level_standard(
 }
 
 /// Helper function to get next power of two
+#[allow(dead_code)]
 fn next_power_of_two(n: usize) -> usize {
     let mut p = 1;
     while p < n {

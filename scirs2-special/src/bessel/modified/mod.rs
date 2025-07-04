@@ -43,6 +43,7 @@ use std::fmt::Debug;
 /// // I₀(0) = 1
 /// assert!((i0(0.0f64) - 1.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn i0<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // Special case
     if x == F::zero() {
@@ -150,6 +151,7 @@ pub fn i0<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// // I₁(0) = 0
 /// assert!(i1(0.0f64).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn i1<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // Special case
     if x == F::zero() {
@@ -270,6 +272,7 @@ pub fn i1<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// // I₁(x) comparison
 /// assert!((iv(1.0f64, x) - i1(x)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn iv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -> F {
     // Special cases
     if x == F::zero() {
@@ -437,6 +440,7 @@ pub fn iv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
 /// let k0_1 = k0(1.0f64);
 /// assert!(k0_1 > 0.4 && k0_1 < 0.5);
 /// ```
+#[allow(dead_code)]
 pub fn k0<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // K₀ is singular at x = 0
     if x <= F::zero() {
@@ -482,6 +486,7 @@ pub fn k0<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let k1_1 = k1(1.0f64);
 /// assert!(k1_1 > 0.5 && k1_1 < 0.6);
 /// ```
+#[allow(dead_code)]
 pub fn k1<F: Float + FromPrimitive + Debug>(x: F) -> F {
     // K₁ is singular at x = 0
     if x <= F::zero() {
@@ -532,6 +537,7 @@ pub fn k1<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// // K₁(x) comparison
 /// assert!((kv(1.0f64, x) - k1(x)).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn kv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -> F {
     // Kᵥ is singular at x = 0
     if x <= F::zero() {
@@ -581,6 +587,7 @@ pub fn kv<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) ->
 /// let result = i0e(x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn i0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
     let abs_x = x.abs();
     i0(x) * (-abs_x).exp()
@@ -608,6 +615,7 @@ pub fn i0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let result = i1e(x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn i1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
     let abs_x = x.abs();
     let sign = if x.is_sign_positive() {
@@ -641,6 +649,7 @@ pub fn i1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let result = ive(2.5, x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn ive<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -> F {
     let abs_x = x.abs();
     iv(v, x) * (-abs_x).exp()
@@ -668,6 +677,7 @@ pub fn ive<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -
 /// let result = k0e(x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn k0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x <= F::zero() {
         return F::infinity();
@@ -697,6 +707,7 @@ pub fn k0e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let result = k1e(x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn k1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
     if x <= F::zero() {
         return F::infinity();
@@ -727,6 +738,7 @@ pub fn k1e<F: Float + FromPrimitive + Debug>(x: F) -> F {
 /// let result = kve(2.5, x);
 /// assert!(result.is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn kve<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -> F {
     if x <= F::zero() {
         return F::infinity();
@@ -735,6 +747,7 @@ pub fn kve<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(v: F, x: F) -
 }
 
 /// Helper function to return maximum of two values.
+#[allow(dead_code)]
 fn max<T: PartialOrd>(a: T, b: T) -> T {
     if a > b {
         a

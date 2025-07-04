@@ -95,6 +95,7 @@ impl Mode {
 /// let input = array![[1.0, 2.0], [3.0, 4.0]];
 /// let filtered = gaussian_filter(&input, 1.0, None, None, None, None).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn gaussian_filter<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     sigma: impl Into<Vec<T>>,
@@ -134,6 +135,7 @@ where
 /// * `mode` - How to handle boundaries
 /// * `cval` - Value to use for constant mode
 /// * `origin` - The origin parameter controls the placement of the filter
+#[allow(dead_code)]
 pub fn uniform_filter<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     size: impl Into<Vec<usize>>,
@@ -164,6 +166,7 @@ where
 }
 
 /// Median filter with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn median_filter<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     size: impl Into<Vec<usize>>,
@@ -188,6 +191,7 @@ where
 }
 
 /// Sobel filter with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn sobel<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     axis: Option<usize>,
@@ -211,6 +215,7 @@ where
 }
 
 /// Binary erosion with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn binary_erosion<D>(
     input: &ArrayBase<impl Data<Elem = bool>, D>,
     structure: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
@@ -234,6 +239,7 @@ where
 }
 
 /// Binary dilation with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn binary_dilation<D>(
     input: &ArrayBase<impl Data<Elem = bool>, D>,
     structure: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
@@ -257,6 +263,7 @@ where
 }
 
 /// Grayscale erosion with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn grey_erosion<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     size: Option<Vec<usize>>,
@@ -288,6 +295,7 @@ where
 }
 
 /// Label connected components with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn label<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     structure: Option<&ArrayBase<impl Data<Elem = bool>, D>>,
@@ -303,6 +311,7 @@ where
 }
 
 /// Center of mass with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn center_of_mass<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     labels: Option<&ArrayBase<impl Data<Elem = i32>, D>>,
@@ -316,6 +325,7 @@ where
 }
 
 /// Affine transform with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn affine_transform<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     matrix: &Array2<f64>,
@@ -352,6 +362,7 @@ where
 }
 
 /// Distance transform with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn distance_transform_edt<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     sampling: Option<Vec<f64>>,
@@ -418,6 +429,7 @@ where
 /// * `mode` - How to handle boundaries
 /// * `cval` - Value to use for constant mode
 /// * `prefilter` - Whether to apply spline prefilter
+#[allow(dead_code)]
 pub fn map_coordinates<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     coordinates: &Array2<f64>,
@@ -457,6 +469,7 @@ where
 /// * `mode` - How to handle boundaries
 /// * `cval` - Value to use for constant mode
 /// * `prefilter` - Whether to apply spline prefilter
+#[allow(dead_code)]
 pub fn zoom<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     zoom_factors: impl Into<Vec<f64>>,
@@ -498,6 +511,7 @@ where
 /// * `order` - The order of the spline interpolation
 /// * `mode` - How to handle boundaries
 /// * `cval` - Value to use for constant mode
+#[allow(dead_code)]
 pub fn rotate<T>(
     input: &ArrayView2<T>,
     angle: f64,
@@ -530,6 +544,7 @@ where
 }
 
 /// Shift array with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn shift<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     shift: impl Into<Vec<f64>>,
@@ -562,6 +577,7 @@ where
 }
 
 /// Laplace filter with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn laplace<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     mode: Option<&str>,
@@ -584,6 +600,7 @@ where
 }
 
 /// Prewitt filter with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn prewitt<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     axis: Option<usize>,
@@ -616,6 +633,7 @@ where
 /// * `mode` - How to handle boundaries
 /// * `cval` - Value to use for constant mode
 /// * `origin` - The origin parameter controls the placement of the filter
+#[allow(dead_code)]
 pub fn generic_filter<T, D, F>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     function: F,
@@ -660,6 +678,7 @@ where
 }
 
 /// Maximum filter with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn maximum_filter<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     size: Option<Vec<usize>>,
@@ -700,6 +719,7 @@ where
 }
 
 /// Minimum filter with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn minimum_filter<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     size: Option<Vec<usize>>,
@@ -740,6 +760,7 @@ where
 }
 
 /// Percentile filter with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn percentile_filter<T, D>(
     input: &ArrayBase<impl Data<Elem = T>, D>,
     percentile: f64,
@@ -783,6 +804,7 @@ where
 }
 
 /// Find objects with SciPy-compatible interface
+#[allow(dead_code)]
 pub fn find_objects<D>(
     input: &ArrayBase<impl Data<Elem = i32>, D>,
     max_label: Option<i32>,

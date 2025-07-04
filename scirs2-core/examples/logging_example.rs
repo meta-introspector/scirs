@@ -5,6 +5,7 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
+#[allow(dead_code)]
 fn main() {
     println!("Logging and Diagnostics Example");
 
@@ -46,6 +47,7 @@ fn main() {
 }
 
 #[cfg(feature = "logging")]
+#[allow(dead_code)]
 fn simulate_long_operation() {
     println!("\n--- Progress Tracking Example ---");
 

@@ -15,6 +15,7 @@ use std::time::Instant;
 const N: usize = 30; // Grid size (NxN)
 const TOTAL_VARS: usize = N * N; // Total number of variables
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "Solving a large sparse DAE system ({TOTAL_VARS} variables) using Krylov-enhanced BDF methods"
@@ -129,6 +130,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Initial condition setup
+#[allow(dead_code)]
 fn setup_initial_conditions() -> Array1<f64> {
     let mut x0 = Array1::zeros(TOTAL_VARS);
 
@@ -150,6 +152,7 @@ fn setup_initial_conditions() -> Array1<f64> {
 
 /// Right-hand side of the heat equation (semi-discretized using finite differences)
 /// u_t = k * (u_xx + u_yy) + f(x,y,t)
+#[allow(dead_code)]
 fn heat_equation_rhs(t: f64, u: ArrayView1<f64>, lambda: ArrayView1<f64>) -> Array1<f64> {
     let mut du_dt = Array1::zeros(TOTAL_VARS);
     let h = 1.0 / (N as f64 - 1.0);
@@ -204,6 +207,7 @@ fn heat_equation_rhs(t: f64, u: ArrayView1<f64>, lambda: ArrayView1<f64>) -> Arr
 }
 
 /// Constraint equation: constrain every 5th point to remain at its initial value
+#[allow(dead_code)]
 fn constraint_equation(_t: f64, u: ArrayView1<f64>, _lambda: ArrayView1<f64>) -> Array1<f64> {
     let initial_conditions = setup_initial_conditions();
     let n_constraints = N / 5; // Every 5th point is constrained
@@ -225,6 +229,7 @@ fn constraint_equation(_t: f64, u: ArrayView1<f64>, _lambda: ArrayView1<f64>) ->
 
 // Create a heatmap visualization of the solution (disabled due to missing dependencies)
 /*
+#[allow(dead_code)]
 fn create_solution_plot(
     result: &DAEResult<f64>,
     filename: &str,

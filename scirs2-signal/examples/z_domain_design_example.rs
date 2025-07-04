@@ -5,6 +5,7 @@
 
 use scirs2_signal::filter::{butter_bandpass_bandstop, cheby1, FilterType};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Digital Filter Design Examples");
     println!("===============================\n");

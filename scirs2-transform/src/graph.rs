@@ -111,7 +111,7 @@ impl SpectralEmbedding {
 
         // Compute eigendecomposition
         let (eigenvalues, eigenvectors) = eigh(&laplacian.view(), None).map_err(|e| {
-            TransformError::ComputationError(format!("Eigendecomposition failed: {}", e))
+            TransformError::ComputationError(format!("Eigendecomposition failed: {e}"))
         })?;
 
         // Select the smallest n_components eigenvalues (excluding zero)
@@ -269,6 +269,7 @@ impl DeepWalk {
                     let window_start = idx.saturating_sub(self.window_size);
                     let window_end = (idx + self.window_size + 1).min(walk.len());
 
+                    #[allow(clippy::needless_range_loop)]
                     for context_idx in window_start..window_end {
                         if context_idx == idx {
                             continue;
@@ -560,8 +561,7 @@ impl GraphAutoencoder {
 
         if self.encoder_dims.is_empty() || self.encoder_dims[0] != n_nodes {
             return Err(TransformError::InvalidInput(format!(
-                "First encoder dimension must match number of nodes ({})",
-                n_nodes
+                "First encoder dimension must match number of nodes ({n_nodes})"
             )));
         }
 
@@ -668,6 +668,7 @@ impl GraphAutoencoder {
 }
 
 /// Convert edge list to adjacency matrix
+#[allow(dead_code)]
 pub fn edge_list_to_adjacency(edges: &[(usize, usize)], n_nodes: Option<usize>) -> Array2<f64> {
     let max_node = edges
         .iter()
@@ -689,6 +690,7 @@ pub fn edge_list_to_adjacency(edges: &[(usize, usize)], n_nodes: Option<usize>) 
 }
 
 /// Convert adjacency matrix to edge list
+#[allow(dead_code)]
 pub fn adjacency_to_edge_list(adjacency: &Array2<f64>) -> Vec<(usize, usize)> {
     let mut edges = Vec::new();
     let n = adjacency.shape()[0];

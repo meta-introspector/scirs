@@ -1,6 +1,7 @@
 use ndarray::array;
 use scirs2_linalg::compat;
 
+#[allow(dead_code)]
 fn main() {
     println!("Testing eigenvalue computation...");
 

@@ -13,12 +13,14 @@ use crate::base::{DiGraph, Graph};
 use crate::error::{GraphError, Result};
 
 /// Create a new empty undirected graph
+#[allow(dead_code)]
 pub fn create_graph<N: crate::base::Node + std::fmt::Debug, E: crate::base::EdgeWeight>(
 ) -> Graph<N, E> {
     Graph::new()
 }
 
 /// Create a new empty directed graph
+#[allow(dead_code)]
 pub fn create_digraph<N: crate::base::Node + std::fmt::Debug, E: crate::base::EdgeWeight>(
 ) -> DiGraph<N, E> {
     DiGraph::new()
@@ -33,6 +35,7 @@ pub fn create_digraph<N: crate::base::Node + std::fmt::Debug, E: crate::base::Ed
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - The generated graph with node IDs 0..n-1
+#[allow(dead_code)]
 pub fn erdos_renyi_graph<R: Rng>(n: usize, p: f64, rng: &mut R) -> Result<Graph<usize, f64>> {
     if !(0.0..=1.0).contains(&p) {
         return Err(GraphError::InvalidGraph(
@@ -68,6 +71,7 @@ pub fn erdos_renyi_graph<R: Rng>(n: usize, p: f64, rng: &mut R) -> Result<Graph<
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - The generated graph with node IDs 0..n-1
+#[allow(dead_code)]
 pub fn barabasi_albert_graph<R: Rng>(n: usize, m: usize, rng: &mut R) -> Result<Graph<usize, f64>> {
     if m >= n {
         return Err(GraphError::InvalidGraph(
@@ -135,6 +139,7 @@ pub fn barabasi_albert_graph<R: Rng>(n: usize, m: usize, rng: &mut R) -> Result<
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A complete graph with n nodes
+#[allow(dead_code)]
 pub fn complete_graph(n: usize) -> Result<Graph<usize, f64>> {
     let mut graph = Graph::new();
 
@@ -160,6 +165,7 @@ pub fn complete_graph(n: usize) -> Result<Graph<usize, f64>> {
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A star graph with node 0 as the center
+#[allow(dead_code)]
 pub fn star_graph(n: usize) -> Result<Graph<usize, f64>> {
     if n == 0 {
         return Err(GraphError::InvalidGraph(
@@ -189,6 +195,7 @@ pub fn star_graph(n: usize) -> Result<Graph<usize, f64>> {
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A path graph with nodes 0, 1, ..., n-1
+#[allow(dead_code)]
 pub fn path_graph(n: usize) -> Result<Graph<usize, f64>> {
     let mut graph = Graph::new();
 
@@ -216,6 +223,7 @@ pub fn path_graph(n: usize) -> Result<Graph<usize, f64>> {
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A random tree with nodes 0, 1, ..., n-1
+#[allow(dead_code)]
 pub fn tree_graph<R: Rng>(n: usize, rng: &mut R) -> Result<Graph<usize, f64>> {
     if n == 0 {
         return Ok(Graph::new());
@@ -275,6 +283,7 @@ pub fn tree_graph<R: Rng>(n: usize, rng: &mut R) -> Result<Graph<usize, f64>> {
 ///
 /// # Returns
 /// * `Result<Graph<N, E>>` - A spanning tree of the input graph
+#[allow(dead_code)]
 pub fn random_spanning_tree<N, E, Ix, R>(
     graph: &Graph<N, E, Ix>,
     rng: &mut R,
@@ -383,6 +392,7 @@ where
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A forest containing the specified trees
+#[allow(dead_code)]
 pub fn forest_graph<R: Rng>(tree_sizes: &[usize], rng: &mut R) -> Result<Graph<usize, f64>> {
     let mut forest = Graph::new();
     let mut node_offset = 0;
@@ -422,6 +432,7 @@ pub fn forest_graph<R: Rng>(tree_sizes: &[usize], rng: &mut R) -> Result<Graph<u
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A cycle graph with nodes 0, 1, ..., n-1
+#[allow(dead_code)]
 pub fn cycle_graph(n: usize) -> Result<Graph<usize, f64>> {
     if n < 3 {
         return Err(GraphError::InvalidGraph(
@@ -452,6 +463,7 @@ pub fn cycle_graph(n: usize) -> Result<Graph<usize, f64>> {
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A grid graph where node ID = row * cols + col
+#[allow(dead_code)]
 pub fn grid_2d_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
     if rows == 0 || cols == 0 {
         return Err(GraphError::InvalidGraph(
@@ -497,6 +509,7 @@ pub fn grid_2d_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A 3D grid graph where node ID = z*x_dim*y_dim + y*x_dim + x
+#[allow(dead_code)]
 pub fn grid_3d_graph(x_dim: usize, y_dim: usize, z_dim: usize) -> Result<Graph<usize, f64>> {
     if x_dim == 0 || y_dim == 0 || z_dim == 0 {
         return Err(GraphError::InvalidGraph(
@@ -549,6 +562,7 @@ pub fn grid_3d_graph(x_dim: usize, y_dim: usize, z_dim: usize) -> Result<Graph<u
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A triangular lattice where each node has up to 6 neighbors
+#[allow(dead_code)]
 pub fn triangular_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
     if rows == 0 || cols == 0 {
         return Err(GraphError::InvalidGraph(
@@ -606,6 +620,7 @@ pub fn triangular_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize,
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A hexagonal lattice where each node has exactly 3 neighbors
+#[allow(dead_code)]
 pub fn hexagonal_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, f64>> {
     if rows == 0 || cols == 0 {
         return Err(GraphError::InvalidGraph(
@@ -674,6 +689,7 @@ pub fn hexagonal_lattice_graph(rows: usize, cols: usize) -> Result<Graph<usize, 
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - A small-world graph
+#[allow(dead_code)]
 pub fn watts_strogatz_graph<R: Rng>(
     n: usize,
     k: usize,
@@ -760,6 +776,7 @@ pub fn watts_strogatz_graph<R: Rng>(
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - The generated graph with node IDs 0..n-1
 ///   where nodes 0..block_sizes[0]-1 are in block 0, etc.
+#[allow(dead_code)]
 pub fn stochastic_block_model<R: Rng>(
     block_sizes: &[usize],
     block_matrix: &[Vec<f64>],
@@ -840,6 +857,7 @@ pub fn stochastic_block_model<R: Rng>(
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - The generated graph
+#[allow(dead_code)]
 pub fn two_community_sbm<R: Rng>(
     n1: usize,
     n2: usize,
@@ -867,6 +885,7 @@ pub fn two_community_sbm<R: Rng>(
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - The generated graph
+#[allow(dead_code)]
 pub fn planted_partition_model<R: Rng>(
     n: usize,
     k: usize,
@@ -911,6 +930,7 @@ pub fn planted_partition_model<R: Rng>(
 /// * Self-loops and multiple edges between the same pair of nodes are possible
 /// * If you want a simple graph (no self-loops or multiple edges), you may need to
 ///   regenerate or post-process the result
+#[allow(dead_code)]
 pub fn configuration_model<R: Rng>(
     degree_sequence: &[usize],
     rng: &mut R,
@@ -972,6 +992,7 @@ pub fn configuration_model<R: Rng>(
 ///
 /// # Returns
 /// * `Result<Graph<usize, f64>>` - The generated simple graph
+#[allow(dead_code)]
 pub fn simple_configuration_model<R: Rng>(
     degree_sequence: &[usize],
     rng: &mut R,

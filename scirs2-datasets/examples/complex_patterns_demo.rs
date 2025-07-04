@@ -8,6 +8,7 @@ use scirs2_datasets::{
     make_swiss_roll,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Complex Pattern Generators Demonstration ===\n");
 
@@ -179,6 +180,7 @@ fn main() {
 }
 
 /// Print a concise summary of a dataset
+#[allow(dead_code)]
 fn print_dataset_summary(dataset: &scirs2_datasets::Dataset, name: &str) {
     let n_classes = if let Some(target) = &dataset.target {
         let unique_labels: std::collections::HashSet<_> =

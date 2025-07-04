@@ -67,6 +67,7 @@ pub struct RobustnessAnalysis {
     /// Recommended confidence adjustments
     pub confidence_adjustments: HashMap<String, f64>,
 /// Generate comprehensive interpretation report
+#[allow(dead_code)]
 pub fn generate_comprehensive_report<F>(
     interpreter: &ModelInterpreter<F>,
     input: &ArrayD<F>,
@@ -128,6 +129,7 @@ where
         robustness_analysis,
     })
 /// Generate basic interpretation report
+#[allow(dead_code)]
 pub fn generate_basic_report<F>(
     target_class: Option<usize>,
 ) -> Result<InterpretationReport<F>>
@@ -135,7 +137,7 @@ pub fn generate_basic_report<F>(
     // Compute attributions using all available methods
     for method in interpreter.attribution_methods() {
         let attribution = interpreter.compute_attribution(method, input, target_class)?;
-        let method_name = format!("{:?}", method);
+        let method_name = format!("{method:?}");
         attributions.insert(method_name, attribution);
     // Compute attribution statistics
     let mut attribution_stats = HashMap::new();
@@ -151,6 +153,7 @@ pub fn generate_basic_report<F>(
         layer_statistics: interpreter.layer_statistics().clone(),
         interpretation_summary,
 /// Generate feature visualizations for the model
+#[allow(dead_code)]
 fn generate_feature_visualizations<F>(
     _interpreter: &ModelInterpreter<F>,
 ) -> Result<HashMap<String, ArrayD<F>>>
@@ -163,6 +166,7 @@ fn generate_feature_visualizations<F>(
     );
     Ok(visualizations)
 /// Compute confidence estimates for interpretation results
+#[allow(dead_code)]
 fn compute_confidence_estimates<F>(report: &InterpretationReport<F>) -> Result<ConfidenceEstimates>
     F: Float + Debug,
     let overall_confidence = report.interpretation_summary.interpretation_confidence;
@@ -190,6 +194,7 @@ fn compute_confidence_estimates<F>(report: &InterpretationReport<F>) -> Result<C
         attribution_uncertainty,
         reliability_indicators,
 /// Perform robustness analysis on the interpretation
+#[allow(dead_code)]
 fn perform_robustness_analysis<F>(
     _input: &ArrayD<F>,
 ) -> Result<RobustnessAnalysis>
@@ -208,6 +213,7 @@ fn perform_robustness_analysis<F>(
         attribution_stability,
         confidence_adjustments,
 /// Generate summary statistics for a comprehensive report
+#[allow(dead_code)]
 pub fn generate_report_summary<F>(
     report: &ComprehensiveInterpretationReport<F>,
 ) -> HashMap<String, String>
@@ -247,6 +253,7 @@ pub fn generate_report_summary<F>(
         report.concept_activations.len().to_string(),
     summary
 /// Export report to different formats
+#[allow(dead_code)]
 pub fn export_report_data<F>(
     format: &str,
 ) -> Result<String>
@@ -261,6 +268,7 @@ pub fn export_report_data<F>(
             "Export format '{}' not supported. Supported formats: json, summary, csv, yaml, xml, toml",
             format
         ))),
+#[allow(dead_code)]
 fn export_to_json<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
     use serde_json::{json, Map};
     // Build JSON object with report data
@@ -314,22 +322,24 @@ fn export_to_json<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<St
         json_obj.insert("robustness_analysis".to_string(), json!(robustness_obj));
     // Serialize to JSON string
     serde_json::to_string_pretty(&json_obj)
-        .map_err(|e| NeuralError::ConfigError(format!("JSON serialization error: {}", e)))
+        .map_err(|e| NeuralError::ConfigError(format!("JSON serialization error: {e}")))
+#[allow(dead_code)]
 fn format_summary_report<F>(report: &ComprehensiveInterpretationReport<F>) -> String
     let summary = generate_report_summary(report);
     let mut output = String::new();
     output.push_str("=== Interpretation Report Summary ===\n\n");
     for (key, value) in summary {
-        output.push_str(&format!("{}: {}\n", key, value));
+        output.push_str(&format!("{key}: {value}\n"));
     output.push_str("\n=== Method Confidence Scores ===\n");
-        output.push_str(&format!("{}: {:.3}\n", method, confidence));
+        output.push_str(&format!("{method}: {confidence:.3}\n"));
     output
+#[allow(dead_code)]
 fn export_to_csv<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
     let mut csv_content = String::new();
     // Header for method confidence data
     csv_content.push_str("section,key,value\n");
     csv_content.push_str(&format!("basic_info,input_shape,\"{:?}\"\n", report.basic_report.input_shape));
-        csv_content.push_str(&format!("basic_info,target_class,{}\n", target_class));
+        csv_content.push_str(&format!("basic_info,target_class,{target_class}\n"));
     let num_methods = report.basic_report.attributions.len();
     csv_content.push_str(&format!("basic_info,num_attribution_methods,{}\n", num_methods));
     csv_content.push_str(&format!("confidence,overall_confidence,{}\n", report.confidence_estimates.overall_confidence));
@@ -351,6 +361,7 @@ fn export_to_csv<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<Str
     csv_content.push_str(&format!("attribution_stats,std,{}\n", attribution_stats.std));
     Ok(csv_content)
 /// Helper function to compute attribution statistics
+#[allow(dead_code)]
 fn compute_attribution_statistics<F>(attribution: &ArrayD<F>) -> AttributionStats
     F: Float + Debug + Copy,
     let data: Vec<f64> = attribution.iter().map(|&x| x.to_f64().unwrap_or(0.0)).collect();
@@ -367,6 +378,7 @@ struct AttributionStats {
     mean: f64,
     std: f64,
 /// Export report to YAML format
+#[allow(dead_code)]
 fn export_to_yaml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
     use serde_yaml;
     // Reuse the JSON structure but serialize to YAML
@@ -388,6 +400,7 @@ fn export_to_yaml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<St
     serde_yaml::to_string(&json!(yaml_obj))
         .map_err(|e| NeuralError::ConfigError(format!("YAML serialization error: {}", e)))
 /// Export report to XML format
+#[allow(dead_code)]
 fn export_to_xml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
     let mut xml_content = String::new();
     xml_content.push_str("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
@@ -417,6 +430,7 @@ fn export_to_xml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<Str
     xml_content.push_str("</interpretation_report>\n");
     Ok(xml_content)
 /// Export report to TOML format
+#[allow(dead_code)]
 fn export_to_toml<F>(report: &ComprehensiveInterpretationReport<F>) -> Result<String>
     let mut toml_content = String::new();
     toml_content.push_str("[basic_info]\n");
@@ -479,6 +493,7 @@ impl<F: Float + Debug> std::fmt::Display for ComprehensiveInterpretationReport<F
                 "- Attribution stability: {:.3}",
                 robustness.attribution_stability
 /// Compute concept activation for a given input and concept vector
+#[allow(dead_code)]
 fn compute_concept_activation<F>(input: &ArrayD<F>, concept_vector: &ConceptActivationVector<F>) -> f64
     F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimitive + Sum + Clone + Copy,
     // Simplified concept activation computation
@@ -492,6 +507,7 @@ fn compute_concept_activation<F>(input: &ArrayD<F>, concept_vector: &ConceptActi
     } else {
         0.0
 /// Compute high activation score based on input statistics
+#[allow(dead_code)]
 fn compute_high_activation_score<F>(input: &ArrayD<F>) -> f64
     let mean_val = input.mean().unwrap_or(F::zero()).to_f64().unwrap_or(0.0);
     let max_val = input.iter().fold(F::zero(), |acc, &x| acc.max(x)).to_f64().unwrap_or(0.0);
@@ -502,6 +518,7 @@ fn compute_high_activation_score<F>(input: &ArrayD<F>) -> f64
     if total_count > 0 {
         high_count as f64 / total_count as f64
 /// Compute low activation score based on input statistics
+#[allow(dead_code)]
 fn compute_low_activation_score<F>(input: &ArrayD<F>) -> f64
     let min_val = input.iter().fold(F::zero(), |acc, &x| acc.min(x)).to_f64().unwrap_or(0.0);
     // Score based on how much of the input has low activation values
@@ -509,6 +526,7 @@ fn compute_low_activation_score<F>(input: &ArrayD<F>) -> f64
     let low_count = input.iter().filter(|&&x| x < threshold).count();
         low_count as f64 / total_count as f64
 /// Compute activation variance as a concept score
+#[allow(dead_code)]
 fn compute_activation_variance<F>(input: &ArrayD<F>) -> f64
     let mean_val = input.mean().unwrap_or(F::zero());
     let variance = input.iter()

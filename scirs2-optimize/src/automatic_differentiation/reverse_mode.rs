@@ -4,7 +4,9 @@
 //! output variables is small (typically 1 for optimization). It builds a
 //! computational graph and then propagates derivatives backwards.
 
-use crate::automatic_differentiation::tape::{ComputationTape, TapeNode, Variable};
+use crate::automatic_differentiation::tape::{
+    BinaryOpType, ComputationTape, TapeNode, UnaryOpType, Variable,
+};
 use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
 
@@ -247,6 +249,7 @@ impl ComputationGraph {
     /// Add a binary operation to the tape
     fn add_binary_op(
         &mut self,
+        op_type: BinaryOpType,
         left: &ReverseVariable,
         right: &ReverseVariable,
         result_value: f64,
@@ -261,6 +264,7 @@ impl ComputationGraph {
 
         // Add to tape
         let node = TapeNode::BinaryOp {
+            op_type,
             left: left.index,
             right: right.index,
             result: result_index,
@@ -276,6 +280,7 @@ impl ComputationGraph {
     /// Add a unary operation to the tape
     fn add_unary_op(
         &mut self,
+        op_type: UnaryOpType,
         input: &ReverseVariable,
         result_value: f64,
         input_grad: f64,
@@ -288,6 +293,7 @@ impl ComputationGraph {
 
         // Add to tape
         let node = TapeNode::UnaryOp {
+            op_type,
             input: input.index,
             result: result_index,
             partial: input_grad,
@@ -528,6 +534,7 @@ impl std::ops::Div<ReverseVariable> for f64 {
 }
 
 /// Addition operation on computation graph
+#[allow(dead_code)]
 pub fn add(
     graph: &mut ComputationGraph,
     left: &ReverseVariable,
@@ -542,6 +549,7 @@ pub fn add(
 }
 
 /// Multiplication operation on computation graph
+#[allow(dead_code)]
 pub fn mul(
     graph: &mut ComputationGraph,
     left: &ReverseVariable,
@@ -556,6 +564,7 @@ pub fn mul(
 }
 
 /// Subtraction operation on computation graph
+#[allow(dead_code)]
 pub fn sub(
     graph: &mut ComputationGraph,
     left: &ReverseVariable,
@@ -570,6 +579,7 @@ pub fn sub(
 }
 
 /// Division operation on computation graph
+#[allow(dead_code)]
 pub fn div(
     graph: &mut ComputationGraph,
     left: &ReverseVariable,
@@ -587,6 +597,7 @@ pub fn div(
 }
 
 /// Power operation (x^n) on computation graph
+#[allow(dead_code)]
 pub fn powi(graph: &mut ComputationGraph, input: &ReverseVariable, n: i32) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.powi(n));
@@ -599,6 +610,7 @@ pub fn powi(graph: &mut ComputationGraph, input: &ReverseVariable, n: i32) -> Re
 }
 
 /// Exponential operation on computation graph
+#[allow(dead_code)]
 pub fn exp(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.exp());
@@ -611,6 +623,7 @@ pub fn exp(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
 }
 
 /// Natural logarithm operation on computation graph
+#[allow(dead_code)]
 pub fn ln(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.ln());
@@ -623,6 +636,7 @@ pub fn ln(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVaria
 }
 
 /// Sine operation on computation graph
+#[allow(dead_code)]
 pub fn sin(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.sin());
@@ -635,6 +649,7 @@ pub fn sin(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
 }
 
 /// Cosine operation on computation graph
+#[allow(dead_code)]
 pub fn cos(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.cos());
@@ -647,6 +662,7 @@ pub fn cos(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
 }
 
 /// Tangent operation on computation graph
+#[allow(dead_code)]
 pub fn tan(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.tan());
@@ -660,6 +676,7 @@ pub fn tan(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
 }
 
 /// Square root operation on computation graph
+#[allow(dead_code)]
 pub fn sqrt(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.sqrt());
@@ -672,6 +689,7 @@ pub fn sqrt(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVar
 }
 
 /// Absolute value operation on computation graph
+#[allow(dead_code)]
 pub fn abs(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.abs());
@@ -684,6 +702,7 @@ pub fn abs(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
 }
 
 /// Sigmoid operation on computation graph
+#[allow(dead_code)]
 pub fn sigmoid(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         let exp_val = (-input.value).exp();
@@ -698,6 +717,7 @@ pub fn sigmoid(graph: &mut ComputationGraph, input: &ReverseVariable) -> Reverse
 }
 
 /// Hyperbolic tangent operation on computation graph
+#[allow(dead_code)]
 pub fn tanh(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.tanh());
@@ -710,6 +730,7 @@ pub fn tanh(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVar
 }
 
 /// ReLU (Rectified Linear Unit) operation on computation graph
+#[allow(dead_code)]
 pub fn relu(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVariable {
     if input.is_constant() {
         return ReverseVariable::constant(input.value.max(0.0));
@@ -722,6 +743,7 @@ pub fn relu(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVar
 }
 
 /// Leaky ReLU operation on computation graph
+#[allow(dead_code)]
 pub fn leaky_relu(
     graph: &mut ComputationGraph,
     input: &ReverseVariable,
@@ -749,6 +771,7 @@ pub fn leaky_relu(
 /// Compute gradient using reverse-mode automatic differentiation
 /// This is a generic function that works with closures, using finite differences
 /// For functions that can be expressed in terms of AD operations, use reverse_gradient_with_tape
+#[allow(dead_code)]
 pub fn reverse_gradient<F>(func: F, x: &ArrayView1<f64>) -> Result<Array1<f64>, OptimizeError>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
@@ -775,6 +798,7 @@ where
 }
 
 /// Compute gradient using reverse-mode AD with a function that directly uses AD operations
+#[allow(dead_code)]
 pub fn reverse_gradient_ad<F>(func: F, x: &ArrayView1<f64>) -> Result<Array1<f64>, OptimizeError>
 where
     F: Fn(&mut ComputationGraph, &[ReverseVariable]) -> ReverseVariable,
@@ -800,6 +824,7 @@ where
 }
 
 /// Compute Hessian using reverse-mode automatic differentiation (finite differences for generic functions)
+#[allow(dead_code)]
 pub fn reverse_hessian<F>(func: F, x: &ArrayView1<f64>) -> Result<Array2<f64>, OptimizeError>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
@@ -865,6 +890,7 @@ where
 }
 
 /// Compute Hessian using forward-over-reverse mode for AD functions
+#[allow(dead_code)]
 pub fn reverse_hessian_ad<F>(func: F, x: &ArrayView1<f64>) -> Result<Array2<f64>, OptimizeError>
 where
     F: Fn(&mut ComputationGraph, &[ReverseVariable]) -> ReverseVariable,
@@ -892,6 +918,7 @@ where
 }
 
 /// Simple reverse-mode gradient computation using a basic tape
+#[allow(dead_code)]
 pub fn reverse_gradient_with_tape<F>(
     func: F,
     x: &ArrayView1<f64>,
@@ -921,6 +948,7 @@ where
 }
 
 /// Check if reverse mode is preferred for the given problem dimensions
+#[allow(dead_code)]
 pub fn is_reverse_mode_efficient(input_dim: usize, output_dim: usize) -> bool {
     // Reverse mode is efficient when output dimension is small
     // Cost is O(output_dim * cost_of_function)
@@ -929,6 +957,7 @@ pub fn is_reverse_mode_efficient(input_dim: usize, output_dim: usize) -> bool {
 
 /// Vector-Jacobian product using reverse-mode AD
 #[allow(clippy::many_single_char_names)]
+#[allow(dead_code)]
 pub fn reverse_vjp<F>(
     func: F,
     x: &ArrayView1<f64>,
@@ -969,6 +998,7 @@ where
 
 /// Vector-Jacobian product using reverse-mode AD for AD-compatible functions
 #[allow(clippy::many_single_char_names)]
+#[allow(dead_code)]
 pub fn reverse_vjp_ad<F>(
     func: F,
     x: &ArrayView1<f64>,
@@ -1008,6 +1038,7 @@ where
 }
 
 /// Gauss-Newton Hessian approximation using reverse-mode AD
+#[allow(dead_code)]
 pub fn reverse_gauss_newton_hessian<F>(
     func: F,
     x: &ArrayView1<f64>,
@@ -1046,6 +1077,7 @@ where
 }
 
 /// Gauss-Newton Hessian approximation using reverse-mode AD for AD-compatible functions
+#[allow(dead_code)]
 pub fn reverse_gauss_newton_hessian_ad<F>(
     func: F,
     x: &ArrayView1<f64>,

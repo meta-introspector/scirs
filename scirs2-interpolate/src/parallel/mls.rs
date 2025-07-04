@@ -301,6 +301,7 @@ where
 }
 
 /// Apply weight function to a normalized distance
+#[allow(dead_code)]
 fn apply_weight<F: Float + FromPrimitive>(r: F, weight_fn: WeightFunction) -> F {
     match weight_fn {
         WeightFunction::Gaussian => (-r * r).exp(),
@@ -341,6 +342,7 @@ fn apply_weight<F: Float + FromPrimitive>(r: F, weight_fn: WeightFunction) -> F 
 /// # Returns
 ///
 /// A ParallelMovingLeastSquares interpolator with linear basis and Gaussian weights
+#[allow(dead_code)]
 pub fn make_parallel_mls<F>(
     points: Array2<F>,
     values: Array1<F>,

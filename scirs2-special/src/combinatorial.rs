@@ -33,6 +33,7 @@ use crate::gamma::gamma;
 /// assert_eq!(factorial(5).unwrap(), 120.0);
 /// assert_eq!(factorial(10).unwrap(), 3628800.0);
 /// ```
+#[allow(dead_code)]
 pub fn factorial(n: u32) -> SpecialResult<f64> {
     if n <= 20 {
         // Use direct calculation for small values
@@ -71,6 +72,7 @@ pub fn factorial(n: u32) -> SpecialResult<f64> {
 /// assert_eq!(double_factorial(5).unwrap(), 15.0); // 5 × 3 × 1
 /// assert_eq!(double_factorial(6).unwrap(), 48.0); // 6 × 4 × 2
 /// ```
+#[allow(dead_code)]
 pub fn double_factorial(n: u32) -> SpecialResult<f64> {
     if n == 0 {
         return Ok(1.0);
@@ -105,6 +107,7 @@ pub fn double_factorial(n: u32) -> SpecialResult<f64> {
 /// assert_eq!(factorial2(5).unwrap(), 15.0); // 5 × 3 × 1
 /// assert_eq!(factorial2(6).unwrap(), 48.0); // 6 × 4 × 2
 /// ```
+#[allow(dead_code)]
 pub fn factorial2(n: u32) -> SpecialResult<f64> {
     double_factorial(n)
 }
@@ -133,6 +136,7 @@ pub fn factorial2(n: u32) -> SpecialResult<f64> {
 /// assert_eq!(factorialk(5, 2).unwrap(), 15.0); // 5 × 3 × 1
 /// assert_eq!(factorialk(6, 2).unwrap(), 48.0); // 6 × 4 × 2 (same as double factorial)
 /// ```
+#[allow(dead_code)]
 pub fn factorialk(n: u32, k: u32) -> SpecialResult<f64> {
     if k == 0 {
         return Err(crate::SpecialError::ValueError(
@@ -177,6 +181,7 @@ pub fn factorialk(n: u32, k: u32) -> SpecialResult<f64> {
 /// assert_eq!(binomial(7, 0).unwrap(), 1.0);
 /// assert_eq!(binomial(7, 7).unwrap(), 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn binomial(n: u32, k: u32) -> SpecialResult<f64> {
     if k > n {
         return Ok(0.0);
@@ -228,6 +233,7 @@ pub fn binomial(n: u32, k: u32) -> SpecialResult<f64> {
 /// assert_eq!(permutations(10, 3).unwrap(), 720.0);
 /// assert_eq!(permutations(7, 0).unwrap(), 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn permutations(n: u32, k: u32) -> SpecialResult<f64> {
     if k > n {
         return Ok(0.0);
@@ -273,6 +279,7 @@ pub fn permutations(n: u32, k: u32) -> SpecialResult<f64> {
 /// assert_eq!(perm(5, 2).unwrap(), 20.0);
 /// assert_eq!(perm(10, 3).unwrap(), 720.0);
 /// ```
+#[allow(dead_code)]
 pub fn perm(n: u32, k: u32) -> SpecialResult<f64> {
     permutations(n, k)
 }
@@ -300,6 +307,7 @@ pub fn perm(n: u32, k: u32) -> SpecialResult<f64> {
 /// assert_eq!(stirling_first(4, 2).unwrap(), 11.0);
 /// assert_eq!(stirling_first(5, 3).unwrap(), 35.0);
 /// ```
+#[allow(dead_code)]
 pub fn stirling_first(n: u32, k: u32) -> SpecialResult<f64> {
     if n == 0 && k == 0 {
         return Ok(1.0);
@@ -344,6 +352,7 @@ pub fn stirling_first(n: u32, k: u32) -> SpecialResult<f64> {
 /// assert_eq!(stirling_second(4, 2).unwrap(), 7.0);
 /// assert_eq!(stirling_second(5, 3).unwrap(), 25.0);
 /// ```
+#[allow(dead_code)]
 pub fn stirling_second(n: u32, k: u32) -> SpecialResult<f64> {
     if n == 0 && k == 0 {
         return Ok(1.0);
@@ -386,6 +395,7 @@ pub fn stirling_second(n: u32, k: u32) -> SpecialResult<f64> {
 /// assert_eq!(stirling2(4, 2).unwrap(), 7.0);
 /// assert_eq!(stirling2(5, 3).unwrap(), 25.0);
 /// ```
+#[allow(dead_code)]
 pub fn stirling2(n: u32, k: u32) -> SpecialResult<f64> {
     stirling_second(n, k)
 }
@@ -414,6 +424,7 @@ pub fn stirling2(n: u32, k: u32) -> SpecialResult<f64> {
 /// assert_eq!(bell_number(3).unwrap(), 5.0);
 /// assert_eq!(bell_number(4).unwrap(), 15.0);
 /// ```
+#[allow(dead_code)]
 pub fn bell_number(n: u32) -> SpecialResult<f64> {
     if n == 0 {
         return Ok(1.0);
@@ -453,6 +464,7 @@ pub fn bell_number(n: u32) -> SpecialResult<f64> {
 /// assert_relative_eq!(bernoulli_number(2).unwrap(), 1.0/6.0, epsilon = 1e-10);
 /// assert_eq!(bernoulli_number(3).unwrap(), 0.0); // Odd Bernoulli numbers are 0 (except B_1)
 /// ```
+#[allow(dead_code)]
 pub fn bernoulli_number(n: u32) -> SpecialResult<f64> {
     if n == 0 {
         return Ok(1.0);
@@ -524,6 +536,7 @@ pub fn bernoulli_number(n: u32) -> SpecialResult<f64> {
 /// assert_eq!(euler_number(2).unwrap(), -1.0);
 /// assert_eq!(euler_number(4).unwrap(), 5.0);
 /// ```
+#[allow(dead_code)]
 pub fn euler_number(n: u32) -> SpecialResult<f64> {
     if n % 2 == 1 {
         return Ok(0.0); // Odd Euler numbers are zero
@@ -554,6 +567,7 @@ pub fn euler_number(n: u32) -> SpecialResult<f64> {
 }
 
 /// Standard recurrence relation for Euler numbers (small n)
+#[allow(dead_code)]
 fn euler_number_standard_recurrence(n: i32) -> SpecialResult<f64> {
     // Use recurrence relation based on generating function
     let mut euler = vec![0.0; (n + 1) as usize];
@@ -572,6 +586,7 @@ fn euler_number_standard_recurrence(n: i32) -> SpecialResult<f64> {
 }
 
 /// Improved recurrence relation for Euler numbers using rational arithmetic (moderate n)
+#[allow(dead_code)]
 fn euler_number_improved_recurrence(n: i32) -> SpecialResult<f64> {
     // Use the recurrence relation with better numerical stability
     // E_n = -sum_{k=0}^{n-1} C(n,k) * E_k for even n
@@ -613,6 +628,7 @@ fn euler_number_improved_recurrence(n: i32) -> SpecialResult<f64> {
 }
 
 /// Asymptotic approximation for Euler numbers (large n)
+#[allow(dead_code)]
 fn euler_number_asymptotic(n: i32) -> SpecialResult<f64> {
     if n % 2 == 1 {
         return Ok(0.0); // Euler numbers are zero for odd indices
@@ -655,6 +671,7 @@ fn euler_number_asymptotic(n: i32) -> SpecialResult<f64> {
 }
 
 /// More efficient binomial coefficient computation for moderate values
+#[allow(dead_code)]
 fn efficient_binomial(n: u32, k: u32) -> SpecialResult<f64> {
     if k > n {
         return Ok(0.0);
@@ -698,6 +715,7 @@ fn efficient_binomial(n: u32, k: u32) -> SpecialResult<f64> {
 ///
 /// This function provides SciPy compatibility for `comb(n, k)`
 /// which is the number of ways to choose k items from n items.
+#[allow(dead_code)]
 pub fn comb(n: u32, k: u32) -> SpecialResult<f64> {
     binomial(n, k)
 }

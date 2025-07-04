@@ -8,6 +8,7 @@ use crate::common::IntegrateFloat;
 use ndarray::{Array1, Array2, ArrayView1};
 
 /// Computes Jacobian for a banded system with specified number of lower and upper diagonals
+#[allow(dead_code)]
 pub fn compute_banded_jacobian<F, Func>(
     f: &Func,
     t: F,
@@ -51,6 +52,7 @@ where
 }
 
 /// Computes Jacobian for a system with diagonal or block-diagonal structure
+#[allow(dead_code)]
 pub fn compute_diagonal_jacobian<F, Func>(
     f: &Func,
     t: F,
@@ -91,6 +93,7 @@ where
 }
 
 /// Group variables based on their interactions to minimize function evaluations
+#[allow(dead_code)]
 pub fn compute_colored_jacobian<F, Func>(
     f: &Func,
     t: F,
@@ -141,6 +144,7 @@ where
 }
 
 /// Generate a simple coloring for a banded matrix
+#[allow(dead_code)]
 pub fn generate_banded_coloring(n: usize, lower: usize, upper: usize) -> Vec<usize> {
     let bandwidth = lower + upper + 1;
     let mut coloring = vec![0; n];
@@ -156,6 +160,7 @@ pub fn generate_banded_coloring(n: usize, lower: usize, upper: usize) -> Vec<usi
 
 /// Update the Jacobian using Broyden's method (rank-1 update)
 /// J_{k+1} = J_k + (df - J_k * dy) * dy^T / (dy^T * dy)
+#[allow(dead_code)]
 pub fn broyden_update<F>(jac: &mut Array2<F>, delta_y: &Array1<F>, delta_f: &Array1<F>)
 where
     F: IntegrateFloat,
@@ -187,6 +192,7 @@ where
 }
 
 /// Performs a block-update of the Jacobian using block structure
+#[allow(dead_code)]
 pub fn block_update<F>(
     jac: &mut Array2<F>,
     delta_y: &Array1<F>,

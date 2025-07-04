@@ -640,6 +640,7 @@ where
 /// # Returns
 ///
 /// A new variable knot smoothing spline
+#[allow(dead_code)]
 pub fn make_adaptive_smoothing_spline<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -660,7 +661,8 @@ where
         + MulAssign
         + DivAssign
         + RemAssign
-        + 'static,
+        + 'static
+        + crate::traits::InterpolationFloat,
 {
     VariableKnotSpline::new(
         x,
@@ -686,6 +688,7 @@ where
 /// # Returns
 ///
 /// A new variable knot smoothing spline
+#[allow(dead_code)]
 pub fn make_optimized_smoothing_spline<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -706,7 +709,8 @@ where
         + MulAssign
         + DivAssign
         + RemAssign
-        + 'static,
+        + 'static
+        + crate::traits::InterpolationFloat,
 {
     VariableKnotSpline::new(
         x,
@@ -732,6 +736,7 @@ where
 /// # Returns
 ///
 /// A new variable knot smoothing spline
+#[allow(dead_code)]
 pub fn make_error_based_smoothing_spline<F>(
     x: &ArrayView1<F>,
     y: &ArrayView1<F>,
@@ -752,7 +757,8 @@ where
         + MulAssign
         + DivAssign
         + RemAssign
-        + 'static,
+        + 'static
+        + crate::traits::InterpolationFloat,
 {
     VariableKnotSpline::new(
         x,

@@ -9,6 +9,7 @@ use scirs2_integrate::ode::{solve_ivp, MassMatrix, ODEMethod, ODEOptions};
 
 /// Test Radau method with a constant mass matrix
 #[test]
+#[allow(dead_code)]
 fn test_radau_constant_mass_matrix() -> IntegrateResult<()> {
     // Simple 2D oscillator with a mass matrix
     // M·[x', v']^T = [v, -x]^T
@@ -96,6 +97,7 @@ fn test_radau_constant_mass_matrix() -> IntegrateResult<()> {
 
 /// Test Radau method with a time-dependent mass matrix
 #[test]
+#[allow(dead_code)]
 fn test_radau_time_dependent_mass_matrix() -> IntegrateResult<()> {
     // Simple time-dependent system
     // M(t)·x'' + x = 0
@@ -232,6 +234,7 @@ fn test_radau_time_dependent_mass_matrix() -> IntegrateResult<()> {
 
 /// Debug test to understand Radau mass matrix issue
 #[test]
+#[allow(dead_code)]
 fn test_radau_debug() -> IntegrateResult<()> {
     // Simple test case: 2D oscillator with mass matrix
     // M·[x', v']^T = [v, -x]^T where M = [2 0; 0 1]
@@ -312,6 +315,7 @@ fn test_radau_debug() -> IntegrateResult<()> {
 
 /// Compare Radau method with transformed explicit solver for mass matrices
 #[test]
+#[allow(dead_code)]
 fn test_radau_vs_explicit_mass_matrix() -> IntegrateResult<()> {
     // Test that should now work with the fixed Newton iteration
 

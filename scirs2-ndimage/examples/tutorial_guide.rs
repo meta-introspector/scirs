@@ -21,6 +21,7 @@ use scirs2_ndimage::{
     morphology::*, segmentation::*,
 };
 
+#[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("🎓 SciRS2 NDImage Tutorial Guide");
     println!("================================\n");
@@ -66,6 +67,7 @@ fn main() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn tutorial_1_getting_started() -> NdimageResult<()> {
     println!("-------------------------------------------");
     println!("Welcome to image processing with SciRS2!");
@@ -151,6 +153,7 @@ fn tutorial_1_getting_started() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn tutorial_2_working_with_images() -> NdimageResult<()> {
     println!("-------------------------------------------");
     println!("Learn how to create, modify, and inspect images.");
@@ -230,6 +233,7 @@ fn tutorial_2_working_with_images() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn tutorial_3_image_enhancement() -> NdimageResult<()> {
     println!("-------------------------------------------");
     println!("Learn to improve image quality by reducing noise and enhancing details.");
@@ -318,6 +322,7 @@ fn tutorial_3_image_enhancement() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn tutorial_4_edge_detection() -> NdimageResult<()> {
     println!("-------------------------------------------");
     println!("Learn to find edges and boundaries in images - fundamental for computer vision.");
@@ -418,6 +423,7 @@ fn tutorial_4_edge_detection() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn tutorial_5_shape_analysis() -> NdimageResult<()> {
     println!("-------------------------------------------");
     println!("Learn morphological operations to analyze and modify object shapes.");
@@ -569,6 +575,7 @@ fn tutorial_5_shape_analysis() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn tutorial_6_object_detection() -> NdimageResult<()> {
     println!("-------------------------------------------");
     println!("Learn to find, label, and measure objects in images.");
@@ -709,6 +716,7 @@ fn tutorial_6_object_detection() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn tutorial_7_transformations() -> NdimageResult<()> {
     println!("-------------------------------------------");
     println!("Learn to rotate, scale, and warp images for registration and augmentation.");
@@ -938,6 +946,7 @@ fn tutorial_7_transformations() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn tutorial_8_advanced_techniques() -> NdimageResult<()> {
     println!("-------------------------------------------");
     println!("Explore advanced image processing techniques and domain-specific applications.");
@@ -1109,6 +1118,7 @@ fn tutorial_8_advanced_techniques() -> NdimageResult<()> {
 
 // Helper functions for creating test images and computing statistics
 
+#[allow(dead_code)]
 fn create_circle_image(height: usize, width: usize, radius: f64) -> Array2<f64> {
     let center_y = height as f64 / 2.0;
     let center_x = width as f64 / 2.0;
@@ -1126,6 +1136,7 @@ fn create_circle_image(height: usize, width: usize, radius: f64) -> Array2<f64> 
     })
 }
 
+#[allow(dead_code)]
 fn create_square_image(height: usize, width: usize, size: usize) -> Array2<f64> {
     let start_y = (height - size) / 2;
     let start_x = (width - size) / 2;
@@ -1139,6 +1150,7 @@ fn create_square_image(height: usize, width: usize, size: usize) -> Array2<f64> 
     })
 }
 
+#[allow(dead_code)]
 fn compute_image_stats(image: &Array2<f64>) -> (f64, f64, f64) {
     let min = image.fold(f64::INFINITY, |acc, &x| acc.min(x));
     let max = image.fold(f64::NEG_INFINITY, |acc, &x| acc.max(x));
@@ -1146,6 +1158,7 @@ fn compute_image_stats(image: &Array2<f64>) -> (f64, f64, f64) {
     (min, max, mean)
 }
 
+#[allow(dead_code)]
 fn add_realistic_noise(image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
     // Simple deterministic noise for reproducible examples
     image
@@ -1155,6 +1168,7 @@ fn add_realistic_noise(image: &Array2<f64>, noise_level: f64) -> Array2<f64> {
         })
 }
 
+#[allow(dead_code)]
 fn create_edge_test_image(height: usize, width: usize) -> Array2<f64> {
     Array2::from_shape_fn((height, width), |(i, j)| {
         // Create various edge patterns
@@ -1174,10 +1188,12 @@ fn create_edge_test_image(height: usize, width: usize) -> Array2<f64> {
     })
 }
 
+#[allow(dead_code)]
 fn count_edge_pixels(image: &Array2<f64>, threshold: f64) -> usize {
     image.iter().filter(|&&x| x > threshold).count()
 }
 
+#[allow(dead_code)]
 fn roberts_cross_gradient(image: &ArrayView2<f64>) -> NdimageResult<Array2<f64>> {
     // Simple Roberts cross gradient implementation
     let (height, width) = image.dim();
@@ -1194,6 +1210,7 @@ fn roberts_cross_gradient(image: &ArrayView2<f64>) -> NdimageResult<Array2<f64>>
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn create_binary_shapes_image(height: usize, width: usize) -> Array2<u8> {
     Array2::from_shape_fn((height, width), |(i, j)| {
         // Create several shapes
@@ -1218,6 +1235,7 @@ fn create_binary_shapes_image(height: usize, width: usize) -> Array2<u8> {
     })
 }
 
+#[allow(dead_code)]
 fn count_white_pixels<T>(image: &Array2<T>) -> usize
 where
     T: PartialOrd + From<u8>,
@@ -1225,6 +1243,7 @@ where
     image.iter().filter(|&&x| x > T::from(0u8)).count()
 }
 
+#[allow(dead_code)]
 fn create_multi_object_image(height: usize, width: usize) -> Array2<f64> {
     Array2::from_shape_fn((height, width), |(i, j)| {
         // Create multiple objects of different sizes and intensities
@@ -1247,6 +1266,7 @@ fn create_multi_object_image(height: usize, width: usize) -> Array2<f64> {
     })
 }
 
+#[allow(dead_code)]
 fn create_test_pattern_image(height: usize, width: usize) -> Array2<f64> {
     Array2::from_shape_fn((height, width), |(i, j)| {
         let x = i as f64 / height as f64;
@@ -1261,6 +1281,7 @@ fn create_test_pattern_image(height: usize, width: usize) -> Array2<f64> {
     })
 }
 
+#[allow(dead_code)]
 fn create_complex_test_image(height: usize, width: usize) -> Array2<f64> {
     Array2::from_shape_fn((height, width), |(i, j)| {
         let x = i as f64 / height as f64;
@@ -1281,6 +1302,7 @@ fn create_complex_test_image(height: usize, width: usize) -> Array2<f64> {
     })
 }
 
+#[allow(dead_code)]
 fn create_watershed_markers(distance_map: &Array2<f64>, threshold: f64) -> Array2<u32> {
     let mut markers = Array2::zeros(distance_map.dim());
     let mut label = 1u32;
@@ -1304,6 +1326,7 @@ fn create_watershed_markers(distance_map: &Array2<f64>, threshold: f64) -> Array
     markers
 }
 
+#[allow(dead_code)]
 fn estimate_sharpness(image: &Array2<f64>) -> f64 {
     // Simple sharpness estimate using Laplacian variance
     let laplacian_kernel = Array2::from_shape_vec(
@@ -1333,11 +1356,13 @@ fn estimate_sharpness(image: &Array2<f64>) -> f64 {
     sum_squares / count as f64
 }
 
+#[allow(dead_code)]
 fn estimate_contrast(image: &Array2<f64>) -> f64 {
     let stats = compute_image_stats(image);
     stats.1 - stats.0 // max - min
 }
 
+#[allow(dead_code)]
 fn estimate_noise_level(image: &Array2<f64>) -> f64 {
     // Estimate noise using high-frequency content
     let (height, width) = image.dim();
@@ -1357,6 +1382,7 @@ fn estimate_noise_level(image: &Array2<f64>) -> f64 {
     noise_sum / count as f64
 }
 
+#[allow(dead_code)]
 fn enhance_contrast(image: &Array2<f64>, factor: f64) -> NdimageResult<Array2<f64>> {
     let stats = compute_image_stats(image);
     let mean = stats.2;

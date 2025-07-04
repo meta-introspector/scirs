@@ -6,6 +6,7 @@
 use num_complex::Complex64;
 use scirs2_special::physics_engineering::*;
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Physics and Engineering Functions Demo ===\n");
 

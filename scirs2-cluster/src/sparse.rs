@@ -361,6 +361,7 @@ impl<F: Float + FromPrimitive + Debug + PartialOrd> SparseHierarchicalClustering
 }
 
 /// Build a sparse k-nearest neighbor graph from dense data
+#[allow(dead_code)]
 pub fn sparse_knn_graph<F>(
     data: ArrayView2<F>,
     k: usize,
@@ -431,6 +432,7 @@ where
 }
 
 /// Build a sparse epsilon-neighborhood graph from dense data
+#[allow(dead_code)]
 pub fn sparse_epsilon_graph<F>(
     data: ArrayView2<F>,
     epsilon: F,

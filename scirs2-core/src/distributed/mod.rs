@@ -59,6 +59,7 @@ pub use scheduler::{
 };
 
 /// Initialize distributed computing infrastructure
+#[allow(dead_code)]
 pub fn initialize_distributed_computing() -> crate::error::CoreResult<()> {
     cluster::initialize_cluster_manager()?;
     scheduler::initialize_distributed_scheduler()?;
@@ -67,6 +68,7 @@ pub fn initialize_distributed_computing() -> crate::error::CoreResult<()> {
 }
 
 /// Get distributed system status
+#[allow(dead_code)]
 pub fn get_distributed_status() -> crate::error::CoreResult<DistributedSystemStatus> {
     let cluster_manager = cluster::ClusterManager::global()?;
     let scheduler = scheduler::DistributedScheduler::global()?;

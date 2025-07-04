@@ -186,6 +186,7 @@ pub struct ODEResult<F> {
 ///
 /// let result = matrix_exp_action(&a.view(), &b.view(), t, &DynamicsConfig::default()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn matrix_exp_action<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -212,6 +213,7 @@ where
 }
 
 /// High-precision matrix exponential action for small matrices
+#[allow(dead_code)]
 fn high_precision_exp_action<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -267,6 +269,7 @@ where
 }
 
 /// High-precision Padé approximation for matrix exponential
+#[allow(dead_code)]
 fn pade_matrix_exp<F>(a: &ArrayView2<F>) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + Send + Sync + 'static + ndarray::ScalarOperand,
@@ -307,6 +310,7 @@ where
 }
 
 /// Krylov subspace approximation for matrix exponential action
+#[allow(dead_code)]
 fn krylov_exp_action<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -413,6 +417,7 @@ where
 ///
 /// let x = lyapunov_solve(&a.view(), &c.view(), &DynamicsConfig::default()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn lyapunov_solve<F>(
     a: &ArrayView2<F>,
     c: &ArrayView2<F>,
@@ -448,6 +453,7 @@ where
 }
 
 /// Direct solution of Lyapunov equation using Kronecker products
+#[allow(dead_code)]
 fn lyapunov_direct<F>(
     a: &ArrayView2<F>,
     c: &ArrayView2<F>,
@@ -501,6 +507,7 @@ where
 }
 
 /// Iterative solution of Lyapunov equation using conjugate gradient
+#[allow(dead_code)]
 fn lyapunov_iterative<F>(
     a: &ArrayView2<F>,
     c: &ArrayView2<F>,
@@ -562,6 +569,7 @@ where
 ///
 /// let x = riccati_solve(&a.view(), &b.view(), &q.view(), &r.view(), &DynamicsConfig::default()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn riccati_solve<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -592,6 +600,7 @@ where
 }
 
 /// Solve Riccati equation using Hamiltonian matrix approach
+#[allow(dead_code)]
 fn riccati_hamiltonian<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
@@ -705,6 +714,7 @@ where
 ///
 /// let result = matrix_ode_solve(f, &x0.view(), [0.0, 1.0], &DynamicsConfig::default()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn matrix_ode_solve<F, E>(
     f: impl Fn(F, &ArrayView2<F>) -> Result<Array2<F>, E>,
     x0: &ArrayView2<F>,
@@ -857,6 +867,7 @@ where
 ///
 /// let psi_t = quantum_evolution(&h.view(), &psi.view(), t, &DynamicsConfig::quantum()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn quantum_evolution<F>(
     hamiltonian: &ArrayView2<F>,
     psi: &ArrayView2<F>,
@@ -949,6 +960,7 @@ where
 /// assert!(stable);
 /// assert!(margin < 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn stability_analysis<F>(a: &ArrayView2<F>) -> LinalgResult<(bool, Array1<Complex<F>>, F)>
 where
     F: Float + NumAssign + Sum + Send + Sync + 'static + ndarray::ScalarOperand,

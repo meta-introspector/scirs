@@ -14,6 +14,7 @@ use ndarray::{Array1, ArrayView1};
 ///
 /// This method applies index reduction techniques to transform a higher-index
 /// DAE system into an index-1 system, and then solves it using BDF methods.
+#[allow(dead_code)]
 pub fn bdf_with_index_reduction<F, FFunc, GFunc>(
     f: FFunc,
     g: GFunc,
@@ -113,6 +114,7 @@ where
 /// 2. Differentiation of constraints to reduce the index
 /// 3. Augmentation of the system with derivative constraints
 /// 4. Solution using BDF methods on the index-reduced system
+#[allow(dead_code)]
 pub fn bdf_implicit_with_index_reduction<F, FFunc>(
     f: FFunc,
     t_span: [F; 2],
@@ -183,6 +185,7 @@ where
 ///
 /// This function implements the differentiation-based index reduction for
 /// implicit DAE systems F(t, y, y') = 0.
+#[allow(dead_code)]
 fn reduce_implicit_dae_index<F, FFunc>(
     f: FFunc,
     y0: &Array1<F>,

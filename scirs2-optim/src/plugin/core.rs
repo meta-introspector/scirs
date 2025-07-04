@@ -551,6 +551,7 @@ impl Default for OptimizerState {
 
 /// Utility functions for plugin development
 /// Create a basic plugin info structure
+#[allow(dead_code)]
 pub fn create_plugin_info(name: &str, version: &str, author: &str) -> PluginInfo {
     PluginInfo {
         name: name.to_string(),
@@ -561,6 +562,7 @@ pub fn create_plugin_info(name: &str, version: &str, author: &str) -> PluginInfo
 }
 
 /// Create basic plugin capabilities
+#[allow(dead_code)]
 pub fn create_basic_capabilities() -> PluginCapabilities {
     PluginCapabilities {
         state_serialization: true,
@@ -570,6 +572,7 @@ pub fn create_basic_capabilities() -> PluginCapabilities {
 }
 
 /// Validate plugin configuration against schema
+#[allow(dead_code)]
 pub fn validate_config_against_schema(
     config: &OptimizerConfig,
     schema: &ConfigSchema,
@@ -625,6 +628,7 @@ pub fn validate_config_against_schema(
 }
 
 /// Validate individual field value against schema
+#[allow(dead_code)]
 fn validate_field_value(value: &ConfigValue, schema: &FieldSchema) -> Result<()> {
     for constraint in &schema.constraints {
         match (value, constraint) {

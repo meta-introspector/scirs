@@ -46,6 +46,7 @@ use scirs2_core::parallel_ops::*;
 /// assert_eq!(eye.get(2, 2), 1.0);
 /// assert_eq!(eye.get(0, 1), 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn eye_array<T>(n: usize, format: &str) -> SparseResult<Box<dyn SparseArray<T>>>
 where
     T: Float
@@ -122,6 +123,7 @@ where
 /// assert_eq!(subdiag.get(2, 1), 1.0);
 /// assert_eq!(subdiag.get(3, 2), 1.0);
 /// ```
+#[allow(dead_code)]
 pub fn eye_array_k<T>(
     m: usize,
     n: usize,
@@ -216,6 +218,7 @@ where
 /// assert_eq!(result.get(0, 1), 4.0);
 /// assert_eq!(result.get(1, 2), 5.0);
 /// ```
+#[allow(dead_code)]
 pub fn diags_array<T>(
     diagonals: &[Array1<T>],
     offsets: &[isize],
@@ -256,7 +259,7 @@ where
 
             if diag.len() > max_len {
                 return Err(SparseError::InconsistentData {
-                    reason: format!("Diagonal {} is too long ({} > {})", i, diag.len(), max_len),
+                    reason: format!("Diagonal {i} is too long ({} > {})", diag.len(), max_len),
                 });
             }
 
@@ -273,7 +276,7 @@ where
 
             if diag.len() > max_len {
                 return Err(SparseError::InconsistentData {
-                    reason: format!("Diagonal {} is too long ({} > {})", i, diag.len(), max_len),
+                    reason: format!("Diagonal {i} is too long ({} > {})", diag.len(), max_len),
                 });
             }
 
@@ -326,6 +329,7 @@ where
 /// let seeded = random_array::<f64>((5, 5), 0.5, Some(42), "coo").unwrap();
 /// assert_eq!(seeded.shape(), (5, 5));
 /// ```
+#[allow(dead_code)]
 pub fn random_array<T>(
     shape: (usize, usize),
     density: f64,
@@ -463,6 +467,7 @@ where
 /// assert_eq!(large_random.shape(), (1000, 1000));
 /// assert!(large_random.nnz() > 5000); // Approximately 10000 non-zeros expected
 /// ```
+#[allow(dead_code)]
 pub fn random_array_parallel<T>(
     shape: (usize, usize),
     density: f64,
@@ -508,6 +513,7 @@ where
 }
 
 /// Internal parallel construction function
+#[allow(dead_code)]
 fn parallel_random_construction<T>(
     shape: (usize, usize),
     density: f64,

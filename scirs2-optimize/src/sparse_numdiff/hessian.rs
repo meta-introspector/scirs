@@ -12,6 +12,7 @@ use super::finite_diff::{compute_step_sizes, SparseFiniteDiffOptions};
 use crate::error::OptimizeError;
 
 // Helper function to replace get_index and set_value_by_index which are not available in CsrArray
+#[allow(dead_code)]
 fn update_sparse_value(matrix: &mut CsrArray<f64>, row: usize, col: usize, value: f64) {
     // Only update if the position is non-zero in the sparsity pattern and set operation succeeds
     if matrix.get(row, col) != 0.0 && matrix.set(row, col, value).is_err() {
@@ -20,6 +21,7 @@ fn update_sparse_value(matrix: &mut CsrArray<f64>, row: usize, col: usize, value
 }
 
 // Helper function to check if a position exists in the sparsity pattern
+#[allow(dead_code)]
 fn exists_in_sparsity(matrix: &CsrArray<f64>, row: usize, col: usize) -> bool {
     matrix.get(row, col) != 0.0
 }
@@ -40,6 +42,7 @@ fn exists_in_sparsity(matrix: &CsrArray<f64>, row: usize, col: usize) -> bool {
 ///
 /// * `CsrArray<f64>` - Sparse Hessian matrix in CSR format
 ///
+#[allow(dead_code)]
 pub fn sparse_hessian<F, G>(
     func: F,
     grad: Option<G>,
@@ -119,6 +122,7 @@ where
 }
 
 /// Computes Hessian from a gradient function using forward differences
+#[allow(dead_code)]
 fn compute_hessian_from_gradient<G>(
     grad_fn: G,
     x: &ArrayView1<f64>,
@@ -167,6 +171,7 @@ where
 }
 
 /// Computes Hessian using 2-point finite differences
+#[allow(dead_code)]
 fn compute_hessian_2point<F>(
     func: F,
     x: &ArrayView1<f64>,
@@ -314,6 +319,7 @@ where
 }
 
 /// Computes Hessian using 3-point finite differences (more accurate but more expensive)
+#[allow(dead_code)]
 fn compute_hessian_3point<F>(
     func: F,
     x: &ArrayView1<f64>,
@@ -487,6 +493,7 @@ where
 /// uses a combination of forward differences and the complex step method
 /// to achieve high accuracy. This implementation uses higher-order finite differences
 /// to approximate the complex step approach.
+#[allow(dead_code)]
 fn compute_hessian_complex_step<F>(
     func: F,
     x: &ArrayView1<f64>,
@@ -577,6 +584,7 @@ where
 }
 
 /// Computes a diagonal element of the Hessian using complex step method
+#[allow(dead_code)]
 fn compute_hessian_diagonal_complex_step<F>(func: &F, x: &ArrayView1<f64>, i: usize, h: f64) -> f64
 where
     F: Fn(&ArrayView1<f64>) -> f64,
@@ -606,6 +614,7 @@ where
 }
 
 /// Computes a mixed partial derivative of the Hessian using complex step method
+#[allow(dead_code)]
 fn compute_hessian_mixed_complex_step<F>(
     func: &F,
     x: &ArrayView1<f64>,
@@ -649,6 +658,7 @@ where
 }
 
 /// Ensures a sparsity pattern is symmetric
+#[allow(dead_code)]
 fn make_symmetric_sparsity(sparsity: &CsrArray<f64>) -> Result<CsrArray<f64>, OptimizeError> {
     let (m, n) = sparsity.shape();
     if m != n {
@@ -682,6 +692,7 @@ fn make_symmetric_sparsity(sparsity: &CsrArray<f64>) -> Result<CsrArray<f64>, Op
 }
 
 /// Fills the lower triangle of a Hessian matrix based on the upper triangle
+#[allow(dead_code)]
 fn fill_symmetric_hessian(upper: &CsrArray<f64>) -> Result<CsrArray<f64>, OptimizeError> {
     let (n, _) = upper.shape();
     if n != upper.shape().1 {

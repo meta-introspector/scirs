@@ -8,11 +8,13 @@ use scirs2_spatial::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn generate_points(n_points: usize, dimensions: usize, seed: u64) -> Array2<f64> {
     let mut rng = StdRng::seed_from_u64(seed);
     Array2::from_shape_fn((n_points, dimensions), |_| rng.random_range(-10.0..10.0))
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("=== High-Precision Performance Analysis ===\n");
 
@@ -48,8 +50,7 @@ fn main() {
         let speedup = scalar_per_op as f64 / simd_per_op as f64;
 
         println!(
-            "{:>8} {:>15} {:>15} {:>12.2}x",
-            dim, scalar_per_op, simd_per_op, speedup
+            "{dim:>8} {scalar_per_op:>15} {simd_per_op:>15} {speedup:>12.2}x"
         );
     }
 
@@ -72,8 +73,7 @@ fn main() {
         let ops_per_sec = expected_ops as f64 / elapsed.as_secs_f64();
 
         println!(
-            "{:>8} {:>12} {:>15} {:>15.0}",
-            size, expected_ops, micros, ops_per_sec
+            "{size:>8} {expected_ops:>12} {micros:>15} {ops_per_sec:>15.0}"
         );
     }
 
@@ -106,8 +106,7 @@ fn main() {
         let mb_per_sec = data_size_mb / elapsed.as_secs_f64();
 
         println!(
-            "{:>8} {:>15} {:>15.2} {:>15.1}",
-            size, micros, ops_per_million, mb_per_sec
+            "{size:>8} {micros:>15} {ops_per_million:>15.2} {mb_per_sec:>15.1}"
         );
     }
 
@@ -126,7 +125,7 @@ fn main() {
     let per_op_nanos = total_time.as_nanos() / iterations;
     let ops_per_sec = 1_000_000_000.0 / per_op_nanos as f64;
 
-    println!("Single Euclidean distance (100D): {} ns", per_op_nanos);
+    println!("Single Euclidean distance (100D): {per_op_nanos} ns");
     println!(
         "Throughput: {:.1} million operations/second",
         ops_per_sec / 1_000_000.0

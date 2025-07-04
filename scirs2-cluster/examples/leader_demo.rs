@@ -6,6 +6,7 @@ use scirs2_cluster::{
     LeaderTree,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Leader Algorithm Demo ===\n");
 
@@ -138,6 +139,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn print_tree_node<F: num_traits::Float + std::fmt::Display>(
     node: &LeaderNode<F>,
     depth: usize,

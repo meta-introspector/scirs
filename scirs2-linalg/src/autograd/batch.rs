@@ -22,6 +22,7 @@ use scirs2_autograd::variable::Variable;
 /// # Returns
 ///
 /// A new tensor of shape (..., n, p) containing the batch matrix products.
+#[allow(dead_code)]
 pub fn batch_matmul<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
     b: &Tensor<F>,
@@ -355,6 +356,7 @@ pub fn batch_matmul<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor of shape (batch_size, n) containing the batch matrix-vector products.
+#[allow(dead_code)]
 pub fn batch_matvec<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
     x: &Tensor<F>,
@@ -516,6 +518,7 @@ pub fn batch_matvec<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor of shape (batch_size, n, n) containing the batch matrix inverses.
+#[allow(dead_code)]
 pub fn batch_inv<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
 ) -> AutogradResult<Tensor<F>> {
@@ -659,6 +662,7 @@ pub fn batch_inv<F: Float + Debug + Send + Sync + 'static>(
 /// # Returns
 ///
 /// A new tensor of shape (batch_size, 1) containing the batch matrix determinants.
+#[allow(dead_code)]
 pub fn batch_det<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
 ) -> AutogradResult<Tensor<F>> {

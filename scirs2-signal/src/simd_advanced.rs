@@ -19,7 +19,7 @@ use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::check_finite;
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
-#[cfg(test)]
+
 use std::f64::consts::PI;
 
 /// Configuration for SIMD operations
@@ -68,6 +68,7 @@ impl Default for SimdConfig {
 /// * `coeffs` - Filter coefficients (assumed to be relatively short)
 /// * `output` - Output buffer (must be pre-allocated)
 /// * `config` - SIMD configuration
+#[allow(dead_code)]
 pub fn simd_fir_filter(
     input: &[f64],
     coeffs: &[f64],
@@ -108,6 +109,7 @@ pub fn simd_fir_filter(
 ///
 /// Computes autocorrelation function using SIMD vectorization with
 /// cache-friendly memory access patterns
+#[allow(dead_code)]
 pub fn simd_autocorrelation(
     signal: &[f64],
     max_lag: usize,
@@ -144,6 +146,7 @@ pub fn simd_autocorrelation(
 /// SIMD-optimized cross-correlation
 ///
 /// Computes cross-correlation between two signals using vectorized operations
+#[allow(dead_code)]
 pub fn simd_cross_correlation(
     signal1: &[f64],
     signal2: &[f64],
@@ -205,6 +208,7 @@ pub fn simd_cross_correlation(
 /// SIMD-optimized complex FFT butterfly operations
 ///
 /// Performs vectorized complex arithmetic for FFT computations
+#[allow(dead_code)]
 pub fn simd_complex_fft_butterfly(
     data: &mut [num_complex::Complex<f64>],
     twiddles: &[num_complex::Complex<f64>],
@@ -236,6 +240,7 @@ pub fn simd_complex_fft_butterfly(
 /// SIMD-optimized windowing function application
 ///
 /// Applies window functions using vectorized operations
+#[allow(dead_code)]
 pub fn simd_apply_window(
     signal: &[f64],
     window: &[f64],
@@ -278,6 +283,7 @@ pub fn simd_apply_window(
 
 // Scalar fallback implementations
 
+#[allow(dead_code)]
 fn scalar_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> SignalResult<()> {
     let n = input.len();
     let m = coeffs.len();
@@ -295,6 +301,7 @@ fn scalar_fir_filter(input: &[f64], coeffs: &[f64], output: &mut [f64]) -> Signa
     Ok(())
 }
 
+#[allow(dead_code)]
 fn scalar_autocorrelation(signal: &[f64], max_lag: usize) -> SignalResult<Vec<f64>> {
     let n = signal.len();
     let mut autocorr = vec![0.0; max_lag + 1];
@@ -313,6 +320,7 @@ fn scalar_autocorrelation(signal: &[f64], max_lag: usize) -> SignalResult<Vec<f6
     Ok(autocorr)
 }
 
+#[allow(dead_code)]
 fn scalar_cross_correlation(
     signal1: &[f64],
     signal2: &[f64],
@@ -351,6 +359,7 @@ fn scalar_cross_correlation(
     Ok(result)
 }
 
+#[allow(dead_code)]
 fn scalar_complex_butterfly(
     data: &mut [num_complex::Complex<f64>],
     twiddles: &[num_complex::Complex<f64>],
@@ -712,6 +721,7 @@ unsafe fn sse_apply_window(signal: &[f64], window: &[f64], output: &mut [f64]) -
 }
 
 /// Performance benchmark for SIMD operations
+#[allow(dead_code)]
 pub fn benchmark_simd_operations(signal_length: usize) -> SignalResult<()> {
     use std::time::Instant;
 
@@ -787,6 +797,7 @@ pub fn benchmark_simd_operations(signal_length: usize) -> SignalResult<()> {
 /// # Returns
 ///
 /// * Spectral centroid in Hz
+#[allow(dead_code)]
 pub fn simd_spectral_centroid(
     magnitude_spectrum: &[f64],
     frequencies: &[f64],
@@ -824,6 +835,7 @@ pub fn simd_spectral_centroid(
 }
 
 /// Scalar fallback for spectral centroid
+#[allow(dead_code)]
 fn scalar_spectral_centroid(magnitude_spectrum: &[f64], frequencies: &[f64]) -> SignalResult<f64> {
     let mut weighted_sum = 0.0;
     let mut total_magnitude = 0.0;
@@ -855,6 +867,7 @@ fn scalar_spectral_centroid(magnitude_spectrum: &[f64], frequencies: &[f64]) -> 
 /// # Returns
 ///
 /// * Rolloff frequency in Hz
+#[allow(dead_code)]
 pub fn simd_spectral_rolloff(
     magnitude_spectrum: &[f64],
     frequencies: &[f64],
@@ -907,6 +920,7 @@ pub fn simd_spectral_rolloff(
 }
 
 /// Scalar fallback for spectral rolloff
+#[allow(dead_code)]
 fn scalar_spectral_rolloff(
     magnitude_spectrum: &[f64],
     frequencies: &[f64],
@@ -945,6 +959,7 @@ fn scalar_spectral_rolloff(
 /// # Returns
 ///
 /// * Vector of peak indices
+#[allow(dead_code)]
 pub fn simd_peak_detection(
     signal: &[f64],
     min_height: f64,
@@ -1016,6 +1031,7 @@ unsafe fn avx2_peak_detection(
 }
 
 /// Scalar local maxima detection
+#[allow(dead_code)]
 fn scalar_local_maxima_detection(
     signal: &[f64],
     min_height: f64,
@@ -1031,6 +1047,7 @@ fn scalar_local_maxima_detection(
 }
 
 /// Apply minimum distance constraint to peak candidates
+#[allow(dead_code)]
 fn apply_minimum_distance_constraint(
     peak_candidates: &mut Vec<usize>,
     signal: &[f64],
@@ -1066,6 +1083,7 @@ fn apply_minimum_distance_constraint(
 }
 
 /// Scalar fallback for peak detection
+#[allow(dead_code)]
 fn scalar_peak_detection(
     signal: &[f64],
     min_height: f64,
@@ -1090,6 +1108,7 @@ fn scalar_peak_detection(
 /// # Returns
 ///
 /// * Zero-crossing rate (crossings per sample)
+#[allow(dead_code)]
 pub fn simd_zero_crossing_rate(signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
     check_finite(signal, "signal")?;
 
@@ -1133,6 +1152,7 @@ unsafe fn avx2_zero_crossings(signal: &[f64]) -> SignalResult<usize> {
 }
 
 /// Scalar zero crossing count
+#[allow(dead_code)]
 fn scalar_count_zero_crossings(signal: &[f64]) -> usize {
     let n = signal.len();
     let mut crossings = 0;
@@ -1147,6 +1167,7 @@ fn scalar_count_zero_crossings(signal: &[f64]) -> usize {
 }
 
 /// Scalar fallback for zero-crossing rate
+#[allow(dead_code)]
 fn scalar_zero_crossing_rate(signal: &[f64]) -> SignalResult<f64> {
     let n = signal.len();
     if n < 2 {
@@ -1170,6 +1191,7 @@ fn scalar_zero_crossing_rate(signal: &[f64]) -> SignalResult<f64> {
 /// # Returns
 ///
 /// * Signal energy (sum of squares)
+#[allow(dead_code)]
 pub fn simd_signal_energy(signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
     check_finite(signal, "signal")?;
 
@@ -1191,6 +1213,7 @@ pub fn simd_signal_energy(signal: &[f64], config: &SimdConfig) -> SignalResult<f
 }
 
 /// Scalar fallback for signal energy
+#[allow(dead_code)]
 fn scalar_signal_energy(signal: &[f64]) -> SignalResult<f64> {
     let energy = signal.iter().map(|&x| x * x).sum();
     Ok(energy)
@@ -1208,6 +1231,7 @@ fn scalar_signal_energy(signal: &[f64]) -> SignalResult<f64> {
 /// # Returns
 ///
 /// * RMS value
+#[allow(dead_code)]
 pub fn simd_rms(signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
     let energy = simd_signal_energy(signal, config)?;
     let n = signal.len();
@@ -1234,6 +1258,7 @@ pub fn simd_rms(signal: &[f64], config: &SimdConfig) -> SignalResult<f64> {
 /// # Returns
 ///
 /// * `BatchSpectralResult` containing power spectra, phases, and statistics
+#[allow(dead_code)]
 pub fn simd_batch_spectral_analysis(
     signals: &Array2<f64>,
     window_type: &str,
@@ -1355,6 +1380,7 @@ struct SingleSpectralResult {
 }
 
 /// Process a single signal with SIMD optimizations
+#[allow(dead_code)]
 fn process_single_signal_simd(
     signal: &[f64],
     window: &[f64],
@@ -1430,6 +1456,7 @@ fn process_single_signal_simd(
 }
 
 /// Generate window function using SIMD optimizations
+#[allow(dead_code)]
 fn generate_simd_window(
     window_type: &str,
     length: usize,
@@ -1497,6 +1524,7 @@ pub struct SimdPerformanceMetrics {
 }
 
 /// Enhanced SIMD convolution with advanced optimizations
+#[allow(dead_code)]
 pub fn simd_enhanced_convolution(
     signal: &[f64],
     kernel: &[f64],
@@ -1532,6 +1560,7 @@ pub fn simd_enhanced_convolution(
 }
 
 /// Scalar fallback for enhanced convolution
+#[allow(dead_code)]
 fn scalar_enhanced_convolution(
     signal: &[f64],
     kernel: &[f64],
@@ -2166,6 +2195,7 @@ pub mod ultra_simd_realtime {
 }
 
 /// Comprehensive SIMD validation and performance testing
+#[allow(dead_code)]
 pub fn comprehensive_simd_validation(
     test_size: usize,
     config: &SimdConfig,
@@ -2254,7 +2284,6 @@ pub struct SimdValidationResult {
     pub validation_passed: bool,
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -2422,6 +2451,7 @@ mod tests {
 ///
 /// This function provides highly optimized complex multiplication for spectral analysis,
 /// particularly useful in multitaper and other frequency domain operations.
+#[allow(dead_code)]
 pub fn simd_complex_multiply(
     a_real: &[f64],
     a_imag: &[f64],
@@ -2466,6 +2496,7 @@ pub fn simd_complex_multiply(
 /// SIMD-optimized power spectral density computation
 ///
 /// Computes |X|^2 for complex FFT results using SIMD acceleration
+#[allow(dead_code)]
 pub fn simd_power_spectrum(
     real: &[f64],
     imag: &[f64],
@@ -2500,6 +2531,7 @@ pub fn simd_power_spectrum(
 /// SIMD-optimized weighted averaging for multitaper spectral estimation
 ///
 /// Computes weighted averages of multiple tapered spectra using adaptive weights
+#[allow(dead_code)]
 pub fn simd_weighted_average_spectra(
     spectra: &[&[f64]],
     weights: &[f64],
@@ -2553,6 +2585,7 @@ pub fn simd_weighted_average_spectra(
 /// SIMD-optimized window function application
 ///
 /// Applies window functions element-wise with SIMD acceleration (alternative implementation)
+#[allow(dead_code)]
 pub fn simd_apply_window_v2(
     signal: &[f64],
     window: &[f64],
@@ -2585,6 +2618,7 @@ pub fn simd_apply_window_v2(
 }
 
 // Scalar fallback implementations
+#[allow(dead_code)]
 fn scalar_complex_multiply(
     a_real: &[f64],
     a_imag: &[f64],
@@ -2600,6 +2634,7 @@ fn scalar_complex_multiply(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn scalar_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> SignalResult<()> {
     for i in 0..real.len() {
         power[i] = real[i] * real[i] + imag[i] * imag[i];
@@ -2607,6 +2642,7 @@ fn scalar_power_spectrum(real: &[f64], imag: &[f64], power: &mut [f64]) -> Signa
     Ok(())
 }
 
+#[allow(dead_code)]
 fn scalar_weighted_average_spectra(
     spectra: &[&[f64]],
     weights: &[f64],
@@ -2629,6 +2665,7 @@ fn scalar_weighted_average_spectra(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn scalar_apply_window(signal: &[f64], window: &[f64], result: &mut [f64]) -> SignalResult<()> {
     for i in 0..signal.len() {
         result[i] = signal[i] * window[i];

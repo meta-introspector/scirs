@@ -2,7 +2,7 @@
 
 use ndarray::{Array, Array1, Array2, ArrayView, Dimension};
 use num_traits::{Float, FromPrimitive, Zero};
-use scirs2_core::{parallel_ops, simd, CoreError};
+use scirs2_core::{parallel_ops, CoreError};
 use std::fmt::Debug;
 
 use super::{pad_array, BorderMode};
@@ -19,6 +19,7 @@ use crate::error::{NdimageError, NdimageResult};
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn maximum_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -72,6 +73,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn minimum_filter<T, D>(
     input: &Array<T, D>,
     size: &[usize],
@@ -123,6 +125,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn percentile_filter<T, D>(
     input: &Array<T, D>,
     percentile: f64,
@@ -200,6 +203,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn percentile_filter_footprint<T, D>(
     input: ArrayView<T, D>,
     percentile: f64,
@@ -278,6 +282,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn rank_filter_footprint<T, D>(
     input: ArrayView<T, D>,
     rank: usize,
@@ -389,6 +394,7 @@ where
 /// # Returns
 ///
 /// * `Result<Array<T, D>>` - Filtered array
+#[allow(dead_code)]
 pub fn rank_filter<T, D>(
     input: &Array<T, D>,
     rank: usize,
@@ -493,6 +499,7 @@ where
 }
 
 /// Apply a rank filter to a 1D array
+#[allow(dead_code)]
 fn rank_filter_1d<T>(
     input: &Array1<T>,
     rank: usize,
@@ -579,6 +586,7 @@ where
 
 /// Sort 3 elements and return them in order
 #[inline]
+#[allow(dead_code)]
 fn sort3(a: f32, b: f32, c: f32) -> (f32, f32, f32) {
     if a > b {
         if b > c {
@@ -599,6 +607,7 @@ fn sort3(a: f32, b: f32, c: f32) -> (f32, f32, f32) {
 
 /// Sort 5 elements in-place using a sorting network
 #[inline]
+#[allow(dead_code)]
 fn sort5(arr: &mut [f32; 5]) {
     // Sorting network for 5 elements
     // Optimal sorting network from http://pages.ripco.net/~jgamble/nw.html
@@ -633,6 +642,7 @@ fn sort5(arr: &mut [f32; 5]) {
 
 /// Helper function to swap elements in an array
 #[inline]
+#[allow(dead_code)]
 fn swap<T: PartialOrd>(arr: &mut [T], i: usize, j: usize) {
     if arr[i] > arr[j] {
         arr.swap(i, j);
@@ -640,6 +650,7 @@ fn swap<T: PartialOrd>(arr: &mut [T], i: usize, j: usize) {
 }
 
 /// Optimization for f32 arrays with window size 3
+#[allow(dead_code)]
 fn optimize_for_f32_size3<T>(
     input: &Array1<T>,
     rank: usize,
@@ -714,6 +725,7 @@ where
 }
 
 /// Optimization for f32 arrays with window size 5
+#[allow(dead_code)]
 fn optimize_for_f32_size5<T>(
     input: &Array1<T>,
     rank: usize,
@@ -799,6 +811,7 @@ where
 }
 
 /// Apply a rank filter to a 2D array
+#[allow(dead_code)]
 fn rank_filter_2d<T>(
     input: &Array2<T>,
     rank: usize,
@@ -900,6 +913,7 @@ where
 }
 
 /// Apply a rank filter to an n-dimensional IxDyn array (3D and higher)
+#[allow(dead_code)]
 fn rank_filter_nd<T>(
     input: &Array<T, ndarray::IxDyn>,
     rank: usize,

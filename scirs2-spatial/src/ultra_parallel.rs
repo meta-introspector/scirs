@@ -1197,11 +1197,13 @@ static GLOBAL_WORK_STEALING_POOL: std::sync::OnceLock<Mutex<Option<WorkStealingP
     std::sync::OnceLock::new();
 
 /// Get or create the global work-stealing pool
+#[allow(dead_code)]
 pub fn global_work_stealing_pool() -> SpatialResult<&'static Mutex<Option<WorkStealingPool>>> {
     Ok(GLOBAL_WORK_STEALING_POOL.get_or_init(|| Mutex::new(None)))
 }
 
 /// Initialize the global work-stealing pool with configuration
+#[allow(dead_code)]
 pub fn initialize_global_pool(config: WorkStealingConfig) -> SpatialResult<()> {
     let pool_mutex = global_work_stealing_pool()?;
     let mut pool_guard = pool_mutex.lock().unwrap();
@@ -1214,11 +1216,13 @@ pub fn initialize_global_pool(config: WorkStealingConfig) -> SpatialResult<()> {
 }
 
 /// Get NUMA topology information
+#[allow(dead_code)]
 pub fn get_numa_topology() -> NumaTopology {
     NumaTopology::detect()
 }
 
 /// Report ultra-parallel capabilities
+#[allow(dead_code)]
 pub fn report_ultra_parallel_capabilities() {
     let topology = get_numa_topology();
     let total_cores: usize = topology.cores_per_node.iter().sum();

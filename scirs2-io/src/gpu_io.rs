@@ -8,6 +8,8 @@
 //! - Machine learning model integration
 //! - Advanced compute pipelines for scientific computing
 
+#![allow(dead_code)]
+
 use crate::error::{IoError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, IxDyn};
 use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuDataType, GpuDevice, GpuError};

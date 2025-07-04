@@ -108,6 +108,7 @@ use std::f64::consts::PI;
 ///
 /// The implementation uses specialized algorithms for α near 0, 1, 2, 3
 /// to avoid numerical instabilities.
+#[allow(dead_code)]
 pub fn frft<T>(x: &[T], alpha: f64, d: Option<f64>) -> FFTResult<Vec<Complex64>>
 where
     T: NumCast + Copy + std::fmt::Debug + 'static,
@@ -160,6 +161,7 @@ where
 }
 
 /// Implementation of FrFT for the general case using the decomposition method.
+#[allow(dead_code)]
 fn frft_decomposition(x: &[Complex64], alpha: f64, d: f64) -> FFTResult<Vec<Complex64>> {
     let n = x.len();
 
@@ -202,6 +204,7 @@ fn frft_decomposition(x: &[Complex64], alpha: f64, d: f64) -> FFTResult<Vec<Comp
 
 /// Special case implementation for α near 0, 1, 2, or 3.
 /// Uses linear interpolation between the special cases.
+#[allow(dead_code)]
 fn frft_near_special_case(x: &[Complex64], alpha: f64, _d: f64) -> FFTResult<Vec<Complex64>> {
     let n = x.len();
 
@@ -298,6 +301,7 @@ fn frft_near_special_case(x: &[Complex64], alpha: f64, _d: f64) -> FFTResult<Vec
 /// // Result has same length as input
 /// assert_eq!(result.len(), signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn frft_complex(x: &[Complex64], alpha: f64, d: Option<f64>) -> FFTResult<Vec<Complex64>> {
     // Validate inputs
     if x.is_empty() {
@@ -367,6 +371,7 @@ pub fn frft_complex(x: &[Complex64], alpha: f64, d: Option<f64>) -> FFTResult<Ve
 /// let result = frft_stable(&signal, 0.5).unwrap();
 /// assert_eq!(result.len(), signal.len());
 /// ```
+#[allow(dead_code)]
 pub fn frft_stable<T>(x: &[T], alpha: f64) -> FFTResult<Vec<Complex64>>
 where
     T: Copy + Into<f64>,
@@ -396,6 +401,7 @@ where
 /// let signal = vec![1.0, 2.0, 3.0, 4.0];
 /// let result = frft_dft(&signal, 0.5).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn frft_dft<T>(x: &[T], alpha: f64) -> FFTResult<Vec<Complex64>>
 where
     T: Copy + Into<f64>,

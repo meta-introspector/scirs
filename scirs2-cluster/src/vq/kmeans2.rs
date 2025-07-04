@@ -94,6 +94,7 @@ pub enum MissingMethod {
 ///   - centroids: Array of shape (k × n_features)
 ///   - labels: Array of shape (n_samples,) with cluster assignments
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn kmeans2<F>(
     data: ArrayView2<F>,
     k: usize,
@@ -264,6 +265,7 @@ where
 /// ).unwrap();
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn kmeans2_str<F>(
     data: ArrayView2<F>,
     k: usize,
@@ -314,6 +316,7 @@ where
 
 /// Random initialization: generate k centroids from a Gaussian with mean and
 /// variance estimated from the data
+#[allow(dead_code)]
 fn krandinit<F>(data: ArrayView2<F>, k: usize, random_seed: Option<u64>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,
@@ -369,6 +372,7 @@ where
 }
 
 /// Points initialization: choose k observations (rows) at random from data
+#[allow(dead_code)]
 fn kpoints<F>(data: ArrayView2<F>, k: usize, random_seed: Option<u64>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug,
@@ -404,6 +408,7 @@ where
 }
 
 /// K-means++ initialization
+#[allow(dead_code)]
 fn kmeans_plus_plus<F>(data: ArrayView2<F>, k: usize, random_seed: Option<u64>) -> Result<Array2<F>>
 where
     F: Float + FromPrimitive + Debug + std::iter::Sum,

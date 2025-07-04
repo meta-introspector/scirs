@@ -13,6 +13,7 @@ use scirs2_core::gpu::kernels::{DataType, KernelParams};
 use scirs2_core::gpu::{GpuBackend, GpuContext};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Comprehensive GPU Kernel Library Example ===");
 
@@ -46,6 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Initialize GPU context with intelligent fallback
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn initialize_gpu_context() -> Result<GpuContext, Box<dyn std::error::Error>> {
     // Try different backends in order of preference
     let backends = [
@@ -78,6 +80,7 @@ fn initialize_gpu_context() -> Result<GpuContext, Box<dyn std::error::Error>> {
 
 /// Advanced BLAS operations with different matrix sizes
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn demo_blas_advanced(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("Demo: Advanced BLAS Operations");
     println!("===============================");
@@ -184,6 +187,7 @@ fn demo_blas_advanced(context: &GpuContext) -> Result<(), Box<dyn std::error::Er
 
 /// Comprehensive reduction operations testing
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn demo_reduction_comprehensive(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n\nDemo: Comprehensive Reduction Operations");
     println!("========================================");
@@ -253,6 +257,7 @@ fn demo_reduction_comprehensive(context: &GpuContext) -> Result<(), Box<dyn std:
 
 /// Complete machine learning kernels demonstration
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn demo_ml_kernels_complete(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n\nDemo: Complete Machine Learning Kernels");
     println!("=======================================");
@@ -375,6 +380,7 @@ fn demo_ml_kernels_complete(context: &GpuContext) -> Result<(), Box<dyn std::err
 
 /// Transform operations including FFT and convolution
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn demo_transform_operations(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n\nDemo: Transform Operations");
     println!("==========================");
@@ -493,6 +499,7 @@ fn demo_transform_operations(context: &GpuContext) -> Result<(), Box<dyn std::er
 
 /// Demonstrate kernel chaining and complex workflows
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn demo_kernel_chaining(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n\nDemo: Kernel Chaining and Complex Workflows");
     println!("============================================");
@@ -604,6 +611,7 @@ fn demo_kernel_chaining(context: &GpuContext) -> Result<(), Box<dyn std::error::
 
 /// Performance analysis and comparison
 #[cfg(feature = "gpu")]
+#[allow(dead_code)]
 fn demo_performance_analysis(context: &GpuContext) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n\nDemo: Performance Analysis");
     println!("==========================");

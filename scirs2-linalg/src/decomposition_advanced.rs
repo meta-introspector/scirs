@@ -32,6 +32,7 @@ use std::fmt::{Debug, Display};
 /// let a = array![[1.0, 2.0], [3.0, 4.0]];
 /// let (u, s, vt) = jacobi_svd(&a.view(), 100, 1e-14).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn jacobi_svd<A>(
     a: &ArrayView2<A>,
     max_iterations: usize,
@@ -189,6 +190,7 @@ where
 /// let (u, p) = polar_decomposition(&a.view(), true).unwrap();
 /// assert!(p.is_some());
 /// ```
+#[allow(dead_code)]
 pub fn polar_decomposition<A>(
     a: &ArrayView2<A>,
     compute_p: bool,
@@ -242,6 +244,7 @@ where
 ///
 /// # Returns
 /// * Tuple (U, P) where U is unitary and P is positive semidefinite
+#[allow(dead_code)]
 pub fn polar_decomposition_newton<A>(
     a: &ArrayView2<A>,
     max_iterations: usize,
@@ -336,6 +339,7 @@ where
 /// ```
 pub type QRPivotingResult<A> = (Array2<A>, Array2<A>, Array2<A>, usize);
 
+#[allow(dead_code)]
 pub fn qr_with_column_pivoting<A>(
     a: &ArrayView2<A>,
     tolerance: A,

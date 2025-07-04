@@ -720,6 +720,7 @@ pub enum QmcSequenceType {
 }
 
 /// Create a QMC generator of the specified type
+#[allow(dead_code)]
 pub fn create_generator(
     sequence_type: QmcSequenceType,
     dimension: usize,

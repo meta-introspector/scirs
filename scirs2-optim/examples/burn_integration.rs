@@ -288,6 +288,7 @@ impl<B: Backend> Batcher<(Vec<f32>, usize), MnistBatch<B>> for SyntheticBatcher<
 }
 
 /// Main training function
+#[allow(dead_code)]
 fn train_with_scirs2_optimizer() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Starting Burn + SciRS2 Integration Example");
 
@@ -328,6 +329,7 @@ fn train_with_scirs2_optimizer() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Advanced example with different optimizers for different layers
+#[allow(dead_code)]
 fn multi_optimizer_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔬 Multi-Optimizer Example");
 
@@ -356,6 +358,7 @@ fn multi_optimizer_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Benchmark comparison
+#[allow(dead_code)]
 fn benchmark_optimizers() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚡ Optimizer Performance Benchmark");
 
@@ -397,6 +400,7 @@ fn benchmark_optimizers() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Transfer learning example
+#[allow(dead_code)]
 fn transfer_learning_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔄 Transfer Learning with SciRS2 Optimizers");
 
@@ -431,12 +435,14 @@ fn transfer_learning_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Helper functions
+#[allow(dead_code)]
 fn count_parameters<B: Backend>(model: &SimpleMLP<B>) -> usize {
     // Simplified parameter counting
     // In practice, you'd iterate through all parameters
     1000 // Placeholder
 }
 
+#[allow(dead_code)]
 fn generate_synthetic_data(
     samples: usize,
     input_dim: usize,
@@ -456,6 +462,7 @@ fn generate_synthetic_data(
         .collect()
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 Burn + SciRS2 Optimization Integration Examples\n");
 

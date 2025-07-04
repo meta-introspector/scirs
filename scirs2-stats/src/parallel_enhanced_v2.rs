@@ -92,6 +92,7 @@ impl ParallelConfig {
 /// Enhanced parallel mean computation
 ///
 /// Handles non-contiguous arrays and provides better load balancing
+#[allow(dead_code)]
 pub fn mean_parallel_enhanced<F, D>(
     x: &ArrayBase<D, Ix1>,
     config: Option<ParallelConfig>,
@@ -128,6 +129,7 @@ where
 /// Parallel variance with single-pass algorithm
 ///
 /// Uses parallel Welford's algorithm for numerical stability
+#[allow(dead_code)]
 pub fn variance_parallel_enhanced<F, D>(
     x: &ArrayBase<D, Ix1>,
     ddof: usize,
@@ -190,6 +192,7 @@ where
 /// Parallel correlation matrix computation
 ///
 /// Efficiently computes correlation matrix for multivariate data
+#[allow(dead_code)]
 pub fn corrcoef_parallel_enhanced<F, D>(
     data: &ArrayBase<D, Ix2>,
     config: Option<ParallelConfig>,
@@ -251,6 +254,7 @@ where
 /// Parallel bootstrap resampling
 ///
 /// Generates bootstrap samples in parallel for faster computation
+#[allow(dead_code)]
 pub fn bootstrap_parallel_enhanced<F, D>(
     data: &ArrayBase<D, Ix1>,
     n_samples: usize,
@@ -296,6 +300,7 @@ where
 }
 
 /// Helper function for parallel sum on slices
+#[allow(dead_code)]
 fn parallel_sum_slice<F>(slice: &[F], config: &ParallelConfig) -> F
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum,
@@ -308,6 +313,7 @@ where
 }
 
 /// Helper function for parallel sum on indexed arrays
+#[allow(dead_code)]
 fn parallel_sum_indexed<F, D>(arr: &ArrayBase<D, Ix1>, config: &ParallelConfig) -> F
 where
     F: Float + NumCast + Send + Sync + std::iter::Sum,
@@ -333,6 +339,7 @@ where
 }
 
 /// Sequential Welford's algorithm (fallback)
+#[allow(dead_code)]
 fn variance_sequential_welford<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
@@ -354,6 +361,7 @@ where
 }
 
 /// Combine Welford statistics from parallel chunks
+#[allow(dead_code)]
 fn combine_welford_stats<F>(stats: &[(F, F, usize)]) -> (F, F, usize)
 where
     F: Float + NumCast,
@@ -374,6 +382,7 @@ where
 }
 
 /// Compute correlation between two vectors
+#[allow(dead_code)]
 fn compute_correlation_pair<F>(x: &ArrayView1<F>, y: &ArrayView1<F>, mean_x: F, mean_y: F) -> F
 where
     F: Float + NumCast,

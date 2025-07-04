@@ -49,6 +49,7 @@ use std::fmt::Debug;
 /// // Standard deviation should be close to 1/sqrt(2) for a sine wave
 /// assert!((std_dev - 1.0 / 2.0_f64.sqrt()).abs() < 0.01);
 /// ```
+#[allow(dead_code)]
 pub fn extract_features<T>(
     signal: &[T],
     options: &FeatureOptions,
@@ -148,6 +149,7 @@ where
 /// assert_eq!(feature_matrix.shape()[0], n_signals);
 /// assert_eq!(feature_matrix.shape()[1], feature_names.len());
 /// ```
+#[allow(dead_code)]
 pub fn extract_features_batch(
     signals: &Array2<f64>,
     options: &FeatureOptions,

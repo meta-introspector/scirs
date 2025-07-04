@@ -3,6 +3,7 @@
 use ndarray::{array, Array2, Axis};
 use scirs2_core::ndarray_ext::{indexing, stats};
 
+#[allow(dead_code)]
 fn main() {
     println!("SciRS2-Core Advanced Indexing and Statistics Example");
     println!("===================================================\n");
@@ -136,6 +137,7 @@ fn main() {
 }
 
 // Function to standardize an array (convert to z-scores)
+#[allow(dead_code)]
 fn standardize_array(array: &Array2<f64>) -> Array2<f64> {
     // Calculate the global mean and standard deviation
     let mean = stats::mean(&array.view(), None).unwrap()[0];

@@ -4,8 +4,8 @@
 //! variational inference, hierarchical models, and robust Bayesian regression.
 
 use crate::error::{StatsError, StatsResult};
-use ndarray::{Array1, Array2, ArrayView2};
-use num_traits::{Float, One, Zero};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ScalarOperand};
+use num_traits::{Float, NumAssign, One, Zero};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
 
@@ -109,7 +109,18 @@ pub struct ConvergenceInfo {
 
 impl<F> EnhancedBayesianRegression<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + std::fmt::Display
+        + 'static
+        + std::iter::Sum
+        + NumAssign
+        + ScalarOperand,
 {
     /// Create new enhanced Bayesian regression model
     pub fn new(
@@ -522,7 +533,7 @@ where
     /// Compute predictive variance
     fn compute_predictive_variance(
         &self,
-        x: &Array2<F>,
+        x: ArrayView2<F>,
         beta_covariance: &Array2<F>,
         noise_precision_mean: F,
     ) -> StatsResult<Array1<F>> {
@@ -784,13 +795,24 @@ where
 }
 
 /// Convenience functions
+#[allow(dead_code)]
 pub fn bayesian_linear_regression_exact<F>(
     x: Array2<F>,
     y: Array1<F>,
     prior: Option<BayesianRegressionPrior<F>>,
 ) -> StatsResult<BayesianRegressionResult<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + 'static
+        + std::iter::Sum
+        + NumAssign
+        + ScalarOperand,
 {
     let p = x.ncols();
     let prior = prior.unwrap_or_else(|| BayesianRegressionPrior::uninformative(p));
@@ -799,6 +821,7 @@ where
     model.fit()
 }
 
+#[allow(dead_code)]
 pub fn bayesian_linear_regression_vb<F>(
     x: Array2<F>,
     y: Array1<F>,
@@ -806,7 +829,17 @@ pub fn bayesian_linear_regression_vb<F>(
     config: Option<BayesianRegressionConfig>,
 ) -> StatsResult<BayesianRegressionResult<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + 'static,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + 'static
+        + std::iter::Sum
+        + NumAssign
+        + ScalarOperand,
 {
     let p = x.ncols();
     let prior = prior.unwrap_or_else(|| BayesianRegressionPrior::uninformative(p));

@@ -13,6 +13,7 @@ use scirs2_cluster::{
     SearchStrategy, StandardSearchSpaces, TuningConfig,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Automatic Hyperparameter Tuning Demo for scirs2-cluster");
     println!("=======================================================");
@@ -50,6 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Test tuning individual algorithms
+#[allow(dead_code)]
 fn test_individual_algorithm_tuning(
     data: &Array2<f64>,
     dataset_name: &str,
@@ -190,6 +192,7 @@ fn test_individual_algorithm_tuning(
 }
 
 /// Test automatic algorithm selection
+#[allow(dead_code)]
 fn test_automatic_algorithm_selection(
     data: &Array2<f64>,
     dataset_name: &str,
@@ -264,6 +267,7 @@ fn test_automatic_algorithm_selection(
 }
 
 /// Test quick algorithm selection
+#[allow(dead_code)]
 fn test_quick_selection(
     data: &Array2<f64>,
     dataset_name: &str,
@@ -304,6 +308,7 @@ fn test_quick_selection(
 }
 
 /// Create dense cluster data for testing
+#[allow(dead_code)]
 fn create_dense_clusters_data(n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
     use rand_distr::Normal;
@@ -342,6 +347,7 @@ fn create_dense_clusters_data(n_samples: usize, n_features: usize) -> Array2<f64
 }
 
 /// Create sparse data for testing
+#[allow(dead_code)]
 fn create_sparse_data(n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
 
@@ -364,6 +370,7 @@ fn create_sparse_data(n_samples: usize, n_features: usize) -> Array2<f64> {
 }
 
 /// Create high-dimensional data for testing
+#[allow(dead_code)]
 fn create_high_dimensional_data(n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
 
@@ -391,6 +398,7 @@ fn create_high_dimensional_data(n_samples: usize, n_features: usize) -> Array2<f
 }
 
 /// Create noisy data for testing
+#[allow(dead_code)]
 fn create_noisy_data(n_samples: usize, n_features: usize) -> Array2<f64> {
     use rand::prelude::*;
     use rand_distr::Normal;

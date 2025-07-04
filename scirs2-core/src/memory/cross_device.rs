@@ -837,6 +837,7 @@ static GLOBAL_MANAGER: std::sync::OnceLock<Arc<CrossDeviceMemoryManager>> =
     std::sync::OnceLock::new();
 
 /// Get the global cross-device memory manager
+#[allow(dead_code)]
 pub fn global_manager() -> Arc<CrossDeviceMemoryManager> {
     GLOBAL_MANAGER
         .get_or_init(|| {
@@ -852,6 +853,7 @@ pub fn global_manager() -> Arc<CrossDeviceMemoryManager> {
 }
 
 /// Initialize cross-device memory management with GPU devices
+#[allow(dead_code)]
 pub fn initialize_with_gpu_devices(gpu_devices: Vec<Arc<GpuContext>>) -> CoreResult<()> {
     let manager = global_manager();
 

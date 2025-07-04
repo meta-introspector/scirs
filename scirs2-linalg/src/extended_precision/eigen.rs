@@ -77,6 +77,7 @@ use crate::error::LinalgResult;
 /// // Expected eigenvalues approximately (-0.3723, 5.3723)
 /// assert!((eigvals[0].re + 0.3723).abs() < 1e-4 || (eigvals[0].re - 5.3723).abs() < 1e-4);
 /// ```
+#[allow(dead_code)]
 pub fn extended_eigvals<A, I>(
     a: &ArrayView2<A>,
     max_iter: Option<usize>,
@@ -167,6 +168,7 @@ pub type EigenResult<A> = LinalgResult<(
     Array2<num_complex::Complex<A>>,
 )>;
 
+#[allow(dead_code)]
 pub fn extended_eig<A, I>(
     a: &ArrayView2<A>,
     max_iter: Option<usize>,
@@ -281,6 +283,7 @@ where
 /// assert!(eigvals[0].is_finite());
 /// assert!(eigvals[1].is_finite());
 /// ```
+#[allow(dead_code)]
 pub fn extended_eigvalsh<A, I>(
     a: &ArrayView2<A>,
     max_iter: Option<usize>,
@@ -391,6 +394,7 @@ where
 /// assert!((norm1 - 1.0).abs() < 0.1);
 /// assert!((norm2 - 1.0).abs() < 0.1);
 /// ```
+#[allow(dead_code)]
 pub fn extended_eigh<A, I>(
     a: &ArrayView2<A>,
     max_iter: Option<usize>,
@@ -905,6 +909,7 @@ where
 }
 
 // QR algorithm for symmetric tridiagonal matrices with eigenvector computation
+#[allow(dead_code)]
 fn qr_algorithm_symmetric_with_vectors<I>(
     a: Array2<I>,
     q: Array2<I>,
@@ -1085,6 +1090,7 @@ where
 /// let a = array![[2.0f32, 1.0], [1.0, 2.0]];
 /// let (eigvals, eigvecs) = ultra_precision_eigh::<_, f64>(&a.view(), None, None, true).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn ultra_precision_eigh<A, I>(
     a: &ArrayView2<A>,
     max_iter: Option<usize>,
@@ -1152,6 +1158,7 @@ where
 }
 
 /// Internal ultra-precision solver with advanced numerical techniques
+#[allow(dead_code)]
 fn ultra_precision_solver_internal<A>(
     a: &ArrayView2<A>,
     max_iter: usize,
@@ -1187,6 +1194,7 @@ where
 }
 
 /// Enhanced tridiagonalization with Kahan summation for numerical stability
+#[allow(dead_code)]
 fn enhanced_tridiagonalize_with_kahan<A>(
     a: &Array2<A>,
 ) -> LinalgResult<(Array1<A>, Array1<A>, Array2<A>)>
@@ -1264,6 +1272,7 @@ where
 }
 
 /// Apply Householder transformation with enhanced numerical stability
+#[allow(dead_code)]
 fn apply_householder_transformation<A>(a: &mut Array2<A>, v: &Array1<A>, k: usize)
 where
     A: Float + Zero + One + Copy + std::ops::AddAssign,
@@ -1298,6 +1307,7 @@ where
 }
 
 /// Apply Householder transformation to orthogonal matrix Q
+#[allow(dead_code)]
 fn apply_householder_to_q<A>(q: &mut Array2<A>, v: &Array1<A>, k: usize)
 where
     A: Float + Zero + One + Copy + std::ops::AddAssign,
@@ -1319,6 +1329,7 @@ where
 }
 
 /// Multiple-stage Rayleigh quotient iteration for enhanced precision
+#[allow(dead_code)]
 fn rayleigh_quotient_iteration<A>(
     d: &mut Array1<A>,
     e: &mut Array1<A>,
@@ -1359,6 +1370,7 @@ where
 }
 
 /// Compute optimal Rayleigh quotient shift
+#[allow(dead_code)]
 fn compute_rayleigh_quotient_shift<A>(d1: A, d2: A, e: A) -> A
 where
     A: Float + Zero + One + Copy,
@@ -1384,6 +1396,7 @@ where
 }
 
 /// Apply QR step with Wilkinson shift
+#[allow(dead_code)]
 fn apply_qr_step_with_shift<A>(
     d: &mut Array1<A>,
     _e: &mut Array1<A>,
@@ -1403,6 +1416,7 @@ where
 }
 
 /// Newton's method eigenvalue correction for final accuracy verification
+#[allow(dead_code)]
 fn newton_eigenvalue_correction<A>(
     eigenvalues: &mut Array1<A>,
     original_matrix: &Array2<A>,
@@ -1441,6 +1455,7 @@ where
 }
 
 /// Compute characteristic polynomial value at lambda
+#[allow(dead_code)]
 fn compute_characteristic_polynomial_value<A>(matrix: &Array2<A>, lambda: A) -> LinalgResult<A>
 where
     A: Float + Zero + One + Copy,
@@ -1458,6 +1473,7 @@ where
 }
 
 /// Compute characteristic polynomial derivative at lambda
+#[allow(dead_code)]
 fn compute_characteristic_polynomial_derivative<A>(matrix: &Array2<A>, lambda: A) -> LinalgResult<A>
 where
     A: Float + Zero + One + Copy,
@@ -1471,6 +1487,7 @@ where
 }
 
 /// Simple determinant computation for small matrices
+#[allow(dead_code)]
 fn compute_determinant_simple<A>(matrix: &Array2<A>) -> A
 where
     A: Float + Zero + One + Copy,
@@ -1488,6 +1505,7 @@ where
 }
 
 /// Enhanced Gram-Schmidt orthogonalization with multiple passes
+#[allow(dead_code)]
 fn enhanced_gram_schmidt_orthogonalization<A>(
     q: &mut Array2<A>,
     num_passes: usize,
@@ -1530,6 +1548,7 @@ where
 }
 
 /// Final residual verification and eigenvalue correction
+#[allow(dead_code)]
 fn final_residual_verification<A>(
     eigenvalues: &mut Array1<A>,
     eigenvectors: &mut Array2<A>,
@@ -1578,6 +1597,7 @@ where
 }
 
 /// Inverse iteration for eigenvector refinement
+#[allow(dead_code)]
 fn inverse_iteration_refinement<A>(
     eigenvectors: &mut Array2<A>,
     matrix: &Array2<A>,
@@ -1597,6 +1617,7 @@ where
 }
 
 /// Estimate matrix condition number for adaptive tolerance selection
+#[allow(dead_code)]
 fn estimate_condition_number<A>(matrix: &ArrayView2<A>) -> LinalgResult<A>
 where
     A: Float + Zero + One + Copy + std::ops::AddAssign,

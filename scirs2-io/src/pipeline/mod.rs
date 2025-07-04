@@ -420,6 +420,7 @@ impl From<IoError> for PipelineError {
 }
 
 /// Create a simple function-based pipeline stage
+#[allow(dead_code)]
 pub fn function_stage<F, I, O>(name: &str, f: F) -> Box<dyn PipelineStage>
 where
     F: Fn(I) -> Result<O> + Send + Sync + 'static,

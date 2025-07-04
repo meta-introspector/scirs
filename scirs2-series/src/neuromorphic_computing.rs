@@ -2381,6 +2381,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> PowerManager<F> {
 mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
+    use scirs2_core::ScientificNumber;
 
     #[test]
     fn test_neuron_models() {

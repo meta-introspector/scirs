@@ -27,6 +27,7 @@ use std::collections::HashMap;
 use std::time::{Duration, Instant, SystemTime};
 
 /// Comprehensive NAS + Learned Optimizer integration example
+#[allow(dead_code)]
 fn main() -> Result<(), OptimizerError> {
     println!("🔬 NAS + Learned Optimizer Integration Demo");
     println!("===========================================\n");
@@ -134,6 +135,7 @@ impl OptimizationScenario {
 }
 
 /// Step 1: Discover promising optimizer architectures using NAS
+#[allow(dead_code)]
 fn discover_optimizer_architectures(
     scenario: &OptimizationScenario,
 ) -> Result<Vec<OptimizerArchitecture<f64>>, OptimizerError> {
@@ -192,6 +194,7 @@ fn discover_optimizer_architectures(
 }
 
 /// Step 2: Evaluate architectures using learned optimizers for efficiency
+#[allow(dead_code)]
 fn evaluate_with_learned_optimizer(
     architectures: &[OptimizerArchitecture<f64>],
     scenario: &OptimizationScenario,
@@ -292,6 +295,7 @@ struct ArchitectureEvaluation {
 }
 
 /// Evaluate an architecture using the learned optimizer
+#[allow(dead_code)]
 fn evaluate_architecture_with_lstm(
     _lstm_evaluator: &LSTMOptimizer<f64>,
     architecture: &OptimizerArchitecture<f64>,
@@ -346,6 +350,7 @@ fn evaluate_architecture_with_lstm(
 }
 
 /// Step 3: Apply few-shot learning for rapid adaptation
+#[allow(dead_code)]
 fn few_shot_adaptation(
     evaluated_architectures: &[EvaluatedArchitecture],
     scenario: &OptimizationScenario,
@@ -393,6 +398,7 @@ fn few_shot_adaptation(
 }
 
 /// Create support set from optimization scenario
+#[allow(dead_code)]
 fn create_support_set_from_scenario(
     scenario: &OptimizationScenario,
 ) -> Result<SupportSet<f64>, OptimizerError> {
@@ -441,6 +447,7 @@ fn create_support_set_from_scenario(
 }
 
 /// Create query set from optimization scenario
+#[allow(dead_code)]
 fn create_query_set_from_scenario(
     _scenario: &OptimizationScenario,
 ) -> Result<QuerySet<f64>, OptimizerError> {
@@ -470,6 +477,7 @@ fn create_query_set_from_scenario(
 }
 
 /// Perform few-shot adaptation on an architecture
+#[allow(dead_code)]
 fn perform_few_shot_adaptation(
     architecture: &OptimizerArchitecture<f64>,
     support_set: &SupportSet<f64>,
@@ -503,6 +511,7 @@ fn perform_few_shot_adaptation(
 }
 
 /// Calculate adaptation factor for a hyperparameter based on support set
+#[allow(dead_code)]
 fn calculate_adaptation_factor(support_set: &SupportSet<f64>, param_name: &str) -> f64 {
     // Simulate intelligent adaptation based on support examples
     let base_factor = 1.0;
@@ -517,6 +526,7 @@ fn calculate_adaptation_factor(support_set: &SupportSet<f64>, param_name: &str) 
 }
 
 /// Step 4: Select the best adapted optimizer
+#[allow(dead_code)]
 fn select_best_optimizer(
     adapted_optimizers: &[AdaptedOptimizer],
 ) -> Result<&AdaptedOptimizer, OptimizerError> {
@@ -548,6 +558,7 @@ fn select_best_optimizer(
 }
 
 /// Demonstrate usage of the selected optimizer
+#[allow(dead_code)]
 fn demonstrate_optimizer_usage(
     optimizer: &AdaptedOptimizer,
     scenario: &OptimizationScenario,
@@ -590,6 +601,7 @@ fn demonstrate_optimizer_usage(
 }
 
 /// Print summary of the entire process
+#[allow(dead_code)]
 fn print_summary(optimizer: &AdaptedOptimizer) {
     println!("\n📈 Integration Demo Summary");
     println!("==========================");

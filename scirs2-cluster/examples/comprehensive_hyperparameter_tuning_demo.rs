@@ -17,6 +17,7 @@ use scirs2_cluster::{
 };
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Comprehensive Hyperparameter Tuning Demo");
     println!("========================================");
@@ -51,6 +52,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Test Bayesian optimization with Gaussian process surrogate
+#[allow(dead_code)]
 fn test_bayesian_optimization(
     data: &Array2<f64>,
     dataset_name: &str,
@@ -122,6 +124,7 @@ fn test_bayesian_optimization(
 }
 
 /// Test ensemble search combining multiple strategies
+#[allow(dead_code)]
 fn test_ensemble_search(
     data: &Array2<f64>,
     dataset_name: &str,
@@ -177,6 +180,7 @@ fn test_ensemble_search(
 }
 
 /// Test multi-objective optimization
+#[allow(dead_code)]
 fn test_multi_objective_optimization(
     data: &Array2<f64>,
     dataset_name: &str,
@@ -232,6 +236,7 @@ fn test_multi_objective_optimization(
 }
 
 /// Test adaptive search that evolves strategy based on performance
+#[allow(dead_code)]
 fn test_adaptive_search(
     data: &Array2<f64>,
     dataset_name: &str,
@@ -300,6 +305,7 @@ fn test_adaptive_search(
 }
 
 /// Test evolutionary search strategy
+#[allow(dead_code)]
 fn test_evolutionary_search(
     data: &Array2<f64>,
     dataset_name: &str,
@@ -357,6 +363,7 @@ fn test_evolutionary_search(
 }
 
 /// Demonstrate algorithm-specific advanced tuning
+#[allow(dead_code)]
 fn demonstrate_algorithm_specific_tuning() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Algorithm-Specific Advanced Tuning");
 
@@ -378,6 +385,7 @@ fn demonstrate_algorithm_specific_tuning() -> Result<(), Box<dyn std::error::Err
 }
 
 /// Demonstrate ensemble algorithm selection
+#[allow(dead_code)]
 fn demonstrate_ensemble_algorithm_selection() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎭 Ensemble Algorithm Selection");
 
@@ -418,6 +426,7 @@ fn demonstrate_ensemble_algorithm_selection() -> Result<(), Box<dyn std::error::
 }
 
 /// Generate test datasets with different characteristics
+#[allow(dead_code)]
 fn generate_test_datasets() -> HashMap<String, Array2<f64>> {
     let mut datasets = HashMap::new();
 
@@ -434,6 +443,7 @@ fn generate_test_datasets() -> HashMap<String, Array2<f64>> {
 }
 
 /// Generate blob clusters
+#[allow(dead_code)]
 fn generate_blob_clusters(n_samples: usize, n_clusters: usize, std_dev: f64) -> Array2<f64> {
     let mut data = Vec::new();
     let samples_per_cluster = n_samples / n_clusters;
@@ -453,6 +463,7 @@ fn generate_blob_clusters(n_samples: usize, n_clusters: usize, std_dev: f64) -> 
 }
 
 /// Generate moon-shaped clusters
+#[allow(dead_code)]
 fn generate_moon_clusters(n_samples: usize) -> Array2<f64> {
     let mut data = Vec::new();
     let samples_per_moon = n_samples / 2;
@@ -476,6 +487,7 @@ fn generate_moon_clusters(n_samples: usize) -> Array2<f64> {
 }
 
 /// Generate circle clusters
+#[allow(dead_code)]
 fn generate_circle_clusters(n_samples: usize) -> Array2<f64> {
     let mut data = Vec::new();
     let samples_per_circle = n_samples / 2;
@@ -501,6 +513,7 @@ fn generate_circle_clusters(n_samples: usize) -> Array2<f64> {
 }
 
 /// Generate anisotropic clusters
+#[allow(dead_code)]
 fn generate_anisotropic_clusters(n_samples: usize, n_clusters: usize) -> Array2<f64> {
     let mut data = Vec::new();
     let samples_per_cluster = n_samples / n_clusters;
@@ -526,6 +539,7 @@ fn generate_anisotropic_clusters(n_samples: usize, n_clusters: usize) -> Array2<
 }
 
 /// Generate varied size clusters
+#[allow(dead_code)]
 fn generate_varied_size_clusters(n_samples: usize) -> Array2<f64> {
     let mut data = Vec::new();
     let cluster_sizes = vec![n_samples / 2, n_samples / 3, n_samples / 6];
@@ -546,18 +560,22 @@ fn generate_varied_size_clusters(n_samples: usize) -> Array2<f64> {
 }
 
 /// Other utility functions (placeholders for actual implementations)
+#[allow(dead_code)]
 fn generate_density_clusters(n_samples: usize, n_clusters: usize) -> Array2<f64> {
     generate_blob_clusters(n_samples, n_clusters, 0.8)
 }
 
+#[allow(dead_code)]
 fn generate_hierarchical_clusters(n_samples: usize, n_clusters: usize) -> Array2<f64> {
     generate_blob_clusters(n_samples, n_clusters, 1.2)
 }
 
+#[allow(dead_code)]
 fn generate_mixed_clusters(n_samples: usize) -> Array2<f64> {
     generate_blob_clusters(n_samples, 4, 1.0)
 }
 
+#[allow(dead_code)]
 fn tune_kmeans_initialization_strategies(
     _data: &Array2<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -565,11 +583,13 @@ fn tune_kmeans_initialization_strategies(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn tune_dbscan_with_automatic_eps(_data: &Array2<f64>) -> Result<(), Box<dyn std::error::Error>> {
     println!("   🔍 DBSCAN automatic eps estimation");
     Ok(())
 }
 
+#[allow(dead_code)]
 fn tune_hierarchical_linkage_methods(
     _data: &Array2<f64>,
 ) -> Result<(), Box<dyn std::error::Error>> {

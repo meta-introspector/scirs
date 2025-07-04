@@ -173,6 +173,7 @@ use std::ops::{AddAssign, MulAssign, SubAssign};
 /// let result2: f64 = pochhammer(3.0, 2);
 /// assert!((result2 - 12.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn pochhammer<F>(a: F, n: usize) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -218,6 +219,7 @@ where
 ///
 /// assert!((ln_poch - poch.ln()).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn ln_pochhammer<F>(a: F, n: usize) -> F
 where
     F: Float + FromPrimitive + Debug,
@@ -381,6 +383,7 @@ where
 }
 
 /// Direct series computation for hyp0f1 as fallback
+#[allow(dead_code)]
 fn hyp0f1_series<F>(v: F, z: F, max_terms: usize) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign,
@@ -483,6 +486,7 @@ where
 }
 
 /// Specialized computation for b=1 using recurrence relation
+#[allow(dead_code)]
 fn hyperu_recurrence_b1<F>(a: F, x: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign,
@@ -501,6 +505,7 @@ where
 }
 
 /// Computation for negative integer a (polynomial case)
+#[allow(dead_code)]
 fn hyperu_polynomial<F>(a: F, b: F, x: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign,
@@ -519,6 +524,7 @@ where
 }
 
 /// General computation using asymptotic expansion or series
+#[allow(dead_code)]
 fn hyperu_general<F>(a: F, b: F, x: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign,
@@ -554,6 +560,7 @@ where
     Ok(normalization * sum)
 }
 
+#[allow(dead_code)]
 pub fn hyp1f1<F>(a: F, b: F, z: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign,
@@ -650,6 +657,7 @@ where
 /// Continued fraction approximation for confluent hypergeometric function
 ///
 /// This is an internal function used when the series expansion doesn't converge quickly.
+#[allow(dead_code)]
 fn hyp1f1_continued_fraction<F>(a: F, b: F, z: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign,
@@ -715,6 +723,7 @@ where
 /// let result2: f64 = hyp2f1(0.5, 1.0, 1.5, 0.25).unwrap();
 /// assert!((result2 - 1.1861859247859235).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn hyp2f1<F>(a: F, b: F, c: F, z: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign + SubAssign,
@@ -811,6 +820,7 @@ where
 /// Analytic continuation for 2F1 for |z| ≥ 1
 ///
 /// Uses transformation formulas to calculate 2F1 for arguments outside the convergence radius.
+#[allow(dead_code)]
 fn hyp2f1_analytic_continuation<F>(a: F, b: F, c: F, z: F) -> SpecialResult<F>
 where
     F: Float + FromPrimitive + Debug + AddAssign + MulAssign + SubAssign,

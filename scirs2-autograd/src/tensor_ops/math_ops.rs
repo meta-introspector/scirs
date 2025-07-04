@@ -47,34 +47,42 @@ pub struct Lgamma;
 pub struct Digamma;
 
 #[inline(always)]
+#[allow(dead_code)]
 fn equal_fn<T: Float>(a: T, b: T) -> T {
     T::from((a == b) as i32).unwrap()
 }
 #[inline(always)]
+#[allow(dead_code)]
 fn not_equal_fn<T: Float>(a: T, b: T) -> T {
     T::from((a != b) as i32).unwrap()
 }
 #[inline(always)]
+#[allow(dead_code)]
 fn greater_fn<T: Float>(a: T, b: T) -> T {
     T::from((a > b) as i32).unwrap()
 }
 #[inline(always)]
+#[allow(dead_code)]
 fn lesser_fn<T: Float>(a: T, b: T) -> T {
     T::from((a < b) as i32).unwrap()
 }
 #[inline(always)]
+#[allow(dead_code)]
 fn greater_equal_fn<T: Float>(a: T, b: T) -> T {
     T::from((a >= b) as i32).unwrap()
 }
 #[inline(always)]
+#[allow(dead_code)]
 fn lesser_equal_fn<T: Float>(a: T, b: T) -> T {
     T::from((a <= b) as i32).unwrap()
 }
 #[inline(always)]
+#[allow(dead_code)]
 fn maximum_fn<T: Float>(a: T, b: T) -> T {
     a.max(b)
 }
 #[inline(always)]
+#[allow(dead_code)]
 fn minimum_fn<T: Float>(a: T, b: T) -> T {
     a.min(b)
 }
@@ -191,6 +199,7 @@ impl_cmp_op!(Maximum, "Maximum", maximum_fn, min_max_grad);
 impl_cmp_op!(Minimum, "Minimum", minimum_fn, min_max_grad);
 
 #[inline]
+#[allow(dead_code)]
 fn none_grad<'g, T: Float>(
     _: Tensor<'g, T>,
     _: Tensor<'g, T>,
@@ -203,6 +212,7 @@ fn none_grad<'g, T: Float>(
 }
 
 #[inline]
+#[allow(dead_code)]
 fn min_max_grad<'g, T: Float>(
     gy: Tensor<'g, T>,
     x1: Tensor<'g, T>,
@@ -495,6 +505,7 @@ pub(crate) fn fast_inplace_ln_impl<F: Float>(x: &mut NdArray<F>) {
     }
 }
 
+#[allow(dead_code)]
 pub fn logsumexp_forward<T: Float>(x: &NdArrayView<T>, axis: isize, keep_dims: bool) -> NdArray<T> {
     let axis = if axis < 0 {
         (x.ndim() as isize + axis) as usize

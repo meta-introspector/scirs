@@ -7,6 +7,7 @@ use scirs2_interpolate::{
     run_simd_validation, run_simd_validation_with_config, SimdValidationConfig,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("SIMD Performance Validation Demo");
     println!("=".repeat(50));

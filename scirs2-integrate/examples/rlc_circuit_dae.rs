@@ -2,6 +2,7 @@ use ndarray::{array, Array1, ArrayView1};
 use scirs2_integrate::dae::{solve_semi_explicit_dae, DAEOptions};
 use scirs2_integrate::ode::ODEMethod;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("RLC Circuit as a DAE System Example");
     println!("==================================\n");
@@ -163,6 +164,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Analyze the energy in different components of the circuit
+#[allow(dead_code)]
 fn analyze_energy(
     t: &[f64],
     x: &[Array1<f64>],

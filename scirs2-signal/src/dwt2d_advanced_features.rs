@@ -14,7 +14,7 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array2};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
-#[cfg(test)]
+
 use std::f64::consts::PI;
 
 /// Advanced 2D wavelet processing configuration
@@ -180,6 +180,7 @@ pub struct WaveletLevel {
 /// # Returns
 ///
 /// * Advanced wavelet processing result
+#[allow(dead_code)]
 pub fn advanced_wavelet_denoising(
     noisy_image: &Array2<f64>,
     wavelet: Wavelet,
@@ -239,6 +240,7 @@ pub fn advanced_wavelet_denoising(
 }
 
 /// Compute multi-scale wavelet decomposition
+#[allow(dead_code)]
 fn compute_multi_scale_decomposition(
     image: &Array2<f64>,
     wavelet: Wavelet,
@@ -300,6 +302,7 @@ fn compute_multi_scale_decomposition(
 }
 
 /// Estimate noise variance from wavelet coefficients
+#[allow(dead_code)]
 fn estimate_noise_variance(
     image: &Array2<f64>,
     multi_scale: &MultiScaleDecomposition,
@@ -340,6 +343,7 @@ fn estimate_noise_variance(
 }
 
 /// Apply adaptive threshold processing
+#[allow(dead_code)]
 fn adaptive_threshold_processing(
     image: &Array2<f64>,
     multi_scale: &MultiScaleDecomposition,
@@ -384,6 +388,7 @@ fn adaptive_threshold_processing(
 }
 
 /// Compute adaptive threshold for a decomposition level
+#[allow(dead_code)]
 fn compute_adaptive_threshold(
     details: &(Array2<f64>, Array2<f64>, Array2<f64>),
     noise_variance: f64,
@@ -413,6 +418,7 @@ fn compute_adaptive_threshold(
 }
 
 /// Compute BayesShrink threshold
+#[allow(dead_code)]
 fn compute_bayes_threshold(
     details: &(Array2<f64>, Array2<f64>, Array2<f64>),
     noise_variance: f64,
@@ -436,6 +442,7 @@ fn compute_bayes_threshold(
 }
 
 /// Compute SURE (Stein's Unbiased Risk Estimate) threshold
+#[allow(dead_code)]
 fn compute_sure_threshold(
     details: &(Array2<f64>, Array2<f64>, Array2<f64>),
     noise_variance: f64,
@@ -478,6 +485,7 @@ fn compute_sure_threshold(
 }
 
 /// Compute local variance in detail coefficients
+#[allow(dead_code)]
 fn compute_local_variance(
     details: &(Array2<f64>, Array2<f64>, Array2<f64>),
     window_size: usize,
@@ -517,6 +525,7 @@ fn compute_local_variance(
 }
 
 /// Apply 2D thresholding to coefficients
+#[allow(dead_code)]
 fn apply_threshold_2d(
     coeffs: &Array2<f64>,
     threshold: f64,
@@ -566,6 +575,7 @@ fn apply_threshold_2d(
 }
 
 /// Apply adaptive thresholding
+#[allow(dead_code)]
 fn adaptive_threshold_2d(coeffs: &mut Array2<f64>, base_threshold: f64) -> SignalResult<()> {
     let (rows, cols) = coeffs.dim();
     let window_size = 5;
@@ -600,6 +610,7 @@ fn adaptive_threshold_2d(coeffs: &mut Array2<f64>, base_threshold: f64) -> Signa
 }
 
 /// Apply edge-preserving thresholding
+#[allow(dead_code)]
 fn edge_preserving_threshold_2d(coeffs: &mut Array2<f64>, threshold: f64) -> SignalResult<()> {
     let (rows, cols) = coeffs.dim();
 
@@ -628,6 +639,7 @@ fn edge_preserving_threshold_2d(coeffs: &mut Array2<f64>, threshold: f64) -> Sig
 }
 
 /// Standard threshold processing (non-adaptive)
+#[allow(dead_code)]
 fn standard_threshold_processing(
     multi_scale: &MultiScaleDecomposition,
     noise_variance: f64,
@@ -670,6 +682,7 @@ fn standard_threshold_processing(
 }
 
 /// Edge-preserving enhancement
+#[allow(dead_code)]
 fn edge_preserving_enhancement(
     denoised_image: &Array2<f64>,
     original_image: &Array2<f64>,
@@ -701,6 +714,7 @@ fn edge_preserving_enhancement(
 }
 
 /// Compute edge map using gradient magnitude
+#[allow(dead_code)]
 fn compute_edge_map(image: &Array2<f64>) -> SignalResult<Array2<f64>> {
     let (rows, cols) = image.dim();
     let mut edge_map = Array2::zeros((rows, cols));
@@ -723,6 +737,7 @@ fn compute_edge_map(image: &Array2<f64>) -> SignalResult<Array2<f64>> {
 }
 
 /// Reconstruct image from processed wavelet levels
+#[allow(dead_code)]
 fn reconstruct_from_levels(levels: &[WaveletLevel]) -> SignalResult<Array2<f64>> {
     // This is a simplified reconstruction - would need proper inverse DWT
     // For now, return the finest scale approximation with detail enhancement
@@ -749,6 +764,7 @@ fn reconstruct_from_levels(levels: &[WaveletLevel]) -> SignalResult<Array2<f64>>
 }
 
 /// Compute denoising quality metrics
+#[allow(dead_code)]
 fn compute_denoising_metrics(
     original: &Array2<f64>,
     denoised: &Array2<f64>,
@@ -796,6 +812,7 @@ fn compute_denoising_metrics(
 }
 
 /// Compute edge preservation metrics
+#[allow(dead_code)]
 fn compute_edge_metrics(
     original: &Array2<f64>,
     processed: &Array2<f64>,
@@ -820,6 +837,7 @@ fn compute_edge_metrics(
 }
 
 /// Compute texture features from multi-scale decomposition
+#[allow(dead_code)]
 fn compute_texture_features(
     image: &Array2<f64>,
     multi_scale: &MultiScaleDecomposition,
@@ -890,7 +908,6 @@ fn compute_texture_features(
     })
 }
 
-#[cfg(test)]
 mod tests {
     use super::*;
     use ndarray::Array2;
@@ -906,7 +923,7 @@ mod tests {
 
         // Add noise
         let mut rng = rand::rng();
-        let noisy_image = clean_image.mapv(|x| x + 0.1 * rng.gen_range(-1.0..1.0));
+        let noisy_image = clean_image.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
 
         let config = AdvancedWaveletConfig::default();
         let result = advanced_wavelet_denoising(&noisy_image, Wavelet::DB(4), &config).unwrap();

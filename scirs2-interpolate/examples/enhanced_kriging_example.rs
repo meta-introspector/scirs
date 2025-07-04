@@ -11,6 +11,7 @@
 /// NOTE: This is a simplified version as some APIs are not fully implemented.
 use ndarray::{Array1, Array2, ArrayView1};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Enhanced Kriging Example");
     println!("========================\n");
@@ -47,6 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Generate synthetic data with anisotropic covariance structure
+#[allow(dead_code)]
 fn generate_anisotropic_data() -> (Array2<f64>, Array1<f64>) {
     let n_samples = 100;
     use scirs2_core::random::Random;
@@ -76,6 +78,7 @@ fn generate_anisotropic_data() -> (Array2<f64>, Array1<f64>) {
 }
 
 /// Generate a grid of points for prediction
+#[allow(dead_code)]
 fn _generate_prediction_grid(n_grid: usize) -> Array2<f64> {
     let grid_size = n_grid * n_grid;
     let mut grid_points = Array2::zeros((grid_size, 2));
@@ -93,6 +96,7 @@ fn _generate_prediction_grid(n_grid: usize) -> Array2<f64> {
     grid_points
 }
 
+#[allow(dead_code)]
 fn anisotropic_kriging_example(
     _points: &Array2<f64>,
     _values: &Array1<f64>,
@@ -102,6 +106,7 @@ fn anisotropic_kriging_example(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn universal_kriging_example(
     _points: &Array2<f64>,
     _values: &Array1<f64>,
@@ -111,6 +116,7 @@ fn universal_kriging_example(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn bayesian_kriging_example(
     _points: &Array2<f64>,
     _values: &Array1<f64>,
@@ -120,6 +126,7 @@ fn bayesian_kriging_example(
     Ok(())
 }
 
+#[allow(dead_code)]
 fn model_comparison_example(
     _points: &Array2<f64>,
     _values: &Array1<f64>,
@@ -150,6 +157,7 @@ impl _ArrayStats for ArrayView1<'_, f64> {
 }
 
 /// Print quantiles from sample array
+#[allow(dead_code)]
 fn _print_quantiles(samples: &ArrayView1<f64>) {
     let mut sorted: Vec<f64> = samples.iter().cloned().collect();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());

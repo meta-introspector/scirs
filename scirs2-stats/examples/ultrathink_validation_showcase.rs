@@ -8,6 +8,7 @@ use scirs2_stats::{
     create_custom_ultrathink_validator, create_ultrathink_validator, ValidationConfig,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔬 Ultrathink Validation Framework Showcase");
     println!("============================================\n");
@@ -27,6 +28,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate validation with default configuration
+#[allow(dead_code)]
 fn demonstrate_default_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Default Validation Configuration");
     println!("-----------------------------------");
@@ -67,6 +69,7 @@ fn demonstrate_default_validation() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate custom validation configuration
+#[allow(dead_code)]
 fn demonstrate_custom_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔧 Custom Validation Configuration");
     println!("----------------------------------");
@@ -95,6 +98,7 @@ fn demonstrate_custom_validation() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate detailed validation analysis
+#[allow(dead_code)]
 fn demonstrate_detailed_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔍 Detailed Validation Analysis");
     println!("-------------------------------");
@@ -115,6 +119,7 @@ fn demonstrate_detailed_analysis() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Analyze performance trends across different data sizes
+#[allow(dead_code)]
 fn analyze_performance_trends(report: &scirs2_stats::ValidationReport) {
     println!("\n📈 Performance Trend Analysis:");
 
@@ -149,6 +154,7 @@ fn analyze_performance_trends(report: &scirs2_stats::ValidationReport) {
 }
 
 /// Analyze validation results by operation type
+#[allow(dead_code)]
 fn analyze_by_operation(report: &scirs2_stats::ValidationReport) {
     println!("\n🔬 Analysis by Operation Type:");
 
@@ -181,6 +187,7 @@ fn analyze_by_operation(report: &scirs2_stats::ValidationReport) {
 }
 
 /// Analyze validation results by data size
+#[allow(dead_code)]
 fn analyze_by_data_size(report: &scirs2_stats::ValidationReport) {
     println!("\n📏 Analysis by Data Size:");
 
@@ -218,6 +225,7 @@ fn analyze_by_data_size(report: &scirs2_stats::ValidationReport) {
 }
 
 /// Generate optimization recommendations based on validation results
+#[allow(dead_code)]
 fn generate_recommendations(report: &scirs2_stats::ValidationReport) {
     println!("\n💡 Optimization Recommendations:");
 

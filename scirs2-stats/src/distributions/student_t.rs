@@ -268,6 +268,7 @@ impl<F: Float + NumCast + Send + Sync + 'static> StudentT<F> {
 
 /// Approximation of the gamma function for floating point types
 #[inline]
+#[allow(dead_code)]
 fn gamma_function<F: Float>(x: F) -> F {
     if x == F::one() {
         return F::one();

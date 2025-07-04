@@ -4,6 +4,7 @@ use scirs2_integrate::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Method of Lines example: 2D Advection-Diffusion equation solver");
     println!("Solving: ∂u/∂t = α(∂²u/∂x² + ∂²u/∂y²) - vx∂u/∂x - vy∂u/∂y");

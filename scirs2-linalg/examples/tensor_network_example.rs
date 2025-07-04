@@ -6,6 +6,7 @@
 //! ```
 
 #[cfg(feature = "tensor_contraction")]
+#[allow(dead_code)]
 fn main() -> scirs2_linalg::error::LinalgResult<()> {
     use ndarray::{ArrayD, IxDyn};
     use scirs2_linalg::tensor_contraction::tensor_network::{TensorNetwork, TensorNode};
@@ -184,6 +185,7 @@ fn main() -> scirs2_linalg::error::LinalgResult<()> {
 }
 
 #[cfg(not(feature = "tensor_contraction"))]
+#[allow(dead_code)]
 fn main() {
     println!("This example requires the 'tensor_contraction' feature.");
     println!(

@@ -18,6 +18,7 @@ struct RegressionResult {
 }
 
 /// Simple implementation of Theil-Sen estimator
+#[allow(dead_code)]
 fn simple_theilslopes(x: &[f64], y: &[f64]) -> TheilSlopesResult {
     assert_eq!(x.len(), y.len(), "x and y must have same length");
 
@@ -68,6 +69,7 @@ fn simple_theilslopes(x: &[f64], y: &[f64]) -> TheilSlopesResult {
 }
 
 /// Simple OLS (Ordinary Least Squares) implementation
+#[allow(dead_code)]
 fn simple_ols(x: &[f64], y: &[f64]) -> RegressionResult {
     assert_eq!(x.len(), y.len(), "x and y must have same length");
 
@@ -112,6 +114,7 @@ fn simple_ols(x: &[f64], y: &[f64]) -> RegressionResult {
 }
 
 /// Simple implementation of RANSAC (Random Sample Consensus) regression
+#[allow(dead_code)]
 fn simple_ransac(x: &[f64], y: &[f64], threshold: f64, n_trials: usize) -> RegressionResult {
     assert_eq!(x.len(), y.len(), "x and y must have same length");
 
@@ -223,6 +226,7 @@ fn simple_ransac(x: &[f64], y: &[f64], threshold: f64, n_trials: usize) -> Regre
 }
 
 /// A simplified implementation of Huber regression
+#[allow(dead_code)]
 fn simple_huber(x: &[f64], y: &[f64], epsilon: f64, max_iter: usize) -> RegressionResult {
     assert_eq!(x.len(), y.len(), "x and y must have same length");
 
@@ -311,6 +315,7 @@ fn simple_huber(x: &[f64], y: &[f64], epsilon: f64, max_iter: usize) -> Regressi
 }
 
 /// Text-based visualization of regression lines
+#[allow(dead_code)]
 fn visualize_regression_lines(
     x: &[f64],
     y: &[f64],
@@ -424,6 +429,7 @@ fn visualize_regression_lines(
     println!("        + Multiple lines overlap");
 }
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Robust Regression Comparison ===");
 

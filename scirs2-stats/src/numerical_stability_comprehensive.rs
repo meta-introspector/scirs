@@ -624,6 +624,7 @@ impl NumericalStabilityTester {
 }
 
 /// Generate comprehensive numerical stability report
+#[allow(dead_code)]
 pub fn generate_stability_report(config: Option<NumericalStabilityConfig>) -> StabilityTestResults {
     let config = config.unwrap_or_default();
     let mut tester = NumericalStabilityTester::new(config);
@@ -631,6 +632,7 @@ pub fn generate_stability_report(config: Option<NumericalStabilityConfig>) -> St
 }
 
 /// Quick numerical stability check with default configuration
+#[allow(dead_code)]
 pub fn quick_stability_check() -> bool {
     let results = generate_stability_report(None);
     results.stability_score > 95.0 // Require 95% pass rate

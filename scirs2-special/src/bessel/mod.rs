@@ -239,6 +239,7 @@ pub mod spherical;
 /// let result = hankel1(1.0, 1.0);
 /// // H₁⁽¹⁾₁(1) = J₁(1) + i*Y₁(1)
 /// ```
+#[allow(dead_code)]
 pub fn hankel1<T>(v: T, z: T) -> num_complex::Complex<T>
 where
     T: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + std::ops::AddAssign,
@@ -298,6 +299,7 @@ where
 /// let result = hankel2(1.0, 1.0);
 /// // H₂⁽²⁾₁(1) = J₁(1) - i*Y₁(1)
 /// ```
+#[allow(dead_code)]
 pub fn hankel2<T>(v: T, z: T) -> num_complex::Complex<T>
 where
     T: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + std::ops::AddAssign,
@@ -354,6 +356,7 @@ where
 /// let result = hankel1e(1.0, 10.0);
 /// // Scaled version for numerical stability
 /// ```
+#[allow(dead_code)]
 pub fn hankel1e<T>(v: T, z: T) -> num_complex::Complex<T>
 where
     T: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + std::ops::AddAssign,
@@ -386,6 +389,7 @@ where
 /// let result = hankel2e(1.0, 10.0);
 /// // Scaled version for numerical stability
 /// ```
+#[allow(dead_code)]
 pub fn hankel2e<T>(v: T, z: T) -> num_complex::Complex<T>
 where
     T: num_traits::Float + num_traits::FromPrimitive + std::fmt::Debug + std::ops::AddAssign,

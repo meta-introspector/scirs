@@ -347,6 +347,7 @@ impl<F: Float + NumCast> Pareto<F> {
 /// let pdf_at_two = p.pdf(2.0);
 /// assert!((pdf_at_two - 0.1875).abs() < 1e-7);
 /// ```
+#[allow(dead_code)]
 pub fn pareto<F>(shape: F, scale: F, loc: F) -> StatsResult<Pareto<F>>
 where
     F: Float + NumCast,

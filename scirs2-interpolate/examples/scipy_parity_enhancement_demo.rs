@@ -9,6 +9,7 @@ use scirs2_interpolate::{
     ImplementationLevel, ParityConfig, ParityReadiness, PerformanceCategory,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== SciPy Parity Enhancement Demo ===\n");
 
@@ -149,6 +150,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Analyze parity enhancement results in detail
+#[allow(dead_code)]
 fn analyze_parity_results(report: &scirs2_interpolate::SciPyParityReport) {
     println!("Detailed Parity Analysis:");
 
@@ -209,6 +211,7 @@ fn analyze_parity_results(report: &scirs2_interpolate::SciPyParityReport) {
 }
 
 /// Analyze feature gaps by priority level
+#[allow(dead_code)]
 fn analyze_gaps_by_priority(report: &scirs2_interpolate::SciPyParityReport) {
     use std::collections::HashMap;
 
@@ -254,6 +257,7 @@ fn analyze_gaps_by_priority(report: &scirs2_interpolate::SciPyParityReport) {
 }
 
 /// Track implementation progress for active features
+#[allow(dead_code)]
 fn track_implementation_progress(report: &scirs2_interpolate::SciPyParityReport) {
     println!("Implementation Progress:");
 
@@ -305,6 +309,7 @@ fn track_implementation_progress(report: &scirs2_interpolate::SciPyParityReport)
 }
 
 /// Analyze compatibility test results
+#[allow(dead_code)]
 fn analyze_compatibility_results(report: &scirs2_interpolate::SciPyParityReport) {
     println!("Compatibility Test Results:");
 
@@ -393,6 +398,7 @@ fn analyze_compatibility_results(report: &scirs2_interpolate::SciPyParityReport)
 }
 
 /// Analyze performance comparison results
+#[allow(dead_code)]
 fn analyze_performance_comparisons(report: &scirs2_interpolate::SciPyParityReport) {
     println!("Performance Comparison Results:");
 
@@ -497,6 +503,7 @@ fn analyze_performance_comparisons(report: &scirs2_interpolate::SciPyParityRepor
 }
 
 /// Provide actionable plan for completing SciPy parity
+#[allow(dead_code)]
 fn provide_parity_action_plan(report: &scirs2_interpolate::SciPyParityReport) {
     match report.readiness {
         ParityReadiness::Ready => {

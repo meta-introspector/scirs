@@ -22,6 +22,7 @@ use scirs2_autograd::variable::Variable;
 ///
 /// A tuple (p, l, u) representing the permutation matrix, lower triangular matrix,
 /// and upper triangular matrix with gradient tracking.
+#[allow(dead_code)]
 pub fn lu<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
 ) -> AutogradResult<(Tensor<F>, Tensor<F>, Tensor<F>)> {
@@ -144,6 +145,7 @@ pub fn lu<F: Float + Debug + Send + Sync + 'static>(
 ///
 /// A tuple (q, r) representing the orthogonal and upper triangular matrices
 /// with gradient tracking.
+#[allow(dead_code)]
 pub fn qr<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
 ) -> AutogradResult<(Tensor<F>, Tensor<F>)> {
@@ -277,6 +279,7 @@ pub fn qr<F: Float + Debug + Send + Sync + 'static>(
 ///
 /// The lower triangular Cholesky factor L where A = L * L^T
 /// with gradient tracking.
+#[allow(dead_code)]
 pub fn cholesky<F: Float + Debug + Send + Sync + 'static>(
     a: &Tensor<F>,
 ) -> AutogradResult<Tensor<F>> {

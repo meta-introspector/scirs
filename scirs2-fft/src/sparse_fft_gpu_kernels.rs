@@ -628,6 +628,7 @@ impl KernelLauncher {
 ///
 /// * Result containing sparse frequency components and kernel statistics
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn execute_sparse_fft_kernel<T>(
     signal: &[T],
     sparsity: usize,

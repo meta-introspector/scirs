@@ -44,6 +44,7 @@ use std::fmt::Debug;
 /// A. Savitzky, M. J. E. Golay, "Smoothing and Differentiation of Data by
 /// Simplified Least Squares Procedures." Analytical Chemistry, 1964, 36 (8),
 /// pp 1627-1639.
+#[allow(dead_code)]
 pub fn savgol_coeffs(
     window_length: usize,
     polyorder: usize,
@@ -176,6 +177,7 @@ pub fn savgol_coeffs(
 }
 
 // Helper function for full SG coefficient calculation
+#[allow(dead_code)]
 fn calculate_savgol_coeffs(
     window_length: usize,
     polyorder: usize,
@@ -226,6 +228,7 @@ fn calculate_savgol_coeffs(
 }
 
 /// Simple implementation of least squares solution for Ax = b
+#[allow(dead_code)]
 fn solve_lstsq(a: Array2<f64>, b: Array1<f64>) -> SignalResult<Array1<f64>> {
     // Calculate dimensions
     let nrows = a.nrows();
@@ -313,6 +316,7 @@ fn solve_lstsq(a: Array2<f64>, b: Array1<f64>) -> SignalResult<Array1<f64>> {
 }
 
 /// Simple linear system solver for Ax = b using Gaussian elimination
+#[allow(dead_code)]
 fn solve_system(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, String> {
     let n = a.nrows();
     if n != a.ncols() {
@@ -390,6 +394,7 @@ fn solve_system(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>, String>
 /// # Returns
 ///
 /// * The coefficients of the differentiated polynomial
+#[allow(dead_code)]
 fn polyder<S>(p: &ArrayBase<S, Ix1>, m: usize) -> Array1<f64>
 where
     S: Data<Elem = f64>,
@@ -440,6 +445,7 @@ struct EdgeFitConfig {
     delta: f64,
 }
 
+#[allow(dead_code)]
 fn fit_edge<T>(x: &[T], config: EdgeFitConfig) -> SignalResult<Vec<f64>>
 where
     T: Float + NumCast + Debug,
@@ -517,6 +523,7 @@ where
 /// # Returns
 ///
 /// * The filtered data including edge handling
+#[allow(dead_code)]
 fn fit_edges_polyfit<T>(
     x: &[T],
     window_length: usize,
@@ -618,6 +625,7 @@ where
 /// let smoothed = savgol_filter(&x, 11, 2, None, None, None, None).unwrap();
 /// ```
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 pub fn savgol_filter<T>(
     x: &[T],
     window_length: usize,

@@ -1329,6 +1329,7 @@ enum ElementResult {
 }
 
 // Helper functions for creating proof steps
+#[allow(dead_code)]
 fn create_reflection_formula_proof_steps() -> Vec<ProofStep> {
     vec![
         ProofStep {
@@ -1388,6 +1389,7 @@ fn create_reflection_formula_proof_steps() -> Vec<ProofStep> {
     ]
 }
 
+#[allow(dead_code)]
 fn create_stirling_proof_steps() -> Vec<ProofStep> {
     vec![
         ProofStep {
@@ -1420,6 +1422,7 @@ fn create_stirling_proof_steps() -> Vec<ProofStep> {
     ]
 }
 
+#[allow(dead_code)]
 fn create_bessel_generating_proof_steps() -> Vec<ProofStep> {
     vec![
         ProofStep {
@@ -1459,6 +1462,7 @@ fn create_bessel_generating_proof_steps() -> Vec<ProofStep> {
     ]
 }
 
+#[allow(dead_code)]
 fn create_error_function_proof_steps() -> Vec<ProofStep> {
     vec![
         ProofStep {
@@ -1504,6 +1508,7 @@ fn create_error_function_proof_steps() -> Vec<ProofStep> {
     ]
 }
 
+#[allow(dead_code)]
 fn create_reflection_formula_examples() -> Vec<ComputationalExample> {
     vec![
         ComputationalExample {
@@ -1516,6 +1521,7 @@ fn create_reflection_formula_examples() -> Vec<ComputationalExample> {
     ]
 }
 
+#[allow(dead_code)]
 fn create_stirling_examples() -> Vec<ComputationalExample> {
     vec![
         ComputationalExample {
@@ -1528,6 +1534,7 @@ fn create_stirling_examples() -> Vec<ComputationalExample> {
     ]
 }
 
+#[allow(dead_code)]
 fn create_bessel_generating_examples() -> Vec<ComputationalExample> {
     vec![
         ComputationalExample {
@@ -1540,6 +1547,7 @@ fn create_bessel_generating_examples() -> Vec<ComputationalExample> {
     ]
 }
 
+#[allow(dead_code)]
 fn create_error_function_examples() -> Vec<ComputationalExample> {
     vec![
         ComputationalExample {
@@ -1552,11 +1560,13 @@ fn create_error_function_examples() -> Vec<ComputationalExample> {
     ]
 }
 
+#[allow(dead_code)]
 fn wait_for_user_input() -> Result<(), Box<dyn std::error::Error>> {
     get_user_input("Press Enter to continue...")?;
     Ok(())
 }
 
+#[allow(dead_code)]
 fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
     print!("{}", prompt);
     io::stdout().flush()?;
@@ -1565,6 +1575,7 @@ fn get_user_input(prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
     Ok(input.trim().to_string())
 }
 
+#[allow(dead_code)]
 fn gamma_complex(z: Complex64) -> Complex64 {
     // Complex gamma function implementation using Lanczos approximation
     if z.re > 0.0 {
@@ -1607,6 +1618,7 @@ fn gamma_complex(z: Complex64) -> Complex64 {
     }
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut explorer = ProofExplorer::new();
     explorer.run()

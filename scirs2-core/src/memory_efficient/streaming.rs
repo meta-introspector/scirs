@@ -1570,6 +1570,7 @@ where
 }
 
 /// Create a new stream processor with default configuration
+#[allow(dead_code)]
 pub fn create_stream_processor<T, U, F>(process_fn: F) -> StreamProcessor<T, U>
 where
     T: Clone + Send + 'static,
@@ -1580,6 +1581,7 @@ where
 }
 
 /// Create a new pipeline
+#[allow(dead_code)]
 pub fn create_pipeline(name: &str) -> PipelineBuilder {
     PipelineBuilder::new(name.to_string())
 }

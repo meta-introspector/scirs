@@ -42,6 +42,7 @@ use scirs2_core::parallel_ops::*;
 /// // This should be a perfect negative correlation, approximately -1.0
 /// assert!((corr - (-1.0f64)).abs() < 1e-10f64);
 /// ```
+#[allow(dead_code)]
 pub fn pearson_r<F, D>(x: &ArrayBase<D, Ix1>, y: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
@@ -132,6 +133,7 @@ where
 /// // This should be a perfect monotonic relationship, approximately 1.0
 /// assert!((corr - 1.0f64).abs() < 1e-10f64);
 /// ```
+#[allow(dead_code)]
 pub fn spearman_r<F, D>(x: &ArrayBase<D, Ix1>, y: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
@@ -180,6 +182,7 @@ where
 }
 
 /// Helper function to assign ranks to sorted data
+#[allow(dead_code)]
 fn assign_ranks<F: Float>(sorted_data: &[(F, usize)], ranks: &mut [F]) -> StatsResult<()> {
     let n = sorted_data.len();
 
@@ -238,6 +241,7 @@ fn assign_ranks<F: Float>(sorted_data: &[(F, usize)], ranks: &mut [F]) -> StatsR
 /// // This should be a perfect negative rank correlation, approximately -1.0
 /// assert!((corr - (-1.0f64)).abs() < 1e-10f64);
 /// ```
+#[allow(dead_code)]
 pub fn kendall_tau<F, D>(
     x: &ArrayBase<D, Ix1>,
     y: &ArrayBase<D, Ix1>,
@@ -360,6 +364,7 @@ where
 /// let partial_r = partial_corr(&x.view(), &y.view(), &z.view()).unwrap();
 /// println!("Partial correlation: {}", partial_r);
 /// ```
+#[allow(dead_code)]
 pub fn partial_corr<F, D1, D2>(
     x: &ArrayBase<D1, Ix1>,
     y: &ArrayBase<D1, Ix1>,
@@ -442,6 +447,7 @@ where
 /// println!("Partial correlation coefficient: {}", pr);
 /// println!("Two-sided p-value: {}", p_value);
 /// ```
+#[allow(dead_code)]
 pub fn partial_corrr<F, D1, D2>(
     x: &ArrayBase<D1, Ix1>,
     y: &ArrayBase<D1, Ix1>,
@@ -521,6 +527,7 @@ where
 }
 
 /// Helper function to compute residuals by regressing one variable on control variables
+#[allow(dead_code)]
 fn compute_residuals<F, D1, D2>(
     y: &ArrayBase<D1, Ix1>,
     x: &ArrayBase<D2, Ix2>,
@@ -582,6 +589,7 @@ where
 
 /// Simple linear equation solver using Gaussian elimination for demonstration purposes
 /// This should be replaced with a better implementation in production code
+#[allow(dead_code)]
 fn simple_linear_solve<F>(
     a: &ndarray::Array2<F>,
     b: &ndarray::Array1<F>,
@@ -688,6 +696,7 @@ where
 /// let corr = point_biserial(&binary.view(), &continuous.view()).unwrap();
 /// println!("Point-biserial correlation: {}", corr);
 /// ```
+#[allow(dead_code)]
 pub fn point_biserial<F, D>(
     binary: &ArrayBase<D, Ix1>,
     continuous: &ArrayBase<D, Ix1>,
@@ -807,6 +816,7 @@ where
 /// // A high positive coefficient indicates that group 1 (binary = 1) has higher values
 /// // than group 0 (binary = 0)
 /// ```
+#[allow(dead_code)]
 pub fn point_biserialr<F, D>(
     binary: &ArrayBase<D, Ix1>,
     continuous: &ArrayBase<D, Ix1>,
@@ -909,6 +919,7 @@ where
 /// let corr_matrix = corrcoef(&data.view(), "pearson").unwrap();
 /// println!("Correlation matrix:\n{:?}", corr_matrix);
 /// ```
+#[allow(dead_code)]
 pub fn corrcoef<F, D>(data: &ArrayBase<D, Ix2>, method: &str) -> StatsResult<ndarray::Array2<F>>
 where
     F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
@@ -1154,6 +1165,7 @@ mod tests {
 /// // A coefficient close to 1 indicates a strong positive linear relationship
 /// assert!(r > 0.9);
 /// ```
+#[allow(dead_code)]
 pub fn pearsonr<F, D>(
     x: &ArrayBase<D, Ix1>,
     y: &ArrayBase<D, Ix1>,
@@ -1244,6 +1256,7 @@ where
 }
 
 // Implementation of Student's t-distribution CDF
+#[allow(dead_code)]
 fn student_t_cdf<F: Float + NumCast>(t: F, df: F) -> F {
     let t_f64 = <f64 as NumCast>::from(t).unwrap();
     let df_f64 = <f64 as NumCast>::from(df).unwrap();
@@ -1263,6 +1276,7 @@ fn student_t_cdf<F: Float + NumCast>(t: F, df: F) -> F {
 }
 
 // Beta cumulative distribution function
+#[allow(dead_code)]
 fn beta_cdf(x: f64, a: f64, b: f64) -> f64 {
     if x <= 0.0 {
         return 0.0;
@@ -1286,6 +1300,7 @@ fn beta_cdf(x: f64, a: f64, b: f64) -> f64 {
 }
 
 // Incomplete beta function
+#[allow(dead_code)]
 fn beta_incomplete(a: f64, b: f64, x: f64) -> f64 {
     if x <= 0.0 {
         return 0.0;
@@ -1307,6 +1322,7 @@ fn beta_incomplete(a: f64, b: f64, x: f64) -> f64 {
 }
 
 // Continued fraction for the incomplete beta function
+#[allow(dead_code)]
 fn beta_continued_fraction(a: f64, b: f64, x: f64) -> f64 {
     let max_iter = 100;
     let epsilon = 1e-10;
@@ -1362,11 +1378,13 @@ fn beta_continued_fraction(a: f64, b: f64, x: f64) -> f64 {
 }
 
 // Beta function
+#[allow(dead_code)]
 fn beta_function(a: f64, b: f64) -> f64 {
     gamma_function(a) * gamma_function(b) / gamma_function(a + b)
 }
 
 // Gamma function approximation (Lanczos approximation)
+#[allow(dead_code)]
 fn gamma_function(x: f64) -> f64 {
     if x <= 0.0 {
         panic!("Gamma function not defined for non-positive values");
@@ -1439,6 +1457,7 @@ fn gamma_function(x: f64) -> f64 {
 /// // Perfect monotonic relationship (rho = 1.0)
 /// assert!(rho > 0.99);
 /// ```
+#[allow(dead_code)]
 pub fn spearmanr<F, D>(
     x: &ArrayBase<D, Ix1>,
     y: &ArrayBase<D, Ix1>,
@@ -1550,6 +1569,7 @@ where
 /// // Perfect negative ordinal association (tau should be -1.0)
 /// assert!((tau - (-1.0f64)).abs() < 1e-10f64);
 /// ```
+#[allow(dead_code)]
 pub fn kendalltau<F, D>(
     x: &ArrayBase<D, Ix1>,
     y: &ArrayBase<D, Ix1>,
@@ -1679,6 +1699,7 @@ where
 }
 
 // Standard normal cumulative distribution function
+#[allow(dead_code)]
 fn normal_cdf<F: Float + NumCast>(z: F) -> F {
     let z_f64 = <f64 as NumCast>::from(z).unwrap();
 

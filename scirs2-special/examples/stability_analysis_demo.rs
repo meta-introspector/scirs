@@ -5,6 +5,7 @@
 
 use scirs2_special::stability_analysis::{generate_stability_report, run_stability_tests};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Special Functions Numerical Stability Analysis Demo");
     println!("=================================================\n");
@@ -22,6 +23,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_edge_cases() {
     use scirs2_special::{bessel::j0, erf, erfc, gamma, gamma_safe};
 
@@ -77,6 +79,7 @@ fn demonstrate_edge_cases() {
     }
 }
 
+#[allow(dead_code)]
 fn demonstrate_safe_usage() {
     use scirs2_special::{beta_safe, digamma_safe, gamma_safe};
 

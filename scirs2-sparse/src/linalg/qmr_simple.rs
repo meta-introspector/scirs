@@ -169,14 +169,17 @@ fn vec_add<F: Float>(a: &[F], b: &[F]) -> Vec<F> {
     a.iter().zip(b.iter()).map(|(&ai, &bi)| ai + bi).collect()
 }
 
+#[allow(dead_code)]
 fn vec_sub<F: Float>(a: &[F], b: &[F]) -> Vec<F> {
     a.iter().zip(b.iter()).map(|(&ai, &bi)| ai - bi).collect()
 }
 
+#[allow(dead_code)]
 fn vec_scaled<F: Float>(v: &[F], s: F) -> Vec<F> {
     v.iter().map(|&vi| vi * s).collect()
 }
 
+#[allow(dead_code)]
 fn vec_add_scaled<F: Float>(a: &[F], b: &[F], s: F) -> Vec<F> {
     a.iter()
         .zip(b.iter())

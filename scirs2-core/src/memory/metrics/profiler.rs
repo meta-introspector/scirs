@@ -430,10 +430,7 @@ impl MemoryProfiler {
         let total_memory_mb = memory_report.total_current_usage / (1024 * 1024);
         if total_memory_mb > 1000 {
             health_score -= 0.2;
-            key_insights.push(format!(
-                "High memory usage detected: {} MB",
-                total_memory_mb
-            ));
+            key_insights.push(format!("High memory usage detected: {total_memory_mb} MB"));
             priority_recommendations
                 .push("Consider implementing memory optimization strategies".to_string());
         }
@@ -445,13 +442,10 @@ impl MemoryProfiler {
             .count();
         if critical_leaks > 0 {
             health_score -= 0.3 * critical_leaks as f64;
-            key_insights.push(format!(
-                "{} potential memory leaks detected",
-                critical_leaks
-            ));
+            key_insights.push(format!("{critical_leaks} potential memory leaks detected"));
             priority_recommendations
                 .push("Investigate and fix memory leaks immediately".to_string());
-            risk_issues.push(format!("{} critical memory leaks", critical_leaks));
+            risk_issues.push(format!("{critical_leaks} critical memory leaks"));
         }
 
         // Check allocation efficiency
@@ -477,8 +471,7 @@ impl MemoryProfiler {
         if high_frequency_components > 0 {
             health_score -= 0.1;
             key_insights.push(format!(
-                "{} components with high allocation frequency",
-                high_frequency_components
+                "{high_frequency_components} components with high allocation frequency"
             ));
             priority_recommendations
                 .push("Consider batching allocations for better performance".to_string());

@@ -3,6 +3,7 @@ use scirs2_integrate::{
     MOLParabolicSolver1D, ODEMethod,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Method of Lines example: Advection-Diffusion equation solver");
     println!("Solving: ∂u/∂t = α ∂²u/∂x² - v ∂u/∂x");

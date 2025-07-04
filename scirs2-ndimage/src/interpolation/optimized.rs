@@ -6,28 +6,20 @@
 //! - Parallel implementation for large images
 //! - Memory-efficient processing
 
-use ndarray::{Array, Array1, Array2, Array3, ArrayView1, ArrayView2, Dimension, Ix2};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Dimension};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
 use super::{BoundaryMode, InterpolationOrder};
 use crate::error::{NdimageError, NdimageResult};
+use crate::utils::safe_f64_to_float;
 
-/// Helper function for safe conversion of hardcoded constants
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
 
 /// Helper function for safe i32 conversion
+#[allow(dead_code)]
 fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
     T::from_i32(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert i32 {} to float type", value))
@@ -35,6 +27,7 @@ fn safe_i32_to_float<T: Float + FromPrimitive>(value: i32) -> NdimageResult<T> {
 }
 
 /// Helper function for safe usize conversion
+#[allow(dead_code)]
 fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
     value.to_usize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert value to usize".to_string())
@@ -42,6 +35,7 @@ fn safe_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 }
 
 /// Helper function for safe isize conversion
+#[allow(dead_code)]
 fn safe_to_isize<T: Float>(value: T) -> NdimageResult<isize> {
     value.to_isize().ok_or_else(|| {
         NdimageError::ComputationError("Failed to convert value to isize".to_string())
@@ -49,6 +43,7 @@ fn safe_to_isize<T: Float>(value: T) -> NdimageResult<isize> {
 }
 
 /// Helper function for safe i32 conversion
+#[allow(dead_code)]
 fn safe_to_i32<T: Float>(value: T) -> NdimageResult<i32> {
     value
         .to_i32()
@@ -56,6 +51,7 @@ fn safe_to_i32<T: Float>(value: T) -> NdimageResult<i32> {
 }
 
 /// Helper function for safe usize to float conversion
+#[allow(dead_code)]
 fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
     T::from_usize(value).ok_or_else(|| {
         NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
@@ -140,6 +136,7 @@ impl<T: Float + FromPrimitive + Debug + Clone> CoefficientCache<T> {
 }
 
 /// Compute interpolation coefficients for a given order and offset
+#[allow(dead_code)]
 fn compute_interpolation_coefficients<T>(
     order: InterpolationOrder,
     offset: T,
@@ -173,6 +170,7 @@ where
 }
 
 /// Compute B-spline coefficients
+#[allow(dead_code)]
 fn compute_bspline_coefficients<T>(order: usize, offset: T) -> NdimageResult<Vec<T>>
 where
     T: Float + FromPrimitive,
@@ -273,6 +271,7 @@ impl<T: Float + FromPrimitive + Debug + Clone> Interpolator1D<T> {
 
 /// Get value with boundary handling for 1D arrays
 #[inline]
+#[allow(dead_code)]
 fn get_boundary_value_1d<T>(data: &ArrayView1<T>, idx: isize, mode: BoundaryMode, cval: T) -> T
 where
     T: Float + FromPrimitive + Clone,
@@ -419,6 +418,7 @@ impl<T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static> Interpola
 
 /// Get value with boundary handling for 2D arrays
 #[inline]
+#[allow(dead_code)]
 fn get_boundary_value_2d<T>(
     data: &ArrayView2<T>,
     y: isize,
@@ -488,6 +488,7 @@ where
 }
 
 /// Optimized map_coordinates implementation
+#[allow(dead_code)]
 pub fn map_coordinates_optimized<T>(
     input: &Array2<T>,
     coordinates: &[Array1<T>],
@@ -530,6 +531,7 @@ where
 }
 
 /// Optimized zoom operation with caching
+#[allow(dead_code)]
 pub fn zoom_optimized<T>(
     input: &Array2<T>,
     zoom_factors: &[T],

@@ -15,6 +15,7 @@ use scirs2_special::{wright_bessel, wright_bessel_zeros};
 use std::f64::consts::{E, PI};
 
 /// Demonstrate basic properties of Wright Bessel functions
+#[allow(dead_code)]
 fn demonstrate_basic_properties() {
     println!("\n📚 PART 1: WRIGHT BESSEL FUNCTION FUNDAMENTALS");
     println!("══════════════════════════════════════════════════════════════");
@@ -67,6 +68,7 @@ fn demonstrate_basic_properties() {
 }
 
 /// Explore asymptotic behavior
+#[allow(dead_code)]
 fn demonstrate_asymptotic_behavior() {
     println!("\n📚 PART 2: ASYMPTOTIC BEHAVIOR");
     println!("══════════════════════════════════════════════════════════════");
@@ -120,6 +122,7 @@ fn demonstrate_asymptotic_behavior() {
 }
 
 /// Demonstrate zeros and oscillatory behavior
+#[allow(dead_code)]
 fn demonstrate_zeros() {
     println!("\n📚 PART 3: ZEROS AND OSCILLATORY BEHAVIOR");
     println!("══════════════════════════════════════════════════════════════");
@@ -194,6 +197,7 @@ fn demonstrate_zeros() {
 }
 
 /// Explore connections to other special functions
+#[allow(dead_code)]
 fn demonstrate_function_relationships() {
     println!("\n📚 PART 4: RELATIONSHIPS TO OTHER FUNCTIONS");
     println!("══════════════════════════════════════════════════════════════");
@@ -250,6 +254,7 @@ fn demonstrate_function_relationships() {
 }
 
 /// Applications in fractional calculus
+#[allow(dead_code)]
 fn demonstrate_applications() {
     println!("\n📚 PART 5: APPLICATIONS IN FRACTIONAL CALCULUS");
     println!("══════════════════════════════════════════════════════════════");
@@ -351,6 +356,7 @@ fn demonstrate_applications() {
 }
 
 /// Computational challenges and strategies
+#[allow(dead_code)]
 fn demonstrate_computational_aspects() {
     println!("\n📚 PART 6: COMPUTATIONAL CHALLENGES");
     println!("══════════════════════════════════════════════════════════════");
@@ -420,6 +426,7 @@ fn demonstrate_computational_aspects() {
 }
 
 /// Main tutorial runner
+#[allow(dead_code)]
 fn main() {
     println!("🌟 WRIGHT BESSEL FUNCTIONS: COMPREHENSIVE TUTORIAL");
     println!("════════════════════════════════════════════════════════════════");

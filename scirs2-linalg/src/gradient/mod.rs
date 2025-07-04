@@ -43,6 +43,7 @@ use crate::error::{LinalgError, LinalgResult};
 /// assert_relative_eq!(gradient[1], 1.0/3.0, epsilon = 1e-10);
 /// assert_relative_eq!(gradient[2], 0.0, epsilon = 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn mse_gradient<F>(
     predictions: &ArrayView1<F>,
     targets: &ArrayView1<F>,
@@ -106,6 +107,7 @@ where
 /// assert_relative_eq!(gradient[1], 1.428571, epsilon = 1e-6);
 /// assert_relative_eq!(gradient[2], -1.111111, epsilon = 1e-6);
 /// ```
+#[allow(dead_code)]
 pub fn binary_crossentropy_gradient<F>(
     predictions: &ArrayView1<F>,
     targets: &ArrayView1<F>,
@@ -207,6 +209,7 @@ where
 /// assert_relative_eq!(gradient[[1, 1]], -0.2, epsilon = 1e-10);
 /// assert_relative_eq!(gradient[[1, 2]], 0.05, epsilon = 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn softmax_crossentropy_gradient<F>(
     softmax_output: &ArrayView2<F>,
     targets: &ArrayView2<F>,
@@ -326,6 +329,7 @@ where
 /// assert!((jac[[2, 0]] - 3.0).abs() < 1e-4);
 /// assert!((jac[[2, 1]] - 2.0).abs() < 1e-4);
 /// ```
+#[allow(dead_code)]
 pub fn jacobian<F, G>(f: &G, x: &Array1<F>, epsilon: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + ScalarOperand,
@@ -406,6 +410,7 @@ where
 /// assert!((hess[[1, 0]] - 1.0).abs() < 1e-4);
 /// assert!((hess[[1, 1]] - 4.0).abs() < 1e-4);
 /// ```
+#[allow(dead_code)]
 pub fn hessian<F, G>(f: &G, x: &Array1<F>, epsilon: F) -> LinalgResult<Array2<F>>
 where
     F: Float + NumAssign + Sum + ScalarOperand,

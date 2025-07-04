@@ -129,6 +129,7 @@ struct BenchmarkConfig {
 }
 
 /// Get standard benchmark problems
+#[allow(dead_code)]
 fn get_benchmark_problems() -> Vec<BenchmarkConfig> {
     vec![
         BenchmarkConfig {
@@ -177,6 +178,7 @@ fn get_benchmark_problems() -> Vec<BenchmarkConfig> {
 }
 
 /// Benchmark unconstrained optimization methods
+#[allow(dead_code)]
 fn bench_unconstrained_methods(c: &mut Criterion) {
     let mut group = c.benchmark_group("unconstrained");
     group.sample_size(50);
@@ -221,6 +223,7 @@ fn bench_unconstrained_methods(c: &mut Criterion) {
 }
 
 /// Benchmark different problem dimensions
+#[allow(dead_code)]
 fn bench_dimensions(c: &mut Criterion) {
     let mut group = c.benchmark_group("dimensions");
     group.sample_size(30);
@@ -262,6 +265,7 @@ fn bench_dimensions(c: &mut Criterion) {
 type TestFunction = fn(&ArrayView1<f64>) -> f64;
 
 /// Benchmark global optimization methods
+#[allow(dead_code)]
 fn bench_global_methods(c: &mut Criterion) {
     let mut group = c.benchmark_group("global");
     group.sample_size(20);
@@ -296,6 +300,7 @@ fn bench_global_methods(c: &mut Criterion) {
 }
 
 /// Benchmark least squares problems
+#[allow(dead_code)]
 fn bench_least_squares(c: &mut Criterion) {
     let mut group = c.benchmark_group("least_squares");
     group.sample_size(50);

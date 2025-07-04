@@ -139,6 +139,7 @@ impl Wavelet {
 }
 
 /// Haar wavelet filters
+#[allow(dead_code)]
 fn haar_filters() -> WaveletFilters {
     let dec_lo = vec![0.7071067811865475, 0.7071067811865475];
     let dec_hi = vec![-0.7071067811865475, 0.7071067811865475];
@@ -149,6 +150,7 @@ fn haar_filters() -> WaveletFilters {
 }
 
 /// Daubechies wavelet filters
+#[allow(dead_code)]
 fn db_filters(n: usize) -> SignalResult<WaveletFilters> {
     // Coefficients for Daubechies wavelets up to db20
     let coeffs = match n {
@@ -643,6 +645,7 @@ fn db_filters(n: usize) -> SignalResult<WaveletFilters> {
 }
 
 /// Symlet wavelet filters
+#[allow(dead_code)]
 fn sym_filters(n: usize) -> SignalResult<WaveletFilters> {
     // Symlets are similar to Daubechies but more symmetrical
     // For now, we'll implement a few commonly used ones
@@ -773,6 +776,7 @@ fn sym_filters(n: usize) -> SignalResult<WaveletFilters> {
 }
 
 /// Coiflet wavelet filters
+#[allow(dead_code)]
 fn coif_filters(n: usize) -> SignalResult<WaveletFilters> {
     // Coiflet filter coefficients
     let coeffs = match n {
@@ -916,6 +920,7 @@ fn coif_filters(n: usize) -> SignalResult<WaveletFilters> {
 }
 
 /// Biorthogonal wavelet filters
+#[allow(dead_code)]
 fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
     // Biorthogonal wavelets use different filters for decomposition and reconstruction
     // The filters are defined by their order (nr, nd)
@@ -1254,6 +1259,7 @@ fn bior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
 }
 
 /// Reverse biorthogonal wavelet filters
+#[allow(dead_code)]
 fn rbior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
     // Reverse biorthogonal wavelets are just biorthogonal wavelets with
     // decomposition and reconstruction filters swapped
@@ -1305,6 +1311,7 @@ fn rbior_filters(nr: usize, nd: usize) -> SignalResult<WaveletFilters> {
 /// These are approximations of the Meyer wavelet for DWT
 /// The Meyer wavelet is defined in the frequency domain and doesn't have
 /// a finite filter representation. This implementation uses a FIR approximation.
+#[allow(dead_code)]
 fn meyer_filters() -> SignalResult<WaveletFilters> {
     // Use a 62-tap FIR approximation for the Meyer wavelet
     let filter_len = 62;
@@ -1406,6 +1413,7 @@ fn meyer_filters() -> SignalResult<WaveletFilters> {
 /// The Discrete Meyer wavelet is a more computationally efficient
 /// approximation of the Meyer wavelet that uses FIR filters.
 /// This implementation uses the coefficients from PyWavelets/SciPy.
+#[allow(dead_code)]
 fn dmeyer_filters() -> SignalResult<WaveletFilters> {
     // These are pre-computed Discrete Meyer wavelet coefficients
     // Comparable to the ones used in SciPy/PyWavelets (dmey)

@@ -16,6 +16,7 @@ use scirs2_series::{
 };
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("=== GPU Acceleration and Advanced ML Demo ===\n");
 
@@ -50,6 +51,7 @@ fn main() {
     println!("\n=== GPU and ML Demo Complete ===");
 }
 
+#[allow(dead_code)]
 fn check_gpu_capabilities() {
     println!("  Checking GPU acceleration support...");
 
@@ -73,6 +75,7 @@ fn check_gpu_capabilities() {
     );
 }
 
+#[allow(dead_code)]
 fn gpu_device_management_demo() {
     match GpuDeviceManager::new() {
         Ok(mut manager) => {
@@ -117,6 +120,7 @@ fn gpu_device_management_demo() {
     }
 }
 
+#[allow(dead_code)]
 fn gpu_batch_processing_demo() {
     println!("  Setting up GPU-accelerated batch processing...");
 
@@ -263,6 +267,7 @@ fn gpu_batch_processing_demo() {
     }
 }
 
+#[allow(dead_code)]
 fn gpu_feature_extraction_demo() {
     println!("  GPU-accelerated feature extraction...");
 
@@ -345,6 +350,7 @@ fn gpu_feature_extraction_demo() {
     }
 }
 
+#[allow(dead_code)]
 fn generate_pattern_series(pattern: &str, length: usize, seed: f64) -> Array1<f64> {
     let mut series = Array1::zeros(length);
 
@@ -372,6 +378,7 @@ fn generate_pattern_series(pattern: &str, length: usize, seed: f64) -> Array1<f6
     series
 }
 
+#[allow(dead_code)]
 fn gpu_memory_optimization_demo() {
     println!("  GPU memory optimization strategies...");
 
@@ -462,6 +469,7 @@ fn gpu_memory_optimization_demo() {
     }
 }
 
+#[allow(dead_code)]
 fn advanced_ml_demo() {
     println!("  Advanced ML integration with neural networks...");
 
@@ -606,6 +614,7 @@ fn advanced_ml_demo() {
     }
 }
 
+#[allow(dead_code)]
 fn performance_comparison() {
     println!("  Comparing CPU vs GPU performance...");
 

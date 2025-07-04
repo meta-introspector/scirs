@@ -58,6 +58,7 @@ fn create_test_problem(problem: TestProblem) -> OdeFunction {
 }
 
 // Get time span and initial conditions for a test problem
+#[allow(dead_code)]
 fn problem_settings(problem: &TestProblem) -> ([f64; 2], Array1<f64>) {
     match problem {
         TestProblem::VanDerPol(mu) => {
@@ -72,6 +73,7 @@ fn problem_settings(problem: &TestProblem) -> ([f64; 2], Array1<f64>) {
 }
 
 // Get problem description for printing
+#[allow(dead_code)]
 fn problem_description(problem: &TestProblem) -> String {
     match problem {
         TestProblem::VanDerPol(mu) => {
@@ -84,6 +86,7 @@ fn problem_description(problem: &TestProblem) -> String {
 }
 
 // Run a solver and measure performance
+#[allow(dead_code)]
 fn run_solver(
     problem: &TestProblem,
     method: ODEMethod,
@@ -166,6 +169,7 @@ fn run_solver(
 }
 
 // Compare different solvers on a test problem
+#[allow(dead_code)]
 fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResult<()> {
     println!("\n=== {} ===", problem_description(&problem));
 
@@ -277,6 +281,7 @@ fn compare_methods(problem: TestProblem, rtol: f64, atol: f64) -> IntegrateResul
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("Enhanced ODE Methods Comparison");
     println!("===============================");

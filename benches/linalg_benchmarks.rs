@@ -17,6 +17,7 @@ const MATRIX_SIZES: &[usize] = &[10, 50, 100, 200, 500, 1000];
 const SEED: u64 = 42;
 
 /// Generate a random matrix with controlled properties
+#[allow(dead_code)]
 fn generate_matrix(n: usize, condition_number: Option<f64>) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
 
@@ -46,6 +47,7 @@ fn generate_matrix(n: usize, condition_number: Option<f64>) -> Array2<f64> {
 }
 
 /// Generate a symmetric positive definite matrix
+#[allow(dead_code)]
 fn generate_spd_matrix(n: usize) -> Array2<f64> {
     let mut rng = ChaCha8Rng::seed_from_u64(SEED);
     let a = Array2::random_using((n, n), Uniform::new(-1.0, 1.0), &mut rng);
@@ -56,6 +58,7 @@ fn generate_spd_matrix(n: usize) -> Array2<f64> {
 }
 
 /// Benchmark basic matrix operations
+#[allow(dead_code)]
 fn bench_basic_operations(c: &mut Criterion) {
     let mut group = c.benchmark_group("basic_operations");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
@@ -102,6 +105,7 @@ fn bench_basic_operations(c: &mut Criterion) {
 }
 
 /// Benchmark matrix decompositions
+#[allow(dead_code)]
 fn bench_decompositions(c: &mut Criterion) {
     let mut group = c.benchmark_group("decompositions");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
@@ -158,6 +162,7 @@ fn bench_decompositions(c: &mut Criterion) {
 }
 
 /// Benchmark linear system solvers
+#[allow(dead_code)]
 fn bench_linear_solvers(c: &mut Criterion) {
     let mut group = c.benchmark_group("linear_solvers");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
@@ -198,6 +203,7 @@ fn bench_linear_solvers(c: &mut Criterion) {
 }
 
 /// Benchmark eigenvalue computations
+#[allow(dead_code)]
 fn bench_eigenvalues(c: &mut Criterion) {
     let mut group = c.benchmark_group("eigenvalues");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
@@ -237,6 +243,7 @@ fn bench_eigenvalues(c: &mut Criterion) {
 }
 
 /// Benchmark numerical stability with ill-conditioned matrices
+#[allow(dead_code)]
 fn bench_numerical_stability(c: &mut Criterion) {
     let mut group = c.benchmark_group("numerical_stability");
 
@@ -277,6 +284,7 @@ fn bench_numerical_stability(c: &mut Criterion) {
 }
 
 /// Benchmark memory efficiency by measuring peak memory usage
+#[allow(dead_code)]
 fn bench_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_efficiency");
 
@@ -307,6 +315,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
 }
 
 /// Performance analysis and reporting
+#[allow(dead_code)]
 fn performance_analysis(c: &mut Criterion) {
     let mut group = c.benchmark_group("performance_analysis");
 

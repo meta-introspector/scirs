@@ -3,6 +3,7 @@
 use scirs2_signal::lti::system::*;
 use scirs2_signal::lti::{bode, LtiSystem};
 
+#[allow(dead_code)]
 fn main() {
     println!("LTI System Interconnection Example");
     println!("===================================\n");

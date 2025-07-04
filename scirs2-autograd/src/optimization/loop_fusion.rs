@@ -593,6 +593,7 @@ static FUSION_MANAGER: std::sync::OnceLock<Arc<Mutex<LoopFusionManager<f32>>>> =
     std::sync::OnceLock::new();
 
 /// Initialize the global fusion manager
+#[allow(dead_code)]
 pub fn init_fusion_manager() -> Arc<Mutex<LoopFusionManager<f32>>> {
     FUSION_MANAGER
         .get_or_init(|| Arc::new(Mutex::new(LoopFusionManager::new())))
@@ -600,6 +601,7 @@ pub fn init_fusion_manager() -> Arc<Mutex<LoopFusionManager<f32>>> {
 }
 
 /// Configure global fusion settings
+#[allow(dead_code)]
 pub fn configure_fusion(config: FusionConfig) -> Result<(), OpError> {
     let manager = init_fusion_manager();
     let mut manager_guard = manager
@@ -610,6 +612,7 @@ pub fn configure_fusion(config: FusionConfig) -> Result<(), OpError> {
 }
 
 /// Enable or disable loop fusion globally
+#[allow(dead_code)]
 pub fn set_fusion_enabled(enabled: bool) -> Result<(), OpError> {
     let config = FusionConfig {
         enable_fusion: enabled,
@@ -619,6 +622,7 @@ pub fn set_fusion_enabled(enabled: bool) -> Result<(), OpError> {
 }
 
 /// Check if loop fusion is enabled
+#[allow(dead_code)]
 pub fn is_fusion_enabled() -> bool {
     let manager = init_fusion_manager();
     let result = match manager.lock() {

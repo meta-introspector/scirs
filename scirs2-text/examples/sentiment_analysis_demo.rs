@@ -2,6 +2,7 @@
 
 use scirs2_text::{LexiconSentimentAnalyzer, RuleBasedSentimentAnalyzer, SentimentLexicon};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Sentiment Analysis Demo");
     println!("======================\n");

@@ -11,31 +11,8 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
-use crate::filters::{gaussian_filter, sobel, BorderMode};
-
-/// Helper function for safe conversion of hardcoded constants
-fn safe_f64_to_float<T: Float + FromPrimitive>(value: f64) -> NdimageResult<T> {
-    T::from_f64(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!(
-            "Failed to convert constant {} to float type",
-            value
-        ))
-    })
-}
-
-/// Helper function for safe usize conversion
-fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
-    })
-}
-
-/// Helper function for safe float to usize conversion
-fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
-    value.to_usize().ok_or_else(|| {
-        NdimageError::ComputationError("Failed to convert float to usize".to_string())
-    })
-}
+use crate::filters::{sobel, BorderMode};
+use crate::utils::{safe_f64_to_float, safe_usize_to_float, safe_float_to_usize};
 
 /// Comprehensive image quality metrics
 #[derive(Debug, Clone)]
@@ -102,6 +79,7 @@ impl Default for MultiScaleConfig {
 }
 
 /// Compute comprehensive image quality metrics
+#[allow(dead_code)]
 pub fn image_quality_assessment<T>(
     reference: &ArrayView2<T>,
     test_image: &ArrayView2<T>,
@@ -141,6 +119,7 @@ where
 }
 
 /// Compute Peak Signal-to-Noise Ratio (PSNR)
+#[allow(dead_code)]
 pub fn peak_signal_to_noise_ratio<T>(
     reference: &ArrayView2<T>,
     test_image: &ArrayView2<T>,
@@ -167,11 +146,13 @@ where
         ));
     }
 
-    let psnr = safe_f64_to_float(20.0)? * (max_val * max_val / mse).log10();
+    let twenty: T = safe_f64_to_float(20.0)?;
+    let psnr = twenty * (max_val * max_val / mse).log10();
     Ok(psnr)
 }
 
 /// Compute Structural Similarity Index Measure (SSIM)
+#[allow(dead_code)]
 pub fn structural_similarity_index<T>(
     reference: &ArrayView2<T>,
     test_image: &ArrayView2<T>,
@@ -183,34 +164,26 @@ where
     let c1 = safe_f64_to_float(0.01)? * safe_f64_to_float(0.01)?; // (K1 * L)^2
     let c2 = safe_f64_to_float(0.03)? * safe_f64_to_float(0.03)?; // (K2 * L)^2
 
-    // Apply Gaussian filter for local statistics
-    let sigma = vec![safe_f64_to_float(1.5)?, safe_f64_to_float(1.5)?];
-
-    let ref_filtered = gaussian_filter(reference.to_owned(), &sigma, None, None, None)?;
-    let test_filtered = gaussian_filter(test_image.to_owned(), &sigma, None, None, None)?;
-
-    // Compute means
-    let mu1 = ref_filtered.mean().unwrap_or(T::zero());
-    let mu2 = test_filtered.mean().unwrap_or(T::zero());
+    // Compute means directly (simplified SSIM without Gaussian filtering)
+    let mu1 = reference.sum() / safe_usize_to_float(reference.len())?;
+    let mu2 = test_image.sum() / safe_usize_to_float(test_image.len())?;
 
     // Compute variances and covariance
     let mu1_sq = mu1 * mu1;
     let mu2_sq = mu2 * mu2;
     let mu1_mu2 = mu1 * mu2;
 
-    let ref_var = ref_filtered
+    let ref_var = reference
         .mapv(|x| (x - mu1) * (x - mu1))
-        .mean()
-        .unwrap_or(T::zero());
-    let test_var = test_filtered
+        .sum() / safe_usize_to_float(reference.len())?;
+    let test_var = test_image
         .mapv(|x| (x - mu2) * (x - mu2))
-        .mean()
-        .unwrap_or(T::zero());
+        .sum() / safe_usize_to_float(test_image.len())?;
 
-    let covar = Zip::from(&ref_filtered)
-        .and(&test_filtered)
+    let covar = Zip::from(reference)
+        .and(test_image)
         .fold(T::zero(), |acc, &r, &t| acc + (r - mu1) * (t - mu2))
-        / safe_usize_to_float(ref_filtered.len())?;
+        / safe_usize_to_float(reference.len())?;
 
     // Compute SSIM
     let numerator =
@@ -225,6 +198,7 @@ where
 }
 
 /// Compute Mean Squared Error
+#[allow(dead_code)]
 pub fn mean_squared_error<T>(reference: &ArrayView2<T>, test_image: &ArrayView2<T>) -> T
 where
     T: Float + FromPrimitive,
@@ -240,6 +214,7 @@ where
 }
 
 /// Compute Mean Absolute Error
+#[allow(dead_code)]
 pub fn mean_absolute_error<T>(reference: &ArrayView2<T>, test_image: &ArrayView2<T>) -> T
 where
     T: Float + FromPrimitive,
@@ -252,6 +227,7 @@ where
 }
 
 /// Compute Signal-to-Noise Ratio
+#[allow(dead_code)]
 pub fn signal_to_noise_ratio<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive,
@@ -275,6 +251,7 @@ where
 }
 
 /// Compute Contrast-to-Noise Ratio
+#[allow(dead_code)]
 pub fn contrast_to_noise_ratio<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive,
@@ -298,6 +275,7 @@ where
 }
 
 /// Compute image entropy (information content)
+#[allow(dead_code)]
 pub fn image_entropy<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive,
@@ -338,9 +316,10 @@ where
 }
 
 /// Compute image sharpness using Laplacian variance
+#[allow(dead_code)]
 pub fn image_sharpness<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static + std::ops::AddAssign,
 {
     // Apply Laplacian filter to detect edges
     let laplacian_kernel = Array2::from_shape_vec(
@@ -366,16 +345,16 @@ where
     )?;
 
     // Compute variance of Laplacian response (sharpness measure)
-    let mean_val = filtered.mean().unwrap_or(T::zero());
+    let mean_val = filtered.sum() / safe_usize_to_float(filtered.len())?;
     let variance = filtered
         .mapv(|x| (x - mean_val) * (x - mean_val))
-        .mean()
-        .unwrap_or(T::zero());
+        .sum() / safe_usize_to_float(filtered.len())?;
 
     Ok(variance)
 }
 
 /// Compute local variance in a sliding window
+#[allow(dead_code)]
 pub fn compute_local_variance<T>(image: &ArrayView2<T>, window_size: usize) -> NdimageResult<T>
 where
     T: Float + FromPrimitive,
@@ -423,6 +402,7 @@ where
 }
 
 /// Perform comprehensive texture analysis
+#[allow(dead_code)]
 pub fn texture_analysis<T>(
     image: &ArrayView2<T>,
     window_size: Option<usize>,
@@ -458,6 +438,7 @@ where
 }
 
 /// Compute Gray-Level Co-occurrence Matrix features
+#[allow(dead_code)]
 fn compute_glcm_features<T>(
     image: &ArrayView2<T>,
     _window_size: usize,
@@ -509,6 +490,7 @@ where
 }
 
 /// Compute Local Binary Pattern uniformity
+#[allow(dead_code)]
 fn compute_lbp_uniformity<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive,
@@ -557,6 +539,7 @@ where
 }
 
 /// Compute Gabor filter texture features
+#[allow(dead_code)]
 fn compute_gabor_texture_features<T>(image: &ArrayView2<T>) -> NdimageResult<(T, T)>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static + SimdUnifiedOps,
@@ -603,13 +586,14 @@ where
 }
 
 /// Estimate fractal dimension using box-counting method
+#[allow(dead_code)]
 pub fn estimate_fractal_dimension<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static + std::ops::AddAssign,
 {
     // Convert to binary edge image for fractal analysis
     let edges = sobel(&image.to_owned(), None)?;
-    let threshold = edges.mean().unwrap_or(T::zero()) * safe_f64_to_float(2.0)?;
+    let threshold = (edges.sum() / safe_usize_to_float(edges.len())?) * safe_f64_to_float(2.0)?;
 
     let (height, width) = edges.dim();
     let min_dim = height.min(width);
@@ -675,6 +659,7 @@ where
 
 /// High-performance SIMD-optimized image quality assessment for large arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn image_quality_assessment_simd_f32(
     reference: &ArrayView2<f32>,
     test_image: &ArrayView2<f32>,
@@ -745,6 +730,7 @@ pub fn image_quality_assessment_simd_f32(
 
 /// SIMD-optimized SSIM calculation for f32 arrays
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 fn compute_ssim_simd_f32(
     reference: &ArrayView2<f32>,
     test_image: &ArrayView2<f32>,
@@ -810,6 +796,7 @@ fn compute_ssim_simd_f32(
 
 /// High-performance SIMD-optimized statistical moment calculation
 #[cfg(feature = "simd")]
+#[allow(dead_code)]
 pub fn compute_moments_simd_f32(image: &ArrayView2<f32>) -> NdimageResult<(f32, f32, f32, f32)> {
     let (height, width) = image.dim();
     let total_elements = (height * width) as f32;
@@ -864,6 +851,7 @@ pub fn compute_moments_simd_f32(image: &ArrayView2<f32>) -> NdimageResult<(f32, 
 
 /// Parallel implementation of image entropy calculation
 #[cfg(feature = "parallel")]
+#[allow(dead_code)]
 pub fn image_entropy_parallel<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Send + Sync,
@@ -930,6 +918,7 @@ where
 }
 
 /// High-performance batch quality assessment for multiple image pairs
+#[allow(dead_code)]
 pub fn batch_quality_assessment<T>(
     reference_images: &[ArrayView2<T>],
     test_images: &[ArrayView2<T>],
@@ -969,6 +958,7 @@ where
 }
 
 /// Optimized local feature analysis using sliding window statistics
+#[allow(dead_code)]
 pub fn local_feature_analysis<T>(
     image: &ArrayView2<T>,
     window_size: usize,
@@ -1073,6 +1063,7 @@ where
 }
 
 /// Perform multi-scale image analysis
+#[allow(dead_code)]
 pub fn multi_scale_analysis<T>(
     image: &ArrayView2<T>,
     config: &MultiScaleConfig,

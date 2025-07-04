@@ -25,6 +25,7 @@ use scirs2_special::{
     yne,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== SciPy Parity Functions Demo ===\n");
 

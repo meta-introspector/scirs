@@ -22,6 +22,7 @@ use scirs2_linalg::complex::enhanced_ops::{
 // requires the random module which was refactored
 
 #[test]
+#[allow(dead_code)]
 fn test_complex_matrix_operations() {
     // Create test matrices
     let a = array![
@@ -211,6 +212,7 @@ fn test_complex_matrix_operations() {
 
 /* Matrix calculus is temporarily disabled
 #[test]
+#[allow(dead_code)]
 fn test_matrix_calculus() {
     // Define a simple quadratic function f(x) = x[0]^2 + 2*x[1]^2
     let f = |x: &ArrayView1<f64>| -> LinalgResult<f64> { Ok(x[0] * x[0] + 2.0 * x[1] * x[1]) };

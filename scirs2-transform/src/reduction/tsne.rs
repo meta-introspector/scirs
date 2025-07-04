@@ -1819,6 +1819,7 @@ impl TSNE {
 ///
 /// # Returns
 /// * `Result<f64>` - Trustworthiness score between 0.0 and 1.0
+#[allow(dead_code)]
 pub fn trustworthiness<S1, S2>(
     x: &ArrayBase<S1, Ix2>,
     x_embedded: &ArrayBase<S2, Ix2>,

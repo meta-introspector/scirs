@@ -3,6 +3,7 @@
 use scirs2_signal::filter::butter;
 use scirs2_signal::error::SignalResult;
 
+#[allow(dead_code)]
 fn main() -> SignalResult<()> {
     println!("Testing basic scirs2-signal functionality...");
     

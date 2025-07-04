@@ -6,6 +6,7 @@
 use ndarray::{Array1, Array2};
 use scirs2_datasets::{k_fold_split, stratified_k_fold_split, time_series_split, Dataset};
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Cross-Validation Demonstration ===\n");
 

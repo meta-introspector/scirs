@@ -183,6 +183,7 @@ impl<F: Float> RankOp<F> {
 }
 
 /// Compute the rank of a matrix
+#[allow(dead_code)]
 pub fn matrix_rank<'g, F: Float>(matrix: &Tensor<'g, F>, tolerance: Option<F>) -> Tensor<'g, F> {
     let g = matrix.graph();
 
@@ -335,6 +336,7 @@ impl<F: Float + ndarray::ScalarOperand> Op<F> for CondOp {
 }
 
 /// Compute the condition number of a matrix
+#[allow(dead_code)]
 pub fn cond<'g, F: Float + ndarray::ScalarOperand>(
     matrix: &Tensor<'g, F>,
     p: Option<ConditionType>,
@@ -348,21 +350,25 @@ pub fn cond<'g, F: Float + ndarray::ScalarOperand>(
 }
 
 /// Compute 1-norm condition number
+#[allow(dead_code)]
 pub fn cond_1<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     cond(matrix, Some(ConditionType::One))
 }
 
 /// Compute 2-norm condition number (default)
+#[allow(dead_code)]
 pub fn cond_2<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     cond(matrix, Some(ConditionType::Two))
 }
 
 /// Compute infinity-norm condition number
+#[allow(dead_code)]
 pub fn cond_inf<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     cond(matrix, Some(ConditionType::Inf))
 }
 
 /// Compute Frobenius norm condition number
+#[allow(dead_code)]
 pub fn cond_fro<'g, F: Float + ndarray::ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     cond(matrix, Some(ConditionType::Fro))
 }
@@ -479,6 +485,7 @@ impl<F: Float> Op<F> for LogDetOp {
 }
 
 /// Compute log(|det(A)|) in a numerically stable way
+#[allow(dead_code)]
 pub fn logdet<'g, F: Float>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
 
@@ -643,6 +650,7 @@ impl<F: Float> Op<F> for SLogDetExtractOp {
 /// Compute sign(det(A)) and log(|det(A)|) in a numerically stable way
 ///
 /// Returns (sign, log|det|) where det(A) = sign * exp(log|det|)
+#[allow(dead_code)]
 pub fn slogdet<'g, F: Float>(matrix: &Tensor<'g, F>) -> (Tensor<'g, F>, Tensor<'g, F>) {
     let g = matrix.graph();
 

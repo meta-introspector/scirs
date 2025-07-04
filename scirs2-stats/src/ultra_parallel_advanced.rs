@@ -872,6 +872,7 @@ pub type F64UltraParallelProcessor = UltraParallelProcessor<f64>;
 pub type F32UltraParallelProcessor = UltraParallelProcessor<f32>;
 
 /// Factory functions
+#[allow(dead_code)]
 pub fn create_ultra_parallel_processor<F>() -> UltraParallelProcessor<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static,
@@ -879,6 +880,7 @@ where
     UltraParallelProcessor::new()
 }
 
+#[allow(dead_code)]
 pub fn create_optimized_parallel_processor<F>(
     config: UltraParallelConfig,
 ) -> UltraParallelProcessor<F>

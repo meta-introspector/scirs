@@ -14,6 +14,7 @@ use scirs2_signal::wavelet_vis::{
     NormalizationStrategy,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Wavelet Coefficient Visualization Example");
     println!("----------------------------------------");
@@ -234,6 +235,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Helper function to print a small array
+#[allow(dead_code)]
 fn print_array2(array: &ndarray::ArrayView2<f64>) {
     let (rows, cols) = array.dim();
     for i in 0..rows {

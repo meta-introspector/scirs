@@ -15,6 +15,7 @@ use scirs2_graph::numerical_accuracy_validation::{
 use std::time::Instant;
 
 /// Basic numerical validation example
+#[allow(dead_code)]
 fn basic_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔬 Basic Ultrathink Numerical Validation Example");
     println!("==============================================");
@@ -77,6 +78,7 @@ fn basic_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Comprehensive validation suite example
+#[allow(dead_code)]
 fn comprehensive_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧪 Comprehensive Validation Suite Example");
     println!("========================================");
@@ -167,6 +169,7 @@ fn comprehensive_validation_example() -> Result<(), Box<dyn std::error::Error>> 
 }
 
 /// Custom validation test case example
+#[allow(dead_code)]
 fn custom_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🎛️ Custom Validation Test Case Example");
     println!("====================================");
@@ -303,6 +306,7 @@ fn custom_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Quick validation example for development workflow
+#[allow(dead_code)]
 fn quick_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n⚡ Quick Validation Example (Development Workflow)");
     println!("================================================");
@@ -348,6 +352,7 @@ fn quick_validation_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Validation metrics deep dive example
+#[allow(dead_code)]
 fn validation_metrics_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Validation Metrics Deep Dive Example");
     println!("======================================");
@@ -420,6 +425,7 @@ fn validation_metrics_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Numerical Validation Demo");
     println!("======================================");

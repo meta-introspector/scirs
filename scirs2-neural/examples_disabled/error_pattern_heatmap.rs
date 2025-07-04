@@ -3,6 +3,7 @@ use rand::rngs::SmallRng;
 use scirs2_neural::utils::colors::ColorOptions;
 use scirs2_neural::utils::evaluation::ConfusionMatrix;
 
+#[allow(dead_code)]
 fn main() {
     // Create a reproducible random number generator
     let mut rng = SmallRng::seed_from_u64(42);

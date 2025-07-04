@@ -1,7 +1,7 @@
-//! Memory Usage Profiler for Ultrathink Mode
+//! Memory Usage Profiler for Advanced Mode
 //!
 //! This module provides comprehensive memory profiling and optimization analysis
-//! for ultrathink mode components, including detailed memory usage tracking,
+//! for advanced mode components, including detailed memory usage tracking,
 //! optimization recommendations, and performance analysis.
 
 #![allow(missing_docs)]
@@ -9,7 +9,7 @@
 use crate::advanced::UltrathinkProcessor;
 use crate::base::{EdgeWeight, Graph, Node};
 use crate::error::Result;
-use rand::Rng;
+use rand::{rng, Rng};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, SystemTime};
 
@@ -61,7 +61,7 @@ pub struct AllocationPattern {
     pub was_predicted: bool,
 }
 
-/// Memory usage profiling data for different ultrathink components
+/// Memory usage profiling data for different advanced components
 #[derive(Debug)]
 pub struct MemoryProfile {
     /// Overall memory statistics
@@ -135,8 +135,8 @@ pub struct EfficiencyAnalysis {
     pub recommendations: Vec<String>,
 }
 
-/// Comprehensive memory profiler for ultrathink mode
-pub struct UltrathinkMemoryProfiler {
+/// Comprehensive memory profiler for advanced mode
+pub struct AdvancedMemoryProfiler {
     /// Current memory profile data
     profile: MemoryProfile,
     /// Profiling configuration
@@ -182,7 +182,7 @@ impl Default for MemoryProfilerConfig {
     }
 }
 
-impl UltrathinkMemoryProfiler {
+impl AdvancedMemoryProfiler {
     /// Create a new memory profiler
     pub fn new(config: MemoryProfilerConfig) -> Self {
         let now = SystemTime::now();
@@ -211,7 +211,7 @@ impl UltrathinkMemoryProfiler {
         }
     }
 
-    /// Start profiling an ultrathink processor
+    /// Start profiling an advanced processor
     pub fn start_profiling(&mut self, processor: &UltrathinkProcessor) {
         self.start_time = SystemTime::now();
         self.record_initial_state(processor);
@@ -258,7 +258,7 @@ impl UltrathinkMemoryProfiler {
             .profile
             .component_stats
             .entry(component.to_string())
-            .or_insert_with(MemoryStats::default);
+            .or_default();
         component_stats.current_usage += size;
         component_stats.peak_usage = component_stats
             .peak_usage
@@ -302,7 +302,7 @@ impl UltrathinkMemoryProfiler {
                     .profile
                     .component_stats
                     .entry(component.to_string())
-                    .or_insert_with(MemoryStats::default);
+                    .or_default();
                 component_stats.current_usage = component_stats.current_usage.saturating_sub(size);
                 component_stats.deallocation_count += 1;
 
@@ -556,7 +556,7 @@ impl UltrathinkMemoryProfiler {
                         estimated_savings: count * 1024, // Estimate based on frequency
                         performance_impact: 0.05 * (count as f64 / 100.0), // Performance improvement
                         implementation_complexity: 2,
-                        description: format!("Pool frequent allocations: {}", pattern),
+                        description: format!("Pool frequent allocations: {pattern}"),
                         priority: 3,
                     });
             }
@@ -983,7 +983,7 @@ impl MemoryUsageReport {
             self.recommendations
                 .iter()
                 .take(3)
-                .map(|r| format!("  • {}", r))
+                .map(|r| format!("  • {r}"))
                 .collect::<Vec<_>>()
                 .join("\n")
         )
@@ -992,17 +992,19 @@ impl MemoryUsageReport {
     /// Export report to JSON format
     pub fn to_json(&self) -> String {
         // In a real implementation, this would use serde_json
-        format!("{{\"memory_report\": \"JSON export not implemented\"}}")
+        "{\"memory_report\": \"JSON export not implemented\"}".to_string()
     }
 }
 
 /// Convenience function to create a memory profiler with default configuration
-pub fn create_memory_profiler() -> UltrathinkMemoryProfiler {
-    UltrathinkMemoryProfiler::new(MemoryProfilerConfig::default())
+#[allow(dead_code)]
+pub fn create_memory_profiler() -> AdvancedMemoryProfiler {
+    AdvancedMemoryProfiler::new(MemoryProfilerConfig::default())
 }
 
 /// Convenience function to create a memory profiler optimized for large graphs
-pub fn create_large_graph_memory_profiler() -> UltrathinkMemoryProfiler {
+#[allow(dead_code)]
+pub fn create_large_graph_memory_profiler() -> AdvancedMemoryProfiler {
     let config = MemoryProfilerConfig {
         track_allocations: true,
         analyze_patterns: true,
@@ -1011,11 +1013,12 @@ pub fn create_large_graph_memory_profiler() -> UltrathinkMemoryProfiler {
         sampling_interval: Duration::from_millis(50), // More frequent sampling
         real_time_monitoring: true,
     };
-    UltrathinkMemoryProfiler::new(config)
+    AdvancedMemoryProfiler::new(config)
 }
 
 /// Enhanced memory profiler for extreme stress testing
-pub fn create_extreme_stress_memory_profiler() -> UltrathinkMemoryProfiler {
+#[allow(dead_code)]
+pub fn create_extreme_stress_memory_profiler() -> AdvancedMemoryProfiler {
     let config = MemoryProfilerConfig {
         track_allocations: true,
         analyze_patterns: true,
@@ -1024,12 +1027,13 @@ pub fn create_extreme_stress_memory_profiler() -> UltrathinkMemoryProfiler {
         sampling_interval: Duration::from_millis(25), // Very frequent sampling
         real_time_monitoring: true,
     };
-    UltrathinkMemoryProfiler::new(config)
+    AdvancedMemoryProfiler::new(config)
 }
 
 /// Profile a comprehensive stress test with detailed memory analysis
+#[allow(dead_code)]
 pub fn profile_comprehensive_stress_test<F>(
-    profiler: &mut UltrathinkMemoryProfiler,
+    profiler: &mut AdvancedMemoryProfiler,
     processor: &mut UltrathinkProcessor,
     test_name: &str,
     test_function: F,
@@ -1037,7 +1041,7 @@ pub fn profile_comprehensive_stress_test<F>(
 where
     F: FnOnce(&mut UltrathinkProcessor) -> Result<String>,
 {
-    println!("🧠 Starting memory-profiled stress test: {}", test_name);
+    println!("🧠 Starting memory-profiled stress test: {test_name}");
 
     // Start profiling
     profiler.start_profiling(processor);
@@ -1058,7 +1062,7 @@ where
     // Generate report
     let report = profiler.generate_memory_report();
 
-    println!("🧠 Memory profiling completed for {}", test_name);
+    println!("🧠 Memory profiling completed for {test_name}");
     println!(
         "   📊 Peak memory: {:.1} MB",
         report.overall_stats.peak_usage as f64 / 1_000_000.0
@@ -1075,25 +1079,20 @@ where
     match test_result {
         Ok(_) => Ok((report, test_duration)),
         Err(e) => {
-            println!(
-                "⚠️  Test failed but memory profile still generated: {:?}",
-                e
-            );
+            println!("⚠️  Test failed but memory profile still generated: {e:?}");
             Ok((report, test_duration))
         }
     }
 }
 
 /// Memory-aware graph generator with profiling integration
+#[allow(dead_code)]
 pub fn generate_profiled_large_graph(
-    profiler: &mut UltrathinkMemoryProfiler,
+    profiler: &mut AdvancedMemoryProfiler,
     num_nodes: usize,
     graph_type: &str,
 ) -> Result<crate::base::Graph<usize, f64>> {
-    println!(
-        "🏗️  Generating profiled {} graph with {} nodes",
-        graph_type, num_nodes
-    );
+    println!("🏗️  Generating profiled {graph_type} graph with {num_nodes} nodes");
 
     let generation_start = std::time::Instant::now();
     profiler.record_allocation("graph_generation", num_nodes * 8, "nodes", true);
@@ -1150,7 +1149,7 @@ pub fn generate_profiled_large_graph(
                 edges_added += 1;
 
                 if edges_added % 100_000 == 0 {
-                    println!("   🔗 Added {} edges", edges_added);
+                    println!("   🔗 Added {edges_added} edges");
                 }
             }
         }
@@ -1168,6 +1167,7 @@ pub fn generate_profiled_large_graph(
 }
 
 /// Comprehensive memory stress test runner
+#[allow(dead_code)]
 pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
     println!("🧠 Starting comprehensive memory stress tests...");
     println!("================================================");
@@ -1200,10 +1200,10 @@ pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
                 },
             )?;
 
-            println!("   ⏱️  Test completed in {:?}", duration);
+            println!("   ⏱️  Test completed in {duration:?}");
             reports.push(report);
         }
-        Err(e) => println!("   ❌ Failed to create small graph: {}", e),
+        Err(e) => println!("   ❌ Failed to create small graph: {e}"),
     }
 
     // Test 2: Medium graph stress test
@@ -1242,10 +1242,10 @@ pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
                 },
             )?;
 
-            println!("   ⏱️  Test completed in {:?}", duration);
+            println!("   ⏱️  Test completed in {duration:?}");
             reports.push(report);
         }
-        Err(e) => println!("   ❌ Failed to create medium graph: {}", e),
+        Err(e) => println!("   ❌ Failed to create medium graph: {e}"),
     }
 
     // Test 3: Large graph extreme test (if memory allows)
@@ -1285,10 +1285,10 @@ pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
                 },
             )?;
 
-            println!("   ⏱️  Test completed in {:?}", duration);
+            println!("   ⏱️  Test completed in {duration:?}");
             reports.push(report);
         }
-        Err(e) => println!("   ❌ Failed to create large graph: {}", e),
+        Err(e) => println!("   ❌ Failed to create large graph: {e}"),
     }
 
     // Generate summary

@@ -52,6 +52,7 @@ use crate::error::{ClusteringError, Result};
 /// let score = davies_bouldin_score(data.view(), labels.view()).unwrap();
 /// assert!(score < 0.5);  // Should be low for well-separated clusters
 /// ```
+#[allow(dead_code)]
 pub fn davies_bouldin_score<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + PartialOrd + 'static,
@@ -181,6 +182,7 @@ where
 /// let score = calinski_harabasz_score(data.view(), labels.view()).unwrap();
 /// assert!(score > 50.0);  // Should be high for well-separated clusters
 /// ```
+#[allow(dead_code)]
 pub fn calinski_harabasz_score<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + PartialOrd + 'static,
@@ -303,6 +305,7 @@ where
 ///
 /// let score = mean_silhouette_score(data.view(), labels.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn mean_silhouette_score<F>(data: ArrayView2<F>, labels: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + 'static,
@@ -339,6 +342,7 @@ where
 /// let ari: f64 = adjusted_rand_index(labels_true.view(), labels_pred.view()).unwrap();
 /// assert!(ari > 0.0);  // Should be positive for similar clusterings
 /// ```
+#[allow(dead_code)]
 pub fn adjusted_rand_index<F>(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -462,6 +466,7 @@ where
 /// let nmi: f64 = normalized_mutual_info(labels_true.view(), labels_pred.view(), "arithmetic").unwrap();
 /// assert!((nmi - 1.0).abs() < 1e-6);  // Perfect agreement
 /// ```
+#[allow(dead_code)]
 pub fn normalized_mutual_info<F>(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -515,6 +520,7 @@ where
 }
 
 /// Compute mutual information between two label assignments.
+#[allow(dead_code)]
 fn mutual_info<F>(labels_true: ArrayView1<i32>, labels_pred: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + 'static,
@@ -546,6 +552,7 @@ where
 }
 
 /// Compute entropy of a label assignment.
+#[allow(dead_code)]
 fn entropy<F>(labels: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + 'static,
@@ -569,6 +576,7 @@ where
 }
 
 /// Build contingency matrix for two label assignments.
+#[allow(dead_code)]
 fn build_contingency_matrix(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -635,6 +643,7 @@ fn build_contingency_matrix(
 /// assert!(h > 0.5);  // Good homogeneity
 /// assert!(c > 0.9);  // High completeness (all members of each class in single clusters)
 /// ```
+#[allow(dead_code)]
 pub fn homogeneity_completeness_v_measure<F>(
     labels_true: ArrayView1<i32>,
     labels_pred: ArrayView1<i32>,
@@ -694,6 +703,7 @@ where
 }
 
 /// Compute conditional entropy H(X|Y).
+#[allow(dead_code)]
 fn conditional_entropy<F>(labels_x: ArrayView1<i32>, labels_y: ArrayView1<i32>) -> Result<F>
 where
     F: Float + FromPrimitive + Debug + 'static,

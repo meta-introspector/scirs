@@ -9,6 +9,7 @@ use scirs2_integrate::{
     IntegrateResult,
 };
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Mode Demonstration");
     println!("================================");

@@ -14,6 +14,7 @@ use scirs2_metrics::{
 };
 
 /// Generate synthetic classification data for benchmarking
+#[allow(dead_code)]
 fn generate_classification_data(n_samples: usize) -> (Array1<f64>, Array1<f64>) {
     let y_true: Array1<f64> = Array1::from_iter((0..n_samples).map(|i| (i % 2) as f64));
     let y_pred: Array1<f64> = Array1::from_iter((0..n_samples).map(|i| ((i + 1) % 2) as f64));
@@ -21,6 +22,7 @@ fn generate_classification_data(n_samples: usize) -> (Array1<f64>, Array1<f64>) 
 }
 
 /// Generate synthetic classification data with integer labels for confusion matrix
+#[allow(dead_code)]
 fn generate_classification_data_int(n_samples: usize) -> (Array1<i32>, Array1<i32>) {
     let y_true: Array1<i32> = Array1::from_iter((0..n_samples).map(|i| (i % 2) as i32));
     let y_pred: Array1<i32> = Array1::from_iter((0..n_samples).map(|i| ((i + 1) % 2) as i32));
@@ -28,6 +30,7 @@ fn generate_classification_data_int(n_samples: usize) -> (Array1<i32>, Array1<i3
 }
 
 /// Generate synthetic regression data for benchmarking
+#[allow(dead_code)]
 fn generate_regression_data(n_samples: usize) -> (Array1<f64>, Array1<f64>) {
     let y_true: Array1<f64> = Array1::from_iter((0..n_samples).map(|i| i as f64));
     let y_pred: Array1<f64> = Array1::from_iter((0..n_samples).map(|i| (i as f64) + 0.1));
@@ -35,6 +38,7 @@ fn generate_regression_data(n_samples: usize) -> (Array1<f64>, Array1<f64>) {
 }
 
 /// Generate synthetic clustering data for benchmarking
+#[allow(dead_code)]
 fn generate_clustering_data(n_samples: usize, n_features: usize) -> (Array2<f64>, Array1<usize>) {
     let mut data = Array2::zeros((n_samples, n_features));
     let mut labels = Array1::zeros(n_samples);
@@ -54,6 +58,7 @@ fn generate_clustering_data(n_samples: usize, n_features: usize) -> (Array2<f64>
 }
 
 /// Generate synthetic probability distributions for benchmarking
+#[allow(dead_code)]
 fn generate_probability_distributions(n_samples: usize) -> (Array1<f64>, Array1<f64>) {
     let mut p = Array1::zeros(n_samples);
     let mut q = Array1::zeros(n_samples);
@@ -79,6 +84,7 @@ fn generate_probability_distributions(n_samples: usize) -> (Array1<f64>, Array1<
 }
 
 /// Benchmark classification metrics performance
+#[allow(dead_code)]
 fn benchmark_classification_metrics(c: &mut Criterion) {
     let mut group = c.benchmark_group("classification_metrics");
 
@@ -117,6 +123,7 @@ fn benchmark_classification_metrics(c: &mut Criterion) {
 }
 
 /// Benchmark regression metrics performance
+#[allow(dead_code)]
 fn benchmark_regression_metrics(c: &mut Criterion) {
     let mut group = c.benchmark_group("regression_metrics");
 
@@ -144,6 +151,7 @@ fn benchmark_regression_metrics(c: &mut Criterion) {
 }
 
 /// Benchmark clustering metrics performance
+#[allow(dead_code)]
 fn benchmark_clustering_metrics(c: &mut Criterion) {
     let mut group = c.benchmark_group("clustering_metrics");
 
@@ -168,6 +176,7 @@ fn benchmark_clustering_metrics(c: &mut Criterion) {
 }
 
 /// Benchmark anomaly detection metrics performance
+#[allow(dead_code)]
 fn benchmark_anomaly_metrics(c: &mut Criterion) {
     let mut group = c.benchmark_group("anomaly_metrics");
 
@@ -198,6 +207,7 @@ fn benchmark_anomaly_metrics(c: &mut Criterion) {
 }
 
 /// Benchmark stable statistical computation performance
+#[allow(dead_code)]
 fn benchmark_stable_metrics(c: &mut Criterion) {
     let mut group = c.benchmark_group("stable_metrics");
     let stable_metrics = StableMetrics::<f64>::new();
@@ -224,6 +234,7 @@ fn benchmark_stable_metrics(c: &mut Criterion) {
 }
 
 /// Benchmark high-dimensional data performance
+#[allow(dead_code)]
 fn benchmark_high_dimensional_performance(c: &mut Criterion) {
     let mut group = c.benchmark_group("high_dimensional");
 
@@ -242,6 +253,7 @@ fn benchmark_high_dimensional_performance(c: &mut Criterion) {
 }
 
 /// Benchmark memory efficiency for large datasets
+#[allow(dead_code)]
 fn benchmark_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_efficiency");
 
@@ -278,6 +290,7 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
 }
 
 /// Benchmark worst-case scenarios for edge case handling
+#[allow(dead_code)]
 fn benchmark_edge_cases(c: &mut Criterion) {
     let mut group = c.benchmark_group("edge_cases");
 

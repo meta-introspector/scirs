@@ -5,6 +5,7 @@
 //! mechanisms that evolve in real-time based on computational patterns.
 
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::useless_vec)]
 #![allow(dead_code)]
 
 use crate::error::{MetricsError, Result};
@@ -1433,7 +1434,7 @@ impl<F: Float + Send + Sync + std::iter::Sum + 'static + ndarray::ScalarOperand>
     fn predict_sample(&mut self, sample: &ArrayView1<F>) -> Result<Vec<F>> {
         // Encode sample as spikes and run prediction
         let spike_pattern = self.encode_to_spikes(sample)?;
-        self.inject_spike_patterns(&spike_pattern, &vec![])?;
+        self.inject_spike_patterns(&spike_pattern, &[])?;
 
         let result = self.run_simulation()?;
 

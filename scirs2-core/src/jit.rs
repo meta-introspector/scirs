@@ -341,7 +341,7 @@ impl Default for ParallelizationHints {
 }
 
 /// Compiled kernel representation
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CompiledKernel {
     /// Kernel identifier
     pub id: String,
@@ -689,7 +689,7 @@ impl JitCompiler {
         let kernel = {
             let cache = self.cache.read().unwrap();
             cache
-                .get(kernel_id)
+                .get_readonly(kernel_id)
                 .ok_or_else(|| JitError::CacheError(format!("{kernel_id}")))?
                 .clone()
         };
@@ -788,6 +788,11 @@ impl KernelCache {
         } else {
             None
         }
+    }
+
+    /// Get a kernel from the cache without updating access tracking
+    pub fn get_readonly(&self, kernel_id: &str) -> Option<&CompiledKernel> {
+        self.kernels.get(kernel_id)
     }
 
     /// Insert kernel into cache

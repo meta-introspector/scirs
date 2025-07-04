@@ -371,7 +371,7 @@ impl NoUTurnSampler {
         let mut tree_sizes = Array1::zeros(n_samples);
 
         let mut current_state = initial_state.to_owned();
-        let mut current_log_prob = target.log_density(&current_state.view())?;
+        let mut current_log_prob;
 
         let mut step_size = self.initial_step_size;
         let mut step_size_bar = self.initial_step_size;
@@ -423,8 +423,8 @@ impl NoUTurnSampler {
         let mut momentum = Array1::zeros(ndim);
         for i in 0..ndim {
             // Simplified normal sampling using Box-Muller
-            let u1: f64 = rng.gen();
-            let u2: f64 = rng.gen();
+            let u1: f64 = rng.random();
+            let u2: f64 = rng.random();
             momentum[i] = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
         }
         momentum
@@ -447,7 +447,7 @@ impl NoUTurnSampler {
         let current_log_prob = target.log_density(&current_pos.view())?;
 
         // Take a few leapfrog steps (simplified)
-        let n_steps = 2_usize.pow(rng.random_range(1..=self.max_tree_depth.min(4)));
+        let n_steps = 2_usize.pow(rng.random_range(1..=self.max_tree_depth.min(4)) as u32);
 
         for _ in 0..n_steps {
             // Simplified leapfrog step
@@ -623,8 +623,8 @@ impl AdaptiveMetropolis {
         // Sample from N(0, I)
         let mut z = Array1::zeros(ndim);
         for i in 0..ndim {
-            let u1: f64 = rng.gen();
-            let u2: f64 = rng.gen();
+            let u1: f64 = rng.random();
+            let u2: f64 = rng.random();
             z[i] = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
         }
 
@@ -818,8 +818,8 @@ impl ParallelTempering {
         let mut proposal = current.clone();
 
         for i in 0..ndim {
-            let u1: f64 = rng.gen();
-            let u2: f64 = rng.gen();
+            let u1: f64 = rng.random();
+            let u2: f64 = rng.random();
             let normal_sample = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             proposal[i] += self.step_size * normal_sample;
         }

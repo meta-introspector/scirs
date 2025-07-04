@@ -9,6 +9,7 @@ use scirs2_datasets::{
     random_undersample, BalancingStrategy,
 };
 
+#[allow(dead_code)]
 fn main() {
     println!("=== Data Balancing Utilities Demonstration ===\n");
 
@@ -189,6 +190,7 @@ fn main() {
 }
 
 /// Print the class distribution of targets
+#[allow(dead_code)]
 fn print_class_distribution(targets: &Array1<f64>) {
     let mut class_counts = std::collections::HashMap::new();
     for &target in targets.iter() {

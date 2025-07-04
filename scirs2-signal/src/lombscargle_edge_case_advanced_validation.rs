@@ -103,6 +103,7 @@ pub struct StressPerformanceResult {
 }
 
 /// Run comprehensive advanced edge case validation
+#[allow(dead_code)]
 pub fn run_advanced_edge_case_validation() -> SignalResult<AdvancedEdgeCaseValidationResult> {
     println!("🔬 Starting Advanced Edge Case Validation for Lomb-Scargle...");
 
@@ -170,6 +171,7 @@ pub fn run_advanced_edge_case_validation() -> SignalResult<AdvancedEdgeCaseValid
 }
 
 /// Validate sparse sampling scenarios
+#[allow(dead_code)]
 fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
     let mut rng = rand::rng();
     let true_freq = 0.1; // Low frequency to test with sparse sampling
@@ -183,14 +185,16 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
     for &n_samples in &sample_densities {
         // Generate sparse, randomly distributed time points
         let mut times: Vec<f64> = (0..n_samples)
-            .map(|_| rng.gen_range(0.0..total_duration))
+            .map(|_| rng.random_range(0.0..total_duration))
             .collect();
         times.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         // Generate signal with true frequency
         let signal: Vec<f64> = times
             .iter()
-            .map(|&t| amplitude * (2.0 * PI * true_freq * t).sin() + 0.1 * rng.gen_range(-1.0..1.0))
+            .map(|&t| {
+                amplitude * (2.0 * PI * true_freq * t).sin() + 0.1 * rng.random_range(-1.0..1.0)
+            })
             .collect();
 
         // Run Lomb-Scargle analysis
@@ -239,6 +243,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
 }
 
 /// Validate non-uniform grid handling
+#[allow(dead_code)]
 fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
     let mut rng = rand::rng();
     let true_freq = 0.2;
@@ -249,7 +254,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
     // Add clusters of points
     for cluster_center in [10.0, 30.0, 60.0, 90.0] {
         for _ in 0..25 {
-            times.push(cluster_center + rng.gen_range(-2.0..2.0));
+            times.push(cluster_center + rng.random_range(-2.0..2.0));
         }
     }
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -307,7 +312,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
             let regular_time = i as f64;
             // Add random jitter with increasing magnitude
             let jitter_magnitude = (i as f64 / 50.0).min(2.0);
-            regular_time + rng.gen_range(-jitter_magnitude..jitter_magnitude)
+            regular_time + rng.random_range(-jitter_magnitude..jitter_magnitude)
         })
         .collect();
     irregular_times.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -342,6 +347,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
 }
 
 /// Validate noise tolerance
+#[allow(dead_code)]
 fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
     let mut rng = rand::rng();
     let true_freq = 0.15;
@@ -358,17 +364,17 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
     for &noise_level in &noise_levels {
         // Test different noise types
         let noise_types = vec![
-            ("white", || rng.gen_range(-1.0..1.0)),
+            ("white", || rng.random_range(-1.0..1.0)),
             ("impulsive", || {
                 if rng.random::<f64>() < 0.1 {
-                    rng.gen_range(-10.0..10.0)
+                    rng.random_range(-10.0..10.0)
                 } else {
-                    rng.gen_range(-0.1..0.1)
+                    rng.random_range(-0.1..0.1)
                 }
             }),
             ("colored", || {
                 // Simple colored noise approximation
-                rng.gen_range(-1.0..1.0) / (1.0 + rng.gen_range(0.0..1.0))
+                rng.random_range(-1.0..1.0) / (1.0 + rng.random_range(0.0..1.0))
             }),
         ];
 
@@ -418,7 +424,9 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
     let n_false_positive_tests = 50;
 
     for _ in 0..n_false_positive_tests {
-        let pure_noise: Vec<f64> = (0..n_samples).map(|_| rng.gen_range(-1.0..1.0)).collect();
+        let pure_noise: Vec<f64> = (0..n_samples)
+            .map(|_| rng.random_range(-1.0..1.0))
+            .collect();
 
         let frequencies = Array1::linspace(0.05, 0.5, 100);
         if let Ok(power) = lombscargle(&times.to_vec(), &pure_noise, &frequencies, None) {
@@ -453,6 +461,7 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
 }
 
 /// Validate aliasing detection
+#[allow(dead_code)]
 fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
     let mut rng = rand::rng();
     let n_samples = 100;
@@ -570,6 +579,7 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
 }
 
 /// Validate numerical precision
+#[allow(dead_code)]
 fn validate_numerical_precision() -> SignalResult<NumericalPrecisionResult> {
     let true_freq = 0.1;
     let amplitude = 1.0;
@@ -690,6 +700,7 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionResult> {
 }
 
 /// Validate multi-scale signals
+#[allow(dead_code)]
 fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
     let n_samples = 500;
     let times: Array1<f64> = Array1::linspace(0.0, 100.0, n_samples);
@@ -858,6 +869,7 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
 }
 
 /// Validate performance under stress conditions
+#[allow(dead_code)]
 fn validate_stress_performance() -> SignalResult<StressPerformanceResult> {
     let mut memory_scores = Vec::new();
     let mut time_scores = Vec::new();
@@ -954,6 +966,7 @@ fn validate_stress_performance() -> SignalResult<StressPerformanceResult> {
 }
 
 /// Calculate overall robustness score
+#[allow(dead_code)]
 fn calculate_robustness_score(
     sparse_sampling: &SparseSamplingResult,
     non_uniform_grid: &NonUniformGridResult,
@@ -983,6 +996,7 @@ fn calculate_robustness_score(
 }
 
 /// Identify critical robustness issues
+#[allow(dead_code)]
 fn identify_robustness_issues(
     sparse_sampling: &SparseSamplingResult,
     non_uniform_grid: &NonUniformGridResult,
@@ -1037,6 +1051,7 @@ fn identify_robustness_issues(
 }
 
 /// Generate comprehensive validation report
+#[allow(dead_code)]
 pub fn generate_advanced_edge_case_report(result: &AdvancedEdgeCaseValidationResult) -> String {
     let mut report = String::new();
 

@@ -60,7 +60,7 @@ pub enum KernelType {
 
 impl<F> VariationalSparseGP<F>
 where
-    F: Float + FromPrimitive + Debug + Display + std::iter::Sum + 'static,
+    F: Float + FromPrimitive + Debug + Display + std::iter::Sum + 'static + std::ops::AddAssign + ndarray::ScalarOperand + std::ops::SubAssign,
 {
     /// Create a new variational sparse GP
     pub fn new(
@@ -113,16 +113,16 @@ where
             let l_uu = self.cholesky_decomposition(&k_uu_jitter)?;
 
             // Solve for A = K_fu @ inv(K_uu)
-            let a_matrix = self.solve_triangular_system(&l_uu, &k_fu.t())?;
+            let a_matrix = self.solve_triangular_system(&l_uu, &k_fu.t().to_owned())?;
 
             // Compute variational parameters
             let sigma_inv = F::one() / self.noise_variance;
-            let lambda = Array2::eye(n_inducing) + sigma_inv * &a_matrix.dot(&a_matrix.t());
+            let lambda = Array2::eye(n_inducing) + &(a_matrix.dot(&a_matrix.t()) * sigma_inv);
 
             // Update variational mean
             let y_centered = y_train.to_owned();
             let ata_y = a_matrix.dot(&y_centered);
-            self.variational_mean = sigma_inv * self.solve_system(&lambda, &ata_y)?;
+            self.variational_mean = self.solve_system(&lambda, &ata_y)? * sigma_inv;
 
             // Update variational covariance (Cholesky factor)
             self.variational_cov_chol = self.cholesky_decomposition(&lambda)?;
@@ -163,7 +163,7 @@ where
 
         // Solve K_uu^{-1} * K_su^T
         let l_uu = self.cholesky_decomposition(&k_uu_jitter)?;
-        let alpha = self.solve_triangular_system(&l_uu, &k_su.t())?;
+        let alpha = self.solve_triangular_system(&l_uu, &k_su.t().to_owned())?;
 
         // Predictive mean
         let mean = k_su.dot(&self.variational_mean);

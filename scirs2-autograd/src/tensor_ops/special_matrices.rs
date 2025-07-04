@@ -532,6 +532,7 @@ impl<F: Float> Op<F> for BandMatrixOp {
 // Public API functions
 
 /// Compute Cholesky decomposition with gradient support
+#[allow(dead_code)]
 pub fn cholesky<'g, F: Float + ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
@@ -540,6 +541,7 @@ pub fn cholesky<'g, F: Float + ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<
 }
 
 /// Make a matrix symmetric by averaging with its transpose
+#[allow(dead_code)]
 pub fn symmetrize<'g, F: Float + ScalarOperand>(matrix: &Tensor<'g, F>) -> Tensor<'g, F> {
     let g = matrix.graph();
     Tensor::builder(g)
@@ -548,6 +550,7 @@ pub fn symmetrize<'g, F: Float + ScalarOperand>(matrix: &Tensor<'g, F>) -> Tenso
 }
 
 /// Extract lower triangular part of a matrix
+#[allow(dead_code)]
 pub fn tril<'g, F: Float>(matrix: &Tensor<'g, F>, diagonal: i32) -> Tensor<'g, F> {
     let g = matrix.graph();
 
@@ -561,6 +564,7 @@ pub fn tril<'g, F: Float>(matrix: &Tensor<'g, F>, diagonal: i32) -> Tensor<'g, F
 }
 
 /// Extract upper triangular part of a matrix
+#[allow(dead_code)]
 pub fn triu<'g, F: Float>(matrix: &Tensor<'g, F>, diagonal: i32) -> Tensor<'g, F> {
     let g = matrix.graph();
 
@@ -574,6 +578,7 @@ pub fn triu<'g, F: Float>(matrix: &Tensor<'g, F>, diagonal: i32) -> Tensor<'g, F
 }
 
 /// Extract band from a matrix
+#[allow(dead_code)]
 pub fn band_matrix<'g, F: Float>(matrix: &Tensor<'g, F>, lower: i32, upper: i32) -> Tensor<'g, F> {
     let g = matrix.graph();
 

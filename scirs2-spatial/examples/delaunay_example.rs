@@ -2,6 +2,7 @@ use ndarray::array;
 use rand::Rng;
 use scirs2_spatial::Delaunay;
 
+#[allow(dead_code)]
 fn main() {
     println!("=== SciRS2 Spatial - Delaunay Triangulation Example ===\n");
 
@@ -21,15 +22,15 @@ fn main() {
     // Print the simplices (triangles in 2D)
     println!("Triangles:");
     for (i, simplex) in tri_simple.simplices().iter().enumerate() {
-        println!("  Triangle {}: {:?}", i, simplex);
+        println!("  Triangle {i}: {simplex:?}");
     }
 
     // Find which triangle contains a test point
     let test_point = [0.25, 0.25];
     if let Some(idx) = tri_simple.find_simplex(&test_point) {
-        println!("  Point {:?} is in triangle {}", test_point, idx);
+        println!("  Point {test_point:?} is in triangle {idx}");
     } else {
-        println!("  Point {:?} is not in any triangle", test_point);
+        println!("  Point {test_point:?} is not in any triangle");
     }
     println!();
 
@@ -50,7 +51,7 @@ fn main() {
     let tri_3d = match Delaunay::new(&points_3d) {
         Ok(t) => t,
         Err(e) => {
-            println!("  Note: {}", e);
+            println!("  Note: {e}");
             println!("  3D Delaunay triangulation can be sensitive to cospherical points");
             println!("  Continuing with remaining examples...");
             println!();
@@ -62,7 +63,7 @@ fn main() {
     println!("Tetrahedra:");
     for (i, simplex) in tri_3d.simplices().iter().enumerate() {
         // Each simplex should have 4 vertices in 3D
-        println!("  Tetrahedron {}: {:?}", i, simplex);
+        println!("  Tetrahedron {i}: {simplex:?}");
     }
     println!();
 
@@ -83,13 +84,13 @@ fn main() {
     let tri_random = Delaunay::new(&points_random).unwrap();
 
     // Print statistics
-    println!("  Number of points: {}", n_points);
+    println!("  Number of points: {n_points}");
     println!("  Number of triangles: {}", tri_random.simplices().len());
 
     // Get the convex hull from the Delaunay triangulation
     let hull = tri_random.convex_hull();
     println!("  Convex hull points: {}", hull.len());
-    println!("  Hull indices: {:?}", hull);
+    println!("  Hull indices: {hull:?}");
     println!();
 
     // Example 4: Point location
@@ -110,6 +111,6 @@ fn main() {
     }
 
     println!("  Tested {} points", grid_size * grid_size);
-    println!("  Found containing triangle for {} points", found_count);
+    println!("  Found containing triangle for {found_count} points");
     println!();
 }

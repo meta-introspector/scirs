@@ -1,6 +1,7 @@
 use ndarray::array;
 use scirs2_stats::{kendall_tau, kendalltau};
 
+#[allow(dead_code)]
 fn main() {
     // Create sample data with a monotonic relationship
     let x = array![1.0, 2.0, 3.0, 4.0, 5.0];

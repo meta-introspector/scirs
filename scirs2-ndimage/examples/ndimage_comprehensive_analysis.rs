@@ -35,6 +35,7 @@ use scirs2_ndimage::{
     },
 };
 
+#[allow(dead_code)]
 fn main() -> NdimageResult<()> {
     println!("=== SciRS2 N-Dimensional Image Processing - Comprehensive Analysis Demo ===\n");
 
@@ -78,6 +79,7 @@ fn main() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_device_detection() -> NdimageResult<()> {
     println!("1. GPU Backend Device Detection");
     println!("-------------------------------");
@@ -145,6 +147,7 @@ fn demonstrate_device_detection() -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn create_test_image() -> Array2<f64> {
     let (height, width) = (128, 128);
     let mut image = Array2::zeros((height, width));
@@ -186,6 +189,7 @@ fn create_test_image() -> Array2<f64> {
     image
 }
 
+#[allow(dead_code)]
 fn demonstrate_quality_assessment(image: &Array2<f64>) -> NdimageResult<()> {
     println!("2. Advanced Image Quality Assessment");
     println!("------------------------------------");
@@ -224,6 +228,7 @@ fn demonstrate_quality_assessment(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_texture_analysis(image: &Array2<f64>) -> NdimageResult<()> {
     println!("3. Comprehensive Texture Analysis");
     println!("----------------------------------");
@@ -263,6 +268,7 @@ fn demonstrate_texture_analysis(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_advanced_filtering(image: &Array2<f64>) -> NdimageResult<()> {
     println!("4. Advanced Filtering Techniques");
     println!("--------------------------------");
@@ -363,6 +369,7 @@ fn demonstrate_advanced_filtering(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_wavelet_analysis(image: &Array2<f64>) -> NdimageResult<()> {
     println!("5. Wavelet Analysis and Denoising");
     println!("----------------------------------");
@@ -410,6 +417,7 @@ fn demonstrate_wavelet_analysis(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_multiscale_analysis(image: &Array2<f64>) -> NdimageResult<()> {
     println!("6. Multi-scale Analysis");
     println!("-----------------------");
@@ -442,6 +450,7 @@ fn demonstrate_multiscale_analysis(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_visualization(image: &Array2<f64>) -> NdimageResult<()> {
     println!("7. Visualization and Reporting");
     println!("------------------------------");
@@ -509,6 +518,7 @@ fn demonstrate_visualization(image: &Array2<f64>) -> NdimageResult<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn demonstrate_performance_comparison(image: &Array2<f64>) -> NdimageResult<()> {
     println!("8. Performance Characteristics");
     println!("------------------------------");

@@ -31,6 +31,7 @@ use crate::error::{NeuralError, Result};
 /// // Result should be shape [2, 2, 2]
 /// let c = batch_matmul(&a.view(), &b.view()).unwrap();
 /// assert_eq!(c.shape(), &[2, 2, 2]);
+#[allow(dead_code)]
 pub fn batch_matmul<F>(a: &ArrayView3<F>, b: &ArrayView3<F>) -> Result<Array3<F>>
 where
     F: Float + Debug,
@@ -83,6 +84,7 @@ where
 /// // Result should be shape [2, 2]
 /// let result = batch_vecmat(&v.view(), &m.view()).unwrap();
 /// assert_eq!(result.shape(), &[2, 2]);
+#[allow(dead_code)]
 pub fn batch_vecmat<F>(v: &ArrayView2<F>, m: &ArrayView3<F>) -> Result<Array2<F>>
     let batch_size = v.shape()[0];
     if batch_size != m.shape()[0] {
@@ -119,6 +121,7 @@ pub fn batch_vecmat<F>(v: &ArrayView2<F>, m: &ArrayView3<F>) -> Result<Array2<F>
 /// let (grad_a, grad_b) = batch_matmul_backward(&a.view(), &b.view(), &grad_output.view()).unwrap();
 /// assert_eq!(grad_a.shape(), a.shape());
 /// assert_eq!(grad_b.shape(), b.shape());
+#[allow(dead_code)]
 pub fn batch_matmul_backward<F>(
     a: &ArrayView3<F>,
     b: &ArrayView3<F>,

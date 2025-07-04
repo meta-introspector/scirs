@@ -126,6 +126,7 @@ where
 /// # Returns
 ///
 /// A transposed copy of the array
+#[allow(dead_code)]
 pub fn transpose_view<A, S>(array: &ArrayBase<S, Ix2>) -> Result<Array<A, Ix2>, CoreError>
 where
     A: Clone,
@@ -146,6 +147,7 @@ where
 /// # Returns
 ///
 /// A copy of the diagonal of the array
+#[allow(dead_code)]
 pub fn diagonal_view<A, S>(array: &ArrayBase<S, Ix2>) -> Result<Array<A, Ix1>, CoreError>
 where
     A: Clone,

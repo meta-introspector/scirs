@@ -9,6 +9,7 @@ use scirs2_linalg::{
     simd_ops::{hardware_optimized_dot, hardware_optimized_matvec, HardwareCapabilities},
 };
 
+#[allow(dead_code)]
 fn main() -> LinalgResult<()> {
     println!("🚀 SciRS2 Linear Algebra Hardware Optimization Showcase");
     println!("========================================================");
@@ -194,6 +195,7 @@ fn main() -> LinalgResult<()> {
 }
 
 #[cfg(not(feature = "simd"))]
+#[allow(dead_code)]
 fn main() {
     println!("❌ This example requires the 'simd' feature to be enabled.");
     println!("   Run with: cargo run --example hardware_optimization_showcase --features simd");

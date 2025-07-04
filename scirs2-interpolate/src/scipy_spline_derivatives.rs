@@ -660,6 +660,7 @@ impl<T: InterpolationFloat> SciPyPPoly<T> {
 /// Convenience functions for creating SciPy-compatible splines
 
 /// Create a SciPy-compatible cubic spline with natural boundary conditions
+#[allow(dead_code)]
 pub fn make_scipy_cubic_spline<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -671,6 +672,7 @@ where
 }
 
 /// Create a SciPy-compatible cubic spline with clamped boundary conditions
+#[allow(dead_code)]
 pub fn make_scipy_cubic_spline_clamped<T>(
     x: &ArrayView1<T>,
     y: &ArrayView1<T>,
@@ -690,6 +692,7 @@ where
 }
 
 /// Create a SciPy-compatible BSpline
+#[allow(dead_code)]
 pub fn make_scipy_bspline<T>(inner: BSpline<T>, extrapolate: bool) -> SciPyCompatibleBSpline<T>
 where
     T: InterpolationFloat + std::ops::MulAssign + std::ops::DivAssign + std::ops::RemAssign,
@@ -698,6 +701,7 @@ where
 }
 
 /// Create a SciPy-compatible PPoly from coefficients and breakpoints
+#[allow(dead_code)]
 pub fn make_scipy_ppoly<T>(
     coefficients: Array2<T>,
     breakpoints: Array1<T>,

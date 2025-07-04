@@ -42,6 +42,7 @@ use crate::error::{MetricsError, Result};
 ///
 /// let ovo_acc = one_vs_one_accuracy(&y_true, &y_pred).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn one_vs_one_accuracy<T, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -153,6 +154,7 @@ where
 ///
 /// let (precision, recall) = one_vs_one_precision_recall(&y_true, &y_pred).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn one_vs_one_precision_recall<T, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -262,6 +264,7 @@ where
 ///
 /// let f1_scores = one_vs_one_f1_score(&y_true, &y_pred).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn one_vs_one_f1_score<T, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,
@@ -320,6 +323,7 @@ where
 ///
 /// let weighted_f1 = weighted_one_vs_one_f1_score(&y_true, &y_pred).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn weighted_one_vs_one_f1_score<T, S1, S2, D1, D2>(
     y_true: &ArrayBase<S1, D1>,
     y_pred: &ArrayBase<S2, D2>,

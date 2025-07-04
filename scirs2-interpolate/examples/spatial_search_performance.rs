@@ -4,6 +4,7 @@ use scirs2_interpolate::spatial::{BallTree, KdTree};
 use std::error::Error;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Spatial Search Performance Comparison");
     println!("-------------------------------------\n");
@@ -294,6 +295,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 }
 
 /// Linear (brute force) nearest neighbor search
+#[allow(dead_code)]
 fn linear_nearest_neighbor(
     points: &Array2<f64>,
     query: &[f64],
@@ -324,6 +326,7 @@ fn linear_nearest_neighbor(
 }
 
 /// Linear (brute force) k-nearest neighbors search
+#[allow(dead_code)]
 fn linear_k_nearest_neighbors(
     points: &Array2<f64>,
     query: &[f64],
@@ -356,6 +359,7 @@ fn linear_k_nearest_neighbors(
 }
 
 /// Linear (brute force) search for points within radius
+#[allow(dead_code)]
 fn linear_points_within_radius(
     points: &Array2<f64>,
     query: &[f64],

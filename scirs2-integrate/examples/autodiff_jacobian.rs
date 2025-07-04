@@ -13,6 +13,7 @@ use scirs2_integrate::ode::utils::jacobian::{is_autodiff_available, JacobianStra
 use scirs2_integrate::ode::{solve_ivp, ODEMethod, ODEOptions, ODEResult};
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     // Check if autodiff feature is available
     let autodiff_available = is_autodiff_available();

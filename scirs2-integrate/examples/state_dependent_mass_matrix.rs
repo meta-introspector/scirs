@@ -12,6 +12,7 @@ use scirs2_integrate::error::IntegrateResult;
 use scirs2_integrate::ode::{solve_ivp, MassMatrix, ODEMethod, ODEOptions};
 use std::f64::consts::PI;
 
+#[allow(dead_code)]
 fn main() -> IntegrateResult<()> {
     println!("=== State-Dependent Mass Matrix Example ===");
 

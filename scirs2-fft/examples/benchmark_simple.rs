@@ -5,6 +5,7 @@ use scirs2_fft::{fft, frft, rfft};
 use std::f64::consts::PI;
 use std::time::Instant;
 
+#[allow(dead_code)]
 fn main() {
     println!("Simple FFT Benchmark");
     println!("===================");

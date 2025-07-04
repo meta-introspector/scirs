@@ -102,11 +102,13 @@ pub struct DeprecationInfo {
 }
 
 /// Initialize deprecation system with default configuration
+#[allow(dead_code)]
 pub fn init_deprecation_system() {
     let _ = DEPRECATION_CONFIG.set(Mutex::new(DeprecationConfig::default()));
 }
 
 /// Configure deprecation warning behavior
+#[allow(dead_code)]
 pub fn configure_deprecation(config: DeprecationConfig) {
     init_deprecation_system();
     if let Ok(mut global_config) = DEPRECATION_CONFIG.get().unwrap().lock() {
@@ -115,6 +117,7 @@ pub fn configure_deprecation(config: DeprecationConfig) {
 }
 
 /// Issue a deprecation warning if enabled
+#[allow(dead_code)]
 pub fn issue_deprecation_warning(info: &DeprecationInfo) {
     init_deprecation_system();
 
@@ -141,6 +144,7 @@ pub fn issue_deprecation_warning(info: &DeprecationInfo) {
 }
 
 /// Format a deprecation warning message
+#[allow(dead_code)]
 fn format_deprecation_warning(info: &DeprecationInfo) -> String {
     let mut msg = format!(
         "Function '{}' is deprecated since v{}",

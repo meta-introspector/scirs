@@ -12,6 +12,7 @@ use scirs2_neural::performance::PerformanceOptimizer;
 #[cfg(feature = "simd")]
 use scirs2_neural::performance::{PerformanceOptimizer, SIMDOperations, SIMDStats};
 use std::time::Instant;
+#[allow(dead_code)]
 fn main() -> Result<()> {
     println!("SIMD Acceleration Demo for Neural Networks");
     println!("==========================================");
@@ -31,6 +32,7 @@ fn main() -> Result<()> {
     demo_neural_network_forward_pass()?;
     Ok(())
 }
+#[allow(dead_code)]
 fn check_simd_capabilities() {
     println!("\n🔍 SIMD Capabilities Check");
     println!("-------------------------");
@@ -64,6 +66,7 @@ fn check_simd_capabilities() {
     }
     #[cfg(not(feature = "simd"))]
         println!("SIMD features not enabled. Compile with --features simd for acceleration.");
+#[allow(dead_code)]
 fn demo_simd_activations() -> Result<()> {
     println!("\n⚡ SIMD Activation Functions Demo");
     println!("--------------------------------");
@@ -125,6 +128,7 @@ fn demo_simd_activations() -> Result<()> {
         swish_result
         swish_result.mean().unwrap_or(0.0)
     println!("SIMD features not enabled. Skipping SIMD activation demo.");
+#[allow(dead_code)]
 fn demo_simd_matrix_operations() -> Result<()> {
     println!("\n🔢 SIMD Matrix Operations Demo");
     println!("-----------------------------");
@@ -164,6 +168,7 @@ fn demo_simd_matrix_operations() -> Result<()> {
         mul_result.iter().cloned().fold(f32::NEG_INFINITY, f32::max),
         mul_result.mean().unwrap_or(0.0)
     println!("SIMD features not enabled. Skipping SIMD matrix operations demo.");
+#[allow(dead_code)]
 fn demo_simd_normalization() -> Result<()> {
     println!("\n📊 SIMD Normalization Demo");
     let input = Array2::from_shape_fn((32, 128), |(i, j)| {
@@ -197,6 +202,7 @@ fn demo_simd_normalization() -> Result<()> {
         layer_norm_result
         layer_norm_result.mean().unwrap_or(0.0)
     println!("SIMD features not enabled. Skipping SIMD normalization demo.");
+#[allow(dead_code)]
 fn demo_simd_loss_functions() -> Result<()> {
     println!("\n📉 SIMD Loss Functions Demo");
     println!("---------------------------");
@@ -238,6 +244,7 @@ fn demo_simd_loss_functions() -> Result<()> {
             .mean()
             .unwrap_or(0.0)
     println!("SIMD features not enabled. Skipping SIMD loss functions demo.");
+#[allow(dead_code)]
 fn demo_performance_comparison() -> Result<()> {
     println!("\n🏃 Performance Comparison");
     println!("------------------------");
@@ -266,6 +273,7 @@ fn demo_performance_comparison() -> Result<()> {
         let diff = (&_scalar_result - &simd_result).mapv(|x| x.abs()).sum();
         println!("  Result difference: {:.2e}", diff);
         println!("  SIMD version not available (compile with --features simd)");
+#[allow(dead_code)]
 fn demo_neural_network_forward_pass() -> Result<()> {
     println!("\n🧠 Integrated Neural Network Forward Pass");
     println!("------------------------------------------");

@@ -17,6 +17,7 @@ use std::ops::Not;
 /// # Arguments
 ///
 /// * `array` - Mutable reference to a 2D complex array
+#[allow(dead_code)]
 pub fn enforce_hermitian_symmetry(array: &mut Array2<Complex64>) {
     let (rows, cols) = array.dim();
 
@@ -62,6 +63,7 @@ pub fn enforce_hermitian_symmetry(array: &mut Array2<Complex64>) {
 /// # Arguments
 ///
 /// * `array` - Mutable reference to an N-dimensional complex array
+#[allow(dead_code)]
 pub fn enforce_hermitian_symmetry_nd(array: &mut Array<Complex64, IxDyn>) {
     let shape = array.shape().to_vec();
     let ndim = shape.len();
@@ -162,6 +164,7 @@ pub fn enforce_hermitian_symmetry_nd(array: &mut Array<Complex64, IxDyn>) {
 /// # Returns
 ///
 /// * `true` if the array is approximately Hermitian-symmetric, `false` otherwise
+#[allow(dead_code)]
 pub fn is_hermitian_symmetric<D>(array: &Array<Complex64, D>, tolerance: Option<f64>) -> bool
 where
     D: Dimension,
@@ -254,6 +257,7 @@ where
 /// # Returns
 ///
 /// * A complex array with Hermitian symmetry
+#[allow(dead_code)]
 pub fn create_hermitian_symmetric_signal(
     amplitudes: &[f64],
     randomize_phases: bool,

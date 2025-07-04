@@ -34,6 +34,7 @@ pub use retinex::{
 /// # Returns
 ///
 /// * Grayscale image
+#[allow(dead_code)]
 pub fn to_grayscale(img: &DynamicImage) -> GrayImage {
     img.to_luma8()
 }
@@ -49,6 +50,7 @@ pub fn to_grayscale(img: &DynamicImage) -> GrayImage {
 /// # Returns
 ///
 /// * Result containing the normalized image
+#[allow(dead_code)]
 pub fn normalize_brightness(
     img: &DynamicImage,
     min_out: f32,
@@ -110,6 +112,7 @@ pub fn normalize_brightness(
 /// # Returns
 ///
 /// * Result containing the contrast-enhanced image
+#[allow(dead_code)]
 pub fn equalize_histogram(img: &DynamicImage) -> Result<DynamicImage> {
     // Convert to grayscale
     let gray = img.to_luma8();
@@ -158,6 +161,7 @@ pub fn equalize_histogram(img: &DynamicImage) -> Result<DynamicImage> {
 /// # Returns
 ///
 /// * Result containing the blurred image
+#[allow(dead_code)]
 pub fn gaussian_blur(img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
     if sigma <= 0.0 {
         return Err(VisionError::InvalidParameter(
@@ -251,6 +255,7 @@ pub fn gaussian_blur(img: &DynamicImage, sigma: f32) -> Result<DynamicImage> {
 /// # Errors
 ///
 /// Returns an error if `amount` is negative
+#[allow(dead_code)]
 pub fn unsharp_mask(img: &DynamicImage, sigma: f32, amount: f32) -> Result<DynamicImage> {
     if amount < 0.0 {
         return Err(VisionError::InvalidParameter(
@@ -335,6 +340,7 @@ pub fn unsharp_mask(img: &DynamicImage, sigma: f32, amount: f32) -> Result<Dynam
 ///
 /// * Tomasi, C., & Manduchi, R. (1998). Bilateral filtering for gray and color images.
 ///   In Sixth International Conference on Computer Vision (IEEE Cat. No. 98CH36271) (pp. 839-846). IEEE.
+#[allow(dead_code)]
 pub fn bilateral_filter(
     img: &DynamicImage,
     diameter: u32,
@@ -370,6 +376,7 @@ pub fn bilateral_filter(
 }
 
 /// Apply bilateral filtering to a grayscale image
+#[allow(dead_code)]
 fn bilateral_filter_gray(
     img: &DynamicImage,
     diameter: u32,
@@ -457,6 +464,7 @@ fn bilateral_filter_gray(
 }
 
 /// Apply bilateral filtering to a color image (RGB)
+#[allow(dead_code)]
 fn bilateral_filter_color(
     img: &DynamicImage,
     diameter: u32,
@@ -596,6 +604,7 @@ fn bilateral_filter_color(
 /// let img = open("examples/input/input.jpg").unwrap();
 /// let filtered = median_filter(&img, 3).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn median_filter(img: &DynamicImage, kernel_size: u32) -> Result<DynamicImage> {
     // Parameter validation
     if kernel_size % 2 == 0 || kernel_size == 0 {
@@ -691,6 +700,7 @@ pub fn median_filter(img: &DynamicImage, kernel_size: u32) -> Result<DynamicImag
 ///
 /// * Zuiderveld, K. (1994). Contrast limited adaptive histogram equalization.
 ///   In Graphics gems IV (pp. 474-485). Academic Press Professional, Inc.
+#[allow(dead_code)]
 pub fn clahe(img: &DynamicImage, tile_size: u32, clip_limit: f32) -> Result<DynamicImage> {
     // Parameter validation
     if tile_size == 0 {

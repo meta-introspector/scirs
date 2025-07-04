@@ -51,6 +51,7 @@ pub type EigenResult<F> = LinalgResult<(Array1<Complex<F>>, Array2<Complex<F>>)>
 /// assert!((eigenvalues[0].0 - 1.0).abs() < 1e-10);
 /// assert!((eigenvalues[1].0 - 2.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn eig<F>(a: &ArrayView2<F>, workers: Option<usize>) -> EigenResult<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -106,6 +107,7 @@ where
 /// assert!((eigenvalues[0] - 1.0).abs() < 1e-10);
 /// assert!((eigenvalues[1] - 2.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn eigvals<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<Array1<Complex<F>>>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -142,6 +144,7 @@ where
 /// // The largest eigenvalue of this matrix is approximately 3.618
 /// assert!((eigenvalue - 3.618).abs() < 1e-2);
 /// ```
+#[allow(dead_code)]
 pub fn power_iteration<F>(
     a: &ArrayView2<F>,
     max_iter: usize,
@@ -237,6 +240,7 @@ where
 /// assert!((eigenvalues[0].0 - 1.0).abs() < 1e-10);
 /// assert!((eigenvalues[1].0 - 2.0).abs() < 1e-10);
 /// ```
+#[allow(dead_code)]
 pub fn eigh<F>(a: &ArrayView2<F>, workers: Option<usize>) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -308,6 +312,7 @@ where
 /// - Newton's method eigenvalue correction
 /// - Adaptive tolerance selection based on matrix condition number
 /// - Enhanced Gram-Schmidt orthogonalization with multiple passes
+#[allow(dead_code)]
 pub fn ultra_precision_eig<F>(
     a: &ArrayView2<F>,
     workers: Option<usize>,
@@ -352,6 +357,7 @@ where
 }
 
 /// Estimate matrix condition number for adaptive tolerance selection
+#[allow(dead_code)]
 fn estimate_condition_number<F>(a: &ArrayView2<F>) -> LinalgResult<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -393,6 +399,7 @@ where
 }
 
 /// Ultra-precise eigenvalue computation for small matrices (n <= 4)
+#[allow(dead_code)]
 fn ultra_precise_small_matrix_eig<F>(
     a: &ArrayView2<F>,
     precision_target: F,
@@ -418,6 +425,7 @@ where
 }
 
 /// Ultra-precise 2x2 eigenvalue computation with Kahan summation
+#[allow(dead_code)]
 fn ultra_precise_2x2_eig<F>(
     a: &ArrayView2<F>,
     _precision_target: F,
@@ -465,6 +473,7 @@ where
 }
 
 /// Ultra-precise 3x3 eigenvalue computation using Cardano's formula with enhancements
+#[allow(dead_code)]
 fn ultra_precise_3x3_eig<F>(
     a: &ArrayView2<F>,
     precision_target: F,
@@ -483,6 +492,7 @@ where
 }
 
 /// Ultra-precise 4x4 eigenvalue computation using enhanced QR iteration
+#[allow(dead_code)]
 fn ultra_precise_4x4_eig<F>(
     a: &ArrayView2<F>,
     precision_target: F,
@@ -495,6 +505,7 @@ where
 }
 
 /// Kahan summation algorithm for enhanced numerical precision
+#[allow(dead_code)]
 fn kahan_sum<F>(values: &[F]) -> F
 where
     F: Float + NumAssign,
@@ -513,6 +524,7 @@ where
 }
 
 /// Compute characteristic polynomial for 3x3 matrix with enhanced precision
+#[allow(dead_code)]
 fn compute_characteristic_polynomial_3x3<F>(a: &ArrayView2<F>) -> LinalgResult<[F; 4]>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -549,6 +561,7 @@ where
 }
 
 /// Solve cubic equation with ultra-high precision using Cardano's formula with enhancements
+#[allow(dead_code)]
 fn solve_cubic_equation_ultra_precise<F>(
     coeffs: &[F; 4],
     precision_target: F,
@@ -633,6 +646,7 @@ where
 }
 
 /// Newton's method for cubic equation root refinement
+#[allow(dead_code)]
 fn newton_method_cubic_refinement<F>(
     coeffs: &[F; 4],
     initial_guess: F,
@@ -667,6 +681,7 @@ where
 }
 
 /// Compute ultra-precise eigenvectors for 2x2 matrix
+#[allow(dead_code)]
 fn compute_ultra_precise_eigenvectors_2x2<F>(
     a: &ArrayView2<F>,
     eigenvalues: &Array1<F>,
@@ -721,6 +736,7 @@ where
 }
 
 /// Compute ultra-precise eigenvectors for 3x3 matrix
+#[allow(dead_code)]
 fn compute_ultra_precise_eigenvectors_3x3<F>(
     a: &ArrayView2<F>,
     eigenvalues: &Array1<F>,
@@ -752,6 +768,7 @@ where
 }
 
 /// Enhanced null space computation for eigenvector calculation
+#[allow(dead_code)]
 fn enhanced_null_space_computation<F>(
     matrix: &ArrayView2<F>,
     precision_target: F,
@@ -811,6 +828,7 @@ where
 }
 
 /// Enhanced Gram-Schmidt orthogonalization with numerical stability
+#[allow(dead_code)]
 fn gram_schmidt_orthogonalization<F>(matrix: &mut Array2<F>) -> LinalgResult<()>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -855,6 +873,7 @@ where
 }
 
 /// Ultra-precise iterative eigenvalue computation for large matrices
+#[allow(dead_code)]
 fn ultra_precise_iterative_eig<F>(
     a: &ArrayView2<F>,
     precision_target: F,
@@ -868,6 +887,7 @@ where
 }
 
 /// Ultra-precise QR iteration with enhanced numerical stability
+#[allow(dead_code)]
 fn ultra_precise_qr_iteration<F>(
     a: &ArrayView2<F>,
     precision_target: F,
@@ -941,6 +961,7 @@ where
 }
 
 /// Enhanced QR decomposition with numerical stability improvements
+#[allow(dead_code)]
 fn enhanced_qr_decomposition<F>(a: &ArrayView2<F>) -> LinalgResult<(Array2<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
@@ -1000,6 +1021,7 @@ where
 }
 
 /// Solve 2x2 general eigenvalue problem using analytical formula
+#[allow(dead_code)]
 fn solve_2x2_eigenvalue_problem<F>(a: &ArrayView2<F>) -> EigenResult<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -1110,6 +1132,7 @@ where
 }
 
 /// Solve 2x2 symmetric eigenvalue problem
+#[allow(dead_code)]
 fn solve_2x2_symmetric_eigenvalue_problem<F>(
     a: &ArrayView2<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
@@ -1204,6 +1227,7 @@ where
 
 /// Solve 3x3 symmetric eigenvalue problem using analytical methods
 /// Based on "Efficient numerical diagonalization of hermitian 3x3 matrices" by Kopp (2008)
+#[allow(dead_code)]
 fn solve_3x3_symmetric_eigenvalue_problem<F>(
     a: &ArrayView2<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
@@ -1261,6 +1285,7 @@ where
 }
 
 /// Solve 4x4 symmetric eigenvalue problem using QR iteration
+#[allow(dead_code)]
 fn solve_4x4_symmetric_eigenvalue_problem<F>(
     a: &ArrayView2<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
@@ -1322,6 +1347,7 @@ where
 }
 
 /// QR algorithm for general eigenvalue decomposition
+#[allow(dead_code)]
 fn solve_qr_algorithm<F>(a: &ArrayView2<F>) -> EigenResult<F>
 where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
@@ -1383,6 +1409,7 @@ where
 }
 
 /// Solve symmetric matrices with power iteration (simplified implementation)
+#[allow(dead_code)]
 fn solve_symmetric_with_power_iteration<F>(
     a: &ArrayView2<F>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>

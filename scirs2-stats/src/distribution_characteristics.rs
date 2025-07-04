@@ -60,6 +60,7 @@ where
 /// assert_eq!(multimodal_result.values, vec![2, 3]);
 /// assert_eq!(multimodal_result.counts, vec![2, 2]);
 /// ```
+#[allow(dead_code)]
 pub fn mode<T>(x: &ArrayView1<T>, method: ModeMethod) -> StatsResult<Mode<T>>
 where
     T: Copy + Eq + Hash + Debug + Ord,
@@ -142,6 +143,7 @@ where
 /// let entropy_less = entropy(&less_uniform.view(), Some(2.0)).unwrap();
 /// assert!(entropy_less < entropy_uniform);
 /// ```
+#[allow(dead_code)]
 pub fn entropy<T>(x: &ArrayView1<T>, base: Option<f64>) -> StatsResult<f64>
 where
     T: Eq + Hash + Copy,
@@ -207,6 +209,7 @@ where
 /// let same = kl_divergence(&p.view(), &p.view()).unwrap();
 /// assert!(same == 0.0);
 /// ```
+#[allow(dead_code)]
 pub fn kl_divergence<F>(p: &ArrayView1<F>, q: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + std::fmt::Debug + Sum,
@@ -286,6 +289,7 @@ where
 ///
 /// let cross_ent = cross_entropy(&p.view(), &q.view()).unwrap();
 /// ```
+#[allow(dead_code)]
 pub fn cross_entropy<F>(p: &ArrayView1<F>, q: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float + std::fmt::Debug + Sum,
@@ -382,6 +386,7 @@ where
 /// let result = skewness_ci(&data.view(), false, None, None, Some(42)).unwrap();
 /// println!("Skewness: {} (95% CI: {}, {})", result.estimate, result.lower, result.upper);
 /// ```
+#[allow(dead_code)]
 pub fn skewness_ci<F>(
     x: &ArrayView1<F>,
     bias: bool,
@@ -482,6 +487,7 @@ where
 /// let result = kurtosis_ci(&data.view(), true, false, None, None, Some(42)).unwrap();
 /// println!("Kurtosis: {} (95% CI: {}, {})", result.estimate, result.lower, result.upper);
 /// ```
+#[allow(dead_code)]
 pub fn kurtosis_ci<F>(
     x: &ArrayView1<F>,
     fisher: bool,

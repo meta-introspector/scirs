@@ -54,6 +54,7 @@ static BROADCAST_CACHE: LazyLock<Mutex<HashMap<BroadcastCacheKey, BroadcastInfo>
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// Analyze broadcasting requirements between two shapes
+#[allow(dead_code)]
 pub fn analyze_broadcast(
     left_shape: &[usize],
     right_shape: &[usize],
@@ -80,6 +81,7 @@ pub fn analyze_broadcast(
     Ok(info)
 }
 
+#[allow(dead_code)]
 fn analyze_broadcast_impl(
     left_shape: &[usize],
     right_shape: &[usize],
@@ -173,6 +175,7 @@ fn analyze_broadcast_impl(
     })
 }
 
+#[allow(dead_code)]
 fn pad_shape_left(shape: &[usize], target_len: usize) -> Vec<usize> {
     let mut padded = vec![1; target_len];
     let offset = target_len - shape.len();
@@ -180,6 +183,7 @@ fn pad_shape_left(shape: &[usize], target_len: usize) -> Vec<usize> {
     padded
 }
 
+#[allow(dead_code)]
 fn choose_broadcast_strategy(
     _left_shape: &[usize],
     _right_shape: &[usize],
@@ -333,6 +337,7 @@ impl<F: Float> Op<F> for OptimizedBroadcastOp<F> {
 }
 
 /// Apply binary operation when tensors have the same shape
+#[allow(dead_code)]
 fn apply_binary_op_same_shape<'a, F: Float>(
     left: &NdArrayView<'a, F>,
     right: &NdArrayView<'a, F>,
@@ -368,6 +373,7 @@ fn apply_binary_op_same_shape<'a, F: Float>(
 }
 
 /// Apply binary operation with scalar broadcasting
+#[allow(dead_code)]
 fn apply_scalar_broadcast<'a, F: Float>(
     left: &NdArrayView<'a, F>,
     right: &NdArrayView<'a, F>,
@@ -409,6 +415,7 @@ fn apply_scalar_broadcast<'a, F: Float>(
 }
 
 /// Apply SIMD-optimized broadcasting for 1D cases
+#[allow(dead_code)]
 fn apply_simd_broadcast<'a, F: Float>(
     left: &NdArrayView<'a, F>,
     right: &NdArrayView<'a, F>,
@@ -421,6 +428,7 @@ fn apply_simd_broadcast<'a, F: Float>(
 }
 
 /// Apply chunked broadcasting for large tensors
+#[allow(dead_code)]
 fn apply_chunked_broadcast<'a, F: Float>(
     left: &NdArrayView<'a, F>,
     right: &NdArrayView<'a, F>,
@@ -451,6 +459,7 @@ fn apply_chunked_broadcast<'a, F: Float>(
 }
 
 /// Apply standard ndarray broadcasting
+#[allow(dead_code)]
 fn apply_standard_broadcast<'a, F: Float>(
     left: &NdArrayView<'a, F>,
     right: &NdArrayView<'a, F>,
@@ -517,6 +526,7 @@ fn apply_standard_broadcast<'a, F: Float>(
 }
 
 /// Reduce gradients appropriately for broadcasting
+#[allow(dead_code)]
 fn reduce_for_broadcast_grad<'g, F: Float>(
     grad: &Tensor<'g, F>,
     reduce_axes: &[usize],
@@ -540,31 +550,37 @@ fn reduce_for_broadcast_grad<'g, F: Float>(
 /// Public API functions for optimized broadcasting
 ///
 /// Add tensors with optimized broadcasting
+#[allow(dead_code)]
 pub fn broadcast_add<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
     broadcast_binary_op(left, right, BinaryOperation::Add)
 }
 
 /// Subtract tensors with optimized broadcasting
+#[allow(dead_code)]
 pub fn broadcast_sub<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
     broadcast_binary_op(left, right, BinaryOperation::Subtract)
 }
 
 /// Multiply tensors with optimized broadcasting
+#[allow(dead_code)]
 pub fn broadcast_mul<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
     broadcast_binary_op(left, right, BinaryOperation::Multiply)
 }
 
 /// Divide tensors with optimized broadcasting
+#[allow(dead_code)]
 pub fn broadcast_div<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
     broadcast_binary_op(left, right, BinaryOperation::Divide)
 }
 
 /// Power tensors with optimized broadcasting
+#[allow(dead_code)]
 pub fn broadcast_pow<'g, F: Float>(left: &Tensor<'g, F>, right: &Tensor<'g, F>) -> Tensor<'g, F> {
     broadcast_binary_op(left, right, BinaryOperation::Power)
 }
 
 /// Element-wise maximum with optimized broadcasting
+#[allow(dead_code)]
 pub fn broadcast_maximum<'g, F: Float>(
     left: &Tensor<'g, F>,
     right: &Tensor<'g, F>,
@@ -573,6 +589,7 @@ pub fn broadcast_maximum<'g, F: Float>(
 }
 
 /// Element-wise minimum with optimized broadcasting
+#[allow(dead_code)]
 pub fn broadcast_minimum<'g, F: Float>(
     left: &Tensor<'g, F>,
     right: &Tensor<'g, F>,
@@ -580,6 +597,7 @@ pub fn broadcast_minimum<'g, F: Float>(
     broadcast_binary_op(left, right, BinaryOperation::Minimum)
 }
 
+#[allow(dead_code)]
 fn broadcast_binary_op<'g, F: Float>(
     left: &Tensor<'g, F>,
     right: &Tensor<'g, F>,
@@ -618,6 +636,7 @@ fn broadcast_binary_op<'g, F: Float>(
 }
 
 /// Clear the broadcast analysis cache
+#[allow(dead_code)]
 pub fn clear_broadcast_cache() {
     if let Ok(mut cache) = BROADCAST_CACHE.lock() {
         cache.clear();
@@ -625,6 +644,7 @@ pub fn clear_broadcast_cache() {
 }
 
 /// Get broadcast cache statistics
+#[allow(dead_code)]
 pub fn get_broadcast_cache_stats() -> (usize, usize) {
     if let Ok(cache) = BROADCAST_CACHE.lock() {
         (cache.len(), cache.capacity())

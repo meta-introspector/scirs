@@ -12,6 +12,7 @@ use scirs2_integrate::{
 };
 use std::time::{Duration, Instant};
 
+#[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Auto-Tuning for Hardware Configurations ===\n");
 
@@ -30,6 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn hardware_detection_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🖥️  Hardware Detection");
     println!("{}", "=".repeat(50));
@@ -80,6 +82,7 @@ fn hardware_detection_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn algorithm_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚙️  Algorithm-Specific Auto-Tuning");
     println!("{}", "=".repeat(50));
@@ -134,6 +137,7 @@ fn algorithm_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn benchmark_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Benchmark-Based Tuning");
     println!("{}", "=".repeat(50));
@@ -182,6 +186,7 @@ fn benchmark_tuning_example() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 fn memory_optimization_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("🧠 Memory-Aware Optimization");
     println!("{}", "=".repeat(50));

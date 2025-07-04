@@ -62,6 +62,7 @@ pub enum WindowType {
 /// assert!(window[0] < 0.01); // Near zero at the edges
 /// assert!(window[5] > 0.9); // Near one in the middle
 /// ```
+#[allow(dead_code)]
 pub fn create_window(window_type: WindowType, length: usize) -> FFTResult<Vec<f64>> {
     if length == 0 {
         return Err(FFTError::ValueError("Window length cannot be zero".into()));
@@ -221,6 +222,7 @@ pub fn create_window(window_type: WindowType, length: usize) -> FFTResult<Vec<f6
 /// assert!(windowed_signal[0] < signal[0]); // Edges are attenuated
 /// assert!(windowed_signal[3] <= signal[3]); // Middle is preserved or slightly attenuated
 /// ```
+#[allow(dead_code)]
 pub fn apply_window(signal: &[f64], window: &[f64]) -> FFTResult<Vec<f64>> {
     if signal.len() != window.len() {
         return Err(FFTError::ValueError(
@@ -245,6 +247,7 @@ pub fn apply_window(signal: &[f64], window: &[f64]) -> FFTResult<Vec<f64>> {
 /// # Returns
 ///
 /// A struct containing window properties
+#[allow(dead_code)]
 pub fn window_properties(window: &[f64]) -> WindowProperties {
     let n = window.len();
     let mut sum = 0.0;

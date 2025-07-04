@@ -58,6 +58,7 @@ impl Default for AdamWOptions {
 }
 
 /// AdamW optimizer implementation
+#[allow(dead_code)]
 pub fn minimize_adamw<F>(
     mut grad_func: F,
     mut x: Array1<f64>,
@@ -238,6 +239,7 @@ where
 }
 
 /// AdamW with cosine annealing and restarts
+#[allow(dead_code)]
 pub fn minimize_adamw_cosine_restarts<F>(
     mut grad_func: F,
     mut x: Array1<f64>,
@@ -322,6 +324,7 @@ where
 }
 
 /// Helper function for a single cycle of AdamW with cosine annealing
+#[allow(dead_code)]
 fn minimize_adamw_cycle<F>(
     grad_func: &mut F,
     mut x: Array1<f64>,

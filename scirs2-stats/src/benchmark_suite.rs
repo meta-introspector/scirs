@@ -791,7 +791,7 @@ impl BenchmarkSuite {
     }
 
     /// Generate threshold recommendations for algorithm switching
-    fn generate_thresholds(&self, metrics: &[&BenchmarkMetrics]) -> Vec<ThresholdRecommendation> {
+    fn generate_thresholds(&self, _metrics: &[&BenchmarkMetrics]) -> Vec<ThresholdRecommendation> {
         // Placeholder implementation - would analyze performance crossover points
         // between different algorithm variants
         Vec::new()
@@ -844,7 +844,7 @@ impl BenchmarkSuite {
     /// Generate optimization recommendations
     fn generate_recommendations(
         &self,
-        metrics: &[BenchmarkMetrics],
+        _metrics: &[BenchmarkMetrics],
         analysis: &PerformanceAnalysis,
     ) -> Vec<OptimizationRecommendation> {
         let mut recommendations = Vec::new();
