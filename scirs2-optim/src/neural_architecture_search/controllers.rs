@@ -822,7 +822,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> TransformerController<T> {
+impl<T: Float + Default + Clone + Send + Sync + 'static> TransformerController<T> {
     /// Create new Transformer controller
     pub fn new(model_dim: usize, num_heads: usize, num_layers: usize) -> Result<Self> {
         let config = TransformerConfig {

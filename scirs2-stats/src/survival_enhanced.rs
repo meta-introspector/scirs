@@ -7,6 +7,8 @@
 //! - Parametric survival models (Weibull, Exponential)
 //! - Competing risks analysis
 
+#![allow(dead_code)]
+
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, One, Zero};

@@ -689,6 +689,7 @@ pub struct RegimeSwitchingModel<F: Float + Debug> {
     state_probs: Array1<F>,
 }
 
+/// Parameters for a specific regime in the regime-switching model
 #[derive(Debug, Clone)]
 pub struct RegimeParameters<F: Float> {
     /// Mean for this regime

@@ -67,7 +67,7 @@ fn main() {
     println!("   Success rate: {:.1}%", (passed as f32 / total as f32) * 100.0);
 
     if passed == total {
-        println!("\n🎉 All ultrathink implementations validated successfully!");
+        println!("\n🎉 All advanced implementations validated successfully!");
     } else {
         println!("\n⚠️  Some implementations need attention.");
     }

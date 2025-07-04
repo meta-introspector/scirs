@@ -38,22 +38,22 @@
 // extern crate blas;
 // extern crate openblas_src;
 
+pub mod advanced;
 pub mod algorithms;
 pub mod attributes;
 pub mod base;
 pub mod embeddings;
 pub mod error;
 pub mod generators;
+pub mod graph_memory_profiler;
 pub mod io;
 pub mod layout;
 pub mod measures;
 pub mod memory;
+pub mod numerical_accuracy_validation;
 pub mod performance;
 pub mod spectral;
 pub mod temporal;
-pub mod ultrathink;
-pub mod ultrathink_memory_profiler;
-pub mod ultrathink_numerical_validation;
 pub mod weighted;
 
 // Re-export stable APIs for 1.0
@@ -279,25 +279,25 @@ pub use temporal::{
     TimeInstant, TimeInterval,
 };
 
-// Ultrathink mode optimizations - experimental but stable API
-pub use ultrathink::{
-    create_ultrathink_processor, execute_with_ultrathink, AlgorithmMetrics, GPUAccelerationContext,
+// Advanced mode optimizations - experimental but stable API
+pub use advanced::{
+    create_advanced_processor, execute_with_advanced, AlgorithmMetrics, GPUAccelerationContext,
     NeuralRLAgent, NeuromorphicProcessor, UltrathinkConfig, UltrathinkProcessor, UltrathinkStats,
 };
 
-// Ultrathink memory profiling - experimental
-pub use ultrathink_memory_profiler::{
+// Graph memory profiling - experimental
+pub use graph_memory_profiler::{
     EfficiencyAnalysis,
     MemoryProfile,
     MemoryProfilerConfig,
-    MemoryStats as UltrathinkMemoryStats, // Renamed to avoid conflict
+    MemoryStats as GraphMemoryStats, // Renamed to avoid conflict
     OptimizationOpportunity,
     OptimizationType,
     UltrathinkMemoryProfiler,
 };
 
-// Ultrathink numerical validation - experimental
-pub use ultrathink_numerical_validation::{
+// Numerical accuracy validation - experimental
+pub use numerical_accuracy_validation::{
     create_comprehensive_validation_suite, run_quick_validation, UltrathinkNumericalValidator,
     ValidationAlgorithm, ValidationConfig, ValidationReport, ValidationResult,
     ValidationTolerances,

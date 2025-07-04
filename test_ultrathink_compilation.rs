@@ -2,7 +2,7 @@
 // This tests basic syntax and imports
 
 fn main() {
-    println!("Testing ultrathink mode compilation");
+    println!("Testing advanced mode compilation");
     
     // This would be the ultrathink mode showcase content but as a simple test
     test_neural_architecture_search();

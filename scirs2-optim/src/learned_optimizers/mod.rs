@@ -17,7 +17,7 @@ pub mod neural_architecture_search;
 pub mod transformer_optimizer;
 
 // UltraThink Mode - Advanced AI optimization coordination
-pub mod ultrathink_coordinator;
+pub mod optimization_coordinator;
 
 use crate::error::{OptimError, Result};
 use crate::optimizers::Optimizer;

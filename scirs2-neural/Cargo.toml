@@ -17,7 +17,7 @@ num-traits = "0.2.19"
 num-complex = "0.4.6"
 thiserror = "2.0.12"
 approx = "0.5.1"
-rand = "0.8.5"
+rand = { workspace = true }
 
 [features]
 default = []

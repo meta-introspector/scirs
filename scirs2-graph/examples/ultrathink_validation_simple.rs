@@ -24,36 +24,35 @@ fn main() -> Result<()> {
     println!("   - Nodes: {}", graph.node_count());
     println!("   - Edges: {}", graph.edge_count());
 
-    // Create ultrathink processor
-    let mut processor = create_ultrathink_processor();
+    // Create advanced processor
+    let mut processor = create_advanced_processor();
     println!("🚀 Ultrathink processor initialized");
 
-    // Test 1: PageRank with ultrathink optimization
+    // Test 1: PageRank with advanced optimization
     println!("\n🧠 Test 1: PageRank Centrality");
     let start = Instant::now();
     let _pagerank_result =
-        execute_with_ultrathink(&mut processor, &graph, "pagerank_centrality", |g| {
+        execute_with_advanced(&mut processor, &graph, "pagerank_centrality", |g| {
             pagerank_centrality(g, 0.85, 1e-6)
         })?;
     let duration = start.elapsed();
     println!("   ✅ Completed in {:?}", duration);
 
-    // Test 2: Connected components with ultrathink optimization
+    // Test 2: Connected components with advanced optimization
     println!("\n🔗 Test 2: Connected Components");
     let start = Instant::now();
-    let _components =
-        execute_with_ultrathink(&mut processor, &graph, "connected_components", |g| {
-            connected_components(g)
-        })?;
+    let _components = execute_with_advanced(&mut processor, &graph, "connected_components", |g| {
+        connected_components(g)
+    })?;
     let duration = start.elapsed();
     println!("   ✅ Completed in {:?}", duration);
 
-    // Test 3: Shortest path with ultrathink optimization
+    // Test 3: Shortest path with advanced optimization
     println!("\n🛣️  Test 3: Shortest Path");
     let nodes: Vec<_> = graph.nodes().into_iter().collect();
     if nodes.len() >= 2 {
         let start = Instant::now();
-        let _path_result = execute_with_ultrathink(&mut processor, &graph, "dijkstra_path", |g| {
+        let _path_result = execute_with_advanced(&mut processor, &graph, "dijkstra_path", |g| {
             dijkstra_path(g, &nodes[0], &nodes[1])
         })?;
         let duration = start.elapsed();
@@ -74,6 +73,6 @@ fn main() -> Result<()> {
         stats.memory_efficiency * 100.0
     );
 
-    println!("\n🎉 All ultrathink mode tests passed!");
+    println!("\n🎉 All advanced mode tests passed!");
     Ok(())
 }

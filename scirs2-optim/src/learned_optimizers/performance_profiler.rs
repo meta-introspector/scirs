@@ -9,7 +9,7 @@ use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant, SystemTime};
 
-use super::ultrathink_coordinator::{UltraThinkCoordinator, UltraThinkConfig};
+use super::optimization_coordinator::{UltraThinkCoordinator, UltraThinkConfig};
 use super::{LearnedOptimizerMetrics, NeuralOptimizerMetrics, PerformanceMetrics};
 #[allow(unused_imports)]
 use crate::error::Result;

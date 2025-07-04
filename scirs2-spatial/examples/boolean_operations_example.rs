@@ -62,14 +62,14 @@ fn overlapping_squares_example() -> Result<(), Box<dyn std::error::Error>> {
 
     let area1 = compute_polygon_area(&poly1.view())?;
     let area2 = compute_polygon_area(&poly2.view())?;
-    println!("Areas: {:.1}, {:.1}", area1, area2);
+    println!("Areas: {area1:.1}, {area2:.1}");
 
     // Union
     let union_result = polygon_union(&poly1.view(), &poly2.view())?;
     let union_area = compute_polygon_area(&union_result.view())?;
     println!("Union:");
     println!("  Vertices: {}", union_result.nrows());
-    println!("  Area: {:.3}", union_area);
+    println!("  Area: {union_area:.3}");
     print_vertices(&union_result);
 
     // Intersection
@@ -78,7 +78,7 @@ fn overlapping_squares_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Vertices: {}", intersection_result.nrows());
     if intersection_result.nrows() > 0 {
         let intersection_area = compute_polygon_area(&intersection_result.view())?;
-        println!("  Area: {:.3}", intersection_area);
+        println!("  Area: {intersection_area:.3}");
         print_vertices(&intersection_result);
     } else {
         println!("  No intersection");
@@ -90,7 +90,7 @@ fn overlapping_squares_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Vertices: {}", difference_result.nrows());
     if difference_result.nrows() > 0 {
         let difference_area = compute_polygon_area(&difference_result.view())?;
-        println!("  Area: {:.3}", difference_area);
+        println!("  Area: {difference_area:.3}");
         print_vertices(&difference_result);
     }
 
@@ -100,7 +100,7 @@ fn overlapping_squares_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Vertices: {}", sym_diff_result.nrows());
     if sym_diff_result.nrows() > 0 {
         let sym_diff_area = compute_polygon_area(&sym_diff_result.view())?;
-        println!("  Area: {:.3}", sym_diff_area);
+        println!("  Area: {sym_diff_area:.3}");
     }
 
     Ok(())
@@ -116,7 +116,7 @@ fn non_overlapping_example() -> Result<(), Box<dyn std::error::Error>> {
 
     let area1 = compute_polygon_area(&poly1.view())?;
     let area2 = compute_polygon_area(&poly2.view())?;
-    println!("Individual areas: {:.1}, {:.1}", area1, area2);
+    println!("Individual areas: {area1:.1}, {area2:.1}");
 
     // Union should have both polygons
     let union_result = polygon_union(&poly1.view(), &poly2.view())?;
@@ -135,7 +135,7 @@ fn non_overlapping_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Vertices: {}", intersection_result.nrows());
     if intersection_result.nrows() > 0 {
         let intersection_area = compute_polygon_area(&intersection_result.view())?;
-        println!("  Area: {:.6}", intersection_area);
+        println!("  Area: {intersection_area:.6}");
     } else {
         println!("  Empty (as expected)");
     }
@@ -170,7 +170,7 @@ fn complex_polygon_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("Union:");
     println!("  Vertices: {}", union_result.nrows());
     let union_area = compute_polygon_area(&union_result.view())?;
-    println!("  Area: {:.3}", union_area);
+    println!("  Area: {union_area:.3}");
 
     // Intersection
     let intersection_result = polygon_intersection(&hexagon.view(), &triangle.view())?;
@@ -178,7 +178,7 @@ fn complex_polygon_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Vertices: {}", intersection_result.nrows());
     if intersection_result.nrows() > 0 {
         let intersection_area = compute_polygon_area(&intersection_result.view())?;
-        println!("  Area: {:.3}", intersection_area);
+        println!("  Area: {intersection_area:.3}");
     }
 
     Ok(())
@@ -207,15 +207,15 @@ fn polygon_properties_example() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (name, poly) in polygons {
-        println!("{}:", name);
+        println!("{name}:");
 
         let area = compute_polygon_area(&poly.view())?;
         let is_convex = is_convex_polygon(&poly.view())?;
         let is_self_intersecting = is_self_intersecting(&poly.view())?;
 
-        println!("  Area: {:.3}", area);
-        println!("  Convex: {}", is_convex);
-        println!("  Self-intersecting: {}", is_self_intersecting);
+        println!("  Area: {area:.3}");
+        println!("  Convex: {is_convex}");
+        println!("  Self-intersecting: {is_self_intersecting}");
         println!("  Vertices: {}", poly.nrows());
         println!();
     }
@@ -232,14 +232,14 @@ fn triangle_operations_example() -> Result<(), Box<dyn std::error::Error>> {
 
     let area1 = compute_polygon_area(&triangle1.view())?;
     let area2 = compute_polygon_area(&triangle2.view())?;
-    println!("Areas: {:.3}, {:.3}", area1, area2);
+    println!("Areas: {area1:.3}, {area2:.3}");
 
     // Union
     let union_result = polygon_union(&triangle1.view(), &triangle2.view())?;
     println!("Union:");
     println!("  Vertices: {}", union_result.nrows());
     let union_area = compute_polygon_area(&union_result.view())?;
-    println!("  Area: {:.3}", union_area);
+    println!("  Area: {union_area:.3}");
 
     // Intersection
     let intersection_result = polygon_intersection(&triangle1.view(), &triangle2.view())?;
@@ -247,7 +247,7 @@ fn triangle_operations_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Vertices: {}", intersection_result.nrows());
     if intersection_result.nrows() > 0 {
         let intersection_area = compute_polygon_area(&intersection_result.view())?;
-        println!("  Area: {:.3}", intersection_area);
+        println!("  Area: {intersection_area:.3}");
     }
 
     Ok(())
@@ -271,18 +271,18 @@ fn l_shape_operations_example() -> Result<(), Box<dyn std::error::Error>> {
 
     let l_area = compute_polygon_area(&l_shape.view())?;
     let sq_area = compute_polygon_area(&square.view())?;
-    println!("Areas: L-shape = {:.3}, square = {:.3}", l_area, sq_area);
+    println!("Areas: L-shape = {l_area:.3}, square = {sq_area:.3}");
 
     let l_convex = is_convex_polygon(&l_shape.view())?;
     let sq_convex = is_convex_polygon(&square.view())?;
-    println!("Convex: L-shape = {}, square = {}", l_convex, sq_convex);
+    println!("Convex: L-shape = {l_convex}, square = {sq_convex}");
 
     // Union
     let union_result = polygon_union(&l_shape.view(), &square.view())?;
     println!("Union:");
     println!("  Vertices: {}", union_result.nrows());
     let union_area = compute_polygon_area(&union_result.view())?;
-    println!("  Area: {:.3}", union_area);
+    println!("  Area: {union_area:.3}");
 
     // Intersection
     let intersection_result = polygon_intersection(&l_shape.view(), &square.view())?;
@@ -290,7 +290,7 @@ fn l_shape_operations_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Vertices: {}", intersection_result.nrows());
     if intersection_result.nrows() > 0 {
         let intersection_area = compute_polygon_area(&intersection_result.view())?;
-        println!("  Area: {:.3}", intersection_area);
+        println!("  Area: {intersection_area:.3}");
         print_vertices(&intersection_result);
     }
 
@@ -318,13 +318,13 @@ fn self_intersection_example() -> Result<(), Box<dyn std::error::Error>> {
         let is_self_intersecting = is_self_intersecting(&shape.view())?;
         let is_convex = is_convex_polygon(&shape.view())?;
 
-        println!("{}:", name);
-        println!("  Self-intersecting: {}", is_self_intersecting);
-        println!("  Convex: {}", is_convex);
+        println!("{name}:");
+        println!("  Self-intersecting: {is_self_intersecting}");
+        println!("  Convex: {is_convex}");
 
         if !is_self_intersecting {
             let area = compute_polygon_area(&shape.view())?;
-            println!("  Area: {:.3}", area);
+            println!("  Area: {area:.3}");
         } else {
             println!("  Area: (undefined for self-intersecting polygon)");
         }

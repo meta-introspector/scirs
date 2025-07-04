@@ -510,8 +510,8 @@ impl ProductionMLTrainer {
         // 2. Return the gradient norm
         // For simulation, we return a random gradient norm
         use rand::Rng;
-        let mut rng = rand::thread_rng();
-        rng.gen_range(0.1..2.0)
+        let mut rng = rand::rng();
+        rng.random_range(0.1, 2.0)
     }
 
     /// Apply optimizer step

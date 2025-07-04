@@ -16,7 +16,7 @@ fn main() -> Result<()> {
     println!("=====================================");
 
     // Initialize random number generator
-    let mut rng = ndarray_rand::rand::thread_rng();
+    let mut rng = ndarray_rand::rand::rng();
 
     // Example 1: Dense Layer Classification
     println!("\n1. Dense Layer Binary Classification");

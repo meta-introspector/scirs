@@ -27,7 +27,7 @@ fn bench_distance_calculations(c: &mut Criterion) {
             group.throughput(Throughput::Elements(size as u64));
 
             group.bench_with_input(
-                BenchmarkId::new("euclidean_pairwise", format!("{}x{}", size, dim)),
+                BenchmarkId::new("euclidean_pairwise", format!("{size}x{dim}")),
                 &(size, dim),
                 |b, _| {
                     b.iter(|| {
@@ -45,7 +45,7 @@ fn bench_distance_calculations(c: &mut Criterion) {
             );
 
             group.bench_with_input(
-                BenchmarkId::new("manhattan_pairwise", format!("{}x{}", size, dim)),
+                BenchmarkId::new("manhattan_pairwise", format!("{size}x{dim}")),
                 &(size, dim),
                 |b, _| {
                     b.iter(|| {

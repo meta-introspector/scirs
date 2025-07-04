@@ -3,12 +3,12 @@
 //! This module tests the numerical accuracy of graph algorithms when
 //! run through ultrathink optimizations compared to reference implementations.
 
-use scirs2_graph::base::Graph;
-use scirs2_graph::ultrathink::{
+use scirs2_graph::advanced::{
     create_adaptive_ultrathink_processor, create_enhanced_ultrathink_processor,
     create_memory_efficient_ultrathink_processor, create_performance_ultrathink_processor,
     execute_with_enhanced_ultrathink, UltrathinkProcessor, UltrathinkStats,
 };
+use scirs2_graph::base::Graph;
 use std::collections::HashMap;
 use std::f64;
 
@@ -166,8 +166,8 @@ fn test_numerical_accuracy(
     // Calculate reference properties
     let reference_props = calculate_reference_properties(&test_case.graph);
 
-    // Calculate properties using ultrathink optimization
-    let optimized_props = execute_with_enhanced_ultrathink(
+    // Calculate properties using advanced optimization
+    let optimized_props = execute_with_enhanced_advanced(
         processor,
         &test_case.graph,
         &format!("validation_{}", test_case.name),
@@ -318,13 +318,13 @@ fn run_comprehensive_validation() -> Vec<ValidationResult> {
 
     // Test different processor configurations
     let mut processors = vec![
-        ("enhanced", create_enhanced_ultrathink_processor()),
-        ("performance", create_performance_ultrathink_processor()),
+        ("enhanced", create_enhanced_advanced_processor()),
+        ("performance", create_performance_advanced_processor()),
         (
             "memory_efficient",
-            create_memory_efficient_ultrathink_processor(),
+            create_memory_efficient_advanced_processor(),
         ),
-        ("adaptive", create_adaptive_ultrathink_processor()),
+        ("adaptive", create_adaptive_advanced_processor()),
     ];
 
     for test_case in &test_cases {
@@ -425,7 +425,7 @@ struct AlgorithmValidationTest {
     name: String,
     graph: Graph<usize, f64>,
     reference_implementation: fn(&Graph<usize, f64>) -> Result<ValidationOutput, String>,
-    ultrathink_implementation:
+    advanced_implementation:
         fn(&Graph<usize, f64>, &mut UltrathinkProcessor) -> Result<ValidationOutput, String>,
     tolerance: f64,
     description: String,
@@ -486,9 +486,9 @@ fn create_pagerank_validation_test() -> AlgorithmValidationTest {
 
             Ok(ValidationOutput::FloatArray(ranks))
         },
-        ultrathink_implementation: |g, processor| {
+        advanced_implementation: |g, processor| {
             let result =
-                execute_with_enhanced_ultrathink(processor, g, "pagerank_validation", |graph| {
+                execute_with_enhanced_advanced(processor, g, "pagerank_validation", |graph| {
                     use scirs2_graph::measures::pagerank;
                     pagerank(graph, 0.85, Some(100), Some(1e-8))
                 });
@@ -528,9 +528,9 @@ fn create_centrality_validation_test() -> AlgorithmValidationTest {
             let centralities: Vec<f64> = nodes.iter().map(|&node| g.degree(node) as f64).collect();
             Ok(ValidationOutput::FloatArray(centralities))
         },
-        ultrathink_implementation: |g, processor| {
+        advanced_implementation: |g, processor| {
             let result =
-                execute_with_enhanced_ultrathink(processor, g, "centrality_validation", |graph| {
+                execute_with_enhanced_advanced(processor, g, "centrality_validation", |graph| {
                     use scirs2_graph::algorithms::centrality::degree_centrality;
                     degree_centrality(graph)
                 });
@@ -603,16 +603,12 @@ fn create_shortest_path_validation_test() -> AlgorithmValidationTest {
 
             Ok(ValidationOutput::Float(*distances.get(&target).unwrap()))
         },
-        ultrathink_implementation: |g, processor| {
-            let result = execute_with_enhanced_ultrathink(
-                processor,
-                g,
-                "shortest_path_validation",
-                |graph| {
+        advanced_implementation: |g, processor| {
+            let result =
+                execute_with_enhanced_advanced(processor, g, "shortest_path_validation", |graph| {
                     use scirs2_graph::algorithms::paths::shortest_path_dijkstra;
                     shortest_path_dijkstra(graph, 0)
-                },
-            );
+                });
 
             match result {
                 Ok(distances) => {
@@ -675,9 +671,9 @@ fn create_community_detection_validation_test() -> AlgorithmValidationTest {
 
             Ok(ValidationOutput::Integer(components))
         },
-        ultrathink_implementation: |g, processor| {
+        advanced_implementation: |g, processor| {
             let result =
-                execute_with_enhanced_ultrathink(processor, g, "community_validation", |graph| {
+                execute_with_enhanced_advanced(processor, g, "community_validation", |graph| {
                     use scirs2_graph::algorithms::community::louvain_communities;
                     louvain_communities(graph, None)
                 });
@@ -737,9 +733,9 @@ fn create_connected_components_validation_test() -> AlgorithmValidationTest {
 
             Ok(ValidationOutput::Integer(components.len()))
         },
-        ultrathink_implementation: |g, processor| {
+        advanced_implementation: |g, processor| {
             let result =
-                execute_with_enhanced_ultrathink(processor, g, "components_validation", |graph| {
+                execute_with_enhanced_advanced(processor, g, "components_validation", |graph| {
                     use scirs2_graph::algorithms::connectivity::connected_components;
                     connected_components(graph)
                 });
@@ -763,13 +759,13 @@ fn run_algorithm_validation() -> Vec<AlgorithmValidationResult> {
     println!("===================================================");
 
     let mut processors = vec![
-        ("enhanced", create_enhanced_ultrathink_processor()),
-        ("performance", create_performance_ultrathink_processor()),
+        ("enhanced", create_enhanced_advanced_processor()),
+        ("performance", create_performance_advanced_processor()),
         (
             "memory_efficient",
-            create_memory_efficient_ultrathink_processor(),
+            create_memory_efficient_advanced_processor(),
         ),
-        ("adaptive", create_adaptive_ultrathink_processor()),
+        ("adaptive", create_adaptive_advanced_processor()),
     ];
 
     for test in &tests {
@@ -808,8 +804,8 @@ fn validate_algorithm(
     // Run reference implementation
     let reference_result = (test.reference_implementation)(&test.graph);
 
-    // Run ultrathink implementation
-    let optimized_result = (test.ultrathink_implementation)(&test.graph, processor);
+    // Run advanced implementation
+    let optimized_result = (test.advanced_implementation)(&test.graph, processor);
 
     let (accuracy, ref_output, opt_output, error) = match (reference_result, optimized_result) {
         (Ok(ref_val), Ok(opt_val)) => {
@@ -1035,7 +1031,7 @@ mod tests {
         let test_cases = generate_reference_test_graphs();
         let test_case = &test_cases[0]; // Linear graph
 
-        let mut processor = create_enhanced_ultrathink_processor();
+        let mut processor = create_enhanced_advanced_processor();
         let result = test_numerical_accuracy(test_case, &mut processor, "test");
 
         assert!(!result.property_results.is_empty());

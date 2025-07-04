@@ -7,11 +7,54 @@
 //! - Pattern recognition for memory access optimization
 
 use crate::error::{LinalgError, LinalgResult};
-use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2};
+use ndarray::{Array1, Array2, Array3, ArrayView2};
 use num_traits::{Float, NumAssign, Zero};
 use std::collections::{HashMap, VecDeque};
-use std::sync::{Arc, Mutex, RwLock};
 use std::fmt::Debug;
+use std::sync::{Arc, Mutex};
+
+/// Workload characteristics for optimization
+#[derive(Debug, Clone)]
+pub struct WorkloadCharacteristics {
+    /// Types of operations being performed
+    pub operation_types: Vec<MemoryOperationType>,
+    /// Data sizes and shapes
+    pub data_sizes: Vec<TensorShape>,
+    /// Computation intensity (operations per byte)
+    pub computation_intensity: f64,
+    /// Memory intensity (bytes accessed per operation)
+    pub memory_intensity: f64,
+}
+
+/// Tensor shape information
+#[derive(Debug, Clone)]
+pub struct TensorShape {
+    /// Tensor dimensions
+    pub dimensions: Vec<usize>,
+    /// Element data type
+    pub element_type: ElementType,
+    /// Memory layout
+    pub memory_layout: MemoryLayout,
+}
+
+/// Element types
+#[derive(Debug, Clone, PartialEq)]
+pub enum ElementType {
+    F32,
+    F64,
+    I32,
+    I64,
+    Complex32,
+    Complex64,
+}
+
+/// Memory layout types
+#[derive(Debug, Clone, PartialEq)]
+pub enum MemoryLayout {
+    RowMajor,
+    ColumnMajor,
+    Blocked,
+}
 
 /// Neural memory intelligence orchestrator
 pub struct UltraMemoryIntelligence<T>
@@ -32,6 +75,7 @@ where
 
 /// Neural cache prediction model using deep learning
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct NeuralCachePredictionModel<T> {
     /// Convolutional layers for pattern recognition
     conv_layers: Vec<ConvolutionalLayer<T>>,
@@ -270,6 +314,7 @@ pub enum OptimizerType {
 
 /// Adaptive compression engine using ML
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct AdaptiveCompressionEngine<T> {
     /// Available compression algorithms
     compression_algorithms: Vec<CompressionAlgorithm>,
@@ -301,6 +346,7 @@ pub enum CompressionAlgorithm {
 
 /// Compression selector network
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct CompressionSelectorNetwork<T> {
     /// Input feature extractors
     feature_extractors: Vec<FeatureExtractor<T>>,
@@ -407,6 +453,7 @@ pub struct TrainingMetrics {
 
 /// Confidence estimator for predictions
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ConfidenceEstimator<T> {
     /// Bayesian neural network
     bayesian_network: BayesianNetwork<T>,
@@ -439,12 +486,34 @@ pub struct WeightDistribution<T> {
 }
 
 /// Prior distribution types
-#[derive(Debug)]
 pub enum PriorDistribution<T> {
     Normal { mean: T, variance: T },
     Uniform { min: T, max: T },
     Laplace { location: T, scale: T },
     Custom(Box<dyn Fn(T) -> f64 + Send + Sync>),
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for PriorDistribution<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PriorDistribution::Normal { mean, variance } => f
+                .debug_struct("Normal")
+                .field("mean", mean)
+                .field("variance", variance)
+                .finish(),
+            PriorDistribution::Uniform { min, max } => f
+                .debug_struct("Uniform")
+                .field("min", min)
+                .field("max", max)
+                .finish(),
+            PriorDistribution::Laplace { location, scale } => f
+                .debug_struct("Laplace")
+                .field("location", location)
+                .field("scale", scale)
+                .finish(),
+            PriorDistribution::Custom(_) => f.debug_tuple("Custom").field(&"<function>").finish(),
+        }
+    }
 }
 
 /// Variational parameters
@@ -489,6 +558,7 @@ pub struct CompressionMetrics {
 
 /// Real-time compression algorithm switcher
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct RealTimeCompressionSwitcher {
     /// Current algorithm
     current_algorithm: CompressionAlgorithm,
@@ -502,6 +572,7 @@ pub struct RealTimeCompressionSwitcher {
 
 /// Compression performance predictor
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct CompressionPerformancePredictor {
     /// Prediction models for each algorithm
     models: HashMap<CompressionAlgorithm, PredictionModel>,
@@ -513,6 +584,7 @@ pub struct CompressionPerformancePredictor {
 
 /// Prediction model for compression performance
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PredictionModel {
     /// Model type
     model_type: ModelType,
@@ -556,6 +628,7 @@ pub enum ScalingMethod {
 
 /// Model ensemble for improved predictions
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ModelEnsemble {
     /// Individual models
     models: Vec<PredictionModel>,
@@ -577,6 +650,7 @@ pub enum EnsembleMethod {
 
 /// Compression quality assessor
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct CompressionQualityAssessor<T> {
     /// Quality metrics
     quality_metrics: Vec<QualityMetric<T>>,
@@ -587,7 +661,6 @@ pub struct CompressionQualityAssessor<T> {
 }
 
 /// Quality metrics for compression
-#[derive(Debug)]
 pub enum QualityMetric<T> {
     MeanSquaredError,
     PeakSignalToNoiseRatio,
@@ -595,11 +668,27 @@ pub enum QualityMetric<T> {
     FrobeniusNorm,
     SpectralNorm,
     RelativeError,
+    #[allow(clippy::type_complexity)]
     Custom(Box<dyn Fn(&ArrayView2<T>, &ArrayView2<T>) -> f64 + Send + Sync>),
+}
+
+impl<T> std::fmt::Debug for QualityMetric<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            QualityMetric::MeanSquaredError => write!(f, "MeanSquaredError"),
+            QualityMetric::PeakSignalToNoiseRatio => write!(f, "PeakSignalToNoiseRatio"),
+            QualityMetric::StructuralSimilarity => write!(f, "StructuralSimilarity"),
+            QualityMetric::FrobeniusNorm => write!(f, "FrobeniusNorm"),
+            QualityMetric::SpectralNorm => write!(f, "SpectralNorm"),
+            QualityMetric::RelativeError => write!(f, "RelativeError"),
+            QualityMetric::Custom(_) => write!(f, "Custom(<function>)"),
+        }
+    }
 }
 
 /// Perceptual quality model
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PerceptualQualityModel<T> {
     /// Feature extractors for perceptual features
     feature_extractors: Vec<PerceptualFeatureExtractor<T>>,
@@ -659,6 +748,7 @@ pub struct AttentionMechanism<T> {
 
 /// NUMA topology optimizer
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct NumaTopologyOptimizer {
     /// NUMA topology
     numa_topology: NumaTopology,
@@ -713,6 +803,7 @@ pub enum MemoryAllocationStrategy {
 
 /// NUMA performance monitor
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct NumaPerformanceMonitor {
     /// Memory access patterns
     access_patterns: HashMap<usize, VecDeque<MemoryAccessSample>>,
@@ -812,6 +903,7 @@ pub enum NumaSuccessCriterion {
 
 /// Bandwidth monitor for memory subsystem
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct BandwidthMonitor {
     /// Current bandwidth utilization
     current_utilization: f64,
@@ -842,6 +934,7 @@ pub struct BandwidthMeasurement {
 
 /// Saturation detector for memory bandwidth
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct SaturationDetector {
     /// Saturation threshold
     saturation_threshold: f64,
@@ -865,6 +958,7 @@ pub enum SaturationDetectionAlgorithm {
 
 /// Bandwidth predictor
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct BandwidthPredictor {
     /// Prediction model
     model: BandwidthPredictionModel,
@@ -886,6 +980,7 @@ pub enum BandwidthPredictionModel {
 
 /// Advanced memory pattern learning agent
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct AdvancedMemoryPatternLearning<T> {
     /// Pattern recognition neural network
     pattern_recognition_nn: ConvolutionalPatternNetwork<T>,
@@ -899,6 +994,7 @@ pub struct AdvancedMemoryPatternLearning<T> {
 
 /// Convolutional pattern network for memory access patterns
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ConvolutionalPatternNetwork<T> {
     /// Convolutional layers
     conv_layers: Vec<ConvolutionalLayer<T>>,
@@ -945,6 +1041,7 @@ pub struct EmbeddingLayer<T> {
 
 /// Classification head for pattern classification
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ClassificationHead<T> {
     /// Dense layers
     dense_layers: Vec<DenseLayer<T>>,
@@ -956,6 +1053,7 @@ pub struct ClassificationHead<T> {
 
 /// Reinforcement learning agent for prefetch optimization
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ReinforcementLearningAgent<T> {
     /// Q-network for value estimation
     q_network: QNetwork<T>,
@@ -969,6 +1067,7 @@ pub struct ReinforcementLearningAgent<T> {
 
 /// Q-network for value function approximation
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct QNetwork<T> {
     /// Network layers
     layers: Vec<DenseLayer<T>>,
@@ -980,6 +1079,7 @@ pub struct QNetwork<T> {
 
 /// Policy network for action selection
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PolicyNetwork<T> {
     /// Actor network
     actor: Vec<DenseLayer<T>>,
@@ -991,6 +1091,7 @@ pub struct PolicyNetwork<T> {
 
 /// Experience replay buffer for RL training
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ExperienceReplayBuffer<T> {
     /// Buffer of experiences
     buffer: VecDeque<Experience<T>>,
@@ -1036,9 +1137,10 @@ pub struct RLLearningParameters {
 
 /// Genetic algorithm for memory layout optimization
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct GeneticLayoutOptimizer<T> {
     /// Population of layout solutions
-    population: Vec<MemoryLayout<T>>,
+    population: Vec<AdvancedMemoryLayout<T>>,
     /// Population size
     population_size: usize,
     /// Genetic algorithm parameters
@@ -1049,7 +1151,7 @@ pub struct GeneticLayoutOptimizer<T> {
 
 /// Memory layout representation
 #[derive(Debug, Clone)]
-pub struct MemoryLayout<T> {
+pub struct AdvancedMemoryLayout<T> {
     /// Layout type
     pub layout_type: LayoutType,
     /// Block sizes
@@ -1127,6 +1229,7 @@ pub enum SelectionMethod {
 
 /// Fitness evaluator for memory layouts
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct FitnessEvaluator<T> {
     /// Evaluation metrics
     metrics: Vec<FitnessMetric<T>>,
@@ -1137,17 +1240,30 @@ pub struct FitnessEvaluator<T> {
 }
 
 /// Fitness metrics for layout evaluation
-#[derive(Debug)]
 pub enum FitnessMetric<T> {
     CacheHitRate,
     MemoryBandwidthUtilization,
     AccessLatency,
     EnergyEfficiency,
-    Custom(Box<dyn Fn(&MemoryLayout<T>) -> f64 + Send + Sync>),
+    #[allow(clippy::type_complexity)]
+    Custom(Box<dyn Fn(&AdvancedMemoryLayout<T>) -> f64 + Send + Sync>),
+}
+
+impl<T> std::fmt::Debug for FitnessMetric<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FitnessMetric::CacheHitRate => write!(f, "CacheHitRate"),
+            FitnessMetric::MemoryBandwidthUtilization => write!(f, "MemoryBandwidthUtilization"),
+            FitnessMetric::AccessLatency => write!(f, "AccessLatency"),
+            FitnessMetric::EnergyEfficiency => write!(f, "EnergyEfficiency"),
+            FitnessMetric::Custom(_) => write!(f, "Custom(<function>)"),
+        }
+    }
 }
 
 /// Benchmark suite for layout evaluation
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct BenchmarkSuite<T> {
     /// Benchmark tests
     benchmarks: Vec<MemoryBenchmark<T>>,
@@ -1163,7 +1279,7 @@ pub struct MemoryBenchmark<T> {
     /// Benchmark name
     pub name: String,
     /// Test function
-    pub test_fn: fn(&MemoryLayout<T>, &Array2<T>) -> BenchmarkResult,
+    pub test_fn: fn(&AdvancedMemoryLayout<T>, &Array2<T>) -> BenchmarkResult,
     /// Weight in overall score
     pub weight: f64,
 }
@@ -1185,6 +1301,7 @@ pub struct BenchmarkResult {
 
 /// Pattern database for memory access patterns
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PatternDatabase<T> {
     /// Stored patterns
     patterns: HashMap<PatternId, MemoryAccessPattern<T>>,
@@ -1201,6 +1318,7 @@ pub type PatternId = u64;
 
 /// Pattern similarity index for fast lookup
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PatternSimilarityIndex {
     /// Locality sensitive hashing
     lsh_index: LocalitySensitiveHashing,
@@ -1212,6 +1330,7 @@ pub struct PatternSimilarityIndex {
 
 /// Locality sensitive hashing for pattern similarity
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct LocalitySensitiveHashing {
     /// Hash functions
     hash_functions: Vec<HashFunction>,
@@ -1330,9 +1449,10 @@ where
         &self,
         access_pattern: &CacheAccessPattern<T>,
     ) -> LinalgResult<CachePerformancePrediction> {
-        let predictor = self.ml_cache_predictor.lock()
-            .map_err(|_| LinalgError::InvalidInput("Failed to acquire predictor lock".to_string()))?;
-        
+        let predictor = self.ml_cache_predictor.lock().map_err(|_| {
+            LinalgError::InvalidInput("Failed to acquire predictor lock".to_string())
+        })?;
+
         predictor.predict_performance(access_pattern)
     }
 
@@ -1342,9 +1462,10 @@ where
         data: &ArrayView2<T>,
         constraints: &CompressionConstraints,
     ) -> LinalgResult<CompressionAlgorithm> {
-        let selector = self.compression_selector.lock()
-            .map_err(|_| LinalgError::InvalidInput("Failed to acquire selector lock".to_string()))?;
-        
+        let selector = self.compression_selector.lock().map_err(|_| {
+            LinalgError::InvalidInput("Failed to acquire selector lock".to_string())
+        })?;
+
         selector.select_algorithm(data, constraints)
     }
 
@@ -1353,17 +1474,20 @@ where
         &self,
         workload: &WorkloadCharacteristics,
     ) -> LinalgResult<MemoryAllocationStrategy> {
-        let optimizer = self.numa_optimizer.lock()
-            .map_err(|_| LinalgError::InvalidInput("Failed to acquire optimizer lock".to_string()))?;
-        
+        let optimizer = self.numa_optimizer.lock().map_err(|_| {
+            LinalgError::InvalidInput("Failed to acquire optimizer lock".to_string())
+        })?;
+
         optimizer.optimize_allocation(workload)
     }
 
     /// Monitor and predict bandwidth saturation
     pub fn monitor_bandwidth_saturation(&self) -> LinalgResult<BandwidthSaturationPrediction> {
-        let monitor = self.bandwidth_monitor.lock()
+        let monitor = self
+            .bandwidth_monitor
+            .lock()
             .map_err(|_| LinalgError::InvalidInput("Failed to acquire monitor lock".to_string()))?;
-        
+
         monitor.predict_saturation()
     }
 
@@ -1372,9 +1496,11 @@ where
         &self,
         access_traces: &[MemoryAccessPattern<T>],
     ) -> LinalgResult<OptimizationRecommendations<T>> {
-        let learner = self.pattern_learner.lock()
+        let learner = self
+            .pattern_learner
+            .lock()
             .map_err(|_| LinalgError::InvalidInput("Failed to acquire learner lock".to_string()))?;
-        
+
         learner.learn_patterns(access_traces)
     }
 
@@ -1385,11 +1511,13 @@ where
         data: &ArrayView2<T>,
     ) -> LinalgResult<UltraMemoryOptimizationReport<T>> {
         // Gather predictions from all components
-        let cache_prediction = self.predict_cache_performance(&CacheAccessPattern::from_workload(workload))?;
-        let compression_algo = self.select_compression_algorithm(data, &CompressionConstraints::default())?;
+        let cache_prediction =
+            self.predict_cache_performance(&CacheAccessPattern::from_workload(workload))?;
+        let compression_algo =
+            self.select_compression_algorithm(data, &CompressionConstraints::default())?;
         let numa_strategy = self.optimize_numa_allocation(workload)?;
         let bandwidth_prediction = self.monitor_bandwidth_saturation()?;
-        
+
         Ok(UltraMemoryOptimizationReport {
             cache_prediction,
             compression_algorithm: compression_algo,
@@ -1404,29 +1532,26 @@ where
     /// Generate optimization recommendations
     fn generate_recommendations(
         &self,
-        workload: &WorkloadCharacteristics,
-        data: &ArrayView2<T>,
+        _workload: &WorkloadCharacteristics,
+        _data: &ArrayView2<T>,
     ) -> LinalgResult<Vec<OptimizationRecommendation<T>>> {
-        let mut recommendations = Vec::new();
-        
-        // Add cache optimization recommendations
-        recommendations.push(OptimizationRecommendation {
-            category: OptimizationCategory::Cache,
-            description: "Use cache-aware blocking for large matrix operations".to_string(),
-            impact_score: 0.8,
-            implementation_complexity: ComplexityLevel::Medium,
-            parameters: HashMap::new(),
-        });
-        
-        // Add compression recommendations
-        recommendations.push(OptimizationRecommendation {
-            category: OptimizationCategory::Compression,
-            description: "Apply adaptive compression for memory-bound operations".to_string(),
-            impact_score: 0.6,
-            implementation_complexity: ComplexityLevel::Low,
-            parameters: HashMap::new(),
-        });
-        
+        let recommendations = vec![
+            OptimizationRecommendation {
+                category: OptimizationCategory::Cache,
+                description: "Use cache-aware blocking for large matrix operations".to_string(),
+                impact_score: 0.8,
+                implementation_complexity: ComplexityLevel::Medium,
+                parameters: HashMap::new(),
+            },
+            OptimizationRecommendation {
+                category: OptimizationCategory::Compression,
+                description: "Apply adaptive compression for memory-bound operations".to_string(),
+                impact_score: 0.6,
+                implementation_complexity: ComplexityLevel::Low,
+                parameters: HashMap::new(),
+            },
+        ];
+
         Ok(recommendations)
     }
 }
@@ -1511,7 +1636,7 @@ pub struct OptimizationRecommendations<T> {
     /// Prefetch strategies
     pub prefetch_strategies: Vec<PrefetchStrategy>,
     /// Memory layout recommendations
-    pub layout_recommendations: Vec<MemoryLayout<T>>,
+    pub layout_recommendations: Vec<AdvancedMemoryLayout<T>>,
     /// Access pattern optimizations
     pub pattern_optimizations: Vec<PatternOptimization>,
     /// Overall improvement estimate
@@ -1645,8 +1770,11 @@ where
             model_params: NeuralModelParameters::default(),
         })
     }
-    
-    fn predict_performance(&self, _pattern: &CacheAccessPattern<T>) -> LinalgResult<CachePerformancePrediction> {
+
+    fn predict_performance(
+        &self,
+        _pattern: &CacheAccessPattern<T>,
+    ) -> LinalgResult<CachePerformancePrediction> {
         // Simplified prediction
         Ok(CachePerformancePrediction {
             hit_rate: 0.85,
@@ -1689,7 +1817,7 @@ where
             quality_assessor: CompressionQualityAssessor::new()?,
         })
     }
-    
+
     fn select_algorithm(
         &self,
         _data: &ArrayView2<T>,
@@ -1700,7 +1828,10 @@ where
     }
 }
 
-impl<T> CompressionSelectorNetwork<T> {
+impl<T> CompressionSelectorNetwork<T>
+where
+    T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
+{
     fn new() -> LinalgResult<Self> {
         Ok(Self {
             feature_extractors: Vec::new(),
@@ -1711,7 +1842,10 @@ impl<T> CompressionSelectorNetwork<T> {
     }
 }
 
-impl<T> ClassificationNetwork<T> {
+impl<T> ClassificationNetwork<T>
+where
+    T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
+{
     fn new() -> LinalgResult<Self> {
         Ok(Self {
             layers: Vec::new(),
@@ -1734,7 +1868,10 @@ where
     }
 }
 
-impl<T> ConfidenceEstimator<T> {
+impl<T> ConfidenceEstimator<T>
+where
+    T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
+{
     fn new() -> LinalgResult<Self> {
         Ok(Self {
             bayesian_network: BayesianNetwork::new()?,
@@ -1801,7 +1938,10 @@ impl ModelEnsemble {
     }
 }
 
-impl<T> CompressionQualityAssessor<T> {
+impl<T> CompressionQualityAssessor<T>
+where
+    T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
+{
     fn new() -> LinalgResult<Self> {
         Ok(Self {
             quality_metrics: Vec::new(),
@@ -1811,7 +1951,10 @@ impl<T> CompressionQualityAssessor<T> {
     }
 }
 
-impl<T> PerceptualQualityModel<T> {
+impl<T> PerceptualQualityModel<T>
+where
+    T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
+{
     fn new() -> LinalgResult<Self> {
         Ok(Self {
             feature_extractors: Vec::new(),
@@ -1871,7 +2014,7 @@ impl NumaTopologyOptimizer {
             optimization_policies: Vec::new(),
         })
     }
-    
+
     fn optimize_allocation(
         &self,
         _workload: &WorkloadCharacteristics,
@@ -1912,7 +2055,7 @@ impl BandwidthMonitor {
             bandwidth_predictor: BandwidthPredictor::new(),
         })
     }
-    
+
     fn predict_saturation(&self) -> LinalgResult<BandwidthSaturationPrediction> {
         Ok(BandwidthSaturationPrediction {
             saturation_level: 0.3,
@@ -1956,7 +2099,7 @@ where
             pattern_database: PatternDatabase::new(),
         })
     }
-    
+
     fn learn_patterns(
         &self,
         _access_traces: &[MemoryAccessPattern<T>],
@@ -1970,7 +2113,10 @@ where
     }
 }
 
-impl<T> ConvolutionalPatternNetwork<T> {
+impl<T> ConvolutionalPatternNetwork<T>
+where
+    T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
+{
     fn new() -> LinalgResult<Self> {
         Ok(Self {
             conv_layers: Vec::new(),
@@ -1994,7 +2140,10 @@ where
     }
 }
 
-impl<T> ClassificationHead<T> {
+impl<T> ClassificationHead<T>
+where
+    T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
+{
     fn new() -> LinalgResult<Self> {
         Ok(Self {
             dense_layers: Vec::new(),
@@ -2148,7 +2297,10 @@ impl Default for IndexParameters {
     }
 }
 
-impl<T> CacheAccessPattern<T> {
+impl<T> CacheAccessPattern<T>
+where
+    T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
+{
     fn from_workload(_workload: &WorkloadCharacteristics) -> Self {
         Self {
             addresses: Vec::new(),
@@ -2231,16 +2383,16 @@ mod tests {
             data_sizes: vec![TensorShape {
                 dimensions: vec![100, 100],
                 element_type: ElementType::F32,
-                memory_layout: super::super::ultra_acceleration::MemoryLayout::RowMajor,
+                memory_layout: MemoryLayout::RowMajor,
             }],
             computation_intensity: 1.0,
             memory_intensity: 0.5,
         };
         let access_pattern = CacheAccessPattern::from_workload(&workload);
-        
+
         let prediction = memory_intelligence.predict_cache_performance(&access_pattern);
         assert!(prediction.is_ok());
-        
+
         let result = prediction.unwrap();
         assert!(result.hit_rate >= 0.0 && result.hit_rate <= 1.0);
         assert!(result.confidence >= 0.0 && result.confidence <= 1.0);
@@ -2251,7 +2403,7 @@ mod tests {
         let memory_intelligence = UltraMemoryIntelligence::<f32>::new().unwrap();
         let data = Array2::zeros((100, 100));
         let constraints = CompressionConstraints::default();
-        
+
         let result = memory_intelligence.select_compression_algorithm(&data.view(), &constraints);
         assert!(result.is_ok());
     }
@@ -2264,12 +2416,12 @@ mod tests {
             data_sizes: vec![TensorShape {
                 dimensions: vec![1000, 1000],
                 element_type: ElementType::F32,
-                memory_layout: super::super::ultra_acceleration::MemoryLayout::RowMajor,
+                memory_layout: MemoryLayout::RowMajor,
             }],
             computation_intensity: 2.0,
             memory_intensity: 1.0,
         };
-        
+
         let result = memory_intelligence.optimize_numa_allocation(&workload);
         assert!(result.is_ok());
     }
@@ -2277,10 +2429,10 @@ mod tests {
     #[test]
     fn test_bandwidth_monitoring() {
         let memory_intelligence = UltraMemoryIntelligence::<f32>::new().unwrap();
-        
+
         let result = memory_intelligence.monitor_bandwidth_saturation();
         assert!(result.is_ok());
-        
+
         let prediction = result.unwrap();
         assert!(prediction.saturation_level >= 0.0 && prediction.saturation_level <= 1.0);
         assert!(prediction.confidence >= 0.0 && prediction.confidence <= 1.0);
@@ -2294,16 +2446,16 @@ mod tests {
             data_sizes: vec![TensorShape {
                 dimensions: vec![500, 500],
                 element_type: ElementType::F32,
-                memory_layout: super::super::ultra_acceleration::MemoryLayout::RowMajor,
+                memory_layout: MemoryLayout::RowMajor,
             }],
             computation_intensity: 1.5,
             memory_intensity: 0.8,
         };
         let data = Array2::ones((500, 500));
-        
+
         let result = memory_intelligence.comprehensive_analysis(&workload, &data.view());
         assert!(result.is_ok());
-        
+
         let report = result.unwrap();
         assert!(report.optimization_score >= 0.0 && report.optimization_score <= 1.0);
         assert!(report.confidence >= 0.0 && report.confidence <= 1.0);

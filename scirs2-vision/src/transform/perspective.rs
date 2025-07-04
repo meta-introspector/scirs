@@ -485,8 +485,8 @@ impl PerspectiveTransform {
         let mut rng = if let Some(seed) = params.seed {
             StdRng::seed_from_u64(seed)
         } else {
-            use rand::thread_rng;
-            StdRng::from_rng(&mut thread_rng())
+            use rand::rng;
+            StdRng::from_rng(&mut rng())
         };
 
         let mut best_transform: Option<PerspectiveTransform> = None;

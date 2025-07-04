@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink FFT Mode Showcase");
     println!("=====================================");
 
-    // Create ultrathink coordinator with custom configuration
+    // Create advanced coordinator with custom configuration
     let mut config = UltrathinkFftConfig::default();
     config.enable_method_selection = true;
     config.enable_adaptive_optimization = true;
@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - Max Memory: {} MB", config.max_memory_mb);
     println!();
 
-    let coordinator = create_ultrathink_fft_coordinator::<f64>()?;
+    let coordinator = create_advanced_fft_coordinator::<f64>()?;
     println!("✅ Ultrathink FFT Coordinator created successfully");
     println!();
 
@@ -224,7 +224,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n🎯 Ultrathink FFT Mode Showcase Complete!");
     println!("==========================================");
-    println!("The ultrathink mode has demonstrated:");
+    println!("The advanced mode has demonstrated:");
     println!("✅ Intelligent algorithm selection based on signal characteristics");
     println!("✅ Adaptive performance optimization with real-time learning");
     println!("✅ Memory-aware processing with intelligent caching");

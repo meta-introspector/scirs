@@ -1351,7 +1351,7 @@ impl HfHub {
                 {
                     let config = HfConfig::default();
                     serde_json::to_string_pretty(&config)
-                        .map_err(|e| TextError::InvalidInput(format!("JSON error: {}", e)))?
+                        .map_err(|e| TextError::InvalidInput(format!("JSON error: {e}")))?
                         .into_bytes()
                 }
                 #[cfg(not(feature = "serde-support"))]
@@ -1376,7 +1376,7 @@ impl HfHub {
                 {
                     let tokenizer_config = HfTokenizerConfig::default();
                     serde_json::to_string_pretty(&tokenizer_config)
-                        .map_err(|e| TextError::InvalidInput(format!("JSON error: {}", e)))?
+                        .map_err(|e| TextError::InvalidInput(format!("JSON error: {e}")))?
                         .into_bytes()
                 }
                 #[cfg(not(feature = "serde-support"))]

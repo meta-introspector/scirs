@@ -1,15 +1,11 @@
 //! Error types for the SciRS2 linear algebra module
 
-use scirs2_core::error::CoreError;
+use scirs2_core::CoreError;
 use thiserror::Error;
 
 /// Linear algebra error type
 #[derive(Error, Debug, Clone)]
 pub enum LinalgError {
-    /// Core error
-    #[error(transparent)]
-    CoreError(#[from] CoreError),
-
     /// Computation error (generic error)
     #[error("Computation error: {0}")]
     ComputationError(String),
@@ -191,6 +187,28 @@ impl LinalgError {
 
 /// Result type for linear algebra operations
 pub type LinalgResult<T> = Result<T, LinalgError>;
+
+/// Conversion from CoreError to LinalgError
+impl From<CoreError> for LinalgError {
+    fn from(error: CoreError) -> Self {
+        match error {
+            CoreError::ShapeError(msg) => LinalgError::ShapeError(msg.to_string()),
+            CoreError::DimensionError(msg) => LinalgError::DimensionError(msg.to_string()),
+            CoreError::IndexError(msg) => LinalgError::IndexError(msg.to_string()),
+            CoreError::ValueError(msg) => LinalgError::ValueError(msg.to_string()),
+            CoreError::InvalidInput(msg) => LinalgError::InvalidInput(msg.to_string()),
+            CoreError::ComputationError(msg) => LinalgError::ComputationError(msg.to_string()),
+            CoreError::NotImplementedError(msg) => {
+                LinalgError::NotImplementedError(msg.to_string())
+            }
+            CoreError::ImplementationError(msg) => {
+                LinalgError::ImplementationError(msg.to_string())
+            }
+            // For other CoreError variants, map to a generic LinalgError
+            _ => LinalgError::ComputationError(format!("Core error: {error}")),
+        }
+    }
+}
 
 /// Checks if a condition is true, otherwise returns a domain error
 ///

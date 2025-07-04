@@ -8,10 +8,10 @@ use crate::error::{SignalError, SignalResult};
 use crate::lti::{LtiSystem, StateSpace, TransferFunction};
 use crate::sysid_enhanced::{NonlinearFunction, ParameterEstimate, SystemModel};
 use ndarray::{s, Array1, Array2, ArrayView1, Axis};
-// use ndarray_linalg::{Solve, Eig, SVD, Norm}; // TODO: Add ndarray-linalg dependency
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_shape};
+use scirs2_linalg::solve;
 #[cfg(test)]
 use std::f64::consts::PI;
 
@@ -27,7 +27,7 @@ pub fn identify_armax_complete(
     delay: usize,
 ) -> SignalResult<(SystemModel, ParameterEstimate, usize, bool, f64)> {
     let n = output.len();
-    check_shape(input, (n, None), "input and output")?;
+    check_shape(input, &[n], "input and output")?;
 
     // Initialize with ARX estimate
     let (ar_init, b_init, _) = estimate_arx_ls(input, output, na, nb, delay)?;
@@ -151,9 +151,7 @@ pub fn identify_oe_complete(
             h_reg[[i, i]] += lambda;
         }
 
-        let delta = h_reg
-            .solve(&gradient)
-            .unwrap_or_else(|_| gradient.clone() * 0.01);
+        let delta = solve(&h_reg, &gradient).unwrap_or_else(|_| gradient.clone() * 0.01);
 
         // Update parameters
         let alpha = backtracking_line_search(input, output, &b_coeffs, &f_coeffs, &delta, delay)?;
@@ -161,7 +159,8 @@ pub fn identify_oe_complete(
         update_oe_parameters(&mut b_coeffs, &mut f_coeffs, &delta, alpha);
 
         // Check convergence
-        if delta.norm() < tolerance {
+        let delta_norm = (delta.mapv(|x| x * x).sum()).sqrt();
+        if delta_norm < tolerance {
             converged = true;
             iterations = iter + 1;
             break;

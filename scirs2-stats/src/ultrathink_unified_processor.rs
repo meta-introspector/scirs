@@ -5,6 +5,8 @@
 //! testing. It automatically selects the optimal combination of techniques based
 //! on data characteristics and system capabilities.
 
+#![allow(dead_code)]
+
 use crate::error::{StatsError, StatsResult};
 use crate::error_standardization::ErrorMessages;
 use crate::ultrathink_error_enhancements::{UltrathinkContextBuilder, UltrathinkErrorMessages};

@@ -456,7 +456,7 @@ where
 /// * True if connected, false otherwise
 pub fn is_hypergraph_connected<N, E, Ix>(hypergraph: &Hypergraph<N, E, Ix>) -> bool
 where
-    N: Node + Clone + Ord,
+    N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {

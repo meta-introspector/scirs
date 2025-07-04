@@ -9,6 +9,9 @@ use criterion::{
     black_box, criterion_group, criterion_main, AxisScale, BenchmarkId, Criterion,
     PlotConfiguration,
 };
+use scirs2_graph::advanced::{
+    create_ultrathink_processor, execute_with_ultrathink, UltrathinkConfig, UltrathinkProcessor,
+};
 use scirs2_graph::algorithms::community::louvain_communities;
 use scirs2_graph::algorithms::connectivity::connected_components;
 use scirs2_graph::algorithms::paths::shortest_path_dijkstra;
@@ -16,9 +19,6 @@ use scirs2_graph::algorithms::properties::betweenness_centrality;
 use scirs2_graph::base::Graph;
 use scirs2_graph::generators::random_graph;
 use scirs2_graph::measures::pagerank;
-use scirs2_graph::ultrathink::{
-    create_ultrathink_processor, execute_with_ultrathink, UltrathinkConfig, UltrathinkProcessor,
-};
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -131,15 +131,15 @@ fn benchmark_connected_components(c: &mut Criterion) {
                 |b, g| b.iter(|| black_box(connected_components(g).unwrap())),
             );
 
-            // Benchmark ultrathink optimized algorithm
+            // Benchmark advanced optimized algorithm
             group.bench_with_input(
                 BenchmarkId::new("ultrathink", format!("{}_{}", size, density)),
                 &graph_clone,
                 |b, g| {
-                    let mut processor = create_ultrathink_processor();
+                    let mut processor = create_advanced_processor();
                     b.iter(|| {
                         black_box(
-                            execute_with_ultrathink(
+                            execute_with_advanced(
                                 &mut processor,
                                 g,
                                 "connected_components",
@@ -155,7 +155,7 @@ fn benchmark_connected_components(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark shortest path algorithms with and without ultrathink
+/// Benchmark shortest path algorithms with and without advanced
 fn benchmark_shortest_paths(c: &mut Criterion) {
     let config = UltrathinkBenchmarkConfig::default();
     let mut group = c.benchmark_group("shortest_paths");
@@ -176,15 +176,15 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
                     },
                 );
 
-                // Benchmark ultrathink optimized Dijkstra
+                // Benchmark advanced optimized Dijkstra
                 group.bench_with_input(
                     BenchmarkId::new("dijkstra_ultrathink", format!("{}_{}", size, density)),
                     &(&graph_clone, start_node),
                     |b, (g, start)| {
-                        let mut processor = create_ultrathink_processor();
+                        let mut processor = create_advanced_processor();
                         b.iter(|| {
                             black_box(
-                                execute_with_ultrathink(
+                                execute_with_advanced(
                                     &mut processor,
                                     g,
                                     "shortest_path_dijkstra",
@@ -201,7 +201,7 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark PageRank with and without ultrathink
+/// Benchmark PageRank with and without advanced
 fn benchmark_pagerank(c: &mut Criterion) {
     let config = UltrathinkBenchmarkConfig::default();
     let mut group = c.benchmark_group("pagerank");
@@ -219,15 +219,15 @@ fn benchmark_pagerank(c: &mut Criterion) {
                 |b, g| b.iter(|| black_box(pagerank(g, 0.85, Some(100), Some(1e-6)).unwrap())),
             );
 
-            // Benchmark ultrathink optimized PageRank
+            // Benchmark advanced optimized PageRank
             group.bench_with_input(
                 BenchmarkId::new("pagerank_ultrathink", format!("{}_{}", size, density)),
                 &graph_clone,
                 |b, g| {
-                    let mut processor = create_ultrathink_processor();
+                    let mut processor = create_advanced_processor();
                     b.iter(|| {
                         black_box(
-                            execute_with_ultrathink(&mut processor, g, "pagerank", |graph| {
+                            execute_with_advanced(&mut processor, g, "pagerank", |graph| {
                                 pagerank(graph, 0.85, Some(100), Some(1e-6))
                             })
                             .unwrap(),
@@ -240,7 +240,7 @@ fn benchmark_pagerank(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark community detection with and without ultrathink
+/// Benchmark community detection with and without advanced
 fn benchmark_community_detection(c: &mut Criterion) {
     let config = UltrathinkBenchmarkConfig::default();
     let mut group = c.benchmark_group("community_detection");
@@ -258,15 +258,15 @@ fn benchmark_community_detection(c: &mut Criterion) {
                 |b, g| b.iter(|| black_box(louvain_communities(g, None).unwrap())),
             );
 
-            // Benchmark ultrathink optimized Louvain
+            // Benchmark advanced optimized Louvain
             group.bench_with_input(
                 BenchmarkId::new("louvain_ultrathink", format!("{}_{}", size, density)),
                 &graph_clone,
                 |b, g| {
-                    let mut processor = create_ultrathink_processor();
+                    let mut processor = create_advanced_processor();
                     b.iter(|| {
                         black_box(
-                            execute_with_ultrathink(
+                            execute_with_advanced(
                                 &mut processor,
                                 g,
                                 "louvain_communities",
@@ -282,7 +282,7 @@ fn benchmark_community_detection(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark centrality measures with and without ultrathink
+/// Benchmark centrality measures with and without advanced
 fn benchmark_centrality(c: &mut Criterion) {
     let config = UltrathinkBenchmarkConfig::default();
     let mut group = c.benchmark_group("centrality");
@@ -301,15 +301,15 @@ fn benchmark_centrality(c: &mut Criterion) {
                 |b, g| b.iter(|| black_box(betweenness_centrality(g).unwrap())),
             );
 
-            // Benchmark ultrathink optimized betweenness centrality
+            // Benchmark advanced optimized betweenness centrality
             group.bench_with_input(
                 BenchmarkId::new("betweenness_ultrathink", format!("{}_{}", size, density)),
                 &graph_clone,
                 |b, g| {
-                    let mut processor = create_ultrathink_processor();
+                    let mut processor = create_advanced_processor();
                     b.iter(|| {
                         black_box(
-                            execute_with_ultrathink(
+                            execute_with_advanced(
                                 &mut processor,
                                 g,
                                 "betweenness_centrality",
@@ -325,8 +325,8 @@ fn benchmark_centrality(c: &mut Criterion) {
     group.finish();
 }
 
-/// Comprehensive ultrathink performance benchmark
-fn benchmark_ultrathink_comprehensive(c: &mut Criterion) {
+/// Comprehensive advanced performance benchmark
+fn benchmark_advanced_comprehensive(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultrathink_comprehensive");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 
@@ -371,7 +371,7 @@ fn benchmark_ultrathink_comprehensive(c: &mut Criterion) {
         let graph = generate_test_graph(1000, 0.05);
 
         group.bench_with_input(
-            BenchmarkId::new("ultrathink_config", config_name),
+            BenchmarkId::new("advanced_config", config_name),
             &(&graph, &config),
             |b, (g, cfg)| {
                 let mut processor = UltrathinkProcessor::new(cfg.clone());
@@ -394,7 +394,7 @@ fn benchmark_ultrathink_comprehensive(c: &mut Criterion) {
     group.finish();
 }
 
-/// Memory efficiency benchmarks for ultrathink
+/// Memory efficiency benchmarks for advanced
 fn benchmark_memory_efficiency(c: &mut Criterion) {
     let mut group = c.benchmark_group("memory_efficiency");
 
@@ -416,7 +416,7 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
 
         // Ultrathink memory usage
         group.bench_with_input(
-            BenchmarkId::new("memory_ultrathink", size),
+            BenchmarkId::new("memory_advanced", size),
             &graph_clone,
             |b, g| {
                 let mut processor = create_ultrathink_processor();
@@ -495,7 +495,7 @@ pub fn generate_performance_report(
             result.graph_size,
             result.graph_density,
             result.standard_time_us,
-            result.ultrathink_time_us,
+            result.advanced_time_us,
             result.speedup_ratio,
             result.memory_efficiency_ratio
         )?;

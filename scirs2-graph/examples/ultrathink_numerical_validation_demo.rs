@@ -7,7 +7,7 @@
 
 use scirs2_graph::base::Graph;
 use scirs2_graph::generators::{barabasi_albert_graph, erdos_renyi_graph, random_graph};
-use scirs2_graph::ultrathink_numerical_validation::{
+use scirs2_graph::numerical_accuracy_validation::{
     create_comprehensive_validation_suite, run_quick_validation, GraphGenerator,
     UltrathinkNumericalValidator, ValidationAlgorithm, ValidationConfig, ValidationTestCase,
     ValidationTolerances,
@@ -402,7 +402,7 @@ fn validation_metrics_example() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("   ⚡ Performance Metrics:");
         println!("     - Standard time: {:?}", result.standard_time);
-        println!("     - Ultrathink time: {:?}", result.ultrathink_time);
+        println!("     - Ultrathink time: {:?}", result.advanced_time);
         println!("     - Speedup factor: {:.2}x", result.speedup_factor);
 
         if !result.metrics.custom_metrics.is_empty() {
@@ -423,7 +423,7 @@ fn validation_metrics_example() -> Result<(), Box<dyn std::error::Error>> {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Numerical Validation Demo");
     println!("======================================");
-    println!("This demo showcases the numerical validation framework for ultrathink mode.");
+    println!("This demo showcases the numerical validation framework for advanced mode.");
     println!();
 
     // Run all examples
@@ -444,7 +444,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("• Detailed metrics provide insights for further optimization");
     println!();
     println!("📚 For more information:");
-    println!("• Check the ultrathink_numerical_validation module documentation");
+    println!("• Check the advanced_numerical_validation module documentation");
     println!("• Review validation tolerances for your specific use case");
     println!("• Integrate validation into your CI/CD pipeline");
 

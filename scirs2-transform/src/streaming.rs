@@ -4,7 +4,7 @@
 //! maintaining running statistics and transforming data incrementally.
 
 use ndarray::{Array1, Array2};
-use scirs2_linalg::eigen::eigh;
+use scirs2_linalg::eigh;
 use std::collections::VecDeque;
 
 use crate::error::{Result, TransformError};

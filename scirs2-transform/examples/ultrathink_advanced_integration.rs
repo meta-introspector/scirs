@@ -133,9 +133,7 @@ fn demonstrate_real_time_adaptation() -> Result<(), Box<dyn std::error::Error>> 
         };
 
         let adaptation_time = start_time.elapsed();
-        let throughput = neuromorphic_processor
-            .get_ultrathink_diagnostics()
-            .throughput;
+        let throughput = neuromorphic_processor.get_advanced_diagnostics().throughput;
 
         adaptation_history.push(AdaptationRecord {
             window,
@@ -242,7 +240,7 @@ fn demonstrate_multimodal_fusion() -> Result<(), Box<dyn std::error::Error>> {
     println!("   - Interaction strength: {:.3}", optimal_params[3]);
     println!("   - Fusion score: {:.3}", fusion_score);
 
-    let quantum_metrics = multimodal_optimizer.get_ultrathink_diagnostics();
+    let quantum_metrics = multimodal_optimizer.get_advanced_diagnostics();
     println!("\n📊 Quantum optimization metrics:");
     println!(
         "   - Quantum efficiency: {:.3}",
@@ -369,19 +367,19 @@ fn demonstrate_performance_benchmark() -> Result<(), Box<dyn std::error::Error>>
         let traditional_time = traditional_start.elapsed();
 
         // UltraThink method timing
-        let ultrathink_start = Instant::now();
-        let ultrathink_result = ultrathink_optimization(&data.view())?;
-        let ultrathink_time = ultrathink_start.elapsed();
+        let advanced_start = Instant::now();
+        let advanced_result = advanced_optimization(&data.view())?;
+        let advanced_time = advanced_start.elapsed();
 
-        let speedup = traditional_time.as_secs_f64() / ultrathink_time.as_secs_f64();
-        let quality_score = evaluate_pipeline_quality(&ultrathink_result);
+        let speedup = traditional_time.as_secs_f64() / advanced_time.as_secs_f64();
+        let quality_score = evaluate_pipeline_quality(&advanced_result);
 
         println!(
             "{}×{:3}      | {:8.2}ms | {:7.2}ms | {:6.1}x | {:6.1}%",
             samples,
             features,
             traditional_time.as_millis(),
-            ultrathink_time.as_millis(),
+            advanced_time.as_millis(),
             speedup,
             quality_score * 100.0
         );

@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Ultrathink Interpolation Mode Showcase");
     println!("==========================================");
 
-    // Create ultrathink coordinator with custom configuration
+    // Create advanced coordinator with custom configuration
     let mut config = UltrathinkInterpolationConfig::default();
     config.enable_method_selection = true;
     config.enable_accuracy_optimization = true;
@@ -44,7 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - Max Memory: {} MB", config.max_memory_mb);
     println!();
 
-    let coordinator = create_ultrathink_interpolation_coordinator::<f64>()?;
+    let coordinator = create_advanced_interpolation_coordinator::<f64>()?;
     println!("✅ Ultrathink Interpolation Coordinator created successfully");
     println!();
 
@@ -313,7 +313,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n🎯 Ultrathink Interpolation Mode Showcase Complete!");
     println!("====================================================");
-    println!("The ultrathink mode has demonstrated:");
+    println!("The advanced mode has demonstrated:");
     println!("✅ Intelligent method selection based on data characteristics");
     println!("✅ Adaptive accuracy optimization with error prediction");
     println!("✅ Noise-aware processing with robust method selection");

@@ -6,6 +6,10 @@
 
 #![allow(dead_code)]
 
+use scirs2_graph::advanced::{
+    create_enhanced_ultrathink_processor, create_performance_ultrathink_processor,
+    execute_with_enhanced_ultrathink, UltrathinkProcessor,
+};
 use scirs2_graph::algorithms::community::louvain_communities;
 use scirs2_graph::algorithms::connectivity::connected_components;
 use scirs2_graph::algorithms::paths::shortest_path_dijkstra;
@@ -13,10 +17,6 @@ use scirs2_graph::algorithms::properties::{betweenness_centrality, closeness_cen
 use scirs2_graph::base::Graph;
 use scirs2_graph::generators::{barabasi_albert_graph, erdos_renyi_graph};
 use scirs2_graph::measures::pagerank;
-use scirs2_graph::ultrathink::{
-    create_enhanced_ultrathink_processor, create_performance_ultrathink_processor,
-    execute_with_enhanced_ultrathink, UltrathinkProcessor,
-};
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -84,8 +84,8 @@ fn financial_risk_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> 
         graph.edge_count() as f64 * 2.0 / graph.node_count() as f64
     );
 
-    // Create an enhanced ultrathink processor optimized for financial analysis
-    let mut processor = create_enhanced_ultrathink_processor();
+    // Create an enhanced advanced processor optimized for financial analysis
+    let mut processor = create_enhanced_advanced_processor();
 
     // Step 1: Systemic Risk Assessment
     println!("\n📊 Step 1: Systemic Risk Assessment");
@@ -263,7 +263,7 @@ fn assess_systemic_risk(
     println!("   🔍 Computing betweenness centrality...");
     let start = Instant::now();
     let betweenness =
-        execute_with_enhanced_ultrathink(processor, graph, "risk_betweenness_centrality", |g| {
+        execute_with_enhanced_advanced(processor, graph, "risk_betweenness_centrality", |g| {
             betweenness_centrality(g)
         })?;
     println!(
@@ -274,7 +274,7 @@ fn assess_systemic_risk(
     println!("   🔍 Computing closeness centrality...");
     let start = Instant::now();
     let closeness =
-        execute_with_enhanced_ultrathink(processor, graph, "risk_closeness_centrality", |g| {
+        execute_with_enhanced_advanced(processor, graph, "risk_closeness_centrality", |g| {
             closeness_centrality(g)
         })?;
     println!(
@@ -284,10 +284,9 @@ fn assess_systemic_risk(
 
     println!("   🔍 Computing PageRank scores...");
     let start = Instant::now();
-    let pagerank_scores =
-        execute_with_enhanced_ultrathink(processor, graph, "risk_pagerank", |g| {
-            pagerank(g, 0.85, Some(100), Some(1e-6))
-        })?;
+    let pagerank_scores = execute_with_enhanced_advanced(processor, graph, "risk_pagerank", |g| {
+        pagerank(g, 0.85, Some(100), Some(1e-6))
+    })?;
     println!("   ✅ PageRank computed in {:?}", start.elapsed());
 
     // Combine metrics to compute risk scores
@@ -344,7 +343,7 @@ fn analyze_critical_institutions(
 
     let start = Instant::now();
     let betweenness =
-        execute_with_enhanced_ultrathink(processor, graph, "critical_institution_analysis", |g| {
+        execute_with_enhanced_advanced(processor, graph, "critical_institution_analysis", |g| {
             betweenness_centrality(g)
         })?;
 
@@ -374,7 +373,7 @@ fn model_contagion_spread(
         let start = Instant::now();
 
         let distances =
-            execute_with_enhanced_ultrathink(processor, graph, "contagion_single_failure", |g| {
+            execute_with_enhanced_advanced(processor, graph, "contagion_single_failure", |g| {
                 shortest_path_dijkstra(g, first_critical)
             })?;
 
@@ -399,7 +398,7 @@ fn model_contagion_spread(
 
         let mut total_affected = 0;
         for &institution in critical_institutions.iter().take(3) {
-            let distances = execute_with_enhanced_ultrathink(
+            let distances = execute_with_enhanced_advanced(
                 processor,
                 graph,
                 &format!("contagion_multi_failure_{}", institution),
@@ -435,7 +434,7 @@ fn analyze_financial_clusters(
 
     let start = Instant::now();
     let clusters =
-        execute_with_enhanced_ultrathink(processor, graph, "financial_cluster_detection", |g| {
+        execute_with_enhanced_advanced(processor, graph, "financial_cluster_detection", |g| {
             louvain_communities(g, None)
         })?;
 
@@ -456,7 +455,7 @@ fn run_stress_tests(
     let start = Instant::now();
 
     let components =
-        execute_with_enhanced_ultrathink(processor, graph, "stress_test_connectivity", |g| {
+        execute_with_enhanced_advanced(processor, graph, "stress_test_connectivity", |g| {
             connected_components(g)
         })?;
 

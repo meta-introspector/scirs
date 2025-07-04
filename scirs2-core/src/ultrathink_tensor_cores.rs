@@ -46,7 +46,7 @@ mod gpu_implementation {
     use super::*;
     use crate::gpu::tensor_cores::TensorCoreOp;
 
-    /// Central coordinator for ultrathink tensor cores and kernel tuning
+    /// Central coordinator for advanced tensor cores and kernel tuning
     #[derive(Debug)]
     pub struct UltrathinkTensorCoreCoordinator {
         /// Tensor core managers for different backends
@@ -69,7 +69,7 @@ mod gpu_implementation {
         pub monitoring: Arc<RwLock<TensorCoreMonitoring>>,
     }
 
-    /// Configuration for ultrathink tensor core operations
+    /// Configuration for advanced tensor core operations
     #[derive(Debug, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct UltrathinkTensorConfig {
@@ -2075,7 +2075,7 @@ mod gpu_implementation {
 
     #[cfg(feature = "gpu")]
     impl UltrathinkTensorCoreCoordinator {
-        /// Create a new ultrathink tensor core coordinator
+        /// Create a new advanced tensor core coordinator
         pub fn new(config: UltrathinkTensorConfig) -> CoreResult<Self> {
             let tensor_managers = Arc::new(RwLock::new(HashMap::new()));
             let auto_tuners = Arc::new(RwLock::new(HashMap::new()));
@@ -2138,7 +2138,7 @@ mod gpu_implementation {
             // Initialize monitoring for this backend
             self.initialize_monitoring(backend)?;
 
-            println!("🚀 Initialized ultrathink tensor cores for backend: {backend:?}");
+            println!("🚀 Initialized advanced tensor cores for backend: {backend:?}");
             Ok(())
         }
 
@@ -4109,7 +4109,7 @@ pub use gpu_implementation::*;
 pub mod fallback {
     use super::*;
 
-    /// Configuration for ultrathink tensor core operations (fallback)
+    /// Configuration for advanced tensor core operations (fallback)
     #[derive(Debug, Clone, Default)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
     pub struct UltrathinkTensorConfig {

@@ -1314,7 +1314,7 @@ fn compute_confidence_intervals(
     energy_ratios: &[f64],
     confidence_level: f64,
 ) -> ConfidenceIntervals {
-    let alpha = 1.0 - confidence_level;
+    let _alpha = 1.0 - confidence_level;
     let z_score = 1.96; // Approximate z-score for 95% confidence
 
     // Energy conservation confidence interval

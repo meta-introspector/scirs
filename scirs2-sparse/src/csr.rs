@@ -524,11 +524,17 @@ impl CsrMatrix<f64> {
     /// let result = matrix.gpu_dot(&vec).unwrap();
     /// ```
     #[allow(dead_code)]
-    pub fn gpu_dot(&self, _vec: &[f64]) -> SparseResult<Vec<f64>> {
-        // Temporarily disabled until gpu_spmv_implementation module is re-enabled
-        Err(SparseError::OperationNotSupported(
-            "GPU operations temporarily disabled".to_string(),
-        ))
+    pub fn gpu_dot(&self, vec: &[f64]) -> SparseResult<Vec<f64>> {
+        // Use the GpuSpMV implementation
+        let gpu_spmv = crate::gpu_spmv_implementation::GpuSpMV::new()?;
+        gpu_spmv.spmv(
+            self.rows,
+            self.cols,
+            &self.indptr,
+            &self.indices,
+            &self.data,
+            vec,
+        )
     }
 
     /// GPU-accelerated matrix-vector multiplication with backend selection
@@ -544,13 +550,19 @@ impl CsrMatrix<f64> {
     #[allow(dead_code)]
     pub fn gpu_dot_with_backend(
         &self,
-        _vec: &[f64],
-        _backend: crate::gpu_ops::GpuBackend,
+        vec: &[f64],
+        backend: crate::gpu_ops::GpuBackend,
     ) -> SparseResult<Vec<f64>> {
-        // Temporarily disabled until gpu_spmv_implementation module is re-enabled
-        Err(SparseError::OperationNotSupported(
-            "GPU operations temporarily disabled".to_string(),
-        ))
+        // Use the GpuSpMV implementation with specified backend
+        let gpu_spmv = crate::gpu_spmv_implementation::GpuSpMV::with_backend(backend)?;
+        gpu_spmv.spmv(
+            self.rows,
+            self.cols,
+            &self.indptr,
+            &self.indices,
+            &self.data,
+            vec,
+        )
     }
 }
 

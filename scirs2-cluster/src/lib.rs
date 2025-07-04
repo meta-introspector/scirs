@@ -80,6 +80,37 @@ pub mod advanced;
 /// * **Cross-Platform Benchmarking**: Performance comparisons across different systems
 /// * **GPU vs CPU Analysis**: Comprehensive acceleration analysis
 pub mod advanced_benchmarking;
+/// Ultrathink Clustering - AI-Driven Quantum-Neuromorphic Clustering (Ultrathink Mode)
+///
+/// This module represents the pinnacle of clustering intelligence, combining
+/// AI-driven algorithm selection with quantum-neuromorphic fusion algorithms
+/// to achieve unprecedented clustering performance. It leverages meta-learning,
+/// neural architecture search, and bio-quantum computing paradigms.
+///
+/// # Revolutionary Ultrathink Features
+///
+/// * **AI-Driven Clustering Selection** - Automatically select optimal clustering algorithms
+/// * **Quantum-Neuromorphic Clustering** - Fusion of quantum and spiking neural networks
+/// * **Meta-Learning Optimization** - Learn optimal hyperparameters from experience
+/// * **Adaptive Resource Allocation** - Dynamic GPU/CPU/QPU resource management
+/// * **Multi-Objective Clustering** - Optimize for accuracy, speed, and interpretability
+/// * **Continual Learning** - Adapt to changing data distributions in real-time
+/// * **Bio-Quantum Clustering** - Nature-inspired quantum clustering algorithms
+pub mod advanced_clustering;
+/// Enhanced visualization specifically for ultrathink clustering results.
+///
+/// This module provides specialized visualization capabilities for ultrathink clustering,
+/// including quantum state visualization, neuromorphic adaptation plots, and AI algorithm
+/// selection insights with real-time interactive capabilities.
+///
+/// # Features
+///
+/// * **Quantum State Visualization**: Real-time coherence and entanglement plots
+/// * **Neuromorphic Adaptation**: Spiking neuron activity and plasticity visualization
+/// * **AI Algorithm Selection**: Performance predictions and selection insights
+/// * **Performance Dashboard**: Comprehensive metrics comparison with classical methods
+/// * **Export Capabilities**: Multiple formats including interactive HTML and JSON
+pub mod advanced_visualization;
 pub mod affinity;
 pub mod birch;
 pub mod density;
@@ -98,6 +129,21 @@ pub mod density;
 /// * **Memory Management**: Configurable memory limits and optimization
 /// * **Fault Tolerance**: Worker failure detection and recovery mechanisms
 pub mod distributed;
+/// Enhanced Ultrathink Features - Advanced AI-Driven Clustering Extensions
+///
+/// This module extends the ultrathink clustering capabilities with cutting-edge
+/// features including deep learning integration, quantum-inspired algorithms,
+/// and advanced ensemble methods for superior clustering performance.
+///
+/// # Revolutionary Deep Learning Features
+///
+/// * **Transformer-Based Embeddings** - Deep representations using attention mechanisms
+/// * **Graph Neural Networks** - Complex relationship modeling through graph convolutions
+/// * **Reinforcement Learning** - Adaptive clustering strategy optimization
+/// * **Neural Architecture Search** - Automatic design of optimal clustering networks
+/// * **Deep Ensemble Methods** - Robust clustering through uncertainty quantification
+/// * **Advanced Uncertainty Estimation** - Confidence intervals and reliability metrics
+pub mod enhanced_clustering_features;
 /// Ensemble clustering methods for improved robustness.
 ///
 /// This module provides ensemble clustering techniques that combine multiple
@@ -122,6 +168,21 @@ pub mod gmm;
 /// * **Device Selection**: Automatic or manual GPU device selection strategies
 #[cfg(feature = "gpu")]
 pub mod gpu;
+/// Ultrathink GPU and Distributed Computing Extensions
+///
+/// This module provides GPU acceleration and distributed computing capabilities
+/// for ultrathink clustering, enabling massive scalability and performance
+/// improvements for large-scale clustering tasks.
+///
+/// # High-Performance Computing Features
+///
+/// * **GPU Acceleration** - CUDA/OpenCL/ROCm GPU acceleration with automatic fallback
+/// * **Distributed Computing** - Multi-node clustering with fault tolerance
+/// * **Hybrid GPU-Distributed** - Combined GPU and distributed processing
+/// * **Advanced Memory Management** - Optimized GPU memory allocation and transfer
+/// * **Load Balancing** - Dynamic workload distribution across nodes
+/// * **Fault Tolerance** - Automatic recovery from worker node failures
+pub mod gpu_distributed_clustering;
 /// Graph clustering and community detection algorithms.
 ///
 /// This module provides implementations of various graph clustering algorithms for
@@ -224,67 +285,6 @@ pub mod time_series;
 /// for all clustering algorithms in the scirs2-cluster crate. It supports
 /// grid search, random search, Bayesian optimization, and adaptive strategies.
 pub mod tuning;
-/// Ultrathink Clustering - AI-Driven Quantum-Neuromorphic Clustering (Ultrathink Mode)
-///
-/// This module represents the pinnacle of clustering intelligence, combining
-/// AI-driven algorithm selection with quantum-neuromorphic fusion algorithms
-/// to achieve unprecedented clustering performance. It leverages meta-learning,
-/// neural architecture search, and bio-quantum computing paradigms.
-///
-/// # Revolutionary Ultrathink Features
-///
-/// * **AI-Driven Clustering Selection** - Automatically select optimal clustering algorithms
-/// * **Quantum-Neuromorphic Clustering** - Fusion of quantum and spiking neural networks
-/// * **Meta-Learning Optimization** - Learn optimal hyperparameters from experience
-/// * **Adaptive Resource Allocation** - Dynamic GPU/CPU/QPU resource management
-/// * **Multi-Objective Clustering** - Optimize for accuracy, speed, and interpretability
-/// * **Continual Learning** - Adapt to changing data distributions in real-time
-/// * **Bio-Quantum Clustering** - Nature-inspired quantum clustering algorithms
-pub mod ultrathink_clustering;
-/// Enhanced Ultrathink Features - Advanced AI-Driven Clustering Extensions
-///
-/// This module extends the ultrathink clustering capabilities with cutting-edge
-/// features including deep learning integration, quantum-inspired algorithms,
-/// and advanced ensemble methods for superior clustering performance.
-///
-/// # Revolutionary Deep Learning Features
-///
-/// * **Transformer-Based Embeddings** - Deep representations using attention mechanisms
-/// * **Graph Neural Networks** - Complex relationship modeling through graph convolutions
-/// * **Reinforcement Learning** - Adaptive clustering strategy optimization
-/// * **Neural Architecture Search** - Automatic design of optimal clustering networks
-/// * **Deep Ensemble Methods** - Robust clustering through uncertainty quantification
-/// * **Advanced Uncertainty Estimation** - Confidence intervals and reliability metrics
-pub mod ultrathink_enhanced_features;
-/// Ultrathink GPU and Distributed Computing Extensions
-///
-/// This module provides GPU acceleration and distributed computing capabilities
-/// for ultrathink clustering, enabling massive scalability and performance
-/// improvements for large-scale clustering tasks.
-///
-/// # High-Performance Computing Features
-///
-/// * **GPU Acceleration** - CUDA/OpenCL/ROCm GPU acceleration with automatic fallback
-/// * **Distributed Computing** - Multi-node clustering with fault tolerance
-/// * **Hybrid GPU-Distributed** - Combined GPU and distributed processing
-/// * **Advanced Memory Management** - Optimized GPU memory allocation and transfer
-/// * **Load Balancing** - Dynamic workload distribution across nodes
-/// * **Fault Tolerance** - Automatic recovery from worker node failures
-pub mod ultrathink_gpu_distributed;
-/// Enhanced visualization specifically for ultrathink clustering results.
-///
-/// This module provides specialized visualization capabilities for ultrathink clustering,
-/// including quantum state visualization, neuromorphic adaptation plots, and AI algorithm
-/// selection insights with real-time interactive capabilities.
-///
-/// # Features
-///
-/// * **Quantum State Visualization**: Real-time coherence and entanglement plots
-/// * **Neuromorphic Adaptation**: Spiking neuron activity and plasticity visualization
-/// * **AI Algorithm Selection**: Performance predictions and selection insights
-/// * **Performance Dashboard**: Comprehensive metrics comparison with classical methods
-/// * **Export Capabilities**: Multiple formats including interactive HTML and JSON
-pub mod ultrathink_visualization;
 /// Enhanced visualization capabilities for clustering results.
 ///
 /// This module provides comprehensive visualization tools for clustering algorithms,
@@ -319,12 +319,12 @@ pub use quantum_clustering::{
 };
 
 // Re-export ultrathink clustering capabilities
-pub use ultrathink_clustering::{
+pub use advanced_clustering::{
     UltrathinkClusterer, UltrathinkClusteringResult, UltrathinkConfig, UltrathinkPerformanceMetrics,
 };
 
 // Re-export ultrathink visualization capabilities
-pub use ultrathink_visualization::{
+pub use advanced_visualization::{
     create_ultrathink_visualization_report, visualize_ultrathink_results, AISelectionPlot,
     ClusterPlot, NeuromorphicAdaptationPlot, PerformanceDashboard, QuantumCoherencePlot,
     QuantumColorScheme, UltrathinkVisualizationConfig, UltrathinkVisualizationOutput,
@@ -332,7 +332,7 @@ pub use ultrathink_visualization::{
 };
 
 // Re-export enhanced ultrathink features
-pub use ultrathink_enhanced_features::{
+pub use enhanced_clustering_features::{
     DeepEnsembleCoordinator, DeepUltrathinkClusterer, DeepUltrathinkResult, EnsembleConsensus,
     GraphNeuralNetworkProcessor, GraphStructureInsights, NeuralArchitectureSearchEngine,
     OptimalArchitecture, ReinforcementLearningAgent, SpectralProperties,
@@ -340,7 +340,7 @@ pub use ultrathink_enhanced_features::{
 };
 
 // Re-export GPU and distributed ultrathink features
-pub use ultrathink_gpu_distributed::{
+pub use gpu_distributed_clustering::{
     CommunicationOverhead, CoordinationStrategy, DistributedProcessingMetrics,
     DistributedUltrathinkClusterer, DistributedUltrathinkResult, GpuAccelerationConfig,
     GpuAccelerationMetrics, GpuDeviceSelection, GpuMemoryStrategy, GpuOptimizationLevel,

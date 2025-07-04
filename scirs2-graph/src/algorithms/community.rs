@@ -2302,7 +2302,7 @@ mod tests {
         assert!(!louvain_communities_count.is_empty());
 
         // Both should have reasonable modularity
-        assert!(infomap_result.quality_score.unwrap_or(0.0) >= -0.5);
+        assert!(infomap_result.modularity >= -0.5);
         assert!(louvain_result.quality_score.unwrap_or(0.0) >= -0.5);
 
         Ok(())
@@ -2399,7 +2399,7 @@ mod tests {
         let result = fluid_communities_result(&graph, 2, 10);
 
         assert!(result.node_communities.is_empty());
-        assert_eq!(result.modularity, 0.0);
+        assert_eq!(result.quality_score.unwrap_or(0.0), 0.0);
     }
 
     #[test]

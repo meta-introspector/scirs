@@ -34,7 +34,7 @@ use std::time::{Duration, Instant};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// Central coordinator for ultrathink FFT operations
+/// Central coordinator for advanced FFT operations
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct UltrathinkFftCoordinator<F: Float + Debug> {
@@ -60,7 +60,7 @@ pub struct UltrathinkFftCoordinator<F: Float + Debug> {
     adaptive_cache: Arc<Mutex<AdaptiveFftCache<F>>>,
 }
 
-/// Configuration for ultrathink FFT operations
+/// Configuration for advanced FFT operations
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UltrathinkFftConfig {
@@ -1229,7 +1229,7 @@ pub struct PrefetchStatistics {
 }
 
 impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
-    /// Create a new ultrathink FFT coordinator
+    /// Create a new advanced FFT coordinator
     pub fn new(config: UltrathinkFftConfig) -> FFTResult<Self> {
         Ok(Self {
             algorithm_selector: Arc::new(RwLock::new(IntelligentAlgorithmSelector::new()?)),
@@ -1272,7 +1272,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         })
     }
 
-    /// Execute FFT with ultrathink optimizations
+    /// Execute FFT with advanced optimizations
     pub fn execute_optimized_fft<D: Dimension>(
         &self,
         signal: &ArrayBase<impl Data<Elem = Complex<F>>, D>,
@@ -1320,7 +1320,7 @@ impl<F: Float + Debug + std::ops::AddAssign> UltrathinkFftCoordinator<F> {
         })
     }
 
-    /// Update ultrathink configuration
+    /// Update advanced configuration
     pub fn update_config(&mut self, new_config: UltrathinkFftConfig) -> FFTResult<()> {
         self.config = new_config;
         // Update subsystem configurations

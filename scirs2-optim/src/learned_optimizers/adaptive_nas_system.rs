@@ -4018,7 +4018,7 @@ impl<T: Float + 'static> PerformancePredictorEnsemble<T> {
         self.update_ensemble_weights()?;
 
         // Update individual predictors if they support online learning
-        for (i, predictor) in self.predictors.iter_mut().enumerate() {
+        for (_i, predictor) in self.predictors.iter_mut().enumerate() {
             // Simulate architecture spec from feedback (simplified)
             let dummy_spec = ArchitectureSpecification::default();
             predictor.update(&dummy_spec, feedback.actual_performance)?;

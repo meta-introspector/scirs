@@ -16,10 +16,10 @@
 //! - Cross-platform code generation
 //! - Real-time performance monitoring and analytics
 
-use scirs2_core::error::CoreResult;
-use scirs2_core::ultrathink_jit_compilation::{
+use scirs2_core::advanced_jit_compilation::{
     CompiledKernel, JitCompilerConfig, UltrathinkJitCompiler,
 };
+use scirs2_core::error::CoreResult;
 use std::time::{Duration, Instant};
 
 fn main() -> CoreResult<()> {

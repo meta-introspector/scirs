@@ -70,10 +70,18 @@ impl<F: Float + ScalarOperand + Debug> Adam<F> {
             )
         })?;
         let beta2 = F::from(0.999).ok_or_else(|| {
+            NeuralError::InvalidArgument(
                 "Failed to convert 0.999 to the appropriate floating point type".to_string(),
+            )
+        })?;
         let epsilon = F::from(1e-8).ok_or_else(|| {
+            NeuralError::InvalidArgument(
                 "Failed to convert 1e-8 to the appropriate floating point type".to_string(),
+            )
+        })?;
         Ok(Self::new(learning_rate, beta1, beta2, epsilon))
+    }
+
     /// Creates a new Adam optimizer with the full configuration
     /// * `beta1` - Exponential decay rate for the first moment estimates
     /// * `beta2` - Exponential decay rate for the second moment estimates

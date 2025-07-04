@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("\nTopic {}:", topic.id);
         println!("Top words:");
         for (word, weight) in &topic.top_words {
-            println!("  {} ({:.4})", word, weight);
+            println!("  {word} ({weight:.4})");
         }
     }
 
@@ -100,10 +100,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let new_doc_vec = vectorizer.transform(new_doc)?;
     let new_doc_topics = lda.transform(&new_doc_vec.insert_axis(ndarray::Axis(0)))?;
 
-    println!("Document: \"{}\"", new_doc);
+    println!("Document: \"{new_doc}\"");
     println!("Topic distribution:");
     for (topic_idx, &prob) in new_doc_topics.row(0).iter().enumerate() {
-        println!("  Topic {}: {:.3}", topic_idx, prob);
+        println!("  Topic {topic_idx}: {prob:.3}");
     }
 
     // Create another LDA model with different configuration

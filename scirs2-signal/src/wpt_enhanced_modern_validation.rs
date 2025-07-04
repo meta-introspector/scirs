@@ -592,8 +592,8 @@ pub fn run_enhanced_modern_validation(
 /// Run core WPT validation
 fn run_core_validation(
     signal: &[f64],
-    wavelet: &Wavelet,
-    max_depth: usize,
+    _wavelet: &Wavelet,
+    _max_depth: usize,
     _config: &EnhancedModernValidationConfig,
 ) -> SignalResult<WptValidationResult> {
     // This would use the existing WPT validation functions
@@ -783,7 +783,7 @@ fn run_cross_framework_validation(
 
 /// Run precision validation
 fn run_precision_validation(
-    signal: &[f64],
+    _signal: &[f64],
     _wavelet: &Wavelet,
     max_depth: usize,
     _config: &EnhancedModernValidationConfig,

@@ -17,6 +17,7 @@ use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::check_finite;
+#[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
 #[cfg(test)]
 use std::f64::consts::PI;

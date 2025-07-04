@@ -18,7 +18,6 @@ use std::sync::{Arc, Mutex};
 use std::os::unix::fs::FileExt;
 
 // Memory mapping support
-#[cfg(unix)]
 #[cfg(windows)]
 use std::os::windows::fs::FileExt;
 

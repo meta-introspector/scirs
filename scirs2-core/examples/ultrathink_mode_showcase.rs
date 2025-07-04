@@ -4,16 +4,16 @@
 //! across multiple scirs2-core modules, showing how they work together
 //! to provide enhanced AI-driven scientific computing.
 
+use scirs2_core::distributed_compute::UltrathinkDistributedComputer;
+use scirs2_core::ecosystem_bridge::UltrathinkEcosystemCoordinator;
 use scirs2_core::error::CoreResult;
 use scirs2_core::neural_architecture_search::{
     HardwareConstraints, NASStrategy, NeuralArchitectureSearch, OptimizationObjectives,
     SearchConfig, SearchSpace,
 };
-use scirs2_core::ultrathink_distributed_computing::UltrathinkDistributedComputer;
-use scirs2_core::ultrathink_ecosystem_integration::UltrathinkEcosystemCoordinator;
 
 #[cfg(feature = "jit")]
-use scirs2_core::ultrathink_jit_compilation::UltrathinkJitCompiler;
+use scirs2_core::advanced_jit_compilation::UltrathinkJitCompiler;
 
 fn main() -> CoreResult<()> {
     println!("🚀 Ultrathink Mode Showcase - scirs2-core");

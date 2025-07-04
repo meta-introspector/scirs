@@ -3636,22 +3636,16 @@ pub mod advanced_solvers {
             sigma_jump: f64,
             _ds: f64,
         ) -> Result<Array1<f64>> {
-            let mut integral_weights = Array1::zeros(self.n_asset);
+            let mut integral_weights = Array1::zeros(self.integration_points);
 
-            for i in 0..self.n_asset {
-                let mut integral = 0.0;
-
-                // Numerical integration over jump sizes
-                for k in 0..self.integration_points {
-                    let y = -self.jump_cutoff
-                        + 2.0 * self.jump_cutoff * k as f64 / (self.integration_points - 1) as f64;
-                    let jump_density = (-0.5 * ((y - mu_jump) / sigma_jump).powi(2)).exp()
-                        / (sigma_jump * (2.0 * PI).sqrt());
-                    integral += jump_density
-                        * (2.0 * self.jump_cutoff / (self.integration_points - 1) as f64);
-                }
-
-                integral_weights[i] = integral;
+            // Numerical integration over jump sizes
+            for k in 0..self.integration_points {
+                let y = -self.jump_cutoff
+                    + 2.0 * self.jump_cutoff * k as f64 / (self.integration_points - 1) as f64;
+                let jump_density = (-0.5 * ((y - mu_jump) / sigma_jump).powi(2)).exp()
+                    / (sigma_jump * (2.0 * PI).sqrt());
+                integral_weights[k] =
+                    jump_density * (2.0 * self.jump_cutoff / (self.integration_points - 1) as f64);
             }
 
             Ok(integral_weights)

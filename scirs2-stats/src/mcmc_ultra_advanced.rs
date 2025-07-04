@@ -9,6 +9,8 @@
 //! - Variational MCMC hybrids
 //! - Reversible Jump MCMC for model selection
 
+#![allow(dead_code)]
+
 use crate::error::StatsResult;
 use ndarray::{Array1, Array2, Array3};
 use num_traits::{Float, NumCast, One, Zero};

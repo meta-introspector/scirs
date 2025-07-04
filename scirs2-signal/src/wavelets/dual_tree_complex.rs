@@ -864,7 +864,7 @@ fn create_dtcwt_filters(filter_set: FilterSet) -> SignalResult<DtcwtFilters> {
             ]);
 
             // Synthesis filters (time-reversed and possibly sign-flipped)
-            let mut g0a: Array1<f64> = h0a.iter().rev().cloned().collect();
+            let g0a: Array1<f64> = h0a.iter().rev().cloned().collect();
             let mut g1a: Array1<f64> = h1a.iter().rev().cloned().collect();
             // Alternate signs for g1
             for (i, val) in g1a.iter_mut().enumerate() {
@@ -873,7 +873,7 @@ fn create_dtcwt_filters(filter_set: FilterSet) -> SignalResult<DtcwtFilters> {
                 }
             }
 
-            let mut g0b: Array1<f64> = h0b.iter().rev().cloned().collect();
+            let g0b: Array1<f64> = h0b.iter().rev().cloned().collect();
             let mut g1b: Array1<f64> = h1b.iter().rev().cloned().collect();
             // Alternate signs for g1
             for (i, val) in g1b.iter_mut().enumerate() {

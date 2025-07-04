@@ -200,9 +200,7 @@ fn run_3d_examples() {
     // Ray that hits the box
     match ray_box3d_collision(&ray_origin, &ray_direction, &box3d) {
         Some((t_enter, t_exit, hit_point)) => {
-            println!(
-                "  Ray enters box at time t={t_enter} at point {hit_point:?}"
-            );
+            println!("  Ray enters box at time t={t_enter} at point {hit_point:?}");
             println!("  Ray exits box at time t={t_exit}");
         }
         None => {
@@ -213,9 +211,7 @@ fn run_3d_examples() {
     // Ray that hits the triangle
     match ray_triangle3d_collision(&ray_origin, &ray_direction, &triangle) {
         Some((t, hit_point, barycentric)) => {
-            println!(
-                "  Ray hits triangle at time t={t} at point {hit_point:?}"
-            );
+            println!("  Ray hits triangle at time t={t} at point {hit_point:?}");
             println!("  Barycentric coordinates: {barycentric:?}");
         }
         None => {

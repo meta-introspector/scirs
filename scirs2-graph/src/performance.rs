@@ -623,6 +623,7 @@ pub struct RealTimeMemoryProfiler {
     /// Deallocation tracking
     deallocations: AtomicUsize,
     /// Sampling interval in milliseconds
+    #[allow(dead_code)]
     sample_interval_ms: u64,
 }
 

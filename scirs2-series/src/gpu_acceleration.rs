@@ -480,8 +480,7 @@ impl GpuDeviceManager {
     pub fn set_device(&mut self, device_id: usize) -> Result<()> {
         if device_id >= self.devices.len() {
             return Err(TimeSeriesError::InvalidInput(format!(
-                "Device {} not available",
-                device_id
+                "Device {device_id} not available"
             )));
         }
         self.current_device = Some(device_id);
@@ -2656,19 +2655,37 @@ pub mod algorithms {
     /// Forecasting methods for GPU acceleration
     #[derive(Debug, Clone)]
     pub enum ForecastMethod {
-        ExponentialSmoothing { alpha: f64 },
+        /// Exponential smoothing with alpha parameter
+        ExponentialSmoothing {
+            /// Smoothing parameter (0 < alpha < 1)
+            alpha: f64,
+        },
+        /// Linear trend forecasting
         LinearTrend,
-        MovingAverage { window: usize },
-        AutoRegressive { order: usize },
+        /// Moving average with window size
+        MovingAverage {
+            /// Window size for moving average
+            window: usize,
+        },
+        /// Autoregressive model
+        AutoRegressive {
+            /// Order of the autoregressive model
+            order: usize,
+        },
     }
 
     /// Window statistics for sliding window operations
     #[derive(Debug, Clone)]
     pub enum WindowStatistic {
+        /// Calculate mean of window
         Mean,
+        /// Calculate variance of window
         Variance,
+        /// Calculate minimum value in window
         Min,
+        /// Calculate maximum value in window
         Max,
+        /// Calculate range (max - min) of window
         Range,
     }
 
@@ -2680,11 +2697,16 @@ pub mod algorithms {
         feature_config: FeatureConfig,
     }
 
+    /// Configuration for feature extraction
     #[derive(Debug, Clone)]
     pub struct FeatureConfig {
+        /// Extract statistical features (mean, std, skewness, etc.)
         pub extract_statistical: bool,
+        /// Extract frequency domain features (FFT-based)
         pub extract_frequency: bool,
+        /// Extract complexity features (entropy, fractal dimension, etc.)
         pub extract_complexity: bool,
+        /// Window sizes for sliding window feature extraction
         pub window_sizes: Vec<usize>,
     }
 

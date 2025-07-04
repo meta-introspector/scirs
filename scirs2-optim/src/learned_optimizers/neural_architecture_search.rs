@@ -1518,11 +1518,19 @@ impl<
             &mut self.search_strategy.state
         {
             bayesian_state.observations.extend(observations);
-            self.update_surrogate_model(bayesian_state).await?;
+        }
 
-            // Generate candidates using acquisition function
+        // Update surrogate model with separate borrow
+        if let SearchStrategyState::Bayesian(ref mut bayesian_state) =
+            &mut self.search_strategy.state
+        {
+            self.update_surrogate_model(bayesian_state).await?;
+        }
+
+        // Generate candidates using acquisition function
+        if let SearchStrategyState::Bayesian(ref bayesian_state) = &self.search_strategy.state {
             for i in 0..acquisition_batch_size {
-                let candidate_spec = self.optimize_acquisition_function(bayesian_state).await?;
+                let candidate_spec = self.optimize_acquisition_function(&bayesian_state).await?;
 
                 let candidate = ArchitectureCandidate {
                     id: format!(
@@ -1745,7 +1753,7 @@ impl<
 
     async fn optimize_acquisition_function(
         &mut self,
-        bayesian_state: &mut BayesianOptimizationState<T>,
+        bayesian_state: &BayesianOptimizationState<T>,
     ) -> Result<ArchitectureSpec> {
         let mut best_spec = self.architecture_generator.generate_random_architecture()?;
         let mut best_acquisition = T::from(std::f64::NEG_INFINITY).unwrap();
@@ -2030,33 +2038,36 @@ impl<
         let mut new_architectures = Vec::new();
         let generation_batch_size = 8;
 
-        if let SearchStrategyState::ReinforcementLearning(ref mut rl_state) =
-            &mut self.search_strategy.state
-        {
+        if let SearchStrategyState::ReinforcementLearning(_) = &self.search_strategy.state {
             // Update policy based on recent rewards
-            self.update_rl_policy(rl_state).await?;
+            self.update_rl_policy_wrapper().await?;
 
             // Generate architectures using the learned policy
-            for i in 0..generation_batch_size {
-                let architecture_spec =
-                    self.generate_architecture_with_controller(rl_state).await?;
+            if let SearchStrategyState::ReinforcementLearning(ref rl_state) =
+                &self.search_strategy.state
+            {
+                for i in 0..generation_batch_size {
+                    let architecture_spec = self
+                        .generate_architecture_with_controller(&rl_state)
+                        .await?;
 
-                let candidate = ArchitectureCandidate {
-                    id: format!("rl_gen_{}_{}", self.search_history.current_iteration(), i),
-                    architecture: architecture_spec,
-                    performance: PerformanceMetrics::default(),
-                    resource_usage: ResourceUsage::default(),
-                    generation_info: GenerationInfo {
-                        generation: self.search_history.current_iteration(),
-                        parents: vec![],
-                        mutations: vec![],
-                        created_at: Instant::now(),
-                        creation_method: CreationMethod::Guided,
-                    },
-                    validation_results: None,
-                };
+                    let candidate = ArchitectureCandidate {
+                        id: format!("rl_gen_{}_{}", self.search_history.current_iteration(), i),
+                        architecture: architecture_spec,
+                        performance: PerformanceMetrics::default(),
+                        resource_usage: ResourceUsage::default(),
+                        generation_info: GenerationInfo {
+                            generation: self.search_history.current_iteration(),
+                            parents: vec![],
+                            mutations: vec![],
+                            created_at: Instant::now(),
+                            creation_method: CreationMethod::Guided,
+                        },
+                        validation_results: None,
+                    };
 
-                new_architectures.push(candidate);
+                    new_architectures.push(candidate);
+                }
             }
         } else {
             // Fallback to random if not in RL state
@@ -2115,8 +2126,7 @@ impl<
         let mut new_architectures = Vec::new();
         let generation_batch_size = 6;
 
-        if let SearchStrategyState::Progressive(ref mut progressive_state) =
-            &mut self.search_strategy.state
+        if let SearchStrategyState::Progressive(ref progressive_state) = &self.search_strategy.state
         {
             // Progressive growth based on current stage
             let current_stage = self.get_progressive_stage(&progressive_state);
@@ -2185,7 +2195,7 @@ impl<
             ProgressiveStage::Large => (4, 8, 256),
         };
 
-        let num_layers = rand::rng().random_range(min_layers..=max_layers);
+        let num_layers = rand::rng().gen_range(min_layers..=max_layers);
         let mut layers = Vec::new();
 
         // Generate layers with progressive complexity
@@ -2260,7 +2270,7 @@ impl<
                 LayerType::Attention,
                 LayerType::LSTM,
             ];
-            layer_types[rand::rng().random_range(0..layer_types.len())]
+            layer_types[rand::rng().gen_range(0..layer_types.len())]
         };
 
         // Adjust dimensions based on complexity
@@ -2655,7 +2665,16 @@ impl<
     }
 
     // RL helper functions
-    async fn update_rl_policy(&mut self, rl_state: &mut RLSearchState<T>) -> Result<()> {
+    async fn update_rl_policy_wrapper(&mut self) -> Result<()> {
+        if let SearchStrategyState::ReinforcementLearning(ref mut rl_state) =
+            &mut self.search_strategy.state
+        {
+            Self::update_rl_policy(rl_state).await?;
+        }
+        Ok(())
+    }
+
+    async fn update_rl_policy(rl_state: &mut RLSearchState<T>) -> Result<()> {
         if rl_state.reward_history.len() < 2 {
             return Ok(()); // Need at least 2 rewards for policy update
         }
@@ -2677,16 +2696,12 @@ impl<
                     .unwrap();
 
             // Apply gradient to weights (simplified update)
-            rl_state.controller.weights[layer_idx] =
-                rl_state.controller.weights[layer_idx].mapv(|w| {
-                    w + gradient_scale * T::from(rand::rng().random_range(-0.1..0.1)).unwrap()
-                });
+            rl_state.controller.weights[layer_idx] = rl_state.controller.weights[layer_idx]
+                .mapv(|w| w + gradient_scale * T::from(rand::rng().gen_range(-0.1..0.1)).unwrap());
 
             // Update biases
-            rl_state.controller.biases[layer_idx] =
-                rl_state.controller.biases[layer_idx].mapv(|b| {
-                    b + gradient_scale * T::from(rand::rng().random_range(-0.1..0.1)).unwrap()
-                });
+            rl_state.controller.biases[layer_idx] = rl_state.controller.biases[layer_idx]
+                .mapv(|b| b + gradient_scale * T::from(rand::rng().gen_range(-0.1..0.1)).unwrap());
         }
 
         // Update exploration rate (epsilon decay)
@@ -2704,8 +2719,8 @@ impl<
     }
 
     async fn generate_architecture_with_controller(
-        &mut self,
-        rl_state: &mut RLSearchState<T>,
+        &self,
+        rl_state: &RLSearchState<T>,
     ) -> Result<ArchitectureSpec> {
         let mut architecture_decisions = Vec::new();
         let mut current_state = self.encode_current_search_state(rl_state);
@@ -2870,7 +2885,7 @@ impl<
     }
 
     fn sample_random_action(&self) -> Result<ArchitectureAction> {
-        let action_type = rand::rng().random_range(0..4);
+        let action_type = rand::rng().gen_range(0..4);
 
         match action_type {
             0 => Ok(ArchitectureAction::SelectLayerType(
@@ -2924,22 +2939,22 @@ impl<
 
     fn sample_random_layer_type(&self) -> LayerType {
         let layer_types = &self.search_space.layer_types;
-        layer_types[rand::rng().random_range(0..layer_types.len())]
+        layer_types[rand::rng().gen_range(0..layer_types.len())]
     }
 
     fn sample_random_hidden_size(&self) -> usize {
         let hidden_sizes = &self.search_space.hidden_sizes;
-        hidden_sizes[rand::rng().random_range(0..hidden_sizes.len())]
+        hidden_sizes[rand::rng().gen_range(0..hidden_sizes.len())]
     }
 
     fn sample_random_activation(&self) -> ActivationType {
         let activations = &self.search_space.activation_functions;
-        activations[rand::rng().random_range(0..activations.len())]
+        activations[rand::rng().gen_range(0..activations.len())]
     }
 
     fn sample_random_connection(&self) -> ConnectionPattern {
         let connections = &self.search_space.connection_patterns;
-        connections[rand::rng().random_range(0..connections.len())]
+        connections[rand::rng().gen_range(0..connections.len())]
     }
 
     fn action_to_layer_spec(
@@ -3128,7 +3143,7 @@ impl<
     ) -> Result<ArchitectureSpec> {
         // Use Gumbel softmax to sample discrete architectures from continuous space
         let mut layers = Vec::new();
-        let num_layers = 3 + rand::rng().random_range(0..5); // 3-7 layers
+        let num_layers = 3 + rand::rng().gen_range(0..5); // 3-7 layers
 
         for i in 0..num_layers {
             // Sample layer type using continuous relaxation
@@ -3151,7 +3166,7 @@ impl<
             } else {
                 layers[i - 1].dimensions.output_dim
             };
-            let output_dim = 64 + rand::rng().random_range(0..192); // 64-256
+            let output_dim = 64 + rand::rng().gen_range(0..192); // 64-256
 
             let layer_spec = LayerSpec {
                 layer_type: self.index_to_layer_type(layer_type),
@@ -3431,7 +3446,7 @@ impl<T: Float + Default + Clone> ArchitectureEvaluator<T> {
 
     pub async fn evaluate_architecture(
         &self,
-        arch: &ArchitectureSpec,
+        _arch: &ArchitectureSpec,
     ) -> Result<PerformanceMetrics> {
         Ok(PerformanceMetrics::default())
     }
@@ -3491,7 +3506,7 @@ impl ResourceManager {
         Ok(true) // Simplified check
     }
 
-    pub fn estimate_resource_usage(&self, arch: &ArchitectureSpec) -> Result<ResourceUsage> {
+    pub fn estimate_resource_usage(&self, _arch: &ArchitectureSpec) -> Result<ResourceUsage> {
         Ok(ResourceUsage::default())
     }
 

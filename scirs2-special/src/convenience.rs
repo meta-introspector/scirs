@@ -536,6 +536,7 @@ pub mod finance {
     /// * `rate` - Risk-free rate
     /// * `time` - Time to maturity
     /// * `max_iter` - Maximum iterations
+    #[allow(clippy::too_many_arguments)]
     pub fn implied_volatility(
         option_price: f64,
         spot: f64,

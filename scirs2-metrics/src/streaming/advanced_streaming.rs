@@ -2175,7 +2175,9 @@ impl AlertsManager {
 /// This system uses neural networks and reinforcement learning to automatically
 /// tune streaming parameters for optimal performance across different data patterns.
 #[derive(Debug)]
-pub struct NeuralAdaptiveStreaming<F: Float + std::fmt::Debug + Send + Sync> {
+pub struct NeuralAdaptiveStreaming<
+    F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand + std::ops::AddAssign,
+> {
     /// Neural parameter optimizer
     parameter_optimizer: NeuralParameterOptimizer<F>,
     /// Reinforcement learning agent for adaptive control
@@ -3410,7 +3412,7 @@ impl<F: Float + std::fmt::Debug> UncertaintyQuantifier<F> {
 }
 
 /// Aleatoric uncertainty estimator
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AleatoricUncertaintyEstimator<F: Float + std::fmt::Debug> {
     /// Noise model parameters
     noise_parameters: Array1<F>,
@@ -3419,7 +3421,7 @@ pub struct AleatoricUncertaintyEstimator<F: Float + std::fmt::Debug> {
 }
 
 /// Epistemic uncertainty estimator
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct EpistemicUncertaintyEstimator<F: Float + std::fmt::Debug> {
     /// Model ensemble for uncertainty estimation
     model_ensemble: Vec<NeuralParameterOptimizer<F>>,
@@ -3597,7 +3599,10 @@ impl<F: Float + std::fmt::Debug + std::ops::AddAssign> MultiArmedBandit<F> {
         // Simple arm selection - return parameters from the best arm
         if let Some(best_idx) = self.best_arm {
             if best_idx < self.arms.len() {
-                return Ok(self.arms[best_idx].parameters.clone());
+                // Convert HashMap to Array1
+                let param_values: Vec<F> =
+                    self.arms[best_idx].parameters.values().cloned().collect();
+                return Ok(Array1::from_vec(param_values));
             }
         }
 
@@ -3890,7 +3895,9 @@ impl<F: Float + std::fmt::Debug> NeuralFeatureExtractor<F> {
 
 // Implementation methods for NeuralAdaptiveStreaming
 
-impl<F: Float + std::fmt::Debug + Send + Sync> NeuralAdaptiveStreaming<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand + std::ops::AddAssign>
+    NeuralAdaptiveStreaming<F>
+{
     /// Create a new neural-adaptive streaming system
     pub fn new(config: NeuralAdaptiveConfig) -> Result<Self> {
         let parameter_optimizer = NeuralParameterOptimizer::new(

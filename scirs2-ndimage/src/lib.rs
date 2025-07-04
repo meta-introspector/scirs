@@ -4,7 +4,8 @@
 //! It includes filters, interpolation, measurements, morphology, feature detection, and segmentation functions.
 
 // Public modules
-pub mod adaptive_ultrathink_optimizer;
+pub mod adaptive_image_optimizer;
+pub mod advanced_fusion_algorithms;
 pub mod advanced_streaming_ai;
 pub mod ai_driven_adaptive_processing;
 pub mod analysis;
@@ -16,6 +17,7 @@ pub mod chunked_v2;
 pub mod comprehensive_examples;
 pub mod comprehensive_scipy_benchmarks;
 pub mod comprehensive_scipy_validation;
+pub mod comprehensive_validation;
 pub mod domain_specific;
 pub mod error;
 pub mod features;
@@ -25,6 +27,7 @@ pub mod hyperdimensional_computing;
 pub mod interpolation;
 pub mod measurements;
 pub mod memory_management;
+pub mod meta_learning_algorithms;
 pub mod mmap_io;
 pub mod morphology;
 pub mod neuromorphic_computing;
@@ -43,9 +46,6 @@ mod scipy_validation_tests;
 pub mod segmentation;
 pub mod streaming;
 pub mod threading;
-pub mod ultrathink_enhanced_validation;
-pub mod ultrathink_fusion_core;
-pub mod ultrathink_meta_learning;
 pub mod visualization;
 
 // Re-exports
@@ -303,7 +303,7 @@ pub use self::neuromorphic_computing::{
 };
 
 // Ultrathink fusion core exports
-pub use self::ultrathink_fusion_core::{
+pub use self::advanced_fusion_algorithms::{
     enhanced_meta_learning_with_temporal_fusion, enhanced_quantum_consciousness_evolution,
     quantum_aware_resource_scheduling_optimization, ultrathink_fusion_processing,
     AdaptiveMemoryConsolidation, CoherenceStrategy, ConsciousnessComplexity, ConsciousnessState,
@@ -314,7 +314,7 @@ pub use self::ultrathink_fusion_core::{
 };
 
 // Enhanced validation exports
-pub use self::ultrathink_enhanced_validation::{
+pub use self::comprehensive_validation::{
     validated_ultrathink_processing, PerformanceBenchmark, PerformanceSummary, UltrathinkValidator,
     ValidationConfig, ValidationError, ValidationReport,
 };

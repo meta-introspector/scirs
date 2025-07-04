@@ -5,6 +5,8 @@
 //! both performance and correctness. It ensures that SIMD, parallel, and other
 //! optimizations maintain numerical accuracy while providing performance benefits.
 
+#![allow(dead_code)]
+
 use crate::error::{StatsError, StatsResult};
 use crate::ultrathink_unified_processor::{
     OptimizationMode, UltrathinkProcessorConfig, UltrathinkUnifiedProcessor,

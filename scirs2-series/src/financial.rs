@@ -3212,23 +3212,34 @@ pub struct EgarchModel<F: Float + Debug> {
     conditional_variance: Option<Array1<F>>,
 }
 
+/// Configuration for EGARCH model
 #[derive(Debug, Clone)]
 pub struct EgarchConfig {
-    pub p: usize, // GARCH order
-    pub q: usize, // ARCH order
+    /// GARCH order (p)
+    pub p: usize,
+    /// ARCH order (q)
+    pub q: usize,
+    /// Maximum iterations for optimization
     pub max_iterations: usize,
+    /// Convergence tolerance
     pub tolerance: f64,
 }
 
+/// EGARCH model parameters
 #[derive(Debug, Clone)]
 pub struct EgarchParameters<F: Float> {
+    /// Constant term (omega)
     pub omega: F,
-    pub alpha: Array1<F>, // Magnitude effects
-    pub beta: Array1<F>,  // Persistence effects
-    pub gamma: Array1<F>, // Asymmetry effects
+    /// Magnitude effects coefficients (alpha)
+    pub alpha: Array1<F>,
+    /// Persistence effects coefficients (beta)
+    pub beta: Array1<F>,
+    /// Asymmetry effects coefficients (gamma)
+    pub gamma: Array1<F>,
 }
 
 impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
+    /// Create a new EGARCH model
     pub fn new(config: EgarchConfig) -> Self {
         Self {
             config,
@@ -3238,6 +3249,7 @@ impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
         }
     }
 
+    /// Create EGARCH(1,1) model with default settings
     pub fn egarch_11() -> Self {
         Self::new(EgarchConfig {
             p: 1,
@@ -3348,15 +3360,24 @@ impl<F: Float + Debug + std::iter::Sum> EgarchModel<F> {
     }
 }
 
+/// EGARCH model estimation results
 #[derive(Debug, Clone)]
 pub struct EgarchResult<F: Float> {
+    /// Estimated model parameters
     pub parameters: EgarchParameters<F>,
+    /// Conditional variance series
     pub conditional_variance: Array1<F>,
+    /// Standardized residuals
     pub standardized_residuals: Array1<F>,
+    /// Log-likelihood value
     pub log_likelihood: F,
+    /// Akaike Information Criterion
     pub aic: F,
+    /// Bayesian Information Criterion
     pub bic: F,
+    /// Whether optimization converged
     pub converged: bool,
+    /// Number of iterations used
     pub iterations: usize,
 }
 
@@ -3590,6 +3611,12 @@ pub struct AparchModel<F: Float + Debug + std::iter::Sum> {
     conditional_std: Option<Array1<F>>,
     /// Whether the model has been fitted
     fitted: bool,
+}
+
+impl<F: Float + Debug + Clone + std::iter::Sum> Default for AparchModel<F> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl<F: Float + Debug + Clone + std::iter::Sum> AparchModel<F> {

@@ -173,10 +173,7 @@ fn compare_correctors(
         let dict_correction = dict_corrector.correct(misspelled)?;
         let stat_correction = stat_corrector.correct(misspelled)?;
 
-        println!(
-            "{:<15} {:<15} {:<15}",
-            misspelled, dict_correction, stat_correction
-        );
+        println!("{misspelled:<15} {dict_correction:<15} {stat_correction:<15}");
     }
 
     println!("\nDictionary sizes:");
@@ -200,16 +197,16 @@ fn context_aware_correction_demo(
     println!("\n=== Context-Aware Correction Demo ===\n");
 
     println!("Original text with misspellings:");
-    println!("{}\n", TEXT_WITH_CONTEXT_MISSPELLINGS);
+    println!("{TEXT_WITH_CONTEXT_MISSPELLINGS}\n");
 
     // Correct the text
     let corrected_text = corrector.correct_text(TEXT_WITH_CONTEXT_MISSPELLINGS)?;
 
     println!("Corrected text:");
-    println!("{}\n", corrected_text);
+    println!("{corrected_text}\n");
 
     println!("Expected text:");
-    println!("{}\n", EXPECTED_CORRECTED_TEXT);
+    println!("{EXPECTED_CORRECTED_TEXT}\n");
 
     // Compare specific correction examples
     println!("Specific context examples:\n");
@@ -219,11 +216,11 @@ fn context_aware_correction_demo(
     let text2 = "The river bnk was muddy after the rain.";
 
     println!("Example 1: 'bnk' in financial context");
-    println!("Before: {}", text1);
+    println!("Before: {text1}");
     println!("After:  {}\n", corrector.correct_text(text1)?);
 
     println!("Example 2: 'bnk' in geographical context");
-    println!("Before: {}", text2);
+    println!("Before: {text2}");
     println!("After:  {}\n", corrector.correct_text(text2)?);
 
     // Example 2: there/their homophone confusion
@@ -231,11 +228,11 @@ fn context_aware_correction_demo(
     let text4 = "There car broke down on the highway.";
 
     println!("Example 3: 'their' used incorrectly");
-    println!("Before: {}", text3);
+    println!("Before: {text3}");
     println!("After:  {}\n", corrector.correct_text(text3)?);
 
     println!("Example 4: 'there' used incorrectly");
-    println!("Before: {}", text4);
+    println!("Before: {text4}");
     println!("After:  {}\n", corrector.correct_text(text4)?);
 
     Ok(())
@@ -281,12 +278,9 @@ fn performance_test(
         "Performance comparison on text with {} characters:",
         test_text.len()
     );
-    println!("  - Dictionary corrector: {:?}", dict_time);
-    println!(
-        "  - Statistical corrector (without context): {:?}",
-        non_context_time
-    );
-    println!("  - Statistical corrector (with context): {:?}", stat_time);
+    println!("  - Dictionary corrector: {dict_time:?}");
+    println!("  - Statistical corrector (without context): {non_context_time:?}");
+    println!("  - Statistical corrector (with context): {stat_time:?}");
 
     Ok(())
 }
@@ -354,7 +348,7 @@ fn configuration_demo() -> Result<(), Box<dyn std::error::Error>> {
         train_language_model(&mut corrector);
         add_example_words(&mut corrector);
 
-        println!("{} configuration:", name);
+        println!("{name} configuration:");
         println!("  max_edit_distance: {}", config.max_edit_distance);
         println!("  language_model_weight: {}", config.language_model_weight);
         println!("  edit_distance_weight: {}", config.edit_distance_weight);
@@ -363,7 +357,7 @@ fn configuration_demo() -> Result<(), Box<dyn std::error::Error>> {
         println!("\n  Correction examples:");
         for word in &test_cases {
             let corrected = corrector.correct(word)?;
-            println!("    {} -> {}", word, corrected);
+            println!("    {word} -> {corrected}");
         }
 
         // Show a context example if context is enabled
@@ -371,8 +365,8 @@ fn configuration_demo() -> Result<(), Box<dyn std::error::Error>> {
             let context_example = "Going to the bnk to deposit money. The river bnk was muddy.";
             let corrected = corrector.correct_text(context_example)?;
             println!("\n  Context example:");
-            println!("    Before: {}", context_example);
-            println!("    After:  {}", corrected);
+            println!("    Before: {context_example}");
+            println!("    After:  {corrected}");
         }
 
         println!("\n{:-<60}", "");
@@ -435,7 +429,7 @@ fn noise_model_demo() -> Result<(), Box<dyn std::error::Error>> {
 
     for (typo, correct) in &test_pairs {
         let prob = default_model.error_probability(typo, correct);
-        println!("{:<12} -> {:<12}: {:.6}", typo, correct, prob);
+        println!("{typo:<12} -> {correct:<12}: {prob:.6}");
     }
 
     println!("\nImpact on correction with custom error model:");
@@ -460,8 +454,8 @@ fn noise_model_demo() -> Result<(), Box<dyn std::error::Error>> {
     let test_text = "I recieved a mesage about thier acheivements.";
     let corrected = custom_corrector.correct_text(test_text)?;
 
-    println!("Before: {}", test_text);
-    println!("After:  {}", corrected);
+    println!("Before: {test_text}");
+    println!("After:  {corrected}");
 
     Ok(())
 }

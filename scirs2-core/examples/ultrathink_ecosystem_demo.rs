@@ -12,13 +12,13 @@
 //! - AI-driven workflow optimization
 //! - Quantum-enhanced computation pipelines
 
-use scirs2_core::error::{CoreError, CoreResult, ErrorContext};
-use scirs2_core::ultrathink_ecosystem_integration::{
+use scirs2_core::ecosystem_bridge::{
     EcosystemContext, InterModuleMessage, MessageType, ModulePerformanceMetrics,
     ModuleResourceUsage, Priority, ProcessingContext, ProcessingMetrics, QualityRequirements,
     TimingConstraints, UltrathinkEcosystemCoordinator, UltrathinkInput, UltrathinkModule,
     UltrathinkOutput,
 };
+use scirs2_core::error::{CoreError, CoreResult, ErrorContext};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -35,7 +35,7 @@ struct MockNeuralUltrathinkModule {
 impl MockNeuralUltrathinkModule {
     fn new() -> Self {
         Self {
-            name: "neural-ultrathink".to_string(),
+            name: "neural-advanced".to_string(),
             version: "0.1.0-beta.1".to_string(),
             initialized: false,
             performance_metrics: ModulePerformanceMetrics {
@@ -68,7 +68,7 @@ impl UltrathinkModule for MockNeuralUltrathinkModule {
         ]
     }
 
-    fn initialize_ultrathink(&mut self) -> CoreResult<()> {
+    fn initialize_advanced(&mut self) -> CoreResult<()> {
         println!("🧠 Initializing Neural Ultrathink Module...");
         println!("   - Loading neural architectures");
         println!("   - Calibrating adaptive parameters");
@@ -77,7 +77,7 @@ impl UltrathinkModule for MockNeuralUltrathinkModule {
         Ok(())
     }
 
-    fn process_ultrathink(&mut self, input: UltrathinkInput) -> CoreResult<UltrathinkOutput> {
+    fn process_advanced(&mut self, input: UltrathinkInput) -> CoreResult<UltrathinkOutput> {
         if !self.initialized {
             return Err(CoreError::InvalidInput(ErrorContext::new(
                 "Module not initialized",
@@ -181,7 +181,7 @@ impl UltrathinkModule for MockNeuralUltrathinkModule {
     }
 }
 
-/// Demo implementation of a clustering ultrathink module
+/// Demo implementation of a clustering advanced module
 #[derive(Debug)]
 struct MockClusteringUltrathinkModule {
     name: String,
@@ -219,7 +219,7 @@ impl UltrathinkModule for MockClusteringUltrathinkModule {
         ]
     }
 
-    fn initialize_ultrathink(&mut self) -> CoreResult<()> {
+    fn initialize_advanced(&mut self) -> CoreResult<()> {
         println!("🎯 Initializing Clustering Ultrathink Module...");
         println!("   - Loading quantum-neuromorphic algorithms");
         println!("   - Calibrating meta-learning parameters");
@@ -228,7 +228,7 @@ impl UltrathinkModule for MockClusteringUltrathinkModule {
         Ok(())
     }
 
-    fn process_ultrathink(&mut self, input: UltrathinkInput) -> CoreResult<UltrathinkOutput> {
+    fn process_advanced(&mut self, input: UltrathinkInput) -> CoreResult<UltrathinkOutput> {
         if !self.initialized {
             return Err(CoreError::InvalidInput(ErrorContext::new(
                 "Module not initialized",
@@ -338,7 +338,7 @@ impl UltrathinkModule for MockClusteringUltrathinkModule {
     }
 }
 
-/// Demo implementation of an I/O ultrathink module
+/// Demo implementation of an I/O advanced module
 #[derive(Debug)]
 struct MockIoUltrathinkModule {
     name: String,
@@ -376,7 +376,7 @@ impl UltrathinkModule for MockIoUltrathinkModule {
         ]
     }
 
-    fn initialize_ultrathink(&mut self) -> CoreResult<()> {
+    fn initialize_advanced(&mut self) -> CoreResult<()> {
         println!("💾 Initializing I/O Ultrathink Module...");
         println!("   - Configuring adaptive compression algorithms");
         println!("   - Initializing quantum parallel processors");
@@ -385,7 +385,7 @@ impl UltrathinkModule for MockIoUltrathinkModule {
         Ok(())
     }
 
-    fn process_ultrathink(&mut self, input: UltrathinkInput) -> CoreResult<UltrathinkOutput> {
+    fn process_advanced(&mut self, input: UltrathinkInput) -> CoreResult<UltrathinkOutput> {
         if !self.initialized {
             return Err(CoreError::InvalidInput(ErrorContext::new(
                 "Module not initialized",
@@ -506,7 +506,7 @@ impl UltrathinkWorkflowDemo {
         }
     }
 
-    /// Run the complete ultrathink ecosystem demo
+    /// Run the complete advanced ecosystem demo
     fn run_demo(&mut self) -> CoreResult<()> {
         println!("🚀 SciRS2 Ultrathink Ecosystem Integration Demo");
         println!("================================================\n");
@@ -611,7 +611,7 @@ impl UltrathinkWorkflowDemo {
             priority: Priority::High,
         };
 
-        println!("🎯 Processing data through ultrathink ecosystem...");
+        println!("🎯 Processing data through advanced ecosystem...");
         let start_time = Instant::now();
 
         let output = self.coordinator.process_ecosystem(input)?;
@@ -794,7 +794,7 @@ fn main() -> CoreResult<()> {
     demo.run_demo()?;
 
     println!("\n🚀 The future of scientific computing is here!");
-    println!("The ultrathink ecosystem enables unprecedented");
+    println!("The advanced ecosystem enables unprecedented");
     println!("performance, intelligence, and adaptability.");
 
     Ok(())
@@ -807,7 +807,7 @@ mod tests {
     #[test]
     fn test_mock_neural_module() {
         let mut module = MockNeuralUltrathinkModule::new();
-        assert_eq!(module.name(), "neural-ultrathink");
+        assert_eq!(module.name(), "neural-advanced");
         assert!(!module.capabilities().is_empty());
 
         module.initialize_ultrathink().unwrap();
@@ -817,7 +817,7 @@ mod tests {
     #[test]
     fn test_mock_clustering_module() {
         let mut module = MockClusteringUltrathinkModule::new();
-        assert_eq!(module.name(), "clustering-ultrathink");
+        assert_eq!(module.name(), "clustering-advanced");
         assert!(module
             .capabilities()
             .contains(&"quantum_neuromorphic_clustering".to_string()));
@@ -826,7 +826,7 @@ mod tests {
     #[test]
     fn test_mock_io_module() {
         let mut module = MockIoUltrathinkModule::new();
-        assert_eq!(module.name(), "io-ultrathink");
+        assert_eq!(module.name(), "io-advanced");
         assert!(module
             .capabilities()
             .contains(&"adaptive_compression".to_string()));

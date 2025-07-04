@@ -54,9 +54,7 @@ pub use rand::{Rng, RngCore};
 /// In rand 0.9, provides a convenient alias for rng() wrapped in Random
 /// This allows usage like: scirs2_core::random::rng().random_range(0, 100)
 pub fn rng() -> Random<rand::rngs::ThreadRng> {
-    Random {
-        rng: rand::thread_rng(),
-    }
+    Random { rng: rand::rng() }
 }
 
 /// Wrapper around the rand crate's RNG for a consistent interface
@@ -67,9 +65,7 @@ pub struct Random<R: Rng + ?Sized = rand::rngs::ThreadRng> {
 
 impl Default for Random {
     fn default() -> Self {
-        Self {
-            rng: rand::thread_rng(),
-        }
+        Self { rng: rand::rng() }
     }
 }
 

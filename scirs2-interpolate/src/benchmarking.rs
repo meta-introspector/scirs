@@ -13,6 +13,9 @@
 //! - **Regression detection**: Automated performance regression detection
 //! - **Production workload simulation**: Real-world scenario benchmarks
 
+#![allow(clippy::too_many_arguments)]
+#![allow(dead_code)]
+
 use crate::error::InterpolateResult;
 use crate::streaming::StreamingInterpolator;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};

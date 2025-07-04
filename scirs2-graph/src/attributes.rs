@@ -500,7 +500,7 @@ impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType
     }
 }
 
-impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Default
+impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType> Default
     for AttributedDiGraph<N, E, Ix>
 {
     fn default() -> Self {

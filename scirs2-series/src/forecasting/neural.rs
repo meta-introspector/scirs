@@ -154,11 +154,14 @@ mod simple_nn {
     /// Simple feedforward layer
     #[derive(Debug, Clone)]
     pub struct DenseLayer<F: Float> {
+        /// Weight matrix for the layer
         pub weights: Array2<F>,
+        /// Bias vector for the layer
         pub biases: Array1<F>,
     }
 
     impl<F: Float + FromPrimitive> DenseLayer<F> {
+        /// Create a new dense layer with random initialization
         pub fn new(input_size: usize, output_size: usize) -> Self {
             // Initialize with small random values (simplified Xavier initialization)
             let scale = F::from(0.1).unwrap();
@@ -180,6 +183,7 @@ mod simple_nn {
             Self { weights, biases }
         }
 
+        /// Forward pass through the layer
         pub fn forward(&self, input: &Array1<F>) -> Array1<F> {
             let mut output = Array1::zeros(self.biases.len());
             for i in 0..self.weights.ncols() {
@@ -193,21 +197,24 @@ mod simple_nn {
         }
     }
 
-    /// Activation functions
+    /// Hyperbolic tangent activation function
     pub fn tanh<F: Float>(x: F) -> F {
         let exp_pos = x.exp();
         let exp_neg = (-x).exp();
         (exp_pos - exp_neg) / (exp_pos + exp_neg)
     }
 
+    /// Sigmoid activation function
     pub fn sigmoid<F: Float>(x: F) -> F {
         F::one() / (F::one() + (-x).exp())
     }
 
+    /// Rectified Linear Unit (ReLU) activation function
     pub fn relu<F: Float>(x: F) -> F {
         x.max(F::zero())
     }
 
+    /// Apply activation function to an array element-wise
     pub fn apply_activation<F: Float>(arr: &Array1<F>, activation: &str) -> Array1<F> {
         match activation {
             "tanh" => arr.mapv(tanh),
@@ -243,12 +250,19 @@ pub trait NeuralForecaster<F: Float + Debug + FromPrimitive> {
 /// LSTM-based forecasting model
 #[derive(Debug)]
 pub struct LSTMForecaster<F: Float + Debug + FromPrimitive> {
+    /// LSTM configuration parameters
     config: LSTMConfig,
+    /// Whether the model has been trained
     trained: bool,
+    /// Training loss history
     loss_history: Vec<F>,
+    /// Input layer of the network
     input_layer: Option<simple_nn::DenseLayer<F>>,
+    /// Hidden layer of the network
     hidden_layer: Option<simple_nn::DenseLayer<F>>,
+    /// Output layer of the network
     output_layer: Option<simple_nn::DenseLayer<F>>,
+    /// Last input window for forecasting
     last_window: Option<Array1<F>>,
 }
 
@@ -480,12 +494,19 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for LSTMForecaster<F>
 /// Transformer-based forecasting model
 #[derive(Debug)]
 pub struct TransformerForecaster<F: Float + Debug + FromPrimitive> {
+    /// Transformer configuration parameters
     config: TransformerConfig,
+    /// Whether the model has been trained
     trained: bool,
+    /// Training loss history
     loss_history: Vec<F>,
+    /// Attention layer of the transformer
     attention_layer: Option<simple_nn::DenseLayer<F>>,
+    /// Feedforward layer of the transformer
     feedforward_layer: Option<simple_nn::DenseLayer<F>>,
+    /// Output layer of the network
     output_layer: Option<simple_nn::DenseLayer<F>>,
+    /// Last input window for forecasting
     last_window: Option<Array1<F>>,
 }
 
@@ -697,13 +718,21 @@ impl<F: Float + Debug + FromPrimitive> NeuralForecaster<F> for TransformerForeca
 /// N-BEATS forecasting model
 #[derive(Debug)]
 pub struct NBeatsForecaster<F: Float + Debug + FromPrimitive> {
+    /// N-BEATS configuration parameters
     config: NBeatsConfig,
+    /// Whether the model has been trained
     trained: bool,
+    /// Training loss history
     loss_history: Vec<F>,
+    /// Stack layers (blocks) of the N-BEATS model
     stack_layers: Vec<simple_nn::DenseLayer<F>>,
+    /// Trend component layer
     trend_layer: Option<simple_nn::DenseLayer<F>>,
+    /// Seasonality component layer
     seasonality_layer: Option<simple_nn::DenseLayer<F>>,
+    /// Residual component layer
     residual_layer: Option<simple_nn::DenseLayer<F>>,
+    /// Last input window for forecasting
     last_window: Option<Array1<F>>,
 }
 
@@ -2066,8 +2095,8 @@ pub mod advanced {
             let forecast_horizon = validation_size.min(10);
             let mut validation_errors = vec![F::zero(); self.forecasters.len()];
 
-            for i in 0..self.forecasters.len() {
-                if let Ok(result) = self.forecasters[i].predict(forecast_horizon) {
+            for (i, forecaster) in self.forecasters.iter().enumerate() {
+                if let Ok(result) = forecaster.predict(forecast_horizon) {
                     let actual = validation_data.slice(s![..forecast_horizon]);
                     let mut mse = F::zero();
                     for j in 0..forecast_horizon {
@@ -2589,8 +2618,7 @@ pub mod advanced {
                     Ok(Box::new(NBeatsForecaster::new(config)))
                 }
                 _ => Err(TimeSeriesError::InvalidInput(format!(
-                    "Unknown model type: {}",
-                    model_type
+                    "Unknown model type: {model_type}"
                 ))),
             }
         }

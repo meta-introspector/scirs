@@ -153,7 +153,7 @@ pub use gradient_accumulation::{
 //     QuantizationSupport, ResourceMonitor, SIMDSupport, TPUVersion, TuningStrategy,
 // };
 // Temporarily commented out complex re-exports to resolve compilation issues
-// pub use learned_optimizers::ultrathink_coordinator::{
+// pub use learned_optimizers::optimization_coordinator::{
 //     LandscapeFeatures, OptimizationContext as UltraThinkOptimizationContext,
 //     OptimizationRecommendation, OptimizerCapabilities, PerformanceSnapshot, UltraThinkConfig,
 //     UltraThinkCoordinator, UltraThinkResult,

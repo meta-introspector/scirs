@@ -4,6 +4,8 @@
 //! performance analysis, predictive modeling, automated optimization recommendations,
 //! and comprehensive cross-platform performance validation for production deployment.
 
+#![allow(dead_code)]
+
 use crate::benchmark_suite::{BenchmarkConfig, BenchmarkMetrics};
 use crate::error::StatsResult;
 use crate::ultrathink_error_enhancements_v2::CompatibilityImpact;

@@ -260,10 +260,10 @@ where
     let n = a.nrows();
 
     // Start with a random vector
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut b = Array1::zeros(n);
     for i in 0..n {
-        b[i] = F::from(rng.gen_range(-1.0..=1.0)).unwrap_or(F::zero());
+        b[i] = F::from(rng.random_range(-1.0, 1.0)).unwrap_or(F::zero());
     }
 
     // Normalize the vector

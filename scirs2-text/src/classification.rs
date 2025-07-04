@@ -576,7 +576,7 @@ mod tests {
 
     #[test]
     fn test_train_test_split() {
-        let texts = (0..10).map(|i| format!("Text {}", i)).collect();
+        let texts = (0..10).map(|i| format!("Text {i}")).collect();
         let labels = (0..10).map(|_| "A".to_string()).collect();
 
         let dataset = TextDataset::new(texts, labels).unwrap();

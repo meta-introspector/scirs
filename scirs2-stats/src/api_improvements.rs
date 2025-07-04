@@ -2,6 +2,8 @@
 //!
 //! This module defines improved API patterns for better consistency and usability.
 
+#![allow(dead_code)]
+
 use crate::error::StatsResult;
 use crate::tests::ttest::Alternative;
 use ndarray::{ArrayBase, Data, Ix1};

@@ -2254,7 +2254,7 @@ pub mod ensemble {
         for _ in 0..iterations {
             let mut gradients = vec![0.0; m];
 
-            for (_i, (x_row, &y_val)) in x.iter().zip(y.iter()).enumerate() {
+            for (x_row, &y_val) in x.iter().zip(y.iter()) {
                 let prediction = weights
                     .iter()
                     .zip(x_row.iter())
@@ -2262,7 +2262,7 @@ pub mod ensemble {
                     .sum::<f64>();
                 let error = prediction - y_val;
 
-                for (_j, (grad, &x_val)) in gradients.iter_mut().zip(x_row.iter()).enumerate() {
+                for (grad, &x_val) in gradients.iter_mut().zip(x_row.iter()) {
                     *grad += (2.0 / n as f64) * error * x_val;
                 }
             }

@@ -43,8 +43,10 @@ struct UltrathinkSystem {
     /// Performance monitoring system
     performance_monitor: UltrathinkPerformanceMonitor,
     /// SIMD processor for ultra-fast operations
+    #[allow(dead_code)]
     simd_processor: UltraSIMDTextProcessor,
     /// Streaming processor for large datasets
+    #[allow(dead_code)]
     streaming_processor: UltrathinkStreamingProcessor<WordTokenizer>,
 }
 
@@ -145,7 +147,7 @@ impl UltrathinkSystem {
         operation_monitor.complete(sample_documents.len())?;
 
         println!("\n📈 Pipeline Results:");
-        println!("  • Processing Time: {:?}", processing_time);
+        println!("  • Processing Time: {processing_time:?}");
         println!(
             "  • Throughput: {:.2} docs/sec",
             result.performance_metrics.throughput
@@ -161,7 +163,7 @@ impl UltrathinkSystem {
 
         println!("\n🔧 Applied Optimizations:");
         for optimization in &result.optimizations_applied {
-            println!("  • {}", optimization);
+            println!("  • {optimization}");
         }
 
         println!("\n🎯 Confidence Scores:");
@@ -212,9 +214,9 @@ impl UltrathinkSystem {
         operation_monitor.complete(test_texts.len())?;
 
         println!("\n📊 SIMD Operation Results:");
-        println!("  • Processing Time: {:?}", processing_time);
+        println!("  • Processing Time: {processing_time:?}");
         println!("  • Documents Processed: {}", processed_results.len());
-        println!("  • Character Counts (letter 'o'): {:?}", char_counts);
+        println!("  • Character Counts (letter 'o'): {char_counts:?}");
         println!(
             "  • Similarity Matrix Size: {}x{}",
             similarity_matrix.len(),
@@ -224,12 +226,12 @@ impl UltrathinkSystem {
         // Display similarity matrix
         println!("\n🔗 Text Similarity Matrix:");
         for (i, row) in similarity_matrix.iter().enumerate() {
-            print!("  Row {}: [", i);
+            print!("  Row {i}: [");
             for (j, &similarity) in row.iter().enumerate() {
                 if j > 0 {
                     print!(", ");
                 }
-                print!("{:.3}", similarity);
+                print!("{similarity:.3}");
             }
             println!("]");
         }
@@ -252,7 +254,7 @@ impl UltrathinkSystem {
 
         // Create large dataset simulation
         let large_texts: Vec<String> = (0..1000)
-            .map(|i| format!("This is streaming document number {} with various content lengths and different patterns of text processing requirements.", i))
+            .map(|i| format!("This is streaming document number {i} with various content lengths and different patterns of text processing requirements."))
             .collect();
 
         println!(
@@ -291,9 +293,9 @@ impl UltrathinkSystem {
         let streaming_metrics = streaming_processor.get_performance_metrics();
 
         println!("\n📈 Streaming Processing Results:");
-        println!("  • Processing Time: {:?}", processing_time);
+        println!("  • Processing Time: {processing_time:?}");
         println!("  • Documents Processed: {}", large_texts.len());
-        println!("  • Total Tokens Extracted: {}", total_tokens);
+        println!("  • Total Tokens Extracted: {total_tokens}");
         println!(
             "  • Throughput: {:.2} docs/sec",
             large_texts.len() as f64 / processing_time.as_secs_f64()
@@ -344,7 +346,7 @@ impl UltrathinkSystem {
         ];
 
         for (pattern_name, documents) in workload_patterns {
-            println!("\n🔄 Processing Pattern: {}", pattern_name);
+            println!("\n🔄 Processing Pattern: {pattern_name}");
             println!("  • Document Count: {}", documents.len());
 
             // Start monitoring for this pattern
@@ -362,7 +364,7 @@ impl UltrathinkSystem {
             // Complete monitoring
             operation_monitor.complete(documents.len())?;
 
-            println!("  • Processing Time: {:?}", processing_time);
+            println!("  • Processing Time: {processing_time:?}");
             println!(
                 "  • Throughput: {:.2} docs/sec",
                 result.performance_metrics.throughput
@@ -373,10 +375,10 @@ impl UltrathinkSystem {
             );
 
             // Show adaptive responses
-            if result.optimizations_applied.len() > 0 {
+            if !result.optimizations_applied.is_empty() {
                 println!("  • Adaptive Responses:");
                 for opt in &result.optimizations_applied {
-                    println!("    - {}", opt);
+                    println!("    - {opt}");
                 }
             }
         }
@@ -436,7 +438,7 @@ impl UltrathinkSystem {
         if !performance_report.summary.active_alerts.is_empty() {
             println!("\n⚠️  Active Performance Alerts:");
             for alert in &performance_report.summary.active_alerts {
-                println!("  • {}", alert);
+                println!("  • {alert}");
             }
         } else {
             println!("\n✅ No active performance alerts");
@@ -487,7 +489,7 @@ impl UltrathinkSystem {
                     bottleneck.component, bottleneck.severity, bottleneck.description
                 );
                 for rec in &bottleneck.recommendations {
-                    println!("    - {}", rec);
+                    println!("    - {rec}");
                 }
             }
         }
@@ -506,7 +508,7 @@ impl UltrathinkSystem {
 
         // System health score
         let health_score = calculate_system_health_score(&performance_report);
-        println!("\n🏥 Overall System Health Score: {:.1}/100", health_score);
+        println!("\n🏥 Overall System Health Score: {health_score:.1}/100");
 
         let health_status = match health_score {
             score if score >= 90.0 => "Excellent",
@@ -532,27 +534,27 @@ impl UltrathinkSystem {
 
 // Helper functions for generating test data
 fn generate_short_documents(count: usize) -> Vec<String> {
-    (0..count).map(|i| format!("Short doc {}.", i)).collect()
+    (0..count).map(|i| format!("Short doc {i}.")).collect()
 }
 
 fn generate_medium_documents(count: usize) -> Vec<String> {
     (0..count)
-        .map(|i| format!("Medium length document {} with additional content for processing analysis and performance testing.", i))
+        .map(|i| format!("Medium length document {i} with additional content for processing analysis and performance testing."))
         .collect()
 }
 
 fn generate_long_documents(count: usize) -> Vec<String> {
     (0..count)
-        .map(|i| format!("This is a long document number {} that contains significant amounts of text content designed to test the performance characteristics of the ultrathink text processing system under heavy load conditions with complex linguistic patterns and varied vocabulary usage.", i))
+        .map(|i| format!("This is a long document number {i} that contains significant amounts of text content designed to test the performance characteristics of the ultrathink text processing system under heavy load conditions with complex linguistic patterns and varied vocabulary usage."))
         .collect()
 }
 
 fn generate_mixed_workload(count: usize) -> Vec<String> {
     (0..count)
         .map(|i| match i % 3 {
-            0 => format!("Short {}", i),
-            1 => format!("Medium document {} with some content.", i),
-            _ => format!("Long detailed document {} with extensive content for comprehensive testing and analysis.", i),
+            0 => format!("Short {i}"),
+            1 => format!("Medium document {i} with some content."),
+            _ => format!("Long detailed document {i} with extensive content for comprehensive testing and analysis."),
         })
         .collect()
 }
@@ -584,5 +586,5 @@ fn calculate_system_health_score(
     // Penalize for bottlenecks
     score -= report.bottleneck_analysis.len() as f64 * 5.0;
 
-    score.max(0.0).min(100.0)
+    score.clamp(0.0, 100.0)
 }

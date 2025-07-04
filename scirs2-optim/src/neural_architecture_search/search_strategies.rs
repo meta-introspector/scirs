@@ -678,7 +678,9 @@ impl<T: Float> EvolutionarySearch<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> ReinforcementLearningSearch<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static>
+    ReinforcementLearningSearch<T>
+{
     pub fn new(
         controller_hidden_size: usize,
         controller_num_layers: usize,

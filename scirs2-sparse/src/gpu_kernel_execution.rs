@@ -303,14 +303,14 @@ where
 
     // Enhanced kernel arguments with CUDA-specific optimizations
     let cuda_args = &[
-        Box::new(rows as u32),
-        Box::new(indptr_buffer),
-        Box::new(indices_buffer),
-        Box::new(data_buffer),
-        Box::new(x_buffer),
-        Box::new(y_buffer),
-        Box::new(block_size as u32),
-        Box::new(shared_memory_size as u32),
+        Box::new(rows as u32) as Box<dyn std::any::Any>,
+        Box::new(indptr_buffer) as Box<dyn std::any::Any>,
+        Box::new(indices_buffer) as Box<dyn std::any::Any>,
+        Box::new(data_buffer) as Box<dyn std::any::Any>,
+        Box::new(x_buffer) as Box<dyn std::any::Any>,
+        Box::new(y_buffer) as Box<dyn std::any::Any>,
+        Box::new(block_size as u32) as Box<dyn std::any::Any>,
+        Box::new(shared_memory_size as u32) as Box<dyn std::any::Any>,
     ];
 
     // Set CUDA-specific execution configuration
@@ -368,14 +368,14 @@ where
 
     // Enhanced OpenCL kernel arguments
     let opencl_args = &[
-        Box::new(rows as u32),
-        Box::new(indptr_buffer),
-        Box::new(indices_buffer),
-        Box::new(data_buffer),
-        Box::new(x_buffer),
-        Box::new(y_buffer),
-        Box::new(local_memory_size as u32),
-        Box::new(config.vectorization as u32),
+        Box::new(rows as u32) as Box<dyn std::any::Any>,
+        Box::new(indptr_buffer) as Box<dyn std::any::Any>,
+        Box::new(indices_buffer) as Box<dyn std::any::Any>,
+        Box::new(data_buffer) as Box<dyn std::any::Any>,
+        Box::new(x_buffer) as Box<dyn std::any::Any>,
+        Box::new(y_buffer) as Box<dyn std::any::Any>,
+        Box::new(local_memory_size as u32) as Box<dyn std::any::Any>,
+        Box::new(config.vectorization as u32) as Box<dyn std::any::Any>,
     ];
 
     // Set OpenCL-specific execution configuration
@@ -434,15 +434,15 @@ where
 
     // Enhanced Metal kernel arguments
     let metal_args = &[
-        Box::new(rows as u32),
-        Box::new(indptr_buffer),
-        Box::new(indices_buffer),
-        Box::new(data_buffer),
-        Box::new(x_buffer),
-        Box::new(y_buffer),
-        Box::new(aligned_threadgroup_size as u32),
-        Box::new(threadgroup_memory_size as u32),
-        Box::new(simdgroup_size as u32),
+        Box::new(rows as u32) as Box<dyn std::any::Any>,
+        Box::new(indptr_buffer) as Box<dyn std::any::Any>,
+        Box::new(indices_buffer) as Box<dyn std::any::Any>,
+        Box::new(data_buffer) as Box<dyn std::any::Any>,
+        Box::new(x_buffer) as Box<dyn std::any::Any>,
+        Box::new(y_buffer) as Box<dyn std::any::Any>,
+        Box::new(aligned_threadgroup_size as u32) as Box<dyn std::any::Any>,
+        Box::new(threadgroup_memory_size as u32) as Box<dyn std::any::Any>,
+        Box::new(simdgroup_size as u32) as Box<dyn std::any::Any>,
     ];
 
     // Set Metal-specific execution configuration
@@ -518,12 +518,12 @@ where
         global_size,
         local_size,
         &[
-            Box::new(rows as u32),
-            Box::new(indptr_buffer),
-            Box::new(indices_buffer),
-            Box::new(data_buffer),
-            Box::new(x_buffer),
-            Box::new(y_buffer),
+            Box::new(rows as u32) as Box<dyn std::any::Any>,
+            Box::new(indptr_buffer) as Box<dyn std::any::Any>,
+            Box::new(indices_buffer) as Box<dyn std::any::Any>,
+            Box::new(data_buffer) as Box<dyn std::any::Any>,
+            Box::new(x_buffer) as Box<dyn std::any::Any>,
+            Box::new(y_buffer) as Box<dyn std::any::Any>,
         ],
     )
 }
@@ -550,12 +550,12 @@ where
         global_size,
         local_size,
         &[
-            Box::new(rows as u32),
-            Box::new(indptr_buffer),
-            Box::new(indices_buffer),
-            Box::new(data_buffer),
-            Box::new(x_buffer),
-            Box::new(y_buffer),
+            Box::new(rows as u32) as Box<dyn std::any::Any>,
+            Box::new(indptr_buffer) as Box<dyn std::any::Any>,
+            Box::new(indices_buffer) as Box<dyn std::any::Any>,
+            Box::new(data_buffer) as Box<dyn std::any::Any>,
+            Box::new(x_buffer) as Box<dyn std::any::Any>,
+            Box::new(y_buffer) as Box<dyn std::any::Any>,
         ],
     )
 }
@@ -582,12 +582,12 @@ where
         global_size,
         local_size,
         &[
-            Box::new(rows as u32),
-            Box::new(indptr_buffer),
-            Box::new(indices_buffer),
-            Box::new(data_buffer),
-            Box::new(x_buffer),
-            Box::new(y_buffer),
+            Box::new(rows as u32) as Box<dyn std::any::Any>,
+            Box::new(indptr_buffer) as Box<dyn std::any::Any>,
+            Box::new(indices_buffer) as Box<dyn std::any::Any>,
+            Box::new(data_buffer) as Box<dyn std::any::Any>,
+            Box::new(x_buffer) as Box<dyn std::any::Any>,
+            Box::new(y_buffer) as Box<dyn std::any::Any>,
         ],
     )
 }
@@ -690,12 +690,12 @@ where
             &global_size,
             &local_size,
             &[
-                Box::new(n as u32),
-                Box::new(indptr_buffer),
-                Box::new(indices_buffer),
-                Box::new(data_buffer),
-                Box::new(b_buffer),
-                Box::new(x_buffer),
+                Box::new(n as u32) as Box<dyn std::any::Any>,
+                Box::new(indptr_buffer) as Box<dyn std::any::Any>,
+                Box::new(indices_buffer) as Box<dyn std::any::Any>,
+                Box::new(data_buffer) as Box<dyn std::any::Any>,
+                Box::new(b_buffer) as Box<dyn std::any::Any>,
+                Box::new(x_buffer) as Box<dyn std::any::Any>,
             ],
         ),
     }

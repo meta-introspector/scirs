@@ -6,7 +6,7 @@
 #![allow(dead_code)]
 
 use rand::Rng;
-use scirs2_graph::ultrathink::{
+use scirs2_graph::advanced::{
     create_enhanced_ultrathink_processor, create_large_graph_ultrathink_processor,
     create_performance_ultrathink_processor, create_realtime_ultrathink_processor,
     execute_with_enhanced_ultrathink, ExplorationStrategy, UltrathinkConfig, UltrathinkProcessor,
@@ -40,15 +40,15 @@ fn social_network_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> 
         graph.edge_count() as f64 * 2.0 / graph.node_count() as f64
     );
 
-    // Create an enhanced ultrathink processor optimized for social network analysis
-    let mut processor = create_enhanced_ultrathink_processor();
+    // Create an enhanced advanced processor optimized for social network analysis
+    let mut processor = create_enhanced_advanced_processor();
 
     // Step 1: Community Detection
     println!("\n👥 Step 1: Community Detection");
     println!("------------------------------");
 
     let start = Instant::now();
-    let communities = execute_with_enhanced_ultrathink(
+    let communities = execute_with_enhanced_advanced(
         &mut processor,
         &graph,
         "social_community_detection",
@@ -83,12 +83,10 @@ fn social_network_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> 
     println!("----------------------------");
 
     let start = Instant::now();
-    let influence_scores = execute_with_enhanced_ultrathink(
-        &mut processor,
-        &graph,
-        "social_influence_analysis",
-        |g| pagerank_centrality(g, 0.85, 1e-6),
-    )?;
+    let influence_scores =
+        execute_with_enhanced_advanced(&mut processor, &graph, "social_influence_analysis", |g| {
+            pagerank_centrality(g, 0.85, 1e-6)
+        })?;
     let influence_time = start.elapsed();
 
     println!("✅ Computed influence scores in {:?}", influence_time);
@@ -116,12 +114,10 @@ fn social_network_analysis_workflow() -> Result<(), Box<dyn std::error::Error>> 
         sorted_influences.get(1).map(|(id, _)| id),
     ) {
         let start = Instant::now();
-        let path = execute_with_enhanced_ultrathink(
-            &mut processor,
-            &graph,
-            "social_path_analysis",
-            |g| shortest_path_dijkstra(g, *user1),
-        )?;
+        let path =
+            execute_with_enhanced_advanced(&mut processor, &graph, "social_path_analysis", |g| {
+                shortest_path_dijkstra(g, *user1)
+            })?;
         let path_time = start.elapsed();
 
         if let Some(distance) = path.get(user2) {
@@ -170,20 +166,18 @@ fn bioinformatics_workflow() -> Result<(), Box<dyn std::error::Error>> {
         graph.edge_count() as f64 / (graph.node_count() * (graph.node_count() - 1) / 2) as f64
     );
 
-    // Use performance-optimized ultrathink for computational biology
-    let mut processor = create_performance_ultrathink_processor();
+    // Use performance-optimized advanced for computational biology
+    let mut processor = create_performance_advanced_processor();
 
     // Step 1: Identify Protein Complexes (Strong Components)
     println!("\n🔬 Step 1: Protein Complex Identification");
     println!("----------------------------------------");
 
     let start = Instant::now();
-    let components = execute_with_enhanced_ultrathink(
-        &mut processor,
-        &graph,
-        "protein_complex_detection",
-        |g| connected_components(g),
-    )?;
+    let components =
+        execute_with_enhanced_advanced(&mut processor, &graph, "protein_complex_detection", |g| {
+            connected_components(g)
+        })?;
     let complex_time = start.elapsed();
 
     println!(
@@ -207,7 +201,7 @@ fn bioinformatics_workflow() -> Result<(), Box<dyn std::error::Error>> {
 
     let start = Instant::now();
     let centrality_scores =
-        execute_with_enhanced_ultrathink(&mut processor, &graph, "hub_protein_analysis", |g| {
+        execute_with_enhanced_advanced(&mut processor, &graph, "hub_protein_analysis", |g| {
             betweenness_centrality(g)
         })?;
     let centrality_time = start.elapsed();
@@ -236,7 +230,7 @@ fn bioinformatics_workflow() -> Result<(), Box<dyn std::error::Error>> {
     println!("-------------------------------------");
 
     let start = Instant::now();
-    let modules = execute_with_enhanced_ultrathink(
+    let modules = execute_with_enhanced_advanced(
         &mut processor,
         &graph,
         "functional_module_detection",
@@ -309,20 +303,18 @@ fn infrastructure_network_workflow() -> Result<(), Box<dyn std::error::Error>> {
         graph.edge_count() as f64 * 2.0 / graph.node_count() as f64
     );
 
-    // Use large-graph optimized ultrathink processor
-    let mut processor = create_large_graph_ultrathink_processor();
+    // Use large-graph optimized advanced processor
+    let mut processor = create_large_graph_advanced_processor();
 
     // Step 1: Network Resilience Analysis
     println!("\n🛡️ Step 1: Network Resilience Analysis");
     println!("-------------------------------------");
 
     let start = Instant::now();
-    let components = execute_with_enhanced_ultrathink(
-        &mut processor,
-        &graph,
-        "infrastructure_resilience",
-        |g| connected_components(g),
-    )?;
+    let components =
+        execute_with_enhanced_advanced(&mut processor, &graph, "infrastructure_resilience", |g| {
+            connected_components(g)
+        })?;
     let resilience_time = start.elapsed();
 
     println!("✅ Resilience analysis completed in {:?}", resilience_time);
@@ -355,7 +347,7 @@ fn infrastructure_network_workflow() -> Result<(), Box<dyn std::error::Error>> {
     println!("--------------------------------------");
 
     let start = Instant::now();
-    let closeness_scores = execute_with_enhanced_ultrathink(
+    let closeness_scores = execute_with_enhanced_advanced(
         &mut processor,
         &graph,
         "critical_node_identification",
@@ -386,7 +378,7 @@ fn infrastructure_network_workflow() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(&critical_node) = sorted_closeness.get(0).map(|(id, _)| id) {
         let start = Instant::now();
         let distances =
-            execute_with_enhanced_ultrathink(&mut processor, &graph, "route_optimization", |g| {
+            execute_with_enhanced_advanced(&mut processor, &graph, "route_optimization", |g| {
                 shortest_path_dijkstra(g, *critical_node)
             })?;
         let route_time = start.elapsed();
@@ -442,8 +434,8 @@ fn real_time_monitoring_workflow() -> Result<(), Box<dyn std::error::Error>> {
     println!("   - Nodes: {}", graph.node_count());
     println!("   - Edges: {}", graph.edge_count());
 
-    // Use real-time optimized ultrathink processor
-    let mut processor = create_realtime_ultrathink_processor();
+    // Use real-time optimized advanced processor
+    let mut processor = create_realtime_advanced_processor();
 
     // Configure for rapid adaptation
     // Note: In a real implementation, we'd need API to modify processor config
@@ -477,7 +469,7 @@ fn real_time_monitoring_workflow() -> Result<(), Box<dyn std::error::Error>> {
         let start = Instant::now();
 
         // Quick connectivity check
-        let components = execute_with_enhanced_ultrathink(
+        let components = execute_with_enhanced_advanced(
             &mut processor,
             &graph,
             &format!("realtime_connectivity_step_{}", step),
@@ -485,7 +477,7 @@ fn real_time_monitoring_workflow() -> Result<(), Box<dyn std::error::Error>> {
         )?;
 
         // Quick centrality update
-        let pagerank_scores = execute_with_enhanced_ultrathink(
+        let pagerank_scores = execute_with_enhanced_advanced(
             &mut processor,
             &graph,
             &format!("realtime_centrality_step_{}", step),
@@ -582,21 +574,15 @@ fn benchmark_suite_workflow() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create multiple processor configurations for comparison
     let mut processors = vec![
-        (
-            "Standard Ultrathink",
-            create_enhanced_ultrathink_processor(),
-        ),
+        ("Standard Ultrathink", create_enhanced_advanced_processor()),
         (
             "Performance Optimized",
-            create_performance_ultrathink_processor(),
+            create_performance_advanced_processor(),
         ),
-        (
-            "Real-time Optimized",
-            create_realtime_ultrathink_processor(),
-        ),
+        ("Real-time Optimized", create_realtime_advanced_processor()),
         (
             "Large Graph Optimized",
-            create_large_graph_ultrathink_processor(),
+            create_large_graph_advanced_processor(),
         ),
     ];
 
@@ -629,19 +615,19 @@ fn benchmark_suite_workflow() -> Result<(), Box<dyn std::error::Error>> {
                 let start = Instant::now();
 
                 let result = match *alg_id {
-                    "connected_components" => execute_with_enhanced_ultrathink(
+                    "connected_components" => execute_with_enhanced_advanced(
                         processor,
                         graph,
                         &format!("{}_{}_{}", graph_name, processor_name, alg_id),
                         |g| connected_components(g).map(|components| components.len()),
                     )?,
-                    "pagerank" => execute_with_enhanced_ultrathink(
+                    "pagerank" => execute_with_enhanced_advanced(
                         processor,
                         graph,
                         &format!("{}_{}_{}", graph_name, processor_name, alg_id),
                         |g| pagerank(g, 0.85, Some(50), Some(1e-6)).map(|scores| scores.len()),
                     )?,
-                    "community_detection" => execute_with_enhanced_ultrathink(
+                    "community_detection" => execute_with_enhanced_advanced(
                         processor,
                         graph,
                         &format!("{}_{}_{}", graph_name, processor_name, alg_id),
@@ -748,7 +734,7 @@ fn benchmark_suite_workflow() -> Result<(), Box<dyn std::error::Error>> {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SciRS2 Ultrathink Comprehensive Workflows");
     println!("============================================");
-    println!("This demo showcases real-world usage patterns for ultrathink mode.");
+    println!("This demo showcases real-world usage patterns for advanced mode.");
     println!();
 
     // Run all workflows
@@ -762,7 +748,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("======================================");
     println!();
     println!("💡 Key Insights from Comprehensive Testing:");
-    println!("• Different ultrathink configurations excel in different scenarios");
+    println!("• Different advanced configurations excel in different scenarios");
     println!("• Neural RL adaptation improves performance over multiple runs");
     println!("• Memory optimization is crucial for large graphs");
     println!("• Real-time configurations trade accuracy for speed");
@@ -782,15 +768,13 @@ mod tests {
     fn test_social_network_workflow() {
         // Test basic social network analysis workflow
         let graph = barabasi_albert_graph(100, 3).unwrap();
-        let mut processor = create_enhanced_ultrathink_processor();
+        let mut processor = create_enhanced_advanced_processor();
 
-        let communities = execute_with_enhanced_ultrathink(
-            &mut processor,
-            &graph,
-            "test_social_community",
-            |g| louvain_communities(g, None),
-        )
-        .unwrap();
+        let communities =
+            execute_with_enhanced_advanced(&mut processor, &graph, "test_social_community", |g| {
+                louvain_communities(g, None)
+            })
+            .unwrap();
 
         assert!(!communities.is_empty());
         assert!(communities.len() <= graph.node_count());
@@ -800,10 +784,10 @@ mod tests {
     fn test_bioinformatics_workflow() {
         // Test bioinformatics network analysis
         let graph = erdos_renyi_graph(200, 0.01).unwrap();
-        let mut processor = create_performance_ultrathink_processor();
+        let mut processor = create_performance_advanced_processor();
 
         let components =
-            execute_with_enhanced_ultrathink(&mut processor, &graph, "test_bio_components", |g| {
+            execute_with_enhanced_advanced(&mut processor, &graph, "test_bio_components", |g| {
                 connected_components(g)
             })
             .unwrap();
@@ -816,9 +800,9 @@ mod tests {
     fn test_infrastructure_workflow() {
         // Test infrastructure network analysis
         let graph = random_graph(500, 1000, false).unwrap();
-        let mut processor = create_large_graph_ultrathink_processor();
+        let mut processor = create_large_graph_advanced_processor();
 
-        let centrality = execute_with_enhanced_ultrathink(
+        let centrality = execute_with_enhanced_advanced(
             &mut processor,
             &graph,
             "test_infrastructure_centrality",
@@ -834,16 +818,14 @@ mod tests {
     fn test_realtime_workflow() {
         // Test real-time processing capabilities
         let graph = random_graph(100, 200, false).unwrap();
-        let mut processor = create_realtime_ultrathink_processor();
+        let mut processor = create_realtime_advanced_processor();
 
         let start = Instant::now();
-        let pagerank_result = execute_with_enhanced_ultrathink(
-            &mut processor,
-            &graph,
-            "test_realtime_pagerank",
-            |g| pagerank(g, 0.85, Some(10), Some(1e-4)),
-        )
-        .unwrap();
+        let pagerank_result =
+            execute_with_enhanced_advanced(&mut processor, &graph, "test_realtime_pagerank", |g| {
+                pagerank(g, 0.85, Some(10), Some(1e-4))
+            })
+            .unwrap();
         let elapsed = start.elapsed();
 
         assert!(!pagerank_result.is_empty());
@@ -855,17 +837,17 @@ mod tests {
     fn test_benchmark_suite() {
         // Test basic benchmark functionality
         let graph = random_graph(50, 100, false).unwrap();
-        let mut processor = create_enhanced_ultrathink_processor();
+        let mut processor = create_enhanced_advanced_processor();
 
         // Test multiple algorithms
         let components =
-            execute_with_enhanced_ultrathink(&mut processor, &graph, "benchmark_components", |g| {
+            execute_with_enhanced_advanced(&mut processor, &graph, "benchmark_components", |g| {
                 connected_components(g)
             })
             .unwrap();
 
         let pagerank_scores =
-            execute_with_enhanced_ultrathink(&mut processor, &graph, "benchmark_pagerank", |g| {
+            execute_with_enhanced_advanced(&mut processor, &graph, "benchmark_pagerank", |g| {
                 pagerank(g, 0.85, Some(20), Some(1e-5))
             })
             .unwrap();
@@ -884,14 +866,14 @@ mod tests {
         let graph = random_graph(100, 200, false).unwrap();
 
         let processors = vec![
-            create_enhanced_ultrathink_processor(),
-            create_performance_ultrathink_processor(),
-            create_realtime_ultrathink_processor(),
-            create_large_graph_ultrathink_processor(),
+            create_enhanced_advanced_processor(),
+            create_performance_advanced_processor(),
+            create_realtime_advanced_processor(),
+            create_large_graph_advanced_processor(),
         ];
 
         for mut processor in processors {
-            let result = execute_with_enhanced_ultrathink(
+            let result = execute_with_enhanced_advanced(
                 &mut processor,
                 &graph,
                 "test_processor_config",

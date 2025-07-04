@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for text in &texts {
         let result = basic_analyzer.analyze(text)?;
-        println!("\nText: \"{}\"", text);
+        println!("\nText: \"{text}\"");
         println!("  Sentiment: {:?}", result.sentiment);
         println!("  Score: {:.2}", result.score);
         println!("  Confidence: {:.2}%", result.confidence * 100.0);
@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let basic_result = basic_analyzer.analyze(text)?;
         let rule_result = rule_based_analyzer.analyze(text)?;
 
-        println!("\nText: \"{}\"", text);
+        println!("\nText: \"{text}\"");
         println!("  Basic score: {:.2}", basic_result.score);
         println!("  Rule-based score: {:.2}", rule_result.score);
         println!(

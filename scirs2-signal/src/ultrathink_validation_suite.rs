@@ -686,7 +686,7 @@ pub fn run_ultrathink_validation(
         }
     } else {
         // Create default results
-        let simd_results = SimdValidationResults {
+        let _simd_results = SimdValidationResults {
             operation_accuracy: 0.0,
             speedup_factor: 0.0,
             platform_consistency: 0.0,
@@ -714,7 +714,7 @@ pub fn run_ultrathink_validation(
             critical_issues.push("Parallel processing correctness below threshold".to_string());
         }
     } else {
-        let parallel_results = ParallelValidationResults {
+        let _parallel_results = ParallelValidationResults {
             correctness_score: 0.0,
             scalability: ScalabilityAnalysisResult {
                 weak_scaling: 0.0,

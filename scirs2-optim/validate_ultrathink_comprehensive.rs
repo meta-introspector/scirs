@@ -1,6 +1,6 @@
 //! Comprehensive Ultrathink Mode Validation Suite
 //!
-//! This validation suite embodies the "ultrathink mode" philosophy by providing
+//! This validation suite embodies the "advanced mode" philosophy by providing
 //! exhaustive testing, validation, and quality assurance for the scirs2-optim module.
 //!
 //! # Ultrathink Mode Features
@@ -748,7 +748,7 @@ impl UltrathinkValidator {
 
     fn generate_recommendations(&self, categories: &HashMap<String, CategoryResult>, recommendations: &mut Vec<String>) {
         // Add general recommendations based on validation results
-        recommendations.push("🚀 Continue running ultrathink validation regularly".to_string());
+        recommendations.push("🚀 Continue running advanced validation regularly".to_string());
         recommendations.push("📊 Set up automated CI/CD validation pipeline".to_string());
         recommendations.push("🔄 Establish regular dependency update schedule".to_string());
         recommendations.push("📈 Monitor performance metrics continuously".to_string());
@@ -757,10 +757,10 @@ impl UltrathinkValidator {
 }
 
 fn main() {
-    let matches = Command::new("ultrathink-comprehensive-validator")
+    let matches = Command::new("advanced-comprehensive-validator")
         .version("0.1.0")
         .author("SciRS2 Development Team")
-        .about("Comprehensive validation suite for ultrathink mode development")
+        .about("Comprehensive validation suite for advanced mode development")
         .arg(
             Arg::new("project-path")
                 .long("project-path")

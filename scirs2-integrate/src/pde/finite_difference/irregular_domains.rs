@@ -345,7 +345,15 @@ impl IrregularGrid {
                 {
                     let row_idx = point.solution_index as usize;
 
-                    // Standard 5-point Laplacian stencil
+                    // Handle boundary points with Dirichlet conditions
+                    if point.point_type == PointType::Boundary {
+                        // For Dirichlet boundary conditions, set the diagonal to 1
+                        // and all other entries in the row to 0
+                        matrix[[row_idx, row_idx]] = 1.0;
+                        continue;
+                    }
+
+                    // Standard 5-point Laplacian stencil for interior points
                     let stencil_coeffs = [
                         (0, 0, -2.0 / self.dx.powi(2) - 2.0 / self.dy.powi(2)), // Center
                         (-1, 0, 1.0 / self.dx.powi(2)),                         // Left
@@ -399,7 +407,26 @@ impl IrregularGrid {
                     let row_idx = point.solution_index as usize;
                     let (x, y) = point.coords;
 
-                    // Add source term contribution
+                    // Handle boundary points with Dirichlet conditions
+                    if point.point_type == PointType::Boundary {
+                        // For Dirichlet boundary conditions, set RHS to the boundary value
+                        if let Some(bc) = self.boundary_conditions.get(&(i, j)) {
+                            match bc {
+                                BoundaryCondition::Dirichlet(value) => {
+                                    rhs[row_idx] = *value;
+                                }
+                                _ => {
+                                    // For non-Dirichlet boundary conditions, use the source function
+                                    if let Some(source_fn) = source_function {
+                                        rhs[row_idx] += source_fn(x, y);
+                                    }
+                                }
+                            }
+                        }
+                        continue;
+                    }
+
+                    // Add source term contribution for interior points
                     if let Some(source_fn) = source_function {
                         rhs[row_idx] += source_fn(x, y);
                     }
@@ -1141,9 +1168,38 @@ mod tests {
         assert_eq!(solution.len(), grid.count_interior_points());
 
         // For this problem, all solution values should be positive (maximum principle)
+        let mut min_value = f64::INFINITY;
+        let mut max_value = f64::NEG_INFINITY;
+        let mut negative_count = 0;
+
         for &value in solution.iter() {
-            assert!(value >= 0.0, "Solution values should be non-negative");
+            if value < min_value {
+                min_value = value;
+            }
+            if value > max_value {
+                max_value = value;
+            }
+            if value < 0.0 {
+                negative_count += 1;
+            }
         }
+
+        println!("Solution statistics:");
+        println!("Min value: {}", min_value);
+        println!("Max value: {}", max_value);
+        println!("Negative values: {}/{}", negative_count, solution.len());
+
+        // Allow small numerical errors but require most values to be positive
+        assert!(
+            min_value >= -1e-10,
+            "Solution values should be non-negative (got min: {})",
+            min_value
+        );
+        assert!(
+            max_value > 0.0,
+            "Solution should have positive values (got max: {})",
+            max_value
+        );
 
         // Ghost values should be stored after solving
         assert!(

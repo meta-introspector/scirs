@@ -234,8 +234,7 @@ where
         if total_bytes > mmap_len {
             return Err(CoreError::MemoryError(
                 ErrorContext::new(format!(
-                    "Requested array size {} bytes exceeds memory map size {} bytes",
-                    total_bytes, mmap_len
+                    "Requested array size {total_bytes} bytes exceeds memory map size {mmap_len} bytes"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
@@ -290,8 +289,7 @@ where
         if data_size > file_size {
             return Err(CoreError::ValidationError(
                 ErrorContext::new(format!(
-                    "File too small for specified shape: need {} bytes, but file is only {} bytes",
-                    data_size, file_size
+                    "File too small for specified shape: need {data_size} bytes, but file is only {file_size} bytes"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
@@ -473,11 +471,8 @@ where
                 // Serialize header to bytes
                 let header_bytes = serialize(&header).map_err(|e| {
                     CoreError::ValidationError(
-                        ErrorContext::new(format!(
-                            "Failed to serialize header: {error}",
-                            error = e
-                        ))
-                        .with_location(ErrorLocation::new(file!(), line!())),
+                        ErrorContext::new(format!("Failed to serialize header: {e}"))
+                            .with_location(ErrorLocation::new(file!(), line!())),
                     )
                 })?;
 
@@ -635,7 +630,7 @@ where
         // Create an array from the memory-mapped data
         let array = Array::from_shape_vec(shape_vec, data_slice.to_vec()).map_err(|e| {
             CoreError::ShapeError(
-                ErrorContext::new(format!("error: {}", e))
+                ErrorContext::new(format!("error: {e}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )
         })?;
@@ -644,8 +639,7 @@ where
         let array = array.into_dimensionality::<D>().map_err(|e| {
             CoreError::ShapeError(
                 ErrorContext::new(format!(
-                    "Failed to convert array to requested dimension type: {}",
-                    e
+                    "Failed to convert array to requested dimension type: {e}"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             )
@@ -750,7 +744,7 @@ where
         let array_view = ndarray::ArrayViewMut::from_shape(self.shape.clone(), data_slice)
             .map_err(|e| {
                 CoreError::ShapeError(
-                    ErrorContext::new(format!("error: {}", e))
+                    ErrorContext::new(format!("error: {e}"))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 )
             })?;
@@ -759,8 +753,7 @@ where
         let array_view = array_view.into_dimensionality::<D>().map_err(|e| {
             CoreError::ShapeError(
                 ErrorContext::new(format!(
-                    "Failed to convert array to requested dimension type: {}",
-                    e
+                    "Failed to convert array to requested dimension type: {e}"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             )

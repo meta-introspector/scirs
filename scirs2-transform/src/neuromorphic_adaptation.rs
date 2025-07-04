@@ -1077,7 +1077,7 @@ impl UltraThinkNeuromorphicProcessor {
         // ✅ ULTRATHINK OPTIMIZATION: Update performance metrics
         let processing_time = start_time.elapsed().as_secs_f64();
         self.performance_metrics.throughput = meta_features_batch.len() as f64 / processing_time;
-        self.update_ultrathink_metrics();
+        self.update_advanced_metrics();
 
         Ok(results)
     }
@@ -1298,7 +1298,7 @@ impl UltraThinkNeuromorphicProcessor {
     }
 
     /// ✅ ULTRATHINK MODE: Update comprehensive performance metrics
-    fn update_ultrathink_metrics(&mut self) {
+    fn update_advanced_metrics(&mut self) {
         // ✅ ULTRATHINK OPTIMIZATION: Memory efficiency calculation
         let pool_hit_rate = self.memory_pool.len() as f64 / 32.0;
         self.performance_metrics.memory_efficiency = pool_hit_rate;
@@ -1321,7 +1321,7 @@ impl UltraThinkNeuromorphicProcessor {
     }
 
     /// ✅ ULTRATHINK MODE: Get real-time performance diagnostics
-    pub fn get_ultrathink_diagnostics(&self) -> &UltraThinkNeuromorphicMetrics {
+    pub fn get_advanced_diagnostics(&self) -> &UltraThinkNeuromorphicMetrics {
         &self.performance_metrics
     }
 

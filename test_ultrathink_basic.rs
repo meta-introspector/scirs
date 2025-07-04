@@ -1,6 +1,6 @@
 // Basic test for ultrathink mode compilation
 fn main() {
-    println!("Testing ultrathink mode basic compilation");
+    println!("Testing advanced mode basic compilation");
     
     // Test that the modules exist and can be imported
     // This is a basic syntax check
@@ -14,5 +14,5 @@ fn main() {
         println!("JIT compilation module available");
     }
     
-    println!("Basic ultrathink test complete");
+    println!("Basic advanced test complete");
 }

@@ -12,15 +12,15 @@ use scirs2_graph::{
     watts_strogatz_graph, DiGraph, Graph, Node,
 };
 
-use scirs2_graph::ultrathink::{
+use scirs2_graph::advanced::{
     create_enhanced_ultrathink_processor, create_large_graph_ultrathink_processor,
     create_performance_ultrathink_processor, execute_with_enhanced_ultrathink, UltrathinkConfig,
     UltrathinkProcessor,
 };
 
-use scirs2_graph::ultrathink_memory_profiler::{MemoryProfilerConfig, UltrathinkMemoryProfiler};
+use scirs2_graph::graph_memory_profiler::{MemoryProfilerConfig, UltrathinkMemoryProfiler};
 
-use scirs2_graph::ultrathink_numerical_validation::{
+use scirs2_graph::numerical_accuracy_validation::{
     create_comprehensive_validation_suite, run_quick_validation, ValidationConfig,
 };
 
@@ -48,12 +48,12 @@ enum ValidationStatus {
 
 /// Test different ultrathink processor configurations
 fn test_processor_configurations() -> HashMap<String, bool> {
-    println!("🔧 Testing ultrathink processor configurations...");
+    println!("🔧 Testing advanced processor configurations...");
     let mut results = HashMap::new();
 
     // Test enhanced processor creation
     println!("  Testing enhanced processor...");
-    match std::panic::catch_unwind(|| create_enhanced_ultrathink_processor()) {
+    match std::panic::catch_unwind(|| create_enhanced_advanced_processor()) {
         Ok(_processor) => {
             results.insert("enhanced_processor".to_string(), true);
             println!("    ✅ Enhanced processor created successfully");
@@ -66,7 +66,7 @@ fn test_processor_configurations() -> HashMap<String, bool> {
 
     // Test large graph processor creation
     println!("  Testing large graph processor...");
-    match std::panic::catch_unwind(|| create_large_graph_ultrathink_processor()) {
+    match std::panic::catch_unwind(|| create_large_graph_advanced_processor()) {
         Ok(_processor) => {
             results.insert("large_graph_processor".to_string(), true);
             println!("    ✅ Large graph processor created successfully");
@@ -79,7 +79,7 @@ fn test_processor_configurations() -> HashMap<String, bool> {
 
     // Test performance processor creation
     println!("  Testing performance processor...");
-    match std::panic::catch_unwind(|| create_performance_ultrathink_processor()) {
+    match std::panic::catch_unwind(|| create_performance_advanced_processor()) {
         Ok(_processor) => {
             results.insert("performance_processor".to_string(), true);
             println!("    ✅ Performance processor created successfully");
@@ -118,7 +118,7 @@ fn test_processor_configurations() -> HashMap<String, bool> {
     results
 }
 
-/// Test algorithm execution with ultrathink mode
+/// Test algorithm execution with advanced mode
 fn test_algorithm_execution() -> HashMap<String, Duration> {
     println!("🧮 Testing algorithm execution with ultrathink mode...");
     let mut results = HashMap::new();
@@ -133,12 +133,12 @@ fn test_algorithm_execution() -> HashMap<String, Duration> {
         }
     };
 
-    let mut processor = create_enhanced_ultrathink_processor();
+    let mut processor = create_enhanced_advanced_processor();
 
     // Test BFS
     println!("  Testing BFS with ultrathink...");
     let start_time = Instant::now();
-    match execute_with_enhanced_ultrathink(&mut processor, &test_graph, "bfs_test", |g| {
+    match execute_with_enhanced_advanced(&mut processor, &test_graph, "bfs_test", |g| {
         breadth_first_search(g, &0)
     }) {
         Ok(_) => {
@@ -152,7 +152,7 @@ fn test_algorithm_execution() -> HashMap<String, Duration> {
     }
 
     // Test Connected Components
-    println!("  Testing connected components with ultrathink...");
+    println!("  Testing connected components with advanced...");
     let start_time = Instant::now();
     match execute_with_enhanced_ultrathink(
         &mut processor,
@@ -171,7 +171,7 @@ fn test_algorithm_execution() -> HashMap<String, Duration> {
     }
 
     // Test PageRank
-    println!("  Testing PageRank with ultrathink...");
+    println!("  Testing PageRank with advanced...");
     let start_time = Instant::now();
     match execute_with_enhanced_ultrathink(&mut processor, &test_graph, "pagerank_test", |g| {
         pagerank_centrality(g, None, None, None)
@@ -187,7 +187,7 @@ fn test_algorithm_execution() -> HashMap<String, Duration> {
     }
 
     // Test Community Detection
-    println!("  Testing community detection with ultrathink...");
+    println!("  Testing community detection with advanced...");
     let start_time = Instant::now();
     match execute_with_enhanced_ultrathink(
         &mut processor,
@@ -208,7 +208,7 @@ fn test_algorithm_execution() -> HashMap<String, Duration> {
     results
 }
 
-/// Test memory efficiency with ultrathink mode
+/// Test memory efficiency with advanced mode
 fn test_memory_efficiency() -> f64 {
     println!("💾 Testing memory efficiency with ultrathink mode...");
 
@@ -235,7 +235,7 @@ fn test_memory_efficiency() -> f64 {
 
     profiler.start_profiling();
 
-    let mut processor = create_performance_ultrathink_processor();
+    let mut processor = create_performance_advanced_processor();
 
     // Run several memory-intensive operations
     let operations = vec![
@@ -251,7 +251,7 @@ fn test_memory_efficiency() -> f64 {
     ];
 
     for (name, operation) in operations {
-        let _ = execute_with_enhanced_ultrathink(
+        let _ = execute_with_enhanced_advanced(
             &mut processor,
             &test_graph,
             &format!("memory_test_{}", name),
@@ -278,7 +278,7 @@ fn test_memory_efficiency() -> f64 {
 
 /// Test numerical accuracy with quick validation
 fn test_numerical_accuracy() -> bool {
-    println!("🔢 Testing numerical accuracy with ultrathink mode...");
+    println!("🔢 Testing numerical accuracy with advanced mode...");
 
     // Create validation configuration
     let config = ValidationConfig {
@@ -308,7 +308,7 @@ fn test_numerical_accuracy() -> bool {
     }
 }
 
-/// Compare performance with and without ultrathink mode
+/// Compare performance with and without advanced mode
 fn test_performance_improvements() -> HashMap<String, f64> {
     println!("⚡ Testing performance improvements with ultrathink mode...");
     let mut improvements = HashMap::new();
@@ -331,19 +331,18 @@ fn test_performance_improvements() -> HashMap<String, f64> {
     let standard_duration = start_time.elapsed();
 
     // Ultrathink execution
-    let mut processor = create_performance_ultrathink_processor();
+    let mut processor = create_performance_advanced_processor();
     let start_time = Instant::now();
-    let _ultrathink_result = execute_with_enhanced_ultrathink(
+    let _advanced_result = execute_with_enhanced_advanced(
         &mut processor,
         &test_graph,
         "pagerank_performance_test",
         |g| pagerank_centrality(g, None, None, None),
     );
-    let ultrathink_duration = start_time.elapsed();
+    let advanced_duration = start_time.elapsed();
 
-    if ultrathink_duration.as_nanos() > 0 {
-        let improvement =
-            standard_duration.as_nanos() as f64 / ultrathink_duration.as_nanos() as f64;
+    if advanced_duration.as_nanos() > 0 {
+        let improvement = standard_duration.as_nanos() as f64 / advanced_duration.as_nanos() as f64;
         improvements.insert("pagerank".to_string(), improvement);
         println!("    📊 PageRank improvement: {:.2}x", improvement);
     }
@@ -358,15 +357,14 @@ fn test_performance_improvements() -> HashMap<String, f64> {
 
     // Ultrathink execution
     let start_time = Instant::now();
-    let _ultrathink_result =
-        execute_with_enhanced_ultrathink(&mut processor, &test_graph, "cc_performance_test", |g| {
+    let _advanced_result =
+        execute_with_enhanced_advanced(&mut processor, &test_graph, "cc_performance_test", |g| {
             connected_components(g)
         });
-    let ultrathink_duration = start_time.elapsed();
+    let advanced_duration = start_time.elapsed();
 
-    if ultrathink_duration.as_nanos() > 0 {
-        let improvement =
-            standard_duration.as_nanos() as f64 / ultrathink_duration.as_nanos() as f64;
+    if advanced_duration.as_nanos() > 0 {
+        let improvement = standard_duration.as_nanos() as f64 / advanced_duration.as_nanos() as f64;
         improvements.insert("connected_components".to_string(), improvement);
         println!(
             "    📊 Connected components improvement: {:.2}x",
@@ -540,7 +538,7 @@ fn print_validation_report(report: &UltrathinkValidationReport) {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("🚀 Starting final ultrathink mode validation...");
+    println!("🚀 Starting final advanced mode validation...");
     println!("=".repeat(60));
 
     // Run all validation tests
@@ -564,7 +562,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Exit with appropriate code
     match report.overall_status {
         ValidationStatus::Pass => {
-            println!("\n🎉 All ultrathink mode validations passed successfully!");
+            println!("\n🎉 All advanced mode validations passed successfully!");
             Ok(())
         }
         ValidationStatus::Warning => {

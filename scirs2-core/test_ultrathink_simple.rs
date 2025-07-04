@@ -1,17 +1,17 @@
 //! Simple test for ultrathink mode basic functionality
 
 fn main() {
-    println!("Testing ultrathink mode basic functionality...");
+    println!("Testing advanced mode basic functionality...");
     
     // Test basic imports - this should compile if the modules are working
     println!("Testing imports...");
     
     // Test ecosystem coordinator
-    let _coordinator = scirs2_core::ultrathink_ecosystem_integration::UltrathinkEcosystemCoordinator::new();
+    let _coordinator = scirs2_core::advanced_ecosystem_integration::UltrathinkEcosystemCoordinator::new();
     println!("✓ Ecosystem coordinator created");
     
     // Test distributed computer
-    match scirs2_core::ultrathink_distributed_computing::UltrathinkDistributedComputer::new() {
+    match scirs2_core::advanced_distributed_computing::UltrathinkDistributedComputer::new() {
         Ok(_) => println!("✓ Distributed computer created"),
         Err(e) => println!("⚠ Distributed computer failed: {}", e),
     }
@@ -41,7 +41,7 @@ fn main() {
     #[cfg(feature = "jit")]
     {
         // Test JIT compiler if feature is enabled
-        match scirs2_core::ultrathink_jit_compilation::UltrathinkJitCompiler::new() {
+        match scirs2_core::advanced_jit_compilation::UltrathinkJitCompiler::new() {
             Ok(_) => println!("✓ JIT compiler created"),
             Err(e) => println!("⚠ JIT compiler failed: {}", e),
         }
@@ -51,5 +51,5 @@ fn main() {
         println!("ℹ JIT compiler test skipped (feature not enabled)");
     }
     
-    println!("✅ Basic ultrathink mode functionality test complete!");
+    println!("✅ Basic advanced mode functionality test complete!");
 }

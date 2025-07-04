@@ -3,7 +3,7 @@ use scirs2_special::{sici, shichi, spence, erfcx, erfi, wofz, expit, logit, expi
 use ndarray::array;
 
 fn main() {
-    println!("Testing new SciPy parity functions (ultrathink mode)...");
+    println!("Testing new SciPy parity functions (advanced mode)...");
     
     // Test sici function
     if let Ok((si_val, ci_val)) = sici(1.0) {
@@ -103,7 +103,7 @@ fn main() {
     
     println!("✓ array function tests passed");
     
-    println!("\n🎉 All ultrathink mode function tests passed successfully!");
+    println!("\n🎉 All advanced mode function tests passed successfully!");
     println!("NEW HIGH-PRIORITY FUNCTIONS:");
     println!("✓ sici (sine and cosine integrals)");
     println!("✓ shichi (hyperbolic sine and cosine integrals)");

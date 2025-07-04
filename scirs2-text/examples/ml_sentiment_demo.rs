@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Test examples: {}", test_dataset.texts.len());
 
     let labels_train: std::collections::HashSet<_> = train_dataset.labels.iter().cloned().collect();
-    println!("Labels: {:?}\n", labels_train);
+    println!("Labels: {labels_train:?}\n");
 
     // Configure and train ML sentiment analyzer
     println!("2. Training ML Sentiment Analyzer");

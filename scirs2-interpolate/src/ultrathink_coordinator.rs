@@ -33,7 +33,7 @@ use std::time::{Duration, Instant};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// Central coordinator for ultrathink interpolation operations
+/// Central coordinator for advanced interpolation operations
 #[derive(Debug)]
 pub struct UltrathinkInterpolationCoordinator<F: Float + Debug> {
     /// Intelligent method selector
@@ -58,7 +58,7 @@ pub struct UltrathinkInterpolationCoordinator<F: Float + Debug> {
     adaptive_cache: Arc<Mutex<AdaptiveInterpolationCache<F>>>,
 }
 
-/// Configuration for ultrathink interpolation operations
+/// Configuration for advanced interpolation operations
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UltrathinkInterpolationConfig {
@@ -1078,7 +1078,7 @@ impl<F: Float> InputValidationResult<F> {
 }
 
 impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
-    /// Create a new ultrathink interpolation coordinator
+    /// Create a new advanced interpolation coordinator
     pub fn new(config: UltrathinkInterpolationConfig) -> InterpolateResult<Self> {
         Ok(Self {
             method_selector: Arc::new(RwLock::new(IntelligentMethodSelector::new()?)),
@@ -1124,7 +1124,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         })
     }
 
-    /// Execute interpolation with ultrathink optimizations
+    /// Execute interpolation with advanced optimizations
     pub fn execute_optimized_interpolation<D: Dimension>(
         &self,
         x_data: &ArrayBase<impl Data<Elem = F>, D>,
@@ -1179,7 +1179,7 @@ impl<F: Float + Debug> UltrathinkInterpolationCoordinator<F> {
         })
     }
 
-    /// Update ultrathink configuration
+    /// Update advanced configuration
     pub fn update_config(
         &mut self,
         new_config: UltrathinkInterpolationConfig,

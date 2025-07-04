@@ -178,8 +178,7 @@ where
             }
 
             return Err(CoreError::DimensionError(ErrorContext::new(format!(
-                "Cannot convert {} dimensions to target dimension type",
-                source_ndim
+                "Cannot convert {source_ndim} dimensions to target dimension type"
             ))));
         }
 

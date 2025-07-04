@@ -564,9 +564,10 @@ impl SpMVKernel {
         }
     }
 
+    #[allow(unused_variables)]
     pub fn execute<T>(
         &self,
-        _device: &GpuDevice,
+        device: &GpuDevice,
         rows: usize,
         cols: usize,
         indptr: &GpuBuffer<usize>,
@@ -646,12 +647,12 @@ impl SpMVKernel {
             &[grid_size * block_size],
             &[block_size],
             &[
-                Box::new(rows as u32),
-                Box::new(indptr),
-                Box::new(indices),
-                Box::new(data),
-                Box::new(x),
-                Box::new(y),
+                Box::new(rows as u32) as Box<dyn std::any::Any>,
+                Box::new(indptr) as Box<dyn std::any::Any>,
+                Box::new(indices) as Box<dyn std::any::Any>,
+                Box::new(data) as Box<dyn std::any::Any>,
+                Box::new(x) as Box<dyn std::any::Any>,
+                Box::new(y) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -682,12 +683,12 @@ impl SpMVKernel {
             &[global_work_size],
             &[local_work_size],
             &[
-                Box::new(rows as u32),
-                Box::new(indptr),
-                Box::new(indices),
-                Box::new(data),
-                Box::new(x),
-                Box::new(y),
+                Box::new(rows as u32) as Box<dyn std::any::Any>,
+                Box::new(indptr) as Box<dyn std::any::Any>,
+                Box::new(indices) as Box<dyn std::any::Any>,
+                Box::new(data) as Box<dyn std::any::Any>,
+                Box::new(x) as Box<dyn std::any::Any>,
+                Box::new(y) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -718,12 +719,12 @@ impl SpMVKernel {
             &[threadgroups * threads_per_threadgroup],
             &[threads_per_threadgroup],
             &[
-                Box::new(rows as u32),
-                Box::new(indptr),
-                Box::new(indices),
-                Box::new(data),
-                Box::new(x),
-                Box::new(y),
+                Box::new(rows as u32) as Box<dyn std::any::Any>,
+                Box::new(indptr) as Box<dyn std::any::Any>,
+                Box::new(indices) as Box<dyn std::any::Any>,
+                Box::new(data) as Box<dyn std::any::Any>,
+                Box::new(x) as Box<dyn std::any::Any>,
+                Box::new(y) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1580,12 +1581,12 @@ impl SpMSKernel {
             &[grid_size * block_size],
             &[block_size],
             &[
-                Box::new(rows as u32),
-                Box::new(indptr),
-                Box::new(indices),
-                Box::new(data),
-                Box::new(x),
-                Box::new(y),
+                Box::new(rows as u32) as Box<dyn std::any::Any>,
+                Box::new(indptr) as Box<dyn std::any::Any>,
+                Box::new(indices) as Box<dyn std::any::Any>,
+                Box::new(data) as Box<dyn std::any::Any>,
+                Box::new(x) as Box<dyn std::any::Any>,
+                Box::new(y) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1614,12 +1615,12 @@ impl SpMSKernel {
             &[global_work_size],
             &[local_work_size],
             &[
-                Box::new(rows as u32),
-                Box::new(indptr),
-                Box::new(indices),
-                Box::new(data),
-                Box::new(x),
-                Box::new(y),
+                Box::new(rows as u32) as Box<dyn std::any::Any>,
+                Box::new(indptr) as Box<dyn std::any::Any>,
+                Box::new(indices) as Box<dyn std::any::Any>,
+                Box::new(data) as Box<dyn std::any::Any>,
+                Box::new(x) as Box<dyn std::any::Any>,
+                Box::new(y) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1648,12 +1649,12 @@ impl SpMSKernel {
             &[threadgroups * threads_per_threadgroup],
             &[threads_per_threadgroup],
             &[
-                Box::new(rows as u32),
-                Box::new(indptr),
-                Box::new(indices),
-                Box::new(data),
-                Box::new(x),
-                Box::new(y),
+                Box::new(rows as u32) as Box<dyn std::any::Any>,
+                Box::new(indptr) as Box<dyn std::any::Any>,
+                Box::new(indices) as Box<dyn std::any::Any>,
+                Box::new(data) as Box<dyn std::any::Any>,
+                Box::new(x) as Box<dyn std::any::Any>,
+                Box::new(y) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1688,18 +1689,18 @@ impl SpMSKernel {
             &[grid_size * block_size],
             &[block_size],
             &[
-                Box::new(a_rows as u32),
-                Box::new(a_cols as u32),
-                Box::new(b_cols as u32),
-                Box::new(a_indptr),
-                Box::new(a_indices),
-                Box::new(a_data),
-                Box::new(b_indptr),
-                Box::new(b_indices),
-                Box::new(b_data),
-                Box::new(c_indptr),
-                Box::new(c_indices),
-                Box::new(c_data),
+                Box::new(a_rows as u32) as Box<dyn std::any::Any>,
+                Box::new(a_cols as u32) as Box<dyn std::any::Any>,
+                Box::new(b_cols as u32) as Box<dyn std::any::Any>,
+                Box::new(a_indptr) as Box<dyn std::any::Any>,
+                Box::new(a_indices) as Box<dyn std::any::Any>,
+                Box::new(a_data) as Box<dyn std::any::Any>,
+                Box::new(b_indptr) as Box<dyn std::any::Any>,
+                Box::new(b_indices) as Box<dyn std::any::Any>,
+                Box::new(b_data) as Box<dyn std::any::Any>,
+                Box::new(c_indptr) as Box<dyn std::any::Any>,
+                Box::new(c_indices) as Box<dyn std::any::Any>,
+                Box::new(c_data) as Box<dyn std::any::Any>,
             ],
         )?;
 
@@ -1737,18 +1738,18 @@ impl SpMSKernel {
             &[global_work_size],
             &[local_work_size],
             &[
-                Box::new(a_rows as u32),
-                Box::new(a_cols as u32),
-                Box::new(b_cols as u32),
-                Box::new(a_indptr),
-                Box::new(a_indices),
-                Box::new(a_data),
-                Box::new(b_indptr),
-                Box::new(b_indices),
-                Box::new(b_data),
-                Box::new(c_indptr),
-                Box::new(c_indices),
-                Box::new(c_data),
+                Box::new(a_rows as u32) as Box<dyn std::any::Any>,
+                Box::new(a_cols as u32) as Box<dyn std::any::Any>,
+                Box::new(b_cols as u32) as Box<dyn std::any::Any>,
+                Box::new(a_indptr) as Box<dyn std::any::Any>,
+                Box::new(a_indices) as Box<dyn std::any::Any>,
+                Box::new(a_data) as Box<dyn std::any::Any>,
+                Box::new(b_indptr) as Box<dyn std::any::Any>,
+                Box::new(b_indices) as Box<dyn std::any::Any>,
+                Box::new(b_data) as Box<dyn std::any::Any>,
+                Box::new(c_indptr) as Box<dyn std::any::Any>,
+                Box::new(c_indices) as Box<dyn std::any::Any>,
+                Box::new(c_data) as Box<dyn std::any::Any>,
             ],
         )?;
 
@@ -1785,18 +1786,18 @@ impl SpMSKernel {
             &[threadgroups * threads_per_threadgroup],
             &[threads_per_threadgroup],
             &[
-                Box::new(a_rows as u32),
-                Box::new(a_cols as u32),
-                Box::new(b_cols as u32),
-                Box::new(a_indptr),
-                Box::new(a_indices),
-                Box::new(a_data),
-                Box::new(b_indptr),
-                Box::new(b_indices),
-                Box::new(b_data),
-                Box::new(c_indptr),
-                Box::new(c_indices),
-                Box::new(c_data),
+                Box::new(a_rows as u32) as Box<dyn std::any::Any>,
+                Box::new(a_cols as u32) as Box<dyn std::any::Any>,
+                Box::new(b_cols as u32) as Box<dyn std::any::Any>,
+                Box::new(a_indptr) as Box<dyn std::any::Any>,
+                Box::new(a_indices) as Box<dyn std::any::Any>,
+                Box::new(a_data) as Box<dyn std::any::Any>,
+                Box::new(b_indptr) as Box<dyn std::any::Any>,
+                Box::new(b_indices) as Box<dyn std::any::Any>,
+                Box::new(b_data) as Box<dyn std::any::Any>,
+                Box::new(c_indptr) as Box<dyn std::any::Any>,
+                Box::new(c_indices) as Box<dyn std::any::Any>,
+                Box::new(c_data) as Box<dyn std::any::Any>,
             ],
         )?;
 
@@ -1826,12 +1827,12 @@ impl SpMSKernel {
             &[1], // Single global work item
             &[1], // Single local work item
             &[
-                Box::new(n as u32),
-                Box::new(indptr),
-                Box::new(indices),
-                Box::new(data),
-                Box::new(b),
-                Box::new(x),
+                Box::new(n as u32) as Box<dyn std::any::Any>,
+                Box::new(indptr) as Box<dyn std::any::Any>,
+                Box::new(indices) as Box<dyn std::any::Any>,
+                Box::new(data) as Box<dyn std::any::Any>,
+                Box::new(b) as Box<dyn std::any::Any>,
+                Box::new(x) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1858,12 +1859,12 @@ impl SpMSKernel {
             &[1],
             &[1],
             &[
-                Box::new(n as u32),
-                Box::new(indptr),
-                Box::new(indices),
-                Box::new(data),
-                Box::new(b),
-                Box::new(x),
+                Box::new(n as u32) as Box<dyn std::any::Any>,
+                Box::new(indptr) as Box<dyn std::any::Any>,
+                Box::new(indices) as Box<dyn std::any::Any>,
+                Box::new(data) as Box<dyn std::any::Any>,
+                Box::new(b) as Box<dyn std::any::Any>,
+                Box::new(x) as Box<dyn std::any::Any>,
             ],
         )
     }
@@ -1890,12 +1891,12 @@ impl SpMSKernel {
             &[1],
             &[1],
             &[
-                Box::new(n as u32),
-                Box::new(indptr),
-                Box::new(indices),
-                Box::new(data),
-                Box::new(b),
-                Box::new(x),
+                Box::new(n as u32) as Box<dyn std::any::Any>,
+                Box::new(indptr) as Box<dyn std::any::Any>,
+                Box::new(indices) as Box<dyn std::any::Any>,
+                Box::new(data) as Box<dyn std::any::Any>,
+                Box::new(b) as Box<dyn std::any::Any>,
+                Box::new(x) as Box<dyn std::any::Any>,
             ],
         )
     }

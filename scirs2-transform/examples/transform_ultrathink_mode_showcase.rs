@@ -112,7 +112,7 @@ fn demonstrate_neuromorphic_adaptation() -> Result<()> {
     }
 
     // Get performance diagnostics
-    let diagnostics = processor.get_ultrathink_diagnostics();
+    let diagnostics = processor.get_advanced_diagnostics();
     println!("\n📊 ULTRATHINK Performance Metrics:");
     println!("   Throughput: {:.1} samples/sec", diagnostics.throughput);
     println!("   Memory Efficiency: {:.3}", diagnostics.memory_efficiency);
@@ -196,7 +196,7 @@ fn demonstrate_quantum_optimization() -> Result<()> {
     println!("   Best Fitness: {:.6}", best_fitness);
 
     // Get quantum optimization diagnostics
-    let diagnostics = optimizer.get_ultrathink_diagnostics();
+    let diagnostics = optimizer.get_advanced_diagnostics();
     let adaptive_params = optimizer.get_adaptive_params();
 
     println!("\n⚡ ULTRATHINK Quantum Metrics:");

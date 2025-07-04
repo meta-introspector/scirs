@@ -4,6 +4,8 @@
 //! for ultrathink mode optimizations by comparing results against
 //! reference implementations and established benchmarks.
 
+#![allow(missing_docs)]
+
 use crate::algorithms::community::{label_propagation_result, louvain_communities_result};
 use crate::algorithms::connectivity::connected_components;
 use crate::algorithms::floyd_warshall;
@@ -13,11 +15,10 @@ use crate::error::{GraphError, Result};
 use crate::generators::{barabasi_albert_graph, erdos_renyi_graph};
 use crate::measures::pagerank_centrality;
 // Unused imports are commented to avoid warnings
-// use crate::ultrathink::{
+// use crate::advanced::{
 //     create_ultrathink_processor, execute_with_ultrathink, UltrathinkProcessor,
 // };
-use crate::ultrathink::create_ultrathink_processor as create_enhanced_ultrathink_processor;
-use crate::ultrathink::execute_with_ultrathink as execute_with_enhanced_ultrathink;
+use crate::advanced::{create_enhanced_advanced_processor, execute_with_enhanced_advanced};
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant, SystemTime};
 
@@ -409,12 +410,11 @@ impl UltrathinkNumericalValidator {
         // Run standard (reference) implementation
         let (standard_result, standard_time) = self.run_standard_algorithm(graph, algorithm)?;
 
-        // Run ultrathink optimized implementation
-        let (ultrathink_result, ultrathink_time) =
-            self.run_ultrathink_algorithm(graph, algorithm)?;
+        // Run advanced optimized implementation
+        let (advanced_result, advanced_time) = self.run_advanced_algorithm(graph, algorithm)?;
 
         // Compare results and calculate metrics
-        let metrics = self.compare_results(&standard_result, &ultrathink_result, algorithm)?;
+        let metrics = self.compare_results(&standard_result, &advanced_result, algorithm)?;
 
         // Determine if validation passed
         let passed = self.evaluate_validation_pass(&metrics, tolerances);
@@ -423,7 +423,7 @@ impl UltrathinkNumericalValidator {
         let accuracy_score = self.calculate_accuracy_score(&metrics);
 
         // Calculate speedup factor
-        let speedup_factor = standard_time.as_secs_f64() / ultrathink_time.as_secs_f64();
+        let speedup_factor = standard_time.as_secs_f64() / advanced_time.as_secs_f64();
 
         let error_message = if !passed {
             Some(format!(
@@ -440,7 +440,7 @@ impl UltrathinkNumericalValidator {
             passed,
             accuracy_score,
             standard_time,
-            ultrathink_time,
+            ultrathink_time: advanced_time,
             speedup_factor,
             metrics,
             error_message,
@@ -538,48 +538,48 @@ impl UltrathinkNumericalValidator {
         Ok((result, elapsed))
     }
 
-    /// Run ultrathink optimized algorithm implementation
-    fn run_ultrathink_algorithm(
+    /// Run advanced optimized algorithm implementation
+    fn run_advanced_algorithm(
         &self,
         graph: &Graph<usize, f64>,
         algorithm: &ValidationAlgorithm,
     ) -> Result<(AlgorithmOutput, Duration)> {
-        let mut processor = create_enhanced_ultrathink_processor();
+        let mut processor = create_enhanced_advanced_processor();
         let start = Instant::now();
 
         let result = match algorithm {
             ValidationAlgorithm::ConnectedComponents => {
-                let components = execute_with_enhanced_ultrathink(
+                let components = execute_with_enhanced_advanced(
                     &mut processor,
                     graph,
                     "validation_connected_components",
                     |g| Ok(connected_components(g)),
                 )?;
                 AlgorithmOutput::ComponentMap({
-                    let mut component_map: HashMap<usize, usize> = HashMap::new();
+                    let mut component_map = HashMap::new();
                     for (component_id, component) in components.iter().enumerate() {
                         for node in component {
-                            component_map.insert(**node, component_id);
+                            component_map.insert(*node, component_id);
                         }
                     }
                     component_map
                 })
             }
             ValidationAlgorithm::StronglyConnectedComponents => {
-                let components = execute_with_enhanced_ultrathink(
+                let components = execute_with_enhanced_advanced(
                     &mut processor,
                     graph,
                     "validation_strongly_connected_components",
                     |g| {
                         // strongly_connected_components requires DiGraph, skip for undirected graphs
-                        Ok(vec![g.nodes().into_iter().collect::<HashSet<_>>()])
+                        Ok(vec![g.nodes().into_iter().cloned().collect::<HashSet<_>>()])
                     },
                 )?;
                 AlgorithmOutput::ComponentMap({
-                    let mut component_map: HashMap<usize, usize> = HashMap::new();
+                    let mut component_map = HashMap::new();
                     for (component_id, component) in components.iter().enumerate() {
                         for node in component {
-                            component_map.insert(**node, component_id);
+                            component_map.insert(*node, component_id);
                         }
                     }
                     component_map
@@ -587,10 +587,10 @@ impl UltrathinkNumericalValidator {
             }
             ValidationAlgorithm::PageRank {
                 damping,
-                max_iterations,
+                max_iterations: _,
                 tolerance,
             } => {
-                let scores = execute_with_enhanced_ultrathink(
+                let scores = execute_with_enhanced_advanced(
                     &mut processor,
                     graph,
                     "validation_pagerank",
@@ -599,7 +599,7 @@ impl UltrathinkNumericalValidator {
                 AlgorithmOutput::ScoreMap(scores)
             }
             ValidationAlgorithm::BetweennessCentrality => {
-                let scores = execute_with_enhanced_ultrathink(
+                let scores = execute_with_enhanced_advanced(
                     &mut processor,
                     graph,
                     "validation_betweenness_centrality",
@@ -608,7 +608,7 @@ impl UltrathinkNumericalValidator {
                 AlgorithmOutput::ScoreMap(scores)
             }
             ValidationAlgorithm::ClosenessCentrality => {
-                let scores = execute_with_enhanced_ultrathink(
+                let scores = execute_with_enhanced_advanced(
                     &mut processor,
                     graph,
                     "validation_closeness_centrality",
@@ -617,22 +617,22 @@ impl UltrathinkNumericalValidator {
                 AlgorithmOutput::ScoreMap(scores)
             }
             ValidationAlgorithm::DegreeCentrality => {
-                let scores = execute_with_enhanced_ultrathink(
+                let scores = execute_with_enhanced_advanced(
                     &mut processor,
                     graph,
                     "validation_degree_centrality",
                     |g| {
                         let mut degree_map = HashMap::new();
                         for node in g.nodes() {
-                            degree_map.insert(node, g.degree(node) as f64);
+                            degree_map.insert(node.clone(), g.degree(node) as f64);
                         }
                         Ok(degree_map)
                     },
                 )?;
-                AlgorithmOutput::ScoreMap(scores.into_iter().map(|(k, v)| (*k, v)).collect())
+                AlgorithmOutput::ScoreMap(scores)
             }
             ValidationAlgorithm::ShortestPaths { source } => {
-                let distances = execute_with_enhanced_ultrathink(
+                let distances = execute_with_enhanced_advanced(
                     &mut processor,
                     graph,
                     "validation_shortest_paths",
@@ -657,7 +657,7 @@ impl UltrathinkNumericalValidator {
                 AlgorithmOutput::DistanceMap(distances)
             }
             ValidationAlgorithm::AllPairsShortestPaths => {
-                let distances = execute_with_enhanced_ultrathink(
+                let distances = execute_with_enhanced_advanced(
                     &mut processor,
                     graph,
                     "validation_all_pairs_shortest_paths",
@@ -677,7 +677,7 @@ impl UltrathinkNumericalValidator {
                 AlgorithmOutput::AllPairsDistances(distances)
             }
             ValidationAlgorithm::LouvainCommunities => {
-                let communities = execute_with_enhanced_ultrathink(
+                let communities = execute_with_enhanced_advanced(
                     &mut processor,
                     graph,
                     "validation_louvain_communities",
@@ -686,7 +686,7 @@ impl UltrathinkNumericalValidator {
                 AlgorithmOutput::ComponentMap(communities)
             }
             ValidationAlgorithm::LabelPropagation { max_iterations } => {
-                let communities = execute_with_enhanced_ultrathink(
+                let communities = execute_with_enhanced_advanced(
                     &mut processor,
                     graph,
                     "validation_label_propagation",
@@ -744,10 +744,10 @@ impl UltrathinkNumericalValidator {
     fn compare_results(
         &self,
         standard: &AlgorithmOutput,
-        ultrathink: &AlgorithmOutput,
+        advanced: &AlgorithmOutput,
         _algorithm: &ValidationAlgorithm,
     ) -> Result<ValidationMetrics> {
-        match (standard, ultrathink) {
+        match (standard, advanced) {
             (AlgorithmOutput::ScoreMap(std_scores), AlgorithmOutput::ScoreMap(ut_scores)) => {
                 self.compare_score_maps(std_scores, ut_scores)
             }
@@ -774,27 +774,27 @@ impl UltrathinkNumericalValidator {
     fn compare_score_maps(
         &self,
         standard: &HashMap<usize, f64>,
-        ultrathink: &HashMap<usize, f64>,
+        advanced: &HashMap<usize, f64>,
     ) -> Result<ValidationMetrics> {
         let mut absolute_errors = Vec::new();
         let mut standard_values = Vec::new();
-        let mut ultrathink_values = Vec::new();
+        let mut advanced_values = Vec::new();
         let mut exact_matches = 0;
 
         // Find common keys
         let common_keys: Vec<_> = standard
             .keys()
-            .filter(|k| ultrathink.contains_key(k))
+            .filter(|k| advanced.contains_key(k))
             .collect();
 
         for &key in &common_keys {
             let std_val = standard[key];
-            let ut_val = ultrathink[key];
+            let ut_val = advanced[key];
 
             let abs_error = (std_val - ut_val).abs();
             absolute_errors.push(abs_error);
             standard_values.push(std_val);
-            ultrathink_values.push(ut_val);
+            advanced_values.push(ut_val);
 
             if abs_error < self.tolerances.absolute_tolerance {
                 exact_matches += 1;
@@ -810,9 +810,9 @@ impl UltrathinkNumericalValidator {
 
         // Calculate correlations
         let pearson_correlation =
-            self.calculate_pearson_correlation(&standard_values, &ultrathink_values);
+            self.calculate_pearson_correlation(&standard_values, &advanced_values);
         let spearman_correlation =
-            self.calculate_spearman_correlation(&standard_values, &ultrathink_values);
+            self.calculate_spearman_correlation(&standard_values, &advanced_values);
 
         Ok(ValidationMetrics {
             max_absolute_error,
@@ -830,18 +830,18 @@ impl UltrathinkNumericalValidator {
     fn compare_component_maps(
         &self,
         standard: &HashMap<usize, usize>,
-        ultrathink: &HashMap<usize, usize>,
+        advanced: &HashMap<usize, usize>,
     ) -> Result<ValidationMetrics> {
         let mut exact_matches = 0;
         let common_keys: Vec<_> = standard
             .keys()
-            .filter(|k| ultrathink.contains_key(k))
+            .filter(|k| advanced.contains_key(k))
             .collect();
 
         // For component maps, we need to check if the partitioning is equivalent
         // even if the component IDs are different
         let normalized_std = self.normalize_component_map(standard);
-        let normalized_ut = self.normalize_component_map(ultrathink);
+        let normalized_ut = self.normalize_component_map(advanced);
 
         for &key in &common_keys {
             if normalized_std.get(key) == normalized_ut.get(key) {
@@ -876,29 +876,29 @@ impl UltrathinkNumericalValidator {
     fn compare_distance_maps(
         &self,
         standard: &HashMap<usize, f64>,
-        ultrathink: &HashMap<usize, f64>,
+        advanced: &HashMap<usize, f64>,
     ) -> Result<ValidationMetrics> {
         // Distance maps are similar to score maps but may have special handling for infinity
-        self.compare_score_maps(standard, ultrathink)
+        self.compare_score_maps(standard, advanced)
     }
 
     /// Compare all-pairs distance results
     fn compare_all_pairs_distances(
         &self,
         standard: &HashMap<(usize, usize), f64>,
-        ultrathink: &HashMap<(usize, usize), f64>,
+        advanced: &HashMap<(usize, usize), f64>,
     ) -> Result<ValidationMetrics> {
         let mut absolute_errors = Vec::new();
         let mut exact_matches = 0;
 
         let common_keys: Vec<_> = standard
             .keys()
-            .filter(|k| ultrathink.contains_key(k))
+            .filter(|k| advanced.contains_key(k))
             .collect();
 
         for &key in &common_keys {
             let std_val = standard[key];
-            let ut_val = ultrathink[key];
+            let ut_val = advanced[key];
 
             let abs_error = (std_val - ut_val).abs();
             absolute_errors.push(abs_error);
@@ -1052,7 +1052,7 @@ impl UltrathinkNumericalValidator {
                 .sum::<f64>()
                 / results.len() as f64,
         );
-        let ultrathink_time = Duration::from_secs_f64(
+        let advanced_time = Duration::from_secs_f64(
             results
                 .iter()
                 .map(|r| r.ultrathink_time.as_secs_f64())
@@ -1114,7 +1114,7 @@ impl UltrathinkNumericalValidator {
             passed,
             accuracy_score,
             standard_time,
-            ultrathink_time,
+            ultrathink_time: advanced_time,
             speedup_factor,
             metrics,
             error_message,
@@ -1268,7 +1268,7 @@ impl UltrathinkNumericalValidator {
             self.results.iter().map(|r| r.accuracy_score).sum::<f64>() / self.results.len() as f64;
         if avg_accuracy < 0.98 {
             recommendations.push(
-                "Consider tightening numerical precision in ultrathink optimizations".to_string(),
+                "Consider tightening numerical precision in advanced optimizations".to_string(),
             );
         }
 

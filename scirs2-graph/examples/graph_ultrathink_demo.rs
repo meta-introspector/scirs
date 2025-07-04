@@ -4,15 +4,15 @@
 //! for graph processing algorithms.
 
 use rand::Rng;
+use scirs2_graph::advanced::{
+    create_ultrathink_processor, execute_with_ultrathink, UltrathinkConfig, UltrathinkProcessor,
+};
 use scirs2_graph::algorithms::community::louvain_communities_result;
 use scirs2_graph::algorithms::connectivity::connected_components;
 use scirs2_graph::algorithms::dijkstra_path;
 use scirs2_graph::base::Graph;
 use scirs2_graph::generators::erdos_renyi_graph;
 use scirs2_graph::measures::pagerank_centrality;
-use scirs2_graph::ultrathink::{
-    create_ultrathink_processor, execute_with_ultrathink, UltrathinkConfig, UltrathinkProcessor,
-};
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -54,26 +54,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   - Nodes ranked: {}", standard_pagerank.len());
 
     // Ultrathink PageRank
-    let mut processor = create_ultrathink_processor();
+    let mut processor = create_advanced_processor();
     let start = Instant::now();
-    let ultrathink_pagerank = execute_with_ultrathink(&mut processor, &graph, "pagerank", |g| {
+    let advanced_pagerank = execute_with_advanced(&mut processor, &graph, "pagerank", |g| {
         pagerank_centrality(g, 0.85, 1e-6)
     })?;
-    let ultrathink_time = start.elapsed();
+    let advanced_time = start.elapsed();
 
-    println!("🚀 Ultrathink PageRank completed in: {:?}", ultrathink_time);
-    println!("   - Nodes ranked: {}", ultrathink_pagerank.len());
+    println!("🚀 Ultrathink PageRank completed in: {:?}", advanced_time);
+    println!("   - Nodes ranked: {}", advanced_pagerank.len());
 
-    let speedup = standard_time.as_secs_f64() / ultrathink_time.as_secs_f64();
+    let speedup = standard_time.as_secs_f64() / advanced_time.as_secs_f64();
     println!("⚡ Speedup: {:.2}x", speedup);
     println!();
 
-    // Test 2: Connected Components with different ultrathink configurations
+    // Test 2: Connected Components with different advanced configurations
     println!("🔗 Test 2: Connected Components with Different Configurations");
     println!("------------------------------------------------------------");
 
     let configs = vec![
-        ("Standard (no ultrathink)", None),
+        ("Standard (no advanced)", None),
         ("Ultrathink Full", Some(UltrathinkConfig::default())),
         (
             "Neural RL Only",
@@ -117,7 +117,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let components = if let Some(config) = config_opt {
             let mut processor = UltrathinkProcessor::new(config);
-            execute_with_ultrathink(&mut processor, &graph, "connected_components", |g| {
+            execute_with_advanced(&mut processor, &graph, "connected_components", |g| {
                 connected_components(g)
             })?
         } else {
@@ -153,21 +153,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // Ultrathink Louvain
-    let mut processor = create_ultrathink_processor();
+    let mut processor = create_advanced_processor();
     let start = Instant::now();
-    let ultrathink_communities =
-        execute_with_ultrathink(&mut processor, &graph, "louvain_communities", |g| {
+    let advanced_communities =
+        execute_with_advanced(&mut processor, &graph, "louvain_communities", |g| {
             louvain_communities_result(g, None, None)
         })?;
-    let ultrathink_time = start.elapsed();
+    let advanced_time = start.elapsed();
 
     println!(
         "🚀 Ultrathink Louvain: {:?} ({} communities)",
-        ultrathink_time,
-        ultrathink_communities.len()
+        advanced_time,
+        advanced_communities.len()
     );
 
-    let community_speedup = standard_time.as_secs_f64() / ultrathink_time.as_secs_f64();
+    let community_speedup = standard_time.as_secs_f64() / advanced_time.as_secs_f64();
     println!("⚡ Community Detection Speedup: {:.2}x", community_speedup);
     println!();
 
@@ -195,17 +195,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let start = Instant::now();
         match alg_name {
             "connected_components" => {
-                let _ = execute_with_ultrathink(&mut adaptive_processor, &graph, alg_name, |g| {
+                let _ = execute_with_advanced(&mut adaptive_processor, &graph, alg_name, |g| {
                     connected_components(g)
                 })?;
             }
             "pagerank" => {
-                let _ = execute_with_ultrathink(&mut adaptive_processor, &graph, alg_name, |g| {
+                let _ = execute_with_advanced(&mut adaptive_processor, &graph, alg_name, |g| {
                     pagerank_centrality(g, 0.85, 1e-6)
                 })?;
             }
             "louvain_communities" => {
-                let _ = execute_with_ultrathink(&mut adaptive_processor, &graph, alg_name, |g| {
+                let _ = execute_with_advanced(&mut adaptive_processor, &graph, alg_name, |g| {
                     louvain_communities_result(g, None, None)
                 })?;
             }
@@ -237,7 +237,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("---------------------------------------");
 
     let graph_sizes = vec![100, 500, 1000];
-    println!("Testing ultrathink performance scaling...");
+    println!("Testing advanced performance scaling...");
 
     for &size in &graph_sizes {
         let mut rng = rand::rng();
@@ -271,7 +271,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("• Neuromorphic computing excels at pattern recognition tasks");
     println!("• Real-time adaptation optimizes performance over time");
     println!();
-    println!("📚 For more information, see the ultrathink documentation");
+    println!("📚 For more information, see the advanced documentation");
     println!("🚀 Ready to supercharge your graph processing!");
 
     Ok(())
@@ -282,14 +282,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ultrathink_basic_functionality() {
+    fn test_advanced_basic_functionality() {
         let mut rng = rand::rng();
         let graph = erdos_renyi_graph(100, 0.02, &mut rng).unwrap();
-        let mut processor = create_ultrathink_processor();
+        let mut processor = create_advanced_processor();
 
-        // Test that ultrathink processing works
+        // Test that advanced processing works
         let result =
-            execute_with_ultrathink(&mut processor, &graph, "test_connected_components", |g| {
+            execute_with_advanced(&mut processor, &graph, "test_connected_components", |g| {
                 connected_components(g)
             });
 
@@ -299,7 +299,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ultrathink_configuration() {
+    fn test_advanced_configuration() {
         let config = UltrathinkConfig {
             enable_neural_rl: false,
             enable_gpu_acceleration: true,
@@ -319,13 +319,13 @@ mod tests {
     }
 
     #[test]
-    fn test_ultrathink_performance_metrics() {
+    fn test_advanced_performance_metrics() {
         let mut rng = rand::rng();
         let graph = erdos_renyi_graph(50, 0.04, &mut rng).unwrap();
-        let mut processor = create_ultrathink_processor();
+        let mut processor = create_advanced_processor();
 
         // Run a test algorithm
-        let _ = execute_with_ultrathink(&mut processor, &graph, "test_pagerank", |g| {
+        let _ = execute_with_advanced(&mut processor, &graph, "test_pagerank", |g| {
             pagerank_centrality(g, 0.85, 1e-4)
         })
         .unwrap();

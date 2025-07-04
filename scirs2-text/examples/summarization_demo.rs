@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Original text length: {} characters", text.len());
     println!("Summary length: {} characters", summary.len());
     println!("\nSummary:");
-    println!("{}\n", summary);
+    println!("{summary}\n");
 
     // Centroid-based summarization
     println!("2. Centroid-based Summarization");
@@ -45,7 +45,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let centroid_summary = centroid.summarize(text)?;
 
     println!("Summary:");
-    println!("{}\n", centroid_summary);
+    println!("{centroid_summary}\n");
 
     // Keyword extraction
     println!("3. Keyword Extraction");
@@ -67,7 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let keywords_with_pos = extractor.extract_keywords_with_positions(text)?;
 
     for (keyword, _score, positions) in keywords_with_pos.iter().take(5) {
-        println!("'{}' appears at positions: {:?}", keyword, positions);
+        println!("'{keyword}' appears at positions: {positions:?}");
     }
 
     // Multi-document summarization example
@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let multi_doc_summary = textrank.summarize(&combined_text)?;
 
     println!("Combined documents summary:");
-    println!("{}\n", multi_doc_summary);
+    println!("{multi_doc_summary}\n");
 
     // Comparative analysis
     println!("6. Comparative Analysis");
@@ -102,7 +102,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (name, summary) in techniques {
         println!("{} (length: {} chars):", name, summary.len());
-        println!("{}\n", summary);
+        println!("{summary}\n");
     }
 
     Ok(())

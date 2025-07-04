@@ -28,8 +28,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create dummy input with higher resolution for B3 (300x300)
     let input_b3 = Array::from_shape_fn(IxDyn(&[1, input_channels, 300, 300]), |_| {
         use rand::prelude::*;
-        let mut rng = thread_rng();
-        rng.gen_range(-1.0..1.0)
+        let mut rng = rng();
+        rng.random_range(-1.0, 1.0)
     });
     println!("Input shape for B3: {:?}", input_b3.shape());
     let output_b3 = model_b3.forward(&input_b3)?;
@@ -48,8 +48,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create dummy input for small images (32x32)
     let small_input = Array::from_shape_fn(IxDyn(&[1, input_channels, 32, 32]), |_| {
         use rand::prelude::*;
-        let mut rng = thread_rng();
-        rng.gen_range(-1.0..1.0)
+        let mut rng = rng();
+        rng.random_range(-1.0, 1.0)
     });
     println!("Custom input shape: {:?}", small_input.shape());
     let custom_output = custom_model.forward(&small_input)?;

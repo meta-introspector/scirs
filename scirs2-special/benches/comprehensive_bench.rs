@@ -336,7 +336,7 @@ fn bench_memory_usage(c: &mut Criterion) {
     group.finish();
 }
 
-fn bench_ultrathink_functions(c: &mut Criterion) {
+fn bench_advanced_functions(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultrathink_functions");
 
     // Dawson's integral benchmarks

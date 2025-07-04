@@ -5,12 +5,12 @@
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::Rng;
-use scirs2_graph::base::Graph;
-use scirs2_graph::ultrathink::{
+use scirs2_graph::advanced::{
     create_enhanced_ultrathink_processor, create_large_graph_ultrathink_processor,
     create_realtime_ultrathink_processor, execute_with_enhanced_ultrathink, UltrathinkConfig,
     UltrathinkProcessor,
 };
+use scirs2_graph::base::Graph;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -321,7 +321,7 @@ fn stress_test_algorithms(
     println!("  Testing connected components...");
     let start = Instant::now();
     let result =
-        execute_with_enhanced_ultrathink(processor, graph, "stress_connected_components", |g| {
+        execute_with_enhanced_advanced(processor, graph, "stress_connected_components", |g| {
             connected_components(g)
         });
     let elapsed = start.elapsed();
@@ -334,7 +334,7 @@ fn stress_test_algorithms(
     // Test 2: PageRank (Memory and computation intensive)
     println!("  Testing PageRank...");
     let start = Instant::now();
-    let result = execute_with_enhanced_ultrathink(processor, graph, "stress_pagerank", |g| {
+    let result = execute_with_enhanced_advanced(processor, graph, "stress_pagerank", |g| {
         pagerank(g, 0.85, Some(50), Some(1e-4)) // Reduced iterations for stress test
     });
     let elapsed = start.elapsed();
@@ -352,7 +352,7 @@ fn stress_test_algorithms(
     println!("  Testing community detection...");
     let start = Instant::now();
     let result =
-        execute_with_enhanced_ultrathink(processor, graph, "stress_community_detection", |g| {
+        execute_with_enhanced_advanced(processor, graph, "stress_community_detection", |g| {
             louvain_communities(g, None)
         });
     let elapsed = start.elapsed();
@@ -372,7 +372,7 @@ fn stress_test_algorithms(
         let start = Instant::now();
         let source_node = graph.nodes().next().unwrap_or(0);
         let result =
-            execute_with_enhanced_ultrathink(processor, graph, "stress_shortest_paths", |g| {
+            execute_with_enhanced_advanced(processor, graph, "stress_shortest_paths", |g| {
                 shortest_path_dijkstra(g, source_node)
             });
         let elapsed = start.elapsed();
@@ -393,7 +393,7 @@ fn stress_test_algorithms(
     println!("  Testing memory optimization...");
     let start = Instant::now();
     let result =
-        execute_with_enhanced_ultrathink(processor, graph, "stress_memory_optimization", |g| {
+        execute_with_enhanced_advanced(processor, graph, "stress_memory_optimization", |g| {
             // Memory-intensive operation: collect all edges and process them
             let edges: Vec<_> = g
                 .edges()
@@ -445,7 +445,7 @@ fn extreme_stress_test(
     println!("  🔗 Testing connected components (memory-optimized)...");
     let start = Instant::now();
     let result =
-        execute_with_enhanced_ultrathink(processor, graph, "extreme_connected_components", |g| {
+        execute_with_enhanced_advanced(processor, graph, "extreme_connected_components", |g| {
             use scirs2_graph::algorithms::connectivity::connected_components;
             match connected_components(g) {
                 Ok(components) => Ok(format!("Found {} components", components.len())),
@@ -481,7 +481,7 @@ fn extreme_stress_test(
         // Only for manageable sizes
         println!("  📈 Testing streaming PageRank...");
         let start = Instant::now();
-        let result = execute_with_enhanced_ultrathink(processor, graph, "extreme_pagerank", |g| {
+        let result = execute_with_enhanced_advanced(processor, graph, "extreme_pagerank", |g| {
             use scirs2_graph::measures::pagerank;
             match pagerank(g, 0.85, Some(20), Some(1e-3)) {
                 // Reduced precision for speed
@@ -516,34 +516,33 @@ fn extreme_stress_test(
     // Test 3: Memory pressure test
     println!("  💾 Testing memory pressure handling...");
     let start = Instant::now();
-    let result =
-        execute_with_enhanced_ultrathink(processor, graph, "extreme_memory_pressure", |g| {
-            // Deliberately create memory pressure
-            let mut memory_hog: Vec<Vec<f64>> = Vec::new();
-            let chunk_size = 100_000;
-            let max_chunks = 50; // Limit to prevent OOM
+    let result = execute_with_enhanced_advanced(processor, graph, "extreme_memory_pressure", |g| {
+        // Deliberately create memory pressure
+        let mut memory_hog: Vec<Vec<f64>> = Vec::new();
+        let chunk_size = 100_000;
+        let max_chunks = 50; // Limit to prevent OOM
 
-            for chunk in 0..max_chunks {
-                let data: Vec<f64> = (0..chunk_size)
-                    .map(|i| (i + chunk * chunk_size) as f64)
-                    .collect();
-                memory_hog.push(data);
+        for chunk in 0..max_chunks {
+            let data: Vec<f64> = (0..chunk_size)
+                .map(|i| (i + chunk * chunk_size) as f64)
+                .collect();
+            memory_hog.push(data);
 
-                // Process some graph data to simulate real work
-                if chunk % 10 == 0 {
-                    let sample_nodes: Vec<_> = g.nodes().take(1000).collect();
-                    if sample_nodes.is_empty() {
-                        break;
-                    }
+            // Process some graph data to simulate real work
+            if chunk % 10 == 0 {
+                let sample_nodes: Vec<_> = g.nodes().take(1000).collect();
+                if sample_nodes.is_empty() {
+                    break;
                 }
             }
+        }
 
-            let total_memory = memory_hog.iter().map(|v| v.len()).sum::<usize>();
-            Ok(format!(
-                "Allocated {} floats under memory pressure",
-                total_memory
-            ))
-        });
+        let total_memory = memory_hog.iter().map(|v| v.len()).sum::<usize>();
+        Ok(format!(
+            "Allocated {} floats under memory pressure",
+            total_memory
+        ))
+    });
     let elapsed = start.elapsed();
     let memory_after = get_memory_usage();
     println!(
@@ -597,7 +596,7 @@ fn failure_recovery_stress_test(
     // Test 1: Algorithm timeout simulation
     println!("  ⏰ Testing timeout handling...");
     let start = Instant::now();
-    let result = execute_with_enhanced_ultrathink(processor, graph, "timeout_test", |_g| {
+    let result = execute_with_enhanced_advanced(processor, graph, "timeout_test", |_g| {
         // Simulate a long-running algorithm
         std::thread::sleep(Duration::from_millis(100));
         Ok("Timeout test completed")
@@ -624,7 +623,7 @@ fn failure_recovery_stress_test(
     // Test 2: Memory allocation failure simulation
     println!("  💾 Testing memory allocation failure...");
     let start = Instant::now();
-    let result = execute_with_enhanced_ultrathink(processor, graph, "memory_failure_test", |g| {
+    let result = execute_with_enhanced_advanced(processor, graph, "memory_failure_test", |g| {
         // Try to allocate a large amount of memory
         let node_count = g.node_count();
         if node_count > 1_000_000 {
@@ -660,7 +659,7 @@ fn failure_recovery_stress_test(
     // Run a series of operations
     for i in 0..3 {
         let _ =
-            execute_with_enhanced_ultrathink(processor, graph, &format!("state_test_{}", i), |g| {
+            execute_with_enhanced_advanced(processor, graph, &format!("state_test_{}", i), |g| {
                 Ok(g.node_count() + i)
             });
     }
@@ -705,11 +704,11 @@ fn concurrent_processor_stress_test(
         let results_clone = Arc::clone(&results_arc);
 
         let handle = thread::spawn(move || {
-            let mut processor = create_large_graph_ultrathink_processor();
+            let mut processor = create_large_graph_advanced_processor();
             let thread_start = Instant::now();
 
             // Run multiple algorithms concurrently
-            let cc_result = execute_with_enhanced_ultrathink(
+            let cc_result = execute_with_enhanced_advanced(
                 &mut processor,
                 &graph_clone,
                 &format!("concurrent_cc_{}", i),
@@ -720,7 +719,7 @@ fn concurrent_processor_stress_test(
             );
 
             let pr_result = if graph_clone.node_count() <= 500_000 {
-                execute_with_enhanced_ultrathink(
+                execute_with_enhanced_advanced(
                     &mut processor,
                     &graph_clone,
                     &format!("concurrent_pr_{}", i),
@@ -818,8 +817,8 @@ fn bench_large_graph_creation(c: &mut Criterion) {
     group.finish();
 }
 
-/// Benchmark ultrathink processors on large graphs
-fn bench_ultrathink_processors(c: &mut Criterion) {
+/// Benchmark advanced processors on large graphs
+fn bench_advanced_processors(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultrathink_large_graphs");
     group.measurement_time(Duration::from_secs(120));
     group.sample_size(5);
@@ -830,9 +829,9 @@ fn bench_ultrathink_processors(c: &mut Criterion) {
 
     // Test different processor configurations
     let configs = vec![
-        ("enhanced", create_enhanced_ultrathink_processor()),
-        ("large_graph", create_large_graph_ultrathink_processor()),
-        ("realtime", create_realtime_ultrathink_processor()),
+        ("enhanced", create_enhanced_advanced_processor()),
+        ("large_graph", create_large_graph_advanced_processor()),
+        ("realtime", create_realtime_advanced_processor()),
     ];
 
     for (name, mut processor) in configs {
@@ -864,11 +863,11 @@ fn bench_memory_usage(c: &mut Criterion) {
         group.bench_function(format!("memory_profile_{}", size), |b| {
             b.iter(|| {
                 let graph = generate_memory_efficient_graph(size);
-                let mut processor = create_large_graph_ultrathink_processor();
+                let mut processor = create_large_graph_advanced_processor();
 
                 // Simulate memory-intensive operations
                 let _results =
-                    execute_with_enhanced_ultrathink(&mut processor, &graph, "memory_test", |g| {
+                    execute_with_enhanced_advanced(&mut processor, &graph, "memory_test", |g| {
                         // Force memory allocation
                         let nodes: Vec<_> = g.nodes().collect();
                         let _edges: Vec<_> = g.edges().collect();
@@ -894,13 +893,13 @@ fn bench_adaptive_performance(c: &mut Criterion) {
     // Test adaptive learning over multiple iterations
     group.bench_function("adaptive_learning", |b| {
         b.iter(|| {
-            let mut processor = create_enhanced_ultrathink_processor();
+            let mut processor = create_enhanced_advanced_processor();
             let mut total_time = Duration::ZERO;
 
             // Run multiple iterations to test adaptation
             for i in 0..10 {
                 let start = Instant::now();
-                let _result = execute_with_enhanced_ultrathink(
+                let _result = execute_with_enhanced_advanced(
                     &mut processor,
                     &test_graph,
                     &format!("adaptive_iteration_{}", i),
@@ -929,7 +928,7 @@ fn bench_concurrent_processing(c: &mut Criterion) {
     group.bench_function("concurrent_graphs", |b| {
         b.iter(|| {
             let mut processors: Vec<_> = (0..4)
-                .map(|_| create_realtime_ultrathink_processor())
+                .map(|_| create_realtime_advanced_processor())
                 .collect();
 
             let results: Vec<_> = graphs
@@ -937,7 +936,7 @@ fn bench_concurrent_processing(c: &mut Criterion) {
                 .zip(processors.iter_mut())
                 .enumerate()
                 .map(|(i, (graph, processor))| {
-                    execute_with_enhanced_ultrathink(
+                    execute_with_enhanced_advanced(
                         processor,
                         graph,
                         &format!("concurrent_{}", i),
@@ -961,7 +960,7 @@ fn bench_configuration_comparison(c: &mut Criterion) {
 
     let test_graph = generate_scale_free_graph(30_000, 4);
 
-    // Test different ultrathink configurations
+    // Test different advanced configurations
     let configs = vec![
         (
             "baseline",
@@ -996,7 +995,7 @@ fn bench_configuration_comparison(c: &mut Criterion) {
                 ..UltrathinkConfig::default()
             },
         ),
-        ("full_ultrathink", UltrathinkConfig::default()),
+        ("full_advanced", UltrathinkConfig::default()),
     ];
 
     for (name, config) in configs {
@@ -1040,9 +1039,9 @@ fn bench_very_large_graphs(c: &mut Criterion) {
             large_graph.edge_count()
         );
 
-        // Test different ultrathink configurations on very large graphs
+        // Test different advanced configurations on very large graphs
         group.bench_function(format!("large_graph_optimized_{}", size), |b| {
-            let mut processor = create_large_graph_ultrathink_processor();
+            let mut processor = create_large_graph_advanced_processor();
             b.iter_custom(|iters| {
                 let start = Instant::now();
                 for _ in 0..iters {
@@ -1076,13 +1075,13 @@ fn bench_memory_usage_analysis(c: &mut Criterion) {
 
         // Test memory optimization effectiveness
         group.bench_function(format!("memory_optimization_{}", size), |b| {
-            let mut processor = create_large_graph_ultrathink_processor();
+            let mut processor = create_large_graph_advanced_processor();
 
             b.iter_custom(|iters| {
                 let start = Instant::now();
                 for _ in 0..iters {
                     // Memory-intensive operations
-                    let result = execute_with_enhanced_ultrathink(
+                    let result = execute_with_enhanced_advanced(
                         &mut processor,
                         &graph,
                         "memory_stress",
@@ -1124,7 +1123,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
     println!("📈 Analyzing performance scaling...");
 
     let sizes = vec![100_000, 250_000, 500_000, 750_000, 1_000_000];
-    let mut processor = create_large_graph_ultrathink_processor();
+    let mut processor = create_large_graph_advanced_processor();
 
     for &size in &sizes {
         let graph = generate_memory_efficient_graph(size);
@@ -1133,15 +1132,11 @@ fn bench_scaling_analysis(c: &mut Criterion) {
             b.iter_custom(|iters| {
                 let start = Instant::now();
                 for _ in 0..iters {
-                    let result = execute_with_enhanced_ultrathink(
-                        &mut processor,
-                        &graph,
-                        "scaling_cc",
-                        |g| {
+                    let result =
+                        execute_with_enhanced_advanced(&mut processor, &graph, "scaling_cc", |g| {
                             use scirs2_graph::algorithms::connectivity::connected_components;
                             connected_components(g)
-                        },
-                    );
+                        });
                     black_box(result);
                 }
                 start.elapsed()
@@ -1152,15 +1147,11 @@ fn bench_scaling_analysis(c: &mut Criterion) {
             b.iter_custom(|iters| {
                 let start = Instant::now();
                 for _ in 0..iters {
-                    let result = execute_with_enhanced_ultrathink(
-                        &mut processor,
-                        &graph,
-                        "scaling_pr",
-                        |g| {
+                    let result =
+                        execute_with_enhanced_advanced(&mut processor, &graph, "scaling_pr", |g| {
                             use scirs2_graph::measures::pagerank;
                             pagerank(g, 0.85, Some(30), Some(1e-4)) // Reduced iterations for scaling test
-                        },
-                    );
+                        });
                     black_box(result);
                 }
                 start.elapsed()
@@ -1232,8 +1223,8 @@ pub fn run_ultra_comprehensive_stress_tests() {
     for (size, graph) in &created_graphs {
         println!("\n  Testing extreme scale with {} nodes:", size);
 
-        let mut large_processor = create_large_graph_ultrathink_processor();
-        let mut enhanced_processor = create_enhanced_ultrathink_processor();
+        let mut large_processor = create_large_graph_advanced_processor();
+        let mut enhanced_processor = create_enhanced_advanced_processor();
 
         println!("    🔧 Testing large-graph optimized processor:");
         let extreme_results =
@@ -1277,7 +1268,7 @@ pub fn run_ultra_comprehensive_stress_tests() {
 
     for (topology_name, graph) in topology_graphs {
         println!("  Testing {} topology:", topology_name);
-        let mut processor = create_enhanced_ultrathink_processor();
+        let mut processor = create_enhanced_advanced_processor();
         let results = stress_test_algorithms(graph, &mut processor, topology_name);
 
         for (test_name, duration) in &results {
@@ -1288,7 +1279,7 @@ pub fn run_ultra_comprehensive_stress_tests() {
     // Phase 3: Failure recovery testing
     println!("\n🛠️  Phase 3: Failure Recovery and Robustness Testing");
     if let Some((_, test_graph)) = created_graphs.first() {
-        let mut processor = create_large_graph_ultrathink_processor();
+        let mut processor = create_large_graph_advanced_processor();
         let failure_results = failure_recovery_stress_test(test_graph, &mut processor);
 
         for (test_name, (duration, message)) in &failure_results {
@@ -1364,8 +1355,8 @@ pub fn run_comprehensive_stress_tests() {
         );
 
         // Test different processor configurations
-        let mut large_processor = create_large_graph_ultrathink_processor();
-        let mut enhanced_processor = create_enhanced_ultrathink_processor();
+        let mut large_processor = create_large_graph_advanced_processor();
+        let mut enhanced_processor = create_enhanced_advanced_processor();
 
         println!("    🔧 Testing large-graph optimized processor:");
         let large_results = stress_test_algorithms(&graph, &mut large_processor, "large_optimized");
@@ -1389,7 +1380,7 @@ pub fn run_comprehensive_stress_tests() {
     // Test 2: Optimization statistics analysis
     println!("\n📈 Phase 2: Optimization Statistics Analysis");
     let test_graph = generate_memory_efficient_graph(1_000_000);
-    let mut processor = create_large_graph_ultrathink_processor();
+    let mut processor = create_large_graph_advanced_processor();
 
     // Run several algorithms to collect statistics
     for i in 0..5 {

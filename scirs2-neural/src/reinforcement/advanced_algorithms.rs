@@ -675,7 +675,7 @@ impl ExplorationStrategy {
                     use rand::prelude::*;
 use rand::rng;
                     let mut rng = rng();
-                    Ok(rng.random_range(0..q_values.len()))
+                    Ok(rng.gen_range(0..q_values.len()))
                 } else {
                     // Greedy action
                     Ok(q_values.iter()

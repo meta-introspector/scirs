@@ -33,6 +33,10 @@ pub enum OptimizeError {
     /// I/O error
     #[error("I/O error: {0}")]
     IOError(String),
+
+    /// Invalid input error
+    #[error("Invalid input: {0}")]
+    InvalidInput(String),
 }
 
 /// Result type for optimization operations
@@ -111,6 +115,9 @@ impl From<scirs2_sparse::error::SparseError> for OptimizeError {
             }
             scirs2_sparse::error::SparseError::BlockNotFound(msg) => {
                 OptimizeError::ValueError(format!("Block not found: {}", msg))
+            }
+            scirs2_sparse::error::SparseError::GpuError(err) => {
+                OptimizeError::ComputationError(format!("GPU error: {}", err))
             }
         }
     }

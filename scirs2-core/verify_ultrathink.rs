@@ -3,7 +3,7 @@
 //! This script verifies that all ultrathink modules compile and have required methods
 
 fn main() {
-    println!("Verifying ultrathink mode implementations...");
+    println!("Verifying advanced mode implementations...");
     
     // Test that all modules exist and can be imported
     use scirs2_core::error::CoreResult;
@@ -11,11 +11,11 @@ fn main() {
         HardwareConstraints, NASStrategy, NeuralArchitectureSearch, OptimizationObjectives,
         SearchConfig, SearchSpace,
     };
-    use scirs2_core::ultrathink_distributed_computing::UltrathinkDistributedComputer;
-    use scirs2_core::ultrathink_ecosystem_integration::UltrathinkEcosystemCoordinator;
+    use scirs2_core::distributed_compute::UltrathinkDistributedComputer;
+    use scirs2_core::ecosystem_bridge::UltrathinkEcosystemCoordinator;
     
     #[cfg(feature = "jit")]
-    use scirs2_core::ultrathink_jit_compilation::UltrathinkJitCompiler;
+    use scirs2_core::advanced_jit_compilation::UltrathinkJitCompiler;
     
     println!("✓ All ultrathink modules imported successfully");
     
@@ -27,16 +27,16 @@ fn main() {
     #[cfg(feature = "jit")]
     test_jit_compiler();
     
-    println!("✅ All ultrathink mode implementations verified successfully!");
+    println!("✅ All advanced mode implementations verified successfully!");
 }
 
 fn test_ecosystem_coordinator() {
-    let _coordinator = scirs2_core::ultrathink_ecosystem_integration::UltrathinkEcosystemCoordinator::new();
+    let _coordinator = scirs2_core::ecosystem_bridge::UltrathinkEcosystemCoordinator::new();
     println!("✓ UltrathinkEcosystemCoordinator::new() works");
 }
 
 fn test_distributed_computer() {
-    match scirs2_core::ultrathink_distributed_computing::UltrathinkDistributedComputer::new() {
+    match scirs2_core::advanced_distributed_computing::UltrathinkDistributedComputer::new() {
         Ok(_) => println!("✓ UltrathinkDistributedComputer::new() works"),
         Err(e) => println!("⚠ UltrathinkDistributedComputer::new() failed: {}", e),
     }
@@ -67,7 +67,7 @@ fn test_neural_architecture_search() {
 
 #[cfg(feature = "jit")]
 fn test_jit_compiler() {
-    match scirs2_core::ultrathink_jit_compilation::UltrathinkJitCompiler::new() {
+    match scirs2_core::advanced_jit_compilation::UltrathinkJitCompiler::new() {
         Ok(_) => println!("✓ UltrathinkJitCompiler::new() works"),
         Err(e) => println!("⚠ UltrathinkJitCompiler::new() failed: {}", e),
     }

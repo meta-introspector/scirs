@@ -25,7 +25,7 @@ use std::time::{Duration, Instant};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// Central JIT compilation coordinator for ultrathink mode
+/// Central JIT compilation coordinator for advanced mode
 #[derive(Debug)]
 pub struct UltrathinkJitCompiler {
     /// LLVM compilation engine
@@ -1312,7 +1312,7 @@ impl LlvmCompilationEngine {
     pub fn new(_config: &JitCompilerConfig) -> CoreResult<Self> {
         Ok(Self {
             llvm_context: LlvmContext {
-                context_id: "ultrathink-llvm".to_string(),
+                context_id: "advanced-llvm".to_string(),
                 created_at: Instant::now(),
                 active_modules: 0,
             },

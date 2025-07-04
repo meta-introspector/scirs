@@ -332,7 +332,7 @@ pub fn reconstruct_hessian_central_diff(
         for &col_i in &columns_in_color {
             for row in 0..n {
                 // Check if (row, col_i) should be nonzero according to sparsity
-                if sparsity.get(row, col_i).is_some() {
+                if sparsity.get(row, col_i).abs() > 1e-15 {
                     // Central difference approximation
                     let h_val = (gradients_forward[[row, color]]
                         - gradients_backward[[row, color]])
@@ -340,7 +340,7 @@ pub fn reconstruct_hessian_central_diff(
                     hessian_dense[[row, col_i]] = h_val;
 
                     // Ensure symmetry for Hessian
-                    if row != col_i && sparsity.get(col_i, row).is_some() {
+                    if row != col_i && sparsity.get(col_i, row).abs() > 1e-15 {
                         hessian_dense[[col_i, row]] = h_val;
                     }
                 }
@@ -355,7 +355,7 @@ pub fn reconstruct_hessian_central_diff(
 
     for row in 0..n {
         for col in 0..n {
-            if sparsity.get(row, col).is_some() && hessian_dense[[row, col]].abs() > 1e-15 {
+            if sparsity.get(row, col).abs() > 1e-15 && hessian_dense[[row, col]].abs() > 1e-15 {
                 row_indices.push(row);
                 col_indices.push(col);
                 values.push(hessian_dense[[row, col]]);

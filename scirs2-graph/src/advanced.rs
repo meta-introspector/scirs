@@ -53,13 +53,27 @@ impl Default for UltrathinkConfig {
 #[derive(Debug, Clone)]
 pub enum ExplorationStrategy {
     /// Standard epsilon-greedy exploration
-    EpsilonGreedy { epsilon: f64 },
+    EpsilonGreedy {
+        /// Exploration probability parameter
+        epsilon: f64,
+    },
     /// Upper confidence bound exploration
-    UCB { c: f64 },
+    UCB {
+        /// Confidence parameter for UCB
+        c: f64,
+    },
     /// Thompson sampling exploration
-    ThompsonSampling { alpha: f64, beta: f64 },
+    ThompsonSampling {
+        /// Alpha parameter for beta distribution
+        alpha: f64,
+        /// Beta parameter for beta distribution
+        beta: f64,
+    },
     /// Adaptive exploration based on uncertainty
-    AdaptiveUncertainty { uncertainty_threshold: f64 },
+    AdaptiveUncertainty {
+        /// Uncertainty threshold for adaptive exploration
+        uncertainty_threshold: f64,
+    },
 }
 
 impl Default for ExplorationStrategy {
@@ -202,6 +216,7 @@ pub struct NeuralRLAgent {
     /// Target network weights for stable learning
     target_weights: Vec<Vec<Vec<f64>>>,
     /// Priority weights for experience replay
+    #[allow(dead_code)]
     priority_weights: Vec<f64>,
     /// Algorithm performance history for better selection
     algorithm_performance: HashMap<usize, VecDeque<f64>>,
@@ -574,6 +589,7 @@ impl NeuralRLAgent {
 #[derive(Debug)]
 pub struct GPUAccelerationContext {
     /// GPU memory pool size
+    #[allow(dead_code)]
     memory_pool_mb: usize,
     /// GPU utilization tracking
     utilization_history: Vec<f64>,
@@ -852,13 +868,14 @@ pub struct UltrathinkProcessor {
     /// Algorithm optimization cache
     optimization_cache: HashMap<String, AlgorithmMetrics>,
     /// Real-time adaptation parameters
+    #[allow(dead_code)]
     adaptation_rate: f64,
     /// Update counter for target network
     update_counter: usize,
 }
 
 impl UltrathinkProcessor {
-    /// Create new ultrathink processor with enhanced features
+    /// Create new advanced processor with enhanced features
     pub fn new(config: UltrathinkConfig) -> Self {
         let mut neural_agent =
             NeuralRLAgent::new(4, config.neural_hidden_size, 4, config.learning_rate);
@@ -884,7 +901,7 @@ impl UltrathinkProcessor {
         }
     }
 
-    /// Execute graph algorithm with enhanced ultrathink optimizations
+    /// Execute graph algorithm with enhanced advanced optimizations
     pub fn execute_optimized_algorithm_enhanced<N, E, Ix, T>(
         &mut self,
         graph: &Graph<N, E, Ix>,
@@ -1195,7 +1212,7 @@ impl UltrathinkProcessor {
         }
     }
 
-    /// Execute graph algorithm with ultrathink optimizations
+    /// Execute graph algorithm with advanced optimizations
     pub fn execute_optimized_algorithm<N, E, Ix, T>(
         &mut self,
         graph: &Graph<N, E, Ix>,
@@ -1355,13 +1372,13 @@ pub struct UltrathinkStats {
     pub memory_efficiency: f64,
 }
 
-/// Convenience function to create an ultrathink processor with default config
-pub fn create_ultrathink_processor() -> UltrathinkProcessor {
+/// Convenience function to create an advanced processor with default config
+pub fn create_advanced_processor() -> UltrathinkProcessor {
     UltrathinkProcessor::new(UltrathinkConfig::default())
 }
 
-/// Convenience function to create an enhanced ultrathink processor with advanced features
-pub fn create_enhanced_ultrathink_processor() -> UltrathinkProcessor {
+/// Convenience function to create an enhanced advanced processor with advanced features
+pub fn create_enhanced_advanced_processor() -> UltrathinkProcessor {
     let config = UltrathinkConfig {
         enable_neural_rl: true,
         enable_gpu_acceleration: true,
@@ -1376,8 +1393,8 @@ pub fn create_enhanced_ultrathink_processor() -> UltrathinkProcessor {
     UltrathinkProcessor::new(config)
 }
 
-/// Convenience function to execute algorithm with ultrathink optimizations
-pub fn execute_with_ultrathink<N, E, Ix, T>(
+/// Convenience function to execute algorithm with advanced optimizations
+pub fn execute_with_advanced<N, E, Ix, T>(
     processor: &mut UltrathinkProcessor,
     graph: &Graph<N, E, Ix>,
     algorithm_name: &str,
@@ -1391,8 +1408,8 @@ where
     processor.execute_optimized_algorithm(graph, algorithm_name, algorithm)
 }
 
-/// Convenience function to execute algorithm with enhanced ultrathink optimizations
-pub fn execute_with_enhanced_ultrathink<N, E, Ix, T>(
+/// Convenience function to execute algorithm with enhanced advanced optimizations
+pub fn execute_with_enhanced_advanced<N, E, Ix, T>(
     processor: &mut UltrathinkProcessor,
     graph: &Graph<N, E, Ix>,
     algorithm_name: &str,
@@ -1406,8 +1423,8 @@ where
     processor.execute_optimized_algorithm_enhanced(graph, algorithm_name, algorithm)
 }
 
-/// Create an ultrathink processor optimized for large graphs
-pub fn create_large_graph_ultrathink_processor() -> UltrathinkProcessor {
+/// Create an advanced processor optimized for large graphs
+pub fn create_large_graph_advanced_processor() -> UltrathinkProcessor {
     let config = UltrathinkConfig {
         enable_neural_rl: true,
         enable_gpu_acceleration: true,
@@ -1422,8 +1439,8 @@ pub fn create_large_graph_ultrathink_processor() -> UltrathinkProcessor {
     UltrathinkProcessor::new(config)
 }
 
-/// Create an ultrathink processor optimized for real-time applications
-pub fn create_realtime_ultrathink_processor() -> UltrathinkProcessor {
+/// Create an advanced processor optimized for real-time applications
+pub fn create_realtime_advanced_processor() -> UltrathinkProcessor {
     let config = UltrathinkConfig {
         enable_neural_rl: true,
         enable_gpu_acceleration: true,
@@ -1438,8 +1455,8 @@ pub fn create_realtime_ultrathink_processor() -> UltrathinkProcessor {
     UltrathinkProcessor::new(config)
 }
 
-/// Create an ultrathink processor optimized for maximum performance
-pub fn create_performance_ultrathink_processor() -> UltrathinkProcessor {
+/// Create an advanced processor optimized for maximum performance
+pub fn create_performance_advanced_processor() -> UltrathinkProcessor {
     let config = UltrathinkConfig {
         enable_neural_rl: true,
         enable_gpu_acceleration: true,
@@ -1454,8 +1471,8 @@ pub fn create_performance_ultrathink_processor() -> UltrathinkProcessor {
     UltrathinkProcessor::new(config)
 }
 
-/// Create an ultrathink processor optimized for memory-constrained environments
-pub fn create_memory_efficient_ultrathink_processor() -> UltrathinkProcessor {
+/// Create an advanced processor optimized for memory-constrained environments
+pub fn create_memory_efficient_advanced_processor() -> UltrathinkProcessor {
     let config = UltrathinkConfig {
         enable_neural_rl: true,
         enable_gpu_acceleration: false, // Disabled to save memory
@@ -1470,8 +1487,8 @@ pub fn create_memory_efficient_ultrathink_processor() -> UltrathinkProcessor {
     UltrathinkProcessor::new(config)
 }
 
-/// Create an ultrathink processor with adaptive configuration based on system resources
-pub fn create_adaptive_ultrathink_processor() -> UltrathinkProcessor {
+/// Create an advanced processor with adaptive configuration based on system resources
+pub fn create_adaptive_advanced_processor() -> UltrathinkProcessor {
     let system_memory = get_system_memory_mb();
     let has_gpu = detect_gpu_support();
     let cpu_cores = num_cpus::get();
@@ -1548,7 +1565,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ultrathink_config() {
+    fn test_advanced_config() {
         let config = UltrathinkConfig::default();
         assert!(config.enable_neural_rl);
         assert!(config.enable_gpu_acceleration);
@@ -1608,7 +1625,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ultrathink_processor() {
+    fn test_advanced_processor() {
         let mut processor = UltrathinkProcessor::new(UltrathinkConfig::default());
 
         // Create test graph
@@ -1641,7 +1658,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ultrathink_stats() {
+    fn test_advanced_stats() {
         let stats = UltrathinkStats {
             total_optimizations: 100,
             average_speedup: 2.5,
@@ -1659,7 +1676,7 @@ mod tests {
 
     #[test]
     fn test_convenience_functions() {
-        let mut processor = create_ultrathink_processor();
+        let mut processor = create_advanced_processor();
 
         // Create test graph
         let mut graph: Graph<i32, f64> = Graph::new();
@@ -1667,15 +1684,14 @@ mod tests {
 
         // Test convenience function
         let result =
-            execute_with_ultrathink(&mut processor, &graph, "test", |g| Ok(g.edge_count()))
-                .unwrap();
+            execute_with_advanced(&mut processor, &graph, "test", |g| Ok(g.edge_count())).unwrap();
 
         assert_eq!(result, 1);
     }
 
     #[test]
-    fn test_enhanced_ultrathink_processor() {
-        let mut processor = create_enhanced_ultrathink_processor();
+    fn test_enhanced_advanced_processor() {
+        let mut processor = create_enhanced_advanced_processor();
 
         // Create test graph
         let mut graph: Graph<i32, f64> = Graph::new();
@@ -1683,12 +1699,11 @@ mod tests {
         graph.add_edge(2, 3, 2.0).unwrap();
         graph.add_edge(3, 4, 3.0).unwrap();
 
-        // Test enhanced ultrathink execution
-        let result =
-            execute_with_enhanced_ultrathink(&mut processor, &graph, "test_enhanced", |g| {
-                Ok(g.node_count())
-            })
-            .unwrap();
+        // Test enhanced advanced execution
+        let result = execute_with_enhanced_advanced(&mut processor, &graph, "test_enhanced", |g| {
+            Ok(g.node_count())
+        })
+        .unwrap();
 
         assert_eq!(result, 4);
 
@@ -1697,7 +1712,7 @@ mod tests {
 
         // Test that subsequent calls use cache
         let result2 =
-            execute_with_enhanced_ultrathink(&mut processor, &graph, "test_enhanced", |g| {
+            execute_with_enhanced_advanced(&mut processor, &graph, "test_enhanced", |g| {
                 Ok(g.node_count())
             })
             .unwrap();
@@ -1805,7 +1820,7 @@ mod tests {
 
     #[test]
     fn test_large_graph_processor() {
-        let mut processor = create_large_graph_ultrathink_processor();
+        let mut processor = create_large_graph_advanced_processor();
 
         // Create larger test graph
         let mut graph: Graph<i32, f64> = Graph::new();
@@ -1815,7 +1830,7 @@ mod tests {
 
         // Test execution with large graph optimization
         let result =
-            execute_with_enhanced_ultrathink(&mut processor, &graph, "large_graph_test", |g| {
+            execute_with_enhanced_advanced(&mut processor, &graph, "large_graph_test", |g| {
                 Ok(g.edge_count())
             })
             .unwrap();
@@ -1829,7 +1844,7 @@ mod tests {
 
     #[test]
     fn test_realtime_processor() {
-        let mut processor = create_realtime_ultrathink_processor();
+        let mut processor = create_realtime_advanced_processor();
 
         // Create test graph
         let mut graph: Graph<i32, f64> = Graph::new();
@@ -1837,11 +1852,10 @@ mod tests {
         graph.add_edge(2, 3, 2.0).unwrap();
 
         // Test execution with real-time optimization
-        let result =
-            execute_with_enhanced_ultrathink(&mut processor, &graph, "realtime_test", |g| {
-                Ok(g.node_count())
-            })
-            .unwrap();
+        let result = execute_with_enhanced_advanced(&mut processor, &graph, "realtime_test", |g| {
+            Ok(g.node_count())
+        })
+        .unwrap();
 
         assert_eq!(result, 3);
 
@@ -1852,7 +1866,7 @@ mod tests {
 
     #[test]
     fn test_performance_processor() {
-        let mut processor = create_performance_ultrathink_processor();
+        let mut processor = create_performance_advanced_processor();
 
         // Create larger test graph
         let mut graph: Graph<i32, f64> = Graph::new();
@@ -1862,7 +1876,7 @@ mod tests {
 
         // Test performance optimization
         let result =
-            execute_with_enhanced_ultrathink(&mut processor, &graph, "performance_test", |g| {
+            execute_with_enhanced_advanced(&mut processor, &graph, "performance_test", |g| {
                 Ok(g.edge_count())
             })
             .unwrap();
@@ -1877,14 +1891,14 @@ mod tests {
 
     #[test]
     fn test_memory_efficient_processor() {
-        let mut processor = create_memory_efficient_ultrathink_processor();
+        let mut processor = create_memory_efficient_advanced_processor();
 
         // Create test graph
         let mut graph: Graph<i32, f64> = Graph::new();
         graph.add_edge(1, 2, 1.0).unwrap();
 
         // Test memory-efficient execution
-        let result = execute_with_enhanced_ultrathink(&mut processor, &graph, "memory_test", |g| {
+        let result = execute_with_enhanced_advanced(&mut processor, &graph, "memory_test", |g| {
             Ok(g.node_count())
         })
         .unwrap();
@@ -1900,7 +1914,7 @@ mod tests {
 
     #[test]
     fn test_adaptive_processor() {
-        let processor = create_adaptive_ultrathink_processor();
+        let processor = create_adaptive_advanced_processor();
 
         // Test that adaptive processor creates valid configuration
         assert!(processor.config.enable_realtime_adaptation);
@@ -2003,7 +2017,7 @@ mod tests {
 
     #[test]
     fn test_enhanced_reward_calculation() {
-        let processor = create_enhanced_ultrathink_processor();
+        let processor = create_enhanced_advanced_processor();
 
         // Create test metrics
         let metrics = AlgorithmMetrics {
@@ -2024,14 +2038,14 @@ mod tests {
 
     #[test]
     fn test_optimization_caching() {
-        let mut processor = create_enhanced_ultrathink_processor();
+        let mut processor = create_enhanced_advanced_processor();
 
         let mut graph: Graph<i32, f64> = Graph::new();
         graph.add_edge(1, 2, 1.0).unwrap();
         graph.add_edge(2, 3, 2.0).unwrap();
 
         // First execution - should cache results
-        let result1 = execute_with_enhanced_ultrathink(&mut processor, &graph, "cache_test", |g| {
+        let result1 = execute_with_enhanced_advanced(&mut processor, &graph, "cache_test", |g| {
             Ok(g.node_count())
         })
         .unwrap();
@@ -2040,7 +2054,7 @@ mod tests {
         assert!(!processor.optimization_cache.is_empty());
 
         // Second execution - should potentially use cache
-        let result2 = execute_with_enhanced_ultrathink(&mut processor, &graph, "cache_test", |g| {
+        let result2 = execute_with_enhanced_advanced(&mut processor, &graph, "cache_test", |g| {
             Ok(g.node_count())
         })
         .unwrap();
@@ -2070,13 +2084,13 @@ mod tests {
 
             let handle = thread::spawn(move || {
                 let mut processor = match i {
-                    0 => create_enhanced_ultrathink_processor(),
-                    1 => create_large_graph_ultrathink_processor(),
-                    2 => create_realtime_ultrathink_processor(),
-                    _ => create_memory_efficient_ultrathink_processor(),
+                    0 => create_enhanced_advanced_processor(),
+                    1 => create_large_graph_advanced_processor(),
+                    2 => create_realtime_advanced_processor(),
+                    _ => create_memory_efficient_advanced_processor(),
                 };
 
-                let result = execute_with_enhanced_ultrathink(
+                let result = execute_with_enhanced_advanced(
                     &mut processor,
                     &*graph_clone,
                     &format!("concurrent_test_{}", i),

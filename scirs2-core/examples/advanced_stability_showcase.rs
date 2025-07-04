@@ -8,7 +8,7 @@
 //! - Cryptographic audit trails
 //! - Real-time monitoring
 //!
-//! This showcases the "ultrathink mode" enhancements for 1.0 release preparation.
+//! This showcases the "advanced mode" enhancements for 1.0 release preparation.
 
 use scirs2_core::api_versioning::Version;
 use scirs2_core::stability::*;

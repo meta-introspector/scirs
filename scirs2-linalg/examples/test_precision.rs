@@ -45,7 +45,7 @@ fn main() {
 
             println!("Maximum orthogonality error: {:.2e}", max_ortho_error);
 
-            // Check if we meet the 1e-12 precision requirement (ultrathink mode)
+            // Check if we meet the 1e-12 precision requirement (advanced mode)
             if max_error < 1e-12 && max_ortho_error < 1e-12 {
                 println!("✅ SUCCESS: All precision requirements met!");
             } else {

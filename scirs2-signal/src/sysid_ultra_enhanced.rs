@@ -1315,8 +1315,8 @@ fn train_gaussian_process(
 fn train_physics_informed_network(
     input: &Array1<f64>,
     output: &Array1<f64>,
-    config: &NeuralNetworkConfig,
-    simd_enabled: bool,
+    _config: &NeuralNetworkConfig,
+    _simd_enabled: bool,
 ) -> SignalResult<SystemModel> {
     // Physics-informed neural network training (simplified)
     Ok(SystemModel::ARX {
@@ -1328,7 +1328,7 @@ fn train_physics_informed_network(
 
 fn build_model_ensemble(
     models: Vec<WeightedModel>,
-    config: &EnsembleConfig,
+    _config: &EnsembleConfig,
 ) -> SignalResult<ModelEnsemble> {
     let selection_criteria = ModelSelectionCriteria {
         multi_objective_scores: HashMap::new(),
@@ -1366,24 +1366,24 @@ fn build_single_model_ensemble(models: Vec<WeightedModel>) -> SignalResult<Model
 }
 
 fn initialize_real_time_tracker(
-    input: &Array1<f64>,
-    output: &Array1<f64>,
-    ensemble: &ModelEnsemble,
-    config: &RealTimeConfig,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
+    _ensemble: &ModelEnsemble,
+    _config: &RealTimeConfig,
 ) -> SignalResult<RealTimeTracker> {
     // Initialize real-time tracker with ensemble model
     Ok(RealTimeTracker::default())
 }
 
 fn perform_uncertainty_quantification(
-    ensemble: &ModelEnsemble,
-    config: &UncertaintyConfig,
+    _ensemble: &ModelEnsemble,
+    _config: &UncertaintyConfig,
 ) -> SignalResult<UncertaintyAnalysis> {
     // Perform uncertainty quantification (simplified)
     Ok(UncertaintyAnalysis::default())
 }
 
-fn extract_neural_models(models: &[WeightedModel]) -> NeuralModelCollection {
+fn extract_neural_models(_models: &[WeightedModel]) -> NeuralModelCollection {
     // Extract neural models from candidate models
     NeuralModelCollection {
         feedforward_models: Vec::new(),

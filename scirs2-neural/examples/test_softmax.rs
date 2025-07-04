@@ -1,5 +1,5 @@
 use ndarray::{arr1, arr2};
-use scirs2_neural::activations::{Activation, Softmax};
+use scirs2_neural::activations_minimal::{Activation, Softmax};
 
 fn main() {
     println!("Testing softmax implementation...\n");

@@ -5,6 +5,7 @@
 //! computer vision techniques into a unified ultrathink processing framework.
 
 #![allow(missing_docs)]
+#![allow(dead_code)]
 //!
 //! # Features
 //!
@@ -16,8 +17,6 @@
 //! - Advanced Meta-Learning
 //! - Emergent Behavior Detection
 //! - Quantum-Enhanced Neural Networks
-
-#![allow(dead_code)]
 
 use crate::activity_recognition::*;
 use crate::ai_optimization::*;

@@ -582,7 +582,7 @@ impl<T: StreamingObjective> UltraAdaptiveStreamingOptimizer<T> {
         let mut fusion_weights: Array1<f64> = Array1::ones(3) / 3.0;
 
         // Adaptive weight calculation based on recent performance
-        let recent_performance = self.performance_tracker.get_recent_performance();
+        let _recent_performance = self.performance_tracker.get_recent_performance();
 
         // Algorithm-specific weight adjustment
         match selected_algorithm {

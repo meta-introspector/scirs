@@ -1437,7 +1437,10 @@ pub fn robust_least_squares(
         let new_parameters = solve_weighted_least_squares(&regressor, &target, &weights)?;
 
         // Check convergence
-        let parameter_change = (&new_parameters - &parameters).norm() / parameters.norm();
+        let diff = &new_parameters - &parameters;
+        let diff_norm = (diff.mapv(|x| x * x).sum()).sqrt();
+        let params_norm = (parameters.mapv(|x| x * x).sum()).sqrt();
+        let parameter_change = diff_norm / params_norm;
         converged = parameter_change < 1e-6;
 
         parameters = new_parameters;

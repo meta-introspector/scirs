@@ -8,6 +8,9 @@
 //! - Robust interpolation methods
 //! - Stochastic interpolation for random fields
 
+#![allow(clippy::too_many_arguments)]
+#![allow(dead_code)]
+
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, Axis};
 use num_traits::{Float, FromPrimitive};
@@ -747,16 +750,7 @@ pub struct EnsembleInterpolator<T: Float> {
     normalize_weights: bool,
 }
 
-impl<
-        T: Float
-            + FromPrimitive
-            + Debug
-            + Display
-            + Copy
-            + std::iter::Sum
-            + crate::traits::InterpolationFloat,
-    > EnsembleInterpolator<T>
-{
+impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
     /// Create a new ensemble interpolator
     pub fn new() -> Self {
         Self {

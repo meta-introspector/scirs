@@ -272,7 +272,7 @@ print("SUCCESS:true")
     }
 }
 
-/// Benchmark graph creation with ultrathink optimizations
+/// Benchmark graph creation with advanced optimizations
 fn bench_creation_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("creation_comparison");
     let external_runner = ExternalBenchmarkRunner::new();
@@ -291,16 +291,16 @@ fn bench_creation_comparison(c: &mut Criterion) {
             },
         );
 
-        // scirs2-graph with ultrathink optimization for larger graphs
+        // scirs2-graph with advanced optimization for larger graphs
         if *size >= 1000 {
             group.bench_with_input(
                 BenchmarkId::new("scirs2_erdos_renyi_ultrathink", size),
                 size,
                 |b, &size| {
                     b.iter(|| {
-                        let mut processor = create_performance_ultrathink_processor();
+                        let mut processor = create_performance_advanced_processor();
                         let graph = Graph::new();
-                        let result = execute_with_enhanced_ultrathink(
+                        let result = execute_with_enhanced_advanced(
                             &mut processor,
                             &graph,
                             "creation_test",
@@ -603,8 +603,8 @@ fn measure_scirs2_algorithm(algorithm: &str, size: usize, graph_type: &str) -> f
     start.elapsed().as_millis() as f64
 }
 
-/// Measure scirs2-graph algorithm performance with ultrathink optimizations
-fn measure_scirs2_algorithm_with_ultrathink<N: Node, E: EdgeWeight, Ix>(
+/// Measure scirs2-graph algorithm performance with advanced optimizations
+fn measure_scirs2_algorithm_with_advanced<N: Node, E: EdgeWeight, Ix>(
     algorithm: &str,
     graph: &Graph<N, E, Ix>,
 ) -> f64
@@ -612,28 +612,28 @@ where
     N: Clone + std::hash::Hash + Eq,
     Ix: petgraph::graph::IndexType,
 {
-    use scirs2_graph::{create_performance_ultrathink_processor, execute_with_enhanced_ultrathink};
+    use scirs2_graph::{create_performance_advanced_processor, execute_with_enhanced_advanced};
 
-    let mut processor = create_performance_ultrathink_processor();
+    let mut processor = create_performance_advanced_processor();
     let start = Instant::now();
 
     let _ = match algorithm {
-        "bfs" => execute_with_enhanced_ultrathink(&mut processor, graph, "bfs", |g| {
+        "bfs" => execute_with_enhanced_advanced(&mut processor, graph, "bfs", |g| {
             Ok(breadth_first_search(g, &0))
         }),
-        "dfs" => execute_with_enhanced_ultrathink(&mut processor, graph, "dfs", |g| {
+        "dfs" => execute_with_enhanced_advanced(&mut processor, graph, "dfs", |g| {
             Ok(depth_first_search(g, &0))
         }),
-        "pagerank" => execute_with_enhanced_ultrathink(&mut processor, graph, "pagerank", |g| {
+        "pagerank" => execute_with_enhanced_advanced(&mut processor, graph, "pagerank", |g| {
             Ok(pagerank_centrality(g, None, None, None))
         }),
         "betweenness_centrality" => {
-            execute_with_enhanced_ultrathink(&mut processor, graph, "betweenness", |g| {
+            execute_with_enhanced_advanced(&mut processor, graph, "betweenness", |g| {
                 Ok(betweenness_centrality(g))
             })
         }
         "shortest_path" => {
-            execute_with_enhanced_ultrathink(&mut processor, graph, "shortest_path", |g| {
+            execute_with_enhanced_advanced(&mut processor, graph, "shortest_path", |g| {
                 let target = std::cmp::min(10, g.node_count().saturating_sub(1));
                 if target > 0 {
                     shortest_path(g, &0, &target)
@@ -643,12 +643,12 @@ where
             })
         }
         "connected_components" => {
-            execute_with_enhanced_ultrathink(&mut processor, graph, "connected_components", |g| {
+            execute_with_enhanced_advanced(&mut processor, graph, "connected_components", |g| {
                 Ok(connected_components(g))
             })
         }
         "louvain_communities" => {
-            execute_with_enhanced_ultrathink(&mut processor, graph, "louvain", |g| {
+            execute_with_enhanced_advanced(&mut processor, graph, "louvain", |g| {
                 louvain_communities_result(g, None, None)
             })
         }
@@ -658,7 +658,7 @@ where
     start.elapsed().as_millis() as f64
 }
 
-/// Measure scirs2-graph algorithm performance without ultrathink optimizations (standard mode)
+/// Measure scirs2-graph algorithm performance without advanced optimizations (standard mode)
 fn measure_scirs2_algorithm_standard<N: Node, E: EdgeWeight, Ix>(
     algorithm: &str,
     graph: &Graph<N, E, Ix>,
@@ -776,8 +776,8 @@ fn generate_markdown_report(results: &[(String, String, usize, ComparisonMetrics
     report
 }
 
-/// Comprehensive ultrathink performance comparison
-fn bench_ultrathink_comprehensive_comparison(c: &mut Criterion) {
+/// Comprehensive advanced performance comparison
+fn bench_advanced_comprehensive_comparison(c: &mut Criterion) {
     let mut group = c.benchmark_group("ultrathink_comprehensive_comparison");
     let external_runner = ExternalBenchmarkRunner::new();
 
@@ -813,7 +813,7 @@ fn bench_ultrathink_comprehensive_comparison(c: &mut Criterion) {
         };
 
         for algorithm in algorithms {
-            // Benchmark scirs2-graph with ultrathink
+            // Benchmark scirs2-graph with advanced
             group.bench_with_input(
                 BenchmarkId::new(
                     format!("scirs2_ultrathink_{}_{}", graph_type, algorithm),
@@ -822,13 +822,13 @@ fn bench_ultrathink_comprehensive_comparison(c: &mut Criterion) {
                 &test_graph,
                 |b, graph| {
                     b.iter(|| {
-                        let result = measure_scirs2_algorithm_with_ultrathink(algorithm, graph);
+                        let result = measure_scirs2_algorithm_with_advanced(algorithm, graph);
                         black_box(result)
                     });
                 },
             );
 
-            // Benchmark scirs2-graph without ultrathink for comparison
+            // Benchmark scirs2-graph without advanced for comparison
             group.bench_with_input(
                 BenchmarkId::new(
                     format!("scirs2_standard_{}_{}", graph_type, algorithm),
@@ -872,11 +872,11 @@ fn bench_memory_efficiency_comparison(c: &mut Criterion) {
             size,
             |b, &size| {
                 b.iter(|| {
-                    let mut processor = create_memory_efficient_ultrathink_processor();
+                    let mut processor = create_memory_efficient_advanced_processor();
                     let mut rng = StdRng::seed_from_u64(42);
                     let graph = barabasi_albert_graph(size, 3, &mut rng).unwrap();
 
-                    let result = execute_with_enhanced_ultrathink(
+                    let result = execute_with_enhanced_advanced(
                         &mut processor,
                         &graph,
                         "memory_pagerank",
@@ -905,7 +905,7 @@ criterion_group!(
     bench_centrality_comparison,
     bench_shortest_path_comparison,
     bench_community_comparison,
-    bench_ultrathink_comprehensive_comparison,
+    bench_advanced_comprehensive_comparison,
     bench_memory_efficiency_comparison
 );
 

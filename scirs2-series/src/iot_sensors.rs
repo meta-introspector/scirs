@@ -103,7 +103,7 @@ impl EnvironmentalSensorAnalysis {
         }
 
         // Validate humidity range (0-100%)
-        if data.iter().any(|&x| x < 0.0 || x > 100.0) {
+        if data.iter().any(|&x| !(0.0..=100.0).contains(&x)) {
             return Err(TimeSeriesError::InvalidInput(
                 "Humidity values must be between 0 and 100%".to_string(),
             ));

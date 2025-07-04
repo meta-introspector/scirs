@@ -25,17 +25,17 @@ fn simd_vs_scalar_benchmark(c: &mut Criterion) {
         let p2: Vec<f64> = (0..size).map(|i| (i + 1) as f64).collect();
 
         // Scalar version
-        group.bench_function(format!("scalar_euclidean_{}", size), |b| {
+        group.bench_function(format!("scalar_euclidean_{size}"), |b| {
             b.iter(|| black_box(euclidean(&p1, &p2)))
         });
 
         // SIMD version
-        group.bench_function(format!("simd_euclidean_{}", size), |b| {
+        group.bench_function(format!("simd_euclidean_{size}"), |b| {
             b.iter(|| black_box(simd_euclidean_distance(&p1, &p2).unwrap()))
         });
 
         // SIMD Manhattan
-        group.bench_function(format!("simd_manhattan_{}", size), |b| {
+        group.bench_function(format!("simd_manhattan_{size}"), |b| {
             b.iter(|| black_box(simd_manhattan_distance(&p1, &p2).unwrap()))
         });
     }

@@ -17,7 +17,7 @@ use scirs2_special::{
 
 /// Test the accuracy and performance of the fixed polygamma function
 fn bench_polygamma_improvements(c: &mut Criterion) {
-    let mut group = c.benchmark_group("polygamma_ultrathink_improvements");
+    let mut group = c.benchmark_group("polygamma_advanced_improvements");
     
     // Test values that showcase the sign fix
     let test_cases = vec![
@@ -58,7 +58,7 @@ fn bench_polygamma_improvements(c: &mut Criterion) {
 
 /// Test the accuracy and performance of the enhanced Dawson function
 fn bench_dawson_improvements(c: &mut Criterion) {
-    let mut group = c.benchmark_group("dawson_ultrathink_improvements");
+    let mut group = c.benchmark_group("dawson_advanced_improvements");
     
     // Test values across all improved ranges
     let test_ranges = vec![
@@ -179,7 +179,7 @@ fn bench_new_bessel_derivatives(c: &mut Criterion) {
 
 /// Compare performance against existing implementations
 fn bench_performance_comparison(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultrathink_performance_comparison");
+    let mut group = c.benchmark_group("advanced_performance_comparison");
     
     let test_values: Vec<f64> = (1..=100).map(|i| i as f64 * 0.1).collect();
     
@@ -212,7 +212,7 @@ fn bench_performance_comparison(c: &mut Criterion) {
 }
 
 /// Comprehensive accuracy test across all improvements
-fn validate_ultrathink_improvements() {
+fn validate_advanced_improvements() {
     println!("\n=== ULTRATHINK MODE VALIDATION SUMMARY ===");
     
     let start_time = Instant::now();

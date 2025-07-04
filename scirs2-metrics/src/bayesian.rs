@@ -441,7 +441,7 @@ impl BayesianModelComparison {
             let log_prior_val = log_prior.map(|lp| lp[i]).unwrap_or(0.0);
 
             // Tempered log posterior (up to normalization)
-            let log_tempered_posterior = beta * log_like + log_prior_val;
+            let _log_tempered_posterior = beta * log_like + log_prior_val;
 
             // Importance weight (stabilized)
             let log_weight = (beta - 1.0) * (log_like - max_log_like);
@@ -563,7 +563,7 @@ impl BayesianModelComparison {
             // Fallback: use bootstrap sampling with low-likelihood bias
             // This approximates sampling from a broader distribution
             let min_log_like = log_likelihood.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-            let range = log_likelihood
+            let _range = log_likelihood
                 .iter()
                 .fold(f64::NEG_INFINITY, |a, &b| a.max(b))
                 - min_log_like;
@@ -639,7 +639,7 @@ impl BayesianModelComparison {
         // Initialize with simple ratio estimate
         let mut log_r = self.initialize_bridge_estimate(log_likelihood, prior_samples)?;
 
-        for iter in 0..max_iter {
+        for _iter in 0..max_iter {
             let log_r_new =
                 self.bridge_iteration(log_likelihood, log_prior, prior_samples, log_r, n1, n2)?;
 
@@ -796,7 +796,7 @@ impl BayesianModelComparison {
     fn nested_sampling_integration(
         &self,
         log_likelihood: &Array1<f64>,
-        log_prior: Option<&Array1<f64>>,
+        _log_prior: Option<&Array1<f64>>,
         n_live: usize,
     ) -> Result<(f64, f64)> {
         // Sort samples by likelihood to simulate nested sampling iterations
@@ -829,7 +829,7 @@ impl BayesianModelComparison {
                 .min_by(|(_, (_, a)), (_, (_, b))| {
                     a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
                 })
-                .map(|(i, (idx, ll))| (i, *ll))
+                .map(|(i, (_idx, ll))| (i, *ll))
                 .unwrap_or((0, f64::NEG_INFINITY));
 
             // Prior volume contraction

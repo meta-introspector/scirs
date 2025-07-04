@@ -10,6 +10,7 @@
 
 use crate::error::{LinalgError, LinalgResult};
 use ndarray::{Array2, ArrayView2, ArrayViewMut2, Axis, s};
+#[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
 use std::ptr;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -232,7 +233,6 @@ impl CacheAwareMatrixOperations {
     }
     
     /// L1 cache blocking with intelligent prefetching
-    #[cfg(target_arch = "x86_64")]
     fn l1_blocked_gemm_with_prefetch(
         &mut self,
         a: &ArrayView2<f32>,
@@ -278,7 +278,6 @@ impl CacheAwareMatrixOperations {
     }
     
     /// Intelligent prefetching based on access patterns and cache strategy
-    #[cfg(target_arch = "x86_64")]
     fn intelligent_prefetch(
         &self,
         a: &ArrayView2<f32>,
@@ -298,6 +297,7 @@ impl CacheAwareMatrixOperations {
                 (*prefetch_distance, *prefetch_hint),
         };
         
+        #[cfg(target_arch = "x86_64")]
         unsafe {
             let cache_hint = match hint {
                 PrefetchHint::T0 => 3,
@@ -323,6 +323,12 @@ impl CacheAwareMatrixOperations {
                 let c_ptr = &c[[i + prefetch_distance, j + prefetch_distance]] as *const f32;
                 _mm_prefetch(c_ptr as *const i8, cache_hint);
             }
+        }
+        
+        #[cfg(not(target_arch = "x86_64"))]
+        {
+            // No-op on non-x86_64 platforms
+            let _ = (a, b, c, i, j, k, strategy);
         }
     }
     

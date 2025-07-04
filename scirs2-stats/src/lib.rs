@@ -313,6 +313,7 @@
 pub mod error;
 pub mod error_context;
 pub mod error_diagnostics;
+pub mod error_handling_enhancements;
 pub mod error_handling_v2;
 pub mod error_messages;
 pub mod error_recovery_system;
@@ -320,7 +321,6 @@ pub mod error_standardization;
 pub mod error_suggestions;
 pub mod intelligent_error_recovery;
 pub mod performance_optimization;
-pub mod ultrathink_error_enhancements;
 pub mod ultrathink_error_enhancements_v2;
 pub mod unified_error_handling;
 pub use adaptive_simd_optimization::{
@@ -360,6 +360,10 @@ pub use error_diagnostics::{
     CriticalIssue, ErrorMonitor, ErrorOccurrence, ErrorPattern, ErrorStatistics, ErrorTrend,
     HealthReport, Recommendation,
 };
+pub use error_handling_enhancements::{
+    OptimizationSuggestion, RecoveryStrategy, UltrathinkContextBuilder, UltrathinkErrorContext,
+    UltrathinkErrorMessages, UltrathinkErrorRecovery,
+};
 pub use error_handling_v2::{
     EnhancedError, ErrorBuilder, ErrorCode, ErrorContext as ErrorContextV2, PerformanceImpact,
     RecoverySuggestion,
@@ -396,6 +400,11 @@ pub use memory_optimization_enhanced::{
     MemoryStatistics as EnhancedMemoryStatistics,
     OptimizationRecommendation as EnhancedOptimizationRecommendation,
 };
+pub use performance_benchmark_suite::{
+    run_ultrathink_benchmarks, ComprehensiveAnalysis, CrossPlatformAssessment,
+    ScalabilityAssessment, StabilityAssessment, UltraThinkBenchmarkConfig,
+    UltraThinkBenchmarkMetrics, UltraThinkBenchmarkReport, UltraThinkBenchmarkSuite,
+};
 pub use performance_optimization::{
     OptimizedCanonicalCorrelationAnalysis, OptimizedLinearDiscriminantAnalysis,
     PerformanceBenchmark, PerformanceConfig, PerformanceMetrics,
@@ -412,15 +421,6 @@ pub use ultra_parallel_stats::{
     PerformanceRating as UltraParallelPerformanceRating,
     UltraParallelConfig as UltraParallelStatsConfig, UltraParallelResult,
     UltraParallelStatsProcessor, WorkStealingStrategy,
-};
-pub use ultrathink_benchmark_suite::{
-    run_ultrathink_benchmarks, ComprehensiveAnalysis, CrossPlatformAssessment,
-    ScalabilityAssessment, StabilityAssessment, UltraThinkBenchmarkConfig,
-    UltraThinkBenchmarkMetrics, UltraThinkBenchmarkReport, UltraThinkBenchmarkSuite,
-};
-pub use ultrathink_error_enhancements::{
-    OptimizationSuggestion, RecoveryStrategy, UltrathinkContextBuilder, UltrathinkErrorContext,
-    UltrathinkErrorMessages, UltrathinkErrorRecovery,
 };
 pub use ultrathink_error_enhancements_v2::{
     create_enhanced_error_context, CompatibilityImpact, EffortLevel, ErrorEngineConfig,
@@ -480,11 +480,11 @@ pub mod benchmark_suite_enhanced; // AI-driven enhanced benchmark suite with cro
 pub mod memory_optimization_advanced; // Advanced memory optimization strategies
 pub mod memory_optimization_enhanced; // Enhanced memory optimization with intelligent management
 pub mod parallel_enhanced_advanced; // Advanced parallel processing with intelligent optimization
+pub mod performance_benchmark_suite;
 pub mod production_deployment;
 pub mod scipy_benchmark_comparison; // SciPy comparison and validation framework
 pub mod simd_enhanced_core; // Enhanced SIMD-optimized core statistical operations
-pub mod ultra_parallel_stats;
-pub mod ultrathink_benchmark_suite; // Ultra-Think enhanced benchmark suite with advanced analytics // Ultra-parallel statistical computing framework // Production deployment utilities and validation
+pub mod ultra_parallel_stats; // Performance enhanced benchmark suite with advanced analytics // Ultra-parallel statistical computing framework // Production deployment utilities and validation
 
 // Module substructure following SciPy's organization
 pub mod advanced_integration; // High-level workflows integrating multiple advanced methods
@@ -515,6 +515,7 @@ pub use traits::{
 
 // Core functions for descriptive statistics
 mod adaptive_memory_ultra_advanced;
+pub mod advanced_simd_stats;
 mod bayesian_advanced;
 mod cross_platform_regression_detection;
 mod descriptive;
@@ -529,6 +530,7 @@ mod memory_profiling;
 mod mixture_models;
 mod moments_simd;
 mod multivariate_ultra_advanced;
+pub mod numerical_stability_enhancements;
 mod parallel_advanced_v3;
 mod parallel_enhanced_v2;
 mod parallel_enhanced_v4;
@@ -555,14 +557,10 @@ mod ultra_simd_enhanced;
 pub mod ultrathink_benchmark_validation;
 pub mod ultrathink_cross_platform_validation;
 pub mod ultrathink_memory_ultra_enhanced;
-pub mod ultrathink_numerical_stability;
-pub mod ultrathink_numerical_stability_ultra_enhanced;
 pub mod ultrathink_parallel_enhancements;
 pub mod ultrathink_parallel_ultra_enhanced;
 pub mod ultrathink_property_testing_ultra_enhanced;
 pub mod ultrathink_property_tests;
-pub mod ultrathink_simd_optimizations;
-pub mod ultrathink_simd_ultra_enhanced;
 pub mod ultrathink_unified_processor;
 pub use descriptive::*;
 pub use descriptive_simd::{descriptive_stats_simd, mean_simd, std_simd, variance_simd};
@@ -583,6 +581,12 @@ pub use adaptive_memory_ultra_advanced::{
     CacheOptimizationConfig, F32AdaptiveMemoryManager, F64AdaptiveMemoryManager, GCResult,
     GarbageCollectionConfig, MemoryPressureConfig, MemoryUsageStatistics, NumaConfig,
     OutOfCoreConfig, PredictiveConfig,
+};
+pub use advanced_simd_stats::{
+    AccuracyLevel, AlgorithmChoice as UltraAlgorithmChoice, BatchOperation, BatchResults,
+    MemoryConstraints as UltraMemoryConstraints, PerformancePreference,
+    PerformanceProfile as UltraPerformanceProfile, ScalarAlgorithm, SimdAlgorithm,
+    ThreadingPreferences, UltraThinkSimdConfig as UltraThinkSimdConfigV2, UltraThinkSimdOptimizer,
 };
 pub use bayesian_advanced::{
     ActivationType, AdvancedBayesianResult, AdvancedPrior, BayesianGaussianProcess, BayesianModel,
@@ -635,6 +639,17 @@ pub use multivariate_ultra_advanced::{
     ActivationFunction, ClusteringAlgorithm, ClusteringConfig, DimensionalityReductionMethod,
     ICAAlgorithm, ManifoldConfig, MultiViewConfig, PCAVariant, TensorConfig, TensorDecomposition,
     UltraMultivariateAnalysis, UltraMultivariateConfig, UltraMultivariateResults,
+};
+pub use numerical_stability_enhancements::{
+    create_exhaustive_numerical_stability_tester, create_fast_numerical_stability_tester,
+    create_ultra_think_numerical_stability_tester, CancellationDetectionResult,
+    ComprehensiveStabilityResult, ConditionAnalysisResult, ConvergenceStabilityResult,
+    CriticalIssueType, EdgeCaseGenerationApproach, EdgeCaseStabilityResult, EdgeCaseType,
+    InvariantValidationResult, MonteCarloStabilityResult, NumericalStabilityThoroughness,
+    OverflowMonitoringResult, PrecisionStabilityResult, PrecisionTestingStrategy,
+    RegressionTestResult, StabilityAssessment as NumericalStabilityAssessment,
+    StabilityRecommendation, StabilityTolerance, StabilityTrend, StabilityTrendAnalysis,
+    UltraThinkNumericalStabilityConfig, UltraThinkNumericalStabilityTester, WarningType,
 };
 pub use parallel_advanced_v3::{
     AdvancedParallelConfig, ParallelBatchProcessor, ParallelCrossValidator, ParallelMatrixOps,
@@ -769,22 +784,6 @@ pub use ultrathink_memory_ultra_enhanced::{
     LifetimeHint, MemoryOptimizationLevel, MemoryPoolStrategy, MemoryStatistics, MemoryUsageHint,
     NumaMemoryPolicy, UltraThinkMemoryConfig as UltraThinkMemoryConfigV2, UltraThinkMemoryManager,
 };
-pub use ultrathink_numerical_stability::{
-    create_configured_stability_analyzer, create_numerical_stability_analyzer,
-    NumericalStabilityConfig, StabilityAnalysisReport, StabilityTestResult,
-    UltrathinkNumericalStabilityAnalyzer,
-};
-pub use ultrathink_numerical_stability_ultra_enhanced::{
-    create_exhaustive_numerical_stability_tester, create_fast_numerical_stability_tester,
-    create_ultra_think_numerical_stability_tester, CancellationDetectionResult,
-    ComprehensiveStabilityResult, ConditionAnalysisResult, ConvergenceStabilityResult,
-    CriticalIssueType, EdgeCaseGenerationApproach, EdgeCaseStabilityResult, EdgeCaseType,
-    InvariantValidationResult, MonteCarloStabilityResult, NumericalStabilityThoroughness,
-    OverflowMonitoringResult, PrecisionStabilityResult, PrecisionTestingStrategy,
-    RegressionTestResult, StabilityAssessment as NumericalStabilityAssessment,
-    StabilityRecommendation, StabilityTolerance, StabilityTrend, StabilityTrendAnalysis,
-    UltraThinkNumericalStabilityConfig, UltraThinkNumericalStabilityTester, WarningType,
-};
 pub use ultrathink_parallel_enhancements::{
     create_configured_ultra_parallel_processor as create_configured_ultrathink_parallel_processor,
     create_ultra_parallel_processor as create_ultrathink_parallel_processor,
@@ -814,17 +813,6 @@ pub use ultrathink_property_testing_ultra_enhanced::{
 pub use ultrathink_property_tests::{
     create_ultrathink_property_tester, ComprehensiveTestReport, PropertyTestResult,
     UltrathinkPropertyTester,
-};
-pub use ultrathink_simd_optimizations::{
-    ultra_batch_statistics, ultra_matrix_operations, ultra_moving_window_stats,
-    ultra_quantiles_simd, MatrixOperation as UltrathinkMatrixOperation, MovingWindowResult,
-    UltraBatchStats, UltrathinkSimdConfig,
-};
-pub use ultrathink_simd_ultra_enhanced::{
-    AccuracyLevel, AlgorithmChoice as UltraAlgorithmChoice, BatchOperation, BatchResults,
-    MemoryConstraints as UltraMemoryConstraints, PerformancePreference,
-    PerformanceProfile as UltraPerformanceProfile, ScalarAlgorithm, SimdAlgorithm,
-    ThreadingPreferences, UltraThinkSimdConfig as UltraThinkSimdConfigV2, UltraThinkSimdOptimizer,
 };
 pub use ultrathink_unified_processor::{
     create_configured_ultrathink_processor, create_ultrathink_processor, OptimizationMode,

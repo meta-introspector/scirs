@@ -119,10 +119,7 @@ fn basic_correction_demo(
         let corrected = corrector.correct(misspelled)?;
         let success = if &corrected == expected { "✓" } else { "✗" };
 
-        println!(
-            "{:<20} {:<20} {:<20} {}",
-            misspelled, corrected, expected, success
-        );
+        println!("{misspelled:<20} {corrected:<20} {expected:<20} {success}");
     }
 
     // Count successful corrections
@@ -222,10 +219,7 @@ fn compare_correctors(
         let basic_correction = basic.correct(misspelled)?;
         let specialized_correction = specialized.correct(misspelled)?;
 
-        println!(
-            "{:<15} {:<15} {:<15}",
-            misspelled, basic_correction, specialized_correction
-        );
+        println!("{misspelled:<15} {basic_correction:<15} {specialized_correction:<15}");
     }
 
     println!("\nDictionary sizes:");
@@ -284,12 +278,9 @@ fn performance_test(
     let strict_time = start.elapsed();
 
     println!("Time to correct {} words:", test_words.len());
-    println!("  - Standard dictionary: {:?}", basic_time);
-    println!("  - Specialized dictionary: {:?}", specialized_time);
-    println!(
-        "  - Strict configuration (max_edit_distance=1): {:?}",
-        strict_time
-    );
+    println!("  - Standard dictionary: {basic_time:?}");
+    println!("  - Specialized dictionary: {specialized_time:?}");
+    println!("  - Strict configuration (max_edit_distance=1): {strict_time:?}");
 
     Ok(())
 }
@@ -299,16 +290,16 @@ fn text_correction_demo(corrector: &DictionaryCorrector) -> Result<(), Box<dyn s
     println!("\n=== Text Correction Demo ===\n");
 
     println!("Original text with misspellings:");
-    println!("{}\n", TEXT_WITH_MISSPELLINGS);
+    println!("{TEXT_WITH_MISSPELLINGS}\n");
 
     // Correct the text
     let corrected_text = corrector.correct_text(TEXT_WITH_MISSPELLINGS)?;
 
     println!("Corrected text:");
-    println!("{}\n", corrected_text);
+    println!("{corrected_text}\n");
 
     println!("Expected text:");
-    println!("{}\n", EXPECTED_CORRECTED_TEXT);
+    println!("{EXPECTED_CORRECTED_TEXT}\n");
 
     // Calculate how many misspellings were corrected
     let original_words: Vec<&str> = TEXT_WITH_MISSPELLINGS.split_whitespace().collect();
@@ -404,7 +395,7 @@ fn custom_config_demo() -> Result<(), Box<dyn std::error::Error>> {
     // Print table header
     print!("{:<30}", "Configuration");
     for word in &test_cases {
-        print!("{:<15}", word);
+        print!("{word:<15}");
     }
     println!();
     println!("{:-<90}", "");
@@ -413,11 +404,11 @@ fn custom_config_demo() -> Result<(), Box<dyn std::error::Error>> {
     for (name, config) in &configs {
         let corrector = DictionaryCorrector::new(config.clone());
 
-        print!("{:<30}", name);
+        print!("{name:<30}");
 
         for word in &test_cases {
             let corrected = corrector.correct(word)?;
-            print!("{:<15}", corrected);
+            print!("{corrected:<15}");
         }
 
         println!();
@@ -430,7 +421,7 @@ fn custom_config_demo() -> Result<(), Box<dyn std::error::Error>> {
     for word in &test_cases {
         let suggestions = corrector.get_suggestions(word, 3)?;
 
-        println!("Suggestions for '{}': ", word);
+        println!("Suggestions for '{word}': ");
         for (i, suggestion) in suggestions.iter().enumerate() {
             println!("  {}. {}", i + 1, suggestion);
         }

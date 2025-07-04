@@ -553,12 +553,6 @@ impl Normalizer {
             )));
         }
 
-        let _size = if self.axis == 0 {
-            array_f64.shape()[1]
-        } else {
-            array_f64.shape()[0]
-        };
-
         match &mut self.params {
             NormalizerParams::MinMax {
                 min,

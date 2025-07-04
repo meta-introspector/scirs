@@ -26,6 +26,8 @@ pub trait InterpolationFloat:
     + Send
     + Sync
     + Default
+    + Copy
+    + std::iter::Sum
     + 'static
 {
     /// Default epsilon value for this floating-point type

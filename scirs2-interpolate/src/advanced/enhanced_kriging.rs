@@ -1,3 +1,6 @@
+#![allow(clippy::too_many_arguments)]
+#![allow(dead_code)]
+
 use crate::advanced::kriging::{CovarianceFunction, PredictionResult};
 use crate::error::{InterpolateError, InterpolateResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};

@@ -66,7 +66,7 @@ fn bench_simd_vs_scalar_distance(c: &mut Criterion) {
 
             // Scalar benchmark
             group.bench_with_input(
-                BenchmarkId::new("scalar_euclidean", format!("{}x{}", size, dim)),
+                BenchmarkId::new("scalar_euclidean", format!("{size}x{dim}")),
                 &(size, dim),
                 |b, _| {
                     b.iter(|| {
@@ -82,7 +82,7 @@ fn bench_simd_vs_scalar_distance(c: &mut Criterion) {
 
             // SIMD batch benchmark
             group.bench_with_input(
-                BenchmarkId::new("simd_euclidean_batch", format!("{}x{}", size, dim)),
+                BenchmarkId::new("simd_euclidean_batch", format!("{size}x{dim}")),
                 &(size, dim),
                 |b, _| {
                     b.iter(|| {
@@ -96,7 +96,7 @@ fn bench_simd_vs_scalar_distance(c: &mut Criterion) {
 
             // Individual SIMD calls for comparison
             group.bench_with_input(
-                BenchmarkId::new("simd_euclidean_individual", format!("{}x{}", size, dim)),
+                BenchmarkId::new("simd_euclidean_individual", format!("{size}x{dim}")),
                 &(size, dim),
                 |b, _| {
                     b.iter(|| {
@@ -171,7 +171,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
 
         // Memory-efficient distance matrix computation
         group.bench_with_input(
-            BenchmarkId::new("memory_efficient_pdist", format!("{:.1}MB", data_size_mb)),
+            BenchmarkId::new("memory_efficient_pdist", format!("{data_size_mb:.1}MB")),
             &size,
             |b, _| {
                 b.iter(|| {
@@ -185,7 +185,7 @@ fn bench_memory_efficiency(c: &mut Criterion) {
 
         // Chunked processing simulation
         group.bench_with_input(
-            BenchmarkId::new("chunked_processing", format!("{:.1}MB", data_size_mb)),
+            BenchmarkId::new("chunked_processing", format!("{data_size_mb:.1}MB")),
             &size,
             |b, _| {
                 b.iter(|| {
@@ -327,7 +327,7 @@ fn bench_spatial_data_structures(c: &mut Criterion) {
 
         for &k in &[1, 5, 10] {
             group.bench_with_input(
-                BenchmarkId::new("kdtree_query", format!("{}pts_k{}", size, k)),
+                BenchmarkId::new("kdtree_query", format!("{size}pts_k{k}")),
                 &(size, k),
                 |b, _| {
                     b.iter(|| {
@@ -339,7 +339,7 @@ fn bench_spatial_data_structures(c: &mut Criterion) {
             );
 
             group.bench_with_input(
-                BenchmarkId::new("balltree_query", format!("{}pts_k{}", size, k)),
+                BenchmarkId::new("balltree_query", format!("{size}pts_k{k}")),
                 &(size, k),
                 |b, _| {
                     b.iter(|| {
@@ -433,7 +433,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
             group.throughput(Throughput::Elements((n * m) as u64));
 
             group.bench_with_input(
-                BenchmarkId::new("cdist_scaling", format!("{}x{}", n, m)),
+                BenchmarkId::new("cdist_scaling", format!("{n}x{m}")),
                 &(n, m),
                 |b, _| {
                     b.iter(|| {
@@ -523,10 +523,7 @@ fn bench_performance_report(c: &mut Criterion) {
 
     // Output performance characteristics to stderr for capture
     eprintln!("\n=== Performance Characteristics Report ===");
-    eprintln!(
-        "Test configuration: {} points, {} dimensions",
-        test_size, test_dim
-    );
+    eprintln!("Test configuration: {test_size} points, {test_dim} dimensions");
     eprintln!("Expected operations: {}", test_size * (test_size - 1) / 2);
     eprintln!(
         "Data size: {:.2} MB",

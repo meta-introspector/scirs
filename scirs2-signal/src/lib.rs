@@ -115,7 +115,7 @@ pub mod lombscargle_enhanced_validation_improvements;
 pub mod lombscargle_scipy_validation;
 pub mod lombscargle_simd;
 pub mod lombscargle_ultra_validation;
-pub mod lombscargle_ultrathink_enhanced;
+// pub mod lombscargle_optimized;
 pub mod lombscargle_ultrathink_enhanced_validation;
 pub mod lombscargle_validation;
 pub mod lti;
@@ -154,7 +154,8 @@ pub mod separation;
 pub mod simd_advanced;
 pub mod simd_memory_optimization;
 pub mod simd_ops;
-pub mod simd_ultrathink_enhanced;
+// pub mod simd_advanced_enhanced;
+pub mod advanced_mode_coordinator;
 pub mod sparse;
 pub mod spectral;
 pub mod spline;
@@ -170,7 +171,6 @@ pub mod sysid_robust_enhancements;
 pub mod sysid_ultra_enhanced;
 pub mod tv;
 pub mod ultrathink_comprehensive_validation;
-pub mod ultrathink_mode_coordinator;
 pub mod ultrathink_validation_suite;
 pub mod validation_runner;
 pub mod waveforms;
@@ -290,7 +290,7 @@ pub use lombscargle::{
 pub use lombscargle_simd::{simd_lombscargle, SimdLombScargleResult, ValidationMetrics};
 
 // Ultrathink Enhanced Lomb-Scargle Validation
-pub use lombscargle_ultrathink_enhanced::{
+pub use lombscargle_optimized::{
     generate_ultrathink_lombscargle_report, run_ultrathink_lombscargle_validation,
     CompleteSimdValidation, ComprehensiveAccuracyResult, MemoryProfilingResult,
     PerformanceRegressionResult, ScipyComparisonResult, StatisticalValidationResult,
@@ -384,7 +384,7 @@ pub use simd_memory_optimization::{
 pub use simd_ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
 
 // Ultrathink Enhanced SIMD Operations
-pub use simd_ultrathink_enhanced::{
+pub use simd_advanced_enhanced::{
     generate_simd_performance_report, ultrathink_simd_dwt, ultrathink_simd_fft,
     ultrathink_simd_resample, ultrathink_simd_rfft, ultrathink_simd_stft, FftPerformanceMetrics,
     SimdFftResult, SimdStftResult, SimdUtilizationStats, SimdWaveletResult, StftPerformanceMetrics,
@@ -674,7 +674,7 @@ pub use benchmarking::{
 };
 
 // Ultrathink mode coordination and comprehensive validation
-pub use ultrathink_mode_coordinator::{
+pub use advanced_mode_coordinator::{
     run_quick_ultrathink_validation as run_quick_ultrathink_validation_coordinator,
     run_ultrathink_validation_with_config, PerformanceMetrics as UltrathinkPerformanceMetrics,
     UltrathinkConfig, UltrathinkCoordinator, UltrathinkResults,

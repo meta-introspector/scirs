@@ -54,6 +54,7 @@ pub use visualization::{
 /// let shape = IxDyn(&[2, 3]);
 /// let random_matrix = random_normal(shape, 0.0, 1.0, &mut rng).unwrap();
 /// assert_eq!(random_matrix.shape(), &[2, 3]);
+#[allow(dead_code)]
 pub fn random_normal<F: Float + Debug, R: Rng>(
     shape: ndarray::IxDyn,
     mean: F,
@@ -66,12 +67,13 @@ pub fn random_normal<F: Float + Debug, R: Rng>(
     })?;
     let std_f64 = std.to_f64().ok_or_else(|| {
         NeuralError::InvalidArchitecture("Failed to convert std to f64".to_string())
+    })?;
     // Generate random values from normal distribution
     let values: Vec<F> = (0..size)
         .map(|_| {
             // Box-Muller transform to generate normal distribution
-            let u1 = rng.random_range(0.0..1.0);
-            let u2 = rng.random_range(0.0..1.0);
+            let u1 = rng.gen_range(0.0..1.0);
+            let u2 = rng.gen_range(0.0..1.0);
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             let val = mean_f64 + std_f64 * z;
             F::from(val).ok_or_else(|| {
@@ -95,6 +97,7 @@ pub fn random_normal<F: Float + Debug, R: Rng>(
 /// assert_eq!(one_hot[[0, 0]], 1.0f64); // First sample, class 0
 /// assert_eq!(one_hot[[1, 2]], 1.0f64); // Second sample, class 2
 /// assert_eq!(one_hot[[2, 1]], 1.0f64); // Third sample, class 1
+#[allow(dead_code)]
 pub fn one_hot_encode<F: Float + Debug>(
     indices: &ndarray::Array1<usize>,
     num_classes: usize,
@@ -162,7 +165,7 @@ pub fn train_test_split<F: Float + Debug, R: Rng>(
     if shuffle {
         // Fisher-Yates shuffle
         for i in (1..n_samples).rev() {
-            let j = rng.random_range(0..=i);
+            let j = rng.gen_range(0..=i);
             indices.swap(i, j);
     // Actually split the data using the shuffled indices
     let train_indices = &indices[..n_train];

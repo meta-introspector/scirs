@@ -4,9 +4,11 @@
 //! for ultrathink mode components, including detailed memory usage tracking,
 //! optimization recommendations, and performance analysis.
 
+#![allow(missing_docs)]
+
+use crate::advanced::UltrathinkProcessor;
 use crate::base::{EdgeWeight, Graph, Node};
 use crate::error::Result;
-use crate::ultrathink::UltrathinkProcessor;
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, SystemTime};
@@ -144,6 +146,7 @@ pub struct UltrathinkMemoryProfiler {
     /// Profiling start time
     start_time: SystemTime,
     /// Last garbage collection time
+    #[allow(dead_code)]
     last_gc_time: SystemTime,
     /// Memory pressure threshold
     memory_pressure_threshold: usize,
@@ -370,7 +373,7 @@ impl UltrathinkMemoryProfiler {
         self.record_allocation("graph", graph_memory, "input_data", false);
 
         // Execute algorithm with memory tracking
-        let result = crate::ultrathink::execute_with_enhanced_ultrathink(
+        let result = crate::advanced::execute_with_enhanced_advanced(
             processor,
             graph,
             algorithm_name,
@@ -439,7 +442,7 @@ impl UltrathinkMemoryProfiler {
         base_graph_overhead + node_memory + edge_memory
     }
 
-    /// Estimate memory usage of an ultrathink processor
+    /// Estimate memory usage of an advanced processor
     fn estimate_processor_memory_usage(&self, processor: &UltrathinkProcessor) -> usize {
         let stats = processor.get_optimization_stats();
 
@@ -1176,7 +1179,7 @@ pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
     println!("\n📊 Test 1: Small Graph Baseline (100K nodes)");
     match generate_profiled_large_graph(&mut profiler, 100_000, "medium") {
         Ok(small_graph) => {
-            let mut processor = crate::ultrathink::create_large_graph_ultrathink_processor();
+            let mut processor = crate::advanced::create_large_graph_advanced_processor();
 
             let (report, duration) = profile_comprehensive_stress_test(
                 &mut profiler,
@@ -1184,7 +1187,7 @@ pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
                 "small_graph_baseline",
                 |proc| {
                     // Run basic algorithm
-                    let _result = crate::ultrathink::execute_with_enhanced_ultrathink(
+                    let _result = crate::advanced::execute_with_enhanced_advanced(
                         proc,
                         &small_graph,
                         "baseline_cc",
@@ -1207,7 +1210,7 @@ pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
     println!("\n📊 Test 2: Medium Graph Stress Test (500K nodes)");
     match generate_profiled_large_graph(&mut profiler, 500_000, "sparse") {
         Ok(medium_graph) => {
-            let mut processor = crate::ultrathink::create_large_graph_ultrathink_processor();
+            let mut processor = crate::advanced::create_large_graph_advanced_processor();
 
             let (report, duration) = profile_comprehensive_stress_test(
                 &mut profiler,
@@ -1215,7 +1218,7 @@ pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
                 "medium_graph_stress",
                 |proc| {
                     // Run multiple algorithms
-                    let _cc_result = crate::ultrathink::execute_with_enhanced_ultrathink(
+                    let _cc_result = crate::advanced::execute_with_enhanced_advanced(
                         proc,
                         &medium_graph,
                         "medium_cc",
@@ -1225,7 +1228,7 @@ pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
                         },
                     );
 
-                    let _pr_result = crate::ultrathink::execute_with_enhanced_ultrathink(
+                    let _pr_result = crate::advanced::execute_with_enhanced_advanced(
                         proc,
                         &medium_graph,
                         "medium_pr",
@@ -1249,7 +1252,7 @@ pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
     println!("\n📊 Test 3: Large Graph Extreme Test (1M nodes)");
     match generate_profiled_large_graph(&mut profiler, 1_000_000, "sparse") {
         Ok(large_graph) => {
-            let mut processor = crate::ultrathink::create_large_graph_ultrathink_processor();
+            let mut processor = crate::advanced::create_large_graph_advanced_processor();
 
             let (report, duration) = profile_comprehensive_stress_test(
                 &mut profiler,
@@ -1257,7 +1260,7 @@ pub fn run_memory_stress_tests() -> Result<Vec<MemoryUsageReport>> {
                 "large_graph_extreme",
                 |proc| {
                     // Run memory-intensive test
-                    let _result = crate::ultrathink::execute_with_enhanced_ultrathink(
+                    let _result = crate::advanced::execute_with_enhanced_advanced(
                         proc,
                         &large_graph,
                         "large_memory_test",

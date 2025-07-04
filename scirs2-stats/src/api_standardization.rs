@@ -6,6 +6,8 @@
 //! a smooth user experience that follows Rust idioms while maintaining SciPy
 //! compatibility where appropriate.
 
+#![allow(dead_code)]
+
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast};
@@ -811,8 +813,8 @@ pub type F32CorrelationBuilder = CorrelationBuilder<f32>;
 
 impl<F> Default for DescriptiveStatsBuilder<F>
 where
-    F: Float 
-        + NumCast 
+    F: Float
+        + NumCast
         + Clone
         + scirs2_core::simd_ops::SimdUnifiedOps
         + std::iter::Sum<F>

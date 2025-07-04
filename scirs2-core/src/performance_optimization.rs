@@ -1644,8 +1644,8 @@ pub mod benchmarking {
             }
         }
 
-        /// Configuration for ultrathink mode comprehensive benchmarking
-        pub fn ultrathink_comprehensive() -> BenchmarkConfig {
+        /// Configuration for advanced mode comprehensive benchmarking
+        pub fn advanced_comprehensive() -> BenchmarkConfig {
             BenchmarkConfig {
                 warmup_iterations: 10,
                 measurement_iterations: 25,
@@ -2040,7 +2040,7 @@ pub mod cache_aware_algorithms {
 /// This module provides advanced AI-driven optimization capabilities that learn
 /// from runtime characteristics and automatically adapt optimization strategies
 /// for maximum performance in scientific computing workloads.
-pub mod ultrathink_optimization {
+pub mod advanced_optimization {
     use super::*;
     use std::collections::{HashMap, VecDeque};
     use std::sync::{Arc, Mutex, RwLock};
@@ -2070,7 +2070,7 @@ pub mod ultrathink_optimization {
         config: UltrathinkOptimizationConfig,
     }
 
-    /// Configuration for ultrathink optimization
+    /// Configuration for advanced optimization
     #[derive(Debug, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub struct UltrathinkOptimizationConfig {
@@ -3637,6 +3637,9 @@ mod tests {
     use super::*;
     use std::time::{Duration, Instant};
 
+    #[cfg(feature = "benchmarking")]
+    use crate::benchmarking;
+
     #[test]
     fn test_adaptive_optimizer() {
         let optimizer = AdaptiveOptimizer::new();
@@ -4197,6 +4200,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "benchmarking")]
     fn test_ultrathink_benchmark_config() {
         let config = benchmarking::presets::ultrathink_comprehensive();
 
@@ -4225,6 +4229,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "benchmarking")]
     fn test_modern_architecture_benchmark_config() {
         let config = benchmarking::presets::modern_architectures();
 

@@ -123,8 +123,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("Confusion Matrix:");
-    println!("[ {} {} ]", true_negative, false_positive);
-    println!("[ {} {} ]", false_negative, true_positive);
+    println!("[ {true_negative} {false_positive} ]");
+    println!("[ {false_negative} {true_positive} ]");
 
     Ok(())
 }

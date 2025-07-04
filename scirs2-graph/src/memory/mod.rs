@@ -2,6 +2,8 @@
 //!
 //! This module provides tools to analyze and optimize memory usage in graph operations.
 
+#![allow(missing_docs)]
+
 pub mod compact;
 
 pub use compact::{BitPackedGraph, CSRGraph, CompressedAdjacencyList, HybridGraph, MemmapGraph};

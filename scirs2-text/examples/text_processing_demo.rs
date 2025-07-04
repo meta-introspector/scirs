@@ -44,17 +44,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Word tokenization
     let word_tokenizer = WordTokenizer::new(true);
     let tokens = word_tokenizer.tokenize(documents[0])?;
-    println!("Word tokens: {:?}", tokens);
+    println!("Word tokens: {tokens:?}");
 
     // N-gram tokenization
     let ngram_tokenizer = NgramTokenizer::new(2)?;
     let ngrams = ngram_tokenizer.tokenize(documents[0])?;
-    println!("2-grams: {:?}", ngrams);
+    println!("2-grams: {ngrams:?}");
 
     // Regex tokenization
     let regex_tokenizer = RegexTokenizer::new(r"\b\w+\b", false)?;
     let regex_tokens = regex_tokenizer.tokenize(documents[0])?;
-    println!("Regex tokens: {:?}", regex_tokens);
+    println!("Regex tokens: {regex_tokens:?}");
     println!();
 
     // 4. Stemming and Lemmatization
@@ -66,7 +66,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for word in test_words {
         let stemmed = porter_stemmer.stem(word)?;
         let lemmatized = lemmatizer.stem(word)?;
-        println!("{}: stemmed={}, lemmatized={}", word, stemmed, lemmatized);
+        println!("{word}: stemmed={stemmed}, lemmatized={lemmatized}");
     }
     println!();
 
@@ -107,15 +107,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Normalize
     let normalized = normalizer.normalize(test_text)?;
-    println!("Normalized: {}", normalized);
+    println!("Normalized: {normalized}");
 
     // Clean
     let cleaned = cleaner.clean(&normalized)?;
-    println!("Cleaned: {}", cleaned);
+    println!("Cleaned: {cleaned}");
 
     // Tokenize
     let tokens = word_tokenizer.tokenize(&cleaned)?;
-    println!("Tokens: {:?}", tokens);
+    println!("Tokens: {tokens:?}");
 
     // Stem
     let stemmed_tokens: Result<Vec<_>, _> = tokens
@@ -123,7 +123,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|token| porter_stemmer.stem(token))
         .collect();
     let stemmed_tokens = stemmed_tokens?;
-    println!("Stemmed: {:?}", stemmed_tokens);
+    println!("Stemmed: {stemmed_tokens:?}");
 
     Ok(())
 }

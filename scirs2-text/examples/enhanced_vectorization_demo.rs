@@ -60,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-    println!("Sample bigrams: {:?}", ngram_tokens);
+    println!("Sample bigrams: {ngram_tokens:?}");
     println!();
 
     // 3. Enhanced Count Vectorizer with Document Frequency Filtering
@@ -107,7 +107,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     top_features.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
     println!("\nTop TF-IDF features for first document:");
     for (token, score) in top_features.iter().take(5) {
-        println!("  {}: {:.3}", token, score);
+        println!("  {token}: {score:.3}");
     }
     println!();
 

@@ -523,6 +523,7 @@ pub struct MemmapGraph {
     file: File,
     /// CSR format stored on disk
     /// Format: [n_nodes:8][n_edges:8][row_ptr:(n_nodes+1)*8][col_idx:n_edges*8][weights:n_edges*8]
+    #[allow(dead_code)]
     header_size: usize,
     row_ptr_offset: usize,
     col_idx_offset: usize,

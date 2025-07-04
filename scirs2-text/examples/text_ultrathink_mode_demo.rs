@@ -104,7 +104,7 @@ fn demo_ultra_text_processing(coordinator: &UltrathinkTextCoordinator) -> Result
     let processing_time = start_time.elapsed();
 
     println!("\n📈 Results:");
-    println!("  • Processing Time: {:?}", processing_time);
+    println!("  • Processing Time: {processing_time:?}");
     println!(
         "  • Throughput: {:.2} docs/sec",
         result.performance_metrics.throughput
@@ -120,7 +120,7 @@ fn demo_ultra_text_processing(coordinator: &UltrathinkTextCoordinator) -> Result
 
     println!("\n🔧 Optimizations Applied:");
     for optimization in &result.optimizations_applied {
-        println!("  • {}", optimization);
+        println!("  • {optimization}");
     }
 
     println!("\n⏱️  Timing Breakdown:");
@@ -160,7 +160,7 @@ fn demo_semantic_similarity(coordinator: &UltrathinkTextCoordinator) -> Result<(
     println!("🔍 Demo 2: Advanced Semantic Similarity");
     println!("=======================================");
 
-    let text_pairs = vec![
+    let text_pairs = [
         ("The cat sat on the mat", "A feline rested on the rug"),
         (
             "Machine learning is a subset of artificial intelligence",
@@ -171,8 +171,8 @@ fn demo_semantic_similarity(coordinator: &UltrathinkTextCoordinator) -> Result<(
 
     for (i, (text1, text2)) in text_pairs.iter().enumerate() {
         println!("\n📝 Text Pair {}:", i + 1);
-        println!("  Text 1: \"{}\"", text1);
-        println!("  Text 2: \"{}\"", text2);
+        println!("  Text 1: \"{text1}\"");
+        println!("  Text 2: \"{text2}\"");
 
         let result = coordinator.ultra_semantic_similarity(text1, text2)?;
 
@@ -216,7 +216,7 @@ fn demo_batch_classification(coordinator: &UltrathinkTextCoordinator) -> Result<
         texts.len(),
         categories.len()
     );
-    println!("\n📊 Categories: {:?}", categories);
+    println!("\n📊 Categories: {categories:?}");
 
     let result = coordinator.ultra_classify_batch(&texts, &categories)?;
 

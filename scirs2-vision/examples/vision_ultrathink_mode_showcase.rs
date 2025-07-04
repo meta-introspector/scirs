@@ -62,7 +62,7 @@ fn create_test_video_sequence(num_frames: usize, dimensions: (usize, usize)) -> 
             let y_norm = y as f32 / height as f32;
 
             // Moving vertical edge
-            let edge = if x_norm > 0.3 + 0.2 * (t * 6.28).sin() {
+            let edge = if x_norm > 0.3 + 0.2 * (t * std::f32::consts::TAU).sin() {
                 1.0
             } else {
                 0.0
@@ -71,7 +71,7 @@ fn create_test_video_sequence(num_frames: usize, dimensions: (usize, usize)) -> 
             // Rotating pattern
             let center_x = 0.5;
             let center_y = 0.5;
-            let angle = t * 6.28;
+            let angle = t * std::f32::consts::TAU;
             let dx = x_norm - center_x;
             let dy = y_norm - center_y;
             let rotated_x = dx * angle.cos() - dy * angle.sin();
@@ -155,7 +155,7 @@ fn quantum_streaming_demo(frames: &[Frame]) -> Result<()> {
         processed_count,
         processing_time.as_secs_f32()
     );
-    println!("     - Achieved {:.1} FPS with quantum optimization", fps);
+    println!("     - Achieved {fps:.1} FPS with quantum optimization");
     println!("     - Quantum interference reduced noise by ~30%");
     println!("     - Superposition processing enabled 4x parallel variants");
 
@@ -198,11 +198,8 @@ fn neuromorphic_processing_demo(frames: &[Frame]) -> Result<()> {
     let energy_savings = avg_sparsity * 100.0;
 
     println!("  ✅ Neuromorphic processing complete:");
-    println!("     - Total spike events: {}", total_events);
-    println!(
-        "     - Average sparsity: {:.3} ({:.1}% energy savings)",
-        avg_sparsity, energy_savings
-    );
+    println!("     - Total spike events: {total_events}");
+    println!("     - Average sparsity: {avg_sparsity:.3} ({energy_savings:.1}% energy savings)");
     println!("     - Spiking neurons adapted to input patterns");
     println!(
         "     - Event-driven processing achieved {}x speedup",
@@ -280,7 +277,7 @@ fn ai_optimization_demo(_frames: &[Frame]) -> Result<()> {
 
         // RL optimization
         let state = rl_optimizer.metrics_to_state(&performance);
-        let _action = rl_optimizer.select_action(&state);
+        let action = rl_optimizer.select_action(&state);
         let reward = rl_optimizer.calculate_reward(&performance);
 
         if i > 0 {

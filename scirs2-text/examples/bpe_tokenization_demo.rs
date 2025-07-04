@@ -33,7 +33,7 @@ fn main() -> Result<()> {
 
     // Display vocabulary information
     let vocab_size = tokenizer.vocab_size();
-    println!("Learned vocabulary size: {}\n", vocab_size);
+    println!("Learned vocabulary size: {vocab_size}\n");
 
     // Tokenize some examples
     let examples = [
@@ -45,15 +45,15 @@ fn main() -> Result<()> {
 
     for example in &examples {
         let tokens = tokenizer.tokenize(example)?;
-        println!("Original: \"{}\"", example);
-        println!("Tokenized: {:?}", tokens);
+        println!("Original: \"{example}\"");
+        println!("Tokenized: {tokens:?}");
         println!("Token count: {}\n", tokens.len());
     }
 
     // Save the tokenizer's vocabulary to a file
     let vocab_path = "bpe_vocab.txt";
     tokenizer.save_vocabulary(vocab_path)?;
-    println!("Saved vocabulary to {}", vocab_path);
+    println!("Saved vocabulary to {vocab_path}");
 
     // Load the vocabulary and tokenize again
     let mut new_tokenizer = BpeTokenizer::with_defaults();
@@ -62,8 +62,8 @@ fn main() -> Result<()> {
     let test_text = "Hello, demonstrating vocabulary loading!";
     let tokens = new_tokenizer.tokenize(test_text)?;
     println!("\nTokenization after loading vocabulary:");
-    println!("Original: \"{}\"", test_text);
-    println!("Tokenized: {:?}", tokens);
+    println!("Original: \"{test_text}\"");
+    println!("Tokenized: {tokens:?}");
 
     Ok(())
 }

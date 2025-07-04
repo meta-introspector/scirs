@@ -3,6 +3,8 @@
 //! This module provides graph embedding algorithms including Node2Vec, DeepWalk,
 //! and other representation learning methods for graphs.
 
+#![allow(missing_docs)]
+
 use crate::base::{DiGraph, EdgeWeight, Graph, Node};
 use crate::error::{GraphError, Result};
 use rand::prelude::*;
@@ -257,6 +259,7 @@ pub struct NegativeSampler<N: Node> {
     /// Vocabulary (all nodes)
     vocabulary: Vec<N>,
     /// Frequency distribution for sampling
+    #[allow(dead_code)]
     frequencies: Vec<f64>,
     /// Cumulative distribution for fast sampling
     cumulative: Vec<f64>,

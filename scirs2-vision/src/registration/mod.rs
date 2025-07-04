@@ -346,8 +346,8 @@ pub fn ransac_estimate_transform(
 
     use rand::prelude::*;
     use rand::rngs::StdRng;
-    use rand::thread_rng;
-    let mut base_rng = thread_rng();
+    use rand::rng;
+    let mut base_rng = rng();
     let mut rng = StdRng::from_rng(&mut base_rng);
 
     for _iteration in 0..params.ransac_iterations {

@@ -47,8 +47,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for (text, expected) in &texts {
         let result = detector.detect(text)?;
-        println!("\nText: \"{}\"", text);
-        println!("Expected: {}", expected);
+        println!("\nText: \"{text}\"");
+        println!("Expected: {expected}");
         println!(
             "Detected: {} (confidence: {:.2}%)",
             result.language.name(),
@@ -81,9 +81,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let filtered = stop_words.remove_stop_words(&tokens, *language);
 
         println!("\nLanguage: {}", language.name());
-        println!("Original: {}", sentence);
-        println!("Tokens: {:?}", tokens);
-        println!("Without stop words: {:?}", filtered);
+        println!("Original: {sentence}");
+        println!("Tokens: {tokens:?}");
+        println!("Without stop words: {filtered:?}");
     }
 
     // Demonstrate multilingual processor
@@ -101,7 +101,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for text in &mixed_texts {
         let result = processor.process(text)?;
 
-        println!("\nOriginal: \"{}\"", text);
+        println!("\nOriginal: \"{text}\"");
         println!(
             "Detected Language: {} (confidence: {:.2}%)",
             result.language.name(),

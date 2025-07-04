@@ -4,6 +4,8 @@
 //! from the existing implementation, focusing on FFT, STFT, wavelets, and
 //! advanced signal processing operations that provide maximum performance benefit.
 
+#![allow(dead_code)]
+
 use crate::error::{SignalError, SignalResult};
 use crate::simd_advanced::SimdConfig;
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayViewMut1, Axis};
@@ -841,7 +843,7 @@ fn simd_fft_frame(
         capabilities_used: vec![],
     };
 
-    if signal.len().is_power_of_two() && caps.supports_avx2 {
+    if signal.len().is_power_of_two() && caps.avx2_available {
         simd_fft_radix4_avx2(signal, &mut stats)
     } else {
         simd_fft_radix2_sse(signal, &mut stats)

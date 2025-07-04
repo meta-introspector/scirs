@@ -327,11 +327,11 @@ fn workflow_directed_graph_analysis() -> Result<()> {
 
 /// Workflow 6: Ultrathink Optimization Example
 ///
-/// Demonstrates using ultrathink mode for automatic performance optimization.
+/// Demonstrates using advanced mode for automatic performance optimization.
 #[cfg(feature = "ultrathink")]
-fn workflow_ultrathink_optimization() -> Result<()> {
-    use scirs2_graph::ultrathink::{
-        create_enhanced_ultrathink_processor, execute_with_enhanced_ultrathink,
+fn workflow_advanced_optimization() -> Result<()> {
+    use scirs2_graph::advanced::{
+        create_enhanced_advanced_processor, execute_with_enhanced_advanced,
     };
 
     println!("🔹 Workflow 6: Ultrathink Performance Optimization");
@@ -340,12 +340,12 @@ fn workflow_ultrathink_optimization() -> Result<()> {
     let mut rng = StdRng::seed_from_u64(42);
     let graph = barabasi_albert_graph(50_000, 5, &mut rng)?;
 
-    println!("  🧠 Created large graph for ultrathink demonstration:");
+    println!("  🧠 Created large graph for advanced demonstration:");
     println!("    Nodes: {}", graph.node_count());
     println!("    Edges: {}", graph.edge_count());
 
-    // Create ultrathink processor
-    let mut processor = create_enhanced_ultrathink_processor();
+    // Create advanced processor
+    let mut processor = create_enhanced_advanced_processor();
 
     // Standard vs Ultrathink PageRank comparison
     println!("  ⚡ Performance Comparison (PageRank):");
@@ -361,30 +361,28 @@ fn workflow_ultrathink_optimization() -> Result<()> {
 
     // Ultrathink optimized implementation
     let start = std::time::Instant::now();
-    let _ultrathink_result =
-        execute_with_enhanced_ultrathink(&mut processor, &graph, "pagerank_large_graph", |g| {
+    let _advanced_result =
+        execute_with_enhanced_advanced(&mut processor, &graph, "pagerank_large_graph", |g| {
             pagerank_centrality(g, Some(0.85), Some(100), Some(1e-6))
         })?;
-    let ultrathink_time = start.elapsed();
+    let advanced_time = start.elapsed();
     println!(
         "    Ultrathink optimized: {:.2}ms",
-        ultrathink_time.as_millis()
+        advanced_time.as_millis()
     );
 
-    if ultrathink_time < standard_time {
-        let speedup = standard_time.as_nanos() as f64 / ultrathink_time.as_nanos() as f64;
+    if advanced_time < standard_time {
+        let speedup = standard_time.as_nanos() as f64 / advanced_time.as_nanos() as f64;
         println!("    🚀 Speedup achieved: {:.2}x", speedup);
     }
 
-    // Community detection with ultrathink
+    // Community detection with advanced
     println!("  🏘️  Community Detection with Ultrathink:");
     let start = std::time::Instant::now();
-    let community_result = execute_with_enhanced_ultrathink(
-        &mut processor,
-        &graph,
-        "community_detection_large",
-        |g| louvain_communities_result(g, None, None),
-    )?;
+    let community_result =
+        execute_with_enhanced_advanced(&mut processor, &graph, "community_detection_large", |g| {
+            louvain_communities_result(g, None, None)
+        })?;
     let community_time = start.elapsed();
 
     println!(
@@ -672,7 +670,7 @@ fn main() -> Result<()> {
     workflow_directed_graph_analysis()?;
 
     // Advanced workflows - feature dependent
-    #[cfg(feature = "ultrathink")]
+    #[cfg(feature = "advanced")]
     workflow_ultrathink_optimization()?;
 
     // Application-specific workflows
@@ -683,14 +681,14 @@ fn main() -> Result<()> {
     println!("🎉 All workflows completed successfully!");
     println!("\n💡 Performance Optimization Tips:");
     println!("   • Use parallel algorithms for graphs with >10,000 nodes");
-    println!("   • Enable ultrathink mode for 1.5-5x additional speedup");
+    println!("   • Enable advanced mode for 1.5-5x additional speedup");
     println!("   • Choose appropriate data types (u32 vs usize) for memory efficiency");
     println!("   • Use graph generators with fixed seeds for reproducible benchmarks");
     println!("   • Consider directed vs undirected graphs based on your domain");
 
     println!("\n🔧 Feature Recommendations:");
     println!("   • Enable 'parallel' feature for multi-threaded algorithms");
-    println!("   • Enable 'ultrathink' feature for AI-driven optimizations");
+    println!("   • Enable 'advanced' feature for AI-driven optimizations");
     println!("   • Enable 'serde' feature for serialization/deserialization");
     println!("   • Profile memory usage with built-in memory profiling tools");
 

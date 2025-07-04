@@ -844,7 +844,7 @@ impl AudioProcessingMetrics {
         &mut self,
         reference_audio: &ArrayView1<F>,
         degraded_audio: &ArrayView1<F>,
-        sample_rate: f64,
+        _sample_rate: f64,
     ) -> Result<AudioQualityResults>
     where
         F: Float + std::iter::Sum,
@@ -1398,7 +1398,7 @@ impl BleuCalculator {
         }
     }
 
-    fn calculate(&mut self, reference: &[String], hypothesis: &[String]) -> Result<f64> {
+    fn calculate(&mut self, _reference: &[String], _hypothesis: &[String]) -> Result<f64> {
         // Simplified BLEU calculation
         Ok(0.8) // Placeholder
     }

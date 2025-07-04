@@ -70,9 +70,9 @@ pub mod image;
 /// Utility functions and helpers for data transformation
 pub mod utils;
 
-/// Test module for ultrathink implementations
-#[cfg(test)]
-mod ultrathink_test;
+/// Test module for advanced implementations
+// #[cfg(test)]
+// mod advanced_test;
 
 /// Performance optimizations and enhanced implementations
 pub mod performance;

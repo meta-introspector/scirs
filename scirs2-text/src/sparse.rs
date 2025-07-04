@@ -1397,8 +1397,8 @@ mod tests {
         let dense_memory = n * n * std::mem::size_of::<f64>();
         let sparse_memory = sparse.memory_usage();
 
-        println!("Dense memory: {} bytes", dense_memory);
-        println!("Sparse memory: {} bytes", sparse_memory);
+        println!("Dense memory: {dense_memory} bytes");
+        println!("Sparse memory: {sparse_memory} bytes");
         println!(
             "Memory savings: {:.1}%",
             (1.0 - sparse_memory as f64 / dense_memory as f64) * 100.0

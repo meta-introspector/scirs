@@ -195,6 +195,7 @@ pub struct BatchRandomWalker<N: Node + std::fmt::Debug> {
     /// Index to node mapping
     idx_to_node: Vec<N>,
     /// Cumulative transition probabilities for fast sampling
+    #[allow(dead_code)]
     transition_probs: Vec<Vec<f64>>,
     /// Alias tables for O(1) neighbor sampling
     alias_tables: Vec<AliasTable>,

@@ -767,6 +767,7 @@ struct FordFulkersonResidualGraph<N: Node> {
     /// Adjacency list: node -> (neighbor, capacity)
     adj: HashMap<N, Vec<(N, f64)>>,
     /// Original capacities for restoration
+    #[allow(dead_code)]
     original_capacity: HashMap<(N, N), f64>,
 }
 

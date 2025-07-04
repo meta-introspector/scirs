@@ -182,7 +182,7 @@ impl PerformanceAnalyzer {
 
                 // Store metrics
                 self.results.push(PerformanceMetrics {
-                    name: format!("scalar_distance_{}x{}", size, dim),
+                    name: format!("scalar_distance_{size}x{dim}"),
                     duration: scalar_duration,
                     throughput_ops_per_sec: size as f64 / scalar_duration.as_secs_f64(),
                     memory_mb: (size * dim * 8 * 2) as f64 / (1024.0 * 1024.0),
@@ -190,7 +190,7 @@ impl PerformanceAnalyzer {
                 });
 
                 self.results.push(PerformanceMetrics {
-                    name: format!("simd_distance_{}x{}", size, dim),
+                    name: format!("simd_distance_{size}x{dim}"),
                     duration: simd_duration,
                     throughput_ops_per_sec: size as f64 / simd_duration.as_secs_f64(),
                     memory_mb: (size * dim * 8 * 2) as f64 / (1024.0 * 1024.0),
@@ -237,7 +237,7 @@ impl PerformanceAnalyzer {
 
             // Store metrics
             self.results.push(PerformanceMetrics {
-                name: format!("pdist_sequential_{}", size),
+                name: format!("pdist_sequential_{size}"),
                 duration: sequential_duration,
                 throughput_ops_per_sec: expected_ops as f64 / sequential_duration.as_secs_f64(),
                 memory_mb: (expected_ops * 8) as f64 / (1024.0 * 1024.0),
@@ -245,7 +245,7 @@ impl PerformanceAnalyzer {
             });
 
             self.results.push(PerformanceMetrics {
-                name: format!("pdist_parallel_{}", size),
+                name: format!("pdist_parallel_{size}"),
                 duration: parallel_duration,
                 throughput_ops_per_sec: expected_ops as f64 / parallel_duration.as_secs_f64(),
                 memory_mb: (expected_ops * 8) as f64 / (1024.0 * 1024.0),
@@ -285,7 +285,7 @@ impl PerformanceAnalyzer {
 
             // Store metrics
             self.results.push(PerformanceMetrics {
-                name: format!("metric_{}_{}", metric, size),
+                name: format!("metric_{metric}_{size}"),
                 duration,
                 throughput_ops_per_sec: (size * (size - 1) / 2) as f64 / duration.as_secs_f64(),
                 memory_mb: (size * dim * 8) as f64 / (1024.0 * 1024.0),
@@ -335,7 +335,7 @@ impl PerformanceAnalyzer {
 
             // Store metrics
             self.results.push(PerformanceMetrics {
-                name: format!("kdtree_build_{}", size),
+                name: format!("kdtree_build_{size}"),
                 duration: kdtree_build_time,
                 throughput_ops_per_sec: size as f64 / kdtree_build_time.as_secs_f64(),
                 memory_mb: (size * 3 * 8) as f64 / (1024.0 * 1024.0),
@@ -371,7 +371,7 @@ impl PerformanceAnalyzer {
 
             // Store metrics
             self.results.push(PerformanceMetrics {
-                name: format!("knn_k{}_{}", k, data_size),
+                name: format!("knn_k{k}_{data_size}"),
                 duration,
                 throughput_ops_per_sec: throughput,
                 memory_mb: ((data_size + query_size) * 5 * 8) as f64 / (1024.0 * 1024.0),
@@ -430,7 +430,7 @@ impl PerformanceAnalyzer {
 
             // Store metrics
             self.results.push(PerformanceMetrics {
-                name: format!("pattern_{}_{}", pattern_name, size),
+                name: format!("pattern_{pattern_name}_{size}"),
                 duration,
                 throughput_ops_per_sec: (size * (size - 1) / 2) as f64 / duration.as_secs_f64(),
                 memory_mb: (size * dim * 8) as f64 / (1024.0 * 1024.0),
@@ -477,8 +477,8 @@ impl PerformanceAnalyzer {
         if !simd_speedups.is_empty() {
             let avg_simd_speedup = simd_speedups.iter().sum::<f64>() / simd_speedups.len() as f64;
             let max_simd_speedup = simd_speedups.iter().fold(0.0f64, |a, &b| a.max(b));
-            println!("  Average SIMD speedup: {:.2}x", avg_simd_speedup);
-            println!("  Maximum SIMD speedup: {:.2}x", max_simd_speedup);
+            println!("  Average SIMD speedup: {avg_simd_speedup:.2}x");
+            println!("  Maximum SIMD speedup: {max_simd_speedup:.2}x");
         }
 
         let parallel_speedups: Vec<f64> = self
@@ -492,13 +492,13 @@ impl PerformanceAnalyzer {
             let avg_parallel_speedup =
                 parallel_speedups.iter().sum::<f64>() / parallel_speedups.len() as f64;
             let max_parallel_speedup = parallel_speedups.iter().fold(0.0f64, |a, &b| a.max(b));
-            println!("  Average parallel speedup: {:.2}x", avg_parallel_speedup);
-            println!("  Maximum parallel speedup: {:.2}x", max_parallel_speedup);
+            println!("  Average parallel speedup: {avg_parallel_speedup:.2}x");
+            println!("  Maximum parallel speedup: {max_parallel_speedup:.2}x");
         }
 
         // Memory efficiency
         let total_memory: f64 = self.results.iter().map(|r| r.memory_mb).sum();
-        println!("  Total memory processed: {:.1} MB", total_memory);
+        println!("  Total memory processed: {total_memory:.1} MB");
 
         // Recommendations
         println!("\nRecommendations:");
@@ -570,8 +570,7 @@ impl MemoryAnalyzer {
             let peak_memory = points_memory + dist_matrix_memory;
 
             println!(
-                "{:>8} {:>15.2} {:>15.2} {:>15.2}",
-                size, points_memory, dist_matrix_memory, peak_memory
+                "{size:>8} {points_memory:>15.2} {dist_matrix_memory:>15.2} {peak_memory:>15.2}"
             );
         }
 

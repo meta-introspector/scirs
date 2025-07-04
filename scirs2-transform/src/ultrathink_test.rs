@@ -131,12 +131,12 @@ mod tests {
     }
 
     #[test]
-    fn test_ultrathink_performance_metrics() {
+    fn test_advanced_performance_metrics() {
         let bounds = vec![(0.0, 1.0); 3];
         let optimizer = UltraThinkQuantumOptimizer::new(3, 10, bounds, 50);
 
         if let Ok(opt) = optimizer {
-            let metrics = opt.get_ultrathink_diagnostics();
+            let metrics = opt.get_advanced_diagnostics();
 
             // Test default values
             assert_eq!(metrics.convergence_rate, 0.0);
@@ -151,8 +151,8 @@ mod tests {
     }
 
     #[test]
-    fn test_ultrathink_data_processing() {
-        // Test that ultrathink mode can handle various data types and sizes
+    fn test_advanced_data_processing() {
+        // Test that advanced mode can handle various data types and sizes
         let small_data = create_test_dataset(10, 5);
         let medium_data = create_test_dataset(100, 20);
         let large_data = create_test_dataset(1000, 50);

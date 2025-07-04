@@ -1054,7 +1054,7 @@ where
     (sorted_d, sorted_z)
 }
 
-/// Ultra-precision eigenvalue solver targeting 1e-12+ accuracy (ultrathink mode)
+/// Ultra-precision eigenvalue solver targeting 1e-12+ accuracy (advanced mode)
 ///
 /// This function implements state-of-the-art numerical techniques for achieving
 /// ultra-high precision eigenvalue computation, including:
@@ -1069,7 +1069,7 @@ where
 ///
 /// * `a` - Input symmetric matrix
 /// * `max_iter` - Maximum number of iterations (default: 500)
-/// * `target_precision` - Target precision (default: 1e-12, ultrathink mode enhancement)
+/// * `target_precision` - Target precision (default: 1e-12, advanced mode enhancement)
 /// * `auto_detect` - Automatically activate ultra-precision for challenging matrices
 ///
 /// # Returns
@@ -1136,7 +1136,7 @@ where
         target_precision
     };
 
-    // Auto-detect if ultra-precision mode should be activated (more aggressive in ultrathink mode)
+    // Auto-detect if ultra-precision mode should be activated (more aggressive in advanced mode)
     let use_ultra_precision = auto_detect
         && (
             condition_number > A::from(1e12).unwrap() || target_precision <= A::from(1e-11).unwrap()

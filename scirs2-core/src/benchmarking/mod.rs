@@ -21,12 +21,17 @@ pub use cross_module::{
 };
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
-use std::collections::HashMap;
+use crate::performance_optimization::OptimizationStrategy;
+use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant};
 
 /// Benchmark configuration
 #[derive(Debug, Clone)]
 pub struct BenchmarkConfig {
+    /// Optimization strategies to benchmark
+    pub strategies: HashSet<OptimizationStrategy>,
+    /// Sample sizes for benchmarking
+    pub sample_sizes: Vec<usize>,
     /// Number of warmup iterations
     pub warmup_iterations: usize,
     /// Number of measurement iterations
@@ -47,7 +52,12 @@ pub struct BenchmarkConfig {
 
 impl Default for BenchmarkConfig {
     fn default() -> Self {
+        let mut strategies = HashSet::new();
+        strategies.insert(OptimizationStrategy::Scalar);
+
         Self {
+            strategies,
+            sample_sizes: vec![1000, 10000, 100000],
             warmup_iterations: 10,
             measurement_iterations: 100,
             measurement_time: Duration::from_secs(5),
@@ -117,6 +127,24 @@ impl BenchmarkConfig {
     /// Add a single tag
     pub fn with_tag(mut self, tag: String) -> Self {
         self.tags.push(tag);
+        self
+    }
+
+    /// Set strategies
+    pub fn with_strategies(mut self, strategies: HashSet<OptimizationStrategy>) -> Self {
+        self.strategies = strategies;
+        self
+    }
+
+    /// Add a single strategy
+    pub fn with_strategy(mut self, strategy: OptimizationStrategy) -> Self {
+        self.strategies.insert(strategy);
+        self
+    }
+
+    /// Set sample sizes
+    pub fn with_sample_sizes(mut self, sample_sizes: Vec<usize>) -> Self {
+        self.sample_sizes = sample_sizes;
         self
     }
 }
@@ -662,6 +690,78 @@ impl BenchmarkSuite {
             reliable_count,
             results.len()
         );
+    }
+}
+
+/// Benchmark configuration presets
+pub mod presets {
+    use super::*;
+
+    /// Comprehensive benchmark configuration for ultrathink mode
+    ///
+    /// This configuration includes all available optimization strategies
+    /// and provides extensive sample size coverage for thorough testing.
+    #[allow(dead_code)]
+    pub fn ultrathink_comprehensive() -> BenchmarkConfig {
+        let mut strategies = HashSet::new();
+        strategies.insert(OptimizationStrategy::Scalar);
+        strategies.insert(OptimizationStrategy::Simd);
+        strategies.insert(OptimizationStrategy::Parallel);
+        strategies.insert(OptimizationStrategy::Gpu);
+        strategies.insert(OptimizationStrategy::Hybrid);
+        strategies.insert(OptimizationStrategy::CacheOptimized);
+        strategies.insert(OptimizationStrategy::MemoryBound);
+        strategies.insert(OptimizationStrategy::ComputeBound);
+        strategies.insert(OptimizationStrategy::ModernArchOptimized);
+        strategies.insert(OptimizationStrategy::VectorOptimized);
+        strategies.insert(OptimizationStrategy::EnergyEfficient);
+        strategies.insert(OptimizationStrategy::HighThroughput);
+
+        let sample_sizes = vec![
+            100, 500, 1_000, 5_000, 10_000, 50_000, 100_000, 500_000, 1_000_000, 5_000_000,
+            10_000_000,
+        ];
+
+        BenchmarkConfig {
+            strategies,
+            sample_sizes,
+            warmup_iterations: 15,
+            measurement_iterations: 50,
+            measurement_time: Duration::from_secs(10),
+            confidence_level: 0.95,
+            max_cv: 0.1,
+            enable_profiling: true,
+            enable_memory_tracking: true,
+            tags: vec!["ultrathink".to_string(), "comprehensive".to_string()],
+        }
+    }
+
+    /// Modern architecture-focused benchmark configuration
+    ///
+    /// This configuration focuses on modern CPU architectures and
+    /// advanced optimization strategies while excluding basic scalar approaches.
+    #[allow(dead_code)]
+    pub fn modern_architectures() -> BenchmarkConfig {
+        let mut strategies = HashSet::new();
+        strategies.insert(OptimizationStrategy::ModernArchOptimized);
+        strategies.insert(OptimizationStrategy::VectorOptimized);
+        strategies.insert(OptimizationStrategy::EnergyEfficient);
+        strategies.insert(OptimizationStrategy::HighThroughput);
+
+        let sample_sizes = vec![1_000, 10_000, 100_000, 1_000_000, 10_000_000];
+
+        BenchmarkConfig {
+            strategies,
+            sample_sizes,
+            warmup_iterations: 10,
+            measurement_iterations: 30,
+            measurement_time: Duration::from_secs(8),
+            confidence_level: 0.95,
+            max_cv: 0.1,
+            enable_profiling: true,
+            enable_memory_tracking: true,
+            tags: vec!["modern".to_string(), "architecture".to_string()],
+        }
     }
 }
 

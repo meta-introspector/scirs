@@ -85,7 +85,7 @@ fn main() {
     );
 
     if passed == total {
-        println!("\n🎉 All ultrathink implementations validated successfully!");
+        println!("\n🎉 All advanced implementations validated successfully!");
     } else {
         println!("\n⚠️  Some implementations need attention.");
     }

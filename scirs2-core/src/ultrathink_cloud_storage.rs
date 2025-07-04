@@ -23,7 +23,7 @@ use std::time::{Duration, Instant};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-/// Central coordinator for ultrathink cloud storage
+/// Central coordinator for advanced cloud storage
 #[derive(Debug)]
 pub struct UltrathinkCloudStorageCoordinator {
     /// Cloud provider connections
@@ -46,7 +46,7 @@ pub struct UltrathinkCloudStorageCoordinator {
     analytics: Arc<RwLock<CloudPerformanceAnalytics>>,
 }
 
-/// Configuration for ultrathink cloud storage
+/// Configuration for advanced cloud storage
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct UltrathinkCloudConfig {

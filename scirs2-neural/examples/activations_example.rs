@@ -1,5 +1,5 @@
 use ndarray::{Array, Array1, Array2};
-use scirs2_neural::activations::{Activation, Mish, ReLU, Sigmoid, Swish, Tanh, GELU};
+use scirs2_neural::activations_minimal::{Activation, ReLU, Sigmoid, Tanh, GELU};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Activation Functions Demonstration");
@@ -14,8 +14,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tanh = Tanh::new();
     let gelu = GELU::new();
     let gelu_fast = GELU::fast();
-    let swish = Swish::new(1.0);
-    let mish = Mish::new();
     // Compute outputs for each activation function
     let relu_output = relu.forward(&x_dyn)?;
     let leaky_relu_output = leaky_relu.forward(&x_dyn)?;
@@ -23,8 +21,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tanh_output = tanh.forward(&x_dyn)?;
     let gelu_output = gelu.forward(&x_dyn)?;
     let gelu_fast_output = gelu_fast.forward(&x_dyn)?;
-    let swish_output = swish.forward(&x_dyn)?;
-    let mish_output = mish.forward(&x_dyn)?;
+    // Note: Swish and Mish are not available in the minimal activation set
     // Print sample values for each activation
     println!("Sample activation values for input x = -2.0, -1.0, 0.0, 1.0, 2.0:");
     let indices = [5, 40, 50, 60, 95]; // Corresponding to x = -2, -1, 0, 1, 2
@@ -33,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "x", "-2.0", "-1.0", "0.0", "1.0", "2.0"
     );
     println!(
-        "|{:-<12}|{:-<12}|{:-<12}|{:-<12}|{:-<12}|{:-<12}|",,
+        "|{:-<12}|{:-<12}|{:-<12}|{:-<12}|{:-<12}|{:-<12}|",
         "", "", "", "", "", ""
     );
     println!(
@@ -90,24 +87,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         gelu_fast_output[[indices[3]]],
         gelu_fast_output[[indices[4]]]
     );
-    println!(
-        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
-        "Swish",
-        swish_output[[indices[0]]],
-        swish_output[[indices[1]]],
-        swish_output[[indices[2]]],
-        swish_output[[indices[3]]],
-        swish_output[[indices[4]]]
-    );
-    println!(
-        "| {:<10} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} | {:<10.6} |",
-        "Mish",
-        mish_output[[indices[0]]],
-        mish_output[[indices[1]]],
-        mish_output[[indices[2]]],
-        mish_output[[indices[3]]],
-        mish_output[[indices[4]]]
-    );
+    // Swish and Mish not available in minimal activation set
     // Now test the backward pass with some dummy gradient output
     println!("\nTesting backward pass...");
     // Create a dummy gradient output
@@ -119,8 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _tanh_grad = tanh.backward(&dummy_grad, &tanh_output)?;
     let _gelu_grad = gelu.backward(&dummy_grad, &gelu_output)?;
     let _gelu_fast_grad = gelu_fast.backward(&dummy_grad, &gelu_fast_output)?;
-    let _swish_grad = swish.backward(&dummy_grad, &swish_output)?;
-    let _mish_grad = mish.backward(&dummy_grad, &mish_output)?;
+    // Note: Swish and Mish gradients not available in minimal set
     println!("Backward pass completed successfully.");
     // Test with matrix input instead of vector
     println!("\nTesting with matrix input...");
