@@ -504,7 +504,7 @@ impl UltraThinkSimdOptimizer {
     /// Ultra-optimized mean calculation with adaptive selection
     pub fn ultra_mean<F, D>(&self, x: &ArrayBase<D, Ix1>) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static,
+        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static + std::iter::Sum<F> + std::fmt::Display,
         D: Data<Elem = F>
         + std::fmt::Display,
     {
@@ -1131,9 +1131,8 @@ impl UltraThinkSimdOptimizer {
         algorithm: &AlgorithmChoice,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         self.execute_mean_algorithm(x, algorithm)
     }
@@ -1145,7 +1144,7 @@ impl UltraThinkSimdOptimizer {
         algorithm: &AlgorithmChoice,
     ) -> StatsResult<(F, PerformanceMetrics)>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
+        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
         D: Data<Elem = F>
         + std::fmt::Display,
     {
@@ -1172,7 +1171,7 @@ impl UltraThinkSimdOptimizer {
         algorithm: &AlgorithmChoice,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
+        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::iter::Sum<F>,
         D: Data<Elem = F>
         + std::fmt::Display,
     {
@@ -1308,7 +1307,7 @@ impl UltraThinkSimdOptimizer {
         algorithm: &AlgorithmChoice,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
+        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
         D: Data<Elem = F>
         + std::fmt::Display,
     {
@@ -1361,8 +1360,8 @@ impl UltraThinkSimdOptimizer {
         algorithm: &AlgorithmChoice,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
-        D1: Data<Elem = F>,
+        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
+        D1: Data<Elem = F> + std::fmt::Display,
         D2: Data<Elem = F>
         + std::fmt::Display,
     {

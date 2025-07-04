@@ -9,7 +9,7 @@ use rand::{random, rng, Rng};
 use scirs2_graph::advanced::{
     create_enhanced_advanced_processor, create_large_graph_advanced_processor,
     create_performance_advanced_processor, create_realtime_advanced_processor,
-    execute_with_enhanced_advanced, ExplorationStrategy, AdvancedConfig, AdvancedProcessor,
+    execute_with_enhanced_advanced, AdvancedConfig, AdvancedProcessor, ExplorationStrategy,
 };
 use scirs2_graph::{
     barabasi_albert_graph, betweenness_centrality, closeness_centrality, connected_components,

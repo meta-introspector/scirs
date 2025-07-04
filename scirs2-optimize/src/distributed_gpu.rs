@@ -233,7 +233,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         let total_time = start_time.elapsed().as_secs_f64();
 
         Ok(DistributedGpuResults {
-            base_result: OptimizeResults {
+            base_result: OptimizeResults::<f64> {
                 x: best_individual,
                 fun: best_fitness,
                 success: true,
@@ -338,8 +338,8 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
             let j_rand = rng.random_range(0..dims);
             for j in 0..dims {
                 if rng.random_range(0.0..1.0) < crossover_rate || j == j_rand {
-                    trial_population[[i, j]] = population[[a, j]]
-                        + f_scale * (population[[b, j]] - population[[c, j]]);
+                    trial_population[[i, j]] =
+                        population[[a, j]] + f_scale * (population[[b, j]] - population[[c, j]]);
                 } else {
                     trial_population[[i, j]] = population[[i, j]];
                 }
@@ -651,7 +651,7 @@ pub struct IterationStats {
 #[derive(Debug, Clone)]
 pub struct DistributedGpuResults {
     /// Base optimization results
-    pub base_result: OptimizeResults,
+    pub base_result: OptimizeResults<f64>,
     /// GPU-specific performance statistics
     pub gpu_stats: crate::gpu::acceleration::PerformanceStats,
     /// Distributed computing statistics
@@ -665,7 +665,7 @@ pub struct DistributedGpuResults {
 impl DistributedGpuResults {
     fn empty() -> Self {
         Self {
-            base_result: OptimizeResults {
+            base_result: OptimizeResults::<f64> {
                 x: Array1::zeros(0),
                 fun: 0.0,
                 success: false,
@@ -693,11 +693,8 @@ impl DistributedGpuResults {
         println!("===================================");
         println!("Success: {}", self.base_result.success);
         println!("Final function value: {:.6e}", self.base_result.fun);
-        println!("Iterations: {}", self.base_result.iterations);
-        println!(
-            "Function evaluations: {}",
-            self.base_result.function_evaluations
-        );
+        println!("Iterations: {}", self.base_result.nit);
+        println!("Function evaluations: {}", self.base_result.nfev);
         println!("Total time: {:.3}s", self.total_time);
         println!();
 

@@ -3,7 +3,7 @@
 //! These tests verify that scirs2-graph can handle production-scale graphs
 //! with millions of nodes and edges.
 
-use rand::rng;
+use rand::{rng, Rng};
 use scirs2_core::error::CoreResult;
 use scirs2_graph::{algorithms, generators, measures, DiGraph, Graph};
 use std::time::Instant;
@@ -18,30 +18,34 @@ fn test_large_erdos_renyi_graph() -> CoreResult<()> {
     let edge_probability = 0.00001; // Keep sparse to avoid memory issues
 
     for n in sizes {
-        println!("\nTesting with {} nodes", n);
+        println!("\nTesting with {n} nodes");
         let start = Instant::now();
 
         // Generate graph
         let gen_start = Instant::now();
-        let graph = generators::erdos_renyi_graph(n, edge_probability, None)?;
+        let mut rng = rng();
+        let graph = generators::erdos_renyi_graph(n, edge_probability, &mut rng)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         let gen_time = gen_start.elapsed();
 
         println!("  Generation time: {:.2}s", gen_time.as_secs_f64());
         println!("  Nodes: {}", graph.node_count());
         println!("  Edges: {}", graph.edge_count());
-        println!("  Density: {:.6}", measures::graph_density(&graph));
+        let density = measures::graph_density(&graph)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        println!("  Density: {density:.6}");
 
         // Test basic operations
         let ops_start = Instant::now();
 
         // Degree calculation
-        let max_degree = (0..n).map(|i| graph.degree(i)).max().unwrap_or(0);
-        println!("  Max degree: {}", max_degree);
+        let max_degree = (0..n).map(|i| graph.degree(&i)).max().unwrap_or(0);
+        println!("  Max degree: {max_degree}");
 
         // Connected components (sample for very large graphs)
         if n <= 500_000 {
             let cc_start = Instant::now();
-            let components = algorithms::connected_components(&graph)?;
+            let components = algorithms::connected_components(&graph);
             println!(
                 "  Connected components: {} ({:.2}s)",
                 components.len(),
@@ -69,12 +73,14 @@ fn test_large_barabasi_albert_graph() -> CoreResult<()> {
     let m = 3; // Number of edges to attach from a new node
 
     for n in sizes {
-        println!("\nTesting with {} nodes", n);
+        println!("\nTesting with {n} nodes");
         let start = Instant::now();
 
         // Generate graph
         let gen_start = Instant::now();
-        let graph = generators::barabasi_albert_graph(n, m, None)?;
+        let mut rng = rng();
+        let graph = generators::barabasi_albert_graph(n, m, &mut rng)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         let gen_time = gen_start.elapsed();
 
         println!("  Generation time: {:.2}s", gen_time.as_secs_f64());
@@ -85,11 +91,11 @@ fn test_large_barabasi_albert_graph() -> CoreResult<()> {
         let ops_start = Instant::now();
 
         // Degree distribution
-        let degrees: Vec<usize> = (0..graph.node_count()).map(|i| graph.degree(i)).collect();
+        let degrees: Vec<usize> = (0..graph.node_count()).map(|i| graph.degree(&i)).collect();
         let max_degree = degrees.iter().max().unwrap_or(&0);
         let avg_degree = degrees.iter().sum::<usize>() as f64 / degrees.len() as f64;
-        println!("  Max degree: {}", max_degree);
-        println!("  Avg degree: {:.2}", avg_degree);
+        println!("  Max degree: {max_degree}");
+        println!("  Avg degree: {avg_degree:.2}");
 
         // Sample node for local algorithms
         let sample_node = n / 2;
@@ -145,7 +151,9 @@ fn test_large_grid_graph() -> CoreResult<()> {
         let source = 0;
         let target = graph.node_count() - 1;
         let path_start = Instant::now();
-        let path = algorithms::shortest_path(&graph, source, target)?;
+        let path_result = algorithms::dijkstra_path(&graph, &source, &target)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        let path = path_result.unwrap().nodes;
         println!(
             "  Shortest path (corner to corner): {} steps ({:.2}s)",
             path.len() - 1,
@@ -180,13 +188,13 @@ fn test_large_directed_graph_algorithms() -> CoreResult<()> {
     println!("\n=== Large Directed Graph Algorithms Test ===");
 
     let n = 100_000;
-    let edge_probability = 0.00002;
+    let _edge_probability = 0.00002;
 
-    println!("\nGenerating directed graph with {} nodes", n);
+    println!("\nGenerating directed graph with {n} nodes");
     let start = Instant::now();
 
     // Create directed graph
-    let mut graph = DiGraph::new();
+    let mut graph: DiGraph<usize, f64, u32> = DiGraph::new();
     for i in 0..n {
         graph.add_node(i);
     }
@@ -200,7 +208,9 @@ fn test_large_directed_graph_algorithms() -> CoreResult<()> {
         let num_edges = (rng.random::<f64>() * 5.0) as usize + 1;
         for _ in 0..num_edges {
             let target = rng.random_range(0..i);
-            graph.add_edge(i, target, 1.0)?;
+            graph
+                .add_edge(i, target, 1.0)
+                .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         }
     }
 
@@ -213,7 +223,7 @@ fn test_large_directed_graph_algorithms() -> CoreResult<()> {
 
     // Strongly connected components
     let scc_start = Instant::now();
-    let sccs = algorithms::strongly_connected_components(&graph)?;
+    let sccs = algorithms::strongly_connected_components(&graph);
     println!(
         "  Strongly connected components: {} ({:.2}s)",
         sccs.len(),
@@ -222,11 +232,11 @@ fn test_large_directed_graph_algorithms() -> CoreResult<()> {
 
     // Find largest SCC
     let largest_scc_size = sccs.iter().map(|scc| scc.len()).max().unwrap_or(0);
-    println!("  Largest SCC size: {}", largest_scc_size);
+    println!("  Largest SCC size: {largest_scc_size}");
 
     // Topological sort (if DAG)
     match algorithms::topological_sort(&graph) {
-        Ok(topo) => println!("  Graph is DAG, topological sort computed"),
+        Ok(_topo) => println!("  Graph is DAG, topological sort computed"),
         Err(_) => println!("  Graph contains cycles"),
     }
 
@@ -248,11 +258,13 @@ fn test_memory_efficient_operations() -> CoreResult<()> {
     let n = 1_000_000;
     let m = 5; // Average degree of 10
 
-    println!("\nGenerating graph with {} nodes", n);
+    println!("\nGenerating graph with {n} nodes");
     let start = Instant::now();
 
     // Generate a sparse graph
-    let graph = generators::barabasi_albert_graph(n, m, None)?;
+    let mut rng = rng();
+    let graph = generators::barabasi_albert_graph(n, m, &mut rng)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
     println!("  Generation time: {:.2}s", start.elapsed().as_secs_f64());
     println!("  Nodes: {}", graph.node_count());
     println!("  Edges: {}", graph.edge_count());
@@ -264,7 +276,7 @@ fn test_memory_efficient_operations() -> CoreResult<()> {
     let mut degree_sum = 0u64;
     let mut max_degree = 0usize;
     for i in 0..graph.node_count() {
-        let degree = graph.degree(i);
+        let degree = graph.degree(&i);
         degree_sum += degree as u64;
         max_degree = max_degree.max(degree);
     }
@@ -280,8 +292,6 @@ fn test_memory_efficient_operations() -> CoreResult<()> {
     let clustering_start = Instant::now();
     let sample_size = 1000;
     let mut clustering_sum = 0.0;
-    let mut rng = rng();
-
     if let Ok(coefficients) = measures::clustering_coefficient(&graph) {
         for _ in 0..sample_size {
             let node = rng.random_range(0..graph.node_count());
@@ -324,10 +334,12 @@ fn test_parallel_algorithms_on_large_graphs() -> CoreResult<()> {
         use scirs2_core::parallel_ops::*;
 
         let n = 500_000;
-        let edge_probability = 0.00002;
+        let _edge_probability = 0.00002;
 
         println!("\nGenerating graph with {} nodes", n);
-        let graph = generators::erdos_renyi_graph(n, edge_probability, None)?;
+        let mut rng = rng();
+        let graph = generators::erdos_renyi_graph(n, edge_probability, &mut rng)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         println!("  Nodes: {}", graph.node_count());
         println!("  Edges: {}", graph.edge_count());
 
@@ -335,7 +347,7 @@ fn test_parallel_algorithms_on_large_graphs() -> CoreResult<()> {
         let degree_start = Instant::now();
         let degrees: Vec<usize> = (0..graph.node_count())
             .into_par_iter()
-            .map(|i| graph.degree(i))
+            .map(|i| graph.degree(&i))
             .collect();
 
         let max_degree = degrees.par_iter().max().unwrap_or(&0);
@@ -372,7 +384,7 @@ fn test_parallel_algorithms_on_large_graphs() -> CoreResult<()> {
 // Helper functions
 
 #[allow(dead_code)]
-fn estimate_diameter(graph: &Graph, samples: usize) -> CoreResult<usize> {
+fn estimate_diameter(graph: &Graph<usize, f64>, samples: usize) -> CoreResult<usize> {
     use rand::prelude::*;
     let mut rng = rng();
     let mut max_distance = 0;
@@ -384,10 +396,8 @@ fn estimate_diameter(graph: &Graph, samples: usize) -> CoreResult<usize> {
             .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
         // For BFS, distance is the position in the traversal order
-        let mut dist_count = 0;
-        for _ in bfs_nodes {
+        for (dist_count, _) in bfs_nodes.into_iter().enumerate() {
             max_distance = max_distance.max(dist_count);
-            dist_count += 1;
         }
     }
 
@@ -395,7 +405,11 @@ fn estimate_diameter(graph: &Graph, samples: usize) -> CoreResult<usize> {
 }
 
 #[allow(dead_code)]
-fn bfs_with_depth_limit(graph: &Graph, start: usize, depth_limit: usize) -> CoreResult<usize> {
+fn bfs_with_depth_limit(
+    graph: &Graph<usize, f64>,
+    start: usize,
+    depth_limit: usize,
+) -> CoreResult<usize> {
     use std::collections::{HashSet, VecDeque};
 
     let mut visited = HashSet::new();
@@ -409,9 +423,11 @@ fn bfs_with_depth_limit(graph: &Graph, start: usize, depth_limit: usize) -> Core
             continue;
         }
 
-        for neighbor in graph.neighbors(node) {
-            if visited.insert(neighbor) {
-                queue.push_back((neighbor, depth + 1));
+        if let Ok(neighbors) = graph.neighbors(&node) {
+            for neighbor in neighbors {
+                if visited.insert(neighbor) {
+                    queue.push_back((neighbor, depth + 1));
+                }
             }
         }
     }
@@ -428,11 +444,13 @@ fn test_extreme_scale_graph() -> CoreResult<()> {
     let n = 5_000_000;
     let m = 2; // Very sparse to fit in memory
 
-    println!("\nGenerating graph with {} nodes", n);
+    println!("\nGenerating graph with {n} nodes");
     let start = Instant::now();
 
     // Generate graph
-    let graph = generators::barabasi_albert_graph(n, m, None)?;
+    let mut rng = rng();
+    let graph = generators::barabasi_albert_graph(n, m, &mut rng)
+        .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
     let gen_time = start.elapsed();
 
     println!("  Generation time: {:.2}s", gen_time.as_secs_f64());
@@ -452,16 +470,13 @@ fn test_extreme_scale_graph() -> CoreResult<()> {
     let step = n / sample_size;
 
     for i in (0..n).step_by(step) {
-        degree_samples.push(graph.degree(i));
+        degree_samples.push(graph.degree(&i));
     }
 
     let max_sampled = degree_samples.iter().max().unwrap_or(&0);
     let avg_sampled = degree_samples.iter().sum::<usize>() as f64 / degree_samples.len() as f64;
 
-    println!(
-        "  Sampled degree stats: max={}, avg={:.2}",
-        max_sampled, avg_sampled
-    );
+    println!("  Sampled degree stats: max={max_sampled}, avg={avg_sampled:.2}");
     println!(
         "  Operations time: {:.2}s",
         ops_start.elapsed().as_secs_f64()
@@ -488,10 +503,10 @@ fn test_algorithm_scaling() -> CoreResult<()> {
 
     let sizes = vec![10_000, 50_000, 100_000, 200_000];
 
-    println!("\nTesting algorithm scaling with graph sizes: {:?}", sizes);
+    println!("\nTesting algorithm scaling with graph sizes: {sizes:?}");
 
     for n in sizes {
-        println!("\n--- Graph size: {} nodes ---", n);
+        println!("\n--- Graph size: {n} nodes ---");
 
         // Generate test graph
         let mut rng = rng();

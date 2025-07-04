@@ -8,6 +8,7 @@ use super::{
     ActivationType, LearnedOptimizationConfig, LearnedOptimizer, MetaOptimizerState,
     OptimizationProblem, TrainingTask,
 };
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, Array3, ArrayView1};
 use std::collections::HashMap;
@@ -901,7 +902,7 @@ impl LearnedOptimizer for AdaptiveNASSystem {
         &mut self,
         objective: F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -942,7 +943,7 @@ impl LearnedOptimizer for AdaptiveNASSystem {
             }
         }
 
-        Ok(OptimizeResults {
+        Ok(OptimizeResults::<f64> {
             x: current_params,
             fun: best_value,
             success: true,
@@ -1044,7 +1045,7 @@ pub fn nas_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     config: Option<LearnedOptimizationConfig>,
-) -> Result<OptimizeResults>
+) -> super::OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {

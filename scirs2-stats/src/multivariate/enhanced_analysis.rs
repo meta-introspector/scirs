@@ -259,7 +259,7 @@ where
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());
 
         // Compute SVD
-        let (u, s, vt) = scirs2_linalg::svd(&data_f64.view(), true, true)
+        let (u, s, vt) = scirs2_linalg::svd(&data_f64.view(), true, None)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
 
         // Extract components and singular values

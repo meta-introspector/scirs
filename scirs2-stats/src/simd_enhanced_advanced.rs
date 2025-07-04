@@ -267,7 +267,8 @@ where
     }
 
     use rand::rngs::StdRng;
-    use rand::{Rng, SeedableRng};
+    use scirs2_core::rng;
+    use rand::SeedableRng;
 
     let mut rng = match seed {
         Some(s) => StdRng::seed_from_u64(s),

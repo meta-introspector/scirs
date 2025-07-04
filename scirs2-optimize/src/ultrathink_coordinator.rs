@@ -256,7 +256,7 @@ impl AdvancedCoordinator {
     }
 
     /// Execute Advanced optimization
-    pub fn optimize<F>(&mut self, objective: F) -> Result<OptimizeResults>
+    pub fn optimize<F>(&mut self, objective: F) -> Result<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + Clone,
     {
@@ -326,7 +326,7 @@ impl AdvancedCoordinator {
             }
         }
 
-        let final_result = best_result.unwrap_or_else(|| OptimizeResults {
+        let final_result = best_result.unwrap_or_else(|| OptimizeResults::<f64> {
             x: self.state.global_best_solution.clone(),
             fun: self.state.global_best_objective,
             success: self.state.global_best_objective < f64::INFINITY,
@@ -346,7 +346,7 @@ impl AdvancedCoordinator {
     }
 
     /// Execute Quantum-Neural Fusion strategy
-    fn execute_quantum_neural_fusion<F>(&mut self, objective: &F) -> Result<OptimizeResults>
+    fn execute_quantum_neural_fusion<F>(&mut self, objective: &F) -> Result<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -364,7 +364,7 @@ impl AdvancedCoordinator {
                 .network()
                 .encode_parameters(&quantum_candidate.view());
             let neural_result = neuro_opt.optimize(objective, &quantum_candidate.view())?;
-            self.state.total_evaluations += neural_result.iterations;
+            self.state.total_evaluations += neural_result.nit;
 
             // Fusion of results
             let fused_solution = self.fusion_engine.fuse_solutions(
@@ -376,7 +376,7 @@ impl AdvancedCoordinator {
             let fused_objective = objective(&fused_solution.view());
             self.state.total_evaluations += 1;
 
-            Ok(OptimizeResults {
+            Ok(OptimizeResults::<f64> {
                 x: fused_solution,
                 fun: fused_objective,
                 success: fused_objective < f64::INFINITY,
@@ -399,7 +399,7 @@ impl AdvancedCoordinator {
     }
 
     /// Execute Neuromorphic-Quantum Hybrid strategy
-    fn execute_neuromorphic_quantum_hybrid<F>(&mut self, objective: &F) -> Result<OptimizeResults>
+    fn execute_neuromorphic_quantum_hybrid<F>(&mut self, objective: &F) -> Result<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -432,7 +432,7 @@ impl AdvancedCoordinator {
                 (neural_candidate, neural_obj)
             };
 
-            Ok(OptimizeResults {
+            Ok(OptimizeResults::<f64> {
                 x: best_solution,
                 fun: best_obj,
                 success: best_obj < f64::INFINITY,
@@ -455,7 +455,7 @@ impl AdvancedCoordinator {
     }
 
     /// Execute Meta-Learning Quantum strategy
-    fn execute_meta_learning_quantum<F>(&mut self, objective: &F) -> Result<OptimizeResults>
+    fn execute_meta_learning_quantum<F>(&mut self, objective: &F) -> Result<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -477,7 +477,7 @@ impl AdvancedCoordinator {
 
             // Quantum evolution with meta-learning guidance
             let quantum_result = quantum_opt.optimize(objective)?;
-            self.state.total_evaluations += quantum_result.iterations;
+            self.state.total_evaluations += quantum_result.nit;
 
             // Meta-learning from quantum results
             self.update_problem_characteristics(&quantum_result)?;
@@ -491,7 +491,7 @@ impl AdvancedCoordinator {
     }
 
     /// Execute Adaptive Selection strategy
-    fn execute_adaptive_selection<F>(&mut self, objective: &F) -> Result<OptimizeResults>
+    fn execute_adaptive_selection<F>(&mut self, objective: &F) -> Result<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -502,7 +502,7 @@ impl AdvancedCoordinator {
             "quantum" => {
                 if let Some(quantum_opt) = self.quantum_optimizer.as_mut() {
                     let result = quantum_opt.optimize(objective)?;
-                    self.state.total_evaluations += result.iterations;
+                    self.state.total_evaluations += result.nit;
                     Ok(result)
                 } else {
                     Err(OptimizeError::InitializationError(
@@ -514,7 +514,7 @@ impl AdvancedCoordinator {
                 if let Some(neuro_opt) = self.neuromorphic_optimizer.as_mut() {
                     let result =
                         neuro_opt.optimize(objective, &self.state.global_best_solution.view())?;
-                    self.state.total_evaluations += result.iterations;
+                    self.state.total_evaluations += result.nit;
                     Ok(result)
                 } else {
                     Err(OptimizeError::InitializationError(
@@ -526,7 +526,7 @@ impl AdvancedCoordinator {
                 if let Some(meta_opt) = self.meta_learning_optimizer.as_mut() {
                     let result =
                         meta_opt.optimize(objective, &self.state.global_best_solution.view())?;
-                    self.state.total_evaluations += result.iterations;
+                    self.state.total_evaluations += result.nit;
                     Ok(result)
                 } else {
                     Err(OptimizeError::InitializationError(
@@ -541,7 +541,7 @@ impl AdvancedCoordinator {
     }
 
     /// Execute Full Advanced strategy (all optimizers in parallel coordination)
-    fn execute_full_advanced<F>(&mut self, objective: &F) -> Result<OptimizeResults>
+    fn execute_full_advanced<F>(&mut self, objective: &F) -> Result<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -553,7 +553,7 @@ impl AdvancedCoordinator {
             let quantum_obj = objective(&quantum_candidate.view());
             self.state.total_evaluations += 1;
 
-            results.push(OptimizeResults {
+            results.push(OptimizeResults::<f64> {
                 x: quantum_candidate,
                 fun: quantum_obj,
                 success: quantum_obj < f64::INFINITY,
@@ -575,7 +575,7 @@ impl AdvancedCoordinator {
             let neural_obj = objective(&neural_candidate.view());
             self.state.total_evaluations += 1;
 
-            results.push(OptimizeResults {
+            results.push(OptimizeResults::<f64> {
                 x: neural_candidate,
                 fun: neural_obj,
                 success: neural_obj < f64::INFINITY,
@@ -598,7 +598,7 @@ impl AdvancedCoordinator {
             let meta_obj = objective(&meta_candidate.view());
             self.state.total_evaluations += 1;
 
-            results.push(OptimizeResults {
+            results.push(OptimizeResults::<f64> {
                 x: meta_candidate,
                 fun: meta_obj,
                 success: meta_obj < f64::INFINITY,
@@ -621,7 +621,7 @@ impl AdvancedCoordinator {
             let fused_obj = objective(&fused_result.view());
             self.state.total_evaluations += 1;
 
-            Ok(OptimizeResults {
+            Ok(OptimizeResults::<f64> {
                 x: fused_result,
                 fun: fused_obj,
                 success: fused_obj < f64::INFINITY,
@@ -931,7 +931,7 @@ pub fn advanced_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     config: Option<AdvancedConfig>,
-) -> Result<OptimizeResults>
+) -> Result<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + Clone,
 {
@@ -1016,7 +1016,7 @@ mod tests {
     fn test_multiple_solution_fusion() {
         let fusion_engine = CrossModalFusionEngine::new(2);
         let results = vec![
-            OptimizeResults {
+            OptimizeResults::<f64> {
                 x: Array1::from(vec![1.0, 2.0]),
                 fun: 1.0,
                 success: true,
@@ -1031,7 +1031,7 @@ mod tests {
                 constr: None,
                 message: "test1".to_string(),
             },
-            OptimizeResults {
+            OptimizeResults::<f64> {
                 x: Array1::from(vec![3.0, 4.0]),
                 fun: 2.0,
                 success: true,

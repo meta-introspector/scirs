@@ -43,9 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let nn_interp = NaturalNeighborInterpolator::new(&points.view(), &values.view())?;
     let nn_results = nn_interp.interpolate_many(&grid_points.view())?;
 
-    println!(
-        "Natural Neighbor interpolation results on a {grid_size}x{grid_size} grid:"
-    );
+    println!("Natural Neighbor interpolation results on a {grid_size}x{grid_size} grid:");
     print_grid(grid_size, &nn_results);
 
     // ===== Radial Basis Function Interpolation =====

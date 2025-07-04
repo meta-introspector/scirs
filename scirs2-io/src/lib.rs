@@ -433,8 +433,8 @@ pub mod zero_copy;
 
 // Re-export commonly used functionality
 pub use advanced_coordinator::{
-    AdaptiveImprovements, IntelligenceLevel, PerformanceIntelligenceStats, ProcessingResult,
-    QualityMetrics, StrategyType, AdvancedCoordinator, UltraThinkStatistics,
+    AdaptiveImprovements, AdvancedCoordinator, IntelligenceLevel, PerformanceIntelligenceStats,
+    ProcessingResult, QualityMetrics, StrategyType, UltraThinkStatistics,
 };
 pub use enhanced_algorithms::{
     AdvancedPatternAnalysis, AdvancedPatternRecognizer, DataCharacteristics, EmergentPattern,

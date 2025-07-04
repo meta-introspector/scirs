@@ -11,15 +11,7 @@ use std::fmt::{Debug, Write};
 
 use crate::analysis::{ImageQualityMetrics, TextureMetrics};
 use crate::error::{NdimageError, NdimageResult};
-use crate::utils::safe_f64_to_float;
-
-/// Helper function for safe conversion from usize to float
-#[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
-    })
-}
+use crate::utils::{safe_f64_to_float, safe_usize_to_float};
 
 /// Color map types for visualization
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

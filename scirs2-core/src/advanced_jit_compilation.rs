@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 
 /// Central JIT compilation coordinator for advanced mode
 #[derive(Debug)]
-pub struct advancedJitCompiler {
+pub struct AdvancedJitCompiler {
     /// LLVM compilation engine
     llvm_engine: Arc<Mutex<LlvmCompilationEngine>>,
     /// Kernel cache for compiled functions
@@ -852,7 +852,7 @@ pub struct MemoryUsageStats {
     pub total_deallocations: u64,
 }
 
-impl advancedJitCompiler {
+impl AdvancedJitCompiler {
     /// Create a new JIT compiler with default configuration
     #[allow(dead_code)]
     pub fn new() -> CoreResult<Self> {
@@ -1647,7 +1647,7 @@ impl Default for KernelPerformance {
     }
 }
 
-impl Default for advancedJitCompiler {
+impl Default for AdvancedJitCompiler {
     fn default() -> Self {
         Self::new().expect("Failed to create default JIT compiler")
     }

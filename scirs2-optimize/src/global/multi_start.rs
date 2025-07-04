@@ -76,7 +76,9 @@ where
     /// Create new multi-start solver
     pub fn new(func: F, bounds: Bounds, options: MultiStartOptions) -> Self {
         let ndim = bounds.len();
-        let seed = options.seed.unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
+        let seed = options
+            .seed
+            .unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
         let rng = StdRng::seed_from_u64(seed);
 
         Self {

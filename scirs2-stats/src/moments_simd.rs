@@ -521,7 +521,7 @@ mod tests {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 
         let simd_result = skewness_simd(&data.view(), false).unwrap();
-        let scalar_result = skew(&data.view(), false).unwrap();
+        let scalar_result = skew(&data.view(), false, None).unwrap();
 
         assert!((simd_result - scalar_result).abs() < 1e-10);
     }

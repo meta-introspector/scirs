@@ -10,7 +10,7 @@ use crate::denoise_cutting_edge::{denoise_dictionary_learning, DictionaryDenoise
 use crate::denoise_enhanced::{
     denoise_median_1d, denoise_total_variation_1d, denoise_wiener_1d, WienerConfig,
 };
-use crate::denoise_ultra_advanced::{ultra_advanced_denoise, UltraAdvancedDenoisingConfig};
+use crate::denoise_super_advanced::{ultra_advanced_denoise, UltraAdvancedDenoisingConfig};
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;

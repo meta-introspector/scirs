@@ -1225,7 +1225,7 @@ pub struct PerformanceSample {
     pub memory_utilization: f64,
 }
 
-impl<T: Float> TPUMemoryManager<T> {
+impl<T: Float + Send + Sync> TPUMemoryManager<T> {
     pub fn allocate_for_computation(
         &self,
         _program: &CompiledProgram,
@@ -1239,14 +1239,14 @@ impl<T: Float> TPUMemoryManager<T> {
     }
 }
 
-impl<T: Float> ExecutionScheduler<T> {
+impl<T: Float + Send + Sync> ExecutionScheduler<T> {
     pub fn next_task_id(&mut self) -> u64 {
         // Simple implementation
         0
     }
 }
 
-impl<T: Float> ExecutionEngine<T> {
+impl<T: Float + Send + Sync> ExecutionEngine<T> {
     pub fn new(_config: &TPUBackendConfig) -> Result<Self> {
         Ok(Self {
             scheduler: ExecutionScheduler {
@@ -1337,7 +1337,7 @@ impl Default for ExecutionConstraints {
     }
 }
 
-impl<T: Float> TPUBuffer<T> {
+impl<T: Float + Send + Sync> TPUBuffer<T> {
     /// Create a new TPU buffer
     pub fn new(data: Vec<T>, shape: Vec<usize>, layout: MemoryLayout) -> Self {
         Self {

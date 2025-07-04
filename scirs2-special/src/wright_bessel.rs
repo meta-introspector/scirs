@@ -329,7 +329,6 @@ pub fn wright_bessel_complex(rho: f64, beta: Complex64, z: Complex64) -> Special
 /// # Returns
 ///
 /// * `SpecialResult<Vec<f64>>` - The zeros of the Wright Bessel function
-#[allow(unused_assignments)]
 #[allow(dead_code)]
 pub fn wright_bessel_zeros(rho: f64, _beta: f64, n: usize) -> SpecialResult<Vec<f64>> {
     // Parameter validation
@@ -431,7 +430,7 @@ pub fn wright_bessel_zeros(rho: f64, _beta: f64, n: usize) -> SpecialResult<Vec<
 
                     if f_a * f_c < 0.0 {
                         b = c;
-                        f_b = f_c;
+                        // f_b = f_c; // Not needed since we only check f_a * f_c
                     } else {
                         a = c;
                         f_a = f_c;
@@ -800,7 +799,6 @@ fn wright_bessel_asymptotic_enhanced(rho: f64, beta: f64, z: f64) -> SpecialResu
 ///
 /// Computes log(J_{ρ,β}(z)) accurately for all parameter ranges
 /// Useful when the Wright Bessel function is very large or very small
-#[allow(unused_imports)]
 #[allow(dead_code)]
 pub fn log_wright_bessel(rho: f64, beta: f64, z: f64) -> SpecialResult<f64> {
     if rho <= 0.0 || rho > 1.0 {

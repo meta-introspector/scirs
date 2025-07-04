@@ -1,4 +1,13 @@
 //! Optimization and performance enhancements for metrics computation
+
+#![allow(clippy::manual_div_ceil)]
+#![allow(clippy::unwrap_or_default)]
+#![allow(clippy::arc_with_non_send_sync)]
+#![allow(clippy::await_holding_lock)]
+#![allow(clippy::type_complexity)]
+#![allow(clippy::manual_map)]
+#![allow(clippy::too_many_arguments)]
+#![allow(dead_code)]
 //!
 //! This module provides optimized implementations of metrics calculations
 //! for improved performance, memory efficiency, and numerical stability.

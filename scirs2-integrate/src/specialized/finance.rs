@@ -3491,9 +3491,12 @@ mod tests {
         // Use smaller number of simulations to prevent hanging
         let result = engine.price_exotic_derivative(&option, &heston_params, 10, 5);
         match result {
-            Ok(price) => {
-                assert!(price > 0.0, "Option price should be positive");
-                println!("Monte Carlo option price: {price}");
+            Ok(pricing_result) => {
+                assert!(
+                    pricing_result.price > 0.0,
+                    "Option price should be positive"
+                );
+                println!("Monte Carlo option price: {}", pricing_result.price);
             }
             Err(e) => {
                 println!("Monte Carlo pricing failed (expected in some environments): {e:?}");

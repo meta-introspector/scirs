@@ -80,9 +80,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("------------");
 
     let search_radius = 0.7;
-    println!(
-        "Finding points within radius {search_radius:.1} of query point:"
-    );
+    println!("Finding points within radius {search_radius:.1} of query point:");
 
     let (indices, distances) = octree.query_radius(&query_point.view(), search_radius)?;
 
@@ -114,9 +112,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     let collision_threshold = 0.2;
-    println!(
-        "Checking for collision with threshold {collision_threshold:.1}:"
-    );
+    println!("Checking for collision with threshold {collision_threshold:.1}:");
     println!("  Object points:");
     for i in 0..object_points.nrows() {
         let point = object_points.row(i);

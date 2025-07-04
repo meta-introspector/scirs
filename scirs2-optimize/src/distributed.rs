@@ -419,7 +419,7 @@ pub mod algorithms {
             &mut self,
             function: F,
             bounds: &[(f64, f64)],
-        ) -> ScirsResult<OptimizeResults>
+        ) -> ScirsResult<OptimizeResults<f64>>
         where
             F: Fn(&ArrayView1<f64>) -> f64 + Clone + Send + Sync,
         {
@@ -480,7 +480,7 @@ pub mod algorithms {
                 global_best_fitness = final_best.1;
             }
 
-            Ok(OptimizeResults {
+            Ok(OptimizeResults::<f64> {
                 x: global_best.0,
                 fun: global_best_fitness,
                 success: true,
@@ -692,7 +692,7 @@ pub mod algorithms {
             &mut self,
             function: F,
             bounds: &[(f64, f64)],
-        ) -> ScirsResult<OptimizeResults>
+        ) -> ScirsResult<OptimizeResults<f64>>
         where
             F: Fn(&ArrayView1<f64>) -> f64 + Clone + Send + Sync,
         {
@@ -746,7 +746,7 @@ pub mod algorithms {
                 }
             }
 
-            Ok(OptimizeResults {
+            Ok(OptimizeResults::<f64> {
                 x: global_best.0,
                 fun: global_best_fitness,
                 success: true,

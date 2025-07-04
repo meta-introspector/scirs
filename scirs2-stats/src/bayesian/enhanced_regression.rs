@@ -384,11 +384,8 @@ where
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
-                let mut thread_rng = rand::rng();
-                match StdRng::from_rng(&mut thread_rng) {
-                    Ok(rng) => rng,
-                    Err(_) => StdRng::seed_from_u64(0), // fallback to deterministic seed
-                }
+                let mut rng = rand::thread_rng();
+                StdRng::from_rng(&mut rng)
             },
         };
 
@@ -605,7 +602,7 @@ where
     }
 
     /// Sample from multivariate normal distribution
-    fn sample_multivariate_normal<R: rand::Rng>(
+    fn sample_multivariate_normal<R: scirs2_core::Rng>(
         &self,
         mean: &Array1<f64>,
         covariance: &Array2<f64>,

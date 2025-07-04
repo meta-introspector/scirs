@@ -1541,7 +1541,7 @@ impl QuantumPerformanceMonitor {
     fn record_execution(&mut self, operation: &str, duration: Duration) {
         self.execution_times
             .entry(operation.to_string())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(duration);
     }
 
@@ -1550,7 +1550,7 @@ impl QuantumPerformanceMonitor {
         let progress_key = format!("vqe_iteration_{}", iteration);
         self.execution_times
             .entry(progress_key)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(Duration::from_millis((energy * 1000.0) as u64));
     }
 
@@ -1559,7 +1559,7 @@ impl QuantumPerformanceMonitor {
         let progress_key = format!("qaoa_iteration_{}", iteration);
         self.execution_times
             .entry(progress_key)
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(Duration::from_millis((objective * 1000.0) as u64));
     }
 }
@@ -1590,8 +1590,8 @@ impl<F: Float + SimdUnifiedOps + Send + Sync + std::iter::Sum> ClassicalFallback
             let mean_x_array = Array1::from_elem(x.len(), mean_x);
             let mean_y_array = Array1::from_elem(y.len(), mean_y);
 
-            let dev_x = F::simd_sub(&x, &mean_x_array.view());
-            let dev_y = F::simd_sub(&y, &mean_y_array.view());
+            let dev_x = F::simd_sub(x, &mean_x_array.view());
+            let dev_y = F::simd_sub(y, &mean_y_array.view());
 
             let cov_xy = F::simd_mul(&dev_x.view(), &dev_y.view());
             let sum_cov = F::simd_sum(&cov_xy.view());

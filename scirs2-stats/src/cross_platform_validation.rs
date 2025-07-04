@@ -511,7 +511,7 @@ impl CrossPlatformValidator {
         let computed_mean = crate::descriptive::mean(&test_data.view())?;
         let expected_mean = 3.0;
         
-        let computed_var = crate::descriptive::var(&test_data.view(), 1)?;
+        let computed_var = crate::descriptive::var(&test_data.view(), 1, None)?;
         let expected_var = 2.5; // Sample variance
         
         let test_cases = vec![
@@ -686,7 +686,7 @@ impl CrossPlatformValidator {
         let test_data = Array1::from_vec((1..=1000).map(|x| x as f64).collect());
         
         // Compare SIMD and scalar implementations
-        let scalar_var = crate::descriptive::var(&test_data.view(), 1)?;
+        let scalar_var = crate::descriptive::var(&test_data.view(), 1, None)?;
         let simd_result = crate::descriptive_simd::variance_simd(&test_data.view(), 1);
         
         let (status, accuracy_metrics) = match simd_result {
@@ -1239,7 +1239,7 @@ impl CrossPlatformValidator {
 
         // Variance computation benchmark
         let start = std::time::Instant::now();
-        let _ = crate::descriptive::var(&test_data.view(), 1)?;
+        let _ = crate::descriptive::var(&test_data.view(), 1, None)?;
         let var_time = start.elapsed().as_secs_f64() * 1000.0;
         benchmarks.insert("variance_computation_ms".to_string(), var_time);
 

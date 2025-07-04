@@ -72,9 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("------------");
 
     let search_radius = 0.3;
-    println!(
-        "Finding points within radius {search_radius:.1} of query point:"
-    );
+    println!("Finding points within radius {search_radius:.1} of query point:");
 
     let (indices, distances) = quadtree.query_radius(&query_point.view(), search_radius)?;
 

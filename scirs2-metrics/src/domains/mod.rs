@@ -79,7 +79,7 @@ pub mod edge_ai;
 pub mod financial;
 pub mod generative_ai;
 pub mod graph_neural_networks;
-pub mod neuromorphic_advanced;
+pub mod neuromorphic_ultrathink;
 pub mod nlp;
 pub mod quantum_ml;
 pub mod recommender;

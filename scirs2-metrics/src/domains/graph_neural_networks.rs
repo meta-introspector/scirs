@@ -2458,7 +2458,7 @@ impl MolecularGraphMetrics {
 
             let adjusted_validity =
                 base_validity + admet_bonus - toxicity_penalty - synthetic_penalty;
-            Ok(adjusted_validity.max(0.0).min(1.0))
+            Ok(adjusted_validity.clamp(0.0, 1.0))
         }
     }
 
@@ -2589,7 +2589,7 @@ impl MolecularGraphMetrics {
         let mut score = 1.0;
 
         // Penalize unusual atom ratios
-        if carbon_ratio < 0.1 || carbon_ratio > 0.95 {
+        if !(0.1..=0.95).contains(&carbon_ratio) {
             score -= 0.2;
         }
 
@@ -2618,7 +2618,7 @@ impl MolecularGraphMetrics {
         let mut stability_score = 1.0;
 
         // TPSA should be reasonable for stability
-        if tpsa > 200.0 || tpsa < 10.0 {
+        if !(10.0..=200.0).contains(&tpsa) {
             stability_score -= 0.3;
         }
 
@@ -2732,7 +2732,7 @@ impl MolecularGraphMetrics {
             admet_score -= 0.2;
         }
 
-        if logp < -2.0 || logp > 6.0 {
+        if !(-2.0..=6.0).contains(&logp) {
             admet_score -= 0.3; // Poor permeability
         }
 
@@ -2748,7 +2748,7 @@ impl MolecularGraphMetrics {
             admet_score += 0.1; // Low toxicity prediction (bonus)
         }
 
-        Ok(admet_score.max(0.0).min(1.0))
+        Ok(admet_score.clamp(0.0, 1.0))
     }
 }
 

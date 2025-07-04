@@ -2,7 +2,7 @@ use ndarray::{Array2, Array4};
 use rand::prelude::*;
 use rand::rngs::SmallRng;
 use rand::SeedableRng;
-use scirs2_neural::layers::{BatchNorm, Conv2D, Dense, Dropout, Layer, PaddingMode};
+use scirs2_neural::layers::{Dense, Dropout, Layer};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

@@ -2,7 +2,7 @@
 
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2};
-use rand::Rng;
+use rand::thread_rng;
 use rand_distr::{Distribution, Uniform};
 use scirs2_core::validation::*;
 use scirs2_linalg::{det, inv};
@@ -20,7 +20,7 @@ pub trait TargetDistribution: Send + Sync {
 /// Proposal distribution trait for Metropolis-Hastings
 pub trait ProposalDistribution: Send + Sync {
     /// Sample a new proposal given the current state
-    fn sample<R: Rng + ?Sized>(&self, current: &Array1<f64>, rng: &mut R) -> Array1<f64>;
+    fn sample<R: rand::Rng + ?Sized>(&self, current: &Array1<f64>, rng: &mut R) -> Array1<f64>;
 
     /// Compute the log density ratio q(x|y) / q(y|x) for asymmetric proposals
     fn log_ratio(&self, _from: &Array1<f64>, _to: &Array1<f64>) -> f64 {
@@ -44,7 +44,7 @@ impl RandomWalkProposal {
 }
 
 impl ProposalDistribution for RandomWalkProposal {
-    fn sample<R: Rng + ?Sized>(&self, current: &Array1<f64>, rng: &mut R) -> Array1<f64> {
+    fn sample<R: rand::Rng + ?Sized>(&self, current: &Array1<f64>, rng: &mut R) -> Array1<f64> {
         use rand_distr::Normal;
         let normal = Normal::new(0.0, self.step_size).unwrap();
         current + Array1::from_shape_fn(current.len(), |_| normal.sample(rng))
@@ -92,7 +92,7 @@ impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
     }
 
     /// Perform one step of the Metropolis-Hastings algorithm
-    pub fn step<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Array1<f64> {
+    pub fn step<R: rand::Rng + ?Sized>(&mut self, rng: &mut R) -> Array1<f64> {
         // Propose new state
         let proposed = self.proposal.sample(&self.current, rng);
         let proposed_log_density = self.target.log_density(&proposed);
@@ -114,7 +114,7 @@ impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
     }
 
     /// Sample multiple states from the distribution
-    pub fn sample<R: Rng + ?Sized>(&mut self, n_samples: usize, rng: &mut R) -> Array2<f64> {
+    pub fn sample<R: rand::Rng + ?Sized>(&mut self, n_samples: usize, rng: &mut R) -> Array2<f64> {
         let dim = self.current.len();
         let mut samples = Array2::zeros((n_samples, dim));
 
@@ -127,7 +127,7 @@ impl<T: TargetDistribution, P: ProposalDistribution> MetropolisHastings<T, P> {
     }
 
     /// Sample with thinning to reduce autocorrelation
-    pub fn sample_thinned<R: Rng + ?Sized>(
+    pub fn sample_thinned<R: rand::Rng + ?Sized>(
         &mut self,
         n_samples: usize,
         thin: usize,
@@ -203,7 +203,7 @@ impl<T: TargetDistribution> AdaptiveMetropolisHastings<T> {
     }
 
     /// Perform one adaptive step
-    pub fn step<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Array1<f64> {
+    pub fn step<R: rand::Rng + ?Sized>(&mut self, rng: &mut R) -> Array1<f64> {
         let sample = self.sampler.step(rng);
 
         // Adapt step size based on acceptance rate
@@ -222,7 +222,7 @@ impl<T: TargetDistribution> AdaptiveMetropolisHastings<T> {
     }
 
     /// Run adaptation phase
-    pub fn adapt<R: Rng + ?Sized>(&mut self, n_steps: usize, rng: &mut R) -> Result<()> {
+    pub fn adapt<R: rand::Rng + ?Sized>(&mut self, n_steps: usize, rng: &mut R) -> Result<()> {
         check_positive(n_steps, "n_steps")?;
 
         for _ in 0..n_steps {

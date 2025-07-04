@@ -100,7 +100,7 @@ impl SimdConsistencyTester {
 
         let arr = Array1::from_vec(test_data.data.clone());
 
-        match (var(&arr.view(), 1), variance_simd(&arr.view(), 1)) {
+        match (var(&arr.view(), 1, None), variance_simd(&arr.view(), 1, None)) {
             (Ok(scalar_result), Ok(simd_result)) => {
                 let relative_error =
                     ((scalar_result - simd_result) / scalar_result.max(1e-10)).abs();
@@ -117,7 +117,7 @@ impl SimdConsistencyTester {
 
         let arr = Array1::from_vec(test_data.data.clone());
 
-        match (skew(&arr.view(), false), skewness_simd(&arr.view(), false)) {
+        match (skew(&arr.view(), false, None), skewness_simd(&arr.view(), false)) {
             (Ok(scalar_result), Ok(simd_result)) => {
                 let relative_error =
                     ((scalar_result - simd_result) / scalar_result.abs().max(1e-10)).abs();
@@ -135,7 +135,7 @@ impl SimdConsistencyTester {
         let arr = Array1::from_vec(test_data.data.clone());
 
         match (
-            kurtosis(&arr.view(), true, false),
+            kurtosis(&arr.view(), true, false, None),
             kurtosis_simd(&arr.view(), true, false),
         ) {
             (Ok(scalar_result), Ok(simd_result)) => {
@@ -219,7 +219,7 @@ impl MathematicalInvariantTester {
         let arr = Array1::from_vec(test_data.data.clone());
 
         // Test 1: Variance is non-negative
-        let variance_result = var(&arr.view(), 1);
+        let variance_result = var(&arr.view(), 1, None);
         if let Ok(variance) = variance_result {
             if variance < 0.0 {
                 return false;
@@ -232,7 +232,7 @@ impl MathematicalInvariantTester {
         let shifted_data: Vec<f64> = test_data.data.iter().map(|&x| x + 100.0).collect();
         let shifted_arr = Array1::from_vec(shifted_data);
 
-        match (var(&arr.view(), 1), var(&shifted_arr.view(), 1)) {
+        match (var(&arr.view(), 1, None), var(&shifted_arr.view(), 1, None)) {
             (Ok(var1), Ok(var2)) => {
                 let relative_error = ((var1 - var2) / var1.max(1e-10)).abs();
                 relative_error < 1e-12
@@ -341,7 +341,7 @@ impl MathematicalInvariantTester {
         let scaled_data: Vec<f64> = test_data.data.iter().map(|&x| a * x).collect();
         let scaled_arr = Array1::from_vec(scaled_data);
 
-        match (var(&arr.view(), 1), var(&scaled_arr.view(), 1)) {
+        match (var(&arr.view(), 1, None), var(&scaled_arr.view(), 1, None)) {
             (Ok(var_x), Ok(var_ax)) => {
                 let expected = a * a * var_x;
                 let relative_error = ((expected - var_ax) / expected.max(1e-10)).abs();
@@ -402,8 +402,8 @@ impl MathematicalInvariantTester {
         let left_skewed_arr = Array1::from_vec(left_skewed);
 
         match (
-            skew(&right_skewed_arr.view(), false),
-            skew(&left_skewed_arr.view(), false),
+            skew(&right_skewed_arr.view(), false, None),
+            skew(&left_skewed_arr.view(), false, None),
         ) {
             (Ok(right_skew), Ok(left_skew)) => {
                 // Right-skewed data should have positive skewness
@@ -425,7 +425,7 @@ impl MathematicalInvariantTester {
         let uniform_data: Vec<f64> = (0..100).map(|i| i as f64 / 100.0).collect();
         let uniform_arr = Array1::from_vec(uniform_data);
 
-        match kurtosis(&uniform_arr.view(), false, false) {
+        match kurtosis(&uniform_arr.view(), false, false, None) {
             Ok(kurt) => {
                 // Uniform distribution should have kurtosis < 3 (platykurtic)
                 kurt < 3.0
@@ -613,7 +613,7 @@ impl NumericalStabilityTester {
         let arr = Array1::from_vec(data);
 
         // Should compute variance without numerical issues
-        match var(&arr.view(), 1) {
+        match var(&arr.view(), 1, None) {
             Ok(variance) => variance >= 0.0 && variance.is_finite(),
             _ => false,
         }
@@ -627,8 +627,8 @@ impl NumericalStabilityTester {
         // All statistics should be computable and finite
         match (
             mean(&arr.view()),
-            var(&arr.view(), 1),
-            skew(&arr.view(), false),
+            var(&arr.view(), 1, None),
+            skew(&arr.view(), false, None),
         ) {
             (Ok(mean_val), Ok(var_val), Ok(skew_val)) => {
                 mean_val.is_finite() && var_val.is_finite() && skew_val.is_finite()
@@ -671,7 +671,7 @@ impl NumericalStabilityTester {
         let arr = Array1::from_vec(constant_data);
 
         // Variance should be exactly zero
-        match var(&arr.view(), 1) {
+        match var(&arr.view(), 1, None) {
             Ok(variance) => variance.abs() < 1e-15,
             _ => false,
         }
@@ -705,7 +705,8 @@ impl FuzzingTester {
     /// Generate random data with various characteristics for stress testing
     pub fn generate_random_data(size: usize, seed: u64) -> StatisticalTestData {
         use rand::rngs::StdRng;
-        use rand::{Rng, SeedableRng};
+        use scirs2_core::rng;
+        use rand::SeedableRng;
 
         let mut rng = StdRng::seed_from_u64(seed);
         let data: Vec<f64> = (0..size)
@@ -721,7 +722,8 @@ impl FuzzingTester {
         seed: u64,
     ) -> StatisticalTestData {
         use rand::rngs::StdRng;
-        use rand::{Rng, SeedableRng};
+        use scirs2_core::rng;
+        use rand::SeedableRng;
 
         let mut rng = StdRng::seed_from_u64(seed);
         let mut data: Vec<f64> = (0..size).map(|_| rng.random_range(0.0..1.0)).collect();
@@ -746,7 +748,8 @@ impl FuzzingTester {
         seed: u64,
     ) -> StatisticalTestData {
         use rand::rngs::StdRng;
-        use rand::{Rng, SeedableRng};
+        use scirs2_core::rng;
+        use rand::SeedableRng;
 
         let mut rng = StdRng::seed_from_u64(seed);
         let mut data: Vec<f64> = (0..size).map(|_| rng.random_range(-1.0..1.0)).collect();
@@ -796,7 +799,7 @@ impl FuzzingTester {
                     continue;
                 }
 
-                match var(&arr.view(), 1) {
+                match var(&arr.view(), 1, None) {
                     Ok(result) => {
                         if !result.is_finite() || result < 0.0 {
                             return false;
@@ -958,7 +961,7 @@ impl RobustnessTester {
         let zero_data = vec![0.0; 100];
         let arr = Array1::from_vec(zero_data);
 
-        match (mean(&arr.view()), var(&arr.view(), 1)) {
+        match (mean(&arr.view()), var(&arr.view(), 1, None)) {
             (Ok(mean_val), Ok(var_val)) => mean_val.abs() < 1e-15 && var_val.abs() < 1e-15,
             _ => false,
         }
@@ -970,7 +973,7 @@ impl RobustnessTester {
         let constant_data = vec![constant_value; 50];
         let arr = Array1::from_vec(constant_data);
 
-        match (mean(&arr.view()), var(&arr.view(), 1)) {
+        match (mean(&arr.view()), var(&arr.view(), 1, None)) {
             (Ok(mean_val), Ok(var_val)) => {
                 (mean_val - constant_value).abs() < 1e-15 && var_val.abs() < 1e-15
             }
@@ -1002,7 +1005,7 @@ impl PerformanceRegressionTester {
 
         let start = std::time::Instant::now();
         for _ in 0..iterations {
-            let _ = var(&arr.view(), 1);
+            let _ = var(&arr.view(), 1, None);
         }
         start.elapsed()
     }
@@ -1175,9 +1178,9 @@ impl ExtendedMathematicalTester {
 
         // Test with p=2 (Euclidean norm related to standard deviation)
         match (
-            var(&x_arr.view(), 1),
-            var(&y_arr.view(), 1),
-            var(&sum_arr.view(), 1),
+            var(&x_arr.view(), 1, None),
+            var(&y_arr.view(), 1, None),
+            var(&sum_arr.view(), 1, None),
         ) {
             (Ok(var_x), Ok(var_y), Ok(var_sum)) => {
                 let std_x = var_x.sqrt();
@@ -1201,7 +1204,7 @@ impl ExtendedMathematicalTester {
 
         let arr = Array1::from_vec(test_data.data.clone());
 
-        match (mean(&arr.view()), var(&arr.view(), 1)) {
+        match (mean(&arr.view()), var(&arr.view(), 1, None)) {
             (Ok(mean_val), Ok(var_val)) => {
                 let std_val = var_val.sqrt();
                 if std_val <= 1e-10 {

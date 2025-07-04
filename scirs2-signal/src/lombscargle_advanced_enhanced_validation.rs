@@ -4,7 +4,7 @@
 //! implementation with comprehensive statistical testing, edge case validation,
 //! and enhanced numerical stability assessments.
 
-use crate::error::{SignalError, SignalResult};
+use crate::error::SignalResult;
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
 use ndarray::{Array1, Array2};
 use rand::prelude::*;

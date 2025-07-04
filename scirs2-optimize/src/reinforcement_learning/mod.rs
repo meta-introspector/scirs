@@ -21,6 +21,7 @@
 //! - Neural architecture search
 //! - AutoML optimization pipelines
 
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
 use rand::Rng;
@@ -158,14 +159,14 @@ pub trait RLOptimizer {
     fn select_action(&mut self, state: &OptimizationState) -> OptimizationAction;
 
     /// Update policy/value function based on experience
-    fn update(&mut self, experience: &Experience) -> Result<()>;
+    fn update(&mut self, experience: &Experience) -> OptimizeResult<()>;
 
     /// Run optimization episode
     fn run_episode<F>(
         &mut self,
         objective: &F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64;
 
@@ -174,7 +175,7 @@ pub trait RLOptimizer {
         &mut self,
         objective: &F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64;
 

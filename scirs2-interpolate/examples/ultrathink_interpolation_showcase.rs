@@ -6,8 +6,7 @@
 
 use ndarray::Array1;
 use scirs2_interpolate::{
-    create_advanced_interpolation_coordinator, InterpolationMethodType,
-    advancedInterpolationConfig,
+    advancedInterpolationConfig, create_advanced_interpolation_coordinator, InterpolationMethodType,
 };
 use std::f64::consts::PI;
 use std::time::Instant;

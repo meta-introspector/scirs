@@ -752,7 +752,7 @@ where
 
 impl<T> GpuBuffer<T> for CpuFallbackBuffer<T>
 where
-    T: Clone + Default + Send + Sync + 'static,
+    T: Clone + Default + Send + Sync + Copy + 'static,
 {
     fn size(&self) -> usize {
         self.data.len()
@@ -836,7 +836,7 @@ pub fn gpu_gaussian_filter_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
 {
     let (h, w) = input.dim();
 
@@ -862,8 +862,8 @@ where
     // Execute kernel
     executor.execute_kernel(
         kernel,
-        &[&input_buffer],
-        &[&mut output_buffer],
+        &[input_buffer.as_ref()],
+        &[output_buffer.as_mut()],
         &[h, w],
         &params,
     )?;
@@ -883,7 +883,7 @@ pub fn gpu_convolve_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
 {
     let (ih, iw) = input.dim();
     let (kh, kw) = kernel.dim();
@@ -910,8 +910,8 @@ where
     // Execute kernel
     executor.execute_kernel(
         gpu_kernel,
-        &[&input_buffer, &kernel_buffer],
-        &[&mut output_buffer],
+        &[input_buffer.as_ref(), kernel_buffer.as_ref()],
+        &[output_buffer.as_mut()],
         &[ih, iw],
         &params,
     )?;
@@ -931,7 +931,7 @@ pub fn gpu_median_filter_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
 {
     let (h, w) = input.dim();
 
@@ -956,8 +956,8 @@ where
     // Execute kernel
     executor.execute_kernel(
         kernel,
-        &[&input_buffer],
-        &[&mut output_buffer],
+        &[input_buffer.as_ref()],
+        &[output_buffer.as_mut()],
         &[h, w],
         &params,
     )?;
@@ -977,7 +977,7 @@ pub fn gpu_erosion_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
 {
     let (h, w) = input.dim();
     let (sh, sw) = structure.dim();
@@ -1010,8 +1010,8 @@ where
     // Execute kernel
     executor.execute_kernel(
         kernel,
-        &[&input_buffer, &structure_buffer],
-        &[&mut output_buffer],
+        &[input_buffer.as_ref(), structure_buffer.as_ref()],
+        &[output_buffer.as_mut()],
         &[h, w],
         &params,
     )?;
@@ -1031,17 +1031,17 @@ pub fn gpu_separable_gaussian_filter_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
 {
     let (h, w) = input.dim();
 
     // Calculate Gaussian weights for separable filter
-    let radius_x = (safe_f64_to_float(3.0)? * sigma[0])
+    let radius_x = (safe_f64_to_float::<T>(3.0)? * sigma[0])
         .to_usize()
         .ok_or_else(|| {
             NdimageError::ComputationError("Failed to convert radius_x to usize".to_string())
         })?;
-    let radius_y = (safe_f64_to_float(3.0)? * sigma[1])
+    let radius_y = (safe_f64_to_float::<T>(3.0)? * sigma[1])
         .to_usize()
         .ok_or_else(|| {
             NdimageError::ComputationError("Failed to convert radius_y to usize".to_string())
@@ -1093,8 +1093,8 @@ where
 
     executor.execute_kernel(
         kernel,
-        &[&input_buffer, &weights_x_buffer],
-        &[&mut temp_buffer],
+        &[input_buffer.as_ref(), weights_x_buffer.as_ref()],
+        &[temp_buffer.as_mut()],
         &[h, w],
         &params_h,
     )?;
@@ -1110,8 +1110,8 @@ where
 
     executor.execute_kernel(
         kernel,
-        &[&temp_buffer, &weights_y_buffer],
-        &[&mut output_buffer],
+        &[temp_buffer.as_ref(), weights_y_buffer.as_ref()],
+        &[output_buffer.as_mut()],
         &[h, w],
         &params_v,
     )?;
@@ -1133,7 +1133,7 @@ pub fn gpu_bilateral_filter_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
 {
     let (h, w) = input.dim();
 
@@ -1159,8 +1159,8 @@ where
     // Execute kernel
     executor.execute_kernel(
         kernel,
-        &[&input_buffer],
-        &[&mut output_buffer],
+        &[input_buffer.as_ref()],
+        &[output_buffer.as_mut()],
         &[h, w],
         &params,
     )?;
@@ -1183,7 +1183,7 @@ pub fn gpu_sobel_filter_2d<T>(
     Array<T, ndarray::Ix2>,
 )>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
 {
     let (h, w) = input.dim();
 
@@ -1205,11 +1205,11 @@ where
     // Execute kernel
     executor.execute_kernel(
         kernel,
-        &[&input_buffer],
+        &[input_buffer.as_ref()],
         &[
-            &mut output_x_buffer,
-            &mut output_y_buffer,
-            &mut magnitude_buffer,
+            output_x_buffer.as_mut(),
+            output_y_buffer.as_mut(),
+            magnitude_buffer.as_mut(),
         ],
         &[h, w],
         &params,
@@ -1239,7 +1239,7 @@ pub fn gpu_laplacian_filter_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
 {
     let (h, w) = input.dim();
 
@@ -1263,8 +1263,8 @@ where
     // Execute kernel
     executor.execute_kernel(
         kernel,
-        &[&input_buffer],
-        &[&mut output_buffer],
+        &[input_buffer.as_ref()],
+        &[output_buffer.as_mut()],
         &[h, w],
         &params,
     )?;
@@ -1281,7 +1281,7 @@ where
 #[allow(dead_code)]
 fn allocate_gpu_buffer<T>(data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
-    T: 'static,
+    T: Clone + Send + Sync + 'static,
 {
     #[cfg(feature = "cuda")]
     {
@@ -1298,7 +1298,7 @@ where
 #[allow(dead_code)]
 fn allocate_gpu_buffer_empty<T>(size: usize) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
-    T: 'static,
+    T: Clone + Default + Send + Sync + 'static,
 {
     #[cfg(feature = "cuda")]
     {

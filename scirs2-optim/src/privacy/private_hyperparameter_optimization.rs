@@ -1236,7 +1236,7 @@ pub struct PrivateRandomSearch<T: Float> {
     history: Vec<HPOEvaluation<T>>,
 }
 
-impl<T: Float> PrivateRandomSearch<T> {
+impl<T: Float + Send + Sync> PrivateRandomSearch<T> {
     pub fn new(config: PrivateHPOConfig<T>) -> Result<Self> {
         Ok(Self {
             config,
@@ -1246,7 +1246,7 @@ impl<T: Float> PrivateRandomSearch<T> {
     }
 }
 
-impl<T: Float> NoisyOptimizer<T> for PrivateRandomSearch<T> {
+impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
     fn suggest_next(
         &mut self,
         parameter_space: &ParameterSpace<T>,
@@ -1276,15 +1276,15 @@ impl<T: Float> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                         .unwrap_or(T::from(100).unwrap())
                         .to_i64()
                         .unwrap_or(100);
-                    ParameterValue::Integer(self.rng.gen_range(min..=max))
+                    ParameterValue::Integer(self.rng.random_range(min..=max))
                 }
                 ParameterType::Boolean => ParameterValue::Boolean(self.rng.gen()),
                 ParameterType::Categorical(categories) => {
-                    let idx = self.rng.gen_range(0..categories.len());
+                    let idx = self.rng.random_range(0..categories.len());
                     ParameterValue::Categorical(categories[idx].clone())
                 }
                 ParameterType::Ordinal(values) => {
-                    let idx = self.rng.gen_range(0..values.len());
+                    let idx = self.rng.random_range(0..values.len());
                     ParameterValue::Ordinal(idx)
                 }
             };
@@ -1329,7 +1329,7 @@ pub struct PrivateBayesianOptimization<T: Float> {
     history: Vec<HPOEvaluation<T>>,
 }
 
-impl<T: Float> PrivateBayesianOptimization<T> {
+impl<T: Float + Send + Sync> PrivateBayesianOptimization<T> {
     pub fn new(config: PrivateHPOConfig<T>) -> Result<Self> {
         Ok(Self {
             config,
@@ -1340,7 +1340,7 @@ impl<T: Float> PrivateBayesianOptimization<T> {
     }
 }
 
-impl<T: Float> NoisyOptimizer<T> for PrivateBayesianOptimization<T> {
+impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T> {
     fn suggest_next(
         &mut self,
         parameter_space: &ParameterSpace<T>,
@@ -1559,7 +1559,7 @@ impl AdaptiveBudgetController {
     }
 }
 
-impl<T: Float> PrivateObjective<T> {
+impl<T: Float + Send + Sync> PrivateObjective<T> {
     pub fn new() -> Result<Self> {
         Ok(Self {
             objective_fn: Box::new(|_| Ok(0.0)),
@@ -1599,7 +1599,7 @@ impl<T: Float> PrivateObjective<T> {
     }
 }
 
-impl<T: Float> ObjectiveNoiseMechanism<T> {
+impl<T: Float + Send + Sync> ObjectiveNoiseMechanism<T> {
     pub fn new() -> Self {
         Self {
             mechanism_type: HyperparameterNoiseMechanism::Gaussian,
@@ -1630,7 +1630,7 @@ impl<T: Float> ObjectiveNoiseMechanism<T> {
     }
 }
 
-impl<T: Float> ObjectiveSensitivityAnalyzer<T> {
+impl<T: Float + Send + Sync> ObjectiveSensitivityAnalyzer<T> {
     pub fn new() -> Self {
         Self {
             estimation_method: SensitivityEstimationMethod::Global,
@@ -1640,7 +1640,7 @@ impl<T: Float> ObjectiveSensitivityAnalyzer<T> {
     }
 }
 
-impl<T: Float> SampleBasedSensitivityEstimator<T> {
+impl<T: Float + Send + Sync> SampleBasedSensitivityEstimator<T> {
     pub fn new() -> Self {
         Self {
             num_samples: 1000,
@@ -1651,7 +1651,7 @@ impl<T: Float> SampleBasedSensitivityEstimator<T> {
     }
 }
 
-impl<T: Float> BootstrapEstimator<T> {
+impl<T: Float + Send + Sync> BootstrapEstimator<T> {
     pub fn new() -> Self {
         Self {
             num_bootstrap: 1000,
@@ -1661,7 +1661,7 @@ impl<T: Float> BootstrapEstimator<T> {
     }
 }
 
-impl<T: Float> PrivateCrossValidation<T> {
+impl<T: Float + Send + Sync> PrivateCrossValidation<T> {
     pub fn new() -> Self {
         Self {
             num_folds: 5,
@@ -1672,7 +1672,7 @@ impl<T: Float> PrivateCrossValidation<T> {
     }
 }
 
-impl<T: Float> PrivateFoldAggregation<T> {
+impl<T: Float + Send + Sync> PrivateFoldAggregation<T> {
     pub fn new() -> Self {
         Self {
             aggregation_method: AggregationMethod::NoisyMean,
@@ -1687,7 +1687,7 @@ impl<T: Float> PrivateFoldAggregation<T> {
     }
 }
 
-impl<T: Float> ConfidenceEstimation<T> {
+impl<T: Float + Send + Sync> ConfidenceEstimation<T> {
     pub fn new() -> Self {
         Self {
             confidence_level: 0.95,
@@ -1697,7 +1697,7 @@ impl<T: Float> ConfidenceEstimation<T> {
     }
 }
 
-impl<T: Float> SearchStrategy<T> {
+impl<T: Float + Send + Sync> SearchStrategy<T> {
     pub fn new() -> Self {
         Self {
             algorithm: SearchAlgorithm::RandomSearch,
@@ -1713,7 +1713,7 @@ impl<T: Float> SearchStrategy<T> {
     }
 }
 
-impl<T: Float> PrivateResultsAggregator<T> {
+impl<T: Float + Send + Sync> PrivateResultsAggregator<T> {
     pub fn new() -> Result<Self> {
         Ok(Self {
             aggregation_strategy: ResultAggregationStrategy::SelectBest,
@@ -1780,7 +1780,7 @@ impl<T: Float> PrivateResultsAggregator<T> {
     }
 }
 
-impl<T: Float> SelectionMechanism<T> {
+impl<T: Float + Send + Sync> SelectionMechanism<T> {
     pub fn new() -> Self {
         Self {
             mechanism_type: HyperparameterNoiseMechanism::Exponential,
@@ -1795,7 +1795,7 @@ impl<T: Float> SelectionMechanism<T> {
     }
 }
 
-impl<T: Float> UtilityFunction<T> {
+impl<T: Float + Send + Sync> UtilityFunction<T> {
     pub fn new() -> Self {
         Self {
             function_type: UtilityFunctionType::Linear,
@@ -1805,7 +1805,7 @@ impl<T: Float> UtilityFunction<T> {
     }
 }
 
-impl<T: Float> ResultValidator<T> {
+impl<T: Float + Send + Sync> ResultValidator<T> {
     pub fn new() -> Self {
         Self {
             validation_rules: Vec::new(),
@@ -1815,7 +1815,7 @@ impl<T: Float> ResultValidator<T> {
     }
 }
 
-impl<T: Float> AnomalyDetector<T> {
+impl<T: Float + Send + Sync> AnomalyDetector<T> {
     pub fn new() -> Self {
         Self {
             threshold: T::from(3.0).unwrap(),
@@ -1825,7 +1825,7 @@ impl<T: Float> AnomalyDetector<T> {
     }
 }
 
-impl<T: Float> GaussianProcessModel<T> {
+impl<T: Float + Send + Sync> GaussianProcessModel<T> {
     pub fn new() -> Self {
         Self {
             training_inputs: Vec::new(),
@@ -1836,7 +1836,7 @@ impl<T: Float> GaussianProcessModel<T> {
     }
 }
 
-impl<T: Float> KernelFunction<T> {
+impl<T: Float + Send + Sync> KernelFunction<T> {
     pub fn new() -> Self {
         Self {
             kernel_type: KernelType::RBF,
@@ -1845,7 +1845,7 @@ impl<T: Float> KernelFunction<T> {
     }
 }
 
-impl<T: Float> AcquisitionFunction<T> {
+impl<T: Float + Send + Sync> AcquisitionFunction<T> {
     pub fn new() -> Self {
         Self {
             function_type: AcquisitionFunctionType::ExpectedImprovement,

@@ -9,17 +9,17 @@ mod tests {
     use crate::auto_feature_engineering::{AutoFeatureEngineer, DatasetMetaFeatures};
     use crate::{
         NeuromorphicTransformationSystem, QuantumTransformationOptimizer, TransformationType,
-        advancedNeuromorphicProcessor, advancedQuantumOptimizer,
+        UltraThinkNeuromorphicProcessor, UltraThinkQuantumOptimizer,
     };
     use ndarray::{Array1, Array2};
     use std::collections::HashMap;
 
     #[test]
     fn test_advanced_neuromorphic_creation() {
-        let processor = advancedNeuromorphicProcessor::new(10, 20, 5);
-        assert_eq!(processor.get_advanced_diagnostics().throughput, 0.0);
+        let processor = UltraThinkNeuromorphicProcessor::new(10, 20, 5);
+        assert_eq!(processor.get_ultrathink_diagnostics().throughput, 0.0);
         assert_eq!(
-            processor.get_advanced_diagnostics().memory_efficiency,
+            processor.get_ultrathink_diagnostics().memory_efficiency,
             1.0
         );
     }
@@ -27,11 +27,11 @@ mod tests {
     #[test]
     fn test_advanced_quantum_creation() {
         let bounds = vec![(0.0, 1.0); 5];
-        let optimizer = advancedQuantumOptimizer::new(5, 20, bounds, 100);
+        let optimizer = UltraThinkQuantumOptimizer::new(5, 20, bounds, 100);
         assert!(optimizer.is_ok());
 
         if let Ok(opt) = optimizer {
-            let metrics = opt.get_advanced_diagnostics();
+            let metrics = opt.get_ultrathink_diagnostics();
             assert!(metrics.quantum_efficiency >= 0.0);
             assert!(metrics.quantum_efficiency <= 1.0);
         }
@@ -69,11 +69,11 @@ mod tests {
     }
 
     #[test]
-    fn test_advanced_integration_workflow() {
-        // Test the full Advanced workflow components can be created
-        let _quantum_opt = QuantumTransformationOptimizer::new().unwrap();
+    fn test_ultrathink_integration_workflow() {
+        // Test the full UltraThink workflow components can be created
+        let _quantum_opt = QuantumTransformationOptimizer::new().expect("Failed to create quantum optimizer");
         let mut neuro_system = NeuromorphicTransformationSystem::new();
-        let _auto_engineer = AutoFeatureEngineer::new().unwrap();
+        let _auto_engineer = AutoFeatureEngineer::new().expect("Failed to create auto engineer");
 
         // Test basic integration functionality
         let meta_features = create_test_meta_features();
@@ -88,7 +88,7 @@ mod tests {
         }
 
         // If we get here without panicking, the integration components work
-        assert!(true);
+        // Test passes if no panic occurred during workflow execution
     }
 
     #[test]
@@ -133,10 +133,10 @@ mod tests {
     #[test]
     fn test_advanced_performance_metrics() {
         let bounds = vec![(0.0, 1.0); 3];
-        let optimizer = advancedQuantumOptimizer::new(3, 10, bounds, 50);
+        let optimizer = UltraThinkQuantumOptimizer::new(3, 10, bounds, 50);
 
         if let Ok(opt) = optimizer {
-            let metrics = opt.get_advanced_diagnostics();
+            let metrics = opt.get_ultrathink_diagnostics();
 
             // Test default values
             assert_eq!(metrics.convergence_rate, 0.0);

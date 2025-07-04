@@ -54,7 +54,7 @@ where
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
+            let mut system_rng = rand::thread_rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
@@ -205,7 +205,7 @@ pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
+            let mut system_rng = rand::thread_rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
@@ -286,7 +286,7 @@ where
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
+            let mut system_rng = rand::thread_rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
@@ -327,7 +327,7 @@ where
         if replace {
             // Weighted sampling with replacement
             for _ in 0..size {
-                let r: f64 = rng.gen();
+                let r: f64 = rng.random();
 
                 // Binary search for the index
                 let mut low = 0;
@@ -373,7 +373,7 @@ where
                 }
 
                 // Select an index based on weights
-                let r: f64 = rng.gen();
+                let r: f64 = rng.random();
                 let mut selected = 0;
 
                 for (j, &weight) in cum_weights.iter().enumerate().take(n - i) {
@@ -460,7 +460,7 @@ where
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
+            let mut system_rng = rand::thread_rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
@@ -517,7 +517,7 @@ pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
+            let mut system_rng = rand::thread_rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
@@ -587,7 +587,7 @@ pub fn random_binary_matrix(
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
+            let mut system_rng = rand::thread_rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
@@ -660,7 +660,7 @@ where
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::rng();
+            let mut system_rng = rand::thread_rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }

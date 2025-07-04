@@ -7,7 +7,7 @@ use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, ArrayView1};
 use scirs2_core::error_context;
 use std::path::Path;
-use std::sync::Arc;
+// Unused import: std::sync::Arc
 
 use crate::distributed::{DistributedConfig, DistributedOptimizationContext, MPIInterface};
 use crate::gpu::{
@@ -331,15 +331,15 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
         )?;
 
         Ok(UnifiedOptimizationResults {
-            base_result: OptimizeResults {
+            base_result: OptimizeResults::<f64> {
                 x: current_x,
                 fun: current_f,
                 success,
                 message,
-                iterations: iteration,
-                function_evaluations,
-                gradient_evaluations: Some(gradient_evaluations),
-                ..OptimizeResults::default()
+                nit: iteration,
+                nfev: function_evaluations,
+                njev: gradient_evaluations,
+                ..OptimizeResults::<f64>::default()
             },
             visualization_paths,
             performance_report,
@@ -588,7 +588,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
 #[derive(Debug, Clone)]
 pub struct UnifiedOptimizationResults {
     /// Base optimization results
-    pub base_result: OptimizeResults,
+    pub base_result: OptimizeResults<f64>,
     /// Paths to generated visualization files
     pub visualization_paths: Vec<String>,
     /// Performance report
@@ -622,7 +622,7 @@ impl UnifiedOptimizationResults {
 
     /// Get number of iterations performed
     pub fn iterations(&self) -> usize {
-        self.base_result.iterations
+        self.base_result.nit
     }
 
     /// Print comprehensive results summary
@@ -632,13 +632,10 @@ impl UnifiedOptimizationResults {
         println!("Success: {}", self.success());
         println!("Final function value: {:.6e}", self.fun());
         println!("Iterations: {}", self.iterations());
-        println!(
-            "Function evaluations: {}",
-            self.base_result.function_evaluations
-        );
+        println!("Function evaluations: {}", self.base_result.nfev);
 
-        if let Some(grad_evals) = self.base_result.gradient_evaluations {
-            println!("Gradient evaluations: {}", grad_evals);
+        if self.base_result.njev > 0 {
+            println!("Gradient evaluations: {}", self.base_result.njev);
         }
 
         if !self.visualization_paths.is_empty() {

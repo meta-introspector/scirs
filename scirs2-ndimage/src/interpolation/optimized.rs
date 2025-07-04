@@ -152,13 +152,17 @@ where
             let t2 = t * t;
             let t3 = t2 * t;
 
+            let neg_half: T = crate::utils::safe_f64_to_float(-0.5)?;
+            let half: T = crate::utils::safe_f64_to_float(0.5)?;
+            let one_half: T = crate::utils::safe_f64_to_float(1.5)?;
+            let two_half: T = crate::utils::safe_f64_to_float(2.5)?;
+            let two: T = crate::utils::safe_f64_to_float(2.0)?;
+
             Ok(vec![
-                safe_f64_to_float(-0.5)? * t3 + t2 - safe_f64_to_float(0.5)? * t,
-                safe_f64_to_float(1.5)? * t3 - safe_f64_to_float(2.5)? * t2 + T::one(),
-                safe_f64_to_float(-1.5)? * t3
-                    + safe_f64_to_float(2.0)? * t2
-                    + safe_f64_to_float(0.5)? * t,
-                safe_f64_to_float(0.5)? * t3 - safe_f64_to_float(0.5)? * t2,
+                neg_half * t3 + t2 - half * t,
+                one_half * t3 - two_half * t2 + T::one(),
+                -one_half * t3 + two * t2 + half * t,
+                half * t3 - half * t2,
             ])
         }
         InterpolationOrder::Spline => {
@@ -184,40 +188,23 @@ where
         let t4 = t3 * t;
         let t5 = t4 * t;
 
-        // Pre-computed B-spline basis functions
-        coeffs[0] = safe_f64_to_float(1.0 / 120.0)?
-            * (-t5 + safe_f64_to_float(5.0)? * t4 - safe_f64_to_float(10.0)? * t3
-                + safe_f64_to_float(10.0)? * t2
-                - safe_f64_to_float(5.0)? * t
-                + T::one());
-        coeffs[1] = safe_f64_to_float(1.0 / 24.0)?
-            * (t5 - safe_f64_to_float(2.0)? * t4 - safe_f64_to_float(3.0)? * t3
-                + safe_f64_to_float(6.0)? * t2
-                + safe_f64_to_float(4.0)? * t
-                + T::one());
-        coeffs[2] = safe_f64_to_float(1.0 / 12.0)?
-            * (-t5 + t4 + safe_f64_to_float(3.0)? * t3 + safe_f64_to_float(3.0)? * t2
-                - safe_f64_to_float(3.0)? * t
-                + T::one());
-        coeffs[3] = safe_f64_to_float(1.0 / 12.0)?
-            * (t5 - t4 - safe_f64_to_float(3.0)? * t3
-                + safe_f64_to_float(3.0)? * t2
-                + safe_f64_to_float(3.0)? * t
-                + T::one());
-        coeffs[4] = safe_f64_to_float(1.0 / 24.0)?
-            * (-t5
-                + safe_f64_to_float(2.0)? * t4
-                + safe_f64_to_float(3.0)? * t3
-                + safe_f64_to_float(6.0)? * t2
-                - safe_f64_to_float(4.0)? * t
-                + T::one());
-        coeffs[5] = safe_f64_to_float(1.0 / 120.0)?
-            * (t5
-                + safe_f64_to_float(5.0)? * t4
-                + safe_f64_to_float(10.0)? * t3
-                + safe_f64_to_float(10.0)? * t2
-                + safe_f64_to_float(5.0)? * t
-                + T::one());
+        // Pre-computed B-spline basis functions with constants
+        let c120: T = crate::utils::safe_f64_to_float(1.0 / 120.0)?;
+        let c24: T = crate::utils::safe_f64_to_float(1.0 / 24.0)?;
+        let c12: T = crate::utils::safe_f64_to_float(1.0 / 12.0)?;
+        let c2: T = crate::utils::safe_f64_to_float(2.0)?;
+        let c3: T = crate::utils::safe_f64_to_float(3.0)?;
+        let c4: T = crate::utils::safe_f64_to_float(4.0)?;
+        let c5: T = crate::utils::safe_f64_to_float(5.0)?;
+        let c6: T = crate::utils::safe_f64_to_float(6.0)?;
+        let c10: T = crate::utils::safe_f64_to_float(10.0)?;
+
+        coeffs[0] = c120 * (-t5 + c5 * t4 - c10 * t3 + c10 * t2 - c5 * t + T::one());
+        coeffs[1] = c24 * (t5 - c2 * t4 - c3 * t3 + c6 * t2 + c4 * t + T::one());
+        coeffs[2] = c12 * (-t5 + t4 + c3 * t3 + c3 * t2 - c3 * t + T::one());
+        coeffs[3] = c12 * (t5 - t4 - c3 * t3 + c3 * t2 + c3 * t + T::one());
+        coeffs[4] = c24 * (-t5 + c2 * t4 + c3 * t3 + c6 * t2 - c4 * t + T::one());
+        coeffs[5] = c120 * (t5 + c5 * t4 + c10 * t3 + c10 * t2 + c5 * t + T::one());
     }
 
     Ok(coeffs)

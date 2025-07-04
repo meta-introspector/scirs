@@ -2,6 +2,7 @@
 //!
 //! Implementation of neural ordinary differential equation-based optimization.
 
+use crate::error::OptimizeResult;
 use ndarray::{Array1, ArrayView1};
 
 /// Neural ODE system for optimization
@@ -80,7 +81,7 @@ pub fn neural_ode_optimize<F>(
     initial_params: &ArrayView1<f64>,
     num_steps: usize,
     dt: f64,
-) -> Result<Array1<f64>>
+) -> OptimizeResult<Array1<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {

@@ -6,7 +6,7 @@
 use super::{ProposalDistribution, TargetDistribution};
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, Axis};
-use rand::Rng;
+use scirs2_core::Rng;
 use rand_distr::Distribution;
 use scirs2_core::validation::*;
 use std::sync::Arc;

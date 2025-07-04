@@ -16,10 +16,10 @@
 //! - Cross-platform code generation
 //! - Real-time performance monitoring and analytics
 
-use scirs2_core::error::CoreResult;
 use scirs2_core::advanced_jit_compilation::{
-    CompiledKernel, JitCompilerConfig, advancedJitCompiler,
+    AdvancedJitCompiler, CompiledKernel, JitCompilerConfig,
 };
+use scirs2_core::error::CoreResult;
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]
@@ -28,7 +28,7 @@ fn main() -> CoreResult<()> {
     println!("====================================================\n");
 
     // Create JIT compiler with optimized configuration
-    let jit_demo = advancedJitDemo::new()?;
+    let jit_demo = AdvancedJitDemo::new()?;
 
     // Run comprehensive demonstration
     jit_demo.run_demo()?;
@@ -37,11 +37,11 @@ fn main() -> CoreResult<()> {
 }
 
 /// Comprehensive JIT compilation demonstration
-struct advancedJitDemo {
-    compiler: advancedJitCompiler,
+struct AdvancedJitDemo {
+    compiler: AdvancedJitCompiler,
 }
 
-impl advancedJitDemo {
+impl AdvancedJitDemo {
     /// Create a new JIT demonstration
     fn new() -> CoreResult<Self> {
         // Configure JIT compiler for maximum performance
@@ -66,7 +66,7 @@ impl advancedJitDemo {
             enable_adaptive_compilation: true,
         };
 
-        let compiler = advancedJitCompiler::with_config(config)?;
+        let compiler = AdvancedJitCompiler::with_config(config)?;
 
         Ok(Self { compiler })
     }

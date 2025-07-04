@@ -3,10 +3,9 @@
 //! This module provides specialized 2D wavelet algorithms for advanced applications
 //! including texture analysis, edge detection, compression, and adaptive processing.
 
-use crate::dwt::{Wavelet};
+use crate::dwt::Wavelet;
 use crate::dwt2d_enhanced::{
-    enhanced_dwt2d_decompose, enhanced_dwt2d_reconstruct, Dwt2dConfig,
-    EnhancedDwt2dResult,
+    enhanced_dwt2d_decompose, enhanced_dwt2d_reconstruct, Dwt2dConfig, EnhancedDwt2dResult,
 };
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2, Array3};
@@ -913,6 +912,7 @@ fn estimate_reconstruction_quality(
     Ok(30.0) // Placeholder quality value
 }
 
+#[allow(unused_imports)]
 mod tests {
     use super::*;
     use crate::dwt::Wavelet;

@@ -12,8 +12,8 @@
 //! - Emergent behavior detection and system evolution
 //! - Real-time performance monitoring and self-optimization
 
-use scirs2_io::error::Result;
 use scirs2_io::advanced_coordinator::AdvancedCoordinator;
+use scirs2_io::error::Result;
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]

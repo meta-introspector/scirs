@@ -2,8 +2,10 @@
 //!
 //! Population-based reinforcement learning optimization methods.
 
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
+use scirs2_core::Rng;
 // Unused import
 // use scirs2_core::error::CoreResult;
 
@@ -58,13 +60,13 @@ impl EvolutionaryStrategy {
 
         // Generate new population
         for i in elite_size..self.population_size {
-            let parent_idx = indices[rand::rng().random::<usize>() % elite_size];
+            let parent_idx = indices[rand::rng().random_range(0..elite_size)];
             let parent = &self.population[parent_idx];
 
             // Mutate
             let mut offspring = parent.clone();
             for j in 0..offspring.len() {
-                offspring[j] += self.sigma * (rand::rng().random::<f64>() - 0.5);
+                offspring[j] += self.sigma * (rand::rng().random_range(-0.5..0.5));
             }
 
             self.population[i] = offspring;
@@ -93,7 +95,7 @@ pub fn evolutionary_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     num_generations: usize,
-) -> Result<OptimizeResults>
+) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
@@ -109,11 +111,11 @@ where
 
     let (best_params, best_fitness) = es.get_best();
 
-    Ok(OptimizeResults {
+    Ok(OptimizeResults::<f64> {
         x: best_params,
         fun: best_fitness,
         success: true,
-        iterations: num_generations,
+        nit: num_generations,
         message: "Evolutionary strategy completed".to_string(),
     })
 }

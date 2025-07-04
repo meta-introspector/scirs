@@ -7,8 +7,8 @@
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_signal::{
-    generate_simd_performance_report, advanced_simd_dwt, advanced_simd_fft,
-    advanced_simd_resample, advanced_simd_rfft, advanced_simd_stft, AdvancedSimdConfig,
+    advanced_simd_dwt, advanced_simd_fft, advanced_simd_resample, advanced_simd_rfft,
+    advanced_simd_stft, generate_simd_performance_report, AdvancedSimdConfig,
 };
 use std::f64::consts::PI;
 use std::time::Instant;

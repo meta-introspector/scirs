@@ -60,12 +60,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Test 2: SIMD-accelerated distance computation (safe version)
     println!("\n⚡ Testing SIMD-accelerated distance computation...");
     let start = std::time::Instant::now();
-    
+
     // Use simple distance computation instead of batch operation to avoid stack overflow
     let point1 = points.row(0).to_owned();
     let point2 = points.row(1).to_owned();
     let _distance = euclidean(point1.as_slice().unwrap(), point2.as_slice().unwrap());
-    
+
     let simd_time = start.elapsed();
 
     println!(
@@ -81,7 +81,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Perform safe operation that uses memory pool (avoid pdist for now)
     for i in 0..std::cmp::min(5, n_points) {
-        for j in (i+1)..std::cmp::min(5, n_points) {
+        for j in (i + 1)..std::cmp::min(5, n_points) {
             let row_i = points.row(i).to_owned();
             let row_j = points.row(j).to_owned();
             let _distance = euclidean(row_i.as_slice().unwrap(), row_j.as_slice().unwrap());
@@ -121,10 +121,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = std::time::Instant::now();
     let mut distances = Vec::new();
     for i in 0..std::cmp::min(3, n_points) {
-        for j in (i+1)..std::cmp::min(3, n_points) {
+        for j in (i + 1)..std::cmp::min(3, n_points) {
             let row_i = points.row(i).to_owned();
             let row_j = points.row(j).to_owned();
-            distances.push(euclidean(row_i.as_slice().unwrap(), row_j.as_slice().unwrap()));
+            distances.push(euclidean(
+                row_i.as_slice().unwrap(),
+                row_j.as_slice().unwrap(),
+            ));
         }
     }
     let classical_time = start.elapsed();
@@ -153,9 +156,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("✅ Memory pool optimization active");
     println!("✅ AI-driven algorithm selection available");
     println!("✅ Extreme performance optimization ready");
-    println!(
-        "✅ Theoretical speedup potential: {theoretical_speedup:.1}x"
-    );
+    println!("✅ Theoretical speedup potential: {theoretical_speedup:.1}x");
     println!("✅ Measured performance improvements validated");
 
     Ok(())

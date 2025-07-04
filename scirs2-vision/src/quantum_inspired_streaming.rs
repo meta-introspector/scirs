@@ -1019,7 +1019,10 @@ impl QuantumAdaptiveStreamPipeline {
 
     /// Get quantum optimization metrics
     pub fn get_quantum_metrics(&self) -> HashMap<String, f64> {
-        self.performance_metrics.lock().unwrap().clone()
+        self.performance_metrics
+            .lock()
+            .expect("Mutex should not be poisoned")
+            .clone()
     }
 }
 

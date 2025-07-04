@@ -616,7 +616,7 @@ impl<A: Float + 'static, D: Dimension + 'static> SelfTuningOptimizer<A, D> {
 
         if rng.random::<f64>() < self.config.exploration_rate {
             // Explore: random selection
-            rng.gen_range(0..self.optimizer_candidates.len())
+            rng.random_range(0..self.optimizer_candidates.len())
         } else {
             // Exploit: best performing optimizer
             self.bandit_state
@@ -641,7 +641,7 @@ impl<A: Float + 'static, D: Dimension + 'static> SelfTuningOptimizer<A, D> {
         for (i, _) in self.optimizer_candidates.iter().enumerate() {
             let mean = self.bandit_state.reward_estimates[i];
             let std = self.bandit_state.confidence_bounds[i];
-            let sample = rng.gen_range((mean - std)..(mean + std));
+            let sample = rng.random_range((mean - std)..(mean + std));
 
             if sample > best_sample {
                 best_sample = sample;

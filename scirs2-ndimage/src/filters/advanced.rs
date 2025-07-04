@@ -4,7 +4,7 @@
 //! steerable filters, and other specialized convolution operations that are
 //! commonly used in computer vision and signal processing.
 
-use ndarray::{Array2, ArrayView2, Dimension};
+use ndarray::{Array2, ArrayView2, Dimension, Zip};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::fmt::Debug;
@@ -1151,7 +1151,7 @@ where
 
     // Compute smoothed version for structure analysis
     let sigma_vec = vec![sigma, sigma];
-    let smoothed = crate::filters::gaussian_filter(input.to_owned(), &sigma_vec, None, None, None)?;
+    let smoothed = crate::filters::gaussian_filter(input.to_owned(), sigma, None, None)?;
 
     for i in 1..height - 1 {
         for j in 1..width - 1 {
@@ -1240,7 +1240,7 @@ where
 
     // Pre-smooth the image
     let sigma_vec = vec![sigma, sigma];
-    image = crate::filters::gaussian_filter(image, &sigma_vec, None, None, None)?;
+    image = crate::filters::gaussian_filter(image, sigma, None, None)?;
 
     for _ in 0..num_iterations {
         let new_image = ced_iteration(&image.view(), alpha, c)?;

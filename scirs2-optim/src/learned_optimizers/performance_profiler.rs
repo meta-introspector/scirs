@@ -932,7 +932,7 @@ pub struct MLPerformancePredictor<T: Float> {
     prediction_cache: HashMap<String, PredictionResult<T>>,
     model_performance: ModelPerformanceTracker<T>}
 
-impl<T: Float> MLPerformancePredictor<T> {
+impl<T: Float + Send + Sync> MLPerformancePredictor<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }
@@ -950,7 +950,7 @@ pub struct AnomalyDetectionEngine<T: Float> {
     thresholds: HashMap<String, T>,
     false_positive_tracker: FalsePositiveTracker<T>}
 
-impl<T: Float> AnomalyDetectionEngine<T> {
+impl<T: Float + Send + Sync> AnomalyDetectionEngine<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }
@@ -976,7 +976,7 @@ pub struct ResourceUsageTracker<T: Float> {
     peak_usage: PeakUsageTracker<T>,
     efficiency_analyzer: ResourceEfficiencyAnalyzer<T>}
 
-impl<T: Float> ResourceUsageTracker<T> {
+impl<T: Float + Send + Sync> ResourceUsageTracker<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }
@@ -997,7 +997,7 @@ pub struct PerformanceTrendAnalyzer<T: Float> {
     trend_history: VecDeque<TrendAnalysis<T>>,
     trend_predictions: HashMap<String, TrendPrediction<T>>}
 
-impl<T: Float> PerformanceTrendAnalyzer<T> {
+impl<T: Float + Send + Sync> PerformanceTrendAnalyzer<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }
@@ -1018,7 +1018,7 @@ pub struct AlertManager<T: Float> {
     alert_history: VecDeque<Alert<T>>,
     alert_channels: Vec<Box<dyn AlertChannel>>}
 
-impl<T: Float> AlertManager<T> {
+impl<T: Float + Send + Sync> AlertManager<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }
@@ -1032,7 +1032,7 @@ impl<T: Float> AlertManager<T> {
 pub struct PerformanceDataStorage<T: Float> {
     data: Vec<advancedMetrics<T>>}
 
-impl<T: Float> PerformanceDataStorage<T> {
+impl<T: Float + Send + Sync> PerformanceDataStorage<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }

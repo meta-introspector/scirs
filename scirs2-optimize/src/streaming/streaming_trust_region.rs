@@ -12,7 +12,7 @@ use crate::error::OptimizeError;
 use ndarray::{Array1, Array2, ArrayView1};
 // Unused import
 // use scirs2_core::error::CoreResult;
-use scirs2_linalg::{solve};
+use scirs2_linalg::solve;
 // Unused import
 // use scirs2_linalg::LinalgError;
 

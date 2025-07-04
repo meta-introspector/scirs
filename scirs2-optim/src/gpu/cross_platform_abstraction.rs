@@ -789,7 +789,7 @@ impl Default for AlertThresholds {
     }
 }
 
-impl<T: Float> CrossPlatformOptimizer<T> {
+impl<T: Float + Send + Sync> CrossPlatformOptimizer<T> {
     /// Create new cross-platform optimizer
     pub fn new(config: CrossPlatformConfig) -> Result<Self> {
         let mut optimizer = Self {

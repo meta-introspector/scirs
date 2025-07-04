@@ -1152,7 +1152,7 @@ pub struct ConvergenceConfig<T: Float> {
     pub patience: usize,
 }
 
-impl<T: Float> HyperparameterOptimizer<T> {
+impl<T: Float + Send + Sync> HyperparameterOptimizer<T> {
     /// Create new hyperparameter optimizer
     pub fn new(
         strategy: Box<dyn HyperOptStrategy<T>>,
@@ -1322,7 +1322,7 @@ impl<T: Float> HyperparameterOptimizer<T> {
     }
 }
 
-impl<T: Float> EarlyStoppingManager<T> {
+impl<T: Float + Send + Sync> EarlyStoppingManager<T> {
     fn new() -> Self {
         Self {
             criteria: Vec::new(),
@@ -1339,7 +1339,7 @@ impl<T: Float> EarlyStoppingManager<T> {
     }
 }
 
-impl<T: Float> ConfigurationCache<T> {
+impl<T: Float + Send + Sync> ConfigurationCache<T> {
     fn new(max_size: usize) -> Self {
         Self {
             cache: HashMap::new(),

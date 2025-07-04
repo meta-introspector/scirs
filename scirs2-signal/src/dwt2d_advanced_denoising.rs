@@ -14,7 +14,7 @@ use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_shape};
-use std::f64::consts::PI;
+// use std::f64::consts::PI;
 
 /// Advanced 2D wavelet denoising configuration
 #[derive(Debug, Clone)]

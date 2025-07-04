@@ -1313,7 +1313,7 @@ impl<T: Float> Default for FewShotConfig<T> {
     }
 }
 
-impl<T: Float> FewShotLearningEnhancement<T> {
+impl<T: Float + Send + Sync> FewShotLearningEnhancement<T> {
     /// Create new few-shot learning enhancement
     pub fn new(config: FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
@@ -1387,7 +1387,7 @@ impl<T: Float> FewShotLearningEnhancement<T> {
 }
 
 // Implementation stubs for complex components
-impl<T: Float> SupportSetManager<T> {
+impl<T: Float + Send + Sync> SupportSetManager<T> {
     fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             support_sets: HashMap::new(),
@@ -1404,7 +1404,7 @@ impl<T: Float> SupportSetManager<T> {
     }
 }
 
-impl<T: Float> FewShotMetaLearner<T> {
+impl<T: Float + Send + Sync> FewShotMetaLearner<T> {
     fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             meta_parameters: MetaParameters::default(),
@@ -1422,7 +1422,7 @@ impl<T: Float> FewShotMetaLearner<T> {
     }
 }
 
-impl<T: Float> PrototypeNetwork<T> {
+impl<T: Float + Send + Sync> PrototypeNetwork<T> {
     fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             prototypes: Array2::zeros((5, 64)), // n_way x feature_dim
@@ -1434,7 +1434,7 @@ impl<T: Float> PrototypeNetwork<T> {
     }
 }
 
-impl<T: Float> SimilarityMatcher<T> {
+impl<T: Float + Send + Sync> SimilarityMatcher<T> {
     fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             similarity_computer: SimilarityComputer::new(),
@@ -1458,7 +1458,7 @@ impl<T: Float> SimilarityMatcher<T> {
     }
 }
 
-impl<T: Float> TaskDistributionAnalyzer<T> {
+impl<T: Float + Send + Sync> TaskDistributionAnalyzer<T> {
     fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             distribution_estimator: TaskDistributionEstimator::new(),
@@ -1479,7 +1479,7 @@ impl<T: Float> TaskDistributionAnalyzer<T> {
     }
 }
 
-impl<T: Float> AdaptationController<T> {
+impl<T: Float + Send + Sync> AdaptationController<T> {
     fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             strategy: AdaptationStrategy::new(AdaptationStrategyType::Balanced),
@@ -1506,7 +1506,7 @@ impl<T: Float> AdaptationController<T> {
     }
 }
 
-impl<T: Float> FewShotPerformanceTracker<T> {
+impl<T: Float + Send + Sync> FewShotPerformanceTracker<T> {
     fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             episode_performance: VecDeque::new(),
@@ -1564,7 +1564,7 @@ impl<T: Float> Default for SupportSetStatistics<T> {
     }
 }
 
-impl<T: Float> SupportSetQualityAssessor<T> {
+impl<T: Float + Send + Sync> SupportSetQualityAssessor<T> {
     fn new() -> Self {
         Self {
             metrics: vec![QualityMetric::Diversity, QualityMetric::Representativeness],
@@ -1585,7 +1585,7 @@ impl<T: Float> Default for MetaParameters<T> {
     }
 }
 
-impl<T: Float> EpisodeMemory<T> {
+impl<T: Float + Send + Sync> EpisodeMemory<T> {
     fn new(capacity: usize) -> Self {
         Self {
             episodes: VecDeque::new(),
@@ -1604,7 +1604,7 @@ impl<T: Float> EpisodeMemory<T> {
     }
 }
 
-impl<T: Float> MetaGradientComputer<T> {
+impl<T: Float + Send + Sync> MetaGradientComputer<T> {
     fn new() -> Self {
         Self {
             computation_method: GradientComputationMethod::Automatic,
@@ -1615,7 +1615,7 @@ impl<T: Float> MetaGradientComputer<T> {
     }
 }
 
-impl<T: Float> FastAdaptationEngine<T> {
+impl<T: Float + Send + Sync> FastAdaptationEngine<T> {
     fn new() -> Self {
         Self {
             algorithm: FastAdaptationAlgorithm::Adam,
@@ -1626,7 +1626,7 @@ impl<T: Float> FastAdaptationEngine<T> {
     }
 }
 
-impl<T: Float> PrototypeUpdateRule<T> {
+impl<T: Float + Send + Sync> PrototypeUpdateRule<T> {
     fn new(method: PrototypeUpdateMethod) -> Self {
         Self {
             method,
@@ -1636,7 +1636,7 @@ impl<T: Float> PrototypeUpdateRule<T> {
     }
 }
 
-impl<T: Float> DistanceComputer<T> {
+impl<T: Float + Send + Sync> DistanceComputer<T> {
     fn new(metric: DistanceMetric) -> Self {
         Self {
             metric,
@@ -1647,7 +1647,7 @@ impl<T: Float> DistanceComputer<T> {
     }
 }
 
-impl<T: Float> SimilarityComputer<T> {
+impl<T: Float + Send + Sync> SimilarityComputer<T> {
     fn new() -> Self {
         Self {
             metrics: vec![SimilarityMetric::Cosine],
@@ -1658,7 +1658,7 @@ impl<T: Float> SimilarityComputer<T> {
     }
 }
 
-impl<T: Float> SimilarityCache<T> {
+impl<T: Float + Send + Sync> SimilarityCache<T> {
     fn new(capacity: usize) -> Self {
         Self {
             cache: HashMap::new(),
@@ -1669,7 +1669,7 @@ impl<T: Float> SimilarityCache<T> {
     }
 }
 
-impl<T: Float> TaskDistributionEstimator<T> {
+impl<T: Float + Send + Sync> TaskDistributionEstimator<T> {
     fn new() -> Self {
         Self {
             distribution_model: DistributionModel::Gaussian(T::zero(), T::one()),
@@ -1680,7 +1680,7 @@ impl<T: Float> TaskDistributionEstimator<T> {
     }
 }
 
-impl<T: Float> TaskNoveltyDetector<T> {
+impl<T: Float + Send + Sync> TaskNoveltyDetector<T> {
     fn new() -> Self {
         Self {
             novelty_threshold: T::from(0.5).unwrap(),
@@ -1696,7 +1696,7 @@ impl<T: Float> TaskNoveltyDetector<T> {
     }
 }
 
-impl<T: Float> TaskDifficultyEstimator<T> {
+impl<T: Float + Send + Sync> TaskDifficultyEstimator<T> {
     fn new() -> Self {
         Self {
             difficulty_model: DifficultyModel::new(),
@@ -1707,7 +1707,7 @@ impl<T: Float> TaskDifficultyEstimator<T> {
     }
 }
 
-impl<T: Float> ComputationalGraph<T> {
+impl<T: Float + Send + Sync> ComputationalGraph<T> {
     fn new() -> Self {
         Self {
             nodes: Vec::new(),
@@ -1717,7 +1717,7 @@ impl<T: Float> ComputationalGraph<T> {
     }
 }
 
-impl<T: Float> ConvergenceDetector<T> {
+impl<T: Float + Send + Sync> ConvergenceDetector<T> {
     fn new() -> Self {
         Self {
             criteria: vec![ConvergenceCriterion {
@@ -1733,7 +1733,7 @@ impl<T: Float> ConvergenceDetector<T> {
     }
 }
 
-impl<T: Float> EarlyStoppingMechanism<T> {
+impl<T: Float + Send + Sync> EarlyStoppingMechanism<T> {
     fn new(patience: usize) -> Self {
         Self {
             patience,
@@ -1744,7 +1744,7 @@ impl<T: Float> EarlyStoppingMechanism<T> {
     }
 }
 
-impl<T: Float> AdaptationStrategy<T> {
+impl<T: Float + Send + Sync> AdaptationStrategy<T> {
     fn new(strategy_type: AdaptationStrategyType) -> Self {
         Self {
             strategy_type,
@@ -1754,7 +1754,7 @@ impl<T: Float> AdaptationStrategy<T> {
     }
 }
 
-impl<T: Float> AdaptationRateController<T> {
+impl<T: Float + Send + Sync> AdaptationRateController<T> {
     fn new(base_rate: T) -> Self {
         Self {
             base_rate,
@@ -1765,7 +1765,7 @@ impl<T: Float> AdaptationRateController<T> {
     }
 }
 
-impl<T: Float> AdaptationMemory<T> {
+impl<T: Float + Send + Sync> AdaptationMemory<T> {
     fn new(capacity: usize) -> Self {
         Self {
             entries: VecDeque::new(),
@@ -1775,7 +1775,7 @@ impl<T: Float> AdaptationMemory<T> {
     }
 }
 
-impl<T: Float> AdaptationPerformanceMonitor<T> {
+impl<T: Float + Send + Sync> AdaptationPerformanceMonitor<T> {
     fn new(window_size: usize) -> Self {
         Self {
             performance_history: VecDeque::new(),
@@ -1786,7 +1786,7 @@ impl<T: Float> AdaptationPerformanceMonitor<T> {
     }
 }
 
-impl<T: Float> TaskPerformance<T> {
+impl<T: Float + Send + Sync> TaskPerformance<T> {
     fn new(task_id: String) -> Self {
         Self {
             task_id,
@@ -1808,7 +1808,7 @@ impl<T: Float> TaskPerformance<T> {
     }
 }
 
-impl<T: Float> DifficultyModel<T> {
+impl<T: Float + Send + Sync> DifficultyModel<T> {
     fn new() -> Self {
         Self {
             parameters: HashMap::new(),
@@ -1818,7 +1818,7 @@ impl<T: Float> DifficultyModel<T> {
     }
 }
 
-impl<T: Float> DifficultyFeatureExtractor<T> {
+impl<T: Float + Send + Sync> DifficultyFeatureExtractor<T> {
     fn new(dims: usize) -> Self {
         Self {
             feature_dims: dims,

@@ -14,7 +14,7 @@
 use crate::error::StatsResult;
 use ndarray::{Array1, Array2, Array3};
 use num_traits::{Float, NumCast, One, Zero};
-use rand::Rng;
+use rand::thread_rng;
 use rand_distr::{Distribution, Normal};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
 use std::marker::PhantomData;
@@ -615,7 +615,7 @@ where
         // Simplified - would implement proper sampling from multivariate normal
         let dim = self.target.dim();
         let normal = Normal::new(0.0, 1.0).unwrap();
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
 
         let momentum: Array1<F> =
             Array1::from_shape_fn(dim, |_| F::from(normal.sample(&mut rng)).unwrap());
@@ -668,7 +668,7 @@ where
             true
         } else {
             let accept_prob = (-energy_diff).exp();
-            let mut rng = rand::rng();
+            let mut rng = thread_rng();
             let u: f64 = rng.random_range(0.0..1.0);
             F::from(u).unwrap() < accept_prob
         }

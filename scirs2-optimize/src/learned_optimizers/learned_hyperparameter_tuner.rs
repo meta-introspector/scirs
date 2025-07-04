@@ -7,6 +7,7 @@ use super::{
     LearnedOptimizationConfig, LearnedOptimizer, MetaOptimizerState, OptimizationProblem,
     TrainingTask,
 };
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
 use std::collections::{HashMap, VecDeque};
@@ -403,7 +404,7 @@ impl LearnedHyperparameterTuner {
         initial_params: &ArrayView1<f64>,
         problem: &OptimizationProblem,
         budget: f64,
-    ) -> Result<HyperparameterConfig>
+    ) -> OptimizeResult<HyperparameterConfig>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -485,7 +486,7 @@ impl LearnedHyperparameterTuner {
         objective: &F,
         initial_params: &ArrayView1<f64>,
         problem: &OptimizationProblem,
-    ) -> Result<Array1<f64>>
+    ) -> OptimizeResult<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -672,7 +673,7 @@ impl LearnedHyperparameterTuner {
         objective: &F,
         initial_params: &ArrayView1<f64>,
         config: &HyperparameterConfig,
-    ) -> Result<(f64, f64)>
+    ) -> OptimizeResult<(f64, f64)>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -686,7 +687,7 @@ impl LearnedHyperparameterTuner {
         initial_params: &ArrayView1<f64>,
         config: &HyperparameterConfig,
         fidelity: f64,
-    ) -> Result<(f64, f64)>
+    ) -> OptimizeResult<(f64, f64)>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -708,7 +709,7 @@ impl LearnedHyperparameterTuner {
         objective: &F,
         initial_params: &ArrayView1<f64>,
         fidelity: f64,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -756,11 +757,11 @@ impl LearnedHyperparameterTuner {
             }
         }
 
-        Ok(OptimizeResults {
+        Ok(OptimizeResults::<f64> {
             x: current_params,
             fun: best_value,
             success: true,
-            iterations: max_iterations,
+            nit: max_iterations,
             message: "Hyperparameter evaluation completed".to_string(),
         })
     }
@@ -1311,7 +1312,7 @@ impl LearnedOptimizer for LearnedHyperparameterTuner {
         &mut self,
         objective: F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -1349,7 +1350,7 @@ pub fn hyperparameter_tuning_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     config: Option<LearnedOptimizationConfig>,
-) -> Result<OptimizeResults>
+) -> super::OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {

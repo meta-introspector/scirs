@@ -24,7 +24,7 @@ use std::time::Duration;
 use std::time::Instant;
 
 /// Unified Advanced mode coordinator integrating all optimization components
-pub struct advancedModeCoordinator<
+pub struct AdvancedModeCoordinator<
     F: IntegrateFloat
         + scirs2_core::gpu::GpuDataType
         + scirs2_core::simd_ops::SimdUnifiedOps
@@ -41,12 +41,12 @@ pub struct advancedModeCoordinator<
     /// Neural RL step size controller
     neural_rl_controller: Arc<Mutex<NeuralRLStepController<F>>>,
     /// Configuration settings
-    config: advancedModeConfig,
+    config: AdvancedModeConfig,
 }
 
 /// Configuration for Advanced mode operations
 #[derive(Debug, Clone)]
-pub struct advancedModeConfig {
+pub struct AdvancedModeConfig {
     /// Enable GPU acceleration
     pub enable_gpu: bool,
     /// Enable memory optimization
@@ -76,18 +76,18 @@ pub struct PerformanceTargets {
 
 /// Advanced mode optimization result
 #[derive(Debug)]
-pub struct advancedModeResult<F: IntegrateFloat> {
+pub struct AdvancedModeResult<F: IntegrateFloat> {
     /// Computed solution
     pub solution: Array1<F>,
     /// Performance metrics
-    pub performance_metrics: advancedModeMetrics,
+    pub performance_metrics: AdvancedModeMetrics,
     /// Applied optimizations
     pub optimizations_applied: Vec<String>,
 }
 
 /// Performance metrics for Advanced mode operations
 #[derive(Debug, Clone)]
-pub struct advancedModeMetrics {
+pub struct AdvancedModeMetrics {
     /// Total execution time
     pub execution_time: Duration,
     /// Memory usage peak
@@ -107,10 +107,10 @@ impl<
             + scirs2_core::gpu::GpuDataType
             + scirs2_core::simd_ops::SimdUnifiedOps
             + Default,
-    > advancedModeCoordinator<F>
+    > AdvancedModeCoordinator<F>
 {
     /// Create a new Advanced mode coordinator
-    pub fn new(config: advancedModeConfig) -> IntegrateResult<Self> {
+    pub fn new(config: AdvancedModeConfig) -> IntegrateResult<Self> {
         let gpu_accelerator = if config.enable_gpu {
             // Try to create GPU accelerator, fallback to CPU mode if GPU not available
             match UltraGPUAccelerator::new() {
@@ -136,7 +136,7 @@ impl<
             Arc::new(Mutex::new(NeuralRLStepController::new()?))
         };
 
-        Ok(advancedModeCoordinator {
+        Ok(AdvancedModeCoordinator {
             gpu_accelerator,
             memory_optimizer,
             simd_accelerator,
@@ -153,7 +153,7 @@ impl<
         y: &ArrayView1<F>,
         h: F,
         f: impl Fn(F, &ArrayView1<F>) -> IntegrateResult<Array1<F>>,
-    ) -> IntegrateResult<advancedModeResult<F>> {
+    ) -> IntegrateResult<AdvancedModeResult<F>> {
         let start_time = std::time::Instant::now();
         let mut optimizations_applied = Vec::new();
 
@@ -191,9 +191,9 @@ impl<
 
         let execution_time = start_time.elapsed();
 
-        Ok(advancedModeResult {
+        Ok(AdvancedModeResult {
             solution,
-            performance_metrics: advancedModeMetrics {
+            performance_metrics: AdvancedModeMetrics {
                 execution_time,
                 peak_memory_usage: self.estimate_memory_usage(y.len()),
                 gpu_utilization: if self.config.enable_gpu { 85.0 } else { 0.0 },
@@ -214,7 +214,7 @@ impl<
         rtol: F,
         atol: F,
         f: impl Fn(F, &ArrayView1<F>) -> IntegrateResult<Array1<F>>,
-    ) -> IntegrateResult<advancedModeResult<F>> {
+    ) -> IntegrateResult<AdvancedModeResult<F>> {
         let start_time = std::time::Instant::now();
         let mut optimizations_applied = Vec::new();
 
@@ -320,9 +320,9 @@ impl<
 
         let execution_time = start_time.elapsed();
 
-        Ok(advancedModeResult {
+        Ok(AdvancedModeResult {
             solution,
-            performance_metrics: advancedModeMetrics {
+            performance_metrics: AdvancedModeMetrics {
                 execution_time,
                 peak_memory_usage: self.estimate_memory_usage(y.len()),
                 gpu_utilization: if self.config.enable_gpu { 85.0 } else { 0.0 },
@@ -343,7 +343,7 @@ impl<
         rtol: F,
         atol: F,
         f: impl Fn(F, &ArrayView1<F>) -> IntegrateResult<Array1<F>>,
-    ) -> IntegrateResult<advancedModeResult<F>> {
+    ) -> IntegrateResult<AdvancedModeResult<F>> {
         let start_time = std::time::Instant::now();
         let mut optimizations_applied = Vec::new();
 
@@ -374,9 +374,9 @@ impl<
 
         let execution_time = start_time.elapsed();
 
-        Ok(advancedModeResult {
+        Ok(AdvancedModeResult {
             solution,
-            performance_metrics: advancedModeMetrics {
+            performance_metrics: AdvancedModeMetrics {
                 execution_time,
                 peak_memory_usage: self.estimate_memory_usage(y.len()),
                 gpu_utilization: if self.config.enable_gpu { 80.0 } else { 0.0 },
@@ -427,12 +427,12 @@ impl<
     }
 
     /// Get comprehensive performance report
-    pub fn get_performance_report(&self) -> IntegrateResult<advancedModePerformanceReport> {
+    pub fn get_performance_report(&self) -> IntegrateResult<AdvancedModePerformanceReport> {
         let performance_history = self.collect_performance_history()?;
         let hardware_utilization = self.analyze_hardware_utilization()?;
         let bottleneck_analysis = self.identify_performance_bottlenecks()?;
 
-        Ok(advancedModePerformanceReport {
+        Ok(AdvancedModePerformanceReport {
             components_active: self.count_active_components(),
             estimated_speedup: self.estimate_speedup(),
             memory_efficiency: self.estimate_memory_efficiency(),
@@ -1157,7 +1157,7 @@ impl<
 
 /// Comprehensive performance report for Advanced mode
 #[derive(Debug)]
-pub struct advancedModePerformanceReport {
+pub struct AdvancedModePerformanceReport {
     /// Number of active optimization components
     pub components_active: usize,
     /// Estimated overall speedup
@@ -1458,9 +1458,9 @@ pub struct SimdMetrics {
     pub alignment_efficiency: f64,
 }
 
-impl Default for advancedModeConfig {
+impl Default for AdvancedModeConfig {
     fn default() -> Self {
-        advancedModeConfig {
+        AdvancedModeConfig {
             enable_gpu: true,
             enable_memory_optimization: true,
             enable_simd: true,
@@ -1494,15 +1494,15 @@ mod tests {
 
     #[test]
     fn test_advanced_mode_coordinator_creation() {
-        let config = advancedModeConfig::default();
-        let coordinator = advancedModeCoordinator::<f64>::new(config);
+        let config = AdvancedModeConfig::default();
+        let coordinator = AdvancedModeCoordinator::<f64>::new(config);
         assert!(coordinator.is_ok());
     }
 
     #[test]
     fn test_advanced_mode_integration() {
-        let config = advancedModeConfig::default();
-        let coordinator = advancedModeCoordinator::<f64>::new(config).unwrap();
+        let config = AdvancedModeConfig::default();
+        let coordinator = AdvancedModeCoordinator::<f64>::new(config).unwrap();
 
         // Simple test function: dy/dt = -y
         let ode_func =
@@ -1522,8 +1522,8 @@ mod tests {
 
     #[test]
     fn test_performance_report() {
-        let config = advancedModeConfig::default();
-        let coordinator = advancedModeCoordinator::<f64>::new(config).unwrap();
+        let config = AdvancedModeConfig::default();
+        let coordinator = AdvancedModeCoordinator::<f64>::new(config).unwrap();
 
         let report = coordinator.get_performance_report().unwrap();
         assert_eq!(report.components_active, 5); // All components enabled (including neural RL)
@@ -1532,8 +1532,8 @@ mod tests {
 
     #[test]
     fn test_neural_rl_integration() {
-        let config = advancedModeConfig::default();
-        let coordinator = advancedModeCoordinator::<f64>::new(config).unwrap();
+        let config = AdvancedModeConfig::default();
+        let coordinator = AdvancedModeCoordinator::<f64>::new(config).unwrap();
 
         // Simple test function: dy/dt = -y
         let ode_func =

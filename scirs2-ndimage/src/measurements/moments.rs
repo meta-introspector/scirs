@@ -5,14 +5,7 @@ use num_traits::{Float, FromPrimitive, NumAssign};
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
-
-/// Helper function for safe conversion from usize to float
-#[allow(dead_code)]
-fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<T> {
-    T::from_usize(value).ok_or_else(|| {
-        NdimageError::ComputationError(format!("Failed to convert usize {} to float type", value))
-    })
-}
+use crate::utils::safe_usize_to_float;
 
 /// Find the center of mass (centroid) of an array
 ///

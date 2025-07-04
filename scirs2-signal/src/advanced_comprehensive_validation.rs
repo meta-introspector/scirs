@@ -8,11 +8,11 @@ use crate::lombscargle_edge_case_validation::{run_edge_case_validation, EdgeCase
 use crate::multitaper::validation::{
     validate_multitaper_comprehensive, EnhancedMultitaperValidationResult,
 };
-use crate::parametric_ultra_enhanced::comprehensive_parametric_validation;
+use crate::parametric_advanced_enhanced::comprehensive_parametric_validation;
 use crate::scipy_validation_comprehensive::{
     run_comprehensive_scipy_validation, ComprehensiveSciPyValidationResult,
 };
-use crate::wpt_ultra_validation::{run_ultra_wpt_validation, UltraWptValidationResult};
+use crate::wpt_super_validation::{run_ultra_wpt_validation, UltraWptValidationResult};
 use std::time::Instant;
 
 /// Comprehensive validation result for Advanced mode
@@ -70,7 +70,7 @@ pub fn run_comprehensive_validation() -> SignalResult<ComprehensiveValidationRes
     let multitaper_validation = validate_multitaper_comprehensive()?;
 
     // Run WPT validation
-    println!("4/5 Running ultra WPT validation...");
+    println!("4/5 Running super WPT validation...");
     let wpt_validation = run_ultra_wpt_validation()?;
 
     // Run parametric validation (simplified)
@@ -99,10 +99,7 @@ pub fn run_comprehensive_validation() -> SignalResult<ComprehensiveValidationRes
         "✅ Advanced MODE validation completed in {:.2}ms",
         total_validation_time_ms
     );
-    println!(
-        "🎯 Overall Advanced Score: {:.2}%",
-        overall_advanced_score
-    );
+    println!("🎯 Overall Advanced Score: {:.2}%", overall_advanced_score);
     println!(
         "⚡ SIMD Acceleration: {:.2}x",
         performance_improvements.simd_acceleration

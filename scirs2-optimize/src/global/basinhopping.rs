@@ -161,7 +161,9 @@ where
         take_step: Option<TakeStep>,
     ) -> Self {
         let ndim = x0.len();
-        let seed = options.seed.unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
+        let seed = options
+            .seed
+            .unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
         let mut rng = StdRng::seed_from_u64(seed);
 
         // Default accept test is Metropolis criterion
@@ -181,7 +183,9 @@ where
         let take_step = take_step.unwrap_or_else(|| {
             let stepsize = options.stepsize;
             let bounds = options.bounds.clone();
-            let seed = options.seed.unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
+            let seed = options
+                .seed
+                .unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
             Box::new(move |x: &Array1<f64>| {
                 let mut local_rng = StdRng::seed_from_u64(seed + x.len() as u64);
                 let mut x_new = x.clone();

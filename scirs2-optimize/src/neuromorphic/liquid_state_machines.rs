@@ -2,6 +2,7 @@
 //!
 //! Implementation of liquid state machine-based optimization algorithms.
 
+use crate::error::OptimizeResult;
 use ndarray::{Array1, Array2, ArrayView1};
 
 /// Liquid State Machine for optimization
@@ -118,7 +119,7 @@ pub fn lsm_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     num_iterations: usize,
-) -> Result<Array1<f64>>
+) -> OptimizeResult<Array1<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {

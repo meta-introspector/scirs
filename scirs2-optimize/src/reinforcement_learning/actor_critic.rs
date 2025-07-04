@@ -7,6 +7,7 @@ use super::{
     utils, Experience, ExperienceBuffer, ImprovementReward, OptimizationAction, OptimizationState,
     RLOptimizationConfig, RLOptimizer, RewardFunction,
 };
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
 // use std::collections::VecDeque; // Unused import
@@ -684,7 +685,7 @@ impl RLOptimizer for AdvantageActorCriticOptimizer {
         &mut self,
         objective: &F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -744,7 +745,7 @@ impl RLOptimizer for AdvantageActorCriticOptimizer {
         // Adjust exploration parameters
         self.adjust_exploration();
 
-        Ok(OptimizeResults {
+        Ok(OptimizeResults::<f64> {
             x: current_params,
             fun: current_state.objective_value,
             success: current_state.convergence_metrics.relative_objective_change < 1e-6,
@@ -757,11 +758,11 @@ impl RLOptimizer for AdvantageActorCriticOptimizer {
         &mut self,
         objective: &F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
-        let mut best_result = OptimizeResults {
+        let mut best_result = OptimizeResults::<f64> {
             x: initial_params.to_owned(),
             fun: f64::INFINITY,
             success: false,
@@ -812,7 +813,7 @@ pub fn actor_critic_optimize<F>(
     initial_params: &ArrayView1<f64>,
     config: Option<RLOptimizationConfig>,
     hidden_size: Option<usize>,
-) -> Result<OptimizeResults>
+) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {

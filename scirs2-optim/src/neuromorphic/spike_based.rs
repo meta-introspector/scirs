@@ -207,7 +207,7 @@ pub struct SpikingOptimizer<T: Float> {
     /// Plasticity model
     plasticity_model: PlasticityModel}
 
-impl<T: Float> SpikingOptimizer<T> {
+impl<T: Float + Send + Sync> SpikingOptimizer<T> {
     /// Create a new spiking optimizer
     pub fn new(
         config: SpikingConfig<T>,
@@ -674,7 +674,7 @@ pub enum TemporalKernelType {
     /// Rectangular kernel
     Rectangular}
 
-impl<T: Float> SpikeTrainOptimizer<T> {
+impl<T: Float + Send + Sync> SpikeTrainOptimizer<T> {
     /// Create a new spike train optimizer
     pub fn new(config: SpikingConfig<T>) -> Self {
         Self {

@@ -1409,7 +1409,7 @@ fn validate_parametric_spectral(
     config: &ValidationConfig,
 ) -> SignalResult<()> {
     use crate::parametric::{estimate_ar, ARMethod};
-    use crate::parametric_ultra_enhanced::comprehensive_parametric_validation;
+    use crate::parametric_advanced_enhanced::comprehensive_parametric_validation;
 
     let start_time = std::time::Instant::now();
     let test_name = "parametric_spectral".to_string();

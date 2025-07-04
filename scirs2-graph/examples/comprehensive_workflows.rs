@@ -372,10 +372,7 @@ fn workflow_advanced_optimization() -> Result<()> {
             pagerank_centrality(g, Some(0.85), Some(100), Some(1e-6))
         })?;
     let advanced_time = start.elapsed();
-    println!(
-        "    Advanced optimized: {:.2}ms",
-        advanced_time.as_millis()
-    );
+    println!("    Advanced optimized: {:.2}ms", advanced_time.as_millis());
 
     if advanced_time < standard_time {
         let speedup = standard_time.as_nanos() as f64 / advanced_time.as_nanos() as f64;

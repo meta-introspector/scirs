@@ -1247,7 +1247,7 @@ impl<T: Float> Default for NASConfig<T> {
     }
 }
 
-impl<T: Float> NeuralArchitectureSearch<T> {
+impl<T: Float + Send + Sync> NeuralArchitectureSearch<T> {
     /// Create a new Neural Architecture Search engine
     pub fn new(config: NASConfig<T>) -> Result<Self> {
         // Initialize search strategy
@@ -2027,7 +2027,7 @@ impl<T: Float> Default for SearchStatistics<T> {
     }
 }
 
-impl<T: Float> ResourceMonitor<T> {
+impl<T: Float + Send + Sync> ResourceMonitor<T> {
     fn new(constraints: ResourceConstraints<T>) -> Self {
         Self {
             current_usage: ResourceUsage {

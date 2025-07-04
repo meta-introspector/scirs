@@ -269,7 +269,7 @@ pub struct VerificationRule<T: Float> {
     pub weight: f64,
 }
 
-impl<T: Float> ByzantineTolerantAggregator<T> {
+impl<T: Float + Send + Sync> ByzantineTolerantAggregator<T> {
     /// Create new Byzantine tolerant aggregator
     pub fn new(config: ByzantineConfig) -> Self {
         let anomaly_threshold = config.anomaly_threshold;
@@ -1128,7 +1128,7 @@ impl ReputationScore {
     }
 }
 
-impl<T: Float> AnomalyDetector<T> {
+impl<T: Float + Send + Sync> AnomalyDetector<T> {
     /// Create new anomaly detector
     pub fn new(threshold: f64) -> Self {
         Self {
@@ -1206,7 +1206,7 @@ impl<T: Float> AnomalyDetector<T> {
     }
 }
 
-impl<T: Float> GradientStatistics<T> {
+impl<T: Float + Send + Sync> GradientStatistics<T> {
     /// Create new gradient statistics
     pub fn new() -> Self {
         Self {
@@ -1246,7 +1246,7 @@ impl<T: Float> GradientStatistics<T> {
     }
 }
 
-impl<T: Float> PatternModel<T> {
+impl<T: Float + Send + Sync> PatternModel<T> {
     /// Create new pattern model
     pub fn new() -> Self {
         Self {
@@ -1297,7 +1297,7 @@ impl<T: Float> PatternModel<T> {
     }
 }
 
-impl<T: Float> StatisticalAnalysis<T> {
+impl<T: Float + Send + Sync> StatisticalAnalysis<T> {
     /// Create new statistical analysis engine
     pub fn new(window_size: usize) -> Self {
         Self {
@@ -1380,7 +1380,7 @@ impl<T: Float> StatisticalAnalysis<T> {
     }
 }
 
-impl<T: Float> StatisticalMeasures<T> {
+impl<T: Float + Send + Sync> StatisticalMeasures<T> {
     /// Create new statistical measures
     pub fn new() -> Self {
         Self {
@@ -1394,7 +1394,7 @@ impl<T: Float> StatisticalMeasures<T> {
     }
 }
 
-impl<T: Float> GradientVerifier<T> {
+impl<T: Float + Send + Sync> GradientVerifier<T> {
     /// Create new gradient verifier
     pub fn new() -> Self {
         let mut verification_rules = Vec::new();
@@ -1441,7 +1441,7 @@ impl<T: Float> GradientVerifier<T> {
     }
 }
 
-impl<T: Float> GradientProperties<T> {
+impl<T: Float + Send + Sync> GradientProperties<T> {
     /// Create new gradient properties
     pub fn new() -> Self {
         Self {

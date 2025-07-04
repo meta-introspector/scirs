@@ -247,10 +247,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut processor = create_advanced_processor();
 
         let start = Instant::now();
-        let _ =
-            execute_with_advanced(&mut processor, &test_graph, "pagerank_scaling_test", |g| {
-                pagerank_centrality(g, 0.85, 1e-6)
-            })?;
+        let _ = execute_with_advanced(&mut processor, &test_graph, "pagerank_scaling_test", |g| {
+            pagerank_centrality(g, 0.85, 1e-6)
+        })?;
         let elapsed = start.elapsed();
 
         println!(

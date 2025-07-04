@@ -132,7 +132,7 @@ impl NumericalStabilityTester {
     pub fn new(config: NumericalStabilityConfig) -> Self {
         let rng = match config.random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(rng()),
         };
 
         Self {
@@ -250,16 +250,16 @@ impl NumericalStabilityTester {
         
         self.run_test("variance_near_identical", "basic_statistics", &near_identical, |data| {
             let arr = Array1::from_vec(data.clone());
-            crate::descriptive::var(&arr.view(), 1).map(|var| {
+            crate::descriptive::var(&arr.view(), 1, None).map(|var| {
                 var >= 0.0 && var.is_finite()
             }).unwrap_or(false)
         });
 
         // Test Welford's algorithm stability
-        let large_scale_data: Vec<f64> = (0..1000).map(|i| 1e9 + rand::rng().random::<f64>()).collect();
+        let large_scale_data: Vec<f64> = (0..1000).map(|i| 1e9 + scirs2_core::rng().random::<f64>()).collect();
         self.run_test("variance_welford_large_scale", "basic_statistics", &large_scale_data, |data| {
             let arr = Array1::from_vec(data.clone());
-            let result1 = crate::descriptive::var(&arr.view(), 1);
+            let result1 = crate::descriptive::var(&arr.view(), 1, None);
             let result2 = crate::memory_efficient::welford_variance(&arr.view(), 1);
             
             match (result1, result2) {
@@ -276,11 +276,11 @@ impl NumericalStabilityTester {
     fn test_standard_deviation_stability(&mut self) {
         // Test that std = sqrt(variance) relationship holds
         for _ in 0..10 {
-            let data: Vec<f64> = (0..500).map(|_| rand::rng().random_range(-1e6..1e6)).collect();
+            let data: Vec<f64> = (0..500).map(|_| scirs2_core::rng().random_range(-1e6..1e6)).collect();
             
             self.run_test("std_sqrt_variance_consistency", "basic_statistics", &data, |data| {
                 let arr = Array1::from_vec(data.clone());
-                match (crate::descriptive::var(&arr.view(), 1), crate::descriptive::std(&arr.view(), 1)) {
+                match (crate::descriptive::var(&arr.view(), 1, None), crate::descriptive::std(&arr.view(), 1, None)) {
                     (Ok(var), Ok(std)) => {
                         let expected_std = var.sqrt();
                         let rel_error = ((std - expected_std) / expected_std.max(1e-15)).abs();
@@ -299,7 +299,7 @@ impl NumericalStabilityTester {
         
         self.run_test("skewness_symmetric_data", "higher_moments", &symmetric_data, |data| {
             let arr = Array1::from_vec(data.clone());
-            crate::descriptive::skew(&arr.view(), false).map(|skew| {
+            crate::descriptive::skew(&arr.view(), false, None).map(|skew| {
                 skew.abs() < 1e-10
             }).unwrap_or(false)
         });
@@ -358,7 +358,7 @@ impl NumericalStabilityTester {
 
         // Test with high precision requirements
         for _ in 0..5 {
-            let base_data: Vec<f64> = (0..1000).map(|_| rand::rng().random::<f64>()).collect();
+            let base_data: Vec<f64> = (0..1000).map(|_| scirs2_core::rng().random::<f64>()).collect();
             let scaled_data: Vec<f64> = base_data.iter().map(|&x| 1e15 * x + 1e10).collect();
             
             self.run_test("correlation_high_precision", "correlation", &base_data, |base| {
@@ -408,7 +408,7 @@ impl NumericalStabilityTester {
         
         self.run_test("near_zero_variance", "near_zero", &near_zero_data, |data| {
             let arr = Array1::from_vec(data.clone());
-            crate::descriptive::var(&arr.view(), 1).map(|var| {
+            crate::descriptive::var(&arr.view(), 1, None).map(|var| {
                 var >= 0.0 && var.is_finite()
             }).unwrap_or(false)
         });
@@ -420,7 +420,7 @@ impl NumericalStabilityTester {
         
         self.run_test("large_values_precision", "large_values", &large_data, |data| {
             let arr = Array1::from_vec(data.clone());
-            crate::descriptive::var(&arr.view(), 1).map(|var| {
+            crate::descriptive::var(&arr.view(), 1, None).map(|var| {
                 // Variance should be close to actual variance
                 let expected_var = ((data.len() - 1) as f64 * (data.len() as f64)) / 12.0;
                 let rel_error = ((var - expected_var) / expected_var).abs();
@@ -471,7 +471,7 @@ impl NumericalStabilityTester {
     fn test_ill_conditioned_cases(&mut self) {
         // Test correlation with nearly collinear data
         let x: Vec<f64> = (0..1000).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&val| val + 1e-10 * rand::rng().random::<f64>()).collect();
+        let y: Vec<f64> = x.iter().map(|&val| val + 1e-10 * scirs2_core::rng().random::<f64>()).collect();
         
         self.run_test("ill_conditioned_correlation", "ill_conditioned", &x, |_| {
             let x_arr = Array1::from_vec((0..1000).map(|i| i as f64).collect());
@@ -489,7 +489,7 @@ impl NumericalStabilityTester {
         // This would test things like iterative PCA, EM algorithms, etc.
         
         // For now, test a simple iterative mean calculation
-        let data: Vec<f64> = (0..1000).map(|_| rand::rng().random::<f64>()).collect();
+        let data: Vec<f64> = (0..1000).map(|_| scirs2_core::rng().random::<f64>()).collect();
         
         self.run_test("iterative_convergence", "iterative", &data, |data| {
             let arr = Array1::from_vec(data.clone());

@@ -14,6 +14,7 @@ use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
 use scirs2_graph::{
+    algorithms::shortest_path::k_shortest_paths as shortest_path,
     // Core algorithms for comparison
     barabasi_albert_graph,
     betweenness_centrality,
@@ -25,7 +26,6 @@ use scirs2_graph::{
     louvain_communities_result,
     minimum_spanning_tree,
     pagerank_centrality,
-    shortest_path,
     strongly_connected_components,
     watts_strogatz_graph,
     DiGraph,
@@ -299,9 +299,10 @@ fn bench_creation_comparison(c: &mut Criterion) {
                 size,
                 |b, &size| {
                     b.iter(|| {
-                        let mut processor = create_performance_advanced_processor();
+                        let mut processor =
+                            scirs2_graph::advanced::create_performance_advanced_processor();
                         let graph = Graph::new();
-                        let result = execute_with_enhanced_advanced(
+                        let result = scirs2_graph::advanced::execute_with_enhanced_advanced(
                             &mut processor,
                             &graph,
                             "creation_test",
@@ -612,7 +613,7 @@ fn measure_scirs2_algorithm(algorithm: &str, size: usize, graph_type: &str) -> f
 
 /// Measure scirs2-graph algorithm performance with advanced optimizations
 #[allow(dead_code)]
-fn measure_scirs2_algorithm_with_advanced<N: Node, E: EdgeWeight, Ix>(
+fn measure_scirs2_algorithm_with_advanced<N: Node, E: scirs2_graph::EdgeWeight, Ix>(
     algorithm: &str,
     graph: &Graph<N, E, Ix>,
 ) -> f64
@@ -620,7 +621,9 @@ where
     N: Clone + std::hash::Hash + Eq,
     Ix: petgraph::graph::IndexType,
 {
-    use scirs2_graph::{create_performance_advanced_processor, execute_with_enhanced_advanced};
+    use scirs2_graph::advanced::{
+        create_performance_advanced_processor, execute_with_enhanced_advanced,
+    };
 
     let mut processor = create_performance_advanced_processor();
     let start = Instant::now();
@@ -668,7 +671,7 @@ where
 
 /// Measure scirs2-graph algorithm performance without advanced optimizations (standard mode)
 #[allow(dead_code)]
-fn measure_scirs2_algorithm_standard<N: Node, E: EdgeWeight, Ix>(
+fn measure_scirs2_algorithm_standard<N: Node, E: scirs2_graph::EdgeWeight, Ix>(
     algorithm: &str,
     graph: &Graph<N, E, Ix>,
 ) -> f64
@@ -884,11 +887,12 @@ fn bench_memory_efficiency_comparison(c: &mut Criterion) {
             size,
             |b, &size| {
                 b.iter(|| {
-                    let mut processor = create_memory_efficient_advanced_processor();
+                    let mut processor =
+                        scirs2_graph::advanced::create_memory_efficient_advanced_processor();
                     let mut rng = StdRng::seed_from_u64(42);
                     let graph = barabasi_albert_graph(size, 3, &mut rng).unwrap();
 
-                    let result = execute_with_enhanced_advanced(
+                    let result = scirs2_graph::advanced::execute_with_enhanced_advanced(
                         &mut processor,
                         &graph,
                         "memory_pagerank",

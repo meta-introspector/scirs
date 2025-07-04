@@ -31,9 +31,9 @@ use serde::{Deserialize, Serialize};
 /// Central coordinator for advanced mode ecosystem
 #[allow(dead_code)]
 #[derive(Debug)]
-pub struct advancedEcosystemCoordinator {
+pub struct AdvancedEcosystemCoordinator {
     /// Registered advanced modules
-    modules: Arc<RwLock<HashMap<String, Box<dyn advancedModule + Send + Sync>>>>,
+    modules: Arc<RwLock<HashMap<String, Box<dyn AdvancedModule + Send + Sync>>>>,
     /// Performance monitor
     performance_monitor: Arc<Mutex<EcosystemPerformanceMonitor>>,
     /// Resource manager
@@ -41,7 +41,7 @@ pub struct advancedEcosystemCoordinator {
     /// Communication hub
     communication_hub: Arc<Mutex<ModuleCommunicationHub>>,
     /// Configuration
-    config: advancedEcosystemConfig,
+    config: AdvancedEcosystemConfig,
     /// Status tracker
     status: Arc<RwLock<EcosystemStatus>>,
 }
@@ -50,7 +50,7 @@ pub struct advancedEcosystemCoordinator {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct advancedEcosystemConfig {
+pub struct AdvancedEcosystemConfig {
     /// Enable cross-module optimization
     pub enable_cross_module_optimization: bool,
     /// Enable adaptive load balancing
@@ -67,7 +67,7 @@ pub struct advancedEcosystemConfig {
     pub communication_timeout_ms: u64,
 }
 
-impl Default for advancedEcosystemConfig {
+impl Default for AdvancedEcosystemConfig {
     fn default() -> Self {
         Self {
             enable_cross_module_optimization: true,
@@ -129,7 +129,7 @@ pub struct ResourceUtilization {
 }
 
 /// Trait for advanced modules to implement ecosystem integration
-pub trait advancedModule: std::fmt::Debug {
+pub trait AdvancedModule: std::fmt::Debug {
     /// Get module name
     fn name(&self) -> &str;
 
@@ -143,7 +143,7 @@ pub trait advancedModule: std::fmt::Debug {
     fn initialize_advanced(&mut self) -> CoreResult<()>;
 
     /// Process data in advanced mode
-    fn process_advanced(&mut self, input: advancedInput) -> CoreResult<advancedOutput>;
+    fn process_advanced(&mut self, input: AdvancedInput) -> CoreResult<AdvancedOutput>;
 
     /// Get performance metrics
     fn get_performance_metrics(&self) -> ModulePerformanceMetrics;
@@ -167,7 +167,7 @@ pub trait advancedModule: std::fmt::Debug {
 /// Input for advanced processing
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
-pub struct advancedInput {
+pub struct AdvancedInput {
     /// Data payload
     pub data: Vec<u8>,
     /// Processing parameters
@@ -181,7 +181,7 @@ pub struct advancedInput {
 /// Output from advanced processing
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
-pub struct advancedOutput {
+pub struct AdvancedOutput {
     /// Processed data
     pub data: Vec<u8>,
     /// Processing metrics
@@ -825,16 +825,16 @@ pub struct OptimizationOpportunity {
     pub priority: Priority,
 }
 
-impl advancedEcosystemCoordinator {
+impl AdvancedEcosystemCoordinator {
     /// Create a new ecosystem coordinator
     #[allow(dead_code)]
     pub fn new() -> Self {
-        Self::with_config(advancedEcosystemConfig::default())
+        Self::with_config(AdvancedEcosystemConfig::default())
     }
 
     /// Create with custom configuration
     #[allow(dead_code)]
-    pub fn with_config(config: advancedEcosystemConfig) -> Self {
+    pub fn with_config(config: AdvancedEcosystemConfig) -> Self {
         Self {
             modules: Arc::new(RwLock::new(HashMap::new())),
             performance_monitor: Arc::new(Mutex::new(EcosystemPerformanceMonitor::new())),
@@ -858,10 +858,7 @@ impl advancedEcosystemCoordinator {
     }
 
     /// Register a new advanced module
-    pub fn register_module(
-        &self,
-        module: Box<dyn advancedModule + Send + Sync>,
-    ) -> CoreResult<()> {
+    pub fn register_module(&self, module: Box<dyn AdvancedModule + Send + Sync>) -> CoreResult<()> {
         let module_name = module.name().to_string();
 
         {
@@ -899,7 +896,7 @@ impl advancedEcosystemCoordinator {
     }
 
     /// Process data through the ecosystem with intelligent multi-module coordination
-    pub fn process_ecosystem(&self, input: advancedInput) -> CoreResult<advancedOutput> {
+    pub fn process_ecosystem(&self, input: AdvancedInput) -> CoreResult<AdvancedOutput> {
         let start_time = Instant::now();
 
         // Analyze input to determine if it requires multi-module processing
@@ -932,9 +929,9 @@ impl advancedEcosystemCoordinator {
     /// Process data through multiple modules with cross-module optimization
     pub fn process_multi_module_optimized(
         &self,
-        input: advancedInput,
+        input: AdvancedInput,
         optimization_config: CrossModuleOptimizationConfig,
-    ) -> CoreResult<advancedOutput> {
+    ) -> CoreResult<AdvancedOutput> {
         let start_time = Instant::now();
 
         println!("🔄 Starting optimized multi-module processing...");
@@ -967,7 +964,7 @@ impl advancedEcosystemCoordinator {
             optimization_context.update_from_stage_results(&stage)?;
         }
 
-        let final_output = advancedOutput {
+        let final_output = AdvancedOutput {
             data: current_data.data,
             metrics: ProcessingMetrics {
                 processing_time: start_time.elapsed(),
@@ -1130,7 +1127,7 @@ impl advancedEcosystemCoordinator {
     // Private helper methods
 
     #[allow(dead_code)]
-    fn select_optimal_module(&self, input: &advancedInput) -> CoreResult<String> {
+    fn select_optimal_module(&self, input: &AdvancedInput) -> CoreResult<String> {
         let modules = self.modules.read().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire modules lock: {e}"
@@ -1151,8 +1148,8 @@ impl advancedEcosystemCoordinator {
     #[allow(dead_code)]
     fn analyze_input_and_select_module(
         &self,
-        input: &advancedInput,
-        modules: &HashMap<String, Box<dyn advancedModule + Send + Sync>>,
+        input: &AdvancedInput,
+        modules: &HashMap<String, Box<dyn AdvancedModule + Send + Sync>>,
     ) -> CoreResult<String> {
         // Analyze input characteristics
         let data_size = input.data.len();
@@ -1397,7 +1394,7 @@ impl advancedEcosystemCoordinator {
 
     fn create_ecosystem_context(
         &self,
-        modules: &HashMap<String, Box<dyn advancedModule + Send + Sync>>,
+        modules: &HashMap<String, Box<dyn AdvancedModule + Send + Sync>>,
     ) -> CoreResult<EcosystemContext> {
         // Calculate aggregate resource usage
         let mut total_cpu = 0.0;
@@ -1602,7 +1599,7 @@ impl advancedEcosystemCoordinator {
 
     // Enhanced private methods for advanced ecosystem integration
 
-    fn create_processing_plan(&self, input: &advancedInput) -> CoreResult<ProcessingPlan> {
+    fn create_processing_plan(&self, input: &AdvancedInput) -> CoreResult<ProcessingPlan> {
         // Analyze input characteristics to determine optimal processing strategy
         let input_size = input.data.len();
         let operation_type = &input.context.operation_type;
@@ -1669,7 +1666,7 @@ impl advancedEcosystemCoordinator {
     fn select_primary_module_for_operation(
         &self,
         operation_type: &str,
-        modules: &HashMap<String, Box<dyn advancedModule + Send + Sync>>,
+        modules: &HashMap<String, Box<dyn AdvancedModule + Send + Sync>>,
     ) -> CoreResult<String> {
         // Enhanced module selection logic
         for (module_name, module) in modules.iter() {
@@ -1736,7 +1733,7 @@ impl advancedEcosystemCoordinator {
     fn create_sequential_chain(
         &self,
         operation_type: &str,
-        modules: &HashMap<String, Box<dyn advancedModule + Send + Sync>>,
+        modules: &HashMap<String, Box<dyn AdvancedModule + Send + Sync>>,
     ) -> CoreResult<Vec<String>> {
         // Create an optimal sequential processing chain
         let mut chain = Vec::new();
@@ -1774,7 +1771,7 @@ impl advancedEcosystemCoordinator {
     fn select_parallel_modules(
         &self,
         operation_type: &str,
-        modules: &HashMap<String, Box<dyn advancedModule + Send + Sync>>,
+        modules: &HashMap<String, Box<dyn AdvancedModule + Send + Sync>>,
     ) -> CoreResult<Vec<String>> {
         // Select modules that can work in parallel
         let mut parallel_modules = Vec::new();
@@ -1812,7 +1809,7 @@ impl advancedEcosystemCoordinator {
     fn find_module_with_capability(
         &self,
         capability: &str,
-        modules: &HashMap<String, Box<dyn advancedModule + Send + Sync>>,
+        modules: &HashMap<String, Box<dyn AdvancedModule + Send + Sync>>,
     ) -> Option<String> {
         for (name, module) in modules {
             if module.capabilities().contains(&capability.to_string()) {
@@ -1824,7 +1821,7 @@ impl advancedEcosystemCoordinator {
 
     fn estimate_processing_duration(
         &self,
-        input: &advancedInput,
+        input: &AdvancedInput,
         strategy: &ProcessingStrategy,
     ) -> CoreResult<Duration> {
         let base_duration = Duration::from_millis(input.data.len() as u64 / 1000); // 1ms per KB
@@ -1843,7 +1840,7 @@ impl advancedEcosystemCoordinator {
 
     fn estimate_resource_requirements(
         &self,
-        input: &advancedInput,
+        input: &AdvancedInput,
     ) -> CoreResult<ResourceRequirements> {
         let data_size_gb = input.data.len() as f64 / (1024.0 * 1024.0 * 1024.0);
 
@@ -1874,9 +1871,9 @@ impl advancedEcosystemCoordinator {
 
     fn process_single_module(
         &self,
-        input: &advancedInput,
+        input: &AdvancedInput,
         module_name: &str,
-    ) -> CoreResult<advancedOutput> {
+    ) -> CoreResult<AdvancedOutput> {
         let mut modules = self.modules.write().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
                 "Failed to acquire modules lock: {e}"
@@ -1894,16 +1891,16 @@ impl advancedEcosystemCoordinator {
 
     fn process_sequential_modules(
         &self,
-        input: &advancedInput,
+        input: &AdvancedInput,
         module_chain: &[String],
-    ) -> CoreResult<advancedOutput> {
+    ) -> CoreResult<AdvancedOutput> {
         let mut current_input = input.clone();
 
         for module_name in module_chain {
             let output = self.process_single_module(&current_input, module_name)?;
 
             // Convert output back to input for next stage
-            current_input = advancedInput {
+            current_input = AdvancedInput {
                 data: output.data,
                 parameters: current_input.parameters.clone(),
                 context: current_input.context.clone(),
@@ -1916,9 +1913,9 @@ impl advancedEcosystemCoordinator {
 
     fn process_parallel_modules(
         &self,
-        input: &advancedInput,
+        input: &AdvancedInput,
         parallel_modules: &[String],
-    ) -> CoreResult<advancedOutput> {
+    ) -> CoreResult<AdvancedOutput> {
         use std::thread;
 
         let mut handles = Vec::new();
@@ -1931,7 +1928,7 @@ impl advancedEcosystemCoordinator {
 
             let handle = thread::spawn(move || {
                 // In real implementation, would call process_single_module
-                advancedOutput {
+                AdvancedOutput {
                     data: input.data,
                     metrics: ProcessingMetrics {
                         processing_time: Duration::from_millis(100),
@@ -1974,9 +1971,9 @@ impl advancedEcosystemCoordinator {
 
     fn process_distributed_pipeline(
         &self,
-        input: &advancedInput,
+        input: &AdvancedInput,
         _plan: &ProcessingPlan,
-    ) -> CoreResult<advancedOutput> {
+    ) -> CoreResult<AdvancedOutput> {
         // Simplified distributed processing
         println!("🌐 Executing distributed pipeline...");
 
@@ -2000,7 +1997,7 @@ impl advancedEcosystemCoordinator {
     fn update_ecosystem_health(
         &self,
         _plan: &ProcessingPlan,
-        output: &advancedOutput,
+        output: &AdvancedOutput,
     ) -> CoreResult<()> {
         let mut status = self.status.write().map_err(|e| {
             CoreError::InvalidArgument(crate::error::ErrorContext::new(format!(
@@ -2100,7 +2097,7 @@ impl advancedEcosystemCoordinator {
     // Missing method implementation for the first impl block
     pub fn create_optimized_pipeline(
         &self,
-        _input: &advancedInput,
+        _input: &AdvancedInput,
         _optimization_config: &CrossModuleOptimizationConfig,
     ) -> CoreResult<OptimizedPipeline> {
         // Create optimized processing pipeline based on input characteristics
@@ -2140,10 +2137,10 @@ impl advancedEcosystemCoordinator {
 
     pub fn apply_pre_stage_optimization(
         &self,
-        data: advancedInput,
+        data: AdvancedInput,
         stage: &PipelineStage,
         _context: &OptimizationContext,
-    ) -> CoreResult<advancedInput> {
+    ) -> CoreResult<AdvancedInput> {
         // Pre-stage optimization logic
         println!("    ⚡ Applying pre-stage optimizations for {}", stage.name);
 
@@ -2153,9 +2150,9 @@ impl advancedEcosystemCoordinator {
 
     pub fn execute_pipeline_stage(
         &self,
-        data: advancedInput,
+        data: AdvancedInput,
         stage: &PipelineStage,
-    ) -> CoreResult<advancedInput> {
+    ) -> CoreResult<AdvancedInput> {
         // Execute the pipeline stage
         println!("    🔧 Executing stage: {}", stage.name);
 
@@ -2166,10 +2163,10 @@ impl advancedEcosystemCoordinator {
 
     pub fn apply_post_stage_optimization(
         &self,
-        data: advancedInput,
+        data: AdvancedInput,
         stage: &PipelineStage,
         context: &mut OptimizationContext,
-    ) -> CoreResult<advancedInput> {
+    ) -> CoreResult<AdvancedInput> {
         // Post-stage optimization logic
         println!(
             "    📈 Applying post-stage optimizations for {}",
@@ -2271,7 +2268,7 @@ impl EcosystemPerformanceMonitor {
     // Missing method implementation for the first impl block
     pub fn create_optimized_pipeline(
         &self,
-        _input: &advancedInput,
+        _input: &AdvancedInput,
         _optimization_config: &CrossModuleOptimizationConfig,
     ) -> CoreResult<OptimizedPipeline> {
         // Create optimized processing pipeline based on input characteristics
@@ -2311,10 +2308,10 @@ impl EcosystemPerformanceMonitor {
 
     pub fn apply_pre_stage_optimization(
         &self,
-        data: advancedInput,
+        data: AdvancedInput,
         stage: &PipelineStage,
         _context: &OptimizationContext,
-    ) -> CoreResult<advancedInput> {
+    ) -> CoreResult<AdvancedInput> {
         // Pre-stage optimization logic
         println!("    ⚡ Applying pre-stage optimizations for {}", stage.name);
 
@@ -2324,9 +2321,9 @@ impl EcosystemPerformanceMonitor {
 
     pub fn execute_pipeline_stage(
         &self,
-        data: advancedInput,
+        data: AdvancedInput,
         stage: &PipelineStage,
-    ) -> CoreResult<advancedInput> {
+    ) -> CoreResult<AdvancedInput> {
         // Execute the pipeline stage
         println!("    🔧 Executing stage: {}", stage.name);
 
@@ -2337,10 +2334,10 @@ impl EcosystemPerformanceMonitor {
 
     pub fn apply_post_stage_optimization(
         &self,
-        data: advancedInput,
+        data: AdvancedInput,
         stage: &PipelineStage,
         context: &mut OptimizationContext,
-    ) -> CoreResult<advancedInput> {
+    ) -> CoreResult<AdvancedInput> {
         // Post-stage optimization logic
         println!(
             "    📈 Applying post-stage optimizations for {}",
@@ -2498,7 +2495,7 @@ impl ModuleCommunicationHub {
     /// Create an optimized processing pipeline
     pub fn create_optimized_pipeline(
         &self,
-        input: &advancedInput,
+        input: &AdvancedInput,
         config: &CrossModuleOptimizationConfig,
     ) -> CoreResult<OptimizedPipeline> {
         let stages = vec![
@@ -2888,7 +2885,7 @@ impl ModuleCommunicationHub {
     }
 }
 
-impl Default for advancedEcosystemCoordinator {
+impl Default for AdvancedEcosystemCoordinator {
     fn default() -> Self {
         Self::new()
     }
@@ -2900,7 +2897,7 @@ mod tests {
 
     #[test]
     fn test_ecosystem_coordinator_creation() {
-        let coordinator = advancedEcosystemCoordinator::new();
+        let coordinator = AdvancedEcosystemCoordinator::new();
         let status = coordinator.get_status().unwrap();
         assert_eq!(status.health, EcosystemHealth::Healthy);
         assert_eq!(status.active_modules, 0);

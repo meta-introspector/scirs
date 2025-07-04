@@ -5,7 +5,7 @@
 //! surface visualization.
 
 use crate::error::{ScirsError, ScirsResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use ndarray::{Array1, ArrayView1}; // Unused import: Array2, ArrayView2
 use scirs2_core::error_context;
 use std::collections::HashMap;
 use std::fs::File;

@@ -5,8 +5,8 @@
 
 use ndarray::{Array1, Array2};
 use scirs2_transform::{
-    auto_feature_engineering::DatasetMetaFeatures, error::Result, advancedNeuromorphicProcessor,
-    advancedQuantumOptimizer,
+    auto_feature_engineering::DatasetMetaFeatures, error::Result, UltraThinkNeuromorphicProcessor,
+    UltraThinkQuantumOptimizer,
 };
 
 #[allow(dead_code)]
@@ -35,7 +35,7 @@ fn main() -> Result<()> {
 #[allow(dead_code)]
 fn demonstrate_neuromorphic_adaptation() -> Result<()> {
     // Create ultra-fast neuromorphic processor
-    let mut processor = advancedNeuromorphicProcessor::new(10, 20, 10);
+    let mut processor = UltraThinkNeuromorphicProcessor::new(10, 20, 10);
 
     // Configure for high-throughput workload
     processor.tune_for_workload(1000.0, 0.05); // 1000 samples/sec, 50ms latency
@@ -154,7 +154,7 @@ fn demonstrate_quantum_optimization() -> Result<()> {
         (0.0, 1.0),  // Regularization parameter
     ];
 
-    let mut optimizer = advancedQuantumOptimizer::new(dimension, population_size, bounds, 100)?;
+    let mut optimizer = UltraThinkQuantumOptimizer::new(dimension, population_size, bounds, 100)?;
 
     // Define a complex multi-modal optimization objective
     let objective_function = |params: &Array1<f64>| -> f64 {

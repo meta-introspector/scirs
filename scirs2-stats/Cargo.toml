@@ -1,48 +1,47 @@
 [package]
 name = "scirs2-stats"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
+version = "0.1.0-beta.1"
+edition = "2021"
+authors = ["Claude AI Assistant"]
 description = "Statistical functions module for SciRS2 (scirs2-stats)"
-license.workspace = true
-repository.workspace = true
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/cool-japan/scirs"
 keywords = ["statistics", "probability", "scientific", "scipy", "numerical"]
 categories = ["science", "mathematics", "algorithms"]
 
 [dependencies]
 # Core dependencies
-ndarray = { workspace = true, features = ["std", "serde", "rayon"] }
-num-traits = { workspace = true }
-num-complex = { workspace = true }
-thiserror = { workspace = true }
+ndarray = { version = "0.16", features = ["std", "serde", "rayon"] }
+num-traits = "0.2"
+num-complex = "0.4"
+thiserror = "1.0"
 # Linear algebra for PCA and other multivariate methods
-ndarray-linalg = { workspace = true, default-features = false }
-scirs2-core = { workspace = true, features = ["validation", "parallel", "simd", "linalg"] }
-scirs2-linalg = { workspace = true }
+ndarray-linalg = { version = "0.17", default-features = false }
+scirs2-core = { path = "../scirs2-core", features = ["validation", "parallel", "simd", "linalg"] }
+scirs2-linalg = { path = "../scirs2-linalg" }
 
 # Statistics specific dependencies
-rand = { workspace = true }
-rand_distr = { workspace = true }
-rand_pcg = { workspace = true }
-rand_chacha = { workspace = true }
-statrs = { workspace = true }
-special = { workspace = true }
-num_cpus = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-either = { workspace = true }
-chrono = { workspace = true }
+rand = "0.9"
+rand_distr = "0.4"
+rand_pcg = "0.9"
+rand_chacha = "0.9"
+statrs = "0.18"
+special = "0.10"
+num_cpus = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+either = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
 memmap2 = "0.9"
 quickcheck = "1.0"
-crossbeam = { workspace = true }
+crossbeam = "0.8"
 
 [dev-dependencies]
-# approx = { workspace = true } # Temporarily removed due to incompatibility
-criterion = { workspace = true }
-plotters = { workspace = true }
+criterion = "0.5"
+plotters = "0.3"
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
-rand = { workspace = true }
+rand = "0.9"
 
 [features]
 default = []
@@ -68,3 +67,5 @@ harness = false
 [[bench]]
 name = "comprehensive_scipy_comparison"
 harness = false
+
+

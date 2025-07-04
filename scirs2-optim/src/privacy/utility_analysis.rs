@@ -1121,7 +1121,7 @@ pub struct UtilityDegradationPredictor<T: Float> {
     phantom: std::marker::PhantomData<T>,
 }
 
-impl<T: Float> PrivacyUtilityAnalyzer<T> {
+impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Create a new privacy-utility analyzer
     pub fn new(config: AnalysisConfig) -> Self {
         Self {
@@ -1800,7 +1800,7 @@ impl Default for PrivacyParameterSpace {
     }
 }
 
-impl<T: Float> PrivacyUtilityAnalyzer<T> {
+impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
     /// Generate privacy configurations for parameter space exploration
     fn generate_privacy_configurations(&self) -> Result<Vec<PrivacyConfiguration<T>>> {
         let mut configurations = Vec::new();
@@ -1899,7 +1899,7 @@ impl<T: Float> PrivacyUtilityAnalyzer<T> {
                 use rand::Rng;
                 let mut rng = rand::rng();
                 for _ in 0..range.num_samples {
-                    let value = rng.gen_range(range.min..=range.max);
+                    let value = rng.random_range(range.min..=range.max);
                     values.push(T::from(value).unwrap());
                 }
             }

@@ -3464,7 +3464,7 @@ pub enum FeedbackMechanism {
     Hybrid,
 }
 
-impl<T: Float> AdvancedTPUOptimizer<T> {
+impl<T: Float + Send + Sync> AdvancedTPUOptimizer<T> {
     /// Create new advanced TPU optimizer
     pub fn new(config: XLACompilerConfig) -> Self {
         Self {
@@ -3566,7 +3566,7 @@ pub struct MemoryCoalescingOptimizer<T: Float> {
     _phantom: std::marker::PhantomData<T>,
 }
 
-impl<T: Float> MemoryCoalescingOptimizer<T> {
+impl<T: Float + Send + Sync> MemoryCoalescingOptimizer<T> {
     pub fn new(_config: &XLACompilerConfig) -> Self {
         Self {
             _phantom: std::marker::PhantomData,
@@ -3584,7 +3584,7 @@ pub struct DynamicShapeOptimizer<T: Float> {
     _phantom: std::marker::PhantomData<T>,
 }
 
-impl<T: Float> DynamicShapeOptimizer<T> {
+impl<T: Float + Send + Sync> DynamicShapeOptimizer<T> {
     pub fn new(_config: &XLACompilerConfig) -> Self {
         Self {
             _phantom: std::marker::PhantomData,
@@ -3602,7 +3602,7 @@ pub struct CrossReplicaOptimizer<T: Float> {
     _phantom: std::marker::PhantomData<T>,
 }
 
-impl<T: Float> CrossReplicaOptimizer<T> {
+impl<T: Float + Send + Sync> CrossReplicaOptimizer<T> {
     pub fn new(_config: &XLACompilerConfig) -> Self {
         Self {
             _phantom: std::marker::PhantomData,
@@ -3614,7 +3614,7 @@ impl<T: Float> CrossReplicaOptimizer<T> {
     }
 }
 
-impl<T: Float> TensorCoreOptimizer<T> {
+impl<T: Float + Send + Sync> TensorCoreOptimizer<T> {
     pub fn new(_config: &XLACompilerConfig) -> Self {
         Self {
             supported_ops: HashSet::new(),
@@ -3636,7 +3636,7 @@ impl<T: Float> TensorCoreOptimizer<T> {
     }
 }
 
-impl<T: Float> TileSizeOptimizer<T> {
+impl<T: Float + Send + Sync> TileSizeOptimizer<T> {
     pub fn new() -> Self {
         Self {
             tile_cache: HashMap::new(),
@@ -3645,7 +3645,7 @@ impl<T: Float> TileSizeOptimizer<T> {
     }
 }
 
-impl<T: Float> TilePerformanceModel<T> {
+impl<T: Float + Send + Sync> TilePerformanceModel<T> {
     pub fn new() -> Self {
         Self {
             hardware_params: TPUHardwareParameters {
@@ -3666,7 +3666,7 @@ impl<T: Float> TilePerformanceModel<T> {
     }
 }
 
-impl<T: Float> BenchmarkData<T> {
+impl<T: Float + Send + Sync> BenchmarkData<T> {
     pub fn new() -> Self {
         Self {
             performance_measurements: HashMap::new(),
@@ -3680,7 +3680,7 @@ impl<T: Float> BenchmarkData<T> {
     }
 }
 
-impl<T: Float> SparsityOptimizer<T> {
+impl<T: Float + Send + Sync> SparsityOptimizer<T> {
     pub fn new(_config: &XLACompilerConfig) -> Self {
         Self {
             sparsity_patterns: Vec::new(),
@@ -3704,7 +3704,7 @@ impl<T: Float> SparsityOptimizer<T> {
     }
 }
 
-impl<T: Float> QuantizationOptimizer<T> {
+impl<T: Float + Send + Sync> QuantizationOptimizer<T> {
     pub fn new(_config: &XLACompilerConfig) -> Self {
         Self {
             quantization_schemes: Vec::new(),
@@ -3725,7 +3725,7 @@ impl<T: Float> QuantizationOptimizer<T> {
     }
 }
 
-impl<T: Float> PrecisionAnalyzer<T> {
+impl<T: Float + Send + Sync> PrecisionAnalyzer<T> {
     pub fn new() -> Self {
         Self {
             sensitivity_analyzer: SensitivityAnalyzer::new(),
@@ -3740,7 +3740,7 @@ impl<T: Float> PrecisionAnalyzer<T> {
     }
 }
 
-impl<T: Float> SensitivityAnalyzer<T> {
+impl<T: Float + Send + Sync> SensitivityAnalyzer<T> {
     pub fn new() -> Self {
         Self {
             operation_sensitivity: HashMap::new(),
@@ -3751,7 +3751,7 @@ impl<T: Float> SensitivityAnalyzer<T> {
     }
 }
 
-impl<T: Float> ErrorPropagationModel<T> {
+impl<T: Float + Send + Sync> ErrorPropagationModel<T> {
     pub fn new() -> Self {
         Self {
             error_patterns: Vec::new(),
@@ -3765,7 +3765,7 @@ impl<T: Float> ErrorPropagationModel<T> {
     }
 }
 
-impl<T: Float> ErrorCompensation<T> {
+impl<T: Float + Send + Sync> ErrorCompensation<T> {
     pub fn new() -> Self {
         Self {
             bias_correction: true,
@@ -3776,7 +3776,7 @@ impl<T: Float> ErrorCompensation<T> {
     }
 }
 
-impl<T: Float> QuantizationNoiseModel<T> {
+impl<T: Float + Send + Sync> QuantizationNoiseModel<T> {
     pub fn new() -> Self {
         Self {
             noise_characteristics: NoiseCharacteristics {
@@ -3791,7 +3791,7 @@ impl<T: Float> QuantizationNoiseModel<T> {
     }
 }
 
-impl<T: Float> NoisePropagation<T> {
+impl<T: Float + Send + Sync> NoisePropagation<T> {
     pub fn new() -> Self {
         Self {
             propagation_model: PropagationModel::Linear,
@@ -3801,7 +3801,7 @@ impl<T: Float> NoisePropagation<T> {
     }
 }
 
-impl<T: Float> NoiseMitigation<T> {
+impl<T: Float + Send + Sync> NoiseMitigation<T> {
     pub fn new() -> Self {
         Self {
             dithering: DitheringConfig {

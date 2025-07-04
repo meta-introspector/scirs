@@ -18,7 +18,7 @@ use scirs2_graph::advanced::{
     AdvancedProcessor,
 };
 
-use scirs2_graph::graph_memory_profiler::{MemoryProfilerConfig, AdvancedMemoryProfiler};
+use scirs2_graph::graph_memory_profiler::{AdvancedMemoryProfiler, MemoryProfilerConfig};
 
 use scirs2_graph::numerical_accuracy_validation::{
     create_comprehensive_validation_suite, run_quick_validation, ValidationConfig,

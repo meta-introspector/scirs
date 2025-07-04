@@ -725,10 +725,10 @@ impl PerformanceBenchmark {
         n_features: usize,
         n_classes: usize,
     ) -> Result<(Array2<f64>, Array1<i32>)> {
-        use rand::{rng, Rng};
+        use rand::thread_rng;
         use rand_distr::{Distribution, Normal};
 
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let normal = Normal::new(0.0, 1.0).unwrap();
 
         let mut x = Array2::zeros((n_samples, n_features));

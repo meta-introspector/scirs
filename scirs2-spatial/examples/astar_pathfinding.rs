@@ -136,9 +136,7 @@ fn grid_astar_diagonal_example() -> SpatialResult<()> {
     let start = [1, 1];
     let goal = [8, 8];
 
-    println!(
-        "\nFinding path from {start:?} to {goal:?} with diagonal movement..."
-    );
+    println!("\nFinding path from {start:?} to {goal:?} with diagonal movement...");
 
     // Find a path
     match planner.find_path(start, goal)? {
@@ -210,9 +208,7 @@ fn continuous_astar_example() -> SpatialResult<()> {
     let goal = [9.0, 9.0];
     let neighbor_radius = 1.0;
 
-    println!(
-        "\nFinding path from {start:?} to {goal:?} in continuous space..."
-    );
+    println!("\nFinding path from {start:?} to {goal:?} in continuous space...");
 
     // Find a path
     match planner.find_path(start, goal, neighbor_radius)? {

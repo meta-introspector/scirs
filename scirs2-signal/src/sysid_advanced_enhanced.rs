@@ -754,7 +754,7 @@ impl Default for UltraEnhancedSysIdConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::sysid_ultra_enhanced::{ultra_enhanced_system_identification, UltraEnhancedSysIdConfig};
+/// use scirs2_signal::sysid_advanced_enhanced::{advanced_enhanced_system_identification, AdvancedEnhancedSysIdConfig};
 /// use ndarray::Array1;
 ///
 use std::f64::consts::PI;

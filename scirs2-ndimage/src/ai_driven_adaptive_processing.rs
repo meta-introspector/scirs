@@ -17,7 +17,7 @@ use std::collections::{HashMap, VecDeque};
 
 use crate::advanced_fusion_algorithms::AdvancedConfig;
 use crate::error::{NdimageError, NdimageResult};
-use crate::utils::{safe_usize_to_float};
+use crate::utils::safe_usize_to_float;
 
 /// AI-Driven Adaptive Processing Configuration
 #[derive(Debug, Clone)]

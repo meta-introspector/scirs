@@ -7,6 +7,7 @@ use crate::sampling::SampleableDistribution;
 use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
+use rand::thread_rng;
 use rand_distr::{Distribution, StudentT as RandStudentT};
 use std::f64::consts::PI;
 
@@ -228,7 +229,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
     pub fn rvs_vec(&self, size: usize) -> StatsResult<Vec<F>> {
         // For small sample sizes, use the serial implementation
         if size < 1000 {
-            let mut rng = rand::rng();
+            let mut rng = thread_rng();
             let mut samples = Vec::with_capacity(size);
 
             for _ in 0..size {
@@ -256,7 +257,7 @@ impl<F: Float + NumCast + Send + Sync + 'static + std::fmt::Display> StudentT<F>
 
         // Generate samples in parallel
         let samples = parallel_map(&indices, move |_| {
-            let mut rng = rand::rng();
+            let mut rng = thread_rng();
             let rand_distr = RandStudentT::new(df_f64).unwrap();
             let sample = rand_distr.sample(&mut rng);
             F::from(sample).unwrap() * scale + loc

@@ -17,16 +17,16 @@ use ndarray::{Array2, ArrayView2};
 use std::time::Instant;
 
 use scirs2_ndimage::{
-    error::NdimageResult,
-    // Core configurations
-    neuromorphic_computing::NeuromorphicConfig,
-    quantum_inspired::QuantumConfig,
-    quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
     // Enhanced validation system
     enhanced_validation::{
         validated_ultrathink_processing, ComprehensiveValidator, ValidationConfig,
     },
+    error::NdimageResult,
     fusion_core::{fusion_processing, AdvancedConfig, UltrathinkState},
+    // Core configurations
+    neuromorphic_computing::NeuromorphicConfig,
+    quantum_inspired::QuantumConfig,
+    quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
 };
 
 /// Complete showcase of enhanced Advanced capabilities

@@ -284,7 +284,8 @@ where
         .into_par_iter()
         .map(|sample_idx| {
             use rand::rngs::StdRng;
-            use rand::{Rng, SeedableRng};
+            use scirs2_core::rng;
+            use rand::SeedableRng;
 
             // Create deterministic RNG for reproducibility
             let mut rng = StdRng::seed_from_u64(sample_idx as u64);

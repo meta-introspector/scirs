@@ -1,12 +1,12 @@
 use ndarray::{s, Array1, Array2, Array3};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
-use serde::{Deserialize, Serialize};
+// use serde::{Deserialize, Serialize}; // Serde not available in minimal version
 use std::collections::HashMap;
 use std::f32;
 
 // Embedding layer
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 struct Embedding {
     vocab_size: usize,
     embedding_dim: usize,
@@ -145,7 +145,7 @@ struct LSTMCell {
     c_t: Option<Array2<f32>>, // Current cell state [batch_size, hidden_size]
 }
 impl LSTMCell {
-    fn new(input_size: usize, hidden_size: usize, batch_size: usize) -> Self {
+    fn new(input_size: usize, hidden_size: usize, _batch_size: usize) -> Self {
         let bound = (6.0 / (input_size + hidden_size) as f32).sqrt();
         let mut rng = SmallRng::seed_from_u64(42);
 

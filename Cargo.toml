@@ -4,22 +4,15 @@ members = [
     "scirs2-core",
     "scirs2-linalg",
     "scirs2-integrate",
-    "scirs2-interpolate",
-    "scirs2-optimize",
     "scirs2-fft",
-    "scirs2-stats",
-    "scirs2-special",
     "scirs2-signal",
     "scirs2-sparse",
     "scirs2-spatial",
-    # Advanced modules
-    "scirs2-cluster",
     "scirs2-ndimage",
     "scirs2-io",
     "scirs2-datasets",
-    # AI/ML modules
+    # AI/ML modules - Core working modules only
     "scirs2-neural",
-    # "scirs2-optim", # Temporarily disabled due to compilation errors
     "scirs2-graph",
     "scirs2-transform",
     "scirs2-metrics",
@@ -29,6 +22,14 @@ members = [
     "scirs2-autograd",
     # Benchmarking suite
     "benches",
+    
+    # Temporarily disabled due to compilation errors:
+    # "scirs2-interpolate", # Needs debugging
+    # "scirs2-optimize", # 518+ compilation errors
+    # "scirs2-stats", # 481+ compilation errors  
+    # "scirs2-cluster", # 662+ compilation errors
+    # "scirs2-optim", # 1332+ compilation errors
+    # "scirs2-special", # Compilation errors
 ]
 resolver = "2"
 

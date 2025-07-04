@@ -7,6 +7,7 @@ use super::{
     LearnedOptimizationConfig, LearnedOptimizer, MetaOptimizerState, OptimizationProblem,
     TrainingTask,
 };
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
 use std::collections::HashMap;
@@ -166,7 +167,11 @@ impl MetaLearningOptimizer {
     }
 
     /// Compute meta-learned direction
-    fn compute_meta_direction<F>(&self, params: &Array1<f64>, objective: &F) -> Result<Array1<f64>>
+    fn compute_meta_direction<F>(
+        &self,
+        params: &Array1<f64>,
+        objective: &F,
+    ) -> OptimizeResult<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -439,7 +444,7 @@ impl LearnedOptimizer for MetaLearningOptimizer {
         &mut self,
         objective: F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -486,7 +491,7 @@ impl LearnedOptimizer for MetaLearningOptimizer {
             }
         }
 
-        Ok(OptimizeResults {
+        Ok(OptimizeResults::<f64> {
             x: current_params,
             fun: best_value,
             success: true,
@@ -513,7 +518,7 @@ pub fn meta_learning_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     config: Option<LearnedOptimizationConfig>,
-) -> Result<OptimizeResults>
+) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {

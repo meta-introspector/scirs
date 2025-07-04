@@ -5,7 +5,7 @@
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
-use rand::Rng;
+use rand::thread_rng;
 use rand_distr::Distribution;
 use statrs::function::gamma::ln_gamma;
 
@@ -363,7 +363,7 @@ impl<F: Float + NumCast + std::fmt::Display> NegativeBinomial<F> {
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         // For integer r, we can use a sum of geometric variables

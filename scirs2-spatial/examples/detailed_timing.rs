@@ -49,9 +49,7 @@ fn main() {
 
         let speedup = scalar_per_op as f64 / simd_per_op as f64;
 
-        println!(
-            "{dim:>8} {scalar_per_op:>15} {simd_per_op:>15} {speedup:>12.2}x"
-        );
+        println!("{dim:>8} {scalar_per_op:>15} {simd_per_op:>15} {speedup:>12.2}x");
     }
 
     println!("\n=== Matrix Operations Detailed Timing ===");
@@ -72,9 +70,7 @@ fn main() {
         let micros = elapsed.as_micros();
         let ops_per_sec = expected_ops as f64 / elapsed.as_secs_f64();
 
-        println!(
-            "{size:>8} {expected_ops:>12} {micros:>15} {ops_per_sec:>15.0}"
-        );
+        println!("{size:>8} {expected_ops:>12} {micros:>15} {ops_per_sec:>15.0}");
     }
 
     println!("\n=== Performance Characteristics Summary ===");
@@ -105,9 +101,7 @@ fn main() {
         let ops_per_million = expected_ops as f64 / 1_000_000.0;
         let mb_per_sec = data_size_mb / elapsed.as_secs_f64();
 
-        println!(
-            "{size:>8} {micros:>15} {ops_per_million:>15.2} {mb_per_sec:>15.1}"
-        );
+        println!("{size:>8} {micros:>15} {ops_per_million:>15.2} {mb_per_sec:>15.1}");
     }
 
     println!("\n=== Concrete Performance Numbers ===");

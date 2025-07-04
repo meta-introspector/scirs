@@ -121,7 +121,7 @@ where
     let sample_mean = mean(&data.view())?;
 
     // Calculate the sample standard deviation (with ddof=1 for unbiased estimator)
-    let sample_std = std(&data.view(), 1)?;
+    let sample_std = std(&data.view(), 1, None)?;
 
     // Calculate the standard error of the mean
     let n = F::from(data.len()).unwrap();
@@ -247,8 +247,8 @@ where
     let n_b = F::from(data_b.len()).unwrap();
 
     // Calculate sample standard deviations (with ddof=1 for unbiased estimator)
-    let std_a = std(&data_a.view(), 1)?;
-    let std_b = std(&data_b.view(), 1)?;
+    let std_a = std(&data_a.view(), 1, None)?;
+    let std_b = std(&data_b.view(), 1, None)?;
 
     // Calculate t-statistic and degrees of freedom
     let t_stat: F;

@@ -8,11 +8,11 @@
 //! - Advanced pattern recognition driving system-wide optimizations
 //! - Real-time performance intelligence and autonomous improvement
 
+use scirs2_io::advanced_coordinator::AdvancedCoordinator;
+use scirs2_io::enhanced_algorithms::AdvancedPatternRecognizer;
 use scirs2_io::error::Result;
 use scirs2_io::neural_adaptive_io::{NeuralAdaptiveIoController, SystemMetrics};
 use scirs2_io::quantum_inspired_io::QuantumParallelProcessor;
-use scirs2_io::advanced_coordinator::AdvancedCoordinator;
-use scirs2_io::ultrathink_enhanced_algorithms::AdvancedPatternRecognizer;
 use scirs2_io::zero_copy::{AsyncConfig, AsyncZeroCopyProcessor};
 use std::time::{Duration, Instant};
 

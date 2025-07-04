@@ -418,12 +418,16 @@ impl UltrathinkPerformanceMonitor {
 
     /// Get detailed performance report
     pub fn generate_performance_report(&self) -> Result<DetailedPerformanceReport> {
+        // Get the summary first to avoid nested locking
+        let summary = self.get_performance_summary()?;
+
+        // Then acquire other locks
         let history = self.metrics_history.read().unwrap();
         let resource_monitor = self.resource_monitor.lock().unwrap();
         let optimization_engine = self.optimization_engine.lock().unwrap();
 
         let report = DetailedPerformanceReport {
-            summary: self.get_performance_summary()?,
+            summary,
             historical_trends: Self::analyze_trends(&history),
             resource_utilization: resource_monitor.get_utilization_summary(),
             bottleneck_analysis: Self::identify_bottlenecks(&history),

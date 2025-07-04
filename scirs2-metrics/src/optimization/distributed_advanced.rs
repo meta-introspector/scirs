@@ -1,4 +1,12 @@
 //! Advanced distributed computing with consensus algorithms and fault recovery
+
+#![allow(clippy::large_enum_variant)]
+#![allow(clippy::for_kv_map)]
+#![allow(clippy::to_string_in_format_args)]
+#![allow(clippy::manual_abs_diff)]
+#![allow(clippy::derivable_impls)]
+#![allow(clippy::too_many_arguments)]
+#![allow(dead_code)]
 //!
 //! This module extends the basic distributed computing capabilities with:
 //! - Consensus algorithms (Raft, PBFT)
@@ -7,9 +15,6 @@
 //! - Dynamic cluster scaling
 //! - Data locality optimization
 //! - Advanced partitioning strategies
-
-#![allow(clippy::too_many_arguments)]
-#![allow(dead_code)]
 
 use crate::error::{MetricsError, Result};
 use crate::optimization::distributed::CircuitBreakerState;

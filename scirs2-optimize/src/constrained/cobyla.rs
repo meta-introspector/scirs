@@ -224,7 +224,7 @@ where
         }
     }
 
-    Ok(OptimizeResults {
+    Ok(OptimizeResults::<f64> {
         x,
         fun: f,
         jac: None,

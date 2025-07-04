@@ -147,19 +147,19 @@ pub mod neural_architecture_search;
 pub mod quantum_optimization;
 
 // Advanced Mode Ecosystem Integration
-// pub mod advanced_ecosystem_integration; // Module not implemented yet
+pub mod advanced_ecosystem_integration;
 
 // Advanced JIT Compilation Framework
-// pub mod advanced_jit_compilation; // Module not implemented yet
+pub mod advanced_jit_compilation;
 
 // Advanced Distributed Computing Framework
-// pub mod advanced_distributed_computing; // Module not implemented yet
+pub mod advanced_distributed_computing;
 
 // Advanced Cloud Storage Framework
 // pub mod distributed_storage; // Module not implemented yet
 
 // Advanced Tensor Cores and Automatic Kernel Tuning Framework
-// pub mod advanced_tensor_cores; // Module not implemented yet
+pub mod advanced_tensor_cores;
 
 // Benchmarking module
 #[cfg(feature = "benchmarking")]

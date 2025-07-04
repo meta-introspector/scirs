@@ -3,10 +3,10 @@
 //! This example demonstrates how to create and use a transformer model
 //! with the scirs2-neural crate.
 
-use ndarray::Array3;
-use rand::rngs::SmallRng;
-use rand::SeedableRng;
-use scirs2_neural::layers::Layer;
+// use ndarray::Array3; // Unused import
+// use rand::rngs::SmallRng; // Unused import
+// use rand::SeedableRng; // Unused import
+// use scirs2_neural::layers::Layer; // Unused import
 // use scirs2_neural::transformer::{Transformer, TransformerConfig};
 // use scirs2_neural::utils::PositionalEncodingType;
 #[allow(dead_code)]

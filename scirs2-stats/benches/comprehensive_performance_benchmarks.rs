@@ -7,7 +7,8 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use ndarray::{Array1, Array2, Axis};
 use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use scirs2_core::rng;
+use rand::SeedableRng;
 use scirs2_stats::{
     correlation::*, descriptive::*, distributions::*, quantile::*, regression::linear::*, tests::*,
     traits::Distribution,

@@ -8,11 +8,12 @@
 //! - Quantum interference patterns for optimization landscapes
 //! - Quantum state collapse for solution selection
 
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
+use rand::Rng;
 use std::collections::VecDeque;
 use std::f64::consts::PI;
-use rand::Rng;
 
 /// Complex number representation for quantum states
 #[derive(Debug, Clone, Copy)]
@@ -316,7 +317,8 @@ impl QuantumState {
         // Create new basis states around current ones
         for i in 0..n_states {
             for j in 0..n_params {
-                let perturbation = rand::rng().random_range(-exploration_radius..exploration_radius);
+                let perturbation =
+                    rand::rng().random_range(-exploration_radius..exploration_radius);
                 self.basis_states[[i, j]] += perturbation;
             }
         }
@@ -497,7 +499,7 @@ impl QuantumInspiredOptimizer {
     }
 
     /// Run quantum-inspired optimization
-    pub fn optimize<F>(&mut self, objective: F) -> Result<OptimizeResults>
+    pub fn optimize<F>(&mut self, objective: F) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -571,11 +573,11 @@ impl QuantumInspiredOptimizer {
             prev_objective = candidate_objective;
         }
 
-        Ok(OptimizeResults {
+        Ok(OptimizeResults::<f64> {
             x: self.best_solution.clone(),
             fun: self.best_objective,
             success: self.best_objective < f64::INFINITY,
-            iterations: self.iteration,
+            nit: self.iteration,
             message: format!(
                 "Quantum optimization completed. Tunneling events: {}, Final entanglement: {:.3}",
                 self.tunneling_events, self.entanglement_strength
@@ -587,7 +589,7 @@ impl QuantumInspiredOptimizer {
         &self,
         objective: &F,
         params: &ArrayView1<f64>,
-    ) -> Result<Array1<f64>>
+    ) -> OptimizeResult<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -681,7 +683,7 @@ pub fn quantum_optimize<F>(
     initial_params: &ArrayView1<f64>,
     max_iterations: Option<usize>,
     num_quantum_states: Option<usize>,
-) -> Result<OptimizeResults>
+) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
@@ -699,7 +701,7 @@ pub fn quantum_particle_swarm_optimize<F>(
     initial_params: &ArrayView1<f64>,
     num_particles: usize,
     max_iterations: usize,
-) -> Result<OptimizeResults>
+) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
@@ -761,11 +763,11 @@ where
         }
     }
 
-    Ok(OptimizeResults {
+    Ok(OptimizeResults::<f64> {
         x: global_best_solution,
         fun: global_best_objective,
         success: global_best_objective < f64::INFINITY,
-        iterations: max_iterations,
+        nit: max_iterations,
         message: format!(
             "Quantum particle swarm optimization completed with {} particles",
             num_particles
@@ -845,7 +847,7 @@ mod tests {
 
         let result = quantum_optimize(objective, &initial.view(), Some(50), Some(8)).unwrap();
 
-        assert!(result.iterations > 0);
+        assert!(result.nit > 0);
         assert!(result.fun < objective(&initial.view()));
         assert!(result.success);
 
@@ -882,7 +884,7 @@ mod tests {
 
         let result = quantum_particle_swarm_optimize(objective, &initial.view(), 5, 20).unwrap();
 
-        assert!(result.iterations > 0);
+        assert!(result.nit > 0);
         assert!(result.fun < objective(&initial.view()));
         assert!(result.success);
     }

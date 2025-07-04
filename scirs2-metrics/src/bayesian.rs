@@ -820,7 +820,7 @@ impl BayesianModelComparison {
         let mut log_x = 0.0; // log(1.0)
 
         // Nested sampling iterations
-        let n_iterations = indexed_samples.len() - n_live;
+        let n_iterations = indexed_samples.len().saturating_sub(n_live);
         for iter in 0..n_iterations {
             // Find point with minimum likelihood among live points
             let (min_idx, min_log_like) = live_points

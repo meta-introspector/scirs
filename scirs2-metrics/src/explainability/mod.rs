@@ -647,7 +647,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
         let n_samples = std::cmp::min(1000, self.n_perturbations); // Limit for efficiency
 
         // Process each instance separately for local explanations
-        for (_instance_idx, instance) in x_test.axis_iter(Axis(0)).enumerate() {
+        for instance in x_test.axis_iter(Axis(0)) {
             let instance_importance =
                 self.compute_lime_for_instance(model, &instance, feature_names, n_samples)?;
 

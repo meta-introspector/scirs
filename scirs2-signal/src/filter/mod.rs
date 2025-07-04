@@ -65,8 +65,8 @@ pub mod common;
 pub mod fir;
 pub mod iir;
 pub mod parallel;
-pub mod parallel_enhanced;
 pub mod parallel_advanced_enhanced;
+pub mod parallel_enhanced;
 pub mod specialized;
 pub mod transform;
 
@@ -124,9 +124,9 @@ pub use parallel_enhanced::{
 // Re-export Advanced enhanced parallel filter functions
 pub use parallel_advanced_enhanced::{
     benchmark_parallel_filtering_operations, validate_parallel_filtering_accuracy,
-    LockFreeStreamingFilter, ParallelFilterMetrics, ParallelMultiRateFilterBank,
-    ParallelSpectralFilter, SparseParallelFilter, StreamingFilterState, StreamingStats,
-    AdvancedParallelConfig,
+    AdvancedParallelConfig, LockFreeStreamingFilter, ParallelFilterMetrics,
+    ParallelMultiRateFilterBank, ParallelSpectralFilter, SparseParallelFilter,
+    StreamingFilterState, StreamingStats,
 };
 
 #[cfg(test)]

@@ -21,6 +21,7 @@
 //! - Neuromorphic hardware optimization
 //! - Event-driven optimization problems
 
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::Rng;
@@ -275,7 +276,8 @@ impl NeuromorphicNetwork {
 
             // Add noise
             if self.config.noise_level > 0.0 {
-                let noise = rand::rng().random_range(-self.config.noise_level..self.config.noise_level);
+                let noise =
+                    rand::rng().random_range(-self.config.noise_level..self.config.noise_level);
                 self.neurons[i].potential += noise;
             }
 
@@ -394,7 +396,7 @@ pub trait NeuromorphicOptimizer {
         &mut self,
         objective: F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64;
 
@@ -437,7 +439,7 @@ impl NeuromorphicOptimizer for BasicNeuromorphicOptimizer {
         &mut self,
         objective: F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -475,7 +477,7 @@ impl NeuromorphicOptimizer for BasicNeuromorphicOptimizer {
             }
         }
 
-        Ok(OptimizeResults {
+        Ok(OptimizeResults::<f64> {
             x: self.best_params.clone(),
             fun: self.best_objective,
             success: self.best_objective < 1e-3,
@@ -526,7 +528,7 @@ pub fn neuromorphic_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     config: Option<NeuromorphicConfig>,
-) -> Result<OptimizeResults>
+) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {

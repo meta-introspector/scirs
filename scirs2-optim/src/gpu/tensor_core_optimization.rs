@@ -1328,7 +1328,7 @@ pub struct SparseTensorCoreMatrix<T: Float> {
     sparsity_ratio: f32,
 }
 
-impl<T: Float> SparseTensorCoreMatrix<T> {
+impl<T: Float + Send + Sync> SparseTensorCoreMatrix<T> {
     /// Create sparse matrix from dense matrix using 2:4 structured sparsity
     pub fn from_dense(dense: &Array2<T>) -> Self {
         let (m, n) = dense.dim();

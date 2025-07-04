@@ -137,7 +137,7 @@ impl UltrathinkPropertyTester {
             if std_val > F::from(1e-10).unwrap() {
                 let standardized: Array1<F> = data.map(|&x| (x - mean_val) / std_val);
                 if let (Ok(std_mean), Ok(std_var)) =
-                    (mean(&standardized.view()), var(&standardized.view(), 0))
+                    (mean(&standardized.view()), var(&standardized.view(), 0, None))
                 {
                     let mean_error = std_mean.to_f64().unwrap().abs();
                     let var_error = (std_var.to_f64().unwrap() - 1.0).abs();
@@ -198,7 +198,7 @@ impl UltrathinkPropertyTester {
         let offset = F::from(1e6).unwrap();
         let translated: Array1<F> = data.map(|&x| x + offset);
 
-        if let (Ok(orig_var), Ok(trans_var)) = (var(data, 0), var(&translated.view(), 0)) {
+        if let (Ok(orig_var), Ok(trans_var)) = (var(data, 0, None), var(&translated.view(), 0, None)) {
             let var_diff = (orig_var - trans_var).abs();
             if var_diff > tolerance {
                 errors.push(format!(
@@ -213,7 +213,7 @@ impl UltrathinkPropertyTester {
         let scale = F::from(2.0).unwrap();
         let scaled: Array1<F> = data.map(|&x| x * scale);
 
-        if let (Ok(orig_var), Ok(scaled_var)) = (var(data, 0), var(&scaled.view(), 0)) {
+        if let (Ok(orig_var), Ok(scaled_var)) = (var(data, 0, None), var(&scaled.view(), 0, None)) {
             let expected_var = scale * scale * orig_var;
             let scaling_error = (scaled_var - expected_var).abs();
             if scaling_error > tolerance * expected_var.abs() {

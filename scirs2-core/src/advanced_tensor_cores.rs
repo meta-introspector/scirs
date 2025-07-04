@@ -65,7 +65,7 @@ mod gpu_implementation {
         /// Real-time analytics
         pub analytics_engine: Arc<Mutex<RealTimeAnalytics>>,
         /// Configuration
-        pub config: advancedTensorConfig,
+        pub config: AdvancedTensorConfig,
         /// Monitoring system
         pub monitoring: Arc<RwLock<TensorCoreMonitoring>>,
     }
@@ -74,7 +74,7 @@ mod gpu_implementation {
     #[allow(dead_code)]
     #[derive(Debug, Clone)]
     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-    pub struct advancedTensorConfig {
+    pub struct AdvancedTensorConfig {
         /// Enable AI-driven optimization
         pub enable_ai_optimization: bool,
         /// Enable adaptive kernel tuning
@@ -99,7 +99,7 @@ mod gpu_implementation {
         pub enable_dvfs: bool,
     }
 
-    impl Default for advancedTensorConfig {
+    impl Default for AdvancedTensorConfig {
         fn default() -> Self {
             Self {
                 enable_ai_optimization: true,
@@ -2288,7 +2288,7 @@ mod gpu_implementation {
     #[cfg(feature = "gpu")]
     impl advancedTensorCoreCoordinator {
         /// Create a new advanced tensor core coordinator
-        pub fn new(config: advancedTensorConfig) -> CoreResult<Self> {
+        pub fn new(config: AdvancedTensorConfig) -> CoreResult<Self> {
             let tensor_managers = Arc::new(RwLock::new(HashMap::new()));
             let auto_tuners = Arc::new(RwLock::new(HashMap::new()));
             let ai_optimizer = Arc::new(Mutex::new(AIOptimizationEngine::new()?));
@@ -3911,7 +3911,7 @@ mod gpu_implementation {
 
     impl Default for advancedTensorCoreCoordinator {
         fn default() -> Self {
-            Self::new(advancedTensorConfig::default())
+            Self::new(AdvancedTensorConfig::default())
                 .expect("Failed to create default coordinator")
         }
     }
@@ -4223,7 +4223,7 @@ mod gpu_implementation {
 
         #[test]
         fn test_coordinator_creation() {
-            let config = advancedTensorConfig::default();
+            let config = AdvancedTensorConfig::default();
             let coordinator = advancedTensorCoreCoordinator::new(config);
             assert!(coordinator.is_ok());
         }
@@ -4237,7 +4237,7 @@ mod gpu_implementation {
 
         #[test]
         fn test_config_defaults() {
-            let config = advancedTensorConfig::default();
+            let config = AdvancedTensorConfig::default();
             assert!(config.enable_ai_optimization);
             assert!(config.enable_adaptive_tuning);
             assert!(config.enable_real_time_learning);
@@ -4342,7 +4342,7 @@ pub mod fallback {
     #[allow(dead_code)]
     #[derive(Debug, Clone, Default)]
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-    pub struct advancedTensorConfig {
+    pub struct AdvancedTensorConfig {
         /// Feature disabled - GPU not available
         pub gpu_available: bool,
     }

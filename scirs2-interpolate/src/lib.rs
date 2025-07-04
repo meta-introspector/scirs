@@ -221,7 +221,7 @@ pub mod streaming;
 pub mod tension;
 pub mod tensor;
 pub mod timeseries;
-pub mod advanced_coordinator;
+pub mod ultrathink_coordinator;
 pub mod utils;
 pub mod voronoi;
 
@@ -245,10 +245,10 @@ pub mod scipy_compatibility;
 // Re-exports for convenience
 
 // Advanced mode coordinator for advanced AI-driven optimization
-pub use advanced_coordinator::{
+pub use ultrathink_coordinator::{
     create_advanced_interpolation_coordinator,
-    create_advanced_interpolation_coordinator_with_config, InterpolationPerformanceMetrics,
-    InterpolationRecommendation, advancedInterpolationConfig, advancedInterpolationCoordinator,
+    create_advanced_interpolation_coordinator_with_config, AdvancedInterpolationConfig,
+    AdvancedInterpolationCoordinator, InterpolationPerformanceMetrics, InterpolationRecommendation,
 };
 
 pub use adaptive_gp::{

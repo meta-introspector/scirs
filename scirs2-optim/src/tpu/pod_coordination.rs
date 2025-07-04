@@ -1593,7 +1593,7 @@ pub struct ResourceScheduler<T: Float> {
     _phantom: std::marker::PhantomData<T>,
 }
 
-impl<T: Float> ResourceScheduler<T> {
+impl<T: Float + Send + Sync> ResourceScheduler<T> {
     pub fn new(config: &PodCoordinationConfig) -> Result<Self> {
         let mut device_availability = HashMap::new();
 

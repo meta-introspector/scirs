@@ -15,8 +15,8 @@
 #![allow(dead_code)]
 
 use crate::error::Result;
-use rand::prelude::*;
 use rand::rng;
+use rand::seq::IteratorRandom;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -243,7 +243,10 @@ impl RLParameterOptimizer {
 
         if rng.random::<f64>() < self.learning_params.epsilon {
             // Explore: random action
-            self.action_space.choose(&mut rng).expect("Action space should not be empty").clone()
+            self.action_space
+                .choose(&mut rng)
+                .expect("Action space should not be empty")
+                .clone()
         } else {
             // Exploit: best known action
             self.get_best_action(state)
@@ -277,7 +280,7 @@ impl RLParameterOptimizer {
                 .map(|action_values| {
                     *action_values
                         .values()
-                        .max_by(|a, b| a.partial_cmp(b).unwrap())
+                        .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                         .unwrap_or(&0.0)
                 })
                 .unwrap_or(0.0)
@@ -840,8 +843,11 @@ impl GeneticPipelineOptimizer {
 
         // Limit Pareto front size
         if self.pareto_front.len() > 100 {
-            self.pareto_front
-                .sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
+            self.pareto_front.sort_by(|a, b| {
+                b.fitness
+                    .partial_cmp(&a.fitness)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
             self.pareto_front.truncate(100);
         }
     }
@@ -870,7 +876,11 @@ impl GeneticPipelineOptimizer {
         // Keep elite solutions
         let elite_count = (self.population.len() as f64 * self.ga_params.elite_ratio) as usize;
         let mut sorted_pop = self.population.clone();
-        sorted_pop.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
+        sorted_pop.sort_by(|a, b| {
+            b.fitness
+                .partial_cmp(&a.fitness)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         for individual in sorted_pop.iter().take(elite_count) {
             new_population.push(individual.clone());
@@ -1059,7 +1069,11 @@ impl GeneticPipelineOptimizer {
     fn update_elite_archives(&mut self) {
         // Update performance archive
         let mut sorted_by_fitness = self.population.clone();
-        sorted_by_fitness.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
+        sorted_by_fitness.sort_by(|a, b| {
+            b.fitness
+                .partial_cmp(&a.fitness)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         for genome in sorted_by_fitness.iter().take(10) {
             if self.elite_archives.performance_archive.len() < self.elite_archives.max_archive_size
@@ -1175,12 +1189,19 @@ impl GeneticPipelineOptimizer {
         }
 
         // Sort by fitness (descending)
-        self.population
-            .sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
+        self.population.sort_by(|a, b| {
+            b.fitness
+                .partial_cmp(&a.fitness)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         // Record generation statistics
         let best_fitness = self.population[0].fitness;
-        let worst_fitness = self.population.last().expect("Population should not be empty").fitness;
+        let worst_fitness = self
+            .population
+            .last()
+            .expect("Population should not be empty")
+            .fitness;
         let avg_fitness =
             self.population.iter().map(|g| g.fitness).sum::<f64>() / self.population.len() as f64;
 
@@ -1598,7 +1619,7 @@ impl NeuralArchitectureSearch {
                     .search_space
                     .layer_types
                     .choose(&mut rng)
-                    .unwrap()
+                    .expect("Layer types should not be empty")
                     .clone();
                 layers.push(layer_type);
 
@@ -1606,7 +1627,7 @@ impl NeuralArchitectureSearch {
                     .search_space
                     .connections
                     .choose(&mut rng)
-                    .unwrap()
+                    .expect("Connections should not be empty")
                     .clone();
                 connections.push(connection);
             }
@@ -1649,7 +1670,7 @@ impl NeuralArchitectureSearch {
             })
             .collect();
 
-        ranked_archs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        ranked_archs.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Keep top performers
         let elite_count = population_size / 4;
@@ -1660,8 +1681,14 @@ impl NeuralArchitectureSearch {
         // Generate offspring through mutation and crossover
         while new_population.len() < population_size {
             if ranked_archs.len() >= 2 {
-                let parent1 = ranked_archs.choose(&mut rng).unwrap().0;
-                let parent2 = ranked_archs.choose(&mut rng).unwrap().0;
+                let parent1 = ranked_archs
+                    .choose(&mut rng)
+                    .expect("Ranked architectures should not be empty")
+                    .0;
+                let parent2 = ranked_archs
+                    .choose(&mut rng)
+                    .expect("Ranked architectures should not be empty")
+                    .0;
 
                 let offspring = self.crossover_architectures(parent1, parent2);
                 let mutated = self.mutate_architecture(offspring);
@@ -1772,7 +1799,7 @@ impl NeuralArchitectureSearch {
                     .search_space
                     .layer_types
                     .choose(&mut rng)
-                    .unwrap()
+                    .expect("Layer types should not be empty")
                     .clone();
             }
         }

@@ -352,13 +352,14 @@ fn classify_stability<F>(condition_number: F) -> StabilityLevel
 where
     F: Float + FromPrimitive,
 {
-    let threshold_1e12 = F::from_f64(1e12)
-        .unwrap_or_else(|| F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000).unwrap()));
+    let threshold_1e12 = F::from_f64(1e12).unwrap_or_else(|| {
+        F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000i64).unwrap())
+    });
     let threshold_1e14 = F::from_f64(1e14).unwrap_or_else(|| {
-        F::from(1e14 as f32).unwrap_or_else(|| F::from(100000000000000).unwrap())
+        F::from(1e14 as f32).unwrap_or_else(|| F::from(100000000000000i64).unwrap())
     });
     let threshold_1e16 = F::from_f64(1e16).unwrap_or_else(|| {
-        F::from(1e16 as f32).unwrap_or_else(|| F::from(10000000000000000).unwrap())
+        F::from(1e16 as f32).unwrap_or_else(|| F::from(10000000000000000i64).unwrap())
     });
 
     if condition_number < threshold_1e12 {
@@ -504,7 +505,7 @@ where
                 .recommended_regularization
                 .unwrap_or_else(|| {
                     machine_epsilon::<F>()
-                        * F::from_f64(1e12).unwrap_or(F::from(1000000000000).unwrap())
+                        * F::from_f64(1e12).unwrap_or(F::from(1000000000000i64).unwrap())
                 })
         }
     };
@@ -554,7 +555,7 @@ where
         let dynamic_range = max_val / min_val;
         dynamic_range
             > F::from_f64(1e15)
-                .unwrap_or(F::from(1e15 as f32).unwrap_or(F::from(1000000000000000).unwrap()))
+                .unwrap_or(F::from(1e15 as f32).unwrap_or(F::from(1000000000000000i64).unwrap()))
     } else {
         false
     };
@@ -570,7 +571,7 @@ where
             x.is_nan()
                 || x.is_infinite()
                 || x.abs()
-                    > F::from_f64(1e100).unwrap_or(F::from(1e100 as f32).unwrap_or(F::max_value()))
+                    > F::from_f64(1e100).unwrap_or(F::from_f64(1e100).unwrap_or(F::max_value()))
         });
     }
 
@@ -1036,7 +1037,7 @@ where
         // If condition number is very high, likely have linear dependencies
         Ok(condition_report.condition_number
             > F::from_f64(1e14).unwrap_or_else(|| {
-                F::from(1e14 as f32).unwrap_or_else(|| F::from(100000000000000).unwrap())
+                F::from(1e14 as f32).unwrap_or_else(|| F::from(100000000000000i64).unwrap())
             }))
     } else {
         // For larger matrices, use a simpler heuristic
@@ -1081,7 +1082,7 @@ where
     // Scale by distance ratio (more ill-conditioned data needs more regularization)
     let ratio_factor = if distance_ratio
         > F::from_f64(1e12).unwrap_or_else(|| {
-            F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000).unwrap())
+            F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000i64).unwrap())
         }) {
         F::from_f64(1000.0)
             .unwrap_or_else(|| F::from(1000.0 as f32).unwrap_or_else(|| F::from(1000).unwrap()))
@@ -2179,7 +2180,7 @@ where
 
     let interpolation_risky = diagonal_ratio
         > F::from_f64(1e12).unwrap_or_else(|| {
-            F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000).unwrap())
+            F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000i64).unwrap())
         });
 
     // Suggest adaptive regularization
@@ -2213,12 +2214,12 @@ where
     // Scale by condition number estimate
     let condition_factor = if condition_estimate
         > F::from_f64(1e15).unwrap_or_else(|| {
-            F::from(1e15 as f32).unwrap_or_else(|| F::from(1000000000000000).unwrap())
+            F::from(1e15 as f32).unwrap_or_else(|| F::from(1000000000000000i64).unwrap())
         }) {
         F::from_f64(1000.0).unwrap_or_else(|| F::from(1000).unwrap())
     } else if condition_estimate
         > F::from_f64(1e12).unwrap_or_else(|| {
-            F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000).unwrap())
+            F::from(1e12 as f32).unwrap_or_else(|| F::from(1000000000000i64).unwrap())
         })
     {
         F::from_f64(100.0).unwrap_or_else(|| F::from(100).unwrap())

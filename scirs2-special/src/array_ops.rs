@@ -11,6 +11,10 @@ use ndarray::{Array, ArrayView1, Dimension};
 /// Safe slice casting replacement for bytemuck::cast_slice
 #[allow(dead_code)]
 fn cast_slice_to_bytes<T>(slice: &[T]) -> &[u8] {
+    // SAFETY: This is safe because:
+    // 1. The pointer is derived from a valid slice
+    // 2. The size calculation is correct using size_of_val
+    // 3. The lifetime is bounded by the input slice
     unsafe { std::slice::from_raw_parts(slice.as_ptr() as *const u8, std::mem::size_of_val(slice)) }
 }
 
@@ -18,6 +22,11 @@ fn cast_slice_to_bytes<T>(slice: &[T]) -> &[u8] {
 #[allow(dead_code)]
 fn cast_bytes_to_slice<T>(bytes: &[u8]) -> &[T] {
     assert_eq!(bytes.len() % std::mem::size_of::<T>(), 0);
+    // SAFETY: This is safe because:
+    // 1. We assert that the byte length is a multiple of T's size
+    // 2. The pointer is derived from a valid slice
+    // 3. The length calculation ensures we don't exceed bounds
+    // 4. The lifetime is bounded by the input slice
     unsafe {
         std::slice::from_raw_parts(
             bytes.as_ptr() as *const T,

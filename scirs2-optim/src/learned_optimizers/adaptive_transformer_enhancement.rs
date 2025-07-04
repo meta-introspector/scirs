@@ -889,7 +889,7 @@ impl<T: Float> Default for AdaptiveConfig<T> {
     }
 }
 
-impl<T: Float> AdaptiveTransformerEnhancement<T> {
+impl<T: Float + Send + Sync> AdaptiveTransformerEnhancement<T> {
     /// Create new adaptive transformer enhancement
     pub fn new(config: AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
@@ -1104,7 +1104,7 @@ pub struct EnhancementStatistics<T: Float> {
 }
 
 // Main implementation for AdaptiveTransformerEnhancement
-impl<T: Float> AdaptiveTransformerEnhancement<T> {
+impl<T: Float + Send + Sync> AdaptiveTransformerEnhancement<T> {
     pub fn new(config: AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             sequence_processor: AdaptiveSequenceProcessor::new(&config)?,
@@ -1378,7 +1378,7 @@ impl<T: Float> AdaptiveTransformerEnhancement<T> {
 }
 
 // Implementation stubs for the complex components
-impl<T: Float> AdaptiveSequenceProcessor<T> {
+impl<T: Float + Send + Sync> AdaptiveSequenceProcessor<T> {
     fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             current_length: 512,
@@ -1463,7 +1463,7 @@ impl<T: Float> AdaptiveSequenceProcessor<T> {
     }
 }
 
-impl<T: Float> MemoryEfficientAttentionManager<T> {
+impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
     fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             pattern_cache: AttentionPatternCache::new(),
@@ -1604,7 +1604,7 @@ impl<T: Float> MemoryEfficientAttentionManager<T> {
     }
 }
 
-impl<T: Float> DynamicArchitectureAdapter<T> {
+impl<T: Float + Send + Sync> DynamicArchitectureAdapter<T> {
     fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             current_config: TransformerOptimizerConfig::default(),
@@ -1631,7 +1631,7 @@ impl<T: Float> DynamicArchitectureAdapter<T> {
     }
 }
 
-impl<T: Float> OptimizationLandscapeAnalyzer<T> {
+impl<T: Float + Send + Sync> OptimizationLandscapeAnalyzer<T> {
     fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             landscape_features: LandscapeFeatures::default(),
@@ -1657,7 +1657,7 @@ impl<T: Float> OptimizationLandscapeAnalyzer<T> {
     }
 }
 
-impl<T: Float> TransformerPerformancePredictor<T> {
+impl<T: Float + Send + Sync> TransformerPerformancePredictor<T> {
     fn new(_config: &AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             predictor_network: PredictorNetwork::new(vec![64, 128, 64, 1])?,
@@ -1683,7 +1683,7 @@ impl<T: Float> TransformerPerformancePredictor<T> {
 }
 
 // Additional implementation stubs for completeness
-impl<T: Float> SequenceCompressor<T> {
+impl<T: Float + Send + Sync> SequenceCompressor<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             algorithm: CompressionAlgorithm::PCA,
@@ -1693,7 +1693,7 @@ impl<T: Float> SequenceCompressor<T> {
     }
 }
 
-impl<T: Float> AttentionPatternCache<T> {
+impl<T: Float + Send + Sync> AttentionPatternCache<T> {
     fn new() -> Self {
         Self {
             patterns: HashMap::new(),
@@ -1715,7 +1715,7 @@ impl MemoryUsageTracker {
     }
 }
 
-impl<T: Float> ComplexityEstimator<T> {
+impl<T: Float + Send + Sync> ComplexityEstimator<T> {
     fn new() -> Self {
         Self {
             computational_complexity: T::from(0.5).unwrap(),
@@ -1726,7 +1726,7 @@ impl<T: Float> ComplexityEstimator<T> {
     }
 }
 
-impl<T: Float> LocalGeometryAnalyzer<T> {
+impl<T: Float + Send + Sync> LocalGeometryAnalyzer<T> {
     fn new() -> Self {
         Self {
             local_minima_detector: LocalMinimaDetector::new(),
@@ -1736,7 +1736,7 @@ impl<T: Float> LocalGeometryAnalyzer<T> {
     }
 }
 
-impl<T: Float> GlobalStructureDetector<T> {
+impl<T: Float + Send + Sync> GlobalStructureDetector<T> {
     fn new() -> Self {
         Self {
             connectivity_analyzer: ConnectivityAnalyzer::new(),
@@ -1746,7 +1746,7 @@ impl<T: Float> GlobalStructureDetector<T> {
     }
 }
 
-impl<T: Float> PredictorNetwork<T> {
+impl<T: Float + Send + Sync> PredictorNetwork<T> {
     fn new(architecture: Vec<usize>) -> Result<Self> {
         let mut weights = Vec::new();
         let mut biases = Vec::new();
@@ -1768,7 +1768,7 @@ impl<T: Float> PredictorNetwork<T> {
     }
 }
 
-impl<T: Float> PerformanceFeatureExtractor<T> {
+impl<T: Float + Send + Sync> PerformanceFeatureExtractor<T> {
     fn new(dims: usize) -> Result<Self> {
         Ok(Self {
             feature_dims: dims,
@@ -1778,7 +1778,7 @@ impl<T: Float> PerformanceFeatureExtractor<T> {
     }
 }
 
-impl<T: Float> PredictionCache<T> {
+impl<T: Float + Send + Sync> PredictionCache<T> {
     fn new(capacity: usize) -> Self {
         Self {
             predictions: HashMap::new(),
@@ -1788,7 +1788,7 @@ impl<T: Float> PredictionCache<T> {
     }
 }
 
-impl<T: Float> UncertaintyEstimator<T> {
+impl<T: Float + Send + Sync> UncertaintyEstimator<T> {
     fn new(method: UncertaintyMethod) -> Self {
         Self {
             epistemic_uncertainty: T::from(0.1).unwrap(),
@@ -1799,7 +1799,7 @@ impl<T: Float> UncertaintyEstimator<T> {
     }
 }
 
-impl<T: Float> LocalMinimaDetector<T> {
+impl<T: Float + Send + Sync> LocalMinimaDetector<T> {
     fn new() -> Self {
         Self {
             threshold: T::from(1e-6).unwrap(),
@@ -1809,7 +1809,7 @@ impl<T: Float> LocalMinimaDetector<T> {
     }
 }
 
-impl<T: Float> SaddlePointDetector<T> {
+impl<T: Float + Send + Sync> SaddlePointDetector<T> {
     fn new() -> Self {
         Self {
             threshold: T::from(1e-6).unwrap(),
@@ -1819,7 +1819,7 @@ impl<T: Float> SaddlePointDetector<T> {
     }
 }
 
-impl<T: Float> BasinAnalyzer<T> {
+impl<T: Float + Send + Sync> BasinAnalyzer<T> {
     fn new() -> Self {
         Self {
             basin_characteristics: Vec::new(),
@@ -1828,7 +1828,7 @@ impl<T: Float> BasinAnalyzer<T> {
     }
 }
 
-impl<T: Float> ConnectivityAnalyzer<T> {
+impl<T: Float + Send + Sync> ConnectivityAnalyzer<T> {
     fn new() -> Self {
         Self {
             connectivity_graph: Array2::zeros((0, 0)),
@@ -1841,7 +1841,7 @@ impl<T: Float> ConnectivityAnalyzer<T> {
     }
 }
 
-impl<T: Float> SymmetryDetector<T> {
+impl<T: Float + Send + Sync> SymmetryDetector<T> {
     fn new() -> Self {
         Self {
             symmetries: Vec::new(),
@@ -1850,7 +1850,7 @@ impl<T: Float> SymmetryDetector<T> {
     }
 }
 
-impl<T: Float> PatternRecognizer<T> {
+impl<T: Float + Send + Sync> PatternRecognizer<T> {
     fn new() -> Self {
         Self {
             patterns: Vec::new(),

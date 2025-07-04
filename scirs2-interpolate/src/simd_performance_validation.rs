@@ -311,11 +311,13 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
             "Platform: {} - {}",
             self.session_info.cpu_info.brand, self.session_info.cpu_info.architecture
         );
-        println!("SIMD Support: SIMD={}, AVX2={}, AVX512={}, NEON={}", 
-                 self.platform_caps.simd_available,
-                 self.platform_caps.avx2_available,
-                 self.platform_caps.avx512_available,
-                 self.platform_caps.neon_available);
+        println!(
+            "SIMD Support: SIMD={}, AVX2={}, AVX512={}, NEON={}",
+            self.platform_caps.simd_available,
+            self.platform_caps.avx2_available,
+            self.platform_caps.avx512_available,
+            self.platform_caps.neon_available
+        );
 
         // Validate RBF operations
         self.validate_rbf_operations()?;
@@ -1157,14 +1159,17 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> ValidationSu
 
 /// Convenience function to run SIMD validation with default configuration
 #[allow(dead_code)]
-pub fn run_simd_validation<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps>() -> InterpolateResult<ValidationSummary<T>> {
+pub fn run_simd_validation<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps>(
+) -> InterpolateResult<ValidationSummary<T>> {
     let mut validator = SimdPerformanceValidator::new(SimdValidationConfig::default());
     validator.run_comprehensive_validation()
 }
 
 /// Convenience function to run SIMD validation with custom configuration
 #[allow(dead_code)]
-pub fn run_simd_validation_with_config<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps>(
+pub fn run_simd_validation_with_config<
+    T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps,
+>(
     config: SimdValidationConfig,
 ) -> InterpolateResult<ValidationSummary<T>> {
     let mut validator = SimdPerformanceValidator::new(config);

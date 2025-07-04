@@ -470,7 +470,7 @@ where
         + num_traits::One
         + ndarray::ScalarOperand,
 {
-    use rand::prelude::*;
+    use scirs2_core::rng;
     use rand::rngs::StdRng;
     use rand::seq::SliceRandom;
 

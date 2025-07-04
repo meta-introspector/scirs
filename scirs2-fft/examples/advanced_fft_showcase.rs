@@ -7,9 +7,9 @@
 use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_fft::{
-    create_advanced_fft_coordinator,
-    advanced_coordinator::{FftAlgorithmType, MemoryAllocationStrategy},
     advancedFftConfig,
+    advanced_coordinator::{FftAlgorithmType, MemoryAllocationStrategy},
+    create_advanced_fft_coordinator,
 };
 use std::f64::consts::PI;
 use std::time::Instant;

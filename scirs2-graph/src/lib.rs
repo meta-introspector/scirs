@@ -281,8 +281,8 @@ pub use temporal::{
 
 // Advanced mode optimizations - experimental but stable API
 pub use advanced::{
-    create_advanced_processor, execute_with_advanced, AlgorithmMetrics, GPUAccelerationContext,
-    NeuralRLAgent, NeuromorphicProcessor, AdvancedConfig, AdvancedProcessor, AdvancedStats,
+    create_advanced_processor, execute_with_advanced, AdvancedConfig, AdvancedProcessor,
+    AdvancedStats, AlgorithmMetrics, GPUAccelerationContext, NeuralRLAgent, NeuromorphicProcessor,
 };
 
 // Graph memory profiling - experimental

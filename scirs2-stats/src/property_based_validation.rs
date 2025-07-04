@@ -351,10 +351,10 @@ impl MathematicalProperty<Array1<f64>> for VarianceTranslationInvariance {
     fn test(&self, input: &Array1<f64>) -> PropertyTestResult {
         use crate::descriptive::var;
 
-        let original_var = var(&input.view(), 1);
+        let original_var = var(&input.view(), 1, None);
         let translation = 50.0;
         let translated = input.mapv(|x| x + translation);
-        let translated_var = var(&translated.view(), 1);
+        let translated_var = var(&translated.view(), 1, None);
 
         let property_holds = match (original_var, translated_var) {
             (Ok(orig), Ok(trans)) => (trans - orig).abs() < 1e-12,
@@ -498,6 +498,7 @@ impl MathematicalProperty<(Array1<f64>, Array1<f64>)> for CorrelationBounds {
 }
 
 /// Comprehensive test suite for all mathematical properties
+#[derive(Debug)]
 pub struct ComprehensivePropertyTestSuite {
     validator: PropertyBasedValidator,
 }
@@ -606,10 +607,10 @@ impl MathematicalProperty<Array1<f64>> for StandardDeviationScale {
     fn test(&self, input: &Array1<f64>) -> PropertyTestResult {
         use crate::descriptive::std;
 
-        let original_std = std(&input.view(), 1);
+        let original_std = std(&input.view(), 1, None);
         let scale_factor = 2.0;
         let scaled = input.mapv(|x| x * scale_factor);
-        let scaled_std = std(&scaled.view(), 1);
+        let scaled_std = std(&scaled.view(), 1, None);
 
         let property_holds = match (original_std, scaled_std) {
             (Ok(orig), Ok(scaled)) => {
@@ -662,7 +663,7 @@ impl MathematicalProperty<Array1<f64>> for StandardDeviationNonNegativity {
     fn test(&self, input: &Array1<f64>) -> PropertyTestResult {
         use crate::descriptive::std;
 
-        let result = std(&input.view(), 1);
+        let result = std(&input.view(), 1, None);
 
         let property_holds = match result {
             Ok(std_val) => std_val >= 0.0 && std_val.is_finite(),

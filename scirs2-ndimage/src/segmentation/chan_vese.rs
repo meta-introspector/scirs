@@ -506,7 +506,7 @@ pub fn mask_to_level_set(
 
     // Apply smoothing if requested
     if let Some(sigma) = smoothing {
-        phi = gaussian_filter(&phi, &[sigma, sigma], None, Some(BorderMode::Reflect), None)?;
+        phi = gaussian_filter(&phi, sigma, Some(BorderMode::Reflect), None)?;
     }
 
     Ok(phi)

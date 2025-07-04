@@ -38,8 +38,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps}
 pub fn mean_simd<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
@@ -77,8 +76,7 @@ where
 pub fn variance_simd<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     let n = x.len();
     if n <= ddof {
@@ -132,8 +130,7 @@ where
 pub fn std_simd<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     variance_simd(x, ddof).map(|var| var.sqrt())
 }
@@ -154,8 +151,7 @@ where
 pub fn descriptive_stats_simd<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F, F)>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     if x.is_empty() {
         return Err(crate::error::StatsError::InvalidArgument(

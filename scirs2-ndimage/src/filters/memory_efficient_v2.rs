@@ -126,7 +126,7 @@ where
         gaussian_filter_separable_zerocopy(input, sigma)
     } else {
         // Use regular filtering for small inputs
-        gaussian_filter(input, sigma, None, Some(BorderMode::Reflect), None)
+        gaussian_filter(input, sigma, Some(BorderMode::Reflect), None)
     }
 }
 
@@ -190,9 +190,14 @@ where
     let border_mode = BorderMode::Reflect;
 
     let op = move |chunk: &ArrayView<T, IxDyn>| -> CoreResult<Array<T, IxDyn>> {
-        gaussian_filter(&chunk.to_owned(), &sigma_vec, None, Some(border_mode), None)
-            .map(|r| r.into_dyn())
-            .map_err(|e| scirs2_core::error::CoreError::ComputationError(e.to_string()))
+        gaussian_filter(
+            &chunk.to_owned(),
+            sigma_vec[0].to_f64().unwrap_or(1.0),
+            Some(border_mode),
+            None,
+        )
+        .map(|r| r.into_dyn())
+        .map_err(|e| scirs2_core::error::CoreError::ComputationError(e.to_string()))
     };
 
     process_chunked_v2(

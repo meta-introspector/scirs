@@ -433,10 +433,7 @@ impl PerformanceReportGenerator {
         let data_sizes: Vec<usize> = self.data_points.iter().map(|dp| dp.data_size).collect();
         let min_size = data_sizes.iter().min().unwrap_or(&0);
         let max_size = data_sizes.iter().max().unwrap_or(&0);
-        writeln!(
-            file,
-            "  Tested Size Range: {min_size} - {max_size} points"
-        )?;
+        writeln!(file, "  Tested Size Range: {min_size} - {max_size} points")?;
 
         // Find optimal size ranges
         let small_data_perf: Vec<&PerformanceDataPoint> = self

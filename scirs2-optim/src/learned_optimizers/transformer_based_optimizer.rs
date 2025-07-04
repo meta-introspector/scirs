@@ -2706,7 +2706,7 @@ pub struct TransformerOptimizerState<T: Float> {
     current_lr: T,
 }
 
-impl<T: Float> TransformerOptimizer<T> {
+impl<T: Float + Send + Sync> TransformerOptimizer<T> {
     /// Create new transformer optimizer
     pub fn new(config: TransformerBasedOptimizerConfig<T>) -> Result<Self> {
         let transformer = TransformerArchitecture::new(&config)?;
@@ -2860,7 +2860,7 @@ pub struct RuleCondition<T: Float> {
 }
 
 // Implementation of supporting components
-impl<T: Float> TransformerLayer<T> {
+impl<T: Float + Send + Sync> TransformerLayer<T> {
     fn forward(&self, input: &Array2<T>) -> Result<Array2<T>> {
         // Pre-norm architecture
         let normalized_input = self.pre_norm1.forward(input)?;
@@ -2887,7 +2887,7 @@ impl<T: Float> TransformerLayer<T> {
     }
 }
 
-impl<T: Float> FeedForwardNetwork<T> {
+impl<T: Float + Send + Sync> FeedForwardNetwork<T> {
     fn new(input_dim: usize, hidden_dim: usize, dropout_rate: f64) -> Result<Self> {
         Ok(Self {
             linear1: LinearLayer::new(input_dim, hidden_dim)?,
@@ -2947,7 +2947,7 @@ impl<T: Float> FeedForwardNetwork<T> {
     }
 }
 
-impl<T: Float> LinearLayer<T> {
+impl<T: Float + Send + Sync> LinearLayer<T> {
     fn new(input_dim: usize, output_dim: usize) -> Result<Self> {
         // Xavier initialization
         let init_scale = T::from((2.0 / (input_dim + output_dim) as f64).sqrt()).unwrap();
@@ -2985,7 +2985,7 @@ impl<T: Float> LinearLayer<T> {
     }
 }
 
-impl<T: Float> LayerNormalization<T> {
+impl<T: Float + Send + Sync> LayerNormalization<T> {
     fn new(dim: usize) -> Result<Self> {
         Ok(Self {
             weight: Array1::ones(dim),
@@ -3026,7 +3026,7 @@ impl<T: Float> LayerNormalization<T> {
     }
 }
 
-impl<T: Float> EmbeddingLayer<T> {
+impl<T: Float + Send + Sync> EmbeddingLayer<T> {
     fn new(embedding_dim: usize, max_seq_length: usize) -> Result<Self> {
         let init_scale = T::from(0.02).unwrap();
         let embedding_weights = Array2::from_shape_fn((max_seq_length, embedding_dim), |(i, j)| {
@@ -3066,7 +3066,7 @@ impl<T: Float> EmbeddingLayer<T> {
     }
 }
 
-impl<T: Float> OutputProjection<T> {
+impl<T: Float + Send + Sync> OutputProjection<T> {
     fn new(input_dim: usize, output_dim: usize) -> Result<Self> {
         Ok(Self {
             projection_layer: LinearLayer::new(input_dim, output_dim)?,
@@ -3115,7 +3115,7 @@ impl DropoutLayer {
     }
 }
 
-impl<T: Float> ResidualConnections<T> {
+impl<T: Float + Send + Sync> ResidualConnections<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             connection_type: ResidualType::Add,
@@ -3166,7 +3166,7 @@ impl<T: Float> ResidualConnections<T> {
 }
 
 // Implementation stubs for major components
-impl<T: Float> TransformerArchitecture<T> {
+impl<T: Float + Send + Sync> TransformerArchitecture<T> {
     fn new(config: &TransformerBasedOptimizerConfig<T>) -> Result<Self> {
         let mut layers = Vec::new();
         
@@ -3246,7 +3246,7 @@ impl<T: Float> TransformerArchitecture<T> {
     }
 }
 
-impl<T: Float> PositionalEncoding<T> {
+impl<T: Float + Send + Sync> PositionalEncoding<T> {
     fn new(encoding_type: PositionalEncodingType, max_length: usize, encoding_dim: usize) -> Result<Self> {
         let mut encoding_matrix = Array2::zeros((max_length, encoding_dim));
         
@@ -3304,7 +3304,7 @@ impl<T: Float> PositionalEncoding<T> {
     }
 }
 
-impl<T: Float> MultiHeadAttention<T> {
+impl<T: Float + Send + Sync> MultiHeadAttention<T> {
     fn new(config: &TransformerBasedOptimizerConfig<T>) -> Result<Self> {
         Self::new_with_config(config.model_dim, config.num_heads, config.dropout_rate)
     }
@@ -3463,7 +3463,7 @@ impl<T: Float> MultiHeadAttention<T> {
     }
 }
 
-impl<T: Float> TransformerMetaLearning<T> {
+impl<T: Float + Send + Sync> TransformerMetaLearning<T> {
     fn new(config: &TransformerMetaConfig<T>) -> Result<Self> {
         Ok(Self {
             meta_strategy: config.strategy,
@@ -3587,7 +3587,7 @@ impl<T: Float> TransformerMetaLearning<T> {
     }
 }
 
-impl<T: Float> OptimizationSequenceProcessor<T> {
+impl<T: Float + Send + Sync> OptimizationSequenceProcessor<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             sequence_analyzer: SequenceAnalyzer::new()?,
@@ -3635,7 +3635,7 @@ impl<T: Float> OptimizationSequenceProcessor<T> {
     }
 }
 
-impl<T: Float> TransformerMemoryManager<T> {
+impl<T: Float + Send + Sync> TransformerMemoryManager<T> {
     fn new(config: &TransformerMemoryConfig<T>) -> Result<Self> {
         let mut memory_stores = HashMap::new();
         
@@ -3721,7 +3721,7 @@ impl<T: Float> TransformerMemoryManager<T> {
     }
 }
 
-impl<T: Float> TransformerPerformanceTracker<T> {
+impl<T: Float + Send + Sync> TransformerPerformanceTracker<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             performance_history: VecDeque::new(),
@@ -3796,7 +3796,7 @@ impl<T: Float> TransformerPerformanceTracker<T> {
     }
 }
 
-impl<T: Float> TransformerOptimizerState<T> {
+impl<T: Float + Send + Sync> TransformerOptimizerState<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             parameters: HashMap::new(),
@@ -3811,7 +3811,7 @@ impl<T: Float> TransformerOptimizerState<T> {
 }
 
 // Additional stub implementations for helper components
-impl<T: Float> GradientProcessor<T> {
+impl<T: Float + Send + Sync> GradientProcessor<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             processing_layers: vec![LinearLayer::new(256, 256)?],
@@ -3843,7 +3843,7 @@ impl<T: Float> GradientProcessor<T> {
     }
 }
 
-impl<T: Float> UpdateRuleGenerator<T> {
+impl<T: Float + Send + Sync> UpdateRuleGenerator<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             generator_network: GeneratorNetwork::new()?,
@@ -3854,7 +3854,7 @@ impl<T: Float> UpdateRuleGenerator<T> {
     }
 }
 
-impl<T: Float> ContextIntegrator<T> {
+impl<T: Float + Send + Sync> ContextIntegrator<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             integration_type: IntegrationType::Additive,
@@ -3869,7 +3869,7 @@ impl<T: Float> ContextIntegrator<T> {
     }
 }
 
-impl<T: Float> ContextMemory<T> {
+impl<T: Float + Send + Sync> ContextMemory<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             memory_bank: Vec::new(),
@@ -3879,7 +3879,7 @@ impl<T: Float> ContextMemory<T> {
     }
 }
 
-impl<T: Float> PerformanceTracker<T> {
+impl<T: Float + Send + Sync> PerformanceTracker<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             metrics_history: VecDeque::new(),
@@ -3893,7 +3893,7 @@ impl<T: Float> PerformanceTracker<T> {
     }
 }
 
-impl<T: Float> AdaptationMechanism<T> {
+impl<T: Float + Send + Sync> AdaptationMechanism<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             adaptation_strategy: AdaptationType::Gradient,
@@ -3904,7 +3904,7 @@ impl<T: Float> AdaptationMechanism<T> {
 }
 
 // Additional helper implementations
-impl<T: Float> SequenceAnalyzer<T> {
+impl<T: Float + Send + Sync> SequenceAnalyzer<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             analysis_methods: vec![AnalysisMethod::Statistical],
@@ -3918,7 +3918,7 @@ impl<T: Float> SequenceAnalyzer<T> {
     }
 }
 
-impl<T: Float> PatternDetector<T> {
+impl<T: Float + Send + Sync> PatternDetector<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             detection_algorithms: vec![DetectionAlgorithm::Correlation],
@@ -3937,7 +3937,7 @@ impl<T: Float> PatternDetector<T> {
     }
 }
 
-impl<T: Float> TrendAnalyzer<T> {
+impl<T: Float + Send + Sync> TrendAnalyzer<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             trend_methods: vec![TrendMethod::LinearRegression],
@@ -3956,7 +3956,7 @@ impl<T: Float> TrendAnalyzer<T> {
     }
 }
 
-impl<T: Float> SequenceEmbedder<T> {
+impl<T: Float + Send + Sync> SequenceEmbedder<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             embedding_model: EmbeddingModel::Transformer,
@@ -3988,7 +3988,7 @@ impl<T: Float> SequenceEmbedder<T> {
     }
 }
 
-impl<T: Float> TemporalProcessor<T> {
+impl<T: Float + Send + Sync> TemporalProcessor<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             processing_model: TemporalModel::LSTM,
@@ -4016,7 +4016,7 @@ impl<T: Float> TemporalProcessor<T> {
 }
 
 // Stub implementations for remaining helper components
-impl<T: Float> GeneratorNetwork<T> {
+impl<T: Float + Send + Sync> GeneratorNetwork<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             encoder: TransformerArchitecture::new(&TransformerBasedOptimizerConfig::default())?,
@@ -4026,7 +4026,7 @@ impl<T: Float> GeneratorNetwork<T> {
     }
 }
 
-impl<T: Float> RuleDecoder<T> {
+impl<T: Float + Send + Sync> RuleDecoder<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             layers: vec![],
@@ -4046,7 +4046,7 @@ impl RuleVocabulary {
     }
 }
 
-impl<T: Float> RuleSelector<T> {
+impl<T: Float + Send + Sync> RuleSelector<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             selection_strategy: SelectionStrategy::PerformanceBased,
@@ -4055,7 +4055,7 @@ impl<T: Float> RuleSelector<T> {
     }
 }
 
-impl<T: Float> RuleComposer<T> {
+impl<T: Float + Send + Sync> RuleComposer<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             composition_strategy: CompositionStrategy::Sequential,
@@ -4064,7 +4064,7 @@ impl<T: Float> RuleComposer<T> {
     }
 }
 
-impl<T: Float> GradientClipping<T> {
+impl<T: Float + Send + Sync> GradientClipping<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             method: ClippingMethod::Norm,
@@ -4080,7 +4080,7 @@ impl<T: Float> GradientClipping<T> {
     }
 }
 
-impl<T: Float> GradientNormalization<T> {
+impl<T: Float + Send + Sync> GradientNormalization<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             normalization_type: NormalizationType::L2,
@@ -4090,7 +4090,7 @@ impl<T: Float> GradientNormalization<T> {
     }
 }
 
-impl<T: Float> MemoryAccessMechanism<T> {
+impl<T: Float + Send + Sync> MemoryAccessMechanism<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             strategy: MemoryAccessStrategy::Attention,
@@ -4100,7 +4100,7 @@ impl<T: Float> MemoryAccessMechanism<T> {
     }
 }
 
-impl<T: Float> QueryProcessor<T> {
+impl<T: Float + Send + Sync> QueryProcessor<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             processing_layers: vec![],
@@ -4109,7 +4109,7 @@ impl<T: Float> QueryProcessor<T> {
     }
 }
 
-impl<T: Float> SimilarityMeasure<T> {
+impl<T: Float + Send + Sync> SimilarityMeasure<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             measure_type: SimilarityType::Cosine,
@@ -4118,7 +4118,7 @@ impl<T: Float> SimilarityMeasure<T> {
     }
 }
 
-impl<T: Float> MemoryManagement<T> {
+impl<T: Float + Send + Sync> MemoryManagement<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             management_strategy: ManagementStrategy::LRU,
@@ -4128,7 +4128,7 @@ impl<T: Float> MemoryManagement<T> {
     }
 }
 
-impl<T: Float> CompressionManager<T> {
+impl<T: Float + Send + Sync> CompressionManager<T> {
     fn new(compression_ratio: f64) -> Result<Self> {
         Ok(Self {
             compression_type: CompressionType::PCA,
@@ -4148,7 +4148,7 @@ impl<T: Float> CompressionManager<T> {
     }
 }
 
-impl<T: Float> CompressionModel<T> {
+impl<T: Float + Send + Sync> CompressionModel<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             model_type: CompressionModelType::PCA,
@@ -4157,7 +4157,7 @@ impl<T: Float> CompressionModel<T> {
     }
 }
 
-impl<T: Float> MemoryGarbageCollector<T> {
+impl<T: Float + Send + Sync> MemoryGarbageCollector<T> {
     fn new(enabled: bool) -> Result<Self> {
         Ok(Self {
             enabled,
@@ -4174,7 +4174,7 @@ impl<T: Float> MemoryGarbageCollector<T> {
     }
 }
 
-impl<T: Float> MemoryStore<T> {
+impl<T: Float + Send + Sync> MemoryStore<T> {
     fn new(capacity: usize) -> Result<Self> {
         Ok(Self {
             data: HashMap::new(),
@@ -4194,7 +4194,7 @@ impl<T: Float> MemoryStore<T> {
     }
 }
 
-impl<T: Float> MetricsComputer<T> {
+impl<T: Float + Send + Sync> MetricsComputer<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             metric_types: vec![MetricType::Accuracy, MetricType::Loss],
@@ -4214,7 +4214,7 @@ impl<T: Float> MetricsComputer<T> {
     }
 }
 
-impl<T: Float> BenchmarkSuite<T> {
+impl<T: Float + Send + Sync> BenchmarkSuite<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             benchmarks: vec![],
@@ -4223,7 +4223,7 @@ impl<T: Float> BenchmarkSuite<T> {
     }
 }
 
-impl<T: Float> PerformancePredictor<T> {
+impl<T: Float + Send + Sync> PerformancePredictor<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             prediction_model: PredictionModel::new()?,
@@ -4247,7 +4247,7 @@ impl<T: Float> PerformancePredictor<T> {
     }
 }
 
-impl<T: Float> AnomalyDetector<T> {
+impl<T: Float + Send + Sync> AnomalyDetector<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             detection_method: AnomalyDetectionMethod::Statistical,
@@ -4260,7 +4260,7 @@ impl<T: Float> AnomalyDetector<T> {
     }
 }
 
-impl<T: Float> PredictionModel<T> {
+impl<T: Float + Send + Sync> PredictionModel<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             model_type: PredictionModelType::LSTM,
@@ -4275,7 +4275,7 @@ impl<T: Float> PredictionModel<T> {
     }
 }
 
-impl<T: Float> TransformerPredictionArchitecture<T> {
+impl<T: Float + Send + Sync> TransformerPredictionArchitecture<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             layers: vec![],
@@ -4284,7 +4284,7 @@ impl<T: Float> TransformerPredictionArchitecture<T> {
     }
 }
 
-impl<T: Float> PredictionArchitecture<T> for TransformerPredictionArchitecture<T> {
+impl<T: Float + Send + Sync> PredictionArchitecture<T> for TransformerPredictionArchitecture<T> {
     fn predict(&self, sequence: &Array2<T>) -> Result<Array2<T>> {
         // Simple prediction - just return the input
         Ok(sequence.clone())
@@ -4299,7 +4299,7 @@ impl<T: Float> PredictionArchitecture<T> for TransformerPredictionArchitecture<T
     }
 }
 
-impl<T: Float> ContextIntegration<T> {
+impl<T: Float + Send + Sync> ContextIntegration<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             integration_layers: vec![],

@@ -3047,7 +3047,7 @@ impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
 
 // Implementation of helper structures
 
-impl<T: Float> SecureAggregator<T> {
+impl<T: Float + Send + Sync> SecureAggregator<T> {
     fn new(config: SecureAggregationConfig) -> Result<Self> {
         Ok(Self {
             config,
@@ -3070,7 +3070,7 @@ impl<T: Float> SecureAggregator<T> {
             let mask_size = self.config.masking_dimension;
 
             let mask = Array1::from_iter(
-                (0..mask_size).map(|_| T::from(client_rng.gen_range(-1.0..1.0)).unwrap()),
+                (0..mask_size).map(|_| T::from(client_rng.random_range(-1.0..1.0)).unwrap()),
             );
 
             self.client_masks.insert(client_id.clone(), mask);
@@ -3198,7 +3198,7 @@ impl PrivacyAmplificationAnalyzer {
     }
 }
 
-impl<T: Float> CrossDevicePrivacyManager<T> {
+impl<T: Float + Send + Sync> CrossDevicePrivacyManager<T> {
     fn new(config: CrossDeviceConfig) -> Self {
         Self {
             config,
@@ -4387,7 +4387,7 @@ pub mod secure_aggregation_protocols {
         }
     }
 
-    impl<T: Float> ByzantineFaultDetector<T> {
+    impl<T: Float + Send + Sync> ByzantineFaultDetector<T> {
         fn new() -> Self {
             Self {
                 anomaly_detector: StatisticalAnomalyDetector::new(),
@@ -4415,7 +4415,7 @@ pub mod secure_aggregation_protocols {
         }
     }
 
-    impl<T: Float> AggregationRoundState<T> {
+    impl<T: Float + Send + Sync> AggregationRoundState<T> {
         fn new() -> Self {
             Self {
                 round_number: 0,
@@ -4445,7 +4445,7 @@ pub mod secure_aggregation_protocols {
         _phantom: std::marker::PhantomData<T>,
     }
 
-    impl<T: Float> StatisticalAnomalyDetector<T> {
+    impl<T: Float + Send + Sync> StatisticalAnomalyDetector<T> {
         fn new() -> Self {
             Self {
                 _phantom: std::marker::PhantomData,

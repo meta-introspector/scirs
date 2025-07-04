@@ -8,7 +8,7 @@ use super::{
     ActivationType, LearnedOptimizationConfig, LearnedOptimizer, MetaOptimizerState,
     OptimizationProblem, TrainingTask,
 };
-use crate::error::OptimizeError;
+use crate::error::{OptimizeError, OptimizeResult};
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::{HashMap, VecDeque};
@@ -292,7 +292,7 @@ impl AdaptiveTransformerOptimizer {
         objective: &F,
         current_params: &ArrayView1<f64>,
         problem: &OptimizationProblem,
-    ) -> Result<OptimizationStep>
+    ) -> OptimizeResult<OptimizationStep>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -324,7 +324,7 @@ impl AdaptiveTransformerOptimizer {
         objective: &F,
         current_params: &ArrayView1<f64>,
         problem: &OptimizationProblem,
-    ) -> Result<Array2<f64>>
+    ) -> OptimizeResult<Array2<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -1037,7 +1037,7 @@ impl TransformerProblemEncoder {
         objective: &F,
         current_params: &ArrayView1<f64>,
         problem: &OptimizationProblem,
-    ) -> Result<Array1<f64>>
+    ) -> OptimizeResult<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -1415,7 +1415,7 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
         &mut self,
         objective: F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -1460,11 +1460,11 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
             }
         }
 
-        Ok(OptimizeResults {
+        Ok(OptimizeResults::<f64> {
             x: current_params,
             fun: best_value,
             success: true,
-            iterations,
+            nit: iterations,
             message: "Transformer optimization completed".to_string(),
         })
     }
@@ -1505,7 +1505,7 @@ pub fn transformer_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     config: Option<LearnedOptimizationConfig>,
-) -> Result<OptimizeResults>
+) -> super::Result<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {

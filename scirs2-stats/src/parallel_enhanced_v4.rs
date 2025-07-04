@@ -218,7 +218,7 @@ where
             use rand::{rngs::StdRng, Rng, SeedableRng};
             let mut rng = match seed {
                 Some(s) => StdRng::seed_from_u64(s.wrapping_add(i as u64)),
-                None => StdRng::from_rng(&mut rand::rng()),
+                None => StdRng::from_entropy(),
             };
 
             // Generate bootstrap sample

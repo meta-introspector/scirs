@@ -157,7 +157,7 @@ pub use image::{
 pub use optimization_config::{
     AdaptiveParameterTuner, AutoTuner, ConfigurationPredictor, DataCharacteristics,
     OptimizationConfig, OptimizationReport, PerformanceMetric, SystemMonitor, SystemResources,
-    TransformationRecommendation, advancedConfigOptimizer,
+    TransformationRecommendation, UltraThinkConfigOptimizer,
 };
 pub use out_of_core::{
     csv_chunks, ChunkedArrayReader, ChunkedArrayWriter, OutOfCoreConfig, OutOfCoreNormalizer,
@@ -196,15 +196,15 @@ pub use auto_feature_engineering::{
 // Quantum optimization exports
 pub use quantum_optimization::{
     QuantumHyperparameterTuner, QuantumInspiredOptimizer, QuantumParticle,
-    QuantumTransformationOptimizer, advancedQuantumMetrics, advancedQuantumOptimizer,
-    advancedQuantumParams,
+    QuantumTransformationOptimizer, UltraThinkQuantumMetrics, UltraThinkQuantumOptimizer,
+    UltraThinkQuantumParams,
 };
 
 // Neuromorphic computing exports
 pub use neuromorphic_adaptation::{
     NeuromorphicAdaptationNetwork, NeuromorphicMemorySystem, NeuromorphicTransformationSystem,
-    SpikingNeuron, SystemState, TransformationEpisode, advancedNeuromorphicMetrics,
-    advancedNeuromorphicProcessor,
+    SpikingNeuron, SystemState, TransformationEpisode, UltraThinkNeuromorphicMetrics,
+    UltraThinkNeuromorphicProcessor,
 };
 
 // Production monitoring exports

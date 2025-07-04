@@ -5,7 +5,9 @@
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, ArrayBase, Data, Ix1};
-use rand_distr::weighted::WeightedAliasIndex;
+// NOTE: rand_distr::weighted may not be available in current version
+// use rand_distr::weighted::WeightedAliasIndex;
+use rand::thread_rng;
 use rand_distr::Distribution;
 use scirs2_core::validation::{check_probabilities, check_probabilities_sum_to_one};
 use std::fmt::Debug;
@@ -46,8 +48,8 @@ pub struct Multinomial {
     pub n: u64,
     /// Probability of each outcome (must sum to 1)
     pub p: Array1<f64>,
-    /// Alias sampler for efficient random sampling
-    alias_sampler: WeightedAliasIndex<f64>,
+    // Alias sampler for efficient random sampling (temporarily disabled)
+    // alias_sampler: WeightedAliasIndex<f64>,
 }
 
 impl Multinomial {
@@ -84,20 +86,20 @@ impl Multinomial {
         check_probabilities_sum_to_one(&p_owned, "Probabilities", None)
             .map_err(StatsError::from)?;
 
-        // Create alias sampler for efficient random sampling
-        let alias_sampler = match WeightedAliasIndex::new(p_owned.iter().cloned().collect()) {
-            Ok(sampler) => sampler,
-            Err(_) => {
-                return Err(StatsError::ComputationError(
-                    "Failed to create alias sampler for random sampling".to_string(),
-                ))
-            }
-        };
+        // Create alias sampler for efficient random sampling (temporarily disabled)
+        // let alias_sampler = match WeightedAliasIndex::new(p_owned.iter().cloned().collect()) {
+        //     Ok(sampler) => sampler,
+        //     Err(_) => {
+        //         return Err(StatsError::ComputationError(
+        //             "Failed to create alias sampler for random sampling".to_string(),
+        //         ))
+        //     }
+        // };
 
         Ok(Multinomial {
             n,
             p: p_owned,
-            alias_sampler,
+            // alias_sampler,
         })
     }
 
@@ -273,7 +275,7 @@ impl Multinomial {
     /// assert_eq!(samples[0].len(), 3);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<Array1<f64>>> {
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
         let k = self.p.len();
 

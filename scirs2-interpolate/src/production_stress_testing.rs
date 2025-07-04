@@ -560,12 +560,12 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
                     // For error scenarios, we expect graceful failures
                     let mut issues = Vec::new();
                     let mut _error_count = 0;
-                    let mut total_tests = 0;
+                    let mut _total_tests = 0;
 
                     // Test each interpolation method
                     let methods = vec!["linear", "cubic", "pchip"];
                     for method in methods {
-                        total_tests += 1;
+                        _total_tests += 1;
                         let query_x = Array1::from_vec(vec![T::from_f64(2.5).unwrap()]);
 
                         let result = match method {
@@ -719,7 +719,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
         let mut issues = Vec::new();
         let mut error_info = None;
         let mut timings = Vec::new();
-        let mut total_tests = 0;
+        let mut _total_tests = 0;
         let mut successful_tests = 0;
 
         // Create query points
@@ -763,7 +763,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
         ];
 
         for (method_name, method_fn) in methods {
-            total_tests += 1;
+            _total_tests += 1;
             let method_start = Instant::now();
 
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -881,7 +881,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
             category: StressTestCategory::ExtremeDataSize, // Would be set appropriately by caller
             input_characteristics: format!("Large dataset: {} points", data_size),
             execution_time: total_duration,
-            status,
+            status: status.clone(),
             performance: StressPerformanceMetrics {
                 mean_time: avg_time,
                 max_time: timings
@@ -2089,7 +2089,7 @@ impl<T: InterpolationFloat + std::panic::RefUnwindSafe> ProductionStressTester<T
 
         let duration = start.elapsed();
 
-        let graceful_handling = match result {
+        let graceful_handling = match &result {
             Err(e) => {
                 let error_msg = format!("{}", e);
                 error_msg.contains("memory")

@@ -27,9 +27,11 @@ fn main() {
     matrix[4][2] = 10;
     matrix[4][3] = 12;
     // - Some minor errors scattered about
-    for j in 0..num_classes {
-        if i != j && matrix[i][j] == 0 {
-            matrix[i][j] = rng.random_range(0..5);
+    for i in 0..num_classes {
+        for j in 0..num_classes {
+            if i != j && matrix[i][j] == 0 {
+                matrix[i][j] = rng.random_range(0..5);
+            }
         }
     }
     // Convert to ndarray

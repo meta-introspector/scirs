@@ -1271,7 +1271,7 @@ pub enum WidgetType {
     AlertList,
 }
 
-impl<T: Float> EnhancedAuditSystem<T> {
+impl<T: Float + Send + Sync> EnhancedAuditSystem<T> {
     /// Create new enhanced audit system
     pub fn new(config: AuditConfig) -> Self {
         Self {
@@ -1607,7 +1607,7 @@ impl ComplianceMonitor {
     }
 }
 
-impl<T: Float> FormalVerificationEngine<T> {
+impl<T: Float + Send + Sync> FormalVerificationEngine<T> {
     pub fn new() -> Self {
         Self {
             verification_rules: Vec::new(),
@@ -1633,7 +1633,7 @@ impl<T: Float> FormalVerificationEngine<T> {
     }
 }
 
-impl<T: Float> ProofSystem<T> {
+impl<T: Float + Send + Sync> ProofSystem<T> {
     pub fn new() -> Self {
         Self {
             algorithms: HashMap::new(),
@@ -1642,7 +1642,7 @@ impl<T: Float> ProofSystem<T> {
     }
 }
 
-impl<T: Float> ModelChecker<T> {
+impl<T: Float + Send + Sync> ModelChecker<T> {
     pub fn new() -> Self {
         Self {
             model: SystemModel::new(),
@@ -1651,7 +1651,7 @@ impl<T: Float> ModelChecker<T> {
     }
 }
 
-impl<T: Float> SystemModel<T> {
+impl<T: Float + Send + Sync> SystemModel<T> {
     pub fn new() -> Self {
         Self {
             states: Vec::new(),
@@ -1660,7 +1660,7 @@ impl<T: Float> SystemModel<T> {
     }
 }
 
-impl<T: Float> TheoremProver<T> {
+impl<T: Float + Send + Sync> TheoremProver<T> {
     pub fn new() -> Self {
         Self {
             axioms: Vec::new(),
@@ -1717,7 +1717,7 @@ impl PredictionModel {
     }
 }
 
-impl<T: Float> CryptographicProofGenerator<T> {
+impl<T: Float + Send + Sync> CryptographicProofGenerator<T> {
     pub fn new() -> Self {
         Self {
             proof_types: HashMap::new(),

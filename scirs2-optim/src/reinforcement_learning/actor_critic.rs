@@ -337,7 +337,7 @@ pub struct ExperienceReplayBuffer<T: Float> {
     priority_tree: Option<Vec<T>>,
 }
 
-impl<T: Float> ExperienceReplayBuffer<T> {
+impl<T: Float + Send + Sync> ExperienceReplayBuffer<T> {
     /// Create a new experience replay buffer
     pub fn new(max_size: usize, alpha: T, beta: T) -> Self {
         Self {
@@ -374,7 +374,7 @@ impl<T: Float> ExperienceReplayBuffer<T> {
 
         let mut samples = Vec::new();
         for _ in 0..sample_size {
-            let idx = rng().gen_range(0..available_size);
+            let idx = rng().random_range(0..available_size);
             samples.push(self.buffer[idx].clone());
         }
 

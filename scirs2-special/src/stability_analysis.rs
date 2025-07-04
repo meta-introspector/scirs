@@ -216,8 +216,7 @@ pub mod bessel_stability {
 
     pub fn analyze_bessel_j_stability() -> StabilityAnalysis {
         let mut issues = Vec::new();
-        #[allow(unused_mut)]
-        let mut condition_numbers = HashMap::new();
+        let condition_numbers = HashMap::new();
 
         // Test small arguments
         for x in [1e-10, 1e-8, 1e-6, 1e-4] {

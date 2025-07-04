@@ -4,6 +4,7 @@
 //! resistive devices whose resistance depends on the history of applied voltage/current.
 //! Features advanced memristor models, crossbar architectures, and variability modeling.
 
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use scirs2_core::error::CoreResult as Result;
@@ -618,7 +619,11 @@ impl MemristiveOptimizer {
     }
 
     /// Optimize using memristive crossbar
-    pub fn optimize<F>(&mut self, objective: F, max_iterations: usize) -> Result<OptimizeResults>
+    pub fn optimize<F>(
+        &mut self,
+        objective: F,
+        max_iterations: usize,
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -666,7 +671,7 @@ impl MemristiveOptimizer {
             }
         }
 
-        Ok(OptimizeResults {
+        Ok(OptimizeResults::<f64> {
             x: self.best_parameters.clone(),
             fun: self.best_objective,
             success: self.best_objective < 1e-6,
@@ -805,7 +810,7 @@ pub fn advanced_memristive_optimization<F>(
     max_iterations: usize,
     memristor_params: MemristorParameters,
     model: MemristorModel,
-) -> Result<OptimizeResults>
+) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {

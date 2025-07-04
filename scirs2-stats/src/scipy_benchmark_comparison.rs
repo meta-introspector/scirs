@@ -809,7 +809,7 @@ print(json.dumps(info))
 
     /// Generate test data for benchmarking
     fn generate_test_data(&self, size: usize) -> StatsResult<TestData> {
-        use rand::{rng, Rng};
+        use scirs2_core::rng;
         use rand_distr::{Distribution, Normal};
 
         let mut rng = rng();

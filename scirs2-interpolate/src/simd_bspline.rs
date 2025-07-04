@@ -156,7 +156,7 @@ where
         for p in 1..=degree {
             let mut saved = T::zero();
             for r in 0..p {
-                let left = self.knots[k + 1 - r] - self.knots[k + 1 - p - r];
+                let _left = self.knots[k + 1 - r] - self.knots[k + 1 - p - r];
                 let right = self.knots[k + 1 + p - r] - self.knots[k + 1 - r];
                 if right != T::zero() {
                     let temp = basis[r] / right;

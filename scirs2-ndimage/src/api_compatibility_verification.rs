@@ -561,7 +561,7 @@ impl ApiCompatibilityTester {
         let mut incompatible_params = Vec::new();
         let mut error_messages = Vec::new();
 
-        let input = Array2::ones((10, 10));
+        let input = Array2::<f64>::ones((10, 10));
 
         // Test center of mass calculation
         let com_test = center_of_mass(&input).is_ok();

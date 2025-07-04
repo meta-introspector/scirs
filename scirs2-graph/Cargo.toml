@@ -43,6 +43,7 @@ tempfile = "3.8"
 criterion = { version = "0.5", features = ["html_reports"] }
 num_cpus = "1.16"
 ctor = "0.2"
+approx = "0.5"
 
 [features]
 default = ["std", "sysinfo"]

@@ -4,16 +4,16 @@
 //! across multiple scirs2-core modules, showing how they work together
 //! to provide enhanced AI-driven scientific computing.
 
+use scirs2_core::advanced_distributed_computing::AdvancedDistributedComputer;
+use scirs2_core::advanced_ecosystem_integration::AdvancedEcosystemCoordinator;
 use scirs2_core::error::CoreResult;
 use scirs2_core::neural_architecture_search::{
     HardwareConstraints, NASStrategy, NeuralArchitectureSearch, OptimizationObjectives,
     SearchConfig, SearchSpace,
 };
-use scirs2_core::advanced_distributed_computing::advancedDistributedComputer;
-use scirs2_core::advanced_ecosystem_integration::advancedEcosystemCoordinator;
 
 #[cfg(feature = "jit")]
-use scirs2_core::advanced_jit_compilation::advancedJitCompiler;
+use scirs2_core::advanced_jit_compilation::AdvancedJitCompiler;
 
 #[allow(dead_code)]
 fn main() -> CoreResult<()> {

@@ -32,9 +32,11 @@ use scirs2_ndimage::{
     enhanced_meta_learning_with_temporal_fusion,
     // Latest Advanced enhancements
     enhanced_quantum_consciousness_evolution,
+    fusion_processing,
     quantum_aware_resource_scheduling_optimization,
     quantum_neuromorphic_fusion::QuantumNeuromorphicConfig,
-    fusion_processing,
+    // Core structures
+    AdvancedConfig,
     ConsciousnessState,
     EnhancedMetaLearningSystem,
     NeuromorphicConfig,
@@ -43,8 +45,6 @@ use scirs2_ndimage::{
     QuantumConfig,
     QuantumConsciousnessEvolution,
     ResourceSchedulingDecision,
-    // Core structures
-    AdvancedConfig,
     UltrathinkState,
     WorkloadCharacteristics,
 };
@@ -359,21 +359,28 @@ fn demonstrate_quantum_resource_scheduling(
     for (i, algorithm) in resource_scheduler.scheduling_algorithms.iter().enumerate() {
         match algorithm {
             scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::QuantumAnnealing {
-                annealing_schedule, optimization_target
+                annealing_schedule,
+                optimization_target,
             } => {
-                println!("      Algorithm {}: Quantum Annealing ({} steps)", 
-                         i + 1, annealing_schedule.steps);
-            },
-            scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::QAOA {
-                layers, ..
-            } => {
+                println!(
+                    "      Algorithm {}: Quantum Annealing ({} steps)",
+                    i + 1,
+                    annealing_schedule.steps
+                );
+            }
+            scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::QAOA { layers, .. } => {
                 println!("      Algorithm {}: QAOA ({} layers)", i + 1, layers);
-            },
+            }
             scirs2_ndimage::fusion_core::QuantumSchedulingAlgorithm::VQEScheduling {
-                ansatz, ..
+                ansatz,
+                ..
             } => {
-                println!("      Algorithm {}: VQE Scheduling (ansatz: {})", i + 1, ansatz);
-            },
+                println!(
+                    "      Algorithm {}: VQE Scheduling (ansatz: {})",
+                    i + 1,
+                    ansatz
+                );
+            }
             _ => {
                 println!("      Algorithm {}: Advanced quantum scheduling", i + 1);
             }
@@ -390,17 +397,25 @@ fn demonstrate_quantum_resource_scheduling(
     {
         match strategy {
             scirs2_ndimage::fusion_core::QuantumLoadBalancingStrategy::QuantumSuperposition {
-                measurement_basis, ..
+                measurement_basis,
+                ..
             } => {
-                println!("      Strategy {}: Quantum Superposition (basis: {})", 
-                         i + 1, measurement_basis);
-            },
+                println!(
+                    "      Strategy {}: Quantum Superposition (basis: {})",
+                    i + 1,
+                    measurement_basis
+                );
+            }
             scirs2_ndimage::fusion_core::QuantumLoadBalancingStrategy::EntanglementSharing {
-                entanglement_strength, ..
+                entanglement_strength,
+                ..
             } => {
-                println!("      Strategy {}: Entanglement Sharing (strength: {:.3})", 
-                         i + 1, entanglement_strength);
-            },
+                println!(
+                    "      Strategy {}: Entanglement Sharing (strength: {:.3})",
+                    i + 1,
+                    entanglement_strength
+                );
+            }
             _ => {
                 println!("      Strategy {}: Advanced quantum load balancing", i + 1);
             }

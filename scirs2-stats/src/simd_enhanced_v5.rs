@@ -6,7 +6,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
-use rand::Rng;
+use scirs2_core::Rng;
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 
 /// SIMD-optimized rolling statistics with configurable functions
@@ -475,7 +475,7 @@ where
             }
             _ => {
                 // For other operations, flatten and compute
-                let flattened = data.view().into_shape(data.len()).unwrap();
+                let flattened = data.view().to_shape(data.len()).unwrap();
                 compute_vector_operation(&flattened, operation, &mut results, 0);
             }
         }
@@ -804,7 +804,7 @@ where
 
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
-        None => StdRng::from_rng(&mut rand::rng()),
+        None => StdRng::from_entropy(),
     };
 
     let n_data = data.len();
@@ -812,7 +812,7 @@ where
 
     // Parallel bootstrap sampling for large numbers of bootstrap samples
     if n_bootstrap > 1000 {
-        let seeds: Vec<u64> = (0..n_bootstrap).map(|_| rng.gen()).collect();
+        let seeds: Vec<u64> = (0..n_bootstrap).map(|_| rng.random()).collect();
 
         parallel_for_indexed(0..n_bootstrap, |chunk, chunk_start| {
             let mut local_rng = StdRng::seed_from_u64(seeds[chunk_start]);

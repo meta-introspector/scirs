@@ -2545,7 +2545,7 @@ pub struct MemoryOptimizationStats {
 
 // Implement stub methods for the contained structs to make this compile
 
-impl<T: Float> GradientAccumulator<T> {
+impl<T: Float + Send + Sync> GradientAccumulator<T> {
     fn new(microbatch_size: usize) -> Self {
         Self {
             accumulated_gradients: HashMap::new(),
@@ -2575,7 +2575,7 @@ impl<T: Float> GradientAccumulator<T> {
     }
 }
 
-impl<T: Float> CheckpointManager<T> {
+impl<T: Float + Send + Sync> CheckpointManager<T> {
     fn new(interval: usize) -> Self {
         Self {
             checkpoints: HashMap::new(),
@@ -2597,7 +2597,7 @@ impl<T: Float> CheckpointManager<T> {
     }
 }
 
-impl<T: Float> ParameterOffloadManager<T> {
+impl<T: Float + Send + Sync> ParameterOffloadManager<T> {
     fn new(threshold: usize) -> Self {
         Self {
             offloaded_params: HashMap::new(),
@@ -2691,7 +2691,7 @@ impl MemoryPressureMonitor {
     }
 }
 
-impl<T: Float> ZeroRedundancyState<T> {
+impl<T: Float + Send + Sync> ZeroRedundancyState<T> {
     fn new() -> Self {
         Self {
             parameter_partitions: Vec::new(),
@@ -2704,7 +2704,7 @@ impl<T: Float> ZeroRedundancyState<T> {
     }
 }
 
-impl<T: Float> GradientSynchronizer<T> {
+impl<T: Float + Send + Sync> GradientSynchronizer<T> {
     fn new() -> Self {
         Self {
             pending_reductions: HashMap::new(),
@@ -2715,7 +2715,7 @@ impl<T: Float> GradientSynchronizer<T> {
     }
 }
 
-impl<T: Float> MixedPrecisionManager<T> {
+impl<T: Float + Send + Sync> MixedPrecisionManager<T> {
     fn new(enabled: bool) -> Self {
         Self {
             enabled,
@@ -2741,7 +2741,7 @@ impl<T: Float> MixedPrecisionManager<T> {
     }
 }
 
-impl<T: Float> MemoryMappedStorage<T> {
+impl<T: Float + Send + Sync> MemoryMappedStorage<T> {
     fn new() -> Self {
         Self {
             mapped_files: HashMap::new(),
@@ -2755,7 +2755,7 @@ impl<T: Float> MemoryMappedStorage<T> {
     }
 }
 
-impl<T: Float> MemoryCoalescingOptimizer<T> {
+impl<T: Float + Send + Sync> MemoryCoalescingOptimizer<T> {
     /// Create a new memory coalescing optimizer
     fn new() -> Self {
         Self {
@@ -2898,7 +2898,7 @@ impl WarpDivergenceTracker {
     }
 }
 
-impl<T: Float> CudaLayoutOptimizer<T> {
+impl<T: Float + Send + Sync> CudaLayoutOptimizer<T> {
     fn new() -> Self {
         Self {
             aos_vs_soa_analyzer: AoSVsSoAAnalyzer::new(),
@@ -2954,7 +2954,7 @@ impl<T: Float> CudaLayoutOptimizer<T> {
     }
 }
 
-impl<T: Float> AoSVsSoAAnalyzer<T> {
+impl<T: Float + Send + Sync> AoSVsSoAAnalyzer<T> {
     fn new() -> Self {
         Self {
             current_layout: MemoryLayout::ArrayOfStructures,
@@ -3000,7 +3000,7 @@ impl MemoryAlignmentOptimizer {
     }
 }
 
-impl<T: Float> TextureMemoryOptimizer<T> {
+impl<T: Float + Send + Sync> TextureMemoryOptimizer<T> {
     fn new() -> Self {
         Self {
             texture_cache_efficiency: 0.8,
@@ -3018,7 +3018,7 @@ impl<T: Float> TextureMemoryOptimizer<T> {
     }
 }
 
-impl<T: Float> ConstantMemoryOptimizer<T> {
+impl<T: Float + Send + Sync> ConstantMemoryOptimizer<T> {
     fn new() -> Self {
         Self {
             constant_usage: 0,
@@ -3029,7 +3029,7 @@ impl<T: Float> ConstantMemoryOptimizer<T> {
     }
 }
 
-impl<T: Float> SharedMemoryOptimizer<T> {
+impl<T: Float + Send + Sync> SharedMemoryOptimizer<T> {
     fn new() -> Self {
         Self {
             shared_usage: 0,

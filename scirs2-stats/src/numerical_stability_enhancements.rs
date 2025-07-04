@@ -1415,7 +1415,7 @@ impl MonteCarloStabilityTester {
         D: Data<Elem = R>,
         R: Float + NumCast + Copy + Send + Sync + Debug + 'static,
     {
-        let mut rng = rand::rng();
+        let mut rng = scirs2_core::rng();
         let perturbation_magnitude = R::from(1e-12).unwrap_or(R::min_positive_value());
 
         let perturbed_data = test_data.mapv(|x| {
@@ -2248,7 +2248,7 @@ pub fn test_mean_stability() -> StatsResult<ComprehensiveStabilityResult> {
 pub fn test_variance_stability() -> StatsResult<ComprehensiveStabilityResult> {
     use crate::descriptive::var;
 
-    let variance_function = |data: &ArrayView1<f64>| var(data, 1);
+    let variance_function = |data: &ArrayView1<f64>| var(data, 1, None);
 
     let input_ranges = vec![
         (-1e6, 1e6),     // Large numbers

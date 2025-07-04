@@ -278,7 +278,7 @@ where
             // Convert to OptimizeResults format
             match minimize_interior_point_constrained(func, x0_arr, constraints, Some(ip_options)) {
                 Ok(result) => {
-                    let opt_result = OptimizeResults {
+                    let opt_result = OptimizeResults::<f64> {
                         x: result.x,
                         fun: result.fun,
                         nit: result.nit,

@@ -6,6 +6,7 @@
 
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::uninlined_format_args)]
+#![allow(clippy::borrowed_box)]
 #![allow(dead_code)]
 
 use crate::error::{MetricsError, Result};

@@ -499,13 +499,13 @@ impl PhoneticAlgorithm for Nysiis {
 
         // Step 1: Handle initial letter combinations
         if word.len() >= 3 {
-            let start = &word[0..3].iter().collect::<String>();
-            match start.as_str() {
-                "MAC" => word[1] = 'C',
-                "KN" => {
-                    word.remove(0);
-                }
-                _ => {}
+            let start3 = &word[0..3].iter().collect::<String>();
+            let start2 = &word[0..2].iter().collect::<String>();
+
+            if start3 == "MAC" {
+                word[1] = 'C';
+            } else if start2 == "KN" {
+                word.remove(0);
             }
         } else if word.len() >= 2 {
             let start = &word[0..2].iter().collect::<String>();
@@ -524,7 +524,7 @@ impl PhoneticAlgorithm for Nysiis {
         if word.len() >= 3 && word[0] == 'S' && word[1] == 'C' && word[2] == 'H' {
             word[0] = 'S';
             word[1] = 'S';
-            word[2] = 'S';
+            word.remove(2); // Remove the third character to get SS instead of SSS
         }
 
         // Step 2: Handle last letter combinations
@@ -555,7 +555,7 @@ impl PhoneticAlgorithm for Nysiis {
 
             match ch {
                 'A' => {
-                    // Only add 'A' if it's not repeated and last char isn't 'A'
+                    // Add 'A' only if previous character is different and result doesn't end with 'A'
                     if prev != 'A' && result.last() != Some(&'A') {
                         result.push('A');
                     }
@@ -564,7 +564,7 @@ impl PhoneticAlgorithm for Nysiis {
                     if prev == ch {
                         continue; // Skip repeated vowels
                     }
-                    // Don't add 'A' if the last character is already 'A'
+                    // Convert vowels to 'A', but avoid consecutive 'A's in the result
                     if result.last() != Some(&'A') {
                         result.push('A');
                     }
@@ -597,7 +597,10 @@ impl PhoneticAlgorithm for Nysiis {
                     }
                 }
                 'H' => {
-                    if !matches!(prev, 'A' | 'E' | 'I' | 'O' | 'U')
+                    // Skip 'H' if it follows 'G' (for GH combinations)
+                    if prev == 'G' {
+                        // Skip this 'H'
+                    } else if !matches!(prev, 'A' | 'E' | 'I' | 'O' | 'U')
                         && !matches!(
                             next,
                             Some('A') | Some('E') | Some('I') | Some('O') | Some('U')
@@ -616,13 +619,23 @@ impl PhoneticAlgorithm for Nysiis {
                     if prev != ch {
                         // Skip repeated consonants
                         result.push(ch);
+                    } else if i == 1 && ch == 'F' && result.len() == 1 && result[0] == 'F' {
+                        // Special case: allow FF from PH conversion at start only
+                        result.push(ch);
+                    } else if i == 1 && ch == 'S' && result.len() == 1 && result[0] == 'S' {
+                        // Special case: allow SS from SCH conversion at start only
+                        result.push(ch);
                     }
                 }
             }
         }
 
-        // Step 5: Remove trailing 'S' and 'A'
-        while result.len() > 1 && (result.last() == Some(&'S') || result.last() == Some(&'A')) {
+        // Step 5: Remove trailing 'S', 'A', and 'H'
+        while result.len() > 1
+            && (result.last() == Some(&'S')
+                || result.last() == Some(&'A')
+                || result.last() == Some(&'H'))
+        {
             result.pop();
         }
 
@@ -964,7 +977,7 @@ mod tests {
 
         // Basic tests
         assert_eq!(nysiis.encode("Johnson").unwrap(), "JANSAN");
-        assert_eq!(nysiis.encode("Williams").unwrap(), "WALAAN");  // Our implementation produces this valid NYSIIS code
+        assert_eq!(nysiis.encode("Williams").unwrap(), "WALAN"); // Standard NYSIIS code
         assert_eq!(nysiis.encode("Jones").unwrap(), "JAN");
         assert_eq!(nysiis.encode("Smith").unwrap(), "SNAT");
         assert_eq!(nysiis.encode("MacDonald").unwrap(), "MCDANALD");
@@ -983,8 +996,8 @@ mod tests {
 
         // Test with max length
         let nysiis_6 = Nysiis::with_max_length(6);
-        assert_eq!(nysiis_6.encode("Williams").unwrap(), "WALAAN");  // 6 chars exactly, so not truncated
-        assert_eq!(nysiis_6.encode("MacDonald").unwrap(), "MCDANA");  // 6 chars, truncated from longer
+        assert_eq!(nysiis_6.encode("Williams").unwrap(), "WALAN"); // 5 chars, so not truncated
+        assert_eq!(nysiis_6.encode("MacDonald").unwrap(), "MCDANA"); // 6 chars, truncated from longer
     }
 
     #[test]
@@ -993,15 +1006,19 @@ mod tests {
 
         // Test simple alignment
         let result = aligner.align("GATTACA", "GCATGCU");
-        
+
         // Check that we get a valid optimal alignment with correct score
         assert_eq!(result.aligned_seq1, "G-ATTACA");
         assert_eq!(result.score, 0);
-        
+
         // Verify the alignment is valid by checking that all characters from seq2 are present
-        let seq2_chars = result.aligned_seq2.chars().filter(|&c| c != '-').collect::<String>();
+        let seq2_chars = result
+            .aligned_seq2
+            .chars()
+            .filter(|&c| c != '-')
+            .collect::<String>();
         assert_eq!(seq2_chars, "GCATGCU");
-        
+
         // Verify alignment length consistency
         assert_eq!(result.aligned_seq1.len(), result.aligned_seq2.len());
 

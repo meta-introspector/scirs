@@ -14,11 +14,11 @@ use super::{
 };
 use crate::error::OptimizeError;
 use ndarray::s;
-use ndarray::{Array1, Array2, ArrayView1};
-// Unused import
-// use scirs2_core::error::CoreResult;
-// Unused import
-// use scirs2_core::simd_ops::SimdUnifiedOps;
+use ndarray::{Array1, Array2}; // Unused import: ArrayView1
+                               // Unused import
+                               // use scirs2_core::error::CoreResult;
+                               // Unused import
+                               // use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 

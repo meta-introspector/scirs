@@ -53,7 +53,7 @@ pub struct BayesianRegressionResult {
 
 impl BayesianLinearRegression {
     /// Create a new Bayesian linear regression model
-    pub fn new(n_features: usize, fit_intercept: bool) -> Result<Self> {
+    pub fn new(n_features: usize, fit_intercept: bool) -> StatsResult<Self> {
         check_positive(n_features, "n_features")?;
 
         // Default to weakly informative priors
@@ -78,7 +78,7 @@ impl BayesianLinearRegression {
         prior_alpha: f64,
         prior_beta: f64,
         fit_intercept: bool,
-    ) -> Result<Self> {
+    ) -> StatsResult<Self> {
         check_array_finite(&prior_mean, "prior_mean")?;
         check_array_finite(&prior_precision, "prior_precision")?;
         check_positive(prior_alpha, "prior_alpha")?;

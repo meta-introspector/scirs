@@ -231,7 +231,18 @@ pub struct BayesianInterpolator<T: Float> {
     y_obs: Array1<T>,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign + std::ops::RemAssign> BayesianInterpolator<T> {
+impl<
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Display
+            + std::ops::AddAssign
+            + std::ops::SubAssign
+            + std::ops::MulAssign
+            + std::ops::DivAssign
+            + std::ops::RemAssign,
+    > BayesianInterpolator<T>
+{
     /// Create a new Bayesian interpolator
     pub fn new(
         x: &ArrayView1<T>,
@@ -938,9 +949,7 @@ impl<T: crate::traits::InterpolationFloat> EnsembleInterpolator<T> {
     }
 }
 
-impl<T: crate::traits::InterpolationFloat> Default
-    for EnsembleInterpolator<T>
-{
+impl<T: crate::traits::InterpolationFloat> Default for EnsembleInterpolator<T> {
     fn default() -> Self {
         Self::new()
     }
@@ -1135,7 +1144,13 @@ impl CrossValidationUncertainty {
 /// Create an ensemble interpolator with linear and cubic methods
 #[allow(dead_code)]
 pub fn make_ensemble_interpolator<
-    T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum + crate::traits::InterpolationFloat,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + Copy
+        + std::iter::Sum
+        + crate::traits::InterpolationFloat,
 >() -> EnsembleInterpolator<T> {
     EnsembleInterpolator::new()
         .add_linear_method(T::from(0.6).unwrap())

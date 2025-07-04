@@ -5,8 +5,8 @@
 
 use ndarray::{Array1, ArrayView1};
 use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::advanced_mode_coordinator::{
-    PerformanceTargets, advancedModeConfig, advancedModeCoordinator,
+use scirs2_integrate::ultrathink_mode_coordinator::{
+    AdvancedModeConfig, AdvancedModeCoordinator, PerformanceTargets,
 };
 use std::time::Duration;
 
@@ -15,7 +15,7 @@ fn main() -> IntegrateResult<()> {
     println!("🚀 Advanced Mode Demonstration");
 
     // Create Advanced mode configuration
-    let config = advancedModeConfig {
+    let config = AdvancedModeConfig {
         enable_gpu: false, // Disable GPU for demo
         enable_memory_optimization: true,
         enable_simd: true,
@@ -31,7 +31,7 @@ fn main() -> IntegrateResult<()> {
 
     // Create Advanced mode coordinator
     println!("📊 Creating Advanced mode coordinator...");
-    let coordinator = advancedModeCoordinator::<f64>::new(config)?;
+    let coordinator = AdvancedModeCoordinator::<f64>::new(config)?;
 
     // Initialize adaptive optimization
     println!("⚙️  Initializing adaptive optimization...");

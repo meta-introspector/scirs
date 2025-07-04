@@ -4,7 +4,7 @@
 //! processing components work together to solve real-world problems. These tests
 //! serve as both validation and documentation of the library's capabilities.
 
-use crate::denoise_adaptive_ultra::{adaptive_denoise_ultra, AdaptiveDenoisingConfig};
+use crate::denoise_adaptive_advanced::{adaptive_denoise_ultra, AdaptiveDenoisingConfig};
 use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
 use crate::error::{SignalError, SignalResult};
 use crate::filter::{butter, filtfilt, FilterType};
@@ -102,8 +102,8 @@ fn test_biomedical_signal_pipeline() -> SignalResult<()> {
     let denoise_config = AdaptiveDenoisingConfig {
         auto_noise_estimation: true,
         enable_fusion: true,
-        preservation_mode: crate::denoise_adaptive_ultra::PreservationMode::EdgePreserving,
-        optimization_target: crate::denoise_adaptive_ultra::OptimizationTarget::MaxSNR,
+        preservation_mode: crate::denoise_adaptive_advanced::PreservationMode::EdgePreserving,
+        optimization_target: crate::denoise_adaptive_advanced::OptimizationTarget::MaxSNR,
         ..Default::default()
     };
 

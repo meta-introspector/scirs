@@ -78,6 +78,7 @@ fn main() {
     let heatmap_output = cm.to_heatmap_with_options(
         Some("Animal Classification Heatmap (normalized)"),
         true, // normalized
+        &color_options,
     );
     println!("{}", heatmap_output);
 
@@ -86,6 +87,7 @@ fn main() {
     let raw_heatmap = cm.to_heatmap_with_options(
         Some("Animal Classification Heatmap (raw counts)"),
         false, // not normalized
+        &color_options,
     );
     println!("{}", raw_heatmap);
 }

@@ -18,7 +18,7 @@ use crate::error::{StatsError, StatsResult};
 use either::Either;
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, One, Zero};
-use rand::Rng;
+use scirs2_core::Rng;
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
 
@@ -342,7 +342,7 @@ where
                 use rand::{rngs::StdRng, SeedableRng};
                 let mut rng = match self.config.seed {
                     Some(seed) => StdRng::seed_from_u64(seed),
-                    None => StdRng::from_rng(&mut rand::rng()),
+                    None => StdRng::from_entropy(),
                 };
 
                 for i in 0..self.n_components {
@@ -400,7 +400,7 @@ where
         use rand::{rngs::StdRng, SeedableRng};
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_entropy(),
         };
 
         let (n_samples, n_features) = data.dim();
@@ -1678,7 +1678,7 @@ where
         use rand::{rngs::StdRng, SeedableRng};
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_entropy(),
         };
 
         for i in 0..self.max_components {

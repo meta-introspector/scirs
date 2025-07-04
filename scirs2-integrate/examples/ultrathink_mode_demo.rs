@@ -5,7 +5,7 @@
 
 use ndarray::{array, Array1, ArrayView1};
 use scirs2_integrate::{
-    ultrathink_mode_coordinator::{UltrathinkModeConfig, UltrathinkModeCoordinator},
+    ultrathink_mode_coordinator::{AdvancedModeConfig, AdvancedModeCoordinator},
     IntegrateResult,
 };
 
@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("================================");
 
     // Create Advanced mode configuration with all optimizations enabled
-    let config = UltrathinkModeConfig {
+    let config = AdvancedModeConfig {
         enable_gpu: true,
         enable_memory_optimization: true,
         enable_simd: true,
@@ -39,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Create the Advanced mode coordinator
     println!("\n📊 Initializing Advanced mode coordinator...");
-    let coordinator = UltrathinkModeCoordinator::<f64>::new(config)?;
+    let coordinator = AdvancedModeCoordinator::<f64>::new(config)?;
     println!("✅ Advanced mode coordinator initialized successfully");
 
     // Set up a simple ODE problem: dy/dt = -0.5 * y (exponential decay)

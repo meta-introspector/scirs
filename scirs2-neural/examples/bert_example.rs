@@ -1,5 +1,5 @@
-use ndarray::{Array, IxDyn};
-use scirs2_neural::layers::Layer;
+// use ndarray::{Array, IxDyn}; // Unused imports
+// use scirs2_neural::layers::Layer; // Unused imports
 // use scirs2_neural::models::{BertConfig, BertModel}; // TODO: Implement models module
 
 #[allow(dead_code)]

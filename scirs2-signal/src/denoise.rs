@@ -481,7 +481,6 @@ mod tests {
     #[allow(unused_imports)]
     use rand::Rng;
 
-    
     #[test]
     fn test_thresholding_methods() {
         let data = vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0];

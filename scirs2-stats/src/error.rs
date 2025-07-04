@@ -53,11 +53,12 @@ pub enum StatsError {
 
 // The #[from] attribute in the CoreError variant handles the conversion automatically
 
-impl From<rand_distr::uniform::Error> for StatsError {
-    fn from(err: rand_distr::uniform::Error) -> Self {
-        StatsError::DistributionError(format!("Uniform distribution error: {}", err))
-    }
-}
+// NOTE: rand_distr::uniform::Error API has changed, commenting out for now
+// impl From<rand_distr::uniform::Error> for StatsError {
+//     fn from(err: rand_distr::uniform::Error) -> Self {
+//         StatsError::DistributionError(format!("Uniform distribution error: {}", err))
+//     }
+// }
 
 /// Helper trait for adding context and recovery suggestions to errors
 pub trait StatsErrorExt {

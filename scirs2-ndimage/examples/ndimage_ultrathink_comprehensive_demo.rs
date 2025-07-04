@@ -12,8 +12,8 @@
 
 use ndarray::{Array2, Array3};
 use scirs2_ndimage::{
-    adaptive_ultrathink_optimizer::*, error::Result, gpu_operations::*, performance_profiler::*,
-    fusion_core::*,
+    adaptive_ultrathink_optimizer::*, error::Result, fusion_core::*, gpu_operations::*,
+    performance_profiler::*,
 };
 use std::time::Instant;
 
@@ -164,8 +164,7 @@ fn main() -> Result<()> {
     let start_time = Instant::now();
 
     // Simulate complex processing
-    let processed =
-        fusion_processing(&large_image.view(), &AdvancedConfig::default())?;
+    let processed = fusion_processing(&large_image.view(), &AdvancedConfig::default())?;
 
     let processing_time = start_time.elapsed();
     profiler.end_operation("large_scale_processing");

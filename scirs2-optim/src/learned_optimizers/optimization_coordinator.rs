@@ -2955,7 +2955,7 @@ pub enum RecommendationType {
 }
 
 // More implementation stubs for complex structures
-impl<T: Float> OptimizerEnsemble<T> {
+impl<T: Float + Send + Sync> OptimizerEnsemble<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             optimizers: HashMap::new(),
@@ -2980,7 +2980,7 @@ impl<T: Float> OptimizerEnsemble<T> {
 }
 
 // Placeholder implementations for other complex structures
-impl<T: Float> MetaLearningOrchestrator<T> {
+impl<T: Float + Send + Sync> MetaLearningOrchestrator<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             strategies: Vec::new(),
@@ -3004,7 +3004,7 @@ impl<T: Float> MetaLearningOrchestrator<T> {
     }
 }
 
-impl<T: Float> PerformancePredictor<T> {
+impl<T: Float + Send + Sync> PerformancePredictor<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             models: HashMap::new(),
@@ -3015,7 +3015,7 @@ impl<T: Float> PerformancePredictor<T> {
     }
 }
 
-impl<T: Float> ResourceManager<T> {
+impl<T: Float + Send + Sync> ResourceManager<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             available_resources: ResourcePool::default(),
@@ -3026,7 +3026,7 @@ impl<T: Float> ResourceManager<T> {
     }
 }
 
-impl<T: Float> AdaptationController<T> {
+impl<T: Float + Send + Sync> AdaptationController<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             strategies: HashMap::new(),
@@ -3047,7 +3047,7 @@ impl<T: Float> AdaptationController<T> {
     }
 }
 
-impl<T: Float> OptimizationKnowledgeBase<T> {
+impl<T: Float + Send + Sync> OptimizationKnowledgeBase<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             optimization_patterns: HashMap::new(),
@@ -3352,7 +3352,7 @@ pub struct AdvancedLSTMWrapper<T: Float> {
     performance_score: T,
 }
 
-impl<T: Float> AdvancedLSTMWrapper<T> {
+impl<T: Float + Send + Sync> AdvancedLSTMWrapper<T> {
     fn new(lstm_optimizer: LSTMOptimizer<T, ndarray::Ix1>) -> Self {
         let capabilities = OptimizerCapabilities {
             supported_problems: vec![ProblemType::NonConvex, ProblemType::Stochastic],
@@ -3426,7 +3426,7 @@ pub struct MAMLStrategy<T: Float> {
     performance: T,
 }
 
-impl<T: Float> MAMLStrategy<T> {
+impl<T: Float + Send + Sync> MAMLStrategy<T> {
     fn new() -> Self {
         Self {
             name: "MAML".to_string(),
@@ -3435,7 +3435,7 @@ impl<T: Float> MAMLStrategy<T> {
     }
 }
 
-impl<T: Float> MetaLearningStrategy<T> for MAMLStrategy<T> {
+impl<T: Float + Send + Sync> MetaLearningStrategy<T> for MAMLStrategy<T> {
     fn meta_step(
         &mut self,
         _meta_task: &MetaTask<T>,
@@ -3463,7 +3463,7 @@ pub struct ReptileStrategy<T: Float> {
     performance: T,
 }
 
-impl<T: Float> ReptileStrategy<T> {
+impl<T: Float + Send + Sync> ReptileStrategy<T> {
     fn new() -> Self {
         Self {
             name: "Reptile".to_string(),
@@ -3472,7 +3472,7 @@ impl<T: Float> ReptileStrategy<T> {
     }
 }
 
-impl<T: Float> MetaLearningStrategy<T> for ReptileStrategy<T> {
+impl<T: Float + Send + Sync> MetaLearningStrategy<T> for ReptileStrategy<T> {
     fn meta_step(
         &mut self,
         _meta_task: &MetaTask<T>,
@@ -3500,13 +3500,13 @@ pub struct PerformanceDegradationTrigger<T: Float> {
     threshold: T,
 }
 
-impl<T: Float> PerformanceDegradationTrigger<T> {
+impl<T: Float + Send + Sync> PerformanceDegradationTrigger<T> {
     fn new(threshold: T) -> Self {
         Self { threshold }
     }
 }
 
-impl<T: Float> AdaptationTrigger<T> for PerformanceDegradationTrigger<T> {
+impl<T: Float + Send + Sync> AdaptationTrigger<T> for PerformanceDegradationTrigger<T> {
     fn is_triggered(&self, context: &OptimizationContext<T>) -> bool {
         if context.historical_performance.len() >= 2 {
             let recent = context.historical_performance[context.historical_performance.len() - 1];
@@ -3530,7 +3530,7 @@ pub struct ResourceConstraintTrigger<T: Float> {
     _phantom: std::marker::PhantomData<T>,
 }
 
-impl<T: Float> ResourceConstraintTrigger<T> {
+impl<T: Float + Send + Sync> ResourceConstraintTrigger<T> {
     fn new() -> Self {
         Self {
             _phantom: std::marker::PhantomData,
@@ -3538,7 +3538,7 @@ impl<T: Float> ResourceConstraintTrigger<T> {
     }
 }
 
-impl<T: Float> AdaptationTrigger<T> for ResourceConstraintTrigger<T> {
+impl<T: Float + Send + Sync> AdaptationTrigger<T> for ResourceConstraintTrigger<T> {
     fn is_triggered(&self, context: &OptimizationContext<T>) -> bool {
         // Check if resource constraints are being violated
         context.resource_constraints.max_memory > T::from(8192.0).unwrap() // Simplified check
@@ -3572,7 +3572,7 @@ impl<T: Float> Default for TransferCapabilities<T> {
 }
 
 // Continue with more implementations...
-impl<T: Float> TaskDistributionAnalyzer<T> {
+impl<T: Float + Send + Sync> TaskDistributionAnalyzer<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             distribution_models: HashMap::new(),
@@ -3618,7 +3618,7 @@ impl<T: Float> TaskDistributionAnalyzer<T> {
     }
 }
 
-impl<T: Float> PredictionCache<T> {
+impl<T: Float + Send + Sync> PredictionCache<T> {
     fn new() -> Self {
         Self {
             cache: HashMap::new(),
@@ -3628,7 +3628,7 @@ impl<T: Float> PredictionCache<T> {
     }
 }
 
-impl<T: Float> UncertaintyEstimator<T> {
+impl<T: Float + Send + Sync> UncertaintyEstimator<T> {
     fn new() -> Self {
         Self {
             models: Vec::new(),
@@ -3638,7 +3638,7 @@ impl<T: Float> UncertaintyEstimator<T> {
     }
 }
 
-impl<T: Float> ResourceAllocationTracker<T> {
+impl<T: Float + Send + Sync> ResourceAllocationTracker<T> {
     fn new() -> Self {
         Self {
             current_allocations: HashMap::new(),
@@ -3648,7 +3648,7 @@ impl<T: Float> ResourceAllocationTracker<T> {
     }
 }
 
-impl<T: Float> ResourceOptimizationEngine<T> {
+impl<T: Float + Send + Sync> ResourceOptimizationEngine<T> {
     fn new() -> Self {
         Self {
             algorithm: ResourceOptimizationAlgorithm::GreedyAllocation,
@@ -3658,7 +3658,7 @@ impl<T: Float> ResourceOptimizationEngine<T> {
     }
 }
 
-impl<T: Float> LoadBalancer<T> {
+impl<T: Float + Send + Sync> LoadBalancer<T> {
     fn new() -> Self {
         Self {
             strategy: LoadBalancingStrategy::WeightedRoundRobin,
@@ -3693,7 +3693,7 @@ impl BestPracticesDatabase {
     }
 }
 
-impl<T: Float> FailureAnalysisDatabase<T> {
+impl<T: Float + Send + Sync> FailureAnalysisDatabase<T> {
     fn new() -> Self {
         Self {
             failure_patterns: HashMap::new(),
@@ -3737,7 +3737,7 @@ impl ResearchInsightsDatabase {
     }
 }
 
-impl<T: Float> DynamicLearningSystem<T> {
+impl<T: Float + Send + Sync> DynamicLearningSystem<T> {
     fn new() -> Self {
         Self {
             learning_algorithms: Vec::new(),
@@ -3841,7 +3841,7 @@ pub struct ResourcePerformancePredictor<T: Float> {
     pub features: Vec<String>,
 }
 
-impl<T: Float> ResourcePerformancePredictor<T> {
+impl<T: Float + Send + Sync> ResourcePerformancePredictor<T> {
     fn new() -> Self {
         Self {
             model: PredictionModel {
@@ -3910,7 +3910,7 @@ pub struct KnowledgeIntegrationEngine<T: Float> {
     pub confidence_threshold: T,
 }
 
-impl<T: Float> KnowledgeIntegrationEngine<T> {
+impl<T: Float + Send + Sync> KnowledgeIntegrationEngine<T> {
     fn new() -> Self {
         Self {
             integration_algorithms: vec!["consensus".to_string(), "weighted_voting".to_string()],
@@ -3931,7 +3931,7 @@ pub struct KnowledgeValidationSystem<T: Float> {
     pub validation_threshold: T,
 }
 
-impl<T: Float> KnowledgeValidationSystem<T> {
+impl<T: Float + Send + Sync> KnowledgeValidationSystem<T> {
     fn new() -> Self {
         Self {
             validation_rules: Vec::new(),
@@ -4139,7 +4139,7 @@ pub struct AdaptationResult<T: Float> {
 }
 
 // Stub implementations for missing constructors
-impl<T: Float> OptimizerEnsemble<T> {
+impl<T: Float + Send + Sync> OptimizerEnsemble<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             optimizers: HashMap::new(),
@@ -4151,7 +4151,7 @@ impl<T: Float> OptimizerEnsemble<T> {
     }
 }
 
-impl<T: Float> MetaLearningOrchestrator<T> {
+impl<T: Float + Send + Sync> MetaLearningOrchestrator<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             strategies: Vec::new(),
@@ -4168,7 +4168,7 @@ impl<T: Float> MetaLearningOrchestrator<T> {
     }
 }
 
-impl<T: Float> PerformancePredictor<T> {
+impl<T: Float + Send + Sync> PerformancePredictor<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             models: HashMap::new(),
@@ -4185,7 +4185,7 @@ impl<T: Float> PerformancePredictor<T> {
     }
 }
 
-impl<T: Float> ResourceManager<T> {
+impl<T: Float + Send + Sync> ResourceManager<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             available_resources: ResourcePool {
@@ -4208,7 +4208,7 @@ impl<T: Float> ResourceManager<T> {
     }
 }
 
-impl<T: Float> AdaptationController<T> {
+impl<T: Float + Send + Sync> AdaptationController<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             strategies: HashMap::new(),
@@ -4222,7 +4222,7 @@ impl<T: Float> AdaptationController<T> {
     }
 }
 
-impl<T: Float> OptimizationKnowledgeBase<T> {
+impl<T: Float + Send + Sync> OptimizationKnowledgeBase<T> {
     fn new() -> Result<Self> {
         Ok(Self {
             optimization_patterns: HashMap::new(),
@@ -4248,7 +4248,7 @@ impl<T: Float> OptimizationKnowledgeBase<T> {
     }
 }
 
-impl<T: Float> CoordinatorState<T> {
+impl<T: Float + Send + Sync> CoordinatorState<T> {
     fn new() -> Self {
         Self {
             current_phase: OptimizationPhase::Initialization,

@@ -83,7 +83,7 @@ pub struct DistributedConfig {
     pub enable_overlap: bool,
 }
 
-impl<T: Float> DistributedOptimizer<T> {
+impl<T: Float + Send + Sync> DistributedOptimizer<T> {
     /// Create new distributed optimizer
     pub fn new(
         local_optimizer: Adam<T>,

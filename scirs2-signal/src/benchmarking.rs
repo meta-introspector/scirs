@@ -470,9 +470,7 @@ fn benchmark_zero_phase_filtering(
 
     let (b, a) = butter(4, 0.3, "low")?;
 
-    benchmark_operation(name, size, config, || {
-        filtfilt(&b, &a, signal).unwrap()
-    })
+    benchmark_operation(name, size, config, || filtfilt(&b, &a, signal).unwrap())
 }
 
 #[allow(dead_code)]

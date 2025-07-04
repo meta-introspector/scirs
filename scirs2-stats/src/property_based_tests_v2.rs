@@ -146,7 +146,7 @@ where
     pub fn new(config: PropertyTestConfig) -> Self {
         let rng = match config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(rng()),
         };
 
         Self {
@@ -413,7 +413,7 @@ where
             let constant_value = 3.0;
             let constant_data = Array1::from_elem(data.len(), constant_value);
             
-            let result = match crate::descriptive::var(&constant_data.view(), 1) {
+            let result = match crate::descriptive::var(&constant_data.view(), 1, None) {
                 Ok(computed_variance) => {
                     if computed_variance.abs() < self.config.tolerance {
                         PropertyTestResult {
@@ -457,11 +457,11 @@ where
             results.push(result);
 
             // Test variance scaling: var(a*X) = a²*var(X)
-            if let Ok(original_var) = crate::descriptive::var(&data.view(), 1) {
+            if let Ok(original_var) = crate::descriptive::var(&data.view(), 1, None) {
                 let a = self.rng.random_range(0.1..5.0);
                 let scaled_data = data.mapv(|x| a * x);
                 
-                if let Ok(scaled_var) = crate::descriptive::var(&scaled_data.view(), 1) {
+                if let Ok(scaled_var) = crate::descriptive::var(&scaled_data.view(), 1, None) {
                     let expected_var = a * a * original_var;
                     let diff = (scaled_var - expected_var).abs();
                     
@@ -511,8 +511,8 @@ where
             let data = self.generate_random_array()?;
             
             // Test that std = sqrt(variance)
-            let variance_result = crate::descriptive::var(&data.view(), 1);
-            let std_result = crate::descriptive::std(&data.view(), 1);
+            let variance_result = crate::descriptive::var(&data.view(), 1, None);
+            let std_result = crate::descriptive::std(&data.view(), 1, None);
             
             let result = match (variance_result, std_result) {
                 (Ok(variance), Ok(std_dev)) => {
@@ -587,7 +587,7 @@ where
             let data_array = Array1::from_vec(data);
             
             // Test that symmetric data should have near-zero skewness
-            let result = match crate::descriptive::skew(&data_array.view(), false) {
+            let result = match crate::descriptive::skew(&data_array.view(), false, None) {
                 Ok(skewness) => {
                     if skewness.abs() < self.config.tolerance * 10.0 { // Allow some tolerance for finite samples
                         PropertyTestResult {
@@ -645,8 +645,8 @@ where
             let data: Vec<f64> = (0..n)
                 .map(|_| {
                     // Box-Muller transform for normal distribution
-                    let u1: f64 = self.rng.gen();
-                    let u2: f64 = self.rng.gen();
+                    let u1: f64 = self.rng.random();
+                    let u2: f64 = self.rng.random();
                     (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
                 })
                 .collect();

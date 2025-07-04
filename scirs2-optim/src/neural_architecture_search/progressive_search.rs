@@ -122,7 +122,7 @@ pub struct ProgressionRecord<T: Float> {
     pub timestamp: std::time::Instant,
 }
 
-impl<T: Float> ProgressiveNAS<T> {
+impl<T: Float + Send + Sync> ProgressiveNAS<T> {
     /// Create new progressive NAS
     pub fn new(config: &NASConfig<T>) -> Result<Self> {
         let progression_strategy = match config.search_budget {
@@ -332,7 +332,7 @@ pub struct SearchPhaseConfig<T: Float> {
     pub conservative_search: bool,
 }
 
-impl<T: Float> ComplexityScheduler<T> {
+impl<T: Float + Send + Sync> ComplexityScheduler<T> {
     /// Create new complexity scheduler
     pub fn new() -> Result<Self> {
         Ok(Self {
@@ -370,7 +370,7 @@ impl<T: Float> ComplexityScheduler<T> {
     }
 }
 
-impl<T: Float> ArchitectureProgression<T> {
+impl<T: Float + Send + Sync> ArchitectureProgression<T> {
     /// Create new architecture progression tracker
     pub fn new() -> Self {
         Self {

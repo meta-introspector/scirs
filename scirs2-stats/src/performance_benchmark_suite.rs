@@ -11,8 +11,7 @@ use crate::error::StatsResult;
 // use crate::ultrathink_error_enhancements_v2::CompatibilityImpact; // Commented out temporarily
 use ndarray::Array1;
 use num_traits::Float;
-use rand::rng;
-use scirs2_core::parallel_ops::*;
+use scirs2_core::{parallel_ops::*, rng};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};

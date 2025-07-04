@@ -52,7 +52,7 @@ pub mod medical {
     {
         let params = params.unwrap_or_default();
         let (height, width) = image.dim();
-        let mut vesselness = Array2::zeros((height, width));
+        let mut vesselness = Array2::<f64>::zeros((height, width));
 
         // Convert to f64
         let img = image.mapv(|x| x.to_f64().unwrap_or(0.0));
@@ -60,7 +60,7 @@ pub mod medical {
         // Compute vesselness at each scale
         for &scale in &params.scales {
             // Compute Hessian matrix components
-            let smoothed = gaussian_filter(&img, &[scale, scale], None, None, None)?;
+            let smoothed = gaussian_filter(&img, scale, None, None)?;
             let hessian = compute_hessian_2d(&smoothed.view(), scale)?;
 
             // Compute eigenvalues at each pixel
@@ -171,8 +171,8 @@ pub mod medical {
         let lung_mask = ct_slice.mapv(|x| x > threshold);
 
         // Apply morphological operations to clean up
-        let cleaned = binary_closing(&lung_mask.view(), None, Some(3))?;
-        let cleaned = binary_opening(&cleaned.view(), None, Some(2))?;
+        let cleaned = binary_closing(&lung_mask.view(), None, Some(3), None, None, None, None)?;
+        let cleaned = binary_opening(&cleaned.view(), None, Some(2), None, None, None, None)?;
 
         // Find connected components
         let (labels, num_features) = label(&cleaned.view(), None)?;
@@ -772,8 +772,14 @@ pub mod microscopy {
         let manders_m2 = if sum2 > 0.0 { m2 / sum2 } else { 0.0 };
 
         // Compute Pearson correlation
-        let mean1 = safe_float_to_f64(channel1.sum() / safe_usize_to_float(channel1.len()).unwrap_or(T::one())).unwrap_or(0.0);
-        let mean2 = safe_float_to_f64(channel2.sum() / safe_usize_to_float(channel2.len()).unwrap_or(T::one())).unwrap_or(0.0);
+        let mean1 = safe_float_to_f64(
+            channel1.sum() / safe_usize_to_float(channel1.len()).unwrap_or(T::one()),
+        )
+        .unwrap_or(0.0);
+        let mean2 = safe_float_to_f64(
+            channel2.sum() / safe_usize_to_float(channel2.len()).unwrap_or(T::one()),
+        )
+        .unwrap_or(0.0);
 
         let mut cov = 0.0;
         let mut var1 = 0.0;

@@ -698,7 +698,7 @@ pub type F64UltraSimdProcessor = UltraEnhancedSimdProcessor<f64>;
 impl<F> UltraEnhancedSimdProcessor<F>
 where
     F: Float + NumCast + Copy + Send + Sync + 'static
-        + std::fmt::Display,
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     /// Predict optimal algorithm based on data characteristics
     pub fn predict_optimal_algorithm(

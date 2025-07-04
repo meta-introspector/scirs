@@ -3,9 +3,9 @@
 //! A minimal validation to test advanced coordinator and enhanced algorithms
 //! to verify all compilation errors are fixed.
 
-use scirs2_io::error::Result;
 use scirs2_io::advanced_coordinator::AdvancedCoordinator;
-use scirs2_io::ultrathink_enhanced_algorithms::AdvancedPatternRecognizer;
+use scirs2_io::enhanced_algorithms::AdvancedPatternRecognizer;
+use scirs2_io::error::Result;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {

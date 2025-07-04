@@ -9,7 +9,7 @@ use crate::unified_error_handling::global_error_handler;
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_core::validation::*;
+use scirs2_core::{validation::*, rng};
 use std::collections::HashMap;
 
 /// Advanced QMC sequence types
@@ -373,7 +373,7 @@ impl AdvancedQMCGenerator {
     fn init_optimal_lhs_state(_dimension: usize, seed: Option<u64>) -> Result<OptimalLHSState> {
         let rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_entropy(),
         };
 
         Ok(OptimalLHSState {
@@ -529,7 +529,7 @@ impl AdvancedQMCGenerator {
 
             let mut uniform = Array1::zeros(dimension);
             for i in 0..dimension {
-                uniform[i] = rand::rng().random::<f64>();
+                uniform[i] = scirs2_core::rng().random::<f64>();
             }
 
             // Apply inverse normal transformation and correlation
@@ -537,10 +537,10 @@ impl AdvancedQMCGenerator {
                 // Inverse normal using Box-Muller approximation
                 if u <= 0.5 {
                     -(-2.0 * u.ln()).sqrt()
-                        * (2.0 * std::f64::consts::PI * rand::rng().random::<f64>()).cos()
+                        * (2.0 * std::f64::consts::PI * scirs2_core::rng().random::<f64>()).cos()
                 } else {
                     (-2.0 * (1.0 - u).ln()).sqrt()
-                        * (2.0 * std::f64::consts::PI * rand::rng().random::<f64>()).cos()
+                        * (2.0 * std::f64::consts::PI * scirs2_core::rng().random::<f64>()).cos()
                 }
             });
 
@@ -554,7 +554,7 @@ impl AdvancedQMCGenerator {
             // Standard LHS
             for i in 0..dimension {
                 let stratum = current_index % 1000; // Simplified stratification
-                let u = rand::rng().random::<f64>();
+                let u = scirs2_core::rng().random::<f64>();
                 point[i] = (stratum as f64 + u) / 1000.0;
             }
         }
@@ -621,7 +621,7 @@ impl AdvancedQMCGenerator {
     ) -> Result<Vec<Array2<u32>>> {
         let mut rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_entropy(),
         };
 
         let mut matrices = Vec::with_capacity(dimension);
@@ -666,7 +666,7 @@ impl AdvancedQMCGenerator {
     ) -> Result<Vec<Vec<u32>>> {
         let mut rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_entropy(),
         };
 
         let mut permutations = Vec::with_capacity(bases.len());
@@ -708,7 +708,7 @@ impl AdvancedQMCGenerator {
     ) -> Result<Vec<Vec<u32>>> {
         let mut rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_entropy(),
         };
 
         let mut permutations = Vec::with_capacity(bases.len());
@@ -956,7 +956,7 @@ impl AdvancedQMCGenerator {
     ) -> Result<Vec<Array2<u32>>> {
         let mut rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_entropy(),
         };
 
         let mut matrices = Vec::with_capacity(dimension);
@@ -1030,7 +1030,7 @@ impl StratifiedSampler {
 
         let mut rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_entropy(),
         };
 
         // Generate samples for each stratum

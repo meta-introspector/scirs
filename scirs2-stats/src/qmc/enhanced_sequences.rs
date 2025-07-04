@@ -185,6 +185,7 @@ impl<F> EnhancedQMCGenerator<F>
 where
     F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
         + std::fmt::Display,
+    for<'a> &'a F: std::iter::Product<&'a F>,
 {
     /// Create new enhanced QMC generator
     pub fn new(
@@ -237,20 +238,20 @@ where
         let chunk_size = self.config.chunk_size;
         let num_chunks = (n + chunk_size - 1) / chunk_size;
 
-        let chunks = parallel_map_collect(0..num_chunks, |&chunk_idx| {
+        let chunks = parallel_map_result((0..num_chunks).collect::<Vec<_>>().as_slice(), |&chunk_idx| {
             let start = chunk_idx * chunk_size;
             let end = (start + chunk_size).min(n);
             let chunk_size = end - start;
 
             self.generate_chunk(start, chunk_size)
-        });
+        })?;
 
         // Combine chunks
         let mut result = Array2::zeros((n, self.dimension));
         let mut row_idx = 0;
 
-        for chunk_result in chunks {
-            let chunk = chunk_result?;
+        for chunk in chunks {
+            let chunk = chunk;
             let chunk_rows = chunk.nrows();
             result
                 .slice_mut(ndarray::s![row_idx..row_idx + chunk_rows, ..])
@@ -454,7 +455,7 @@ where
     fn initialize_randomization(&mut self) -> StatsResult<()> {
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_entropy(),
         };
 
         // Initialize scrambling matrices
@@ -634,7 +635,7 @@ where
                 }
             }
 
-            let volume: F = test_point.iter().product();
+            let volume: F = test_point.iter().fold(F::one(), |acc, &x| acc * x);
             let expected = volume.to_f64().unwrap() * n as f64;
             let discrepancy = (count as f64 - expected).abs() / n as f64;
             max_discrepancy = max_discrepancy.max(discrepancy);
@@ -661,6 +662,7 @@ pub fn enhanced_sobol<F>(
 where
     F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
         + std::fmt::Display,
+    for<'a> &'a F: std::iter::Product<&'a F>,
 {
     let sequence_type = EnhancedSequenceType::SobolAdvanced {
         owen_scrambling: scrambling,
@@ -686,6 +688,7 @@ pub fn enhanced_niederreiter<F>(
 where
     F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
         + std::fmt::Display,
+    for<'a> &'a F: std::iter::Product<&'a F>,
 {
     let sequence_type = EnhancedSequenceType::Niederreiter {
         base_strategy: BaseSelectionStrategy::OptimizedPrimes,
@@ -711,6 +714,7 @@ pub fn enhanced_digital_net<F>(
 where
     F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
         + std::fmt::Display,
+    for<'a> &'a F: std::iter::Product<&'a F>,
 {
     let net_params = DigitalNetParams {
         t,

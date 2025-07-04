@@ -343,7 +343,7 @@ where
         // Sample according to weights
         let total_weight: f64 = weights.iter().sum();
         let mut cumulative = 0.0;
-        let random_val: f64 = self.rng.gen_range(0.0..total_weight);
+        let random_val: f64 = self.rng.random_range(0.0..total_weight);
 
         for (i, &weight) in weights.iter().enumerate() {
             cumulative += weight;

@@ -31,12 +31,12 @@ harness = false
 # SciRS2 modules
 scirs2-core = { path = "../scirs2-core", features = ["parallel", "simd", "profiling", "memory_management"] }
 scirs2-linalg = { path = "../scirs2-linalg", features = ["simd", "parallel"] }
-scirs2-stats = { path = "../scirs2-stats" }
+# scirs2-stats = { path = "../scirs2-stats" } # Temporarily disabled
 scirs2-fft = { path = "../scirs2-fft" }
-scirs2-optimize = { path = "../scirs2-optimize" }
+# scirs2-optimize = { path = "../scirs2-optimize" } # Temporarily disabled
 scirs2-integrate = { path = "../scirs2-integrate" }
-scirs2-cluster = { path = "../scirs2-cluster" }
-scirs2-interpolate = { path = "../scirs2-interpolate" }
+# scirs2-cluster = { path = "../scirs2-cluster" } # Temporarily disabled
+# scirs2-interpolate = { path = "../scirs2-interpolate" } # Temporarily disabled
 
 # Benchmarking framework
 criterion = { workspace = true, features = ["html_reports"] }

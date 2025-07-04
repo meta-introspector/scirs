@@ -17,7 +17,8 @@ use ndarray::{Array1, Array2, ArrayView1};
 // use scirs2_core::error::CoreResult;
 // Unused import
 // use scirs2_linalg::{cholesky, solve, LinalgError};
-use scirs2_linalg::{solve, LinalgError};
+use scirs2_linalg::solve;
+// Unused import: LinalgError
 
 type Result<T> = std::result::Result<T, OptimizeError>;
 

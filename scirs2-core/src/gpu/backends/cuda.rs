@@ -11,7 +11,7 @@ use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKe
 #[cfg(feature = "cuda")]
 use cudarc::driver::sys::{CUcontext, CUdevice, CUdeviceptr};
 #[cfg(feature = "cuda")]
-use cudarc::driver::{CudaDevice, CudaSlice};
+use cudarc::driver::{CudaDevice, DevicePtr};
 
 // CUDA API types - use real CUDA when available, fallback types otherwise
 #[cfg(feature = "cuda")]
@@ -309,7 +309,7 @@ impl CudaContext {
             use cudarc::nvrtc::compile_ptx;
 
             compile_ptx(source)
-                .map(|ptx| ptx.ptx().to_string())
+                .map(|ptx| ptx.to_string())
                 .map_err(|e| GpuError::Other(format!("NVRTC compilation failed for {name}: {e}")))
         }
         #[cfg(not(feature = "cuda"))]
@@ -332,7 +332,7 @@ impl CudaContext {
         ptx: &str,
     ) -> Result<Arc<impl std::any::Any>, GpuError> {
         device
-            .load_ptx(cudarc::nvrtc::Ptx::from_src(ptx), "neural_kernels", &[])
+            .load_ptx(ptx.as_bytes(), "neural_kernels", &[])
             .map_err(|e| GpuError::Other(format!("Failed to load PTX module: {e}")))
             .map(Arc::new)
     }
@@ -358,7 +358,7 @@ impl CudaContext {
             .device
             .alloc_zeros::<u8>(size)
             .map_err(|e| GpuError::Other(format!("CUDA memory allocation failed: {e}")))?;
-        Ok(buffer.device_ptr())
+        Ok(*buffer.device_ptr())
     }
 
     /// Allocate device memory (fallback)

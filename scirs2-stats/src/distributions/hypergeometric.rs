@@ -51,7 +51,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::Array1;
 use num_traits::{cast::NumCast, Float, FloatConst};
-use rand::Rng;
+use rand::thread_rng;
 use std::cmp;
 
 /// Hypergeometric distribution
@@ -215,7 +215,7 @@ impl<F: Float + NumCast + FloatConst + std::fmt::Display> Hypergeometric<F> {
     ///
     /// An array of random samples
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         let mut samples = Array1::zeros(size);
 
         for i in 0..size {

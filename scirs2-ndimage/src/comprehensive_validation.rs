@@ -413,11 +413,8 @@ where
     let start_time = Instant::now();
 
     // Perform Advanced processing
-    let (output, state) = crate::advanced_fusion_algorithms::fusion_processing(
-        image,
-        config,
-        previous_state,
-    )?;
+    let (output, state) =
+        crate::advanced_fusion_algorithms::fusion_processing(image, config, previous_state)?;
 
     let processing_time = start_time.elapsed();
 

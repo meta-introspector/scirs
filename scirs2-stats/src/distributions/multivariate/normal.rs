@@ -6,6 +6,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use crate::traits::{Distribution as DistributionTrait, MultivariateDistribution};
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Axis, Data, Ix1, Ix2};
+use rand::thread_rng;
 use rand_distr::{Distribution as RandDistribution, Normal as RandNormal};
 use std::fmt::Debug;
 
@@ -171,7 +172,7 @@ impl MultivariateNormal {
     /// assert_eq!(samples.shape(), &[100, 2]);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array2<f64>> {
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         let normal = RandNormal::new(0.0, 1.0).unwrap();
 
         // Create a matrix of standard normal samples

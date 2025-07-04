@@ -5,7 +5,7 @@
 
 use approx::{assert_abs_diff_eq, assert_relative_eq};
 use scirs2_core::error::CoreResult;
-use scirs2_graph::{algorithms, flow, generators, measures, spectral, DiGraph, Graph};
+use scirs2_graph::{algorithms, generators, measures, spectral, DiGraph, Graph};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -95,13 +95,27 @@ impl ValidationFramework {
             graph.add_node(i);
         }
 
-        graph.add_edge(0, 1, 1.0)?;
-        graph.add_edge(0, 2, 1.0)?;
-        graph.add_edge(1, 2, 1.0)?;
-        graph.add_edge(2, 0, 1.0)?;
-        graph.add_edge(3, 0, 1.0)?;
-        graph.add_edge(3, 1, 1.0)?;
-        graph.add_edge(3, 2, 1.0)?;
+        graph
+            .add_edge(0, 1, 1.0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        graph
+            .add_edge(0, 2, 1.0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        graph
+            .add_edge(1, 2, 1.0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        graph
+            .add_edge(2, 0, 1.0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        graph
+            .add_edge(3, 0, 1.0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        graph
+            .add_edge(3, 1, 1.0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        graph
+            .add_edge(3, 2, 1.0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
         let pagerank = algorithms::pagerank(&graph, 0.85, Some(100))?;
 
@@ -271,11 +285,16 @@ impl ValidationFramework {
         for i in 0..6 {
             tree.add_node(i);
         }
-        tree.add_edge(0, 1, 1.0)?;
-        tree.add_edge(0, 2, 1.0)?;
-        tree.add_edge(1, 3, 1.0)?;
-        tree.add_edge(1, 4, 1.0)?;
-        tree.add_edge(2, 5, 1.0)?;
+        tree.add_edge(0, 1, 1.0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        tree.add_edge(0, 2, 1.0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        tree.add_edge(1, 3, 1.0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        tree.add_edge(1, 4, 1.0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        tree.add_edge(2, 5, 1.0)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
 
         let cc_tree = measures::clustering_coefficient(&tree)?;
         let ref_tree_cc = ref_values.clustering["tree"]["global_clustering"]
@@ -318,10 +337,20 @@ impl ValidationFramework {
         ];
 
         for (u, v, w) in edges {
-            graph.add_edge(u, v, w)?;
+            graph
+                .add_edge(u, v, w)
+                .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         }
 
-        let (path, length) = algorithms::shortest_path(&graph, 0, 4)?;
+        let path_result = algorithms::dijkstra_path(&graph, &0, &4)
+            .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
+        let (path, length) = if let Some(result) = path_result {
+            (result.nodes, result.cost)
+        } else {
+            return Err(scirs2_core::error::CoreError::from(
+                "No path found".to_string(),
+            ));
+        };
 
         let ref_sp = &ref_values.shortest_paths["weighted_graph"];
         let ref_length = ref_sp["path_length_0_4"].as_f64().unwrap();
@@ -366,7 +395,9 @@ impl ValidationFramework {
 
         let edges = vec![(0, 1), (1, 2), (2, 3), (3, 0), (1, 3)];
         for (u, v) in edges {
-            graph.add_edge(u, v, 1.0)?;
+            graph
+                .add_edge(u, v, 1.0)
+                .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         }
 
         let ec = algorithms::eigenvector_centrality(&graph)?;
@@ -453,7 +484,9 @@ impl ValidationFramework {
         ];
 
         for (u, v, cap) in capacities {
-            graph.add_edge(u, v, cap)?;
+            graph
+                .add_edge(u, v, cap)
+                .map_err(|e| scirs2_core::error::CoreError::from(e.to_string()))?;
         }
 
         let (max_flow_value, _) = flow::dinic_max_flow(&graph, 0, 5)?;

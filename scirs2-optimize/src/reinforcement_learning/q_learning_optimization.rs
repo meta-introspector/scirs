@@ -3,12 +3,13 @@
 //! Value-based reinforcement learning approach to optimization strategy learning.
 
 use super::{utils, OptimizationAction, OptimizationState, RLOptimizationConfig, RLOptimizer};
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
 // Unused import
 // use scirs2_core::error::CoreResult;
-use std::collections::HashMap;
 use rand::Rng;
+use std::collections::HashMap;
 
 /// Q-Learning optimizer for optimization problems
 #[derive(Debug, Clone)]
@@ -143,7 +144,7 @@ impl RLOptimizer for QLearningOptimizer {
         &mut self,
         objective: &F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -190,11 +191,11 @@ impl RLOptimizer for QLearningOptimizer {
         self.exploration_rate = (self.exploration_rate * self.config.exploration_decay)
             .max(self.config.min_exploration_rate);
 
-        Ok(OptimizeResults {
+        Ok(OptimizeResults::<f64> {
             x: current_params,
             fun: current_state.objective_value,
             success: current_state.convergence_metrics.relative_objective_change < 1e-6,
-            iterations: current_state.step,
+            nit: current_state.step,
             message: "Q-learning episode completed".to_string(),
         })
     }
@@ -203,11 +204,11 @@ impl RLOptimizer for QLearningOptimizer {
         &mut self,
         objective: &F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
-        let mut best_result = OptimizeResults {
+        let mut best_result = OptimizeResults::<f64> {
             x: initial_params.to_owned(),
             fun: f64::INFINITY,
             success: false,

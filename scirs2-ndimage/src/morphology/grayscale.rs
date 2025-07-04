@@ -718,7 +718,7 @@ where
     ) {
         // Calculate Laplace
         let mut result_2d = Array2::from_elem(dilated_2d.dim(), safe_f64_to_float(0.0)?);
-        let two = safe_f64_to_float(2.0)?;
+        let two: T = crate::utils::safe_f64_to_float(2.0)?;
 
         // Compute (dilated + eroded) - 2 * input
         for (((d, e), i), r) in dilated_2d

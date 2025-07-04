@@ -60,7 +60,16 @@ pub enum KernelType {
 
 impl<F> VariationalSparseGP<F>
 where
-    F: Float + FromPrimitive + Debug + Display + std::iter::Sum + 'static + std::ops::AddAssign + ndarray::ScalarOperand + std::ops::SubAssign + std::ops::DivAssign,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + std::iter::Sum
+        + 'static
+        + std::ops::AddAssign
+        + ndarray::ScalarOperand
+        + std::ops::SubAssign
+        + std::ops::DivAssign,
 {
     /// Create a new variational sparse GP
     pub fn new(
@@ -88,10 +97,10 @@ where
         x_train: &ArrayView2<F>,
         y_train: &ArrayView1<F>,
         max_iter: usize,
-        learning_rate: F,
+        _learning_rate: F,
         tolerance: F,
     ) -> InterpolateResult<()> {
-        let n_data = x_train.nrows();
+        let _n_data = x_train.nrows();
         let n_inducing = self.inducing_points.nrows();
 
         for iter in 0..max_iter {
@@ -171,7 +180,7 @@ where
         // Predictive variance
         let mut variance = Array1::zeros(n_test);
         for i in 0..n_test {
-            let k_s = k_su.row(i);
+            let _k_s = k_su.row(i);
             let alpha_i = alpha.column(i);
 
             // Diagonal element of predictive covariance
@@ -360,7 +369,8 @@ where
                 }
                 let c = aug[[k, i]] / aug[[i, i]];
                 for j in i..=n {
-                    aug[[k, j]] -= c * aug[[i, j]];
+                    let aug_i_j = aug[[i, j]];
+                    aug[[k, j]] -= c * aug_i_j;
                 }
             }
         }
@@ -435,7 +445,15 @@ pub struct StatisticalSpline<F: Float> {
 
 impl<F> StatisticalSpline<F>
 where
-    F: Float + FromPrimitive + Debug + Display + ndarray::ScalarOperand + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign,
+    F: Float
+        + FromPrimitive
+        + Debug
+        + Display
+        + ndarray::ScalarOperand
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign,
 {
     /// Fit a statistical spline with inference
     pub fn fit(
@@ -695,11 +713,11 @@ where
         InterpolatorFn:
             Fn(&ArrayView1<F>, &ArrayView1<F>, &ArrayView1<F>) -> InterpolateResult<Array1<F>>,
     {
-        let n = x.len();
+        let _n = x.len();
         let m = x_new.len();
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::seed_from_u64(42)
+            None => StdRng::seed_from_u64(42),
         };
 
         let mut bootstrap_results = Array2::zeros((self.n_samples, m));
@@ -722,7 +740,7 @@ where
 
         // Compute statistics
         let mean = bootstrap_results.mean_axis(Axis(0)).unwrap();
-        let std_dev = bootstrap_results.std_axis(Axis(0), F::zero());
+        let _std_dev = bootstrap_results.std_axis(Axis(0), F::zero());
 
         // Compute percentiles for confidence intervals
         let mut conf_lower = Array1::zeros(m);

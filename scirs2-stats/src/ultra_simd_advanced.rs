@@ -133,7 +133,7 @@ pub struct CacheAwareVectorProcessor {
 impl<F> UltraSimdProcessor<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+        + std::fmt::Display + std::iter::Sum<F>,
 {
     /// Create new ultra-optimized SIMD processor
     pub fn new() -> Self {

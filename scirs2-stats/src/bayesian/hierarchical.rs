@@ -5,7 +5,7 @@
 
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use rand::Rng;
+use scirs2_core::Rng;
 use rand_distr::{Distribution, Gamma, Normal};
 use scirs2_core::validation::*;
 
@@ -190,7 +190,7 @@ impl HierarchicalLinearModel {
     }
 
     /// Update random effects for each group using Gibbs sampling
-    fn update_random_effects<R: Rng + ?Sized>(
+    fn update_random_effects<R: scirs2_core::Rng + ?Sized>(
         &self,
         y: &ArrayView1<f64>,
         x_level1: &ArrayView2<f64>,
@@ -368,7 +368,7 @@ impl HierarchicalLinearModel {
     }
 
     /// Update random effects covariance matrix using inverse Wishart
-    fn update_random_effects_covariance<R: Rng + ?Sized>(
+    fn update_random_effects_covariance<R: scirs2_core::Rng + ?Sized>(
         &mut self,
         random_effects: &Array2<f64>,
         rng: &mut R,
@@ -377,7 +377,7 @@ impl HierarchicalLinearModel {
         let n_groups = random_effects.nrows();
 
         // Compute sample covariance of random effects
-        let mut sum_outer_products = Array2::zeros((n_random_effects, n_random_effects));
+        let mut sum_outer_products = Array2::<f64>::zeros((n_random_effects, n_random_effects));
 
         for group in 0..n_groups {
             let effects = random_effects.row(group);
@@ -387,7 +387,7 @@ impl HierarchicalLinearModel {
 
         // Inverse Wishart prior parameters
         let nu_prior = n_random_effects as f64 + 2.0; // Degrees of freedom
-        let psi_prior = Array2::eye(n_random_effects) * 0.1; // Scale matrix
+        let psi_prior = Array2::<f64>::eye(n_random_effects) * 0.1; // Scale matrix
 
         // Posterior parameters
         let nu_posterior = nu_prior + n_groups as f64;
@@ -395,7 +395,7 @@ impl HierarchicalLinearModel {
 
         // Sample from inverse Wishart (simplified using independent gamma for diagonal)
         // In full implementation, would use proper inverse Wishart sampling
-        let mut new_cov = Array2::zeros((n_random_effects, n_random_effects));
+        let mut new_cov = Array2::<f64>::zeros((n_random_effects, n_random_effects));
 
         for i in 0..n_random_effects {
             // Sample diagonal elements from inverse gamma
@@ -412,8 +412,10 @@ impl HierarchicalLinearModel {
         // For off-diagonal elements, use simplified approach
         for i in 0..n_random_effects {
             for j in (i + 1)..n_random_effects {
-                let correlation =
-                    psi_posterior[[i, j]] / (psi_posterior[[i, i]] * psi_posterior[[j, j]]).sqrt();
+                let val1: f64 = psi_posterior[[i, i]];
+                let val2: f64 = psi_posterior[[j, j]];
+                let denom: f64 = (val1 * val2).sqrt();
+                let correlation: f64 = psi_posterior[[i, j]] / denom;
                 let covariance = correlation * (new_cov[[i, i]] * new_cov[[j, j]]).sqrt();
                 new_cov[[i, j]] = covariance * 0.1; // Shrink off-diagonal
                 new_cov[[j, i]] = new_cov[[i, j]];

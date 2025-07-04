@@ -186,7 +186,7 @@ pub struct ShamirSecretSharing<T: Float> {
     coefficients: Vec<T>,
 }
 
-impl<T: Float> ShamirSecretSharing<T> {
+impl<T: Float + Send + Sync> ShamirSecretSharing<T> {
     /// Create new secret sharing instance
     pub fn new(threshold: usize, num_shares: usize) -> Self {
         // Use a large prime for field arithmetic
@@ -280,7 +280,7 @@ pub struct CryptographicAggregator<T: Float> {
     aggregation_proofs: Vec<AggregationProof<T>>,
 }
 
-impl<T: Float> CryptographicAggregator<T> {
+impl<T: Float + Send + Sync> CryptographicAggregator<T> {
     /// Create new cryptographic aggregator
     pub fn new(config: SMPCConfig) -> Self {
         Self {
@@ -447,7 +447,7 @@ pub struct CommitmentScheme<T: Float> {
     commitment_key: Vec<u8>,
 }
 
-impl<T: Float> CommitmentScheme<T> {
+impl<T: Float + Send + Sync> CommitmentScheme<T> {
     /// Create new commitment scheme
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
@@ -482,7 +482,7 @@ pub struct VerificationParameters<T: Float> {
     proof_params: ProofParameters<T>,
 }
 
-impl<T: Float> VerificationParameters<T> {
+impl<T: Float + Send + Sync> VerificationParameters<T> {
     /// Create new verification parameters
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
@@ -519,7 +519,7 @@ pub struct ProofParameters<T: Float> {
     system_params: Vec<u8>,
 }
 
-impl<T: Float> ProofParameters<T> {
+impl<T: Float + Send + Sync> ProofParameters<T> {
     /// Create new proof parameters
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
@@ -547,7 +547,7 @@ pub struct HomomorphicEngine<T: Float> {
     private_key: Vec<u8>,
 }
 
-impl<T: Float> HomomorphicEngine<T> {
+impl<T: Float + Send + Sync> HomomorphicEngine<T> {
     /// Create new homomorphic encryption engine
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
@@ -661,7 +661,7 @@ pub struct HomomorphicParameters<T: Float> {
     pub modulus: u128,
 }
 
-impl<T: Float> HomomorphicParameters<T> {
+impl<T: Float + Send + Sync> HomomorphicParameters<T> {
     /// Create new homomorphic parameters
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
@@ -694,7 +694,7 @@ pub struct ZKProofSystem<T: Float> {
     crs: Vec<u8>,
 }
 
-impl<T: Float> ZKProofSystem<T> {
+impl<T: Float + Send + Sync> ZKProofSystem<T> {
     /// Create new zero-knowledge proof system
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
@@ -774,7 +774,7 @@ pub struct ZKProofParameters<T: Float> {
     pub circuit_params: Vec<T>,
 }
 
-impl<T: Float> ZKProofParameters<T> {
+impl<T: Float + Send + Sync> ZKProofParameters<T> {
     /// Create new ZK proof parameters
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
@@ -851,7 +851,7 @@ pub struct SecureAggregationResult<T: Float> {
     pub security_level: CommunicationSecurity,
 }
 
-impl<T: Float> SMPCCoordinator<T> {
+impl<T: Float + Send + Sync> SMPCCoordinator<T> {
     /// Create new SMPC coordinator
     pub fn new(config: SMPCConfig) -> Result<Self> {
         let secret_sharing = ShamirSecretSharing::new(config.threshold, config.num_participants);

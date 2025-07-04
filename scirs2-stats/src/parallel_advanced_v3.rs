@@ -380,7 +380,8 @@ where
             .into_iter()
             .map(|seed| {
                 use rand::rngs::StdRng;
-                use rand::{Rng, SeedableRng};
+                use scirs2_core::rng;
+                use rand::SeedableRng;
 
                 let mut rng = StdRng::seed_from_u64(seed as u64);
                 let mut bootstrap_sample = Array1::zeros(n);
@@ -452,6 +453,7 @@ where
 
         (0..self.n_simulations).into_iter().for_each(|seed| {
             use rand::rngs::StdRng;
+            use scirs2_core::rng;
             use rand::{seq::SliceRandom, SeedableRng};
 
             let mut rng = StdRng::seed_from_u64(seed as u64);

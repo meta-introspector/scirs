@@ -133,9 +133,7 @@ fn navigation_example() -> Result<(), Box<dyn std::error::Error>> {
     let final_bearing_rad = final_bearing(departure, destination);
     let final_bearing_deg = final_bearing_rad * 180.0 / PI;
 
-    println!(
-        "Distance: {distance_km:.1} km ({distance_nm:.1} nautical miles)"
-    );
+    println!("Distance: {distance_km:.1} km ({distance_nm:.1} nautical miles)");
     println!(
         "Initial bearing: {:.1}°",
         normalize_bearing(initial_bearing_deg)
@@ -168,12 +166,8 @@ fn navigation_example() -> Result<(), Box<dyn std::error::Error>> {
     let mid_distance_from_destination = haversine_distance(destination, mid) / 1000.0;
 
     println!("\nMidpoint: ({:.4}°, {:.4}°)", mid.0, mid.1);
-    println!(
-        "Distance from departure: {mid_distance_from_departure:.1} km"
-    );
-    println!(
-        "Distance from destination: {mid_distance_from_destination:.1} km"
-    );
+    println!("Distance from departure: {mid_distance_from_departure:.1} km");
+    println!("Distance from destination: {mid_distance_from_destination:.1} km");
 
     Ok(())
 }
@@ -242,9 +236,7 @@ fn coordinate_transformations_example() -> Result<(), Box<dyn std::error::Error>
                     let lon_diff = (back_lon - lon).abs();
 
                     if lat_diff > 1e-6 || lon_diff > 1e-6 {
-                        println!(
-                            "    Round trip error: Δlat={lat_diff:.8}, Δlon={lon_diff:.8}"
-                        );
+                        println!("    Round trip error: Δlat={lat_diff:.8}, Δlon={lon_diff:.8}");
                     }
                 }
                 Err(_) => {
@@ -410,9 +402,7 @@ fn spherical_geometry_example() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     let caribbean_area = spherical_polygon_area(&caribbean)? / 1_000_000.0;
-    println!(
-        "\nCaribbean Sea (approximate area): {caribbean_area:.0} km²"
-    );
+    println!("\nCaribbean Sea (approximate area): {caribbean_area:.0} km²");
 
     Ok(())
 }
@@ -454,9 +444,7 @@ fn gps_tracking_example() -> Result<(), Box<dyn std::error::Error>> {
 
             println!("  {time}: ({lat:.4}°, {lon:.4}°) - {elevation:.0}m - {segment_distance:.1}m segment, {elevation_change:.1}m elevation change, {speed_kmh:.1} km/h");
         } else {
-            println!(
-                "  {time}: ({lat:.4}°, {lon:.4}°) - {elevation:.0}m - Start"
-            );
+            println!("  {time}: ({lat:.4}°, {lon:.4}°) - {elevation:.0}m - Start");
         }
     }
 
@@ -476,9 +464,7 @@ fn gps_tracking_example() -> Result<(), Box<dyn std::error::Error>> {
     let max_elevation = elevations.iter().fold(0.0f64, |acc, &x| acc.max(x));
     let min_elevation = elevations.iter().fold(f64::INFINITY, |acc, &x| acc.min(x));
 
-    println!(
-        "  Elevation range: {min_elevation:.0}m - {max_elevation:.0}m"
-    );
+    println!("  Elevation range: {min_elevation:.0}m - {max_elevation:.0}m");
 
     Ok(())
 }
@@ -555,9 +541,7 @@ fn geospatial_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let distance_to_centroid = haversine_distance(earthquake, centroid) / 1000.0;
-    println!(
-        "  Distance from earthquake to network centroid: {distance_to_centroid:.1} km"
-    );
+    println!("  Distance from earthquake to network centroid: {distance_to_centroid:.1} km");
 
     // Calculate network coverage
     let mut max_station_distance = 0.0f64;
@@ -569,9 +553,7 @@ fn geospatial_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!(
-        "  Maximum inter-station distance: {max_station_distance:.1} km"
-    );
+    println!("  Maximum inter-station distance: {max_station_distance:.1} km");
 
     // Estimate detection threshold
     let closest_station_distance = station_distances[0].1;

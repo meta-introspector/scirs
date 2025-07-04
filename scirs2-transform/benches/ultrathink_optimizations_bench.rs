@@ -135,7 +135,8 @@ fn bench_enhanced_pca(c: &mut Criterion) {
                 &data,
                 |b, data| {
                     b.iter(|| {
-                        let mut pca = EnhancedPCA::new(n_components, true, 512).unwrap();
+                        let mut pca = EnhancedPCA::new(n_components, true, 512)
+                            .expect("Enhanced PCA creation failed");
                         let _result = pca.fit_transform(black_box(&data.view()));
                     });
                 },
@@ -145,7 +146,7 @@ fn bench_enhanced_pca(c: &mut Criterion) {
             group.bench_with_input(
                 BenchmarkId::new("UltraFast", format!("{}x{}", n_samples, n_features)),
                 &data,
-                |b, data| {
+                |b, _data| {
                     let mut ultra_pca = UltraFastPCA::new(n_components, n_samples, n_features);
                     b.iter(|| {
                         // Note: This would need the fitting implementation to be complete
@@ -249,12 +250,14 @@ fn bench_comprehensive_performance(c: &mut Criterion) {
         |b, data| {
             b.iter(|| {
                 // Normalization
-                let normalized =
-                    normalize_array(black_box(data), NormalizationMethod::ZScore, 0).unwrap();
+                let normalized = normalize_array(black_box(data), NormalizationMethod::ZScore, 0)
+                    .expect("Normalization failed");
 
                 // Polynomial features (degree 2)
                 let poly = PolynomialFeatures::new(2, false, false);
-                let poly_features = poly.transform(&normalized.view()).unwrap();
+                let poly_features = poly
+                    .transform(&normalized.view())
+                    .expect("Polynomial transform failed");
 
                 // PCA
                 let mut pca = PCA::new(10, true, false);
@@ -274,7 +277,7 @@ fn bench_comprehensive_performance(c: &mut Criterion) {
                     // Adaptive SIMD normalization
                     let normalized =
                         simd_normalize_adaptive(black_box(data), NormalizationMethod::ZScore, 0)
-                            .unwrap();
+                            .expect("SIMD normalization failed");
 
                     // Optimized SIMD polynomial features
                     let poly_features = simd_polynomial_features_optimized(
@@ -284,10 +287,11 @@ fn bench_comprehensive_performance(c: &mut Criterion) {
                         false,
                         256, // 256MB memory limit
                     )
-                    .unwrap();
+                    .expect("SIMD polynomial features failed");
 
                     // Enhanced PCA
-                    let mut pca = EnhancedPCA::new(10, true, 512).unwrap();
+                    let mut pca =
+                        EnhancedPCA::new(10, true, 512).expect("Enhanced PCA creation failed");
                     let _result = pca.fit_transform(&poly_features.view());
                 }
 
@@ -295,12 +299,16 @@ fn bench_comprehensive_performance(c: &mut Criterion) {
                 {
                     // Fallback to standard pipeline when SIMD is not available
                     let normalized =
-                        normalize_array(black_box(data), NormalizationMethod::ZScore, 0).unwrap();
+                        normalize_array(black_box(data), NormalizationMethod::ZScore, 0)
+                            .expect("Fallback normalization failed");
 
                     let poly = PolynomialFeatures::new(2, false, false);
-                    let poly_features = poly.transform(&normalized.view()).unwrap();
+                    let poly_features = poly
+                        .transform(&normalized.view())
+                        .expect("Fallback polynomial transform failed");
 
-                    let mut pca = EnhancedPCA::new(10, true, 512).unwrap();
+                    let mut pca = EnhancedPCA::new(10, true, 512)
+                        .expect("Fallback enhanced PCA creation failed");
                     let _result = pca.fit_transform(&poly_features.view());
                 }
             });

@@ -9,17 +9,8 @@ use ndarray::{Array1, Array2, ArrayView1};
 use scirs2_core::gpu::{GpuBuffer, GpuDevice};
 use std::sync::Arc;
 
-// Implement error conversion for GPU errors
-impl From<scirs2_core::gpu::GpuError> for ScirsError {
-    fn from(error: scirs2_core::gpu::GpuError) -> Self {
-        match error {
-            scirs2_core::gpu::GpuError::OutOfMemory(msg) => ScirsError::OutOfMemory(msg),
-            scirs2_core::gpu::GpuError::InvalidOperation(msg) => ScirsError::InvalidInput(msg),
-            scirs2_core::gpu::GpuError::ComputationError(msg) => ScirsError::ComputationError(msg),
-            _ => ScirsError::ComputationError(format!("GPU error: {}", error)),
-        }
-    }
-}
+// Note: Error conversion handled through scirs2_core::error system
+// GPU errors are automatically converted via CoreError type alias
 
 // Real GPU array type backed by scirs2-core (using GpuBuffer instead of GpuArray)
 pub type OptimGpuArray<T> = GpuBuffer<T>;
@@ -299,7 +290,7 @@ pub mod algorithms {
             &mut self,
             function: &F,
             bounds: &[(f64, f64)],
-        ) -> ScirsResult<OptimizeResults>
+        ) -> ScirsResult<OptimizeResults<f64>>
         where
             F: GpuFunction,
         {
@@ -355,7 +346,7 @@ pub mod algorithms {
             // Transfer best solution back to CPU
             let best_x = population.row(best_idx).to_owned();
 
-            Ok(OptimizeResults {
+            Ok(OptimizeResults::<f64> {
                 x: best_x,
                 fun: best_fitness,
                 success: true,
@@ -499,7 +490,7 @@ pub mod algorithms {
             &mut self,
             function: &F,
             bounds: &[(f64, f64)],
-        ) -> ScirsResult<OptimizeResults>
+        ) -> ScirsResult<OptimizeResults<f64>>
         where
             F: GpuFunction,
         {
@@ -563,7 +554,7 @@ pub mod algorithms {
                 }
             }
 
-            Ok(OptimizeResults {
+            Ok(OptimizeResults::<f64> {
                 x: global_best,
                 fun: global_best_fitness,
                 success: true,

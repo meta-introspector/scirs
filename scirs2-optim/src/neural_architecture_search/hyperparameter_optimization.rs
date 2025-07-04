@@ -1540,7 +1540,7 @@ impl<T: Float> Default for EvaluationBudget {
     }
 }
 
-impl<T: Float> HyperparameterOptimizationPipeline<T> {
+impl<T: Float + Send + Sync> HyperparameterOptimizationPipeline<T> {
     /// Create new hyperparameter optimization pipeline
     pub fn new(config: HPOConfig<T>) -> Result<Self> {
         let strategies = Self::create_strategies(&config)?;
@@ -1869,7 +1869,7 @@ pub struct OptimizationTracePoint<T: Float> {
     pub timestamp: Instant}
 
 // Implementation stubs for complex components - these would be fully implemented in practice
-impl<T: Float> ParameterSpaceManager<T> {
+impl<T: Float + Send + Sync> ParameterSpaceManager<T> {
     fn new(_space: ParameterSearchSpace) -> Result<Self> {
         Ok(Self {
             space: _space,
@@ -1884,7 +1884,7 @@ impl<T: Float> ParameterSpaceManager<T> {
     }
 }
 
-impl<T: Float> EvaluationScheduler<T> {
+impl<T: Float + Send + Sync> EvaluationScheduler<T> {
     fn new(_config: SchedulerConfig, _constraints: ResourceConstraints<T>) -> Result<Self> {
         Ok(Self {
             pending_queue: VecDeque::new(),
@@ -1911,7 +1911,7 @@ impl<T: Float> EvaluationScheduler<T> {
     }
 }
 
-impl<T: Float> HPOResultDatabase<T> {
+impl<T: Float + Send + Sync> HPOResultDatabase<T> {
     fn new() -> Self {
         Self {
             results: Vec::new(),
@@ -1946,7 +1946,7 @@ impl<T: Float> HPOResultDatabase<T> {
     }
 }
 
-impl<T: Float> MultiFidelityManager<T> {
+impl<T: Float + Send + Sync> MultiFidelityManager<T> {
     fn new(_settings: MultiFidelitySettings<T>) -> Result<Self> {
         Ok(Self {
             settings: _settings,
@@ -1964,7 +1964,7 @@ impl<T: Float> MultiFidelityManager<T> {
     }
 }
 
-impl<T: Float> EarlyStoppingController<T> {
+impl<T: Float + Send + Sync> EarlyStoppingController<T> {
     fn new(_criteria: EarlyStoppingCriteria<T>) -> Self {
         Self {
             criteria: _criteria,
@@ -1983,7 +1983,7 @@ impl<T: Float> EarlyStoppingController<T> {
     }
 }
 
-impl<T: Float> EnsembleOptimizer<T> {
+impl<T: Float + Send + Sync> EnsembleOptimizer<T> {
     fn new(_settings: EnsembleSettings<T>) -> Result<Self> {
         Ok(Self {
             settings: _settings,
@@ -2006,7 +2006,7 @@ impl<T: Float> EnsembleOptimizer<T> {
     }
 }
 
-impl<T: Float> OptimizationState<T> {
+impl<T: Float + Send + Sync> OptimizationState<T> {
     fn new() -> Self {
         Self {
             iteration: 0,
@@ -2025,7 +2025,7 @@ impl<T: Float> OptimizationState<T> {
     }
 }
 
-impl<T: Float> ResourceMonitor<T> {
+impl<T: Float + Send + Sync> ResourceMonitor<T> {
     fn new(_constraints: ResourceConstraints<T>) -> Self {
         Self {
             current_usage: ResourceUsage {
@@ -2042,7 +2042,7 @@ impl<T: Float> ResourceMonitor<T> {
 }
 
 // Additional implementation stubs
-impl<T: Float> FidelityResourceTracker<T> {
+impl<T: Float + Send + Sync> FidelityResourceTracker<T> {
     fn new() -> Self {
         Self {
             usage_per_fidelity: HashMap::new(),
@@ -2063,7 +2063,7 @@ impl<T: Float> FidelityResourceTracker<T> {
     }
 }
 
-impl<T: Float> StrategyPerformanceTracker<T> {
+impl<T: Float + Send + Sync> StrategyPerformanceTracker<T> {
     fn new() -> Self {
         Self {
             performance_history: HashMap::new(),
@@ -2073,7 +2073,7 @@ impl<T: Float> StrategyPerformanceTracker<T> {
     }
 }
 
-impl<T: Float> WeightAdaptationController<T> {
+impl<T: Float + Send + Sync> WeightAdaptationController<T> {
     fn new() -> Self {
         Self {
             current_weights: Vec::new(),
@@ -2083,7 +2083,7 @@ impl<T: Float> WeightAdaptationController<T> {
     }
 }
 
-impl<T: Float> CombinationEngine<T> {
+impl<T: Float + Send + Sync> CombinationEngine<T> {
     fn new() -> Self {
         Self {
             method: EnsembleCombinationMethod::WeightedAverage,

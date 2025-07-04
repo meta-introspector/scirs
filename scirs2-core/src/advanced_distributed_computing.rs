@@ -37,7 +37,7 @@ fn default_instant() -> Instant {
 
 /// Central coordinator for distributed advanced computing
 #[derive(Debug)]
-pub struct advancedDistributedComputer {
+pub struct AdvancedDistributedComputer {
     /// Cluster manager
     cluster_manager: Arc<Mutex<ClusterManager>>,
     /// Task scheduler
@@ -2180,7 +2180,7 @@ pub struct FaultToleranceMetrics {
     pub successful_recoveries: u64,
 }
 
-impl advancedDistributedComputer {
+impl AdvancedDistributedComputer {
     /// Create a new distributed computer with default configuration
     #[allow(dead_code)]
     pub fn new() -> CoreResult<Self> {
@@ -3239,7 +3239,7 @@ impl Default for ClusterStatistics {
     }
 }
 
-impl Default for advancedDistributedComputer {
+impl Default for AdvancedDistributedComputer {
     fn default() -> Self {
         Self::new().expect("Failed to create default distributed computer")
     }
@@ -3251,7 +3251,7 @@ mod tests {
 
     #[test]
     fn test_distributed_computer_creation() {
-        let computer = advancedDistributedComputer::new();
+        let computer = AdvancedDistributedComputer::new();
         assert!(computer.is_ok());
     }
 
@@ -3266,7 +3266,7 @@ mod tests {
 
     #[test]
     fn test_task_submission() {
-        let computer = advancedDistributedComputer::new().unwrap();
+        let computer = AdvancedDistributedComputer::new().unwrap();
 
         let task = DistributedTask {
             id: TaskId("test-task-1".to_string()),

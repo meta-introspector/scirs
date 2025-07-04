@@ -7,7 +7,7 @@
 use ndarray::{Array1, ArrayBase, Data, Dimension, Ix1, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ops::{AddAssign, DivAssign};
 
 use crate::error::{MetricsError, Result};
@@ -82,13 +82,9 @@ where
         )));
     }
 
-    // Get unique cluster labels
-    let mut unique_labels = Vec::new();
-    for &label in labels.iter() {
-        if !unique_labels.contains(&label) {
-            unique_labels.push(label);
-        }
-    }
+    // Get unique cluster labels efficiently
+    let unique_set: HashSet<usize> = labels.iter().copied().collect();
+    let mut unique_labels: Vec<usize> = unique_set.into_iter().collect();
 
     // Sort labels for consistent results
     unique_labels.sort();
@@ -212,13 +208,9 @@ where
         )));
     }
 
-    // Get unique cluster labels
-    let mut unique_labels = Vec::new();
-    for &label in labels.iter() {
-        if !unique_labels.contains(&label) {
-            unique_labels.push(label);
-        }
-    }
+    // Get unique cluster labels efficiently
+    let unique_set: HashSet<usize> = labels.iter().copied().collect();
+    let mut unique_labels: Vec<usize> = unique_set.into_iter().collect();
 
     // Sort labels for consistent results
     unique_labels.sort();
@@ -340,13 +332,9 @@ where
     let inter_distances = inter_cluster_distances(x, labels, metric)?;
     let intra_distances = intra_cluster_distances(x, labels, metric)?;
 
-    // Get unique cluster labels
-    let mut unique_labels = Vec::new();
-    for &label in labels.iter() {
-        if !unique_labels.contains(&label) {
-            unique_labels.push(label);
-        }
-    }
+    // Get unique cluster labels efficiently
+    let unique_set: HashSet<usize> = labels.iter().copied().collect();
+    let mut unique_labels: Vec<usize> = unique_set.into_iter().collect();
 
     // Sort labels for consistent results
     unique_labels.sort();
@@ -450,13 +438,9 @@ where
     let inter_distances = inter_cluster_distances(x, labels, metric)?;
     let intra_distances = intra_cluster_distances(x, labels, metric)?;
 
-    // Get unique cluster labels
-    let mut unique_labels = Vec::new();
-    for &label in labels.iter() {
-        if !unique_labels.contains(&label) {
-            unique_labels.push(label);
-        }
-    }
+    // Get unique cluster labels efficiently
+    let unique_set: HashSet<usize> = labels.iter().copied().collect();
+    let mut unique_labels: Vec<usize> = unique_set.into_iter().collect();
 
     // Sort labels for consistent results
     unique_labels.sort();

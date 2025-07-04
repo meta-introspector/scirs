@@ -294,7 +294,7 @@ struct SpikeEventHandler<T: Float> {
     membrane_config: MembraneDynamicsConfig<T>,
 }
 
-impl<T: Float> EventHandler<T> for SpikeEventHandler<T> {
+impl<T: Float + Send + Sync> EventHandler<T> for SpikeEventHandler<T> {
     fn handle_event(&mut self, event: &NeuromorphicEvent<T>, state: &mut SystemState<T>) -> Result<()> {
         let neuron_id = event.source_neuron;
         
@@ -324,7 +324,7 @@ impl<T: Float> EventHandler<T> for SpikeEventHandler<T> {
     }
 }
 
-impl<T: Float> SpikeEventHandler<T> {
+impl<T: Float + Send + Sync> SpikeEventHandler<T> {
     fn trigger_stdp_updates(&self, post_neuron: usize, state: &mut SystemState<T>) -> Result<()> {
         // Check all presynaptic connections
         for pre_neuron in 0..state.last_spike_times.len() {
@@ -362,7 +362,7 @@ struct WeightUpdateEventHandler<T: Float> {
     stdp_config: STDPConfig<T>,
 }
 
-impl<T: Float> EventHandler<T> for WeightUpdateEventHandler<T> {
+impl<T: Float + Send + Sync> EventHandler<T> for WeightUpdateEventHandler<T> {
     fn handle_event(&mut self, event: &NeuromorphicEvent<T>, state: &mut SystemState<T>) -> Result<()> {
         let source = event.source_neuron;
         
@@ -393,7 +393,7 @@ struct TemporalCorrelationTracker<T: Float> {
     correlation_patterns: HashMap<(EventType, EventType), T>,
 }
 
-impl<T: Float> TemporalCorrelationTracker<T> {
+impl<T: Float + Send + Sync> TemporalCorrelationTracker<T> {
     fn new(correlation_window: T) -> Self {
         Self {
             correlation_window,
@@ -444,7 +444,7 @@ struct EventRateLimiter<T: Float> {
     reset_interval: Duration,
 }
 
-impl<T: Float> EventRateLimiter<T> {
+impl<T: Float + Send + Sync> EventRateLimiter<T> {
     fn new(rate_limits: HashMap<EventType, T>) -> Self {
         Self {
             rate_limits,
@@ -482,7 +482,7 @@ struct EventCompressionEngine<T: Float> {
     decompression_buffer: Vec<u8>,
 }
 
-impl<T: Float> EventCompressionEngine<T> {
+impl<T: Float + Send + Sync> EventCompressionEngine<T> {
     fn new(algorithm: EventCompressionAlgorithm) -> Self {
         Self {
             algorithm,
@@ -551,7 +551,7 @@ enum AdaptationStrategy {
     Aggressive,
 }
 
-impl<T: Float> AdaptiveEventHandler<T> {
+impl<T: Float + Send + Sync> AdaptiveEventHandler<T> {
     fn new() -> Self {
         Self {
             adaptation_rate: T::from(0.1).unwrap(),
@@ -604,7 +604,7 @@ struct DistributedEventCoordinator<T: Float> {
     total_workers: usize,
 }
 
-impl<T: Float> DistributedEventCoordinator<T> {
+impl<T: Float + Send + Sync> DistributedEventCoordinator<T> {
     fn new(strategy: LoadBalancingStrategy, num_workers: usize) -> Self {
         Self {
             load_balancing: strategy,
@@ -641,7 +641,7 @@ impl<T: Float> DistributedEventCoordinator<T> {
     }
 }
 
-impl<T: Float> EventDrivenOptimizer<T> {
+impl<T: Float + Send + Sync> EventDrivenOptimizer<T> {
     /// Create a new event-driven optimizer
     pub fn new(
         config: EventDrivenConfig<T>,

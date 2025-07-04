@@ -7,7 +7,8 @@ use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
 use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
+use scirs2_core::{rng, Rng};
+use rand::SeedableRng;
 use scirs2_core::{parallel_ops::*, validation::*};
 
 /// Trait for defining log probability density functions
@@ -100,7 +101,7 @@ impl HamiltonianMonteCarlo {
 
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(rng()),
         };
 
         let ndim = target.ndim();
@@ -362,7 +363,7 @@ impl NoUTurnSampler {
 
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(rng()),
         };
 
         let ndim = target.ndim();
@@ -530,7 +531,7 @@ impl AdaptiveMetropolis {
 
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(rng()),
         };
 
         let ndim = target.ndim();
@@ -721,7 +722,7 @@ impl ParallelTempering {
 
         let mut rng = match self.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(rng()),
         };
 
         // Initialize chains

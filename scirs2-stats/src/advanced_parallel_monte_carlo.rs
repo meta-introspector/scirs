@@ -11,7 +11,7 @@ use crate::error::StatsResult;
 use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, rng};
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
@@ -259,7 +259,7 @@ where
         // Initialize random number generator
         let mut main_rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(rng()),
         };
 
         let mut total_samples = 0;

@@ -69,11 +69,11 @@ pub mod cqt;
 pub mod czt;
 pub mod deconvolution;
 pub mod denoise;
-pub mod denoise_adaptive_ultra;
+pub mod denoise_adaptive_advanced;
 pub mod denoise_advanced;
 pub mod denoise_cutting_edge;
 pub mod denoise_enhanced;
-pub mod denoise_ultra_advanced;
+pub mod denoise_super_advanced;
 pub mod denoise_unified;
 pub mod detrend;
 pub mod dwt;
@@ -82,12 +82,12 @@ pub mod dwt2d_advanced_algorithms;
 pub mod dwt2d_advanced_applications;
 pub mod dwt2d_advanced_denoising;
 pub mod dwt2d_advanced_features;
+pub mod dwt2d_advanced_validation;
 pub mod dwt2d_boundary_enhanced;
 pub mod dwt2d_enhanced;
 pub mod dwt2d_image;
 pub mod dwt2d_performance_optimization;
-pub mod dwt2d_ultra_refined;
-pub mod dwt2d_advanced_validation;
+pub mod dwt2d_super_refined;
 pub mod dwt2d_validation;
 pub mod emd;
 pub mod features;
@@ -98,7 +98,9 @@ pub mod utilities;
 pub use dwt::{
     dwt_decompose, dwt_reconstruct, extend_signal, wavedec, waverec, Wavelet, WaveletFilters,
 };
+pub mod advanced_comprehensive_validation;
 pub mod advanced_mode_coordinator;
+pub mod advanced_validation_suite;
 pub mod filter;
 pub mod filter_banks;
 pub mod higher_order;
@@ -107,6 +109,7 @@ pub mod integration_tests;
 pub mod interpolate;
 pub mod kalman;
 pub mod lombscargle;
+pub mod lombscargle_advanced_enhanced_validation;
 pub mod lombscargle_advanced_validation;
 pub mod lombscargle_comprehensive_validation;
 pub mod lombscargle_edge_case_advanced_validation;
@@ -117,14 +120,12 @@ pub mod lombscargle_enhanced_validation_improvements;
 pub mod lombscargle_optimized;
 pub mod lombscargle_scipy_validation;
 pub mod lombscargle_simd;
-pub mod lombscargle_ultra_validation;
-pub mod lombscargle_advanced_enhanced_validation;
 pub mod lombscargle_validation;
 pub mod lti;
+pub mod lti_advanced_controllability_observability;
 pub mod lti_analysis_enhanced;
 pub mod lti_enhanced_system_identification;
 pub mod lti_response;
-pub mod lti_ultra_controllability_observability;
 pub mod median;
 pub mod memory_efficient;
 pub mod memory_optimized;
@@ -137,11 +138,11 @@ pub mod parallel_spectral;
 pub mod parametric;
 pub mod parametric_adaptive;
 pub mod parametric_advanced;
+pub mod parametric_advanced_enhanced;
 pub mod parametric_advanced_enhancements;
 pub mod parametric_arma;
 pub mod parametric_comprehensive_optimization;
 pub mod parametric_enhanced;
-pub mod parametric_ultra_enhanced;
 pub mod parametric_validation;
 pub mod peak;
 pub mod performance_optimized;
@@ -169,13 +170,11 @@ pub mod swt;
 pub mod swt2d;
 pub mod sysid;
 pub mod sysid_advanced;
+pub mod sysid_advanced_enhanced;
 pub mod sysid_enhanced;
 pub mod sysid_robust_enhancements;
-pub mod sysid_ultra_enhanced;
 pub mod test_rng;
 pub mod tv;
-pub mod comprehensive_validation;
-pub mod comprehensive_validation_suite;
 pub mod validation_runner;
 pub mod waveforms;
 pub mod wavelet_vis;
@@ -184,10 +183,10 @@ pub mod wiener;
 pub mod window;
 pub mod wpt;
 pub mod wpt2d;
+pub mod wpt_advanced_validation;
 pub mod wpt_comprehensive_validation;
 pub mod wpt_enhanced_modern_validation;
-pub mod wpt_ultra_validation;
-pub mod wpt_advanced_validation;
+pub mod wpt_super_validation;
 pub mod wpt_validation;
 pub mod wvd;
 
@@ -240,6 +239,8 @@ pub use filter::{
     prewarp_frequency,
     remez,
     validate_parallel_filtering_accuracy,
+    // Advanced Enhanced Parallel Filtering
+    AdvancedParallelConfig,
     FilterAnalysis,
     FilterStability,
     LockFreeStreamingFilter,
@@ -249,8 +250,6 @@ pub use filter::{
     SparseParallelFilter,
     StreamingFilterState,
     StreamingStats,
-    // Advanced Enhanced Parallel Filtering
-    AdvancedParallelConfig,
 };
 pub use filter_banks::{
     CosineModulatedFilterBank, FilterBankAnalysis, FilterBankType, FilterBankWindow, IirStabilizer,
@@ -296,9 +295,9 @@ pub use lombscargle_simd::{simd_lombscargle, SimdLombScargleResult, ValidationMe
 // Advanced Enhanced Lomb-Scargle Validation
 pub use lombscargle_optimized::{
     generate_advanced_lombscargle_report, run_advanced_lombscargle_validation,
-    CompleteSimdValidation, ComprehensiveAccuracyResult, MemoryProfilingResult,
-    PerformanceRegressionResult, ScipyComparisonResult, StatisticalValidationResult,
-    AdvancedLombScargleResult,
+    AdvancedLombScargleResult, CompleteSimdValidation, ComprehensiveAccuracyResult,
+    MemoryProfilingResult, PerformanceRegressionResult, ScipyComparisonResult,
+    StatisticalValidationResult,
 };
 
 // Ultra-enhanced Lomb-Scargle validation
@@ -345,16 +344,16 @@ pub use parametric_advanced::{
     estimate_var_model, high_resolution_spectral_estimation, AdvancedParametricConfig,
     HighResolutionMethod, HighResolutionResult, RegularizationMethod, VarModel,
 };
-pub use parametric_enhanced::{
-    enhanced_parametric_estimation, DiagnosticStats, EnhancedParametricResult,
-    ModelSelectionResult, ModelType, ParametricConfig,
-};
-pub use parametric_ultra_enhanced::{
+pub use parametric_advanced_enhanced::{
     adaptive_ar_spectral_estimation, comprehensive_parametric_validation,
     high_resolution_spectral_estimation as ultra_high_resolution_spectral_estimation,
     multitaper_parametric_estimation, robust_parametric_spectral_estimation, ultra_enhanced_arma,
     ultra_enhanced_arma_spectrum, ConvergenceInfo, ModelDiagnostics, PerformanceStats,
     UltraEnhancedARMAResult,
+};
+pub use parametric_enhanced::{
+    enhanced_parametric_estimation, DiagnosticStats, EnhancedParametricResult,
+    ModelSelectionResult, ModelType, ParametricConfig,
 };
 
 // Comprehensive Parametric Optimization
@@ -389,11 +388,10 @@ pub use simd_ops::{simd_autocorrelation_enhanced, AutocorrelationMetrics};
 
 // Advanced Enhanced SIMD Operations
 pub use simd_advanced_enhanced::{
-    generate_simd_performance_report, advanced_simd_dwt as advanced_simd_dwt,
-    advanced_simd_fft as advanced_simd_fft, advanced_simd_resample as advanced_simd_resample,
-    advanced_simd_rfft as advanced_simd_rfft, advanced_simd_stft as advanced_simd_stft,
+    advanced_simd_dwt, advanced_simd_fft, advanced_simd_resample, advanced_simd_rfft,
+    advanced_simd_stft, generate_simd_performance_report, AdvancedSimdConfig,
     FftPerformanceMetrics, SimdFftResult, SimdStftResult, SimdUtilizationStats, SimdWaveletResult,
-    StftPerformanceMetrics, AdvancedSimdConfig as AdvancedSimdConfig, WaveletPerformanceMetrics,
+    StftPerformanceMetrics, WaveletPerformanceMetrics,
 };
 pub use sparse::{
     basis_pursuit, compressed_sensing_recover, cosamp, estimate_rip_constant, fista, iht,
@@ -465,9 +463,9 @@ pub use dwt2d_performance_optimization::{
 
 // 2D wavelet advanced validation
 pub use dwt2d_advanced_validation::{
-    generate_dwt2d_comprehensive_report, run_dwt2d_comprehensive_validation, run_quick_dwt2d_validation,
-    BoundaryValidationResult, CompressionValidationResult, ConsistencyAnalysisResult,
-    DenoisingValidationResult, Dwt2dadvancedConfig, Dwt2dadvancedResult,
+    generate_dwt2d_comprehensive_report, run_dwt2d_comprehensive_validation,
+    run_quick_dwt2d_validation, BoundaryValidationResult, CompressionValidationResult,
+    ConsistencyAnalysisResult, DenoisingValidationResult, Dwt2dadvancedConfig, Dwt2dadvancedResult,
     EnergyConservationResult, MemoryAnalysisResult, MultilevelValidationResult,
     OrthogonalityValidationResult, PerformanceAnalysisResult, ReconstructionValidationResult,
     SimdOptimizationResult, StabilityValidationResult,
@@ -507,7 +505,7 @@ pub use wpt_enhanced_modern_validation::{
     OptimizationValidationResult, PrecisionValidationResult, ResourceValidationResult,
     StreamingValidationResult,
 };
-pub use wpt_ultra_validation::{run_ultra_wpt_validation, UltraWptValidationResult};
+pub use wpt_super_validation::{run_ultra_wpt_validation, UltraWptValidationResult};
 
 // Note: wpt_enhanced_modern_validation functions are already imported above
 
@@ -528,7 +526,7 @@ pub use lti_enhanced_system_identification::{
 };
 
 // Ultra-enhanced controllability and observability analysis
-pub use lti_ultra_controllability_observability::{
+pub use lti_advanced_controllability_observability::{
     ultra_controllability_observability_analysis, AnalysisPerformanceMetrics, GeometricAnalysis,
     MultiScaleAnalysis, OptimizationLevel, QuantumInspiredMetrics, RealTimeMonitoring,
     TemporalDynamicsAnalysis, UltraAnalysisConfig, UltraControllabilityAnalysis,
@@ -646,18 +644,19 @@ pub use scipy_validation::{
 };
 
 // Advanced comprehensive validation
-pub use comprehensive_validation::{
-    generate_comprehensive_report, run_comprehensive_validation, PerformanceImprovements,
-    ComprehensiveValidationResult,
+pub use advanced_comprehensive_validation::{
+    generate_comprehensive_report, run_comprehensive_validation, ComprehensiveValidationResult,
+    PerformanceImprovements,
 };
 
 // Advanced validation suite
-pub use comprehensive_validation_suite::{
-    generate_comprehensive_report as generate_comprehensive_validation_report, run_full_comprehensive_validation,
-    run_quick_comprehensive_validation, run_comprehensive_validation, LombScargleUltraResults,
-    MultitaperUltraResults, ParametricUltraResults, ComprehensiveValidationConfig,
-    ComprehensiveValidationResult as UltraValidationResult, ComprehensiveValidationSummary,
-    Wavelet2dUltraResults, WaveletPacketUltraResults,
+pub use advanced_validation_suite::{
+    generate_comprehensive_report as generate_comprehensive_validation_report,
+    run_comprehensive_validation as run_suite_comprehensive_validation,
+    run_full_comprehensive_validation, run_quick_comprehensive_validation,
+    ComprehensiveValidationConfig, ComprehensiveValidationResult as UltraValidationResult,
+    ComprehensiveValidationSummary, LombScargleUltraResults, MultitaperUltraResults,
+    ParametricUltraResults, Wavelet2dUltraResults, WaveletPacketUltraResults,
 };
 
 // Comprehensive performance benchmarking
@@ -668,10 +667,9 @@ pub use benchmarking::{
 
 // Advanced mode coordination and comprehensive validation
 pub use advanced_mode_coordinator::{
+    advancedResults as AdvancedResults, run_advanced_validation_with_config,
     run_quick_comprehensive_validation as run_quick_advanced_validation_coordinator,
-    run_advanced_validation_with_config as run_advanced_validation_with_config,
-    PerformanceMetrics as AdvancedPerformanceMetrics, AdvancedConfig as AdvancedConfig,
-    AdvancedCoordinator as AdvancedCoordinator, advancedResults as AdvancedResults,
+    AdvancedConfig, AdvancedCoordinator, PerformanceMetrics as AdvancedPerformanceMetrics,
     ValidationResults as AdvancedValidationResults,
 };
 

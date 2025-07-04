@@ -16,16 +16,16 @@
 //! - Performance monitoring and analytics
 //! - Cost optimization strategies
 
-use scirs2_core::error::{CoreError, CoreResult, ErrorContext};
 use scirs2_core::distributed_storage::{
-    CloudCredentials, CloudProviderConfig, CloudProviderId, CloudProviderType,
-    CloudStorageProvider, CostEstimate, CostOperation, CredentialType, DataStream, DeleteRequest,
-    DeleteResponse, DownloadOptions, DownloadRequest, DownloadResponse, EncryptionAlgorithm,
-    HealthStatus, ListRequest, ListResponse, MetadataRequest, ObjectMetadata, OperationType,
-    ProviderHealth, ProviderPerformanceSettings, ProviderSecuritySettings, RegionConfig,
-    RetryStrategy, StreamOptions, StreamRequest, TransferPerformance, advancedCloudConfig,
-    advancedCloudStorageCoordinator, UploadOptions, UploadRequest, UploadResponse,
+    advancedCloudConfig, advancedCloudStorageCoordinator, CloudCredentials, CloudProviderConfig,
+    CloudProviderId, CloudProviderType, CloudStorageProvider, CostEstimate, CostOperation,
+    CredentialType, DataStream, DeleteRequest, DeleteResponse, DownloadOptions, DownloadRequest,
+    DownloadResponse, EncryptionAlgorithm, HealthStatus, ListRequest, ListResponse,
+    MetadataRequest, ObjectMetadata, OperationType, ProviderHealth, ProviderPerformanceSettings,
+    ProviderSecuritySettings, RegionConfig, RetryStrategy, StreamOptions, StreamRequest,
+    TransferPerformance, UploadOptions, UploadRequest, UploadResponse,
 };
+use scirs2_core::error::{CoreError, CoreResult, ErrorContext};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -597,13 +597,12 @@ impl advancedCloudStorageDemo {
                     key_rotation_interval_days: Some(90),
                 },
                 enable_signature_verification: true,
-                certificate_validation:
-                    scirs2_core::distributed_storage::CertificateValidation {
-                        validate_chain: true,
-                        validate_hostname: true,
-                        custom_ca_certs: vec![],
-                        certificate_pinning: true,
-                    },
+                certificate_validation: scirs2_core::distributed_storage::CertificateValidation {
+                    validate_chain: true,
+                    validate_hostname: true,
+                    custom_ca_certs: vec![],
+                    certificate_pinning: true,
+                },
             },
         };
 

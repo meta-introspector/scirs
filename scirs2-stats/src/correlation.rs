@@ -45,7 +45,7 @@ use scirs2_core::parallel_ops::*;
 #[allow(dead_code)]
 pub fn pearson_r<F, D>(x: &ArrayBase<D, Ix1>, y: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
+    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F> + std::fmt::Display,
     D: Data<Elem = F>,
     Ix1: Dimension,
 {
@@ -702,7 +702,7 @@ pub fn point_biserial<F, D>(
     continuous: &ArrayBase<D, Ix1>,
 ) -> StatsResult<F>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
+    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F> + std::fmt::Display,
     D: Data<Elem = F>,
     Ix1: Dimension,
 {
@@ -922,7 +922,7 @@ where
 #[allow(dead_code)]
 pub fn corrcoef<F, D>(data: &ArrayBase<D, Ix2>, method: &str) -> StatsResult<ndarray::Array2<F>>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
+    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F> + std::fmt::Display + std::marker::Send,
     D: Data<Elem = F>,
     Ix2: Dimension,
 {

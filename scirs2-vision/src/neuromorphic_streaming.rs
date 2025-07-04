@@ -18,8 +18,8 @@ use crate::error::Result;
 use crate::streaming::FrameMetadata;
 use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2, ArrayView2};
-use rand::Rng;
 use rand::rng;
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -1122,7 +1122,10 @@ impl AdaptiveNeuromorphicPipeline {
         let event_stats = self.event_processor.get_event_stats();
 
         let recent_performance = if !self.performance_history.is_empty() {
-            self.performance_history.back().unwrap().clone()
+            self.performance_history
+                .back()
+                .expect("Performance history should not be empty after check")
+                .clone()
         } else {
             PerformanceSnapshot {
                 accuracy: 0.0,
@@ -1256,7 +1259,7 @@ mod tests {
         let result = detector.process(frame);
         assert!(result.is_ok());
 
-        let processed = result.unwrap();
+        let processed = result.expect("Result should be Ok after assertion");
         assert_eq!(processed.data.dim(), (8, 8));
     }
 

@@ -7,7 +7,7 @@ use ndarray::{Array1, Array2};
 use scirs2_transform::{
     AutoFeatureEngineer, DatasetMetaFeatures, NeuromorphicTransformationSystem,
     QuantumTransformationOptimizer, TransformationConfig, TransformationType,
-    advancedNeuromorphicProcessor, advancedQuantumOptimizer,
+    UltraThinkNeuromorphicProcessor, UltraThinkQuantumOptimizer,
 };
 use std::collections::HashMap;
 use std::time::Instant;
@@ -104,7 +104,7 @@ fn demonstrate_real_time_adaptation() -> Result<(), Box<dyn std::error::Error>> 
     println!("==================================================");
     println!("Simulating continuous data streams with concept drift");
 
-    let mut neuromorphic_processor = advancedNeuromorphicProcessor::new(50, 100, 20);
+    let mut neuromorphic_processor = UltraThinkNeuromorphicProcessor::new(50, 100, 20);
     let mut adaptation_history = Vec::new();
 
     // Simulate 10 time windows of streaming data
@@ -208,7 +208,7 @@ fn demonstrate_multimodal_fusion() -> Result<(), Box<dyn std::error::Error>> {
 
     // Initialize quantum optimization for multi-modal fusion
     let bounds = vec![(0.0, 1.0); 8]; // Multi-modal parameter space
-    let mut multimodal_optimizer = advancedQuantumOptimizer::new(8, 30, bounds, 150)?;
+    let mut multimodal_optimizer = UltraThinkQuantumOptimizer::new(8, 30, bounds, 150)?;
 
     println!("\n⚛️  Quantum optimization for multi-modal fusion...");
 
@@ -605,10 +605,10 @@ fn traditional_optimization(
 }
 
 #[allow(dead_code)]
-fn advanced_optimization(
+fn ultrathink_optimization(
     data: &ndarray::ArrayView2<f64>,
 ) -> Result<Vec<TransformationConfig>, Box<dyn std::error::Error>> {
-    // Use actual Advanced optimization
+    // Use actual UltraThink optimization
     let mut quantum_optimizer = QuantumTransformationOptimizer::new()?;
     quantum_optimizer.optimize_pipeline(data, 0.8)
 }

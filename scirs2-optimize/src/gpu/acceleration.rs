@@ -11,9 +11,9 @@
 
 use crate::error::ScirsResult;
 use ndarray::{Array1, Array2};
+use rand::Rng;
 use std::collections::HashMap;
 use std::sync::Arc;
-use rand::Rng;
 
 use super::{
     cuda_kernels::ParticleSwarmKernel,
@@ -362,7 +362,7 @@ impl UltraParallelSwarmOptimizer {
         &mut self,
         objective: &F,
         bounds: &[(f64, f64)],
-    ) -> ScirsResult<OptimizeResults>
+    ) -> ScirsResult<OptimizeResults<f64>>
     where
         F: GpuFunction + Send + Sync,
     {
@@ -411,7 +411,7 @@ impl UltraParallelSwarmOptimizer {
             iteration += 1;
         }
 
-        Ok(OptimizeResults {
+        Ok(OptimizeResults::<f64> {
             x: self.global_best.position.clone(),
             fun: self.global_best.fitness,
             success: self.global_best.fitness < f64::INFINITY,
@@ -586,8 +586,9 @@ impl UltraParallelSwarmOptimizer {
         }
 
         let trial_counters = Array1::zeros(self.config.swarm_size);
-        let nectar_amounts =
-            Array1::from_shape_fn(self.config.swarm_size, |_| rand::rng().random_range(0.0..1.0));
+        let nectar_amounts = Array1::from_shape_fn(self.config.swarm_size, |_| {
+            rand::rng().random_range(0.0..1.0)
+        });
 
         swarm.algorithm_state = AlgorithmSpecificState::ArtificialBee {
             employed_bees,
@@ -1718,7 +1719,7 @@ pub fn ultra_parallel_swarm_optimize<F>(
     objective: F,
     bounds: &[(f64, f64)],
     config: Option<UltraSwarmConfig>,
-) -> ScirsResult<OptimizeResults>
+) -> ScirsResult<OptimizeResults<f64>>
 where
     F: GpuFunction + Send + Sync,
 {

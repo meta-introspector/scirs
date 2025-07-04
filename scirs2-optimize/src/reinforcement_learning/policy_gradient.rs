@@ -12,12 +12,13 @@ use super::{
     RLOptimizationConfig, RLOptimizer, RewardFunction,
 };
 // use crate::error::OptimizeError; // Unused import
+use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, Array3, ArrayView1};
 // use scirs2_core::error::CoreResult; // Unused import
 // use scirs2_core::simd_ops::SimdUnifiedOps; // Unused import
-use std::collections::{HashMap, VecDeque};
 use rand::Rng;
+use std::collections::{HashMap, VecDeque};
 
 /// Ultra-Advanced Neural Network with Meta-Learning Capabilities
 #[derive(Debug, Clone)]
@@ -782,7 +783,7 @@ impl RLOptimizer for UltraAdvancedPolicyGradientOptimizer {
         &mut self,
         objective: &F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -898,7 +899,7 @@ impl RLOptimizer for UltraAdvancedPolicyGradientOptimizer {
         self.curriculum_controller
             .update_progress(episode_performance);
 
-        Ok(OptimizeResults {
+        Ok(OptimizeResults::<f64> {
             x: current_params,
             fun: current_state.objective_value,
             success: current_state.convergence_metrics.relative_objective_change < 1e-6,
@@ -922,11 +923,11 @@ impl RLOptimizer for UltraAdvancedPolicyGradientOptimizer {
         &mut self,
         objective: &F,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<OptimizeResults>
+    ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
-        let mut best_result = OptimizeResults {
+        let mut best_result = OptimizeResults::<f64> {
             x: initial_params.to_owned(),
             fun: f64::INFINITY,
             success: false,
@@ -1008,7 +1009,7 @@ pub fn ultra_advanced_policy_gradient_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     config: Option<RLOptimizationConfig>,
-) -> Result<OptimizeResults>
+) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
@@ -1033,7 +1034,7 @@ pub fn policy_gradient_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     config: Option<RLOptimizationConfig>,
-) -> Result<OptimizeResults>
+) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {

@@ -1016,7 +1016,7 @@ pub mod kfac_utils {
 }
 
 #[allow(dead_code)]
-impl<T: Float> KFACLayerState<T> {
+impl<T: Float + Send + Sync> KFACLayerState<T> {
     /// Get the condition number estimate of covariance matrices
     pub fn condition_number_estimate(&self) -> (T, T) {
         let a_cond = self.estimate_condition_number(&self.a_cov);
@@ -2902,7 +2902,7 @@ pub mod advanced_kfac {
 
     /// Basic implementations for missing components
 
-    impl<T: Float> DistributedKFAC<T> {
+    impl<T: Float + Send + Sync> DistributedKFAC<T> {
         pub fn new(base_config: KFACConfig<T>, dist_config: DistributedKFACConfig) -> Result<Self> {
             let base_kfac = KFACOptimizer::new(base_config);
             let comm_backend = Some(Arc::new(LocalCommunicationBackend::new(
@@ -2957,7 +2957,7 @@ pub mod advanced_kfac {
     /// Placeholder type alias for the main KFAC optimizer (for compatibility)
     pub type KFACOptimizer<T> = KFAC<T>;
 
-    impl<T: Float> BlockDecomposition<T> {
+    impl<T: Float + Send + Sync> BlockDecomposition<T> {
         pub fn new(block_size: usize) -> Self {
             Self {
                 blocks: HashMap::new(),
@@ -3004,7 +3004,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> AdvancedConditioning<T> {
+    impl<T: Float + Send + Sync> AdvancedConditioning<T> {
         pub fn new() -> Self {
             Self {
                 eigenvalue_trackers: HashMap::new(),
@@ -3039,7 +3039,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> EigenvalueTracker<T> {
+    impl<T: Float + Send + Sync> EigenvalueTracker<T> {
         pub fn new(size: usize) -> Self {
             Self {
                 eigenvalue_history: VecDeque::with_capacity(100),
@@ -3079,7 +3079,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> PowerIterationState<T> {
+    impl<T: Float + Send + Sync> PowerIterationState<T> {
         pub fn new(size: usize) -> Self {
             Self {
                 vector: Array1::ones(size),
@@ -3115,7 +3115,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> ConditionMonitor<T> {
+    impl<T: Float + Send + Sync> ConditionMonitor<T> {
         pub fn new() -> Self {
             Self {
                 condition_history: VecDeque::with_capacity(100),
@@ -3167,7 +3167,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> AdaptivePreconditioning<T> {
+    impl<T: Float + Send + Sync> AdaptivePreconditioning<T> {
         pub fn new() -> Self {
             Self {
                 method_selector: PreconditioningSelector::new(),
@@ -3177,7 +3177,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> PreconditioningSelector<T> {
+    impl<T: Float + Send + Sync> PreconditioningSelector<T> {
         pub fn new() -> Self {
             let mut size_thresholds = BTreeMap::new();
             size_thresholds.insert(100, PreconditioningMethod::Standard);
@@ -3207,7 +3207,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> MethodPerformanceTracker<T> {
+    impl<T: Float + Send + Sync> MethodPerformanceTracker<T> {
         pub fn new() -> Self {
             Self {
                 metrics: HashMap::new(),
@@ -3216,7 +3216,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> StabilityAnalyzer<T> {
+    impl<T: Float + Send + Sync> StabilityAnalyzer<T> {
         pub fn new() -> Self {
             Self {
                 stability_metrics: StabilityMetrics::new(),
@@ -3227,7 +3227,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> StabilityMetrics<T> {
+    impl<T: Float + Send + Sync> StabilityMetrics<T> {
         pub fn new() -> Self {
             Self {
                 numerical_errors: Vec::new(),
@@ -3238,7 +3238,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> ConditioningIndicators<T> {
+    impl<T: Float + Send + Sync> ConditioningIndicators<T> {
         pub fn new() -> Self {
             Self {
                 condition_trends: VecDeque::with_capacity(100),
@@ -3249,7 +3249,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> RankIndicators<T> {
+    impl<T: Float + Send + Sync> RankIndicators<T> {
         pub fn new() -> Self {
             Self {
                 effective_rank: 0,
@@ -3260,7 +3260,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> ConvergenceStability<T> {
+    impl<T: Float + Send + Sync> ConvergenceStability<T> {
         pub fn new() -> Self {
             Self {
                 rate_history: VecDeque::with_capacity(100),
@@ -3276,7 +3276,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> OscillationDetector<T> {
+    impl<T: Float + Send + Sync> OscillationDetector<T> {
         pub fn new() -> Self {
             Self {
                 recent_values: VecDeque::with_capacity(50),
@@ -3287,7 +3287,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> DivergenceIndicators<T> {
+    impl<T: Float + Send + Sync> DivergenceIndicators<T> {
         pub fn new() -> Self {
             Self {
                 gradient_explosion: false,
@@ -3298,7 +3298,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> ErrorTracking<T> {
+    impl<T: Float + Send + Sync> ErrorTracking<T> {
         pub fn new() -> Self {
             Self {
                 fp_error_accumulation: T::zero(),
@@ -3309,7 +3309,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> CancellationDetector<T> {
+    impl<T: Float + Send + Sync> CancellationDetector<T> {
         pub fn new() -> Self {
             Self {
                 bit_loss: Vec::new(),
@@ -3319,7 +3319,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> ErrorPropagation<T> {
+    impl<T: Float + Send + Sync> ErrorPropagation<T> {
         pub fn new() -> Self {
             Self {
                 input_sensitivity: T::one(),
@@ -3340,7 +3340,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> AutoStabilization<T> {
+    impl<T: Float + Send + Sync> AutoStabilization<T> {
         pub fn new() -> Self {
             Self {
                 enabled_techniques: vec![
@@ -3353,7 +3353,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> SecondOrderMomentum<T> {
+    impl<T: Float + Send + Sync> SecondOrderMomentum<T> {
         pub fn new(config: MomentumConfig<T>) -> Self {
             Self {
                 layer_momentum: HashMap::new(),
@@ -3379,7 +3379,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> AdaptiveMomentumScheduling<T> {
+    impl<T: Float + Send + Sync> AdaptiveMomentumScheduling<T> {
         pub fn new() -> Self {
             Self {
                 layer_schedules: HashMap::new(),
@@ -3389,7 +3389,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> MomentumTrends<T> {
+    impl<T: Float + Send + Sync> MomentumTrends<T> {
         pub fn new() -> Self {
             Self {
                 avg_effectiveness: T::from(0.5).unwrap(),
@@ -3400,7 +3400,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> MomentumEffectivenessTracker<T> {
+    impl<T: Float + Send + Sync> MomentumEffectivenessTracker<T> {
         pub fn new() -> Self {
             Self {
                 layer_scores: HashMap::new(),
@@ -3410,7 +3410,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> GlobalEffectivenessMetrics<T> {
+    impl<T: Float + Send + Sync> GlobalEffectivenessMetrics<T> {
         pub fn new() -> Self {
             Self {
                 total_convergence_improvement: T::zero(),
@@ -3421,7 +3421,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float> EffectivenessBaselines<T> {
+    impl<T: Float + Send + Sync> EffectivenessBaselines<T> {
         pub fn new() -> Self {
             Self {
                 no_momentum: T::zero(),

@@ -37,7 +37,8 @@ pub struct ArimaModel<F> {
 }
 
 /// ARIMA model configuration
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ArimaConfig {
     /// AR order
     pub p: usize,

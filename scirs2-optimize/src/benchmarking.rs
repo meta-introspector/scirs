@@ -320,7 +320,7 @@ pub struct BenchmarkRun {
     /// Optimization algorithm used
     pub algorithm: String,
     /// Optimization results
-    pub results: OptimizeResults,
+    pub results: OptimizeResults<f64>,
     /// Runtime statistics
     pub runtime_stats: RuntimeStats,
     /// Distance to global optimum
@@ -491,7 +491,7 @@ impl BenchmarkResults {
                 run.algorithm,
                 run.success,
                 run.results.fun,
-                run.results.function_evaluations,
+                run.results.nfev,
                 run.runtime_stats.total_time.as_millis(),
                 run.distance_to_optimum
             ));
@@ -589,7 +589,7 @@ impl BenchmarkSystem {
         optimize_fn: F,
     ) -> ScirsResult<BenchmarkResults>
     where
-        F: Fn(&TestProblem, &Array1<f64>) -> ScirsResult<OptimizeResults> + Clone,
+        F: Fn(&TestProblem, &Array1<f64>) -> ScirsResult<OptimizeResults<f64>> + Clone,
     {
         let mut runs = Vec::new();
 
@@ -623,10 +623,9 @@ impl BenchmarkSystem {
 
                         let runtime_stats = RuntimeStats {
                             total_time: runtime,
-                            time_per_evaluation: runtime
-                                / opt_result.function_evaluations.max(1) as u32,
+                            time_per_evaluation: runtime / opt_result.nfev.max(1) as u32,
                             peak_memory: 0, // Would need system monitoring
-                            convergence_checks: opt_result.iterations,
+                            convergence_checks: opt_result.nit,
                         };
 
                         runs.push(BenchmarkRun {
@@ -655,7 +654,7 @@ impl BenchmarkSystem {
                             dimensions: problem.dimensions,
                             run_id,
                             algorithm: algorithm_name.to_string(),
-                            results: OptimizeResults {
+                            results: OptimizeResults::<f64> {
                                 x: start_point.clone(),
                                 fun: f64::INFINITY,
                                 success: false,
@@ -698,11 +697,8 @@ impl BenchmarkSystem {
         let total_runtime: Duration = runs.iter().map(|run| run.runtime_stats.total_time).sum();
         let average_runtime = total_runtime / runs.len() as u32;
 
-        let average_function_evaluations = runs
-            .iter()
-            .map(|run| run.results.function_evaluations as f64)
-            .sum::<f64>()
-            / runs.len() as f64;
+        let average_function_evaluations =
+            runs.iter().map(|run| run.results.nfev as f64).sum::<f64>() / runs.len() as f64;
 
         let distances: Vec<f64> = runs
             .iter()

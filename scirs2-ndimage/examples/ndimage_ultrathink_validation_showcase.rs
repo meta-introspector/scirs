@@ -17,8 +17,8 @@ use scirs2_ndimage::{
     error::NdimageResult,
     fusion_core::{
         enhanced_meta_learning_with_temporal_fusion, enhanced_quantum_consciousness_evolution,
-        quantum_aware_resource_scheduling_optimization, fusion_processing,
-        AdvancedConfig, UltrathinkState,
+        fusion_processing, quantum_aware_resource_scheduling_optimization, AdvancedConfig,
+        UltrathinkState,
     },
 };
 
@@ -77,16 +77,14 @@ pub fn demonstrate_ultrathink_capabilities() -> NdimageResult<()> {
         println!("    ✓ Configuration optimized for cycle {}", cycle);
 
         // Run abbreviated processing with optimized config
-        let (processed, _state) =
-            fusion_processing(test_image.view(), &optimized_config, None)?;
+        let (processed, _state) = fusion_processing(test_image.view(), &optimized_config, None)?;
         println!("    ✓ Processing completed with optimized config");
         println!("    - Output shape: {:?}", processed.dim());
     }
 
     // Demonstration 5: Comprehensive Integration Test
     println!("\n🌟 Testing Comprehensive Advanced Integration");
-    let (final_result, final_state) =
-        fusion_processing(test_image.view(), &config, None)?;
+    let (final_result, final_state) = fusion_processing(test_image.view(), &config, None)?;
 
     println!("✓ Comprehensive Advanced processing completed");
     println!("  - Final output shape: {:?}", final_result.dim());

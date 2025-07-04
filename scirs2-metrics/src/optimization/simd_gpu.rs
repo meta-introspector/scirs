@@ -609,8 +609,7 @@ impl SimdMetrics {
 
         // Simulate GPU computation with appropriate delays and batch processing
         let threads_per_block = gpu_info.max_threads_per_block.min(1024);
-        let _blocks_needed =
-            (batch_size + threads_per_block as usize - 1) / threads_per_block as usize;
+        let _blocks_needed = batch_size.div_ceil(threads_per_block as usize);
 
         // Simulate memory transfer to GPU
         std::thread::sleep(std::time::Duration::from_micros(

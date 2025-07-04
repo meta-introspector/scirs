@@ -1583,7 +1583,7 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum + ndarray::ScalarOper
                 - (ps.local_difficulty - median_difficulty).abs()
                     / (difficulties
                         .iter()
-                        .map(|&d| d)
+                        .copied()
                         .fold(F::zero(), |acc, d| acc.max(d))
                         + F::from(1e-8).unwrap());
             let size_factor = ps.size / F::from(10.0).unwrap(); // Normalize by expected set size

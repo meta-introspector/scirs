@@ -5,6 +5,7 @@
 //! fault tolerance, and cost optimization.
 
 use crate::error::{Result, TimeSeriesError};
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -28,7 +29,8 @@ pub enum CloudError {
 }
 
 /// Supported cloud platforms
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum CloudPlatform {
     AWS,
     GCP,
@@ -36,7 +38,8 @@ pub enum CloudPlatform {
 }
 
 /// Cloud resource configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CloudResourceConfig {
     pub platform: CloudPlatform,
     pub region: String,
@@ -66,7 +69,8 @@ impl Default for CloudResourceConfig {
 }
 
 /// Deployment environment configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DeploymentConfig {
     pub environment: String,
     pub resources: CloudResourceConfig,
@@ -77,7 +81,8 @@ pub struct DeploymentConfig {
 }
 
 /// Network configuration for cloud deployment
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NetworkConfig {
     pub vpc_cidr: String,
     pub subnet_cidrs: Vec<String>,
@@ -87,7 +92,8 @@ pub struct NetworkConfig {
 }
 
 /// Security configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SecurityConfig {
     pub encryption_at_rest: bool,
     pub encryption_in_transit: bool,
@@ -97,7 +103,8 @@ pub struct SecurityConfig {
 }
 
 /// Monitoring and observability configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MonitoringConfig {
     pub metrics_enabled: bool,
     pub logging_enabled: bool,
@@ -107,7 +114,8 @@ pub struct MonitoringConfig {
 }
 
 /// Backup and disaster recovery configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BackupConfig {
     pub backup_enabled: bool,
     pub backup_frequency: String,
@@ -117,7 +125,8 @@ pub struct BackupConfig {
 }
 
 /// Firewall rule definition
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FirewallRule {
     pub direction: String,
     pub protocol: String,
@@ -137,6 +146,7 @@ pub struct CloudDeploymentOrchestrator {
 
 /// Current deployment state
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DeploymentState {
     pub status: DeploymentStatus,
     pub active_instances: Vec<InstanceInfo>,
@@ -158,7 +168,8 @@ pub enum DeploymentStatus {
 }
 
 /// Instance information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct InstanceInfo {
     pub instance_id: String,
     pub instance_type: String,
@@ -192,6 +203,7 @@ pub struct HealthMonitor {
 
 /// Alert definition
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Alert {
     pub alert_id: String,
     pub severity: AlertSeverity,
@@ -210,6 +222,7 @@ pub enum AlertSeverity {
 
 /// Health check configuration
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HealthCheck {
     pub check_id: String,
     pub endpoint: String,
@@ -220,7 +233,8 @@ pub struct HealthCheck {
 }
 
 /// Time series processing job for cloud execution
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CloudTimeSeriesJob {
     pub job_id: String,
     pub job_type: TimeSeriesJobType,
@@ -232,7 +246,7 @@ pub struct CloudTimeSeriesJob {
 }
 
 /// Type of time series analysis job
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum TimeSeriesJobType {
     Forecasting,
     AnomalyDetection,
@@ -244,7 +258,8 @@ pub enum TimeSeriesJobType {
 }
 
 /// Job priority levels
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum JobPriority {
     Low,
     Normal,
@@ -253,7 +268,8 @@ pub enum JobPriority {
 }
 
 /// Resource requirements for a job
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ResourceRequirements {
     pub cpu_cores: usize,
     pub memory_gb: f64,

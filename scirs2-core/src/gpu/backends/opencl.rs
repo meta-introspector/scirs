@@ -142,15 +142,15 @@ impl OpenCLContext {
                 return Err(GpuError::Other("No OpenCL platforms found".to_string()));
             }
 
-            let devices = get_all_devices(CL_DEVICE_TYPE_GPU)
+            let device_ids = get_all_devices(CL_DEVICE_TYPE_GPU)
                 .map_err(|e| GpuError::Other(format!("Failed to get OpenCL GPU devices: {e}")))?;
 
-            if devices.is_empty() {
+            if device_ids.is_empty() {
                 return Err(GpuError::Other("No OpenCL GPU devices found".to_string()));
             }
 
-            let device = &devices[0];
-            let context = Context::from_device(device)
+            let device = Device::new(device_ids[0]);
+            let context = Context::from_device(&device)
                 .map_err(|e| GpuError::Other(format!("Failed to create OpenCL context: {e}")))?;
 
             let queue =
@@ -159,7 +159,7 @@ impl OpenCLContext {
                 })?;
 
             Ok(Self {
-                device: Arc::new(device.clone()),
+                device: Arc::new(device),
                 context: Arc::new(context),
                 queue: Arc::new(queue),
                 compiled_kernels: Arc::new(Mutex::new(HashMap::new())),

@@ -5,17 +5,8 @@
 
 use crate::error::{ScirsError, ScirsResult};
 
-// Implement error conversion for GPU errors
-impl From<scirs2_core::gpu::GpuError> for ScirsError {
-    fn from(error: scirs2_core::gpu::GpuError) -> Self {
-        match error {
-            scirs2_core::gpu::GpuError::OutOfMemory(msg) => ScirsError::OutOfMemory(msg),
-            scirs2_core::gpu::GpuError::InvalidOperation(msg) => ScirsError::InvalidInput(msg),
-            scirs2_core::gpu::GpuError::ComputationError(msg) => ScirsError::ComputationError(msg),
-            _ => ScirsError::ComputationError(format!("GPU error: {}", error)),
-        }
-    }
-}
+// Note: Error conversion handled through scirs2_core::error system
+// GPU errors are automatically converted via CoreError type alias
 use scirs2_core::gpu::{GpuBuffer, GpuDevice};
 
 // Real GPU types from scirs2-core

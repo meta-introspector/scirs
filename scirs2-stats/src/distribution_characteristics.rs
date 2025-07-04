@@ -436,7 +436,7 @@ where
 
     for i in 0..n_boot {
         let sample_view = samples.slice(ndarray::s![i, ..]).to_owned();
-        if let Ok(sk) = skew(&sample_view.view(), bias) {
+        if let Ok(sk) = skew(&sample_view.view(), bias, None) {
             bootstrap_skew.push(sk);
         }
     }
@@ -650,7 +650,7 @@ mod tests {
         let result = skewness_ci(&data.view(), false, None, Some(100), Some(42)).unwrap();
 
         // Check that the estimate is correct
-        let direct_skew = skew(&data.view(), false).unwrap();
+        let direct_skew = skew(&data.view(), false, None).unwrap();
         assert_relative_eq!(result.estimate, direct_skew, epsilon = 1e-10);
 
         // Check confidence interval contains the estimate

@@ -634,7 +634,6 @@
 
 #![allow(
     unused_imports,
-    dead_code,
     unexpected_cfgs,
     clippy::clone_on_copy,
     clippy::needless_range_loop,

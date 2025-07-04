@@ -350,7 +350,7 @@ pub struct SpikeTrain<T: Float> {
     /// Spike count
     pub spike_count: usize}
 
-impl<T: Float> SpikeTrain<T> {
+impl<T: Float + Send + Sync> SpikeTrain<T> {
     /// Create a new spike train from spike times
     pub fn new(neuron_id: usize, spike_times: Vec<T>) -> Self {
         let spike_count = spike_times.len();

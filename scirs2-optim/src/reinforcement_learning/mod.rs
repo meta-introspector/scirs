@@ -129,7 +129,7 @@ pub struct TrajectoryBatch<T: Float> {
     pub returns: Array1<T>,
 }
 
-impl<T: Float> TrajectoryBatch<T> {
+impl<T: Float + Send + Sync> TrajectoryBatch<T> {
     /// Create a new trajectory batch
     pub fn new(
         observations: Array2<T>,
@@ -377,7 +377,7 @@ pub enum ScheduleType {
     Adaptive,
 }
 
-impl<T: Float> RLScheduler<T> {
+impl<T: Float + Send + Sync> RLScheduler<T> {
     /// Create a new learning rate scheduler
     pub fn new(initial_lr: T, schedule: ScheduleType) -> Self {
         Self {

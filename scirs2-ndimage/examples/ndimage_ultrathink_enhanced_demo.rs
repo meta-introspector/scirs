@@ -14,10 +14,10 @@ use ndarray::{Array2, ArrayView2};
 use std::time::Instant;
 
 use scirs2_ndimage::{
-    error::NdimageResult,
     enhanced_validation::{
         validated_ultrathink_processing, ComprehensiveValidator, ValidationConfig,
     },
+    error::NdimageResult,
     fusion_core::AdvancedConfig,
 };
 

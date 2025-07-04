@@ -4,7 +4,7 @@
 //! transforms, covering tree structure validation, coefficient organization,
 //! reconstruction fidelity, best basis selection, and compression performance.
 
-use crate::error::{SignalError, SignalResult};
+use crate::error::SignalResult;
 use ndarray::{Array1, Array2, ArrayView1};
 use rand::prelude::*;
 use scirs2_core::validation::check_finite;
@@ -382,9 +382,7 @@ pub struct ScalabilityAnalysisResult {
 ///
 /// * Comprehensive validation results with detailed analysis
 #[allow(dead_code)]
-pub fn run_wpt_advanced_validation(
-    config: &WptadvancedConfig,
-) -> SignalResult<WptadvancedResult> {
+pub fn run_wpt_advanced_validation(config: &WptadvancedConfig) -> SignalResult<WptadvancedResult> {
     let start_time = Instant::now();
     let mut issues = Vec::new();
     let mut recommendations = Vec::new();

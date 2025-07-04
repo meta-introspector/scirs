@@ -1,4 +1,4 @@
-use ndarray::{Array, IxDyn};
+use ndarray::{Array, Array3, IxDyn};
 use scirs2_neural::losses::{
     ContrastiveLoss, CrossEntropyLoss, FocalLoss, Loss, MeanSquaredError, TripletLoss,
 };
@@ -74,7 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create sample data for triplet learning
     // Embedding triplets (batch_size x 3 x embedding_dim)
     let triplet_embeddings = Array3::from_shape_vec(
-        IxDyn(&[2, 3, 3]),
+        (2, 3, 3),
         vec![
             0.1, 0.2, 0.3, // First triplet, anchor
             0.1, 0.3, 0.3, // First triplet, positive

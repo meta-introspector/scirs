@@ -120,7 +120,16 @@ impl ProductionValidator {
     /// Run comprehensive production validation
     pub fn validate_production_readiness<F>(&self) -> InterpolateResult<ProductionValidationReport>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + Display
+            + AddAssign
+            + SubAssign
+            + Send
+            + Sync
+            + 'static
+            + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let mut test_results = Vec::new();
@@ -172,7 +181,16 @@ impl ProductionValidator {
     /// Test edge cases that could cause production issues
     fn test_edge_cases<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + Display
+            + AddAssign
+            + SubAssign
+            + Send
+            + Sync
+            + 'static
+            + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let mut errors = Vec::new();
@@ -215,7 +233,16 @@ impl ProductionValidator {
     /// Test for memory leaks over extended operation
     fn test_memory_leaks<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + Display
+            + AddAssign
+            + SubAssign
+            + Send
+            + Sync
+            + 'static
+            + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let iterations = 1000;
@@ -248,7 +275,16 @@ impl ProductionValidator {
     /// Test performance under stress conditions
     fn test_performance_under_stress<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + Display
+            + AddAssign
+            + SubAssign
+            + Send
+            + Sync
+            + 'static
+            + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let timeout = Duration::from_secs(self.config.max_computation_time_secs);
@@ -366,7 +402,16 @@ impl ProductionValidator {
     /// Test error recovery and graceful degradation
     fn test_error_recovery<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + Display
+            + AddAssign
+            + SubAssign
+            + Send
+            + Sync
+            + 'static
+            + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let mut recovery_tests_passed = 0;
@@ -419,17 +464,26 @@ impl ProductionValidator {
     /// Test resource exhaustion handling
     fn test_resource_exhaustion<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + Display
+            + AddAssign
+            + SubAssign
+            + Send
+            + Sync
+            + 'static
+            + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
 
         // Test with progressively larger datasets until resource limits
         let mut handled_gracefully = true;
-        let mut max_tested_size = 0;
+        let mut _max_tested_size = 0;
 
         for size_factor in [1, 2, 4, 8, 16, 32] {
             let size = 1000 * size_factor;
-            max_tested_size = size;
+            _max_tested_size = size;
 
             match self.generate_test_data::<F>(size) {
                 Ok(data) => {
@@ -471,7 +525,16 @@ impl ProductionValidator {
     /// Test numerical stability under extreme conditions
     fn test_numerical_stability_extreme<F>(&self) -> InterpolateResult<ProductionTestResult>
     where
-        F: Float + FromPrimitive + Debug + Display + AddAssign + SubAssign + Send + Sync + 'static + crate::traits::InterpolationFloat,
+        F: Float
+            + FromPrimitive
+            + Debug
+            + Display
+            + AddAssign
+            + SubAssign
+            + Send
+            + Sync
+            + 'static
+            + crate::traits::InterpolationFloat,
     {
         let start_time = Instant::now();
         let mut stability_tests_passed = 0;

@@ -254,8 +254,12 @@ pub fn get_device_manager() -> NdimageResult<Arc<Mutex<DeviceManager>>> {
             Err(_) => {
                 // Fallback to empty manager on error
                 Arc::new(Mutex::new(DeviceManager {
-                    devices: HashMap::new(),
-                    capabilities: HashMap::new(),
+                    #[cfg(feature = "cuda")]
+                    cuda_devices: Vec::new(),
+                    #[cfg(feature = "opencl")]
+                    opencl_devices: Vec::new(),
+                    #[cfg(all(target_os = "macos", feature = "metal"))]
+                    metal_devices: Vec::new(),
                 }))
             }
         }

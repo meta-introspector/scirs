@@ -664,8 +664,8 @@ impl QuantumHyperparameterTuner {
 // ✅ Advanced MODE: Quantum-Inspired Optimization Enhancements
 // ========================================================================
 
-/// ✅ Advanced MODE: Ultra-fast quantum-inspired optimizer with SIMD acceleration
-pub struct advancedQuantumOptimizer {
+/// ✅ UltraThink MODE: Ultra-fast quantum-inspired optimizer with SIMD acceleration
+pub struct UltraThinkQuantumOptimizer {
     /// Population of quantum particles
     particles: Vec<QuantumParticle>,
     /// Global best position
@@ -680,9 +680,9 @@ pub struct advancedQuantumOptimizer {
     /// Parallel processing configuration
     parallel_chunks: usize,
     /// Adaptive quantum parameters
-    adaptive_params: advancedQuantumParams,
+    adaptive_params: UltraThinkQuantumParams,
     /// Real-time performance metrics
-    performance_metrics: advancedQuantumMetrics,
+    performance_metrics: UltraThinkQuantumMetrics,
     /// Memory pool for efficient allocations
     #[allow(dead_code)]
     memory_pool: Vec<Array1<f64>>,
@@ -690,7 +690,7 @@ pub struct advancedQuantumOptimizer {
 
 /// ✅ Advanced MODE: Adaptive quantum parameters for real-time tuning
 #[derive(Debug, Clone)]
-pub struct advancedQuantumParams {
+pub struct UltraThinkQuantumParams {
     /// Quantum collapse probability (adaptive)
     collapse_probability: f64,
     /// Entanglement strength (adaptive)
@@ -708,7 +708,7 @@ pub struct advancedQuantumParams {
 
 /// ✅ Advanced MODE: Performance metrics for quantum optimization
 #[derive(Debug, Clone)]
-pub struct advancedQuantumMetrics {
+pub struct UltraThinkQuantumMetrics {
     /// Convergence rate (iterations per second)
     convergence_rate: f64,
     /// Quantum efficiency score
@@ -723,8 +723,8 @@ pub struct advancedQuantumMetrics {
     parallel_speedup: f64,
 }
 
-impl advancedQuantumOptimizer {
-    /// ✅ Advanced OPTIMIZATION: Create ultra-fast quantum optimizer
+impl UltraThinkQuantumOptimizer {
+    /// ✅ UltraThink OPTIMIZATION: Create ultra-fast quantum optimizer
     pub fn new(
         dimension: usize,
         population_size: usize,
@@ -764,7 +764,7 @@ impl advancedQuantumOptimizer {
             });
         }
 
-        Ok(advancedQuantumOptimizer {
+        Ok(UltraThinkQuantumOptimizer {
             particles,
             global_best_position: Array1::zeros(dimension),
             global_best_fitness: f64::NEG_INFINITY,
@@ -772,7 +772,7 @@ impl advancedQuantumOptimizer {
             position_buffer: Array2::zeros((population_size, dimension)),
             velocity_buffer: Array2::zeros((population_size, dimension)),
             parallel_chunks,
-            adaptive_params: advancedQuantumParams {
+            adaptive_params: UltraThinkQuantumParams {
                 collapse_probability: 0.1,
                 entanglement_strength: 0.3,
                 decay_rate: 0.95,
@@ -780,7 +780,7 @@ impl advancedQuantumOptimizer {
                 coherence_time: 50.0,
                 tunneling_probability: 0.05,
             },
-            performance_metrics: advancedQuantumMetrics {
+            performance_metrics: UltraThinkQuantumMetrics {
                 convergence_rate: 0.0,
                 quantum_efficiency: 1.0,
                 exploration_ratio: 0.5,
@@ -1191,35 +1191,34 @@ impl advancedQuantumOptimizer {
             .min(1.0);
     }
 
-    /// ✅ Advanced MODE: Get comprehensive performance diagnostics
-    pub const fn get_advanced_diagnostics(&self) -> &advancedQuantumMetrics {
+    /// ✅ UltraThink MODE: Get comprehensive performance diagnostics
+    pub const fn get_ultrathink_diagnostics(&self) -> &UltraThinkQuantumMetrics {
         &self.performance_metrics
     }
 
-    /// ✅ Advanced MODE: Get adaptive parameters state
-    pub const fn get_adaptive_params(&self) -> &advancedQuantumParams {
-        &self.adaptive_params
+    /// ✅ UltraThink MODE: Get comprehensive performance diagnostics (alias for backward compatibility)
+    pub const fn get_advanced_diagnostics(&self) -> &UltraThinkQuantumMetrics {
+        &self.performance_metrics
     }
 
-    /// ✅ Advanced MODE: Simplified optimize interface (defaults to 100 iterations)
+    /// ✅ UltraThink MODE: Optimize with default parameters (wrapper method)
     pub fn optimize<F>(&mut self, objective_function: F) -> Result<(Array1<f64>, f64)>
     where
-        F: Fn(&Array1<f64>) -> f64 + Sync + Send,
-        F: Copy,
+        F: Fn(&Array1<f64>) -> f64 + Sync + Send + Copy,
     {
         self.optimize_ultrafast(objective_function, 100)
     }
 
-    /// ✅ Advanced MODE: Get advanced performance diagnostics (alias for get_advanced_diagnostics)
-    pub const fn get_advanced_diagnostics(&self) -> &advancedQuantumMetrics {
-        &self.performance_metrics
+    /// ✅ Advanced MODE: Get adaptive parameters state
+    pub const fn get_adaptive_params(&self) -> &UltraThinkQuantumParams {
+        &self.adaptive_params
     }
 }
 
 #[allow(dead_code)]
-impl Default for advancedQuantumParams {
+impl Default for UltraThinkQuantumParams {
     fn default() -> Self {
-        advancedQuantumParams {
+        UltraThinkQuantumParams {
             collapse_probability: 0.1,
             entanglement_strength: 0.3,
             decay_rate: 0.95,
@@ -1231,9 +1230,9 @@ impl Default for advancedQuantumParams {
 }
 
 #[allow(dead_code)]
-impl Default for advancedQuantumMetrics {
+impl Default for UltraThinkQuantumMetrics {
     fn default() -> Self {
-        advancedQuantumMetrics {
+        UltraThinkQuantumMetrics {
             convergence_rate: 0.0,
             quantum_efficiency: 1.0,
             exploration_ratio: 0.5,

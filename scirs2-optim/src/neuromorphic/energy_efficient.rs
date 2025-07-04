@@ -698,7 +698,7 @@ struct EnergyPrediction<T: Float> {
     /// Model used
     model_type: ModelType}
 
-impl<T: Float> EnergyEfficientOptimizer<T> {
+impl<T: Float + Send + Sync> EnergyEfficientOptimizer<T> {
     /// Create a new energy-efficient optimizer
     pub fn new(config: EnergyEfficientConfig<T>, num_neurons: usize) -> Self {
         Self {
@@ -1049,7 +1049,7 @@ pub struct EnergyBudgetStatus<T: Float> {
 // Implementation of various helper structs and methods would continue here...
 // For brevity, I'm including placeholder implementations
 
-impl<T: Float> EnergyMonitor<T> {
+impl<T: Float + Send + Sync> EnergyMonitor<T> {
     fn new(monitoring_frequency: Duration) -> Self {
         Self {
             consumption_history: VecDeque::new(),

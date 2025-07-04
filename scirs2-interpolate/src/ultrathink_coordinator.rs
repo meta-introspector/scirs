@@ -35,7 +35,7 @@ use serde::{Deserialize, Serialize};
 
 /// Central coordinator for advanced interpolation operations
 #[derive(Debug)]
-pub struct advancedInterpolationCoordinator<F: Float + Debug> {
+pub struct AdvancedInterpolationCoordinator<F: Float + Debug> {
     /// Intelligent method selector
     method_selector: Arc<RwLock<IntelligentMethodSelector<F>>>,
     /// Accuracy optimization engine
@@ -53,7 +53,7 @@ pub struct advancedInterpolationCoordinator<F: Float + Debug> {
     /// Performance tracker
     performance_tracker: Arc<RwLock<InterpolationPerformanceTracker>>,
     /// Configuration
-    config: advancedInterpolationConfig,
+    config: AdvancedInterpolationConfig,
     /// Adaptive cache system
     adaptive_cache: Arc<Mutex<AdaptiveInterpolationCache<F>>>,
 }
@@ -61,7 +61,7 @@ pub struct advancedInterpolationCoordinator<F: Float + Debug> {
 /// Configuration for advanced interpolation operations
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct advancedInterpolationConfig {
+pub struct AdvancedInterpolationConfig {
     /// Enable intelligent method selection
     pub enable_method_selection: bool,
     /// Enable adaptive optimization
@@ -88,7 +88,7 @@ pub struct advancedInterpolationConfig {
     pub enable_hardware_optimization: bool,
 }
 
-impl Default for advancedInterpolationConfig {
+impl Default for AdvancedInterpolationConfig {
     fn default() -> Self {
         Self {
             enable_method_selection: true,
@@ -1077,9 +1077,9 @@ impl<F: Float> InputValidationResult<F> {
     }
 }
 
-impl<F: Float + Debug> advancedInterpolationCoordinator<F> {
+impl<F: Float + Debug> AdvancedInterpolationCoordinator<F> {
     /// Create a new advanced interpolation coordinator
-    pub fn new(config: advancedInterpolationConfig) -> InterpolateResult<Self> {
+    pub fn new(config: AdvancedInterpolationConfig) -> InterpolateResult<Self> {
         Ok(Self {
             method_selector: Arc::new(RwLock::new(IntelligentMethodSelector::new()?)),
             accuracy_optimizer: Arc::new(Mutex::new(AccuracyOptimizationEngine::new()?)),
@@ -1187,7 +1187,7 @@ impl<F: Float + Debug> advancedInterpolationCoordinator<F> {
     /// Update advanced configuration
     pub fn update_config(
         &mut self,
-        new_config: advancedInterpolationConfig,
+        new_config: AdvancedInterpolationConfig,
     ) -> InterpolateResult<()> {
         self.config = new_config;
         // Update subsystem configurations
@@ -1275,7 +1275,7 @@ impl<F: Float + Debug> advancedInterpolationCoordinator<F> {
         let expected_performance = ExpectedPerformance {
             execution_time: perf_estimate.expected_execution_time,
             memory_usage: perf_estimate.expected_memory_usage,
-            accuracy: 0.95, // Default accuracy estimate
+            accuracy: 0.95,  // Default accuracy estimate
             robustness: 0.8, // Default robustness estimate
         };
 
@@ -1637,7 +1637,7 @@ impl<F: Float + Debug> advancedInterpolationCoordinator<F> {
                     }
                 }
                 left
-            }
+            };
 
             // Evaluate cubic polynomial
             let dx = xi - x_flat[indices[j]];
@@ -2894,16 +2894,16 @@ pub struct InterpolationPerformanceMetrics {
 /// Create a new Advanced interpolation coordinator with default configuration
 #[allow(dead_code)]
 pub fn create_advanced_interpolation_coordinator<F: Float + Debug>(
-) -> InterpolateResult<advancedInterpolationCoordinator<F>> {
-    advancedInterpolationCoordinator::new(advancedInterpolationConfig::default())
+) -> InterpolateResult<AdvancedInterpolationCoordinator<F>> {
+    AdvancedInterpolationCoordinator::new(AdvancedInterpolationConfig::default())
 }
 
 /// Create a new Advanced interpolation coordinator with custom configuration
 #[allow(dead_code)]
 pub fn create_advanced_interpolation_coordinator_with_config<F: Float + Debug>(
-    config: advancedInterpolationConfig,
-) -> InterpolateResult<advancedInterpolationCoordinator<F>> {
-    advancedInterpolationCoordinator::new(config)
+    config: AdvancedInterpolationConfig,
+) -> InterpolateResult<AdvancedInterpolationCoordinator<F>> {
+    AdvancedInterpolationCoordinator::new(config)
 }
 
 #[allow(dead_code)]
@@ -2943,7 +2943,7 @@ mod tests {
 
     #[test]
     fn test_advanced_config_default() {
-        let config = advancedInterpolationConfig::default();
+        let config = AdvancedInterpolationConfig::default();
         assert!(config.enable_method_selection);
         assert!(config.enable_adaptive_optimization);
         assert!(config.enable_quantum_optimization);

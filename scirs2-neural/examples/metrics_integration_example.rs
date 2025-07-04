@@ -2,23 +2,13 @@
 //!
 //! This example shows how to use metrics from scirs2-metrics with
 //! neural network training in scirs2-neural.
-//! To run this example, enable the 'metrics_integration' feature:
+//! To run this example:
 //! ```bash
-//! cargo run --example metrics_integration_example --features metrics_integration
+//! cargo run --example metrics_integration_example
 //! ```
 
-#[cfg(feature = "metrics_integration")]
 use ndarray::Array2;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-// This example requires the metrics_integration feature
-#[cfg(not(feature = "metrics_integration"))]
-#[allow(dead_code)]
-fn main() {
-    println!("This example requires the 'metrics_integration' feature.");
-    println!("Run it with: cargo run --example metrics_integration_example --features metrics_integration");
-}
-
-#[cfg(feature = "metrics_integration")]
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     use scirs2_metrics::integration::neural::NeuralMetricAdapter;
@@ -133,7 +123,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(feature = "metrics_integration")]
 #[allow(dead_code)]
 fn generate_binary_classification_data(
     n_samples: usize,
@@ -157,7 +146,6 @@ fn generate_binary_classification_data(
     Ok((x, y))
 }
 
-#[cfg(feature = "metrics_integration")]
 #[allow(dead_code)]
 fn shuffle_indices(mut indices: Vec<usize>) -> Vec<usize> {
     use rand::rngs::ThreadRng;
@@ -166,7 +154,6 @@ fn shuffle_indices(mut indices: Vec<usize>) -> Vec<usize> {
     indices
 }
 
-#[cfg(feature = "metrics_integration")]
 #[allow(dead_code)]
 fn create_batch(data: &Array2<f64>, indices: &[usize]) -> Array2<f64> {
     let n_samples = indices.len();

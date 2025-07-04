@@ -7,6 +7,7 @@ use crate::sampling::SampleableDistribution;
 use crate::traits::{ContinuousDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
+use rand::thread_rng;
 use rand_distr::{Distribution as RandDistribution, Uniform as RandUniform};
 
 /// Uniform distribution structure
@@ -168,7 +169,7 @@ impl<F: Float + NumCast + std::fmt::Display> Uniform<F> {
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Array1<F>> {
-        let mut rng = rand::rng();
+        let mut rng = thread_rng();
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {

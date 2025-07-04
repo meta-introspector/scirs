@@ -1589,7 +1589,7 @@ impl<'a, T> ZeroCopyArrayView<'a, T> {
         }
 
         Ok(ZeroCopyArrayView {
-            data: unsafe { NonNull::new_unchecked(self.data.as_ptr().add(start) as *mut T) },
+            data: unsafe { NonNull::new_unchecked(self.data.as_ptr().add(start)) },
             len,
             _lifetime: std::marker::PhantomData,
             memory_manager: self.memory_manager,

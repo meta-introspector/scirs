@@ -726,7 +726,6 @@ fn soft_threshold_inplace(coeffs: &mut Array1<f64>, threshold: f64) {
     }
 }
 
-#[allow(dead_code)]
 /// Adaptive dictionary denoising that learns dictionary from the signal itself
 #[allow(dead_code)]
 pub fn denoise_adaptive_dictionary(

@@ -8,7 +8,7 @@ use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, FromPrimitive, NumCast, One, Zero};
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*, rng};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
@@ -267,7 +267,7 @@ where
     pub fn new(config: AdvancedBootstrapConfig) -> Self {
         let rng = match config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(rng()),
         };
 
         Self {
@@ -369,7 +369,7 @@ where
             let samples: Result<Vec<_>, _> = (0..self.config.n_bootstrap)
                 .into_par_iter()
                 .map(|_| {
-                    let mut local_rng = StdRng::from_rng(&mut rand::rng());
+                    let mut local_rng = StdRng::from_rng(rng());
                     let mut resample = Array1::zeros(n);
 
                     for i in 0..n {

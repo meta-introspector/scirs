@@ -913,7 +913,7 @@ pub struct PerformanceStats<T: Float> {
 }
 
 // Implementation stubs for key structures
-impl<T: Float> FewShotLearningSystem<T> {
+impl<T: Float + Send + Sync> FewShotLearningSystem<T> {
     /// Create new few-shot learning system
     pub fn new(
         base_optimizer: Box<dyn FewShotOptimizer<T>>,
@@ -1031,7 +1031,7 @@ pub struct PrototypicalNetworkConfig<T: Float> {
 }
 
 // Implementation stubs for major components
-impl<T: Float> PrototypicalNetwork<T> {
+impl<T: Float + Send + Sync> PrototypicalNetwork<T> {
     fn new(_config: PrototypicalNetworkConfig<T>) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "PrototypicalNetwork implementation pending".to_string(),
@@ -1051,7 +1051,7 @@ impl<T: Float> PrototypicalNetwork<T> {
     }
 }
 
-impl<T: Float> SupportSetManager<T> {
+impl<T: Float + Send + Sync> SupportSetManager<T> {
     fn new(_config: SupportSetManagerConfig) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "SupportSetManager implementation pending".to_string(),
@@ -1059,7 +1059,7 @@ impl<T: Float> SupportSetManager<T> {
     }
 }
 
-impl<T: Float> TaskSimilarityCalculator<T> {
+impl<T: Float + Send + Sync> TaskSimilarityCalculator<T> {
     fn new(_config: SimilarityCalculatorConfig<T>) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "TaskSimilarityCalculator implementation pending".to_string(),
@@ -1067,7 +1067,7 @@ impl<T: Float> TaskSimilarityCalculator<T> {
     }
 }
 
-impl<T: Float> EpisodicMemoryBank<T> {
+impl<T: Float + Send + Sync> EpisodicMemoryBank<T> {
     fn new(_config: MemoryBankConfig<T>) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "EpisodicMemoryBank implementation pending".to_string(),
@@ -1091,7 +1091,7 @@ impl<T: Float> EpisodicMemoryBank<T> {
     }
 }
 
-impl<T: Float> FastAdaptationEngine<T> {
+impl<T: Float + Send + Sync> FastAdaptationEngine<T> {
     fn new(_config: FastAdaptationConfig) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "FastAdaptationEngine implementation pending".to_string(),
@@ -1139,7 +1139,7 @@ impl<T: Float> FastAdaptationEngine<T> {
     }
 }
 
-impl<T: Float> FewShotPerformanceTracker<T> {
+impl<T: Float + Send + Sync> FewShotPerformanceTracker<T> {
     fn new(_config: TrackingConfig) -> Result<Self> {
         Err(OptimError::InvalidConfig(
             "FewShotPerformanceTracker implementation pending".to_string(),
