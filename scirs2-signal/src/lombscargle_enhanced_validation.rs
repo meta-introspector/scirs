@@ -22,7 +22,6 @@ use rand::prelude::*;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::check_finite;
-#[cfg(test)]
 use std::f64::consts::PI;
 use std::time::Instant;
 

@@ -27,8 +27,7 @@ impl TraversalOrder {
             "breadth_first" | "bfs" | "breadth-first" => Ok(Self::BreadthFirst),
             "depth_first" | "dfs" | "depth-first" => Ok(Self::DepthFirst),
             _ => Err(SparseError::ValueError(format!(
-                "Unknown traversal order: {}",
-                s
+                "Unknown traversal order: {s}"
             ))),
         }
     }
@@ -81,8 +80,7 @@ where
 
     if start >= n {
         return Err(SparseError::ValueError(format!(
-            "Start vertex {} out of bounds for graph with {} vertices",
-            start, n
+            "Start vertex {start} out of bounds for graph with {n} vertices"
         )));
     }
 
@@ -292,8 +290,7 @@ where
 
     if start >= n {
         return Err(SparseError::ValueError(format!(
-            "Start vertex {} out of bounds for graph with {} vertices",
-            start, n
+            "Start vertex {start} out of bounds for graph with {n} vertices"
         )));
     }
 
@@ -353,8 +350,7 @@ where
 
     if source >= n || target >= n {
         return Err(SparseError::ValueError(format!(
-            "Vertex index out of bounds for graph with {} vertices",
-            n
+            "Vertex index out of bounds for graph with {n} vertices"
         )));
     }
 

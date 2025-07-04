@@ -1386,18 +1386,19 @@ pub fn robust_least_squares(
     config: &RobustEstimationConfig,
 ) -> SignalResult<RobustSysIdResult> {
     if input.len() != output.len() {
-        return Err(SignalError::DimensionMismatch {
-            expected: input.len(),
-            actual: output.len(),
-        });
+        return Err(SignalError::DimensionMismatch(format!(
+            "Input and output length mismatch: expected {}, got {}",
+            input.len(),
+            output.len()
+        )));
     }
 
     if input.len() < order {
-        return Err(SignalError::InvalidParameter {
-            name: "order".to_string(),
-            value: order.to_string(),
-            reason: "Order cannot exceed data length".to_string(),
-        });
+        return Err(SignalError::InvalidArgument(format!(
+            "Order {} cannot exceed data length {}",
+            order,
+            input.len()
+        )));
     }
 
     let n = input.len() - order;

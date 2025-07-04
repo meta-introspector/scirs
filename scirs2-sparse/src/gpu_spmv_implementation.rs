@@ -28,7 +28,7 @@ impl GpuSpMV {
     /// Create a new GPU SpMV instance with specified backend
     pub fn with_backend(backend: GpuBackend) -> SparseResult<Self> {
         let device = GpuDevice::get_default(backend).map_err(|e| {
-            SparseError::ComputationError(format!("Failed to initialize GPU device: {}", e))
+            SparseError::ComputationError(format!("Failed to initialize GPU device: {e}"))
         })?;
 
         Ok(Self { device, backend })
@@ -134,8 +134,7 @@ impl GpuSpMV {
         for &idx in indices {
             if idx >= cols {
                 return Err(SparseError::InvalidFormat(format!(
-                    "Column index {} exceeds cols {}",
-                    idx, cols
+                    "Column index {idx} exceeds cols {cols}"
                 )));
             }
         }

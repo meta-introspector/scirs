@@ -36,6 +36,25 @@ pub struct ArimaModel<F> {
     pub is_fitted: bool,
 }
 
+/// ARIMA model configuration
+#[derive(Debug, Clone)]
+pub struct ArimaConfig {
+    /// AR order
+    pub p: usize,
+    /// Differencing order
+    pub d: usize,
+    /// MA order
+    pub q: usize,
+    /// Seasonal AR order
+    pub seasonal_p: usize,
+    /// Seasonal differencing order
+    pub seasonal_d: usize,
+    /// Seasonal MA order
+    pub seasonal_q: usize,
+    /// Seasonal period
+    pub seasonal_period: usize,
+}
+
 /// Seasonal ARIMA parameters
 #[derive(Debug, Clone)]
 pub struct SarimaParams {

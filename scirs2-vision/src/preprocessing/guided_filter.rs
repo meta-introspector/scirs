@@ -250,7 +250,7 @@ mod tests {
         for y in 1..4 {
             for x in 1..4 {
                 let diff = (result[[y, x]] - input[[y, x]]).abs();
-                assert!(diff < 2.0, "Difference at ({}, {}): {}", x, y, diff);
+                assert!(diff < 2.0, "Difference at ({x}, {y}): {diff}");
             }
         }
     }

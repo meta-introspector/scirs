@@ -109,7 +109,7 @@ pub struct ConvergenceInfo {
 
 impl<F> EnhancedBayesianRegression<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + 'static,
 {
     /// Create new enhanced Bayesian regression model
     pub fn new(
@@ -200,7 +200,7 @@ where
         let noise_rate_f64 = self.prior.noise_rate.to_f64().unwrap_or(1.0);
 
         // Posterior precision matrix
-        let posterior_precision_f64 = xtx_f64 + prior_precision_f64;
+        let posterior_precision_f64 = xtx_f64.clone() + prior_precision_f64.clone();
 
         // Invert posterior precision to get covariance
         let posterior_covariance_f64 = scirs2_linalg::inv(&posterior_precision_f64.view(), None)
@@ -543,13 +543,13 @@ where
     fn compute_log_marginal_likelihood(
         &self,
         xtx: &Array2<f64>,
-        xty: &Array1<f64>,
+        _xty: &Array1<f64>,
         prior_precision: &Array2<f64>,
-        prior_mean: &Array1<f64>,
+        _prior_mean: &Array1<f64>,
         noise_shape: f64,
         noise_rate: f64,
         n: f64,
-        p: usize,
+        _p: usize,
     ) -> StatsResult<F> {
         // This is a simplified version - full implementation would include all normalization terms
         let posterior_precision = xtx + prior_precision;
@@ -571,7 +571,7 @@ where
     fn compute_elbo(
         &self,
         q_beta_mean: &Array1<F>,
-        q_beta_precision: &Array2<F>,
+        _q_beta_precision: &Array2<F>,
         q_noise_shape: F,
         q_noise_rate: F,
     ) -> StatsResult<F> {
@@ -790,7 +790,7 @@ pub fn bayesian_linear_regression_exact<F>(
     prior: Option<BayesianRegressionPrior<F>>,
 ) -> StatsResult<BayesianRegressionResult<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + 'static,
 {
     let p = x.ncols();
     let prior = prior.unwrap_or_else(|| BayesianRegressionPrior::uninformative(p));
@@ -806,7 +806,7 @@ pub fn bayesian_linear_regression_vb<F>(
     config: Option<BayesianRegressionConfig>,
 ) -> StatsResult<BayesianRegressionResult<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + 'static,
 {
     let p = x.ncols();
     let prior = prior.unwrap_or_else(|| BayesianRegressionPrior::uninformative(p));

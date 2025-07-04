@@ -992,7 +992,7 @@ mod tests {
         let processor = UltraComprehensiveSimdProcessor::<f64>::new();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let (sum, sum_sq, sum_cube, sum_quad, min_val, max_val) =
+        let (sum, sum_sq, _sum_cube, _sum_quad, min_val, max_val) =
             processor.simd_single_pass_moments(&data.view()).unwrap();
 
         assert!((sum - 15.0).abs() < 1e-10);

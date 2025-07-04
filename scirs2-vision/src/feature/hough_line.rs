@@ -186,9 +186,9 @@ pub fn hough_lines_p(edges: &GrayImage, params: &HoughParams) -> Result<Vec<Line
     }
 
     // Process edge points randomly
-    use rand::rng;
     use rand::seq::SliceRandom;
-    let mut rng = rng();
+    use rand::thread_rng;
+    let mut rng = thread_rng();
     edge_points.shuffle(&mut rng);
 
     for &(x, y) in &edge_points {

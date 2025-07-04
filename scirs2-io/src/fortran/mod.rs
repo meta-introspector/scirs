@@ -46,7 +46,7 @@ use crate::error::{IoError, Result};
 // use scirs2_core::numeric::ScientificNumber;
 
 // Temporary trait replacement for ScientificNumber
-trait ScientificNumber: Copy + Default + std::fmt::Debug {
+pub trait ScientificNumber: Copy + Default + std::fmt::Debug {
     const SIZE: usize;
     fn from_le_bytes(bytes: &[u8]) -> Self;
     fn from_be_bytes(bytes: &[u8]) -> Self;

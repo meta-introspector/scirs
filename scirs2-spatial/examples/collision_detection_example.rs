@@ -190,7 +190,7 @@ fn run_3d_examples() {
 
     match ray_sphere_collision(&ray_origin, &ray_direction, &sphere) {
         Some((t, hit_point)) => {
-            println!("  Ray hits sphere at time t={} at point {:?}", t, hit_point);
+            println!("  Ray hits sphere at time t={t} at point {hit_point:?}");
         }
         None => {
             println!("  Ray misses sphere");
@@ -201,10 +201,9 @@ fn run_3d_examples() {
     match ray_box3d_collision(&ray_origin, &ray_direction, &box3d) {
         Some((t_enter, t_exit, hit_point)) => {
             println!(
-                "  Ray enters box at time t={} at point {:?}",
-                t_enter, hit_point
+                "  Ray enters box at time t={t_enter} at point {hit_point:?}"
             );
-            println!("  Ray exits box at time t={}", t_exit);
+            println!("  Ray exits box at time t={t_exit}");
         }
         None => {
             println!("  Ray misses box");
@@ -215,10 +214,9 @@ fn run_3d_examples() {
     match ray_triangle3d_collision(&ray_origin, &ray_direction, &triangle) {
         Some((t, hit_point, barycentric)) => {
             println!(
-                "  Ray hits triangle at time t={} at point {:?}",
-                t, hit_point
+                "  Ray hits triangle at time t={t} at point {hit_point:?}"
             );
-            println!("  Barycentric coordinates: {:?}", barycentric);
+            println!("  Barycentric coordinates: {barycentric:?}");
         }
         None => {
             println!("  Ray misses triangle");
@@ -251,9 +249,9 @@ fn run_continuous_examples() {
     match continuous_sphere_sphere_collision(&sphere1, &velocity1, &sphere2, &velocity2, 10.0) {
         Some((time, pos1, pos2)) => {
             println!("\nSpheres will collide:");
-            println!("  Time of collision: {}", time);
-            println!("  Sphere 1 position at collision: {:?}", pos1);
-            println!("  Sphere 2 position at collision: {:?}", pos2);
+            println!("  Time of collision: {time}");
+            println!("  Sphere 1 position at collision: {pos1:?}");
+            println!("  Sphere 2 position at collision: {pos2:?}");
         }
         None => {
             println!("\nSpheres will not collide within time limit");
@@ -276,9 +274,9 @@ fn run_continuous_examples() {
     match continuous_sphere_sphere_collision(&sphere1, &velocity1, &sphere3, &velocity3, 10.0) {
         Some((time, pos1, pos3)) => {
             println!("\nSpheres will collide:");
-            println!("  Time of collision: {}", time);
-            println!("  Sphere 1 position at collision: {:?}", pos1);
-            println!("  Sphere 3 position at collision: {:?}", pos3);
+            println!("  Time of collision: {time}");
+            println!("  Sphere 1 position at collision: {pos1:?}");
+            println!("  Sphere 3 position at collision: {pos3:?}");
         }
         None => {
             println!("\nSpheres will not collide within time limit");

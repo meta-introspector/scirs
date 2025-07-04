@@ -1947,35 +1947,6 @@ impl Default for ArchitectureSearchSpace {
     }
 }
 
-impl Default for TransformerOptimizerConfig {
-    fn default() -> Self {
-        Self {
-            base_config: super::LearnedOptimizerConfig::default(),
-            model_dim: 512,
-            num_heads: 8,
-            ff_dim: 2048,
-            num_layers: 6,
-            max_sequence_length: 1024,
-            attention_dropout: 0.1,
-            ff_dropout: 0.1,
-            layer_norm_eps: 1e-5,
-            pre_layer_norm: true,
-            pos_encoding_type: PositionalEncodingType::Learned,
-            relative_position_bias: false,
-            use_rope: false,
-            gradient_checkpointing: false,
-            attention_optimization: AttentionOptimization {
-                attention_patterns: Array3::zeros((8, 512, 512)),
-                sparsity_level: 0.1,
-                memory_savings: 0,
-                computational_speedup: 1.0,
-            },
-            multi_scale_attention: false,
-            cross_attention: false,
-        }
-    }
-}
-
 /// Adaptive Transformer optimizer configuration
 #[derive(Debug, Clone)]
 pub struct AdaptiveTransformerOptimizerConfig {

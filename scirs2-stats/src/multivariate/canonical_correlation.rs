@@ -664,7 +664,7 @@ impl PLSCanonical {
 
             // Compute loadings
             let w = x_current.t().dot(&u);
-            let w = w / (w.dot(&w)).sqrt();
+            let w = w.clone() / (w.dot(&w)).sqrt();
             let t = x_current.dot(&w);
             let c = y_current.t().dot(&t);
             let c = c.clone() / (c.dot(&c)).sqrt();
@@ -682,14 +682,14 @@ impl PLSCanonical {
             y_scores.column_mut(comp).assign(&u);
 
             // Deflate matrices
-            let tt = Array1::from_vec(vec![t.dot(&t)]);
+            let _tt = Array1::from_vec(vec![t.dot(&t)]);
             let outer_product = &t
                 .view()
                 .insert_axis(Axis(1))
                 .dot(&p.view().insert_axis(Axis(0)));
             x_current = x_current - outer_product;
 
-            let uu = Array1::from_vec(vec![u.dot(&u)]);
+            let _uu = Array1::from_vec(vec![u.dot(&u)]);
             let outer_product_y = &u
                 .view()
                 .insert_axis(Axis(1))

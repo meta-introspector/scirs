@@ -42,8 +42,8 @@ fn main() -> SpatialResult<()> {
     for (i, (start, goal, description)) in test_cases.iter().enumerate() {
         println!("\nTest Case {}: Path planning {}", i + 1, description);
         println!("--------------------------------------------");
-        println!("Start: {:?}", start);
-        println!("Goal:  {:?}", goal);
+        println!("Start: {start:?}");
+        println!("Goal:  {goal:?}");
 
         match planner.find_path(*start, *goal, neighbor_radius)? {
             Some(path) => {
@@ -94,7 +94,7 @@ fn main() -> SpatialResult<()> {
                 println!("\nPath visualization (S=Start, G=Goal, *=Path, X=Obstacle):");
                 for row in &grid {
                     for &cell in row {
-                        print!("{} ", cell);
+                        print!("{cell} ");
                     }
                     println!();
                 }

@@ -4,7 +4,7 @@
 //! neuromorphic, and hybrid algorithms compared to classical approaches.
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{Array1, Array2};
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::time::Duration;
 

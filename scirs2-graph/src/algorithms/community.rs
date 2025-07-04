@@ -1800,10 +1800,9 @@ where
 {
     let max_iter = max_iterations.unwrap_or(100);
     let nodes: Vec<N> = graph.nodes().into_iter().cloned().collect();
-    let mut labels: HashMap<N, usize> = HashMap::new();
 
     // Initialize labels (parallel)
-    labels = nodes
+    let mut labels: HashMap<N, usize> = nodes
         .par_iter()
         .enumerate()
         .map(|(i, node)| (node.clone(), i))
@@ -2303,8 +2302,8 @@ mod tests {
         assert!(!louvain_communities_count.is_empty());
 
         // Both should have reasonable modularity
-        assert!(infomap_result.modularity >= -0.5);
-        assert!(louvain_result.modularity >= -0.5);
+        assert!(infomap_result.quality_score.unwrap_or(0.0) >= -0.5);
+        assert!(louvain_result.quality_score.unwrap_or(0.0) >= -0.5);
 
         Ok(())
     }
@@ -2385,11 +2384,11 @@ mod tests {
         assert!(!communities.is_empty() && communities.len() <= 2);
 
         // Modularity should be calculated
-        assert!(result.modularity.is_finite());
+        assert!(result.quality_score.unwrap_or(0.0).is_finite());
 
         // Verify modularity calculation matches
         let calculated_mod = modularity(&graph, &result.node_communities);
-        assert!((result.modularity - calculated_mod).abs() < 1e-10);
+        assert!((result.quality_score.unwrap_or(0.0) - calculated_mod).abs() < 1e-10);
 
         Ok(())
     }

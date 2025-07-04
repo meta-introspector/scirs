@@ -274,7 +274,7 @@ impl AliasTable {
     }
 }
 
-impl<N: Node + Clone + Hash + Eq> BatchRandomWalker<N> {
+impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> BatchRandomWalker<N> {
     /// Create a new batch random walker
     pub fn new<E, Ix>(graph: &Graph<N, E, Ix>) -> Result<Self>
     where

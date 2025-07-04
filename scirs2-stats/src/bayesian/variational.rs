@@ -167,7 +167,7 @@ impl VariationalBayesianRegression {
             shape_tau: self.shape_tau,
             rate_tau: self.rate_tau,
             elbo: prev_elbo,
-            elbo_history,
+            elbo_history: elbo_history.clone(),
             n_samples,
             n_features: self.n_features,
             x_mean,
@@ -323,7 +323,7 @@ impl VariationalBayesianRegression {
 
         Ok(VariationalPredictionResult {
             mean: y_pred,
-            variance: predictive_variance,
+            variance: predictive_variance.clone(),
             model_uncertainty: predictive_variance.mapv(|v| (v - expected_noise_variance).max(0.0)),
             noise_variance: expected_noise_variance,
         })
@@ -498,7 +498,7 @@ impl VariationalARD {
         check_positive(max_iter, "max_iter")?;
         check_positive(tol, "tol")?;
 
-        let (n_samples, n_features) = x.dim();
+        let (n_samples, _n_features) = x.dim();
         if y.len() != n_samples {
             return Err(StatsError::DimensionMismatch(format!(
                 "y length ({}) must match x rows ({})",
@@ -566,7 +566,7 @@ impl VariationalARD {
             shape_tau: self.shape_tau,
             rate_tau: self.rate_tau,
             elbo: prev_elbo,
-            elbo_history,
+            elbo_history: elbo_history.clone(),
             n_samples,
             n_features: self.n_features,
             x_mean,

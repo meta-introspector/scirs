@@ -985,7 +985,7 @@ impl AdvancedMemoryLeakDetector {
     fn generate_recommendations(
         &self,
         growth_analysis: &GrowthAnalysis,
-        pattern_analysis: &PatternAnalysisResult,
+        _pattern_analysis: &PatternAnalysisResult,
         leak_characteristics: &LeakCharacteristics,
     ) -> Vec<String> {
         let mut recommendations = Vec::new();
@@ -1046,8 +1046,8 @@ impl AdvancedMemoryLeakDetector {
 
     fn update_statistics(
         &self,
-        session: &MonitoringSession,
-        analysis_result: &LeakAnalysisResult,
+        _session: &MonitoringSession,
+        _analysis_result: &LeakAnalysisResult,
     ) -> Result<()> {
         // Implementation would update global statistics
         Ok(())
@@ -1109,7 +1109,7 @@ impl LeakAnalysisEngine {
         })
     }
 
-    fn analyze_patterns(&self, memory_values: &[f64]) -> Result<PatternAnalysisResult> {
+    fn analyze_patterns(&self, _memory_values: &[f64]) -> Result<PatternAnalysisResult> {
         // Simplified implementation
         Ok(PatternAnalysisResult {
             patterns: Vec::new(),
@@ -1118,7 +1118,7 @@ impl LeakAnalysisEngine {
         })
     }
 
-    fn detect_anomalies(&self, memory_values: &[f64]) -> Result<AnomalyAnalysisResult> {
+    fn detect_anomalies(&self, _memory_values: &[f64]) -> Result<AnomalyAnalysisResult> {
         // Simplified implementation
         Ok(AnomalyAnalysisResult {
             anomalies: Vec::new(),

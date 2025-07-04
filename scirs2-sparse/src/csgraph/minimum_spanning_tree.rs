@@ -120,8 +120,7 @@ impl MSTAlgorithm {
             "prim" => Ok(Self::Prim),
             "auto" => Ok(Self::Auto),
             _ => Err(SparseError::ValueError(format!(
-                "Unknown MST algorithm: {}. Use 'kruskal', 'prim', or 'auto'",
-                s
+                "Unknown MST algorithm: {s}. Use 'kruskal', 'prim', or 'auto'"
             ))),
         }
     }
@@ -281,8 +280,7 @@ where
 
     if start >= n {
         return Err(SparseError::ValueError(format!(
-            "Start vertex {} out of bounds for graph with {} vertices",
-            start, n
+            "Start vertex {start} out of bounds for graph with {n} vertices"
         )));
     }
 

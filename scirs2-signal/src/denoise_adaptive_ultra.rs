@@ -16,6 +16,7 @@ use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
 use std::collections::HashMap;
+use std::f64::consts::PI;
 
 /// Advanced adaptive denoising configuration
 #[derive(Debug, Clone)]
@@ -1017,8 +1018,6 @@ fn estimate_effective_bandwidth(signal: &Array1<f64>) -> SignalResult<f64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(test)]
-    use std::f64::consts::PI;
 
     #[test]
     fn test_adaptive_denoising_basic() {

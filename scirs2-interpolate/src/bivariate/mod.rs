@@ -44,7 +44,9 @@ pub trait BivariateInterpolator<F: Float + FromPrimitive + Debug + std::fmt::Dis
 
 /// Base struct for bivariate splines
 #[derive(Debug, Clone)]
-pub struct BivariateSpline<F: Float + FromPrimitive + Debug + std::fmt::Display> {
+pub struct BivariateSpline<
+    F: Float + FromPrimitive + Debug + std::fmt::Display + crate::traits::InterpolationFloat,
+> {
     /// x knots
     tx: Array1<F>,
     /// y knots
@@ -391,13 +393,18 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display + crate::traits::Inter
 ///
 /// This class approximates a set of data points with a smooth bivariate spline.
 #[derive(Debug, Clone)]
-pub struct SmoothBivariateSpline<F: Float + FromPrimitive + Debug + std::fmt::Display> {
+pub struct SmoothBivariateSpline<
+    F: Float + FromPrimitive + Debug + std::fmt::Display + crate::traits::InterpolationFloat,
+> {
     /// The underlying bivariate spline
     spline: BivariateSpline<F>,
 }
 
 /// Builder for SmoothBivariateSpline
-pub struct SmoothBivariateSplineBuilder<'a, F: Float + FromPrimitive + Debug + std::fmt::Display> {
+pub struct SmoothBivariateSplineBuilder<
+    'a,
+    F: Float + FromPrimitive + Debug + std::fmt::Display + crate::traits::InterpolationFloat,
+> {
     x: &'a ArrayView1<'a, F>,
     y: &'a ArrayView1<'a, F>,
     z: &'a ArrayView1<'a, F>,
@@ -630,7 +637,9 @@ impl<
     }
 }
 
-impl<F: Float + FromPrimitive + Debug + std::fmt::Display> SmoothBivariateSpline<F> {
+impl<F: Float + FromPrimitive + Debug + std::fmt::Display + crate::traits::InterpolationFloat>
+    SmoothBivariateSpline<F>
+{
     /// Create a new smooth bivariate spline with default parameters
     ///
     /// # Arguments
@@ -650,8 +659,8 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> SmoothBivariateSpline
     }
 }
 
-impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BivariateInterpolator<F>
-    for SmoothBivariateSpline<F>
+impl<F: Float + FromPrimitive + Debug + std::fmt::Display + crate::traits::InterpolationFloat>
+    BivariateInterpolator<F> for SmoothBivariateSpline<F>
 {
     fn evaluate(
         &self,
@@ -682,13 +691,21 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BivariateInterpolator
 ///
 /// Can be used for both smoothing and interpolating data.
 #[derive(Debug, Clone)]
-pub struct RectBivariateSpline<F: Float + FromPrimitive + Debug + std::fmt::Display> {
+pub struct RectBivariateSpline<
+    F: Float + FromPrimitive + Debug + std::fmt::Display + crate::traits::InterpolationFloat,
+> {
     /// The underlying bivariate spline
     spline: BivariateSpline<F>,
 }
 
-impl<F: Float + FromPrimitive + Debug + std::fmt::Display + std::ops::AddAssign>
-    RectBivariateSpline<F>
+impl<
+        F: Float
+            + FromPrimitive
+            + Debug
+            + std::fmt::Display
+            + std::ops::AddAssign
+            + crate::traits::InterpolationFloat,
+    > RectBivariateSpline<F>
 {
     /// Create a new bivariate spline over a rectangular mesh
     ///
@@ -897,8 +914,8 @@ impl<F: Float + FromPrimitive + Debug + std::fmt::Display + std::ops::AddAssign>
     }
 }
 
-impl<F: Float + FromPrimitive + Debug + std::fmt::Display> BivariateInterpolator<F>
-    for RectBivariateSpline<F>
+impl<F: Float + FromPrimitive + Debug + std::fmt::Display + crate::traits::InterpolationFloat>
+    BivariateInterpolator<F> for RectBivariateSpline<F>
 {
     fn evaluate(
         &self,

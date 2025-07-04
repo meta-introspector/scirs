@@ -849,8 +849,11 @@ impl<
             epsilon,
         )?;
 
-        // Evaluate at the query point
-        rbf.evaluate(point)
+        // Evaluate at the query point (reshape 1D point to 2D for RBF interface)
+        let binding = point.to_owned();
+        let point_2d = binding.to_shape((1, point.len())).unwrap();
+        let result = rbf.evaluate(&point_2d.view())?;
+        Ok(result[0])
     }
 }
 

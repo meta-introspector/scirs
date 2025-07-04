@@ -546,7 +546,7 @@ impl ComprehensiveValidationSuite {
     ) -> ProductionReadinessAssessment {
         let mut readiness_score = 0.0;
         let mut production_blockers = Vec::new();
-        let mut recommendations = Vec::new();
+        let recommendations = Vec::new();
 
         // Accuracy assessment
         let accuracy_ready = benchmark_results

@@ -1735,6 +1735,7 @@ pub fn create_streaming_memory_manager() -> UltraThinkMemoryManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ndarray::Array1;
 
     #[test]
     fn test_ultra_think_memory_manager_creation() {

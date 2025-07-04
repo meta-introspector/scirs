@@ -10,7 +10,7 @@ use scirs2_spatial::set_distance::{
 
 /// Print distance and description
 fn print_distance(name: &str, dist: f64, description: &str) {
-    println!("{: <25} : {:.6}", name, dist);
+    println!("{name: <25} : {dist:.6}");
     println!("{: <25}   {}", "", description);
     println!();
 }
@@ -51,9 +51,9 @@ fn visualize_sets(set1: &ArrayView2<f64>, set2: &ArrayView2<f64>) {
     println!("  0123456789");
     println!(" +----------+");
     for (i, row) in grid.iter().enumerate() {
-        print!("{}|", i);
+        print!("{i}|");
         for &cell in row {
-            print!("{}", cell);
+            print!("{cell}");
         }
         println!("|");
     }
@@ -126,7 +126,7 @@ fn main() {
                 "Minimum 'work' required to transform one distribution into the other",
             );
         }
-        Err(e) => println!("Error computing Wasserstein distance: {}", e),
+        Err(e) => println!("Error computing Wasserstein distance: {e}"),
     }
 
     // Compute Gromov-Hausdorff distance
@@ -170,7 +170,7 @@ fn main() {
                 "For different-sized sets, this is an approximation",
             );
         }
-        Err(e) => println!("Error computing Wasserstein distance: {}", e),
+        Err(e) => println!("Error computing Wasserstein distance: {e}"),
     }
 
     // Example 3: Same shape but different scales

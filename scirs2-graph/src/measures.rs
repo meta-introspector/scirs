@@ -1063,7 +1063,7 @@ pub fn hits_algorithm<N, E, Ix>(
     tolerance: f64,
 ) -> Result<HitsScores<N>>
 where
-    N: Node + Clone + Hash + Eq,
+    N: Node + Clone + Hash + Eq + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {

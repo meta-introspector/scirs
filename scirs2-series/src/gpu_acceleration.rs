@@ -2503,23 +2503,23 @@ pub mod algorithms {
 
             // Build design matrix X and target vector y
             let num_equations = n - order;
-            let mut X = Array2::zeros((num_equations, order));
+            let mut x = Array2::zeros((num_equations, order));
             let mut y = Array1::zeros(num_equations);
 
             for i in 0..num_equations {
                 y[i] = series[i + order];
                 for j in 0..order {
-                    X[[i, j]] = series[i + order - 1 - j];
+                    x[[i, j]] = series[i + order - 1 - j];
                 }
             }
 
             // Solve normal equations: X^T X β = X^T y
-            self.solve_normal_equations(&X, &y)
+            self.solve_normal_equations(&x, &y)
         }
 
         /// Solve normal equations for least squares
-        fn solve_normal_equations(&self, X: &Array2<F>, y: &Array1<F>) -> Result<Vec<F>> {
-            let p = X.ncols();
+        fn solve_normal_equations(&self, x: &Array2<F>, y: &Array1<F>) -> Result<Vec<F>> {
+            let p = x.ncols();
 
             // For simplicity, use a diagonal approximation
             // In a full implementation, this would use proper matrix operations
@@ -2529,9 +2529,9 @@ pub mod algorithms {
                 let mut num = F::zero();
                 let mut den = F::zero();
 
-                for i in 0..X.nrows() {
-                    num = num + X[[i, j]] * y[i];
-                    den = den + X[[i, j]] * X[[i, j]];
+                for i in 0..x.nrows() {
+                    num = num + x[[i, j]] * y[i];
+                    den = den + x[[i, j]] * x[[i, j]];
                 }
 
                 coefficients[j] = if den > F::zero() {

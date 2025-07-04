@@ -8,6 +8,7 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayViewMut1, Axis};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, check_positive};
+use std::f64::consts::PI;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::Path;
@@ -547,8 +548,6 @@ fn process_fft_stage_disk(
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
     use num_complex::Complex;
-    #[cfg(test)]
-    use std::f64::consts::PI;
 
     let start_time = std::time::Instant::now();
     let mut disk_ops = 0;

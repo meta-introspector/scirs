@@ -37,7 +37,7 @@ fn main() {
         .unwrap();
 
     for (_idx, city) in results {
-        println!("- {}", city);
+        println!("- {city}");
     }
 
     // Find the 3 nearest cities to Vienna
@@ -47,7 +47,7 @@ fn main() {
     let nearest_results = rtree.nearest(&vienna_coords.view(), 3).unwrap();
 
     for (_idx, city, distance) in nearest_results {
-        println!("- {} (distance: {:.2})", city, distance);
+        println!("- {city} (distance: {distance:.2})");
     }
 
     // Find the 3 nearest cities to Paris
@@ -57,7 +57,7 @@ fn main() {
     let nearest_results = rtree.nearest(&paris_coords.view(), 3).unwrap();
 
     for (_idx, city, distance) in nearest_results {
-        println!("- {} (distance: {:.2})", city, distance);
+        println!("- {city} (distance: {distance:.2})");
     }
 
     // Delete a city from the R-tree
@@ -80,6 +80,6 @@ fn main() {
     let nearest_results = rtree.nearest(&london_coords.view(), 3).unwrap();
 
     for (_idx, city, distance) in nearest_results {
-        println!("- {} (distance: {:.2})", city, distance);
+        println!("- {city} (distance: {distance:.2})");
     }
 }

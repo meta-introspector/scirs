@@ -345,7 +345,7 @@ where
         index: usize,
         owen_scrambling: bool,
         digital_shift: bool,
-        nested_scrambling: bool,
+        _nested_scrambling: bool,
     ) -> StatsResult<Array1<F>> {
         let mut point = Array1::zeros(self.dimension);
 

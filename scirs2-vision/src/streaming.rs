@@ -1793,9 +1793,7 @@ impl AdaptivePerformanceMonitor {
 
                 // In a real implementation, we would actually adjust the thread pool
                 // For now, we just log the adaptation
-                eprintln!(
-                    "Adapted {bottleneck_stage} to {new_thread_count} threads"
-                );
+                eprintln!("Adapted {bottleneck_stage} to {new_thread_count} threads");
             }
         }
 

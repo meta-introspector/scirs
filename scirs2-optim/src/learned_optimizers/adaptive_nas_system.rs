@@ -1612,6 +1612,9 @@ pub struct PerformanceIndices<T: Float> {
 
     /// Time-based index
     time_index: BTreeMap<Instant, Vec<String>>,
+
+    /// Phantom data for type parameter
+    _phantom: std::marker::PhantomData<T>,
 }
 
 /// Database statistics
@@ -2610,7 +2613,7 @@ impl<T: Float> LearningBasedGenerator<T> {
 }
 
 // Additional implementation stubs...
-impl<T: Float> Default for DatabaseStatistics {
+impl Default for DatabaseStatistics {
     fn default() -> Self {
         Self {
             total_records: 0,

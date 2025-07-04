@@ -68,7 +68,7 @@ impl DistributedProcessor {
     }
 
     /// Create with default configuration
-    pub fn default() -> Result<Self> {
+    pub fn default_config() -> Result<Self> {
         Self::new(DistributedConfig::default())
     }
 
@@ -154,7 +154,7 @@ impl DistributedProcessor {
                 feature_names: dataset.feature_names.clone(),
                 target_names: dataset.target_names.clone(),
                 feature_descriptions: dataset.feature_descriptions.clone(),
-                description: Some(format!("Chunk {}-{} of distributed dataset", start, end)),
+                description: Some(format!("Chunk {start}-{end} of distributed dataset")),
                 metadata: dataset.metadata.clone(),
             };
 
@@ -572,12 +572,12 @@ impl DistributedProcessor {
         let mut global_stds = vec![0.0; n_features];
 
         // Combine means
-        for feature in 0..n_features {
+        for (feature, global_mean) in global_means.iter_mut().enumerate().take(n_features) {
             let weighted_sum: f64 = stats
                 .iter()
                 .map(|s| s.means[feature] * s.n_samples as f64)
                 .sum();
-            global_means[feature] = weighted_sum / total_samples as f64;
+            *global_mean = weighted_sum / total_samples as f64;
         }
 
         // Combine mins and maxs

@@ -876,7 +876,7 @@ pub fn ultra_mean_f32(data: &ArrayView1<f32>) -> StatsResult<UltraStatsResult<f3
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
+    use ndarray::{array, Array1};
 
     #[test]
     fn test_ultra_simd_basic() {

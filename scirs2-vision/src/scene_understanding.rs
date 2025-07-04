@@ -342,6 +342,12 @@ pub struct ReasoningResult {
     pub evidence: Vec<String>,
 }
 
+impl Default for SceneUnderstandingEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SceneUnderstandingEngine {
     /// Create a new ultra-advanced scene understanding engine
     pub fn new() -> Self {

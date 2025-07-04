@@ -920,7 +920,7 @@ mod tests {
         let target = StandardNormal { dim: 2 };
         let config = UltraAdvancedConfig::default();
 
-        let mut sampler = UltraAdvancedMCMC::new(target, config).unwrap();
+        let sampler = UltraAdvancedMCMC::new(target, config).unwrap();
 
         // Test initialization
         assert_eq!(sampler.chains.len(), 4);

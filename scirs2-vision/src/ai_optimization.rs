@@ -16,7 +16,7 @@
 
 use crate::error::Result;
 use rand::prelude::*;
-use rand::rng;
+use rand::thread_rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -238,7 +238,7 @@ impl RLParameterOptimizer {
 
     /// Select action using epsilon-greedy policy
     pub fn select_action(&mut self, state: &StateDiscrete) -> ActionDiscrete {
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         if rng.random::<f64>() < self.learning_params.epsilon {
             // Explore: random action
@@ -346,7 +346,7 @@ impl RLParameterOptimizer {
             return;
         }
 
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let sample_indices: Vec<usize> = (0..batch_size)
             .map(|_| rng.random_range(0..self.experience_buffer.len()))
             .collect();
@@ -502,7 +502,7 @@ pub struct NeuralNetworkPredictor {
 impl NeuralNetworkPredictor {
     /// Create a new neural network predictor
     pub fn new(input_size: usize, hidden_size: usize, output_size: usize) -> Self {
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         // Initialize weights randomly
         let input_weights = (0..hidden_size)
@@ -717,7 +717,7 @@ impl GeneticPipelineOptimizer {
         population_size: usize,
     ) -> Vec<PipelineGenome> {
         let mut population = Vec::with_capacity(population_size);
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         for _ in 0..population_size {
             let mut genes = HashMap::new();
@@ -863,15 +863,15 @@ impl GeneticPipelineOptimizer {
     /// Perform adaptive evolution with multiple mutation strategies
     fn adaptive_evolution(&mut self) -> Result<Vec<PipelineGenome>> {
         let mut new_population = Vec::with_capacity(self.population.len());
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         // Keep elite solutions
         let elite_count = (self.population.len() as f64 * self.ga_params.elite_ratio) as usize;
         let mut sorted_pop = self.population.clone();
         sorted_pop.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap());
 
-        for i in 0..elite_count {
-            new_population.push(sorted_pop[i].clone());
+        for individual in sorted_pop.iter().take(elite_count) {
+            new_population.push(individual.clone());
         }
 
         // Generate offspring using adaptive strategies
@@ -1018,7 +1018,7 @@ impl GeneticPipelineOptimizer {
                 }
 
                 // Ensure bounds (simplified - would use actual parameter ranges)
-                *value = value.max(0.0).min(1.0);
+                *value = value.clamp(0.0, 1.0);
             }
         }
 
@@ -1240,7 +1240,7 @@ impl GeneticPipelineOptimizer {
     pub fn evolve_generation(&mut self) -> bool {
         let elite_count = (self.population.len() as f64 * self.ga_params.elite_ratio) as usize;
         let mut new_population = Vec::with_capacity(self.population.len());
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         // Keep elite individuals
         for i in 0..elite_count {
@@ -1282,7 +1282,7 @@ impl GeneticPipelineOptimizer {
     /// Single-point crossover
     fn crossover(&self, parent1: &PipelineGenome, parent2: &PipelineGenome) -> PipelineGenome {
         let mut offspring_genes = HashMap::new();
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         for (param_name, &value1) in &parent1.genes {
             if let Some(&value2) = parent2.genes.get(param_name) {
@@ -1310,7 +1310,7 @@ impl GeneticPipelineOptimizer {
 
     /// Gaussian mutation
     fn mutate(&self, genome: &mut PipelineGenome) {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let mutation_strength = 0.1;
 
         for value in genome.genes.values_mut() {
@@ -1582,7 +1582,7 @@ impl NeuralArchitectureSearch {
     /// Random architecture search
     fn random_search(&self, num_candidates: usize) -> Vec<ProcessingArchitecture> {
         let mut candidates = Vec::new();
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         for i in 0..num_candidates {
             let depth =
@@ -1611,7 +1611,7 @@ impl NeuralArchitectureSearch {
             let complexity = self.calculate_complexity(&layers);
             let parameter_count = self.estimate_parameters(&layers);
             let architecture = ProcessingArchitecture {
-                id: format!("arch_{}", i),
+                id: format!("arch_{i}"),
                 layers,
                 connections,
                 complexity,
@@ -1633,7 +1633,7 @@ impl NeuralArchitectureSearch {
 
         // Evolve existing population
         let mut new_population = Vec::new();
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         // Select best performing architectures
         let mut ranked_archs: Vec<_> = self
@@ -1726,7 +1726,7 @@ impl NeuralArchitectureSearch {
         parent1: &ProcessingArchitecture,
         parent2: &ProcessingArchitecture,
     ) -> ProcessingArchitecture {
-        let mut rng = rng();
+        let mut rng = thread_rng();
         let min_depth = parent1.layers.len().min(parent2.layers.len());
         let crossover_point = rng.random_range(1..min_depth);
 
@@ -1759,7 +1759,7 @@ impl NeuralArchitectureSearch {
         &self,
         mut architecture: ProcessingArchitecture,
     ) -> ProcessingArchitecture {
-        let mut rng = rng();
+        let mut rng = thread_rng();
 
         // Randomly mutate some layers
         for layer in &mut architecture.layers {

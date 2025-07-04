@@ -2869,7 +2869,7 @@ pub struct OnlineLearningSystem<F: Float + std::fmt::Debug + Send + Sync> {
     performance_tracker: OnlinePerformanceTracker<F>,
 }
 
-impl<F: Float + std::fmt::Debug + Send + Sync + 'static> OnlineLearningSystem<F> {
+impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> OnlineLearningSystem<F> {
     /// Create a new online learning system
     pub fn new(config: OnlineLearningConfig) -> Result<Self> {
         // Create placeholder implementations for required traits
@@ -3327,6 +3327,21 @@ pub struct ConfidenceEstimator<F: Float + std::fmt::Debug> {
     calibration_history: VecDeque<CalibrationPoint<F>>,
 }
 
+impl<F: Float + std::fmt::Debug> ConfidenceEstimator<F> {
+    /// Create a new confidence estimator
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            confidence_models: Vec::new(),
+            calibration_params: CalibrationParams {
+                temperature: F::one(),
+                bias: F::zero(),
+                scale: F::one(),
+            },
+            calibration_history: VecDeque::new(),
+        })
+    }
+}
+
 /// Confidence model
 #[derive(Debug, Clone)]
 pub struct ConfidenceModel<F: Float + std::fmt::Debug> {
@@ -3372,8 +3387,30 @@ pub struct UncertaintyQuantifier<F: Float + std::fmt::Debug> {
     uncertainty_combination: UncertaintyCombination,
 }
 
+impl<F: Float + std::fmt::Debug> UncertaintyQuantifier<F> {
+    /// Create a new uncertainty quantifier
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            aleatoric_estimator: AleatoricUncertaintyEstimator {
+                noise_parameters: Array1::ones(1),
+                heteroscedastic_model: None,
+            },
+            epistemic_estimator: EpistemicUncertaintyEstimator {
+                model_ensemble: Vec::new(),
+                mc_dropout_params: MCDropoutParams {
+                    dropout_rate: 0.1,
+                    num_samples: 100,
+                    enable_mc_dropout: true,
+                },
+                bayesian_params: None,
+            },
+            uncertainty_combination: UncertaintyCombination::Addition,
+        })
+    }
+}
+
 /// Aleatoric uncertainty estimator
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AleatoricUncertaintyEstimator<F: Float + std::fmt::Debug> {
     /// Noise model parameters
     noise_parameters: Array1<F>,
@@ -3382,7 +3419,7 @@ pub struct AleatoricUncertaintyEstimator<F: Float + std::fmt::Debug> {
 }
 
 /// Epistemic uncertainty estimator
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EpistemicUncertaintyEstimator<F: Float + std::fmt::Debug> {
     /// Model ensemble for uncertainty estimation
     model_ensemble: Vec<NeuralParameterOptimizer<F>>,
@@ -3491,11 +3528,25 @@ pub struct RegretTracker<F: Float + std::fmt::Debug> {
     pub theoretical_bound: F,
 }
 
-impl<F: Float + std::fmt::Debug> MultiArmedBandit<F> {
+impl<F: Float + std::fmt::Debug> RegretTracker<F> {
+    /// Create a new regret tracker
+    pub fn new() -> Self {
+        Self {
+            cumulative_regret: F::zero(),
+            regret_history: VecDeque::new(),
+            optimal_performance: F::zero(),
+            theoretical_bound: F::zero(),
+        }
+    }
+}
+
+impl<F: Float + std::fmt::Debug + std::ops::AddAssign> MultiArmedBandit<F> {
     /// Create a new multi-armed bandit
     pub fn new() -> Result<Self> {
         Ok(Self {
-            algorithm: BanditAlgorithm::EpsilonGreedy,
+            algorithm: BanditAlgorithm::EpsilonGreedy {
+                epsilon: F::from(0.1).unwrap(),
+            },
             arms: Vec::new(),
             reward_history: Vec::new(),
             action_history: VecDeque::new(),

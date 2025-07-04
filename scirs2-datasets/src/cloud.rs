@@ -219,7 +219,7 @@ impl CloudClient {
                 // In a real implementation, you'd use proper AWS signature v4
                 config.headers.insert(
                     "Authorization".to_string(),
-                    format!("AWS {}:{}", access_key, secret_key),
+                    format!("AWS {access_key}:{secret_key}"),
                 );
 
                 if let Some(token) = session_token {
@@ -281,12 +281,11 @@ impl CloudClient {
     fn get_gcs_token(&self, key_file: &str) -> Result<String> {
         // Load service account key file
         let key_data = std::fs::read_to_string(key_file).map_err(|e| {
-            DatasetsError::LoadingError(format!("Failed to read key file {}: {}", key_file, e))
+            DatasetsError::LoadingError(format!("Failed to read key file {key_file}: {e}"))
         })?;
 
-        let service_account: serde_json::Value = serde_json::from_str(&key_data).map_err(|e| {
-            DatasetsError::SerdeError(format!("Invalid service account JSON: {}", e))
-        })?;
+        let service_account: serde_json::Value = serde_json::from_str(&key_data)
+            .map_err(|e| DatasetsError::SerdeError(format!("Invalid service account JSON: {e}")))?;
 
         // Extract required fields
         let client_email = service_account["client_email"].as_str().ok_or_else(|| {
@@ -302,7 +301,7 @@ impl CloudClient {
         // Create JWT claims for Google Cloud Storage API
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|e| DatasetsError::Other(format!("Time error: {}", e)))?
+            .map_err(|e| DatasetsError::Other(format!("Time error: {e}")))?
             .as_secs();
 
         let claims = serde_json::json!({
@@ -320,13 +319,11 @@ impl CloudClient {
 
         // For now, return a descriptive error with implementation guidance
         Err(DatasetsError::AuthenticationError(format!(
-            "GCS authentication requires JWT signing implementation. Service account: {}, Claims: {}. 
+            "GCS authentication requires JWT signing implementation. Service account: {client_email}, Claims: {claims}. 
             To complete implementation:
             1. Add 'jsonwebtoken' crate dependency
             2. Implement RS256 JWT signing with private key
-            3. Exchange signed JWT for OAuth2 access token at https://oauth2.googleapis.com/token",
-            client_email,
-            claims
+            3. Exchange signed JWT for OAuth2 access token at https://oauth2.googleapis.com/token"
         )))
     }
 
@@ -341,7 +338,7 @@ impl CloudClient {
         // Get current UTC timestamp in required format
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|e| DatasetsError::Other(format!("Time error: {}", e)))?;
+            .map_err(|e| DatasetsError::Other(format!("Time error: {e}")))?;
 
         // Azure requires RFC2822 format: "Wed, 27 Mar 2009 12:52:15 GMT"
         let timestamp = format_azure_timestamp(now.as_secs());
@@ -360,19 +357,18 @@ impl CloudClient {
         // Create string-to-sign for LIST operation
         // Format: VERB\nContent-Encoding\nContent-Language\nContent-Length\nContent-MD5\nContent-Type\nDate\nIf-Modified-Since\nIf-Match\nIf-None-Match\nIf-Unmodified-Since\nRange\nCanonicalizedHeaders\nCanonicalizedResource
         let string_to_sign = format!(
-            "GET\n\n\n\n\n\n\n\n\n\n\n\nx-ms-date:{}\nx-ms-version:2020-04-08\n/{}",
-            timestamp, account_name
+            "GET\n\n\n\n\n\n\n\n\n\n\n\nx-ms-date:{timestamp}\nx-ms-version:2020-04-08\n/{account_name}"
         );
 
         // Implement HMAC-SHA256 signing with the account key
         let signature = hmac_sha256(&account_key_bytes, string_to_sign.as_bytes())
-            .map_err(|e| DatasetsError::Other(e))?;
+            .map_err(DatasetsError::Other)?;
 
         // Base64 encode the signature
         let signature_b64 = base64_encode(&signature);
 
         // Format as "SharedKey <account>:<signature>"
-        let auth_header = format!("SharedKey {}:{}", account_name, signature_b64);
+        let auth_header = format!("SharedKey {account_name}:{signature_b64}");
 
         Ok(auth_header)
     }
@@ -413,14 +409,14 @@ impl CloudClient {
 
         // Step 3: Compute inner hash - SHA256(inner_key || message)
         let mut inner_hasher = Sha256::new();
-        inner_hasher.update(&inner_key);
+        inner_hasher.update(inner_key);
         inner_hasher.update(message);
         let inner_hash = inner_hasher.finalize();
 
         // Step 4: Compute outer hash - SHA256(outer_key || inner_hash)
         let mut outer_hasher = Sha256::new();
-        outer_hasher.update(&outer_key);
-        outer_hasher.update(&inner_hash);
+        outer_hasher.update(outer_key);
+        outer_hasher.update(inner_hash);
         let final_hash = outer_hasher.finalize();
 
         Ok(final_hash.to_vec())
@@ -447,7 +443,7 @@ impl CloudClient {
         };
 
         let _url_with_prefix = if let Some(prefix) = prefix {
-            format!("{}&prefix={}", list_url, prefix)
+            format!("{list_url}&prefix={prefix}")
         } else {
             list_url
         };
@@ -514,7 +510,7 @@ impl CloudClient {
         );
 
         let _url_with_prefix = if let Some(prefix) = prefix {
-            format!("{}?prefix={}", list_url, prefix)
+            format!("{list_url}?prefix={prefix}")
         } else {
             list_url
         };
@@ -530,8 +526,7 @@ impl CloudClient {
             // Verify key file exists
             if !std::path::Path::new(key_file).exists() {
                 return Err(DatasetsError::LoadingError(format!(
-                    "GCS service account key file not found: {}",
-                    key_file
+                    "GCS service account key file not found: {key_file}"
                 )));
             }
         } else {
@@ -590,7 +585,7 @@ impl CloudClient {
         );
 
         let _url_with_prefix = if let Some(prefix) = prefix {
-            format!("{}&prefix={}", list_url, prefix)
+            format!("{list_url}&prefix={prefix}")
         } else {
             list_url
         };
@@ -615,8 +610,7 @@ impl CloudClient {
                 // Validate account key format (should be base64)
                 if let Err(e) = base64_decode(account_key) {
                     return Err(DatasetsError::AuthenticationError(format!(
-                        "Invalid Azure account key format (expected base64): {}",
-                        e
+                        "Invalid Azure account key format (expected base64): {e}"
                     )));
                 }
 
@@ -716,8 +710,7 @@ impl CloudClient {
                 if let CloudCredentials::ServiceAccount { key_file } = &self.config.credentials {
                     if !std::path::Path::new(key_file).exists() {
                         return Err(DatasetsError::AuthenticationError(format!(
-                            "GCS key file not found: {}",
-                            key_file
+                            "GCS key file not found: {key_file}"
                         )));
                     }
                 } else {

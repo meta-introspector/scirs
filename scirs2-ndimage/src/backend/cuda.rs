@@ -3,8 +3,16 @@
 //! This module provides CUDA-specific implementations for GPU-accelerated
 //! image processing operations.
 
-use crate::backend::{GpuBuffer, GpuContext, GpuKernelExecutor, KernelInfo};
+use crate::backend::kernels::{GpuBuffer, GpuKernelExecutor, KernelInfo};
 use crate::error::{NdimageError, NdimageResult};
+
+/// GPU context trait for different GPU backends
+pub trait GpuContext: Send + Sync {
+    fn name(&self) -> &str;
+    fn device_count(&self) -> usize;
+    fn current_device(&self) -> usize;
+    fn memory_info(&self) -> (usize, usize); // (used, total)
+}
 use ndarray::{Array, ArrayView, ArrayView2, Dimension};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::collections::HashMap;
@@ -92,7 +100,7 @@ fn cuda_error_string(error: i32) -> String {
     unsafe {
         let error_ptr = cudaGetErrorString(error);
         if error_ptr.is_null() {
-            format!("Unknown CUDA error: {}", error)
+            format!("Unknown CUDA error: {error}")
         } else {
             CStr::from_ptr(error_ptr).to_string_lossy().into_owned()
         }
@@ -115,8 +123,7 @@ impl<T> CudaBuffer<T> {
             let result = cudaMalloc(&mut device_ptr, byte_size);
             if result != CUDA_SUCCESS {
                 return Err(NdimageError::ComputationError(format!(
-                    "CUDA malloc failed with error code: {}",
-                    result
+                    "CUDA malloc failed with error code: {result}"
                 )));
             }
         }
@@ -145,7 +152,7 @@ impl<T> Drop for CudaBuffer<T> {
     }
 }
 
-impl<T> GpuBuffer<T> for CudaBuffer<T> {
+impl<T: Send + Sync> GpuBuffer<T> for CudaBuffer<T> {
     fn as_any(&self) -> &dyn std::any::Any {
         self
     }
@@ -174,8 +181,7 @@ impl<T> GpuBuffer<T> for CudaBuffer<T> {
 
             if result != CUDA_SUCCESS {
                 return Err(NdimageError::ComputationError(format!(
-                    "CUDA memcpy failed with error code: {}",
-                    result
+                    "CUDA memcpy failed with error code: {result}"
                 )));
             }
         }
@@ -199,8 +205,7 @@ impl<T> GpuBuffer<T> for CudaBuffer<T> {
 
             if result != CUDA_SUCCESS {
                 return Err(NdimageError::ComputationError(format!(
-                    "CUDA memcpy failed with error code: {}",
-                    result
+                    "CUDA memcpy failed with error code: {result}"
                 )));
             }
         }
@@ -227,15 +232,13 @@ impl CudaContext {
             let result = cudaGetDeviceCount(&mut device_count);
             if result != CUDA_SUCCESS {
                 return Err(NdimageError::ComputationError(format!(
-                    "Failed to get CUDA device count: {}",
-                    result
+                    "Failed to get CUDA device count: {result}"
                 )));
             }
 
             if device_id >= device_count {
                 return Err(NdimageError::InvalidInput(format!(
-                    "CUDA device {} not found. Only {} devices available",
-                    device_id, device_count
+                    "CUDA device {device_id} not found. Only {device_count} devices available"
                 )));
             }
 
@@ -243,8 +246,7 @@ impl CudaContext {
             let result = cudaSetDevice(device_id);
             if result != CUDA_SUCCESS {
                 return Err(NdimageError::ComputationError(format!(
-                    "Failed to set CUDA device: {}",
-                    result
+                    "Failed to set CUDA device: {result}"
                 )));
             }
         }
@@ -366,8 +368,7 @@ impl CudaContext {
 
             if result != NVRTC_SUCCESS {
                 return Err(NdimageError::ComputationError(format!(
-                    "Failed to create NVRTC program: {}",
-                    result
+                    "Failed to create NVRTC program: {result}"
                 )));
             }
 
@@ -390,8 +391,7 @@ impl CudaContext {
 
                     nvrtcDestroyProgram(&mut prog);
                     return Err(NdimageError::ComputationError(format!(
-                        "CUDA compilation failed:\n{}",
-                        log_str
+                        "CUDA compilation failed:\n{log_str}"
                     )));
                 }
             }
@@ -498,6 +498,11 @@ pub struct CudaKernel {
 unsafe impl Send for CudaKernel {}
 unsafe impl Sync for CudaKernel {}
 
+// SAFETY: CudaExecutor's raw pointers are managed by CUDA runtime
+// and access is properly synchronized
+unsafe impl Send for CudaExecutor {}
+unsafe impl Sync for CudaExecutor {}
+
 /// Kernel cache to avoid recompilation
 lazy_static::lazy_static! {
     static ref KERNEL_CACHE: Arc<Mutex<HashMap<String, CudaKernel>>> = Arc::new(Mutex::new(HashMap::new()));
@@ -516,8 +521,7 @@ impl CudaExecutor {
             let result = cudaStreamCreate(&mut stream);
             if result != CUDA_SUCCESS {
                 return Err(NdimageError::ComputationError(format!(
-                    "Failed to create CUDA stream: {}",
-                    result
+                    "Failed to create CUDA stream: {result}"
                 )));
             }
         }
@@ -538,7 +542,7 @@ impl Drop for CudaExecutor {
 
 impl<T> GpuKernelExecutor<T> for CudaExecutor
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + Send + Sync,
 {
     fn execute_kernel(
         &self,
@@ -832,8 +836,7 @@ impl AdvancedCudaExecutor {
             let result = cudaStreamCreate(&mut stream);
             if result != CUDA_SUCCESS {
                 return Err(NdimageError::ComputationError(format!(
-                    "Failed to create CUDA stream: {}",
-                    result
+                    "Failed to create CUDA stream: {result}"
                 )));
             }
         }

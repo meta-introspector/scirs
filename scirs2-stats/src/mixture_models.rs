@@ -359,6 +359,36 @@ where
                     "Custom initialization not implemented".to_string(),
                 ));
             }
+            InitializationMethod::KMeans { n_runs: _ } => {
+                // K-means with multiple runs initialization
+                return Err(StatsError::InvalidArgument(
+                    "K-means initialization not implemented".to_string(),
+                ));
+            }
+            InitializationMethod::FurthestFirst => {
+                // Furthest-first initialization
+                return Err(StatsError::InvalidArgument(
+                    "Furthest-first initialization not implemented".to_string(),
+                ));
+            }
+            InitializationMethod::Quantile => {
+                // Quantile-based initialization
+                return Err(StatsError::InvalidArgument(
+                    "Quantile initialization not implemented".to_string(),
+                ));
+            }
+            InitializationMethod::PCA => {
+                // PCA-based initialization
+                return Err(StatsError::InvalidArgument(
+                    "PCA initialization not implemented".to_string(),
+                ));
+            }
+            InitializationMethod::Spectral => {
+                // Spectral clustering initialization
+                return Err(StatsError::InvalidArgument(
+                    "Spectral initialization not implemented".to_string(),
+                ));
+            }
         }
 
         Ok(means)

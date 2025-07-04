@@ -718,8 +718,7 @@ impl CacheManager {
                         Ok(dataset) => Ok(Some(dataset)),
                         Err(e) => {
                             // If deserialization fails, consider the cache entry invalid
-                            let _ = self
-                                .cache
+                            self.cache
                                 .mem_cache
                                 .borrow_mut()
                                 .remove(&FileCacheKey(name.clone()));

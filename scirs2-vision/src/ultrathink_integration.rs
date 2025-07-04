@@ -769,6 +769,12 @@ pub struct UltrathinkStatus {
 }
 
 // Placeholder implementations for cross-module coordination interfaces
+impl Default for ClusteringCoordinationInterface {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ClusteringCoordinationInterface {
     /// Creates a new clustering coordination interface with default settings
     pub fn new() -> Self {
@@ -1019,7 +1025,7 @@ impl NeuralNetworkInterface {
             // Simulate meta-learned adaptation
             let adaptation_strength = (self.neural_performance.len() as f64 * 0.01).min(0.3);
             for value in output.iter_mut() {
-                *value *= (1.0 + adaptation_strength);
+                *value *= 1.0 + adaptation_strength;
             }
             1.4 + adaptation_strength
         } else {

@@ -747,7 +747,16 @@ pub struct EnsembleInterpolator<T: Float> {
     normalize_weights: bool,
 }
 
-impl<T: Float + FromPrimitive + Debug + Display + Copy + std::iter::Sum> EnsembleInterpolator<T> {
+impl<
+        T: Float
+            + FromPrimitive
+            + Debug
+            + Display
+            + Copy
+            + std::iter::Sum
+            + crate::traits::InterpolationFloat,
+    > EnsembleInterpolator<T>
+{
     /// Create a new ensemble interpolator
     pub fn new() -> Self {
         Self {

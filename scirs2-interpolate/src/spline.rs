@@ -2262,7 +2262,7 @@ impl<F: crate::traits::InterpolationFloat + ToString> CubicSpline<F> {
         for &start in &start_points {
             let start_f = F::from_f64(start).unwrap_or_default();
             if let Ok(Some(root)) =
-                self.newton_raphson_cubic(a, b, c, d, start_f, tolerance, max_iterations)
+                self.newton_raphson_cubic(a, b, c, d, start_f, tolerance, _max_iterations)
             {
                 // Check if this root is already found
                 let mut is_new_root = true;

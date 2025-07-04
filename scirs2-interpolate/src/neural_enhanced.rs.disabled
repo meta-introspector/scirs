@@ -188,6 +188,7 @@ where
         + DivAssign
         + RemAssign
         + Copy
+        + std::default::Default
         + 'static,
 {
     /// Base interpolation method (e.g., B-spline)
@@ -233,6 +234,7 @@ where
         + DivAssign
         + RemAssign
         + Copy
+        + std::default::Default
         + 'static,
 {
     fn default() -> Self {
@@ -255,6 +257,7 @@ where
         + DivAssign
         + RemAssign
         + Copy
+        + std::default::Default
         + 'static,
 {
     /// Create a new neural enhanced interpolator
@@ -914,6 +917,7 @@ where
         + DivAssign
         + RemAssign
         + Copy
+        + std::default::Default
         + 'static,
 {
     let mut interpolator = NeuralEnhancedInterpolator::new()

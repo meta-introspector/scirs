@@ -540,7 +540,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
     /// Compute meta-gradients for meta-learning
     pub fn compute_meta_gradients(
         &mut self,
-        inner_steps: usize,
+        _inner_steps: usize,
         outer_objective_id: usize,
     ) -> Result<Vec<T>> {
         if !self.config.enable_meta_gradients {
@@ -694,7 +694,7 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         let mut jvp_values = vec![T::zero(); self.graph.len()];
 
         // Initialize tangent values for input variables
-        for (var_name, &var_id) in &self.variables {
+        for (_var_name, &var_id) in &self.variables {
             if var_id < tangent.len() {
                 jvp_values[var_id] = tangent[var_id];
             }

@@ -381,8 +381,8 @@ where
         &self,
         data: &Array2<F>,
         n_components: usize,
-        n_iter: usize,
-        n_oversamples: usize,
+        _n_iter: usize,
+        _n_oversamples: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -396,7 +396,7 @@ where
         &self,
         data: &Array2<F>,
         n_components: usize,
-        batch_size: usize,
+        _batch_size: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -410,8 +410,8 @@ where
         &self,
         data: &Array2<F>,
         n_components: usize,
-        alpha: f64,
-        max_iter: usize,
+        _alpha: f64,
+        _max_iter: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
@@ -425,8 +425,8 @@ where
         &self,
         data: &Array2<F>,
         n_components: usize,
-        lambda: f64,
-        max_iter: usize,
+        _lambda: f64,
+        _max_iter: usize,
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {

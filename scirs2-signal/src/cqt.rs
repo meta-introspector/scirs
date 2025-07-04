@@ -17,7 +17,6 @@ use std::f64::consts::PI;
 
 use crate::error::{SignalError, SignalResult};
 use crate::window;
-use num_complex::Complex64;
 use scirs2_fft;
 
 /// Configuration parameters for Constant-Q Transform

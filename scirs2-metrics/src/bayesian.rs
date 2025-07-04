@@ -383,7 +383,7 @@ impl BayesianModelComparison {
     fn compute_marginal_log_likelihood(
         &self,
         log_likelihood: &Array1<f64>,
-        log_prior: Option<&Array1<f64>>,
+        _log_prior: Option<&Array1<f64>>,
     ) -> Result<f64> {
         // For β=0, we sample from the prior
         // The expected log likelihood is the marginal likelihood

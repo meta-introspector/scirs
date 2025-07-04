@@ -868,7 +868,7 @@ impl AutomatedTestRunner {
 
     /// Analyze failures across platform matrix
     fn analyze_failures(&mut self, queue: &VecDeque<TestExecution>) -> Result<()> {
-        let mut common_patterns = Vec::new();
+        let common_patterns = Vec::new();
         let mut platform_issues = HashMap::new();
         let mut recommendations = Vec::new();
 

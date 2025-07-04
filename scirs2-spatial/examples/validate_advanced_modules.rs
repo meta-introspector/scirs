@@ -49,7 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match test_core_functionality(&points).await {
         Ok(_) => println!("✅ Core functionality: PASSED"),
         Err(e) => {
-            println!("❌ Core functionality: FAILED - {}", e);
+            println!("❌ Core functionality: FAILED - {e}");
             all_passed = false;
         }
     }
@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match test_quantum_inspired(&points).await {
         Ok(_) => println!("✅ Quantum-inspired: PASSED"),
         Err(e) => {
-            println!("❌ Quantum-inspired: FAILED - {}", e);
+            println!("❌ Quantum-inspired: FAILED - {e}");
             all_passed = false;
         }
     }
@@ -69,7 +69,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match test_neuromorphic(&points).await {
         Ok(_) => println!("✅ Neuromorphic: PASSED"),
         Err(e) => {
-            println!("❌ Neuromorphic: FAILED - {}", e);
+            println!("❌ Neuromorphic: FAILED - {e}");
             all_passed = false;
         }
     }
@@ -79,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match test_hybrid_algorithms(&points).await {
         Ok(_) => println!("✅ Hybrid algorithms: PASSED"),
         Err(e) => {
-            println!("❌ Hybrid algorithms: FAILED - {}", e);
+            println!("❌ Hybrid algorithms: FAILED - {e}");
             all_passed = false;
         }
     }
@@ -89,7 +89,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match test_gpu_acceleration().await {
         Ok(_) => println!("✅ GPU acceleration: PASSED"),
         Err(e) => {
-            println!("⚠️  GPU acceleration: SKIPPED - {}", e);
+            println!("⚠️  GPU acceleration: SKIPPED - {e}");
             // GPU tests are optional, don't fail validation
         }
     }
@@ -99,7 +99,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match test_memory_optimization().await {
         Ok(_) => println!("✅ Memory optimization: PASSED"),
         Err(e) => {
-            println!("❌ Memory optimization: FAILED - {}", e);
+            println!("❌ Memory optimization: FAILED - {e}");
             all_passed = false;
         }
     }
@@ -109,7 +109,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match test_advanced_optimization().await {
         Ok(_) => println!("✅ Advanced optimization: PASSED"),
         Err(e) => {
-            println!("❌ Advanced optimization: FAILED - {}", e);
+            println!("❌ Advanced optimization: FAILED - {e}");
             all_passed = false;
         }
     }

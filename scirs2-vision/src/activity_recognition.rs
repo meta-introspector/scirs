@@ -1082,7 +1082,7 @@ impl ActivitySequenceAnalyzer {
         // Find activity sequences across frames
         let mut current_sequence: Option<ActivitySequence> = None;
 
-        for (_frame_idx, frame_result) in frame_activities.iter().enumerate() {
+        for frame_result in frame_activities.iter() {
             for activity in &frame_result.activities {
                 match &mut current_sequence {
                     None => {
@@ -1180,7 +1180,7 @@ impl MultiPersonInteractionRecognizer {
         for scene in scene_analyses {
             for (i, object) in scene.objects.iter().enumerate() {
                 if object.class == "person" {
-                    let person_id = format!("person_{}", i);
+                    let person_id = format!("person_{i}");
                     let position = (
                         object.bbox.0 + object.bbox.2 / 2.0,
                         object.bbox.1 + object.bbox.3 / 2.0,
@@ -1358,7 +1358,7 @@ impl HierarchicalActivityDecomposer {
         for (group_type, group_activities) in activity_groups {
             // Create composite activity node
             let composite_node = ActivityNode {
-                node_id: format!("composite_{}", node_id),
+                node_id: format!("composite_{node_id}"),
                 activity_type: group_type.clone(),
                 level: 1,
                 children: Vec::new(),
@@ -1381,7 +1381,7 @@ impl HierarchicalActivityDecomposer {
             // Create atomic activity nodes
             for (i, activity) in group_activities.iter().enumerate() {
                 let atomic_node = ActivityNode {
-                    node_id: format!("atomic_{}_{}", node_id, i),
+                    node_id: format!("atomic_{node_id}_{i}"),
                     activity_type: activity.activity_class.clone(),
                     level: 2,
                     children: Vec::new(),

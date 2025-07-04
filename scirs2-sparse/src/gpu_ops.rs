@@ -391,7 +391,7 @@ impl SpMVKernel {
                 let kernel_handle = device
                     .compile_kernel(cuda_kernel_source, "spmv_csr_vectorized_kernel")
                     .map_err(|e| {
-                        GpuError::new(&format!("Failed to compile CUDA SpMV kernel: {}", e))
+                        GpuError::new(&format!("Failed to compile CUDA SpMV kernel: {e}"))
                     })?;
 
                 // Verify kernel compilation succeeded and store handle
@@ -462,7 +462,7 @@ impl SpMVKernel {
                 let kernel_handle = device
                     .compile_kernel(opencl_kernel_source, "spmv_csr_local_kernel")
                     .map_err(|e| {
-                        GpuError::new(&format!("Failed to compile OpenCL SpMV kernel: {}", e))
+                        GpuError::new(&format!("Failed to compile OpenCL SpMV kernel: {e}"))
                     })?;
 
                 // Verify kernel compilation succeeded and store handle
@@ -530,7 +530,7 @@ impl SpMVKernel {
                 let kernel_handle = device
                     .compile_kernel(metal_kernel_source, "spmv_csr_simdgroup_kernel")
                     .map_err(|e| {
-                        GpuError::new(&format!("Failed to compile Metal SpMV kernel: {}", e))
+                        GpuError::new(&format!("Failed to compile Metal SpMV kernel: {e}"))
                     })?;
 
                 // Verify kernel compilation succeeded and store handle
@@ -547,12 +547,26 @@ impl SpMVKernel {
                     backend: device.backend(),
                 })
             }
+            GpuBackend::Rocm => {
+                // ROCm implementation - no kernel handle needed for fallback
+                Ok(Self {
+                    kernel_handle: None,
+                    backend: device.backend(),
+                })
+            }
+            GpuBackend::Wgpu => {
+                // WebGPU implementation - no kernel handle needed for fallback
+                Ok(Self {
+                    kernel_handle: None,
+                    backend: device.backend(),
+                })
+            }
         }
     }
 
     pub fn execute<T>(
         &self,
-        device: &GpuDevice,
+        _device: &GpuDevice,
         rows: usize,
         cols: usize,
         indptr: &GpuBuffer<usize>,
@@ -1168,9 +1182,24 @@ impl SpMSKernel {
                     backend: device.backend(),
                 })
             }
+            GpuBackend::Rocm => {
+                // ROCm implementation - no kernel handle needed for fallback
+                Ok(Self {
+                    kernel_handle: None,
+                    backend: device.backend(),
+                })
+            }
+            GpuBackend::Wgpu => {
+                // WebGPU implementation - no kernel handle needed for fallback
+                Ok(Self {
+                    kernel_handle: None,
+                    backend: device.backend(),
+                })
+            }
         }
     }
 
+    #[allow(unused_variables)]
     pub fn execute_symmetric<T>(
         &self,
         device: &GpuDevice,
@@ -1226,6 +1255,7 @@ impl SpMSKernel {
         }
     }
 
+    #[allow(unused_variables)]
     pub fn execute_spmm<T>(
         &self,
         device: &GpuDevice,
@@ -1308,6 +1338,7 @@ impl SpMSKernel {
         }
     }
 
+    #[allow(unused_variables)]
     pub fn execute_triangular_solve<T>(
         &self,
         device: &GpuDevice,
@@ -2820,8 +2851,7 @@ impl OptimizedGpuOps {
             "bicgstab" => self.gpu_bicgstab(matrix, b, preconditioner, max_iter, tol),
             "gmres" => self.gpu_gmres(matrix, b, preconditioner, max_iter, tol),
             _ => Err(SparseError::ValueError(format!(
-                "Unknown solver method: {}",
-                method
+                "Unknown solver method: {method}"
             ))),
         }
     }
@@ -3446,7 +3476,7 @@ fn create_sparse_matvec_kernel(
 
     device
         .compile_kernel(&operation_config, "sparse_matvec")
-        .map_err(|e| format!("Failed to create SpMV kernel: {}", e))
+        .map_err(|e| format!("Failed to create SpMV kernel: {e}"))
 }
 
 /// Create a GPU kernel for symmetric sparse matrix-vector multiplication
@@ -3496,7 +3526,7 @@ fn create_symmetric_sparse_matvec_kernel(
 
     device
         .compile_kernel(&operation_config, "symmetric_sparse_matvec")
-        .map_err(|e| format!("Failed to create symmetric SpMV kernel: {}", e))
+        .map_err(|e| format!("Failed to create symmetric SpMV kernel: {e}"))
 }
 /// Execute sparse matrix-vector multiplication kernel
 #[cfg(feature = "gpu")]

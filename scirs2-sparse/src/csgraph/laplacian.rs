@@ -31,8 +31,7 @@ impl LaplacianType {
             "normalized" | "symmetric" => Ok(Self::Normalized),
             "random_walk" | "random-walk" | "randomwalk" => Ok(Self::RandomWalk),
             _ => Err(SparseError::ValueError(format!(
-                "Unknown Laplacian type: {}. Use 'standard', 'normalized', or 'random_walk'",
-                s
+                "Unknown Laplacian type: {s}. Use 'standard', 'normalized', or 'random_walk'"
             ))),
         }
     }

@@ -17,7 +17,7 @@ use opencl3::device::{get_all_devices, Device, CL_DEVICE_TYPE_GPU};
 #[cfg(feature = "opencl")]
 use opencl3::kernel::{ExecuteKernel, Kernel};
 #[cfg(feature = "opencl")]
-use opencl3::memory::{Buffer, CL_MEM_READ_WRITE};
+use opencl3::memory::{Buffer, ClMem, CL_MEM_READ_WRITE};
 #[cfg(feature = "opencl")]
 use opencl3::platform::get_platforms;
 #[cfg(feature = "opencl")]

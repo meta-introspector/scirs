@@ -732,7 +732,7 @@ impl ComprehensiveSecurityAuditor {
     fn run_static_analysis(&self, project_path: &Path) -> Result<StaticAnalysisResult> {
         let start_time = std::time::Instant::now();
         let mut security_issues = Vec::new();
-        let mut quality_issues = Vec::new();
+        let quality_issues = Vec::new();
         let mut files_scanned = 0;
         let mut lines_analyzed = 0;
 

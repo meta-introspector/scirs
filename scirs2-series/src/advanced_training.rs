@@ -1039,8 +1039,8 @@ mod tests {
             assert_eq!(trajectory.dim(), (3, 2));
 
             // Check that trajectory evolves (not constant)
-            let initial_sum = trajectory.row(0).sum();
-            let final_sum = trajectory.row(2).sum();
+            let _initial_sum = trajectory.row(0).sum();
+            let _final_sum = trajectory.row(2).sum();
             // Should be different unless the ODE derivative is exactly zero
             // For our randomly initialized network, this is very unlikely
         }

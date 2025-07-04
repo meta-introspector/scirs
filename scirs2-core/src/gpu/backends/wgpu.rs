@@ -160,8 +160,8 @@ impl WebGPUContext {
             .map_err(|e| GpuError::Other(format!("{e}")))?;
 
             Ok(Self {
-                device,
-                queue,
+                device: Arc::new(device),
+                queue: Arc::new(queue),
                 compiled_shaders: Arc::new(Mutex::new(HashMap::new())),
                 memory_pool: Arc::new(Mutex::new(WebGPUMemoryPool::new(1024 * 1024 * 1024))), // 1GB pool
             })
@@ -466,7 +466,7 @@ impl GpuContextImpl for WebGPUContext {
         };
 
         Arc::new(WebGPUBuffer {
-            device_buffer,
+            device_buffer: Some(device_buffer),
             #[cfg(feature = "wgpu_backend")]
             queue: Arc::clone(&self.queue),
             #[cfg(not(feature = "wgpu_backend"))]
@@ -611,7 +611,7 @@ impl GpuKernelImpl for WebGPUKernelHandle {
             // Real WebGPU compute dispatch
             let shaders = self.compiled_shaders.lock().unwrap();
             if let Some(shader) = shaders.get(&self.shader_name) {
-                let params = self.params.lock().unwrap();
+                let _params = self.params.lock().unwrap();
 
                 // Create command encoder
                 let mut encoder =

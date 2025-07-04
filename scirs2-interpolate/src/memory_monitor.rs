@@ -1002,13 +1002,14 @@ impl StressMemoryProfiler {
         // In a real implementation, this would query the operating system
         // For now, simulate pressure based on our current usage
 
-        let total_system_memory = 16 * 1024 * 1024 * 1024; // 16GB assumed
+        let total_system_memory: u64 = 16 * 1024 * 1024 * 1024; // 16GB assumed
         let our_usage = self.base_monitor.current_memory_bytes;
 
         self.pressure_indicators.system_memory_utilization =
             (our_usage as f64 / total_system_memory as f64 * 100.0).min(100.0);
 
-        self.pressure_indicators.available_memory = total_system_memory.saturating_sub(our_usage);
+        self.pressure_indicators.available_memory =
+            (total_system_memory as usize).saturating_sub(our_usage);
 
         // Simulate other metrics
         self.pressure_indicators.allocation_failure_rate =

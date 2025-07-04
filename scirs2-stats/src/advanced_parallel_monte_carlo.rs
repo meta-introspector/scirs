@@ -187,12 +187,12 @@ where
     fn bounds(&self) -> (Array1<F>, Array1<F>);
 
     /// Provide importance sampling density (optional)
-    fn importance_density(&self, x: &ArrayView1<F>) -> Option<F> {
+    fn importance_density(&self, _x: &ArrayView1<F>) -> Option<F> {
         None
     }
 
     /// Provide control variate function (optional)
-    fn control_variate(&self, x: &ArrayView1<F>) -> Option<F> {
+    fn control_variate(&self, _x: &ArrayView1<F>) -> Option<F> {
         None
     }
 }
@@ -230,7 +230,7 @@ where
     {
         let start_time = std::time::Instant::now();
         let (lower_bounds, upper_bounds) = function.bounds();
-        let dimension = function.dimension();
+        let _dimension = function.dimension();
 
         // Initialize adaptive state
         {

@@ -245,12 +245,12 @@ fn example_large_matrix_performance(file_path: &Path) {
 /// Create a random symmetric positive definite matrix of the given size
 fn create_random_spd_matrix(size: usize) -> Array2<f32> {
     // Create a random matrix with values in the range [-1.0, 1.0)
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut matrix = Array2::zeros((size, size));
 
     for i in 0..size {
         for j in 0..size {
-            matrix[[i, j]] = rng.gen_range(-1.0..1.0);
+            matrix[[i, j]] = rng.random_range(-1.0..1.0);
         }
     }
 

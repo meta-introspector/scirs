@@ -8,11 +8,14 @@
 
 use crate::error::{IoError, Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1};
-use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+// use scirs2_core::parallel_ops::*; // Removed for now as we're using sequential operations
+use scirs2_core::simd_ops::PlatformCapabilities;
 
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
+
+#[cfg(target_arch = "aarch64")]
+use std::arch::aarch64::*;
 
 /// SIMD-accelerated data transformation during I/O
 pub struct SimdIoProcessor;
@@ -24,12 +27,9 @@ impl SimdIoProcessor {
 
         // Use parallel processing for large arrays
         if input.len() > 1000 {
-            output
-                .par_iter_mut()
-                .zip(input.par_iter())
-                .for_each(|(out, &inp)| {
-                    *out = inp as f32;
-                });
+            output.iter_mut().zip(input.iter()).for_each(|(out, &inp)| {
+                *out = inp as f32;
+            });
         } else {
             // Use sequential processing for small arrays
             for (out, &inp) in output.iter_mut().zip(input.iter()) {
@@ -44,9 +44,7 @@ impl SimdIoProcessor {
     pub fn normalize_audio_simd(data: &mut ArrayViewMut1<f32>) {
         // Find max absolute value using parallel operations
         let max_val = if data.len() > 1000 {
-            data.par_iter()
-                .map(|&x| x.abs())
-                .reduce(|| 0.0f32, f32::max)
+            data.iter().map(|&x| x.abs()).fold(0.0f32, f32::max)
         } else {
             data.iter().map(|&x| x.abs()).fold(0.0f32, f32::max)
         };
@@ -57,7 +55,7 @@ impl SimdIoProcessor {
 
             // Use parallel processing for large arrays
             if data.len() > 1000 {
-                data.par_iter_mut().for_each(|x| *x *= scale);
+                data.iter_mut().for_each(|x| *x *= scale);
             } else {
                 data.mapv_inplace(|x| x * scale);
             }
@@ -68,7 +66,7 @@ impl SimdIoProcessor {
     pub fn apply_gain_simd(data: &mut ArrayViewMut1<f32>, gain: f32) {
         // Use parallel processing for large arrays
         if data.len() > 1000 {
-            data.par_iter_mut().for_each(|x| *x *= gain);
+            data.iter_mut().for_each(|x| *x *= gain);
         } else {
             data.mapv_inplace(|x| x * gain);
         }
@@ -82,8 +80,8 @@ impl SimdIoProcessor {
         // Use parallel processing for large arrays
         if input.len() > 1000 {
             output
-                .par_iter_mut()
-                .zip(input.par_iter())
+                .iter_mut()
+                .zip(input.iter())
                 .for_each(|(out, &sample)| {
                     *out = sample as f32 * scale;
                 });
@@ -104,7 +102,7 @@ impl SimdIoProcessor {
         // Use parallel processing for large arrays
         if input.len() > 1000 {
             input
-                .par_iter()
+                .iter()
                 .map(|&sample| {
                     let scaled = sample * scale;
                     let clamped = scaled.clamp(-32768.0, 32767.0);
@@ -347,11 +345,11 @@ pub mod matrix_simd {
             let block_size = self.calculate_optimal_block_size(element_size);
 
             // Use parallel blocked transpose with cache optimization
-            (0..rows).into_par_iter().step_by(block_size).for_each(|i| {
+            for i in (0..rows).step_by(block_size) {
                 for j in (0..cols).step_by(block_size) {
                     self.transpose_block(input, &output, i, j, block_size, rows, cols);
                 }
-            });
+            }
 
             output
         }
@@ -533,18 +531,13 @@ pub mod matrix_simd {
 
             // Use parallel processing for large matrices
             if rows > 100 {
-                result
-                    .as_slice_mut()
-                    .unwrap()
-                    .par_iter_mut()
-                    .enumerate()
-                    .for_each(|(i, res)| {
-                        let mut sum = T::default();
-                        for j in 0..cols {
-                            sum = sum + matrix[[i, j]] * vector[j];
-                        }
-                        *res = sum;
-                    });
+                for (i, res) in result.iter_mut().enumerate() {
+                    let mut sum = T::default();
+                    for j in 0..cols {
+                        sum = sum + matrix[[i, j]] * vector[j];
+                    }
+                    *res = sum;
+                }
             } else {
                 for i in 0..rows {
                     let mut sum = T::default();
@@ -672,15 +665,15 @@ pub mod matrix_simd {
 
         // Use parallel processing for large matrices
         if a.len() > 1024 {
-            result
+            for ((r, &a_val), &b_val) in result
                 .as_slice_mut()
                 .unwrap()
-                .par_iter_mut()
-                .zip(a.as_slice().unwrap().par_iter())
-                .zip(b.as_slice().unwrap().par_iter())
-                .for_each(|((r, &a_val), &b_val)| {
-                    *r = a_val + b_val;
-                });
+                .iter_mut()
+                .zip(a.as_slice().unwrap().iter())
+                .zip(b.as_slice().unwrap().iter())
+            {
+                *r = a_val + b_val;
+            }
         } else {
             for ((i, j), &a_val) in a.indexed_iter() {
                 result[[i, j]] = a_val + b[[i, j]];
@@ -717,7 +710,7 @@ pub mod stats_simd {
         let slice = data.as_slice().unwrap();
 
         // Use parallel processing for variance calculation
-        let sum_sq_diff: f64 = slice.par_iter().map(|&x| (x - mean).powi(2)).sum();
+        let sum_sq_diff: f64 = slice.iter().map(|&x| (x - mean).powi(2)).sum();
 
         sum_sq_diff / (data.len() - 1) as f64
     }
@@ -731,15 +724,10 @@ pub mod stats_simd {
         let slice = data.as_slice().unwrap();
 
         let (min, max) = slice
-            .par_iter()
-            .fold(
-                || (f64::INFINITY, f64::NEG_INFINITY),
-                |acc, &x| (acc.0.min(x), acc.1.max(x)),
-            )
-            .reduce(
-                || (f64::INFINITY, f64::NEG_INFINITY),
-                |a, b| (a.0.min(b.0), a.1.max(b.1)),
-            );
+            .iter()
+            .fold((f64::INFINITY, f64::NEG_INFINITY), |acc, &x| {
+                (acc.0.min(x), acc.1.max(x))
+            });
 
         (min, max)
     }
@@ -751,7 +739,7 @@ pub mod stats_simd {
         }
 
         let mut sorted_data = data.to_vec();
-        sorted_data.par_sort_by(|a, b| a.partial_cmp(b).unwrap());
+        sorted_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         let index = q * (sorted_data.len() - 1) as f64;
         let lower = index.floor() as usize;
@@ -780,9 +768,7 @@ pub mod binary_simd {
 
         // Use parallel copy for large arrays
         if src.len() > 4096 {
-            dst.par_iter_mut()
-                .zip(src.par_iter())
-                .for_each(|(d, &s)| *d = s);
+            dst.iter_mut().zip(src.iter()).for_each(|(d, &s)| *d = s);
         } else {
             dst.copy_from_slice(src);
         }
@@ -795,16 +781,14 @@ pub mod binary_simd {
         let key_len = key.len();
 
         // Process in parallel chunks
-        data.par_iter_mut().enumerate().for_each(|(i, byte)| {
+        data.iter_mut().enumerate().for_each(|(i, byte)| {
             *byte ^= key[i % key_len];
         });
     }
 
     /// Count set bits using SIMD operations
     pub fn popcount_simd(data: &[u8]) -> usize {
-        data.par_iter()
-            .map(|&byte| byte.count_ones() as usize)
-            .sum()
+        data.iter().map(|&byte| byte.count_ones() as usize).sum()
     }
 
     /// Find pattern in binary data using SIMD
@@ -1045,8 +1029,8 @@ impl AdvancedSimdProcessor {
         // Use parallel processing for large arrays
         if len > 1024 {
             input[..len]
-                .par_iter()
-                .zip(output[..len].par_iter_mut())
+                .iter()
+                .zip(output[..len].iter_mut())
                 .for_each(|(&inp, out)| {
                     *out = inp as f32;
                 });
@@ -1234,9 +1218,7 @@ impl AdvancedSimdProcessor {
 
         if len > 1024 * 1024 {
             // Large data: use parallel copy
-            dst.par_iter_mut()
-                .zip(src.par_iter())
-                .for_each(|(d, &s)| *d = s);
+            dst.iter_mut().zip(src.iter()).for_each(|(d, &s)| *d = s);
         } else {
             dst.copy_from_slice(src);
         }
@@ -1319,7 +1301,7 @@ impl SimdIoAccelerator {
     where
         T: Copy + Send + Sync,
     {
-        arrays.par_iter().map(processor).collect()
+        arrays.iter().map(processor).collect()
     }
 }
 

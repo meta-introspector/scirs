@@ -7,7 +7,6 @@
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
 use rustfft::{num_complex::Complex, FftPlanner};
-#[cfg(test)]
 use std::f64::consts::PI;
 
 use super::basic::linear_interpolate;
@@ -394,7 +393,6 @@ pub mod resampling {
     //! interpolation, polyphase filtering, and other advanced signal processing techniques.
 
     use crate::error::{SignalError, SignalResult};
-    #[cfg(test)]
     use std::f64::consts::PI;
 
     /// Configuration for high-quality resampling

@@ -920,7 +920,7 @@ mod tests {
         let context = UltrathinkContextBuilder::new(1000).build();
 
         // Test different data sizes
-        let small_strategy = processor
+        let _small_strategy = processor
             .determine_processing_strategy(100, &context)
             .unwrap();
         let large_strategy = processor

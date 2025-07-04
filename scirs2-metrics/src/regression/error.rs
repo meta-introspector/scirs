@@ -97,11 +97,13 @@ where
     // Use SIMD optimizations for vector operations when data is contiguous
     let squared_error_sum = if y_true.is_standard_layout() && y_pred.is_standard_layout() {
         // SIMD-optimized computation - convert to 1D views for SIMD ops
-        let y_true_reshaped = y_true.view().to_shape(y_true.len()).unwrap();
-        let y_pred_reshaped = y_pred.view().to_shape(y_pred.len()).unwrap();
-        let y_true_view = y_true_reshaped.view();
-        let y_pred_view = y_pred_reshaped.view();
-        let diff = F::simd_sub(&y_true_view, &y_pred_view);
+        let y_true_view = y_true.view();
+        let y_pred_view = y_pred.view();
+        let y_true_reshaped = y_true_view.to_shape(y_true.len()).unwrap();
+        let y_pred_reshaped = y_pred_view.to_shape(y_pred.len()).unwrap();
+        let y_true_1d = y_true_reshaped.view();
+        let y_pred_1d = y_pred_reshaped.view();
+        let diff = F::simd_sub(&y_true_1d, &y_pred_1d);
         let squared_diff = F::simd_mul(&diff.view(), &diff.view());
         F::simd_sum(&squared_diff.view())
     } else {
@@ -204,11 +206,13 @@ where
     // Use SIMD optimizations for vector operations when data is contiguous
     let abs_error_sum = if y_true.is_standard_layout() && y_pred.is_standard_layout() {
         // SIMD-optimized computation for 1D arrays
-        let y_true_reshaped = y_true.view().to_shape(y_true.len()).unwrap();
-        let y_pred_reshaped = y_pred.view().to_shape(y_pred.len()).unwrap();
-        let y_true_view = y_true_reshaped.view();
-        let y_pred_view = y_pred_reshaped.view();
-        let diff = F::simd_sub(&y_true_view, &y_pred_view);
+        let y_true_view = y_true.view();
+        let y_pred_view = y_pred.view();
+        let y_true_reshaped = y_true_view.to_shape(y_true.len()).unwrap();
+        let y_pred_reshaped = y_pred_view.to_shape(y_pred.len()).unwrap();
+        let y_true_1d = y_true_reshaped.view();
+        let y_pred_1d = y_pred_reshaped.view();
+        let diff = F::simd_sub(&y_true_1d, &y_pred_1d);
         let abs_diff = F::simd_abs(&diff.view());
         F::simd_sum(&abs_diff.view())
     } else {

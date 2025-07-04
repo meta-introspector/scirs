@@ -886,8 +886,7 @@ where
                 .fold(T::zero(), |acc, x| if x > acc { x } else { acc }))
         }
         _ => Err(SparseError::ValueError(format!(
-            "Unknown norm type: {}",
-            norm_type
+            "Unknown norm type: {norm_type}"
         ))),
     }
 }

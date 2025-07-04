@@ -629,6 +629,12 @@ pub struct ConceptRelationship {
     pub strength: f32,
 }
 
+impl Default for VisualReasoningEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VisualReasoningEngine {
     /// Create a new ultra-advanced visual reasoning engine
     pub fn new() -> Self {

@@ -260,13 +260,11 @@ impl MemoryMappedFile {
             .read(true)
             .write(true)
             .open(&file_path)
-            .map_err(|e| {
-                SparseError::Io(format!("Failed to create file {:?}: {}", file_path, e))
-            })?;
+            .map_err(|e| SparseError::Io(format!("Failed to create file {file_path:?}: {e}")))?;
 
         // Set file size if creating new file
         file.set_len(size as u64)
-            .map_err(|e| SparseError::Io(format!("Failed to set file size: {}", e)))?;
+            .map_err(|e| SparseError::Io(format!("Failed to set file size: {e}")))?;
 
         Ok(Self {
             file_path,
@@ -284,7 +282,7 @@ impl MemoryMappedFile {
         {
             self.file
                 .read_at(buffer, offset as u64)
-                .map_err(|e| SparseError::Io(format!("Failed to read at offset {}: {}", offset, e)))
+                .map_err(|e| SparseError::Io(format!("Failed to read at offset {offset}: {e}")))
         }
 
         #[cfg(windows)]
@@ -318,9 +316,9 @@ impl MemoryMappedFile {
     fn write_at(&self, offset: usize, data: &[u8]) -> SparseResult<usize> {
         #[cfg(unix)]
         {
-            self.file.write_at(data, offset as u64).map_err(|e| {
-                SparseError::Io(format!("Failed to write at offset {}: {}", offset, e))
-            })
+            self.file
+                .write_at(data, offset as u64)
+                .map_err(|e| SparseError::Io(format!("Failed to write at offset {offset}: {e}")))
         }
 
         #[cfg(windows)]
@@ -354,7 +352,7 @@ impl MemoryMappedFile {
     fn flush(&self) -> SparseResult<()> {
         self.file
             .sync_all()
-            .map_err(|e| SparseError::Io(format!("Failed to flush file: {}", e)))
+            .map_err(|e| SparseError::Io(format!("Failed to flush file: {e}")))
     }
 }
 
@@ -2039,9 +2037,8 @@ impl OutOfCoreManager {
         let file_path = Path::new(&self.temp_dir).join(&file_name);
 
         // Create and write to file
-        let mut file = File::create(&file_path).map_err(|e| {
-            SparseError::Io(format!("Failed to create file {:?}: {}", file_path, e))
-        })?;
+        let mut file = File::create(&file_path)
+            .map_err(|e| SparseError::Io(format!("Failed to create file {file_path:?}: {e}")))?;
 
         // Write block header
         let header = BlockHeader {
@@ -2053,14 +2050,14 @@ impl OutOfCoreManager {
         };
 
         file.write_all(&header.serialize())
-            .map_err(|e| SparseError::Io(format!("Failed to write header: {}", e)))?;
+            .map_err(|e| SparseError::Io(format!("Failed to write header: {e}")))?;
 
         // Write compressed data
         file.write_all(&block.compressed_data)
-            .map_err(|e| SparseError::Io(format!("Failed to write data: {}", e)))?;
+            .map_err(|e| SparseError::Io(format!("Failed to write data: {e}")))?;
 
         file.flush()
-            .map_err(|e| SparseError::Io(format!("Failed to flush file: {}", e)))?;
+            .map_err(|e| SparseError::Io(format!("Failed to flush file: {e}")))?;
 
         // Track the file
         self.active_files
@@ -2073,24 +2070,24 @@ impl OutOfCoreManager {
     #[allow(dead_code)]
     fn read_block_from_disk(&self, block_id: BlockId) -> SparseResult<CompressedBlock> {
         let file_name = self.active_files.get(&block_id).ok_or_else(|| {
-            SparseError::BlockNotFound(format!("Block {} not found on disk", block_id))
+            SparseError::BlockNotFound(format!("Block {block_id} not found on disk"))
         })?;
 
         let file_path = Path::new(&self.temp_dir).join(file_name);
         let mut file = File::open(&file_path)
-            .map_err(|e| SparseError::Io(format!("Failed to open file {:?}: {}", file_path, e)))?;
+            .map_err(|e| SparseError::Io(format!("Failed to open file {file_path:?}: {e}")))?;
 
         // Read block header
         let mut header_bytes = vec![0u8; std::mem::size_of::<BlockHeaderSerialized>()];
         file.read_exact(&mut header_bytes)
-            .map_err(|e| SparseError::Io(format!("Failed to read header: {}", e)))?;
+            .map_err(|e| SparseError::Io(format!("Failed to read header: {e}")))?;
 
         let header = BlockHeader::deserialize(&header_bytes)?;
 
         // Read compressed data
         let mut compressed_data = vec![0u8; header.compressed_size];
         file.read_exact(&mut compressed_data)
-            .map_err(|e| SparseError::Io(format!("Failed to read data: {}", e)))?;
+            .map_err(|e| SparseError::Io(format!("Failed to read data: {e}")))?;
 
         Ok(CompressedBlock {
             block_id: header.block_id,
@@ -2115,7 +2112,7 @@ impl OutOfCoreManager {
         size: usize,
     ) -> SparseResult<String> {
         let file_id = self.file_counter.fetch_add(1, Ordering::Relaxed);
-        let file_name = format!("mmap_{}_{}.dat", block_id, file_id);
+        let file_name = format!("mmap_{block_id}_{file_id}.dat");
         let file_path = Path::new(&self.temp_dir).join(&file_name);
 
         let mapped_file = MemoryMappedFile::new(file_path, size)?;
@@ -2140,8 +2137,7 @@ impl OutOfCoreManager {
             Ok(())
         } else {
             Err(SparseError::Io(format!(
-                "Memory-mapped file {} not found",
-                file_name
+                "Memory-mapped file {file_name} not found"
             )))
         }
     }
@@ -2161,8 +2157,7 @@ impl OutOfCoreManager {
             Ok(buffer)
         } else {
             Err(SparseError::Io(format!(
-                "Memory-mapped file {} not found",
-                file_name
+                "Memory-mapped file {file_name} not found"
             )))
         }
     }
@@ -2178,7 +2173,7 @@ impl OutOfCoreManager {
 
             // Remove file from disk
             std::fs::remove_file(&file_path).map_err(|e| {
-                SparseError::Io(format!("Failed to remove file {:?}: {}", file_path, e))
+                SparseError::Io(format!("Failed to remove file {file_path:?}: {e}"))
             })?;
         }
         Ok(())

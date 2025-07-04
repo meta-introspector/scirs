@@ -556,10 +556,10 @@ impl UltrathinkNumericalValidator {
                     |g| Ok(connected_components(g)),
                 )?;
                 AlgorithmOutput::ComponentMap({
-                    let mut component_map = HashMap::new();
+                    let mut component_map: HashMap<usize, usize> = HashMap::new();
                     for (component_id, component) in components.iter().enumerate() {
                         for node in component {
-                            component_map.insert(*node, component_id);
+                            component_map.insert(**node, component_id);
                         }
                     }
                     component_map
@@ -576,10 +576,10 @@ impl UltrathinkNumericalValidator {
                     },
                 )?;
                 AlgorithmOutput::ComponentMap({
-                    let mut component_map = HashMap::new();
+                    let mut component_map: HashMap<usize, usize> = HashMap::new();
                     for (component_id, component) in components.iter().enumerate() {
                         for node in component {
-                            component_map.insert(*node, component_id);
+                            component_map.insert(**node, component_id);
                         }
                     }
                     component_map

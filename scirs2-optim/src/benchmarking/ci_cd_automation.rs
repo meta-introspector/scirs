@@ -5,8 +5,9 @@
 //! automated benchmarking, regression detection, and report generation.
 
 use crate::benchmarking::performance_regression_detector::{
-    EnvironmentInfo, MetricType, MetricValue, PerformanceMeasurement,
-    PerformanceRegressionDetector, RegressionConfig, RegressionResult, TestConfiguration,
+    BaselineMetrics, ConfidenceInterval, EnvironmentInfo, MetricType, MetricValue,
+    PerformanceMeasurement, PerformanceRegressionDetector, RegressionConfig, RegressionResult,
+    TestConfiguration,
 };
 use crate::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
@@ -983,7 +984,7 @@ impl CiCdAutomation {
     }
 
     /// Determine if tests should run based on configuration and context
-    fn should_run_tests(&self, ci_context: &CiCdContext, git_info: &GitInfo) -> Result<bool> {
+    fn should_run_tests(&self, ci_context: &CiCdContext, _git_info: &GitInfo) -> Result<bool> {
         if !self.config.enable_automation {
             return Ok(false);
         }
@@ -1094,7 +1095,10 @@ impl CiCdAutomation {
 
         let start_time = std::time::Instant::now();
         let output = cmd.output().map_err(|e| {
-            crate::error::OptimError::General(format!("Failed to execute cargo bench: {}", e))
+            crate::error::OptimError::ExecutionError(format!(
+                "Failed to execute cargo bench: {}",
+                e
+            ))
         })?;
         let execution_time = start_time.elapsed().as_secs_f64();
 
@@ -1103,7 +1107,7 @@ impl CiCdAutomation {
         let stderr = String::from_utf8_lossy(&output.stderr);
 
         if !output.status.success() {
-            return Err(crate::error::OptimError::General(format!(
+            return Err(crate::error::OptimError::ExecutionError(format!(
                 "Benchmark execution failed: {}",
                 stderr
             )));
@@ -1169,7 +1173,10 @@ impl CiCdAutomation {
 
         let start_time = std::time::Instant::now();
         let output = cmd.output().map_err(|e| {
-            crate::error::OptimError::General(format!("Failed to execute criterion bench: {}", e))
+            crate::error::OptimError::ExecutionError(format!(
+                "Failed to execute criterion bench: {}",
+                e
+            ))
         })?;
         let execution_time = start_time.elapsed().as_secs_f64();
 
@@ -1177,7 +1184,7 @@ impl CiCdAutomation {
         let stderr = String::from_utf8_lossy(&output.stderr);
 
         if !output.status.success() {
-            return Err(crate::error::OptimError::General(format!(
+            return Err(crate::error::OptimError::ExecutionError(format!(
                 "Criterion benchmark execution failed: {}",
                 stderr
             )));
@@ -1216,7 +1223,7 @@ impl CiCdAutomation {
         // Parse the command and arguments
         let parts: Vec<&str> = command.split_whitespace().collect();
         if parts.is_empty() {
-            return Err(crate::error::OptimError::General(
+            return Err(crate::error::OptimError::ExecutionError(
                 "Empty command".to_string(),
             ));
         }
@@ -1238,7 +1245,7 @@ impl CiCdAutomation {
 
         let start_time = std::time::Instant::now();
         let output = cmd.output().map_err(|e| {
-            crate::error::OptimError::General(format!(
+            crate::error::OptimError::ExecutionError(format!(
                 "Failed to execute command '{}': {}",
                 command, e
             ))
@@ -1249,7 +1256,7 @@ impl CiCdAutomation {
         let stderr = String::from_utf8_lossy(&output.stderr);
 
         if !output.status.success() {
-            return Err(crate::error::OptimError::General(format!(
+            return Err(crate::error::OptimError::ExecutionError(format!(
                 "Custom command '{}' failed with exit code {}: {}",
                 command,
                 output.status.code().unwrap_or(-1),
@@ -1325,7 +1332,7 @@ impl CiCdAutomation {
                 self.execute_sleep_benchmark(duration_ms).await
             }
             _ => {
-                return Err(crate::error::OptimError::General(format!(
+                return Err(crate::error::OptimError::ExecutionError(format!(
                     "Unknown inline function: {}. Supported functions: simple_loop, memory_allocation, computation_intensive, sleep_benchmark", 
                     function
                 )));
@@ -1349,7 +1356,7 @@ impl CiCdAutomation {
         // Add total overhead time as a separate metric
         if total_time > execution_time {
             metrics.insert(
-                MetricType::Other("overhead_time".to_string()),
+                MetricType::Custom("overhead_time".to_string()),
                 MetricValue {
                     value: total_time - execution_time,
                     std_dev: None,
@@ -1369,22 +1376,30 @@ impl CiCdAutomation {
         // Try to load baseline from different sources in order of preference
 
         // 1. Try to load from artifact storage
-        if let Ok(baseline) = self.load_baseline_from_storage(branch).await {
+        if let Ok(baseline_measurements) = self.load_baseline_from_storage(branch).await {
+            let baseline =
+                self.convert_to_baseline_metrics(baseline_measurements, branch.to_string())?;
             self.regression_detector.set_baseline(baseline)?;
             return Ok(());
         }
 
         // 2. Try to load from local cache
-        if let Ok(baseline) = self.load_baseline_from_cache(branch).await {
+        if let Ok(baseline_measurements) = self.load_baseline_from_cache(branch).await {
+            let baseline =
+                self.convert_to_baseline_metrics(baseline_measurements, branch.to_string())?;
             self.regression_detector.set_baseline(baseline)?;
             return Ok(());
         }
 
         // 3. Try to load from git history (run tests on previous commits)
-        if let Ok(baseline) = self.generate_baseline_from_history(branch).await {
+        if let Ok(baseline_measurements) = self.generate_baseline_from_history(branch).await {
+            let baseline = self
+                .convert_to_baseline_metrics(baseline_measurements.clone(), branch.to_string())?;
             self.regression_detector.set_baseline(baseline)?;
             // Cache the generated baseline for future use
-            let _ = self.save_baseline_to_cache(branch, &baseline).await;
+            let _ = self
+                .save_baseline_to_cache(branch, &baseline_measurements)
+                .await;
             return Ok(());
         }
 
@@ -1814,7 +1829,7 @@ impl CiCdAutomation {
     ) -> Result<Vec<PerformanceMeasurement>> {
         // Implementation would depend on the specific storage backend
         // For now, return an error to fall back to other methods
-        Err(crate::error::OptimError::General(format!(
+        Err(crate::error::OptimError::ExecutionError(format!(
             "Artifact storage not configured for branch: {}",
             branch
         )))
@@ -1825,15 +1840,18 @@ impl CiCdAutomation {
         let cache_path = format!(".performance_cache/{}.json", branch);
         if std::path::Path::new(&cache_path).exists() {
             let content = std::fs::read_to_string(&cache_path).map_err(|e| {
-                crate::error::OptimError::General(format!("Failed to read cache: {}", e))
+                crate::error::OptimError::ExecutionError(format!("Failed to read cache: {}", e))
             })?;
             let baseline: Vec<PerformanceMeasurement> =
                 serde_json::from_str(&content).map_err(|e| {
-                    crate::error::OptimError::General(format!("Failed to parse cache: {}", e))
+                    crate::error::OptimError::ExecutionError(format!(
+                        "Failed to parse cache: {}",
+                        e
+                    ))
                 })?;
             Ok(baseline)
         } else {
-            Err(crate::error::OptimError::General(format!(
+            Err(crate::error::OptimError::ExecutionError(format!(
                 "No cached baseline found for branch: {}",
                 branch
             )))
@@ -1850,7 +1868,7 @@ impl CiCdAutomation {
         println!("Generating baseline from history for branch: {}", branch);
 
         // For now, return an error to indicate this feature needs more implementation
-        Err(crate::error::OptimError::General(
+        Err(crate::error::OptimError::ExecutionError(
             "Baseline generation from history not fully implemented".to_string(),
         ))
     }
@@ -1862,19 +1880,105 @@ impl CiCdAutomation {
         baseline: &[PerformanceMeasurement],
     ) -> Result<()> {
         std::fs::create_dir_all(".performance_cache").map_err(|e| {
-            crate::error::OptimError::General(format!("Failed to create cache dir: {}", e))
+            crate::error::OptimError::ExecutionError(format!("Failed to create cache dir: {}", e))
         })?;
 
         let cache_path = format!(".performance_cache/{}.json", branch);
         let content = serde_json::to_string_pretty(baseline).map_err(|e| {
-            crate::error::OptimError::General(format!("Failed to serialize baseline: {}", e))
+            crate::error::OptimError::ExecutionError(format!("Failed to serialize baseline: {}", e))
         })?;
 
         std::fs::write(&cache_path, content).map_err(|e| {
-            crate::error::OptimError::General(format!("Failed to write cache: {}", e))
+            crate::error::OptimError::ExecutionError(format!("Failed to write cache: {}", e))
         })?;
 
         Ok(())
+    }
+
+    /// Convert Vec<PerformanceMeasurement> to BaselineMetrics
+    fn convert_to_baseline_metrics(
+        &self,
+        measurements: Vec<PerformanceMeasurement>,
+        version: String,
+    ) -> Result<BaselineMetrics> {
+        if measurements.is_empty() {
+            return Err(OptimError::InvalidConfig(
+                "No measurements to convert to baseline".to_string(),
+            ));
+        }
+
+        let mut metrics = HashMap::new();
+        let mut confidence_intervals = HashMap::new();
+
+        // Extract all metric types from measurements
+        let mut all_metric_types = std::collections::HashSet::new();
+        for measurement in &measurements {
+            for metric_type in measurement.metrics.keys() {
+                all_metric_types.insert(metric_type.clone());
+            }
+        }
+
+        // Calculate statistics for each metric type
+        for metric_type in all_metric_types {
+            let values: Vec<f64> = measurements
+                .iter()
+                .filter_map(|m| m.metrics.get(&metric_type))
+                .map(|mv| mv.value)
+                .collect();
+
+            if !values.is_empty() {
+                let mean = values.iter().sum::<f64>() / values.len() as f64;
+                let variance = if values.len() > 1 {
+                    let mean_sq = values.iter().map(|&x| x * x).sum::<f64>() / values.len() as f64;
+                    mean_sq - mean * mean
+                } else {
+                    0.0
+                };
+                let std_dev = variance.sqrt();
+
+                metrics.insert(
+                    metric_type.clone(),
+                    MetricValue {
+                        value: mean,
+                        std_dev: Some(std_dev),
+                        sample_count: values.len(),
+                        min_value: values.iter().fold(f64::INFINITY, |acc, &x| acc.min(x)),
+                        max_value: values.iter().fold(f64::NEG_INFINITY, |acc, &x| acc.max(x)),
+                        percentiles: None,
+                    },
+                );
+
+                // 95% confidence interval
+                let margin = if values.len() > 1 {
+                    1.96 * std_dev / (values.len() as f64).sqrt()
+                } else {
+                    0.0
+                };
+                confidence_intervals.insert(
+                    metric_type,
+                    ConfidenceInterval {
+                        lower_bound: mean - margin,
+                        upper_bound: mean + margin,
+                        confidence_level: 0.95,
+                    },
+                );
+            }
+        }
+
+        // Calculate quality score (simple version)
+        let quality_score = if measurements.len() >= 10 {
+            1.0
+        } else {
+            measurements.len() as f64 / 10.0
+        };
+
+        Ok(BaselineMetrics {
+            version,
+            timestamp: SystemTime::now(),
+            metrics,
+            confidence_intervals,
+            quality_score,
+        })
     }
 }
 

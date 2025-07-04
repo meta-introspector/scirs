@@ -735,6 +735,12 @@ pub struct FeatureDensityMetrics {
     pub feature_quality_scores: Vec<f32>,
 }
 
+impl Default for VisualSLAMSystem {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl VisualSLAMSystem {
     /// Create a new ultra-advanced Visual SLAM system
     pub fn new() -> Self {

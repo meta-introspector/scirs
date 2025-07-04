@@ -72,7 +72,7 @@ fn unit_square_example() -> Result<(), Box<dyn std::error::Error>> {
 
     if intersection.is_feasible() {
         let area = intersection.volume()?;
-        println!("  Area: {:.3}", area);
+        println!("  Area: {area:.3}");
 
         println!("  Vertex coordinates:");
         for (i, vertex) in intersection.vertices().outer_iter().enumerate() {
@@ -104,7 +104,7 @@ fn triangle_example() -> Result<(), Box<dyn std::error::Error>> {
 
     if intersection.is_feasible() {
         let area = intersection.volume()?;
-        println!("  Area: {:.3}", area);
+        println!("  Area: {area:.3}");
 
         println!("  Vertex coordinates:");
         for (i, vertex) in intersection.vertices().outer_iter().enumerate() {
@@ -121,10 +121,7 @@ fn regular_polygon_example() -> Result<(), Box<dyn std::error::Error>> {
     let radius = 2.0;
     let mut halfspaces = Vec::new();
 
-    println!(
-        "Regular hexagon with {} sides and radius {:.1}:",
-        n_sides, radius
-    );
+    println!("Regular hexagon with {n_sides} sides and radius {radius:.1}:");
 
     for i in 0..n_sides {
         let angle = 2.0 * std::f64::consts::PI * (i as f64) / (n_sides as f64);
@@ -156,11 +153,11 @@ fn regular_polygon_example() -> Result<(), Box<dyn std::error::Error>> {
 
     if intersection.is_feasible() {
         let area = intersection.volume()?;
-        println!("  Area: {:.3}", area);
+        println!("  Area: {area:.3}");
 
         // Theoretical area of regular hexagon: 3*sqrt(3)/2 * radius^2
         let theoretical_area = 3.0 * 3.0_f64.sqrt() / 2.0 * radius * radius;
-        println!("  Theoretical area: {:.3}", theoretical_area);
+        println!("  Theoretical area: {theoretical_area:.3}");
 
         if intersection.num_vertices() <= 8 {
             println!("  Vertex coordinates:");
@@ -201,7 +198,7 @@ fn cube_3d_example() -> Result<(), Box<dyn std::error::Error>> {
     if intersection.is_feasible() {
         if intersection.dim() == 3 && intersection.is_bounded() {
             let volume = intersection.volume()?;
-            println!("  Volume: {:.3}", volume);
+            println!("  Volume: {volume:.3}");
         }
 
         if intersection.num_vertices() <= 12 {
@@ -248,7 +245,7 @@ fn unbounded_example() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         Err(e) => {
-            println!("Could not compute intersection: {}", e);
+            println!("Could not compute intersection: {e}");
             println!("This is expected for unbounded regions without proper constraints");
         }
     }
@@ -280,7 +277,7 @@ fn empty_intersection_example() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
         Err(e) => {
-            println!("Error computing intersection: {}", e);
+            println!("Error computing intersection: {e}");
             println!("This indicates the constraints are contradictory");
         }
     }
@@ -328,7 +325,7 @@ fn custom_polytope_example() -> Result<(), Box<dyn std::error::Error>> {
 
     if intersection.is_feasible() {
         let area = intersection.volume()?;
-        println!("  Area: {:.3}", area);
+        println!("  Area: {area:.3}");
 
         println!("  Vertex coordinates:");
         for (i, vertex) in intersection.vertices().outer_iter().enumerate() {

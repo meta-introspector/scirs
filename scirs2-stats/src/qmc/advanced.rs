@@ -370,7 +370,7 @@ impl AdvancedQMCGenerator {
     }
 
     /// Initialize Optimal LHS state
-    fn init_optimal_lhs_state(dimension: usize, seed: Option<u64>) -> Result<OptimalLHSState> {
+    fn init_optimal_lhs_state(_dimension: usize, seed: Option<u64>) -> Result<OptimalLHSState> {
         let rng = match seed {
             Some(s) => StdRng::seed_from_u64(s),
             None => StdRng::from_rng(&mut rand::rng()),

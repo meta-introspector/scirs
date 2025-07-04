@@ -48,7 +48,6 @@ impl Default for PhaseVocoderConfig {
     }
 }
 
-use num_complex::Complex64;
 /// Process a signal using the phase vocoder algorithm
 ///
 /// The phase vocoder uses the short-time Fourier transform (STFT) to analyze

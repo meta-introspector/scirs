@@ -266,7 +266,7 @@ impl<N: Node> NegativeSampler<N> {
     /// Create a new negative sampler from graph
     pub fn new<E, Ix>(graph: &Graph<N, E, Ix>) -> Self
     where
-        N: Clone,
+        N: Clone + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -499,7 +499,7 @@ impl<N: Node> EmbeddingModel<N> {
     /// Initialize random embeddings for all nodes
     pub fn initialize_random<E, Ix>(&mut self, graph: &Graph<N, E, Ix>, rng: &mut impl Rng)
     where
-        N: Clone,
+        N: Clone + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -518,7 +518,7 @@ impl<N: Node> EmbeddingModel<N> {
         graph: &DiGraph<N, E, Ix>,
         rng: &mut impl Rng,
     ) where
-        N: Clone,
+        N: Clone + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -1018,7 +1018,7 @@ impl<N: Node> EmbeddingModel<N> {
         rng: &mut impl Rng,
     ) -> Vec<(N, N)>
     where
-        N: Clone,
+        N: Clone + std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {
@@ -1894,6 +1894,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FastGraphEmbedding<N> {
         num_samples: usize,
     ) -> Result<Vec<f32>>
     where
+        N: std::fmt::Debug,
         E: EdgeWeight + Into<f64>,
         Ix: petgraph::graph::IndexType,
     {
@@ -1976,6 +1977,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FastGraphEmbedding<N> {
         node: &N,
     ) -> Result<Vec<f32>>
     where
+        N: std::fmt::Debug,
         E: EdgeWeight + Into<f64>,
         Ix: petgraph::graph::IndexType,
     {
@@ -1995,7 +1997,7 @@ impl<N: Node + Clone + Hash + Eq + std::fmt::Debug> FastGraphEmbedding<N> {
         nodes: &[N],
     ) -> Result<HashMap<N, Vec<f32>>>
     where
-        N: Send + Sync,
+        N: Send + Sync + std::fmt::Debug,
         E: EdgeWeight + Into<f64> + Send + Sync,
         Ix: petgraph::graph::IndexType + Send + Sync,
     {
@@ -2044,6 +2046,7 @@ impl<N: Node + Clone + Hash + Eq> Graph2Vec<N> {
         _graph_id: &str,
     ) -> Result<Vec<String>>
     where
+        N: std::fmt::Debug,
         E: EdgeWeight,
         Ix: petgraph::graph::IndexType,
     {

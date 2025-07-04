@@ -109,7 +109,7 @@ impl<T: DifferentiableTarget> HamiltonianMonteCarlo<T> {
 
     /// Perform one HMC step
     pub fn step<R: Rng + ?Sized>(&mut self, rng: &mut R) -> Result<Array1<f64>> {
-        let dim = self.position.len();
+        let _dim = self.position.len();
 
         // Sample momentum from N(0, M)
         let momentum = self.sample_momentum(rng)?;
@@ -376,7 +376,7 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
         momentum: Array1<f64>,
         log_u: f64,
         depth: usize,
-        rng: &mut R,
+        _rng: &mut R,
     ) -> Result<(Array1<f64>, f64)> {
         if depth >= self.max_tree_depth {
             // Base case: return input position with low acceptance
@@ -384,7 +384,7 @@ impl<T: DifferentiableTarget> NoUTurnSampler<T> {
         }
 
         // Perform leapfrog step
-        let (new_position, new_momentum) = self.hmc.leapfrog(position.clone(), momentum)?;
+        let (new_position, new_momentum) = self.hmc.leapfrog(position.clone(), momentum.clone())?;
 
         // Compute log probability for new state
         let new_log_density = self.hmc.target.log_density(&new_position);

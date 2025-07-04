@@ -361,7 +361,7 @@ impl SciPyCompatibilityChecker {
     fn validate_behavior(&self) -> InterpolateResult<BehaviorValidationResults> {
         let mut tests_passed = 0;
         let mut tests_failed = 0;
-        let mut max_error = 0.0;
+        let mut max_error: f64 = 0.0;
         let mut total_error = 0.0;
         let mut failed_tests = Vec::new();
 

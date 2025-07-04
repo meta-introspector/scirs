@@ -13,6 +13,7 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::collections::{HashMap, VecDeque};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -796,8 +797,6 @@ pub fn validate_parallel_filtering_accuracy(
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(test)]
-    use std::f64::consts::PI;
 
     #[test]
     fn test_parallel_multirate_filter_bank() {

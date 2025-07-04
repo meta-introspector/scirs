@@ -5,18 +5,8 @@
 
 #![allow(dead_code)]
 
-use crate::gpu_ops::{GpuBackend, GpuBuffer, GpuDevice, GpuError, GpuKernelHandle};
+use crate::gpu_ops::{GpuBackend, GpuBuffer, GpuDataType, GpuDevice, GpuError, GpuKernelHandle};
 use num_traits::Float;
-#[cfg(feature = "gpu")]
-use scirs2_core::gpu::GpuDataType;
-#[cfg(not(feature = "gpu"))]
-pub trait GpuDataType: Copy + Send + Sync + 'static {}
-#[cfg(not(feature = "gpu"))]
-impl GpuDataType for f32 {}
-#[cfg(not(feature = "gpu"))]
-impl GpuDataType for f64 {}
-#[cfg(not(feature = "gpu"))]
-impl GpuDataType for u32 {}
 use std::fmt::Debug;
 
 /// High-performance GPU kernel configuration
@@ -1486,6 +1476,20 @@ impl GpuPerformanceProfiler {
                         if variance > 20.0 {
                             recommendations.push(format!(
                                 "High CPU timing variance for {operation} suggests CPU scheduling issues"
+                            ));
+                        }
+                    }
+                    GpuBackend::Rocm => {
+                        if avg_time > 12.0 {
+                            recommendations.push(format!(
+                                "ROCm performance for {operation} could be improved with memory optimization (current avg: {avg_time:.2}ms)"
+                            ));
+                        }
+                    }
+                    GpuBackend::Wgpu => {
+                        if avg_time > 15.0 {
+                            recommendations.push(format!(
+                                "WebGPU performance for {operation} could be improved with buffer optimization (current avg: {avg_time:.2}ms)"
                             ));
                         }
                     }

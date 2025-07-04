@@ -285,8 +285,8 @@ impl ElasticDeformation {
             StdRng::seed_from_u64(seed_value)
         } else {
             // For rand 0.9.0+, we need to create a seeded RNG for reproducibility
-            use rand::rng;
-            let mut rng = rng();
+            use rand::thread_rng;
+            let mut rng = thread_rng();
             StdRng::from_rng(&mut rng)
         };
 

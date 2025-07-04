@@ -245,7 +245,7 @@ impl DatasetExplorer {
     }
 
     /// Create with default configuration
-    pub fn default() -> Self {
+    pub fn default_config() -> Self {
         Self::new(ExploreConfig::default())
     }
 
@@ -424,7 +424,7 @@ impl DatasetExplorer {
         ) {
             let mut unique: std::collections::HashSet<String> = std::collections::HashSet::new();
             for &value in &valid_values {
-                unique.insert(format!("{:.0}", value));
+                unique.insert(format!("{value:.0}"));
             }
 
             let unique_count = unique.len();
@@ -637,7 +637,7 @@ impl DatasetExplorer {
             let mut distribution = HashMap::new();
             for &value in target.iter() {
                 if !value.is_nan() {
-                    let class_name = format!("{:.0}", value);
+                    let class_name = format!("{value:.0}");
                     *distribution.entry(class_name).or_insert(0) += 1;
                 }
             }
@@ -708,7 +708,7 @@ impl DatasetExplorer {
         let low_variance_features: Vec<String> = statistics
             .features
             .iter()
-            .filter(|f| f.std.map_or(false, |std| std < 1e-6))
+            .filter(|f| f.std.is_some_and(|std| std < 1e-6))
             .map(|f| f.name.clone())
             .collect();
 
@@ -818,7 +818,7 @@ impl DatasetExplorer {
         );
 
         if let Some(ref description) = info.description {
-            println!("Description: {}", description);
+            println!("Description: {description}");
         }
 
         println!();
@@ -1176,13 +1176,13 @@ pub mod convenience {
 
     /// Quick dataset summary with default configuration
     pub fn quick_summary(dataset: &Dataset) -> Result<DatasetSummary> {
-        let explorer = DatasetExplorer::default();
+        let explorer = DatasetExplorer::default_config();
         explorer.summarize(dataset)
     }
 
     /// Display basic dataset information
     pub fn info(dataset: &Dataset) -> Result<()> {
-        let explorer = DatasetExplorer::default();
+        let explorer = DatasetExplorer::default_config();
         let summary = explorer.summarize(dataset)?;
         explorer.display_basic_info(&summary.info);
         Ok(())
@@ -1229,7 +1229,7 @@ mod tests {
 
     #[test]
     fn test_dataset_explorer_creation() {
-        let explorer = DatasetExplorer::default();
+        let explorer = DatasetExplorer::default_config();
         assert_eq!(explorer.config.precision, 3);
         assert!(explorer.config.show_detailed_stats);
     }
@@ -1247,7 +1247,7 @@ mod tests {
     #[test]
     fn test_feature_statistics() {
         let dataset = make_classification(50, 3, 2, 0, 0, Some(42)).unwrap();
-        let explorer = DatasetExplorer::default();
+        let explorer = DatasetExplorer::default_config();
         let statistics = explorer.compute_feature_statistics(&dataset).unwrap();
 
         assert_eq!(statistics.features.len(), 3);
@@ -1263,7 +1263,7 @@ mod tests {
     #[test]
     fn test_quality_assessment() {
         let dataset = make_classification(100, 4, 2, 0, 0, Some(42)).unwrap();
-        let explorer = DatasetExplorer::default();
+        let explorer = DatasetExplorer::default_config();
         let summary = explorer.summarize(&dataset).unwrap();
 
         // Should have high quality score for synthetic data
@@ -1272,7 +1272,7 @@ mod tests {
 
     #[test]
     fn test_data_type_inference() {
-        let explorer = DatasetExplorer::default();
+        let explorer = DatasetExplorer::default_config();
 
         // Test numerical data
         let numerical_data = vec![1.1, 2.3, 3.7, 4.2];

@@ -1480,7 +1480,7 @@ struct ParallelFlowGraph<N: Node> {
     num_threads: usize,
 }
 
-impl<N: Node + Clone + Hash + Eq + Send + Sync> ParallelFlowGraph<N> {
+impl<N: Node + Clone + Hash + Eq + Send + Sync + std::fmt::Debug> ParallelFlowGraph<N> {
     fn new<E, Ix>(graph: &DiGraph<N, E, Ix>, num_threads: usize) -> Result<Self>
     where
         E: EdgeWeight + Into<f64> + Clone + Send + Sync,

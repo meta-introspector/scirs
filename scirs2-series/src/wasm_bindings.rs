@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "wasm")]
 use crate::{
     anomaly::{detect_anomalies, AnomalyMethod, AnomalyOptions},
-    arima_models::{ArimaModel, ArimaSelectionOptions, SarimaParams},
+    arima_models::{ArimaConfig, ArimaModel, ArimaSelectionOptions, SarimaParams},
     decomposition::{stl_decomposition, STLOptions},
     error::Result,
     forecasting::neural::NeuralForecaster,
@@ -116,7 +116,7 @@ impl TimeSeriesData {
 #[wasm_bindgen]
 pub struct WasmARIMA {
     model: Option<ArimaModel<f64>>,
-    config: SarimaParams,
+    config: ArimaConfig,
 }
 
 #[cfg(feature = "wasm")]
@@ -148,7 +148,7 @@ impl WasmARIMA {
         seasonal_q: usize,
         seasonal_period: usize,
     ) -> WasmARIMA {
-        let config = crate::forecasting::ArimaParams {
+        let config = crate::arima_models::ArimaConfig {
             p,
             d,
             q,
@@ -156,14 +156,6 @@ impl WasmARIMA {
             seasonal_d,
             seasonal_q,
             seasonal_period,
-            trend: Some("c".to_string()),
-            enforce_stationarity: true,
-            enforce_invertibility: true,
-            concentrate_scale: false,
-            dates: None,
-            freq: None,
-            missing: "none".to_string(),
-            validate_specification: true,
         };
 
         WasmARIMA {
@@ -176,7 +168,7 @@ impl WasmARIMA {
     #[wasm_bindgen]
     pub fn fit(&mut self, data: &TimeSeriesData) -> Result<(), JsValue> {
         let arr = Array1::from_vec(data.values.clone());
-        let mut model = js_result!(ARIMAModel::new(self.config.clone()))?;
+        let mut model = js_result!(ArimaModel::new(self.config.p, self.config.d, self.config.q))?;
         js_result!(model.fit(&arr))?;
         self.model = Some(model);
         Ok(())

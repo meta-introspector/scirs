@@ -239,7 +239,7 @@ impl HierarchicalLinearModel {
             }
 
             let zt_z = z_group.t().dot(&z_group);
-            let precision_posterior = precision_prior + zt_z / self.residual_variance;
+            let precision_posterior = precision_prior.clone() + zt_z / self.residual_variance;
 
             let covariance_posterior = scirs2_linalg::inv(&precision_posterior.view(), None)
                 .map_err(|e| {
@@ -448,11 +448,12 @@ impl HierarchicalLinearModel {
             let x_obs = x_level1.row(obs_idx);
 
             // Compute group-level predictors
+            let zeros_array = Array1::zeros(x_level2.ncols());
             let group_level2 = if group < x_level2.nrows() {
                 x_level2.row(group)
             } else {
                 // Handle new groups by using population mean
-                Array1::zeros(x_level2.ncols()).view()
+                zeros_array.view()
             };
 
             // Compute random intercept

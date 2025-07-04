@@ -236,7 +236,10 @@ where
                 .collect();
             Ok(sorted_nodes)
         }
-        Err(_) => Err(GraphError::CycleDetected),
+        Err(_) => Err(GraphError::CycleDetected {
+            start_node: "unknown".to_string(),
+            cycle_length: 0,
+        }),
     }
 }
 

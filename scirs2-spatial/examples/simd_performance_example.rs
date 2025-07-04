@@ -101,10 +101,7 @@ fn single_distance_performance_example() -> Result<(), Box<dyn std::error::Error
 
         let speedup = scalar_time as f64 / simd_time as f64;
 
-        println!(
-            "{:>8} {:>12} {:>12} {:>12.2}x",
-            dim, scalar_time, simd_time, speedup
-        );
+        println!("{dim:>8} {scalar_time:>12} {simd_time:>12} {speedup:>12.2}x");
     }
 
     Ok(())
@@ -176,10 +173,7 @@ fn distance_matrix_performance_example() -> Result<(), Box<dyn std::error::Error
 
         let speedup = scalar_time as f64 / parallel_time as f64;
 
-        println!(
-            "{:>8} {:>12} {:>12} {:>12.2}x",
-            n_points, scalar_time, parallel_time, speedup
-        );
+        println!("{n_points:>8} {scalar_time:>12} {parallel_time:>12} {speedup:>12.2}x");
     }
 
     Ok(())
@@ -210,7 +204,7 @@ fn knn_performance_example() -> Result<(), Box<dyn std::error::Error>> {
 
         let throughput = (n_queries * 1000) / elapsed as usize;
 
-        println!("{:>6} {:>15} {:>12}", k, elapsed, throughput);
+        println!("{k:>6} {elapsed:>15} {throughput:>12}");
     }
 
     // Compare different metrics
@@ -233,7 +227,7 @@ fn knn_performance_example() -> Result<(), Box<dyn std::error::Error>> {
 
         let relative_speed = base_time as f64 / elapsed as f64;
 
-        println!("{:>12} {:>12} {:>12.2}x", metric, elapsed, relative_speed);
+        println!("{metric:>12} {elapsed:>12} {relative_speed:>12.2}x");
     }
 
     Ok(())
@@ -261,10 +255,7 @@ fn scalability_analysis_example() -> Result<(), Box<dyn std::error::Error>> {
         let time_per_point = (elapsed as f64 * 1000.0) / (n_points as f64);
         let memory_mb = (distances.len() * std::mem::size_of::<f64>()) as f64 / (1024.0 * 1024.0);
 
-        println!(
-            "{:>8} {:>12} {:>12.1} {:>15.2}",
-            n_points, elapsed, time_per_point, memory_mb
-        );
+        println!("{n_points:>8} {elapsed:>12} {time_per_point:>12.1} {memory_mb:>15.2}");
     }
 
     // Parallel efficiency analysis
@@ -351,10 +342,7 @@ fn memory_efficiency_example() -> Result<(), Box<dyn std::error::Error>> {
 
         let improvement = random_time as f64 / sequential_time as f64;
 
-        println!(
-            "{:>8} {:>15} {:>15} {:>15.2}x",
-            dim, sequential_time, random_time, improvement
-        );
+        println!("{dim:>8} {sequential_time:>15} {random_time:>15} {improvement:>15.2}x");
     }
 
     // Memory allocation analysis
@@ -489,10 +477,7 @@ fn benchmark_io_intensive() -> Result<(), Box<dyn std::error::Error>> {
         let _sum: f64 = distances.sum(); // Simulate processing
         let write_time = start.elapsed().as_millis();
 
-        println!(
-            "{:>8} {:>12} {:>15} {:>15}",
-            size, read_time, compute_time, write_time
-        );
+        println!("{size:>8} {read_time:>12} {compute_time:>15} {write_time:>15}");
     }
 
     Ok(())
@@ -519,8 +504,8 @@ fn memory_bandwidth_analysis() -> Result<(), Box<dyn std::error::Error>> {
         "Data processed: {:.2} MB",
         data_size as f64 / (1024.0 * 1024.0)
     );
-    println!("Time elapsed: {:.3} seconds", elapsed);
-    println!("Effective bandwidth: {:.2} GB/s", bandwidth_gb_s);
+    println!("Time elapsed: {elapsed:.3} seconds");
+    println!("Effective bandwidth: {bandwidth_gb_s:.2} GB/s");
 
     // Compare with theoretical peak
     #[cfg(target_arch = "x86_64")]

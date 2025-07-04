@@ -20,7 +20,7 @@ use std::collections::HashMap;
 
 #[cfg(feature = "python")]
 use crate::{
-    arima_models::ArimaModel,
+    arima_models::{ArimaConfig, ArimaModel},
     error::{Result, TimeSeriesError},
     utils::*,
 };
@@ -142,7 +142,7 @@ impl PyTimeSeries {
 #[cfg(feature = "python")]
 #[pyclass]
 pub struct PyARIMA {
-    model: Option<ArimaModel>,
+    model: Option<ArimaModel<f64>>,
     config: ArimaConfig,
 }
 

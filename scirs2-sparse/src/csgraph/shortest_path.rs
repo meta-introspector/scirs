@@ -33,8 +33,7 @@ impl ShortestPathMethod {
             "floyd-warshall" | "floyd_warshall" | "fw" => Ok(Self::FloydWarshall),
             "auto" => Ok(Self::Auto),
             _ => Err(SparseError::ValueError(format!(
-                "Unknown shortest path method: {}",
-                s
+                "Unknown shortest path method: {s}"
             ))),
         }
     }
@@ -159,8 +158,7 @@ where
 
     if source >= n {
         return Err(SparseError::ValueError(format!(
-            "Source vertex {} out of bounds for graph with {} vertices",
-            source, n
+            "Source vertex {source} out of bounds for graph with {n} vertices"
         )));
     }
 

@@ -50,7 +50,6 @@ use crate::error::{SignalError, SignalResult};
 use crate::filter::{butter, FilterType};
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
-#[cfg(test)]
 use std::f64::consts::PI;
 
 /// Types of filter banks

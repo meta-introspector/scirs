@@ -25,10 +25,7 @@ fn main() -> SpatialResult<()> {
     let (mtx1, mtx2, disparity) = procrustes(&a.view(), &b.view())?;
 
     println!("\nAfter Procrustes transformation:");
-    println!(
-        "Disparity (squared error between transformed matrices): {:.10}",
-        disparity
-    );
+    println!("Disparity (squared error between transformed matrices): {disparity:.10}");
 
     println!("\nStandardized dataset A:");
     print_matrix(&mtx1.view());
@@ -67,7 +64,7 @@ fn main() -> SpatialResult<()> {
         procrustes_extended(&points3d_a.view(), &points3d_b.view(), true, true, true)?;
 
     println!("\nAfter Extended Procrustes transformation:");
-    println!("Disparity: {:.10}", disparity);
+    println!("Disparity: {disparity:.10}");
     println!("Scale factor recovered: {:.6}", params.scale);
     println!("Rotation matrix recovered:\n{:.6}", params.rotation);
     println!(
@@ -87,7 +84,7 @@ fn main() -> SpatialResult<()> {
         procrustes_extended(&points3d_a.view(), &points3d_b.view(), false, true, true)?;
 
     println!("Without scaling:");
-    println!("Disparity: {:.10}", disparity_no_scale);
+    println!("Disparity: {disparity_no_scale:.10}");
     println!("Scale factor: {:.6} (should be 1.0)", params_no_scale.scale);
 
     // No reflection allowed
@@ -95,14 +92,14 @@ fn main() -> SpatialResult<()> {
         procrustes_extended(&points3d_a.view(), &points3d_b.view(), true, false, true)?;
 
     println!("\nWithout reflection:");
-    println!("Disparity: {:.10}", disparity_no_reflection);
+    println!("Disparity: {disparity_no_reflection:.10}");
 
     // No translation allowed
     let (_transformed_no_translation, params_no_translation, disparity_no_translation) =
         procrustes_extended(&points3d_a.view(), &points3d_b.view(), true, true, false)?;
 
     println!("\nWithout translation:");
-    println!("Disparity: {:.10}", disparity_no_translation);
+    println!("Disparity: {disparity_no_translation:.10}");
     println!(
         "Translation vector: [{:.6}, {:.6}, {:.6}] (should be zeros)",
         params_no_translation.translation[0],
@@ -135,7 +132,7 @@ fn print_matrix(mat: &ArrayView2<f64>) {
             if j > 0 {
                 print!(", ");
             }
-            print!("{:.4}", val);
+            print!("{val:.4}");
         }
         println!("]");
     }

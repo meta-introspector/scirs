@@ -34,12 +34,12 @@ where
     }
 
     /// Compute Hessian matrix (optional, for Riemannian HMC)
-    fn hessian(&self, x: &Array1<F>) -> Option<Array2<F>> {
+    fn hessian(&self, _x: &Array1<F>) -> Option<Array2<F>> {
         None
     }
 
     /// Compute Fisher information metric (optional, for Riemannian HMC)
-    fn fisher_information(&self, x: &Array1<F>) -> Option<Array2<F>> {
+    fn fisher_information(&self, _x: &Array1<F>) -> Option<Array2<F>> {
         None
     }
 }
@@ -366,8 +366,8 @@ where
     /// Parallel leapfrog integration for large problems
     fn parallel_leapfrog(
         &self,
-        mut position: Array1<F>,
-        mut momentum: Array1<F>,
+        position: Array1<F>,
+        momentum: Array1<F>,
     ) -> StatsResult<(Array1<F>, Array1<F>)> {
         // For now, use standard leapfrog
         // Full parallel implementation would require chunking operations

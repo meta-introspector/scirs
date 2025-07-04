@@ -12,6 +12,7 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2, ArrayView1};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
+use std::f64::consts::PI;
 
 /// Dictionary learning denoising configuration
 #[derive(Debug, Clone)]
@@ -730,8 +731,6 @@ pub fn denoise_adaptive_dictionary(
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(test)]
-    use std::f64::consts::PI;
 
     #[test]
     fn test_dictionary_denoising() {

@@ -5,6 +5,7 @@
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Type alias for periodogram result containing frequencies and power spectral density values
@@ -31,8 +32,7 @@ fn get_window(window_type: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
         "hann" => {
             let mut window = Vec::with_capacity(nperseg);
             for i in 0..nperseg {
-                let value = 0.5
-                    * (1.0 - (2.0 * std::f64::consts::PI * i as f64 / (nperseg - 1) as f64).cos());
+                let value = 0.5 * (1.0 - (2.0 * PI * i as f64 / (nperseg - 1) as f64).cos());
                 window.push(value);
             }
             Ok(window)
@@ -40,8 +40,7 @@ fn get_window(window_type: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
         "hamming" => {
             let mut window = Vec::with_capacity(nperseg);
             for i in 0..nperseg {
-                let value = 0.54
-                    - 0.46 * (2.0 * std::f64::consts::PI * i as f64 / (nperseg - 1) as f64).cos();
+                let value = 0.54 - 0.46 * (2.0 * PI * i as f64 / (nperseg - 1) as f64).cos();
                 window.push(value);
             }
             Ok(window)
@@ -49,9 +48,8 @@ fn get_window(window_type: &str, nperseg: usize) -> SignalResult<Vec<f64>> {
         "blackman" => {
             let mut window = Vec::with_capacity(nperseg);
             for i in 0..nperseg {
-                let value = 0.42
-                    - 0.5 * (2.0 * std::f64::consts::PI * i as f64 / (nperseg - 1) as f64).cos()
-                    + 0.08 * (4.0 * std::f64::consts::PI * i as f64 / (nperseg - 1) as f64).cos();
+                let value = 0.42 - 0.5 * (2.0 * PI * i as f64 / (nperseg - 1) as f64).cos()
+                    + 0.08 * (4.0 * PI * i as f64 / (nperseg - 1) as f64).cos();
                 window.push(value);
             }
             Ok(window)

@@ -394,11 +394,11 @@ impl BenchmarkRunner {
                     ("features".to_string(), n_features.to_string()),
                 ]);
                 let class_result = self.run_benchmark(
-                    &format!("make_classification_{}x{}", n_samples, n_features),
+                    &format!("make_classification_{n_samples}x{n_features}"),
                     class_params,
                     || match make_classification(n_samples, n_features, 3, 2, 4, Some(42)) {
                         Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-                        Err(e) => Err(format!("Failed to generate classification data: {}", e)),
+                        Err(e) => Err(format!("Failed to generate classification data: {e}")),
                     },
                 );
                 suite.add_result(class_result);
@@ -410,11 +410,11 @@ impl BenchmarkRunner {
                     ("features".to_string(), n_features.to_string()),
                 ]);
                 let reg_result = self.run_benchmark(
-                    &format!("make_regression_{}x{}", n_samples, n_features),
+                    &format!("make_regression_{n_samples}x{n_features}"),
                     reg_params,
                     || match make_regression(n_samples, n_features, 3, 0.1, Some(42)) {
                         Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-                        Err(e) => Err(format!("Failed to generate regression data: {}", e)),
+                        Err(e) => Err(format!("Failed to generate regression data: {e}")),
                     },
                 );
                 suite.add_result(reg_result);
@@ -427,11 +427,11 @@ impl BenchmarkRunner {
                         ("features".to_string(), n_features.to_string()),
                     ]);
                     let blob_result = self.run_benchmark(
-                        &format!("make_blobs_{}x{}", n_samples, n_features),
+                        &format!("make_blobs_{n_samples}x{n_features}"),
                         blob_params,
                         || match make_blobs(n_samples, n_features, 4, 1.0, Some(42)) {
                             Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-                            Err(e) => Err(format!("Failed to generate blob data: {}", e)),
+                            Err(e) => Err(format!("Failed to generate blob data: {e}")),
                         },
                     );
                     suite.add_result(blob_result);
@@ -463,7 +463,7 @@ impl BenchmarkRunner {
             let config = CsvConfig::default().with_header(true);
             match load_csv(path, config) {
                 Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-                Err(e) => Err(format!("Failed to load CSV: {}", e)),
+                Err(e) => Err(format!("Failed to load CSV: {e}")),
             }
         });
         suite.add_result(std_result);
@@ -480,7 +480,7 @@ impl BenchmarkRunner {
                 .with_chunk_size(1000);
             match load_csv_parallel(path, csv_config, streaming_config) {
                 Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-                Err(e) => Err(format!("Failed to load CSV in parallel: {}", e)),
+                Err(e) => Err(format!("Failed to load CSV in parallel: {e}")),
             }
         });
         suite.add_result(par_result);
@@ -578,7 +578,7 @@ impl PerformanceComparison {
                 "≈ SAME"
             };
 
-            println!("  {}: {:.2}x {}", operation, speedup, status);
+            println!("  {operation}: {speedup:.2}x {status}");
             total_speedup += speedup;
         }
 
@@ -586,13 +586,13 @@ impl PerformanceComparison {
 
         println!();
         println!("Summary:");
-        println!("  Improvements: {}", improvements);
-        println!("  Regressions:  {}", regressions);
+        println!("  Improvements: {improvements}");
+        println!("  Regressions:  {regressions}");
         println!(
             "  Unchanged:    {}",
             speedups.len() - improvements - regressions
         );
-        println!("  Average speedup: {:.2}x", avg_speedup);
+        println!("  Average speedup: {avg_speedup:.2}x");
 
         if avg_speedup > 1.1 {
             println!("  Overall assessment: 🎉 SIGNIFICANT IMPROVEMENT");

@@ -602,6 +602,89 @@ pub struct StabilityMetrics<T: Float> {
     pub forgetting_measure: T,
 }
 
+/// Validation result for meta-learning
+#[derive(Debug, Clone)]
+pub struct ValidationResult {
+    /// Whether validation passed
+    pub is_valid: bool,
+    /// Validation loss
+    pub validation_loss: f64,
+    /// Additional validation metrics
+    pub metrics: HashMap<String, f64>,
+}
+
+/// Training result for meta-learning
+#[derive(Debug, Clone)]
+pub struct TrainingResult {
+    /// Training loss
+    pub training_loss: f64,
+    /// Training metrics
+    pub metrics: HashMap<String, f64>,
+    /// Number of training steps
+    pub steps: usize,
+}
+
+/// Meta-parameters for meta-learning
+#[derive(Debug, Clone)]
+pub struct MetaParameters<T: Float> {
+    /// Parameter values
+    pub parameters: HashMap<String, Array1<T>>,
+    /// Parameter metadata
+    pub metadata: HashMap<String, String>,
+}
+
+impl<T: Float> Default for MetaParameters<T> {
+    fn default() -> Self {
+        Self {
+            parameters: HashMap::new(),
+            metadata: HashMap::new(),
+        }
+    }
+}
+
+impl<T: Float> Default for MetaTask<T> {
+    fn default() -> Self {
+        Self {
+            id: "default".to_string(),
+            support_set: TaskDataset::default(),
+            query_set: TaskDataset::default(),
+            metadata: TaskMetadata::default(),
+            difficulty: T::from(1.0).unwrap_or_else(|| T::zero()),
+            domain: "default".to_string(),
+            task_type: TaskType::Classification,
+        }
+    }
+}
+
+impl<T: Float> Default for TaskDataset<T> {
+    fn default() -> Self {
+        Self {
+            features: Vec::new(),
+            targets: Vec::new(),
+            weights: Vec::new(),
+            metadata: DatasetMetadata::default(),
+        }
+    }
+}
+
+impl Default for TaskMetadata {
+    fn default() -> Self {
+        Self {
+            name: "default".to_string(),
+            description: "default task".to_string(),
+        }
+    }
+}
+
+impl Default for DatasetMetadata {
+    fn default() -> Self {
+        Self {
+            source: "default".to_string(),
+            version: "1.0".to_string(),
+        }
+    }
+}
+
 /// Task adaptation result
 #[derive(Debug, Clone)]
 pub struct TaskAdaptationResult<T: Float> {
@@ -1042,7 +1125,11 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
         tasks: Vec<MetaTask<T>>,
         num_epochs: usize,
     ) -> Result<MetaTrainingResults<T>> {
-        let mut meta_parameters = self.initialize_meta_parameters()?;
+        let meta_params_raw = self.initialize_meta_parameters()?;
+        let mut meta_parameters = MetaParameters {
+            parameters: meta_params_raw,
+            metadata: HashMap::new(),
+        };
         let mut training_history = Vec::new();
         let mut best_performance = T::neg_infinity();
 
@@ -1055,32 +1142,47 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
             // Perform meta-training step
             let training_result = self
                 .meta_learner
-                .meta_train_step(&task_batch, &mut meta_parameters)?;
+                .meta_train_step(&task_batch, &mut meta_parameters.parameters)?;
 
             // Update meta-parameters
-            self.update_meta_parameters(&mut meta_parameters, &training_result.meta_gradients)?;
+            self.update_meta_parameters(
+                &mut meta_parameters.parameters,
+                &training_result.meta_gradients,
+            )?;
 
             // Validate on meta-validation set
-            let validation_result = self
-                .meta_validator
-                .validate(&meta_parameters, &tasks)
-                .await?;
+            let validation_result = self.meta_validator.validate(&meta_parameters, &tasks)?;
 
             // Track progress
+            let training_result_simple = TrainingResult {
+                training_loss: training_result.meta_loss.to_f64().unwrap_or(0.0),
+                metrics: HashMap::new(),
+                steps: epoch,
+            };
             self.meta_tracker
-                .record_epoch(epoch, &training_result, &validation_result)?;
+                .record_epoch(epoch, &training_result_simple, &validation_result)?;
 
-            // Check for improvement
-            if validation_result.performance > best_performance {
-                best_performance = validation_result.performance;
+            // Check for improvement (lower validation loss is better)
+            let current_performance =
+                T::from(-validation_result.validation_loss).unwrap_or_default();
+            if current_performance > best_performance {
+                best_performance = current_performance;
                 self.meta_tracker.update_best_parameters(&meta_parameters)?;
             }
+
+            // Convert ValidationResult to MetaValidationResult
+            let meta_validation_result = MetaValidationResult {
+                performance: current_performance,
+                loss: T::from(validation_result.validation_loss).unwrap_or_default(),
+                task_performances: Vec::new(),
+                adaptation_metrics: HashMap::new(),
+            };
 
             training_history.push(MetaTrainingEpoch {
                 epoch,
                 training_result,
-                validation_result,
-                meta_parameters: meta_parameters.clone(),
+                validation_result: meta_validation_result,
+                meta_parameters: meta_parameters.parameters.clone(),
             });
 
             // Early stopping check
@@ -1558,6 +1660,19 @@ impl<T: Float + Default + Clone> MetaValidator<T> {
             _phantom: std::marker::PhantomData,
         })
     }
+
+    pub fn validate(
+        &self,
+        _meta_parameters: &MetaParameters<T>,
+        _tasks: &[MetaTask<T>],
+    ) -> Result<ValidationResult> {
+        // Placeholder validation implementation
+        Ok(ValidationResult {
+            is_valid: true,
+            validation_loss: T::from(0.5).unwrap_or_default(),
+            metrics: std::collections::HashMap::new(),
+        })
+    }
 }
 
 /// Adaptation engine for meta-learning
@@ -1572,6 +1687,16 @@ impl<T: Float + Default + Clone> AdaptationEngine<T> {
             config: config.clone(),
             _phantom: std::marker::PhantomData,
         })
+    }
+
+    pub fn adapt(
+        &mut self,
+        _meta_parameters: &MetaParameters<T>,
+        _support_tasks: &[MetaTask<T>],
+        _num_adaptation_steps: usize,
+    ) -> Result<MetaParameters<T>> {
+        // Placeholder adaptation implementation
+        Ok(MetaParameters::default())
     }
 }
 
@@ -1685,6 +1810,22 @@ impl<T: Float + Default + Clone> MetaOptimizationTracker<T> {
             _phantom: std::marker::PhantomData,
         }
     }
+
+    pub fn record_epoch(
+        &mut self,
+        _epoch: usize,
+        _training_result: &TrainingResult,
+        _validation_result: &ValidationResult,
+    ) -> Result<()> {
+        self.step_count += 1;
+        // Placeholder implementation
+        Ok(())
+    }
+
+    pub fn update_best_parameters(&mut self, _meta_parameters: &MetaParameters<T>) -> Result<()> {
+        // Placeholder implementation
+        Ok(())
+    }
 }
 
 /// Task distribution manager
@@ -1699,6 +1840,15 @@ impl<T: Float + Default + Clone> TaskDistributionManager<T> {
             config: config.clone(),
             _phantom: std::marker::PhantomData,
         })
+    }
+
+    pub fn sample_task_batch(
+        &self,
+        _tasks: &[MetaTask<T>],
+        batch_size: usize,
+    ) -> Result<Vec<MetaTask<T>>> {
+        // Placeholder implementation - sample random tasks
+        Ok(vec![MetaTask::default(); batch_size.min(10)])
     }
 }
 

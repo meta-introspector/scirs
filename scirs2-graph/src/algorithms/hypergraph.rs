@@ -47,7 +47,7 @@ pub fn minimal_transversals<N, E, Ix>(
     max_size: Option<usize>,
 ) -> Vec<MinimalTransversal<N>>
 where
-    N: Node + Clone + Ord,
+    N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -158,7 +158,7 @@ pub fn minimum_vertex_cut<N, E, Ix>(
     target: &N,
 ) -> Result<HypergraphCut<N>>
 where
-    N: Node + Clone + Ord,
+    N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight + Clone + num_traits::Zero + std::ops::Add<Output = E> + Into<f64>,
     Ix: IndexType,
 {
@@ -238,7 +238,7 @@ pub fn hyperedge_connectivity<N, E, Ix>(
     target: &N,
 ) -> Result<usize>
 where
-    N: Node + Clone + Ord,
+    N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight + Clone,
     Ix: IndexType,
 {
@@ -307,7 +307,7 @@ where
 /// * The diameter, or None if the hypergraph is disconnected
 pub fn hypergraph_diameter<N, E, Ix>(hypergraph: &Hypergraph<N, E, Ix>) -> Option<usize>
 where
-    N: Node + Clone + Ord,
+    N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -349,7 +349,7 @@ pub fn hypergraph_distance<N, E, Ix>(
     target: &N,
 ) -> Option<usize>
 where
-    N: Node + Clone + Ord,
+    N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -409,12 +409,12 @@ pub fn hypergraph_connected_components<N, E, Ix>(
     hypergraph: &Hypergraph<N, E, Ix>,
 ) -> Vec<HashSet<N>>
 where
-    N: Node + Clone + Ord,
+    N: Node + Clone + Ord + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
     let mut components = Vec::new();
-    let mut visited = HashSet::new();
+    let mut visited: HashSet<N> = HashSet::new();
 
     for node in hypergraph.nodes() {
         if !visited.contains(node) {

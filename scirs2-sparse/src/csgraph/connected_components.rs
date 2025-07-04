@@ -57,8 +57,7 @@ where
         "strong" => ConnectionType::Strong,
         _ => {
             return Err(SparseError::ValueError(format!(
-                "Unknown connection type: {}. Use 'weak' or 'strong'",
-                connection
+                "Unknown connection type: {connection}. Use 'weak' or 'strong'"
             )))
         }
     };

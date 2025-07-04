@@ -1246,6 +1246,3 @@ pub fn multiscale_edge_preserving_denoise(
         quantum_results: None,
     })
 }
-
-#[allow(dead_code)]
-const PI: f64 = std::f64::consts::PI;

@@ -51,9 +51,11 @@ impl AttributeValue {
 
     /// Create a JSON attribute from any serializable type
     pub fn json<T: Serialize>(value: &T) -> Result<Self> {
-        let json_value = serde_json::to_value(value).map_err(|_| {
-            GraphError::SerializationError("Failed to serialize to JSON".to_string())
-        })?;
+        let json_value =
+            serde_json::to_value(value).map_err(|_| GraphError::SerializationError {
+                format: "JSON".to_string(),
+                details: "Failed to serialize to JSON".to_string(),
+            })?;
         Ok(AttributeValue::Json(json_value))
     }
 
@@ -176,13 +178,17 @@ pub struct AttributedDiGraph<N: Node, E: EdgeWeight, Ix: IndexType = u32> {
     graph_attributes: Attributes,
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for AttributedGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType> Default
+    for AttributedGraph<N, E, Ix>
+{
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> AttributedGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType>
+    AttributedGraph<N, E, Ix>
+{
     /// Create a new empty attributed graph
     pub fn new() -> Self {
         AttributedGraph {
@@ -494,13 +500,17 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> AttributedGraph<N, E, Ix> {
     }
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for AttributedDiGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Default
+    for AttributedDiGraph<N, E, Ix>
+{
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> AttributedDiGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug + std::fmt::Display, E: EdgeWeight, Ix: IndexType>
+    AttributedDiGraph<N, E, Ix>
+{
     /// Create a new empty attributed directed graph
     pub fn new() -> Self {
         AttributedDiGraph {

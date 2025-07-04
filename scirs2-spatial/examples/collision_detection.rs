@@ -244,12 +244,12 @@ fn main() {
     );
 
     match ray_triangle3d_collision(&ray_origin1, &ray_direction1, &ray_triangle) {
-        Some(distance) => println!("  Ray1 intersects triangle at distance {:.2?}", distance),
+        Some(distance) => println!("  Ray1 intersects triangle at distance {distance:.2?}"),
         None => println!("  Ray1 does not intersect triangle"),
     }
 
     match ray_triangle3d_collision(&ray_origin2, &ray_direction2, &ray_triangle) {
-        Some(distance) => println!("  Ray2 intersects triangle at distance {:.2?}", distance),
+        Some(distance) => println!("  Ray2 intersects triangle at distance {distance:.2?}"),
         None => println!("  Ray2 does not intersect triangle"),
     }
 
@@ -285,7 +285,7 @@ fn main() {
     let time_steps = [1.0, 2.0, 5.0];
 
     for &time_step in &time_steps {
-        println!("\nChecking collision within time step {:.1}:", time_step);
+        println!("\nChecking collision within time step {time_step:.1}:");
 
         match continuous_sphere_sphere_collision(
             &moving_sphere1,
@@ -295,7 +295,7 @@ fn main() {
             time_step,
         ) {
             Some(collision_time) => {
-                println!("  Spheres will collide at time {:.2?}", collision_time);
+                println!("  Spheres will collide at time {collision_time:.2?}");
 
                 // Extract the collision time as a float (the first element of the tuple)
                 let (t, _, _) = collision_time;

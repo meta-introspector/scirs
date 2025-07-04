@@ -203,8 +203,7 @@ pub mod astronomy {
                     "Radial velocity (km/s)".to_string(),
                 ]),
                 description: Some(format!(
-                    "Synthetic {} stellar catalog with {} stars",
-                    catalog, n_stars
+                    "Synthetic {catalog} stellar catalog with {n_stars} stars"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -286,8 +285,7 @@ pub mod astronomy {
                     "Stellar metallicity [Fe/H]".to_string(),
                 ]),
                 description: Some(format!(
-                    "Synthetic exoplanet catalog with {} planets",
-                    n_planets
+                    "Synthetic exoplanet catalog with {n_planets} planets"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -385,8 +383,7 @@ pub mod astronomy {
                     "Galactic latitude (degrees)".to_string(),
                 ]),
                 description: Some(format!(
-                    "Synthetic supernova catalog with {} events",
-                    n_supernovae
+                    "Synthetic supernova catalog with {n_supernovae} events"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -466,8 +463,7 @@ pub mod genomics {
             let target = Array1::from_vec(phenotypes);
 
             // Generate gene names
-            let feature_names: Vec<String> =
-                (0..n_genes).map(|i| format!("GENE_{:06}", i)).collect();
+            let feature_names: Vec<String> = (0..n_genes).map(|i| format!("GENE_{i:06}")).collect();
 
             Ok(Dataset {
                 data: data_array,
@@ -483,12 +479,11 @@ pub mod genomics {
                 feature_descriptions: Some(
                     feature_names
                         .iter()
-                        .map(|name| format!("Expression level of {}", name))
+                        .map(|name| format!("Expression level of {name}"))
                         .collect(),
                 ),
                 description: Some(format!(
-                    "Synthetic gene expression data: {} samples × {} genes",
-                    n_samples, n_genes
+                    "Synthetic gene expression data: {n_samples} samples × {n_genes} genes"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -585,12 +580,11 @@ pub mod genomics {
                 feature_descriptions: Some(
                     kmers
                         .iter()
-                        .map(|kmer| format!("Frequency of {}-mer: {}", k, kmer))
+                        .map(|kmer| format!("Frequency of {k}-mer: {kmer}"))
                         .collect(),
                 ),
                 description: Some(format!(
-                    "DNA sequences: {} seqs × {}-mer features",
-                    n_sequences, k
+                    "DNA sequences: {n_sequences} seqs × {k}-mer features"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -804,8 +798,7 @@ pub mod climate {
                     "Average daily precipitation (mm/day)".to_string(),
                 ]),
                 description: Some(format!(
-                    "Climate data: {} stations × {} years",
-                    n_stations, n_years
+                    "Climate data: {n_stations} stations × {n_years} years"
                 )),
                 metadata: std::collections::HashMap::new(),
             })
@@ -911,8 +904,7 @@ pub mod climate {
                     "UV index".to_string(),
                 ]),
                 description: Some(format!(
-                    "Atmospheric chemistry measurements: {} samples",
-                    n_measurements
+                    "Atmospheric chemistry measurements: {n_measurements} samples"
                 )),
                 metadata: std::collections::HashMap::new(),
             })

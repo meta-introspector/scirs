@@ -588,7 +588,7 @@ impl Default for UltraSimdConfig {
 }
 
 /// Convenience functions for creating optimized SIMD processors
-
+///
 /// Create an ultra-enhanced SIMD processor with default configuration
 pub fn create_ultra_simd_processor<F>() -> StatsResult<UltraEnhancedSimdProcessor<F>>
 where

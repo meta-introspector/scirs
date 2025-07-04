@@ -533,7 +533,7 @@ impl CloudDeploymentOrchestrator {
     }
 
     /// Select the best instance for a job based on resource requirements
-    fn select_best_instance(&self, job: &CloudTimeSeriesJob) -> Result<&InstanceInfo> {
+    fn select_best_instance(&self, _job: &CloudTimeSeriesJob) -> Result<&InstanceInfo> {
         // Simple selection based on lowest CPU utilization
         self.deployment_state
             .active_instances

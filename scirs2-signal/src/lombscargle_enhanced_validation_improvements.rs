@@ -17,7 +17,6 @@ use num_traits::{Float, NumCast};
 use rand::prelude::*;
 use rand::Rng;
 use scirs2_core::validation::{check_finite, check_positive};
-#[cfg(test)]
 use std::f64::consts::PI;
 use std::time::Instant;
 

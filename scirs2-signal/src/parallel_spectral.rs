@@ -7,6 +7,7 @@
 use crate::error::{SignalError, SignalResult};
 use crate::window;
 use ndarray::Array2;
+use std::f64::consts::PI;
 
 type SpectrogramResult = (Vec<f64>, Vec<f64>, Array2<f64>);
 type TimeFrequencyCoherenceResult = (Vec<f64>, Vec<f64>, Array2<f64>);
@@ -639,7 +640,7 @@ impl ParallelSpectralProcessor {
 
         for taper_idx in 0..k {
             let mut taper = vec![0.0; n];
-            let beta = 2.0 * std::f64::consts::PI * nw * taper_idx as f64 / n as f64;
+            let beta = 2.0 * PI * nw * taper_idx as f64 / n as f64;
 
             for (i, tap) in taper.iter_mut().enumerate().take(n) {
                 let t = (i as f64 - n as f64 / 2.0) / n as f64;
@@ -649,7 +650,7 @@ impl ParallelSpectralProcessor {
                 *tap = if (beta * t).abs() < 1e-10 {
                     1.0
                 } else {
-                    (w * std::f64::consts::PI * t).sin() / (std::f64::consts::PI * t)
+                    (w * PI * t).sin() / (PI * t)
                 } * (1.0 - 2.0 * taper_idx as f64 / k as f64).max(0.0);
             }
 

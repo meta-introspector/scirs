@@ -15,10 +15,11 @@ use std::slice;
 #[cfg(feature = "r")]
 use crate::{
     anomaly::{detect_anomalies, AnomalyMethod, AnomalyOptions},
-    arima_models::ArimaModel,
+    arima_models::{ArimaConfig, ArimaModel},
     decomposition::{stl_decomposition, STLOptions},
     error::{Result, TimeSeriesError},
     forecasting::neural::NeuralForecaster,
+    streaming::StreamingAnomalyDetector,
     utils::*,
 };
 #[cfg(feature = "r")]
@@ -312,7 +313,7 @@ pub extern "C" fn scirs_create_arima(
     seasonal_q: c_int,
     seasonal_period: c_int,
 ) -> *mut RARIMAModel {
-    let config = ARIMAConfig {
+    let config = ArimaConfig {
         p: p as usize,
         d: d as usize,
         q: q as usize,
@@ -320,17 +321,9 @@ pub extern "C" fn scirs_create_arima(
         seasonal_d: seasonal_d as usize,
         seasonal_q: seasonal_q as usize,
         seasonal_period: seasonal_period as usize,
-        trend: Some("c".to_string()),
-        enforce_stationarity: true,
-        enforce_invertibility: true,
-        concentrate_scale: false,
-        dates: None,
-        freq: None,
-        missing: "none".to_string(),
-        validate_specification: true,
     };
 
-    match ARIMAModel::new(config.clone()) {
+    match ArimaModel::new(config.p, config.d, config.q) {
         Ok(model) => {
             let r_model = Box::new(RARIMAModel {
                 handle: Box::into_raw(Box::new(model)) as *mut c_void,
@@ -364,7 +357,7 @@ pub extern "C" fn scirs_fit_arima(model: *mut RARIMAModel, ts: *const RTimeSerie
             return R_ERROR_INVALID_PARAMS;
         }
 
-        let arima_model = &mut *(model_ref.handle as *mut ARIMAModel);
+        let arima_model = &mut *(model_ref.handle as *mut ArimaModel<f64>);
         let values_slice = slice::from_raw_parts(ts_ref.values, ts_ref.length as usize);
         let values_array = Array1::from_vec(values_slice.to_vec());
 
@@ -394,7 +387,7 @@ pub extern "C" fn scirs_forecast_arima(
             return R_ERROR_NOT_FITTED;
         }
 
-        let arima_model = &*(model_ref.handle as *const ARIMAModel);
+        let arima_model = &*(model_ref.handle as *const ArimaModel<f64>);
 
         match arima_model.forecast(steps as usize) {
             Ok(forecasts) => {
@@ -431,7 +424,7 @@ pub extern "C" fn scirs_get_arima_params(
             return R_ERROR_NOT_FITTED;
         }
 
-        let arima_model = &*(model_ref.handle as *const ARIMAModel);
+        let arima_model = &*(model_ref.handle as *const ArimaModel<f64>);
 
         match arima_model.get_params() {
             Ok(params) => {
@@ -460,7 +453,7 @@ pub extern "C" fn scirs_free_arima(model: *mut RARIMAModel) {
         unsafe {
             let model_box = Box::from_raw(model);
             if !model_box.handle.is_null() {
-                Box::from_raw(model_box.handle as *mut ARIMAModel);
+                Box::from_raw(model_box.handle as *mut ArimaModel<f64>);
             }
         }
     }
@@ -474,7 +467,7 @@ pub extern "C" fn scirs_free_arima(model: *mut RARIMAModel) {
 #[cfg(feature = "r")]
 #[no_mangle]
 pub extern "C" fn scirs_create_anomaly_detector() -> *mut RAnomalyDetector {
-    let detector = AnomalyDetector::new();
+    let detector = StreamingAnomalyDetector::new(100, 2.0, 10, 5);
     let r_detector = Box::new(RAnomalyDetector {
         handle: Box::into_raw(Box::new(detector)) as *mut c_void,
     });

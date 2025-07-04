@@ -12,7 +12,7 @@
 //! - Predictive scaling with machine learning
 //! - Multi-objective optimization balancing speed, accuracy, and energy
 
-use ndarray::{Array1, Array2};
+use ndarray::Array2;
 use scirs2_vision::*;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -133,7 +133,7 @@ fn quantum_streaming_demo(frames: &[Frame]) -> Result<()> {
             break;
         } // Process first 10 frames for demo
 
-        let result = quantum_pipeline.process_quantum_optimized(frame.clone())?;
+        let _result = quantum_pipeline.process_quantum_optimized(frame.clone())?;
         processed_count += 1;
 
         if i % 3 == 0 {
@@ -179,7 +179,7 @@ fn neuromorphic_processing_demo(frames: &[Frame]) -> Result<()> {
             break;
         } // Process first 15 frames for demo
 
-        let result = neuromorphic_pipeline.process_adaptive(frame.clone())?;
+        let _result = neuromorphic_pipeline.process_adaptive(frame.clone())?;
         let stats = neuromorphic_pipeline.get_processing_stats();
 
         total_events += stats.total_events;
@@ -193,7 +193,7 @@ fn neuromorphic_processing_demo(frames: &[Frame]) -> Result<()> {
         }
     }
 
-    let processing_time = start_time.elapsed();
+    let _processing_time = start_time.elapsed();
     let avg_sparsity = total_sparsity / 15.0;
     let energy_savings = avg_sparsity * 100.0;
 
@@ -214,7 +214,7 @@ fn neuromorphic_processing_demo(frames: &[Frame]) -> Result<()> {
 }
 
 /// Demonstrate AI-driven optimization
-fn ai_optimization_demo(frames: &[Frame]) -> Result<()> {
+fn ai_optimization_demo(_frames: &[Frame]) -> Result<()> {
     println!("  Initializing AI optimization systems...");
 
     // Reinforcement learning optimizer
@@ -280,7 +280,7 @@ fn ai_optimization_demo(frames: &[Frame]) -> Result<()> {
 
         // RL optimization
         let state = rl_optimizer.metrics_to_state(&performance);
-        let action = rl_optimizer.select_action(&state);
+        let _action = rl_optimizer.select_action(&state);
         let reward = rl_optimizer.calculate_reward(&performance);
 
         if i > 0 {
@@ -438,7 +438,7 @@ fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
         let neuromorphic_frame = neuromorphic_detector.process(quantum_frame)?;
 
         // Stage 3: Event-driven sparse processing
-        let event_frame = event_processor.process(neuromorphic_frame)?;
+        let _event_frame = event_processor.process(neuromorphic_frame)?;
 
         // Stage 4: AI optimization feedback
         let performance = PerformanceMetric {
@@ -451,7 +451,7 @@ fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
         };
 
         let state = rl_optimizer.metrics_to_state(&performance);
-        let action = rl_optimizer.select_action(&state);
+        let _action = rl_optimizer.select_action(&state);
         let reward = rl_optimizer.calculate_reward(&performance);
         optimization_rewards.push(reward);
 
@@ -643,7 +643,4 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
 }
 
 /// Import necessary types for the example
-use scirs2_vision::{
-    ai_optimization::*, neuromorphic_streaming::*, process_with_ultrathink_mode,
-    quantum_inspired_streaming::*, ultrathink_integration::*, NeuralQuantumHybridProcessor,
-};
+use scirs2_vision::{ai_optimization::*, NeuralQuantumHybridProcessor};

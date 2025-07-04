@@ -453,8 +453,7 @@ mod tests {
         let ssim_value = ssim(&img, &img, &SSIMParams::default()).unwrap();
         assert!(
             (ssim_value - 1.0).abs() < 0.01,
-            "SSIM of identical images should be ~1.0, got {}",
-            ssim_value
+            "SSIM of identical images should be ~1.0, got {ssim_value}"
         );
     }
 

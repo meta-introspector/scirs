@@ -781,8 +781,20 @@ impl EnhancedGpuEngine {
         backend_index: usize,
         n: usize,
     ) -> Result<ComputeKernel> {
-        let backend = self.backends[backend_index].clone();
-        self.get_or_create_correlation_kernel(&backend, n)
+        let kernel_hash = self.compute_kernel_hash("correlation", n);
+
+        if let Some(kernel) = self.kernel_cache.get(kernel_hash) {
+            return Ok(kernel.clone());
+        }
+
+        // Generate optimized kernel source
+        let source = self.generate_correlation_kernel_source(n)?;
+        let kernel = self.backends[backend_index].create_kernel(&source, "compute_correlation")?;
+
+        // Cache the kernel
+        self.kernel_cache.insert(kernel_hash, kernel.clone());
+
+        Ok(kernel)
     }
 
     /// Generate optimized correlation kernel source

@@ -49,7 +49,7 @@ pub struct Edge<N: Node, E: EdgeWeight> {
     pub weight: E,
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for Graph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Default for Graph<N, E, Ix> {
     fn default() -> Self {
         Self::new()
     }
@@ -241,13 +241,13 @@ impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Graph<N, E, Ix> {
     }
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for DiGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Default for DiGraph<N, E, Ix> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> DiGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> DiGraph<N, E, Ix> {
     /// Create a new empty directed graph
     pub fn new() -> Self {
         DiGraph {
@@ -483,13 +483,13 @@ pub struct MultiDiGraph<N: Node, E: EdgeWeight, Ix: IndexType = u32> {
     _phantom: std::marker::PhantomData<Ix>,
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for MultiGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Default for MultiGraph<N, E, Ix> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> MultiGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiGraph<N, E, Ix> {
     /// Create a new empty multi-graph
     pub fn new() -> Self {
         MultiGraph {
@@ -639,13 +639,13 @@ impl<N: Node, E: EdgeWeight, Ix: IndexType> MultiGraph<N, E, Ix> {
     }
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for MultiDiGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Default for MultiDiGraph<N, E, Ix> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> MultiDiGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> MultiDiGraph<N, E, Ix> {
     /// Create a new empty directed multi-graph
     pub fn new() -> Self {
         MultiDiGraph {
@@ -832,13 +832,13 @@ pub struct BipartiteGraph<N: Node, E: EdgeWeight, Ix: IndexType = u32> {
     set_b: std::collections::HashSet<N>,
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for BipartiteGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Default for BipartiteGraph<N, E, Ix> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> BipartiteGraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> BipartiteGraph<N, E, Ix> {
     /// Create a new empty bipartite graph
     pub fn new() -> Self {
         BipartiteGraph {
@@ -1160,13 +1160,13 @@ pub struct Hyperedge<N: Node, E: EdgeWeight> {
     pub weight: E,
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> Default for Hypergraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Default for Hypergraph<N, E, Ix> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<N: Node, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, Ix> {
+impl<N: Node + std::fmt::Debug, E: EdgeWeight, Ix: IndexType> Hypergraph<N, E, Ix> {
     /// Create a new empty hypergraph
     pub fn new() -> Self {
         Hypergraph {

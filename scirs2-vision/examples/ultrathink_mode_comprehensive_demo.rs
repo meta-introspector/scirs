@@ -30,7 +30,6 @@ use scirs2_vision::{
     Frame,
     FrameMetadata,
     GeneticPipelineOptimizer,
-    NeuralArchitectureSearch,
     PredictiveScaler,
 
     // Quantum-inspired processing
@@ -43,11 +42,8 @@ use scirs2_vision::{
     // Core functionality
     Result,
     SceneUnderstandingEngine,
-    SpatialRelationType,
 
     SpikingNeuralNetwork,
-
-    VisionError,
 
     VisualReasoningEngine,
     VisualReasoningQuery,
@@ -153,7 +149,7 @@ fn main() -> Result<()> {
     println!("🏃 3. Advanced Activity Recognition");
     println!("----------------------------------");
 
-    let activity_engine = ActivityRecognitionEngine::new();
+    let _activity_engine = ActivityRecognitionEngine::new();
 
     // Process video sequence for temporal activity analysis
     let frame_views: Vec<_> = test_images.iter().map(|img| img.view()).collect();
@@ -337,7 +333,7 @@ fn main() -> Result<()> {
     println!("---------------------------");
 
     // Reinforcement Learning Parameter Optimizer
-    let rl_optimizer = RLParameterOptimizer::new();
+    let _rl_optimizer = RLParameterOptimizer::new();
     println!("✓ RL Parameter Optimizer initialized");
     println!("  - Q-learning system active");
     println!("  - Parameter adaptation enabled");
@@ -351,13 +347,13 @@ fn main() -> Result<()> {
     let mut parameter_ranges = std::collections::HashMap::new();
     parameter_ranges.insert("blur_sigma".to_string(), (0.5, 2.0));
     parameter_ranges.insert("edge_threshold".to_string(), (0.1, 0.9));
-    let genetic_optimizer = GeneticPipelineOptimizer::new(parameter_ranges);
+    let _genetic_optimizer = GeneticPipelineOptimizer::new(parameter_ranges);
     println!("✓ Genetic Pipeline Optimizer initialized");
     println!("  - Parameter ranges configured");
     println!("  - Genetic evolution ready");
 
     // Predictive Scaling
-    let predictive_scaler = PredictiveScaler::new(10.0); // 10 second prediction window
+    let _predictive_scaler = PredictiveScaler::new(10.0); // 10 second prediction window
     println!("✓ Predictive Scaler initialized");
     println!("  - Prediction window: 10 seconds");
     println!("  - Resource scaling analysis active");
@@ -373,7 +369,7 @@ fn main() -> Result<()> {
         "annealing".to_string(),
     ];
     let mut quantum_processor = QuantumStreamProcessor::new(quantum_stages.clone());
-    let quantum_pipeline = QuantumAdaptiveStreamPipeline::new(quantum_stages);
+    let _quantum_pipeline = QuantumAdaptiveStreamPipeline::new(quantum_stages);
 
     println!("✓ Quantum-inspired algorithms initialized");
     println!("  - Quantum entanglement processing: Enabled");
@@ -412,7 +408,7 @@ fn main() -> Result<()> {
     println!("-----------------------------");
 
     let mut neuromorphic_pipeline = AdaptiveNeuromorphicPipeline::new(1000); // 1000 neurons
-    let mut spiking_network = SpikingNeuralNetwork::new(500, 0.1); // 500 neurons, 10% connectivity
+    let _spiking_network = SpikingNeuralNetwork::new(500, 0.1); // 500 neurons, 10% connectivity
 
     println!("✓ Neuromorphic systems initialized");
     println!("  - Adaptive pipeline neurons: 1000");
@@ -461,7 +457,7 @@ fn main() -> Result<()> {
     )?;
     let reasoning_time = start_time.elapsed() - scene_time;
 
-    let benchmark_activity = recognize_activities_comprehensive(&frame_views, &scene_analyses)?;
+    let _benchmark_activity = recognize_activities_comprehensive(&frame_views, &scene_analyses)?;
     let activity_time = start_time.elapsed() - scene_time - reasoning_time;
 
     println!("✓ Performance Benchmark Results:");

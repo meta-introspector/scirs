@@ -6,7 +6,6 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix2};
 use num_traits::{Float, NumCast, One, Zero};
-use rand;
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
 use std::cmp::Ordering;
 use std::collections::VecDeque;
@@ -1273,7 +1272,7 @@ mod tests {
     #[test]
     fn test_adaptive_memory_manager() {
         let constraints = MemoryConstraints::default();
-        let mut manager = AdaptiveMemoryManager::new(constraints);
+        let manager = AdaptiveMemoryManager::new(constraints);
 
         let chunk_size = manager.get_optimal_chunk_size(1000, 8);
         assert!(chunk_size > 0);

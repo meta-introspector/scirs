@@ -189,7 +189,8 @@ where
         + std::ops::Div<Output = F>
         + Sync
         + Send
-        + std::fmt::Display,
+        + std::fmt::Display
+        + std::fmt::Debug,
 {
     /// Create a new descriptive statistics builder
     pub fn new() -> Self {
@@ -385,12 +386,9 @@ where
         _warnings: &mut Vec<String>,
     ) -> StatsResult<DescriptiveStats<F>> {
         // Use parallel-optimized functions
-        let mean = crate::parallel_stats::mean_parallel(&data.view(), num_threads())?;
-        let variance = crate::parallel_stats::variance_parallel(
-            &data.view(),
-            self.ddof.unwrap_or(1),
-            num_threads(),
-        )?;
+        let mean = crate::parallel_stats::mean_parallel(&data.view())?;
+        let variance =
+            crate::parallel_stats::variance_parallel(&data.view(), self.ddof.unwrap_or(1))?;
         let std = variance.sqrt();
 
         // Compute other statistics
@@ -424,7 +422,7 @@ where
         _warnings: &mut Vec<String>,
     ) -> StatsResult<DescriptiveStats<F>> {
         let mean = crate::descriptive::mean(&data.view())?;
-        let variance = crate::descriptive::var(&data.view(), self.ddof.unwrap_or(1))?;
+        let variance = crate::descriptive::var(&data.view(), self.ddof.unwrap_or(1), None)?;
         let std = variance.sqrt();
 
         let (min, max) = self.compute_min_max(data);
@@ -516,7 +514,16 @@ where
 
 impl<F> CorrelationBuilder<F>
 where
-    F: Float + NumCast + Clone,
+    F: Float
+        + NumCast
+        + Clone
+        + std::fmt::Debug
+        + std::fmt::Display
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + Send
+        + Sync,
 {
     /// Create a new correlation analysis builder
     pub fn new() -> Self {
@@ -732,7 +739,16 @@ where
 
 impl<F> StatsAnalyzer<F>
 where
-    F: Float + NumCast + Clone,
+    F: Float
+        + NumCast
+        + Clone
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + Sync
+        + Send
+        + std::fmt::Display
+        + std::fmt::Debug,
 {
     /// Create a new unified stats analyzer
     pub fn new() -> Self {
@@ -795,7 +811,16 @@ pub type F32CorrelationBuilder = CorrelationBuilder<f32>;
 
 impl<F> Default for DescriptiveStatsBuilder<F>
 where
-    F: Float + NumCast + Clone,
+    F: Float 
+        + NumCast 
+        + Clone
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + Sync
+        + Send
+        + std::fmt::Display
+        + std::fmt::Debug,
 {
     fn default() -> Self {
         Self::new()
@@ -804,7 +829,16 @@ where
 
 impl<F> Default for CorrelationBuilder<F>
 where
-    F: Float + NumCast + Clone,
+    F: Float
+        + NumCast
+        + Clone
+        + std::fmt::Debug
+        + std::fmt::Display
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + Send
+        + Sync,
 {
     fn default() -> Self {
         Self::new()
@@ -813,7 +847,16 @@ where
 
 impl<F> Default for StatsAnalyzer<F>
 where
-    F: Float + NumCast + Clone,
+    F: Float
+        + NumCast
+        + Clone
+        + scirs2_core::simd_ops::SimdUnifiedOps
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + Sync
+        + Send
+        + std::fmt::Display
+        + std::fmt::Debug,
 {
     fn default() -> Self {
         Self::new()

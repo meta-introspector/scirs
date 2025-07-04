@@ -58,7 +58,7 @@ where
 /// if the head of one edge equals the tail of another.
 pub fn line_digraph<N, E, Ix>(digraph: &DiGraph<N, E, Ix>) -> DiGraph<(N, N), (), Ix>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone,
     Ix: IndexType,
 {
@@ -129,7 +129,7 @@ where
 /// Extracts a subgraph from a directed graph
 pub fn subdigraph<N, E, Ix>(digraph: &DiGraph<N, E, Ix>, nodes: &HashSet<N>) -> DiGraph<N, E, Ix>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone,
     Ix: IndexType,
 {
@@ -168,7 +168,7 @@ where
 /// * A new graph containing the specified edges and their endpoints
 pub fn edge_subgraph<N, E, Ix>(graph: &Graph<N, E, Ix>, edges: &[(N, N)]) -> Graph<N, E, Ix>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone,
     Ix: IndexType,
 {
@@ -216,8 +216,8 @@ pub fn cartesian_product<N1, N2, E1, E2, Ix>(
     graph2: &Graph<N2, E2, Ix>,
 ) -> Graph<(N1, N2), (), Ix>
 where
-    N1: Node + Clone,
-    N2: Node + Clone,
+    N1: Node + Clone + std::fmt::Debug,
+    N2: Node + Clone + std::fmt::Debug,
     E1: EdgeWeight,
     E2: EdgeWeight,
     Ix: IndexType,
@@ -271,8 +271,8 @@ pub fn tensor_product<N1, N2, E1, E2, Ix>(
     graph2: &Graph<N2, E2, Ix>,
 ) -> Graph<(N1, N2), (), Ix>
 where
-    N1: Node + Clone,
-    N2: Node + Clone,
+    N1: Node + Clone + std::fmt::Debug,
+    N2: Node + Clone + std::fmt::Debug,
     E1: EdgeWeight,
     E2: EdgeWeight,
     Ix: IndexType,
@@ -320,7 +320,7 @@ where
 /// but edge (u,v) is in G̅ if and only if (u,v) is not in G.
 pub fn complement<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Graph<N, (), Ix>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight,
     Ix: IndexType,
 {
@@ -357,7 +357,7 @@ pub fn weight_filtered_subgraph<N, E, Ix>(
     valid_weights: &HashSet<E>,
 ) -> Graph<N, E, Ix>
 where
-    N: Node + Clone,
+    N: Node + Clone + std::fmt::Debug,
     E: EdgeWeight + Clone + std::hash::Hash + Eq,
     Ix: IndexType,
 {

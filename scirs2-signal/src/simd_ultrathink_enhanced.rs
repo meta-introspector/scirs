@@ -7,7 +7,6 @@
 use crate::error::{SignalError, SignalResult};
 use crate::simd_advanced::SimdConfig;
 use ndarray::{s, Array1, Array2, ArrayView1, ArrayViewMut1, Axis};
-use num_complex::Complex64;
 use num_complex::{Complex, Complex64};
 use num_traits::{Float, Zero};
 use scirs2_core::parallel_ops::*;
@@ -1043,7 +1042,7 @@ fn get_wavelet_filters(
             let g1 = h1.clone();
             Ok((h0, h1, g0, g1))
         }
-        _ => Err(SignalError::InvalidInput(format!(
+        _ => Err(SignalError::InvalidArgument(format!(
             "Unsupported wavelet: {}",
             wavelet
         ))),
