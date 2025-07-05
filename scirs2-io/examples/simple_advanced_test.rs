@@ -1,4 +1,4 @@
-//! Simple advanced Test
+//! Simple Advanced Test
 //!
 //! A minimal test to validate advanced coordinator functionality
 //! and check if all components are working properly.
@@ -9,18 +9,18 @@ use scirs2_io::error::Result;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🧪 Simple advanced Test");
+    println!("🧪 Simple Advanced Test");
     println!("========================\n");
 
-    // Test 1: Create advanced Coordinator
-    println!("Test 1: Creating advanced Coordinator...");
+    // Test 1: Create Advanced Coordinator
+    println!("Test 1: Creating Advanced Coordinator...");
     let mut coordinator = AdvancedCoordinator::new()?;
-    println!("✅ advanced Coordinator created successfully\n");
+    println!("✅ Advanced Coordinator created successfully\n");
 
     // Test 2: Test basic data processing
     println!("Test 2: Basic data processing...");
     let test_data = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    let result = coordinator.process_ultra_intelligent(&test_data)?;
+    let result = coordinator.process_advanced_intelligent(&test_data)?;
     println!("✅ Data processed successfully");
     println!("   Strategy used: {:?}", result.strategy_used);
     println!("   Efficiency score: {:.3}", result.efficiency_score);

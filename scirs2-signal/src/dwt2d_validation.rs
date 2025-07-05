@@ -11,6 +11,7 @@ use crate::dwt2d_enhanced::{
     MultilevelDwt2d,
 };
 use crate::error::SignalResult;
+use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array2};
 use rand::prelude::*;
 // use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -111,7 +112,11 @@ pub fn validate_dwt2d(
     let mut issues = Vec::new();
 
     // Check input
-    check_finite(&test_image.as_slice().unwrap(), "test_image")?;
+    if test_image.iter().any(|&x| !x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Test image contains non-finite values".to_string(),
+        ));
+    }
 
     // Test perfect reconstruction
     let reconstruction_error = test_perfect_reconstruction(test_image, wavelet, tolerance)?;

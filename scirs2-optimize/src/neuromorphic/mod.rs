@@ -187,7 +187,7 @@ impl NeuromorphicNetwork {
             for j in 0..config.num_neurons {
                 if i != j {
                     // Random connection strength
-                    connectivity[[i, j]] = rand::rng().random_range(-0.05..0.05);
+                    connectivity[[i, j]] = rand::rng().gen_range(-0.05..0.05);
                 }
             }
         }
@@ -277,7 +277,7 @@ impl NeuromorphicNetwork {
             // Add noise
             if self.config.noise_level > 0.0 {
                 let noise =
-                    rand::rng().random_range(-self.config.noise_level..self.config.noise_level);
+                    rand::rng().gen_range(-self.config.noise_level..self.config.noise_level);
                 self.neurons[i].potential += noise;
             }
 
@@ -413,7 +413,7 @@ pub struct BasicNeuromorphicOptimizer {
     network: NeuromorphicNetwork,
     best_params: Array1<f64>,
     best_objective: f64,
-    iterations: usize,
+    nit: usize,
 }
 
 impl BasicNeuromorphicOptimizer {
@@ -425,7 +425,7 @@ impl BasicNeuromorphicOptimizer {
             network,
             best_params: Array1::zeros(num_parameters),
             best_objective: f64::INFINITY,
-            iterations: 0,
+            nit: 0,
         }
     }
 }
@@ -447,9 +447,9 @@ impl NeuromorphicOptimizer for BasicNeuromorphicOptimizer {
         self.best_params = initial_params.to_owned();
         self.best_objective = objective(initial_params);
 
-        let max_iterations = (self.network.config.total_time / self.network.config.dt) as usize;
+        let max_nit = (self.network.config.total_time / self.network.config.dt) as usize;
 
-        for iteration in 0..max_iterations {
+        for iteration in 0..max_nit {
             // Encode current parameters into network
             self.network
                 .encode_parameters(&self.network.parameters.view());
@@ -469,7 +469,7 @@ impl NeuromorphicOptimizer for BasicNeuromorphicOptimizer {
                 self.best_params = self.network.parameters.clone();
             }
 
-            self.iterations = iteration + 1;
+            self.nit = iteration + 1;
 
             // Check convergence
             if current_objective < 1e-6 {
@@ -481,8 +481,8 @@ impl NeuromorphicOptimizer for BasicNeuromorphicOptimizer {
             x: self.best_params.clone(),
             fun: self.best_objective,
             success: self.best_objective < 1e-3,
-            nit: self.iterations,
-            nfev: self.iterations,
+            nit: self.nit,
+            nfev: self.nit,
             njev: 0,
             nhev: 0,
             maxcv: 0,
@@ -503,7 +503,7 @@ impl NeuromorphicOptimizer for BasicNeuromorphicOptimizer {
         self.network.spike_queue.clear();
         self.network.objective_history.clear();
         self.best_objective = f64::INFINITY;
-        self.iterations = 0;
+        self.nit = 0;
 
         // Reset neuron states
         for neuron in &mut self.network.neurons {
@@ -603,7 +603,7 @@ mod tests {
 
         let result = optimizer.optimize(objective, &initial.view()).unwrap();
 
-        assert!(result.iterations > 0);
+        assert!(result.nit > 0);
         assert!(result.fun < 2.0); // Should improve from initial value of 2.0
     }
 
@@ -620,7 +620,7 @@ mod tests {
 
         let result = neuromorphic_optimize(objective, &initial.view(), Some(config)).unwrap();
 
-        assert!(result.iterations > 0);
+        assert!(result.nit > 0);
         assert!(result.x.len() == 1);
     }
 

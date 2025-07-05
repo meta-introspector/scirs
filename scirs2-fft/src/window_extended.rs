@@ -29,8 +29,8 @@ pub enum ExtendedWindow {
     HannPoisson { alpha: f64 },
     /// Cauchy window
     Cauchy { alpha: f64 },
-    /// Ultraspherical window
-    Ultraspherical { mu: f64, x0: f64 },
+    /// Advancedspherical window
+    Advancedspherical { mu: f64, x0: f64 },
     /// Taylor window
     Taylor {
         n_sidelobes: usize,
@@ -68,8 +68,8 @@ pub fn get_extended_window(window: ExtendedWindow, n: usize) -> FFTResult<Array1
         ExtendedWindow::Cauchy { alpha } => {
             generate_cauchy_window(&mut w, alpha);
         }
-        ExtendedWindow::Ultraspherical { mu, x0 } => {
-            generate_ultraspherical_window(&mut w, mu, x0)?;
+        ExtendedWindow::Advancedspherical { mu, x0 } => {
+            generate_advancedspherical_window(&mut w, mu, x0)?;
         }
         ExtendedWindow::Taylor {
             n_sidelobes,
@@ -218,9 +218,9 @@ fn generate_cauchy_window(w: &mut Array1<f64>, alpha: f64) {
     }
 }
 
-/// Generate Ultraspherical window
+/// Generate Advancedspherical window
 #[allow(dead_code)]
-fn generate_ultraspherical_window(w: &mut Array1<f64>, mu: f64, x0: f64) -> FFTResult<()> {
+fn generate_advancedspherical_window(w: &mut Array1<f64>, mu: f64, x0: f64) -> FFTResult<()> {
     let n = w.len();
     if x0 <= 0.0 || x0 >= 1.0 {
         return Err(FFTError::ValueError(
@@ -228,7 +228,7 @@ fn generate_ultraspherical_window(w: &mut Array1<f64>, mu: f64, x0: f64) -> FFTR
         ));
     }
 
-    // Simplified ultraspherical window
+    // Simplified advancedspherical window
     for i in 0..n {
         let x = 2.0 * i as f64 / (n - 1) as f64 - 1.0;
         if x.abs() < x0 {

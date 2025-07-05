@@ -1,4 +1,4 @@
-//! Ultra-advanced multivariate statistical analysis methods
+//! Advanced-advanced multivariate statistical analysis methods
 //!
 //! This module implements state-of-the-art multivariate analysis techniques including:
 //! - Tensor decomposition methods (CP, Tucker, tensor PCA)
@@ -10,16 +10,16 @@
 //! - Deep learning based dimensionality reduction
 
 use crate::error::StatsResult;
-use ndarray::{Array1, Array2, Array3, ArrayView2, Axis};
+use ndarray::{Array1, Array2, Array3, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-/// Ultra-advanced multivariate analysis framework
-pub struct UltraMultivariateAnalysis<F> {
+/// Advanced-advanced multivariate analysis framework
+pub struct AdvancedMultivariateAnalysis<F> {
     /// Analysis configuration
-    config: UltraMultivariateConfig<F>,
+    config: AdvancedMultivariateConfig<F>,
     /// Fitted models
     models: HashMap<String, MultivariateModel<F>>,
     /// Performance metrics
@@ -27,9 +27,9 @@ pub struct UltraMultivariateAnalysis<F> {
     _phantom: PhantomData<F>,
 }
 
-/// Configuration for ultra-advanced multivariate analysis
+/// Configuration for advanced-advanced multivariate analysis
 #[derive(Debug, Clone)]
-pub struct UltraMultivariateConfig<F> {
+pub struct AdvancedMultivariateConfig<F> {
     /// Dimensionality reduction methods to use
     pub methods: Vec<DimensionalityReductionMethod<F>>,
     /// Manifold learning configuration
@@ -57,9 +57,9 @@ pub enum DimensionalityReductionMethod<F> {
     },
     /// Independent Component Analysis
     ICA {
-        algorithm: ICAAlgorithm,
+        _algorithm: ICAAlgorithm,
         n_components: usize,
-        max_iter: usize,
+        _max_iter: usize,
         tolerance: F,
     },
     /// Non-negative Matrix Factorization
@@ -264,7 +264,7 @@ pub enum CovarianceType {
 }
 
 /// Cluster validation metrics
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ClusterValidationMetric {
     SilhouetteScore,
     CalinskiHarabasz,
@@ -493,9 +493,9 @@ pub struct PerformanceMetrics {
     pub stability_score: f64,
 }
 
-/// Ultra-advanced analysis results
+/// Advanced-advanced analysis results
 #[derive(Debug, Clone)]
-pub struct UltraMultivariateResults<F> {
+pub struct AdvancedMultivariateResults<F> {
     /// Results from each method
     pub method_results: HashMap<String, MultivariateModel<F>>,
     /// Comparative analysis
@@ -535,13 +535,22 @@ pub struct ValidationResults<F> {
     pub significance_tests: HashMap<String, F>,
 }
 
-impl<F> UltraMultivariateAnalysis<F>
+impl<F> AdvancedMultivariateAnalysis<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + ndarray::ScalarOperand,
 {
-    /// Create new ultra-advanced multivariate analysis
-    pub fn new(config: UltraMultivariateConfig<F>) -> Self {
+    /// Create new advanced-advanced multivariate analysis
+    pub fn new(config: AdvancedMultivariateConfig<F>) -> Self {
         Self {
             config,
             models: HashMap::new(),
@@ -556,7 +565,7 @@ where
     }
 
     /// Fit all configured methods to the data
-    pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<UltraMultivariateResults<F>> {
+    pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<AdvancedMultivariateResults<F>> {
         check_array_finite(data, "data")?;
 
         let start_time = std::time::Instant::now();
@@ -600,7 +609,7 @@ where
 
         self.performance.computation_time = computation_time;
 
-        Ok(UltraMultivariateResults {
+        Ok(AdvancedMultivariateResults {
             method_results,
             comparison,
             validation,
@@ -661,8 +670,12 @@ where
         let (n_samples, n_features) = data.dim();
         let actual_components = n_components.min(n_features.min(n_samples));
 
-        // Center the data
-        let mean = F::simd_mean_axis(data, Axis(0));
+        // Center the data - compute column-wise means
+        let mut mean = Array1::zeros(n_features);
+        for j in 0..n_features {
+            let column = data.column(j);
+            mean[j] = F::simd_mean(&column);
+        }
         let centered_data = self.center_data(data, &mean)?;
 
         // Compute covariance matrix using SIMD
@@ -698,8 +711,9 @@ where
     /// Center data using SIMD operations
     fn center_data(&self, data: &ArrayView2<F>, mean: &Array1<F>) -> StatsResult<Array2<F>> {
         let mut centered = data.to_owned();
-        for mut row in centered.rows_mut() {
-            F::simd_sub_assign(&mut row, &mean.view());
+        for (i, row) in data.rows().into_iter().enumerate() {
+            let centered_row = F::simd_sub(&row, &mean.view());
+            centered.row_mut(i).assign(&centered_row);
         }
         Ok(centered)
     }
@@ -709,8 +723,13 @@ where
         let (n_samples, n_features) = data.dim();
         let n_f = F::from(n_samples - 1).unwrap();
 
-        // Use SIMD matrix multiplication
-        let covariance = F::simd_matrix_multiply_transpose(data, data)? / n_f;
+        // Compute data.T @ data using SIMD operations
+        let data_t = F::simd_transpose(data);
+        let mut covariance = Array2::zeros((n_features, n_features));
+        F::simd_gemm(F::one(), &data_t.view(), data, F::zero(), &mut covariance);
+
+        // Scale by (n_samples - 1)
+        covariance.mapv_inplace(|x| x / n_f);
         Ok(covariance)
     }
 
@@ -730,9 +749,9 @@ where
     fn independent_component_analysis(
         &self,
         data: &ArrayView2<F>,
-        algorithm: ICAAlgorithm,
+        _algorithm: ICAAlgorithm,
         n_components: usize,
-        max_iter: usize,
+        _max_iter: usize,
         tolerance: F,
     ) -> StatsResult<MultivariateModel<F>> {
         // Simplified ICA implementation
@@ -742,7 +761,12 @@ where
         let components = Array2::eye(actual_components);
         let mixing_matrix = Array2::eye(actual_components);
         let sources = Array2::zeros((n_samples, actual_components));
-        let mean = F::simd_mean_axis(data, Axis(0));
+        // Compute column-wise means
+        let mut mean = Array1::zeros(n_features);
+        for j in 0..n_features {
+            let column = data.column(j);
+            mean[j] = F::simd_mean(&column);
+        }
 
         let convergence_info = ConvergenceInfo {
             converged: true,
@@ -966,10 +990,9 @@ where
     }
 }
 
-impl<F> Default for UltraMultivariateConfig<F>
+impl<F> Default for AdvancedMultivariateConfig<F>
 where
-    F: Float + NumCast + Copy
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + std::fmt::Display,
 {
     fn default() -> Self {
         Self {
@@ -1027,9 +1050,9 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_ultra_multivariate_analysis() {
-        let config = UltraMultivariateConfig::default();
-        let mut analyzer = UltraMultivariateAnalysis::new(config);
+    fn test_advanced_multivariate_analysis() {
+        let config = AdvancedMultivariateConfig::default();
+        let mut analyzer = AdvancedMultivariateAnalysis::new(config);
 
         let data = array![
             [1.0, 2.0, 3.0],
@@ -1048,8 +1071,8 @@ mod tests {
 
     #[test]
     fn test_advanced_pca() {
-        let config = UltraMultivariateConfig::default();
-        let analyzer = UltraMultivariateAnalysis::new(config);
+        let config = AdvancedMultivariateConfig::default();
+        let analyzer = AdvancedMultivariateAnalysis::new(config);
 
         let data = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
 

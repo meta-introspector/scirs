@@ -336,7 +336,7 @@ fn evaluate_model_order(
     let result = enhanced_parametric_estimation(signal, &parametric_config)?;
 
     // Calculate information criteria
-    let log_likelihood = -0.5 * n as f64 * (result.noise_variance.ln() + 1.0 + 2.0 * PI);
+    let log_likelihood = -0.5 * n as f64 * (result.variance.ln() + 1.0 + 2.0 * PI);
     let aic = -2.0 * log_likelihood + 2.0 * order as f64;
     let bic = -2.0 * log_likelihood + order as f64 * (n as f64).ln();
 
@@ -563,17 +563,13 @@ fn advanced_parameter_estimation(
             let result = enhanced_parametric_estimation(signal, &parametric_config)?;
 
             // Calculate additional metrics
-            let metrics = calculate_optimization_metrics(
-                signal,
-                &result.ar_coeffs,
-                None,
-                result.noise_variance,
-            )?;
+            let metrics =
+                calculate_optimization_metrics(signal, &result.ar_coeffs, None, result.variance)?;
 
             Ok(AdvancedEstimationResult {
                 ar_coeffs: result.ar_coeffs,
                 ma_coeffs: None,
-                noise_variance: result.noise_variance,
+                noise_variance: result.variance,
                 residuals: compute_residuals(signal, &result.ar_coeffs, None)?,
                 metrics,
             })

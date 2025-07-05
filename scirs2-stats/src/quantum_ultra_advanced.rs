@@ -1,4 +1,4 @@
-//! Ultra-advanced quantum-inspired statistical methods
+//! Advanced-advanced quantum-inspired statistical methods
 //!
 //! This module implements cutting-edge quantum-inspired algorithms for statistical analysis:
 //! - Quantum amplitude estimation for improved Monte Carlo
@@ -17,8 +17,8 @@ use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-/// Ultra-advanced quantum-inspired statistical analyzer
-pub struct UltraQuantumAnalyzer<F> {
+/// Advanced-advanced quantum-inspired statistical analyzer
+pub struct AdvancedQuantumAnalyzer<F> {
     /// Quantum-inspired configuration
     config: QuantumConfig<F>,
     /// Quantum state cache
@@ -589,10 +589,19 @@ pub struct QuantumAdvantageMetrics {
     pub resource_efficiency: f64,
 }
 
-impl<F> UltraQuantumAnalyzer<F>
+impl<F> AdvancedQuantumAnalyzer<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + One + Zero + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + One
+        + Zero
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     /// Create new quantum-inspired statistical analyzer
     pub fn new(config: QuantumConfig<F>) -> Self {
@@ -887,8 +896,8 @@ where
     }
 
     /// Quantum neural network training and inference
-    fn quantum_neural_network(&mut self, data: &ArrayView2<F>) -> StatsResult<QNNResults<F>> {
-        let total_params = self
+    fn quantum_neural_network(&mut self, _data: &ArrayView2<F>) -> StatsResult<QNNResults<F>> {
+        let total_params: usize = self
             .config
             .qnn_config
             .quantum_layers
@@ -1020,8 +1029,7 @@ where
 
 impl<F> Default for QuantumConfig<F>
 where
-    F: Float + NumCast + Copy
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + std::fmt::Display,
 {
     fn default() -> Self {
         Self {
@@ -1128,7 +1136,7 @@ mod tests {
     #[test]
     fn test_quantum_analyzer_creation() {
         let config = QuantumConfig::default();
-        let analyzer = UltraQuantumAnalyzer::<f64>::new(config);
+        let analyzer = AdvancedQuantumAnalyzer::<f64>::new(config);
 
         assert_eq!(analyzer.config.num_qubits, 10);
     }
@@ -1136,7 +1144,7 @@ mod tests {
     #[test]
     fn test_quantum_amplitude_estimation() {
         let config = QuantumConfig::default();
-        let mut analyzer = UltraQuantumAnalyzer::<f64>::new(config);
+        let mut analyzer = AdvancedQuantumAnalyzer::<f64>::new(config);
         let data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
 
         let result = analyzer.quantum_amplitude_estimation(&data.view());
@@ -1146,7 +1154,7 @@ mod tests {
     #[test]
     fn test_quantum_pca() {
         let config = QuantumConfig::default();
-        let mut analyzer = UltraQuantumAnalyzer::<f64>::new(config);
+        let mut analyzer = AdvancedQuantumAnalyzer::<f64>::new(config);
         let data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
 
         let result = analyzer.quantum_pca(&data.view());
@@ -1154,11 +1162,21 @@ mod tests {
     }
 }
 
-/// Ultra-advanced quantum-inspired methods extension
-impl<F> UltraQuantumAnalyzer<F>
+/// Advanced-advanced quantum-inspired methods extension
+impl<F> AdvancedQuantumAnalyzer<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + One + Zero + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + One
+        + Zero
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + ndarray::ScalarOperand,
 {
     /// Quantum-inspired Monte Carlo with variance reduction
     pub fn quantum_monte_carlo_integration(
@@ -1251,7 +1269,7 @@ where
             .map(|(lower, upper)| *upper - *lower)
             .fold(F::one(), |acc, x| acc * x);
 
-        let mean_value = values.iter().sum::<F>() / F::from(values.len()).unwrap();
+        let mean_value = values.iter().copied().sum::<F>() / F::from(values.len()).unwrap();
         Ok(volume * mean_value)
     }
 
@@ -1505,7 +1523,7 @@ where
         labels: &ArrayView1<F>,
         num_quantum_models: usize,
     ) -> StatsResult<QuantumEnsembleResult<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (_n_samples, n_features) = data.dim();
 
         // Create quantum-inspired diverse models
         let mut quantum_models = Vec::new();
@@ -1744,7 +1762,7 @@ where
 
             // Compute prediction variance as uncertainty measure
             let mean_prediction =
-                predictions.iter().sum::<F>() / F::from(predictions.len()).unwrap();
+                predictions.iter().copied().sum::<F>() / F::from(predictions.len()).unwrap();
             let variance = predictions
                 .iter()
                 .map(|&p| (p - mean_prediction) * (p - mean_prediction))
@@ -1832,7 +1850,7 @@ pub enum QuantumMeasurementBasis {
     Custom,
 }
 
-impl<F: Float + NumCast + std::fmt::Display> UltraQuantumAnalyzer<F> {
+impl<F: Float + NumCast + std::fmt::Display> AdvancedQuantumAnalyzer<F> {
     /// Validate if data is suitable for quantum encoding
     fn validate_quantum_encoding_feasibility(&self, data: &ArrayView2<F>) -> StatsResult<bool> {
         let (_, n_features) = data.dim();
@@ -1939,7 +1957,7 @@ impl<F: Float + NumCast + std::fmt::Display> UltraQuantumAnalyzer<F> {
         }
 
         // Update performance metrics
-        self.performance.quantum_advantage.quality_improvement = F::from(1.15).unwrap();
+        self.performance.quantum_advantage.quality_improvement = 1.15;
 
         Ok(corrected_results)
     }
@@ -1949,7 +1967,7 @@ impl<F: Float + NumCast + std::fmt::Display> UltraQuantumAnalyzer<F> {
         // Simulate quantum noise from environmental decoherence
         use scirs2_core::rng;
         let mut rng = rng();
-        let noise: f64 = rng.random_range(-0.01..0.01);
+        let noise: f64 = rng.random_range(-0.01, 0.01);
         F::from(noise).unwrap()
     }
 

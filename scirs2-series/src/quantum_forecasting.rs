@@ -1380,7 +1380,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
     }
 }
 
-/// Quantum Tensor Network for Ultra-Advanced Time Series Analysis
+/// Quantum Tensor Network for Advanced-Advanced Time Series Analysis
 #[derive(Debug)]
 pub struct QuantumTensorNetwork<F: Float + Debug> {
     /// Tensor network nodes

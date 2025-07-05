@@ -832,7 +832,7 @@ pub enum OptimizationLevel {
     None,
     Basic,
     Aggressive,
-    Ultra,
+    Advanced,
 }
 
 #[derive(Debug, Clone)]
@@ -1202,10 +1202,10 @@ __kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
                 optimized = self.apply_basic_optimizations(optimized)?;
                 optimized = self.apply_aggressive_optimizations(optimized)?;
             }
-            OptimizationLevel::Ultra => {
+            OptimizationLevel::Advanced => {
                 optimized = self.apply_basic_optimizations(optimized)?;
                 optimized = self.apply_aggressive_optimizations(optimized)?;
-                optimized = self.apply_ultra_optimizations(optimized)?;
+                optimized = self.apply_advanced_optimizations(optimized)?;
             }
         }
 
@@ -1247,7 +1247,7 @@ __kernel void tensor_contract_{{PRECISION}}_{{BLOCK_SIZE}}(
         Ok(optimized)
     }
 
-    fn apply_ultra_optimizations(&self, source: String) -> LinalgResult<String> {
+    fn apply_advanced_optimizations(&self, source: String) -> LinalgResult<String> {
         let mut optimized = source;
 
         // Add tensor core utilization if available
@@ -2181,11 +2181,11 @@ where
     }
 }
 
-/// Advanced MODE: Ultra-Intelligent GPU Dispatch System
+/// Advanced MODE: Advanced-Intelligent GPU Dispatch System
 ///
 /// This advanced dispatch system uses machine learning-based performance prediction,
 /// workload analysis, and adaptive optimization to make optimal CPU/GPU decisions.
-pub struct UltraIntelligentGpuDispatcher<T>
+pub struct AdvancedIntelligentGpuDispatcher<T>
 where
     T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
 {
@@ -2365,11 +2365,11 @@ pub struct DeviceProfile {
     pub mixed_precision_support: bool,
 }
 
-impl<T> UltraIntelligentGpuDispatcher<T>
+impl<T> AdvancedIntelligentGpuDispatcher<T>
 where
     T: Float + NumAssign + Zero + Send + Sync + Debug + 'static,
 {
-    /// Create a new ultra-intelligent GPU dispatcher
+    /// Create a new advanced-intelligent GPU dispatcher
     pub fn new() -> Self {
         Self {
             performance_predictor: Arc::new(Mutex::new(GpuPerformancePredictor::new())),

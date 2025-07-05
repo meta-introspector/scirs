@@ -99,6 +99,7 @@ pub mod explore;
 pub mod external;
 pub mod generators;
 pub mod gpu;
+pub mod gpu_optimization;
 pub mod loaders;
 pub mod ml_integration;
 pub mod real_world;
@@ -107,7 +108,6 @@ pub mod sample;
 pub mod streaming;
 pub mod time_series;
 pub mod toy;
-pub mod ultra_gpu_optimization;
 /// Core utilities for working with datasets
 ///
 /// This module provides the Dataset struct and helper functions for
@@ -197,6 +197,12 @@ pub use gpu::{
     make_blobs_auto_gpu, make_classification_auto_gpu, make_regression_auto_gpu, GpuBackend,
     GpuBenchmark, GpuBenchmarkResults, GpuConfig, GpuContext, GpuDeviceInfo, GpuMemoryConfig,
 };
+pub use gpu_optimization::{
+    benchmark_advanced_performance, generate_advanced_matrix, AdvancedGpuOptimizer,
+    AdvancedKernelConfig, BenchmarkResult as AdvancedBenchmarkResult, DataLayout,
+    LoadBalancingMethod, MemoryAccessPattern, PerformanceBenchmarkResults, SpecializationLevel,
+    VectorizationStrategy,
+};
 pub use loaders::{
     load_csv, load_csv_legacy, load_csv_parallel, load_csv_streaming, load_json, load_raw,
     save_json, CsvConfig, DatasetChunkIterator, StreamingConfig,
@@ -224,16 +230,12 @@ pub use streaming::{
     StreamStats, StreamTransformer, StreamingIterator,
 };
 pub use toy::*;
-pub use ultra_gpu_optimization::{
-    benchmark_ultra_performance, generate_ultra_matrix, BenchmarkResult as UltraBenchmarkResult,
-    DataLayout, LoadBalancingMethod, MemoryAccessPattern, PerformanceBenchmarkResults,
-    SpecializationLevel, UltraGpuOptimizer, UltraKernelConfig, VectorizationStrategy,
-};
 pub use utils::{
-    analyze_dataset_ultra, create_balanced_dataset, create_binned_features,
+    analyze_dataset_advanced, create_balanced_dataset, create_binned_features,
     generate_synthetic_samples, importance_sample, k_fold_split, min_max_scale,
     polynomial_features, quick_quality_assessment, random_oversample, random_sample,
     random_undersample, robust_scale, statistical_features, stratified_k_fold_split,
-    stratified_sample, time_series_split, BalancingStrategy, BinningStrategy, CorrelationInsights,
-    CrossValidationFolds, Dataset, NormalityAssessment, UltraDatasetAnalyzer, UltraQualityMetrics,
+    stratified_sample, time_series_split, AdvancedDatasetAnalyzer, AdvancedQualityMetrics,
+    BalancingStrategy, BinningStrategy, CorrelationInsights, CrossValidationFolds, Dataset,
+    NormalityAssessment,
 };

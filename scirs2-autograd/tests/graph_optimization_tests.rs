@@ -406,7 +406,7 @@ mod integration_tests {
 
 /// Test the newly implemented features from previous Advanced sessions
 #[cfg(test)]
-mod ultrathink_feature_integration_tests {
+mod advanced_feature_integration_tests {
     use super::*;
 
     #[test]
@@ -520,7 +520,7 @@ mod ultrathink_feature_integration_tests {
     }
 
     #[test]
-    fn test_complete_ultrathink_feature_integration() {
+    fn test_complete_advanced_feature_integration() {
         // Test all Advanced features working together
         ag::run(|ctx: &mut ag::Context<f32>| {
             // 1. Create efficient tensors

@@ -105,7 +105,11 @@ impl BayesianLinearRegression {
     }
 
     /// Fit the Bayesian regression model
-    pub fn fit(&self, x: ArrayView2<f64>, y: ArrayView1<f64>) -> StatsResult<BayesianRegressionResult> {
+    pub fn fit(
+        &self,
+        x: ArrayView2<f64>,
+        y: ArrayView1<f64>,
+    ) -> StatsResult<BayesianRegressionResult> {
         check_array_finite(&x, "x")?;
         check_array_finite(&y, "y")?;
         let (n_samples, n_features) = x.dim();
@@ -147,9 +151,10 @@ impl BayesianLinearRegression {
 
         // Posterior precision
         let posterior_precision = &self.prior_precision + &xtx;
-        let posterior_covariance = scirs2_linalg::inv(&posterior_precision.view(), None).map_err(|e| {
-            StatsError::ComputationError(format!("Failed to invert posterior precision: {}", e))
-        })?;
+        let posterior_covariance =
+            scirs2_linalg::inv(&posterior_precision.view(), None).map_err(|e| {
+                StatsError::ComputationError(format!("Failed to invert posterior precision: {}", e))
+            })?;
 
         // Posterior mean
         let prior_contribution = self.prior_precision.dot(&self.prior_mean);
@@ -208,13 +213,18 @@ impl BayesianLinearRegression {
         let _p = x.ncols() as f64;
 
         // Log determinant terms
-        let prior_log_det = scirs2_linalg::det(&self.prior_precision.view(), None).map_err(|e| {
-            StatsError::ComputationError(format!("Failed to compute prior determinant: {}", e))
-        })?;
+        let prior_log_det =
+            scirs2_linalg::det(&self.prior_precision.view(), None).map_err(|e| {
+                StatsError::ComputationError(format!("Failed to compute prior determinant: {}", e))
+            })?;
 
-        let posterior_log_det = scirs2_linalg::det(&posterior_precision.view(), None).map_err(|e| {
-            StatsError::ComputationError(format!("Failed to compute posterior determinant: {}", e))
-        })?;
+        let posterior_log_det =
+            scirs2_linalg::det(&posterior_precision.view(), None).map_err(|e| {
+                StatsError::ComputationError(format!(
+                    "Failed to compute posterior determinant: {}",
+                    e
+                ))
+            })?;
 
         if prior_log_det <= 0.0 || posterior_log_det <= 0.0 {
             return Err(StatsError::ComputationError(

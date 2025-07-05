@@ -1959,7 +1959,7 @@ impl AdaptivePerformanceMonitor {
 ///
 /// Advanced streaming pipeline that minimizes memory allocations and copies
 /// for maximum throughput in real-time video processing.
-pub struct UltraStreamPipeline {
+pub struct AdvancedStreamPipeline {
     stages: Vec<Box<dyn ProcessingStage>>,
     buffer_size: usize,
     #[allow(dead_code)]
@@ -2086,14 +2086,14 @@ pub struct MemoryStats {
     pub average_memory: usize,
 }
 
-impl Default for UltraStreamPipeline {
+impl Default for AdvancedStreamPipeline {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl UltraStreamPipeline {
-    /// Create a new ultra-performance streaming pipeline
+impl AdvancedStreamPipeline {
+    /// Create a new advanced-performance streaming pipeline
     pub fn new() -> Self {
         Self {
             stages: Vec::new(),
@@ -2141,8 +2141,8 @@ impl UltraStreamPipeline {
         self
     }
 
-    /// Process stream with ultra-performance optimizations
-    pub fn process_ultra_stream<I>(&mut self, input: I) -> UltraStreamProcessor
+    /// Process stream with advanced-performance optimizations
+    pub fn process_advanced_stream<I>(&mut self, input: I) -> AdvancedStreamProcessor
     where
         I: Iterator<Item = Frame> + Send + 'static,
     {
@@ -2250,7 +2250,7 @@ impl UltraStreamPipeline {
             }
         });
 
-        UltraStreamProcessor {
+        AdvancedStreamProcessor {
             output: output_rx,
             metrics,
             frame_pool,
@@ -2265,8 +2265,8 @@ impl UltraStreamPipeline {
     }
 }
 
-/// Ultra-high performance stream processor
-pub struct UltraStreamProcessor {
+/// Advanced-high performance stream processor
+pub struct AdvancedStreamProcessor {
     output: Receiver<Frame>,
     metrics: Arc<Mutex<PipelineMetrics>>,
     frame_pool: Arc<Mutex<FramePool>>,
@@ -2275,7 +2275,7 @@ pub struct UltraStreamProcessor {
     worker_handles: Vec<thread::JoinHandle<()>>,
 }
 
-impl UltraStreamProcessor {
+impl AdvancedStreamProcessor {
     /// Get next frame with zero-copy optimization
     pub fn next_zero_copy(&self) -> Option<Frame> {
         self.output.recv().ok()
@@ -2304,7 +2304,7 @@ impl UltraStreamProcessor {
     }
 
     /// Get comprehensive performance metrics
-    pub fn ultra_metrics(&self) -> (PipelineMetrics, MemoryStats) {
+    pub fn advanced_metrics(&self) -> (PipelineMetrics, MemoryStats) {
         let pipeline_metrics = self.metrics.lock().unwrap().clone();
         let memory_stats = self.memory_profiler.lock().unwrap().get_stats();
         (pipeline_metrics, memory_stats)
@@ -2321,7 +2321,7 @@ impl UltraStreamProcessor {
     }
 }
 
-impl Iterator for UltraStreamProcessor {
+impl Iterator for AdvancedStreamProcessor {
     type Item = Frame;
 
     fn next(&mut self) -> Option<Self::Item> {

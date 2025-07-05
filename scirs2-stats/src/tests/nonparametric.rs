@@ -51,8 +51,7 @@ pub fn wilcoxon<F>(
     correction: bool,
 ) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
     // Check if the arrays are empty
     if x.is_empty() || y.is_empty() {
@@ -220,7 +219,11 @@ pub fn mann_whitney<F>(
     use_continuity: bool,
 ) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Debug
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + NumCast
+        + std::fmt::Debug
         + std::fmt::Display,
 {
     // Check if the arrays are empty
@@ -410,8 +413,7 @@ where
 #[allow(dead_code)]
 pub fn kruskal_wallis<F>(samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
     // Check if there are at least two groups
     if samples.len() < 2 {
@@ -558,7 +560,11 @@ where
 #[allow(dead_code)]
 pub fn friedman<F>(data: &ndarray::ArrayView2<F>) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::ops::AddAssign
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + NumCast
+        + std::ops::AddAssign
         + std::fmt::Display,
 {
     // Get the number of subjects (n) and treatments (k)

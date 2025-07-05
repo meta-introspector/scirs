@@ -409,8 +409,7 @@ impl SafeArrayOps {
     pub fn safe_slice<T>(array: &[T], start: usize, end: usize) -> CoreResult<&[T]> {
         if start > end {
             return Err(CoreError::IndexError(ErrorContext::new(format!(
-                "Invalid slice: start index {} greater than end index {}",
-                start, end
+                "Invalid slice: start index {start} greater than end index {end}"
             ))));
         }
 

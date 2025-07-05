@@ -323,8 +323,8 @@ pub mod matrix_simd {
             }
         }
 
-        /// Ultra-fast matrix transpose with advanced cache optimization
-        pub fn transpose_ultra_fast<T>(&self, input: &ArrayView2<T>) -> Array2<T>
+        /// Optimized matrix transpose with advanced cache optimization
+        pub fn transpose_advanced_fast<T>(&self, input: &ArrayView2<T>) -> Array2<T>
         where
             T: Copy + Default + Send + Sync,
         {
@@ -612,7 +612,7 @@ pub mod matrix_simd {
     /// Legacy transpose function with SIMD operations
     pub fn transpose_simd<T: Copy + Default + Send + Sync>(input: &ArrayView2<T>) -> Array2<T> {
         let processor = CacheOptimizedMatrixProcessor::new();
-        processor.transpose_ultra_fast(input)
+        processor.transpose_advanced_fast(input)
     }
 
     /// Matrix multiplication using SIMD and blocking
@@ -877,8 +877,8 @@ impl AdvancedSimdProcessor {
         (chunk_size / vector_width) * vector_width
     }
 
-    /// Ultra-fast SIMD data type conversion with auto-vectorization
-    pub fn convert_f64_to_f32_ultra(&self, input: &ArrayView1<f64>) -> Array1<f32> {
+    /// Optimized SIMD data type conversion with auto-vectorization
+    pub fn convert_f64_to_f32_advanced(&self, input: &ArrayView1<f64>) -> Array1<f32> {
         let len = input.len();
         let mut output = Array1::<f32>::zeros(len);
 
@@ -1092,7 +1092,7 @@ impl AdvancedSimdProcessor {
         (block_size / elements_per_cache_line) * elements_per_cache_line
     }
 
-    /// Ultra-fast memory copy with SIMD and prefetching
+    /// Optimized memory copy with SIMD and prefetching
     pub fn memcopy_simd(&self, src: &[u8], dst: &mut [u8]) -> Result<()> {
         if src.len() != dst.len() {
             return Err(IoError::ValidationError(
@@ -1353,10 +1353,10 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_fast_conversion() {
+    fn test_optimized_conversion() {
         let processor = AdvancedSimdProcessor::new();
         let input = Array1::from_vec((0..1000).map(|x| x as f64 * 0.1).collect());
-        let result = processor.convert_f64_to_f32_ultra(&input.view());
+        let result = processor.convert_f64_to_f32_advanced(&input.view());
 
         assert_eq!(result.len(), 1000);
         assert!((result[0] - 0.0f32).abs() < 1e-6);
@@ -1388,9 +1388,9 @@ mod tests {
     fn test_cache_optimized_matrix_processor() {
         let processor = matrix_simd::CacheOptimizedMatrixProcessor::new();
 
-        // Test ultra-fast transpose
+        // Test optimized transpose
         let input = Array2::from_shape_fn((64, 48), |(i, j)| (i * 48 + j) as f64);
-        let result = processor.transpose_ultra_fast(&input.view());
+        let result = processor.transpose_advanced_fast(&input.view());
 
         assert_eq!(result.dim(), (48, 64));
         assert_eq!(result[[0, 0]], input[[0, 0]]);

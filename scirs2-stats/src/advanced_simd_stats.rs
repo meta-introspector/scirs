@@ -94,7 +94,7 @@ pub enum AffinityStrategy {
 }
 
 /// advanced SIMD Optimizer with Advanced Intelligence
-pub struct UltraThinkSimdOptimizer {
+pub struct AdvancedSimdOptimizer {
     config: AdvancedSimdConfig,
     performance_cache: Arc<RwLock<HashMap<String, PerformanceProfile>>>,
     hardware_profile: HardwareProfile,
@@ -485,7 +485,7 @@ pub enum NumaAllocationPolicy {
     Preferred(usize), // Preferred node ID
 }
 
-impl UltraThinkSimdOptimizer {
+impl AdvancedSimdOptimizer {
     /// Create new advanced SIMD optimizer
     pub fn new(config: AdvancedSimdConfig) -> Self {
         let hardware_profile = Self::detect_hardware_profile();
@@ -501,12 +501,19 @@ impl UltraThinkSimdOptimizer {
         }
     }
 
-    /// Ultra-optimized mean calculation with adaptive selection
-    pub fn ultra_mean<F, D>(&self, x: &ArrayBase<D, Ix1>) -> StatsResult<F>
+    /// Advanced-optimized mean calculation with adaptive selection
+    pub fn advanced_mean<F, D>(&self, x: &ArrayBase<D, Ix1>) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static + std::iter::Sum<F> + std::fmt::Display,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + 'static
+            + std::iter::Sum<F>
+            + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         if x.is_empty() {
             return Err(ErrorMessages::empty_array("x"));
@@ -542,12 +549,19 @@ impl UltraThinkSimdOptimizer {
         Ok(result)
     }
 
-    /// Ultra-optimized variance calculation
-    pub fn ultra_variance<F, D>(&self, x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
+    /// Advanced-optimized variance calculation
+    pub fn advanced_variance<F, D>(&self, x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + 'static
+            + std::iter::Sum<F>
+            + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         if x.is_empty() {
             return Err(ErrorMessages::empty_array("x"));
@@ -587,17 +601,24 @@ impl UltraThinkSimdOptimizer {
         Ok(result)
     }
 
-    /// Ultra-optimized correlation calculation
-    pub fn ultra_correlation<F, D1, D2>(
+    /// Advanced-optimized correlation calculation
+    pub fn advanced_correlation<F, D1, D2>(
         &self,
         x: &ArrayBase<D1, Ix1>,
         y: &ArrayBase<D2, Ix1>,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static,
-        D1: Data<Elem = F>,
-        D2: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + 'static
+            + std::iter::Sum<F>
+            + std::fmt::Display,
+        D1: Data<Elem = F> + std::fmt::Display,
+        D2: Data<Elem = F> + std::fmt::Display,
     {
         if x.is_empty() {
             return Err(ErrorMessages::empty_array("x"));
@@ -632,10 +653,13 @@ impl UltraThinkSimdOptimizer {
     }
 
     /// Matrix operations with advanced SIMD optimization
-    pub fn ultra_matrix_multiply<F>(&self, a: &Array2<F>, b: &Array2<F>) -> StatsResult<Array2<F>>
+    pub fn advanced_matrix_multiply<F>(
+        &self,
+        a: &Array2<F>,
+        b: &Array2<F>,
+    ) -> StatsResult<Array2<F>>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static
-        + std::fmt::Display,
+        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static + std::fmt::Display,
     {
         if a.ncols() != b.nrows() {
             return Err(StatsError::dimension_mismatch(format!(
@@ -661,15 +685,22 @@ impl UltraThinkSimdOptimizer {
     }
 
     /// Batch operations with intelligent optimization
-    pub fn ultra_batch_statistics<F, D>(
+    pub fn advanced_batch_statistics<F, D>(
         &self,
         data: &[ArrayBase<D, Ix1>],
         operations: &[BatchOperation],
     ) -> StatsResult<BatchResults<F>>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + 'static
+            + std::iter::Sum<F>
+            + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         if data.is_empty() {
             return Err(ErrorMessages::empty_array("data"));
@@ -826,9 +857,8 @@ impl UltraThinkSimdOptimizer {
     /// Analyze data characteristics for optimization selection
     fn analyze_data_characteristics<F, D>(&self, x: &ArrayBase<D, Ix1>) -> DataCharacteristics
     where
-        F: Float + Copy,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float + Copy + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         // Determine memory layout
         let memory_layout = if x.as_slice().is_some() {
@@ -880,10 +910,9 @@ impl UltraThinkSimdOptimizer {
         _y: &ArrayBase<D2, Ix1>,
     ) -> DataCharacteristics
     where
-        F: Float + Copy,
-        D1: Data<Elem = F>,
-        D2: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float + Copy + std::fmt::Display,
+        D1: Data<Elem = F> + std::fmt::Display,
+        D2: Data<Elem = F> + std::fmt::Display,
     {
         // For simplicity, analyze x and extend to bivariate
         let x_chars = self.analyze_data_characteristics(_x);
@@ -900,8 +929,7 @@ impl UltraThinkSimdOptimizer {
         _b: &Array2<F>,
     ) -> DataCharacteristics
     where
-        F: Float + Copy
-        + std::fmt::Display,
+        F: Float + Copy + std::fmt::Display,
     {
         // Simplified matrix analysis
         DataCharacteristics {
@@ -972,8 +1000,7 @@ impl UltraThinkSimdOptimizer {
     ) -> StatsResult<AlgorithmChoice>
     where
         F: Float + Copy,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         // Use decision tree to select algorithm
         let algorithm = match (&signature.size_bucket, &self.config.target_accuracy) {
@@ -1018,8 +1045,7 @@ impl UltraThinkSimdOptimizer {
     ) -> StatsResult<AlgorithmChoice>
     where
         F: Float + Copy,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         // For variance, prioritize numerical stability
         let algorithm = match (&signature.size_bucket, &self.config.target_accuracy) {
@@ -1056,8 +1082,7 @@ impl UltraThinkSimdOptimizer {
     where
         F: Float + Copy,
         D1: Data<Elem = F>,
-        D2: Data<Elem = F>
-        + std::fmt::Display,
+        D2: Data<Elem = F> + std::fmt::Display,
     {
         // Correlation benefits from SIMD for medium to large datasets
         let algorithm = match &signature.size_bucket {
@@ -1094,8 +1119,7 @@ impl UltraThinkSimdOptimizer {
         b: &Array2<F>,
     ) -> StatsResult<AlgorithmChoice>
     where
-        F: Float + Copy
-        + std::fmt::Display,
+        F: Float + Copy + std::fmt::Display,
     {
         let total_ops = a.nrows() * a.ncols() * b.ncols();
 
@@ -1131,8 +1155,15 @@ impl UltraThinkSimdOptimizer {
         algorithm: &AlgorithmChoice,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
-        D: Data<Elem = F>,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + std::iter::Sum<F>
+            + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         self.execute_mean_algorithm(x, algorithm)
     }
@@ -1144,9 +1175,15 @@ impl UltraThinkSimdOptimizer {
         algorithm: &AlgorithmChoice,
     ) -> StatsResult<(F, PerformanceMetrics)>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + std::iter::Sum<F>
+            + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         let start_time = Instant::now();
         let result = self.execute_mean_algorithm(x, algorithm)?;
@@ -1171,9 +1208,15 @@ impl UltraThinkSimdOptimizer {
         algorithm: &AlgorithmChoice,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::iter::Sum<F>,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + std::iter::Sum<F>
+            + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         match algorithm {
             AlgorithmChoice::Scalar { algorithm } => self.execute_scalar_mean(x, algorithm),
@@ -1200,9 +1243,8 @@ impl UltraThinkSimdOptimizer {
         algorithm: &ScalarAlgorithm,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast + Copy,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float + NumCast + Copy + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         let result = match algorithm {
             ScalarAlgorithm::Standard => x.iter().fold(F::zero(), |acc, &val| acc + val),
@@ -1221,9 +1263,8 @@ impl UltraThinkSimdOptimizer {
     /// Kahan summation algorithm
     fn kahan_sum<F, D>(&self, x: &ArrayBase<D, Ix1>) -> F
     where
-        F: Float + Copy,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float + Copy + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         let mut sum = F::zero();
         let mut c = F::zero();
@@ -1241,9 +1282,8 @@ impl UltraThinkSimdOptimizer {
     /// Pairwise summation algorithm
     fn pairwise_sum<F, D>(&self, x: &ArrayBase<D, Ix1>) -> F
     where
-        F: Float + Copy,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float + Copy + std::fmt::Display,
+        D: Data<Elem = F>,
     {
         if x.len() <= 16 {
             return x.iter().fold(F::zero(), |acc, &val| acc + val);
@@ -1258,9 +1298,8 @@ impl UltraThinkSimdOptimizer {
     /// Compensated summation
     fn compensated_sum<F, D>(&self, x: &ArrayBase<D, Ix1>) -> F
     where
-        F: Float + Copy,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float + Copy + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         // Simplified compensated summation (similar to Kahan)
         self.kahan_sum(x)
@@ -1274,8 +1313,15 @@ impl UltraThinkSimdOptimizer {
         thread_count: usize,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
-        D: Data<Elem = F>,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + std::iter::Sum<F>
+            + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         // Using scirs2_core::parallel_ops already imported
 
@@ -1307,9 +1353,15 @@ impl UltraThinkSimdOptimizer {
         algorithm: &AlgorithmChoice,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + std::iter::Sum<F>
+            + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         // Placeholder implementation
         let mean = self.execute_mean_algorithm(x, algorithm)?;
@@ -1332,9 +1384,15 @@ impl UltraThinkSimdOptimizer {
         algorithm: &AlgorithmChoice,
     ) -> StatsResult<(F, PerformanceMetrics)>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + std::iter::Sum<F>
+            + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         let start_time = Instant::now();
         let result = self.execute_variance_cached(x, ddof, algorithm)?;
@@ -1360,10 +1418,16 @@ impl UltraThinkSimdOptimizer {
         algorithm: &AlgorithmChoice,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + std::iter::Sum<F>
+            + std::fmt::Display,
         D1: Data<Elem = F> + std::fmt::Display,
-        D2: Data<Elem = F>
-        + std::fmt::Display,
+        D2: Data<Elem = F> + std::fmt::Display,
     {
         // Placeholder implementation for correlation
         let mean_x = self.execute_mean_algorithm(x, algorithm)?;
@@ -1398,10 +1462,16 @@ impl UltraThinkSimdOptimizer {
         algorithm: &AlgorithmChoice,
     ) -> StatsResult<(F, PerformanceMetrics)>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync,
-        D1: Data<Elem = F>,
-        D2: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + std::iter::Sum<F>
+            + std::fmt::Display,
+        D1: Data<Elem = F> + std::fmt::Display,
+        D2: Data<Elem = F> + std::fmt::Display,
     {
         let start_time = Instant::now();
         let result = self.execute_correlation_cached(x, y, algorithm)?;
@@ -1427,8 +1497,7 @@ impl UltraThinkSimdOptimizer {
         _algorithm: &AlgorithmChoice,
     ) -> StatsResult<Array2<F>>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + Zero
-        + std::fmt::Display,
+        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + Zero + std::fmt::Display,
     {
         let (m, k) = (a.nrows(), a.ncols());
         let n = b.ncols();
@@ -1473,9 +1542,16 @@ impl UltraThinkSimdOptimizer {
         _strategy: &BatchStrategy,
     ) -> StatsResult<BatchResults<F>>
     where
-        F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static,
-        D: Data<Elem = F>
-        + std::fmt::Display,
+        F: Float
+            + NumCast
+            + SimdUnifiedOps
+            + Copy
+            + Send
+            + Sync
+            + 'static
+            + std::iter::Sum<F>
+            + std::fmt::Display,
+        D: Data<Elem = F> + std::fmt::Display,
     {
         // Placeholder implementation
         let mut results = BatchResults {
@@ -1486,11 +1562,11 @@ impl UltraThinkSimdOptimizer {
 
         for array in data {
             if operations.contains(&BatchOperation::Mean) {
-                let mean = self.ultra_mean(array)?;
+                let mean = self.advanced_mean(array)?;
                 results.means.push(mean);
             }
             if operations.contains(&BatchOperation::Variance) {
-                let variance = self.ultra_variance(array, 1)?;
+                let variance = self.advanced_variance(array, 1)?;
                 results.variances.push(variance);
             }
         }
@@ -1553,11 +1629,9 @@ impl Default for AdvancedSimdConfig {
 
 /// Convenience function to create advanced SIMD optimizer
 #[allow(dead_code)]
-pub fn create_ultra_simd_optimizer(
-    config: Option<AdvancedSimdConfig>,
-) -> UltraThinkSimdOptimizer {
+pub fn create_advanced_simd_optimizer(config: Option<AdvancedSimdConfig>) -> AdvancedSimdOptimizer {
     let config = config.unwrap_or_default();
-    UltraThinkSimdOptimizer::new(config)
+    AdvancedSimdOptimizer::new(config)
 }
 
 #[cfg(test)]
@@ -1566,9 +1640,9 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_ultra_simd_optimizer_creation() {
+    fn test_advanced_simd_optimizer_creation() {
         let config = AdvancedSimdConfig::default();
-        let optimizer = UltraThinkSimdOptimizer::new(config);
+        let optimizer = AdvancedSimdOptimizer::new(config);
 
         // Test basic functionality
         assert!(matches!(
@@ -1578,36 +1652,38 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_mean_calculation() {
+    fn test_advanced_mean_calculation() {
         let config = AdvancedSimdConfig::default();
-        let optimizer = UltraThinkSimdOptimizer::new(config);
+        let optimizer = AdvancedSimdOptimizer::new(config);
 
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let result = optimizer.ultra_mean(&data.view()).unwrap();
+        let result = optimizer.advanced_mean(&data.view()).unwrap();
 
         assert!((result - 3.0).abs() < 1e-10);
     }
 
     #[test]
-    fn test_ultra_variance_calculation() {
+    fn test_advanced_variance_calculation() {
         let config = AdvancedSimdConfig::default();
-        let optimizer = UltraThinkSimdOptimizer::new(config);
+        let optimizer = AdvancedSimdOptimizer::new(config);
 
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
-        let result = optimizer.ultra_variance(&data.view(), 1).unwrap();
+        let result = optimizer.advanced_variance(&data.view(), 1).unwrap();
 
         // Expected variance for sample: 2.5
         assert!((result - 2.5).abs() < 1e-10);
     }
 
     #[test]
-    fn test_ultra_correlation_calculation() {
+    fn test_advanced_correlation_calculation() {
         let config = AdvancedSimdConfig::default();
-        let optimizer = UltraThinkSimdOptimizer::new(config);
+        let optimizer = AdvancedSimdOptimizer::new(config);
 
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![5.0, 4.0, 3.0, 2.0, 1.0];
-        let result = optimizer.ultra_correlation(&x.view(), &y.view()).unwrap();
+        let result = optimizer
+            .advanced_correlation(&x.view(), &y.view())
+            .unwrap();
 
         // Perfect negative correlation
         assert!((result - (-1.0)).abs() < 1e-10);
@@ -1616,7 +1692,7 @@ mod tests {
     #[test]
     fn test_data_characteristics_analysis() {
         let config = AdvancedSimdConfig::default();
-        let optimizer = UltraThinkSimdOptimizer::new(config);
+        let optimizer = AdvancedSimdOptimizer::new(config);
 
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let characteristics = optimizer.analyze_data_characteristics(&data.view());
@@ -1634,15 +1710,15 @@ mod tests {
     #[test]
     fn test_size_categorization() {
         assert!(matches!(
-            UltraThinkSimdOptimizer::categorize_size(50),
+            AdvancedSimdOptimizer::categorize_size(50),
             SizeBucket::Tiny
         ));
         assert!(matches!(
-            UltraThinkSimdOptimizer::categorize_size(500),
+            AdvancedSimdOptimizer::categorize_size(500),
             SizeBucket::Small
         ));
         assert!(matches!(
-            UltraThinkSimdOptimizer::categorize_size(50000),
+            AdvancedSimdOptimizer::categorize_size(50000),
             SizeBucket::Medium
         ));
     }
@@ -1650,7 +1726,7 @@ mod tests {
     #[test]
     fn test_kahan_summation() {
         let config = AdvancedSimdConfig::default();
-        let optimizer = UltraThinkSimdOptimizer::new(config);
+        let optimizer = AdvancedSimdOptimizer::new(config);
 
         // Test with numbers that would lose precision in naive summation
         let data = array![1e16, 1.0, -1e16];
@@ -1663,7 +1739,7 @@ mod tests {
     #[test]
     fn test_batch_operations() {
         let config = AdvancedSimdConfig::default();
-        let optimizer = UltraThinkSimdOptimizer::new(config);
+        let optimizer = AdvancedSimdOptimizer::new(config);
 
         let data1 = array![1.0, 2.0, 3.0];
         let data2 = array![4.0, 5.0, 6.0];
@@ -1671,7 +1747,7 @@ mod tests {
 
         let operations = vec![BatchOperation::Mean, BatchOperation::Variance];
         let results = optimizer
-            .ultra_batch_statistics(&data_arrays, &operations)
+            .advanced_batch_statistics(&data_arrays, &operations)
             .unwrap();
 
         assert_eq!(results.means.len(), 2);

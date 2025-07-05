@@ -15,9 +15,9 @@ use std::fs::{File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::PathBuf;
 
-/// Options for ultra-large-scale memory-efficient optimization
+/// Options for advanced-large-scale memory-efficient optimization
 #[derive(Debug, Clone)]
-pub struct UltraScaleOptions {
+pub struct AdvancedScaleOptions {
     /// Base memory options
     pub memory_options: MemoryOptions,
     /// Sparse finite difference options
@@ -36,7 +36,7 @@ pub struct UltraScaleOptions {
     pub compression_level: u32,
 }
 
-impl Default for UltraScaleOptions {
+impl Default for AdvancedScaleOptions {
     fn default() -> Self {
         Self {
             memory_options: MemoryOptions::default(),
@@ -51,8 +51,8 @@ impl Default for UltraScaleOptions {
     }
 }
 
-/// Ultra-large-scale problem state manager
-struct UltraScaleState {
+/// Advanced-large-scale problem state manager
+struct AdvancedScaleState {
     /// Current variable values (may be stored on disk)
     variables: VariableStorage,
     /// Current gradient (sparse representation)
@@ -95,8 +95,8 @@ struct VariableBlock {
     last_updated: usize,
 }
 
-impl UltraScaleState {
-    fn new(x0: Array1<f64>, options: &UltraScaleOptions) -> Result<Self, OptimizeError> {
+impl AdvancedScaleState {
+    fn new(x0: Array1<f64>, options: &AdvancedScaleOptions) -> Result<Self, OptimizeError> {
         let n = x0.len();
 
         // Determine storage strategy
@@ -112,7 +112,7 @@ impl UltraScaleState {
                 OptimizeError::ComputationError(format!("Failed to create temp directory: {}", e))
             })?;
 
-            let file_path = temp_dir.join(format!("ultrascale_vars_{}.dat", std::process::id()));
+            let file_path = temp_dir.join(format!("advancedscale_vars_{}.dat", std::process::id()));
 
             // Write initial variables to disk
             let mut file = File::create(&file_path).map_err(|e| {
@@ -230,7 +230,7 @@ impl UltraScaleState {
     }
 }
 
-impl Drop for UltraScaleState {
+impl Drop for AdvancedScaleState {
     fn drop(&mut self) {
         // Clean up temporary files
         if let VariableStorage::Disk { file_path, .. } = &self.variables {
@@ -261,12 +261,12 @@ fn create_variable_blocks(n: usize, block_size: usize) -> Vec<VariableBlock> {
     blocks
 }
 
-/// Ultra-large-scale optimization using progressive refinement and memory management
+/// Advanced-large-scale optimization using progressive refinement and memory management
 #[allow(dead_code)]
-pub fn minimize_ultra_scale<F, S>(
+pub fn minimize_advanced_scale<F, S>(
     fun: F,
     x0: Array1<f64>,
-    options: &UltraScaleOptions,
+    options: &AdvancedScaleOptions,
 ) -> Result<OptimizeResult<S>, OptimizeError>
 where
     F: Fn(&ArrayView1<f64>) -> S + Clone + Sync,
@@ -284,12 +284,12 @@ where
     }
 
     println!(
-        "Starting ultra-large-scale optimization for {} variables",
+        "Starting advanced-large-scale optimization for {} variables",
         n
     );
 
     // Initialize state manager
-    let mut state = UltraScaleState::new(x0, options)?;
+    let mut state = AdvancedScaleState::new(x0, options)?;
     let mut iteration = 0;
     let mut total_nfev = 0;
 
@@ -355,12 +355,11 @@ where
                     return Ok(OptimizeResult {
                         x: new_x.clone(),
                         fun: fun(&new_x.view()),
-                        iterations: iteration,
                         nit: iteration,
                         func_evals: total_nfev,
                         nfev: total_nfev,
                         success: true,
-                        message: "Ultra-scale optimization converged successfully.".to_string(),
+                        message: "Advanced-scale optimization converged successfully.".to_string(),
                         jacobian: None,
                         hessian: None,
                     });
@@ -383,13 +382,12 @@ where
     Ok(OptimizeResult {
         x: final_x.clone(),
         fun: fun(&final_x.view()),
-        iterations: iteration,
         nit: iteration,
         func_evals: total_nfev,
         nfev: total_nfev,
         success: iteration < options.memory_options.base_options.max_iter,
         message: if iteration < options.memory_options.base_options.max_iter {
-            "Ultra-scale optimization completed successfully.".to_string()
+            "Advanced-scale optimization completed successfully.".to_string()
         } else {
             "Maximum iterations reached.".to_string()
         },
@@ -453,7 +451,7 @@ fn update_block_priorities(blocks: &mut [VariableBlock], gradient: &CsrArray<f64
 fn estimate_sparse_gradient_norm<F, S>(
     fun: &F,
     x: &ArrayView1<f64>,
-    options: &UltraScaleOptions,
+    options: &AdvancedScaleOptions,
 ) -> Result<f64, OptimizeError>
 where
     F: Fn(&ArrayView1<f64>) -> S,
@@ -531,13 +529,13 @@ where
     Ok(gradient_norm_squared.sqrt())
 }
 
-/// Create ultra-scale optimizer with automatic parameter selection
+/// Create advanced-scale optimizer with automatic parameter selection
 #[allow(dead_code)]
-pub fn create_ultra_scale_optimizer(
+pub fn create_advanced_scale_optimizer(
     problem_size: usize,
     available_memory_mb: usize,
     estimated_sparsity: f64, // Fraction of non-zero elements
-) -> UltraScaleOptions {
+) -> AdvancedScaleOptions {
     let available_bytes = available_memory_mb * 1024 * 1024;
 
     // Estimate memory per variable
@@ -565,7 +563,7 @@ pub fn create_ultra_scale_optimizer(
         3
     };
 
-    UltraScaleOptions {
+    AdvancedScaleOptions {
         memory_options: super::memory_efficient::create_memory_efficient_optimizer(
             max_vars_in_memory,
             available_memory_mb / 2,
@@ -589,15 +587,15 @@ mod tests {
     use approx::assert_abs_diff_eq;
 
     #[test]
-    fn test_ultra_scale_small_problem() {
+    fn test_advanced_scale_small_problem() {
         // Test that small problems fall back to regular memory-efficient method
         let quadratic = |x: &ArrayView1<f64>| -> f64 { x.mapv(|xi| xi.powi(2)).sum() };
 
         let n = 50; // Small problem
         let x0 = Array1::ones(n);
-        let options = UltraScaleOptions::default();
+        let options = AdvancedScaleOptions::default();
 
-        let result = minimize_ultra_scale(quadratic, x0, &options).unwrap();
+        let result = minimize_advanced_scale(quadratic, x0, &options).unwrap();
 
         assert!(result.success);
         // Should converge to origin
@@ -618,7 +616,7 @@ mod tests {
 
     #[test]
     fn test_auto_parameter_selection() {
-        let options = create_ultra_scale_optimizer(1_000_000, 1024, 0.05);
+        let options = create_advanced_scale_optimizer(1_000_000, 1024, 0.05);
 
         assert!(options.max_variables_in_memory > 0);
         assert!(options.block_size > 0);

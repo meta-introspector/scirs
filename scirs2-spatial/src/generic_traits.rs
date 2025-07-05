@@ -427,7 +427,7 @@ impl<T: SpatialScalar, P: SpatialPoint<T>> DistanceMetric<T, P> for ChebyshevMet
     }
 }
 
-/// Implementation of SpatialPoint for Vec<T>
+/// Implementation of SpatialPoint for `Vec<T>`
 impl<T: SpatialScalar> SpatialPoint<T> for Vec<T> {
     fn dimension(&self) -> usize {
         self.len()

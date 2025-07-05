@@ -1,4 +1,4 @@
-//! Neuromorphic Computing for Ultra-Advanced Time Series Analysis
+//! Neuromorphic Computing for Advanced-Advanced Time Series Analysis
 //!
 //! This module implements neuromorphic computing paradigms for time series processing,
 //! including spiking neural networks, liquid state machines, reservoir computing,
@@ -1748,7 +1748,7 @@ pub enum SynapticType {
     Inhibitory,
 }
 
-/// Synaptic Vesicle Dynamics for Ultra-Realistic Synaptic Transmission
+/// Synaptic Vesicle Dynamics for Advanced-Realistic Synaptic Transmission
 #[derive(Debug)]
 pub struct SynapticVesicleDynamics<F: Float + Debug> {
     /// Readily releasable pool (RRP)

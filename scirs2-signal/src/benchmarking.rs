@@ -10,14 +10,14 @@
 //! - Regression testing for performance optimization
 //! - Detailed reporting and visualization
 
-use crate::dwt;
+use crate::dwt::{dwt_decompose, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use crate::filter::{butter, butter_bandpass_bandstop, filtfilt, firwin};
 use crate::lombscargle::lombscargle;
 use crate::memory_optimized::{memory_optimized_fir_filter, MemoryConfig};
 use crate::simd_memory_optimization::{simd_optimized_convolution, SimdMemoryConfig};
 use crate::spectral::{periodogram, spectrogram, welch};
-use crate::wavelets::cwt;
+use crate::wavelets::{cwt, morlet};
 use ndarray::Array1;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
@@ -26,7 +26,7 @@ use std::io::Write;
 use std::time::Instant;
 
 /// Comprehensive benchmark configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct BenchmarkConfig {
     /// Signal sizes to test
     pub signal_sizes: Vec<usize>,
@@ -68,7 +68,7 @@ impl Default for BenchmarkConfig {
 }
 
 /// Result of a single benchmark
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct BenchmarkResult {
     /// Test name
     pub name: String,
@@ -95,7 +95,7 @@ pub struct BenchmarkResult {
 }
 
 /// Memory usage statistics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct MemoryUsageStats {
     /// Peak memory usage (bytes)
     pub peak_memory: usize,
@@ -110,7 +110,7 @@ pub struct MemoryUsageStats {
 }
 
 /// Efficiency metrics for optimization analysis
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct EfficiencyMetrics {
     /// SIMD acceleration factor (vs scalar)
     pub simd_speedup: f64,
@@ -125,7 +125,7 @@ pub struct EfficiencyMetrics {
 }
 
 /// Configuration information for the benchmark
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct ConfigInfo {
     /// SIMD capabilities detected
     pub simd_capabilities: String,
@@ -140,7 +140,7 @@ pub struct ConfigInfo {
 }
 
 /// Suite of all benchmark results
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct BenchmarkSuite {
     /// Individual benchmark results
     pub results: Vec<BenchmarkResult>,
@@ -153,7 +153,7 @@ pub struct BenchmarkSuite {
 }
 
 /// Summary statistics across all benchmarks
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct BenchmarkSummary {
     /// Total benchmarks run
     pub total_benchmarks: usize,
@@ -170,7 +170,7 @@ pub struct BenchmarkSummary {
 }
 
 /// System information for benchmark context
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct SystemInfo {
     /// CPU model and frequency
     pub cpu_info: String,
@@ -432,7 +432,7 @@ fn benchmark_fir_filtering(
 
     benchmark_operation(name, size, config, || {
         // Apply FIR filter
-        let mut output = Array1::zeros(signal.len());
+        let mut output = Array1::<f64>::zeros(signal.len());
         for i in 0..signal.len() {
             for (j, &coeff) in coeffs.iter().enumerate() {
                 if i >= j {
@@ -470,7 +470,9 @@ fn benchmark_zero_phase_filtering(
 
     let (b, a) = butter(4, 0.3, "low")?;
 
-    benchmark_operation(name, size, config, || filtfilt(&b, &a, signal).unwrap())
+    benchmark_operation(name, size, config, || {
+        filtfilt(&b, &a, signal.as_slice().unwrap()).unwrap()
+    })
 }
 
 #[allow(dead_code)]
@@ -482,7 +484,15 @@ fn benchmark_periodogram(
     let name = format!("Periodogram_N{}", size);
 
     benchmark_operation(name, size, config, || {
-        periodogram(&signal.view(), None, "hann", true, true).unwrap()
+        periodogram(
+            signal.as_slice().unwrap(),
+            None,
+            Some("hann"),
+            None,
+            None,
+            None,
+        )
+        .unwrap()
     })
 }
 
@@ -497,16 +507,14 @@ fn benchmark_welch_method(
 
     benchmark_operation(name, size, config, || {
         welch(
-            &signal.view(),
+            signal.as_slice().unwrap(),
             None,
             Some("hann"),
             Some(nperseg),
             None,
             None,
-            true,
-            true,
-            "constant",
-            true,
+            Some("constant"),
+            None,
         )
         .unwrap()
     })
@@ -523,15 +531,15 @@ fn benchmark_spectrogram(
 
     benchmark_operation(name, size, config, || {
         spectrogram(
-            &signal.view(),
+            signal.as_slice().unwrap(),
             None,
             Some("hann"),
             Some(nperseg),
             None,
             None,
-            true,
-            "psd",
-            "constant",
+            Some("true"),
+            Some("psd"),
+            Some("constant"),
         )
         .unwrap()
     })
@@ -551,7 +559,17 @@ fn benchmark_lombscargle(
         .collect();
 
     benchmark_operation(name, size, config, || {
-        lombscargle(&times, signal, None, "standard", true, true, 1.0).unwrap()
+        lombscargle(
+            times.as_slice().unwrap(),
+            signal.as_slice().unwrap(),
+            None,
+            Some("standard"),
+            Some(true),
+            Some(true),
+            Some(1.0),
+            None,
+        )
+        .unwrap()
     })
 }
 
@@ -564,7 +582,12 @@ fn benchmark_dwt(
     let name = format!("DWT_N{}", size);
 
     benchmark_operation(name, size, config, || {
-        dwt(&signal.view(), "db4", "symmetric").unwrap()
+        dwt_decompose(
+            signal.as_slice().unwrap(),
+            Wavelet::DB(4),
+            Some("symmetric"),
+        )
+        .unwrap()
     })
 }
 
@@ -578,7 +601,12 @@ fn benchmark_cwt(
     let scales: Vec<f64> = (1..=50).map(|i| i as f64).collect();
 
     benchmark_operation(name, size, config, || {
-        cwt(&signal.view(), &scales, "morlet", None).unwrap()
+        cwt(
+            signal.as_slice().unwrap(),
+            |points, scale| morlet(points, 6.0, scale),
+            &scales,
+        )
+        .unwrap()
     })
 }
 
@@ -592,7 +620,7 @@ fn benchmark_convolution(
     let name = format!("Convolution_N{}_K{}", size, kernel.len());
 
     benchmark_operation(name, size, config, || {
-        let mut output = Array1::zeros(signal.len() + kernel.len() - 1);
+        let mut output = Array1::<f64>::zeros(signal.len() + kernel.len() - 1);
         for i in 0..signal.len() {
             for j in 0..kernel.len() {
                 output[i + j] += signal[i] * kernel[j];
@@ -614,7 +642,7 @@ fn benchmark_fft_convolution(
     benchmark_operation(name, size, config, || {
         // Simplified FFT convolution placeholder
         // In practice, this would use FFT-based convolution
-        let mut output = Array1::zeros(signal.len() + kernel.len() - 1);
+        let mut output: Array1<f64> = Array1::zeros(signal.len() + kernel.len() - 1);
         for i in 0..signal.len() {
             for j in 0..kernel.len() {
                 output[i + j] += signal[i] * kernel[j];
@@ -657,14 +685,23 @@ fn benchmark_memory_optimized_filter(
 
     // Warmup
     for _ in 0..config.warmup_iterations {
-        let _ = memory_optimized_fir_filter(&input_file, &output_file, &coeffs, &memory_config)?;
+        let _ = memory_optimized_fir_filter(
+            input_file.to_str().unwrap(),
+            output_file.to_str().unwrap(),
+            &coeffs,
+            &memory_config,
+        )?;
     }
 
     // Benchmark iterations
     for _ in 0..config.iterations {
         let start = Instant::now();
-        let _result =
-            memory_optimized_fir_filter(&input_file, &output_file, &coeffs, &memory_config)?;
+        let _result = memory_optimized_fir_filter(
+            input_file.to_str().unwrap(),
+            output_file.to_str().unwrap(),
+            &coeffs,
+            &memory_config,
+        )?;
         execution_times.push(start.elapsed().as_nanos() as u64);
     }
 
@@ -711,12 +748,11 @@ fn benchmark_parallel_vs_sequential(
         let chunks: Vec<_> = signal
             .axis_chunks_iter(ndarray::Axis(0), size / 4)
             .collect();
-        parallel_map(chunks.into_iter(), |chunk| {
-            chunk.mapv(|x| x.sin() + x.cos())
-        })
-        .into_iter()
-        .flatten()
-        .collect::<Vec<_>>()
+        let results: Vec<_> = chunks
+            .into_iter()
+            .map(|chunk| chunk.mapv(|x| x.sin() + x.cos()))
+            .collect();
+        results.into_iter().flatten().collect::<Vec<_>>()
     })
 }
 
@@ -738,20 +774,24 @@ fn benchmark_audio_processing_workflow(
         // 2. Compute spectrogram
         let nperseg = 1024.min(size / 4);
         let (_, _, spec) = spectrogram(
-            &filtered.view(),
+            filtered.as_slice().unwrap(),
             None,
             Some("hann"),
             Some(nperseg),
             None,
             None,
-            true,
-            "psd",
-            "constant",
+            Some("true"),
+            Some("psd"),
+            Some("constant"),
         )
         .unwrap();
 
         // 3. Feature extraction (simplified)
-        let mean_power = spec.mean().unwrap();
+        let mean_power = spec
+            .iter()
+            .map(|row| row.iter().sum::<f64>() / row.len() as f64)
+            .sum::<f64>()
+            / spec.len() as f64;
 
         vec![mean_power]
     })
@@ -769,7 +809,8 @@ fn benchmark_biomedical_workflow(
 
         // Biomedical signal processing workflow:
         // 1. Bandpass filter
-        let (bp_b, bp_a) = butter_bandpass_bandstop(4, 0.5, 100.0, "bandpass").unwrap();
+        let (bp_b, bp_a) =
+            butter_bandpass_bandstop(4, 0.5, 100.0, crate::filter::FilterType::Bandpass).unwrap();
         let filtered = Array1::from_vec(filtfilt(&bp_b, &bp_a, &signal.to_vec()).unwrap());
 
         // 2. Artifact removal (simplified)
@@ -930,14 +971,14 @@ fn generate_test_signal(size: usize, signal_type: &str) -> Array1<f64> {
             .map(|i| {
                 let t = i as f64 / size as f64;
                 let center = 0.5;
-                let width = 0.1;
+                let width = 0.1f64;
                 let envelope = (-(t - center).powi(2) / (2.0 * width.powi(2))).exp();
                 envelope * (2.0 * PI * 20.0 * t).sin()
             })
             .collect(),
         "noise" => {
-            let mut rng = rand::rng();
-            (0..size).map(|_| rng.random_range(-1.0..1.0)).collect()
+            let mut rng = rand::thread_rng();
+            (0..size).map(|_| rng.gen_range(-1.0..1.0)).collect()
         }
         "gaussian" => (0..size)
             .map(|i| {
@@ -953,7 +994,7 @@ fn generate_test_signal(size: usize, signal_type: &str) -> Array1<f64> {
                     let t = i as f64 / 44100.0; // 44.1 kHz sample rate
                     0.5 * (2.0 * PI * 440.0 * t).sin() + // A4 note
                     0.3 * (2.0 * PI * 880.0 * t).sin() + // A5 note
-                    0.1 * rand::rng().random_range(-1.0..1.0) // Noise
+                    0.1 * rand::thread_rng().gen_range(-1.0..1.0) // Noise
                 })
                 .collect()
         }
@@ -968,7 +1009,7 @@ fn generate_test_signal(size: usize, signal_type: &str) -> Array1<f64> {
                     } else {
                         0.0
                     };
-                    heartbeat + qrs + 0.05 * rand::rng().random_range(-1.0..1.0)
+                    heartbeat + qrs + 0.05 * rand::thread_rng().random_range(-1.0..1.0)
                 })
                 .collect()
         }
@@ -1059,7 +1100,7 @@ fn gather_config_info() -> ConfigInfo {
     ConfigInfo {
         simd_capabilities: format!(
             "AVX: {}, AVX2: {}, AVX512: {}",
-            capabilities.has_avx, capabilities.has_avx2, capabilities.has_avx512
+            capabilities.simd_available, capabilities.avx2_available, capabilities.avx512_available
         ),
         cpu_cores: num_cpus::get(),
         cache_sizes: vec![32768, 262144, 8388608], // L1: 32KB, L2: 256KB, L3: 8MB

@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 
 /// Advanced-specific error context with performance tracking
 #[derive(Debug, Clone)]
-pub struct UltrathinkErrorContext {
+pub struct AdvancedErrorContext {
     pub operation_start: Instant,
     pub data_size: usize,
     pub memory_usage_mb: f64,
@@ -46,9 +46,9 @@ pub enum OptimizationSuggestion {
 }
 
 /// Enhanced error messages for Advanced mode
-pub struct UltrathinkErrorMessages;
+pub struct AdvancedErrorMessages;
 
-impl UltrathinkErrorMessages {
+impl AdvancedErrorMessages {
     /// Memory exhaustion with intelligent suggestions
     pub fn memory_exhaustion(required_mb: f64, available_mb: f64, data_size: usize) -> StatsError {
         let suggestion = if data_size > 10_000_000 {
@@ -71,7 +71,7 @@ impl UltrathinkErrorMessages {
         operation: &str,
         expected_duration: Duration,
         actual_duration: Duration,
-        context: &UltrathinkErrorContext,
+        context: &AdvancedErrorContext,
     ) -> StatsError {
         let slowdown_factor = actual_duration.as_secs_f64() / expected_duration.as_secs_f64();
 
@@ -219,13 +219,13 @@ impl UltrathinkErrorMessages {
 }
 
 /// Adaptive error recovery system for Advanced mode
-pub struct UltrathinkErrorRecovery;
+pub struct AdvancedErrorRecovery;
 
-impl UltrathinkErrorRecovery {
+impl AdvancedErrorRecovery {
     /// Attempt automatic error recovery with performance optimization
     pub fn attempt_recovery(
         error: &StatsError,
-        context: &UltrathinkErrorContext,
+        context: &AdvancedErrorContext,
         operation: &str,
     ) -> Option<RecoveryStrategy> {
         match error {
@@ -259,10 +259,7 @@ impl UltrathinkErrorRecovery {
     }
 
     /// Generate context-aware recovery suggestions
-    pub fn generate_suggestions(
-        error: &StatsError,
-        context: &UltrathinkErrorContext,
-    ) -> Vec<String> {
+    pub fn generate_suggestions(error: &StatsError, context: &AdvancedErrorContext) -> Vec<String> {
         let mut suggestions = Vec::new();
 
         // Data size-based suggestions
@@ -328,7 +325,7 @@ pub enum RecoveryStrategy {
 }
 
 /// Context builder for Advanced error handling
-pub struct UltrathinkContextBuilder {
+pub struct AdvancedContextBuilder {
     data_size: usize,
     operation_start: Instant,
     memory_usage_mb: f64,
@@ -336,7 +333,7 @@ pub struct UltrathinkContextBuilder {
     parallel_enabled: bool,
 }
 
-impl UltrathinkContextBuilder {
+impl AdvancedContextBuilder {
     pub fn new(data_size: usize) -> Self {
         Self {
             data_size,
@@ -362,8 +359,8 @@ impl UltrathinkContextBuilder {
         self
     }
 
-    pub fn build(self) -> UltrathinkErrorContext {
-        UltrathinkErrorContext {
+    pub fn build(self) -> AdvancedErrorContext {
+        AdvancedErrorContext {
             operation_start: self.operation_start,
             data_size: self.data_size,
             memory_usage_mb: self.memory_usage_mb,
@@ -379,8 +376,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ultrathink_context_builder() {
-        let context = UltrathinkContextBuilder::new(10000)
+    fn test_advanced_context_builder() {
+        let context = AdvancedContextBuilder::new(10000)
             .memory_usage(256.0)
             .simd_enabled(true)
             .parallel_enabled(false)
@@ -394,14 +391,14 @@ mod tests {
 
     #[test]
     fn test_recovery_suggestions() {
-        let context = UltrathinkContextBuilder::new(50000)
+        let context = AdvancedContextBuilder::new(50000)
             .memory_usage(500.0)
             .simd_enabled(false)
             .parallel_enabled(false)
             .build();
 
         let error = StatsError::computation("test error");
-        let suggestions = UltrathinkErrorRecovery::generate_suggestions(&error, &context);
+        let suggestions = AdvancedErrorRecovery::generate_suggestions(&error, &context);
 
         assert!(suggestions.contains(&"Enable SIMD operations for better performance".to_string()));
         assert!(suggestions.contains(&"Enable parallel processing for large datasets".to_string()));

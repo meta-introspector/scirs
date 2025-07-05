@@ -394,7 +394,7 @@ impl StreamProcessor {
     }
 }
 
-/// Lock-free ring buffer for ultra-low latency applications
+/// Lock-free ring buffer for advanced-low latency applications
 pub struct LockFreeRingBuffer {
     buffer: Vec<std::sync::atomic::AtomicU64>,
     capacity: usize,

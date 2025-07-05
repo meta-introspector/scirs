@@ -89,7 +89,6 @@ pub struct PriorComponent<F> {
 }
 
 /// Distribution types for priors and likelihoods
-#[derive(Debug, Clone)]
 pub enum DistributionType<F> {
     Normal {
         mean: F,
@@ -130,6 +129,108 @@ pub enum DistributionType<F> {
         log_density: Box<dyn Fn(F) -> F + Send + Sync>,
         parameters: HashMap<String, F>,
     },
+}
+
+impl<F: std::fmt::Debug> std::fmt::Debug for DistributionType<F> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DistributionType::Normal { mean, precision } => f
+                .debug_struct("Normal")
+                .field("mean", mean)
+                .field("precision", precision)
+                .finish(),
+            DistributionType::Gamma { shape, rate } => f
+                .debug_struct("Gamma")
+                .field("shape", shape)
+                .field("rate", rate)
+                .finish(),
+            DistributionType::Beta { alpha, beta } => f
+                .debug_struct("Beta")
+                .field("alpha", alpha)
+                .field("beta", beta)
+                .finish(),
+            DistributionType::Uniform { lower, upper } => f
+                .debug_struct("Uniform")
+                .field("lower", lower)
+                .field("upper", upper)
+                .finish(),
+            DistributionType::InverseGamma { shape, scale } => f
+                .debug_struct("InverseGamma")
+                .field("shape", shape)
+                .field("scale", scale)
+                .finish(),
+            DistributionType::StudentT {
+                degrees_freedom,
+                location,
+                scale,
+            } => f
+                .debug_struct("StudentT")
+                .field("degrees_freedom", degrees_freedom)
+                .field("location", location)
+                .field("scale", scale)
+                .finish(),
+            DistributionType::Exponential { rate } => {
+                f.debug_struct("Exponential").field("rate", rate).finish()
+            }
+            DistributionType::Horseshoe { tau } => {
+                f.debug_struct("Horseshoe").field("tau", tau).finish()
+            }
+            DistributionType::Custom { parameters, .. } => f
+                .debug_struct("Custom")
+                .field("parameters", parameters)
+                .field("log_density", &"<function>")
+                .finish(),
+        }
+    }
+}
+
+impl<F: Clone> Clone for DistributionType<F> {
+    fn clone(&self) -> Self {
+        match self {
+            DistributionType::Normal { mean, precision } => DistributionType::Normal {
+                mean: mean.clone(),
+                precision: precision.clone(),
+            },
+            DistributionType::Gamma { shape, rate } => DistributionType::Gamma {
+                shape: shape.clone(),
+                rate: rate.clone(),
+            },
+            DistributionType::Beta { alpha, beta } => DistributionType::Beta {
+                alpha: alpha.clone(),
+                beta: beta.clone(),
+            },
+            DistributionType::Uniform { lower, upper } => DistributionType::Uniform {
+                lower: lower.clone(),
+                upper: upper.clone(),
+            },
+            DistributionType::InverseGamma { shape, scale } => DistributionType::InverseGamma {
+                shape: shape.clone(),
+                scale: scale.clone(),
+            },
+            DistributionType::StudentT {
+                degrees_freedom,
+                location,
+                scale,
+            } => DistributionType::StudentT {
+                degrees_freedom: degrees_freedom.clone(),
+                location: location.clone(),
+                scale: scale.clone(),
+            },
+            DistributionType::Exponential { rate } => {
+                DistributionType::Exponential { rate: rate.clone() }
+            }
+            DistributionType::Horseshoe { tau } => DistributionType::Horseshoe { tau: tau.clone() },
+            DistributionType::Laplace { location, scale } => DistributionType::Laplace {
+                location: location.clone(),
+                scale: scale.clone(),
+            },
+            DistributionType::Custom { parameters, .. } => {
+                // For Custom variant with function pointer, we can't actually clone the function
+                // So we'll create a placeholder that will panic if used
+                panic!("Cannot clone DistributionType::Custom with function pointer")
+            }
+        }
+    }
 }
 
 /// Sparsity-inducing prior types
@@ -248,7 +349,7 @@ pub enum LikelihoodType {
 }
 
 /// Model selection criteria
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ModelSelectionCriterion {
     /// Deviance Information Criterion
     DIC,
@@ -488,8 +589,17 @@ pub struct PredictiveDistribution<F> {
 
 impl<F> BayesianModelComparison<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     /// Create new model comparison framework
     pub fn new() -> Self {
@@ -761,8 +871,17 @@ impl Default for VIConfig {
 
 impl<F> Default for BayesianModelComparison<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     fn default() -> Self {
         Self::new()
@@ -771,7 +890,15 @@ where
 
 impl<F> BayesianGaussianProcess<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
         + std::fmt::Display,
 {
     /// Create new Gaussian process
@@ -934,7 +1061,15 @@ where
 
 impl<F> BayesianNeuralNetwork<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
         + std::fmt::Display,
 {
     /// Create new Bayesian neural network

@@ -12,10 +12,7 @@ use crate::dwt::Wavelet;
 use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array2};
-use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::check_finite;
-
-use std::f64::consts::PI;
+use scirs2_core::validation::check_array_finite;
 
 /// Advanced 2D wavelet processing configuration
 #[derive(Debug, Clone)]
@@ -186,7 +183,7 @@ pub fn advanced_wavelet_denoising(
     wavelet: Wavelet,
     config: &AdvancedWaveletConfig,
 ) -> SignalResult<AdvancedWaveletResult> {
-    check_finite(&noisy_image.as_slice().unwrap(), "noisy_image")?;
+    check_array_finite(noisy_image, "noisy_image")?;
 
     let (rows, cols) = noisy_image.dim();
     if rows < 8 || cols < 8 {
@@ -910,7 +907,7 @@ fn compute_texture_features(
 
 mod tests {
     use super::*;
-    use ndarray::Array2;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_advanced_wavelet_denoising() {

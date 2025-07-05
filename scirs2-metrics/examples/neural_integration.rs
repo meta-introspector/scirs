@@ -52,9 +52,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             r2_adapter.compute(&predictions.clone().into_dyn(), &targets.clone().into_dyn())?;
 
         println!("Regression metrics:");
-        println!("  MSE:  {:.4}", mse);
-        println!("  MAE:  {:.4}", mae);
-        println!("  R²:   {:.4}", r2);
+        println!("  MSE:  {mse:.4}");
+        println!("  MAE:  {mae:.4}");
+        println!("  R²:   {r2:.4}");
 
         println!("\nComparison with direct calls:");
         println!("  MSE:  {:.4}", mean_squared_error(&targets, &predictions)?);
@@ -99,11 +99,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )?;
 
         println!("\nBinary classification metrics:");
-        println!("  Accuracy:   {:.4}", accuracy);
-        println!("  Precision:  {:.4}", precision);
-        println!("  Recall:     {:.4}", recall);
-        println!("  F1 Score:   {:.4}", f1);
-        println!("  ROC AUC:    {:.4}", roc_auc);
+        println!("  Accuracy:   {accuracy:.4}");
+        println!("  Precision:  {precision:.4}");
+        println!("  Recall:     {recall:.4}");
+        println!("  F1 Score:   {f1:.4}");
+        println!("  ROC AUC:    {roc_auc:.4}");
 
         println!("\nComparison with direct calls:");
         println!(
@@ -171,8 +171,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .into_dimensionality::<ndarray::Ix1>()
                     .map_err(|e| {
                         scirs2_metrics::error::MetricsError::InvalidInput(format!(
-                            "Shape error: {}",
-                            e
+                            "Shape error: {e}"
                         ))
                     })?;
                 let preds_1d = preds
@@ -180,8 +179,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .into_dimensionality::<ndarray::Ix1>()
                     .map_err(|e| {
                         scirs2_metrics::error::MetricsError::InvalidInput(format!(
-                            "Shape error: {}",
-                            e
+                            "Shape error: {e}"
                         ))
                     })?;
 
@@ -204,7 +202,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )?;
 
         println!("\nMulticlass classification metrics:");
-        println!("  F1 Score (macro):  {:.4}", multiclass_f1);
+        println!("  F1 Score (macro):  {multiclass_f1:.4}");
 
         // When enabling the neural_common feature, you can use these adapters
         // directly with scirs2-neural's training loops
@@ -223,7 +221,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let mut callback = MetricsCallback::new(metrics, true);
             let metric_names = callback.metric_names();
 
-            println!("  Created MetricsCallback with metrics: {:?}", metric_names);
+            println!("  Created MetricsCallback with metrics: {metric_names:?}");
 
             // Example of computing metrics with the callback
             let results = callback
@@ -231,7 +229,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             println!("  Results:");
             for (name, value) in results {
-                println!("    {}: {:.4}", name, value);
+                println!("    {name}: {value:.4}");
             }
         }
 

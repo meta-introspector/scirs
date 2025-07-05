@@ -16,6 +16,7 @@
 //! - Performance monitoring and analytics
 //! - Cost optimization strategies
 
+#[cfg(feature = "distributed_storage")]
 use scirs2_core::distributed_storage::{
     advancedCloudConfig, advancedCloudStorageCoordinator, CloudCredentials, CloudProviderConfig,
     CloudProviderId, CloudProviderType, CloudStorageProvider, CostEstimate, CostOperation,
@@ -1123,6 +1124,7 @@ fn generate_test_data(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
+#[cfg(feature = "distributed_storage")]
 fn main() -> CoreResult<()> {
     println!("🌟 Welcome to SciRS2 Advanced Cloud Storage!");
     println!("===============================================");
@@ -1137,6 +1139,12 @@ fn main() -> CoreResult<()> {
     println!("The future of scientific computing in the cloud is here.");
 
     Ok(())
+}
+
+#[cfg(not(feature = "distributed_storage"))]
+fn main() {
+    println!("This example requires the 'distributed_storage' feature to be enabled.");
+    println!("Enable it with: cargo run --example advancedthink_cloud_storage_demo --features distributed_storage");
 }
 
 #[cfg(test)]

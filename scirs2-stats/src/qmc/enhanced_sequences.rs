@@ -9,7 +9,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2};
 use num_traits::{Float, FromPrimitive, One, Zero};
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{rng, rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
 
@@ -183,8 +183,7 @@ pub struct QualityMetrics {
 
 impl<F> EnhancedQMCGenerator<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + std::fmt::Display,
     for<'a> &'a F: std::iter::Product<&'a F>,
 {
     /// Create new enhanced QMC generator
@@ -238,13 +237,16 @@ where
         let chunk_size = self.config.chunk_size;
         let num_chunks = (n + chunk_size - 1) / chunk_size;
 
-        let chunks = parallel_map_result((0..num_chunks).collect::<Vec<_>>().as_slice(), |&chunk_idx| {
-            let start = chunk_idx * chunk_size;
-            let end = (start + chunk_size).min(n);
-            let chunk_size = end - start;
+        let chunks = parallel_map_result(
+            (0..num_chunks).collect::<Vec<_>>().as_slice(),
+            |&chunk_idx| {
+                let start = chunk_idx * chunk_size;
+                let end = (start + chunk_size).min(n);
+                let chunk_size = end - start;
 
-            self.generate_chunk(start, chunk_size)
-        })?;
+                self.generate_chunk(start, chunk_size)
+            },
+        )?;
 
         // Combine chunks
         let mut result = Array2::zeros((n, self.dimension));
@@ -455,7 +457,7 @@ where
     fn initialize_randomization(&mut self) -> StatsResult<()> {
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            None => StdRng::from_rng(&mut rng()),
         };
 
         // Initialize scrambling matrices
@@ -660,8 +662,7 @@ pub fn enhanced_sobol<F>(
     seed: Option<u64>,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + std::fmt::Display,
     for<'a> &'a F: std::iter::Product<&'a F>,
 {
     let sequence_type = EnhancedSequenceType::SobolAdvanced {
@@ -686,8 +687,7 @@ pub fn enhanced_niederreiter<F>(
     seed: Option<u64>,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + std::fmt::Display,
     for<'a> &'a F: std::iter::Product<&'a F>,
 {
     let sequence_type = EnhancedSequenceType::Niederreiter {
@@ -712,8 +712,7 @@ pub fn enhanced_digital_net<F>(
     seed: Option<u64>,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display,
+    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + std::fmt::Display,
     for<'a> &'a F: std::iter::Product<&'a F>,
 {
     let net_params = DigitalNetParams {

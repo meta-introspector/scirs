@@ -10,7 +10,7 @@ use crate::denoise_cutting_edge::{denoise_dictionary_learning, DictionaryDenoise
 use crate::denoise_enhanced::{
     denoise_median_1d, denoise_total_variation_1d, denoise_wiener_1d, WienerConfig,
 };
-use crate::denoise_super_advanced::{ultra_advanced_denoise, UltraAdvancedDenoisingConfig};
+use crate::denoise_super_advanced::{advanced_advanced_denoise, AdvancedAdvancedDenoisingConfig};
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use ndarray::Array1;
@@ -37,9 +37,9 @@ pub enum DenoisingMethod {
     Median { window_size: usize },
     /// Total variation denoising
     TotalVariation { lambda: f64, iterations: usize },
-    /// Ultra-advanced denoising with modern techniques
-    UltraAdvanced {
-        config: UltraAdvancedDenoisingConfig,
+    /// Advanced-advanced denoising with modern techniques
+    AdvancedAdvanced {
+        config: AdvancedAdvancedDenoisingConfig,
     },
     /// Adaptive hybrid denoising with automatic method selection
     AdaptiveHybrid {
@@ -123,6 +123,10 @@ pub struct QualityMetrics {
     pub signal_preservation: f64,
     /// Noise reduction metric (0-1, higher is better)
     pub noise_reduction: f64,
+    /// Edge preservation metric (0-1, higher is better)
+    pub edge_preservation: f64,
+    /// Smoothness index metric (0-1, higher is better)
+    pub smoothness_index: f64,
 }
 
 /// Unified denoising function
@@ -242,10 +246,10 @@ pub fn denoise_unified(
                 .unwrap_or_else(|| estimate_noise_level(&preprocessed));
             (denoised, noise_level)
         }
-        DenoisingMethod::UltraAdvanced {
-            config: ultra_config,
+        DenoisingMethod::AdvancedAdvanced {
+            config: advanced_config,
         } => {
-            let result = ultra_advanced_denoise(&preprocessed, ultra_config)?;
+            let result = advanced_advanced_denoise(&preprocessed, advanced_config)?;
             (
                 result.denoised_signal,
                 estimate_noise_level(&result.noise_estimate),
@@ -495,6 +499,8 @@ fn calculate_quality_metrics(
         ssim: None, // Complex SSIM calculation not implemented here
         signal_preservation,
         noise_reduction,
+        edge_preservation: 0.8, // Placeholder value
+        smoothness_index: 0.7,  // Placeholder value
     }
 }
 
@@ -870,6 +876,7 @@ fn calculate_patch_distance(signal: &Array1<f64>, i: usize, j: usize, patch_size
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_unified_denoising_basic() {

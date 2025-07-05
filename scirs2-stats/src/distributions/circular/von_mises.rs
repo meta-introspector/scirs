@@ -8,7 +8,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::traits::{CircularDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::Float;
-use rand::thread_rng;
+use rand::rng;
 use rand_distr::{Distribution as RandDistribution, VonMises};
 use rand_distr::uniform::SampleUniform;
 use std::f64::consts::PI;
@@ -226,7 +226,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> Distributio
         };
         
         // Generate samples
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mut samples = Array1::zeros(size);
         for i in 0..size {
             let sample = dist.sample(&mut rng);
@@ -287,7 +287,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
         };
         
         // Generate a sample
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let sample = dist.sample(&mut rng);
         Ok(F::from(sample).unwrap())
     }

@@ -4,8 +4,8 @@
 //! results, including quantum state visualization, neuromorphic adaptation plots,
 //! and AI algorithm selection insights.
 
+use crate::advanced_clustering::{AdvancedClusteringResult, AdvancedPerformanceMetrics};
 use crate::error::{ClusteringError, Result};
-use crate::advanced_clustering::{UltrathinkClusteringResult, UltrathinkPerformanceMetrics};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use std::collections::HashMap;
 
@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 /// Visualization configuration for Advanced clustering results
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct UltrathinkVisualizationConfig {
+pub struct AdvancedVisualizationConfig {
     /// Show quantum coherence visualization
     pub show_quantum_coherence: bool,
     /// Show neuromorphic adaptation timeline
@@ -64,9 +64,9 @@ pub enum VisualizationExportFormat {
 
 /// Advanced clustering visualization
 #[derive(Debug)]
-pub struct UltrathinkVisualizer {
+pub struct AdvancedVisualizer {
     /// Configuration for visualization
-    config: UltrathinkVisualizationConfig,
+    config: AdvancedVisualizationConfig,
     /// Quantum state history for animation
     quantum_history: Vec<QuantumStateSnapshot>,
     /// Neuromorphic adaptation timeline
@@ -165,7 +165,7 @@ pub struct NeuromorphicAdaptationPlot {
     pub learning_curve: Array1<f64>,
 }
 
-impl Default for UltrathinkVisualizationConfig {
+impl Default for AdvancedVisualizationConfig {
     fn default() -> Self {
         Self {
             show_quantum_coherence: true,
@@ -178,9 +178,9 @@ impl Default for UltrathinkVisualizationConfig {
     }
 }
 
-impl UltrathinkVisualizer {
+impl AdvancedVisualizer {
     /// Create a new Advanced visualizer
-    pub fn new(config: UltrathinkVisualizationConfig) -> Self {
+    pub fn new(config: AdvancedVisualizationConfig) -> Self {
         Self {
             config,
             quantum_history: Vec::new(),
@@ -193,10 +193,10 @@ impl UltrathinkVisualizer {
     pub fn visualize_results(
         &mut self,
         data: &ArrayView2<f64>,
-        result: &UltrathinkClusteringResult,
-    ) -> Result<UltrathinkVisualizationOutput> {
+        result: &AdvancedClusteringResult,
+    ) -> Result<AdvancedVisualizationOutput> {
         // Create comprehensive visualization
-        let mut output = UltrathinkVisualizationOutput::new();
+        let mut output = AdvancedVisualizationOutput::new();
 
         // 1. Standard clustering visualization
         output.cluster_plot = self.create_cluster_plot(data, result)?;
@@ -226,7 +226,7 @@ impl UltrathinkVisualizer {
     fn create_cluster_plot(
         &self,
         data: &ArrayView2<f64>,
-        result: &UltrathinkClusteringResult,
+        result: &AdvancedClusteringResult,
     ) -> Result<ClusterPlot> {
         let n_samples = data.nrows();
         let n_features = data.ncols();
@@ -254,7 +254,7 @@ impl UltrathinkVisualizer {
     /// Create quantum coherence visualization
     fn create_quantum_coherence_plot(
         &self,
-        result: &UltrathinkClusteringResult,
+        result: &AdvancedClusteringResult,
     ) -> Result<QuantumCoherencePlot> {
         let n_clusters = result.centroids.nrows();
         let time_steps = 100;
@@ -307,7 +307,7 @@ impl UltrathinkVisualizer {
     /// Create neuromorphic adaptation visualization
     fn create_neuromorphic_plot(
         &self,
-        result: &UltrathinkClusteringResult,
+        result: &AdvancedClusteringResult,
     ) -> Result<NeuromorphicAdaptationPlot> {
         let n_neurons = result.centroids.nrows();
         let time_steps = 150;
@@ -367,7 +367,7 @@ impl UltrathinkVisualizer {
     /// Create AI algorithm selection visualization
     fn create_ai_selection_plot(
         &self,
-        result: &UltrathinkClusteringResult,
+        result: &AdvancedClusteringResult,
     ) -> Result<AISelectionPlot> {
         // Create algorithm comparison
         let mut algorithm_scores = HashMap::new();
@@ -414,7 +414,7 @@ impl UltrathinkVisualizer {
     /// Create performance metrics dashboard
     fn create_performance_dashboard(
         &self,
-        result: &UltrathinkClusteringResult,
+        result: &AdvancedClusteringResult,
     ) -> Result<PerformanceDashboard> {
         let metrics = &result.performance;
 
@@ -438,7 +438,7 @@ impl UltrathinkVisualizer {
         ]);
 
         Ok(PerformanceDashboard {
-            ultrathink_metrics: metric_values,
+            advanced_metrics: metric_values,
             classical_baseline,
             execution_time: metrics.execution_time,
             memory_usage: metrics.memory_usage,
@@ -677,7 +677,7 @@ impl UltrathinkVisualizer {
     /// Export visualization to specified format
     pub fn export_visualization(
         &self,
-        output: &UltrathinkVisualizationOutput,
+        output: &AdvancedVisualizationOutput,
         filename: &str,
     ) -> Result<()> {
         match self.config.export_format {
@@ -692,7 +692,7 @@ impl UltrathinkVisualizer {
     }
 
     /// Export to JSON format
-    fn export_to_json(&self, output: &UltrathinkVisualizationOutput, filename: &str) -> Result<()> {
+    fn export_to_json(&self, output: &AdvancedVisualizationOutput, filename: &str) -> Result<()> {
         #[cfg(feature = "serde")]
         {
             use std::fs::File;
@@ -743,7 +743,7 @@ impl UltrathinkVisualizer {
     }
 
     /// Export to interactive HTML format
-    fn export_to_html(&self, output: &UltrathinkVisualizationOutput, filename: &str) -> Result<()> {
+    fn export_to_html(&self, output: &AdvancedVisualizationOutput, filename: &str) -> Result<()> {
         use std::fs::File;
         use std::io::Write;
 
@@ -766,7 +766,7 @@ impl UltrathinkVisualizer {
 
     /// Create comprehensive JSON export data
     #[cfg(feature = "serde")]
-    fn create_json_export_data(&self, output: &UltrathinkVisualizationOutput) -> serde_json::Value {
+    fn create_json_export_data(&self, output: &AdvancedVisualizationOutput) -> serde_json::Value {
         use serde_json::json;
 
         json!({
@@ -776,7 +776,7 @@ impl UltrathinkVisualizer {
                         .duration_since(std::time::UNIX_EPOCH)
                         .unwrap_or_default()
                         .as_secs(),
-                    "export_format": "ultrathink_json_v1.0",
+                    "export_format": "advanced_json_v1.0",
                     "quantum_enhanced": true,
                     "neuromorphic_enabled": true
                 },
@@ -805,7 +805,7 @@ impl UltrathinkVisualizer {
                     "meta_learning_steps": ap.meta_learning_timeline.len()
                 })),
                 "performance_dashboard": {
-                    "ultrathink_metrics": output.performance_dashboard.ultrathink_metrics.len(),
+                    "advanced_metrics": output.performance_dashboard.advanced_metrics.len(),
                     "classical_baseline": output.performance_dashboard.classical_baseline.len(),
                     "execution_time": output.performance_dashboard.execution_time,
                     "memory_usage": output.performance_dashboard.memory_usage,
@@ -817,12 +817,12 @@ impl UltrathinkVisualizer {
     }
 
     /// Create basic JSON export without serde
-    fn create_basic_json_export(&self, output: &UltrathinkVisualizationOutput) -> String {
+    fn create_basic_json_export(&self, output: &AdvancedVisualizationOutput) -> String {
         format!(
             r#"{{
   "advanced_visualization": {{
     "metadata": {{
-      "export_format": "ultrathink_basic_v1.0",
+      "export_format": "advanced_basic_v1.0",
       "quantum_enhanced": true,
       "neuromorphic_enabled": true
     }},
@@ -855,7 +855,7 @@ impl UltrathinkVisualizer {
     }
 
     /// Generate interactive HTML visualization
-    fn generate_interactive_html(&self, output: &UltrathinkVisualizationOutput) -> String {
+    fn generate_interactive_html(&self, output: &AdvancedVisualizationOutput) -> String {
         format!(
             r#"<!DOCTYPE html>
 <html lang="en">
@@ -923,7 +923,7 @@ impl UltrathinkVisualizer {
         )
     }
 
-    fn format_cluster_data_for_html(&self, output: &UltrathinkVisualizationOutput) -> String {
+    fn format_cluster_data_for_html(&self, output: &AdvancedVisualizationOutput) -> String {
         format!(
             "{{\"clusters\": {}, \"enhancement\": {}}}",
             output.cluster_plot.centroids.nrows(),
@@ -931,7 +931,7 @@ impl UltrathinkVisualizer {
         )
     }
 
-    fn format_quantum_data_for_html(&self, output: &UltrathinkVisualizationOutput) -> String {
+    fn format_quantum_data_for_html(&self, output: &AdvancedVisualizationOutput) -> String {
         if let Some(ref qp) = output.quantum_plot {
             format!(
                 "{{\"timePoints\": {}, \"connections\": {}}}",
@@ -943,7 +943,7 @@ impl UltrathinkVisualizer {
         }
     }
 
-    fn format_neuromorphic_data_for_html(&self, output: &UltrathinkVisualizationOutput) -> String {
+    fn format_neuromorphic_data_for_html(&self, output: &AdvancedVisualizationOutput) -> String {
         if let Some(ref np) = output.neuromorphic_plot {
             format!(
                 "{{\"neurons\": {}, \"evolution\": {}}}",
@@ -955,15 +955,15 @@ impl UltrathinkVisualizer {
         }
     }
 
-    fn format_performance_data_for_html(&self, output: &UltrathinkVisualizationOutput) -> String {
+    fn format_performance_data_for_html(&self, output: &AdvancedVisualizationOutput) -> String {
         format!(
             "{{\"metrics\": {}, \"time\": {}}}",
-            output.performance_dashboard.ultrathink_metrics.len(),
+            output.performance_dashboard.advanced_metrics.len(),
             output.performance_dashboard.execution_time
         )
     }
 
-    fn get_neuromorphic_benefit(&self, output: &UltrathinkVisualizationOutput) -> f64 {
+    fn get_neuromorphic_benefit(&self, output: &AdvancedVisualizationOutput) -> f64 {
         // Extract neuromorphic benefit from performance data
         output
             .performance_dashboard
@@ -974,7 +974,7 @@ impl UltrathinkVisualizer {
             .unwrap_or(1.0)
     }
 
-    fn get_ai_speedup(&self, output: &UltrathinkVisualizationOutput) -> f64 {
+    fn get_ai_speedup(&self, output: &AdvancedVisualizationOutput) -> f64 {
         // Extract AI speedup from performance data
         output
             .performance_dashboard
@@ -988,7 +988,7 @@ impl UltrathinkVisualizer {
 
 /// Complete visualization output for Advanced clustering
 #[derive(Debug)]
-pub struct UltrathinkVisualizationOutput {
+pub struct AdvancedVisualizationOutput {
     /// Standard cluster plot with quantum enhancement
     pub cluster_plot: ClusterPlot,
     /// Quantum coherence visualization
@@ -1037,7 +1037,7 @@ pub struct AISelectionPlot {
 #[derive(Debug)]
 pub struct PerformanceDashboard {
     /// Advanced clustering metrics
-    pub ultrathink_metrics: HashMap<String, f64>,
+    pub advanced_metrics: HashMap<String, f64>,
     /// Classical baseline comparison
     pub classical_baseline: HashMap<String, f64>,
     /// Execution time
@@ -1050,7 +1050,7 @@ pub struct PerformanceDashboard {
     pub improvement_factors: Vec<(String, f64)>,
 }
 
-impl UltrathinkVisualizationOutput {
+impl AdvancedVisualizationOutput {
     /// Create new empty visualization output
     pub fn new() -> Self {
         Self {
@@ -1066,7 +1066,7 @@ impl UltrathinkVisualizationOutput {
             neuromorphic_plot: None,
             ai_selection_plot: None,
             performance_dashboard: PerformanceDashboard {
-                ultrathink_metrics: HashMap::new(),
+                advanced_metrics: HashMap::new(),
                 classical_baseline: HashMap::new(),
                 execution_time: 0.0,
                 memory_usage: 0.0,
@@ -1096,25 +1096,25 @@ impl Default for AISelectionInsights {
 
 /// Convenience function to create Advanced visualization
 #[allow(dead_code)]
-pub fn visualize_ultrathink_results(
+pub fn visualize_advanced_results(
     data: &ArrayView2<f64>,
-    result: &UltrathinkClusteringResult,
-    config: Option<UltrathinkVisualizationConfig>,
-) -> Result<UltrathinkVisualizationOutput> {
+    result: &AdvancedClusteringResult,
+    config: Option<AdvancedVisualizationConfig>,
+) -> Result<AdvancedVisualizationOutput> {
     let config = config.unwrap_or_default();
-    let mut visualizer = UltrathinkVisualizer::new(config);
+    let mut visualizer = AdvancedVisualizer::new(config);
     visualizer.visualize_results(data, result)
 }
 
 /// Convenience function to create and export Advanced visualization
 #[allow(dead_code)]
-pub fn create_ultrathink_visualization_report(
+pub fn create_advanced_visualization_report(
     data: &ArrayView2<f64>,
-    result: &UltrathinkClusteringResult,
+    result: &AdvancedClusteringResult,
     output_filename: &str,
 ) -> Result<()> {
-    let config = UltrathinkVisualizationConfig::default();
-    let mut visualizer = UltrathinkVisualizer::new(config);
+    let config = AdvancedVisualizationConfig::default();
+    let mut visualizer = AdvancedVisualizer::new(config);
     let output = visualizer.visualize_results(data, result)?;
     visualizer.export_visualization(&output, output_filename)?;
     Ok(())

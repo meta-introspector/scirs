@@ -701,8 +701,8 @@ fn detect_macos_discrete_gpus() -> NdimageResult<Vec<DeviceCapability>> {
     if output_str.contains("Apple M") {
         let mut capability = DeviceCapability::default();
 
-        if output_str.contains("M1 Ultra") {
-            capability.name = "Apple M1 Ultra GPU (Metal)".to_string();
+        if output_str.contains("M1 Advanced") {
+            capability.name = "Apple M1 Advanced GPU (Metal)".to_string();
             capability.total_memory = 137_438_953_472; // 128GB unified memory
             capability.available_memory = 120_259_084_288; // 87% available
             capability.multiprocessor_count = Some(64); // 64-core GPU

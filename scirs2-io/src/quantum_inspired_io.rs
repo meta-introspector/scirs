@@ -2,7 +2,7 @@
 //!
 //! This module implements quantum-inspired algorithms for I/O optimization,
 //! leveraging quantum computing principles like superposition, entanglement,
-//! and quantum annealing for ultra-high performance data processing.
+//! and quantum annealing for advanced-high performance data processing.
 
 #![allow(dead_code)]
 #![allow(clippy::too_many_arguments)]

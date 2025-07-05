@@ -46,7 +46,11 @@ use std::cmp::Ordering;
 #[allow(dead_code)]
 pub fn mean_abs_deviation<F>(x: &ArrayView1<F>, center: Option<F>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + SimdUnifiedOps
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + NumCast
+        + SimdUnifiedOps
         + std::fmt::Display,
 {
     // Use standardized validation
@@ -114,8 +118,7 @@ pub fn median_abs_deviation<F>(
     scale: Option<F>,
 ) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Display,
 {
     // Use standardized validation
     if x.is_empty() {
@@ -170,8 +173,7 @@ where
 #[allow(dead_code)]
 pub fn iqr<F>(x: &ArrayView1<F>, interpolation: Option<&str>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {
@@ -217,7 +219,11 @@ where
 #[allow(dead_code)]
 pub fn data_range<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + SimdUnifiedOps
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + NumCast
+        + SimdUnifiedOps
         + std::fmt::Display,
 {
     // Use standardized validation
@@ -231,7 +237,10 @@ where
     // Find min and max using SIMD when beneficial
     let (min_val, max_val) = if optimizer.should_use_simd(n) {
         // Use SIMD operations for better performance
-        (F::simd_min(&x.view()), F::simd_max(&x.view()))
+        (
+            F::simd_min_element(&x.view()),
+            F::simd_max_element(&x.view()),
+        )
     } else {
         // Fallback to scalar operations for small arrays
         let min_val = x.iter().cloned().fold(F::infinity(), F::min);
@@ -273,8 +282,11 @@ where
 #[allow(dead_code)]
 pub fn coef_variation<F>(x: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Display
+        + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     // Check for empty array
     if x.is_empty() {
@@ -314,8 +326,7 @@ where
 #[allow(dead_code)]
 fn percentile<F>(x: &ArrayView1<F>, q: F, interpolation: &str) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {
@@ -409,8 +420,7 @@ where
 #[allow(dead_code)]
 pub fn gini_coefficient<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Display,
 {
     // Check for empty array
     if x.is_empty() {

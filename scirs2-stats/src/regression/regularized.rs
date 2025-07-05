@@ -76,7 +76,9 @@ where
         + 'static
         + num_traits::NumAssign
         + num_traits::One
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     // Check input dimensions
     if x.nrows() != y.len() {
@@ -263,7 +265,9 @@ where
         + num_traits::NumAssign
         + num_traits::One
         + ndarray::ScalarOperand
-        + std::fmt::Display,
+        + std::fmt::Display
+        + Send
+        + Sync,
 {
     match lstsq(x_ridge, y_ridge, None) {
         Ok(result) => Ok(result.x),
@@ -283,8 +287,7 @@ fn preprocess_data<F>(
     normalize: bool,
 ) -> StatsResult<PreprocessingResult<F>>
 where
-    F: Float + std::iter::Sum<F> + 'static
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + 'static + std::fmt::Display,
 {
     let n = x.nrows();
     let p = x.ncols();
@@ -361,8 +364,7 @@ fn transform_coefficients<F>(
     fit_intercept: bool,
 ) -> Array1<F>
 where
-    F: Float + 'static
-        + std::fmt::Display,
+    F: Float + 'static + std::fmt::Display,
 {
     let _p = coefficients.len();
     let p_features = x_mean.len();
@@ -412,7 +414,9 @@ where
         + num_traits::NumAssign
         + num_traits::One
         + ndarray::ScalarOperand
-        + std::fmt::Display,
+        + std::fmt::Display
+        + Send
+        + Sync,
 {
     // Calculate the mean squared error of the residuals
     let mse = residuals
@@ -522,7 +526,9 @@ where
         + 'static
         + num_traits::NumAssign
         + num_traits::One
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     // Check input dimensions
     if x.nrows() != y.len() {
@@ -752,7 +758,9 @@ where
         + num_traits::NumAssign
         + num_traits::One
         + ndarray::ScalarOperand
-        + std::fmt::Display,
+        + std::fmt::Display
+        + Send
+        + Sync,
 {
     // Calculate the mean squared error of the residuals
     let mse = residuals
@@ -880,7 +888,9 @@ where
         + 'static
         + num_traits::NumAssign
         + num_traits::One
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     // Check input dimensions
     if x.nrows() != y.len() {
@@ -1152,7 +1162,9 @@ where
         + num_traits::NumAssign
         + num_traits::One
         + ndarray::ScalarOperand
-        + std::fmt::Display,
+        + std::fmt::Display
+        + Send
+        + Sync,
 {
     // Calculate the mean squared error of the residuals
     let mse = residuals
@@ -1290,7 +1302,9 @@ where
         + 'static
         + num_traits::NumAssign
         + num_traits::One
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     // Check input dimensions
     if x.nrows() != y.len() {
@@ -1610,7 +1624,9 @@ where
         + num_traits::NumAssign
         + num_traits::One
         + ndarray::ScalarOperand
-        + std::fmt::Display,
+        + std::fmt::Display
+        + Send
+        + Sync,
 {
     let p = xtr.len();
 
@@ -1683,7 +1699,9 @@ where
         + num_traits::NumAssign
         + num_traits::One
         + ndarray::ScalarOperand
-        + std::fmt::Display,
+        + std::fmt::Display
+        + Send
+        + Sync,
 {
     // Calculate the mean squared error of the residuals
     let mse = residuals

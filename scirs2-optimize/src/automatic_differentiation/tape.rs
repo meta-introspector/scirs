@@ -170,6 +170,7 @@ impl ComputationTape {
                     // Constants have zero gradient
                 }
                 TapeNode::UnaryOp {
+                    op_type: _,
                     input,
                     result,
                     partial,
@@ -178,6 +179,7 @@ impl ComputationTape {
                     gradients[*input] += gradients[*result] * partial;
                 }
                 TapeNode::BinaryOp {
+                    op_type: _,
                     left,
                     right,
                     result,
@@ -769,6 +771,7 @@ mod tests {
 
         // Add operation: z = x + y (result=2)
         tape.add_node(TapeNode::BinaryOp {
+            op_type: BinaryOpType::Add,
             left: 0,
             right: 1,
             result: 2,
@@ -825,6 +828,7 @@ mod tests {
         // This should have triggered one batch
         streaming_tape
             .add_node(TapeNode::UnaryOp {
+                op_type: UnaryOpType::Neg,
                 input: 0,
                 result: 2,
                 partial: 1.0,

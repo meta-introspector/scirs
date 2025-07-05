@@ -2863,7 +2863,7 @@ pub struct OptimizationProblem<F: Float + Debug> {
 }
 
 #[cfg(test)]
-mod ultrathink_meta_learning_tests {
+mod advanced_meta_learning_tests {
     use super::*;
 
     #[test]

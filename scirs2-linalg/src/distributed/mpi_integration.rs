@@ -1746,7 +1746,7 @@ impl MPIBackend {
 /// This enhancement provides sophisticated dynamic process management, intelligent
 /// load balancing, and adaptive communication pattern optimization for large-scale
 /// distributed linear algebra operations.
-pub struct UltraAdvancedMPIManager {
+pub struct AdvancedAdvancedMPIManager {
     /// Dynamic process spawning manager
     process_spawner: Arc<Mutex<DynamicProcessSpawner>>,
     /// Intelligent load balancer with predictive capabilities
@@ -2187,8 +2187,8 @@ pub enum CheckpointCompression {
     Custom(String),
 }
 
-impl UltraAdvancedMPIManager {
-    /// Create a new ultra-advanced MPI manager
+impl AdvancedAdvancedMPIManager {
+    /// Create a new advanced-advanced MPI manager
     pub fn new() -> Self {
         Self {
             process_spawner: Arc::new(Mutex::new(DynamicProcessSpawner::new())),

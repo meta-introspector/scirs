@@ -10,6 +10,30 @@ use scirs2_special::bessel::*;
 use scirs2_special::{j0_zeros, j1_zeros};
 use std::io::{self, Write};
 
+/// Helper function to generate multiple J0 zeros
+fn generate_j0_zeros(num_zeros: usize) -> Result<Vec<f64>, String> {
+    let mut zeros = Vec::new();
+    for k in 1..=num_zeros {
+        match j0_zeros::<f64>(k) {
+            Ok(zero) => zeros.push(zero),
+            Err(e) => return Err(format!("Error computing J₀ zero {}: {}", k, e)),
+        }
+    }
+    Ok(zeros)
+}
+
+/// Helper function to generate multiple J1 zeros
+fn generate_j1_zeros(num_zeros: usize) -> Result<Vec<f64>, String> {
+    let mut zeros = Vec::new();
+    for k in 1..=num_zeros {
+        match j1_zeros::<f64>(k) {
+            Ok(zero) => zeros.push(zero),
+            Err(e) => return Err(format!("Error computing J₁ zero {}: {}", k, e)),
+        }
+    }
+    Ok(zeros)
+}
+
 #[allow(dead_code)]
 fn main() {
     println!("🚀 Welcome to the Interactive Bessel Functions Tutorial!");
@@ -230,14 +254,14 @@ fn explore_bessel_zeros() {
     println!("────────|──────────");
 
     let zeros = match n {
-        0 => match j0_zeros::<f64>(num_zeros) {
+        0 => match generate_j0_zeros(num_zeros) {
             Ok(z) => z,
             Err(e) => {
                 println!("Error computing J₀ zeros: {}", e);
                 return;
             }
         },
-        1 => match j1_zeros::<f64>(num_zeros) {
+        1 => match generate_j1_zeros(num_zeros) {
             Ok(z) => z,
             Err(e) => {
                 println!("Error computing J₁ zeros: {}", e);
@@ -525,14 +549,14 @@ fn drum_vibration_demo() {
     println!("-----------|----------------|------------");
 
     // Calculate first few modes
-    let zeros_j0 = match j0_zeros::<f64>(3) {
+    let zeros_j0 = match generate_j0_zeros(3) {
         Ok(z) => z,
         Err(e) => {
             println!("Error computing J₀ zeros: {}", e);
             return;
         }
     };
-    let zeros_j1 = match j1_zeros::<f64>(3) {
+    let zeros_j1 = match generate_j1_zeros(3) {
         Ok(z) => z,
         Err(e) => {
             println!("Error computing J₁ zeros: {}", e);
@@ -587,7 +611,7 @@ fn heat_conduction_demo() {
     io::stdout().flush().unwrap();
     let time: f64 = get_user_input().parse().unwrap_or(10.0);
 
-    let zeros = match j0_zeros::<f64>(5) {
+    let zeros = match generate_j0_zeros(5) {
         Ok(z) => z,
         Err(e) => {
             println!("Error computing J₀ zeros: {}", e);
@@ -635,14 +659,14 @@ fn waveguide_demo() {
     println!("--------|-------------------|---------------");
 
     // TE modes (use Bessel function zeros)
-    let zeros_j0 = match j0_zeros::<f64>(2) {
+    let zeros_j0 = match generate_j0_zeros(2) {
         Ok(z) => z,
         Err(e) => {
             println!("Error computing J₀ zeros: {}", e);
             return;
         }
     };
-    let zeros_j1 = match j1_zeros::<f64>(3) {
+    let zeros_j1 = match generate_j1_zeros(3) {
         Ok(z) => z,
         Err(e) => {
             println!("Error computing J₁ zeros: {}", e);
@@ -697,14 +721,14 @@ fn quantum_mechanics_demo() {
     println!("State (m,k,n) | Energy | Description");
     println!("--------------|--------|------------");
 
-    let zeros_j0 = match j0_zeros::<f64>(3) {
+    let zeros_j0 = match generate_j0_zeros(3) {
         Ok(z) => z,
         Err(e) => {
             println!("Error computing J₀ zeros: {}", e);
             return;
         }
     };
-    let zeros_j1 = match j1_zeros::<f64>(2) {
+    let zeros_j1 = match generate_j1_zeros(2) {
         Ok(z) => z,
         Err(e) => {
             println!("Error computing J₁ zeros: {}", e);

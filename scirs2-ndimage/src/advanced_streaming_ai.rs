@@ -2,7 +2,7 @@
 //!
 //! This module implements next-generation streaming algorithms that use artificial intelligence
 //! to predict optimal chunking strategies, adapt to data patterns, and optimize memory usage
-//! for ultra-large image processing tasks.
+//! for advanced-large image processing tasks.
 //!
 //! # Revolutionary Features
 //!

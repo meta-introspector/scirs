@@ -1,4 +1,4 @@
-//! Ultra-advanced adaptive memory optimization system for statistical computing
+//! Advanced-advanced adaptive memory optimization system for statistical computing
 //!
 //! This module provides state-of-the-art memory management techniques optimized
 //! for extremely large-scale statistical computations with:
@@ -24,8 +24,8 @@ use std::sync::{Arc, Mutex, RwLock, Weak};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
-/// Ultra-advanced adaptive memory configuration
-#[derive(Debug, Clone)]
+/// Advanced-advanced adaptive memory configuration
+#[derive(Debug)]
 pub struct AdaptiveMemoryConfig {
     /// Memory allocation strategies
     pub allocation_strategy: AllocationStrategy,
@@ -61,7 +61,7 @@ pub enum AllocationStrategy {
 }
 
 /// Cache optimization configuration
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct CacheOptimizationConfig {
     /// Cache hierarchy information
     pub cache_hierarchy: CacheHierarchy,
@@ -109,7 +109,7 @@ pub enum DataLayoutStrategy {
 }
 
 /// Prefetching configuration
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct PrefetchConfig {
     /// Enable software prefetching
     pub enable_software_prefetch: bool,
@@ -126,7 +126,7 @@ pub struct PrefetchConfig {
 }
 
 /// Memory access pattern analysis
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AccessPatternConfig {
     /// Enable pattern detection
     pub enable_detection: bool,
@@ -141,7 +141,7 @@ pub struct AccessPatternConfig {
 }
 
 /// NUMA (Non-Uniform Memory Access) configuration
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NumaConfig {
     /// Enable NUMA awareness
     pub enable_numa: bool,
@@ -186,7 +186,7 @@ pub enum NumaMigrationPolicy {
 }
 
 /// Predictive memory management configuration
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct PredictiveConfig {
     /// Enable predictive memory management
     pub enable_prediction: bool,
@@ -237,7 +237,7 @@ pub struct FeatureExtractionConfig {
 }
 
 /// Memory pressure detection and response
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MemoryPressureConfig {
     /// Memory pressure detection thresholds
     pub pressure_thresholds: PressureThresholds,
@@ -299,7 +299,7 @@ pub enum PressureResponse {
 }
 
 /// Emergency response configuration
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct EmergencyResponseConfig {
     /// Enable emergency responses
     pub enable_emergency: bool,
@@ -794,10 +794,10 @@ impl Default for GCWorkloadAwareness {
     }
 }
 
-/// Ultra-advanced adaptive memory manager
+/// Advanced-advanced adaptive memory manager
 pub struct AdaptiveMemoryManager<F> {
     config: AdaptiveMemoryConfig,
-    memory_pools: Arc<RwLock<HashMap<usize, MemoryPool>>>,
+    memory_pools: Arc<RwLock<HashMap<usize, Arc<MemoryPool>>>>,
     cache_manager: Arc<CacheManager>,
     numa_manager: Arc<NumaManager>,
     predictive_engine: Arc<PredictiveEngine>,
@@ -834,7 +834,7 @@ pub struct LayoutOptimizer {
 }
 
 /// Layout performance metrics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct LayoutPerformance {
     strategy: DataLayoutStrategy,
     cache_hit_rate: f64,
@@ -858,7 +858,7 @@ pub struct PatternPredictor {
 }
 
 /// Memory access record
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MemoryAccess {
     address: usize,
     size: usize,
@@ -909,7 +909,7 @@ pub struct HardwarePrefetcher {
 }
 
 /// Prefetch instruction type
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct PrefetchInstruction {
     instruction_type: PrefetchType,
     locality: Locality,
@@ -942,7 +942,7 @@ pub struct AccessTracker {
 }
 
 /// Access pattern for a memory region
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AccessPattern {
     region_start: usize,
     region_size: usize,
@@ -954,7 +954,7 @@ pub struct AccessPattern {
 }
 
 /// Hot memory region
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct HotSpot {
     address: usize,
     size: usize,
@@ -964,7 +964,7 @@ pub struct HotSpot {
 }
 
 /// Cold memory region
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ColdRegion {
     address: usize,
     size: usize,
@@ -981,7 +981,7 @@ pub struct NumaManager {
 }
 
 /// NUMA topology information
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NumaTopology {
     nodes: Vec<NumaNode>,
     distances: Array2<f64>,
@@ -989,7 +989,7 @@ pub struct NumaTopology {
 }
 
 /// NUMA node information
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NumaNode {
     node_id: usize,
     cpus: Vec<usize>,
@@ -1007,7 +1007,7 @@ pub struct MigrationEngine {
 }
 
 /// Memory migration request
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MigrationRequest {
     source_node: usize,
     target_node: usize,
@@ -1017,7 +1017,7 @@ pub struct MigrationRequest {
 }
 
 /// Memory region descriptor
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MemoryRegion {
     start_address: usize,
     size: usize,
@@ -1035,7 +1035,7 @@ pub enum MigrationPriority {
 }
 
 /// Migration statistics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MigrationStatistics {
     total_migrations: usize,
     successful_migrations: usize,
@@ -1088,7 +1088,7 @@ pub struct FeatureExtractor {
 }
 
 /// Training example for predictive models
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TrainingExample {
     features: Vec<f64>,
     target: f64,
@@ -1097,7 +1097,7 @@ pub struct TrainingExample {
 }
 
 /// Training context for better model accuracy
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TrainingContext {
     operation_type: String,
     data_size: usize,
@@ -1106,7 +1106,7 @@ pub struct TrainingContext {
 }
 
 /// Model performance metrics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ModelPerformance {
     accuracy: f64,
     precision: f64,
@@ -1125,7 +1125,7 @@ pub struct PressureMonitor {
 }
 
 /// Pressure reading
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct PressureReading {
     pressure_level: f64,
     memory_usage: usize,
@@ -1135,7 +1135,7 @@ pub struct PressureReading {
 }
 
 /// Pressure trigger events
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum PressureTrigger {
     AllocationFailure,
     SwapActivity,
@@ -1152,7 +1152,7 @@ pub struct ResponseEngine {
 }
 
 /// Active pressure response
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ActiveResponse {
     response_type: PressureResponse,
     start_time: Instant,
@@ -1177,7 +1177,7 @@ pub struct ChunkScheduler {
 }
 
 /// Data chunk for out-of-core processing
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Chunk {
     chunk_id: usize,
     data_type: String,
@@ -1189,7 +1189,7 @@ pub struct Chunk {
 }
 
 /// Chunk location
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum ChunkLocation {
     Memory(usize),         // Memory address
     Disk(String),          // File path
@@ -1198,7 +1198,7 @@ pub enum ChunkLocation {
 }
 
 /// Chunk request
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ChunkRequest {
     chunk_id: usize,
     request_type: ChunkRequestType,
@@ -1287,7 +1287,7 @@ pub struct NetworkManager {
 }
 
 /// Network configuration
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NetworkConfig {
     storage_nodes: Vec<StorageNode>,
     replication_factor: usize,
@@ -1296,7 +1296,7 @@ pub struct NetworkConfig {
 }
 
 /// Storage node information
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct StorageNode {
     node_id: String,
     address: String,
@@ -1345,7 +1345,7 @@ pub trait Compressor: Send + Sync {
 }
 
 /// Compression statistics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct CompressionStatistics {
     total_compressions: usize,
     total_decompressions: usize,
@@ -1373,7 +1373,7 @@ pub struct GCScheduler {
 }
 
 /// GC task
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct GCTask {
     task_type: GCTaskType,
     priority: GCPriority,
@@ -1401,7 +1401,7 @@ pub enum GCPriority {
 }
 
 /// GC statistics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct GCStatistics {
     total_collections: usize,
     total_pause_time: Duration,
@@ -1432,7 +1432,7 @@ pub struct OperationTracker {
 }
 
 /// Statistical operation
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct StatisticalOperation {
     operation_type: StatOperationType,
     start_time: Instant,
@@ -1459,7 +1459,7 @@ pub enum StatOperationType {
 }
 
 /// Completed operation for analysis
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct CompletedOperation {
     operation: StatisticalOperation,
     completion_time: Instant,
@@ -1474,7 +1474,7 @@ pub struct LifecycleAnalyzer {
 }
 
 /// Object lifetime information
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ObjectLifetime {
     object_id: usize,
     creation_time: Instant,
@@ -1496,7 +1496,7 @@ pub enum ObjectType {
 }
 
 /// Lifetime pattern for different operations
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct LifetimePattern {
     operation_type: StatOperationType,
     average_lifetime: Duration,
@@ -1525,7 +1525,7 @@ pub enum ComputationPhase {
 }
 
 /// Phase transition information
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct PhaseTransition {
     from_phase: ComputationPhase,
     to_phase: ComputationPhase,
@@ -1569,7 +1569,7 @@ pub struct MemoryPerformanceMetrics {
 }
 
 /// Memory performance snapshot
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MemoryPerformanceSnapshot {
     timestamp: Instant,
     metrics: MemoryPerformanceMetrics,
@@ -1577,7 +1577,7 @@ pub struct MemoryPerformanceSnapshot {
 }
 
 /// System context for performance analysis
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct SystemContext {
     cpu_usage: f64,
     system_load: f64,
@@ -1595,7 +1595,7 @@ pub struct AlertingSystem {
 }
 
 /// Alert rule configuration
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AlertRule {
     rule_id: String,
     condition: AlertCondition,
@@ -1605,7 +1605,6 @@ pub struct AlertRule {
 }
 
 /// Alert condition
-#[derive(Debug, Clone)]
 pub enum AlertCondition {
     MemoryUsageThreshold(f64),
     CacheHitRatioThreshold(f64),
@@ -1614,6 +1613,32 @@ pub enum AlertCondition {
     PressureLevelThreshold(f64),
     PerformanceDegradation(f64),
     Custom(Box<dyn Fn(&MemoryPerformanceMetrics) -> bool + Send + Sync>),
+}
+
+impl std::fmt::Debug for AlertCondition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AlertCondition::MemoryUsageThreshold(v) => {
+                f.debug_tuple("MemoryUsageThreshold").field(v).finish()
+            }
+            AlertCondition::CacheHitRatioThreshold(v) => {
+                f.debug_tuple("CacheHitRatioThreshold").field(v).finish()
+            }
+            AlertCondition::GCOverheadThreshold(v) => {
+                f.debug_tuple("GCOverheadThreshold").field(v).finish()
+            }
+            AlertCondition::FragmentationThreshold(v) => {
+                f.debug_tuple("FragmentationThreshold").field(v).finish()
+            }
+            AlertCondition::PressureLevelThreshold(v) => {
+                f.debug_tuple("PressureLevelThreshold").field(v).finish()
+            }
+            AlertCondition::PerformanceDegradation(v) => {
+                f.debug_tuple("PerformanceDegradation").field(v).finish()
+            }
+            AlertCondition::Custom(_) => f.debug_tuple("Custom").field(&"<function>").finish(),
+        }
+    }
 }
 
 /// Alert severity level
@@ -1626,7 +1651,7 @@ pub enum AlertSeverity {
 }
 
 /// Alert action
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum AlertAction {
     Log(String),
     Notify(String),
@@ -1638,7 +1663,7 @@ pub enum AlertAction {
 }
 
 /// Active alert
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct ActiveAlert {
     rule_id: String,
     start_time: Instant,
@@ -1648,7 +1673,7 @@ pub struct ActiveAlert {
 }
 
 /// Alert event for history tracking
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AlertEvent {
     rule_id: String,
     timestamp: Instant,
@@ -1659,7 +1684,7 @@ pub struct AlertEvent {
 }
 
 /// Allocation context for decision making
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct AllocationContext {
     size: usize,
     thread_id: usize,
@@ -1692,7 +1717,16 @@ enum AllocationUrgency {
 
 impl<F> AdaptiveMemoryManager<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + 'static
         + std::fmt::Display,
 {
     /// Create new adaptive memory manager
@@ -1864,18 +1898,18 @@ where
         {
             let pools = self.memory_pools.read().unwrap();
             if let Some(pool) = pools.get(&pool_size) {
-                return Ok(pool.clone());
+                return Ok(Arc::clone(pool));
             }
         }
 
         // Create new pool
         let mut pools = self.memory_pools.write().unwrap();
         if let Some(pool) = pools.get(&pool_size) {
-            return Ok(pool.clone());
+            return Ok(Arc::clone(pool));
         }
 
         let pool = Arc::new(MemoryPool::new(pool_size, self.config.allocation_strategy));
-        pools.insert(pool_size, pool.clone());
+        pools.insert(pool_size, Arc::clone(&pool));
         Ok(pool)
     }
 
@@ -2061,7 +2095,7 @@ where
 }
 
 /// Memory usage statistics
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MemoryUsageStatistics {
     pub total_allocated: usize,
     pub peak_allocated: usize,
@@ -2074,7 +2108,7 @@ pub struct MemoryUsageStatistics {
 }
 
 /// GC result information
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct GCResult {
     pub memory_reclaimed: usize,
     pub collection_time: Duration,
@@ -2179,7 +2213,7 @@ impl LayoutOptimizer {
 impl PrefetchEngine {
     fn new(config: &PrefetchConfig) -> Self {
         Self {
-            prefetch_config: config.clone(),
+            prefetch_config: *config,
             pattern_predictor: PatternPredictor::new(),
             hardware_prefetcher: HardwarePrefetcher::new(),
         }
@@ -2610,7 +2644,7 @@ impl MemoryPerformanceMonitor {
     }
 
     fn get_current_metrics(&self) -> MemoryPerformanceMetrics {
-        self.performance_metrics.read().unwrap().clone()
+        (*self.performance_metrics.read().unwrap()).clone()
     }
 }
 
@@ -2643,7 +2677,16 @@ impl AlertingSystem {
 
 impl<F> Default for AdaptiveMemoryManager<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + 'static
         + std::fmt::Display,
 {
     fn default() -> Self {
@@ -2659,7 +2702,16 @@ pub type F32AdaptiveMemoryManager = AdaptiveMemoryManager<f32>;
 #[allow(dead_code)]
 pub fn create_adaptive_memory_manager<F>() -> AdaptiveMemoryManager<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + 'static
         + std::fmt::Display,
 {
     AdaptiveMemoryManager::new()
@@ -2668,7 +2720,16 @@ where
 #[allow(dead_code)]
 pub fn create_optimized_memory_manager<F>(config: AdaptiveMemoryConfig) -> AdaptiveMemoryManager<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + 'static
         + std::fmt::Display,
 {
     AdaptiveMemoryManager::with_config(config)

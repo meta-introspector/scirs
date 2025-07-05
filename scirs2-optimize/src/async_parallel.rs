@@ -7,7 +7,7 @@
 use crate::error::OptimizeError;
 use crate::unconstrained::OptimizeResult;
 use ndarray::{Array1, Array2};
-use rand::{prelude::*, rng};
+use rand::{prelude::*, Rng};
 use std::future::Future;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -340,7 +340,6 @@ impl AsyncDifferentialEvolution {
         let result = OptimizeResult {
             x: best_individual,
             fun: best_fitness,
-            iterations: generation,
             nit: generation,
             func_evals: final_stats.total_completed,
             nfev: final_stats.total_completed,
@@ -359,18 +358,18 @@ impl AsyncDifferentialEvolution {
     /// Initialize random population
     fn initialize_population(&self) -> Array2<f64> {
         let mut population = Array2::zeros((self.population_size, self.dimensions));
-        let mut rng = rng();
+        let mut rng = rand::rng();
 
         if let Some((ref lower, ref upper)) = self.bounds {
             for mut individual in population.outer_iter_mut() {
                 for (j, gene) in individual.iter_mut().enumerate() {
-                    *gene = lower[j] + rng.random::<f64>() * (upper[j] - lower[j]);
+                    *gene = lower[j] + rng.gen::<f64>() * (upper[j] - lower[j]);
                 }
             }
         } else {
             for mut individual in population.outer_iter_mut() {
                 for gene in individual.iter_mut() {
-                    *gene = rng.random::<f64>() * 2.0 - 1.0; // [-1, 1]
+                    *gene = rng.gen::<f64>() * 2.0 - 1.0; // [-1, 1]
                 }
             }
         }
@@ -577,13 +576,13 @@ impl AsyncDifferentialEvolution {
         _fitness_values: &[f64],
     ) -> Array2<f64> {
         let mut new_population = Array2::zeros((self.population_size, self.dimensions));
-        let mut rng = rng();
+        let mut rng = rand::rng();
 
         for i in 0..self.population_size {
             // Select three random individuals (different from current)
             let mut indices = Vec::new();
             while indices.len() < 3 {
-                let idx = rng.random_range(0..self.population_size);
+                let idx = rng.gen_range(0..self.population_size);
                 if idx != i && !indices.contains(&idx) {
                     indices.push(idx);
                 }
@@ -607,10 +606,10 @@ impl AsyncDifferentialEvolution {
 
             // Crossover
             let mut trial = current_population.row(i).to_owned();
-            let r = rng.random_range(0..self.dimensions);
+            let r = rng.gen_range(0..self.dimensions);
 
             for j in 0..self.dimensions {
-                if j == r || rng.random::<f64>() < self.crossover_probability {
+                if j == r || rng.gen::<f64>() < self.crossover_probability {
                     trial[j] = mutant[j];
                 }
             }
@@ -671,7 +670,7 @@ mod tests {
         // Function with varying evaluation times
         let objective = |x: Array1<f64>| async move {
             // Simulate varying computation times (10ms to 100ms)
-            let delay = rng().random_range(10..=100);
+            let delay = rand::rng().gen_range(10..=100);
             sleep(Duration::from_millis(delay)).await;
 
             // Rosenbrock function (2D)
@@ -709,7 +708,7 @@ mod tests {
         println!("Async DE Results:");
         println!("  Final solution: [{:.6}, {:.6}]", result.x[0], result.x[1]);
         println!("  Final cost: {:.6}", result.fun);
-        println!("  Generations: {}", result.iterations);
+        println!("  Generations: {}", result.nit);
         println!("  Total evaluations: {}", stats.total_completed);
         println!("  Average eval time: {:?}", stats.avg_evaluation_time);
     }
@@ -719,7 +718,7 @@ mod tests {
         // Function that sometimes takes too long
         let objective = |x: Array1<f64>| async move {
             // 50% chance of taking too long
-            if rand::rng().random::<f64>() < 0.5 {
+            if rand::rng().gen::<f64>() < 0.5 {
                 sleep(Duration::from_secs(1)).await; // Too long
             } else {
                 sleep(Duration::from_millis(10)).await; // Normal

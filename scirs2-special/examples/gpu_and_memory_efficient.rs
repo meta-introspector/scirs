@@ -3,7 +3,7 @@
 //! This example shows how to use the GPU-accelerated and memory-efficient
 //! implementations of special functions for large arrays.
 
-use ndarray::{Array1, ArrayView1};
+use ndarray::Array1;
 use scirs2_special::error::SpecialResult;
 
 #[cfg(feature = "gpu")]
@@ -178,7 +178,7 @@ fn compare_accuracy() -> SpecialResult<()> {
     println!("\nAccuracy Comparison:");
     println!("===================");
 
-    let test_values = vec![0.5, 1.0, 2.5, 5.0, 10.0];
+    let test_values: Vec<f64> = vec![0.5, 1.0, 2.5, 5.0, 10.0];
 
     for &x in &test_values {
         let single_value = scirs2_special::gamma(x);

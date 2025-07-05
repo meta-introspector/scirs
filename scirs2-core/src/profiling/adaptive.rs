@@ -904,22 +904,14 @@ impl AdaptiveOptimizer {
         self.active_recommendations
             .lock()
             .map(|recs| recs.clone())
-            .map_err(|_| {
-                CoreError::from(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Failed to access recommendations",
-                ))
-            })
+            .map_err(|_| CoreError::from(std::io::Error::other("Failed to access recommendations")))
     }
 
     /// Apply optimization recommendation
     pub fn apply_recommendation(&mut self, recommendation_id: usize) -> CoreResult<()> {
         let recommendation = {
             let mut recs = self.active_recommendations.lock().map_err(|_| {
-                CoreError::from(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Failed to access recommendations",
-                ))
+                CoreError::from(std::io::Error::other("Failed to access recommendations"))
             })?;
 
             if recommendation_id >= recs.len() {
@@ -976,10 +968,7 @@ impl AdaptiveOptimizer {
 
         Err(CoreError::from(std::io::Error::new(
             std::io::ErrorKind::NotFound,
-            format!(
-                "Workload '{workload_name}' not found",
-                workload_name = workload_name
-            ),
+            format!("Workload '{workload_name}' not found"),
         )))
     }
 
@@ -1111,7 +1100,7 @@ impl AdaptiveOptimizer {
                                 benefit_score: 0.8,
                             },
                             confidence: 0.85,
-                            rationale: format!("Workload '{workload}' shows degrading execution time. Increasing thread count may improve parallelization.", workload = workload),
+                            rationale: format!("Workload '{workload}' shows degrading execution time. Increasing thread count may improve parallelization."),
                             risk_level: RiskLevel::Low,
                         });
                     }

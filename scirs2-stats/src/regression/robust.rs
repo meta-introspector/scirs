@@ -64,8 +64,7 @@ where
 /// Huber loss function and constants for robust regression
 pub struct HuberT<F>
 where
-    F: Float + 'static
-        + std::fmt::Display,
+    F: Float + 'static + std::fmt::Display,
 {
     /// The parameter that controls the transition between squared and absolute error
     pub t: F,
@@ -76,8 +75,7 @@ where
 
 impl<F> HuberT<F>
 where
-    F: Float + 'static
-        + std::fmt::Display,
+    F: Float + 'static + std::fmt::Display,
 {
     /// Create a new Huber T object with default parameters
     ///
@@ -130,8 +128,7 @@ where
 
 impl<F> Default for HuberT<F>
 where
-    F: Float + 'static
-        + std::fmt::Display,
+    F: Float + 'static + std::fmt::Display,
 {
     fn default() -> Self {
         Self::new()
@@ -155,8 +152,7 @@ where
 #[allow(dead_code)]
 fn huber_weight<F>(r: F, t: F) -> F
 where
-    F: Float + 'static
-        + std::fmt::Display,
+    F: Float + 'static + std::fmt::Display,
 {
     let abs_r = crate::regression::utils::float_abs(r);
     if abs_r <= t {
@@ -212,7 +208,9 @@ where
         + std::ops::Div<Output = F>
         + std::fmt::Debug
         + std::fmt::Display
-        + 'static,
+        + 'static
+        + Send
+        + Sync,
 {
     // Check input dimensions
     if x.len() != y.len() {
@@ -332,8 +330,7 @@ where
 #[allow(dead_code)]
 fn compute_median<F>(x: &ArrayView1<F>) -> F
 where
-    F: Float + 'static
-        + std::fmt::Display,
+    F: Float + 'static + std::fmt::Display,
 {
     let n = x.len();
     if n == 0 {
@@ -468,10 +465,10 @@ where
         + 'static
         + num_traits::NumAssign
         + num_traits::One
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
-    use scirs2_core::rng;
-    use rand::rngs::StdRng;
     use rand::seq::SliceRandom;
 
     // Check input dimensions
@@ -523,11 +520,12 @@ where
     };
 
     // Initialize random number generator
+    use scirs2_core::random::Random;
     let mut rng = if let Some(seed) = random_seed {
-        StdRng::seed_from_u64(seed)
+        Random::with_seed(seed)
     } else {
         // Use a random seed
-        StdRng::seed_from_u64(rand::random())
+        Random::default()
     };
 
     // Keep track of best model
@@ -693,7 +691,9 @@ where
         + num_traits::NumAssign
         + num_traits::One
         + ndarray::ScalarOperand
-        + std::fmt::Display,
+        + std::fmt::Display
+        + Send
+        + Sync,
 {
     match lstsq(x, y, None) {
         Ok(result) => Ok(result.x),
@@ -719,7 +719,9 @@ where
         + 'static
         + num_traits::NumAssign
         + num_traits::One
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     let n = x.nrows();
     let p = x.ncols();
@@ -938,6 +940,8 @@ where
         + 'static
         + num_traits::NumAssign
         + num_traits::One
+        + Send
+        + Sync
         + ndarray::ScalarOperand,
 {
     // Check input dimensions
@@ -1154,7 +1158,9 @@ where
         + num_traits::NumAssign
         + num_traits::One
         + ndarray::ScalarOperand
-        + std::fmt::Display,
+        + std::fmt::Display
+        + Send
+        + Sync,
 {
     match lstsq(x, y, None) {
         Ok(result) => Ok(result.x),
@@ -1182,7 +1188,9 @@ where
         + num_traits::NumAssign
         + num_traits::One
         + ndarray::ScalarOperand
-        + std::fmt::Display,
+        + std::fmt::Display
+        + Send
+        + Sync,
 {
     // Calculate weighted X'X
     let mut xtx = Array2::<F>::zeros((x.ncols(), x.ncols()));

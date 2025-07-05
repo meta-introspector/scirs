@@ -1,4 +1,4 @@
-//! Ultra-enhanced Lomb-Scargle validation in Advanced mode
+//! Advanced-enhanced Lomb-Scargle validation in Advanced mode
 //!
 //! This module provides advanced validation capabilities for Lomb-Scargle periodogram
 //! implementation with comprehensive statistical testing, edge case validation,
@@ -8,14 +8,15 @@ use crate::error::SignalResult;
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
+use scirs2_core::random::Rng;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::Instant;
 
-/// Ultra-enhanced validation result with advanced metrics
+/// Advanced-enhanced validation result with advanced metrics
 #[derive(Debug, Clone)]
-pub struct UltraEnhancedLombScargleValidationResult {
+pub struct AdvancedEnhancedLombScargleValidationResult {
     /// Basic accuracy validation
     pub basic_validation: LombScargleAccuracyValidation,
     /// Statistical robustness assessment
@@ -135,11 +136,11 @@ pub struct FalseAlarmAnalysisMetrics {
     pub significance_reliability: f64,
 }
 
-/// Run comprehensive ultra-enhanced Lomb-Scargle validation
+/// Run comprehensive advanced-enhanced Lomb-Scargle validation
 #[allow(dead_code)]
-pub fn run_ultra_enhanced_lombscargle_validation(
-) -> SignalResult<UltraEnhancedLombScargleValidationResult> {
-    println!("Running ultra-enhanced Lomb-Scargle validation in Advanced mode...");
+pub fn run_advanced_enhanced_lombscargle_validation(
+) -> SignalResult<AdvancedEnhancedLombScargleValidationResult> {
+    println!("Running advanced-enhanced Lomb-Scargle validation in Advanced mode...");
 
     let mut critical_issues = Vec::new();
     let mut recommendations = Vec::new();
@@ -199,7 +200,7 @@ pub fn run_ultra_enhanced_lombscargle_validation(
             .push("Consider algorithmic optimizations for better time complexity".to_string());
     }
 
-    Ok(UltraEnhancedLombScargleValidationResult {
+    Ok(AdvancedEnhancedLombScargleValidationResult {
         basic_validation,
         statistical_robustness,
         edge_case_validation,
@@ -223,7 +224,7 @@ fn validate_basic_accuracy() -> SignalResult<LombScargleAccuracyValidation> {
     // Test 1: Single frequency sinusoid with irregular sampling
     for &freq in &[0.1, 1.0, 5.0, 10.0] {
         let n = 200;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         // Generate irregular time samples
         let mut t = Vec::new();
@@ -327,7 +328,7 @@ fn validate_statistical_robustness() -> SignalResult<StatisticalRobustnessMetric
     for _ in 0..n_trials {
         let n = 200;
         let t: Vec<f64> = (0..n).map(|i| i as f64 * 0.01).collect();
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let y: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
 
         let freq_grid = Array1::linspace(0.1, 10.0, 100);
@@ -689,12 +690,12 @@ fn calculate_enhanced_overall_score(
 
 /// Generate comprehensive validation report
 #[allow(dead_code)]
-pub fn generate_ultra_enhanced_validation_report(
-    result: &UltraEnhancedLombScargleValidationResult,
+pub fn generate_advanced_enhanced_validation_report(
+    result: &AdvancedEnhancedLombScargleValidationResult,
 ) -> String {
     let mut report = String::new();
 
-    report.push_str("=== Ultra-Enhanced Lomb-Scargle Validation Report ===\n\n");
+    report.push_str("=== Advanced-Enhanced Lomb-Scargle Validation Report ===\n\n");
 
     report.push_str(&format!(
         "Enhanced Overall Score: {:.1}/100\n\n",

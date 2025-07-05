@@ -195,7 +195,7 @@ impl Default for LombScargleValidationConfig {
 
 /// Enhanced Advanced validation of Lomb-Scargle implementation
 ///
-/// This function runs an ultra-comprehensive validation suite covering:
+/// This function runs an advanced-comprehensive validation suite covering:
 /// - Single and multi-frequency signals with precision analysis
 /// - Advanced noise models and extreme edge cases
 /// - Sophisticated sampling patterns and statistical testing

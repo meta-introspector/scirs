@@ -120,8 +120,7 @@ impl StatsConfig {
 pub trait CorrelationExt<F, D>
 where
     F: Float + std::fmt::Display + std::iter::Sum + Send + Sync,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F> + std::fmt::Display,
 {
     /// Compute correlation with optional p-value based on configuration
     fn correlation(

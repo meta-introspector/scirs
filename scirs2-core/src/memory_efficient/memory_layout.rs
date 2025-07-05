@@ -72,7 +72,7 @@ impl LayoutOrder {
             "A" | "ANY" => Ok(LayoutOrder::Any),
             "K" | "KEEP" => Ok(LayoutOrder::Keep),
             _ => Err(CoreError::ValidationError(
-                ErrorContext::new(format!("Invalid layout order: {}", s))
+                ErrorContext::new(format!("Invalid layout order: {s}"))
                     .with_location(ErrorLocation::new(file!(), line!())),
             )),
         }
@@ -274,8 +274,7 @@ impl MemoryLayout {
             if idx >= dim {
                 return Err(CoreError::IndexError(
                     ErrorContext::new(format!(
-                        "Index {} is out of bounds for axis {} with size {}",
-                        idx, i, dim
+                        "Index {idx} is out of bounds for axis {i} with size {dim}"
                     ))
                     .with_location(ErrorLocation::new(file!(), line!())),
                 ));
@@ -297,8 +296,7 @@ impl MemoryLayout {
         if linear_idx >= total_elements {
             return Err(CoreError::IndexError(
                 ErrorContext::new(format!(
-                    "Linear index {} is out of bounds for array with {} elements",
-                    linear_idx, total_elements
+                    "Linear index {linear_idx} is out of bounds for array with {total_elements} elements"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
@@ -450,8 +448,7 @@ impl MemoryLayout {
         if new_size != old_size {
             return Err(CoreError::ShapeError(
                 ErrorContext::new(format!(
-                    "Cannot reshape array of size {} into shape with size {}",
-                    old_size, new_size
+                    "Cannot reshape array of size {old_size} into shape with size {new_size}"
                 ))
                 .with_location(ErrorLocation::new(file!(), line!())),
             ));
@@ -731,13 +728,13 @@ impl ArrayCreation {
         match order {
             LayoutOrder::C => Array::from_shape_vec(shape, data).map_err(|e| {
                 CoreError::ShapeError(
-                    ErrorContext::new(format!("error: {}", e))
+                    ErrorContext::new(format!("error: {e}"))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 )
             }),
             LayoutOrder::Fortran => Array::from_shape_vec(shape.f(), data).map_err(|e| {
                 CoreError::ShapeError(
-                    ErrorContext::new(format!("error: {}", e))
+                    ErrorContext::new(format!("error: {e}"))
                         .with_location(ErrorLocation::new(file!(), line!())),
                 )
             }),

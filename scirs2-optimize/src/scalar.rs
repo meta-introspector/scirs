@@ -63,7 +63,7 @@ pub struct ScalarOptimizeResult {
     /// Function value at the minimum
     pub fun: f64,
     /// Number of iterations
-    pub iterations: usize,
+    pub nit: usize,
     /// Number of function evaluations
     pub function_evals: usize,
     /// Whether the optimization succeeded
@@ -182,7 +182,7 @@ where
             return Ok(ScalarOptimizeResult {
                 x,
                 fun: fx,
-                iterations: iter,
+                nit: iter,
                 function_evals: feval,
                 success: true,
                 message: "Optimization terminated successfully.".to_string(),
@@ -328,7 +328,7 @@ where
             return Ok(ScalarOptimizeResult {
                 x,
                 fun: fx,
-                iterations: iter,
+                nit: iter,
                 function_evals: feval,
                 success: true,
                 message: "Optimization terminated successfully.".to_string(),
@@ -465,7 +465,7 @@ where
             return Ok(ScalarOptimizeResult {
                 x,
                 fun: fx,
-                iterations: iter,
+                nit: iter,
                 function_evals: feval,
                 success: true,
                 message: "Optimization terminated successfully.".to_string(),

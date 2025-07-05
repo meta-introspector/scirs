@@ -1,21 +1,19 @@
 //! Integration tests for Advanced mode functionality
 
 use ndarray::Array1;
-use scirs2_stats::ultrathink_error_enhancements::{
-    UltrathinkContextBuilder, UltrathinkErrorMessages,
+use scirs2_stats::advanced_error_enhancements::{AdvancedContextBuilder, AdvancedErrorMessages};
+use scirs2_stats::advanced_numerical_stability::{
+    AdvancedNumericalStabilityAnalyzer, NumericalStabilityConfig,
 };
-use scirs2_stats::ultrathink_numerical_stability::{
-    NumericalStabilityConfig, UltrathinkNumericalStabilityAnalyzer,
-};
+use scirs2_stats::advanced_property_tests::AdvancedPropertyTester;
+use scirs2_stats::advanced_simd_optimizations::{advanced_batch_statistics, AdvancedSimdConfig};
 use scirs2_stats::parallel_enhancements::AdvancedParallelConfig;
-use scirs2_stats::ultrathink_property_tests::UltrathinkPropertyTester;
-use scirs2_stats::ultrathink_simd_optimizations::{ultra_batch_statistics, AdvancedSimdConfig};
 use scirs2_stats::{mean, var};
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_error_context_creation() {
-    let context = UltrathinkContextBuilder::new(1000)
+fn test_advanced_error_context_creation() {
+    let context = AdvancedContextBuilder::new(1000)
         .memory_usage(256.0)
         .simd_enabled(true)
         .parallel_enabled(false)
@@ -29,9 +27,9 @@ fn test_ultrathink_error_context_creation() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_error_messages() {
+fn test_advanced_error_messages() {
     // Test memory exhaustion message
-    let error = UltrathinkErrorMessages::memory_exhaustion(2000.0, 1000.0, 50000);
+    let error = AdvancedErrorMessages::memory_exhaustion(2000.0, 1000.0, 50000);
     let error_str = format!("{}", error);
     assert!(error_str.contains("Memory exhaustion"));
     assert!(error_str.contains("2000.0MB"));
@@ -40,7 +38,7 @@ fn test_ultrathink_error_messages() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_numerical_stability_config() {
+fn test_advanced_numerical_stability_config() {
     let config = NumericalStabilityConfig::default();
     assert_eq!(config.relative_tolerance, 1e-12);
     assert_eq!(config.absolute_tolerance, 1e-15);
@@ -51,7 +49,7 @@ fn test_ultrathink_numerical_stability_config() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_parallel_config() {
+fn test_advanced_parallel_config() {
     let config = AdvancedParallelConfig::default();
     assert!(config.max_threads > 0);
     assert_eq!(config.min_chunk_size, 1000);
@@ -61,7 +59,7 @@ fn test_ultrathink_parallel_config() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_simd_config() {
+fn test_advanced_simd_config() {
     let config = AdvancedSimdConfig::default();
     assert_eq!(config.min_simd_size, 64);
     assert_eq!(config.chunk_size, 8192);
@@ -72,11 +70,11 @@ fn test_ultrathink_simd_config() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_batch_statistics() {
+fn test_advanced_batch_statistics() {
     let data = Array1::from_vec((1..=1000).map(|x| x as f64).collect());
     let config = AdvancedSimdConfig::default();
 
-    let result = ultra_batch_statistics(&data.view(), &config);
+    let result = advanced_batch_statistics(&data.view(), &config);
     assert!(result.is_ok());
 
     let stats = result.unwrap();
@@ -92,11 +90,11 @@ fn test_ultrathink_batch_statistics() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_property_tester_creation() {
+fn test_advanced_property_tester_creation() {
     let simd_config = AdvancedSimdConfig::default();
     let parallel_config = AdvancedParallelConfig::default();
 
-    let tester = UltrathinkPropertyTester::new(simd_config, parallel_config);
+    let tester = AdvancedPropertyTester::new(simd_config, parallel_config);
 
     // Just verify it can be created without panicking
     assert_eq!(tester.numerical_tolerance, 1e-12);
@@ -107,7 +105,7 @@ fn test_ultrathink_property_tester_creation() {
 #[allow(dead_code)]
 fn test_numerical_stability_analyzer() {
     let config = NumericalStabilityConfig::default();
-    let analyzer = UltrathinkNumericalStabilityAnalyzer::new(config);
+    let analyzer = AdvancedNumericalStabilityAnalyzer::new(config);
 
     // Test that analyzer can be created and used
     let data = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
@@ -121,7 +119,7 @@ fn test_numerical_stability_analyzer() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_integration_basic_stats() {
+fn test_advanced_integration_basic_stats() {
     // Test that Advanced features work with basic statistical functions
     let data = Array1::from_vec((1..=100).map(|x| x as f64).collect());
 
@@ -137,7 +135,7 @@ fn test_ultrathink_integration_basic_stats() {
 
     // Test Advanced batch statistics
     let config = AdvancedSimdConfig::default();
-    let batch_result = ultra_batch_statistics(&data.view(), &config);
+    let batch_result = advanced_batch_statistics(&data.view(), &config);
     assert!(batch_result.is_ok());
 
     let batch_stats = batch_result.unwrap();
@@ -151,12 +149,12 @@ mod property_tests {
     use quickcheck::TestResult;
 
     #[quickcheck::quickcheck]
-    fn test_ultrathink_error_context_properties(data_size: usize, memory_mb: f64) -> TestResult {
+    fn test_advanced_error_context_properties(data_size: usize, memory_mb: f64) -> TestResult {
         if data_size == 0 || memory_mb < 0.0 || memory_mb > 1e9 {
             return TestResult::discard();
         }
 
-        let context = UltrathinkContextBuilder::new(data_size)
+        let context = AdvancedContextBuilder::new(data_size)
             .memory_usage(memory_mb)
             .build();
 

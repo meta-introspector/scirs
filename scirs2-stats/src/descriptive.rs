@@ -32,8 +32,7 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 #[allow(dead_code)]
 pub fn mean<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Display + SimdUnifiedOps,
 {
     // Use standardized validation
     if x.is_empty() {
@@ -81,8 +80,7 @@ where
 #[allow(dead_code)]
 pub fn weighted_mean<F>(x: &ArrayView1<F>, weights: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + Signed
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + Signed + std::fmt::Display,
 {
     // Use standardized validation
     if x.is_empty() {
@@ -152,8 +150,7 @@ where
 #[allow(dead_code)]
 pub fn median<F>(x: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Display,
 {
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
@@ -215,8 +212,13 @@ where
 #[allow(dead_code)]
 pub fn var<F>(x: &ArrayView1<F>, ddof: usize, workers: Option<usize>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Display
+        + Send
+        + Sync
+        + SimdUnifiedOps,
 {
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
@@ -306,8 +308,13 @@ where
 #[allow(dead_code)]
 pub fn std<F>(x: &ArrayView1<F>, ddof: usize, workers: Option<usize>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Display
+        + Send
+        + Sync
+        + SimdUnifiedOps,
 {
     // Get the variance and take the square root
     let variance = var(x, ddof, workers)?;
@@ -346,8 +353,13 @@ where
 #[allow(dead_code)]
 pub fn skew<F>(x: &ArrayView1<F>, bias: bool, workers: Option<usize>) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Display
+        + Send
+        + Sync
+        + SimdUnifiedOps,
 {
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
@@ -467,8 +479,13 @@ pub fn kurtosis<F>(
     workers: Option<usize>,
 ) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Display
+        + Send
+        + Sync
+        + SimdUnifiedOps,
 {
     if x.is_empty() {
         return Err(ErrorMessages::empty_array("x"));
@@ -616,8 +633,13 @@ pub fn moment<F>(
     workers: Option<usize>,
 ) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Display
+        + Send
+        + Sync
+        + SimdUnifiedOps,
 {
     if x.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -694,8 +716,13 @@ where
 #[allow(dead_code)]
 pub fn var_compat<F>(x: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Display
+        + Send
+        + Sync
+        + SimdUnifiedOps,
 {
     var(x, ddof, None)
 }
@@ -710,8 +737,13 @@ where
 #[allow(dead_code)]
 pub fn std_compat<F>(x: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Display
+        + Send
+        + Sync
+        + SimdUnifiedOps,
 {
     std(x, ddof, None)
 }
@@ -726,8 +758,13 @@ where
 #[allow(dead_code)]
 pub fn skew_compat<F>(x: &ArrayView1<F>, bias: bool) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Display
+        + Send
+        + Sync
+        + SimdUnifiedOps,
 {
     skew(x, bias, None)
 }
@@ -742,8 +779,13 @@ where
 #[allow(dead_code)]
 pub fn kurtosis_compat<F>(x: &ArrayView1<F>, fisher: bool, bias: bool) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Display
+        + Send
+        + Sync
+        + SimdUnifiedOps,
 {
     kurtosis(x, fisher, bias, None)
 }
@@ -758,8 +800,13 @@ where
 #[allow(dead_code)]
 pub fn moment_compat<F>(x: &ArrayView1<F>, moment_order: usize, center: bool) -> StatsResult<F>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F>
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Display
+        + Send
+        + Sync
+        + SimdUnifiedOps,
 {
     moment(x, moment_order, center, None)
 }

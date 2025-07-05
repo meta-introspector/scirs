@@ -1,4 +1,4 @@
-//! Vision Transformer (ViT) for ultra-advanced feature detection and analysis
+//! Vision Transformer (ViT) for advanced-advanced feature detection and analysis
 //!
 //! This module implements state-of-the-art Vision Transformer architectures
 //! for computer vision tasks including feature detection, image classification,

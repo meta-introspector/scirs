@@ -122,7 +122,7 @@ where
             // First iteration: initialize velocity
             velocity = gradient.clone();
         } else {
-            // Subsequent iterations: apply momentum with optional dampening
+            // Subsequent nit: apply momentum with optional dampening
             velocity = &velocity * options.momentum + &gradient * (1.0 - options.dampening);
         }
 
@@ -165,7 +165,6 @@ where
                 return Ok(OptimizeResult {
                     x: best_x,
                     fun: best_f,
-                    iterations: iteration,
                     nit: iteration,
                     func_evals,
                     nfev: func_evals,
@@ -186,7 +185,6 @@ where
                 return Ok(OptimizeResult {
                     x: best_x,
                     fun: best_f,
-                    iterations: iteration,
                     nit: iteration,
                     func_evals,
                     nfev: func_evals,
@@ -207,7 +205,6 @@ where
     Ok(OptimizeResult {
         x: best_x,
         fun: final_loss.min(best_f),
-        iterations: options.max_iter,
         nit: options.max_iter,
         func_evals,
         nfev: func_evals,
@@ -308,7 +305,6 @@ where
     Ok(OptimizeResult {
         x: best_x,
         fun: best_f,
-        iterations: options.max_iter,
         nit: options.max_iter,
         func_evals,
         nfev: func_evals,
@@ -426,7 +422,6 @@ where
     Ok(OptimizeResult {
         x: best_x,
         fun: best_f,
-        iterations: options.max_iter,
         nit: options.max_iter,
         func_evals,
         nfev: func_evals,

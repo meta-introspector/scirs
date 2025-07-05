@@ -6,7 +6,7 @@
 //! performance on large-scale statistical computations.
 
 use crate::error::StatsResult;
-use crate::error_handling_enhancements::{UltrathinkContextBuilder, UltrathinkErrorMessages};
+use crate::error_handling_enhancements::{AdvancedContextBuilder, AdvancedErrorMessages};
 use crate::error_standardization::ErrorMessages;
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, Zero};
@@ -72,15 +72,15 @@ pub struct ParallelExecutionMetrics {
     pub memory_bandwidth_utilization: f64,
 }
 
-/// Ultra-parallel statistical batch processor
-pub struct UltraParallelProcessor {
+/// Advanced-parallel statistical batch processor
+pub struct AdvancedParallelProcessor {
     config: AdvancedParallelConfig,
     performance_history: Arc<Mutex<Vec<ParallelExecutionMetrics>>>,
     adaptive_chunk_size: AtomicUsize,
 }
 
-impl UltraParallelProcessor {
-    /// Create a new ultra-parallel processor
+impl AdvancedParallelProcessor {
+    /// Create a new advanced-parallel processor
     pub fn new(config: AdvancedParallelConfig) -> Self {
         Self {
             adaptive_chunk_size: AtomicUsize::new(config.min_chunk_size),
@@ -93,7 +93,7 @@ impl UltraParallelProcessor {
     pub fn process_batch_statistics<F, D>(
         &self,
         data: &ArrayBase<D, Ix1>,
-    ) -> StatsResult<UltraParallelBatchResult<F>>
+    ) -> StatsResult<AdvancedParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -106,7 +106,7 @@ impl UltraParallelProcessor {
             return Err(ErrorMessages::empty_array("data"));
         }
 
-        let context = UltrathinkContextBuilder::new(n)
+        let context = AdvancedContextBuilder::new(n)
             .parallel_enabled(true)
             .memory_usage(self.estimate_memory_usage::<F>(n))
             .build();
@@ -163,7 +163,7 @@ impl UltraParallelProcessor {
         &self,
         data: &ArrayBase<D, Ix2>,
         operation: MatrixOperationType,
-    ) -> StatsResult<UltraParallelMatrixResult<F>>
+    ) -> StatsResult<AdvancedParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -178,7 +178,7 @@ impl UltraParallelProcessor {
         let memory_estimate = self.estimate_matrix_memory_usage::<F>(n_rows, n_cols, &operation);
 
         if memory_estimate > self.config.memory_threshold_mb {
-            return Err(UltrathinkErrorMessages::memory_exhaustion(
+            return Err(AdvancedErrorMessages::memory_exhaustion(
                 memory_estimate,
                 self.config.memory_threshold_mb,
                 n_rows * n_cols,
@@ -200,7 +200,7 @@ impl UltraParallelProcessor {
         data: &ArrayBase<D, Ix1>,
         window_size: usize,
         operations: &[TimeSeriesOperation],
-    ) -> StatsResult<UltraParallelTimeSeriesResult<F>>
+    ) -> StatsResult<AdvancedParallelTimeSeriesResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -287,7 +287,7 @@ impl UltraParallelProcessor {
     fn determine_optimal_parallelization(
         &self,
         data_size: usize,
-        _context: &crate::ultrathink_error_enhancements_v2::UltraThinkErrorContext,
+        _context: &crate::advanced_error_enhancements_v2::AdvancedErrorContext,
     ) -> StatsResult<(usize, usize)> {
         let max_threads = self.config.max_threads.min(num_threads());
         let min_chunk = self.config.min_chunk_size;
@@ -315,7 +315,7 @@ impl UltraParallelProcessor {
         data: &ArrayBase<D, Ix1>,
         _num_threads: usize,
         chunk_size: usize,
-    ) -> StatsResult<UltraParallelBatchResult<F>>
+    ) -> StatsResult<AdvancedParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -336,7 +336,7 @@ impl UltraParallelProcessor {
         &self,
         data: &ArrayBase<D, Ix1>,
         _num_threads: usize,
-    ) -> StatsResult<UltraParallelBatchResult<F>>
+    ) -> StatsResult<AdvancedParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -351,7 +351,7 @@ impl UltraParallelProcessor {
         data: &ArrayBase<D, Ix1>,
         _num_threads: usize,
         initial_chunk_size: usize,
-    ) -> StatsResult<UltraParallelBatchResult<F>>
+    ) -> StatsResult<AdvancedParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -365,8 +365,8 @@ impl UltraParallelProcessor {
         &self,
         data: &ArrayBase<D, Ix1>,
         num_threads: usize,
-        _context: &crate::ultrathink_error_enhancements_v2::UltraThinkErrorContext,
-    ) -> StatsResult<UltraParallelBatchResult<F>>
+        _context: &crate::advanced_error_enhancements_v2::AdvancedErrorContext,
+    ) -> StatsResult<AdvancedParallelBatchResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -416,7 +416,7 @@ impl UltraParallelProcessor {
         &self,
         chunks: &[ChunkStatistics<F>],
         total_n: usize,
-    ) -> StatsResult<UltraParallelBatchResult<F>>
+    ) -> StatsResult<AdvancedParallelBatchResult<F>>
     where
         F: Float + NumCast + Copy + PartialOrd
         + std::fmt::Display,
@@ -442,7 +442,7 @@ impl UltraParallelProcessor {
         let variance = (total_sum_squares / n_f) - (mean * mean);
         let std_dev = variance.sqrt();
 
-        Ok(UltraParallelBatchResult {
+        Ok(AdvancedParallelBatchResult {
             mean,
             variance,
             std_dev,
@@ -542,7 +542,7 @@ impl UltraParallelProcessor {
     fn parallel_row_statistics<F, D>(
         &self,
         data: &ArrayBase<D, Ix2>,
-    ) -> StatsResult<UltraParallelMatrixResult<F>>
+    ) -> StatsResult<AdvancedParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -594,7 +594,7 @@ impl UltraParallelProcessor {
             result[[row_idx, 3]] = max_val;
         }
 
-        Ok(UltraParallelMatrixResult {
+        Ok(AdvancedParallelMatrixResult {
             result,
             operation_type: MatrixOperationType::RowStatistics,
             execution_metrics: None,
@@ -604,7 +604,7 @@ impl UltraParallelProcessor {
     fn parallel_column_statistics<F, D>(
         &self,
         data: &ArrayBase<D, Ix2>,
-    ) -> StatsResult<UltraParallelMatrixResult<F>>
+    ) -> StatsResult<AdvancedParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -656,7 +656,7 @@ impl UltraParallelProcessor {
             result[[col_idx, 3]] = max_val;
         }
 
-        Ok(UltraParallelMatrixResult {
+        Ok(AdvancedParallelMatrixResult {
             result,
             operation_type: MatrixOperationType::ColumnStatistics,
             execution_metrics: None,
@@ -666,7 +666,7 @@ impl UltraParallelProcessor {
     fn parallel_covariance_matrix<F, D>(
         &self,
         data: &ArrayBase<D, Ix2>,
-    ) -> StatsResult<UltraParallelMatrixResult<F>>
+    ) -> StatsResult<AdvancedParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -728,7 +728,7 @@ impl UltraParallelProcessor {
             }
         }
 
-        Ok(UltraParallelMatrixResult {
+        Ok(AdvancedParallelMatrixResult {
             result,
             operation_type: MatrixOperationType::CovarianceMatrix,
             execution_metrics: None,
@@ -738,7 +738,7 @@ impl UltraParallelProcessor {
     fn parallel_correlation_matrix<F, D>(
         &self,
         data: &ArrayBase<D, Ix2>,
-    ) -> StatsResult<UltraParallelMatrixResult<F>>
+    ) -> StatsResult<AdvancedParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -825,7 +825,7 @@ impl UltraParallelProcessor {
             result[[j, i]] = corr;
         }
 
-        Ok(UltraParallelMatrixResult {
+        Ok(AdvancedParallelMatrixResult {
             result,
             operation_type: MatrixOperationType::CorrelationMatrix,
             execution_metrics: None,
@@ -835,7 +835,7 @@ impl UltraParallelProcessor {
     fn parallel_distance_matrix<F, D>(
         &self,
         data: &ArrayBase<D, Ix2>,
-    ) -> StatsResult<UltraParallelMatrixResult<F>>
+    ) -> StatsResult<AdvancedParallelMatrixResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -878,7 +878,7 @@ impl UltraParallelProcessor {
             result[[j, i]] = dist;
         }
 
-        Ok(UltraParallelMatrixResult {
+        Ok(AdvancedParallelMatrixResult {
             result,
             operation_type: MatrixOperationType::DistanceMatrix,
             execution_metrics: None,
@@ -897,7 +897,7 @@ impl UltraParallelProcessor {
         window_size: usize,
         operations: &[TimeSeriesOperation],
         _threads: usize,
-    ) -> StatsResult<UltraParallelTimeSeriesResult<F>>
+    ) -> StatsResult<AdvancedParallelTimeSeriesResult<F>>
     where
         F: Float + NumCast + Send + Sync + Copy + PartialOrd,
         D: Data<Elem = F> + Sync
@@ -999,7 +999,7 @@ impl UltraParallelProcessor {
             results.push(Array1::from_vec(window_results));
         }
 
-        Ok(UltraParallelTimeSeriesResult {
+        Ok(AdvancedParallelTimeSeriesResult {
             results,
             operations: operations.to_vec(),
             window_size,
@@ -1032,7 +1032,7 @@ impl<F: Float + Copy + std::fmt::Display> ChunkStatistics<F> {
 }
 
 #[derive(Debug, Clone)]
-pub struct UltraParallelBatchResult<F> {
+pub struct AdvancedParallelBatchResult<F> {
     pub mean: F,
     pub variance: F,
     pub std_dev: F,
@@ -1044,14 +1044,14 @@ pub struct UltraParallelBatchResult<F> {
 }
 
 #[derive(Debug, Clone)]
-pub struct UltraParallelMatrixResult<F> {
+pub struct AdvancedParallelMatrixResult<F> {
     pub result: Array2<F>,
     pub operation_type: MatrixOperationType,
     pub execution_metrics: Option<ParallelExecutionMetrics>,
 }
 
 #[derive(Debug, Clone)]
-pub struct UltraParallelTimeSeriesResult<F> {
+pub struct AdvancedParallelTimeSeriesResult<F> {
     pub results: Vec<Array1<F>>,
     pub operations: Vec<TimeSeriesOperation>,
     pub window_size: usize,
@@ -1085,18 +1085,18 @@ pub struct ParallelPerformanceAnalytics {
     pub recommendations: Vec<String>,
 }
 
-/// Create a new ultra-parallel processor with default configuration
+/// Create a new advanced-parallel processor with default configuration
 #[allow(dead_code)]
-pub fn create_ultra_parallel_processor() -> UltraParallelProcessor {
-    UltraParallelProcessor::new(AdvancedParallelConfig::default())
+pub fn create_advanced_parallel_processor() -> AdvancedParallelProcessor {
+    AdvancedParallelProcessor::new(AdvancedParallelConfig::default())
 }
 
-/// Create a new ultra-parallel processor with custom configuration
+/// Create a new advanced-parallel processor with custom configuration
 #[allow(dead_code)]
-pub fn create_configured_ultra_parallel_processor(
+pub fn create_configured_advanced_parallel_processor(
     config: AdvancedParallelConfig,
-) -> UltraParallelProcessor {
-    UltraParallelProcessor::new(config)
+) -> AdvancedParallelProcessor {
+    AdvancedParallelProcessor::new(config)
 }
 
 #[cfg(test)]
@@ -1105,15 +1105,15 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_ultra_parallel_processor_creation() {
-        let processor = create_ultra_parallel_processor();
+    fn test_advanced_parallel_processor_creation() {
+        let processor = create_advanced_parallel_processor();
         assert!(processor.config.max_threads > 0);
         assert!(processor.config.min_chunk_size > 0);
     }
 
     #[test]
     fn test_batch_statistics() {
-        let processor = create_ultra_parallel_processor();
+        let processor = create_advanced_parallel_processor();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         let result = processor.process_batch_statistics(&data.view()).unwrap();
@@ -1126,7 +1126,7 @@ mod tests {
 
     #[test]
     fn test_performance_analytics() {
-        let processor = create_ultra_parallel_processor();
+        let processor = create_advanced_parallel_processor();
         let analytics = processor.get_performance_analytics();
 
         // Should have default values when no operations have been performed

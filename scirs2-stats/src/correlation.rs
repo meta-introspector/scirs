@@ -45,7 +45,12 @@ use scirs2_core::parallel_ops::*;
 #[allow(dead_code)]
 pub fn pearson_r<F, D>(x: &ArrayBase<D, Ix1>, y: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F> + std::fmt::Display,
+    F: Float
+        + std::fmt::Debug
+        + NumCast
+        + std::iter::Sum<F>
+        + std::fmt::Display
+        + scirs2_core::simd_ops::SimdUnifiedOps,
     D: Data<Elem = F>,
     Ix1: Dimension,
 {
@@ -136,7 +141,12 @@ where
 #[allow(dead_code)]
 pub fn spearman_r<F, D>(x: &ArrayBase<D, Ix1>, y: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
+    F: Float
+        + std::fmt::Debug
+        + NumCast
+        + std::iter::Sum<F>
+        + std::fmt::Display
+        + scirs2_core::simd_ops::SimdUnifiedOps,
     D: Data<Elem = F>,
     Ix1: Dimension,
 {
@@ -248,7 +258,7 @@ pub fn kendall_tau<F, D>(
     method: &str,
 ) -> StatsResult<F>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
+    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F> + std::fmt::Display,
     D: Data<Elem = F>,
     Ix1: Dimension,
 {
@@ -371,7 +381,13 @@ pub fn partial_corr<F, D1, D2>(
     z: &ArrayBase<D2, Ix2>,
 ) -> StatsResult<F>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F> + 'static,
+    F: Float
+        + std::fmt::Debug
+        + NumCast
+        + std::iter::Sum<F>
+        + std::fmt::Display
+        + 'static
+        + scirs2_core::simd_ops::SimdUnifiedOps,
     D1: Data<Elem = F>,
     D2: Data<Elem = F>,
     Ix1: Dimension,
@@ -455,7 +471,13 @@ pub fn partial_corrr<F, D1, D2>(
     alternative: &str,
 ) -> StatsResult<(F, F)>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F> + 'static,
+    F: Float
+        + std::fmt::Debug
+        + NumCast
+        + std::iter::Sum<F>
+        + std::fmt::Display
+        + 'static
+        + scirs2_core::simd_ops::SimdUnifiedOps,
     D1: Data<Elem = F>,
     D2: Data<Elem = F>,
 {
@@ -702,7 +724,14 @@ pub fn point_biserial<F, D>(
     continuous: &ArrayBase<D, Ix1>,
 ) -> StatsResult<F>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F> + std::fmt::Display,
+    F: Float
+        + std::fmt::Debug
+        + NumCast
+        + std::iter::Sum<F>
+        + std::fmt::Display
+        + Send
+        + Sync
+        + scirs2_core::simd_ops::SimdUnifiedOps,
     D: Data<Elem = F>,
     Ix1: Dimension,
 {
@@ -823,7 +852,14 @@ pub fn point_biserialr<F, D>(
     alternative: &str,
 ) -> StatsResult<(F, F)>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
+    F: Float
+        + std::fmt::Debug
+        + NumCast
+        + std::iter::Sum<F>
+        + std::fmt::Display
+        + Send
+        + Sync
+        + scirs2_core::simd_ops::SimdUnifiedOps,
     D: Data<Elem = F>,
 {
     // Calculate the point-biserial correlation coefficient
@@ -922,8 +958,14 @@ where
 #[allow(dead_code)]
 pub fn corrcoef<F, D>(data: &ArrayBase<D, Ix2>, method: &str) -> StatsResult<ndarray::Array2<F>>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F> + std::fmt::Display + std::marker::Send,
-    D: Data<Elem = F>,
+    F: Float
+        + std::fmt::Debug
+        + NumCast
+        + std::iter::Sum<F>
+        + std::fmt::Display
+        + std::marker::Send
+        + scirs2_core::simd_ops::SimdUnifiedOps,
+    D: Data<Elem = F> + Sync,
     Ix2: Dimension,
 {
     // Validate method parameter
@@ -1172,7 +1214,12 @@ pub fn pearsonr<F, D>(
     alternative: &str,
 ) -> StatsResult<(F, F)>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
+    F: Float
+        + std::fmt::Debug
+        + NumCast
+        + std::iter::Sum<F>
+        + std::fmt::Display
+        + scirs2_core::simd_ops::SimdUnifiedOps,
     D: Data<Elem = F>,
 {
     // Use standardized validation
@@ -1464,7 +1511,12 @@ pub fn spearmanr<F, D>(
     alternative: &str,
 ) -> StatsResult<(F, F)>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
+    F: Float
+        + std::fmt::Debug
+        + NumCast
+        + std::iter::Sum<F>
+        + std::fmt::Display
+        + scirs2_core::simd_ops::SimdUnifiedOps,
     D: Data<Elem = F>,
 {
     // Calculate Spearman's rank correlation coefficient (rho)
@@ -1577,7 +1629,7 @@ pub fn kendalltau<F, D>(
     alternative: &str,
 ) -> StatsResult<(F, F)>
 where
-    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F>,
+    F: Float + std::fmt::Debug + NumCast + std::iter::Sum<F> + std::fmt::Display,
     D: Data<Elem = F>,
 {
     // Calculate Kendall's tau correlation coefficient

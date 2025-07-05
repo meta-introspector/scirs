@@ -809,8 +809,8 @@ print(json.dumps(info))
 
     /// Generate test data for benchmarking
     fn generate_test_data(&self, size: usize) -> StatsResult<TestData> {
-        use scirs2_core::rng;
         use rand_distr::{Distribution, Normal};
+        use scirs2_core::rng;
 
         let mut rng = rng();
         let normal = Normal::new(0.0, 1.0).map_err(|e| {

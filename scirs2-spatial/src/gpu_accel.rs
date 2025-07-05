@@ -9,7 +9,7 @@
 //!
 //! - **GPU distance matrix computation**: Massive parallel distance calculations
 //! - **GPU clustering algorithms**: K-means and DBSCAN on GPU
-//! - **GPU nearest neighbor search**: Ultra-fast spatial queries
+//! - **GPU nearest neighbor search**: Optimized spatial queries
 //! - **Hybrid CPU-GPU algorithms**: Automatic workload distribution
 //! - **Memory-mapped GPU transfers**: Minimize data movement overhead
 //! - **Multi-GPU support**: Scale across multiple graphics cards
@@ -843,19 +843,19 @@ impl GpuKMeans {
         self.fit_cpu_fallback(points).await
     }
 
-    /// CPU fallback using ultra-optimized SIMD K-means
+    /// CPU fallback using advanced-optimized SIMD K-means
     async fn fit_cpu_fallback(
         &self,
         points: &ArrayView2<'_, f64>,
     ) -> SpatialResult<(Array2<f64>, Array1<usize>)> {
-        // Use existing ultra-optimized SIMD K-means as fallback
-        use crate::simd_distance::ultra_simd_clustering::UltraSimdKMeans;
+        // Use existing advanced-optimized SIMD K-means as fallback
+        use crate::simd_distance::advanced_simd_clustering::AdvancedSimdKMeans;
 
-        let ultra_kmeans = UltraSimdKMeans::new(self.k)
+        let advanced_kmeans = AdvancedSimdKMeans::new(self.k)
             .with_mixed_precision(true)
             .with_block_size(256);
 
-        ultra_kmeans.fit(points)
+        advanced_kmeans.fit(points)
     }
 }
 
@@ -945,18 +945,18 @@ impl GpuNearestNeighbors {
             .await
     }
 
-    /// CPU fallback using ultra-optimized SIMD nearest neighbors
+    /// CPU fallback using advanced-optimized SIMD nearest neighbors
     async fn knn_search_cpu_fallback(
         &self,
         query_points: &ArrayView2<'_, f64>,
         data_points: &ArrayView2<'_, f64>,
         k: usize,
     ) -> SpatialResult<(Array2<usize>, Array2<f64>)> {
-        // Use existing ultra-optimized SIMD nearest neighbors as fallback
-        use crate::simd_distance::ultra_simd_clustering::UltraSimdNearestNeighbors;
+        // Use existing advanced-optimized SIMD nearest neighbors as fallback
+        use crate::simd_distance::advanced_simd_clustering::AdvancedSimdNearestNeighbors;
 
-        let ultra_nn = UltraSimdNearestNeighbors::new();
-        ultra_nn.simd_knn_ultra_fast(query_points, data_points, k)
+        let advanced_nn = AdvancedSimdNearestNeighbors::new();
+        advanced_nn.simd_knn_advanced_fast(query_points, data_points, k)
     }
 }
 

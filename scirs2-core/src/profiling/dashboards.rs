@@ -709,12 +709,7 @@ impl PerformanceDashboard {
         self.metrics
             .read()
             .map(|metrics| metrics.clone())
-            .map_err(|_| {
-                CoreError::from(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Failed to read metrics",
-                ))
-            })
+            .map_err(|_| CoreError::from(std::io::Error::other("Failed to read metrics")))
     }
 
     /// Get dashboard statistics
@@ -746,10 +741,9 @@ impl PerformanceDashboard {
             };
 
             serde_json::to_string_pretty(&export_data).map_err(|e| {
-                CoreError::from(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Failed to serialize dashboard config: {e}"),
-                ))
+                CoreError::from(std::io::Error::other(format!(
+                    "Failed to serialize dashboard config: {e}"
+                )))
             })
         }
         #[cfg(not(feature = "serde"))]
@@ -763,10 +757,9 @@ impl PerformanceDashboard {
         #[cfg(feature = "serde")]
         {
             let import_data: DashboardExport = serde_json::from_str(config_json).map_err(|e| {
-                CoreError::from(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Failed to parse dashboard config: {e}"),
-                ))
+                CoreError::from(std::io::Error::other(format!(
+                    "Failed to parse dashboard config: {e}"
+                )))
             })?;
 
             self.config = import_data.config;
@@ -781,8 +774,7 @@ impl PerformanceDashboard {
         #[cfg(not(feature = "serde"))]
         {
             let _ = config_json; // Suppress unused variable warning
-            Err(CoreError::from(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            Err(CoreError::from(std::io::Error::other(
                 "Serde feature not enabled for configuration import",
             )))
         }

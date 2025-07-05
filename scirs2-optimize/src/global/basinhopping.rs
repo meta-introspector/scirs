@@ -325,7 +325,6 @@ where
             nfev: self.nfev,
             func_evals: self.nfev,
             nit,
-            iterations: nit,
             success: self.storage.success,
             message,
             ..Default::default()

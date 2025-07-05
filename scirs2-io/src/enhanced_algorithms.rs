@@ -1,4 +1,4 @@
-//! Enhanced Algorithms for advanced Mode
+//! Enhanced Algorithms for Advanced Mode
 //!
 //! This module provides advanced algorithmic enhancements for the advanced coordinator,
 //! including new optimization strategies, advanced pattern recognition, and self-improving

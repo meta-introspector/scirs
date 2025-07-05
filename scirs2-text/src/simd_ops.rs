@@ -47,11 +47,11 @@ impl SimdStringOps {
             return data.iter().filter(|&&b| b == target).count();
         }
 
-        // Ultra-optimized SIMD processing with larger chunks and prefetching
+        // Advanced-optimized SIMD processing with larger chunks and prefetching
         let simd_chunk_size = 512; // Increased for better SIMD utilization
         let mut count = 0usize;
 
-        // Process complete chunks with ultra-vectorized counting
+        // Process complete chunks with advanced-vectorized counting
         let chunks: Vec<_> = data.chunks(simd_chunk_size).collect();
 
         // Use parallel processing for large datasets
@@ -1555,12 +1555,12 @@ pub struct TextAnalysisResult {
     pub other_count: usize,
 }
 
-/// Ultra-advanced SIMD text processing coordinator
-pub struct UltraSIMDTextProcessor;
+/// Advanced-advanced SIMD text processing coordinator
+pub struct AdvancedSIMDTextProcessor;
 
-impl UltraSIMDTextProcessor {
+impl AdvancedSIMDTextProcessor {
     /// Advanced-enhanced batch text processing with predictive optimization
-    pub fn ultra_batch_process(texts: &[String]) -> Vec<TextProcessingResult> {
+    pub fn advanced_batch_process(texts: &[String]) -> Vec<TextProcessingResult> {
         use scirs2_core::parallel_ops::*;
 
         if texts.len() < 100 {
@@ -1578,7 +1578,7 @@ impl UltraSIMDTextProcessor {
         }
     }
 
-    /// Process a single text with ultra-optimized SIMD operations
+    /// Process a single text with advanced-optimized SIMD operations
     fn process_single_text(text: &str) -> TextProcessingResult {
         let char_count = SimdStringOps::count_chars(text, ' ');
         let whitespace_positions = SimdStringOps::find_whitespace_positions(text);
@@ -1592,8 +1592,8 @@ impl UltraSIMDTextProcessor {
         }
     }
 
-    /// Ultra-fast text similarity computation with SIMD
-    pub fn ultra_similarity_matrix(texts: &[String]) -> Vec<Vec<f64>> {
+    /// Optimized text similarity computation with SIMD
+    pub fn advanced_similarity_matrix(texts: &[String]) -> Vec<Vec<f64>> {
         let n = texts.len();
         let mut matrix = vec![vec![0.0; n]; n];
 
@@ -1603,7 +1603,7 @@ impl UltraSIMDTextProcessor {
                 let sim = if i == j {
                     1.0
                 } else {
-                    Self::ultra_text_similarity(&texts[i], &texts[j])
+                    Self::advanced_text_similarity(&texts[i], &texts[j])
                 };
                 matrix[i][j] = sim;
                 if i != j {
@@ -1615,8 +1615,8 @@ impl UltraSIMDTextProcessor {
         matrix
     }
 
-    /// Ultra-fast text similarity using SIMD operations
-    fn ultra_text_similarity(text1: &str, text2: &str) -> f64 {
+    /// Optimized text similarity using SIMD operations
+    fn advanced_text_similarity(text1: &str, text2: &str) -> f64 {
         if text1 == text2 {
             return 1.0;
         }
@@ -1647,8 +1647,8 @@ impl UltraSIMDTextProcessor {
         }
     }
 
-    /// Ultra-fast pattern matching with multiple patterns simultaneously
-    pub fn ultra_multi_pattern_search(text: &str, patterns: &[String]) -> Vec<(usize, String)> {
+    /// Optimized pattern matching with multiple patterns simultaneously
+    pub fn advanced_multi_pattern_search(text: &str, patterns: &[String]) -> Vec<(usize, String)> {
         use scirs2_core::parallel_ops::*;
 
         if patterns.is_empty() {
@@ -1692,7 +1692,7 @@ impl UltraSIMDTextProcessor {
     }
 }
 
-/// Result of ultra-SIMD text processing
+/// Result of advanced-SIMD text processing
 #[derive(Debug)]
 pub struct TextProcessingResult {
     /// Total number of characters processed

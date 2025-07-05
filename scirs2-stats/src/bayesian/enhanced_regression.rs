@@ -5,7 +5,7 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView2, ScalarOperand};
-use num_traits::{Float, NumAssign, One, Zero, ToPrimitive, FromPrimitive};
+use num_traits::{Float, FromPrimitive, NumAssign, One, ToPrimitive, Zero};
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
 
@@ -384,9 +384,9 @@ where
         let mut rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 StdRng::from_rng(&mut rng)
-            },
+            }
         };
 
         // Initialize parameters
@@ -767,9 +767,7 @@ where
 
 impl<F> BayesianRegressionPrior<F>
 where
-    F: Float + Zero + One + Copy + ScalarOperand
-        + std::fmt::Display
-        + FromPrimitive,
+    F: Float + Zero + One + Copy + ScalarOperand + std::fmt::Display + FromPrimitive,
 {
     /// Create uninformative prior
     pub fn uninformative(p: usize) -> Self {

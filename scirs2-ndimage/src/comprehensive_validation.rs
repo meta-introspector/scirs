@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
-use crate::advanced_fusion_algorithms::{AdvancedConfig, UltrathinkState};
+use crate::advanced_fusion_algorithms::{AdvancedConfig, AdvancedState};
 use crate::error::{NdimageError, NdimageResult};
 
 /// Comprehensive validation framework for Advanced operations
@@ -113,10 +113,10 @@ impl ComprehensiveValidator {
             ));
         }
 
-        // Validate ultra-dimensions
-        if config.ultra_dimensions == 0 || config.ultra_dimensions > 64 {
+        // Validate advanced-dimensions
+        if config.advanced_dimensions == 0 || config.advanced_dimensions > 64 {
             return Err(NdimageError::ConfigurationError(
-                "Ultra-dimensions must be between 1 and 64".to_string(),
+                "Advanced-dimensions must be between 1 and 64".to_string(),
             ));
         }
 
@@ -176,7 +176,7 @@ impl ComprehensiveValidator {
     pub fn validate_output<T>(
         &mut self,
         output: &Array2<T>,
-        state: &UltrathinkState,
+        state: &AdvancedState,
         processing_time: Duration,
     ) -> NdimageResult<ValidationReport>
     where
@@ -266,7 +266,7 @@ impl ComprehensiveValidator {
     /// Validate consciousness state
     fn validate_consciousness_state(
         &self,
-        state: &UltrathinkState,
+        state: &AdvancedState,
         report: &mut ValidationReport,
     ) -> NdimageResult<()> {
         if state.processing_cycles == 0 {
@@ -397,12 +397,12 @@ impl PerformanceSummary {
 
 /// Enhanced Advanced processing with validation
 #[allow(dead_code)]
-pub fn validated_ultrathink_processing<T>(
+pub fn validated_advanced_processing<T>(
     image: ArrayView2<T>,
     config: &AdvancedConfig,
-    previous_state: Option<UltrathinkState>,
+    previous_state: Option<AdvancedState>,
     validator: &mut ComprehensiveValidator,
-) -> NdimageResult<(Array2<T>, UltrathinkState, ValidationReport)>
+) -> NdimageResult<(Array2<T>, AdvancedState, ValidationReport)>
 where
     T: Float + FromPrimitive + Copy + Send + Sync + Debug,
 {

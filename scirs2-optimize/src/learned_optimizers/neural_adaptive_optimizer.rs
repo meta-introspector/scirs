@@ -10,6 +10,7 @@ use super::{
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
 /// Neural Adaptive Optimizer with dynamic strategy learning
@@ -484,7 +485,7 @@ impl NeuralAdaptiveOptimizer {
         objective: &F,
         current_params: &ArrayView1<f64>,
         step_number: usize,
-    ) -> Result<AdaptiveOptimizationStep>
+    ) -> OptimizeResult<AdaptiveOptimizationStep>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -530,7 +531,7 @@ impl NeuralAdaptiveOptimizer {
         objective: &F,
         current_params: &ArrayView1<f64>,
         step_number: usize,
-    ) -> Result<Array1<f64>>
+    ) -> OptimizeResult<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -609,7 +610,7 @@ impl NeuralAdaptiveOptimizer {
         &mut self,
         objective: &F,
         params: &ArrayView1<f64>,
-    ) -> Result<Array1<f64>>
+    ) -> OptimizeResult<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -728,7 +729,7 @@ impl NeuralAdaptiveOptimizer {
     }
 
     /// Update adaptive optimization statistics
-    fn update_adaptive_stats(&mut self, step: &AdaptiveOptimizationStep) -> Result<()> {
+    fn update_adaptive_stats(&mut self, step: &AdaptiveOptimizationStep) -> OptimizeResult<()> {
         // Update strategy switch count
         if let Some(last_strategy) = self.adaptation_controller.strategy_history.back() {
             if last_strategy.id != step.strategy.id {
@@ -748,7 +749,10 @@ impl NeuralAdaptiveOptimizer {
     }
 
     /// Train the neural networks on optimization data
-    pub fn train_networks(&mut self, training_data: &[OptimizationTrajectory]) -> Result<()> {
+    pub fn train_networks(
+        &mut self,
+        training_data: &[OptimizationTrajectory],
+    ) -> OptimizeResult<()> {
         for trajectory in training_data {
             // Train optimization network
             self.train_optimization_network(trajectory)?;
@@ -764,7 +768,10 @@ impl NeuralAdaptiveOptimizer {
     }
 
     /// Train the optimization network
-    fn train_optimization_network(&mut self, trajectory: &OptimizationTrajectory) -> Result<()> {
+    fn train_optimization_network(
+        &mut self,
+        trajectory: &OptimizationTrajectory,
+    ) -> OptimizeResult<()> {
         // Simplified training using trajectory data
         let learning_rate = self.config.meta_learning_rate;
 
@@ -789,7 +796,10 @@ impl NeuralAdaptiveOptimizer {
     }
 
     /// Train the performance predictor
-    fn train_performance_predictor(&mut self, trajectory: &OptimizationTrajectory) -> Result<()> {
+    fn train_performance_predictor(
+        &mut self,
+        trajectory: &OptimizationTrajectory,
+    ) -> OptimizeResult<()> {
         // Simplified training for performance prediction
         let learning_rate = self.config.meta_learning_rate * 0.5;
 
@@ -806,7 +816,7 @@ impl NeuralAdaptiveOptimizer {
                 // Update prediction network (simplified)
                 for row in self.performance_predictor.prediction_network.rows_mut() {
                     for weight in row {
-                        *weight += learning_rate * error * rand::rng().random::<f64>() * 0.01;
+                        *weight += learning_rate * error * rand::rng().gen::<f64>() * 0.01;
                     }
                 }
             }
@@ -816,7 +826,10 @@ impl NeuralAdaptiveOptimizer {
     }
 
     /// Update adaptation controller
-    fn update_adaptation_controller(&mut self, trajectory: &OptimizationTrajectory) -> Result<()> {
+    fn update_adaptation_controller(
+        &mut self,
+        trajectory: &OptimizationTrajectory,
+    ) -> OptimizeResult<()> {
         // Analyze trajectory for adaptation patterns
         if trajectory.performance_values.len() > 2 {
             let performance_trend =
@@ -922,7 +935,7 @@ impl OptimizationNetwork {
     }
 
     /// Forward pass through network
-    pub fn forward(&mut self, input: &ArrayView1<f64>) -> Result<Array1<f64>> {
+    pub fn forward(&mut self, input: &ArrayView1<f64>) -> OptimizeResult<Array1<f64>> {
         // Input layer
         let mut current = self.input_layer.forward(input)?;
 
@@ -943,7 +956,7 @@ impl OptimizationNetwork {
     }
 
     /// Backward pass (simplified)
-    pub fn backward(&mut self, gradient: &Array1<f64>, learning_rate: f64) -> Result<()> {
+    pub fn backward(&mut self, gradient: &Array1<f64>, learning_rate: f64) -> OptimizeResult<()> {
         // Simplified backpropagation
         // In practice, this would implement proper gradient computation
 
@@ -959,7 +972,7 @@ impl OptimizationNetwork {
         for layer in &mut self.hidden_layers {
             for i in 0..layer.weights.nrows() {
                 for j in 0..layer.weights.ncols() {
-                    layer.weights[[i, j]] -= learning_rate * rand::rng().random::<f64>() * 0.001;
+                    layer.weights[[i, j]] -= learning_rate * rand::rng().gen::<f64>() * 0.001;
                 }
             }
         }
@@ -975,7 +988,7 @@ impl NeuralLayer {
 
         Self {
             weights: Array2::from_shape_fn((output_size, input_size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             biases: Array1::zeros(output_size),
             activation,
@@ -986,7 +999,7 @@ impl NeuralLayer {
     }
 
     /// Forward pass through layer
-    pub fn forward(&mut self, input: &ArrayView1<f64>) -> Result<Array1<f64>> {
+    pub fn forward(&mut self, input: &ArrayView1<f64>) -> OptimizeResult<Array1<f64>> {
         let mut output = Array1::zeros(self.size);
 
         // Linear transformation
@@ -1028,7 +1041,7 @@ impl LayerNormalization {
     }
 
     /// Normalize input
-    pub fn normalize(&mut self, input: &Array1<f64>) -> Result<Array1<f64>> {
+    pub fn normalize(&mut self, input: &Array1<f64>) -> OptimizeResult<Array1<f64>> {
         let mean = input.mean().unwrap_or(0.0);
         let var = input.var(0.0);
         let std = (var + self.epsilon).sqrt();
@@ -1056,16 +1069,16 @@ impl RecurrentConnections {
             hidden_state: Array1::zeros(size),
             cell_state: Array1::zeros(size),
             recurrent_weights: Array2::from_shape_fn((size, size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             input_gate_weights: Array2::from_shape_fn((size, size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             forget_gate_weights: Array2::from_shape_fn((size, size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             output_gate_weights: Array2::from_shape_fn((size, size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
         }
     }
@@ -1083,7 +1096,7 @@ impl RecurrentConnections {
     }
 
     /// Apply recurrent connections (LSTM-like)
-    pub fn apply(&mut self, input: &Array1<f64>) -> Result<Array1<f64>> {
+    pub fn apply(&mut self, input: &Array1<f64>) -> OptimizeResult<Array1<f64>> {
         if self.hidden_state.is_empty() {
             return Ok(input.clone());
         }
@@ -1142,7 +1155,7 @@ impl AdaptationController {
         &mut self,
         network_output: &Array1<f64>,
         performance_prediction: &f64,
-    ) -> Result<OptimizationStrategy> {
+    ) -> OptimizeResult<OptimizationStrategy> {
         let strategy = self
             .strategy_selector
             .select(network_output, *performance_prediction)?;
@@ -1152,7 +1165,7 @@ impl AdaptationController {
     }
 
     /// Monitor progress and adapt
-    pub fn monitor_and_adapt(&mut self, performance_prediction: &f64) -> Result<()> {
+    pub fn monitor_and_adapt(&mut self, performance_prediction: &f64) -> OptimizeResult<()> {
         self.progress_monitor.update(*performance_prediction)?;
 
         match self.progress_monitor.current_state {
@@ -1174,12 +1187,12 @@ impl AdaptationController {
     }
 
     /// Reinforce current strategy
-    pub fn reinforce_current_strategy(&mut self, strength: f64) -> Result<()> {
+    pub fn reinforce_current_strategy(&mut self, strength: f64) -> OptimizeResult<()> {
         self.strategy_selector.reinforce_current(strength)
     }
 
     /// Encourage exploration
-    pub fn encourage_exploration(&mut self, strength: f64) -> Result<()> {
+    pub fn encourage_exploration(&mut self, strength: f64) -> OptimizeResult<()> {
         self.strategy_selector.encourage_exploration(strength)
     }
 }
@@ -1191,10 +1204,10 @@ impl StrategySelector {
 
         Self {
             selection_network: Array2::from_shape_fn((num_strategies, hidden_size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             strategy_embeddings: Array2::from_shape_fn((num_strategies, hidden_size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             strategy_weights: Array1::from_elem(num_strategies, 1.0 / num_strategies as f64),
             available_strategies: vec![
@@ -1212,7 +1225,7 @@ impl StrategySelector {
         &self,
         network_output: &Array1<f64>,
         performance_prediction: f64,
-    ) -> Result<OptimizationStrategy> {
+    ) -> OptimizeResult<OptimizationStrategy> {
         let mut strategy_scores = Array1::zeros(self.available_strategies.len());
 
         // Compute strategy scores
@@ -1248,7 +1261,7 @@ impl StrategySelector {
     }
 
     /// Reinforce current strategy
-    pub fn reinforce_current(&mut self, strength: f64) -> Result<()> {
+    pub fn reinforce_current(&mut self, strength: f64) -> OptimizeResult<()> {
         // Increase weight of current best strategy
         if let Some((best_idx, _)) = self
             .strategy_weights
@@ -1269,10 +1282,10 @@ impl StrategySelector {
     }
 
     /// Encourage exploration
-    pub fn encourage_exploration(&mut self, strength: f64) -> Result<()> {
+    pub fn encourage_exploration(&mut self, strength: f64) -> OptimizeResult<()> {
         // Add uniform noise to encourage exploration
         for weight in &mut self.strategy_weights {
-            *weight += strength * rand::rng().random::<f64>();
+            *weight += strength * rand::rng().gen::<f64>();
         }
 
         // Renormalize
@@ -1347,7 +1360,7 @@ impl AdaptationRateController {
     pub fn new() -> Self {
         Self {
             controller_network: Array2::from_shape_fn((1, 10), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             current_rate: 0.1,
             rate_history: BoundedHistory::new(100),
@@ -1356,7 +1369,7 @@ impl AdaptationRateController {
     }
 
     /// Increase adaptation rate
-    pub fn increase_rate(&mut self) -> Result<()> {
+    pub fn increase_rate(&mut self) -> OptimizeResult<()> {
         self.current_rate = (self.current_rate * 1.2).min(1.0);
         self.rate_history.push(self.current_rate);
 
@@ -1364,7 +1377,7 @@ impl AdaptationRateController {
     }
 
     /// Maintain current rate
-    pub fn maintain_rate(&mut self) -> Result<()> {
+    pub fn maintain_rate(&mut self) -> OptimizeResult<()> {
         self.rate_history.push(self.current_rate);
 
         Ok(())
@@ -1381,7 +1394,7 @@ impl ProgressMonitor {
                 ProgressIndicator::new("step_size".to_string()),
             ],
             monitoring_network: Array2::from_shape_fn((4, 10), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             alert_thresholds: HashMap::new(),
             current_state: ProgressState::Improving,
@@ -1389,7 +1402,7 @@ impl ProgressMonitor {
     }
 
     /// Update progress monitoring
-    pub fn update(&mut self, performance_value: f64) -> Result<()> {
+    pub fn update(&mut self, performance_value: f64) -> OptimizeResult<()> {
         // Update progress indicators
         for indicator in &mut self.progress_indicators {
             indicator.update(performance_value)?;
@@ -1402,7 +1415,7 @@ impl ProgressMonitor {
     }
 
     /// Determine progress state
-    fn determine_progress_state(&self) -> Result<ProgressState> {
+    fn determine_progress_state(&self) -> OptimizeResult<ProgressState> {
         let mut improvement_count = 0;
         let mut stagnation_count = 0;
 
@@ -1437,7 +1450,7 @@ impl ProgressIndicator {
     }
 
     /// Update indicator
-    pub fn update(&mut self, new_value: f64) -> Result<()> {
+    pub fn update(&mut self, new_value: f64) -> OptimizeResult<()> {
         self.value = new_value;
         self.history.push(new_value);
 
@@ -1458,7 +1471,7 @@ impl PerformancePredictor {
     pub fn new(hidden_size: usize) -> Self {
         Self {
             prediction_network: Array2::from_shape_fn((1, hidden_size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             feature_extractor: FeatureExtractor::new(hidden_size),
             prediction_horizon: 5,
@@ -1468,7 +1481,7 @@ impl PerformancePredictor {
     }
 
     /// Predict performance
-    pub fn predict(&self, state_features: &Array1<f64>) -> Result<f64> {
+    pub fn predict(&self, state_features: &Array1<f64>) -> OptimizeResult<f64> {
         // Extract features for prediction
         let prediction_features = self.feature_extractor.extract(state_features)?;
 
@@ -1490,7 +1503,7 @@ impl FeatureExtractor {
     pub fn new(feature_dim: usize) -> Self {
         Self {
             extraction_layers: vec![Array2::from_shape_fn((feature_dim, feature_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             })],
             feature_dim,
             temporal_features: TemporalFeatures::new(feature_dim),
@@ -1498,7 +1511,7 @@ impl FeatureExtractor {
     }
 
     /// Extract features for prediction
-    pub fn extract(&self, input: &Array1<f64>) -> Result<Array1<f64>> {
+    pub fn extract(&self, input: &Array1<f64>) -> OptimizeResult<Array1<f64>> {
         let mut features = input.clone();
 
         // Apply extraction layers
@@ -1521,7 +1534,7 @@ impl TemporalFeatures {
     pub fn new(dim: usize) -> Self {
         Self {
             time_embeddings: Array2::from_shape_fn((dim, 100), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             trend_analyzer: TrendAnalyzer::new(),
             seasonality_detector: SeasonalityDetector::new(dim),
@@ -1556,7 +1569,7 @@ impl ConfidenceEstimator {
     pub fn new(hidden_size: usize) -> Self {
         Self {
             confidence_network: Array2::from_shape_fn((1, hidden_size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             uncertainty_quantifier: UncertaintyQuantifier::new(),
             calibration_params: Array1::from(vec![1.0, 0.0, 0.1]),
@@ -1564,7 +1577,7 @@ impl ConfidenceEstimator {
     }
 
     /// Estimate confidence in prediction
-    pub fn estimate_confidence(&self, features: &Array1<f64>) -> Result<f64> {
+    pub fn estimate_confidence(&self, features: &Array1<f64>) -> OptimizeResult<f64> {
         let mut confidence = 0.0;
         for j in 0..features.len().min(self.confidence_network.ncols()) {
             confidence += self.confidence_network[[0, j]] * features[j];
@@ -1599,7 +1612,7 @@ impl Default for AdaptiveOptimizationStats {
 }
 
 impl LearnedOptimizer for NeuralAdaptiveOptimizer {
-    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> Result<()> {
+    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
         // Convert training tasks to trajectories
         let mut trajectories = Vec::new();
 
@@ -1618,7 +1631,7 @@ impl LearnedOptimizer for NeuralAdaptiveOptimizer {
         &mut self,
         _problem: &OptimizationProblem,
         _initial_params: &ArrayView1<f64>,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         // Adaptation happens dynamically during optimization
         Ok(())
     }
@@ -1697,7 +1710,10 @@ impl LearnedOptimizer for NeuralAdaptiveOptimizer {
 }
 
 impl NeuralAdaptiveOptimizer {
-    fn create_trajectory_from_task(&self, task: &TrainingTask) -> Result<OptimizationTrajectory> {
+    fn create_trajectory_from_task(
+        &self,
+        task: &TrainingTask,
+    ) -> OptimizeResult<OptimizationTrajectory> {
         // Simplified trajectory creation
         let num_steps = 10;
         let mut states = Vec::new();
@@ -1708,12 +1724,12 @@ impl NeuralAdaptiveOptimizer {
         for i in 0..num_steps {
             states.push(Array1::from_shape_fn(
                 self.optimization_network.architecture.input_size,
-                |_| rand::rng().random::<f64>(),
+                |_| rand::rng().gen::<f64>(),
             ));
 
             actions.push(Array1::from_shape_fn(
                 self.optimization_network.architecture.output_size,
-                |_| rand::rng().random::<f64>(),
+                |_| rand::rng().gen::<f64>(),
             ));
 
             performance_values.push(1.0 - i as f64 / num_steps as f64);
@@ -1737,7 +1753,7 @@ impl NeuralAdaptiveOptimizer {
         objective: &F,
         params: &Array1<f64>,
         strategy: &OptimizationStrategy,
-    ) -> Result<Array1<f64>>
+    ) -> OptimizeResult<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {

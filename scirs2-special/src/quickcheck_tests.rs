@@ -4,7 +4,7 @@
 //! to ensure mathematical correctness across wide parameter ranges.
 //!
 //! Configure test intensity with environment variables:
-//! - ULTRA_FAST_TESTS=1: Ultra-fast mode for rapid development iteration (10 tests)
+//! - ADVANCED_FAST_TESTS=1: Optimized mode for rapid development iteration (10 tests)
 //! - QUICK_TESTS=1: Run with reduced test cases for faster compilation (50 tests)
 //! - COMPREHENSIVE_TESTS=1: Run full test suite (500 tests, default in release mode)
 
@@ -27,10 +27,10 @@ impl Default for TestConfig {
         // Check environment variables for test configuration
         let quick_tests = std::env::var("QUICK_TESTS").is_ok();
         let comprehensive_tests = std::env::var("COMPREHENSIVE_TESTS").is_ok();
-        let ultra_fast = std::env::var("ULTRA_FAST_TESTS").is_ok();
+        let advanced_fast = std::env::var("ADVANCED_FAST_TESTS").is_ok();
 
-        if ultra_fast {
-            // Ultra-fast mode for development iteration
+        if advanced_fast {
+            // Optimized mode for development iteration
             Self {
                 test_count: 10,
                 max_iterations: 20,

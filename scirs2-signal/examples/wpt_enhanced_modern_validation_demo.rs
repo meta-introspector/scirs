@@ -330,7 +330,7 @@ fn analyze_streaming_performance(
     // Performance classification
     let latency = streaming.realtime_metrics.processing_latency;
     let performance_class = if latency < 1.0 {
-        "Excellent (Ultra-low latency)"
+        "Excellent (Advanced-low latency)"
     } else if latency < 10.0 {
         "Very Good (Low latency)"
     } else if latency < 50.0 {

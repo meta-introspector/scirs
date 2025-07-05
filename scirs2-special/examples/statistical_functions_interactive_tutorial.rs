@@ -5,9 +5,9 @@
 //!
 //! Run with: cargo run --example statistical_functions_interactive_tutorial
 
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use scirs2_special::*;
-use std::f64::consts::{E, PI};
+use std::f64::consts::PI;
 use std::io::{self, Write};
 
 #[allow(dead_code)]
@@ -355,7 +355,7 @@ fn machine_learning_applications() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Network outputs (logits): {:?}", logits.to_vec());
     println!("Class probabilities:");
-    for (i, (&prob, &name)) in probabilities.iter().zip(class_names.iter()).enumerate() {
+    for (_i, (&prob, &name)) in probabilities.iter().zip(class_names.iter()).enumerate() {
         println!("  {}: {:.4} ({:.1}%)", name, prob, prob * 100.0);
     }
 
@@ -454,7 +454,7 @@ fn computational_experiments() -> Result<(), Box<dyn std::error::Error>> {
     let expected = 0.5 + precision_test_x / 4.0; // First-order Taylor approximation
     let relative_error = ((result - expected) / expected).abs();
 
-    println!("Ultra-small input test:");
+    println!("Advanced-small input test:");
     println!("x = {:.2e}", precision_test_x);
     println!("σ(x) = {:.15}", result);
     println!("Expected ≈ {:.15}", expected);

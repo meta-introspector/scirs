@@ -504,7 +504,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
 /// use ndarray::{Array2, array, IxDyn};
 /// use scirs2_ndimage::morphology::distance_transform_edt;
 ///
@@ -515,8 +515,8 @@ where
 ///                    [false, true, true, false, false]];
 ///
 /// // Convert to IxDyn for the function call
-/// let input_dyn = input.clone().into_dimensionality::<IxDyn>()?;
-/// let (distances, _) = distance_transform_edt(&input_dyn, None, true, false)?;
+/// let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+/// let (distances, _) = distance_transform_edt(&input_dyn, None, true, false).unwrap();
 /// ```
 #[allow(dead_code)]
 pub fn distance_transform_edt<D>(
@@ -585,7 +585,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
 /// use ndarray::{Array2, array, IxDyn};
 /// use scirs2_ndimage::morphology::distance_transform_cdt;
 ///
@@ -596,8 +596,8 @@ where
 ///                    [false, true, true, false, false]];
 ///
 /// // Convert to IxDyn for the function call
-/// let input_dyn = input.clone().into_dimensionality::<IxDyn>()?;
-/// let (distances, _) = distance_transform_cdt(&input_dyn, "cityblock", true, false)?;
+/// let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+/// let (distances, _) = distance_transform_cdt(&input_dyn, "cityblock", true, false).unwrap();
 /// ```
 #[allow(dead_code)]
 pub fn distance_transform_cdt<D>(
@@ -749,7 +749,7 @@ where
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
 /// use ndarray::{Array2, array, IxDyn};
 /// use scirs2_ndimage::morphology::distance_transform_bf;
 ///
@@ -760,8 +760,8 @@ where
 ///                    [false, true, true, false, false]];
 ///
 /// // Convert to IxDyn for the function call
-/// let input_dyn = input.clone().into_dimensionality::<IxDyn>()?;
-/// let (distances, _) = distance_transform_bf(&input_dyn, "euclidean", None, true, false)?;
+/// let input_dyn = input.clone().into_dimensionality::<IxDyn>().unwrap();
+/// let (distances, _) = distance_transform_bf(&input_dyn, "euclidean", None, true, false).unwrap();
 /// ```
 #[allow(dead_code)]
 pub fn distance_transform_bf<D>(

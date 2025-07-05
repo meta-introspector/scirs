@@ -1,4 +1,4 @@
-//! Ultra-comprehensive wavelet packet transform validation in Advanced mode
+//! Advanced-comprehensive wavelet packet transform validation in Advanced mode
 //!
 //! This module provides the most thorough validation possible for wavelet packet
 //! transforms, covering tree structure validation, coefficient organization,
@@ -11,7 +11,7 @@ use scirs2_core::validation::check_finite;
 use std::collections::HashMap;
 use std::time::Instant;
 
-/// Ultra-comprehensive wavelet packet validation configuration
+/// Advanced-comprehensive wavelet packet validation configuration
 #[derive(Debug, Clone)]
 pub struct WptadvancedConfig {
     /// Signal lengths to test for scaling analysis
@@ -109,7 +109,7 @@ impl Default for WptadvancedConfig {
     }
 }
 
-/// Ultra-comprehensive wavelet packet validation results
+/// Advanced-comprehensive wavelet packet validation results
 #[derive(Debug, Clone)]
 pub struct WptadvancedResult {
     /// Tree structure validation results
@@ -368,7 +368,7 @@ pub struct ScalabilityAnalysisResult {
     pub memory_scaling_factor: f64,
 }
 
-/// Main ultra-comprehensive wavelet packet validation function
+/// Main advanced-comprehensive wavelet packet validation function
 ///
 /// This function performs the most thorough validation possible of wavelet packet
 /// transforms, testing all aspects from tree structure correctness to compression
@@ -389,7 +389,7 @@ pub fn run_wpt_advanced_validation(config: &WptadvancedConfig) -> SignalResult<W
     let mut total_score = 0.0;
     let mut score_count = 0;
 
-    println!("📦 Starting ultra-comprehensive wavelet packet validation...");
+    println!("📦 Starting advanced-comprehensive wavelet packet validation...");
 
     // Set random seed for reproducibility
     let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(config.random_seed);
@@ -922,7 +922,7 @@ fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
 pub fn generate_wpt_advanced_report(result: &WptadvancedResult) -> String {
     let mut report = String::new();
 
-    report.push_str("# Ultra-comprehensive Wavelet Packet Transform Validation Report\n\n");
+    report.push_str("# Advanced-comprehensive Wavelet Packet Transform Validation Report\n\n");
 
     report.push_str(&format!(
         "## Overall Score: {:.1}%\n\n",

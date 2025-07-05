@@ -54,7 +54,9 @@ where
         + 'static
         + num_traits::NumAssign
         + num_traits::One
-        + ndarray::ScalarOperand,
+        + ndarray::ScalarOperand
+        + Send
+        + Sync,
 {
     // Check input dimensions
     if x.len() != y.len() {

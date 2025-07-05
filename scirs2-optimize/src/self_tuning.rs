@@ -484,7 +484,7 @@ struct PerformanceTracker {
     function_values: VecDeque<f64>,
     gradient_norms: VecDeque<f64>,
     improvements: VecDeque<f64>,
-    iterations: VecDeque<usize>,
+    nit: VecDeque<usize>,
     timestamps: VecDeque<Instant>,
 }
 
@@ -495,7 +495,7 @@ impl PerformanceTracker {
             function_values: VecDeque::new(),
             gradient_norms: VecDeque::new(),
             improvements: VecDeque::new(),
-            iterations: VecDeque::new(),
+            nit: VecDeque::new(),
             timestamps: VecDeque::new(),
         }
     }
@@ -511,7 +511,7 @@ impl PerformanceTracker {
         if self.function_values.len() >= self.memory_window {
             self.function_values.pop_front();
             self.improvements.pop_front();
-            self.iterations.pop_front();
+            self.nit.pop_front();
             self.timestamps.pop_front();
             if !self.gradient_norms.is_empty() {
                 self.gradient_norms.pop_front();
@@ -520,7 +520,7 @@ impl PerformanceTracker {
 
         self.function_values.push_back(function_value);
         self.improvements.push_back(improvement);
-        self.iterations.push_back(iteration);
+        self.nit.push_back(iteration);
         self.timestamps.push_back(Instant::now());
 
         if let Some(grad_norm) = gradient_norm {
@@ -593,7 +593,7 @@ impl PerformanceTracker {
     }
 
     fn compute_progress_rate(&self) -> f64 {
-        if self.iterations.len() < 2 || self.timestamps.len() < 2 {
+        if self.nit.len() < 2 || self.timestamps.len() < 2 {
             return 0.0;
         }
 
@@ -608,7 +608,7 @@ impl PerformanceTracker {
             return 0.0;
         }
 
-        let iteration_count = self.iterations.len() as f64;
+        let iteration_count = self.nit.len() as f64;
         iteration_count / time_elapsed
     }
 }
@@ -1183,7 +1183,7 @@ impl BayesianParameterOptimizer {
                     // Add small random perturbation for exploration
                     use rand::Rng;
                     let mut rng = rand::rng();
-                    let perturbation_factor = 1.0 + (rng.random_range(-0.1..=0.1));
+                    let perturbation_factor = 1.0 + (rng.gen_range(-0.1..=0.1));
 
                     let perturbed_value = match value {
                         ParameterValue::Float(f) => {

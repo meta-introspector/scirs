@@ -3,7 +3,7 @@
 //! This example showcases the complete Advanced validation suite for scirs2-signal,
 //! demonstrating all the enhanced validation capabilities implemented:
 //!
-//! 1. Ultra-comprehensive validation suite
+//! 1. Advanced-comprehensive validation suite
 //! 2. Enhanced multitaper spectral estimation validation
 //! 3. Comprehensive Lomb-Scargle periodogram testing
 //! 4. Parametric spectral estimation validation (AR, ARMA)

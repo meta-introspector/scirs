@@ -207,8 +207,7 @@ where
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot expand to 2D from dimensions: {:?}",
-                            expanded_dims
+                            "Cannot expand to 2D from dimensions: {expanded_dims:?}"
                         ))))
                     }
                 }
@@ -220,8 +219,7 @@ where
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot expand to 3D from dimensions: {:?}",
-                            expanded_dims
+                            "Cannot expand to 3D from dimensions: {expanded_dims:?}"
                         ))))
                     }
                 }
@@ -237,14 +235,12 @@ where
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot expand to 4D from dimensions: {:?}",
-                            expanded_dims
+                            "Cannot expand to 4D from dimensions: {expanded_dims:?}"
                         ))))
                     }
                 }
                 _ => Err(CoreError::DimensionError(ErrorContext::new(format!(
-                    "Unsupported target dimension: {}",
-                    target_ndim
+                    "Unsupported target dimension: {target_ndim}"
                 )))),
             }
         } else {
@@ -281,8 +277,7 @@ where
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot squeeze to 1D from dimensions: {:?}",
-                            squeezed_dims
+                            "Cannot squeeze to 1D from dimensions: {squeezed_dims:?}"
                         ))))
                     }
                 }
@@ -293,8 +288,7 @@ where
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot squeeze to 2D from dimensions: {:?}",
-                            squeezed_dims
+                            "Cannot squeeze to 2D from dimensions: {squeezed_dims:?}"
                         ))))
                     }
                 }
@@ -306,8 +300,7 @@ where
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot squeeze to 3D from dimensions: {:?}",
-                            squeezed_dims
+                            "Cannot squeeze to 3D from dimensions: {squeezed_dims:?}"
                         ))))
                     }
                 }
@@ -323,14 +316,12 @@ where
                         Ok(converted_dim)
                     } else {
                         Err(CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot squeeze to 4D from dimensions: {:?}",
-                            squeezed_dims
+                            "Cannot squeeze to 4D from dimensions: {squeezed_dims:?}"
                         ))))
                     }
                 }
                 _ => Err(CoreError::DimensionError(ErrorContext::new(format!(
-                    "Unsupported target dimension: {}",
-                    target_ndim
+                    "Unsupported target dimension: {target_ndim}"
                 )))),
             }
         }
@@ -359,8 +350,7 @@ where
         if target_ndim.is_none() {
             return array.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
-                    "Failed to convert {} array to dynamic dimension type. Source shape: {:?}",
-                    context, source_shape
+                    "Failed to convert {context} array to dynamic dimension type. Source shape: {source_shape:?}"
                 )))
             });
         }
@@ -391,8 +381,7 @@ where
                 // This case is already handled above, but for completeness
                 array.into_dimensionality::<D>().map_err(|_| {
                     CoreError::DimensionError(ErrorContext::new(format!(
-                        "Unexpected dimension conversion failure for {} array with matching dimensions. Source shape: {:?}",
-                        context, source_shape
+                        "Unexpected dimension conversion failure for {context} array with matching dimensions. Source shape: {source_shape:?}"
                     )))
                 })
             }
@@ -412,8 +401,7 @@ where
         if dims_to_add == 0 {
             return array.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
-                    "Failed to convert {} array despite equal dimensions",
-                    context
+                    "Failed to convert {context} array despite equal dimensions"
                 )))
             });
         }
@@ -429,8 +417,7 @@ where
         {
             Ok(reshaped) => reshaped.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
-                    "Failed to convert expanded {} array to target dimension type",
-                    context
+                    "Failed to convert expanded {context} array to target dimension type"
                 )))
             }),
             Err(_) => {
@@ -442,15 +429,13 @@ where
                     .into_shape_with_order(ndarray::IxDyn(&alt_shape))
                     .map_err(|_| {
                         CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot reshape {} array from shape {:?} to any expanded shape",
-                            context, source_shape
+                            "Cannot reshape {context} array from shape {source_shape:?} to any expanded shape"
                         )))
                     })?
                     .into_dimensionality::<D>()
                     .map_err(|_| {
                         CoreError::DimensionError(ErrorContext::new(format!(
-                            "Cannot expand {} array from {} to {} dimensions",
-                            context, source_dims, target_dims
+                            "Cannot expand {context} array from {source_dims} to {target_dims} dimensions"
                         )))
                     })
             }
@@ -493,15 +478,13 @@ where
             .into_shape_with_order(ndarray::IxDyn(&squeezed_shape))
             .map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
-                    "Cannot reshape {} array from shape {:?} to squeezed shape {:?}",
-                    context, source_shape, squeezed_shape
+                    "Cannot reshape {context} array from shape {source_shape:?} to squeezed shape {squeezed_shape:?}"
                 )))
             })?
             .into_dimensionality::<D>()
             .map_err(|_| {
                 CoreError::DimensionError(ErrorContext::new(format!(
-                    "Cannot convert squeezed {} array from {} to {} dimensions",
-                    context, source_dims, target_dims
+                    "Cannot convert squeezed {context} array from {source_dims} to {target_dims} dimensions"
                 )))
             })
     }
@@ -765,8 +748,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
             ])
             .map_err(|e| {
                 CoreError::ShapeError(ErrorContext::new(format!(
-                    "Failed to create slice info: {}",
-                    e
+                    "Failed to create slice info: {e}"
                 )))
             })?
         };
@@ -846,8 +828,7 @@ impl<A: Clone + Copy + 'static + Send + Sync> MemoryMappedSlicing<A> for MemoryM
             ])
             .map_err(|e| {
                 CoreError::ShapeError(ErrorContext::new(format!(
-                    "Failed to create slice info: {}",
-                    e
+                    "Failed to create slice info: {e}"
                 )))
             })?
         };

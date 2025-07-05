@@ -332,6 +332,153 @@ pub use rayon::join as par_join;
 #[cfg(not(feature = "parallel"))]
 pub use sequential_fallbacks::join as par_join;
 
+/// Parallel map operation on array data with chunking
+///
+/// This function processes array data in parallel chunks using the provided mapper function.
+///
+/// # Arguments
+///
+/// * `data` - The data to process (e.g., array view)
+/// * `chunk_size` - Size of each chunk for parallel processing
+/// * `mapper` - Function that processes a chunk and returns a result
+/// * `reducer` - Function that combines two results into one
+///
+/// # Returns
+///
+/// The final reduced result
+#[cfg(feature = "parallel")]
+#[allow(dead_code)]
+pub fn parallel_map_reduce<D, T, M, Red>(data: D, _chunk_size: usize, mapper: M, _reducer: Red) -> T
+where
+    D: Send + Sync,
+    T: Send + Clone,
+    M: Fn(D) -> T + Sync + Send + Clone,
+    Red: Fn(T, T) -> T + Sync + Send,
+{
+    // For simplicity, we'll just apply the mapper once since we can't easily chunk arbitrary data
+    // In practice, this would need to be specialized for specific data types
+    mapper(data)
+}
+
+/// Sequential fallback for parallel_map_reduce
+#[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
+pub fn parallel_map_reduce<D, T, M, Red>(data: D, chunk_size: usize, mapper: M, reducer: Red) -> T
+where
+    T: Clone,
+    M: Fn(D) -> T,
+    Red: Fn(T, T) -> T,
+{
+    mapper(data)
+}
+
+/// Parallel map-collect operation on a collection
+///
+/// This function maps over a collection in parallel and collects the results.
+///
+/// # Arguments
+///
+/// * `items` - The items to process
+/// * `mapper` - Function that processes each item
+///
+/// # Returns
+///
+/// Vector of mapped results
+#[cfg(feature = "parallel")]
+#[allow(dead_code)]
+pub fn parallel_map_collect<I, T, U, M>(items: I, mapper: M) -> Vec<U>
+where
+    I: IntoParallelIterator<Item = T>,
+    T: Send,
+    U: Send,
+    M: Fn(T) -> U + Sync + Send,
+{
+    use rayon::prelude::*;
+    items.into_par_iter().map(mapper).collect()
+}
+
+/// Sequential fallback for parallel_map_collect
+#[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
+pub fn parallel_map_collect<I, T, U, M>(items: I, mapper: M) -> Vec<U>
+where
+    I: IntoIterator<Item = T>,
+    M: Fn(T) -> U,
+{
+    items.into_iter().map(mapper).collect()
+}
+
+/// Parallel map-reduce operation on indexed chunks
+///
+/// This function takes a range of indices, splits them into chunks of the specified size,
+/// processes each chunk in parallel using the mapper function, and then reduces the results
+/// using the reducer function.
+///
+/// # Arguments
+///
+/// * `range` - The range of indices to process (e.g., 0..n)
+/// * `chunk_size` - Size of each chunk for parallel processing
+/// * `mapper` - Function that processes a slice of indices and returns a result
+/// * `reducer` - Function that combines two results into one
+///
+/// # Returns
+///
+/// The final reduced result
+#[cfg(feature = "parallel")]
+#[allow(dead_code)]
+pub fn parallel_map_reduce_indexed<R, T, M, Red>(
+    range: R,
+    chunk_size: usize,
+    mapper: M,
+    reducer: Red,
+) -> T
+where
+    R: Iterator<Item = usize> + Send,
+    T: Send + Clone,
+    M: Fn(&[usize]) -> T + Sync + Send,
+    Red: Fn(T, T) -> T + Sync + Send,
+{
+    use rayon::prelude::*;
+
+    let indices: Vec<usize> = range.collect();
+
+    indices
+        .chunks(chunk_size)
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .map(&mapper)
+        .reduce_with(reducer)
+        .unwrap_or_else(|| mapper(&[]))
+}
+
+/// Sequential fallback for parallel_map_reduce_indexed
+#[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
+pub fn parallel_map_reduce_indexed<R, T, M, Red>(
+    range: R,
+    chunk_size: usize,
+    mapper: M,
+    reducer: Red,
+) -> T
+where
+    R: Iterator<Item = usize>,
+    T: Clone,
+    M: Fn(&[usize]) -> T,
+    Red: Fn(T, T) -> T,
+{
+    let indices: Vec<usize> = range.collect();
+
+    let mut results = Vec::new();
+    for chunk in indices.chunks(chunk_size) {
+        results.push(mapper(chunk));
+    }
+
+    results
+        .into_iter()
+        .reduce(reducer)
+        .unwrap_or_else(|| mapper(&[]))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

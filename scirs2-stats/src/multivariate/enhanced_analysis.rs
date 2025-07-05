@@ -117,7 +117,17 @@ pub struct PCAResult<F> {
 
 impl<F> EnhancedPCA<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + std::fmt::Display + std::iter::Sum + ScalarOperand,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum
+        + ScalarOperand,
 {
     /// Create new enhanced PCA analyzer
     pub fn new(algorithm: PCAAlgorithm, config: PCAConfig) -> Self {
@@ -615,7 +625,17 @@ impl Default for FactorAnalysisConfig {
 
 impl<F> EnhancedFactorAnalysis<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive + std::fmt::Display + std::iter::Sum + ScalarOperand,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum
+        + ScalarOperand,
 {
     /// Create new factor analysis
     pub fn new(n_factors: usize, config: FactorAnalysisConfig) -> StatsResult<Self> {
@@ -821,8 +841,17 @@ pub fn enhanced_pca<F>(
     algorithm: Option<PCAAlgorithm>,
 ) -> StatsResult<PCAResult<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display + std::iter::Sum + ScalarOperand,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum
+        + ScalarOperand,
 {
     let algorithm = algorithm.unwrap_or(PCAAlgorithm::SVD);
     let config = PCAConfig {
@@ -841,8 +870,17 @@ pub fn enhanced_factor_analysis<F>(
     rotation: Option<RotationMethod>,
 ) -> StatsResult<FactorAnalysisResult<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display + std::iter::Sum + ScalarOperand,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum
+        + ScalarOperand,
 {
     let config = FactorAnalysisConfig {
         rotation: rotation.unwrap_or(RotationMethod::Varimax),

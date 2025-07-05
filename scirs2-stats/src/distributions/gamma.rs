@@ -7,7 +7,7 @@ use crate::sampling::SampleableDistribution;
 use crate::traits::{ContinuousDistribution, Distribution as ScirsDist};
 use ndarray::Array1;
 use num_traits::{Float, NumCast};
-use rand::thread_rng;
+use rand::rng;
 use rand_distr::{Distribution, Gamma as RandGamma};
 use std::fmt::Debug;
 
@@ -303,7 +303,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
     pub fn rvs_vec(&self, size: usize) -> StatsResult<Vec<F>> {
         // For small sample sizes, use the serial implementation
         if size < 1000 {
-            let mut rng = thread_rng();
+            let mut rng = rng();
             let mut samples = Vec::with_capacity(size);
 
             for _ in 0..size {
@@ -327,7 +327,7 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Gam
 
         // Generate samples in parallel
         let samples = parallel_map(&indices, move |_| {
-            let mut rng = thread_rng();
+            let mut rng = rng();
             let rand_distr = RandGamma::new(shape_f64, 1.0 / scale_f64).unwrap();
             let sample = rand_distr.sample(&mut rng);
             F::from(sample).unwrap() + loc
@@ -519,7 +519,9 @@ fn one_minus_p<F: Float>(p: F) -> F {
 }
 
 /// Implementation of the Distribution trait for Gamma
-impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> ScirsDist<F> for Gamma<F> {
+impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> ScirsDist<F>
+    for Gamma<F>
+{
     fn mean(&self) -> F {
         // For Gamma distribution, mean = shape * scale
         self.shape * self.scale
@@ -564,7 +566,9 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Sci
 }
 
 /// Implementation of the ContinuousDistribution trait for Gamma
-impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> ContinuousDistribution<F> for Gamma<F> {
+impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display>
+    ContinuousDistribution<F> for Gamma<F>
+{
     fn pdf(&self, x: F) -> F {
         // Call the implementation from the struct
         Gamma::pdf(self, x)
@@ -582,7 +586,9 @@ impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> Con
 }
 
 /// Implementation of SampleableDistribution for Gamma
-impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display> SampleableDistribution<F> for Gamma<F> {
+impl<F: Float + NumCast + Debug + Send + Sync + 'static + std::fmt::Display>
+    SampleableDistribution<F> for Gamma<F>
+{
     fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
         self.rvs_vec(size)
     }

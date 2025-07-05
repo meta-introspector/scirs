@@ -4,9 +4,7 @@
 //! optimizations. It validates that SIMD, parallel, and other optimizations maintain
 //! numerical accuracy while providing performance benefits.
 
-use scirs2_stats::{
-    create_custom_ultrathink_validator, create_ultrathink_validator, ValidationConfig,
-};
+use scirs2_stats::{create_advanced_validator, create_custom_advanced_validator, ValidationConfig};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -33,7 +31,7 @@ fn demonstrate_default_validation() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 Default Validation Configuration");
     println!("-----------------------------------");
 
-    let mut validator = create_ultrathink_validator();
+    let mut validator = create_advanced_validator();
 
     println!("🚀 Running comprehensive validation tests...");
     let report = validator.validate_all_operations()?;
@@ -83,7 +81,7 @@ fn demonstrate_custom_validation() -> Result<(), Box<dyn std::error::Error>> {
         test_sizes: vec![1000, 10000], // Specific test sizes
     };
 
-    let mut validator = create_custom_ultrathink_validator(custom_config);
+    let mut validator = create_custom_advanced_validator(custom_config);
 
     println!("🚀 Running high-precision validation tests...");
     let report = validator.validate_all_operations()?;
@@ -103,7 +101,7 @@ fn demonstrate_detailed_analysis() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🔍 Detailed Validation Analysis");
     println!("-------------------------------");
 
-    let mut validator = create_ultrathink_validator();
+    let mut validator = create_advanced_validator();
     let report = validator.validate_all_operations()?;
 
     // Analyze results by operation type

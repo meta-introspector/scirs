@@ -323,30 +323,30 @@
 //! println!("Nearest neighbor indices: {:?}", indices);
 //! ```
 //!
-//! ### Ultra-Optimized SIMD Clustering
+//! ### Advanced-Optimized SIMD Clustering
 //!
 //! ```
-//! use scirs2_spatial::{UltraSimdKMeans, UltraSimdNearestNeighbors};
+//! use scirs2_spatial::{AdvancedSimdKMeans, AdvancedSimdNearestNeighbors};
 //! use ndarray::array;
 //!
-//! // Ultra-fast SIMD K-means clustering
+//! // Optimized SIMD K-means clustering
 //! let points = array![
 //!     [0.0, 0.0], [0.1, 0.1], [0.0, 0.1],  // Cluster 1
 //!     [5.0, 5.0], [5.1, 5.1], [5.0, 5.1],  // Cluster 2
 //! ];
 //!
-//! let ultra_kmeans = UltraSimdKMeans::new(2)
+//! let advanced_kmeans = AdvancedSimdKMeans::new(2)
 //!     .with_mixed_precision(true)
 //!     .with_block_size(256);
 //!
-//! let (centroids, assignments) = ultra_kmeans.fit(&points.view()).unwrap();
+//! let (centroids, assignments) = advanced_kmeans.fit(&points.view()).unwrap();
 //! println!("Centroids: {:?}", centroids);
 //! println!("Assignments: {:?}", assignments);
 //!
-//! // Ultra-fast SIMD nearest neighbors
-//! let nn_searcher = UltraSimdNearestNeighbors::new();
+//! // Optimized SIMD nearest neighbors
+//! let nn_searcher = AdvancedSimdNearestNeighbors::new();
 //! let query_points = array![[0.05, 0.05], [5.05, 5.05]];
-//! let (indices, distances) = nn_searcher.simd_knn_ultra_fast(
+//! let (indices, distances) = nn_searcher.simd_knn_advanced_fast(
 //!     &query_points.view(), &points.view(), 2
 //! ).unwrap();
 //! println!("NN indices: {:?}", indices);
@@ -416,10 +416,10 @@
 //! println!("Optimal strategy: {:?}", strategy);
 //! ```
 //!
-//! ### Ultra-Optimized KD-Tree for Maximum Performance
+//! ### Advanced-Optimized KD-Tree for Maximum Performance
 //!
 //! ```
-//! use scirs2_spatial::{UltraKDTree, KDTreeConfig};
+//! use scirs2_spatial::{AdvancedKDTree, KDTreeConfig};
 //! use ndarray::array;
 //!
 //! // Create points dataset
@@ -428,32 +428,32 @@
 //!     [2.0, 2.0], [3.0, 3.0], [4.0, 4.0], [5.0, 5.0],
 //! ];
 //!
-//! // Configure ultra-optimized KD-Tree
+//! // Configure advanced-optimized KD-Tree
 //! let config = KDTreeConfig::new()
 //!     .with_cache_aware_layout(true)    // Optimize for CPU cache
 //!     .with_vectorized_search(true)     // Use SIMD acceleration
 //!     .with_numa_aware(true)            // NUMA-aware construction
 //!     .with_parallel_construction(true, 1000);  // Parallel for large datasets
 //!
-//! // Build ultra-optimized tree
-//! let ultra_kdtree = UltraKDTree::new(&points.view(), config)?;
+//! // Build advanced-optimized tree
+//! let advanced_kdtree = AdvancedKDTree::new(&points.view(), config)?;
 //!
-//! // Ultra-fast k-nearest neighbors
+//! // Optimized k-nearest neighbors
 //! let query = array![2.1, 2.1];
-//! let (indices, distances) = ultra_kdtree.knn_search_ultra(&query.view(), 3)?;
-//! println!("Ultra-fast k-NN: indices={:?}, distances={:?}", indices, distances);
+//! let (indices, distances) = advanced_kdtree.knn_search_advanced(&query.view(), 3)?;
+//! println!("Optimized k-NN: indices={:?}, distances={:?}", indices, distances);
 //!
 //! // Batch processing for multiple queries
 //! let queries = array![[0.5, 0.5], [2.5, 2.5], [4.5, 4.5]];
-//! let (batch_indices, batch_distances) = ultra_kdtree.batch_knn_search(&queries.view(), 2)?;
+//! let (batch_indices, batch_distances) = advanced_kdtree.batch_knn_search(&queries.view(), 2)?;
 //! println!("Batch k-NN shape: {:?}", batch_indices.shape());
 //!
 //! // Range search with radius
-//! let range_results = ultra_kdtree.range_search(&query.view(), 1.0)?;
+//! let range_results = advanced_kdtree.range_search(&query.view(), 1.0)?;
 //! println!("Points within radius 1.0: {} found", range_results.len());
 //!
 //! // Performance statistics
-//! let stats = ultra_kdtree.statistics();
+//! let stats = advanced_kdtree.statistics();
 //! println!("Tree depth: {}, Construction time: {:.2}ms",
 //!          stats.depth, stats.construction_time_ms);
 //! println!("Memory usage: {:.1} KB", stats.memory_usage_bytes as f64 / 1024.0);
@@ -515,7 +515,7 @@
 //!
 //! ### Quantum-Classical Hybrid Algorithms (Development Mode)
 //!
-//! ```ignore
+//! ```text
 //! // Temporarily disabled for optimization
 //! // use scirs2_spatial::quantum_classical_hybrid::{HybridSpatialOptimizer, HybridClusterer};
 //! // use ndarray::array;
@@ -533,7 +533,7 @@
 //!
 //! ### Neuromorphic-Quantum Fusion Computing (Development Mode)
 //!
-//! ```ignore
+//! ```text
 //! // Temporarily disabled for optimization
 //! // use scirs2_spatial::neuromorphic_quantum_fusion::{QuantumSpikingClusterer, NeuralQuantumOptimizer};
 //! // use ndarray::array;
@@ -552,7 +552,7 @@
 //!
 //! ### Next-Generation GPU Architectures (Development Mode)
 //!
-//! ```ignore
+//! ```text
 //! // Temporarily disabled for optimization
 //! // use scirs2_spatial::next_gen_gpu_architecture::{QuantumGpuProcessor, PhotonicAccelerator};
 //! // use ndarray::array;
@@ -570,7 +570,7 @@
 //!
 //! ### AI-Driven Algorithm Selection and Optimization (Development Mode)
 //!
-//! ```ignore
+//! ```text
 //! // Temporarily disabled for optimization
 //! // use scirs2_spatial::ai_driven_optimization::{AIAlgorithmSelector, MetaLearningOptimizer};
 //! // use ndarray::array;
@@ -592,10 +592,10 @@
 //!
 //! ### Extreme Performance Optimization (Development Mode)
 //!
-//! ```ignore
+//! ```text
 //! // Temporarily disabled for optimization
 //! // use scirs2_spatial::extreme_performance_optimization::{
-//! //     ExtremeOptimizer, UltrafastDistanceMatrix, SelfOptimizingAlgorithm, create_ultimate_optimizer
+//! //     ExtremeOptimizer, AdvancedfastDistanceMatrix, SelfOptimizingAlgorithm, create_ultimate_optimizer
 //! // };
 //! // use ndarray::array;
 //! //
@@ -603,8 +603,8 @@
 //! // let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]];
 //! // let optimizer = create_ultimate_optimizer(); // All optimizations enabled
 //! //
-//! // let ultrafast_matrix = UltrafastDistanceMatrix::new(optimizer);
-//! // let distances = ultrafast_matrix.compute_extreme_performance(&points.view()).await?;
+//! // let advancedfast_matrix = AdvancedfastDistanceMatrix::new(optimizer);
+//! // let distances = advancedfast_matrix.compute_extreme_performance(&points.view()).await?;
 //! //
 //! // // Self-optimizing algorithms that improve during execution
 //! // let mut self_optimizer = SelfOptimizingAlgorithm::new("clustering")
@@ -674,10 +674,10 @@ pub use kdtree::{KDTree, Rectangle};
 pub mod kdtree_optimized;
 pub use kdtree_optimized::KDTreeOptimized;
 
-// Ultra-optimized KD-Tree with advanced performance features
-pub mod kdtree_ultra;
-pub use kdtree_ultra::{
-    BoundingBox as KDTreeBoundingBox, KDTreeConfig, TreeStatistics, UltraKDTree,
+// Advanced-optimized KD-Tree with advanced performance features
+pub mod kdtree_advanced;
+pub use kdtree_advanced::{
+    AdvancedKDTree, BoundingBox as KDTreeBoundingBox, KDTreeConfig, TreeStatistics,
 };
 
 // Ball-Tree for efficient nearest neighbor searches in high dimensions
@@ -816,16 +816,18 @@ pub use simd_distance::{
     simd_knn_search, simd_manhattan_distance, SimdMetric,
 };
 
-// Ultra-optimized SIMD clustering and distance operations
+// Advanced-optimized SIMD clustering and distance operations
+pub use simd_distance::advanced_simd_clustering::{
+    AdvancedSimdKMeans, AdvancedSimdNearestNeighbors,
+};
 pub use simd_distance::bench::{
     benchmark_distance_computation, report_simd_features, BenchmarkResults,
 };
 pub use simd_distance::mixed_precision_simd::{
     simd_euclidean_distance_batch_f32, simd_euclidean_distance_f32,
 };
-pub use simd_distance::ultra_simd_clustering::{UltraSimdKMeans, UltraSimdNearestNeighbors};
 
-// Ultra-optimized memory pool system for spatial algorithms
+// Advanced-optimized memory pool system for spatial algorithms
 pub mod memory_pool;
 pub use memory_pool::{
     global_clustering_arena, global_distance_pool, ArenaStatistics, ClusteringArena,
@@ -840,12 +842,13 @@ pub use gpu_accel::{
     ProcessingStrategy,
 };
 
-// Ultra-parallel algorithms with work-stealing and NUMA-aware optimizations
-pub mod ultra_parallel;
-pub use ultra_parallel::{
-    get_numa_topology, initialize_global_pool, report_ultra_parallel_capabilities, MemoryStrategy,
-    NumaTopology, PoolStatistics as UltraPoolStatistics, ThreadAffinityStrategy,
-    UltraParallelDistanceMatrix, UltraParallelKMeans, WorkStealingConfig, WorkStealingPool,
+// Advanced-parallel algorithms with work-stealing and NUMA-aware optimizations
+pub mod advanced_parallel;
+pub use advanced_parallel::{
+    get_numa_topology, initialize_global_pool, report_advanced_parallel_capabilities,
+    AdvancedParallelDistanceMatrix, AdvancedParallelKMeans, MemoryStrategy, NumaTopology,
+    PoolStatistics as AdvancedPoolStatistics, ThreadAffinityStrategy, WorkStealingConfig,
+    WorkStealingPool,
 };
 
 // Utility functions
@@ -969,10 +972,10 @@ pub use ai_driven_optimization::{
 // Extreme performance optimization pushing spatial computing beyond current limits
 pub mod extreme_performance_optimization;
 pub use extreme_performance_optimization::{
-    benchmark_extreme_optimizations, create_ultimate_optimizer, CacheHierarchyInfo,
-    CacheObliviousSpatialAlgorithms, ExtremeMemoryAllocator, ExtremeOptimizer,
+    benchmark_extreme_optimizations, create_ultimate_optimizer, AdvancedfastDistanceMatrix,
+    CacheHierarchyInfo, CacheObliviousSpatialAlgorithms, ExtremeMemoryAllocator, ExtremeOptimizer,
     ExtremePerformanceMetrics, HardwarePerformanceCounters, JitCompiler, LockFreeSpatialStructures,
-    NumaTopologyInfo, OptimizationRecord, SelfOptimizingAlgorithm, UltrafastDistanceMatrix,
+    NumaTopologyInfo, OptimizationRecord, SelfOptimizingAlgorithm,
 };
 
 #[cfg(test)]

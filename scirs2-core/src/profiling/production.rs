@@ -669,12 +669,10 @@ impl ProductionProfiler {
     /// Check if current operation should be sampled
     fn should_sample(&self) -> CoreResult<bool> {
         use rand::Rng;
-        let mut rng = self.sampler.lock().map_err(|_| {
-            CoreError::from(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Failed to lock sampler",
-            ))
-        })?;
+        let mut rng = self
+            .sampler
+            .lock()
+            .map_err(|_| CoreError::from(std::io::Error::other("Failed to lock sampler")))?;
         Ok(rng.random::<f64>() < self.config.sampling_rate)
     }
 
@@ -933,10 +931,7 @@ impl ProductionProfiler {
     /// Get current resource utilization
     pub fn get_resource_utilization(&self) -> CoreResult<ResourceUsage> {
         let tracker = self.resource_tracker.lock().map_err(|_| {
-            CoreError::from(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Failed to lock resource tracker",
-            ))
+            CoreError::from(std::io::Error::other("Failed to lock resource tracker"))
         })?;
         Ok(tracker.get_current_usage())
     }
@@ -953,19 +948,12 @@ impl ProductionProfiler {
                 "exported_at": SystemTime::now()
             });
 
-            serde_json::to_string_pretty(&summary).map_err(|e| {
-                CoreError::from(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("error: {}", e),
-                ))
-            })
+            serde_json::to_string_pretty(&summary)
+                .map_err(|e| CoreError::from(std::io::Error::other(format!("error: {e}"))))
         }
         #[cfg(not(feature = "serde"))]
         {
-            Ok(format!(
-                "Profiling data for workload: {workload_id}",
-                workload_id = workload_id
-            ))
+            Ok(format!("Profiling data for workload: {workload_id}"))
         }
     }
 }

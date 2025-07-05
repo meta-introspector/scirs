@@ -715,9 +715,9 @@ pub fn loggamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) ->
 ///
 /// **3. Negative Arguments**: Applies reflection formula to reduce to positive case
 ///
-/// **4. Small Positive Range** (0 < z < 1): Uses recurrence to shift to [1,2], then rational approximation
+/// **4. Small Positive Range** (0 < z < 1): Uses recurrence to shift to `[1,2]`, then rational approximation
 ///
-/// **5. Moderate Arguments** (1 ≤ z ≤ 20): Rational approximation in [1,2] interval
+/// **5. Moderate Arguments** (1 ≤ z ≤ 20): Rational approximation in `[1,2]` interval
 ///
 /// **6. Large Arguments** (z > 20): Direct asymptotic expansion
 ///

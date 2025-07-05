@@ -7,9 +7,10 @@ use super::{
     utils, Experience, ExperienceBuffer, ImprovementReward, OptimizationAction, OptimizationState,
     RLOptimizationConfig, RLOptimizer, RewardFunction,
 };
-use crate::error::OptimizeResult;
+use crate::error::{OptimizeError, OptimizeResult};
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
+use rand::Rng;
 // use std::collections::VecDeque; // Unused import
 
 /// Actor network for policy learning
@@ -129,11 +130,11 @@ impl ActorNetwork {
 
         Self {
             hidden_weights: Array2::from_shape_fn((hidden_size, input_size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
             output_weights: Array2::from_shape_fn((output_size, hidden_size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: Array1::zeros(output_size),
             input_size,
@@ -235,11 +236,11 @@ impl CriticNetwork {
 
         Self {
             hidden_weights: Array2::from_shape_fn((hidden_size, input_size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
             output_weights: Array1::from_shape_fn(hidden_size, |_| {
-                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: 0.0,
             input_size,
@@ -459,7 +460,7 @@ impl AdvantageActorCriticOptimizer {
         };
 
         let noisy_output =
-            policy_output.mapv(|x| x + (rand::rng().random::<f64>() - 0.5) * exploration_noise);
+            policy_output.mapv(|x| x + (rand::rng().gen::<f64>() - 0.5) * exploration_noise);
         let action_probs = self
             .actor
             .action_probabilities(&noisy_output.view(), self.temperature);
@@ -473,7 +474,7 @@ impl AdvantageActorCriticOptimizer {
             })
             .collect();
 
-        let rand_val = rand::rng().random::<f64>();
+        let rand_val = rand::rng().gen::<f64>();
         let action_idx = cumulative_probs
             .iter()
             .position(|&cp| rand_val <= cp)
@@ -527,7 +528,7 @@ impl AdvantageActorCriticOptimizer {
     }
 
     /// Update actor and critic networks using A2C algorithm
-    fn update_networks(&mut self, experiences: &[Experience]) -> Result<()> {
+    fn update_networks(&mut self, experiences: &[Experience]) -> Result<(), OptimizeError> {
         let mut total_actor_loss = 0.0;
         let mut total_critic_loss = 0.0;
         let mut total_advantage = 0.0;
@@ -669,7 +670,7 @@ impl RLOptimizer for AdvantageActorCriticOptimizer {
         action
     }
 
-    fn update(&mut self, experience: &Experience) -> Result<()> {
+    fn update(&mut self, experience: &Experience) -> Result<(), OptimizeError> {
         self.experience_buffer.add(experience.clone());
 
         // Update networks when we have enough experiences
@@ -749,7 +750,7 @@ impl RLOptimizer for AdvantageActorCriticOptimizer {
             x: current_params,
             fun: current_state.objective_value,
             success: current_state.convergence_metrics.relative_objective_change < 1e-6,
-            iterations: current_state.step,
+            nit: current_state.step,
             message: format!("A2C episode completed, total reward: {:.4}", total_reward),
         })
     }
@@ -766,7 +767,7 @@ impl RLOptimizer for AdvantageActorCriticOptimizer {
             x: initial_params.to_owned(),
             fun: f64::INFINITY,
             success: false,
-            iterations: 0,
+            nit: 0,
             message: "Training not completed".to_string(),
         };
 
@@ -951,7 +952,7 @@ mod tests {
         // Should make some progress
         let initial_obj = objective(&initial.view());
         assert!(result.fun <= initial_obj);
-        assert!(result.iterations > 0);
+        assert!(result.nit > 0);
     }
 }
 

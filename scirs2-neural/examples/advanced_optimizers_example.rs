@@ -1,11 +1,11 @@
-use ndarray::Array2;
-use ndarray_rand::rand::rngs::SmallRng;
-use ndarray_rand::rand::SeedableRng;
-use scirs2_neural::layers::{Dense, Dropout};
-use scirs2_neural::losses::CrossEntropyLoss;
+// use ndarray::Array2;
+// use ndarray_rand::rand::rngs::SmallRng;
+// use ndarray_rand::rand::SeedableRng;
+// use scirs2_neural::layers::{Dense, Dropout};
+// use scirs2_neural::losses::CrossEntropyLoss;
 // use scirs2_neural::models::{Model, Sequential};
 // use scirs2_neural::optimizers::{Adam, AdamW, Optimizer, RAdam, RMSprop, SGD};
-use std::time::Instant;
+// use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

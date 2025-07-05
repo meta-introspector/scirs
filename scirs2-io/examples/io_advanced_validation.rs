@@ -1,4 +1,4 @@
-//! advanced Mode Validation
+//! Advanced Mode Validation
 //!
 //! A minimal validation to test advanced coordinator and enhanced algorithms
 //! to verify all compilation errors are fixed.
@@ -9,13 +9,13 @@ use scirs2_io::error::Result;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🔍 advanced Mode Validation");
+    println!("🔍 Advanced Mode Validation");
     println!("=============================\n");
 
-    // Test 1: Create advanced Coordinator
-    println!("✅ Test 1: Creating advanced Coordinator...");
+    // Test 1: Create Advanced Coordinator
+    println!("✅ Test 1: Creating Advanced Coordinator...");
     let mut coordinator = AdvancedCoordinator::new()?;
-    println!("   advanced Coordinator created successfully");
+    println!("   Advanced Coordinator created successfully");
 
     // Test 2: Create Advanced Pattern Recognizer
     println!("✅ Test 2: Creating Advanced Pattern Recognizer...");
@@ -25,7 +25,7 @@ fn main() -> Result<()> {
     // Test 3: Basic processing
     println!("✅ Test 3: Testing basic processing...");
     let test_data = vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5];
-    let result = coordinator.process_ultra_intelligent(&test_data)?;
+    let result = coordinator.process_advanced_intelligent(&test_data)?;
     println!(
         "   Processing completed: Strategy {:?}, Efficiency {:.3}",
         result.strategy_used, result.efficiency_score

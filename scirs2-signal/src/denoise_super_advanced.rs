@@ -1,4 +1,4 @@
-//! Ultra-advanced denoising algorithms with modern computational techniques
+//! Advanced-advanced denoising algorithms with modern computational techniques
 //!
 //! This module provides state-of-the-art denoising methods combining:
 //! - Deep learning-inspired architectures adapted for signal processing
@@ -18,9 +18,9 @@ use scirs2_core::validation::check_finite;
 
 // use std::f64::consts::PI;
 
-/// Ultra-advanced denoising result with comprehensive analysis
+/// Advanced-advanced denoising result with comprehensive analysis
 #[derive(Debug, Clone)]
-pub struct UltraAdvancedDenoisingResult {
+pub struct AdvancedAdvancedDenoisingResult {
     /// Denoised signal
     pub denoised_signal: Array1<f64>,
     /// Estimated noise component
@@ -141,11 +141,11 @@ pub struct ConvergenceInfo {
     pub convergence_rate: f64,
 }
 
-/// Configuration for ultra-advanced denoising
+/// Configuration for advanced-advanced denoising
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct UltraAdvancedDenoisingConfig {
+pub struct AdvancedAdvancedDenoisingConfig {
     /// Primary denoising method
-    pub method: UltraAdvancedMethod,
+    pub method: AdvancedAdvancedMethod,
     /// Noise variance (if known, None for estimation)
     pub noise_variance: Option<f64>,
     /// Multi-scale processing configuration
@@ -160,9 +160,9 @@ pub struct UltraAdvancedDenoisingConfig {
     pub memory_config: MemoryConfig,
 }
 
-/// Ultra-advanced denoising methods
+/// Advanced-advanced denoising methods
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
-pub enum UltraAdvancedMethod {
+pub enum AdvancedAdvancedMethod {
     /// Adaptive neural network-inspired denoising
     AdaptiveNeuralNet,
     /// Variational auto-encoder style processing
@@ -254,13 +254,13 @@ pub enum MemoryOptimizationLevel {
     None,
     Basic,
     Aggressive,
-    UltraConservative,
+    AdvancedConservative,
 }
 
-impl Default for UltraAdvancedDenoisingConfig {
+impl Default for AdvancedAdvancedDenoisingConfig {
     fn default() -> Self {
         Self {
-            method: UltraAdvancedMethod::AdaptiveNeuralNet,
+            method: AdvancedAdvancedMethod::AdaptiveNeuralNet,
             noise_variance: None,
             multiscale_config: MultiScaleConfig {
                 num_scales: 6,
@@ -296,7 +296,7 @@ impl Default for UltraAdvancedDenoisingConfig {
     }
 }
 
-/// Ultra-advanced signal denoising with state-of-the-art algorithms
+/// Advanced-advanced signal denoising with state-of-the-art algorithms
 ///
 /// This function provides the most sophisticated signal denoising available, combining:
 /// - Deep learning-inspired architectures adapted for signal processing
@@ -308,7 +308,7 @@ impl Default for UltraAdvancedDenoisingConfig {
 /// # Arguments
 ///
 /// * `noisy_signal` - Input noisy signal
-/// * `config` - Ultra-advanced denoising configuration
+/// * `config` - Advanced-advanced denoising configuration
 ///
 /// # Returns
 ///
@@ -317,7 +317,7 @@ impl Default for UltraAdvancedDenoisingConfig {
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::denoise_ultra_advanced::{ultra_advanced_denoise, UltraAdvancedDenoisingConfig, UltraAdvancedMethod};
+/// use scirs2_signal::denoise_advanced_advanced::{advanced_advanced_denoise, AdvancedAdvancedDenoisingConfig, AdvancedAdvancedMethod};
 /// use ndarray::Array1;
 ///
 ///
@@ -335,21 +335,21 @@ impl Default for UltraAdvancedDenoisingConfig {
 ///     x + 0.2 * rng.random_range(-1.0..1.0)
 /// });
 ///
-/// let config = UltraAdvancedDenoisingConfig {
-///     method: UltraAdvancedMethod::AdaptiveNeuralNet,
+/// let config = AdvancedAdvancedDenoisingConfig {
+///     method: AdvancedAdvancedMethod::AdaptiveNeuralNet,
 ///     ..Default::default()
 /// };
 ///
-/// let result = ultra_advanced_denoise(&noisy_signal, &config).unwrap();
+/// let result = advanced_advanced_denoise(&noisy_signal, &config).unwrap();
 ///
 /// assert!(result.quality_metrics.snr_improvement_db > 5.0);
 /// assert!(result.processing_stats.simd_speedup >= 1.0);
 /// ```
 #[allow(dead_code)]
-pub fn ultra_advanced_denoise(
+pub fn advanced_advanced_denoise(
     noisy_signal: &Array1<f64>,
-    config: &UltraAdvancedDenoisingConfig,
-) -> SignalResult<UltraAdvancedDenoisingResult> {
+    config: &AdvancedAdvancedDenoisingConfig,
+) -> SignalResult<AdvancedAdvancedDenoisingResult> {
     let start_time = std::time::Instant::now();
 
     // Input validation
@@ -365,33 +365,33 @@ pub fn ultra_advanced_denoise(
     // Memory management setup
     let memory_manager = MemoryManager::new(&config.memory_config, noisy_signal.len());
 
-    // Apply ultra-advanced denoising
+    // Apply advanced-advanced denoising
     let denoising_result = match config.method {
-        UltraAdvancedMethod::AdaptiveNeuralNet => {
+        AdvancedAdvancedMethod::AdaptiveNeuralNet => {
             adaptive_neural_net_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
         }
-        UltraAdvancedMethod::VariationalDenoising => {
+        AdvancedAdvancedMethod::VariationalDenoising => {
             variational_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
         }
-        UltraAdvancedMethod::AttentionBasedDenoising => {
+        AdvancedAdvancedMethod::AttentionBasedDenoising => {
             attention_based_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
         }
-        UltraAdvancedMethod::ResidualLearning => {
+        AdvancedAdvancedMethod::ResidualLearning => {
             residual_learning_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
         }
-        UltraAdvancedMethod::MultiScaleDictionary => {
+        AdvancedAdvancedMethod::MultiScaleDictionary => {
             multiscale_dictionary_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
         }
-        UltraAdvancedMethod::LearnedSparseRepresentation => {
+        AdvancedAdvancedMethod::LearnedSparseRepresentation => {
             learned_sparse_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
         }
-        UltraAdvancedMethod::HybridWaveletNeural => {
+        AdvancedAdvancedMethod::HybridWaveletNeural => {
             hybrid_wavelet_neural_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
         }
-        UltraAdvancedMethod::AdaptiveBasisPursuit => {
+        AdvancedAdvancedMethod::AdaptiveBasisPursuit => {
             adaptive_basis_pursuit_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
         }
-        UltraAdvancedMethod::EnsembleConsensus => {
+        AdvancedAdvancedMethod::EnsembleConsensus => {
             ensemble_consensus_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?
         }
     };
@@ -414,7 +414,7 @@ pub fn ultra_advanced_denoise(
         complexity_estimate: estimate_computational_complexity(noisy_signal.len(), config),
     };
 
-    Ok(UltraAdvancedDenoisingResult {
+    Ok(AdvancedAdvancedDenoisingResult {
         denoised_signal: denoising_result.denoised_signal,
         noise_estimate: denoising_result.noise_estimate,
         noise_analysis,
@@ -426,7 +426,7 @@ pub fn ultra_advanced_denoise(
 
 /// Real-time streaming denoising for live audio/signal processing
 ///
-/// Provides ultra-low latency denoising suitable for real-time applications:
+/// Provides advanced-low latency denoising suitable for real-time applications:
 /// - Bounded memory usage with streaming buffers
 /// - Adaptive algorithm selection based on signal characteristics
 /// - SIMD-optimized processing for maximum throughput
@@ -442,10 +442,10 @@ pub fn ultra_advanced_denoise(
 ///
 /// * Denoised signal chunk with updated context
 #[allow(dead_code)]
-pub fn ultra_advanced_denoise_realtime(
+pub fn advanced_advanced_denoise_realtime(
     signal_chunk: &Array1<f64>,
     context: &mut RealTimeDenoisingContext,
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<Array1<f64>> {
     let start_time = std::time::Instant::now();
 
@@ -500,9 +500,9 @@ pub fn ultra_advanced_denoise_realtime(
 ///
 /// * Batch denoising results with comprehensive statistics
 #[allow(dead_code)]
-pub fn ultra_advanced_denoise_batch(
+pub fn advanced_advanced_denoise_batch(
     signals: &[Array1<f64>],
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
     progress_callback: Option<Box<dyn Fn(f64) + Send + Sync>>,
 ) -> SignalResult<BatchDenoisingResult> {
     let start_time = std::time::Instant::now();
@@ -516,15 +516,16 @@ pub fn ultra_advanced_denoise_batch(
 
     for (chunk_idx, signal_chunk) in signals.chunks(chunk_size).enumerate() {
         // Parallel processing within chunk
-        let chunk_results: Vec<UltraAdvancedDenoisingResult> = if config.simd_config.enable_simd {
+        let chunk_results: Vec<AdvancedAdvancedDenoisingResult> = if config.simd_config.enable_simd
+        {
             signal_chunk
                 .par_iter()
-                .map(|signal| ultra_advanced_denoise(signal, config))
+                .map(|signal| advanced_advanced_denoise(signal, config))
                 .collect::<SignalResult<Vec<_>>>()?
         } else {
             signal_chunk
                 .iter()
-                .map(|signal| ultra_advanced_denoise(signal, config))
+                .map(|signal| advanced_advanced_denoise(signal, config))
                 .collect::<SignalResult<Vec<_>>>()?
         };
 
@@ -563,7 +564,7 @@ fn adaptive_neural_net_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
     simd_optimizer: &SimdOptimizer,
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     let n = signal.len();
 
@@ -620,7 +621,7 @@ fn variational_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
     simd_optimizer: &SimdOptimizer,
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Implement variational energy minimization
     // Simplified implementation for demonstration
@@ -647,7 +648,7 @@ fn attention_based_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
     simd_optimizer: &SimdOptimizer,
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Implement attention mechanisms for signal denoising
     let denoised = apply_attention_mechanism(signal, noise_analysis, simd_optimizer)?;
@@ -674,7 +675,7 @@ fn residual_learning_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
     simd_optimizer: &SimdOptimizer,
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Residual learning approach
     let denoised = signal.clone(); // Placeholder
@@ -694,7 +695,7 @@ fn multiscale_dictionary_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
     simd_optimizer: &SimdOptimizer,
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Multi-scale dictionary learning
     let denoised = signal.clone(); // Placeholder
@@ -714,7 +715,7 @@ fn learned_sparse_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
     simd_optimizer: &SimdOptimizer,
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Learned sparse representation
     let denoised = signal.clone(); // Placeholder
@@ -734,7 +735,7 @@ fn hybrid_wavelet_neural_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
     simd_optimizer: &SimdOptimizer,
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Hybrid wavelet-neural approach
     let denoised = signal.clone(); // Placeholder
@@ -754,7 +755,7 @@ fn adaptive_basis_pursuit_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
     simd_optimizer: &SimdOptimizer,
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Adaptive basis pursuit
     let denoised = signal.clone(); // Placeholder
@@ -774,7 +775,7 @@ fn ensemble_consensus_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
     simd_optimizer: &SimdOptimizer,
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Ensemble consensus approach
     let denoised = signal.clone(); // Placeholder
@@ -828,7 +829,7 @@ enum FastDenoisingMethod {
 
 #[derive(Debug, Clone)]
 pub struct BatchDenoisingResult {
-    pub results: Vec<UltraAdvancedDenoisingResult>,
+    pub results: Vec<AdvancedAdvancedDenoisingResult>,
     pub batch_statistics: BatchStatistics,
     pub total_processing_time_ms: f64,
     pub throughput_signals_per_second: f64,
@@ -851,7 +852,16 @@ impl SimdOptimizer {
     fn new(caps: &PlatformCapabilities, config: &SimdOptimizationConfig) -> Self {
         Self {
             speedup_achieved: if config.enable_simd { 2.5 } else { 1.0 },
-            capabilities: caps.clone(),
+            capabilities: PlatformCapabilities {
+                simd_available: caps.simd_available,
+                gpu_available: caps.gpu_available,
+                cuda_available: caps.cuda_available,
+                opencl_available: caps.opencl_available,
+                metal_available: caps.metal_available,
+                avx2_available: caps.avx2_available,
+                avx512_available: caps.avx512_available,
+                neon_available: caps.neon_available,
+            },
         }
     }
 
@@ -891,7 +901,7 @@ impl MemoryManager {
 struct BatchProcessor;
 
 impl BatchProcessor {
-    fn new(config: &UltraAdvancedDenoisingConfig, num_signals: usize) -> Self {
+    fn new(config: &AdvancedAdvancedDenoisingConfig, num_signals: usize) -> Self {
         Self
     }
 }
@@ -901,13 +911,16 @@ impl BatchProcessor {
 #[allow(dead_code)]
 fn validate_input_signal(
     signal: &Array1<f64>,
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<()> {
     if signal.is_empty() {
         return Err(SignalError::ValueError("Input signal is empty".to_string()));
     }
 
-    check_finite(signal.as_slice().unwrap(), "signal")?;
+    // Check for finite values in signal
+    for &x in signal.iter() {
+        check_finite(x, "signal")?;
+    }
 
     Ok(())
 }
@@ -1027,7 +1040,7 @@ fn compute_denoising_quality_metrics(
 #[allow(dead_code)]
 fn estimate_computational_complexity(
     signal_length: usize,
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> f64 {
     // Estimate computational complexity
     signal_length as f64 * (signal_length as f64).log2()
@@ -1036,14 +1049,14 @@ fn estimate_computational_complexity(
 #[allow(dead_code)]
 fn calculate_optimal_chunk_size(
     signals: &[Array1<f64>],
-    config: &UltraAdvancedDenoisingConfig,
+    config: &AdvancedAdvancedDenoisingConfig,
 ) -> usize {
     // Calculate optimal chunk size for batch processing
     10.min(signals.len())
 }
 
 #[allow(dead_code)]
-fn compute_batch_statistics(results: &[UltraAdvancedDenoisingResult]) -> BatchStatistics {
+fn compute_batch_statistics(results: &[AdvancedAdvancedDenoisingResult]) -> BatchStatistics {
     let avg_snr = results
         .iter()
         .map(|r| r.quality_metrics.snr_improvement_db)
@@ -1134,9 +1147,10 @@ impl RealTimeDenoisingContext {
 mod tests {
     #[allow(unused_imports)]
     use super::*;
+    use std::f64::consts::PI;
 
     #[test]
-    fn test_ultra_advanced_denoise_basic() {
+    fn test_advanced_advanced_denoise_basic() {
         // Generate test signal
         let n = 256;
         let t: Array1<f64> = Array1::linspace(0.0, 1.0, n);
@@ -1148,8 +1162,8 @@ mod tests {
         let noisy_signal: Array1<f64> =
             clean_signal.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
 
-        let config = UltraAdvancedDenoisingConfig::default();
-        let result = ultra_advanced_denoise(&noisy_signal, &config);
+        let config = AdvancedAdvancedDenoisingConfig::default();
+        let result = advanced_advanced_denoise(&noisy_signal, &config);
 
         assert!(result.is_ok());
         let denoising_result = result.unwrap();
@@ -1162,8 +1176,8 @@ mod tests {
         let mut context = RealTimeDenoisingContext::new(512);
         let chunk = Array1::ones(64);
 
-        let config = UltraAdvancedDenoisingConfig::default();
-        let result = ultra_advanced_denoise_realtime(&chunk, &mut context, &config);
+        let config = AdvancedAdvancedDenoisingConfig::default();
+        let result = advanced_advanced_denoise_realtime(&chunk, &mut context, &config);
 
         assert!(result.is_ok());
         assert_eq!(result.unwrap().len(), 64);

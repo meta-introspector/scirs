@@ -1,4 +1,4 @@
-//! Ultra-Advanced Visual SLAM Framework
+//! Advanced-Advanced Visual SLAM Framework
 //!
 //! This module provides sophisticated Visual Simultaneous Localization and Mapping capabilities including:
 //! - Real-time camera pose estimation
@@ -16,7 +16,7 @@ use crate::scene_understanding::SceneAnalysisResult;
 use ndarray::{Array1, Array2, Array3, ArrayView3};
 use std::collections::HashMap;
 
-/// Ultra-advanced Visual SLAM system with multi-modal capabilities
+/// Advanced-advanced Visual SLAM system with multi-modal capabilities
 pub struct VisualSLAMSystem {
     /// Camera pose estimator
     pose_estimator: CameraPoseEstimator,
@@ -742,7 +742,7 @@ impl Default for VisualSLAMSystem {
 }
 
 impl VisualSLAMSystem {
-    /// Create a new ultra-advanced Visual SLAM system
+    /// Create a new advanced-advanced Visual SLAM system
     pub fn new() -> Self {
         Self {
             pose_estimator: CameraPoseEstimator::new(),

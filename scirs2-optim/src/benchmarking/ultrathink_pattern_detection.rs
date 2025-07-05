@@ -1,4 +1,4 @@
-//! Ultra-advanced pattern detection for memory leak analysis
+//! Advanced-advanced pattern detection for memory leak analysis
 //!
 //! This module implements cutting-edge pattern detection algorithms using machine learning
 //! techniques, statistical analysis, and advanced signal processing for memory usage patterns.
@@ -9,11 +9,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;
 
-/// Ultra-advanced pattern detector using ML and signal processing
+/// Advanced-advanced pattern detector using ML and signal processing
 #[derive(Debug)]
 pub struct advancedPatternDetector {
     /// Configuration for pattern detection
-    config: UltraPatternConfig,
+    config: AdvancedPatternConfig,
     /// Neural network for pattern classification
     pattern_classifier: PatternClassifier,
     /// Signal processing engine
@@ -26,9 +26,9 @@ pub struct advancedPatternDetector {
     feature_extractor: FeatureExtractor,
 }
 
-/// Configuration for ultra-advanced pattern detection
+/// Configuration for advanced-advanced pattern detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UltraPatternConfig {
+pub struct AdvancedPatternConfig {
     /// Enable machine learning classification
     pub enable_ml_classification: bool,
     /// Enable signal processing analysis
@@ -51,7 +51,7 @@ pub struct UltraPatternConfig {
     pub enable_trend_forecasting: bool,
 }
 
-impl Default for UltraPatternConfig {
+impl Default for AdvancedPatternConfig {
     fn default() -> Self {
         Self {
             enable_ml_classification: true,
@@ -566,8 +566,8 @@ pub enum FeatureType {
 }
 
 impl advancedPatternDetector {
-    /// Create a new ultra-advanced pattern detector
-    pub fn new(config: UltraPatternConfig) -> Result<Self> {
+    /// Create a new advanced-advanced pattern detector
+    pub fn new(config: AdvancedPatternConfig) -> Result<Self> {
         Ok(Self {
             config: config.clone(),
             pattern_classifier: PatternClassifier::new(config.learning_rate)?,
@@ -578,7 +578,7 @@ impl advancedPatternDetector {
         })
     }
 
-    /// Detect patterns in memory usage data using ultra-advanced algorithms
+    /// Detect patterns in memory usage data using advanced-advanced algorithms
     pub fn detect_patterns(&mut self, memory_data: &[f64]) -> Result<Vec<AdvancedMemoryPattern>> {
         if memory_data.len() < self.config.min_pattern_length {
             return Ok(Vec::new());

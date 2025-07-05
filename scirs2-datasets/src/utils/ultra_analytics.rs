@@ -1,17 +1,17 @@
-//! Ultra-Advanced Statistical Analytics for Dataset Quality Assessment
+//! Advanced-Advanced Statistical Analytics for Dataset Quality Assessment
 //!
 //! This module provides cutting-edge statistical analysis capabilities for datasets,
 //! including ML-based quality assessment, advanced statistical validation, and
-//! ultra-high-performance analytics using SIMD and GPU acceleration.
+//! advanced-high-performance analytics using SIMD and GPU acceleration.
 
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::parallel_ops::*;
 
-/// Ultra-advanced dataset quality metrics
+/// Advanced-advanced dataset quality metrics
 #[derive(Debug, Clone)]
-pub struct UltraQualityMetrics {
+pub struct AdvancedQualityMetrics {
     /// Statistical complexity score (0.0 to 1.0)
     pub complexity_score: f64,
     /// Information theoretic entropy
@@ -54,28 +54,28 @@ pub struct CorrelationInsights {
     pub feature_importance: Array1<f64>,
 }
 
-/// Ultra-advanced dataset analyzer with ML-based quality assessment
-pub struct UltraDatasetAnalyzer {
+/// Advanced-advanced dataset analyzer with ML-based quality assessment
+pub struct AdvancedDatasetAnalyzer {
     /// Enable GPU acceleration
     use_gpu: bool,
-    /// Enable ultra-high precision mode
-    ultra_precision: bool,
+    /// Enable advanced-high precision mode
+    advanced_precision: bool,
     /// Statistical significance threshold
     significance_threshold: f64,
 }
 
-impl Default for UltraDatasetAnalyzer {
+impl Default for AdvancedDatasetAnalyzer {
     fn default() -> Self {
         Self {
             use_gpu: true,
-            ultra_precision: true,
+            advanced_precision: true,
             significance_threshold: 0.01,
         }
     }
 }
 
-impl UltraDatasetAnalyzer {
-    /// Create a new ultra-advanced dataset analyzer
+impl AdvancedDatasetAnalyzer {
+    /// Create a new advanced-advanced dataset analyzer
     pub fn new() -> Self {
         Self::default()
     }
@@ -86,9 +86,9 @@ impl UltraDatasetAnalyzer {
         self
     }
 
-    /// Configure ultra-precision mode
-    pub fn with_ultra_precision(mut self, ultra_precision: bool) -> Self {
-        self.ultra_precision = ultra_precision;
+    /// Configure advanced-precision mode
+    pub fn with_advanced_precision(mut self, advanced_precision: bool) -> Self {
+        self.advanced_precision = advanced_precision;
         self
     }
 
@@ -98,15 +98,15 @@ impl UltraDatasetAnalyzer {
         self
     }
 
-    /// Perform ultra-advanced dataset quality analysis
-    pub fn analyze_dataset_quality(&self, dataset: &Dataset) -> Result<UltraQualityMetrics> {
+    /// Perform advanced-advanced dataset quality analysis
+    pub fn analyze_dataset_quality(&self, dataset: &Dataset) -> Result<AdvancedQualityMetrics> {
         let data = &dataset.data;
         let n_samples = data.nrows();
         let n_features = data.ncols();
 
         if n_samples < 3 || n_features == 0 {
             return Err(DatasetsError::ValidationError(
-                "Dataset too small for ultra-advanced analysis".to_string(),
+                "Dataset too small for advanced-advanced analysis".to_string(),
             ));
         }
 
@@ -131,7 +131,7 @@ impl UltraDatasetAnalyzer {
         // Advanced correlation analysis
         let correlation_insights = self.analyze_correlations(data.view())?;
 
-        Ok(UltraQualityMetrics {
+        Ok(AdvancedQualityMetrics {
             complexity_score,
             entropy,
             outlier_score,
@@ -731,17 +731,17 @@ impl UltraDatasetAnalyzer {
     }
 }
 
-/// Convenience function for ultra-advanced dataset analysis
+/// Convenience function for advanced-advanced dataset analysis
 #[allow(dead_code)]
-pub fn analyze_dataset_ultra(dataset: &Dataset) -> Result<UltraQualityMetrics> {
-    let analyzer = UltraDatasetAnalyzer::new();
+pub fn analyze_dataset_advanced(dataset: &Dataset) -> Result<AdvancedQualityMetrics> {
+    let analyzer = AdvancedDatasetAnalyzer::new();
     analyzer.analyze_dataset_quality(dataset)
 }
 
 /// Convenience function for quick quality assessment
 #[allow(dead_code)]
 pub fn quick_quality_assessment(dataset: &Dataset) -> Result<f64> {
-    let analyzer = UltraDatasetAnalyzer::new().with_ultra_precision(false);
+    let analyzer = AdvancedDatasetAnalyzer::new().with_advanced_precision(false);
     let metrics = analyzer.analyze_dataset_quality(dataset)?;
     Ok(metrics.ml_quality_score)
 }
@@ -759,10 +759,10 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_analyzer_creation() {
-        let analyzer = UltraDatasetAnalyzer::new();
+    fn test_advanced_analyzer_creation() {
+        let analyzer = AdvancedDatasetAnalyzer::new();
         assert!(analyzer.use_gpu);
-        assert!(analyzer.ultra_precision);
+        assert!(analyzer.advanced_precision);
     }
 
     #[test]

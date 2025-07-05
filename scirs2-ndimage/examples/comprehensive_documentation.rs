@@ -56,7 +56,7 @@ fn main() -> NdimageResult<()> {
     #[cfg(feature = "simd")]
     {
         println!("\n--- 8. ULTRA-ADVANCED SIMD EXTENSIONS ---\n");
-        demonstrate_ultra_simd(&test_image_2d)?;
+        demonstrate_advanced_simd(&test_image_2d)?;
     }
 
     // 9. Backend and Performance
@@ -471,25 +471,25 @@ fn demonstrate_domain_specific(image: &Array2<f64>) -> NdimageResult<()> {
 
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
-fn demonstrate_ultra_simd(image: &Array2<f64>) -> NdimageResult<()> {
-    println!("⚡ Ultra-Advanced SIMD Extensions");
+fn demonstrate_advanced_simd(image: &Array2<f64>) -> NdimageResult<()> {
+    println!("⚡ Advanced-Advanced SIMD Extensions");
 
     // 1. Wavelet pyramid
-    println!("  • Ultra-SIMD wavelet pyramid:");
-    let pyramid = ultra_simd_wavelet_pyramid(image.view(), 3, WaveletType::Daubechies4)?;
+    println!("  • Advanced-SIMD wavelet pyramid:");
+    let pyramid = advanced_simd_wavelet_pyramid(image.view(), 3, WaveletType::Daubechies4)?;
     println!(
         "    Wavelet pyramid: {} levels generated",
         pyramid.levels.len()
     );
 
     // 2. Local Binary Patterns
-    println!("  • Ultra-SIMD multi-scale LBP:");
-    let lbp = ultra_simd_multi_scale_lbp(image.view(), &[1, 2, 3], &[8, 16, 24])?;
+    println!("  • Advanced-SIMD multi-scale LBP:");
+    let lbp = advanced_simd_multi_scale_lbp(image.view(), &[1, 2, 3], &[8, 16, 24])?;
     println!("    Multi-scale LBP texture analysis completed");
 
     // 3. Advanced edge detection
-    println!("  • Ultra-SIMD advanced edge detection:");
-    let advanced_edges = ultra_simd_advanced_edge_detection(image.view(), 1.0, 0.1, 0.3)?;
+    println!("  • Advanced-SIMD advanced edge detection:");
+    let advanced_edges = advanced_simd_advanced_edge_detection(image.view(), 1.0, 0.1, 0.3)?;
     println!("    Advanced edge detection with multi-directional gradients completed");
 
     Ok(())
@@ -654,8 +654,8 @@ fn demonstrate_best_practices() -> NdimageResult<()> {
 
 #[cfg(not(feature = "simd"))]
 #[allow(dead_code)]
-fn demonstrate_ultra_simd(_image: &Array2<f64>) -> NdimageResult<()> {
-    println!("⚡ Ultra-Advanced SIMD Extensions");
+fn demonstrate_advanced_simd(_image: &Array2<f64>) -> NdimageResult<()> {
+    println!("⚡ Advanced-Advanced SIMD Extensions");
     println!("  Note: SIMD features not available (compile with --features simd)");
     Ok(())
 }

@@ -3,7 +3,7 @@
 //! Value-based reinforcement learning approach to optimization strategy learning.
 
 use super::{utils, OptimizationAction, OptimizationState, RLOptimizationConfig, RLOptimizer};
-use crate::error::OptimizeResult;
+use crate::error::{OptimizeError, OptimizeResult};
 use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
 // Unused import
@@ -95,10 +95,10 @@ impl RLOptimizer for QLearningOptimizer {
 
     fn select_action(&mut self, state: &OptimizationState) -> OptimizationAction {
         // Epsilon-greedy action selection
-        if rand::rng().random_range(0.0..1.0) < self.exploration_rate {
+        if rand::rng().gen_range(0.0..1.0) < self.exploration_rate {
             // Random action
             let actions = self.get_possible_actions();
-            let idx = rand::rng().random_range(0..actions.len());
+            let idx = rand::rng().gen_range(0..actions.len());
             actions[idx].clone()
         } else {
             // Greedy action
@@ -118,7 +118,7 @@ impl RLOptimizer for QLearningOptimizer {
         }
     }
 
-    fn update(&mut self, experience: &super::Experience) -> Result<()> {
+    fn update(&mut self, experience: &super::Experience) -> Result<(), OptimizeError> {
         // Q-learning update: Q(s,a) = Q(s,a) + α[r + γ max Q(s',a') - Q(s,a)]
         let current_q = self.get_q_value(&experience.state, &experience.action);
 

@@ -911,7 +911,6 @@ where
     Ok(OptimizeResult {
         x: result.x,
         fun: result.fun,
-        iterations: result.nit,
         nit: result.nit,
         func_evals: result.nfev,
         nfev: result.nfev,
@@ -1079,7 +1078,6 @@ where
     Ok(OptimizeResult {
         x: result.x,
         fun: result.fun,
-        iterations: result.nit,
         nit: result.nit,
         func_evals: result.nfev,
         nfev: result.nfev,

@@ -84,7 +84,7 @@ pub enum ModelComplexity {
     Low,
     Medium,
     High,
-    Ultra,
+    Advanced,
     Adaptive, // Automatically adjusts complexity based on available resources
 }
 
@@ -180,7 +180,7 @@ pub enum ComplexityLevel {
     Low,
     Medium,
     High,
-    Ultra,
+    Advanced,
 }
 
 /// Noise Levels
@@ -259,7 +259,7 @@ pub enum AlgorithmType {
     QuantumProcessing,
     NeuromorphicProcessing,
     ConsciousnessSimulation,
-    UltrathinkFusion,
+    AdvancedFusion,
     CustomAI,
 }
 
@@ -1670,7 +1670,7 @@ fn score_strategies(
                 AlgorithmType::QuantumProcessing => "quantum_processing",
                 AlgorithmType::NeuromorphicProcessing => "neuromorphic_processing",
                 AlgorithmType::ConsciousnessSimulation => "consciousness_simulation",
-                AlgorithmType::UltrathinkFusion => "ultrathink_fusion",
+                AlgorithmType::AdvancedFusion => "advanced_fusion",
                 AlgorithmType::CustomAI => "custom_ai",
             };
 
@@ -1854,8 +1854,8 @@ where
             AlgorithmType::ConsciousnessSimulation => {
                 apply_consciousness_simulation(&current_image.view(), &step_adjustments, config)?
             }
-            AlgorithmType::UltrathinkFusion => {
-                apply_ultrathink_fusion(&current_image.view(), &step_adjustments, config)?
+            AlgorithmType::AdvancedFusion => {
+                apply_advanced_fusion(&current_image.view(), &step_adjustments, config)?
             }
             AlgorithmType::CustomAI => {
                 apply_custom_ai(&current_image.view(), &step_adjustments, config)?
@@ -2608,7 +2608,7 @@ where
 }
 
 #[allow(dead_code)]
-fn apply_ultrathink_fusion<T>(
+fn apply_advanced_fusion<T>(
     _image: &ArrayView2<T>,
     _adjustments: &HashMap<String, f64>,
     _config: &AIAdaptiveConfig,

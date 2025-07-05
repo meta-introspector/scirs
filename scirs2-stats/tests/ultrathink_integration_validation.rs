@@ -5,15 +5,15 @@
 
 use ndarray::{array, Array1, Array2, Axis};
 use scirs2_stats::{
-    create_numerical_stability_analyzer, create_advanced_processor,
-    unified_processor::{UltrathinkMatrixOperation, UltrathinkTimeSeriesOperation},
-    OptimizationMode, ProcessingStrategy, UltrathinkProcessorConfig,
+    create_advanced_processor, create_numerical_stability_analyzer,
+    unified_processor::{AdvancedMatrixOperation, AdvancedTimeSeriesOperation},
+    AdvancedProcessorConfig, OptimizationMode, ProcessingStrategy,
 };
 use std::time::Instant;
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_basic_functionality() {
+fn test_advanced_basic_functionality() {
     let mut processor = create_advanced_processor();
     let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 
@@ -34,7 +34,7 @@ fn test_ultrathink_basic_functionality() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_large_dataset_performance() {
+fn test_advanced_large_dataset_performance() {
     let mut processor = create_advanced_processor();
 
     // Generate a larger dataset to trigger optimizations
@@ -70,13 +70,12 @@ fn test_optimization_mode_selection() {
     ];
 
     for mode in optimization_modes {
-        let config = UltrathinkProcessorConfig {
+        let config = AdvancedProcessorConfig {
             optimization_mode: mode,
             ..Default::default()
         };
 
-        let mut processor =
-            scirs2_stats::unified_processor::UltrathinkUnifiedProcessor::new(config);
+        let mut processor = scirs2_stats::unified_processor::AdvancedUnifiedProcessor::new(config);
         let result = processor
             .process_comprehensive_statistics(&test_data.view())
             .unwrap();
@@ -104,12 +103,11 @@ fn test_optimization_mode_selection() {
 #[test]
 #[allow(dead_code)]
 fn test_numerical_stability_integration() {
-    let mut processor = scirs2_stats::unified_processor::UltrathinkUnifiedProcessor::new(
-        UltrathinkProcessorConfig {
+    let mut processor =
+        scirs2_stats::unified_processor::AdvancedUnifiedProcessor::new(AdvancedProcessorConfig {
             enable_stability_testing: true,
             ..Default::default()
-        },
-    );
+        });
 
     // Test with well-conditioned data
     let normal_data = array![1.0, 2.0, 3.0, 4.0, 5.0];
@@ -149,7 +147,7 @@ fn test_matrix_operations_integration() {
 
     // Test covariance matrix computation
     let covariance_result = processor
-        .process_matrix_operations(&matrix.view(), UltrathinkMatrixOperation::Covariance)
+        .process_matrix_operations(&matrix.view(), AdvancedMatrixOperation::Covariance)
         .unwrap();
 
     // Result should be a 3x3 matrix (features x features)
@@ -165,7 +163,7 @@ fn test_matrix_operations_integration() {
 
     // Test correlation matrix computation
     let correlation_result = processor
-        .process_matrix_operations(&matrix.view(), UltrathinkMatrixOperation::Correlation)
+        .process_matrix_operations(&matrix.view(), AdvancedMatrixOperation::Correlation)
         .unwrap();
 
     // Result should be a 3x3 matrix
@@ -197,7 +195,7 @@ fn test_time_series_processing() {
     // Generate a simple time series
     let time_series: Array1<f64> = (0..100).map(|i| (i as f64 / 10.0).sin()).collect();
 
-    let operations = vec![UltrathinkTimeSeriesOperation::MovingWindow];
+    let operations = vec![AdvancedTimeSeriesOperation::MovingWindow];
     let window_size = 10;
 
     let result = processor
@@ -218,12 +216,11 @@ fn test_time_series_processing() {
 #[test]
 #[allow(dead_code)]
 fn test_performance_monitoring() {
-    let mut processor = scirs2_stats::unified_processor::UltrathinkUnifiedProcessor::new(
-        UltrathinkProcessorConfig {
+    let mut processor =
+        scirs2_stats::unified_processor::AdvancedUnifiedProcessor::new(AdvancedProcessorConfig {
             enable_performance_monitoring: true,
             ..Default::default()
-        },
-    );
+        });
 
     // Perform several operations to build performance history
     let test_cases = vec![
@@ -263,7 +260,7 @@ fn test_error_handling() {
     // Test matrix operations with empty matrix
     let empty_matrix = Array2::<f64>::zeros((0, 0));
     let matrix_result = processor
-        .process_matrix_operations(&empty_matrix.view(), UltrathinkMatrixOperation::Covariance);
+        .process_matrix_operations(&empty_matrix.view(), AdvancedMatrixOperation::Covariance);
     assert!(matrix_result.is_err(), "Should fail with empty matrix");
 
     // Test time series with invalid window size
@@ -271,7 +268,7 @@ fn test_error_handling() {
     let ts_result = processor.process_time_series(
         &valid_data.view(),
         0, // Invalid window size
-        &[UltrathinkTimeSeriesOperation::MovingWindow],
+        &[AdvancedTimeSeriesOperation::MovingWindow],
     );
     assert!(ts_result.is_err(), "Should fail with zero window size");
 }
@@ -334,14 +331,13 @@ fn test_processing_strategy_effectiveness() {
 #[allow(dead_code)]
 fn test_comprehensive_workflow() {
     // This test demonstrates a complete Advanced workflow
-    let mut processor = scirs2_stats::unified_processor::UltrathinkUnifiedProcessor::new(
-        UltrathinkProcessorConfig {
+    let mut processor =
+        scirs2_stats::unified_processor::AdvancedUnifiedProcessor::new(AdvancedProcessorConfig {
             optimization_mode: OptimizationMode::Adaptive,
             enable_stability_testing: true,
             enable_performance_monitoring: true,
             ..Default::default()
-        },
-    );
+        });
 
     // Generate test data with different characteristics
     let datasets = vec![

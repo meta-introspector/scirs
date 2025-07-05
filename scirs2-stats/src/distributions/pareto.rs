@@ -5,7 +5,7 @@
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
-use rand::thread_rng;
+use rand::rng;
 use rand_distr::{Distribution, Uniform as RandUniform};
 
 /// Pareto distribution structure
@@ -207,7 +207,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mut samples = Vec::with_capacity(size);
 
         // Generate samples using the inverse transform sampling method
@@ -351,8 +351,7 @@ impl<F: Float + NumCast + std::fmt::Display> Pareto<F> {
 #[allow(dead_code)]
 pub fn pareto<F>(shape: F, scale: F, loc: F) -> StatsResult<Pareto<F>>
 where
-    F: Float + NumCast
-        + std::fmt::Display,
+    F: Float + NumCast + std::fmt::Display,
 {
     Pareto::new(shape, scale, loc)
 }

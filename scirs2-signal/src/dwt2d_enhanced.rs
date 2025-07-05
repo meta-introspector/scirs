@@ -1,4 +1,4 @@
-//! Ultra-optimized 2D DWT with advanced production features
+//! Advanced-optimized 2D DWT with advanced production features
 //!
 //! This implementation provides industry-grade 2D discrete wavelet transforms with:
 //! - Multiple high-performance processing modes (SIMD, parallel, memory-optimized)
@@ -20,12 +20,8 @@
 
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
-use rand::prelude::*;
-use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
-use std::f64::consts::PI;
+use ndarray::{s, Array2, ArrayView1, ArrayView2};
+use scirs2_core::validation::{check_array_finite, check_positive};
 use std::sync::Arc;
 
 /// Enhanced 2D DWT decomposition result
@@ -143,7 +139,7 @@ pub fn enhanced_dwt2d_decompose(
     config: &Dwt2dConfig,
 ) -> SignalResult<EnhancedDwt2dResult> {
     // Enhanced input validation
-    check_finite(&data.as_slice().unwrap(), "data")?;
+    check_array_finite(data, "data")?;
 
     let (rows, cols) = data.dim();
 
@@ -164,14 +160,14 @@ pub fn enhanced_dwt2d_decompose(
     }
 
     // Validate wavelet compatibility with data size
-    let filters = WaveletFilters::new(wavelet);
-    let min_size_required = filters.lo_d.len() * 2;
+    let filters = wavelet.filters()?;
+    let min_size_required = filters.dec_lo.len() * 2;
     if rows < min_size_required || cols < min_size_required {
         return Err(SignalError::ValueError(format!(
             "Input size ({}x{}) too small for wavelet filter length ({}). Minimum required: {}x{}",
             rows,
             cols,
-            filters.lo_d.len(),
+            filters.dec_lo.len(),
             min_size_required,
             min_size_required
         )));
@@ -248,8 +244,8 @@ fn parallel_dwt2d_decompose(
         .into_par_iter()
         .map(|i| {
             let row = data_arc.row(i).to_vec();
-            let padded = apply_boundary_padding(&row, filters.lo_d.len(), config.boundary_mode);
-            let (lo, hi) = apply_filters_simd(&padded, &filters.lo_d, &filters.hi_d);
+            let padded = apply_boundary_padding(&row, filters.dec_lo.len(), config.boundary_mode);
+            let (lo, hi) = apply_filters_simd(&padded, &filters.dec_lo, &filters.dec_hi);
             (downsample(&lo), downsample(&hi))
         })
         .collect();
@@ -280,8 +276,8 @@ fn parallel_dwt2d_decompose(
         .into_par_iter()
         .map(|j| {
             let col = temp_lo.column(j).to_vec();
-            let padded = apply_boundary_padding(&col, filters.lo_d.len(), config.boundary_mode);
-            let (lo, hi) = apply_filters_simd(&padded, &filters.lo_d, &filters.hi_d);
+            let padded = apply_boundary_padding(&col, filters.dec_lo.len(), config.boundary_mode);
+            let (lo, hi) = apply_filters_simd(&padded, &filters.dec_lo, &filters.dec_hi);
             (j, downsample(&lo), downsample(&hi))
         })
         .collect();
@@ -291,8 +287,8 @@ fn parallel_dwt2d_decompose(
         .into_par_iter()
         .map(|j| {
             let col = temp_hi.column(j).to_vec();
-            let padded = apply_boundary_padding(&col, filters.lo_d.len(), config.boundary_mode);
-            let (lo, hi) = apply_filters_simd(&padded, &filters.lo_d, &filters.hi_d);
+            let padded = apply_boundary_padding(&col, filters.dec_lo.len(), config.boundary_mode);
+            let (lo, hi) = apply_filters_simd(&padded, &filters.dec_lo, &filters.dec_hi);
             (j, downsample(&lo), downsample(&hi))
         })
         .collect();
@@ -358,8 +354,8 @@ fn simd_dwt2d_decompose(
 
     for i in 0..rows {
         let row = data.row(i).to_vec();
-        let padded = apply_boundary_padding(&row, filters.lo_d.len(), config.boundary_mode);
-        let (lo, hi) = apply_filters_simd(&padded, &filters.lo_d, &filters.hi_d);
+        let padded = apply_boundary_padding(&row, filters.dec_lo.len(), config.boundary_mode);
+        let (lo, hi) = apply_filters_simd(&padded, &filters.dec_lo, &filters.dec_hi);
 
         let lo_down = downsample(&lo);
         let hi_down = downsample(&hi);
@@ -386,8 +382,8 @@ fn simd_dwt2d_decompose(
     // Process low frequency columns
     for j in 0..half_cols {
         let col = temp_lo.column(j).to_vec();
-        let padded = apply_boundary_padding(&col, filters.lo_d.len(), config.boundary_mode);
-        let (lo, hi) = apply_filters_simd(&padded, &filters.lo_d, &filters.hi_d);
+        let padded = apply_boundary_padding(&col, filters.dec_lo.len(), config.boundary_mode);
+        let (lo, hi) = apply_filters_simd(&padded, &filters.dec_lo, &filters.dec_hi);
 
         let lo_down = downsample(&lo);
         let hi_down = downsample(&hi);
@@ -407,8 +403,8 @@ fn simd_dwt2d_decompose(
     // Process high frequency columns
     for j in 0..half_cols {
         let col = temp_hi.column(j).to_vec();
-        let padded = apply_boundary_padding(&col, filters.lo_d.len(), config.boundary_mode);
-        let (lo, hi) = apply_filters_simd(&padded, &filters.lo_d, &filters.hi_d);
+        let padded = apply_boundary_padding(&col, filters.dec_lo.len(), config.boundary_mode);
+        let (lo, hi) = apply_filters_simd(&padded, &filters.dec_lo, &filters.dec_hi);
 
         let lo_down = downsample(&lo);
         let hi_down = downsample(&hi);
@@ -789,7 +785,7 @@ fn memory_optimized_dwt2d_decompose(
     let mut detail_d = Array2::zeros((half_rows, half_cols));
 
     // Process in blocks to reduce memory usage
-    let overlap = filters.lo_d.len(); // Filter length for overlap
+    let overlap = filters.dec_lo.len(); // Filter length for overlap
     let min_block_size = overlap * 2; // Minimum useful block size
 
     // Adaptive block sizing based on available memory
@@ -1033,7 +1029,7 @@ pub fn enhanced_dwt2d_reconstruct(
     wavelet: Wavelet,
     config: &Dwt2dConfig,
 ) -> SignalResult<Array2<f64>> {
-    let filters = WaveletFilters::new(wavelet);
+    let filters = wavelet.filters()?;
     let (orig_rows, orig_cols) = result.original_shape;
 
     // Get dimensions of subbands
@@ -1070,8 +1066,12 @@ fn enhanced_parallel_dwt2d_reconstruct(
             let upsampled_lo = upsample(&lo_col);
             let upsampled_hi = upsample(&hi_col);
 
-            let reconstructed =
-                reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, &filters.lo_r, &filters.hi_r);
+            let reconstructed = reconstruct_1d_simd(
+                &upsampled_lo,
+                &upsampled_hi,
+                &filters.rec_lo,
+                &filters.rec_hi,
+            );
             (j, reconstructed)
         })
         .collect();
@@ -1086,8 +1086,12 @@ fn enhanced_parallel_dwt2d_reconstruct(
             let upsampled_lo = upsample(&lo_col);
             let upsampled_hi = upsample(&hi_col);
 
-            let reconstructed =
-                reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, &filters.lo_r, &filters.hi_r);
+            let reconstructed = reconstruct_1d_simd(
+                &upsampled_lo,
+                &upsampled_hi,
+                &filters.rec_lo,
+                &filters.rec_hi,
+            );
             (j, reconstructed)
         })
         .collect();
@@ -1122,8 +1126,12 @@ fn enhanced_parallel_dwt2d_reconstruct(
             let upsampled_lo = upsample(&lo_row);
             let upsampled_hi = upsample(&hi_row);
 
-            let reconstructed =
-                reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, &filters.lo_r, &filters.hi_r);
+            let reconstructed = reconstruct_1d_simd(
+                &upsampled_lo,
+                &upsampled_hi,
+                &filters.rec_lo,
+                &filters.rec_hi,
+            );
             (i, reconstructed)
         })
         .collect();
@@ -1170,8 +1178,12 @@ fn enhanced_simd_dwt2d_reconstruct(
         let upsampled_lo = upsample(&lo_col);
         let upsampled_hi = upsample(&hi_col);
 
-        let reconstructed_lo =
-            reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, &filters.lo_r, &filters.hi_r);
+        let reconstructed_lo = reconstruct_1d_simd(
+            &upsampled_lo,
+            &upsampled_hi,
+            &filters.rec_lo,
+            &filters.rec_hi,
+        );
 
         // High frequency reconstruction
         let lo_col_h = result.detail_h.column(j).to_vec();
@@ -1183,8 +1195,8 @@ fn enhanced_simd_dwt2d_reconstruct(
         let reconstructed_hi = reconstruct_1d_simd(
             &upsampled_lo_h,
             &upsampled_hi_h,
-            &filters.lo_r,
-            &filters.hi_r,
+            &filters.rec_lo,
+            &filters.rec_hi,
         );
 
         // Store results
@@ -1212,8 +1224,12 @@ fn enhanced_simd_dwt2d_reconstruct(
         let upsampled_lo = upsample(&lo_row);
         let upsampled_hi = upsample(&hi_row);
 
-        let reconstructed_row =
-            reconstruct_1d_simd(&upsampled_lo, &upsampled_hi, &filters.lo_r, &filters.hi_r);
+        let reconstructed_row = reconstruct_1d_simd(
+            &upsampled_lo,
+            &upsampled_hi,
+            &filters.rec_lo,
+            &filters.rec_hi,
+        );
 
         for (j, &val) in reconstructed_row.iter().enumerate() {
             if j < temp_cols {
@@ -1476,7 +1492,7 @@ pub fn enhanced_dwt2d_adaptive(
     config: &Dwt2dConfig,
     energy_threshold: f64,
 ) -> SignalResult<MultilevelDwt2d> {
-    check_finite(&data.as_slice().unwrap(), "data")?;
+    check_array_finite(data, "data")?;
 
     if energy_threshold <= 0.0 || energy_threshold >= 1.0 {
         return Err(SignalError::ValueError(
@@ -1873,8 +1889,6 @@ fn resize_to_match(source: &Array2<f64>, target_dim: (usize, usize)) -> SignalRe
 /// Compute correlation between edge maps
 #[allow(dead_code)]
 fn compute_edge_correlation(edges1: &Array2<f64>, edges2: &Array2<f64>) -> SignalResult<f64> {
-    use ndarray::ArrayView1;
-
     let edges1_flat = edges1.view().into_shape(edges1.len()).unwrap();
     let edges2_flat = edges2.view().into_shape(edges2.len()).unwrap();
 

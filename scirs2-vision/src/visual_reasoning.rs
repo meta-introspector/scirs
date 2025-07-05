@@ -1,4 +1,4 @@
-//! Ultra-Advanced Visual Reasoning Framework
+//! Advanced-Advanced Visual Reasoning Framework
 //!
 //! This module provides sophisticated visual reasoning capabilities including:
 //! - Causal relationship inference
@@ -16,7 +16,7 @@ use crate::scene_understanding::SceneAnalysisResult;
 use ndarray::{Array1, Array2};
 use std::collections::HashMap;
 
-/// Ultra-advanced visual reasoning engine with cognitive-level capabilities
+/// Advanced-advanced visual reasoning engine with cognitive-level capabilities
 pub struct VisualReasoningEngine {
     /// Causal inference module
     causal_inference: CausalInferenceModule,
@@ -636,7 +636,7 @@ impl Default for VisualReasoningEngine {
 }
 
 impl VisualReasoningEngine {
-    /// Create a new ultra-advanced visual reasoning engine
+    /// Create a new advanced-advanced visual reasoning engine
     pub fn new() -> Self {
         Self {
             causal_inference: CausalInferenceModule::new(),

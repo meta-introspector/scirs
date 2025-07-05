@@ -73,10 +73,10 @@ impl DiagnosticOptimizer {
     }
 
     /// Add a simple progress callback
-    pub fn add_progress_callback(&mut self, every_n_iterations: usize) {
+    pub fn add_progress_callback(&mut self, every_n_nit: usize) {
         let mut last_printed = 0;
         self.add_callback(Box::new(move |info| {
-            if info.iteration >= last_printed + every_n_iterations {
+            if info.iteration >= last_printed + every_n_nit {
                 println!(
                     "Iteration {}: f = {:.6e}, |grad| = {:.6e}",
                     info.iteration,
@@ -245,7 +245,6 @@ where
                 return Ok(OptimizeResult {
                     x,
                     fun: f,
-                    iterations: iteration,
                     nit: iteration,
                     func_evals: iteration * 2,
                     nfev: iteration * 2,
@@ -275,7 +274,6 @@ where
     Ok(OptimizeResult {
         x,
         fun: f,
-        iterations: iteration,
         nit: iteration,
         func_evals: iteration * 2,
         nfev: iteration * 2,

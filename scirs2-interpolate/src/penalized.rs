@@ -456,7 +456,7 @@ where
                 .or_else(|_| {
                     // If direct solve fails, try SVD approach
                     use scirs2_linalg::svd;
-                    let (u_opt, s, vt_opt) = match svd(&a_f64.view(), None) {
+                    let (u, s, vt) = match svd(&a_f64.view(), false, None) {
                         Ok(svd_tuple) => svd_tuple,
                         Err(_) => {
                             return Err(InterpolateError::ComputationError(
@@ -466,8 +466,7 @@ where
                         }
                     };
 
-                    let u = u_opt.unwrap();
-                    let vt = vt_opt.unwrap();
+                    // u and vt are already extracted from the SVD tuple above
                     let mut s_inv = Array2::zeros((a.ncols(), a.nrows()));
 
                     // Threshold for singular values (to handle near-zero values)

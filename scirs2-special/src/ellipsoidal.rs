@@ -21,7 +21,7 @@
 //!
 //! - Hobson, E.W. "The Theory of Spherical and Ellipsoidal Harmonics" (1931)
 //! - Heiskanen, W.A. & Moritz, H. "Physical Geodesy" (1967)
-//! - SciPy documentation: https://docs.scipy.org/doc/scipy/reference/special.html
+//! - SciPy documentation: <https://docs.scipy.org/doc/scipy/reference/special.html>
 
 #![allow(dead_code)]
 

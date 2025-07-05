@@ -85,6 +85,7 @@ pub mod model_registry;
 pub mod multilingual;
 pub mod neural_architectures;
 pub mod parallel;
+pub mod performance;
 pub mod pos_tagging;
 pub mod preprocess;
 pub mod semantic_similarity;
@@ -97,14 +98,13 @@ pub mod stemming;
 pub mod streaming;
 pub mod string_metrics;
 pub mod summarization;
+pub mod text_coordinator;
 pub mod text_statistics;
 pub mod token_filter;
 pub mod tokenize;
 pub mod topic_coherence;
 pub mod topic_modeling;
 pub mod transformer;
-pub mod ultrathink_performance;
-pub mod ultrathink_text_coordinator;
 pub mod utils;
 pub mod vectorize;
 pub mod visualization;
@@ -162,6 +162,10 @@ pub use neural_architectures::{
 pub use parallel::{
     ParallelCorpusProcessor, ParallelTextProcessor, ParallelTokenizer, ParallelVectorizer,
 };
+pub use performance::{
+    AdvancedPerformanceMonitor, DetailedPerformanceReport, OptimizationRecommendation,
+    PerformanceSummary, PerformanceThresholds,
+};
 pub use pos_tagging::{
     PosAwareLemmatizer, PosTagResult, PosTagger, PosTaggerConfig, PosTaggingResult,
 };
@@ -175,7 +179,8 @@ pub use sentiment::{
     SentimentResult, SentimentRules, SentimentWordCounts,
 };
 pub use simd_ops::{
-    SimdEditDistance, SimdStringOps, SimdTextAnalyzer, TextProcessingResult, UltraSIMDTextProcessor,
+    AdvancedSIMDTextProcessor, SimdEditDistance, SimdStringOps, SimdTextAnalyzer,
+    TextProcessingResult,
 };
 pub use sparse::{CsrMatrix, DokMatrix, SparseMatrixBuilder, SparseVector};
 pub use sparse_vectorize::{
@@ -190,14 +195,18 @@ pub use stemming::{
     RuleLemmatizerBuilder, SimpleLemmatizer, SnowballStemmer, Stemmer,
 };
 pub use streaming::{
-    ChunkedCorpusReader, MemoryMappedCorpus, ProgressTracker, StreamingTextProcessor,
-    StreamingVectorizer, UltraStreamingMetrics, UltrathinkStreamingProcessor,
+    AdvancedStreamingMetrics, AdvancedStreamingProcessor, ChunkedCorpusReader, MemoryMappedCorpus,
+    ProgressTracker, StreamingTextProcessor, StreamingVectorizer,
 };
 pub use string_metrics::{
     AlignmentResult, DamerauLevenshteinMetric, Metaphone, NeedlemanWunsch, Nysiis,
     PhoneticAlgorithm, SmithWaterman, Soundex, StringMetric,
 };
 pub use summarization::{CentroidSummarizer, KeywordExtractor, TextRank};
+pub use text_coordinator::{
+    AdvancedBatchClassificationResult, AdvancedSemanticSimilarityResult, AdvancedTextConfig,
+    AdvancedTextCoordinator, AdvancedTextResult, AdvancedTopicModelingResult,
+};
 pub use text_statistics::{ReadabilityMetrics, TextMetrics, TextStatistics};
 pub use token_filter::{
     CompositeFilter, CustomFilter, FrequencyFilter, LengthFilter, RegexFilter, StopwordsFilter,
@@ -216,14 +225,6 @@ pub use transformer::{
     FeedForward, LayerNorm, MultiHeadAttention, PositionalEncoding, TokenEmbedding,
     TransformerConfig, TransformerDecoder, TransformerDecoderLayer, TransformerEncoder,
     TransformerEncoderLayer, TransformerModel,
-};
-pub use ultrathink_performance::{
-    DetailedPerformanceReport, OptimizationRecommendation, PerformanceSummary,
-    PerformanceThresholds, UltrathinkPerformanceMonitor,
-};
-pub use ultrathink_text_coordinator::{
-    UltraBatchClassificationResult, UltraSemanticSimilarityResult, UltraTopicModelingResult,
-    UltrathinkTextConfig, UltrathinkTextCoordinator, UltrathinkTextResult,
 };
 pub use vectorize::{CountVectorizer, TfidfVectorizer, Vectorizer};
 pub use visualization::{

@@ -207,7 +207,6 @@ where
             return Ok(OptimizeResult {
                 x: state.position,
                 fun: state.function_value,
-                iterations: iteration,
                 nit: iteration,
                 func_evals: state.nfev,
                 nfev: state.nfev,
@@ -225,7 +224,6 @@ where
                 return Ok(OptimizeResult {
                     x: state.position,
                     fun: state.function_value,
-                    iterations: iteration,
                     nit: iteration,
                     func_evals: state.nfev,
                     nfev: state.nfev,
@@ -304,7 +302,6 @@ where
             return Ok(OptimizeResult {
                 x: state.position,
                 fun: state.function_value,
-                iterations: iteration + 1,
                 nit: iteration + 1,
                 func_evals: state.nfev,
                 nfev: state.nfev,
@@ -320,7 +317,6 @@ where
     Ok(OptimizeResult {
         x: state.position,
         fun: state.function_value,
-        iterations: options.base_options.max_iter,
         nit: options.base_options.max_iter,
         func_evals: state.nfev,
         nfev: state.nfev,

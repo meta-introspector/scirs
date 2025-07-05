@@ -67,8 +67,13 @@ pub struct AnovaResult<F> {
 #[allow(dead_code)]
 pub fn one_way_anova<F>(groups: &[&ArrayView1<F>]) -> StatsResult<AnovaResult<F>>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + Debug
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + NumCast
+        + Debug
+        + std::fmt::Display
+        + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     // Check if there are at least two groups
     if groups.len() < 2 {
@@ -216,8 +221,13 @@ pub type TukeyHSDResult<F> = Vec<(usize, usize, F, F, bool)>;
 #[allow(dead_code)]
 pub fn tukey_hsd<F>(groups: &[&ArrayView1<F>], alpha: F) -> StatsResult<TukeyHSDResult<F>>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + Debug
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + NumCast
+        + Debug
+        + std::fmt::Display
+        + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     // Check if there are at least two groups
     if groups.len() < 2 {

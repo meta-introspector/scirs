@@ -97,7 +97,7 @@ where
     Ok(eigenvalues)
 }
 
-/// Ultra-precision eigenvalue decomposition for demanding numerical applications.
+/// Advanced-precision eigenvalue decomposition for demanding numerical applications.
 ///
 /// This function provides enhanced numerical precision for eigenvalue computations,
 /// achieving accuracy improvements from ~1e-8 to 1e-10 or better. It's particularly
@@ -114,31 +114,31 @@ where
 ///
 /// # Returns
 ///
-/// * Tuple (eigenvalues, eigenvectors) with ultra-high precision
+/// * Tuple (eigenvalues, eigenvectors) with advanced-high precision
 ///
 /// # Examples
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_linalg::eigen::ultra_precision_eig;
+/// use scirs2_linalg::eigen::advanced_precision_eig;
 ///
 /// let a = array![[1.0000000001_f64, 0.9999999999], [0.9999999999, 1.0000000001]];
-/// let (w, v) = ultra_precision_eig(&a.view(), 1e-12).unwrap();
+/// let (w, v) = advanced_precision_eig(&a.view(), 1e-12).unwrap();
 /// ```
 ///
 /// # Notes
 ///
 /// This function currently delegates to the standard `eigh` implementation.
-/// Full ultra-precision algorithms will be implemented in future versions.
+/// Full advanced-precision algorithms will be implemented in future versions.
 #[allow(dead_code)]
-pub fn ultra_precision_eig<F>(
+pub fn advanced_precision_eig<F>(
     a: &ArrayView2<F>,
     tolerance: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
 where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
-    // Implement ultra-precision algorithms using extended precision and iterative refinement
+    // Implement advanced-precision algorithms using extended precision and iterative refinement
 
     // Check matrix size for optimal algorithm selection
     let n = a.nrows();
@@ -225,15 +225,15 @@ where
     }
 
     if is_symmetric {
-        // Enhanced ultra-precision symmetric eigenvalue solver
-        ultra_precision_symmetric_eigensolver(a, tolerance)
+        // Enhanced advanced-precision symmetric eigenvalue solver
+        advanced_precision_symmetric_eigensolver(a, tolerance)
     } else {
-        // Enhanced ultra-precision general eigenvalue solver
-        ultra_precision_general_eigensolver(a, tolerance)
+        // Enhanced advanced-precision general eigenvalue solver
+        advanced_precision_general_eigensolver(a, tolerance)
     }
 }
 
-/// Ultra-precision symmetric eigenvalue solver using advanced numerical techniques
+/// Advanced-precision symmetric eigenvalue solver using advanced numerical techniques
 ///
 /// This function implements multiple advanced techniques to achieve 1e-10+ accuracy:
 /// - Kahan summation for numerically stable arithmetic
@@ -242,7 +242,7 @@ where
 /// - Enhanced Gram-Schmidt orthogonalization with multiple passes
 /// - Residual verification and eigenvalue correction
 #[allow(dead_code)]
-fn ultra_precision_symmetric_eigensolver<F>(
+fn advanced_precision_symmetric_eigensolver<F>(
     a: &ArrayView2<F>,
     tolerance: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
@@ -263,7 +263,7 @@ where
     };
 
     // Enhanced iterative refinement with multiple precision passes
-    let max_iterations = 50; // More iterations for ultra-precision
+    let max_iterations = 50; // More iterations for advanced-precision
     let mut converged = false;
 
     for iter in 0..max_iterations {
@@ -341,7 +341,7 @@ where
     }
 
     if !converged {
-        eprintln!("Warning: Ultra-precision eigenvalue solver did not fully converge to desired tolerance");
+        eprintln!("Warning: Advanced-precision eigenvalue solver did not fully converge to desired tolerance");
     }
 
     // Final verification and sorting
@@ -351,9 +351,9 @@ where
     Ok((sorted_eigenvalues, sorted_eigenvectors))
 }
 
-/// Ultra-precision general eigenvalue solver for non-symmetric matrices
+/// Advanced-precision general eigenvalue solver for non-symmetric matrices
 #[allow(dead_code)]
-fn ultra_precision_general_eigensolver<F>(
+fn advanced_precision_general_eigensolver<F>(
     a: &ArrayView2<F>,
     tolerance: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
@@ -383,15 +383,15 @@ where
 
     if nearly_symmetric {
         // Treat as symmetric with enhanced precision
-        ultra_precision_symmetric_eigensolver(a, tolerance)
+        advanced_precision_symmetric_eigensolver(a, tolerance)
     } else {
         // Use standard solver with warning - full complex eigenvalue support would be needed
-        eprintln!("Warning: Ultra-precision solver for general non-symmetric matrices is limited. Using standard solver.");
+        eprintln!("Warning: Advanced-precision solver for general non-symmetric matrices is limited. Using standard solver.");
         eigh(a, None)
     }
 }
 
-// Helper functions for ultra-precision algorithms
+// Helper functions for advanced-precision algorithms
 
 /// Kahan summation algorithm for numerically stable matrix-vector multiplication
 #[allow(dead_code)]
@@ -457,7 +457,7 @@ where
     sum
 }
 
-/// Newton's method for eigenvalue correction to achieve ultra-high precision
+/// Newton's method for eigenvalue correction to achieve advanced-high precision
 #[allow(dead_code)]
 fn newton_eigenvalue_correction<F>(a: &ArrayView2<F>, v: &Array1<F>, lambda: F, tolerance: F) -> F
 where
@@ -885,11 +885,11 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_precision_fallback() {
+    fn test_advanced_precision_fallback() {
         let a = array![[1.0_f64, 0.0], [0.0, 2.0]];
 
         // Should not fail (falls back to standard eigh)
-        let result = ultra_precision_eig(&a.view(), 1e-12);
+        let result = advanced_precision_eig(&a.view(), 1e-12);
         assert!(result.is_ok());
 
         let (w, v) = result.unwrap();

@@ -8,7 +8,7 @@
 
 use crate::benchmark_suite::{BenchmarkConfig, BenchmarkMetrics};
 use crate::error::StatsResult;
-// use crate::ultrathink_error_enhancements_v2::CompatibilityImpact; // Commented out temporarily
+// use crate::advanced_error_enhancements_v2::CompatibilityImpact; // Commented out temporarily
 use ndarray::Array1;
 use num_traits::Float;
 use scirs2_core::{parallel_ops::*, rng};
@@ -28,7 +28,7 @@ pub enum CompatibilityImpact {
 
 /// advanced Benchmark Configuration with Advanced Analytics
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UltraThinkBenchmarkConfig {
+pub struct AdvancedBenchmarkConfig {
     /// Base benchmark configuration
     pub base_config: BenchmarkConfig,
     /// Enable predictive performance modeling
@@ -117,7 +117,7 @@ pub struct StressTestConfig {
 
 /// Enhanced benchmark metrics with advanced analytics
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UltraThinkBenchmarkMetrics {
+pub struct AdvancedBenchmarkMetrics {
     /// Base metrics
     pub base_metrics: BenchmarkMetrics,
     /// Numerical stability metrics
@@ -280,8 +280,8 @@ pub struct PredictionAccuracyMetrics {
 }
 
 /// advanced Benchmark Suite
-pub struct UltraThinkBenchmarkSuite {
-    config: UltraThinkBenchmarkConfig,
+pub struct AdvancedBenchmarkSuite {
+    config: AdvancedBenchmarkConfig,
     performance_models: HashMap<String, PerformanceModel>,
     baseline_results: HashMap<String, BenchmarkMetrics>,
     platform_profiles: HashMap<String, PlatformProfile>,
@@ -385,9 +385,9 @@ pub enum PlatformSpecificity {
     Unique,    // applies only to this exact hardware
 }
 
-impl UltraThinkBenchmarkSuite {
+impl AdvancedBenchmarkSuite {
     /// Create new advanced benchmark suite
-    pub fn new(config: UltraThinkBenchmarkConfig) -> Self {
+    pub fn new(config: AdvancedBenchmarkConfig) -> Self {
         Self {
             config,
             performance_models: HashMap::new(),
@@ -397,7 +397,7 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Run comprehensive benchmark suite
-    pub fn run_comprehensive_benchmarks(&mut self) -> StatsResult<UltraThinkBenchmarkReport> {
+    pub fn run_comprehensive_benchmarks(&mut self) -> StatsResult<AdvancedBenchmarkReport> {
         let start_time = Instant::now();
         let mut all_metrics = Vec::new();
 
@@ -434,7 +434,7 @@ impl UltraThinkBenchmarkSuite {
         // Create comprehensive analysis
         let analysis = self.create_comprehensive_analysis(&all_metrics);
 
-        Ok(UltraThinkBenchmarkReport {
+        Ok(AdvancedBenchmarkReport {
             timestamp: chrono::Utc::now().to_rfc3339(),
             config: self.config.clone(),
             metrics: all_metrics,
@@ -447,7 +447,7 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Run core statistical operation benchmarks
-    fn run_core_benchmarks(&self) -> StatsResult<Vec<UltraThinkBenchmarkMetrics>> {
+    fn run_core_benchmarks(&self) -> StatsResult<Vec<AdvancedBenchmarkMetrics>> {
         let mut metrics = Vec::new();
 
         // Test core descriptive statistics
@@ -466,7 +466,7 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Benchmark descriptive statistics operations
-    fn benchmark_descriptive_stats(&self) -> StatsResult<Vec<UltraThinkBenchmarkMetrics>> {
+    fn benchmark_descriptive_stats(&self) -> StatsResult<Vec<AdvancedBenchmarkMetrics>> {
         let mut metrics = Vec::new();
 
         for &size in &self.config.base_config.data_sizes {
@@ -495,7 +495,7 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Benchmark correlation operations
-    fn benchmark_correlation_operations(&self) -> StatsResult<Vec<UltraThinkBenchmarkMetrics>> {
+    fn benchmark_correlation_operations(&self) -> StatsResult<Vec<AdvancedBenchmarkMetrics>> {
         let mut metrics = Vec::new();
 
         for &size in &self.config.base_config.data_sizes {
@@ -521,7 +521,7 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Benchmark regression operations
-    fn benchmark_regression_operations(&self) -> StatsResult<Vec<UltraThinkBenchmarkMetrics>> {
+    fn benchmark_regression_operations(&self) -> StatsResult<Vec<AdvancedBenchmarkMetrics>> {
         let mut metrics = Vec::new();
 
         for &size in &self.config.base_config.data_sizes {
@@ -540,7 +540,7 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Benchmark distribution operations
-    fn benchmark_distribution_operations(&self) -> StatsResult<Vec<UltraThinkBenchmarkMetrics>> {
+    fn benchmark_distribution_operations(&self) -> StatsResult<Vec<AdvancedBenchmarkMetrics>> {
         let mut metrics = Vec::new();
 
         for &size in &self.config.base_config.data_sizes {
@@ -556,7 +556,7 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Run numerical stability tests
-    fn run_stability_tests(&self) -> StatsResult<Vec<UltraThinkBenchmarkMetrics>> {
+    fn run_stability_tests(&self) -> StatsResult<Vec<AdvancedBenchmarkMetrics>> {
         let mut metrics = Vec::new();
 
         // Test with extreme values
@@ -584,7 +584,7 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Run scalability analysis
-    fn run_scalability_analysis(&self) -> StatsResult<Vec<UltraThinkBenchmarkMetrics>> {
+    fn run_scalability_analysis(&self) -> StatsResult<Vec<AdvancedBenchmarkMetrics>> {
         let mut metrics = Vec::new();
 
         // Generate data sizes for scalability testing
@@ -607,7 +607,7 @@ impl UltraThinkBenchmarkSuite {
     }
 
     /// Run cross-platform tests
-    fn run_cross_platform_tests(&self) -> StatsResult<Vec<UltraThinkBenchmarkMetrics>> {
+    fn run_cross_platform_tests(&self) -> StatsResult<Vec<AdvancedBenchmarkMetrics>> {
         let mut metrics = Vec::new();
 
         // Test with different compiler optimizations
@@ -641,7 +641,7 @@ impl UltraThinkBenchmarkSuite {
 
         match distribution {
             DataDistribution::Uniform => {
-                let uniform = Uniform::new(0.0, 1.0)?;
+                let uniform = Uniform::new(0.0, 1.0).unwrap();
                 for val in data.iter_mut() {
                     *val = uniform.sample(&mut rng);
                 }
@@ -672,7 +672,7 @@ impl UltraThinkBenchmarkSuite {
             }
             DataDistribution::Sparse(sparsity) => {
                 let normal = Normal::new(0.0, 1.0).unwrap();
-                let uniform = Uniform::new(0.0, 1.0)?;
+                let uniform = Uniform::new(0.0, 1.0).unwrap();
                 for val in data.iter_mut() {
                     if uniform.sample(&mut rng) < *sparsity {
                         *val = 0.0;
@@ -699,7 +699,7 @@ impl UltraThinkBenchmarkSuite {
         name: &str,
         data: &Array1<f64>,
         func: F,
-    ) -> StatsResult<UltraThinkBenchmarkMetrics>
+    ) -> StatsResult<AdvancedBenchmarkMetrics>
     where
         F: Fn(&Array1<f64>) -> StatsResult<R>,
     {
@@ -722,7 +722,7 @@ impl UltraThinkBenchmarkSuite {
         let stability_metrics = self.calculate_stability_metrics(data);
         let scalability_metrics = self.calculate_scalability_metrics(data.len(), &timings);
 
-        Ok(UltraThinkBenchmarkMetrics {
+        Ok(AdvancedBenchmarkMetrics {
             base_metrics,
             stability_metrics,
             scalability_metrics,
@@ -740,7 +740,7 @@ impl UltraThinkBenchmarkSuite {
         x: &Array1<f64>,
         y: &Array1<f64>,
         func: F,
-    ) -> StatsResult<UltraThinkBenchmarkMetrics>
+    ) -> StatsResult<AdvancedBenchmarkMetrics>
     where
         F: Fn(&Array1<f64>, &Array1<f64>) -> StatsResult<R>,
     {
@@ -763,7 +763,7 @@ impl UltraThinkBenchmarkSuite {
         let stability_metrics = self.calculate_stability_metrics(x);
         let scalability_metrics = self.calculate_scalability_metrics(x.len(), &timings);
 
-        Ok(UltraThinkBenchmarkMetrics {
+        Ok(AdvancedBenchmarkMetrics {
             base_metrics,
             stability_metrics,
             scalability_metrics,
@@ -779,7 +779,7 @@ impl UltraThinkBenchmarkSuite {
         &self,
         name: &str,
         data: &Array1<f64>,
-    ) -> StatsResult<UltraThinkBenchmarkMetrics> {
+    ) -> StatsResult<AdvancedBenchmarkMetrics> {
         // Use high-precision reference calculation
         let reference_result = self.calculate_high_precision_mean(data);
 
@@ -820,7 +820,7 @@ impl UltraThinkBenchmarkSuite {
             baseline_comparison: None,
         };
 
-        Ok(UltraThinkBenchmarkMetrics {
+        Ok(AdvancedBenchmarkMetrics {
             base_metrics,
             stability_metrics,
             scalability_metrics: ScalabilityMetrics {
@@ -848,7 +848,7 @@ impl UltraThinkBenchmarkSuite {
         name: &str,
         data: &Array1<f64>,
         size: usize,
-    ) -> StatsResult<UltraThinkBenchmarkMetrics> {
+    ) -> StatsResult<AdvancedBenchmarkMetrics> {
         // This is a simplified implementation
         // In practice, you would run multiple sizes and analyze scaling
 
@@ -889,7 +889,7 @@ impl UltraThinkBenchmarkSuite {
             parallel_scaling: None,
         };
 
-        Ok(UltraThinkBenchmarkMetrics {
+        Ok(AdvancedBenchmarkMetrics {
             base_metrics,
             stability_metrics: self.calculate_stability_metrics(data),
             scalability_metrics,
@@ -905,7 +905,7 @@ impl UltraThinkBenchmarkSuite {
         &self,
         name: &str,
         data: &Array1<f64>,
-    ) -> StatsResult<UltraThinkBenchmarkMetrics> {
+    ) -> StatsResult<AdvancedBenchmarkMetrics> {
         // This would involve running on multiple platforms
         // For now, we simulate the metrics
 
@@ -951,7 +951,7 @@ impl UltraThinkBenchmarkSuite {
             },
         };
 
-        Ok(UltraThinkBenchmarkMetrics {
+        Ok(AdvancedBenchmarkMetrics {
             base_metrics,
             stability_metrics: self.calculate_stability_metrics(data),
             scalability_metrics: ScalabilityMetrics {
@@ -1071,11 +1071,10 @@ impl UltraThinkBenchmarkSuite {
     /// Build performance prediction models
     fn build_performance_models(
         &mut self,
-        metrics: &[UltraThinkBenchmarkMetrics],
+        metrics: &[AdvancedBenchmarkMetrics],
     ) -> StatsResult<()> {
         // Group metrics by function name
-        let mut function_metrics: HashMap<String, Vec<&UltraThinkBenchmarkMetrics>> =
-            HashMap::new();
+        let mut function_metrics: HashMap<String, Vec<&AdvancedBenchmarkMetrics>> = HashMap::new();
 
         for metric in metrics {
             function_metrics
@@ -1096,7 +1095,7 @@ impl UltraThinkBenchmarkSuite {
     /// Build performance model for a specific function
     fn build_performance_model(
         &self,
-        metrics: &[&UltraThinkBenchmarkMetrics],
+        metrics: &[&AdvancedBenchmarkMetrics],
     ) -> StatsResult<PerformanceModel> {
         // Simple linear regression: time = a * size + b
         let n = metrics.len() as f64;
@@ -1151,7 +1150,7 @@ impl UltraThinkBenchmarkSuite {
     /// Generate intelligent optimization recommendations
     fn generate_intelligent_recommendations(
         &self,
-        metrics: &[UltraThinkBenchmarkMetrics],
+        metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         let mut recommendations = Vec::new();
 
@@ -1173,7 +1172,7 @@ impl UltraThinkBenchmarkSuite {
     /// Analyze SIMD optimization opportunities
     fn analyze_simd_opportunities(
         &self,
-        _metrics: &[UltraThinkBenchmarkMetrics],
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         vec![IntelligentRecommendation {
             category: RecommendationCategory::Performance,
@@ -1200,7 +1199,7 @@ let result = f64::simd_mean(&data.view());
     /// Analyze parallel processing opportunities
     fn analyze_parallel_opportunities(
         &self,
-        _metrics: &[UltraThinkBenchmarkMetrics],
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         vec![IntelligentRecommendation {
             category: RecommendationCategory::Performance,
@@ -1229,7 +1228,7 @@ if data.len() > 10_000 {
     /// Analyze memory optimization opportunities
     fn analyze_memory_opportunities(
         &self,
-        _metrics: &[UltraThinkBenchmarkMetrics],
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         vec![IntelligentRecommendation {
             category: RecommendationCategory::Memory,
@@ -1248,7 +1247,7 @@ if data.len() > 10_000 {
     /// Analyze numerical stability improvements
     fn analyze_stability_improvements(
         &self,
-        _metrics: &[UltraThinkBenchmarkMetrics],
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<IntelligentRecommendation> {
         vec![IntelligentRecommendation {
             category: RecommendationCategory::Stability,
@@ -1284,7 +1283,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
     /// Create comprehensive analysis
     fn create_comprehensive_analysis(
         &self,
-        metrics: &[UltraThinkBenchmarkMetrics],
+        metrics: &[AdvancedBenchmarkMetrics],
     ) -> ComprehensiveAnalysis {
         ComprehensiveAnalysis {
             overall_performance_score: self.calculate_overall_score(metrics),
@@ -1297,7 +1296,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
     }
 
     /// Calculate overall performance score
-    fn calculate_overall_score(&self, metrics: &[UltraThinkBenchmarkMetrics]) -> f64 {
+    fn calculate_overall_score(&self, metrics: &[AdvancedBenchmarkMetrics]) -> f64 {
         if metrics.is_empty() {
             return 0.0;
         }
@@ -1314,7 +1313,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
     }
 
     /// Assess scalability characteristics
-    fn assess_scalability(&self, _metrics: &[UltraThinkBenchmarkMetrics]) -> ScalabilityAssessment {
+    fn assess_scalability(&self, _metrics: &[AdvancedBenchmarkMetrics]) -> ScalabilityAssessment {
         ScalabilityAssessment {
             scaling_efficiency: 0.85, // Average efficiency across data sizes
             memory_efficiency: 0.90,
@@ -1324,7 +1323,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
     }
 
     /// Assess numerical stability
-    fn assess_stability(&self, metrics: &[UltraThinkBenchmarkMetrics]) -> StabilityAssessment {
+    fn assess_stability(&self, metrics: &[AdvancedBenchmarkMetrics]) -> StabilityAssessment {
         let avg_relative_error = metrics
             .iter()
             .map(|m| m.stability_metrics.relative_error)
@@ -1345,7 +1344,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
     /// Assess cross-platform performance
     fn assess_cross_platform(
         &self,
-        _metrics: &[UltraThinkBenchmarkMetrics],
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> CrossPlatformAssessment {
         CrossPlatformAssessment {
             portability_score: 0.9,
@@ -1361,7 +1360,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
     /// Analyze performance bottlenecks
     fn analyze_bottlenecks(
         &self,
-        _metrics: &[UltraThinkBenchmarkMetrics],
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<BottleneckAnalysis> {
         vec![
             BottleneckAnalysis {
@@ -1386,7 +1385,7 @@ fn kahan_sum(data: &[f64]) -> f64 {
     /// Identify optimization opportunities
     fn identify_optimization_opportunities(
         &self,
-        _metrics: &[UltraThinkBenchmarkMetrics],
+        _metrics: &[AdvancedBenchmarkMetrics],
     ) -> Vec<OptimizationOpportunity> {
         vec![
             OptimizationOpportunity {
@@ -1407,10 +1406,10 @@ fn kahan_sum(data: &[f64]) -> f64 {
 
 /// advanced Benchmark Report
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UltraThinkBenchmarkReport {
+pub struct AdvancedBenchmarkReport {
     pub timestamp: String,
-    pub config: UltraThinkBenchmarkConfig,
-    pub metrics: Vec<UltraThinkBenchmarkMetrics>,
+    pub config: AdvancedBenchmarkConfig,
+    pub metrics: Vec<AdvancedBenchmarkMetrics>,
     pub analysis: ComprehensiveAnalysis,
     pub recommendations: Vec<IntelligentRecommendation>,
     pub performance_models: HashMap<String, PerformanceModel>,
@@ -1524,7 +1523,7 @@ pub struct OptimizationOpportunity {
     pub risk_level: String,
 }
 
-impl Default for UltraThinkBenchmarkConfig {
+impl Default for AdvancedBenchmarkConfig {
     fn default() -> Self {
         Self {
             base_config: BenchmarkConfig::default(),
@@ -1571,11 +1570,11 @@ impl Default for UltraThinkBenchmarkConfig {
 
 /// Convenience function to run advanced benchmarks
 #[allow(dead_code)]
-pub fn run_ultrathink_benchmarks(
-    config: Option<UltraThinkBenchmarkConfig>,
-) -> StatsResult<UltraThinkBenchmarkReport> {
+pub fn run_advanced_benchmarks(
+    config: Option<AdvancedBenchmarkConfig>,
+) -> StatsResult<AdvancedBenchmarkReport> {
     let config = config.unwrap_or_default();
-    let mut suite = UltraThinkBenchmarkSuite::new(config);
+    let mut suite = AdvancedBenchmarkSuite::new(config);
     suite.run_comprehensive_benchmarks()
 }
 
@@ -1584,16 +1583,16 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ultrathink_benchmark_creation() {
-        let config = UltraThinkBenchmarkConfig::default();
-        let suite = UltraThinkBenchmarkSuite::new(config);
+    fn test_advanced_benchmark_creation() {
+        let config = AdvancedBenchmarkConfig::default();
+        let suite = AdvancedBenchmarkSuite::new(config);
         assert!(suite.performance_models.is_empty());
     }
 
     #[test]
     fn test_data_generation() {
-        let config = UltraThinkBenchmarkConfig::default();
-        let suite = UltraThinkBenchmarkSuite::new(config);
+        let config = AdvancedBenchmarkConfig::default();
+        let suite = AdvancedBenchmarkSuite::new(config);
 
         let data = suite
             .generate_test_data(100, &DataDistribution::Normal)
@@ -1609,11 +1608,11 @@ mod tests {
 
     #[test]
     fn test_performance_model_building() {
-        let config = UltraThinkBenchmarkConfig::default();
-        let suite = UltraThinkBenchmarkSuite::new(config);
+        let config = AdvancedBenchmarkConfig::default();
+        let suite = AdvancedBenchmarkSuite::new(config);
 
         // Create some mock metrics
-        let mock_metrics = vec![UltraThinkBenchmarkMetrics {
+        let mock_metrics = vec![AdvancedBenchmarkMetrics {
             base_metrics: crate::benchmark_suite::BenchmarkMetrics {
                 function_name: "test".to_string(),
                 data_size: 100,

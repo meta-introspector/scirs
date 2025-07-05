@@ -4,9 +4,8 @@
 //! using the Lomb-Scargle periodogram technique.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, ArrayView1};
+use ndarray::Array1;
 use num_traits::{Float, NumCast};
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
@@ -140,8 +139,22 @@ where
     }
 
     // Check for finite values in both arrays
-    check_finite(&Array1::from(x_f64.clone()), "sample times")?;
-    check_finite(&Array1::from(y_f64.clone()), "signal values")?;
+    for (i, &x) in x_f64.iter().enumerate() {
+        if !x.is_finite() {
+            return Err(SignalError::ValueError(format!(
+                "Sample time at index {} is not finite: {}",
+                i, x
+            )));
+        }
+    }
+    for (i, &y) in y_f64.iter().enumerate() {
+        if !y.is_finite() {
+            return Err(SignalError::ValueError(format!(
+                "Signal value at index {} is not finite: {}",
+                i, y
+            )));
+        }
+    }
 
     // Check for adequate data length
     if x_f64.len() < 3 {

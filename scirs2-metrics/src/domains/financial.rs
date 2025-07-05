@@ -1146,7 +1146,7 @@ mod tests {
         let defaults = array![true, false, true, false, false];
 
         let gini = credit.gini_coefficient(&scores, &defaults).unwrap();
-        assert!(gini >= -1.0 && gini <= 1.0);
+        assert!((-1.0..=1.0).contains(&gini));
     }
 
     #[test]
@@ -1155,7 +1155,7 @@ mod tests {
         let trade_returns = array![0.02, -0.01, 0.03, -0.005, 0.01];
 
         let hit_ratio = trading.hit_ratio(&trade_returns).unwrap();
-        assert!(hit_ratio >= 0.0 && hit_ratio <= 1.0);
+        assert!((0.0..=1.0).contains(&hit_ratio));
         assert_eq!(hit_ratio, 0.6); // 3 out of 5 profitable trades
     }
 
@@ -1181,6 +1181,6 @@ mod tests {
         let composite = esg
             .composite_esg_score(environmental, social, governance, None)
             .unwrap();
-        assert!(composite >= 0.0 && composite <= 1.0);
+        assert!((0.0..=1.0).contains(&composite));
     }
 }

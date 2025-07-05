@@ -72,8 +72,8 @@ pub enum PrecisionMode {
     Int4Advanced,
     /// Automatic precision selection
     Adaptive,
-    /// Ultra-adaptive with stability monitoring
-    UltraAdaptive,
+    /// Advanced-adaptive with stability monitoring
+    AdvancedAdaptive,
 }
 
 /// Numerical stability level
@@ -726,7 +726,7 @@ impl TensorCoreDistanceMatrix {
                 self.compute_distances_adaptive(&points_i.view(), &points_j.view())
                     .await
             }
-            PrecisionMode::UltraAdaptive => {
+            PrecisionMode::AdvancedAdaptive => {
                 self.compute_distances_adaptive(&points_i.view(), &points_j.view())
                     .await
             }
@@ -2684,12 +2684,12 @@ mod tests {
 
     #[test]
     fn test_precision_mode_ordering() {
-        // Test UltraAdaptive mode
+        // Test AdvancedAdaptive mode
         assert!(matches!(
-            PrecisionMode::UltraAdaptive,
-            PrecisionMode::UltraAdaptive
+            PrecisionMode::AdvancedAdaptive,
+            PrecisionMode::AdvancedAdaptive
         ));
-        assert_ne!(PrecisionMode::UltraAdaptive, PrecisionMode::Adaptive);
+        assert_ne!(PrecisionMode::AdvancedAdaptive, PrecisionMode::Adaptive);
     }
 
     #[test]

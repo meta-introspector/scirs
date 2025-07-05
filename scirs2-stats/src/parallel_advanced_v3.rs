@@ -66,8 +66,7 @@ pub struct ParallelBatchProcessor<F> {
 
 impl<F> ParallelBatchProcessor<F>
 where
-    F: Float + NumCast + Send + Sync + std::iter::Sum
-        + std::fmt::Display,
+    F: Float + NumCast + Send + Sync + std::iter::Sum + std::fmt::Display,
 {
     pub fn new(config: AdvancedParallelConfig) -> Self {
         Self {
@@ -215,8 +214,7 @@ pub struct ParallelCrossValidator<F> {
 
 impl<F> ParallelCrossValidator<F>
 where
-    F: Float + NumCast + Send + Sync
-        + std::fmt::Display,
+    F: Float + NumCast + Send + Sync + std::fmt::Display,
 {
     pub fn new(k_folds: usize, config: AdvancedParallelConfig) -> Self {
         Self {
@@ -338,8 +336,7 @@ pub struct ParallelMonteCarlo<F> {
 
 impl<F> ParallelMonteCarlo<F>
 where
-    F: Float + NumCast + Send + Sync
-        + std::fmt::Display,
+    F: Float + NumCast + Send + Sync + std::fmt::Display,
 {
     pub fn new(n_simulations: usize, config: AdvancedParallelConfig) -> Self {
         Self {
@@ -380,13 +377,13 @@ where
             .into_iter()
             .map(|seed| {
                 use rand::rngs::StdRng;
-                use scirs2_core::rng;
                 use rand::SeedableRng;
 
                 let mut rng = StdRng::seed_from_u64(seed as u64);
                 let mut bootstrap_sample = Array1::zeros(n);
 
                 for i in 0..n {
+                    use rand::Rng;
                     let idx = rng.random_range(0..n);
                     bootstrap_sample[i] = data_arc[idx];
                 }
@@ -453,7 +450,6 @@ where
 
         (0..self.n_simulations).into_iter().for_each(|seed| {
             use rand::rngs::StdRng;
-            use scirs2_core::rng;
             use rand::{seq::SliceRandom, SeedableRng};
 
             let mut rng = StdRng::seed_from_u64(seed as u64);
@@ -493,8 +489,7 @@ impl ParallelMatrixOps {
     where
         F: Float + NumCast + Send + Sync + std::iter::Sum,
         D1: Data<Elem = F> + Sync,
-        D2: Data<Elem = F> + Sync
-        + std::fmt::Display,
+        D2: Data<Elem = F> + Sync + std::fmt::Display,
     {
         let (m, n) = matrix.dim();
         if n != vector.len() {
@@ -543,8 +538,7 @@ impl ParallelMatrixOps {
     where
         F: Float + NumCast + Send + Sync,
         D1: Data<Elem = F> + Sync,
-        D2: Data<Elem = F> + Sync
-        + std::fmt::Display,
+        D2: Data<Elem = F> + Sync + std::fmt::Display,
     {
         let m = a.len();
         let n = b.len();

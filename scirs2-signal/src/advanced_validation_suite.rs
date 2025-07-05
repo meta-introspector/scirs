@@ -1,4 +1,4 @@
-//! Ultra-comprehensive validation suite for signal processing in "Advanced mode"
+//! Advanced-comprehensive validation suite for signal processing in "Advanced mode"
 //!
 //! This module provides the most comprehensive validation system for the scirs2-signal
 //! library, incorporating all TODO requirements and validation best practices.
@@ -25,10 +25,10 @@ use std::collections::HashMap;
 // use std::f64::consts::PI;
 use std::time::Instant;
 
-/// Ultra-comprehensive validation configuration for "Advanced mode"
+/// Advanced-comprehensive validation configuration for "Advanced mode"
 #[derive(Debug, Clone)]
 pub struct ComprehensiveValidationConfig {
-    /// Numerical tolerance for ultra-precise comparisons
+    /// Numerical tolerance for advanced-precise comparisons
     pub tolerance: f64,
     /// Whether to run exhaustive tests (very slow but extremely thorough)
     pub exhaustive: bool,
@@ -89,15 +89,15 @@ impl Default for ComprehensiveValidationConfig {
 #[derive(Debug, Clone)]
 pub struct ComprehensiveValidationResult {
     /// Enhanced multitaper validation
-    pub multitaper_results: MultitaperUltraResults,
+    pub multitaper_results: MultitaperAdvancedResults,
     /// Enhanced Lomb-Scargle validation
-    pub lombscargle_results: LombScargleUltraResults,
+    pub lombscargle_results: LombScargleAdvancedResults,
     /// Parametric spectral estimation validation
-    pub parametric_results: ParametricUltraResults,
+    pub parametric_results: ParametricAdvancedResults,
     /// 2D wavelet validation
-    pub wavelet2d_results: Wavelet2dUltraResults,
+    pub wavelet2d_results: Wavelet2dAdvancedResults,
     /// Wavelet packet validation
-    pub wavelet_packet_results: WaveletPacketUltraResults,
+    pub wavelet_packet_results: WaveletPacketAdvancedResults,
     /// SIMD performance validation
     pub simd_results: SimdValidationResults,
     /// Parallel processing validation
@@ -122,7 +122,7 @@ pub struct ComprehensiveValidationResult {
 
 /// Enhanced multitaper validation results
 #[derive(Debug, Clone)]
-pub struct MultitaperUltraResults {
+pub struct MultitaperAdvancedResults {
     /// DPSS accuracy validation
     pub dpss_accuracy_score: f64,
     /// Spectral estimation bias analysis
@@ -147,7 +147,7 @@ pub struct MultitaperUltraResults {
 
 /// Enhanced Lomb-Scargle validation results
 #[derive(Debug, Clone)]
-pub struct LombScargleUltraResults {
+pub struct LombScargleAdvancedResults {
     /// Accuracy against analytical solutions
     pub analytical_accuracy: f64,
     /// Noise robustness across SNR levels
@@ -172,7 +172,7 @@ pub struct LombScargleUltraResults {
 
 /// Parametric spectral estimation validation results
 #[derive(Debug, Clone)]
-pub struct ParametricUltraResults {
+pub struct ParametricAdvancedResults {
     /// AR model validation
     pub ar_validation: ArModelValidation,
     /// ARMA model validation
@@ -195,7 +195,7 @@ pub struct ParametricUltraResults {
 
 /// 2D wavelet validation results
 #[derive(Debug, Clone)]
-pub struct Wavelet2dUltraResults {
+pub struct Wavelet2dAdvancedResults {
     /// Perfect reconstruction accuracy
     pub reconstruction_accuracy: f64,
     /// Boundary condition handling
@@ -218,7 +218,7 @@ pub struct Wavelet2dUltraResults {
 
 /// Wavelet packet validation results
 #[derive(Debug, Clone)]
-pub struct WaveletPacketUltraResults {
+pub struct WaveletPacketAdvancedResults {
     /// Tree structure validation
     pub tree_validation_score: f64,
     /// Coefficient organization accuracy
@@ -738,7 +738,7 @@ pub fn run_comprehensive_validation(
         (pass_rate + (100.0 - (failed_tests as f64 / total_tests as f64 * 100.0))) / 2.0;
 
     // Create placeholder results for components that couldn't be fully validated
-    let default_multitaper = MultitaperUltraResults {
+    let default_multitaper = MultitaperAdvancedResults {
         dpss_accuracy_score: 95.0,
         bias_analysis: BiasAnalysisResult {
             mean_bias: 0.01,
@@ -776,7 +776,7 @@ pub fn run_comprehensive_validation(
         issues: vec![],
     };
 
-    let default_lombscargle = LombScargleUltraResults {
+    let default_lombscargle = LombScargleAdvancedResults {
         analytical_accuracy: 97.0,
         noise_robustness: NoiseRobustnessResult {
             robustness_by_snr: HashMap::new(),
@@ -799,7 +799,7 @@ pub fn run_comprehensive_validation(
         issues: vec![],
     };
 
-    let default_parametric = ParametricUltraResults {
+    let default_parametric = ParametricAdvancedResults {
         ar_validation: ArModelValidation {
             coefficient_accuracy: 91.0,
             prediction_accuracy: 88.0,
@@ -883,7 +883,7 @@ pub fn run_comprehensive_validation(
         multitaper_results: default_multitaper,
         lombscargle_results: default_lombscargle,
         parametric_results: default_parametric,
-        wavelet2d_results: Wavelet2dUltraResults {
+        wavelet2d_results: Wavelet2dAdvancedResults {
             reconstruction_accuracy: 99.5,
             boundary_handling_score: 92.0,
             multilevel_accuracy: 96.0,
@@ -904,7 +904,7 @@ pub fn run_comprehensive_validation(
             wavelet_consistency: 94.0,
             issues: vec![],
         },
-        wavelet_packet_results: WaveletPacketUltraResults {
+        wavelet_packet_results: WaveletPacketAdvancedResults {
             tree_validation_score: 96.0,
             coefficient_accuracy: 98.0,
             reconstruction_fidelity: 99.2,
@@ -1015,10 +1015,10 @@ pub fn run_comprehensive_validation(
 fn run_enhanced_multitaper_validation(
     _config: &ComprehensiveValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
-) -> SignalResult<MultitaperUltraResults> {
+) -> SignalResult<MultitaperAdvancedResults> {
     // Placeholder implementation - in a real implementation this would
     // call the actual multitaper validation functions
-    Ok(MultitaperUltraResults {
+    Ok(MultitaperAdvancedResults {
         dpss_accuracy_score: 95.0,
         bias_analysis: BiasAnalysisResult {
             mean_bias: 0.01,
@@ -1061,9 +1061,9 @@ fn run_enhanced_multitaper_validation(
 fn run_enhanced_lombscargle_validation(
     _config: &ComprehensiveValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
-) -> SignalResult<LombScargleUltraResults> {
+) -> SignalResult<LombScargleAdvancedResults> {
     // Placeholder implementation
-    Ok(LombScargleUltraResults {
+    Ok(LombScargleAdvancedResults {
         analytical_accuracy: 97.0,
         noise_robustness: NoiseRobustnessResult {
             robustness_by_snr: HashMap::new(),
@@ -1091,9 +1091,9 @@ fn run_enhanced_lombscargle_validation(
 fn run_enhanced_parametric_validation(
     _config: &ComprehensiveValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
-) -> SignalResult<ParametricUltraResults> {
+) -> SignalResult<ParametricAdvancedResults> {
     // Placeholder implementation
-    Ok(ParametricUltraResults {
+    Ok(ParametricAdvancedResults {
         ar_validation: ArModelValidation {
             coefficient_accuracy: 91.0,
             prediction_accuracy: 88.0,
@@ -1140,9 +1140,9 @@ fn run_enhanced_parametric_validation(
 fn run_enhanced_wavelet2d_validation(
     _config: &ComprehensiveValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
-) -> SignalResult<Wavelet2dUltraResults> {
+) -> SignalResult<Wavelet2dAdvancedResults> {
     // Placeholder implementation
-    Ok(Wavelet2dUltraResults {
+    Ok(Wavelet2dAdvancedResults {
         reconstruction_accuracy: 99.5,
         boundary_handling_score: 92.0,
         multilevel_accuracy: 96.0,
@@ -1169,9 +1169,9 @@ fn run_enhanced_wavelet2d_validation(
 fn run_enhanced_wavelet_packet_validation(
     _config: &ComprehensiveValidationConfig,
     _rng: &mut rand_chacha::ChaCha8Rng,
-) -> SignalResult<WaveletPacketUltraResults> {
+) -> SignalResult<WaveletPacketAdvancedResults> {
     // Placeholder implementation
-    Ok(WaveletPacketUltraResults {
+    Ok(WaveletPacketAdvancedResults {
         tree_validation_score: 96.0,
         coefficient_accuracy: 98.0,
         reconstruction_fidelity: 99.2,

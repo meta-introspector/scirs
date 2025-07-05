@@ -11,7 +11,7 @@ use scirs2_core::validation::check_finite;
 use std::fmt::Debug;
 
 /// Methods for thresholding wavelet coefficients
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum ThresholdMethod {
     /// Hard thresholding: set coefficients below threshold to zero
     Hard,
@@ -22,7 +22,7 @@ pub enum ThresholdMethod {
 }
 
 /// Methods for selecting the threshold value
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum ThresholdSelect {
     /// Universal threshold: sqrt(2 * log(n)) * sigma
     Universal,
@@ -216,9 +216,12 @@ fn garrote_threshold(coeffs: &[f64], threshold: f64) -> Vec<f64> {
 /// Apply threshold to wavelet coefficients using specified method
 #[allow(dead_code)]
 pub fn threshold_coefficients(coeffs: &[f64], threshold: f64, method: ThresholdMethod) -> Vec<f64> {
-    check_finite(coeffs, "coefficients").unwrap_or_else(|_| {
-        // If finite check fails, proceed anyway but log it
-    });
+    // Check if all coefficients are finite
+    for (i, &coeff) in coeffs.iter().enumerate() {
+        if !coeff.is_finite() {
+            eprintln!("Warning: Non-finite coefficient at index {}: {}", i, coeff);
+        }
+    }
 
     // Use SIMD-optimized version for larger arrays
     if coeffs.len() >= 64 {
@@ -241,7 +244,7 @@ fn simd_threshold_coefficients(
 ) -> Vec<f64> {
     let caps = PlatformCapabilities::detect();
 
-    if caps.has_avx2 {
+    if caps.avx2_available {
         simd_threshold_avx2(coeffs, threshold, method)
     } else {
         // Fallback to scalar implementation
@@ -365,7 +368,7 @@ fn median_abs_deviation(data: &[f64]) -> f64 {
 fn simd_median_abs_deviation(data: &[f64]) -> f64 {
     let caps = PlatformCapabilities::detect();
 
-    if caps.has_avx2 {
+    if caps.avx2_available {
         simd_mad_avx2(data)
     } else {
         scalar_median_abs_deviation(data)
@@ -480,6 +483,7 @@ mod tests {
     use crate::dwt::Wavelet;
     #[allow(unused_imports)]
     use rand::Rng;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_thresholding_methods() {

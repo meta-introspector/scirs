@@ -1,4 +1,4 @@
-//! Ultra-comprehensive 2D wavelet transform validation in Advanced mode
+//! Advanced-comprehensive 2D wavelet transform validation in Advanced mode
 //!
 //! This module provides the most thorough validation possible for 2D wavelet
 //! transforms, covering all aspects from mathematical correctness to performance
@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::Instant;
 
-/// Ultra-comprehensive 2D wavelet validation configuration
+/// Advanced-comprehensive 2D wavelet validation configuration
 #[derive(Debug, Clone)]
 pub struct Dwt2dadvancedConfig {
     /// Test image sizes for scaling analysis
@@ -72,7 +72,7 @@ impl Default for Dwt2dadvancedConfig {
     }
 }
 
-/// Ultra-comprehensive 2D wavelet validation results
+/// Advanced-comprehensive 2D wavelet validation results
 #[derive(Debug, Clone)]
 pub struct Dwt2dadvancedResult {
     /// Perfect reconstruction validation
@@ -302,7 +302,7 @@ pub struct ScalingBehaviorResult {
     pub optimal_size_range: (usize, usize),
 }
 
-/// Main ultra-comprehensive 2D wavelet validation function
+/// Main advanced-comprehensive 2D wavelet validation function
 ///
 /// This function performs the most thorough validation possible of 2D wavelet
 /// transforms, testing all aspects from mathematical correctness to performance
@@ -325,7 +325,7 @@ pub fn run_dwt2d_comprehensive_validation(
     let mut total_score = 0.0;
     let mut score_count = 0;
 
-    println!("🌊 Starting ultra-comprehensive 2D wavelet validation...");
+    println!("🌊 Starting advanced-comprehensive 2D wavelet validation...");
 
     // Set random seed for reproducibility
     let mut rng = rand_chacha::ChaCha8Rng::seed_from_u64(config.random_seed);
@@ -776,7 +776,7 @@ fn simulate_reconstruction_test(
 ) -> SignalResult<f64> {
     // Simulate perfect reconstruction test
     // In real implementation, this would perform actual DWT and IDWT
-    let error = 1e-14 * (1.0 + rand::rng().random_range(0.0..1.0));
+    let error = 1e-14 * (1.0 + rand::thread_rng().random_range(0.0..1.0));
     Ok(error)
 }
 
@@ -874,7 +874,7 @@ fn calculate_consistency_score(result: &ConsistencyAnalysisResult) -> f64 {
 pub fn generate_dwt2d_comprehensive_report(result: &Dwt2dadvancedResult) -> String {
     let mut report = String::new();
 
-    report.push_str("# Ultra-comprehensive 2D Wavelet Transform Validation Report\n\n");
+    report.push_str("# Advanced-comprehensive 2D Wavelet Transform Validation Report\n\n");
 
     report.push_str(&format!(
         "## Overall Score: {:.1}%\n\n",
@@ -965,7 +965,6 @@ pub fn generate_dwt2d_comprehensive_report(result: &Dwt2dadvancedResult) -> Stri
     report
 }
 
-#[allow(dead_code)]
 /// Quick 2D wavelet validation for development
 #[allow(dead_code)]
 pub fn run_quick_dwt2d_validation() -> SignalResult<Dwt2dadvancedResult> {

@@ -1,23 +1,25 @@
 //! Advanced Mode Showcase
 //!
-//! This example demonstrates the ultra-sophisticated enhancements added to scirs2-datasets,
+//! This example demonstrates the advanced-sophisticated enhancements added to scirs2-datasets,
 //! including advanced analytics, GPU optimization, and adaptive streaming processing.
 
 use ndarray::{Array1, Array2};
 use scirs2_datasets::{
-    // Ultra-advanced analytics
-    analyze_dataset_ultra,
-    benchmark_ultra_performance,
+    // Advanced-advanced analytics
+    analyze_dataset_advanced,
+    benchmark_advanced_performance,
     // Adaptive streaming
     create_adaptive_engine,
     create_adaptive_engine_with_config,
-    // Ultra-GPU optimization
-    generate_ultra_matrix,
+    // Advanced-GPU optimization
+    generate_advanced_matrix,
     // Core functionality
     make_classification,
     quick_quality_assessment,
     AdaptiveStreamConfig,
     AdaptiveStreamingEngine,
+    AdvancedDatasetAnalyzer,
+    AdvancedGpuOptimizer,
     ChunkMetadata,
     DataCharacteristics,
     Dataset,
@@ -27,8 +29,6 @@ use scirs2_datasets::{
     StreamChunk,
     TrendDirection,
     TrendIndicators,
-    UltraDatasetAnalyzer,
-    UltraGpuOptimizer,
 };
 use std::time::{Duration, Instant};
 
@@ -45,11 +45,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         dataset.n_features()
     );
 
-    // Demonstrate ultra-advanced analytics
-    demonstrate_ultra_analytics(&dataset)?;
+    // Demonstrate advanced-advanced analytics
+    demonstrate_advanced_analytics(&dataset)?;
 
-    // Demonstrate ultra-GPU optimization
-    demonstrate_ultra_gpu_optimization()?;
+    // Demonstrate advanced-GPU optimization
+    demonstrate_advanced_gpu_optimization()?;
 
     // Demonstrate adaptive streaming
     demonstrate_adaptive_streaming(&dataset)?;
@@ -75,10 +75,10 @@ fn create_sample_dataset() -> Result<Dataset, Box<dyn std::error::Error>> {
     Ok(dataset)
 }
 
-/// Demonstrate ultra-advanced analytics capabilities
+/// Demonstrate advanced-advanced analytics capabilities
 #[allow(dead_code)]
-fn demonstrate_ultra_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n🧠 Ultra-Advanced Analytics Demonstration");
+fn demonstrate_advanced_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
+    println!("\n🧠 Advanced-Advanced Analytics Demonstration");
     println!("==========================================");
 
     // Quick quality assessment
@@ -86,13 +86,13 @@ fn demonstrate_ultra_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::err
     let quick_quality = quick_quality_assessment(dataset)?;
     println!("   Quality Score: {:.3}", quick_quality);
 
-    // Comprehensive ultra-analysis
-    println!("🔬 Running comprehensive ultra-analysis...");
+    // Comprehensive advanced-analysis
+    println!("🔬 Running comprehensive advanced-analysis...");
     let start_time = Instant::now();
 
-    let analyzer = UltraDatasetAnalyzer::new()
+    let analyzer = AdvancedDatasetAnalyzer::new()
         .with_gpu(true)
-        .with_ultra_precision(true)
+        .with_advanced_precision(true)
         .with_significance_threshold(0.01);
 
     let metrics = analyzer.analyze_dataset_quality(dataset)?;
@@ -135,10 +135,10 @@ fn demonstrate_ultra_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::err
     Ok(())
 }
 
-/// Demonstrate ultra-GPU optimization capabilities
+/// Demonstrate advanced-GPU optimization capabilities
 #[allow(dead_code)]
-fn demonstrate_ultra_gpu_optimization() -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n⚡ Ultra-GPU Optimization Demonstration");
+fn demonstrate_advanced_gpu_optimization() -> Result<(), Box<dyn std::error::Error>> {
+    println!("\n⚡ Advanced-GPU Optimization Demonstration");
     println!("=====================================");
 
     // Create GPU context (falls back to CPU if no GPU available)
@@ -146,17 +146,17 @@ fn demonstrate_ultra_gpu_optimization() -> Result<(), Box<dyn std::error::Error>
     let gpu_context = GpuContext::new(GpuBackend::Cpu)?; // Using CPU backend for demo
     println!("   Backend: {:?}", gpu_context.backend());
 
-    // Create ultra-GPU optimizer
-    let optimizer = UltraGpuOptimizer::new()
+    // Create advanced-GPU optimizer
+    let optimizer = AdvancedGpuOptimizer::new()
         .with_adaptive_kernels(true)
         .with_memory_prefetch(true)
         .with_multi_gpu(false) // Single GPU for demo
         .with_auto_tuning(true);
 
-    // Generate ultra-optimized matrix
-    println!("🔥 Generating ultra-optimized matrix...");
+    // Generate advanced-optimized matrix
+    println!("🔥 Generating advanced-optimized matrix...");
     let start_time = Instant::now();
-    let matrix = optimizer.generate_ultra_optimized_matrix(
+    let matrix = optimizer.generate_advanced_optimized_matrix(
         &gpu_context,
         500,      // rows
         200,      // cols
@@ -326,15 +326,15 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_analytics_integration() {
+    fn test_advanced_analytics_integration() {
         let dataset = create_sample_dataset().unwrap();
-        let result = demonstrate_ultra_analytics(&dataset);
+        let result = demonstrate_advanced_analytics(&dataset);
         assert!(result.is_ok());
     }
 
     #[test]
     fn test_gpu_optimization_integration() {
-        let result = demonstrate_ultra_gpu_optimization();
+        let result = demonstrate_advanced_gpu_optimization();
         assert!(result.is_ok());
     }
 

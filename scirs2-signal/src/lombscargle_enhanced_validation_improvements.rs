@@ -10,11 +10,10 @@
 //! - Memory leak detection for large signals
 
 use crate::error::{SignalError, SignalResult};
-use crate::lombscargle::{lombscargle, AutoFreqMethod};
-use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
-use ndarray::{Array1, ArrayView1};
+use crate::lombscargle::lombscargle;
+use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig};
+use ndarray::Array1;
 use num_traits::{Float, NumCast};
-use rand::prelude::*;
 use rand::Rng;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::f64::consts::PI;
@@ -138,7 +137,16 @@ pub fn validate_bootstrap_confidence_intervals(
         let sorted_time: Vec<f64> = indices.iter().map(|&i| bootstrap_time[i]).collect();
 
         // Compute Lomb-Scargle periodogram
-        match lombscargle(&sorted_signal, &sorted_time, None, None, None, None, None) {
+        match lombscargle(
+            &sorted_signal,
+            &sorted_time,
+            None,
+            Some("standard"),
+            Some(true),
+            Some(true),
+            Some(1.0),
+            None,
+        ) {
             Ok((freqs, power)) => {
                 bootstrap_powers.push(power);
                 successful_iterations += 1;
@@ -193,7 +201,16 @@ pub fn analyze_numerical_precision(
     let time_f32_as_f64: Vec<f64> = time_f32.iter().map(|&x| x as f64).collect();
 
     // Compute using both precisions
-    let (freqs_f64, power_f64) = lombscargle(signal, time, None, None, None, None, None)?;
+    let (freqs_f64, power_f64) = lombscargle(
+        signal,
+        time,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        Some(1.0),
+        None,
+    )?;
     let (freqs_f32, power_f32) = lombscargle(
         &signal_f32_as_f64,
         &time_f32_as_f64,
@@ -276,7 +293,16 @@ pub fn analyze_memory_performance(
             peak_memory = peak_memory.max(estimated_memory);
             allocation_count += 1;
 
-            match lombscargle(&signal, &time, None, None, None, None, None) {
+            match lombscargle(
+                &signal,
+                &time,
+                None,
+                Some("standard"),
+                Some(true),
+                Some(true),
+                Some(1.0),
+                None,
+            ) {
                 Ok(_) => {
                     let duration = start_time.elapsed();
 
@@ -351,7 +377,16 @@ pub fn analyze_statistical_power(
                 })
                 .collect();
 
-            match lombscargle(&signal, &time, None, None, None, None, None) {
+            match lombscargle(
+                &signal,
+                &time,
+                None,
+                Some("standard"),
+                Some(true),
+                Some(true),
+                Some(1.0),
+                None,
+            ) {
                 Ok((freqs, power)) => {
                     // Find peak
                     let max_power = power.iter().cloned().fold(0.0, f64::max);
@@ -413,7 +448,16 @@ pub fn validate_cross_implementation_consistency(
     check_finite(time, "time")?;
 
     // Standard implementation
-    let (freqs_std, power_std) = lombscargle(signal, time, None, None, None, None, None)?;
+    let (freqs_std, power_std) = lombscargle(
+        signal,
+        time,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        Some(1.0),
+        None,
+    )?;
 
     // Enhanced implementation
     let config = LombScargleConfig::default();
@@ -605,7 +649,7 @@ fn compute_correlation(x: &[f64], y: &[f64]) -> f64 {
 
 /// Comprehensive enhanced validation for Lomb-Scargle periodogram
 ///
-/// This function performs ultra-comprehensive validation including:
+/// This function performs advanced-comprehensive validation including:
 /// - Statistical power analysis across multiple SNR levels
 /// - Bootstrap confidence interval validation
 /// - Cross-implementation consistency testing
@@ -783,7 +827,16 @@ fn test_edge_case_robustness() -> SignalResult<f64> {
     // Test 1: Empty signal
     let empty_signal = vec![];
     let empty_time = vec![];
-    match lombscargle(&empty_signal, &empty_time, None, None, None, None, None) {
+    match lombscargle(
+        &empty_signal,
+        &empty_time,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        Some(1.0),
+        None,
+    ) {
         Err(_) => (),           // Expected behavior
         Ok(_) => score -= 20.0, // Should fail gracefully
     }
@@ -791,7 +844,16 @@ fn test_edge_case_robustness() -> SignalResult<f64> {
     // Test 2: Single point
     let single_signal = vec![1.0];
     let single_time = vec![0.0];
-    match lombscargle(&single_signal, &single_time, None, None, None, None, None) {
+    match lombscargle(
+        &single_signal,
+        &single_time,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        Some(1.0),
+        None,
+    ) {
         Err(_) => (),           // Expected behavior
         Ok(_) => score -= 10.0, // May or may not work
     }
@@ -822,7 +884,16 @@ fn test_edge_case_robustness() -> SignalResult<f64> {
     // Test 4: Very large values
     let large_signal = vec![1e10; 50];
     let large_time: Vec<f64> = (0..50).map(|i| i as f64).collect();
-    match lombscargle(&large_signal, &large_time, None, None, None, None, None) {
+    match lombscargle(
+        &large_signal,
+        &large_time,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        Some(1.0),
+        None,
+    ) {
         Ok((_, power)) => {
             if !power.iter().all(|&p| p.is_finite()) {
                 score -= 20.0;
@@ -834,7 +905,16 @@ fn test_edge_case_robustness() -> SignalResult<f64> {
     // Test 5: Very small values
     let small_signal = vec![1e-10; 50];
     let small_time: Vec<f64> = (0..50).map(|i| i as f64).collect();
-    match lombscargle(&small_signal, &small_time, None, None, None, None, None) {
+    match lombscargle(
+        &small_signal,
+        &small_time,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        Some(1.0),
+        None,
+    ) {
         Ok((_, power)) => {
             if !power.iter().all(|&p| p.is_finite() && p >= 0.0) {
                 score -= 20.0;
@@ -857,7 +937,16 @@ fn benchmark_lombscargle_performance(
 
     for _ in 0..n_iterations {
         let start = Instant::now();
-        let _ = lombscargle(signal, time, None, None, None, None, None)?;
+        let _ = lombscargle(
+            signal,
+            time,
+            None,
+            Some("standard"),
+            Some(true),
+            Some(true),
+            Some(1.0),
+            None,
+        )?;
         times.push(start.elapsed().as_secs_f64() * 1000.0); // Convert to ms
     }
 
@@ -913,7 +1002,16 @@ fn validate_simd_scalar_consistency(signal: &[f64], time: &[f64]) -> SignalResul
     let consistency_score = 95.0;
 
     // Basic validation that the signal processing doesn't fail
-    match lombscargle(signal, time, None, None, None, None, None) {
+    match lombscargle(
+        signal,
+        time,
+        None,
+        Some("standard"),
+        Some(true),
+        Some(true),
+        Some(1.0),
+        None,
+    ) {
         Ok((_, power)) => {
             if power.iter().all(|&p| p.is_finite() && p >= 0.0) {
                 Ok(consistency_score)

@@ -12,7 +12,7 @@ use crate::parametric_advanced_enhanced::comprehensive_parametric_validation;
 use crate::scipy_validation_comprehensive::{
     run_comprehensive_scipy_validation, ComprehensiveSciPyValidationResult,
 };
-use crate::wpt_super_validation::{run_ultra_wpt_validation, UltraWptValidationResult};
+use crate::wpt_super_validation::{run_advanced_wpt_validation, AdvancedWptValidationResult};
 use std::time::Instant;
 
 /// Comprehensive validation result for Advanced mode
@@ -24,8 +24,8 @@ pub struct ComprehensiveValidationResult {
     pub scipy_validation: ComprehensiveSciPyValidationResult,
     /// Enhanced multitaper validation
     pub multitaper_validation: EnhancedMultitaperValidationResult,
-    /// Ultra WPT validation
-    pub wpt_validation: UltraWptValidationResult,
+    /// Advanced WPT validation
+    pub wpt_validation: AdvancedWptValidationResult,
     /// Parametric estimation validation result (simplified)
     pub parametric_validation_passed: bool,
     /// Overall Advanced mode score
@@ -71,7 +71,7 @@ pub fn run_comprehensive_validation() -> SignalResult<ComprehensiveValidationRes
 
     // Run WPT validation
     println!("4/5 Running super WPT validation...");
-    let wpt_validation = run_ultra_wpt_validation()?;
+    let wpt_validation = run_advanced_wpt_validation()?;
 
     // Run parametric validation (simplified)
     println!("5/5 Running parametric validation...");
@@ -135,7 +135,7 @@ fn compute_advanced_score(
     edge_case: &EdgeCaseValidationResult,
     scipy: &ComprehensiveSciPyValidationResult,
     multitaper: &EnhancedMultitaperValidationResult,
-    wpt: &UltraWptValidationResult,
+    wpt: &AdvancedWptValidationResult,
     parametric_passed: bool,
 ) -> f64 {
     let mut total_score = 0.0;
@@ -226,7 +226,7 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
         result
             .edge_case_validation
             .sparse_sampling
-            .ultra_sparse_accuracy
+            .advanced_sparse_accuracy
             * 100.0
     ));
     report.push_str(&format!(
@@ -234,7 +234,7 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
         result
             .edge_case_validation
             .dense_sampling
-            .ultra_dense_accuracy
+            .advanced_dense_accuracy
             * 100.0
     ));
     report.push_str(&format!(
@@ -299,7 +299,7 @@ pub fn generate_comprehensive_report(result: &ComprehensiveValidationResult) -> 
     ));
 
     // WPT Validation
-    report.push_str("### 4. Ultra Wavelet Packet Transform Validation\n");
+    report.push_str("### 4. Advanced Wavelet Packet Transform Validation\n");
     report.push_str(&format!(
         "- **WPT Validation Score:** {:.2}%\n",
         result.wpt_validation.overall_validation_score

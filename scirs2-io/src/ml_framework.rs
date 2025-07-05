@@ -4019,7 +4019,7 @@ pub mod model_hub {
             // This would require GitHub API integration for a complete implementation
             Ok(vec![
                 "pytorch/vision".to_string(),
-                "ultralytics/yolov5".to_string(),
+                "advancedlytics/yolov5".to_string(),
                 "rwightman/gen-efficientnet-pytorch".to_string(),
             ])
         }

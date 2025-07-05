@@ -4,7 +4,7 @@
 
 use crate::error::{StatsError, StatsResult};
 use num_traits::{Float, NumCast};
-use rand::thread_rng;
+use rand::rng;
 use rand_distr::{Distribution, StudentT as RandStudentT};
 use std::fmt::Debug;
 
@@ -249,7 +249,7 @@ impl<F: Float + NumCast + Debug + std::fmt::Display> StudentT<F> {
     /// assert_eq!(samples.len(), 1000);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mut samples = Vec::with_capacity(size);
         
         for _ in 0..size {

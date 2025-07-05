@@ -2,7 +2,7 @@
 //!
 //! This module provides next-generation parallel filtering operations that push the boundaries
 //! of performance and capability. It focuses on real-time streaming, advanced multi-rate systems,
-//! sparse filtering, and ultra-high-performance parallel spectral processing.
+//! sparse filtering, and advanced-high-performance parallel spectral processing.
 
 use crate::error::{SignalError, SignalResult};
 use crate::filter::parallel::{ParallelFilterConfig, ParallelFilterType};

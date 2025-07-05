@@ -1182,9 +1182,9 @@ fn bench_scaling_analysis(c: &mut Criterion) {
     group.finish();
 }
 
-/// Ultra-comprehensive stress test runner for extreme large graphs
+/// Advanced-comprehensive stress test runner for extreme large graphs
 #[allow(dead_code)]
-pub fn run_ultra_comprehensive_stress_tests() {
+pub fn run_advanced_comprehensive_stress_tests() {
     println!("🎯 Starting ULTRA-COMPREHENSIVE large graph stress tests...");
     println!("==========================================================");
     println!("⚠️  WARNING: This test suite may take 30+ minutes and use >16GB RAM");

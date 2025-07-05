@@ -1239,7 +1239,6 @@ fn execute_compute_shader_with_validation(
         }
     }
 
-    #[allow(unreachable_code)]
     unreachable!()
 }
 

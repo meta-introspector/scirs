@@ -2905,7 +2905,7 @@ mod tests {
 
     #[test]
     fn test_ecosystem_configuration() {
-        let config = advancedEcosystemConfig::default();
+        let config = AdvancedEcosystemConfig::default();
         assert!(config.enable_cross_module_optimization);
         assert!(config.enable_adaptive_load_balancing);
         assert!(config.enable_fault_tolerance);

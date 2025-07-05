@@ -521,7 +521,7 @@ fn condensed_matter_phase_transitions() -> Result<(), Box<dyn std::error::Error>
     println!();
 
     println!("💡 EXPERIMENTAL REALIZATIONS:");
-    println!("• Ising model: quantum gas microscopes with ultracold atoms");
+    println!("• Ising model: quantum gas microscopes with advancedcold atoms");
     println!("• BCS superconductors: cuprates, iron-based, organic superconductors");
     println!("• Quantum criticality: heavy fermion compounds, quantum magnets");
     println!("• Topological phases: quantum Hall systems, topological insulators");
@@ -1403,7 +1403,7 @@ fn nonlinear_optics_solitons() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     println!("💡 APPLICATIONS & DISCOVERIES:");
-    println!("• Optical solitons: ultra-fast telecommunications, pulse compression");
+    println!("• Optical solitons: optimized telecommunications, pulse compression");
     println!("• Supercontinuum: spectroscopy, optical coherence tomography");
     println!("• Rogue waves: understanding extreme events in optics and oceanography");
     println!("• Frequency combs: precision metrology, Nobel Prize 2005 (Hänsch, Hall)");
@@ -1439,7 +1439,7 @@ fn cosmic_ray_physics() -> Result<(), Box<dyn std::error::Error>> {
         ("Low energy", 1e12, 1e15, 2.7),
         ("Knee region", 1e15, 1e17, 3.0),
         ("Ankle region", 1e17, 1e19, 2.6),
-        ("Ultra-high", 1e19, 1e21, 4.0),
+        ("Advanced-high", 1e19, 1e21, 4.0),
     ];
 
     println!("COSMIC RAY FLUX:");
@@ -1535,10 +1535,10 @@ fn cosmic_ray_physics() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let detector_rates = vec![
-        ("Muon counter", 1.0, 3600.0),      // 1 Hz, 1 hour
-        ("Neutron monitor", 100.0, 60.0),   // 100 Hz, 1 minute
-        ("Air shower", 0.01, 86400.0),      // 0.01 Hz, 1 day
-        ("Ultra-high E", 1e-6, 31536000.0), // 1 per year
+        ("Muon counter", 1.0, 3600.0),         // 1 Hz, 1 hour
+        ("Neutron monitor", 100.0, 60.0),      // 100 Hz, 1 minute
+        ("Air shower", 0.01, 86400.0),         // 0.01 Hz, 1 day
+        ("Advanced-high E", 1e-6, 31536000.0), // 1 per year
     ];
 
     println!("DETECTION STATISTICS:");
@@ -1562,7 +1562,7 @@ fn cosmic_ray_physics() -> Result<(), Box<dyn std::error::Error>> {
     println!("5. GZK CUTOFF: Photodisintegration Process");
     println!("==========================================");
     println!();
-    println!("Ultra-high energy protons interact with CMB photons:");
+    println!("Advanced-high energy protons interact with CMB photons:");
     println!("p + γ_CMB → Δ⁺ → p + π⁰ or n + π⁺");
     println!();
     println!("The threshold energy is E_th ≈ 6×10¹⁹ eV for head-on collision.");
@@ -1592,7 +1592,7 @@ fn cosmic_ray_physics() -> Result<(), Box<dyn std::error::Error>> {
     println!("• Victor Hess (1912): Discovery of cosmic radiation, Nobel Prize 1936");
     println!("• Positron discovery (1932): First antimatter particle by Carl Anderson");
     println!("• Muon discovery (1936): \"Who ordered that?\" - I.I. Rabi");
-    println!("• Pierre Auger Observatory: Ultra-high energy cosmic ray studies");
+    println!("• Pierre Auger Observatory: Advanced-high energy cosmic ray studies");
     println!("• IceCube: Neutrino astronomy with cubic kilometer detector");
     println!();
 

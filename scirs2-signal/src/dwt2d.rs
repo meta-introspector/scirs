@@ -2366,7 +2366,7 @@ where
         Dwt2dConfig {
             preallocate_memory: true,
             use_inplace: false,
-            memory_alignment: if caps.has_avx512 {
+            memory_alignment: if caps.avx512_available {
                 64
             } else if caps.has_avx2 {
                 32

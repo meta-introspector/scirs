@@ -284,14 +284,14 @@ pub fn simd_add_cache_optimized_f32(a: &ArrayView1<f32>, b: &ArrayView1<f32>) ->
     f32::simd_add_cache_optimized(a, b)
 }
 
-/// Ultra-optimized fused multiply-add using unified interface
+/// Advanced-optimized fused multiply-add using unified interface
 #[allow(dead_code)]
-pub fn simd_fma_ultra_optimized_f32(
+pub fn simd_fma_advanced_optimized_f32(
     a: &ArrayView1<f32>,
     b: &ArrayView1<f32>,
     c: &ArrayView1<f32>,
 ) -> Array1<f32> {
-    f32::simd_fma_ultra_optimized(a, b, c)
+    f32::simd_fma_advanced_optimized(a, b, c)
 }
 
 /// Adaptive SIMD operation selector using unified interface
@@ -306,14 +306,14 @@ pub fn simd_add_cache_optimized_f64(a: &ArrayView1<f64>, b: &ArrayView1<f64>) ->
     f64::simd_add_cache_optimized(a, b)
 }
 
-/// Ultra-optimized fused multiply-add for f64 using unified interface
+/// Advanced-optimized fused multiply-add for f64 using unified interface
 #[allow(dead_code)]
-pub fn simd_fma_ultra_optimized_f64(
+pub fn simd_fma_advanced_optimized_f64(
     a: &ArrayView1<f64>,
     b: &ArrayView1<f64>,
     c: &ArrayView1<f64>,
 ) -> Array1<f64> {
-    f64::simd_fma_ultra_optimized(a, b, c)
+    f64::simd_fma_advanced_optimized(a, b, c)
 }
 
 /// Adaptive SIMD operation selector for f64 using unified interface

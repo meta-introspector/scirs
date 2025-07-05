@@ -52,7 +52,11 @@ pub fn levene<F>(
     proportion_to_cut: F,
 ) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Debug
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + NumCast
+        + std::fmt::Debug
         + std::fmt::Display,
 {
     // Validate center parameter
@@ -168,8 +172,7 @@ where
 #[allow(dead_code)]
 fn calculate_mean<F>(data: &[F]) -> F
 where
-    F: Float + std::iter::Sum<F>
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::fmt::Display,
 {
     let sum = data.iter().cloned().sum::<F>();
     sum / F::from(data.len()).unwrap()
@@ -179,8 +182,7 @@ where
 #[allow(dead_code)]
 fn calculate_median<F>(data: &[F]) -> F
 where
-    F: Float + Copy
-        + std::fmt::Display,
+    F: Float + Copy + std::fmt::Display,
 {
     let mut sorted = data.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
@@ -199,8 +201,7 @@ where
 #[allow(dead_code)]
 fn trim_both<F>(sorted_data: &[F], proportion: F) -> Vec<F>
 where
-    F: Float + Copy
-        + std::fmt::Display,
+    F: Float + Copy + std::fmt::Display,
 {
     if proportion <= F::zero() || proportion >= F::from(0.5).unwrap() {
         return sorted_data.to_vec();
@@ -394,7 +395,11 @@ fn gamma_function(x: f64) -> f64 {
 #[allow(dead_code)]
 pub fn bartlett<F>(samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Debug
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + NumCast
+        + std::fmt::Debug
         + std::fmt::Display,
 {
     // Check if there are at least two groups
@@ -634,7 +639,11 @@ fn gamma_continued_fraction(a: f64, x: f64) -> f64 {
 #[allow(dead_code)]
 pub fn brown_forsythe<F>(samples: &[ArrayView1<F>]) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Debug
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + NumCast
+        + std::fmt::Debug
         + std::fmt::Display,
 {
     // The Brown-Forsythe test is just Levene's test with center="median"

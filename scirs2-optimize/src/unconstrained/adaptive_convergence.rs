@@ -74,7 +74,7 @@ pub struct AdaptiveToleranceState {
     /// Estimated gradient scale
     gradient_scale: f64,
     /// Number of stagnant iterations
-    stagnant_iterations: usize,
+    stagnant_nit: usize,
     /// Problem dimension
     problem_dim: usize,
     /// Options
@@ -93,7 +93,7 @@ impl AdaptiveToleranceState {
             step_history: VecDeque::with_capacity(options.history_length),
             function_scale: 1.0,
             gradient_scale: 1.0,
-            stagnant_iterations: 0,
+            stagnant_nit: 0,
             problem_dim,
             options,
         }
@@ -344,7 +344,7 @@ impl AdaptiveToleranceState {
         AdaptationStats {
             function_scale: self.function_scale,
             gradient_scale: self.gradient_scale,
-            stagnant_iterations: self.stagnant_iterations,
+            stagnant_nit: self.stagnant_iterations,
             current_ftol: self.current_ftol,
             current_gtol: self.current_gtol,
             current_xtol: self.current_xtol,
@@ -370,7 +370,7 @@ pub struct ConvergenceStatus {
 pub struct AdaptationStats {
     pub function_scale: f64,
     pub gradient_scale: f64,
-    pub stagnant_iterations: usize,
+    pub stagnant_nit: usize,
     pub current_ftol: f64,
     pub current_gtol: f64,
     pub current_xtol: f64,
@@ -489,7 +489,7 @@ mod tests {
         }
 
         let stats = state.get_adaptation_stats();
-        assert!(stats.stagnant_iterations > 5);
+        assert!(stats.stagnant_nit > 5);
     }
 
     #[test]

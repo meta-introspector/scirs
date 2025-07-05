@@ -1827,13 +1827,13 @@ pub fn gpu_batch_matmul_transformer(
 
     if !ctx.is_gpu_available() {
         // Fallback to optimized SIMD matmul
-        return crate::simd_ops::simd_matmul_attention_ultra(a, b);
+        return crate::simd_ops::simd_matmul_attention_advanced(a, b);
     }
 
     // Use GPU for large matrices where it's beneficial
     if m * n * k < 1024 * 1024 {
         // Small matrices benefit more from SIMD
-        return crate::simd_ops::simd_matmul_attention_ultra(a, b);
+        return crate::simd_ops::simd_matmul_attention_advanced(a, b);
     }
 
     let a_flat: Vec<f32> = a.iter().cloned().collect();
@@ -1934,7 +1934,7 @@ pub fn gpu_batch_matmul_transformer(
         }
         Err(_) => {
             // Fall back to SIMD
-            crate::simd_ops::simd_matmul_attention_ultra(a, b)
+            crate::simd_ops::simd_matmul_attention_advanced(a, b)
         }
     }
 }
@@ -1955,7 +1955,7 @@ pub fn gpu_batch_matmul_transformer(
 ///
 /// 10-50x speedup for large descriptor sets (>1000 features).
 #[allow(dead_code)]
-pub fn gpu_feature_matching_ultra(
+pub fn gpu_feature_matching_advanced(
     ctx: &GpuVisionContext,
     descriptors1: &ArrayView2<f32>,
     descriptors2: &ArrayView2<f32>,
@@ -1972,7 +1972,11 @@ pub fn gpu_feature_matching_ultra(
 
     if !ctx.is_gpu_available() || n1 < 100 || n2 < 100 {
         // Use SIMD for small sets or when GPU unavailable
-        return crate::simd_ops::simd_feature_matching_ultra(descriptors1, descriptors2, threshold);
+        return crate::simd_ops::simd_feature_matching_advanced(
+            descriptors1,
+            descriptors2,
+            threshold,
+        );
     }
 
     let desc1_flat: Vec<f32> = descriptors1.iter().cloned().collect();
@@ -2085,7 +2089,7 @@ pub fn gpu_feature_matching_ultra(
         }
         Err(_) => {
             // Fall back to SIMD
-            crate::simd_ops::simd_feature_matching_ultra(descriptors1, descriptors2, threshold)
+            crate::simd_ops::simd_feature_matching_advanced(descriptors1, descriptors2, threshold)
         }
     }
 }
@@ -2296,7 +2300,7 @@ fn fallback_multi_head_attention(
         let v_head = values.slice(ndarray::s![.., head_start..head_end]);
 
         // Compute attention scores: Q @ K^T
-        let scores = crate::simd_ops::simd_matmul_attention_ultra(&q_head, &k_head.t())?;
+        let scores = crate::simd_ops::simd_matmul_attention_advanced(&q_head, &k_head.t())?;
 
         // Apply scaling
         let scaled_scores = scores.mapv(|x| x * scale);
@@ -2316,7 +2320,7 @@ fn fallback_multi_head_attention(
             });
 
         // Apply attention to values: attention_weights @ V
-        let head_output = crate::simd_ops::simd_matmul_attention_ultra(
+        let head_output = crate::simd_ops::simd_matmul_attention_advanced(
             &attention_weights.view(),
             &v_head.view(),
         )?;

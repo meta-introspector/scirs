@@ -62,7 +62,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         // Print history
         println!("\nLearning rate history:");
         for (i, &lr) in scheduler.history().iter().enumerate() {
-            println!("Change {}: {:.6}", i, lr);
+            println!("Change {i}: {lr:.6}");
         }
 
         // Best metric value
@@ -105,10 +105,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             // Show how to extract configuration values
             let (initial_lr, factor, patience, min_lr, mode) = scheduler_config.as_tuple();
             println!("\nConfiguration as tuple:");
-            println!(
-                "  ({}, {}, {}, {}, {})",
-                initial_lr, factor, patience, min_lr, mode
-            );
+            println!("  ({initial_lr}, {factor}, {patience}, {min_lr}, {mode})");
 
             println!("\nThis configuration can be used to create external schedulers");
             println!("from scirs2-optim or other optimization libraries.");

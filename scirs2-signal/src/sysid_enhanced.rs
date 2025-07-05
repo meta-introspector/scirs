@@ -936,7 +936,7 @@ fn validate_model(
 /// Cross-validate model performance
 #[allow(dead_code)]
 fn cross_validate_model(
-    model: &SystemModel,
+    _model: &SystemModel,
     input: &Array1<f64>,
     output: &Array1<f64>,
     k_folds: usize,
@@ -1718,7 +1718,7 @@ pub fn robust_system_identification(
     let mut clean_input = input.clone();
     let mut clean_output = output.clone();
 
-    for iter in 0..max_iterations {
+    for _iter in 0..max_iterations {
         // Identify with current clean data
         let result = enhanced_system_identification(&clean_input, &clean_output, config)?;
 

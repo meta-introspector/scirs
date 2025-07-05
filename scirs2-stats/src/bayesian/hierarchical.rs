@@ -5,9 +5,9 @@
 
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::Rng;
 use rand_distr::{Distribution, Gamma, Normal};
 use scirs2_core::validation::*;
+use scirs2_core::Rng;
 
 /// Hierarchical linear model with random intercepts and slopes
 ///

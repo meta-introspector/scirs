@@ -1,4 +1,4 @@
-//! Ultra-optimized memory pool system for spatial algorithms
+//! Advanced-optimized memory pool system for spatial algorithms
 //!
 //! This module provides advanced memory management strategies specifically
 //! designed for spatial computing algorithms that perform frequent allocations.
@@ -105,7 +105,7 @@ impl Default for MemoryPoolConfig {
     }
 }
 
-/// Ultra-optimized distance computation memory pool
+/// Advanced-optimized distance computation memory pool
 pub struct DistancePool {
     config: MemoryPoolConfig,
     distance_buffers: Mutex<VecDeque<Box<[f64]>>>,

@@ -89,7 +89,7 @@
 //!
 //! println!("Solution: {:?}", result.x);
 //! println!("Function value at solution: {}", result.fun);
-//! println!("Number of iterations: {}", result.iterations);
+//! println!("Number of nit: {}", result.nit);
 //! println!("Success: {}", result.success);
 //! # Ok(())
 //! # }

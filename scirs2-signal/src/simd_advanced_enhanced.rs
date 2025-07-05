@@ -214,7 +214,7 @@ pub struct WaveletPerformanceMetrics {
     pub simd_speedup: f64,
 }
 
-/// Ultra-high performance SIMD FFT implementation
+/// Advanced-high performance SIMD FFT implementation
 #[allow(dead_code)]
 pub fn advanced_simd_fft(
     input: &Array1<Complex64>,
@@ -311,7 +311,7 @@ pub fn advanced_simd_rfft(
     })
 }
 
-/// Ultra-high performance SIMD STFT implementation
+/// Advanced-high performance SIMD STFT implementation
 #[allow(dead_code)]
 pub fn advanced_simd_stft(
     signal: &Array1<f64>,

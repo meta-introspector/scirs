@@ -2,7 +2,7 @@
 //!
 //! This module implements brain-inspired computing paradigms for spatial algorithms,
 //! leveraging spiking neural networks, memristive computing, and neuroplasticity
-//! for ultra-efficient adaptive spatial processing. These algorithms mimic biological
+//! for advanced-efficient adaptive spatial processing. These algorithms mimic biological
 //! neural computation to achieve extreme energy efficiency and real-time adaptation.
 //!
 //! # Features

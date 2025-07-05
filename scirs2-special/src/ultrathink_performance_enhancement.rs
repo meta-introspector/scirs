@@ -1,4 +1,4 @@
-//! Ultra-high performance enhancements for critical special functions
+//! Advanced-high performance enhancements for critical special functions
 //!
 //! This module provides state-of-the-art optimizations specifically targeting
 //! the most commonly used special functions identified through profiling.
@@ -44,7 +44,7 @@ impl Default for PerformanceConfig {
     }
 }
 
-/// Ultra-fast lookup table for gamma function in critical range [0.5, 2.5]
+/// Optimized lookup table for gamma function in critical range [0.5, 2.5]
 static GAMMA_LOOKUP_TABLE: LazyLock<Vec<f64>> = LazyLock::new(|| {
     const TABLE_SIZE: usize = 2000;
     const MIN_X: f64 = 0.5;
@@ -59,7 +59,7 @@ static GAMMA_LOOKUP_TABLE: LazyLock<Vec<f64>> = LazyLock::new(|| {
     table
 });
 
-/// Ultra-fast lookup table for J0 Bessel function in range [0, 20]
+/// Optimized lookup table for J0 Bessel function in range [0, 20]
 static J0_LOOKUP_TABLE: LazyLock<Vec<f64>> = LazyLock::new(|| {
     const TABLE_SIZE: usize = 20000;
     const MAX_X: f64 = 20.0;
@@ -128,9 +128,9 @@ fn j0_series_precise(x: f64) -> f64 {
     result
 }
 
-/// Ultra-fast gamma function with optimized lookup table
+/// Optimized gamma function with optimized lookup table
 #[allow(dead_code)]
-pub fn gamma_ultrafast(x: f64) -> SpecialResult<f64> {
+pub fn gamma_advancedfast(x: f64) -> SpecialResult<f64> {
     const MIN_X: f64 = 0.5;
     const MAX_X: f64 = 2.5;
     const TABLE_SIZE: usize = 2000;
@@ -155,19 +155,19 @@ pub fn gamma_ultrafast(x: f64) -> SpecialResult<f64> {
         if x <= 0.0 && x.fract() == 0.0 {
             return Err(SpecialError::DomainError("Gamma undefined for non-positive integers".to_string()));
         }
-        let reflected = gamma_ultrafast(1.0 - x)?;
+        let reflected = gamma_advancedfast(1.0 - x)?;
         Ok(std::f64::consts::PI / ((std::f64::consts::PI * x).sin() * reflected))
     } else {
         // Use recurrence relation to bring into lookup range
-        let mut result = gamma_ultrafast(x - 1.0)?;
+        let mut result = gamma_advancedfast(x - 1.0)?;
         result *= x - 1.0;
         Ok(result)
     }
 }
 
-/// Ultra-fast J0 Bessel function with lookup table
+/// Optimized J0 Bessel function with lookup table
 #[allow(dead_code)]
-pub fn j0_ultrafast(x: f64) -> SpecialResult<f64> {
+pub fn j0_advancedfast(x: f64) -> SpecialResult<f64> {
     let x_abs = x.abs();
     const MAX_X: f64 = 20.0;
     const TABLE_SIZE: usize = 20000;
@@ -195,9 +195,9 @@ pub fn j0_ultrafast(x: f64) -> SpecialResult<f64> {
     }
 }
 
-/// Ultra-fast array processing with adaptive optimization
+/// Optimized array processing with adaptive optimization
 #[allow(dead_code)]
-pub fn gamma_array_ultrafast(input: &ArrayView1<f64>, config: &PerformanceConfig) -> SpecialResult<Array1<f64>> {
+pub fn gamma_array_advancedfast(input: &ArrayView1<f64>, config: &PerformanceConfig) -> SpecialResult<Array1<f64>> {
     let len = input.len();
     let mut output = Array1::zeros(len);
     
@@ -213,7 +213,7 @@ pub fn gamma_array_ultrafast(input: &ArrayView1<f64>, config: &PerformanceConfig
                 .zip(output.as_slice_mut().unwrap().par_chunks_mut(config.chunk_size))
                 .try_for_each(|(input_chunk, output_chunk)| -> SpecialResult<()> {
                     for (i, &x) in input_chunk.iter().enumerate() {
-                        output_chunk[i] = gamma_ultrafast(x)?;
+                        output_chunk[i] = gamma_advancedfast(x)?;
                     }
                     Ok(())
                 })?;
@@ -231,13 +231,13 @@ pub fn gamma_array_ultrafast(input: &ArrayView1<f64>, config: &PerformanceConfig
             for i in 0..simd_chunks {
                 let start = i * 4;
                 for j in 0..4 {
-                    output[start + j] = gamma_ultrafast(input[start + j])?;
+                    output[start + j] = gamma_advancedfast(input[start + j])?;
                 }
             }
             
             // Handle remaining elements
             for i in (simd_chunks * 4)..len {
-                output[i] = gamma_ultrafast(input[i])?;
+                output[i] = gamma_advancedfast(input[i])?;
             }
             
             return Ok(output);
@@ -246,7 +246,7 @@ pub fn gamma_array_ultrafast(input: &ArrayView1<f64>, config: &PerformanceConfig
     
     // Fallback to scalar processing
     for (i, &x) in input.iter().enumerate() {
-        output[i] = gamma_ultrafast(x)?;
+        output[i] = gamma_advancedfast(x)?;
     }
     
     Ok(output)
@@ -302,7 +302,7 @@ where
 
 /// Advanced error function optimization using rational approximations
 #[allow(dead_code)]
-pub fn erf_ultrafast(x: f64) -> SpecialResult<f64> {
+pub fn erf_advancedfast(x: f64) -> SpecialResult<f64> {
     let abs_x = x.abs();
     
     if abs_x < 0.5 {
@@ -329,7 +329,7 @@ mod tests {
     use approx::assert_relative_eq;
     
     #[test]
-    fn test_gamma_ultrafast_accuracy() {
+    fn test_gamma_advancedfast_accuracy() {
         let test_values = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0];
         let expected = [
             1.7724538509055159, // Γ(0.5) = √π
@@ -341,13 +341,13 @@ mod tests {
         ];
         
         for (i, &x) in test_values.iter().enumerate() {
-            let result = gamma_ultrafast(x).unwrap();
+            let result = gamma_advancedfast(x).unwrap();
             assert_relative_eq!(result, expected[i], epsilon = 1e-10);
         }
     }
     
     #[test]
-    fn test_j0_ultrafast_accuracy() {
+    fn test_j0_advancedfast_accuracy() {
         let test_values = [0.0, 1.0, 2.0, 5.0, 10.0];
         let expected = [
             1.0,
@@ -358,7 +358,7 @@ mod tests {
         ];
         
         for (i, &x) in test_values.iter().enumerate() {
-            let result = j0_ultrafast(x).unwrap();
+            let result = j0_advancedfast(x).unwrap();
             assert_relative_eq!(result, expected[i], epsilon = 1e-8);
         }
     }
@@ -369,8 +369,8 @@ mod tests {
         let config = PerformanceConfig::default();
         
         let metrics = benchmark_function(
-            "gamma_array_ultrafast",
-            || gamma_array_ultrafast(&input.view(), &config).map(|_| ()),
+            "gamma_array_advancedfast",
+            || gamma_array_advancedfast(&input.view(), &config).map(|_| ()),
             1000,
             10,
         );

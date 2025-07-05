@@ -1,4 +1,4 @@
-//! Ultra-advanced survival analysis methods
+//! Advanced-advanced survival analysis methods
 //!
 //! This module implements state-of-the-art survival analysis techniques including:
 //! - Machine learning-based survival models (Random Survival Forests, Deep Survival)
@@ -16,10 +16,10 @@ use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-/// Ultra-advanced survival analysis framework
-pub struct UltraSurvivalAnalysis<F> {
+/// Advanced-advanced survival analysis framework
+pub struct AdvancedSurvivalAnalysis<F> {
     /// Configuration for survival analysis
-    config: UltraSurvivalConfig<F>,
+    config: AdvancedSurvivalConfig<F>,
     /// Fitted models
     models: HashMap<String, SurvivalModel<F>>,
     /// Model performance metrics
@@ -27,9 +27,9 @@ pub struct UltraSurvivalAnalysis<F> {
     _phantom: PhantomData<F>,
 }
 
-/// Configuration for ultra-advanced survival analysis
+/// Configuration for advanced-advanced survival analysis
 #[derive(Debug, Clone)]
-pub struct UltraSurvivalConfig<F> {
+pub struct AdvancedSurvivalConfig<F> {
     /// Survival models to fit
     pub models: Vec<SurvivalModelType<F>>,
     /// Evaluation metrics to compute
@@ -503,9 +503,9 @@ pub struct SurvivalPrediction<F> {
     pub percentile_survival_times: Array2<F>,
 }
 
-/// Ultra-advanced survival analysis results
+/// Advanced-advanced survival analysis results
 #[derive(Debug, Clone)]
-pub struct UltraSurvivalResults<F> {
+pub struct AdvancedSurvivalResults<F> {
     pub fitted_models: HashMap<String, SurvivalModel<F>>,
     pub model_comparison: ModelComparison<F>,
     pub ensemble_results: Option<EnsembleResults<F>>,
@@ -608,13 +608,22 @@ pub struct CompetingRisksResults<F> {
     pub years_of_life_lost: Array1<F>,
 }
 
-impl<F> UltraSurvivalAnalysis<F>
+impl<F> AdvancedSurvivalAnalysis<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + ndarray::ScalarOperand,
 {
-    /// Create new ultra-advanced survival analysis
-    pub fn new(config: UltraSurvivalConfig<F>) -> Self {
+    /// Create new advanced-advanced survival analysis
+    pub fn new(config: AdvancedSurvivalConfig<F>) -> Self {
         Self {
             config,
             models: HashMap::new(),
@@ -636,7 +645,7 @@ where
         durations: &ArrayView1<F>,
         events: &ArrayView1<bool>,
         covariates: &ArrayView2<F>,
-    ) -> StatsResult<UltraSurvivalResults<F>> {
+    ) -> StatsResult<AdvancedSurvivalResults<F>> {
         check_array_finite(durations, "durations")?;
         check_array_finite(covariates, "covariates")?;
 
@@ -689,7 +698,7 @@ where
         // Generate recommendations
         let recommendations = self.generate_recommendations(&model_comparison, &ensemble_results);
 
-        Ok(UltraSurvivalResults {
+        Ok(AdvancedSurvivalResults {
             fitted_models,
             model_comparison,
             ensemble_results,
@@ -740,7 +749,7 @@ where
 
         // Simplified Cox model fitting (would use proper partial likelihood)
         let coefficients = Array1::zeros(n_features);
-        let hazard_ratios = coefficients.mapv(|x| x.exp());
+        let hazard_ratios = coefficients.mapv(|x: F| x.exp());
         let standard_errors = Array1::ones(n_features) * F::from(0.1).unwrap();
         let p_values = Array1::from_elem(n_features, F::from(0.05).unwrap());
         let confidence_intervals = Array2::zeros((n_features, 2));
@@ -798,9 +807,9 @@ where
     fn fit_aft_model(
         &self,
         durations: &ArrayView1<F>,
-        events: &ArrayView1<bool>,
+        _events: &ArrayView1<bool>,
         covariates: &ArrayView2<F>,
-        distribution: AFTDistribution,
+        _distribution: AFTDistribution,
     ) -> StatsResult<SurvivalModel<F>> {
         let n_features = covariates.ncols();
 
@@ -809,10 +818,11 @@ where
         let scale_parameter = F::one();
         let shape_parameter = Some(F::from(2.0).unwrap());
         let log_likelihood = F::from(-200.0).unwrap();
-        let aic =
-            -F::from(2.0).unwrap() * log_likelihood + F::from(2.0 * (n_features + 1)).unwrap();
+        let aic = -F::from(2.0).unwrap() * log_likelihood
+            + F::from(2.0).unwrap() * F::from(n_features + 1).unwrap();
         let bic = -F::from(2.0).unwrap() * log_likelihood
-            + F::from((n_features + 1) as f64).unwrap() * durations.len().ln();
+            + F::from((n_features + 1) as f64).unwrap()
+                * F::from(durations.len() as f64).unwrap().ln();
         let residuals = Array1::zeros(durations.len());
 
         let aft_model = AFTModel {
@@ -933,7 +943,7 @@ where
     fn ensemble_analysis(
         &self,
         models: &HashMap<String, SurvivalModel<F>>,
-        config: &EnsembleConfig<F>,
+        _config: &EnsembleConfig<F>,
     ) -> StatsResult<EnsembleResults<F>> {
         let n_models = models.len();
 
@@ -1097,10 +1107,9 @@ where
     }
 }
 
-impl<F> Default for UltraSurvivalConfig<F>
+impl<F> Default for AdvancedSurvivalConfig<F>
 where
-    F: Float + NumCast + Copy
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + std::fmt::Display,
 {
     fn default() -> Self {
         Self {
@@ -1136,9 +1145,9 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_ultra_survival_analysis() {
-        let config = UltraSurvivalConfig::default();
-        let mut analyzer = UltraSurvivalAnalysis::new(config);
+    fn test_advanced_survival_analysis() {
+        let config = AdvancedSurvivalConfig::default();
+        let mut analyzer = AdvancedSurvivalAnalysis::new(config);
 
         let durations = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let events = array![true, false, true, true, false];
@@ -1154,8 +1163,8 @@ mod tests {
 
     #[test]
     fn test_survival_prediction() {
-        let config = UltraSurvivalConfig::default();
-        let analyzer = UltraSurvivalAnalysis::new(config);
+        let config = AdvancedSurvivalConfig::default();
+        let analyzer = AdvancedSurvivalAnalysis::new(config);
 
         let covariates = array![[1.0, 2.0], [3.0, 4.0]];
         let time_points = array![1.0, 2.0, 3.0];

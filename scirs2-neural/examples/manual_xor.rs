@@ -1,6 +1,6 @@
 use ndarray::{Array, IxDyn};
-use rand::rngs::SmallRng;
-use rand::SeedableRng;
+use ndarray_rand::rand::rngs::SmallRng;
+use ndarray_rand::rand::SeedableRng;
 use scirs2_neural::error::Result;
 use scirs2_neural::layers::{Dense, Layer};
 use scirs2_neural::losses::{Loss, MeanSquaredError};

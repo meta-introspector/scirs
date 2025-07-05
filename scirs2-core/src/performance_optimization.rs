@@ -1719,7 +1719,7 @@ pub mod benchmarking {
     }
 }
 
-/// Ultra-optimized cache-aware algorithms for maximum performance
+/// Advanced-optimized cache-aware algorithms for maximum performance
 ///
 /// This module provides adaptive algorithms that automatically adjust their
 /// behavior based on cache performance characteristics and system topology.

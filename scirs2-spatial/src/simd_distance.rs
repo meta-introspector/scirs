@@ -456,13 +456,13 @@ fn linear_to_condensed_indices(linear_idx: usize, n: usize) -> (usize, usize) {
     (i, j)
 }
 
-/// Ultra-optimized SIMD-accelerated clustering algorithms
-pub mod ultra_simd_clustering {
+/// Advanced-optimized SIMD-accelerated clustering algorithms
+pub mod advanced_simd_clustering {
     use super::*;
     use ndarray::{Array1, Array2};
 
-    /// Ultra-optimized SIMD K-means implementation with vectorized operations
-    pub struct UltraSimdKMeans {
+    /// Advanced-optimized SIMD K-means implementation with vectorized operations
+    pub struct AdvancedSimdKMeans {
         k: usize,
         max_iterations: usize,
         tolerance: f64,
@@ -470,8 +470,8 @@ pub mod ultra_simd_clustering {
         block_size: usize,
     }
 
-    impl UltraSimdKMeans {
-        /// Create a new ultra-optimized SIMD K-means clusterer
+    impl AdvancedSimdKMeans {
+        /// Create a new advanced-optimized SIMD K-means clusterer
         pub fn new(k: usize) -> Self {
             Self {
                 k,
@@ -494,7 +494,7 @@ pub mod ultra_simd_clustering {
             self
         }
 
-        /// Ultra-optimized SIMD K-means clustering
+        /// Advanced-optimized SIMD K-means clustering
         pub fn fit(
             &self,
             points: &ArrayView2<'_, f64>,
@@ -614,7 +614,7 @@ pub mod ultra_simd_clustering {
             Ok(centroids)
         }
 
-        /// Ultra-optimized vectorized point assignment with block processing
+        /// Advanced-optimized vectorized point assignment with block processing
         fn assign_points_vectorized(
             &self,
             points: &ArrayView2<'_, f64>,
@@ -661,7 +661,7 @@ pub mod ultra_simd_clustering {
             Ok(())
         }
 
-        /// Ultra-optimized vectorized centroid updates with FMA
+        /// Advanced-optimized vectorized centroid updates with FMA
         fn update_centroids_vectorized(
             &self,
             points: &ArrayView2<'_, f64>,
@@ -729,21 +729,21 @@ pub mod ultra_simd_clustering {
         }
     }
 
-    /// Ultra-optimized SIMD nearest neighbor operations
-    pub struct UltraSimdNearestNeighbors {
+    /// Advanced-optimized SIMD nearest neighbor operations
+    pub struct AdvancedSimdNearestNeighbors {
         block_size: usize,
         #[allow(dead_code)]
         use_parallel_heaps: bool,
     }
 
-    impl Default for UltraSimdNearestNeighbors {
+    impl Default for AdvancedSimdNearestNeighbors {
         fn default() -> Self {
             Self::new()
         }
     }
 
-    impl UltraSimdNearestNeighbors {
-        /// Create new ultra-optimized SIMD nearest neighbor searcher
+    impl AdvancedSimdNearestNeighbors {
+        /// Create new advanced-optimized SIMD nearest neighbor searcher
         pub fn new() -> Self {
             Self {
                 block_size: 128,
@@ -751,8 +751,8 @@ pub mod ultra_simd_clustering {
             }
         }
 
-        /// Ultra-fast SIMD k-nearest neighbors with vectorized heap operations
-        pub fn simd_knn_ultra_fast(
+        /// Optimized SIMD k-nearest neighbors with vectorized heap operations
+        pub fn simd_knn_advanced_fast(
             &self,
             query_points: &ArrayView2<'_, f64>,
             data_points: &ArrayView2<'_, f64>,
@@ -796,7 +796,7 @@ pub mod ultra_simd_clustering {
                             }
                         }
 
-                        // Ultra-fast partial sort using SIMD-aware algorithms
+                        // Optimized partial sort using SIMD-aware algorithms
                         all_distances
                             .select_nth_unstable_by(k - 1, |a, b| a.0.partial_cmp(&b.0).unwrap());
                         all_distances[..k].sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
@@ -822,7 +822,7 @@ pub mod hardware_specific_simd {
     use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2};
     use scirs2_core::simd_ops::PlatformCapabilities;
 
-    /// Ultra-optimized distance calculations with hardware-specific code paths
+    /// Advanced-optimized distance calculations with hardware-specific code paths
     pub struct HardwareOptimizedDistances {
         capabilities: PlatformCapabilities,
     }
@@ -984,7 +984,7 @@ pub mod hardware_specific_simd {
             sum.sqrt()
         }
 
-        /// Ultra-fast batch processing with cache-optimized memory access
+        /// Optimized batch processing with cache-optimized memory access
         pub fn batch_distance_matrix_optimized(
             &self,
             points: &ArrayView2<'_, f64>,
@@ -1188,7 +1188,7 @@ pub mod mixed_precision_simd {
 
         let n_points = points1.nrows();
 
-        // Ultra-high-throughput parallel computation with f32 SIMD
+        // Advanced-high-throughput parallel computation with f32 SIMD
         let distances_vec: Result<Vec<f32>, SpatialError> = (0..n_points)
             .into_par_iter()
             .map(|i| -> SpatialResult<f32> {
@@ -1204,7 +1204,7 @@ pub mod mixed_precision_simd {
         Ok(Array1::from(distances_vec?))
     }
 
-    /// Ultra-fast mixed precision distance matrix with adaptive precision
+    /// Optimized mixed precision distance matrix with adaptive precision
     pub fn adaptive_precision_distance_matrix(
         points: &ArrayView2<'_, f64>,
         precision_threshold: f64,
@@ -1319,7 +1319,7 @@ pub mod bench {
 
         /// Print detailed benchmark report
         pub fn report(&self) {
-            println!("Ultra-SIMD Performance Benchmark Results:");
+            println!("Advanced-SIMD Performance Benchmark Results:");
             println!("  Scalar time:      {:.6} seconds", self.scalar_time);
             println!(
                 "  SIMD f64 time:    {:.6} seconds ({:.2}x speedup)",
@@ -1335,7 +1335,7 @@ pub mod bench {
 
     /// Advanced SIMD feature reporting
     pub fn report_simd_features() {
-        println!("Ultra-SIMD Features Available:");
+        println!("Advanced-SIMD Features Available:");
 
         let caps = PlatformCapabilities::detect();
         println!("  SIMD Available: {}", caps.simd_available);

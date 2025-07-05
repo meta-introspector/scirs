@@ -545,7 +545,7 @@ pub fn add(
     }
 
     let result_value = left.value + right.value;
-    graph.add_binary_op(left, right, result_value, 1.0, 1.0)
+    graph.add_binary_op(BinaryOpType::Add, left, right, result_value, 1.0, 1.0)
 }
 
 /// Multiplication operation on computation graph
@@ -560,7 +560,14 @@ pub fn mul(
     }
 
     let result_value = left.value * right.value;
-    graph.add_binary_op(left, right, result_value, right.value, left.value)
+    graph.add_binary_op(
+        BinaryOpType::Mul,
+        left,
+        right,
+        result_value,
+        right.value,
+        left.value,
+    )
 }
 
 /// Subtraction operation on computation graph
@@ -575,7 +582,7 @@ pub fn sub(
     }
 
     let result_value = left.value - right.value;
-    graph.add_binary_op(left, right, result_value, 1.0, -1.0)
+    graph.add_binary_op(BinaryOpType::Sub, left, right, result_value, 1.0, -1.0)
 }
 
 /// Division operation on computation graph
@@ -593,7 +600,14 @@ pub fn div(
     let left_grad = 1.0 / right.value;
     let right_grad = -left.value / (right.value * right.value);
 
-    graph.add_binary_op(left, right, result_value, left_grad, right_grad)
+    graph.add_binary_op(
+        BinaryOpType::Div,
+        left,
+        right,
+        result_value,
+        left_grad,
+        right_grad,
+    )
 }
 
 /// Power operation (x^n) on computation graph
@@ -606,7 +620,7 @@ pub fn powi(graph: &mut ComputationGraph, input: &ReverseVariable, n: i32) -> Re
     let result_value = input.value.powi(n);
     let input_grad = (n as f64) * input.value.powi(n - 1);
 
-    graph.add_unary_op(input, result_value, input_grad)
+    graph.add_unary_op(UnaryOpType::Square, input, result_value, input_grad)
 }
 
 /// Exponential operation on computation graph
@@ -619,7 +633,7 @@ pub fn exp(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
     let result_value = input.value.exp();
     let input_grad = result_value; // d/dx(e^x) = e^x
 
-    graph.add_unary_op(input, result_value, input_grad)
+    graph.add_unary_op(UnaryOpType::Exp, input, result_value, input_grad)
 }
 
 /// Natural logarithm operation on computation graph
@@ -632,7 +646,7 @@ pub fn ln(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVaria
     let result_value = input.value.ln();
     let input_grad = 1.0 / input.value;
 
-    graph.add_unary_op(input, result_value, input_grad)
+    graph.add_unary_op(UnaryOpType::Ln, input, result_value, input_grad)
 }
 
 /// Sine operation on computation graph
@@ -645,7 +659,7 @@ pub fn sin(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
     let result_value = input.value.sin();
     let input_grad = input.value.cos();
 
-    graph.add_unary_op(input, result_value, input_grad)
+    graph.add_unary_op(UnaryOpType::Sin, input, result_value, input_grad)
 }
 
 /// Cosine operation on computation graph
@@ -658,7 +672,7 @@ pub fn cos(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
     let result_value = input.value.cos();
     let input_grad = -input.value.sin();
 
-    graph.add_unary_op(input, result_value, input_grad)
+    graph.add_unary_op(UnaryOpType::Cos, input, result_value, input_grad)
 }
 
 /// Tangent operation on computation graph
@@ -672,7 +686,7 @@ pub fn tan(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
     let cos_val = input.value.cos();
     let input_grad = 1.0 / (cos_val * cos_val); // sec²(x) = 1/cos²(x)
 
-    graph.add_unary_op(input, result_value, input_grad)
+    graph.add_unary_op(UnaryOpType::Tan, input, result_value, input_grad)
 }
 
 /// Square root operation on computation graph
@@ -685,7 +699,7 @@ pub fn sqrt(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVar
     let result_value = input.value.sqrt();
     let input_grad = 0.5 / result_value; // d/dx(√x) = 1/(2√x)
 
-    graph.add_unary_op(input, result_value, input_grad)
+    graph.add_unary_op(UnaryOpType::Sqrt, input, result_value, input_grad)
 }
 
 /// Absolute value operation on computation graph
@@ -698,7 +712,7 @@ pub fn abs(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVari
     let result_value = input.value.abs();
     let input_grad = if input.value >= 0.0 { 1.0 } else { -1.0 };
 
-    graph.add_unary_op(input, result_value, input_grad)
+    graph.add_unary_op(UnaryOpType::Sqrt, input, result_value, input_grad)
 }
 
 /// Sigmoid operation on computation graph
@@ -713,7 +727,7 @@ pub fn sigmoid(graph: &mut ComputationGraph, input: &ReverseVariable) -> Reverse
     let result_value = 1.0 / (1.0 + exp_neg_x);
     let input_grad = result_value * (1.0 - result_value); // σ'(x) = σ(x)(1-σ(x))
 
-    graph.add_unary_op(input, result_value, input_grad)
+    graph.add_unary_op(UnaryOpType::Exp, input, result_value, input_grad)
 }
 
 /// Hyperbolic tangent operation on computation graph
@@ -726,7 +740,7 @@ pub fn tanh(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVar
     let result_value = input.value.tanh();
     let input_grad = 1.0 - result_value * result_value; // d/dx(tanh(x)) = 1 - tanh²(x)
 
-    graph.add_unary_op(input, result_value, input_grad)
+    graph.add_unary_op(UnaryOpType::Tan, input, result_value, input_grad)
 }
 
 /// ReLU (Rectified Linear Unit) operation on computation graph
@@ -739,7 +753,7 @@ pub fn relu(graph: &mut ComputationGraph, input: &ReverseVariable) -> ReverseVar
     let result_value = input.value.max(0.0);
     let input_grad = if input.value > 0.0 { 1.0 } else { 0.0 };
 
-    graph.add_unary_op(input, result_value, input_grad)
+    graph.add_unary_op(UnaryOpType::Sqrt, input, result_value, input_grad)
 }
 
 /// Leaky ReLU operation on computation graph
@@ -765,7 +779,7 @@ pub fn leaky_relu(
     };
     let input_grad = if input.value > 0.0 { 1.0 } else { alpha };
 
-    graph.add_unary_op(input, result_value, input_grad)
+    graph.add_unary_op(UnaryOpType::Sqrt, input, result_value, input_grad)
 }
 
 /// Compute gradient using reverse-mode automatic differentiation

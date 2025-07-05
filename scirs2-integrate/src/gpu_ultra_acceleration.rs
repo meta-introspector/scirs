@@ -1,11 +1,11 @@
-//! Ultra-performance GPU acceleration framework for ODE solvers
+//! Advanced-performance GPU acceleration framework for ODE solvers
 //!
 //! This module provides cutting-edge GPU acceleration capabilities for ODE solving,
-//! featuring ultra-optimized CUDA/OpenCL kernels, advanced memory management,
+//! featuring advanced-optimized CUDA/OpenCL kernels, advanced memory management,
 //! and real-time performance adaptation in Advanced mode.
 //!
 //! Key features:
-//! - Ultra-optimized GPU kernels for Runge-Kutta methods
+//! - Advanced-optimized GPU kernels for Runge-Kutta methods
 //! - Advanced GPU memory pool management with automatic defragmentation
 //! - Real-time kernel performance monitoring and adaptation
 //! - Multi-GPU support with automatic load balancing
@@ -23,12 +23,12 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-/// Ultra-performance GPU acceleration engine
-pub struct UltraGPUAccelerator<F: IntegrateFloat + GpuDataType> {
+/// Advanced-performance GPU acceleration engine
+pub struct AdvancedGPUAccelerator<F: IntegrateFloat + GpuDataType> {
     /// GPU context manager
     context: Arc<Mutex<gpu::GpuContext>>,
     /// Memory pool for optimal GPU memory management
-    memory_pool: Arc<Mutex<UltraGPUMemoryPool<F>>>,
+    memory_pool: Arc<Mutex<AdvancedGPUMemoryPool<F>>>,
     /// Kernel performance cache for adaptive optimization
     kernel_cache: Arc<Mutex<HashMap<String, KernelPerformanceData>>>,
     /// Multi-GPU configuration
@@ -37,8 +37,8 @@ pub struct UltraGPUAccelerator<F: IntegrateFloat + GpuDataType> {
     performance_monitor: Arc<Mutex<RealTimeGpuMonitor>>,
 }
 
-/// Ultra-optimized GPU memory pool with advanced management
-pub struct UltraGPUMemoryPool<F: IntegrateFloat + GpuDataType> {
+/// Advanced-optimized GPU memory pool with advanced management
+pub struct AdvancedGPUMemoryPool<F: IntegrateFloat + GpuDataType> {
     /// Available memory blocks sorted by size
     available_blocks: Vec<MemoryBlock<F>>,
     /// Currently allocated blocks metadata
@@ -192,8 +192,8 @@ pub struct PerformanceThresholds {
     min_efficiency: f64,
 }
 
-impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
-    /// Create a new ultra-performance GPU accelerator
+impl<F: IntegrateFloat + GpuDataType> AdvancedGPUAccelerator<F> {
+    /// Create a new advanced-performance GPU accelerator
     pub fn new() -> IntegrateResult<Self> {
         // Try to create GPU context, fallback gracefully if not available
         let context = match gpu::GpuContext::new(GpuBackend::Cuda) {
@@ -212,12 +212,12 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
             }
         };
 
-        let memory_pool = Arc::new(Mutex::new(UltraGPUMemoryPool::new()?));
+        let memory_pool = Arc::new(Mutex::new(AdvancedGPUMemoryPool::new()?));
         let kernel_cache = Arc::new(Mutex::new(HashMap::new()));
         let multi_gpu_config = MultiGpuConfiguration::detect_and_configure()?;
         let performance_monitor = Arc::new(Mutex::new(RealTimeGpuMonitor::new()));
 
-        Ok(UltraGPUAccelerator {
+        Ok(AdvancedGPUAccelerator {
             context,
             memory_pool,
             kernel_cache,
@@ -229,7 +229,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
     /// Create a new GPU accelerator with CPU fallback mode
     pub fn new_with_cpu_fallback() -> IntegrateResult<Self> {
         // Create a minimal GPU accelerator that works in CPU fallback mode
-        let memory_pool = Arc::new(Mutex::new(UltraGPUMemoryPool::new_cpu_fallback()?));
+        let memory_pool = Arc::new(Mutex::new(AdvancedGPUMemoryPool::new_cpu_fallback()?));
         let kernel_cache = Arc::new(Mutex::new(HashMap::new()));
         let multi_gpu_config = MultiGpuConfiguration::cpu_fallback_config()?;
         let performance_monitor = Arc::new(Mutex::new(RealTimeGpuMonitor::new()));
@@ -243,7 +243,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
             },
         )?));
 
-        Ok(UltraGPUAccelerator {
+        Ok(AdvancedGPUAccelerator {
             context,
             memory_pool,
             kernel_cache,
@@ -252,8 +252,8 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
         })
     }
 
-    /// Ultra-optimized Runge-Kutta 4th order method on GPU
-    pub fn ultra_rk4_step(
+    /// Advanced-optimized Runge-Kutta 4th order method on GPU
+    pub fn advanced_rk4_step(
         &self,
         t: F,
         y: &ArrayView1<F>,
@@ -262,7 +262,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
     ) -> IntegrateResult<Array1<F>> {
         let start_time = Instant::now();
 
-        // Allocate GPU memory using ultra-optimized pool
+        // Allocate GPU memory using advanced-optimized pool
         let mut memory_pool = self.memory_pool.lock().unwrap();
         let y_gpu = memory_pool.allocate_solution_vector(y.len())?;
         let k1_gpu = memory_pool.allocate_derivative_vector(y.len())?;
@@ -275,9 +275,9 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
         // Transfer initial data to GPU with optimal memory pattern
         self.transfer_to_gpu_optimized(&y_gpu, y)?;
 
-        // Launch ultra-optimized RK4 kernel with adaptive block sizing
+        // Launch advanced-optimized RK4 kernel with adaptive block sizing
         let mut kernel_cache = self.kernel_cache.lock().unwrap();
-        let kernel_name = "ultra_rk4_kernel";
+        let kernel_name = "advanced_rk4_kernel";
         let optimal_config =
             self.get_or_optimize_kernel_config(&mut kernel_cache, kernel_name, y.len())?;
         drop(kernel_cache);
@@ -288,7 +288,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
         self.launch_rk4_stage3_kernel(&y_gpu, &k2_gpu, &k3_gpu, t, h, &optimal_config)?;
         self.launch_rk4_stage4_kernel(&y_gpu, &k3_gpu, &k4_gpu, t, h, &optimal_config)?;
 
-        // Final combination with ultra-optimized memory access pattern
+        // Final combination with advanced-optimized memory access pattern
         self.launch_rk4_combine_kernel(
             &y_gpu,
             &k1_gpu,
@@ -319,8 +319,8 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
         Ok(result)
     }
 
-    /// Ultra-optimized adaptive step size control on GPU
-    pub fn ultra_adaptive_step(
+    /// Advanced-optimized adaptive step size control on GPU
+    pub fn advanced_adaptive_step(
         &self,
         t: F,
         y: &ArrayView1<F>,
@@ -330,9 +330,9 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
         f: impl Fn(F, &ArrayView1<F>) -> IntegrateResult<Array1<F>>,
     ) -> IntegrateResult<(Array1<F>, F, bool)> {
         // Perform two steps: one full step and two half steps
-        let y1 = self.ultra_rk4_step(t, y, h, &f)?;
-        let y_half1 = self.ultra_rk4_step(t, y, h / F::from(2.0).unwrap(), &f)?;
-        let y2 = self.ultra_rk4_step(
+        let y1 = self.advanced_rk4_step(t, y, h, &f)?;
+        let y_half1 = self.advanced_rk4_step(t, y, h / F::from(2.0).unwrap(), &f)?;
+        let y2 = self.advanced_rk4_step(
             t + h / F::from(2.0).unwrap(),
             &y_half1.view(),
             h / F::from(2.0).unwrap(),
@@ -340,7 +340,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
         )?;
 
         // Calculate error estimate using GPU-accelerated norm computation
-        let error = self.ultra_gpu_error_estimate(&y1.view(), &y2.view(), rtol, atol)?;
+        let error = self.advanced_gpu_error_estimate(&y1.view(), &y2.view(), rtol, atol)?;
 
         // Determine step acceptance and new step size
         let safety_factor = F::from(0.9).unwrap();
@@ -663,7 +663,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUAccelerator<F> {
     }
 
     /// Compute GPU-accelerated error estimate
-    fn ultra_gpu_error_estimate(
+    fn advanced_gpu_error_estimate(
         &self,
         y1: &ArrayView1<F>,
         y2: &ArrayView1<F>,
@@ -757,10 +757,10 @@ pub struct KernelConfiguration {
     pub grid_size: (usize, usize, usize),
 }
 
-impl<F: IntegrateFloat + GpuDataType> UltraGPUMemoryPool<F> {
-    /// Create a new ultra-optimized GPU memory pool
+impl<F: IntegrateFloat + GpuDataType> AdvancedGPUMemoryPool<F> {
+    /// Create a new advanced-optimized GPU memory pool
     pub fn new() -> IntegrateResult<Self> {
-        Ok(UltraGPUMemoryPool {
+        Ok(AdvancedGPUMemoryPool {
             available_blocks: Vec::new(),
             allocated_blocks: HashMap::new(),
             total_memory: 0,
@@ -773,7 +773,7 @@ impl<F: IntegrateFloat + GpuDataType> UltraGPUMemoryPool<F> {
 
     /// Create a new memory pool with CPU fallback mode
     pub fn new_cpu_fallback() -> IntegrateResult<Self> {
-        Ok(UltraGPUMemoryPool {
+        Ok(AdvancedGPUMemoryPool {
             available_blocks: Vec::new(),
             allocated_blocks: HashMap::new(),
             total_memory: 1024 * 1024 * 1024, // 1GB virtual CPU memory
@@ -1045,7 +1045,7 @@ mod tests {
 
     #[test]
     fn test_gpu_memory_pool_allocation() {
-        let mut pool = UltraGPUMemoryPool::<f64>::new().unwrap();
+        let mut pool = AdvancedGPUMemoryPool::<f64>::new().unwrap();
 
         // Test basic allocation
         let block1 = pool.allocate_solution_vector(1000);

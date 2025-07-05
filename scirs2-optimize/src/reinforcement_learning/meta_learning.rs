@@ -40,7 +40,7 @@ impl MetaLearningOptimizer {
         objective: &F,
         initial_params: &ArrayView1<f64>,
         num_steps: usize,
-    ) -> Result<Array1<f64>>
+    ) -> OptimizeResult<Array1<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {

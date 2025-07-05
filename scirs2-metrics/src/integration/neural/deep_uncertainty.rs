@@ -577,11 +577,7 @@ impl<F: Float + num_traits::FromPrimitive + Sum + ndarray::ScalarOperand>
         let mut deviation_matrix = Array2::zeros((n_weights, max_rank));
 
         // Use most recent deviations for low-rank approximation
-        let start_idx = if n_deviations > max_rank {
-            n_deviations - max_rank
-        } else {
-            0
-        };
+        let start_idx = n_deviations.saturating_sub(max_rank);
 
         for (j, deviation_idx) in (start_idx..n_deviations).enumerate() {
             for i in 0..n_weights {
@@ -1858,7 +1854,7 @@ mod tests {
 
         // All calibrated probabilities should be valid probabilities
         for &prob in temp_scaling.calibrated_probabilities.iter() {
-            assert!(prob >= 0.0 && prob <= 1.0);
+            assert!((0.0..=1.0).contains(&prob));
         }
     }
 

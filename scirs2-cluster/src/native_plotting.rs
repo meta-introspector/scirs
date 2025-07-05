@@ -5,8 +5,8 @@
 //! and advanced quantum state visualizations without external dependencies.
 
 use crate::error::{ClusteringError, Result};
-use crate::advanced_clustering::{UltrathinkClusteringResult, UltrathinkPerformanceMetrics};
-use crate::advanced_visualization::{UltrathinkVisualizationOutput, QuantumCoherencePlot, NeuromorphicAdaptationPlot};
+use crate::advanced_clustering::{AdvancedClusteringResult, AdvancedPerformanceMetrics};
+use crate::advanced_visualization::{AdvancedVisualizationOutput, QuantumCoherencePlot, NeuromorphicAdaptationPlot};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 
 /// Native plotting engine for Advanced clustering
 #[derive(Debug)]
-pub struct UltrathinkNativePlotter {
+pub struct AdvancedNativePlotter {
     /// Plot configuration
     config: NativePlotConfig,
     /// SVG canvas for rendering
@@ -354,7 +354,7 @@ impl Default for NativePlotConfig {
     }
 }
 
-impl UltrathinkNativePlotter {
+impl AdvancedNativePlotter {
     /// Create a new native plotter
     pub fn new(config: NativePlotConfig) -> Self {
         Self {
@@ -369,7 +369,7 @@ impl UltrathinkNativePlotter {
     pub fn create_comprehensive_plot(
         &mut self,
         data: &ArrayView2<f64>,
-        result: &UltrathinkClusteringResult,
+        result: &AdvancedClusteringResult,
     ) -> Result<NativeVisualizationOutput> {
         // Clear canvas
         self.svg_canvas.clear();
@@ -420,7 +420,7 @@ impl UltrathinkNativePlotter {
     fn create_native_cluster_plot(
         &mut self,
         data: &ArrayView2<f64>,
-        result: &UltrathinkClusteringResult,
+        result: &AdvancedClusteringResult,
     ) -> Result<NativeClusterPlot> {
         let n_samples = data.nrows();
         let n_features = data.ncols();
@@ -533,7 +533,7 @@ impl UltrathinkNativePlotter {
     fn create_native_dendrogram(
         &mut self,
         data: &ArrayView2<f64>,
-        result: &UltrathinkClusteringResult,
+        result: &AdvancedClusteringResult,
     ) -> Result<NativeDendrogramPlot> {
         // Create hierarchical tree structure
         let tree = self.build_dendrogram_tree(data, result)?;
@@ -571,7 +571,7 @@ impl UltrathinkNativePlotter {
     fn create_native_3d_plot(
         &mut self,
         data: &ArrayView2<f64>,
-        result: &UltrathinkClusteringResult,
+        result: &AdvancedClusteringResult,
     ) -> Result<Native3DClusterPlot> {
         // Reduce to 3D if needed
         let points_3d = if data.ncols() > 3 {
@@ -657,7 +657,7 @@ impl UltrathinkNativePlotter {
     /// Create quantum coherence animation
     fn create_quantum_coherence_animation(
         &mut self,
-        result: &UltrathinkClusteringResult,
+        result: &AdvancedClusteringResult,
     ) -> Result<QuantumCoherenceAnimation> {
         let num_frames = (self.config.animation_fps * 5.0) as usize; // 5 second animation
         let mut frames = Vec::new();
@@ -681,7 +681,7 @@ impl UltrathinkNativePlotter {
     /// Create neuromorphic activity plot
     fn create_neuromorphic_activity_plot(
         &mut self,
-        result: &UltrathinkClusteringResult,
+        result: &AdvancedClusteringResult,
     ) -> Result<NeuromorphicActivityPlot> {
         let n_neurons = result.centroids.nrows();
         let time_steps = 100;
@@ -732,7 +732,7 @@ impl UltrathinkNativePlotter {
     /// Create interactive performance dashboard
     fn create_interactive_performance_dashboard(
         &mut self,
-        result: &UltrathinkClusteringResult,
+        result: &AdvancedClusteringResult,
     ) -> Result<InteractivePerformanceDashboard> {
         let metrics = &result.performance;
         
@@ -784,7 +784,7 @@ impl UltrathinkNativePlotter {
 
     // Helper methods for calculations and rendering
 
-    fn calculate_point_quantum_enhancement(&self, point_idx: usize, cluster_id: usize, result: &UltrathinkClusteringResult) -> f64 {
+    fn calculate_point_quantum_enhancement(&self, point_idx: usize, cluster_id: usize, result: &AdvancedClusteringResult) -> f64 {
         // Calculate quantum enhancement based on clustering properties
         let base_quantum = result.quantum_advantage / 10.0;
         let coherence_factor = result.performance.quantum_coherence;
@@ -1311,13 +1311,13 @@ impl InteractiveController {
 
 /// Convenience function to create native Advanced visualization
 #[allow(dead_code)]
-pub fn create_native_ultrathink_plot(
+pub fn create_native_advanced_plot(
     data: &ArrayView2<f64>,
-    result: &UltrathinkClusteringResult,
+    result: &AdvancedClusteringResult,
     config: Option<NativePlotConfig>,
 ) -> Result<NativeVisualizationOutput> {
     let config = config.unwrap_or_default();
-    let mut plotter = UltrathinkNativePlotter::new(config);
+    let mut plotter = AdvancedNativePlotter::new(config);
     plotter.create_comprehensive_plot(data, result)
 }
 

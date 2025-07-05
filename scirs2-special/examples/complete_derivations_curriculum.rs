@@ -35,13 +35,11 @@
 //!
 //! Run with: cargo run --example complete_derivations_curriculum
 
-use ndarray::{Array1, Array2, ArrayView1};
-use num_complex::Complex64;
 use scirs2_special::*;
-use std::collections::{HashMap, VecDeque};
+use std::collections::HashMap;
 use std::f64::consts::{E, PI};
 use std::io::{self, Write};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 #[derive(Debug, Clone)]
 struct DerivationCurriculum {
@@ -633,10 +631,10 @@ impl DerivationCurriculum {
                     description: "Verify reflection formula for various z values".to_string(),
                     input_values: vec![0.3, 0.7, 1.5, 2.5],
                     expected_results: vec![
-                        PI / sin(PI * 0.3),
-                        PI / sin(PI * 0.7),
-                        PI / sin(PI * 1.5),
-                        PI / sin(PI * 2.5),
+                        PI / (PI * 0.3).sin(),
+                        PI / (PI * 0.7).sin(),
+                        PI / (PI * 1.5).sin(),
+                        PI / (PI * 2.5).sin(),
                     ],
                     tolerance: 1e-12,
                     implementation_notes: "Test with both real and complex values".to_string(),
@@ -1426,7 +1424,7 @@ impl DerivationCurriculum {
                 }
             }
 
-            println!("\n" + &"─".repeat(60) + "\n");
+            println!("\n{}\n", "─".repeat(60));
 
             let _ = self.get_user_input("Press Enter to continue to next step...");
         }
@@ -1612,7 +1610,7 @@ impl DerivationCurriculum {
         let z = 2.5;
         let gamma_z_plus_1 = gamma(z + 1.0);
         let z_times_gamma_z = z * gamma(z);
-        let func_eq_diff = (gamma_z_plus_1 - z_times_gamma_z).abs();
+        let func_eq_diff: f64 = (gamma_z_plus_1 - z_times_gamma_z).abs();
 
         println!("Γ({}) = {:.15}", z + 1.0, gamma_z_plus_1);
         println!("{}·Γ({}) = {:.15}", z, z, z_times_gamma_z);
@@ -1655,7 +1653,7 @@ impl DerivationCurriculum {
 
         // Test gamma function near poles
         println!("Gamma function behavior near poles:");
-        for &x in &[-0.99, -1.01, -1.99, -2.01] {
+        for &x in &[-0.99f64, -1.01, -1.99, -2.01] {
             let gamma_val = gamma(x);
             println!("Γ({}) = {:.6} (near pole at {})", x, gamma_val, x.round());
         }

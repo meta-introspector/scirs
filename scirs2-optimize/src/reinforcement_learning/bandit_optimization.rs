@@ -5,6 +5,7 @@
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
+use rand::Rng;
 // Unused import
 // use scirs2_core::error::CoreResult;
 
@@ -33,7 +34,7 @@ impl BanditOptimizer {
     pub fn select_arm(&self) -> usize {
         let total_counts: usize = self.arm_counts.sum();
         if total_counts == 0 {
-            return rand::rng().random::<usize>() % self.num_arms;
+            return rand::rng().gen::<usize>() % self.num_arms;
         }
 
         let mut best_arm = 0;
@@ -72,7 +73,7 @@ impl BanditOptimizer {
 pub fn bandit_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
-    num_iterations: usize,
+    num_nit: usize,
 ) -> OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
@@ -81,7 +82,7 @@ where
     let mut params = initial_params.to_owned();
     let mut best_obj = objective(initial_params);
 
-    for _iter in 0..num_iterations {
+    for _iter in 0..num_nit {
         let arm = bandit.select_arm();
 
         // Apply different strategies based on arm
@@ -93,7 +94,7 @@ where
 
         // Simple gradient-like update
         for i in 0..params.len() {
-            params[i] += (rand::rng().random::<f64>() - 0.5) * step_size;
+            params[i] += (rand::rng().gen::<f64>() - 0.5) * step_size;
         }
 
         let new_obj = objective(&params.view());
@@ -110,7 +111,7 @@ where
         x: params,
         fun: best_obj,
         success: true,
-        iterations: num_iterations,
+        nit: num_nit,
         message: "Bandit optimization completed".to_string(),
     })
 }

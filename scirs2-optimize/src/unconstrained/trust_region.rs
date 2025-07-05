@@ -124,7 +124,6 @@ where
     Ok(OptimizeResult {
         x,
         fun: final_fun,
-        iterations: iter,
         nit: iter,
         func_evals: nfev,
         nfev,
@@ -257,7 +256,6 @@ where
     Ok(OptimizeResult {
         x,
         fun: final_fun,
-        iterations: iter,
         nit: iter,
         func_evals: nfev,
         nfev,
@@ -390,7 +388,6 @@ where
     Ok(OptimizeResult {
         x,
         fun: final_fun,
-        iterations: iter,
         nit: iter,
         func_evals: nfev,
         nfev,
@@ -957,7 +954,7 @@ mod tests {
         let result = minimize_trust_krylov(rosenbrock, x0, &options).unwrap();
 
         // Rosenbrock is challenging, accept reasonable convergence
-        assert!(result.iterations > 0, "Should make at least some progress");
+        assert!(result.nit > 0, "Should make at least some progress");
         // Accept if we get reasonably close to (1, 1)
         assert!(
             result.x[0] >= -0.1 && result.x[0] <= 1.5,

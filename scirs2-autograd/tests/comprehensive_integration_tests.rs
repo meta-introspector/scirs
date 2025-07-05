@@ -20,7 +20,7 @@ use scirs2_autograd::visualization::{GraphVisualizer, OutputFormat, Visualizatio
 /// Test the complete Advanced feature integration pipeline
 #[test]
 #[allow(dead_code)]
-fn test_complete_ultrathink_pipeline() {
+fn test_complete_advanced_pipeline() {
     // Initialize advanced thread pool
     let thread_config = ThreadPoolConfig {
         num_threads: 4,

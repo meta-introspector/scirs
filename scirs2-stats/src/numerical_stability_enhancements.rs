@@ -18,7 +18,7 @@ use std::time::{Duration, Instant, SystemTime};
 
 /// advanced Numerical Stability Configuration
 #[derive(Debug, Clone)]
-pub struct UltraThinkNumericalStabilityConfig {
+pub struct AdvancedNumericalStabilityConfig {
     /// Enable comprehensive edge case testing
     pub enable_edge_case_testing: bool,
     /// Enable precision analysis across different floating-point types
@@ -55,7 +55,7 @@ pub struct UltraThinkNumericalStabilityConfig {
     pub monte_carlo_samples: usize,
 }
 
-impl Default for UltraThinkNumericalStabilityConfig {
+impl Default for AdvancedNumericalStabilityConfig {
     fn default() -> Self {
         Self {
             enable_edge_case_testing: true,
@@ -131,8 +131,8 @@ impl Default for StabilityTolerance {
 }
 
 /// Comprehensive numerical stability tester
-pub struct UltraThinkNumericalStabilityTester {
-    config: UltraThinkNumericalStabilityConfig,
+pub struct AdvancedNumericalStabilityTester {
+    config: AdvancedNumericalStabilityConfig,
     edge_case_generator: Arc<RwLock<EdgeCaseGenerator>>,
     precision_analyzer: Arc<RwLock<PrecisionAnalyzer>>,
     invariant_validator: Arc<RwLock<InvariantValidator>>,
@@ -145,9 +145,9 @@ pub struct UltraThinkNumericalStabilityTester {
     stability_history: Arc<RwLock<VecDeque<StabilityTestResult>>>,
 }
 
-impl UltraThinkNumericalStabilityTester {
+impl AdvancedNumericalStabilityTester {
     /// Create new numerical stability tester
-    pub fn new(config: UltraThinkNumericalStabilityConfig) -> Self {
+    pub fn new(config: AdvancedNumericalStabilityConfig) -> Self {
         Self {
             edge_case_generator: Arc::new(RwLock::new(EdgeCaseGenerator::new(&config))),
             precision_analyzer: Arc::new(RwLock::new(PrecisionAnalyzer::new(&config))),
@@ -455,7 +455,7 @@ impl UltraThinkNumericalStabilityTester {
                 edge_case_type: edge_case.edge_case_type.clone(),
                 execution_time: start_time.elapsed(),
                 result_status: EdgeCaseResultStatus::Success,
-                computed_value: Some(value),
+                computed_value: value.to_f64(),
                 error_message: None,
                 stability_metrics: self.compute_edge_case_stability_metrics(value),
             },
@@ -685,11 +685,11 @@ impl UltraThinkNumericalStabilityTester {
 
 /// Edge case generator
 pub struct EdgeCaseGenerator {
-    config: UltraThinkNumericalStabilityConfig,
+    config: AdvancedNumericalStabilityConfig,
 }
 
 impl EdgeCaseGenerator {
-    pub fn new(config: &UltraThinkNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
             config: config.clone(),
         }
@@ -882,11 +882,11 @@ impl EdgeCaseGenerator {
 
 /// Precision analyzer
 pub struct PrecisionAnalyzer {
-    config: UltraThinkNumericalStabilityConfig,
+    config: AdvancedNumericalStabilityConfig,
 }
 
 impl PrecisionAnalyzer {
-    pub fn new(config: &UltraThinkNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
             config: config.clone(),
         }
@@ -917,11 +917,11 @@ impl PrecisionAnalyzer {
 
 /// Invariant validator
 pub struct InvariantValidator {
-    config: UltraThinkNumericalStabilityConfig,
+    config: AdvancedNumericalStabilityConfig,
 }
 
 impl InvariantValidator {
-    pub fn new(config: &UltraThinkNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
             config: config.clone(),
         }
@@ -1012,11 +1012,11 @@ impl InvariantValidator {
 
 /// Cancellation detector
 pub struct CancellationDetector {
-    config: UltraThinkNumericalStabilityConfig,
+    config: AdvancedNumericalStabilityConfig,
 }
 
 impl CancellationDetector {
-    pub fn new(config: &UltraThinkNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
             config: config.clone(),
         }
@@ -1043,8 +1043,8 @@ impl CancellationDetector {
                 let cancellation_risk = self.assess_cancellation_risk(value, &test_case);
                 if cancellation_risk > self.config.stability_tolerance.cancellation_threshold {
                     result.add_cancellation_event(CancellationEvent {
-                        test_case: test_case.clone(),
-                        computed_value: value,
+                        test_case: test_case.mapv(|x| x.to_f64().unwrap_or(0.0)),
+                        computed_value: value.to_f64().unwrap_or(0.0),
                         cancellation_risk,
                         description: "Potential catastrophic cancellation detected".to_string(),
                     });
@@ -1103,11 +1103,11 @@ impl CancellationDetector {
 
 /// Overflow monitor
 pub struct OverflowMonitor {
-    config: UltraThinkNumericalStabilityConfig,
+    config: AdvancedNumericalStabilityConfig,
 }
 
 impl OverflowMonitor {
-    pub fn new(config: &UltraThinkNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
             config: config.clone(),
         }
@@ -1134,25 +1134,25 @@ impl OverflowMonitor {
                 Ok(value) => {
                     if value.is_infinite() {
                         result.add_overflow_event(OverflowEvent {
-                            test_case: test_case.clone(),
+                            test_case: test_case.mapv(|x| x.to_f64().unwrap_or(0.0)),
                             event_type: OverflowEventType::Overflow,
-                            computed_value: value,
+                            computed_value: value.to_f64().unwrap_or(0.0),
                             description: "Overflow detected".to_string(),
                         });
                     } else if !value.is_normal() && !value.is_zero() {
                         result.add_underflow_event(UnderflowEvent {
-                            test_case: test_case.clone(),
+                            test_case: test_case.mapv(|x| x.to_f64().unwrap_or(0.0)),
                             event_type: UnderflowEventType::Underflow,
-                            computed_value: value,
+                            computed_value: value.to_f64().unwrap_or(0.0),
                             description: "Underflow detected".to_string(),
                         });
                     }
                 }
                 Err(_) => {
                     result.add_overflow_event(OverflowEvent {
-                        test_case: test_case.clone(),
+                        test_case: test_case.mapv(|x| x.to_f64().unwrap_or(0.0)),
                         event_type: OverflowEventType::ComputationError,
-                        computed_value: R::nan(),
+                        computed_value: f64::NAN,
                         description: "Computation error on extreme values".to_string(),
                     });
                 }
@@ -1195,11 +1195,11 @@ impl OverflowMonitor {
 
 /// Condition analyzer
 pub struct ConditionAnalyzer {
-    config: UltraThinkNumericalStabilityConfig,
+    config: AdvancedNumericalStabilityConfig,
 }
 
 impl ConditionAnalyzer {
-    pub fn new(config: &UltraThinkNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
             config: config.clone(),
         }
@@ -1238,8 +1238,8 @@ impl ConditionAnalyzer {
                     result.add_condition_measurement(ConditionMeasurement {
                         input_index: i,
                         condition_number,
-                        base_value,
-                        perturbed_value,
+                        base_value: base_value.to_f64().unwrap_or(0.0),
+                        perturbed_value: perturbed_value.to_f64().unwrap_or(0.0),
                         perturbation_magnitude: NumCast::from(perturbation_factor).unwrap_or(0.0),
                     });
                 }
@@ -1279,11 +1279,11 @@ impl ConditionAnalyzer {
 
 /// Convergence tester
 pub struct ConvergenceTester {
-    config: UltraThinkNumericalStabilityConfig,
+    config: AdvancedNumericalStabilityConfig,
 }
 
 impl ConvergenceTester {
-    pub fn new(config: &UltraThinkNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
             config: config.clone(),
         }
@@ -1339,18 +1339,18 @@ impl ConvergenceTester {
             converged,
             iterations,
             convergence_time,
-            final_value: result.ok(),
+            final_value: result.ok().map(|v| v.to_f64().unwrap_or(0.0)),
         })
     }
 }
 
 /// Monte Carlo stability tester
 pub struct MonteCarloStabilityTester {
-    config: UltraThinkNumericalStabilityConfig,
+    config: AdvancedNumericalStabilityConfig,
 }
 
 impl MonteCarloStabilityTester {
-    pub fn new(config: &UltraThinkNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
             config: config.clone(),
         }
@@ -1430,12 +1430,12 @@ impl MonteCarloStabilityTester {
 
 /// Regression tester
 pub struct RegressionTester {
-    config: UltraThinkNumericalStabilityConfig,
+    config: AdvancedNumericalStabilityConfig,
     historical_results: Arc<RwLock<HashMap<String, Vec<f64>>>>,
 }
 
 impl RegressionTester {
-    pub fn new(config: &UltraThinkNumericalStabilityConfig) -> Self {
+    pub fn new(config: &AdvancedNumericalStabilityConfig) -> Self {
         Self {
             config: config.clone(),
             historical_results: Arc::new(RwLock::new(HashMap::new())),
@@ -1923,20 +1923,20 @@ pub struct ConditionMeasurement {
 
 #[derive(Debug, Clone)]
 pub struct ConvergenceStabilityResult {
-    pub convergence_tests: HashMap<f64, ConvergenceTestResult>,
+    pub convergence_tests: Vec<(f64, ConvergenceTestResult)>,
     pub overall_convergence_assessment: ConvergenceAssessment,
 }
 
 impl ConvergenceStabilityResult {
     pub fn new() -> Self {
         Self {
-            convergence_tests: HashMap::new(),
+            convergence_tests: Vec::new(),
             overall_convergence_assessment: ConvergenceAssessment::Unknown,
         }
     }
 
     pub fn add_convergence_test(&mut self, tolerance: f64, result: ConvergenceTestResult) {
-        self.convergence_tests.insert(tolerance, result);
+        self.convergence_tests.push((tolerance, result));
     }
 }
 
@@ -2101,15 +2101,15 @@ pub enum IssueSeverity {
 
 /// Create comprehensive numerical stability tester
 #[allow(dead_code)]
-pub fn create_ultra_think_numerical_stability_tester() -> UltraThinkNumericalStabilityTester {
-    let config = UltraThinkNumericalStabilityConfig::default();
-    UltraThinkNumericalStabilityTester::new(config)
+pub fn create_advanced_think_numerical_stability_tester() -> AdvancedNumericalStabilityTester {
+    let config = AdvancedNumericalStabilityConfig::default();
+    AdvancedNumericalStabilityTester::new(config)
 }
 
 /// Create fast numerical stability tester for development
 #[allow(dead_code)]
-pub fn create_fast_numerical_stability_tester() -> UltraThinkNumericalStabilityTester {
-    let config = UltraThinkNumericalStabilityConfig {
+pub fn create_fast_numerical_stability_tester() -> AdvancedNumericalStabilityTester {
+    let config = AdvancedNumericalStabilityConfig {
         enable_edge_case_testing: true,
         enable_precision_analysis: true,
         enable_invariant_validation: true,
@@ -2128,13 +2128,13 @@ pub fn create_fast_numerical_stability_tester() -> UltraThinkNumericalStabilityT
         max_convergence_iterations: 1000,
         monte_carlo_samples: 1000,
     };
-    UltraThinkNumericalStabilityTester::new(config)
+    AdvancedNumericalStabilityTester::new(config)
 }
 
 /// Create exhaustive numerical stability tester for release validation
 #[allow(dead_code)]
-pub fn create_exhaustive_numerical_stability_tester() -> UltraThinkNumericalStabilityTester {
-    let config = UltraThinkNumericalStabilityConfig {
+pub fn create_exhaustive_numerical_stability_tester() -> AdvancedNumericalStabilityTester {
+    let config = AdvancedNumericalStabilityConfig {
         enable_edge_case_testing: true,
         enable_precision_analysis: true,
         enable_invariant_validation: true,
@@ -2160,7 +2160,7 @@ pub fn create_exhaustive_numerical_stability_tester() -> UltraThinkNumericalStab
         max_convergence_iterations: 100000,
         monte_carlo_samples: 1000000,
     };
-    UltraThinkNumericalStabilityTester::new(config)
+    AdvancedNumericalStabilityTester::new(config)
 }
 
 /// Enhanced numerical stability testing for common statistical functions
@@ -2173,8 +2173,8 @@ pub fn test_statistical_function_stability<F>(
 where
     F: Fn(&ArrayView1<f64>) -> StatsResult<f64> + Clone + Send + Sync + 'static,
 {
-    let config = UltraThinkNumericalStabilityConfig::default();
-    let tester = UltraThinkNumericalStabilityTester::new(config);
+    let config = AdvancedNumericalStabilityConfig::default();
+    let tester = AdvancedNumericalStabilityTester::new(config);
 
     // Generate test data across multiple ranges
     let mut comprehensive_result = ComprehensiveStabilityResult::new(function_name.to_string());
@@ -2318,7 +2318,7 @@ pub fn run_quick_stability_validation() -> StatsResult<bool> {
         result
             .edge_case_results
             .as_ref()
-            .map(|edge_results| edge_results.critical_issues.is_empty())
+            .map(|edge_results| edge_results.failed_cases.is_empty())
             .unwrap_or(true)
     });
 
@@ -2331,8 +2331,8 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_ultra_think_numerical_stability_tester_creation() {
-        let tester = create_ultra_think_numerical_stability_tester();
+    fn test_advanced_think_numerical_stability_tester_creation() {
+        let tester = create_advanced_think_numerical_stability_tester();
         assert!(tester.config.enable_edge_case_testing);
         assert!(tester.config.enable_precision_analysis);
         assert!(tester.config.enable_invariant_validation);
@@ -2348,7 +2348,7 @@ mod tests {
 
     #[test]
     fn test_edge_case_generation() {
-        let config = UltraThinkNumericalStabilityConfig::default();
+        let config = AdvancedNumericalStabilityConfig::default();
         let generator = EdgeCaseGenerator::new(&config);
         let test_data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 

@@ -49,6 +49,7 @@ impl Embedding {
     }
 }
 // Bidirectional LSTM layer
+#[allow(dead_code)]
 struct BiLSTM {
     input_size: usize,
     hidden_size: usize,
@@ -260,6 +261,7 @@ struct Dropout {
     mask: Option<Array2<f32>>,
     is_training: bool,
 }
+#[allow(dead_code)]
 impl Dropout {
     fn new(p: f32) -> Self {
         assert!(

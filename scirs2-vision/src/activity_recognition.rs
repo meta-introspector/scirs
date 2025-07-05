@@ -1,4 +1,4 @@
-//! Ultra-Advanced Activity Recognition Framework
+//! Advanced-Advanced Activity Recognition Framework
 //!
 //! This module provides sophisticated activity recognition capabilities including:
 //! - Real-time action detection and classification
@@ -15,7 +15,7 @@ use crate::scene_understanding::SceneAnalysisResult;
 use ndarray::{Array1, Array2, Array3, ArrayView3};
 use std::collections::HashMap;
 
-/// Ultra-advanced activity recognition engine with multi-level analysis
+/// Advanced-advanced activity recognition engine with multi-level analysis
 pub struct ActivityRecognitionEngine {
     /// Action detection modules
     action_detectors: Vec<ActionDetector>,
@@ -33,7 +33,7 @@ pub struct ActivityRecognitionEngine {
     knowledge_base: ActivityKnowledgeBase,
 }
 
-/// Action detection with ultra-high precision
+/// Action detection with advanced-high precision
 #[derive(Debug, Clone)]
 pub struct ActionDetector {
     /// Detector name
@@ -552,7 +552,7 @@ impl Default for ActivityRecognitionEngine {
 }
 
 impl ActivityRecognitionEngine {
-    /// Create a new ultra-advanced activity recognition engine
+    /// Create a new advanced-advanced activity recognition engine
     pub fn new() -> Self {
         Self {
             action_detectors: vec![

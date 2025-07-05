@@ -1,4 +1,4 @@
-//! Ultra-advanced streaming analytics framework for scirs2-stats v1.0.0+
+//! Advanced-advanced streaming analytics framework for scirs2-stats v1.0.0+
 //!
 //! This module provides real-time, high-throughput streaming statistical
 //! computations with advanced features like adaptive windowing, incremental
@@ -15,9 +15,9 @@ use std::marker::PhantomData;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-/// Configuration for ultra-advanced streaming analytics
+/// Configuration for advanced-advanced streaming analytics
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UltraStreamingConfig {
+pub struct AdvancedStreamingConfig {
     /// Default window size for streaming operations
     pub default_window_size: usize,
     /// Enable adaptive windowing based on data characteristics
@@ -44,7 +44,7 @@ pub struct UltraStreamingConfig {
     pub approximate_algorithms: bool,
 }
 
-impl Default for UltraStreamingConfig {
+impl Default for AdvancedStreamingConfig {
     fn default() -> Self {
         Self {
             default_window_size: 1000,
@@ -116,8 +116,8 @@ pub struct StreamingStatistics<F> {
 }
 
 /// Advanced streaming processor with multiple algorithms
-pub struct UltraAdvancedStreamingProcessor<F> {
-    config: UltraStreamingConfig,
+pub struct AdvancedAdvancedStreamingProcessor<F> {
+    config: AdvancedStreamingConfig,
     windowing_strategy: WindowingStrategy,
     processing_mode: StreamProcessingMode,
     buffer: Arc<RwLock<VecDeque<(Instant, F)>>>,
@@ -359,13 +359,22 @@ pub enum RecommendationPriority {
     Critical,
 }
 
-impl<F> UltraAdvancedStreamingProcessor<F>
+impl<F> AdvancedAdvancedStreamingProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + 'static
         + std::fmt::Display,
 {
-    /// Create a new ultra-advanced streaming processor
-    pub fn new(config: UltraStreamingConfig) -> Self {
+    /// Create a new advanced-advanced streaming processor
+    pub fn new(config: AdvancedStreamingConfig) -> Self {
         let windowing_strategy = WindowingStrategy::Sliding {
             size: config.default_window_size,
         };
@@ -471,9 +480,12 @@ where
     fn process_batch_simd(&mut self, values: &ArrayView1<F>) -> StatsResult<()> {
         // Use scirs2-core's SIMD operations for efficient batch processing
         let batch_mean = F::simd_mean(values);
-        let batch_variance = F::simd_variance(values);
-        let batch_min = F::simd_min(values);
-        let batch_max = F::simd_max(values);
+        // Compute variance using SIMD operations: Var(X) = E[X²] - E[X]²
+        let squared_values = F::simd_mul(values, values);
+        let mean_squared = F::simd_mean(&squared_values.view());
+        let batch_variance = mean_squared - batch_mean * batch_mean;
+        let batch_min = F::simd_min_element(values);
+        let batch_max = F::simd_max_element(values);
 
         // Update streaming statistics with batch results
         {
@@ -745,8 +757,7 @@ where
 
 impl<F> ChangePointDetector<F>
 where
-    F: Float + NumCast + Copy
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + std::fmt::Display,
 {
     fn new() -> Self {
         Self {
@@ -803,8 +814,7 @@ where
 
 impl<F> AnomalyDetector<F>
 where
-    F: Float + NumCast + Copy
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + std::fmt::Display,
 {
     fn new() -> Self {
         let baseline = StreamingStatistics {
@@ -865,8 +875,7 @@ where
 
 impl<F> CompressionEngine<F>
 where
-    F: Float + NumCast + Copy
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + std::fmt::Display,
 {
     fn new() -> Self {
         Self {
@@ -906,26 +915,44 @@ where
     }
 }
 
-/// Convenience function to create an ultra-advanced streaming processor
+/// Convenience function to create an advanced-advanced streaming processor
 #[allow(dead_code)]
-pub fn create_ultra_streaming_processor<F>() -> UltraAdvancedStreamingProcessor<F>
+pub fn create_advanced_streaming_processor<F>() -> AdvancedAdvancedStreamingProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + 'static
         + std::fmt::Display,
 {
-    UltraAdvancedStreamingProcessor::new(UltraStreamingConfig::default())
+    AdvancedAdvancedStreamingProcessor::new(AdvancedStreamingConfig::default())
 }
 
 /// Convenience function to create a streaming processor with custom configuration
 #[allow(dead_code)]
 pub fn create_streaming_processor_with_config<F>(
-    config: UltraStreamingConfig,
-) -> UltraAdvancedStreamingProcessor<F>
+    config: AdvancedStreamingConfig,
+) -> AdvancedAdvancedStreamingProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + 'static
         + std::fmt::Display,
 {
-    UltraAdvancedStreamingProcessor::new(config)
+    AdvancedAdvancedStreamingProcessor::new(config)
 }
 
 #[cfg(test)]
@@ -935,7 +962,7 @@ mod tests {
 
     #[test]
     fn test_streaming_processor_creation() {
-        let processor = create_ultra_streaming_processor::<f64>();
+        let processor = create_advanced_streaming_processor::<f64>();
         let config = &processor.config;
         assert_eq!(config.default_window_size, 1000);
         assert!(config.adaptive_windowing);
@@ -943,7 +970,7 @@ mod tests {
 
     #[test]
     fn test_single_data_point_processing() {
-        let mut processor = create_ultra_streaming_processor::<f64>();
+        let mut processor = create_advanced_streaming_processor::<f64>();
         let result = processor.process_data_point(5.0);
         assert!(result.is_ok());
 
@@ -954,7 +981,7 @@ mod tests {
 
     #[test]
     fn test_batch_processing() {
-        let mut processor = create_ultra_streaming_processor::<f64>();
+        let mut processor = create_advanced_streaming_processor::<f64>();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let result = processor.process_batch(&data.view());
         assert!(result.is_ok());
@@ -966,7 +993,7 @@ mod tests {
 
     #[test]
     fn test_analytics_results() {
-        let mut processor = create_ultra_streaming_processor::<f64>();
+        let mut processor = create_advanced_streaming_processor::<f64>();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 100.0]; // Include an outlier
         let _ = processor.process_batch(&data.view());
 
@@ -1014,8 +1041,8 @@ mod tests {
 
     #[test]
     fn test_windowing_strategies() {
-        let config = UltraStreamingConfig::default();
-        let processor = UltraAdvancedStreamingProcessor::<f64>::new(config);
+        let config = AdvancedStreamingConfig::default();
+        let processor = AdvancedAdvancedStreamingProcessor::<f64>::new(config);
 
         let mut buffer = VecDeque::new();
         for i in 0..2000 {

@@ -145,7 +145,12 @@ where
 #[allow(dead_code)]
 pub fn t<F>(df: F, loc: F, scale: F) -> StatsResult<StudentT<F>>
 where
-    F: num_traits::Float + num_traits::NumCast + std::marker::Send + std::marker::Sync + 'static + std::fmt::Display,
+    F: num_traits::Float
+        + num_traits::NumCast
+        + std::marker::Send
+        + std::marker::Sync
+        + 'static
+        + std::fmt::Display,
 {
     StudentT::new(df, loc, scale)
 }
@@ -177,7 +182,12 @@ where
 #[allow(dead_code)]
 pub fn chi2<F>(df: F, loc: F, scale: F) -> StatsResult<ChiSquare<F>>
 where
-    F: num_traits::Float + num_traits::NumCast + std::marker::Send + std::marker::Sync + 'static + std::fmt::Display,
+    F: num_traits::Float
+        + num_traits::NumCast
+        + std::marker::Send
+        + std::marker::Sync
+        + 'static
+        + std::fmt::Display,
 {
     ChiSquare::new(df, loc, scale)
 }

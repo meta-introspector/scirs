@@ -11,6 +11,7 @@ use super::{
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, Array3, ArrayView1};
+use rand::Rng;
 use std::collections::HashMap;
 
 /// Advanced Neural Architecture Search System for Optimization
@@ -180,7 +181,7 @@ pub enum OptimizerComponent {
     /// Line search component
     LineSearch {
         method: LineSearchMethod,
-        max_iterations: usize,
+        max_nit: usize,
     },
     /// Regularization component
     Regularization {
@@ -324,7 +325,7 @@ impl AdaptiveNASSystem {
     pub fn search_architectures(
         &mut self,
         training_problems: &[OptimizationProblem],
-    ) -> Result<Vec<OptimizationArchitecture>> {
+    ) -> OptimizeResult<Vec<OptimizationArchitecture>> {
         // Initialize population if empty
         if self.architecture_population.is_empty() {
             self.initialize_population()?;
@@ -358,7 +359,7 @@ impl AdaptiveNASSystem {
     }
 
     /// Initialize population with diverse architectures
-    fn initialize_population(&mut self) -> Result<()> {
+    fn initialize_population(&mut self) -> OptimizeResult<()> {
         for _ in 0..self.config.batch_size {
             let architecture = self.generate_random_architecture()?;
             self.architecture_population.push(architecture);
@@ -367,8 +368,8 @@ impl AdaptiveNASSystem {
     }
 
     /// Generate a random architecture
-    fn generate_random_architecture(&self) -> Result<OptimizationArchitecture> {
-        let num_layers = 2 + (rand::rng().random::<usize>() % 8); // 2-10 layers
+    fn generate_random_architecture(&self) -> OptimizeResult<OptimizationArchitecture> {
+        let num_layers = 2 + (rand::rng().gen_range(0..8)); // 2-10 layers
         let mut layers = Vec::new();
         let mut connections = Vec::new();
         let mut activations = Vec::new();
@@ -377,12 +378,12 @@ impl AdaptiveNASSystem {
         // Generate layers
         for i in 0..num_layers {
             let layer_type = self.sample_layer_type();
-            let units = 16 + (rand::rng().random::<usize>() % 256); // 16-272 units
+            let units = 16 + (rand::rng().gen_range(0..256)); // 16-272 units
 
             layers.push(LayerConfig {
                 layer_type,
                 units,
-                dropout: rand::rng().random::<f64>() * 0.5,
+                dropout: rand::rng().gen_range(0.0..0.5),
                 normalization: self.sample_normalization(),
                 parameters: HashMap::new(),
             });
@@ -399,8 +400,8 @@ impl AdaptiveNASSystem {
                 });
 
                 // Add skip connections with some probability
-                if i > 1 && rand::rng().random::<f64>() < 0.3 {
-                    let skip_source = rand::rng().random::<usize>() % i;
+                if i > 1 && rand::rng().gen_range(0.0..1.0) < 0.3 {
+                    let skip_source = rand::rng().gen_range(0..i);
                     connections.push(Connection {
                         from: skip_source,
                         to: i,
@@ -412,11 +413,11 @@ impl AdaptiveNASSystem {
         }
 
         // Generate optimizer components
-        for _ in 0..(1 + rand::rng().random::<usize>() % 4) {
+        for _ in 0..(1 + rand::rng().gen_range(0..4)) {
             optimizer_components.push(self.sample_optimizer_component());
         }
 
-        let id = format!("arch_{}", rand::rng().random::<u64>());
+        let id = format!("arch_{}", rand::rng().gen_range(0..u64::MAX));
 
         Ok(OptimizationArchitecture {
             id,
@@ -431,27 +432,27 @@ impl AdaptiveNASSystem {
     }
 
     fn sample_layer_type(&self) -> LayerType {
-        match rand::rng().random::<usize>() % 8 {
+        match rand::rng().gen_range(0..8) {
             0 => LayerType::Dense,
             1 => LayerType::Attention {
-                num_heads: 2 + rand::rng().random::<usize>() % 6,
+                num_heads: 2 + rand::rng().gen_range(0..6),
             },
             2 => LayerType::LSTM {
-                hidden_size: 32 + rand::rng().random::<usize>() % 128,
+                hidden_size: 32 + rand::rng().gen_range(0..128),
             },
             3 => LayerType::GRU {
-                hidden_size: 32 + rand::rng().random::<usize>() % 128,
+                hidden_size: 32 + rand::rng().gen_range(0..128),
             },
             4 => LayerType::Transformer {
-                num_heads: 2 + rand::rng().random::<usize>() % 6,
-                ff_dim: 64 + rand::rng().random::<usize>() % 256,
+                num_heads: 2 + rand::rng().gen_range(0..6),
+                ff_dim: 64 + rand::rng().gen_range(0..256),
             },
             5 => LayerType::Memory {
-                memory_size: 16 + rand::rng().random::<usize>() % 64,
+                memory_size: 16 + rand::rng().gen_range(0..64),
             },
             6 => LayerType::Convolution {
-                kernel_size: 1 + rand::rng().random::<usize>() % 5,
-                stride: 1 + rand::rng().random::<usize>() % 3,
+                kernel_size: 1 + rand::rng().gen_range(0..5),
+                stride: 1 + rand::rng().gen_range(0..3),
             },
             _ => LayerType::GraphNN {
                 aggregation: "mean".to_string(),
@@ -460,19 +461,19 @@ impl AdaptiveNASSystem {
     }
 
     fn sample_normalization(&self) -> NormalizationType {
-        match rand::rng().random::<usize>() % 5 {
+        match rand::rng().gen_range(0..5) {
             0 => NormalizationType::None,
             1 => NormalizationType::BatchNorm,
             2 => NormalizationType::LayerNorm,
             3 => NormalizationType::GroupNorm {
-                groups: 2 + rand::rng().random::<usize>() % 6,
+                groups: 2 + rand::rng().gen_range(0..6),
             },
             _ => NormalizationType::InstanceNorm,
         }
     }
 
     fn sample_activation(&self) -> ActivationType {
-        match rand::rng().random::<usize>() % 5 {
+        match rand::rng().gen_range(0..5) {
             0 => ActivationType::ReLU,
             1 => ActivationType::GELU,
             2 => ActivationType::Swish,
@@ -482,41 +483,44 @@ impl AdaptiveNASSystem {
     }
 
     fn sample_optimizer_component(&self) -> OptimizerComponent {
-        match rand::rng().random::<usize>() % 6 {
+        match rand::rng().gen_range(0..6) {
             0 => OptimizerComponent::Momentum {
-                decay: 0.8 + rand::rng().random::<f64>() * 0.19,
+                decay: 0.8 + rand::rng().gen_range(0.0..0.19),
             },
             1 => OptimizerComponent::AdaptiveLR {
-                adaptation_rate: 0.001 + rand::rng().random::<f64>() * 0.009,
+                adaptation_rate: 0.001 + rand::rng().gen_range(0.0..0.009),
                 min_lr: 1e-8,
                 max_lr: 1.0,
             },
             2 => OptimizerComponent::SecondOrder {
                 hessian_approximation: HessianApprox::LBFGS {
-                    memory_size: 5 + rand::rng().random::<usize>() % 15,
+                    memory_size: 5 + rand::rng().gen_range(0..15),
                 },
-                regularization: 1e-6 + rand::rng().random::<f64>() * 1e-3,
+                regularization: 1e-6 + rand::rng().gen_range(0.0..1e-3),
             },
             3 => OptimizerComponent::TrustRegion {
-                initial_radius: 0.1 + rand::rng().random::<f64>() * 0.9,
+                initial_radius: 0.1 + rand::rng().gen_range(0.0..0.9),
                 max_radius: 10.0,
                 shrink_factor: 0.25,
                 expand_factor: 2.0,
             },
             4 => OptimizerComponent::LineSearch {
                 method: LineSearchMethod::StrongWolfe,
-                max_iterations: 10 + rand::rng().random::<usize>() % 20,
+                max_nit: 10 + rand::rng().gen_range(0..20),
             },
             _ => OptimizerComponent::Regularization {
-                l1_weight: rand::rng().random::<f64>() * 0.01,
-                l2_weight: rand::rng().random::<f64>() * 0.01,
-                elastic_net_ratio: rand::rng().random::<f64>(),
+                l1_weight: rand::rng().gen_range(0.0..0.01),
+                l2_weight: rand::rng().gen_range(0.0..0.01),
+                elastic_net_ratio: rand::rng().gen_range(0.0..1.0),
             },
         }
     }
 
     /// Evaluate population on training problems
-    fn evaluate_population(&mut self, training_problems: &[OptimizationProblem]) -> Result<()> {
+    fn evaluate_population(
+        &mut self,
+        training_problems: &[OptimizationProblem],
+    ) -> OptimizeResult<()> {
         for architecture in &mut self.architecture_population {
             let mut total_score = 0.0;
             let mut num_evaluated = 0;
@@ -549,7 +553,7 @@ impl AdaptiveNASSystem {
         &self,
         architecture: &OptimizationArchitecture,
         problem: &OptimizationProblem,
-    ) -> Result<f64> {
+    ) -> OptimizeResult<f64> {
         // Simplified evaluation - in practice would build and test the actual architecture
         let complexity_penalty = architecture.complexity * 0.01;
         let num_components = architecture.optimizer_components.len() as f64;
@@ -563,7 +567,7 @@ impl AdaptiveNASSystem {
     }
 
     /// Update controller network
-    fn update_controller(&mut self) -> Result<()> {
+    fn update_controller(&mut self) -> OptimizeResult<()> {
         // Collect performance feedback
         let mut rewards = Vec::new();
         for arch in &self.architecture_population {
@@ -597,7 +601,7 @@ impl AdaptiveNASSystem {
     }
 
     /// Generate new architectures using controller
-    fn generate_new_architectures(&mut self) -> Result<Vec<OptimizationArchitecture>> {
+    fn generate_new_architectures(&mut self) -> OptimizeResult<Vec<OptimizationArchitecture>> {
         let mut new_architectures = Vec::new();
 
         for _ in 0..self.config.batch_size / 2 {
@@ -617,7 +621,7 @@ impl AdaptiveNASSystem {
     }
 
     /// Generate architecture using controller network
-    fn controller_generate_architecture(&mut self) -> Result<OptimizationArchitecture> {
+    fn controller_generate_architecture(&mut self) -> OptimizeResult<OptimizationArchitecture> {
         // Simplified architecture generation using controller
         // In practice, this would use the LSTM controller to generate architecture sequences
 
@@ -652,18 +656,18 @@ impl AdaptiveNASSystem {
     fn mutate_architecture(
         &self,
         base_arch: &OptimizationArchitecture,
-    ) -> Result<OptimizationArchitecture> {
+    ) -> OptimizeResult<OptimizationArchitecture> {
         let mut mutated = base_arch.clone();
-        mutated.id = format!("mutated_{}", rand::rng().random::<u64>());
+        mutated.id = format!("mutated_{}", rand::rng().gen_range(0..u64::MAX));
 
         // Mutate with some probability
-        if rand::rng().random::<f64>() < 0.3 {
+        if rand::rng().gen_range(0.0..1.0) < 0.3 {
             // Mutate layer count
-            if rand::rng().random::<f64>() < 0.5 && mutated.layers.len() < 12 {
+            if rand::rng().gen_range(0.0..1.0) < 0.5 && mutated.layers.len() < 12 {
                 mutated.layers.push(LayerConfig {
                     layer_type: self.sample_layer_type(),
-                    units: 32 + rand::rng().random::<usize>() % 128,
-                    dropout: rand::rng().random::<f64>() * 0.5,
+                    units: 32 + rand::rng().gen_range(0..128),
+                    dropout: rand::rng().gen_range(0.0..0.5),
                     normalization: self.sample_normalization(),
                     parameters: HashMap::new(),
                 });
@@ -674,19 +678,19 @@ impl AdaptiveNASSystem {
 
         // Mutate activations
         for activation in &mut mutated.activations {
-            if rand::rng().random::<f64>() < 0.2 {
+            if rand::rng().gen_range(0.0..1.0) < 0.2 {
                 *activation = self.sample_activation();
             }
         }
 
         // Mutate optimizer components
-        if rand::rng().random::<f64>() < 0.4 {
-            if rand::rng().random::<f64>() < 0.5 && mutated.optimizer_components.len() < 6 {
+        if rand::rng().gen_range(0.0..1.0) < 0.4 {
+            if rand::rng().gen_range(0.0..1.0) < 0.5 && mutated.optimizer_components.len() < 6 {
                 mutated
                     .optimizer_components
                     .push(self.sample_optimizer_component());
             } else if !mutated.optimizer_components.is_empty() {
-                let idx = rand::rng().random::<usize>() % mutated.optimizer_components.len();
+                let idx = rand::rng().gen_range(0..mutated.optimizer_components.len());
                 mutated.optimizer_components.remove(idx);
             }
         }
@@ -698,7 +702,7 @@ impl AdaptiveNASSystem {
     fn select_next_generation(
         &mut self,
         mut new_architectures: Vec<OptimizationArchitecture>,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         // Combine current population with new architectures
         self.architecture_population.append(&mut new_architectures);
 
@@ -718,7 +722,7 @@ impl AdaptiveNASSystem {
     }
 
     /// Update search statistics
-    fn update_search_stats(&mut self) -> Result<()> {
+    fn update_search_stats(&mut self) -> OptimizeResult<()> {
         self.search_stats.architectures_evaluated += self.architecture_population.len();
 
         if let Some(best_arch) = self.architecture_population.first() {
@@ -818,13 +822,13 @@ impl ArchitectureController {
     pub fn new(vocabulary: &ArchitectureVocabulary, hidden_size: usize) -> Self {
         Self {
             lstm_weights: Array3::from_shape_fn((4, hidden_size, hidden_size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen_range(0.0..1.0) - 0.5) * 0.1
             }),
             embedding_layer: Array2::from_shape_fn((hidden_size, vocabulary.vocab_size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen_range(0.0..1.0) - 0.5) * 0.1
             }),
             output_layer: Array2::from_shape_fn((vocabulary.vocab_size, hidden_size), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen_range(0.0..1.0) - 0.5) * 0.1
             }),
             controller_state: Array1::zeros(hidden_size),
             vocabulary: vocabulary.clone(),
@@ -870,7 +874,7 @@ impl ArchitectureVocabulary {
 }
 
 impl LearnedOptimizer for AdaptiveNASSystem {
-    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> Result<()> {
+    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
         let problems: Vec<OptimizationProblem> = training_tasks
             .iter()
             .map(|task| task.problem.clone())
@@ -884,7 +888,7 @@ impl LearnedOptimizer for AdaptiveNASSystem {
         &mut self,
         problem: &OptimizationProblem,
         _initial_params: &ArrayView1<f64>,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         // Check if we have a cached architecture for this problem type
         if let Some(cached_arch) = self.get_cached_architecture(&problem.problem_class) {
             // Use cached architecture - no adaptation needed

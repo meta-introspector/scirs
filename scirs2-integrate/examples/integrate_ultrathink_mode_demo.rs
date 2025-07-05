@@ -46,9 +46,9 @@ fn main() -> IntegrateResult<()> {
     let t = 0.0;
     let h = 0.01;
 
-    // Perform ultra-optimized RK4 integration
-    println!("🧮 Performing ultra-optimized RK4 integration...");
-    let result = coordinator.ultra_rk4_integration(t, &initial_y.view(), h, ode_function)?;
+    // Perform advanced-optimized RK4 integration
+    println!("🧮 Performing advanced-optimized RK4 integration...");
+    let result = coordinator.advanced_rk4_integration(t, &initial_y.view(), h, ode_function)?;
 
     println!("✅ Integration completed successfully!");
     println!("   Solution length: {}", result.solution.len());
@@ -86,7 +86,7 @@ fn main() -> IntegrateResult<()> {
     let rtol = 1e-6;
     let atol = 1e-8;
 
-    let adaptive_result = coordinator.ultra_adaptive_integration(
+    let adaptive_result = coordinator.advanced_adaptive_integration(
         t,
         &initial_y.view(),
         h,

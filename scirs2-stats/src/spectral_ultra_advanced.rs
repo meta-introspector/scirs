@@ -1,4 +1,4 @@
-//! Ultra-advanced spectral analysis methods for statistical signal processing
+//! Advanced-advanced spectral analysis methods for statistical signal processing
 //!
 //! This module implements state-of-the-art spectral analysis techniques including:
 //! - Multi-taper spectral estimation with adaptive bandwidth
@@ -18,10 +18,10 @@ use scirs2_linalg::parallel_dispatch::ParallelConfig;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-/// Ultra-advanced spectral analysis framework
-pub struct UltraSpectralAnalyzer<F> {
+/// Advanced-advanced spectral analysis framework
+pub struct AdvancedSpectralAnalyzer<F> {
     /// Analysis configuration
-    config: UltraSpectralConfig<F>,
+    config: AdvancedSpectralConfig<F>,
     /// Cached basis functions and transforms
     cache: SpectralCache<F>,
     /// Performance metrics
@@ -29,9 +29,8 @@ pub struct UltraSpectralAnalyzer<F> {
     _phantom: PhantomData<F>,
 }
 
-/// Configuration for ultra-advanced spectral analysis
-#[derive(Debug, Clone)]
-pub struct UltraSpectralConfig<F> {
+/// Configuration for advanced-advanced spectral analysis
+pub struct AdvancedSpectralConfig<F> {
     /// Sampling frequency
     pub fs: F,
     /// Window functions to use
@@ -245,7 +244,7 @@ pub enum ActivationFunction {
 
 /// Spectral analysis results
 #[derive(Debug, Clone)]
-pub struct UltraSpectralResults<F> {
+pub struct AdvancedSpectralResults<F> {
     /// Power spectral density
     pub psd: Array2<F>,
     /// Frequency bins
@@ -388,13 +387,22 @@ struct SpectralCache<F> {
     tapers: HashMap<String, Array2<F>>,
 }
 
-impl<F> UltraSpectralAnalyzer<F>
+impl<F> AdvancedSpectralAnalyzer<F>
 where
-    F: Float + NumCast + FloatConst + SimdUnifiedOps + One + Zero + PartialOrd + Copy + Send + Sync
+    F: Float
+        + NumCast
+        + FloatConst
+        + SimdUnifiedOps
+        + One
+        + Zero
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
         + std::fmt::Display,
 {
-    /// Create a new ultra-advanced spectral analyzer
-    pub fn new(config: UltraSpectralConfig<F>) -> Self {
+    /// Create a new advanced-advanced spectral analyzer
+    pub fn new(config: AdvancedSpectralConfig<F>) -> Self {
         let cache = SpectralCache {
             windows: HashMap::new(),
             fft_plans: HashMap::new(),
@@ -436,12 +444,12 @@ where
     pub fn analyze_comprehensive(
         &mut self,
         signal: &ArrayView1<F>,
-    ) -> StatsResult<UltraSpectralResults<F>> {
+    ) -> StatsResult<AdvancedSpectralResults<F>> {
         check_array_finite(signal, "signal")?;
         check_min_samples(signal, 2, "signal")?;
 
         let start_time = std::time::Instant::now();
-        let mut results = UltraSpectralResults {
+        let mut results = AdvancedSpectralResults {
             psd: Array2::zeros((0, 0)),
             frequencies: Array1::zeros(0),
             times: None,
@@ -494,7 +502,7 @@ where
         signals: &ArrayView2<F>,
     ) -> StatsResult<CoherenceResults<F>> {
         check_array_finite(signals, "signals")?;
-        let (n_samples, n_channels) = signals.dim();
+        let (_n_samples, n_channels) = signals.dim();
 
         if n_channels < 2 {
             return Err(StatsError::InvalidArgument(
@@ -634,7 +642,7 @@ where
 
         let n_freqs = n / 2 + 1;
         let mut psd = Array2::zeros((n_freqs, 1));
-        let frequencies = self.generate_frequency_grid(n)?;
+        let frequencies = self.generate_frequency_grid(n);
 
         // Apply each taper and compute periodogram
         for taper_idx in 0..k {
@@ -797,7 +805,7 @@ where
                     -F::from(2.0).unwrap() * F::PI() * F::from(k).unwrap() * F::from(j).unwrap()
                         / F::from(n).unwrap();
                 let complex_exp = num_complex::Complex::new(angle.cos(), angle.sin());
-                sum = sum + signal[j] * complex_exp;
+                sum = sum + num_complex::Complex::new(signal[j], F::zero()) * complex_exp;
             }
             spectrum.push(sum);
         }
@@ -964,10 +972,9 @@ pub struct SpectralPeak<F> {
     pub confidence: F,
 }
 
-impl<F> Default for UltraSpectralConfig<F>
+impl<F> Default for AdvancedSpectralConfig<F>
 where
-    F: Float + NumCast + FloatConst + Copy
-        + std::fmt::Display,
+    F: Float + NumCast + FloatConst + Copy + std::fmt::Display,
 {
     fn default() -> Self {
         Self {
@@ -1036,8 +1043,8 @@ mod tests {
 
     #[test]
     fn test_spectral_analyzer_creation() {
-        let config = UltraSpectralConfig::default();
-        let analyzer = UltraSpectralAnalyzer::<f64>::new(config);
+        let config = AdvancedSpectralConfig::default();
+        let analyzer = AdvancedSpectralAnalyzer::<f64>::new(config);
 
         assert_eq!(analyzer.config.fs, 1.0);
         assert_eq!(analyzer.config.multitaper_config.k, 7);
@@ -1045,8 +1052,8 @@ mod tests {
 
     #[test]
     fn test_window_generation() {
-        let config = UltraSpectralConfig::default();
-        let analyzer = UltraSpectralAnalyzer::<f64>::new(config);
+        let config = AdvancedSpectralConfig::default();
+        let analyzer = AdvancedSpectralAnalyzer::<f64>::new(config);
 
         let window = analyzer.generate_window(WindowFunction::Hann, 10).unwrap();
         assert_eq!(window.len(), 10);
@@ -1055,9 +1062,9 @@ mod tests {
 
     #[test]
     fn test_frequency_grid() {
-        let mut config = UltraSpectralConfig::default();
+        let mut config = AdvancedSpectralConfig::default();
         config.fs = 100.0;
-        let analyzer = UltraSpectralAnalyzer::<f64>::new(config);
+        let analyzer = AdvancedSpectralAnalyzer::<f64>::new(config);
 
         let freqs = analyzer.generate_frequency_grid(20);
         assert_eq!(freqs.len(), 11); // n/2 + 1
@@ -1067,8 +1074,8 @@ mod tests {
 
     #[test]
     fn test_comprehensive_analysis() {
-        let config = UltraSpectralConfig::default();
-        let mut analyzer = UltraSpectralAnalyzer::<f64>::new(config);
+        let config = AdvancedSpectralConfig::default();
+        let mut analyzer = AdvancedSpectralAnalyzer::<f64>::new(config);
 
         // Generate test signal: sine wave + noise
         let n = 128;
@@ -1087,11 +1094,11 @@ mod tests {
 
     #[test]
     fn test_time_frequency_analysis() {
-        let mut config = UltraSpectralConfig::default();
+        let mut config = AdvancedSpectralConfig::default();
         config.nonstationary_config.stft_window_size = 32;
         config.nonstationary_config.stft_overlap = 0.5;
 
-        let mut analyzer = UltraSpectralAnalyzer::<f64>::new(config);
+        let mut analyzer = AdvancedSpectralAnalyzer::<f64>::new(config);
 
         let signal = array![
             1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 4.0, 3.0,
@@ -1108,8 +1115,8 @@ mod tests {
 
     #[test]
     fn test_spectral_peak_detection() {
-        let config = UltraSpectralConfig::default();
-        let analyzer = UltraSpectralAnalyzer::<f64>::new(config);
+        let config = AdvancedSpectralConfig::default();
+        let analyzer = AdvancedSpectralAnalyzer::<f64>::new(config);
 
         // Create PSD with clear peaks
         let psd = array![1.0, 2.0, 10.0, 2.0, 1.0, 3.0, 15.0, 3.0, 1.0, 2.0];

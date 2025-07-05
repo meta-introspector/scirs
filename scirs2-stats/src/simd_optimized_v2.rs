@@ -25,23 +25,14 @@ pub struct SimdConfig {
 
 impl Default for SimdConfig {
     fn default() -> Self {
-        // Detect platform capabilities for optimal configuration
-        let capabilities = PlatformCapabilities::detect();
-
-        let min_size = if capabilities.has_avx512() {
-            64 // AVX-512 is efficient even for smaller arrays
-        } else if capabilities.has_avx2() {
-            96 // AVX2 needs slightly larger arrays
-        } else if capabilities.has_sse() {
-            128 // SSE requires larger arrays to be beneficial
-        } else {
-            1024 // No SIMD, set high threshold to prefer scalar
-        };
+        // Use conservative defaults for cross-platform compatibility
+        // TODO: Implement proper platform capability detection when available
+        let min_size = 128; // Conservative threshold for SIMD benefits
 
         Self {
             min_size,
-            use_aligned: capabilities.has_avx2(), // AVX2+ benefits from alignment
-            unroll_factor: if capabilities.has_avx512() { 8 } else { 4 },
+            use_aligned: true, // Enable alignment for better performance
+            unroll_factor: 4,  // Standard unroll factor
         }
     }
 }
@@ -57,11 +48,10 @@ pub fn mean_simd_optimized<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F> + std::fmt::Display,
 {
     // Use scirs2-core validation
-    check_not_empty(x.as_slice().unwrap(), "x").map_err(|_| {
+    check_not_empty(x, "x").map_err(|_| {
         crate::error::StatsError::invalid_argument("Cannot compute mean of empty array")
     })?;
 
@@ -90,8 +80,7 @@ pub fn variance_simd_optimized<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F> + std::fmt::Display,
 {
     let n = x.len();
     if n <= ddof {
@@ -124,8 +113,7 @@ pub fn stats_simd_single_pass<F, D>(
 ) -> StatsResult<(F, F, F, F, F, F)>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F> + std::fmt::Display,
 {
     if x.is_empty() {
         return Err(crate::error::StatsError::invalid_argument(
@@ -247,8 +235,7 @@ where
 fn chunked_simd_sum<F, D>(x: &ArrayBase<D, Ix1>, _config: &SimdConfig) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F> + std::fmt::Display,
 {
     let capabilities = PlatformCapabilities::detect();
     let _simd_width = if capabilities.simd_available { 8 } else { 1 };
@@ -282,8 +269,7 @@ fn chunked_simd_sum_squared_deviations<F, D>(
 ) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F> + std::fmt::Display,
 {
     const CHUNK_SIZE: usize = 1024;
     let mut total_sum = F::zero();
@@ -317,8 +303,7 @@ where
 fn variance_scalar_welford<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F> + std::fmt::Display,
 {
     let mut mean = F::zero();
     let mut m2 = F::zero();
@@ -340,8 +325,7 @@ where
 fn stats_scalar_single_pass<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<(F, F, F, F, F, F)>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F> + std::fmt::Display,
 {
     let n = x.len();
     let n_f = F::from(n).unwrap();

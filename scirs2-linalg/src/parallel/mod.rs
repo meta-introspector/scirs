@@ -11,14 +11,14 @@ pub mod work_stealing;
 
 // Re-export submodule types
 pub use thread_pools::{
-    get_global_manager, AdvancedThreadPoolConfig, AffinityStrategy, AnomalySeverity, AnomalyType,
+    get_global_manager, AdvancedPerformanceStats, AdvancedPerformanceThreadPool,
+    AdvancedThreadPoolConfig, AffinityStrategy, AnomalySeverity, AnomalyType,
     CacheAllocationPolicy, DecompositionType, DynamicSizingConfig, DynamicThreadManager,
     IterativeSolverType, MemoryMetrics, MonitoringConfig, OperationType, PerformanceAnomaly,
     PredictionModelParams, ProfileMetrics, ResourceIsolationConfig, ResourceUsagePattern,
     ScalingDecision, ScalingReason, ScopedThreadPool, ThreadPoolConfig, ThreadPoolManager,
-    ThreadPoolProfile, ThreadPoolProfiler, ThreadPoolStats, UltraPerformanceStats,
-    UltraPerformanceThreadPool, WorkloadAdaptationConfig, WorkloadCharacteristics, WorkloadPattern,
-    WorkloadPredictor,
+    ThreadPoolProfile, ThreadPoolProfiler, ThreadPoolStats, WorkloadAdaptationConfig,
+    WorkloadCharacteristics, WorkloadPattern, WorkloadPredictor,
 };
 pub use work_stealing::{
     AdaptiveChunking, AdaptiveChunkingStats, CacheAwareStrategy, CacheAwareWorkStealer,

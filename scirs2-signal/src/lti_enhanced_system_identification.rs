@@ -3,7 +3,7 @@
 //! This module provides state-of-the-art system identification techniques combining:
 //! - Quantum-inspired optimization algorithms for parameter estimation
 //! - Neuromorphic-hybrid identification with adaptive learning
-//! - Ultra-high-resolution frequency domain identification
+//! - Advanced-high-resolution frequency domain identification
 //! - Advanced uncertainty quantification with Bayesian neural networks
 //! - Real-time multi-scale temporal identification
 //! - SIMD-accelerated matrix-free iterative solvers
@@ -20,15 +20,15 @@ use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
-/// Ultra-enhanced system identification result with quantum-inspired optimization
+/// Advanced-enhanced system identification result with quantum-inspired optimization
 #[derive(Debug, Clone)]
-pub struct UltraEnhancedSysIdResult {
+pub struct AdvancedEnhancedSysIdResult {
     /// Identified system model
     pub system_model: SystemModel,
     /// Parameter estimates with uncertainty quantification
     pub parameter_estimates: Vec<ParameterWithUncertainty>,
     /// Model validation metrics
-    pub validation_metrics: UltraValidationMetrics,
+    pub validation_metrics: AdvancedValidationMetrics,
     /// Computational performance metrics
     pub performance_metrics: PerformanceMetrics,
     /// Convergence diagnostics
@@ -71,9 +71,9 @@ pub struct ParameterWithUncertainty {
     pub correlations: HashMap<String, f64>,
 }
 
-/// Ultra-comprehensive validation metrics
+/// Advanced-comprehensive validation metrics
 #[derive(Debug, Clone)]
-pub struct UltraValidationMetrics {
+pub struct AdvancedValidationMetrics {
     /// Basic validation metrics
     pub fit_percentage: f64,
     pub mse: f64,
@@ -264,9 +264,9 @@ pub enum ChangeType {
     OperatingPointChange,
 }
 
-/// Configuration for ultra-enhanced system identification
+/// Configuration for advanced-enhanced system identification
 #[derive(Debug, Clone)]
-pub struct UltraEnhancedSysIdConfig {
+pub struct AdvancedEnhancedSysIdConfig {
     /// Maximum model order to consider
     pub max_order: usize,
     /// Minimum model order to consider
@@ -293,7 +293,7 @@ pub struct UltraEnhancedSysIdConfig {
     pub noise_variance: Option<f64>,
 }
 
-impl Default for UltraEnhancedSysIdConfig {
+impl Default for AdvancedEnhancedSysIdConfig {
     fn default() -> Self {
         Self {
             max_order: 20,
@@ -312,7 +312,7 @@ impl Default for UltraEnhancedSysIdConfig {
     }
 }
 
-/// Ultra-enhanced system identification using quantum-inspired optimization
+/// Advanced-enhanced system identification using quantum-inspired optimization
 ///
 /// This function implements state-of-the-art system identification techniques
 /// combining multiple advanced methods for maximum accuracy and robustness.
@@ -327,11 +327,11 @@ impl Default for UltraEnhancedSysIdConfig {
 ///
 /// * Comprehensive identification results with uncertainty quantification
 #[allow(dead_code)]
-pub fn ultra_enhanced_system_identification(
+pub fn advanced_enhanced_system_identification(
     input: &Array1<f64>,
     output: &Array1<f64>,
-    config: &UltraEnhancedSysIdConfig,
-) -> SignalResult<UltraEnhancedSysIdResult> {
+    config: &AdvancedEnhancedSysIdConfig,
+) -> SignalResult<AdvancedEnhancedSysIdResult> {
     // Validate inputs
     check_finite(&input.to_vec(), "input")?;
     check_finite(&output.to_vec(), "output")?;
@@ -367,7 +367,7 @@ pub fn ultra_enhanced_system_identification(
         build_system_model(&parameter_estimates, structure_selection.selected_order)?;
 
     // Step 4: Comprehensive validation
-    let validation_metrics = perform_ultra_validation(input, output, &system_model, config)?;
+    let validation_metrics = perform_advanced_validation(input, output, &system_model, config)?;
 
     // Step 5: Convergence analysis
     let convergence_info = analyze_convergence(&parameter_estimates, config)?;
@@ -400,7 +400,7 @@ pub fn ultra_enhanced_system_identification(
         cache_miss_rate: 0.05, // Optimized implementation
     };
 
-    Ok(UltraEnhancedSysIdResult {
+    Ok(AdvancedEnhancedSysIdResult {
         system_model,
         parameter_estimates,
         validation_metrics,
@@ -416,7 +416,7 @@ pub fn ultra_enhanced_system_identification(
 fn perform_structure_selection(
     input: &Array1<f64>,
     output: &Array1<f64>,
-    config: &UltraEnhancedSysIdConfig,
+    config: &AdvancedEnhancedSysIdConfig,
 ) -> SignalResult<StructureSelectionResults> {
     let mut order_criteria = HashMap::new();
     let mut best_order = config.min_order;
@@ -477,7 +477,7 @@ fn quantum_inspired_parameter_estimation(
     input: &Array1<f64>,
     output: &Array1<f64>,
     order: usize,
-    config: &UltraEnhancedSysIdConfig,
+    config: &AdvancedEnhancedSysIdConfig,
 ) -> SignalResult<Vec<ParameterWithUncertainty>> {
     let n_params = 2 * order; // Numerator and denominator coefficients
     let mut parameters = Vec::with_capacity(n_params);
@@ -531,7 +531,7 @@ fn classical_parameter_estimation(
     input: &Array1<f64>,
     output: &Array1<f64>,
     order: usize,
-    config: &UltraEnhancedSysIdConfig,
+    config: &AdvancedEnhancedSysIdConfig,
 ) -> SignalResult<Vec<ParameterWithUncertainty>> {
     // Use least squares with Tikhonov regularization
     let (params, uncertainties) =
@@ -602,14 +602,14 @@ fn build_system_model(
     })
 }
 
-/// Perform ultra-comprehensive validation
+/// Perform advanced-comprehensive validation
 #[allow(dead_code)]
-fn perform_ultra_validation(
+fn perform_advanced_validation(
     input: &Array1<f64>,
     output: &Array1<f64>,
     model: &SystemModel,
-    config: &UltraEnhancedSysIdConfig,
-) -> SignalResult<UltraValidationMetrics> {
+    config: &AdvancedEnhancedSysIdConfig,
+) -> SignalResult<AdvancedValidationMetrics> {
     let tf = model
         .transfer_function
         .as_ref()
@@ -656,7 +656,7 @@ fn perform_ultra_validation(
     let stability_margin = compute_stability_margin(tf)?;
     let noise_robustness = estimate_noise_robustness(input, output, tf)?;
 
-    Ok(UltraValidationMetrics {
+    Ok(AdvancedValidationMetrics {
         fit_percentage,
         mse,
         rmse,
@@ -821,7 +821,7 @@ fn evolve_quantum_states(
     quantum_states: &mut Array2<Complex64>,
     cost: f64,
     iteration: usize,
-    config: &UltraEnhancedSysIdConfig,
+    config: &AdvancedEnhancedSysIdConfig,
 ) {
     let (n_params, n_states) = quantum_states.dim();
     let annealing_factor = 1.0 - (iteration as f64) / (config.max_iterations as f64);
@@ -1200,7 +1200,7 @@ fn find_alternative_orders(
 #[allow(dead_code)]
 fn analyze_convergence(
     parameters: &[ParameterWithUncertainty],
-    config: &UltraEnhancedSysIdConfig,
+    config: &AdvancedEnhancedSysIdConfig,
 ) -> SignalResult<ConvergenceInfo> {
     // Simplified convergence analysis
     let avg_uncertainty =
@@ -1222,7 +1222,7 @@ fn setup_real_time_adaptation(
     input: &Array1<f64>,
     output: &Array1<f64>,
     model: &SystemModel,
-    config: &UltraEnhancedSysIdConfig,
+    config: &AdvancedEnhancedSysIdConfig,
 ) -> SignalResult<AdaptationResults> {
     let n = input.len();
     let n_params = 2 * model.order;
@@ -1415,20 +1415,20 @@ mod tests {
     use approx::assert_relative_eq;
 
     #[test]
-    fn test_ultra_enhanced_system_identification() {
+    fn test_advanced_enhanced_system_identification() {
         // Create test signals
         let n = 100;
         let input = Array1::from_shape_fn(n, |i| (i as f64 * 0.1).sin());
         let output = Array1::from_shape_fn(n, |i| (i as f64 * 0.1 + 0.5).sin() * 0.8);
 
-        let config = UltraEnhancedSysIdConfig {
+        let config = AdvancedEnhancedSysIdConfig {
             max_order: 5,
             min_order: 1,
             enable_quantum_optimization: false, // Disable for testing
             ..Default::default()
         };
 
-        let result = ultra_enhanced_system_identification(&input, &output, &config);
+        let result = advanced_enhanced_system_identification(&input, &output, &config);
         assert!(result.is_ok());
 
         let result = result.unwrap();
@@ -1442,7 +1442,7 @@ mod tests {
     fn test_parameter_estimation() {
         let input = Array1::from_vec(vec![1.0, 0.5, 0.2, 0.1, 0.05]);
         let output = Array1::from_vec(vec![0.8, 0.4, 0.16, 0.08, 0.04]);
-        let config = UltraEnhancedSysIdConfig::default();
+        let config = AdvancedEnhancedSysIdConfig::default();
 
         let params = classical_parameter_estimation(&input, &output, 2, &config);
         assert!(params.is_ok());
@@ -1472,8 +1472,8 @@ mod tests {
         let output =
             simulate_model_response(model.transfer_function.as_ref().unwrap(), &input).unwrap();
 
-        let config = UltraEnhancedSysIdConfig::default();
-        let validation = perform_ultra_validation(&input, &output, &model, &config);
+        let config = AdvancedEnhancedSysIdConfig::default();
+        let validation = perform_advanced_validation(&input, &output, &model, &config);
 
         assert!(validation.is_ok());
         let validation = validation.unwrap();
@@ -1486,7 +1486,7 @@ mod tests {
         let input = Array1::from_shape_fn(50, |i| (i as f64 * 0.1).sin());
         let output = Array1::from_shape_fn(50, |i| (i as f64 * 0.1 + 0.2).cos());
 
-        let config = UltraEnhancedSysIdConfig {
+        let config = AdvancedEnhancedSysIdConfig {
             max_order: 3,
             min_order: 1,
             ..Default::default()

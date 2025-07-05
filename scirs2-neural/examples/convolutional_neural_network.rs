@@ -991,13 +991,17 @@ fn create_synthetic_dataset(
     // Create synthetic patterns for each class
     let mut class_patterns = Vec::with_capacity(num_classes);
     for _ in 0..num_classes {
-        let pattern = Array2::from_shape_fn(image_size, |_| {
-            if rng.random::<f32>() > 0.7 {
-                1.0
-            } else {
-                0.0
-            }
-        });
+        let pattern =
+            Array2::from_shape_fn(
+                image_size,
+                |_| {
+                    if rng.gen::<f32>() > 0.7 {
+                        1.0
+                    } else {
+                        0.0
+                    }
+                },
+            );
         class_patterns.push(pattern);
     }
     // Generate samples with noise
@@ -1007,7 +1011,7 @@ fn create_synthetic_dataset(
         // Add the class pattern with noise
         for h in 0..image_size.0 {
             for w in 0..image_size.1 {
-                let noise = rng.random::<f32>() * 0.3;
+                let noise = rng.gen::<f32>() * 0.3;
                 let pixel = (class_patterns[class][[h, w]] + noise).min(1.0);
                 images[[i, 0, h, w]] = pixel;
             }

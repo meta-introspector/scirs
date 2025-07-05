@@ -63,7 +63,7 @@ pub mod visual_slam;
 /// * **Unified Meta-Learning** - Cross-module transfer learning and adaptation
 /// * **Resource Management** - Optimal allocation of computational resources
 /// * **Performance Tracking** - Comprehensive monitoring and optimization
-pub mod ultrathink_integration;
+pub mod integration;
 
 /// Advanced Performance Benchmarking for Advanced Mode
 ///
@@ -218,16 +218,16 @@ pub use visual_slam::{
 };
 
 // Re-export Advanced integration functionality
-pub use ultrathink_integration::{
-    batch_process_advanced, process_with_ultrathink_mode, realtime_ultrathink_stream,
-    CrossModuleUltrathinkProcessingResult, EmergentBehavior, FusionQuality,
-    NeuralQuantumHybridProcessor, PerformanceMetrics, UltrathinkProcessingResult,
-    UncertaintyQuantification as UltrathinkUncertaintyQuantification,
+pub use integration::{
+    batch_process_advanced, process_with_advanced_mode, realtime_advanced_stream,
+    AdvancedProcessingResult, CrossModuleAdvancedProcessingResult, EmergentBehavior, FusionQuality,
+    NeuralQuantumHybridProcessor, PerformanceMetrics,
+    UncertaintyQuantification as AdvancedUncertaintyQuantification,
 };
 
 // Re-export performance benchmarking functionality
 pub use performance_benchmark::{
-    BenchmarkConfig, BenchmarkResult, ComparisonMetrics,
+    AdvancedBenchmarkSuite, BenchmarkConfig, BenchmarkResult, ComparisonMetrics,
     PerformanceMetrics as BenchmarkPerformanceMetrics, QualityMetrics, ResourceUsage,
-    ScalabilityMetrics, StatisticalSummary, UltrathinkBenchmarkSuite,
+    ScalabilityMetrics, StatisticalSummary,
 };

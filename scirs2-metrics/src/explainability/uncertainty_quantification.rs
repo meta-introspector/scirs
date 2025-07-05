@@ -2490,10 +2490,10 @@ mod tests {
         let pcg_val = pcg.uniform_01::<f64>();
         let chacha_val = chacha.uniform_01::<f64>();
 
-        assert!(lcg_val >= 0.0 && lcg_val <= 1.0);
-        assert!(xorshift_val >= 0.0 && xorshift_val <= 1.0);
-        assert!(pcg_val >= 0.0 && pcg_val <= 1.0);
-        assert!(chacha_val >= 0.0 && chacha_val <= 1.0);
+        assert!((0.0..=1.0).contains(&lcg_val));
+        assert!((0.0..=1.0).contains(&xorshift_val));
+        assert!((0.0..=1.0).contains(&pcg_val));
+        assert!((0.0..=1.0).contains(&chacha_val));
 
         // Test normal generation
         let lcg_normal = lcg.normal::<f64>();

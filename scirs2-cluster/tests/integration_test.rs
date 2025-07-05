@@ -1,8 +1,8 @@
 //! Integration tests for clustering algorithms
 
 use ndarray::{array, Array2};
-use scirs2_cluster::metrics::silhouette_score;
 use scirs2_cluster::advanced_clustering::{AdvancedClusterer, AdvancedConfig};
+use scirs2_cluster::metrics::silhouette_score;
 use scirs2_cluster::vq::{kmeans2, whiten, MinitMethod, MissingMethod};
 
 #[test]
@@ -72,7 +72,7 @@ fn test_silhouette_score_basic() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_clusterer_basic() {
+fn test_advanced_clusterer_basic() {
     // Create test data with clear clusters
     let data = Array2::from_shape_vec(
         (8, 2),
@@ -100,7 +100,7 @@ fn test_ultrathink_clusterer_basic() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_clusterer_with_ai_selection() {
+fn test_advanced_clusterer_with_ai_selection() {
     let data = Array2::from_shape_vec(
         (12, 3),
         vec![
@@ -132,7 +132,7 @@ fn test_ultrathink_clusterer_with_ai_selection() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_clusterer_with_all_features() {
+fn test_advanced_clusterer_with_all_features() {
     let data = Array2::from_shape_vec(
         (16, 4),
         (0..64)
@@ -170,7 +170,7 @@ fn test_ultrathink_clusterer_with_all_features() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_clusterer_error_handling() {
+fn test_advanced_clusterer_error_handling() {
     let mut clusterer = AdvancedClusterer::new();
 
     // Test empty data
@@ -193,7 +193,7 @@ fn test_ultrathink_clusterer_error_handling() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_clusterer_different_data_sizes() {
+fn test_advanced_clusterer_different_data_sizes() {
     let mut clusterer = AdvancedClusterer::new().with_ai_algorithm_selection(true);
 
     // Test small dataset
@@ -223,7 +223,7 @@ fn test_ultrathink_clusterer_different_data_sizes() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_clusterer_high_dimensional() {
+fn test_advanced_clusterer_high_dimensional() {
     // Test with higher dimensional data
     let data = Array2::from_shape_vec(
         (12, 8),
@@ -251,7 +251,7 @@ fn test_ultrathink_clusterer_high_dimensional() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_clusterer_noisy_data() {
+fn test_advanced_clusterer_noisy_data() {
     // Create data with noise
     let mut data_vec = Vec::new();
     for i in 0..16 {
@@ -282,7 +282,7 @@ fn test_ultrathink_clusterer_noisy_data() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_config_defaults() {
+fn test_advanced_config_defaults() {
     let config = AdvancedConfig::default();
 
     assert_eq!(config.max_clusters, 20);
@@ -297,7 +297,7 @@ fn test_ultrathink_config_defaults() {
 
 #[test]
 #[allow(dead_code)]
-fn test_ultrathink_performance_metrics() {
+fn test_advanced_performance_metrics() {
     let data = Array2::from_shape_vec(
         (6, 2),
         vec![

@@ -574,7 +574,7 @@ pub fn denoise_wiener_1d(signal: &Array1<f64>, config: &WienerConfig) -> SignalR
         .collect();
 
     // Compute FFT
-    let signal_fft = fft(&complex_signal)?;
+    let signal_fft = fft(&complex_signal, None)?;
 
     // Estimate noise power spectral density
     let noise_psd = match config.noise_estimation {
@@ -615,7 +615,7 @@ pub fn denoise_wiener_1d(signal: &Array1<f64>, config: &WienerConfig) -> SignalR
     }
 
     // Inverse FFT
-    let filtered_complex = ifft(&filtered_fft)?;
+    let filtered_complex = ifft(&filtered_fft, None)?;
 
     // Extract real part and trim to original size
     let filtered: Vec<f64> = filtered_complex[..n].iter().map(|c| c.re).collect();
@@ -865,7 +865,13 @@ pub fn denoise_wavelet_2d(
 
     // Multilevel decomposition with thresholding
     for level in 0..levels {
-        let (approx, h_detail, v_detail, d_detail) = dwt2d_decompose(&current, config.wavelet)?;
+        let result = dwt2d_decompose(&current, config.wavelet, None)?;
+        let (approx, h_detail, v_detail, d_detail) = (
+            result.approx,
+            result.detail_h,
+            result.detail_v,
+            result.detail_d,
+        );
 
         // Estimate noise at first level
         let noise_sigma = if level == 0 {
@@ -1945,7 +1951,7 @@ fn simd_circular_shift(signal: &Array1<f64>, shift: usize) -> SignalResult<Array
     let mut shifted = Array1::zeros(n);
     let capabilities = PlatformCapabilities::detect();
 
-    if capabilities.has_avx2 && n >= 32 {
+    if capabilities.avx2_available && n >= 32 {
         // Use SIMD for large arrays
         let signal_slice = signal.as_slice().unwrap();
         let mut shifted_slice = shifted.as_slice_mut().unwrap();

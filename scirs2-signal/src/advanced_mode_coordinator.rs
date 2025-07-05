@@ -43,7 +43,7 @@ impl Default for AdvancedConfig {
 
 /// Results from Advanced mode operations
 #[derive(Debug, Clone)]
-pub struct advancedResults {
+pub struct AdvancedResults {
     /// Performance metrics
     pub performance_metrics: PerformanceMetrics,
     /// Validation results
@@ -110,7 +110,7 @@ impl AdvancedCoordinator {
     }
 
     /// Run comprehensive validation of all Advanced mode features
-    pub fn run_comprehensive_validation(&mut self) -> SignalResult<advancedResults> {
+    pub fn run_comprehensive_validation(&mut self) -> SignalResult<AdvancedResults> {
         let start_time = Instant::now();
         let issues = Vec::new();
         let mut validation_scores = Vec::new();
@@ -156,7 +156,7 @@ impl AdvancedCoordinator {
         // Store performance metrics for historical analysis
         self.performance_history.push(performance_metrics.clone());
 
-        Ok(advancedResults {
+        Ok(AdvancedResults {
             performance_metrics,
             validation_results,
             issues,
@@ -477,7 +477,7 @@ impl Default for AdvancedCoordinator {
 
 /// Convenience function to run a quick Advanced validation
 #[allow(dead_code)]
-pub fn run_quick_comprehensive_validation() -> SignalResult<advancedResults> {
+pub fn run_quick_comprehensive_validation() -> SignalResult<AdvancedResults> {
     let mut coordinator = AdvancedCoordinator::new();
     coordinator.run_comprehensive_validation()
 }
@@ -486,7 +486,7 @@ pub fn run_quick_comprehensive_validation() -> SignalResult<advancedResults> {
 #[allow(dead_code)]
 pub fn run_advanced_validation_with_config(
     config: AdvancedConfig,
-) -> SignalResult<advancedResults> {
+) -> SignalResult<AdvancedResults> {
     let mut coordinator = AdvancedCoordinator::with_config(config);
     coordinator.run_comprehensive_validation()
 }

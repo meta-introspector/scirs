@@ -119,7 +119,7 @@ fn demonstrate_adaptive_multi_system_processing() -> Result<()> {
         );
 
         // Process using advanced coordination
-        let processing_result = coordinator.process_with_ultra_intelligence(&data)?;
+        let processing_result = coordinator.process_with_advanced_intelligence(&data)?;
 
         let processing_time = start.elapsed();
         println!("   - Processing completed in {:?}", processing_time);

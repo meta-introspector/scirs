@@ -1,7 +1,7 @@
-//! Adaptive Memory Compression for Ultra-Large Sparse Matrices
+//! Adaptive Memory Compression for Advanced-Large Sparse Matrices
 //!
 //! This module provides advanced memory management and compression techniques
-//! specifically designed for handling ultra-large sparse matrices that exceed
+//! specifically designed for handling advanced-large sparse matrices that exceed
 //! available system memory.
 
 use crate::error::{SparseError, SparseResult};

@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     println!("\nAvailable domains:");
     for domain in domain_suite.available_domains() {
-        println!("  - {}", domain);
+        println!("  - {domain}");
     }
 
     // Example 1: Computer Vision - Object Detection
@@ -220,13 +220,13 @@ fn recommender_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
 
     println!("Recommender Ranking Results:");
     for (&k, &ndcg) in &results.ndcg_at_k {
-        println!("  NDCG@{}: {:.4}", k, ndcg);
+        println!("  NDCG@{k}: {ndcg:.4}");
     }
     for (&k, &precision) in &results.precision_at_k {
-        println!("  Precision@{}: {:.4}", k, precision);
+        println!("  Precision@{k}: {precision:.4}");
     }
     for (&k, &recall) in &results.recall_at_k {
-        println!("  Recall@{}: {:.4}", k, recall);
+        println!("  Recall@{k}: {recall:.4}");
     }
     println!("  MAP: {:.4}", results.map);
     println!("  MRR: {:.4}", results.mrr);
@@ -244,7 +244,7 @@ fn recommender_example() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
     println!("  RMSE: {:.4}", rating_results.rmse);
     println!("  MAE: {:.4}", rating_results.mae);
     for (threshold, precision) in &rating_results.precision_at_threshold {
-        println!("  Precision@{}: {:.4}", threshold, precision);
+        println!("  Precision@{threshold}: {precision:.4}");
     }
 
     Ok(())

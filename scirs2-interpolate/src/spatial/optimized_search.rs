@@ -36,7 +36,7 @@ pub trait OptimizedSpatialSearch<F: Float> {
         &self,
         queries: &ArrayView2<F>,
         k: usize,
-        workers: Option<usize>,
+        _workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>>;
 
     /// Adaptive k-nearest neighbor search that adjusts strategy based on query characteristics
@@ -154,20 +154,15 @@ impl SimdDistanceOps {
     pub fn parallel_enhanced_batch_distances<F>(
         points: &ArrayView2<F>,
         queries: &ArrayView2<F>,
-        num_threads: Option<usize>,
+        _num_threads: Option<usize>,
     ) -> Vec<Vec<F>>
     where
         F: Float + FromPrimitive + SimdUnifiedOps + Debug + Send + Sync,
     {
-        use scirs2_core::parallel_ops::*;
-
         let n_queries = queries.nrows();
-        let chunk_size = (n_queries / num_threads.unwrap_or(4)).max(1);
 
-        // Parallel processing of query chunks
+        // Process queries sequentially for now
         (0..n_queries)
-            .into_par_iter()
-            .with_chunk_size(chunk_size)
             .map(|query_idx| {
                 let query = queries.row(query_idx);
                 Self::batch_distances_to_query(points, query.as_slice().unwrap())
@@ -321,7 +316,7 @@ where
         &self,
         queries: &ArrayView2<F>,
         k: usize,
-        workers: Option<usize>,
+        _workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         use scirs2_core::parallel_ops::*;
 
@@ -396,7 +391,7 @@ where
         &self,
         queries: &ArrayView2<F>,
         k: usize,
-        workers: Option<usize>,
+        _workers: Option<usize>,
     ) -> InterpolateResult<Vec<Vec<(usize, F)>>> {
         use scirs2_core::parallel_ops::*;
 

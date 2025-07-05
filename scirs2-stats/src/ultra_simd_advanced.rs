@@ -1,4 +1,4 @@
-//! Ultra-advanced SIMD optimizations for statistical computations
+//! Advanced-advanced SIMD optimizations for statistical computations
 //!
 //! This module provides cutting-edge SIMD implementations that go beyond traditional
 //! vectorization by incorporating:
@@ -10,6 +10,7 @@
 //! - Vector instruction pipelining
 
 use crate::error::{StatsError, StatsResult};
+use crate::simd_enhanced_v6::AdvancedSimdOps;
 use ndarray::ArrayView1;
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
@@ -19,9 +20,9 @@ use scirs2_core::{
 };
 use std::marker::PhantomData;
 
-/// Ultra-advanced SIMD configuration with sophisticated optimization strategies
+/// Advanced-advanced SIMD configuration with sophisticated optimization strategies
 #[derive(Debug, Clone)]
-pub struct UltraSimdConfig {
+pub struct AdvancedSimdConfig {
     /// Detected platform capabilities
     pub platform: PlatformCapabilities,
     /// Optimal vector register width (in elements)
@@ -38,11 +39,11 @@ pub struct UltraSimdConfig {
     pub enable_cache_blocking: bool,
     /// Enable instruction pipelining optimization
     pub enable_pipelining: bool,
-    /// Minimum data size for ultra-SIMD processing
-    pub ultra_simd_threshold: usize,
+    /// Minimum data size for advanced-SIMD processing
+    pub advanced_simd_threshold: usize,
 }
 
-impl Default for UltraSimdConfig {
+impl Default for AdvancedSimdConfig {
     fn default() -> Self {
         let platform = PlatformCapabilities::detect();
 
@@ -65,7 +66,7 @@ impl Default for UltraSimdConfig {
             enable_prefetch: true,
             enable_cache_blocking: true,
             enable_pipelining: true,
-            ultra_simd_threshold: 256,
+            advanced_simd_threshold: 256,
         }
     }
 }
@@ -96,9 +97,9 @@ pub enum MemoryPattern {
     Blocked { block_size: usize },
 }
 
-/// Ultra-optimized SIMD statistical operations
-pub struct UltraSimdProcessor<F> {
-    config: UltraSimdConfig,
+/// Advanced-optimized SIMD statistical operations
+pub struct AdvancedSimdProcessor<F> {
+    config: AdvancedSimdConfig,
     vector_strategy: VectorStrategy,
     memory_pattern: MemoryPattern,
     _phantom: PhantomData<F>,
@@ -106,7 +107,7 @@ pub struct UltraSimdProcessor<F> {
 
 /// Advanced statistics result with performance metrics
 #[derive(Debug, Clone)]
-pub struct UltraStatsResult<F> {
+pub struct AdvancedStatsResult<F> {
     /// Basic statistics
     pub mean: F,
     pub variance: F,
@@ -130,14 +131,24 @@ pub struct CacheAwareVectorProcessor {
     prefetch_distance: usize,
 }
 
-impl<F> UltraSimdProcessor<F>
+impl<F> AdvancedSimdProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + AdvancedSimdOps<F>,
 {
-    /// Create new ultra-optimized SIMD processor
+    /// Create new advanced-optimized SIMD processor
     pub fn new() -> Self {
-        let config = UltraSimdConfig::default();
+        let config = AdvancedSimdConfig::default();
         let vector_strategy = Self::select_optimal_vector_strategy(&config);
         let memory_pattern = Self::select_optimal_memory_pattern(&config);
 
@@ -150,7 +161,7 @@ where
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: UltraSimdConfig) -> Self {
+    pub fn with_config(config: AdvancedSimdConfig) -> Self {
         let vector_strategy = Self::select_optimal_vector_strategy(&config);
         let memory_pattern = Self::select_optimal_memory_pattern(&config);
 
@@ -163,7 +174,7 @@ where
     }
 
     /// Select optimal vector strategy based on platform capabilities
-    fn select_optimal_vector_strategy(config: &UltraSimdConfig) -> VectorStrategy {
+    fn select_optimal_vector_strategy(config: &AdvancedSimdConfig) -> VectorStrategy {
         if config.platform.avx512_available && config.enable_pipelining {
             VectorStrategy::MultiVector { num_registers: 4 }
         } else if config.platform.avx2_available {
@@ -178,7 +189,7 @@ where
     }
 
     /// Select optimal memory access pattern
-    fn select_optimal_memory_pattern(config: &UltraSimdConfig) -> MemoryPattern {
+    fn select_optimal_memory_pattern(config: &AdvancedSimdConfig) -> MemoryPattern {
         if config.enable_cache_blocking {
             MemoryPattern::Blocked {
                 block_size: config.l1_cache_size / std::mem::size_of::<f64>(),
@@ -192,11 +203,11 @@ where
         }
     }
 
-    /// Ultra-optimized comprehensive statistics computation
-    pub fn compute_ultra_statistics(
+    /// Advanced-optimized comprehensive statistics computation
+    pub fn compute_advanced_statistics(
         &self,
         data: &ArrayView1<F>,
-    ) -> StatsResult<UltraStatsResult<F>> {
+    ) -> StatsResult<AdvancedStatsResult<F>> {
         check_array_finite(data, "data")?;
 
         if data.is_empty() {
@@ -207,7 +218,7 @@ where
 
         let n = data.len();
 
-        if n < self.config.ultra_simd_threshold {
+        if n < self.config.advanced_simd_threshold {
             return self.compute_scalar_fallback(data);
         }
 
@@ -230,7 +241,7 @@ where
         &self,
         data: &ArrayView1<F>,
         num_registers: usize,
-    ) -> StatsResult<UltraStatsResult<F>> {
+    ) -> StatsResult<AdvancedStatsResult<F>> {
         let n = data.len();
         let vector_width = self.config.vector_width;
         let chunk_size = vector_width * num_registers;
@@ -271,7 +282,7 @@ where
                 if start < n {
                     let chunk = data.slice(ndarray::s![start..end]);
 
-                    // Use ultra-optimized SIMD operations
+                    // Use advanced-optimized SIMD operations
                     let (sum, sum_sq, sum_cube, sum_quad, min_val, max_val) =
                         self.compute_vector_moments(&chunk)?;
 
@@ -384,7 +395,7 @@ where
             0.0
         };
 
-        Ok(UltraStatsResult {
+        Ok(AdvancedStatsResult {
             mean,
             variance,
             std_dev,
@@ -404,7 +415,7 @@ where
         &self,
         data: &ArrayView1<F>,
         unroll_factor: usize,
-    ) -> StatsResult<UltraStatsResult<F>> {
+    ) -> StatsResult<AdvancedStatsResult<F>> {
         let n = data.len();
         let vector_width = self.config.vector_width;
         let unrolled_size = vector_width * unroll_factor;
@@ -491,7 +502,7 @@ where
             F::zero()
         };
 
-        Ok(UltraStatsResult {
+        Ok(AdvancedStatsResult {
             mean,
             variance,
             std_dev,
@@ -511,7 +522,7 @@ where
         &self,
         data: &ArrayView1<F>,
         block_size: usize,
-    ) -> StatsResult<UltraStatsResult<F>> {
+    ) -> StatsResult<AdvancedStatsResult<F>> {
         let n = data.len();
         let n_blocks = n / block_size;
         let remainder = n % block_size;
@@ -591,7 +602,7 @@ where
             F::zero()
         };
 
-        Ok(UltraStatsResult {
+        Ok(AdvancedStatsResult {
             mean,
             variance,
             std_dev,
@@ -610,7 +621,7 @@ where
     fn compute_single_vector_stats(
         &self,
         data: &ArrayView1<F>,
-    ) -> StatsResult<UltraStatsResult<F>> {
+    ) -> StatsResult<AdvancedStatsResult<F>> {
         // Simplified single vector implementation
         let n = data.len();
         let vector_width = self.config.vector_width;
@@ -630,8 +641,8 @@ where
 
             let chunk_sum = F::simd_sum(&chunk);
             let chunk_sum_sq = F::simd_sum_squares(&chunk);
-            let chunk_min = F::simd_min(&chunk);
-            let chunk_max = F::simd_max(&chunk);
+            let chunk_min = F::simd_min_element(&chunk);
+            let chunk_max = F::simd_max_element(&chunk);
 
             sum_acc = sum_acc + chunk_sum;
             sum_sq_acc = sum_sq_acc + chunk_sum_sq;
@@ -664,7 +675,7 @@ where
         let variance = sum_sq_acc / n_f - mean * mean;
         let std_dev = variance.sqrt();
 
-        Ok(UltraStatsResult {
+        Ok(AdvancedStatsResult {
             mean,
             variance,
             std_dev,
@@ -685,8 +696,8 @@ where
         let sum_sq = F::simd_sum_squares(chunk);
         let sum_cube = F::simd_sum_cubes(chunk);
         let sum_quad = F::simd_sum_quads(chunk);
-        let min_val = F::simd_min(chunk);
-        let max_val = F::simd_max(chunk);
+        let min_val = F::simd_min_element(chunk);
+        let max_val = F::simd_max_element(chunk);
 
         Ok((sum, sum_sq, sum_cube, sum_quad, min_val, max_val))
     }
@@ -779,7 +790,7 @@ where
     }
 
     /// Scalar fallback for small datasets
-    fn compute_scalar_fallback(&self, data: &ArrayView1<F>) -> StatsResult<UltraStatsResult<F>> {
+    fn compute_scalar_fallback(&self, data: &ArrayView1<F>) -> StatsResult<AdvancedStatsResult<F>> {
         let n = data.len();
         let n_f = F::from(n).unwrap();
 
@@ -794,7 +805,7 @@ where
             .copied()
             .fold(F::neg_infinity(), |a, b| a.max(b));
 
-        Ok(UltraStatsResult {
+        Ok(AdvancedStatsResult {
             mean,
             variance,
             std_dev: variance.sqrt(),
@@ -824,7 +835,7 @@ struct BlockResult<F> {
 
 impl CacheAwareVectorProcessor {
     /// Create new cache-aware processor
-    pub fn new(config: &UltraSimdConfig) -> Self {
+    pub fn new(config: &AdvancedSimdConfig) -> Self {
         Self {
             l1_block_size: config.l1_cache_size / std::mem::size_of::<f64>(),
             l2_block_size: config.l2_cache_size / std::mem::size_of::<f64>(),
@@ -836,12 +847,12 @@ impl CacheAwareVectorProcessor {
 
 /// Convenience functions for different precision types
 #[allow(dead_code)]
-pub fn ultra_mean_f64(data: &ArrayView1<f64>) -> StatsResult<UltraStatsResult<f64>> {
-    let processor = UltraSimdProcessor::<f64>::new();
-    processor.compute_ultra_statistics(data)
+pub fn advanced_mean_f64(data: &ArrayView1<f64>) -> StatsResult<AdvancedStatsResult<f64>> {
+    let processor = AdvancedSimdProcessor::<f64>::new();
+    processor.compute_advanced_statistics(data)
 }
 
-/// Computes ultra-high-performance statistics for single-precision floating-point data.
+/// Computes advanced-high-performance statistics for single-precision floating-point data.
 ///
 /// This function provides a streamlined interface for computing comprehensive statistics
 /// using SIMD-accelerated algorithms optimized for f32 data.
@@ -852,7 +863,7 @@ pub fn ultra_mean_f64(data: &ArrayView1<f64>) -> StatsResult<UltraStatsResult<f6
 ///
 /// # Returns
 ///
-/// Returns `StatsResult<UltraStatsResult<f32>>` containing computed statistics
+/// Returns `StatsResult<AdvancedStatsResult<f32>>` containing computed statistics
 /// or an error if the computation fails.
 ///
 /// # Performance
@@ -865,15 +876,15 @@ pub fn ultra_mean_f64(data: &ArrayView1<f64>) -> StatsResult<UltraStatsResult<f6
 ///
 /// ```
 /// use ndarray::Array1;
-/// use scirs2_stats::ultra_simd_advanced::ultra_mean_f32;
+/// use scirs2_stats::advanced_simd_advanced::advanced_mean_f32;
 ///
 /// let data = Array1::from_vec(vec![1.0f32, 2.0, 3.0, 4.0, 5.0]);
-/// let result = ultra_mean_f32(&data.view()).unwrap();
+/// let result = advanced_mean_f32(&data.view()).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn ultra_mean_f32(data: &ArrayView1<f32>) -> StatsResult<UltraStatsResult<f32>> {
-    let processor = UltraSimdProcessor::<f32>::new();
-    processor.compute_ultra_statistics(data)
+pub fn advanced_mean_f32(data: &ArrayView1<f32>) -> StatsResult<AdvancedStatsResult<f32>> {
+    let processor = AdvancedSimdProcessor::<f32>::new();
+    processor.compute_advanced_statistics(data)
 }
 
 #[cfg(test)]
@@ -882,10 +893,10 @@ mod tests {
     use ndarray::{array, Array1};
 
     #[test]
-    fn test_ultra_simd_basic() {
+    fn test_advanced_simd_basic() {
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let processor = UltraSimdProcessor::<f64>::new();
-        let result = processor.compute_ultra_statistics(&data.view()).unwrap();
+        let processor = AdvancedSimdProcessor::<f64>::new();
+        let result = processor.compute_advanced_statistics(&data.view()).unwrap();
 
         assert!((result.mean - 4.5).abs() < 1e-10);
         assert!(result.simd_utilization >= 0.0);
@@ -895,8 +906,8 @@ mod tests {
     #[test]
     fn test_large_dataset_performance() {
         let data: Array1<f64> = Array1::from_shape_fn(10000, |i| i as f64);
-        let processor = UltraSimdProcessor::<f64>::new();
-        let result = processor.compute_ultra_statistics(&data.view()).unwrap();
+        let processor = AdvancedSimdProcessor::<f64>::new();
+        let result = processor.compute_advanced_statistics(&data.view()).unwrap();
 
         assert!(result.simd_utilization > 0.5); // Should have good SIMD utilization
         assert!(result.vector_operations_count > 0);
@@ -907,25 +918,25 @@ mod tests {
         let data: Array1<f64> = Array1::from_shape_fn(1000, |i| (i as f64).sin());
 
         // Test multi-vector strategy
-        let config_multi = UltraSimdConfig {
+        let config_multi = AdvancedSimdConfig {
             vector_width: 8,
             enable_pipelining: true,
             ..Default::default()
         };
-        let processor_multi = UltraSimdProcessor::with_config(config_multi);
+        let processor_multi = AdvancedSimdProcessor::with_config(config_multi);
         let result_multi = processor_multi
-            .compute_ultra_statistics(&data.view())
+            .compute_advanced_statistics(&data.view())
             .unwrap();
 
         // Test cache-blocked strategy
-        let config_blocked = UltraSimdConfig {
+        let config_blocked = AdvancedSimdConfig {
             enable_cache_blocking: true,
             l1_cache_size: 4096,
             ..Default::default()
         };
-        let processor_blocked = UltraSimdProcessor::with_config(config_blocked);
+        let processor_blocked = AdvancedSimdProcessor::with_config(config_blocked);
         let result_blocked = processor_blocked
-            .compute_ultra_statistics(&data.view())
+            .compute_advanced_statistics(&data.view())
             .unwrap();
 
         // Results should be numerically equivalent

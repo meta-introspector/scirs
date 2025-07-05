@@ -33,14 +33,14 @@
 //!
 //! // AI-driven Advanced clustering
 //! let data = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0], [5.0, 5.0], [6.0, 5.0]];
-//! let mut Advanced = AdvancedClusterer::new()
+//! let mut advanced = AdvancedClusterer::new()
 //!     .with_ai_algorithm_selection(true)
 //!     .with_quantum_neuromorphic_fusion(true)
 //!     .with_meta_learning(true)
 //!     .with_continual_adaptation(true)
 //!     .with_multi_objective_optimization(true);
 //!
-//! let result = Advanced.cluster(&data.view())?;
+//! let result = advanced.cluster(&data.view())?;
 //! println!("Advanced clusters: {:?}", result.clusters);
 //! println!("AI advantage: {:.2}x speedup", result.ai_speedup);
 //! println!("Quantum advantage: {:.2}x optimization", result.quantum_advantage);
@@ -116,7 +116,7 @@ pub struct QuantumClusterState {
 /// Advanced clustering result
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct UltrathinkClusteringResult {
+pub struct AdvancedClusteringResult {
     /// Final cluster assignments
     pub clusters: Array1<usize>,
     /// Cluster centroids
@@ -134,13 +134,13 @@ pub struct UltrathinkClusteringResult {
     /// Confidence score
     pub confidence: f64,
     /// Performance metrics
-    pub performance: UltrathinkPerformanceMetrics,
+    pub performance: AdvancedPerformanceMetrics,
 }
 
 /// Performance metrics for Advanced clustering
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct UltrathinkPerformanceMetrics {
+pub struct AdvancedPerformanceMetrics {
     /// Clustering quality (silhouette score)
     pub silhouette_score: f64,
     /// Execution time (seconds)
@@ -242,7 +242,7 @@ impl AdvancedClusterer {
     }
 
     /// Perform Advanced clustering
-    pub fn cluster(&mut self, data: &ArrayView2<f64>) -> Result<UltrathinkClusteringResult> {
+    pub fn cluster(&mut self, data: &ArrayView2<f64>) -> Result<AdvancedClusteringResult> {
         // Input validation
         if data.is_empty() {
             return Err(ClusteringError::InvalidInput(
@@ -308,7 +308,7 @@ impl AdvancedClusterer {
         let quantum_advantage = quantum_metrics.quantum_advantage;
         let neuromorphic_benefit = quantum_metrics.neuromorphic_adaptation;
 
-        Ok(UltrathinkClusteringResult {
+        Ok(AdvancedClusteringResult {
             clusters,
             centroids,
             ai_speedup,
@@ -317,7 +317,7 @@ impl AdvancedClusterer {
             meta_learning_improvement: quantum_metrics.meta_learning_boost,
             selected_algorithm,
             confidence: quantum_metrics.confidence,
-            performance: UltrathinkPerformanceMetrics {
+            performance: AdvancedPerformanceMetrics {
                 silhouette_score,
                 execution_time,
                 memory_usage: quantum_metrics.memory_usage,

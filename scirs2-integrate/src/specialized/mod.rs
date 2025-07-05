@@ -13,12 +13,12 @@ pub use finance::{
     FinanceMethod, FinancialOption, Greeks, JumpProcess, OptionStyle, OptionType,
     StochasticPDESolver, VolatilityModel,
 };
-// Ultra-performance financial computing exports
+// Advanced-performance financial computing exports
+pub use finance::advanced_monte_carlo_engine::{
+    AdvancedMonteCarloEngine, OptionPricingResult, QuantumInspiredRNG, VarianceReductionSuite,
+};
 pub use finance::realtime_risk_engine::{
     AlertSeverity, RealTimeRiskMonitor, RiskAlert, RiskAlertType, RiskDashboard, RiskSnapshot,
-};
-pub use finance::ultra_monte_carlo_engine::{
-    OptionPricingResult, QuantumInspiredRNG, UltraMonteCarloEngine, VarianceReductionSuite,
 };
 pub use fluid_dynamics::turbulence_models::{
     FluidState3D, LESolver, RANSModel, RANSSolver, RANSState, SGSModel,
@@ -27,12 +27,12 @@ pub use fluid_dynamics::{
     DealiasingStrategy, FluidBoundaryCondition, FluidState, NavierStokesParams, NavierStokesSolver,
     SpectralNavierStokesSolver,
 };
-// Ultra-performance fluid dynamics exports
+// Advanced-performance fluid dynamics exports
+pub use fluid_dynamics::advanced_gpu_acceleration::{AdvancedGPUKernel, GPUMemoryPool};
 pub use fluid_dynamics::neural_adaptive_solver::{
     AdaptiveAlgorithmSelector, AlgorithmRecommendation, ProblemCharacteristics,
 };
 pub use fluid_dynamics::streaming_optimization::StreamingComputeManager;
-pub use fluid_dynamics::ultra_gpu_acceleration::{GPUMemoryPool, UltraGPUKernel};
 // Enhanced multiphase flow exports
 pub use fluid_dynamics::multiphase_flow::{
     InterfaceTrackingMethod, MultiphaseFlowSolver, MultiphaseFlowState, PhaseProperties,

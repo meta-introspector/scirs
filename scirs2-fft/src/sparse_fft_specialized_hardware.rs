@@ -399,7 +399,7 @@ impl ASICAccelerator {
                 memory_bandwidth_gb_s: 1000.0, // Dedicated memory interface
                 peak_throughput_gflops: 5000.0, // Purpose-built for sparse FFT
                 power_consumption_watts: 50.0, // Optimized design
-                latency_us: 0.5,               // Ultra-low latency
+                latency_us: 0.5,               // Advanced-low latency
                 supports_parallel: true,
                 supports_pipeline: true,
                 ..AcceleratorCapabilities::default()
@@ -467,7 +467,7 @@ impl HardwareAbstractionLayer for ASICAccelerator {
     }
 
     fn transfer_to_device(&mut self, _handle: u64, data: &[u8]) -> FFTResult<()> {
-        // Ultra-fast dedicated interface
+        // Optimized dedicated interface
         let transfer_time_ns = data.len() as f64 / self.info.capabilities.memory_bandwidth_gb_s;
         std::thread::sleep(Duration::from_nanos(transfer_time_ns as u64));
         Ok(())
@@ -494,7 +494,7 @@ impl HardwareAbstractionLayer for ASICAccelerator {
 
         // ASIC execution characteristics:
         // - Purpose-built for sparse FFT
-        // - Ultra-low latency
+        // - Advanced-low latency
         // - Highly optimized datapath
         // - Minimal overhead
 

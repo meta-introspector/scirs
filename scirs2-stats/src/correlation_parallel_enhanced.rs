@@ -220,8 +220,7 @@ where
 pub fn pearson_r_simd_enhanced<F, D>(x: &ArrayBase<D, Ix1>, y: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + std::iter::Sum<F>,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F> + std::fmt::Display,
 {
     // Check dimensions
     if x.len() != y.len() {
@@ -504,8 +503,7 @@ where
 fn check_array_finite_2d<F, D>(arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
 where
     F: Float,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F> + std::fmt::Display,
 {
     for &val in arr.iter() {
         if !val.is_finite() {

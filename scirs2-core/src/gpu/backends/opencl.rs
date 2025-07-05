@@ -667,7 +667,7 @@ impl GpuBufferImpl for OpenCLCpuFallbackBuffer {
 unsafe impl Send for OpenCLCpuFallbackBuffer {}
 unsafe impl Sync for OpenCLCpuFallbackBuffer {}
 
-/// Advanced OpenCL memory pool with ultra-optimization for efficient buffer management
+/// Advanced OpenCL memory pool with advanced-optimization for efficient buffer management
 ///
 /// Features:
 /// - Size-class bucketing for O(1) allocation/deallocation

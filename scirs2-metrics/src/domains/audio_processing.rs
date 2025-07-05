@@ -1803,85 +1803,6 @@ impl Default for AudioProcessingMetrics {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_audio_processing_metrics_creation() {
-        let _metrics = AudioProcessingMetrics::new();
-        // Basic test to ensure creation works
-    }
-
-    #[test]
-    fn test_wer_calculation() {
-        let mut wer_calc = WerCalculator::new();
-        let reference = vec!["hello world".to_string()];
-        let hypothesis = vec!["hello word".to_string()];
-
-        let wer = wer_calc.calculate(&reference, &hypothesis).unwrap();
-        assert!(wer > 0.0 && wer <= 1.0);
-    }
-
-    #[test]
-    fn test_cer_calculation() {
-        let mut cer_calc = CerCalculator::new();
-        let reference = vec!["hello".to_string()];
-        let hypothesis = vec!["helo".to_string()];
-
-        let cer = cer_calc.calculate(&reference, &hypothesis).unwrap();
-        assert!(cer > 0.0 && cer <= 1.0);
-    }
-
-    #[test]
-    fn test_speech_recognition_evaluation() {
-        let mut metrics = AudioProcessingMetrics::new();
-        let reference = vec!["hello world".to_string(), "how are you".to_string()];
-        let hypothesis = vec!["hello word".to_string(), "how are you".to_string()];
-
-        let results = metrics
-            .evaluate_speech_recognition(&reference, &hypothesis, None, None, None)
-            .unwrap();
-
-        assert!(results.wer >= 0.0 && results.wer <= 1.0);
-        assert!(results.cer >= 0.0 && results.cer <= 1.0);
-    }
-
-    #[test]
-    fn test_audio_quality_evaluation() {
-        let mut metrics = AudioProcessingMetrics::new();
-        let reference = Array1::from_vec(vec![1.0, 0.5, -0.5, -1.0]);
-        let degraded = Array1::from_vec(vec![0.9, 0.4, -0.6, -0.9]);
-
-        let results = metrics
-            .evaluate_audio_quality(&reference.view(), &degraded.view(), 16000.0)
-            .unwrap();
-
-        assert!(results.snr.is_finite());
-        assert!(results.sdr.is_finite());
-    }
-
-    #[test]
-    fn test_music_information_evaluation() {
-        let mut metrics = AudioProcessingMetrics::new();
-        let ref_beats = vec![0.0, 0.5, 1.0, 1.5, 2.0];
-        let est_beats = vec![0.02, 0.48, 1.03, 1.52, 1.98];
-
-        let results = metrics
-            .evaluate_music_information(
-                Some((&ref_beats, &est_beats)),
-                None,
-                Some(("C major".to_string(), "C major".to_string())),
-                Some((120.0, 118.0)),
-            )
-            .unwrap();
-
-        assert!(results.beat_f_measure.is_some());
-        assert!(results.key_accuracy.is_some());
-        assert!(results.tempo_accuracy.is_some());
-    }
-}
-
 impl DomainMetrics for AudioProcessingMetrics {
     type Result = DomainEvaluationResult;
 
@@ -1981,5 +1902,84 @@ impl DomainMetrics for AudioProcessingMetrics {
             "Euclidean distance for audio similarity measurement",
         );
         descriptions
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_audio_processing_metrics_creation() {
+        let _metrics = AudioProcessingMetrics::new();
+        // Basic test to ensure creation works
+    }
+
+    #[test]
+    fn test_wer_calculation() {
+        let mut wer_calc = WerCalculator::new();
+        let reference = vec!["hello world".to_string()];
+        let hypothesis = vec!["hello word".to_string()];
+
+        let wer = wer_calc.calculate(&reference, &hypothesis).unwrap();
+        assert!(wer > 0.0 && wer <= 1.0);
+    }
+
+    #[test]
+    fn test_cer_calculation() {
+        let mut cer_calc = CerCalculator::new();
+        let reference = vec!["hello".to_string()];
+        let hypothesis = vec!["helo".to_string()];
+
+        let cer = cer_calc.calculate(&reference, &hypothesis).unwrap();
+        assert!(cer > 0.0 && cer <= 1.0);
+    }
+
+    #[test]
+    fn test_speech_recognition_evaluation() {
+        let mut metrics = AudioProcessingMetrics::new();
+        let reference = vec!["hello world".to_string(), "how are you".to_string()];
+        let hypothesis = vec!["hello word".to_string(), "how are you".to_string()];
+
+        let results = metrics
+            .evaluate_speech_recognition(&reference, &hypothesis, None, None, None)
+            .unwrap();
+
+        assert!(results.wer >= 0.0 && results.wer <= 1.0);
+        assert!(results.cer >= 0.0 && results.cer <= 1.0);
+    }
+
+    #[test]
+    fn test_audio_quality_evaluation() {
+        let mut metrics = AudioProcessingMetrics::new();
+        let reference = Array1::from_vec(vec![1.0, 0.5, -0.5, -1.0]);
+        let degraded = Array1::from_vec(vec![0.9, 0.4, -0.6, -0.9]);
+
+        let results = metrics
+            .evaluate_audio_quality(&reference.view(), &degraded.view(), 16000.0)
+            .unwrap();
+
+        assert!(results.snr.is_finite());
+        assert!(results.sdr.is_finite());
+    }
+
+    #[test]
+    fn test_music_information_evaluation() {
+        let mut metrics = AudioProcessingMetrics::new();
+        let ref_beats = vec![0.0, 0.5, 1.0, 1.5, 2.0];
+        let est_beats = vec![0.02, 0.48, 1.03, 1.52, 1.98];
+
+        let results = metrics
+            .evaluate_music_information(
+                Some((&ref_beats, &est_beats)),
+                None,
+                Some(("C major".to_string(), "C major".to_string())),
+                Some((120.0, 118.0)),
+            )
+            .unwrap();
+
+        assert!(results.beat_f_measure.is_some());
+        assert!(results.key_accuracy.is_some());
+        assert!(results.tempo_accuracy.is_some());
     }
 }

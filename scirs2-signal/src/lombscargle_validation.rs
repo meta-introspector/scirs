@@ -114,7 +114,7 @@ pub fn validate_analytical_cases(
     peak_errors.push(test_result_9.peak_error);
     issues.extend(test_result_9.issues);
 
-    // Test case 10: Ultra-high frequency resolution
+    // Test case 10: Advanced-high frequency resolution
     let test_result_10 = validate_high_frequency_resolution(implementation, tolerance)?;
     errors.extend(test_result_10.errors);
     peak_errors.push(test_result_10.peak_error);
@@ -1421,7 +1421,7 @@ fn validate_correlated_noise(
     })
 }
 
-/// Validate ultra-high frequency resolution
+/// Validate advanced-high frequency resolution
 #[allow(dead_code)]
 fn validate_high_frequency_resolution(
     implementation: &str,

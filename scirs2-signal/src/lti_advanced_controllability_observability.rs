@@ -1,9 +1,9 @@
-//! Ultra-Enhanced Controllability and Observability Analysis
+//! Advanced-Enhanced Controllability and Observability Analysis
 //!
 //! This module provides cutting-edge controllability and observability analysis with:
 //! - Quantum-inspired subspace identification
 //! - Neuromorphic-hybrid sensitivity analysis
-//! - Ultra-high-resolution numerical robustness assessment
+//! - Advanced-high-resolution numerical robustness assessment
 //! - Advanced geometric analysis of reachable/observable sets
 //! - Real-time controllability/observability monitoring
 //! - SIMD-accelerated gramian computations
@@ -23,13 +23,13 @@ use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::collections::HashMap;
 
-/// Ultra-enhanced controllability and observability analysis result
+/// Advanced-enhanced controllability and observability analysis result
 #[derive(Debug, Clone)]
-pub struct UltraControllabilityObservabilityResult {
+pub struct AdvancedControllabilityObservabilityResult {
     /// Enhanced controllability analysis
-    pub enhanced_controllability: UltraControllabilityAnalysis,
+    pub enhanced_controllability: AdvancedControllabilityAnalysis,
     /// Enhanced observability analysis
-    pub enhanced_observability: UltraObservabilityAnalysis,
+    pub enhanced_observability: AdvancedObservabilityAnalysis,
     /// Geometric analysis results
     pub geometric_analysis: GeometricAnalysis,
     /// Temporal dynamics analysis
@@ -44,9 +44,9 @@ pub struct UltraControllabilityObservabilityResult {
     pub performance_metrics: AnalysisPerformanceMetrics,
 }
 
-/// Ultra-enhanced controllability analysis with quantum-inspired methods
+/// Advanced-enhanced controllability analysis with quantum-inspired methods
 #[derive(Debug, Clone)]
-pub struct UltraControllabilityAnalysis {
+pub struct AdvancedControllabilityAnalysis {
     /// Base enhanced analysis
     pub base_analysis: EnhancedControllabilityAnalysis,
     /// Quantum coherence measures
@@ -61,9 +61,9 @@ pub struct UltraControllabilityAnalysis {
     pub energy_optimal_analysis: EnergyOptimalAnalysis,
 }
 
-/// Ultra-enhanced observability analysis with neuromorphic capabilities
+/// Advanced-enhanced observability analysis with neuromorphic capabilities
 #[derive(Debug, Clone)]
-pub struct UltraObservabilityAnalysis {
+pub struct AdvancedObservabilityAnalysis {
     /// Base enhanced analysis
     pub base_analysis: EnhancedObservabilityAnalysis,
     /// Neuromorphic observability measures
@@ -829,9 +829,9 @@ pub struct AnalysisPerformanceMetrics {
     pub numerical_accuracy: f64,
 }
 
-/// Configuration for ultra-enhanced analysis
+/// Configuration for advanced-enhanced analysis
 #[derive(Debug, Clone)]
-pub struct UltraAnalysisConfig {
+pub struct AdvancedAnalysisConfig {
     /// Base robust analysis config
     pub base_config: RobustAnalysisConfig,
     /// Enable quantum-inspired methods
@@ -865,7 +865,7 @@ pub enum OptimizationLevel {
     RealTime,
 }
 
-impl Default for UltraAnalysisConfig {
+impl Default for AdvancedAnalysisConfig {
     fn default() -> Self {
         Self {
             base_config: RobustAnalysisConfig::default(),
@@ -881,7 +881,7 @@ impl Default for UltraAnalysisConfig {
     }
 }
 
-/// Ultra-enhanced controllability and observability analysis
+/// Advanced-enhanced controllability and observability analysis
 ///
 /// This function provides the most comprehensive analysis of system controllability
 /// and observability using cutting-edge techniques from quantum information theory,
@@ -890,16 +890,16 @@ impl Default for UltraAnalysisConfig {
 /// # Arguments
 ///
 /// * `ss` - State-space system to analyze
-/// * `config` - Ultra-analysis configuration
+/// * `config` - Advanced-analysis configuration
 ///
 /// # Returns
 ///
-/// * Comprehensive ultra-enhanced analysis results
+/// * Comprehensive advanced-enhanced analysis results
 #[allow(dead_code)]
-pub fn ultra_controllability_observability_analysis(
+pub fn advanced_controllability_observability_analysis(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
-) -> SignalResult<UltraControllabilityObservabilityResult> {
+    config: &AdvancedAnalysisConfig,
+) -> SignalResult<AdvancedControllabilityObservabilityResult> {
     // Validate inputs
     check_finite(&ss.a, "A matrix")?;
     check_finite(&ss.b, "B matrix")?;
@@ -914,10 +914,10 @@ pub fn ultra_controllability_observability_analysis(
     let start_time = std::time::Instant::now();
 
     // Step 1: Enhanced controllability analysis
-    let enhanced_controllability = perform_ultra_controllability_analysis(ss, config)?;
+    let enhanced_controllability = perform_advanced_controllability_analysis(ss, config)?;
 
     // Step 2: Enhanced observability analysis
-    let enhanced_observability = perform_ultra_observability_analysis(ss, config)?;
+    let enhanced_observability = perform_advanced_observability_analysis(ss, config)?;
 
     // Step 3: Geometric analysis
     let geometric_analysis = if config.enable_geometric_analysis {
@@ -982,7 +982,7 @@ pub fn ultra_controllability_observability_analysis(
         numerical_accuracy: estimate_numerical_accuracy(config),
     };
 
-    Ok(UltraControllabilityObservabilityResult {
+    Ok(AdvancedControllabilityObservabilityResult {
         enhanced_controllability,
         enhanced_observability,
         geometric_analysis,
@@ -994,12 +994,12 @@ pub fn ultra_controllability_observability_analysis(
     })
 }
 
-/// Perform ultra-enhanced controllability analysis
+/// Perform advanced-enhanced controllability analysis
 #[allow(dead_code)]
-fn perform_ultra_controllability_analysis(
+fn perform_advanced_controllability_analysis(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
-) -> SignalResult<UltraControllabilityAnalysis> {
+    config: &AdvancedAnalysisConfig,
+) -> SignalResult<AdvancedControllabilityAnalysis> {
     // Get base enhanced analysis
     let base_analysis =
         crate::lti::robust_analysis::enhanced_controllability_analysis(ss, &config.base_config)?;
@@ -1023,7 +1023,7 @@ fn perform_ultra_controllability_analysis(
     // Energy-optimal analysis
     let energy_optimal_analysis = perform_energy_optimal_analysis(ss, config)?;
 
-    Ok(UltraControllabilityAnalysis {
+    Ok(AdvancedControllabilityAnalysis {
         base_analysis,
         quantum_coherence,
         geometric_measures,
@@ -1033,12 +1033,12 @@ fn perform_ultra_controllability_analysis(
     })
 }
 
-/// Perform ultra-enhanced observability analysis
+/// Perform advanced-enhanced observability analysis
 #[allow(dead_code)]
-fn perform_ultra_observability_analysis(
+fn perform_advanced_observability_analysis(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
-) -> SignalResult<UltraObservabilityAnalysis> {
+    config: &AdvancedAnalysisConfig,
+) -> SignalResult<AdvancedObservabilityAnalysis> {
     // Get base enhanced analysis using available public function
     let control_obs_analysis = crate::lti::robust_analysis::robust_control_observability_analysis(
         ss,
@@ -1065,7 +1065,7 @@ fn perform_ultra_observability_analysis(
     // Estimation-theoretic analysis
     let estimation_analysis = perform_estimation_theoretic_analysis(ss, config)?;
 
-    Ok(UltraObservabilityAnalysis {
+    Ok(AdvancedObservabilityAnalysis {
         base_analysis,
         neuromorphic_measures,
         information_theory,
@@ -1080,7 +1080,7 @@ fn perform_ultra_observability_analysis(
 #[allow(dead_code)]
 fn compute_quantum_coherence(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<QuantumCoherence> {
     let n = ss.n_states;
 
@@ -1107,7 +1107,7 @@ fn create_default_quantum_coherence() -> QuantumCoherence {
 #[allow(dead_code)]
 fn compute_geometric_controllability(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<GeometricControllability> {
     let n = ss.n_states;
 
@@ -1129,7 +1129,7 @@ fn compute_geometric_controllability(
 #[allow(dead_code)]
 fn compute_temporal_controllability(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<TemporalControllability> {
     let n = ss.n_states;
     let time_steps = 10;
@@ -1146,7 +1146,7 @@ fn compute_temporal_controllability(
 #[allow(dead_code)]
 fn perform_reachability_analysis(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<ReachabilityAnalysis> {
     let n = ss.n_states;
 
@@ -1167,7 +1167,7 @@ fn perform_reachability_analysis(
 #[allow(dead_code)]
 fn perform_energy_optimal_analysis(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<EnergyOptimalAnalysis> {
     let n = ss.n_states;
     let m = ss.n_inputs;
@@ -1184,7 +1184,7 @@ fn perform_energy_optimal_analysis(
 #[allow(dead_code)]
 fn compute_neuromorphic_observability(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<NeuromorphicObservability> {
     Ok(NeuromorphicObservability {
         spike_observability: 0.85,
@@ -1239,7 +1239,7 @@ fn create_default_neuromorphic_observability() -> NeuromorphicObservability {
 #[allow(dead_code)]
 fn compute_information_theoretic_observability(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<InformationTheoreticObservability> {
     let n = ss.n_states;
 
@@ -1260,7 +1260,7 @@ fn compute_information_theoretic_observability(
 #[allow(dead_code)]
 fn compute_temporal_observability(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<TemporalObservability> {
     let n = ss.n_states;
     let time_steps = 10;
@@ -1277,7 +1277,7 @@ fn compute_temporal_observability(
 #[allow(dead_code)]
 fn perform_observable_set_analysis(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<ObservableSetAnalysis> {
     let n = ss.n_states;
 
@@ -1302,7 +1302,7 @@ fn perform_observable_set_analysis(
 #[allow(dead_code)]
 fn perform_estimation_theoretic_analysis(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<EstimationTheoreticAnalysis> {
     let n = ss.n_states;
     let p = ss.n_outputs;
@@ -1380,9 +1380,9 @@ fn create_default_null_controllable_set_characterization(
 #[allow(dead_code)]
 fn perform_geometric_analysis(
     ss: &StateSpace,
-    controllability: &UltraControllabilityAnalysis,
-    observability: &UltraObservabilityAnalysis,
-    config: &UltraAnalysisConfig,
+    controllability: &AdvancedControllabilityAnalysis,
+    observability: &AdvancedObservabilityAnalysis,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<GeometricAnalysis> {
     let n = ss.n_states;
 
@@ -1507,7 +1507,7 @@ fn create_default_geometric_analysis(n: usize) -> GeometricAnalysis {
 #[allow(dead_code)]
 fn perform_temporal_dynamics_analysis(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<TemporalDynamicsAnalysis> {
     Ok(TemporalDynamicsAnalysis {
         time_scale_separation: TimeScaleSeparation {
@@ -1586,7 +1586,7 @@ fn create_default_temporal_analysis(n: usize) -> TemporalDynamicsAnalysis {
 #[allow(dead_code)]
 fn perform_multi_scale_analysis(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<MultiScaleAnalysis> {
     let n = ss.n_states;
 
@@ -1661,7 +1661,7 @@ fn create_default_multi_scale_analysis(n: usize) -> MultiScaleAnalysis {
 #[allow(dead_code)]
 fn setup_real_time_monitoring(
     ss: &StateSpace,
-    config: &UltraAnalysisConfig,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<RealTimeMonitoring> {
     Ok(RealTimeMonitoring {
         online_controllability: OnlineEstimation {
@@ -1729,9 +1729,9 @@ fn create_default_real_time_monitoring() -> RealTimeMonitoring {
 #[allow(dead_code)]
 fn compute_quantum_inspired_metrics(
     ss: &StateSpace,
-    controllability: &UltraControllabilityAnalysis,
-    observability: &UltraObservabilityAnalysis,
-    config: &UltraAnalysisConfig,
+    controllability: &AdvancedControllabilityAnalysis,
+    observability: &AdvancedObservabilityAnalysis,
+    config: &AdvancedAnalysisConfig,
 ) -> SignalResult<QuantumInspiredMetrics> {
     Ok(QuantumInspiredMetrics {
         quantum_controllability: 0.9,
@@ -1770,7 +1770,7 @@ fn estimate_analysis_memory_usage(n: usize) -> f64 {
 }
 
 #[allow(dead_code)]
-fn estimate_numerical_accuracy(config: &UltraAnalysisConfig) -> f64 {
+fn estimate_numerical_accuracy(config: &AdvancedAnalysisConfig) -> f64 {
     match config.optimization_level {
         OptimizationLevel::MaxAccuracy => 0.999,
         OptimizationLevel::Balanced => 0.995,
@@ -1785,7 +1785,7 @@ mod tests {
     use crate::lti::systems::StateSpace;
 
     #[test]
-    fn test_ultra_controllability_observability_analysis() {
+    fn test_advanced_controllability_observability_analysis() {
         // Create a simple test system
         let ss = StateSpace::new(
             vec![-1.0, 0.0, 1.0, -2.0], // 2x2 A matrix
@@ -1796,8 +1796,8 @@ mod tests {
         )
         .unwrap();
 
-        let config = UltraAnalysisConfig::default();
-        let result = ultra_controllability_observability_analysis(&ss, &config);
+        let config = AdvancedAnalysisConfig::default();
+        let result = advanced_controllability_observability_analysis(&ss, &config);
 
         assert!(result.is_ok());
         let result = result.unwrap();
@@ -1811,7 +1811,7 @@ mod tests {
 
     #[test]
     fn test_config_defaults() {
-        let config = UltraAnalysisConfig::default();
+        let config = AdvancedAnalysisConfig::default();
 
         assert!(config.enable_quantum_methods);
         assert!(config.enable_neuromorphic);

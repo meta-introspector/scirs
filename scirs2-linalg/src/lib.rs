@@ -100,8 +100,8 @@ pub mod decomposition_advanced;
 // Main eigen module
 pub mod eigen;
 pub use self::eigen::{
-    eig, eig_gen, eigh, eigh_gen, eigvals, eigvals_gen, eigvalsh, eigvalsh_gen, power_iteration,
-    ultra_precision_eig,
+    advanced_precision_eig, eig, eig_gen, eigh, eigh_gen, eigvals, eigvals_gen, eigvalsh,
+    eigvalsh_gen, power_iteration,
 };
 
 // Specialized eigen solvers in separate module
@@ -306,8 +306,8 @@ pub mod prelude {
         polar_decomposition_newton, qr_with_column_pivoting,
     };
     pub use super::eigen::{
-        eig, eig_gen, eigh, eigh_gen, eigvals, eigvals_gen, eigvalsh, eigvalsh_gen,
-        power_iteration, ultra_precision_eig,
+        advanced_precision_eig, eig, eig_gen, eigh, eigh_gen, eigvals, eigvals_gen, eigvalsh,
+        eigvalsh_gen, power_iteration,
     };
     pub use super::eigen_specialized::{
         banded_eigen, banded_eigh, banded_eigvalsh, circulant_eigenvalues, largest_k_eigh,

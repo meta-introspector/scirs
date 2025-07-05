@@ -2579,7 +2579,7 @@ mod tests {
 
     #[test]
     fn test_jit_compiler_creation() {
-        let compiler = advancedJitCompiler::new();
+        let compiler = AdvancedJitCompiler::new();
         assert!(compiler.is_ok());
     }
 

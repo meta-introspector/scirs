@@ -349,7 +349,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let configs = vec![
         (
-            "Ultra Low Latency",
+            "Advanced Low Latency",
             StreamingStftConfig {
                 frame_length: 64,
                 hop_length: 32,

@@ -4,22 +4,22 @@
 //! featuring comprehensive mathematical invariant testing, numerical stability
 //! verification, SIMD consistency checks, and performance regression detection.
 
-use crate::advanced_simd_stats::{BatchOperation, AdvancedSimdConfig, UltraThinkSimdOptimizer};
+use crate::advanced_simd_stats::{BatchOperation, AdvancedSimdConfig, AdvancedSimdOptimizer};
 use crate::parallel_enhancements::AdvancedParallelConfig;
 use crate::{kurtosis, mean, pearson_r, skew, std, var};
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
 use std::time::Instant;
 
-/// Ultra-comprehensive property testing framework
-pub struct UltrathinkPropertyTester {
+/// Advanced-comprehensive property testing framework
+pub struct AdvancedPropertyTester {
     simd_config: AdvancedSimdConfig,
     parallel_config: AdvancedParallelConfig,
     numerical_tolerance: f64,
     performance_tolerance: f64,
 }
 
-impl Default for UltrathinkPropertyTester {
+impl Default for AdvancedPropertyTester {
     fn default() -> Self {
         Self {
             simd_config: AdvancedSimdConfig::default(),
@@ -30,7 +30,7 @@ impl Default for UltrathinkPropertyTester {
     }
 }
 
-impl UltrathinkPropertyTester {
+impl AdvancedPropertyTester {
     /// Create a new property tester with custom configuration
     pub fn new(
         simd_config: AdvancedSimdConfig,
@@ -58,11 +58,11 @@ impl UltrathinkPropertyTester {
         let mut errors = Vec::new();
 
         // Test batch statistics consistency
-        let optimizer = UltraThinkSimdOptimizer::new(self.simd_config.clone());
+        let optimizer = AdvancedSimdOptimizer::new(self.simd_config.clone());
         let data_arrays = vec![data.to_owned().view()];
         let operations = vec![BatchOperation::Mean, BatchOperation::Variance];
 
-        match optimizer.ultra_batch_statistics(&data_arrays, &operations) {
+        match optimizer.advanced_batch_statistics(&data_arrays, &operations) {
             Ok(simd_result) => {
                 // Compare with scalar implementations
                 if let Ok(scalar_mean) = mean(data) {
@@ -359,14 +359,14 @@ impl UltrathinkPropertyTester {
 
         // Benchmark SIMD operations
         let start = Instant::now();
-        let optimizer = UltraThinkSimdOptimizer::new(self.simd_config.clone());
+        let optimizer = AdvancedSimdOptimizer::new(self.simd_config.clone());
         let data_arrays = vec![data.to_owned().view()];
         let operations = vec![
             BatchOperation::Mean,
             BatchOperation::Variance,
             BatchOperation::StandardDeviation,
         ];
-        let _ = optimizer.ultra_batch_statistics(&data_arrays, &operations);
+        let _ = optimizer.advanced_batch_statistics(&data_arrays, &operations);
         let simd_time = start.elapsed();
 
         // Check for performance regression
@@ -546,8 +546,8 @@ impl ComprehensiveTestReport {
 
 /// Create a default Advanced property tester
 #[allow(dead_code)]
-pub fn create_ultrathink_property_tester() -> UltrathinkPropertyTester {
-    UltrathinkPropertyTester::default()
+pub fn create_advanced_property_tester() -> AdvancedPropertyTester {
+    AdvancedPropertyTester::default()
 }
 
 #[cfg(test)]
@@ -557,14 +557,14 @@ mod tests {
 
     #[test]
     fn test_property_tester_creation() {
-        let tester = create_ultrathink_property_tester();
+        let tester = create_advanced_property_tester();
         assert!(tester.numerical_tolerance > 0.0);
         assert!(tester.performance_tolerance > 0.0);
     }
 
     #[test]
     fn test_mathematical_invariants() {
-        let tester = create_ultrathink_property_tester();
+        let tester = create_advanced_property_tester();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
 
         let result = tester.test_mathematical_invariants(&data.view());
@@ -578,7 +578,7 @@ mod tests {
 
     #[test]
     fn test_correlation_properties() {
-        let tester = create_ultrathink_property_tester();
+        let tester = create_advanced_property_tester();
         let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = array![5.0, 4.0, 3.0, 2.0, 1.0]; // Perfect negative correlation
 
@@ -593,7 +593,7 @@ mod tests {
 
     #[test]
     fn test_comprehensive_report() {
-        let tester = create_ultrathink_property_tester();
+        let tester = create_advanced_property_tester();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 
         let report = tester.run_comprehensive_tests(&data.view());

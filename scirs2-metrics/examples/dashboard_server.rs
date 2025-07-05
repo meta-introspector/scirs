@@ -14,9 +14,11 @@ use std::{thread, time::Duration};
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create dashboard configuration
-    let mut config = DashboardConfig::default();
-    config.title = "ML Training Metrics Dashboard".to_string();
-    config.refresh_interval = 2; // Refresh every 2 seconds
+    let config = DashboardConfig {
+        title: "ML Training Metrics Dashboard".to_string(),
+        refresh_interval: 2, // Refresh every 2 seconds
+        ..Default::default()
+    };
 
     // Create interactive dashboard
     let dashboard = InteractiveDashboard::new(config);
@@ -54,10 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Add epoch-specific metrics
         dashboard.add_metric("epoch", epoch as f64)?;
 
-        println!(
-            "Epoch {}: accuracy={:.4}, loss={:.4}, lr={:.6}",
-            epoch, accuracy, loss, lr
-        );
+        println!("Epoch {epoch}: accuracy={accuracy:.4}, loss={loss:.4}, lr={lr:.6}");
 
         // Wait before next update
         thread::sleep(Duration::from_secs(3));

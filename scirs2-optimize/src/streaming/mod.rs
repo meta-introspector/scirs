@@ -48,7 +48,7 @@ pub use ultra_adaptive_streaming::*;
 #[derive(Debug, Clone)]
 pub struct StreamingConfig {
     /// Maximum number of iterations per update
-    pub max_iterations: usize,
+    pub max_nit: usize,
     /// Convergence tolerance
     pub tolerance: f64,
     /// Learning rate for online methods
@@ -66,7 +66,7 @@ pub struct StreamingConfig {
 impl Default for StreamingConfig {
     fn default() -> Self {
         Self {
-            max_iterations: 100,
+            max_nit: 100,
             tolerance: 1e-6,
             learning_rate: 0.01,
             forgetting_factor: 0.9,

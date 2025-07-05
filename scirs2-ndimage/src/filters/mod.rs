@@ -19,23 +19,25 @@ pub use simd_specialized::{
     simd_anisotropic_diffusion, simd_bilateral_filter, simd_non_local_means,
 };
 
-// Ultra SIMD optimized exports
+// Advanced SIMD optimized exports
 #[cfg(feature = "simd")]
-pub use ultra_simd_optimized::{
-    ultra_simd_gaussian_pyramid, ultra_simd_morphological_erosion_2d, ultra_simd_template_matching,
+pub use advanced_simd_optimized::{
+    advanced_simd_gaussian_pyramid, advanced_simd_morphological_erosion_2d,
+    advanced_simd_template_matching,
 };
 
-// Ultra SIMD enhanced exports
+// Advanced SIMD enhanced exports
 #[cfg(feature = "simd")]
-pub use ultra_simd_enhanced::{
-    ultra_simd_convolution_2d, ultra_simd_median_filter, ultra_simd_separable_convolution_2d,
+pub use advanced_simd_enhanced::{
+    advanced_simd_convolution_2d, advanced_simd_median_filter,
+    advanced_simd_separable_convolution_2d,
 };
 
 // Advanced SIMD extensions exports
 #[cfg(feature = "simd")]
 pub use advanced_simd_extensions::{
-    ultra_simd_advanced_edge_detection, ultra_simd_multi_scale_lbp, ultra_simd_wavelet_pyramid,
-    WaveletPyramid, WaveletType,
+    advanced_simd_advanced_edge_detection, advanced_simd_multi_scale_lbp,
+    advanced_simd_wavelet_pyramid, WaveletPyramid, WaveletType,
 };
 
 // Enhanced SIMD optimizations exports
@@ -47,7 +49,11 @@ pub use simd_enhanced_optimizations::{
 
 pub mod advanced;
 #[cfg(feature = "simd")]
+mod advanced_simd_enhanced;
+#[cfg(feature = "simd")]
 mod advanced_simd_extensions;
+#[cfg(feature = "simd")]
+mod advanced_simd_optimized;
 mod bilateral;
 mod boundary_handler;
 mod boundary_optimized;
@@ -67,10 +73,6 @@ mod simd_enhanced_optimizations;
 #[cfg(feature = "simd")]
 mod simd_specialized;
 mod tests;
-#[cfg(feature = "simd")]
-mod ultra_simd_enhanced;
-#[cfg(feature = "simd")]
-mod ultra_simd_optimized;
 mod uniform;
 mod utils;
 mod vectorized;

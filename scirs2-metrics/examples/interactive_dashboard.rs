@@ -82,7 +82,7 @@ fn basic_dashboard_example() -> Result<()> {
     println!("  Unique metrics: {}", stats.unique_metrics);
     println!("  Latest values:");
     for (metric, value) in &stats.latest_values {
-        println!("    {}: {:.4}", metric, value);
+        println!("    {metric}: {value:.4}");
     }
 
     // Start the dashboard server (mock implementation)
@@ -152,8 +152,7 @@ fn realtime_monitoring_example() -> Result<()> {
         dashboard.add_metric_with_metadata("val_loss", val_loss, val_metadata)?;
 
         println!(
-            "  Epoch {}: Train Acc={:.4}, Train Loss={:.4}, Val Acc={:.4}, Val Loss={:.4}",
-            epoch, accuracy, loss, val_accuracy, val_loss
+            "  Epoch {epoch}: Train Acc={accuracy:.4}, Train Loss={loss:.4}, Val Acc={val_accuracy:.4}, Val Loss={val_loss:.4}"
         );
 
         // Simulate processing time
@@ -268,7 +267,7 @@ fn export_and_data_management_example() -> Result<()> {
 
     println!("\nData filtering examples:");
     println!("  Total data points: {}", all_metrics.len());
-    println!("  Time range: {} to {}", first_timestamp, last_timestamp);
+    println!("  Time range: {first_timestamp} to {last_timestamp}");
 
     // Get metrics in time range (first half)
     let mid_timestamp = first_timestamp + (last_timestamp - first_timestamp) / 2;
@@ -357,16 +356,12 @@ fn advanced_configuration_example() -> Result<()> {
             let f1_score = accuracy - 0.02 + noise * 0.5;
 
             dashboard.add_metric_with_metadata(
-                &format!("{}_accuracy", experiment),
+                &format!("{experiment}_accuracy"),
                 accuracy,
                 metadata.clone(),
             )?;
 
-            dashboard.add_metric_with_metadata(
-                &format!("{}_f1", experiment),
-                f1_score,
-                metadata,
-            )?;
+            dashboard.add_metric_with_metadata(&format!("{experiment}_f1"), f1_score, metadata)?;
         }
     }
 
@@ -481,7 +476,7 @@ fn widget_system_example() -> Result<()> {
     println!("  Total data points: {}", stats.total_data_points);
     println!("  Latest metric values:");
     for (metric, value) in &stats.latest_values {
-        println!("    {}: {:.4}", metric, value);
+        println!("    {metric}: {value:.4}");
     }
 
     Ok(())

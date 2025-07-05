@@ -86,7 +86,7 @@ fn demonstrate_progressive_intelligence(coordinator: &mut AdvancedCoordinator) -
         ("Complex Structure", generate_complex_structure(2500)),
         ("Random Entropy", generate_random_entropy(5000)),
         ("Hybrid Dataset", generate_hybrid_dataset(7500)),
-        ("Ultra-Complex", generate_ultra_complex_data(10000)),
+        ("Advanced-Complex", generate_advanced_complex_data(10000)),
     ];
 
     println!("Testing intelligence scaling across data complexity levels...\n");
@@ -96,7 +96,7 @@ fn demonstrate_progressive_intelligence(coordinator: &mut AdvancedCoordinator) -
         println!("   Data Size: {} bytes", data.len());
 
         let start_time = Instant::now();
-        let result = coordinator.process_ultra_intelligent(&data)?;
+        let result = coordinator.process_advanced_intelligent(&data)?;
         let processing_time = start_time.elapsed();
 
         println!("   Strategy Used: {:?}", result.strategy_used);
@@ -139,7 +139,7 @@ fn demonstrate_multi_modal_processing(coordinator: &mut AdvancedCoordinator) -> 
         println!("🔄 Iteration {}/5", iteration);
 
         let start = Instant::now();
-        let result = coordinator.process_ultra_intelligent(&test_data)?;
+        let result = coordinator.process_advanced_intelligent(&test_data)?;
         let total_time = start.elapsed();
 
         println!("   Strategy: {:?}", result.strategy_used);
@@ -197,7 +197,7 @@ fn demonstrate_adaptive_learning_evolution(coordinator: &mut AdvancedCoordinator
         println!("🎯 Workload: {}", workload_name);
 
         let start = Instant::now();
-        let result = coordinator.process_ultra_intelligent(&data)?;
+        let result = coordinator.process_advanced_intelligent(&data)?;
         let processing_time = start.elapsed();
 
         let efficiency = result.efficiency_score;
@@ -269,7 +269,7 @@ fn demonstrate_cross_domain_intelligence(coordinator: &mut AdvancedCoordinator) 
         println!("🔬 Domain: {}", domain_name);
 
         let start = Instant::now();
-        let result = coordinator.process_ultra_intelligent(&data)?;
+        let result = coordinator.process_advanced_intelligent(&data)?;
         let processing_time = start.elapsed();
 
         domain_performances.push((domain_name, result.efficiency_score, result.strategy_used));
@@ -344,7 +344,7 @@ fn demonstrate_emergent_behavior_detection(coordinator: &mut AdvancedCoordinator
         println!("🧪 Challenge: {}", challenge_name);
 
         let start = Instant::now();
-        let result = coordinator.process_ultra_intelligent(&data)?;
+        let result = coordinator.process_advanced_intelligent(&data)?;
         let processing_time = start.elapsed();
 
         println!("   Processing Time: {:.2} ms", processing_time.as_millis());
@@ -442,7 +442,7 @@ fn demonstrate_real_world_performance(coordinator: &mut AdvancedCoordinator) -> 
         println!("   Data Size: {:.2} KB", data.len() as f32 / 1024.0);
 
         let start = Instant::now();
-        let result = coordinator.process_ultra_intelligent(&data)?;
+        let result = coordinator.process_advanced_intelligent(&data)?;
         let processing_time = start.elapsed();
 
         total_data_processed += data.len();
@@ -644,7 +644,7 @@ fn generate_hybrid_dataset(size: usize) -> Vec<u8> {
 }
 
 #[allow(dead_code)]
-fn generate_ultra_complex_data(size: usize) -> Vec<u8> {
+fn generate_advanced_complex_data(size: usize) -> Vec<u8> {
     (0..size)
         .map(|i| {
             let fractal =

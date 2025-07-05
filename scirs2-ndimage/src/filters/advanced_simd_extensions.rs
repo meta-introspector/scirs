@@ -1,4 +1,4 @@
-//! Advanced SIMD extensions for ultra-high performance image processing
+//! Advanced SIMD extensions for advanced-high performance image processing
 //!
 //! This module implements cutting-edge SIMD optimization techniques including:
 //! - Multi-level cache awareness and optimization
@@ -22,7 +22,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
     })
 }
 
-/// Ultra-optimized SIMD pyramid generation with wavelet decomposition
+/// Advanced-optimized SIMD pyramid generation with wavelet decomposition
 ///
 /// This implementation uses advanced techniques for pyramid construction:
 /// - Separable wavelet filters for optimal frequency separation
@@ -30,7 +30,7 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 /// - SIMD-optimized subsampling with anti-aliasing
 /// - Memory-efficient pyramid storage
 #[allow(dead_code)]
-pub fn ultra_simd_wavelet_pyramid<T>(
+pub fn advanced_simd_wavelet_pyramid<T>(
     input: ArrayView2<T>,
     levels: usize,
     wavelet_type: WaveletType,
@@ -50,7 +50,7 @@ where
         }
 
         // Wavelet decomposition with SIMD optimization
-        let decomp = ultra_simd_wavelet_decomposition(current.view(), &low_pass, &high_pass)?;
+        let decomp = advanced_simd_wavelet_decomposition(current.view(), &low_pass, &high_pass)?;
 
         pyramid.add_level(decomp);
 
@@ -94,9 +94,9 @@ pub enum WaveletType {
     Biorthogonal,
 }
 
-/// Ultra-SIMD wavelet decomposition
+/// Advanced-SIMD wavelet decomposition
 #[allow(dead_code)]
-fn ultra_simd_wavelet_decomposition<T>(
+fn advanced_simd_wavelet_decomposition<T>(
     input: ArrayView2<T>,
     low_pass: &[T],
     high_pass: &[T],
@@ -113,7 +113,7 @@ where
     let mut temp_h = Array2::zeros((height, new_width));
 
     // Step 1: Horizontal filtering and downsampling with SIMD
-    ultra_simd_horizontal_filter_downsample(
+    advanced_simd_horizontal_filter_downsample(
         &input,
         &mut temp_l.view_mut(),
         &mut temp_h.view_mut(),
@@ -127,7 +127,7 @@ where
     let mut hl = Array2::zeros((new_height, new_width));
     let mut hh = Array2::zeros((new_height, new_width));
 
-    ultra_simd_vertical_filter_downsample(
+    advanced_simd_vertical_filter_downsample(
         &temp_l.view(),
         &mut ll.view_mut(),
         &mut lh.view_mut(),
@@ -135,7 +135,7 @@ where
         high_pass,
     )?;
 
-    ultra_simd_vertical_filter_downsample(
+    advanced_simd_vertical_filter_downsample(
         &temp_h.view(),
         &mut hl.view_mut(),
         &mut hh.view_mut(),
@@ -148,7 +148,7 @@ where
 
 /// SIMD-optimized horizontal filtering with downsampling
 #[allow(dead_code)]
-fn ultra_simd_horizontal_filter_downsample<T>(
+fn advanced_simd_horizontal_filter_downsample<T>(
     input: &ArrayView2<T>,
     output_low: &mut ArrayViewMut2<T>,
     output_high: &mut ArrayViewMut2<T>,
@@ -229,7 +229,7 @@ where
 
 /// SIMD-optimized vertical filtering with downsampling
 #[allow(dead_code)]
-fn ultra_simd_vertical_filter_downsample<T>(
+fn advanced_simd_vertical_filter_downsample<T>(
     input: &ArrayView2<T>,
     output_low: &mut ArrayViewMut2<T>,
     output_high: &mut ArrayViewMut2<T>,
@@ -332,7 +332,7 @@ where
     }
 }
 
-/// Ultra-optimized SIMD texture analysis using Local Binary Patterns
+/// Advanced-optimized SIMD texture analysis using Local Binary Patterns
 ///
 /// This implementation provides advanced texture analysis with:
 /// - Multi-scale LBP computation
@@ -340,7 +340,7 @@ where
 /// - SIMD-optimized histogram computation
 /// - Uniform pattern detection
 #[allow(dead_code)]
-pub fn ultra_simd_multi_scale_lbp<T>(
+pub fn advanced_simd_multi_scale_lbp<T>(
     input: ArrayView2<T>,
     radii: &[usize],
     sample_points: &[usize],
@@ -359,7 +359,7 @@ where
 
     // Process each scale
     for (scale_idx, (&radius, &n_points)) in radii.iter().zip(sample_points.iter()).enumerate() {
-        let scale_lbp = ultra_simd_lbp_single_scale(&input, radius, n_points)?;
+        let scale_lbp = advanced_simd_lbp_single_scale(&input, radius, n_points)?;
 
         // Combine multi-scale results (simple weighted sum)
         let weight = 1u32 << scale_idx; // Powers of 2 for different scales
@@ -373,7 +373,7 @@ where
 
 /// SIMD-optimized LBP computation for single scale
 #[allow(dead_code)]
-fn ultra_simd_lbp_single_scale<T>(
+fn advanced_simd_lbp_single_scale<T>(
     input: &ArrayView2<T>,
     radius: usize,
     n_points: usize,
@@ -450,7 +450,7 @@ fn lbp_to_uniform_pattern(code: u32, n_points: usize) -> u32 {
     }
 }
 
-/// Ultra-optimized SIMD edge detection using advanced multi-directional gradients
+/// Advanced-optimized SIMD edge detection using advanced multi-directional gradients
 ///
 /// This implementation provides advanced edge detection with:
 /// - Multi-directional gradient computation (8 directions)
@@ -458,7 +458,7 @@ fn lbp_to_uniform_pattern(code: u32, n_points: usize) -> u32 {
 /// - Non-maximum suppression with sub-pixel accuracy
 /// - Adaptive thresholding based on local statistics
 #[allow(dead_code)]
-pub fn ultra_simd_advanced_edge_detection<T>(
+pub fn advanced_simd_advanced_edge_detection<T>(
     input: ArrayView2<T>,
     sigma: T,
     low_threshold_factor: T,
@@ -470,19 +470,19 @@ where
     let (height, width) = input.dim();
 
     // Step 1: Gaussian smoothing
-    let smoothed = ultra_simd_gaussian_smooth(&input, sigma)?;
+    let smoothed = advanced_simd_gaussian_smooth(&input, sigma)?;
 
     // Step 2: Multi-directional gradient computation
-    let gradients = ultra_simd_multi_directional_gradients(&smoothed.view())?;
+    let gradients = advanced_simd_multi_directional_gradients(&smoothed.view())?;
 
     // Step 3: Compute gradient magnitude and direction
-    let (magnitude, direction) = ultra_simd_gradient_magnitude_direction(&gradients)?;
+    let (magnitude, direction) = advanced_simd_gradient_magnitude_direction(&gradients)?;
 
     // Step 4: Non-maximum suppression
-    let suppressed = ultra_simd_non_maximum_suppression(&magnitude.view(), &direction.view())?;
+    let suppressed = advanced_simd_non_maximum_suppression(&magnitude.view(), &direction.view())?;
 
     // Step 5: Adaptive double thresholding
-    let edges = ultra_simd_adaptive_double_threshold(
+    let edges = advanced_simd_adaptive_double_threshold(
         &suppressed.view(),
         low_threshold_factor,
         high_threshold_factor,
@@ -493,7 +493,7 @@ where
 
 /// SIMD-optimized Gaussian smoothing
 #[allow(dead_code)]
-fn ultra_simd_gaussian_smooth<T>(input: &ArrayView2<T>, sigma: T) -> NdimageResult<Array2<T>>
+fn advanced_simd_gaussian_smooth<T>(input: &ArrayView2<T>, sigma: T) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
 {
@@ -505,7 +505,7 @@ where
     let kernel = generate_gaussian_kernel_1d(sigma, kernel_size)?;
 
     // Apply separable convolution
-    crate::filters::ultra_simd_optimized::ultra_simd_separable_convolution_2d(
+    crate::filters::advanced_simd_optimized::advanced_simd_separable_convolution_2d(
         input.view(),
         &kernel,
         &kernel,
@@ -546,7 +546,9 @@ where
 
 /// Multi-directional gradient computation
 #[allow(dead_code)]
-fn ultra_simd_multi_directional_gradients<T>(input: &ArrayView2<T>) -> NdimageResult<Vec<Array2<T>>>
+fn advanced_simd_multi_directional_gradients<T>(
+    input: &ArrayView2<T>,
+) -> NdimageResult<Vec<Array2<T>>>
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
 {
@@ -621,7 +623,7 @@ where
 
 /// Compute gradient magnitude and direction from multi-directional gradients
 #[allow(dead_code)]
-fn ultra_simd_gradient_magnitude_direction<T>(
+fn advanced_simd_gradient_magnitude_direction<T>(
     gradients: &[Array2<T>],
 ) -> NdimageResult<(Array2<T>, Array2<T>)>
 where
@@ -655,7 +657,7 @@ where
 
 /// Non-maximum suppression with sub-pixel accuracy
 #[allow(dead_code)]
-fn ultra_simd_non_maximum_suppression<T>(
+fn advanced_simd_non_maximum_suppression<T>(
     magnitude: &ArrayView2<T>,
     direction: &ArrayView2<T>,
 ) -> NdimageResult<Array2<T>>
@@ -691,7 +693,7 @@ where
 
 /// Adaptive double thresholding based on local statistics
 #[allow(dead_code)]
-fn ultra_simd_adaptive_double_threshold<T>(
+fn advanced_simd_adaptive_double_threshold<T>(
     magnitude: &ArrayView2<T>,
     low_factor: T,
     high_factor: T,
@@ -770,10 +772,10 @@ mod tests {
     use ndarray::Array2;
 
     #[test]
-    fn test_ultra_simd_wavelet_pyramid() {
+    fn test_advanced_simd_wavelet_pyramid() {
         let input = Array2::ones((64, 64));
 
-        let pyramid = ultra_simd_wavelet_pyramid(input.view(), 3, WaveletType::Haar).unwrap();
+        let pyramid = advanced_simd_wavelet_pyramid(input.view(), 3, WaveletType::Haar).unwrap();
 
         assert!(pyramid.levels.len() <= 3);
 
@@ -787,13 +789,13 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_simd_multi_scale_lbp() {
+    fn test_advanced_simd_multi_scale_lbp() {
         let input = Array2::from_shape_fn((32, 32), |(i, j)| ((i + j) % 3) as f64);
 
         let radii = [1, 2, 3];
         let sample_points = [8, 16, 24];
 
-        let result = ultra_simd_multi_scale_lbp(input.view(), &radii, &sample_points).unwrap();
+        let result = advanced_simd_multi_scale_lbp(input.view(), &radii, &sample_points).unwrap();
 
         assert_eq!(result.shape(), input.shape());
 
@@ -802,11 +804,11 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_simd_advanced_edge_detection() {
+    fn test_advanced_simd_advanced_edge_detection() {
         let input =
             Array2::from_shape_fn((64, 64), |(i, j)| if i > 30 && i < 34 { 1.0 } else { 0.0 });
 
-        let result = ultra_simd_advanced_edge_detection(input.view(), 1.0, 0.1, 0.3).unwrap();
+        let result = advanced_simd_advanced_edge_detection(input.view(), 1.0, 0.1, 0.3).unwrap();
 
         assert_eq!(result.shape(), input.shape());
 

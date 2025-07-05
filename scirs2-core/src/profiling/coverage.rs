@@ -758,10 +758,9 @@ impl CoverageAnalyzer {
         // Create output directory if it doesn't exist
         if !config.output_directory.exists() {
             std::fs::create_dir_all(&config.output_directory).map_err(|e| {
-                CoreError::from(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    format!("Failed to create output directory: {e}"),
-                ))
+                CoreError::from(std::io::Error::other(format!(
+                    "Failed to create output directory: {e}"
+                )))
             })?;
         }
 
@@ -780,8 +779,7 @@ impl CoverageAnalyzer {
         if let Ok(mut state) = self.collection_state.lock() {
             match *state {
                 CollectionState::Collecting => {
-                    return Err(CoreError::from(std::io::Error::new(
-                        std::io::ErrorKind::Other,
+                    return Err(CoreError::from(std::io::Error::other(
                         "Coverage collection already in progress",
                     )));
                 }

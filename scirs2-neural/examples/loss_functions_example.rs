@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create sample data for imbalanced classification
     let loss = focal.forward(&predictions, &targets)?;
     println!("Focal Loss (gamma=2.0, alpha=0.25): {:.4}", loss);
-    let gradients = focal.backward(&predictions, &targets)?;
+    let _gradients = focal.backward(&predictions, &targets)?;
     println!("Focal Loss Gradients:");
     // Contrastive Loss example
     println!("\n--- Contrastive Loss Example ---");
@@ -93,7 +93,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - Second dimension: [anchor, positive, negative]");
     println!("  - Third dimension: embedding components");
     println!("Triplet Loss (margin=0.5): {:.4}", loss);
-    let gradients = triplet.backward(&triplet_embeddings, &dummy_labels)?;
+    let _gradients = triplet.backward(&triplet_embeddings, &dummy_labels)?;
     println!("Triplet Loss Gradients (first few):");
     Ok(())
 }

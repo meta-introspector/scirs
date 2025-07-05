@@ -57,9 +57,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(y.mapv(|val| -0.5 * val))
     };
 
-    // Perform ultra-optimized RK4 integration
-    println!("\n⚡ Performing ultra-optimized RK4 integration...");
-    let result = coordinator.ultra_rk4_integration(t, &y_initial.view(), h, ode_function)?;
+    // Perform advanced-optimized RK4 integration
+    println!("\n⚡ Performing advanced-optimized RK4 integration...");
+    let result = coordinator.advanced_rk4_integration(t, &y_initial.view(), h, ode_function)?;
 
     println!("✅ Integration completed successfully!");
     println!("\n📈 Results:");
@@ -130,7 +130,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("\n🎉 Advanced mode demonstration completed successfully!");
-    println!("   All ultra-performance optimizations are active and functioning.");
+    println!("   All advanced-performance optimizations are active and functioning.");
 
     Ok(())
 }

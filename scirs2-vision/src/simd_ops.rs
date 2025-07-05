@@ -702,10 +702,10 @@ pub fn return_temp_buffer(buffer: Vec<f32>) {
 }
 
 // ============================================================================
-// Ultra-Performance SIMD Enhancements for Vision Operations
+// Advanced-Performance SIMD Enhancements for Vision Operations
 // ============================================================================
 
-/// Ultra-fast SIMD-based image resizing with Lanczos interpolation
+/// Optimized SIMD-based image resizing with Lanczos interpolation
 ///
 /// Implements high-quality resizing using SIMD-accelerated Lanczos kernel.
 /// Optimized for real-time video processing and large image datasets.
@@ -721,7 +721,7 @@ pub fn return_temp_buffer(buffer: Vec<f32>) {
 /// 3-5x faster than scalar implementation with superior quality.
 /// Memory usage optimized to reduce allocations by 80%.
 #[allow(dead_code)]
-pub fn simd_resize_lanczos_ultra(
+pub fn simd_resize_lanczos_advanced(
     image: &ArrayView2<f32>,
     new_height: usize,
     new_width: usize,
@@ -759,7 +759,7 @@ pub fn simd_resize_lanczos_ultra(
         for x in x_start..=x_end {
             if x >= 0 && x < orig_width as i32 {
                 let distance = (x as f32 - src_x).abs();
-                let weight = lanczos_kernel_ultra(distance, LANCZOS_A);
+                let weight = lanczos_kernel_advanced(distance, LANCZOS_A);
                 weights.push(weight);
                 indices.push(x as usize);
                 weight_sum += weight;
@@ -827,7 +827,7 @@ pub fn simd_resize_lanczos_ultra(
         for y in y_start..=y_end {
             if y >= 0 && y < orig_height as i32 {
                 let distance = (y as f32 - src_y).abs();
-                let weight = lanczos_kernel_ultra(distance, LANCZOS_A);
+                let weight = lanczos_kernel_advanced(distance, LANCZOS_A);
                 weights.push(weight);
                 indices.push(y as usize);
                 weight_sum += weight;
@@ -878,7 +878,7 @@ pub fn simd_resize_lanczos_ultra(
 
 /// Optimized Lanczos interpolation kernel with lookup table
 #[allow(dead_code)]
-fn lanczos_kernel_ultra(x: f32, a: f32) -> f32 {
+fn lanczos_kernel_advanced(x: f32, a: f32) -> f32 {
     if x.abs() < 1e-6 {
         1.0
     } else if x.abs() >= a {
@@ -890,7 +890,7 @@ fn lanczos_kernel_ultra(x: f32, a: f32) -> f32 {
     }
 }
 
-/// Ultra-performance SIMD matrix multiplication for neural vision tasks
+/// Advanced-performance SIMD matrix multiplication for neural vision tasks
 ///
 /// Optimized specifically for transformer attention computations and feature matching.
 /// Uses advanced blocking, vectorization, and memory prefetching.
@@ -905,7 +905,7 @@ fn lanczos_kernel_ultra(x: f32, a: f32) -> f32 {
 /// Up to 10x faster than naive implementation using cache-aware blocked algorithms.
 /// Optimized for matrices common in vision transformers (768x768, 1024x256, etc.).
 #[allow(dead_code)]
-pub fn simd_matmul_attention_ultra(
+pub fn simd_matmul_attention_advanced(
     a: &ArrayView2<f32>,
     b: &ArrayView2<f32>,
 ) -> Result<Array2<f32>> {
@@ -938,7 +938,7 @@ pub fn simd_matmul_attention_ultra(
                 let k_end = (k_block + block_size).min(k);
 
                 // Micro-kernel optimization for small blocks
-                ultra_matmul_micro_kernel(
+                advanced_matmul_micro_kernel(
                     &a.slice(ndarray::s![i_block..i_end, k_block..k_end]),
                     &b.slice(ndarray::s![k_block..k_end, j_block..j_end]),
                     &mut c.slice_mut(ndarray::s![i_block..i_end, j_block..j_end]),
@@ -952,7 +952,7 @@ pub fn simd_matmul_attention_ultra(
 
 /// Highly optimized micro-kernel for matrix multiplication
 #[allow(dead_code)]
-fn ultra_matmul_micro_kernel(
+fn advanced_matmul_micro_kernel(
     a: &ArrayView2<f32>,
     b: &ArrayView2<f32>,
     c: &mut ndarray::ArrayViewMut2<f32>,
@@ -1007,7 +1007,7 @@ fn ultra_matmul_micro_kernel(
     Ok(())
 }
 
-/// Ultra-fast SIMD-based Non-Maximum Suppression for real-time feature detection
+/// Optimized SIMD-based Non-Maximum Suppression for real-time feature detection
 ///
 /// Heavily optimized NMS implementation using SIMD for threshold comparisons
 /// and spatial sorting for improved cache performance.
@@ -1023,7 +1023,7 @@ fn ultra_matmul_micro_kernel(
 /// 6-8x faster than scalar implementation for large response maps.
 /// Optimized for real-time video processing applications.
 #[allow(dead_code)]
-pub fn simd_non_maximum_suppression_ultra(
+pub fn simd_non_maximum_suppression_advanced(
     response: &ArrayView2<f32>,
     threshold: f32,
     radius: usize,
@@ -1104,7 +1104,7 @@ pub fn simd_non_maximum_suppression_ultra(
     Ok(output)
 }
 
-/// Ultra-performance SIMD convolution with adaptive algorithm selection
+/// Advanced-performance SIMD convolution with adaptive algorithm selection
 ///
 /// Automatically selects the best convolution algorithm based on kernel size and image dimensions.
 /// Includes specialized paths for common kernel sizes (3x3, 5x5, 7x7).
@@ -1118,7 +1118,7 @@ pub fn simd_non_maximum_suppression_ultra(
 ///
 /// Up to 8x speedup through algorithm selection and SIMD optimization.
 #[allow(dead_code)]
-pub fn simd_convolve_adaptive_ultra(
+pub fn simd_convolve_adaptive_advanced(
     image: &ArrayView2<f32>,
     kernel: &ArrayView2<f32>,
 ) -> Result<Array2<f32>> {
@@ -1228,7 +1228,7 @@ fn simd_convolve_large_kernel_fft(
     simd_convolve_2d_blocked(image, kernel, 128)
 }
 
-/// Ultra-performance SIMD feature matching with early termination
+/// Advanced-performance SIMD feature matching with early termination
 ///
 /// Optimized descriptor matching using SIMD distance computations and adaptive thresholding.
 ///
@@ -1242,7 +1242,7 @@ fn simd_convolve_large_kernel_fft(
 ///
 /// 5-10x faster than naive matching through SIMD and algorithmic optimizations.
 #[allow(dead_code)]
-pub fn simd_feature_matching_ultra(
+pub fn simd_feature_matching_advanced(
     descriptors1: &ArrayView2<f32>,
     descriptors2: &ArrayView2<f32>,
     threshold: f32,

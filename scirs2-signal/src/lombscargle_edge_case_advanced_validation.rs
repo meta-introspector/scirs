@@ -265,7 +265,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
         .collect();
 
     let frequencies = Array1::linspace(0.05, 0.5, 100);
-    let power = lombscargle(&times, &signal, &frequencies, None)?;
+    let (_freqs, power) = lombscargle(&times, &signal, &frequencies, None)?;
 
     let peak_idx = power
         .iter()
@@ -720,7 +720,7 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
         .collect();
 
     let frequencies = Array1::linspace(0.01, 0.5, 200);
-    let power = lombscargle(&times.to_vec(), &multi_scale_signal, &frequencies, None)?;
+    let (_freqs, power) = lombscargle(&times.to_vec(), &multi_scale_signal, &frequencies, None)?;
 
     // Find peaks corresponding to each frequency
     let mut detected_freqs = Vec::new();

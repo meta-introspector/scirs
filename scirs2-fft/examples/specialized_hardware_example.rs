@@ -294,7 +294,7 @@ fn display_accelerator_recommendations() {
     println!("For different use cases:");
     println!();
 
-    println!("Ultra-Low Latency Applications (< 1 μs):");
+    println!("Advanced-Low Latency Applications (< 1 μs):");
     println!("  ✓ ASIC accelerators - Purpose-built for sparse FFT");
     println!("  ✓ FPGA with custom bitstreams - Configurable for specific needs");
     println!("  • Consider: Power consumption vs latency trade-offs");

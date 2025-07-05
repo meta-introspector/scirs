@@ -1,4 +1,4 @@
-//! Ultra-comprehensive SIMD optimizations using scirs2-core unified operations
+//! Advanced-comprehensive SIMD optimizations using scirs2-core unified operations
 //!
 //! This module provides the most advanced SIMD implementations for statistical
 //! computations, leveraging scirs2-core's unified SIMD operations for maximum
@@ -14,9 +14,9 @@ use scirs2_core::{
 };
 use std::marker::PhantomData;
 
-/// Ultra-comprehensive SIMD configuration
+/// Advanced-comprehensive SIMD configuration
 #[derive(Debug, Clone)]
-pub struct UltraComprehensiveSimdConfig {
+pub struct AdvancedComprehensiveSimdConfig {
     /// Detected platform capabilities
     pub capabilities: PlatformCapabilities,
     /// Optimal vector lane counts for different types
@@ -38,7 +38,7 @@ pub struct UltraComprehensiveSimdConfig {
     pub enable_fma: bool, // Fused multiply-add
 }
 
-impl Default for UltraComprehensiveSimdConfig {
+impl Default for AdvancedComprehensiveSimdConfig {
     fn default() -> Self {
         let capabilities = PlatformCapabilities::detect();
 
@@ -70,9 +70,9 @@ impl Default for UltraComprehensiveSimdConfig {
     }
 }
 
-/// Ultra-comprehensive SIMD processor
-pub struct UltraComprehensiveSimdProcessor<F> {
-    config: UltraComprehensiveSimdConfig,
+/// Advanced-comprehensive SIMD processor
+pub struct AdvancedComprehensiveSimdProcessor<F> {
+    config: AdvancedComprehensiveSimdConfig,
     _phantom: PhantomData<F>,
 }
 
@@ -133,28 +133,37 @@ pub struct MatrixStatsResult<F> {
     pub spectral_norm: F,
 }
 
-impl<F> UltraComprehensiveSimdProcessor<F>
+impl<F> AdvancedComprehensiveSimdProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + ndarray::ScalarOperand,
 {
-    /// Create new ultra-comprehensive SIMD processor
+    /// Create new advanced-comprehensive SIMD processor
     pub fn new() -> Self {
         Self {
-            config: UltraComprehensiveSimdConfig::default(),
+            config: AdvancedComprehensiveSimdConfig::default(),
             _phantom: PhantomData,
         }
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: UltraComprehensiveSimdConfig) -> Self {
+    pub fn with_config(config: AdvancedComprehensiveSimdConfig) -> Self {
         Self {
             config,
             _phantom: PhantomData,
         }
     }
 
-    /// Compute comprehensive statistics using ultra-optimized SIMD
+    /// Compute comprehensive statistics using advanced-optimized SIMD
     pub fn compute_comprehensive_stats(
         &self,
         data: &ArrayView1<F>,
@@ -272,8 +281,8 @@ where
             // Use scirs2-core's unified SIMD operations
             let chunk_sum = F::simd_sum(&chunk);
             let chunk_sum_sq = F::simd_sum_squares(&chunk);
-            let chunk_min = F::simd_min(&chunk);
-            let chunk_max = F::simd_max(&chunk);
+            let chunk_min = F::simd_min_element(&chunk);
+            let chunk_max = F::simd_max_element(&chunk);
 
             // Compute higher moments using SIMD
             let chunk_sum_cube = self.simd_sum_cubes(&chunk)?;
@@ -612,7 +621,7 @@ where
         Ok(partial_results[0].clone())
     }
 
-    /// Compute ultra-optimized matrix statistics
+    /// Compute advanced-optimized matrix statistics
     pub fn compute_matrix_stats(&self, data: &ArrayView2<F>) -> StatsResult<MatrixStatsResult<F>> {
         check_array_finite(data, "data")?;
 
@@ -830,8 +839,8 @@ where
             return Ok(F::one());
         }
 
-        let max_eigenval = F::simd_max(eigenvalues);
-        let min_eigenval = F::simd_min(eigenvalues);
+        let max_eigenval = F::simd_max_element(eigenvalues);
+        let min_eigenval = F::simd_min_element(eigenvalues);
 
         if min_eigenval == F::zero() {
             Ok(F::infinity())
@@ -891,17 +900,17 @@ where
         if eigenvalues.is_empty() {
             Ok(F::zero())
         } else {
-            Ok(F::simd_max(eigenvalues))
+            Ok(F::simd_max_element(eigenvalues))
         }
     }
 
     /// Get processor configuration
-    pub fn get_config(&self) -> &UltraComprehensiveSimdConfig {
+    pub fn get_config(&self) -> &AdvancedComprehensiveSimdConfig {
         &self.config
     }
 
     /// Update processor configuration
-    pub fn update_config(&mut self, config: UltraComprehensiveSimdConfig) {
+    pub fn update_config(&mut self, config: AdvancedComprehensiveSimdConfig) {
         self.config = config;
     }
 
@@ -934,13 +943,22 @@ pub struct PerformanceMetrics {
 }
 
 /// Convenient type aliases
-pub type F64UltraSimdProcessor = UltraComprehensiveSimdProcessor<f64>;
-pub type F32UltraSimdProcessor = UltraComprehensiveSimdProcessor<f32>;
+pub type F64AdvancedSimdProcessor = AdvancedComprehensiveSimdProcessor<f64>;
+pub type F32AdvancedSimdProcessor = AdvancedComprehensiveSimdProcessor<f32>;
 
-impl<F> Default for UltraComprehensiveSimdProcessor<F>
+impl<F> Default for AdvancedComprehensiveSimdProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + ndarray::ScalarOperand,
 {
     fn default() -> Self {
         Self::new()
@@ -949,23 +967,41 @@ where
 
 /// Factory functions for common operations
 #[allow(dead_code)]
-pub fn create_ultra_simd_processor<F>() -> UltraComprehensiveSimdProcessor<F>
+pub fn create_advanced_simd_processor<F>() -> AdvancedComprehensiveSimdProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + ndarray::ScalarOperand,
 {
-    UltraComprehensiveSimdProcessor::new()
+    AdvancedComprehensiveSimdProcessor::new()
 }
 
 #[allow(dead_code)]
 pub fn create_optimized_simd_processor<F>(
-    config: UltraComprehensiveSimdConfig,
-) -> UltraComprehensiveSimdProcessor<F>
+    config: AdvancedComprehensiveSimdConfig,
+) -> AdvancedComprehensiveSimdProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + ndarray::ScalarOperand,
 {
-    UltraComprehensiveSimdProcessor::with_config(config)
+    AdvancedComprehensiveSimdProcessor::with_config(config)
 }
 
 #[cfg(test)]
@@ -974,15 +1010,15 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_ultra_simd_processor_creation() {
-        let processor = UltraComprehensiveSimdProcessor::<f64>::new();
+    fn test_advanced_simd_processor_creation() {
+        let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         assert!(processor.config.f64_lanes >= 1);
         assert!(processor.config.simd_threshold > 0);
     }
 
     #[test]
     fn test_comprehensive_stats_computation() {
-        let processor = UltraComprehensiveSimdProcessor::<f64>::new();
+        let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
 
         let result = processor.compute_comprehensive_stats(&data.view()).unwrap();
@@ -995,7 +1031,7 @@ mod tests {
 
     #[test]
     fn test_simd_single_pass_moments() {
-        let processor = UltraComprehensiveSimdProcessor::<f64>::new();
+        let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
         let (sum, sum_sq, _sum_cube, _sum_quad, min_val, max_val) =
@@ -1009,7 +1045,7 @@ mod tests {
 
     #[test]
     fn test_matrix_stats_computation() {
-        let processor = UltraComprehensiveSimdProcessor::<f64>::new();
+        let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         let data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]];
 
         let result = processor.compute_matrix_stats(&data.view()).unwrap();
@@ -1021,7 +1057,7 @@ mod tests {
 
     #[test]
     fn test_performance_metrics() {
-        let processor = UltraComprehensiveSimdProcessor::<f64>::new();
+        let processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
         let metrics = processor.get_performance_metrics();
 
         assert!(metrics.simd_utilization > 0.0);
@@ -1031,8 +1067,8 @@ mod tests {
 
     #[test]
     fn test_config_update() {
-        let mut processor = UltraComprehensiveSimdProcessor::<f64>::new();
-        let mut new_config = UltraComprehensiveSimdConfig::default();
+        let mut processor = AdvancedComprehensiveSimdProcessor::<f64>::new();
+        let mut new_config = AdvancedComprehensiveSimdConfig::default();
         new_config.enable_fma = false;
 
         processor.update_config(new_config);

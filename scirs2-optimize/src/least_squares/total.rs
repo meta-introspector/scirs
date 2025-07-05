@@ -92,7 +92,7 @@ pub struct TotalLeastSquaresResult {
     pub orthogonal_residuals: f64,
 
     /// Number of iterations (for iterative methods)
-    pub iterations: usize,
+    pub nit: usize,
 
     /// Convergence status
     pub converged: bool,
@@ -259,7 +259,7 @@ where
         x_corrected,
         y_corrected,
         orthogonal_residuals: total_residual,
-        iterations: 1,
+        nit: 1,
         converged: true,
     })
 }
@@ -359,7 +359,7 @@ where
         x_corrected,
         y_corrected,
         orthogonal_residuals,
-        iterations: iter,
+        nit: iter,
         converged,
     })
 }

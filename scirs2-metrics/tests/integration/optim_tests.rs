@@ -146,7 +146,7 @@ fn test_hyperparameter_tuner() {
     ];
 
     // Create tuner
-    let mut tuner = HyperParameterTuner::new(params, "accuracy", true, 5);
+    let tuner = HyperParameterTuner::new(params, "accuracy", true, 5);
 
     // Test random parameter generation
     let mut tuner = tuner.unwrap();

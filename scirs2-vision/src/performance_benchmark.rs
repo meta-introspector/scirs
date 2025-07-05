@@ -8,13 +8,13 @@
 #![allow(missing_docs)]
 
 use crate::error::Result;
+use crate::integration::NeuralQuantumHybridProcessor;
 use crate::streaming::Frame;
-use crate::ultrathink_integration::NeuralQuantumHybridProcessor;
 use ndarray::Array2;
 use std::time::{Duration, Instant};
 
 /// Comprehensive performance benchmark suite for Advanced mode
-pub struct UltrathinkBenchmarkSuite {
+pub struct AdvancedBenchmarkSuite {
     /// Benchmarking configuration
     config: BenchmarkConfig,
     /// Performance history
@@ -319,7 +319,7 @@ pub struct ResourceMonitors {
     energy_monitor: EnergyMonitor,
 }
 
-impl UltrathinkBenchmarkSuite {
+impl AdvancedBenchmarkSuite {
     /// Create a new benchmark suite
     pub fn new(config: BenchmarkConfig) -> Self {
         Self {

@@ -206,7 +206,6 @@ where
                 return Ok(OptimizeResult {
                     x: best_x,
                     fun: best_f,
-                    iterations: iteration,
                     nit: iteration,
                     func_evals,
                     nfev: func_evals,
@@ -227,7 +226,6 @@ where
                 return Ok(OptimizeResult {
                     x: best_x,
                     fun: best_f,
-                    iterations: iteration,
                     nit: iteration,
                     func_evals,
                     nfev: func_evals,
@@ -248,7 +246,6 @@ where
     Ok(OptimizeResult {
         x: best_x,
         fun: final_loss.min(best_f),
-        iterations: options.max_iter,
         nit: options.max_iter,
         func_evals,
         nfev: func_evals,
@@ -356,7 +353,6 @@ where
     Ok(OptimizeResult {
         x: best_x,
         fun: best_f,
-        iterations: options.max_iter,
         nit: options.max_iter,
         func_evals,
         nfev: func_evals,

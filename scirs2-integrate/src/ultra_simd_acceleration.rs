@@ -1,4 +1,4 @@
-//! Ultra-fast SIMD acceleration for ODE solvers
+//! Optimized SIMD acceleration for ODE solvers
 //!
 //! This module provides cutting-edge SIMD optimizations that push the boundaries
 //! of vectorized computation for numerical integration. Features include:
@@ -19,8 +19,8 @@ use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
 use std::time::Instant;
 
-/// Ultra-fast SIMD acceleration engine
-pub struct UltraSimdAccelerator<F: IntegrateFloat> {
+/// Optimized SIMD acceleration engine
+pub struct AdvancedSimdAccelerator<F: IntegrateFloat> {
     /// SIMD capability detector
     simd_capabilities: SimdCapabilities,
     /// Vectorization strategies
@@ -196,15 +196,15 @@ pub struct MixedPrecisionEngine<F: IntegrateFloat> {
     tradeoff_optimizer: TradeoffOptimizer<F>,
 }
 
-impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
-    /// Create a new ultra-SIMD accelerator
+impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
+    /// Create a new advanced-SIMD accelerator
     pub fn new() -> IntegrateResult<Self> {
         let simd_capabilities = Self::detect_simd_capabilities();
         let vectorization_strategies = VectorizationStrategies::new(&simd_capabilities)?;
         let performance_analytics = SimdPerformanceAnalytics::new();
         let mixed_precision_engine = MixedPrecisionEngine::new()?;
 
-        Ok(UltraSimdAccelerator {
+        Ok(AdvancedSimdAccelerator {
             simd_capabilities,
             vectorization_strategies,
             performance_analytics,
@@ -225,8 +225,8 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         }
     }
 
-    /// Ultra-optimized vector addition with FMA
-    pub fn ultra_vector_add_fma(
+    /// Advanced-optimized vector addition with FMA
+    pub fn advanced_vector_add_fma(
         &self,
         a: &ArrayView1<F>,
         b: &ArrayView1<F>,
@@ -264,8 +264,8 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         Ok(result)
     }
 
-    /// Ultra-fast matrix-vector multiplication with cache blocking
-    pub fn ultra_matrix_vector_multiply(
+    /// Optimized matrix-vector multiplication with cache blocking
+    pub fn advanced_matrix_vector_multiply(
         &self,
         matrix: &Array2<F>,
         vector: &ArrayView1<F>,
@@ -286,15 +286,15 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
             // Standard SIMD implementation
             for i in 0..m {
                 let row = matrix.row(i);
-                result[i] = self.ultra_dot_product(&row, vector)?;
+                result[i] = self.advanced_dot_product(&row, vector)?;
             }
         }
 
         Ok(result)
     }
 
-    /// Ultra-optimized dot product with multiple accumulation
-    pub fn ultra_dot_product(&self, a: &ArrayView1<F>, b: &ArrayView1<F>) -> IntegrateResult<F> {
+    /// Advanced-optimized dot product with multiple accumulation
+    pub fn advanced_dot_product(&self, a: &ArrayView1<F>, b: &ArrayView1<F>) -> IntegrateResult<F> {
         let n = a.len();
         if b.len() != n {
             return Err(IntegrateError::ValueError(
@@ -311,8 +311,8 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         }
     }
 
-    /// Ultra-fast reduction operations with tree reduction
-    pub fn ultra_reduce_sum(&self, data: &ArrayView1<F>) -> IntegrateResult<F> {
+    /// Optimized reduction operations with tree reduction
+    pub fn advanced_reduce_sum(&self, data: &ArrayView1<F>) -> IntegrateResult<F> {
         if data.is_empty() {
             return Ok(F::zero());
         }
@@ -327,8 +327,8 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         }
     }
 
-    /// Ultra-optimized element-wise operations with predication
-    pub fn ultra_elementwise_conditional(
+    /// Advanced-optimized element-wise operations with predication
+    pub fn advanced_elementwise_conditional(
         &self,
         a: &ArrayView1<F>,
         b: &ArrayView1<F>,
@@ -365,8 +365,8 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         Ok(result)
     }
 
-    /// Ultra-fast gather operation for sparse access patterns
-    pub fn ultra_gather(
+    /// Optimized gather operation for sparse access patterns
+    pub fn advanced_gather(
         &self,
         data: &ArrayView1<F>,
         indices: &[usize],
@@ -384,8 +384,8 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         Ok(result)
     }
 
-    /// Ultra-optimized Runge-Kutta step with vectorized stages
-    pub fn ultra_rk4_vectorized(
+    /// Advanced-optimized Runge-Kutta step with vectorized stages
+    pub fn advanced_rk4_vectorized(
         &self,
         t: F,
         y: &ArrayView1<F>,
@@ -400,25 +400,25 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
 
         // Stage 1: k1 = h * f(t, y)
         let mut k1 = f(t, y)?;
-        self.ultra_scalar_multiply_inplace(&mut k1, h)?;
+        self.advanced_scalar_multiply_inplace(&mut k1, h)?;
 
         // Stage 2: k2 = h * f(t + h/2, y + k1/2)
-        self.ultra_vector_add_scalar(&mut temp_y, y, &k1.view(), F::from(0.5).unwrap())?;
+        self.advanced_vector_add_scalar(&mut temp_y, y, &k1.view(), F::from(0.5).unwrap())?;
         let mut k2 = f(t + h / F::from(2.0).unwrap(), &temp_y.view())?;
-        self.ultra_scalar_multiply_inplace(&mut k2, h)?;
+        self.advanced_scalar_multiply_inplace(&mut k2, h)?;
 
         // Stage 3: k3 = h * f(t + h/2, y + k2/2)
-        self.ultra_vector_add_scalar(&mut temp_y, y, &k2.view(), F::from(0.5).unwrap())?;
+        self.advanced_vector_add_scalar(&mut temp_y, y, &k2.view(), F::from(0.5).unwrap())?;
         let mut k3 = f(t + h / F::from(2.0).unwrap(), &temp_y.view())?;
-        self.ultra_scalar_multiply_inplace(&mut k3, h)?;
+        self.advanced_scalar_multiply_inplace(&mut k3, h)?;
 
         // Stage 4: k4 = h * f(t + h, y + k3)
-        self.ultra_vector_add_scalar(&mut temp_y, y, &k3.view(), F::one())?;
+        self.advanced_vector_add_scalar(&mut temp_y, y, &k3.view(), F::one())?;
         let mut k4 = f(t + h, &temp_y.view())?;
-        self.ultra_scalar_multiply_inplace(&mut k4, h)?;
+        self.advanced_scalar_multiply_inplace(&mut k4, h)?;
 
         // Final combination: y_new = y + (k1 + 2*k2 + 2*k3 + k4) / 6
-        self.ultra_rk4_combine(
+        self.advanced_rk4_combine(
             &mut result,
             y,
             &k1.view(),
@@ -431,7 +431,7 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
     }
 
     /// Mixed-precision computation for enhanced performance
-    pub fn ultra_mixed_precision_step(
+    pub fn advanced_mixed_precision_step(
         &self,
         high_precision_data: &ArrayView1<F>,
         operation: MixedPrecisionOperation,
@@ -726,8 +726,8 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         Ok(())
     }
 
-    /// Ultra-optimized scalar multiplication in-place
-    fn ultra_scalar_multiply_inplace(
+    /// Advanced-optimized scalar multiplication in-place
+    fn advanced_scalar_multiply_inplace(
         &self,
         vector: &mut Array1<F>,
         scalar: F,
@@ -741,8 +741,8 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         Ok(())
     }
 
-    /// Ultra-optimized vector addition with scalar
-    fn ultra_vector_add_scalar(
+    /// Advanced-optimized vector addition with scalar
+    fn advanced_vector_add_scalar(
         &self,
         result: &mut Array1<F>,
         a: &ArrayView1<F>,
@@ -763,8 +763,8 @@ impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
         Ok(())
     }
 
-    /// Ultra-optimized RK4 final combination
-    fn ultra_rk4_combine(
+    /// Advanced-optimized RK4 final combination
+    fn advanced_rk4_combine(
         &self,
         result: &mut Array1<F>,
         y: &ArrayView1<F>,
@@ -1395,7 +1395,7 @@ impl<F: IntegrateFloat> BlendOperation<F> {
 }
 
 // Additional SIMD helper methods implementation
-impl<F: IntegrateFloat + SimdUnifiedOps> UltraSimdAccelerator<F> {
+impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
     fn analyze_data_range(&self, data: &ArrayView1<F>) -> (f64, f64) {
         let mut min_val = F::infinity();
         let mut max_val = -F::infinity();
@@ -1523,20 +1523,20 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_ultra_simd_accelerator_creation() {
-        let accelerator = UltraSimdAccelerator::<f64>::new();
+    fn test_advanced_simd_accelerator_creation() {
+        let accelerator = AdvancedSimdAccelerator::<f64>::new();
         assert!(accelerator.is_ok());
     }
 
     #[test]
-    fn test_ultra_vector_add_fma() {
-        let accelerator = UltraSimdAccelerator::<f64>::new().unwrap();
+    fn test_advanced_vector_add_fma() {
+        let accelerator = AdvancedSimdAccelerator::<f64>::new().unwrap();
         let a = array![1.0, 2.0, 3.0, 4.0];
         let b = array![0.1, 0.2, 0.3, 0.4];
         let c = array![0.01, 0.02, 0.03, 0.04];
         let scale = 2.0;
 
-        let result = accelerator.ultra_vector_add_fma(&a.view(), &b.view(), &c.view(), scale);
+        let result = accelerator.advanced_vector_add_fma(&a.view(), &b.view(), &c.view(), scale);
         assert!(result.is_ok());
 
         let expected = array![1.12, 2.24, 3.36, 4.48]; // a + b + scale * c
@@ -1547,12 +1547,12 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_dot_product() {
-        let accelerator = UltraSimdAccelerator::<f64>::new().unwrap();
+    fn test_advanced_dot_product() {
+        let accelerator = AdvancedSimdAccelerator::<f64>::new().unwrap();
         let a = array![1.0, 2.0, 3.0, 4.0];
         let b = array![0.1, 0.2, 0.3, 0.4];
 
-        let result = accelerator.ultra_dot_product(&a.view(), &b.view());
+        let result = accelerator.advanced_dot_product(&a.view(), &b.view());
         assert!(result.is_ok());
 
         let expected = 3.0; // 1*0.1 + 2*0.2 + 3*0.3 + 4*0.4
@@ -1561,11 +1561,11 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_reduce_sum() {
-        let accelerator = UltraSimdAccelerator::<f64>::new().unwrap();
+    fn test_advanced_reduce_sum() {
+        let accelerator = AdvancedSimdAccelerator::<f64>::new().unwrap();
         let data = array![1.0, 2.0, 3.0, 4.0, 5.0];
 
-        let result = accelerator.ultra_reduce_sum(&data.view());
+        let result = accelerator.advanced_reduce_sum(&data.view());
         assert!(result.is_ok());
 
         let expected = 15.0;

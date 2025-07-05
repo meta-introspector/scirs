@@ -49,7 +49,7 @@ mod gpu_implementation {
     /// Central coordinator for advanced tensor cores and kernel tuning
     #[allow(dead_code)]
     #[derive(Debug)]
-    pub struct advancedTensorCoreCoordinator {
+    pub struct AdvancedTensorCoreCoordinator {
         /// Tensor core managers for different backends
         pub tensor_managers: Arc<RwLock<HashMap<GpuBackend, TensorCoreManager>>>,
         /// Auto-tuners for different backends
@@ -2286,7 +2286,7 @@ mod gpu_implementation {
     }
 
     #[cfg(feature = "gpu")]
-    impl advancedTensorCoreCoordinator {
+    impl AdvancedTensorCoreCoordinator {
         /// Create a new advanced tensor core coordinator
         pub fn new(config: AdvancedTensorConfig) -> CoreResult<Self> {
             let tensor_managers = Arc::new(RwLock::new(HashMap::new()));
@@ -3909,7 +3909,7 @@ mod gpu_implementation {
         }
     }
 
-    impl Default for advancedTensorCoreCoordinator {
+    impl Default for AdvancedTensorCoreCoordinator {
         fn default() -> Self {
             Self::new(AdvancedTensorConfig::default())
                 .expect("Failed to create default coordinator")
@@ -4224,13 +4224,13 @@ mod gpu_implementation {
         #[test]
         fn test_coordinator_creation() {
             let config = AdvancedTensorConfig::default();
-            let coordinator = advancedTensorCoreCoordinator::new(config);
+            let coordinator = AdvancedTensorCoreCoordinator::new(config);
             assert!(coordinator.is_ok());
         }
 
         #[test]
         fn test_backend_initialization() {
-            let coordinator = advancedTensorCoreCoordinator::default();
+            let coordinator = AdvancedTensorCoreCoordinator::default();
             let result = coordinator.initialize_backend(GpuBackend::Cpu);
             assert!(result.is_ok());
         }

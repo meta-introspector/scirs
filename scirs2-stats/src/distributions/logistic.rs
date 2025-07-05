@@ -5,7 +5,7 @@
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use num_traits::{Float, NumCast};
-use rand::thread_rng;
+use rand::rng;
 use rand_distr::{Distribution, Uniform as RandUniform};
 
 /// Logistic distribution structure
@@ -178,7 +178,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
     /// assert_eq!(samples.len(), 10);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<F>> {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mut samples = Vec::with_capacity(size);
 
         for _ in 0..size {
@@ -433,8 +433,7 @@ impl<F: Float + NumCast + std::fmt::Display> Logistic<F> {
 #[allow(dead_code)]
 pub fn logistic<F>(loc: F, scale: F) -> StatsResult<Logistic<F>>
 where
-    F: Float + NumCast
-        + std::fmt::Display,
+    F: Float + NumCast + std::fmt::Display,
 {
     Logistic::new(loc, scale)
 }

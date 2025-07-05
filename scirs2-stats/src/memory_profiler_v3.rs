@@ -405,8 +405,7 @@ pub struct ProfiledStatistics<F> {
 
 impl<F> ProfiledStatistics<F>
 where
-    F: Float + NumCast + Clone + Send + Sync
-        + std::fmt::Display,
+    F: Float + NumCast + Clone + Send + Sync + std::fmt::Display,
 {
     pub fn new(profiler: Arc<MemoryProfiler>) -> Self {
         let cache = StatisticsCache::new(1000, 50 * 1024 * 1024) // 50MB cache

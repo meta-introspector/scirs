@@ -4,7 +4,7 @@
 //! of the advanced coordinator and enhanced algorithms.
 
 use scirs2_io::advanced_coordinator::AdvancedCoordinator;
-use scirs2_io::ultrathink_enhanced_algorithms::AdvancedPatternRecognizer;
+use scirs2_io::advanced_enhanced_algorithms::AdvancedPatternRecognizer;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // advanced processing
         let start_time = Instant::now();
-        let processing_result = coordinator.process_ultra_intelligent(&data)?;
+        let processing_result = coordinator.process_advanced_intelligent(&data)?;
         let processing_duration = start_time.elapsed();
 
         println!("   🎯 Strategy used: {:?}", processing_result.strategy_used);

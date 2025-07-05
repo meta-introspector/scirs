@@ -10,6 +10,7 @@ use super::{
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
+use rand::Rng;
 use std::collections::HashMap;
 
 /// Meta-Learning Optimizer with cross-problem adaptation
@@ -68,7 +69,7 @@ impl MetaLearningOptimizer {
     }
 
     /// Learn meta-optimization strategy
-    pub fn learn_meta_strategy(&mut self, training_tasks: &[TrainingTask]) -> Result<()> {
+    pub fn learn_meta_strategy(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
         for task in training_tasks {
             // Create task-specific optimizer
             let task_optimizer = self.create_task_optimizer(&task.problem)?;
@@ -92,11 +93,11 @@ impl MetaLearningOptimizer {
     fn create_task_optimizer(
         &self,
         problem: &OptimizationProblem,
-    ) -> Result<TaskSpecificOptimizer> {
+    ) -> OptimizeResult<TaskSpecificOptimizer> {
         let param_size = self.estimate_parameter_size(problem);
 
         Ok(TaskSpecificOptimizer {
-            parameters: Array1::from_shape_fn(param_size, |_| rand::rng().random::<f64>() * 0.1),
+            parameters: Array1::from_shape_fn(param_size, |_| rand::rng().gen_range(0.0..0.1)),
             performance_history: Vec::new(),
             task_id: problem.name.clone(),
         })
@@ -121,17 +122,17 @@ impl MetaLearningOptimizer {
         &mut self,
         optimizer: &TaskSpecificOptimizer,
         task: &TrainingTask,
-    ) -> Result<f64> {
+    ) -> OptimizeResult<f64> {
         // Simplified training simulation
         let initial_params = match &task.initial_distribution {
             super::ParameterDistribution::Uniform { low, high } => {
                 Array1::from_shape_fn(task.problem.dimension, |_| {
-                    low + rand::rng().random::<f64>() * (high - low)
+                    low + rand::rng().gen_range(0.0..1.0) * (high - low)
                 })
             }
             super::ParameterDistribution::Normal { mean, std } => {
                 Array1::from_shape_fn(task.problem.dimension, |_| {
-                    mean + std * (rand::rng().random::<f64>() - 0.5) * 2.0
+                    mean + std * (rand::rng().gen_range(0.0..1.0) - 0.5) * 2.0
                 })
             }
             super::ParameterDistribution::Custom { samples } => {
@@ -194,7 +195,7 @@ impl MetaLearningOptimizer {
     }
 
     /// Apply meta-learned transformation to gradient
-    fn apply_meta_transformation(&self, gradient: &mut Array1<f64>) -> Result<()> {
+    fn apply_meta_transformation(&self, gradient: &mut Array1<f64>) -> OptimizeResult<()> {
         // Simple meta-transformation using meta-parameters
         for i in 0..gradient.len() {
             let meta_idx = i % self.meta_state.meta_params.len();
@@ -206,7 +207,7 @@ impl MetaLearningOptimizer {
     }
 
     /// Compute meta-learned step size
-    fn compute_meta_step_size(&self, task_params: &Array1<f64>) -> Result<f64> {
+    fn compute_meta_step_size(&self, task_params: &Array1<f64>) -> OptimizeResult<f64> {
         // Compute step size based on task parameters and meta-parameters
         let mut step_size = self.config.inner_learning_rate;
 
@@ -230,7 +231,7 @@ impl MetaLearningOptimizer {
         &mut self,
         problem: &OptimizationProblem,
         performance: f64,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         let learning_rate = self.config.meta_learning_rate;
 
         // Simple meta-gradient based on performance
@@ -239,8 +240,10 @@ impl MetaLearningOptimizer {
         // Update meta-parameters
         for i in 0..self.meta_state.meta_params.len() {
             // Simple update rule (in practice would use proper meta-gradients)
-            let update =
-                learning_rate * performance_gradient * (rand::rng().random::<f64>() - 0.5) * 0.1;
+            let update = learning_rate
+                * performance_gradient
+                * (rand::rng().gen_range(0.0..1.0) - 0.5)
+                * 0.1;
             self.meta_state.meta_params[i] += update;
 
             // Clip to reasonable range
@@ -262,7 +265,7 @@ impl MetaLearningOptimizer {
     pub fn adapt_to_new_problem(
         &mut self,
         problem: &OptimizationProblem,
-    ) -> Result<TaskSpecificOptimizer> {
+    ) -> OptimizeResult<TaskSpecificOptimizer> {
         // Find most similar task
         let similar_task = self.find_most_similar_task(problem)?;
 
@@ -290,7 +293,7 @@ impl MetaLearningOptimizer {
     fn find_most_similar_task(
         &self,
         problem: &OptimizationProblem,
-    ) -> Result<Option<&TaskSpecificOptimizer>> {
+    ) -> OptimizeResult<Option<&TaskSpecificOptimizer>> {
         let mut best_similarity = 0.0;
         let mut best_optimizer = None;
 
@@ -314,7 +317,7 @@ impl MetaLearningOptimizer {
         &self,
         problem: &OptimizationProblem,
         task_name: &str,
-    ) -> Result<f64> {
+    ) -> OptimizeResult<f64> {
         // Simple similarity based on problem class and dimension
         let similarity = if task_name.contains(&problem.problem_class) {
             0.8
@@ -333,7 +336,7 @@ impl MetaLearningOptimizer {
         &self,
         optimizer: &mut TaskSpecificOptimizer,
         problem: &OptimizationProblem,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         // Simple adaptation based on problem characteristics
         let adaptation_factor = match problem.problem_class.as_str() {
             "quadratic" => 1.0,
@@ -355,7 +358,7 @@ impl MetaLearningOptimizer {
         &mut self,
         optimizer: &mut TaskSpecificOptimizer,
         _problem: &OptimizationProblem,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         // Apply meta-learning based fine-tuning
         let meta_influence = 0.1;
 
@@ -423,7 +426,7 @@ impl Default for MetaLearningStats {
 }
 
 impl LearnedOptimizer for MetaLearningOptimizer {
-    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> Result<()> {
+    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
         self.learn_meta_strategy(training_tasks)?;
         self.update_meta_stats();
         Ok(())
@@ -433,7 +436,7 @@ impl LearnedOptimizer for MetaLearningOptimizer {
         &mut self,
         problem: &OptimizationProblem,
         _initial_params: &ArrayView1<f64>,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         let adapted_optimizer = self.adapt_to_new_problem(problem)?;
         self.task_optimizers
             .insert(problem.name.clone(), adapted_optimizer);

@@ -4,10 +4,7 @@
 //! optimized_search.rs functionality with more specialized optimizations.
 
 use crate::error::InterpolateResult;
-use ndarray::{Array2, ArrayView1, ArrayView2, Axis};
-
-#[cfg(all(test, feature = "simd"))]
-use ndarray::Array1;
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::Debug;
 

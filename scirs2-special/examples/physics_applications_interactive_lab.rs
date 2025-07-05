@@ -664,7 +664,7 @@ In signal processing, chirp signals (frequency-modulated signals) are used in:
 - Radar systems
 - Sonar applications  
 - Spread spectrum communications
-- Medical ultrasound imaging
+- Medical advancedsound imaging
 
 The mathematical connection between optics and signal processing comes through
 the Fourier transform and the principle of stationary phase.

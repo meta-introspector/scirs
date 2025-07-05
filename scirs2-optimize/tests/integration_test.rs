@@ -210,7 +210,7 @@ fn test_stochastic_workflow() {
             // Add small noise to simulate stochastic gradients
             use rand::Rng;
             let mut rng = rand::rng();
-            x.mapv(|xi| 2.0 * xi + rng.random_range(-0.01..0.01))
+            x.mapv(|xi| 2.0 * xi + rng.gen_range(-0.01..0.01))
         }
 
         fn compute_value(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> f64 {

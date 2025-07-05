@@ -12,6 +12,29 @@ use scirs2_core::validation::check_finite;
 use std::f64::consts::PI;
 use std::fmt::Debug;
 
+// Temporary replacement for par_iter_with_setup
+fn par_iter_with_setup<I, IT, S, F, R, RF, E>(
+    items: I,
+    _setup: S,
+    map_fn: F,
+    _reduce_fn: RF,
+) -> Result<Vec<R>, E>
+where
+    I: IntoIterator<Item = IT>,
+    IT: Copy,
+    S: Fn() -> (),
+    F: Fn((), IT) -> Result<R, E>,
+    RF: Fn(&mut Vec<R>, Result<R, E>) -> Result<(), E>,
+    E: std::fmt::Debug,
+{
+    let mut results = Vec::new();
+    for item in items {
+        let result = map_fn((), item)?;
+        results.push(result);
+    }
+    Ok(results)
+}
+
 /// Parallel implementation of filtfilt (zero-phase filtering)
 ///
 /// Applies a digital filter forward and backward to achieve zero-phase
@@ -1946,7 +1969,7 @@ pub fn parallel_group_delay(
 
     let delay_chunks: Result<Vec<_>, SignalError> = parallel_map(&w_chunks, |freq_chunk| {
         let mut delays = Vec::with_capacity(freq_chunk.len());
-        for &frequency in freq_chunk {
+        for &frequency in *freq_chunk {
             let delay = compute_group_delay_at_frequency(b, a, frequency)?;
             delays.push(delay);
         }

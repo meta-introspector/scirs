@@ -10,6 +10,7 @@ use super::{
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
 /// Learned hyperparameter tuner with adaptive configuration
@@ -263,7 +264,7 @@ pub enum OptimizationStrategy {
     GridSearch { grid_resolution: usize },
     GradientBased { num_restarts: usize },
     EvolutionarySearch { population_size: usize },
-    DIRECT { max_iterations: usize },
+    DIRECT { max_nit: usize },
 }
 
 /// Multi-fidelity evaluator
@@ -544,7 +545,7 @@ impl LearnedHyperparameterTuner {
     fn get_promising_configurations(
         &self,
         problem_features: &Array1<f64>,
-    ) -> Result<Vec<HyperparameterConfig>> {
+    ) -> OptimizeResult<Vec<HyperparameterConfig>> {
         let mut configs = Vec::new();
         let mut similarities = Vec::new();
 
@@ -582,7 +583,7 @@ impl LearnedHyperparameterTuner {
         &self,
         features1: &Array1<f64>,
         features2: &Array1<f64>,
-    ) -> Result<f64> {
+    ) -> OptimizeResult<f64> {
         // Cosine similarity
         let dot_product = features1
             .iter()
@@ -601,7 +602,7 @@ impl LearnedHyperparameterTuner {
     }
 
     /// Sample random configuration from hyperparameter space
-    fn sample_random_configuration(&self) -> Result<HyperparameterConfig> {
+    fn sample_random_configuration(&self) -> OptimizeResult<HyperparameterConfig> {
         let mut parameters = HashMap::new();
 
         // Sample continuous parameters
@@ -609,12 +610,12 @@ impl LearnedHyperparameterTuner {
             let value = match param.scale {
                 ParameterScale::Linear => {
                     param.lower_bound
-                        + rand::rng().random::<f64>() * (param.upper_bound - param.lower_bound)
+                        + rand::rng().gen::<f64>() * (param.upper_bound - param.lower_bound)
                 }
                 ParameterScale::Logarithmic => {
                     let log_lower = param.lower_bound.ln();
                     let log_upper = param.upper_bound.ln();
-                    (log_lower + rand::rng().random::<f64>() * (log_upper - log_lower)).exp()
+                    (log_lower + rand::rng().gen::<f64>() * (log_upper - log_lower)).exp()
                 }
                 _ => param.default_value,
             };
@@ -624,14 +625,14 @@ impl LearnedHyperparameterTuner {
 
         // Sample discrete parameters
         for param in &self.hyperparameter_space.discrete_params {
-            let idx = rand::rng().random::<usize>() % param.values.len();
+            let idx = rand::rng().gen::<usize>() % param.values.len();
             let value = param.values[idx];
             parameters.insert(param.name.clone(), ParameterValue::Discrete(value));
         }
 
         // Sample categorical parameters
         for param in &self.hyperparameter_space.categorical_params {
-            let idx = rand::rng().random::<usize>() % param.categories.len();
+            let idx = rand::rng().gen::<usize>() % param.categories.len();
             let value = param.categories[idx].clone();
             parameters.insert(param.name.clone(), ParameterValue::Categorical(value));
         }
@@ -640,7 +641,7 @@ impl LearnedHyperparameterTuner {
     }
 
     /// Get default configuration
-    fn get_default_config(&self) -> Result<HyperparameterConfig> {
+    fn get_default_config(&self) -> OptimizeResult<HyperparameterConfig> {
         let mut parameters = HashMap::new();
 
         for param in &self.hyperparameter_space.continuous_params {
@@ -719,7 +720,7 @@ impl LearnedHyperparameterTuner {
             _ => 0.01,
         };
 
-        let max_iterations = match config.parameters.get("max_iterations") {
+        let max_nit = match config.parameters.get("max_nit") {
             Some(ParameterValue::Discrete(iters)) => (*iters as f64 * fidelity) as usize,
             _ => (100.0 * fidelity) as usize,
         };
@@ -728,7 +729,7 @@ impl LearnedHyperparameterTuner {
         let mut current_params = initial_params.to_owned();
         let mut best_value = objective(initial_params);
 
-        for iter in 0..max_iterations {
+        for iter in 0..max_nit {
             // Compute gradient
             let h = 1e-6;
             let f0 = objective(&current_params.view());
@@ -752,7 +753,7 @@ impl LearnedHyperparameterTuner {
             }
 
             // Early stopping for low fidelity
-            if fidelity < 1.0 && iter > (max_iterations / 2) {
+            if fidelity < 1.0 && iter > (max_nit / 2) {
                 break;
             }
         }
@@ -761,7 +762,7 @@ impl LearnedHyperparameterTuner {
             x: current_params,
             fun: best_value,
             success: true,
-            nit: max_iterations,
+            nit: max_nit,
             message: "Hyperparameter evaluation completed".to_string(),
         })
     }
@@ -773,7 +774,7 @@ impl LearnedHyperparameterTuner {
         performance: f64,
         cost: f64,
         problem_features: &Array1<f64>,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         let record = EvaluationRecord {
             config,
             performance,
@@ -792,7 +793,7 @@ impl LearnedHyperparameterTuner {
     }
 
     /// Update Gaussian process with new data
-    fn update_gaussian_process(&mut self) -> Result<()> {
+    fn update_gaussian_process(&mut self) -> OptimizeResult<()> {
         // Extract training data from database
         let (inputs, outputs) = self.extract_training_data()?;
 
@@ -810,7 +811,7 @@ impl LearnedHyperparameterTuner {
     }
 
     /// Extract training data from database
-    fn extract_training_data(&self) -> Result<(Array2<f64>, Array1<f64>)> {
+    fn extract_training_data(&self) -> OptimizeResult<(Array2<f64>, Array1<f64>)> {
         let num_records = self.performance_database.records.len();
         if num_records == 0 {
             return Ok((Array2::zeros((0, 10)), Array1::zeros(0)));
@@ -834,7 +835,7 @@ impl LearnedHyperparameterTuner {
     fn select_next_configuration(
         &self,
         _problem_features: &Array1<f64>,
-    ) -> Result<HyperparameterConfig> {
+    ) -> OptimizeResult<HyperparameterConfig> {
         // Use acquisition function to select next point
         let candidate_configs = self.generate_candidate_configurations(100)?;
         let mut best_config = candidate_configs[0].clone();
@@ -855,7 +856,7 @@ impl LearnedHyperparameterTuner {
     fn generate_candidate_configurations(
         &self,
         num_candidates: usize,
-    ) -> Result<Vec<HyperparameterConfig>> {
+    ) -> OptimizeResult<Vec<HyperparameterConfig>> {
         let mut candidates = Vec::new();
 
         for _ in 0..num_candidates {
@@ -866,7 +867,7 @@ impl LearnedHyperparameterTuner {
     }
 
     /// Evaluate acquisition function
-    fn evaluate_acquisition_function(&self, config: &HyperparameterConfig) -> Result<f64> {
+    fn evaluate_acquisition_function(&self, config: &HyperparameterConfig) -> OptimizeResult<f64> {
         // Predict mean and variance using GP
         let (mean, variance) = self
             .bayesian_optimizer
@@ -918,7 +919,7 @@ impl LearnedHyperparameterTuner {
         &self,
         _config: &HyperparameterConfig,
         remaining_budget: f64,
-    ) -> Result<f64> {
+    ) -> OptimizeResult<f64> {
         match &self.multi_fidelity_evaluator.selection_strategy {
             FidelitySelectionStrategy::Static(fidelity) => Ok(*fidelity),
             FidelitySelectionStrategy::Adaptive {
@@ -934,7 +935,7 @@ impl LearnedHyperparameterTuner {
     }
 
     /// Update tuning statistics
-    fn update_tuning_stats(&mut self, performance: f64, cost: f64) -> Result<()> {
+    fn update_tuning_stats(&mut self, performance: f64, cost: f64) -> OptimizeResult<()> {
         self.tuning_stats.total_evaluations += 1;
         self.tuning_stats.total_cost += cost;
 
@@ -996,7 +997,7 @@ impl HyperparameterSpace {
 
         let discrete_params = vec![
             DiscreteHyperparameter {
-                name: "max_iterations".to_string(),
+                name: "max_nit".to_string(),
                 values: vec![10, 50, 100, 500, 1000],
                 default_value: 100,
                 importance_score: 0.9,
@@ -1159,21 +1160,21 @@ impl GaussianProcess {
         &mut self,
         inputs: Array2<f64>,
         outputs: Array1<f64>,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         self.training_inputs = inputs;
         self.training_outputs = outputs;
         Ok(())
     }
 
     /// Optimize hyperparameters
-    pub fn optimize_hyperparameters(&mut self) -> Result<()> {
+    pub fn optimize_hyperparameters(&mut self) -> OptimizeResult<()> {
         // Simplified hyperparameter optimization
         // In practice, would use marginal likelihood optimization
         Ok(())
     }
 
     /// Predict mean and variance
-    pub fn predict(&self, input: &Array1<f64>) -> Result<(f64, f64)> {
+    pub fn predict(&self, input: &Array1<f64>) -> OptimizeResult<(f64, f64)> {
         if self.training_inputs.is_empty() {
             return Ok((0.0, 1.0));
         }
@@ -1242,7 +1243,7 @@ impl CostModel {
     pub fn new() -> Self {
         Self {
             cost_network: Array2::from_shape_fn((1, 10), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             base_cost: 1.0,
             scaling_factors: Array1::ones(5),
@@ -1276,7 +1277,7 @@ impl Default for HyperparameterTuningStats {
 }
 
 impl LearnedOptimizer for LearnedHyperparameterTuner {
-    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> Result<()> {
+    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
         for task in training_tasks {
             // Create simple objective for training
             let training_objective = |x: &ArrayView1<f64>| x.iter().map(|&xi| xi * xi).sum::<f64>();
@@ -1299,7 +1300,7 @@ impl LearnedOptimizer for LearnedHyperparameterTuner {
         &mut self,
         problem: &OptimizationProblem,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         // Extract problem features for future configuration selection
         let simple_objective = |_x: &ArrayView1<f64>| 0.0;
         let _problem_features =
@@ -1388,7 +1389,7 @@ mod tests {
             "learning_rate".to_string(),
             ParameterValue::Continuous(0.01),
         );
-        parameters.insert("max_iterations".to_string(), ParameterValue::Discrete(100));
+        parameters.insert("max_nit".to_string(), ParameterValue::Discrete(100));
         parameters.insert(
             "optimizer_type".to_string(),
             ParameterValue::Categorical("adam".to_string()),
@@ -1424,7 +1425,7 @@ mod tests {
     fn test_gaussian_process() {
         let mut gp = GaussianProcess::new();
 
-        let inputs = Array2::from_shape_fn((3, 2), |_| rand::rng().random::<f64>());
+        let inputs = Array2::from_shape_fn((3, 2), |_| rand::rng().gen::<f64>());
         let outputs = Array1::from(vec![1.0, 2.0, 3.0]);
 
         gp.update_training_data(inputs, outputs).unwrap();

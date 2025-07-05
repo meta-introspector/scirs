@@ -544,7 +544,7 @@ impl TestDataGenerator {
                 }
             }
             DataDistribution::Uniform { min, max } => {
-                let uniform = UniformDist::new(*min, *max);
+                let uniform = UniformDist::new(*min, *max).unwrap();
                 for val in data.iter_mut() {
                     *val = uniform.sample(&mut rng);
                 }

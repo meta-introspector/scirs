@@ -7,9 +7,10 @@ use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, ArrayBase, Data, Ix1};
 // NOTE: rand_distr::weighted may not be available in current version
 // use rand_distr::weighted::WeightedAliasIndex;
-use rand::thread_rng;
+use rand::rng;
 use rand_distr::Distribution;
 use scirs2_core::validation::{check_probabilities, check_probabilities_sum_to_one};
+use scirs2_core::Rng;
 use std::fmt::Debug;
 
 /// Implementation of the factorial function
@@ -275,7 +276,7 @@ impl Multinomial {
     /// assert_eq!(samples[0].len(), 3);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<Array1<f64>>> {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mut samples = Vec::with_capacity(size);
         let k = self.p.len();
 
@@ -285,8 +286,17 @@ impl Multinomial {
 
             // Simulate n trials
             for _ in 0..self.n {
-                // Sample category using the alias method
-                let category = self.alias_sampler.sample(&mut rng);
+                // Sample category using cumulative probability
+                let u: f64 = rng.random();
+                let mut cumulative = 0.0;
+                let mut category = 0;
+                for (i, &prob) in self.p.iter().enumerate() {
+                    cumulative += prob;
+                    if u <= cumulative {
+                        category = i;
+                        break;
+                    }
+                }
                 counts[category] += 1;
             }
 

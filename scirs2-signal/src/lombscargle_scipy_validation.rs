@@ -16,7 +16,7 @@ use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, Windo
 use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
 use rand::prelude::*;
-use rand::Rng;
+use scirs2_core::random::Rng;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
 use std::f64::consts::PI;
@@ -301,7 +301,7 @@ fn validate_single_case(
     config: &ScipyValidationConfig,
 ) -> SignalResult<(f64, f64, f64, f64)> {
     // Generate irregular time samples
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let duration = n as f64 / fs;
     let mut t: Vec<f64> = Vec::new();
     let mut signal: Vec<f64> = Vec::new();
@@ -309,14 +309,14 @@ fn validate_single_case(
     // Create irregularly sampled signal with known frequency content
     for i in 0..n {
         let base_time = i as f64 * duration / n as f64;
-        let jitter = rng.random_range(-0.1..0.1) * duration / n as f64;
+        let jitter = rng.gen_range(-0.1..0.1) * duration / n as f64;
         let time = (base_time + jitter).max(0.0).min(duration);
         t.push(time);
 
         // Add signal with multiple frequency components
         let signal_val = (2.0 * PI * test_freq * time).sin()
             + 0.3 * (2.0 * PI * test_freq * 2.0 * time).sin()
-            + 0.1 * rng.random_range(-1.0..1.0); // Add some noise
+            + 0.1 * rng.gen_range(-1.0..1.0); // Add some noise
         signal.push(signal_val);
     }
 
@@ -337,7 +337,7 @@ fn validate_single_case(
         Some(true),
         Some(true),
         Some(1.0),
-        Some(AutoFreqMethod::Standard),
+        Some(AutoFreqMethod::Fft),
     )?;
 
     // Reference SciPy implementation (simulated with high accuracy)
@@ -503,7 +503,7 @@ fn validate_single_normalization_case(
         Some(true),
         Some(true),
         Some(1.0),
-        Some(AutoFreqMethod::Standard),
+        Some(AutoFreqMethod::Fft),
     )?;
 
     // For normalization validation, we compare with our own reference implementation
@@ -558,7 +558,7 @@ fn test_sparse_sampling(_config: &ScipyValidationConfig) -> SignalResult<bool> {
         Some(true),
         Some(true),
         Some(1.0),
-        Some(AutoFreqMethod::Standard),
+        Some(AutoFreqMethod::Fft),
     ) {
         Ok((_, power)) => {
             // Check if results are reasonable
@@ -594,7 +594,7 @@ fn test_extreme_dynamic_range(_config: &ScipyValidationConfig) -> SignalResult<b
         Some(true),
         Some(true),
         Some(1.0),
-        Some(AutoFreqMethod::Standard),
+        Some(AutoFreqMethod::Fft),
     ) {
         Ok((_, power)) => {
             // Check if algorithm remains stable
@@ -620,7 +620,7 @@ fn test_short_time_series(_config: &ScipyValidationConfig) -> SignalResult<bool>
         Some(true),
         Some(true),
         Some(1.0),
-        Some(AutoFreqMethod::Standard),
+        Some(AutoFreqMethod::Fft),
     ) {
         Ok((_, power)) => Ok(power.iter().all(|&p| p.is_finite() && p >= 0.0)),
         Err(_) => Ok(false),
@@ -653,7 +653,7 @@ fn test_high_frequency_resolution(_config: &ScipyValidationConfig) -> SignalResu
         Some(true),
         Some(true),
         Some(1.0),
-        Some(AutoFreqMethod::Standard),
+        Some(AutoFreqMethod::Fft),
     ) {
         Ok((_, power)) => {
             // Should be able to resolve close frequencies
@@ -691,10 +691,10 @@ fn estimate_false_alarm_rate(config: &ScipyValidationConfig) -> SignalResult<f64
 
     for _ in 0..trials {
         // Generate pure noise
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let n = 100;
         let t: Vec<f64> = (0..n).map(|i| i as f64 / 10.0).collect();
-        let signal: Vec<f64> = (0..n).map(|_| rng.random_range(-1.0..1.0)).collect();
+        let signal: Vec<f64> = (0..n).map(|_| rng.gen_range(-1.0..1.0)).collect();
 
         let freqs: Vec<f64> = Array1::linspace(0.1, 5.0, 50).to_vec();
 
@@ -706,7 +706,7 @@ fn estimate_false_alarm_rate(config: &ScipyValidationConfig) -> SignalResult<f64
             Some(true),
             Some(true),
             Some(1.0),
-            Some(AutoFreqMethod::Standard),
+            Some(AutoFreqMethod::Fft),
         ) {
             // Check for false detections (power > 10, typical threshold)
             if power.iter().any(|&p| p > 10.0) {
@@ -726,14 +726,14 @@ fn estimate_detection_power(config: &ScipyValidationConfig) -> SignalResult<f64>
 
     for _ in 0..trials {
         // Generate signal with known frequency
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let n = 100;
         let fs = 10.0;
         let signal_freq = 1.0;
         let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
         let signal: Vec<f64> = t
             .iter()
-            .map(|&time| (2.0 * PI * signal_freq * time).sin() + 0.1 * rng.random_range(-1.0..1.0))
+            .map(|&time| (2.0 * PI * signal_freq * time).sin() + 0.1 * rng.gen_range(-1.0..1.0))
             .collect();
 
         let freqs: Vec<f64> = Array1::linspace(0.1, fs / 2.0, 50).to_vec();
@@ -746,7 +746,7 @@ fn estimate_detection_power(config: &ScipyValidationConfig) -> SignalResult<f64>
             Some(true),
             Some(true),
             Some(1.0),
-            Some(AutoFreqMethod::Standard),
+            Some(AutoFreqMethod::Fft),
         ) {
             // Find peak frequency
             if let Some(peak_idx) = power
@@ -1123,7 +1123,7 @@ fn test_numerical_conditioning(
 ) -> SignalResult<ConditioningTestResult> {
     // Generate test data with known conditioning properties
     let n = 1000;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Create time series with irregular sampling
     let mut times: Vec<f64> = (0..n).map(|_| rng.random::<f64>() * 100.0).collect();
@@ -1139,7 +1139,16 @@ fn test_numerical_conditioning(
     let freqs: Vec<f64> = (1..=100).map(|i| i as f64 * 0.01).collect();
 
     // Compute periodogram
-    let periodogram = lombscargle(&times, &values, &freqs)?;
+    let periodogram = lombscargle(
+        &times,
+        &values,
+        Some(&freqs),
+        None, // normalization
+        None, // center_data
+        None, // fit_mean
+        None, // nyquist_factor
+        None, // freq_method
+    )?;
 
     // Estimate condition number (simplified)
     let condition_number = estimate_condition_number(&times, &freqs)?;
@@ -1164,7 +1173,7 @@ fn test_numerical_conditioning(
 /// Test aliasing effects in Lomb-Scargle
 #[allow(dead_code)]
 fn test_aliasing_effects(config: &ScipyValidationConfig) -> SignalResult<AliasingTestResult> {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Test 1: Nyquist aliasing detection
     let nyquist_detection = test_nyquist_aliasing_detection(&mut rng)?;
@@ -1191,7 +1200,7 @@ fn test_aliasing_effects(config: &ScipyValidationConfig) -> SignalResult<Aliasin
 fn test_astronomical_scenarios(
     config: &ScipyValidationConfig,
 ) -> SignalResult<AstronomicalTestResult> {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Test 1: Variable star simulation
     let variable_star_detection = test_variable_star_simulation(&mut rng)?;
@@ -1216,7 +1225,7 @@ fn test_astronomical_scenarios(
 /// Test phase coherence preservation
 #[allow(dead_code)]
 fn test_phase_coherence(config: &ScipyValidationConfig) -> SignalResult<PhaseCoherenceResult> {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Generate complex signal with known phase relationships
     let n = 500;
@@ -1255,7 +1264,7 @@ fn quantify_uncertainty(
     config: &ScipyValidationConfig,
     n_bootstrap: usize,
 ) -> SignalResult<UncertaintyResult> {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Generate base dataset
     let n = 200;
@@ -1276,7 +1285,16 @@ fn quantify_uncertainty(
         let boot_values: Vec<f64> = bootstrap_indices.iter().map(|&i| signal[i]).collect();
 
         let freqs: Vec<f64> = (1..=100).map(|i| i as f64 * 0.01).collect();
-        let periodogram = lombscargle(&boot_times, &boot_values, &freqs)?;
+        let periodogram = lombscargle(
+            &boot_times,
+            &boot_values,
+            Some(&freqs),
+            None, // normalization
+            None, // center_data
+            None, // fit_mean
+            None, // nyquist_factor
+            None, // freq_method
+        )?;
 
         // Find peak frequency
         let peak_idx = periodogram
@@ -1328,7 +1346,7 @@ fn quantify_uncertainty(
 fn test_frequency_resolution(
     config: &ScipyValidationConfig,
 ) -> SignalResult<FrequencyResolutionResult> {
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Test minimum resolvable frequency separation
     let min_frequency_separation = test_min_frequency_separation(&mut rng)?;
@@ -1522,7 +1540,7 @@ fn estimate_sampling_irregularity(times: &[f64]) -> f64 {
 fn test_perturbation_stability(times: &[f64], values: &[f64], freqs: &[f64]) -> SignalResult<f64> {
     // Test stability under small perturbations to the data
     let perturbation_level = 1e-8;
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Original periodogram
     let original = lombscargle(times, values, freqs)?;
@@ -1597,7 +1615,16 @@ fn test_nyquist_aliasing_detection(rng: &mut impl Rng) -> SignalResult<f64> {
         .collect();
 
     let freqs: Vec<f64> = (1..=50).map(|i| i as f64 * 0.02).collect();
-    let periodogram = lombscargle(&times, &values, &freqs)?;
+    let periodogram = lombscargle(
+        &times,
+        &values,
+        Some(&freqs),
+        None, // normalization
+        None, // center_data
+        None, // fit_mean
+        None, // nyquist_factor
+        None, // freq_method
+    )?;
 
     // Find peak near aliased frequency
     let peak_idx = periodogram
@@ -1627,7 +1654,16 @@ fn test_sub_nyquist_handling(rng: &mut impl Rng) -> SignalResult<f64> {
         .collect();
 
     let freqs: Vec<f64> = (1..=100).map(|i| i as f64 * 0.01).collect();
-    let periodogram = lombscargle(&times, &values, &freqs)?;
+    let periodogram = lombscargle(
+        &times,
+        &values,
+        Some(&freqs),
+        None, // normalization
+        None, // center_data
+        None, // fit_mean
+        None, // nyquist_factor
+        None, // freq_method
+    )?;
 
     let peak_idx = periodogram
         .iter()
@@ -1656,7 +1692,16 @@ fn test_false_peak_suppression(rng: &mut impl Rng) -> SignalResult<f64> {
         .collect();
 
     let freqs: Vec<f64> = (1..=100).map(|i| i as f64 * 0.01).collect();
-    let periodogram = lombscargle(&times, &values, &freqs)?;
+    let periodogram = lombscargle(
+        &times,
+        &values,
+        Some(&freqs),
+        None, // normalization
+        None, // center_data
+        None, // fit_mean
+        None, // nyquist_factor
+        None, // freq_method
+    )?;
 
     // Find main peak
     let main_peak_power = periodogram.iter().cloned().fold(0.0, f64::max);
@@ -1691,7 +1736,16 @@ fn test_spectral_leakage_mitigation(rng: &mut impl Rng) -> SignalResult<f64> {
         .collect();
 
     let freqs: Vec<f64> = (10..=25).map(|i| i as f64 * 0.01).collect();
-    let periodogram = lombscargle(&times, &values, &freqs)?;
+    let periodogram = lombscargle(
+        &times,
+        &values,
+        Some(&freqs),
+        None, // normalization
+        None, // center_data
+        None, // fit_mean
+        None, // nyquist_factor
+        None, // freq_method
+    )?;
 
     // Check if both peaks are resolved
     let peaks = find_peaks(&periodogram, 0.1);
@@ -1724,7 +1778,16 @@ fn test_variable_star_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
         .collect();
 
     let freqs: Vec<f64> = (1..=200).map(|i| i as f64 * 0.001).collect();
-    let periodogram = lombscargle(&times, &magnitudes, &freqs)?;
+    let periodogram = lombscargle(
+        &times,
+        &magnitudes,
+        Some(&freqs),
+        None, // normalization
+        None, // center_data
+        None, // fit_mean
+        None, // nyquist_factor
+        None, // freq_method
+    )?;
 
     let peak_idx = periodogram
         .iter()
@@ -1767,7 +1830,16 @@ fn test_exoplanet_transit_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
         .collect();
 
     let freqs: Vec<f64> = (1..=100).map(|i| i as f64 * 0.001).collect();
-    let periodogram = lombscargle(&times, &flux, &freqs)?;
+    let periodogram = lombscargle(
+        &times,
+        &flux,
+        Some(&freqs),
+        None, // normalization
+        None, // center_data
+        None, // fit_mean
+        None, // nyquist_factor
+        None, // freq_method
+    )?;
 
     let expected_freq = 1.0 / orbital_period;
     let closest_freq_idx = freqs
@@ -1814,7 +1886,16 @@ fn test_rr_lyrae_simulation(rng: &mut impl Rng) -> SignalResult<f64> {
         .collect();
 
     let freqs: Vec<f64> = (50..=400).map(|i| i as f64 * 0.01).collect();
-    let periodogram = lombscargle(&times, &magnitudes, &freqs)?;
+    let periodogram = lombscargle(
+        &times,
+        &magnitudes,
+        Some(&freqs),
+        None, // normalization
+        None, // center_data
+        None, // fit_mean
+        None, // nyquist_factor
+        None, // freq_method
+    )?;
 
     let peak_idx = periodogram
         .iter()
@@ -1850,7 +1931,16 @@ fn test_multi_periodic_source(rng: &mut impl Rng) -> SignalResult<f64> {
         .collect();
 
     let freqs: Vec<f64> = (1..=200).map(|i| i as f64 * 0.002).collect();
-    let periodogram = lombscargle(&times, &values, &freqs)?;
+    let periodogram = lombscargle(
+        &times,
+        &values,
+        Some(&freqs),
+        None, // normalization
+        None, // center_data
+        None, // fit_mean
+        None, // nyquist_factor
+        None, // freq_method
+    )?;
 
     // Find peaks and check if all three frequencies are detected
     let threshold = 0.2 * periodogram.iter().cloned().fold(0.0, f64::max);
@@ -1963,7 +2053,16 @@ fn test_min_frequency_separation(rng: &mut impl Rng) -> SignalResult<f64> {
             .collect();
 
         let freqs: Vec<f64> = (50..=150).map(|i| i as f64 * 0.002).collect();
-        let periodogram = lombscargle(&times, &values, &freqs)?;
+        let periodogram = lombscargle(
+            &times,
+            &values,
+            Some(&freqs),
+            None, // normalization
+            None, // center_data
+            None, // fit_mean
+            None, // nyquist_factor
+            None, // freq_method
+        )?;
 
         let peaks = find_peaks(&periodogram, 0.3);
         if peaks.len() >= 2 {
@@ -1998,7 +2097,16 @@ fn test_resolution_scaling(rng: &mut impl Rng) -> SignalResult<f64> {
             .collect();
 
         let freqs: Vec<f64> = (50..=150).map(|i| i as f64 * 0.002).collect();
-        let periodogram = lombscargle(&times, &values, &freqs)?;
+        let periodogram = lombscargle(
+            &times,
+            &values,
+            Some(&freqs),
+            None, // normalization
+            None, // center_data
+            None, // fit_mean
+            None, // nyquist_factor
+            None, // freq_method
+        )?;
 
         // Estimate resolution from peak width
         let peak_idx = periodogram
@@ -2046,7 +2154,16 @@ fn characterize_spectral_window(rng: &mut impl Rng) -> SignalResult<f64> {
     let values = vec![1.0; n];
 
     let freqs: Vec<f64> = (1..=200).map(|i| (i as f64 - 100.0) * 0.01).collect();
-    let spectral_window = lombscargle(&times, &values, &freqs)?;
+    let spectral_window = lombscargle(
+        &times,
+        &values,
+        Some(&freqs),
+        None, // normalization
+        None, // center_data
+        None, // fit_mean
+        None, // nyquist_factor
+        None, // freq_method
+    )?;
 
     // Analyze spectral window properties
     let main_lobe_idx = spectral_window

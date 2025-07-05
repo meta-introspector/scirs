@@ -16,7 +16,7 @@ use crate::error::{NdimageError, NdimageResult};
 
 /// Adaptive optimization system for Advanced mode operations
 #[derive(Debug)]
-pub struct AdaptiveUltrathinkOptimizer {
+pub struct AdaptiveAdvancedOptimizer {
     /// Performance history database
     performance_history: Arc<RwLock<HashMap<String, VecDeque<PerformanceSnapshot>>>>,
     /// Machine learning model for performance prediction
@@ -272,7 +272,7 @@ impl ParameterController {
         bounds.insert("quantum_coherence_time".to_string(), (0.1, 10.0));
         bounds.insert("consciousness_depth".to_string(), (1.0, 32.0));
         bounds.insert("meta_learning_rate".to_string(), (0.001, 0.1));
-        bounds.insert("ultra_dimensions".to_string(), (4.0, 64.0));
+        bounds.insert("advanced_dimensions".to_string(), (4.0, 64.0));
         bounds.insert("temporal_window".to_string(), (8.0, 256.0));
 
         Self {
@@ -390,7 +390,7 @@ impl RealTimeMonitor {
     }
 }
 
-impl AdaptiveUltrathinkOptimizer {
+impl AdaptiveAdvancedOptimizer {
     /// Create a new adaptive optimizer
     pub fn new(config: AdaptiveOptimizerConfig) -> Self {
         Self {
@@ -432,11 +432,11 @@ impl AdaptiveUltrathinkOptimizer {
             // Adjust configuration based on prediction
             if predicted_performance < 0.5 {
                 // Poor predicted performance, use conservative settings
-                optimized_config.ultra_dimensions = optimized_config.ultra_dimensions.min(8);
+                optimized_config.advanced_dimensions = optimized_config.advanced_dimensions.min(8);
                 optimized_config.consciousness_depth = optimized_config.consciousness_depth.min(4);
             } else {
                 // Good predicted performance, use aggressive settings
-                optimized_config.ultra_dimensions = optimized_config.ultra_dimensions.max(16);
+                optimized_config.advanced_dimensions = optimized_config.advanced_dimensions.max(16);
                 optimized_config.consciousness_depth = optimized_config.consciousness_depth.max(8);
             }
         }
@@ -695,7 +695,7 @@ mod tests {
     #[test]
     fn test_adaptive_optimizer_creation() {
         let config = AdaptiveOptimizerConfig::default();
-        let optimizer = AdaptiveUltrathinkOptimizer::new(config);
+        let optimizer = AdaptiveAdvancedOptimizer::new(config);
 
         // Test basic creation
         assert!(optimizer.performance_history.read().unwrap().is_empty());

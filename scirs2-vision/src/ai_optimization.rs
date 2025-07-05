@@ -15,8 +15,9 @@
 #![allow(dead_code)]
 
 use crate::error::Result;
+use rand::prelude::IndexedRandom;
 use rand::rng;
-use rand::seq::IteratorRandom;
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -244,6 +245,7 @@ impl RLParameterOptimizer {
         if rng.random::<f64>() < self.learning_params.epsilon {
             // Explore: random action
             self.action_space
+                .as_slice()
                 .choose(&mut rng)
                 .expect("Action space should not be empty")
                 .clone()
@@ -1618,6 +1620,7 @@ impl NeuralArchitectureSearch {
                 let layer_type = self
                     .search_space
                     .layer_types
+                    .as_slice()
                     .choose(&mut rng)
                     .expect("Layer types should not be empty")
                     .clone();
@@ -1626,6 +1629,7 @@ impl NeuralArchitectureSearch {
                 let connection = self
                     .search_space
                     .connections
+                    .as_slice()
                     .choose(&mut rng)
                     .expect("Connections should not be empty")
                     .clone();
@@ -1682,10 +1686,12 @@ impl NeuralArchitectureSearch {
         while new_population.len() < population_size {
             if ranked_archs.len() >= 2 {
                 let parent1 = ranked_archs
+                    .as_slice()
                     .choose(&mut rng)
                     .expect("Ranked architectures should not be empty")
                     .0;
                 let parent2 = ranked_archs
+                    .as_slice()
                     .choose(&mut rng)
                     .expect("Ranked architectures should not be empty")
                     .0;
@@ -1798,6 +1804,7 @@ impl NeuralArchitectureSearch {
                 *layer = self
                     .search_space
                     .layer_types
+                    .as_slice()
                     .choose(&mut rng)
                     .expect("Layer types should not be empty")
                     .clone();

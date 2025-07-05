@@ -54,7 +54,7 @@ where
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
@@ -98,8 +98,7 @@ where
 #[allow(dead_code)]
 pub fn uniform<F>(low: F, high: F, size: usize, seed: Option<u64>) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + Zero + SampleUniform
-        + std::fmt::Display,
+    F: Float + NumCast + Zero + SampleUniform + std::fmt::Display,
 {
     if size == 0 {
         return Err(StatsError::InvalidArgument(
@@ -205,7 +204,7 @@ pub fn randn(size: usize, seed: Option<u64>) -> StatsResult<Array1<f64>> {
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
@@ -286,7 +285,7 @@ where
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
@@ -460,7 +459,7 @@ where
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
@@ -517,7 +516,7 @@ pub fn permutation_int(n: usize, seed: Option<u64>) -> StatsResult<Array1<usize>
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
@@ -587,7 +586,7 @@ pub fn random_binary_matrix(
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }
@@ -660,7 +659,7 @@ where
         Some(seed_value) => SeedableRng::seed_from_u64(seed_value),
         None => {
             // Get a seed from the system RNG
-            let mut system_rng = rand::thread_rng();
+            let mut system_rng = rand::rng();
             let seed = system_rng.gen::<u64>();
             SeedableRng::seed_from_u64(seed)
         }

@@ -169,8 +169,8 @@ where
         let mean = sum / F::from(n).unwrap();
 
         // For min/max, we use element reduction operations
-        let min = F::simd_min(&x.view());
-        let max = F::simd_max(&x.view());
+        let min = F::simd_min_element(&x.view());
+        let max = F::simd_max_element(&x.view());
 
         // Variance calculation
         let mean_array = ndarray::Array1::from_elem(x.len(), mean);

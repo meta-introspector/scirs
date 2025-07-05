@@ -237,7 +237,10 @@ impl<M: MPIInterface> DistributedOptimizationContext<M> {
             let result =
                 Array2::from_shape_vec((self.size as usize, local_result.len()), gathered_data)
                     .map_err(|e| {
-                        ScirsError::InvalidInput(format!("Failed to reshape gathered data: {}", e))
+                        ScirsError::InvalidInput(scirs2_core::error::ErrorContext::new(format!(
+                            "Failed to reshape gathered data: {}",
+                            e
+                        )))
                     })?;
             Ok(Some(result))
         } else {
@@ -386,7 +389,7 @@ pub mod algorithms {
     pub struct DistributedDifferentialEvolution<M: MPIInterface> {
         context: DistributedOptimizationContext<M>,
         population_size: usize,
-        max_iterations: usize,
+        max_nit: usize,
         f_scale: f64,
         crossover_rate: f64,
     }
@@ -396,12 +399,12 @@ pub mod algorithms {
         pub fn new(
             context: DistributedOptimizationContext<M>,
             population_size: usize,
-            max_iterations: usize,
+            max_nit: usize,
         ) -> Self {
             Self {
                 context,
                 population_size,
-                max_iterations,
+                max_nit,
                 f_scale: 0.8,
                 crossover_rate: 0.7,
             }
@@ -436,7 +439,7 @@ pub mod algorithms {
 
             let mut total_evaluations = self.population_size;
 
-            for iteration in 0..self.max_iterations {
+            for iteration in 0..self.max_nit {
                 // Generate trial population
                 let trial_population = self.generate_trial_population(&local_population)?;
                 let trial_fitness = self.evaluate_local_population(&function, &trial_population)?;
@@ -485,8 +488,8 @@ pub mod algorithms {
                 fun: global_best_fitness,
                 success: true,
                 message: "Distributed differential evolution completed".to_string(),
-                iterations: self.max_iterations,
-                function_evaluations: total_evaluations,
+                nit: self.max_nit,
+                nfev: total_evaluations,
                 ..OptimizeResults::default()
             })
         }
@@ -656,7 +659,7 @@ pub mod algorithms {
     pub struct DistributedParticleSwarm<M: MPIInterface> {
         context: DistributedOptimizationContext<M>,
         swarm_size: usize,
-        max_iterations: usize,
+        max_nit: usize,
         w: f64,  // Inertia weight
         c1: f64, // Cognitive parameter
         c2: f64, // Social parameter
@@ -667,12 +670,12 @@ pub mod algorithms {
         pub fn new(
             context: DistributedOptimizationContext<M>,
             swarm_size: usize,
-            max_iterations: usize,
+            max_nit: usize,
         ) -> Self {
             Self {
                 context,
                 swarm_size,
-                max_iterations,
+                max_nit,
                 w: 0.729,
                 c1: 1.49445,
                 c2: 1.49445,
@@ -711,7 +714,7 @@ pub mod algorithms {
 
             let mut function_evaluations = local_swarm_size;
 
-            for iteration in 0..self.max_iterations {
+            for iteration in 0..self.max_nit {
                 // Update swarm
                 self.update_swarm(
                     &mut positions,
@@ -751,8 +754,8 @@ pub mod algorithms {
                 fun: global_best_fitness,
                 success: true,
                 message: "Distributed particle swarm optimization completed".to_string(),
-                iterations: self.max_iterations,
-                function_evaluations,
+                nit: self.max_nit,
+                nfev: function_evaluations,
                 ..OptimizeResults::default()
             })
         }
@@ -832,8 +835,8 @@ pub mod algorithms {
 
             for i in 0..swarm_size {
                 for j in 0..dims {
-                    let r1: f64 = rng.gen();
-                    let r2: f64 = rng.gen();
+                    let r1: f64 = rng.random();
+                    let r2: f64 = rng.random();
 
                     // Update velocity
                     velocities[[i, j]] = self.w * velocities[[i, j]]

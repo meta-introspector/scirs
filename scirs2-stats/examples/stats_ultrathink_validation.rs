@@ -18,11 +18,11 @@ fn main() {
     println!("1. 🛡️  Error Handling Module");
 
     // These should compile if the modules are properly structured
-    use scirs2_stats::ultrathink_error_enhancements::{
-        OptimizationSuggestion, RecoveryStrategy, UltrathinkContextBuilder, UltrathinkErrorMessages,
+    use scirs2_stats::advanced_error_enhancements::{
+        AdvancedContextBuilder, AdvancedErrorMessages, OptimizationSuggestion, RecoveryStrategy,
     };
 
-    let context = UltrathinkContextBuilder::new(test_data.len())
+    let context = AdvancedContextBuilder::new(test_data.len())
         .memory_usage(100.0)
         .simd_enabled(true)
         .build();
@@ -35,12 +35,12 @@ fn main() {
     // 2. Validate numerical stability module
     println!("2. 🔬 Numerical Stability Module");
 
-    use scirs2_stats::ultrathink_numerical_stability::{
-        NumericalStabilityConfig, UltrathinkNumericalStabilityAnalyzer,
+    use scirs2_stats::advanced_numerical_stability::{
+        AdvancedNumericalStabilityAnalyzer, NumericalStabilityConfig,
     };
 
     let config = NumericalStabilityConfig::default();
-    let _analyzer = UltrathinkNumericalStabilityAnalyzer::new(config.clone());
+    let _analyzer = AdvancedNumericalStabilityAnalyzer::new(config.clone());
 
     println!(
         "   ✅ Stability analyzer created with tolerance: {:.2e}",
@@ -50,9 +50,7 @@ fn main() {
     // 3. Validate parallel enhancements module
     println!("3. ⚡ Parallel Processing Module");
 
-    use scirs2_stats::parallel_enhancements::{
-        LoadBalancingStrategy, AdvancedParallelConfig,
-    };
+    use scirs2_stats::parallel_enhancements::{AdvancedParallelConfig, LoadBalancingStrategy};
 
     let parallel_config = AdvancedParallelConfig::default();
 
@@ -64,14 +62,14 @@ fn main() {
     // 4. Validate SIMD optimizations module
     println!("4. 🏎️  SIMD Optimizations Module");
 
-    use scirs2_stats::ultrathink_simd_optimizations::{
-        ultra_batch_statistics, AdvancedSimdConfig,
+    use scirs2_stats::advanced_simd_optimizations::{
+        advanced_batch_statistics, AdvancedSimdConfig,
     };
 
     let simd_config = AdvancedSimdConfig::default();
 
     // Try to run batch statistics - this tests the full pipeline
-    match ultra_batch_statistics(&test_data.view(), &simd_config) {
+    match advanced_batch_statistics(&test_data.view(), &simd_config) {
         Ok(stats) => {
             println!("   ✅ SIMD batch statistics computed:");
             println!("      Mean: {:.6}", stats.mean);
@@ -87,9 +85,9 @@ fn main() {
     // 5. Validate property testing module
     println!("5. 🧪 Property Testing Module");
 
-    use scirs2_stats::ultrathink_property_tests::UltrathinkPropertyTester;
+    use scirs2_stats::advanced_property_tests::AdvancedPropertyTester;
 
-    let property_tester = UltrathinkPropertyTester::new(simd_config, parallel_config);
+    let property_tester = AdvancedPropertyTester::new(simd_config, parallel_config);
 
     println!(
         "   ✅ Property tester created with tolerance: {:.2e}",
@@ -137,23 +135,23 @@ fn main() {
 
 #[allow(dead_code)]
 fn demonstrate_error_recovery() {
-    use scirs2_stats::error::StatsError;
-    use scirs2_stats::ultrathink_error_enhancements::{
-        UltrathinkContextBuilder, UltrathinkErrorRecovery,
+    use scirs2_stats::advanced_error_enhancements::{
+        AdvancedContextBuilder, AdvancedErrorRecovery,
     };
+    use scirs2_stats::error::StatsError;
 
-    let context = UltrathinkContextBuilder::new(50000)
+    let context = AdvancedContextBuilder::new(50000)
         .memory_usage(1500.0) // High memory usage
         .simd_enabled(false)  // SIMD disabled
         .build();
 
     let error = StatsError::computation("performance degradation detected");
 
-    if let Some(strategy) = UltrathinkErrorRecovery::attempt_recovery(&error, &context, "mean") {
+    if let Some(strategy) = AdvancedErrorRecovery::attempt_recovery(&error, &context, "mean") {
         println!("Recovery strategy suggested: {:?}", strategy);
     }
 
-    let suggestions = UltrathinkErrorRecovery::generate_suggestions(&error, &context);
+    let suggestions = AdvancedErrorRecovery::generate_suggestions(&error, &context);
     for (i, suggestion) in suggestions.iter().enumerate() {
         println!("Suggestion {}: {}", i + 1, suggestion);
     }

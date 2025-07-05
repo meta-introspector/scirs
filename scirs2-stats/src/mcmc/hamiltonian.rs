@@ -5,9 +5,9 @@
 
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2};
-use scirs2_core::Rng;
 use rand_distr::{Distribution, Normal};
 use scirs2_core::validation::*;
+use scirs2_core::Rng;
 use std::fmt::Debug;
 
 /// Target distribution trait with gradient information for HMC

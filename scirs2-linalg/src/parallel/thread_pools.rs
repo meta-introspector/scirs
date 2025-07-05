@@ -240,7 +240,7 @@ pub struct ThreadPoolManager {
     /// Pool configurations by profile
     pool_configs: Arc<RwLock<HashMap<ThreadPoolProfile, AdvancedThreadPoolConfig>>>,
     /// Active thread pools
-    active_pools: Arc<RwLock<HashMap<ThreadPoolProfile, Arc<UltraPerformanceThreadPool>>>>,
+    active_pools: Arc<RwLock<HashMap<ThreadPoolProfile, Arc<AdvancedPerformanceThreadPool>>>>,
     /// Global manager instance
     #[allow(dead_code)]
     instance: Arc<Mutex<Option<Self>>>,
@@ -266,7 +266,7 @@ impl ThreadPoolManager {
     pub fn get_pool(
         &self,
         profile: ThreadPoolProfile,
-    ) -> LinalgResult<Arc<UltraPerformanceThreadPool>> {
+    ) -> LinalgResult<Arc<AdvancedPerformanceThreadPool>> {
         let pools = self.active_pools.read().unwrap();
         if let Some(pool) = pools.get(&profile) {
             return Ok(pool.clone());
@@ -301,7 +301,7 @@ impl ThreadPoolManager {
             })
         };
 
-        let pool = Arc::new(UltraPerformanceThreadPool::new(config)?);
+        let pool = Arc::new(AdvancedPerformanceThreadPool::new(config)?);
 
         let mut pools = self.active_pools.write().unwrap();
         pools.insert(profile, pool.clone());
@@ -316,7 +316,7 @@ impl ThreadPoolManager {
     }
 
     /// Get performance statistics for all pools
-    pub fn get_all_stats(&self) -> HashMap<ThreadPoolProfile, UltraPerformanceStats> {
+    pub fn get_all_stats(&self) -> HashMap<ThreadPoolProfile, AdvancedPerformanceStats> {
         let pools = self.active_pools.read().unwrap();
         let mut stats = HashMap::new();
 
@@ -452,14 +452,14 @@ impl ThreadPoolManager {
     }
 }
 
-/// Ultra-performance thread pool with advanced features
+/// Advanced-performance thread pool with advanced features
 #[derive(Debug)]
-pub struct UltraPerformanceThreadPool {
+pub struct AdvancedPerformanceThreadPool {
     /// Configuration
     #[allow(dead_code)]
     config: AdvancedThreadPoolConfig,
     /// Performance statistics
-    stats: Arc<Mutex<UltraPerformanceStats>>,
+    stats: Arc<Mutex<AdvancedPerformanceStats>>,
     /// Dynamic thread manager
     thread_manager: Arc<Mutex<DynamicThreadManager>>,
     /// Workload predictor
@@ -469,10 +469,10 @@ pub struct UltraPerformanceThreadPool {
     profiler: Arc<Mutex<ThreadPoolProfiler>>,
 }
 
-impl UltraPerformanceThreadPool {
-    /// Create a new ultra-performance thread pool
+impl AdvancedPerformanceThreadPool {
+    /// Create a new advanced-performance thread pool
     pub fn new(config: AdvancedThreadPoolConfig) -> LinalgResult<Self> {
-        let stats = Arc::new(Mutex::new(UltraPerformanceStats::default()));
+        let stats = Arc::new(Mutex::new(AdvancedPerformanceStats::default()));
         let thread_manager = Arc::new(Mutex::new(DynamicThreadManager::new(&config.base_config)?));
         let workload_predictor = Arc::new(Mutex::new(WorkloadPredictor::new()));
         let profiler = Arc::new(Mutex::new(ThreadPoolProfiler::new()));
@@ -487,7 +487,7 @@ impl UltraPerformanceThreadPool {
     }
 
     /// Get performance statistics
-    pub fn get_stats(&self) -> UltraPerformanceStats {
+    pub fn get_stats(&self) -> AdvancedPerformanceStats {
         self.stats.lock().unwrap().clone()
     }
 
@@ -1032,7 +1032,7 @@ pub enum ScalingReason {
 
 /// Comprehensive performance statistics
 #[derive(Debug, Clone)]
-pub struct UltraPerformanceStats {
+pub struct AdvancedPerformanceStats {
     /// Basic thread pool statistics
     pub thread_pool_stats: ThreadPoolStats,
     /// Memory usage metrics
@@ -1049,7 +1049,7 @@ pub struct UltraPerformanceStats {
     pub average_throughput_ops_per_sec: f64,
 }
 
-impl Default for UltraPerformanceStats {
+impl Default for AdvancedPerformanceStats {
     fn default() -> Self {
         Self {
             thread_pool_stats: ThreadPoolStats::default(),
@@ -1063,7 +1063,7 @@ impl Default for UltraPerformanceStats {
     }
 }
 
-impl UltraPerformanceStats {
+impl AdvancedPerformanceStats {
     /// Record execution performance
     pub fn record_execution(&mut self, operation_type: OperationType, execution_time: Duration) {
         self.thread_pool_stats.total_tasks += 1;

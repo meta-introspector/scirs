@@ -107,7 +107,7 @@ fn showcase_jit_compilation() -> CoreResult<()> {
 fn showcase_distributed_computing() -> CoreResult<()> {
     println!("   Initializing Distributed Computing Framework...");
 
-    let _distributed_computer = advancedDistributedComputer::new()?;
+    let _distributed_computer = AdvancedDistributedComputer::new()?;
     println!("   ✓ Distributed computing coordinator initialized");
     println!("   ✓ Cluster management system ready");
     println!("   ✓ Fault tolerance mechanisms active");
@@ -120,7 +120,7 @@ fn showcase_distributed_computing() -> CoreResult<()> {
 fn showcase_ecosystem_integration() -> CoreResult<()> {
     println!("   Initializing Ecosystem Integration...");
 
-    let _ecosystem_coordinator = advancedEcosystemCoordinator::new();
+    let _ecosystem_coordinator = AdvancedEcosystemCoordinator::new();
     println!("   ✓ Ecosystem coordinator initialized");
     println!("   ✓ Cross-module communication enabled");
     println!("   ✓ Resource management system active");

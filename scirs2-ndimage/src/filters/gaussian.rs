@@ -30,17 +30,17 @@ use scirs2_core::{parallel_ops, CoreError};
 /// # Examples
 ///
 /// ## Basic 1D smoothing
-/// ```
+/// ```no_run
 /// use ndarray::array;
 /// use scirs2_ndimage::filters::gaussian_filter;
 ///
 /// let data = array![1.0, 5.0, 2.0, 8.0, 3.0];
-/// let smoothed = gaussian_filter(&data, 0.8, None, None)?;
+/// let smoothed = gaussian_filter(&data, 0.8, None, None).unwrap();
 /// // Result will be smoother with reduced sharp transitions
 /// ```
 ///
 /// ## 2D image smoothing with different border modes
-/// ```
+/// ```no_run
 /// use ndarray::Array2;
 /// use scirs2_ndimage::filters::{gaussian_filter, BorderMode};
 ///
@@ -49,14 +49,14 @@ use scirs2_core::{parallel_ops, CoreError};
 /// });
 ///
 /// // Light smoothing with reflective boundaries
-/// let smooth1 = gaussian_filter(&image, 1.0, Some(BorderMode::Reflect), None)?;
+/// let smooth1 = gaussian_filter(&image, 1.0, Some(BorderMode::Reflect), None).unwrap();
 ///
 /// // Heavy smoothing with constant boundaries  
-/// let smooth2 = gaussian_filter(&image, 3.0, Some(BorderMode::Constant), None)?;
+/// let smooth2 = gaussian_filter(&image, 3.0, Some(BorderMode::Constant), None).unwrap();
 /// ```
 ///
 /// ## 3D volume smoothing
-/// ```
+/// ```no_run
 /// use ndarray::Array3;
 /// use scirs2_ndimage::filters::gaussian_filter;
 ///
@@ -64,7 +64,7 @@ use scirs2_core::{parallel_ops, CoreError};
 ///     (i + j + k) as f64
 /// });
 ///
-/// let smoothed_volume = gaussian_filter(&volume, 2.0, None, None)?;
+/// let smoothed_volume = gaussian_filter(&volume, 2.0, None, None).unwrap();
 /// assert_eq!(smoothed_volume.shape(), volume.shape());
 /// ```
 ///

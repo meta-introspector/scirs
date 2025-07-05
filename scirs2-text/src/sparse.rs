@@ -698,7 +698,7 @@ impl BlockSparseMatrix {
     }
 }
 
-/// Hierarchical sparse matrix using two-level indexing for ultra-sparse data
+/// Hierarchical sparse matrix using two-level indexing for advanced-sparse data
 #[derive(Debug, Clone)]
 pub struct HierarchicalSparseMatrix {
     /// Top-level blocks (coarse granularity)

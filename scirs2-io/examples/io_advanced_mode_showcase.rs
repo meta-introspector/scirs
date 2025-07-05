@@ -11,7 +11,7 @@
 
 use scirs2_io::error::Result;
 use scirs2_io::neural_adaptive_io::{
-    NeuralAdaptiveIoController, PerformanceFeedback, SystemMetrics, UltraThinkIoProcessor,
+    AdvancedIoProcessor, NeuralAdaptiveIoController, PerformanceFeedback, SystemMetrics,
 };
 use scirs2_io::quantum_inspired_io::QuantumParallelProcessor;
 use std::time::Instant;
@@ -27,8 +27,8 @@ fn main() -> Result<()> {
     // Demo 2: Quantum-Inspired Parallel Processing
     demonstrate_quantum_parallel_processing()?;
 
-    // Demo 3: advanced Integrated Processor
-    demonstrate_ultra_think_processor()?;
+    // Demo 3: Advanced Integrated Processor
+    demonstrate_advanced_think_processor()?;
 
     // Demo 4: Performance Comparison
     demonstrate_performance_comparison()?;
@@ -259,11 +259,11 @@ fn demonstrate_quantum_parallel_processing() -> Result<()> {
 
 /// Demonstrate advanced integrated processor
 #[allow(dead_code)]
-fn demonstrate_ultra_think_processor() -> Result<()> {
-    println!("\n\n🚀 advanced Integrated Processor Demo");
+fn demonstrate_advanced_think_processor() -> Result<()> {
+    println!("\n\n🚀 Advanced Integrated Processor Demo");
     println!("=======================================");
 
-    let mut processor = UltraThinkIoProcessor::new();
+    let mut processor = AdvancedIoProcessor::new();
 
     // Progressive data sizes to show scaling
     let data_sizes = vec![100, 1000, 10000, 50000];
@@ -289,7 +289,7 @@ fn demonstrate_ultra_think_processor() -> Result<()> {
     }
 
     let performance_stats = processor.get_performance_stats();
-    println!("\n📈 advanced Performance Summary:");
+    println!("\n📈 Advanced Performance Summary:");
     println!(
         "  Total Adaptations: {}",
         performance_stats.total_adaptations
@@ -324,7 +324,7 @@ fn demonstrate_performance_comparison() -> Result<()> {
 
     // Neural adaptive approach
     println!("\n🧠 Neural Adaptive Approach:");
-    let mut neural_processor = UltraThinkIoProcessor::new();
+    let mut neural_processor = AdvancedIoProcessor::new();
     let start = Instant::now();
     let neural_result = neural_processor.process_data_adaptive(&test_data)?;
     let neural_time = start.elapsed();

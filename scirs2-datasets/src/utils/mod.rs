@@ -5,6 +5,7 @@
 //! scaling, feature engineering, and trait extensions.
 
 // Import all submodules
+pub mod advanced_analytics;
 pub mod balancing;
 pub mod dataset;
 pub mod extensions;
@@ -13,7 +14,6 @@ pub mod sampling;
 pub mod scaling;
 pub mod serialization;
 pub mod splitting;
-pub mod ultra_analytics;
 
 // Re-export main types and functions for backward compatibility
 
@@ -47,10 +47,10 @@ pub use feature_engineering::{
     create_binned_features, polynomial_features, statistical_features, BinningStrategy,
 };
 
-// Ultra-advanced analytics
-pub use ultra_analytics::{
-    analyze_dataset_ultra, quick_quality_assessment, CorrelationInsights, NormalityAssessment,
-    UltraDatasetAnalyzer, UltraQualityMetrics,
+// Advanced-advanced analytics
+pub use advanced_analytics::{
+    analyze_dataset_advanced, quick_quality_assessment, AdvancedDatasetAnalyzer,
+    AdvancedQualityMetrics, CorrelationInsights, NormalityAssessment,
 };
 
 // Trait extensions

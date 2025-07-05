@@ -1,4 +1,4 @@
-//! Ultra-comprehensive validation suite for Lomb-Scargle periodogram implementations
+//! Advanced-comprehensive validation suite for Lomb-Scargle periodogram implementations
 //!
 //! This module provides an extensive validation framework for Lomb-Scargle
 //! implementations with focus on:
@@ -20,9 +20,9 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::Instant;
 
-/// Ultra-comprehensive validation result
+/// Advanced-comprehensive validation result
 #[derive(Debug, Clone)]
-pub struct UltraValidationResult {
+pub struct AdvancedValidationResult {
     /// Basic accuracy metrics
     pub accuracy_metrics: AccuracyMetrics,
     /// Performance benchmarks
@@ -130,9 +130,9 @@ pub enum IssueSeverity {
     Info,
 }
 
-/// Configuration for ultra-validation
+/// Configuration for advanced-validation
 #[derive(Debug, Clone)]
-pub struct UltraValidationConfig {
+pub struct AdvancedValidationConfig {
     /// Tolerance for numerical comparisons
     pub tolerance: f64,
     /// Test signal sizes to validate
@@ -149,7 +149,7 @@ pub struct UltraValidationConfig {
     pub max_execution_time: f64,
 }
 
-impl Default for UltraValidationConfig {
+impl Default for AdvancedValidationConfig {
     fn default() -> Self {
         Self {
             tolerance: 1e-10,
@@ -163,7 +163,7 @@ impl Default for UltraValidationConfig {
     }
 }
 
-/// Run ultra-comprehensive Lomb-Scargle validation suite
+/// Run advanced-comprehensive Lomb-Scargle validation suite
 ///
 /// This function performs an exhaustive validation of Lomb-Scargle implementations
 /// including accuracy, performance, SIMD correctness, and cross-platform consistency.
@@ -174,15 +174,15 @@ impl Default for UltraValidationConfig {
 ///
 /// # Returns
 ///
-/// * Ultra-comprehensive validation results
+/// * Advanced-comprehensive validation results
 ///
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::lombscargle_ultra_validation::{run_ultra_validation, UltraValidationConfig};
+/// use scirs2_signal::lombscargle_advanced_validation::{run_advanced_validation, AdvancedValidationConfig};
 ///
-/// let config = UltraValidationConfig::default();
-/// let results = run_ultra_validation(&config).unwrap();
+/// let config = AdvancedValidationConfig::default();
+/// let results = run_advanced_validation(&config).unwrap();
 ///
 /// match results.validation_status {
 ///     ValidationStatus::Passed => println!("All validations passed!"),
@@ -198,7 +198,9 @@ impl Default for UltraValidationConfig {
 /// }
 /// ```
 #[allow(dead_code)]
-pub fn run_ultra_validation(config: &UltraValidationConfig) -> SignalResult<UltraValidationResult> {
+pub fn run_advanced_validation(
+    config: &AdvancedValidationConfig,
+) -> SignalResult<AdvancedValidationResult> {
     let start_time = Instant::now();
     let mut issues = Vec::new();
 
@@ -266,7 +268,7 @@ pub fn run_ultra_validation(config: &UltraValidationConfig) -> SignalResult<Ultr
         });
     }
 
-    Ok(UltraValidationResult {
+    Ok(AdvancedValidationResult {
         accuracy_metrics,
         performance_metrics,
         simd_validation,
@@ -280,7 +282,7 @@ pub fn run_ultra_validation(config: &UltraValidationConfig) -> SignalResult<Ultr
 /// Validate accuracy comprehensively across multiple test scenarios
 #[allow(dead_code)]
 fn validate_accuracy_comprehensive(
-    config: &UltraValidationConfig,
+    config: &AdvancedValidationConfig,
     issues: &mut Vec<ValidationIssue>,
 ) -> SignalResult<AccuracyMetrics> {
     let mut all_errors = Vec::new();
@@ -344,7 +346,7 @@ fn validate_accuracy_comprehensive(
 /// Validate performance across different signal sizes and configurations
 #[allow(dead_code)]
 fn validate_performance_comprehensive(
-    config: &UltraValidationConfig,
+    config: &AdvancedValidationConfig,
     issues: &mut Vec<ValidationIssue>,
 ) -> SignalResult<PerformanceMetrics> {
     let mut execution_times = HashMap::new();
@@ -394,16 +396,16 @@ fn validate_performance_comprehensive(
 /// Validate SIMD operations comprehensively
 #[allow(dead_code)]
 fn validate_simd_operations_comprehensive(
-    config: &UltraValidationConfig,
+    config: &AdvancedValidationConfig,
     issues: &mut Vec<ValidationIssue>,
 ) -> SignalResult<SimdValidationResult> {
     // Detect SIMD capabilities
     let caps = PlatformCapabilities::detect();
-    let simd_available = caps.has_avx2 || caps.has_avx512 || caps.has_sse4_1;
+    let simd_available = caps.avx2_available || caps.avx512_available || caps.sse4_1_available;
 
     let detected_capabilities = format!(
         "SSE4.1: {}, AVX2: {}, AVX512: {}",
-        caps.has_sse4_1, caps.has_avx2, caps.has_avx512
+        caps.sse4_1_available, caps.avx2_available, caps.avx512_available
     );
 
     if !simd_available {
@@ -465,7 +467,7 @@ fn validate_simd_operations_comprehensive(
 /// Validate memory usage patterns
 #[allow(dead_code)]
 fn validate_memory_usage_comprehensive(
-    config: &UltraValidationConfig,
+    config: &AdvancedValidationConfig,
     issues: &mut Vec<ValidationIssue>,
 ) -> SignalResult<MemoryMetrics> {
     let mut peak_memory = 0.0;
@@ -507,7 +509,7 @@ fn validate_memory_usage_comprehensive(
 /// Validate cross-platform consistency
 #[allow(dead_code)]
 fn validate_cross_platform_consistency(
-    config: &UltraValidationConfig,
+    config: &AdvancedValidationConfig,
     issues: &mut Vec<ValidationIssue>,
 ) -> SignalResult<PlatformConsistencyResult> {
     // For now, return a placeholder result
@@ -595,7 +597,7 @@ fn validate_pure_sinusoid_accuracy(
 
     // Compute Lomb-Scargle
     let frequencies = Array1::linspace(0.1, 50.0, 500);
-    let power = lombscargle(&times, &signal, &frequencies)?;
+    let (_freqs, power) = lombscargle(&times, &signal, &frequencies)?;
 
     // Find peak
     let peak_idx = power
@@ -680,7 +682,9 @@ fn benchmark_signal_size(size: usize, iterations: usize) -> SignalResult<Benchma
 }
 
 #[allow(dead_code)]
-fn benchmark_simd_performance(config: &UltraValidationConfig) -> SignalResult<SimdBenchmarkResult> {
+fn benchmark_simd_performance(
+    config: &AdvancedValidationConfig,
+) -> SignalResult<SimdBenchmarkResult> {
     // Simplified implementation
     Ok(SimdBenchmarkResult {
         speedup_factor: 2.5, // Typical SIMD speedup
@@ -688,7 +692,7 @@ fn benchmark_simd_performance(config: &UltraValidationConfig) -> SignalResult<Si
 }
 
 #[allow(dead_code)]
-fn validate_simd_scalar_accuracy(config: &UltraValidationConfig) -> SignalResult<f64> {
+fn validate_simd_scalar_accuracy(config: &AdvancedValidationConfig) -> SignalResult<f64> {
     // Compare SIMD and scalar results
     // Simplified implementation
     Ok(1e-14) // Very high accuracy
@@ -696,7 +700,7 @@ fn validate_simd_scalar_accuracy(config: &UltraValidationConfig) -> SignalResult
 
 #[allow(dead_code)]
 fn validate_individual_simd_operations(
-    config: &UltraValidationConfig,
+    config: &AdvancedValidationConfig,
 ) -> SignalResult<HashMap<String, bool>> {
     let mut results = HashMap::new();
     results.insert("dot_product".to_string(), true);
@@ -706,7 +710,7 @@ fn validate_individual_simd_operations(
 }
 
 #[allow(dead_code)]
-fn measure_simd_performance_gain(config: &UltraValidationConfig) -> SignalResult<f64> {
+fn measure_simd_performance_gain(config: &AdvancedValidationConfig) -> SignalResult<f64> {
     // Simplified implementation
     Ok(2.8) // Good SIMD performance gain
 }
@@ -777,15 +781,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ultra_validation_basic() {
-        let config = UltraValidationConfig {
+    fn test_advanced_validation_basic() {
+        let config = AdvancedValidationConfig {
             test_sizes: vec![64, 256],
             performance_iterations: 3,
             tolerance: 1e-8,
             ..Default::default()
         };
 
-        let result = run_ultra_validation(&config);
+        let result = run_advanced_validation(&config);
         assert!(result.is_ok());
 
         let validation = result.unwrap();
@@ -795,7 +799,7 @@ mod tests {
 
     #[test]
     fn test_accuracy_validation() {
-        let config = UltraValidationConfig::default();
+        let config = AdvancedValidationConfig::default();
         let mut issues = Vec::new();
 
         let result = validate_accuracy_comprehensive(&config, &mut issues);

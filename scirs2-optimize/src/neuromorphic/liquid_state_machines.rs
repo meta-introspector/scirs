@@ -2,8 +2,9 @@
 //!
 //! Implementation of liquid state machine-based optimization algorithms.
 
-use crate::error::OptimizeResult;
+use crate::error::{OptimizeError, OptimizeResult};
 use ndarray::{Array1, Array2, ArrayView1};
+use rand::Rng;
 
 /// Liquid State Machine for optimization
 #[derive(Debug, Clone)]
@@ -35,8 +36,8 @@ impl LiquidStateMachine {
         // Random sparse connectivity for reservoir
         for i in 0..reservoir_size {
             for j in 0..reservoir_size {
-                if i != j && rand::rng().random::<f64>() < 0.1 {
-                    reservoir_weights[[i, j]] = (rand::rng().random::<f64>() - 0.5) * 0.1;
+                if i != j && rand::rng().gen::<f64>() < 0.1 {
+                    reservoir_weights[[i, j]] = (rand::rng().gen::<f64>() - 0.5) * 0.1;
                 }
             }
         }
@@ -44,7 +45,7 @@ impl LiquidStateMachine {
         // Random input weights
         for i in 0..reservoir_size {
             for j in 0..input_size {
-                input_weights[[i, j]] = (rand::rng().random::<f64>() - 0.5) * 0.5;
+                input_weights[[i, j]] = (rand::rng().gen::<f64>() - 0.5) * 0.5;
             }
         }
 
@@ -103,7 +104,7 @@ impl LiquidStateMachine {
         &mut self,
         targets: &Array2<f64>,
         states: &Array2<f64>,
-    ) -> Result<()> {
+    ) -> Result<(), OptimizeError> {
         // Simplified training - use a basic approach
         // For now, use identity weights as placeholder
         let state_dims = states.ncols();
@@ -118,7 +119,7 @@ impl LiquidStateMachine {
 pub fn lsm_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
-    num_iterations: usize,
+    num_nit: usize,
 ) -> OptimizeResult<Array1<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
@@ -130,7 +131,7 @@ where
     let mut lsm = LiquidStateMachine::new(input_size, reservoir_size, output_size);
     let mut params = initial_params.to_owned();
 
-    for _iter in 0..num_iterations {
+    for _iter in 0..num_nit {
         // Use current parameters as input
         lsm.update_reservoir(&params.view());
 

@@ -212,8 +212,7 @@ where
 #[allow(dead_code)]
 pub fn kl_divergence<F>(p: &ArrayView1<F>, q: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::fmt::Debug + Sum
-        + std::fmt::Display,
+    F: Float + std::fmt::Debug + Sum + std::fmt::Display,
 {
     if p.is_empty() || q.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -293,8 +292,7 @@ where
 #[allow(dead_code)]
 pub fn cross_entropy<F>(p: &ArrayView1<F>, q: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + std::fmt::Debug + Sum
-        + std::fmt::Display,
+    F: Float + std::fmt::Debug + Sum + std::fmt::Display,
 {
     if p.is_empty() || q.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -351,8 +349,7 @@ where
 #[derive(Debug, Clone, Copy)]
 pub struct ConfidenceInterval<F>
 where
-    F: Float
-        + std::fmt::Display
+    F: Float + std::fmt::Display,
 {
     /// The estimated statistic value
     pub estimate: F,
@@ -398,8 +395,14 @@ pub fn skewness_ci<F>(
     seed: Option<u64>,
 ) -> StatsResult<ConfidenceInterval<F>>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Debug
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Debug
+        + std::fmt::Display
+        + Send
+        + Sync
+        + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     use crate::sampling::bootstrap;
     use crate::skew;
@@ -426,7 +429,7 @@ where
     }
 
     // Calculate point estimate
-    let estimate = skew(x, bias)?;
+    let estimate = skew(x, bias, None)?;
 
     // Generate bootstrap samples
     let samples = bootstrap(x, n_boot, seed)?;
@@ -501,8 +504,14 @@ pub fn kurtosis_ci<F>(
     seed: Option<u64>,
 ) -> StatsResult<ConfidenceInterval<F>>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + std::fmt::Debug
-        + std::fmt::Display,
+    F: Float
+        + std::iter::Sum<F>
+        + std::ops::Div<Output = F>
+        + std::fmt::Debug
+        + std::fmt::Display
+        + Send
+        + Sync
+        + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     use crate::kurtosis;
     use crate::sampling::bootstrap;
@@ -529,7 +538,7 @@ where
     }
 
     // Calculate point estimate
-    let estimate = kurtosis(x, fisher, bias)?;
+    let estimate = kurtosis(x, fisher, bias, None)?;
 
     // Generate bootstrap samples
     let samples = bootstrap(x, n_boot, seed)?;
@@ -539,7 +548,7 @@ where
 
     for i in 0..n_boot {
         let sample_view = samples.slice(ndarray::s![i, ..]).to_owned();
-        if let Ok(k) = kurtosis(&sample_view.view(), fisher, bias) {
+        if let Ok(k) = kurtosis(&sample_view.view(), fisher, bias, None) {
             bootstrap_kurt.push(k);
         }
     }

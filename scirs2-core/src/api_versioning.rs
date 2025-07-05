@@ -1137,7 +1137,7 @@ fn get_test_frozen_apis() -> Vec<ApiSignature> {
             StabilityLevel::Experimental,
         ),
         create_api_signature(
-            "simd_fma_ultra_optimized",
+            "simd_fma_advanced_optimized",
             "simd_ops",
             vec![
                 Parameter {

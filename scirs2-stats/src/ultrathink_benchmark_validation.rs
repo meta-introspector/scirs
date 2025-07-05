@@ -9,7 +9,7 @@
 
 use crate::error::{StatsError, StatsResult};
 use crate::unified_processor::{
-    OptimizationMode, UltrathinkProcessorConfig, UltrathinkUnifiedProcessor,
+    OptimizationMode, AdvancedProcessorConfig, AdvancedUnifiedProcessor,
 };
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::Float;
@@ -71,9 +71,9 @@ pub struct ValidationReport {
 }
 
 /// Advanced benchmark validation framework
-pub struct UltrathinkBenchmarkValidator {
+pub struct AdvancedBenchmarkValidator {
     config: ValidationConfig,
-    processor: UltrathinkUnifiedProcessor,
+    processor: AdvancedUnifiedProcessor,
     reference_implementations: HashMap<String, Box<dyn ReferenceImplementation>>,
 }
 
@@ -183,11 +183,11 @@ impl ReferenceImplementation for ReferenceCorrelation {
     }
 }
 
-impl UltrathinkBenchmarkValidator {
+impl AdvancedBenchmarkValidator {
     /// Create a new benchmark validator
     pub fn new(config: ValidationConfig) -> Self {
-        let processor_config = UltrathinkProcessorConfig::default();
-        let processor = UltrathinkUnifiedProcessor::new(processor_config);
+        let processor_config = AdvancedProcessorConfig::default();
+        let processor = AdvancedUnifiedProcessor::new(processor_config);
 
         let mut reference_implementations: HashMap<String, Box<dyn ReferenceImplementation>> =
             HashMap::new();
@@ -485,16 +485,16 @@ impl UltrathinkBenchmarkValidator {
 
 /// Create a default Advanced benchmark validator  
 #[allow(dead_code)]
-pub fn create_ultrathink_validator() -> UltrathinkBenchmarkValidator {
-    UltrathinkBenchmarkValidator::new(ValidationConfig::default())
+pub fn create_advanced_validator() -> AdvancedBenchmarkValidator {
+    AdvancedBenchmarkValidator::new(ValidationConfig::default())
 }
 
 /// Create a custom Advanced benchmark validator
 #[allow(dead_code)]
-pub fn create_custom_ultrathink_validator(
+pub fn create_custom_advanced_validator(
     config: ValidationConfig,
-) -> UltrathinkBenchmarkValidator {
-    UltrathinkBenchmarkValidator::new(config)
+) -> AdvancedBenchmarkValidator {
+    AdvancedBenchmarkValidator::new(config)
 }
 
 #[cfg(test)]
@@ -530,7 +530,7 @@ mod tests {
 
     #[test]
     fn test_validator_creation() {
-        let validator = create_ultrathink_validator();
+        let validator = create_advanced_validator();
         assert_eq!(validator.config.numerical_tolerance, 1e-12);
         assert_eq!(validator.reference_implementations.len(), 3);
     }

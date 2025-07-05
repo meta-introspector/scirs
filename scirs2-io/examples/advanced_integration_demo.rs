@@ -6,7 +6,7 @@
 
 use scirs2_io::error::Result;
 use scirs2_io::neural_adaptive_io::{
-    NeuralAdaptiveIoController, SystemMetrics, UltraThinkIoProcessor,
+    AdvancedIoProcessor, NeuralAdaptiveIoController, SystemMetrics,
 };
 use scirs2_io::quantum_inspired_io::QuantumParallelProcessor;
 use std::collections::VecDeque;
@@ -18,7 +18,7 @@ use std::time::{Duration, Instant};
 pub struct IntelligentIoManager {
     neural_controller: NeuralAdaptiveIoController,
     quantum_processor: QuantumParallelProcessor,
-    ultra_think_processor: UltraThinkIoProcessor,
+    advanced_think_processor: AdvancedIoProcessor,
     performance_history: Arc<Mutex<VecDeque<f64>>>,
     current_mode: ProcessingMode,
 }
@@ -36,7 +36,7 @@ impl IntelligentIoManager {
         Self {
             neural_controller: NeuralAdaptiveIoController::new(),
             quantum_processor: QuantumParallelProcessor::new(8),
-            ultra_think_processor: UltraThinkIoProcessor::new(),
+            advanced_think_processor: AdvancedIoProcessor::new(),
             performance_history: Arc::new(Mutex::new(VecDeque::with_capacity(1000))),
             current_mode: ProcessingMode::Adaptive,
         }
@@ -56,7 +56,7 @@ impl IntelligentIoManager {
         let result = match chosen_mode {
             ProcessingMode::Neural => self.process_neural_adaptive(data),
             ProcessingMode::Quantum => self.process_quantum_parallel(data),
-            ProcessingMode::Advanced => self.process_ultra_think(data),
+            ProcessingMode::Advanced => self.process_advanced_think(data),
             ProcessingMode::Adaptive => self.process_adaptive_hybrid(data, &metrics),
         }?;
 
@@ -70,7 +70,7 @@ impl IntelligentIoManager {
 
     /// Neural adaptive processing
     fn process_neural_adaptive(&mut self, data: &[u8]) -> Result<Vec<u8>> {
-        self.ultra_think_processor.process_data_adaptive(data)
+        self.advanced_think_processor.process_data_adaptive(data)
     }
 
     /// Quantum-inspired parallel processing
@@ -79,8 +79,8 @@ impl IntelligentIoManager {
     }
 
     /// advanced integrated processing
-    fn process_ultra_think(&mut self, data: &[u8]) -> Result<Vec<u8>> {
-        self.ultra_think_processor.process_data_adaptive(data)
+    fn process_advanced_think(&mut self, data: &[u8]) -> Result<Vec<u8>> {
+        self.advanced_think_processor.process_data_adaptive(data)
     }
 
     /// Adaptive hybrid processing
@@ -95,10 +95,10 @@ impl IntelligentIoManager {
             self.quantum_processor.process_quantum_parallel(data)
         } else if data_size_class == DataSizeClass::Large && metrics.memory_usage < 0.7 {
             // Large data with available memory - use neural adaptive
-            self.ultra_think_processor.process_data_adaptive(data)
+            self.advanced_think_processor.process_data_adaptive(data)
         } else {
             // Default to advanced for balanced approach
-            self.ultra_think_processor.process_data_adaptive(data)
+            self.advanced_think_processor.process_data_adaptive(data)
         }
     }
 
@@ -233,7 +233,7 @@ impl IntelligentIoManager {
         self.quantum_processor.optimize_parameters()?;
 
         // Get performance stats from all processors
-        let neural_stats = self.ultra_think_processor.get_performance_stats();
+        let neural_stats = self.advanced_think_processor.get_performance_stats();
         let quantum_stats = self.quantum_processor.get_performance_stats();
 
         println!("🔧 Optimization Complete:");

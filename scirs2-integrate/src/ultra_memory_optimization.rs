@@ -1,4 +1,4 @@
-//! Ultra-advanced memory optimization system for ODE solvers
+//! Advanced-advanced memory optimization system for ODE solvers
 //!
 //! This module provides cutting-edge memory management optimizations including:
 //! - Predictive memory allocation based on problem characteristics
@@ -19,8 +19,8 @@ use std::marker::PhantomData;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-/// Ultra-advanced memory optimization manager
-pub struct UltraMemoryOptimizer<F: IntegrateFloat> {
+/// Advanced-advanced memory optimization manager
+pub struct AdvancedMemoryOptimizer<F: IntegrateFloat> {
     /// Multi-level memory hierarchy manager
     hierarchy_manager: Arc<RwLock<MemoryHierarchyManager<F>>>,
     /// Predictive allocation engine
@@ -387,8 +387,8 @@ pub enum AccessMode {
     CopyOnWrite,
 }
 
-impl<F: IntegrateFloat> UltraMemoryOptimizer<F> {
-    /// Create a new ultra-memory optimizer
+impl<F: IntegrateFloat> AdvancedMemoryOptimizer<F> {
+    /// Create a new advanced-memory optimizer
     pub fn new() -> IntegrateResult<Self> {
         let hierarchy_manager = Arc::new(RwLock::new(MemoryHierarchyManager::new()?));
         let predictor = Arc::new(Mutex::new(AllocationPredictor::new()));
@@ -397,7 +397,7 @@ impl<F: IntegrateFloat> UltraMemoryOptimizer<F> {
         let numa_manager = Arc::new(RwLock::new(NumaTopologyManager::new()?));
         let zero_copy_pool = Arc::new(Mutex::new(ZeroCopyBufferPool::new()?));
 
-        Ok(UltraMemoryOptimizer {
+        Ok(AdvancedMemoryOptimizer {
             hierarchy_manager,
             predictor,
             cache_optimizer,
@@ -429,7 +429,7 @@ impl<F: IntegrateFloat> UltraMemoryOptimizer<F> {
         Ok(plan)
     }
 
-    /// Allocate ultra-optimized memory for solution vectors
+    /// Allocate advanced-optimized memory for solution vectors
     pub fn allocate_solution_memory(
         &self,
         size: usize,
@@ -1372,21 +1372,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ultra_memory_optimizer_creation() {
-        let optimizer = UltraMemoryOptimizer::<f64>::new();
+    fn test_advanced_memory_optimizer_creation() {
+        let optimizer = AdvancedMemoryOptimizer::<f64>::new();
         assert!(optimizer.is_ok());
     }
 
     #[test]
     fn test_memory_allocation_prediction() {
-        let optimizer = UltraMemoryOptimizer::<f64>::new().unwrap();
+        let optimizer = AdvancedMemoryOptimizer::<f64>::new().unwrap();
         let plan = optimizer.optimize_for_problem(1000, "rk4", 100);
         assert!(plan.is_ok());
     }
 
     #[test]
     fn test_solution_memory_allocation() {
-        let optimizer = UltraMemoryOptimizer::<f64>::new().unwrap();
+        let optimizer = AdvancedMemoryOptimizer::<f64>::new().unwrap();
         let memory = optimizer.allocate_solution_memory(1000);
         assert!(memory.is_ok());
     }

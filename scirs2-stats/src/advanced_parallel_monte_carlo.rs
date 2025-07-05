@@ -11,7 +11,7 @@ use crate::error::StatsResult;
 use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, rng};
+use scirs2_core::{parallel_ops::*, rng, simd_ops::SimdUnifiedOps};
 use std::marker::PhantomData;
 use std::sync::{Arc, Mutex};
 
@@ -175,8 +175,7 @@ pub struct MonteCarloResult<F> {
 /// Trait for functions to integrate
 pub trait IntegrableFunction<F>: Send + Sync
 where
-    F: Float + Copy
-        + std::fmt::Display,
+    F: Float + Copy + std::fmt::Display,
 {
     /// Evaluate function at given point
     fn evaluate(&self, x: &ArrayView1<F>) -> F;
@@ -259,7 +258,7 @@ where
         // Initialize random number generator
         let mut main_rng = match self.config.seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(rng()),
+            None => StdRng::from_rng(&mut rng()),
         };
 
         let mut total_samples = 0;

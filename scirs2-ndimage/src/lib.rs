@@ -307,16 +307,15 @@ pub use self::neuromorphic_computing::{
 pub use self::advanced_fusion_algorithms::{
     enhanced_meta_learning_with_temporal_fusion, enhanced_quantum_consciousness_evolution,
     fusion_processing, quantum_aware_resource_scheduling_optimization, AdaptiveMemoryConsolidation,
-    AdvancedConfig, CoherenceStrategy, ConsciousnessComplexity, ConsciousnessState,
+    AdvancedConfig, AdvancedState, CoherenceStrategy, ConsciousnessComplexity, ConsciousnessState,
     EnhancedMetaLearningSystem, HierarchicalLearner, MetaLearningTracker,
     QuantumAwareResourceScheduler, QuantumCoherenceOptimizer, QuantumConsciousnessEvolution,
-    ResourceSchedulingDecision, StrategyEvolution, TemporalMemoryFusion, UltrathinkState,
-    WorkloadCharacteristics,
+    ResourceSchedulingDecision, StrategyEvolution, TemporalMemoryFusion, WorkloadCharacteristics,
 };
 
 // Enhanced validation exports
 pub use self::comprehensive_validation::{
-    validated_ultrathink_processing, ComprehensiveValidator, PerformanceBenchmark,
+    validated_advanced_processing, ComprehensiveValidator, PerformanceBenchmark,
     PerformanceSummary, ValidationConfig, ValidationError, ValidationReport,
 };
 

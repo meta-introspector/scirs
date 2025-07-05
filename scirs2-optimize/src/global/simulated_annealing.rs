@@ -84,7 +84,7 @@ where
         options: SimulatedAnnealingOptions,
     ) -> Self {
         let ndim = x0.len();
-        let seed = options.seed.unwrap_or_else(rand::rng().gen);
+        let seed = options.seed.unwrap_or_else(|| rand::rng().random());
         let rng = StdRng::seed_from_u64(seed);
 
         // Evaluate initial point
@@ -112,14 +112,14 @@ where
         let mut neighbor = self.current_x.clone();
 
         // Randomly perturb one or more dimensions
-        let num_dims_to_perturb = self.rng.random_range(1..=self.ndim);
+        let num_dims_to_perturb = self.rng.gen_range(1..=self.ndim);
         let mut dims: Vec<usize> = (0..self.ndim).collect();
         dims.shuffle(&mut self.rng);
 
         for &i in dims.iter().take(num_dims_to_perturb) {
             let perturbation = self
                 .rng
-                .random_range(-self.options.step_size..self.options.step_size);
+                .gen_range(-self.options.step_size..self.options.step_size);
             neighbor[i] += perturbation;
 
             // Apply bounds if specified
@@ -189,7 +189,7 @@ where
 
             // Accept or reject
             let acceptance_prob = self.acceptance_probability(neighbor_value);
-            if self.rng.random_range(0.0..1.0) < acceptance_prob {
+            if self.rng.gen_range(0.0..1.0) < acceptance_prob {
                 self.current_x = neighbor;
                 self.current_value = neighbor_value;
 
@@ -233,7 +233,6 @@ where
             nfev: self.nfev,
             func_evals: self.nfev,
             nit: self.nit,
-            iterations: self.nit,
             success: converged,
             message: if converged {
                 "Temperature reached minimum"

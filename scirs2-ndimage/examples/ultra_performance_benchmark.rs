@@ -1,6 +1,6 @@
-//! Ultra-performance benchmark showcasing advanced SIMD optimizations
+//! Advanced-performance benchmark showcasing advanced SIMD optimizations
 //!
-//! This example demonstrates the performance benefits of the ultra-advanced SIMD
+//! This example demonstrates the performance benefits of the advanced-advanced SIMD
 //! extensions compared to standard implementations. It includes:
 //! - Wavelet pyramid decomposition performance
 //! - Local Binary Pattern texture analysis speed
@@ -18,11 +18,11 @@ use scirs2_ndimage::{
 };
 use std::time::{Duration, Instant};
 
-// Import both standard and ultra-advanced SIMD functions for comparison
+// Import both standard and advanced-advanced SIMD functions for comparison
 #[cfg(feature = "simd")]
 use scirs2_ndimage::filters::{
-    laplace, sobel, ultra_simd_advanced_edge_detection, ultra_simd_multi_scale_lbp,
-    ultra_simd_wavelet_pyramid, WaveletType,
+    advanced_simd_advanced_edge_detection, advanced_simd_multi_scale_lbp,
+    advanced_simd_wavelet_pyramid, laplace, sobel, WaveletType,
 };
 
 #[cfg(feature = "simd")]
@@ -135,7 +135,7 @@ impl BenchmarkResult {
 
 #[allow(dead_code)]
 fn main() -> NdimageResult<()> {
-    println!("=== Ultra-Performance Benchmark for scirs2-ndimage ===\n");
+    println!("=== Advanced-Performance Benchmark for scirs2-ndimage ===\n");
 
     let config = BenchmarkConfig::default();
 
@@ -231,17 +231,17 @@ fn benchmark_wavelet_pyramid(
 ) -> NdimageResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
-    // Benchmark ultra-SIMD wavelet pyramid with different wavelet types
+    // Benchmark advanced-SIMD wavelet pyramid with different wavelet types
     for (wavelet_name, wavelet_type) in [
-        ("Ultra-SIMD Haar Wavelet", WaveletType::Haar),
-        ("Ultra-SIMD Daubechies-4", WaveletType::Daubechies4),
-        ("Ultra-SIMD Biorthogonal", WaveletType::Biorthogonal),
+        ("Advanced-SIMD Haar Wavelet", WaveletType::Haar),
+        ("Advanced-SIMD Daubechies-4", WaveletType::Daubechies4),
+        ("Advanced-SIMD Biorthogonal", WaveletType::Biorthogonal),
     ] {
         let mut durations = Vec::new();
 
         for _ in 0..config.iterations {
             let start = Instant::now();
-            let _pyramid = ultra_simd_wavelet_pyramid(
+            let _pyramid = advanced_simd_wavelet_pyramid(
                 image.view(),
                 3, // levels
                 wavelet_type.clone(),
@@ -281,12 +281,12 @@ fn benchmark_lbp(
 
         for _ in 0..config.iterations {
             let start = Instant::now();
-            let _lbp_result = ultra_simd_multi_scale_lbp(image.view(), &radii, &sample_points)?;
+            let _lbp_result = advanced_simd_multi_scale_lbp(image.view(), &radii, &sample_points)?;
             durations.push(start.elapsed());
         }
 
         let result = BenchmarkResult::new(
-            format!("Ultra-SIMD {}", config_name),
+            format!("Advanced-SIMD {}", config_name),
             image.dim(),
             &durations,
         );
@@ -308,12 +308,12 @@ fn benchmark_edge_detection(
 ) -> NdimageResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
-    // Benchmark ultra-advanced edge detection
+    // Benchmark advanced-advanced edge detection
     let mut durations = Vec::new();
 
     for _ in 0..config.iterations {
         let start = Instant::now();
-        let _edges = ultra_simd_advanced_edge_detection(
+        let _edges = advanced_simd_advanced_edge_detection(
             image.view(),
             1.0, // sigma
             0.1, // low threshold factor
@@ -323,7 +323,7 @@ fn benchmark_edge_detection(
     }
 
     let result = BenchmarkResult::new(
-        "Ultra-SIMD Advanced Edge Detection".to_string(),
+        "Advanced-SIMD Advanced Edge Detection".to_string(),
         image.dim(),
         &durations,
     );
@@ -468,9 +468,9 @@ fn display_benchmark_summary(results: &[BenchmarkResult]) {
 #[cfg(not(feature = "simd"))]
 #[allow(dead_code)]
 fn main() -> NdimageResult<()> {
-    println!("Ultra-performance benchmark requires SIMD features");
+    println!("Advanced-performance benchmark requires SIMD features");
     println!(
-        "Please compile with: cargo run --example ultra_performance_benchmark --features simd"
+        "Please compile with: cargo run --example advanced_performance_benchmark --features simd"
     );
     Ok(())
 }

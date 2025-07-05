@@ -66,8 +66,8 @@ pub trait SimdUnifiedOps: Sized + Copy + PartialOrd + Zero {
     /// Enhanced cache-optimized addition for large arrays
     fn simd_add_cache_optimized(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self>;
 
-    /// Ultra-optimized fused multiply-add for maximum performance
-    fn simd_fma_ultra_optimized(
+    /// Advanced-optimized fused multiply-add for maximum performance
+    fn simd_fma_advanced_optimized(
         a: &ArrayView1<Self>,
         b: &ArrayView1<Self>,
         c: &ArrayView1<Self>,
@@ -84,6 +84,12 @@ pub trait SimdUnifiedOps: Sized + Copy + PartialOrd + Zero {
 
     /// Element-wise square root
     fn simd_sqrt(a: &ArrayView1<Self>) -> Array1<Self>;
+
+    /// Sum of squares
+    fn simd_sum_squares(a: &ArrayView1<Self>) -> Self;
+
+    /// Element-wise multiplication (alias for simd_mul)
+    fn simd_multiply(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self>;
 
     /// Check if SIMD is available for this type
     fn simd_available() -> bool;
@@ -286,16 +292,16 @@ impl SimdUnifiedOps for f32 {
     }
 
     #[cfg(feature = "simd")]
-    fn simd_fma_ultra_optimized(
+    fn simd_fma_advanced_optimized(
         a: &ArrayView1<Self>,
         b: &ArrayView1<Self>,
         c: &ArrayView1<Self>,
     ) -> Array1<Self> {
-        crate::simd::simd_fma_ultra_optimized_f32(a, b, c)
+        crate::simd::simd_fma_advanced_optimized_f32(a, b, c)
     }
 
     #[cfg(not(feature = "simd"))]
-    fn simd_fma_ultra_optimized(
+    fn simd_fma_advanced_optimized(
         a: &ArrayView1<Self>,
         b: &ArrayView1<Self>,
         c: &ArrayView1<Self>,
@@ -327,6 +333,14 @@ impl SimdUnifiedOps for f32 {
 
     fn simd_sqrt(a: &ArrayView1<Self>) -> Array1<Self> {
         a.mapv(|x| x.sqrt())
+    }
+
+    fn simd_sum_squares(a: &ArrayView1<Self>) -> Self {
+        a.iter().map(|&x| x * x).sum()
+    }
+
+    fn simd_multiply(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        Self::simd_mul(a, b)
     }
 
     #[cfg(feature = "simd")]
@@ -537,16 +551,16 @@ impl SimdUnifiedOps for f64 {
     }
 
     #[cfg(feature = "simd")]
-    fn simd_fma_ultra_optimized(
+    fn simd_fma_advanced_optimized(
         a: &ArrayView1<Self>,
         b: &ArrayView1<Self>,
         c: &ArrayView1<Self>,
     ) -> Array1<Self> {
-        crate::simd::simd_fma_ultra_optimized_f64(a, b, c)
+        crate::simd::simd_fma_advanced_optimized_f64(a, b, c)
     }
 
     #[cfg(not(feature = "simd"))]
-    fn simd_fma_ultra_optimized(
+    fn simd_fma_advanced_optimized(
         a: &ArrayView1<Self>,
         b: &ArrayView1<Self>,
         c: &ArrayView1<Self>,
@@ -580,6 +594,14 @@ impl SimdUnifiedOps for f64 {
         a.mapv(|x| x.sqrt())
     }
 
+    fn simd_sum_squares(a: &ArrayView1<Self>) -> Self {
+        a.iter().map(|&x| x * x).sum()
+    }
+
+    fn simd_multiply(a: &ArrayView1<Self>, b: &ArrayView1<Self>) -> Array1<Self> {
+        Self::simd_mul(a, b)
+    }
+
     #[cfg(feature = "simd")]
     fn simd_available() -> bool {
         true
@@ -592,6 +614,7 @@ impl SimdUnifiedOps for f64 {
 }
 
 /// Platform capability detection
+#[derive(Debug, Clone)]
 pub struct PlatformCapabilities {
     pub simd_available: bool,
     pub gpu_available: bool,

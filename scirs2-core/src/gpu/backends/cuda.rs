@@ -309,7 +309,7 @@ impl CudaContext {
             use cudarc::nvrtc::compile_ptx;
 
             compile_ptx(source)
-                .map(|ptx| ptx.to_string())
+                .map(|ptx| String::from_utf8_lossy(ptx.as_bytes()).to_string())
                 .map_err(|e| GpuError::Other(format!("NVRTC compilation failed for {name}: {e}")))
         }
         #[cfg(not(feature = "cuda"))]
@@ -332,7 +332,7 @@ impl CudaContext {
         ptx: &str,
     ) -> Result<Arc<impl std::any::Any>, GpuError> {
         device
-            .load_ptx(ptx.as_bytes(), "neural_kernels", &[])
+            .load_ptx_module(ptx.as_bytes(), "neural_kernels", &[])
             .map_err(|e| GpuError::Other(format!("Failed to load PTX module: {e}")))
             .map(Arc::new)
     }

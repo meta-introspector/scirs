@@ -1283,7 +1283,7 @@ impl MixedPrecisionTrainer {
             }
             TensorCoreOperation::Attention => {
                 if self.tensor_core_info.supports_fp8 {
-                    TensorCorePrecision::FP8 // Ultra-high throughput for attention
+                    TensorCorePrecision::FP8 // Advanced-high throughput for attention
                 } else if self.tensor_core_info.supports_bf16 {
                     TensorCorePrecision::BF16
                 } else {

@@ -660,7 +660,7 @@ pub fn parallel_sparse_matvec_csr<T>(
     }
 }
 
-/// Ultra-optimized parallel sparse matrix-vector multiplication with adaptive strategies
+/// Advanced-optimized parallel sparse matrix-vector multiplication with adaptive strategies
 ///
 /// This is an Advanced mode enhancement that automatically selects the best
 /// computational strategy based on matrix characteristics and hardware capabilities.
@@ -682,7 +682,7 @@ pub fn parallel_sparse_matvec_csr<T>(
 /// - Vectorized inner loops with prefetching
 #[allow(dead_code)]
 #[allow(clippy::too_many_arguments)]
-pub fn ultrathink_sparse_matvec_csr<T>(
+pub fn advanced_sparse_matvec_csr<T>(
     y: &mut [T],
     rows: usize,
     indptr: &[usize],
@@ -718,19 +718,19 @@ pub fn ultrathink_sparse_matvec_csr<T>(
     // Strategy selection based on matrix characteristics
     if sparsity_variance > (avg_nnz_per_row as f64) * 2.0 {
         // High variance in row sparsity - use dynamic load balancing
-        ultrathink_adaptive_load_balanced_spmv(y, rows, indptr, indices, data, x, &row_nnz_counts);
+        advanced_adaptive_load_balanced_spmv(y, rows, indptr, indices, data, x, &row_nnz_counts);
     } else if avg_nnz_per_row > 64 {
         // Dense-ish rows - use vectorized computation
-        ultrathink_vectorized_spmv(y, rows, indptr, indices, data, x);
+        advanced_vectorized_spmv(y, rows, indptr, indices, data, x);
     } else {
         // Sparse matrix - use cache-optimized computation
-        ultrathink_cache_optimized_spmv(y, rows, indptr, indices, data, x);
+        advanced_cache_optimized_spmv(y, rows, indptr, indices, data, x);
     }
 }
 
 /// Adaptive load-balanced SpMV for matrices with irregular sparsity patterns
 #[allow(dead_code)]
-fn ultrathink_adaptive_load_balanced_spmv<T>(
+fn advanced_adaptive_load_balanced_spmv<T>(
     y: &mut [T],
     rows: usize,
     indptr: &[usize],
@@ -790,7 +790,7 @@ fn ultrathink_adaptive_load_balanced_spmv<T>(
 
 /// Vectorized SpMV for dense-ish matrices
 #[allow(dead_code)]
-fn ultrathink_vectorized_spmv<T>(
+fn advanced_vectorized_spmv<T>(
     y: &mut [T],
     rows: usize,
     indptr: &[usize],
@@ -857,7 +857,7 @@ fn ultrathink_vectorized_spmv<T>(
 
 /// Cache-optimized SpMV for sparse matrices
 #[allow(dead_code)]
-fn ultrathink_cache_optimized_spmv<T>(
+fn advanced_cache_optimized_spmv<T>(
     y: &mut [T],
     rows: usize,
     indptr: &[usize],

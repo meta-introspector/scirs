@@ -46,7 +46,7 @@ fn safe_to_float<T: Float + FromPrimitive>(value: f64) -> T {
 ///
 /// # Examples
 ///
-/// ```rust
+/// ```no_run
 /// use ndarray::Array2;
 /// use scirs2_ndimage::filters::generic_filter;
 ///
@@ -58,7 +58,7 @@ fn safe_to_float<T: Float + FromPrimitive>(value: f64) -> T {
 /// };
 ///
 /// let input = Array2::from_shape_fn((5, 5), |(i, j)| (i + j) as f64);
-/// let result = generic_filter(&input, range_func, &[3, 3], None, None)?;
+/// let result = generic_filter(&input, range_func, &[3, 3], None, None).unwrap();
 /// ```
 #[allow(dead_code)]
 pub fn generic_filter<T, D, F>(

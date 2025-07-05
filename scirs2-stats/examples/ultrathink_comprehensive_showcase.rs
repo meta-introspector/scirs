@@ -6,11 +6,11 @@
 
 use ndarray::{array, Array1, Array2};
 use scirs2_stats::{
-    create_numerical_stability_analyzer, create_advanced_processor,
+    create_advanced_processor, create_numerical_stability_analyzer,
     parallel_enhancements::MatrixOperationType,
-    unified_processor::{UltrathinkMatrixOperation, UltrathinkTimeSeriesOperation},
-    NumericalStabilityConfig, OptimizationMode, AdvancedParallelConfig,
-    UltrathinkProcessorConfig, AdvancedSimdConfig,
+    unified_processor::{AdvancedMatrixOperation, AdvancedTimeSeriesOperation},
+    AdvancedParallelConfig, AdvancedProcessorConfig, AdvancedSimdConfig, NumericalStabilityConfig,
+    OptimizationMode,
 };
 use std::time::Instant;
 
@@ -105,7 +105,7 @@ fn demonstrate_advanced_configurations() -> Result<(), Box<dyn std::error::Error
     let configs = vec![
         (
             "Performance Optimized",
-            UltrathinkProcessorConfig {
+            AdvancedProcessorConfig {
                 optimization_mode: OptimizationMode::Performance,
                 enable_stability_testing: false,
                 simd_config: AdvancedSimdConfig {
@@ -119,7 +119,7 @@ fn demonstrate_advanced_configurations() -> Result<(), Box<dyn std::error::Error
         ),
         (
             "Accuracy Focused",
-            UltrathinkProcessorConfig {
+            AdvancedProcessorConfig {
                 optimization_mode: OptimizationMode::Accuracy,
                 enable_stability_testing: true,
                 stability_config: NumericalStabilityConfig {
@@ -133,7 +133,7 @@ fn demonstrate_advanced_configurations() -> Result<(), Box<dyn std::error::Error
         ),
         (
             "Balanced",
-            UltrathinkProcessorConfig {
+            AdvancedProcessorConfig {
                 optimization_mode: OptimizationMode::Balanced,
                 enable_stability_testing: true,
                 enable_performance_monitoring: true,
@@ -142,7 +142,7 @@ fn demonstrate_advanced_configurations() -> Result<(), Box<dyn std::error::Error
         ),
         (
             "Adaptive",
-            UltrathinkProcessorConfig {
+            AdvancedProcessorConfig {
                 optimization_mode: OptimizationMode::Adaptive,
                 enable_stability_testing: true,
                 enable_performance_monitoring: true,
@@ -154,8 +154,7 @@ fn demonstrate_advanced_configurations() -> Result<(), Box<dyn std::error::Error
     let data = generate_sample_data(5000);
 
     for (name, config) in configs {
-        let mut processor =
-            scirs2_stats::unified_processor::UltrathinkUnifiedProcessor::new(config);
+        let mut processor = scirs2_stats::unified_processor::AdvancedUnifiedProcessor::new(config);
 
         let start_time = Instant::now();
         let result = processor.process_comprehensive_statistics(&data.view())?;
@@ -259,8 +258,8 @@ fn demonstrate_matrix_operations() -> Result<(), Box<dyn std::error::Error>> {
 
     // Test different matrix operations
     let operations = vec![
-        ("Covariance Matrix", UltrathinkMatrixOperation::Covariance),
-        ("Correlation Matrix", UltrathinkMatrixOperation::Correlation),
+        ("Covariance Matrix", AdvancedMatrixOperation::Covariance),
+        ("Correlation Matrix", AdvancedMatrixOperation::Correlation),
     ];
 
     for (name, operation) in operations {
@@ -309,7 +308,7 @@ fn demonstrate_time_series_processing() -> Result<(), Box<dyn std::error::Error>
     println!("Generated time series with {} points", time_series.len());
 
     let window_sizes = vec![50, 100, 200];
-    let operations = vec![UltrathinkTimeSeriesOperation::MovingWindow];
+    let operations = vec![AdvancedTimeSeriesOperation::MovingWindow];
 
     for window_size in window_sizes {
         println!("\nMoving window analysis (window size: {}):", window_size);

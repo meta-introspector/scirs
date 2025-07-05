@@ -85,8 +85,7 @@ fn classification_report_example() -> Result<()> {
         let support = report.support.get(class_name).unwrap_or(&0);
 
         println!(
-            "    {}: Precision={:.4}, Recall={:.4}, F1={:.4}, Support={}",
-            class_name, precision, recall, f1, support
+            "    {class_name}: Precision={precision:.4}, Recall={recall:.4}, F1={f1:.4}, Support={support}"
         );
     }
 
@@ -128,7 +127,7 @@ fn precision_recall_fscore_support_example() -> Result<()> {
             0.0,  // zero_division
         )?;
 
-        println!("\n  {}:", description);
+        println!("\n  {description}:");
         if average.is_some() {
             // Single values for averaged results
             println!("    Precision: {:.4}", precision[0]);
@@ -173,19 +172,19 @@ fn cohen_kappa_example() -> Result<()> {
     let y1_perfect = Array1::from_vec(vec![0, 1, 0, 1, 0, 1]);
     let y2_perfect = Array1::from_vec(vec![0, 1, 0, 1, 0, 1]);
     let kappa_perfect = cohen_kappa_score_sklearn(&y1_perfect, &y2_perfect, None, None, None)?;
-    println!("  Perfect agreement: {:.4}", kappa_perfect);
+    println!("  Perfect agreement: {kappa_perfect:.4}");
 
     // Random agreement
     let y1_random = Array1::from_vec(vec![0, 1, 0, 1, 0, 1]);
     let y2_random = Array1::from_vec(vec![1, 0, 1, 0, 1, 0]);
     let kappa_random = cohen_kappa_score_sklearn(&y1_random, &y2_random, None, None, None)?;
-    println!("  Random-like agreement: {:.4}", kappa_random);
+    println!("  Random-like agreement: {kappa_random:.4}");
 
     // Partial agreement
     let y1_partial = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
     let y2_partial = Array1::from_vec(vec![0, 1, 1, 1, 2, 1]);
     let kappa_partial = cohen_kappa_score_sklearn(&y1_partial, &y2_partial, None, None, None)?;
-    println!("  Partial agreement: {:.4}", kappa_partial);
+    println!("  Partial agreement: {kappa_partial:.4}");
 
     // Test with different weighting schemes
     println!("\n  Testing different weighting schemes:");
@@ -198,14 +197,14 @@ fn cohen_kappa_example() -> Result<()> {
 
     for (weights, description) in weight_schemes {
         let kappa = cohen_kappa_score_sklearn(&y1_partial, &y2_partial, None, weights, None)?;
-        println!("    {}: {:.4}", description, kappa);
+        println!("    {description}: {kappa:.4}");
     }
 
     // Test with sample weights
     let sample_weights = Array1::from_vec(vec![1.0, 2.0, 1.0, 2.0, 1.0, 2.0]);
     let kappa_weighted =
         cohen_kappa_score_sklearn(&y1_partial, &y2_partial, None, None, Some(&sample_weights))?;
-    println!("  With sample weights: {:.4}", kappa_weighted);
+    println!("  With sample weights: {kappa_weighted:.4}");
 
     Ok(())
 }
@@ -240,8 +239,8 @@ fn multilabel_confusion_matrix_example() -> Result<()> {
     .unwrap();
 
     println!("Multilabel data shape: {:?}", y_true.shape());
-    println!("  True labels:\n{:?}", y_true);
-    println!("  Predicted labels:\n{:?}", y_pred);
+    println!("  True labels:\n{y_true:?}");
+    println!("  Predicted labels:\n{y_pred:?}");
 
     let confusion_matrices = multilabel_confusion_matrix_sklearn(&y_true, &y_pred, None, None)?;
 
@@ -255,11 +254,11 @@ fn multilabel_confusion_matrix_example() -> Result<()> {
         let fn_val = confusion_matrices[[base_idx + 1, 0]];
         let tp = confusion_matrices[[base_idx + 1, 1]];
 
-        println!("  Label {}:", label);
-        println!("    True Negatives (TN): {}", tn);
-        println!("    False Positives (FP): {}", fp);
-        println!("    False Negatives (FN): {}", fn_val);
-        println!("    True Positives (TP): {}", tp);
+        println!("  Label {label}:");
+        println!("    True Negatives (TN): {tn}");
+        println!("    False Positives (FP): {fp}");
+        println!("    False Negatives (FN): {fn_val}");
+        println!("    True Positives (TP): {tp}");
 
         // Calculate per-label metrics
         let precision = if tp + fp > 0 {
@@ -278,9 +277,9 @@ fn multilabel_confusion_matrix_example() -> Result<()> {
             0.0
         };
 
-        println!("    Precision: {:.4}", precision);
-        println!("    Recall: {:.4}", recall);
-        println!("    F1-score: {:.4}", f1);
+        println!("    Precision: {precision:.4}");
+        println!("    Recall: {recall:.4}");
+        println!("    F1-score: {f1:.4}");
         println!();
     }
 
@@ -306,14 +305,14 @@ fn loss_functions_example() -> Result<()> {
     let loss_normalized = zero_one_loss_sklearn(&y_true_binary, &y_pred_binary, true, None)?;
     let loss_count = zero_one_loss_sklearn(&y_true_binary, &y_pred_binary, false, None)?;
 
-    println!("  Normalized (fraction of errors): {:.4}", loss_normalized);
-    println!("  Count (number of errors): {:.1}", loss_count);
+    println!("  Normalized (fraction of errors): {loss_normalized:.4}");
+    println!("  Count (number of errors): {loss_count:.1}");
 
     // Test with sample weights
     let sample_weights = Array1::from_vec(vec![1.0, 2.0, 1.0, 2.0, 1.0, 2.0]);
     let weighted_loss =
         zero_one_loss_sklearn(&y_true_binary, &y_pred_binary, true, Some(&sample_weights))?;
-    println!("  Weighted loss: {:.4}", weighted_loss);
+    println!("  Weighted loss: {weighted_loss:.4}");
 
     // Test hinge loss
     println!("\nHinge Loss:");
@@ -331,7 +330,7 @@ fn loss_functions_example() -> Result<()> {
     .unwrap();
 
     let hinge_loss = hinge_loss_sklearn(&y_true_multiclass, &y_pred_scores, None, None)?;
-    println!("  Hinge loss: {:.4}", hinge_loss);
+    println!("  Hinge loss: {hinge_loss:.4}");
 
     // Test hinge loss with sample weights
     let hinge_weights = Array1::from_vec(vec![1.0, 1.0, 2.0, 1.0, 1.0]);
@@ -341,7 +340,7 @@ fn loss_functions_example() -> Result<()> {
         None,
         Some(&hinge_weights),
     )?;
-    println!("  Weighted hinge loss: {:.4}", weighted_hinge_loss);
+    println!("  Weighted hinge loss: {weighted_hinge_loss:.4}");
 
     Ok(())
 }
@@ -382,7 +381,7 @@ fn averaging_methods_example() -> Result<()> {
             0.0,
         )?;
 
-        println!("\n  {}:", description);
+        println!("\n  {description}:");
         println!("    Precision: {:.4}", precision[0]);
         println!("    Recall: {:.4}", recall[0]);
         println!("    F1-score: {:.4}", f1[0]);
@@ -406,10 +405,7 @@ fn averaging_methods_example() -> Result<()> {
         )
         .enumerate()
     {
-        println!(
-            "    Class {}: P={:.4}, R={:.4}, F1={:.4}, Support={}",
-            i, p, r, f, s
-        );
+        println!("    Class {i}: P={p:.4}, R={r:.4}, F1={f:.4}, Support={s}");
     }
 
     println!("\n  Averaging method explanations:");
@@ -451,17 +447,17 @@ fn weighted_metrics_example() -> Result<()> {
     ];
 
     for (weights, description) in weight_scenarios {
-        println!("\n  {}:", description);
+        println!("\n  {description}:");
         println!("    Weights: {:?}", weights.to_vec());
 
         // Test zero-one loss with weights
         let weighted_loss = zero_one_loss_sklearn(&y_true, &y_pred, true, Some(&weights))?;
-        println!("    Weighted zero-one loss: {:.4}", weighted_loss);
+        println!("    Weighted zero-one loss: {weighted_loss:.4}");
 
         // Test Cohen's kappa with weights
         let weighted_kappa =
             cohen_kappa_score_sklearn(&y_true, &y_pred, None, None, Some(&weights))?;
-        println!("    Weighted Cohen's kappa: {:.4}", weighted_kappa);
+        println!("    Weighted Cohen's kappa: {weighted_kappa:.4}");
     }
 
     // Demonstrate effect of weights on multilabel metrics

@@ -659,8 +659,8 @@ impl BenchmarkSystem {
                                 fun: f64::INFINITY,
                                 success: false,
                                 message: format!("Error: {}", e),
-                                iterations: 0,
-                                function_evaluations: 0,
+                                nit: 0,
+                                nfev: 0,
                                 ..OptimizeResults::default()
                             },
                             runtime_stats,

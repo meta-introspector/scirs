@@ -1,4 +1,4 @@
-//! Ultra-enhanced system identification with machine learning and real-time capabilities
+//! Advanced-enhanced system identification with machine learning and real-time capabilities
 //!
 //! This module provides cutting-edge system identification techniques combining:
 //! - Deep learning-based nonlinear system identification
@@ -23,9 +23,9 @@ use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::collections::HashMap;
 
-/// Ultra-enhanced system identification result with comprehensive analysis
+/// Advanced-enhanced system identification result with comprehensive analysis
 #[derive(Debug, Clone)]
-pub struct UltraEnhancedSysIdResult {
+pub struct AdvancedEnhancedSysIdResult {
     /// Base identification result
     pub base_result: EnhancedSysIdResult,
     /// Advanced model ensemble
@@ -556,11 +556,11 @@ pub enum FusionMethod {
     Mixture,
 }
 
-/// Configuration for ultra-enhanced system identification
+/// Configuration for advanced-enhanced system identification
 #[derive(Debug, Clone)]
-pub struct UltraEnhancedSysIdConfig {
+pub struct AdvancedEnhancedSysIdConfig {
     /// Identification methods to try
-    pub methods: Vec<UltraAdvancedMethod>,
+    pub methods: Vec<AdvancedAdvancedMethod>,
     /// Neural network configuration
     pub neural_config: NeuralNetworkConfig,
     /// Real-time processing settings
@@ -573,9 +573,9 @@ pub struct UltraEnhancedSysIdConfig {
     pub ensemble_config: EnsembleConfig,
 }
 
-/// Ultra-advanced identification methods
-#[derive(Debug, Clone, Copy)]
-pub enum UltraAdvancedMethod {
+/// Advanced-advanced identification methods
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum AdvancedAdvancedMethod {
     /// Deep neural network identification
     DeepNeuralNetwork,
     /// Physics-informed neural networks
@@ -684,13 +684,13 @@ impl Default for EnsembleConfig {
     }
 }
 
-impl Default for UltraEnhancedSysIdConfig {
+impl Default for AdvancedEnhancedSysIdConfig {
     fn default() -> Self {
         Self {
             methods: vec![
-                UltraAdvancedMethod::DeepNeuralNetwork,
-                UltraAdvancedMethod::BayesianIdentification,
-                UltraAdvancedMethod::GaussianProcess,
+                AdvancedAdvancedMethod::DeepNeuralNetwork,
+                AdvancedAdvancedMethod::BayesianIdentification,
+                AdvancedAdvancedMethod::GaussianProcess,
             ],
             neural_config: NeuralNetworkConfig {
                 enable_neural_models: true,
@@ -732,7 +732,7 @@ impl Default for UltraEnhancedSysIdConfig {
     }
 }
 
-/// Ultra-enhanced system identification with machine learning and real-time capabilities
+/// Advanced-enhanced system identification with machine learning and real-time capabilities
 ///
 /// This function provides state-of-the-art system identification using:
 /// - Deep learning for complex nonlinear system modeling
@@ -745,7 +745,7 @@ impl Default for UltraEnhancedSysIdConfig {
 ///
 /// * `input_signal` - System input signal
 /// * `output_signal` - System output signal
-/// * `config` - Ultra-enhanced configuration
+/// * `config` - Advanced-enhanced configuration
 ///
 /// # Returns
 ///
@@ -770,18 +770,18 @@ use std::f64::consts::PI;
 ///     output[i] = 0.8 * output[i-1] + 0.5 * input[i-1];
 /// }
 ///
-/// let config = UltraEnhancedSysIdConfig::default();
-/// let result = ultra_enhanced_system_identification(&input, &output, &config).unwrap();
+/// let config = AdvancedEnhancedSysIdConfig::default();
+/// let result = advanced_enhanced_system_identification(&input, &output, &config).unwrap();
 ///
 /// assert!(result.base_result.validation.fit_percentage > 80.0);
 /// assert!(result.model_ensemble.models.len() > 0);
 /// ```
 #[allow(dead_code)]
-pub fn ultra_enhanced_system_identification(
+pub fn advanced_enhanced_system_identification(
     input_signal: &Array1<f64>,
     output_signal: &Array1<f64>,
-    config: &UltraEnhancedSysIdConfig,
-) -> SignalResult<UltraEnhancedSysIdResult> {
+    config: &AdvancedEnhancedSysIdConfig,
+) -> SignalResult<AdvancedEnhancedSysIdResult> {
     let start_time = std::time::Instant::now();
 
     // Input validation
@@ -789,7 +789,7 @@ pub fn ultra_enhanced_system_identification(
 
     // SIMD optimization setup
     let caps = PlatformCapabilities::detect();
-    let simd_enabled = config.performance_config.simd_optimization && caps.has_avx2;
+    let simd_enabled = config.performance_config.simd_optimization && caps.avx2_available;
 
     // Performance monitoring
     let mut performance_monitor = PerformanceMonitor::new();
@@ -801,7 +801,7 @@ pub fn ultra_enhanced_system_identification(
         let method_start = std::time::Instant::now();
 
         match method {
-            UltraAdvancedMethod::DeepNeuralNetwork => {
+            AdvancedAdvancedMethod::DeepNeuralNetwork => {
                 if config.neural_config.enable_neural_models {
                     let neural_result = identify_with_deep_neural_network(
                         input_signal,
@@ -812,7 +812,7 @@ pub fn ultra_enhanced_system_identification(
                     candidate_models.push(neural_result);
                 }
             }
-            UltraAdvancedMethod::BayesianIdentification => {
+            AdvancedAdvancedMethod::BayesianIdentification => {
                 let bayesian_result = identify_with_bayesian_inference(
                     input_signal,
                     output_signal,
@@ -821,12 +821,12 @@ pub fn ultra_enhanced_system_identification(
                 )?;
                 candidate_models.push(bayesian_result);
             }
-            UltraAdvancedMethod::GaussianProcess => {
+            AdvancedAdvancedMethod::GaussianProcess => {
                 let gp_result =
                     identify_with_gaussian_process(input_signal, output_signal, simd_enabled)?;
                 candidate_models.push(gp_result);
             }
-            UltraAdvancedMethod::PhysicsInformedNN => {
+            AdvancedAdvancedMethod::PhysicsInformedNN => {
                 let pinn_result = identify_with_physics_informed_nn(
                     input_signal,
                     output_signal,
@@ -847,7 +847,7 @@ pub fn ultra_enhanced_system_identification(
 
     // Step 2: Build model ensemble
     let model_ensemble = if config.ensemble_config.enable_ensemble {
-        build_model_ensemble(candidate_models, &config.ensemble_config)?
+        build_model_ensemble(candidate_models.clone(), &config.ensemble_config)?
     } else {
         // Use best single model
         build_single_model_ensemble(candidate_models)?
@@ -886,7 +886,7 @@ pub fn ultra_enhanced_system_identification(
     let total_time = start_time.elapsed().as_secs_f64() * 1000.0;
     let performance_metrics = performance_monitor.finalize(total_time, simd_enabled);
 
-    Ok(UltraEnhancedSysIdResult {
+    Ok(AdvancedEnhancedSysIdResult {
         base_result,
         model_ensemble,
         real_time_tracker,
@@ -904,7 +904,7 @@ pub fn ultra_enhanced_system_identification(
 /// - Memory-bounded operation for embedded systems
 /// - Low-latency processing with quality guarantees
 #[allow(dead_code)]
-pub fn ultra_enhanced_real_time_identification(
+pub fn advanced_enhanced_real_time_identification(
     new_input: f64,
     new_output: f64,
     tracker: &mut RealTimeTracker,
@@ -1042,7 +1042,7 @@ pub struct ParameterUpdate {
 }
 
 struct PerformanceMonitor {
-    method_times: HashMap<UltraAdvancedMethod, f64>,
+    method_times: HashMap<AdvancedAdvancedMethod, f64>,
     memory_usage: f64,
 }
 
@@ -1054,7 +1054,7 @@ impl PerformanceMonitor {
         }
     }
 
-    fn record_method_time(&mut self, method: UltraAdvancedMethod, time_ms: f64) {
+    fn record_method_time(&mut self, method: AdvancedAdvancedMethod, time_ms: f64) {
         self.method_times.insert(method, time_ms);
     }
 
@@ -1217,8 +1217,8 @@ impl RealTimeTracker {
 
     fn handle_system_change(
         &mut self,
-        update: &ParameterUpdate,
-        config: &RealTimeConfig,
+        _update: &ParameterUpdate,
+        _config: &RealTimeConfig,
     ) -> SignalResult<()> {
         // Increase learning rates temporarily
         self.learning_rates *= 2.0;
@@ -1255,8 +1255,8 @@ fn validate_identification_signals(input: &Array1<f64>, output: &Array1<f64>) ->
 
 #[allow(dead_code)]
 fn search_optimal_architecture(
-    input: &Array1<f64>,
-    output: &Array1<f64>,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
 ) -> SignalResult<NetworkArchitecture> {
     // Neural architecture search (simplified)
     Ok(NetworkArchitecture {
@@ -1269,11 +1269,11 @@ fn search_optimal_architecture(
 
 #[allow(dead_code)]
 fn train_feedforward_network(
-    input: &Array1<f64>,
-    output: &Array1<f64>,
+    _input: &Array1<f64>,
+    _output: &Array1<f64>,
     architecture: &NetworkArchitecture,
-    config: &NeuralNetworkConfig,
-    simd_enabled: bool,
+    _config: &NeuralNetworkConfig,
+    _simd_enabled: bool,
 ) -> SignalResult<FeedforwardNetwork> {
     // Train neural network (simplified)
     let mut weights = Vec::new();
@@ -1359,7 +1359,7 @@ fn train_physics_informed_network(
 #[allow(dead_code)]
 fn build_model_ensemble(
     models: Vec<WeightedModel>,
-    config: &EnsembleConfig,
+    _config: &EnsembleConfig,
 ) -> SignalResult<ModelEnsemble> {
     let selection_criteria = ModelSelectionCriteria {
         multi_objective_scores: HashMap::new(),
@@ -1465,7 +1465,7 @@ mod tests {
     use std::f64::consts::PI;
 
     #[test]
-    fn test_ultra_enhanced_system_identification() {
+    fn test_advanced_enhanced_system_identification() {
         // Generate test signals
         let n = 200;
         let input: Array1<f64> =
@@ -1476,8 +1476,8 @@ mod tests {
             output[i] = 0.8 * output[i - 1] + 0.5 * input[i - 1];
         }
 
-        let config = UltraEnhancedSysIdConfig::default();
-        let result = ultra_enhanced_system_identification(&input, &output, &config);
+        let config = AdvancedEnhancedSysIdConfig::default();
+        let result = advanced_enhanced_system_identification(&input, &output, &config);
 
         assert!(result.is_ok());
         let id_result = result.unwrap();
@@ -1496,7 +1496,7 @@ mod tests {
         let mut tracker = RealTimeTracker::default();
         let config = RealTimeConfig::default();
 
-        let update = ultra_enhanced_real_time_identification(1.0, 0.8, &mut tracker, &config);
+        let update = advanced_enhanced_real_time_identification(1.0, 0.8, &mut tracker, &config);
         assert!(update.is_ok());
 
         let param_update = update.unwrap();
@@ -1509,7 +1509,7 @@ mod tests {
     #[test]
     fn test_performance_monitor() {
         let mut monitor = PerformanceMonitor::new();
-        monitor.record_method_time(UltraAdvancedMethod::DeepNeuralNetwork, 100.0);
+        monitor.record_method_time(AdvancedAdvancedMethod::DeepNeuralNetwork, 100.0);
 
         let metrics = monitor.finalize(150.0, true);
         assert!(metrics.computational_metrics.simd_acceleration_factor > 1.0);

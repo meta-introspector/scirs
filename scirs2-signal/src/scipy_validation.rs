@@ -256,8 +256,8 @@ fn validate_butterworth_filter(
                 for &n in &config.test_lengths {
                     match test_single_butter_filter(n, fs, order, filter_type.clone(), config) {
                         Ok((abs_err, rel_err, rmse)) => {
-                            max_abs_error = max_abs_error.max(abs_err);
-                            max_rel_error = max_rel_error.max(rel_err);
+                            max_abs_error = f64::max(max_abs_error, abs_err);
+                            max_rel_error = f64::max(max_rel_error, rel_err);
                             rmse_sum += rmse * rmse;
                             num_cases += 1;
 
@@ -330,7 +330,9 @@ fn test_single_cheby1_filter(
     };
 
     // Our implementation
-    let (b, a) = cheby1(order, ripple, &critical_freq, btype, Some(fs))?;
+    // For now, use the first element of critical_freq as cutoff
+    let cutoff = critical_freq[0];
+    let (b, a) = cheby1(order, ripple, cutoff, btype)?;
     let our_result = lfilter(&b, &a, &test_signal)?;
 
     // Reference implementation (simplified)

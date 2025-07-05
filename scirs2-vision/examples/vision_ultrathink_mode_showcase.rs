@@ -13,7 +13,39 @@
 //! - Multi-objective optimization balancing speed, accuracy, and energy
 
 use ndarray::Array2;
-use scirs2_vision::*;
+use scirs2_vision::{
+    // Neuromorphic processing
+    AdaptiveNeuromorphicPipeline,
+    // AI optimization
+    ArchitecturePerformance,
+    EventDrivenProcessor,
+    Frame,
+    FrameMetadata,
+    GeneticPipelineOptimizer,
+    NeuralArchitectureSearch,
+    // Hybrid processing
+    NeuralQuantumHybridProcessor,
+    NeuromorphicEdgeDetector,
+    PerformanceMetric,
+    PredictiveScaler,
+    // Core types
+    ProcessingStage,
+    // Quantum processing
+    QuantumAdaptiveStreamPipeline,
+    QuantumAnnealingStage,
+    QuantumEntanglementStage,
+    QuantumStreamProcessor,
+    QuantumSuperpositionStage,
+    RLParameterOptimizer,
+    Result,
+    SearchStrategy,
+};
+
+// Import additional AI optimization types directly from the module
+use scirs2_vision::ai_optimization::{
+    ActivationType, ArchitectureSearchSpace, AttentionType, ConnectionType, Experience, LayerType,
+    PoolingType, ResourceRequirement, WorkloadMeasurement,
+};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -39,10 +71,10 @@ fn main() -> Result<()> {
 
     // Demonstrate integrated Advanced pipeline
     println!("\n⚡ Integrated Advanced Pipeline");
-    integrated_ultrathink_demo(&test_frames)?;
+    integrated_advanced_demo(&test_frames)?;
 
-    // Demonstrate ultra-advanced neural-quantum hybrid processing
-    println!("\n🔮 Ultra-Advanced Neural-Quantum Hybrid Processing");
+    // Demonstrate advanced-advanced neural-quantum hybrid processing
+    println!("\n🔮 Advanced-Advanced Neural-Quantum Hybrid Processing");
     neural_quantum_hybrid_demo(&test_frames)?;
 
     println!("\n✨ Advanced mode demonstration completed!");
@@ -410,7 +442,7 @@ fn ai_optimization_demo(_frames: &[Frame]) -> Result<()> {
 
 /// Demonstrate integrated Advanced pipeline
 #[allow(dead_code)]
-fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
+fn integrated_advanced_demo(frames: &[Frame]) -> Result<()> {
     println!("  Creating integrated Advanced pipeline...");
 
     // Create hybrid pipeline combining all Advanced technologies
@@ -487,7 +519,7 @@ fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
     println!("     🧠 Neuromorphic Computing:");
     println!("        - {total_spike_events} total spike events processed");
     println!(
-        "        - {:.1}% sparsity achieved ultra-low power consumption",
+        "        - {:.1}% sparsity achieved advanced-low power consumption",
         efficiency_stats.sparsity * 100.0
     );
     println!("        - Adaptive spiking networks learned input patterns");
@@ -527,7 +559,7 @@ fn integrated_ultrathink_demo(frames: &[Frame]) -> Result<()> {
     Ok(())
 }
 
-/// Demonstrate ultra-advanced neural-quantum hybrid processing
+/// Demonstrate advanced-advanced neural-quantum hybrid processing
 #[allow(dead_code)]
 fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
     println!("  Initializing Neural-Quantum Hybrid Processor...");
@@ -539,7 +571,7 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
     println!("  ✓ Emergent Behavior Detection: Enabled");
     println!("  ✓ Self-Modification Engine: Standby");
 
-    println!("  Processing frames with ultra-advanced capabilities...");
+    println!("  Processing frames with advanced-advanced capabilities...");
     let start_time = Instant::now();
 
     let mut total_emergent_behaviors = 0;
@@ -552,7 +584,7 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
             break;
         } // Process first 8 frames for demo
 
-        // Process with ultra-advanced capabilities
+        // Process with advanced-advanced capabilities
         let result = hybrid_processor.process_advanced(frame.clone())?;
 
         // Accumulate metrics
@@ -599,7 +631,7 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
 
     println!("     🧠 Neuromorphic Computing:");
     println!(
-        "        - Average spike efficiency: {:.1}% (ultra-low power)",
+        "        - Average spike efficiency: {:.1}% (advanced-low power)",
         avg_neuromorphic_efficiency * 100.0
     );
     println!("        - Adaptive plasticity enabled real-time learning");
@@ -639,12 +671,9 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
     println!("   ✓ Successfully fused quantum-inspired and neuromorphic paradigms");
     println!("   ✓ Demonstrated emergent intelligence capabilities");
     println!("   ✓ Achieved self-optimization through meta-learning");
-    println!("   ✓ Maintained real-time performance with ultra-high quality");
+    println!("   ✓ Maintained real-time performance with advanced-high quality");
     println!("   ✓ Enabled adaptive behavior modification during processing");
     println!("   ✓ Quantified uncertainty for robust decision making");
 
     Ok(())
 }
-
-/// Import necessary types for the example
-use scirs2_vision::{ai_optimization::*, NeuralQuantumHybridProcessor};

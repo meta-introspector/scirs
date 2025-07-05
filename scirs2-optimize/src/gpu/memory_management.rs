@@ -193,7 +193,7 @@ impl GpuMemoryBlock {
     }
 
     /// Cast to a specific type
-    pub fn as_typed<T>(&self) -> ScirsResult<&OptimGpuBuffer<T>> {
+    pub fn as_typed<T: scirs2_core::GpuDataType>(&self) -> ScirsResult<&OptimGpuBuffer<T>> {
         if let Some(ref buffer) = self.gpu_buffer {
             // Safe casting through scirs2-core's type system
             buffer
@@ -242,7 +242,10 @@ impl GpuWorkspace {
     }
 
     /// Get a typed buffer view of the specified size
-    pub fn get_buffer<T>(&mut self, size: usize) -> ScirsResult<&OptimGpuBuffer<T>> {
+    pub fn get_buffer<T: scirs2_core::GpuDataType>(
+        &mut self,
+        size: usize,
+    ) -> ScirsResult<&OptimGpuBuffer<T>> {
         let size_bytes = size * std::mem::size_of::<T>();
         let block = self.get_block(size_bytes)?;
         block.as_typed::<T>()
@@ -251,7 +254,7 @@ impl GpuWorkspace {
     /// Create a GPU array view from the workspace
     pub fn create_array<T>(&mut self, dimensions: &[usize]) -> ScirsResult<OptimGpuArray<T>>
     where
-        T: Clone + Default + 'static,
+        T: Clone + Default + 'static + scirs2_core::GpuDataType,
     {
         let total_elements: usize = dimensions.iter().product();
         let buffer = self.get_buffer::<T>(total_elements)?;

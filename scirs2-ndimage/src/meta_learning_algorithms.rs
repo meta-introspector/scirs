@@ -23,7 +23,7 @@ use crate::error::NdimageResult;
 
 /// Enhanced Meta-Learning Configuration
 #[derive(Debug, Clone)]
-pub struct UltrathinkMetaLearningConfig {
+pub struct AdvancedMetaLearningConfig {
     /// Few-shot learning parameters
     pub few_shot: FewShotConfig,
     /// Transfer learning parameters
@@ -38,7 +38,7 @@ pub struct UltrathinkMetaLearningConfig {
     pub quantum_enhancement: QuantumEnhancementConfig,
 }
 
-impl Default for UltrathinkMetaLearningConfig {
+impl Default for AdvancedMetaLearningConfig {
     fn default() -> Self {
         Self {
             few_shot: FewShotConfig::default(),
@@ -425,7 +425,7 @@ pub enum ErrorMitigationStrategy {
 #[allow(dead_code)]
 pub fn enhanced_meta_learning_processing<T>(
     task_data: &[TaskData<T>],
-    config: &UltrathinkMetaLearningConfig,
+    config: &AdvancedMetaLearningConfig,
 ) -> NdimageResult<(Vec<Array2<T>>, MetaLearningInsights)>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
@@ -539,7 +539,7 @@ pub struct TransferResult {
 #[allow(dead_code)]
 fn apply_few_shot_learning<T>(
     task: &TaskData<T>,
-    _config: &UltrathinkMetaLearningConfig,
+    _config: &AdvancedMetaLearningConfig,
 ) -> NdimageResult<FewShotResult>
 where
     T: Float + FromPrimitive + Copy,
@@ -559,7 +559,7 @@ where
 #[allow(dead_code)]
 fn apply_transfer_learning<T>(
     task: &TaskData<T>,
-    _config: &UltrathinkMetaLearningConfig,
+    _config: &AdvancedMetaLearningConfig,
 ) -> NdimageResult<TransferResult>
 where
     T: Float + FromPrimitive + Copy,
@@ -579,7 +579,7 @@ where
 #[allow(dead_code)]
 fn extract_meta_learning_insights(
     insights: &mut MetaLearningInsights,
-    _config: &UltrathinkMetaLearningConfig,
+    _config: &AdvancedMetaLearningConfig,
 ) -> NdimageResult<()> {
     // Extract insights (simplified)
     insights
@@ -604,7 +604,7 @@ mod tests {
 
     #[test]
     fn test_meta_learning_config() {
-        let config = UltrathinkMetaLearningConfig::default();
+        let config = AdvancedMetaLearningConfig::default();
 
         assert_eq!(config.few_shot.n_shots, 5);
         assert_eq!(config.few_shot.n_ways, 3);
@@ -631,7 +631,7 @@ mod tests {
             },
         };
 
-        let config = UltrathinkMetaLearningConfig::default();
+        let config = AdvancedMetaLearningConfig::default();
         let result = apply_few_shot_learning(&task_data, &config);
 
         assert!(result.is_ok());
@@ -660,7 +660,7 @@ mod tests {
             },
         };
 
-        let config = UltrathinkMetaLearningConfig::default();
+        let config = AdvancedMetaLearningConfig::default();
         let result = apply_transfer_learning(&task_data, &config);
 
         assert!(result.is_ok());
@@ -711,7 +711,7 @@ mod tests {
             },
         ];
 
-        let config = UltrathinkMetaLearningConfig::default();
+        let config = AdvancedMetaLearningConfig::default();
         let result = enhanced_meta_learning_processing(&task_data, &config);
 
         assert!(result.is_ok());

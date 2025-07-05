@@ -254,7 +254,7 @@ where
         // Convert to f64 for SVD computation
         let matrix_f64 = matrix.mapv(|x| x.to_f64().unwrap_or(0.0));
 
-        match svd(&matrix_f64.view(), None) {
+        match svd(&matrix_f64.view(), false, None) {
             Ok((_, singular_values, _)) => {
                 if singular_values.is_empty() {
                     return Err(InterpolateError::ComputationError(

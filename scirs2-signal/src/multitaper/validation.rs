@@ -2043,7 +2043,7 @@ fn validate_expected_peaks(
 pub fn run_comprehensive_enhanced_validation(
     test_signals: &TestSignalConfig,
     tolerance: f64,
-) -> SignalResult<UltraEnhancedMultitaperValidationResult> {
+) -> SignalResult<AdvancedEnhancedMultitaperValidationResult> {
     println!("Running comprehensive enhanced multitaper validation...");
 
     // Run base validation
@@ -2064,7 +2064,7 @@ pub fn run_comprehensive_enhanced_validation(
         + (consistency_score * 0.15)
         + (simd_score * 0.1);
 
-    Ok(UltraEnhancedMultitaperValidationResult {
+    Ok(AdvancedEnhancedMultitaperValidationResult {
         base_validation,
         precision_score,
         consistency_score,
@@ -2120,9 +2120,9 @@ fn generate_recommendations(
     recommendations
 }
 
-/// Ultra enhanced validation result structure with additional metrics
+/// Advanced enhanced validation result structure with additional metrics
 #[derive(Debug, Clone)]
-pub struct UltraEnhancedMultitaperValidationResult {
+pub struct AdvancedEnhancedMultitaperValidationResult {
     /// Base validation results
     pub base_validation: MultitaperValidationResult,
     /// Numerical precision test score (0-100)

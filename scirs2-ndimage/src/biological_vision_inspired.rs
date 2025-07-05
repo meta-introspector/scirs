@@ -2,13 +2,13 @@
 //!
 //! This module implements cutting-edge algorithms inspired by biological vision systems,
 //! including the mammalian visual cortex, insect compound eyes, bird navigation systems,
-//! and deep-sea creature adaptations. These algorithms provide ultra-efficient, robust,
+//! and deep-sea creature adaptations. These algorithms provide advanced-efficient, robust,
 //! and adaptive image processing capabilities.
 //!
 //! # Revolutionary Features
 //!
 //! - **Hierarchical Feature Processing**: Multi-scale cortical-like processing
-//! - **Compound Eye Vision**: Ultra-wide field motion detection
+//! - **Compound Eye Vision**: Advanced-wide field motion detection
 //! - **Retinal Processing**: Biological-accurate retinal transformations
 //! - **Attention and Saccades**: Bio-inspired attention mechanisms
 //! - **Predictive Coding**: Brain-like prediction and error processing
@@ -293,7 +293,7 @@ where
 
 /// Compound Eye Motion Detection
 ///
-/// Implements insect-inspired compound eye vision for ultra-wide field
+/// Implements insect-inspired compound eye vision for advanced-wide field
 /// motion detection and looming object detection.
 #[allow(dead_code)]
 pub fn compound_eye_motion_detection<T>(

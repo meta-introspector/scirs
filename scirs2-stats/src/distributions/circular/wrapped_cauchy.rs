@@ -7,7 +7,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::traits::{CircularDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::Float;
-use rand::thread_rng;
+use rand::rng;
 use rand_distr::uniform::SampleUniform;
 use std::f64::consts::PI;
 use std::fmt::Debug;
@@ -164,7 +164,7 @@ impl<F: Float + SampleUniform + Debug + 'static + std::fmt::Display> CircularDis
         
         // Method 1: Inverse transform sampling
         // Generate uniform random number in [0, 1)
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let u: f64 = rng.random();
         
         // Convert to angle using inverse CDF

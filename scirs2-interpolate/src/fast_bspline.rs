@@ -628,19 +628,19 @@ where
     /// Array of spline values at the given points
     #[cfg(feature = "parallel")]
     pub fn evaluate_batch_parallel(&self, x_vals: &ArrayView1<T>) -> InterpolateResult<Array1<T>> {
-        use scirs2_core::parallel_ops::*;
+        // Note: Using sequential evaluation instead of parallel due to thread safety
 
         let chunk_size = self.chunk_size;
         let chunks: Vec<_> = x_vals.as_slice().unwrap().chunks(chunk_size).collect();
 
         let results: Result<Vec<_>, _> = chunks
-            .into_par_iter()
+            .into_iter()
             .map(|chunk| {
                 let mut chunk_results = Vec::with_capacity(chunk.len());
                 for &x in chunk {
                     chunk_results.push(self.evaluate_fast(x)?);
                 }
-                Ok(chunk_results)
+                Ok::<Vec<T>, InterpolateError>(chunk_results)
             })
             .collect();
 

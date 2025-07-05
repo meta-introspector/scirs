@@ -187,7 +187,6 @@ where
     Ok(OptimizeResult {
         x: x_best,
         fun: final_value,
-        iterations: iter,
         nit: iter,
         func_evals: nfev,
         nfev,

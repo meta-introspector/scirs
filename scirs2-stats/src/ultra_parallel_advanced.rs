@@ -1,4 +1,4 @@
-//! Ultra-advanced parallel processing for massive statistical computations
+//! Advanced-advanced parallel processing for massive statistical computations
 //!
 //! This module provides cutting-edge parallel processing capabilities optimized
 //! for extremely large datasets (TB+ scale) with:
@@ -23,9 +23,9 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant};
 
-/// Ultra-advanced parallel configuration for massive scale operations
+/// Advanced-advanced parallel configuration for massive scale operations
 #[derive(Debug, Clone)]
-pub struct UltraParallelConfig {
+pub struct AdvancedParallelConfig {
     /// Hardware configuration
     pub hardware: HardwareConfig,
     /// Parallel strategy selection
@@ -165,7 +165,7 @@ pub struct GpuConfig {
     pub stream_count: usize,
 }
 
-impl Default for UltraParallelConfig {
+impl Default for AdvancedParallelConfig {
     fn default() -> Self {
         let cpu_cores = num_threads();
         let system_ram = Self::detect_system_ram();
@@ -218,7 +218,7 @@ impl Default for UltraParallelConfig {
     }
 }
 
-impl UltraParallelConfig {
+impl AdvancedParallelConfig {
     /// Detect system RAM size
     fn detect_system_ram() -> usize {
         // Enhanced system RAM detection using multiple methods
@@ -497,9 +497,9 @@ impl UltraParallelConfig {
     }
 }
 
-/// Ultra-advanced parallel processor for massive datasets
-pub struct UltraParallelProcessor<F> {
-    config: UltraParallelConfig,
+/// Advanced-advanced parallel processor for massive datasets
+pub struct AdvancedParallelProcessor<F> {
+    config: AdvancedParallelConfig,
     thread_pool: Option<ThreadPool>,
     performance_monitor: Arc<PerformanceMonitor>,
     memory_manager: Arc<MemoryManager>,
@@ -614,18 +614,28 @@ pub struct GpuStream {
     pending_operations: AtomicUsize,
 }
 
-impl<F> UltraParallelProcessor<F>
+impl<F> AdvancedParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + 'static
+        + std::fmt::Display
+        + ndarray::ScalarOperand,
 {
-    /// Create new ultra-parallel processor
+    /// Create new advanced-parallel processor
     pub fn new() -> Self {
-        Self::with_config(UltraParallelConfig::default())
+        Self::with_config(AdvancedParallelConfig::default())
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: UltraParallelConfig) -> Self {
+    pub fn with_config(config: AdvancedParallelConfig) -> Self {
         let performance_monitor = Arc::new(PerformanceMonitor::new());
         let memory_manager = Arc::new(MemoryManager::new(&config.memory));
 
@@ -736,9 +746,9 @@ where
         T: Fn(&ArrayView2<F>) -> StatsResult<R> + Send + Sync + Clone + 'static,
         R: Send + Sync + 'static,
     {
-        // Use SIMD-optimized operations from ultra_simd_comprehensive
+        // Use SIMD-optimized operations from advanced_simd_comprehensive
         let _simd_processor =
-            crate::ultra_simd_comprehensive::UltraComprehensiveSimdProcessor::<F>::new();
+            crate::ultra_simd_comprehensive::AdvancedComprehensiveSimdProcessor::<F>::new();
 
         // For now, delegate to standard processing
         // In practice, would use SIMD-optimized variants
@@ -804,12 +814,12 @@ where
     }
 
     /// Get configuration
-    pub fn get_config(&self) -> &UltraParallelConfig {
+    pub fn get_config(&self) -> &AdvancedParallelConfig {
         &self.config
     }
 
     /// Update configuration
-    pub fn update_config(&mut self, config: UltraParallelConfig) {
+    pub fn update_config(&mut self, config: AdvancedParallelConfig) {
         self.config = config;
     }
 }
@@ -859,10 +869,20 @@ impl Default for PerformanceMetrics {
     }
 }
 
-impl<F> Default for UltraParallelProcessor<F>
+impl<F> Default for AdvancedParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + 'static
+        + std::fmt::Display
+        + ndarray::ScalarOperand,
 {
     fn default() -> Self {
         Self::new()
@@ -870,28 +890,48 @@ where
 }
 
 /// Convenient type aliases
-pub type F64UltraParallelProcessor = UltraParallelProcessor<f64>;
-pub type F32UltraParallelProcessor = UltraParallelProcessor<f32>;
+pub type F64AdvancedParallelProcessor = AdvancedParallelProcessor<f64>;
+pub type F32AdvancedParallelProcessor = AdvancedParallelProcessor<f32>;
 
 /// Factory functions
 #[allow(dead_code)]
-pub fn create_ultra_parallel_processor<F>() -> UltraParallelProcessor<F>
+pub fn create_advanced_parallel_processor<F>() -> AdvancedParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + 'static
+        + std::fmt::Display
+        + ndarray::ScalarOperand,
 {
-    UltraParallelProcessor::new()
+    AdvancedParallelProcessor::new()
 }
 
 #[allow(dead_code)]
 pub fn create_optimized_parallel_processor<F>(
-    config: UltraParallelConfig,
-) -> UltraParallelProcessor<F>
+    config: AdvancedParallelConfig,
+) -> AdvancedParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync + 'static
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + 'static
+        + std::fmt::Display
+        + ndarray::ScalarOperand,
 {
-    UltraParallelProcessor::with_config(config)
+    AdvancedParallelProcessor::with_config(config)
 }
 
 // Unsafe implementations for raw memory operations
@@ -904,22 +944,22 @@ mod tests {
     use ndarray::Array2;
 
     #[test]
-    fn test_ultra_parallel_config_default() {
-        let config = UltraParallelConfig::default();
+    fn test_advanced_parallel_config_default() {
+        let config = AdvancedParallelConfig::default();
         assert!(config.hardware.cpu_cores > 0);
         assert!(config.memory.system_ram > 0);
     }
 
     #[test]
     fn test_memory_bandwidth_detection() {
-        let bandwidth = UltraParallelConfig::detect_memory_bandwidth();
+        let bandwidth = AdvancedParallelConfig::detect_memory_bandwidth();
         assert!(bandwidth > 0.0);
         assert!(bandwidth < 1000.0); // Reasonable upper bound
     }
 
     #[test]
     fn test_cache_size_detection() {
-        let cache_sizes = UltraParallelConfig::detect_cache_sizes();
+        let cache_sizes = AdvancedParallelConfig::detect_cache_sizes();
         assert!(cache_sizes.l1_data > 0);
         assert!(cache_sizes.l2_unified > cache_sizes.l1_data);
         assert!(cache_sizes.l3_shared > cache_sizes.l2_unified);
@@ -927,20 +967,20 @@ mod tests {
 
     #[test]
     fn test_numa_detection() {
-        let numa_nodes = UltraParallelConfig::detect_numa_nodes();
+        let numa_nodes = AdvancedParallelConfig::detect_numa_nodes();
         assert!(numa_nodes > 0);
         assert!(numa_nodes <= 16); // Reasonable upper bound
     }
 
     #[test]
-    fn test_ultra_parallel_processor_creation() {
-        let processor = UltraParallelProcessor::<f64>::new();
+    fn test_advanced_parallel_processor_creation() {
+        let processor = AdvancedParallelProcessor::<f64>::new();
         assert!(processor.config.hardware.cpu_cores > 0);
     }
 
     #[test]
     fn test_strategy_selection() {
-        let processor = UltraParallelProcessor::<f64>::new();
+        let processor = AdvancedParallelProcessor::<f64>::new();
         let small_data = Array2::<f64>::zeros((10, 10));
         let strategy = processor
             .select_optimal_strategy(&small_data.view())
@@ -987,21 +1027,14 @@ impl MemoryManager {
 }
 
 impl ThreadPool {
-    fn new(config: &UltraParallelConfig) -> Self {
+    fn new(config: &AdvancedParallelConfig) -> Self {
         let num_workers = config.hardware.cpu_cores;
         let work_queue = Arc::new(Mutex::new(VecDeque::new()));
         let shutdown = Arc::new(AtomicBool::new(false));
         let active_workers = Arc::new(AtomicUsize::new(0));
 
         let workers = (0..num_workers)
-            .map(|id| {
-                Worker::new(
-                    id,
-                    work_queue.clone(),
-                    shutdown.clone(),
-                    active_workers.clone(),
-                )
-            })
+            .map(|id| Worker::new(id, work_queue.clone(), shutdown.clone()))
             .collect();
 
         Self {

@@ -235,8 +235,7 @@ pub fn kde_parallel<F, D>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
-    D: Data<Elem = F> + Sync
-        + std::fmt::Display,
+    D: Data<Elem = F> + Sync + std::fmt::Display,
 {
     use std::f64::consts::PI;
 
@@ -435,8 +434,7 @@ pub fn pairwise_distances_parallel<F, D>(
 ) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
-    D: Data<Elem = F> + Sync
-        + std::fmt::Display,
+    D: Data<Elem = F> + Sync + std::fmt::Display,
 {
     let n = x.nrows();
     let d = x.ncols();
@@ -622,8 +620,7 @@ impl<F: Float + NumCast + Send + Sync + std::fmt::Display> ParallelCrossValidati
 pub fn corrcoef_parallel<F, D>(data: &ArrayBase<D, Ix2>, rowvar: bool) -> StatsResult<Array2<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
-    D: Data<Elem = F> + Sync
-        + std::fmt::Display,
+    D: Data<Elem = F> + Sync + std::fmt::Display,
 {
     use crate::correlation_simd::pearson_r_simd;
 
@@ -725,8 +722,7 @@ where
         + ndarray::ScalarOperand
         + std::iter::Sum
         + num_traits::NumAssign,
-    D: Data<Elem = F> + Sync
-        + std::fmt::Display,
+    D: Data<Elem = F> + Sync + std::fmt::Display,
 {
     use scirs2_linalg::lstsq;
 
@@ -844,8 +840,7 @@ pub fn autocorrelation_parallel<F, D>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Send + Sync + SimdUnifiedOps,
-    D: Data<Elem = F> + Sync
-        + std::fmt::Display,
+    D: Data<Elem = F> + Sync + std::fmt::Display,
 {
     let n = data.len();
     if max_lag >= n {

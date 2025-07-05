@@ -1237,7 +1237,7 @@ mod tests {
     fn test_number_needed_to_treat() {
         let clinical = ClinicalTrialMetrics::new();
         let nnt = clinical.number_needed_to_treat(0.8, 0.6).unwrap();
-        assert_eq!(nnt, 5.0);
+        assert!((nnt - 5.0).abs() < 1e-10, "Expected NNT ~5.0, got {}", nnt);
     }
 
     #[test]
@@ -1247,6 +1247,6 @@ mod tests {
         let fp2 = array![1, 0, 0, 1, 1];
 
         let similarity = drug_discovery.tanimoto_similarity(&fp1, &fp2).unwrap();
-        assert!(similarity >= 0.0 && similarity <= 1.0);
+        assert!((0.0..=1.0).contains(&similarity));
     }
 }

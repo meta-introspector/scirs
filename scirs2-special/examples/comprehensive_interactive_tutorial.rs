@@ -11,11 +11,8 @@
 //!
 //! Run with: cargo run --example comprehensive_interactive_tutorial
 
-use ndarray::{Array1, Array2, ArrayView1};
-use num_complex::Complex64;
 use scirs2_special::*;
-use std::collections::{HashMap, VecDeque};
-use std::f64::consts::PI;
+use std::collections::HashMap;
 use std::io::{self, Write};
 use std::time::{Duration, Instant, SystemTime};
 
@@ -1093,7 +1090,7 @@ impl TutorialSystem {
             if let Ok(choice) = answer.parse::<usize>() {
                 if choice > 0 && choice <= options.len() {
                     let style = &styles[choice - 1];
-                    *style_scores.get_mut(style).unwrap() += 1;
+                    *style_scores.get_mut(&style.to_string()).unwrap() += 1;
                 }
             }
             println!();
@@ -1453,7 +1450,7 @@ impl TutorialSystem {
                 println!("🎲 Gamma Function Experimentation");
                 println!("Enter values to explore Γ(x):");
 
-                let test_values = vec![0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0];
+                let test_values: Vec<f64> = vec![0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0];
                 println!("Suggested values to try: {:?}\n", test_values);
 
                 println!("x\t\tΓ(x)\t\tFactorial Connection");
@@ -2229,7 +2226,7 @@ impl TutorialSystem {
         println!("3. 🚀 Intensive (fast-paced)");
         println!("4. 😌 Casual (relaxed learning)");
 
-        let choice = self.get_user_input("Your preference (1-4): ")?;
+        let _choice = self.get_user_input("Your preference (1-4): ")?;
 
         // This would update the user's pacing preferences
         println!("✅ Pacing preference updated!");
@@ -2273,7 +2270,7 @@ impl TutorialSystem {
         println!("7. 🧬 Biology");
         println!("8. 📡 Signal Processing");
 
-        let input =
+        let _input =
             self.get_user_input("Enter your choices separated by commas (e.g., 1,3,4): ")?;
 
         // Parse and update preferences
@@ -2291,7 +2288,7 @@ impl TutorialSystem {
         println!("3. 🔍 Detailed (every step justified)");
         println!("4. 🎓 Rigorous (formal mathematical rigor)");
 
-        let choice = self.get_user_input("Your preference (1-4): ")?;
+        let _choice = self.get_user_input("Your preference (1-4): ")?;
 
         // Update explanation detail preferences
         println!("✅ Explanation detail level updated!");

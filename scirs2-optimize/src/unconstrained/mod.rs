@@ -63,7 +63,7 @@ pub use memory_efficient::{
     create_memory_efficient_optimizer, minimize_memory_efficient_lbfgs, MemoryOptions,
 };
 pub use memory_efficient_sparse::{
-    create_ultra_scale_optimizer, minimize_ultra_scale, UltraScaleOptions,
+    create_advanced_scale_optimizer, minimize_advanced_scale, AdvancedScaleOptions,
 };
 pub use nelder_mead::minimize_nelder_mead;
 pub use newton::minimize_newton_cg;
@@ -365,7 +365,6 @@ where
     Ok(OptimizeResult {
         x: result.x,
         fun: result.fun.into(),
-        iterations: result.iterations,
         nit: result.nit,
         func_evals: result.func_evals,
         nfev: result.nfev,
@@ -409,7 +408,6 @@ where
     Ok(OptimizeResult {
         x: result.x,
         fun: result.fun.into(),
-        iterations: result.iterations,
         nit: result.nit,
         func_evals: result.func_evals,
         nfev: result.nfev,

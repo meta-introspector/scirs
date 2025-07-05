@@ -1,4 +1,4 @@
-//! Ultra-Advanced Policy Gradient Optimization with Meta-Gradient Learning
+//! Advanced-Advanced Policy Gradient Optimization with Meta-Gradient Learning
 //!
 //! Implementation of cutting-edge policy gradient methods with meta-learning capabilities:
 //! - Meta-gradient learning for automatic learning rate adaptation
@@ -11,8 +11,7 @@ use super::{
     utils, Experience, ImprovementReward, OptimizationAction, OptimizationState,
     RLOptimizationConfig, RLOptimizer, RewardFunction,
 };
-// use crate::error::OptimizeError; // Unused import
-use crate::error::OptimizeResult;
+use crate::error::{OptimizeError, OptimizeResult};
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, Array3, ArrayView1};
 // use scirs2_core::error::CoreResult; // Unused import
@@ -20,7 +19,7 @@ use ndarray::{Array1, Array2, Array3, ArrayView1};
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
-/// Ultra-Advanced Neural Network with Meta-Learning Capabilities
+/// Advanced-Advanced Neural Network with Meta-Learning Capabilities
 #[derive(Debug, Clone)]
 pub struct MetaPolicyNetwork {
     /// Primary policy weights
@@ -66,9 +65,9 @@ impl MetaPolicyNetwork {
             for i in 0..fan_out {
                 for j in 0..fan_in {
                     policy_weights[[layer, i, j]] =
-                        rand::rng().random_range(-0.5..0.5) * 2.0 * xavier_std;
+                        rand::rng().gen_range(-0.5..0.5) * 2.0 * xavier_std;
                     meta_weights[[layer, i, j]] =
-                        rand::rng().random_range(-0.5..0.5) * 2.0 * xavier_std * 0.1;
+                        rand::rng().gen_range(-0.5..0.5) * 2.0 * xavier_std * 0.1;
                 }
             }
         }
@@ -188,7 +187,7 @@ impl MetaPolicyNetwork {
             embedding.clone()
         } else {
             let embedding =
-                Array1::from_shape_fn(input_size, |_| rand::rng().random_range(-0.05..0.05));
+                Array1::from_shape_fn(input_size, |_| rand::rng().gen_range(-0.05..0.05));
             self.problem_embeddings
                 .insert(problem_class.to_string(), embedding.clone());
             embedding
@@ -266,9 +265,9 @@ pub struct MetaGradients {
     pub second_order_terms: Array3<f64>,
 }
 
-/// Ultra-Advanced Policy Gradient Optimizer with Meta-Learning
+/// Advanced-Advanced Policy Gradient Optimizer with Meta-Learning
 #[derive(Debug, Clone)]
-pub struct UltraAdvancedPolicyGradientOptimizer {
+pub struct AdvancedAdvancedPolicyGradientOptimizer {
     /// Configuration
     config: RLOptimizationConfig,
     /// Meta-policy network
@@ -425,7 +424,7 @@ impl MetaExperienceBuffer {
 
         for _ in 0..batch_size.min(self.trajectories.len()) {
             // Weighted sampling based on problem class performance
-            let idx = rand::rng().random_range(0..self.trajectories.len());
+            let idx = rand::rng().gen_range(0..self.trajectories.len());
             if let Some(trajectory) = self.trajectories.get(idx) {
                 batch.push(trajectory.clone());
             }
@@ -435,8 +434,8 @@ impl MetaExperienceBuffer {
     }
 }
 
-impl UltraAdvancedPolicyGradientOptimizer {
-    /// Create new ultra-advanced policy gradient optimizer
+impl AdvancedAdvancedPolicyGradientOptimizer {
+    /// Create new advanced-advanced policy gradient optimizer
     pub fn new(config: RLOptimizationConfig, state_size: usize, action_size: usize) -> Self {
         let hidden_sizes = vec![state_size * 2, state_size * 3, state_size * 2];
         let meta_policy = MetaPolicyNetwork::new(state_size, action_size, hidden_sizes);
@@ -760,7 +759,7 @@ impl UltraAdvancedPolicyGradientOptimizer {
     }
 }
 
-impl RLOptimizer for UltraAdvancedPolicyGradientOptimizer {
+impl RLOptimizer for AdvancedAdvancedPolicyGradientOptimizer {
     fn config(&self) -> &RLOptimizationConfig {
         &self.config
     }
@@ -774,7 +773,7 @@ impl RLOptimizer for UltraAdvancedPolicyGradientOptimizer {
         self.decode_meta_action(&policy_output.view(), &meta_output.view())
     }
 
-    fn update(&mut self, _experience: &Experience) -> Result<()> {
+    fn update(&mut self, _experience: &Experience) -> Result<(), OptimizeError> {
         // Meta-learning updates are done in batch after collecting trajectories
         Ok(())
     }
@@ -1003,9 +1002,9 @@ impl RLOptimizer for UltraAdvancedPolicyGradientOptimizer {
     }
 }
 
-/// Convenience function for ultra-advanced meta-learning policy gradient optimization
+/// Convenience function for advanced-advanced meta-learning policy gradient optimization
 #[allow(dead_code)]
-pub fn ultra_advanced_policy_gradient_optimize<F>(
+pub fn advanced_advanced_policy_gradient_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     config: Option<RLOptimizationConfig>,
@@ -1020,7 +1019,7 @@ where
         ..Default::default()
     });
 
-    let mut optimizer = UltraAdvancedPolicyGradientOptimizer::new(
+    let mut optimizer = AdvancedAdvancedPolicyGradientOptimizer::new(
         config,
         initial_params.len() + 5, // Extra features for meta-context
         6,                        // Number of action types
@@ -1038,7 +1037,7 @@ pub fn policy_gradient_optimize<F>(
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
-    ultra_advanced_policy_gradient_optimize(objective, initial_params, config)
+    advanced_advanced_policy_gradient_optimize(objective, initial_params, config)
 }
 
 #[cfg(test)]
@@ -1101,9 +1100,9 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_advanced_optimizer_creation() {
+    fn test_advanced_advanced_optimizer_creation() {
         let config = RLOptimizationConfig::default();
-        let optimizer = UltraAdvancedPolicyGradientOptimizer::new(config, 4, 3);
+        let optimizer = AdvancedAdvancedPolicyGradientOptimizer::new(config, 4, 3);
 
         assert_eq!(optimizer.meta_policy.layer_sizes[0], 4);
         assert_eq!(optimizer.meta_policy.layer_sizes.last(), Some(&3));
@@ -1112,7 +1111,7 @@ mod tests {
     #[test]
     fn test_problem_classification() {
         let config = RLOptimizationConfig::default();
-        let optimizer = UltraAdvancedPolicyGradientOptimizer::new(config, 2, 3);
+        let optimizer = AdvancedAdvancedPolicyGradientOptimizer::new(config, 2, 3);
 
         let quadratic = |x: &ArrayView1<f64>| x[0].powi(2) + x[1].powi(2);
         let params = Array1::from(vec![1.0, 1.0]);
@@ -1134,10 +1133,10 @@ mod tests {
         let initial = Array1::from(vec![0.0, 0.0]);
 
         let result =
-            ultra_advanced_policy_gradient_optimize(objective, &initial.view(), Some(config))
+            advanced_advanced_policy_gradient_optimize(objective, &initial.view(), Some(config))
                 .unwrap();
 
-        assert!(result.iterations > 0);
+        assert!(result.nit > 0);
         assert!(result.fun <= objective(&initial.view()));
     }
 }

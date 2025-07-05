@@ -1,4 +1,4 @@
-//! Ultra-enhanced parametric spectral estimation with SIMD acceleration
+//! Advanced-enhanced parametric spectral estimation with SIMD acceleration
 //!
 //! This module provides high-performance implementations of parametric spectral
 //! estimation methods with scirs2-core SIMD and parallel processing optimizations.
@@ -24,9 +24,9 @@ use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
 
-/// Ultra-enhanced ARMA estimation result with comprehensive diagnostics
+/// Advanced-enhanced ARMA estimation result with comprehensive diagnostics
 #[derive(Debug, Clone)]
-pub struct UltraEnhancedARMAResult {
+pub struct AdvancedEnhancedARMAResult {
     /// AR coefficients [1, a1, a2, ..., ap]
     pub ar_coeffs: Array1<f64>,
     /// MA coefficients [1, b1, b2, ..., bq]
@@ -82,9 +82,9 @@ pub struct PerformanceStats {
     pub simd_utilization: f64,
 }
 
-/// Configuration for ultra-enhanced ARMA estimation
+/// Configuration for advanced-enhanced ARMA estimation
 #[derive(Debug, Clone)]
-pub struct UltraEnhancedConfig {
+pub struct AdvancedEnhancedConfig {
     /// Maximum iterations for iterative methods
     pub max_iterations: usize,
     /// Convergence tolerance
@@ -103,7 +103,7 @@ pub struct UltraEnhancedConfig {
     pub detailed_diagnostics: bool,
 }
 
-impl Default for UltraEnhancedConfig {
+impl Default for AdvancedEnhancedConfig {
     fn default() -> Self {
         Self {
             max_iterations: 500,
@@ -119,7 +119,7 @@ impl Default for UltraEnhancedConfig {
 }
 
 use num_complex::Complex64;
-/// Ultra-enhanced ARMA estimation with SIMD acceleration and advanced numerics
+/// Advanced-enhanced ARMA estimation with SIMD acceleration and advanced numerics
 ///
 /// This function provides state-of-the-art ARMA parameter estimation using:
 /// - SIMD-accelerated linear algebra operations
@@ -141,7 +141,7 @@ use num_complex::Complex64;
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::parametric_ultra_enhanced::{ultra_enhanced_arma, UltraEnhancedConfig};
+/// use scirs2_signal::parametric_advanced_enhanced::{advanced_enhanced_arma, AdvancedEnhancedConfig};
 /// use ndarray::Array1;
 ///
 use std::f64::consts::PI;
@@ -156,23 +156,23 @@ use std::f64::consts::PI;
 /// let signal: Array1<f64> = t.mapv(|ti| {
 ///     (2.0 * PI * 5.0 * ti).sin() +
 ///     0.5 * (2.0 * PI * 15.0 * ti).sin() +
-///     0.1 * rng.random_range(-1.0..1.0)
+///     0.1 * rng.gen_range(-1.0..1.0)
 /// });
 ///
-/// let config = UltraEnhancedConfig::default();
-/// let result = ultra_enhanced_arma(&signal, 4, 2, &config).unwrap();
+/// let config = AdvancedEnhancedConfig::default();
+/// let result = advanced_enhanced_arma(&signal, 4, 2, &config).unwrap();
 ///
 /// assert!(result.convergence_info.converged);
 /// assert!(result.diagnostics.is_stable);
 /// assert!(result.noise_variance > 0.0);
 /// ```
 #[allow(dead_code)]
-pub fn ultra_enhanced_arma<T>(
+pub fn advanced_enhanced_arma<T>(
     signal: &Array1<T>,
     ar_order: usize,
     ma_order: usize,
-    config: &UltraEnhancedConfig,
-) -> SignalResult<UltraEnhancedARMAResult>
+    config: &AdvancedEnhancedConfig,
+) -> SignalResult<AdvancedEnhancedARMAResult>
 where
     T: Float + NumCast + Send + Sync,
 {
@@ -195,7 +195,12 @@ where
         })
         .collect::<SignalResult<Array1<f64>>>()?;
 
-    check_finite(signal_f64.as_slice().unwrap(), "signal")?;
+    // Signal validation - check for finite values
+    if signal_f64.iter().any(|&x| !x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Signal contains non-finite values".to_string(),
+        ));
+    }
 
     let n = signal_f64.len();
 
@@ -210,7 +215,7 @@ where
 
     // Detect SIMD capabilities
     let caps = PlatformCapabilities::detect();
-    let use_advanced_simd = config.use_simd && (caps.has_avx2 || caps.has_avx512);
+    let use_advanced_simd = config.use_simd && (caps.avx2_available || caps.avx512_available);
 
     // Initialize performance tracking
     let mut simd_time = 0.0;
@@ -298,7 +303,7 @@ where
         simd_utilization,
     };
 
-    Ok(UltraEnhancedARMAResult {
+    Ok(AdvancedEnhancedARMAResult {
         ar_coeffs: final_ar_coeffs,
         ma_coeffs,
         noise_variance,
@@ -319,7 +324,12 @@ pub fn adaptive_ar_spectral_estimation(
     initial_order: usize,
     config: &AdaptiveARConfig,
 ) -> SignalResult<AdaptiveARResult> {
-    check_finite(signal, "signal")?;
+    // Signal validation - check for finite values
+    if signal.iter().any(|&x| !x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Signal contains non-finite values".to_string(),
+        ));
+    }
 
     let n = signal.len();
     if n < 100 {
@@ -395,7 +405,12 @@ pub fn robust_parametric_spectral_estimation(
     ma_order: usize,
     config: &RobustParametricConfig,
 ) -> SignalResult<RobustParametricResult> {
-    check_finite(signal, "signal")?;
+    // Signal validation - check for finite values
+    if signal.iter().any(|&x| !x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Signal contains non-finite values".to_string(),
+        ));
+    }
     check_positive(ar_order as f64, "ar_order")?;
 
     let n = signal.len();
@@ -406,9 +421,9 @@ pub fn robust_parametric_spectral_estimation(
     }
 
     // Step 1: Initial estimation using standard methods
-    let initial_config = UltraEnhancedConfig::default();
+    let initial_config = AdvancedEnhancedConfig::default();
     let initial_result =
-        ultra_enhanced_arma_estimation(signal, ar_order, ma_order, &initial_config)?;
+        advanced_enhanced_arma_estimation(signal, ar_order, ma_order, &initial_config)?;
 
     // Step 2: Robust estimation using iterative reweighting
     let mut current_ar = initial_result.ar_coeffs.clone();
@@ -475,7 +490,12 @@ pub fn high_resolution_spectral_estimation(
     signal: &[f64],
     config: &HighResolutionConfig,
 ) -> SignalResult<HighResolutionResult> {
-    check_finite(signal, "signal")?;
+    // Signal validation - check for finite values
+    if signal.iter().any(|&x| !x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Signal contains non-finite values".to_string(),
+        ));
+    }
 
     let n = signal.len();
     if n < config.subspace_dimension * 2 {
@@ -548,7 +568,12 @@ pub fn multitaper_parametric_estimation(
     signal: &[f64],
     config: &MultitaperParametricConfig,
 ) -> SignalResult<MultitaperParametricResult> {
-    check_finite(signal, "signal")?;
+    // Signal validation - check for finite values
+    if signal.iter().any(|&x| !x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Signal contains non-finite values".to_string(),
+        ));
+    }
 
     let n = signal.len();
     let nw = config.time_bandwidth_product;
@@ -570,9 +595,9 @@ pub fn multitaper_parametric_estimation(
             .collect();
 
         // AR estimation for this taper
-        let ar_config = UltraEnhancedConfig::default();
+        let ar_config = AdvancedEnhancedConfig::default();
         let ar_result = if config.ma_order > 0 {
-            ultra_enhanced_arma_estimation(
+            advanced_enhanced_arma_estimation(
                 &tapered_signal,
                 config.ar_order,
                 config.ma_order,
@@ -580,8 +605,13 @@ pub fn multitaper_parametric_estimation(
             )?
         } else {
             // AR-only estimation
-            let enhanced_config = UltraEnhancedConfig::default();
-            ultra_enhanced_arma_estimation(&tapered_signal, config.ar_order, 0, &enhanced_config)?
+            let enhanced_config = AdvancedEnhancedConfig::default();
+            advanced_enhanced_arma_estimation(
+                &tapered_signal,
+                config.ar_order,
+                0,
+                &enhanced_config,
+            )?
         };
 
         // Compute PSD for this taper
@@ -821,7 +851,7 @@ pub struct SpectralEstimate {
 pub struct MultitaperParametricResult {
     pub combined_psd: Vec<f64>,
     pub frequencies: Vec<f64>,
-    pub individual_estimates: Vec<UltraEnhancedARMAResult>,
+    pub individual_estimates: Vec<AdvancedEnhancedARMAResult>,
     pub individual_spectra: Vec<Vec<f64>>,
     pub confidence_intervals: Option<(Vec<f64>, Vec<f64>)>,
     pub effective_degrees_of_freedom: f64,
@@ -833,7 +863,7 @@ pub struct MultitaperParametricResult {
 fn enhanced_burg_method_simd(
     signal: &Array1<f64>,
     order: usize,
-    config: &UltraEnhancedConfig,
+    config: &AdvancedEnhancedConfig,
 ) -> SignalResult<(Array1<f64>, Array1<f64>, f64)> {
     let n = signal.len();
     let mut ar_coeffs = Array1::zeros(order + 1);
@@ -980,7 +1010,7 @@ fn update_prediction_errors_simd(
 fn enhanced_burg_method_standard(
     signal: &Array1<f64>,
     order: usize,
-    config: &UltraEnhancedConfig,
+    config: &AdvancedEnhancedConfig,
 ) -> SignalResult<(Array1<f64>, Array1<f64>, f64)> {
     // Call the original Burg method from the parametric module
     crate::parametric::burg_method(signal, order)
@@ -993,7 +1023,7 @@ fn enhanced_arma_estimation_parallel(
     initial_ar_coeffs: &Array1<f64>,
     ar_order: usize,
     ma_order: usize,
-    config: &UltraEnhancedConfig,
+    config: &AdvancedEnhancedConfig,
 ) -> SignalResult<(Array1<f64>, Array1<f64>, f64, Array1<f64>, ConvergenceInfo)> {
     // For now, delegate to sequential version
     // In a full implementation, this would use parallel optimization algorithms
@@ -1007,7 +1037,7 @@ fn enhanced_arma_estimation_sequential(
     initial_ar_coeffs: &Array1<f64>,
     ar_order: usize,
     ma_order: usize,
-    config: &UltraEnhancedConfig,
+    config: &AdvancedEnhancedConfig,
 ) -> SignalResult<(Array1<f64>, Array1<f64>, f64, Array1<f64>, ConvergenceInfo)> {
     let n = signal.len();
 
@@ -1081,7 +1111,7 @@ fn estimate_ma_given_ar(
     signal: &Array1<f64>,
     ar_coeffs: &Array1<f64>,
     ma_order: usize,
-    config: &UltraEnhancedConfig,
+    config: &AdvancedEnhancedConfig,
 ) -> SignalResult<Array1<f64>> {
     // Compute AR residuals
     let residuals = compute_ar_residuals(signal, ar_coeffs)?;
@@ -1096,7 +1126,7 @@ fn estimate_ar_given_ma(
     signal: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
     ar_order: usize,
-    config: &UltraEnhancedConfig,
+    config: &AdvancedEnhancedConfig,
 ) -> SignalResult<Array1<f64>> {
     // For simplicity, use least squares method
     // In practice, this would involve more sophisticated estimation
@@ -1108,7 +1138,7 @@ fn estimate_ar_given_ma(
 fn estimate_ma_from_residuals(
     residuals: &Array1<f64>,
     ma_order: usize,
-    config: &UltraEnhancedConfig,
+    config: &AdvancedEnhancedConfig,
 ) -> SignalResult<Array1<f64>> {
     // Use method of moments approach based on residual autocorrelations
     let mut ma_coeffs = Array1::zeros(ma_order + 1);
@@ -1382,7 +1412,7 @@ fn estimate_memory_usage(n: usize, ar_order: usize, ma_order: usize) -> f64 {
     (floats_used * 8) as f64 / (1024.0 * 1024.0) // Convert to MB
 }
 
-/// Ultra-enhanced power spectral density estimation with SIMD acceleration
+/// Advanced-enhanced power spectral density estimation with SIMD acceleration
 ///
 /// Computes the power spectral density of an ARMA model using highly optimized
 /// SIMD operations and advanced numerical techniques.
@@ -1400,13 +1430,13 @@ fn estimate_memory_usage(n: usize, ar_order: usize, ma_order: usize) -> f64 {
 ///
 /// * Power spectral density values
 #[allow(dead_code)]
-pub fn ultra_enhanced_arma_spectrum<T>(
+pub fn advanced_enhanced_arma_spectrum<T>(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
     noise_variance: f64,
     frequencies: &Array1<T>,
     fs: f64,
-    config: &UltraEnhancedConfig,
+    config: &AdvancedEnhancedConfig,
 ) -> SignalResult<Array1<f64>>
 where
     T: Float + NumCast + Send + Sync,
@@ -1437,22 +1467,26 @@ where
         })
         .collect::<SignalResult<Array1<f64>>>()?;
 
-    check_finite(freqs_f64.as_slice().unwrap(), "frequencies")?;
+    // Check for finite values in frequencies
+    for &freq in freqs_f64.iter() {
+        check_finite(freq, "frequency")?;
+    }
 
     let n_freqs = freqs_f64.len();
     let caps = PlatformCapabilities::detect();
-    let use_simd = config.use_simd && n_freqs >= 16 && (caps.has_avx2 || caps.has_avx512);
+    let use_simd =
+        config.use_simd && n_freqs >= 16 && (caps.avx2_available || caps.avx512_available);
 
     if use_simd {
-        ultra_enhanced_arma_spectrum_simd(ar_coeffs, ma_coeffs, noise_variance, &freqs_f64, fs)
+        advanced_enhanced_arma_spectrum_simd(ar_coeffs, ma_coeffs, noise_variance, &freqs_f64, fs)
     } else {
-        ultra_enhanced_arma_spectrum_scalar(ar_coeffs, ma_coeffs, noise_variance, &freqs_f64, fs)
+        advanced_enhanced_arma_spectrum_scalar(ar_coeffs, ma_coeffs, noise_variance, &freqs_f64, fs)
     }
 }
 
 /// SIMD-accelerated ARMA spectrum computation
 #[allow(dead_code)]
-fn ultra_enhanced_arma_spectrum_simd(
+fn advanced_enhanced_arma_spectrum_simd(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
     noise_variance: f64,
@@ -1540,7 +1574,7 @@ fn compute_polynomial_chunk_simd(
 
 /// Scalar fallback for ARMA spectrum computation
 #[allow(dead_code)]
-fn ultra_enhanced_arma_spectrum_scalar(
+fn advanced_enhanced_arma_spectrum_scalar(
     ar_coeffs: &Array1<f64>,
     ma_coeffs: &Array1<f64>,
     noise_variance: f64,
@@ -1553,7 +1587,7 @@ fn ultra_enhanced_arma_spectrum_scalar(
 
 /// Comprehensive parametric spectral estimation validation
 ///
-/// This function provides ultra-comprehensive validation including:
+/// This function provides advanced-comprehensive validation including:
 /// - SIMD-accelerated ARMA parameter estimation
 /// - Cross-validation for optimal order selection  
 /// - Model comparison with multiple criteria (AIC, BIC, MDL)
@@ -1567,7 +1601,12 @@ pub fn comprehensive_parametric_validation(
     max_ma_order: usize,
     validation_config: &ParametricValidationConfig,
 ) -> SignalResult<ComprehensiveParametricValidationResult> {
-    check_finite(signal, "signal")?;
+    // Signal validation - check for finite values
+    if signal.iter().any(|&x| !x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Signal contains non-finite values".to_string(),
+        ));
+    }
     check_positive(max_ar_order, "max_ar_order")?;
     check_positive(max_ma_order, "max_ma_order")?;
 
@@ -1586,7 +1625,7 @@ pub fn comprehensive_parametric_validation(
     validation_result.optimal_ma_order = optimal_orders.1;
 
     // 2. Enhanced ARMA Estimation with SIMD Acceleration
-    let ultra_config = UltraEnhancedConfig {
+    let advanced_config = AdvancedEnhancedConfig {
         max_iterations: 100,
         tolerance: 1e-8,
         use_simd: validation_config.use_simd,
@@ -1598,7 +1637,7 @@ pub fn comprehensive_parametric_validation(
     };
 
     let arma_result =
-        ultra_enhanced_arma(signal, optimal_orders.0, optimal_orders.1, &ultra_config)?;
+        advanced_enhanced_arma(signal, optimal_orders.0, optimal_orders.1, &advanced_config)?;
 
     validation_result.arma_estimation = Some(arma_result.clone());
 
@@ -1675,7 +1714,7 @@ impl Default for ParametricValidationConfig {
 pub struct ComprehensiveParametricValidationResult {
     pub optimal_ar_order: usize,
     pub optimal_ma_order: usize,
-    pub arma_estimation: Option<UltraEnhancedARMAResult>,
+    pub arma_estimation: Option<AdvancedEnhancedARMAResult>,
     pub stability_analysis: Option<StabilityAnalysisResult>,
     pub performance_analysis: Option<ParametricPerformanceResult>,
     pub simd_analysis: Option<SimdUtilizationResult>,
@@ -1728,11 +1767,11 @@ fn cross_validation_order_selection(
                 let train_signal = Array1::from_vec(train_data);
 
                 // Estimate ARMA model on training data
-                match ultra_enhanced_arma(
+                match advanced_enhanced_arma(
                     &train_signal,
                     ar_order,
                     ma_order,
-                    &UltraEnhancedConfig::default(),
+                    &AdvancedEnhancedConfig::default(),
                 ) {
                     Ok(model) => {
                         // Simple validation error estimate
@@ -1768,7 +1807,12 @@ fn information_criterion_order_selection(
 
     for ar_order in 1..=max_ar_order.min(5) {
         for ma_order in 0..=max_ma_order.min(3) {
-            match ultra_enhanced_arma(signal, ar_order, ma_order, &UltraEnhancedConfig::default()) {
+            match advanced_enhanced_arma(
+                signal,
+                ar_order,
+                ma_order,
+                &AdvancedEnhancedConfig::default(),
+            ) {
                 Ok(result) => {
                     if result.diagnostics.aic < best_aic {
                         best_aic = result.diagnostics.aic;
@@ -1843,7 +1887,12 @@ fn benchmark_parametric_performance(
 
     for _ in 0..n_iterations {
         let start = std::time::Instant::now();
-        let _ = ultra_enhanced_arma(signal, ar_order, ma_order, &UltraEnhancedConfig::default())?;
+        let _ = advanced_enhanced_arma(
+            signal,
+            ar_order,
+            ma_order,
+            &AdvancedEnhancedConfig::default(),
+        )?;
         times.push(start.elapsed().as_secs_f64() * 1000.0);
     }
 
@@ -1896,14 +1945,14 @@ mod tests {
     use std::f64::consts::PI;
 
     #[test]
-    fn test_ultra_enhanced_arma_basic() {
+    fn test_advanced_enhanced_arma_basic() {
         // Generate test signal
         let n = 512;
         let signal: Array1<f64> =
             Array1::linspace(0.0, 1.0, n).mapv(|t| (2.0 * PI * 10.0 * t).sin() + 0.1 * t);
 
-        let config = UltraEnhancedConfig::default();
-        let result = ultra_enhanced_arma(&signal, 2, 1, &config).unwrap();
+        let config = AdvancedEnhancedConfig::default();
+        let result = advanced_enhanced_arma(&signal, 2, 1, &config).unwrap();
 
         assert!(result.convergence_info.converged);
         assert!(result.noise_variance > 0.0);
@@ -1914,7 +1963,7 @@ mod tests {
     #[test]
     fn test_enhanced_burg_method_simd() {
         let signal = Array1::from_vec(vec![1.0, 2.0, 3.0, 2.0, 1.0, 0.0, -1.0, -2.0, -1.0, 0.0]);
-        let config = UltraEnhancedConfig::default();
+        let config = AdvancedEnhancedConfig::default();
 
         let result = enhanced_burg_method_simd(&signal, 3, &config);
         assert!(result.is_ok());
@@ -1926,15 +1975,15 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_enhanced_arma_spectrum() {
+    fn test_advanced_enhanced_arma_spectrum() {
         let ar_coeffs = Array1::from_vec(vec![1.0, -0.5, 0.2]);
         let ma_coeffs = Array1::from_vec(vec![1.0, 0.3]);
         let noise_variance = 1.0;
         let frequencies = Array1::linspace(0.0, 50.0, 100);
         let fs = 100.0;
-        let config = UltraEnhancedConfig::default();
+        let config = AdvancedEnhancedConfig::default();
 
-        let psd = ultra_enhanced_arma_spectrum(
+        let psd = advanced_enhanced_arma_spectrum(
             &ar_coeffs,
             &ma_coeffs,
             noise_variance,

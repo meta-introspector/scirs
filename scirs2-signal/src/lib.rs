@@ -300,11 +300,11 @@ pub use lombscargle_optimized::{
     StatisticalValidationResult,
 };
 
-// Ultra-enhanced Lomb-Scargle validation
+// Advanced-enhanced Lomb-Scargle validation
 pub use lombscargle_advanced_enhanced_validation::{
-    generate_ultra_enhanced_validation_report, run_ultra_enhanced_lombscargle_validation,
-    EdgeCaseValidationMetrics, LombScargleAccuracyValidation, StatisticalRobustnessMetrics,
-    UltraEnhancedLombScargleValidationResult,
+    generate_advanced_enhanced_validation_report, run_advanced_enhanced_lombscargle_validation,
+    AdvancedEnhancedLombScargleValidationResult, EdgeCaseValidationMetrics,
+    LombScargleAccuracyValidation, StatisticalRobustnessMetrics,
 };
 
 // Advanced Edge Case Validation for Lomb-Scargle
@@ -345,11 +345,11 @@ pub use parametric_advanced::{
     HighResolutionMethod, HighResolutionResult, RegularizationMethod, VarModel,
 };
 pub use parametric_advanced_enhanced::{
-    adaptive_ar_spectral_estimation, comprehensive_parametric_validation,
-    high_resolution_spectral_estimation as ultra_high_resolution_spectral_estimation,
-    multitaper_parametric_estimation, robust_parametric_spectral_estimation, ultra_enhanced_arma,
-    ultra_enhanced_arma_spectrum, ConvergenceInfo, ModelDiagnostics, PerformanceStats,
-    UltraEnhancedARMAResult,
+    adaptive_ar_spectral_estimation, advanced_enhanced_arma, advanced_enhanced_arma_spectrum,
+    comprehensive_parametric_validation,
+    high_resolution_spectral_estimation as advanced_high_resolution_spectral_estimation,
+    multitaper_parametric_estimation, robust_parametric_spectral_estimation,
+    AdvancedEnhancedARMAResult, ConvergenceInfo, ModelDiagnostics, PerformanceStats,
 };
 pub use parametric_enhanced::{
     enhanced_parametric_estimation, DiagnosticStats, EnhancedParametricResult,
@@ -505,7 +505,7 @@ pub use wpt_enhanced_modern_validation::{
     OptimizationValidationResult, PrecisionValidationResult, ResourceValidationResult,
     StreamingValidationResult,
 };
-pub use wpt_super_validation::{run_ultra_wpt_validation, UltraWptValidationResult};
+pub use wpt_super_validation::{run_advanced_wpt_validation, AdvancedWptValidationResult};
 
 // Note: wpt_enhanced_modern_validation functions are already imported above
 
@@ -520,17 +520,18 @@ pub use lti::{
 
 // Enhanced LTI system identification functions
 pub use lti_enhanced_system_identification::{
-    ultra_enhanced_system_identification, AdaptationResults, ParameterWithUncertainty,
+    advanced_enhanced_system_identification, AdaptationResults, AdvancedEnhancedSysIdConfig,
+    AdvancedEnhancedSysIdResult, AdvancedValidationMetrics, ParameterWithUncertainty,
     PerformanceMetrics as LtiPerformanceMetrics, StructureSelectionResults, SystemModel,
-    UltraEnhancedSysIdConfig, UltraEnhancedSysIdResult, UltraValidationMetrics,
 };
 
-// Ultra-enhanced controllability and observability analysis
+// Advanced-enhanced controllability and observability analysis
 pub use lti_advanced_controllability_observability::{
-    ultra_controllability_observability_analysis, AnalysisPerformanceMetrics, GeometricAnalysis,
+    advanced_controllability_observability_analysis, AdvancedAnalysisConfig,
+    AdvancedControllabilityAnalysis, AdvancedControllabilityObservabilityResult,
+    AdvancedObservabilityAnalysis, AnalysisPerformanceMetrics, GeometricAnalysis,
     MultiScaleAnalysis, OptimizationLevel, QuantumInspiredMetrics, RealTimeMonitoring,
-    TemporalDynamicsAnalysis, UltraAnalysisConfig, UltraControllabilityAnalysis,
-    UltraControllabilityObservabilityResult, UltraObservabilityAnalysis,
+    TemporalDynamicsAnalysis,
 };
 
 // LTI system functions (using what's available)
@@ -654,9 +655,9 @@ pub use advanced_validation_suite::{
     generate_comprehensive_report as generate_comprehensive_validation_report,
     run_comprehensive_validation as run_suite_comprehensive_validation,
     run_full_comprehensive_validation, run_quick_comprehensive_validation,
-    ComprehensiveValidationConfig, ComprehensiveValidationResult as UltraValidationResult,
-    ComprehensiveValidationSummary, LombScargleUltraResults, MultitaperUltraResults,
-    ParametricUltraResults, Wavelet2dUltraResults, WaveletPacketUltraResults,
+    ComprehensiveValidationConfig, ComprehensiveValidationResult as AdvancedValidationResult,
+    ComprehensiveValidationSummary, LombScargleAdvancedResults, MultitaperAdvancedResults,
+    ParametricAdvancedResults, Wavelet2dAdvancedResults, WaveletPacketAdvancedResults,
 };
 
 // Comprehensive performance benchmarking
@@ -667,9 +668,10 @@ pub use benchmarking::{
 
 // Advanced mode coordination and comprehensive validation
 pub use advanced_mode_coordinator::{
-    advancedResults as AdvancedResults, run_advanced_validation_with_config,
+    run_advanced_validation_with_config,
     run_quick_comprehensive_validation as run_quick_advanced_validation_coordinator,
-    AdvancedConfig, AdvancedCoordinator, PerformanceMetrics as AdvancedPerformanceMetrics,
+    AdvancedConfig, AdvancedCoordinator, AdvancedResults,
+    PerformanceMetrics as AdvancedPerformanceMetrics,
     ValidationResults as AdvancedValidationResults,
 };
 

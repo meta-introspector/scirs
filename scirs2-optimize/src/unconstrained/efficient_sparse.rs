@@ -27,7 +27,7 @@ pub struct EfficientSparseOptions {
     /// Sparsity detection threshold
     pub sparsity_threshold: f64,
     /// Maximum number of sparsity detection iterations
-    pub max_sparsity_iterations: usize,
+    pub max_sparsity_nit: usize,
     /// Use adaptive sparsity pattern refinement
     pub adaptive_sparsity: bool,
     /// Enable Hessian sparsity for Newton-type methods
@@ -45,7 +45,7 @@ impl Default for EfficientSparseOptions {
             sparse_fd_options: SparseFiniteDiffOptions::default(),
             auto_detect_sparsity: true,
             sparsity_threshold: 1e-12,
-            max_sparsity_iterations: 5,
+            max_sparsity_nit: 5,
             adaptive_sparsity: true,
             use_sparse_hessian: true,
             sparse_percentage_threshold: 0.1, // Use sparse if <10% non-zero
@@ -317,7 +317,6 @@ where
     Ok(OptimizeResult {
         x,
         fun: f,
-        iterations: iter,
         nit: iter,
         func_evals: nfev,
         nfev,

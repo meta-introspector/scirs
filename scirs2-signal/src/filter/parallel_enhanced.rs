@@ -1,7 +1,7 @@
 //! Enhanced parallel filtering operations with advanced memory optimization
 //!
 //! This module provides next-generation parallel implementations of filtering
-//! operations with ultra-efficient memory management, adaptive chunk sizing,
+//! operations with advanced-efficient memory management, adaptive chunk sizing,
 //! and intelligent load balancing for optimal performance.
 
 use crate::error::{SignalError, SignalResult};

@@ -26,7 +26,7 @@ pub struct OptimizationTrajectory {
     /// Custom metrics at each iteration
     pub custom_metrics: HashMap<String, Vec<f64>>,
     /// Iteration numbers
-    pub iterations: Vec<usize>,
+    pub nit: Vec<usize>,
     /// Wall clock times (in seconds from start)
     pub times: Vec<f64>,
 }
@@ -40,7 +40,7 @@ impl OptimizationTrajectory {
             gradient_norms: Vec::new(),
             step_sizes: Vec::new(),
             custom_metrics: HashMap::new(),
-            iterations: Vec::new(),
+            nit: Vec::new(),
             times: Vec::new(),
         }
     }
@@ -53,7 +53,7 @@ impl OptimizationTrajectory {
         function_value: f64,
         time: f64,
     ) {
-        self.iterations.push(iteration);
+        self.nit.push(iteration);
         self.parameters.push(params.to_owned());
         self.function_values.push(function_value);
         self.times.push(time);
@@ -79,12 +79,12 @@ impl OptimizationTrajectory {
 
     /// Get the number of recorded points
     pub fn len(&self) -> usize {
-        self.iterations.len()
+        self.nit.len()
     }
 
     /// Check if trajectory is empty
     pub fn is_empty(&self) -> bool {
-        self.iterations.is_empty()
+        self.nit.is_empty()
     }
 
     /// Get the final parameter values
@@ -430,7 +430,7 @@ impl OptimizationVisualizer {
                 .fold(f64::NEG_INFINITY, f64::max)
         };
 
-        let max_x = trajectory.iterations.len() as f64;
+        let max_x = trajectory.nit.len() as f64;
 
         let mut svg_content = format!(
             r#"<svg width="{}" height="{}" xmlns="http://www.w3.org/2000/svg">
@@ -574,7 +574,7 @@ impl OptimizationVisualizer {
             self.config.width,
             self.config.height,
             trajectory
-                .iterations
+                .nit
                 .iter()
                 .map(|i| i.to_string())
                 .collect::<Vec<_>>()
@@ -848,7 +848,7 @@ impl OptimizationVisualizer {
         for i in 0..trajectory.len() {
             let mut row = format!(
                 "{},{},{}",
-                trajectory.iterations[i], trajectory.function_values[i], trajectory.times[i]
+                trajectory.nit[i], trajectory.function_values[i], trajectory.times[i]
             );
 
             if i < trajectory.gradient_norms.len() {

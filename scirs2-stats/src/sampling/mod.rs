@@ -195,7 +195,7 @@ where
         None => {
             // Get a seed from the system RNG
             let mut rng = scirs2_core::rng();
-            let seed = rng.gen::<u64>();
+            let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
     };
@@ -286,7 +286,7 @@ where
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
             let mut rng = scirs2_core::rng();
-            let seed = rng.gen::<u64>();
+            let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
     };
@@ -378,7 +378,7 @@ where
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
             let mut rng = scirs2_core::rng();
-            let seed = rng.gen::<u64>();
+            let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
     };
@@ -471,7 +471,7 @@ where
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
             let mut rng = scirs2_core::rng();
-            let seed = rng.gen::<u64>();
+            let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
     };
@@ -553,7 +553,7 @@ where
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value),
         None => {
             let mut rng = scirs2_core::rng();
-            let seed = rng.gen::<u64>();
+            let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
     };
@@ -644,7 +644,7 @@ where
         Some(seed_value) => rand::rngs::StdRng::seed_from_u64(seed_value + 1),
         None => {
             let mut rng = scirs2_core::rng();
-            let seed = rng.gen::<u64>();
+            let seed = rng.random::<u64>();
             rand::rngs::StdRng::seed_from_u64(seed)
         }
     };

@@ -40,7 +40,9 @@ where
     let x0_vec = x0.to_vec();
 
     // Validate inputs
-    check_finite(&x0_vec, "x0")?;
+    for (i, &val) in x0_vec.iter().enumerate() {
+        check_finite(val, &format!("x0[{}]", i))?;
+    }
     if n == 0 {
         return Err(OptimizeError::ValueError("x0 cannot be empty".to_string()));
     }
@@ -78,7 +80,7 @@ where
     }
 
     // Check initial constraint satisfaction
-    let mut max_constraint_violation = 0.0;
+    let mut max_constraint_violation: f64 = 0.0;
     for (i, constraint) in constraints.iter().enumerate() {
         let violation = match constraint.kind {
             ConstraintKind::Equality => constraint_values[i].abs(),
@@ -165,7 +167,7 @@ where
         let actual_reduction = f - f_trial;
 
         // Compute constraint violation
-        let mut trial_violation = 0.0;
+        let mut trial_violation: f64 = 0.0;
         for (i, constraint) in constraints.iter().enumerate() {
             let violation = match constraint.kind {
                 ConstraintKind::Equality => c_trial[i].abs(),

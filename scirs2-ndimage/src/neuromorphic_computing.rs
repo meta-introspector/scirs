@@ -2,7 +2,7 @@
 //!
 //! This module implements cutting-edge neuromorphic computing algorithms inspired by
 //! biological neural networks and brain-like processing. These algorithms provide
-//! ultra-low power, event-driven, and adaptive image processing capabilities.
+//! advanced-low power, event-driven, and adaptive image processing capabilities.
 //!
 //! # Key Features
 //!

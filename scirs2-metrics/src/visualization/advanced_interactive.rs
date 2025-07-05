@@ -630,7 +630,7 @@ pub enum RenderQuality {
     Low,
     Medium,
     High,
-    Ultra,
+    Advanced,
     Auto,
 }
 

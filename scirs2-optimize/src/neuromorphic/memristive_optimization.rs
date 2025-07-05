@@ -7,6 +7,7 @@
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use rand::Rng;
 use scirs2_core::error::CoreResult as Result;
 
 /// Advanced memristor models
@@ -89,7 +90,7 @@ impl Memristor {
         let initial_resistance =
             params.r_on + (params.r_off - params.r_on) * (1.0 - params.initial_x);
         let variability_factor = if params.variability > 0.0 {
-            1.0 + (rand::rng().random::<f64>() - 0.5) * 2.0 * params.variability
+            1.0 + (rand::rng().gen::<f64>() - 0.5) * 2.0 * params.variability
         } else {
             1.0
         };
@@ -309,11 +310,11 @@ impl MemristiveCrossbar {
                 let mut memristor = Memristor::new(params.clone(), model);
 
                 // Introduce random stuck-at faults (1% probability)
-                if rand::rng().random::<f64>() < 0.01 {
+                if rand::rng().gen::<f64>() < 0.01 {
                     fault_map[[i, j]] = true;
                     faulty_count += 1;
                     // Set to extreme resistance values for stuck faults
-                    if rand::rng().random::<bool>() {
+                    if rand::rng().gen::<bool>() {
                         memristor.resistance = params.r_off * 10.0; // Stuck high
                     } else {
                         memristor.resistance = params.r_on * 0.1; // Stuck low
@@ -589,7 +590,7 @@ pub struct MemristiveOptimizer {
     /// Momentum buffer
     pub momentum_buffer: Array1<f64>,
     /// Iteration counter
-    pub iterations: usize,
+    pub nit: usize,
 }
 
 impl MemristiveOptimizer {
@@ -614,7 +615,7 @@ impl MemristiveOptimizer {
             learning_rate,
             momentum,
             momentum_buffer: Array1::zeros(n),
-            iterations: 0,
+            nit: 0,
         }
     }
 
@@ -622,14 +623,14 @@ impl MemristiveOptimizer {
     pub fn optimize<F>(
         &mut self,
         objective: F,
-        max_iterations: usize,
+        max_nit: usize,
     ) -> OptimizeResult<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
         let mut convergence_history = Vec::new();
 
-        for iter in 0..max_iterations {
+        for iter in 0..max_nit {
             // Evaluate current objective
             let current_obj = objective(&self.parameters.view());
             convergence_history.push(current_obj);
@@ -663,7 +664,7 @@ impl MemristiveOptimizer {
                 break;
             }
 
-            self.iterations += 1;
+            self.nit += 1;
 
             // Periodic crossbar refresh to combat drift
             if iter % 100 == 0 {
@@ -675,7 +676,7 @@ impl MemristiveOptimizer {
             x: self.best_parameters.clone(),
             fun: self.best_objective,
             success: self.best_objective < 1e-6,
-            iterations: self.iterations,
+            nit: self.nit,
             message: "Memristive optimization completed".to_string(),
         })
     }
@@ -781,7 +782,7 @@ pub fn memristive_gradient_descent<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     learning_rate: f64,
-    max_iterations: usize,
+    max_nit: usize,
 ) -> Result<Array1<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
@@ -797,7 +798,7 @@ where
         model,
     );
 
-    let result = optimizer.optimize(objective, max_iterations)?;
+    let result = optimizer.optimize(objective, max_nit)?;
     Ok(result.x)
 }
 
@@ -807,7 +808,7 @@ pub fn advanced_memristive_optimization<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     learning_rate: f64,
-    max_iterations: usize,
+    max_nit: usize,
     memristor_params: MemristorParameters,
     model: MemristorModel,
 ) -> OptimizeResult<OptimizeResults<f64>>
@@ -822,7 +823,7 @@ where
         model,
     );
 
-    optimizer.optimize(objective, max_iterations)
+    optimizer.optimize(objective, max_nit)
 }
 
 /// Memristive Neural Network Optimizer for ML problems
@@ -831,7 +832,7 @@ pub fn memristive_neural_optimizer<F>(
     objective: F,
     initial_weights: &ArrayView2<f64>,
     learning_rate: f64,
-    max_iterations: usize,
+    max_nit: usize,
 ) -> Result<Array2<f64>>
 where
     F: Fn(&ArrayView2<f64>) -> f64,
@@ -853,7 +854,7 @@ where
         }
     }
 
-    for _iter in 0..max_iterations {
+    for _iter in 0..max_nit {
         // Get current weights from crossbar
         let current_weights = crossbar.get_conductance_matrix();
         let objective_value = objective(&current_weights.view());

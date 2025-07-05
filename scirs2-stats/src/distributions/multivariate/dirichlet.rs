@@ -5,7 +5,7 @@
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, ArrayBase, Data, Ix1};
-use rand::thread_rng;
+use rand::rng;
 use rand_distr::{Distribution, Gamma as RandGamma};
 use std::fmt::Debug;
 
@@ -273,7 +273,7 @@ impl Dirichlet {
     /// assert_eq!(samples[0].len(), 3);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<Array1<f64>>> {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mut samples = Vec::with_capacity(size);
 
         // Generate samples using the gamma method:

@@ -439,8 +439,7 @@ where
     ) -> StatsResult<F>
     where
         D: Data<Elem = F> + Sync + Send,
-        F: Float + Send + Sync + 'static
-        + std::fmt::Display,
+        F: Float + Send + Sync + 'static + std::fmt::Display,
     {
         const CACHE_THRESHOLD: usize = 1024; // Empirically determined threshold
 
@@ -727,7 +726,7 @@ where
     where
         D: Data<Elem = F> + Sync + Send,
     {
-        use rand::{Rng, SeedableRng};
+        use rand::{rng, Rng, SeedableRng};
         use rand_chacha::ChaCha8Rng;
 
         let num_threads = self
@@ -751,7 +750,7 @@ where
                     let mut rng = if let Some(seed) = seed {
                         ChaCha8Rng::seed_from_u64(seed + thread_id as u64)
                     } else {
-                        ChaCha8Rng::from_rng(scirs2_core::rng())
+                        ChaCha8Rng::from_rng(&mut rng())
                     };
 
                     let mut local_results = Vec::with_capacity(samples_per_thread);

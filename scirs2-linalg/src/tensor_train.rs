@@ -498,31 +498,25 @@ where
     }
 
     // Last core (k = d-1)
-    eprintln!("Creating last core: d={d}, current_shape={current_shape:?}");
-
-    // The last core should handle all remaining dimensions
-    let expected_elements = current_data.len();
     let r_prev = ranks[d - 1];
+    let n_d = shape[d - 1]; // Last dimension of original tensor
 
-    // Calculate the actual last dimensions
-    let remaining_size = expected_elements / r_prev;
+    // For the last core, we expect data of size r_prev * n_d
+    let expected_elements = r_prev * n_d;
 
-    eprintln!(
-        "Last core: r_prev={}, remaining_size={}, data len {}",
-        r_prev,
-        remaining_size,
-        current_data.len()
-    );
+    if current_data.len() != expected_elements {
+        return Err(LinalgError::ShapeError(format!(
+            "Last core data size mismatch: expected {}, got {}",
+            expected_elements,
+            current_data.len()
+        )));
+    }
 
-    // For the last core, we need to form a (r_{d-1}, n_d, 1) tensor
-    // But the remaining data might be (r_{d-1}, remaining_size)
-    // We reshape current_data directly
-    let reshaped_last_core =
-        ndarray::Array2::from_shape_vec((r_prev, remaining_size), current_data)
-            .map_err(|e| LinalgError::ShapeError(format!("Last core reshape: {e}")))?;
+    // Reshape to (r_prev, n_d) matrix first
+    let reshaped_last_core = ndarray::Array2::from_shape_vec((r_prev, n_d), current_data)
+        .map_err(|e| LinalgError::ShapeError(format!("Last core reshape: {e}")))?;
 
     // Convert to 3D with last dimension = 1
-    let n_d = remaining_size;
     let last_core = reshaped_last_core
         .into_shape_with_order((r_prev, n_d, 1))
         .map_err(|e| LinalgError::ShapeError(format!("Last core 3D: {e}")))?;

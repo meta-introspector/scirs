@@ -93,7 +93,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             return min;
         }
 
-        let random_val = self.rng.random_range(min_f..max_f);
+        let random_val = self.rng.gen_range(min_f..max_f);
         A::from_f64(random_val).unwrap()
     }
 

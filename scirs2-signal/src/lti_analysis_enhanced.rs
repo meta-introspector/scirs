@@ -5,12 +5,32 @@
 //! advanced system properties.
 
 use crate::error::{SignalError, SignalResult};
-use crate::lti::{StateSpace, TransferFunction};
-use ndarray::{s, Array1, Array2, ArrayView2, Axis};
+use crate::lti::StateSpace;
+use ndarray::{s, Array1, Array2};
+use scirs2_linalg::{eig, eigh, inv, matrix_norm, solve, svd};
 // Enhanced with robust controllability/observability analysis
 use num_complex::Complex64;
 use scirs2_core::validation::{check_finite, check_shape};
 use std::f64::consts::PI;
+
+/// Helper function to convert Vec<f64> to Array2<f64> for matrix operations
+fn vec_to_array2(vec: &[f64], rows: usize, cols: usize) -> SignalResult<Array2<f64>> {
+    if vec.len() != rows * cols {
+        return Err(SignalError::InvalidArgument(format!(
+            "Vector length {} doesn't match matrix dimensions {}x{}",
+            vec.len(),
+            rows,
+            cols
+        )));
+    }
+    Ok(Array2::from_shape_vec((rows, cols), vec.to_vec())
+        .map_err(|e| SignalError::ComputationError(format!("Array creation failed: {}", e)))?)
+}
+
+/// Helper function to convert Array2<f64> to Vec<f64> in row-major order
+fn array2_to_vec(arr: &Array2<f64>) -> Vec<f64> {
+    arr.iter().cloned().collect()
+}
 
 /// Comprehensive LTI system analysis result
 #[derive(Debug, Clone)]
@@ -163,15 +183,18 @@ pub fn analyze_lti_system(ss: &StateSpace) -> SignalResult<LtiAnalysisResult> {
 /// Analyze controllability
 #[allow(dead_code)]
 fn analyze_controllability(ss: &StateSpace) -> SignalResult<ControllabilityResult> {
-    let n = ss.a.nrows();
-    let m = ss.b.ncols();
+    let n = ss.n_states;
+    let m = ss.n_inputs;
+
+    // Convert Vec<f64> matrices to Array2<f64>
+    let a_matrix = vec_to_array2(&ss.a, n, n)?;
+    let b_matrix = vec_to_array2(&ss.b, n, m)?;
 
     // Build controllability matrix [B AB A²B ... A^(n-1)B]
-    let ctrl_matrix = build_controllability_matrix(&ss.a, &ss.b)?;
+    let ctrl_matrix = build_controllability_matrix(&a_matrix, &b_matrix)?;
 
     // Compute rank using SVD
-    let (_, s, _) = ctrl_matrix
-        .svd(false, false)
+    let (_, s, _) = svd(&ctrl_matrix.view(), false, None)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
     let tolerance = 1e-10 * s[0];
@@ -181,15 +204,14 @@ fn analyze_controllability(ss: &StateSpace) -> SignalResult<ControllabilityResul
     let is_controllable = rank == n;
 
     // Compute controllability Gramian
-    let gramian = if ss.dt.is_some() {
-        compute_discrete_controllability_gramian(&ss.a, &ss.b)?
+    let gramian = if ss.dt {
+        compute_discrete_controllability_gramian(&a_matrix, &b_matrix)?
     } else {
-        compute_continuous_controllability_gramian(&ss.a, &ss.b)?
+        compute_continuous_controllability_gramian(&a_matrix, &b_matrix)?
     };
 
     // Controllability measure (smallest eigenvalue of Gramian)
-    let gram_eigenvalues = gramian
-        .eigh(UPLO::Lower)
+    let gram_eigenvalues = eigh(&gramian.view(), None)
         .map_err(|e| {
             SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
         })?
@@ -217,15 +239,18 @@ fn analyze_controllability(ss: &StateSpace) -> SignalResult<ControllabilityResul
 /// Analyze observability
 #[allow(dead_code)]
 fn analyze_observability(ss: &StateSpace) -> SignalResult<ObservabilityResult> {
-    let n = ss.a.nrows();
-    let p = ss.c.nrows();
+    let n = ss.n_states;
+    let p = ss.n_outputs;
+
+    // Convert Vec<f64> matrices to Array2<f64>
+    let a_matrix = vec_to_array2(&ss.a, n, n)?;
+    let c_matrix = vec_to_array2(&ss.c, p, n)?;
 
     // Build observability matrix [C; CA; CA²; ...; CA^(n-1)]
-    let obs_matrix = build_observability_matrix(&ss.a, &ss.c)?;
+    let obs_matrix = build_observability_matrix(&a_matrix, &c_matrix)?;
 
     // Compute rank using SVD
-    let (_, s, _) = obs_matrix
-        .svd(false, false)
+    let (_, s, _) = svd(&obs_matrix.view(), false, None)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
     let tolerance = 1e-10 * s[0];
@@ -235,15 +260,14 @@ fn analyze_observability(ss: &StateSpace) -> SignalResult<ObservabilityResult> {
     let is_observable = rank == n;
 
     // Compute observability Gramian
-    let gramian = if ss.dt.is_some() {
-        compute_discrete_observability_gramian(&ss.a, &ss.c)?
+    let gramian = if ss.dt {
+        compute_discrete_observability_gramian(&a_matrix, &c_matrix)?
     } else {
-        compute_continuous_observability_gramian(&ss.a, &ss.c)?
+        compute_continuous_observability_gramian(&a_matrix, &c_matrix)?
     };
 
     // Observability measure
-    let gram_eigenvalues = gramian
-        .eigh(UPLO::Lower)
+    let gram_eigenvalues = eigh(&gramian.view(), None)
         .map_err(|e| {
             SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
         })?
@@ -271,15 +295,17 @@ fn analyze_observability(ss: &StateSpace) -> SignalResult<ObservabilityResult> {
 /// Analyze stability
 #[allow(dead_code)]
 fn analyze_stability(ss: &StateSpace) -> SignalResult<StabilityResult> {
-    // Compute eigenvalues
-    let eigenvalues =
-        ss.a.eig()
-            .map_err(|e| {
-                SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
-            })?
-            .0;
+    // Convert Vec<f64> matrix to Array2<f64>
+    let a_matrix = vec_to_array2(&ss.a, ss.n_states, ss.n_states)?;
 
-    let is_discrete = ss.dt.is_some();
+    // Compute eigenvalues
+    let eigenvalues = eig(&a_matrix.view(), None)
+        .map_err(|e| {
+            SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
+        })?
+        .0;
+
+    let is_discrete = ss.dt;
 
     // Check stability
     let (is_stable, is_marginally_stable) = if is_discrete {
@@ -293,7 +319,7 @@ fn analyze_stability(ss: &StateSpace) -> SignalResult<StabilityResult> {
 
     // Extract modal properties
     let (damping_ratios, natural_frequencies, time_constants) =
-        extract_modal_properties(&eigenvalues, is_discrete, ss.dt.unwrap_or(1.0));
+        extract_modal_properties(&eigenvalues, is_discrete, if ss.dt { 1.0 } else { 0.0 });
 
     Ok(StabilityResult {
         is_stable,
@@ -402,7 +428,7 @@ fn solve_discrete_lyapunov(a: &Array2<f64>, q: &Array2<f64>) -> SignalResult<Arr
     for _ in 0..max_iter {
         let x_new = q + &a_power.dot(&x).dot(&a_power.t());
 
-        if (&x_new - &x).norm() < tolerance {
+        if matrix_norm(&(&x_new - &x).view(), "fro", None).unwrap_or(f64::INFINITY) < tolerance {
             return Ok(x_new);
         }
 
@@ -410,7 +436,7 @@ fn solve_discrete_lyapunov(a: &Array2<f64>, q: &Array2<f64>) -> SignalResult<Arr
         a_power = a_power.dot(a);
 
         // Check for convergence
-        if a_power.norm() < tolerance {
+        if matrix_norm(&a_power.view(), "fro", None).unwrap_or(f64::INFINITY) < tolerance {
             break;
         }
     }
@@ -434,7 +460,7 @@ fn solve_continuous_lyapunov(a: &Array2<f64>, q: &Array2<f64>) -> SignalResult<A
     let q_vec_neg = Array1::from_vec(q_vec).mapv(|x| -x);
 
     // Solve the linear system
-    let x_vec = coeff.solve(&q_vec_neg).map_err(|e| {
+    let x_vec = solve(&coeff.view(), &q_vec_neg.view(), None).map_err(|e| {
         SignalError::ComputationError(format!("Lyapunov equation solution failed: {}", e))
     })?;
 
@@ -467,28 +493,30 @@ fn kronecker_product(a: &Array2<f64>, b: &Array2<f64>) -> SignalResult<Array2<f6
 /// Find uncontrollable modes
 #[allow(dead_code)]
 fn find_uncontrollable_modes(ss: &StateSpace, ctrl_rank: usize) -> SignalResult<Vec<Complex64>> {
-    if ctrl_rank == ss.a.nrows() {
+    if ctrl_rank == ss.n_states {
         return Ok(Vec::new()); // All modes are controllable
     }
 
     // Use PBH test: (λI - A, B) must have full row rank for all eigenvalues
-    let eigenvalues =
-        ss.a.eig()
-            .map_err(|e| {
-                SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
-            })?
-            .0;
+    let a_matrix = vec_to_array2(&ss.a, ss.n_states, ss.n_states)?;
+    let eigenvalues = eig(&a_matrix.view(), None)
+        .map_err(|e| {
+            SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
+        })?
+        .0;
 
     let mut uncontrollable = Vec::new();
 
     for &lambda in eigenvalues.iter() {
-        let test_matrix = build_pbh_test_matrix(&ss.a, &ss.b, lambda)?;
-        let (_, s, _) = test_matrix
-            .svd(false, false)
+        let b_matrix = vec_to_array2(&ss.b, ss.n_states, ss.n_inputs)?;
+        let test_matrix = build_pbh_test_matrix(&a_matrix, &b_matrix, lambda)?;
+        // Convert complex matrix to real for SVD computation
+        let real_matrix = test_matrix.mapv(|x| x.norm());
+        let (_, s, _) = svd(&real_matrix.view(), false, None)
             .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
         let rank = s.iter().filter(|&&sv| sv > 1e-10).count();
-        if rank < ss.a.nrows() {
+        if rank < ss.n_states {
             uncontrollable.push(lambda);
         }
     }
@@ -499,28 +527,30 @@ fn find_uncontrollable_modes(ss: &StateSpace, ctrl_rank: usize) -> SignalResult<
 /// Find unobservable modes
 #[allow(dead_code)]
 fn find_unobservable_modes(ss: &StateSpace, obs_rank: usize) -> SignalResult<Vec<Complex64>> {
-    if obs_rank == ss.a.nrows() {
+    if obs_rank == ss.n_states {
         return Ok(Vec::new());
     }
 
     // Use PBH test: [λI - A; C] must have full column rank for all eigenvalues
-    let eigenvalues =
-        ss.a.eig()
-            .map_err(|e| {
-                SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
-            })?
-            .0;
+    let a_matrix = vec_to_array2(&ss.a, ss.n_states, ss.n_states)?;
+    let eigenvalues = eig(&a_matrix.view(), None)
+        .map_err(|e| {
+            SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
+        })?
+        .0;
 
     let mut unobservable = Vec::new();
 
     for &lambda in eigenvalues.iter() {
-        let test_matrix = build_pbh_observability_test_matrix(&ss.a, &ss.c, lambda)?;
-        let (_, s, _) = test_matrix
-            .svd(false, false)
+        let c_matrix = vec_to_array2(&ss.c, ss.n_outputs, ss.n_states)?;
+        let test_matrix = build_pbh_observability_test_matrix(&a_matrix, &c_matrix, lambda)?;
+        // Convert complex matrix to real for SVD computation
+        let real_matrix = test_matrix.mapv(|x| x.norm());
+        let (_, s, _) = svd(&real_matrix.view(), false, None)
             .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
         let rank = s.iter().filter(|&&sv| sv > 1e-10).count();
-        if rank < ss.a.nrows() {
+        if rank < ss.n_states {
             unobservable.push(lambda);
         }
     }
@@ -544,9 +574,9 @@ fn build_pbh_test_matrix(
     for i in 0..n {
         for j in 0..n {
             test_matrix[[i, j]] = if i == j {
-                lambda - a[[i, j]]
+                lambda - Complex64::new(a[[i, j]], 0.0)
             } else {
-                -a[[i, j]]
+                Complex64::new(-a[[i, j]], 0.0)
             };
         }
     }
@@ -577,9 +607,9 @@ fn build_pbh_observability_test_matrix(
     for i in 0..n {
         for j in 0..n {
             test_matrix[[i, j]] = if i == j {
-                lambda - a[[i, j]]
+                lambda - Complex64::new(a[[i, j]], 0.0)
             } else {
-                -a[[i, j]]
+                Complex64::new(-a[[i, j]], 0.0)
             };
         }
     }
@@ -706,18 +736,18 @@ fn continuous_modal_properties(s: Complex64) -> (f64, f64, f64) {
 /// Analyze system properties
 #[allow(dead_code)]
 fn analyze_system_properties(ss: &StateSpace) -> SignalResult<SystemProperties> {
-    let num_states = ss.a.nrows();
-    let num_inputs = ss.b.ncols();
-    let num_outputs = ss.c.nrows();
+    let num_states = ss.n_states;
+    let num_inputs = ss.n_inputs;
+    let num_outputs = ss.n_outputs;
 
     // Compute poles (eigenvalues of A)
-    let poles =
-        ss.a.eig()
-            .map_err(|e| {
-                SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
-            })?
-            .0
-            .to_vec();
+    let a_matrix = vec_to_array2(&ss.a, ss.n_states, ss.n_states)?;
+    let poles = eig(&a_matrix.view(), None)
+        .map_err(|e| {
+            SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
+        })?
+        .0
+        .to_vec();
 
     // Compute zeros (more complex for MIMO systems)
     let zeros = compute_system_zeros(ss)?;
@@ -753,29 +783,33 @@ fn compute_system_zeros(ss: &StateSpace) -> SignalResult<Vec<Complex64>> {
     // For SISO systems, zeros are eigenvalues of [A B; C D] with constraint
     // For MIMO, this is more complex
 
-    if ss.b.ncols() == 1 && ss.c.nrows() == 1 {
+    if ss.n_inputs == 1 && ss.n_outputs == 1 {
         // SISO case
-        let n = ss.a.nrows();
+        let n = ss.n_states;
         let mut augmented = Array2::zeros((n + 1, n + 1));
 
-        augmented.slice_mut(s![0..n, 0..n]).assign(&ss.a);
-        augmented.slice_mut(s![0..n, n]).assign(&ss.b.column(0));
-        augmented.slice_mut(s![n, 0..n]).assign(&ss.c.row(0));
-        augmented[[n, n]] = ss.d[[0, 0]];
+        let a_matrix = vec_to_array2(&ss.a, n, n)?;
+        let b_matrix = vec_to_array2(&ss.b, n, 1)?;
+        let c_matrix = vec_to_array2(&ss.c, 1, n)?;
+        let d_matrix = vec_to_array2(&ss.d, 1, 1)?;
 
-        let eigenvalues = augmented
-            .eig()
+        augmented.slice_mut(s![0..n, 0..n]).assign(&a_matrix);
+        augmented.slice_mut(s![0..n, n]).assign(&b_matrix.column(0));
+        augmented.slice_mut(s![n, 0..n]).assign(&c_matrix.row(0));
+        augmented[[n, n]] = d_matrix[[0, 0]];
+
+        let eigenvalues = eig(&augmented.view(), None)
             .map_err(|e| SignalError::ComputationError(format!("Zero computation failed: {}", e)))?
             .0;
 
         // Filter out poles
-        let poles_set: std::collections::HashSet<_> =
-            ss.a.eig()
-                .unwrap()
-                .0
-                .iter()
-                .map(|&p| (p.re * 1e6) as i64)
-                .collect();
+        let a_matrix = vec_to_array2(&ss.a, ss.n_states, ss.n_states)?;
+        let poles_set: std::collections::HashSet<_> = eig(&a_matrix.view(), None)
+            .unwrap()
+            .0
+            .iter()
+            .map(|&p| (p.re * 1e6) as i64)
+            .collect();
 
         Ok(eigenvalues
             .iter()
@@ -791,19 +825,26 @@ fn compute_system_zeros(ss: &StateSpace) -> SignalResult<Vec<Complex64>> {
 /// Compute DC gain
 #[allow(dead_code)]
 fn compute_dc_gain(ss: &StateSpace) -> SignalResult<Array2<f64>> {
-    if ss.dt.is_some() {
+    if ss.dt {
         // Discrete: G(1) = C(I - A)^(-1)B + D
-        let eye = Array2::eye(ss.a.nrows());
-        let inv = (eye - &ss.a)
-            .inv()
+        let a_matrix = vec_to_array2(&ss.a, ss.n_states, ss.n_states)?;
+        let b_matrix = vec_to_array2(&ss.b, ss.n_states, ss.n_inputs)?;
+        let c_matrix = vec_to_array2(&ss.c, ss.n_outputs, ss.n_states)?;
+        let d_matrix = vec_to_array2(&ss.d, ss.n_outputs, ss.n_inputs)?;
+        let eye = Array2::eye(ss.n_states);
+        let matrix_to_inv = &eye - &a_matrix;
+        let inv = inv(&matrix_to_inv.view(), None)
             .map_err(|_| SignalError::ComputationError("System has pole at z=1".to_string()))?;
-        Ok(ss.c.dot(&inv).dot(&ss.b) + &ss.d)
+        Ok(c_matrix.dot(&inv).dot(&b_matrix) + &d_matrix)
     } else {
         // Continuous: G(0) = -CA^(-1)B + D
-        let inv =
-            ss.a.inv()
-                .map_err(|_| SignalError::ComputationError("System has pole at s=0".to_string()))?;
-        Ok(-ss.c.dot(&inv).dot(&ss.b) + &ss.d)
+        let a_matrix = vec_to_array2(&ss.a, ss.n_states, ss.n_states)?;
+        let b_matrix = vec_to_array2(&ss.b, ss.n_states, ss.n_inputs)?;
+        let c_matrix = vec_to_array2(&ss.c, ss.n_outputs, ss.n_states)?;
+        let d_matrix = vec_to_array2(&ss.d, ss.n_outputs, ss.n_inputs)?;
+        let inv = inv(&a_matrix.view(), None)
+            .map_err(|_| SignalError::ComputationError("System has pole at s=0".to_string()))?;
+        Ok(-c_matrix.dot(&inv).dot(&b_matrix) + &d_matrix)
     }
 }
 
@@ -854,10 +895,12 @@ fn compute_bandwidth(ss: &StateSpace) -> SignalResult<f64> {
 #[allow(dead_code)]
 fn evaluate_frequency_response(ss: &StateSpace, freq: f64) -> SignalResult<f64> {
     let s = Complex64::new(0.0, 2.0 * PI * freq);
-    let eye = Array2::eye(ss.a.nrows());
+    let eye: Array2<Complex64> = Array2::eye(ss.n_states);
 
     // G(s) = C(sI - A)^(-1)B + D
-    let si_minus_a = &eye * s - &ss.a.mapv(|x| Complex64::new(x, 0.0));
+    let a_matrix = vec_to_array2(&ss.a, ss.n_states, ss.n_states)?;
+    let a_complex = a_matrix.mapv(|x| Complex64::new(x, 0.0));
+    let si_minus_a = &eye * s - &a_complex;
 
     // For now, return a placeholder
     Ok(1.0)
@@ -872,8 +915,7 @@ fn analyze_gramians(
 ) -> SignalResult<GramianAnalysis> {
     // Compute Hankel singular values
     let product = wc.dot(wo);
-    let eigenvalues = product
-        .eig()
+    let eigenvalues = eig(&product.view(), None)
         .map_err(|e| {
             SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
         })?
@@ -882,10 +924,10 @@ fn analyze_gramians(
     let hankel_singular_values = eigenvalues.mapv(|lambda| lambda.norm().sqrt());
 
     // Check if balanced
-    let is_balanced = (wc - wo).norm() < 1e-10;
+    let is_balanced = matrix_norm(&(wc - wo).view(), "fro", None).unwrap_or(1e6) < 1e-10;
 
     // Cross-Gramian for SISO
-    let cross_gramian = if ss.b.ncols() == 1 && ss.c.nrows() == 1 {
+    let cross_gramian = if ss.n_inputs == 1 && ss.n_outputs == 1 {
         Some(compute_cross_gramian(ss)?)
     } else {
         None
@@ -904,12 +946,15 @@ fn compute_cross_gramian(ss: &StateSpace) -> SignalResult<Array2<f64>> {
     // For continuous: A*X + X*A + B*C = 0
     // For discrete: X = A*X*A + B*C
 
-    let bc = ss.b.dot(&ss.c);
+    let b_matrix = vec_to_array2(&ss.b, ss.n_states, ss.n_inputs)?;
+    let c_matrix = vec_to_array2(&ss.c, ss.n_outputs, ss.n_states)?;
+    let bc = b_matrix.dot(&c_matrix);
 
-    if ss.dt.is_some() {
-        solve_discrete_lyapunov(&ss.a, &bc)
+    let a_matrix = vec_to_array2(&ss.a, ss.n_states, ss.n_states)?;
+    if ss.dt {
+        solve_discrete_lyapunov(&a_matrix, &bc)
     } else {
-        solve_continuous_lyapunov(&ss.a, &bc)
+        solve_continuous_lyapunov(&a_matrix, &bc)
     }
 }
 
@@ -917,19 +962,22 @@ fn compute_cross_gramian(ss: &StateSpace) -> SignalResult<Array2<f64>> {
 #[allow(dead_code)]
 fn perform_modal_analysis(ss: &StateSpace) -> SignalResult<ModalAnalysis> {
     // Eigenvalue decomposition
-    let (eigenvalues, eigenvectors) = ss.a.eig().map_err(|e| {
+    let a_matrix = vec_to_array2(&ss.a, ss.n_states, ss.n_states)?;
+    let (eigenvalues, eigenvectors) = eig(&a_matrix.view(), None).map_err(|e| {
         SignalError::ComputationError(format!("Eigenvalue computation failed: {}", e))
     })?;
 
-    let n = ss.a.nrows();
-    let m = ss.b.ncols();
-    let p = ss.c.nrows();
+    let n = ss.n_states;
+    let m = ss.n_inputs;
+    let p = ss.n_outputs;
 
     // Modal controllability: |v_i' * B|
     let mut modal_controllability = Vec::with_capacity(n);
     for i in 0..n {
         let v_i = eigenvectors.column(i);
-        let ctrl = v_i.t().mapv(|x| x.conj()).dot(&ss.b.mapv(Complex64::from));
+        let b_matrix = vec_to_array2(&ss.b, ss.n_states, ss.n_inputs)?;
+        let b_complex = b_matrix.mapv(Complex64::from);
+        let ctrl = v_i.t().mapv(|x| x.conj()).dot(&b_complex);
         modal_controllability.push(ctrl.norm());
     }
 
@@ -937,7 +985,9 @@ fn perform_modal_analysis(ss: &StateSpace) -> SignalResult<ModalAnalysis> {
     let mut modal_observability = Vec::with_capacity(n);
     for i in 0..n {
         let v_i = eigenvectors.column(i);
-        let obs = ss.c.mapv(Complex64::from).dot(&v_i);
+        let c_matrix = vec_to_array2(&ss.c, ss.n_outputs, ss.n_states)?;
+        let c_complex = c_matrix.mapv(Complex64::from);
+        let obs = c_complex.dot(&v_i);
         modal_observability.push(obs.norm());
     }
 
@@ -962,9 +1012,9 @@ fn perform_modal_analysis(ss: &StateSpace) -> SignalResult<ModalAnalysis> {
 /// Validate state-space system
 #[allow(dead_code)]
 fn validate_state_space(ss: &StateSpace) -> SignalResult<()> {
-    let n = ss.a.nrows();
-    let m = ss.b.ncols();
-    let p = ss.c.nrows();
+    let n = ss.n_states;
+    let m = ss.n_inputs;
+    let p = ss.n_outputs;
 
     // Check dimensions
     check_shape(&ss.a, (n, n), "A matrix")?;
@@ -987,14 +1037,13 @@ pub fn controllability_canonical_form(ss: &StateSpace) -> SignalResult<(StateSpa
     let ctrl_matrix = build_controllability_matrix(&ss.a, &ss.b)?;
 
     // Find transformation matrix
-    let (u, s, vt) = ctrl_matrix
-        .svd(true, true)
+    let (u, s, vt) = svd(&ctrl_matrix.view(), true, None)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
     let u = u.unwrap();
     let rank = s.iter().filter(|&&sv| sv > 1e-10).count();
 
-    if rank < ss.a.nrows() {
+    if rank < ss.n_states {
         return Err(SignalError::ComputationError(
             "System is not controllable".to_string(),
         ));
@@ -1028,14 +1077,13 @@ pub fn observability_canonical_form(ss: &StateSpace) -> SignalResult<(StateSpace
     let obs_matrix = build_observability_matrix(&ss.a, &ss.c)?;
 
     // Find transformation matrix
-    let (u, s, vt) = obs_matrix
-        .svd(true, true)
+    let (u, s, vt) = svd(&obs_matrix.view(), true, None)
         .map_err(|e| SignalError::ComputationError(format!("SVD failed: {}", e)))?;
 
     let vt = vt.unwrap();
     let rank = s.iter().filter(|&&sv| sv > 1e-10).count();
 
-    if rank < ss.a.nrows() {
+    if rank < ss.n_states {
         return Err(SignalError::ComputationError(
             "System is not observable".to_string(),
         ));
@@ -1434,7 +1482,7 @@ fn compute_small_matrix_svd(matrix: &Array2<f64>) -> SignalResult<Array1<f64>> {
 #[allow(dead_code)]
 fn power_iteration_svd(matrix: &Array2<f64>, max_iter: usize, tol: f64) -> SignalResult<f64> {
     let n = matrix.ncols();
-    let mut v = Array1::ones(n) / (n as f64).sqrt();
+    let mut v: Array1<f64> = Array1::ones(n) / (n as f64).sqrt();
 
     for _ in 0..max_iter {
         // Av

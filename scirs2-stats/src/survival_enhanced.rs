@@ -132,7 +132,6 @@ where
             &survival_function,
             &at_risk,
             &events,
-            confidence_level,
         )?;
 
         // Compute median and mean survival times
@@ -308,8 +307,16 @@ impl Default for CoxConfig {
 
 impl<F> CoxProportionalHazards<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + 'static,
 {
     /// Create new Cox model
     pub fn new(config: CoxConfig) -> Self {
@@ -353,7 +360,7 @@ where
         let mut converged = false;
         let mut log_likelihood = f64::NEG_INFINITY;
 
-        for iter in 0..self.config.max_iter {
+        for _iter in 0..self.config.max_iter {
             // Compute partial likelihood and its derivatives
             let (ll, gradient, hessian) = self.compute_partial_likelihood_derivatives(
                 &durations_f64,
@@ -460,16 +467,17 @@ where
 
                     // Update gradient
                     let cov_i = covariates.row(i);
-                    gradient = &gradient + &cov_i - &risk_set_grad.mapv(|x| x / risk_set_sum);
+                    gradient = &gradient + &cov_i - &risk_set_grad.mapv(|x: f64| x / risk_set_sum);
 
                     // Update Hessian
-                    let risk_grad_normalized = risk_set_grad.mapv(|x| x / risk_set_sum);
-                    let risk_hess_normalized = risk_set_hess.mapv(|x| x / risk_set_sum);
+                    let risk_grad_normalized = risk_set_grad.mapv(|x: f64| x / risk_set_sum);
+                    let risk_hess_normalized = risk_set_hess.mapv(|x: f64| x / risk_set_sum);
 
                     for k in 0..p {
                         for l in 0..p {
-                            hessian[[k, l]] -= risk_hess_normalized[[k, l]]
-                                - risk_grad_normalized[k] * risk_grad_normalized[l];
+                            hessian[[k, l]] = hessian[[k, l]]
+                                - (risk_hess_normalized[[k, l]]
+                                    - risk_grad_normalized[k] * risk_grad_normalized[l]);
                         }
                     }
                 }
@@ -650,8 +658,16 @@ pub fn cox_regression<F>(
     config: Option<CoxConfig>,
 ) -> StatsResult<CoxProportionalHazards<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + 'static,
 {
     let config = config.unwrap_or_default();
     let mut cox = CoxProportionalHazards::new(config);

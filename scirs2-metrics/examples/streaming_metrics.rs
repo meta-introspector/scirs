@@ -84,10 +84,7 @@ fn real_time_classification_example() {
     }
 
     let (tp, fp, tn, fn_counts) = metrics.confusion_matrix();
-    println!(
-        "Final confusion matrix: TP={}, FP={}, TN={}, FN={}",
-        tp, fp, tn, fn_counts
-    );
+    println!("Final confusion matrix: TP={tp}, FP={fp}, TN={tn}, FN={fn_counts}");
 }
 
 /// Demonstrates processing large datasets without loading everything into memory
@@ -161,10 +158,7 @@ fn concept_drift_example() {
     let window_size = 50;
     let mut metrics = WindowedClassificationMetrics::new(window_size);
 
-    println!(
-        "Monitoring for concept drift with window size {}...",
-        window_size
-    );
+    println!("Monitoring for concept drift with window size {window_size}...");
 
     for i in 0..200 {
         let true_label = i % 2;
@@ -234,7 +228,7 @@ fn streaming_regression_example() {
             );
 
             if let (Some(min_err), Some(max_err)) = (metrics.min_error(), metrics.max_error()) {
-                println!("  Error range: [{:.4}, {:.4}]", min_err, max_err);
+                println!("  Error range: [{min_err:.4}, {max_err:.4}]");
             }
         }
     }
@@ -276,15 +270,9 @@ fn performance_comparison_example() {
     let batch_accuracy = correct_predictions as f64 / n_samples as f64;
     let batch_time = start.elapsed();
 
-    println!("Results for {} samples:", n_samples);
-    println!(
-        "  Streaming: {:.4} accuracy in {:?}",
-        streaming_accuracy, streaming_time
-    );
-    println!(
-        "  Batch:     {:.4} accuracy in {:?}",
-        batch_accuracy, batch_time
-    );
+    println!("Results for {n_samples} samples:");
+    println!("  Streaming: {streaming_accuracy:.4} accuracy in {streaming_time:?}");
+    println!("  Batch:     {batch_accuracy:.4} accuracy in {batch_time:?}");
     println!(
         "  Accuracy difference: {:.6}",
         (streaming_accuracy - batch_accuracy).abs()

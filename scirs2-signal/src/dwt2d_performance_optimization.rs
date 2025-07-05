@@ -10,13 +10,13 @@
 //! - Adaptive precision management
 
 use crate::dwt::{Wavelet, WaveletFilters};
-use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct, Dwt2dResult};
+use crate::dwt2d::dwt2d_decompose;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, Array3, ArrayView2, ArrayViewMut2, Axis};
-use num_traits::{Float, NumCast, Zero};
+use ndarray::{Array1, Array2};
+// num_traits not used
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use scirs2_core::simd_ops::PlatformCapabilities;
+use scirs2_core::validation::check_positive;
 use std::collections::HashMap;
 use std::time::Instant;
 

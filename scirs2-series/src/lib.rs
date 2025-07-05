@@ -134,19 +134,21 @@
 //!   - Distributed forecasting, feature extraction, and anomaly detection
 //!   - Task dependency management and priority scheduling
 //!   - Real-time cluster monitoring and performance metrics
-//! - Ultra Fusion Intelligence - Next-Generation AI Systems
+//! - Advanced Fusion Intelligence - Next-Generation AI Systems
 //!   - Quantum-Neuromorphic fusion processors combining quantum and biological computing
 //!   - Meta-learning systems that learn how to learn from time series patterns
 //!   - Self-evolving neural architectures that redesign themselves autonomously
 //!   - Consciousness-inspired computing with attention and self-awareness mechanisms
 //!   - Temporal hypercomputing for multi-dimensional time analysis
 //!   - Autonomous mathematical discovery and pattern recognition
-//!   - Ultra-predictive analytics for impossible event prediction
+//!   - Advanced-predictive analytics for impossible event prediction
 //!   - Distributed quantum networks with planet-scale processing capabilities
 //! - Utility functions for time series operations
 
 #![warn(missing_docs)]
 
+pub mod advanced_advanced_visualization;
+pub mod advanced_fusion_intelligence;
 pub mod advanced_training;
 pub mod anomaly;
 pub mod arima_models;
@@ -186,8 +188,6 @@ pub mod streaming;
 pub mod tests;
 pub mod transformations;
 pub mod trends;
-pub mod ultra_advanced_visualization;
-pub mod ultra_fusion_intelligence;
 pub mod utils;
 pub mod validation;
 pub mod var_models;

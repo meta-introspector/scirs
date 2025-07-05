@@ -422,7 +422,7 @@ impl RobustConvergenceState {
             warning_flags,
             adaptive_status,
             criteria_met,
-            early_stopping_iterations: self.early_stop_state.iterations_without_improvement,
+            early_stopping_nit: self.early_stop_state.iterations_without_improvement,
             progress_rate: self.progress_state.progress_rate,
             time_elapsed: self.start_time.map(|t| t.elapsed()),
             plateau_detected: self.plateau_state.plateau_detected,
@@ -502,7 +502,7 @@ pub struct RobustConvergenceResult {
     /// Number of criteria that were met
     pub criteria_met: usize,
     /// Early stopping iterations count
-    pub early_stopping_iterations: usize,
+    pub early_stopping_nit: usize,
     /// Current progress rate
     pub progress_rate: f64,
     /// Time elapsed since start

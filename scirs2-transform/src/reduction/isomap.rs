@@ -572,7 +572,7 @@ mod tests {
 
     #[test]
     fn test_isomap_epsilon_ball() {
-        let x = Array::eye(5);
+        let x: Array2<f64> = Array::eye(5);
 
         let mut isomap = Isomap::new(3, 2).with_epsilon(1.5);
         let result = isomap.fit_transform(&x);
@@ -586,7 +586,7 @@ mod tests {
 
     #[test]
     fn test_isomap_disconnected_graph() {
-        let x = Array::eye(5);
+        let x: Array2<f64> = Array::eye(5);
 
         // With only 1 neighbor and identity matrix, graph will be disconnected
         let mut isomap = Isomap::new(1, 2);

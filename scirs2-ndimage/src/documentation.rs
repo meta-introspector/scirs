@@ -65,7 +65,9 @@ impl DocumentationSite {
     pub fn new() -> Self {
         Self {
             title: "SciRS2 NDImage Documentation".to_string(),
-            description: "Comprehensive documentation for SciRS2 N-dimensional image processing library".to_string(),
+            description:
+                "Comprehensive documentation for SciRS2 N-dimensional image processing library"
+                    .to_string(),
             version: "0.1.0-beta.1".to_string(),
             base_url: "https://scirs2.github.io/ndimage".to_string(),
             modules: Vec::new(),
@@ -279,34 +281,29 @@ let rotated = affine_transform(&image, &rotation_matrix);"#.to_string(),
         let measurements_module = ModuleDoc {
             name: "Measurements".to_string(),
             description: "Statistical measurements and region analysis".to_string(),
-            functions: vec![
-                FunctionDoc {
-                    name: "center_of_mass".to_string(),
-                    signature: "pub fn center_of_mass<T>(input: &ArrayD<T>) -> Vec<f64>".to_string(),
-                    description: "Calculate center of mass of n-dimensional array".to_string(),
-                    parameters: vec![
-                        Parameter {
-                            name: "input".to_string(),
-                            param_type: "&ArrayD<T>".to_string(),
-                            description: "Input array".to_string(),
-                            optional: false,
-                        },
-                    ],
-                    returns: "Vec<f64> - Center of mass coordinates".to_string(),
-                    examples: vec![
-                        r#"use scirs2_ndimage::measurements::center_of_mass;
+            functions: vec![FunctionDoc {
+                name: "center_of_mass".to_string(),
+                signature: "pub fn center_of_mass<T>(input: &ArrayD<T>) -> Vec<f64>".to_string(),
+                description: "Calculate center of mass of n-dimensional array".to_string(),
+                parameters: vec![Parameter {
+                    name: "input".to_string(),
+                    param_type: "&ArrayD<T>".to_string(),
+                    description: "Input array".to_string(),
+                    optional: false,
+                }],
+                returns: "Vec<f64> - Center of mass coordinates".to_string(),
+                examples: vec![r#"use scirs2_ndimage::measurements::center_of_mass;
 use ndarray::Array2;
 
 let image = Array2::from_elem((100, 100), 1.0f64);
 let com = center_of_mass(&image);
-println!("Center of mass: {:?}", com);"#.to_string(),
-                    ],
-                    notes: vec![
-                        "Works with any numeric type".to_string(),
-                        "Returns coordinates in array index order".to_string(),
-                    ],
-                },
-            ],
+println!("Center of mass: {:?}", com);"#
+                    .to_string()],
+                notes: vec![
+                    "Works with any numeric type".to_string(),
+                    "Returns coordinates in array index order".to_string(),
+                ],
+            }],
             examples: vec![
                 "Object property analysis".to_string(),
                 "Region statistics".to_string(),
@@ -314,7 +311,12 @@ println!("Center of mass: {:?}", com);"#.to_string(),
             ],
         };
 
-        self.modules = vec![filters_module, morphology_module, interpolation_module, measurements_module];
+        self.modules = vec![
+            filters_module,
+            morphology_module,
+            interpolation_module,
+            measurements_module,
+        ];
         Ok(())
     }
 
@@ -704,19 +706,19 @@ println!("Analysis complete: {} regions found", regions.len());
 
         // Generate main index page
         self.generate_index_page(output_path)?;
-        
+
         // Generate API documentation
         self.generate_api_documentation(output_path)?;
-        
+
         // Generate tutorials
         self.generate_tutorials(output_path)?;
-        
+
         // Generate examples
         self.generate_examples(output_path)?;
-        
+
         // Generate search functionality
         self.generate_search_index(output_path)?;
-        
+
         // Copy CSS and JavaScript files
         self.generate_static_files(output_path)?;
 
@@ -724,7 +726,8 @@ println!("Analysis complete: {} regions found", regions.len());
     }
 
     fn generate_index_page(&self, output_path: &Path) -> Result<()> {
-        let index_html = format!(r#"
+        let index_html = format!(
+            r#"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -828,7 +831,7 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
     <script src="static/main.js"></script>
 </body>
 </html>
-"#, 
+"#,
             self.title,
             self.title,
             self.description,
@@ -843,8 +846,11 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
     }
 
     fn generate_module_cards(&self) -> String {
-        self.modules.iter().map(|module| {
-            format!(r#"
+        self.modules
+            .iter()
+            .map(|module| {
+                format!(
+                    r#"
                 <div class="module-card">
                     <h4>{}</h4>
                     <p>{}</p>
@@ -853,8 +859,15 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
                         <a href="api/{}.html" class="module-link">View API →</a>
                     </div>
                 </div>
-            "#, module.name, module.description, module.functions.len(), module.name.to_lowercase())
-        }).collect::<Vec<_>>().join("")
+            "#,
+                    module.name,
+                    module.description,
+                    module.functions.len(),
+                    module.name.to_lowercase()
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("")
     }
 
     fn generate_api_documentation(&self, output_path: &Path) -> Result<()> {
@@ -878,7 +891,8 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
     }
 
     fn generate_api_index(&self) -> String {
-        format!(r#"
+        format!(
+            r#"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -922,7 +936,7 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
     <script src="../static/prism.js"></script>
 </body>
 </html>
-        "#, 
+        "#,
             self.title,
             self.title,
             self.generate_api_module_list()
@@ -930,8 +944,11 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
     }
 
     fn generate_api_module_list(&self) -> String {
-        self.modules.iter().map(|module| {
-            format!(r#"
+        self.modules
+            .iter()
+            .map(|module| {
+                format!(
+                    r#"
                 <div class="api-module">
                     <h3><a href="{}.html">{}</a></h3>
                     <p>{}</p>
@@ -939,19 +956,27 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
                         {}
                     </div>
                 </div>
-            "#, 
-                module.name.to_lowercase(),
-                module.name,
-                module.description,
-                module.functions.iter().map(|func| {
-                    format!(r#"<span class="function-name">{}</span>"#, func.name)
-                }).collect::<Vec<_>>().join(", ")
-            )
-        }).collect::<Vec<_>>().join("")
+            "#,
+                    module.name.to_lowercase(),
+                    module.name,
+                    module.description,
+                    module
+                        .functions
+                        .iter()
+                        .map(|func| {
+                            format!(r#"<span class="function-name">{}</span>"#, func.name)
+                        })
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("")
     }
 
     fn generate_module_page(&self, module: &ModuleDoc) -> String {
-        format!(r#"
+        format!(
+            r#"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -996,14 +1021,21 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
 </body>
 </html>
         "#,
-            module.name, self.title, self.title, module.name, module.description,
+            module.name,
+            self.title,
+            self.title,
+            module.name,
+            module.description,
             self.generate_function_documentation(&module.functions)
         )
     }
 
     fn generate_function_documentation(&self, functions: &[FunctionDoc]) -> String {
-        functions.iter().map(|func| {
-            format!(r#"
+        functions
+            .iter()
+            .map(|func| {
+                format!(
+                    r#"
                 <div class="function">
                     <h3 class="function-name">{}</h3>
                     <pre class="function-signature"><code class="language-rust">{}</code></pre>
@@ -1026,46 +1058,68 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
                     {}
                 </div>
             "#,
-                func.name,
-                func.signature,
-                func.description,
-                func.parameters.iter().map(|param| {
-                    format!(r#"<li><code>{}</code> ({}): {}{}</li>"#,
-                        param.name,
-                        param.param_type,
-                        param.description,
-                        if param.optional { " (optional)" } else { "" }
-                    )
-                }).collect::<Vec<_>>().join(""),
-                func.returns,
-                if !func.examples.is_empty() {
-                    format!(r#"
+                    func.name,
+                    func.signature,
+                    func.description,
+                    func.parameters
+                        .iter()
+                        .map(|param| {
+                            format!(
+                                r#"<li><code>{}</code> ({}): {}{}</li>"#,
+                                param.name,
+                                param.param_type,
+                                param.description,
+                                if param.optional { " (optional)" } else { "" }
+                            )
+                        })
+                        .collect::<Vec<_>>()
+                        .join(""),
+                    func.returns,
+                    if !func.examples.is_empty() {
+                        format!(
+                            r#"
                         <div class="examples">
                             <h4>Examples</h4>
                             {}
                         </div>
-                    "#, func.examples.iter().map(|example| {
-                        format!(r#"<pre><code class="language-rust">{}</code></pre>"#, example)
-                    }).collect::<Vec<_>>().join(""))
-                } else {
-                    String::new()
-                },
-                if !func.notes.is_empty() {
-                    format!(r#"
+                    "#,
+                            func.examples
+                                .iter()
+                                .map(|example| {
+                                    format!(
+                                        r#"<pre><code class="language-rust">{}</code></pre>"#,
+                                        example
+                                    )
+                                })
+                                .collect::<Vec<_>>()
+                                .join("")
+                        )
+                    } else {
+                        String::new()
+                    },
+                    if !func.notes.is_empty() {
+                        format!(
+                            r#"
                         <div class="notes">
                             <h4>Notes</h4>
                             <ul>
                                 {}
                             </ul>
                         </div>
-                    "#, func.notes.iter().map(|note| {
-                        format!(r#"<li>{}</li>"#, note)
-                    }).collect::<Vec<_>>().join(""))
-                } else {
-                    String::new()
-                }
-            )
-        }).collect::<Vec<_>>().join("")
+                    "#,
+                            func.notes
+                                .iter()
+                                .map(|note| { format!(r#"<li>{}</li>"#, note) })
+                                .collect::<Vec<_>>()
+                                .join("")
+                        )
+                    } else {
+                        String::new()
+                    }
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("")
     }
 
     fn generate_tutorials(&self, output_path: &Path) -> Result<()> {
@@ -1080,7 +1134,8 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
         // Generate individual tutorial pages
         for tutorial in &self.tutorials {
             let tutorial_html = self.generate_tutorial_page(tutorial);
-            let tutorial_filename = format!("{}.html", tutorial.title.to_lowercase().replace(" ", "-"));
+            let tutorial_filename =
+                format!("{}.html", tutorial.title.to_lowercase().replace(" ", "-"));
             let mut tutorial_file = fs::File::create(tutorials_dir.join(tutorial_filename))?;
             tutorial_file.write_all(tutorial_html.as_bytes())?;
         }
@@ -1089,7 +1144,8 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
     }
 
     fn generate_tutorials_index(&self) -> String {
-        format!(r#"
+        format!(
+            r#"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1131,21 +1187,25 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
 </body>
 </html>
         "#,
-            self.title, self.title,
+            self.title,
+            self.title,
             self.generate_tutorial_cards()
         )
     }
 
     fn generate_tutorial_cards(&self) -> String {
-        self.tutorials.iter().map(|tutorial| {
-            let difficulty_class = match tutorial.difficulty.as_str() {
-                "Beginner" => "difficulty-beginner",
-                "Intermediate" => "difficulty-intermediate",
-                "Advanced" => "difficulty-advanced",
-                _ => "difficulty-beginner",
-            };
-            
-            format!(r#"
+        self.tutorials
+            .iter()
+            .map(|tutorial| {
+                let difficulty_class = match tutorial.difficulty.as_str() {
+                    "Beginner" => "difficulty-beginner",
+                    "Intermediate" => "difficulty-intermediate",
+                    "Advanced" => "difficulty-advanced",
+                    _ => "difficulty-beginner",
+                };
+
+                format!(
+                    r#"
                 <div class="tutorial-card">
                     <h3><a href="{}.html">{}</a></h3>
                     <p>{}</p>
@@ -1154,20 +1214,23 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
                     </div>
                 </div>
             "#,
-                tutorial.title.to_lowercase().replace(" ", "-"),
-                tutorial.title,
-                tutorial.description,
-                difficulty_class,
-                tutorial.difficulty
-            )
-        }).collect::<Vec<_>>().join("")
+                    tutorial.title.to_lowercase().replace(" ", "-"),
+                    tutorial.title,
+                    tutorial.description,
+                    difficulty_class,
+                    tutorial.difficulty
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("")
     }
 
     fn generate_tutorial_page(&self, tutorial: &Tutorial) -> String {
         // Convert markdown-like content to HTML
         let html_content = self.markdown_to_html(&tutorial.content);
-        
-        format!(r#"
+
+        format!(
+            r#"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1216,35 +1279,40 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
     fn markdown_to_html(&self, markdown: &str) -> String {
         // Simple markdown to HTML conversion
         let mut html = markdown.to_string();
-        
+
         // Headers
         html = html.replace("# ", "<h1>").replace("\n\n", "</h1>\n\n");
         html = html.replace("## ", "<h2>").replace("\n\n", "</h2>\n\n");
         html = html.replace("### ", "<h3>").replace("\n\n", "</h3>\n\n");
-        
+
         // Code blocks
         let code_block_regex = regex::Regex::new(r"```(\w+)\n(.*?)\n```").unwrap();
-        html = code_block_regex.replace_all(&html, r#"<pre><code class="language-$1">$2</code></pre>"#).to_string();
-        
+        html = code_block_regex
+            .replace_all(&html, r#"<pre><code class="language-$1">$2</code></pre>"#)
+            .to_string();
+
         // Inline code
         let inline_code_regex = regex::Regex::new(r"`([^`]+)`").unwrap();
-        html = inline_code_regex.replace_all(&html, r#"<code>$1</code>"#).to_string();
-        
+        html = inline_code_regex
+            .replace_all(&html, r#"<code>$1</code>"#)
+            .to_string();
+
         // Paragraphs
         let paragraphs: Vec<&str> = html.split("\n\n").collect();
         let mut result = String::new();
-        
+
         for paragraph in paragraphs {
-            if !paragraph.trim().is_empty() && 
-               !paragraph.starts_with("<h") && 
-               !paragraph.starts_with("<pre") &&
-               !paragraph.starts_with("<code") {
+            if !paragraph.trim().is_empty()
+                && !paragraph.starts_with("<h")
+                && !paragraph.starts_with("<pre")
+                && !paragraph.starts_with("<code")
+            {
                 result.push_str(&format!("<p>{}</p>\n", paragraph.trim()));
             } else {
                 result.push_str(&format!("{}\n", paragraph));
             }
         }
-        
+
         result
     }
 
@@ -1260,7 +1328,8 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
         // Generate individual example pages
         for example in &self.examples {
             let example_html = self.generate_example_page(example);
-            let example_filename = format!("{}.html", example.title.to_lowercase().replace(" ", "-"));
+            let example_filename =
+                format!("{}.html", example.title.to_lowercase().replace(" ", "-"));
             let mut example_file = fs::File::create(examples_dir.join(example_filename))?;
             example_file.write_all(example_html.as_bytes())?;
         }
@@ -1269,11 +1338,11 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
     }
 
     fn generate_examples_index(&self) -> String {
-        let categories: std::collections::HashSet<String> = self.examples.iter()
-            .map(|e| e.category.clone())
-            .collect();
+        let categories: std::collections::HashSet<String> =
+            self.examples.iter().map(|e| e.category.clone()).collect();
 
-        format!(r#"
+        format!(
+            r#"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1313,42 +1382,56 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
 </body>
 </html>
         "#,
-            self.title, self.title,
-            categories.iter().map(|category| {
-                let category_examples: Vec<&Example> = self.examples.iter()
-                    .filter(|e| &e.category == category)
-                    .collect();
-                
-                format!(r#"
+            self.title,
+            self.title,
+            categories
+                .iter()
+                .map(|category| {
+                    let category_examples: Vec<&Example> = self
+                        .examples
+                        .iter()
+                        .filter(|e| &e.category == category)
+                        .collect();
+
+                    format!(
+                        r#"
                     <div class="example-category">
                         <h3>{}</h3>
                         <div class="example-grid">
                             {}
                         </div>
                     </div>
-                "#, 
-                    category,
-                    category_examples.iter().map(|example| {
-                        format!(r#"
+                "#,
+                        category,
+                        category_examples
+                            .iter()
+                            .map(|example| {
+                                format!(
+                                    r#"
                             <div class="example-card">
                                 <h4><a href="{}.html">{}</a></h4>
                                 <p>{}</p>
                                 <span class="example-category">{}</span>
                             </div>
                         "#,
-                            example.title.to_lowercase().replace(" ", "-"),
-                            example.title,
-                            example.description,
-                            example.category
-                        )
-                    }).collect::<Vec<_>>().join("")
-                )
-            }).collect::<Vec<_>>().join("")
+                                    example.title.to_lowercase().replace(" ", "-"),
+                                    example.title,
+                                    example.description,
+                                    example.category
+                                )
+                            })
+                            .collect::<Vec<_>>()
+                            .join("")
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("")
         )
     }
 
     fn generate_example_page(&self, example: &Example) -> String {
-        format!(r#"
+        format!(
+            r#"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1399,16 +1482,23 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
 </body>
 </html>
         "#,
-            example.title, self.title, self.title,
-            example.title, example.description, example.category,
+            example.title,
+            self.title,
+            self.title,
+            example.title,
+            example.description,
+            example.category,
             example.code,
             if let Some(output) = &example.expected_output {
-                format!(r#"
+                format!(
+                    r#"
                     <div class="expected-output">
                         <h3>Expected Output</h3>
                         <pre><code>{}</code></pre>
                     </div>
-                "#, output)
+                "#,
+                    output
+                )
             } else {
                 String::new()
             }
@@ -1418,7 +1508,7 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
     fn generate_search_index(&self, output_path: &Path) -> Result<()> {
         // Generate search index JSON
         let mut search_index = HashMap::new();
-        
+
         // Add modules to search index
         for module in &self.modules {
             search_index.insert(
@@ -1428,9 +1518,9 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
                     "description": module.description,
                     "url": format!("api/{}.html", module.name.to_lowercase()),
                     "type": "module"
-                })
+                }),
             );
-            
+
             // Add functions to search index
             for function in &module.functions {
                 search_index.insert(
@@ -1445,7 +1535,7 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
                 );
             }
         }
-        
+
         // Add tutorials to search index
         for tutorial in &self.tutorials {
             search_index.insert(
@@ -1458,7 +1548,7 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
                 })
             );
         }
-        
+
         // Add examples to search index
         for example in &self.examples {
             search_index.insert(
@@ -1487,7 +1577,8 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
     }
 
     fn generate_search_page(&self) -> String {
-        format!(r#"
+        format!(
+            r#"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1529,7 +1620,9 @@ println!("Filtered image shape: {{:?}}", filtered.shape());</code></pre>
     <script src="static/search.js"></script>
 </body>
 </html>
-        "#, self.title, self.title)
+        "#,
+            self.title, self.title
+        )
     }
 
     fn generate_static_files(&self, output_path: &Path) -> Result<()> {
@@ -1612,7 +1705,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     pub fn generate_readme(&self, output_path: &Path) -> Result<()> {
-        let readme_content = format!(r#"# {} - Documentation Website
+        let readme_content = format!(
+            r#"# {} - Documentation Website
 
 This directory contains the generated documentation website for {}.
 
@@ -1676,7 +1770,9 @@ Documentation generated for {} version {}.
 ## License
 
 Documentation licensed under MIT License.
-"#, self.title, self.title, self.title, self.version);
+"#,
+            self.title, self.title, self.title, self.version
+        );
 
         let mut readme_file = fs::File::create(output_path.join("README.md"))?;
         readme_file.write_all(readme_content.as_bytes())?;
@@ -2051,11 +2147,12 @@ body {
         gap: 0.5rem;
     }
 }
-        "#.to_string()
+        "#
+        .to_string()
     }
 
     fn generate_default_js(&self) -> String {
-        r#"
+        r##"
 // SciRS2 NDImage Documentation JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -2105,7 +2202,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('SciRS2 NDImage Documentation loaded successfully');
 });
-        "#.to_string()
+        "##
+        .to_string()
     }
 
     fn generate_default_prism_css(&self) -> String {
@@ -2223,7 +2321,8 @@ pre[class*="language-"] {
 .token.entity {
     cursor: help;
 }
-        "#.to_string()
+        "#
+        .to_string()
     }
 
     fn generate_default_prism_js(&self) -> String {
@@ -2328,49 +2427,52 @@ impl Default for DocumentationSite {
 pub fn generate_documentation_website() -> Result<()> {
     let mut doc_site = DocumentationSite::new();
     doc_site.build_comprehensive_documentation()?;
-    
+
     let output_dir = "docs";
     doc_site.generate_html_documentation(output_dir)?;
     doc_site.generate_readme(Path::new(output_dir))?;
-    
-    println!("Documentation website generated in '{}' directory", output_dir);
+
+    println!(
+        "Documentation website generated in '{}' directory",
+        output_dir
+    );
     println!("Open 'docs/index.html' in a web browser to view the documentation");
-    
+
     Ok(())
 }
 
 #[allow(dead_code)]
 pub fn export_documentation_to_formats() -> Result<()> {
     let doc_site = DocumentationSite::new();
-    
+
     // Export to different formats
     export_to_markdown(&doc_site)?;
     export_to_json(&doc_site)?;
-    
+
     Ok(())
 }
 
 #[allow(dead_code)]
 fn export_to_markdown(doc_site: &DocumentationSite) -> Result<()> {
     let mut markdown = String::new();
-    
+
     markdown.push_str(&format!("# {}\n\n", doc_site.title));
     markdown.push_str(&format!("{}\n\n", doc_site.description));
-    
+
     for module in &doc_site.modules {
         markdown.push_str(&format!("## {}\n\n", module.name));
         markdown.push_str(&format!("{}\n\n", module.description));
-        
+
         for function in &module.functions {
             markdown.push_str(&format!("### {}\n\n", function.name));
             markdown.push_str(&format!("```rust\n{}\n```\n\n", function.signature));
             markdown.push_str(&format!("{}\n\n", function.description));
         }
     }
-    
+
     let mut file = fs::File::create("docs/API_REFERENCE.md")?;
     file.write_all(markdown.as_bytes())?;
-    
+
     Ok(())
 }
 
@@ -2379,6 +2481,6 @@ fn export_to_json(doc_site: &DocumentationSite) -> Result<()> {
     let json_data = serde_json::to_string_pretty(doc_site)?;
     let mut file = fs::File::create("docs/documentation.json")?;
     file.write_all(json_data.as_bytes())?;
-    
+
     Ok(())
 }

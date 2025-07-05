@@ -288,9 +288,9 @@ pub use simd_ops::{
 // Parallel vector operations for iterative solvers
 pub mod parallel_vector_ops;
 pub use parallel_vector_ops::{
-    parallel_axpy, parallel_dot, parallel_linear_combination, parallel_norm2,
-    parallel_sparse_matvec_csr, parallel_vector_add, parallel_vector_copy, parallel_vector_scale,
-    parallel_vector_sub, ultrathink_sparse_matvec_csr, ParallelVectorOptions,
+    advanced_sparse_matvec_csr, parallel_axpy, parallel_dot, parallel_linear_combination,
+    parallel_norm2, parallel_sparse_matvec_csr, parallel_vector_add, parallel_vector_copy,
+    parallel_vector_scale, parallel_vector_sub, ParallelVectorOptions,
 };
 
 // Quantum-inspired sparse matrix operations (Advanced mode)
@@ -311,7 +311,7 @@ pub use quantum_neural_hybrid::{
     HybridStrategy, QuantumNeuralConfig, QuantumNeuralHybridProcessor, QuantumNeuralHybridStats,
 };
 
-// Adaptive memory compression for ultra-large sparse matrices (Advanced mode)
+// Adaptive memory compression for advanced-large sparse matrices (Advanced mode)
 pub mod adaptive_memory_compression;
 pub use adaptive_memory_compression::{
     AdaptiveCompressionConfig, AdaptiveMemoryCompressor, CompressedMatrix, CompressionAlgorithm,

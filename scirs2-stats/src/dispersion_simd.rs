@@ -26,9 +26,8 @@ use scirs2_core::simd_ops::{AutoOptimizer, SimdUnifiedOps};
 #[allow(dead_code)]
 pub fn mad_simd<F, D>(x: &mut ArrayBase<D, Ix1>, scale: F, nan_policy: &str) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps,
-    D: DataMut<Elem = F>
-        + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
+    D: DataMut<Elem = F>,
 {
     let n = x.len();
     if n == 0 {
@@ -115,9 +114,8 @@ pub fn iqr_simd<F, D>(
     _keep_dims: bool,
 ) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps,
-    D: DataMut<Elem = F>
-        + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
+    D: DataMut<Elem = F>,
 {
     if x.is_empty() {
         return Err(StatsError::invalid_argument(
@@ -151,9 +149,8 @@ pub fn coefficient_of_variation_simd<F, D>(
     nan_policy: &str,
 ) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     use crate::descriptive_simd::{mean_simd, std_simd};
 
@@ -204,9 +201,8 @@ where
 #[allow(dead_code)]
 pub fn range_simd<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     if x.is_empty() {
         return Err(StatsError::invalid_argument(
@@ -246,9 +242,8 @@ where
 #[allow(dead_code)]
 pub fn gini_simd<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     let n = x.len();
     if n == 0 {
@@ -314,9 +309,8 @@ where
 #[allow(dead_code)]
 pub fn sem_simd<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     use crate::descriptive_simd::std_simd;
 
@@ -341,9 +335,8 @@ pub fn median_abs_deviation_simd<F, D>(
     scale: F,
 ) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps,
-    D: DataMut<Elem = F>
-        + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
+    D: DataMut<Elem = F>,
 {
     let n = x.len();
     if n == 0 {
@@ -389,9 +382,8 @@ pub fn percentile_range_simd<F, D>(
     interpolation: &str,
 ) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps,
-    D: DataMut<Elem = F>
-        + std::fmt::Display,
+    F: Float + NumCast + SimdUnifiedOps + std::fmt::Display,
+    D: DataMut<Elem = F>,
 {
     if lower_pct < F::zero()
         || lower_pct > F::from(100).unwrap()

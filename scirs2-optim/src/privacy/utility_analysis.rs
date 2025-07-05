@@ -205,8 +205,8 @@ pub enum AnalysisGranularity {
     /// Fine-grained analysis
     Fine,
 
-    /// Ultra-fine analysis
-    UltraFine,
+    /// Advanced-fine analysis
+    AdvancedFine,
 
     /// Adaptive granularity
     Adaptive,

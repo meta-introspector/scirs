@@ -3303,7 +3303,7 @@ impl NetworkClient for UdpClient {
                     available_cores: 16,
                     gpu_usage: None,
                     worker_version: "1.0.0".to_string(),
-                    capabilities: vec!["metrics".to_string(), "ultrafast".to_string()],
+                    capabilities: vec!["metrics".to_string(), "advancedfast".to_string()],
                     health_score: 0.96,
                 },
             })

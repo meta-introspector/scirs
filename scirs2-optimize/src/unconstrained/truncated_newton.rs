@@ -311,7 +311,6 @@ where
             return Ok(OptimizeResult {
                 x,
                 fun: f,
-                iterations: iter,
                 nit: iter,
                 func_evals: nfev,
                 nfev,
@@ -405,7 +404,6 @@ where
     Ok(OptimizeResult {
         x,
         fun: final_f,
-        iterations: options.max_iter,
         nit: options.max_iter,
         func_evals: nfev,
         nfev,
@@ -481,7 +479,6 @@ where
             return Ok(OptimizeResult {
                 x,
                 fun: f,
-                iterations: iter,
                 nit: iter,
                 func_evals: nfev,
                 nfev,
@@ -543,7 +540,6 @@ where
     Ok(OptimizeResult {
         x,
         fun: final_f,
-        iterations: options.max_iter,
         nit: options.max_iter,
         func_evals: nfev,
         nfev,

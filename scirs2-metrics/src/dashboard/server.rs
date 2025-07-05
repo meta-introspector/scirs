@@ -286,7 +286,7 @@ fn generate_ai_insights(metrics: &[MetricDataPoint]) -> Vec<AiInsight> {
     for metric in metrics {
         metric_groups
             .entry(metric.name.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(metric);
     }
 
@@ -397,7 +397,7 @@ fn detect_anomalies(metrics: &[MetricDataPoint]) -> Vec<AnomalyAlert> {
     for metric in metrics {
         metric_groups
             .entry(metric.name.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(metric);
     }
 
@@ -455,7 +455,7 @@ fn predict_future_performance(metrics: &[MetricDataPoint]) -> Vec<PerformancePre
     for metric in metrics {
         metric_groups
             .entry(metric.name.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(metric);
     }
 

@@ -233,8 +233,7 @@ struct CacheEntry {
 
 impl<F> StreamingStatsCalculator<F>
 where
-    F: Float + NumCast + Zero + One + Send + Sync
-        + std::fmt::Display,
+    F: Float + NumCast + Zero + One + Send + Sync + std::fmt::Display,
 {
     /// Create a new streaming statistics calculator
     pub fn new(config: MemoryOptimizationConfig) -> Self {
@@ -364,8 +363,7 @@ pub struct StreamingStatistics<F> {
 
 impl<F> CacheOptimizedMatrix<F>
 where
-    F: Float + NumCast + Zero + One + Clone + 'static
-        + std::fmt::Display,
+    F: Float + NumCast + Zero + One + Clone + 'static + std::fmt::Display,
 {
     /// Create a cache-optimized matrix with specified layout
     pub fn new(data: Array2<F>, layout: MatrixLayout, cache_line_size: usize) -> Self {
@@ -947,8 +945,7 @@ impl MemoryOptimizationSuite {
     /// Optimize correlation computation for large matrices
     pub fn optimized_correlation_matrix<F>(&mut self, data: ArrayView2<F>) -> StatsResult<Array2<F>>
     where
-        F: Float + NumCast + Zero + One + Clone + Send + Sync + 'static
-        + std::fmt::Display,
+        F: Float + NumCast + Zero + One + Clone + Send + Sync + 'static + std::fmt::Display,
     {
         let (n_samples, n_features) = data.dim();
         let data_size = n_samples * n_features * mem::size_of::<F>();
@@ -972,8 +969,7 @@ impl MemoryOptimizationSuite {
     /// Streaming correlation matrix computation for large datasets
     fn streaming_correlation_matrix<F>(&mut self, data: ArrayView2<F>) -> StatsResult<Array2<F>>
     where
-        F: Float + NumCast + Zero + One + Clone + 'static
-        + std::fmt::Display,
+        F: Float + NumCast + Zero + One + Clone + 'static + std::fmt::Display,
     {
         let (n_samples, n_features) = data.dim();
         let chunk_size = self.config.streaming_chunk_size;
@@ -1023,8 +1019,7 @@ impl MemoryOptimizationSuite {
         mean_j: F,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast + Zero + One
-        + std::fmt::Display,
+        F: Float + NumCast + Zero + One + std::fmt::Display,
     {
         if feature_i == feature_j {
             return Ok(F::one());

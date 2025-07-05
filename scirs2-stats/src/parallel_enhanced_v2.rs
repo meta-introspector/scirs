@@ -98,12 +98,11 @@ pub fn mean_parallel_enhanced<F, D>(
     config: Option<ParallelConfig>,
 ) -> StatsResult<F>
 where
-    F: Float + NumCast + Send + Sync + std::iter::Sum,
-    D: Data<Elem = F> + Sync
-        + std::fmt::Display,
+    F: Float + NumCast + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
+    D: Data<Elem = F> + Sync,
 {
     // Use scirs2-core validation
-    check_not_empty(x.as_slice().unwrap(), "x")
+    check_not_empty(x, "x")
         .map_err(|_| StatsError::invalid_argument("Cannot compute mean of empty array"))?;
 
     let config = config.unwrap_or_default();
@@ -137,9 +136,8 @@ pub fn variance_parallel_enhanced<F, D>(
     config: Option<ParallelConfig>,
 ) -> StatsResult<F>
 where
-    F: Float + NumCast + Send + Sync + std::iter::Sum,
-    D: Data<Elem = F> + Sync
-        + std::fmt::Display,
+    F: Float + NumCast + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
+    D: Data<Elem = F> + Sync + std::fmt::Display,
 {
     let n = x.len();
     if n <= ddof {
@@ -200,9 +198,8 @@ pub fn corrcoef_parallel_enhanced<F, D>(
     config: Option<ParallelConfig>,
 ) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + Send + Sync + std::iter::Sum,
-    D: Data<Elem = F> + Sync
-        + std::fmt::Display,
+    F: Float + NumCast + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
+    D: Data<Elem = F> + Sync,
 {
     let (n_samples, n_features) = data.dim();
 
@@ -266,8 +263,7 @@ pub fn bootstrap_parallel_enhanced<F, D>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Send + Sync,
-    D: Data<Elem = F> + Sync
-        + std::fmt::Display,
+    D: Data<Elem = F> + Sync + std::fmt::Display,
 {
     if data.is_empty() {
         return Err(StatsError::invalid_argument("Cannot bootstrap empty data"));
@@ -284,8 +280,7 @@ where
         .into_par_iter()
         .map(|sample_idx| {
             use rand::rngs::StdRng;
-            use scirs2_core::rng;
-            use rand::SeedableRng;
+            use rand::{Rng, SeedableRng};
 
             // Create deterministic RNG for reproducibility
             let mut rng = StdRng::seed_from_u64(sample_idx as u64);
@@ -308,8 +303,7 @@ where
 #[allow(dead_code)]
 fn parallel_sum_slice<F>(slice: &[F], config: &ParallelConfig) -> F
 where
-    F: Float + NumCast + Send + Sync + std::iter::Sum
-        + std::fmt::Display,
+    F: Float + NumCast + Send + Sync + std::iter::Sum + std::fmt::Display,
 {
     let chunk_size = config.get_chunk_size(slice.len());
 
@@ -322,9 +316,8 @@ where
 #[allow(dead_code)]
 fn parallel_sum_indexed<F, D>(arr: &ArrayBase<D, Ix1>, config: &ParallelConfig) -> F
 where
-    F: Float + NumCast + Send + Sync + std::iter::Sum,
-    D: Data<Elem = F> + Sync
-        + std::fmt::Display,
+    F: Float + NumCast + Send + Sync + std::iter::Sum<F> + std::fmt::Display,
+    D: Data<Elem = F> + Sync,
 {
     let n = arr.len();
     let chunk_size = config.get_chunk_size(n);
@@ -350,8 +343,7 @@ where
 fn variance_sequential_welford<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F> + std::fmt::Display,
 {
     let mut mean = F::zero();
     let mut m2 = F::zero();
@@ -372,8 +364,7 @@ where
 #[allow(dead_code)]
 fn combine_welford_stats<F>(stats: &[(F, F, usize)]) -> (F, F, usize)
 where
-    F: Float + NumCast
-        + std::fmt::Display,
+    F: Float + NumCast + std::fmt::Display,
 {
     stats.iter().fold(
         (F::zero(), F::zero(), 0),
@@ -394,8 +385,7 @@ where
 #[allow(dead_code)]
 fn compute_correlation_pair<F>(x: &ArrayView1<F>, y: &ArrayView1<F>, mean_x: F, mean_y: F) -> F
 where
-    F: Float + NumCast
-        + std::fmt::Display,
+    F: Float + NumCast + std::fmt::Display,
 {
     let n = x.len();
     let mut cov = F::zero();

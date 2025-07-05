@@ -1,4 +1,4 @@
-//! Ultra-advanced MCMC methods for complex statistical inference
+//! Advanced-advanced MCMC methods for complex statistical inference
 //!
 //! This module implements state-of-the-art MCMC algorithms including:
 //! - Adaptive MCMC with optimal scaling
@@ -14,24 +14,23 @@
 use crate::error::StatsResult;
 use ndarray::{Array1, Array2, Array3};
 use num_traits::{Float, NumCast, One, Zero};
-use rand::thread_rng;
+use rand::{rng, Rng};
 use rand_distr::{Distribution, Normal};
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
 use std::marker::PhantomData;
 use std::sync::RwLock;
 use std::time::Instant;
 
-/// Ultra-advanced MCMC sampler with adaptive methods
-pub struct UltraAdvancedMCMC<F, T>
+/// Advanced-advanced MCMC sampler with adaptive methods
+pub struct AdvancedAdvancedMCMC<F, T>
 where
     F: Float + NumCast + Copy + Send + Sync + std::fmt::Display,
-    T: UltraTarget<F>
-        + std::fmt::Display,
+    T: AdvancedTarget<F> + std::fmt::Display,
 {
     /// Target distribution
     target: T,
     /// Sampler configuration
-    config: UltraAdvancedConfig<F>,
+    config: AdvancedAdvancedConfig<F>,
     /// Current state of chains
     chains: Vec<MCMCChain<F>>,
     /// Adaptation state
@@ -43,11 +42,10 @@ where
     _phantom: PhantomData<F>,
 }
 
-/// Ultra-advanced target distribution interface
-pub trait UltraTarget<F>: Send + Sync
+/// Advanced-advanced target distribution interface
+pub trait AdvancedTarget<F>: Send + Sync
 where
-    F: Float + Copy
-        + std::fmt::Display,
+    F: Float + Copy + std::fmt::Display,
 {
     /// Compute log probability density
     fn log_density(&self, x: &Array1<F>) -> F;
@@ -98,9 +96,9 @@ where
     }
 }
 
-/// Ultra-advanced MCMC configuration
+/// Advanced-advanced MCMC configuration
 #[derive(Debug, Clone)]
-pub struct UltraAdvancedConfig<F> {
+pub struct AdvancedAdvancedConfig<F> {
     /// Number of parallel chains
     pub num_chains: usize,
     /// Number of samples per chain
@@ -375,7 +373,7 @@ pub struct PerformanceMonitor {
 
 /// MCMC sampling results
 #[derive(Debug, Clone)]
-pub struct UltraAdvancedResults<F> {
+pub struct AdvancedAdvancedResults<F> {
     /// All chain samples
     pub samples: Array3<F>, // (chain, sample, parameter)
     /// Log densities for all samples
@@ -419,14 +417,13 @@ pub struct PosteriorSummary<F> {
     pub credible_intervals: Array2<F>, // (parameter, [lower, upper])
 }
 
-impl<F, T> UltraAdvancedMCMC<F, T>
+impl<F, T> AdvancedAdvancedMCMC<F, T>
 where
     F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static + std::fmt::Display,
-    T: UltraTarget<F> + 'static
-        + std::fmt::Display,
+    T: AdvancedTarget<F> + 'static + std::fmt::Display,
 {
-    /// Create new ultra-advanced MCMC sampler
-    pub fn new(target: T, config: UltraAdvancedConfig<F>) -> StatsResult<Self> {
+    /// Create new advanced-advanced MCMC sampler
+    pub fn new(target: T, config: AdvancedAdvancedConfig<F>) -> StatsResult<Self> {
         let dim = target.dim();
 
         // Initialize chains
@@ -452,7 +449,7 @@ where
     }
 
     /// Run MCMC sampling with adaptive optimization
-    pub fn sample(&mut self) -> StatsResult<UltraAdvancedResults<F>> {
+    pub fn sample(&mut self) -> StatsResult<AdvancedAdvancedResults<F>> {
         let start_time = Instant::now();
         let total_iterations = self.config.burn_in + self.config.num_samples;
 
@@ -586,26 +583,26 @@ where
         let half_step = step_size / F::from(2.0).unwrap();
 
         // First half-step for momentum
-        F::simd_fma(&mut m.view_mut(), &gradient.view(), half_step);
+        m = &m + &F::simd_scalar_mul(&gradient.view(), half_step);
 
         // Full steps
         for _ in 0..(num_steps - 1) {
             // Full step for position
-            F::simd_fma(&mut p.view_mut(), &m.view(), step_size);
+            p = &p + &F::simd_scalar_mul(&m.view(), step_size);
 
             // Compute new gradient
             let new_grad = self.target.gradient(&p);
 
             // Full step for momentum
-            F::simd_fma(&mut m.view_mut(), &new_grad.view(), step_size);
+            m = &m + &F::simd_scalar_mul(&new_grad.view(), step_size);
         }
 
         // Final position step
-        F::simd_fma(&mut p.view_mut(), &m.view(), step_size);
+        p = &p + &F::simd_scalar_mul(&m.view(), step_size);
 
         // Final half-step for momentum
         let final_grad = self.target.gradient(&p);
-        F::simd_fma(&mut m.view_mut(), &final_grad.view(), half_step);
+        m = &m + &F::simd_scalar_mul(&final_grad.view(), half_step);
 
         Ok((p, m))
     }
@@ -615,7 +612,7 @@ where
         // Simplified - would implement proper sampling from multivariate normal
         let dim = self.target.dim();
         let normal = Normal::new(0.0, 1.0).unwrap();
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
         let momentum: Array1<F> =
             Array1::from_shape_fn(dim, |_| F::from(normal.sample(&mut rng)).unwrap());
@@ -650,14 +647,19 @@ where
         mass_matrix: &MassMatrixType<F>,
     ) -> StatsResult<F> {
         match mass_matrix {
-            MassMatrixType::Identity => Ok(F::simd_dot(momentum, momentum) / F::from(2.0).unwrap()),
+            MassMatrixType::Identity => {
+                Ok(F::simd_dot(&momentum.view(), &momentum.view()) / F::from(2.0).unwrap())
+            }
             MassMatrixType::Diagonal(diag) => {
-                let weighted_momentum = F::simd_mul(momentum, diag);
-                Ok(F::simd_dot(momentum, &weighted_momentum) / F::from(2.0).unwrap())
+                let weighted_momentum = F::simd_mul(&momentum.view(), &diag.view());
+                Ok(
+                    F::simd_dot(&momentum.view(), &weighted_momentum.view())
+                        / F::from(2.0).unwrap(),
+                )
             }
             _ => {
                 // Simplified for other types
-                Ok(F::simd_dot(momentum, momentum) / F::from(2.0).unwrap())
+                Ok(F::simd_dot(&momentum.view(), &momentum.view()) / F::from(2.0).unwrap())
             }
         }
     }
@@ -668,7 +670,7 @@ where
             true
         } else {
             let accept_prob = (-energy_diff).exp();
-            let mut rng = thread_rng();
+            let mut rng = rng();
             let u: f64 = rng.random_range(0.0..1.0);
             F::from(u).unwrap() < accept_prob
         }
@@ -724,7 +726,7 @@ where
     }
 
     /// Compile final results
-    fn compile_results(&self, total_time: f64) -> StatsResult<UltraAdvancedResults<F>> {
+    fn compile_results(&self, total_time: f64) -> StatsResult<AdvancedAdvancedResults<F>> {
         let dim = self.target.dim();
         let effective_samples = self.config.num_samples / self.config.thin;
 
@@ -764,7 +766,7 @@ where
 
         let effective_samples = Array2::zeros((effective_samples, dim));
 
-        Ok(UltraAdvancedResults {
+        Ok(AdvancedAdvancedResults {
             samples,
             log_densities,
             convergence_summary,
@@ -778,10 +780,9 @@ where
 // Implementation of helper structs
 impl<F> MCMCChain<F>
 where
-    F: Float + NumCast + Copy
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + std::fmt::Display,
 {
-    fn new(id: usize, dim: usize, config: &UltraAdvancedConfig<F>) -> StatsResult<Self> {
+    fn new(id: usize, dim: usize, config: &AdvancedAdvancedConfig<F>) -> StatsResult<Self> {
         Ok(Self {
             id,
             current_position: Array1::zeros(dim),
@@ -799,8 +800,7 @@ where
 
 impl<F> AdaptationState<F>
 where
-    F: Float + NumCast + Copy
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + std::fmt::Display,
 {
     fn new(dim: usize) -> Self {
         Self {
@@ -825,8 +825,7 @@ where
 
 impl<F> ConvergenceDiagnostics<F>
 where
-    F: Float + NumCast + Copy
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + std::fmt::Display,
 {
     fn new(dim: usize) -> Self {
         Self {
@@ -853,10 +852,9 @@ impl PerformanceMonitor {
     }
 }
 
-impl<F> Default for UltraAdvancedConfig<F>
+impl<F> Default for AdvancedAdvancedConfig<F>
 where
-    F: Float + NumCast + Copy
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + std::fmt::Display,
 {
     fn default() -> Self {
         Self {
@@ -910,7 +908,7 @@ mod tests {
         dim: usize,
     }
 
-    impl UltraTarget<f64> for StandardNormal {
+    impl AdvancedTarget<f64> for StandardNormal {
         fn log_density(&self, x: &Array1<f64>) -> f64 {
             -0.5 * x.iter().map(|&xi| xi * xi).sum::<f64>()
         }
@@ -925,11 +923,11 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_advanced_mcmc() {
+    fn test_advanced_advanced_mcmc() {
         let target = StandardNormal { dim: 2 };
-        let config = UltraAdvancedConfig::default();
+        let config = AdvancedAdvancedConfig::default();
 
-        let sampler = UltraAdvancedMCMC::new(target, config).unwrap();
+        let sampler = AdvancedAdvancedMCMC::new(target, config).unwrap();
 
         // Test initialization
         assert_eq!(sampler.chains.len(), 4);
@@ -939,8 +937,8 @@ mod tests {
     #[test]
     fn test_leapfrog_integration() {
         let target = StandardNormal { dim: 2 };
-        let config = UltraAdvancedConfig::default();
-        let sampler = UltraAdvancedMCMC::new(target, config).unwrap();
+        let config = AdvancedAdvancedConfig::default();
+        let sampler = AdvancedAdvancedMCMC::new(target, config).unwrap();
 
         let position = array![0.0, 0.0];
         let momentum = array![1.0, -1.0];

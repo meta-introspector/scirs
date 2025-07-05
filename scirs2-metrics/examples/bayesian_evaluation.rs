@@ -201,7 +201,7 @@ fn posterior_predictive_check_example() -> Result<()> {
 
         let results = ppc.check_model_adequacy(&observed_data, &posterior_predictive_samples)?;
 
-        println!("Posterior Predictive Check ({}):", name);
+        println!("Posterior Predictive Check ({name}):");
         println!("  Bayesian p-value: {:.4}", results.bayesian_p_value);
         println!("  Observed statistic: {:.4}", results.observed_statistic);
         println!(
@@ -297,7 +297,7 @@ fn bayesian_model_averaging_example() -> Result<()> {
 
         let results = bma.average_models(&predictions, &scores)?;
 
-        println!("Bayesian Model Averaging ({}):", name);
+        println!("Bayesian Model Averaging ({name}):");
         println!("  Model weights: {:?}", results.model_weights.to_vec());
         println!(
             "  Averaged predictions: {:?}",
@@ -426,17 +426,14 @@ fn comprehensive_bayesian_workflow() -> Result<()> {
     };
     let waic_diff = (model1_info.waic - model2_info.waic).abs();
 
-    println!(
-        "  Best model by WAIC: {} (difference: {:.2})",
-        best_model, waic_diff
-    );
+    println!("  Best model by WAIC: {best_model} (difference: {waic_diff:.2})");
 
     if waic_diff < 2.0 {
         println!("  Models are very similar - consider model averaging");
     } else if waic_diff < 6.0 {
-        println!("  Moderate evidence favoring {}", best_model);
+        println!("  Moderate evidence favoring {best_model}");
     } else {
-        println!("  Strong evidence favoring {}", best_model);
+        println!("  Strong evidence favoring {best_model}");
     }
 
     if ppc_result.model_adequate {

@@ -1,4 +1,4 @@
-//! Ultra-Advanced Spike-Timing Dependent Plasticity (STDP) Learning
+//! Advanced-Advanced Spike-Timing Dependent Plasticity (STDP) Learning
 //!
 //! Implementation of cutting-edge STDP-based optimization algorithms with:
 //! - Multi-timescale adaptive plasticity
@@ -9,12 +9,13 @@
 //! - Calcium-based synaptic dynamics
 
 use ndarray::{Array1, ArrayView1};
+use rand::Rng;
 use scirs2_core::error::CoreResult as Result;
 use std::collections::VecDeque;
 
-/// Ultra-Advanced Multi-Timescale STDP with Metaplasticity
+/// Advanced-Advanced Multi-Timescale STDP with Metaplasticity
 #[derive(Debug, Clone)]
-pub struct UltraAdvancedSTDP {
+pub struct AdvancedAdvancedSTDP {
     // Basic STDP traces
     pub pre_trace_fast: f64,
     pub post_trace_fast: f64,
@@ -67,8 +68,8 @@ pub struct UltraAdvancedSTDP {
     pub w_max: f64,
 }
 
-impl UltraAdvancedSTDP {
-    /// Create new ultra-advanced STDP rule with sophisticated plasticity mechanisms
+impl AdvancedAdvancedSTDP {
+    /// Create new advanced-advanced STDP rule with sophisticated plasticity mechanisms
     pub fn new(eta_ltp: f64, eta_ltd: f64, target_firing_rate: f64) -> Self {
         Self {
             // Initialize traces
@@ -428,13 +429,13 @@ impl STDPLearningRule {
     }
 }
 
-/// Ultra-advanced STDP network for complex optimization problems
+/// Advanced-advanced STDP network for complex optimization problems
 #[derive(Debug, Clone)]
-pub struct UltraSTDPNetwork {
+pub struct AdvancedSTDPNetwork {
     /// Network layers
     pub layers: Vec<STDPLayer>,
-    /// Ultra-advanced STDP rules
-    pub ultra_stdp_rules: Vec<Vec<UltraAdvancedSTDP>>,
+    /// Advanced-advanced STDP rules
+    pub advanced_stdp_rules: Vec<Vec<AdvancedAdvancedSTDP>>,
     /// Current parameters being optimized
     pub current_params: Array1<f64>,
     /// Best parameters found
@@ -442,7 +443,7 @@ pub struct UltraSTDPNetwork {
     /// Best objective value
     pub best_objective: f64,
     /// Iteration counter
-    pub iterations: usize,
+    pub nit: usize,
     /// Network statistics
     pub network_stats: NetworkStats,
 }
@@ -484,11 +485,11 @@ impl Default for NetworkStats {
     }
 }
 
-impl UltraSTDPNetwork {
-    /// Create new ultra-advanced STDP network
+impl AdvancedSTDPNetwork {
+    /// Create new advanced-advanced STDP network
     pub fn new(layer_sizes: Vec<usize>, target_firing_rate: f64, learning_rate: f64) -> Self {
         let mut layers = Vec::new();
-        let mut ultra_stdp_rules = Vec::new();
+        let mut advanced_stdp_rules = Vec::new();
 
         for (layer_idx, &size) in layer_sizes.iter().enumerate() {
             let layer = STDPLayer {
@@ -507,7 +508,7 @@ impl UltraSTDPNetwork {
                 for _i in 0..size {
                     let mut neuron_rules = Vec::new();
                     for _j in 0..prev_size {
-                        neuron_rules.push(UltraAdvancedSTDP::new(
+                        neuron_rules.push(AdvancedAdvancedSTDP::new(
                             learning_rate,
                             learning_rate * 0.5,
                             target_firing_rate,
@@ -515,7 +516,7 @@ impl UltraSTDPNetwork {
                     }
                     layer_rules.push(neuron_rules);
                 }
-                ultra_stdp_rules.push(layer_rules);
+                advanced_stdp_rules.push(layer_rules);
             }
         }
 
@@ -523,21 +524,21 @@ impl UltraSTDPNetwork {
 
         Self {
             layers,
-            ultra_stdp_rules,
+            advanced_stdp_rules,
             current_params: Array1::zeros(input_size),
             best_params: Array1::zeros(input_size),
             best_objective: f64::INFINITY,
-            iterations: 0,
+            nit: 0,
             network_stats: NetworkStats::default(),
         }
     }
 
-    /// Run ultra-advanced STDP optimization
+    /// Run advanced-advanced STDP optimization
     pub fn optimize<F>(
         &mut self,
         objective: F,
         initial_params: &ArrayView1<f64>,
-        max_iterations: usize,
+        max_nit: usize,
         dt: f64,
     ) -> Result<Array1<f64>>
     where
@@ -549,7 +550,7 @@ impl UltraSTDPNetwork {
 
         let mut prev_objective = self.best_objective;
 
-        for iteration in 0..max_iterations {
+        for iteration in 0..max_nit {
             let current_time = iteration as f64 * dt;
 
             // Evaluate current objective
@@ -570,8 +571,8 @@ impl UltraSTDPNetwork {
             let network_spikes =
                 self.simulate_network_dynamics(&spike_patterns, current_time, dt)?;
 
-            // Update synaptic weights using ultra-advanced STDP
-            self.update_ultra_stdp_weights(
+            // Update synaptic weights using advanced-advanced STDP
+            self.update_advanced_stdp_weights(
                 &network_spikes,
                 current_time,
                 dt,
@@ -598,7 +599,7 @@ impl UltraSTDPNetwork {
             }
 
             prev_objective = current_objective;
-            self.iterations = iteration + 1;
+            self.nit = iteration + 1;
         }
 
         Ok(self.best_params.clone())
@@ -617,7 +618,7 @@ impl UltraSTDPNetwork {
             // For first layer, use parameter values to determine spike probability
             for i in 0..layer.size.min(params.len()) {
                 let spike_prob = ((params[i] + 1.0) / 2.0).max(0.0).min(1.0);
-                layer_spikes[i] = rand::rng().random::<f64>() < spike_prob * 0.1;
+                layer_spikes[i] = rand::rng().gen::<f64>() < spike_prob * 0.1;
             }
 
             spike_patterns.push(layer_spikes);
@@ -676,7 +677,7 @@ impl UltraSTDPNetwork {
         Ok(all_spikes)
     }
 
-    fn update_ultra_stdp_weights(
+    fn update_advanced_stdp_weights(
         &mut self,
         all_spikes: &[Vec<bool>],
         current_time: f64,
@@ -684,18 +685,18 @@ impl UltraSTDPNetwork {
         objective_improvement: f64,
     ) -> Result<()> {
         // Update STDP rules for each layer connection
-        for layer_idx in 0..self.ultra_stdp_rules.len() {
+        for layer_idx in 0..self.advanced_stdp_rules.len() {
             let input_spikes = &all_spikes[layer_idx];
             let output_spikes = &all_spikes[layer_idx + 1];
 
             for (neuron_idx, neuron_rules) in
-                self.ultra_stdp_rules[layer_idx].iter_mut().enumerate()
+                self.advanced_stdp_rules[layer_idx].iter_mut().enumerate()
             {
                 for (input_idx, rule) in neuron_rules.iter_mut().enumerate() {
                     let pre_spike = input_spikes.get(input_idx).copied().unwrap_or(false);
                     let post_spike = output_spikes.get(neuron_idx).copied().unwrap_or(false);
 
-                    // Update using ultra-advanced STDP
+                    // Update using advanced-advanced STDP
                     let _new_weight = rule.update_weight_advanced(
                         0.5, // Current weight (simplified)
                         pre_spike,
@@ -743,7 +744,7 @@ impl UltraSTDPNetwork {
         let mut total_plasticity = 0.0;
         let mut count = 0;
 
-        for layer_rules in &self.ultra_stdp_rules {
+        for layer_rules in &self.advanced_stdp_rules {
             for neuron_rules in layer_rules {
                 for rule in neuron_rules {
                     let stats = rule.get_plasticity_stats();
@@ -785,7 +786,7 @@ impl UltraSTDPNetwork {
 pub fn stdp_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
-    num_iterations: usize,
+    num_nit: usize,
 ) -> Result<Array1<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
@@ -797,14 +798,14 @@ where
 
     let mut prev_obj = objective(&params.view());
 
-    for _iter in 0..num_iterations {
+    for _iter in 0..num_nit {
         let current_obj = objective(&params.view());
         let improvement = prev_obj - current_obj;
 
         // More sophisticated spike-based encoding
         for (i, rule) in stdp_rules.iter_mut().enumerate() {
-            let pre_spike = rand::rng().random::<f64>() < (params[i].abs() * 0.1).min(0.5);
-            let post_spike = improvement > 0.0 && rand::rng().random::<f64>() < 0.2;
+            let pre_spike = rand::rng().gen::<f64>() < (params[i].abs() * 0.1).min(0.5);
+            let post_spike = improvement > 0.0 && rand::rng().gen::<f64>() < 0.2;
 
             params[i] = rule.update_weight(params[i], pre_spike, post_spike, 0.001);
         }
@@ -815,12 +816,12 @@ where
     Ok(params)
 }
 
-/// Ultra-advanced STDP optimization with full network simulation
+/// Advanced-advanced STDP optimization with full network simulation
 #[allow(dead_code)]
-pub fn ultra_stdp_optimize<F>(
+pub fn advanced_stdp_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
-    max_iterations: usize,
+    max_nit: usize,
     network_config: Option<(Vec<usize>, f64, f64)>, // (layer_sizes, target_rate, learning_rate)
 ) -> Result<Array1<f64>>
 where
@@ -831,8 +832,8 @@ where
         (vec![input_size, input_size * 2, input_size], 5.0, 0.01)
     });
 
-    let mut network = UltraSTDPNetwork::new(layer_sizes, target_rate, learning_rate);
-    network.optimize(objective, initial_params, max_iterations, 0.001)
+    let mut network = AdvancedSTDPNetwork::new(layer_sizes, target_rate, learning_rate);
+    network.optimize(objective, initial_params, max_nit, 0.001)
 }
 
 #[cfg(test)]
@@ -840,15 +841,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ultra_stdp_creation() {
-        let stdp = UltraAdvancedSTDP::new(0.01, 0.005, 5.0);
+    fn test_advanced_stdp_creation() {
+        let stdp = AdvancedAdvancedSTDP::new(0.01, 0.005, 5.0);
         assert_eq!(stdp.eta_ltp, 0.01);
         assert_eq!(stdp.target_firing_rate, 5.0);
     }
 
     #[test]
-    fn test_ultra_stdp_weight_update() {
-        let mut stdp = UltraAdvancedSTDP::new(0.1, 0.05, 5.0);
+    fn test_advanced_stdp_weight_update() {
+        let mut stdp = AdvancedAdvancedSTDP::new(0.1, 0.05, 5.0);
 
         let new_weight = stdp.update_weight_advanced(0.5, true, true, 0.001, 0.0, 0.1);
 
@@ -857,9 +858,9 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_stdp_network() {
+    fn test_advanced_stdp_network() {
         let layer_sizes = vec![3, 5, 3];
-        let network = UltraSTDPNetwork::new(layer_sizes, 5.0, 0.01);
+        let network = AdvancedSTDPNetwork::new(layer_sizes, 5.0, 0.01);
 
         assert_eq!(network.layers.len(), 3);
         assert_eq!(network.layers[0].size, 3);
@@ -869,7 +870,7 @@ mod tests {
 
     #[test]
     fn test_plasticity_stats() {
-        let stdp = UltraAdvancedSTDP::new(0.01, 0.005, 5.0);
+        let stdp = AdvancedAdvancedSTDP::new(0.01, 0.005, 5.0);
         let stats = stdp.get_plasticity_stats();
 
         assert!(stats.calcium_level >= 0.0);
@@ -890,11 +891,11 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_stdp_optimization() {
+    fn test_advanced_stdp_optimization() {
         let objective = |x: &ArrayView1<f64>| (x[0] - 1.0).powi(2) + (x[1] + 0.5).powi(2);
         let initial = Array1::from(vec![0.0, 0.0]);
 
-        let result = ultra_stdp_optimize(
+        let result = advanced_stdp_optimize(
             objective,
             &initial.view(),
             50,

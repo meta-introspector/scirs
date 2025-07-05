@@ -1,4 +1,4 @@
-//! Ultra-enhanced SIMD optimization framework for scirs2-stats v1.0.0+
+//! Advanced-enhanced SIMD optimization framework for scirs2-stats v1.0.0+
 //!
 //! This module provides the most advanced SIMD optimization capabilities with:
 //! - Runtime CPU feature detection and optimization selection
@@ -17,12 +17,12 @@ use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::{Arc, RwLock};
 
-/// Ultra-enhanced SIMD processor with adaptive optimization
-pub struct UltraEnhancedSimdProcessor<F> {
+/// Advanced-enhanced SIMD processor with adaptive optimization
+pub struct AdvancedEnhancedSimdProcessor<F> {
     /// Runtime CPU capabilities
     cpu_features: CpuCapabilities,
     /// Optimization configuration
-    config: UltraSimdConfig,
+    config: AdvancedSimdConfig,
     /// Performance statistics
     performance_stats: Arc<RwLock<PerformanceStatistics>>,
     /// Algorithm selection cache
@@ -80,9 +80,9 @@ pub enum InstructionSet {
     VSX,
 }
 
-/// Ultra-advanced SIMD configuration
+/// Advanced-advanced SIMD configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UltraSimdConfig {
+pub struct AdvancedSimdConfig {
     /// Enable adaptive algorithm selection
     pub adaptive_selection: bool,
     /// Performance profiling level
@@ -217,9 +217,9 @@ pub struct OptimalAlgorithm {
     pub last_used: std::time::Instant,
 }
 
-/// Ultra-enhanced SIMD statistical results
+/// Advanced-enhanced SIMD statistical results
 #[derive(Debug, Clone)]
-pub struct UltraSimdResults<F> {
+pub struct AdvancedSimdResults<F> {
     /// Computed result
     pub result: F,
     /// Performance metrics
@@ -258,13 +258,12 @@ pub struct AccuracyMetrics {
     pub significant_digits: usize,
 }
 
-impl<F> UltraEnhancedSimdProcessor<F>
+impl<F> AdvancedEnhancedSimdProcessor<F>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + Send + Sync + 'static + std::fmt::Display + SimdUnifiedOps,
 {
-    /// Create a new ultra-enhanced SIMD processor
-    pub fn new(config: UltraSimdConfig) -> StatsResult<Self> {
+    /// Create a new advanced-enhanced SIMD processor
+    pub fn new(config: AdvancedSimdConfig) -> StatsResult<Self> {
         let cpu_features = Self::detect_cpu_capabilities()?;
 
         Ok(Self {
@@ -297,8 +296,8 @@ where
         })
     }
 
-    /// Compute ultra-optimized mean with adaptive algorithm selection
-    pub fn ultra_mean(&self, data: ArrayView1<F>) -> StatsResult<UltraSimdResults<F>> {
+    /// Compute advanced-optimized mean with adaptive algorithm selection
+    pub fn advanced_mean(&self, data: ArrayView1<F>) -> StatsResult<AdvancedSimdResults<F>> {
         let start_time = std::time::Instant::now();
 
         // Validate input
@@ -321,7 +320,7 @@ where
         let execution_time = start_time.elapsed();
         self.update_performance_stats(&algorithm.name, execution_time.as_nanos() as u64);
 
-        Ok(UltraSimdResults {
+        Ok(AdvancedSimdResults {
             result,
             performance: OperationPerformance {
                 execution_time_ns: execution_time.as_nanos() as u64,
@@ -473,8 +472,12 @@ where
         Ok(sum / n)
     }
 
-    /// Ultra-optimized standard deviation with numerical stability
-    pub fn ultra_std(&self, data: ArrayView1<F>, ddof: usize) -> StatsResult<UltraSimdResults<F>> {
+    /// Advanced-optimized standard deviation with numerical stability
+    pub fn advanced_std(
+        &self,
+        data: ArrayView1<F>,
+        ddof: usize,
+    ) -> StatsResult<AdvancedSimdResults<F>> {
         let start_time = std::time::Instant::now();
 
         // Validate input
@@ -485,7 +488,7 @@ where
 
         let execution_time = start_time.elapsed();
 
-        Ok(UltraSimdResults {
+        Ok(AdvancedSimdResults {
             result,
             performance: OperationPerformance {
                 execution_time_ns: execution_time.as_nanos() as u64,
@@ -571,7 +574,7 @@ where
     }
 }
 
-impl Default for UltraSimdConfig {
+impl Default for AdvancedSimdConfig {
     fn default() -> Self {
         Self {
             adaptive_selection: true,
@@ -590,49 +593,47 @@ impl Default for UltraSimdConfig {
 
 /// Convenience functions for creating optimized SIMD processors
 ///
-/// Create an ultra-enhanced SIMD processor with default configuration
+/// Create an advanced-enhanced SIMD processor with default configuration
 #[allow(dead_code)]
-pub fn create_ultra_simd_processor<F>() -> StatsResult<UltraEnhancedSimdProcessor<F>>
+pub fn create_advanced_simd_processor<F>() -> StatsResult<AdvancedEnhancedSimdProcessor<F>>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + Send + Sync + 'static + std::fmt::Display + SimdUnifiedOps,
 {
-    UltraEnhancedSimdProcessor::new(UltraSimdConfig::default())
+    AdvancedEnhancedSimdProcessor::new(AdvancedSimdConfig::default())
 }
 
 /// Create SIMD processor optimized for specific hardware platform
 #[allow(dead_code)]
 pub fn create_platform_optimized_simd_processor<F>(
     target_platform: TargetPlatform,
-) -> StatsResult<UltraEnhancedSimdProcessor<F>>
+) -> StatsResult<AdvancedEnhancedSimdProcessor<F>>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + Send + Sync + 'static + std::fmt::Display + SimdUnifiedOps,
 {
     let config = match target_platform {
-        TargetPlatform::IntelAvx512 => UltraSimdConfig {
+        TargetPlatform::IntelAvx512 => AdvancedSimdConfig {
             vectorization_level: VectorizationLevel::Maximum,
             cache_optimization: CacheOptimizationStrategy::L3Optimized,
             prefetch_strategy: PrefetchStrategy::Aggressive,
             loop_unrolling: true,
-            ..UltraSimdConfig::default()
+            ..AdvancedSimdConfig::default()
         },
-        TargetPlatform::AmdZen => UltraSimdConfig {
+        TargetPlatform::AmdZen => AdvancedSimdConfig {
             vectorization_level: VectorizationLevel::Balanced,
             cache_optimization: CacheOptimizationStrategy::L2Optimized,
             prefetch_strategy: PrefetchStrategy::Conservative,
-            ..UltraSimdConfig::default()
+            ..AdvancedSimdConfig::default()
         },
-        TargetPlatform::ArmNeon => UltraSimdConfig {
+        TargetPlatform::ArmNeon => AdvancedSimdConfig {
             vectorization_level: VectorizationLevel::Conservative,
             cache_optimization: CacheOptimizationStrategy::PowerEfficient,
             mixed_precision: true,
-            ..UltraSimdConfig::default()
+            ..AdvancedSimdConfig::default()
         },
-        TargetPlatform::Generic => UltraSimdConfig::default(),
+        TargetPlatform::Generic => AdvancedSimdConfig::default(),
     };
 
-    UltraEnhancedSimdProcessor::new(config)
+    AdvancedEnhancedSimdProcessor::new(config)
 }
 
 /// Target hardware platforms for optimization
@@ -644,14 +645,14 @@ pub enum TargetPlatform {
     Generic,
 }
 
-/// Create an ultra-enhanced SIMD processor optimized for performance
+/// Create an advanced-enhanced SIMD processor optimized for performance
 #[allow(dead_code)]
-pub fn create_performance_optimized_simd_processor<F>() -> StatsResult<UltraEnhancedSimdProcessor<F>>
+pub fn create_performance_optimized_simd_processor<F>(
+) -> StatsResult<AdvancedEnhancedSimdProcessor<F>>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + Send + Sync + 'static + std::fmt::Display + SimdUnifiedOps,
 {
-    let config = UltraSimdConfig {
+    let config = AdvancedSimdConfig {
         adaptive_selection: true,
         profiling_level: ProfilingLevel::Detailed,
         cache_optimization: CacheOptimizationStrategy::Adaptive,
@@ -664,17 +665,17 @@ where
         prefetch_strategy: PrefetchStrategy::Adaptive,
     };
 
-    UltraEnhancedSimdProcessor::new(config)
+    AdvancedEnhancedSimdProcessor::new(config)
 }
 
-/// Create an ultra-enhanced SIMD processor optimized for numerical stability
+/// Create an advanced-enhanced SIMD processor optimized for numerical stability
 #[allow(dead_code)]
-pub fn create_stability_optimized_simd_processor<F>() -> StatsResult<UltraEnhancedSimdProcessor<F>>
+pub fn create_stability_optimized_simd_processor<F>(
+) -> StatsResult<AdvancedEnhancedSimdProcessor<F>>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static
-        + std::fmt::Display,
+    F: Float + NumCast + Copy + Send + Sync + 'static + std::fmt::Display + SimdUnifiedOps,
 {
-    let config = UltraSimdConfig {
+    let config = AdvancedSimdConfig {
         adaptive_selection: true,
         profiling_level: ProfilingLevel::Comprehensive,
         cache_optimization: CacheOptimizationStrategy::CacheOblivious,
@@ -687,18 +688,17 @@ where
         prefetch_strategy: PrefetchStrategy::Software,
     };
 
-    UltraEnhancedSimdProcessor::new(config)
+    AdvancedEnhancedSimdProcessor::new(config)
 }
 
 // Type aliases for common use cases
-pub type F32UltraSimdProcessor = UltraEnhancedSimdProcessor<f32>;
-pub type F64UltraSimdProcessor = UltraEnhancedSimdProcessor<f64>;
+pub type F32AdvancedSimdProcessor = AdvancedEnhancedSimdProcessor<f32>;
+pub type F64AdvancedSimdProcessor = AdvancedEnhancedSimdProcessor<f64>;
 
 /// Machine learning-based algorithm selection for SIMD operations
-impl<F> UltraEnhancedSimdProcessor<F>
+impl<F> AdvancedEnhancedSimdProcessor<F>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float + NumCast + Copy + Send + Sync + 'static + std::fmt::Display + std::iter::Sum<F>,
 {
     /// Predict optimal algorithm based on data characteristics
     pub fn predict_optimal_algorithm(

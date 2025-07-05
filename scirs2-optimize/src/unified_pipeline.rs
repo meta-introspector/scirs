@@ -51,7 +51,7 @@ pub struct UnifiedOptimizationConfig {
     pub output_directory: Option<String>,
 
     /// Maximum number of iterations
-    pub max_iterations: usize,
+    pub max_nit: usize,
     /// Function tolerance
     pub function_tolerance: f64,
     /// Gradient tolerance
@@ -71,7 +71,7 @@ impl Default for UnifiedOptimizationConfig {
             enable_visualization: true,
             visualization_config: Some(VisualizationConfig::default()),
             output_directory: Some("optimization_output".to_string()),
-            max_iterations: 1000,
+            max_nit: 1000,
             function_tolerance: 1e-6,
             gradient_tolerance: 1e-6,
         }
@@ -206,7 +206,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
         let start_time = std::time::Instant::now();
 
         // Main optimization loop
-        while iteration < self.config.max_iterations {
+        while iteration < self.config.max_nit {
             iteration += 1;
 
             // Compute gradient
@@ -307,7 +307,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
         let total_time = start_time.elapsed().as_secs_f64();
 
         // Generate results
-        let success = iteration < self.config.max_iterations;
+        let success = iteration < self.config.max_nit;
         let message = if success {
             "Optimization completed successfully".to_string()
         } else {
@@ -631,7 +631,7 @@ impl UnifiedOptimizationResults {
         println!("============================");
         println!("Success: {}", self.success());
         println!("Final function value: {:.6e}", self.fun());
-        println!("Iterations: {}", self.iterations());
+        println!("Iterations: {}", self.nit());
         println!("Function evaluations: {}", self.base_result.nfev);
 
         if self.base_result.njev > 0 {
@@ -689,7 +689,7 @@ pub mod presets {
             enable_visualization: true,
             visualization_config: Some(VisualizationConfig::default()),
             output_directory: Some("distributed_gpu_optimization".to_string()),
-            max_iterations: 2000,
+            max_nit: 2000,
             function_tolerance: 1e-8,
             gradient_tolerance: 1e-8,
         }
@@ -715,7 +715,7 @@ pub mod presets {
             enable_visualization: true,
             visualization_config: Some(VisualizationConfig::default()),
             output_directory: Some("large_scale_optimization".to_string()),
-            max_iterations: 5000,
+            max_nit: 5000,
             function_tolerance: 1e-6,
             gradient_tolerance: 1e-6,
         }
@@ -751,7 +751,7 @@ pub mod presets {
                 custom_style: None,
             }),
             output_directory: Some("interactive_optimization".to_string()),
-            max_iterations: 500,
+            max_nit: 500,
             function_tolerance: 1e-4,
             gradient_tolerance: 1e-4,
         }

@@ -12,8 +12,8 @@
 //! - Minimal artifacts at image borders
 //! - Support for non-separable 2D wavelets (future extension)
 
-use crate::dwt::{self, Wavelet};
-use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct, Dwt2dResult};
+use crate::dwt::Wavelet;
+use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
 
 // Temporary type definition to fix compilation
 #[derive(Debug, Clone)]
@@ -24,12 +24,10 @@ pub struct DWT2DDecomposition {
     pub hh: Array2<f64>,
 }
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array2, Array3, ArrayView2, ArrayViewMut2, Axis};
+use ndarray::{s, Array2};
 use num_traits::{Float, NumCast, Zero};
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use scirs2_core::validation::check_shape;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Enhanced boundary extension modes for 2D wavelets
@@ -367,10 +365,10 @@ where
     for enhanced_decomp in decompositions.iter().rev() {
         // Create synthetic decomposition for reconstruction
         let synthetic_decomp = DWT2DDecomposition {
-            approx: current_data,
-            detail_h: enhanced_decomp.decomposition.detail_h.clone(),
-            detail_v: enhanced_decomp.decomposition.detail_v.clone(),
-            detail_d: enhanced_decomp.decomposition.detail_d.clone(),
+            ll: current_data,
+            lh: enhanced_decomp.decomposition.lh.clone(),
+            hl: enhanced_decomp.decomposition.hl.clone(),
+            hh: enhanced_decomp.decomposition.hh.clone(),
         };
 
         let temp_enhanced = EnhancedDWT2DDecomposition {

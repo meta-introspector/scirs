@@ -1,4 +1,4 @@
-//! Ultra-advanced SIMD optimizations for complex statistical operations (v7)
+//! Advanced-advanced SIMD optimizations for complex statistical operations (v7)
 //!
 //! This module extends the SIMD capabilities to advanced statistical computations
 //! including multi-dimensional analysis, statistical tests, and regression operations
@@ -14,9 +14,9 @@ use scirs2_core::{
 };
 use std::marker::PhantomData;
 
-/// Ultra-advanced SIMD configuration for complex operations
+/// Advanced-advanced SIMD configuration for complex operations
 #[derive(Debug, Clone)]
-pub struct UltraAdvancedSimdConfig {
+pub struct AdvancedAdvancedSimdConfig {
     /// Platform capabilities detected at runtime
     pub capabilities: PlatformCapabilities,
     /// Vector width for different operations
@@ -50,7 +50,7 @@ pub enum CacheStrategy {
     Adaptive,
 }
 
-impl Default for UltraAdvancedSimdConfig {
+impl Default for AdvancedAdvancedSimdConfig {
     fn default() -> Self {
         let capabilities = PlatformCapabilities::detect();
         let vector_width = VectorWidth::from_capabilities(&capabilities);
@@ -95,9 +95,9 @@ impl VectorWidth {
     }
 }
 
-/// Ultra-advanced SIMD statistical processor
-pub struct UltraAdvancedSimdProcessor<F> {
-    config: UltraAdvancedSimdConfig,
+/// Advanced-advanced SIMD statistical processor
+pub struct AdvancedAdvancedSimdProcessor<F> {
+    config: AdvancedAdvancedSimdConfig,
     _phantom: PhantomData<F>,
 }
 
@@ -152,21 +152,21 @@ pub struct SimdCovarianceResult<F> {
     pub trace: F,
 }
 
-impl<F> UltraAdvancedSimdProcessor<F>
+impl<F> AdvancedAdvancedSimdProcessor<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
         + std::fmt::Display,
 {
-    /// Create new ultra-advanced SIMD processor
+    /// Create new advanced-advanced SIMD processor
     pub fn new() -> Self {
         Self {
-            config: UltraAdvancedSimdConfig::default(),
+            config: AdvancedAdvancedSimdConfig::default(),
             _phantom: PhantomData,
         }
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: UltraAdvancedSimdConfig) -> Self {
+    pub fn with_config(config: AdvancedAdvancedSimdConfig) -> Self {
         Self {
             config,
             _phantom: PhantomData,
@@ -873,7 +873,7 @@ pub enum StatisticalTestType {
     KolmogorovSmirnov,
 }
 
-impl<F> Default for UltraAdvancedSimdProcessor<F>
+impl<F> Default for AdvancedAdvancedSimdProcessor<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
         + std::fmt::Display,
@@ -883,9 +883,9 @@ where
     }
 }
 
-/// Convenience functions for ultra-advanced SIMD operations
+/// Convenience functions for advanced-advanced SIMD operations
 #[allow(dead_code)]
-pub fn ultra_simd_multiple_regression<F>(
+pub fn advanced_simd_multiple_regression<F>(
     y: &ArrayView1<F>,
     x: &ArrayView2<F>,
     include_intercept: bool,
@@ -894,12 +894,12 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
         + std::fmt::Display,
 {
-    let processor = UltraAdvancedSimdProcessor::new();
+    let processor = AdvancedAdvancedSimdProcessor::new();
     processor.simd_multiple_regression(y, x, include_intercept)
 }
 
 #[allow(dead_code)]
-pub fn ultra_simd_covariance_analysis<F>(
+pub fn advanced_simd_covariance_analysis<F>(
     data: &ArrayView2<F>,
     bias_correction: bool,
 ) -> StatsResult<SimdCovarianceResult<F>>
@@ -907,12 +907,12 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
         + std::fmt::Display,
 {
-    let processor = UltraAdvancedSimdProcessor::new();
+    let processor = AdvancedAdvancedSimdProcessor::new();
     processor.simd_multivariate_covariance(data, bias_correction)
 }
 
 #[allow(dead_code)]
-pub fn ultra_simd_batch_tests<F>(
+pub fn advanced_simd_batch_tests<F>(
     group1: &ArrayView2<F>,
     group2: &ArrayView2<F>,
     test_type: StatisticalTestType,
@@ -921,7 +921,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
         + std::fmt::Display,
 {
-    let processor = UltraAdvancedSimdProcessor::new();
+    let processor = AdvancedAdvancedSimdProcessor::new();
     processor.simd_batch_statistical_tests(group1, group2, test_type)
 }
 
@@ -931,8 +931,8 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_ultra_advanced_simd_config() {
-        let config = UltraAdvancedSimdConfig::default();
+    fn test_advanced_advanced_simd_config() {
+        let config = AdvancedAdvancedSimdConfig::default();
         assert!(config.vector_width.f64_lanes > 0);
         assert!(config.vector_width.f32_lanes > 0);
         assert!(config.parallel_threshold > 0);
@@ -943,7 +943,7 @@ mod tests {
         let y = array![1.0, 2.0, 3.0, 4.0, 5.0];
         let x = array![[1.0], [2.0], [3.0], [4.0], [5.0]];
         
-        let result = ultra_simd_multiple_regression(&y.view(), &x.view(), true);
+        let result = advanced_simd_multiple_regression(&y.view(), &x.view(), true);
         assert!(result.is_ok());
     }
 
@@ -956,7 +956,7 @@ mod tests {
             [4.0, 5.0, 6.0],
         ];
         
-        let result = ultra_simd_covariance_analysis(&data.view(), true);
+        let result = advanced_simd_covariance_analysis(&data.view(), true);
         assert!(result.is_ok());
     }
 

@@ -130,7 +130,11 @@ pub fn denoise_dictionary_learning(
     signal: &Array1<f64>,
     config: &DictionaryDenoiseConfig,
 ) -> SignalResult<Array1<f64>> {
-    check_finite(signal.as_slice().unwrap(), "signal")?;
+    if signal.iter().any(|&x| !x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Signal contains non-finite values".to_string(),
+        ));
+    }
 
     let n = signal.len();
     if n < config.patch_size {
@@ -162,7 +166,11 @@ pub fn denoise_dictionary_learning(
 /// manner, inspired by BM3D but using sparse coding instead of wavelet transforms.
 #[allow(dead_code)]
 pub fn denoise_nlsc(signal: &Array1<f64>, config: &NLSCConfig) -> SignalResult<Array1<f64>> {
-    check_finite(signal.as_slice().unwrap(), "signal")?;
+    if signal.iter().any(|&x| !x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Signal contains non-finite values".to_string(),
+        ));
+    }
 
     let n = signal.len();
     if n < config.patch_size {
@@ -210,7 +218,11 @@ pub fn denoise_nlsc(signal: &Array1<f64>, config: &NLSCConfig) -> SignalResult<A
 /// This uses a learned unfolded network structure for sparse coding.
 #[allow(dead_code)]
 pub fn denoise_lista(signal: &Array1<f64>, config: &LISTAConfig) -> SignalResult<Array1<f64>> {
-    check_finite(signal.as_slice().unwrap(), "signal")?;
+    if signal.iter().any(|&x| !x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Signal contains non-finite values".to_string(),
+        ));
+    }
 
     let dictionary = match &config.dictionary {
         Some(dict) => dict.clone(),
@@ -582,8 +594,8 @@ fn reconstruct_from_patches(
     patch_size: usize,
     overlap: usize,
 ) -> SignalResult<Array1<f64>> {
-    let mut signal = Array1::zeros(signal_length);
-    let mut weights = Array1::zeros(signal_length);
+    let mut signal: Array1<f64> = Array1::zeros(signal_length);
+    let mut weights: Array1<f64> = Array1::zeros(signal_length);
 
     let step = patch_size - overlap;
     let (num_patches, _) = patches.dim();
@@ -747,6 +759,7 @@ pub fn denoise_adaptive_dictionary(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_dictionary_denoising() {

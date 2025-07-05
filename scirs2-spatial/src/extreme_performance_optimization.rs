@@ -32,7 +32,7 @@
 //! # Examples
 //!
 //! ```
-//! use scirs2_spatial::extreme_performance_optimization::{ExtremeOptimizer, UltrafastDistanceMatrix};
+//! use scirs2_spatial::extreme_performance_optimization::{ExtremeOptimizer, AdvancedfastDistanceMatrix};
 //! use ndarray::array;
 //!
 //! // Extreme performance distance matrix computation
@@ -45,8 +45,8 @@
 //!     .with_numa_optimization(true)
 //!     .with_jit_compilation(true);
 //!
-//! let ultrafast_matrix = UltrafastDistanceMatrix::new(optimizer);
-//! let distances = ultrafast_matrix.compute_extreme_performance(&points.view()).await?;
+//! let advancedfast_matrix = AdvancedfastDistanceMatrix::new(optimizer);
+//! let distances = advancedfast_matrix.compute_extreme_performance(&points.view()).await?;
 //!
 //! // Performance can be 10-100x faster than conventional implementations
 //! println!("Extreme distance matrix: {:?}", distances);
@@ -234,10 +234,10 @@ pub struct MemoryBlock {
     pub ref_count: usize,
 }
 
-/// Ultra-fast distance matrix with extreme optimizations
+/// Optimized distance matrix with extreme optimizations
 #[allow(dead_code)]
 #[derive(Debug)]
-pub struct UltrafastDistanceMatrix {
+pub struct AdvancedfastDistanceMatrix {
     /// Optimizer configuration
     optimizer: ExtremeOptimizer,
     /// Vectorized kernels
@@ -921,8 +921,8 @@ impl ExtremeMemoryAllocator {
     }
 }
 
-impl UltrafastDistanceMatrix {
-    /// Create new ultrafast distance matrix computer
+impl AdvancedfastDistanceMatrix {
+    /// Create new advancedfast distance matrix computer
     pub fn new(optimizer: ExtremeOptimizer) -> Self {
         Self {
             optimizer,
@@ -992,7 +992,7 @@ impl UltrafastDistanceMatrix {
                 .await?;
         }
 
-        // Simulate ultra-high performance computation
+        // Simulate advanced-high performance computation
         for i in 0..n_points {
             for j in (i + 1)..n_points {
                 let mut dist_sq = 0.0;
@@ -1606,10 +1606,12 @@ pub async fn benchmark_extreme_optimizations(
     data: &ArrayView2<'_, f64>,
 ) -> SpatialResult<ExtremePerformanceMetrics> {
     let optimizer = create_ultimate_optimizer();
-    let ultrafast_matrix = UltrafastDistanceMatrix::new(optimizer);
+    let advancedfast_matrix = AdvancedfastDistanceMatrix::new(optimizer);
 
     let start_time = Instant::now();
-    let _distances = ultrafast_matrix.compute_extreme_performance(data).await?;
+    let _distances = advancedfast_matrix
+        .compute_extreme_performance(data)
+        .await?;
     let elapsed = start_time.elapsed();
 
     // Calculate performance metrics
@@ -1715,12 +1717,12 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_ultrafast_distance_matrix() {
+    async fn test_advancedfast_distance_matrix() {
         let optimizer = ExtremeOptimizer::new()
             .with_extreme_simd(true)
             .with_cache_oblivious_algorithms(true);
 
-        let matrix_computer = UltrafastDistanceMatrix::new(optimizer);
+        let matrix_computer = AdvancedfastDistanceMatrix::new(optimizer);
         // Use smaller dataset for faster testing
         let points = array![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
 

@@ -529,8 +529,8 @@ impl BenchmarkSuite {
 
     /// Generate test data for benchmarking
     fn generate_test_data(&self, size: usize) -> StatsResult<Array1<f64>> {
-        use scirs2_core::rng;
         use rand_distr::{Distribution, Normal};
+        use scirs2_core::rng;
 
         let mut rng = rng();
         let normal = Normal::new(0.0, 1.0).map_err(|e| {
@@ -548,8 +548,8 @@ impl BenchmarkSuite {
         base_data: &Array1<f64>,
         correlation: f64,
     ) -> StatsResult<Array1<f64>> {
-        use scirs2_core::rng;
         use rand_distr::{Distribution, Normal};
+        use scirs2_core::rng;
 
         let mut rng = rng();
         let normal = Normal::new(0.0, 1.0).map_err(|e| {
@@ -568,8 +568,8 @@ impl BenchmarkSuite {
 
     /// Generate matrix test data
     fn generate_matrix_data(&self, rows: usize, cols: usize) -> StatsResult<Array2<f64>> {
-        use scirs2_core::rng;
         use rand_distr::{Distribution, Normal};
+        use scirs2_core::rng;
 
         let mut rng = rng();
         let normal = Normal::new(0.0, 1.0).map_err(|e| {

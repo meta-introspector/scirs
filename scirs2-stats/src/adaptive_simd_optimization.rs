@@ -471,8 +471,7 @@ impl AdaptiveSimdOptimizer {
         data: &ArrayView1<F>,
     ) -> StatsResult<DataCharacteristics>
     where
-        F: Float + NumCast
-        + std::fmt::Display,
+        F: Float + NumCast + std::fmt::Display,
     {
         let size = data.len();
         let element_size = std::mem::size_of::<F>();
@@ -528,8 +527,7 @@ impl AdaptiveSimdOptimizer {
         data: &ArrayView2<F>,
     ) -> StatsResult<DataCharacteristics>
     where
-        F: Float + NumCast
-        + std::fmt::Display,
+        F: Float + NumCast + std::fmt::Display,
     {
         let size = data.len();
         let element_size = std::mem::size_of::<F>();

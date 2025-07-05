@@ -34,8 +34,7 @@ const CHUNK_SIZE: usize = 8192;
 pub fn streaming_mean<F, I>(mut data_iter: I, total_count: usize) -> StatsResult<F>
 where
     F: Float + NumCast,
-    I: Iterator<Item = F>
-        + std::fmt::Display,
+    I: Iterator<Item = F> + std::fmt::Display,
 {
     if total_count == 0 {
         return Err(ErrorMessages::empty_array("dataset"));
@@ -75,8 +74,7 @@ where
 pub fn welford_variance<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<(F, F)>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     let n = x.len();
     if n <= ddof {
@@ -113,10 +111,9 @@ where
 #[allow(dead_code)]
 pub fn normalize_inplace<F>(data: &mut ArrayViewMut1<F>, ddof: usize) -> StatsResult<()>
 where
-    F: Float + NumCast
-        + std::fmt::Display,
+    F: Float + NumCast + std::fmt::Display,
 {
-    let (mean, variance) = welford_variance(&data.view(), ddof)?;
+    let (mean, variance) = welford_variance(&data.to_owned(), ddof)?;
 
     if variance <= F::epsilon() {
         return Err(StatsError::InvalidArgument(
@@ -150,8 +147,7 @@ where
 #[allow(dead_code)]
 pub fn quantile_quickselect<F>(data: &mut [F], q: F) -> StatsResult<F>
 where
-    F: Float + NumCast
-        + std::fmt::Display,
+    F: Float + NumCast + std::fmt::Display,
 {
     if data.is_empty() {
         return Err(StatsError::InvalidArgument(
@@ -245,8 +241,7 @@ pub fn covariance_chunked<F, D>(
 ) -> StatsResult<ndarray::Array2<F>>
 where
     F: Float + NumCast,
-    D: Data<Elem = F>
-        + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     let n_obs = data.nrows();
     let n_vars = data.ncols();

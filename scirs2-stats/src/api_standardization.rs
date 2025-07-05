@@ -320,11 +320,9 @@ where
         let finite_count = finite_data.len();
         match self.config.null_handling {
             NullHandling::Exclude => Ok((Array1::from_vec(finite_data), finite_count)),
-            NullHandling::Fail if finite_count != data.len() => {
-                Err(StatsError::InvalidArgument(
-                    "Null values encountered with Fail strategy".to_string(),
-                ))
-            }
+            NullHandling::Fail if finite_count != data.len() => Err(StatsError::InvalidArgument(
+                "Null values encountered with Fail strategy".to_string(),
+            )),
             _ => Ok((Array1::from_vec(finite_data), finite_count)),
         }
     }

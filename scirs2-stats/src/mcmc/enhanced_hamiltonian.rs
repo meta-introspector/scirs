@@ -9,8 +9,8 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::{Float, NumAssign};
-use scirs2_core::Rng;
 use rand_distr::{Distribution, Normal};
+use scirs2_core::Rng;
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 use std::fmt::Display;
 use std::iter::Sum;

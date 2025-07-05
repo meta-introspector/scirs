@@ -1,4 +1,4 @@
-//! Ultra-enhanced SIMD optimizations for statistical operations (v4)
+//! Advanced-enhanced SIMD optimizations for statistical operations (v4)
 //!
 //! This module provides the most advanced SIMD optimizations for core statistical
 //! operations, targeting maximum performance for large datasets.
@@ -15,7 +15,14 @@ use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 #[allow(dead_code)]
 pub fn comprehensive_stats_simd<F>(data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + num_traits::FromPrimitive,
 {
     check_array_finite(data, "data")?;
 
@@ -34,8 +41,8 @@ where
         let sum = F::simd_sum(&data.view());
         let sq_data = F::simd_mul(&data.view(), &data.view());
         let sum_sq = F::simd_sum(&sq_data.view());
-        let min_val = F::simd_min(&data.view());
-        let max_val = F::simd_max(&data.view());
+        let min_val = F::simd_min_element(&data.view());
+        let max_val = F::simd_max_element(&data.view());
         (sum, sum_sq, min_val, max_val)
     } else {
         // Scalar fallback for small arrays
@@ -136,7 +143,14 @@ pub fn sliding_window_stats_simd<F>(
     window_size: usize,
 ) -> StatsResult<SlidingWindowStats<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + num_traits::FromPrimitive,
 {
     check_array_finite(data, "data")?;
     check_positive(window_size, "window_size")?;
@@ -166,7 +180,7 @@ where
             means[i] = mean;
 
             let sq_data = F::simd_mul(&window, &window);
-            let sum_sq = F::simd_sum(&sq_data);
+            let sum_sq = F::simd_sum(&sq_data.view());
             let variance = if window_size > 1 {
                 let n_minus_1 = F::from(window_size - 1).unwrap();
                 (sum_sq - sum * sum / window_size_f) / n_minus_1
@@ -175,8 +189,8 @@ where
             };
             variances[i] = variance;
 
-            mins[i] = F::simd_min(&window);
-            maxs[i] = F::simd_max(&window);
+            mins[i] = F::simd_min_element(&window);
+            maxs[i] = F::simd_max_element(&window);
         } else {
             // Scalar fallback for small windows
             let sum: F = window.iter().copied().sum();
@@ -222,7 +236,14 @@ pub struct SlidingWindowStats<F> {
 #[allow(dead_code)]
 pub fn covariance_matrix_simd<F>(data: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + num_traits::FromPrimitive,
 {
     check_array_finite(data, "data")?;
 
@@ -302,8 +323,7 @@ where
 #[allow(dead_code)]
 pub fn quantiles_batch_simd<F>(data: &ArrayView1<F>, quantiles: &[f64]) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float + NumCast + SimdUnifiedOps + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
 {
     check_array_finite(data, "data")?;
 
@@ -360,7 +380,14 @@ where
 #[allow(dead_code)]
 pub fn exponential_moving_average_simd<F>(data: &ArrayView1<F>, alpha: F) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + num_traits::FromPrimitive,
 {
     check_array_finite(data, "data")?;
 
@@ -511,7 +538,15 @@ pub fn outlier_detection_zscore_simd<F>(
     threshold: F,
 ) -> StatsResult<(Array1<bool>, ComprehensiveStats<F>)>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + num_traits::FromPrimitive,
 {
     let stats = comprehensive_stats_simd(data)?;
 

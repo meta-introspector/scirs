@@ -189,9 +189,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("• Consider updating system libraries or compiler");
         }
         CompatibilityRating::Incompatible => {
-            println!(
-                "❌ Platform incompatibility detected. Advanced optimizations may not work."
-            );
+            println!("❌ Platform incompatibility detected. Advanced optimizations may not work.");
             println!("• Use standard (non-Advanced) statistical functions");
             println!("• Contact support with platform details");
         }

@@ -50,13 +50,13 @@ impl Default for AdvancedSimdConfig {
     }
 }
 
-/// Ultra-optimized SIMD statistics computer
-pub struct UltraSimdStatistics<F> {
+/// Advanced-optimized SIMD statistics computer
+pub struct AdvancedSimdStatistics<F> {
     config: AdvancedSimdConfig,
     _phantom: PhantomData<F>,
 }
 
-impl<F> UltraSimdStatistics<F>
+impl<F> AdvancedSimdStatistics<F>
 where
     F: Float
         + NumCast
@@ -67,9 +67,10 @@ where
         + Copy
         + Send
         + Sync
-        + std::fmt::Display,
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
-    /// Create new ultra-optimized SIMD statistics computer
+    /// Create new advanced-optimized SIMD statistics computer
     pub fn new() -> Self {
         Self {
             config: AdvancedSimdConfig::default(),
@@ -86,7 +87,7 @@ where
     }
 
     /// Compute comprehensive statistics using advanced SIMD
-    pub fn comprehensive_stats_ultra(
+    pub fn comprehensive_stats_advanced(
         &self,
         data: &ArrayView1<F>,
     ) -> StatsResult<ComprehensiveStats<F>> {
@@ -134,11 +135,14 @@ where
 
             // Use SIMD operations from scirs2-core
             let chunk_sum = F::simd_sum(&chunk);
-            let chunk_sum_sq = F::simd_sum_squares(&chunk);
-            let chunk_sum_cube = F::simd_sum_cubes(&chunk);
-            let chunk_sum_quad = F::simd_sum_quads(&chunk);
-            let chunk_min = F::simd_min(&chunk);
-            let chunk_max = F::simd_max(&chunk);
+            let chunk_sq = F::simd_mul(&chunk, &chunk);
+            let chunk_sum_sq = F::simd_sum(&chunk_sq.view());
+            let chunk_cube = F::simd_mul(&chunk_sq.view(), &chunk);
+            let chunk_sum_cube = F::simd_sum(&chunk_cube.view());
+            let chunk_quad = F::simd_mul(&chunk_sq.view(), &chunk_sq.view());
+            let chunk_sum_quad = F::simd_sum(&chunk_quad.view());
+            let chunk_min = F::simd_min_element(&chunk);
+            let chunk_max = F::simd_max_element(&chunk);
 
             sum_acc = sum_acc + chunk_sum;
             sum_sq_acc = sum_sq_acc + chunk_sum_sq;
@@ -267,8 +271,11 @@ where
         })
     }
 
-    /// Ultra-fast SIMD-optimized matrix operations
-    pub fn matrix_stats_ultra(&self, matrix: &ArrayView2<F>) -> StatsResult<MatrixStatsResult<F>> {
+    /// Optimized SIMD-optimized matrix operations
+    pub fn matrix_stats_advanced(
+        &self,
+        matrix: &ArrayView2<F>,
+    ) -> StatsResult<MatrixStatsResult<F>> {
         check_array_finite(matrix, "matrix")?;
 
         if matrix.is_empty() {
@@ -283,7 +290,7 @@ where
         let mut row_stats = Vec::with_capacity(rows);
         for i in 0..rows {
             let row = matrix.row(i);
-            let stats = self.comprehensive_stats_ultra(&row)?;
+            let stats = self.comprehensive_stats_advanced(&row)?;
             row_stats.push(stats);
         }
 
@@ -291,13 +298,13 @@ where
         let mut col_stats = Vec::with_capacity(cols);
         for j in 0..cols {
             let col = matrix.column(j);
-            let stats = self.comprehensive_stats_ultra(&col)?;
+            let stats = self.comprehensive_stats_advanced(&col)?;
             col_stats.push(stats);
         }
 
         // Compute overall matrix statistics
         let flattened = matrix.iter().copied().collect::<Array1<F>>();
-        let overall_stats = self.comprehensive_stats_ultra(&flattened.view())?;
+        let overall_stats = self.comprehensive_stats_advanced(&flattened.view())?;
 
         Ok(MatrixStatsResult {
             row_stats,
@@ -308,10 +315,10 @@ where
     }
 
     /// SIMD-optimized correlation matrix computation
-    pub fn correlation_matrix_ultra(&self, matrix: &ArrayView2<F>) -> StatsResult<Array2<F>> {
+    pub fn correlation_matrix_advanced(&self, matrix: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         check_array_finite(matrix, "matrix")?;
 
-        let (n_samples, n_features) = matrix.dim();
+        let (_n_samples, n_features) = matrix.dim();
 
         if n_features < 2 {
             return Err(StatsError::InvalidArgument(
@@ -336,7 +343,26 @@ where
                 } else {
                     let col_i = matrix.column(i);
                     let col_j = matrix.column(j);
-                    let corr = F::simd_correlation(&col_i, &col_j, means[i], means[j]);
+
+                    // Compute correlation using SIMD operations
+                    let _n = F::from(col_i.len()).unwrap();
+                    let mean_i_vec = Array1::from_elem(col_i.len(), means[i]);
+                    let mean_j_vec = Array1::from_elem(col_j.len(), means[j]);
+
+                    let dev_i = F::simd_sub(&col_i, &mean_i_vec.view());
+                    let dev_j = F::simd_sub(&col_j, &mean_j_vec.view());
+
+                    let numerator = F::simd_sum(&F::simd_mul(&dev_i.view(), &dev_j.view()).view());
+                    let sum_sq_i = F::simd_sum(&F::simd_mul(&dev_i.view(), &dev_i.view()).view());
+                    let sum_sq_j = F::simd_sum(&F::simd_mul(&dev_j.view(), &dev_j.view()).view());
+
+                    let denominator = (sum_sq_i * sum_sq_j).sqrt();
+                    let corr = if denominator > F::zero() {
+                        numerator / denominator
+                    } else {
+                        F::zero()
+                    };
+
                     corr_matrix[[i, j]] = corr;
                     corr_matrix[[j, i]] = corr;
                 }
@@ -347,7 +373,7 @@ where
     }
 
     /// SIMD-optimized bootstrap sampling with statistics
-    pub fn bootstrap_stats_ultra(
+    pub fn bootstrap_stats_advanced(
         &self,
         data: &ArrayView1<F>,
         n_bootstrap: usize,
@@ -373,7 +399,7 @@ where
             }
 
             // Compute statistics using SIMD
-            let stats = self.comprehensive_stats_ultra(&bootstrap_sample.view())?;
+            let stats = self.comprehensive_stats_advanced(&bootstrap_sample.view())?;
             bootstrap_means[i] = stats.mean;
             bootstrap_vars[i] = stats.variance;
             bootstrap_stds[i] = stats.std_dev;
@@ -400,7 +426,7 @@ where
         );
 
         Ok(BootstrapResult {
-            original_stats: self.comprehensive_stats_ultra(data)?,
+            original_stats: self.comprehensive_stats_advanced(data)?,
             bootstrap_means,
             bootstrap_vars,
             bootstrap_stds,
@@ -447,8 +473,16 @@ pub struct BootstrapResult<F> {
 /// Specialized SIMD operations for advanced statistics
 pub trait AdvancedSimdOps<F>: SimdUnifiedOps
 where
-    F: Float + NumCast + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     /// SIMD-optimized sum of cubes
     fn simd_sum_cubes(data: &ArrayView1<F>) -> F {
@@ -495,7 +529,7 @@ impl AdvancedSimdOps<f64> for f64 {}
 
 /// High-level convenience functions
 #[allow(dead_code)]
-pub fn ultra_mean_simd<F>(data: &ArrayView1<F>) -> StatsResult<F>
+pub fn advanced_mean_simd<F>(data: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float
         + NumCast
@@ -506,15 +540,16 @@ where
         + Copy
         + Send
         + Sync
-        + std::fmt::Display,
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
-    let computer = UltraSimdStatistics::<F>::new();
-    let stats = computer.comprehensive_stats_ultra(data)?;
+    let computer = AdvancedSimdStatistics::<F>::new();
+    let stats = computer.comprehensive_stats_advanced(data)?;
     Ok(stats.mean)
 }
 
 #[allow(dead_code)]
-pub fn ultra_std_simd<F>(data: &ArrayView1<F>) -> StatsResult<F>
+pub fn advanced_std_simd<F>(data: &ArrayView1<F>) -> StatsResult<F>
 where
     F: Float
         + NumCast
@@ -525,15 +560,16 @@ where
         + Copy
         + Send
         + Sync
-        + std::fmt::Display,
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
-    let computer = UltraSimdStatistics::<F>::new();
-    let stats = computer.comprehensive_stats_ultra(data)?;
+    let computer = AdvancedSimdStatistics::<F>::new();
+    let stats = computer.comprehensive_stats_advanced(data)?;
     Ok(stats.std_dev)
 }
 
 #[allow(dead_code)]
-pub fn ultra_comprehensive_simd<F>(data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
+pub fn advanced_comprehensive_simd<F>(data: &ArrayView1<F>) -> StatsResult<ComprehensiveStats<F>>
 where
     F: Float
         + NumCast
@@ -544,10 +580,11 @@ where
         + Copy
         + Send
         + Sync
-        + std::fmt::Display,
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
-    let computer = UltraSimdStatistics::<F>::new();
-    computer.comprehensive_stats_ultra(data)
+    let computer = AdvancedSimdStatistics::<F>::new();
+    computer.comprehensive_stats_advanced(data)
 }
 
 /// Create RNG with optional seed

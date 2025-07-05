@@ -28,7 +28,13 @@ const PARALLEL_THRESHOLD: usize = 10_000;
 #[allow(dead_code)]
 pub fn mean_parallel<F, D>(x: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
-    F: Float + NumCast + Send + Sync + std::iter::Sum,
+    F: Float
+        + NumCast
+        + Send
+        + Sync
+        + std::iter::Sum<F>
+        + std::fmt::Display
+        + scirs2_core::simd_ops::SimdUnifiedOps,
     D: Data<Elem = F> + Sync,
 {
     if x.is_empty() {
@@ -70,7 +76,13 @@ where
 #[allow(dead_code)]
 pub fn variance_parallel<F, D>(x: &ArrayBase<D, Ix1>, ddof: usize) -> StatsResult<F>
 where
-    F: Float + NumCast + Send + Sync + std::iter::Sum,
+    F: Float
+        + NumCast
+        + Send
+        + Sync
+        + std::iter::Sum<F>
+        + std::fmt::Display
+        + scirs2_core::simd_ops::SimdUnifiedOps,
     D: Data<Elem = F> + Sync,
 {
     let n = x.len();
@@ -125,7 +137,7 @@ pub fn quantiles_parallel<F, D>(
     method: QuantileInterpolation,
 ) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + Send + Sync,
+    F: Float + NumCast + Send + Sync + std::fmt::Display,
     D: Data<Elem = F> + Sync,
 {
     if x.is_empty() {
@@ -200,8 +212,7 @@ pub fn row_statistics_parallel<F, D, S>(
 where
     F: Float + NumCast + Send + Sync,
     D: Data<Elem = F> + Sync,
-    S: Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync
-        + std::fmt::Display,
+    S: Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + std::fmt::Display,
 {
     let nrows = data.nrows();
 
@@ -239,7 +250,14 @@ where
 #[allow(dead_code)]
 pub fn corrcoef_parallel<F, D>(data: &ArrayBase<D, Ix2>) -> StatsResult<ndarray::Array2<F>>
 where
-    F: Float + NumCast + Send + Sync + std::iter::Sum + std::fmt::Debug,
+    F: Float
+        + NumCast
+        + Send
+        + Sync
+        + std::iter::Sum<F>
+        + std::fmt::Debug
+        + std::fmt::Display
+        + scirs2_core::simd_ops::SimdUnifiedOps,
     D: Data<Elem = F> + Sync,
 {
     use crate::pearson_r;
@@ -304,7 +322,9 @@ pub fn bootstrap_parallel<F, S>(
 ) -> StatsResult<Array1<F>>
 where
     F: Float + NumCast + Send + Sync,
-    S: Fn(&ArrayBase<ndarray::ViewRepr<&F>, Ix1>) -> StatsResult<F> + Send + Sync
+    S: Fn(&ArrayBase<ndarray::ViewRepr<&F>, Ix1>) -> StatsResult<F>
+        + Send
+        + Sync
         + std::fmt::Display,
 {
     use crate::sampling::bootstrap;

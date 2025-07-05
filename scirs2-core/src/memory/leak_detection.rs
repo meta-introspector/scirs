@@ -809,8 +809,7 @@ impl LeakDetector {
 
         if memory_growth > self.config.growth_threshold_bytes as i64 {
             recommendations.push(format!(
-                "Memory growth of {} bytes exceeds threshold, investigate allocation patterns",
-                memory_growth
+                "Memory growth of {memory_growth} bytes exceeds threshold, investigate allocation patterns"
             ));
         }
 
@@ -869,8 +868,7 @@ impl LeakDetector {
         let cutoff = chrono::Utc::now()
             - chrono::Duration::from_std(max_age).map_err(|e| {
                 CoreError::ComputationError(crate::error::ErrorContext::new(format!(
-                    "Invalid duration: {}",
-                    e
+                    "Invalid duration: {e}"
                 )))
             })?;
 

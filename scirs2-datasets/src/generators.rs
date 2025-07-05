@@ -17,6 +17,7 @@ use std::f64::consts::PI;
 
 /// Generate a random classification dataset with clusters
 #[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn make_classification(
     n_samples: usize,
     n_features: usize,
@@ -1539,6 +1540,7 @@ impl GpuConfig {
 
 /// GPU-accelerated classification dataset generation
 #[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn make_classification_gpu(
     n_samples: usize,
     n_features: usize,
@@ -1836,6 +1838,7 @@ fn generate_classification_gpu_optimized(
 
 /// GPU-accelerated regression dataset generation
 #[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn make_regression_gpu(
     n_samples: usize,
     n_features: usize,

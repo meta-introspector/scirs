@@ -378,7 +378,7 @@ where
 
     // Convert input to boolean array for morphology function
     let bool_input: Array<bool, D> = input.map(|&x| !x.is_zero());
-    
+
     // Call the underlying distance transform function with both parameters
     let (distances, indices) = crate::morphology::distance_transform_edt(
         &bool_input,
@@ -386,25 +386,25 @@ where
         return_distances,
         return_indices,
     );
-    
+
     // Convert indices from i32 IxDyn to usize with original dimensions if needed
     let converted_indices = if let Some(idx_array) = indices {
         if return_indices {
             // Convert from i32 IxDyn to usize D
             let idx_shape = input.shape().to_vec();
             let mut result_indices = Array::<usize, D>::zeros(input.dim());
-            
+
             // Copy data with type conversion
             for (i, &val) in idx_array.iter().enumerate() {
                 let mut coords = vec![0; input.ndim()];
                 let mut remaining = i;
-                
+
                 // Convert flat index to multi-dimensional coordinates
                 for (dim, &size) in idx_shape.iter().enumerate().rev() {
                     coords[dim] = remaining % size;
                     remaining /= size;
                 }
-                
+
                 if let Some(elem) = result_indices.get_mut(&*coords) {
                     *elem = val.max(0) as usize;
                 }
@@ -416,7 +416,7 @@ where
     } else {
         None
     };
-    
+
     Ok((distances, converted_indices))
 }
 

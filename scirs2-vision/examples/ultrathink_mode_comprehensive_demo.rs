@@ -1,6 +1,6 @@
 //! Comprehensive Advanced Mode Demonstration
 //!
-//! This example showcases the ultra-advanced computer vision capabilities implemented
+//! This example showcases the advanced-advanced computer vision capabilities implemented
 //! in Advanced mode, including:
 //! - Scene understanding with cognitive-level reasoning
 //! - Visual reasoning and question answering
@@ -524,7 +524,7 @@ fn main() -> Result<()> {
     println!("==========================================");
     println!();
     println!("Successfully demonstrated:");
-    println!("✓ Ultra-advanced scene understanding with cognitive reasoning");
+    println!("✓ Advanced-advanced scene understanding with cognitive reasoning");
     println!("✓ Sophisticated visual reasoning and question answering");
     println!("✓ Comprehensive activity recognition and temporal modeling");
     println!("✓ Advanced visual SLAM with semantic mapping");

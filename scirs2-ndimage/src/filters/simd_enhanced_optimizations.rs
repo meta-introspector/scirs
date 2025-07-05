@@ -536,7 +536,7 @@ fn simd_separable_convolution_2d<T>(
 where
     T: Float + FromPrimitive + Debug + Clone + Send + Sync + SimdUnifiedOps,
 {
-    // This would use the ultra_simd_separable_convolution_2d from the other module
+    // This would use the advanced_simd_separable_convolution_2d from the other module
     // For now, we'll use a simplified implementation
     let (height, width) = input.dim();
     let mut output = Array::zeros((height, width));

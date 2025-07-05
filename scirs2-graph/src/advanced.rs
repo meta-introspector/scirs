@@ -15,7 +15,7 @@ use std::collections::{HashMap, VecDeque};
 pub struct AdvancedConfig {
     /// Enable neural RL-based algorithm selection
     pub enable_neural_rl: bool,
-    /// Enable GPU ultra-acceleration
+    /// Enable GPU advanced-acceleration
     pub enable_gpu_acceleration: bool,
     /// Enable neuromorphic computing features
     pub enable_neuromorphic: bool,

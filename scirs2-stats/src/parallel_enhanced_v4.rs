@@ -44,8 +44,18 @@ pub struct EnhancedParallelProcessor<F> {
 
 impl<F> EnhancedParallelProcessor<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + num_traits::FromPrimitive,
 {
     /// Create new enhanced parallel processor
     pub fn new() -> Self {
@@ -156,7 +166,7 @@ where
     pub fn correlation_matrix_parallel(&self, matrix: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         check_array_finite(matrix, "matrix")?;
 
-        let (n_samples, n_features) = matrix.dim();
+        let (_n_samples, n_features) = matrix.dim();
 
         if n_features < 2 {
             return Err(StatsError::InvalidArgument(
@@ -165,7 +175,7 @@ where
         }
 
         // Compute means in parallel
-        let means = parallel_map_collect(0..n_features, |&i| {
+        let means = parallel_map_collect(0..n_features, |i| {
             let col = matrix.column(i);
             self.mean_parallel_enhanced(&col).unwrap()
         });
@@ -214,18 +224,18 @@ where
         let statistic_fn = Arc::new(statistic_fn);
         let data_arc = Arc::new(data.to_owned());
 
-        let results = parallel_map_collect(0..n_bootstrap, |&i| {
-            use rand::{rngs::StdRng, Rng, SeedableRng};
+        let results = parallel_map_collect(0..n_bootstrap, |i| {
+            use scirs2_core::random::Random;
             let mut rng = match seed {
-                Some(s) => StdRng::seed_from_u64(s.wrapping_add(i as u64)),
-                None => StdRng::from_entropy(),
+                Some(s) => Random::with_seed(s.wrapping_add(i as u64)),
+                None => Random::with_seed(i as u64), // Use index as seed for determinism in parallel
             };
 
             // Generate bootstrap sample
             let n = data_arc.len();
             let mut bootstrap_sample = Array1::zeros(n);
             for j in 0..n {
-                let idx = rng.random_range(0..n);
+                let idx = rng.random_range(0, n);
                 bootstrap_sample[j] = data_arc[idx];
             }
 
@@ -246,23 +256,23 @@ where
         let (rows, cols) = matrix.dim();
 
         // Compute row statistics in parallel
-        let row_means = parallel_map_collect(0..rows, |&i| {
+        let row_means = parallel_map_collect(0..rows, |i| {
             let row = matrix.row(i);
             self.mean_parallel_enhanced(&row).unwrap()
         });
 
-        let row_vars = parallel_map_collect(0..rows, |&i| {
+        let row_vars = parallel_map_collect(0..rows, |i| {
             let row = matrix.row(i);
             self.variance_parallel_enhanced(&row, 1).unwrap()
         });
 
         // Compute column statistics in parallel
-        let col_means = parallel_map_collect(0..cols, |&j| {
+        let col_means = parallel_map_collect(0..cols, |j| {
             let col = matrix.column(j);
             self.mean_parallel_enhanced(&col).unwrap()
         });
 
-        let col_vars = parallel_map_collect(0..cols, |&j| {
+        let col_vars = parallel_map_collect(0..cols, |j| {
             let col = matrix.column(j);
             self.variance_parallel_enhanced(&col, 1).unwrap()
         });
@@ -310,7 +320,10 @@ where
 
         // Use parallel sorting if data is large enough
         if sorted_data.len() >= self.config.min_chunk_size {
-            parallel_sort(sorted_data.as_slice_mut().unwrap());
+            sorted_data
+                .as_slice_mut()
+                .unwrap()
+                .par_sort_by(|a, b| a.partial_cmp(b).unwrap());
         } else {
             sorted_data
                 .as_slice_mut()
@@ -413,45 +426,85 @@ pub struct MatrixParallelResult<F> {
 
 /// High-level convenience functions
 #[allow(dead_code)]
-pub fn mean_parallel_ultra<F>(data: &ArrayView1<F>) -> StatsResult<F>
+pub fn mean_parallel_advanced<F>(data: &ArrayView1<F>) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + num_traits::FromPrimitive,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
     processor.mean_parallel_enhanced(data)
 }
 
 #[allow(dead_code)]
-pub fn variance_parallel_ultra<F>(data: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
+pub fn variance_parallel_advanced<F>(data: &ArrayView1<F>, ddof: usize) -> StatsResult<F>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + num_traits::FromPrimitive,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
     processor.variance_parallel_enhanced(data, ddof)
 }
 
 #[allow(dead_code)]
-pub fn correlation_matrix_parallel_ultra<F>(matrix: &ArrayView2<F>) -> StatsResult<Array2<F>>
+pub fn correlation_matrix_parallel_advanced<F>(matrix: &ArrayView2<F>) -> StatsResult<Array2<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + num_traits::FromPrimitive,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
     processor.correlation_matrix_parallel(matrix)
 }
 
 #[allow(dead_code)]
-pub fn bootstrap_parallel_ultra<F>(
+pub fn bootstrap_parallel_advanced<F>(
     data: &ArrayView1<F>,
     n_bootstrap: usize,
     statistic_fn: impl Fn(&ArrayView1<F>) -> F + Send + Sync,
     seed: Option<u64>,
 ) -> StatsResult<Array1<F>>
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
-        + std::fmt::Display,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + Send
+        + Sync
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + num_traits::FromPrimitive,
 {
     let processor = EnhancedParallelProcessor::<F>::new();
     processor.bootstrap_parallel_enhanced(data, n_bootstrap, statistic_fn, seed)

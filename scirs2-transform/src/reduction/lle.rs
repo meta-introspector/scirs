@@ -524,7 +524,7 @@ mod tests {
 
     #[test]
     fn test_lle_regularization() {
-        let x = Array::eye(10) * 2.0; // Scale to avoid numerical issues
+        let x: Array2<f64> = Array::eye(10) * 2.0; // Scale to avoid numerical issues
 
         let mut lle = LLE::new(3, 2).with_regularization(0.01);
         let result = lle.fit_transform(&x);

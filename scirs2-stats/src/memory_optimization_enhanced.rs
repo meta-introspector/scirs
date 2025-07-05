@@ -423,8 +423,7 @@ impl EnhancedMemoryOptimizer {
         operation: &str,
     ) -> OptimizationRecommendation
     where
-        F: Float + NumCast
-        + std::fmt::Display,
+        F: Float + NumCast + std::fmt::Display,
     {
         let current_conditions = self.assess_memory_conditions();
         let algorithm_selector = self.algorithm_selector.read().unwrap();
@@ -479,8 +478,7 @@ impl EnhancedMemoryOptimizer {
     /// Memory-aware algorithm selection for specific operations
     pub fn select_algorithm<F>(&self, operation: &str, data_size: usize) -> String
     where
-        F: Float + NumCast
-        + std::fmt::Display,
+        F: Float + NumCast + std::fmt::Display,
     {
         let conditions = self.assess_memory_conditions();
         let selector = self.algorithm_selector.read().unwrap();

@@ -1,4 +1,4 @@
-//! Ultra-parallel statistical computing framework for scirs2-stats v1.0.0
+//! Advanced-parallel statistical computing framework for scirs2-stats v1.0.0
 //!
 //! This module provides an advanced parallel processing system that goes beyond
 //! basic parallelization to offer intelligent work distribution, adaptive load
@@ -14,9 +14,9 @@ use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
 use std::time::{Duration, Instant};
 
-/// Configuration for ultra-parallel statistical operations
+/// Configuration for advanced-parallel statistical operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UltraParallelConfig {
+pub struct AdvancedParallelConfig {
     /// Enable adaptive work distribution
     pub adaptive_work_distribution: bool,
     /// Enable NUMA-aware processing
@@ -43,7 +43,7 @@ pub struct UltraParallelConfig {
     pub cache_optimization: CacheOptimizationLevel,
 }
 
-impl Default for UltraParallelConfig {
+impl Default for AdvancedParallelConfig {
     fn default() -> Self {
         Self {
             adaptive_work_distribution: true,
@@ -340,7 +340,7 @@ impl MemoryPool {
 
 /// Parallel computation result with detailed metrics
 #[derive(Debug, Clone)]
-pub struct UltraParallelResult<T> {
+pub struct AdvancedParallelResult<T> {
     /// Computation result
     pub result: T,
     /// Execution metrics
@@ -543,9 +543,9 @@ pub struct CacheUtilization {
     pub cache_line_utilization: f64,
 }
 
-/// Main ultra-parallel statistical processor
-pub struct UltraParallelStatsProcessor {
-    config: UltraParallelConfig,
+/// Main advanced-parallel statistical processor
+pub struct AdvancedParallelStatsProcessor {
+    config: AdvancedParallelConfig,
     execution_contexts: Vec<Arc<RwLock<ParallelExecutionContext>>>,
     work_queue: Arc<Mutex<Vec<WorkUnit<Vec<f64>>>>>,
     performance_history: Arc<Mutex<Vec<ParallelExecutionMetrics>>>,
@@ -595,9 +595,9 @@ pub enum MemoryLayoutStrategy {
     CacheOptimized,
 }
 
-impl UltraParallelStatsProcessor {
-    /// Create new ultra-parallel processor
-    pub fn new(config: UltraParallelConfig) -> StatsResult<Self> {
+impl AdvancedParallelStatsProcessor {
+    /// Create new advanced-parallel processor
+    pub fn new(config: AdvancedParallelConfig) -> StatsResult<Self> {
         let num_threads = config
             .thread_pool_config
             .num_workers
@@ -630,14 +630,13 @@ impl UltraParallelStatsProcessor {
 
     /// Create with default configuration
     pub fn default() -> StatsResult<Self> {
-        Self::new(UltraParallelConfig::default())
+        Self::new(AdvancedParallelConfig::default())
     }
 
-    /// Compute mean using ultra-parallel processing
-    pub fn mean_ultra_parallel<F>(&self, data: ArrayView1<F>) -> StatsResult<UltraParallelResult<F>>
+    /// Compute mean using advanced-parallel processing
+    pub fn mean_advanced_parallel<F>(&self, data: ArrayView1<F>) -> StatsResult<AdvancedParallelResult<F>>
     where
-        F: Float + NumCast + Send + Sync + Zero + std::iter::Sum
-        + std::fmt::Display,
+        F: Float + NumCast + Send + Sync + Zero + std::iter::Sum + std::fmt::Display,
     {
         let start_time = Instant::now();
 
@@ -662,7 +661,7 @@ impl UltraParallelStatsProcessor {
         // Update performance history
         self.update_performance_history(&metrics);
 
-        Ok(UltraParallelResult {
+        Ok(AdvancedParallelResult {
             result,
             metrics,
             analysis,
@@ -670,20 +669,19 @@ impl UltraParallelStatsProcessor {
         })
     }
 
-    /// Compute variance using ultra-parallel processing
-    pub fn variance_ultra_parallel<F>(
+    /// Compute variance using advanced-parallel processing
+    pub fn variance_advanced_parallel<F>(
         &self,
         data: ArrayView1<F>,
         ddof: usize,
-    ) -> StatsResult<UltraParallelResult<F>>
+    ) -> StatsResult<AdvancedParallelResult<F>>
     where
-        F: Float + NumCast + Send + Sync + Zero + std::iter::Sum
-        + std::fmt::Display,
+        F: Float + NumCast + Send + Sync + Zero + std::iter::Sum + std::fmt::Display,
     {
         let start_time = Instant::now();
 
         // First compute mean in parallel
-        let mean_result = self.mean_ultra_parallel(data)?;
+        let mean_result = self.mean_advanced_parallel(data)?;
         let mean_val = mean_result.result;
 
         // Select strategy for variance computation
@@ -705,7 +703,7 @@ impl UltraParallelStatsProcessor {
 
         self.update_performance_history(&metrics);
 
-        Ok(UltraParallelResult {
+        Ok(AdvancedParallelResult {
             result,
             metrics,
             analysis,
@@ -713,14 +711,13 @@ impl UltraParallelStatsProcessor {
         })
     }
 
-    /// Compute correlation matrix using ultra-parallel processing
-    pub fn correlation_matrix_ultra_parallel<F>(
+    /// Compute correlation matrix using advanced-parallel processing
+    pub fn correlation_matrix_advanced_parallel<F>(
         &self,
         data: ArrayView2<F>,
-    ) -> StatsResult<UltraParallelResult<Array2<F>>>
+    ) -> StatsResult<AdvancedParallelResult<Array2<F>>>
     where
-        F: Float + NumCast + Send + Sync + Zero + std::iter::Sum + Clone
-        + std::fmt::Display,
+        F: Float + NumCast + Send + Sync + Zero + std::iter::Sum + Clone + std::fmt::Display,
     {
         let start_time = Instant::now();
         let (n_rows, n_cols) = data.dim();
@@ -770,7 +767,7 @@ impl UltraParallelStatsProcessor {
 
         self.update_performance_history(&metrics);
 
-        Ok(UltraParallelResult {
+        Ok(AdvancedParallelResult {
             result: result_matrix,
             metrics,
             analysis,
@@ -863,8 +860,7 @@ impl UltraParallelStatsProcessor {
         strategy: &OptimizationStrategy,
     ) -> StatsResult<Vec<WorkUnit<Vec<f64>>>>
     where
-        F: Float + NumCast
-        + std::fmt::Display,
+        F: Float + NumCast + std::fmt::Display,
     {
         let mut work_units = Vec::new();
         let data_size = data.len();
@@ -910,8 +906,7 @@ impl UltraParallelStatsProcessor {
         strategy: &OptimizationStrategy,
     ) -> StatsResult<Vec<WorkUnit<Vec<f64>>>>
     where
-        F: Float + NumCast
-        + std::fmt::Display,
+        F: Float + NumCast + std::fmt::Display,
     {
         let mut work_units = Vec::new();
         let data_size = data.len();
@@ -992,8 +987,7 @@ impl UltraParallelStatsProcessor {
         work_units: &[WorkUnit<(Vec<F>, Vec<F>, usize, usize)>],
     ) -> StatsResult<Vec<((usize, usize), F)>>
     where
-        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum
-        + std::fmt::Display,
+        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum + std::fmt::Display,
     {
         let num_work_units = work_units.len();
         let results = Arc::new(Mutex::new(Vec::with_capacity(num_work_units)));
@@ -1031,8 +1025,7 @@ impl UltraParallelStatsProcessor {
     /// Compute Pearson correlation between two vectors
     fn compute_correlation<F>(&self, x: &[F], y: &[F]) -> StatsResult<F>
     where
-        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum
-        + std::fmt::Display,
+        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum + std::fmt::Display,
     {
         if x.len() != y.len() || x.is_empty() {
             return Ok(F::zero());
@@ -1058,8 +1051,7 @@ impl UltraParallelStatsProcessor {
     /// Combine mean results from parallel computation
     fn combine_mean_results<F>(&self, partial_results: &[f64], total_count: usize) -> StatsResult<F>
     where
-        F: Float + NumCast
-        + std::fmt::Display,
+        F: Float + NumCast + std::fmt::Display,
     {
         let total_sum: f64 = partial_results.iter().sum();
         let mean = total_sum / total_count as f64;
@@ -1076,8 +1068,7 @@ impl UltraParallelStatsProcessor {
         ddof: usize,
     ) -> StatsResult<F>
     where
-        F: Float + NumCast
-        + std::fmt::Display,
+        F: Float + NumCast + std::fmt::Display,
     {
         let total_sum_sq_dev: f64 = partial_results.iter().sum();
         let variance = total_sum_sq_dev / (total_count - ddof) as f64;
@@ -1130,8 +1121,7 @@ impl UltraParallelStatsProcessor {
         work_units: &[WorkUnit<(Vec<F>, Vec<F>, usize, usize)>],
     ) -> StatsResult<ParallelExecutionMetrics>
     where
-        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum
-        + std::fmt::Display,
+        F: Float + NumCast + Send + Sync + Clone + std::iter::Sum + std::fmt::Display,
     {
         let threads_used = work_units.len();
         let _total_work: f64 = work_units.iter().map(|wu| wu.cost).sum();
@@ -1277,33 +1267,31 @@ impl UltraParallelStatsProcessor {
     }
 }
 
-/// Convenience functions for ultra-parallel operations
+/// Convenience functions for advanced-parallel operations
 #[allow(dead_code)]
-pub fn create_ultra_parallel_processor() -> StatsResult<UltraParallelStatsProcessor> {
-    UltraParallelStatsProcessor::default()
+pub fn create_advanced_parallel_processor() -> StatsResult<AdvancedParallelStatsProcessor> {
+    AdvancedParallelStatsProcessor::default()
 }
 
 #[allow(dead_code)]
-pub fn mean_ultra_parallel<F>(data: ArrayView1<F>) -> StatsResult<UltraParallelResult<F>>
+pub fn mean_advanced_parallel<F>(data: ArrayView1<F>) -> StatsResult<AdvancedParallelResult<F>>
 where
-    F: Float + NumCast + Send + Sync + Zero + std::iter::Sum
-        + std::fmt::Display,
+    F: Float + NumCast + Send + Sync + Zero + std::iter::Sum + std::fmt::Display,
 {
-    let processor = UltraParallelStatsProcessor::default()?;
-    processor.mean_ultra_parallel(data)
+    let processor = AdvancedParallelStatsProcessor::default()?;
+    processor.mean_advanced_parallel(data)
 }
 
 #[allow(dead_code)]
-pub fn variance_ultra_parallel<F>(
+pub fn variance_advanced_parallel<F>(
     data: ArrayView1<F>,
     ddof: usize,
-) -> StatsResult<UltraParallelResult<F>>
+) -> StatsResult<AdvancedParallelResult<F>>
 where
-    F: Float + NumCast + Send + Sync + Zero + std::iter::Sum
-        + std::fmt::Display,
+    F: Float + NumCast + Send + Sync + Zero + std::iter::Sum + std::fmt::Display,
 {
-    let processor = UltraParallelStatsProcessor::default()?;
-    processor.variance_ultra_parallel(data, ddof)
+    let processor = AdvancedParallelStatsProcessor::default()?;
+    processor.variance_advanced_parallel(data, ddof)
 }
 
 #[cfg(test)]
@@ -1312,8 +1300,8 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_ultra_parallel_config() {
-        let config = UltraParallelConfig::default();
+    fn test_advanced_parallel_config() {
+        let config = AdvancedParallelConfig::default();
         assert!(config.adaptive_work_distribution);
         assert!(config.numa_aware);
         assert!(config.performance_monitoring);
@@ -1321,13 +1309,13 @@ mod tests {
 
     #[test]
     fn test_processor_creation() {
-        let processor = UltraParallelStatsProcessor::default().unwrap();
+        let processor = AdvancedParallelStatsProcessor::default().unwrap();
         assert!(!processor.execution_contexts.is_empty());
     }
 
     #[test]
     fn test_optimization_strategy_selection() {
-        let processor = UltraParallelStatsProcessor::default().unwrap();
+        let processor = AdvancedParallelStatsProcessor::default().unwrap();
         let strategy = processor
             .select_optimization_strategy("mean", 10000)
             .unwrap();
@@ -1339,7 +1327,7 @@ mod tests {
 
     #[test]
     fn test_work_unit_creation() {
-        let processor = UltraParallelStatsProcessor::default().unwrap();
+        let processor = AdvancedParallelStatsProcessor::default().unwrap();
         let data = array![1.0f64, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let strategy = OptimizationStrategy {
             name: "test".to_string(),
@@ -1359,7 +1347,7 @@ mod tests {
 
     #[test]
     fn test_correlation_computation() {
-        let processor = UltraParallelStatsProcessor::default().unwrap();
+        let processor = AdvancedParallelStatsProcessor::default().unwrap();
         let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = vec![2.0, 4.0, 6.0, 8.0, 10.0];
 
@@ -1369,7 +1357,7 @@ mod tests {
 
     #[test]
     fn test_performance_metrics_calculation() {
-        let processor = UltraParallelStatsProcessor::default().unwrap();
+        let processor = AdvancedParallelStatsProcessor::default().unwrap();
         let work_units = vec![
             WorkUnit {
                 id: 0,

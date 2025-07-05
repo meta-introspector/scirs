@@ -1059,39 +1059,39 @@ where
     (sorted_d, sorted_z)
 }
 
-/// Ultra-precision eigenvalue solver targeting 1e-12+ accuracy (advanced mode)
+/// Advanced-precision eigenvalue solver targeting 1e-12+ accuracy (advanced mode)
 ///
 /// This function implements state-of-the-art numerical techniques for achieving
-/// ultra-high precision eigenvalue computation, including:
+/// advanced-high precision eigenvalue computation, including:
 /// - Kahan summation for compensated arithmetic
 /// - Multiple-stage Rayleigh quotient iteration
 /// - Newton's method eigenvalue correction
-/// - Ultra-aggressive adaptive tolerance based on matrix conditioning
+/// - Advanced-aggressive adaptive tolerance based on matrix conditioning
 /// - Enhanced Gram-Schmidt orthogonalization
-/// - Automatic ultra-precision activation for high precision targets
+/// - Automatic advanced-precision activation for high precision targets
 ///
 /// # Parameters
 ///
 /// * `a` - Input symmetric matrix
 /// * `max_iter` - Maximum number of iterations (default: 500)
 /// * `target_precision` - Target precision (default: 1e-12, advanced mode enhancement)
-/// * `auto_detect` - Automatically activate ultra-precision for challenging matrices
+/// * `auto_detect` - Automatically activate advanced-precision for challenging matrices
 ///
 /// # Returns
 ///
-/// * Tuple containing (eigenvalues, eigenvectors) with ultra-high precision
+/// * Tuple containing (eigenvalues, eigenvectors) with advanced-high precision
 ///
 /// # Examples
 ///
 /// ```
 /// use ndarray::array;
-/// use scirs2_linalg::extended_precision::eigen::ultra_precision_eigh;
+/// use scirs2_linalg::extended_precision::eigen::advanced_precision_eigh;
 ///
 /// let a = array![[2.0f32, 1.0], [1.0, 2.0]];
-/// let (eigvals, eigvecs) = ultra_precision_eigh::<_, f64>(&a.view(), None, None, true).unwrap();
+/// let (eigvals, eigvecs) = advanced_precision_eigh::<_, f64>(&a.view(), None, None, true).unwrap();
 /// ```
 #[allow(dead_code)]
-pub fn ultra_precision_eigh<A, I>(
+pub fn advanced_precision_eigh<A, I>(
     a: &ArrayView2<A>,
     max_iter: Option<usize>,
     target_precision: Option<A>,
@@ -1131,35 +1131,35 @@ where
     // Compute matrix condition number for adaptive tolerance selection
     let condition_number = estimate_condition_number(a)?;
 
-    // Ultra-aggressive adaptive tolerance selection for 1e-12+ accuracy
+    // Advanced-aggressive adaptive tolerance selection for 1e-12+ accuracy
     let adaptive_tolerance = if condition_number > A::from(1e12).unwrap() {
         target_precision * A::from(100.0).unwrap() // Relax tolerance for ill-conditioned matrices
     } else if condition_number < A::from(1e3).unwrap() {
-        target_precision * A::from(0.01).unwrap() // Ultra-tight tolerance for extremely well-conditioned matrices
+        target_precision * A::from(0.01).unwrap() // Advanced-tight tolerance for extremely well-conditioned matrices
     } else if condition_number < A::from(1e6).unwrap() {
         target_precision * A::from(0.1).unwrap() // Tighter tolerance for well-conditioned matrices
     } else {
         target_precision
     };
 
-    // Auto-detect if ultra-precision mode should be activated (more aggressive in advanced mode)
-    let use_ultra_precision = auto_detect
+    // Auto-detect if advanced-precision mode should be activated (more aggressive in advanced mode)
+    let use_advanced_precision = auto_detect
         && (
             condition_number > A::from(1e12).unwrap() || target_precision <= A::from(1e-11).unwrap()
             // Activate for high precision targets
         );
 
-    if use_ultra_precision {
-        ultra_precision_solver_internal(a, max_iter, adaptive_tolerance)
+    if use_advanced_precision {
+        advanced_precision_solver_internal(a, max_iter, adaptive_tolerance)
     } else {
         // Use standard extended precision for well-conditioned matrices
         extended_eigh(a, Some(max_iter), Some(adaptive_tolerance))
     }
 }
 
-/// Internal ultra-precision solver with advanced numerical techniques
+/// Internal advanced-precision solver with advanced numerical techniques
 #[allow(dead_code)]
-fn ultra_precision_solver_internal<A>(
+fn advanced_precision_solver_internal<A>(
     a: &ArrayView2<A>,
     max_iter: usize,
     tolerance: A,

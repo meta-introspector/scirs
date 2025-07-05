@@ -304,16 +304,16 @@ where
     solve_symmetric_with_power_iteration(a)
 }
 
-/// Advanced MODE ENHANCEMENT: Ultra-precision eigenvalue computation targeting 1e-10+ accuracy
+/// Advanced MODE ENHANCEMENT: Advanced-precision eigenvalue computation targeting 1e-10+ accuracy
 ///
 /// This function implements advanced numerical techniques for maximum precision:
 /// - Kahan summation for enhanced numerical stability
-/// - Multiple-stage Rayleigh quotient iteration with ultra-tight convergence
+/// - Multiple-stage Rayleigh quotient iteration with advanced-tight convergence
 /// - Newton's method eigenvalue correction
 /// - Adaptive tolerance selection based on matrix condition number
 /// - Enhanced Gram-Schmidt orthogonalization with multiple passes
 #[allow(dead_code)]
-pub fn ultra_precision_eig<F>(
+pub fn advanced_precision_eig<F>(
     a: &ArrayView2<F>,
     workers: Option<usize>,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
@@ -347,13 +347,13 @@ where
         F::from(1e-10).unwrap() // Well-conditioned matrices
     };
 
-    // For small matrices, use ultra-precise analytical methods
+    // For small matrices, use advanced-precise analytical methods
     if n <= 4 {
-        return ultra_precise_small_matrix_eig(a, precision_target);
+        return advanced_precise_small_matrix_eig(a, precision_target);
     }
 
     // For larger matrices, use enhanced iterative methods
-    ultra_precise_iterative_eig(a, precision_target, workers)
+    advanced_precise_iterative_eig(a, precision_target, workers)
 }
 
 /// Estimate matrix condition number for adaptive tolerance selection
@@ -398,9 +398,9 @@ where
     Ok(condition)
 }
 
-/// Ultra-precise eigenvalue computation for small matrices (n <= 4)
+/// Advanced-precise eigenvalue computation for small matrices (n <= 4)
 #[allow(dead_code)]
-fn ultra_precise_small_matrix_eig<F>(
+fn advanced_precise_small_matrix_eig<F>(
     a: &ArrayView2<F>,
     precision_target: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
@@ -415,18 +415,18 @@ where
             let eigenvector = Array2::eye(1);
             Ok((Array1::from_elem(1, eigenvalue), eigenvector))
         }
-        2 => ultra_precise_2x2_eig(a, precision_target),
-        3 => ultra_precise_3x3_eig(a, precision_target),
-        4 => ultra_precise_4x4_eig(a, precision_target),
+        2 => advanced_precise_2x2_eig(a, precision_target),
+        3 => advanced_precise_3x3_eig(a, precision_target),
+        4 => advanced_precise_4x4_eig(a, precision_target),
         _ => Err(LinalgError::InvalidInput(
-            "Matrix size not supported for ultra-precise small matrix solver".to_string(),
+            "Matrix size not supported for advanced-precise small matrix solver".to_string(),
         )),
     }
 }
 
-/// Ultra-precise 2x2 eigenvalue computation with Kahan summation
+/// Advanced-precise 2x2 eigenvalue computation with Kahan summation
 #[allow(dead_code)]
-fn ultra_precise_2x2_eig<F>(
+fn advanced_precise_2x2_eig<F>(
     a: &ArrayView2<F>,
     _precision_target: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
@@ -467,14 +467,14 @@ where
     eigenvalues[1] = lambda2;
 
     // Enhanced eigenvector computation with Gram-Schmidt orthogonalization
-    let eigenvectors = compute_ultra_precise_eigenvectors_2x2(a, &eigenvalues)?;
+    let eigenvectors = compute_advanced_precise_eigenvectors_2x2(a, &eigenvalues)?;
 
     Ok((eigenvalues, eigenvectors))
 }
 
-/// Ultra-precise 3x3 eigenvalue computation using Cardano's formula with enhancements
+/// Advanced-precise 3x3 eigenvalue computation using Cardano's formula with enhancements
 #[allow(dead_code)]
-fn ultra_precise_3x3_eig<F>(
+fn advanced_precise_3x3_eig<F>(
     a: &ArrayView2<F>,
     precision_target: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
@@ -483,17 +483,19 @@ where
 {
     // Enhanced cubic equation solver with numerical stability improvements
     let characteristic_poly = compute_characteristic_polynomial_3x3(a)?;
-    let eigenvalues = solve_cubic_equation_ultra_precise(&characteristic_poly, precision_target)?;
+    let eigenvalues =
+        solve_cubic_equation_advanced_precise(&characteristic_poly, precision_target)?;
 
     // Enhanced eigenvector computation with multiple Gram-Schmidt passes
-    let eigenvectors = compute_ultra_precise_eigenvectors_3x3(a, &eigenvalues, precision_target)?;
+    let eigenvectors =
+        compute_advanced_precise_eigenvectors_3x3(a, &eigenvalues, precision_target)?;
 
     Ok((eigenvalues, eigenvectors))
 }
 
-/// Ultra-precise 4x4 eigenvalue computation using enhanced QR iteration
+/// Advanced-precise 4x4 eigenvalue computation using enhanced QR iteration
 #[allow(dead_code)]
-fn ultra_precise_4x4_eig<F>(
+fn advanced_precise_4x4_eig<F>(
     a: &ArrayView2<F>,
     precision_target: F,
 ) -> LinalgResult<(Array1<F>, Array2<F>)>
@@ -501,7 +503,7 @@ where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // Use enhanced QR iteration with double shifting and deflation
-    ultra_precise_qr_iteration(a, precision_target, 1000)
+    advanced_precise_qr_iteration(a, precision_target, 1000)
 }
 
 /// Kahan summation algorithm for enhanced numerical precision
@@ -560,9 +562,9 @@ where
     Ok([c0, c1, c2, c3])
 }
 
-/// Solve cubic equation with ultra-high precision using Cardano's formula with enhancements
+/// Solve cubic equation with advanced-high precision using Cardano's formula with enhancements
 #[allow(dead_code)]
-fn solve_cubic_equation_ultra_precise<F>(
+fn solve_cubic_equation_advanced_precise<F>(
     coeffs: &[F; 4],
     precision_target: F,
 ) -> LinalgResult<Array1<F>>
@@ -680,9 +682,9 @@ where
     Ok(x)
 }
 
-/// Compute ultra-precise eigenvectors for 2x2 matrix
+/// Compute advanced-precise eigenvectors for 2x2 matrix
 #[allow(dead_code)]
-fn compute_ultra_precise_eigenvectors_2x2<F>(
+fn compute_advanced_precise_eigenvectors_2x2<F>(
     a: &ArrayView2<F>,
     eigenvalues: &Array1<F>,
 ) -> LinalgResult<Array2<F>>
@@ -735,9 +737,9 @@ where
     Ok(eigenvectors)
 }
 
-/// Compute ultra-precise eigenvectors for 3x3 matrix
+/// Compute advanced-precise eigenvectors for 3x3 matrix
 #[allow(dead_code)]
-fn compute_ultra_precise_eigenvectors_3x3<F>(
+fn compute_advanced_precise_eigenvectors_3x3<F>(
     a: &ArrayView2<F>,
     eigenvalues: &Array1<F>,
     precision_target: F,
@@ -759,7 +761,7 @@ where
         eigenvectors.column_mut(i).assign(&eigenvector);
     }
 
-    // Apply multiple passes of Gram-Schmidt for ultra-high precision
+    // Apply multiple passes of Gram-Schmidt for advanced-high precision
     for _ in 0..3 {
         gram_schmidt_orthogonalization(&mut eigenvectors)?;
     }
@@ -872,9 +874,9 @@ where
     Ok(())
 }
 
-/// Ultra-precise iterative eigenvalue computation for large matrices
+/// Advanced-precise iterative eigenvalue computation for large matrices
 #[allow(dead_code)]
-fn ultra_precise_iterative_eig<F>(
+fn advanced_precise_iterative_eig<F>(
     a: &ArrayView2<F>,
     precision_target: F,
     _workers: Option<usize>,
@@ -883,12 +885,12 @@ where
     F: Float + NumAssign + Sum + Send + Sync + ndarray::ScalarOperand + 'static,
 {
     // Enhanced QR iteration with multiple convergence criteria
-    ultra_precise_qr_iteration(a, precision_target, 2000)
+    advanced_precise_qr_iteration(a, precision_target, 2000)
 }
 
-/// Ultra-precise QR iteration with enhanced numerical stability
+/// Advanced-precise QR iteration with enhanced numerical stability
 #[allow(dead_code)]
-fn ultra_precise_qr_iteration<F>(
+fn advanced_precise_qr_iteration<F>(
     a: &ArrayView2<F>,
     precision_target: F,
     max_iter: usize,

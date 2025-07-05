@@ -94,11 +94,11 @@ pub fn simd_fir_filter(
     // Check for SIMD capabilities
     let caps = PlatformCapabilities::detect();
 
-    if caps.has_avx512 && config.use_advanced {
+    if caps.avx512_available && config.use_advanced {
         unsafe { avx512_fir_filter(input, coeffs, output) }
-    } else if caps.has_avx2 {
+    } else if caps.avx2_available {
         unsafe { avx2_fir_filter(input, coeffs, output) }
-    } else if caps.has_sse41 {
+    } else if caps.simd_available {
         unsafe { sse_fir_filter(input, coeffs, output) }
     } else {
         scalar_fir_filter(input, coeffs, output)
@@ -132,9 +132,9 @@ pub fn simd_autocorrelation(
 
     let caps = PlatformCapabilities::detect();
 
-    if caps.has_avx2 && config.use_advanced {
+    if caps.avx2_available && config.use_advanced {
         unsafe { avx2_autocorrelation(signal, &mut autocorr, max_lag) }?;
-    } else if caps.has_sse41 {
+    } else if caps.simd_available {
         unsafe { sse_autocorrelation(signal, &mut autocorr, max_lag) }?;
     } else {
         return scalar_autocorrelation(signal, max_lag);
@@ -194,9 +194,9 @@ pub fn simd_cross_correlation(
 
     let caps = PlatformCapabilities::detect();
 
-    if caps.has_avx2 && config.use_advanced {
+    if caps.avx2_available && config.use_advanced {
         unsafe { avx2_cross_correlation(signal1, signal2, &mut result, mode) }?;
-    } else if caps.has_sse41 {
+    } else if caps.simd_available {
         unsafe { sse_cross_correlation(signal1, signal2, &mut result, mode) }?;
     } else {
         return scalar_cross_correlation(signal1, signal2, mode);
@@ -228,9 +228,9 @@ pub fn simd_complex_fft_butterfly(
 
     let caps = PlatformCapabilities::detect();
 
-    if caps.has_avx2 && config.use_advanced {
+    if caps.avx2_available && config.use_advanced {
         unsafe { avx2_complex_butterfly(data, twiddles) }
-    } else if caps.has_sse41 {
+    } else if caps.simd_available {
         unsafe { sse_complex_butterfly(data, twiddles) }
     } else {
         scalar_complex_butterfly(data, twiddles)
@@ -267,11 +267,11 @@ pub fn simd_apply_window(
 
     let caps = PlatformCapabilities::detect();
 
-    if caps.has_avx512 && config.use_advanced {
+    if caps.avx512_available && config.use_advanced {
         unsafe { avx512_apply_window(signal, window, output) }
-    } else if caps.has_avx2 {
+    } else if caps.avx2_available {
         unsafe { avx2_apply_window(signal, window, output) }
-    } else if caps.has_sse41 {
+    } else if caps.simd_available {
         unsafe { sse_apply_window(signal, window, output) }
     } else {
         for i in 0..n {
@@ -984,7 +984,7 @@ pub fn simd_peak_detection(
     let mut peak_candidates = Vec::new();
 
     // SIMD-optimized local maxima detection
-    if caps.has_avx2 && config.use_advanced {
+    if caps.avx2_available && config.use_advanced {
         unsafe { avx2_peak_detection(signal, min_height, &mut peak_candidates)? };
     } else {
         scalar_local_maxima_detection(signal, min_height, &mut peak_candidates);
@@ -1126,7 +1126,7 @@ pub fn simd_zero_crossing_rate(signal: &[f64], config: &SimdConfig) -> SignalRes
     // Use SIMD for efficient sign comparison
     let mut crossings = 0;
 
-    if caps.has_avx2 && config.use_advanced {
+    if caps.avx2_available && config.use_advanced {
         unsafe { crossings = avx2_zero_crossings(signal)? };
     } else {
         crossings = scalar_count_zero_crossings(signal);
@@ -1550,9 +1550,9 @@ pub fn simd_enhanced_convolution(
 
     let caps = PlatformCapabilities::detect();
 
-    if caps.has_avx512 && config.use_advanced {
+    if caps.avx512_available && config.use_advanced {
         unsafe { avx512_enhanced_convolution(signal, kernel, output) }
-    } else if caps.has_avx2 {
+    } else if caps.avx2_available {
         unsafe { avx2_enhanced_convolution(signal, kernel, output) }
     } else {
         scalar_enhanced_convolution(signal, kernel, output)
@@ -1652,16 +1652,16 @@ unsafe fn avx512_enhanced_convolution(
     Ok(())
 }
 
-/// Ultra-high-performance SIMD matrix operations for signal processing
+/// Advanced-high-performance SIMD matrix operations for signal processing
 ///
-/// This module provides ultra-optimized SIMD implementations for matrix operations
+/// This module provides advanced-optimized SIMD implementations for matrix operations
 /// commonly used in signal processing, including:
 /// - SIMD-accelerated matrix-vector multiplication
 /// - Batch signal convolution with matrix kernels
 /// - SIMD-optimized covariance matrix computation
 /// - High-performance autocorrelation matrix calculation
 /// - Real-time signal filtering with multiple channels
-pub mod ultra_simd_matrix {
+pub mod advanced_simd_matrix {
     use super::*;
 
     /// SIMD-accelerated matrix-vector multiplication for signal processing
@@ -1903,7 +1903,7 @@ pub mod ultra_simd_matrix {
         Ok(())
     }
 
-    /// Ultra-fast autocorrelation matrix computation with SIMD
+    /// Optimized autocorrelation matrix computation with SIMD
     ///
     /// Computes the autocorrelation matrix for parametric modeling and
     /// linear prediction using advanced SIMD optimizations.
@@ -1985,8 +1985,8 @@ pub mod ultra_simd_matrix {
     }
 }
 
-/// Ultra-high-performance real-time signal processing operations
-pub mod ultra_simd_realtime {
+/// Advanced-high-performance real-time signal processing operations
+pub mod advanced_simd_realtime {
     use super::*;
 
     /// Real-time SIMD FIR filter state
@@ -2023,7 +2023,7 @@ pub mod ultra_simd_realtime {
                 // SIMD-accelerated convolution
                 let caps = PlatformCapabilities::detect();
 
-                if caps.has_avx2 {
+                if caps.avx2_available {
                     output = unsafe { self.avx2_process_sample() };
                 } else {
                     output = self.scalar_process_sample();
@@ -2229,7 +2229,7 @@ pub fn comprehensive_simd_validation(
     let mut matrix_result = vec![0.0; 100];
 
     let matrix_start = std::time::Instant::now();
-    ultra_simd_matrix::simd_matrix_vector_mul(&matrix, &vector, &mut matrix_result, config)?;
+    advanced_simd_matrix::simd_matrix_vector_mul(&matrix, &vector, &mut matrix_result, config)?;
     validation_result.matrix_vector_time_ns = matrix_start.elapsed().as_nanos() as u64;
 
     // 3. Validate SIMD vs Scalar consistency
@@ -2484,9 +2484,9 @@ pub fn simd_complex_multiply(
 
     let caps = PlatformCapabilities::detect();
 
-    if caps.has_avx2 && config.use_advanced {
+    if caps.avx2_available && config.use_advanced {
         unsafe { avx2_complex_multiply(a_real, a_imag, b_real, b_imag, result_real, result_imag) }
-    } else if caps.has_sse41 {
+    } else if caps.simd_available {
         unsafe { sse_complex_multiply(a_real, a_imag, b_real, b_imag, result_real, result_imag) }
     } else {
         scalar_complex_multiply(a_real, a_imag, b_real, b_imag, result_real, result_imag)
@@ -2519,9 +2519,9 @@ pub fn simd_power_spectrum(
 
     let caps = PlatformCapabilities::detect();
 
-    if caps.has_avx2 && config.use_advanced {
+    if caps.avx2_available && config.use_advanced {
         unsafe { avx2_power_spectrum(real, imag, power) }
-    } else if caps.has_sse41 {
+    } else if caps.simd_available {
         unsafe { sse_power_spectrum(real, imag, power) }
     } else {
         scalar_power_spectrum(real, imag, power)
@@ -2573,9 +2573,9 @@ pub fn simd_weighted_average_spectra(
 
     let caps = PlatformCapabilities::detect();
 
-    if caps.has_avx2 && config.use_advanced {
+    if caps.avx2_available && config.use_advanced {
         unsafe { avx2_weighted_average_spectra(spectra, weights, result) }
-    } else if caps.has_sse41 {
+    } else if caps.simd_available {
         unsafe { sse_weighted_average_spectra(spectra, weights, result) }
     } else {
         scalar_weighted_average_spectra(spectra, weights, result)
@@ -2608,9 +2608,9 @@ pub fn simd_apply_window_v2(
 
     let caps = PlatformCapabilities::detect();
 
-    if caps.has_avx2 && config.use_advanced {
+    if caps.avx2_available && config.use_advanced {
         unsafe { avx2_apply_window_v2(signal, window, result) }
-    } else if caps.has_sse41 {
+    } else if caps.simd_available {
         unsafe { sse_apply_window_v2(signal, window, result) }
     } else {
         scalar_apply_window(signal, window, result)

@@ -220,8 +220,7 @@ where
             return array.into_dimensionality::<D>().map_err(|_| {
                 CoreError::DimensionError(
                     ErrorContext::new(format!(
-                        "Failed to convert {} array to dynamic dimension type. Source shape: {:?}",
-                        context, source_shape
+                        "Failed to convert {context} array to dynamic dimension type. Source shape: {source_shape:?}"
                     ))
                     .with_location(ErrorLocation::new(file!(), line!())),
                 )
@@ -259,9 +258,8 @@ where
                 array.into_dimensionality::<D>().map_err(|_| {
                     CoreError::DimensionError(
                         ErrorContext::new(format!(
-                            "Unexpected dimension conversion failure for {} array with matching dimensions. \
-                             Source shape: {:?}",
-                            context, source_shape
+                            "Unexpected dimension conversion failure for {context} array with matching dimensions. \
+                             Source shape: {source_shape:?}"
                         ))
                         .with_location(ErrorLocation::new(file!(), line!())),
                     )
@@ -309,8 +307,7 @@ where
             .map_err(|_| {
                 CoreError::DimensionError(
                     ErrorContext::new(format!(
-                        "Cannot reshape {} array from shape {:?} to squeezed shape {:?}",
-                        context, source_shape, squeezed_shape
+                        "Cannot reshape {context} array from shape {source_shape:?} to squeezed shape {squeezed_shape:?}"
                     ))
                     .with_location(ErrorLocation::new(file!(), line!())),
                 )

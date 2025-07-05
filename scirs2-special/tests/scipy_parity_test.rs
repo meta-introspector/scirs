@@ -6,14 +6,14 @@ use scirs2_special::*;
 #[allow(dead_code)]
 fn test_airy_function_variants() {
     // Test exponentially scaled Airy functions
-    let x = 1.0;
+    let x: f64 = 1.0;
     let ai_scaled = aie(x);
     let bi_scaled = bie(x);
     assert!(ai_scaled.is_finite());
     assert!(bi_scaled.is_finite());
 
     // Test airye (all scaled functions at once)
-    let (ai_val, aip_val, bi_val, bip_val) = airye(x);
+    let (ai_val, aip_val, bi_val, bip_val): (f64, f64, f64, f64) = airye(x);
     assert!(ai_val.is_finite());
     assert!(aip_val.is_finite());
     assert!(bi_val.is_finite());
@@ -27,7 +27,7 @@ fn test_airy_function_variants() {
     assert!(bi_zero < 0.0); // First zero should be negative
 
     // Test Airy integrals
-    let (int_ai, int_bi) = itairy(x);
+    let (int_ai, int_bi): (f64, f64) = itairy(x);
     assert!(int_ai.is_finite());
     assert!(int_bi.is_finite());
 }
@@ -62,7 +62,7 @@ fn test_distribution_inverse_functions() {
     // Test some basic inverse distribution functions
 
     // Test gdtrix (gamma distribution inverse)
-    let result = gdtrix(0.5, 2.0, 1.0).expect("Should compute gamma inverse");
+    let result: f64 = gdtrix(0.5, 2.0).expect("Should compute gamma inverse");
     assert!(result > 0.0);
     assert!(result.is_finite());
 

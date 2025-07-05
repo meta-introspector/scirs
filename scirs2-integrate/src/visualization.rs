@@ -5702,7 +5702,7 @@ impl Default for ConvergenceVisualizationEngine {
 
 /// Advanced Interactive 3D Visualization Module
 ///
-/// Provides ultra-performance 3D visualization with real-time updates,
+/// Provides advanced-performance 3D visualization with real-time updates,
 /// interactive controls, and GPU-accelerated rendering capabilities.
 pub mod advanced_interactive_3d {
     use super::*;
@@ -7033,8 +7033,8 @@ pub mod advanced_interactive_3d {
         Medium,
         /// High quality
         High,
-        /// Ultra quality (maximum visual fidelity)
-        Ultra,
+        /// Advanced quality (maximum visual fidelity)
+        Advanced,
         /// Custom settings
         Custom,
     }
@@ -7045,7 +7045,7 @@ pub mod advanced_interactive_3d {
         Low,
         Medium,
         High,
-        Ultra,
+        Advanced,
     }
 
     /// Shadow quality settings
@@ -7055,7 +7055,7 @@ pub mod advanced_interactive_3d {
         Low,
         Medium,
         High,
-        Ultra,
+        Advanced,
     }
 
     /// Effect quality settings
@@ -7064,7 +7064,7 @@ pub mod advanced_interactive_3d {
         Low,
         Medium,
         High,
-        Ultra,
+        Advanced,
     }
 
     /// Performance metrics for 3D visualization

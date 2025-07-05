@@ -140,7 +140,7 @@ pub enum MemoryStrategy {
     MemoryPool { pool_size: usize },
     /// Memory mapping for large datasets
     MemoryMapped { chunk_size: usize },
-    /// Streaming processing for ultra-large datasets
+    /// Streaming processing for advanced-large datasets
     Streaming { buffer_size: usize },
     /// Hybrid approach combining multiple strategies
     Hybrid {
@@ -1419,7 +1419,7 @@ impl<I, O> OptimizedPipelineBuilder<I, O> {
     }
 }
 
-/// Quantum-Inspired Optimization Engine with Ultra-Advanced Algorithms
+/// Quantum-Inspired Optimization Engine with Advanced-Advanced Algorithms
 #[derive(Debug)]
 pub struct QuantumInspiredOptimizer {
     /// Quantum state representation for optimization space exploration
@@ -1442,7 +1442,7 @@ impl QuantumInspiredOptimizer {
         }
     }
 
-    /// Ultra-advanced quantum optimization using superposition of parameter spaces
+    /// Advanced-advanced quantum optimization using superposition of parameter spaces
     pub fn quantum_optimize(
         &mut self,
         objective_function: &dyn Fn(&[f64]) -> f64,
@@ -1695,7 +1695,7 @@ impl NeuromorphicOptimizer {
         }
     }
 
-    /// Ultra-advanced neuromorphic optimization with spike-timing dependent plasticity
+    /// Advanced-advanced neuromorphic optimization with spike-timing dependent plasticity
     pub fn neuromorphic_optimize(
         &mut self,
         optimization_problem: &NeuromorphicOptimizationProblem,
@@ -1880,7 +1880,7 @@ impl Default for NeuromorphicOptimizer {
     }
 }
 
-/// Ultra-Advanced Consciousness-Inspired Optimization Engine
+/// Advanced-Advanced Consciousness-Inspired Optimization Engine
 #[derive(Debug)]
 pub struct ConsciousnessInspiredOptimizer {
     /// Global workspace for conscious processing
@@ -1906,7 +1906,7 @@ impl ConsciousnessInspiredOptimizer {
         }
     }
 
-    /// Ultra-advanced consciousness-inspired optimization with self-awareness
+    /// Advanced-advanced consciousness-inspired optimization with self-awareness
     pub fn conscious_optimize(
         &mut self,
         optimization_goal: &ConsciousnessOptimizationGoal,
@@ -2168,7 +2168,7 @@ impl Default for ConsciousnessInspiredOptimizer {
     }
 }
 
-// Supporting types and structures for the ultra-advanced optimizers...
+// Supporting types and structures for the advanced-advanced optimizers...
 
 #[derive(Debug, Clone)]
 pub struct QuantumConstraint {
@@ -3421,7 +3421,7 @@ impl Default for GoalDynamics {
     }
 }
 
-/// Ultra-Advanced Reinforcement Learning Optimization Engine
+/// Advanced-Advanced Reinforcement Learning Optimization Engine
 #[derive(Debug)]
 pub struct ReinforcementLearningOptimizer {
     /// Deep Q-Network for optimization policy learning
@@ -3450,7 +3450,7 @@ impl ReinforcementLearningOptimizer {
         }
     }
 
-    /// Ultra-advanced reinforcement learning optimization with meta-learning
+    /// Advanced-advanced reinforcement learning optimization with meta-learning
     pub fn rl_optimize(
         &mut self,
         optimization_environment: &mut OptimizationEnvironment,
@@ -4448,7 +4448,7 @@ impl Layer {
     }
 }
 
-/// Ultra-Advanced Real-Time Performance Prediction and Anomaly Detection Engine
+/// Advanced-Advanced Real-Time Performance Prediction and Anomaly Detection Engine
 #[derive(Debug)]
 pub struct RealTimePerformancePredictor {
     /// Time series forecasting model for performance prediction

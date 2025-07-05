@@ -5,7 +5,7 @@
 use crate::error::{StatsError, StatsResult};
 use crate::sampling::SampleableDistribution;
 use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
-use rand::thread_rng;
+use rand::rng;
 use rand_distr::{ChiSquared, Distribution, Normal as RandNormal};
 use std::fmt::Debug;
 
@@ -328,7 +328,7 @@ impl Wishart {
     /// assert_eq!(samples[0].shape(), &[2, 2]);
     /// ```
     pub fn rvs(&self, size: usize) -> StatsResult<Vec<Array2<f64>>> {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let normal_dist = RandNormal::new(0.0, 1.0).unwrap();
         let mut samples = Vec::with_capacity(size);
 

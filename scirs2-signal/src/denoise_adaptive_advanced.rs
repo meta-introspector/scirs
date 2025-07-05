@@ -1,4 +1,4 @@
-//! Ultra-advanced adaptive denoising with multi-algorithm fusion
+//! Advanced-advanced adaptive denoising with multi-algorithm fusion
 //!
 //! This module provides state-of-the-art adaptive denoising algorithms that:
 //! - Automatically select optimal denoising parameters based on signal characteristics
@@ -7,8 +7,10 @@
 //! - Provide real-time denoising capability with SIMD acceleration
 //! - Preserve signal features while maximally reducing noise
 
+use crate::denoise_enhanced::{denoise_total_variation_1d, TotalVariationConfig};
 use crate::dwt::{dwt_decompose, dwt_reconstruct, Wavelet};
 use crate::error::{SignalError, SignalResult};
+use crate::nlm::{nlm_denoise_1d, NlmConfig};
 use crate::wiener::wiener_filter;
 
 use ndarray::{s, Array1};
@@ -44,7 +46,7 @@ pub struct AdaptiveDenoisingConfig {
 }
 
 /// Denoising algorithms available for fusion
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DenoisingAlgorithm {
     /// Wavelet-based denoising with adaptive thresholding
     WaveletAdaptive,
@@ -171,7 +173,7 @@ pub struct AdaptiveParameters {
     pub wiener_params: Option<(f64, f64)>, // (noise variance, signal variance)
 }
 
-/// Ultra-advanced adaptive denoising with automatic parameter selection
+/// Advanced-advanced adaptive denoising with automatic parameter selection
 ///
 /// This function implements a sophisticated denoising pipeline that:
 /// 1. Analyzes signal characteristics to estimate noise properties
@@ -188,7 +190,7 @@ pub struct AdaptiveParameters {
 ///
 /// * Comprehensive denoising results with quality metrics
 #[allow(dead_code)]
-pub fn adaptive_denoise_ultra<T>(
+pub fn adaptive_denoise_advanced<T>(
     signal: &[T],
     config: &AdaptiveDenoisingConfig,
 ) -> SignalResult<AdaptiveDenoisingResult>
@@ -213,7 +215,10 @@ where
         return Err(SignalError::ValueError("Input signal is empty".to_string()));
     }
 
-    check_finite(signal_f64.as_slice().unwrap(), "signal")?;
+    // Check for finite values in signal
+    for &x in signal_f64.iter() {
+        check_finite(x, "signal")?;
+    }
 
     // 1. Analyze signal characteristics
     let signal_analysis = analyze_signal_characteristics(&signal_f64, config)?;
@@ -236,7 +241,7 @@ where
     let denoised_signal = if config.enable_fusion && config.fusion_algorithms.len() > 1 {
         apply_fusion_denoising(&signal_f64, &denoising_strategy, config)?
     } else {
-        apply_single_algorithm_denoising(&signal_f64, &denoising_strategy, config)?
+        apply_single_algorithm_denoising(&signal_f64, config)?
     };
 
     // 5. Validate and post-process results
@@ -422,7 +427,7 @@ fn estimate_noise_from_wavelets(signal: &Array1<f64>) -> SignalResult<Option<f64
             }
 
             // Use finest scale detail coefficients for noise estimation
-            let finest_detail = &detail_coeffs[0];
+            let finest_detail = &detail_coeffs;
 
             // Calculate MAD of detail coefficients
             let mut abs_coeffs: Vec<f64> = finest_detail.iter().map(|&x| x.abs()).collect();
@@ -712,22 +717,13 @@ fn apply_adaptive_wavelet_denoising(
         dwt_decompose(signal.as_slice().unwrap(), Wavelet::DB(4), None)?;
 
     // Apply soft thresholding to detail coefficients
-    let mut thresholded_details = Vec::new();
-    for detail_level in detail_coeffs {
-        let thresholded: Vec<f64> = detail_level
-            .iter()
-            .map(|&x| soft_threshold(x, threshold))
-            .collect();
-        thresholded_details.push(thresholded);
-    }
+    let thresholded_details: Vec<f64> = detail_coeffs
+        .iter()
+        .map(|&x| soft_threshold(x, threshold))
+        .collect();
 
     // Reconstruct signal
-    let reconstructed = dwt_reconstruct(
-        &approx_coeffs,
-        &thresholded_details,
-        Wavelet::DB(4),
-        Some(signal.len()),
-    )?;
+    let reconstructed = dwt_reconstruct(&approx_coeffs, &thresholded_details, Wavelet::DB(4))?;
     Ok(Array1::from(reconstructed))
 }
 
@@ -739,7 +735,16 @@ fn apply_nlm_denoising(
 ) -> SignalResult<Array1<f64>> {
     let bandwidth = strategy.adaptive_parameters.nlm_bandwidth.unwrap_or(0.1);
 
-    match non_local_means_1d(signal.as_slice().unwrap(), bandwidth, 7, 21) {
+    let config = NlmConfig {
+        patch_size: 7,
+        search_window: 21,
+        h: bandwidth,
+        fast_mode: true,
+        step_size: 2,
+        boundary: true,
+        distance_weighting: true,
+    };
+    match nlm_denoise_1d(signal, &config) {
         Ok(denoised) => Ok(Array1::from(denoised)),
         Err(_) => {
             // Fallback to simple smoothing
@@ -756,7 +761,13 @@ fn apply_tv_denoising(
 ) -> SignalResult<Array1<f64>> {
     let lambda = strategy.adaptive_parameters.tv_lambda.unwrap_or(0.1);
 
-    match total_variation_denoising(signal.as_slice().unwrap(), lambda, 100, 1e-6) {
+    let tv_config = TotalVariationConfig {
+        lambda,
+        max_iterations: 100,
+        step_size: 0.01,
+        tolerance: 1e-6,
+    };
+    match denoise_total_variation_1d(signal, &tv_config) {
         Ok(denoised) => Ok(Array1::from(denoised)),
         Err(_) => {
             // Fallback to simple smoothing
@@ -772,7 +783,7 @@ fn apply_wiener_denoising(
     strategy: &DenoisingStrategy,
 ) -> SignalResult<Array1<f64>> {
     if let Some((noise_var, signal_var)) = strategy.adaptive_parameters.wiener_params {
-        match wiener_filter(signal.as_slice().unwrap(), signal_var, noise_var) {
+        match wiener_filter(signal, Some(noise_var), None) {
             Ok(denoised) => Ok(Array1::from(denoised)),
             Err(_) => apply_simple_smoothing(signal),
         }
@@ -982,7 +993,7 @@ fn estimate_wavelet_sparsity(signal: &Array1<f64>) -> SignalResult<f64> {
         Ok((_, detail_coeffs)) => {
             let mut all_coeffs = Vec::new();
             for detail in detail_coeffs {
-                all_coeffs.extend(detail);
+                all_coeffs.push(detail);
             }
 
             if all_coeffs.is_empty() {
@@ -1046,6 +1057,7 @@ fn estimate_effective_bandwidth(signal: &Array1<f64>) -> SignalResult<f64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_adaptive_denoising_basic() {
@@ -1063,7 +1075,7 @@ mod tests {
             .collect();
 
         let config = AdaptiveDenoisingConfig::default();
-        let result = adaptive_denoise_ultra(&noisy_signal, &config);
+        let result = adaptive_denoise_advanced(&noisy_signal, &config);
 
         assert!(result.is_ok());
         let denoising_result = result.unwrap();

@@ -16,10 +16,7 @@ use scirs2_metrics::{
 // Helper function to print what would be rendered
 #[allow(dead_code)]
 fn print_visualization_info(title: &str, plot_type: &PlotType, filename: &str) {
-    println!(
-        "Would render a {:?} plot titled '{}' to {}",
-        plot_type, title, filename
-    );
+    println!("Would render a {plot_type:?} plot titled '{title}' to {filename}");
 }
 
 #[allow(dead_code)]
@@ -32,7 +29,7 @@ fn main() {
     let y_pred = array![0, 2, 1, 0, 0, 2, 1, 1, 2];
 
     let (cm, _) = confusion_matrix(&y_true, &y_pred, None).unwrap();
-    println!("Confusion Matrix:\n{:?}", cm);
+    println!("Confusion Matrix:\n{cm:?}");
 
     // Create a visualizer for the confusion matrix
     let cm_f64 = cm.mapv(|x| x as f64);

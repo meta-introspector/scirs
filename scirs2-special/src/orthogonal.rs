@@ -602,7 +602,7 @@ pub fn chebyshev<F: Float + FromPrimitive + Debug>(n: usize, x: F, first_kind: b
     }
 }
 
-/// Computes the value of the Gegenbauer (ultraspherical) polynomial C_n^(λ)(x).
+/// Computes the value of the Gegenbauer (advancedspherical) polynomial C_n^(λ)(x).
 ///
 /// Gegenbauer polynomials C_n^(λ)(x) are solutions to the differential equation:
 /// (1-x²) d²y/dx² - (2λ+1)x dy/dx + n(n+2λ)y = 0
@@ -748,7 +748,7 @@ pub fn jacobi<F: Float + FromPrimitive + Debug>(n: usize, alpha: F, beta: F, x: 
         return chebyshev(n, x, true);
     }
 
-    // α = β: Gegenbauer polynomials (ultraspherical)
+    // α = β: Gegenbauer polynomials (advancedspherical)
     if alpha == beta {
         let lambda = alpha + F::from(0.5).unwrap();
         let factor = gamma(F::from(2.0).unwrap() * lambda + F::from(n).unwrap())

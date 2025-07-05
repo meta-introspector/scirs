@@ -2071,11 +2071,11 @@ pub struct Greeks {
 }
 
 // ================================================================================================
-// Ultra-Performance Financial Computing Enhancements
+// Advanced-Performance Financial Computing Enhancements
 // ================================================================================================
 
 /// Advanced risk-neutral Monte Carlo engine with quantum-inspired optimization
-pub mod ultra_monte_carlo_engine {
+pub mod advanced_monte_carlo_engine {
     use super::*;
     use std::collections::HashMap;
     use std::sync::{Arc, RwLock};
@@ -2191,8 +2191,8 @@ pub mod ultra_monte_carlo_engine {
         }
     }
 
-    /// Ultra-parallel Monte Carlo pricing engine
-    pub struct UltraMonteCarloEngine {
+    /// Advanced-parallel Monte Carlo pricing engine
+    pub struct AdvancedMonteCarloEngine {
         /// Quantum-inspired random number generator
         qrng: Arc<RwLock<QuantumInspiredRNG>>,
         /// Adaptive variance reduction techniques
@@ -2398,8 +2398,8 @@ pub mod ultra_monte_carlo_engine {
         }
     }
 
-    impl UltraMonteCarloEngine {
-        /// Create new ultra Monte Carlo engine
+    impl AdvancedMonteCarloEngine {
+        /// Create new advanced Monte Carlo engine
         pub fn new(n_factors: usize, seed: u64) -> Self {
             Self {
                 qrng: Arc::new(RwLock::new(QuantumInspiredRNG::new(n_factors, seed))),
@@ -2409,7 +2409,7 @@ pub mod ultra_monte_carlo_engine {
             }
         }
 
-        /// Price exotic derivative using ultra-parallel Monte Carlo
+        /// Price exotic derivative using advanced-parallel Monte Carlo
         pub fn price_exotic_derivative(
             &mut self,
             option: &FinancialOption,
@@ -2481,7 +2481,7 @@ pub mod ultra_monte_carlo_engine {
                 price_paths[[path, 0]] = params.initial_price;
             }
 
-            // Ultra-parallel Heston simulation with SIMD
+            // Advanced-parallel Heston simulation with SIMD
             for step in 1..=n_steps {
                 for path in (0..n_paths).step_by(8) {
                     // Process 8 paths simultaneously
@@ -3442,7 +3442,7 @@ pub mod advanced_exotic_derivatives {
 mod tests {
     use super::*;
     use crate::{
-        AlertSeverity, QuantumInspiredRNG, RealTimeRiskMonitor, UltraMonteCarloEngine,
+        AdvancedMonteCarloEngine, AlertSeverity, QuantumInspiredRNG, RealTimeRiskMonitor,
         VarianceReductionSuite,
     };
 
@@ -3461,8 +3461,8 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_monte_carlo_engine() {
-        let mut engine = UltraMonteCarloEngine::new(2, 42);
+    fn test_advanced_monte_carlo_engine() {
+        let mut engine = AdvancedMonteCarloEngine::new(2, 42);
 
         let option = FinancialOption {
             option_type: OptionType::Call,
@@ -7899,7 +7899,7 @@ pub mod risk_management {
 }
 
 #[cfg(test)]
-mod ultra_financial_tests {}
+mod advanced_financial_tests {}
 
 #[cfg(test)]
 mod enhanced_finance_tests {
@@ -7976,9 +7976,9 @@ mod enhanced_finance_tests {
     }
 }
 
-/// Ultra-Performance Financial Computing Extensions
+/// Advanced-Performance Financial Computing Extensions
 /// State-of-the-art quantitative finance algorithms and optimization
-pub mod ultra_performance_extensions {
+pub mod advanced_performance_extensions {
     use super::*;
     use ndarray::{Array1, Array2};
 

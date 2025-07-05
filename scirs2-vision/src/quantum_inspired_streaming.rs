@@ -1,6 +1,6 @@
 //! Quantum-inspired streaming processing for next-generation computer vision
 //!
-//! This module implements quantum-inspired algorithms for ultra-high performance
+//! This module implements quantum-inspired algorithms for advanced-high performance
 //! streaming processing, leveraging quantum computing principles like superposition,
 //! entanglement, and interference for optimized computer vision pipelines.
 //!

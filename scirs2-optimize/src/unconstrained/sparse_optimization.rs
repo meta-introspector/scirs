@@ -260,7 +260,6 @@ where
     Ok(OptimizeResult {
         x,
         fun: final_fun,
-        iterations: iter,
         nit: iter,
         func_evals: nfev,
         nfev,
@@ -419,7 +418,7 @@ where
         // Create a small random perturbation
         let mut x_pert = x.to_owned();
         for i in 0..n {
-            x_pert[i] += 1e-6 * rand::rng().random_range(-0.5..0.5);
+            x_pert[i] += 1e-6 * rand::rng().gen_range(-0.5..0.5);
         }
 
         // Compute gradient at this point

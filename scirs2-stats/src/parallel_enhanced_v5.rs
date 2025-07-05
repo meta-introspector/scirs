@@ -1,4 +1,4 @@
-//! Ultra-advanced parallel processing for complex statistical computations (v5)
+//! Advanced-advanced parallel processing for complex statistical computations (v5)
 //!
 //! This module provides sophisticated parallel processing capabilities for
 //! computationally intensive statistical operations, including adaptive load
@@ -19,7 +19,7 @@ use std::time::Instant;
 
 /// Advanced parallel configuration with adaptive strategies
 #[derive(Debug, Clone)]
-pub struct UltraParallelConfig {
+pub struct AdvancedParallelConfig {
     /// Number of worker threads (auto-detected if None)
     pub num_threads: Option<usize>,
     /// Work stealing enabled
@@ -75,7 +75,7 @@ pub enum MemoryStrategy {
     MemoryMapped,
 }
 
-impl Default for UltraParallelConfig {
+impl Default for AdvancedParallelConfig {
     fn default() -> Self {
         let num_cpus = num_cpus::get();
         
@@ -163,29 +163,29 @@ impl<T: Clone + Send> WorkStealingQueue<T> {
     }
 }
 
-/// Ultra-advanced parallel processor
-pub struct UltraParallelProcessor<F> {
-    config: UltraParallelConfig,
+/// Advanced-advanced parallel processor
+pub struct AdvancedParallelProcessor<F> {
+    config: AdvancedParallelConfig,
     metrics: Option<ParallelPerformanceMetrics>,
     _phantom: PhantomData<F>,
 }
 
-impl<F> UltraParallelProcessor<F>
+impl<F> AdvancedParallelProcessor<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
         + std::fmt::Display,
 {
-    /// Create new ultra-parallel processor
+    /// Create new advanced-parallel processor
     pub fn new() -> Self {
         Self {
-            config: UltraParallelConfig::default(),
+            config: AdvancedParallelConfig::default(),
             metrics: None,
             _phantom: PhantomData,
         }
     }
 
     /// Create with custom configuration
-    pub fn with_config(config: UltraParallelConfig) -> Self {
+    pub fn with_config(config: AdvancedParallelConfig) -> Self {
         Self {
             config,
             metrics: None,
@@ -1202,7 +1202,7 @@ pub struct OptimizationResult<F> {
     pub convergence_history: Array1<F>,
 }
 
-impl<F> Default for UltraParallelProcessor<F>
+impl<F> Default for AdvancedParallelProcessor<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
         + std::fmt::Display,
@@ -1212,9 +1212,9 @@ where
     }
 }
 
-/// Convenience functions for ultra-parallel operations
+/// Convenience functions for advanced-parallel operations
 #[allow(dead_code)]
-pub fn ultra_parallel_matrix_multiply<F>(
+pub fn advanced_parallel_matrix_multiply<F>(
     a: &ArrayView2<F>,
     b: &ArrayView2<F>,
 ) -> StatsResult<Array2<F>>
@@ -1222,12 +1222,12 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
         + std::fmt::Display,
 {
-    let mut processor = UltraParallelProcessor::new();
+    let mut processor = AdvancedParallelProcessor::new();
     processor.parallel_matrix_multiply(a, b)
 }
 
 #[allow(dead_code)]
-pub fn ultra_parallel_bootstrap<F>(
+pub fn advanced_parallel_bootstrap<F>(
     data: &ArrayView1<F>,
     statistic_fn: impl Fn(&ArrayView1<F>) -> StatsResult<F> + Send + Sync + Copy,
     n_bootstrap: usize,
@@ -1237,7 +1237,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
         + std::fmt::Display,
 {
-    let mut processor = UltraParallelProcessor::new();
+    let mut processor = AdvancedParallelProcessor::new();
     processor.parallel_bootstrap_advanced(data, statistic_fn, n_bootstrap, strategy)
 }
 
@@ -1247,8 +1247,8 @@ mod tests {
     use ndarray::array;
 
     #[test]
-    fn test_ultra_parallel_config() {
-        let config = UltraParallelConfig::default();
+    fn test_advanced_parallel_config() {
+        let config = AdvancedParallelConfig::default();
         assert!(config.num_cpus::get.unwrap() > 0);
         assert!(config.work_stealing);
         assert!(config.task_granularity.min_parallel_size > 0);
@@ -1259,7 +1259,7 @@ mod tests {
         let a = array![[1.0, 2.0], [3.0, 4.0]];
         let b = array![[5.0, 6.0], [7.0, 8.0]];
         
-        let result = ultra_parallel_matrix_multiply(&a.view(), &b.view());
+        let result = advanced_parallel_matrix_multiply(&a.view(), &b.view());
         assert!(result.is_ok());
         
         let result = result.unwrap();
@@ -1274,7 +1274,7 @@ mod tests {
             Ok(x.iter().sum::<f64>() / x.len() as f64)
         };
         
-        let result = ultra_parallel_bootstrap(
+        let result = advanced_parallel_bootstrap(
             &data.view(),
             statistic_fn,
             100,
@@ -1287,7 +1287,7 @@ mod tests {
 
     #[test]
     fn test_performance_metrics() {
-        let mut processor = UltraParallelProcessor::new();
+        let mut processor = AdvancedParallelProcessor::new();
         processor.config.performance_monitoring = true;
         
         let a = array![[1.0, 2.0], [3.0, 4.0]];
@@ -1303,7 +1303,7 @@ mod tests {
 
     #[test]
     fn test_load_balancing_strategies() {
-        let mut config = UltraParallelConfig::default();
+        let mut config = AdvancedParallelConfig::default();
         
         // Test different load balancing strategies
         for strategy in [
@@ -1313,7 +1313,7 @@ mod tests {
             LoadBalancingStrategy::Adaptive,
         ] {
             config.load_balancing = strategy;
-            let processor = UltraParallelProcessor::with_config(config.clone());
+            let processor = AdvancedParallelProcessor::with_config(config.clone());
             
             let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
             let b = array![[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];

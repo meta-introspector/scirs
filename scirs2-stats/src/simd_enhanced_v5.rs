@@ -1,4 +1,4 @@
-//! Ultra-advanced SIMD optimizations for statistical operations (v5)
+//! Advanced-advanced SIMD optimizations for statistical operations (v5)
 //!
 //! This module provides state-of-the-art SIMD optimizations for advanced statistical
 //! operations, building upon v4 with additional functionality and improved algorithms.
@@ -6,7 +6,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
-use scirs2_core::Rng;
+use rand::Rng;
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 
 /// SIMD-optimized rolling statistics with configurable functions
@@ -29,7 +29,8 @@ where
         + Copy
         + Send
         + Sync
-        + std::fmt::Display,
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     check_array_finite(data, "data")?;
     check_positive(window_size, "window_size")?;
@@ -127,7 +128,15 @@ fn compute_window_statistics<F>(
     results: &mut RollingStatsResult<F>,
     window_idx: usize,
 ) where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     let window_size = window.len();
     let window_size_f = F::from(window_size).unwrap();
@@ -304,7 +313,8 @@ where
         + Copy
         + Send
         + Sync
-        + std::fmt::Display,
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     check_array_finite(data, "data")?;
 
@@ -375,24 +385,16 @@ where
         + Copy
         + Send
         + Sync
-        + std::fmt::Display,
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
-    let (n_rows, n_cols) = data.dim();
+    let (_n_rows, n_cols) = data.dim();
     let mut results = MatrixStatsResult::new_column_wise(n_cols, operations);
 
-    // Use parallel processing for wide matrices
-    if n_cols > 100 {
-        parallel_for(0..n_cols, |chunk| {
-            for j in chunk {
-                let column = data.column(j);
-                compute_column_statistics(&column, operations, &mut results, j);
-            }
-        });
-    } else {
-        for j in 0..n_cols {
-            let column = data.column(j);
-            compute_column_statistics(&column, operations, &mut results, j);
-        }
+    // Process columns sequentially (parallel version would need different data structure)
+    for j in 0..n_cols {
+        let column = data.column(j);
+        compute_column_statistics(&column, operations, &mut results, j);
     }
 
     Ok(results)
@@ -413,24 +415,16 @@ where
         + Copy
         + Send
         + Sync
-        + std::fmt::Display,
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
-    let (n_rows, n_cols) = data.dim();
+    let (n_rows, _n_cols) = data.dim();
     let mut results = MatrixStatsResult::new_row_wise(n_rows, operations);
 
-    // Use parallel processing for tall matrices
-    if n_rows > 100 {
-        parallel_for(0..n_rows, |chunk| {
-            for i in chunk {
-                let row = data.row(i);
-                compute_row_statistics(&row, operations, &mut results, i);
-            }
-        });
-    } else {
-        for i in 0..n_rows {
-            let row = data.row(i);
-            compute_row_statistics(&row, operations, &mut results, i);
-        }
+    // Process rows sequentially (parallel version would need different data structure)
+    for i in 0..n_rows {
+        let row = data.row(i);
+        compute_row_statistics(&row, operations, &mut results, i);
     }
 
     Ok(results)
@@ -451,32 +445,37 @@ where
         + Copy
         + Send
         + Sync
-        + std::fmt::Display,
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     let mut results = MatrixStatsResult::new_global(operations);
 
     for operation in operations {
         match operation {
             MatrixOperation::FrobeniusNorm => {
-                let squared_sum = if data.len() > 1000 {
-                    // Use parallel reduction for large matrices
-                    let chunks: Vec<_> = data.chunks(1000).collect();
-                    parallel_reduce(
-                        &chunks,
-                        F::zero(),
-                        |chunk| F::simd_sum(&F::simd_mul(&chunk.view(), &chunk.view()).view()),
-                        |acc, val| acc + val,
-                    )
+                // Flatten to 1D for SIMD operations since simd_mul expects 1D arrays
+                let flattened = Array1::from_iter(data.iter().cloned());
+                let squared_sum = if flattened.len() > 1000 {
+                    // Use sequential chunked processing for large matrices
+                    let mut sum = F::zero();
+                    let chunk_size = 1000;
+                    for i in (0..flattened.len()).step_by(chunk_size) {
+                        let end = (i + chunk_size).min(flattened.len());
+                        let chunk = flattened.slice(ndarray::s![i..end]);
+                        let squared = F::simd_mul(&chunk, &chunk);
+                        sum = sum + F::simd_sum(&squared.view());
+                    }
+                    sum
                 } else {
-                    let squared = F::simd_mul(&data.view(), &data.view());
+                    let squared = F::simd_mul(&flattened.view(), &flattened.view());
                     F::simd_sum(&squared.view())
                 };
                 results.frobenius_norm = Some(squared_sum.sqrt());
             }
             _ => {
                 // For other operations, flatten and compute
-                let flattened = data.view().to_shape(data.len()).unwrap();
-                compute_vector_operation(&flattened, operation, &mut results, 0);
+                let flattened = Array1::from_iter(data.iter().cloned());
+                compute_vector_operation(&flattened.view(), operation, &mut results, 0);
             }
         }
     }
@@ -491,7 +490,15 @@ fn compute_column_statistics<F>(
     results: &mut MatrixStatsResult<F>,
     col_idx: usize,
 ) where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     for operation in operations {
         compute_vector_operation(column, operation, results, col_idx);
@@ -505,7 +512,15 @@ fn compute_row_statistics<F>(
     results: &mut MatrixStatsResult<F>,
     row_idx: usize,
 ) where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     for operation in operations {
         compute_vector_operation(row, operation, results, row_idx);
@@ -519,7 +534,15 @@ fn compute_vector_operation<F>(
     results: &mut MatrixStatsResult<F>,
     idx: usize,
 ) where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     let n = data.len();
     let n_f = F::from(n).unwrap();
@@ -787,7 +810,9 @@ where
         + Copy
         + Send
         + Sync
-        + std::fmt::Display,
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + num_traits::FromPrimitive,
 {
     check_array_finite(data, "data")?;
     check_positive(n_bootstrap, "n_bootstrap")?;
@@ -799,35 +824,20 @@ where
         ));
     }
 
-    use rand::rngs::StdRng;
-    use rand::{Rng, SeedableRng};
+    use scirs2_core::random::Random;
 
     let mut rng = match random_seed {
-        Some(seed) => StdRng::seed_from_u64(seed),
-        None => StdRng::from_entropy(),
+        Some(seed) => Random::with_seed(seed),
+        None => Random::with_seed(42), // Use default seed
     };
 
-    let n_data = data.len();
+    let _n_data = data.len();
     let mut bootstrap_stats = Array1::zeros(n_bootstrap);
 
-    // Parallel bootstrap sampling for large numbers of bootstrap samples
-    if n_bootstrap > 1000 {
-        let seeds: Vec<u64> = (0..n_bootstrap).map(|_| rng.random()).collect();
-
-        parallel_for_indexed(0..n_bootstrap, |chunk, chunk_start| {
-            let mut local_rng = StdRng::seed_from_u64(seeds[chunk_start]);
-            for (local_idx, global_idx) in chunk.enumerate() {
-                let bootstrap_sample = generate_bootstrap_sample(data, &mut local_rng);
-                bootstrap_stats[global_idx] =
-                    compute_bootstrap_statistic(&bootstrap_sample.view(), &statistic_fn);
-            }
-        });
-    } else {
-        for i in 0..n_bootstrap {
-            let bootstrap_sample = generate_bootstrap_sample(data, &mut rng);
-            bootstrap_stats[i] =
-                compute_bootstrap_statistic(&bootstrap_sample.view(), &statistic_fn);
-        }
+    // Bootstrap sampling (sequential for thread safety)
+    for i in 0..n_bootstrap {
+        let bootstrap_sample = generate_bootstrap_sample(data, &mut rng);
+        bootstrap_stats[i] = compute_bootstrap_statistic(&bootstrap_sample.view(), &statistic_fn);
     }
 
     // Sort bootstrap statistics for confidence interval computation
@@ -849,7 +859,7 @@ where
 
     // Compute bootstrap statistics
     let bootstrap_mean = bootstrap_stats.mean().unwrap();
-    let bootstrap_std = bootstrap_stats.var(1.0).sqrt(); // ddof=1
+    let bootstrap_std = bootstrap_stats.var(F::from(1.0).unwrap()).sqrt(); // ddof=1
 
     Ok(BootstrapResult {
         original_statistic: original_stat,
@@ -893,7 +903,7 @@ pub struct BootstrapResult<F> {
 #[allow(dead_code)]
 fn generate_bootstrap_sample<F, R>(data: &ArrayView1<F>, rng: &mut R) -> Array1<F>
 where
-    F: Copy,
+    F: Copy + Zero,
     R: Rng,
 {
     let n = data.len();
@@ -910,7 +920,15 @@ where
 #[allow(dead_code)]
 fn compute_bootstrap_statistic<F>(data: &ArrayView1<F>, statistic: &BootstrapStatistic) -> F
 where
-    F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + SimdUnifiedOps
+        + Zero
+        + One
+        + PartialOrd
+        + Copy
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     let n = data.len();
     let n_f = F::from(n).unwrap();
@@ -1144,7 +1162,8 @@ where
         + Copy
         + Send
         + Sync
-        + std::fmt::Display,
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     check_array_finite(data, "data")?;
     check_array_finite(eval_points, "eval_points")?;
@@ -1190,45 +1209,8 @@ where
     let n_data_f = F::from(n_data).unwrap();
     let normalization = F::one() / (n_data_f * h);
 
-    // Use parallel processing for large evaluation grids
-    if n_eval > 100 && n_data > 100 {
-        parallel_for(0..n_eval, |chunk| {
-            for eval_idx in chunk {
-                let eval_point = eval_points[eval_idx];
-                let mut density_sum = F::zero();
-
-                // SIMD-optimized kernel evaluation
-                let n_simd_chunks = n_data / 8; // Assume 8-wide SIMD
-                let remainder = n_data % 8;
-
-                // Process SIMD chunks
-                for chunk_start in (0..n_simd_chunks * 8).step_by(8) {
-                    let chunk_end = (chunk_start + 8).min(n_data);
-                    let data_chunk = data.slice(ndarray::s![chunk_start..chunk_end]);
-                    let eval_vec = Array1::from_elem(chunk_end - chunk_start, eval_point);
-
-                    let differences = F::simd_sub(&data_chunk, &eval_vec.view());
-                    let standardized = F::simd_div(
-                        &differences.view(),
-                        &Array1::from_elem(chunk_end - chunk_start, h).view(),
-                    );
-
-                    for &z in standardized.iter() {
-                        density_sum = density_sum + kernel_function(z, &kernel);
-                    }
-                }
-
-                // Process remainder
-                for i in n_simd_chunks * 8..n_data {
-                    let z = (data[i] - eval_point) / h;
-                    density_sum = density_sum + kernel_function(z, &kernel);
-                }
-
-                density[eval_idx] = density_sum * normalization;
-            }
-        });
-    } else {
-        // Sequential processing for smaller datasets
+    // Sequential processing for all datasets (parallel version has data race issues)
+    {
         for (eval_idx, &eval_point) in eval_points.iter().enumerate() {
             let mut density_sum = F::zero();
 
@@ -1272,8 +1254,7 @@ pub enum KernelType {
 #[allow(dead_code)]
 fn kernel_function<F>(z: F, kernel: &KernelType) -> F
 where
-    F: Float + NumCast
-        + std::fmt::Display,
+    F: Float + NumCast + std::fmt::Display,
 {
     match kernel {
         KernelType::Gaussian => {

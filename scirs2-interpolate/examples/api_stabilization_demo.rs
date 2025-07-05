@@ -64,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("Relaxed", StrictnessLevel::Relaxed),
         ("Standard", StrictnessLevel::Standard),
         ("Strict", StrictnessLevel::Strict),
-        ("Ultra-Strict", StrictnessLevel::UltraStrict),
+        ("Advanced-Strict", StrictnessLevel::AdvancedStrict),
     ];
 
     for (name, level) in &strictness_levels {
@@ -73,25 +73,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 StrictnessLevel::Relaxed => 70.0,
                 StrictnessLevel::Standard => 85.0,
                 StrictnessLevel::Strict => 95.0,
-                StrictnessLevel::UltraStrict => 98.0,
+                StrictnessLevel::AdvancedStrict => 98.0,
             },
             max_breaking_changes: match level {
                 StrictnessLevel::Relaxed => 10,
                 StrictnessLevel::Standard => 5,
                 StrictnessLevel::Strict => 0,
-                StrictnessLevel::UltraStrict => 0,
+                StrictnessLevel::AdvancedStrict => 0,
             },
             min_consistency_score: match level {
                 StrictnessLevel::Relaxed => 0.7,
                 StrictnessLevel::Standard => 0.8,
                 StrictnessLevel::Strict => 0.9,
-                StrictnessLevel::UltraStrict => 0.95,
+                StrictnessLevel::AdvancedStrict => 0.95,
             },
             allow_experimental_features: match level {
                 StrictnessLevel::Relaxed => true,
                 StrictnessLevel::Standard => true,
                 StrictnessLevel::Strict => false,
-                StrictnessLevel::UltraStrict => false,
+                StrictnessLevel::AdvancedStrict => false,
             },
             strictness_level: level.clone(),
         };

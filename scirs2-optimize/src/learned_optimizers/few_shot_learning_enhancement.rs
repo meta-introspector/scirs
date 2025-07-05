@@ -11,6 +11,7 @@ use super::{
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, Array3, ArrayView1};
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
 /// Few-Shot Learning Optimizer with Rapid Adaptation
@@ -417,7 +418,7 @@ impl FewShotLearningOptimizer {
         &mut self,
         support_examples: &[SupportExample],
         target_problem: &OptimizationProblem,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         // Extract features from support examples
         let support_features = self.extract_support_features(support_examples)?;
 
@@ -450,7 +451,10 @@ impl FewShotLearningOptimizer {
     }
 
     /// Extract features from support examples
-    fn extract_support_features(&self, support_examples: &[SupportExample]) -> Result<Array2<f64>> {
+    fn extract_support_features(
+        &self,
+        support_examples: &[SupportExample],
+    ) -> OptimizeResult<Array2<f64>> {
         let num_examples = support_examples.len();
         let feature_dim = self.meta_learner.feature_extractor.feature_dim;
         let mut features = Array2::zeros((num_examples, feature_dim));
@@ -469,7 +473,10 @@ impl FewShotLearningOptimizer {
     }
 
     /// Find similar problems in experience memory
-    fn find_similar_problems(&self, target_problem: &OptimizationProblem) -> Result<Vec<String>> {
+    fn find_similar_problems(
+        &self,
+        target_problem: &OptimizationProblem,
+    ) -> OptimizeResult<Vec<String>> {
         let target_encoding = self.encode_problem_for_similarity(target_problem)?;
         let mut similarities = Vec::new();
 
@@ -486,7 +493,10 @@ impl FewShotLearningOptimizer {
     }
 
     /// Encode problem for similarity matching
-    fn encode_problem_for_similarity(&self, problem: &OptimizationProblem) -> Result<Array1<f64>> {
+    fn encode_problem_for_similarity(
+        &self,
+        problem: &OptimizationProblem,
+    ) -> OptimizeResult<Array1<f64>> {
         let mut encoding = Array1::zeros(self.meta_learner.feature_extractor.feature_dim);
 
         // Basic encoding (in practice would be more sophisticated)
@@ -506,7 +516,11 @@ impl FewShotLearningOptimizer {
     }
 
     /// Compute similarity between problem encodings
-    fn compute_similarity(&self, encoding1: &Array1<f64>, encoding2: &Array1<f64>) -> Result<f64> {
+    fn compute_similarity(
+        &self,
+        encoding1: &Array1<f64>,
+        encoding2: &Array1<f64>,
+    ) -> OptimizeResult<f64> {
         // Cosine similarity
         let dot_product = encoding1
             .iter()
@@ -529,7 +543,7 @@ impl FewShotLearningOptimizer {
         &self,
         support_features: &Array2<f64>,
         similar_problems: &[String],
-    ) -> Result<AdaptationStrategy> {
+    ) -> OptimizeResult<AdaptationStrategy> {
         // Simple heuristic-based selection (in practice would use learned selector)
         let num_support = support_features.nrows();
         let num_similar = similar_problems.len();
@@ -548,7 +562,10 @@ impl FewShotLearningOptimizer {
     }
 
     /// Gradient-based adaptation
-    fn gradient_based_adaptation(&mut self, support_examples: &[SupportExample]) -> Result<()> {
+    fn gradient_based_adaptation(
+        &mut self,
+        support_examples: &[SupportExample],
+    ) -> OptimizeResult<()> {
         let adapter = &mut self.fast_adapter.gradient_adapter;
 
         for example in support_examples {
@@ -567,7 +584,10 @@ impl FewShotLearningOptimizer {
     }
 
     /// Prototype-based adaptation
-    fn prototype_based_adaptation(&mut self, support_examples: &[SupportExample]) -> Result<()> {
+    fn prototype_based_adaptation(
+        &mut self,
+        support_examples: &[SupportExample],
+    ) -> OptimizeResult<()> {
         let adapter = &mut self.fast_adapter.prototype_adapter;
 
         // Update prototypes based on support examples
@@ -586,7 +606,7 @@ impl FewShotLearningOptimizer {
     }
 
     /// MAML adaptation
-    fn maml_adaptation(&mut self, support_examples: &[SupportExample]) -> Result<()> {
+    fn maml_adaptation(&mut self, support_examples: &[SupportExample]) -> OptimizeResult<()> {
         let adapter = &mut self.fast_adapter.maml_adapter;
 
         for example in support_examples {
@@ -605,7 +625,7 @@ impl FewShotLearningOptimizer {
         &mut self,
         support_examples: &[SupportExample],
         weights: &Array1<f64>,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         if weights.len() >= 3 {
             // Apply weighted combination of strategies
             if weights[0] > 0.0 {
@@ -623,7 +643,7 @@ impl FewShotLearningOptimizer {
     }
 
     /// Compute meta-gradients from example
-    fn compute_meta_gradients(&self, example: &SupportExample) -> Result<Array1<f64>> {
+    fn compute_meta_gradients(&self, example: &SupportExample) -> OptimizeResult<Array1<f64>> {
         // Simplified meta-gradient computation
         let mut gradients = Array1::zeros(self.meta_state.meta_params.len());
 
@@ -644,7 +664,7 @@ impl FewShotLearningOptimizer {
 
             // Simple gradient estimation based on improvement
             for i in 0..gradients.len() {
-                gradients[i] = improvement * (rand::rng().random::<f64>() - 0.5) * 0.01;
+                gradients[i] = improvement * (rand::rng().gen::<f64>() - 0.5) * 0.01;
             }
         }
 
@@ -652,7 +672,7 @@ impl FewShotLearningOptimizer {
     }
 
     /// Compute inner gradients for MAML
-    fn compute_inner_gradients(&self, example: &SupportExample) -> Result<Array1<f64>> {
+    fn compute_inner_gradients(&self, example: &SupportExample) -> OptimizeResult<Array1<f64>> {
         // Simplified inner gradient computation
         let mut gradients = Array1::zeros(self.meta_state.meta_params.len());
 
@@ -670,7 +690,7 @@ impl FewShotLearningOptimizer {
     }
 
     /// Apply inner loop update
-    fn apply_inner_update(&mut self, gradients: &Array1<f64>) -> Result<()> {
+    fn apply_inner_update(&mut self, gradients: &Array1<f64>) -> OptimizeResult<()> {
         let lr = self.fast_adapter.maml_adapter.inner_optimizer.learning_rate;
 
         for (i, &grad) in gradients.iter().enumerate() {
@@ -683,7 +703,7 @@ impl FewShotLearningOptimizer {
     }
 
     /// Update adaptation statistics
-    fn update_adaptation_stats(&mut self, num_support_examples: usize) -> Result<()> {
+    fn update_adaptation_stats(&mut self, num_support_examples: usize) -> OptimizeResult<()> {
         self.adaptation_stats.support_examples_used = num_support_examples;
         self.adaptation_stats.adaptation_speed = 1.0 / (num_support_examples as f64 + 1.0);
         self.adaptation_stats.transfer_efficiency = if num_support_examples > 0 {
@@ -699,7 +719,7 @@ impl FewShotLearningOptimizer {
     pub fn generate_optimization_strategy(
         &self,
         problem: &OptimizationProblem,
-    ) -> Result<OptimizationStrategy> {
+    ) -> OptimizeResult<OptimizationStrategy> {
         // Extract problem features
         let problem_encoding = self.encode_problem_for_similarity(problem)?;
 
@@ -716,7 +736,7 @@ impl FewShotLearningOptimizer {
             },
             convergence_criteria: ConvergenceCriteria {
                 tolerance: strategy_params.get(1).copied().unwrap_or(1e-6),
-                max_iterations: problem.max_evaluations,
+                max_nit: problem.max_evaluations,
             },
             adaptation_rate: strategy_params.get(2).copied().unwrap_or(0.01),
         })
@@ -726,7 +746,7 @@ impl FewShotLearningOptimizer {
     fn generate_step_size_schedule(
         &self,
         strategy_params: &Array1<f64>,
-    ) -> Result<StepSizeSchedule> {
+    ) -> OptimizeResult<StepSizeSchedule> {
         let initial_step = strategy_params.get(3).copied().unwrap_or(0.01);
         let decay_rate = strategy_params.get(4).copied().unwrap_or(0.99);
 
@@ -810,7 +830,7 @@ pub struct ConvergenceCriteria {
     /// Tolerance for convergence
     pub tolerance: f64,
     /// Maximum iterations
-    pub max_iterations: usize,
+    pub max_nit: usize,
 }
 
 impl MetaLearnerNetwork {
@@ -841,7 +861,7 @@ impl FeatureExtractor {
     }
 
     /// Extract features from problem encoding
-    pub fn extract(&self, problem_encoding: &Array1<f64>) -> Result<Array1<f64>> {
+    pub fn extract(&self, problem_encoding: &Array1<f64>) -> OptimizeResult<Array1<f64>> {
         let mut features = problem_encoding.clone();
 
         // Pass through dense layers
@@ -860,7 +880,7 @@ impl DenseLayer {
     /// Create new dense layer
     pub fn new(input_size: usize, output_size: usize, activation: ActivationType) -> Self {
         let weights = Array2::from_shape_fn((output_size, input_size), |_| {
-            (rand::rng().random::<f64>() - 0.5) * (2.0 / input_size as f64).sqrt()
+            (rand::rng().gen::<f64>() - 0.5) * (2.0 / input_size as f64).sqrt()
         });
         let bias = Array1::zeros(output_size);
 
@@ -872,7 +892,7 @@ impl DenseLayer {
     }
 
     /// Forward pass through dense layer
-    pub fn forward(&self, input: &ArrayView1<f64>) -> Result<Array1<f64>> {
+    pub fn forward(&self, input: &ArrayView1<f64>) -> OptimizeResult<Array1<f64>> {
         let mut output = Array1::zeros(self.bias.len());
 
         for i in 0..output.len() {
@@ -892,20 +912,20 @@ impl FeatureAttention {
     pub fn new(feature_dim: usize) -> Self {
         Self {
             query_weights: Array2::from_shape_fn((feature_dim, feature_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             key_weights: Array2::from_shape_fn((feature_dim, feature_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             value_weights: Array2::from_shape_fn((feature_dim, feature_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             attention_scores: Array1::zeros(feature_dim),
         }
     }
 
     /// Apply attention to features
-    pub fn apply(&self, features: &Array1<f64>) -> Result<Array1<f64>> {
+    pub fn apply(&self, features: &Array1<f64>) -> OptimizeResult<Array1<f64>> {
         // Simplified self-attention
         let mut attended_features = Array1::zeros(features.len());
 
@@ -930,10 +950,10 @@ impl ContextEncoder {
         Self {
             lstm: LSTMCell::new(context_dim),
             embedding_layer: Array2::from_shape_fn((context_dim, 100), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             aggregation_network: Array2::from_shape_fn((context_dim, context_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             context_dim,
         }
@@ -945,16 +965,16 @@ impl LSTMCell {
     pub fn new(hidden_size: usize) -> Self {
         Self {
             w_i: Array2::from_shape_fn((hidden_size, hidden_size * 2), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             w_f: Array2::from_shape_fn((hidden_size, hidden_size * 2), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             w_c: Array2::from_shape_fn((hidden_size, hidden_size * 2), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             w_o: Array2::from_shape_fn((hidden_size, hidden_size * 2), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             hidden_state: Array1::zeros(hidden_size),
             cell_state: Array1::zeros(hidden_size),
@@ -967,20 +987,20 @@ impl ParameterGenerator {
     pub fn new(param_dim: usize) -> Self {
         Self {
             generator_network: Array2::from_shape_fn((param_dim, param_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             conditioning_network: Array2::from_shape_fn((param_dim, param_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             output_projection: Array2::from_shape_fn((param_dim, param_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             param_dim,
         }
     }
 
     /// Generate parameters from encoding
-    pub fn generate(&self, encoding: &Array1<f64>) -> Result<Array1<f64>> {
+    pub fn generate(&self, encoding: &Array1<f64>) -> OptimizeResult<Array1<f64>> {
         let mut params = Array1::zeros(self.param_dim);
 
         // Simple generation (in practice would be more sophisticated)
@@ -1000,13 +1020,13 @@ impl UpdateNetwork {
     pub fn new(param_dim: usize) -> Self {
         Self {
             update_network: Array2::from_shape_fn((param_dim, param_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             meta_gradient_network: Array2::from_shape_fn((param_dim, param_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             lr_network: Array2::from_shape_fn((1, param_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             update_history: VecDeque::with_capacity(100),
         }
@@ -1107,7 +1127,7 @@ impl AdaptationStrategySelector {
         Self {
             strategy_scores,
             selection_network: Array2::from_shape_fn((4, 10), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             current_strategy: AdaptationStrategy::Gradient,
         }
@@ -1120,7 +1140,7 @@ impl ProblemSimilarityMatcher {
         Self {
             problem_embeddings: HashMap::new(),
             similarity_network: Array2::from_shape_fn((1, feature_dim * 2), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             similarity_threshold: 0.7,
             similarity_cache: HashMap::new(),
@@ -1161,7 +1181,7 @@ impl Default for FewShotAdaptationStats {
 }
 
 impl LearnedOptimizer for FewShotLearningOptimizer {
-    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> Result<()> {
+    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
         for task in training_tasks {
             // Create support examples from task
             let support_examples = self.create_support_examples_from_task(task)?;
@@ -1180,7 +1200,7 @@ impl LearnedOptimizer for FewShotLearningOptimizer {
         &mut self,
         problem: &OptimizationProblem,
         initial_params: &ArrayView1<f64>,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         // Find similar problems for support examples
         let similar_problems = self.find_similar_problems(problem)?;
 
@@ -1219,7 +1239,7 @@ impl LearnedOptimizer for FewShotLearningOptimizer {
         let mut best_value = objective(initial_params);
         let mut iterations = 0;
 
-        for iter in 0..strategy.convergence_criteria.max_iterations {
+        for iter in 0..strategy.convergence_criteria.max_nit {
             iterations = iter;
 
             // Compute step size based on schedule
@@ -1269,6 +1289,7 @@ impl LearnedOptimizer for FewShotLearningOptimizer {
             success: true,
             nit: iterations,
             message: "Few-shot learning optimization completed".to_string(),
+            ..OptimizeResults::default()
         })
     }
 
@@ -1287,7 +1308,7 @@ impl FewShotLearningOptimizer {
     fn create_support_examples_from_task(
         &self,
         task: &TrainingTask,
-    ) -> Result<Vec<SupportExample>> {
+    ) -> OptimizeResult<Vec<SupportExample>> {
         // Simplified creation of support examples
         let problem_encoding = self.encode_problem_for_similarity(&task.problem)?;
 
@@ -1307,7 +1328,7 @@ impl FewShotLearningOptimizer {
         }])
     }
 
-    fn update_meta_learner(&mut self, _support_examples: &[SupportExample]) -> Result<()> {
+    fn update_meta_learner(&mut self, _support_examples: &[SupportExample]) -> OptimizeResult<()> {
         // Simplified meta-learner update
         self.meta_state.episode += 1;
         Ok(())
@@ -1316,7 +1337,7 @@ impl FewShotLearningOptimizer {
     fn create_support_examples_from_similar(
         &self,
         _similar_problems: &[String],
-    ) -> Result<Vec<SupportExample>> {
+    ) -> OptimizeResult<Vec<SupportExample>> {
         // Simplified creation from similar problems
         Ok(vec![])
     }
@@ -1473,7 +1494,7 @@ mod tests {
         let config = LearnedOptimizationConfig::default();
         let optimizer = FewShotLearningOptimizer::new(config);
 
-        let support_features = Array2::from_shape_fn((2, 10), |_| rand::rng().random::<f64>());
+        let support_features = Array2::from_shape_fn((2, 10), |_| rand::rng().gen::<f64>());
         let similar_problems = vec!["problem1".to_string(), "problem2".to_string()];
 
         let strategy = optimizer

@@ -592,7 +592,7 @@ mod tests {
 
         let config = StressTestConfig {
             node_counts: vec![10_000_000, 20_000_000, 50_000_000],
-            edge_densities: vec![0.0000001], // Ultra sparse
+            edge_densities: vec![0.0000001], // Advanced sparse
             algorithms: vec!["bfs".to_string(), "degree_distribution".to_string()],
             memory_limit_mb: 64_000, // 64GB
             timeout_seconds: 3600,   // 1 hour

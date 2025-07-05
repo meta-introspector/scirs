@@ -2,7 +2,6 @@
 
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2};
-use rand::thread_rng;
 use rand_distr::{Distribution, Uniform};
 use scirs2_core::validation::*;
 use scirs2_linalg::{det, inv};

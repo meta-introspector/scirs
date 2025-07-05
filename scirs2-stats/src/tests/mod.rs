@@ -82,7 +82,8 @@ where
         + std::marker::Send
         + std::marker::Sync
         + std::fmt::Display
-        + 'static,
+        + 'static
+        + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     // Delegate to the enhanced implementation
     crate::tests::ttest::ttest_1samp(x, popmean, alternative, nan_policy)
@@ -140,7 +141,8 @@ where
         + std::marker::Send
         + std::marker::Sync
         + std::fmt::Display
-        + 'static,
+        + 'static
+        + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     // Check if the input arrays are empty
     if x.is_empty() || y.is_empty() {
@@ -158,8 +160,8 @@ where
     let n_y = F::from(y.len()).unwrap();
 
     // Calculate sample standard deviations (with ddof=1 for unbiased estimator)
-    let std_x = std(x, 1)?;
-    let std_y = std(y, 1)?;
+    let std_x = std(x, 1, None)?;
+    let std_y = std(y, 1, None)?;
 
     // Calculate t-statistic and degrees of freedom
     let t_stat: F;
@@ -329,8 +331,7 @@ where
 pub fn kstest<F, G>(x: &ArrayView1<F>, cdf: G) -> StatsResult<(F, F)>
 where
     F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast,
-    G: Fn(F) -> F
-        + std::fmt::Display,
+    G: Fn(F) -> F + std::fmt::Display,
 {
     // Check if the input array is empty
     if x.is_empty() {
@@ -463,8 +464,7 @@ fn calculate_ks_p_value<F: Float + NumCast>(ks_stat: F, n: F) -> F {
 #[allow(dead_code)]
 pub fn shapiro<F>(x: &ArrayView1<F>) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
     // Check if the input array is empty
     if x.is_empty() {

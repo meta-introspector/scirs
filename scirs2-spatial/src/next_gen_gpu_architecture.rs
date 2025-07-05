@@ -320,7 +320,7 @@ impl QuantumGpuProcessor {
                 unit_id: i,
                 num_qubits: 64,               // Next-gen quantum units
                 coherence_time_ns: 1000000.0, // 1 millisecond coherence
-                gate_fidelity: 0.9999,        // Ultra-high fidelity
+                gate_fidelity: 0.9999,        // Advanced-high fidelity
                 quantum_state: None,
                 error_correction: true,
                 entangled_units: Vec::new(),

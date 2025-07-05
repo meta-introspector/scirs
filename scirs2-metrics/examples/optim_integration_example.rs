@@ -144,7 +144,7 @@ fn regression_optimization_example() -> Result<(), Box<dyn std::error::Error>> {
         "  R² progression: {:?}",
         r2_history
             .iter()
-            .map(|&x| format!("{:.3}", x))
+            .map(|&x| format!("{x:.3}"))
             .collect::<Vec<_>>()
     );
 
@@ -178,7 +178,7 @@ fn multi_metric_tracking_example() -> Result<(), Box<dyn std::error::Error>> {
     primary_optimizer.add_additional_value("recall", recall);
 
     println!("Metrics tracked:");
-    println!("  Primary (F1-score): {:.3}", f1);
+    println!("  Primary (F1-score): {f1:.3}");
     println!("  Additional metrics:");
 
     for metric_name in ["accuracy", "precision", "recall"] {

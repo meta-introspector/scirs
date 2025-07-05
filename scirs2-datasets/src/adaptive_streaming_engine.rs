@@ -1,6 +1,6 @@
 //! Adaptive Streaming Data Processing Engine
 //!
-//! This module provides ultra-sophisticated real-time data processing capabilities
+//! This module provides advanced-sophisticated real-time data processing capabilities
 //! with adaptive algorithms, intelligent buffering, and ML-based stream optimization.
 
 use crate::error::{DatasetsError, Result};
@@ -13,7 +13,7 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-/// Ultra-advanced adaptive streaming processor
+/// Advanced-advanced adaptive streaming processor
 pub struct AdaptiveStreamingEngine {
     /// Stream configuration
     config: AdaptiveStreamConfig,
@@ -957,7 +957,7 @@ pub fn create_adaptive_engine_with_config(config: AdaptiveStreamConfig) -> Adapt
 
 /// Advanced MODE ENHANCEMENTS
 /// Advanced quantum-inspired optimization, neural adaptation, and predictive analytics
-/// Quantum-Inspired Optimization Engine for Ultra-Advanced Stream Processing
+/// Quantum-Inspired Optimization Engine for Advanced-Advanced Stream Processing
 #[derive(Debug)]
 pub struct QuantumInspiredOptimizer {
     /// Quantum state superposition for optimization space exploration
@@ -1967,7 +1967,7 @@ impl PerformancePredictionModel {
 
 /// Enhanced Adaptive Streaming Engine with Quantum and Neural Optimization
 impl AdaptiveStreamingEngine {
-    /// Create ultra-advanced streaming engine with quantum and neural optimization
+    /// Create advanced-advanced streaming engine with quantum and neural optimization
     pub fn with_quantum_neural_optimization(config: AdaptiveStreamConfig) -> Self {
         // In a full implementation, this would integrate:
         // - QuantumInspiredOptimizer for parameter optimization

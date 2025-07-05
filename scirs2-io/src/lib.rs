@@ -264,7 +264,7 @@ pub mod network;
 /// - Dynamic parameter adaptation based on system metrics
 /// - Neural network-driven decision making for resource allocation
 /// - Real-time performance feedback and learning
-/// - Ultra-high performance processing with adaptive algorithms
+/// - Advanced-high performance processing with adaptive algorithms
 /// - SIMD-accelerated neural inference for low-latency decisions
 pub mod neural_adaptive_io;
 /// Out-of-core processing for terabyte-scale datasets
@@ -288,7 +288,7 @@ pub mod out_of_core;
 pub mod pipeline;
 /// Quantum-inspired I/O processing algorithms with advanced capabilities
 ///
-/// Provides quantum-inspired algorithms for ultra-high performance I/O:
+/// Provides quantum-inspired algorithms for advanced-high performance I/O:
 /// - Quantum superposition for parallel processing paths
 /// - Quantum entanglement for correlated data operations
 /// - Quantum annealing for parameter optimization
@@ -433,8 +433,8 @@ pub mod zero_copy;
 
 // Re-export commonly used functionality
 pub use advanced_coordinator::{
-    AdaptiveImprovements, AdvancedCoordinator, IntelligenceLevel, PerformanceIntelligenceStats,
-    ProcessingResult, QualityMetrics, StrategyType, UltraThinkStatistics,
+    AdaptiveImprovements, AdvancedCoordinator, AdvancedStatistics, IntelligenceLevel,
+    PerformanceIntelligenceStats, ProcessingResult, QualityMetrics, StrategyType,
 };
 pub use enhanced_algorithms::{
     AdvancedPatternAnalysis, AdvancedPatternRecognizer, DataCharacteristics, EmergentPattern,

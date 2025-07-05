@@ -11,7 +11,6 @@
 //!
 //! Run with: cargo run --example advanced_interactive_tutor
 
-use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_special::*;
 use std::collections::HashMap;
@@ -470,10 +469,10 @@ fn bessel_adaptive_session(profile: &mut UserProfile) -> Result<(), Box<dyn std:
         println!("u(r,θ,t) = J_n(k_mn·r/R)·cos(nθ)·cos(ω_mn·t)");
         println!("where k_mn are zeros of J_n(x).");
 
-        let zeros = j0_zeros::<f64>(5).unwrap();
         println!("\nFirst 5 zeros of J₀(x):");
-        for (i, zero) in zeros.iter().enumerate() {
-            println!("  α₀,{} = {:.6}", i + 1, zero);
+        for i in 1..=5 {
+            let zero = j0_zeros::<f64>(i).unwrap();
+            println!("  α₀,{} = {:.6}", i, zero);
         }
     }
 
@@ -683,7 +682,7 @@ fn wright_functions_session(profile: &mut UserProfile) -> Result<(), Box<dyn std
     println!("The Wright omega function ω(z) satisfies: ω e^ω = z");
 
     let z = 2.0;
-    let omega_val = wright_omega_real(z).unwrap();
+    let omega_val = wright_omega_real(z, 1e-12).unwrap();
     println!("ω({}) = {:.6}", z, omega_val);
 
     // Verification
@@ -718,7 +717,7 @@ fn spheroidal_functions_session(
     println!("\n🧮 Example: Prolate spheroidal functions");
     println!("Parameters: c = {}, m = {}, n = {}", c, m, n);
 
-    let cv = pro_cv(m, n, c);
+    let cv = pro_cv(m, n, c).unwrap();
     println!("Characteristic value: λ_{}^{} = {:.6}", m, n, cv);
 
     profile.update_mastery("Spheroidal Functions", 1.0);
@@ -743,8 +742,8 @@ fn mathieu_functions_session(profile: &mut UserProfile) -> Result<(), Box<dyn st
     println!("\n🧮 Example: Mathieu characteristic values");
     println!("Parameters: m = {}, q = {}", m, q);
 
-    let a_val = mathieu_a(m, q);
-    let b_val = mathieu_b(m, q);
+    let a_val = mathieu_a(m, q).unwrap();
+    let b_val = mathieu_b(m, q).unwrap();
     println!("a_{}({}) = {:.6}", m, q, a_val);
     println!("b_{}({}) = {:.6}", m, q, b_val);
 
@@ -898,7 +897,11 @@ fn bessel_orthogonality_proof(profile: &mut UserProfile) -> Result<(), Box<dyn s
     // Numerical demonstration
     println!("\n🔍 Numerical verification:");
     let nu = 0;
-    let zeros = j0_zeros(3);
+    let zeros = vec![
+        j0_zeros::<f64>(1).unwrap(),
+        j0_zeros::<f64>(2).unwrap(),
+        j0_zeros::<f64>(3).unwrap(),
+    ];
 
     for i in 0..zeros.len() {
         for j in i..zeros.len() {
@@ -946,7 +949,7 @@ fn error_function_series_proof(
 
     // Numerical verification
     println!("\n🔍 Series convergence demonstration:");
-    let x = 1.0;
+    let x: f64 = 1.0;
     let exact = erf(x);
 
     println!("erf({}) = {:.10} (exact)", x, exact);
@@ -1098,7 +1101,7 @@ fn solve_physics_problems(profile: &mut UserProfile) -> Result<(), Box<dyn std::
         .parse()
         .map_err(|_| "Invalid number")?;
 
-    let hermite_val = hermite(user_n, alpha.sqrt() * user_x);
+    let hermite_val = hermite(user_n as usize, alpha.sqrt() * user_x);
     let exponential = (-0.5 * alpha * user_x * user_x).exp();
     let wavefunction = normalization
         / (2.0_f64.powi(user_n as i32) * factorial(user_n as u64) as f64).sqrt()
@@ -1177,11 +1180,11 @@ fn solve_financial_problems(profile: &mut UserProfile) -> Result<(), Box<dyn std
     println!("N(x) = standard normal CDF = (1/2)[1 + erf(x/√2)]");
 
     // Example parameters
-    let S0 = 100.0; // Current stock price
-    let K = 105.0; // Strike price
-    let r = 0.05; // Risk-free rate
-    let T = 0.25; // Time to expiration (3 months)
-    let sigma = 0.2; // Volatility
+    let S0: f64 = 100.0; // Current stock price
+    let K: f64 = 105.0; // Strike price
+    let r: f64 = 0.05; // Risk-free rate
+    let T: f64 = 0.25; // Time to expiration (3 months)
+    let sigma: f64 = 0.2; // Volatility
 
     println!("\n🔢 Parameters:");
     println!("S₀ = ${:.2}", S0);
@@ -1341,7 +1344,7 @@ fn explore_bessel_visual(profile: &mut UserProfile) -> Result<(), Box<dyn std::e
 
     // Show zeros
     println!("\n🎯 Zeros of Bessel functions:");
-    let j0_zeros_vec = j0_zeros(5);
+    let j0_zeros_vec = j0_zeros::<f64>(5);
     let j1_zeros_vec = j1_zeros(5);
 
     println!("First 5 zeros of J₀(x):");
@@ -1481,7 +1484,7 @@ fn signal_processing_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::e
     println!("where B_n(s) are Bessel polynomials");
 
     // Generate Bessel filter coefficients
-    let order = 3;
+    let _order = 3;
     let cutoff_freq = 1000.0; // Hz
 
     println!("\n🔢 3rd-order Bessel filter:");
@@ -1534,7 +1537,14 @@ fn computer_graphics_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::e
     for l in 0..=2 {
         for m in -(l as i32)..=(l as i32) {
             let y_lm = sph_harm(l, m, theta, phi);
-            println!("Y_{}^{}({:.2}, {:.2}) = {:.6}", l, m, theta, phi, y_lm);
+            println!(
+                "Y_{}^{}({:.2}, {:.2}) = {:.6}",
+                l,
+                m,
+                theta,
+                phi,
+                y_lm.unwrap()
+            );
         }
     }
 
@@ -1555,8 +1565,18 @@ fn computer_graphics_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::e
     let y_00 = sph_harm(0, 0, user_theta, user_phi);
     let y_11 = sph_harm(1, 1, user_theta, user_phi);
 
-    println!("Y_0^0({:.2}, {:.2}) = {:.6}", user_theta, user_phi, y_00);
-    println!("Y_1^1({:.2}, {:.2}) = {:.6}", user_theta, user_phi, y_11);
+    println!(
+        "Y_0^0({:.2}, {:.2}) = {:.6}",
+        user_theta,
+        user_phi,
+        y_00.unwrap()
+    );
+    println!(
+        "Y_1^1({:.2}, {:.2}) = {:.6}",
+        user_theta,
+        user_phi,
+        y_11.unwrap()
+    );
 
     profile.add_experience(45);
     Ok(())
@@ -1577,13 +1597,13 @@ fn bioinformatics_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::erro
 
     // Example: Two-state folding model
     println!("\n🧮 Two-state folding model:");
-    let k_B = 1.381e-23; // Boltzmann constant (J/K)
-    let T = 300.0; // Temperature (K)
-    let delta_G = -20.0 * 1000.0 * 4.184; // -20 kcal/mol to J/mol
-    let N_A = 6.022e23; // Avogadro's number
+    let k_B: f64 = 1.381e-23; // Boltzmann constant (J/K)
+    let T: f64 = 300.0; // Temperature (K)
+    let delta_G: f64 = -20.0 * 1000.0 * 4.184; // -20 kcal/mol to J/mol
+    let N_A: f64 = 6.022e23; // Avogadro's number
 
-    let delta_G_per_molecule = delta_G / N_A;
-    let equilibrium_constant = (-delta_G_per_molecule / (k_B * T)).exp();
+    let delta_G_per_molecule: f64 = delta_G / N_A;
+    let equilibrium_constant: f64 = (-delta_G_per_molecule / (k_B * T)).exp();
 
     println!("ΔG = {:.1} kJ/mol", delta_G / 1000.0);
     println!("K_eq = exp(-ΔG/RT) = {:.2e}", equilibrium_constant);
@@ -1600,7 +1620,7 @@ fn bioinformatics_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::erro
     let temperatures = vec![250.0, 275.0, 300.0, 325.0, 350.0];
 
     for &temp in &temperatures {
-        let k_eq = (-delta_G_per_molecule / (k_B * temp)).exp();
+        let k_eq: f64 = (-delta_G_per_molecule / (k_B * temp)).exp();
         let p_fold = k_eq / (1.0 + k_eq);
         println!("T = {} K: P(folded) = {:.4}", temp, p_fold);
     }
@@ -1643,7 +1663,7 @@ fn climate_science_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::err
     let optical_depths = vec![0.0, 0.1, 0.5, 1.0, 2.0];
 
     for &tau in &optical_depths {
-        let intensity = I_0 * (-tau).exp();
+        let intensity: f64 = I_0 * (-tau).exp();
         let attenuation = (1.0 - intensity / I_0) * 100.0;
         println!(
             "τ = {}: I = {:.1} W/m² ({:.1}% attenuated)",
@@ -1670,7 +1690,7 @@ fn aerospace_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::error::Er
 
     // Example orbit parameters
     let e = 0.3; // Eccentricity
-    let a = 42164.0; // Semi-major axis (km) - geostationary orbit
+    let a: f64 = 42164.0; // Semi-major axis (km) - geostationary orbit
     let mu = 3.986e5; // Earth's gravitational parameter (km³/s²)
 
     println!("\n🛰️ Orbit parameters:");
@@ -2472,7 +2492,7 @@ fn numerical_orthogonality_check(n: u32, m: u32) -> f64 {
 
     for i in 0..num_points {
         let x = -1.0 + (i as f64 + 0.5) * dx;
-        integral += legendre(n, x) * legendre(m, x) * dx;
+        integral += legendre(n as usize, x) * legendre(m as usize, x) * dx;
     }
 
     integral

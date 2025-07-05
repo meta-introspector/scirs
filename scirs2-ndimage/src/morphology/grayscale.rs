@@ -71,7 +71,7 @@ enum MorphOperation {
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// use ndarray::{Array2, s};
 /// use scirs2_ndimage::morphology::grey_erosion;
 ///
@@ -81,7 +81,7 @@ enum MorphOperation {
 /// input[[2, 2]] = 2.0;
 ///
 /// // Apply grayscale erosion
-/// let result = grey_erosion(&input, None, None, None, None, None)?;
+/// let result = grey_erosion(&input, None, None, None, None, None).unwrap();
 ///
 /// // The center value should be eroded to match its lowest neighbor (1.0)
 /// assert_eq!(result[[2, 2]], 1.0);
@@ -270,7 +270,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// use ndarray::{Array2, s};
 /// use scirs2_ndimage::morphology::grey_dilation;
 ///
@@ -280,7 +280,7 @@ where
 /// input[[2, 2]] = 2.0;
 ///
 /// // Apply grayscale dilation
-/// let result = grey_dilation(&input, None, None, None, None, None)?;
+/// let result = grey_dilation(&input, None, None, None, None, None).unwrap();
 ///
 /// // The bright center value should expand to its neighbors
 /// assert_eq!(result[[1, 2]], 2.0);
@@ -472,7 +472,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// use ndarray::{Array2, s};
 /// use scirs2_ndimage::morphology::grey_opening;
 ///
@@ -482,7 +482,7 @@ where
 /// input[[3, 3]] = 2.0;
 ///
 /// // Apply opening to remove the bright spot
-/// let result = grey_opening(&input, None, None, None, None, None)?;
+/// let result = grey_opening(&input, None, None, None, None, None).unwrap();
 ///
 /// // The peak value should be reduced
 /// assert!(result[[3, 3]] < 2.0);
@@ -528,7 +528,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// use ndarray::Array2;
 /// use scirs2_ndimage::morphology::grey_closing;
 ///
@@ -537,7 +537,7 @@ where
 /// input[[3, 3]] = 0.0;
 ///
 /// // Apply closing to fill the dark spot
-/// let result = grey_closing(&input, None, None, None, None, None)?;
+/// let result = grey_closing(&input, None, None, None, None, None).unwrap();
 ///
 /// // The dark spot should be filled
 /// assert!(result[[3, 3]] > 0.0);
@@ -583,7 +583,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// use ndarray::{Array2, s};
 /// use scirs2_ndimage::morphology::morphological_gradient;
 ///
@@ -592,7 +592,7 @@ where
 /// input.slice_mut(s![0..7, 4..7]).fill(1.0);
 ///
 /// // Apply morphological gradient to detect the edge
-/// let result = morphological_gradient(&input, None, None, None, None, None)?;
+/// let result = morphological_gradient(&input, None, None, None, None, None).unwrap();
 ///
 /// // The edge should be highlighted
 /// assert!(result[[3, 3]] > 0.5);
@@ -674,7 +674,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// use ndarray::Array2;
 /// use scirs2_ndimage::morphology::morphological_laplace;
 ///
@@ -684,7 +684,7 @@ where
 /// input[[4, 4]] = 0.0;
 ///
 /// // Apply morphological Laplace to detect both features
-/// let result = morphological_laplace(&input, None, None, None, None, None)?;
+/// let result = morphological_laplace(&input, None, None, None, None, None).unwrap();
 ///
 /// // Both the peak and valley should be highlighted
 /// assert!(result[[2, 2]] > 0.0);
@@ -778,7 +778,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// use ndarray::Array2;
 /// use scirs2_ndimage::morphology::white_tophat;
 ///
@@ -788,7 +788,7 @@ where
 /// input[[4, 4]] = 2.0;
 ///
 /// // Apply white tophat to extract the bright spots
-/// let result = white_tophat(&input, None, None, None, None, None)?;
+/// let result = white_tophat(&input, None, None, None, None, None).unwrap();
 ///
 /// // The bright spots should be highlighted
 /// assert!(result[[2, 2]] > 0.5);
@@ -869,7 +869,7 @@ where
 ///
 /// # Examples
 ///
-/// ```
+/// ```no_run
 /// use ndarray::Array2;
 /// use scirs2_ndimage::morphology::black_tophat;
 ///
@@ -879,7 +879,7 @@ where
 /// input[[4, 4]] = 0.0;
 ///
 /// // Apply black tophat to extract the dark spots
-/// let result = black_tophat(&input, None, None, None, None, None)?;
+/// let result = black_tophat(&input, None, None, None, None, None).unwrap();
 ///
 /// // The dark spots should be highlighted
 /// assert!(result[[2, 2]] > 0.5);

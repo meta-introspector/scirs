@@ -4,8 +4,8 @@
 //! for Advanced clustering, enabling massive scalability and performance
 //! improvements for large-scale clustering tasks.
 
+use crate::advanced_clustering::{AdvancedClusterer, AdvancedClusteringResult};
 use crate::error::{ClusteringError, Result};
-use crate::advanced_clustering::{AdvancedClusterer, UltrathinkClusteringResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 
 /// GPU-accelerated Advanced clusterer
 #[derive(Debug)]
-pub struct GpuUltrathinkClusterer {
+pub struct GpuAdvancedClusterer {
     /// Base Advanced clusterer
     base_clusterer: AdvancedClusterer,
     /// GPU configuration
@@ -31,7 +31,7 @@ pub struct GpuUltrathinkClusterer {
 
 /// Distributed Advanced clustering system
 #[derive(Debug)]
-pub struct DistributedUltrathinkClusterer {
+pub struct DistributedAdvancedClusterer {
     /// Worker node configurations
     worker_configs: Vec<WorkerNodeConfig>,
     /// Coordination strategy
@@ -48,9 +48,9 @@ pub struct DistributedUltrathinkClusterer {
 #[derive(Debug)]
 pub struct HybridGpuDistributedClusterer {
     /// GPU clusterer for local acceleration
-    gpu_clusterer: GpuUltrathinkClusterer,
+    gpu_clusterer: GpuAdvancedClusterer,
     /// Distributed system for scalability
-    distributed_system: DistributedUltrathinkClusterer,
+    distributed_system: DistributedAdvancedClusterer,
     /// Hybrid coordination engine
     hybrid_coordinator: HybridCoordinationEngine,
     /// Resource optimizer
@@ -170,9 +170,9 @@ pub enum CoordinationStrategy {
 /// GPU-accelerated clustering result
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct GpuUltrathinkResult {
+pub struct GpuAdvancedResult {
     /// Base clustering result
-    pub base_result: UltrathinkClusteringResult,
+    pub base_result: AdvancedClusteringResult,
     /// GPU acceleration metrics
     pub gpu_metrics: GpuAccelerationMetrics,
     /// Memory usage statistics
@@ -184,9 +184,9 @@ pub struct GpuUltrathinkResult {
 /// Distributed clustering result
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct DistributedUltrathinkResult {
+pub struct DistributedAdvancedResult {
     /// Base clustering result
-    pub base_result: UltrathinkClusteringResult,
+    pub base_result: AdvancedClusteringResult,
     /// Distributed processing metrics
     pub distributed_metrics: DistributedProcessingMetrics,
     /// Load balancing statistics
@@ -202,16 +202,16 @@ pub struct DistributedUltrathinkResult {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct HybridGpuDistributedResult {
     /// GPU acceleration result
-    pub gpu_result: GpuUltrathinkResult,
+    pub gpu_result: GpuAdvancedResult,
     /// Distributed processing result
-    pub distributed_result: DistributedUltrathinkResult,
+    pub distributed_result: DistributedAdvancedResult,
     /// Hybrid coordination metrics
     pub hybrid_metrics: HybridCoordinationMetrics,
     /// Resource utilization statistics
     pub resource_utilization: ResourceUtilizationStats,
 }
 
-impl GpuUltrathinkClusterer {
+impl GpuAdvancedClusterer {
     /// Create new GPU-accelerated Advanced clusterer
     pub fn new(gpu_config: GpuAccelerationConfig) -> Self {
         Self {
@@ -236,7 +236,7 @@ impl GpuUltrathinkClusterer {
     }
 
     /// Perform GPU-accelerated Advanced clustering
-    pub fn gpu_cluster(&mut self, data: &ArrayView2<f64>) -> Result<GpuUltrathinkResult> {
+    pub fn gpu_cluster(&mut self, data: &ArrayView2<f64>) -> Result<GpuAdvancedResult> {
         // Phase 1: Initialize GPU resources
         self.performance_monitor.start_timing("gpu_initialization");
         self.initialize_gpu_resources(data)?;
@@ -267,7 +267,7 @@ impl GpuUltrathinkClusterer {
 
         // Phase 6: Create Advanced result from GPU computation
         let base_result =
-            self.create_ultrathink_result_from_gpu(&cpu_clusters, &cpu_centroids, data)?;
+            self.create_advanced_result_from_gpu(&cpu_clusters, &cpu_centroids, data)?;
 
         // Phase 7: Collect GPU metrics
         let gpu_metrics = self.collect_gpu_metrics(
@@ -280,7 +280,7 @@ impl GpuUltrathinkClusterer {
         let memory_stats = self.memory_manager.get_memory_stats();
         let kernel_stats = self.kernel_executor.get_kernel_stats();
 
-        Ok(GpuUltrathinkResult {
+        Ok(GpuAdvancedResult {
             base_result,
             gpu_metrics,
             memory_stats,
@@ -299,19 +299,19 @@ impl GpuUltrathinkClusterer {
         Ok(())
     }
 
-    fn create_ultrathink_result_from_gpu(
+    fn create_advanced_result_from_gpu(
         &self,
         clusters: &Array1<usize>,
         centroids: &Array2<f64>,
         original_data: &ArrayView2<f64>,
-    ) -> Result<UltrathinkClusteringResult> {
+    ) -> Result<AdvancedClusteringResult> {
         // Create base Advanced result with GPU-computed values
         // This would normally integrate with the base clusterer
 
         // For demonstration, create a basic result structure
-        use crate::advanced_clustering::UltrathinkPerformanceMetrics;
+        use crate::advanced_clustering::AdvancedPerformanceMetrics;
 
-        let performance = UltrathinkPerformanceMetrics {
+        let performance = AdvancedPerformanceMetrics {
             silhouette_score: self.calculate_gpu_silhouette_score(
                 original_data,
                 clusters,
@@ -325,7 +325,7 @@ impl GpuUltrathinkClusterer {
             energy_efficiency: 0.88,
         };
 
-        Ok(UltrathinkClusteringResult {
+        Ok(AdvancedClusteringResult {
             clusters: clusters.clone(),
             centroids: centroids.clone(),
             ai_speedup: 4.5, // GPU acceleration factor
@@ -439,7 +439,7 @@ impl GpuUltrathinkClusterer {
     }
 }
 
-impl DistributedUltrathinkClusterer {
+impl DistributedAdvancedClusterer {
     /// Create new distributed Advanced clusterer
     pub fn new(
         worker_configs: Vec<WorkerNodeConfig>,
@@ -458,7 +458,7 @@ impl DistributedUltrathinkClusterer {
     pub fn distributed_cluster(
         &mut self,
         data: &ArrayView2<f64>,
-    ) -> Result<DistributedUltrathinkResult> {
+    ) -> Result<DistributedAdvancedResult> {
         // Phase 1: Data partitioning and distribution
         let data_partitions = self.partition_data(data)?;
 
@@ -473,7 +473,7 @@ impl DistributedUltrathinkClusterer {
         let load_balance_stats = self.load_balancer.get_stats();
         let communication_overhead = self.communication_protocol.get_overhead_stats();
 
-        Ok(DistributedUltrathinkResult {
+        Ok(DistributedAdvancedResult {
             base_result: aggregated_result,
             distributed_metrics,
             load_balance_stats,
@@ -565,7 +565,7 @@ impl DistributedUltrathinkClusterer {
     fn aggregate_worker_results(
         &self,
         worker_results: &[WorkerClusteringResult],
-    ) -> Result<UltrathinkClusteringResult> {
+    ) -> Result<AdvancedClusteringResult> {
         // Aggregate clustering results from all workers
         if worker_results.is_empty() {
             return Err(ClusteringError::InvalidInput(
@@ -634,9 +634,9 @@ impl DistributedUltrathinkClusterer {
             .sum::<f64>()
             / worker_results.len() as f64;
 
-        use crate::advanced_clustering::UltrathinkPerformanceMetrics;
+        use crate::advanced_clustering::AdvancedPerformanceMetrics;
 
-        let aggregated_performance = UltrathinkPerformanceMetrics {
+        let aggregated_performance = AdvancedPerformanceMetrics {
             silhouette_score: 0.82, // Would be calculated from aggregated data
             execution_time: total_execution_time,
             memory_usage: worker_results
@@ -649,7 +649,7 @@ impl DistributedUltrathinkClusterer {
             energy_efficiency: 0.91,
         };
 
-        Ok(UltrathinkClusteringResult {
+        Ok(AdvancedClusteringResult {
             clusters: aggregated_clusters,
             centroids: aggregated_centroids,
             ai_speedup: avg_ai_speedup * 1.5, // Distributed acceleration bonus
@@ -904,7 +904,7 @@ pub struct HybridResourceOptimizer;
 #[derive(Debug)]
 pub struct WorkerClusteringResult {
     pub worker_id: String,
-    pub local_result: UltrathinkClusteringResult,
+    pub local_result: AdvancedClusteringResult,
     pub performance_stats: WorkerPerformanceStats,
 }
 

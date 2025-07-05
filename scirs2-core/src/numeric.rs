@@ -857,11 +857,11 @@ pub mod stability;
 /// Stable numerical algorithms
 pub mod stable_algorithms;
 
-/// Ultra-optimized SIMD operations for numerical computations
+/// Advanced-optimized SIMD operations for numerical computations
 ///
 /// This module provides vectorized implementations of common mathematical operations
 /// using the highest available SIMD instruction sets for maximum performance.
-pub mod ultra_simd {
+pub mod advanced_simd {
     #[allow(unused_imports)]
     use super::*;
 
@@ -870,9 +870,9 @@ pub mod ultra_simd {
     #[cfg(target_arch = "x86_64")]
     use std::arch::x86_64::*;
 
-    /// Ultra-fast vectorized addition for f32 arrays
+    /// Optimized vectorized addition for f32 arrays
     #[inline]
-    pub fn add_f32_ultra(a: &[f32], b: &[f32], result: &mut [f32]) {
+    pub fn add_f32_advanced(a: &[f32], b: &[f32], result: &mut [f32]) {
         debug_assert_eq!(a.len(), b.len());
         debug_assert_eq!(a.len(), result.len());
 
@@ -930,9 +930,9 @@ pub mod ultra_simd {
         }
     }
 
-    /// Ultra-fast vectorized multiplication for f32 arrays
+    /// Optimized vectorized multiplication for f32 arrays
     #[inline]
-    pub fn mul_f32_ultra(a: &[f32], b: &[f32], result: &mut [f32]) {
+    pub fn mul_f32_advanced(a: &[f32], b: &[f32], result: &mut [f32]) {
         debug_assert_eq!(a.len(), b.len());
         debug_assert_eq!(a.len(), result.len());
 
@@ -988,9 +988,9 @@ pub mod ultra_simd {
         }
     }
 
-    /// Ultra-fast fused multiply-add (a * b + c) for f32 arrays
+    /// Optimized fused multiply-add (a * b + c) for f32 arrays
     #[inline]
-    pub fn fma_f32_ultra(a: &[f32], b: &[f32], c: &[f32], result: &mut [f32]) {
+    pub fn fma_f32_advanced(a: &[f32], b: &[f32], c: &[f32], result: &mut [f32]) {
         debug_assert_eq!(a.len(), b.len());
         debug_assert_eq!(a.len(), c.len());
         debug_assert_eq!(a.len(), result.len());
@@ -1050,9 +1050,9 @@ pub mod ultra_simd {
         }
     }
 
-    /// Ultra-fast vectorized dot product for f32 arrays
+    /// Optimized vectorized dot product for f32 arrays
     #[inline]
-    pub fn dot_product_f32_ultra(a: &[f32], b: &[f32]) -> f32 {
+    pub fn dot_product_f32_advanced(a: &[f32], b: &[f32]) -> f32 {
         debug_assert_eq!(a.len(), b.len());
 
         let len = a.len();
@@ -1123,9 +1123,9 @@ pub mod ultra_simd {
         sum
     }
 
-    /// Ultra-fast vectorized sum reduction for f32 arrays
+    /// Optimized vectorized sum reduction for f32 arrays
     #[inline]
-    pub fn sum_f32_ultra(data: &[f32]) -> f32 {
+    pub fn sum_f32_advanced(data: &[f32]) -> f32 {
         let len = data.len();
         let mut i = 0;
         let mut sum = 0.0f32;

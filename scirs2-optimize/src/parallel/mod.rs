@@ -200,7 +200,7 @@ where
 pub struct OptimizationResult {
     pub x: Array1<f64>,
     pub function_value: f64,
-    pub iterations: usize,
+    pub nit: usize,
     pub success: bool,
 }
 

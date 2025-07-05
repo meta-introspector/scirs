@@ -8,7 +8,7 @@
 use crate::error::StatsResult;
 use crate::numerical_stability_enhancements::create_exhaustive_numerical_stability_tester;
 use crate::unified_processor::{
-    create_advanced_processor, OptimizationMode, UltrathinkProcessorConfig,
+    create_advanced_processor, OptimizationMode, AdvancedProcessorConfig,
 };
 use ndarray::{Array1, ArrayView1};
 use num_traits::Float;
@@ -107,8 +107,8 @@ pub enum CompatibilityRating {
 
 /// Cross-platform Advanced validator
 pub struct CrossPlatformValidator {
-    stability_analyzer: crate::numerical_stability_enhancements::UltraThinkNumericalStabilityTester,
-    test_configurations: Vec<UltrathinkProcessorConfig>,
+    stability_analyzer: crate::numerical_stability_enhancements::AdvancedNumericalStabilityTester,
+    test_configurations: Vec<AdvancedProcessorConfig>,
     reference_results: HashMap<String, Array1<f64>>,
 }
 
@@ -123,28 +123,28 @@ impl CrossPlatformValidator {
     pub fn new() -> Self {
         let test_configurations = vec![
             // Performance mode
-            UltrathinkProcessorConfig {
+            AdvancedProcessorConfig {
                 optimization_mode: OptimizationMode::Performance,
                 enable_stability_testing: false,
                 enable_performance_monitoring: true,
                 ..Default::default()
             },
             // Accuracy mode
-            UltrathinkProcessorConfig {
+            AdvancedProcessorConfig {
                 optimization_mode: OptimizationMode::Accuracy,
                 enable_stability_testing: true,
                 enable_performance_monitoring: true,
                 ..Default::default()
             },
             // Balanced mode
-            UltrathinkProcessorConfig {
+            AdvancedProcessorConfig {
                 optimization_mode: OptimizationMode::Balanced,
                 enable_stability_testing: true,
                 enable_performance_monitoring: true,
                 ..Default::default()
             },
             // Adaptive mode
-            UltrathinkProcessorConfig {
+            AdvancedProcessorConfig {
                 optimization_mode: OptimizationMode::Adaptive,
                 enable_stability_testing: true,
                 enable_performance_monitoring: true,
@@ -233,7 +233,7 @@ impl CrossPlatformValidator {
 
         for config in &self.test_configurations {
             let mut processor =
-                crate::unified_processor::UltrathinkUnifiedProcessor::new(
+                crate::unified_processor::AdvancedUnifiedProcessor::new(
                     config.clone(),
                 );
 
@@ -307,12 +307,12 @@ impl CrossPlatformValidator {
                 let test_name = format!("simd_test_size_{}_align_{}", size, alignment);
 
                 let start_time = Instant::now();
-                let optimizer = crate::advanced_simd_stats::UltraThinkSimdOptimizer::new(
+                let optimizer = crate::advanced_simd_stats::AdvancedSimdOptimizer::new(
                     crate::advanced_simd_stats::AdvancedSimdConfig::default(),
                 );
                 let data_arrays = vec![data.view()];
                 let operations = vec![crate::advanced_simd_stats::BatchOperation::Mean];
-                let simd_result = optimizer.ultra_batch_statistics(&data_arrays, &operations);
+                let simd_result = optimizer.advanced_batch_statistics(&data_arrays, &operations);
                 let execution_time = start_time.elapsed();
 
                 // Also compute reference result
@@ -631,7 +631,7 @@ impl CrossPlatformValidator {
     fn calculate_numerical_accuracy(
         &self,
         data: &ArrayView1<f64>,
-        result: &crate::unified_processor::UltrathinkComprehensiveResult<f64>,
+        result: &crate::unified_processor::AdvancedComprehensiveResult<f64>,
     ) -> f64 {
         // Simple accuracy calculation based on mean comparison
         let reference_mean = data.mean().unwrap_or(0.0);
@@ -785,12 +785,12 @@ fn time_scalar_operation(data: &Array1<f64>) -> std::time::Duration {
 #[allow(dead_code)]
 fn time_simd_operation(data: &Array1<f64>) -> std::time::Duration {
     let start = Instant::now();
-    let optimizer = crate::advanced_simd_stats::UltraThinkSimdOptimizer::new(
+    let optimizer = crate::advanced_simd_stats::AdvancedSimdOptimizer::new(
         crate::advanced_simd_stats::AdvancedSimdConfig::default(),
     );
     let data_arrays = vec![data.view()];
     let operations = vec![crate::advanced_simd_stats::BatchOperation::Mean];
-    let _result = optimizer.ultra_batch_statistics(&data_arrays, &operations);
+    let _result = optimizer.advanced_batch_statistics(&data_arrays, &operations);
     start.elapsed()
 }
 

@@ -8,7 +8,7 @@
 //! - Multiscale denoising with cross-scale dependencies
 
 use crate::denoise::{threshold_coefficients, ThresholdMethod};
-use crate::dwt::{wavedec, waverec, Wavelet};
+use crate::dwt::{wavedec, waverec, DecompositionResult, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
@@ -17,7 +17,7 @@ use scirs2_core::validation::check_finite;
 use std::sync::Arc;
 
 /// Advanced denoising configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AdvancedDenoiseConfig {
     /// Wavelet to use
     pub wavelet: Wavelet,
@@ -102,7 +102,11 @@ pub fn advanced_denoise(
     signal: &[f64],
     config: &AdvancedDenoiseConfig,
 ) -> SignalResult<AdvancedDenoiseResult> {
-    check_finite(signal, "signal")?;
+    if !signal.iter().all(|&x| x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Signal contains non-finite values".to_string(),
+        ));
+    }
 
     if signal.len() < (1 << config.level) {
         return Err(SignalError::ValueError(
@@ -223,7 +227,8 @@ fn bayesian_denoise(
     noise_level: f64,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     // Decompose signal
-    let coeffs = wavedec(signal, config.wavelet, config.level, None)?;
+    let coeffs_raw = wavedec(signal, config.wavelet, Some(config.level), None)?;
+    let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
     let mut thresholds = Vec::new();
 
     // Process each scale
@@ -248,7 +253,7 @@ fn bayesian_denoise(
     }
 
     // Reconstruct
-    let denoised = waverec(&denoised_coeffs, config.wavelet, None)?;
+    let denoised = waverec(&denoised_coeffs.to_wavedec(), config.wavelet)?;
 
     Ok((denoised, thresholds))
 }
@@ -261,7 +266,8 @@ fn block_threshold_denoise(
     noise_level: f64,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     // Decompose signal
-    let coeffs = wavedec(signal, config.wavelet, config.level, None)?;
+    let coeffs_raw = wavedec(signal, config.wavelet, Some(config.level), None)?;
+    let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
     let mut thresholds = Vec::new();
     let mut denoised_coeffs = coeffs.clone();
 
@@ -284,7 +290,7 @@ fn block_threshold_denoise(
             let end = ((block_idx + 1) * block_size).min(n_coeffs);
 
             // Compute block energy
-            let mut block_energy = 0.0;
+            let mut block_energy = 0.0f64;
             for i in start..end {
                 block_energy += detail[i] * detail[i];
             }
@@ -305,7 +311,7 @@ fn block_threshold_denoise(
     }
 
     // Reconstruct
-    let denoised = waverec(&denoised_coeffs, config.wavelet, None)?;
+    let denoised = waverec(&denoised_coeffs.to_wavedec(), config.wavelet)?;
 
     Ok((denoised, thresholds))
 }
@@ -318,7 +324,8 @@ fn standard_denoise(
     noise_level: f64,
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     // Decompose signal
-    let coeffs = wavedec(signal, config.wavelet, config.level, None)?;
+    let coeffs_raw = wavedec(signal, config.wavelet, Some(config.level), None)?;
+    let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
     let mut thresholds = Vec::new();
     let mut denoised_coeffs = coeffs.clone();
 
@@ -344,7 +351,7 @@ fn standard_denoise(
     }
 
     // Reconstruct
-    let denoised = waverec(&denoised_coeffs, config.wavelet, None)?;
+    let denoised = waverec(&denoised_coeffs.to_wavedec(), config.wavelet)?;
 
     // Ensure output length matches input
     let mut result = denoised;
@@ -359,7 +366,7 @@ fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> Signa
     match config.noise_estimation {
         NoiseEstimation::MAD => {
             // Use MAD of finest scale wavelet coefficients
-            let coeffs = wavedec(signal, config.wavelet, 1, None)?;
+            let coeffs = wavedec(signal, config.wavelet, Some(1), None)?;
             let detail = &coeffs.details[0];
 
             // Compute median
@@ -377,7 +384,8 @@ fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> Signa
         }
         NoiseEstimation::FinestScale => {
             // Standard deviation of finest scale coefficients
-            let coeffs = wavedec(signal, config.wavelet, 1, None)?;
+            let coeffs_raw = wavedec(signal, config.wavelet, Some(1), None)?;
+            let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
             let detail = &coeffs.details[0];
 
             let mean = detail.iter().sum::<f64>() / detail.len() as f64;
@@ -388,7 +396,8 @@ fn estimate_noise_level(signal: &[f64], config: &AdvancedDenoiseConfig) -> Signa
         }
         NoiseEstimation::IQR => {
             // Interquartile range based estimation
-            let coeffs = wavedec(signal, config.wavelet, 1, None)?;
+            let coeffs_raw = wavedec(signal, config.wavelet, Some(1), None)?;
+            let coeffs = DecompositionResult::from_wavedec(coeffs_raw);
             let mut detail = coeffs.details[0].clone();
             detail.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
@@ -491,6 +500,7 @@ pub fn wavelet_packet_denoise(
 mod tests {
     #[allow(unused_imports)]
     use super::*;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_advanced_denoise_basic() {

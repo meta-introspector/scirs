@@ -569,7 +569,7 @@ where
     }
 }
 
-/// Memory-efficient batch processing for ultra-large datasets
+/// Memory-efficient batch processing for advanced-large datasets
 #[allow(dead_code)]
 pub fn simd_normalize_batch<S, F>(
     array: &ArrayBase<S, Ix2>,

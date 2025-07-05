@@ -193,7 +193,11 @@ pub fn advanced_wavelet_denoise_2d(
     let start_time = std::time::Instant::now();
 
     // Validate input
-    check_shape(image, (Some(8), Some(8)), "image")?;
+    if image.nrows() < 8 || image.ncols() < 8 {
+        return Err(SignalError::DimensionError(
+            "Image must be at least 8x8".to_string(),
+        ));
+    }
     check_finite(&image.to_owned().into_dyn(), "image")?;
 
     let (rows, cols) = image.dim();
@@ -379,8 +383,8 @@ fn simd_calculate_std_dev(data: &[f64], mean: f64) -> SignalResult<f64> {
     let mean_view = ndarray::ArrayView1::from(&mean_array);
 
     let diff = f64::simd_sub(&data_view, &mean_view);
-    let squared_diff = f64::simd_mul(&diff, &diff);
-    let sum_squared = f64::simd_sum(&squared_diff);
+    let squared_diff = f64::simd_mul(&diff.view(), &diff.view());
+    let sum_squared = f64::simd_sum(&squared_diff.view());
 
     Ok((sum_squared / (data.len() - 1) as f64).sqrt())
 }

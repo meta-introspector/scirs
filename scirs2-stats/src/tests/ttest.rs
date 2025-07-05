@@ -85,7 +85,8 @@ where
         + std::marker::Send
         + std::marker::Sync
         + std::fmt::Display
-        + 'static,
+        + 'static
+        + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     // Handle NaN values according to policy
     let data = match nan_policy {
@@ -205,7 +206,8 @@ where
         + std::marker::Send
         + std::marker::Sync
         + std::fmt::Display
-        + 'static,
+        + 'static
+        + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     // Handle NaN values according to policy
     let (data_a, data_b) = match nan_policy {
@@ -374,7 +376,8 @@ where
         + std::marker::Send
         + std::marker::Sync
         + std::fmt::Display
-        + 'static,
+        + 'static
+        + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     // Handle NaN values and pair the data
     let paired_data = match nan_policy {

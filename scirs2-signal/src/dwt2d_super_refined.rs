@@ -1,4 +1,4 @@
-//! Ultra-refined 2D wavelet transforms with memory-efficient packet decomposition
+//! Advanced-refined 2D wavelet transforms with memory-efficient packet decomposition
 //!
 //! This module provides the most advanced 2D wavelet transform implementations with:
 //! - Memory-efficient streaming wavelet packet transforms
@@ -11,17 +11,17 @@
 //! - Advanced boundary condition handling with content-aware extension
 
 use crate::dwt::{Wavelet, WaveletFilters};
-use crate::dwt2d_enhanced::{BoundaryMode, Dwt2dConfig, Dwt2dQualityMetrics, EnhancedDwt2dResult};
+use crate::dwt2d_enhanced::{Dwt2dConfig, Dwt2dQualityMetrics};
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, Array3, ArrayView1};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use scirs2_core::simd_ops::PlatformCapabilities;
+use scirs2_core::validation::check_finite;
 use std::collections::HashMap;
 
-/// Ultra-refined 2D wavelet packet decomposition result
+/// Advanced-refined 2D wavelet packet decomposition result
 #[derive(Debug, Clone)]
-pub struct UltraRefinedWaveletPacketResult {
+pub struct AdvancedRefinedWaveletPacketResult {
     /// Wavelet packet coefficients organized by level and orientation
     pub coefficients: Array3<f64>, // [level][subband][data]
     /// Subband energy distribution
@@ -29,7 +29,7 @@ pub struct UltraRefinedWaveletPacketResult {
     /// Optimal decomposition tree structure
     pub decomposition_tree: DecompositionTree,
     /// Advanced quality metrics
-    pub quality_metrics: UltraRefinedQualityMetrics,
+    pub quality_metrics: AdvancedRefinedQualityMetrics,
     /// Memory usage statistics
     pub memory_stats: MemoryStatistics,
     /// Processing performance metrics
@@ -98,9 +98,9 @@ pub struct TreeTraversalStats {
     pub compression_ratio: f64,
 }
 
-/// Ultra-refined quality metrics
+/// Advanced-refined quality metrics
 #[derive(Debug, Clone)]
-pub struct UltraRefinedQualityMetrics {
+pub struct AdvancedRefinedQualityMetrics {
     /// Basic DWT quality metrics
     pub basic_metrics: Dwt2dQualityMetrics,
     /// Perceptual quality score
@@ -155,9 +155,9 @@ pub struct ProcessingMetrics {
     pub cache_hit_ratio: f64,
 }
 
-/// Configuration for ultra-refined wavelet processing
+/// Configuration for advanced-refined wavelet processing
 #[derive(Debug, Clone)]
-pub struct UltraRefinedConfig {
+pub struct AdvancedRefinedConfig {
     /// Base DWT configuration
     pub base_config: Dwt2dConfig,
     /// Maximum decomposition levels
@@ -198,7 +198,7 @@ pub struct QualityConfig {
     pub reference_image: Option<Array2<f64>>,
 }
 
-impl Default for UltraRefinedConfig {
+impl Default for AdvancedRefinedConfig {
     fn default() -> Self {
         Self {
             base_config: Dwt2dConfig::default(),
@@ -220,7 +220,7 @@ impl Default for UltraRefinedConfig {
     }
 }
 
-/// Ultra-refined 2D wavelet packet decomposition with memory efficiency and adaptive basis selection
+/// Advanced-refined 2D wavelet packet decomposition with memory efficiency and adaptive basis selection
 ///
 /// This function provides the most advanced 2D wavelet packet analysis with:
 /// - Memory-efficient streaming decomposition for arbitrarily large images
@@ -233,16 +233,16 @@ impl Default for UltraRefinedConfig {
 ///
 /// * `image` - Input 2D image/signal
 /// * `wavelet` - Wavelet type to use
-/// * `config` - Ultra-refined configuration parameters
+/// * `config` - Advanced-refined configuration parameters
 ///
 /// # Returns
 ///
-/// * Ultra-refined wavelet packet result with comprehensive analysis
+/// * Advanced-refined wavelet packet result with comprehensive analysis
 ///
 /// # Examples
 ///
 /// ```
-/// use scirs2_signal::dwt2d_ultra_refined::{ultra_refined_wavelet_packet_2d, UltraRefinedConfig};
+/// use scirs2_signal::dwt2d_advanced_refined::{advanced_refined_wavelet_packet_2d, AdvancedRefinedConfig};
 /// use scirs2_signal::dwt::Wavelet;
 /// use ndarray::Array2;
 ///
@@ -251,18 +251,18 @@ impl Default for UltraRefinedConfig {
 ///     ((i as f64 / 8.0).sin() * (j as f64 / 8.0).cos() + 1.0) / 2.0
 /// });
 ///
-/// let config = UltraRefinedConfig::default();
-/// let result = ultra_refined_wavelet_packet_2d(&image, &Wavelet::Daubechies4, &config).unwrap();
+/// let config = AdvancedRefinedConfig::default();
+/// let result = advanced_refined_wavelet_packet_2d(&image, &Wavelet::Daubechies4, &config).unwrap();
 ///
 /// assert!(result.quality_metrics.perceptual_quality > 0.0);
 /// assert!(result.memory_stats.memory_efficiency > 0.5);
 /// ```
 #[allow(dead_code)]
-pub fn ultra_refined_wavelet_packet_2d(
+pub fn advanced_refined_wavelet_packet_2d(
     image: &Array2<f64>,
     wavelet: &Wavelet,
-    config: &UltraRefinedConfig,
-) -> SignalResult<UltraRefinedWaveletPacketResult> {
+    config: &AdvancedRefinedConfig,
+) -> SignalResult<AdvancedRefinedWaveletPacketResult> {
     let start_time = std::time::Instant::now();
 
     // Input validation
@@ -299,7 +299,7 @@ pub fn ultra_refined_wavelet_packet_2d(
     let tree_build_time = decomposition_time.elapsed().as_secs_f64() * 1000.0;
 
     // Compute comprehensive quality metrics
-    let quality_metrics = compute_ultra_refined_quality_metrics(
+    let quality_metrics = compute_advanced_refined_quality_metrics(
         image,
         &processing_result,
         &decomposition_tree,
@@ -319,7 +319,7 @@ pub fn ultra_refined_wavelet_packet_2d(
         cache_hit_ratio: estimate_cache_efficiency(image.dim()),
     };
 
-    Ok(UltraRefinedWaveletPacketResult {
+    Ok(AdvancedRefinedWaveletPacketResult {
         coefficients: processing_result.coefficients,
         energy_map: processing_result.energy_map,
         decomposition_tree,
@@ -329,7 +329,7 @@ pub fn ultra_refined_wavelet_packet_2d(
     })
 }
 
-/// Ultra-refined inverse wavelet packet transform with perceptual optimization
+/// Advanced-refined inverse wavelet packet transform with perceptual optimization
 ///
 /// Reconstructs an image from wavelet packet coefficients with advanced optimization:
 /// - Perceptual quality optimization during reconstruction
@@ -347,11 +347,11 @@ pub fn ultra_refined_wavelet_packet_2d(
 ///
 /// * Reconstructed image with optimization metrics
 #[allow(dead_code)]
-pub fn ultra_refined_wavelet_packet_inverse_2d(
-    result: &UltraRefinedWaveletPacketResult,
+pub fn advanced_refined_wavelet_packet_inverse_2d(
+    result: &AdvancedRefinedWaveletPacketResult,
     wavelet: &Wavelet,
-    config: &UltraRefinedConfig,
-) -> SignalResult<UltraRefinedReconstructionResult> {
+    config: &AdvancedRefinedConfig,
+) -> SignalResult<AdvancedRefinedReconstructionResult> {
     let start_time = std::time::Instant::now();
 
     // Initialize reconstruction with perceptual optimization
@@ -379,7 +379,7 @@ pub fn ultra_refined_wavelet_packet_inverse_2d(
     let reconstruction_time = start_time.elapsed().as_secs_f64() * 1000.0;
     let reconstruction_metrics = compute_reconstruction_metrics(&reconstructed_image, result)?;
 
-    Ok(UltraRefinedReconstructionResult {
+    Ok(AdvancedRefinedReconstructionResult {
         image: reconstructed_image,
         reconstruction_time_ms: reconstruction_time,
         quality_metrics: reconstruction_metrics,
@@ -387,7 +387,7 @@ pub fn ultra_refined_wavelet_packet_inverse_2d(
     })
 }
 
-/// Advanced real-time denoising using ultra-refined wavelet analysis
+/// Advanced real-time denoising using advanced-refined wavelet analysis
 ///
 /// Provides state-of-the-art denoising with:
 /// - Multi-scale noise analysis and adaptive thresholding
@@ -405,24 +405,24 @@ pub fn ultra_refined_wavelet_packet_inverse_2d(
 ///
 /// * Denoised image with quality assessment
 #[allow(dead_code)]
-pub fn ultra_refined_denoise_2d(
+pub fn advanced_refined_denoise_2d(
     noisy_image: &Array2<f64>,
     wavelet: &Wavelet,
-    denoising_config: &UltraRefinedDenoisingConfig,
-) -> SignalResult<UltraRefinedDenoisingResult> {
+    denoising_config: &AdvancedRefinedDenoisingConfig,
+) -> SignalResult<AdvancedRefinedDenoisingResult> {
     let start_time = std::time::Instant::now();
 
     // Multi-scale noise analysis
     let noise_analysis = analyze_noise_characteristics(noisy_image, wavelet)?;
 
     // Adaptive wavelet packet decomposition
-    let config = UltraRefinedConfig {
+    let config = AdvancedRefinedConfig {
         adaptive_decomposition: true,
         cost_function: CostFunction::Sure,
         ..Default::default()
     };
 
-    let decomposition = ultra_refined_wavelet_packet_2d(noisy_image, wavelet, &config)?;
+    let decomposition = advanced_refined_wavelet_packet_2d(noisy_image, wavelet, &config)?;
 
     // Apply adaptive denoising based on noise analysis
     let denoised_coefficients = apply_adaptive_denoising(
@@ -433,7 +433,7 @@ pub fn ultra_refined_denoise_2d(
     )?;
 
     // Reconstruct with perceptual optimization
-    let reconstruction_config = UltraRefinedConfig {
+    let reconstruction_config = AdvancedRefinedConfig {
         quality_config: QualityConfig {
             compute_perceptual_metrics: true,
             reference_image: Some(noisy_image.clone()),
@@ -442,12 +442,12 @@ pub fn ultra_refined_denoise_2d(
         ..config
     };
 
-    let reconstruction_result = UltraRefinedWaveletPacketResult {
+    let reconstruction_result = AdvancedRefinedWaveletPacketResult {
         coefficients: denoised_coefficients,
         ..decomposition
     };
 
-    let denoised = ultra_refined_wavelet_packet_inverse_2d(
+    let denoised = advanced_refined_wavelet_packet_inverse_2d(
         &reconstruction_result,
         wavelet,
         &reconstruction_config,
@@ -458,7 +458,7 @@ pub fn ultra_refined_denoise_2d(
     let denoising_metrics =
         compute_denoising_quality_metrics(noisy_image, &denoised.image, &noise_analysis)?;
 
-    Ok(UltraRefinedDenoisingResult {
+    Ok(AdvancedRefinedDenoisingResult {
         denoised_image: denoised.image,
         noise_analysis,
         denoising_time_ms: denoising_time,
@@ -470,7 +470,7 @@ pub fn ultra_refined_denoise_2d(
 // Supporting structures and implementations
 
 #[derive(Debug, Clone)]
-pub struct UltraRefinedReconstructionResult {
+pub struct AdvancedRefinedReconstructionResult {
     pub image: Array2<f64>,
     pub reconstruction_time_ms: f64,
     pub quality_metrics: ReconstructionQualityMetrics,
@@ -485,7 +485,7 @@ pub struct ReconstructionQualityMetrics {
 }
 
 #[derive(Debug, Clone)]
-pub struct UltraRefinedDenoisingConfig {
+pub struct AdvancedRefinedDenoisingConfig {
     pub noise_variance: Option<f64>,
     pub threshold_method: ThresholdMethod,
     pub edge_preservation: f64,
@@ -501,7 +501,7 @@ pub enum ThresholdMethod {
 }
 
 #[derive(Debug, Clone)]
-pub struct UltraRefinedDenoisingResult {
+pub struct AdvancedRefinedDenoisingResult {
     pub denoised_image: Array2<f64>,
     pub noise_analysis: NoiseAnalysis,
     pub denoising_time_ms: f64,
@@ -589,11 +589,11 @@ impl MemoryTracker {
 }
 
 struct PerceptualReconstructionEngine {
-    config: UltraRefinedConfig,
+    config: AdvancedRefinedConfig,
 }
 
 impl PerceptualReconstructionEngine {
-    fn new(config: &UltraRefinedConfig) -> Self {
+    fn new(config: &AdvancedRefinedConfig) -> Self {
         Self {
             config: config.clone(),
         }
@@ -603,7 +603,7 @@ impl PerceptualReconstructionEngine {
 // Implementation of helper functions (simplified for brevity)
 
 #[allow(dead_code)]
-fn validate_input_image(image: &Array2<f64>, config: &UltraRefinedConfig) -> SignalResult<()> {
+fn validate_input_image(image: &Array2<f64>, config: &AdvancedRefinedConfig) -> SignalResult<()> {
     let (height, width) = image.dim();
 
     if height < 4 || width < 4 {
@@ -622,7 +622,7 @@ fn optimize_simd_configuration(caps: &PlatformCapabilities, level: SimdLevel) ->
     let acceleration_factor = match level {
         SimdLevel::None => 1.0,
         SimdLevel::Basic => {
-            if caps.has_sse4_1 {
+            if caps.sse4_1_available {
                 2.0
             } else {
                 1.0
@@ -631,14 +631,14 @@ fn optimize_simd_configuration(caps: &PlatformCapabilities, level: SimdLevel) ->
         SimdLevel::Advanced => {
             if caps.has_avx2 {
                 4.0
-            } else if caps.has_sse4_1 {
+            } else if caps.sse4_1_available {
                 2.0
             } else {
                 1.0
             }
         }
         SimdLevel::Aggressive => {
-            if caps.has_avx512 {
+            if caps.avx512_available {
                 8.0
             } else if caps.has_avx2 {
                 4.0
@@ -651,7 +651,7 @@ fn optimize_simd_configuration(caps: &PlatformCapabilities, level: SimdLevel) ->
     SimdConfiguration {
         acceleration_factor,
         use_fma: caps.has_avx2,
-        vectorization_width: if caps.has_avx512 {
+        vectorization_width: if caps.avx512_available {
             16
         } else if caps.has_avx2 {
             8
@@ -662,7 +662,7 @@ fn optimize_simd_configuration(caps: &PlatformCapabilities, level: SimdLevel) ->
 }
 
 #[allow(dead_code)]
-fn should_use_tiled_processing(image: &Array2<f64>, config: &UltraRefinedConfig) -> bool {
+fn should_use_tiled_processing(image: &Array2<f64>, config: &AdvancedRefinedConfig) -> bool {
     let (height, width) = image.dim();
     let image_size = height * width;
     let tile_size = config.tile_size.0 * config.tile_size.1;
@@ -674,7 +674,7 @@ fn should_use_tiled_processing(image: &Array2<f64>, config: &UltraRefinedConfig)
 fn process_image_tiled(
     image: &Array2<f64>,
     wavelet: &Wavelet,
-    config: &UltraRefinedConfig,
+    config: &AdvancedRefinedConfig,
     simd_config: &SimdConfiguration,
     memory_tracker: &mut MemoryTracker,
 ) -> SignalResult<ProcessingResult> {
@@ -739,7 +739,7 @@ fn process_image_tiled(
 fn process_image_whole(
     image: &Array2<f64>,
     wavelet: &Wavelet,
-    config: &UltraRefinedConfig,
+    config: &AdvancedRefinedConfig,
     simd_config: &SimdConfiguration,
     memory_tracker: &mut MemoryTracker,
 ) -> SignalResult<ProcessingResult> {
@@ -1127,7 +1127,7 @@ fn process_tiles_parallel(
     tile_w: usize,
     overlap: usize,
     wavelet: &Wavelet,
-    config: &UltraRefinedConfig,
+    config: &AdvancedRefinedConfig,
     simd_config: &SimdConfiguration,
 ) -> SignalResult<f64> {
     // Simplified parallel processing - would use rayon in full implementation
@@ -1145,7 +1145,7 @@ fn process_tiles_sequential(
     tile_w: usize,
     overlap: usize,
     wavelet: &Wavelet,
-    config: &UltraRefinedConfig,
+    config: &AdvancedRefinedConfig,
     simd_config: &SimdConfiguration,
 ) -> SignalResult<f64> {
     // Sequential processing
@@ -1473,12 +1473,12 @@ fn estimate_subband_size(coefficients: &Array3<f64>, level: usize) -> usize {
 }
 
 #[allow(dead_code)]
-fn compute_ultra_refined_quality_metrics(
+fn compute_advanced_refined_quality_metrics(
     original_image: &Array2<f64>,
     processing_result: &ProcessingResult,
     decomposition_tree: &DecompositionTree,
     quality_config: &QualityConfig,
-) -> SignalResult<UltraRefinedQualityMetrics> {
+) -> SignalResult<AdvancedRefinedQualityMetrics> {
     // Compute basic metrics
     let approx_energy = compute_approximation_energy(&processing_result.coefficients);
     let detail_energy = compute_detail_energy(&processing_result.coefficients);
@@ -1528,7 +1528,7 @@ fn compute_ultra_refined_quality_metrics(
         }
     };
 
-    Ok(UltraRefinedQualityMetrics {
+    Ok(AdvancedRefinedQualityMetrics {
         basic_metrics,
         perceptual_quality,
         ssim,
@@ -2036,7 +2036,7 @@ fn reconstruct_image_standard(
 #[allow(dead_code)]
 fn compute_reconstruction_metrics(
     image: &Array2<f64>,
-    result: &UltraRefinedWaveletPacketResult,
+    result: &AdvancedRefinedWaveletPacketResult,
 ) -> SignalResult<ReconstructionQualityMetrics> {
     Ok(ReconstructionQualityMetrics {
         reconstruction_error: 0.01,
@@ -2070,7 +2070,7 @@ fn apply_adaptive_denoising(
     coefficients: &Array3<f64>,
     noise_analysis: &NoiseAnalysis,
     tree: &DecompositionTree,
-    config: &UltraRefinedDenoisingConfig,
+    config: &AdvancedRefinedDenoisingConfig,
 ) -> SignalResult<Array3<f64>> {
     Ok(coefficients.clone()) // Placeholder - would apply sophisticated denoising
 }
@@ -2110,13 +2110,13 @@ mod tests {
     use crate::dwt::Wavelet;
 
     #[test]
-    fn test_ultra_refined_wavelet_packet_2d() {
+    fn test_advanced_refined_wavelet_packet_2d() {
         let image = Array2::from_shape_fn((64, 64), |(i, j)| {
             ((i as f64 / 8.0).sin() * (j as f64 / 8.0).cos() + 1.0) / 2.0
         });
 
-        let config = UltraRefinedConfig::default();
-        let result = ultra_refined_wavelet_packet_2d(&image, &Wavelet::Daubechies4, &config);
+        let config = AdvancedRefinedConfig::default();
+        let result = advanced_refined_wavelet_packet_2d(&image, &Wavelet::Daubechies4, &config);
 
         assert!(result.is_ok());
         let packet_result = result.unwrap();

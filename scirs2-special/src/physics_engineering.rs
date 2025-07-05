@@ -43,7 +43,7 @@
 //! uₒₗₐₛₛᵢₓₐₗ(ν,T) = (8πν²/c³) kT
 //! ```
 //!
-//! **Problem**: This leads to the ultraviolet catastrophe (infinite energy).
+//! **Problem**: This leads to the advancedviolet catastrophe (infinite energy).
 //!
 //! **Planck's Solution**: Quantize energy in discrete packets E = hν:
 //!

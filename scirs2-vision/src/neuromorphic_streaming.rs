@@ -1,6 +1,6 @@
 //! Neuromorphic streaming processing for brain-inspired computer vision
 //!
-//! This module implements neuromorphic computing principles for ultra-efficient
+//! This module implements neuromorphic computing principles for advanced-efficient
 //! streaming processing, inspired by biological neural networks and spiking neurons.
 //!
 //! # Features
@@ -954,8 +954,8 @@ pub enum NeuromorphicMode {
     HighAccuracy,
     /// Balanced mode with selective processing
     Balanced,
-    /// Ultra-efficient mode with maximum sparsity
-    UltraEfficient,
+    /// Advanced-efficient mode with maximum sparsity
+    AdvancedEfficient,
 }
 
 /// Adaptation parameters for neuromorphic processing
@@ -1030,7 +1030,7 @@ impl AdaptiveNeuromorphicPipeline {
                     self.event_processor.process(frame)?
                 }
             }
-            NeuromorphicMode::UltraEfficient => {
+            NeuromorphicMode::AdvancedEfficient => {
                 // Event-driven processing only
                 self.event_processor.process(frame)?
             }
@@ -1105,10 +1105,10 @@ impl AdaptiveNeuromorphicPipeline {
                 } else if avg_energy < self.adaptation_params.energy_budget * 0.5
                     && avg_speed > 60.0
                 {
-                    self.processing_mode = NeuromorphicMode::UltraEfficient;
+                    self.processing_mode = NeuromorphicMode::AdvancedEfficient;
                 }
             }
-            NeuromorphicMode::UltraEfficient => {
+            NeuromorphicMode::AdvancedEfficient => {
                 if avg_accuracy < self.adaptation_params.min_accuracy * 0.8 {
                     self.processing_mode = NeuromorphicMode::Balanced;
                 }

@@ -1,4 +1,4 @@
-//! Simple advanced Mode Validation Test
+//! Simple Advanced Mode Validation Test
 //!
 //! A minimal test to validate that the advanced mode implementations
 //! compile correctly and core functionality works as expected.
@@ -9,15 +9,15 @@ use scirs2_io::error::Result;
 
 #[allow(dead_code)]
 fn main() -> Result<()> {
-    println!("🔍 Simple advanced Mode Validation");
+    println!("🔍 Simple Advanced Mode Validation");
     println!("=====================================\n");
 
-    // Test 1: Create advanced Coordinator
-    println!("Test 1: advanced Coordinator Creation");
+    // Test 1: Create Advanced Coordinator
+    println!("Test 1: Advanced Coordinator Creation");
     match AdvancedCoordinator::new() {
-        Ok(_coordinator) => println!("✅ PASS: advanced Coordinator created successfully"),
+        Ok(_coordinator) => println!("✅ PASS: Advanced Coordinator created successfully"),
         Err(e) => {
-            println!("❌ FAIL: advanced Coordinator creation failed: {}", e);
+            println!("❌ FAIL: Advanced Coordinator creation failed: {}", e);
             return Err(e);
         }
     }

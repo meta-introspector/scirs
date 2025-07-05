@@ -114,7 +114,6 @@ impl<F: Float + ScalarOperand> LassoOptimizer<F> {
                 return Ok(OptimizeResult {
                     x: x_prox.mapv(|v| v.into()),
                     fun: F::zero(),
-                    iterations: iter,
                     nit: iter,
                     func_evals: iter,
                     nfev: iter,
@@ -225,7 +224,6 @@ impl<F: Float + ScalarOperand> GroupLassoOptimizer<F> {
                 return Ok(OptimizeResult {
                     x: x_prox.mapv(|v| v.into()),
                     fun: F::zero(),
-                    iterations: iter,
                     nit: iter,
                     func_evals: iter,
                     nfev: iter,
@@ -317,7 +315,6 @@ impl<F: Float + ScalarOperand> ElasticNetOptimizer<F> {
                 return Ok(OptimizeResult {
                     x: x_prox.mapv(|v| v.into()),
                     fun: F::zero(),
-                    iterations: iter,
                     nit: iter,
                     func_evals: iter,
                     nfev: iter,
@@ -425,7 +422,6 @@ impl<F: Float + ScalarOperand> ADMMOptimizer<F> {
                 return Ok(OptimizeResult {
                     x: x.mapv(|v| v.into()),
                     fun: F::zero(),
-                    iterations: iter,
                     nit: iter,
                     func_evals: iter,
                     nfev: iter,
@@ -523,7 +519,6 @@ impl<F: Float + ScalarOperand> CoordinateDescentOptimizer<F> {
                 return Ok(OptimizeResult {
                     x: x.mapv(|v| v.into()),
                     fun: final_obj,
-                    iterations: iter,
                     nit: iter,
                     func_evals: iter * n,
                     nfev: iter * n,

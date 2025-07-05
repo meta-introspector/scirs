@@ -42,8 +42,7 @@ use num_traits::{Float, NumCast};
 #[allow(dead_code)]
 pub fn shapiro_wilk<F>(x: &ArrayView1<F>) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
     // Check if the input array is empty
     if x.is_empty() {
@@ -98,8 +97,7 @@ where
 #[allow(dead_code)]
 fn compute_shapiro_wilk_statistic<F>(sorted_data: &[F], n: usize) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
     // Calculate a coefficients for the test
     let a = calculate_shapiro_wilk_coefficients(n)?;
@@ -354,8 +352,7 @@ fn approx_normal_cdf(z: f64) -> f64 {
 #[allow(dead_code)]
 pub fn anderson_darling<F>(x: &ArrayView1<F>) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
     // Check if the input array is empty
     if x.is_empty() {
@@ -407,8 +404,7 @@ where
 #[allow(dead_code)]
 fn compute_anderson_darling_statistic<F>(z_data: &[F], n: usize) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
     let n_f = F::from(n).unwrap();
 
@@ -499,8 +495,7 @@ fn calculate_anderson_darling_p_value<F: Float + NumCast>(a_squared: F) -> F {
 #[allow(dead_code)]
 pub fn dagostino_k2<F>(x: &ArrayView1<F>) -> StatsResult<(F, F)>
 where
-    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast
-        + std::fmt::Display,
+    F: Float + std::iter::Sum<F> + std::ops::Div<Output = F> + NumCast + std::fmt::Display,
 {
     // Check if the input array is empty
     if x.is_empty() {
@@ -558,8 +553,7 @@ where
 #[allow(dead_code)]
 fn calculate_dagostino_test_statistics<F>(g1: F, g2: F, n: usize) -> StatsResult<(F, F)>
 where
-    F: Float + NumCast
-        + std::fmt::Display,
+    F: Float + NumCast + std::fmt::Display,
 {
     let _n_f = F::from(n).unwrap();
 

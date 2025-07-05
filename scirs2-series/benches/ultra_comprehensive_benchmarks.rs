@@ -1,4 +1,4 @@
-//! Ultra-Comprehensive Performance Benchmarks for scirs2-series
+//! Advanced-Comprehensive Performance Benchmarks for scirs2-series
 //!
 //! This benchmark suite provides extensive performance testing across all major time series
 //! analysis functions with multiple scenarios, stress testing, and comparative analysis.
@@ -227,10 +227,10 @@ pub mod data_generators {
     }
 }
 
-/// Ultra-comprehensive anomaly detection benchmarks
+/// Advanced-comprehensive anomaly detection benchmarks
 #[allow(dead_code)]
-fn ultra_bench_anomaly_detection(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultra_anomaly_detection");
+fn advanced_bench_anomaly_detection(c: &mut Criterion) {
+    let mut group = c.benchmark_group("advanced_anomaly_detection");
     group.sample_size(50);
 
     let configs = [
@@ -293,10 +293,10 @@ fn ultra_bench_anomaly_detection(c: &mut Criterion) {
     group.finish();
 }
 
-/// Ultra-comprehensive forecasting benchmarks with multiple models
+/// Advanced-comprehensive forecasting benchmarks with multiple models
 #[allow(dead_code)]
-fn ultra_bench_forecasting(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultra_forecasting");
+fn advanced_bench_forecasting(c: &mut Criterion) {
+    let mut group = c.benchmark_group("advanced_forecasting");
     group.sample_size(30);
 
     let scenarios = [
@@ -383,8 +383,8 @@ fn ultra_bench_forecasting(c: &mut Criterion) {
 
 /// Advanced meta-learning and neural ODE benchmarks
 #[allow(dead_code)]
-fn ultra_bench_advanced_training(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultra_advanced_training");
+fn advanced_bench_advanced_training(c: &mut Criterion) {
+    let mut group = c.benchmark_group("advanced_advanced_training");
     group.sample_size(20);
 
     let task_scenarios = [
@@ -491,8 +491,8 @@ fn ultra_bench_advanced_training(c: &mut Criterion) {
 
 /// Comprehensive scalability and stress testing
 #[allow(dead_code)]
-fn ultra_bench_scalability(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultra_scalability");
+fn advanced_bench_scalability(c: &mut Criterion) {
+    let mut group = c.benchmark_group("advanced_scalability");
     group.sample_size(20);
 
     // Extreme data sizes for scalability testing
@@ -548,8 +548,8 @@ fn ultra_bench_scalability(c: &mut Criterion) {
 
 /// Cross-domain application benchmarks
 #[allow(dead_code)]
-fn ultra_bench_domain_applications(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultra_domain_applications");
+fn advanced_bench_domain_applications(c: &mut Criterion) {
+    let mut group = c.benchmark_group("advanced_domain_applications");
     group.sample_size(30);
 
     // Biomedical signal processing
@@ -608,8 +608,8 @@ fn ultra_bench_domain_applications(c: &mut Criterion) {
 
 /// Comparative performance analysis across different implementations
 #[allow(dead_code)]
-fn ultra_bench_comparative_analysis(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultra_comparative_analysis");
+fn advanced_bench_comparative_analysis(c: &mut Criterion) {
+    let mut group = c.benchmark_group("advanced_comparative_analysis");
     group.sample_size(50);
 
     let test_sizes = [1_000, 10_000, 50_000];
@@ -671,8 +671,8 @@ fn ultra_bench_comparative_analysis(c: &mut Criterion) {
 
 /// Memory usage profiling benchmarks
 #[allow(dead_code)]
-fn ultra_bench_memory_profiling(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultra_memory_profiling");
+fn advanced_bench_memory_profiling(c: &mut Criterion) {
+    let mut group = c.benchmark_group("advanced_memory_profiling");
     group.sample_size(20);
 
     // Test memory efficiency of different algorithms
@@ -712,8 +712,8 @@ fn ultra_bench_memory_profiling(c: &mut Criterion) {
 
 /// Error handling and robustness benchmarks
 #[allow(dead_code)]
-fn ultra_bench_robustness(c: &mut Criterion) {
-    let mut group = c.benchmark_group("ultra_robustness");
+fn advanced_bench_robustness(c: &mut Criterion) {
+    let mut group = c.benchmark_group("advanced_robustness");
     group.sample_size(30);
 
     // Test with various data quality issues
@@ -790,15 +790,15 @@ fn generate_synthetic_data(size: usize, noise_level: f64) -> Array1<f64> {
 
 // Benchmark groups
 criterion_group!(
-    ultra_benchmarks,
-    ultra_bench_anomaly_detection,
-    ultra_bench_forecasting,
-    ultra_bench_advanced_training,
-    ultra_bench_scalability,
-    ultra_bench_domain_applications,
-    ultra_bench_comparative_analysis,
-    ultra_bench_memory_profiling,
-    ultra_bench_robustness,
+    advanced_benchmarks,
+    advanced_bench_anomaly_detection,
+    advanced_bench_forecasting,
+    advanced_bench_advanced_training,
+    advanced_bench_scalability,
+    advanced_bench_domain_applications,
+    advanced_bench_comparative_analysis,
+    advanced_bench_memory_profiling,
+    advanced_bench_robustness,
 );
 
-criterion_main!(ultra_benchmarks);
+criterion_main!(advanced_benchmarks);

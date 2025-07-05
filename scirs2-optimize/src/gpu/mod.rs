@@ -121,7 +121,7 @@ impl GpuOptimizationContext {
     /// Transfer data from CPU to GPU using scirs2-core GPU abstractions
     pub fn transfer_to_gpu<T>(&self, data: &Array2<T>) -> ScirsResult<OptimGpuArray<T>>
     where
-        T: Clone + Send + Sync + 'static,
+        T: Clone + Send + Sync + 'static + scirs2_core::GpuDataType,
     {
         // Use scirs2-core GPU array creation
         let shape = data.dim();
@@ -136,7 +136,7 @@ impl GpuOptimizationContext {
     /// Transfer data from GPU to CPU using scirs2-core GPU abstractions
     pub fn transfer_from_gpu<T>(&self, gpu_data: &OptimGpuArray<T>) -> ScirsResult<Array2<T>>
     where
-        T: Clone + Send + Sync + Default + 'static,
+        T: Clone + Send + Sync + Default + 'static + scirs2_core::GpuDataType,
     {
         // Get shape from GPU array
         let shape = gpu_data.shape();
@@ -154,7 +154,7 @@ impl GpuOptimizationContext {
     /// Upload array to GPU (alias for transfer_to_gpu)
     pub fn upload_array<T>(&self, data: &Array2<T>) -> ScirsResult<OptimGpuArray<T>>
     where
-        T: Clone + Send + Sync + 'static,
+        T: Clone + Send + Sync + 'static + scirs2_core::GpuDataType,
     {
         self.transfer_to_gpu(data)
     }
@@ -162,7 +162,7 @@ impl GpuOptimizationContext {
     /// Download array from GPU (alias for transfer_from_gpu)
     pub fn download_array<T>(&self, gpu_data: &OptimGpuArray<T>) -> ScirsResult<Array2<T>>
     where
-        T: Clone + Send + Sync + Default + 'static,
+        T: Clone + Send + Sync + Default + 'static + scirs2_core::GpuDataType,
     {
         self.transfer_from_gpu(gpu_data)
     }
@@ -252,7 +252,7 @@ pub mod algorithms {
     pub struct GpuDifferentialEvolution {
         context: GpuOptimizationContext,
         population_size: usize,
-        max_iterations: usize,
+        max_nit: usize,
         f_scale: f64,
         crossover_rate: f64,
     }
@@ -262,12 +262,12 @@ pub mod algorithms {
         pub fn new(
             context: GpuOptimizationContext,
             population_size: usize,
-            max_iterations: usize,
+            max_nit: usize,
         ) -> Self {
             Self {
                 context,
                 population_size,
-                max_iterations,
+                max_nit,
                 f_scale: 0.8,
                 crossover_rate: 0.7,
             }
@@ -311,7 +311,7 @@ pub mod algorithms {
 
             let mut function_evaluations = self.population_size;
 
-            for iteration in 0..self.max_iterations {
+            for iteration in 0..self.max_nit {
                 // Generate trial population using GPU kernels
                 let trial_population = self.generate_trial_population_gpu(&population)?;
                 let trial_fitness = self.evaluate_population_gpu(function, &trial_population)?;
@@ -351,7 +351,7 @@ pub mod algorithms {
                 fun: best_fitness,
                 success: true,
                 message: "GPU differential evolution completed".to_string(),
-                iterations: self.max_iterations,
+                nit: self.max_nit,
                 function_evaluations,
                 ..OptimizeResults::default()
             })
@@ -367,7 +367,7 @@ pub mod algorithms {
             for i in 0..self.population_size {
                 for j in 0..dims {
                     let (low, high) = bounds[j];
-                    population[[i, j]] = rng.random_range(low..=high);
+                    population[[i, j]] = rng.gen_range(low..=high);
                 }
             }
 
@@ -401,7 +401,7 @@ pub mod algorithms {
                 // Select three random individuals different from current
                 let mut indices = Vec::new();
                 while indices.len() < 3 {
-                    let idx = rng.random_range(0..pop_size);
+                    let idx = rng.gen_range(0..pop_size);
                     if idx != i && !indices.contains(&idx) {
                         indices.push(idx);
                     }
@@ -410,9 +410,9 @@ pub mod algorithms {
                 let [a, b, c] = [indices[0], indices[1], indices[2]];
 
                 // Mutation and crossover
-                let j_rand = rng.random_range(0..dims);
+                let j_rand = rng.gen_range(0..dims);
                 for j in 0..dims {
-                    if rng.random_range(0.0..1.0) < self.crossover_rate || j == j_rand {
+                    if rng.gen_range(0.0..1.0) < self.crossover_rate || j == j_rand {
                         trial_population[[i, j]] = population[[a, j]]
                             + self.f_scale * (population[[b, j]] - population[[c, j]]);
                     } else {
@@ -454,7 +454,7 @@ pub mod algorithms {
     pub struct GpuParticleSwarm {
         context: GpuOptimizationContext,
         swarm_size: usize,
-        max_iterations: usize,
+        max_nit: usize,
         w: f64,  // Inertia weight
         c1: f64, // Cognitive parameter
         c2: f64, // Social parameter
@@ -462,15 +462,11 @@ pub mod algorithms {
 
     impl GpuParticleSwarm {
         /// Create a new GPU-accelerated particle swarm optimizer
-        pub fn new(
-            context: GpuOptimizationContext,
-            swarm_size: usize,
-            max_iterations: usize,
-        ) -> Self {
+        pub fn new(context: GpuOptimizationContext, swarm_size: usize, max_nit: usize) -> Self {
             Self {
                 context,
                 swarm_size,
-                max_iterations,
+                max_nit,
                 w: 0.729,
                 c1: 1.49445,
                 c2: 1.49445,
@@ -515,7 +511,7 @@ pub mod algorithms {
 
             let mut function_evaluations = self.swarm_size;
 
-            for iteration in 0..self.max_iterations {
+            for iteration in 0..self.max_nit {
                 // Update velocities and positions on GPU
                 self.update_swarm_gpu(
                     &mut positions,
@@ -559,7 +555,7 @@ pub mod algorithms {
                 fun: global_best_fitness,
                 success: true,
                 message: "GPU particle swarm optimization completed".to_string(),
-                iterations: self.max_iterations,
+                nit: self.max_nit,
                 function_evaluations,
                 ..OptimizeResults::default()
             })
@@ -575,7 +571,7 @@ pub mod algorithms {
             for i in 0..self.swarm_size {
                 for j in 0..dims {
                     let (low, high) = bounds[j];
-                    positions[[i, j]] = rng.random_range(low..=high);
+                    positions[[i, j]] = rng.gen_range(low..=high);
                 }
             }
 
@@ -608,8 +604,8 @@ pub mod algorithms {
 
             for i in 0..swarm_size {
                 for j in 0..dims {
-                    let r1: f64 = rng.random_range(0.0..1.0);
-                    let r2: f64 = rng.random_range(0.0..1.0);
+                    let r1: f64 = rng.gen_range(0.0..1.0);
+                    let r2: f64 = rng.gen_range(0.0..1.0);
 
                     // Update velocity
                     velocities[[i, j]] = self.w * velocities[[i, j]]

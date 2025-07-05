@@ -1345,8 +1345,8 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_fast_memory_pool() {
-        let mut pool = UltraFastMemoryPool::new(100, 10, 2);
+    fn test_optimized_memory_pool() {
+        let mut pool = AdvancedMemoryPool::new(100, 10, 2);
 
         // Test buffer allocation and reuse
         let buffer1 = pool.get_array(50, 5);
@@ -1372,7 +1372,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_fast_pca_small_data() {
+    fn test_optimized_pca_small_data() {
         let data = Array2::from_shape_vec(
             (20, 8),
             (0..160)
@@ -1381,7 +1381,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut pca = UltraFastPCA::new(3, 100, 50);
+        let mut pca = AdvancedPCA::new(3, 100, 50);
         let transformed = pca.fit_transform(&data.view()).unwrap();
 
         assert_eq!(transformed.shape(), &[20, 3]);
@@ -1397,7 +1397,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_fast_pca_large_data() {
+    fn test_optimized_pca_large_data() {
         // Test with larger data to trigger block-wise algorithm
         let data = Array2::from_shape_vec(
             (15000, 600),
@@ -1407,7 +1407,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut pca = UltraFastPCA::new(50, 20000, 1000);
+        let mut pca = AdvancedPCA::new(50, 20000, 1000);
         let result = pca.fit(&data.view());
         assert!(result.is_ok());
 
@@ -1421,7 +1421,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_fast_pca_very_large_data() {
+    fn test_optimized_pca_very_large_data() {
         // Test with very large data to trigger randomized SVD
         let data = Array2::from_shape_vec(
             (60000, 1200),
@@ -1434,7 +1434,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut pca = UltraFastPCA::new(20, 100000, 2000);
+        let mut pca = AdvancedPCA::new(20, 100000, 2000);
         let result = pca.fit(&data.view());
         assert!(result.is_ok());
 
@@ -1447,7 +1447,7 @@ mod tests {
 
     #[test]
     fn test_qr_decomposition_optimized() {
-        let pca = UltraFastPCA::new(5, 100, 50);
+        let pca = AdvancedPCA::new(5, 100, 50);
 
         // Test QR decomposition on a simple matrix
         let matrix = Array2::from_shape_vec(
@@ -1481,7 +1481,7 @@ mod tests {
 
     #[test]
     fn test_svd_small_matrix() {
-        let pca = UltraFastPCA::new(3, 100, 50);
+        let pca = AdvancedPCA::new(3, 100, 50);
 
         // Test SVD on a known matrix
         let matrix = Array2::from_shape_vec(
@@ -1510,14 +1510,14 @@ mod tests {
 
         for i in 0..4 {
             for j in 0..3 {
-                assert!((matrix[[i, j]] - reconstructed[[i, j]]).abs() < 1e-10);
+                assert!((matrix[[i, j]] - reconstructed[[i, j]]).abs() < 1e-10_f64);
             }
         }
     }
 
     #[test]
     fn test_memory_pool_optimization() {
-        let mut pool = UltraFastMemoryPool::new(1000, 100, 4);
+        let mut pool = AdvancedMemoryPool::new(1000, 100, 4);
 
         // Simulate some usage patterns
         for i in 0..10 {
@@ -1537,7 +1537,7 @@ mod tests {
 
     #[test]
     fn test_performance_stats_accuracy() {
-        let mut pool = UltraFastMemoryPool::new(100, 10, 2);
+        let mut pool = AdvancedMemoryPool::new(100, 10, 2);
 
         // Test with known timing
         let test_time_ns = 2_000_000_000; // 2 seconds
@@ -1555,7 +1555,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ultra_fast_pca_numerical_stability() {
+    fn test_optimized_pca_numerical_stability() {
         // Test with data that could cause numerical issues
         let mut data = Array2::zeros((100, 10));
 
@@ -1570,7 +1570,7 @@ mod tests {
             }
         }
 
-        let mut pca = UltraFastPCA::new(5, 200, 20);
+        let mut pca = AdvancedPCA::new(5, 200, 20);
         let result = pca.fit_transform(&data.view());
 
         assert!(result.is_ok());
@@ -1584,8 +1584,8 @@ mod tests {
     }
 
     #[test]
-    fn test_enhanced_standard_scaler_vs_ultra_fast_pca() {
-        // Compare enhanced scaler with ultra fast PCA preprocessing
+    fn test_enhanced_standard_scaler_vs_optimized_pca() {
+        // Compare enhanced scaler with optimized PCA preprocessing
         let data = Array2::from_shape_vec(
             (200, 15),
             (0..3000)
@@ -1599,7 +1599,7 @@ mod tests {
         let scaled_data = scaler.fit_transform(&data.view()).unwrap();
 
         // Apply PCA to scaled data
-        let mut pca = UltraFastPCA::new(10, 300, 20);
+        let mut pca = AdvancedPCA::new(10, 300, 20);
         let pca_result = pca.fit_transform(&scaled_data.view()).unwrap();
 
         assert_eq!(pca_result.shape(), &[200, 10]);
@@ -1611,10 +1611,10 @@ mod tests {
         assert!(total_explained <= 1.0 + 1e-10);
     }
 }
-// REMOVED: Duplicate UltraFastMemoryPool - keeping the advanced version below
+// REMOVED: Duplicate AdvancedMemoryPool - keeping the advanced version below
 /*
-/// Ultra-high performance memory pool for repeated transformations
-pub struct UltraFastMemoryPool {
+/// High performance memory pool for repeated transformations
+pub struct AdvancedMemoryPool {
     /// Pre-allocated transformation buffers
     transform_buffers: Vec<Array2<f64>>,
     /// Pre-allocated temporary arrays
@@ -1642,8 +1642,8 @@ pub struct PerformanceStats {
     pub throughput_samples_per_sec: f64,
 }
 
-impl UltraFastMemoryPool {
-    /// Create a new ultra-fast memory pool
+impl AdvancedMemoryPool {
+    /// Create a new optimized memory pool
     pub fn new(max_samples: usize, max_features: usize, max_concurrent: usize) -> Self {
         let mut transform_buffers = Vec::with_capacity(max_concurrent);
         let mut temp_arrays = Vec::with_capacity(max_concurrent * 4);
@@ -1662,7 +1662,7 @@ impl UltraFastMemoryPool {
             max_concurrent * max_samples * max_features * std::mem::size_of::<f64>()
                 + max_concurrent * 4 * max_features.max(max_samples) * std::mem::size_of::<f64>();
 
-        UltraFastMemoryPool {
+        AdvancedMemoryPool {
             transform_buffers,
             temp_arrays,
             current_buffer_idx: std::cell::Cell::new(0),
@@ -1848,8 +1848,8 @@ impl UltraFastMemoryPool {
     }
 }
 
-/// Ultra-optimized PCA with memory pool and SIMD acceleration
-pub struct UltraFastPCA {
+/// Optimized PCA with memory pool and SIMD acceleration
+pub struct AdvancedPCA {
     /// Number of components
     n_components: usize,
     /// Fitted components
@@ -1859,20 +1859,20 @@ pub struct UltraFastPCA {
     /// Explained variance ratio
     explained_variance_ratio: Option<Array1<f64>>,
     /// Memory pool for high-performance processing
-    memory_pool: UltraFastMemoryPool,
+    memory_pool: AdvancedMemoryPool,
     /// Performance monitoring
     enable_profiling: bool,
 }
 
-impl UltraFastPCA {
-    /// Create new ultra-fast PCA with memory optimization
+impl AdvancedPCA {
+    /// Create new optimized PCA with memory optimization
     pub fn new(n_components: usize, max_samples: usize, max_features: usize) -> Self {
-        UltraFastPCA {
+        AdvancedPCA {
             n_components,
             components: None,
             mean: None,
             explained_variance_ratio: None,
-            memory_pool: UltraFastMemoryPool::new(max_samples, max_features, 4),
+            memory_pool: AdvancedMemoryPool::new(max_samples, max_features, 4),
             enable_profiling: true,
         }
     }
@@ -1897,7 +1897,7 @@ impl UltraFastPCA {
         }
     }
 
-    /// Fit ultra-fast PCA with advanced algorithms
+    /// Fit optimized PCA with advanced algorithms
     pub fn fit(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         check_not_empty(x, "x")?;
 
@@ -1936,7 +1936,7 @@ impl UltraFastPCA {
             self.fit_simd_optimized_pca(x)
         } else {
             // Use standard algorithm
-            self.fit_standard_ultra_pca(x)
+            self.fit_standard_advanced_pca(x)
         };
 
         // Update performance statistics
@@ -2090,8 +2090,8 @@ impl UltraFastPCA {
         Ok(())
     }
 
-    /// Standard ultra-optimized PCA
-    fn fit_standard_ultra_pca(&mut self, x: &ArrayView2<f64>) -> Result<()> {
+    /// Standard advanced-optimized PCA
+    fn fit_standard_advanced_pca(&mut self, x: &ArrayView2<f64>) -> Result<()> {
         let (n_samples, n_features) = x.dim();
 
         // Center data
@@ -2151,11 +2151,11 @@ impl UltraFastPCA {
         let components = self
             .components
             .as_ref()
-            .ok_or_else(|| TransformError::NotFitted("UltraFastPCA not fitted".to_string()))?;
+            .ok_or_else(|| TransformError::NotFitted("AdvancedPCA not fitted".to_string()))?;
         let mean = self
             .mean
             .as_ref()
-            .ok_or_else(|| TransformError::NotFitted("UltraFastPCA not fitted".to_string()))?;
+            .ok_or_else(|| TransformError::NotFitted("AdvancedPCA not fitted".to_string()))?;
 
         check_not_empty(x, "x")?;
 
@@ -2844,9 +2844,9 @@ impl CacheOptimizedAlgorithms {
 }
 */
 
-/// ✅ Advanced MODE: Advanced memory pool for ultra-fast processing
+/// ✅ Advanced MODE: Advanced memory pool for fast processing
 /// This provides cache-efficient memory management for repeated transformations
-pub struct UltraFastMemoryPool {
+pub struct AdvancedMemoryPool {
     /// Pre-allocated matrices pool for different sizes
     matrix_pools: std::collections::HashMap<(usize, usize), Vec<Array2<f64>>>,
     /// Pre-allocated vector pools for different sizes  
@@ -2882,12 +2882,14 @@ pub struct PoolStats {
     pub total_transform_time_ns: u64,
     /// Average processing throughput (samples/second)
     pub throughput_samples_per_sec: f64,
+    /// Cache hit rate (0.0 to 1.0)
+    pub cache_hit_rate: f64,
 }
 
-impl UltraFastMemoryPool {
+impl AdvancedMemoryPool {
     /// Create a new memory pool with specified limits
     pub fn new(max_matrices: usize, max_vectors: usize, initial_capacity: usize) -> Self {
-        let mut pool = UltraFastMemoryPool {
+        let mut pool = AdvancedMemoryPool {
             matrix_pools: std::collections::HashMap::with_capacity(initial_capacity),
             vector_pools: std::collections::HashMap::with_capacity(initial_capacity),
             max_matrices_per_size: max_matrices,
@@ -2903,6 +2905,7 @@ impl UltraFastMemoryPool {
                 transform_count: 0,
                 total_transform_time_ns: 0,
                 throughput_samples_per_sec: 0.0,
+                cache_hit_rate: 0.0,
             },
         };
 
@@ -3024,6 +3027,9 @@ impl UltraFastMemoryPool {
         if self.stats.total_memory_mb > self.stats.peak_memory_mb {
             self.stats.peak_memory_mb = self.stats.total_memory_mb;
         }
+
+        // Update cache hit rate
+        self.update_cache_hit_rate();
     }
 
     /// Get current pool statistics
@@ -3038,6 +3044,11 @@ impl UltraFastMemoryPool {
         } else {
             self.stats.pool_hits as f64 / self.stats.total_allocations as f64
         }
+    }
+
+    /// Update cache hit rate in stats
+    fn update_cache_hit_rate(&mut self) {
+        self.stats.cache_hit_rate = self.efficiency();
     }
 
     /// Update performance statistics
@@ -3091,12 +3102,27 @@ impl UltraFastMemoryPool {
 
         self.update_memory_stats();
     }
+
+    /// Get array from pool (alias for get_matrix)
+    pub fn get_array(&mut self, rows: usize, cols: usize) -> Array2<f64> {
+        self.get_matrix(rows, cols)
+    }
+
+    /// Return array to pool (alias for return_matrix)
+    pub fn return_array(&mut self, array: Array2<f64>) {
+        self.return_matrix(array);
+    }
+
+    /// Optimize pool performance
+    pub fn optimize(&mut self) {
+        self.adaptive_resize();
+    }
 }
 
-/// ✅ Advanced MODE: Ultra-fast PCA with memory pooling
-pub struct UltraFastPCA {
+/// ✅ Advanced MODE: Fast PCA with memory pooling
+pub struct AdvancedPCA {
     enhanced_pca: EnhancedPCA,
-    memory_pool: UltraFastMemoryPool,
+    memory_pool: AdvancedMemoryPool,
     processing_cache: std::collections::HashMap<(usize, usize), CachedPCAResult>,
 }
 
@@ -3111,17 +3137,17 @@ struct CachedPCAResult {
     timestamp: std::time::Instant,
 }
 
-impl UltraFastPCA {
-    /// Create a new ultra-fast PCA with memory pooling
+impl AdvancedPCA {
+    /// Create a new optimized PCA with memory pooling
     pub fn new(n_components: usize, _n_samples_hint: usize, _n_features_hint: usize) -> Self {
         let enhanced_pca = EnhancedPCA::new(n_components, true, 1024).unwrap();
-        let memory_pool = UltraFastMemoryPool::new(
+        let memory_pool = AdvancedMemoryPool::new(
             100, // max matrices per size
             200, // max vectors per size
             20,  // initial capacity
         );
 
-        UltraFastPCA {
+        AdvancedPCA {
             enhanced_pca,
             memory_pool,
             processing_cache: std::collections::HashMap::new(),
@@ -3215,5 +3241,26 @@ impl UltraFastPCA {
         self.processing_cache.retain(|_, cached| {
             now.duration_since(cached.timestamp).as_secs() < 1800 // Keep for 30 minutes
         });
+    }
+
+    /// Transform data using the fitted PCA model
+    pub fn transform(&self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
+        self.enhanced_pca.transform(x)
+    }
+
+    /// QR decomposition optimized method
+    pub fn qr_decomposition_optimized(
+        &self,
+        matrix: &Array2<f64>,
+    ) -> Result<(Array2<f64>, Array2<f64>)> {
+        self.enhanced_pca.qr_decomposition(matrix)
+    }
+
+    /// SVD for small matrices
+    pub fn svd_small_matrix(
+        &self,
+        matrix: &Array2<f64>,
+    ) -> Result<(Array2<f64>, Array1<f64>, Array2<f64>)> {
+        self.enhanced_pca.svd_small_matrix(matrix)
     }
 }

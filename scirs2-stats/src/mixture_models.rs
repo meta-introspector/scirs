@@ -15,10 +15,8 @@
 //! - Mixture model diagnostics and validation
 
 use crate::error::{StatsError, StatsResult};
-use either::Either;
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, One, Zero};
-use scirs2_core::Rng;
 use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
 
@@ -244,8 +242,17 @@ impl Default for GMMConfig {
 
 impl<F> GaussianMixtureModel<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + ndarray::ScalarOperand,
 {
     /// Create new Gaussian Mixture Model
     pub fn new(n_components: usize, config: GMMConfig) -> StatsResult<Self> {
@@ -325,6 +332,32 @@ where
             log_likelihood,
             n_iter: self.convergence_history.len(),
             converged,
+            convergence_reason: if converged {
+                ConvergenceReason::LogLikelihoodTolerance
+            } else {
+                ConvergenceReason::MaxIterations
+            },
+            model_selection: ModelSelectionCriteria {
+                aic: F::zero(),  // Placeholder - would compute AIC in full implementation
+                bic: F::zero(),  // Placeholder - would compute BIC in full implementation
+                icl: F::zero(),  // Placeholder - would compute ICL in full implementation
+                hqic: F::zero(), // Placeholder - would compute HQIC in full implementation
+                cv_log_likelihood: None,
+                n_parameters: self.n_components * 2, // Simplified parameter count
+            },
+            component_diagnostics: vec![
+                ComponentDiagnostics {
+                    effective_sample_size: F::zero(),
+                    condition_number: F::one(),
+                    covariance_determinant: F::one(),
+                    component_separation: F::zero(),
+                    weight_stability: F::zero(),
+                };
+                self.n_components
+            ],
+            outlier_scores: None,
+            responsibilities: None,
+            parameter_history: Vec::new(),
         };
 
         self.parameters = Some(parameters);
@@ -339,14 +372,14 @@ where
         match self.config.init_method {
             InitializationMethod::Random => {
                 // Random selection from data points
-                use rand::{rngs::StdRng, SeedableRng};
+                use scirs2_core::random::Random;
                 let mut rng = match self.config.seed {
-                    Some(seed) => StdRng::seed_from_u64(seed),
-                    None => StdRng::from_entropy(),
+                    Some(seed) => Random::with_seed(seed),
+                    None => Random::with_seed(rand::random()),
                 };
 
                 for i in 0..self.n_components {
-                    let idx = rng.random_range(0..n_samples);
+                    let idx = rng.random_range(0, n_samples);
                     means.row_mut(i).assign(&data.row(idx));
                 }
             }
@@ -397,17 +430,17 @@ where
 
     /// K-means++ initialization
     fn kmeans_plus_plus_init(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        use rand::{rngs::StdRng, SeedableRng};
+        use scirs2_core::random::Random;
         let mut rng = match self.config.seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            Some(seed) => Random::with_seed(seed),
+            None => Random::with_seed(rand::random()),
         };
 
         let (n_samples, n_features) = data.dim();
         let mut means = Array2::zeros((self.n_components, n_features));
 
         // Choose first center randomly
-        let first_idx = rng.random_range(0..n_samples);
+        let first_idx = rng.random_range(0, n_samples);
         means.row_mut(0).assign(&data.row(first_idx));
 
         // Choose remaining centers
@@ -426,7 +459,7 @@ where
             // Choose next center with probability proportional to squared distance
             let total_dist: F = distances.sum();
             let mut cumsum = F::zero();
-            let threshold: F = F::from(rng.random::<f64>()).unwrap() * total_dist;
+            let threshold: F = F::from(rng.random_f64()).unwrap() * total_dist;
 
             for j in 0..n_samples {
                 cumsum = cumsum + distances[j];
@@ -465,6 +498,14 @@ where
                 }
                 CovarianceType::Spherical => {
                     // Isotropic covariance
+                    Array2::eye(n_features) * F::from(self.config.reg_covar).unwrap()
+                }
+                CovarianceType::Factor { .. } => {
+                    // Factor analysis covariance - simplified to identity for now
+                    Array2::eye(n_features) * F::from(self.config.reg_covar).unwrap()
+                }
+                CovarianceType::Constrained { .. } => {
+                    // Constrained covariance - simplified to identity for now
                     Array2::eye(n_features) * F::from(self.config.reg_covar).unwrap()
                 }
             };
@@ -805,8 +846,17 @@ impl Default for KDEConfig {
 
 impl<F> KernelDensityEstimator<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + ndarray::ScalarOperand,
 {
     /// Create new KDE
     pub fn new(kernel: KernelType, bandwidth: F, config: KDEConfig) -> Self {
@@ -831,7 +881,7 @@ where
 
         // Update bandwidth if using automatic selection
         if self.config.bandwidth_method != BandwidthMethod::Fixed {
-            self.bandwidth = Either::Left(self.select_bandwidth_scalar(data)?);
+            self.bandwidth = self.select_bandwidth_scalar(data)?;
         }
 
         self.training_data = Some(data.to_owned());
@@ -864,10 +914,7 @@ where
                 // Simplified cross-validation
                 self.cross_validation_bandwidth(data)
             }
-            BandwidthMethod::Fixed => match &self.bandwidth {
-                Either::Left(scalar) => Ok(*scalar),
-                Either::Right(vector) => Ok(vector[0]), // Use first element as representative
-            },
+            BandwidthMethod::Fixed => Ok(self.bandwidth),
         }
     }
 
@@ -908,19 +955,13 @@ where
             for j in 0..n_train {
                 let train_point = training_data.row(j);
                 let distance = self.compute_distance(&point, &train_point);
-                let bandwidth_val = match &self.bandwidth {
-                    Either::Left(scalar) => *scalar,
-                    Either::Right(vector) => vector[0], // Simplified - would use proper multivariate bandwidth
-                };
+                let bandwidth_val = self.bandwidth;
                 let kernel_value = self.evaluate_kernel(distance / bandwidth_val);
                 density = density + kernel_value;
             }
 
             // Normalize
-            let bandwidth_val = match &self.bandwidth {
-                Either::Left(scalar) => *scalar,
-                Either::Right(vector) => vector[0], // Simplified
-            };
+            let bandwidth_val = self.bandwidth;
             let normalization = F::from(n_train as f64).unwrap()
                 * bandwidth_val.powf(F::from(training_data.ncols()).unwrap());
             densities[i] = density / normalization;
@@ -993,8 +1034,17 @@ pub fn gaussian_mixture_model<F>(
     config: Option<GMMConfig>,
 ) -> StatsResult<GMMParameters<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + ndarray::ScalarOperand,
 {
     let config = config.unwrap_or_default();
     let mut gmm = GaussianMixtureModel::new(n_components, config)?;
@@ -1009,8 +1059,17 @@ pub fn kernel_density_estimation<F>(
     bandwidth: Option<F>,
 ) -> StatsResult<Array1<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + ndarray::ScalarOperand,
 {
     let kernel = kernel.unwrap_or(KernelType::Gaussian);
     let bandwidth = bandwidth.unwrap_or_else(|| {
@@ -1036,8 +1095,17 @@ pub fn gmm_model_selection<F>(
     config: Option<GMMConfig>,
 ) -> StatsResult<(usize, GMMParameters<F>)>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + ndarray::ScalarOperand,
 {
     let config = config.unwrap_or_default();
     let mut best_n_components = min_components;
@@ -1071,8 +1139,17 @@ pub struct RobustGMM<F> {
 
 impl<F> RobustGMM<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + ndarray::ScalarOperand,
 {
     /// Create new Robust GMM
     pub fn new(
@@ -1150,8 +1227,17 @@ pub struct StreamingGMM<F> {
 
 impl<F> StreamingGMM<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + ndarray::ScalarOperand,
 {
     /// Create new Streaming GMM
     pub fn new(
@@ -1205,7 +1291,7 @@ where
 
         // Compute batch statistics
         let batch_weights = self.gmm.m_step_weights(&responsibilities)?;
-        let batch_means = self.gmm.m_step_means_advanced(batch, &responsibilities)?;
+        let batch_means = self.gmm.m_step_means(batch, &responsibilities)?;
 
         // Update running statistics with exponential decay
         let lr = self.learning_rate;
@@ -1251,8 +1337,17 @@ pub fn hierarchical_gmm_init<F>(
     config: GMMConfig,
 ) -> StatsResult<GMMParameters<F>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + ndarray::ScalarOperand,
 {
     // Simplified hierarchical clustering for initialization
     // Full implementation would use proper hierarchical clustering
@@ -1272,8 +1367,17 @@ pub fn gmm_cross_validation<F>(
     config: GMMConfig,
 ) -> StatsResult<F>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + ndarray::ScalarOperand,
 {
     let (n_samples, _) = data.dim();
     let fold_size = n_samples / n_folds;
@@ -1303,7 +1407,7 @@ where
 
         // Fit model on training data
         let mut gmm = GaussianMixtureModel::new(n_components, config.clone())?;
-        let params = gmm.fit(&train_data.view())?;
+        let params = gmm.fit(&train_data.view())?.clone();
 
         // Evaluate on validation data
         let val_likelihood = gmm.compute_log_likelihood(
@@ -1331,8 +1435,17 @@ pub fn benchmark_mixture_models<F>(
     )],
 ) -> StatsResult<Vec<(String, std::time::Duration, F)>>
 where
-    F: Float + Zero + One + Copy + Send + Sync + SimdUnifiedOps + FromPrimitive
-        + std::fmt::Display,
+    F: Float
+        + Zero
+        + One
+        + Copy
+        + Send
+        + Sync
+        + SimdUnifiedOps
+        + FromPrimitive
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + ndarray::ScalarOperand,
 {
     let mut results = Vec::new();
 
@@ -1546,8 +1659,14 @@ pub struct VariationalGMMResult<F> {
 
 impl<F> VariationalGMM<F>
 where
-    F: Float + FromPrimitive + SimdUnifiedOps + Send + Sync + std::fmt::Debug
-        + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + FromPrimitive
+        + SimdUnifiedOps
+        + Send
+        + Sync
+        + std::fmt::Debug
+        + std::fmt::Display
+        + std::iter::Sum<F>,
 {
     /// Create new Variational GMM
     pub fn new(max_components: usize, config: VariationalGMMConfig) -> Self {
@@ -1675,14 +1794,14 @@ where
         let (n_samples, n_features) = data.dim();
         let mut means = Array2::zeros((self.max_components, n_features));
 
-        use rand::{rngs::StdRng, SeedableRng};
+        use scirs2_core::random::Random;
         let mut rng = match self.config.seed {
-            Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_entropy(),
+            Some(seed) => Random::with_seed(seed),
+            None => Random::with_seed(rand::random()),
         };
 
         for i in 0..self.max_components {
-            let idx = rng.random_range(0..n_samples);
+            let idx = rng.random_range(0, n_samples);
             means.row_mut(i).assign(&data.row(idx));
         }
 

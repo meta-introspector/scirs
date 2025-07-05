@@ -43,7 +43,7 @@ impl WaveletFilters {
 }
 
 /// Predefined wavelet types
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Wavelet {
     /// Haar wavelet (equivalent to db1)
     Haar,

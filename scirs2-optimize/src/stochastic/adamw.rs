@@ -185,7 +185,6 @@ where
                 return Ok(OptimizeResult {
                     x: best_x,
                     fun: best_f,
-                    iterations: iteration,
                     nit: iteration,
                     func_evals,
                     nfev: func_evals,
@@ -206,7 +205,6 @@ where
                 return Ok(OptimizeResult {
                     x: best_x,
                     fun: best_f,
-                    iterations: iteration,
                     nit: iteration,
                     func_evals,
                     nfev: func_evals,
@@ -227,7 +225,6 @@ where
     Ok(OptimizeResult {
         x: best_x,
         fun: final_loss.min(best_f),
-        iterations: options.max_iter,
         nit: options.max_iter,
         func_evals,
         nfev: func_evals,
@@ -309,7 +306,6 @@ where
     Ok(OptimizeResult {
         x: global_best_x,
         fun: global_best_f,
-        iterations: cycle_start,
         nit: cycle_start,
         func_evals: 0, // Would need to track across cycles
         nfev: 0,
@@ -403,7 +399,6 @@ where
     Ok(OptimizeResult {
         x: best_x,
         fun: best_f,
-        iterations: options.max_iter,
         nit: options.max_iter,
         func_evals: 0,
         nfev: 0,

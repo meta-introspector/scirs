@@ -9,6 +9,29 @@ use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use std::fmt::Debug;
 
+// Temporary replacement for par_iter_with_setup
+fn par_iter_with_setup<I, IT, S, F, R, RF, E>(
+    items: I,
+    _setup: S,
+    map_fn: F,
+    _reduce_fn: RF,
+) -> Result<Vec<R>, E>
+where
+    I: IntoIterator<Item = IT>,
+    IT: Copy,
+    S: Fn() -> (),
+    F: Fn((), IT) -> Result<R, E>,
+    RF: Fn(&mut Vec<R>, Result<R, E>) -> Result<(), E>,
+    E: std::fmt::Debug,
+{
+    let mut results = Vec::new();
+    for item in items {
+        let result = map_fn((), item)?;
+        results.push(result);
+    }
+    Ok(results)
+}
+
 /// Parallel 1D convolution with automatic chunking
 ///
 /// # Arguments
@@ -84,7 +107,7 @@ fn parallel_direct_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
     let result: Vec<f64> = par_iter_with_setup(
         0..n_full,
         || {},
-        |_, &i| {
+        |_, i| {
             let mut sum = 0.0;
 
             // Compute valid range for convolution at position i
@@ -100,7 +123,7 @@ fn parallel_direct_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
 
             Ok(sum)
         },
-        |results, val| {
+        |results, val: Result<Vec<f64>, SignalError>| {
             results.push(val?);
             Ok(())
         },
@@ -128,7 +151,7 @@ fn parallel_overlap_save_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
     let chunk_results: Vec<Vec<f64>> = par_iter_with_setup(
         0..n_chunks,
         || {},
-        |_, &chunk_idx| {
+        |_, chunk_idx| {
             let start = chunk_idx * step;
             let end = (start + chunk_size).min(na + overlap);
 
@@ -282,7 +305,7 @@ pub fn parallel_convolve2d_ndarray(
     let row_results: Vec<Vec<f64>> = par_iter_with_setup(
         0..out_rows,
         || {},
-        |_, &out_i| {
+        |_, out_i| {
             let mut row = vec![0.0; out_cols];
 
             // Determine input row range based on mode

@@ -153,18 +153,18 @@ pub mod error_estimation;
 pub mod parallel_optimization;
 pub mod performance_monitor;
 
-// Ultra-performance optimization modules (Advanced mode)
+// Advanced-performance optimization modules (Advanced mode)
 pub mod gpu_ultra_acceleration;
+pub mod mode_coordinator;
 pub mod neural_rl_step_control;
 pub mod realtime_performance_adaptation;
 pub mod ultra_memory_optimization;
 pub mod ultra_simd_acceleration;
-pub mod ultrathink_mode_coordinator;
 // pub mod advanced_mode_coordinator; // Module not implemented yet
 
 // Comprehensive tests for Advanced mode
 #[cfg(test)]
-pub mod ultrathink_mode_tests;
+pub mod mode_tests;
 
 // Integration modules
 pub mod bvp;
@@ -297,8 +297,10 @@ pub use autodiff::{
 };
 // Export specialized domain-specific solvers
 pub use specialized::{
-    // Ultra-performance optimizations
+    // Advanced-performance optimizations
     AdaptiveAlgorithmSelector,
+    AdvancedGPUKernel,
+    AdvancedMonteCarloEngine,
     AlertSeverity,
     AlgorithmRecommendation,
     FinanceMethod,
@@ -337,8 +339,6 @@ pub use specialized::{
     SchrodingerSolver,
     StochasticPDESolver,
     StreamingComputeManager,
-    UltraGPUKernel,
-    UltraMonteCarloEngine,
     VarianceReductionSuite,
     VariationalQuantumEigensolver,
     VolatilityModel,
@@ -453,10 +453,11 @@ pub use performance_monitor::{
     PerformanceAnalyzer, PerformanceBottleneck, PerformanceMetrics, PerformanceProfiler,
     PerformanceReport,
 };
-// Export ultra-performance optimization modules
+// Export advanced-performance optimization modules
 pub use gpu_ultra_acceleration::{
-    GpuDeviceInfo, LoadBalancingStrategy as GpuLoadBalancingStrategy, MemoryBlock, MemoryBlockType,
-    MultiGpuConfiguration, RealTimeGpuMonitor, UltraGPUAccelerator, UltraGPUMemoryPool,
+    AdvancedGPUAccelerator, AdvancedGPUMemoryPool, GpuDeviceInfo,
+    LoadBalancingStrategy as GpuLoadBalancingStrategy, MemoryBlock, MemoryBlockType,
+    MultiGpuConfiguration, RealTimeGpuMonitor,
 };
 pub use realtime_performance_adaptation::{
     AdaptationStrategy, AlgorithmSwitchRecommendation, AnomalyAnalysisResult, AnomalySeverity,
@@ -465,18 +466,13 @@ pub use realtime_performance_adaptation::{
     PerformanceMetrics as AdaptivePerformanceMetrics, PerformanceTrend, RealTimeAdaptiveOptimizer,
 };
 pub use ultra_memory_optimization::{
-    AccessPattern, CacheStrategy, L1CacheBuffer, L2CacheBuffer, L3CacheBuffer,
-    MemoryHierarchyManager, MemoryLayout, MemoryTier, MemoryType, NumaPlacement,
-    OptimizedMemoryRegion, PrefetchStrategy, UltraMemoryOptimizer, ZeroCopyBuffer,
-    ZeroCopyBufferPool,
+    AccessPattern, AdvancedMemoryOptimizer, CacheStrategy, L1CacheBuffer, L2CacheBuffer,
+    L3CacheBuffer, MemoryHierarchyManager, MemoryLayout, MemoryTier, MemoryType, NumaPlacement,
+    OptimizedMemoryRegion, PrefetchStrategy, ZeroCopyBuffer, ZeroCopyBufferPool,
 };
 pub use ultra_simd_acceleration::{
-    Avx512Support, MixedPrecisionOperation, PrecisionLevel, SimdCapabilities, SveSupport,
-    UltraSimdAccelerator, VectorizationStrategies,
-};
-pub use ultrathink_mode_coordinator::{
-    AdvancedModeConfig, AdvancedModeCoordinator, AdvancedModeMetrics,
-    AdvancedModePerformanceReport, AdvancedModeResult, PerformanceTargets,
+    AdvancedSimdAccelerator, Avx512Support, MixedPrecisionOperation, PrecisionLevel,
+    SimdCapabilities, SveSupport, VectorizationStrategies,
 };
 // pub use advanced_mode_coordinator::{
 //     PerformanceTargets, advancedModeConfig, advancedModeCoordinator, advancedModeMetrics,

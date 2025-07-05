@@ -4,10 +4,10 @@
 //! features including deep learning integration, quantum-inspired algorithms,
 //! and advanced ensemble methods for superior clustering performance.
 
-use crate::error::{ClusteringError, Result};
 use crate::advanced_clustering::{
-    QuantumNeuromorphicMetrics, AdvancedClusterer, UltrathinkClusteringResult,
+    AdvancedClusterer, AdvancedClusteringResult, QuantumNeuromorphicMetrics,
 };
+use crate::error::{ClusteringError, Result};
 use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
 use std::collections::{HashMap, VecDeque};
@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 
 /// Deep learning enhanced Advanced clusterer
 #[derive(Debug)]
-pub struct DeepUltrathinkClusterer {
+pub struct DeepAdvancedClusterer {
     /// Base Advanced clusterer
     base_clusterer: AdvancedClusterer,
     /// Transformer-based cluster embeddings
@@ -107,9 +107,9 @@ pub struct DeepEnsembleCoordinator {
 /// Advanced clustering result with deep learning enhancements
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct DeepUltrathinkResult {
+pub struct DeepAdvancedResult {
     /// Base Advanced results
-    pub base_result: UltrathinkClusteringResult,
+    pub base_result: AdvancedClusteringResult,
     /// Deep learning embeddings
     pub deep_embeddings: Array2<f64>,
     /// Graph structure insights
@@ -124,7 +124,7 @@ pub struct DeepUltrathinkResult {
     pub uncertainty_estimates: Array1<f64>,
 }
 
-impl DeepUltrathinkClusterer {
+impl DeepAdvancedClusterer {
     /// Create a new deep Advanced clusterer
     pub fn new() -> Self {
         Self {
@@ -150,7 +150,7 @@ impl DeepUltrathinkClusterer {
     }
 
     /// Perform deep Advanced clustering
-    pub fn deep_cluster(&mut self, data: &ArrayView2<f64>) -> Result<DeepUltrathinkResult> {
+    pub fn deep_cluster(&mut self, data: &ArrayView2<f64>) -> Result<DeepAdvancedResult> {
         // Phase 1: Transformer-based feature embedding
         let transformer_embeddings = self.transformer_embedder.embed_features(data)?;
 
@@ -186,7 +186,7 @@ impl DeepUltrathinkClusterer {
             .ensemble_coordinator
             .estimate_uncertainties(data, &base_result)?;
 
-        Ok(DeepUltrathinkResult {
+        Ok(DeepAdvancedResult {
             base_result,
             deep_embeddings: transformer_embeddings,
             graph_insights,
@@ -946,7 +946,7 @@ impl DeepEnsembleCoordinator {
         &mut self,
         data: &ArrayView2<f64>,
         embeddings: &Array2<f64>,
-        base_result: &UltrathinkClusteringResult,
+        base_result: &AdvancedClusteringResult,
     ) -> Result<EnsembleConsensus> {
         // Create ensemble predictions
         let mut ensemble_predictions = Vec::new();
@@ -971,7 +971,7 @@ impl DeepEnsembleCoordinator {
     pub fn estimate_uncertainties(
         &self,
         data: &ArrayView2<f64>,
-        base_result: &UltrathinkClusteringResult,
+        base_result: &AdvancedClusteringResult,
     ) -> Result<Array1<f64>> {
         let n_samples = data.nrows();
         let mut uncertainties = Array1::zeros(n_samples);
@@ -1094,7 +1094,7 @@ impl DeepEnsembleCoordinator {
     }
 }
 
-impl Default for DeepUltrathinkClusterer {
+impl Default for DeepAdvancedClusterer {
     fn default() -> Self {
         Self::new()
     }

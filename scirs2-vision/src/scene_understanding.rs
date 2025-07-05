@@ -1,6 +1,6 @@
 //! Advanced Scene Understanding Framework
 //!
-//! This module provides ultra-advanced scene understanding capabilities including:
+//! This module provides advanced-advanced scene understanding capabilities including:
 //! - Semantic scene segmentation and classification
 //! - Object relationship reasoning
 //! - Spatial layout understanding
@@ -13,7 +13,7 @@ use crate::error::Result;
 use ndarray::{Array2, Array3, ArrayView3};
 use std::collections::HashMap;
 
-/// Ultra-advanced scene understanding engine with multi-level reasoning
+/// Advanced-advanced scene understanding engine with multi-level reasoning
 pub struct SceneUnderstandingEngine {
     /// Semantic segmentation models
     segmentation_models: Vec<SemanticSegmentationModel>,
@@ -29,7 +29,7 @@ pub struct SceneUnderstandingEngine {
     reasoning_engine: ContextualReasoningEngine,
 }
 
-/// Semantic segmentation model with ultra-high accuracy
+/// Semantic segmentation model with advanced-high accuracy
 #[derive(Debug, Clone)]
 pub struct SemanticSegmentationModel {
     /// Model type identifier
@@ -349,7 +349,7 @@ impl Default for SceneUnderstandingEngine {
 }
 
 impl SceneUnderstandingEngine {
-    /// Create a new ultra-advanced scene understanding engine
+    /// Create a new advanced-advanced scene understanding engine
     pub fn new() -> Self {
         Self {
             segmentation_models: Vec::new(),
@@ -420,7 +420,7 @@ impl SceneUnderstandingEngine {
         Ok(results)
     }
 
-    /// Perform ultra-accurate semantic segmentation
+    /// Perform advanced-accurate semantic segmentation
     fn perform_semantic_segmentation(&self, image: &ArrayView3<f32>) -> Result<Array2<u32>> {
         let (height, width, _) = image.dim();
         let mut segmentation_map = Array2::zeros((height, width));
@@ -754,7 +754,7 @@ impl ContextualReasoningEngine {
     }
 }
 
-/// Ultra-advanced scene understanding with cognitive-level reasoning
+/// Advanced-advanced scene understanding with cognitive-level reasoning
 #[allow(dead_code)]
 pub fn analyze_scene_with_reasoning(
     image: &ArrayView3<f32>,

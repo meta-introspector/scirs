@@ -9,11 +9,11 @@ use num_traits::Float;
 use std::collections::HashMap;
 use std::time::Duration;
 
-/// Temporary stub for UltraParallelProcessor
+/// Temporary stub for AdvancedParallelProcessor
 #[derive(Debug, Clone)]
-pub struct UltraParallelProcessor;
+pub struct AdvancedParallelProcessor;
 
-impl UltraParallelProcessor {
+impl AdvancedParallelProcessor {
     pub fn new() -> Self {
         Self
     }
@@ -42,9 +42,9 @@ pub enum TimeSeriesOperation {
     MovingAverage,
 }
 
-/// Temporary stub for UltraParallelBatchResult
+/// Temporary stub for AdvancedParallelBatchResult
 #[derive(Debug, Clone)]
-pub struct UltraParallelBatchResult<F> {
+pub struct AdvancedParallelBatchResult<F> {
     pub mean: F,
     pub variance: F,
     pub std_dev: F,
@@ -54,44 +54,44 @@ pub struct UltraParallelBatchResult<F> {
     pub sum: F,
 }
 
-/// Temporary stub for UltraParallelMatrixResult
+/// Temporary stub for AdvancedParallelMatrixResult
 #[derive(Debug, Clone)]
-pub struct UltraParallelMatrixResult<F> {
+pub struct AdvancedParallelMatrixResult<F> {
     pub result: Array2<F>,
 }
 
-/// Temporary stub for UltraParallelTimeSeriesResult
+/// Temporary stub for AdvancedParallelTimeSeriesResult
 #[derive(Debug, Clone)]
-pub struct UltraParallelTimeSeriesResult<F> {
+pub struct AdvancedParallelTimeSeriesResult<F> {
     pub result: Array1<F>,
 }
 
 /// Factory function stub
-pub fn create_ultra_parallel_processor() -> UltraParallelProcessor {
-    UltraParallelProcessor::new()
+pub fn create_advanced_parallel_processor() -> AdvancedParallelProcessor {
+    AdvancedParallelProcessor::new()
 }
 
 /// Temporary stub for other missing Advanced types
 #[derive(Debug, Clone)]
-pub struct UltrathinkNumericalStabilityAnalyzer;
+pub struct AdvancedNumericalStabilityAnalyzer;
 
 #[derive(Debug, Clone)]
 pub struct ComprehensiveStabilityResult;
 
 #[derive(Debug, Clone)]
-pub struct UltraThinkNumericalStabilityConfig;
+pub struct AdvancedNumericalStabilityConfig;
 
-impl Default for UltraThinkNumericalStabilityConfig {
+impl Default for AdvancedNumericalStabilityConfig {
     fn default() -> Self {
         Self
     }
 }
 
-pub fn create_exhaustive_numerical_stability_tester() -> UltrathinkNumericalStabilityAnalyzer {
-    UltrathinkNumericalStabilityAnalyzer
+pub fn create_exhaustive_numerical_stability_tester() -> AdvancedNumericalStabilityAnalyzer {
+    AdvancedNumericalStabilityAnalyzer
 }
 
-impl UltrathinkNumericalStabilityAnalyzer {
+impl AdvancedNumericalStabilityAnalyzer {
     pub fn analyze_statistical_stability<F, D>(&self, _data: &ndarray::ArrayBase<D, ndarray::Ix1>) -> ComprehensiveStabilityResult
     where
         F: Float,
@@ -116,18 +116,18 @@ impl Default for AdvancedSimdConfig {
     }
 }
 
-/// Temporary stub for UltraThinkSimdOptimizer
+/// Temporary stub for AdvancedSimdOptimizer
 #[derive(Debug, Clone)]
-pub struct UltraThinkSimdOptimizer {
+pub struct AdvancedSimdOptimizer {
     config: AdvancedSimdConfig,
 }
 
-impl UltraThinkSimdOptimizer {
+impl AdvancedSimdOptimizer {
     pub fn new(config: AdvancedSimdConfig) -> Self {
         Self { config }
     }
 
-    pub fn ultra_batch_statistics<F, D>(
+    pub fn advanced_batch_statistics<F, D>(
         &self,
         _data_arrays: &[ndarray::ArrayView1<F>],
         _operations: &[BatchOperation],

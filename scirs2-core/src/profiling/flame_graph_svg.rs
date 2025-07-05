@@ -79,23 +79,23 @@ impl ColorScheme {
                         2.0 * (1.0 - heat)
                     })) as u8;
                 let b = (255.0 * heat) as u8;
-                format!("rgb({},{},{})", r, g, b)
+                format!("rgb({r},{g},{b})")
             }
             ColorScheme::Hot => {
                 let r = (255.0 * heat.sqrt()) as u8;
                 let g = (255.0 * heat.powi(2)) as u8;
                 let b = (128.0 * heat.powi(3)) as u8;
-                format!("rgb({},{},{})", r, g, b)
+                format!("rgb({r},{g},{b})")
             }
             ColorScheme::Cool => {
                 let r = (128.0 * (1.0 - heat)) as u8;
                 let g = (200.0 * (1.0 - heat * 0.5)) as u8;
                 let b = (255.0 * (0.7 + 0.3 * heat)) as u8;
-                format!("rgb({},{},{})", r, g, b)
+                format!("rgb({r},{g},{b})")
             }
             ColorScheme::Grayscale => {
                 let intensity = (255.0 * (0.2 + 0.8 * (1.0 - heat))) as u8;
-                format!("rgb({},{},{})", intensity, intensity, intensity)
+                format!("rgb({intensity},{intensity},{intensity})")
             }
             ColorScheme::Java => {
                 // Use function name hash for consistent coloring
@@ -109,7 +109,7 @@ impl ColorScheme {
                 let r = (255.0 * heat) as u8;
                 let g = (200.0 * (1.0 - heat * 0.7)) as u8;
                 let b = (100.0 * (1.0 - heat)) as u8;
-                format!("rgb({},{},{})", r, g, b)
+                format!("rgb({r},{g},{b})")
             }
         }
     }
@@ -151,7 +151,7 @@ impl ColorScheme {
         let g = ((g + m) * 255.0) as u8;
         let b = ((b + m) * 255.0) as u8;
 
-        format!("rgb({},{},{})", r, g, b)
+        format!("rgb({r},{g},{b})")
     }
 }
 
@@ -488,9 +488,8 @@ impl EnhancedFlameGraph {
         let performance_svg = generator.generate_svg(&self.performance);
         let performance_content = self.extract_svg_content(&performance_svg);
         svg.push_str(&format!(
-            r#"<g transform="translate(0, 70)">{}</g>
-"#,
-            performance_content
+            r#"<g transform="translate(0, 70)">{performance_content}</g>
+"#
         ));
 
         // System metrics charts (bottom half)
@@ -554,21 +553,16 @@ impl EnhancedFlameGraph {
         let max_time = self.total_duration.as_secs_f64();
 
         let mut points = String::new();
-        for (i, (time, cpu)) in self.cpu_usage.iter().enumerate() {
+        for (_i, (time, cpu)) in self.cpu_usage.iter().enumerate() {
             let chart_x = x + (time.as_secs_f64() / max_time) * width;
             let chart_y = y + height - (cpu / max_cpu) * height;
 
-            if i == 0 {
-                points.push_str(&format!("{:.1},{:.1}", chart_x, chart_y));
-            } else {
-                points.push_str(&format!("{:.1},{:.1}", chart_x, chart_y));
-            }
+            points.push_str(&format!("{chart_x:.1},{chart_y:.1}"));
         }
 
         svg.push_str(&format!(
-            r#"<path d="{}" class="chart_line"/>
-"#,
-            points
+            r#"<path d="{points}" class="chart_line"/>
+"#
         ));
     }
 
@@ -599,21 +593,16 @@ impl EnhancedFlameGraph {
         let max_time = self.total_duration.as_secs_f64();
 
         let mut points = String::new();
-        for (i, (time, memory)) in self.memory_usage.iter().enumerate() {
+        for (_i, (time, memory)) in self.memory_usage.iter().enumerate() {
             let chart_x = x + (time.as_secs_f64() / max_time) * width;
             let chart_y = y + height - ((*memory as f64) / (max_memory as f64)) * height;
 
-            if i == 0 {
-                points.push_str(&format!("{:.1},{:.1}", chart_x, chart_y));
-            } else {
-                points.push_str(&format!("{:.1},{:.1}", chart_x, chart_y));
-            }
+            points.push_str(&format!("{chart_x:.1},{chart_y:.1}"));
         }
 
         svg.push_str(&format!(
-            r#"<path d="{}" style="stroke:green; stroke-width:2; fill:none;"/>
-"#,
-            points
+            r#"<path d="{points}" style="stroke:green; stroke-width:2; fill:none;"/>
+"#
         ));
     }
 }

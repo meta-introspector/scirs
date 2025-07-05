@@ -11,6 +11,7 @@ use super::{
 use crate::error::{OptimizeError, OptimizeResult};
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
 /// Adaptive Transformer-Enhanced Optimizer
@@ -396,7 +397,7 @@ impl AdaptiveTransformerOptimizer {
     fn decode_optimization_step(
         &self,
         transformer_output: &ArrayView2<f64>,
-    ) -> Result<OptimizationStep> {
+    ) -> OptimizeResult<OptimizationStep> {
         if transformer_output.is_empty() {
             return Err(OptimizeError::InvalidInput(
                 "Empty transformer output".to_string(),
@@ -451,7 +452,7 @@ impl AdaptiveTransformerOptimizer {
     }
 
     /// Update adaptive components
-    fn update_adaptive_components(&mut self, step: &OptimizationStep) -> Result<()> {
+    fn update_adaptive_components(&mut self, step: &OptimizationStep) -> OptimizeResult<()> {
         // Update attention adaptation
         self.adaptive_components
             .attention_adaptation
@@ -471,7 +472,7 @@ impl AdaptiveTransformerOptimizer {
     }
 
     /// Adapt transformer to specific problem characteristics
-    pub fn adapt_to_problem_class(&mut self, problem_class: &str) -> Result<()> {
+    pub fn adapt_to_problem_class(&mut self, problem_class: &str) -> OptimizeResult<()> {
         // Adjust attention patterns based on problem type
         match problem_class {
             "quadratic" => {
@@ -513,7 +514,7 @@ impl AdaptiveTransformerOptimizer {
     pub fn fine_tune_on_trajectories(
         &mut self,
         trajectories: &[OptimizationTrajectory],
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         for trajectory in trajectories {
             // Process each step in trajectory
             for step in &trajectory.steps {
@@ -531,7 +532,7 @@ impl AdaptiveTransformerOptimizer {
         &mut self,
         state_encoding: &Array2<f64>,
         action_encoding: &Array1<f64>,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         // Simplified weight update (in practice would use proper backpropagation)
         let learning_rate = self.config.meta_learning_rate;
 
@@ -640,12 +641,12 @@ impl OptimizationTransformer {
 
         // Input embedding
         let input_embedding = Array2::from_shape_fn((model_dim, model_dim), |_| {
-            (rand::rng().random::<f64>() - 0.5) * (2.0 / model_dim as f64).sqrt()
+            (rand::rng().gen::<f64>() - 0.5) * (2.0 / model_dim as f64).sqrt()
         });
 
         // Output projection
         let output_projection = Array2::from_shape_fn((model_dim, model_dim), |_| {
-            (rand::rng().random::<f64>() - 0.5) * (2.0 / model_dim as f64).sqrt()
+            (rand::rng().gen::<f64>() - 0.5) * (2.0 / model_dim as f64).sqrt()
         });
 
         Self {
@@ -659,7 +660,7 @@ impl OptimizationTransformer {
     }
 
     /// Forward pass through transformer
-    pub fn forward(&mut self, input_sequence: &ArrayView2<f64>) -> Result<Array2<f64>> {
+    pub fn forward(&mut self, input_sequence: &ArrayView2<f64>) -> OptimizeResult<Array2<f64>> {
         let seq_len = input_sequence.nrows();
         let input_dim = input_sequence.ncols();
 
@@ -736,7 +737,7 @@ impl TransformerBlock {
     }
 
     /// Forward pass through transformer block
-    pub fn forward(&mut self, input: &ArrayView2<f64>) -> Result<Array2<f64>> {
+    pub fn forward(&mut self, input: &ArrayView2<f64>) -> OptimizeResult<Array2<f64>> {
         // Multi-head attention with residual connection
         let attention_output = self.attention.forward(input, input, input)?;
         let after_attention = self
@@ -760,16 +761,16 @@ impl MultiHeadAttention {
         let head_dim = model_dim / num_heads;
 
         let w_query = Array2::from_shape_fn((model_dim, model_dim), |_| {
-            (rand::rng().random::<f64>() - 0.5) * (2.0 / model_dim as f64).sqrt()
+            (rand::rng().gen::<f64>() - 0.5) * (2.0 / model_dim as f64).sqrt()
         });
         let w_key = Array2::from_shape_fn((model_dim, model_dim), |_| {
-            (rand::rng().random::<f64>() - 0.5) * (2.0 / model_dim as f64).sqrt()
+            (rand::rng().gen::<f64>() - 0.5) * (2.0 / model_dim as f64).sqrt()
         });
         let w_value = Array2::from_shape_fn((model_dim, model_dim), |_| {
-            (rand::rng().random::<f64>() - 0.5) * (2.0 / model_dim as f64).sqrt()
+            (rand::rng().gen::<f64>() - 0.5) * (2.0 / model_dim as f64).sqrt()
         });
         let w_output = Array2::from_shape_fn((model_dim, model_dim), |_| {
-            (rand::rng().random::<f64>() - 0.5) * (2.0 / model_dim as f64).sqrt()
+            (rand::rng().gen::<f64>() - 0.5) * (2.0 / model_dim as f64).sqrt()
         });
 
         Self {
@@ -789,7 +790,7 @@ impl MultiHeadAttention {
         query: &ArrayView2<f64>,
         key: &ArrayView2<f64>,
         value: &ArrayView2<f64>,
-    ) -> Result<Array2<f64>> {
+    ) -> OptimizeResult<Array2<f64>> {
         let seq_len = query.nrows();
         let model_dim = query.ncols();
 
@@ -834,7 +835,7 @@ impl MultiHeadAttention {
         &self,
         input: &ArrayView2<f64>,
         weight: &Array2<f64>,
-    ) -> Result<Array2<f64>> {
+    ) -> OptimizeResult<Array2<f64>> {
         let seq_len = input.nrows();
         let input_dim = input.ncols();
         let output_dim = weight.nrows();
@@ -856,7 +857,7 @@ impl MultiHeadAttention {
         &mut self,
         query: &ArrayView2<f64>,
         key: &ArrayView2<f64>,
-    ) -> Result<Array2<f64>> {
+    ) -> OptimizeResult<Array2<f64>> {
         let seq_len = query.nrows();
         let head_dim = query.ncols();
 
@@ -903,7 +904,7 @@ impl MultiHeadAttention {
         &self,
         scores: &Array2<f64>,
         values: &ArrayView2<f64>,
-    ) -> Result<Array2<f64>> {
+    ) -> OptimizeResult<Array2<f64>> {
         let seq_len = scores.nrows();
         let head_dim = values.ncols();
 
@@ -925,10 +926,10 @@ impl FeedForwardNetwork {
     /// Create new feed-forward network
     pub fn new(input_dim: usize, hidden_dim: usize) -> Self {
         let linear1 = Array2::from_shape_fn((hidden_dim, input_dim), |_| {
-            (rand::rng().random::<f64>() - 0.5) * (2.0 / input_dim as f64).sqrt()
+            (rand::rng().gen::<f64>() - 0.5) * (2.0 / input_dim as f64).sqrt()
         });
         let linear2 = Array2::from_shape_fn((input_dim, hidden_dim), |_| {
-            (rand::rng().random::<f64>() - 0.5) * (2.0 / hidden_dim as f64).sqrt()
+            (rand::rng().gen::<f64>() - 0.5) * (2.0 / hidden_dim as f64).sqrt()
         });
 
         Self {
@@ -942,7 +943,7 @@ impl FeedForwardNetwork {
     }
 
     /// Forward pass through feed-forward network
-    pub fn forward(&self, input: &ArrayView2<f64>) -> Result<Array2<f64>> {
+    pub fn forward(&self, input: &ArrayView2<f64>) -> OptimizeResult<Array2<f64>> {
         let seq_len = input.nrows();
         let input_dim = input.ncols();
 
@@ -984,7 +985,7 @@ impl LayerNormalization {
     }
 
     /// Forward pass through layer normalization
-    pub fn forward(&self, input: &ArrayView2<f64>) -> Result<Array2<f64>> {
+    pub fn forward(&self, input: &ArrayView2<f64>) -> OptimizeResult<Array2<f64>> {
         let seq_len = input.nrows();
         let dim = input.ncols();
         let mut output = Array2::zeros((seq_len, dim));
@@ -1013,19 +1014,19 @@ impl TransformerProblemEncoder {
 
         Self {
             gradient_encoder: Array2::from_shape_fn((embedding_dim, feature_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             hessian_encoder: Array2::from_shape_fn((embedding_dim, feature_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             parameter_encoder: Array2::from_shape_fn((embedding_dim, feature_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             temporal_encoder: Array2::from_shape_fn((embedding_dim, feature_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             context_encoder: Array2::from_shape_fn((embedding_dim, feature_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             embedding_dim,
         }
@@ -1221,7 +1222,7 @@ impl AttentionAdaptation {
     }
 
     /// Update attention adaptation
-    pub fn update(&mut self, attention_weights: &Array2<f64>) -> Result<()> {
+    pub fn update(&mut self, attention_weights: &Array2<f64>) -> OptimizeResult<()> {
         if attention_weights.is_empty() {
             return Ok(());
         }
@@ -1270,7 +1271,7 @@ impl LearningRateAdapter {
     }
 
     /// Update learning rate
-    pub fn update(&mut self, lr_factor: f64) -> Result<()> {
+    pub fn update(&mut self, lr_factor: f64) -> OptimizeResult<()> {
         self.current_lr = self.base_lr * lr_factor;
         self.lr_history.push(self.current_lr);
 
@@ -1316,7 +1317,7 @@ impl StepSizePredictor {
     pub fn new(feature_dim: usize) -> Self {
         Self {
             predictor_network: Array2::from_shape_fn((1, feature_dim), |_| {
-                (rand::rng().random::<f64>() - 0.5) * 0.1
+                (rand::rng().gen::<f64>() - 0.5) * 0.1
             }),
             feature_dim,
             prediction_history: Vec::new(),
@@ -1337,7 +1338,7 @@ impl ConvergenceDetector {
     }
 
     /// Update convergence detection
-    pub fn update(&mut self, confidence: f64) -> Result<()> {
+    pub fn update(&mut self, confidence: f64) -> OptimizeResult<()> {
         self.convergence_prob = 0.9 * self.convergence_prob + 0.1 * confidence;
         Ok(())
     }
@@ -1361,7 +1362,7 @@ impl Default for TransformerMetrics {
 }
 
 impl LearnedOptimizer for AdaptiveTransformerOptimizer {
-    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> Result<()> {
+    fn meta_train(&mut self, training_tasks: &[TrainingTask]) -> OptimizeResult<()> {
         for task in training_tasks {
             self.adapt_to_problem_class(&task.problem.problem_class)?;
 
@@ -1369,17 +1370,17 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
             let initial_params = match &task.initial_distribution {
                 super::ParameterDistribution::Uniform { low, high } => {
                     Array1::from_shape_fn(task.problem.dimension, |_| {
-                        low + rand::rng().random::<f64>() * (high - low)
+                        low + rand::rng().gen::<f64>() * (high - low)
                     })
                 }
                 super::ParameterDistribution::Normal { mean, std } => {
                     Array1::from_shape_fn(task.problem.dimension, |_| {
-                        mean + std * (rand::rng().random::<f64>() - 0.5) * 2.0
+                        mean + std * (rand::rng().gen::<f64>() - 0.5) * 2.0
                     })
                 }
                 super::ParameterDistribution::Custom { samples } => {
                     if !samples.is_empty() {
-                        samples[rand::rng().random::<usize>() % samples.len()].clone()
+                        samples[rand::rng().gen::<usize>() % samples.len()].clone()
                     } else {
                         Array1::zeros(task.problem.dimension)
                     }
@@ -1407,7 +1408,7 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
         &mut self,
         problem: &OptimizationProblem,
         _initial_params: &ArrayView1<f64>,
-    ) -> Result<()> {
+    ) -> OptimizeResult<()> {
         self.adapt_to_problem_class(&problem.problem_class)
     }
 
@@ -1466,6 +1467,7 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
             success: true,
             nit: iterations,
             message: "Transformer optimization completed".to_string(),
+            ..OptimizeResults::default()
         })
     }
 
@@ -1505,7 +1507,7 @@ pub fn transformer_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     config: Option<LearnedOptimizationConfig>,
-) -> super::Result<OptimizeResults<f64>>
+) -> super::OptimizeResult<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64,
 {
@@ -1547,7 +1549,7 @@ mod tests {
     #[test]
     fn test_transformer_forward_pass() {
         let mut transformer = OptimizationTransformer::new(2, 32, 10, 1);
-        let input = Array2::from_shape_fn((5, 32), |_| rand::rng().random::<f64>());
+        let input = Array2::from_shape_fn((5, 32), |_| rand::rng().gen::<f64>());
 
         let output = transformer.forward(&input.view()).unwrap();
 

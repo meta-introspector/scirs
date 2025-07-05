@@ -6,15 +6,13 @@
 
 use ndarray::{Array1, Array2};
 use scirs2_stats::{
-    mean, pearson_r, std,
-    ultrathink_error_enhancements::{UltrathinkContextBuilder, UltrathinkErrorMessages},
-    ultrathink_numerical_stability::{
-        NumericalStabilityConfig, UltrathinkNumericalStabilityAnalyzer,
-    },
-    parallel_enhancements::{create_ultra_parallel_processor, AdvancedParallelConfig},
-    ultrathink_property_tests::UltrathinkPropertyTester,
-    ultrathink_simd_optimizations::{ultra_batch_statistics, AdvancedSimdConfig},
-    var,
+    advanced_error_enhancements::{AdvancedContextBuilder, AdvancedErrorMessages},
+    advanced_numerical_stability::{AdvancedNumericalStabilityAnalyzer, NumericalStabilityConfig},
+    advanced_property_tests::AdvancedPropertyTester,
+    advanced_simd_optimizations::{advanced_batch_statistics, AdvancedSimdConfig},
+    mean,
+    parallel_enhancements::{create_advanced_parallel_processor, AdvancedParallelConfig},
+    pearson_r, std, var,
 };
 use std::time::Instant;
 
@@ -40,21 +38,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("1. 🛡️  Enhanced Error Handling");
     println!("   Testing context-aware error messages and recovery strategies");
 
-    let context = UltrathinkContextBuilder::new(large_data.len())
+    let context = AdvancedContextBuilder::new(large_data.len())
         .memory_usage(800.0) // 800MB
         .simd_enabled(true)
         .parallel_enabled(true)
         .build();
 
     // Test memory exhaustion error message
-    let memory_error = UltrathinkErrorMessages::memory_exhaustion(2000.0, 1000.0, large_data.len());
+    let memory_error = AdvancedErrorMessages::memory_exhaustion(2000.0, 1000.0, large_data.len());
     println!("   Memory Error: {}", memory_error);
 
     // Test performance degradation warning
     let expected = std::time::Duration::from_millis(100);
     let actual = std::time::Duration::from_millis(1500);
     let perf_error =
-        UltrathinkErrorMessages::performance_degradation("mean", expected, actual, &context);
+        AdvancedErrorMessages::performance_degradation("mean", expected, actual, &context);
     println!("   Performance Warning: {}", perf_error);
     println!();
 
@@ -70,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    let mut analyzer = UltrathinkNumericalStabilityAnalyzer::new(stability_config);
+    let mut analyzer = AdvancedNumericalStabilityAnalyzer::new(stability_config);
 
     // Test with normal data
     let result = analyzer.test_function_stability("mean", &small_data, |data| {
@@ -97,7 +95,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ..Default::default()
     };
 
-    let processor = create_ultra_parallel_processor(parallel_config)?;
+    let processor = create_advanced_parallel_processor(parallel_config)?;
 
     // Parallel statistical computation
     let start = Instant::now();
@@ -137,7 +135,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let start = Instant::now();
-    let batch_stats = ultra_batch_statistics(&large_data.view(), &simd_config)?;
+    let batch_stats = advanced_batch_statistics(&large_data.view(), &simd_config)?;
     let simd_time = start.elapsed();
 
     println!("   SIMD Batch Statistics (100k elements):");
@@ -154,7 +152,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("5. 🧪 Property-Based Testing");
     println!("   Testing mathematical invariants and consistency");
 
-    let property_tester = UltrathinkPropertyTester::new(simd_config, parallel_config);
+    let property_tester = AdvancedPropertyTester::new(simd_config, parallel_config);
 
     // Test statistical properties
     let test_data = Array1::from_vec((1..=1000).map(|x| x as f64 / 100.0).collect());
@@ -212,15 +210,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Advanced computation
         let start = Instant::now();
-        let _ultra_stats = ultra_batch_statistics(&data.view(), &simd_config)?;
-        let ultra_time = start.elapsed();
+        let _advanced_stats = advanced_batch_statistics(&data.view(), &simd_config)?;
+        let advanced_time = start.elapsed();
 
-        let speedup = std_time.as_nanos() as f64 / ultra_time.as_nanos() as f64;
+        let speedup = std_time.as_nanos() as f64 / advanced_time.as_nanos() as f64;
         println!(
             "   Size {}: Standard {:.3}ms, Advanced {:.3}ms, Speedup: {:.2}x",
             size,
             std_time.as_millis(),
-            ultra_time.as_millis(),
+            advanced_time.as_millis(),
             speedup
         );
     }
@@ -245,7 +243,7 @@ trait PropertyTestExtensions {
     ) -> Result<bool, Box<dyn std::error::Error>>;
 }
 
-impl PropertyTestExtensions for UltrathinkPropertyTester {
+impl PropertyTestExtensions for AdvancedPropertyTester {
     fn test_mean_properties(&self, data: &Array1<f64>) -> Result<bool, Box<dyn std::error::Error>> {
         let computed_mean = mean(&data.view())?;
         let min_val = data.iter().fold(f64::INFINITY, |a, &b| a.min(b));
