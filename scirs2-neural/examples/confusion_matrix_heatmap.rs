@@ -59,7 +59,7 @@ fn main() {
     // Example 1: Standard confusion matrix
     println!("Example 1: Standard Confusion Matrix\n");
     let regular_output = cm.to_ascii(Some("Animal Classification Results"), false);
-    println!("{}", regular_output);
+    println!("{regular_output}");
     // Example 2: Confusion matrix with color
     println!("\n\nExample 2: Colored Confusion Matrix\n");
     let color_options = ColorOptions {
@@ -72,7 +72,7 @@ fn main() {
         false,
         &color_options,
     );
-    println!("{}", colored_output);
+    println!("{colored_output}");
     // Example 3: Normalized confusion matrix heatmap
     println!("\n\nExample 3: Normalized Confusion Matrix Heatmap\n");
     let heatmap_output = cm.to_heatmap_with_options(
@@ -80,7 +80,7 @@ fn main() {
         true, // normalized
         &color_options,
     );
-    println!("{}", heatmap_output);
+    println!("{heatmap_output}");
 
     // Example 4: Raw counts heatmap
     println!("\n\nExample 4: Raw Counts Confusion Matrix Heatmap\n");
@@ -89,5 +89,5 @@ fn main() {
         false, // not normalized
         &color_options,
     );
-    println!("{}", raw_heatmap);
+    println!("{raw_heatmap}");
 }

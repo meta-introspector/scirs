@@ -362,6 +362,7 @@ impl AlphaShape {
     }
 
     /// Compute the Cayley-Menger determinant for 3D circumradius calculation
+    #[allow(clippy::too_many_arguments)]
     fn cayley_menger_determinant_3d(ab: f64, ac: f64, ad: f64, bc: f64, bd: f64, cd: f64) -> f64 {
         // Cayley-Menger matrix for 4 points (tetrahedron)
         let ab2 = ab * ab;

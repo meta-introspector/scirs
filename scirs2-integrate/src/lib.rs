@@ -154,12 +154,12 @@ pub mod parallel_optimization;
 pub mod performance_monitor;
 
 // Advanced-performance optimization modules (Advanced mode)
-pub mod gpu_ultra_acceleration;
+pub mod advanced_memory_optimization;
+pub mod advanced_simd_acceleration;
+pub mod gpu_advanced_acceleration;
 pub mod mode_coordinator;
 pub mod neural_rl_step_control;
 pub mod realtime_performance_adaptation;
-pub mod ultra_memory_optimization;
-pub mod ultra_simd_acceleration;
 // pub mod advanced_mode_coordinator; // Module not implemented yet
 
 // Comprehensive tests for Advanced mode
@@ -454,7 +454,16 @@ pub use performance_monitor::{
     PerformanceReport,
 };
 // Export advanced-performance optimization modules
-pub use gpu_ultra_acceleration::{
+pub use advanced_memory_optimization::{
+    AccessPattern, AdvancedMemoryOptimizer, CacheStrategy, L1CacheBuffer, L2CacheBuffer,
+    L3CacheBuffer, MemoryHierarchyManager, MemoryLayout, MemoryTier, MemoryType, NumaPlacement,
+    OptimizedMemoryRegion, PrefetchStrategy, ZeroCopyBuffer, ZeroCopyBufferPool,
+};
+pub use advanced_simd_acceleration::{
+    AdvancedSimdAccelerator, Avx512Support, MixedPrecisionOperation, PrecisionLevel,
+    SimdCapabilities, SveSupport, VectorizationStrategies,
+};
+pub use gpu_advanced_acceleration::{
     AdvancedGPUAccelerator, AdvancedGPUMemoryPool, GpuDeviceInfo,
     LoadBalancingStrategy as GpuLoadBalancingStrategy, MemoryBlock, MemoryBlockType,
     MultiGpuConfiguration, RealTimeGpuMonitor,
@@ -464,15 +473,6 @@ pub use realtime_performance_adaptation::{
     AnomalyType, OptimizationRecommendations, PerformanceAnalysis, PerformanceAnomaly,
     PerformanceBottleneck as AdaptivePerformanceBottleneck,
     PerformanceMetrics as AdaptivePerformanceMetrics, PerformanceTrend, RealTimeAdaptiveOptimizer,
-};
-pub use ultra_memory_optimization::{
-    AccessPattern, AdvancedMemoryOptimizer, CacheStrategy, L1CacheBuffer, L2CacheBuffer,
-    L3CacheBuffer, MemoryHierarchyManager, MemoryLayout, MemoryTier, MemoryType, NumaPlacement,
-    OptimizedMemoryRegion, PrefetchStrategy, ZeroCopyBuffer, ZeroCopyBufferPool,
-};
-pub use ultra_simd_acceleration::{
-    AdvancedSimdAccelerator, Avx512Support, MixedPrecisionOperation, PrecisionLevel,
-    SimdCapabilities, SveSupport, VectorizationStrategies,
 };
 // pub use advanced_mode_coordinator::{
 //     PerformanceTargets, advancedModeConfig, advancedModeCoordinator, advancedModeMetrics,

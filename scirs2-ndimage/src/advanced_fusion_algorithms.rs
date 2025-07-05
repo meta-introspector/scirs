@@ -22,7 +22,7 @@ use crate::neuromorphic_computing::NeuromorphicConfig;
 use crate::quantum_inspired::QuantumConfig;
 use crate::quantum_neuromorphic_fusion::QuantumNeuromorphicConfig;
 
-/// Advanced-Advanced Processing Configuration
+/// Advanced Processing Configuration
 #[derive(Debug, Clone)]
 pub struct AdvancedConfig {
     /// Quantum computing parameters
@@ -85,7 +85,7 @@ impl Default for AdvancedConfig {
     }
 }
 
-/// Advanced-Advanced Processing State
+/// Advanced Processing State
 #[derive(Debug, Clone)]
 pub struct AdvancedState {
     /// Quantum consciousness amplitudes
@@ -257,7 +257,7 @@ pub struct EfficiencyMetrics {
     pub temporal_efficiency: f64,
 }
 
-/// Advanced-Advanced Quantum-Conscious Image Processing
+/// Advanced Quantum-Conscious Image Processing
 ///
 /// This is the ultimate image processing function that combines all advanced paradigms:
 /// quantum computing, neuromorphic processing, consciousness simulation, and self-organization.
@@ -272,7 +272,7 @@ where
 {
     let (height, width) = image.dim();
 
-    // Initialize or update advanced-advanced processing state
+    // Initialize or update advanced processing state
     let mut advanced_state = initialize_or_update_state(_previous_state, (height, width), config)?;
 
     // Stage 1: Advanced-Dimensional Feature Extraction
@@ -696,7 +696,7 @@ fn initialize_or_update_state(
     shape: (usize, usize),
     config: &AdvancedConfig,
 ) -> NdimageResult<AdvancedState> {
-    // Implementation would initialize or update the advanced-advanced state
+    // Implementation would initialize or update the advanced state
     Ok(AdvancedState {
         consciousness_amplitudes: Array4::zeros((shape.0, shape.1, config.consciousness_depth, 2)),
         meta_parameters: Array2::zeros((config.advanced_dimensions, config.temporal_window)),

@@ -87,7 +87,7 @@ where
     let (batch_size, height, width) = batch.dim();
 
     // Create Gaussian kernel once for all images
-    let six = safe_f64_to_float(6.0)?;
+    let six = safe_f64_to_float::<T>(6.0)?;
     let kernel_size = safe_float_to_usize((six * sigma).ceil())?;
     let kernel_size = kernel_size | 1; // Ensure odd size
     let kernel = create_gaussian_kernel_2d(sigma, kernel_size)?;
@@ -435,13 +435,13 @@ where
             let y = j as f64 - center;
             let dist_sq = x * x + y * y;
             let val = (-dist_sq / two_sigma_sq).exp();
-            kernel[[i, j]] = safe_f64_to_float(val)?;
+            kernel[[i, j]] = safe_f64_to_float::<T>(val)?;
             sum += val;
         }
     }
 
     // Normalize
-    let sum_t = safe_f64_to_float(sum)?;
+    let sum_t = safe_f64_to_float::<T>(sum)?;
     kernel.mapv_inplace(|v| v / sum_t);
 
     Ok(kernel)

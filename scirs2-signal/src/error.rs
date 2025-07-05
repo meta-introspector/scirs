@@ -5,17 +5,9 @@ use thiserror::Error;
 /// Signal processing error type
 #[derive(Error, Debug)]
 pub enum SignalError {
-    /// Computation error (generic error)
-    #[error("Computation error: {0}")]
-    ComputationError(String),
-
     /// Computation error
     #[error("Computation error: {0}")]
-    Compute(String),
-
-    /// Dimension mismatch error
-    #[error("Dimension mismatch error: {0}")]
-    DimensionError(String),
+    ComputationError(String),
 
     /// Dimension mismatch error
     #[error("Dimension mismatch error: {0}")]
@@ -31,7 +23,7 @@ pub enum SignalError {
 
     /// Not implemented error
     #[error("Not implemented: {0}")]
-    NotImplementedError(String),
+    NotImplemented(String),
 
     /// Runtime error
     #[error("Runtime error: {0}")]
@@ -40,10 +32,6 @@ pub enum SignalError {
     /// Shape mismatch error
     #[error("Shape mismatch: {0}")]
     ShapeMismatch(String),
-
-    /// Not implemented error
-    #[error("Not implemented: {0}")]
-    NotImplemented(String),
 }
 
 // Conversion from scirs2_core errors
@@ -77,7 +65,7 @@ impl From<std::io::Error> for SignalError {
 // Conversion from scirs2_linalg errors
 // impl From<scirs2_linalg::LinalgError> for SignalError {
 //     fn from(err: scirs2_linalg::LinalgError) -> Self {
-//         SignalError::Compute(format!("Linear algebra error: {}", err))
+//         SignalError::ComputationError(format!("Linear algebra error: {}", err))
 //     }
 // }
 

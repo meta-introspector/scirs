@@ -1419,7 +1419,7 @@ impl<I, O> OptimizedPipelineBuilder<I, O> {
     }
 }
 
-/// Quantum-Inspired Optimization Engine with Advanced-Advanced Algorithms
+/// Quantum-Inspired Optimization Engine with Advanced Algorithms
 #[derive(Debug)]
 pub struct QuantumInspiredOptimizer {
     /// Quantum state representation for optimization space exploration
@@ -1880,7 +1880,7 @@ impl Default for NeuromorphicOptimizer {
     }
 }
 
-/// Advanced-Advanced Consciousness-Inspired Optimization Engine
+/// Advanced Consciousness-Inspired Optimization Engine
 #[derive(Debug)]
 pub struct ConsciousnessInspiredOptimizer {
     /// Global workspace for conscious processing
@@ -2168,7 +2168,7 @@ impl Default for ConsciousnessInspiredOptimizer {
     }
 }
 
-// Supporting types and structures for the advanced-advanced optimizers...
+// Supporting types and structures for the advanced optimizers...
 
 #[derive(Debug, Clone)]
 pub struct QuantumConstraint {
@@ -3421,7 +3421,7 @@ impl Default for GoalDynamics {
     }
 }
 
-/// Advanced-Advanced Reinforcement Learning Optimization Engine
+/// Advanced Reinforcement Learning Optimization Engine
 #[derive(Debug)]
 pub struct ReinforcementLearningOptimizer {
     /// Deep Q-Network for optimization policy learning
@@ -4448,7 +4448,7 @@ impl Layer {
     }
 }
 
-/// Advanced-Advanced Real-Time Performance Prediction and Anomaly Detection Engine
+/// Advanced Real-Time Performance Prediction and Anomaly Detection Engine
 #[derive(Debug)]
 pub struct RealTimePerformancePredictor {
     /// Time series forecasting model for performance prediction

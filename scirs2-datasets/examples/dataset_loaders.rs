@@ -23,7 +23,12 @@ fn main() {
 
     // Load CSV file
     println!("Loading CSV file: {}", file_path);
-    match loaders::load_csv(file_path, true, None) {
+    let csv_config = loaders::CsvConfig {
+        has_header: true,
+        target_column: None,
+        ..Default::default()
+    };
+    match loaders::load_csv(file_path, csv_config) {
         Ok(dataset) => {
             print_dataset_info(&dataset, "Loaded CSV");
 

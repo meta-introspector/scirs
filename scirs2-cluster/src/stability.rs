@@ -807,7 +807,7 @@ pub mod advanced {
             k: usize,
         ) -> Result<StabilityResult<F>> {
             let mut all_stability_scores = Vec::new();
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
 
             // Get baseline clustering
             let (baseline_centroids, baseline_labels) = kmeans2(

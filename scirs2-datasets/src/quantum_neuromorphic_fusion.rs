@@ -1,7 +1,7 @@
 //! Quantum-Neuromorphic Fusion Engine
 //!
 //! This module represents the cutting-edge fusion of quantum computing and neuromorphic
-//! processing, creating hybrid bio-quantum systems for advanced-advanced dataset processing.
+//! processing, creating hybrid bio-quantum systems for advanced dataset processing.
 //! It combines quantum entanglement, superposition, and interference with spiking neural
 //! networks, synaptic plasticity, and biological learning mechanisms.
 
@@ -476,18 +476,18 @@ impl QuantumNeuromorphicFusion {
 
         for neuron_idx in 0..n_neurons {
             // Initialize quantum state in superposition
-            let theta = rng.random::<f64>() * PI;
-            let phi = rng.random::<f64>() * 2.0 * PI;
+            let theta = rng.gen::<f64>() * PI;
+            let phi = rng.gen::<f64>() * 2.0 * PI;
 
             let quantum_state = (theta.cos() * phi.cos(), theta.sin() * phi.sin());
 
             // Generate entanglement connections
             let entanglement_map: Vec<usize> = (0..n_neurons)
-                .filter(|&i| i != neuron_idx && rng.random::<f64>() < 0.1)
+                .filter(|&i| i != neuron_idx && rng.gen::<f64>() < 0.1)
                 .collect();
 
             neurons.push(QuantumNeuron {
-                membrane_potential: rng.random::<f64>() - 0.5,
+                membrane_potential: rng.gen::<f64>() - 0.5,
                 quantum_state,
                 phase_evolution: 0.0,
                 spike_threshold: 1.0,
@@ -510,15 +510,15 @@ impl QuantumNeuromorphicFusion {
         let mut synapses = Vec::with_capacity(n_synapses);
 
         for _ in 0..n_synapses {
-            let quantum_phase = rng.random::<f64>() * 2.0 * PI;
-            let amplitude_real = rng.random::<f64>() - 0.5;
-            let amplitude_imag = rng.random::<f64>() - 0.5;
+            let quantum_phase = rng.gen::<f64>() * 2.0 * PI;
+            let amplitude_real = rng.gen::<f64>() - 0.5;
+            let amplitude_imag = rng.gen::<f64>() - 0.5;
 
             synapses.push(QuantumSynapse {
-                classical_weight: rng.random::<f64>() - 0.5,
+                classical_weight: rng.gen::<f64>() - 0.5,
                 quantum_amplitudes: (amplitude_real, amplitude_imag),
                 quantum_phase,
-                entangled_partner: if rng.random::<f64>() < 0.3 {
+                entangled_partner: if rng.gen::<f64>() < 0.3 {
                     Some(rng.random_range(0..n_synapses))
                 } else {
                     None
@@ -569,8 +569,8 @@ impl QuantumNeuromorphicFusion {
             // Add quantum noise
             if self.quantum_neural_advantage {
                 let noise_strength = 0.01;
-                neuron.quantum_state.0 += noise_strength * (rng.random::<f64>() - 0.5);
-                neuron.quantum_state.1 += noise_strength * (rng.random::<f64>() - 0.5);
+                neuron.quantum_state.0 += noise_strength * (rng.gen::<f64>() - 0.5);
+                neuron.quantum_state.1 += noise_strength * (rng.gen::<f64>() - 0.5);
             }
         }
 
@@ -596,7 +596,7 @@ impl QuantumNeuromorphicFusion {
             neuron.membrane_potential += quantum_influence;
 
             // Add biological noise
-            neuron.membrane_potential += 0.05 * (rng.random::<f64>() - 0.5);
+            neuron.membrane_potential += 0.05 * (rng.gen::<f64>() - 0.5);
 
             // Check for spike generation
             let dynamic_threshold = neuron.spike_threshold * (1.0 + 0.1 * quantum_influence);
@@ -608,7 +608,7 @@ impl QuantumNeuromorphicFusion {
 
                 // Quantum state collapse upon spike
                 if self.quantum_neural_advantage {
-                    let collapse_probability = rng.random::<f64>();
+                    let collapse_probability = rng.gen::<f64>();
                     if collapse_probability > 0.5 {
                         neuron.quantum_state = (1.0, 0.0); // Collapse to |0⟩
                     } else {
@@ -689,7 +689,7 @@ impl QuantumNeuromorphicFusion {
             + (1.0 - self.quantum_bio_coupling) * biological_contribution;
 
         // Add complexity-dependent noise
-        let noise = complexity * (rng.random::<f64>() - 0.5) * 0.1;
+        let noise = complexity * (rng.gen::<f64>() - 0.5) * 0.1;
 
         Ok((fusion_target + noise).tanh())
     }
@@ -780,7 +780,7 @@ impl QuantumNeuromorphicFusion {
             for &partner_idx in &entangled_indices {
                 if partner_idx < neurons.len() && partner_idx != neuron_idx {
                     // Apply interference between entangled neurons
-                    let interference_phase = rng.random::<f64>() * 2.0 * PI;
+                    let interference_phase = rng.gen::<f64>() * 2.0 * PI;
                     let interference_strength = 0.1;
 
                     let real_interference = interference_strength * interference_phase.cos();

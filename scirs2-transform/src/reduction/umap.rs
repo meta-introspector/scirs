@@ -565,7 +565,7 @@ mod tests {
 
     #[test]
     fn test_umap_parameters() {
-        let x = Array::eye(5);
+        let x: Array2<f64> = Array::eye(5);
 
         // Test with different parameters
         let mut umap = UMAP::new(2, 3, 0.5, 0.5, 100)

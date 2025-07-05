@@ -816,7 +816,7 @@ impl NeuralAdaptiveOptimizer {
                 // Update prediction network (simplified)
                 for row in self.performance_predictor.prediction_network.rows_mut() {
                     for weight in row {
-                        *weight += learning_rate * error * rand::rng().gen::<f64>() * 0.01;
+                        *weight += learning_rate * error * rand::rng().random::<f64>() * 0.01;
                     }
                 }
             }
@@ -972,7 +972,7 @@ impl OptimizationNetwork {
         for layer in &mut self.hidden_layers {
             for i in 0..layer.weights.nrows() {
                 for j in 0..layer.weights.ncols() {
-                    layer.weights[[i, j]] -= learning_rate * rand::rng().gen::<f64>() * 0.001;
+                    layer.weights[[i, j]] -= learning_rate * rand::rng().random::<f64>() * 0.001;
                 }
             }
         }
@@ -988,7 +988,7 @@ impl NeuralLayer {
 
         Self {
             weights: Array2::from_shape_fn((output_size, input_size), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             biases: Array1::zeros(output_size),
             activation,
@@ -1069,16 +1069,16 @@ impl RecurrentConnections {
             hidden_state: Array1::zeros(size),
             cell_state: Array1::zeros(size),
             recurrent_weights: Array2::from_shape_fn((size, size), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
+                (rand::rng().random::<f64>() - 0.5) * 0.1
             }),
             input_gate_weights: Array2::from_shape_fn((size, size), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
+                (rand::rng().random::<f64>() - 0.5) * 0.1
             }),
             forget_gate_weights: Array2::from_shape_fn((size, size), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
+                (rand::rng().random::<f64>() - 0.5) * 0.1
             }),
             output_gate_weights: Array2::from_shape_fn((size, size), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
+                (rand::rng().random::<f64>() - 0.5) * 0.1
             }),
         }
     }
@@ -1204,10 +1204,10 @@ impl StrategySelector {
 
         Self {
             selection_network: Array2::from_shape_fn((num_strategies, hidden_size), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
+                (rand::rng().random::<f64>() - 0.5) * 0.1
             }),
             strategy_embeddings: Array2::from_shape_fn((num_strategies, hidden_size), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
+                (rand::rng().random::<f64>() - 0.5) * 0.1
             }),
             strategy_weights: Array1::from_elem(num_strategies, 1.0 / num_strategies as f64),
             available_strategies: vec![
@@ -1285,7 +1285,7 @@ impl StrategySelector {
     pub fn encourage_exploration(&mut self, strength: f64) -> OptimizeResult<()> {
         // Add uniform noise to encourage exploration
         for weight in &mut self.strategy_weights {
-            *weight += strength * rand::rng().gen::<f64>();
+            *weight += strength * rand::rng().random::<f64>();
         }
 
         // Renormalize
@@ -1360,7 +1360,7 @@ impl AdaptationRateController {
     pub fn new() -> Self {
         Self {
             controller_network: Array2::from_shape_fn((1, 10), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
+                (rand::rng().random::<f64>() - 0.5) * 0.1
             }),
             current_rate: 0.1,
             rate_history: BoundedHistory::new(100),
@@ -1394,7 +1394,7 @@ impl ProgressMonitor {
                 ProgressIndicator::new("step_size".to_string()),
             ],
             monitoring_network: Array2::from_shape_fn((4, 10), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
+                (rand::rng().random::<f64>() - 0.5) * 0.1
             }),
             alert_thresholds: HashMap::new(),
             current_state: ProgressState::Improving,
@@ -1471,7 +1471,7 @@ impl PerformancePredictor {
     pub fn new(hidden_size: usize) -> Self {
         Self {
             prediction_network: Array2::from_shape_fn((1, hidden_size), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
+                (rand::rng().random::<f64>() - 0.5) * 0.1
             }),
             feature_extractor: FeatureExtractor::new(hidden_size),
             prediction_horizon: 5,
@@ -1503,7 +1503,7 @@ impl FeatureExtractor {
     pub fn new(feature_dim: usize) -> Self {
         Self {
             extraction_layers: vec![Array2::from_shape_fn((feature_dim, feature_dim), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
+                (rand::rng().random::<f64>() - 0.5) * 0.1
             })],
             feature_dim,
             temporal_features: TemporalFeatures::new(feature_dim),
@@ -1534,7 +1534,7 @@ impl TemporalFeatures {
     pub fn new(dim: usize) -> Self {
         Self {
             time_embeddings: Array2::from_shape_fn((dim, 100), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
+                (rand::rng().random::<f64>() - 0.5) * 0.1
             }),
             trend_analyzer: TrendAnalyzer::new(),
             seasonality_detector: SeasonalityDetector::new(dim),
@@ -1569,7 +1569,7 @@ impl ConfidenceEstimator {
     pub fn new(hidden_size: usize) -> Self {
         Self {
             confidence_network: Array2::from_shape_fn((1, hidden_size), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 0.1
+                (rand::rng().random::<f64>() - 0.5) * 0.1
             }),
             uncertainty_quantifier: UncertaintyQuantifier::new(),
             calibration_params: Array1::from(vec![1.0, 0.0, 0.1]),
@@ -1687,8 +1687,16 @@ impl LearnedOptimizer for NeuralAdaptiveOptimizer {
             x: current_params,
             fun: best_value,
             success: true,
-            iterations,
+            nit: iterations,
             message: "Neural adaptive optimization completed".to_string(),
+            jac: None,
+            hess: None,
+            constr: None,
+            nfev: iterations * 5, // Neural network evaluations
+            njev: 0,
+            nhev: 0,
+            maxcv: 0,
+            status: 0,
         })
     }
 
@@ -1724,12 +1732,12 @@ impl NeuralAdaptiveOptimizer {
         for i in 0..num_steps {
             states.push(Array1::from_shape_fn(
                 self.optimization_network.architecture.input_size,
-                |_| rand::rng().gen::<f64>(),
+                |_| rand::rng().random::<f64>(),
             ));
 
             actions.push(Array1::from_shape_fn(
                 self.optimization_network.architecture.output_size,
-                |_| rand::rng().gen::<f64>(),
+                |_| rand::rng().random::<f64>(),
             ));
 
             performance_values.push(1.0 - i as f64 / num_steps as f64);

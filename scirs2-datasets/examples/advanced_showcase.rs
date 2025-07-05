@@ -3,27 +3,21 @@
 //! This example demonstrates the advanced-sophisticated enhancements added to scirs2-datasets,
 //! including advanced analytics, GPU optimization, and adaptive streaming processing.
 
-use ndarray::{Array1, Array2};
+use ndarray::Array2;
 use scirs2_datasets::{
-    // Advanced-advanced analytics
-    analyze_dataset_advanced,
-    benchmark_advanced_performance,
     // Adaptive streaming
-    create_adaptive_engine,
     create_adaptive_engine_with_config,
-    // Advanced-GPU optimization
-    generate_advanced_matrix,
     // Core functionality
     make_classification,
     quick_quality_assessment,
     AdaptiveStreamConfig,
-    AdaptiveStreamingEngine,
     AdvancedDatasetAnalyzer,
     AdvancedGpuOptimizer,
     ChunkMetadata,
     DataCharacteristics,
     Dataset,
     GpuBackend,
+    GpuConfig,
     GpuContext,
     StatisticalMoments,
     StreamChunk,
@@ -45,7 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         dataset.n_features()
     );
 
-    // Demonstrate advanced-advanced analytics
+    // Demonstrate advanced analytics
     demonstrate_advanced_analytics(&dataset)?;
 
     // Demonstrate advanced-GPU optimization
@@ -75,10 +69,10 @@ fn create_sample_dataset() -> Result<Dataset, Box<dyn std::error::Error>> {
     Ok(dataset)
 }
 
-/// Demonstrate advanced-advanced analytics capabilities
+/// Demonstrate advanced analytics capabilities
 #[allow(dead_code)]
 fn demonstrate_advanced_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::error::Error>> {
-    println!("\n🧠 Advanced-Advanced Analytics Demonstration");
+    println!("\n🧠 Advanced Analytics Demonstration");
     println!("==========================================");
 
     // Quick quality assessment
@@ -143,7 +137,11 @@ fn demonstrate_advanced_gpu_optimization() -> Result<(), Box<dyn std::error::Err
 
     // Create GPU context (falls back to CPU if no GPU available)
     println!("🔧 Initializing GPU context...");
-    let gpu_context = GpuContext::new(GpuBackend::Cpu)?; // Using CPU backend for demo
+    let gpu_config = GpuConfig {
+        backend: GpuBackend::Cpu,
+        ..Default::default()
+    };
+    let gpu_context = GpuContext::new(gpu_config)?; // Using CPU backend for demo
     println!("   Backend: {:?}", gpu_context.backend());
 
     // Create advanced-GPU optimizer

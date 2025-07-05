@@ -508,8 +508,7 @@ where
                 Array2::from_shape_vec((self.train_times.len(), 1), self.train_times.to_vec())
                     .map_err(|e| {
                         InterpolateError::ComputationError(format!(
-                            "Failed to reshape times: {}",
-                            e
+                            "Failed to reshape times: {e}"
                         ))
                     })?;
 
@@ -534,8 +533,7 @@ where
                 Array2::from_shape_vec((self.train_times.len(), 1), self.train_times.to_vec())
                     .map_err(|e| {
                         InterpolateError::ComputationError(format!(
-                            "Failed to reshape times: {}",
-                            e
+                            "Failed to reshape times: {e}"
                         ))
                     })?;
 

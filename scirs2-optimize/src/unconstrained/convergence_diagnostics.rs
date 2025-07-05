@@ -470,14 +470,14 @@ impl DiagnosticCollector {
 
     /// Compute overall performance metrics
     fn compute_performance_metrics(&self) -> PerformanceMetrics {
-        let total_iterations = self.nit.len();
+        let total_nit = self.nit.len();
         let total_time = self.start_time.elapsed();
 
         let total_fev = self.nit.iter().map(|it| it.line_search.n_fev).sum();
         let total_gev = self.nit.iter().map(|it| it.line_search.n_gev).sum();
 
-        let avg_iteration_time = if total_iterations > 0 {
-            total_time / total_iterations as u32
+        let avg_iteration_time = if total_nit > 0 {
+            total_time / total_nit as u32
         } else {
             Duration::from_secs(0)
         };
@@ -491,7 +491,7 @@ impl DiagnosticCollector {
         let efficiency = self.compute_efficiency_metrics();
 
         PerformanceMetrics {
-            total_iterations,
+            total_nit,
             total_fev,
             total_gev,
             total_hev: 0, // Not tracked in this implementation
@@ -557,14 +557,14 @@ impl DiagnosticCollector {
     /// Analyze convergence behavior
     fn analyze_convergence(&self) -> ConvergenceAnalysis {
         let convergence_rate = self.estimate_convergence_rate();
-        let predicted_iterations = self.predict_iterations_to_convergence();
+        let predicted_nit = self.predict_iterations_to_convergence();
         let confidence_score = self.compute_confidence_score();
         let convergence_phase = self.detect_convergence_phase();
         let stagnation = self.analyze_stagnation();
 
         ConvergenceAnalysis {
             convergence_rate,
-            predicted_iterations,
+            predicted_nit,
             confidence_score,
             convergence_phase,
             stagnation,
@@ -737,20 +737,20 @@ impl DiagnosticCollector {
     /// Analyze stagnation
     fn analyze_stagnation(&self) -> StagnationAnalysis {
         let is_stagnated = self.is_stagnated();
-        let stagnant_iterations = self.count_stagnant_iterations();
+        let stagnant_nit = self.count_stagnant_nit();
         let stagnation_type = self.detect_stagnation_type();
         let recommendations = self.generate_stagnation_recommendations(&stagnation_type);
 
         StagnationAnalysis {
             is_stagnated,
-            stagnant_iterations,
+            stagnant_nit,
             stagnation_type,
             recommendations,
         }
     }
 
     /// Count stagnant iterations
-    fn count_stagnant_iterations(&self) -> usize {
+    fn count_stagnant_nit(&self) -> usize {
         let mut count = 0;
         for it in self.nit.iter().rev() {
             if it.convergence_metrics.f_rel_change < 1e-10 {
@@ -1059,8 +1059,8 @@ impl ConvergenceDiagnostics {
     pub fn to_json(&self) -> Result<String, OptimizeError> {
         // In real implementation, would use serde_json
         Ok(format!(
-            "{{\"total_iterations\": {}}}",
-            self.performance_metrics.total_iterations
+            "{{\"total_nit\": {}}}",
+            self.performance_metrics.total_nit
         ))
     }
 
@@ -1096,7 +1096,7 @@ impl ConvergenceDiagnostics {
              Convergence status: {:?}\n\
              Problem difficulty: {:?}\n\
              Warnings: {}",
-            self.performance_metrics.total_iterations,
+            self.performance_metrics.total_nit,
             self.performance_metrics.total_fev,
             self.performance_metrics.total_time,
             self.nit.last().map(|it| it.f_value).unwrap_or(0.0),

@@ -19,8 +19,6 @@ use std::fmt::Debug;
 #[cfg(feature = "simd")]
 use scirs2_core::simd_ops::SimdUnifiedOps;
 
-#[cfg(feature = "parallel")]
-use scirs2_core::parallel_ops::*;
 
 /// Enhanced spatial search interface with multiple optimization strategies
 pub trait OptimizedSpatialSearch<F: Float> {

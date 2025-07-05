@@ -483,7 +483,7 @@ mod tests {
 
     #[test]
     fn test_dictionary_learning_sparsity() {
-        let x = Array::eye(20) * 2.0;
+        let x: Array2<f64> = Array::eye(20) * 2.0;
 
         let mut dict_learning = DictionaryLearning::new(10, 0.05).with_max_iter(30);
 

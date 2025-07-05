@@ -422,7 +422,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + Copy + Send + Sync + 'static + std::fmt::Display,
     T: AdvancedTarget<F> + 'static + std::fmt::Display,
 {
-    /// Create new advanced-advanced MCMC sampler
+    /// Create new advanced MCMC sampler
     pub fn new(target: T, config: AdvancedAdvancedConfig<F>) -> StatsResult<Self> {
         let dim = target.dim();
 

@@ -10,6 +10,7 @@ use crate::benchmarking::performance_regression_detector::{
     TestConfiguration,
 };
 use crate::error::{OptimError, Result};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -969,9 +970,11 @@ impl CiCdAutomation {
         // Check common CI patterns
         match std::env::var("GITHUB_WORKFLOW").as_deref() {
             Ok(workflow) if workflow.to_lowercase().contains("release") => {
-                Ok("release".to_string())
+                return Ok("release".to_string());
             }
-            Ok(workflow) if workflow.to_lowercase().contains("debug") => Ok("debug".to_string()),
+            Ok(workflow) if workflow.to_lowercase().contains("debug") => {
+                return Ok("debug".to_string());
+            }
             _ => {}
         }
 
@@ -1641,7 +1644,7 @@ impl CiCdAutomation {
         // Try different patterns for extracting timing information
         for line in output.lines() {
             // Pattern 1: "time: [123.45 ms 124.56 ms 125.67 ms]"
-            if let Some(captures) = regex::Regex::new(r"time:\s*\[\s*([0-9.]+)\s*(ns|µs|ms|s)\s*")
+            if let Some(captures) = Regex::new(r"time:\s*\[\s*([0-9.]+)\s*(ns|µs|ms|s)\s*")
                 .ok()?
                 .captures(line)
             {
@@ -1658,7 +1661,7 @@ impl CiCdAutomation {
             }
 
             // Pattern 2: "Elapsed: 123.456 seconds"
-            if let Some(captures) = regex::Regex::new(r"(?i)elapsed:\s*([0-9.]+)\s*seconds?")
+            if let Some(captures) = Regex::new(r"(?i)elapsed:\s*([0-9.]+)\s*seconds?")
                 .ok()?
                 .captures(line)
             {
@@ -1668,7 +1671,7 @@ impl CiCdAutomation {
             }
 
             // Pattern 3: "Duration: 123ms"
-            if let Some(captures) = regex::Regex::new(r"(?i)duration:\s*([0-9.]+)(ms|s)")
+            if let Some(captures) = Regex::new(r"(?i)duration:\s*([0-9.]+)(ms|s)")
                 .ok()?
                 .captures(line)
             {
@@ -1684,10 +1687,9 @@ impl CiCdAutomation {
     /// Parse memory usage from output
     fn parse_memory_usage(&self, output: &str) -> Option<f64> {
         for line in output.lines() {
-            if let Some(captures) =
-                regex::Regex::new(r"(?i)memory:\s*([0-9.]+)\s*(kb|mb|gb|bytes?)")
-                    .ok()?
-                    .captures(line)
+            if let Some(captures) = Regex::new(r"(?i)memory:\s*([0-9.]+)\s*(kb|mb|gb|bytes?)")
+                .ok()?
+                .captures(line)
             {
                 if let (Ok(memory), Some(unit)) = (captures[1].parse::<f64>(), captures.get(2)) {
                     let multiplier = match unit.as_str().to_lowercase().as_str() {
@@ -1743,14 +1745,13 @@ impl CiCdAutomation {
 
         for line in output.lines() {
             // Pattern: METRIC:name=value[unit]
-            if let Some(captures) =
-                regex::Regex::new(r"METRIC:([^=]+)=([0-9.]+)(?:\s*\[([^\]]+)\])?")
-                    .ok()?
-                    .captures(line)
+            if let Some(captures) = Regex::new(r"METRIC:([^=]+)=([0-9.]+)(?:\s*\[([^\]]+)\])?")
+                .ok()?
+                .captures(line)
             {
                 let name = captures[1].trim().to_string();
                 if let Ok(value) = captures[2].parse::<f64>() {
-                    let metric_type = MetricType::Other(name);
+                    let metric_type = MetricType::Custom(name);
                     metrics.insert(
                         metric_type,
                         MetricValue {

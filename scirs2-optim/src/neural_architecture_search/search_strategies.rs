@@ -49,7 +49,7 @@ pub struct SearchStrategyStatistics<T: Float> {
 
 /// Random search baseline strategy
 pub struct RandomSearch<T: Float> {
-    rng: rand::rngs::ThreadRng,
+    rng: rand::rngs::SmallRng,
     statistics: SearchStrategyStatistics<T>,
     search_space: Option<SearchSpaceConfig>,
 }
@@ -287,9 +287,12 @@ pub struct BaselineOptimizer<T: Float> {
 
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> RandomSearch<T> {
     pub fn new(seed: Option<u64>) -> Self {
-        // Note: seeding is simplified for concrete type compatibility
-        let _seed = seed; // Keep parameter for API compatibility
-        let rng = rand::rng();
+        use rand::SeedableRng;
+        let rng = if let Some(seed) = seed {
+            rand::rngs::SmallRng::seed_from_u64(seed)
+        } else {
+            rand::rngs::SmallRng::from_entropy()
+        };
 
         Self {
             rng,
@@ -344,7 +347,11 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
                         T::from(val).unwrap()
                     }
                     super::ParameterRange::Boolean => {
-                        let val = if self.rng.gen_bool(0.5) { 1.0 } else { 0.0 };
+                        let val = if self.rng.random::<f64>() < 0.5 {
+                            1.0
+                        } else {
+                            0.0
+                        };
                         T::from(val).unwrap()
                     }
                     super::ParameterRange::Discrete(values) => {
@@ -361,7 +368,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
             }
 
             components.push(OptimizerComponent {
-                component_type: component_config.component_type,
+                component_type: component_config.component_type.clone(),
                 hyperparameters,
                 connections: Vec::new(),
             });

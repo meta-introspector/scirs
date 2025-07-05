@@ -356,7 +356,7 @@ fn create_random_array(shape: &[usize]) -> Array<f64, IxDyn> {
     for _ in 0..shape[0] {
         for _ in 0..shape[1] {
             // Random values don't compress well typically
-            data.push(rng.random_range(-1.0, 1.0));
+            data.push(rng.random_range(-1.0..1.0));
         }
     }
 
@@ -375,7 +375,7 @@ fn create_mixed_array(shape: &[usize]) -> Array<f64, IxDyn> {
                 data.push((i as f64 / 20.0).sin() + (j as f64 / 20.0).cos());
             } else {
                 // Half is random
-                data.push(rng.random_range(-1.0, 1.0));
+                data.push(rng.random_range(-1.0..1.0));
             }
         }
     }

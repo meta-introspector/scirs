@@ -5,6 +5,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, ArrayView1, ArrayViewMut1};
+use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::f64::consts::PI;
 use std::sync::Once;
@@ -1135,7 +1136,7 @@ pub fn simd_spectral_flatness_f64(spectrum: &[f64]) -> SignalResult<f64> {
     }
 
     // Arithmetic mean using SIMD
-    let spectrum_view = ArrayView1::from(&positive_values);
+    let _spectrum_view = ArrayView1::from(&positive_values);
     let arithmetic_mean = positive_values.iter().sum::<f64>() / positive_values.len() as f64;
 
     // Geometric mean (log domain for numerical stability)
@@ -1358,7 +1359,7 @@ pub fn simd_overlap_add_f64(
 ) -> SignalResult<Vec<f64>> {
     let block_size = input_block.len();
     let ir_len = impulse_response.len();
-    let output_len = block_size + ir_len - 1;
+    let _output_len = block_size + ir_len - 1;
 
     // Initialize overlap buffer if needed
     if overlap_buffer.len() != ir_len - 1 {

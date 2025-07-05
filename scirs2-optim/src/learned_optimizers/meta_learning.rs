@@ -1762,7 +1762,7 @@ impl<T: Float + Default + Clone> ContinualLearningSystem<T> {
     pub fn learn_sequence(
         &mut self,
         sequence: &[MetaTask<T>],
-        meta_parameters: &mut HashMap<String, Array1<T>>,
+        _meta_parameters: &mut HashMap<String, Array1<T>>,
     ) -> Result<ContinualLearningResult<T>> {
         // Placeholder implementation for continual learning
         let mut sequence_results = Vec::new();
@@ -1807,7 +1807,7 @@ impl<T: Float + Default + Clone> MultiTaskCoordinator<T> {
     pub fn learn_simultaneously(
         &mut self,
         tasks: &[MetaTask<T>],
-        meta_parameters: &mut HashMap<String, Array1<T>>,
+        _meta_parameters: &mut HashMap<String, Array1<T>>,
     ) -> Result<MultiTaskResult<T>> {
         // Placeholder implementation for multi-task learning
         let mut task_results = Vec::new();

@@ -387,7 +387,7 @@ impl AdaptiveSimdOptimizer {
                     fallback_info: None,
                 })
             }
-            Err(e) => {
+            Err(_e) => {
                 // Try fallback strategy
                 self.try_fallback_strategy(operation_name, data, operation, &strategy)
             }
@@ -431,7 +431,7 @@ impl AdaptiveSimdOptimizer {
                     fallback_info: None,
                 })
             }
-            Err(e) => {
+            Err(_e) => {
                 // Implement matrix fallback strategy
                 self.try_matrix_fallback_strategy(operation_name, data, operation, &strategy)
             }
@@ -941,7 +941,7 @@ impl AdaptiveSimdOptimizer {
     /// Get performance statistics
     pub fn get_performance_statistics(&self) -> PerformanceStatistics {
         let cache = self.performance_cache.lock().unwrap();
-        let benchmarks = self.benchmark_results.lock().unwrap();
+        let _benchmarks = self.benchmark_results.lock().unwrap();
 
         let total_operations = cache.len();
         let avg_speedup = if !cache.is_empty() {

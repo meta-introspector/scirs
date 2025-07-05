@@ -8,7 +8,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use rand::prelude::*;
 use rand::rngs::StdRng;
-use rand::{rng, SeedableRng};
+use rand::SeedableRng;
 use scirs2_graph::{
     barabasi_albert_graph,
     betweenness_centrality,
@@ -16,11 +16,11 @@ use scirs2_graph::{
     breadth_first_search,
     connected_components,
     depth_first_search,
+    dijkstra_path,
     // Generators
     erdos_renyi_graph,
     minimum_spanning_tree,
     pagerank_centrality,
-    shortest_path,
     strongly_connected_components,
     DiGraph,
     EdgeWeight,
@@ -112,7 +112,7 @@ fn bench_shortest_paths(c: &mut Criterion) {
             &graph,
             |b, graph| {
                 b.iter(|| {
-                    let result = shortest_path(graph, &0, &target);
+                    let result = dijkstra_path(graph, &0, &target);
                     black_box(result)
                 });
             },
@@ -147,7 +147,7 @@ fn bench_connectivity(c: &mut Criterion) {
         for i in 0..*size {
             directed_graph.add_node(i);
         }
-        let mut rng = rng();
+        let mut rng = StdRng::seed_from_u64(43);
         for _ in 0..(size * 2) {
             let u = rng.random_range(0..*size);
             let v = rng.random_range(0..*size);
@@ -246,7 +246,7 @@ fn bench_io(c: &mut Criterion) {
         );
 
         group.bench_with_input(BenchmarkId::new("has_edge", size), &graph, |b, graph| {
-            let mut rng = rng();
+            let mut rng = StdRng::seed_from_u64(44);
             b.iter(|| {
                 let u = rng.random_range(0..*size);
                 let v = rng.random_range(0..*size);

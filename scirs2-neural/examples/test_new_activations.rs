@@ -21,10 +21,7 @@ fn test_activation_logic() -> Result<()> {
         gelu_output.push(gelu_val);
     }
 
-    println!(
-        "GELU approximation test: {:?} -> {:?}",
-        input_vals, gelu_output
-    );
+    println!("GELU approximation test: {input_vals:?} -> {gelu_output:?}");
 
     // Test Sigmoid-like calculation
     let mut sigmoid_output = Vec::new();
@@ -33,7 +30,7 @@ fn test_activation_logic() -> Result<()> {
         sigmoid_output.push(sigmoid_val);
     }
 
-    println!("Sigmoid test: {:?} -> {:?}", input_vals, sigmoid_output);
+    println!("Sigmoid test: {input_vals:?} -> {sigmoid_output:?}");
 
     // Test ReLU-like calculation
     let mut relu_output = Vec::new();
@@ -42,7 +39,7 @@ fn test_activation_logic() -> Result<()> {
         relu_output.push(relu_val);
     }
 
-    println!("ReLU test: {:?} -> {:?}", input_vals, relu_output);
+    println!("ReLU test: {input_vals:?} -> {relu_output:?}");
 
     // Test Softmax-like calculation
     let softmax_input = vec![1.0, 2.0, 3.0];
@@ -53,11 +50,11 @@ fn test_activation_logic() -> Result<()> {
     let sum_exp: f64 = exp_vals.iter().sum();
     let softmax_output: Vec<f64> = exp_vals.iter().map(|x| x / sum_exp).collect();
 
-    println!("Softmax test: {:?} -> {:?}", softmax_input, softmax_output);
+    println!("Softmax test: {softmax_input:?} -> {softmax_output:?}");
 
     // Verify softmax sums to 1
     let sum: f64 = softmax_output.iter().sum();
-    println!("Softmax sum verification: {} (should be ~1.0)", sum);
+    println!("Softmax sum verification: {sum} (should be ~1.0)");
 
     println!("All activation function logic tests passed!");
     Ok(())

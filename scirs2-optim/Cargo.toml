@@ -73,9 +73,6 @@ path = "src/bin/security_audit_scanner.rs"
 name = "dependency-vulnerability-scanner"
 path = "src/bin/dependency_vulnerability_scanner.rs"
 
-[[bin]]
-name = "validate_ultrathink"
-path = "src/bin/validate_ultrathink.rs"
 
 [dev-dependencies]
 plotters = { workspace = true }

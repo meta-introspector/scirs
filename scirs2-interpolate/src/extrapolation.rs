@@ -2170,7 +2170,7 @@ mod tests {
             PhysicsLaw::MassConservation,
         );
 
-        let result = extrapolator.extrapolate(-0.5).unwrap();
+        let result = extrapolator.base_extrapolator.extrapolate(-0.5).unwrap();
         assert!(result.is_finite());
         assert!(result >= 0.0); // Mass conservation - no negative values
     }

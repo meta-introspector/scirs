@@ -475,7 +475,7 @@ impl std::fmt::Display for OptimizationRecommendation {
             OptimizationRecommendation::ProfileAndOptimize => write!(f, "Profile and optimize"),
             OptimizationRecommendation::UseChunking => write!(f, "Use chunking for large inputs"),
             OptimizationRecommendation::CacheResults => write!(f, "Cache intermediate results"),
-            OptimizationRecommendation::Custom(msg) => write!(f, "{}", msg),
+            OptimizationRecommendation::Custom(msg) => write!(f, "{msg}"),
         }
     }
 }

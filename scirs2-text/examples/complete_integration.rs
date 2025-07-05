@@ -12,11 +12,11 @@
 //! - Comprehensive analytics and reporting
 //! - Real-time adaptation and learning
 
-use scirs2_text::advancedthink_performance::{AdvancedPerformanceMonitor, PerformanceThresholds};
-use scirs2_text::advancedthink_text_coordinator::{AdvancedTextConfig, AdvancedTextCoordinator};
 use scirs2_text::error::Result;
+use scirs2_text::performance::{AdvancedPerformanceMonitor, PerformanceThresholds};
 use scirs2_text::simd_ops::{AdvancedSIMDTextProcessor, SimdStringOps};
 use scirs2_text::streaming::AdvancedStreamingProcessor;
+use scirs2_text::text_coordinator::{AdvancedTextConfig, AdvancedTextCoordinator};
 use scirs2_text::tokenize::WordTokenizer;
 use scirs2_text::Tokenizer;
 use std::time::Instant;
@@ -545,7 +545,7 @@ fn generate_mixed_workload(count: usize) -> Vec<String> {
 
 #[allow(dead_code)]
 fn calculate_system_health_score(
-    report: &scirs2_text::advancedthink_performance::DetailedPerformanceReport,
+    report: &scirs2_text::performance::DetailedPerformanceReport,
 ) -> f64 {
     let mut score: f64 = 100.0;
 

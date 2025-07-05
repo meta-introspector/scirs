@@ -2462,7 +2462,7 @@ pub mod benchmark {
         /// Generate synthetic clustering data
         fn generate_synthetic_data(&self, n_samples: usize, n_features: usize) -> Array2<f64> {
             use rand::distributions::{Distribution, Normal};
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             let normal = Normal::new(0.0, 1.0);
 
             Array2::from_shape_fn((n_samples, n_features), |_| normal.sample(&mut rng))

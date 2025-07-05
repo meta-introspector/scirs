@@ -118,11 +118,10 @@ pub enum TPUMemoryOptimization {
 }
 
 /// TPU-optimized optimizer wrapper
-pub struct TPUOptimizer<O, A, D>
+pub struct TPUOptimizer<O, A>
 where
-    A: Float,
-    D: Dimension,
-    O: Optimizer<A, D>,
+    A: Float + ndarray::ScalarOperand + std::fmt::Debug,
+    O: Optimizer<A, ndarray::Ix1>,
 {
     /// Base optimizer
     base_optimizer: O,
@@ -131,7 +130,7 @@ where
     config: TPUConfig,
 
     /// XLA computation graph
-    xla_graph: Option<XLAComputationGraph<A>>,
+    xla_graph: Option<XLAComputationGraph>,
 
     /// TPU memory allocator
     memory_allocator: TPUMemoryAllocator<A>,
@@ -151,9 +150,9 @@ where
 
 /// XLA computation graph for optimizer operations
 #[derive(Debug)]
-struct XLAComputationGraph<A: Float> {
+struct XLAComputationGraph {
     /// Graph nodes
-    nodes: Vec<XLANode<A>>,
+    nodes: Vec<XLANode>,
 
     /// Computation builder
     builder: XLAComputationBuilder,
@@ -170,7 +169,7 @@ struct XLAComputationGraph<A: Float> {
 
 /// XLA computation node
 #[derive(Debug, Clone)]
-struct XLANode<A: Float + Clone> {
+struct XLANode {
     /// Operation type
     operation: XLAOperation,
 
@@ -612,11 +611,10 @@ struct MemoryRequirements {
     temp_memory: usize,
 }
 
-impl<O, A, D> TPUOptimizer<O, A, D>
+impl<O, A> TPUOptimizer<O, A>
 where
     A: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug,
-    D: Dimension,
-    O: Optimizer<A, D> + Send + Sync,
+    O: Optimizer<A, ndarray::Ix1> + Send + Sync,
 {
     /// Create a new TPU optimizer
     pub fn new(base_optimizer: O, config: TPUConfig) -> Result<Self> {
@@ -721,7 +719,7 @@ where
         let computation_id = self.compile_step(&[param_shape, grad_shape])?;
 
         // Execute on TPU
-        let result = if let Some(ref pod_coordinator) = self.pod_coordinator {
+        let result = if let Some(ref _pod_coordinator) = self.pod_coordinator {
             self.execute_distributed(&computation_id, params, gradients)?
         } else {
             self.execute_single_tpu(&computation_id, params, gradients)?
@@ -745,7 +743,7 @@ where
     fn build_optimizer_computation(
         &self,
         input_shapes: &[XLAShape],
-    ) -> Result<XLAComputationGraph<A>> {
+    ) -> Result<XLAComputationGraph> {
         // Simplified computation graph building
         // In a real implementation, this would build the full optimizer computation
         let mut graph = self.xla_graph.as_ref().unwrap().clone();
@@ -761,9 +759,9 @@ where
 
     fn apply_optimization_passes(
         &self,
-        mut computation: XLAComputationGraph<A>,
-    ) -> Result<XLAComputationGraph<A>> {
-        for pass in &computation.optimization_passes {
+        mut computation: XLAComputationGraph,
+    ) -> Result<XLAComputationGraph> {
+        for pass in &computation.optimization_passes.clone() {
             computation = self.apply_single_pass(computation, pass)?;
         }
         Ok(computation)
@@ -771,15 +769,15 @@ where
 
     fn apply_single_pass(
         &self,
-        computation: XLAComputationGraph<A>,
+        computation: XLAComputationGraph,
         _pass: &XLAOptimizationPass,
-    ) -> Result<XLAComputationGraph<A>> {
+    ) -> Result<XLAComputationGraph> {
         // Apply specific optimization pass
         // This is simplified - real implementation would transform the computation graph
         Ok(computation)
     }
 
-    fn compile_to_tpu(&self, computation: XLAComputationGraph<A>) -> Result<CompiledComputation> {
+    fn compile_to_tpu(&self, computation: XLAComputationGraph) -> Result<CompiledComputation> {
         // Compile XLA computation to TPU executable
         let compilation_id = format!(
             "tpu_comp_{}",
@@ -819,33 +817,39 @@ where
     }
 
     fn execute_single_tpu<S, DIM>(
-        &self,
+        &mut self,
         _computation_id: &str,
-        params: &ArrayBase<S, DIM>,
-        gradients: &ArrayBase<S, DIM>,
+        _params: &ArrayBase<S, DIM>,
+        _gradients: &ArrayBase<S, DIM>,
     ) -> Result<Array<A, DIM>>
     where
         S: Data<Elem = A>,
         DIM: Dimension + Clone,
     {
         // Execute on single TPU
-        // For now, fall back to base optimizer
-        self.base_optimizer.step(params, gradients)
+        // For now, return a placeholder since we can't properly convert between
+        // the different dimension types without knowing the exact dimensions
+        Err(crate::error::OptimError::InvalidParameter(
+            "TPU execution not yet implemented for generic dimensions".to_string(),
+        ))
     }
 
     fn execute_distributed<S, DIM>(
-        &self,
+        &mut self,
         _computation_id: &str,
-        params: &ArrayBase<S, DIM>,
-        gradients: &ArrayBase<S, DIM>,
+        _params: &ArrayBase<S, DIM>,
+        _gradients: &ArrayBase<S, DIM>,
     ) -> Result<Array<A, DIM>>
     where
         S: Data<Elem = A>,
         DIM: Dimension + Clone,
     {
         // Execute on TPU pod with coordination
-        // For now, fall back to single TPU execution
-        self.execute_single_tpu(_computation_id, params, gradients)
+        // For now, return a placeholder since we can't properly convert between
+        // the different dimension types without knowing the exact dimensions
+        Err(crate::error::OptimError::InvalidParameter(
+            "TPU distributed execution not yet implemented for generic dimensions".to_string(),
+        ))
     }
 
     fn array_to_xla_shape<S, DIM>(&self, array: &ArrayBase<S, DIM>) -> Result<XLAShape>
@@ -1080,7 +1084,7 @@ impl XLAComputationBuilder {
     }
 }
 
-impl<A: Float> Clone for XLAComputationGraph<A> {
+impl Clone for XLAComputationGraph {
     fn clone(&self) -> Self {
         Self {
             nodes: self.nodes.clone(),

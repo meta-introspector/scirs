@@ -51,6 +51,7 @@ pub struct QuantumMLSuite {
     /// Configuration for quantum metrics computation
     config: QuantumMetricsConfig,
     /// Cache for expensive quantum computations
+    #[allow(dead_code)]
     computation_cache: HashMap<String, f64>,
 }
 

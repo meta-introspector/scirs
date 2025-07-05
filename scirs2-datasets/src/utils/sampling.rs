@@ -8,8 +8,8 @@
 use crate::error::{DatasetsError, Result};
 use ndarray::Array1;
 use rand::prelude::*;
-use rand::rng;
 use rand::rngs::StdRng;
+use rand::thread_rng;
 use std::collections::HashMap;
 
 /// Performs random sampling with or without replacement
@@ -63,15 +63,14 @@ pub fn random_sample(
 
     if !replace && sample_size > n_samples {
         return Err(DatasetsError::InvalidFormat(format!(
-            "Cannot sample {} items from {} without replacement",
-            sample_size, n_samples
+            "Cannot sample {sample_size} items from {n_samples} without replacement"
         )));
     }
 
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -81,7 +80,7 @@ pub fn random_sample(
     if replace {
         // Bootstrap sampling (with replacement)
         for _ in 0..sample_size {
-            indices.push(rng.random_range(0..n_samples));
+            indices.push(rng.gen_range(0..n_samples));
         }
     } else {
         // Sampling without replacement
@@ -162,7 +161,7 @@ pub fn stratified_sample(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -293,7 +292,7 @@ pub fn importance_sample(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -309,7 +308,7 @@ pub fn importance_sample(
         }
 
         // Generate random number between 0 and current_sum
-        let random_value = rng.random_range(0.0..current_sum);
+        let random_value = rng.gen_range(0.0..current_sum);
 
         // Find the index corresponding to this random value
         let mut cumulative_weight = 0.0;
@@ -422,7 +421,7 @@ pub fn multiple_bootstrap_samples(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

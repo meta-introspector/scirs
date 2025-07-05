@@ -281,12 +281,12 @@ where
 
 /// Zero-copy transpose for 2D arrays
 #[allow(dead_code)]
-pub fn transpose_view<T, S>(array: &ArrayBase<S, ndarray::Ix2>) -> ArrayView<T, ndarray::Ix2>
+pub fn transpose_view<T, S>(array: &ArrayBase<S, ndarray::Ix2>) -> Array2<T>
 where
-    T: Float,
+    T: Float + Copy,
     S: Data<Elem = T>,
 {
-    array.view().t()
+    array.t().to_owned()
 }
 
 #[cfg(test)]

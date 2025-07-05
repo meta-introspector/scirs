@@ -11,7 +11,6 @@ use crate::denoise::{threshold_coefficients, ThresholdMethod};
 use crate::dwt::{wavedec, waverec, DecompositionResult, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::check_finite;
 
 // use std::f64::consts::PI;
 use std::sync::Arc;

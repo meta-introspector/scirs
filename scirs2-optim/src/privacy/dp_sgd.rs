@@ -17,7 +17,7 @@ use crate::optimizers::Optimizer;
 /// DP-SGD optimizer with privacy guarantees
 pub struct DPSGDOptimizer<O, A, D>
 where
-    A: Float + Send + Sync,
+    A: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug,
     D: ndarray::Dimension,
     O: Optimizer<A, D>,
 {
@@ -50,6 +50,9 @@ where
 
     /// Batch size for current iteration
     current_batch_size: usize,
+
+    /// Phantom data for unused type parameter
+    _phantom: std::marker::PhantomData<D>,
 }
 
 /// Adaptive clipping state for DP-SGD
@@ -200,7 +203,14 @@ struct NoiseCalibration<A: Float> {
 
 impl<O, A, D> DPSGDOptimizer<O, A, D>
 where
-    A: Float + Default + Clone + Send + Sync + ndarray_rand::rand_distr::uniform::SampleUniform,
+    A: Float
+        + Default
+        + Clone
+        + Send
+        + Sync
+        + ndarray_rand::rand_distr::uniform::SampleUniform
+        + ndarray::ScalarOperand
+        + std::fmt::Debug,
     D: ndarray::Dimension,
     O: Optimizer<A, D> + Send + Sync,
 {
@@ -228,6 +238,7 @@ where
         let gradient_stats = GradientStatistics::new();
         let noise_calibrator = NoiseCalibrator::new(&config);
 
+        let batch_size = config.batch_size;
         Ok(Self {
             base_optimizer,
             config,
@@ -238,7 +249,8 @@ where
             gradient_stats,
             noise_calibrator,
             step_count: 0,
-            current_batch_size: config.batch_size,
+            current_batch_size: batch_size,
+            _phantom: std::marker::PhantomData,
         })
     }
 

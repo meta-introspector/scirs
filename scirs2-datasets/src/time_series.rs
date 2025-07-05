@@ -70,8 +70,7 @@ pub fn electrocardiogram() -> Result<Dataset> {
         Ok(path) => path,
         Err(e) => {
             return Err(DatasetsError::LoadingError(format!(
-                "Failed to fetch ECG data: {}",
-                e
+                "Failed to fetch ECG data: {e}"
             )))
         }
     };
@@ -81,8 +80,7 @@ pub fn electrocardiogram() -> Result<Dataset> {
         Ok(data) => data,
         Err(e) => {
             return Err(DatasetsError::LoadingError(format!(
-                "Failed to read ECG data: {}",
-                e
+                "Failed to read ECG data: {e}"
             )))
         }
     };
@@ -193,7 +191,7 @@ pub fn stock_market(returns: bool) -> Result<Dataset> {
     let records: Result<Vec<StockPrice>> = reader
         .deserialize()
         .map(|result| {
-            result.map_err(|e| DatasetsError::LoadingError(format!("CSV parsing error: {}", e)))
+            result.map_err(|e| DatasetsError::LoadingError(format!("CSV parsing error: {e}")))
         })
         .collect();
 
@@ -330,8 +328,7 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
         Ok(path) => path,
         Err(e) => {
             return Err(DatasetsError::LoadingError(format!(
-                "Failed to fetch weather data: {}",
-                e
+                "Failed to fetch weather data: {e}"
             )))
         }
     };
@@ -341,8 +338,7 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
         Ok(content) => content,
         Err(e) => {
             return Err(DatasetsError::LoadingError(format!(
-                "Failed to read weather data: {}",
-                e
+                "Failed to read weather data: {e}"
             )))
         }
     };
@@ -351,7 +347,7 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
     let records: Result<Vec<WeatherObservation>> = reader
         .deserialize()
         .map(|result| {
-            result.map_err(|e| DatasetsError::LoadingError(format!("CSV parsing error: {}", e)))
+            result.map_err(|e| DatasetsError::LoadingError(format!("CSV parsing error: {e}")))
         })
         .collect();
 
@@ -452,7 +448,7 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
             let mut feature_names = Vec::with_capacity(n_features * locations.len());
             for location in &locations {
                 for feat in &valid_features {
-                    feature_names.push(format!("{}_{}", location, feat));
+                    feature_names.push(format!("{location}_{feat}"));
                 }
             }
 

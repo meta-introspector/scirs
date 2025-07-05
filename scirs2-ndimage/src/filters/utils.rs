@@ -26,10 +26,11 @@ pub fn calculate_kernel_size<T: Float + FromPrimitive>(
     truncate: Option<T>,
 ) -> NdimageResult<usize> {
     let truncate_val = truncate.unwrap_or_else(|| {
-        safe_f64_to_float(4.0).unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::zero()))
+        safe_f64_to_float::<T>(4.0)
+            .unwrap_or_else(|_| T::from_f64(4.0).unwrap_or_else(|| T::zero()))
     });
     let size = safe_usize_to_float::<T>(1)?
-        + (sigma * truncate_val * safe_f64_to_float(2.0)?)
+        + (sigma * truncate_val * safe_f64_to_float::<T>(2.0)?)
             .ceil()
             .to_usize()
             .ok_or_else(|| {
@@ -62,9 +63,9 @@ pub fn generate_gaussian_kernel<T: Float + FromPrimitive>(
     let half = kernel_size / 2;
     let mut kernel = Array::zeros(kernel_size);
     let sigma_sq = sigma * sigma;
-    let norm_factor =
-        safe_f64_to_float::<T>(1.0)? / (sigma * safe_f64_to_float(std::f64::consts::TAU.sqrt())?);
-    let exp_factor = safe_f64_to_float(-0.5)? / sigma_sq;
+    let norm_factor = safe_f64_to_float::<T>(1.0)?
+        / (sigma * safe_f64_to_float::<T>(std::f64::consts::TAU.sqrt())?);
+    let exp_factor = safe_f64_to_float::<T>(-0.5)? / sigma_sq;
 
     let mut sum = T::zero();
     for (i, k) in kernel.iter_mut().enumerate() {

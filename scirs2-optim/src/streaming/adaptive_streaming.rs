@@ -4,9 +4,10 @@
 //! that automatically adjust to changing data characteristics, concept drift,
 //! and varying computational constraints.
 
-use ndarray::Array1;
+use ndarray::{Array1, ScalarOperand};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
+use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
 use super::{StreamingConfig, StreamingDataPoint};
@@ -14,10 +15,11 @@ use crate::error::Result;
 use crate::optimizers::Optimizer;
 
 /// Adaptive streaming optimizer with automatic parameter tuning
-pub struct AdaptiveStreamingOptimizer<O, A>
+pub struct AdaptiveStreamingOptimizer<O, A, D>
 where
-    A: Float,
-    O: Optimizer<A>,
+    A: Float + ScalarOperand + Debug,
+    D: ndarray::Dimension,
+    O: Optimizer<A, D>,
 {
     /// Base optimizer
     base_optimizer: O,
@@ -45,6 +47,9 @@ where
 
     /// Current step count
     step_count: usize,
+
+    /// Phantom data for unused type parameter
+    _phantom: std::marker::PhantomData<D>,
 }
 
 /// Adaptive learning rate controller
@@ -535,10 +540,11 @@ struct MetaAction<A: Float> {
     other_adjustments: HashMap<String, A>,
 }
 
-impl<O, A> AdaptiveStreamingOptimizer<O, A>
+impl<O, A, D> AdaptiveStreamingOptimizer<O, A, D>
 where
-    A: Float + Default + Clone + Send + Sync,
-    O: Optimizer<A> + Send + Sync,
+    A: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug,
+    D: ndarray::Dimension,
+    O: Optimizer<A, D> + Send + Sync,
 {
     /// Create a new adaptive streaming optimizer
     pub fn new(base_optimizer: O, config: StreamingConfig) -> Result<Self> {
@@ -559,6 +565,7 @@ where
             adaptive_buffer,
             meta_learner,
             step_count: 0,
+            _phantom: std::marker::PhantomData,
         })
     }
 
@@ -566,7 +573,7 @@ where
     pub fn adaptive_step(
         &mut self,
         data_point: StreamingDataPoint<A>,
-    ) -> Result<AdaptiveStepResult<A>> {
+    ) -> Result<AdaptiveStepResult> {
         let step_start = Instant::now();
         self.step_count += 1;
 
@@ -600,7 +607,7 @@ where
         self.apply_adaptations(&adaptations)?;
 
         // Perform optimization step
-        let optimization_result = self.perform_optimization_step(&batch)?;
+        let _optimization_result = self.perform_optimization_step(&batch)?;
 
         // Update meta-learner with experience
         self.update_meta_learner(&adaptations, &current_performance)?;
@@ -996,7 +1003,7 @@ enum Adaptation<A: Float> {
 
 /// Result of adaptive step
 #[derive(Debug, Clone)]
-pub struct AdaptiveStepResult<A: Float> {
+pub struct AdaptiveStepResult {
     pub processed: bool,
     pub adaptation_applied: bool,
     pub performance_metrics: HashMap<String, f64>,

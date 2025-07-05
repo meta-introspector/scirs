@@ -65,6 +65,7 @@ impl TrajectoryPoint {
     /// # Returns
     ///
     /// * A new TrajectoryPoint instance
+    #[allow(clippy::too_many_arguments)]
     pub fn new(x: f64, y: f64, vx: f64, vy: f64, ax: f64, ay: f64) -> Self {
         Self {
             x,
@@ -78,6 +79,7 @@ impl TrajectoryPoint {
     }
 
     /// Create a new trajectory point with time
+    #[allow(clippy::too_many_arguments)]
     pub fn with_time(x: f64, y: f64, vx: f64, vy: f64, ax: f64, ay: f64, t: f64) -> Self {
         Self {
             x,
@@ -703,7 +705,6 @@ mod tests {
         match trajectory_result {
             Ok(trajectory) => {
                 // Basic checks
-                assert!(!trajectory.is_empty());
                 assert!(!trajectory.is_empty());
                 println!(
                     "Successfully generated obstacle-avoiding trajectory with {} points",

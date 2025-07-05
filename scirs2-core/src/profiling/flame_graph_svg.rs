@@ -553,7 +553,7 @@ impl EnhancedFlameGraph {
         let max_time = self.total_duration.as_secs_f64();
 
         let mut points = String::new();
-        for (_i, (time, cpu)) in self.cpu_usage.iter().enumerate() {
+        for (time, cpu) in self.cpu_usage.iter() {
             let chart_x = x + (time.as_secs_f64() / max_time) * width;
             let chart_y = y + height - (cpu / max_cpu) * height;
 
@@ -593,7 +593,7 @@ impl EnhancedFlameGraph {
         let max_time = self.total_duration.as_secs_f64();
 
         let mut points = String::new();
-        for (_i, (time, memory)) in self.memory_usage.iter().enumerate() {
+        for (time, memory) in self.memory_usage.iter() {
             let chart_x = x + (time.as_secs_f64() / max_time) * width;
             let chart_y = y + height - ((*memory as f64) / (max_memory as f64)) * height;
 

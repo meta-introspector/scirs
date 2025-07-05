@@ -6,14 +6,14 @@
 
 #![allow(dead_code)]
 
+use crate::advanced_memory_optimization::AdvancedMemoryOptimizer;
+use crate::advanced_simd_acceleration::AdvancedSimdAccelerator;
 use crate::error::IntegrateResult;
-use crate::gpu_ultra_acceleration::AdvancedGPUAccelerator;
+use crate::gpu_advanced_acceleration::AdvancedGPUAccelerator;
 use crate::realtime_performance_adaptation::{
     AdaptationStrategy, AdaptationTriggers, OptimizationObjectives, PerformanceConstraints,
     RealTimeAdaptiveOptimizer, TargetMetrics,
 };
-use crate::ultra_memory_optimization::AdvancedMemoryOptimizer;
-use crate::ultra_simd_acceleration::AdvancedSimdAccelerator;
 use ndarray::{Array1, Array2, ArrayView1};
 use std::time::Duration;
 

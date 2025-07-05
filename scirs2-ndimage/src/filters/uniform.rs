@@ -3,13 +3,19 @@
 //! This module provides functions for applying uniform filters (also known as box filters)
 //! to n-dimensional arrays.
 
-use ndarray::{Array, Array1, Array2, Dimension};
+use ndarray::{s, Array, Array1, Array2, Dimension};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::validation::{check_1d, check_2d, check_positive};
 use std::fmt::Debug;
 
 use super::{pad_array, BorderMode};
 use crate::error::{NdimageError, NdimageResult};
+
+#[cfg(feature = "simd")]
+use scirs2_core::simd_ops::SimdUnifiedOps;
+
+#[cfg(feature = "parallel")]
+use scirs2_core::parallel_ops;
 
 /// Apply a uniform filter to an n-dimensional array
 ///
@@ -621,7 +627,7 @@ where
     let input_shape = input.shape();
 
     // Generate all possible coordinate combinations for the input
-    let _total_elements = input.len();
+    let total_elements = input.len();
 
     // Use parallel iteration if the array is large enough
     #[cfg(feature = "parallel")]
@@ -1120,8 +1126,8 @@ where
     let mut output = Array2::zeros((rows, cols));
 
     // Calculate number of chunks
-    let num_row_chunks = (rows + chunk_size - 1) / chunk_size;
-    let num_col_chunks = (cols + chunk_size - 1) / chunk_size;
+    let num_row_chunks = (rows + _chunk_size - 1) / _chunk_size;
+    let num_col_chunks = (cols + _chunk_size - 1) / _chunk_size;
 
     // Process chunks in parallel using scirs2-core's parallel operations
     let chunk_indices: Vec<(usize, usize)> = (0..num_row_chunks)
@@ -1130,10 +1136,10 @@ where
 
     let process_chunk = |&(chunk_row, chunk_col): &(usize, usize)| -> Result<((usize, usize), Array2<T>), crate::error::NdimageError> {
         // Calculate chunk boundaries
-        let row_start = chunk_row * chunk_size;
-        let row_end = std::cmp::min(row_start + chunk_size, rows);
-        let col_start = chunk_col * chunk_size;
-        let col_end = std::cmp::min(col_start + chunk_size, cols);
+        let row_start = chunk_row * _chunk_size;
+        let row_end = std::cmp::min(row_start + _chunk_size, rows);
+        let col_start = chunk_col * _chunk_size;
+        let col_end = std::cmp::min(col_start + _chunk_size, cols);
 
         // Extract chunk with padding for boundary conditions
         let padded_row_start = row_start.saturating_sub(pad_rows);
@@ -1170,10 +1176,10 @@ where
 
     // Reassemble the results
     for ((chunk_row, chunk_col), chunk_result) in chunk_results {
-        let row_start = chunk_row * chunk_size;
-        let row_end = std::cmp::min(row_start + chunk_size, rows);
-        let col_start = chunk_col * chunk_size;
-        let col_end = std::cmp::min(col_start + chunk_size, cols);
+        let row_start = chunk_row * _chunk_size;
+        let row_end = std::cmp::min(row_start + _chunk_size, rows);
+        let col_start = chunk_col * _chunk_size;
+        let col_end = std::cmp::min(col_start + _chunk_size, cols);
 
         let output_slice = output.slice_mut(s![row_start..row_end, col_start..col_end]);
         output_slice.assign(&chunk_result);

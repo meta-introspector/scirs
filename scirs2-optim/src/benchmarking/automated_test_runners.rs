@@ -804,9 +804,15 @@ impl AutomatedTestRunner {
             }
         }
 
+        // Clone the queue data for later analysis to avoid borrow conflicts
+        let queue_clone = queue.clone();
+
+        // Drop the lock before calling methods that need mutable access
+        drop(queue);
+
         // Analyze performance and failures
         self.analyze_performance_matrix()?;
-        self.analyze_failures(&queue)?;
+        self.analyze_failures(&queue_clone)?;
 
         println!("📊 Results aggregation completed");
         Ok(())

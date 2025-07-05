@@ -9,7 +9,7 @@ use std::str::FromStr;
 
 use super::{euclidean_distance, vq};
 use crate::error::{ClusteringError, Result};
-use scirs2_core::validation::{clustering::*, parameters::*};
+// use scirs2_core::validation::{clustering::*, parameters::*};
 
 /// Initialization methods for kmeans2
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -349,7 +349,7 @@ where
     let mut rng: Box<dyn RngCore> = if let Some(seed) = random_seed {
         Box::new(StdRng::from_seed([seed as u8; 32]))
     } else {
-        Box::new(rand::rng())
+        Box::new(rand::thread_rng())
     };
 
     for i in 0..k {
@@ -383,7 +383,7 @@ where
     let mut rng: Box<dyn RngCore> = if let Some(seed) = random_seed {
         Box::new(StdRng::from_seed([seed as u8; 32]))
     } else {
-        Box::new(rand::rng())
+        Box::new(rand::thread_rng())
     };
 
     // Choose k random indices without replacement
@@ -419,7 +419,7 @@ where
     let mut rng: Box<dyn RngCore> = if let Some(seed) = random_seed {
         Box::new(StdRng::from_seed([seed as u8; 32]))
     } else {
-        Box::new(rand::rng())
+        Box::new(rand::thread_rng())
     };
 
     let mut centroids = Array2::zeros((k, n_features));

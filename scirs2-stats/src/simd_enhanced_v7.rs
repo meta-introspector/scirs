@@ -157,7 +157,7 @@ where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + PartialOrd + Copy + Send + Sync
         + std::fmt::Display,
 {
-    /// Create new advanced-advanced SIMD processor
+    /// Create new advanced SIMD processor
     pub fn new() -> Self {
         Self {
             config: AdvancedAdvancedSimdConfig::default(),
@@ -883,7 +883,7 @@ where
     }
 }
 
-/// Convenience functions for advanced-advanced SIMD operations
+/// Convenience functions for advanced SIMD operations
 #[allow(dead_code)]
 pub fn advanced_simd_multiple_regression<F>(
     y: &ArrayView1<F>,

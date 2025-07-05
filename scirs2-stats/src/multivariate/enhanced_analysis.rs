@@ -143,7 +143,7 @@ where
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&PCAResult<F>> {
         check_array_finite(data, "data")?;
 
-        let (n_samples, n_features) = data.dim();
+        let (n_samples, _n_features) = data.dim();
 
         if n_samples == 0 || n_features == 0 {
             return Err(StatsError::InvalidArgument(
@@ -263,13 +263,13 @@ where
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples, _n_features) = data.dim();
 
         // Convert to f64 for numerical stability
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());
 
         // Compute SVD
-        let (u, s, vt) = scirs2_linalg::svd(&data_f64.view(), true, None)
+        let (_u, s, vt) = scirs2_linalg::svd(&data_f64.view(), true, None)
             .map_err(|e| StatsError::ComputationError(format!("SVD failed: {}", e)))?;
 
         // Extract components and singular values
@@ -653,7 +653,7 @@ where
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&FactorAnalysisResult<F>> {
         check_array_finite(data, "data")?;
 
-        let (n_samples, n_features) = data.dim();
+        let (_n_samples, n_features) = data.dim();
 
         if self.n_factors >= n_features {
             return Err(StatsError::InvalidArgument(format!(
@@ -672,7 +672,7 @@ where
         let mut loadings = self.initial_loadings(&corr_matrix)?;
 
         // Iterative estimation (simplified EM algorithm)
-        let mut uniquenesses = Array1::ones(n_features) * F::from(0.5).unwrap();
+        let uniquenesses = Array1::ones(n_features) * F::from(0.5).unwrap();
 
         for _iter in 0..self.config.max_iter {
             // E-step: Update factor scores (simplified)

@@ -7,10 +7,7 @@ use crate::error::{ScirsError, ScirsResult};
 
 // Note: Error conversion handled through scirs2_core::error system
 // GPU errors are automatically converted via CoreError type alias
-use scirs2_core::gpu::{GpuBuffer, GpuDevice};
-
-// Real GPU types from scirs2-core
-pub type GpuContext = GpuDevice;
+use scirs2_core::gpu::{GpuBuffer, GpuContext};
 pub type OptimGpuArray<T> = GpuBuffer<T>;
 pub type OptimGpuBuffer<T> = GpuBuffer<T>;
 use std::collections::{HashMap, VecDeque};
@@ -50,9 +47,9 @@ impl GpuMemoryPool {
     /// Create a stub GPU memory pool (fallback for incomplete implementations)
     pub fn new_stub() -> Self {
         use scirs2_core::gpu::GpuBackend;
-        let device = GpuDevice::new(GpuBackend::Cpu, 0);
+        let context = GpuContext::new(GpuBackend::Cpu).expect("CPU backend should always work");
         Self {
-            context: Arc::new(device),
+            context: Arc::new(context),
             pools: Arc::new(Mutex::new(HashMap::new())),
             allocated_blocks: Arc::new(Mutex::new(Vec::new())),
             memory_limit: None,
@@ -80,10 +77,13 @@ impl GpuMemoryPool {
                 self.garbage_collect()?;
                 let current = *self.current_usage.lock().unwrap();
                 if current + size > limit {
-                    return Err(ScirsError::OutOfMemory(format!(
-                        "Would exceed memory limit: {} + {} > {}",
-                        current, size, limit
-                    )));
+                    return Err(ScirsError::MemoryError(
+                        scirs2_core::error::ErrorContext::new(format!(
+                            "Would exceed memory limit: {} + {} > {}",
+                            current, size, limit
+                        ))
+                        .with_location(scirs2_core::error::ErrorLocation::new(file!(), line!())),
+                    ));
                 }
             }
         }
@@ -99,8 +99,8 @@ impl GpuMemoryPool {
 
         // Allocate new block
         stats.new_allocations += 1;
-        let gpu_buffer = OptimGpuBuffer::<u8>::zeros(&self.context, size)?;
-        let ptr = gpu_buffer.as_ptr();
+        let gpu_buffer = self.context.create_buffer::<u8>(size);
+        let ptr = std::ptr::null_mut();
         let block = GpuMemoryBlock {
             size,
             ptr,

@@ -732,8 +732,8 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
         result_data: &HashMap<String, f64>,
     ) -> Result<OptimizerBenchmarkSummary<A>> {
         // Simplified parsing - using default values for now
-        let successful_runs = result_data.get("successful_runs").unwrap_or(&0.0) as &f64 as usize;
-        let total_runs = result_data.get("total_runs").unwrap_or(&5.0) as &f64 as usize;
+        let successful_runs = *result_data.get("successful_runs").unwrap_or(&0.0) as usize;
+        let total_runs = *result_data.get("total_runs").unwrap_or(&5.0) as usize;
         let success_rate = *result_data.get("success_rate").unwrap_or(&1.0);
 
         let mean_convergence_time_ms = *result_data
@@ -1206,9 +1206,8 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 impl PythonScriptTemplates {
     fn new() -> Self {
         Self {
-            pytorch_template: include_str!("python_templates/pytorch_benchmark.py").to_string(),
-            tensorflow_template: include_str!("python_templates/tensorflow_benchmark.py")
-                .to_string(),
+            pytorch_template: "# PyTorch benchmark template - placeholder\n".to_string(),
+            tensorflow_template: "# TensorFlow benchmark template - placeholder\n".to_string(),
         }
     }
 

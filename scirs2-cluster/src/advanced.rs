@@ -204,7 +204,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumKMeans<F> {
     fn quantum_noise(&self) -> F {
         // Simplified quantum noise generation
         let uniform = Uniform::new(-1.0, 1.0);
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         F::from(uniform.sample(&mut rng)).unwrap()
     }
 
@@ -924,7 +924,7 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
             ));
         }
 
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut exploration_rate = self.config.exploration_rate;
         let mut best_reward = f64::NEG_INFINITY;
         let mut best_assignments = vec![0; n_samples];
@@ -1694,7 +1694,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> DeepEmbeddedClustering<F> {
 
     /// Initialize neural network weights
     pub fn initialize_weights(&mut self, input_dim: usize) -> Result<()> {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         // Initialize encoder
         let mut prev_dim = input_dim;
@@ -2167,7 +2167,7 @@ pub struct QAOAClustering<F: Float + FromPrimitive> {
 impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
     /// Create new QAOA clustering instance
     pub fn new(n_clusters: usize, config: QAOAConfig) -> Self {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         // Initialize QAOA parameters randomly
         let gamma_params = Array1::from_shape_fn(config.p_layers, |_| {
@@ -2413,7 +2413,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> QAOAClustering<F> {
         if let Some(ref state) = &self.quantum_state {
             let n_qubits = (state.len() as f64).log2() as usize;
             let mut assignments = Array1::zeros(n_qubits);
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
 
             // Sample from probability distribution
             for _shot in 0..self.config.n_shots {
@@ -2560,7 +2560,7 @@ pub struct VQEClustering<F: Float + FromPrimitive> {
 impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
     /// Create new VQE clustering instance
     pub fn new(n_clusters: usize, config: VQEConfig) -> Self {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         // Initialize variational parameters
         let params = Array1::from_shape_fn(config.n_params, |_| {

@@ -32,7 +32,8 @@ tokio = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
 
 [features]
-default = []
+default = ["parallel"]
+parallel = ["scirs2-core/parallel"]
 async = ["tokio", "futures"]
 
 [dev-dependencies]

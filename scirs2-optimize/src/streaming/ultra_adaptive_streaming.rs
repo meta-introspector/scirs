@@ -532,7 +532,7 @@ impl<T: StreamingObjective> AdvancedAdaptiveStreamingOptimizer<T> {
             &selected_algorithm,
         )?;
 
-        // 8. Apply update with advanced-advanced regularization
+        // 8. Apply update with advanced regularization
         self.apply_advanced_regularized_update(&fused_update, data_point)?;
 
         // 9. Update performance tracking and anomaly detection

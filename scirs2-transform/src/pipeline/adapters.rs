@@ -22,19 +22,19 @@ macro_rules! impl_transformer {
             fn fit(&mut self, x: &Array2<f64>) -> Result<()> {
                 self.fit(x)
             }
-            
+
             fn transform(&self, x: &Array2<f64>) -> Result<Array2<f64>> {
                 self.transform(x)
             }
-            
+
             fn clone_box(&self) -> Box<dyn Transformer> {
                 Box::new(self.clone())
             }
-            
+
             fn as_any(&self) -> &dyn Any {
                 self
             }
-            
+
             fn as_any_mut(&mut self) -> &mut dyn Any {
                 self
             }

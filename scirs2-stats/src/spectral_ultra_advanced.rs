@@ -29,7 +29,7 @@ pub struct AdvancedSpectralAnalyzer<F> {
     _phantom: PhantomData<F>,
 }
 
-/// Configuration for advanced-advanced spectral analysis
+/// Configuration for advanced spectral analysis
 pub struct AdvancedSpectralConfig<F> {
     /// Sampling frequency
     pub fs: F,
@@ -401,7 +401,7 @@ where
         + Sync
         + std::fmt::Display,
 {
-    /// Create a new advanced-advanced spectral analyzer
+    /// Create a new advanced spectral analyzer
     pub fn new(config: AdvancedSpectralConfig<F>) -> Self {
         let cache = SpectralCache {
             windows: HashMap::new(),

@@ -263,14 +263,12 @@ impl StabilityChecker {
         match Self::get_stability_level(api_name) {
             StabilityLevel::Experimental => {
                 eprintln!(
-                    "Warning: '{}' is an experimental API and may change in future versions",
-                    api_name
+                    "Warning: '{api_name}' is an experimental API and may change in future versions"
                 );
                 Ok(())
             }
             StabilityLevel::Internal => Err(format!(
-                "Error: '{}' is an internal API and should not be used directly",
-                api_name
+                "Error: '{api_name}' is an internal API and should not be used directly"
             )),
             StabilityLevel::Stable => Ok(()),
         }

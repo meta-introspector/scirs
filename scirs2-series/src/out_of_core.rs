@@ -269,17 +269,17 @@ impl MmapTimeSeriesReader {
     /// Create new memory-mapped reader for binary f64 data
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path.as_ref())
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {e}")))?;
 
         let file_size = file
             .metadata()
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to get file metadata: {}", e)))?
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to get file metadata: {e}")))?
             .len() as usize;
 
         let mmap = unsafe {
-            MmapOptions::new().map(&file).map_err(|e| {
-                TimeSeriesError::IOError(format!("Failed to memory map file: {}", e))
-            })?
+            MmapOptions::new()
+                .map(&file)
+                .map_err(|e| TimeSeriesError::IOError(format!("Failed to memory map file: {e}")))?
         };
 
         let element_size = std::mem::size_of::<f64>();
@@ -381,13 +381,13 @@ impl CsvTimeSeriesReader {
         }
 
         let file = File::open(&self.file_path)
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {e}")))?;
 
         let reader = BufReader::new(file);
         let mut count = 0;
 
         for line in reader.lines() {
-            line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {}", e)))?;
+            line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {e}")))?;
             count += 1;
         }
 
@@ -403,7 +403,7 @@ impl CsvTimeSeriesReader {
     /// Read a chunk of data starting at the given line
     pub fn read_chunk(&self, start_line: usize, chunk_size: usize) -> Result<Array1<f64>> {
         let file = File::open(&self.file_path)
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open file: {e}")))?;
 
         let reader = BufReader::new(file);
         let mut data = Vec::new();
@@ -412,7 +412,7 @@ impl CsvTimeSeriesReader {
 
         for line in reader.lines() {
             let line =
-                line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {}", e)))?;
+                line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {e}")))?;
 
             // Skip header
             if current_line == 0 && self.has_header {
@@ -772,7 +772,7 @@ pub struct OutOfCoreQuantileEstimator {
 impl OutOfCoreQuantileEstimator {
     /// Create new quantile estimator
     pub fn new(quantile: f64) -> Result<Self> {
-        if quantile < 0.0 || quantile > 1.0 {
+        if !(0.0..=1.0).contains(&quantile) {
             return Err(TimeSeriesError::InvalidInput(
                 "Quantile must be between 0 and 1".to_string(),
             ));
@@ -948,7 +948,7 @@ pub mod utils {
 
         for line in reader.lines() {
             let line =
-                line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {}", e)))?;
+                line.map_err(|e| TimeSeriesError::IOError(format!("Failed to read line: {e}")))?;
 
             // Skip header
             if line_number == 0 && has_header {

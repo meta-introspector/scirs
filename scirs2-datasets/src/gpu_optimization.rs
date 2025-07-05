@@ -1,4 +1,4 @@
-//! Advanced-Advanced GPU Optimization Engine
+//! Advanced GPU Optimization Engine
 //!
 //! This module provides cutting-edge GPU acceleration capabilities for dataset operations,
 //! featuring adaptive kernels, intelligent memory management, and advanced-high-performance
@@ -149,7 +149,7 @@ impl Default for AdvancedGpuOptimizer {
 }
 
 impl AdvancedGpuOptimizer {
-    /// Create a new advanced-advanced GPU optimizer
+    /// Create a new advanced GPU optimizer
     pub fn new() -> Self {
         Self::default()
     }
@@ -849,7 +849,7 @@ impl AdvancedGpuOptimizer {
                             let uniform = Uniform::new(0.0, 1.0).unwrap();
                             uniform.sample(&mut local_rng)
                         }
-                        _ => local_rng.random::<f64>(),
+                        _ => local_rng.gen::<f64>(),
                     })
                     .collect::<Vec<_>>()
             })

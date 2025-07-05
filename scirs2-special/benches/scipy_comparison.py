@@ -117,8 +117,8 @@ def main():
     lambertw_args = [(x * 0.1 + 0.1,) for x in range(100)]
     results['lambertw'] = benchmark_function(sp.lambertw, lambertw_args, 'lambertw')
     
-    # Ultrathink mode functions
-    print("Benchmarking ultrathink mode functions...")
+    # Advanced mode functions
+    print("Benchmarking advanced mode functions...")
     
     # Dawson's integral
     dawson_args = [(x * 0.1,) for x in range(-50, 51)]
@@ -152,7 +152,7 @@ def main():
     except AttributeError:
         print("Warning: spence not available in this SciPy version")
     
-    # Exponentially scaled Bessel functions (new in ultrathink mode)
+    # Exponentially scaled Bessel functions (new in advanced mode)
     try:
         results['j0e'] = benchmark_function(sp.j0, large_args, 'j0e')  # Approximation since j0e may not exist
         results['i0e'] = benchmark_function(sp.i0e, medium_args, 'i0e')

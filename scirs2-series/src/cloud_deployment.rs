@@ -5,8 +5,6 @@
 //! fault tolerance, and cost optimization.
 
 use crate::error::{Result, TimeSeriesError};
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 use thiserror::Error;
@@ -150,6 +148,7 @@ pub struct CloudDeploymentOrchestrator {
 pub struct DeploymentState {
     pub status: DeploymentStatus,
     pub active_instances: Vec<InstanceInfo>,
+    #[cfg_attr(feature = "serde", serde(skip))]
     pub last_scaling_event: Option<Instant>,
     pub total_processed_jobs: usize,
     pub error_count: usize,
@@ -157,6 +156,7 @@ pub struct DeploymentState {
 
 /// Deployment status enumeration
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DeploymentStatus {
     Initializing,
     Deploying,
@@ -208,12 +208,14 @@ pub struct Alert {
     pub alert_id: String,
     pub severity: AlertSeverity,
     pub message: String,
+    #[cfg_attr(feature = "serde", serde(skip, default = "Instant::now"))]
     pub timestamp: Instant,
     pub resolved: bool,
 }
 
 /// Alert severity levels
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum AlertSeverity {
     Info,
     Warning,
@@ -247,6 +249,7 @@ pub struct CloudTimeSeriesJob {
 
 /// Type of time series analysis job
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TimeSeriesJobType {
     Forecasting,
     AnomalyDetection,
@@ -542,7 +545,7 @@ impl CloudDeploymentOrchestrator {
         println!("🎯 Assigned to instance: {}", instance.instance_id);
 
         // Execute the job
-        self.execute_job(&job, &instance)?;
+        self.execute_job(&job, instance)?;
 
         self.deployment_state.total_processed_jobs += 1;
         Ok(job.job_id)
@@ -675,8 +678,7 @@ impl CloudDeploymentOrchestrator {
         let current_instances = self.deployment_state.active_instances.len();
 
         println!(
-            "📊 Auto-scaling check: {} instances, {:.1}% avg CPU",
-            current_instances, avg_cpu
+            "📊 Auto-scaling check: {current_instances} instances, {avg_cpu:.1}% avg CPU"
         );
 
         // Scale up if CPU utilization is high
@@ -713,7 +715,7 @@ impl CloudDeploymentOrchestrator {
         };
 
         self.deployment_state.active_instances.push(instance);
-        println!("✅ Added instance: {}", instance_id);
+        println!("✅ Added instance: {instance_id}");
         Ok(())
     }
 

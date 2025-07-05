@@ -94,7 +94,7 @@ fn main() -> Result<()> {
     for i in 0..n_classes {
         println!(
             "  {}: {}={:.3}, {}={:.3}, {}={:.3}",
-            colorize(format!("Class {}", i), Color::BrightYellow),
+            colorize(format!("Class {i}"), Color::BrightYellow),
             colorize("Precision", Color::BrightCyan),
             precision[i],
             colorize("Recall", Color::BrightGreen),
@@ -115,7 +115,7 @@ fn main() -> Result<()> {
     );
     // Generate random feature importance scores
     let feature_names = (0..n_features)
-        .map(|i| format!("Feature_{}", i))
+        .map(|i| format!("Feature_{i}"))
         .collect::<Vec<String>>();
     let importance = Array1::from_shape_fn(n_features, |i| {
         // Make some features more important than others

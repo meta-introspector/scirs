@@ -82,8 +82,8 @@ impl Default for LowLatencyConfig {
 /// Low-latency streaming optimizer
 pub struct LowLatencyOptimizer<O, A>
 where
-    A: Float + Send + Sync,
-    O: Optimizer<A> + Send + Sync,
+    A: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug,
+    O: Optimizer<A, ndarray::Ix1> + Send + Sync,
 {
     /// Base optimizer
     base_optimizer: Arc<Mutex<O>>,
@@ -273,8 +273,8 @@ struct GradientPredictor<A: Float> {
 
 impl<O, A> LowLatencyOptimizer<O, A>
 where
-    A: Float + Send + Sync + Default + Clone + std::fmt::Debug + 'static,
-    O: Optimizer<A> + Send + Sync + 'static,
+    A: Float + Send + Sync + Default + Clone + std::fmt::Debug + ndarray::ScalarOperand + 'static,
+    O: Optimizer<A, ndarray::Ix1> + Send + Sync + 'static,
 {
     /// Create a new low-latency optimizer
     pub fn new(base_optimizer: O, config: LowLatencyConfig) -> Result<Self> {

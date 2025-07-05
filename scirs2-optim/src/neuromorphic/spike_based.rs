@@ -167,7 +167,7 @@ impl<T: Float> Default for SpikeNoiseConfig<T> {
 }
 
 /// Spike-based optimizer
-pub struct SpikingOptimizer<T: Float> {
+pub struct SpikingOptimizer<T: Float + ndarray::ScalarOperand + std::fmt::Debug> {
     /// Configuration
     config: SpikingConfig<T>,
     
@@ -207,7 +207,7 @@ pub struct SpikingOptimizer<T: Float> {
     /// Plasticity model
     plasticity_model: PlasticityModel}
 
-impl<T: Float + Send + Sync> SpikingOptimizer<T> {
+impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikingOptimizer<T> {
     /// Create a new spiking optimizer
     pub fn new(
         config: SpikingConfig<T>,
@@ -613,7 +613,7 @@ impl<T: Float + Send + Sync> SpikingOptimizer<T> {
 }
 
 /// Spike train optimizer for temporal pattern learning
-pub struct SpikeTrainOptimizer<T: Float> {
+pub struct SpikeTrainOptimizer<T: Float + ndarray::ScalarOperand + std::fmt::Debug> {
     /// Configuration
     config: SpikingConfig<T>,
     
@@ -674,7 +674,7 @@ pub enum TemporalKernelType {
     /// Rectangular kernel
     Rectangular}
 
-impl<T: Float + Send + Sync> SpikeTrainOptimizer<T> {
+impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> SpikeTrainOptimizer<T> {
     /// Create a new spike train optimizer
     pub fn new(config: SpikingConfig<T>) -> Self {
         Self {

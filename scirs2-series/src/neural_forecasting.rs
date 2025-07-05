@@ -3635,7 +3635,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> RetrievalAugmentedTimeSeries<F> {
     }
 }
 
-/// Advanced-Advanced Quantum Attention with Quantum Superposition States
+/// Advanced Quantum Attention with Quantum Superposition States
 #[derive(Debug)]
 pub struct QuantumSuperpositionAttention<F: Float + Debug> {
     /// Model dimension
@@ -4624,7 +4624,7 @@ mod tests {
 
             // Each variant should produce meaningful output
             let output_sum: f64 = output.sum();
-            assert!(output_sum.abs() > 1e-10, "Failed for variant: {}", variant);
+            assert!(output_sum.abs() > 1e-10, "Failed for variant: {variant}");
         }
     }
 

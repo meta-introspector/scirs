@@ -315,10 +315,15 @@ fn compute_ulp_error(a: f64, b: f64) -> i64 {
         return 0;
     }
 
-    let a_bits = a.to_bits() as i64;
-    let b_bits = b.to_bits() as i64;
+    let a_bits = a.to_bits();
+    let b_bits = b.to_bits();
 
-    (a_bits - b_bits).abs()
+    // Use safe subtraction to avoid overflow
+    if a_bits >= b_bits {
+        (a_bits - b_bits) as i64
+    } else {
+        (b_bits - a_bits) as i64
+    }
 }
 
 /// Python script runner for SciPy validation

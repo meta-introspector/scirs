@@ -1054,7 +1054,7 @@ where
     let weights_x: Result<Vec<T>, NdimageError> = (0..weights_size)
         .map(|i| -> NdimageResult<T> {
             let offset = safe_usize_to_float(i)? - safe_usize_to_float(max_radius)?;
-            let exp_arg = -safe_f64_to_float(0.5)? * offset * offset / (sigma[0] * sigma[0]);
+            let exp_arg = -safe_f64_to_float::<T>(0.5)? * offset * offset / (sigma[0] * sigma[0]);
             Ok(exp_arg.exp())
         })
         .collect();
@@ -1064,7 +1064,7 @@ where
     let weights_y: Result<Vec<T>, NdimageError> = (0..weights_size)
         .map(|i| -> NdimageResult<T> {
             let offset = safe_usize_to_float(i)? - safe_usize_to_float(max_radius)?;
-            let exp_arg = -safe_f64_to_float(0.5)? * offset * offset / (sigma[1] * sigma[1]);
+            let exp_arg = -safe_f64_to_float::<T>(0.5)? * offset * offset / (sigma[1] * sigma[1]);
             Ok(exp_arg.exp())
         })
         .collect();

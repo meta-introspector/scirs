@@ -176,7 +176,7 @@ pub struct DistributedConfig {
 impl Default for DistributedConfig {
     fn default() -> Self {
         Self {
-            node_id: format!("{uuid::Uuid::new_v4(}")),
+            node_id: format!("{}", uuid::Uuid::new_v4()),
             node_role: NodeRole::Producer,
             aggregators: Vec::new(),
             buffer_size: 1000,

@@ -598,10 +598,9 @@ impl ComprehensiveSecurityAuditor {
         &mut self,
         project_path: &Path,
     ) -> Result<DependencyScanResult> {
-        let start_time = std::time::Instant::now();
+        let _start_time = std::time::Instant::now();
         let mut vulnerable_dependencies = Vec::new();
         let mut outdated_dependencies = Vec::new();
-        let mut total_dependencies = 0;
 
         // Read Cargo.toml to get dependencies
         let cargo_toml_path = project_path.join("Cargo.toml");
@@ -613,7 +612,7 @@ impl ComprehensiveSecurityAuditor {
 
         // Parse Cargo.toml for dependencies (simplified parsing)
         let dependencies = self.parse_cargo_dependencies(&cargo_content)?;
-        total_dependencies = dependencies.len();
+        let total_dependencies = dependencies.len();
 
         // Check each dependency against RustSec Advisory Database
         for (dep_name, version) in dependencies {

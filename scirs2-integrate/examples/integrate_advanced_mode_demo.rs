@@ -4,10 +4,10 @@
 //! coordinator and its optimized integrators.
 
 use ndarray::{Array1, ArrayView1};
-use scirs2_integrate::error::IntegrateResult;
-use scirs2_integrate::ultrathink_mode_coordinator::{
+use scirs2_integrate::advanced_mode_coordinator::{
     AdvancedModeConfig, AdvancedModeCoordinator, PerformanceTargets,
 };
+use scirs2_integrate::error::IntegrateResult;
 use std::time::Duration;
 
 #[allow(dead_code)]

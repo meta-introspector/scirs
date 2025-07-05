@@ -41,7 +41,7 @@ use std::fmt::Debug;
 /// let updated_slow = optimizer.step_group(group_slow, &grads_slow).unwrap();
 /// ```
 #[derive(Debug)]
-pub struct GroupedAdam<A: Float, D: Dimension> {
+pub struct GroupedAdam<A: Float + Send + Sync, D: Dimension> {
     /// Default learning rate
     default_lr: A,
     /// Default beta1
@@ -60,7 +60,7 @@ pub struct GroupedAdam<A: Float, D: Dimension> {
     step: usize,
 }
 
-impl<A: Float + ScalarOperand + Debug, D: Dimension> GroupedAdam<A, D> {
+impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> GroupedAdam<A, D> {
     /// Create a new grouped Adam optimizer
     pub fn new(default_lr: A) -> Self {
         Self {
@@ -199,7 +199,9 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GroupedAdam<A, D> {
     }
 }
 
-impl<A: Float + ScalarOperand + Debug, D: Dimension> GroupedOptimizer<A, D> for GroupedAdam<A, D> {
+impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> GroupedOptimizer<A, D>
+    for GroupedAdam<A, D>
+{
     fn add_group(
         &mut self,
         params: Vec<Array<A, D>>,
@@ -247,7 +249,9 @@ impl<A: Float + ScalarOperand + Debug, D: Dimension> GroupedOptimizer<A, D> for 
 }
 
 // Standard optimizer implementation for default behavior
-impl<A: Float + ScalarOperand + Debug, D: Dimension> Optimizer<A, D> for GroupedAdam<A, D> {
+impl<A: Float + ScalarOperand + Debug + Send + Sync, D: Dimension> Optimizer<A, D>
+    for GroupedAdam<A, D>
+{
     fn step(&mut self, params: &Array<A, D>, gradients: &Array<A, D>) -> Result<Array<A, D>> {
         // For single parameter optimization, create a temporary group
         let params_vec = vec![params.clone()];

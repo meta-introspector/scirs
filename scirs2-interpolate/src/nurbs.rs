@@ -547,6 +547,7 @@ where
     }
 
     /// Compute basis function derivatives at parameter t
+    #[allow(dead_code)]
     fn compute_basis_derivatives(&self, t: T, order: usize) -> InterpolateResult<Vec<T>> {
         // This is a simplified version - in a real implementation,
         // we would compute the basis function derivatives more efficiently

@@ -46,6 +46,7 @@ pub struct SimdPerformanceValidator<T: InterpolationFloat> {
     /// Collected validation results
     results: Vec<ValidationResult<T>>,
     /// Performance baselines for regression detection
+    #[allow(dead_code)]
     baselines: HashMap<String, PerformanceBaseline<T>>,
     /// Platform capabilities detected at runtime
     platform_caps: PlatformCapabilities,
@@ -719,6 +720,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
     }
 
     /// Scalar k-NN search for comparison
+    #[allow(dead_code)]
     fn scalar_knn_search(
         &self,
         points: &ArrayView2<T>,
@@ -875,6 +877,7 @@ impl<T: InterpolationFloat + scirs2_core::simd_ops::SimdUnifiedOps> SimdPerforma
     }
 
     /// Validate k-NN search correctness (relaxed criteria)
+    #[allow(dead_code)]
     fn validate_knn_correctness(
         &self,
         _scalar_result: &[(usize, T)],

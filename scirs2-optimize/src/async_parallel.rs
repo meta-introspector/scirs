@@ -363,13 +363,13 @@ impl AsyncDifferentialEvolution {
         if let Some((ref lower, ref upper)) = self.bounds {
             for mut individual in population.outer_iter_mut() {
                 for (j, gene) in individual.iter_mut().enumerate() {
-                    *gene = lower[j] + rng.gen::<f64>() * (upper[j] - lower[j]);
+                    *gene = lower[j] + rng.random::<f64>() * (upper[j] - lower[j]);
                 }
             }
         } else {
             for mut individual in population.outer_iter_mut() {
                 for gene in individual.iter_mut() {
-                    *gene = rng.gen::<f64>() * 2.0 - 1.0; // [-1, 1]
+                    *gene = rng.random::<f64>() * 2.0 - 1.0; // [-1, 1]
                 }
             }
         }
@@ -483,7 +483,7 @@ impl AsyncDifferentialEvolution {
         stats_guard.avg_evaluation_time = if stats_guard.total_completed > 0 {
             total_time / stats_guard.total_completed as u32
         } else {
-            0 // No evaluations completed yet
+            Duration::ZERO // No evaluations completed yet
         };
 
         if result.evaluation_time < stats_guard.min_evaluation_time {
@@ -582,7 +582,7 @@ impl AsyncDifferentialEvolution {
             // Select three random individuals (different from current)
             let mut indices = Vec::new();
             while indices.len() < 3 {
-                let idx = rng.gen_range(0..self.population_size);
+                let idx = rng.random_range(0..self.population_size);
                 if idx != i && !indices.contains(&idx) {
                     indices.push(idx);
                 }
@@ -606,10 +606,10 @@ impl AsyncDifferentialEvolution {
 
             // Crossover
             let mut trial = current_population.row(i).to_owned();
-            let r = rng.gen_range(0..self.dimensions);
+            let r = rng.random_range(0..self.dimensions);
 
             for j in 0..self.dimensions {
-                if j == r || rng.gen::<f64>() < self.crossover_probability {
+                if j == r || rng.random::<f64>() < self.crossover_probability {
                     trial[j] = mutant[j];
                 }
             }
@@ -670,7 +670,7 @@ mod tests {
         // Function with varying evaluation times
         let objective = |x: Array1<f64>| async move {
             // Simulate varying computation times (10ms to 100ms)
-            let delay = rand::rng().gen_range(10..=100);
+            let delay = rand::rng().random_range(10..=100);
             sleep(Duration::from_millis(delay)).await;
 
             // Rosenbrock function (2D)
@@ -718,7 +718,7 @@ mod tests {
         // Function that sometimes takes too long
         let objective = |x: Array1<f64>| async move {
             // 50% chance of taking too long
-            if rand::rng().gen::<f64>() < 0.5 {
+            if rand::rng().random::<f64>() < 0.5 {
                 sleep(Duration::from_secs(1)).await; // Too long
             } else {
                 sleep(Duration::from_millis(10)).await; // Normal

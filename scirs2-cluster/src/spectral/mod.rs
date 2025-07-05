@@ -11,7 +11,7 @@ use std::fmt::Debug;
 
 use crate::error::{ClusteringError, Result};
 use crate::vq::{kmeans_with_options, KMeansInit, KMeansOptions};
-use scirs2_core::validation::clustering::*;
+// use scirs2_core::validation::clustering::*;
 
 /// Affinity matrix construction methods
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -257,7 +257,7 @@ See the `examples/` directory for comprehensive tutorials:
 ### Running Tests
 ```bash
 # Quick tests for development
-ULTRA_FAST_TESTS=1 cargo nextest run
+FAST_TESTS=1 cargo nextest run
 
 # Comprehensive tests
 COMPREHENSIVE_TESTS=1 cargo nextest run

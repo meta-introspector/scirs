@@ -506,7 +506,7 @@ mod tests {
 
     #[test]
     fn test_spectral_embedding_knn() {
-        let x = Array::eye(8);
+        let x: Array2<f64> = Array::eye(8);
 
         let mut spectral = SpectralEmbedding::new(3, AffinityMethod::KNN).with_n_neighbors(3);
         let embedding = spectral.fit_transform(&x).unwrap();
@@ -521,7 +521,7 @@ mod tests {
 
     #[test]
     fn test_spectral_embedding_out_of_sample() {
-        let x_train = Array::eye(5);
+        let x_train: Array2<f64> = Array::eye(5);
         let x_test = Array::from_shape_vec(
             (2, 5),
             vec![0.1, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.1, 0.0],

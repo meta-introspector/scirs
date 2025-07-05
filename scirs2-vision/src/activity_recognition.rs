@@ -1,4 +1,4 @@
-//! Advanced-Advanced Activity Recognition Framework
+//! Advanced Activity Recognition Framework
 //!
 //! This module provides sophisticated activity recognition capabilities including:
 //! - Real-time action detection and classification
@@ -552,7 +552,7 @@ impl Default for ActivityRecognitionEngine {
 }
 
 impl ActivityRecognitionEngine {
-    /// Create a new advanced-advanced activity recognition engine
+    /// Create a new advanced activity recognition engine
     pub fn new() -> Self {
         Self {
             action_detectors: vec![

@@ -96,15 +96,25 @@ pub struct RForecastResult {
 #[cfg(feature = "r")]
 #[repr(C)]
 pub struct RStatistics {
+    /// Mean value of the data
     pub mean: c_double,
+    /// Variance of the data
     pub variance: c_double,
+    /// Standard deviation of the data
     pub std_dev: c_double,
+    /// Minimum value in the data
     pub min: c_double,
+    /// Maximum value in the data
     pub max: c_double,
+    /// Skewness of the data distribution
     pub skewness: c_double,
+    /// Kurtosis of the data distribution
     pub kurtosis: c_double,
+    /// 25th percentile (first quartile)
     pub q25: c_double,
+    /// 50th percentile (median)
     pub q50: c_double,
+    /// 75th percentile (third quartile)
     pub q75: c_double,
 }
 
@@ -771,7 +781,7 @@ pub extern "C" fn scirs_auto_arima(
         };
 
         match crate::arima_models::auto_arima(&values_array, &options) {
-            Ok((arima_model, sarima_params)) => {
+            Ok((_arima_model, sarima_params)) => {
                 let config = ArimaConfig {
                     p: sarima_params.pdq.0,
                     d: sarima_params.pdq.1,
@@ -811,14 +821,19 @@ pub extern "C" fn scirs_auto_arima(
 #[cfg(feature = "r")]
 #[repr(C)]
 pub struct RNeuralForecaster {
+    /// Opaque handle to the neural network
     pub handle: *mut c_void,
+    /// Size of the input layer
     pub input_size: c_int,
+    /// Size of the hidden layer
     pub hidden_size: c_int,
+    /// Size of the output layer
     pub output_size: c_int,
 }
 
 #[cfg(feature = "r")]
 #[no_mangle]
+/// Creates a new neural forecaster instance
 pub extern "C" fn scirs_create_neural_forecaster(
     input_size: c_int,
     hidden_size: c_int,
@@ -848,7 +863,7 @@ pub extern "C" fn scirs_train_neural_forecaster(
     forecaster: *mut RNeuralForecaster,
     ts: *const RTimeSeries,
     epochs: c_int,
-    learning_rate: c_double,
+    _learning_rate: c_double,
 ) -> c_int {
     if forecaster.is_null() || ts.is_null() || epochs <= 0 {
         return R_ERROR_INVALID_PARAMS;
@@ -897,7 +912,7 @@ pub extern "C" fn scirs_forecast_neural(
 
         let neural_forecaster = &*(forecaster_ref.handle as *const LSTMForecaster<f64>);
         let input_slice = slice::from_raw_parts(input, input_length as usize);
-        let input_array = Array1::from_vec(input_slice.to_vec());
+        let _input_array = Array1::from_vec(input_slice.to_vec());
 
         match neural_forecaster.predict(steps as usize) {
             Ok(forecasts) => {

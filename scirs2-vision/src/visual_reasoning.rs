@@ -1,4 +1,4 @@
-//! Advanced-Advanced Visual Reasoning Framework
+//! Advanced Visual Reasoning Framework
 //!
 //! This module provides sophisticated visual reasoning capabilities including:
 //! - Causal relationship inference
@@ -636,7 +636,7 @@ impl Default for VisualReasoningEngine {
 }
 
 impl VisualReasoningEngine {
-    /// Create a new advanced-advanced visual reasoning engine
+    /// Create a new advanced visual reasoning engine
     pub fn new() -> Self {
         Self {
             causal_inference: CausalInferenceModule::new(),

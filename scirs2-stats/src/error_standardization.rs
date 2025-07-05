@@ -622,6 +622,10 @@ impl BatchErrorHandler {
                 StatsError::NotImplementedError(_) => "Not Implemented",
                 StatsError::ConvergenceError(_) => "Convergence",
                 StatsError::CoreError(_) => "Core",
+                StatsError::InsufficientData(_) => "Insufficient Data",
+                StatsError::InvalidInput(_) => "Invalid Input",
+                StatsError::NotImplemented(_) => "Not Implemented",
+                StatsError::DistributionError(_) => "Distribution",
             };
 
             *summary.entry(error_type.to_string()).or_insert(0) += 1;
@@ -642,7 +646,7 @@ pub struct ErrorDiagnostics;
 
 impl ErrorDiagnostics {
     /// Generate comprehensive diagnostics for array data
-    pub fn diagnose_array_f64(data: &[f64], name: &str) -> DataDiagnostics {
+    pub fn diagnose_array_f64(data: &[f64], _name: &str) -> DataDiagnostics {
         let mut quality_issues = Vec::new();
         let mut nan_count = 0;
         let mut inf_count = 0;
@@ -822,7 +826,7 @@ impl AutoRecoverySystem {
     /// Attempt automatic recovery for common errors
     pub fn attempt_auto_recovery(
         error: &StatsError,
-        context: &EnhancedErrorContext,
+        _context: &EnhancedErrorContext,
     ) -> Option<RecoveryAction> {
         match error {
             StatsError::InvalidArgument(msg) if msg.contains("NaN") => Some(RecoveryAction {

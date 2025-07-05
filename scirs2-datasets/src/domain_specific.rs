@@ -513,13 +513,13 @@ pub mod genomics {
                     let nucleotide = match seq_type {
                         0 => {
                             // GC-rich sequences
-                            if rng.random::<f64>() < 0.6 {
-                                if rng.random::<f64>() < 0.5 {
+                            if rng.gen::<f64>() < 0.6 {
+                                if rng.gen::<f64>() < 0.5 {
                                     'G'
                                 } else {
                                     'C'
                                 }
-                            } else if rng.random::<f64>() < 0.5 {
+                            } else if rng.gen::<f64>() < 0.5 {
                                 'A'
                             } else {
                                 'T'
@@ -527,13 +527,13 @@ pub mod genomics {
                         }
                         1 => {
                             // AT-rich sequences
-                            if rng.random::<f64>() < 0.6 {
-                                if rng.random::<f64>() < 0.5 {
+                            if rng.gen::<f64>() < 0.6 {
+                                if rng.gen::<f64>() < 0.5 {
                                     'A'
                                 } else {
                                     'T'
                                 }
-                            } else if rng.random::<f64>() < 0.5 {
+                            } else if rng.gen::<f64>() < 0.5 {
                                 'G'
                             } else {
                                 'C'
@@ -726,7 +726,7 @@ pub mod climate {
                         _ => 1.0,
                     };
 
-                    let precip = if rng.random::<f64>() < 0.3 {
+                    let precip = if rng.gen::<f64>() < 0.3 {
                         // 30% chance of precipitation
                         rng.random_range(0.0..20.0) * seasonal_precip_factor
                     } else {

@@ -850,7 +850,7 @@ pub fn advanced_enhanced_system_identification(
         build_model_ensemble(candidate_models.clone(), &config.ensemble_config)?
     } else {
         // Use best single model
-        build_single_model_ensemble(candidate_models)?
+        build_single_model_ensemble(candidate_models.clone())?
     };
 
     // Step 3: Real-time tracker setup

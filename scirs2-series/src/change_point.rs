@@ -660,8 +660,7 @@ mod tests {
             let detected = result.change_points[0];
             assert!(
                 detected > 40 && detected < 60,
-                "Detected change point {} should be near 50",
-                detected
+                "Detected change point {detected} should be near 50"
             );
         }
     }
@@ -729,24 +728,21 @@ mod tests {
         let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::Normal).unwrap();
         assert!(
             cost.is_finite(),
-            "Normal cost should be finite, got {}",
-            cost
+            "Normal cost should be finite, got {cost}"
         );
 
         // Test Poisson cost function
         let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::Poisson).unwrap();
         assert!(
             cost.is_finite(),
-            "Poisson cost should be finite, got {}",
-            cost
+            "Poisson cost should be finite, got {cost}"
         );
 
         // Test exponential cost function
         let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::Exponential).unwrap();
         assert!(
             cost.is_finite(),
-            "Exponential cost should be finite, got {}",
-            cost
+            "Exponential cost should be finite, got {cost}"
         );
 
         // Test non-parametric cost function

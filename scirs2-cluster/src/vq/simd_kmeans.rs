@@ -16,7 +16,7 @@ use super::{kmeans_init, KMeansInit, KMeansOptions};
 use crate::error::{ClusteringError, Result};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::clustering::*;
+// use scirs2_core::validation::clustering::*;
 
 /// SIMD-accelerated K-means clustering
 ///
@@ -313,7 +313,7 @@ where
     let mut centroids = kmeans_init(data, k, Some(opts.init_method), opts.random_seed)?;
     let mut counts = Array1::<usize>::zeros(k);
 
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     for iteration in 0..opts.max_iter {
         // Sample a mini-batch
@@ -420,7 +420,7 @@ where
         )));
     }
 
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut centroids = Array2::zeros((k, n_features));
 
     // Choose the first centroid randomly

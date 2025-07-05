@@ -10,7 +10,7 @@ use scirs2_datasets::{
     list_real_world_datasets, load_adult, load_california_housing, load_heart_disease,
     load_red_wine_quality, load_titanic,
     utils::{k_fold_split, train_test_split},
-    BenchmarkRunner, MLPipeline, MLScalingMethod, RealWorldConfig,
+    BenchmarkRunner, MLPipeline, RealWorldConfig,
 };
 use std::collections::HashMap;
 
@@ -308,7 +308,7 @@ fn demonstrate_advanced_operations() -> Result<(), Box<dyn std::error::Error>> {
     println!("Preprocessing pipeline for California Housing:");
 
     // 1. Train/test split
-    let (mut train, mut test) = train_test_split(&housing, 0.2, Some(42))?;
+    let (mut train, test) = train_test_split(&housing, 0.2, Some(42))?;
     println!(
         "  1. Split: {} train, {} test",
         train.n_samples(),

@@ -492,6 +492,7 @@ pub fn optimized_convolve_2d(
 
 /// Process a tile independently for parallel processing
 #[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 fn process_tile_simd_independent(
     image: &Array2<f64>,
     kernel: &Array2<f64>,
@@ -533,6 +534,7 @@ fn process_tile_simd_independent(
 
 /// Process a tile with SIMD operations
 #[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 fn process_tile_simd(
     image: &Array2<f64>,
     kernel: &Array2<f64>,

@@ -3,7 +3,7 @@
 //! This example shows how to use GPU acceleration for large-scale time series processing
 //! and demonstrates advanced machine learning integration capabilities.
 
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use scirs2_series::{
     forecasting::neural::{LSTMConfig, LSTMForecaster, NeuralForecaster},
     gpu_acceleration::{
@@ -11,7 +11,8 @@ use scirs2_series::{
             FeatureConfig, ForecastMethod, GpuFeatureExtractor, GpuTimeSeriesProcessor,
             WindowStatistic,
         },
-        utils, GpuAccelerated, GpuArray, GpuConfig, GpuDeviceManager,
+        utils, GpuAccelerated, GpuArray, GpuConfig, GpuDeviceManager, GraphOptimizationLevel,
+        MemoryStrategy,
     },
 };
 use std::time::Instant;
@@ -131,6 +132,10 @@ fn gpu_batch_processing_demo() {
         batch_size: 128,
         use_half_precision: false,
         enable_async: true,
+        tensor_cores: Default::default(),
+        memory_strategy: MemoryStrategy::OnDemand,
+        dynamic_batching: true,
+        graph_optimization: GraphOptimizationLevel::Extended,
     };
 
     match GpuTimeSeriesProcessor::<f64>::new(config.clone()) {
@@ -558,14 +563,11 @@ fn advanced_ml_demo() {
                             "    Forecasting completed in {:.2}ms",
                             forecast_duration.as_millis()
                         );
-                        println!(
-                            "    Forecast length: {}",
-                            forecast_result.point_forecast.len()
-                        );
+                        println!("    Forecast length: {}", forecast_result.forecast.len());
 
                         // Show sample forecast
                         let sample_forecast: Vec<String> = forecast_result
-                            .point_forecast
+                            .forecast
                             .iter()
                             .take(5)
                             .map(|x| format!("{:.1}", x))
@@ -576,10 +578,9 @@ fn advanced_ml_demo() {
                         match lstm_forecaster.predict_with_uncertainty(5, 0.95) {
                             Ok(uncertainty_result) => {
                                 println!("    Uncertainty quantification successful");
-                                if let (Some(lower), Some(upper)) = (
-                                    &uncertainty_result.lower_bound,
-                                    &uncertainty_result.upper_bound,
-                                ) {
+                                if let (Some(lower), Some(upper)) =
+                                    (&uncertainty_result.lower_ci, &uncertainty_result.upper_ci)
+                                {
                                     println!(
                                         "    Confidence intervals available: {} points",
                                         lower.len()

@@ -503,6 +503,9 @@ pub struct SampleBasedSensitivityEstimator<T: Float> {
 
     /// Bootstrap estimator
     bootstrap_estimator: BootstrapEstimator<T>,
+
+    /// Phantom data to mark type parameter as intentionally unused
+    _phantom: std::marker::PhantomData<T>,
 }
 
 /// Sampling strategies for sensitivity estimation
@@ -534,6 +537,9 @@ pub struct BootstrapEstimator<T: Float> {
 
     /// Bias correction
     bias_correction: bool,
+
+    /// Phantom data to mark type parameter as intentionally unused
+    _phantom: std::marker::PhantomData<T>,
 }
 
 /// Private cross-validation evaluator
@@ -608,6 +614,9 @@ pub struct ConfidenceEstimation<T: Float> {
 
     /// Bootstrap parameters
     bootstrap_params: Option<BootstrapParams>,
+
+    /// Phantom data to mark type parameter as intentionally unused
+    _phantom: std::marker::PhantomData<T>,
 }
 
 /// Confidence estimation methods
@@ -1222,6 +1231,9 @@ pub struct OptimizationStats<T: Float> {
 
     /// Budget efficiency score
     pub budget_efficiency: f64,
+
+    /// Phantom data to mark type parameter as intentionally unused
+    _phantom: std::marker::PhantomData<T>,
 }
 
 /// Private Random Search implementation

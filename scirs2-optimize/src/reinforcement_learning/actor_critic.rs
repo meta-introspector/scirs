@@ -130,11 +130,11 @@ impl ActorNetwork {
 
         Self {
             hidden_weights: Array2::from_shape_fn((hidden_size, input_size), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
             output_weights: Array2::from_shape_fn((output_size, hidden_size), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: Array1::zeros(output_size),
             input_size,
@@ -236,11 +236,11 @@ impl CriticNetwork {
 
         Self {
             hidden_weights: Array2::from_shape_fn((hidden_size, input_size), |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             hidden_bias: Array1::zeros(hidden_size),
             output_weights: Array1::from_shape_fn(hidden_size, |_| {
-                (rand::rng().gen::<f64>() - 0.5) * 2.0 * xavier_scale
+                (rand::rng().random::<f64>() - 0.5) * 2.0 * xavier_scale
             }),
             output_bias: 0.0,
             input_size,
@@ -460,7 +460,7 @@ impl AdvantageActorCriticOptimizer {
         };
 
         let noisy_output =
-            policy_output.mapv(|x| x + (rand::rng().gen::<f64>() - 0.5) * exploration_noise);
+            policy_output.mapv(|x| x + (rand::rng().random::<f64>() - 0.5) * exploration_noise);
         let action_probs = self
             .actor
             .action_probabilities(&noisy_output.view(), self.temperature);
@@ -474,7 +474,7 @@ impl AdvantageActorCriticOptimizer {
             })
             .collect();
 
-        let rand_val = rand::rng().gen::<f64>();
+        let rand_val = rand::rng().random::<f64>();
         let action_idx = cumulative_probs
             .iter()
             .position(|&cp| rand_val <= cp)
@@ -752,6 +752,18 @@ impl RLOptimizer for AdvantageActorCriticOptimizer {
             success: current_state.convergence_metrics.relative_objective_change < 1e-6,
             nit: current_state.step,
             message: format!("A2C episode completed, total reward: {:.4}", total_reward),
+            jac: None,
+            hess: None,
+            constr: None,
+            nfev: current_state.step,
+            njev: 0,
+            nhev: 0,
+            maxcv: 0,
+            status: if current_state.convergence_metrics.relative_objective_change < 1e-6 {
+                0
+            } else {
+                1
+            },
         })
     }
 
@@ -769,6 +781,14 @@ impl RLOptimizer for AdvantageActorCriticOptimizer {
             success: false,
             nit: 0,
             message: "Training not completed".to_string(),
+            jac: None,
+            hess: None,
+            constr: None,
+            nfev: 0,
+            njev: 0,
+            nhev: 0,
+            maxcv: 0,
+            status: 1, // Failure status by default
         };
 
         for episode in 0..self.config.num_episodes {

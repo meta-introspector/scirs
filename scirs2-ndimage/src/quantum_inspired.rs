@@ -17,6 +17,7 @@
 use ndarray::{Array1, Array2, Array3, ArrayView2};
 use num_complex::Complex;
 use num_traits::{Float, FromPrimitive};
+use rand::Rng;
 use std::f64::consts::PI;
 
 use crate::error::{NdimageError, NdimageResult};
@@ -340,6 +341,7 @@ where
 {
     let (height, width) = superposition.dim();
     let mut measured = Array2::zeros((height, width));
+    let mut rng = rand::rng();
 
     // Apply quantum measurement with decoherence
     for y in 0..height {
@@ -350,7 +352,7 @@ where
             let _probability = amplitude * amplitude;
 
             // Add quantum noise
-            let noise = T::from_f64(config.noise_level * (rand::random::<f64>() - 0.5))
+            let noise = T::from_f64(config.noise_level * rng.random_range::<f64>(-0.5..0.5))
                 .ok_or_else(|| {
                     NdimageError::ComputationError("Noise generation failed".to_string())
                 })?;
@@ -512,6 +514,7 @@ where
     T: Float + FromPrimitive + Copy,
 {
     let (height, width) = segmentation.dim();
+    let mut rng = rand::rng();
 
     // Apply quantum tunneling moves
     for y in 0..height {
@@ -530,9 +533,9 @@ where
                 NdimageError::ComputationError("Tunneling probability failed".to_string())
             })?;
 
-            if rand::random::<f64>() < tunneling_prob.to_f64().unwrap_or(0.0) {
+            if rng.random_range::<f64>(0.0..1.0) < tunneling_prob.to_f64().unwrap_or(0.0) {
                 // Quantum tunnel to new state
-                segmentation[(y, x)] = rand::random::<usize>() % 4; // Assuming 4 segments max for demo
+                segmentation[(y, x)] = rng.random_range::<usize>(0..4); // Assuming 4 segments max for demo
             }
         }
     }
@@ -547,10 +550,11 @@ fn apply_quantum_decoherence<T>(
 ) -> NdimageResult<()> {
     // Apply decoherence effects - simplified model
     let (height, width) = segmentation.dim();
+    let mut rng = rand::rng();
 
     for y in 0..height {
         for x in 0..width {
-            if rand::random::<f64>() > coherence_threshold {
+            if rng.random_range::<f64>(0.0..1.0) > coherence_threshold {
                 // Decoherence event - collapse to classical state
                 segmentation[(y, x)] = 0;
             }
@@ -573,6 +577,7 @@ where
     let (height, width) = image.dim();
     let (mut y, mut x) = start_pos;
     let mut edge_strength = T::zero();
+    let mut rng = rand::rng();
 
     for _ in 0..steps {
         // Quantum walk step with superposition of directions
@@ -594,7 +599,7 @@ where
         let prob_right = image[(y, (x + 1).min(width - 1))].to_f64().unwrap_or(0.0);
         let total_prob = prob_up + prob_right;
 
-        if total_prob > 0.0 && rand::random::<f64>() < prob_up / total_prob {
+        if total_prob > 0.0 && rng.random_range::<f64>(0.0..1.0) < prob_up / total_prob {
             y = y.saturating_sub(1);
         } else {
             x = (x + 1).min(width - 1);
@@ -1154,10 +1159,11 @@ where
 {
     let param_count = num_layers * 3; // 3 parameters per layer
     let mut parameters = Array1::zeros(param_count);
+    let mut rng = rand::rng();
 
     // Initialize with small random values
     for i in 0..param_count {
-        let random_value = T::from_f64((rand::random::<f64>() - 0.5) * 0.1).unwrap();
+        let random_value = T::from_f64(rng.random_range::<f64>(-0.05..0.05)).unwrap();
         parameters[i] = random_value;
     }
 

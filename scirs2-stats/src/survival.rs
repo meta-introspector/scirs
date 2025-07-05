@@ -1257,7 +1257,7 @@ impl CompetingRisksModel {
         target_risk: usize,
     ) -> Result<(Array1<f64>, Array1<bool>, Array1<f64>)> {
         let n_samples = durations.len();
-        let mut modified_durations = durations.to_owned();
+        let modified_durations = durations.to_owned();
         let mut modified_events = Array1::from_elem(n_samples, false);
         let mut weights = Array1::ones(n_samples);
 

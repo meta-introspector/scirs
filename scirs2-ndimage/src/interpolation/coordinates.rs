@@ -1,6 +1,6 @@
 //! Coordinate-based interpolation functions
 
-use ndarray::{Array, Dimension, IxDyn};
+use ndarray::{Array, IxDyn};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use std::fmt::Debug;
 
@@ -37,7 +37,7 @@ pub fn map_coordinates<T, D>(
 ) -> NdimageResult<Array<T, IxDyn>>
 where
     T: Float + FromPrimitive + Debug + Clone,
-    D: Dimension,
+    D: ndarray::Dimension,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -340,7 +340,7 @@ where
 pub fn value_at_coordinates<T, D>(input: &Array<T, D>, indices: &[usize]) -> NdimageResult<T>
 where
     T: Float + FromPrimitive + Debug,
-    D: Dimension,
+    D: ndarray::Dimension,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -410,7 +410,7 @@ pub fn interpn<T, D>(
 ) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
     T: Float + FromPrimitive + Debug,
-    D: Dimension,
+    D: ndarray::Dimension,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -426,10 +426,6 @@ where
             input.ndim()
         )));
     }
-
-    let _interp_order = order.unwrap_or(InterpolationOrder::Linear);
-    let _boundary = mode.unwrap_or(BoundaryMode::Constant);
-    let _const_val = cval.unwrap_or_else(|| T::zero());
 
     // Get the number of points to sample
     let n_points = points[0].len();

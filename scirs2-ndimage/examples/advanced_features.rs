@@ -21,7 +21,7 @@ use scirs2_ndimage::{
     scipy_compat::ndimage::{gaussian_filter, laplace, rotate, zoom},
 };
 
-// Import advanced-advanced SIMD extensions
+// Import advanced SIMD extensions
 #[cfg(feature = "simd")]
 use scirs2_ndimage::filters::{
     advanced_simd_advanced_edge_detection, advanced_simd_multi_scale_lbp,
@@ -55,10 +55,10 @@ fn main() -> NdimageResult<()> {
     println!("\n--- SIMD-Optimized Filters Demo ---");
     demo_simd_filters(&test_image)?;
 
-    // 3. Demonstrate advanced-advanced SIMD extensions
+    // 3. Demonstrate advanced SIMD extensions
     #[cfg(feature = "simd")]
     {
-        println!("\n--- Advanced-Advanced SIMD Extensions Demo ---");
+        println!("\n--- Advanced SIMD Extensions Demo ---");
         demo_advanced_simd_extensions(&test_image)?;
     }
 
@@ -266,7 +266,7 @@ fn demo_scipy_compat(image: &Array2<f64>) -> NdimageResult<()> {
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
 fn demo_advanced_simd_extensions(image: &Array2<f64>) -> NdimageResult<()> {
-    println!("Demonstrating advanced-advanced SIMD extensions...");
+    println!("Demonstrating advanced SIMD extensions...");
 
     // 1. Wavelet pyramid decomposition
     println!("Running advanced-SIMD wavelet pyramid...");

@@ -103,7 +103,7 @@ impl SystemInfo {
             gpu_info: Self::get_gpu_info(),
             memory_info: Self::get_memory_info(),
             rust_version: std::env::var("RUSTC_VERSION").unwrap_or_else(|_| {
-                let version = env!("CARGO_PKG_RUST_VERSION", "unknown");
+                let version = option_env!("CARGO_PKG_RUST_VERSION").unwrap_or("unknown");
                 format!("rustc {version}")
             }),
             feature_flags,

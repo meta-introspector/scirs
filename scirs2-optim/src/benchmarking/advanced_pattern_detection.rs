@@ -11,7 +11,7 @@ use std::f64::consts::PI;
 
 /// Advanced-advanced pattern detector using ML and signal processing
 #[derive(Debug)]
-pub struct advancedPatternDetector {
+pub struct AdvancedPatternDetector {
     /// Configuration for pattern detection
     config: AdvancedPatternConfig,
     /// Neural network for pattern classification
@@ -26,7 +26,7 @@ pub struct advancedPatternDetector {
     feature_extractor: FeatureExtractor,
 }
 
-/// Configuration for advanced-advanced pattern detection
+/// Configuration for advanced pattern detection
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdvancedPatternConfig {
     /// Enable machine learning classification
@@ -565,8 +565,8 @@ pub enum FeatureType {
     ShapeFeatures,
 }
 
-impl advancedPatternDetector {
-    /// Create a new advanced-advanced pattern detector
+impl AdvancedPatternDetector {
+    /// Create a new advanced pattern detector
     pub fn new(config: AdvancedPatternConfig) -> Result<Self> {
         Ok(Self {
             config: config.clone(),
@@ -578,7 +578,7 @@ impl advancedPatternDetector {
         })
     }
 
-    /// Detect patterns in memory usage data using advanced-advanced algorithms
+    /// Detect patterns in memory usage data using advanced algorithms
     pub fn detect_patterns(&mut self, memory_data: &[f64]) -> Result<Vec<AdvancedMemoryPattern>> {
         if memory_data.len() < self.config.min_pattern_length {
             return Ok(Vec::new());

@@ -843,7 +843,7 @@ impl MemoryOptimizer {
         // Generate optimization recommendations
         let recommendations = self
             .optimization_engine
-            .generate_recommendations(&self.memory_tracker)?;
+            .generate_recommendations(&self.memory_tracker);
 
         // Detect memory leaks
         let leaks = self.leak_detector.get_detected_leaks();
@@ -858,9 +858,9 @@ impl MemoryOptimizer {
             timestamp: Instant::now(),
             efficiency_score,
             memory_usage_summary: self.memory_tracker.get_usage_summary(),
-            detected_leaks: leaks.clone(),
-            optimization_recommendations: recommendations,
-            memory_patterns: patterns.clone(),
+            detected_leaks: leaks.to_vec(),
+            optimization_recommendations: recommendations.clone(),
+            memory_patterns: patterns.to_vec(),
             fragmentation_analysis: self.analyze_fragmentation()?,
             performance_impact_analysis: self.analyze_performance_impact()?,
             cost_benefit_analysis: self

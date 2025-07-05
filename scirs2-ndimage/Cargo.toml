@@ -30,6 +30,11 @@ regex = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 
+# Compression dependencies
+flate2 = { version = "1.0", optional = true }
+zstd = { version = "0.13", optional = true }
+lz4 = { version = "1.24", optional = true }
+
 [features]
 default = []
 simd = ["scirs2-core/simd"]
@@ -38,7 +43,7 @@ cuda = []
 opencl = []
 metal = []
 gpu = ["cuda"]
-compression = []
+compression = ["flate2", "zstd", "lz4"]
 
 [dev-dependencies]
 criterion = { workspace = true }

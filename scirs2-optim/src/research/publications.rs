@@ -930,9 +930,9 @@ impl Bibliography {
                     let field_name = line[..eq_pos].trim().to_lowercase();
                     let field_value = line[eq_pos+1..].trim()
                         .trim_start_matches('{')
-                        .trim_end_matches('},')
+                        .trim_end_matches("},")
                         .trim_start_matches('"')
-                        .trim_end_matches('",')
+                        .trim_end_matches("\",")
                         .to_string();
                     
                     if let Some(ref mut entry) = current_entry {

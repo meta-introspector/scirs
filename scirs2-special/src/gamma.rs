@@ -385,8 +385,12 @@ pub fn gamma<F: Float + FromPrimitive + Debug + std::ops::AddAssign>(x: F) -> F 
         if n >= 0 {
             // Γ(n + 0.5) = (2n-1)!!/(2^n) * sqrt(π)
             let mut double_factorial = F::one();
-            for i in (1..=n).map(|i| 2 * i - 1) {
-                double_factorial = double_factorial * F::from(i).unwrap();
+            for i in 1..=n {
+                let double_i_minus_1 = match 2_i32.checked_mul(i).and_then(|x| x.checked_sub(1)) {
+                    Some(val) => val,
+                    None => return F::infinity(), // Handle overflow gracefully
+                };
+                double_factorial = double_factorial * F::from(double_i_minus_1).unwrap();
             }
 
             let sqrt_pi = F::from(f64::consts::PI.sqrt()).unwrap();

@@ -172,6 +172,11 @@ impl<F: std::fmt::Debug> std::fmt::Debug for DistributionType<F> {
             DistributionType::Exponential { rate } => {
                 f.debug_struct("Exponential").field("rate", rate).finish()
             }
+            DistributionType::Laplace { location, scale } => f
+                .debug_struct("Laplace")
+                .field("location", location)
+                .field("scale", scale)
+                .finish(),
             DistributionType::Horseshoe { tau } => {
                 f.debug_struct("Horseshoe").field("tau", tau).finish()
             }
@@ -224,7 +229,7 @@ impl<F: Clone> Clone for DistributionType<F> {
                 location: location.clone(),
                 scale: scale.clone(),
             },
-            DistributionType::Custom { parameters, .. } => {
+            DistributionType::Custom { parameters: _, .. } => {
                 // For Custom variant with function pointer, we can't actually clone the function
                 // So we'll create a placeholder that will panic if used
                 panic!("Cannot clone DistributionType::Custom with function pointer")
@@ -1233,7 +1238,7 @@ where
     pub fn predict_with_uncertainty(
         &self,
         x: &ArrayView2<F>,
-        n_samples: usize,
+        _n_samples: usize,
     ) -> StatsResult<(Array2<F>, Array2<F>)> {
         check_array_finite(x, "x")?;
 

@@ -126,7 +126,7 @@ pub struct ResidualAnalysis {
 }
 
 /// Computational diagnostics
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ComputationalDiagnostics {
     /// Number of iterations
     pub iterations: usize,
@@ -276,9 +276,19 @@ pub fn enhanced_system_identification(
     let start_time = std::time::Instant::now();
 
     // Enhanced input validation
-    check_shape(input, (output.len(), None), "input and output")?;
-    check_finite(&input.to_vec(), "input")?;
-    check_finite(&output.to_vec(), "output")?;
+    check_shape(input, &[output.len()], "input and output")?;
+
+    // Check if all values are finite
+    if !input.iter().all(|&x| x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Input contains non-finite values".to_string(),
+        ));
+    }
+    if !output.iter().all(|&x| x.is_finite()) {
+        return Err(SignalError::ValueError(
+            "Output contains non-finite values".to_string(),
+        ));
+    }
 
     // Check minimum data length requirements
     let n = input.len();

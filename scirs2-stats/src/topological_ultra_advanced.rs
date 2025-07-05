@@ -30,6 +30,7 @@ pub struct AdvancedTopologicalAnalyzer<F> {
 }
 
 /// Configuration for topological data analysis
+#[derive(Debug, Clone)]
 pub struct TopologicalConfig<F> {
     /// Maximum homology dimension to compute
     pub max_dimension: usize,
@@ -1127,7 +1128,7 @@ where
     pub fn topological_machine_learning(
         &mut self,
         data: &ArrayView2<F>,
-        labels: Option<&ArrayView1<F>>,
+        _labels: Option<&ArrayView1<F>>,
     ) -> StatsResult<TopologicalMLResult<F>> {
         // Extract topological features for machine learning
         let topological_features = self.extract_topological_features(data)?;
@@ -1136,7 +1137,8 @@ where
         let feature_matrix = Array2::zeros((data.nrows(), 10)); // Simplified feature representation
 
         // Compute distance matrix for ML
-        let kernel_matrix = self.compute_distance_matrix(&feature_matrix.view())?;
+        let analyzer = AdvancedTopologicalAnalyzer::new(self.config.clone());
+        let kernel_matrix = analyzer.compute_distance_matrix(&feature_matrix.view())?;
 
         // Simplified ML results for now
         let prediction_result = None; // Placeholder for future implementation
@@ -1234,12 +1236,13 @@ where
             let epsilon = self.config.filtration_config.max_epsilon * scale;
 
             // Build complex at this scale
-            let distance_matrix = self.compute_distance_matrix(data)?;
+            let analyzer = AdvancedTopologicalAnalyzer::new(self.config.clone());
+            let distance_matrix = analyzer.compute_distance_matrix(data)?;
             let complex =
                 self.build_vietoris_rips_complex_with_epsilon(&distance_matrix, epsilon)?;
 
             // Compute persistence
-            let diagrams = self.compute_persistent_homology(&complex)?;
+            let diagrams = analyzer.compute_persistent_homology(&complex)?;
 
             // Extract features from diagrams
             for (dim, diagram) in diagrams {
@@ -1321,7 +1324,7 @@ where
 
 impl<F> Default for TopologicalConfig<F>
 where
-    F: Float + NumCast + Copy + std::fmt::Display,
+    F: Float + NumCast + Copy + std::fmt::Display + SimdUnifiedOps + Send + Sync,
 {
     fn default() -> Self {
         Self {
@@ -1375,13 +1378,13 @@ where
 
 impl<F> TopologicalConfig<F>
 where
-    F: Float + NumCast + Copy + std::fmt::Display,
+    F: Float + NumCast + Copy + std::fmt::Display + SimdUnifiedOps + Send + Sync,
 {
     /// Advanced-advanced topological machine learning with persistent features
     pub fn topological_machine_learning(
         &mut self,
         data: &ArrayView2<F>,
-        labels: Option<&ArrayView1<F>>,
+        _labels: Option<&ArrayView1<F>>,
     ) -> StatsResult<TopologicalMLResult<F>> {
         // Extract topological features for machine learning
         let topological_features = self.extract_topological_features(data)?;
@@ -1390,7 +1393,8 @@ where
         let feature_matrix = Array2::zeros((data.nrows(), 10)); // Simplified feature representation
 
         // Compute distance matrix for ML
-        let kernel_matrix = self.compute_distance_matrix(&feature_matrix.view())?;
+        let analyzer = AdvancedTopologicalAnalyzer::new(self.config.clone());
+        let kernel_matrix = analyzer.compute_distance_matrix(&feature_matrix.view())?;
 
         // Simplified ML results for now
         let prediction_result = None; // Placeholder for future implementation
@@ -1488,12 +1492,13 @@ where
             let epsilon = self.filtration_config.max_epsilon * scale;
 
             // Build complex at this scale
-            let distance_matrix = self.compute_distance_matrix(data)?;
+            let analyzer = AdvancedTopologicalAnalyzer::new(self.config.clone());
+            let distance_matrix = analyzer.compute_distance_matrix(data)?;
             let complex =
                 self.build_vietoris_rips_complex_with_epsilon(&distance_matrix, epsilon)?;
 
             // Compute persistence
-            let diagrams = self.compute_persistent_homology(&complex)?;
+            let diagrams = analyzer.compute_persistent_homology(&complex)?;
 
             // Extract features from diagrams
             for (dim, diagram) in diagrams {
@@ -2075,7 +2080,7 @@ where
         }
 
         // Compute accuracy
-        let correct_predictions = predictions
+        let correct_predictions: usize = predictions
             .iter()
             .zip(labels.iter())
             .map(|(&pred, &true_label)| {

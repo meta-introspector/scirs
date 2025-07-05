@@ -125,7 +125,7 @@ impl AdvancedDatasetAnalyzer {
     fn calculate_complexity_score(&self, data: &Array2<f64>) -> Result<f64, Box<dyn Error>> {
         // Simple complexity measure based on variance and correlation
         let var_mean = data.var_axis(ndarray::Axis(0), 1.0).mean().unwrap_or(1.0);
-        let complexity = (var_mean.ln() + 1.0).max(0.0).min(1.0);
+        let complexity = (var_mean.ln() + 1.0).clamp(0.0, 1.0);
         Ok(complexity)
     }
 
@@ -138,7 +138,7 @@ impl AdvancedDatasetAnalyzer {
         // Simple entropy approximation
         let n = sorted.len() as f64;
         let entropy = if n > 0.0 {
-            (n.ln() / 2.0).max(0.0).min(5.0)
+            (n.ln() / 2.0).clamp(0.0, 5.0)
         } else {
             0.0
         };
@@ -177,7 +177,7 @@ impl AdvancedDatasetAnalyzer {
 
         // Normalize to 0-1 range
         let quality_score = (mean_variance.ln() + 5.0) / 10.0;
-        Ok(quality_score.max(0.0).min(1.0))
+        Ok(quality_score.clamp(0.0, 1.0))
     }
 
     fn calculate_normality_assessment(
@@ -240,7 +240,7 @@ impl AdvancedDatasetAnalyzer {
         let kurt_penalty = (kurtosis.abs() / 4.0).min(1.0);
         let normality_score: f64 = 1.0 - (skew_penalty + kurt_penalty) / 2.0;
 
-        Ok(normality_score.max(0.0).min(1.0))
+        Ok(normality_score.clamp(0.0, 1.0))
     }
 
     fn calculate_correlation_insights(
@@ -256,7 +256,7 @@ impl AdvancedDatasetAnalyzer {
             let variance = feature.var(1.0);
 
             // Simple importance based on variance (higher variance = more important)
-            let importance = (variance.ln() + 1.0).max(0.0).min(1.0);
+            let importance = (variance.ln() + 1.0).clamp(0.0, 1.0);
             importance_scores.push(importance);
         }
 
@@ -288,12 +288,12 @@ pub fn quick_quality_assessment(dataset: &Dataset) -> Result<f64, Box<dyn Error>
     let variance_score = non_zero_var_count as f64 / n_features as f64;
 
     // Simple size penalty for very small datasets
-    let size_score = ((n_samples as f64).ln() / 10.0).min(1.0).max(0.0);
+    let size_score = ((n_samples as f64).ln() / 10.0).clamp(0.0, 1.0);
 
     // Combined quality score
     let quality_score = (completeness + variance_score + size_score) / 3.0;
 
-    Ok(quality_score.max(0.0).min(1.0))
+    Ok(quality_score.clamp(0.0, 1.0))
 }
 
 /// Advanced dataset analysis function
@@ -320,7 +320,7 @@ mod tests {
         let dataset = Dataset::new(data, None);
 
         let quality = quick_quality_assessment(&dataset).unwrap();
-        assert!(quality >= 0.0 && quality <= 1.0);
+        assert!((0.0..=1.0).contains(&quality));
     }
 
     #[test]
@@ -365,6 +365,6 @@ mod tests {
             .correlation_insights
             .feature_importance
             .iter()
-            .all(|&x| x >= 0.0 && x <= 1.0));
+            .all(|&x| (0.0..=1.0).contains(&x)));
     }
 }

@@ -1,11 +1,11 @@
 //! Advanced Fusion Intelligence for Next-Generation Time Series Analysis
 //!
-//! This module represents the pinnacle of advanced-advanced time series analysis,
+//! This module represents the pinnacle of advanced time series analysis,
 //! combining quantum computing, neuromorphic architectures, meta-learning,
 //! distributed intelligence, and self-evolving AI systems for unprecedented
 //! analytical capabilities.
 //!
-//! ## Advanced-Advanced Features
+//! ## Advanced Features
 //!
 //! - **Quantum-Neuromorphic Fusion**: Hybrid quantum-neuromorphic processors
 //! - **Meta-Learning Forecasting**: AI that learns how to learn from time series
@@ -26,11 +26,13 @@ use std::fmt::Debug;
 use crate::error::Result;
 
 // Missing type definitions for advanced fusion intelligence
+/// Advanced quantum error correction system
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct QuantumErrorCorrectionAdvanced;
 
 impl QuantumErrorCorrectionAdvanced {
+    /// Apply quantum error correction to data
     pub fn apply_correction<F: Float>(&self, data: &Array1<F>) -> Result<Array1<F>> {
         // Simple error correction - pass through with minimal processing
         Ok(data.clone())
@@ -38,26 +40,31 @@ impl QuantumErrorCorrectionAdvanced {
 }
 
 impl QuantumErrorCorrectionAdvanced {
+    /// Create new quantum error correction system
     pub fn new() -> Result<Self> {
         Ok(Self)
     }
 }
 
+/// Library of quantum algorithms for time series analysis
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct QuantumAlgorithmLibrary;
 
 impl QuantumAlgorithmLibrary {
+    /// Create new quantum algorithm library
     pub fn new() -> Result<Self> {
         Ok(Self)
     }
 }
 
+/// Optimizer for quantum coherence in time series processing
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct QuantumCoherenceOptimizer;
 
 // Missing type definitions for neuromorphic processing
+/// Advanced spiking neural network layer
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct AdvancedSpikingLayer<F: Float + Debug> {
@@ -66,6 +73,7 @@ pub struct AdvancedSpikingLayer<F: Float + Debug> {
     learning_rate: F,
 }
 
+/// Individual spiking neuron implementation
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct SpikingNeuron<F: Float + Debug> {
@@ -75,6 +83,7 @@ pub struct SpikingNeuron<F: Float + Debug> {
     tau_membrane: F,
 }
 
+/// Synaptic connection between neurons
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct SynapticConnection<F: Float + Debug> {
@@ -83,15 +92,21 @@ pub struct SynapticConnection<F: Float + Debug> {
     plasticity_rule: PlasticityRule,
 }
 
+/// Neural plasticity learning rules
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum PlasticityRule {
+    /// Spike-timing dependent plasticity
     STDP,
+    /// Bienenstock-Cooper-Munro rule
     BCM,
+    /// Hebbian learning rule
     Hebbian,
+    /// Anti-Hebbian learning rule
     AntiHebbian,
 }
 
+/// Advanced dendritic tree structure for neural computation
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct AdvancedDendriticTree<F: Float + Debug> {
@@ -100,6 +115,7 @@ pub struct AdvancedDendriticTree<F: Float + Debug> {
     backpropagation_efficiency: F,
 }
 
+/// Individual dendritic branch component
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct DendriticBranch<F: Float + Debug> {
@@ -109,15 +125,21 @@ pub struct DendriticBranch<F: Float + Debug> {
     capacitance: F,
 }
 
+/// Neural integration function types
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum IntegrationFunction {
+    /// Linear integration function
     Linear,
+    /// Non-linear integration function
     NonLinear,
+    /// Sigmoid integration function
     Sigmoid,
+    /// Exponential integration function
     Exponential,
 }
 
+/// Converter from quantum states to neural spikes
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct QuantumSpikeConverter<F: Float + Debug> {
@@ -126,6 +148,7 @@ pub struct QuantumSpikeConverter<F: Float + Debug> {
     conversion_matrix: Vec<Vec<F>>,
 }
 
+/// Converter from neural spikes to quantum states
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct SpikeQuantumConverter<F: Float + Debug> {
@@ -134,16 +157,22 @@ pub struct SpikeQuantumConverter<F: Float + Debug> {
     encoding_scheme: QuantumEncodingScheme,
 }
 
+/// Quantum encoding schemes for neural data
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum QuantumEncodingScheme {
+    /// Amplitude-based encoding
     Amplitude,
+    /// Phase-based encoding
     Phase,
+    /// Polarization-based encoding
     Polarization,
+    /// Frequency-based encoding
     Frequency,
 }
 
 // Missing type definitions for meta-learning
+/// Meta-optimization model for learning algorithms
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct MetaOptimizationModel<F: Float + Debug> {
@@ -152,15 +181,21 @@ pub struct MetaOptimizationModel<F: Float + Debug> {
     adaptation_rate: F,
 }
 
+/// Available optimization strategies for meta-learning
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum OptimizationStrategy {
+    /// Gradient-based optimization
     GradientBased,
+    /// Evolutionary algorithm optimization
     EvolutionaryBased,
+    /// Bayesian optimization approach
     BayesianOptimization,
+    /// Reinforcement learning optimization
     ReinforcementLearning,
 }
 
+/// Library of available learning strategies
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct LearningStrategyLibrary<F: Float + Debug> {
@@ -168,6 +203,7 @@ pub struct LearningStrategyLibrary<F: Float + Debug> {
     performance_history: HashMap<String, F>,
 }
 
+/// Individual learning strategy configuration
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct LearningStrategy<F: Float + Debug> {
@@ -176,6 +212,7 @@ pub struct LearningStrategy<F: Float + Debug> {
     applicability_score: F,
 }
 
+/// System for evaluating learning performance
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct LearningEvaluationSystem<F: Float + Debug> {
@@ -184,25 +221,37 @@ pub struct LearningEvaluationSystem<F: Float + Debug> {
     validation_protocol: ValidationMethod,
 }
 
+/// Metrics for evaluating learning performance
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum EvaluationMetric {
+    /// Accuracy metric
     Accuracy,
+    /// Speed metric
     Speed,
+    /// Efficiency metric
     Efficiency,
+    /// Robustness metric
     Robustness,
+    /// Interpretability metric
     Interpretability,
 }
 
+/// Methods for validating learning performance
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum ValidationMethod {
+    /// Cross-validation method
     CrossValidation,
+    /// Hold-out validation method
     HoldOut,
+    /// Bootstrap validation method
     Bootstrap,
+    /// Time series split validation
     TimeSeriesSplit,
 }
 
+/// Mechanism for meta-adaptation of learning strategies
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct MetaAdaptationMechanism<F: Float + Debug> {
@@ -210,6 +259,7 @@ pub struct MetaAdaptationMechanism<F: Float + Debug> {
     trigger_conditions: Vec<TriggerCondition<F>>,
 }
 
+/// Rule for adaptive behavior modification
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct AdaptationRule<F: Float + Debug> {
@@ -218,6 +268,7 @@ pub struct AdaptationRule<F: Float + Debug> {
     strength: F,
 }
 
+/// Condition that triggers adaptive behavior
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct TriggerCondition<F: Float + Debug> {
@@ -226,15 +277,21 @@ pub struct TriggerCondition<F: Float + Debug> {
     direction: ComparisonDirection,
 }
 
+/// Direction for threshold comparisons
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum ComparisonDirection {
+    /// Greater than comparison
     Greater,
+    /// Less than comparison
     Less,
+    /// Equal to comparison
     Equal,
+    /// Not equal to comparison
     NotEqual,
 }
 
+/// System for transferring knowledge between tasks
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct KnowledgeTransferSystem<F: Float + Debug> {
@@ -244,6 +301,7 @@ pub struct KnowledgeTransferSystem<F: Float + Debug> {
     source_tasks: Vec<String>,
 }
 
+/// Individual knowledge item for transfer
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct KnowledgeItem<F: Float + Debug> {
@@ -253,18 +311,26 @@ pub struct KnowledgeItem<F: Float + Debug> {
     confidence_score: F,
 }
 
+/// Mechanisms for knowledge transfer
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum TransferMechanism {
+    /// Direct transfer of knowledge
     DirectTransfer,
+    /// Adaptive transfer mechanism
     AdaptiveTransfer,
+    /// Selective transfer of relevant knowledge
     SelectiveTransfer,
+    /// Hierarchical knowledge transfer
     HierarchicalTransfer,
+    /// Parameter mapping transfer
     ParameterMapping,
+    /// Feature extraction transfer
     FeatureExtraction,
 }
 
 // Missing type definitions for architecture evolution
+/// Engine for evolving neural architectures
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct EvolutionEngine<F: Float + Debug> {
@@ -274,6 +340,7 @@ pub struct EvolutionEngine<F: Float + Debug> {
     crossover_rate: F,
 }
 
+/// Neural network architecture configuration
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Architecture<F: Float + Debug> {
@@ -282,6 +349,7 @@ pub struct Architecture<F: Float + Debug> {
     fitness_score: F,
 }
 
+/// Configuration for individual network layer
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct LayerConfig<F: Float + Debug> {
@@ -291,30 +359,47 @@ pub struct LayerConfig<F: Float + Debug> {
     parameters: Vec<F>,
 }
 
+/// Types of neural network layers
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum LayerType {
+    /// Fully connected dense layer
     Dense,
+    /// Convolutional layer
     Convolutional,
+    /// Recurrent neural network layer
     Recurrent,
+    /// Attention mechanism layer
     Attention,
+    /// Quantum computing layer
     Quantum,
+    /// Long Short-Term Memory layer
     LSTM,
+    /// Dropout regularization layer
     Dropout,
 }
 
+/// Activation functions for neural networks
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum ActivationFunction {
+    /// Rectified Linear Unit activation
     ReLU,
+    /// Sigmoid activation function
     Sigmoid,
+    /// Hyperbolic tangent activation
     Tanh,
+    /// Gaussian Error Linear Unit
     GELU,
+    /// Swish activation function
     Swish,
+    /// Quantum activation function
     Quantum,
+    /// Softmax activation function
     Softmax,
 }
 
+/// Configuration for layer connections
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ConnectionConfig<F: Float + Debug> {
@@ -325,26 +410,39 @@ pub struct ConnectionConfig<F: Float + Debug> {
     weight: F,
 }
 
+/// Types of neural network connections
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum ConnectionType {
+    /// Feedforward connection
     Feedforward,
+    /// Recurrent connection
     Recurrent,
+    /// Skip connection
     Skip,
+    /// Attention-based connection
     Attention,
+    /// Quantum connection
     Quantum,
+    /// Fully connected layer
     FullyConnected,
 }
 
+/// Strategies for evolutionary selection
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum SelectionStrategy {
+    /// Tournament selection
     Tournament,
+    /// Roulette wheel selection
     Roulette,
+    /// Elite selection
     Elite,
+    /// Rank-based selection
     RankBased,
 }
 
+/// Fitness evaluator for evolutionary algorithms
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct FitnessEvaluator<F: Float + Debug> {
@@ -353,24 +451,35 @@ pub struct FitnessEvaluator<F: Float + Debug> {
     normalization_strategy: NormalizationStrategy,
 }
 
+/// Evaluation function types
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum EvaluationFunction {
+    /// Accuracy-based evaluation
     Accuracy,
+    /// Latency-optimized evaluation
     LatencyOptimized,
+    /// Memory-optimized evaluation
     MemoryOptimized,
+    /// Multi-objective evaluation
     MultiObjective,
 }
 
+/// Normalization strategies
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum NormalizationStrategy {
+    /// Min-max normalization
     MinMax,
+    /// Z-score normalization
     ZScore,
+    /// Robust normalization
     Robust,
+    /// Quantile normalization
     Quantile,
 }
 
+/// Mutation operator for evolutionary algorithms
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct MutationOperator {
@@ -379,16 +488,23 @@ pub struct MutationOperator {
     intensity: f64,
 }
 
+/// Types of mutations for evolutionary algorithms
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum MutationType {
+    /// Parameter mutation
     ParameterMutation,
+    /// Structural mutation
     StructuralMutation,
+    /// Layer addition
     LayerAddition,
+    /// Layer removal
     LayerRemoval,
+    /// Connection mutation
     ConnectionMutation,
 }
 
+/// Crossover operator for evolutionary algorithms
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct CrossoverOperator {
@@ -396,12 +512,17 @@ pub struct CrossoverOperator {
     probability: f64,
 }
 
+/// Types of crossover operations
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum CrossoverType {
+    /// Single point crossover
     SinglePoint,
+    /// Two point crossover
     TwoPoint,
+    /// Uniform crossover
     Uniform,
+    /// Semantic crossover
     Semantic,
     Structural,
 }
@@ -3166,7 +3287,7 @@ pub struct QuantumNeuromorphicCore<F: Float + Debug> {
     energy_tracker: EnergyConsumptionTracker<F>,
 }
 
-/// Quantum processing unit with advanced-advanced capabilities
+/// Quantum processing unit with advanced capabilities
 #[derive(Debug)]
 pub struct QuantumProcessingUnit<F: Float + Debug> {
     /// Number of logical qubits
@@ -3647,21 +3768,21 @@ impl<
             self.generate_ensemble_prediction(&ensemble_quantum_state, &ensemble_spike_patterns)?;
 
         // Calculate uncertainty bounds using quantum superposition principles
-        let uncertainty_bounds = self.calculate_quantum_uncertainty_bounds(&core_results)?;
+        let uncertainty_bounds = self.calculate_quantum_uncertainty_bounds(core_results)?;
 
         Ok(FusionProcessingResult {
             ensemble_prediction,
             uncertainty_bounds,
             quantum_analysis: QuantumAnalysisResult {
-                entanglement_measures: self.calculate_entanglement_measures(&core_results)?,
-                coherence_metrics: self.calculate_coherence_metrics(&core_results)?,
-                quantum_advantage_score: self.calculate_quantum_advantage(&core_results)?,
+                entanglement_measures: self.calculate_entanglement_measures(core_results)?,
+                coherence_metrics: self.calculate_coherence_metrics(core_results)?,
+                quantum_advantage_score: self.calculate_quantum_advantage(core_results)?,
             },
             neuromorphic_analysis: NeuromorphicAnalysisResult {
                 spike_synchronization: self
                     .analyze_spike_synchronization(&ensemble_spike_patterns)?,
-                plasticity_evolution: self.track_plasticity_evolution(&core_results)?,
-                emergence_patterns: self.detect_emergence_patterns(&core_results)?,
+                plasticity_evolution: self.track_plasticity_evolution(core_results)?,
+                emergence_patterns: self.detect_emergence_patterns(core_results)?,
             },
         })
     }
@@ -3942,7 +4063,7 @@ impl<
     }
 }
 
-// Placeholder types and implementations for the advanced-advanced system
+// Placeholder types and implementations for the advanced system
 #[derive(Debug, Clone)]
 pub enum AdvancedAnalysisType {
     QuantumForecasting,
@@ -4002,7 +4123,7 @@ pub struct NeuromorphicAnalysisResult<F: Float> {
     pub emergence_patterns: Vec<EmergencePattern<F>>,
 }
 
-// Many more placeholder types would be defined to complete the advanced-advanced system...
+// Many more placeholder types would be defined to complete the advanced system...
 
 #[derive(Debug, Clone)]
 pub struct FusionCoreResult<F: Float> {
@@ -4933,7 +5054,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumNeuromorphicInterface<F> {
     }
 }
 
-// Placeholder implementations for all the other advanced-advanced subsystems...
+// Placeholder implementations for all the other advanced subsystems...
 macro_rules! impl_placeholder_subsystem {
     ($type:ident) => {
         impl<F: Float + Debug + Clone + FromPrimitive> $type<F> {
@@ -5141,7 +5262,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum> MetaLearningCont
                 .parameters
                 .iter()
                 .enumerate()
-                .map(|(i, &param)| (format!("param_{}", i), param))
+                .map(|(i, &param)| (format!("param_{i}"), param))
                 .collect(),
             insights: MetaLearningInsights {
                 learning_efficiency: best_score,
@@ -5862,7 +5983,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         let connection_count = individual.connections.len();
 
         // Optimal complexity range
-        let complexity_score = if layer_count >= 3 && layer_count <= 6 && connection_count <= 10 {
+        let complexity_score = if (3..=6).contains(&layer_count) && connection_count <= 10 {
             F::from_f64(0.9).unwrap()
         } else if layer_count > 6 || connection_count > 10 {
             F::from_f64(0.6).unwrap() // Penalize over-complexity
@@ -5961,7 +6082,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
 
             // Add layer-specific parameters
             for (i, param) in layer.parameters.iter().enumerate() {
-                parameters.insert(format!("param_{}", i), param.to_f64().unwrap_or(0.0));
+                parameters.insert(format!("param_{i}"), param.to_f64().unwrap_or(0.0));
             }
 
             genes.push(ArchitectureGene {
@@ -6064,18 +6185,18 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         let mut selected = Vec::new();
 
         // Higher ranked individuals have higher probability
-        for i in 0..selection_count {
+        for (i, (_, individual)) in indexed_population.iter().enumerate().take(selection_count) {
             let rank_weight = (selection_count - i) as f64;
             if random_range(0.0..1.0) < rank_weight / (selection_count as f64) {
-                selected.push(indexed_population[i].1.clone());
+                selected.push((*individual).clone());
             }
         }
 
         // Fill remaining slots if needed
         while selected.len() < selection_count && !indexed_population.is_empty() {
             selected.push(
-                indexed_population[selected.len() % indexed_population.len()]
-                    .1
+                (*indexed_population[selected.len() % indexed_population.len()]
+                    .1)
                     .clone(),
             );
         }
@@ -6444,7 +6565,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
             let size_multiplier = 0.5 + random_range(0.0..1.0) * 1.0; // 0.5 to 1.5
             mutated.layers[layer_idx].size =
                 ((mutated.layers[layer_idx].size as f64) * size_multiplier) as usize;
-            mutated.layers[layer_idx].size = mutated.layers[layer_idx].size.max(8).min(1024);
+            mutated.layers[layer_idx].size = mutated.layers[layer_idx].size.clamp(8, 1024);
             // Bounds
         }
 
@@ -6572,18 +6693,18 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
             export.push_str(&format!("      \"type\": \"{:?}\",\n", gene.gene_type));
             export.push_str("      \"parameters\": {\n");
             for (key, value) in &gene.parameters {
-                export.push_str(&format!("        \"{}\": {},\n", key, value));
+                export.push_str(&format!("        \"{key}\": {value},\n"));
             }
             export.push_str("      }\n");
             export.push_str("    }");
             if i < self.architecture_dna.genes.len() - 1 {
-                export.push_str(",");
+                export.push(',');
             }
-            export.push_str("\n");
+            export.push('\n');
         }
 
         export.push_str("  ]\n");
-        export.push_str("}");
+        export.push('}');
 
         Ok(export)
     }
@@ -6709,7 +6830,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
         indexed_candidates
             .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
-        let survivors_count = (candidates.len() + 1) / 2;
+        let survivors_count = candidates.len().div_ceil(2);
         let survivors: Vec<ArchitectureDNA> = indexed_candidates
             .iter()
             .take(survivors_count)
@@ -6830,6 +6951,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[should_panic(expected = "Advanced-advanced ConsciousnessSimulator implementation")]
     fn test_advanced_fusion_intelligence_creation() {
         let fusion_system = AdvancedFusionIntelligence::<f64>::new(4, 16);
         assert!(fusion_system.is_ok());

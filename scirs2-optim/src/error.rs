@@ -8,6 +8,8 @@ use std::fmt;
 pub enum OptimError {
     /// Invalid configuration
     InvalidConfig(String),
+    /// Invalid parameter
+    InvalidParameter(String),
     /// Optimization error
     OptimizationError(String),
     /// Dimension mismatch error
@@ -56,6 +58,7 @@ impl fmt::Display for OptimError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             OptimError::InvalidConfig(msg) => write!(f, "Invalid configuration: {msg}"),
+            OptimError::InvalidParameter(msg) => write!(f, "Invalid parameter: {msg}"),
             OptimError::OptimizationError(msg) => write!(f, "Optimization error: {msg}"),
             OptimError::DimensionMismatch(msg) => write!(f, "Dimension mismatch: {msg}"),
             OptimError::PrivacyBudgetExhausted {

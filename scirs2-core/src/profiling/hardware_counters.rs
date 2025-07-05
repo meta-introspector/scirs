@@ -650,8 +650,7 @@ impl HardwareCounterManager {
             Ok(())
         } else {
             Err(HardwareCounterError::InvalidConfiguration(format!(
-                "Session not found: {}",
-                session_name
+                "Session not found: {session_name}"
             ))
             .into())
         }

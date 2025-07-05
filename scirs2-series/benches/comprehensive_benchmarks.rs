@@ -280,13 +280,19 @@ fn bench_state_space(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("kalman_filter", size), size, |b, _| {
             b.iter(|| {
-                let mut filter = KalmanFilter::new(
-                    ndarray::arr2(&[[1.0, 1.0], [0.0, 1.0]]), // State transition
-                    ndarray::arr2(&[[1.0, 0.0]]),             // Observation matrix
-                    ndarray::arr2(&[[0.1, 0.0], [0.0, 0.1]]), // Process noise
-                    ndarray::arr2(&[[1.0]]),                  // Observation noise
-                )
-                .unwrap();
+                let initial_state = scirs2_series::state_space::StateVector {
+                    state: ndarray::arr1(&[0.0, 0.0]),
+                    covariance: ndarray::arr2(&[[1.0, 0.0], [0.0, 1.0]]),
+                };
+                let transition = scirs2_series::state_space::StateTransition {
+                    transition_matrix: ndarray::arr2(&[[1.0, 1.0], [0.0, 1.0]]),
+                    process_noise: ndarray::arr2(&[[0.1, 0.0], [0.0, 0.1]]),
+                };
+                let observation = scirs2_series::state_space::ObservationModel {
+                    observation_matrix: ndarray::arr2(&[[1.0, 0.0]]),
+                    observation_noise: ndarray::arr2(&[[1.0]]),
+                };
+                let mut filter = KalmanFilter::new(initial_state, transition, observation);
 
                 for &obs in observations.iter() {
                     black_box(filter.update(&ndarray::arr1(&[obs])).unwrap());
@@ -333,9 +339,13 @@ fn bench_streaming(c: &mut Criterion) {
             window_size,
             |b, &window_size| {
                 b.iter(|| {
-                    let mut analyzer = StreamingAnalyzer::new(*window_size);
+                    let config = scirs2_series::streaming::StreamConfig {
+                        window_size,
+                        ..Default::default()
+                    };
+                    let mut analyzer = StreamingAnalyzer::new(config).unwrap();
                     for &value in data.iter() {
-                        black_box(analyzer.update(value).unwrap());
+                        black_box(analyzer.add_observation(value).unwrap());
                     }
                 });
             },
@@ -383,14 +393,14 @@ fn bench_out_of_core(c: &mut Criterion) {
             |b, &chunk_size| {
                 b.iter(|| {
                     let config = ProcessingConfig::new()
-                        .with_chunk_size(*chunk_size)
+                        .with_chunk_size(chunk_size)
                         .with_parallel_processing(false);
 
                     let processor = ChunkedProcessor::new(config);
 
                     // Simulate processing chunks
-                    let data = generate_synthetic_data(*chunk_size * 5, 1.0);
-                    let chunks: Vec<_> = data.windows(*chunk_size).step_by(*chunk_size).collect();
+                    let data = generate_synthetic_data(chunk_size * 5, 1.0);
+                    let chunks: Vec<_> = data.windows(chunk_size).collect();
 
                     for chunk in chunks {
                         black_box(chunk.iter().sum::<f64>() / chunk.len() as f64);
@@ -457,8 +467,8 @@ fn bench_transformations(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("box_cox", size), size, |b, _| {
             b.iter(|| {
-                let transformer = BoxCoxTransform::new();
-                black_box(transformer.fit_transform(&data).unwrap());
+                let result = scirs2_series::transformations::box_cox_transform(&data, None);
+                black_box(result.unwrap());
             });
         });
     }

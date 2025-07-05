@@ -4,9 +4,10 @@
 //! algorithms designed for real-time data processing and low-latency inference.
 
 use crate::error::{OptimError, Result};
-use ndarray::Array1;
+use ndarray::{Array, Array1, ArrayBase, ScalarOperand};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
+use std::fmt::Debug;
 use std::time::{Duration, Instant};
 
 pub mod adaptive_streaming;
@@ -168,7 +169,7 @@ pub enum LearningRateAdaptation {
 /// Streaming gradient descent optimizer
 pub struct StreamingOptimizer<O, A, D>
 where
-    A: Float + Send + Sync,
+    A: Float + Send + Sync + ScalarOperand + Debug,
     D: ndarray::Dimension,
     O: Optimizer<A, D>,
 {
@@ -200,7 +201,7 @@ where
     memory_tracker: MemoryTracker,
 
     /// Asynchronous update state
-    async_state: Option<AsyncUpdateState<A>>,
+    async_state: Option<AsyncUpdateState<A, D>>,
 
     /// Current step count
     step_count: usize,
@@ -352,12 +353,12 @@ struct MemoryTracker {
 
 /// Asynchronous update state
 #[derive(Debug)]
-struct AsyncUpdateState<A: Float> {
+struct AsyncUpdateState<A: Float, D: ndarray::Dimension> {
     /// Pending gradients
-    pending_gradients: Vec<Array1<A>>,
+    pending_gradients: Vec<ArrayBase<ndarray::OwnedRepr<A>, D>>,
 
     /// Update queue
-    update_queue: VecDeque<AsyncUpdate<A>>,
+    update_queue: VecDeque<AsyncUpdate<A, D>>,
 
     /// Staleness counter
     staleness_counter: HashMap<usize, usize>,
@@ -368,9 +369,9 @@ struct AsyncUpdateState<A: Float> {
 
 /// Asynchronous update entry
 #[derive(Debug, Clone)]
-struct AsyncUpdate<A: Float> {
+struct AsyncUpdate<A: Float, D: ndarray::Dimension> {
     /// Parameter update
-    update: Array1<A>,
+    update: ArrayBase<ndarray::OwnedRepr<A>, D>,
 
     /// Timestamp
     timestamp: Instant,
@@ -393,7 +394,7 @@ enum UpdatePriority {
 
 impl<O, A, D> StreamingOptimizer<O, A, D>
 where
-    A: Float + Default + Clone + Send + Sync + std::fmt::Debug,
+    A: Float + Default + Clone + Send + Sync + std::fmt::Debug + ScalarOperand,
     D: ndarray::Dimension,
     O: Optimizer<A, D> + Send + Sync,
 {
@@ -815,17 +816,24 @@ where
         Ok(())
     }
 
-    fn get_current_parameters(&self) -> Result<Array1<A>> {
-        // Placeholder - would get actual parameters from model
-        Ok(Array1::zeros(10))
+    fn get_current_parameters(&self) -> Result<ArrayBase<ndarray::OwnedRepr<A>, D>> {
+        // Placeholder - would get actual parameters from model based on dimension D
+        // For now, return an error indicating this needs to be implemented
+        Err(OptimError::InvalidParameter(
+            "get_current_parameters not implemented".to_string(),
+        ))
     }
 
-    fn sync_update(&mut self, params: &Array1<A>, gradient: &Array1<A>) -> Result<Array1<A>> {
+    fn sync_update(&mut self, params: &Array<A, D>, gradient: &Array<A, D>) -> Result<Array<A, D>> {
         // Apply gradient update synchronously
         self.base_optimizer.step(params, gradient)
     }
 
-    fn async_update(&mut self, _params: &Array1<A>, gradient: &Array1<A>) -> Result<Array1<A>> {
+    fn async_update(
+        &mut self,
+        _params: &Array<A, D>,
+        gradient: &Array<A, D>,
+    ) -> Result<Array<A, D>> {
         if let Some(ref mut async_state) = self.async_state {
             // Add to update queue
             let update = AsyncUpdate {
@@ -860,7 +868,7 @@ where
         }
     }
 
-    fn process_async_updates(&mut self) -> Result<Array1<A>> {
+    fn process_async_updates(&mut self) -> Result<ArrayBase<ndarray::OwnedRepr<A>, D>> {
         // Simplified async update processing
         if let Some(ref mut async_state) = self.async_state {
             if let Some(update) = async_state.update_queue.pop_front() {

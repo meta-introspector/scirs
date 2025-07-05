@@ -12,10 +12,11 @@ use crate::metadata::Metadata;
 use ndarray::{Array1, Array2, ArrayView2};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Mutex;
 
 // Database driver imports
 #[cfg(feature = "sqlite")]
-use rusqlite::{params, Connection as SqliteConn, Row, Statement};
+use rusqlite::Connection as SqliteConn;
 
 #[cfg(feature = "postgres")]
 use sqlx::postgres::{PgPool, PgPoolOptions, PgRow};
@@ -515,7 +516,7 @@ impl DatabaseConnector {
 struct SQLiteConnection {
     #[allow(dead_code)]
     path: String,
-    conn: SqliteConn,
+    conn: Mutex<SqliteConn>,
 }
 
 #[cfg(feature = "sqlite")]
@@ -526,7 +527,7 @@ impl SQLiteConnection {
 
         Ok(Self {
             path: config.database.clone(),
-            conn,
+            conn: Mutex::new(conn),
         })
     }
 
@@ -589,44 +590,28 @@ impl DatabaseConnection for SQLiteConnection {
         self.execute_sql(&sql, &[])
     }
 
-    fn execute_sql(&self, sql: &str, params: &[serde_json::Value]) -> Result<ResultSet> {
-        // Convert JSON parameters to rusqlite parameters
-        let rusqlite_params: Vec<rusqlite::types::Value> = params
-            .iter()
-            .map(|p| match p {
-                serde_json::Value::Number(n) => {
-                    if let Some(i) = n.as_i64() {
-                        rusqlite::types::Value::Integer(i)
-                    } else if let Some(f) = n.as_f64() {
-                        rusqlite::types::Value::Real(f)
-                    } else {
-                        rusqlite::types::Value::Null
-                    }
-                }
-                serde_json::Value::String(s) => rusqlite::types::Value::Text(s.clone()),
-                serde_json::Value::Bool(b) => {
-                    rusqlite::types::Value::Integer(if *b { 1 } else { 0 })
-                }
-                _ => rusqlite::types::Value::Null,
-            })
-            .collect();
+    fn execute_sql(&self, sql: &str, _params: &[serde_json::Value]) -> Result<ResultSet> {
+        let conn = self.conn.lock().map_err(|e| {
+            IoError::DatabaseError(format!("Failed to lock database connection: {}", e))
+        })?;
 
         let sql_lower = sql.to_lowercase();
 
         // Handle different SQL types
         if sql_lower.starts_with("select") || sql_lower.starts_with("explain") {
-            let mut stmt = self.conn.prepare(sql).map_err(|e| {
+            let mut stmt = conn.prepare(sql).map_err(|e| {
                 IoError::DatabaseError(format!("Failed to prepare statement: {}", e))
             })?;
 
             let column_names: Vec<String> =
                 stmt.column_names().iter().map(|s| s.to_string()).collect();
+            let column_count = stmt.column_count();
             let mut result = ResultSet::new(column_names);
 
             let rows = stmt
-                .query_map(&rusqlite_params[..], |row| {
+                .query_map(rusqlite::params![], |row| {
                     let mut values = Vec::new();
-                    for i in 0..row.column_count() {
+                    for i in 0..column_count {
                         let value: rusqlite::types::Value = row.get(i)?;
                         let json_value = match value {
                             rusqlite::types::Value::Null => serde_json::Value::Null,
@@ -663,9 +648,8 @@ impl DatabaseConnection for SQLiteConnection {
             Ok(result)
         } else {
             // Handle INSERT, UPDATE, DELETE, CREATE, etc.
-            let affected_rows = self
-                .conn
-                .execute(sql, &rusqlite_params[..])
+            let affected_rows = conn
+                .execute(sql, rusqlite::params![])
                 .map_err(|e| IoError::DatabaseError(format!("SQL execution failed: {}", e)))?;
 
             let mut result = ResultSet::new(vec!["rows_affected".to_string()]);
@@ -681,6 +665,10 @@ impl DatabaseConnection for SQLiteConnection {
             ));
         }
 
+        let conn = self.conn.lock().map_err(|e| {
+            IoError::DatabaseError(format!("Failed to lock database connection: {}", e))
+        })?;
+
         let placeholders: Vec<String> = (0..columns.len()).map(|_| "?".to_string()).collect();
         let sql = format!(
             "INSERT INTO {} ({}) VALUES ({})",
@@ -689,17 +677,14 @@ impl DatabaseConnection for SQLiteConnection {
             placeholders.join(", ")
         );
 
-        let mut stmt = self.conn.prepare(&sql).map_err(|e| {
+        let mut stmt = conn.prepare(&sql).map_err(|e| {
             IoError::DatabaseError(format!("Failed to prepare insert statement: {}", e))
         })?;
 
         let mut inserted = 0;
         for row in data.rows() {
-            let params: Vec<rusqlite::types::Value> = row
-                .iter()
-                .map(|&v| rusqlite::types::Value::Real(v))
-                .collect();
-
+            let params: Vec<&dyn rusqlite::ToSql> =
+                row.iter().map(|v| v as &dyn rusqlite::ToSql).collect();
             stmt.execute(&params[..])
                 .map_err(|e| IoError::DatabaseError(format!("Insert failed: {}", e)))?;
             inserted += 1;
@@ -709,6 +694,10 @@ impl DatabaseConnection for SQLiteConnection {
     }
 
     fn create_table(&self, table: &str, schema: &TableSchema) -> Result<()> {
+        let conn = self.conn.lock().map_err(|e| {
+            IoError::DatabaseError(format!("Failed to lock database connection: {}", e))
+        })?;
+
         let mut sql = format!("CREATE TABLE {} (", table);
 
         let column_defs: Vec<String> = schema
@@ -729,8 +718,7 @@ impl DatabaseConnection for SQLiteConnection {
 
         sql.push(')');
 
-        self.conn
-            .execute(&sql, [])
+        conn.execute(&sql, [])
             .map_err(|e| IoError::DatabaseError(format!("Failed to create table: {}", e)))?;
 
         // Create indexes
@@ -743,8 +731,7 @@ impl DatabaseConnection for SQLiteConnection {
                 table,
                 index.columns.join(", ")
             );
-            self.conn
-                .execute(&index_sql, [])
+            conn.execute(&index_sql, [])
                 .map_err(|e| IoError::DatabaseError(format!("Failed to create index: {}", e)))?;
         }
 
@@ -752,9 +739,12 @@ impl DatabaseConnection for SQLiteConnection {
     }
 
     fn table_exists(&self, table: &str) -> Result<bool> {
+        let conn = self.conn.lock().map_err(|e| {
+            IoError::DatabaseError(format!("Failed to lock database connection: {}", e))
+        })?;
+
         let sql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?";
-        let mut stmt = self
-            .conn
+        let mut stmt = conn
             .prepare(sql)
             .map_err(|e| IoError::DatabaseError(format!("Failed to prepare statement: {}", e)))?;
 
@@ -766,8 +756,12 @@ impl DatabaseConnection for SQLiteConnection {
     }
 
     fn get_schema(&self, table: &str) -> Result<TableSchema> {
+        let conn = self.conn.lock().map_err(|e| {
+            IoError::DatabaseError(format!("Failed to lock database connection: {}", e))
+        })?;
+
         let sql = format!("PRAGMA table_info({})", table);
-        let mut stmt = self.conn.prepare(&sql).map_err(|e| {
+        let mut stmt = conn.prepare(&sql).map_err(|e| {
             IoError::DatabaseError(format!("Failed to prepare schema query: {}", e))
         })?;
 
@@ -2162,7 +2156,7 @@ mod tests {
 
 // Advanced Database Features
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 #[cfg(feature = "async")]
 use tokio::sync::RwLock;
 

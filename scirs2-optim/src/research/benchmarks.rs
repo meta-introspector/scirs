@@ -776,7 +776,7 @@ impl BenchmarkRunner {
     }
     
     /// Run benchmark suite on multiple optimizers
-    pub fn run_benchmarks<A: Float + std::fmt::Debug + Send + Sync + 'static>(
+    pub fn run_benchmarks<A: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand + 'static>(
         &self,
         optimizers: &[(&str, OptimizerConfig)],
     ) -> Result<HashMap<String, BenchmarkResults>> {
@@ -821,7 +821,7 @@ impl BenchmarkRunner {
         Ok(all_results)
     }
     
-    fn run_single_problem<A: Float + std::fmt::Debug + Send + Sync + 'static>(
+    fn run_single_problem<A: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand + 'static>(
         &self,
         benchmark: &BenchmarkProblem,
         optimizer_config: &OptimizerConfig,
@@ -852,7 +852,7 @@ impl BenchmarkRunner {
             convergence_analysis})
     }
     
-    fn run_single_instance<A: Float + std::fmt::Debug + Send + Sync + 'static>(
+    fn run_single_instance<A: Float + std::fmt::Debug + Send + Sync + ndarray::ScalarOperand + 'static>(
         &self,
         benchmark: &BenchmarkProblem,
         optimizer_config: &OptimizerConfig,

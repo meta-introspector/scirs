@@ -118,6 +118,14 @@ impl MetaLearningOptimizer {
             success: true,
             nit: num_steps,
             message: "Meta-learning optimization completed".to_string(),
+            jac: None,
+            hess: None,
+            constr: None,
+            nfev: num_steps * (self.task_count + 1), // Steps * tasks
+            njev: 0,
+            nhev: 0,
+            maxcv: 0,
+            status: 0,
         })
     }
 }

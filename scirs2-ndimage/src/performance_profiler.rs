@@ -346,7 +346,7 @@ impl PerformanceProfiler {
 
     /// Generate comprehensive performance report
     pub fn generate_performance_report(&self) -> PerformanceReport {
-        let records = self.timing_records.read().unwrap();
+        let _records = self.timing_records.read().unwrap();
         let aggregator = self.metrics_aggregator.lock().unwrap();
         let optimizer = self.optimizer.lock().unwrap();
         let memory_tracker = self.memory_tracker.lock().unwrap();
@@ -436,7 +436,7 @@ impl PerformanceProfiler {
 
     // Helper methods
 
-    fn estimate_simd_utilization(&self, operation_name: &str, array_size: usize) -> f64 {
+    fn estimate_simd_utilization(&self, operation_name: &str, _array_size: usize) -> f64 {
         // This would integrate with actual SIMD performance counters in a real implementation
         // For now, provide estimates based on operation characteristics
         match operation_name {
@@ -560,7 +560,7 @@ impl MetricsAggregator {
         self.system_metrics.total_memory_allocated = total_memory_allocated;
     }
 
-    fn update_trends(&mut self, records: &HashMap<String, Vec<OperationTiming>>) {
+    fn update_trends(&mut self, _records: &HashMap<String, Vec<OperationTiming>>) {
         // Simple trend analysis based on recent vs. older measurements
         // In a full implementation, this would use more sophisticated time series analysis
         self.trends.execution_time_trend = 0.0; // Placeholder

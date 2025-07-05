@@ -1032,7 +1032,7 @@ impl CollaborativeWorkspace {
         self.log_activity(
             owner_id,
             ActivityType::DocumentCreated,
-            format!("Created document: {}", name),
+            format!("Created document: {name}"),
             vec![document_id.clone()],
         );
         
@@ -1085,7 +1085,7 @@ impl CollaborativeWorkspace {
         self.log_activity(
             creator_id,
             ActivityType::TaskCreated,
-            format!("Created task: {}", title),
+            format!("Created task: {title}"),
             vec![task_id.clone()],
         );
         

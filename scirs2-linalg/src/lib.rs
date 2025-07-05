@@ -129,6 +129,7 @@ pub mod perf_opt;
 pub mod preconditioners;
 pub mod projection;
 /// Quantization-aware linear algebra operations
+pub mod quantization;
 // Re-enabled quantization module
 pub use self::quantization::calibration::{
     calibrate_matrix, calibrate_vector, get_activation_calibration_config,
@@ -141,7 +142,6 @@ pub mod random_matrices;
 pub mod circulant_toeplitz;
 mod diagnostics;
 pub mod fft;
-pub mod quantization;
 pub mod scalable;
 pub mod simd_ops;
 mod solve;

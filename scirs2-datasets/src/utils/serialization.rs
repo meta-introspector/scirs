@@ -88,7 +88,7 @@ where
 /// # Returns
 ///
 /// * `Result<S::Ok, S::Error>` - Serialization result
-/// Serialize a 1D array to a serde-compatible format
+///   Serialize a 1D array to a serde-compatible format
 ///
 /// This function converts an Array1<f64> to a Vec<f64> for serialization.
 /// Useful for saving datasets or individual arrays to JSON, YAML, etc.
@@ -144,7 +144,7 @@ pub mod optional_array1 {
     /// # Returns
     ///
     /// * `Result<S::Ok, S::Error>` - Serialization result
-    /// Serialize an optional 1D array to a serde-compatible format
+    ///   Serialize an optional 1D array to a serde-compatible format
     ///
     /// This function handles serialization of optional arrays, serializing None as null
     /// and Some(array) using the array1 serializer.
@@ -187,7 +187,7 @@ pub mod optional_array1 {
     /// # Returns
     ///
     /// * `Result<Option<Array1<f64>>, D::Error>` - Deserialized optional array
-    /// Deserialize an optional 1D array from a serde-compatible format
+    ///   Deserialize an optional 1D array from a serde-compatible format
     ///
     /// This function handles deserialization of optional arrays, converting null to None
     /// and valid data to Some(array).

@@ -3,9 +3,8 @@
 //! This module provides utilities for evaluating clustering results, including
 //! metrics like Dunn index and elbow method for determining optimal number of clusters.
 
-use ndarray::{Array1, Array2, ArrayBase, Data, Ix1, Ix2};
+use ndarray::{ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
-use std::collections::HashMap;
 
 use super::{calculate_distance, group_by_labels, pairwise_distances};
 use crate::error::{MetricsError, Result};

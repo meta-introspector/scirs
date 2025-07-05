@@ -668,6 +668,7 @@ pub struct GpuMemoryManager {
     /// Current memory usage tracking
     current_usage: u64,
     /// Memory pool for reusing allocations
+    #[allow(dead_code)]
     memory_pool: Vec<u64>, // Placeholder for actual GPU memory handles
 }
 

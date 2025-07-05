@@ -977,8 +977,8 @@ fn generate_test_signal(size: usize, signal_type: &str) -> Array1<f64> {
             })
             .collect(),
         "noise" => {
-            let mut rng = rand::thread_rng();
-            (0..size).map(|_| rng.gen_range(-1.0..1.0)).collect()
+            let mut rng = rand::rng();
+            (0..size).map(|_| rng.random_range(-1.0..1.0)).collect()
         }
         "gaussian" => (0..size)
             .map(|i| {
@@ -994,7 +994,7 @@ fn generate_test_signal(size: usize, signal_type: &str) -> Array1<f64> {
                     let t = i as f64 / 44100.0; // 44.1 kHz sample rate
                     0.5 * (2.0 * PI * 440.0 * t).sin() + // A4 note
                     0.3 * (2.0 * PI * 880.0 * t).sin() + // A5 note
-                    0.1 * rand::thread_rng().gen_range(-1.0..1.0) // Noise
+                    0.1 * rand::rng().random_range(-1.0..1.0) // Noise
                 })
                 .collect()
         }
@@ -1009,7 +1009,7 @@ fn generate_test_signal(size: usize, signal_type: &str) -> Array1<f64> {
                     } else {
                         0.0
                     };
-                    heartbeat + qrs + 0.05 * rand::thread_rng().random_range(-1.0..1.0)
+                    heartbeat + qrs + 0.05 * rand::rng().random_range(-1.0..1.0)
                 })
                 .collect()
         }

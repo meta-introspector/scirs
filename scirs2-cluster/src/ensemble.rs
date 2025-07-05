@@ -2626,7 +2626,7 @@ pub mod advanced_ensemble {
         ) -> Result<Array1<f64>> {
             // Simplified MCMC update (Metropolis-Hastings)
             let mut new_weights = current_weights.clone();
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
 
             // Propose new weights with small random perturbations
             for weight in new_weights.iter_mut() {
@@ -2687,7 +2687,7 @@ pub mod advanced_ensemble {
                 ClusteringError::InvalidInput(format!("Invalid weights for sampling: {}", e))
             })?;
 
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             let mut sampled_data = Array2::zeros((n_samples, n_features));
 
             // Sample with replacement based on weights

@@ -4,7 +4,7 @@
 //! including Gaussian, Laplace, Exponential, and advanced mechanisms like
 //! tree aggregation and truncated noise.
 
-use ndarray::{s, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
+use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use ndarray_rand::rand_distr::{Distribution, Normal};
 use num_traits::Float;
 use rand::Rng;
@@ -14,17 +14,32 @@ use crate::error::{OptimError, Result};
 
 /// Trait for differential privacy noise mechanisms
 pub trait NoiseMechanism<T: Float> {
-    /// Add noise to maintain differential privacy
-    fn add_noise<S, D>(
+    /// Add noise to maintain differential privacy for 1D arrays
+    fn add_noise_1d(
         &mut self,
-        data: &mut ArrayBase<S, D>,
+        data: &mut Array<T, ndarray::Ix1>,
         sensitivity: T,
         epsilon: T,
         delta: Option<T>,
-    ) -> Result<()>
-    where
-        S: DataMut<Elem = T>,
-        D: Dimension;
+    ) -> Result<()>;
+
+    /// Add noise to maintain differential privacy for 2D arrays
+    fn add_noise_2d(
+        &mut self,
+        data: &mut Array<T, ndarray::Ix2>,
+        sensitivity: T,
+        epsilon: T,
+        delta: Option<T>,
+    ) -> Result<()>;
+
+    /// Add noise to maintain differential privacy for 3D arrays
+    fn add_noise_3d(
+        &mut self,
+        data: &mut Array<T, ndarray::Ix3>,
+        sensitivity: T,
+        epsilon: T,
+        delta: Option<T>,
+    ) -> Result<()>;
 
     /// Get the mechanism name
     fn name(&self) -> &'static str;
@@ -164,13 +179,9 @@ where
 
         Ok(sigma)
     }
-}
 
-impl<T> NoiseMechanism<T> for GaussianMechanism<T>
-where
-    T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
-{
-    fn add_noise<S, D>(
+    /// Generic noise addition implementation
+    fn add_noise_generic<S, D>(
         &mut self,
         data: &mut ArrayBase<S, D>,
         sensitivity: T,
@@ -192,11 +203,46 @@ where
             .map_err(|_| OptimError::InvalidConfig("Invalid noise parameters".to_string()))?;
 
         data.mapv_inplace(|x| {
-            let noise = T::from(normal.sample(&mut *self.rng)).unwrap();
+            let noise = T::from(normal.sample(&mut self.rng)).unwrap();
             x + noise
         });
 
         Ok(())
+    }
+}
+
+impl<T> NoiseMechanism<T> for GaussianMechanism<T>
+where
+    T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
+{
+    fn add_noise_1d(
+        &mut self,
+        data: &mut Array<T, ndarray::Ix1>,
+        sensitivity: T,
+        epsilon: T,
+        delta: Option<T>,
+    ) -> Result<()> {
+        self.add_noise_generic(data, sensitivity, epsilon, delta)
+    }
+
+    fn add_noise_2d(
+        &mut self,
+        data: &mut Array<T, ndarray::Ix2>,
+        sensitivity: T,
+        epsilon: T,
+        delta: Option<T>,
+    ) -> Result<()> {
+        self.add_noise_generic(data, sensitivity, epsilon, delta)
+    }
+
+    fn add_noise_3d(
+        &mut self,
+        data: &mut Array<T, ndarray::Ix3>,
+        sensitivity: T,
+        epsilon: T,
+        delta: Option<T>,
+    ) -> Result<()> {
+        self.add_noise_generic(data, sensitivity, epsilon, delta)
     }
 
     fn name(&self) -> &'static str {
@@ -243,13 +289,9 @@ where
         // Laplace mechanism: b = Δ / ε
         Ok(sensitivity / epsilon)
     }
-}
 
-impl<T> NoiseMechanism<T> for LaplaceMechanism<T>
-where
-    T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
-{
-    fn add_noise<S, D>(
+    /// Generic noise addition implementation
+    fn add_noise_generic<S, D>(
         &mut self,
         data: &mut ArrayBase<S, D>,
         sensitivity: T,
@@ -268,7 +310,7 @@ where
         let uniform = ndarray_rand::rand_distr::Uniform::new(0.0, 1.0);
 
         data.mapv_inplace(|x| {
-            let u: f64 = uniform.sample(&mut *self.rng);
+            let u: f64 = uniform.sample(&mut self.rng);
             let laplace_sample = if u < 0.5 {
                 scale_f64 * (2.0 * u).ln()
             } else {
@@ -279,6 +321,41 @@ where
         });
 
         Ok(())
+    }
+}
+
+impl<T> NoiseMechanism<T> for LaplaceMechanism<T>
+where
+    T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
+{
+    fn add_noise_1d(
+        &mut self,
+        data: &mut Array<T, ndarray::Ix1>,
+        sensitivity: T,
+        epsilon: T,
+        delta: Option<T>,
+    ) -> Result<()> {
+        self.add_noise_generic(data, sensitivity, epsilon, delta)
+    }
+
+    fn add_noise_2d(
+        &mut self,
+        data: &mut Array<T, ndarray::Ix2>,
+        sensitivity: T,
+        epsilon: T,
+        delta: Option<T>,
+    ) -> Result<()> {
+        self.add_noise_generic(data, sensitivity, epsilon, delta)
+    }
+
+    fn add_noise_3d(
+        &mut self,
+        data: &mut Array<T, ndarray::Ix3>,
+        sensitivity: T,
+        epsilon: T,
+        delta: Option<T>,
+    ) -> Result<()> {
+        self.add_noise_generic(data, sensitivity, epsilon, delta)
     }
 
     fn name(&self) -> &'static str {
@@ -375,20 +452,50 @@ impl<T> NoiseMechanism<T> for TruncatedNoiseMechanism<T>
 where
     T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
 {
-    fn add_noise<S, D>(
+    fn add_noise_1d(
         &mut self,
-        data: &mut ArrayBase<S, D>,
+        data: &mut Array<T, ndarray::Ix1>,
         sensitivity: T,
         epsilon: T,
         delta: Option<T>,
-    ) -> Result<()>
-    where
-        S: DataMut<Elem = T>,
-        D: Dimension,
-    {
+    ) -> Result<()> {
         // Apply base mechanism first
         self.base_mechanism
-            .add_noise(data, sensitivity, epsilon, delta)?;
+            .add_noise_1d(data, sensitivity, epsilon, delta)?;
+
+        // Truncate to bounds
+        data.mapv_inplace(|x| x.max(-self.truncation_bound).min(self.truncation_bound));
+
+        Ok(())
+    }
+
+    fn add_noise_2d(
+        &mut self,
+        data: &mut Array<T, ndarray::Ix2>,
+        sensitivity: T,
+        epsilon: T,
+        delta: Option<T>,
+    ) -> Result<()> {
+        // Apply base mechanism first
+        self.base_mechanism
+            .add_noise_2d(data, sensitivity, epsilon, delta)?;
+
+        // Truncate to bounds
+        data.mapv_inplace(|x| x.max(-self.truncation_bound).min(self.truncation_bound));
+
+        Ok(())
+    }
+
+    fn add_noise_3d(
+        &mut self,
+        data: &mut Array<T, ndarray::Ix3>,
+        sensitivity: T,
+        epsilon: T,
+        delta: Option<T>,
+    ) -> Result<()> {
+        // Apply base mechanism first
+        self.base_mechanism
+            .add_noise_3d(data, sensitivity, epsilon, delta)?;
 
         // Truncate to bounds
         data.mapv_inplace(|x| x.max(-self.truncation_bound).min(self.truncation_bound));

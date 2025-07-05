@@ -4,7 +4,7 @@
 //! affine transforms, including perspective transforms, non-rigid deformations,
 //! and multi-resolution approaches.
 
-use ndarray::{Array2, Dimension};
+use ndarray::Array2;
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::parallel_ops;
 use std::fmt::Debug;

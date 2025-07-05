@@ -1,4 +1,4 @@
-//! Advanced-Advanced Policy Gradient Optimization with Meta-Gradient Learning
+//! Advanced Policy Gradient Optimization with Meta-Gradient Learning
 //!
 //! Implementation of cutting-edge policy gradient methods with meta-learning capabilities:
 //! - Meta-gradient learning for automatic learning rate adaptation
@@ -19,7 +19,7 @@ use ndarray::{Array1, Array2, Array3, ArrayView1};
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
-/// Advanced-Advanced Neural Network with Meta-Learning Capabilities
+/// Advanced Neural Network with Meta-Learning Capabilities
 #[derive(Debug, Clone)]
 pub struct MetaPolicyNetwork {
     /// Primary policy weights
@@ -65,9 +65,9 @@ impl MetaPolicyNetwork {
             for i in 0..fan_out {
                 for j in 0..fan_in {
                     policy_weights[[layer, i, j]] =
-                        rand::rng().gen_range(-0.5..0.5) * 2.0 * xavier_std;
+                        rand::rng().random_range(-0.5..0.5) * 2.0 * xavier_std;
                     meta_weights[[layer, i, j]] =
-                        rand::rng().gen_range(-0.5..0.5) * 2.0 * xavier_std * 0.1;
+                        rand::rng().random_range(-0.5..0.5) * 2.0 * xavier_std * 0.1;
                 }
             }
         }
@@ -187,7 +187,7 @@ impl MetaPolicyNetwork {
             embedding.clone()
         } else {
             let embedding =
-                Array1::from_shape_fn(input_size, |_| rand::rng().gen_range(-0.05..0.05));
+                Array1::from_shape_fn(input_size, |_| rand::rng().random_range(-0.05..0.05));
             self.problem_embeddings
                 .insert(problem_class.to_string(), embedding.clone());
             embedding
@@ -265,7 +265,7 @@ pub struct MetaGradients {
     pub second_order_terms: Array3<f64>,
 }
 
-/// Advanced-Advanced Policy Gradient Optimizer with Meta-Learning
+/// Advanced Policy Gradient Optimizer with Meta-Learning
 #[derive(Debug, Clone)]
 pub struct AdvancedAdvancedPolicyGradientOptimizer {
     /// Configuration
@@ -424,7 +424,7 @@ impl MetaExperienceBuffer {
 
         for _ in 0..batch_size.min(self.trajectories.len()) {
             // Weighted sampling based on problem class performance
-            let idx = rand::rng().gen_range(0..self.trajectories.len());
+            let idx = rand::rng().random_range(0..self.trajectories.len());
             if let Some(trajectory) = self.trajectories.get(idx) {
                 batch.push(trajectory.clone());
             }
@@ -435,7 +435,7 @@ impl MetaExperienceBuffer {
 }
 
 impl AdvancedAdvancedPolicyGradientOptimizer {
-    /// Create new advanced-advanced policy gradient optimizer
+    /// Create new advanced policy gradient optimizer
     pub fn new(config: RLOptimizationConfig, state_size: usize, action_size: usize) -> Self {
         let hidden_sizes = vec![state_size * 2, state_size * 3, state_size * 2];
         let meta_policy = MetaPolicyNetwork::new(state_size, action_size, hidden_sizes);
@@ -1002,7 +1002,7 @@ impl RLOptimizer for AdvancedAdvancedPolicyGradientOptimizer {
     }
 }
 
-/// Convenience function for advanced-advanced meta-learning policy gradient optimization
+/// Convenience function for advanced meta-learning policy gradient optimization
 #[allow(dead_code)]
 pub fn advanced_advanced_policy_gradient_optimize<F>(
     objective: F,

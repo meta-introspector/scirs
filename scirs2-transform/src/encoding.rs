@@ -1853,20 +1853,21 @@ mod tests {
         let encoded = encoder.fit_transform(&data).unwrap();
 
         // Should have (3-1) + (2-1) = 3 output features (dropped first category of each)
-        assert_eq!(encoded.shape(), &[3, 3]);
+        assert_eq!(encoded.shape(), (3, 3));
 
         // Categories: feature 0: [0, 1, 2] -> keep [1, 2]
         //            feature 1: [1, 2] -> keep [2]
+        let encoded_dense = encoded.to_dense();
 
         // First row: category 0 (dropped), category 1 (dropped)
-        assert_abs_diff_eq!(encoded[[0, 0]], 0.0, epsilon = 1e-10); // cat 1, feature 0
-        assert_abs_diff_eq!(encoded[[0, 1]], 0.0, epsilon = 1e-10); // cat 2, feature 0
-        assert_abs_diff_eq!(encoded[[0, 2]], 0.0, epsilon = 1e-10); // cat 2, feature 1
+        assert_abs_diff_eq!(encoded_dense[[0, 0]], 0.0, epsilon = 1e-10); // cat 1, feature 0
+        assert_abs_diff_eq!(encoded_dense[[0, 1]], 0.0, epsilon = 1e-10); // cat 2, feature 0
+        assert_abs_diff_eq!(encoded_dense[[0, 2]], 0.0, epsilon = 1e-10); // cat 2, feature 1
 
         // Second row: category 1, category 2
-        assert_abs_diff_eq!(encoded[[1, 0]], 1.0, epsilon = 1e-10); // cat 1, feature 0
-        assert_abs_diff_eq!(encoded[[1, 1]], 0.0, epsilon = 1e-10); // cat 2, feature 0
-        assert_abs_diff_eq!(encoded[[1, 2]], 1.0, epsilon = 1e-10); // cat 2, feature 1
+        assert_abs_diff_eq!(encoded_dense[[1, 0]], 1.0, epsilon = 1e-10); // cat 1, feature 0
+        assert_abs_diff_eq!(encoded_dense[[1, 1]], 0.0, epsilon = 1e-10); // cat 2, feature 0
+        assert_abs_diff_eq!(encoded_dense[[1, 2]], 1.0, epsilon = 1e-10); // cat 2, feature 1
     }
 
     #[test]
@@ -1922,9 +1923,10 @@ mod tests {
         let encoded = encoder.transform(&test_data).unwrap();
 
         // Should be all zeros (ignored unknown category)
-        assert_eq!(encoded.shape(), &[1, 2]);
-        assert_abs_diff_eq!(encoded[[0, 0]], 0.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(encoded[[0, 1]], 0.0, epsilon = 1e-10);
+        assert_eq!(encoded.shape(), (1, 2));
+        let encoded_dense = encoded.to_dense();
+        assert_abs_diff_eq!(encoded_dense[[0, 0]], 0.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(encoded_dense[[0, 1]], 0.0, epsilon = 1e-10);
     }
 
     #[test]
@@ -2470,9 +2472,9 @@ mod tests {
         let onehot_encoded = onehot_encoder.fit_transform(&data).unwrap();
 
         // Binary should use fewer features
-        assert_eq!(binary_encoded.shape()[1], 4); // ceil(log2(10)) = 4
-        assert_eq!(onehot_encoded.shape()[1], 10); // 10 categories = 10 features
-        assert!(binary_encoded.shape()[1] < onehot_encoded.shape()[1]);
+        assert_eq!(binary_encoded.shape().1, 4); // ceil(log2(10)) = 4
+        assert_eq!(onehot_encoded.shape().1, 10); // 10 categories = 10 features
+        assert!(binary_encoded.shape().1 < onehot_encoded.shape().1);
     }
 
     #[test]

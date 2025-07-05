@@ -8,8 +8,8 @@ use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::Array1;
 use rand::prelude::*;
-use rand::rng;
 use rand::rngs::StdRng;
+use rand::thread_rng;
 use std::collections::HashMap;
 
 /// Cross-validation fold indices
@@ -72,7 +72,7 @@ pub fn train_test_split(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -356,8 +356,7 @@ pub fn time_series_split(
     let min_samples_needed = n_test_samples + gap + n_splits;
     if n_samples < min_samples_needed {
         return Err(DatasetsError::InvalidFormat(format!(
-            "Not enough samples for time series split. Need at least {}, got {}",
-            min_samples_needed, n_samples
+            "Not enough samples for time series split. Need at least {min_samples_needed}, got {n_samples}"
         )));
     }
 

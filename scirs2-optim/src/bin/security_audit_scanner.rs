@@ -185,7 +185,7 @@ fn parse_severity(severity_str: &str) -> Result<Severity, Box<dyn std::error::Er
         "medium" => Ok(Severity::Medium),
         "high" => Ok(Severity::High),
         "critical" => Ok(Severity::Critical),
-        _ => Err(format!("Invalid severity level: {}", severity_str).into()),
+        _ => Err(format!("Invalid severity level: {severity_str}").into()),
     }
 }
 
@@ -1177,7 +1177,7 @@ fn generate_audit_report(
         "yaml" => Ok(serde_yaml::to_string(audit_result)?),
         "markdown" => generate_markdown_report(audit_result),
         "html" => generate_html_report(audit_result),
-        _ => Err(format!("Unsupported format: {}", format).into()),
+        _ => Err(format!("Unsupported format: {format}").into()),
     }
 }
 

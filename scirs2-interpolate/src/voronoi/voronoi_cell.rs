@@ -142,8 +142,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand> VoronoiCell<F> {
             self.measure = volume.abs();
         } else {
             return Err(InterpolateError::UnsupportedOperation(format!(
-                "Computing measure for {}-dimensional Voronoi cells not yet implemented",
-                dim
+                "Computing measure for {dim}-dimensional Voronoi cells not yet implemented"
             )));
         }
 
@@ -327,8 +326,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand> VoronoiCell<F> {
             Ok((intersection_vertices, volume.abs()))
         } else {
             return Err(InterpolateError::UnsupportedOperation(format!(
-                "Intersection for {}-dimensional Voronoi cells not yet implemented",
-                dim
+                "Intersection for {dim}-dimensional Voronoi cells not yet implemented"
             )));
         }
     }
@@ -491,7 +489,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
             }
         } else {
             return Err(InterpolateError::UnsupportedOperation(
-                format!("Default bounds calculation for {}-dimensional Voronoi diagrams not yet implemented", dim)));
+                format!("Default bounds calculation for {dim}-dimensional Voronoi diagrams not yet implemented")));
         };
 
         let bounds = bounds.unwrap_or(default_bounds);
@@ -988,8 +986,7 @@ impl<F: Float + FromPrimitive + Debug + ndarray::ScalarOperand + 'static> Vorono
             Ok(weights)
         } else {
             return Err(InterpolateError::UnsupportedOperation(format!(
-                "Natural neighbor computation for {}-dimensional diagrams not yet implemented",
-                dim
+                "Natural neighbor computation for {dim}-dimensional diagrams not yet implemented"
             )));
         }
     }

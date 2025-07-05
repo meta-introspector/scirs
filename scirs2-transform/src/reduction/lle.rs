@@ -536,7 +536,7 @@ mod tests {
 
     #[test]
     fn test_lle_invalid_params() {
-        let x = Array::eye(5);
+        let x: Array2<f64> = Array::eye(5);
 
         // Too many neighbors
         let mut lle = LLE::new(10, 2);

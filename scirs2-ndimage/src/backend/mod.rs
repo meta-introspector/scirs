@@ -231,50 +231,6 @@ pub trait GpuContext: Send + Sync {
     fn memory_info(&self) -> (usize, usize); // (used, total)
 }
 
-#[cfg(feature = "cuda")]
-struct CudaContext {
-    device_id: usize,
-}
-
-#[cfg(feature = "cuda")]
-impl CudaContext {
-    fn new(device_id: Option<usize>) -> NdimageResult<Self> {
-        Ok(Self {
-            device_id: device_id.unwrap_or(0),
-        })
-    }
-}
-
-#[cfg(feature = "cuda")]
-impl GpuContext for CudaContext {
-    fn name(&self) -> &str {
-        "CUDA"
-    }
-
-    fn device_count(&self) -> usize {
-        device_detection::get_device_manager()
-            .map(|manager| manager.lock().unwrap().device_count(Backend::Cuda))
-            .unwrap_or(1)
-    }
-
-    fn current_device(&self) -> usize {
-        self.device_id
-    }
-
-    fn memory_info(&self) -> (usize, usize) {
-        device_detection::get_device_manager()
-            .and_then(|manager| {
-                let mgr = manager.lock().unwrap();
-                mgr.get_device_info(Backend::Cuda, self.device_id)
-                    .map(|info| {
-                        let used = info.total_memory.saturating_sub(info.available_memory);
-                        (used, info.total_memory)
-                    })
-            })
-            .unwrap_or((0, 8_000_000_000)) // Fallback to 8GB dummy value
-    }
-}
-
 /// Example: Gaussian filter with backend support
 pub struct GaussianFilterOp<T> {
     sigma: Vec<T>,

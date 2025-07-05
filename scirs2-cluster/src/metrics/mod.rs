@@ -1033,7 +1033,6 @@ pub mod stability {
     where
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
-        use rand::rng;
         use rand::seq::SliceRandom;
 
         if subsample_ratio <= 0.0 || subsample_ratio > 1.0 {
@@ -1781,7 +1780,6 @@ pub mod ensemble {
     where
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
-        use rand::rng;
         use rand::seq::SliceRandom;
 
         if confidence_level <= 0.0 || confidence_level >= 1.0 {
@@ -1961,7 +1959,7 @@ pub mod advanced_stability {
     where
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let n_samples = data.shape()[0];
         let subsample_size = (n_samples as f64 * subsample_ratio) as usize;
 
@@ -2104,7 +2102,7 @@ pub mod advanced_stability {
     where
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut noise_stabilities = Vec::new();
 
         // Reference clustering on original data
@@ -2189,7 +2187,7 @@ pub mod advanced_stability {
     where
         F: Float + FromPrimitive + Debug + PartialOrd + Copy + 'static,
     {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let n_features = data.shape()[1];
         let mut subspace_stabilities = Vec::new();
 

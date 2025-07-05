@@ -616,7 +616,7 @@ pub fn benchmark_simd_memory_operations(
 
         // Benchmark SIMD convolution
         let start = Instant::now();
-        let result = simd_optimized_convolution(&signal.view(), &kernel.view(), config)?;
+        let _result = simd_optimized_convolution(&signal.view(), &kernel.view(), config)?;
         let simd_time = start.elapsed().as_secs_f64() * 1000.0;
 
         // Benchmark standard convolution

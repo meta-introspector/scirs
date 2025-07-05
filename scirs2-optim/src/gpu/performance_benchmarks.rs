@@ -11,6 +11,7 @@ use std::time::{Duration, Instant};
 use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::Float;
 
+use crate::adaptive_selection::OptimizerType;
 use crate::error::{OptimError, Result};
 use crate::gpu::{GpuOptimError, GpuOptimizerConfig};
 
@@ -70,21 +71,6 @@ pub struct BenchmarkConfig {
 
     /// Statistical confidence level (e.g., 0.95 for 95%)
     pub confidence_level: f64,
-}
-
-/// Optimizer types supported in benchmarks
-#[derive(Debug, Clone, Copy, PartialEq, Hash)]
-pub enum OptimizerType {
-    SGD,
-    Adam,
-    AdamW,
-    LAMB,
-    RMSprop,
-    AdaGrad,
-    LARS,
-    Lion,
-    RAdam,
-    Lookahead,
 }
 
 /// Benchmark result for a specific test
@@ -1341,7 +1327,7 @@ mod tests {
         let result = sparse_gen.generate(1000);
         assert!(result.is_ok());
 
-        let (params, grads) = result.unwrap();
+        let (params, _grads) = result.unwrap();
         let zero_count = params.iter().filter(|&&x| x == 0.0).count();
 
         // Should have approximately 90% zeros (some variance expected)

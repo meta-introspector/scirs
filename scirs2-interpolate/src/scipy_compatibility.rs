@@ -401,32 +401,30 @@ impl SciPyCompatibilityChecker {
 
     /// Identify missing features
     fn identify_missing_features(&self) -> InterpolateResult<Vec<MissingFeature>> {
-        let mut missing = Vec::new();
-
         // Define missing features based on SciPy functionality
-        missing.push(MissingFeature {
-            scipy_module: "scipy.interpolate".to_string(),
-            feature_name: "CloughTocher2DInterpolator".to_string(),
-            description: "C1 continuous 2D interpolation for unstructured data".to_string(),
-            priority: FeaturePriority::High,
-            implementation_effort: ImplementationEffort::Large,
-        });
-
-        missing.push(MissingFeature {
-            scipy_module: "scipy.interpolate".to_string(),
-            feature_name: "krogh_interpolate".to_string(),
-            description: "Krogh interpolation for polynomial interpolation".to_string(),
-            priority: FeaturePriority::Medium,
-            implementation_effort: ImplementationEffort::Small,
-        });
-
-        missing.push(MissingFeature {
-            scipy_module: "scipy.interpolate".to_string(),
-            feature_name: "PPoly.from_spline".to_string(),
-            description: "Convert splines to piecewise polynomial representation".to_string(),
-            priority: FeaturePriority::Medium,
-            implementation_effort: ImplementationEffort::Medium,
-        });
+        let missing = vec![
+            MissingFeature {
+                scipy_module: "scipy.interpolate".to_string(),
+                feature_name: "CloughTocher2DInterpolator".to_string(),
+                description: "C1 continuous 2D interpolation for unstructured data".to_string(),
+                priority: FeaturePriority::High,
+                implementation_effort: ImplementationEffort::Large,
+            },
+            MissingFeature {
+                scipy_module: "scipy.interpolate".to_string(),
+                feature_name: "krogh_interpolate".to_string(),
+                description: "Krogh interpolation for polynomial interpolation".to_string(),
+                priority: FeaturePriority::Medium,
+                implementation_effort: ImplementationEffort::Small,
+            },
+            MissingFeature {
+                scipy_module: "scipy.interpolate".to_string(),
+                feature_name: "PPoly.from_spline".to_string(),
+                description: "Convert splines to piecewise polynomial representation".to_string(),
+                priority: FeaturePriority::Medium,
+                implementation_effort: ImplementationEffort::Medium,
+            },
+        ];
 
         Ok(missing)
     }

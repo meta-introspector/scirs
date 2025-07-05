@@ -73,7 +73,7 @@ impl FourierFeatures {
         }
 
         // Compute FFT
-        let _ = fft(&complex_data, None);
+        let fft_result = fft(&complex_data, None)?;
 
         // Extract features (only positive frequencies due to symmetry)
         let n_freq = (n / 2).min(self.n_components);
@@ -86,15 +86,14 @@ impl FourierFeatures {
         let norm_factor = if self.normalize { 1.0 / n as f64 } else { 1.0 };
 
         for i in 0..n_freq {
-            let magnitude = (complex_data[i].re * complex_data[i].re
-                + complex_data[i].im * complex_data[i].im)
-                .sqrt()
-                * norm_factor;
+            let magnitude =
+                (fft_result[i].re * fft_result[i].re + fft_result[i].im * fft_result[i].im).sqrt()
+                    * norm_factor;
 
             features[i] = magnitude;
 
             if self.include_phase && magnitude > 1e-10 {
-                let phase = complex_data[i].im.atan2(complex_data[i].re);
+                let phase = fft_result[i].im.atan2(fft_result[i].re);
                 features[n_freq + i] = phase;
             }
         }
@@ -633,7 +632,7 @@ mod tests {
     #[test]
     fn test_wavelet_features() {
         let x = Array::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
-        let x_2d = x.clone().into_shape((1, 8)).unwrap();
+        let x_2d = x.clone().into_shape_with_order((1, 8)).unwrap();
 
         let wavelet = WaveletFeatures::new("db1", 2);
         let features = wavelet.transform(&x_2d).unwrap();

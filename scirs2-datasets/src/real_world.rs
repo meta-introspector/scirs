@@ -1207,14 +1207,14 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             for j in 0..n_features {
-                data[[i, j]] = rng.random_range(0.0..1.0);
+                data[[i, j]] = rng.gen_range(0.0..1.0);
             }
             // Simple rule: if sum of first 3 features > 1.5, then positive class
             target[i] = if data.row(i).iter().take(3).sum::<f64>() > 1.5 {
@@ -1230,7 +1230,7 @@ impl RealWorldDatasets {
     #[allow(dead_code)]
     fn create_synthetic_credit_approval_data(&self) -> Result<Dataset> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let n_samples = 690; // Based on the actual UCI credit approval dataset size
         let n_features = 15;
@@ -1258,33 +1258,33 @@ impl RealWorldDatasets {
 
         for i in 0..n_samples {
             // Credit score (300-850)
-            data[[i, 0]] = rng.random_range(300.0..850.0);
+            data[[i, 0]] = rng.gen_range(300.0..850.0);
             // Annual income (20k-200k)
-            data[[i, 1]] = rng.random_range(20000.0..200000.0);
+            data[[i, 1]] = rng.gen_range(20000.0..200000.0);
             // Debt-to-income ratio (0-0.6)
-            data[[i, 2]] = rng.random_range(0.0..0.6);
+            data[[i, 2]] = rng.gen_range(0.0..0.6);
             // Employment length (0-30 years)
-            data[[i, 3]] = rng.random_range(0.0..30.0);
+            data[[i, 3]] = rng.gen_range(0.0..30.0);
             // Age (18-80)
-            data[[i, 4]] = rng.random_range(18.0..80.0);
+            data[[i, 4]] = rng.gen_range(18.0..80.0);
             // Home ownership (0=rent, 1=own, 2=mortgage)
-            data[[i, 5]] = rng.random_range(0.0f64..3.0).floor();
+            data[[i, 5]] = rng.gen_range(0.0f64..3.0).floor();
             // Loan amount (1k-50k)
-            data[[i, 6]] = rng.random_range(1000.0..50000.0);
+            data[[i, 6]] = rng.gen_range(1000.0..50000.0);
             // Loan purpose (0-6, different purposes)
-            data[[i, 7]] = rng.random_range(0.0f64..7.0).floor();
+            data[[i, 7]] = rng.gen_range(0.0f64..7.0).floor();
             // Credit history length (0-40 years)
-            data[[i, 8]] = rng.random_range(0.0..40.0);
+            data[[i, 8]] = rng.gen_range(0.0..40.0);
             // Number of credit lines (0-20)
-            data[[i, 9]] = rng.random_range(0.0..20.0);
+            data[[i, 9]] = rng.gen_range(0.0..20.0);
             // Credit utilization rate (0-1.0)
-            data[[i, 10]] = rng.random_range(0.0..1.0);
+            data[[i, 10]] = rng.gen_range(0.0..1.0);
             // Delinquency count (0-10)
-            data[[i, 11]] = rng.random_range(0.0f64..11.0).floor();
+            data[[i, 11]] = rng.gen_range(0.0f64..11.0).floor();
             // Education level (0=high school, 1=bachelor, 2=master, 3=phd)
-            data[[i, 12]] = rng.random_range(0.0f64..4.0).floor();
+            data[[i, 12]] = rng.gen_range(0.0f64..4.0).floor();
             // Marital status (0=single, 1=married, 2=divorced)
-            data[[i, 13]] = rng.random_range(0.0f64..3.0).floor();
+            data[[i, 13]] = rng.gen_range(0.0f64..3.0).floor();
             // Verification status (0=not verified, 1=verified)
             data[[i, 14]] = if rng.random_bool(0.7) { 1.0 } else { 0.0 };
 
@@ -1302,7 +1302,7 @@ impl RealWorldDatasets {
                 - delinquency_penalty;
 
             // Add some noise and determine final approval
-            let noise = rng.random_range(-0.2..0.2);
+            let noise = rng.gen_range(-0.2..0.2);
             target[i] = if (approval_score + noise) > 0.5 {
                 1.0
             } else {
@@ -1329,7 +1329,7 @@ impl RealWorldDatasets {
     #[allow(dead_code)]
     fn create_synthetic_mushroom_data(&self) -> Result<Dataset> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let n_samples = 8124; // Based on the actual UCI mushroom dataset size
         let n_features = 22;
@@ -1364,15 +1364,15 @@ impl RealWorldDatasets {
 
         for i in 0..n_samples {
             // Cap shape (0-5: bell, conical, convex, flat, knobbed, sunken)
-            data[[i, 0]] = rng.random_range(0.0f64..6.0).floor();
+            data[[i, 0]] = rng.gen_range(0.0f64..6.0).floor();
             // Cap surface (0-3: fibrous, grooves, scaly, smooth)
-            data[[i, 1]] = rng.random_range(0.0f64..4.0).floor();
+            data[[i, 1]] = rng.gen_range(0.0f64..4.0).floor();
             // Cap color (0-9: brown, buff, cinnamon, gray, green, pink, purple, red, white, yellow)
-            data[[i, 2]] = rng.random_range(0.0f64..10.0).floor();
+            data[[i, 2]] = rng.gen_range(0.0f64..10.0).floor();
             // Bruises (0=no, 1=yes)
             data[[i, 3]] = if rng.random_bool(0.6) { 1.0 } else { 0.0 };
             // Odor (0-8: almond, anise, creosote, fishy, foul, musty, none, pungent, spicy)
-            data[[i, 4]] = rng.random_range(0.0f64..9.0).floor();
+            data[[i, 4]] = rng.gen_range(0.0f64..9.0).floor();
             // Gill attachment (0-1: attached, free)
             data[[i, 5]] = if rng.random_bool(0.5) { 1.0 } else { 0.0 };
             // Gill spacing (0-1: close, crowded)
@@ -1380,33 +1380,33 @@ impl RealWorldDatasets {
             // Gill size (0-1: broad, narrow)
             data[[i, 7]] = if rng.random_bool(0.5) { 1.0 } else { 0.0 };
             // Gill color (0-11: black, brown, buff, chocolate, gray, green, orange, pink, purple, red, white, yellow)
-            data[[i, 8]] = rng.random_range(0.0f64..12.0).floor();
+            data[[i, 8]] = rng.gen_range(0.0f64..12.0).floor();
             // Stalk shape (0-1: enlarging, tapering)
             data[[i, 9]] = if rng.random_bool(0.5) { 1.0 } else { 0.0 };
             // Stalk root (0-4: bulbous, club, cup, equal, rhizomorphs)
-            data[[i, 10]] = rng.random_range(0.0f64..5.0).floor();
+            data[[i, 10]] = rng.gen_range(0.0f64..5.0).floor();
             // Stalk surface above ring (0-3: fibrous, scaly, silky, smooth)
-            data[[i, 11]] = rng.random_range(0.0f64..4.0).floor();
+            data[[i, 11]] = rng.gen_range(0.0f64..4.0).floor();
             // Stalk surface below ring (0-3: fibrous, scaly, silky, smooth)
-            data[[i, 12]] = rng.random_range(0.0f64..4.0).floor();
+            data[[i, 12]] = rng.gen_range(0.0f64..4.0).floor();
             // Stalk color above ring (0-8: brown, buff, cinnamon, gray, orange, pink, red, white, yellow)
-            data[[i, 13]] = rng.random_range(0.0f64..9.0).floor();
+            data[[i, 13]] = rng.gen_range(0.0f64..9.0).floor();
             // Stalk color below ring (0-8: brown, buff, cinnamon, gray, orange, pink, red, white, yellow)
-            data[[i, 14]] = rng.random_range(0.0f64..9.0).floor();
+            data[[i, 14]] = rng.gen_range(0.0f64..9.0).floor();
             // Veil type (always partial in the original dataset)
             data[[i, 15]] = 0.0;
             // Veil color (0-3: brown, orange, white, yellow)
-            data[[i, 16]] = rng.random_range(0.0f64..4.0).floor();
+            data[[i, 16]] = rng.gen_range(0.0f64..4.0).floor();
             // Ring number (0-2: none, one, two)
-            data[[i, 17]] = rng.random_range(0.0f64..3.0).floor();
+            data[[i, 17]] = rng.gen_range(0.0f64..3.0).floor();
             // Ring type (0-7: cobwebby, evanescent, flaring, large, none, pendant, sheathing, zone)
-            data[[i, 18]] = rng.random_range(0.0f64..8.0).floor();
+            data[[i, 18]] = rng.gen_range(0.0f64..8.0).floor();
             // Spore print color (0-8: black, brown, buff, chocolate, green, orange, purple, white, yellow)
-            data[[i, 19]] = rng.random_range(0.0f64..9.0).floor();
+            data[[i, 19]] = rng.gen_range(0.0f64..9.0).floor();
             // Population (0-5: abundant, clustered, numerous, scattered, several, solitary)
-            data[[i, 20]] = rng.random_range(0.0f64..6.0).floor();
+            data[[i, 20]] = rng.gen_range(0.0f64..6.0).floor();
             // Habitat (0-6: grasses, leaves, meadows, paths, urban, waste, woods)
-            data[[i, 21]] = rng.random_range(0.0f64..7.0).floor();
+            data[[i, 21]] = rng.gen_range(0.0f64..7.0).floor();
 
             // Determine edibility based on key features
             // Poisonous mushrooms often have certain characteristics
@@ -1435,7 +1435,7 @@ impl RealWorldDatasets {
             }
 
             // Add some randomness for realistic variation
-            let noise = rng.random_range(-0.3..0.3);
+            let noise = rng.gen_range(-0.3..0.3);
             target[i] = if (poison_score + noise) > 0.5 {
                 1.0
             } else {
@@ -1462,7 +1462,7 @@ impl RealWorldDatasets {
     #[allow(dead_code)]
     fn create_synthetic_spam_data(&self) -> Result<Dataset> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let n_samples = 4601; // Based on the actual spam dataset size
         let n_features = 57; // 54 word frequency features + 3 character frequency features
@@ -1553,30 +1553,30 @@ impl RealWorldDatasets {
                 if is_spam {
                     // Spam emails have higher frequencies of certain words
                     match j {
-                        0..=7 => data[[i, j]] = rng.random_range(0.0..5.0), // "make", "address", etc. common in spam
-                        8..=15 => data[[i, j]] = rng.random_range(0.0..3.0), // "order", "mail", etc.
-                        16..=25 => data[[i, j]] = rng.random_range(0.0..4.0), // "free", "business", "money"
-                        _ => data[[i, j]] = rng.random_range(0.0..1.0), // Other words less frequent
+                        0..=7 => data[[i, j]] = rng.gen_range(0.0..5.0), // "make", "address", etc. common in spam
+                        8..=15 => data[[i, j]] = rng.gen_range(0.0..3.0), // "order", "mail", etc.
+                        16..=25 => data[[i, j]] = rng.gen_range(0.0..4.0), // "free", "business", "money"
+                        _ => data[[i, j]] = rng.gen_range(0.0..1.0), // Other words less frequent
                     }
                 } else {
                     // Ham emails have different patterns
                     match j {
-                        26..=35 => data[[i, j]] = rng.random_range(0.0..2.0), // Technical words in ham
-                        36..=45 => data[[i, j]] = rng.random_range(0.0..1.5), // Meeting, project words
-                        _ => data[[i, j]] = rng.random_range(0.0..0.5), // Generally lower frequencies
+                        26..=35 => data[[i, j]] = rng.gen_range(0.0..2.0), // Technical words in ham
+                        36..=45 => data[[i, j]] = rng.gen_range(0.0..1.5), // Meeting, project words
+                        _ => data[[i, j]] = rng.gen_range(0.0..0.5), // Generally lower frequencies
                     }
                 }
             }
 
             // Character frequency features (54-56)
             if is_spam {
-                data[[i, 54]] = rng.random_range(0.0..0.2); // Semicolon frequency
-                data[[i, 55]] = rng.random_range(0.0..0.5); // Parenthesis frequency
-                data[[i, 56]] = rng.random_range(0.0..0.3); // Exclamation frequency
+                data[[i, 54]] = rng.gen_range(0.0..0.2); // Semicolon frequency
+                data[[i, 55]] = rng.gen_range(0.0..0.5); // Parenthesis frequency
+                data[[i, 56]] = rng.gen_range(0.0..0.3); // Exclamation frequency
             } else {
-                data[[i, 54]] = rng.random_range(0.0..0.1);
-                data[[i, 55]] = rng.random_range(0.0..0.2);
-                data[[i, 56]] = rng.random_range(0.0..0.1);
+                data[[i, 54]] = rng.gen_range(0.0..0.1);
+                data[[i, 55]] = rng.gen_range(0.0..0.2);
+                data[[i, 56]] = rng.gen_range(0.0..0.1);
             }
 
             target[i] = if is_spam { 1.0 } else { 0.0 };
@@ -1604,26 +1604,26 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             // Pclass (1, 2, 3)
-            data[[i, 0]] = rng.random_range(1.0f64..4.0).floor();
+            data[[i, 0]] = rng.gen_range(1.0f64..4.0).floor();
             // Sex (0=female, 1=male)
             data[[i, 1]] = if rng.random_bool(0.5) { 0.0 } else { 1.0 };
             // Age
-            data[[i, 2]] = rng.random_range(1.0..80.0);
+            data[[i, 2]] = rng.gen_range(1.0..80.0);
             // SibSp
-            data[[i, 3]] = rng.random_range(0.0f64..6.0).floor();
+            data[[i, 3]] = rng.gen_range(0.0f64..6.0).floor();
             // Parch
-            data[[i, 4]] = rng.random_range(0.0f64..4.0).floor();
+            data[[i, 4]] = rng.gen_range(0.0f64..4.0).floor();
             // Fare
-            data[[i, 5]] = rng.random_range(0.0..512.0);
+            data[[i, 5]] = rng.gen_range(0.0..512.0);
             // Embarked (0, 1, 2)
-            data[[i, 6]] = rng.random_range(0.0f64..3.0).floor();
+            data[[i, 6]] = rng.gen_range(0.0f64..3.0).floor();
 
             // Survival rule: higher class, female, younger = higher survival
             let survival_score = (4.0 - data[[i, 0]]) * 0.3 + // class
@@ -1642,14 +1642,14 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             for j in 0..n_features {
-                data[[i, j]] = rng.random_range(0.0..1.0);
+                data[[i, j]] = rng.gen_range(0.0..1.0);
             }
             // Credit scoring rule
             let score = data.row(i).iter().sum::<f64>() / n_features as f64;
@@ -1665,28 +1665,28 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             // Median income (0-15)
-            data[[i, 0]] = rng.random_range(0.5..15.0);
+            data[[i, 0]] = rng.gen_range(0.5..15.0);
             // House age (1-52)
-            data[[i, 1]] = rng.random_range(1.0..52.0);
+            data[[i, 1]] = rng.gen_range(1.0..52.0);
             // Average rooms (3-20)
-            data[[i, 2]] = rng.random_range(3.0..20.0);
+            data[[i, 2]] = rng.gen_range(3.0..20.0);
             // Average bedrooms (0.8-6)
-            data[[i, 3]] = rng.random_range(0.8..6.0);
+            data[[i, 3]] = rng.gen_range(0.8..6.0);
             // Population (3-35682)
-            data[[i, 4]] = rng.random_range(3.0..35682.0);
+            data[[i, 4]] = rng.gen_range(3.0..35682.0);
             // Average occupancy (0.7-1243)
-            data[[i, 5]] = rng.random_range(0.7..1243.0);
+            data[[i, 5]] = rng.gen_range(0.7..1243.0);
             // Latitude (32-42)
-            data[[i, 6]] = rng.random_range(32.0..42.0);
+            data[[i, 6]] = rng.gen_range(32.0..42.0);
             // Longitude (-124 to -114)
-            data[[i, 7]] = rng.random_range(-124.0..-114.0);
+            data[[i, 7]] = rng.gen_range(-124.0..-114.0);
 
             // House value based on income, rooms, and location
             let house_value = data[[i, 0]] * 50000.0 + // income effect
@@ -1705,31 +1705,31 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             // Wine quality features with realistic ranges
-            data[[i, 0]] = rng.random_range(4.6..15.9); // fixed acidity
-            data[[i, 1]] = rng.random_range(0.12..1.58); // volatile acidity
-            data[[i, 2]] = rng.random_range(0.0..1.0); // citric acid
-            data[[i, 3]] = rng.random_range(0.9..15.5); // residual sugar
-            data[[i, 4]] = rng.random_range(0.012..0.611); // chlorides
-            data[[i, 5]] = rng.random_range(1.0..72.0); // free sulfur dioxide
-            data[[i, 6]] = rng.random_range(6.0..289.0); // total sulfur dioxide
-            data[[i, 7]] = rng.random_range(0.99007..1.00369); // density
-            data[[i, 8]] = rng.random_range(2.74..4.01); // pH
-            data[[i, 9]] = rng.random_range(0.33..2.0); // sulphates
-            data[[i, 10]] = rng.random_range(8.4..14.9); // alcohol
+            data[[i, 0]] = rng.gen_range(4.6..15.9); // fixed acidity
+            data[[i, 1]] = rng.gen_range(0.12..1.58); // volatile acidity
+            data[[i, 2]] = rng.gen_range(0.0..1.0); // citric acid
+            data[[i, 3]] = rng.gen_range(0.9..15.5); // residual sugar
+            data[[i, 4]] = rng.gen_range(0.012..0.611); // chlorides
+            data[[i, 5]] = rng.gen_range(1.0..72.0); // free sulfur dioxide
+            data[[i, 6]] = rng.gen_range(6.0..289.0); // total sulfur dioxide
+            data[[i, 7]] = rng.gen_range(0.99007..1.00369); // density
+            data[[i, 8]] = rng.gen_range(2.74..4.01); // pH
+            data[[i, 9]] = rng.gen_range(0.33..2.0); // sulphates
+            data[[i, 10]] = rng.gen_range(8.4..14.9); // alcohol
 
             // Quality score (3-8) based on features
             let quality: f64 = 3.0 +
                         (data[[i, 10]] - 8.0) * 0.5 + // alcohol
                         (1.0 - data[[i, 1]]) * 2.0 + // volatile acidity (lower is better)
                         data[[i, 2]] * 2.0 + // citric acid
-                        rng.random_range(-0.5..0.5); // noise
+                        rng.gen_range(-0.5..0.5); // noise
 
             target[i] = quality.max(3.0).min(8.0);
         }
@@ -1743,14 +1743,14 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             for j in 0..n_features {
-                data[[i, j]] = rng.random_range(0.0..1.0);
+                data[[i, j]] = rng.gen_range(0.0..1.0);
             }
 
             // Energy efficiency score
@@ -1765,13 +1765,15 @@ impl RealWorldDatasets {
         &self,
         n_timesteps: usize,
     ) -> Result<(Array2<f64>, Option<Array1<f64>>)> {
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
         let mut data = Array2::zeros((n_timesteps, 1));
 
         for i in 0..n_timesteps {
             let t = i as f64;
             let trend = 100.0 + t * 2.0;
             let seasonal = 20.0 * (2.0 * std::f64::consts::PI * t / 12.0).sin();
-            let noise = rand::random::<f64>() * 10.0 - 5.0;
+            let noise = rng.gen::<f64>() * 10.0 - 5.0;
 
             data[[i, 0]] = trend + seasonal + noise;
         }
@@ -1784,19 +1786,19 @@ impl RealWorldDatasets {
         n_timesteps: usize,
     ) -> Result<(Array2<f64>, Option<Array1<f64>>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_timesteps, 6));
         let mut price = 30000.0; // Starting price
 
         for i in 0..n_timesteps {
             // Simulate price movement
-            let change = rng.random_range(-0.05..0.05);
+            let change = rng.gen_range(-0.05..0.05);
             price *= 1.0 + change;
 
-            let high = price * (1.0 + rng.random_range(0.0..0.02));
-            let low = price * (1.0 - rng.random_range(0.0..0.02));
-            let volume = rng.random_range(1000000.0..10000000.0);
+            let high = price * (1.0 + rng.gen_range(0.0..0.02));
+            let low = price * (1.0 - rng.gen_range(0.0..0.02));
+            let volume = rng.gen_range(1000000.0..10000000.0);
 
             data[[i, 0]] = price; // open
             data[[i, 1]] = high;
@@ -1815,26 +1817,26 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             // Age
-            data[[i, 0]] = rng.random_range(29.0..77.0);
+            data[[i, 0]] = rng.gen_range(29.0..77.0);
             // Sex (0=female, 1=male)
             data[[i, 1]] = if rng.random_bool(0.68) { 1.0 } else { 0.0 };
             // Chest pain type (0-3)
-            data[[i, 2]] = rng.random_range(0.0f64..4.0).floor();
+            data[[i, 2]] = rng.gen_range(0.0f64..4.0).floor();
             // Resting blood pressure
-            data[[i, 3]] = rng.random_range(94.0..200.0);
+            data[[i, 3]] = rng.gen_range(94.0..200.0);
             // Cholesterol
-            data[[i, 4]] = rng.random_range(126.0..564.0);
+            data[[i, 4]] = rng.gen_range(126.0..564.0);
 
             // Fill other features
             for j in 5..n_features {
-                data[[i, j]] = rng.random_range(0.0..1.0);
+                data[[i, j]] = rng.gen_range(0.0..1.0);
             }
 
             // Heart disease prediction based on risk factors
@@ -1855,14 +1857,14 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             for j in 0..n_features {
-                data[[i, j]] = rng.random_range(0.0..1.0);
+                data[[i, j]] = rng.gen_range(0.0..1.0);
             }
 
             // Readmission prediction
@@ -1879,31 +1881,31 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             // Cylinders (4, 6, 8)
-            data[[i, 0]] = [4.0, 6.0, 8.0][rng.random_range(0..3)];
+            data[[i, 0]] = [4.0, 6.0, 8.0][rng.gen_range(0..3)];
             // Displacement
-            data[[i, 1]] = rng.random_range(68.0..455.0);
+            data[[i, 1]] = rng.gen_range(68.0..455.0);
             // Horsepower
-            data[[i, 2]] = rng.random_range(46.0..230.0);
+            data[[i, 2]] = rng.gen_range(46.0..230.0);
             // Weight
-            data[[i, 3]] = rng.random_range(1613.0..5140.0);
+            data[[i, 3]] = rng.gen_range(1613.0..5140.0);
             // Acceleration
-            data[[i, 4]] = rng.random_range(8.0..24.8);
+            data[[i, 4]] = rng.gen_range(8.0..24.8);
             // Model year
-            data[[i, 5]] = rng.random_range(70.0..82.0);
+            data[[i, 5]] = rng.gen_range(70.0..82.0);
             // Origin (1=USA, 2=Europe, 3=Japan)
-            data[[i, 6]] = (rng.random_range(1.0f64..4.0f64)).floor();
+            data[[i, 6]] = (rng.gen_range(1.0f64..4.0f64)).floor();
 
             // MPG calculation: inversely related to weight and displacement, positively to efficiency
             let mpg: f64 = 45.0 - (data[[i, 3]] / 5140.0) * 20.0 - (data[[i, 1]] / 455.0) * 15.0
                 + (data[[i, 4]] / 24.8) * 10.0
-                + rng.random_range(-3.0..3.0);
+                + rng.gen_range(-3.0..3.0);
             target[i] = mpg.max(9.0).min(46.6);
         }
 
@@ -1916,35 +1918,35 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             // Cement (component 1)
-            data[[i, 0]] = rng.random_range(102.0..540.0);
+            data[[i, 0]] = rng.gen_range(102.0..540.0);
             // Blast Furnace Slag (component 2)
-            data[[i, 1]] = rng.random_range(0.0..359.4);
+            data[[i, 1]] = rng.gen_range(0.0..359.4);
             // Fly Ash (component 3)
-            data[[i, 2]] = rng.random_range(0.0..200.1);
+            data[[i, 2]] = rng.gen_range(0.0..200.1);
             // Water (component 4)
-            data[[i, 3]] = rng.random_range(121.8..247.0);
+            data[[i, 3]] = rng.gen_range(121.8..247.0);
             // Superplasticizer (component 5)
-            data[[i, 4]] = rng.random_range(0.0..32.2);
+            data[[i, 4]] = rng.gen_range(0.0..32.2);
             // Coarse Aggregate (component 6)
-            data[[i, 5]] = rng.random_range(801.0..1145.0);
+            data[[i, 5]] = rng.gen_range(801.0..1145.0);
             // Fine Aggregate (component 7)
-            data[[i, 6]] = rng.random_range(594.0..992.6);
+            data[[i, 6]] = rng.gen_range(594.0..992.6);
             // Age (days)
-            data[[i, 7]] = rng.random_range(1.0..365.0);
+            data[[i, 7]] = rng.gen_range(1.0..365.0);
 
             // Compressive strength calculation
             let strength: f64 = (data[[i, 0]] / 540.0) * 30.0 + // cement contribution
                           (data[[i, 1]] / 359.4) * 15.0 + // slag contribution
                           (data[[i, 3]] / 247.0) * (-20.0) + // water (negative)
                           ((data[[i, 7]] / 365.0) as f64).ln() * 10.0 + // age (logarithmic)
-                          rng.random_range(-5.0..5.0); // noise
+                          rng.gen_range(-5.0..5.0); // noise
 
             target[i] = strength.max(2.33).min(82.6);
         }
@@ -1958,7 +1960,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1970,9 +1972,9 @@ impl RealWorldDatasets {
             // Temperature
             data[[i, 0]] = 20.0
                 + 15.0 * (day_of_year as f64 * 2.0 * std::f64::consts::PI / 365.0).sin()
-                + rng.random_range(-5.0..5.0);
+                + rng.gen_range(-5.0..5.0);
             // Humidity
-            data[[i, 1]] = 50.0 + 30.0 * rng.random_range(0.0..1.0);
+            data[[i, 1]] = 50.0 + 30.0 * rng.gen_range(0.0..1.0);
             // Hour of day
             data[[i, 2]] = hour;
 
@@ -1985,7 +1987,7 @@ impl RealWorldDatasets {
             let daily = 40.0 + 60.0 * ((hour - 12.0) * std::f64::consts::PI / 12.0).cos();
             let temp_effect = (data[[i, 0]] - 20.0).abs() * 2.0; // Higher load for extreme temperatures
 
-            target[i] = seasonal + daily + temp_effect + rng.random_range(-10.0..10.0);
+            target[i] = seasonal + daily + temp_effect + rng.gen_range(-10.0..10.0);
         }
 
         Ok((data, target))
@@ -1997,7 +1999,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -2006,13 +2008,13 @@ impl RealWorldDatasets {
 
         for i in 0..n_samples {
             // Price movement (random walk with trend)
-            let change = rng.random_range(-0.05..0.05);
+            let change = rng.gen_range(-0.05..0.05);
             price *= 1.0 + change;
 
             // Features: OHLC + Volume
-            let high = price * (1.0 + rng.random_range(0.0..0.02));
-            let low = price * (1.0 - rng.random_range(0.0..0.02));
-            let volume = rng.random_range(1000000.0..10000000.0);
+            let high = price * (1.0 + rng.gen_range(0.0..0.02));
+            let low = price * (1.0 - rng.gen_range(0.0..0.02));
+            let volume = rng.gen_range(1000000.0..10000000.0);
 
             data[[i, 0]] = price; // Close price
             data[[i, 1]] = high;
@@ -2021,7 +2023,7 @@ impl RealWorldDatasets {
             data[[i, 4]] = (high - low) / price; // Volatility
 
             // Target: next day return
-            let next_change = rng.random_range(-0.05..0.05);
+            let next_change = rng.gen_range(-0.05..0.05);
             target[i] = next_change;
         }
 
@@ -2034,23 +2036,23 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
-            let is_fraud = rng.random_range(0.0..1.0) < 0.001728; // ~0.17% fraud rate
+            let is_fraud = rng.gen_range(0.0..1.0) < 0.001728; // ~0.17% fraud rate
 
             for j in 0..n_features {
                 if j < 28 {
                     // Anonymized features (PCA components)
                     if is_fraud {
                         // Fraudulent transactions have different patterns
-                        data[[i, j]] = rng.random_range(-5.0..5.0) * 2.0; // More extreme values
+                        data[[i, j]] = rng.gen_range(-5.0..5.0) * 2.0; // More extreme values
                     } else {
                         // Normal transactions
-                        data[[i, j]] = rng.random_range(-3.0..3.0);
+                        data[[i, j]] = rng.gen_range(-3.0..3.0);
                     }
                 }
             }
@@ -2067,30 +2069,30 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             // Loan amount
-            data[[i, 0]] = rng.random_range(1000.0..50000.0);
+            data[[i, 0]] = rng.gen_range(1000.0..50000.0);
             // Interest rate
-            data[[i, 1]] = rng.random_range(5.0..25.0);
+            data[[i, 1]] = rng.gen_range(5.0..25.0);
             // Loan term (months)
-            data[[i, 2]] = [12.0, 24.0, 36.0, 48.0, 60.0][rng.random_range(0..5)];
+            data[[i, 2]] = [12.0, 24.0, 36.0, 48.0, 60.0][rng.gen_range(0..5)];
             // Annual income
-            data[[i, 3]] = rng.random_range(20000.0..200000.0);
+            data[[i, 3]] = rng.gen_range(20000.0..200000.0);
             // Credit score
-            data[[i, 4]] = rng.random_range(300.0..850.0);
+            data[[i, 4]] = rng.gen_range(300.0..850.0);
             // Employment length (years)
-            data[[i, 5]] = rng.random_range(0.0..40.0);
+            data[[i, 5]] = rng.gen_range(0.0..40.0);
             // Debt-to-income ratio
-            data[[i, 6]] = rng.random_range(0.0..0.4);
+            data[[i, 6]] = rng.gen_range(0.0..0.4);
 
             // Fill remaining features
             for j in 7..n_features {
-                data[[i, j]] = rng.random_range(0.0..1.0);
+                data[[i, j]] = rng.gen_range(0.0..1.0);
             }
 
             // Default probability based on risk factors
@@ -2111,48 +2113,48 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
             // Age (17-90)
-            data[[i, 0]] = rng.random_range(17.0..90.0);
+            data[[i, 0]] = rng.gen_range(17.0..90.0);
             // Workclass (encoded 0-8)
-            data[[i, 1]] = rng.random_range(0.0f64..9.0).floor();
+            data[[i, 1]] = rng.gen_range(0.0f64..9.0).floor();
             // Final weight
-            data[[i, 2]] = rng.random_range(12285.0..1484705.0);
+            data[[i, 2]] = rng.gen_range(12285.0..1484705.0);
             // Education (encoded 0-15)
-            data[[i, 3]] = rng.random_range(0.0f64..16.0).floor();
+            data[[i, 3]] = rng.gen_range(0.0f64..16.0).floor();
             // Education-num (1-16)
-            data[[i, 4]] = rng.random_range(1.0..17.0);
+            data[[i, 4]] = rng.gen_range(1.0..17.0);
             // Marital status (encoded 0-6)
-            data[[i, 5]] = rng.random_range(0.0f64..7.0).floor();
+            data[[i, 5]] = rng.gen_range(0.0f64..7.0).floor();
             // Occupation (encoded 0-13)
-            data[[i, 6]] = rng.random_range(0.0f64..14.0).floor();
+            data[[i, 6]] = rng.gen_range(0.0f64..14.0).floor();
             // Relationship (encoded 0-5)
-            data[[i, 7]] = rng.random_range(0.0f64..6.0).floor();
+            data[[i, 7]] = rng.gen_range(0.0f64..6.0).floor();
             // Race (encoded 0-4)
-            data[[i, 8]] = rng.random_range(0.0f64..5.0).floor();
+            data[[i, 8]] = rng.gen_range(0.0f64..5.0).floor();
             // Sex (0=Female, 1=Male)
             data[[i, 9]] = if rng.random_bool(0.67) { 1.0 } else { 0.0 };
             // Capital gain (0-99999)
             data[[i, 10]] = if rng.random_bool(0.9) {
                 0.0
             } else {
-                rng.random_range(1.0..99999.0)
+                rng.gen_range(1.0..99999.0)
             };
             // Capital loss (0-4356)
             data[[i, 11]] = if rng.random_bool(0.95) {
                 0.0
             } else {
-                rng.random_range(1.0..4356.0)
+                rng.gen_range(1.0..4356.0)
             };
             // Hours per week (1-99)
-            data[[i, 12]] = rng.random_range(1.0..99.0);
+            data[[i, 12]] = rng.gen_range(1.0..99.0);
             // Native country (encoded 0-40)
-            data[[i, 13]] = rng.random_range(0.0f64..41.0).floor();
+            data[[i, 13]] = rng.gen_range(0.0f64..41.0).floor();
 
             // Income prediction based on realistic factors
             let income_score = (data[[i, 0]] - 17.0) / 73.0 * 0.2 + // Age factor
@@ -2162,7 +2164,7 @@ impl RealWorldDatasets {
                 (data[[i, 10]] + data[[i, 11]]) / 100000.0 * 0.1; // Capital gains/losses
 
             // Add some randomness
-            let noise = rng.random_range(-0.15..0.15);
+            let noise = rng.gen_range(-0.15..0.15);
             target[i] = if (income_score + noise) > 0.5 {
                 1.0
             } else {
@@ -2180,7 +2182,7 @@ impl RealWorldDatasets {
         has_categorical: bool,
     ) -> Result<(Array2<f64>, Option<Array1<f64>>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
 
@@ -2188,10 +2190,10 @@ impl RealWorldDatasets {
             for j in 0..n_features {
                 if has_categorical && j < n_features / 3 {
                     // First third are categorical features (encoded as integers)
-                    data[[i, j]] = rng.random_range(0.0f64..10.0).floor();
+                    data[[i, j]] = rng.gen_range(0.0f64..10.0).floor();
                 } else {
                     // Remaining are continuous features
-                    data[[i, j]] = rng.random_range(-2.0..2.0);
+                    data[[i, j]] = rng.gen_range(-2.0..2.0);
                 }
             }
         }
@@ -2213,13 +2215,13 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
-            let class = rng.random_range(0..10) as f64;
+            let class = rng.gen_range(0..10) as f64;
             target[i] = class;
 
             // Generate synthetic image data that has class-dependent patterns
@@ -2239,7 +2241,7 @@ impl RealWorldDatasets {
                 };
 
                 // Add noise and variation
-                data[[i, j]] = base_intensity + rng.random_range(-0.3f64..0.3f64);
+                data[[i, j]] = base_intensity + rng.gen_range(-0.3f64..0.3f64);
                 data[[i, j]] = data[[i, j]].max(0.0f64).min(1.0f64); // Clamp to [0, 1]
             }
         }
@@ -2253,13 +2255,13 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
 
         for i in 0..n_samples {
-            let class = rng.random_range(0..10) as f64;
+            let class = rng.gen_range(0..10) as f64;
             target[i] = class;
 
             // Generate synthetic fashion item patterns
@@ -2279,7 +2281,7 @@ impl RealWorldDatasets {
                 };
 
                 // Add texture and noise
-                let texture_noise = rng.random_range(-0.2f64..0.2f64);
+                let texture_noise = rng.gen_range(-0.2f64..0.2f64);
                 data[[i, j]] = base_intensity + texture_noise;
                 data[[i, j]] = data[[i, j]].max(0.0f64).min(1.0f64); // Clamp to [0, 1]
             }
@@ -2294,7 +2296,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -2311,19 +2313,19 @@ impl RealWorldDatasets {
             for j in 0..n_features {
                 let base_freq = if positive_words.contains(&j) {
                     if is_positive {
-                        rng.random_range(0.5..2.0) // Higher positive word frequency for positive reviews
+                        rng.gen_range(0.5..2.0) // Higher positive word frequency for positive reviews
                     } else {
-                        rng.random_range(0.0..0.5) // Lower positive word frequency for negative reviews
+                        rng.gen_range(0.0..0.5) // Lower positive word frequency for negative reviews
                     }
                 } else if negative_words.contains(&j) {
                     if is_positive {
-                        rng.random_range(0.0..0.5) // Lower negative word frequency for positive reviews
+                        rng.gen_range(0.0..0.5) // Lower negative word frequency for positive reviews
                     } else {
-                        rng.random_range(0.5..2.0) // Higher negative word frequency for negative reviews
+                        rng.gen_range(0.5..2.0) // Higher negative word frequency for negative reviews
                     }
                 } else {
                     // Neutral words appear with similar frequency in both classes
-                    rng.random_range(0.2..1.0)
+                    rng.gen_range(0.2..1.0)
                 };
 
                 data[[i, j]] = base_freq;
@@ -2339,7 +2341,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -2348,7 +2350,7 @@ impl RealWorldDatasets {
         let words_per_topic = n_features / 5; // 5 topics
 
         for i in 0..n_samples {
-            let topic = rng.random_range(0..5) as f64;
+            let topic = rng.gen_range(0..5) as f64;
             target[i] = topic;
 
             for j in 0..n_features {
@@ -2356,14 +2358,14 @@ impl RealWorldDatasets {
 
                 let base_freq = if word_topic == topic as usize {
                     // Words from the same topic appear more frequently
-                    rng.random_range(1.0..3.0)
+                    rng.gen_range(1.0..3.0)
                 } else {
                     // Words from other topics appear less frequently
-                    rng.random_range(0.0..0.8)
+                    rng.gen_range(0.0..0.8)
                 };
 
                 // Add some noise
-                let noise = rng.random_range(-0.2f64..0.2f64);
+                let noise = rng.gen_range(-0.2f64..0.2f64);
                 data[[i, j]] = (base_freq + noise).max(0.0f64);
             }
         }

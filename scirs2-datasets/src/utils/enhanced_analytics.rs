@@ -1,15 +1,15 @@
-//! Advanced-Advanced Statistical Analytics for Dataset Quality Assessment
+//! Advanced Statistical Analytics for Dataset Quality Assessment
 //!
 //! This module provides cutting-edge statistical analysis capabilities for datasets,
 //! including ML-based quality assessment, advanced statistical validation, and
-//! advanced-high-performance analytics using SIMD and GPU acceleration.
+//! high-performance analytics using SIMD and GPU acceleration.
 
 use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use scirs2_core::parallel_ops::*;
 
-/// Advanced-advanced dataset quality metrics
+/// Advanced dataset quality metrics
 #[derive(Debug, Clone)]
 pub struct AdvancedQualityMetrics {
     /// Statistical complexity score (0.0 to 1.0)
@@ -75,7 +75,7 @@ impl Default for AdvancedDatasetAnalyzer {
 }
 
 impl AdvancedDatasetAnalyzer {
-    /// Create a new advanced-advanced dataset analyzer
+    /// Create a new advanced dataset analyzer
     pub fn new() -> Self {
         Self::default()
     }
@@ -98,7 +98,7 @@ impl AdvancedDatasetAnalyzer {
         self
     }
 
-    /// Perform advanced-advanced dataset quality analysis
+    /// Perform advanced dataset quality analysis
     pub fn analyze_dataset_quality(&self, dataset: &Dataset) -> Result<AdvancedQualityMetrics> {
         let data = &dataset.data;
         let n_samples = data.nrows();
@@ -106,7 +106,7 @@ impl AdvancedDatasetAnalyzer {
 
         if n_samples < 3 || n_features == 0 {
             return Err(DatasetsError::ValidationError(
-                "Dataset too small for advanced-advanced analysis".to_string(),
+                "Dataset too small for advanced analysis".to_string(),
             ));
         }
 
@@ -166,7 +166,7 @@ impl AdvancedDatasetAnalyzer {
         values.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
         // Dynamic binning based on data distribution
-        let n_bins = ((values.len() as f64).sqrt() as usize).max(10).min(100);
+        let n_bins = ((values.len() as f64).sqrt() as usize).clamp(10, 100);
         let min_val = values[0];
         let max_val = values[values.len() - 1];
 
@@ -288,7 +288,7 @@ impl AdvancedDatasetAnalyzer {
         let mut mi = 0.0;
 
         for i in 0..n_bins {
-            for j in 0..n_bins {
+            for (j, _) in y_hist.iter().enumerate().take(n_bins) {
                 if joint_hist[i][j] > 0 && x_hist[i] > 0 && y_hist[j] > 0 {
                     let p_xy = joint_hist[i][j] as f64 / n_total;
                     let p_x = x_hist[i] as f64 / n_total;
@@ -445,9 +445,7 @@ impl AdvancedDatasetAnalyzer {
             let mean_anderson = anderson_darling_scores.mean().unwrap_or(0.0);
             let mean_jarque = jarque_bera_scores.mean().unwrap_or(0.0);
 
-            (mean_shapiro * 0.4 + mean_anderson * 0.3 + mean_jarque * 0.3)
-                .max(0.0)
-                .min(1.0)
+            (mean_shapiro * 0.4 + mean_anderson * 0.3 + mean_jarque * 0.3).clamp(0.0, 1.0)
         };
 
         Ok(NormalityAssessment {
@@ -575,8 +573,7 @@ impl AdvancedDatasetAnalyzer {
             + dimensionality_factor * 0.15
             + completeness_factor * 0.35
             + variance_factor * 0.25)
-            .max(0.0)
-            .min(1.0);
+            .clamp(0.0, 1.0);
 
         Ok(quality_score)
     }
@@ -731,7 +728,7 @@ impl AdvancedDatasetAnalyzer {
     }
 }
 
-/// Convenience function for advanced-advanced dataset analysis
+/// Convenience function for advanced dataset analysis
 #[allow(dead_code)]
 pub fn analyze_dataset_advanced(dataset: &Dataset) -> Result<AdvancedQualityMetrics> {
     let analyzer = AdvancedDatasetAnalyzer::new();

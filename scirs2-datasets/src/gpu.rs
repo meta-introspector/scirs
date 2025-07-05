@@ -1083,6 +1083,7 @@ mod tests {
     fn test_gpu_context_cpu_fallback() {
         let config = GpuConfig {
             backend: GpuBackend::Cpu,
+            threads_per_block: 1,
             ..Default::default()
         };
 
@@ -1095,6 +1096,7 @@ mod tests {
     fn test_gpu_classification_generation() {
         let config = GpuConfig {
             backend: GpuBackend::Cpu,
+            threads_per_block: 1,
             ..Default::default()
         };
 
@@ -1131,6 +1133,7 @@ mod tests {
     fn test_gpu_benchmark_creation() {
         let config = GpuConfig {
             backend: GpuBackend::Cpu,
+            threads_per_block: 1,
             ..Default::default()
         };
 

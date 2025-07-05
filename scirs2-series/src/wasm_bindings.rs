@@ -201,7 +201,9 @@ impl WasmARIMA {
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub struct WasmAnomalyDetector {
+    #[allow(dead_code)]
     method: AnomalyMethod,
+    #[allow(dead_code)]
     options: AnomalyOptions,
 }
 

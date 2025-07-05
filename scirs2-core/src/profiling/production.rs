@@ -197,7 +197,7 @@ impl std::fmt::Display for WorkloadType {
             WorkloadType::IOBound => write!(f, "I/O-Bound"),
             WorkloadType::NetworkBound => write!(f, "Network-Bound"),
             WorkloadType::Mixed => write!(f, "Mixed"),
-            WorkloadType::Custom(name) => write!(f, "Custom({})", name),
+            WorkloadType::Custom(name) => write!(f, "Custom({name})"),
         }
     }
 }
@@ -564,20 +564,13 @@ impl ProductionProfiler {
         // For this example, we'll analyze the first active session
         let session_id = {
             let sessions = self.active_sessions.read().map_err(|_| {
-                CoreError::from(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Failed to read active sessions",
-                ))
+                CoreError::from(std::io::Error::other("Failed to read active sessions"))
             })?;
             sessions.keys().next().cloned()
         };
 
-        let session_id = session_id.ok_or_else(|| {
-            CoreError::from(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "No active sessions",
-            ))
-        })?;
+        let session_id = session_id
+            .ok_or_else(|| CoreError::from(std::io::Error::other("No active sessions")))?;
         self.finish_workload_analysis_by_id(&session_id, WorkloadType::Mixed)
     }
 
@@ -593,10 +586,7 @@ impl ProductionProfiler {
         // Remove session from active sessions
         let session = {
             let mut sessions = self.active_sessions.write().map_err(|_| {
-                CoreError::from(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Failed to write to active sessions",
-                ))
+                CoreError::from(std::io::Error::other("Failed to write to active sessions"))
             })?;
             sessions.remove(workload_id)
         };

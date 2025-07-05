@@ -166,7 +166,6 @@ impl PerformanceMonitor {
     fn get_memory_usage(&self) -> usize {
         // Simplified memory usage estimation
         // In a real implementation, this would use more sophisticated memory tracking
-        use std::alloc::System;
 
         // For demonstration, we'll return a basic estimate
         // Real implementation would use tools like jemalloc or tcmalloc statistics
@@ -331,12 +330,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Complex spherical harmonic benchmark (commented out - needs proper complex support)
     {
         monitor.benchmark_function("gamma_complex", 1, || {
-            use scirs2_special::gamma::complex::gamma_complex;
+            use scirs2_special::gamma_complex;
             gamma_complex(z).norm()
         });
 
         monitor.benchmark_function("erf_complex", 1, || {
-            use scirs2_special::erf::complex::erf_complex;
+            use scirs2_special::erf_complex;
             erf_complex(z).norm()
         });
     }

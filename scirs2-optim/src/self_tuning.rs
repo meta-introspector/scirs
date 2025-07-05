@@ -310,7 +310,7 @@ struct BanditState {
 }
 
 /// Trait for optimizer implementations that can be used with self-tuning
-pub trait OptimizerTrait<A: Float, D: Dimension>: Send + Sync {
+pub trait OptimizerTrait<A: Float + ScalarOperand + Debug, D: Dimension>: Send + Sync {
     /// Get optimizer name
     fn name(&self) -> &str;
 
@@ -808,31 +808,43 @@ pub struct SelfTuningStatistics {
 // Wrapper implementations for existing optimizers
 struct AdamOptimizerWrapper<A: Float + ScalarOperand + Debug, D: Dimension> {
     inner: crate::optimizers::Adam<A>,
+    _phantom: std::marker::PhantomData<D>,
 }
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> AdamOptimizerWrapper<A, D> {
     fn new(lr: f64, beta1: f64, beta2: f64, eps: f64, weight_decay: f64) -> Self {
         Self {
-            inner: crate::optimizers::Adam::new(
+            inner: crate::optimizers::Adam::new_with_config(
                 A::from(lr).unwrap(),
                 A::from(beta1).unwrap(),
                 A::from(beta2).unwrap(),
                 A::from(eps).unwrap(),
                 A::from(weight_decay).unwrap(),
             ),
+            _phantom: std::marker::PhantomData,
         }
     }
 }
 
-impl<A: Float + 'static, D: Dimension + 'static> OptimizerTrait<A, D>
-    for AdamOptimizerWrapper<A, D>
+impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 'static>
+    OptimizerTrait<A, D> for AdamOptimizerWrapper<A, D>
 {
     fn name(&self) -> &str {
         "Adam"
     }
 
     fn step(&mut self, params: &mut [Array<A, D>], grads: &[Array<A, D>]) -> Result<()> {
-        self.inner.step(params, grads)
+        if params.len() != grads.len() {
+            return Err(crate::error::OptimError::InvalidParameter(
+                "Mismatched number of parameters and gradients".to_string(),
+            ));
+        }
+
+        for (param, grad) in params.iter_mut().zip(grads.iter()) {
+            let updated = self.inner.step(param, grad)?;
+            *param = updated;
+        }
+        Ok(())
     }
 
     fn learning_rate(&self) -> A {
@@ -854,36 +866,48 @@ impl<A: Float + 'static, D: Dimension + 'static> OptimizerTrait<A, D>
     fn clone_optimizer(&self) -> Box<dyn OptimizerTrait<A, D>> {
         Box::new(AdamOptimizerWrapper {
             inner: self.inner.clone(),
+            _phantom: std::marker::PhantomData,
         })
     }
 }
 
 struct SGDOptimizerWrapper<A: Float + ScalarOperand + Debug, D: Dimension> {
     inner: crate::optimizers::SGD<A>,
+    _phantom: std::marker::PhantomData<D>,
 }
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> SGDOptimizerWrapper<A, D> {
-    fn new(lr: f64, momentum: f64, weight_decay: f64, nesterov: bool) -> Self {
+    fn new(lr: f64, momentum: f64, weight_decay: f64, _nesterov: bool) -> Self {
         Self {
-            inner: crate::optimizers::SGD::new(
+            inner: crate::optimizers::SGD::new_with_config(
                 A::from(lr).unwrap(),
                 A::from(momentum).unwrap(),
                 A::from(weight_decay).unwrap(),
-                nesterov,
             ),
+            _phantom: std::marker::PhantomData,
         }
     }
 }
 
-impl<A: Float + 'static, D: Dimension + 'static> OptimizerTrait<A, D>
-    for SGDOptimizerWrapper<A, D>
+impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 'static>
+    OptimizerTrait<A, D> for SGDOptimizerWrapper<A, D>
 {
     fn name(&self) -> &str {
         "SGD"
     }
 
     fn step(&mut self, params: &mut [Array<A, D>], grads: &[Array<A, D>]) -> Result<()> {
-        self.inner.step(params, grads)
+        if params.len() != grads.len() {
+            return Err(crate::error::OptimError::InvalidParameter(
+                "Mismatched number of parameters and gradients".to_string(),
+            ));
+        }
+
+        for (param, grad) in params.iter_mut().zip(grads.iter()) {
+            let updated = self.inner.step(param, grad)?;
+            *param = updated;
+        }
+        Ok(())
     }
 
     fn learning_rate(&self) -> A {
@@ -905,37 +929,50 @@ impl<A: Float + 'static, D: Dimension + 'static> OptimizerTrait<A, D>
     fn clone_optimizer(&self) -> Box<dyn OptimizerTrait<A, D>> {
         Box::new(SGDOptimizerWrapper {
             inner: self.inner.clone(),
+            _phantom: std::marker::PhantomData,
         })
     }
 }
 
 struct AdamWOptimizerWrapper<A: Float + ScalarOperand + Debug, D: Dimension> {
     inner: crate::optimizers::AdamW<A>,
+    _phantom: std::marker::PhantomData<D>,
 }
 
 impl<A: Float + ScalarOperand + Debug, D: Dimension> AdamWOptimizerWrapper<A, D> {
     fn new(lr: f64, beta1: f64, beta2: f64, eps: f64, weight_decay: f64) -> Self {
         Self {
-            inner: crate::optimizers::AdamW::new(
+            inner: crate::optimizers::AdamW::new_with_config(
                 A::from(lr).unwrap(),
                 A::from(beta1).unwrap(),
                 A::from(beta2).unwrap(),
                 A::from(eps).unwrap(),
                 A::from(weight_decay).unwrap(),
             ),
+            _phantom: std::marker::PhantomData,
         }
     }
 }
 
-impl<A: Float + 'static, D: Dimension + 'static> OptimizerTrait<A, D>
-    for AdamWOptimizerWrapper<A, D>
+impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 'static>
+    OptimizerTrait<A, D> for AdamWOptimizerWrapper<A, D>
 {
     fn name(&self) -> &str {
         "AdamW"
     }
 
     fn step(&mut self, params: &mut [Array<A, D>], grads: &[Array<A, D>]) -> Result<()> {
-        self.inner.step(params, grads)
+        if params.len() != grads.len() {
+            return Err(crate::error::OptimError::InvalidParameter(
+                "Mismatched number of parameters and gradients".to_string(),
+            ));
+        }
+
+        for (param, grad) in params.iter_mut().zip(grads.iter()) {
+            let updated = self.inner.step(param, grad)?;
+            *param = updated;
+        }
+        Ok(())
     }
 
     fn learning_rate(&self) -> A {
@@ -957,6 +994,7 @@ impl<A: Float + 'static, D: Dimension + 'static> OptimizerTrait<A, D>
     fn clone_optimizer(&self) -> Box<dyn OptimizerTrait<A, D>> {
         Box::new(AdamWOptimizerWrapper {
             inner: self.inner.clone(),
+            _phantom: std::marker::PhantomData,
         })
     }
 }

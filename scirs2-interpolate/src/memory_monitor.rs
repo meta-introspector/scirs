@@ -135,9 +135,11 @@ struct AllocationEvent {
     size_bytes: usize,
 
     /// Category of memory (e.g., "distance_matrix", "cache", "coefficients")
+    #[allow(dead_code)]
     category: String,
 
     /// Timestamp of event
+    #[allow(dead_code)]
     timestamp: Instant,
 }
 
@@ -158,6 +160,7 @@ struct LeakDetectionStats {
     total_deallocations: u64,
 
     /// Number of unmatched allocations (potential leaks)
+    #[allow(dead_code)]
     unmatched_allocations: u64,
 
     /// Memory that has been allocated but not freed for a long time
@@ -186,9 +189,11 @@ struct MemoryPerformanceMetrics {
     avg_allocation_size: f64,
 
     /// Average time between allocations
+    #[allow(dead_code)]
     avg_allocation_interval: Duration,
 
     /// Memory fragmentation estimate (0.0 to 1.0)
+    #[allow(dead_code)]
     fragmentation_estimate: f64,
 
     /// Cache hit ratio for memory reuse

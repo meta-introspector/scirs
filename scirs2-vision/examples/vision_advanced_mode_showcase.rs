@@ -73,8 +73,8 @@ fn main() -> Result<()> {
     println!("\n⚡ Integrated Advanced Pipeline");
     integrated_advanced_demo(&test_frames)?;
 
-    // Demonstrate advanced-advanced neural-quantum hybrid processing
-    println!("\n🔮 Advanced-Advanced Neural-Quantum Hybrid Processing");
+    // Demonstrate advanced neural-quantum hybrid processing
+    println!("\n🔮 Advanced Neural-Quantum Hybrid Processing");
     neural_quantum_hybrid_demo(&test_frames)?;
 
     println!("\n✨ Advanced mode demonstration completed!");
@@ -559,7 +559,7 @@ fn integrated_advanced_demo(frames: &[Frame]) -> Result<()> {
     Ok(())
 }
 
-/// Demonstrate advanced-advanced neural-quantum hybrid processing
+/// Demonstrate advanced neural-quantum hybrid processing
 #[allow(dead_code)]
 fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
     println!("  Initializing Neural-Quantum Hybrid Processor...");
@@ -571,7 +571,7 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
     println!("  ✓ Emergent Behavior Detection: Enabled");
     println!("  ✓ Self-Modification Engine: Standby");
 
-    println!("  Processing frames with advanced-advanced capabilities...");
+    println!("  Processing frames with advanced capabilities...");
     let start_time = Instant::now();
 
     let mut total_emergent_behaviors = 0;
@@ -584,7 +584,7 @@ fn neural_quantum_hybrid_demo(frames: &[Frame]) -> Result<()> {
             break;
         } // Process first 8 frames for demo
 
-        // Process with advanced-advanced capabilities
+        // Process with advanced capabilities
         let result = hybrid_processor.process_advanced(frame.clone())?;
 
         // Accumulate metrics

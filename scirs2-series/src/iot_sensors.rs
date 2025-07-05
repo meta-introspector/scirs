@@ -139,7 +139,7 @@ impl EnvironmentalSensorAnalysis {
 
             // Impossible values (temperature outside reasonable range)
             for (i, &temp) in temp_data.iter().enumerate() {
-                if temp < -50.0 || temp > 100.0 {
+                if !(-50.0..=100.0).contains(&temp) {
                     temp_issues.push(i);
                 }
             }
@@ -208,13 +208,12 @@ impl EnvironmentalSensorAnalysis {
             };
 
             // Comfort score (0-100, higher is more comfortable)
-            comfort[i] = if heat_index <= 27.0 && rh >= 30.0 && rh <= 60.0 {
+            comfort[i] = if heat_index <= 27.0 && (30.0..=60.0).contains(&rh) {
                 100.0 - (heat_index - 22.0).abs() * 5.0 - (rh - 45.0).abs() * 0.5
             } else {
                 50.0 - (heat_index - 22.0).abs() * 2.0 - (rh - 45.0).abs() * 0.3
             }
-            .max(0.0)
-            .min(100.0);
+            .clamp(0.0, 100.0);
         }
 
         Ok(comfort)
@@ -323,7 +322,7 @@ impl MotionSensorAnalysis {
         for row in data.outer_iter() {
             let lat = row[0];
             let lon = row[1];
-            if lat < -90.0 || lat > 90.0 || lon < -180.0 || lon > 180.0 {
+            if !(-90.0..=90.0).contains(&lat) || !(-180.0..=180.0).contains(&lon) {
                 return Err(TimeSeriesError::InvalidInput(
                     "Invalid GPS coordinates".to_string(),
                 ));
@@ -644,6 +643,12 @@ pub struct IoTAnalysis {
     pub quality_assessments: HashMap<String, DataQuality>,
 }
 
+impl Default for IoTAnalysis {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl IoTAnalysis {
     /// Create new IoT analysis
     pub fn new() -> Self {
@@ -683,7 +688,7 @@ impl IoTAnalysis {
             let env_status = if total_issues == 0 {
                 "All environmental sensors functioning normally".to_string()
             } else {
-                format!("{} environmental sensor issues detected", total_issues)
+                format!("{total_issues} environmental sensor issues detected")
             };
             report.insert("Environmental_Status".to_string(), env_status);
 
@@ -825,10 +830,9 @@ mod tests {
             .unwrap();
 
         let activities = analysis.activity_recognition().unwrap();
-        assert!(activities.len() > 0);
+        assert!(!activities.is_empty());
 
-        let steps = analysis.step_count().unwrap();
-        assert!(steps >= 0);
+        let _steps = analysis.step_count().unwrap();
     }
 
     #[test]
@@ -862,7 +866,7 @@ mod tests {
             .unwrap();
 
         let falls = analysis.fall_detection(25.0).unwrap();
-        assert!(falls.len() > 0);
+        assert!(!falls.is_empty());
         assert_eq!(falls[0], 2); // Fall detected at index 2
     }
 }

@@ -687,7 +687,7 @@ impl CitationManager {
             let venue_formatted = if style.bibliography_format.punctuation.italicize_journals {
                 format!(" *{}*", venue)
             } else {
-                format!(" {}", venue)
+                format!(" {venue}")
             };
             formatted.push_str(&venue_formatted);
         }
@@ -697,14 +697,14 @@ impl CitationManager {
             if style.bibliography_format.punctuation.parentheses_around_year {
                 formatted.push_str(&format!(" ({})", year));
             } else {
-                formatted.push_str(&format!(" {}", year));
+                formatted.push_str(&format!(" {year}"));
             }
         }
         
         // DOI
         if style.formatting_rules.include_doi {
             if let Some(doi) = &citation.doi {
-                formatted.push_str(&format!(". DOI: {}", doi));
+                formatted.push_str(&format!(". DOI: {doi}"));
             }
         }
         
@@ -1027,9 +1027,9 @@ impl BibTeXProcessor {
                     let field_name = line[..eq_pos].trim().to_lowercase();
                     let field_value = line[eq_pos+1..].trim()
                         .trim_start_matches('{')
-                        .trim_end_matches('},')
+                        .trim_end_matches("},")
                         .trim_start_matches('"')
-                        .trim_end_matches('",')
+                        .trim_end_matches("\",")
                         .to_string();
                     
                     if let Some((_, _, ref mut fields)) = current_entry {

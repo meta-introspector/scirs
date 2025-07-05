@@ -491,7 +491,7 @@ impl AdvancedGenerator {
             // Apply concept drift
             if task_id > 0 {
                 let drift = Array2::from_shape_fn((n_classes, n_features), |_| {
-                    rand::random::<f64>() * concept_drift_strength
+                    rand::thread_rng().gen::<f64>() * concept_drift_strength
                 });
                 base_centers = base_centers + drift;
             }
@@ -545,7 +545,7 @@ impl AdvancedGenerator {
                 let mut perturbations = Array2::zeros((n_samples, n_features));
                 for i in 0..n_samples {
                     for j in 0..n_features {
-                        let sign = if rand::random::<f64>() > 0.5 {
+                        let sign = if rand::thread_rng().gen::<f64>() > 0.5 {
                             1.0
                         } else {
                             -1.0
@@ -561,7 +561,7 @@ impl AdvancedGenerator {
                 for _iter in 0..config.iterations {
                     for i in 0..n_samples {
                         for j in 0..n_features {
-                            let gradient = rand::random::<f64>() * 2.0 - 1.0; // Simulated gradient
+                            let gradient = rand::thread_rng().gen::<f64>() * 2.0 - 1.0; // Simulated gradient
                             perturbations[[i, j]] += config.step_size * gradient.signum();
                             // Clip to epsilon ball
                             perturbations[[i, j]] =
@@ -574,7 +574,7 @@ impl AdvancedGenerator {
             AttackMethod::RandomNoise => {
                 // Random noise baseline
                 let perturbations = Array2::from_shape_fn((n_samples, n_features), |_| {
-                    (rand::random::<f64>() * 2.0 - 1.0) * config.epsilon
+                    (rand::thread_rng().gen::<f64>() * 2.0 - 1.0) * config.epsilon
                 });
                 Ok(perturbations)
             }
@@ -583,7 +583,7 @@ impl AdvancedGenerator {
                 let mut perturbations = Array2::zeros(data.dim());
                 for i in 0..data.nrows() {
                     for j in 0..data.ncols() {
-                        let noise = rand::random::<f64>() * 2.0 - 1.0;
+                        let noise = rand::thread_rng().gen::<f64>() * 2.0 - 1.0;
                         perturbations[[i, j]] = config.epsilon * noise;
                     }
                 }
@@ -630,7 +630,7 @@ impl AdvancedGenerator {
                 let mut anomalies = Array2::zeros((n_anomalies, n_features));
                 for i in 0..n_anomalies {
                     for j in 0..n_features {
-                        let direction = if rng.random::<f64>() > 0.5 { 1.0 } else { -1.0 };
+                        let direction = if rng.gen::<f64>() > 0.5 { 1.0 } else { -1.0 };
                         anomalies[[i, j]] =
                             normal_mean[j] + direction * config.severity * normal_std[j];
                     }
@@ -668,7 +668,7 @@ impl AdvancedGenerator {
                 let mut anomalies = Array2::zeros((n_anomalies, n_features));
                 for i in 0..n_anomalies {
                     for j in 0..n_features {
-                        let direction = if rng.random::<f64>() > 0.5 { 1.0 } else { -1.0 };
+                        let direction = if rng.gen::<f64>() > 0.5 { 1.0 } else { -1.0 };
                         anomalies[[i, j]] =
                             normal_mean[j] + direction * config.severity * normal_std[j];
                     }
@@ -711,7 +711,7 @@ impl AdvancedGenerator {
     fn generate_shared_features(&self, n_samples: usize, n_features: usize) -> Result<Array2<f64>> {
         // Generate shared features using multivariate normal distribution
         let data = Array2::from_shape_fn((n_samples, n_features), |_| {
-            rand::random::<f64>() * 2.0 - 1.0 // Standard normal approximation
+            rand::thread_rng().gen::<f64>() * 2.0 - 1.0 // Standard normal approximation
         });
         Ok(data)
     }
@@ -725,7 +725,7 @@ impl AdvancedGenerator {
         // Generate task-specific features with slight bias per task
         let task_bias = task_id as f64 * 0.1;
         let data = Array2::from_shape_fn((n_samples, n_features), |_| {
-            rand::random::<f64>() * 2.0 - 1.0 + task_bias
+            rand::thread_rng().gen::<f64>() * 2.0 - 1.0 + task_bias
         });
         Ok(data)
     }
@@ -773,7 +773,7 @@ impl AdvancedGenerator {
                         .enumerate()
                         .map(|(j, &x)| x * (j as f64 + 1.0) * correlation)
                         .sum::<f64>();
-                    weighted_sum + rand::random::<f64>() * noise
+                    weighted_sum + rand::thread_rng().gen::<f64>() * noise
                 });
                 Ok(target)
             }
@@ -873,7 +873,7 @@ impl AdvancedGenerator {
 
     fn generate_class_centers(&self, n_classes: usize, n_features: usize) -> Result<Array2<f64>> {
         let centers = Array2::from_shape_fn((n_classes, n_features), |_| {
-            rand::random::<f64>() * 4.0 - 2.0
+            rand::thread_rng().gen::<f64>() * 4.0 - 2.0
         });
         Ok(centers)
     }

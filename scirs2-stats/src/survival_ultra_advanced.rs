@@ -27,7 +27,7 @@ pub struct AdvancedSurvivalAnalysis<F> {
     _phantom: PhantomData<F>,
 }
 
-/// Configuration for advanced-advanced survival analysis
+/// Configuration for advanced survival analysis
 #[derive(Debug, Clone)]
 pub struct AdvancedSurvivalConfig<F> {
     /// Survival models to fit
@@ -622,7 +622,7 @@ where
         + std::fmt::Display
         + ndarray::ScalarOperand,
 {
-    /// Create new advanced-advanced survival analysis
+    /// Create new advanced survival analysis
     pub fn new(config: AdvancedSurvivalConfig<F>) -> Self {
         Self {
             config,

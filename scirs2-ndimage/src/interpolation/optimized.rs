@@ -6,7 +6,7 @@
 //! - Parallel implementation for large images
 //! - Memory-efficient processing
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Dimension};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
@@ -15,7 +15,6 @@ use std::sync::{Arc, RwLock};
 
 use super::{BoundaryMode, InterpolationOrder};
 use crate::error::{NdimageError, NdimageResult};
-use crate::utils::safe_f64_to_float;
 
 /// Helper function for safe i32 conversion
 #[allow(dead_code)]
@@ -152,11 +151,11 @@ where
             let t2 = t * t;
             let t3 = t2 * t;
 
-            let neg_half: T = crate::utils::safe_f64_to_float(-0.5)?;
-            let half: T = crate::utils::safe_f64_to_float(0.5)?;
-            let one_half: T = crate::utils::safe_f64_to_float(1.5)?;
-            let two_half: T = crate::utils::safe_f64_to_float(2.5)?;
-            let two: T = crate::utils::safe_f64_to_float(2.0)?;
+            let neg_half: T = crate::utils::safe_f64_to_float::<T>(-0.5)?;
+            let half: T = crate::utils::safe_f64_to_float::<T>(0.5)?;
+            let one_half: T = crate::utils::safe_f64_to_float::<T>(1.5)?;
+            let two_half: T = crate::utils::safe_f64_to_float::<T>(2.5)?;
+            let two: T = crate::utils::safe_f64_to_float::<T>(2.0)?;
 
             Ok(vec![
                 neg_half * t3 + t2 - half * t,
@@ -189,15 +188,15 @@ where
         let t5 = t4 * t;
 
         // Pre-computed B-spline basis functions with constants
-        let c120: T = crate::utils::safe_f64_to_float(1.0 / 120.0)?;
-        let c24: T = crate::utils::safe_f64_to_float(1.0 / 24.0)?;
-        let c12: T = crate::utils::safe_f64_to_float(1.0 / 12.0)?;
-        let c2: T = crate::utils::safe_f64_to_float(2.0)?;
-        let c3: T = crate::utils::safe_f64_to_float(3.0)?;
-        let c4: T = crate::utils::safe_f64_to_float(4.0)?;
-        let c5: T = crate::utils::safe_f64_to_float(5.0)?;
-        let c6: T = crate::utils::safe_f64_to_float(6.0)?;
-        let c10: T = crate::utils::safe_f64_to_float(10.0)?;
+        let c120: T = crate::utils::safe_f64_to_float::<T>(1.0 / 120.0)?;
+        let c24: T = crate::utils::safe_f64_to_float::<T>(1.0 / 24.0)?;
+        let c12: T = crate::utils::safe_f64_to_float::<T>(1.0 / 12.0)?;
+        let c2: T = crate::utils::safe_f64_to_float::<T>(2.0)?;
+        let c3: T = crate::utils::safe_f64_to_float::<T>(3.0)?;
+        let c4: T = crate::utils::safe_f64_to_float::<T>(4.0)?;
+        let c5: T = crate::utils::safe_f64_to_float::<T>(5.0)?;
+        let c6: T = crate::utils::safe_f64_to_float::<T>(6.0)?;
+        let c10: T = crate::utils::safe_f64_to_float::<T>(10.0)?;
 
         coeffs[0] = c120 * (-t5 + c5 * t4 - c10 * t3 + c10 * t2 - c5 * t + T::one());
         coeffs[1] = c24 * (t5 - c2 * t4 - c3 * t3 + c6 * t2 + c4 * t + T::one());

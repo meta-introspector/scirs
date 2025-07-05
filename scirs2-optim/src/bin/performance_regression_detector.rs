@@ -296,14 +296,13 @@ fn run_regression_detection(
     // Save report
     let output_dir = PathBuf::from(output_report).parent().unwrap();
     fs::create_dir_all(output_dir)
-        .map_err(|e| OptimError::IoError(format!("Failed to create output directory: {}", e)))?;
+        .map_err(|e| OptimError::IoError(format!("Failed to create output directory: {e}")))?;
 
-    let report_json = serde_json::to_string_pretty(&report).map_err(|e| {
-        OptimError::SerializationError(format!("Failed to serialize report: {}", e))
-    })?;
+    let report_json = serde_json::to_string_pretty(&report)
+        .map_err(|e| OptimError::SerializationError(format!("Failed to serialize report: {e}")))?;
 
     fs::write(output_report, report_json)
-        .map_err(|e| OptimError::IoError(format!("Failed to write report: {}", e)))?;
+        .map_err(|e| OptimError::IoError(format!("Failed to write report: {e}")))?;
 
     // Check if regressions were detected
     let has_regressions = !regression_results.is_empty();
@@ -343,10 +342,10 @@ fn run_regression_detection(
 #[allow(dead_code)]
 fn load_benchmark_results(path: &str) -> Result<serde_json::Value> {
     let content = fs::read_to_string(path)
-        .map_err(|e| OptimError::IoError(format!("Failed to read benchmark results: {}", e)))?;
+        .map_err(|e| OptimError::IoError(format!("Failed to read benchmark results: {e}")))?;
 
     let data: serde_json::Value = serde_json::from_str(&content).map_err(|e| {
-        OptimError::SerializationError(format!("Failed to parse benchmark results: {}", e))
+        OptimError::SerializationError(format!("Failed to parse benchmark results: {e}"))
     })?;
 
     Ok(data)
@@ -445,7 +444,7 @@ fn convert_benchmark_data_to_measurements(
                     test_name: benchmark
                         .get("test_name")
                         .and_then(|v| v.as_str())
-                        .unwrap_or(&format!("test_{}", i))
+                        .unwrap_or(&format!("test_{i}"))
                         .to_string(),
                     parameters: HashMap::new(),
                     dataset_size: benchmark

@@ -15,7 +15,7 @@ use std::marker::PhantomData;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, Instant};
 
-/// Configuration for advanced-advanced streaming analytics
+/// Configuration for advanced streaming analytics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdvancedStreamingConfig {
     /// Default window size for streaming operations
@@ -373,7 +373,7 @@ where
         + 'static
         + std::fmt::Display,
 {
-    /// Create a new advanced-advanced streaming processor
+    /// Create a new advanced streaming processor
     pub fn new(config: AdvancedStreamingConfig) -> Self {
         let windowing_strategy = WindowingStrategy::Sliding {
             size: config.default_window_size,
@@ -915,7 +915,7 @@ where
     }
 }
 
-/// Convenience function to create an advanced-advanced streaming processor
+/// Convenience function to create an advanced streaming processor
 #[allow(dead_code)]
 pub fn create_advanced_streaming_processor<F>() -> AdvancedAdvancedStreamingProcessor<F>
 where

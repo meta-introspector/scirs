@@ -3,9 +3,10 @@
 //! This module provides low-level CUDA kernel implementations for common
 //! optimization operations, leveraging scirs2-core's GPU abstractions.
 
+use super::GpuContext;
 use crate::error::OptimizeError;
 use scirs2_core::gpu::async_execution::GpuStream;
-use scirs2_core::gpu::{GpuBuffer, GpuContext, GpuKernel};
+use scirs2_core::gpu::{GpuBuffer, GpuKernel};
 use std::sync::Arc;
 
 type ScirsResult<T> = Result<T, OptimizeError>;
@@ -40,7 +41,7 @@ impl FunctionEvaluationKernel {
             }
         "#;
 
-        let kernel = context.compile_kernel("evaluate_batch", kernel_source)?;
+        let kernel = context.compile_kernel(kernel_source, "evaluate_batch")?;
 
         Ok(Self { context, kernel })
     }
@@ -92,7 +93,7 @@ impl GradientKernel {
             }
         "#;
 
-        let kernel = context.compile_kernel("compute_gradient_finite_diff", kernel_source)?;
+        let kernel = context.compile_kernel(kernel_source, "compute_gradient_finite_diff")?;
 
         Ok(Self { context, kernel })
     }
@@ -149,7 +150,7 @@ impl ParticleSwarmKernel {
             }
         "#;
 
-        let kernel = context.compile_kernel("update_particles", kernel_source)?;
+        let kernel = context.compile_kernel(kernel_source, "update_particles")?;
 
         Ok(Self { context, kernel })
     }
@@ -201,7 +202,7 @@ impl DifferentialEvolutionKernel {
             }
         "#;
 
-        let kernel = context.compile_kernel("mutate_population", kernel_source)?;
+        let kernel = context.compile_kernel(kernel_source, "mutate_population")?;
 
         Ok(Self { context, kernel })
     }

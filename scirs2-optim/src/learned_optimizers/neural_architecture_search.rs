@@ -1176,7 +1176,7 @@ pub struct SupernetState<T: Float> {
 }
 
 /// Multi-objective optimization state
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MultiObjectiveState<T: Float> {
     /// Pareto front of architectures
     pub pareto_front: Vec<ArchitectureCandidate>,
@@ -2343,13 +2343,13 @@ impl<
         let layer_type = if complexity < 0.3 {
             LayerType::Linear
         } else if complexity < 0.6 {
-            if rand::rng().gen_bool(0.7) {
+            if rand::rng().random::<f64>() < 0.7 {
                 LayerType::Linear
             } else {
                 LayerType::LSTM
             }
         } else if complexity < 0.8 {
-            if rand::rng().gen_bool(0.5) {
+            if rand::rng().random::<f64>() < 0.5 {
                 LayerType::LSTM
             } else {
                 LayerType::Transformer
@@ -2438,7 +2438,7 @@ impl<
             ProgressiveStage::Small => {
                 // Add some short skip connections
                 for i in 0..num_layers.saturating_sub(2) {
-                    if rand::rng().gen_bool(0.3) {
+                    if rand::rng().random::<f64>() < 0.3 {
                         connections[[i, i + 2]] = true;
                     }
                 }
@@ -2447,7 +2447,7 @@ impl<
                 // Add medium-range skip connections
                 for i in 0..num_layers {
                     for j in (i + 2)..(i + 4).min(num_layers) {
-                        if rand::rng().gen_bool(0.4) {
+                        if rand::rng().random::<f64>() < 0.4 {
                             connections[[i, j]] = true;
                         }
                     }
@@ -2465,7 +2465,7 @@ impl<
                             _ => 0.2,     // Long skip connections
                         };
 
-                        if rand::rng().gen_bool(connection_prob) {
+                        if rand::rng().random::<f64>() < connection_prob {
                             connections[[i, j]] = true;
                         }
                     }
@@ -2703,10 +2703,16 @@ impl<
         }
 
         // Update Pareto front and hypervolume after generating architectures
-        if let SearchStrategyState::MultiObjective(ref mut mo_state) =
-            &mut self.search_strategy.state
-        {
-            self.update_pareto_front(mo_state);
+        if let SearchStrategyState::MultiObjective(ref mo_state) = &self.search_strategy.state {
+            // Clone the state to avoid borrow checker issues
+            let mut cloned_state = (*mo_state).clone();
+            self.update_pareto_front(&mut cloned_state);
+            // Copy back the updated state
+            if let SearchStrategyState::MultiObjective(ref mut mo_state) =
+                &mut self.search_strategy.state
+            {
+                *mo_state = cloned_state;
+            }
         }
 
         Ok(new_architectures)

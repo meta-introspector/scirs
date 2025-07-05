@@ -141,7 +141,7 @@ pub struct ConvergenceInfo {
     pub convergence_rate: f64,
 }
 
-/// Configuration for advanced-advanced denoising
+/// Configuration for advanced denoising
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AdvancedAdvancedDenoisingConfig {
     /// Primary denoising method
@@ -365,7 +365,7 @@ pub fn advanced_advanced_denoise(
     // Memory management setup
     let memory_manager = MemoryManager::new(&config.memory_config, noisy_signal.len());
 
-    // Apply advanced-advanced denoising
+    // Apply advanced denoising
     let denoising_result = match config.method {
         AdvancedAdvancedMethod::AdaptiveNeuralNet => {
             adaptive_neural_net_denoise(noisy_signal, &noise_analysis, &simd_optimizer, config)?

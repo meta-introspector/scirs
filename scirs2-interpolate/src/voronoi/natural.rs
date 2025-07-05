@@ -88,8 +88,7 @@ impl<
 
         if dim != 2 && dim != 3 {
             return Err(InterpolateError::UnsupportedOperation(format!(
-                "Natural Neighbor interpolation for {}-dimensional data not yet implemented",
-                dim
+                "Natural Neighbor interpolation for {dim}-dimensional data not yet implemented"
             )));
         }
 

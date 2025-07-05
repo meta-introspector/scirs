@@ -199,8 +199,8 @@ where
 
 impl<A, O, D> Optimizer<A, D> for Lookahead<A, O, D>
 where
-    A: Float + ScalarOperand + Debug,
-    O: Optimizer<A, D> + Clone,
+    A: Float + ScalarOperand + Debug + Send + Sync,
+    O: Optimizer<A, D> + Clone + Send + Sync,
     D: Dimension,
 {
     fn step(&mut self, params: &Array<A, D>, gradients: &Array<A, D>) -> Result<Array<A, D>> {

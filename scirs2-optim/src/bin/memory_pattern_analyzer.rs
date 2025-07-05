@@ -859,14 +859,14 @@ fn generate_markdown_report(result: &PatternAnalysisResult) -> String {
             .risk_assessment
             .risk_factors
             .iter()
-            .map(|f| format!("- {}", f))
+            .map(|f| format!("- {f}"))
             .collect::<Vec<_>>()
             .join("\n"),
         result
             .risk_assessment
             .mitigation_strategies
             .iter()
-            .map(|s| format!("- {}", s))
+            .map(|s| format!("- {s}"))
             .collect::<Vec<_>>()
             .join("\n")
     )

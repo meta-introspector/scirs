@@ -13,7 +13,7 @@ use ndarray::{s, Array2, ArrayView2};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_shape};
+use scirs2_core::validation::check_finite;
 // use std::f64::consts::PI;
 
 /// Advanced 2D wavelet denoising configuration

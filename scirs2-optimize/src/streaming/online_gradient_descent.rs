@@ -1,4 +1,4 @@
-//! Advanced-Advanced Online Gradient Descent with Distributed Consensus
+//! Advanced Online Gradient Descent with Distributed Consensus
 //!
 //! This module implements cutting-edge online gradient descent algorithms with:
 //! - Byzantine fault-tolerant consensus protocols
@@ -25,7 +25,7 @@ use std::time::{Duration, Instant};
 
 type Result<T> = std::result::Result<T, OptimizeError>;
 
-/// Advanced-Advanced Distributed Consensus Node
+/// Advanced Distributed Consensus Node
 #[derive(Debug, Clone)]
 pub struct DistributedConsensusNode {
     /// Unique node identifier
@@ -352,7 +352,7 @@ pub struct ByzantineEvidence {
     pub reputation_score: f64,
 }
 
-/// Advanced-Advanced Distributed Online Gradient Descent
+/// Advanced Distributed Online Gradient Descent
 #[derive(Debug, Clone)]
 pub struct AdvancedAdvancedDistributedOnlineGD<T: StreamingObjective> {
     /// Local consensus node
@@ -549,7 +549,7 @@ impl NetworkSynchronizationState {
 }
 
 impl<T: StreamingObjective + Clone> AdvancedAdvancedDistributedOnlineGD<T> {
-    /// Create new advanced-advanced distributed online gradient descent
+    /// Create new advanced distributed online gradient descent
     pub fn new(
         node_id: usize,
         initial_parameters: Array1<f64>,
@@ -962,7 +962,7 @@ pub fn online_logistic_regression(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::streaming::{LinearRegressionObjective, StreamingDataPoint};
+    use crate::streaming::StreamingDataPoint;
 
     #[test]
     fn test_distributed_optimizer_creation() {

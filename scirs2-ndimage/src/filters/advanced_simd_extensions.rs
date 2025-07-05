@@ -291,17 +291,17 @@ where
 {
     match wavelet_type {
         WaveletType::Haar => {
-            let sqrt2_inv = safe_f64_to_float(1.0 / std::f64::consts::SQRT_2)?;
+            let sqrt2_inv = safe_f64_to_float::<T>(1.0 / std::f64::consts::SQRT_2)?;
             let low_pass = vec![sqrt2_inv, sqrt2_inv];
             let high_pass = vec![sqrt2_inv, -sqrt2_inv];
             Ok((low_pass, high_pass))
         }
         WaveletType::Daubechies4 => {
             // Daubechies-4 coefficients
-            let c0 = safe_f64_to_float(0.6830127)?;
-            let c1 = safe_f64_to_float(1.1830127)?;
-            let c2 = safe_f64_to_float(0.3169873)?;
-            let c3 = safe_f64_to_float(-0.1830127)?;
+            let c0 = safe_f64_to_float::<T>(0.6830127)?;
+            let c1 = safe_f64_to_float::<T>(1.1830127)?;
+            let c2 = safe_f64_to_float::<T>(0.3169873)?;
+            let c3 = safe_f64_to_float::<T>(-0.1830127)?;
 
             let low_pass = vec![c0, c1, c2, c3];
             let high_pass = vec![c3, -c2, c1, -c0];
@@ -309,14 +309,14 @@ where
         }
         WaveletType::Biorthogonal => {
             // Biorthogonal 2.2 coefficients (analysis filters)
-            let sqrt2_inv = safe_f64_to_float(1.0 / std::f64::consts::SQRT_2)?;
-            let half = safe_f64_to_float(0.5)?;
-            let quarter = safe_f64_to_float(0.25)?;
+            let sqrt2_inv = safe_f64_to_float::<T>(1.0 / std::f64::consts::SQRT_2)?;
+            let half = safe_f64_to_float::<T>(0.5)?;
+            let quarter = safe_f64_to_float::<T>(0.25)?;
 
             let low_pass = vec![
                 -quarter * sqrt2_inv,
                 half * sqrt2_inv,
-                safe_f64_to_float(1.5)? * sqrt2_inv,
+                safe_f64_to_float::<T>(1.5)? * sqrt2_inv,
                 half * sqrt2_inv,
                 -quarter * sqrt2_inv,
             ];
@@ -521,15 +521,16 @@ where
     let mut kernel = Vec::with_capacity(size);
     let radius = (size / 2) as isize;
     let sigma_sq = sigma * sigma;
-    let two_sigma_sq = safe_f64_to_float(2.0)? * sigma_sq;
+    let two_sigma_sq = safe_f64_to_float::<T>(2.0)? * sigma_sq;
     let norm_factor =
-        (safe_f64_to_float(2.0)? * safe_f64_to_float(std::f64::consts::PI)? * sigma_sq).sqrt();
+        (safe_f64_to_float::<T>(2.0)? * safe_f64_to_float::<T>(std::f64::consts::PI)? * sigma_sq)
+            .sqrt();
 
     let mut sum = T::zero();
 
     for i in 0..size {
         let x = (i as isize - radius) as f64;
-        let x_t = safe_f64_to_float(x)?;
+        let x_t = safe_f64_to_float::<T>(x)?;
         let exp_arg = -(x_t * x_t) / two_sigma_sq;
         let value = exp_arg.exp() / norm_factor;
         kernel.push(value);
@@ -607,7 +608,7 @@ where
                     for (kx, &kernel_val) in kernel_row.iter().enumerate() {
                         let iy = y + ky - 1;
                         let ix = x + kx - 1;
-                        let kernel_val_t = safe_f64_to_float(kernel_val)?;
+                        let kernel_val_t = safe_f64_to_float::<T>(kernel_val)?;
                         sum = sum + input[[iy, ix]] * kernel_val_t;
                     }
                 }
@@ -737,7 +738,7 @@ where
             if mag >= high_thresh {
                 output[[y, x]] = T::one();
             } else if mag >= low_thresh {
-                output[[y, x]] = safe_f64_to_float(0.5)?; // Weak edge
+                output[[y, x]] = safe_f64_to_float::<T>(0.5)?; // Weak edge
             }
         }
     }

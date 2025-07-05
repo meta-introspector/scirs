@@ -27,7 +27,7 @@ pub struct AdvancedMultivariateAnalysis<F> {
     _phantom: PhantomData<F>,
 }
 
-/// Configuration for advanced-advanced multivariate analysis
+/// Configuration for advanced multivariate analysis
 #[derive(Debug, Clone)]
 pub struct AdvancedMultivariateConfig<F> {
     /// Dimensionality reduction methods to use
@@ -549,7 +549,7 @@ where
         + std::fmt::Display
         + ndarray::ScalarOperand,
 {
-    /// Create new advanced-advanced multivariate analysis
+    /// Create new advanced multivariate analysis
     pub fn new(config: AdvancedMultivariateConfig<F>) -> Self {
         Self {
             config,
@@ -631,15 +631,15 @@ where
                 ..
             } => self.advanced_pca(data, *algorithm, *n_components),
             DimensionalityReductionMethod::ICA {
-                algorithm,
+                _algorithm,
                 n_components,
-                max_iter,
+                _max_iter,
                 tolerance,
             } => self.independent_component_analysis(
                 data,
-                *algorithm,
+                *_algorithm,
                 *n_components,
-                *max_iter,
+                *_max_iter,
                 *tolerance,
             ),
             DimensionalityReductionMethod::TSNE {
@@ -664,7 +664,7 @@ where
     fn advanced_pca(
         &self,
         data: &ArrayView2<F>,
-        variant: PCAVariant,
+        _variant: PCAVariant,
         n_components: usize,
     ) -> StatsResult<MultivariateModel<F>> {
         let (n_samples, n_features) = data.dim();

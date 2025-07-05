@@ -240,7 +240,7 @@ where
             for (i, &count) in histogram.iter().enumerate() {
                 let bar_length = (count as f64 / max_count as f64 * 50.0) as usize;
                 let bin_center =
-                    min_val + (safe_usize_to_float(i)? + safe_f64_to_float(0.5)?) * bin_size;
+                    min_val + (safe_usize_to_float(i)? + safe_f64_to_float::<T>(0.5)?) * bin_size;
 
                 writeln!(
                     &mut plot,
@@ -263,7 +263,7 @@ where
             for (i, &count) in histogram.iter().enumerate() {
                 let bar_length = (count as f64 / max_count as f64 * 50.0) as usize;
                 let bin_center =
-                    min_val + (safe_usize_to_float(i)? + safe_f64_to_float(0.5)?) * bin_size;
+                    min_val + (safe_usize_to_float(i)? + safe_f64_to_float::<T>(0.5)?) * bin_size;
 
                 writeln!(
                     &mut plot,
@@ -329,7 +329,7 @@ where
 
                 for (i, (&x, &y)) in x_data.iter().zip(y_data.iter()).enumerate() {
                     let px = ((x - x_min) / x_range * safe_usize_to_float(config.width - 100)?
-                        + safe_f64_to_float(50.0)?)
+                        + safe_f64_to_float::<T>(50.0)?)
                     .to_f64()
                     .unwrap_or(0.0);
                     let py = (config.height as f64 - 50.0)
@@ -1318,7 +1318,7 @@ where
     let mut levels = Vec::new();
     for i in 0..num_levels {
         let t = i as f64 / (num_levels - 1) as f64;
-        let level = min_val + (max_val - min_val) * safe_f64_to_float(t)?;
+        let level = min_val + (max_val - min_val) * safe_f64_to_float::<T>(t)?;
         levels.push(level);
     }
 
@@ -1346,7 +1346,7 @@ where
                 for i in 0..height - 1 {
                     for j in 0..width - 1 {
                         let val = data[[i, j]];
-                        let threshold = (max_val - min_val) * safe_f64_to_float(0.02)?; // 2% tolerance
+                        let threshold = (max_val - min_val) * safe_f64_to_float::<T>(0.02)?; // 2% tolerance
 
                         if (val - level).abs() < threshold {
                             let x = (j as f64 / width as f64) * config.width as f64;

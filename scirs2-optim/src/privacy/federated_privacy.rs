@@ -1605,6 +1605,7 @@ pub struct AdaptiveBudgetManager<T: Float> {
     utility_estimator: UtilityEstimator,
     fairness_monitor: FairnessMonitor,
     contextual_analyzer: ContextualAnalyzer,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 /// Communication efficiency optimizer

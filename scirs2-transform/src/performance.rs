@@ -1386,7 +1386,7 @@ mod tests {
 
         assert_eq!(transformed.shape(), &[20, 3]);
         assert!(pca.components().is_some());
-        assert!(pca.explained_variance_ratio().is_some());
+        assert!(pca.explained_variance_ratio().is_ok());
         assert!(pca.mean().is_some());
 
         // Test that explained variance ratios sum to less than or equal to 1
@@ -3113,6 +3113,16 @@ impl AdvancedMemoryPool {
         self.return_matrix(array);
     }
 
+    /// Get temporary array from pool (alias for get_vector)
+    pub fn get_temp_array(&mut self, size: usize) -> Array1<f64> {
+        self.get_vector(size)
+    }
+
+    /// Return temporary array to pool (alias for return_vector)
+    pub fn return_temp_array(&mut self, temp: Array1<f64>) {
+        self.return_vector(temp);
+    }
+
     /// Optimize pool performance
     pub fn optimize(&mut self) {
         self.adaptive_resize();
@@ -3154,9 +3164,24 @@ impl AdvancedPCA {
         }
     }
 
+    /// Fit the PCA model
+    pub fn fit(&mut self, x: &ArrayView2<f64>) -> Result<()> {
+        self.enhanced_pca.fit(x)
+    }
+
     /// Fit the PCA model and transform the data
     pub fn fit_transform(&mut self, x: &ArrayView2<f64>) -> Result<Array2<f64>> {
         self.enhanced_pca.fit_transform(x)
+    }
+
+    /// Get the fitted components
+    pub fn components(&self) -> Option<&Array2<f64>> {
+        self.enhanced_pca.components()
+    }
+
+    /// Get the fitted mean
+    pub fn mean(&self) -> Option<&Array1<f64>> {
+        self.enhanced_pca.mean.as_ref()
     }
 
     /// Get the explained variance ratio

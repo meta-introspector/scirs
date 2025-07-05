@@ -1183,7 +1183,7 @@ impl BayesianParameterOptimizer {
                     // Add small random perturbation for exploration
                     use rand::Rng;
                     let mut rng = rand::rng();
-                    let perturbation_factor = 1.0 + (rng.gen_range(-0.1..=0.1));
+                    let perturbation_factor = 1.0 + (rng.random_range(-0.1..=0.1));
 
                     let perturbed_value = match value {
                         ParameterValue::Float(f) => {

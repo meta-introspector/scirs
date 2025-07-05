@@ -370,10 +370,12 @@ impl QuantizedMatrix {
                             byte & 0x0F
                         }
                     }
-                    _ => panic!("Cannot convert floating-point quantization to i8"),
+                    _ => unreachable!(
+                        "Invalid quantization type for Int8 storage: expected Int8, Int4, or UInt4"
+                    ),
                 }
             }
-            _ => panic!("Cannot get i8 value from floating-point quantized matrix"),
+            _ => unreachable!("Cannot get i8 value from floating-point quantized matrix"),
         }
     }
 
@@ -384,7 +386,9 @@ impl QuantizedMatrix {
                 QuantizedDataType::Int8 => arr[[row, col]] as f32,
                 QuantizedDataType::Int4 => self.get_i8(row, col) as f32,
                 QuantizedDataType::UInt4 => self.get_i8(row, col) as f32,
-                _ => panic!("Invalid data type for Int8 storage"),
+                _ => unreachable!(
+                    "Invalid data type for Int8 storage: expected Int8, Int4, or UInt4"
+                ),
             },
             QuantizedData2D::Float16(arr) => arr[[row, col]].to_f32(),
             QuantizedData2D::BFloat16(arr) => arr[[row, col]].to_f32(),
@@ -478,10 +482,12 @@ impl QuantizedVector {
                             byte & 0x0F
                         }
                     }
-                    _ => panic!("Cannot convert floating-point quantization to i8"),
+                    _ => unreachable!(
+                        "Invalid quantization type for Int8 storage: expected Int8, Int4, or UInt4"
+                    ),
                 }
             }
-            _ => panic!("Cannot get i8 value from floating-point quantized vector"),
+            _ => unreachable!("Cannot get i8 value from floating-point quantized vector"),
         }
     }
 
@@ -492,7 +498,9 @@ impl QuantizedVector {
                 QuantizedDataType::Int8 => arr[idx] as f32,
                 QuantizedDataType::Int4 => self.get_i8(idx) as f32,
                 QuantizedDataType::UInt4 => self.get_i8(idx) as f32,
-                _ => panic!("Invalid data type for Int8 storage"),
+                _ => unreachable!(
+                    "Invalid data type for Int8 storage: expected Int8, Int4, or UInt4"
+                ),
             },
             QuantizedData1D::Float16(arr) => arr[idx].to_f32(),
             QuantizedData1D::BFloat16(arr) => arr[idx].to_f32(),
@@ -806,13 +814,11 @@ where
     f32: AsPrimitive<F>,
 {
     // Verify method is per-channel
-    if method != QuantizationMethod::PerChannelSymmetric
-        && method != QuantizationMethod::PerChannelAffine
-    {
-        panic!(
-            "quantize_matrix_per_channel requires PerChannelSymmetric or PerChannelAffine method"
-        );
-    }
+    assert!(
+        method == QuantizationMethod::PerChannelSymmetric
+            || method == QuantizationMethod::PerChannelAffine,
+        "quantize_matrix_per_channel requires PerChannelSymmetric or PerChannelAffine method, got {method:?}"
+    );
 
     let shape = (matrix.nrows(), matrix.ncols());
     let num_channels = shape.1;

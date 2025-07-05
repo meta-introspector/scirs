@@ -34,7 +34,7 @@ impl BanditOptimizer {
     pub fn select_arm(&self) -> usize {
         let total_counts: usize = self.arm_counts.sum();
         if total_counts == 0 {
-            return rand::rng().gen::<usize>() % self.num_arms;
+            return rand::rng().random_range(0..self.num_arms);
         }
 
         let mut best_arm = 0;
@@ -94,7 +94,7 @@ where
 
         // Simple gradient-like update
         for i in 0..params.len() {
-            params[i] += (rand::rng().gen::<f64>() - 0.5) * step_size;
+            params[i] += (rand::rng().random::<f64>() - 0.5) * step_size;
         }
 
         let new_obj = objective(&params.view());
@@ -113,6 +113,14 @@ where
         success: true,
         nit: num_nit,
         message: "Bandit optimization completed".to_string(),
+        jac: None,
+        hess: None,
+        constr: None,
+        nfev: num_nit * 3, // Each iteration evaluates multiple arms
+        njev: 0,
+        nhev: 0,
+        maxcv: 0,
+        status: 0,
     })
 }
 

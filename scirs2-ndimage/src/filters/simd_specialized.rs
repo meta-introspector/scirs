@@ -64,7 +64,7 @@ where
         Some(size) => size,
         None => {
             // Automatically determine window size based on spatial sigma
-            let three = safe_f64_to_float(3.0)?;
+            let three = safe_f64_to_float::<T>(3.0)?;
             let radius = safe_float_to_usize(spatial_sigma * three)?;
             2 * radius + 1
         }
@@ -120,7 +120,7 @@ where
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
 {
     let (height, width) = input.dim();
-    let range_factor = safe_f64_to_float(-0.5)? / (range_sigma * range_sigma);
+    let range_factor = safe_f64_to_float::<T>(-0.5)? / (range_sigma * range_sigma);
 
     // Process pixels in SIMD chunks
     let simd_width = T::simd_width();
@@ -234,7 +234,7 @@ where
     T: Float + FromPrimitive,
 {
     let half_window = window_size / 2;
-    let factor = safe_f64_to_float(-0.5)? / (sigma * sigma);
+    let factor = safe_f64_to_float::<T>(-0.5)? / (sigma * sigma);
     let mut weights = Array::zeros((window_size, window_size));
 
     for dy in 0..window_size {
@@ -892,7 +892,7 @@ where
     let window_size = match window_size {
         Some(size) => size,
         None => {
-            let three = safe_f64_to_float(3.0)?;
+            let three = safe_f64_to_float::<T>(3.0)?;
             let radius = safe_float_to_usize(spatial_sigma * three)?;
             2 * radius + 1
         }
@@ -951,7 +951,7 @@ where
     T: Float + FromPrimitive + Debug + Clone + SimdUnifiedOps,
 {
     let (height, width) = input.dim();
-    let range_factor = safe_f64_to_float(-0.5)? / (range_sigma * range_sigma);
+    let range_factor = safe_f64_to_float::<T>(-0.5)? / (range_sigma * range_sigma);
     let simd_width = T::simd_width();
 
     for x in 0..width {

@@ -755,9 +755,9 @@ fn simd_dwt_convolution(
     signal: &Array1<f64>,
     h0: &Array1<f64>,
     h1: &Array1<f64>,
-    g0: &Array1<f64>,
-    g1: &Array1<f64>,
-    caps: &PlatformCapabilities,
+    _g0: &Array1<f64>,
+    _g1: &Array1<f64>,
+    _caps: &PlatformCapabilities,
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     // Low-pass filtering and downsampling
     let low_pass = simd_convolve_same(signal, h0)?;
@@ -776,7 +776,7 @@ fn simd_resample_polyphase(
     signal: &Array1<f64>,
     ratio: f64,
     output_len: usize,
-    caps: &PlatformCapabilities,
+    _caps: &PlatformCapabilities,
 ) -> SignalResult<Array1<f64>> {
     // Polyphase filter implementation with SIMD
     let mut output = Array1::<f64>::zeros(output_len);
@@ -813,7 +813,7 @@ fn simd_resample_interpolation(
     signal: &Array1<f64>,
     ratio: f64,
     output_len: usize,
-    caps: &PlatformCapabilities,
+    _caps: &PlatformCapabilities,
 ) -> SignalResult<Array1<f64>> {
     let mut output = Array1::<f64>::zeros(output_len);
 
@@ -950,9 +950,9 @@ fn bit_reverse_simd(data: &mut Array1<Complex64>) -> SignalResult<()> {
 
 #[allow(dead_code)]
 fn perform_radix4_butterfly_avx2(
-    data: &mut Array1<Complex64>,
-    start: usize,
-    step: usize,
+    _data: &mut Array1<Complex64>,
+    _start: usize,
+    _step: usize,
 ) -> SignalResult<()> {
     // Simplified radix-4 butterfly - would use actual AVX2 intrinsics
     Ok(())
@@ -1032,7 +1032,10 @@ fn prime_factorization(mut n: usize) -> Vec<usize> {
 }
 
 #[allow(dead_code)]
-fn bluestein_fft(input: &Array1<Complex64>, padded_size: usize) -> SignalResult<Array1<Complex64>> {
+fn bluestein_fft(
+    input: &Array1<Complex64>,
+    _padded_size: usize,
+) -> SignalResult<Array1<Complex64>> {
     // Simplified Bluestein algorithm - would implement full algorithm
     Ok(input.clone())
 }

@@ -779,7 +779,9 @@ pub fn create_gpu_backend() -> NdimageResult<Box<dyn GpuBackend>> {
         }
     }
 
-    Err(NdimageError::GpuNotAvailable)
+    Err(NdimageError::GpuNotAvailable(
+        "GPU backend not available".to_string(),
+    ))
 }
 
 /// Common GPU backend trait

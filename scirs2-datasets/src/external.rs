@@ -80,9 +80,9 @@ impl ExternalClient {
                 builder = builder.danger_accept_invalid_certs(true);
             }
 
-            builder.build().map_err(|e| {
-                DatasetsError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e))
-            })?
+            builder
+                .build()
+                .map_err(|e| DatasetsError::IoError(std::io::Error::other(e)))?
         };
 
         Ok(Self {
@@ -118,9 +118,7 @@ impl ExternalClient {
 
         use futures_util::StreamExt;
         while let Some(chunk) = stream.next().await {
-            let chunk = chunk.map_err(|e| {
-                DatasetsError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e))
-            })?;
+            let chunk = chunk.map_err(|e| DatasetsError::IoError(std::io::Error::other(e)))?;
             downloaded += chunk.len() as u64;
             buffer.extend_from_slice(&chunk);
 

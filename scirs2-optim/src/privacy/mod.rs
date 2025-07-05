@@ -169,6 +169,9 @@ where
 
     /// Current step count
     step_count: usize,
+
+    /// Phantom data for unused type parameters
+    _phantom: std::marker::PhantomData<(A, D)>,
 }
 
 /// Adaptive clipping state
@@ -214,7 +217,9 @@ where
         + std::ops::AddAssign
         + std::ops::SubAssign
         + Send
-        + Sync,
+        + Sync
+        + ndarray::ScalarOperand
+        + std::fmt::Debug,
     D: Dimension,
     O: Optimizer<A, D>,
 {
@@ -249,6 +254,7 @@ where
             gradient_history: VecDeque::with_capacity(1000),
             audit_trail: Vec::new(),
             step_count: 0,
+            _phantom: std::marker::PhantomData,
         })
     }
 
@@ -532,8 +538,8 @@ where
 
         PrivacyValidation {
             is_valid,
-            budget,
-            clipping_stats,
+            budget: budget.clone(),
+            clipping_stats: clipping_stats.clone(),
             warnings,
             recommendations: self.generate_recommendations(&budget, &clipping_stats),
         }

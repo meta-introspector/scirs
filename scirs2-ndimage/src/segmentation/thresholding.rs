@@ -267,9 +267,9 @@ where
                         let dist = safe_usize_to_float(dist_sq as usize)?.sqrt();
 
                         // Gaussian weight
-                        let sigma = safe_usize_to_float(radius)? / safe_f64_to_float(2.0)?;
+                        let sigma = safe_usize_to_float(radius)? / safe_f64_to_float::<T>(2.0)?;
                         let weight =
-                            (-dist * dist / (safe_f64_to_float(2.0)? * sigma * sigma)).exp();
+                            (-dist * dist / (safe_f64_to_float::<T>(2.0)? * sigma * sigma)).exp();
 
                         weighted_sum += val * weight;
                         weight_sum += weight;

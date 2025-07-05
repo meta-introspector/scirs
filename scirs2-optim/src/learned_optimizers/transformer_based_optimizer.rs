@@ -12,6 +12,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use serde::{Serialize, Deserialize};
 
+use crate::adaptive_selection::OptimizerType;
 use crate::error::{OptimError, Result};
 use super::{
     LearnedOptimizerConfig, MetaOptimizationStrategy, NeuralOptimizerType,
@@ -2502,16 +2503,6 @@ pub struct TransformerOptConfig<T: Float> {
     pub warmup_steps: usize,
 }
 
-/// Optimizer types
-#[derive(Debug, Clone, Copy)]
-pub enum OptimizerType {
-    Adam,
-    AdamW,
-    SGD,
-    RMSprop,
-    Adagrad,
-    Lion,
-}
 
 /// Learning rate schedule
 #[derive(Debug, Clone)]

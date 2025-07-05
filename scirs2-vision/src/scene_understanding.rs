@@ -1,6 +1,6 @@
 //! Advanced Scene Understanding Framework
 //!
-//! This module provides advanced-advanced scene understanding capabilities including:
+//! This module provides advanced scene understanding capabilities including:
 //! - Semantic scene segmentation and classification
 //! - Object relationship reasoning
 //! - Spatial layout understanding
@@ -349,7 +349,7 @@ impl Default for SceneUnderstandingEngine {
 }
 
 impl SceneUnderstandingEngine {
-    /// Create a new advanced-advanced scene understanding engine
+    /// Create a new advanced scene understanding engine
     pub fn new() -> Self {
         Self {
             segmentation_models: Vec::new(),

@@ -3,14 +3,25 @@
 //! This example demonstrates how to deploy and manage time series analysis
 //! workloads across major cloud platforms with automatic scaling and monitoring.
 
+#[cfg(feature = "wasm")]
 use scirs2_series::cloud_deployment::{
     CloudDeploymentOrchestrator, CloudPlatform, CloudResourceConfig, CloudTimeSeriesJob,
     DeploymentConfig, JobPriority, ResourceRequirements, TimeSeriesJobType,
 };
+
+#[cfg(feature = "wasm")]
 use std::collections::HashMap;
+
+#[cfg(feature = "wasm")]
 use std::time::Duration;
 
-#[allow(dead_code)]
+#[cfg(not(feature = "wasm"))]
+fn main() {
+    println!("This example requires the 'wasm' feature to be enabled.");
+    println!("Run with: cargo run --example cloud_deployment_demo --features wasm");
+}
+
+#[cfg(feature = "wasm")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 SciRS2 Cloud Deployment Demo");
     println!("================================");
@@ -32,10 +43,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Demonstrate development environment deployment
+#[cfg(feature = "wasm")]
 #[allow(dead_code)]
 fn demo_development_deployment() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🧪 Demo 1: Development Environment Deployment");
-    println!("=" * 50);
+    println!("{}", "=".repeat(50));
 
     // Create development configuration
     let config = DeploymentConfig::development();
@@ -68,7 +80,7 @@ fn demo_development_deployment() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demo_production_deployment() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n🏭 Demo 2: Production Environment Deployment");
-    println!("=" * 50);
+    println!("{}", "=".repeat(50));
 
     // Create production configuration
     let config = DeploymentConfig::production();
@@ -115,7 +127,7 @@ fn demo_production_deployment() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demo_multi_cloud_deployment() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n☁️ Demo 3: Multi-Cloud Deployment");
-    println!("=" * 50);
+    println!("{}", "=".repeat(50));
 
     let platforms = vec![
         (CloudPlatform::AWS, "us-west-2", "c5.large"),
@@ -151,7 +163,7 @@ fn demo_multi_cloud_deployment() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demo_auto_scaling() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📊 Demo 4: Auto-Scaling Demonstration");
-    println!("=" * 50);
+    println!("{}", "=".repeat(50));
 
     // Create configuration with aggressive scaling
     let mut config = DeploymentConfig::development();

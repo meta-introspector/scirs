@@ -247,7 +247,7 @@ impl ErrorMonitor {
         }
 
         // Find most frequent errors
-        let mut frequent_errors: Vec<_> = error_distribution.iter().collect();
+        let mut frequent_errors: Vec<_> = error_distribution.clone().into_iter().collect();
         frequent_errors.sort_by(|a, b| b.1.cmp(a.1));
         let top_errors: Vec<_> = frequent_errors.into_iter().take(5).collect();
 
@@ -265,7 +265,7 @@ impl ErrorMonitor {
             recent_error_rate,
             uptime,
             error_distribution,
-            top_errors: top_errors.into_iter().map(|(k, v)| (*k, *v)).collect(),
+            top_errors: top_errors.into_iter().map(|(k, v)| (k, v)).collect(),
             active_patterns: self.detect_active_patterns(),
         }
     }

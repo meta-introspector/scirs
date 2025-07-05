@@ -15,7 +15,7 @@ use super::{LearnedOptimizerMetrics, NeuralOptimizerMetrics, PerformanceMetrics}
 use crate::error::Result;
 
 /// Advanced Performance Monitor
-pub struct advancedPerformanceMonitor<T: Float> {
+pub struct AdvancedPerformanceMonitor<T: Float> {
     /// Real-time metrics collector
     metrics_collector: RealTimeMetricsCollector<T>,
 
@@ -77,10 +77,10 @@ pub struct PerformanceMonitorConfig<T: Float> {
 #[derive(Debug)]
 pub struct RealTimeMetricsCollector<T: Float> {
     /// Current metrics
-    current_metrics: advancedMetrics<T>,
+    current_metrics: AdvancedMetrics<T>,
 
     /// Metrics buffer
-    metrics_buffer: VecDeque<advancedMetrics<T>>,
+    metrics_buffer: VecDeque<AdvancedMetrics<T>>,
 
     /// Collection start time
     start_time: Instant,
@@ -93,7 +93,7 @@ pub struct RealTimeMetricsCollector<T: Float> {
 
 /// Comprehensive Advanced metrics
 #[derive(Debug, Clone)]
-pub struct advancedMetrics<T: Float> {
+pub struct AdvancedMetrics<T: Float> {
     /// Timestamp
     pub timestamp: SystemTime,
 
@@ -274,7 +274,7 @@ pub trait PredictionModel<T: Float> {
 /// Feature extractor interface
 pub trait FeatureExtractor<T: Float> {
     /// Extract features from metrics
-    fn extract_features(&self, metrics: &advancedMetrics<T>) -> Result<Array1<T>>;
+    fn extract_features(&self, metrics: &AdvancedMetrics<T>) -> Result<Array1<T>>;
 
     /// Get feature names
     fn feature_names(&self) -> Vec<String>;
@@ -319,10 +319,10 @@ pub struct AnomalyDetectionEngine<T: Float> {
 /// Anomaly detector interface
 pub trait AnomalyDetector<T: Float> {
     /// Detect anomalies in metrics
-    fn detect_anomaly(&mut self, metrics: &advancedMetrics<T>) -> Result<Option<AnomalyEvent<T>>>;
+    fn detect_anomaly(&mut self, metrics: &AdvancedMetrics<T>) -> Result<Option<AnomalyEvent<T>>>;
 
     /// Update detector with normal data
-    fn update_baseline(&mut self, metrics: &advancedMetrics<T>) -> Result<()>;
+    fn update_baseline(&mut self, metrics: &AdvancedMetrics<T>) -> Result<()>;
 
     /// Get detector sensitivity
     fn sensitivity(&self) -> T;
@@ -401,7 +401,7 @@ pub struct PerformanceTrendAnalyzer<T: Float> {
 /// Trend analyzer interface
 pub trait TrendAnalyzer<T: Float> {
     /// Analyze performance trends
-    fn analyze_trend(&self, metrics_history: &[advancedMetrics<T>]) -> Result<TrendAnalysis<T>>;
+    fn analyze_trend(&self, metrics_history: &[AdvancedMetrics<T>]) -> Result<TrendAnalysis<T>>;
 
     /// Predict future trends
     fn predict_trend(&self, current_trend: &TrendAnalysis<T>) -> Result<TrendPrediction<T>>;
@@ -464,7 +464,7 @@ pub struct Alert<T: Float> {
     pub timestamp: SystemTime,
     pub severity: AlertSeverity,
     pub message: String,
-    pub metrics_snapshot: advancedMetrics<T>,
+    pub metrics_snapshot: AdvancedMetrics<T>,
     pub suggested_actions: Vec<String>,
     pub acknowledged: bool}
 
@@ -485,7 +485,7 @@ pub trait AlertChannel {
     fn channel_name(&self) -> &str;
 }
 
-impl<T: Float + Default + Clone + std::fmt::Debug + 'static> advancedPerformanceMonitor<T> {
+impl<T: Float + Default + Clone + std::fmt::Debug + 'static> AdvancedPerformanceMonitor<T> {
     /// Create new performance monitor
     pub fn new(config: PerformanceMonitorConfig<T>) -> Result<Self> {
         let metrics_collector = RealTimeMetricsCollector::new(&config)?;
@@ -518,7 +518,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> advancedPerformance
     }
 
     /// Collect real-time metrics
-    pub fn collect_metrics(&mut self, coordinator: &AdvancedCoordinator<T>) -> Result<advancedMetrics<T>> {
+    pub fn collect_metrics(&mut self, coordinator: &AdvancedCoordinator<T>) -> Result<AdvancedMetrics<T>> {
         let metrics = self.extract_comprehensive_metrics(coordinator)?;
         
         // Store in collector
@@ -558,7 +558,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> advancedPerformance
     }
 
     /// Extract comprehensive metrics from coordinator
-    fn extract_comprehensive_metrics(&self, coordinator: &AdvancedCoordinator<T>) -> Result<advancedMetrics<T>> {
+    fn extract_comprehensive_metrics(&self, coordinator: &AdvancedCoordinator<T>) -> Result<AdvancedMetrics<T>> {
         let now = SystemTime::now();
         
         // Extract optimizer performance metrics
@@ -579,7 +579,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> advancedPerformance
         // Extract system health metrics
         let system_health = self.extract_system_health_metrics()?;
         
-        Ok(advancedMetrics {
+        Ok(AdvancedMetrics {
             timestamp: now,
             optimizer_performance,
             learning_progress,
@@ -678,7 +678,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> advancedPerformance
     }
 
     /// Detect anomalies in metrics
-    fn detect_anomalies(&mut self, metrics: &[advancedMetrics<T>]) -> Result<Vec<AnomalyEvent<T>>> {
+    fn detect_anomalies(&mut self, metrics: &[AdvancedMetrics<T>]) -> Result<Vec<AnomalyEvent<T>>> {
         let mut anomalies = Vec::new();
         
         for metric in metrics {
@@ -691,22 +691,22 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> advancedPerformance
     }
 
     /// Analyze performance trends
-    fn analyze_trends(&mut self, metrics: &[advancedMetrics<T>]) -> Result<Vec<TrendAnalysis<T>>> {
+    fn analyze_trends(&mut self, metrics: &[AdvancedMetrics<T>]) -> Result<Vec<TrendAnalysis<T>>> {
         self.trend_analyzer.analyze_trends(metrics)
     }
 
     /// Predict future performance
-    fn predict_performance(&mut self, metrics: &[advancedMetrics<T>]) -> Result<Vec<PredictionResult<T>>> {
+    fn predict_performance(&mut self, metrics: &[AdvancedMetrics<T>]) -> Result<Vec<PredictionResult<T>>> {
         self.performance_predictor.predict_performance(metrics)
     }
 
     /// Check for alert conditions
-    fn check_alerts(&mut self, metrics: &[advancedMetrics<T>]) -> Result<Vec<Alert<T>>> {
+    fn check_alerts(&mut self, metrics: &[AdvancedMetrics<T>]) -> Result<Vec<Alert<T>>> {
         self.alert_manager.check_alerts(metrics)
     }
 
     /// Calculate overall health score
-    fn calculate_health_score(&self, metrics: &[advancedMetrics<T>]) -> Result<T> {
+    fn calculate_health_score(&self, metrics: &[AdvancedMetrics<T>]) -> Result<T> {
         if metrics.is_empty() {
             return Ok(T::from(0.5).unwrap());
         }
@@ -751,7 +751,7 @@ impl<T: Float + Default + Clone + std::fmt::Debug + 'static> advancedPerformance
     }
 
     /// Generate optimization recommendations
-    fn generate_recommendations(&self, metrics: &[advancedMetrics<T>]) -> Result<Vec<OptimizationRecommendation>> {
+    fn generate_recommendations(&self, metrics: &[AdvancedMetrics<T>]) -> Result<Vec<OptimizationRecommendation>> {
         let mut recommendations = Vec::new();
         
         if let Some(latest) = metrics.last() {
@@ -837,7 +837,7 @@ pub enum RecommendationPriority {
 impl<T: Float + Default + Clone> RealTimeMetricsCollector<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self {
-            current_metrics: advancedMetrics::default(),
+            current_metrics: AdvancedMetrics::default(),
             metrics_buffer: VecDeque::new(),
             start_time: Instant::now(),
             last_collection: Instant::now(),
@@ -850,7 +850,7 @@ impl<T: Float + Default + Clone> RealTimeMetricsCollector<T> {
         Ok(())
     }
 
-    fn add_metrics(&mut self, metrics: &advancedMetrics<T>) -> Result<()> {
+    fn add_metrics(&mut self, metrics: &AdvancedMetrics<T>) -> Result<()> {
         self.current_metrics = metrics.clone();
         self.metrics_buffer.push_back(metrics.clone());
         
@@ -861,7 +861,7 @@ impl<T: Float + Default + Clone> RealTimeMetricsCollector<T> {
         Ok(())
     }
 
-    fn get_recent_metrics(&self, count: usize) -> Vec<advancedMetrics<T>> {
+    fn get_recent_metrics(&self, count: usize) -> Vec<AdvancedMetrics<T>> {
         self.metrics_buffer.iter().rev().take(count).cloned().collect()
     }
 
@@ -873,7 +873,7 @@ impl<T: Float + Default + Clone> RealTimeMetricsCollector<T> {
 // Additional placeholder implementations would go here...
 // Due to length constraints, I'm including the core structure
 
-impl<T: Float + Default> Default for advancedMetrics<T> {
+impl<T: Float + Default> Default for AdvancedMetrics<T> {
     fn default() -> Self {
         Self {
             timestamp: SystemTime::now(),
@@ -937,7 +937,7 @@ impl<T: Float + Send + Sync> MLPerformancePredictor<T> {
         Ok(Self::default())
     }
 
-    fn predict_performance(&mut self, _metrics: &[advancedMetrics<T>]) -> Result<Vec<PredictionResult<T>>> {
+    fn predict_performance(&mut self, _metrics: &[AdvancedMetrics<T>]) -> Result<Vec<PredictionResult<T>>> {
         Ok(Vec::new())
     }
 }
@@ -955,11 +955,11 @@ impl<T: Float + Send + Sync> AnomalyDetectionEngine<T> {
         Ok(Self::default())
     }
 
-    fn detect_anomaly(&mut self, _metrics: &advancedMetrics<T>) -> Result<Option<AnomalyEvent<T>>> {
+    fn detect_anomaly(&mut self, _metrics: &AdvancedMetrics<T>) -> Result<Option<AnomalyEvent<T>>> {
         Ok(None)
     }
 
-    fn update_baseline(&mut self, _metrics: &advancedMetrics<T>) -> Result<()> {
+    fn update_baseline(&mut self, _metrics: &AdvancedMetrics<T>) -> Result<()> {
         Ok(())
     }
 
@@ -981,7 +981,7 @@ impl<T: Float + Send + Sync> ResourceUsageTracker<T> {
         Ok(Self::default())
     }
 
-    fn update(&mut self, _metrics: &advancedMetrics<T>) -> Result<()> {
+    fn update(&mut self, _metrics: &AdvancedMetrics<T>) -> Result<()> {
         Ok(())
     }
 
@@ -1002,7 +1002,7 @@ impl<T: Float + Send + Sync> PerformanceTrendAnalyzer<T> {
         Ok(Self::default())
     }
 
-    fn analyze_trends(&mut self, _metrics: &[advancedMetrics<T>]) -> Result<Vec<TrendAnalysis<T>>> {
+    fn analyze_trends(&mut self, _metrics: &[AdvancedMetrics<T>]) -> Result<Vec<TrendAnalysis<T>>> {
         Ok(Vec::new())
     }
 
@@ -1023,21 +1023,21 @@ impl<T: Float + Send + Sync> AlertManager<T> {
         Ok(Self::default())
     }
 
-    fn check_alerts(&mut self, _metrics: &[advancedMetrics<T>]) -> Result<Vec<Alert<T>>> {
+    fn check_alerts(&mut self, _metrics: &[AdvancedMetrics<T>]) -> Result<Vec<Alert<T>>> {
         Ok(Vec::new())
     }
 }
 
 #[derive(Debug, Default)]
 pub struct PerformanceDataStorage<T: Float> {
-    data: Vec<advancedMetrics<T>>}
+    data: Vec<AdvancedMetrics<T>>}
 
 impl<T: Float + Send + Sync> PerformanceDataStorage<T> {
     fn new(_config: &PerformanceMonitorConfig<T>) -> Result<Self> {
         Ok(Self::default())
     }
 
-    fn store_metrics(&mut self, metrics: &advancedMetrics<T>) -> Result<()> {
+    fn store_metrics(&mut self, metrics: &AdvancedMetrics<T>) -> Result<()> {
         self.data.push(metrics.clone());
         Ok(())
     }
@@ -1132,7 +1132,7 @@ mod tests {
     #[test]
     fn test_performance_monitor_creation() {
         let config = PerformanceMonitorConfig::<f64>::default();
-        let monitor = advancedPerformanceMonitor::new(config);
+        let monitor = AdvancedPerformanceMonitor::new(config);
         assert!(monitor.is_ok());
     }
 
@@ -1141,7 +1141,7 @@ mod tests {
         let config = PerformanceMonitorConfig::<f64>::default();
         let mut collector = RealTimeMetricsCollector::new(&config).unwrap();
         
-        let metrics = advancedMetrics::default();
+        let metrics = AdvancedMetrics::default();
         assert!(collector.add_metrics(&metrics).is_ok());
         
         let recent = collector.get_recent_metrics(1);

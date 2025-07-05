@@ -976,7 +976,8 @@ where
         }
 
         // Solve (J^T * J + λ * I) * delta = -J^T * f
-        let delta = match solve(&jtj, &(-&jtf)) {
+        let neg_jtf = jtf.mapv(|x| -x);
+        let delta = match solve(&jtj, &neg_jtf) {
             Some(d) => d,
             None => {
                 // Increase damping and try again
@@ -984,13 +985,14 @@ where
                 for i in 0..n {
                     jtj[[i, i]] += lambda;
                 }
-                match solve(&jtj, &(-&jtf)) {
+                let neg_jtf2 = jtf.mapv(|x| -x);
+                match solve(&jtj, &neg_jtf2) {
                     Some(d) => d,
                     None => {
                         // If still singular, use steepest descent
                         let step_size =
                             0.1 / (1.0 + jtf.iter().map(|&g| g.powi(2)).sum::<f64>().sqrt());
-                        -&jtf * step_size
+                        jtf.mapv(|x| -x * step_size)
                     }
                 }
             }

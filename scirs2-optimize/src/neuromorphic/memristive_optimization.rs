@@ -90,7 +90,7 @@ impl Memristor {
         let initial_resistance =
             params.r_on + (params.r_off - params.r_on) * (1.0 - params.initial_x);
         let variability_factor = if params.variability > 0.0 {
-            1.0 + (rand::rng().gen::<f64>() - 0.5) * 2.0 * params.variability
+            1.0 + (rand::rng().random::<f64>() - 0.5) * 2.0 * params.variability
         } else {
             1.0
         };
@@ -310,11 +310,11 @@ impl MemristiveCrossbar {
                 let mut memristor = Memristor::new(params.clone(), model);
 
                 // Introduce random stuck-at faults (1% probability)
-                if rand::rng().gen::<f64>() < 0.01 {
+                if rand::rng().random::<f64>() < 0.01 {
                     fault_map[[i, j]] = true;
                     faulty_count += 1;
                     // Set to extreme resistance values for stuck faults
-                    if rand::rng().gen::<bool>() {
+                    if rand::rng().random::<bool>() {
                         memristor.resistance = params.r_off * 10.0; // Stuck high
                     } else {
                         memristor.resistance = params.r_on * 0.1; // Stuck low
@@ -571,7 +571,6 @@ impl MemristiveCrossbar {
 }
 
 /// Advanced memristive optimization algorithms
-
 /// Memristive Gradient Descent Optimizer
 #[derive(Debug, Clone)]
 pub struct MemristiveOptimizer {

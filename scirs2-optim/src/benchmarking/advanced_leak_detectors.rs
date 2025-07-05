@@ -854,7 +854,7 @@ impl RealTimeMemoryMonitor {
         let is_active_flag = Arc::clone(&self.is_active);
 
         thread::spawn(move || {
-            let mut last_sample_time = Instant::now();
+            let mut _last_sample_time = Instant::now();
 
             loop {
                 // Check if monitoring should continue
@@ -879,7 +879,7 @@ impl RealTimeMemoryMonitor {
                     monitor_state.update_metrics(&config);
                 }
 
-                last_sample_time = now;
+                _last_sample_time = now;
             }
         });
 

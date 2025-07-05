@@ -24,6 +24,10 @@
 use ndarray::{Array1, ArrayView1};
 use scirs2_core::parallel_ops::*;
 
+// Conditional imports for parallel operations
+#[cfg(feature = "parallel")]
+use scirs2_core::parallel_ops::{IntoParallelIterator, ParallelIterator};
+
 /// Options for parallel computation
 #[derive(Debug, Clone)]
 pub struct ParallelOptions {
@@ -101,6 +105,7 @@ where
 }
 
 /// Compute gradient in parallel
+#[cfg(feature = "parallel")]
 #[allow(dead_code)]
 fn compute_parallel_gradient<F>(f: &F, x: ArrayView1<f64>, eps: f64) -> Array1<f64>
 where
@@ -123,6 +128,16 @@ where
     Array1::from_vec(grad_vec)
 }
 
+/// Sequential fallback for gradient computation
+#[cfg(not(feature = "parallel"))]
+#[allow(dead_code)]
+fn compute_parallel_gradient<F>(f: &F, x: ArrayView1<f64>, eps: f64) -> Array1<f64>
+where
+    F: Fn(&ArrayView1<f64>) -> f64,
+{
+    sequential_finite_diff_gradient(|x| f(x), x, eps)
+}
+
 /// Parallel evaluation of multiple points
 ///
 /// Evaluates the objective function at multiple points in parallel.
@@ -140,7 +155,14 @@ where
         points.iter().map(|x| f(&x.view())).collect()
     } else {
         // Parallel evaluation
-        points.par_iter().map(|x| f(&x.view())).collect()
+        #[cfg(feature = "parallel")]
+        {
+            points.par_iter().map(|x| f(&x.view())).collect()
+        }
+        #[cfg(not(feature = "parallel"))]
+        {
+            points.iter().map(|x| f(&x.view())).collect()
+        }
     }
 }
 
@@ -180,10 +202,20 @@ where
                 .collect()
         } else {
             // Parallel execution
-            starting_points
-                .par_iter()
-                .map(|x0| optimizer(x0, &self.objective))
-                .collect()
+            #[cfg(feature = "parallel")]
+            {
+                starting_points
+                    .par_iter()
+                    .map(|x0| optimizer(x0, &self.objective))
+                    .collect()
+            }
+            #[cfg(not(feature = "parallel"))]
+            {
+                starting_points
+                    .iter()
+                    .map(|x0| optimizer(x0, &self.objective))
+                    .collect()
+            }
         }
     }
 
@@ -234,8 +266,53 @@ where
     let num_elements = n * (n + 1) / 2;
 
     // Parallel computation of Hessian elements
+    #[cfg(feature = "parallel")]
     let hessian_elements: Vec<f64> = (0..num_elements)
         .into_par_iter()
+        .map(|idx| {
+            // Convert linear index to (i, j) coordinates
+            let (i, j) = index_to_upper_triangle(idx, n);
+
+            if i == j {
+                // Diagonal element: ∂²f/∂xᵢ²
+                let mut x_plus = x.to_owned();
+                let mut x_minus = x.to_owned();
+                x_plus[i] += eps;
+                x_minus[i] -= eps;
+
+                let f_plus = f(&x_plus.view());
+                let f_minus = f(&x_minus.view());
+                let f_center = f(&x);
+
+                (f_plus - 2.0 * f_center + f_minus) / (eps * eps)
+            } else {
+                // Off-diagonal element: ∂²f/∂xᵢ∂xⱼ
+                let mut x_pp = x.to_owned();
+                let mut x_pm = x.to_owned();
+                let mut x_mp = x.to_owned();
+                let mut x_mm = x.to_owned();
+
+                x_pp[i] += eps;
+                x_pp[j] += eps;
+                x_pm[i] += eps;
+                x_pm[j] -= eps;
+                x_mp[i] -= eps;
+                x_mp[j] += eps;
+                x_mm[i] -= eps;
+                x_mm[j] -= eps;
+
+                let f_pp = f(&x_pp.view());
+                let f_pm = f(&x_pm.view());
+                let f_mp = f(&x_mp.view());
+                let f_mm = f(&x_mm.view());
+
+                (f_pp - f_pm - f_mp + f_mm) / (4.0 * eps * eps)
+            }
+        })
+        .collect();
+
+    #[cfg(not(feature = "parallel"))]
+    let hessian_elements: Vec<f64> = (0..num_elements)
         .map(|idx| {
             // Convert linear index to (i, j) coordinates
             let (i, j) = index_to_upper_triangle(idx, n);
@@ -382,14 +459,28 @@ where
             .collect()
     } else {
         // Parallel evaluation
-        step_sizes
-            .par_iter()
-            .map(|&alpha| {
-                let x_new = x + alpha * direction;
-                let value = f(&x_new.view());
-                (alpha, value)
-            })
-            .collect()
+        #[cfg(feature = "parallel")]
+        {
+            step_sizes
+                .par_iter()
+                .map(|&alpha| {
+                    let x_new = x + alpha * direction;
+                    let value = f(&x_new.view());
+                    (alpha, value)
+                })
+                .collect()
+        }
+        #[cfg(not(feature = "parallel"))]
+        {
+            step_sizes
+                .iter()
+                .map(|&alpha| {
+                    let x_new = x + alpha * direction;
+                    let value = f(&x_new.view());
+                    (alpha, value)
+                })
+                .collect()
+        }
     };
 
     // Find the best step size

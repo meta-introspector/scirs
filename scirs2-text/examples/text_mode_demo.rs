@@ -13,8 +13,8 @@
 //! - Comprehensive performance reporting
 //! - Real-time adaptation and optimization
 
-use scirs2_text::advancedthink_text_coordinator::{AdvancedTextConfig, AdvancedTextCoordinator};
 use scirs2_text::error::Result;
+use scirs2_text::text_coordinator::{AdvancedTextConfig, AdvancedTextCoordinator};
 
 #[allow(dead_code)]
 fn main() -> Result<()> {

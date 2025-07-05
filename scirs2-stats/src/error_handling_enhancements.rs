@@ -226,7 +226,7 @@ impl AdvancedErrorRecovery {
     pub fn attempt_recovery(
         error: &StatsError,
         context: &AdvancedErrorContext,
-        operation: &str,
+        _operation: &str,
     ) -> Option<RecoveryStrategy> {
         match error {
             StatsError::ComputationError(msg) if msg.contains("memory") => {

@@ -7,7 +7,7 @@ use std::fmt::Debug;
 
 use super::{euclidean_distance, vq};
 use crate::error::{ClusteringError, Result};
-use scirs2_core::validation::{clustering::*, parameters::*};
+// use scirs2_core::validation::{clustering::*, parameters::*};
 
 // Re-export kmeans2 related types and functions
 
@@ -90,15 +90,24 @@ where
     let tol = thresh.unwrap_or(F::from(1e-5).unwrap());
     let check_finite_flag = check_finite.unwrap_or(true);
 
-    // Use unified validation
-    validate_clustering_data(&obs, "K-means", check_finite_flag, Some(k))
-        .map_err(|e| ClusteringError::InvalidInput(format!("K-means: {}", e)))?;
-
-    check_n_clusters_bounds(&obs, k, "K-means")
-        .map_err(|e| ClusteringError::InvalidInput(format!("{}", e)))?;
-
-    check_iteration_params(max_iter, tol, "K-means")
-        .map_err(|e| ClusteringError::InvalidInput(format!("{}", e)))?;
+    // Basic validation
+    if obs.is_empty() {
+        return Err(ClusteringError::InvalidInput(
+            "Input data is empty".to_string(),
+        ));
+    }
+    if k == 0 {
+        return Err(ClusteringError::InvalidInput(
+            "Number of clusters must be greater than 0".to_string(),
+        ));
+    }
+    if k > obs.nrows() {
+        return Err(ClusteringError::InvalidInput(format!(
+            "Number of clusters ({}) cannot be greater than number of data points ({})",
+            k,
+            obs.nrows()
+        )));
+    }
 
     // Create options struct for internal use
     let options = KMeansOptions {
@@ -399,7 +408,7 @@ where
         )));
     }
 
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
     let mut centroids = Array2::zeros((k, n_features));
     let mut selected_indices = Vec::with_capacity(k);
 
@@ -451,7 +460,7 @@ where
         )));
     }
 
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     let mut centroids = Array2::zeros((k, n_features));
 
@@ -558,7 +567,7 @@ where
         )));
     }
 
-    let mut rng = rand::rng();
+    let mut rng = rand::thread_rng();
 
     // Hyperparameters for K-means||
     let l = F::from(5.0).unwrap(); // Multiplication factor for oversampling

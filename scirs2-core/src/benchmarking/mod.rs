@@ -780,6 +780,11 @@ pub struct StrategyPerformance {
     pub latency: Duration,
     pub memory_efficiency: f64,
     pub cache_hit_rate: f64,
+    pub avg_throughput: f64,
+    pub throughput_stddev: f64,
+    pub avg_memory_usage: f64,
+    pub optimal_size: usize,
+    pub efficiency_score: f64,
 }
 
 impl StrategyPerformance {
@@ -792,6 +797,11 @@ impl StrategyPerformance {
             latency: Duration::from_secs(0),
             memory_efficiency: 0.0,
             cache_hit_rate: 0.0,
+            avg_throughput: 0.0,
+            throughput_stddev: 0.0,
+            avg_memory_usage: 0.0,
+            optimal_size: 0,
+            efficiency_score: 0.0,
         }
     }
 }
@@ -802,6 +812,9 @@ pub struct MemoryScaling {
     pub linear_factor: f64,
     pub logarithmic_factor: f64,
     pub constant_overhead: usize,
+    pub linear_coefficient: f64,
+    pub constant_coefficient: f64,
+    pub r_squared: f64,
 }
 
 impl MemoryScaling {
@@ -812,18 +825,25 @@ impl MemoryScaling {
             linear_factor: 1.0,
             logarithmic_factor: 0.0,
             constant_overhead: 0,
+            linear_coefficient: 1.0,
+            constant_coefficient: 0.0,
+            r_squared: 1.0,
         }
     }
 }
 
 /// Performance bottleneck identification
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BottleneckType {
     CpuBound,
     MemoryBandwidth,
     CacheMisses,
     BranchMisprediction,
     IoWait,
+    AlgorithmicComplexity,
+    CacheLatency,
+    ComputeBound,
+    SynchronizationOverhead,
 }
 
 #[derive(Debug, Clone)]
@@ -832,6 +852,9 @@ pub struct PerformanceBottleneck {
     pub severity: f64,
     pub description: String,
     pub mitigation_strategy: OptimizationStrategy,
+    pub size_range: (usize, usize),
+    pub impact: f64,
+    pub mitigation: String,
 }
 
 impl PerformanceBottleneck {
@@ -843,6 +866,55 @@ impl PerformanceBottleneck {
             severity: 0.0,
             description: String::new(),
             mitigation_strategy: OptimizationStrategy::Scalar,
+            size_range: (0, 0),
+            impact: 0.0,
+            mitigation: String::new(),
+        }
+    }
+}
+
+/// Scalability analysis
+#[derive(Debug, Clone)]
+pub struct ScalabilityAnalysis {
+    pub parallel_efficiency: HashMap<usize, f64>,
+    pub memory_scaling: MemoryScaling,
+    pub bottlenecks: Vec<PerformanceBottleneck>,
+}
+
+impl ScalabilityAnalysis {
+    /// Create a new scalability analysis
+    #[allow(dead_code)]
+    pub fn new() -> Self {
+        Self {
+            parallel_efficiency: HashMap::new(),
+            memory_scaling: MemoryScaling::new(),
+            bottlenecks: Vec::new(),
+        }
+    }
+}
+
+/// Benchmark results
+#[derive(Debug, Clone)]
+pub struct BenchmarkResults {
+    pub operation_name: String,
+    pub measurements: Vec<BenchmarkMeasurement>,
+    pub strategy_summary: HashMap<OptimizationStrategy, StrategyPerformance>,
+    pub scalability_analysis: ScalabilityAnalysis,
+    pub recommendations: Vec<String>,
+    pub total_duration: Duration,
+}
+
+impl BenchmarkResults {
+    /// Create a new benchmark results
+    #[allow(dead_code)]
+    pub fn new(operation_name: String) -> Self {
+        Self {
+            operation_name,
+            measurements: Vec::new(),
+            strategy_summary: HashMap::new(),
+            scalability_analysis: ScalabilityAnalysis::new(),
+            recommendations: Vec::new(),
+            total_duration: Duration::from_secs(0),
         }
     }
 }

@@ -27,6 +27,7 @@ pub struct ProductionStressTester<T: InterpolationFloat> {
     /// Performance baseline for comparison
     baseline_performance: Option<BaselinePerformance>,
     /// Error tracking
+    #[allow(dead_code)]
     error_patterns: HashMap<String, usize>,
     /// Phantom data for type parameter
     _phantom: std::marker::PhantomData<T>,

@@ -96,12 +96,28 @@ where
         .to_f64()
         .ok_or_else(|| SpecialError::DomainError("Cannot convert gamma to f64".to_string()))?;
 
+    // Handle very small sigma values to avoid numerical instability
+    if sigma_f64 < 1e-8 {
+        // Pure Lorentzian limit
+        let result = gamma_f64 / (std::f64::consts::PI * (x_f64 * x_f64 + gamma_f64 * gamma_f64));
+        return T::from_f64(result).ok_or_else(|| {
+            SpecialError::DomainError("Cannot convert result back to T".to_string())
+        });
+    }
+
     // Compute z = (x + iγ) / (σ√2)
     let denominator = sigma_f64 * std::f64::consts::SQRT_2;
     let z = Complex64::new(x_f64 / denominator, gamma_f64 / denominator);
 
     // Compute Faddeeva function w(z)
     let w_z = faddeeva_complex(z);
+
+    // Check if the result is finite
+    if !w_z.re.is_finite() {
+        return Err(SpecialError::ConvergenceError(
+            "Faddeeva function returned non-finite value".to_string(),
+        ));
+    }
 
     // Voigt profile: V(x) = Re[w(z)] / (σ√(2π))
     let normalization = sigma_f64 * (2.0 * std::f64::consts::PI).sqrt();

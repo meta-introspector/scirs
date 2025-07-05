@@ -1,4 +1,4 @@
-//! Advanced-Advanced Time Series Visualization Module
+//! Advanced Time Series Visualization Module
 //!
 //! This module provides state-of-the-art visualization capabilities for time series data,
 //! including AI-powered visual analytics, real-time streaming visualization, 3D plotting,
@@ -25,30 +25,43 @@ use std::collections::VecDeque;
 pub struct AdvancedPlotConfig {
     /// Basic plot dimensions
     pub width: u32,
+    /// Plot height in pixels
     pub height: u32,
 
     /// Advanced rendering options
     pub renderer: RenderingEngine,
+    /// Enable anti-aliasing for smoother rendering
     pub anti_aliasing: bool,
+    /// Enable hardware acceleration when available
     pub hardware_acceleration: bool,
+    /// Maximum frames per second for animations
     pub max_fps: u32,
 
     /// AI-powered features
     pub enable_ai_insights: bool,
+    /// Enable automatic pattern detection in data
     pub auto_pattern_detection: bool,
+    /// Enable intelligent axis scaling algorithms
     pub smart_axis_scaling: bool,
+    /// Enable AI-powered color scheme selection
     pub intelligent_color_schemes: bool,
 
     /// Accessibility features
     pub color_blind_friendly: bool,
+    /// Enable high contrast mode for better visibility
     pub high_contrast_mode: bool,
+    /// Enable screen reader accessibility support
     pub screen_reader_support: bool,
+    /// Enable keyboard navigation controls
     pub keyboard_navigation: bool,
 
     /// Performance optimization
     pub level_of_detail: LevelOfDetail,
+    /// Data decimation configuration for large datasets
     pub data_decimation: DataDecimationConfig,
+    /// Enable progressive rendering for better performance
     pub progressive_rendering: bool,
+    /// Memory limit in megabytes for visualization data
     pub memory_limit_mb: usize,
 }
 
@@ -150,61 +163,87 @@ pub enum DecimationAlgorithm {
 /// 3D point representation
 #[derive(Debug, Clone, Copy)]
 pub struct Point3D {
+    /// X coordinate
     pub x: f32,
+    /// Y coordinate
     pub y: f32,
+    /// Z coordinate
     pub z: f32,
 }
 
 /// Color representation
 #[derive(Debug, Clone, Copy)]
 pub struct Color {
+    /// Red component (0.0-1.0)
     pub r: f32,
+    /// Green component (0.0-1.0)
     pub g: f32,
+    /// Blue component (0.0-1.0)
     pub b: f32,
+    /// Alpha component (0.0-1.0)
     pub a: f32,
 }
 
 /// 3D surface for visualization
 #[derive(Debug, Clone)]
 pub struct Surface3D {
+    /// 3D vertices of the surface
     pub vertices: Vec<Point3D>,
+    /// Triangle indices for surface mesh
     pub indices: Vec<u32>,
+    /// Vertex colors
     pub colors: Vec<Color>,
+    /// Surface normal vectors
     pub normals: Vec<Point3D>,
 }
 
 /// Lighting configuration
 #[derive(Debug, Clone)]
 pub struct LightingConfig {
+    /// Ambient lighting color
     pub ambient_light: Color,
+    /// Collection of point light sources
     pub point_lights: Vec<PointLight>,
+    /// Optional directional light source
     pub directional_light: Option<DirectionalLight>,
 }
 
 /// Point light source
 #[derive(Debug, Clone)]
 pub struct PointLight {
+    /// Light position in 3D space
     pub position: Point3D,
+    /// Light color
     pub color: Color,
+    /// Light intensity value
     pub intensity: f32,
-    pub attenuation: (f32, f32, f32), // constant, linear, quadratic
+    /// Light attenuation factors (constant, linear, quadratic)
+    pub attenuation: (f32, f32, f32),
 }
 
 /// Directional light source
 #[derive(Debug, Clone)]
 pub struct DirectionalLight {
+    /// Light direction vector
     pub direction: Point3D,
+    /// Light color
     pub color: Color,
+    /// Light intensity value
     pub intensity: f32,
 }
 
 /// Advanced-advanced 3D visualization engine
 #[derive(Debug)]
 pub struct Advanced3DVisualization {
+    /// Visualization configuration
     pub config: AdvancedPlotConfig,
+    /// Collection of 3D surfaces to render
     pub surfaces: Vec<Surface3D>,
+    /// Scene lighting configuration
     pub lighting: LightingConfig,
+    /// Camera position in 3D space
     pub camera_position: Point3D,
+    /// Camera target point
     pub camera_target: Point3D,
 }
 
@@ -326,7 +365,7 @@ impl Advanced3DVisualization {
         );
 
         std::fs::write(path, vr_content)
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to write VR content: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to write VR content: {e}")))?;
 
         Ok(())
     }
@@ -335,7 +374,7 @@ impl Advanced3DVisualization {
     fn value_to_color(&self, value: f64) -> Color {
         // Simple blue-to-red color mapping
         let normalized = (value + 1.0) / 2.0; // Assume values in [-1, 1]
-        let clamped = normalized.max(0.0).min(1.0);
+        let clamped = normalized.clamp(0.0, 1.0);
 
         Color {
             r: clamped as f32,
@@ -349,8 +388,11 @@ impl Advanced3DVisualization {
 /// Real-time streaming visualization
 #[derive(Debug)]
 pub struct StreamingVisualization {
+    /// Visualization configuration
     pub config: AdvancedPlotConfig,
+    /// Circular buffer for streaming data
     pub data_buffer: VecDeque<Array1<f64>>,
+    /// Maximum size of the data buffer
     pub max_buffer_size: usize,
 }
 
@@ -376,14 +418,13 @@ impl StreamingVisualization {
     pub fn generate_plot(&self) -> Result<String> {
         let data_points = self.data_buffer.len();
         let html_content = format!(
-            "<html><head><title>Streaming Visualization</title></head><body><h1>Streaming plot with {} data points</h1></body></html>",
-            data_points
+            "<html><head><title>Streaming Visualization</title></head><body><h1>Streaming plot with {data_points} data points</h1></body></html>"
         );
         Ok(html_content)
     }
 }
 
-/// Export capabilities for advanced-advanced visualizations
+/// Export capabilities for advanced visualizations
 pub struct AdvancedExporter;
 
 impl AdvancedExporter {
@@ -392,7 +433,7 @@ impl AdvancedExporter {
         let html_content = plot.generate_plot()?;
 
         std::fs::write(path, html_content)
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to write HTML: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to write HTML: {e}")))?;
 
         Ok(())
     }

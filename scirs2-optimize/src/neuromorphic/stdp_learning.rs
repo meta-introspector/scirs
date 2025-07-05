@@ -1,4 +1,4 @@
-//! Advanced-Advanced Spike-Timing Dependent Plasticity (STDP) Learning
+//! Advanced Spike-Timing Dependent Plasticity (STDP) Learning
 //!
 //! Implementation of cutting-edge STDP-based optimization algorithms with:
 //! - Multi-timescale adaptive plasticity
@@ -13,7 +13,7 @@ use rand::Rng;
 use scirs2_core::error::CoreResult as Result;
 use std::collections::VecDeque;
 
-/// Advanced-Advanced Multi-Timescale STDP with Metaplasticity
+/// Advanced Multi-Timescale STDP with Metaplasticity
 #[derive(Debug, Clone)]
 pub struct AdvancedAdvancedSTDP {
     // Basic STDP traces
@@ -69,7 +69,7 @@ pub struct AdvancedAdvancedSTDP {
 }
 
 impl AdvancedAdvancedSTDP {
-    /// Create new advanced-advanced STDP rule with sophisticated plasticity mechanisms
+    /// Create new advanced STDP rule with sophisticated plasticity mechanisms
     pub fn new(eta_ltp: f64, eta_ltd: f64, target_firing_rate: f64) -> Self {
         Self {
             // Initialize traces
@@ -486,7 +486,7 @@ impl Default for NetworkStats {
 }
 
 impl AdvancedSTDPNetwork {
-    /// Create new advanced-advanced STDP network
+    /// Create new advanced STDP network
     pub fn new(layer_sizes: Vec<usize>, target_firing_rate: f64, learning_rate: f64) -> Self {
         let mut layers = Vec::new();
         let mut advanced_stdp_rules = Vec::new();
@@ -506,15 +506,13 @@ impl AdvancedSTDPNetwork {
                 let mut layer_rules = Vec::new();
 
                 for _i in 0..size {
-                    let mut neuron_rules = Vec::new();
                     for _j in 0..prev_size {
-                        neuron_rules.push(AdvancedAdvancedSTDP::new(
+                        layer_rules.push(AdvancedAdvancedSTDP::new(
                             learning_rate,
                             learning_rate * 0.5,
                             target_firing_rate,
                         ));
                     }
-                    layer_rules.push(neuron_rules);
                 }
                 advanced_stdp_rules.push(layer_rules);
             }
@@ -533,7 +531,7 @@ impl AdvancedSTDPNetwork {
         }
     }
 
-    /// Run advanced-advanced STDP optimization
+    /// Run advanced STDP optimization
     pub fn optimize<F>(
         &mut self,
         objective: F,
@@ -571,7 +569,7 @@ impl AdvancedSTDPNetwork {
             let network_spikes =
                 self.simulate_network_dynamics(&spike_patterns, current_time, dt)?;
 
-            // Update synaptic weights using advanced-advanced STDP
+            // Update synaptic weights using advanced STDP
             self.update_advanced_stdp_weights(
                 &network_spikes,
                 current_time,
@@ -618,7 +616,7 @@ impl AdvancedSTDPNetwork {
             // For first layer, use parameter values to determine spike probability
             for i in 0..layer.size.min(params.len()) {
                 let spike_prob = ((params[i] + 1.0) / 2.0).max(0.0).min(1.0);
-                layer_spikes[i] = rand::rng().gen::<f64>() < spike_prob * 0.1;
+                layer_spikes[i] = rand::rng().random::<f64>() < spike_prob * 0.1;
             }
 
             spike_patterns.push(layer_spikes);
@@ -689,23 +687,26 @@ impl AdvancedSTDPNetwork {
             let input_spikes = &all_spikes[layer_idx];
             let output_spikes = &all_spikes[layer_idx + 1];
 
-            for (neuron_idx, neuron_rules) in
-                self.advanced_stdp_rules[layer_idx].iter_mut().enumerate()
+            for (connection_idx, rule) in self.advanced_stdp_rules[layer_idx].iter_mut().enumerate()
             {
-                for (input_idx, rule) in neuron_rules.iter_mut().enumerate() {
-                    let pre_spike = input_spikes.get(input_idx).copied().unwrap_or(false);
-                    let post_spike = output_spikes.get(neuron_idx).copied().unwrap_or(false);
+                // Calculate neuron and input indices from connection index
+                let layer_size = self.layers[layer_idx + 1].size;
+                let prev_layer_size = self.layers[layer_idx].size;
+                let neuron_idx = connection_idx / prev_layer_size;
+                let input_idx = connection_idx % prev_layer_size;
 
-                    // Update using advanced-advanced STDP
-                    let _new_weight = rule.update_weight_advanced(
-                        0.5, // Current weight (simplified)
-                        pre_spike,
-                        post_spike,
-                        dt,
-                        current_time,
-                        objective_improvement,
-                    );
-                }
+                let pre_spike = input_spikes.get(input_idx).copied().unwrap_or(false);
+                let post_spike = output_spikes.get(neuron_idx).copied().unwrap_or(false);
+
+                // Update using advanced STDP
+                let _new_weight = rule.update_weight_advanced(
+                    0.5, // Current weight (simplified)
+                    pre_spike,
+                    post_spike,
+                    dt,
+                    current_time,
+                    objective_improvement,
+                );
             }
         }
 
@@ -745,12 +746,10 @@ impl AdvancedSTDPNetwork {
         let mut count = 0;
 
         for layer_rules in &self.advanced_stdp_rules {
-            for neuron_rules in layer_rules {
-                for rule in neuron_rules {
-                    let stats = rule.get_plasticity_stats();
-                    total_plasticity += stats.metaplasticity_factor;
-                    count += 1;
-                }
+            for rule in layer_rules {
+                let stats = rule.get_plasticity_stats();
+                total_plasticity += stats.metaplasticity_factor;
+                count += 1;
             }
         }
 
@@ -804,8 +803,8 @@ where
 
         // More sophisticated spike-based encoding
         for (i, rule) in stdp_rules.iter_mut().enumerate() {
-            let pre_spike = rand::rng().gen::<f64>() < (params[i].abs() * 0.1).min(0.5);
-            let post_spike = improvement > 0.0 && rand::rng().gen::<f64>() < 0.2;
+            let pre_spike = rand::rng().random::<f64>() < (params[i].abs() * 0.1).min(0.5);
+            let post_spike = improvement > 0.0 && rand::rng().random::<f64>() < 0.2;
 
             params[i] = rule.update_weight(params[i], pre_spike, post_spike, 0.001);
         }

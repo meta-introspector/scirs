@@ -207,7 +207,7 @@ impl<T: Float> Default for EnergyEfficientConfig<T> {
 
 /// Energy monitoring and tracking
 #[derive(Debug, Clone)]
-struct EnergyMonitor<T: Float> {
+struct EnergyMonitor<T: Float + ndarray::ScalarOperand + std::fmt::Debug> {
     /// Energy consumption history
     consumption_history: VecDeque<(Instant, T)>,
     
@@ -443,7 +443,7 @@ enum CompressionAlgorithm {
     DOK}
 
 /// Energy-efficient optimizer
-pub struct EnergyEfficientOptimizer<T: Float> {
+pub struct EnergyEfficientOptimizer<T: Float + ndarray::ScalarOperand + std::fmt::Debug> {
     /// Configuration
     config: EnergyEfficientConfig<T>,
     
@@ -698,7 +698,7 @@ struct EnergyPrediction<T: Float> {
     /// Model used
     model_type: ModelType}
 
-impl<T: Float + Send + Sync> EnergyEfficientOptimizer<T> {
+impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> EnergyEfficientOptimizer<T> {
     /// Create a new energy-efficient optimizer
     pub fn new(config: EnergyEfficientConfig<T>, num_neurons: usize) -> Self {
         Self {
@@ -1049,7 +1049,7 @@ pub struct EnergyBudgetStatus<T: Float> {
 // Implementation of various helper structs and methods would continue here...
 // For brevity, I'm including placeholder implementations
 
-impl<T: Float + Send + Sync> EnergyMonitor<T> {
+impl<T: Float + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug> EnergyMonitor<T> {
     fn new(monitoring_frequency: Duration) -> Self {
         Self {
             consumption_history: VecDeque::new(),

@@ -445,6 +445,9 @@ impl<T: Float + Send + Sync> CryptographicAggregator<T> {
 pub struct CommitmentScheme<T: Float> {
     /// Random commitment key
     commitment_key: Vec<u8>,
+
+    /// Phantom data to mark type parameter as intentionally unused
+    _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T: Float + Send + Sync> CommitmentScheme<T> {
@@ -453,7 +456,10 @@ impl<T: Float + Send + Sync> CommitmentScheme<T> {
         let mut rng = ChaCha20Rng::from_entropy();
         let commitment_key: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
 
-        Self { commitment_key }
+        Self {
+            commitment_key,
+            _phantom: std::marker::PhantomData,
+        }
     }
 
     /// Commit to a value
@@ -817,6 +823,9 @@ pub struct ZKProof<T: Float> {
 
     /// Verification key
     pub verification_key: Vec<u8>,
+
+    /// Phantom data to mark type parameter as intentionally unused
+    _phantom: std::marker::PhantomData<T>,
 }
 
 /// Aggregation proof
@@ -833,6 +842,9 @@ pub struct AggregationProof<T: Float> {
 
     /// Timestamp of proof generation
     pub timestamp: std::time::SystemTime,
+
+    /// Phantom data to mark type parameter as intentionally unused
+    _phantom: std::marker::PhantomData<T>,
 }
 
 /// Secure aggregation result

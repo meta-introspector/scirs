@@ -33,6 +33,7 @@ pub struct CollisionInfo {
 ///
 /// A tuple containing the impulse vectors for the first and second spheres
 #[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn sphere_sphere_impulse(
     sphere1_pos: &[f64; 3],
     sphere1_vel: &[f64; 3],
@@ -313,11 +314,11 @@ pub fn find_sphere_box_collision(sphere: &Sphere, box3d: &Box3D) -> Option<Colli
         let dz = (sphere.center[2] - box_center[2]).abs() / half_depth;
 
         if dx > dy && dx > dz {
-            [sphere.center[0] - box_center[0].signum(), 0.0, 0.0]
+            [(sphere.center[0] - box_center[0]).signum(), 0.0, 0.0]
         } else if dy > dz {
-            [0.0, sphere.center[1] - box_center[1].signum(), 0.0]
+            [0.0, (sphere.center[1] - box_center[1]).signum(), 0.0]
         } else {
-            [0.0, 0.0, sphere.center[2] - box_center[2].signum()]
+            [0.0, 0.0, (sphere.center[2] - box_center[2]).signum()]
         }
     } else {
         [dx / distance, dy / distance, dz / distance]

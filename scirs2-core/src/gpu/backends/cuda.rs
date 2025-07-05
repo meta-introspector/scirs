@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 use std::ffi::c_void;
+use std::ptr;
 use std::sync::{Arc, Mutex};
 
 use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKernelImpl};
@@ -309,7 +310,7 @@ impl CudaContext {
             use cudarc::nvrtc::compile_ptx;
 
             compile_ptx(source)
-                .map(|ptx| String::from_utf8_lossy(ptx.as_bytes()).to_string())
+                .map(|ptx| format!("{:?}", ptx))
                 .map_err(|e| GpuError::Other(format!("NVRTC compilation failed for {name}: {e}")))
         }
         #[cfg(not(feature = "cuda"))]
@@ -332,7 +333,7 @@ impl CudaContext {
         ptx: &str,
     ) -> Result<Arc<impl std::any::Any>, GpuError> {
         device
-            .load_ptx_module(ptx.as_bytes(), "neural_kernels", &[])
+            .load_ptx_from_file("neural_kernels")
             .map_err(|e| GpuError::Other(format!("Failed to load PTX module: {e}")))
             .map(Arc::new)
     }

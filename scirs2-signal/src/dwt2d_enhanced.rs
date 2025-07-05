@@ -2296,7 +2296,7 @@ fn content_aware_padding(data: &[f64], pad_length: usize) -> SignalResult<Vec<f6
     } else {
         // Fallback to symmetric for short signals
         for i in 0..pad_length {
-            result[i] = data[(i % n)];
+            result[i] = data[i % n];
         }
     }
 

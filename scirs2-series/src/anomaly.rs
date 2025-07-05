@@ -891,8 +891,7 @@ mod tests {
         let anomaly_count = result.is_anomaly.iter().filter(|&&x| x).count();
         assert!(
             anomaly_count >= 2,
-            "Should detect at least 2 anomalies, found {}",
-            anomaly_count
+            "Should detect at least 2 anomalies, found {anomaly_count}"
         );
 
         // Anomalies should have high scores

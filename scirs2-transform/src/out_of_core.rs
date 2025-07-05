@@ -150,6 +150,7 @@ impl Iterator for ChunkedArrayIterator {
 }
 
 /// Writer for chunked array data to disk
+#[derive(Debug)]
 pub struct ChunkedArrayWriter {
     file: BufWriter<File>,
     shape: (usize, usize),

@@ -1,4 +1,4 @@
-//! Advanced-Advanced Visual SLAM Framework
+//! Advanced Visual SLAM Framework
 //!
 //! This module provides sophisticated Visual Simultaneous Localization and Mapping capabilities including:
 //! - Real-time camera pose estimation
@@ -742,7 +742,7 @@ impl Default for VisualSLAMSystem {
 }
 
 impl VisualSLAMSystem {
-    /// Create a new advanced-advanced Visual SLAM system
+    /// Create a new advanced Visual SLAM system
     pub fn new() -> Self {
         Self {
             pose_estimator: CameraPoseEstimator::new(),

@@ -8,7 +8,7 @@
 
 use scirs2_datasets::{
     make_classification, stream_classification, stream_regression, utils::train_test_split,
-    DataChunk, StreamConfig, StreamProcessor, StreamTransformer, StreamingIterator,
+    DataChunk, StreamConfig, StreamProcessor, StreamTransformer,
 };
 use std::collections::HashMap;
 use std::time::Instant;
@@ -43,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demonstrate_basic_streaming() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 BASIC STREAMING OPERATIONS");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     // Configure streaming
     let config = StreamConfig {
@@ -131,7 +131,7 @@ fn demonstrate_basic_streaming() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demonstrate_memory_efficient_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("💾 MEMORY-EFFICIENT PROCESSING");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     // Compare memory usage: streaming vs. in-memory
     let dataset_size = 50_000;
@@ -222,7 +222,7 @@ fn demonstrate_memory_efficient_processing() -> Result<(), Box<dyn std::error::E
 #[allow(dead_code)]
 fn demonstrate_stream_transformations() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔄 STREAM TRANSFORMATIONS");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     // Create a transformer pipeline
     let transformer = StreamTransformer::new()
@@ -288,7 +288,7 @@ fn demonstrate_stream_transformations() -> Result<(), Box<dyn std::error::Error>
 #[allow(dead_code)]
 fn demonstrate_parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("⚡ PARALLEL STREAM PROCESSING");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     let config = StreamConfig {
         chunk_size: 1500,
@@ -304,7 +304,7 @@ fn demonstrate_parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Buffer size: {}", config.buffer_size);
 
     // Create a simple processor that computes statistics
-    let processor = StreamProcessor::new(config.clone());
+    let _processor: StreamProcessor<DataChunk> = StreamProcessor::new(config.clone());
 
     // Define a processing function
     let compute_stats = |chunk: DataChunk| -> Result<
@@ -344,7 +344,9 @@ fn demonstrate_parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
         let chunk_samples = chunk.n_samples();
 
         // Process chunk
-        let stats = compute_stats(chunk)?;
+        let stats = compute_stats(chunk).map_err(|e| -> Box<dyn std::error::Error> {
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
+        })?;
         let chunk_time = chunk_start.elapsed();
 
         println!(
@@ -390,7 +392,7 @@ fn demonstrate_parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("📊 PERFORMANCE COMPARISON");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     let dataset_sizes = vec![10_000, 50_000, 100_000];
     let chunk_sizes = vec![1_000, 5_000, 10_000];
@@ -454,7 +456,7 @@ fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>
 #[allow(dead_code)]
 fn demonstrate_real_world_scenarios() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌍 REAL-WORLD STREAMING SCENARIOS");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     // Scenario 1: Training on large dataset with limited memory
     println!("Scenario 1: Large dataset training with memory constraints");

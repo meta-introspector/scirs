@@ -1921,7 +1921,7 @@ where
             AcquisitionFunction::ThompsonSampling => {
                 // Sample from posterior
                 use rand::Rng;
-                let mut rng = rand::rng();
+                let mut rng = rand::thread_rng();
                 let sample: f64 = rng.random_range(0.0..1.0);
                 mean + std_dev * self.inverse_normal_cdf(sample)
             }
@@ -2308,13 +2308,13 @@ where
                 HyperParameter::Float { min, max } => {
                     // Add some exploration around high-variance regions
                     use rand::Rng;
-                    let mut rng = rand::rng();
+                    let mut rng = rand::thread_rng();
                     let noise = rng.random_range(-variance.sqrt()..variance.sqrt());
                     (mean + noise).clamp(*min, *max)
                 }
                 HyperParameter::Integer { min, max } => {
                     use rand::Rng;
-                    let mut rng = rand::rng();
+                    let mut rng = rand::thread_rng();
                     rng.random_range(*min..=*max) as f64
                 }
                 _ => mean, // Simplified for other parameter types
@@ -2386,7 +2386,7 @@ where
                 }
                 HyperParameter::Integer { min, max } => {
                     use rand::Rng;
-                    let mut rng = rand::rng();
+                    let mut rng = rand::thread_rng();
                     rng.random_range(*min..=*max) as f64
                 }
                 _ => {
@@ -2912,7 +2912,7 @@ where
         search_space: &SearchSpace,
         n_points: usize,
     ) -> Result<Vec<HashMap<String, f64>>> {
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
         let mut combinations = Vec::new();
 
         let param_names: Vec<String> = search_space.parameters.keys().cloned().collect();
@@ -3125,7 +3125,7 @@ where
         n_candidates: usize,
     ) -> Result<Vec<HashMap<String, f64>>> {
         let mut candidates = Vec::new();
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         // Find top performing regions from observations (placeholder)
         let n_centers = std::cmp::min(5, n_candidates / 10);
@@ -3209,7 +3209,7 @@ where
             }
             AcquisitionFunction::ThompsonSampling => {
                 // Thompson sampling: sample from posterior
-                let mut rng = rand::rng();
+                let mut rng = rand::thread_rng();
                 mean + std_dev * rng.random_range(-1.0..1.0)
             }
         }
@@ -4455,7 +4455,7 @@ pub mod advanced_optimization {
             &self,
             search_space: &SearchSpace,
         ) -> Result<HashMap<String, f64>> {
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
             let mut params = HashMap::new();
 
             for (name, param) in &search_space.parameters {
@@ -4776,7 +4776,7 @@ pub mod advanced_optimization {
 
         /// Initialize controller network
         pub fn initialize_controller(&mut self, input_dim: usize, hidden_dim: usize) {
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
 
             // Simple 2-layer network for hyperparameter generation
             let w1 = Array2::from_shape_fn((input_dim, hidden_dim), |_| {
@@ -5011,7 +5011,7 @@ pub mod advanced_optimization {
 
         /// Initialize arms with random configurations
         pub fn initialize_arms(&mut self, n_arms: usize) -> Result<()> {
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
 
             for _ in 0..n_arms {
                 let mut config = HashMap::new();
@@ -5052,7 +5052,7 @@ pub mod advanced_optimization {
 
             match &self.algorithm {
                 BanditAlgorithm::EpsilonGreedy { epsilon } => {
-                    let mut rng = rand::rng();
+                    let mut rng = rand::thread_rng();
                     if rng.random::<f64>() < *epsilon {
                         // Explore: choose random arm
                         Ok(rng.random_range(0..self.arms.len()))
@@ -5103,7 +5103,7 @@ pub mod advanced_optimization {
                 }
                 _ => {
                     // Default to random selection for other algorithms
-                    let mut rng = rand::rng();
+                    let mut rng = rand::thread_rng();
                     Ok(rng.random_range(0..self.arms.len()))
                 }
             }
@@ -5265,7 +5265,7 @@ pub mod advanced_optimization {
 
         /// Initialize random population
         pub fn initialize_population(&mut self) -> Result<()> {
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
 
             for _ in 0..self.population_size {
                 let mut config = HashMap::new();
@@ -5327,7 +5327,7 @@ pub mod advanced_optimization {
 
             // Reproduction: create new individuals
             let mut new_population = survivors.clone();
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
 
             while new_population.len() < self.population_size {
                 // Select two parents (tournament selection)
@@ -5367,7 +5367,7 @@ pub mod advanced_optimization {
 
         /// Mutate a configuration
         fn mutate_config(&self, config: &mut HashMap<String, F>) -> Result<()> {
-            let mut rng = rand::rng();
+            let mut rng = rand::thread_rng();
 
             // Select random parameter to mutate
             let param_names: Vec<_> = config.keys().cloned().collect();

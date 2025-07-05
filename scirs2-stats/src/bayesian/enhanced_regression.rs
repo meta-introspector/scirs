@@ -390,6 +390,7 @@ where
         };
 
         // Initialize parameters
+        #[allow(unused_assignments)]
         let mut beta = self.prior.beta_mean.clone();
         let mut noise_precision = self.prior.noise_shape / self.prior.noise_rate;
 

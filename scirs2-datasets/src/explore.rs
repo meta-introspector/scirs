@@ -902,13 +902,13 @@ impl DatasetExplorer {
         if let Some(ref distribution) = target_analysis.class_distribution {
             println!("\nClass distribution:");
             for (class, count) in distribution {
-                println!("  {}: {}", class, count);
+                println!("  {class}: {count}");
             }
         }
 
         println!("\nTop correlations with features:");
         for (feature, correlation) in target_analysis.correlations_with_features.iter().take(5) {
-            println!("  {}: {:.3}", feature, correlation);
+            println!("  {feature}: {correlation:.3}");
         }
 
         println!();
@@ -935,7 +935,7 @@ impl DatasetExplorer {
 
         println!("\nRecommendations:");
         for recommendation in &quality.recommendations {
-            println!("  • {}", recommendation);
+            println!("  • {recommendation}");
         }
 
         println!();
@@ -945,7 +945,7 @@ impl DatasetExplorer {
     fn display_json(&self, summary: &DatasetSummary) -> Result<()> {
         let json = serde_json::to_string_pretty(summary)
             .map_err(|e| DatasetsError::SerdeError(e.to_string()))?;
-        println!("{}", json);
+        println!("{json}");
         Ok(())
     }
 
@@ -1077,31 +1077,31 @@ impl DatasetExplorer {
         );
 
         if let Some(mean) = feature.mean {
-            println!("Mean: {:.6}", mean);
+            println!("Mean: {mean:.6}");
         }
         if let Some(std) = feature.std {
-            println!("Std: {:.6}", std);
+            println!("Std: {std:.6}");
         }
         if let Some(min) = feature.min {
-            println!("Min: {:.6}", min);
+            println!("Min: {min:.6}");
         }
         if let Some(max) = feature.max {
-            println!("Max: {:.6}", max);
+            println!("Max: {max:.6}");
         }
         if let Some(median) = feature.median {
-            println!("Median: {:.6}", median);
+            println!("Median: {median:.6}");
         }
         if let Some(q25) = feature.q25 {
-            println!("Q25: {:.6}", q25);
+            println!("Q25: {q25:.6}");
         }
         if let Some(q75) = feature.q75 {
-            println!("Q75: {:.6}", q75);
+            println!("Q75: {q75:.6}");
         }
 
         if let Some(ref unique_values) = feature.unique_values {
-            println!("Unique values: {:?}", unique_values);
+            println!("Unique values: {unique_values:?}");
         } else if let Some(unique_count) = feature.unique_count {
-            println!("Unique count: {}", unique_count);
+            println!("Unique count: {unique_count}");
         }
 
         Ok(())
@@ -1163,9 +1163,9 @@ impl DatasetExplorer {
             }
         };
 
-        std::fs::write(&filename, content).map_err(|e| DatasetsError::IoError(e))?;
+        std::fs::write(&filename, content).map_err(DatasetsError::IoError)?;
 
-        println!("Summary exported to: {}", filename);
+        println!("Summary exported to: {filename}");
         Ok(())
     }
 }
@@ -1190,8 +1190,10 @@ pub mod convenience {
 
     /// Start interactive exploration
     pub fn explore(dataset: &Dataset) -> Result<()> {
-        let mut config = ExploreConfig::default();
-        config.interactive = true;
+        let config = ExploreConfig {
+            interactive: true,
+            ..Default::default()
+        };
 
         let explorer = DatasetExplorer::new(config);
         explorer.interactive_explore(dataset)
@@ -1199,8 +1201,10 @@ pub mod convenience {
 
     /// Export dataset summary to file
     pub fn export_summary(dataset: &Dataset, format: OutputFormat, filename: &str) -> Result<()> {
-        let mut config = ExploreConfig::default();
-        config.output_format = format;
+        let config = ExploreConfig {
+            output_format: format,
+            ..Default::default()
+        };
         let output_format = config.output_format;
 
         let explorer = DatasetExplorer::new(config);
@@ -1216,7 +1220,7 @@ pub mod convenience {
             }
         };
 
-        std::fs::write(filename, content).map_err(|e| DatasetsError::IoError(e))?;
+        std::fs::write(filename, content).map_err(DatasetsError::IoError)?;
 
         Ok(())
     }
@@ -1236,7 +1240,7 @@ mod tests {
 
     #[test]
     fn test_basic_summary() {
-        let dataset = make_classification(100, 5, 2, 0, 0, Some(42)).unwrap();
+        let dataset = make_classification(100, 5, 2, 1, 1, Some(42)).unwrap();
         let summary = convenience::quick_summary(&dataset).unwrap();
 
         assert_eq!(summary.info.n_samples, 100);
@@ -1246,7 +1250,7 @@ mod tests {
 
     #[test]
     fn test_feature_statistics() {
-        let dataset = make_classification(50, 3, 2, 0, 0, Some(42)).unwrap();
+        let dataset = make_classification(50, 3, 2, 1, 1, Some(42)).unwrap();
         let explorer = DatasetExplorer::default_config();
         let statistics = explorer.compute_feature_statistics(&dataset).unwrap();
 
@@ -1262,7 +1266,7 @@ mod tests {
 
     #[test]
     fn test_quality_assessment() {
-        let dataset = make_classification(100, 4, 2, 0, 0, Some(42)).unwrap();
+        let dataset = make_classification(100, 4, 2, 1, 1, Some(42)).unwrap();
         let explorer = DatasetExplorer::default_config();
         let summary = explorer.summarize(&dataset).unwrap();
 

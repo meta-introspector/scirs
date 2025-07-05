@@ -998,7 +998,6 @@ impl MPIInterface for MockMPI {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::array;
 
     #[test]
     fn test_work_distribution() {

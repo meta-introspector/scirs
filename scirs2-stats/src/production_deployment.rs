@@ -302,7 +302,7 @@ impl ProductionDeploymentValidator {
 
     /// Validate production readiness
     pub fn validate_production_readiness(&self) -> StatsResult<ValidationResults> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
         let mut results = ValidationResults::default();
 
         // Run comprehensive validation checks
@@ -336,7 +336,7 @@ impl ProductionDeploymentValidator {
         &self,
         results: &mut ValidationResults,
     ) -> StatsResult<()> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check CPU features
         let cpu_check = self.validate_cpu_features()?;
@@ -365,7 +365,7 @@ impl ProductionDeploymentValidator {
 
     /// Validate CPU features availability
     fn validate_cpu_features(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check if required SIMD features are available
         let required_features = vec![SimdFeature::SSE2, SimdFeature::AVX];
@@ -400,7 +400,7 @@ impl ProductionDeploymentValidator {
 
     /// Validate memory requirements
     fn validate_memory_requirements(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check available memory vs requirements
         let required_memory = self
@@ -465,7 +465,7 @@ impl ProductionDeploymentValidator {
         &self,
         results: &mut ValidationResults,
     ) -> StatsResult<()> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Test latency requirements with actual operations
         let latency_check = self.validate_latency_requirements()?;
@@ -495,7 +495,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_resource_requirements(&self, results: &mut ValidationResults) -> StatsResult<()> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check disk space requirements
         let disk_check = self.validate_disk_requirements()?;
@@ -525,7 +525,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_security_compliance(&self, results: &mut ValidationResults) -> StatsResult<()> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check encryption requirements
         let encryption_check = self.validate_encryption_compliance()?;
@@ -555,7 +555,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_reliability_features(&self, results: &mut ValidationResults) -> StatsResult<()> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check error handling mechanisms
         let error_check = self.validate_error_handling()?;
@@ -585,7 +585,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_monitoring_setup(&self, results: &mut ValidationResults) -> StatsResult<()> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check metrics collection
         let metrics_check = self.validate_metrics_collection()?;
@@ -615,7 +615,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_simd_support(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Test actual SIMD operations
         let test_data = Array1::from_vec((0..1000).map(|i| i as f64).collect::<Vec<_>>());
@@ -647,7 +647,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_parallel_support(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Test parallel operations
         let test_data = Array1::from_vec((0..10000).map(|i| i as f64).collect::<Vec<_>>());
@@ -768,7 +768,7 @@ impl ProductionDeploymentValidator {
 
     // Additional validation methods
     fn validate_latency_requirements(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Test statistical operation latency
         let test_data = Array1::from_vec((0..1000).map(|i| i as f64).collect::<Vec<_>>());
@@ -797,7 +797,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_throughput_requirements(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Test throughput with batch operations
         let test_data = Array1::from_vec((0..10000).map(|i| i as f64).collect::<Vec<_>>());
@@ -832,7 +832,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_memory_performance(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Test memory allocation performance
         let allocation_start = Instant::now();
@@ -857,7 +857,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_cpu_performance(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Test CPU-intensive operation
         let test_data = Array1::from_vec((0..50000).map(|i| (i as f64).sin()).collect::<Vec<_>>());
@@ -883,7 +883,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_disk_requirements(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Simplified disk space check (would use proper syscalls in production)
         let status = CheckStatus::Pass;
@@ -900,7 +900,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_network_requirements(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Simplified network check
         let status = CheckStatus::Pass;
@@ -917,7 +917,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_file_descriptor_limits(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check file descriptor limits (simplified)
         let status = CheckStatus::Pass;
@@ -934,7 +934,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_process_limits(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check process limits
         let status = CheckStatus::Pass;
@@ -951,7 +951,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_encryption_compliance(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check encryption configuration
         let encryption_enabled = self.config.security.encryption_enabled;
@@ -979,7 +979,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_access_control(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check access control configuration
         let status = CheckStatus::Pass;
@@ -996,7 +996,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_audit_logging(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check audit logging configuration
         let status = CheckStatus::Pass;
@@ -1013,7 +1013,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_secure_communication(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check secure communication protocols
         let status = CheckStatus::Pass;
@@ -1030,7 +1030,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_error_handling(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Test error handling mechanisms
         let error_test_result = std::panic::catch_unwind(|| {
@@ -1063,7 +1063,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_circuit_breakers(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check circuit breaker configuration
         let status = CheckStatus::Pass;
@@ -1080,7 +1080,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_retry_mechanisms(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check retry mechanisms
         let status = CheckStatus::Pass;
@@ -1097,7 +1097,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_graceful_degradation(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check graceful degradation capabilities
         let status = CheckStatus::Pass;
@@ -1114,7 +1114,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_metrics_collection(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check metrics collection setup
         let metrics_enabled = self.config.monitoring.metrics_enabled;
@@ -1141,7 +1141,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_health_endpoints(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check health check endpoints
         let health_checks_count = self.config.monitoring.health_checks.len();
@@ -1164,7 +1164,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_alerting_config(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check alerting configuration
         let status = CheckStatus::Pass;
@@ -1181,7 +1181,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_logging_config(&self) -> StatsResult<CheckResult> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check logging configuration
         let status = CheckStatus::Pass;
@@ -1727,7 +1727,7 @@ impl HealthChecker {
         let mut results = Vec::new();
 
         for check in &self.health_checks {
-            let start_time = Instant::now();
+            let _start_time = Instant::now();
             let result = (check.check_fn)();
             let execution_time = start_time.elapsed();
 

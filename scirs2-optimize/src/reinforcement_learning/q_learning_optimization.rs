@@ -95,10 +95,10 @@ impl RLOptimizer for QLearningOptimizer {
 
     fn select_action(&mut self, state: &OptimizationState) -> OptimizationAction {
         // Epsilon-greedy action selection
-        if rand::rng().gen_range(0.0..1.0) < self.exploration_rate {
+        if rand::rng().random_range(0.0..1.0) < self.exploration_rate {
             // Random action
             let actions = self.get_possible_actions();
-            let idx = rand::rng().gen_range(0..actions.len());
+            let idx = rand::rng().random_range(0..actions.len());
             actions[idx].clone()
         } else {
             // Greedy action
@@ -197,6 +197,18 @@ impl RLOptimizer for QLearningOptimizer {
             success: current_state.convergence_metrics.relative_objective_change < 1e-6,
             nit: current_state.step,
             message: "Q-learning episode completed".to_string(),
+            jac: None,
+            hess: None,
+            constr: None,
+            nfev: current_state.step,
+            njev: 0,
+            nhev: 0,
+            maxcv: 0,
+            status: if current_state.convergence_metrics.relative_objective_change < 1e-6 {
+                0
+            } else {
+                1
+            },
         })
     }
 

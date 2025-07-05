@@ -365,7 +365,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
 
         // Initialize with random small values
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         for i in 0..self.config.p_layers {
             self.gamma_params[i] = rng.random_range(0.0..PI);
@@ -702,7 +702,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     /// Initialize circuit parameters
     fn initialize_circuit_parameters(&mut self) {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         for i in 0..self.circuit_parameters.len() {
             self.circuit_parameters[i] = rng.random_range(-PI..PI);
@@ -1008,7 +1008,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     /// SPSA update
     fn spsa_update(&mut self, iteration: usize) -> Result<()> {
         use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = rand::thread_rng();
 
         let ak = 0.1 / (iteration as f64 + 1.0).powf(0.602);
         let ck = 0.1 / (iteration as f64 + 1.0).powf(0.101);
@@ -1253,7 +1253,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
             use rand::SeedableRng;
             rand::rngs::StdRng::seed_from_u64(seed)
         } else {
-            rand::rng()
+            rand::thread_rng()
         };
 
         let mut spins = Array1::zeros(total_qubits);
@@ -1307,7 +1307,7 @@ impl<F: Float + FromPrimitive + Debug> QuantumAnnealingClustering<F> {
             use rand::SeedableRng;
             rand::rngs::StdRng::seed_from_u64(seed)
         } else {
-            rand::rng()
+            rand::thread_rng()
         };
 
         let spins = self.spin_configuration.as_mut().unwrap();

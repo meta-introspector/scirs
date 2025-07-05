@@ -912,7 +912,7 @@ pub struct GraphRewriter<T: Float> {
     rewrite_stats: RewriteStatistics,
 
     /// Safety checker
-    safety_checker: SafetyChecker<T>,
+    safety_checker: SafetyChecker,
 }
 
 /// Rewrite rule
@@ -952,17 +952,17 @@ pub struct RewriteStatistics {
 
 /// Safety checker for transformations
 #[derive(Debug)]
-pub struct SafetyChecker<T: Float> {
+pub struct SafetyChecker {
     /// Safety rules
-    safety_rules: Vec<SafetyRule<T>>,
+    safety_rules: Vec<SafetyRule>,
 
     /// Verification methods
-    verification_methods: Vec<VerificationMethod<T>>,
+    verification_methods: Vec<VerificationMethod>,
 }
 
 /// Safety rule
 #[derive(Debug, Clone)]
-pub struct SafetyRule<T: Float> {
+pub struct SafetyRule {
     pub name: String,
     pub description: String,
     pub check_function: String, // Would be function pointer in real implementation
@@ -979,7 +979,7 @@ pub enum SafetySeverity {
 
 /// Verification method
 #[derive(Debug, Clone)]
-pub struct VerificationMethod<T: Float> {
+pub struct VerificationMethod {
     pub name: String,
     pub method_type: VerificationMethodType,
     pub confidence_level: f64,
@@ -2610,13 +2610,13 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
 {
     /// Create a new XLA compiler
     pub fn new(config: XLACompilerConfig) -> Result<Self> {
-        let graph_builder = ComputationGraphBuilder::new();
-        let optimization_pipeline = OptimizationPipeline::new(&config)?;
-        let code_generator = TPUCodeGenerator::new(&config)?;
+        let graph_builder = ComputationGraphBuilder::<T>::new();
+        let optimization_pipeline = OptimizationPipeline::<T>::new(&config)?;
+        let code_generator = TPUCodeGenerator::<T>::new(&config)?;
         let compilation_cache = Arc::new(RwLock::new(CompilationCache::new(&config)?));
-        let performance_analyzer = PerformanceAnalyzer::new(&config)?;
-        let memory_planner = MemoryPlanner::new(&config)?;
-        let parallel_compiler = ParallelCompilationManager::new(&config)?;
+        let performance_analyzer = PerformanceAnalyzer::<T>::new(&config)?;
+        let memory_planner = MemoryPlanner::<T>::new(&config)?;
+        let parallel_compiler = ParallelCompilationManager::<T>::new(&config)?;
         let profiling_data = ProfilingData::new();
 
         Ok(Self {
@@ -3628,6 +3628,7 @@ impl<T: Float + Send + Sync> TensorCoreOptimizer<T> {
             },
             data_type_preferences: HashMap::new(),
             tile_size_optimizer: TileSizeOptimizer::new(),
+            _phantom: PhantomData,
         }
     }
 
@@ -3641,6 +3642,7 @@ impl<T: Float + Send + Sync> TileSizeOptimizer<T> {
         Self {
             tile_cache: HashMap::new(),
             performance_model: TilePerformanceModel::new(),
+            _phantom: PhantomData,
         }
     }
 }
@@ -3662,6 +3664,7 @@ impl<T: Float + Send + Sync> TilePerformanceModel<T> {
                 parallelization_efficiency: 0.85,
             },
             benchmark_data: BenchmarkData::new(),
+            _phantom: PhantomData,
         }
     }
 }
@@ -3676,6 +3679,7 @@ impl<T: Float + Send + Sync> BenchmarkData<T> {
                 sample_count: 0,
                 variance: 0.0,
             },
+            _phantom: PhantomData,
         }
     }
 }
@@ -3852,6 +3856,13 @@ impl Default for XLACompilerConfig {
             debug_mode: false,
             profile_compilation: false,
             custom_passes: Vec::new(),
+            enable_tensor_core_optimization: true,
+            enable_sparsity_optimization: true,
+            enable_quantization_optimization: true,
+            enable_gradient_accumulation_optimization: true,
+            enable_advanced_memory_coalescing: true,
+            enable_dynamic_shape_optimization: true,
+            enable_cross_replica_optimization: true,
         }
     }
 }
@@ -4102,9 +4113,9 @@ impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
         Ok(Self {
             target_config: TPUConfig::default(),
             strategies: vec![CodeGenerationStrategy::Balanced],
-            scheduler: InstructionScheduler::new(),
-            register_allocator: RegisterAllocator::new(),
-            memory_allocator: CodeGenMemoryAllocator::new(),
+            scheduler: InstructionScheduler::<T>::new(),
+            register_allocator: RegisterAllocator::<T>::new(),
+            memory_allocator: CodeGenMemoryAllocator::<T>::new(),
             code_optimization_passes: Vec::new(),
         })
     }
@@ -4346,6 +4357,7 @@ impl<T: Float + Default + Clone> MemoryPlanner<T> {
             memory_models: Vec::new(),
             allocation_strategies: Vec::new(),
             objectives: Vec::new(),
+            _phantom: PhantomData,
         })
     }
 }
@@ -4400,6 +4412,7 @@ impl<T: Float + Default + Clone> TypeInferenceEngine<T> {
                 unification_state: UnificationState {
                     substitutions: HashMap::new(),
                     type_variables: HashSet::new(),
+                    _phantom: PhantomData,
                 },
             },
             constraint_solver: ConstraintSolver {
@@ -4434,7 +4447,9 @@ impl<T: Float + Default + Clone> ShapeAnalyzer<T> {
                     propagation_rounds: 0,
                     convergence_time: Duration::from_nanos(0),
                 },
+                _phantom: PhantomData,
             },
+            _phantom: PhantomData,
         }
     }
 }
@@ -4721,7 +4736,7 @@ impl<T: Float + Default + Clone> GraphRewriter<T> {
     }
 }
 
-impl<T: Float + Default + Clone> SafetyChecker<T> {
+impl SafetyChecker {
     fn new() -> Self {
         Self {
             safety_rules: Vec::new(),
@@ -4861,7 +4876,7 @@ impl<T: Float + Default + Clone> RegisterAllocator<T> {
                 register_width: 512,
                 special_registers: Vec::new(),
             },
-            spill_handler: SpillHandler {
+            spill_handler: SpillHandler::<T> {
                 strategies: vec![SpillStrategy::LeastRecentlyUsed],
                 cost_model: SpillCostModel {
                     memory_latency: 100.0,
@@ -5022,12 +5037,12 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
     fn new() -> Self {
         Self {
             strategies: vec![MemoryAllocationStrategy::BestFit],
-            layout_optimizer: MemoryLayoutOptimizer {
+            layout_optimizer: MemoryLayoutOptimizer::<T> {
                 algorithms: vec![LayoutAlgorithm::Tiled],
                 coalescing_rules: Vec::new(),
                 alignment_constraints: Vec::new(),
             },
-            prefetch_inserter: PrefetchInserter {
+            prefetch_inserter: PrefetchInserter::<T> {
                 strategies: vec![PrefetchStrategy::Strided],
                 distance_calculator: PrefetchDistanceCalculator {
                     algorithms: vec![DistanceAlgorithm::LatencyBased],
@@ -5037,7 +5052,7 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
                         bandwidth_utilization: 0.8,
                     },
                 },
-                benefit_analyzer: PrefetchBenefitAnalyzer {
+                benefit_analyzer: PrefetchBenefitAnalyzer::<T> {
                     models: Vec::new(),
                     cost_models: Vec::new(),
                 },
@@ -5054,7 +5069,7 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
         // Analyze memory requirements for each operand
         for input in &computation.inputs {
             if let OperandType::Tensor { shape, .. } = &input.operand_type {
-                let memory_size = self.calculate_tensor_memory_size(shape)?;
+                let memory_size = Self::calculate_tensor_memory_size_static(shape)?;
                 let layout = self.choose_optimal_layout(shape, memory_size)?;
 
                 tensor_layouts.insert(OperandId(tensor_layouts.len()), layout);
@@ -5093,7 +5108,7 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
         })
     }
 
-    fn calculate_tensor_memory_size(&self, shape: &TensorShape) -> Result<usize> {
+    fn calculate_tensor_memory_size_static(shape: &TensorShape) -> Result<usize> {
         let element_size = 4; // Assume 32-bit floats
         let total_elements: usize = shape.dimensions.iter().product();
         Ok(total_elements * element_size)

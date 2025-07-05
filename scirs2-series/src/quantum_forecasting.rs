@@ -1380,7 +1380,7 @@ impl<F: Float + Debug + Clone + FromPrimitive + std::iter::Sum<F>> QuantumEnsemb
     }
 }
 
-/// Quantum Tensor Network for Advanced-Advanced Time Series Analysis
+/// Quantum Tensor Network for Advanced Time Series Analysis
 #[derive(Debug)]
 pub struct QuantumTensorNetwork<F: Float + Debug> {
     /// Tensor network nodes
@@ -2216,12 +2216,12 @@ mod quantum_advanced_tests {
 
         // Quantum Sigmoid should produce values in [0, 1]
         for &val in &sigmoid_output {
-            assert!(val >= 0.0 && val <= 1.0);
+            assert!((0.0..=1.0).contains(&val));
         }
 
         // Quantum Tanh should produce values in [-1, 1]
         for &val in &tanh_output {
-            assert!(val >= -1.0 && val <= 1.0);
+            assert!((-1.0..=1.0).contains(&val));
         }
     }
 
@@ -2272,8 +2272,8 @@ mod quantum_advanced_tests {
 
         // Test error statistics
         let (_total, success_rate, confidence) = qec.get_error_statistics();
-        assert!(success_rate >= 0.0 && success_rate <= 1.0);
-        assert!(confidence >= 0.0 && confidence <= 1.0);
+        assert!((0.0..=1.0).contains(&success_rate));
+        assert!((0.0..=1.0).contains(&confidence));
 
         // Test different error correction codes
         let qec_shor = QuantumErrorCorrection::<f64>::new(ErrorCorrectionCode::ShorCode, 1);
@@ -2341,23 +2341,23 @@ mod quantum_advanced_tests {
 
         // All should be valid encoding strategies
         match angle_encoding {
-            QuantumEncoding::AngleEncoding => assert!(true),
-            _ => assert!(false),
+            QuantumEncoding::AngleEncoding => {}
+            _ => panic!("Expected AngleEncoding"),
         }
 
         match amplitude_encoding {
-            QuantumEncoding::AmplitudeEncoding => assert!(true),
-            _ => assert!(false),
+            QuantumEncoding::AmplitudeEncoding => {}
+            _ => panic!("Expected AmplitudeEncoding"),
         }
 
         match basis_encoding {
-            QuantumEncoding::BasisEncoding => assert!(true),
-            _ => assert!(false),
+            QuantumEncoding::BasisEncoding => {}
+            _ => panic!("Expected BasisEncoding"),
         }
 
         match qram_encoding {
-            QuantumEncoding::QRAM => assert!(true),
-            _ => assert!(false),
+            QuantumEncoding::QRAM => {}
+            _ => panic!("Expected QRAM"),
         }
     }
 

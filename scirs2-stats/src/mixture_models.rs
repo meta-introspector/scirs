@@ -271,7 +271,7 @@ where
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&GMMParameters<F>> {
         check_array_finite(data, "data")?;
 
-        let (n_samples, n_features) = data.dim();
+        let (n_samples, _n_features) = data.dim();
 
         if n_samples < self.n_components {
             return Err(StatsError::InvalidArgument(format!(
@@ -293,7 +293,7 @@ where
         self.convergence_history.clear();
 
         // EM algorithm
-        for iter in 0..self.config.max_iter {
+        for _iter in 0..self.config.max_iter {
             // E-step: compute responsibilities
             let responsibilities = self.e_step(data, &weights, &means, &covariances)?;
 
@@ -366,7 +366,7 @@ where
 
     /// Initialize means using chosen method
     fn initialize_means(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples, _n_features) = data.dim();
         let mut means = Array2::zeros((self.n_components, n_features));
 
         match self.config.init_method {
@@ -436,7 +436,7 @@ where
             None => Random::with_seed(rand::random()),
         };
 
-        let (n_samples, n_features) = data.dim();
+        let (n_samples, _n_features) = data.dim();
         let mut means = Array2::zeros((self.n_components, n_features));
 
         // Choose first center randomly
@@ -477,12 +477,12 @@ where
     fn initialize_covariances(
         &self,
         data: &ArrayView2<F>,
-        means: &Array2<F>,
+        _means: &Array2<F>,
     ) -> StatsResult<Vec<Array2<F>>> {
         let n_features = data.ncols();
         let mut covariances = Vec::with_capacity(self.n_components);
 
-        for i in 0..self.n_components {
+        for _i in 0..self.n_components {
             let cov = match self.config.covariance_type {
                 CovarianceType::Full => {
                     // Initialize as identity with regularization
@@ -597,7 +597,7 @@ where
         responsibilities: &Array2<F>,
         means: &Array2<F>,
     ) -> StatsResult<Vec<Array2<F>>> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples, _n_features) = data.dim();
         let mut covariances = Vec::with_capacity(self.n_components);
 
         for k in 0..self.n_components {
@@ -1791,7 +1791,7 @@ where
 
     /// Initialize means for variational GMM
     fn initialize_means(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples, _n_features) = data.dim();
         let mut means = Array2::zeros((self.max_components, n_features));
 
         use scirs2_core::random::Random;
@@ -1851,7 +1851,7 @@ where
         data: &ArrayView2<F>,
         responsibilities: &Array2<F>,
     ) -> StatsResult<(Array1<F>, Array1<F>, Array2<F>, Array1<F>, Array3<F>)> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples, _n_features) = data.dim();
 
         // Update weight concentration
         let mut weight_concentration =

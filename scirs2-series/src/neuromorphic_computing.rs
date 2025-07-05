@@ -1,4 +1,4 @@
-//! Neuromorphic Computing for Advanced-Advanced Time Series Analysis
+//! Neuromorphic Computing for Advanced Time Series Analysis
 //!
 //! This module implements neuromorphic computing paradigms for time series processing,
 //! including spiking neural networks, liquid state machines, reservoir computing,

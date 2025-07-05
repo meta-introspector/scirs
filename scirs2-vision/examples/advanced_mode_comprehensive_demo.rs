@@ -1,6 +1,6 @@
 //! Comprehensive Advanced Mode Demonstration
 //!
-//! This example showcases the advanced-advanced computer vision capabilities implemented
+//! This example showcases the advanced computer vision capabilities implemented
 //! in Advanced mode, including:
 //! - Scene understanding with cognitive-level reasoning
 //! - Visual reasoning and question answering

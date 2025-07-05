@@ -667,7 +667,7 @@ mod tests {
         let suite = runner.benchmark_toy_datasets();
 
         assert!(!suite.results.is_empty());
-        assert!(suite.successful_results().len() > 0);
+        assert!(!suite.successful_results().is_empty());
     }
 
     #[test]
@@ -677,6 +677,6 @@ mod tests {
 
         assert!(!suite.results.is_empty());
         // Allow some failures due to parameter combinations
-        assert!(suite.successful_results().len() > 0);
+        assert!(!suite.successful_results().is_empty());
     }
 }

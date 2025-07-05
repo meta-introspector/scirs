@@ -625,6 +625,11 @@ impl UnifiedOptimizationResults {
         self.base_result.nit
     }
 
+    /// Get number of iterations performed (alias for iterations)
+    pub fn nit(&self) -> usize {
+        self.base_result.nit
+    }
+
     /// Print comprehensive results summary
     pub fn print_summary(&self) {
         println!("Unified Optimization Results");

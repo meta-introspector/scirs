@@ -1165,7 +1165,7 @@ mod tests {
                     "Cross-validation encountered numerical issues (expected): {:?}",
                     e
                 );
-                assert!(matches!(e, InterpolateError::invalid_input(_)));
+                assert!(matches!(e, InterpolateError::InvalidInput { .. }));
             }
         }
     }

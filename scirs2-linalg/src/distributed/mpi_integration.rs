@@ -2188,7 +2188,7 @@ pub enum CheckpointCompression {
 }
 
 impl AdvancedAdvancedMPIManager {
-    /// Create a new advanced-advanced MPI manager
+    /// Create a new advanced MPI manager
     pub fn new() -> Self {
         Self {
             process_spawner: Arc::new(Mutex::new(DynamicProcessSpawner::new())),

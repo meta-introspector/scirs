@@ -1,6 +1,6 @@
 //! Advanced-performance benchmark showcasing advanced SIMD optimizations
 //!
-//! This example demonstrates the performance benefits of the advanced-advanced SIMD
+//! This example demonstrates the performance benefits of the advanced SIMD
 //! extensions compared to standard implementations. It includes:
 //! - Wavelet pyramid decomposition performance
 //! - Local Binary Pattern texture analysis speed
@@ -18,7 +18,7 @@ use scirs2_ndimage::{
 };
 use std::time::{Duration, Instant};
 
-// Import both standard and advanced-advanced SIMD functions for comparison
+// Import both standard and advanced SIMD functions for comparison
 #[cfg(feature = "simd")]
 use scirs2_ndimage::filters::{
     advanced_simd_advanced_edge_detection, advanced_simd_multi_scale_lbp,
@@ -308,7 +308,7 @@ fn benchmark_edge_detection(
 ) -> NdimageResult<Vec<BenchmarkResult>> {
     let mut results = Vec::new();
 
-    // Benchmark advanced-advanced edge detection
+    // Benchmark advanced edge detection
     let mut durations = Vec::new();
 
     for _ in 0..config.iterations {

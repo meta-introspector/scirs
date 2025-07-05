@@ -45,7 +45,7 @@ type PipelineManager<T> = HashMap<String, T>;
 type BatchScheduler<T> = HashMap<String, T>;
 
 /// TPU Pod Coordinator for batch parallelization
-pub struct TPUPodCoordinator<T: Float> {
+pub struct TPUPodCoordinator<T: Float + ndarray::ScalarOperand> {
     /// Coordination configuration
     config: PodCoordinationConfig,
 
@@ -1038,7 +1038,7 @@ impl OptimError {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> TPUPodCoordinator<T> {
+impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand> TPUPodCoordinator<T> {
     /// Create a new TPU pod coordinator
     pub fn new(config: PodCoordinationConfig) -> Result<Self> {
         let topology_manager = TopologyManager::new(&config)?;

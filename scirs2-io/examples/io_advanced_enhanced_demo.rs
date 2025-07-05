@@ -7,7 +7,7 @@
 //! - Advanced optimization recommendations
 //! - Self-improving algorithmic components
 
-use scirs2_io::advanced_enhanced_algorithms::AdvancedPatternRecognizer;
+use scirs2_io::enhanced_algorithms::AdvancedPatternRecognizer;
 use scirs2_io::error::Result;
 use std::time::Instant;
 

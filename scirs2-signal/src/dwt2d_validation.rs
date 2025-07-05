@@ -4,18 +4,14 @@
 //! including perfect reconstruction, energy conservation, and comparison
 //! with reference implementations.
 
-use crate::dwt::{Wavelet, WaveletFilters};
+use crate::dwt::Wavelet;
 use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
 use crate::dwt2d_enhanced::{
     enhanced_dwt2d_decompose, wavedec2_enhanced, BoundaryMode, Dwt2dConfig, EnhancedDwt2dResult,
-    MultilevelDwt2d,
 };
-use crate::error::SignalResult;
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array2};
 use rand::prelude::*;
-// use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::check_finite;
 use std::f64;
 
 /// 2D DWT validation result

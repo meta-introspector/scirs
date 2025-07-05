@@ -5,7 +5,10 @@
 
 #![allow(dead_code)]
 
-use crate::gpu_ops::{GpuBackend, GpuBuffer, GpuDataType, GpuDevice, GpuError, GpuKernelHandle};
+#[allow(unused_imports)]
+use crate::gpu_ops::{
+    GpuBackend, GpuBuffer, GpuBufferExt, GpuDataType, GpuDevice, GpuError, GpuKernelHandle,
+};
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -59,7 +62,7 @@ pub fn execute_spmv_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
     y_buffer: &GpuBuffer<T>,
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -148,7 +151,7 @@ pub fn execute_symmetric_spmv_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
     y_buffer: &GpuBuffer<T>,
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -286,7 +289,7 @@ fn execute_cuda_spmv<T>(
     y_buffer: &GpuBuffer<T>,
     global_size: &[usize],
     local_size: &[usize],
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -297,7 +300,7 @@ where
     // - Employ warp-level primitives for efficient reduction
 
     // Calculate optimal grid size for CUDA
-    let warp_size = 32; // Standard CUDA warp size
+    let _warp_size = 32; // Standard CUDA warp size
     let block_size = local_size[0].min(1024); // Max threads per block
     let grid_size = (rows + block_size - 1) / block_size;
 
@@ -310,11 +313,13 @@ where
     // Enhanced kernel arguments with CUDA-specific optimizations
     let cuda_args = &[
         Box::new(rows as u32) as Box<dyn std::any::Any>,
-        Box::new(indptr_buffer) as Box<dyn std::any::Any>,
-        Box::new(indices_buffer) as Box<dyn std::any::Any>,
-        Box::new(data_buffer) as Box<dyn std::any::Any>,
-        Box::new(x_buffer) as Box<dyn std::any::Any>,
-        Box::new(y_buffer) as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
+            as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
+            as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*y_buffer) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
         Box::new(block_size as u32) as Box<dyn std::any::Any>,
         Box::new(shared_memory_size as u32) as Box<dyn std::any::Any>,
     ];
@@ -349,7 +354,7 @@ fn execute_opencl_spmv<T>(
     y_buffer: &GpuBuffer<T>,
     global_size: &[usize],
     local_size: &[usize],
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -376,11 +381,13 @@ where
     // Enhanced OpenCL kernel arguments
     let opencl_args = &[
         Box::new(rows as u32) as Box<dyn std::any::Any>,
-        Box::new(indptr_buffer) as Box<dyn std::any::Any>,
-        Box::new(indices_buffer) as Box<dyn std::any::Any>,
-        Box::new(data_buffer) as Box<dyn std::any::Any>,
-        Box::new(x_buffer) as Box<dyn std::any::Any>,
-        Box::new(y_buffer) as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
+            as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
+            as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*y_buffer) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
         Box::new(local_memory_size as u32) as Box<dyn std::any::Any>,
         Box::new(config.vectorization as u32) as Box<dyn std::any::Any>,
     ];
@@ -412,7 +419,7 @@ fn execute_metal_spmv<T>(
     y_buffer: &GpuBuffer<T>,
     global_size: &[usize],
     local_size: &[usize],
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -443,11 +450,13 @@ where
     // Enhanced Metal kernel arguments
     let metal_args = &[
         Box::new(rows as u32) as Box<dyn std::any::Any>,
-        Box::new(indptr_buffer) as Box<dyn std::any::Any>,
-        Box::new(indices_buffer) as Box<dyn std::any::Any>,
-        Box::new(data_buffer) as Box<dyn std::any::Any>,
-        Box::new(x_buffer) as Box<dyn std::any::Any>,
-        Box::new(y_buffer) as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
+            as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
+            as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
+        Box::new(std::ptr::addr_of!(*y_buffer) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
         Box::new(aligned_threadgroup_size as u32) as Box<dyn std::any::Any>,
         Box::new(threadgroup_memory_size as u32) as Box<dyn std::any::Any>,
         Box::new(simdgroup_size as u32) as Box<dyn std::any::Any>,
@@ -517,7 +526,7 @@ fn execute_cuda_symmetric_spmv<T>(
     y_buffer: &GpuBuffer<T>,
     global_size: &[usize],
     local_size: &[usize],
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -529,11 +538,15 @@ where
         local_size,
         &[
             Box::new(rows as u32) as Box<dyn std::any::Any>,
-            Box::new(indptr_buffer) as Box<dyn std::any::Any>,
-            Box::new(indices_buffer) as Box<dyn std::any::Any>,
-            Box::new(data_buffer) as Box<dyn std::any::Any>,
-            Box::new(x_buffer) as Box<dyn std::any::Any>,
-            Box::new(y_buffer) as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
+                as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
+                as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>)
+                as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>)
+                as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*y_buffer) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
         ],
     )
 }
@@ -551,7 +564,7 @@ fn execute_opencl_symmetric_spmv<T>(
     y_buffer: &GpuBuffer<T>,
     global_size: &[usize],
     local_size: &[usize],
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -562,11 +575,15 @@ where
         local_size,
         &[
             Box::new(rows as u32) as Box<dyn std::any::Any>,
-            Box::new(indptr_buffer) as Box<dyn std::any::Any>,
-            Box::new(indices_buffer) as Box<dyn std::any::Any>,
-            Box::new(data_buffer) as Box<dyn std::any::Any>,
-            Box::new(x_buffer) as Box<dyn std::any::Any>,
-            Box::new(y_buffer) as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
+                as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
+                as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>)
+                as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>)
+                as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*y_buffer) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
         ],
     )
 }
@@ -584,7 +601,7 @@ fn execute_metal_symmetric_spmv<T>(
     y_buffer: &GpuBuffer<T>,
     global_size: &[usize],
     local_size: &[usize],
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -595,11 +612,15 @@ where
         local_size,
         &[
             Box::new(rows as u32) as Box<dyn std::any::Any>,
-            Box::new(indptr_buffer) as Box<dyn std::any::Any>,
-            Box::new(indices_buffer) as Box<dyn std::any::Any>,
-            Box::new(data_buffer) as Box<dyn std::any::Any>,
-            Box::new(x_buffer) as Box<dyn std::any::Any>,
-            Box::new(y_buffer) as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
+                as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
+                as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>)
+                as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>)
+                as Box<dyn std::any::Any>,
+            Box::new(std::ptr::addr_of!(*y_buffer) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
         ],
     )
 }
@@ -662,7 +683,7 @@ pub fn execute_triangular_solve_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     b_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -706,11 +727,16 @@ where
             &local_size,
             &[
                 Box::new(n as u32) as Box<dyn std::any::Any>,
-                Box::new(indptr_buffer) as Box<dyn std::any::Any>,
-                Box::new(indices_buffer) as Box<dyn std::any::Any>,
-                Box::new(data_buffer) as Box<dyn std::any::Any>,
-                Box::new(b_buffer) as Box<dyn std::any::Any>,
-                Box::new(x_buffer) as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*b_buffer) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
+                Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>)
+                    as Box<dyn std::any::Any>,
             ],
         ),
     }
@@ -760,7 +786,9 @@ where
         if diag_val != T::zero() {
             x[i] = (b[i] - sum) / diag_val;
         } else {
-            return Err(GpuError::new("Singular matrix in triangular solve"));
+            return Err(GpuError::invalid_parameter(
+                "Singular matrix in triangular solve".to_string(),
+            ));
         }
     }
 
@@ -913,8 +941,8 @@ impl GpuMemoryManager {
     where
         T: GpuDataType + 'static,
     {
-        let size = buffer.as_slice().len();
-        let allocation_size = std::mem::size_of_val(buffer.as_slice());
+        let size = buffer.len();
+        let allocation_size = size * std::mem::size_of::<T>();
         let key = (size, std::any::TypeId::of::<T>());
 
         let pool = self.buffer_pool.entry(key).or_default();

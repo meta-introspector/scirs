@@ -35,7 +35,7 @@ fn j0_small(x: f32) -> f32 {
     return -num / den;
 }
 
-// Ultra-small x approximation using Taylor series
+// Very small x approximation using Taylor series
 fn j0_tiny(x: f32) -> f32 {
     let x2 = x * x;
     let x4 = x2 * x2;

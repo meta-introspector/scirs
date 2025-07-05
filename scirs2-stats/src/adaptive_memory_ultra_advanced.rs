@@ -109,7 +109,7 @@ pub enum DataLayoutStrategy {
 }
 
 /// Prefetching configuration
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PrefetchConfig {
     /// Enable software prefetching
     pub enable_software_prefetch: bool,
@@ -2213,7 +2213,7 @@ impl LayoutOptimizer {
 impl PrefetchEngine {
     fn new(config: &PrefetchConfig) -> Self {
         Self {
-            prefetch_config: *config,
+            prefetch_config: config.clone(),
             pattern_predictor: PatternPredictor::new(),
             hardware_prefetcher: HardwarePrefetcher::new(),
         }

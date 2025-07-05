@@ -8,6 +8,7 @@
 pub mod advanced_analytics;
 pub mod balancing;
 pub mod dataset;
+pub mod enhanced_analytics;
 pub mod extensions;
 pub mod feature_engineering;
 pub mod sampling;
@@ -47,7 +48,7 @@ pub use feature_engineering::{
     create_binned_features, polynomial_features, statistical_features, BinningStrategy,
 };
 
-// Advanced-advanced analytics
+// Advanced analytics
 pub use advanced_analytics::{
     analyze_dataset_advanced, quick_quality_assessment, AdvancedDatasetAnalyzer,
     AdvancedQualityMetrics, CorrelationInsights, NormalityAssessment,

@@ -1215,7 +1215,7 @@ impl CrossPlatformTester {
 }
 
 /// Comprehensive test report
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CrossPlatformTestReport {
     pub timestamp: Instant,
     pub config: CrossPlatformConfig,

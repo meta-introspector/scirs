@@ -713,19 +713,22 @@ impl SpecializedPlots {
         plot.set_labels("Time", "Value");
 
         // Original series
-        let mut original_style = PlotStyle::default();
-        original_style.color = "#1f77b4".to_string(); // Blue
+        let original_style = PlotStyle {
+            color: "#1f77b4".to_string(), // Blue
+            ..Default::default()
+        };
         plot.add_series("Original", time, original, original_style)?;
 
         // Trend component
-        let mut trend_style = PlotStyle::default();
-        trend_style.color = "#ff7f0e".to_string(); // Orange
-        trend_style.line_width = 3.0;
+        let trend_style = PlotStyle {
+            color: "#ff7f0e".to_string(), // Orange
+            line_width: 3.0,
+            ..Default::default()
+        };
         plot.add_series("Trend", time, trend, trend_style)?;
 
         // Seasonal component
-        let mut seasonal_style = PlotStyle::default();
-        seasonal_style.color = "#2ca02c".to_string(); // Green
+        let seasonal_style = PlotStyle { color: "#2ca02c".to_string(), ..Default::default() };
         plot.add_series("Seasonal", time, seasonal, seasonal_style)?;
 
         // Residual component

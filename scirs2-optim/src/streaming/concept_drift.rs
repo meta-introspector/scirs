@@ -1480,7 +1480,7 @@ mod tests {
 
     #[test]
     fn test_ddm_detector() {
-        let mut detector = DdmDetector::new();
+        let mut detector = DdmDetector::<f64>::new();
 
         // Stable period with low error rate
         for i in 0..50 {

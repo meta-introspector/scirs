@@ -101,7 +101,7 @@ where
         .map_err(|_| NdimageError::DimensionError("Failed to convert to 1D array".into()))?;
 
     // Calculate kernel radius based on spatial sigma
-    let three = safe_f64_to_float(3.0)?;
+    let three = safe_f64_to_float::<T>(3.0)?;
     let radius = safe_float_to_usize((sigma_spatial * three).ceil()).unwrap_or(3);
     let kernel_size = 2 * radius + 1;
 
@@ -114,7 +114,7 @@ where
 
     // Precompute spatial weights
     let mut spatial_weights = Array1::zeros(kernel_size);
-    let two = safe_f64_to_float(2.0)?;
+    let two = safe_f64_to_float::<T>(2.0)?;
     let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
 
     for k in 0..kernel_size {
@@ -176,7 +176,7 @@ where
     let (rows, cols) = input_2d.dim();
 
     // Calculate kernel radius based on spatial sigma
-    let three = safe_f64_to_float(3.0)?;
+    let three = safe_f64_to_float::<T>(3.0)?;
     let radius = safe_float_to_usize((sigma_spatial * three).ceil()).unwrap_or(3);
     let kernel_size = 2 * radius + 1;
 
@@ -189,7 +189,7 @@ where
 
     // Precompute spatial weights
     let mut spatial_weights = Array2::zeros((kernel_size, kernel_size));
-    let two = safe_f64_to_float(2.0)?;
+    let two = safe_f64_to_float::<T>(2.0)?;
     let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
 
     for dy in 0..kernel_size {
@@ -255,7 +255,7 @@ where
     D: Dimension,
 {
     // Calculate kernel radius based on spatial sigma
-    let three = safe_f64_to_float(3.0)?;
+    let three = safe_f64_to_float::<T>(3.0)?;
     let radius = safe_float_to_usize((sigma_spatial * three).ceil()).unwrap_or(3);
 
     // Convert to dynamic dimension for easier processing
@@ -266,7 +266,7 @@ where
     let pad_width: Vec<(usize, usize)> = (0..input.ndim()).map(|_| (radius, radius)).collect();
     let padded_input = pad_array(&input_dyn, &pad_width, mode, None)?;
 
-    let two = safe_f64_to_float(2.0)?;
+    let two = safe_f64_to_float::<T>(2.0)?;
     let two_sigma_spatial_sq = two * sigma_spatial * sigma_spatial;
     let two_sigma_color_sq = two * sigma_color * sigma_color;
 
@@ -998,8 +998,8 @@ where
 
     // For single level, fall back to regular bilateral filter
     if config.levels == 1 {
-        let spatial_sigma = safe_f64_to_float(config.spatial_sigmas[0])?;
-        let color_sigma = safe_f64_to_float(config.color_sigmas[0])?;
+        let spatial_sigma = safe_f64_to_float::<T>(config.spatial_sigmas[0])?;
+        let color_sigma = safe_f64_to_float::<T>(config.color_sigmas[0])?;
         return bilateral_filter(input, spatial_sigma, color_sigma, Some(config.mode));
     }
 
@@ -1014,8 +1014,8 @@ where
     // Apply bilateral filter at each level
     let mut filtered_pyramid = Vec::with_capacity(config.levels);
     for (level, image) in pyramid.iter().enumerate() {
-        let spatial_sigma = safe_f64_to_float(config.spatial_sigmas[level])?;
-        let color_sigma = safe_f64_to_float(config.color_sigmas[level])?;
+        let spatial_sigma = safe_f64_to_float::<T>(config.spatial_sigmas[level])?;
+        let color_sigma = safe_f64_to_float::<T>(config.color_sigmas[level])?;
 
         let filtered = bilateral_filter(image, spatial_sigma, color_sigma, Some(config.mode))?;
         filtered_pyramid.push(filtered);
@@ -1027,7 +1027,7 @@ where
         result = upsample_image(&result, &filtered_pyramid[level])?;
 
         // Blend with original level
-        let alpha = safe_f64_to_float(0.7)?; // Blend factor
+        let alpha = safe_f64_to_float::<T>(0.7)?; // Blend factor
         result = blend_arrays(&result, &filtered_pyramid[level], alpha)?;
     }
 
@@ -1163,7 +1163,7 @@ where
             let adaptive_spatial =
                 base_spatial_sigma * (T::one() + adaptation_factor * variance_ratio);
             let adaptive_color = base_color_sigma
-                * (T::one() - adaptation_factor * variance_ratio * safe_f64_to_float(0.5)?);
+                * (T::one() - adaptation_factor * variance_ratio * safe_f64_to_float::<T>(0.5)?);
 
             // Apply bilateral filtering with adaptive parameters
             let filtered_value = apply_bilateral_window(
@@ -1244,7 +1244,7 @@ where
     T: Float + FromPrimitive + Debug + Clone + 'static,
 {
     let radius = window_size / 2;
-    let two = safe_f64_to_float(2.0)?;
+    let two = safe_f64_to_float::<T>(2.0)?;
     let two_sigma_spatial_sq = two * spatial_sigma * spatial_sigma;
     let two_sigma_color_sq = two * color_sigma * color_sigma;
 

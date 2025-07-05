@@ -616,7 +616,7 @@ impl SystemAlerter {
                     AlertType::HighMemoryUsage,
                     memory_percent,
                     self.config.memory_threshold,
-                    format!("High memory usage: {:.1}%", memory_percent),
+                    format!("High memory usage: {memory_percent:.1}%"),
                 ));
             }
         }

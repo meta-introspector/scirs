@@ -18,13 +18,11 @@
 
 use ndarray::{s, Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
-use rand::Rng;
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::hash::{Hash, Hasher};
 
 use crate::error::{NdimageError, NdimageResult};
-use scirs2_core::parallel_ops::*;
 
 /// Configuration for hyperdimensional computing
 #[derive(Debug, Clone)]
@@ -85,7 +83,7 @@ impl Hypervector {
             let idx = rng.random_range(0..dim);
             if !used_indices.contains(&idx) {
                 used_indices.insert(idx);
-                let value = if rng.gen_bool(0.5) { 1.0 } else { -1.0 };
+                let value = if rng.random_bool(0.5) { 1.0 } else { -1.0 };
                 sparse_data.push((idx, value));
             }
         }

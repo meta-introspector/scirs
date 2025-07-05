@@ -11,7 +11,7 @@ pub mod utils;
 
 pub use activations_minimal::{Activation, ReLU, Sigmoid, Softmax, Tanh, GELU};
 pub use error::{Error, NeuralError, Result};
-pub use layers::{Conv2D, Dense, Dropout, Layer, Sequential, LSTM};
+pub use layers::{BatchNorm, Conv2D, Dense, Dropout, Layer, LayerNorm, Sequential, LSTM};
 pub use losses::{
     ContrastiveLoss, CrossEntropyLoss, FocalLoss, Loss, MeanSquaredError, TripletLoss,
 };
@@ -22,7 +22,7 @@ pub mod prelude {
     pub use crate::{
         activations_minimal::{Activation, ReLU, Sigmoid, Softmax, Tanh, GELU},
         error::{Error, NeuralError, Result},
-        layers::{Conv2D, Dense, Dropout, Layer, Sequential, LSTM},
+        layers::{BatchNorm, Conv2D, Dense, Dropout, Layer, LayerNorm, Sequential, LSTM},
         losses::{
             ContrastiveLoss, CrossEntropyLoss, FocalLoss, Loss, MeanSquaredError, TripletLoss,
         },

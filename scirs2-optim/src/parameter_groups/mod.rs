@@ -581,70 +581,66 @@ pub mod checkpointing {
 
             // Create the file
             let file = File::create(path).map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to create checkpoint file: {}", e))
+                OptimError::InvalidConfig(format!("Failed to create checkpoint file: {e}"))
             })?;
             let mut writer = BufWriter::new(file);
 
             // Write header
             writeln!(writer, "# ScirS2 Optimizer Checkpoint v1.0").map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to write checkpoint header: {}", e))
+                OptimError::InvalidConfig(format!("Failed to write checkpoint header: {e}"))
             })?;
             writeln!(writer, "# Timestamp: {}", checkpoint.metadata.timestamp).map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to write timestamp: {}", e))
+                OptimError::InvalidConfig(format!("Failed to write timestamp: {e}"))
             })?;
             writeln!(
                 writer,
                 "# Optimizer Version: {}",
                 checkpoint.metadata.optimizer_version
             )
-            .map_err(|e| OptimError::InvalidConfig(format!("Failed to write version: {}", e)))?;
+            .map_err(|e| OptimError::InvalidConfig(format!("Failed to write version: {e}")))?;
             writeln!(writer, "# Step: {}", checkpoint.step)
-                .map_err(|e| OptimError::InvalidConfig(format!("Failed to write step: {}", e)))?;
-            writeln!(writer).map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
-            })?;
+                .map_err(|e| OptimError::InvalidConfig(format!("Failed to write step: {e}")))?;
+            writeln!(writer)
+                .map_err(|e| OptimError::InvalidConfig(format!("Failed to write newline: {e}")))?;
 
             // Write custom metadata
             writeln!(writer, "[METADATA]").map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to write metadata section: {}", e))
+                OptimError::InvalidConfig(format!("Failed to write metadata section: {e}"))
             })?;
             for (key, value) in &checkpoint.metadata.custom {
                 writeln!(writer, "{}={}", key, value).map_err(|e| {
-                    OptimError::InvalidConfig(format!("Failed to write metadata entry: {}", e))
+                    OptimError::InvalidConfig(format!("Failed to write metadata entry: {e}"))
                 })?;
             }
-            writeln!(writer).map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
-            })?;
+            writeln!(writer)
+                .map_err(|e| OptimError::InvalidConfig(format!("Failed to write newline: {e}")))?;
 
             // Write global state
             writeln!(writer, "[GLOBAL_STATE]").map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to write global state section: {}", e))
+                OptimError::InvalidConfig(format!("Failed to write global state section: {e}"))
             })?;
             for (key, value) in &checkpoint.global_state {
                 writeln!(writer, "{}={}", key, value).map_err(|e| {
-                    OptimError::InvalidConfig(format!("Failed to write global state entry: {}", e))
+                    OptimError::InvalidConfig(format!("Failed to write global state entry: {e}"))
                 })?;
             }
-            writeln!(writer).map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
-            })?;
+            writeln!(writer)
+                .map_err(|e| OptimError::InvalidConfig(format!("Failed to write newline: {e}")))?;
 
             // Write parameter groups
             writeln!(writer, "[GROUPS]").map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to write groups section: {}", e))
+                OptimError::InvalidConfig(format!("Failed to write groups section: {e}"))
             })?;
             writeln!(writer, "count={}", checkpoint.groups.len()).map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to write group count: {}", e))
+                OptimError::InvalidConfig(format!("Failed to write group count: {e}"))
             })?;
-            writeln!(writer).map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
-            })?;
+            writeln!(writer)
+                .map_err(|e| OptimError::InvalidConfig(format!("Failed to write newline: {e}")))?;
 
             for group in &checkpoint.groups {
                 // Write group header
                 writeln!(writer, "[GROUP_{}]", group.id).map_err(|e| {
-                    OptimError::InvalidConfig(format!("Failed to write group header: {}", e))
+                    OptimError::InvalidConfig(format!("Failed to write group header: {e}"))
                 })?;
 
                 // Write group config
@@ -658,7 +654,7 @@ pub mod checkpointing {
                         .unwrap_or_else(|| "None".to_string())
                 )
                 .map_err(|e| {
-                    OptimError::InvalidConfig(format!("Failed to write learning rate: {}", e))
+                    OptimError::InvalidConfig(format!("Failed to write learning rate: {e}"))
                 })?;
                 writeln!(
                     writer,
@@ -670,7 +666,7 @@ pub mod checkpointing {
                         .unwrap_or_else(|| "None".to_string())
                 )
                 .map_err(|e| {
-                    OptimError::InvalidConfig(format!("Failed to write weight decay: {}", e))
+                    OptimError::InvalidConfig(format!("Failed to write weight decay: {e}"))
                 })?;
                 writeln!(
                     writer,
@@ -681,9 +677,7 @@ pub mod checkpointing {
                         .map(|m| m.to_string())
                         .unwrap_or_else(|| "None".to_string())
                 )
-                .map_err(|e| {
-                    OptimError::InvalidConfig(format!("Failed to write momentum: {}", e))
-                })?;
+                .map_err(|e| OptimError::InvalidConfig(format!("Failed to write momentum: {e}")))?;
 
                 // Write custom params
                 writeln!(
@@ -692,62 +686,56 @@ pub mod checkpointing {
                     group.config.custom_params.len()
                 )
                 .map_err(|e| {
-                    OptimError::InvalidConfig(format!("Failed to write custom params count: {}", e))
+                    OptimError::InvalidConfig(format!("Failed to write custom params count: {e}"))
                 })?;
                 for (key, value) in &group.config.custom_params {
                     writeln!(writer, "custom_{}={}", key, value).map_err(|e| {
-                        OptimError::InvalidConfig(format!("Failed to write custom param: {}", e))
+                        OptimError::InvalidConfig(format!("Failed to write custom param: {e}"))
                     })?;
                 }
 
                 // Write parameters
                 writeln!(writer, "param_count={}", group.params.len()).map_err(|e| {
-                    OptimError::InvalidConfig(format!("Failed to write param count: {}", e))
+                    OptimError::InvalidConfig(format!("Failed to write param count: {e}"))
                 })?;
                 for (i, param) in group.params.iter().enumerate() {
                     writeln!(writer, "param_{}_shape={:?}", i, param.shape()).map_err(|e| {
-                        OptimError::InvalidConfig(format!("Failed to write param shape: {}", e))
+                        OptimError::InvalidConfig(format!("Failed to write param shape: {e}"))
                     })?;
                     write!(writer, "param_{}_data=", i).map_err(|e| {
-                        OptimError::InvalidConfig(format!(
-                            "Failed to write param data label: {}",
-                            e
-                        ))
+                        OptimError::InvalidConfig(format!("Failed to write param data label: {e}"))
                     })?;
 
                     // Write array data as space-separated values
                     for (j, &val) in param.iter().enumerate() {
                         if j > 0 {
                             write!(writer, " ").map_err(|e| {
-                                OptimError::InvalidConfig(format!("Failed to write space: {}", e))
+                                OptimError::InvalidConfig(format!("Failed to write space: {e}"))
                             })?;
                         }
                         write!(writer, "{}", val).map_err(|e| {
-                            OptimError::InvalidConfig(format!("Failed to write value: {}", e))
+                            OptimError::InvalidConfig(format!("Failed to write value: {e}"))
                         })?;
                     }
                     writeln!(writer).map_err(|e| {
-                        OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
+                        OptimError::InvalidConfig(format!("Failed to write newline: {e}"))
                     })?;
                 }
 
                 // Write optimizer state
                 writeln!(writer, "state_count={}", group.state.len()).map_err(|e| {
-                    OptimError::InvalidConfig(format!("Failed to write state count: {}", e))
+                    OptimError::InvalidConfig(format!("Failed to write state count: {e}"))
                 })?;
                 for (state_name, state_arrays) in &group.state {
                     writeln!(writer, "state_name={}", state_name).map_err(|e| {
-                        OptimError::InvalidConfig(format!("Failed to write state name: {}", e))
+                        OptimError::InvalidConfig(format!("Failed to write state name: {e}"))
                     })?;
                     writeln!(writer, "state_array_count={}", state_arrays.len()).map_err(|e| {
-                        OptimError::InvalidConfig(format!(
-                            "Failed to write state array count: {}",
-                            e
-                        ))
+                        OptimError::InvalidConfig(format!("Failed to write state array count: {e}"))
                     })?;
                     for (i, array) in state_arrays.iter().enumerate() {
                         writeln!(writer, "state_{}_shape={:?}", i, array.shape()).map_err(|e| {
-                            OptimError::InvalidConfig(format!("Failed to write state shape: {}", e))
+                            OptimError::InvalidConfig(format!("Failed to write state shape: {e}"))
                         })?;
                         write!(writer, "state_{}_data=", i).map_err(|e| {
                             OptimError::InvalidConfig(format!(
@@ -767,22 +755,22 @@ pub mod checkpointing {
                                 })?;
                             }
                             write!(writer, "{}", val).map_err(|e| {
-                                OptimError::InvalidConfig(format!("Failed to write value: {}", e))
+                                OptimError::InvalidConfig(format!("Failed to write value: {e}"))
                             })?;
                         }
                         writeln!(writer).map_err(|e| {
-                            OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
+                            OptimError::InvalidConfig(format!("Failed to write newline: {e}"))
                         })?;
                     }
                 }
 
                 writeln!(writer).map_err(|e| {
-                    OptimError::InvalidConfig(format!("Failed to write newline: {}", e))
+                    OptimError::InvalidConfig(format!("Failed to write newline: {e}"))
                 })?;
             }
 
             writer.flush().map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to flush checkpoint file: {}", e))
+                OptimError::InvalidConfig(format!("Failed to flush checkpoint file: {e}"))
             })?;
 
             Ok(())
@@ -796,7 +784,7 @@ pub mod checkpointing {
 
             let path = path.as_ref();
             let file = File::open(path).map_err(|e| {
-                OptimError::InvalidConfig(format!("Failed to open checkpoint file: {}", e))
+                OptimError::InvalidConfig(format!("Failed to open checkpoint file: {e}"))
             })?;
             let reader = BufReader::new(file);
             let mut lines = reader.lines();
@@ -941,7 +929,7 @@ pub mod checkpointing {
                 let param_count: usize = lines
                     .next()
                     .ok_or_else(|| OptimError::InvalidConfig("Missing param count".to_string()))?
-                    .map_err(|e| OptimError::InvalidConfig(format!("Failed to read line: {}", e)))?
+                    .map_err(|e| OptimError::InvalidConfig(format!("Failed to read line: {e}")))?
                     .trim_start_matches("param_count=")
                     .parse()
                     .map_err(|_| OptimError::InvalidConfig("Invalid param count".to_string()))?;
@@ -955,7 +943,7 @@ pub mod checkpointing {
                             OptimError::InvalidConfig("Missing param shape".to_string())
                         })?
                         .map_err(|e| {
-                            OptimError::InvalidConfig(format!("Failed to read line: {}", e))
+                            OptimError::InvalidConfig(format!("Failed to read line: {e}"))
                         })?;
 
                     let shape_str = shape_line
@@ -976,7 +964,7 @@ pub mod checkpointing {
                         .next()
                         .ok_or_else(|| OptimError::InvalidConfig("Missing param data".to_string()))?
                         .map_err(|e| {
-                            OptimError::InvalidConfig(format!("Failed to read line: {}", e))
+                            OptimError::InvalidConfig(format!("Failed to read line: {e}"))
                         })?;
 
                     let data_str = data_line.trim_start_matches(&format!("param_{}_data=", i));
@@ -992,7 +980,7 @@ pub mod checkpointing {
 
                     // Create array from shape and data
                     let array = Array::from_shape_vec(shape, data).map_err(|e| {
-                        OptimError::InvalidConfig(format!("Failed to create array: {}", e))
+                        OptimError::InvalidConfig(format!("Failed to create array: {e}"))
                     })?;
                     params.push(array);
                 }
@@ -1001,7 +989,7 @@ pub mod checkpointing {
                 let state_count: usize = lines
                     .next()
                     .ok_or_else(|| OptimError::InvalidConfig("Missing state count".to_string()))?
-                    .map_err(|e| OptimError::InvalidConfig(format!("Failed to read line: {}", e)))?
+                    .map_err(|e| OptimError::InvalidConfig(format!("Failed to read line: {e}")))?
                     .trim_start_matches("state_count=")
                     .parse()
                     .map_err(|_| OptimError::InvalidConfig("Invalid state count".to_string()))?;
@@ -1012,7 +1000,7 @@ pub mod checkpointing {
                         .next()
                         .ok_or_else(|| OptimError::InvalidConfig("Missing state name".to_string()))?
                         .map_err(|e| {
-                            OptimError::InvalidConfig(format!("Failed to read line: {}", e))
+                            OptimError::InvalidConfig(format!("Failed to read line: {e}"))
                         })?
                         .trim_start_matches("state_name=")
                         .to_string();
@@ -1023,7 +1011,7 @@ pub mod checkpointing {
                             OptimError::InvalidConfig("Missing state array count".to_string())
                         })?
                         .map_err(|e| {
-                            OptimError::InvalidConfig(format!("Failed to read line: {}", e))
+                            OptimError::InvalidConfig(format!("Failed to read line: {e}"))
                         })?
                         .trim_start_matches("state_array_count=")
                         .parse()
@@ -1040,7 +1028,7 @@ pub mod checkpointing {
                                 OptimError::InvalidConfig("Missing state shape".to_string())
                             })?
                             .map_err(|e| {
-                                OptimError::InvalidConfig(format!("Failed to read line: {}", e))
+                                OptimError::InvalidConfig(format!("Failed to read line: {e}"))
                             })?;
 
                         let shape_str = shape_line
@@ -1064,7 +1052,7 @@ pub mod checkpointing {
                                 OptimError::InvalidConfig("Missing state data".to_string())
                             })?
                             .map_err(|e| {
-                                OptimError::InvalidConfig(format!("Failed to read line: {}", e))
+                                OptimError::InvalidConfig(format!("Failed to read line: {e}"))
                             })?;
 
                         let data_str = data_line.trim_start_matches(&format!("state_{}_data=", i));
@@ -1080,10 +1068,7 @@ pub mod checkpointing {
 
                         // Create array
                         let array = Array::from_shape_vec(shape, data).map_err(|e| {
-                            OptimError::InvalidConfig(format!(
-                                "Failed to create state array: {}",
-                                e
-                            ))
+                            OptimError::InvalidConfig(format!("Failed to create state array: {e}"))
                         })?;
                         state_arrays.push(array);
                     }
@@ -1241,9 +1226,8 @@ pub mod checkpointing {
         ) -> Result<()> {
             if checkpoint.groups.len() != expected_groups {
                 return Err(OptimError::InvalidConfig(format!(
-                    "Checkpoint has {} groups, expected {}",
-                    checkpoint.groups.len(),
-                    expected_groups
+                    "Checkpoint has {} groups, expected {expected_groups}",
+                    checkpoint.groups.len()
                 )));
             }
 

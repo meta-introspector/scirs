@@ -349,10 +349,9 @@ impl NeuromorphicProcessor {
             for post_idx in self.network_config.input_neurons
                 ..(self.network_config.input_neurons + self.network_config.hidden_neurons)
             {
-                if rng.random::<f64>() < self.network_config.connection_probability {
-                    let weight =
-                        (rng.random::<f64>() - 0.5) * 2.0 * self.plasticity_config.max_weight;
-                    let delay = Duration::from_millis(rng.random_range(1..=5));
+                if rng.gen::<f64>() < self.network_config.connection_probability {
+                    let weight = (rng.gen::<f64>() - 0.5) * 2.0 * self.plasticity_config.max_weight;
+                    let delay = Duration::from_millis(rng.gen_range(1..=5));
 
                     network[pre_idx].push(Synapse {
                         weight,
@@ -441,7 +440,7 @@ impl NeuromorphicProcessor {
             if feature_idx < self.network_config.input_neurons {
                 // Rate encoding: higher values = higher spike probability
                 let spike_probability = (feature_value.abs().tanh() + 1.0) / 2.0;
-                let spike_current = if rand::rng().random::<f64>() < spike_probability {
+                let spike_current = if rand::thread_rng().gen::<f64>() < spike_probability {
                     0.5 * feature_value.signum()
                 } else {
                     0.0
@@ -531,7 +530,7 @@ impl NeuromorphicProcessor {
 
         // Use network weights to influence feature generation
         for feature_idx in 0..n_features {
-            let mut feature_value = rng.random::<f64>() - 0.5;
+            let mut feature_value = rng.gen::<f64>() - 0.5;
 
             // Neural network influence
             if feature_idx < network.len() {
@@ -564,7 +563,7 @@ impl NeuromorphicProcessor {
             .unwrap_or(0);
 
         // Add some noise for variability
-        let noise = rng.random::<f64>() * 0.1 - 0.05;
+        let noise = rng.gen::<f64>() * 0.1 - 0.05;
         Ok(max_feature_idx as f64 + noise)
     }
 
@@ -664,11 +663,10 @@ impl NeuromorphicProcessor {
         for pre_idx in start_hidden..end_hidden {
             for post_idx in start_hidden..end_hidden {
                 if pre_idx != post_idx
-                    && rng.random::<f64>() < self.network_config.connection_probability * 0.5
+                    && rng.gen::<f64>() < self.network_config.connection_probability * 0.5
                 {
-                    let weight =
-                        (rng.random::<f64>() - 0.5) * self.plasticity_config.max_weight * 0.5;
-                    let delay = Duration::from_millis(rng.random_range(2..=10));
+                    let weight = (rng.gen::<f64>() - 0.5) * self.plasticity_config.max_weight * 0.5;
+                    let delay = Duration::from_millis(rng.gen_range(2..=10));
 
                     network[pre_idx].push(Synapse {
                         weight,

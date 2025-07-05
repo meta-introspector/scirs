@@ -1209,7 +1209,7 @@ pub mod natural_gradients {
     /// Simple iterative inverse for larger matrices
     fn iterative_inverse_simple<T>(matrix: &Array2<T>) -> Result<Array2<T>>
     where
-        T: Float,
+        T: Float + 'static,
     {
         // Use Richardson iteration with diagonal preconditioning
         let n = matrix.nrows();

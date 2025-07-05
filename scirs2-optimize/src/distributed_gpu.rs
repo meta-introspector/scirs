@@ -6,7 +6,6 @@
 
 use crate::error::ScirsResult;
 use ndarray::{Array1, Array2, ArrayView1};
-use std::sync::Arc;
 
 use crate::distributed::{
     DistributedConfig, DistributedOptimizationContext, DistributedStats, MPIInterface,
@@ -88,7 +87,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
             match config.tensor_config.as_ref() {
                 Some(tensor_config) => {
                     match TensorCoreOptimizer::new(
-                        Arc::clone(gpu_context.context()),
+                        gpu_context.context().clone(),
                         tensor_config.clone(),
                     ) {
                         Ok(optimizer) => Some(optimizer),
@@ -160,6 +159,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         //     ).map_err(|e| scirs2_core::error::CoreError::General(e.to_string()))?;
         let evolution_kernel = todo!("Fix GpuContext type conversion");
 
+        #[allow(unreachable_code)]
         let mut best_individual = Array1::zeros(dims);
         let mut best_fitness = f64::INFINITY;
         let mut total_evaluations = local_pop_size;

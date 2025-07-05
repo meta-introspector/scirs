@@ -62,8 +62,10 @@ pub struct GpuDevice {
 #[derive(Debug)]
 pub struct GpuMemoryPool {
     /// Device ID this pool manages
+    #[allow(dead_code)]
     device_id: usize,
     /// Total pool size
+    #[allow(dead_code)]
     total_size: u64,
     /// Currently allocated size
     allocated_size: u64,
@@ -170,6 +172,7 @@ pub struct GpuPerformanceMonitor {
     /// Overall system metrics
     system_metrics: SystemMetrics,
     /// Historical performance data
+    #[allow(dead_code)]
     history: Vec<PerformanceSnapshot>,
     /// Monitoring start time
     start_time: Instant,
@@ -1144,6 +1147,7 @@ pub mod production_extensions {
         /// Defragmentation threshold
         fragmentation_threshold: f32,
         /// Auto-optimization enabled
+        #[allow(dead_code)]
         auto_optimize: bool,
         /// Optimization statistics
         optimization_stats: MemoryOptimizationStats,
@@ -1249,8 +1253,10 @@ pub mod production_extensions {
         /// Performance history for each device
         device_performance_history: HashMap<usize, Vec<PerformanceDataPoint>>,
         /// Auto-scaling enabled
+        #[allow(dead_code)]
         auto_scaling: bool,
         /// Scaling thresholds
+        #[allow(dead_code)]
         scaling_thresholds: ScalingThresholds,
     }
 

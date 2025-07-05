@@ -33,7 +33,7 @@ impl XORNetwork {
         epochs: usize,
     ) -> Result<()> {
         let loss_fn = MeanSquaredError::new();
-        println!("Training for {} epochs", epochs);
+        println!("Training for {epochs} epochs");
         for epoch in 0..epochs {
             // Forward pass
             let hidden_output = self.hidden_layer.forward(inputs)?;
@@ -41,7 +41,7 @@ impl XORNetwork {
             // Compute loss
             let loss = loss_fn.forward(&final_output, targets)?;
             if epoch % 500 == 0 || epoch == epochs - 1 {
-                println!("Epoch {}/{}: loss = {:.6}", epoch + 1, epochs, loss);
+                println!("Epoch {}/{epochs}: loss = {loss:.6}", epoch + 1);
             }
             // Backward pass
             let output_grad = loss_fn.backward(&final_output, targets)?;
@@ -83,15 +83,15 @@ fn main() -> Result<()> {
     )?;
     let targets = Array::from_shape_vec(IxDyn(&[4, 1]), vec![0.0f32, 1.0, 1.0, 0.0])?;
     println!("XOR problem dataset:");
-    println!("Inputs:\n{:?}", inputs);
-    println!("Targets:\n{:?}", targets);
+    println!("Inputs:\n{inputs:?}");
+    println!("Targets:\n{targets:?}");
     // Create and train the network
     let mut network = XORNetwork::new()?;
     network.train(&inputs, &targets, 0.1, 10000)?;
     // Test the trained network
     println!("\nEvaluation:");
     let predictions = network.forward(&inputs)?;
-    println!("Predictions:\n{:.3?}", predictions);
+    println!("Predictions:\n{predictions:.3?}");
     // Test with individual inputs
     println!("\nTesting with specific inputs:");
     let test_cases = vec![
@@ -103,16 +103,14 @@ fn main() -> Result<()> {
     for (x1, x2) in test_cases {
         let test_input = Array::from_shape_vec(IxDyn(&[1, 2]), vec![x1, x2])?;
         let prediction = network.forward(&test_input)?;
+        let expected = if (x1 == 1.0 && x2 == 0.0) || (x1 == 0.0 && x2 == 1.0) {
+            1.0
+        } else {
+            0.0
+        };
         println!(
-            "Input: [{:.1}, {:.1}], Predicted: {:.3}, Expected: {:.1}",
-            x1,
-            x2,
-            prediction[[0, 0]],
-            if (x1 == 1.0 && x2 == 0.0) || (x1 == 0.0 && x2 == 1.0) {
-                1.0
-            } else {
-                0.0
-            }
+            "Input: [{x1:.1}, {x2:.1}], Predicted: {:.3}, Expected: {expected:.1}",
+            prediction[[0, 0]]
         );
     }
     Ok(())

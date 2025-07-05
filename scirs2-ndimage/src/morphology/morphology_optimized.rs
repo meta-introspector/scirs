@@ -119,7 +119,7 @@ fn erosion_iteration_simd<T>(
     // Process rows with potential for SIMD optimization
     for i in 0..height {
         // For each row, we can potentially process multiple pixels at once
-        let row_slice = dst.row_mut(i);
+        let mut row_slice = dst.row_mut(i);
 
         for j in 0..width {
             let mut min_val = T::infinity();
@@ -301,7 +301,7 @@ fn dilation_iteration_simd<T>(
 {
     // Process rows with potential for SIMD optimization
     for i in 0..height {
-        let row_slice = dst.row_mut(i);
+        let mut row_slice = dst.row_mut(i);
 
         for j in 0..width {
             let mut max_val = T::neg_infinity();
@@ -858,7 +858,7 @@ where
         current = grey_erosion_2d_optimized(&current, Some(struct_elem), Some(1), None, None)?;
 
         // Constrain by mask (pointwise maximum)
-        for ((c, m), p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
+        for ((c, m), _p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
             *c = (*c).max(*m);
         }
 
@@ -926,7 +926,7 @@ where
         current = grey_dilation_2d_optimized(&current, Some(struct_elem), Some(1), None, None)?;
 
         // Constrain by mask (pointwise minimum)
-        for ((c, m), p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
+        for ((c, m), _p) in current.iter_mut().zip(mask.iter()).zip(previous.iter()) {
             *c = (*c).min(*m);
         }
 

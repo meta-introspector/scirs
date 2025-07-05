@@ -480,7 +480,7 @@ impl MLPipeline {
         // Create RNG
         let mut rng: Box<dyn RngCore> = match random_state {
             Some(seed) => Box::new(StdRng::seed_from_u64(seed)),
-            None => Box::new(rand::rng()),
+            None => Box::new(rand::thread_rng()),
         };
 
         // Collect all indices for the oversampled dataset
@@ -497,7 +497,7 @@ impl MLPipeline {
 
             if samples_needed > 0 {
                 for _ in 0..samples_needed {
-                    let random_idx = rng.random_range(0..indices.len());
+                    let random_idx = rng.gen_range(0..indices.len());
                     all_indices.push(indices[random_idx]);
                 }
             }
@@ -734,7 +734,7 @@ impl MLPipeline {
                     indices.shuffle(&mut rng);
                 }
                 None => {
-                    let mut rng = rand::rng();
+                    let mut rng = rand::thread_rng();
                     indices.shuffle(&mut rng);
                 }
             }
@@ -764,7 +764,7 @@ impl MLPipeline {
                     class_group.shuffle(&mut rng);
                 }
                 None => {
-                    let mut rng = rand::rng();
+                    let mut rng = rand::thread_rng();
                     class_group.shuffle(&mut rng);
                 }
             }
@@ -901,7 +901,7 @@ mod tests {
 
     #[test]
     fn test_train_test_split() {
-        let dataset = make_classification(100, 5, 2, 0, 0, Some(42)).unwrap();
+        let dataset = make_classification(100, 5, 2, 1, 1, Some(42)).unwrap();
         let split = convenience::train_test_split(&dataset, Some(0.3)).unwrap();
 
         assert_eq!(split.x_train.nrows() + split.x_test.nrows(), 100);
@@ -912,7 +912,7 @@ mod tests {
 
     #[test]
     fn test_cross_validation_split() {
-        let dataset = make_classification(100, 3, 2, 0, 0, Some(42)).unwrap();
+        let dataset = make_classification(100, 3, 2, 1, 1, Some(42)).unwrap();
         let folds = convenience::cv_split(&dataset, Some(5), Some(true)).unwrap();
 
         assert_eq!(folds.len(), 5);
@@ -929,7 +929,7 @@ mod tests {
 
     #[test]
     fn test_dataset_preparation() {
-        let dataset = make_classification(50, 4, 2, 0, 0, Some(42)).unwrap();
+        let dataset = make_classification(50, 4, 2, 1, 1, Some(42)).unwrap();
         let prepared = convenience::prepare_for_ml(&dataset, true, false).unwrap();
 
         assert_eq!(prepared.n_samples(), dataset.n_samples());
@@ -938,7 +938,7 @@ mod tests {
 
     #[test]
     fn test_experiment_creation() {
-        let dataset = make_classification(100, 5, 2, 0, 0, Some(42)).unwrap();
+        let dataset = make_classification(100, 5, 2, 1, 1, Some(42)).unwrap();
         let experiment = convenience::create_experiment("test_experiment", &dataset);
 
         assert_eq!(experiment.name, "test_experiment");

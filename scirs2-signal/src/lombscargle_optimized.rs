@@ -399,7 +399,7 @@ fn validate_comprehensive_accuracy() -> SignalResult<ComprehensiveAccuracyResult
 fn generate_comprehensive_test_signals(
 ) -> SignalResult<HashMap<String, (Array1<f64>, Array1<f64>, Vec<f64>, Vec<f64>)>> {
     let mut signals = HashMap::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // 1. Single tone signal
     let n = 200;
@@ -702,7 +702,7 @@ fn perform_scipy_comparison() -> SignalResult<ScipyComparisonResult> {
 #[allow(dead_code)]
 fn generate_scipy_test_signals() -> SignalResult<Vec<(Array1<f64>, Array1<f64>)>> {
     let mut signals = Vec::new();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Signal 1: Simple sinusoid with irregular sampling
     let n = 100;
@@ -747,7 +747,7 @@ fn simulate_scipy_lombscargle(
     let (freqs, mut power) = lombscargle(t, y, None, Some("standard"), Some(true), Some(false))?;
 
     // Add small random perturbations to simulate SciPy differences
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     for p in power.iter_mut() {
         *p *= 1.0 + 0.001 * rng.random_range(-1.0..1.0); // 0.1% random variation
     }
@@ -762,7 +762,7 @@ fn validate_simd_implementation_complete() -> SignalResult<CompleteSimdValidatio
 
     // Generate test data
     let n = 1024;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let t: Array1<f64> =
         Array1::from_shape_fn(n, |i| i as f64 * 0.01 + 0.001 * rng.random_range(-1.0..1.0));
     let y: Array1<f64> =
@@ -883,7 +883,7 @@ fn validate_false_alarm_probability() -> SignalResult<FalseAlarmValidation> {
     let mut false_alarms = 0;
     let threshold = 10.0; // Arbitrary threshold
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for _ in 0..n_trials {
         let t = Array1::linspace(0.0, 10.0, n_samples);
@@ -913,7 +913,7 @@ fn validate_false_alarm_probability() -> SignalResult<FalseAlarmValidation> {
 fn compare_with_theoretical_psd() -> SignalResult<PsdTheoreticalComparison> {
     // Test with white noise (flat PSD)
     let n = 512;
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let t = Array1::linspace(0.0, 10.0, n);
     let white_noise: Array1<f64> = Array1::from_shape_fn(n, |_| rng.random_range(-1.0..1.0));
 

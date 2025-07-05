@@ -8,8 +8,8 @@ mod tests {
     use super::*;
     use crate::auto_feature_engineering::{AutoFeatureEngineer, DatasetMetaFeatures};
     use crate::{
-        NeuromorphicTransformationSystem, QuantumTransformationOptimizer, TransformationType,
-        AdvancedNeuromorphicProcessor, AdvancedQuantumOptimizer,
+        AdvancedNeuromorphicProcessor, AdvancedQuantumOptimizer, NeuromorphicTransformationSystem,
+        QuantumTransformationOptimizer, TransformationType,
     };
     use ndarray::{Array1, Array2};
     use std::collections::HashMap;
@@ -18,10 +18,7 @@ mod tests {
     fn test_advanced_neuromorphic_creation() {
         let processor = AdvancedNeuromorphicProcessor::new(10, 20, 5);
         assert_eq!(processor.get_advanced_diagnostics().throughput, 0.0);
-        assert_eq!(
-            processor.get_advanced_diagnostics().memory_efficiency,
-            1.0
-        );
+        assert_eq!(processor.get_advanced_diagnostics().memory_efficiency, 1.0);
     }
 
     #[test]
@@ -71,7 +68,8 @@ mod tests {
     #[test]
     fn test_advanced_integration_workflow() {
         // Test the full Advanced workflow components can be created
-        let _quantum_opt = QuantumTransformationOptimizer::new().expect("Failed to create quantum optimizer");
+        let _quantum_opt =
+            QuantumTransformationOptimizer::new().expect("Failed to create quantum optimizer");
         let mut neuro_system = NeuromorphicTransformationSystem::new();
         let _auto_engineer = AutoFeatureEngineer::new().expect("Failed to create auto engineer");
 

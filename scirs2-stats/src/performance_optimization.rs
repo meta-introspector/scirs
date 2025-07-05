@@ -132,7 +132,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         } else {
             None
         };
-        let handler = global_error_handler();
+        let _handler = global_error_handler();
         // Use comprehensive validation with performance considerations
         self.validate_data_optimized(x, y)?;
 
@@ -199,17 +199,17 @@ impl OptimizedLinearDiscriminantAnalysis {
         classes.sort_unstable();
         classes.dedup();
         let unique_classes = Array1::from_vec(classes);
-        let n_classes = unique_classes.len();
-        let (n_samples, n_features) = x.dim();
+        let _n_classes = unique_classes.len();
+        let (_n_samples, _n_features) = x.dim();
 
         // SIMD-optimized class means computation
         let class_means = self.compute_class_means_simd(x, y, &unique_classes)?;
 
         // SIMD-optimized scatter matrices
-        let (sw, sb) = self.compute_scatter_matrices_simd(x, y, &unique_classes, &class_means)?;
+        let (_sw, _sb) = self.compute_scatter_matrices_simd(x, y, &unique_classes, &class_means)?;
 
         // Use the regular LDA eigenvalue solver (already optimized)
-        let lda_temp = LinearDiscriminantAnalysis::new();
+        let _lda_temp = LinearDiscriminantAnalysis::new();
 
         // We'll need to reconstruct the LDA result manually since we computed optimized scatter matrices
         // For now, fall back to regular implementation with our optimized preprocessing
@@ -218,20 +218,20 @@ impl OptimizedLinearDiscriminantAnalysis {
 
     /// Parallel-optimized LDA fitting
     fn fit_parallel(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<LDAResult> {
-        let (n_samples, n_features) = x.dim();
+        let (_n_samples, _n_features) = x.dim();
 
         // Get unique classes
         let mut classes = y.to_vec();
         classes.sort_unstable();
         classes.dedup();
         let unique_classes = Array1::from_vec(classes);
-        let n_classes = unique_classes.len();
+        let _n_classes = unique_classes.len();
 
         // Parallel computation of class statistics
         let class_means = self.compute_class_means_parallel(x, y, &unique_classes)?;
 
         // Parallel scatter matrix computation
-        let (sw, sb) =
+        let (_sw, _sb) =
             self.compute_scatter_matrices_parallel(x, y, &unique_classes, &class_means)?;
 
         // For now, use regular eigenvalue solver
@@ -245,7 +245,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         y: ArrayView1<i32>,
         classes: &Array1<i32>,
     ) -> Result<Array2<f64>> {
-        let (n_samples, n_features) = x.dim();
+        let (_n_samples, _n_features) = x.dim();
         let n_classes = classes.len();
         let mut class_means = Array2::zeros((n_classes, n_features));
 
@@ -301,7 +301,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         y: ArrayView1<i32>,
         classes: &Array1<i32>,
     ) -> Result<Array2<f64>> {
-        let (n_samples, n_features) = x.dim();
+        let (_n_samples, _n_features) = x.dim();
         let n_classes = classes.len();
 
         // Parallel computation of class means
@@ -344,7 +344,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         classes: &Array1<i32>,
         class_means: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array2<f64>)> {
-        let (n_samples, n_features) = x.dim();
+        let (_n_samples, _n_features) = x.dim();
         let overall_mean = x.mean_axis(Axis(0)).unwrap();
 
         let mut sw = Array2::zeros((n_features, n_features));
@@ -404,7 +404,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         classes: &Array1<i32>,
         class_means: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array2<f64>)> {
-        let (n_samples, n_features) = x.dim();
+        let (_n_samples, _n_features) = x.dim();
         let overall_mean = x.mean_axis(Axis(0)).unwrap();
 
         // Parallel computation of within-class scatter contributions
@@ -472,7 +472,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
     /// SIMD-optimized transformation
     fn transform_simd(&self, x: ArrayView2<f64>, result: &LDAResult) -> Result<Array2<f64>> {
-        let (n_samples, n_features) = x.dim();
+        let (_n_samples, _n_features) = x.dim();
         let n_components = result.scalings.ncols();
 
         if n_features >= self.config.simd_threshold {
@@ -522,7 +522,7 @@ impl OptimizedCanonicalCorrelationAnalysis {
         } else {
             None
         };
-        let handler = global_error_handler();
+        let _handler = global_error_handler();
         validate_or_error!(finite: x.as_slice().unwrap(), "x", "Optimized CCA fit");
         validate_or_error!(finite: y.as_slice().unwrap(), "y", "Optimized CCA fit");
 
@@ -559,7 +559,7 @@ impl OptimizedCanonicalCorrelationAnalysis {
         let (x_processed, y_processed) = self.center_and_scale_parallel(x, y)?;
 
         // Parallel covariance computation
-        let (cxx, cyy, cxy) = self.compute_covariances_parallel(&x_processed, &y_processed)?;
+        let (_cxx, _cyy, _cxy) = self.compute_covariances_parallel(&x_processed, &y_processed)?;
 
         // Use regular CCA solver for eigenvalue problem (already optimized)
         self.cca.fit(x, y)
@@ -631,7 +631,7 @@ impl OptimizedCanonicalCorrelationAnalysis {
 
     /// Helper for parallel covariance matrix computation
     fn parallel_covariance_matrix(&self, a: &Array2<f64>, b: &Array2<f64>) -> Array2<f64> {
-        let (n_samples, n_features_a) = a.dim();
+        let (_n_samples, n_features_a) = a.dim();
         let n_features_b = b.ncols();
 
         let cov = Array2::from_shape_fn((n_features_a, n_features_b), |(i, j)| {

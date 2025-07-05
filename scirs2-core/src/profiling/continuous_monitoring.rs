@@ -637,7 +637,7 @@ impl ContinuousPerformanceMonitor {
                             } else {
                                 AlertSeverity::Warning
                             },
-                            message: format!("High memory usage: {:.1}%", memory_usage_percent),
+                            message: format!("High memory usage: {memory_usage_percent:.1}%"),
                             metric_name: "memory_usage".to_string(),
                             current_value: memory_usage_percent,
                             threshold_value: alert_config.memory_threshold,
@@ -951,8 +951,7 @@ impl ContinuousPerformanceMonitor {
                 .count();
             if critical_count > 0 {
                 summary.push_str(&format!(
-                    "- {} critical alerts require immediate attention\n",
-                    critical_count
+                    "- {critical_count} critical alerts require immediate attention\n"
                 ));
             }
         } else {
@@ -978,7 +977,7 @@ impl ContinuousPerformanceMonitor {
                 if sys_metrics.memory_total > 0 {
                     let memory_percent =
                         (sys_metrics.memory_usage as f64 / sys_metrics.memory_total as f64) * 100.0;
-                    summary.push_str(&format!("- Current memory usage: {:.1}%\n", memory_percent));
+                    summary.push_str(&format!("- Current memory usage: {memory_percent:.1}%\n"));
                 }
             }
         }

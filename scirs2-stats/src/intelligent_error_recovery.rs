@@ -117,7 +117,7 @@ impl IntelligentErrorRecovery {
     /// Analyze error and provide intelligent recovery suggestions
     pub fn analyze_and_suggest(
         &mut self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         // Extract features from error context
         let features = self.extract_error_features(error)?;
@@ -290,7 +290,7 @@ impl IntelligentErrorRecovery {
     fn generate_pattern_based_suggestions(
         &self,
         similar_patterns: &[&ErrorPattern],
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
 
@@ -329,7 +329,7 @@ impl IntelligentErrorRecovery {
     /// Generate heuristic-based suggestions
     fn generate_heuristic_suggestions(
         &self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
 
@@ -358,7 +358,7 @@ impl IntelligentErrorRecovery {
     fn generate_ml_suggestions(
         &self,
         _features: &[f64],
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         // Placeholder for actual ML model
         // In a real implementation, this would use a trained model
@@ -381,7 +381,7 @@ impl IntelligentErrorRecovery {
     /// Create dimension mismatch fix strategy
     fn create_dimension_fix_strategy(
         &self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         let suggestion = RecoverySuggestion {
             suggestion_type: SuggestionType::InputValidation,
@@ -411,7 +411,7 @@ impl IntelligentErrorRecovery {
     /// Create computation error fix strategies
     fn create_computation_fix_strategies(
         &self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
 
@@ -469,7 +469,7 @@ impl IntelligentErrorRecovery {
     /// Create convergence fix strategies
     fn create_convergence_fix_strategies(
         &self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
 
@@ -501,7 +501,7 @@ impl IntelligentErrorRecovery {
     /// Create data augmentation strategy
     fn create_data_augmentation_strategy(
         &self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
             suggestion: RecoverySuggestion {
@@ -529,7 +529,7 @@ impl IntelligentErrorRecovery {
     /// Create memory optimization strategy
     fn create_memory_optimization_strategy(
         &self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
             suggestion: RecoverySuggestion {
@@ -555,7 +555,7 @@ impl IntelligentErrorRecovery {
     /// Create parallelization strategy
     fn create_parallelization_strategy(
         &self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         let cores = error.context.system_info.cpu_cores.unwrap_or(1);
 
@@ -583,7 +583,7 @@ impl IntelligentErrorRecovery {
     /// Create generic recovery strategy
     fn create_generic_strategy(
         &self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         Ok(IntelligentRecoveryStrategy {
             suggestion: RecoverySuggestion {
@@ -942,7 +942,7 @@ pub struct RecoveryStrategyEnsemble {
 pub trait StrategyGenerator {
     fn generate_strategies(
         &self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
         features: &[f64],
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>>;
     fn name(&self) -> &str;
@@ -1110,7 +1110,7 @@ impl RecoveryStrategyEnsemble {
     /// Generate ensemble strategies with voting
     pub fn generate_ensemble_strategies(
         &self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
         features: &[f64],
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut all_strategies = Vec::new();
@@ -1222,7 +1222,7 @@ impl MLEnhancedErrorRecovery {
     /// Analyze error with ML enhancement
     pub fn analyze_with_ml(
         &mut self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut all_strategies = Vec::new();
 
@@ -1290,7 +1290,7 @@ impl MLEnhancedErrorRecovery {
         &self,
         predicted_class: usize,
         confidence: f64,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
     ) -> StatsResult<Vec<IntelligentRecoveryStrategy>> {
         let mut strategies = Vec::new();
 
@@ -1396,7 +1396,7 @@ impl MLEnhancedErrorRecovery {
     /// Create resource scaling strategy
     fn create_resource_scaling_strategy(
         &self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
         confidence: f64,
     ) -> StatsResult<IntelligentRecoveryStrategy> {
         let cores = error.context.system_info.cpu_cores.unwrap_or(1);
@@ -1513,7 +1513,7 @@ impl MLEnhancedErrorRecovery {
     /// Provide feedback for online learning
     pub fn provide_feedback(
         &mut self,
-        error: &EnhancedStatsError,
+        _error: &EnhancedStatsError,
         strategy_used: &IntelligentRecoveryStrategy,
         success: bool,
     ) -> StatsResult<()> {

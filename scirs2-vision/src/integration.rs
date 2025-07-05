@@ -1,4 +1,4 @@
-//! Advanced-Advanced Integration Module for Advanced Mode
+//! Advanced Integration Module for Advanced Mode
 //!
 //! This module provides the highest level of AI integration, combining quantum-inspired
 //! processing, neuromorphic computing, advanced AI optimization, and next-generation
@@ -31,7 +31,7 @@ use ndarray::{s, Array1, Array2, Array3};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
-/// Advanced-Advanced Neural-Quantum Hybrid Processor
+/// Advanced Neural-Quantum Hybrid Processor
 /// Combines quantum-inspired algorithms with neuromorphic computing
 /// for unprecedented processing capabilities
 #[derive(Debug)]
@@ -1576,7 +1576,7 @@ impl Default for NeuralQuantumHybridProcessor {
 }
 
 impl NeuralQuantumHybridProcessor {
-    /// Create a new advanced-advanced hybrid processor
+    /// Create a new advanced hybrid processor
     pub fn new() -> Self {
         let quantum_stages = vec![
             "preprocessing".to_string(),
@@ -1757,7 +1757,7 @@ impl NeuralQuantumHybridProcessor {
         })
     }
 
-    /// Process with advanced-advanced capabilities
+    /// Process with advanced capabilities
     pub fn process_advanced(&mut self, frame: Frame) -> Result<AdvancedProcessingResult> {
         let start_time = Instant::now();
 

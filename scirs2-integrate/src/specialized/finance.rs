@@ -857,7 +857,7 @@ impl StochasticPDESolver {
         n_paths: usize,
         antithetic: bool,
     ) -> Result<f64> {
-        let mut rng = rand::rng();
+        let mut rng = rng();
         let _normal = StandardNormal;
 
         let dt = option.maturity / 100.0; // 100 time steps
@@ -3126,7 +3126,7 @@ pub mod advanced_exotic_derivatives {
         ) -> Result<ExoticPricingResult> {
             let dt = option.maturity / 252.0; // Daily steps
             let mut payoffs = Vec::with_capacity(self.n_simulations);
-            let mut rng = rand::rng();
+            let mut rng = rng();
 
             let sigma = 0.2; // Default volatility
 
@@ -3198,7 +3198,7 @@ pub mod advanced_exotic_derivatives {
             observation_times: &[f64],
         ) -> Result<ExoticPricingResult> {
             let mut payoffs = Vec::with_capacity(self.n_simulations);
-            let mut rng = rand::rng();
+            let mut rng = rng();
             let sigma = 0.2; // Default volatility
 
             for _sim in 0..self.n_simulations {
@@ -3269,7 +3269,7 @@ pub mod advanced_exotic_derivatives {
         ) -> Result<ExoticPricingResult> {
             let dt = option.maturity / 252.0; // Daily steps
             let mut payoffs = Vec::with_capacity(self.n_simulations);
-            let mut rng = rand::rng();
+            let mut rng = rng();
             let sigma = 0.2; // Default volatility
 
             for _sim in 0..self.n_simulations {
@@ -3345,7 +3345,7 @@ pub mod advanced_exotic_derivatives {
             cash_amount: f64,
         ) -> Result<ExoticPricingResult> {
             let mut payoffs = Vec::with_capacity(self.n_simulations);
-            let mut rng = rand::rng();
+            let mut rng = rng();
             let sigma = 0.2;
             let dt = option.maturity;
 
@@ -4269,7 +4269,7 @@ pub mod advanced_solvers {
             training_samples: usize,
             learning_rate: f64,
         ) -> Result<()> {
-            let mut rng = rand::rng();
+            let mut rng = rng();
 
             for _ in 0..training_samples {
                 // Generate random option parameters
@@ -7074,7 +7074,7 @@ pub mod exotic_options {
                 rebate,
             } = &option.option_type
             {
-                let mut rng = rand::rng();
+                let mut rng = rng();
                 let mut payoffs = Vec::with_capacity(self.n_simulations);
 
                 let dt = option.maturity / self.n_time_steps as f64;
@@ -7162,7 +7162,7 @@ pub mod exotic_options {
                 current_average,
             } = &option.option_type
             {
-                let mut rng = rand::rng();
+                let mut rng = rng();
                 let mut asian_payoffs = Vec::with_capacity(self.n_simulations);
                 let mut control_payoffs = Vec::with_capacity(self.n_simulations);
 
@@ -7294,7 +7294,7 @@ pub mod exotic_options {
                 extremum_so_far,
             } = &option.option_type
             {
-                let mut rng = rand::rng();
+                let mut rng = rng();
                 let mut payoffs = Vec::with_capacity(self.n_simulations);
 
                 let dt = option.maturity / self.n_time_steps as f64;
@@ -7363,7 +7363,7 @@ pub mod exotic_options {
                 weights,
             } = &option.option_type
             {
-                let mut rng = rand::rng();
+                let mut rng = rng();
                 let mut payoffs = Vec::with_capacity(self.n_simulations);
 
                 let dt = option.maturity / self.n_time_steps as f64;
@@ -7468,7 +7468,7 @@ pub mod exotic_options {
                 is_cash_or_nothing,
             } = &option.option_type
             {
-                let mut rng = rand::rng();
+                let mut rng = rng();
                 let mut payoffs = Vec::with_capacity(self.n_simulations);
 
                 let dt = option.maturity / self.n_time_steps as f64;

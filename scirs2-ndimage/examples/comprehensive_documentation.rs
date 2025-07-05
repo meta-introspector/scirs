@@ -472,7 +472,7 @@ fn demonstrate_domain_specific(image: &Array2<f64>) -> NdimageResult<()> {
 #[cfg(feature = "simd")]
 #[allow(dead_code)]
 fn demonstrate_advanced_simd(image: &Array2<f64>) -> NdimageResult<()> {
-    println!("⚡ Advanced-Advanced SIMD Extensions");
+    println!("⚡ Advanced SIMD Extensions");
 
     // 1. Wavelet pyramid
     println!("  • Advanced-SIMD wavelet pyramid:");
@@ -655,7 +655,7 @@ fn demonstrate_best_practices() -> NdimageResult<()> {
 #[cfg(not(feature = "simd"))]
 #[allow(dead_code)]
 fn demonstrate_advanced_simd(_image: &Array2<f64>) -> NdimageResult<()> {
-    println!("⚡ Advanced-Advanced SIMD Extensions");
+    println!("⚡ Advanced SIMD Extensions");
     println!("  Note: SIMD features not available (compile with --features simd)");
     Ok(())
 }

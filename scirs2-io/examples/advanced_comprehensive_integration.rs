@@ -11,9 +11,8 @@
 use scirs2_io::advanced_coordinator::AdvancedCoordinator;
 use scirs2_io::enhanced_algorithms::AdvancedPatternRecognizer;
 use scirs2_io::error::Result;
-use scirs2_io::neural_adaptive_io::{NeuralAdaptiveIoController, SystemMetrics};
+use scirs2_io::neural_adaptive_io::NeuralAdaptiveIoController;
 use scirs2_io::quantum_inspired_io::QuantumParallelProcessor;
-use scirs2_io::zero_copy::{AsyncConfig, AsyncZeroCopyProcessor};
 use std::time::{Duration, Instant};
 
 #[allow(dead_code)]
@@ -59,27 +58,26 @@ fn demonstrate_intelligent_initialization() -> Result<()> {
     let start = Instant::now();
 
     // Initialize advanced Coordinator
-    let mut coordinator = AdvancedCoordinator::new()?;
+    let coordinator = AdvancedCoordinator::new()?;
     println!("✅ advanced Coordinator initialized");
 
     // Initialize Advanced Pattern Recognizer
-    let mut pattern_recognizer = AdvancedPatternRecognizer::new();
+    let pattern_recognizer = AdvancedPatternRecognizer::new();
     println!("✅ Advanced Pattern Recognizer initialized");
 
     // Initialize Neural Adaptive Controller
-    let neural_controller =
-        NeuralAdaptiveIoController::new(SystemMetrics::default(), Duration::from_millis(100))?;
+    let _neural_controller = NeuralAdaptiveIoController::new();
     println!("✅ Neural Adaptive Controller initialized");
 
     // Initialize Quantum Parallel Processor
-    let quantum_processor = QuantumParallelProcessor::new()?;
+    let _quantum_processor = QuantumParallelProcessor::new(8);
     println!("✅ Quantum Parallel Processor initialized");
 
     // Platform capability assessment
     let capabilities = scirs2_core::simd_ops::PlatformCapabilities::detect();
     println!("✅ Platform capabilities assessed:");
     println!("   - SIMD Available: {}", capabilities.simd_available);
-    println!("   - AVX Support: {}", capabilities.avx_available);
+    println!("   - AVX Support: {}", capabilities.avx2_available);
     println!("   - CUDA Available: {}", capabilities.cuda_available);
 
     let init_time = start.elapsed();
@@ -170,22 +168,22 @@ fn demonstrate_emergent_optimization_discovery() -> Result<()> {
         let analysis = pattern_recognizer.analyze_patterns(data)?;
 
         // Collect emergent patterns
-        for pattern in analysis.emergent_patterns {
+        for pattern in &analysis.emergent_patterns {
             println!(
                 "   ✨ Emergent pattern detected: {} (confidence: {:.3})",
                 pattern.pattern_type, pattern.confidence
             );
-            emergent_patterns.push(pattern);
+            emergent_patterns.push(pattern.clone());
         }
 
         // Collect meta-patterns
-        for meta_pattern in analysis.meta_patterns {
+        for meta_pattern in &analysis.meta_patterns {
             println!(
                 "   🌐 Meta-pattern discovered: {} patterns correlated (strength: {:.3})",
                 meta_pattern.pattern_combination.len(),
                 meta_pattern.correlation_strength
             );
-            meta_patterns.push(meta_pattern);
+            meta_patterns.push(meta_pattern.clone());
         }
 
         // Apply discovered optimizations

@@ -4,9 +4,10 @@
 //! optimized_search.rs functionality with more specialized optimizations.
 
 use crate::error::InterpolateResult;
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, FromPrimitive, Zero};
 use std::fmt::Debug;
+
+use ndarray::{Array2, ArrayView1, ArrayView2, Axis};
+use num_traits::{Float, FromPrimitive, Zero};
 
 #[cfg(feature = "simd")]
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -184,6 +185,7 @@ impl AdvancedSimdOps {
     }
 
     /// Scalar distance computation fallback
+    #[allow(dead_code)]
     fn scalar_distance<F>(a: &ArrayView1<F>, b: &ArrayView1<F>) -> F
     where
         F: Float + Zero,
@@ -292,6 +294,7 @@ impl AdvancedSimdOps {
     }
 
     /// Scalar k-nearest neighbor search for comparison and fallback
+    #[allow(dead_code)]
     fn scalar_knn<F>(points: &ArrayView2<F>, query: &ArrayView1<F>, k: usize) -> Vec<(usize, F)>
     where
         F: Float + Zero + PartialOrd,

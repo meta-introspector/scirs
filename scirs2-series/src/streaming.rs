@@ -1508,7 +1508,7 @@ pub mod feature_engineering {
             let mut count = 0;
 
             for historical_features in &self.feature_history {
-                if historical_features.len() > 0 {
+                if !historical_features.is_empty() {
                     // Simple correlation-based pattern matching
                     let historical_trend = historical_features[0]; // Assuming first feature is trend
                     let similarity = F::one() - (recent_trend - historical_trend).abs();

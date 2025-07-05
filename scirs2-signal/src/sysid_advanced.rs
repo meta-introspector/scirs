@@ -1202,8 +1202,8 @@ fn simulate_state_space(
 #[allow(dead_code)]
 fn simulate_noise_contribution(
     output: &Array1<f64>,
-    c: &Array1<f64>,
-    d: &Array1<f64>,
+    _c: &Array1<f64>,
+    _d: &Array1<f64>,
 ) -> SignalResult<Array1<f64>> {
     // This is a placeholder - in practice would estimate the noise sequence
     Ok(Array1::zeros(output.len()))

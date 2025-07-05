@@ -62,12 +62,13 @@ pub struct OperationNode<T> {
 }
 
 /// GPU operation types supported for fusion
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GpuOperationType {
     MatrixMultiplication,
     MatrixAddition,
     MatrixSubtraction,
     ElementwiseMultiplication,
+    ElementwiseAddition,
     ElementwiseDivision,
     MatrixTranspose,
     VectorNorm,
@@ -75,8 +76,11 @@ pub enum GpuOperationType {
     Reduction,
     BroadcastOperation,
     ConvolutionalOperation,
+    Convolution,
     ActivationFunction,
     BatchNormalization,
+    Transpose,
+    Normalization,
     Custom(String),
 }
 
@@ -619,6 +623,16 @@ pub enum MemoryPoolType {
     Unified,
 }
 
+/// Tensor core precision modes
+#[derive(Debug, Clone, PartialEq)]
+pub enum TensorCorePrecision {
+    Float32,
+    Float16,
+    BFloat16,
+    Int8,
+    Mixed,
+}
+
 /// Operation analysis results for scheduling optimization
 #[derive(Debug, Clone)]
 pub struct OperationAnalysis {
@@ -704,21 +718,27 @@ pub enum TensorCoreSchedulingAlgorithm {
     PriorityBased,
     ThroughputOptimal,
     EnergyEfficient,
+    LatencyOptimal,
+    LoadBalanced,
     LatencyMinimizing,
     MLDriven,
 }
 
 /// Tensor core operation
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TensorCoreOperation<T> {
     /// Operation ID
     pub id: usize,
     /// Operation type
     pub operation_type: TensorCoreOpType,
+    /// Input tensor shapes
+    pub input_shapes: Vec<TensorShape>,
     /// Input tensors
     pub inputs: Vec<Array2<T>>,
     /// Output tensor
     pub output: Array2<T>,
+    /// Precision requirement
+    pub precision: TensorCorePrecision,
     /// Priority
     pub priority: u32,
     /// Deadline
@@ -1672,8 +1692,14 @@ mod tests {
         let operation = TensorCoreOperation {
             id: 0,
             operation_type: TensorCoreOpType::MatrixMultiplication,
+            input_shapes: vec![TensorShape {
+                dimensions: vec![10, 10],
+                element_type: ElementType::F32,
+                memory_layout: MemoryLayout::RowMajor,
+            }],
             inputs: vec![Array2::zeros((10, 10))],
             output: Array2::zeros((10, 10)),
+            precision: TensorCorePrecision::Float32,
             priority: 1,
             deadline: None,
         };

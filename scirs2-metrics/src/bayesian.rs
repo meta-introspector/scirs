@@ -6,7 +6,6 @@
 
 use crate::error::{MetricsError, Result};
 use ndarray::{Array1, Array2, Axis};
-use std::collections::HashMap;
 
 /// Results from Bayesian model comparison
 #[derive(Debug, Clone)]
@@ -1010,6 +1009,7 @@ impl BayesianModelComparison {
     }
 
     /// Calculate variance of an array
+    #[allow(dead_code)]
     fn calculate_variance(&self, data: &Array1<f64>) -> Result<f64> {
         if data.is_empty() {
             return Ok(0.0);

@@ -301,18 +301,19 @@ pub enum LayerConfig {
 pub mod conv;
 pub mod dense;
 pub mod dropout;
+pub mod normalization;
 pub mod recurrent;
 
 // Temporarily comment out layer modules that need fixing
 // mod attention;
 // mod embedding;
-// mod normalization;
 // mod regularization;
 
 // Re-export fixed modules
 pub use conv::Conv2D;
 pub use dense::Dense;
 pub use dropout::Dropout;
+pub use normalization::{BatchNorm, LayerNorm};
 pub use recurrent::LSTM;
 
 // Re-export will be added as modules are fixed

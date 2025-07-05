@@ -344,7 +344,12 @@ pub mod bessel_stability {
             let ulp_error = if reference != 0.0 {
                 let ref_bits = reference.to_bits();
                 let comp_bits = computed.to_bits();
-                (ref_bits as i64 - comp_bits as i64).abs() as f64
+                // Use safe subtraction to avoid overflow
+                if ref_bits >= comp_bits {
+                    (ref_bits - comp_bits) as f64
+                } else {
+                    (comp_bits - ref_bits) as f64
+                }
             } else {
                 0.0
             };
@@ -381,7 +386,12 @@ pub mod bessel_stability {
             let ulp_error = if reference != 0.0 {
                 let ref_bits = reference.to_bits();
                 let comp_bits = computed.to_bits();
-                (ref_bits as i64 - comp_bits as i64).abs() as f64
+                // Use safe subtraction to avoid overflow
+                if ref_bits >= comp_bits {
+                    (ref_bits - comp_bits) as f64
+                } else {
+                    (comp_bits - ref_bits) as f64
+                }
             } else {
                 0.0
             };
@@ -410,7 +420,12 @@ pub mod bessel_stability {
             let ulp_error = if reference != 0.0 {
                 let ref_bits = reference.to_bits();
                 let comp_bits = computed.to_bits();
-                (ref_bits as i64 - comp_bits as i64).abs() as f64
+                // Use safe subtraction to avoid overflow
+                if ref_bits >= comp_bits {
+                    (ref_bits - comp_bits) as f64
+                } else {
+                    (comp_bits - ref_bits) as f64
+                }
             } else {
                 0.0
             };
