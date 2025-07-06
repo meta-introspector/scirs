@@ -2901,7 +2901,6 @@ pub mod advanced_kfac {
     }
 
     /// Basic implementations for missing components
-
     impl<T: Float + Send + Sync> DistributedKFAC<T> {
         pub fn new(base_config: KFACConfig<T>, dist_config: DistributedKFACConfig) -> Result<Self> {
             let base_kfac = KFACOptimizer::new(base_config);

@@ -205,7 +205,7 @@ pub struct XLAOperation<T: Float> {
 }
 
 /// Types of XLA operations
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum OperationType {
     // Arithmetic operations
     Add,
@@ -266,7 +266,7 @@ pub enum OperationType {
 }
 
 /// Reduce operation configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ReduceOperation {
     pub reduce_function: ReduceFunction,
     pub dimensions: Vec<usize>,
@@ -274,7 +274,7 @@ pub struct ReduceOperation {
 }
 
 /// Reduce function types
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ReduceFunction {
     Sum,
     Product,
@@ -286,7 +286,7 @@ pub enum ReduceFunction {
 }
 
 /// All-reduce operation configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AllReduceOperation {
     pub reduce_function: ReduceFunction,
     pub replica_groups: Vec<Vec<usize>>,
@@ -294,7 +294,7 @@ pub struct AllReduceOperation {
 }
 
 /// Convolution operation configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ConvolutionConfig {
     pub strides: Vec<usize>,
     pub padding: PaddingConfig,
@@ -304,7 +304,7 @@ pub struct ConvolutionConfig {
 }
 
 /// Padding configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum PaddingConfig {
     Same,
     Valid,
@@ -312,7 +312,7 @@ pub enum PaddingConfig {
 }
 
 /// Custom operation definition
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CustomOperation {
     pub name: String,
     pub version: u32,
@@ -321,7 +321,7 @@ pub struct CustomOperation {
 }
 
 /// Optimizer update types
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum OptimizerUpdateType {
     SGD,
     Adam,
@@ -385,7 +385,7 @@ pub struct TensorShape {
 }
 
 /// XLA element types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ElementType {
     F16,
     F32,
@@ -436,7 +436,7 @@ pub struct OperationAttributes {
 }
 
 /// Attribute value types
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum AttributeValue {
     Bool(bool),
     Int(i64),
@@ -623,7 +623,6 @@ pub enum UsageHintType {
 }
 
 /// Optimization pipeline for XLA computations
-#[derive(Debug)]
 pub struct OptimizationPipeline<T: Float> {
     /// Optimization passes
     passes: Vec<Box<dyn OptimizationPass<T>>>,
@@ -636,6 +635,17 @@ pub struct OptimizationPipeline<T: Float> {
 
     /// Transformation utilities
     transform_utils: TransformationUtils<T>,
+}
+
+impl<T: Float> std::fmt::Debug for OptimizationPipeline<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("OptimizationPipeline")
+            .field("passes", &format!("[{} passes]", self.passes.len()))
+            .field("pass_manager", &self.pass_manager)
+            .field("analysis_manager", &self.analysis_manager)
+            .field("transform_utils", &"<TransformationUtils>")
+            .finish()
+    }
 }
 
 /// Optimization pass trait
@@ -684,7 +694,6 @@ pub enum SideEffect {
 }
 
 /// Pass manager for coordinating optimization passes
-#[derive(Debug)]
 pub struct PassManager<T: Float> {
     /// Registered passes
     registered_passes: HashMap<String, Box<dyn OptimizationPass<T>>>,
@@ -702,6 +711,18 @@ pub struct PassManager<T: Float> {
     convergence_threshold: f64,
 }
 
+impl<T: Float> std::fmt::Debug for PassManager<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PassManager")
+            .field("registered_passes", &format!("[{} passes]", self.registered_passes.len()))
+            .field("execution_order", &self.execution_order)
+            .field("scheduling_strategy", &self.scheduling_strategy)
+            .field("max_iterations", &self.max_iterations)
+            .field("convergence_threshold", &self.convergence_threshold)
+            .finish()
+    }
+}
+
 /// Pass scheduling strategies
 #[derive(Debug, Clone, Copy)]
 pub enum PassSchedulingStrategy {
@@ -712,7 +733,6 @@ pub enum PassSchedulingStrategy {
 }
 
 /// Analysis manager for computation analysis
-#[derive(Debug)]
 pub struct AnalysisManager<T: Float> {
     /// Available analyses
     analyses: HashMap<String, Box<dyn ComputationAnalysis<T>>>,
@@ -722,6 +742,16 @@ pub struct AnalysisManager<T: Float> {
 
     /// Analysis dependencies
     dependencies: HashMap<String, Vec<String>>,
+}
+
+impl<T: Float> std::fmt::Debug for AnalysisManager<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AnalysisManager")
+            .field("analyses", &format!("[{} analyses]", self.analyses.len()))
+            .field("analysis_cache", &format!("[{} cached results]", self.analysis_cache.len()))
+            .field("dependencies", &self.dependencies)
+            .finish()
+    }
 }
 
 /// Computation analysis trait
@@ -779,7 +809,7 @@ pub struct TransformationUtils<T: Float> {
     constant_propagator: ConstantPropagator<T>,
 
     /// Dead code eliminator
-    dead_code_eliminator: DeadCodeEliminator<T>,
+    dead_code_eliminator: DeadCodeEliminator,
 }
 
 /// Pattern matcher for graph transformations
@@ -1001,21 +1031,21 @@ pub struct ConstantPropagator<T: Float> {
     constants: HashMap<OperandId, T>,
 
     /// Propagation rules
-    propagation_rules: Vec<PropagationRule<T>>,
+    propagation_rules: Vec<PropagationRule>,
 }
 
 /// Propagation rule
 #[derive(Debug, Clone)]
-pub struct PropagationRule<T: Float> {
+pub struct PropagationRule {
     pub operation_type: OperationType,
     pub propagate_function: String, // Function name/ID
 }
 
 /// Dead code eliminator
 #[derive(Debug)]
-pub struct DeadCodeEliminator<T: Float> {
+pub struct DeadCodeEliminator {
     /// Liveness analysis
-    liveness_analysis: LivenessAnalysis<T>,
+    liveness_analysis: LivenessAnalysis,
 
     /// Elimination statistics
     elimination_stats: EliminationStatistics,
@@ -1023,7 +1053,7 @@ pub struct DeadCodeEliminator<T: Float> {
 
 /// Liveness analysis
 #[derive(Debug)]
-pub struct LivenessAnalysis<T: Float> {
+pub struct LivenessAnalysis {
     /// Live operations
     live_operations: HashSet<OperationId>,
 
@@ -1148,6 +1178,9 @@ pub struct InstructionScheduler<T: Float> {
 
     /// Scheduling constraints
     constraints: Vec<SchedulingConstraint>,
+    
+    /// Phantom data for type parameter
+    _phantom: PhantomData<T>,
 }
 
 /// Scheduling algorithms
@@ -1304,6 +1337,9 @@ pub struct SpillHandler<T: Float> {
 
     /// Spill cost model
     cost_model: SpillCostModel,
+    
+    /// Phantom data for type parameter
+    _phantom: PhantomData<T>,
 }
 
 /// Spill strategies
@@ -1357,6 +1393,9 @@ pub struct MemoryLayoutOptimizer<T: Float> {
 
     /// Alignment constraints
     alignment_constraints: Vec<AlignmentConstraint>,
+    
+    /// Phantom data for type parameter
+    _phantom: PhantomData<T>,
 }
 
 /// Layout algorithms
@@ -1453,6 +1492,9 @@ pub struct PrefetchBenefitAnalyzer<T: Float> {
 
     /// Cost models
     cost_models: Vec<CostModel>,
+    
+    /// Phantom data for type parameter
+    _phantom: PhantomData<T>,
 }
 
 /// Benefit model
@@ -1590,6 +1632,9 @@ pub struct PerformanceModel<T: Float> {
 
     /// Accuracy metrics
     pub accuracy: ModelAccuracy,
+    
+    /// Phantom data for type parameter
+    _phantom: PhantomData<T>,
 }
 
 /// Performance model types
@@ -1863,6 +1908,7 @@ pub struct PredictionModel<T: Float> {
     pub parameters: Vec<f64>,
     pub training_data: TrainingData<T>,
     pub validation_metrics: ValidationMetrics,
+    _phantom: PhantomData<T>,
 }
 
 /// Prediction model types
@@ -1883,6 +1929,7 @@ pub struct TrainingData<T: Float> {
     pub targets: Vec<f64>,
     pub weights: Option<Vec<f64>>,
     pub metadata: TrainingMetadata,
+    _phantom: PhantomData<T>,
 }
 
 /// Training metadata
@@ -2921,7 +2968,7 @@ pub struct TileSizeOptimizer<T: Float> {
 }
 
 /// Tile key for caching
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TileKey {
     pub matrix_shape: (usize, usize, usize), // (M, N, K)
     pub data_type: ElementType,
@@ -2987,7 +3034,7 @@ pub struct BenchmarkData<T: Float> {
 }
 
 /// Benchmark key
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BenchmarkKey {
     pub operation: OperationType,
     pub shape: Vec<usize>,
@@ -4151,7 +4198,7 @@ impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
             metadata: CodeMetadata {
                 compilation_time,
                 optimization_level: self.get_optimization_level(),
-                target_tpu: self.target_config.version,
+                target_tpu: self.target_config.tpu_version,
                 code_size,
             },
             resource_requirements: self.estimate_resource_requirements(computation)?,
@@ -4268,7 +4315,7 @@ impl<T: Float + Default + Clone> TPUCodeGenerator<T> {
             Some(CodeGenerationStrategy::LatencyOptimized) => XLAOptimizationLevel::Aggressive,
             Some(CodeGenerationStrategy::ThroughputOptimized) => XLAOptimizationLevel::Aggressive,
             Some(CodeGenerationStrategy::MemoryOptimized) => XLAOptimizationLevel::Standard,
-            Some(CodeGenerationStrategy::PowerOptimized) => XLAOptimizationLevel::Conservative,
+            Some(CodeGenerationStrategy::PowerOptimized) => XLAOptimizationLevel::Basic,
             _ => XLAOptimizationLevel::Standard,
         }
     }
@@ -4754,7 +4801,7 @@ impl<T: Float + Default + Clone> ConstantPropagator<T> {
     }
 }
 
-impl<T: Float + Default + Clone> DeadCodeEliminator<T> {
+impl DeadCodeEliminator {
     fn new() -> Self {
         Self {
             liveness_analysis: LivenessAnalysis {
@@ -4808,6 +4855,7 @@ impl<T: Float + Default + Clone> InstructionScheduler<T> {
                 interconnect_bandwidth: 600.0,
             },
             constraints: Vec::new(),
+            _phantom: PhantomData,
         }
     }
 
@@ -4883,6 +4931,7 @@ impl<T: Float + Default + Clone> RegisterAllocator<T> {
                     bandwidth_cost: 10.0,
                     energy_cost: 1.0,
                 },
+                _phantom: PhantomData,
             },
         }
     }
@@ -5041,6 +5090,7 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
                 algorithms: vec![LayoutAlgorithm::Tiled],
                 coalescing_rules: Vec::new(),
                 alignment_constraints: Vec::new(),
+                _phantom: PhantomData,
             },
             prefetch_inserter: PrefetchInserter::<T> {
                 strategies: vec![PrefetchStrategy::Strided],
@@ -5055,6 +5105,7 @@ impl<T: Float + Default + Clone> CodeGenMemoryAllocator<T> {
                 benefit_analyzer: PrefetchBenefitAnalyzer::<T> {
                     models: Vec::new(),
                     cost_models: Vec::new(),
+                    _phantom: PhantomData,
                 },
             },
         }

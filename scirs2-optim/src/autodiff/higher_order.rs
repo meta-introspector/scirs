@@ -184,7 +184,7 @@ pub enum LayerType {
     Attention,
 }
 
-impl<T: Float + Default + Clone + 'static> HigherOrderEngine<T> {
+impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOperand> HigherOrderEngine<T> {
     /// Create a new higher-order differentiation engine
     pub fn new(max_order: usize) -> Self {
         Self {
@@ -616,18 +616,71 @@ impl<T: Float + Default + Clone + 'static> HigherOrderEngine<T> {
     /// Compute truncated Newton direction
     pub fn truncated_newton_direction(
         &mut self,
-        function: impl Fn(&Array1<T>) -> T,
+        function: impl Fn(&Array1<T>) -> T + Send + Sync,
         point: &Array1<T>,
         gradient: &Array1<T>,
         max_cg_iterations: usize,
         cg_tolerance: T,
     ) -> Result<Array1<T>> {
         // Use Conjugate Gradient to approximately solve Hx = -g
-        let hvp_fn = |v: &Array1<T>| -> Result<Array1<T>> {
-            self.hessian_vector_product_advanced(&function, point, v, None)
+        let neg_gradient = gradient.mapv(|x| -x);
+        
+        // Create a copy of point and function to avoid borrow conflicts
+        let point_copy = point.clone();
+        let function_copy = function;
+        
+        let hvp_fn = move |v: &Array1<T>| -> Result<Array1<T>> {
+            // Use finite differences as a fallback to avoid borrow conflicts
+            let eps = T::from(1e-6).unwrap();
+            let mut hvp = Array1::zeros(v.len());
+            
+            for i in 0..v.len() {
+                let mut point_plus = point_copy.clone();
+                let mut point_minus = point_copy.clone();
+                
+                point_plus[i] = point_plus[i] + eps;
+                point_minus[i] = point_minus[i] - eps;
+                
+                // Compute gradient at perturbed points
+                let grad_plus = Self::finite_diff_gradient(&function_copy, &point_plus)?;
+                let grad_minus = Self::finite_diff_gradient(&function_copy, &point_minus)?;
+                
+                // Approximate Hessian-vector product
+                let hess_col = (&grad_plus - &grad_minus) / (T::from(2.0).unwrap() * eps);
+                hvp[i] = hess_col.dot(v);
+            }
+            
+            Ok(hvp)
         };
 
-        self.conjugate_gradient_solve(hvp_fn, &(-gradient), max_cg_iterations, cg_tolerance)
+        self.conjugate_gradient_solve(hvp_fn, &neg_gradient, max_cg_iterations, cg_tolerance)
+    }
+    
+    /// Helper method for finite difference gradient computation
+    fn finite_diff_gradient<F>(
+        function: &F,
+        point: &Array1<T>,
+    ) -> Result<Array1<T>> 
+    where
+        F: Fn(&Array1<T>) -> T,
+    {
+        let eps = T::from(1e-6).unwrap();
+        let mut gradient = Array1::zeros(point.len());
+
+        for i in 0..point.len() {
+            let mut point_plus = point.clone();
+            let mut point_minus = point.clone();
+
+            point_plus[i] = point_plus[i] + eps;
+            point_minus[i] = point_minus[i] - eps;
+
+            let loss_plus = function(&point_plus);
+            let loss_minus = function(&point_minus);
+
+            gradient[i] = (loss_plus - loss_minus) / (T::from(2.0).unwrap() * eps);
+        }
+
+        Ok(gradient)
     }
 
     // Helper methods
@@ -1183,13 +1236,13 @@ impl<T: Float + Default + Clone + 'static> HigherOrderEngine<T> {
 
     fn conjugate_gradient_solve<F>(
         &mut self,
-        hvp_fn: F,
+        mut hvp_fn: F,
         rhs: &Array1<T>,
         max_iterations: usize,
         tolerance: T,
     ) -> Result<Array1<T>>
     where
-        F: Fn(&Array1<T>) -> Result<Array1<T>>,
+        F: FnMut(&Array1<T>) -> Result<Array1<T>>,
     {
         let n = rhs.len();
         let mut x = Array1::zeros(n);

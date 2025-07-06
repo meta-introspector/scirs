@@ -889,23 +889,11 @@ impl<T: Float> Default for AdaptiveConfig<T> {
     }
 }
 
-impl<T: Float + Send + Sync> AdaptiveTransformerEnhancement<T> {
-    /// Create new adaptive transformer enhancement
-    pub fn new(config: AdaptiveConfig<T>) -> Result<Self> {
-        Ok(Self {
-            sequence_processor: AdaptiveSequenceProcessor::new(&config)?,
-            attention_manager: MemoryEfficientAttentionManager::new(&config)?,
-            architecture_adapter: DynamicArchitectureAdapter::new(&config)?,
-            landscape_analyzer: OptimizationLandscapeAnalyzer::new(&config)?,
-            performance_predictor: TransformerPerformancePredictor::new(&config)?,
-            adaptive_config: config,
-        })
-    }
-
+impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> {
     /// Enhance transformer optimizer for current optimization task
     pub fn enhance_optimizer(
         &mut self,
-        transformer: &mut TransformerOptimizer<T>,
+        _transformer: &mut TransformerOptimizer<T>,
         gradient_history: &[Array1<T>],
         loss_history: &[T],
     ) -> Result<EnhancementResult<T>> {
@@ -936,12 +924,16 @@ impl<T: Float + Send + Sync> AdaptiveTransformerEnhancement<T> {
             .performance_predictor
             .predict_improvement(&landscape_analysis, &architecture_adaptation)?;
 
+        // Calculate convergence metrics
+        let convergence_metrics = self.calculate_convergence_metrics(loss_history);
+
         Ok(EnhancementResult {
             sequence_adaptation,
             attention_optimization,
             architecture_adaptation,
             performance_prediction,
             landscape_analysis,
+            convergence_metrics,
         })
     }
 }
@@ -985,7 +977,7 @@ pub struct SequenceAdaptation<T: Float> {
 }
 
 /// Attention optimization result
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AttentionOptimization<T: Float> {
     /// Optimized attention patterns
     pub attention_patterns: Array3<T>,
@@ -1104,7 +1096,7 @@ pub struct EnhancementStatistics<T: Float> {
 }
 
 // Main implementation for AdaptiveTransformerEnhancement
-impl<T: Float + Send + Sync> AdaptiveTransformerEnhancement<T> {
+impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> {
     pub fn new(config: AdaptiveConfig<T>) -> Result<Self> {
         Ok(Self {
             sequence_processor: AdaptiveSequenceProcessor::new(&config)?,
@@ -1318,10 +1310,9 @@ impl<T: Float + Send + Sync> AdaptiveTransformerEnhancement<T> {
         let performance = ArchitecturePerformance {
             convergence_speed: enhancement_result.convergence_metrics.convergence_rate,
             final_performance: T::one() - enhancement_result.performance_prediction.uncertainty,
-            memory_efficiency: enhancement_result
+            memory_efficiency: T::from(enhancement_result
                 .attention_optimization
-                .memory_savings
-                .into(),
+                .memory_savings).unwrap(),
             computational_cost: T::one()
                 / enhancement_result
                     .attention_optimization
@@ -1537,7 +1528,7 @@ impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
         })
     }
 
-    fn determine_attention_dimensions(&self, complexity: f64, difficulty: f64) -> Result<usize> {
+    fn determine_attention_dimensions(&self, complexity: f64, difficulty: f64) -> Result<(usize, usize)> {
         let base_heads = 8;
         let base_seq_len = 512;
 

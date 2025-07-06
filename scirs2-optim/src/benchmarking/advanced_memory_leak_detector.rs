@@ -12,7 +12,6 @@ use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
 /// Advanced memory leak detector with real-time monitoring
-#[derive(Debug)]
 pub struct AdvancedMemoryLeakDetector {
     /// Configuration for memory leak detection
     config: MemoryLeakConfig,
@@ -466,7 +465,6 @@ pub enum LeakType {
 }
 
 /// Memory alert system
-#[derive(Debug)]
 pub struct MemoryAlertSystem {
     /// Alert configuration
     config: AlertConfig,

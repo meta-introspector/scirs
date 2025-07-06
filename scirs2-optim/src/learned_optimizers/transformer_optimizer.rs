@@ -7,7 +7,7 @@
 
 use ndarray::{s, Array, Array1, Array2, Array3, ArrayBase, Data, Dimension};
 use num_traits::Float;
-use rand::Rng;
+use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use std::collections::{HashMap, VecDeque};
 
@@ -2520,7 +2520,7 @@ pub struct ContinualLearningMetrics {
 
 // Implementation begins here
 
-impl<T: Float + Default + Clone + Send + Sync> TransformerOptimizer<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>> TransformerOptimizer<T> {
     /// Create a new Transformer optimizer
     pub fn new(config: TransformerOptimizerConfig) -> Result<Self> {
         // Validate configuration

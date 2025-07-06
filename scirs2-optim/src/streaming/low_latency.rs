@@ -369,7 +369,7 @@ where
         // This is a simplified version - in practice would get current parameters
         let current_params = Array1::zeros(gradient.len());
 
-        let optimizer = self.base_optimizer.lock().unwrap();
+        let mut optimizer = self.base_optimizer.lock().unwrap();
         optimizer.step(&current_params, gradient)
     }
 

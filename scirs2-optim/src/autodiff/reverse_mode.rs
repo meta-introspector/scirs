@@ -214,11 +214,12 @@ impl<T: Float + Default + Clone> Default for GradientContext<T> {
             accumulate: true,
             retain_graph: false,
             create_graph: false,
+            _phantom: std::marker::PhantomData,
         }
     }
 }
 
-impl<T: Float + Default + Clone> ReverseModeEngine<T> {
+impl<T: Float + Default + Clone + std::iter::Sum + ndarray::ScalarOperand> ReverseModeEngine<T> {
     /// Create a new reverse-mode AD engine
     pub fn new() -> Self {
         Self {
@@ -742,7 +743,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
 
             BackwardFunction::SubtractBackward => {
                 // Subtraction: negate gradient for second operand
-                Ok(vec![output_grad.clone(), -output_grad])
+                Ok(vec![output_grad.clone(), output_grad.mapv(|x| -x)])
             }
 
             BackwardFunction::MultiplyBackward => {
@@ -762,7 +763,7 @@ impl<T: Float + Default + Clone> ReverseModeEngine<T> {
                 if let SavedValues::TensorPair(ref lhs_val, ref rhs_val) = op.saved_values {
                     // Division: (u/v)' = (u'*v - u*v') / v^2
                     let lhs_grad = output_grad / rhs_val;
-                    let rhs_grad = -output_grad * lhs_val / (rhs_val * rhs_val);
+                    let rhs_grad = output_grad.mapv(|x| -x) * lhs_val / (rhs_val * rhs_val);
                     Ok(vec![lhs_grad, rhs_grad])
                 } else {
                     Err(OptimError::InvalidConfig(
@@ -953,7 +954,7 @@ pub struct GradientAccumulator<T: Float> {
     count: usize,
 }
 
-impl<T: Float + Default + Clone> GradientAccumulator<T> {
+impl<T: Float + Default + Clone + ndarray::ScalarOperand> GradientAccumulator<T> {
     pub fn new() -> Self {
         Self {
             gradients: HashMap::new(),

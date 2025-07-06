@@ -222,7 +222,7 @@ struct ComputationCheckpoint<T: Float> {
     memory_usage: usize,
 }
 
-impl<T: Float + Default + Clone> AutodiffEngine<T> {
+impl<T: Float + Default + Clone + ndarray::ScalarOperand> AutodiffEngine<T> {
     /// Create a new automatic differentiation engine
     pub fn new(config: AutodiffConfig) -> Self {
         Self {
@@ -672,14 +672,19 @@ impl<T: Float + Default + Clone> AutodiffEngine<T> {
         gradients: &[T],
         shape: &[usize],
     ) -> Result<Array<T, D>> {
-        if gradients.len() != shape.iter().product() {
+        if gradients.len() != shape.iter().product::<usize>() {
             return Err(OptimError::InvalidConfig(
                 "Gradient size mismatch with shape".to_string(),
             ));
         }
 
-        Array::from_shape_vec(shape, gradients.to_vec())
-            .map_err(|_| OptimError::InvalidConfig("Invalid shape for gradients".to_string()))
+        // Convert to proper dimension type
+        let dyn_array = Array::from_shape_vec(shape, gradients.to_vec())
+            .map_err(|_| OptimError::InvalidConfig("Invalid shape for gradients".to_string()))?;
+        
+        // Convert to target dimension
+        dyn_array.into_dimensionality::<D>()
+            .map_err(|_| OptimError::InvalidConfig("Dimension conversion failed".to_string()))
     }
 
     /// Compute candle-compatible Jacobian-vector product

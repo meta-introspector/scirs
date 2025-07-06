@@ -757,8 +757,6 @@ pub struct PrivacyParameters<T: Float> {
     pub delta: Option<T>,
 }
 
-/// Utility functions for noise mechanisms
-
 /// Generate correlated noise for matrix operations
 #[allow(dead_code)]
 pub fn generate_correlated_gaussian_noise<T>(

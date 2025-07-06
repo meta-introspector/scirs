@@ -823,10 +823,10 @@ impl AutomatedTestRunner {
         &self,
         queue: &VecDeque<TestExecution>,
     ) -> ResourceUtilizationSummary {
-        let mut total_cpu = 0.0;
-        let mut peak_cpu = 0.0;
-        let mut total_memory = 0.0;
-        let mut peak_memory = 0.0;
+        let mut total_cpu = 0.0f64;
+        let mut peak_cpu = 0.0f64;
+        let mut total_memory = 0.0f64;
+        let mut peak_memory = 0.0f64;
         let mut total_compute_time = 0.0;
         let mut count = 0;
 

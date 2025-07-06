@@ -845,7 +845,7 @@ where
         let reward = self.compute_meta_reward(performance)?;
 
         let experience = MetaExperience {
-            state,
+            state: state.clone(),
             action,
             reward,
             next_state: state.clone(), // Simplified
@@ -2320,19 +2320,6 @@ impl<A: Float + Default + Clone> AdaptiveBuffer<A> {
     }
 }
 
-impl<A: Float + Default + Clone> MetaLearner<A> {
-    fn suggest_adaptations(
-        &mut self,
-        _batch: &[StreamingDataPoint<A>],
-        _performance: &PerformanceSnapshot<A>,
-    ) -> Result<Vec<Adaptation<A>>> {
-        Ok(Vec::new())
-    }
-
-    fn add_experience(&mut self, _experience: MetaExperience<A>) -> Result<()> {
-        Ok(())
-    }
-}
 
 #[cfg(test)]
 mod tests {

@@ -4,7 +4,6 @@
 
 use std::collections::HashMap;
 use std::ffi::c_void;
-use std::ptr;
 use std::sync::{Arc, Mutex};
 
 use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKernelImpl};
@@ -333,7 +332,7 @@ impl CudaContext {
         ptx: &str,
     ) -> Result<Arc<impl std::any::Any>, GpuError> {
         device
-            .load_ptx_from_file("neural_kernels")
+            .load_ptx(ptx.as_bytes(), "neural_kernels")
             .map_err(|e| GpuError::Other(format!("Failed to load PTX module: {e}")))
             .map(Arc::new)
     }

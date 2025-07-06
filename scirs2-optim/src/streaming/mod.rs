@@ -1509,7 +1509,7 @@ pub struct StreamFusionOptimizer<A: Float> {
     consensus_mechanism: ConsensusAlgorithm,
 }
 
-impl<A: Float> StreamFusionOptimizer<A> {
+impl<A: Float + std::ops::DivAssign + ndarray::ScalarOperand> StreamFusionOptimizer<A> {
     pub fn new(config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             fusion_strategy: FusionStrategy::WeightedAverage,

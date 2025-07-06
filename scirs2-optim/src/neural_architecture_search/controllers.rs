@@ -504,7 +504,7 @@ pub struct ControllerGenome<T: Float> {
     performance_history: Vec<T>,
 }
 
-impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
+impl<T: Float + Default + Clone + Send + Sync + 'static + std::iter::Sum + for<'a> std::iter::Sum<&'a T>> RNNController<T> {
     /// Create new RNN controller
     pub fn new(hidden_size: usize, num_layers: usize, vocab_size: usize) -> Result<Self> {
         let config = RNNControllerConfig {
@@ -690,7 +690,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + 'static> ArchitectureController<T>
+impl<T: Float + Default + Clone + Send + Sync + 'static + std::iter::Sum + for<'a> std::iter::Sum<&'a T>> ArchitectureController<T>
     for RNNController<T>
 {
     fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<()> {
@@ -744,9 +744,10 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> ArchitectureController<
 
             // Simplified: create input sequence from architecture
             let input_seq = self.architecture_to_sequence(&result.architecture)?;
+            let seq_len = input_seq.len();
             batch.inputs.push(Array1::from_vec(input_seq.clone()));
             batch.targets.push(Array1::from_vec(input_seq)); // Self-prediction for now
-            batch.lengths.push(input_seq.len());
+            batch.lengths.push(seq_len);
         }
 
         self.training_history.push_back(batch);

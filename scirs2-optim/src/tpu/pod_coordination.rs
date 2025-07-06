@@ -1032,12 +1032,6 @@ impl OptimError {
 
 const RESOURCE_UNAVAILABLE: &str = "Resources unavailable";
 
-impl OptimError {
-    pub fn resource_unavailable() -> Self {
-        OptimError::ConfigurationError("Resources unavailable".to_string())
-    }
-}
-
 impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand> TPUPodCoordinator<T> {
     /// Create a new TPU pod coordinator
     pub fn new(config: PodCoordinationConfig) -> Result<Self> {

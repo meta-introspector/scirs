@@ -1313,7 +1313,7 @@ impl<T: Float> Default for FewShotConfig<T> {
     }
 }
 
-impl<T: Float + Send + Sync> FewShotLearningEnhancement<T> {
+impl<T: Float + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>> FewShotLearningEnhancement<T> {
     /// Create new few-shot learning enhancement
     pub fn new(config: FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
@@ -1506,7 +1506,7 @@ impl<T: Float + Send + Sync> AdaptationController<T> {
     }
 }
 
-impl<T: Float + Send + Sync> FewShotPerformanceTracker<T> {
+impl<T: Float + Send + Sync + std::iter::Sum> FewShotPerformanceTracker<T> {
     fn new(_config: &FewShotConfig<T>) -> Result<Self> {
         Ok(Self {
             episode_performance: VecDeque::new(),

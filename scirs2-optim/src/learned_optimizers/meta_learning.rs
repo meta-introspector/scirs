@@ -835,6 +835,18 @@ pub struct GradientComputationEngine<T: Float> {
     autodiff_engine: AutoDiffEngine<T>,
 }
 
+impl<T: Float + Default + Clone> GradientComputationEngine<T> {
+    /// Create a new gradient computation engine
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            method: GradientComputationMethod::AutomaticDifferentiation,
+            computation_graph: ComputationGraph::new()?,
+            gradient_cache: HashMap::new(),
+            autodiff_engine: AutoDiffEngine::new()?,
+        })
+    }
+}
+
 /// Gradient computation methods
 #[derive(Debug, Clone, Copy)]
 pub enum GradientComputationMethod {
@@ -861,6 +873,19 @@ pub struct ComputationGraph<T: Float> {
 
     /// Output nodes
     output_nodes: Vec<usize>,
+}
+
+impl<T: Float + Default + Clone> ComputationGraph<T> {
+    /// Create a new computation graph
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            nodes: Vec::new(),
+            dependencies: HashMap::new(),
+            topological_order: Vec::new(),
+            input_nodes: Vec::new(),
+            output_nodes: Vec::new(),
+        })
+    }
 }
 
 /// Computation graph node
@@ -926,6 +951,17 @@ pub struct AutoDiffEngine<T: Float> {
     mixed_mode: MixedModeAD<T>,
 }
 
+impl<T: Float + Default + Clone> AutoDiffEngine<T> {
+    /// Create a new autodiff engine
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            forward_mode: ForwardModeAD::new()?,
+            reverse_mode: ReverseModeAD::new()?,
+            mixed_mode: MixedModeAD::new()?,
+        })
+    }
+}
+
 /// Forward mode automatic differentiation
 #[derive(Debug)]
 pub struct ForwardModeAD<T: Float> {
@@ -934,6 +970,16 @@ pub struct ForwardModeAD<T: Float> {
 
     /// Jacobian matrix
     jacobian: Array2<T>,
+}
+
+impl<T: Float + Default + Clone> ForwardModeAD<T> {
+    /// Create a new forward mode AD engine
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            dual_numbers: Vec::new(),
+            jacobian: Array2::zeros((1, 1)),
+        })
+    }
 }
 
 /// Dual number for forward mode AD
@@ -957,6 +1003,17 @@ pub struct ReverseModeAD<T: Float> {
 
     /// Gradient accumulator
     gradient_accumulator: Array1<T>,
+}
+
+impl<T: Float + Default + Clone> ReverseModeAD<T> {
+    /// Create a new reverse mode AD engine
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            tape: Vec::new(),
+            adjoints: HashMap::new(),
+            gradient_accumulator: Array1::zeros(1),
+        })
+    }
 }
 
 /// Tape entry for reverse mode AD
@@ -988,6 +1045,17 @@ pub struct MixedModeAD<T: Float> {
     mode_selection: ModeSelectionStrategy,
 }
 
+impl<T: Float + Default + Clone> MixedModeAD<T> {
+    /// Create a new mixed mode AD engine
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            forward_component: ForwardModeAD::new()?,
+            reverse_component: ReverseModeAD::new()?,
+            mode_selection: ModeSelectionStrategy::Adaptive,
+        })
+    }
+}
+
 /// Mode selection strategies
 #[derive(Debug, Clone, Copy)]
 pub enum ModeSelectionStrategy {
@@ -1013,6 +1081,18 @@ pub struct SecondOrderGradientEngine<T: Float> {
     curvature_estimator: CurvatureEstimator<T>,
 }
 
+impl<T: Float + Default + Clone> SecondOrderGradientEngine<T> {
+    /// Create a new second-order gradient engine
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            hessian_method: HessianComputationMethod::BFGS,
+            hessian: Array2::zeros((1, 1)), // Placeholder size
+            hvp_engine: HessianVectorProductEngine::new()?,
+            curvature_estimator: CurvatureEstimator::new()?,
+        })
+    }
+}
+
 /// Hessian computation methods
 #[derive(Debug, Clone, Copy)]
 pub enum HessianComputationMethod {
@@ -1036,6 +1116,17 @@ pub struct HessianVectorProductEngine<T: Float> {
     product_cache: Vec<Array1<T>>,
 }
 
+impl<T: Float + Default + Clone> HessianVectorProductEngine<T> {
+    /// Create a new HVP engine
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            method: HVPComputationMethod::FiniteDifference,
+            vector_cache: Vec::new(),
+            product_cache: Vec::new(),
+        })
+    }
+}
+
 /// HVP computation methods
 #[derive(Debug, Clone, Copy)]
 pub enum HVPComputationMethod {
@@ -1057,6 +1148,17 @@ pub struct CurvatureEstimator<T: Float> {
     local_curvature: HashMap<String, T>,
 }
 
+impl<T: Float + Default + Clone> CurvatureEstimator<T> {
+    /// Create a new curvature estimator
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            method: CurvatureEstimationMethod::DiagonalHessian,
+            curvature_history: VecDeque::new(),
+            local_curvature: HashMap::new(),
+        })
+    }
+}
+
 /// Curvature estimation methods
 #[derive(Debug, Clone, Copy)]
 pub enum CurvatureEstimationMethod {
@@ -1066,7 +1168,7 @@ pub enum CurvatureEstimationMethod {
     NaturalGradient,
 }
 
-impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T> + ndarray::ScalarOperand + std::fmt::Debug> MetaLearningFramework<T> {
     /// Create a new meta-learning framework
     pub fn new(config: MetaLearningConfig) -> Result<Self> {
         let meta_learner = Self::create_meta_learner(&config)?;
@@ -1106,7 +1208,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
                     allow_unused: true,
                     gradient_clip: Some(config.gradient_clip),
                 };
-                Ok(Box::new(MAMLLearner::new(maml_config)?))
+                Ok(Box::new(MAMLLearner::<T, ndarray::Ix1>::new(maml_config)?))
             }
             _ => {
                 // For other algorithms, create appropriate learners
@@ -1119,7 +1221,7 @@ impl<T: Float + Default + Clone + Send + Sync> MetaLearningFramework<T> {
                     allow_unused: true,
                     gradient_clip: Some(config.gradient_clip),
                 };
-                Ok(Box::new(MAMLLearner::new(maml_config)?))
+                Ok(Box::new(MAMLLearner::<T, ndarray::Ix1>::new(maml_config)?))
             }
         }
     }
@@ -1419,7 +1521,7 @@ pub struct MetaLearningStatistics<T: Float> {
 }
 
 // MAML implementation
-impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MAMLLearner<T, D> {
+impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug, D: Dimension> MAMLLearner<T, D> {
     pub fn new(config: MAMLConfig<T>) -> Result<Self> {
         let inner_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> =
             Box::new(crate::optimizers::SGD::new(config.inner_lr));
@@ -1444,7 +1546,7 @@ impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MAMLLearner<T, D> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MetaLearner<T> for MAMLLearner<T, D> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::ScalarOperand, D: Dimension> MetaLearner<T> for MAMLLearner<T, D> {
     fn meta_train_step(
         &mut self,
         task_batch: &[MetaTask<T>],
@@ -1471,7 +1573,7 @@ impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MetaLearner<T> for 
                 let grad = Array1::zeros(param.len()); // Placeholder
                 meta_gradients
                     .entry(name.clone())
-                    .and_modify(|g| *g = g.clone() + &grad)
+                    .and_modify(|g: &mut Array1<T>| *g = g.clone() + &grad)
                     .or_insert(grad);
             }
         }
@@ -1574,7 +1676,7 @@ impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MetaLearner<T> for 
 
         for (features, target) in task.query_set.features.iter().zip(&task.query_set.targets) {
             // Simplified prediction computation
-            let prediction = features.iter().sum::<T>() / T::from(features.len()).unwrap();
+            let prediction = features.iter().copied().sum::<T>() / T::from(features.len()).unwrap();
             let loss = (prediction - *target) * (prediction - *target);
 
             predictions.push(prediction);
@@ -1604,7 +1706,7 @@ impl<T: Float + Default + Clone + Send + Sync, D: Dimension> MetaLearner<T> for 
     }
 }
 
-impl<T: Float + Default + Clone, D: Dimension> MAMLLearner<T, D> {
+impl<T: Float + Default + Clone + std::iter::Sum, D: Dimension> MAMLLearner<T, D> {
     fn compute_support_loss(
         &self,
         task: &MetaTask<T>,
@@ -1619,7 +1721,7 @@ impl<T: Float + Default + Clone, D: Dimension> MAMLLearner<T, D> {
             .zip(&task.support_set.targets)
         {
             // Simplified loss computation
-            let prediction = features.iter().sum::<T>() / T::from(features.len()).unwrap();
+            let prediction = features.iter().copied().sum::<T>() / T::from(features.len()).unwrap();
             let loss = (prediction - *target) * (prediction - *target);
             total_loss = total_loss + loss;
         }
@@ -1669,7 +1771,7 @@ impl<T: Float + Default + Clone> MetaValidator<T> {
         // Placeholder validation implementation
         Ok(ValidationResult {
             is_valid: true,
-            validation_loss: T::from(0.5).unwrap_or_default(),
+            validation_loss: 0.5,
             metrics: std::collections::HashMap::new(),
         })
     }

@@ -146,7 +146,7 @@ impl<T: Float + Default + Clone> VectorDual<T> {
     }
 }
 
-impl<T: Float + Default + Clone> ForwardModeEngine<T> {
+impl<T: Float + Default + Clone + std::iter::Sum + 'static> ForwardModeEngine<T> {
     /// Create a new forward-mode AD engine
     pub fn new() -> Self {
         Self {

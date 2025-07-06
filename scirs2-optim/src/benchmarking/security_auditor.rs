@@ -244,7 +244,7 @@ pub enum VulnerabilityType {
 }
 
 /// Severity levels for vulnerabilities
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SeverityLevel {
     /// Low severity
     Low,
@@ -1107,8 +1107,7 @@ impl SecurityAuditor {
         let payload = self.generate_test_payload(&test.payload_generator);
 
         // Execute test with timeout
-        let test_result =
-            self.execute_with_timeout(|| self.test_input_validation(test, &payload))?;
+        let test_result = self.execute_with_timeout(|| self.test_input_validation(test, &payload));
 
         let execution_time = start_time.elapsed();
 
@@ -1236,14 +1235,14 @@ impl SecurityAuditor {
     }
 
     /// Execute function with timeout
-    fn execute_with_timeout<F, T>(&self, f: F) -> Result<std::result::Result<T, String>>
+    fn execute_with_timeout<F, T>(&self, f: F) -> Result<T>
     where
         F: FnOnce() -> Result<T>,
     {
         // Simplified timeout implementation
         // In practice, this would use proper timeout mechanisms
         let result = f();
-        Ok(result)
+        result
     }
 
     /// Analyze validation test result

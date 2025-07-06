@@ -6,7 +6,7 @@
 
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use rand::Rng;
+use rand::{Rng, SeedableRng};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -158,7 +158,7 @@ pub struct ArchitectureSearchSpace {
 }
 
 /// Types of neural network layers
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LayerType {
     Linear,
     LSTM,
@@ -175,7 +175,7 @@ pub enum LayerType {
 }
 
 /// Activation function types
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ActivationType {
     ReLU,
     Tanh,
@@ -211,7 +211,7 @@ pub enum ConnectionPattern {
 }
 
 /// Types of attention mechanisms
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum AttentionType {
     None,
     SelfAttention,
@@ -223,7 +223,7 @@ pub enum AttentionType {
 }
 
 /// Normalization types
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum NormalizationType {
     None,
     BatchNorm,
@@ -688,12 +688,12 @@ pub enum StatisticalTest {
 }
 
 /// Search strategy implementation
-#[derive(Debug)]
 pub struct SearchStrategy<T: Float> {
     /// Strategy type
     strategy_type: SearchStrategyType,
 
     /// Random number generator
+    #[allow(dead_code)]
     rng: Box<dyn rand::RngCore + Send>,
 
     /// Strategy-specific state
@@ -704,6 +704,17 @@ pub struct SearchStrategy<T: Float> {
 
     /// Current best architectures
     best_architectures: Vec<ArchitectureCandidate>,
+}
+
+impl<T: Float + std::fmt::Debug> std::fmt::Debug for SearchStrategy<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SearchStrategy")
+            .field("strategy_type", &self.strategy_type)
+            .field("state", &self.state)
+            .field("optimization_history", &self.optimization_history)
+            .field("best_architectures", &self.best_architectures)
+            .finish()
+    }
 }
 
 /// Search strategy state
@@ -1195,7 +1206,7 @@ pub struct MultiObjectiveState<T: Float> {
 }
 
 impl<
-        T: Float + Default + Clone + Send + Sync + std::iter::Sum<T> + for<'a> std::iter::Sum<&'a T>,
+        T: Float + Default + Clone + Send + Sync + std::iter::Sum<T> + for<'a> std::iter::Sum<&'a T> + ndarray::ScalarOperand + std::fmt::Debug,
     > NeuralArchitectureSearch<T>
 {
     /// Create a new NAS instance
@@ -2517,17 +2528,12 @@ impl<
                     None
                 },
             },
-            memory_management: MemoryManagement {
-                memory_type,
-                memory_capacity: width * depth,
-                access_pattern: match stage {
-                    ProgressiveStage::Minimal | ProgressiveStage::Small => {
-                        MemoryAccessPattern::Sequential
-                    }
-                    ProgressiveStage::Medium => MemoryAccessPattern::Hierarchical,
-                    ProgressiveStage::Large => MemoryAccessPattern::Adaptive,
-                },
-                compression_enabled: matches!(stage, ProgressiveStage::Large),
+            memory_management: match stage {
+                ProgressiveStage::Minimal | ProgressiveStage::Small => {
+                    MemoryManagementStrategy::Standard
+                }
+                ProgressiveStage::Medium => MemoryManagementStrategy::LowMemory,
+                ProgressiveStage::Large => MemoryManagementStrategy::Optimized,
             },
         })
     }
@@ -3181,12 +3187,7 @@ impl<
                 attention_span: 32,
                 sparse_config: None,
             },
-            memory_management: MemoryManagement {
-                memory_type: MemoryType::ShortTerm,
-                memory_capacity: 1024,
-                access_pattern: MemoryAccessPattern::Sequential,
-                compression_enabled: false,
-            },
+            memory_management: MemoryManagementStrategy::Standard,
         })
     }
 
@@ -4187,6 +4188,7 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
                         genotypic_diversity: 0.5,
                         phenotypic_diversity: 0.5,
                     },
+                    _phantom: std::marker::PhantomData,
                 })
             }
             SearchStrategyType::BayesianOptimization => {
@@ -4283,7 +4285,7 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
 
         Ok(Self {
             strategy_type,
-            rng: Box::new(rand::rng()),
+            rng: Box::new(rand::rngs::SmallRng::from_entropy()),
             state,
             optimization_history: Vec::new(),
             best_architectures: Vec::new(),

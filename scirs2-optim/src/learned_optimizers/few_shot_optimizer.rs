@@ -828,7 +828,6 @@ pub struct FastAdaptationConfig {
 }
 
 /// Performance tracker for few-shot learning
-#[derive(Debug)]
 pub struct FewShotPerformanceTracker<T: Float> {
     /// Performance history
     performance_history: VecDeque<PerformanceRecord<T>>,

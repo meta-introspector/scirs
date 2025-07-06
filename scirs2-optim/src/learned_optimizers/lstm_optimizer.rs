@@ -6,7 +6,6 @@
 
 use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::Float;
-use rand_chacha::ChaCha20Rng;
 use std::collections::{HashMap, VecDeque};
 
 use super::{LearnedOptimizerConfig, MetaOptimizationStrategy};
@@ -39,7 +38,7 @@ pub struct LSTMOptimizer<T: Float> {
     step_count: usize,
 
     /// Random number generator for noise and initialization
-    rng: ChaCha20Rng,
+    rng: rand::prelude::ThreadRng,
 }
 
 /// LSTM network architecture for optimization
@@ -99,6 +98,30 @@ pub struct OutputProjection<T: Float> {
     output_transform: OutputTransform,
 }
 
+impl<T: Float + Default + Clone> OutputProjection<T> {
+    /// Create a new output projection
+    pub fn new(
+        input_size: usize,
+        output_size: usize,
+        output_transform: OutputTransform,
+    ) -> Result<Self> {
+        let weights = Array2::zeros((output_size, input_size));
+        let bias = Array1::zeros(output_size);
+        
+        Ok(Self {
+            weights,
+            bias,
+            output_transform,
+        })
+    }
+    
+    /// Forward pass through output projection
+    pub fn forward(&self, input: &Array1<T>) -> Result<Array1<T>> {
+        // Simplified implementation - just return the input for now
+        Ok(input.clone())
+    }
+}
+
 /// Output transformation types
 #[derive(Debug, Clone, Copy)]
 pub enum OutputTransform {
@@ -143,6 +166,31 @@ pub struct AttentionMechanism<T: Float> {
     attention_weights: Option<Array2<T>>,
 }
 
+impl<T: Float + Default + Clone> AttentionMechanism<T> {
+    /// Create a new attention mechanism
+    pub fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
+        let hidden_size = config.hidden_size;
+        let num_heads = config.attention_heads;
+        let head_size = hidden_size / num_heads;
+        
+        Ok(Self {
+            query_proj: Array2::zeros((hidden_size, hidden_size)),
+            key_proj: Array2::zeros((hidden_size, hidden_size)),
+            value_proj: Array2::zeros((hidden_size, hidden_size)),
+            output_proj: Array2::zeros((hidden_size, hidden_size)),
+            num_heads,
+            head_size,
+            attention_weights: None,
+        })
+    }
+    
+    /// Forward pass through attention mechanism
+    pub fn forward(&mut self, input: &Array1<T>) -> Result<Array1<T>> {
+        // Simplified implementation - just return the input for now
+        Ok(input.clone())
+    }
+}
+
 /// Layer normalization for stable training
 #[derive(Debug, Clone)]
 pub struct LayerNormalization<T: Float> {
@@ -154,6 +202,23 @@ pub struct LayerNormalization<T: Float> {
 
     /// Epsilon for numerical stability
     epsilon: T,
+}
+
+impl<T: Float + Default + Clone> LayerNormalization<T> {
+    /// Create a new layer normalization
+    pub fn new(features: usize) -> Result<Self> {
+        Ok(Self {
+            gamma: Array1::ones(features),
+            beta: Array1::zeros(features),
+            epsilon: T::from(1e-5).unwrap(),
+        })
+    }
+    
+    /// Forward pass through layer normalization
+    pub fn forward(&self, input: &Array1<T>) -> Result<Array1<T>> {
+        // Simplified implementation - just return the input for now
+        Ok(input.clone())
+    }
 }
 
 /// History buffer for maintaining context
@@ -826,7 +891,7 @@ pub struct AttentionStats {
     pub temporal_patterns: Vec<f64>,
 }
 
-impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T> + ndarray::ScalarOperand + std::fmt::Debug> LSTMOptimizer<T> {
     /// Create a new LSTM optimizer
     pub fn new(config: LearnedOptimizerConfig) -> Result<Self> {
         // Validate configuration
@@ -851,7 +916,8 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
         let metrics = LSTMOptimizerMetrics::new();
 
         // Initialize RNG
-        let rng = ChaCha20Rng::from_entropy();
+        use rand::rng;
+        let rng = rng();
 
         Ok(Self {
             config,
@@ -1034,7 +1100,7 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
     }
 
     /// Update performance metrics
-    fn update_metrics(&mut self, gradients: &Array1<T>, updates: &Array1<T>, lr: T) {
+    fn update_metrics(&mut self, gradients: &Array1<T>, updates: &Array1<T>, _lr: T) {
         // Compute gradient statistics
         let grad_norm = gradients.iter().map(|&g| g * g).sum::<T>().sqrt();
         let update_norm = updates.iter().map(|&u| u * u).sum::<T>().sqrt();
@@ -1200,7 +1266,7 @@ impl<T: Float + Default + Clone + Send + Sync> LSTMOptimizer<T> {
 
 // Implementation of major components
 
-impl<T: Float + Default + Clone> LSTMNetwork<T> {
+impl<T: Float + Default + Clone + 'static> LSTMNetwork<T> {
     /// Create new LSTM network
     fn new(config: &LearnedOptimizerConfig) -> Result<Self> {
         let mut layers = Vec::new();
@@ -1233,7 +1299,7 @@ impl<T: Float + Default + Clone> LSTMNetwork<T> {
         // Create layer normalization
         let layer_norms = (0..config.num_layers)
             .map(|_| LayerNormalization::new(config.hidden_size))
-            .collect::<Result<Vec<_>, _>>()?;
+            .collect::<Result<Vec<_>>>()?;
 
         Ok(Self {
             layers,
@@ -1249,8 +1315,8 @@ impl<T: Float + Default + Clone> LSTMNetwork<T> {
         let mut current_input = input.clone();
 
         // Forward through LSTM layers
-        for (i, layer) in self.layers.iter_mut().enumerate() {
-            current_input = layer.forward(&current_input)?;
+        for i in 0..self.layers.len() {
+            current_input = self.layers[i].forward(&current_input)?;
 
             // Apply layer normalization
             current_input = self.layer_norms[i].forward(&current_input)?;

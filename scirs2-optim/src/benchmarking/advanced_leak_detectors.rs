@@ -714,7 +714,6 @@ impl Default for CycleDetector {
 ///
 /// Provides continuous monitoring of memory usage patterns and leak detection
 /// in real-time with configurable sampling rates and alert thresholds.
-#[derive(Debug)]
 pub struct RealTimeMemoryMonitor {
     /// Monitor configuration
     config: RealTimeMonitorConfig,
@@ -819,7 +818,6 @@ pub enum AlertSeverity {
 }
 
 /// Alert system for memory monitoring
-#[derive(Debug)]
 pub struct AlertSystem {
     /// Alert callbacks
     alert_callbacks: Vec<Box<dyn Fn(&MemoryAlert) + Send + Sync>>,

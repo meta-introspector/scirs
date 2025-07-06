@@ -4475,7 +4475,6 @@ pub mod secure_aggregation_protocols {
 }
 
 /// Implementation of missing key structures for federated privacy
-
 impl<T: Float + Default + Clone + Send + Sync> StatisticalAnalyzer<T> {
     /// Create new statistical analyzer
     pub fn new(window_size: usize, significance_level: f64) -> Self {

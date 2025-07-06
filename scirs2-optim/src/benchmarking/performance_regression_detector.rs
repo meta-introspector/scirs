@@ -307,7 +307,7 @@ pub struct PerformanceTrend {
 }
 
 /// Trend direction
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum TrendDirection {
     Improving,
     Degrading,
@@ -432,7 +432,7 @@ pub struct RegressionResult {
 }
 
 /// Types of performance regressions
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum RegressionType {
     /// Sudden performance drop
     AbruptRegression,
@@ -473,7 +473,7 @@ pub struct AlertConfig {
 }
 
 /// Alert severity levels
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize)]
 pub enum AlertSeverity {
     Low,
     Medium,
@@ -703,7 +703,7 @@ impl PerformanceRegressionDetector {
         let changes: Vec<f64> = values.windows(2).map(|w| (w[1] - w[0]).abs()).collect();
 
         let avg_change = changes.iter().sum::<f64>() / changes.len() as f64;
-        let max_change = changes.iter().fold(0.0, |acc, &x| acc.max(x));
+        let max_change = changes.iter().fold(0.0f64, |acc, &x| acc.max(x));
 
         max_change < avg_change * 2.0 // Gradual if no single large change
     }

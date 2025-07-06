@@ -304,8 +304,6 @@ pub enum TopologyType {
     Custom,
 }
 
-/// Load balancer for device assignment
-
 /// Load balancing strategies
 #[derive(Debug, Clone, Copy, Default)]
 pub enum LoadBalancingStrategy {
@@ -810,6 +808,11 @@ impl DeviceManager {
         })
     }
 
+    pub fn get_utilization_stats(&self) -> HashMap<DeviceId, f64> {
+        // Return device utilization map directly
+        self.device_utilization.clone()
+    }
+
 }
 
 impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
@@ -1170,6 +1173,11 @@ impl TPUErrorHandler {
             recovery_strategies: HashMap::new(),
             max_retry_attempts: config.max_retry_attempts,
         }
+    }
+
+    /// Get current error rate
+    pub fn get_error_rate(&self) -> f64 {
+        self.error_statistics.error_rate
     }
 }
 

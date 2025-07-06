@@ -625,21 +625,6 @@ impl MomentsAccountant {
         })
     }
 
-    /// Compute log moment for a specific mechanism
-    fn compute_mechanism_log_moment(
-        &self,
-        mechanism: &MechanismParameters,
-        order: usize,
-    ) -> Result<f64> {
-        let alpha = order as f64;
-        let sigma = mechanism.noise_multiplier;
-        let sensitivity = mechanism.sensitivity;
-
-        // Gaussian mechanism log moment
-        let log_moment = alpha * (alpha - 1.0) * sensitivity * sensitivity / (2.0 * sigma * sigma);
-
-        Ok(log_moment)
-    }
 
     /// Compute optimal epsilon with custom delta
     fn compute_optimal_epsilon_with_delta(

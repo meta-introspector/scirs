@@ -611,7 +611,7 @@ pub struct TaskConstraints<A: Float> {
 }
 
 /// Optimizer state
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct OptimizerState<A: Float> {
     /// Internal parameters
     pub parameters: HashMap<String, Array1<A>>,

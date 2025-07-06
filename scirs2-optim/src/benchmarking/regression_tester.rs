@@ -503,6 +503,8 @@ pub struct AlertSystem {
 /// Alert configuration
 #[derive(Debug, Clone)]
 pub struct AlertConfig {
+    /// Enable alerts globally
+    pub enable_alerts: bool,
     /// Enable email alerts
     pub enable_email: bool,
     /// Enable Slack notifications
@@ -768,7 +770,7 @@ impl<A: Float + Debug + Serialize + for<'de> Deserialize<'de>> RegressionTester<
                 };
 
                 if is_significant_update {
-                    self.baselines.insert(key.clone(), new_baseline);
+                    self.baselines.insert(key.to_string(), new_baseline);
                     return Ok(true);
                 }
             }
@@ -2332,6 +2334,7 @@ impl AlertSystem {
     pub fn new() -> Self {
         Self {
             config: AlertConfig {
+                enable_alerts: true,
                 enable_email: false,
                 enable_slack: false,
                 enable_github_issues: false,

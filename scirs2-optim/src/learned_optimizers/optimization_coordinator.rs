@@ -266,8 +266,6 @@ pub struct PerformanceSnapshot<T: Float> {
     pub convergence_rate: T,
 }
 
-/// Optimization context
-
 /// Landscape features
 #[derive(Debug, Clone)]
 pub struct LandscapeFeatures<T: Float> {
@@ -315,8 +313,6 @@ pub enum ResourceAllocationStrategy {
     Adaptive,
     CustomWeighted,
 }
-
-/// Optimization objectives
 
 /// Ensemble strategies
 #[derive(Debug, Clone, Copy)]
@@ -1024,7 +1020,7 @@ impl<T: Float> Default for AdvancedConfig<T> {
     }
 }
 
-impl<T: Float + 'static> AdvancedCoordinator<T> {
+impl<T: Float + 'static + std::iter::Sum + for<'a> std::iter::Sum<&'a T>> AdvancedCoordinator<T> {
     /// Create new Advanced coordinator
     pub fn new(config: AdvancedConfig<T>) -> Result<Self> {
         let mut coordinator = Self {
@@ -3004,43 +3000,9 @@ impl<T: Float + Send + Sync> MetaLearningOrchestrator<T> {
     }
 }
 
-impl<T: Float + Send + Sync> PerformancePredictor<T> {
-    fn new() -> Result<Self> {
-        Ok(Self {
-            models: HashMap::new(),
-            feature_extractors: Vec::new(),
-            prediction_cache: PredictionCache::new(),
-            uncertainty_estimator: UncertaintyEstimator::new(),
-        })
-    }
-}
 
-impl<T: Float + Send + Sync> ResourceManager<T> {
-    fn new() -> Result<Self> {
-        Ok(Self {
-            available_resources: ResourcePool::default(),
-            allocation_tracker: ResourceAllocationTracker::new(),
-            optimization_engine: ResourceOptimizationEngine::new(),
-            load_balancer: LoadBalancer::new(),
-        })
-    }
-}
 
 impl<T: Float + Send + Sync> AdaptationController<T> {
-    fn new() -> Result<Self> {
-        Ok(Self {
-            strategies: HashMap::new(),
-            triggers: Vec::new(),
-            adaptation_history: VecDeque::new(),
-            current_state: AdaptationState {
-                adaptation_level: T::from(0.5).unwrap(),
-                last_adaptation: SystemTime::now(),
-                adaptation_frequency: T::from(0.1).unwrap(),
-                effectiveness: T::from(0.8).unwrap(),
-            },
-        })
-    }
-
     fn add_trigger(&mut self, trigger: Box<dyn AdaptationTrigger<T>>) -> Result<()> {
         self.triggers.push(trigger);
         Ok(())
@@ -3048,23 +3010,6 @@ impl<T: Float + Send + Sync> AdaptationController<T> {
 }
 
 impl<T: Float + Send + Sync> OptimizationKnowledgeBase<T> {
-    fn new() -> Result<Self> {
-        Ok(Self {
-            optimization_patterns: HashMap::new(),
-            best_practices: BestPracticesDatabase::new(),
-            failure_analysis: FailureAnalysisDatabase::new(),
-            research_insights: ResearchInsightsDatabase::new(),
-            learning_system: DynamicLearningSystem::new(),
-        })
-    }
-
-    fn initialize(&mut self) -> Result<()> {
-        // Load default patterns and practices
-        self.load_default_patterns()?;
-        self.load_default_best_practices()?;
-        Ok(())
-    }
-
     /// Update the pattern database with a new pattern
     fn update_pattern_database(&mut self, pattern: &OptimizationPattern<T>) -> Result<()> {
         // Check if pattern already exists
@@ -3310,28 +3255,6 @@ impl<T: Float + Send + Sync> OptimizationKnowledgeBase<T> {
     }
 }
 
-impl CoordinatorState<f64> {
-    fn new() -> Self {
-        Self {
-            current_phase: OptimizationPhase::Initialization,
-            active_optimizers: 0,
-            current_metrics: CoordinatorMetrics {
-                overall_performance: 0.5,
-                convergence_rate: 0.1,
-                resource_efficiency: 0.8,
-                adaptation_success_rate: 0.9,
-                ensemble_diversity: 0.7,
-            },
-            resource_utilization: ResourceUtilization {
-                cpu_utilization: 0.0,
-                memory_utilization: 0.0,
-                gpu_utilization: 0.0,
-                network_utilization: 0.0,
-            },
-            state_history: VecDeque::new(),
-        }
-    }
-}
 
 impl Default for ResourcePool {
     fn default() -> Self {
@@ -4139,34 +4062,7 @@ pub struct AdaptationResult<T: Float> {
 }
 
 // Stub implementations for missing constructors
-impl<T: Float + Send + Sync> OptimizerEnsemble<T> {
-    fn new() -> Result<Self> {
-        Ok(Self {
-            optimizers: HashMap::new(),
-            performance_scores: HashMap::new(),
-            ensemble_weights: HashMap::new(),
-            ensemble_strategy: EnsembleStrategy::default(),
-            selection_algorithm: OptimizerSelectionAlgorithm::PerformanceBased,
-        })
-    }
-}
 
-impl<T: Float + Send + Sync> MetaLearningOrchestrator<T> {
-    fn new() -> Result<Self> {
-        Ok(Self {
-            strategies: Vec::new(),
-            strategy_performance: HashMap::new(),
-            current_meta_task: None,
-            schedule: MetaLearningSchedule {
-                frequency: Duration::from_secs(60),
-                adaptation_rate: 0.01,
-            },
-            task_analyzer: TaskDistributionAnalyzer {
-                distribution_models: HashMap::new(),
-            },
-        })
-    }
-}
 
 impl<T: Float + Send + Sync> PerformancePredictor<T> {
     fn new() -> Result<Self> {

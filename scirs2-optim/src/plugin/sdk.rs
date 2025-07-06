@@ -810,8 +810,6 @@ impl Default for BenchmarkConfig {
     }
 }
 
-/// Utility macros for plugin development
-
 /// Macro for creating a simple optimizer plugin
 #[macro_export]
 macro_rules! create_optimizer_plugin {
