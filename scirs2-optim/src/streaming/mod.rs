@@ -394,7 +394,15 @@ enum UpdatePriority {
 
 impl<O, A, D> StreamingOptimizer<O, A, D>
 where
-    A: Float + Default + Clone + Send + Sync + std::fmt::Debug + ScalarOperand,
+    A: Float
+        + Default
+        + Clone
+        + Send
+        + Sync
+        + std::fmt::Debug
+        + ScalarOperand
+        + std::iter::Sum
+        + std::ops::DivAssign,
     D: ndarray::Dimension,
     O: Optimizer<A, D> + Send + Sync,
 {
@@ -1555,6 +1563,28 @@ impl<A: Float + std::ops::DivAssign + ndarray::ScalarOperand> StreamFusionOptimi
             FusionStrategy::ConsensusBased => {
                 // Use consensus mechanism
                 self.apply_consensus(steps)
+            }
+            FusionStrategy::AdaptiveFusion => {
+                // Implement adaptive fusion strategy
+                // For now, fallback to weighted average
+                let mut fused_step = Array1::zeros(steps[0].1.len());
+                let mut total_weight = A::zero();
+
+                for (stream_id, step) in steps {
+                    let weight = self
+                        .stream_weights
+                        .get(stream_id)
+                        .copied()
+                        .unwrap_or(A::one());
+                    fused_step = fused_step + step * weight;
+                    total_weight = total_weight + weight;
+                }
+
+                if total_weight > A::zero() {
+                    fused_step /= total_weight;
+                }
+
+                Ok(fused_step)
             }
         }
     }

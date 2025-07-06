@@ -8,8 +8,7 @@
 use crate::error::{StatsError, StatsResult};
 use crate::error_standardization::ErrorMessages;
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix1, Ix2};
-use num_traits::{Float, NumCast, Zero, One, Signed};
-use scirs2_core::parallel_ops::*;
+use num_traits::{Float, NumCast, Zero, One};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque, BTreeMap};
 use std::sync::{Arc, RwLock, Mutex};

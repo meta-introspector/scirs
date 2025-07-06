@@ -1147,7 +1147,6 @@ impl RealTimeDenoisingContext {
 mod tests {
     #[allow(unused_imports)]
     use super::*;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_advanced_advanced_denoise_basic() {

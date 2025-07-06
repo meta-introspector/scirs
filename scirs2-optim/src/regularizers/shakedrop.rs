@@ -110,7 +110,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
         let one = A::one();
 
         // Determine if the gate is active
-        let u: f64 = self.rng.gen();
+        let u: f64 = self.rng.random();
         let b = if u < self.p.to_f64().unwrap() {
             one
         } else {

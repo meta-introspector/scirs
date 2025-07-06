@@ -41,7 +41,7 @@ pub fn jade_ica(
     ) {
         Ok(inv) => inv.slice(s![0..n_components, ..]).to_owned(),
         Err(_) => {
-            return Err(crate::error::SignalError::Compute(
+            return Err(crate::error::SignalError::ComputationError(
                 "Failed to compute PCA unmixing matrix".to_string(),
             ));
         }

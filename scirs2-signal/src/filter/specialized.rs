@@ -9,7 +9,6 @@ use crate::error::{SignalError, SignalResult};
 use super::common::{validation::validate_cutoff_frequency, FilterCoefficients};
 use super::transform::zpk_to_tf;
 use num_complex::Complex64;
-use std::f64::consts::PI;
 
 /// Design a notch filter to remove a specific frequency
 ///

@@ -482,7 +482,6 @@ mod tests {
     use crate::dwt::Wavelet;
     #[allow(unused_imports)]
     use rand::Rng;
-    use std::f64::consts::PI;
 
     #[test]
     fn test_thresholding_methods() {

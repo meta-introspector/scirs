@@ -4,6 +4,7 @@
 //! retry logic, fallback strategies, and adaptive error handling for production environments.
 
 use crate::error::{CoreError, CoreResult, ErrorContext};
+use rand::{rng, Rng};
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -562,12 +563,13 @@ impl RetryExecutor {
 
     /// Calculate delay for the given attempt
     fn calculate_delay(&self, attempt: usize) -> Duration {
+        let mut rng = rng();
         let base_delay_ms = self.policy.base_delay.as_millis() as f64;
         let exponential_delay = base_delay_ms * self.policy.backoff_multiplier.powi(attempt as i32);
 
         // Add jitter
         let jitter_range = exponential_delay * self.policy.jitter;
-        let jitter = (rand::random::<f64>() - 0.5) * 2.0 * jitter_range;
+        let jitter = (rng.random::<f64>() - 0.5) * 2.0 * jitter_range;
         let delay_with_jitter = exponential_delay + jitter;
 
         // Cap at max delay

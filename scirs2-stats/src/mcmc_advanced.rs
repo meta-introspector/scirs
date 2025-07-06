@@ -16,7 +16,7 @@ use ndarray::{Array1, Array2, Array3};
 use num_traits::{Float, NumCast, One, Zero};
 use rand::{rng, Rng};
 use rand_distr::{Distribution, Normal};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::marker::PhantomData;
 use std::sync::RwLock;
 use std::time::Instant;

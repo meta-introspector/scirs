@@ -218,6 +218,12 @@ Suggestion: {}",
                     "Refer to the core error for more details"
                 )
             }
+            StatsError::DistributionError(msg) => {
+                format!(
+                    "{msg}
+Suggestion: Check distribution parameters and ensure they are within valid ranges"
+                )
+            }
         }
     }
 }

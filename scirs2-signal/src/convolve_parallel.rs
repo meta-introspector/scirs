@@ -123,7 +123,7 @@ fn parallel_direct_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
 
             Ok(sum)
         },
-        |results, val: Result<Vec<f64>, SignalError>| {
+        |results: &mut Vec<f64>, val: Result<f64, SignalError>| {
             results.push(val?);
             Ok(())
         },

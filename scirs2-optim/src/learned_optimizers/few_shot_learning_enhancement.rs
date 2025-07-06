@@ -1313,7 +1313,9 @@ impl<T: Float> Default for FewShotConfig<T> {
     }
 }
 
-impl<T: Float + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>> FewShotLearningEnhancement<T> {
+impl<T: Float + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>>
+    FewShotLearningEnhancement<T>
+{
     /// Create new few-shot learning enhancement
     pub fn new(config: FewShotConfig<T>) -> Result<Self> {
         Ok(Self {

@@ -1031,10 +1031,10 @@ where
 fn get_wavelet_filter_length(wavelet: Wavelet) -> usize {
     match wavelet {
         Wavelet::Haar => 2,
-        Wavelet::Daubechies(n) => 2 * n,
-        Wavelet::Biorthogonal(p, q) => 2 * (p.max(q) + 1),
-        Wavelet::Coiflets(n) => 6 * n,
-        Wavelet::Symmlets(n) => 2 * n,
+        Wavelet::DB(n) => 2 * n,
+        Wavelet::BiorNrNd { nr, nd } => 2 * (nr.max(nd) + 1),
+        Wavelet::Coif(n) | Wavelet::Coiflet(n) => 6 * n,
+        Wavelet::Sym(n) => 2 * n,
         _ => 8, // Default conservative estimate
     }
 }
@@ -1227,10 +1227,10 @@ fn example_enhanced_boundary_usage() -> SignalResult<()> {
     };
 
     // Enhanced decomposition
-    let enhanced_decomp = dwt2d_decompose_enhanced(&data, Wavelet::Daubechies(4), &config)?;
+    let enhanced_decomp = dwt2d_decompose_enhanced(&data, Wavelet::DB(4), &config)?;
 
     // Reconstruction
-    let reconstructed = dwt2d_reconstruct_enhanced(&enhanced_decomp, Wavelet::Daubechies(4))?;
+    let reconstructed = dwt2d_reconstruct_enhanced(&enhanced_decomp, Wavelet::DB(4))?;
 
     // Generate report
     let report = generate_boundary_report(&enhanced_decomp);

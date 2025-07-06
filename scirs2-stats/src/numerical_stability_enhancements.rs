@@ -8,9 +8,8 @@
 use crate::error::StatsResult;
 use crate::property_based_validation::ValidationReport;
 use ndarray::{Array1, ArrayBase, ArrayView1, Data, Ix1};
-use num_traits::{Bounded, Float, NumCast, One, Signed, Zero};
+use num_traits::{Float, NumCast, One, Zero};
 use rand::Rng;
-use scirs2_core::parallel_ops::*;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};

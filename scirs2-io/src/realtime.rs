@@ -51,6 +51,7 @@ use crate::error::{IoError, Result};
 #[cfg(feature = "async")]
 use futures::{SinkExt, Stream, StreamExt};
 use ndarray::{Array1, Array2, ArrayD, ArrayView1, IxDyn};
+use rand::rng;
 use scirs2_core::numeric::ScientificNumber;
 use serde_json;
 use std::collections::VecDeque;
@@ -1216,6 +1217,7 @@ impl StreamConnection for MqttConnection {
         }
 
         // Simulate realistic MQTT message with proper JSON structure
+        let mut rng = rng();
         let sensor_data = serde_json::json!({
             "client_id": self.client_id,
             "topic": self.topic,
@@ -1225,9 +1227,9 @@ impl StreamConnection for MqttConnection {
                 .as_millis() as u64,
             "qos": self.qos,
             "payload": {
-                "temperature": 23.5 + (rand::random::<f64>() - 0.5) * 10.0,
-                "humidity": 65.2 + (rand::random::<f64>() - 0.5) * 20.0,
-                "pressure": 1013.25 + (rand::random::<f64>() - 0.5) * 50.0
+                "temperature": 23.5 + (rng.random::<f64>() - 0.5) * 10.0,
+                "humidity": 65.2 + (rng.random::<f64>() - 0.5) * 20.0,
+                "pressure": 1013.25 + (rng.random::<f64>() - 0.5) * 50.0
             }
         });
 
@@ -1588,7 +1590,7 @@ impl StreamSynchronizer {
             // Process synchronized data if available
             if !synchronized_data.is_empty() {
                 if let Err(e) = processor(synchronized_data) {
-                    eprintln!("Processor error: {}", e);
+                    eprintln!("Processor error: {e}");
                 }
             }
 

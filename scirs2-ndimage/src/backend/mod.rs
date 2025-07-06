@@ -5,6 +5,9 @@
 //! It allows seamless switching between implementations based on
 //! hardware availability and performance characteristics.
 
+use crate::NdimageError;
+use std::sync::Arc;
+
 pub mod concrete_gpu_backends;
 pub mod device_detection;
 pub mod gpu_acceleration_framework;

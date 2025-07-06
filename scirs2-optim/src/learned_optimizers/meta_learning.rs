@@ -1168,7 +1168,18 @@ pub enum CurvatureEstimationMethod {
     NaturalGradient,
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T> + ndarray::ScalarOperand + std::fmt::Debug> MetaLearningFramework<T> {
+impl<
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + std::iter::Sum
+            + for<'a> std::iter::Sum<&'a T>
+            + ndarray::ScalarOperand
+            + std::fmt::Debug,
+    > MetaLearningFramework<T>
+{
     /// Create a new meta-learning framework
     pub fn new(config: MetaLearningConfig) -> Result<Self> {
         let meta_learner = Self::create_meta_learner(&config)?;
@@ -1521,7 +1532,11 @@ pub struct MetaLearningStatistics<T: Float> {
 }
 
 // MAML implementation
-impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug, D: Dimension> MAMLLearner<T, D> {
+impl<
+        T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug,
+        D: Dimension,
+    > MAMLLearner<T, D>
+{
     pub fn new(config: MAMLConfig<T>) -> Result<Self> {
         let inner_optimizer: Box<dyn Optimizer<T, D> + Send + Sync> =
             Box::new(crate::optimizers::SGD::new(config.inner_lr));
@@ -1546,7 +1561,11 @@ impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::fm
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::ScalarOperand, D: Dimension> MetaLearner<T> for MAMLLearner<T, D> {
+impl<
+        T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::ScalarOperand,
+        D: Dimension,
+    > MetaLearner<T> for MAMLLearner<T, D>
+{
     fn meta_train_step(
         &mut self,
         task_batch: &[MetaTask<T>],
@@ -1588,7 +1607,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
 
         Ok(MetaTrainingResult {
             meta_loss,
-            task_losses,
+            task_losses: task_losses.clone(),
             meta_gradients,
             metrics: MetaTrainingMetrics {
                 avg_adaptation_speed: T::from(2.0).unwrap(),
@@ -1667,7 +1686,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
     fn evaluate_query_set(
         &self,
         task: &MetaTask<T>,
-        adapted_parameters: &HashMap<String, Array1<T>>,
+        _adapted_parameters: &HashMap<String, Array1<T>>,
     ) -> Result<QueryEvaluationResult<T>> {
         // Compute predictions on query set
         let mut predictions = Vec::new();
@@ -1710,7 +1729,7 @@ impl<T: Float + Default + Clone + std::iter::Sum, D: Dimension> MAMLLearner<T, D
     fn compute_support_loss(
         &self,
         task: &MetaTask<T>,
-        parameters: &HashMap<String, Array1<T>>,
+        _parameters: &HashMap<String, Array1<T>>,
     ) -> Result<T> {
         let mut total_loss = T::zero();
 

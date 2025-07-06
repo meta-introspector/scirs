@@ -399,10 +399,10 @@ pub enum DataValue {
 impl std::fmt::Display for DataValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DataValue::String(s) => write!(f, "{}", s),
-            DataValue::Integer(i) => write!(f, "{}", i),
-            DataValue::Float(v) => write!(f, "{}", v),
-            DataValue::Boolean(b) => write!(f, "{}", b),
+            DataValue::String(s) => write!(f, "{s}"),
+            DataValue::Integer(i) => write!(f, "{i}"),
+            DataValue::Float(v) => write!(f, "{v}"),
+            DataValue::Boolean(b) => write!(f, "{b}"),
             DataValue::Date(d) => write!(f, "{}", d.format("%Y-%m-%d")),
             DataValue::Time(t) => write!(f, "{}", t.format("%H:%M:%S%.f")),
             DataValue::DateTime(dt) => write!(f, "{}", dt.format("%Y-%m-%dT%H:%M:%S%.f")),
@@ -633,15 +633,13 @@ fn convert_value(
         ColumnType::Integer => match trimmed.parse::<i64>() {
             Ok(val) => Ok(DataValue::Integer(val)),
             Err(_) => Err(IoError::FormatError(format!(
-                "Cannot convert '{}' to integer",
-                value
+                "Cannot convert '{value}' to integer"
             ))),
         },
         ColumnType::Float => match trimmed.parse::<f64>() {
             Ok(val) => Ok(DataValue::Float(val)),
             Err(_) => Err(IoError::FormatError(format!(
-                "Cannot convert '{}' to float",
-                value
+                "Cannot convert '{value}' to float"
             ))),
         },
         ColumnType::Boolean => {
@@ -650,16 +648,14 @@ fn convert_value(
                 "true" | "yes" | "1" => Ok(DataValue::Boolean(true)),
                 "false" | "no" | "0" => Ok(DataValue::Boolean(false)),
                 _ => Err(IoError::FormatError(format!(
-                    "Cannot convert '{}' to boolean",
-                    value
+                    "Cannot convert '{value}' to boolean"
                 ))),
             }
         }
         ColumnType::Date => match NaiveDate::parse_from_str(trimmed, "%Y-%m-%d") {
             Ok(date) => Ok(DataValue::Date(date)),
             Err(_) => Err(IoError::FormatError(format!(
-                "Cannot convert '{}' to date (expected YYYY-MM-DD)",
-                value
+                "Cannot convert '{value}' to date (expected YYYY-MM-DD)"
             ))),
         },
         ColumnType::Time => {
@@ -669,8 +665,7 @@ fn convert_value(
             match result {
                 Ok(time) => Ok(DataValue::Time(time)),
                 Err(_) => Err(IoError::FormatError(format!(
-                    "Cannot convert '{}' to time (expected HH:MM:SS[.f])",
-                    value
+                    "Cannot convert '{value}' to time (expected HH:MM:SS[.f])"
                 ))),
             }
         }
@@ -683,16 +678,14 @@ fn convert_value(
             match result {
                 Ok(dt) => Ok(DataValue::DateTime(dt)),
                 Err(_) => Err(IoError::FormatError(format!(
-                    "Cannot convert '{}' to datetime (expected YYYY-MM-DD[T ]HH:MM:SS[.f])",
-                    value
+                    "Cannot convert '{value}' to datetime (expected YYYY-MM-DD[T ]HH:MM:SS[.f])"
                 ))),
             }
         }
         ColumnType::Complex => match parse_complex(trimmed) {
             Some(complex) => Ok(DataValue::Complex(complex)),
             None => Err(IoError::FormatError(format!(
-                "Cannot convert '{}' to complex number (expected a+bi or (a,b))",
-                value
+                "Cannot convert '{value}' to complex number (expected a+bi or (a,b))"
             ))),
         },
     }

@@ -920,6 +920,7 @@ fn estimate_reconstruction_quality(
 mod tests {
     use super::*;
     use crate::dwt::Wavelet;
+    use crate::dwt2d_enhanced::BoundaryMode;
 
     #[test]
     fn test_texture_analysis() {

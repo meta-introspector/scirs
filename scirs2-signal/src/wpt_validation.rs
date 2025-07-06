@@ -959,9 +959,9 @@ pub fn cross_validate_wavelets(
         Wavelet::DB(2),
         Wavelet::DB(4),
         Wavelet::DB(8),
-        Wavelet::Biorthogonal(2, 2),
-        Wavelet::Coiflet(2),
-        Wavelet::Coiflet(4),
+        Wavelet::BiorNrNd { nr: 2, nd: 2 },
+        Wavelet::Coif(2),
+        Wavelet::Coif(4),
     ];
 
     let mut results = HashMap::new();

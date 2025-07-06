@@ -51,28 +51,28 @@ pub enum IoError {
 impl fmt::Display for IoError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            IoError::FileError(msg) => write!(f, "File error: {}", msg),
-            IoError::FormatError(msg) => write!(f, "Format error: {}", msg),
-            IoError::SerializationError(msg) => write!(f, "Serialization error: {}", msg),
-            IoError::DeserializationError(msg) => write!(f, "Deserialization error: {}", msg),
-            IoError::CompressionError(msg) => write!(f, "Compression error: {}", msg),
-            IoError::DecompressionError(msg) => write!(f, "Decompression error: {}", msg),
+            IoError::FileError(msg) => write!(f, "File error: {msg}"),
+            IoError::FormatError(msg) => write!(f, "Format error: {msg}"),
+            IoError::SerializationError(msg) => write!(f, "Serialization error: {msg}"),
+            IoError::DeserializationError(msg) => write!(f, "Deserialization error: {msg}"),
+            IoError::CompressionError(msg) => write!(f, "Compression error: {msg}"),
+            IoError::DecompressionError(msg) => write!(f, "Decompression error: {msg}"),
             IoError::UnsupportedCompressionAlgorithm(algo) => {
-                write!(f, "Unsupported compression algorithm: {}", algo)
+                write!(f, "Unsupported compression algorithm: {algo}")
             }
-            IoError::UnsupportedFormat(fmt) => write!(f, "Unsupported format: {}", fmt),
-            IoError::ConversionError(msg) => write!(f, "Conversion error: {}", msg),
-            IoError::FileNotFound(path) => write!(f, "File not found: {}", path),
-            IoError::NotFound(msg) => write!(f, "Not found: {}", msg),
-            IoError::ParseError(msg) => write!(f, "Parse error: {}", msg),
-            IoError::Io(e) => write!(f, "I/O error: {}", e),
-            IoError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
-            IoError::ChecksumError(msg) => write!(f, "Checksum error: {}", msg),
-            IoError::IntegrityError(msg) => write!(f, "Integrity error: {}", msg),
-            IoError::ConfigError(msg) => write!(f, "Configuration error: {}", msg),
-            IoError::NetworkError(msg) => write!(f, "Network error: {}", msg),
-            IoError::DatabaseError(msg) => write!(f, "Database error: {}", msg),
-            IoError::Other(msg) => write!(f, "Error: {}", msg),
+            IoError::UnsupportedFormat(fmt) => write!(f, "Unsupported format: {fmt}"),
+            IoError::ConversionError(msg) => write!(f, "Conversion error: {msg}"),
+            IoError::FileNotFound(path) => write!(f, "File not found: {path}"),
+            IoError::NotFound(msg) => write!(f, "Not found: {msg}"),
+            IoError::ParseError(msg) => write!(f, "Parse error: {msg}"),
+            IoError::Io(e) => write!(f, "I/O error: {e}"),
+            IoError::ValidationError(msg) => write!(f, "Validation error: {msg}"),
+            IoError::ChecksumError(msg) => write!(f, "Checksum error: {msg}"),
+            IoError::IntegrityError(msg) => write!(f, "Integrity error: {msg}"),
+            IoError::ConfigError(msg) => write!(f, "Configuration error: {msg}"),
+            IoError::NetworkError(msg) => write!(f, "Network error: {msg}"),
+            IoError::DatabaseError(msg) => write!(f, "Database error: {msg}"),
+            IoError::Other(msg) => write!(f, "Error: {msg}"),
         }
     }
 }

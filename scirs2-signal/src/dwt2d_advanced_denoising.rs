@@ -11,6 +11,7 @@ use crate::dwt2d_boundary_enhanced::{dwt2d_decompose_enhanced, BoundaryMode2D};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array2, ArrayView2};
 use num_traits::{Float, NumCast};
+use rand::{rng, Rng};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::check_finite;
@@ -48,7 +49,7 @@ pub struct AdvancedDenoisingConfig {
 impl Default for AdvancedDenoisingConfig {
     fn default() -> Self {
         Self {
-            wavelet: Wavelet::Daubechies(4),
+            wavelet: Wavelet::DB(4),
             levels: 4,
             method: DenoisingMethod::BayesShrink,
             threshold_strategy: ThresholdStrategy::Soft,
@@ -487,12 +488,13 @@ fn quantum_annealing_optimization(
     let mut best_threshold = current_threshold;
     let mut best_energy = evaluate_threshold_energy(current_threshold, energy_states)?;
 
+    let mut rng = rng();
     for iteration in 0..iterations {
         // Simulated quantum temperature
         let temperature = 1.0 / (1.0 + iteration as f64 / 10.0);
 
         // Quantum fluctuation
-        let fluctuation = temperature * (2.0 * rand::random::<f64>() - 1.0);
+        let fluctuation = temperature * (2.0 * rng.gen::<f64>() - 1.0);
         let new_threshold = (current_threshold + fluctuation).max(0.001);
 
         let new_energy = evaluate_threshold_energy(new_threshold, energy_states)?;
@@ -505,7 +507,7 @@ fn quantum_annealing_optimization(
             (-delta_energy / temperature).exp()
         };
 
-        if rand::random::<f64>() < acceptance_prob {
+        if rng.gen::<f64>() < acceptance_prob {
             current_threshold = new_threshold;
             if new_energy < best_energy {
                 best_threshold = new_threshold;
@@ -685,12 +687,13 @@ fn simd_hard_threshold(data: &mut [f64], threshold: f64) -> SignalResult<()> {
 /// Quantum probabilistic thresholding
 #[allow(dead_code)]
 fn quantum_probabilistic_threshold(data: &mut [f64], threshold: f64) -> SignalResult<()> {
+    let mut rng = rng();
     for val in data.iter_mut() {
         let abs_val = val.abs();
         if abs_val < threshold {
             // Quantum probability of keeping the coefficient
             let prob = (abs_val / threshold).powi(2);
-            if rand::random::<f64>() > prob {
+            if rng.gen::<f64>() > prob {
                 *val = 0.0;
             }
         }
@@ -945,7 +948,7 @@ fn estimate_noise_robust_mad_2d(image: &ArrayView2<f64>) -> SignalResult<f64> {
 #[allow(dead_code)]
 fn estimate_noise_wavelet_based_2d(image: &ArrayView2<f64>) -> SignalResult<f64> {
     // Single level DWT to estimate noise from HH coefficients
-    let result = dwt2d_decompose(image, Wavelet::Daubechies(4))?;
+    let result = dwt2d_decompose(image, Wavelet::DB(4))?;
 
     // Estimate noise from HH (diagonal) coefficients
     let hh_values: Vec<f64> = result.hh.iter().cloned().collect();

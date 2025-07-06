@@ -58,7 +58,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Clone for LayerNo
             Ok(guard) => guard.clone(),
             Err(_) => None,
         };
-        
+
         Self {
             normalized_shape: self.normalized_shape.clone(),
             gamma: self.gamma.clone(),
@@ -79,14 +79,18 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> LayerNorm<F> {
     pub fn new<R: Rng>(normalized_shape: usize, eps: f64, _rng: &mut R) -> Result<Self> {
         let gamma = Array::<F, _>::from_elem(IxDyn(&[normalized_shape]), F::one());
         let beta = Array::<F, _>::from_elem(IxDyn(&[normalized_shape]), F::zero());
-        
-        let dgamma = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[normalized_shape]))));
-        let dbeta = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[normalized_shape]))));
-        
+
+        let dgamma = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[
+            normalized_shape,
+        ]))));
+        let dbeta = Arc::new(RwLock::new(Array::<F, _>::zeros(IxDyn(&[
+            normalized_shape,
+        ]))));
+
         let eps = F::from(eps).ok_or_else(|| {
             NeuralError::InvalidArchitecture("Failed to convert epsilon to type F".to_string())
         })?;
-        
+
         Ok(Self {
             normalized_shape: vec![normalized_shape],
             gamma,
@@ -122,7 +126,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
 
         let input_shape = input.shape();
         let ndim = input.ndim();
-        
+
         if ndim < 1 {
             return Err(NeuralError::InferenceError(
                 "Input must have at least 1 dimension".to_string(),
@@ -144,7 +148,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
         let reshaped = input
             .to_owned()
             .into_shape_with_order(IxDyn(&[batch_size, feat_dim]))
-            .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape input: {}", e)))?;
+            .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape input: {e}")))?;
 
         // Compute mean and variance for each sample
         let mut mean = Array::<F, _>::zeros(IxDyn(&[batch_size, 1]));
@@ -190,7 +194,7 @@ impl<F: Float + Debug + ScalarOperand + Send + Sync + 'static> Layer<F> for Laye
         // Reshape back to original shape
         let output = normalized
             .into_shape_with_order(IxDyn(input_shape))
-            .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape output: {}", e)))?;
+            .map_err(|e| NeuralError::InferenceError(format!("Failed to reshape output: {e}")))?;
 
         Ok(output)
     }
@@ -276,8 +280,10 @@ pub struct BatchNorm<F: Float + Debug + Send + Sync> {
     /// Learnable shift parameter
     beta: Array<F, IxDyn>,
     /// Small constant for numerical stability
+    #[allow(dead_code)]
     eps: F,
     /// Momentum for running statistics updates
+    #[allow(dead_code)]
     momentum: F,
     /// Whether we're in training mode
     training: bool,

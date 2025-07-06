@@ -1310,9 +1310,8 @@ impl<T: Float + Send + Sync + std::iter::Sum> AdaptiveTransformerEnhancement<T> 
         let performance = ArchitecturePerformance {
             convergence_speed: enhancement_result.convergence_metrics.convergence_rate,
             final_performance: T::one() - enhancement_result.performance_prediction.uncertainty,
-            memory_efficiency: T::from(enhancement_result
-                .attention_optimization
-                .memory_savings).unwrap(),
+            memory_efficiency: T::from(enhancement_result.attention_optimization.memory_savings)
+                .unwrap(),
             computational_cost: T::one()
                 / enhancement_result
                     .attention_optimization
@@ -1528,7 +1527,11 @@ impl<T: Float + Send + Sync> MemoryEfficientAttentionManager<T> {
         })
     }
 
-    fn determine_attention_dimensions(&self, complexity: f64, difficulty: f64) -> Result<(usize, usize)> {
+    fn determine_attention_dimensions(
+        &self,
+        complexity: f64,
+        difficulty: f64,
+    ) -> Result<(usize, usize)> {
         let base_heads = 8;
         let base_seq_len = 512;
 

@@ -1384,7 +1384,6 @@ pub fn generate_comprehensive_report(results: &ComprehensiveValidationResult) ->
 
 #[allow(dead_code)]
 /// Quick validation mode for development testing
-#[allow(dead_code)]
 pub fn run_quick_comprehensive_validation() -> SignalResult<ComprehensiveValidationResult> {
     let config = ComprehensiveValidationConfig {
         exhaustive: false,
@@ -1399,7 +1398,6 @@ pub fn run_quick_comprehensive_validation() -> SignalResult<ComprehensiveValidat
 
 #[allow(dead_code)]
 /// Full validation mode for production testing
-#[allow(dead_code)]
 pub fn run_full_comprehensive_validation() -> SignalResult<ComprehensiveValidationResult> {
     let config = ComprehensiveValidationConfig::default();
     run_comprehensive_validation(&config)

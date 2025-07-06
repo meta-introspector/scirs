@@ -14,6 +14,7 @@
 use crate::error::{IoError, Result};
 use crate::pipeline::{PipelineData, PipelineStage};
 use chrono::{DateTime, Utc};
+use rand::rng;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
@@ -1031,15 +1032,15 @@ impl AutoTuner {
     }
 
     fn apply_exploration(&self, mut params: OptimalParameters) -> Result<OptimalParameters> {
-        if rand::random::<f64>() < self.exploration_rate {
+        let mut rng = rng();
+        if rng.random::<f64>() < self.exploration_rate {
             // Apply random perturbation for exploration
-            params.thread_count = ((params.thread_count as f64)
-                * (1.0 + (rand::random::<f64>() - 0.5) * 0.2))
-                as usize;
+            params.thread_count =
+                ((params.thread_count as f64) * (1.0 + (rng.random::<f64>() - 0.5) * 0.2)) as usize;
             params.chunk_size =
-                ((params.chunk_size as f64) * (1.0 + (rand::random::<f64>() - 0.5) * 0.2)) as usize;
+                ((params.chunk_size as f64) * (1.0 + (rng.random::<f64>() - 0.5) * 0.2)) as usize;
             params.compression_level = (params.compression_level as f64
-                * (1.0 + (rand::random::<f64>() - 0.5) * 0.2))
+                * (1.0 + (rng.random::<f64>() - 0.5) * 0.2))
                 .clamp(1.0, 9.0) as u8;
         }
 
@@ -1505,10 +1506,11 @@ impl QuantumState {
 
     pub fn initialize_superposition(&mut self, dimensions: usize) -> Result<()> {
         // Initialize quantum superposition state
+        let mut rng = rng();
         for (i, qubit) in self.qubits.iter_mut().enumerate().take(dimensions) {
             qubit.set_superposition_state(
                 self.superposition_weights[i],
-                rand::random::<f64>() * 2.0 * std::f64::consts::PI,
+                rng.random::<f64>() * 2.0 * std::f64::consts::PI,
             );
         }
 
@@ -1519,9 +1521,10 @@ impl QuantumState {
     }
 
     fn create_entanglement_network(&mut self, dimensions: usize) -> Result<()> {
+        let mut rng = rng();
         for i in 0..dimensions {
             for j in (i + 1)..dimensions {
-                let entanglement_strength = (rand::random::<f64>() * 0.5).exp();
+                let entanglement_strength = (rng.random::<f64>() * 0.5).exp();
                 self.entanglement_matrix[i][j] = entanglement_strength;
                 self.entanglement_matrix[j][i] = entanglement_strength;
             }
@@ -1553,7 +1556,8 @@ impl Qubit {
     }
 
     pub fn measure(&self) -> f64 {
-        if rand::random::<f64>() < self.amplitude_alpha.powi(2) {
+        let mut rng = rng();
+        if rng.random::<f64>() < self.amplitude_alpha.powi(2) {
             0.0
         } else {
             1.0
@@ -1642,11 +1646,12 @@ impl QuantumAnnealer {
     }
 
     fn quantum_tunnel(&self, state: &[f64], temperature: f64) -> Result<Vec<f64>> {
+        let mut rng = rng();
         let mut new_state = state.to_vec();
         for value in &mut new_state {
-            if rand::random::<f64>() < self.tunneling_probability {
-                let tunnel_distance = temperature * rand::random::<f64>();
-                *value += tunnel_distance * (rand::random::<f64>() - 0.5) * 2.0;
+            if rng.random::<f64>() < self.tunneling_probability {
+                let tunnel_distance = temperature * rng.random::<f64>();
+                *value += tunnel_distance * (rng.random::<f64>() - 0.5) * 2.0;
                 *value = value.clamp(0.0, 1.0);
             }
         }
@@ -1657,7 +1662,8 @@ impl QuantumAnnealer {
         if temperature <= 0.0 {
             false
         } else {
-            rand::random::<f64>() < (-energy_delta / temperature).exp()
+            let mut rng = rng();
+            rng.random::<f64>() < (-energy_delta / temperature).exp()
         }
     }
 
@@ -1780,10 +1786,11 @@ impl NeuromorphicOptimizer {
     fn variable_to_spike_train(&self, variable: &OptimizationVariable) -> Result<SpikeTrain> {
         let spike_rate = variable.value * 100.0; // Convert to Hz
         let mut spike_times = Vec::new();
+        let mut rng = rng();
 
         let mut t = 0.0;
         while t < 100.0 {
-            if rand::random::<f64>() * 1000.0 < spike_rate {
+            if rng.random::<f64>() * 1000.0 < spike_rate {
                 spike_times.push(t);
             }
             t += 1.0;
@@ -1985,7 +1992,8 @@ impl ConsciousnessInspiredOptimizer {
         }
 
         // Intuitive leaps (non-deterministic conscious insights)
-        if rand::random::<f64>() < 0.1 {
+        let mut rng = rng();
+        if rng.random::<f64>() < 0.1 {
             // 10% chance of intuitive leap
             let intuitive_solution = self.generate_intuitive_solution(goal)?;
             solutions.push(intuitive_solution);
@@ -2044,11 +2052,12 @@ impl ConsciousnessInspiredOptimizer {
         goal: &ConsciousnessOptimizationGoal,
     ) -> Result<ConsciousSolution> {
         // Generate solution through intuitive/unconscious processing
+        let mut rng = rng();
         let parameters: Vec<f64> = (0..goal.dimensions)
             .map(|_| {
                 // Intuitive parameter generation (non-linear, creative)
-                let base = rand::random::<f64>();
-                let intuitive_twist = (rand::random::<f64>() * 2.0 - 1.0) * 0.3;
+                let base = rng.random::<f64>();
+                let intuitive_twist = (rng.random::<f64>() * 2.0 - 1.0) * 0.3;
                 (base + intuitive_twist).clamp(0.0, 1.0)
             })
             .collect();
@@ -2296,9 +2305,10 @@ impl QuantumGeneticAlgorithm {
             let individual = template
                 .iter()
                 .map(|&x| {
-                    if rand::random::<f64>() < self.mutation_rate {
+                    let mut rng = rng();
+                    if rng.random::<f64>() < self.mutation_rate {
                         // Quantum mutation with superposition
-                        let quantum_state = rand::random::<f64>();
+                        let quantum_state = rng.random::<f64>();
                         x * quantum_state + (1.0 - x) * (1.0 - quantum_state)
                     } else {
                         x
@@ -3141,10 +3151,11 @@ pub struct NeuromorphicSolution {
 
 impl NeuromorphicSolution {
     pub fn random(dimensions: usize) -> Self {
+        let mut rng = rng();
         let variables = (0..dimensions)
             .map(|id| OptimizationVariable {
                 id,
-                value: rand::random(),
+                value: rng.random(),
                 bounds: (0.0, 1.0),
             })
             .collect();
@@ -3613,7 +3624,8 @@ impl ReinforcementLearningOptimizer {
 
     fn compute_state_diversity(&self, _state: &OptimizationState) -> f64 {
         // Compute diversity measure for state space
-        rand::random::<f64>() // Placeholder implementation
+        let mut rng = rng();
+        rng.random::<f64>() // Placeholder implementation
     }
 
     fn compute_variance(&self, values: &[f64]) -> f64 {
@@ -3692,7 +3704,8 @@ impl DQNAgent {
         // Epsilon-greedy action selection with decay
         self.epsilon = 0.1 + 0.8 * (-progress * 3.0).exp();
 
-        if rand::random::<f64>() < self.epsilon {
+        let mut rng = rng();
+        if rng.random::<f64>() < self.epsilon {
             // Random exploration
             Ok(OptimizationAction::random())
         } else {
@@ -3996,8 +4009,9 @@ impl ExperienceReplayBuffer {
         }
 
         let mut batch = Vec::with_capacity(batch_size);
+        let mut rng = rng();
         for _ in 0..batch_size {
-            let idx = (rand::random::<f64>() * self.buffer.len() as f64) as usize;
+            let idx = (rng.random::<f64>() * self.buffer.len() as f64) as usize;
             batch.push(self.buffer[idx].clone());
         }
         Ok(batch)
@@ -4137,10 +4151,11 @@ pub struct OptimizationAction {
 
 impl OptimizationAction {
     pub fn random() -> Self {
+        let mut rng = rng();
         Self {
-            parameter_adjustments: (0..10).map(|_| rand::random::<f64>() * 2.0 - 1.0).collect(),
-            learning_rate_adjustment: rand::random::<f64>() * 0.1,
-            exploration_factor: rand::random::<f64>(),
+            parameter_adjustments: (0..10).map(|_| rng.random::<f64>() * 2.0 - 1.0).collect(),
+            learning_rate_adjustment: rng.random::<f64>() * 0.1,
+            exploration_factor: rng.random::<f64>(),
         }
     }
 
@@ -4411,17 +4426,18 @@ pub struct Layer {
 
 impl Layer {
     pub fn new(input_size: usize, output_size: usize) -> Self {
+        let mut rng = rng();
         let mut weights = Vec::new();
         for _ in 0..output_size {
             let mut row = Vec::new();
             for _ in 0..input_size {
-                row.push(rand::random::<f64>() * 2.0 - 1.0); // Random initialization
+                row.push(rng.random::<f64>() * 2.0 - 1.0); // Random initialization
             }
             weights.push(row);
         }
 
         let biases = (0..output_size)
-            .map(|_| rand::random::<f64>() * 2.0 - 1.0)
+            .map(|_| rng.random::<f64>() * 2.0 - 1.0)
             .collect();
 
         Self {
@@ -5597,12 +5613,13 @@ impl LSTMModel {
     pub fn predict(&self, horizon: usize) -> Result<Vec<MetricsPrediction>> {
         // Simple prediction based on random walk
         let mut predictions = Vec::new();
+        let mut rng = rng();
         for _ in 0..horizon {
             predictions.push(MetricsPrediction {
-                throughput: 1.0 + (rand::random::<f64>() - 0.5) * 0.2,
-                memory_usage: 0.5 + (rand::random::<f64>() - 0.5) * 0.1,
-                cpu_utilization: 0.6 + (rand::random::<f64>() - 0.5) * 0.1,
-                cache_hit_rate: 0.8 + (rand::random::<f64>() - 0.5) * 0.1,
+                throughput: 1.0 + (rng.random::<f64>() - 0.5) * 0.2,
+                memory_usage: 0.5 + (rng.random::<f64>() - 0.5) * 0.1,
+                cpu_utilization: 0.6 + (rng.random::<f64>() - 0.5) * 0.1,
+                cache_hit_rate: 0.8 + (rng.random::<f64>() - 0.5) * 0.1,
             });
         }
         Ok(predictions)
@@ -5621,12 +5638,13 @@ impl ARIMAModel {
     pub fn predict(&self, horizon: usize) -> Result<Vec<MetricsPrediction>> {
         // Simple ARIMA-like prediction
         let mut predictions = Vec::new();
+        let mut rng = rng();
         for _ in 0..horizon {
             predictions.push(MetricsPrediction {
-                throughput: 1.0 + (rand::random::<f64>() - 0.5) * 0.1,
-                memory_usage: 0.5 + (rand::random::<f64>() - 0.5) * 0.05,
-                cpu_utilization: 0.6 + (rand::random::<f64>() - 0.5) * 0.05,
-                cache_hit_rate: 0.8 + (rand::random::<f64>() - 0.5) * 0.05,
+                throughput: 1.0 + (rng.random::<f64>() - 0.5) * 0.1,
+                memory_usage: 0.5 + (rng.random::<f64>() - 0.5) * 0.05,
+                cpu_utilization: 0.6 + (rng.random::<f64>() - 0.5) * 0.05,
+                cache_hit_rate: 0.8 + (rng.random::<f64>() - 0.5) * 0.05,
             });
         }
         Ok(predictions)
@@ -5639,7 +5657,8 @@ impl IsolationForest {
     }
 
     pub fn detect(&self, _metrics: &ProcessedMetrics) -> Result<f64> {
-        Ok(rand::random::<f64>() * 0.5) // Random anomaly score
+        let mut rng = rng();
+        Ok(rng.random::<f64>() * 0.5) // Random anomaly score
     }
 }
 
@@ -5649,7 +5668,8 @@ impl LSTMAutoencoder {
     }
 
     pub fn detect(&self, _metrics: &ProcessedMetrics) -> Result<f64> {
-        Ok(rand::random::<f64>() * 0.4) // Random reconstruction error
+        let mut rng = rng();
+        Ok(rng.random::<f64>() * 0.4) // Random reconstruction error
     }
 }
 
@@ -5663,7 +5683,8 @@ impl StatisticalAnomalyDetector {
 
 impl EnsembleAnomalyDetector {
     pub fn detect(&self, _metrics: &ProcessedMetrics) -> Result<f64> {
-        Ok(rand::random::<f64>() * 0.6) // Random ensemble score
+        let mut rng = rng();
+        Ok(rng.random::<f64>() * 0.6) // Random ensemble score
     }
 }
 

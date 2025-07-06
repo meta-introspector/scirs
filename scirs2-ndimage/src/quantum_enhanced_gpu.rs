@@ -1038,7 +1038,6 @@ fn update_performance_predictions(
 mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
-    use ndarray::Array2;
 
     #[test]
     fn test_quantum_gpu_config_default() {

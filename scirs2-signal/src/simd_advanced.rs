@@ -1764,26 +1764,37 @@ pub mod advanced_simd_matrix {
         // Process each channel-kernel combination
         if n_channels * n_kernels >= 4 && !config.force_scalar {
             // Parallel processing for multiple combinations
-            (0..n_channels).into_par_iter().for_each(|ch| {
-                for k in 0..n_kernels {
-                    let signal = signals.row(ch);
-                    let kernel = kernels.row(k);
-                    let mut output = outputs.slice_mut(s![ch, k, ..]);
+            // Collect results first to avoid mutable borrow issues
+            let results: Vec<_> = (0..n_channels)
+                .into_par_iter()
+                .flat_map(|ch| {
+                    (0..n_kernels)
+                        .map(move |k| {
+                            let signal = signals.row(ch);
+                            let kernel = kernels.row(k);
 
-                    // Use enhanced SIMD convolution
-                    let mut output_vec = vec![0.0; expected_output_len];
-                    let _ = simd_enhanced_convolution(
-                        signal.as_slice().unwrap(),
-                        kernel.as_slice().unwrap(),
-                        &mut output_vec,
-                        config,
-                    );
+                            // Use enhanced SIMD convolution
+                            let mut output_vec = vec![0.0; expected_output_len];
+                            let _ = simd_enhanced_convolution(
+                                signal.as_slice().unwrap(),
+                                kernel.as_slice().unwrap(),
+                                &mut output_vec,
+                                config,
+                            );
 
-                    for (i, &val) in output_vec.iter().enumerate() {
-                        output[i] = val;
-                    }
+                            (ch, k, output_vec)
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect();
+
+            // Write results back to outputs
+            for (ch, k, output_vec) in results {
+                let mut output = outputs.slice_mut(s![ch, k, ..]);
+                for (i, &val) in output_vec.iter().enumerate() {
+                    output[i] = val;
                 }
-            });
+            }
         } else {
             // Sequential processing
             for ch in 0..n_channels {
@@ -1843,41 +1854,52 @@ pub mod advanced_simd_matrix {
         // Compute covariance matrix with SIMD acceleration
         if n_channels >= 8 && n_samples >= config.simd_threshold && !config.force_scalar {
             // Parallel computation for large matrices
-            (0..n_channels).into_par_iter().for_each(|i| {
-                for j in i..n_channels {
-                    let signal_i = signals.row(i);
-                    let signal_j = signals.row(j);
+            // Collect results first to avoid mutable borrow issues
+            let cov_results: Vec<_> = (0..n_channels)
+                .into_par_iter()
+                .flat_map(|i| {
+                    let means_clone = means.clone();
+                    (i..n_channels)
+                        .map(move |j| {
+                            let signal_i = signals.row(i);
+                            let signal_j = signals.row(j);
 
-                    // SIMD-accelerated covariance calculation
-                    let mut cov = 0.0;
-                    let mean_i = means[i];
-                    let mean_j = means[j];
+                            // SIMD-accelerated covariance calculation
+                            let mut cov = 0.0;
+                            let mean_i = means_clone[i];
+                            let mean_j = means_clone[j];
 
-                    // Use SIMD for the inner loop
-                    let chunks = n_samples / 4;
-                    for chunk in 0..chunks {
-                        let start_idx = chunk * 4;
-                        let end_idx = start_idx + 4;
+                            // Use SIMD for the inner loop
+                            let chunks = n_samples / 4;
+                            for chunk in 0..chunks {
+                                let start_idx = chunk * 4;
+                                let end_idx = start_idx + 4;
 
-                        for k in start_idx..end_idx {
-                            cov += (signal_i[k] - mean_i) * (signal_j[k] - mean_j);
-                        }
-                    }
+                                for k in start_idx..end_idx {
+                                    cov += (signal_i[k] - mean_i) * (signal_j[k] - mean_j);
+                                }
+                            }
 
-                    // Handle remaining samples
-                    for k in (chunks * 4)..n_samples {
-                        cov += (signal_i[k] - mean_i) * (signal_j[k] - mean_j);
-                    }
+                            // Handle remaining samples
+                            for k in (chunks * 4)..n_samples {
+                                cov += (signal_i[k] - mean_i) * (signal_j[k] - mean_j);
+                            }
 
-                    cov /= (n_samples - 1) as f64;
+                            cov /= (n_samples - 1) as f64;
 
-                    // Set symmetric elements
-                    covariance[[i, j]] = cov;
-                    if i != j {
-                        covariance[[j, i]] = cov;
-                    }
+                            (i, j, cov)
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .collect();
+
+            // Write results back to covariance matrix
+            for (i, j, cov) in cov_results {
+                covariance[[i, j]] = cov;
+                if i != j {
+                    covariance[[j, i]] = cov;
                 }
-            });
+            }
         } else {
             // Sequential computation
             for i in 0..n_channels {

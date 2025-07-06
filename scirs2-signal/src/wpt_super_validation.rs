@@ -827,9 +827,9 @@ impl Default for AdvancedWptValidationConfig {
                 },
             ],
             wavelets_to_test: vec![
-                Wavelet::Daubechies4,
-                Wavelet::Biorthogonal2_2,
-                Wavelet::Coiflet2,
+                Wavelet::DB(4),
+                Wavelet::BiorNrNd { nr: 2, nd: 2 },
+                Wavelet::Coif(2),
             ],
             max_levels_to_test: vec![3, 5, 7],
         }
@@ -2243,20 +2243,14 @@ fn analyze_breakdown_points(
 
 /// Assess numerical stability by comparing results
 #[allow(dead_code)]
-fn assess_numerical_stability(simd_result: &[f64], scalar_result: &[f64]) -> f64 {
-    if simd_result.len() != scalar_result.len() || simd_result.is_empty() {
-        return 0.0;
-    }
-
-    let mut max_relative_error = 0.0;
-    for (simd, scalar) in simd_result.iter().zip(scalar_result.iter()) {
-        if scalar.abs() > 1e-15 {
-            let relative_error = (simd - scalar).abs() / scalar.abs();
-            max_relative_error = max_relative_error.max(relative_error);
-        } else if simd.abs() > 1e-15 {
-            max_relative_error = max_relative_error.max(simd.abs());
-        }
-    }
+fn assess_numerical_stability(simd_result: f64, scalar_result: f64) -> f64 {
+    let max_relative_error = if scalar_result.abs() > 1e-15 {
+        (simd_result - scalar_result).abs() / scalar_result.abs()
+    } else if simd_result.abs() > 1e-15 {
+        simd_result.abs()
+    } else {
+        0.0
+    };
 
     // Return stability score (higher is better)
     (1.0 - max_relative_error.min(1.0)).max(0.0)

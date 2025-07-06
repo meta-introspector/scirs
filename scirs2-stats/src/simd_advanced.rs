@@ -14,7 +14,6 @@ use crate::simd_enhanced_v6::AdvancedSimdOps;
 use ndarray::ArrayView1;
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
-    parallel_ops::*,
     simd_ops::{PlatformCapabilities, SimdUnifiedOps},
     validation::*,
 };

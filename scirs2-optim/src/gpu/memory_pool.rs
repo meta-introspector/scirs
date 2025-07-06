@@ -4530,10 +4530,10 @@ unsafe impl Sync for PooledMemory {}
 #[allow(dead_code)]
 struct CudaKernel;
 
-#[cfg(feature = "gpu")]
-type CudaStream = scirs2_core::gpu::CudaStream;
+#[cfg(all(feature = "gpu", feature = "cuda"))]
+type CudaStream = scirs2_core::gpu::backends::CudaStream;
 
-#[cfg(not(feature = "gpu"))]
+#[cfg(not(all(feature = "gpu", feature = "cuda")))]
 struct CudaStream;
 
 /// Allocation analytics for performance monitoring

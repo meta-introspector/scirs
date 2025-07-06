@@ -9,6 +9,7 @@
 
 use crate::error::{IoError, Result};
 use ndarray::{Array1, Array2};
+use rand::rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 
@@ -141,7 +142,7 @@ impl AdvancedPatternRecognizer {
 
         // Convert to 2D array (4 scales x max_features)
         let feature_array = Array2::from_shape_vec((4, max_features), padded_features)
-            .map_err(|e| IoError::Other(format!("Feature extraction error: {}", e)))?;
+            .map_err(|e| IoError::Other(format!("Feature extraction error: {e}")))?;
 
         Ok(feature_array)
     }
@@ -625,8 +626,9 @@ impl PatternNetwork {
     fn new(pattern_type: &str, input_size: usize, hidden_size: usize, _output_size: usize) -> Self {
         // Xavier initialization for weights
         let scale = (2.0 / (input_size + hidden_size) as f32).sqrt();
+        let mut rng = rng();
         let weights = Array2::from_shape_fn((hidden_size, input_size), |_| {
-            (rand::random::<f32>() - 0.5) * 2.0 * scale
+            (rng.random::<f32>() - 0.5) * 2.0 * scale
         });
 
         Self {
@@ -969,7 +971,8 @@ mod tests {
     #[test]
     fn test_pattern_network() {
         let mut network = PatternNetwork::new("test", 10, 5, 3);
-        let features = Array2::from_shape_fn((2, 5), |_| rand::random::<f32>());
+        let mut rng = rng();
+        let features = Array2::from_shape_fn((2, 5), |_| rng.random::<f32>());
 
         let score = network.analyze(&features).unwrap();
         assert!((0.0..=1.0).contains(&score));

@@ -321,10 +321,10 @@ impl Default for ComprehensiveWptValidationConfig {
     fn default() -> Self {
         Self {
             test_wavelets: vec![
-                Wavelet::Daubechies(4),
-                Wavelet::Daubechies(8),
-                Wavelet::Biorthogonal(2, 2),
-                Wavelet::Coiflets(3),
+                Wavelet::DB(4),
+                Wavelet::DB(8),
+                Wavelet::BiorNrNd { nr: 2, nd: 2 },
+                Wavelet::Coif(3),
                 Wavelet::Haar,
             ],
             test_signal_lengths: vec![64, 128, 256, 512, 1024],
@@ -507,7 +507,7 @@ fn validate_frame_properties(
     // Use a representative test case
     let signal_length = 256;
     let level = 3;
-    let wavelet = Wavelet::Daubechies(4);
+    let wavelet = Wavelet::DB(4);
 
     // Generate frame matrix (simplified representation)
     let frame_matrix = construct_frame_matrix(signal_length, wavelet, level)?;
@@ -550,7 +550,7 @@ fn validate_multiscale_properties(
 ) -> SignalResult<MultiscaleValidationMetrics> {
     let signal_length = 512;
     let max_level = 4;
-    let wavelet = Wavelet::Daubechies(8);
+    let wavelet = Wavelet::DB(8);
 
     // Generate test signal with known multi-scale structure
     let signal = generate_multiscale_test_signal(signal_length)?;
@@ -645,8 +645,7 @@ fn run_statistical_validation(
     // Collect samples for statistical analysis
     for _ in 0..n_samples {
         let signal = generate_test_signal(TestSignalType::WhiteNoise, 256, rand::random())?;
-        let (energy_ratio, reconstruction_error) =
-            test_wpt_round_trip(&signal, Wavelet::Daubechies(4), 3)?;
+        let (energy_ratio, reconstruction_error) = test_wpt_round_trip(&signal, Wavelet::DB(4), 3)?;
 
         reconstruction_errors.push(reconstruction_error);
         energy_ratios.push(energy_ratio);
@@ -1520,7 +1519,7 @@ fn test_wavelet_consistency(config: &ComprehensiveWptValidationConfig) -> Signal
         Wavelet::Haar,
         Wavelet::DB(2),
         Wavelet::DB(4),
-        Wavelet::Biorthogonal(2, 2),
+        Wavelet::BiorNrNd { nr: 2, nd: 2 },
     ];
 
     for &wavelet in &test_wavelets {

@@ -27,7 +27,7 @@ pub mod metal_mps;
 
 // Re-export backend implementations
 #[cfg(feature = "cuda")]
-pub use cuda::{get_optimizer_kernels, CudaContext};
+pub use cuda::{get_optimizer_kernels, CudaContext, CudaStream};
 
 #[cfg(feature = "opencl")]
 pub use opencl::OpenCLContext;

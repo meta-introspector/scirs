@@ -273,7 +273,15 @@ struct GradientPredictor<A: Float> {
 
 impl<O, A> LowLatencyOptimizer<O, A>
 where
-    A: Float + Send + Sync + Default + Clone + std::fmt::Debug + ndarray::ScalarOperand + 'static,
+    A: Float
+        + Send
+        + Sync
+        + Default
+        + Clone
+        + std::fmt::Debug
+        + ndarray::ScalarOperand
+        + 'static
+        + std::iter::Sum,
     O: Optimizer<A, ndarray::Ix1> + Send + Sync + 'static,
 {
     /// Create a new low-latency optimizer

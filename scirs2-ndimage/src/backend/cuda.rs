@@ -115,6 +115,10 @@ pub struct CudaBuffer<T> {
     phantom: std::marker::PhantomData<T>,
 }
 
+// CUDA device pointers are thread-safe as long as the CUDA context is properly managed
+unsafe impl<T> Send for CudaBuffer<T> {}
+unsafe impl<T> Sync for CudaBuffer<T> {}
+
 impl<T> CudaBuffer<T> {
     pub fn new(size: usize) -> NdimageResult<Self> {
         let mut device_ptr: *mut c_void = ptr::null_mut();

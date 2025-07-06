@@ -115,8 +115,7 @@ fn normalize_compression_level(level: Option<u32>, algorithm: CompressionAlgorit
 
     if level > 9 {
         return Err(IoError::CompressionError(format!(
-            "Compression level must be between 0 and 9, got {}",
-            level
+            "Compression level must be between 0 and 9, got {level}"
         )));
     }
 
@@ -199,14 +198,14 @@ pub fn compress_data(
                 ..Default::default()
             };
             BrotliCompress(&mut data, &mut compressed, &params).map_err(|e| {
-                IoError::CompressionError(format!("Brotli compression failed: {}", e))
+                IoError::CompressionError(format!("Brotli compression failed: {e}"))
             })?;
             Ok(compressed)
         }
         CompressionAlgorithm::Snappy => {
             let mut encoder = SnapEncoder::new();
             let compressed = encoder.compress_vec(data).map_err(|e| {
-                IoError::CompressionError(format!("Snappy compression failed: {:?}", e))
+                IoError::CompressionError(format!("Snappy compression failed: {e:?}"))
             })?;
             Ok(compressed)
         }
@@ -265,14 +264,14 @@ pub fn decompress_data(mut data: &[u8], algorithm: CompressionAlgorithm) -> Resu
         CompressionAlgorithm::Brotli => {
             let mut decompressed = Vec::new();
             BrotliDecompress(&mut data, &mut decompressed).map_err(|e| {
-                IoError::DecompressionError(format!("Brotli decompression failed: {}", e))
+                IoError::DecompressionError(format!("Brotli decompression failed: {e}"))
             })?;
             Ok(decompressed)
         }
         CompressionAlgorithm::Snappy => {
             let mut decoder = SnapDecoder::new();
             let decompressed = decoder.decompress_vec(data).map_err(|e| {
-                IoError::DecompressionError(format!("Snappy decompression failed: {:?}", e))
+                IoError::DecompressionError(format!("Snappy decompression failed: {e:?}"))
             })?;
             Ok(decompressed)
         }
@@ -309,9 +308,9 @@ pub fn compress_file<P: AsRef<Path>>(
     // Read input file
     let mut input_data = Vec::new();
     File::open(input_path.as_ref())
-        .map_err(|e| IoError::FileError(format!("Failed to open input file: {}", e)))?
+        .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?
         .read_to_end(&mut input_data)
-        .map_err(|e| IoError::FileError(format!("Failed to read input file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
 
     // Compress the data
     let compressed_data = compress_data(&input_data, algorithm, level)?;
@@ -332,7 +331,7 @@ pub fn compress_file<P: AsRef<Path>>(
                 .to_string();
 
             // Append the extension and update the file name
-            let new_file_name = format!("{}.{}", file_name, ext);
+            let new_file_name = format!("{file_name}.{ext}");
             path_buf.set_file_name(new_file_name);
 
             path_buf.to_string_lossy().to_string()
@@ -341,9 +340,9 @@ pub fn compress_file<P: AsRef<Path>>(
 
     // Write the compressed data to the output file
     File::create(&output_path_string)
-        .map_err(|e| IoError::FileError(format!("Failed to create output file: {}", e)))?
+        .map_err(|e| IoError::FileError(format!("Failed to create output file: {e}")))?
         .write_all(&compressed_data)
-        .map_err(|e| IoError::FileError(format!("Failed to write to output file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write to output file: {e}")))?;
 
     Ok(output_path_string)
 }
@@ -387,9 +386,9 @@ pub fn decompress_file<P: AsRef<Path>>(
     // Read input file
     let mut input_data = Vec::new();
     File::open(input_path.as_ref())
-        .map_err(|e| IoError::FileError(format!("Failed to open input file: {}", e)))?
+        .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?
         .read_to_end(&mut input_data)
-        .map_err(|e| IoError::FileError(format!("Failed to read input file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
 
     // Decompress the data
     let decompressed_data = decompress_data(&input_data, algorithm)?;
@@ -402,21 +401,21 @@ pub fn decompress_file<P: AsRef<Path>>(
             let path_str = input_path.as_ref().to_string_lossy().to_string();
             let ext = algorithm.extension();
 
-            if path_str.ends_with(&format!(".{}", ext)) {
+            if path_str.ends_with(&format!(".{ext}")) {
                 // Remove the extension
                 path_str[0..path_str.len() - ext.len() - 1].to_string()
             } else {
                 // If the extension doesn't match, add a ".decompressed" suffix
-                format!("{}.decompressed", path_str)
+                format!("{path_str}.decompressed")
             }
         }
     };
 
     // Write the decompressed data to the output file
     File::create(&output_path_string)
-        .map_err(|e| IoError::FileError(format!("Failed to create output file: {}", e)))?
+        .map_err(|e| IoError::FileError(format!("Failed to create output file: {e}")))?
         .write_all(&decompressed_data)
-        .map_err(|e| IoError::FileError(format!("Failed to write to output file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write to output file: {e}")))?;
 
     Ok(output_path_string)
 }
@@ -616,9 +615,9 @@ impl TransparentFileHandler {
     pub fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<Vec<u8>> {
         let mut file_data = Vec::new();
         File::open(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?
+            .map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?
             .read_to_end(&mut file_data)
-            .map_err(|e| IoError::FileError(format!("Failed to read file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to read file: {e}")))?;
 
         // Try to detect compression
         let mut algorithm = None;
@@ -667,9 +666,9 @@ impl TransparentFileHandler {
 
         // Write to file
         File::create(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?
+            .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?
             .write_all(&output_data)
-            .map_err(|e| IoError::FileError(format!("Failed to write file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write file: {e}")))?;
 
         Ok(())
     }
@@ -703,9 +702,9 @@ impl TransparentFileHandler {
     pub fn file_info<P: AsRef<Path>>(&self, path: P) -> Result<FileCompressionInfo> {
         let mut file_data = Vec::new();
         File::open(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?
+            .map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?
             .read_to_end(&mut file_data)
-            .map_err(|e| IoError::FileError(format!("Failed to read file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to read file: {e}")))?;
 
         let original_size = file_data.len();
 
@@ -1341,9 +1340,9 @@ pub fn compress_file_parallel<P: AsRef<Path>>(
     // Read input file
     let mut input_data = Vec::new();
     File::open(input_path.as_ref())
-        .map_err(|e| IoError::FileError(format!("Failed to open input file: {}", e)))?
+        .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?
         .read_to_end(&mut input_data)
-        .map_err(|e| IoError::FileError(format!("Failed to read input file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
 
     // Compress the data in parallel
     let (compressed_data, stats) = compress_data_parallel(&input_data, algorithm, level, config)?;
@@ -1359,7 +1358,7 @@ pub fn compress_file_parallel<P: AsRef<Path>>(
                 .ok_or_else(|| IoError::FileError("Invalid input file path".to_string()))?
                 .to_string_lossy()
                 .to_string();
-            let new_file_name = format!("{}.{}", file_name, ext);
+            let new_file_name = format!("{file_name}.{ext}");
             path_buf.set_file_name(new_file_name);
             path_buf.to_string_lossy().to_string()
         }
@@ -1367,9 +1366,9 @@ pub fn compress_file_parallel<P: AsRef<Path>>(
 
     // Write the compressed data to the output file
     File::create(&output_path_string)
-        .map_err(|e| IoError::FileError(format!("Failed to create output file: {}", e)))?
+        .map_err(|e| IoError::FileError(format!("Failed to create output file: {e}")))?
         .write_all(&compressed_data)
-        .map_err(|e| IoError::FileError(format!("Failed to write to output file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write to output file: {e}")))?;
 
     Ok((output_path_string, stats))
 }
@@ -1403,9 +1402,9 @@ pub fn decompress_file_parallel<P: AsRef<Path>>(
     // Read input file
     let mut input_data = Vec::new();
     File::open(input_path.as_ref())
-        .map_err(|e| IoError::FileError(format!("Failed to open input file: {}", e)))?
+        .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?
         .read_to_end(&mut input_data)
-        .map_err(|e| IoError::FileError(format!("Failed to read input file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
 
     // Decompress the data in parallel
     let (decompressed_data, stats) = decompress_data_parallel(&input_data, algorithm, config)?;
@@ -1417,19 +1416,19 @@ pub fn decompress_file_parallel<P: AsRef<Path>>(
             let path_str = input_path.as_ref().to_string_lossy().to_string();
             let ext = algorithm.extension();
 
-            if path_str.ends_with(&format!(".{}", ext)) {
+            if path_str.ends_with(&format!(".{ext}")) {
                 path_str[0..path_str.len() - ext.len() - 1].to_string()
             } else {
-                format!("{}.decompressed", path_str)
+                format!("{path_str}.decompressed")
             }
         }
     };
 
     // Write the decompressed data to the output file
     File::create(&output_path_string)
-        .map_err(|e| IoError::FileError(format!("Failed to create output file: {}", e)))?
+        .map_err(|e| IoError::FileError(format!("Failed to create output file: {e}")))?
         .write_all(&decompressed_data)
-        .map_err(|e| IoError::FileError(format!("Failed to write to output file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write to output file: {e}")))?;
 
     Ok((output_path_string, stats))
 }
@@ -1455,7 +1454,7 @@ pub fn benchmark_compression_algorithms(
             let sequential_decomp_time =
                 start_time.elapsed().as_secs_f64() * 1000.0 - sequential_time;
 
-            assert_eq!(data, &decompressed, "Round-trip failed for {:?}", algorithm);
+            assert_eq!(data, &decompressed, "Round-trip failed for {algorithm:?}");
 
             // Parallel compression for each config
             for config in parallel_configs {
@@ -1466,8 +1465,7 @@ pub fn benchmark_compression_algorithms(
 
                 assert_eq!(
                     data, &par_decompressed,
-                    "Parallel round-trip failed for {:?}",
-                    algorithm
+                    "Parallel round-trip failed for {algorithm:?}"
                 );
 
                 results.push(CompressionBenchmarkResult {

@@ -524,14 +524,14 @@ pub use traits::{
 };
 
 // Core functions for descriptive statistics
-mod adaptive_memory_ultra_advanced;
+mod adaptive_memory_advanced;
 pub mod advanced_simd_stats;
 mod bayesian_advanced;
 mod cross_platform_regression_detection;
 mod descriptive;
 mod descriptive_simd;
 mod dispersion_simd;
-mod mcmc_ultra_advanced;
+mod mcmc_advanced;
 mod memory_efficient;
 mod memory_optimized_advanced;
 mod memory_optimized_v2;
@@ -539,8 +539,9 @@ mod memory_profiler_v3;
 mod memory_profiling;
 mod mixture_models;
 mod moments_simd;
-mod multivariate_ultra_advanced;
+mod multivariate_advanced;
 pub mod numerical_stability_enhancements;
+mod parallel_advanced;
 mod parallel_advanced_v3;
 mod parallel_enhanced_v2;
 mod parallel_enhanced_v4;
@@ -548,22 +549,21 @@ mod parallel_stats;
 mod parallel_stats_enhanced;
 mod property_based_tests_extended;
 mod quantile_simd;
-mod quantum_ultra_advanced;
+mod quantum_advanced;
+mod simd_advanced;
+mod simd_comprehensive;
+mod simd_enhanced;
 mod simd_enhanced_advanced;
 mod simd_enhanced_v3;
 mod simd_enhanced_v4;
 mod simd_enhanced_v5;
 mod simd_enhanced_v6;
 mod simd_optimized_v2;
-mod spectral_ultra_advanced;
-mod streaming_ultra_advanced;
+mod spectral_advanced;
+mod streaming_advanced;
+mod survival_advanced;
 mod survival_enhanced;
-mod survival_ultra_advanced;
-mod topological_ultra_advanced;
-mod ultra_parallel_advanced;
-mod ultra_simd_advanced;
-mod ultra_simd_comprehensive;
-mod ultra_simd_enhanced;
+mod topological_advanced;
 // Temporarily commented out for compilation fixes
 // pub mod advanced_benchmark_validation;
 // pub mod advanced_cross_platform_validation;
@@ -587,7 +587,7 @@ pub use simd_enhanced_core::{
 };
 
 // Property-based testing framework
-pub use adaptive_memory_ultra_advanced::{
+pub use adaptive_memory_advanced::{
     create_adaptive_memory_manager, create_optimized_memory_manager, AdaptiveMemoryConfig,
     AdaptiveMemoryManager as AdvancedAdaptiveMemoryManager, AllocationStrategy,
     CacheOptimizationConfig, F32AdaptiveMemoryManager, F64AdaptiveMemoryManager, GCResult,
@@ -614,7 +614,7 @@ pub use cross_platform_regression_detection::{
     RegressionSummaryStatistics, TrendAnalysis, TrendDirection as RegressionTrendDirection,
 };
 pub use either::Either;
-pub use mcmc_ultra_advanced::{
+pub use mcmc_advanced::{
     AdaptationConfig, AdvancedAdvancedConfig, AdvancedAdvancedMCMC, AdvancedAdvancedResults,
     AdvancedTarget, ConvergenceDiagnostics, PerformanceMetrics as MCMCPerformanceMetrics,
     SamplingMethod, TemperingConfig,
@@ -648,7 +648,7 @@ pub use mixture_models::{
     GaussianMixtureModel, InitializationMethod, KDEConfig, KernelDensityEstimator, KernelType,
     ModelSelectionCriteria, ParameterSnapshot, RobustGMM, StreamingGMM,
 };
-pub use multivariate_ultra_advanced::{
+pub use multivariate_advanced::{
     ActivationFunction, AdvancedMultivariateAnalysis, AdvancedMultivariateConfig,
     AdvancedMultivariateResults, ClusteringAlgorithm, ClusteringConfig,
     DimensionalityReductionMethod, ICAAlgorithm, ManifoldConfig, MultiViewConfig, PCAVariant,
@@ -664,6 +664,12 @@ pub use numerical_stability_enhancements::{
     PrecisionStabilityResult, PrecisionTestingStrategy, RegressionTestResult,
     StabilityAssessment as NumericalStabilityAssessment, StabilityRecommendation,
     StabilityTolerance, StabilityTrend, StabilityTrendAnalysis, WarningType,
+};
+pub use parallel_advanced::{
+    AdvancedParallelConfig as AdvancedAdvancedParallelConfig,
+    AdvancedParallelProcessor as AdvancedAdvancedParallelProcessor, HardwareConfig,
+    MemoryConfig as AdvancedMemoryConfig, MemoryUsageStats, OptimizationConfig, ParallelStrategy,
+    PerformanceMetrics as AdvancedPerformanceMetrics,
 };
 pub use parallel_advanced_v3::{
     AdvancedParallelConfig, ParallelBatchProcessor, ParallelCrossValidator, ParallelMatrixOps,
@@ -700,13 +706,30 @@ pub use property_based_tests_extended::{
 pub use quantile_simd::{
     median_simd, percentile_simd, quantile_simd, quantiles_simd, quickselect_simd,
 };
-pub use quantum_ultra_advanced::{
+pub use quantum_advanced::{
     AdvancedQuantumAnalyzer, DataEncodingMethod, QAEResults, QClusteringResults, QNNResults,
     QPCAResults, QSVMResults, QuantumAdvantageMetrics, QuantumClusteringAlgorithm, QuantumConfig,
     QuantumEnsembleResult, QuantumFeatureEncoding, QuantumFeatureMap, QuantumKernelType,
     QuantumMeasurementBasis, QuantumModel, QuantumMonteCarloResult, QuantumPerformanceMetrics,
     QuantumResults, QuantumVariationalResult, TensorNetworkResults, TensorNetworkType, VQEAnsatz,
     VQEResults,
+};
+pub use simd_advanced::{
+    advanced_mean_f32, advanced_mean_f64, AdvancedSimdProcessor, AdvancedStatsResult,
+    CacheAwareVectorProcessor, MemoryPattern, VectorStrategy,
+};
+pub use simd_comprehensive::{
+    AdvancedComprehensiveSimdConfig, AdvancedComprehensiveSimdProcessor, ComprehensiveStatsResult,
+    MatrixStatsResult as AdvancedMatrixStatsResult,
+};
+pub use simd_enhanced::{
+    create_advanced_simd_processor, create_performance_optimized_simd_processor,
+    create_stability_optimized_simd_processor, AccuracyMetrics, AdvancedEnhancedSimdProcessor,
+    AdvancedSimdConfig as AdvancedEnhancedSimdConfig, AdvancedSimdResults,
+    CacheOptimizationStrategy, CpuCapabilities, F32AdvancedSimdProcessor, F64AdvancedSimdProcessor,
+    InstructionSet, MemoryAlignment, NumericalStabilityLevel, OperationPerformance,
+    OptimalAlgorithm, PerformanceStatistics as AdvancedSimdPerformanceStats, PrefetchStrategy,
+    ProfilingLevel, VectorizationLevel,
 };
 pub use simd_enhanced_advanced::{
     bootstrap_mean_simd, corrcoef_matrix_simd, linear_regression_simd, robust_statistics_simd,
@@ -734,14 +757,14 @@ pub use simd_enhanced_v6::{
 pub use simd_optimized_v2::{
     mean_simd_optimized, stats_simd_single_pass, variance_simd_optimized, SimdConfig,
 };
-pub use spectral_ultra_advanced::{
+pub use spectral_advanced::{
     ActivationFunction as SpectralActivationFunction, AdvancedSpectralAnalyzer,
     AdvancedSpectralConfig, AdvancedSpectralResults, CoherenceConfig, CoherenceResults,
     HigherOrderResults, HigherOrderSpectralConfig, MLSpectralConfig, MLSpectralResults,
     MultiTaperConfig, NonStationaryConfig, SpectralPeak, SpectralPerformanceMetrics,
     SpectrogramType, WaveletConfig, WaveletResults, WaveletType, WindowFunction,
 };
-pub use streaming_ultra_advanced::{
+pub use streaming_advanced::{
     create_advanced_streaming_processor, create_streaming_processor_with_config,
     AdvancedAdvancedStreamingProcessor, AdvancedStreamingConfig, AnomalyDetectionAlgorithm,
     AnomalyDetector, AnomalyEvent, AnomalySeverity, ChangePointAlgorithm, ChangePointDetector,
@@ -749,43 +772,20 @@ pub use streaming_ultra_advanced::{
     IncrementalMLModel, MLModelType, StreamProcessingMode, StreamingAnalyticsResult,
     StreamingPerformanceMetrics, StreamingRecommendation, StreamingStatistics, WindowingStrategy,
 };
-pub use survival_enhanced::{
-    cox_regression, kaplan_meier, log_rank_test, CoxConfig, CoxConvergenceInfo,
-    CoxProportionalHazards, EnhancedKaplanMeier,
-};
-pub use survival_ultra_advanced::{
+pub use survival_advanced::{
     AFTDistribution, ActivationFunction as SurvivalActivationFunction, AdvancedSurvivalAnalysis,
     AdvancedSurvivalConfig, AdvancedSurvivalResults, CausalSurvivalConfig, CompetingRisksConfig,
     EnsembleConfig as SurvivalEnsembleConfig, SurvivalModel, SurvivalModelType, SurvivalPrediction,
 };
-pub use topological_ultra_advanced::{
+pub use survival_enhanced::{
+    cox_regression, kaplan_meier, log_rank_test, CoxConfig, CoxConvergenceInfo,
+    CoxProportionalHazards, EnhancedKaplanMeier,
+};
+pub use topological_advanced::{
     AdvancedTopologicalAnalyzer, CoeffientField, DistanceMetric, FilterFunction, Filtration,
     FiltrationType, MapperEdge, MapperGraph, MapperNode, MultiscaleResults, PersistenceAlgorithm,
     PersistenceDiagram, Simplex, SimplicialChain, SimplicialComplex, TopologicalConfig,
     TopologicalInferenceResults, TopologicalPerformanceMetrics, TopologicalResults,
-};
-pub use ultra_parallel_advanced::{
-    AdvancedParallelConfig as AdvancedAdvancedParallelConfig,
-    AdvancedParallelProcessor as AdvancedAdvancedParallelProcessor, HardwareConfig,
-    MemoryConfig as AdvancedMemoryConfig, MemoryUsageStats, OptimizationConfig, ParallelStrategy,
-    PerformanceMetrics as AdvancedPerformanceMetrics,
-};
-pub use ultra_simd_advanced::{
-    advanced_mean_f32, advanced_mean_f64, AdvancedSimdProcessor, AdvancedStatsResult,
-    CacheAwareVectorProcessor, MemoryPattern, VectorStrategy,
-};
-pub use ultra_simd_comprehensive::{
-    AdvancedComprehensiveSimdConfig, AdvancedComprehensiveSimdProcessor, ComprehensiveStatsResult,
-    MatrixStatsResult as AdvancedMatrixStatsResult,
-};
-pub use ultra_simd_enhanced::{
-    create_advanced_simd_processor, create_performance_optimized_simd_processor,
-    create_stability_optimized_simd_processor, AccuracyMetrics, AdvancedEnhancedSimdProcessor,
-    AdvancedSimdConfig as AdvancedEnhancedSimdConfig, AdvancedSimdResults,
-    CacheOptimizationStrategy, CpuCapabilities, F32AdvancedSimdProcessor, F64AdvancedSimdProcessor,
-    InstructionSet, MemoryAlignment, NumericalStabilityLevel, OperationPerformance,
-    OptimalAlgorithm, PerformanceStatistics as AdvancedSimdPerformanceStats, PrefetchStrategy,
-    ProfilingLevel, VectorizationLevel,
 };
 // Temporarily commented out for compilation fixes
 /*

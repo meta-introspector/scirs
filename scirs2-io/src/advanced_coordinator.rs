@@ -413,7 +413,7 @@ impl AdvancedCoordinator {
         detector.analyze_result(result)?;
 
         if let Some(emergent_behavior) = detector.detect_emergence()? {
-            println!("🚀 Emergent Behavior Detected: {:?}", emergent_behavior);
+            println!("🚀 Emergent Behavior Detected: {emergent_behavior:?}");
             // Handle emergent behavior - could trigger new optimization strategies
         }
 
@@ -892,9 +892,10 @@ impl AdvancedCoordinator {
         data: &[u8],
         workflow_name: &str,
     ) -> Result<WorkflowAnalysis> {
+        let data_len = data.len();
         Ok(WorkflowAnalysis {
             workflow_type: workflow_name.to_string(),
-            data_characteristics: format!("Size: {} bytes", data.len()),
+            data_characteristics: format!("Size: {data_len} bytes"),
             performance_gain: 15.0 + (data.len() % 100) as f64 / 10.0,
             memory_efficiency: 20.0 + (data.iter().sum::<u8>() as f64 % 100.0) / 10.0,
             energy_savings: 10.0 + (data.first().unwrap_or(&0) % 50) as f64 / 5.0,
@@ -1360,8 +1361,9 @@ impl MetaLearningSystem {
 
         for pattern in patterns {
             if pattern.transferability > 0.6 {
+                let pattern_type = &pattern.pattern_type;
                 optimizations.push(TransferableOptimization {
-                    optimization_type: format!("{}_optimization", pattern.pattern_type),
+                    optimization_type: format!("{pattern_type}_optimization"),
                     effectiveness: pattern.confidence * pattern.transferability,
                     domains: vec!["general".to_string()],
                 });

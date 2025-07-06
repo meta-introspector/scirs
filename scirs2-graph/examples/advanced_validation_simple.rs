@@ -5,10 +5,8 @@
 use rand::rng;
 use scirs2_graph::{
     algorithms::{connected_components, dijkstra_path},
-    base::Graph,
     generators::erdos_renyi_graph,
     measures::pagerank_centrality,
-    Advanced::{create_advanced_processor, execute_with_advanced},
     Result,
 };
 use std::time::Instant;

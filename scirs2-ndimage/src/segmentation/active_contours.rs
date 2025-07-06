@@ -455,7 +455,6 @@ pub fn smooth_contour(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
 
     #[test]
     fn test_create_circle_contour() {

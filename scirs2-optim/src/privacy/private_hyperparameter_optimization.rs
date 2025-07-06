@@ -1272,7 +1272,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                 ParameterType::Continuous => {
                     let min = param_def.bounds.min.unwrap_or(T::zero());
                     let max = param_def.bounds.max.unwrap_or(T::one());
-                    let random_val = T::from(self.rng.gen::<f64>()).unwrap();
+                    let random_val = T::from(self.rng.random::<f64>()).unwrap();
                     ParameterValue::Continuous(min + random_val * (max - min))
                 }
                 ParameterType::Integer => {
@@ -1290,7 +1290,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                         .unwrap_or(100);
                     ParameterValue::Integer(self.rng.random_range(min..=max))
                 }
-                ParameterType::Boolean => ParameterValue::Boolean(self.rng.gen()),
+                ParameterType::Boolean => ParameterValue::Boolean(self.rng.random()),
                 ParameterType::Categorical(categories) => {
                     let idx = self.rng.random_range(0..categories.len());
                     ParameterValue::Categorical(categories[idx].clone())
@@ -1369,7 +1369,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T
                     ParameterType::Continuous => {
                         let min = param_def.bounds.min.unwrap_or(T::zero());
                         let max = param_def.bounds.max.unwrap_or(T::one());
-                        let random_val = T::from(rng.gen::<f64>()).unwrap();
+                        let random_val = T::from(rng.random::<f64>()).unwrap();
                         ParameterValue::Continuous(min + random_val * (max - min))
                     }
                     _ => {

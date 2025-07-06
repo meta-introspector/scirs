@@ -1509,7 +1509,7 @@ pub mod gpu_memory {
             self.free_buffers.retain(|_, buffers| !buffers.is_empty());
 
             if total_freed > 0 {
-                eprintln!("Cleaned up {} expired GPU buffers", total_freed);
+                eprintln!("Cleaned up {total_freed} expired GPU buffers");
             }
         }
 
@@ -2096,7 +2096,8 @@ mod tests {
         // In test mode, GPU might be available or not
         if processor.is_ok() {
             let proc = processor.unwrap();
-            println!("GPU backend: {}", proc.backend());
+            let backend = proc.backend();
+            println!("GPU backend: {backend}");
         } else {
             // It's okay if GPU is not available
             assert!(true);

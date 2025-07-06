@@ -8,8 +8,8 @@ use crate::error::{DatasetsError, Result};
 use crate::utils::Dataset;
 use ndarray::Array1;
 use rand::prelude::*;
+use rand::rng;
 use rand::rngs::StdRng;
-use rand::thread_rng;
 use std::collections::HashMap;
 
 /// Cross-validation fold indices
@@ -72,7 +72,7 @@ pub fn train_test_split(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = thread_rng();
+            let mut r = rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

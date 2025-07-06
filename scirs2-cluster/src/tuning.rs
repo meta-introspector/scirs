@@ -6,7 +6,7 @@
 
 use ndarray::{Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
-use rand::{Rng, SeedableRng};
+use rand::{rng, Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -482,7 +482,7 @@ where
             let k = params.get("n_clusters").map(|&x| x as usize).unwrap_or(3);
             let max_iter = params.get("max_iter").map(|&x| x as usize);
             let tol = params.get("tolerance").copied();
-            let seed = rng.random::<u64>();
+            let seed = rng.gen::<u64>();
 
             // Perform cross-validation
             let cv_scores = self.cross_validate_kmeans(data, k, max_iter, tol, Some(seed))?;
@@ -2435,17 +2435,17 @@ where
                 let parent2 = self.tournament_selection(&population, &mut rng)?;
 
                 // Crossover
-                let (mut child1, mut child2) = if rng.random::<f64>() < crossover_rate {
+                let (mut child1, mut child2) = if rng.gen::<f64>() < crossover_rate {
                     self.crossover(&parent1, &parent2, search_space, &mut rng)?
                 } else {
                     (parent1.clone(), parent2.clone())
                 };
 
                 // Mutation
-                if rng.random::<f64>() < mutation_rate {
+                if rng.gen::<f64>() < mutation_rate {
                     self.mutate(&mut child1, search_space, &mut rng)?;
                 }
-                if rng.random::<f64>() < mutation_rate {
+                if rng.gen::<f64>() < mutation_rate {
                     self.mutate(&mut child2, search_space, &mut rng)?;
                 }
 
@@ -2512,7 +2512,7 @@ where
                 HyperParameter::Float { min, max } => {
                     // Blend crossover for continuous parameters
                     let alpha = 0.5;
-                    let beta = rng.random::<f64>() * (1.0 + 2.0 * alpha) - alpha;
+                    let beta = rng.gen::<f64>() * (1.0 + 2.0 * alpha) - alpha;
                     let v1 = (1.0 - beta) * val1 + beta * val2;
                     let v2 = beta * val1 + (1.0 - beta) * val2;
                     (v1.clamp(*min, *max), v2.clamp(*min, *max))
@@ -2556,7 +2556,7 @@ where
         rng: &mut rand::rngs::StdRng,
     ) -> Result<()> {
         for (param_name, param_spec) in &search_space.parameters {
-            if rng.random::<f64>() < 0.1 {
+            if rng.gen::<f64>() < 0.1 {
                 // 10% chance to mutate each parameter
                 let current_val = individual.get(param_name).copied().unwrap_or(0.0);
 
@@ -2672,22 +2672,23 @@ where
             // Simplified implementation: just generate random variations
             let mut new_population = Vec::new();
 
+            let mut rng = rng();
             for individual in &population {
                 let mut mutated = individual.clone();
 
                 // Apply small random mutations
                 for (param_name, param_spec) in &search_space.parameters {
-                    if rand::random::<f64>() < 0.1 {
+                    if rng.gen::<f64>() < 0.1 {
                         // 10% mutation rate
                         let current_val = mutated.get(param_name).copied().unwrap_or(0.0);
                         let new_val = match param_spec {
                             HyperParameter::Float { min, max } => {
                                 let range = max - min;
-                                let delta = (rand::random::<f64>() - 0.5) * range * 0.1;
+                                let delta = (rng.gen::<f64>() - 0.5) * range * 0.1;
                                 (current_val + delta).clamp(*min, *max)
                             }
                             HyperParameter::Integer { min, max } => {
-                                rand::random::<f64>() * (*max - *min) as f64 + *min as f64
+                                rng.gen::<f64>() * (*max - *min) as f64 + *min as f64
                             }
                             _ => current_val,
                         };
@@ -2901,7 +2902,8 @@ where
             }
             _ => {
                 // For other acquisition functions, return random value
-                rand::random::<f64>()
+                let mut rng = rng();
+                rng.gen::<f64>()
             }
         }
     }
@@ -2928,7 +2930,7 @@ where
                 // LHS sampling: divide parameter space into n_points intervals
                 let interval_size = 1.0 / n_points as f64;
                 let base_point = i as f64 * interval_size;
-                let random_offset = rng.random::<f64>() * interval_size;
+                let random_offset = rng.gen::<f64>() * interval_size;
                 let normalized_value = base_point + random_offset;
 
                 let value = match param_spec {
@@ -3848,6 +3850,133 @@ impl StandardSearchSpaces {
             constraints: Vec::new(),
         }
     }
+
+    /// K-means search space with Bayesian optimization
+    pub fn kmeans_bayesian() -> (SearchSpace, TuningConfig) {
+        let mut parameters = HashMap::new();
+        parameters.insert(
+            "n_clusters".to_string(),
+            ParameterSpace::Integer { min: 2, max: 50 },
+        );
+        parameters.insert(
+            "max_iter".to_string(),
+            ParameterSpace::Integer { min: 50, max: 500 },
+        );
+        parameters.insert(
+            "tolerance".to_string(),
+            ParameterSpace::Real {
+                min: 1e-6,
+                max: 1e-2,
+            },
+        );
+
+        let search_space = SearchSpace {
+            parameters,
+            constraints: Vec::new(),
+        };
+
+        let config = TuningConfig {
+            strategy: SearchStrategy::BayesianOptimization {
+                n_initial_points: 10,
+                acquisition_function: AcquisitionFunction::ExpectedImprovement,
+            },
+            evaluation_metric: EvaluationMetric::Silhouette,
+            max_evaluations: 50,
+            cross_validation: Some(CrossValidationConfig {
+                strategy: CVStrategy::KFold { k: 5 },
+                scoring: vec![EvaluationMetric::Silhouette, EvaluationMetric::Inertia],
+            }),
+            early_stopping: Some(EarlyStoppingConfig {
+                patience: 10,
+                min_improvement: 0.001,
+            }),
+            parallel_evaluation: true,
+            seed: Some(42),
+        };
+
+        (search_space, config)
+    }
+
+    /// DBSCAN search space with multi-objective optimization
+    pub fn dbscan_multi_objective() -> (SearchSpace, TuningConfig) {
+        let mut parameters = HashMap::new();
+        parameters.insert(
+            "eps".to_string(),
+            ParameterSpace::Real { min: 0.1, max: 2.0 },
+        );
+        parameters.insert(
+            "min_samples".to_string(),
+            ParameterSpace::Integer { min: 2, max: 20 },
+        );
+
+        let search_space = SearchSpace {
+            parameters,
+            constraints: Vec::new(),
+        };
+
+        let config = TuningConfig {
+            strategy: SearchStrategy::MultiObjective {
+                objectives: vec![
+                    EvaluationMetric::Silhouette,
+                    EvaluationMetric::DaviesBouldin,
+                ],
+                strategy: Box::new(SearchStrategy::BayesianOptimization {
+                    n_initial_points: 10,
+                    acquisition_function: AcquisitionFunction::ExpectedImprovement,
+                }),
+            },
+            evaluation_metric: EvaluationMetric::Silhouette,
+            max_evaluations: 30,
+            cross_validation: Some(CrossValidationConfig {
+                strategy: CVStrategy::KFold { k: 3 },
+                scoring: vec![
+                    EvaluationMetric::Silhouette,
+                    EvaluationMetric::DaviesBouldin,
+                ],
+            }),
+            early_stopping: None,
+            parallel_evaluation: true,
+            seed: Some(42),
+        };
+
+        (search_space, config)
+    }
+
+    /// Ensemble optimization search space
+    pub fn ensemble_optimization() -> (SearchSpace, TuningConfig) {
+        let mut parameters = HashMap::new();
+        parameters.insert(
+            "n_estimators".to_string(),
+            ParameterSpace::Integer { min: 3, max: 20 },
+        );
+        parameters.insert(
+            "diversity_threshold".to_string(),
+            ParameterSpace::Real { min: 0.1, max: 0.9 },
+        );
+
+        let search_space = SearchSpace {
+            parameters,
+            constraints: Vec::new(),
+        };
+
+        let config = TuningConfig {
+            strategy: SearchStrategy::BayesianOptimization {
+                n_initial_points: 5,
+                acquisition_function: AcquisitionFunction::ExpectedImprovement,
+            },
+            evaluation_metric: EvaluationMetric::Silhouette,
+            max_evaluations: 25,
+            cross_validation: Some(CrossValidationConfig {
+                strategy: CVStrategy::KFold { k: 3 },
+                scoring: vec![EvaluationMetric::Silhouette],
+            }),
+            early_stopping: None,
+            parallel_evaluation: true,
+            seed: Some(42),
+        };
+
+        (search_space, config)
+    }
 }
 
 /// Advanced hyperparameter optimization techniques
@@ -4739,8 +4868,8 @@ pub mod advanced_optimization {
     }
 }
 
-/// Advanced hyperparameter optimization techniques
-pub mod advanced_optimization {
+/// Neural Architecture Search for clustering algorithms
+pub mod neural_architecture_search {
     use super::*;
     use rayon::prelude::*;
     use std::sync::{Arc, Mutex};
@@ -5053,7 +5182,7 @@ pub mod advanced_optimization {
             match &self.algorithm {
                 BanditAlgorithm::EpsilonGreedy { epsilon } => {
                     let mut rng = rand::thread_rng();
-                    if rng.random::<f64>() < *epsilon {
+                    if rng.gen::<f64>() < *epsilon {
                         // Explore: choose random arm
                         Ok(rng.random_range(0..self.arms.len()))
                     } else {
@@ -5339,7 +5468,7 @@ pub mod advanced_optimization {
                 // Crossover
                 let mut child_config = HashMap::new();
                 for (param_name, _) in &self.search_space {
-                    let value = if rng.random::<f64>() < 0.5 {
+                    let value = if rng.gen::<f64>() < 0.5 {
                         parent1.config[param_name]
                     } else {
                         parent2.config[param_name]
@@ -5348,7 +5477,7 @@ pub mod advanced_optimization {
                 }
 
                 // Mutation
-                if rng.random::<f64>() < self.mutation_rate {
+                if rng.gen::<f64>() < self.mutation_rate {
                     self.mutate_config(&mut child_config)?;
                 }
 
@@ -5794,367 +5923,4 @@ pub fn quick_algorithm_selection<F: Float + FromPrimitive + Send + Sync + Debug>
 
     let selector = AutoClusteringSelector::with_algorithms(config, algorithms);
     selector.select_best_algorithm(data)
-}
-
-/// Standard search spaces for common clustering algorithms
-pub struct StandardSearchSpaces;
-
-impl StandardSearchSpaces {
-    /// Default K-means search space with advanced Bayesian optimization
-    pub fn kmeans_bayesian() -> (SearchSpace, TuningConfig) {
-        let mut parameters = HashMap::new();
-        parameters.insert(
-            "n_clusters".to_string(),
-            HyperParameter::Integer { min: 2, max: 20 },
-        );
-        parameters.insert(
-            "max_iter".to_string(),
-            HyperParameter::Integer { min: 50, max: 500 },
-        );
-        parameters.insert(
-            "tolerance".to_string(),
-            HyperParameter::LogUniform {
-                min: 1e-6,
-                max: 1e-2,
-            },
-        );
-
-        let search_space = SearchSpace {
-            parameters,
-            constraints: Vec::new(),
-        };
-
-        let config = TuningConfig {
-            strategy: SearchStrategy::BayesianOptimization {
-                n_initial_points: 10,
-                acquisition_function: AcquisitionFunction::ExpectedImprovement,
-            },
-            metric: EvaluationMetric::SilhouetteScore,
-            max_evaluations: 50,
-            early_stopping: Some(EarlyStoppingConfig {
-                patience: 10,
-                min_improvement: 0.001,
-                evaluation_frequency: 1,
-            }),
-            cv_config: CrossValidationConfig {
-                n_folds: 5,
-                validation_ratio: 0.2,
-                strategy: CVStrategy::KFold,
-                shuffle: true,
-            },
-            random_seed: Some(42),
-            parallel_config: None,
-            resource_constraints: ResourceConstraints {
-                max_memory_per_evaluation: None,
-                max_time_per_evaluation: Some(30.0),
-                max_total_time: Some(600.0),
-            },
-        };
-
-        (search_space, config)
-    }
-
-    /// Advanced DBSCAN search space with multi-objective optimization
-    pub fn dbscan_multi_objective() -> (SearchSpace, TuningConfig) {
-        let mut parameters = HashMap::new();
-        parameters.insert(
-            "eps".to_string(),
-            HyperParameter::LogUniform {
-                min: 0.01,
-                max: 10.0,
-            },
-        );
-        parameters.insert(
-            "min_samples".to_string(),
-            HyperParameter::Integer { min: 3, max: 50 },
-        );
-
-        let search_space = SearchSpace {
-            parameters,
-            constraints: vec![ParameterConstraint::Dependency {
-                dependent: "min_samples".to_string(),
-                dependency: "eps".to_string(),
-                relationship: DependencyRelationship::Proportional { ratio: 10.0 },
-            }],
-        };
-
-        let config = TuningConfig {
-            strategy: SearchStrategy::MultiObjective {
-                objectives: vec![
-                    EvaluationMetric::SilhouetteScore,
-                    EvaluationMetric::DaviesBouldinIndex,
-                ],
-                strategy: Box::new(SearchStrategy::BayesianOptimization {
-                    n_initial_points: 15,
-                    acquisition_function: AcquisitionFunction::UpperConfidenceBound { beta: 2.0 },
-                }),
-            },
-            metric: EvaluationMetric::SilhouetteScore,
-            max_evaluations: 75,
-            early_stopping: None, // Multi-objective doesn't use early stopping
-            cv_config: CrossValidationConfig {
-                n_folds: 3,
-                validation_ratio: 0.3,
-                strategy: CVStrategy::StratifiedKFold,
-                shuffle: true,
-            },
-            random_seed: Some(42),
-            parallel_config: Some(ParallelConfig {
-                n_workers: 4,
-                batch_size: 8,
-                load_balancing: LoadBalancingStrategy::Dynamic,
-            }),
-            resource_constraints: ResourceConstraints {
-                max_memory_per_evaluation: Some(1_000_000_000), // 1GB
-                max_time_per_evaluation: Some(60.0),
-                max_total_time: Some(1200.0),
-            },
-        };
-
-        (search_space, config)
-    }
-
-    /// Ensemble search combining multiple strategies
-    pub fn ensemble_optimization() -> (SearchSpace, TuningConfig) {
-        let mut parameters = HashMap::new();
-        parameters.insert(
-            "n_clusters".to_string(),
-            HyperParameter::Integer { min: 2, max: 15 },
-        );
-        parameters.insert(
-            "max_iter".to_string(),
-            HyperParameter::Integer {
-                min: 100,
-                max: 1000,
-            },
-        );
-        parameters.insert(
-            "tolerance".to_string(),
-            HyperParameter::LogUniform {
-                min: 1e-8,
-                max: 1e-3,
-            },
-        );
-
-        let search_space = SearchSpace {
-            parameters,
-            constraints: Vec::new(),
-        };
-
-        let config = TuningConfig {
-            strategy: SearchStrategy::EnsembleSearch {
-                strategies: vec![
-                    SearchStrategy::BayesianOptimization {
-                        n_initial_points: 8,
-                        acquisition_function: AcquisitionFunction::ExpectedImprovement,
-                    },
-                    SearchStrategy::EvolutionarySearch {
-                        population_size: 20,
-                        n_generations: 10,
-                        mutation_rate: 0.1,
-                        crossover_rate: 0.7,
-                    },
-                    SearchStrategy::SMBO {
-                        surrogate_model: SurrogateModel::GaussianProcess {
-                            kernel: KernelType::Matern {
-                                length_scale: 1.0,
-                                nu: 2.5,
-                            },
-                            noise: 0.1,
-                        },
-                        acquisition_function: AcquisitionFunction::ThompsonSampling,
-                    },
-                ],
-                weights: vec![0.5, 0.3, 0.2],
-            },
-            metric: EvaluationMetric::SilhouetteScore,
-            max_evaluations: 100,
-            early_stopping: Some(EarlyStoppingConfig {
-                patience: 15,
-                min_improvement: 0.0005,
-                evaluation_frequency: 5,
-            }),
-            cv_config: CrossValidationConfig {
-                n_folds: 5,
-                validation_ratio: 0.2,
-                strategy: CVStrategy::NestedCV {
-                    outer_folds: 5,
-                    inner_folds: 3,
-                },
-                shuffle: true,
-            },
-            random_seed: Some(42),
-            parallel_config: Some(ParallelConfig {
-                n_workers: 8,
-                batch_size: 16,
-                load_balancing: LoadBalancingStrategy::WorkStealing,
-            }),
-            resource_constraints: ResourceConstraints {
-                max_memory_per_evaluation: Some(2_000_000_000), // 2GB
-                max_time_per_evaluation: Some(120.0),
-                max_total_time: Some(3600.0), // 1 hour
-            },
-        };
-
-        (search_space, config)
-    }
-}
-
-/// Advanced Bayesian optimization convenience functions
-pub mod advanced_bayesian {
-    use super::*;
-
-    /// Tune K-means with advanced Expected Improvement acquisition
-    pub fn tune_kmeans_expected_improvement<F>(
-        data: ArrayView2<F>,
-        n_clusters_range: (usize, usize),
-    ) -> Result<TuningResult>
-    where
-        F: Float
-            + FromPrimitive
-            + Debug
-            + 'static
-            + std::iter::Sum
-            + std::fmt::Display
-            + Send
-            + Sync,
-        f64: From<F>,
-    {
-        let (mut search_space, config) = StandardSearchSpaces::kmeans_bayesian();
-        search_space.parameters.insert(
-            "n_clusters".to_string(),
-            HyperParameter::Integer {
-                min: n_clusters_range.0 as i64,
-                max: n_clusters_range.1 as i64,
-            },
-        );
-
-        let tuner = AutoTuner::new(config);
-        tuner.tune_kmeans(data, search_space)
-    }
-
-    /// Tune DBSCAN with Upper Confidence Bound acquisition
-    pub fn tune_dbscan_ucb<F>(data: ArrayView2<F>, beta: f64) -> Result<TuningResult>
-    where
-        F: Float
-            + FromPrimitive
-            + Debug
-            + 'static
-            + std::iter::Sum
-            + std::fmt::Display
-            + Send
-            + Sync,
-        f64: From<F>,
-    {
-        let (search_space, mut config) = StandardSearchSpaces::dbscan_multi_objective();
-        config.strategy = SearchStrategy::BayesianOptimization {
-            n_initial_points: 12,
-            acquisition_function: AcquisitionFunction::UpperConfidenceBound { beta },
-        };
-
-        let tuner = AutoTuner::new(config);
-        tuner.tune_dbscan(data, search_space)
-    }
-
-    /// Tune with Thompson Sampling for exploration-heavy optimization
-    pub fn tune_with_thompson_sampling<F>(
-        data: ArrayView2<F>,
-        algorithm: ClusteringAlgorithm,
-    ) -> Result<TuningResult>
-    where
-        F: Float
-            + FromPrimitive
-            + Debug
-            + 'static
-            + std::iter::Sum
-            + std::fmt::Display
-            + Send
-            + Sync,
-        f64: From<F>,
-    {
-        let (search_space, mut config) = match algorithm {
-            ClusteringAlgorithm::KMeans => StandardSearchSpaces::kmeans_bayesian(),
-            ClusteringAlgorithm::DBSCAN => StandardSearchSpaces::dbscan_multi_objective(),
-            _ => StandardSearchSpaces::kmeans_bayesian(), // Fallback
-        };
-
-        config.strategy = SearchStrategy::BayesianOptimization {
-            n_initial_points: 15,
-            acquisition_function: AcquisitionFunction::ThompsonSampling,
-        };
-        config.max_evaluations = 60;
-
-        let tuner = AutoTuner::new(config);
-
-        match algorithm {
-            ClusteringAlgorithm::KMeans => tuner.tune_kmeans(data, search_space),
-            ClusteringAlgorithm::DBSCAN => tuner.tune_dbscan(data, search_space),
-            _ => tuner.tune_kmeans(data, search_space), // Fallback
-        }
-    }
-
-    /// Multi-objective Bayesian optimization with Pareto frontier analysis
-    pub fn tune_multi_objective_pareto<F>(
-        data: ArrayView2<F>,
-        objectives: Vec<EvaluationMetric>,
-    ) -> Result<TuningResult>
-    where
-        F: Float
-            + FromPrimitive
-            + Debug
-            + 'static
-            + std::iter::Sum
-            + std::fmt::Display
-            + Send
-            + Sync,
-        f64: From<F>,
-    {
-        let (search_space, mut config) = StandardSearchSpaces::ensemble_optimization();
-        config.strategy = SearchStrategy::MultiObjective {
-            objectives,
-            strategy: Box::new(SearchStrategy::BayesianOptimization {
-                n_initial_points: 20,
-                acquisition_function: AcquisitionFunction::ExpectedImprovement,
-            }),
-        };
-        config.max_evaluations = 100;
-
-        let tuner = AutoTuner::new(config);
-        tuner.tune_kmeans(data, search_space)
-    }
-
-    /// Adaptive Bayesian optimization that switches acquisition functions
-    pub fn tune_adaptive_acquisition<F>(
-        data: ArrayView2<F>,
-        algorithm: ClusteringAlgorithm,
-    ) -> Result<TuningResult>
-    where
-        F: Float
-            + FromPrimitive
-            + Debug
-            + 'static
-            + std::iter::Sum
-            + std::fmt::Display
-            + Send
-            + Sync,
-        f64: From<F>,
-    {
-        let (search_space, mut config) = StandardSearchSpaces::kmeans_bayesian();
-        config.strategy = SearchStrategy::AdaptiveSearch {
-            initial_strategy: Box::new(SearchStrategy::BayesianOptimization {
-                n_initial_points: 10,
-                acquisition_function: AcquisitionFunction::ExpectedImprovement,
-            }),
-            adaptation_frequency: 20,
-        };
-        config.max_evaluations = 80;
-
-        let tuner = AutoTuner::new(config);
-
-        match algorithm {
-            ClusteringAlgorithm::KMeans => tuner.tune_kmeans(data, search_space),
-            ClusteringAlgorithm::DBSCAN => tuner.tune_dbscan(data, search_space),
-            _ => tuner.tune_kmeans(data, search_space),
-        }
-    }
 }

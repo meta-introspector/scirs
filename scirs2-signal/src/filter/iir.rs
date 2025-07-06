@@ -22,7 +22,6 @@ use super::common::{
     FilterCoefficients, FilterType, FilterTypeParam,
 };
 use num_complex::Complex64;
-use std::f64::consts::PI;
 
 /// Butterworth filter design
 ///

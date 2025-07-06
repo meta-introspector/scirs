@@ -181,7 +181,7 @@ pub fn kernel_ica(
         let (eigvals, eigvecs) = match eigh(&ww_t.view(), None) {
             Ok((vals, vecs)) => (vals, vecs),
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to compute eigendecomposition in KernelICA".to_string(),
                 ));
             }
@@ -215,7 +215,7 @@ pub fn kernel_ica(
     let (u, s, vt) = match svd(&unmixing.view(), false, None) {
         Ok((u, s, vt)) => (u, s, vt),
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to compute SVD of unmixing matrix".to_string(),
             ));
         }

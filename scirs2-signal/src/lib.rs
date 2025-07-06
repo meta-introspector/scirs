@@ -105,6 +105,7 @@ pub mod filter;
 pub mod filter_banks;
 pub mod higher_order;
 pub mod hr_spectral;
+#[cfg(test)]
 pub mod integration_tests;
 pub mod interpolate;
 pub mod kalman;

@@ -208,7 +208,7 @@ impl<T: Float + Send + Sync> ShamirSecretSharing<T> {
         self.coefficients.push(secret); // a0 = secret
 
         for _ in 1..self.threshold {
-            let coeff = T::from(rng.gen::<f64>()).unwrap();
+            let coeff = T::from(rng.random::<f64>()).unwrap();
             self.coefficients.push(coeff);
         }
 
@@ -454,7 +454,7 @@ impl<T: Float + Send + Sync> CommitmentScheme<T> {
     /// Create new commitment scheme
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
-        let commitment_key: Vec<u8> = (0..32).map(|_| rng.gen()).collect();
+        let commitment_key: Vec<u8> = (0..32).map(|_| rng.random()).collect();
 
         Self {
             commitment_key,
@@ -492,7 +492,7 @@ impl<T: Float + Send + Sync> VerificationParameters<T> {
     /// Create new verification parameters
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
-        let verification_key: Vec<u8> = (0..64).map(|_| rng.gen()).collect();
+        let verification_key: Vec<u8> = (0..64).map(|_| rng.random()).collect();
 
         Self {
             verification_key,
@@ -530,9 +530,9 @@ impl<T: Float + Send + Sync> ProofParameters<T> {
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
         let generators: Vec<T> = (0..16)
-            .map(|_| T::from(rng.gen::<f64>()).unwrap())
+            .map(|_| T::from(rng.random::<f64>()).unwrap())
             .collect();
-        let system_params: Vec<u8> = (0..128).map(|_| rng.gen()).collect();
+        let system_params: Vec<u8> = (0..128).map(|_| rng.random()).collect();
 
         Self {
             generators,
@@ -557,8 +557,8 @@ impl<T: Float + Send + Sync> HomomorphicEngine<T> {
     /// Create new homomorphic encryption engine
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
-        let public_key: Vec<u8> = (0..256).map(|_| rng.gen()).collect();
-        let private_key: Vec<u8> = (0..256).map(|_| rng.gen()).collect();
+        let public_key: Vec<u8> = (0..256).map(|_| rng.random()).collect();
+        let private_key: Vec<u8> = (0..256).map(|_| rng.random()).collect();
 
         Self {
             params: HomomorphicParameters::new(),
@@ -671,7 +671,9 @@ impl<T: Float + Send + Sync> HomomorphicParameters<T> {
     /// Create new homomorphic parameters
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
-        let noise_params: Vec<T> = (0..8).map(|_| T::from(rng.gen::<f64>()).unwrap()).collect();
+        let noise_params: Vec<T> = (0..8)
+            .map(|_| T::from(rng.random::<f64>()).unwrap())
+            .collect();
 
         Self {
             security_level: 128,
@@ -704,7 +706,7 @@ impl<T: Float + Send + Sync> ZKProofSystem<T> {
     /// Create new zero-knowledge proof system
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
-        let crs: Vec<u8> = (0..512).map(|_| rng.gen()).collect();
+        let crs: Vec<u8> = (0..512).map(|_| rng.random()).collect();
 
         Self {
             params: ZKProofParameters::new(),
@@ -785,7 +787,7 @@ impl<T: Float + Send + Sync> ZKProofParameters<T> {
     pub fn new() -> Self {
         let mut rng = ChaCha20Rng::from_entropy();
         let circuit_params: Vec<T> = (0..16)
-            .map(|_| T::from(rng.gen::<f64>()).unwrap())
+            .map(|_| T::from(rng.random::<f64>()).unwrap())
             .collect();
 
         Self {

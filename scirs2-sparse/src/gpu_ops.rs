@@ -13,6 +13,9 @@ use std::fmt::Debug;
 
 // GPU operations don't currently use parallel_ops directly
 
+// Import GPU kernel execution functions
+use crate::gpu_kernel_execution::{execute_symmetric_spmv_kernel, GpuKernelConfig, MemoryStrategy};
+
 // Import and re-export GPU capabilities from scirs2-core (only when GPU feature is enabled)
 #[cfg(feature = "gpu")]
 pub use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuContext, GpuDataType, GpuKernelHandle};
@@ -2420,6 +2423,12 @@ where
         create_symmetric_sparse_matvec_kernel(&device, rows, options.workgroup_size[0] as usize)?;
 
     // Execute symmetric SpMV GPU kernel with actual kernel dispatch
+    let config = GpuKernelConfig {
+        workgroup_size: options.workgroup_size,
+        compute_units: 0,
+        vectorization: true,
+        memory_strategy: MemoryStrategy::Coalesced,
+    };
     execute_symmetric_spmv_kernel(
         &device,
         &sym_spmv_kernel,
@@ -2429,7 +2438,7 @@ where
         &data_buffer,
         &x_buffer,
         &y_buffer,
-        options.workgroup_size,
+        &config,
     )
     .map_err(|e| format!("GPU kernel execution failed: {e}"))?;
 
@@ -2496,7 +2505,7 @@ impl GpuMemoryManager {
             self.allocated_buffers[buffer_id] = 0;
             Ok(())
         } else {
-            Err(GpuError::invalid_buffer("Invalid buffer ID".to_string()))
+            Err(GpuError::new("Invalid buffer ID"))
         }
     }
 

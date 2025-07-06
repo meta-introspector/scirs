@@ -88,7 +88,7 @@ pub fn sparse_component_analysis(
                     }
                 }
                 Err(_) => {
-                    return Err(SignalError::Compute(
+                    return Err(SignalError::ComputationError(
                         "Failed to solve least squares in SCA".to_string(),
                     ));
                 }

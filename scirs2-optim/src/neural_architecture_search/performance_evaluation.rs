@@ -5,6 +5,7 @@
 
 use ndarray::{Array1, Array2};
 use num_traits::Float;
+use rand::{rng, Rng};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant, SystemTime};
@@ -1592,14 +1593,15 @@ impl<T: Float + Default> BenchmarkSuite<T> {
         let start_time = Instant::now();
 
         // Simplified benchmark execution
+        let mut rng = rng();
         let score = match benchmark.test_function.function_type {
             TestFunctionType::Rosenbrock => {
                 // Simulate Rosenbrock function optimization
-                T::from(0.01 + rand::random::<f64>() * 0.1).unwrap()
+                T::from(0.01 + rng.random::<f64>() * 0.1).unwrap()
             }
             TestFunctionType::Quadratic => {
                 // Simulate quadratic function optimization
-                T::from(0.001 + rand::random::<f64>() * 0.01).unwrap()
+                T::from(0.001 + rng.random::<f64>() * 0.01).unwrap()
             }
             _ => {
                 // Default score

@@ -15,7 +15,7 @@
 
 use ndarray::{s, Array1, Array2, ArrayView2};
 use num_traits::{Float, NumAssign, One, Zero};
-use rand::{self, Rng};
+use rand::{self, rng, Rng};
 use std::fmt::Debug;
 use std::iter::Sum;
 
@@ -115,15 +115,16 @@ where
     let mut h = Array2::<F>::zeros((rank, n));
 
     // Use random initialization
+    let mut rng = rng();
     for i in 0..m {
         for j in 0..rank {
-            w[[i, j]] = F::from(rand::random::<f64>()).unwrap() + epsilon;
+            w[[i, j]] = F::from(rng.random::<f64>()).unwrap() + epsilon;
         }
     }
 
     for i in 0..rank {
         for j in 0..n {
-            h[[i, j]] = F::from(rand::random::<f64>()).unwrap() + epsilon;
+            h[[i, j]] = F::from(rng.random::<f64>()).unwrap() + epsilon;
         }
     }
 
@@ -641,8 +642,9 @@ where
             // First, compute approximate leverage scores via randomized SVD
 
             // Sketch the matrix for faster SVD
+            let mut rng = rng();
             let omega = Array2::<F>::from_shape_fn((n, k + 5), |_| {
-                F::from(rand::random::<f64>() * 2.0 - 1.0).unwrap()
+                F::from(rng.random::<f64>() * 2.0 - 1.0).unwrap()
             });
 
             let y = a.dot(&omega);
@@ -709,7 +711,7 @@ where
 
             // Sample columns with replacement based on leverage scores
             for _ in 0..c_samples {
-                let rand_val = F::from(rand::random::<f64>()).unwrap();
+                let rand_val = F::from(rng.random::<f64>()).unwrap();
                 let mut cumsum = F::zero();
                 let mut selected = 0;
 
@@ -726,7 +728,7 @@ where
 
             // Sample rows with replacement based on leverage scores
             for _ in 0..r_samples {
-                let rand_val = F::from(rand::random::<f64>()).unwrap();
+                let rand_val = F::from(rng.random::<f64>()).unwrap();
                 let mut cumsum = F::zero();
                 let mut selected = 0;
 

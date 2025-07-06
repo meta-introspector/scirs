@@ -5,7 +5,7 @@
 //! serve as both validation and documentation of the library's capabilities.
 
 use crate::denoise_adaptive_advanced::{adaptive_denoise_advanced, AdaptiveDenoisingConfig};
-use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
+use crate::dwt2d_enhanced::Dwt2dConfig;
 use crate::error::{SignalError, SignalResult};
 use crate::filter::{butter, filtfilt, FilterType};
 use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig};

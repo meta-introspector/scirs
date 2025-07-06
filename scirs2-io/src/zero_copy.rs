@@ -797,7 +797,7 @@ impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
                 NumaMemoryPolicy::Bind(node) => {
                     // Bind memory allocation to specific NUMA node
                     // This is a simplified implementation
-                    eprintln!("Binding memory to NUMA node {}", node);
+                    eprintln!("Binding memory to NUMA node {node}");
                 }
                 NumaMemoryPolicy::Interleave => {
                     // Interleave memory across all NUMA nodes
@@ -805,7 +805,7 @@ impl<T: Copy + Send + Sync + 'static> AsyncZeroCopyProcessor<T> {
                 }
                 NumaMemoryPolicy::Local => {
                     // Use local NUMA node
-                    eprintln!("Using local NUMA node {}", numa_node);
+                    eprintln!("Using local NUMA node {numa_node}");
                 }
                 NumaMemoryPolicy::Default => {
                     // Use system default
@@ -995,7 +995,7 @@ fn configure_numa_policy_static(numa_node: usize, memory_policy: NumaMemoryPolic
             NumaMemoryPolicy::Bind(node) => {
                 // Bind memory allocation to specific NUMA node
                 // This is a simplified implementation
-                eprintln!("Binding memory to NUMA node {}", node);
+                eprintln!("Binding memory to NUMA node {node}");
             }
             NumaMemoryPolicy::Interleave => {
                 // Interleave memory across all NUMA nodes
@@ -1003,7 +1003,7 @@ fn configure_numa_policy_static(numa_node: usize, memory_policy: NumaMemoryPolic
             }
             NumaMemoryPolicy::Local => {
                 // Use local NUMA node
-                eprintln!("Using local NUMA node {}", numa_node);
+                eprintln!("Using local NUMA node {numa_node}");
             }
             NumaMemoryPolicy::Default => {
                 // Use system default

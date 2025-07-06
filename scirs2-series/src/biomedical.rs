@@ -67,14 +67,14 @@ impl ECGAnalysis {
 
         // Moving window integration
         let window_size = (0.15 * self.fs) as usize; // 150ms window
-        
+
         // Ensure window_size doesn't exceed squared signal length
         if window_size >= squared.len() {
             // Signal too short for windowing, return empty peaks
             self.r_peaks = Some(Array1::zeros(0));
             return Ok(&self.r_peaks.as_ref().unwrap());
         }
-        
+
         let mut integrated = Array1::zeros(squared.len() - window_size + 1);
 
         for i in 0..integrated.len() {
@@ -557,7 +557,7 @@ impl EMGAnalysis {
         // Calculate median frequency shift (indicator of fatigue)
         let window_size = (2.0 * self.fs) as usize; // 2-second windows
         let n_windows = self.signal.len() / window_size;
-        
+
         if n_windows == 0 {
             // Signal too short for windowed analysis, just return basic RMS
             let rms =
@@ -626,7 +626,7 @@ impl EMGAnalysis {
                 "X and Y arrays must have same length".to_string(),
             ));
         }
-        
+
         if x.is_empty() {
             return Err(TimeSeriesError::InvalidInput(
                 "Cannot perform regression on empty arrays".to_string(),
@@ -710,7 +710,7 @@ impl BiomedicalAnalysis {
         // ECG assessment
         if let Some(ref mut ecg) = self.ecg {
             let peaks = ecg.detect_r_peaks()?;
-            
+
             // Only perform HRV analysis if we have enough R-peaks
             if peaks.len() >= 2 {
                 let hrv = ecg.heart_rate_variability(HRVMethod::TimeDomain)?;
@@ -735,8 +735,14 @@ impl BiomedicalAnalysis {
                 assessment.insert("Rhythm_Status".to_string(), rhythm_status.to_string());
             } else {
                 // Not enough R-peaks for HRV analysis
-                assessment.insert("Heart_Rate_Status".to_string(), "Insufficient data for heart rate analysis".to_string());
-                assessment.insert("Rhythm_Status".to_string(), "Insufficient data for rhythm analysis".to_string());
+                assessment.insert(
+                    "Heart_Rate_Status".to_string(),
+                    "Insufficient data for heart rate analysis".to_string(),
+                );
+                assessment.insert(
+                    "Rhythm_Status".to_string(),
+                    "Insufficient data for rhythm analysis".to_string(),
+                );
             }
         }
 
@@ -801,9 +807,13 @@ mod tests {
         let mut signal_data = vec![0.0; 1000];
         // Add R-peaks at regular intervals with more pronounced peaks
         for i in (100..1000).step_by(200) {
-            signal_data[i] = 2.0;  // Make peaks more pronounced
-            if i > 0 { signal_data[i-1] = 0.5; }  // Add slope
-            if i < 999 { signal_data[i+1] = 0.5; }  // Add slope
+            signal_data[i] = 2.0; // Make peaks more pronounced
+            if i > 0 {
+                signal_data[i - 1] = 0.5;
+            } // Add slope
+            if i < 999 {
+                signal_data[i + 1] = 0.5;
+            } // Add slope
         }
         let signal = Array1::from_vec(signal_data);
 

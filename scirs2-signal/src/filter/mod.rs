@@ -58,7 +58,6 @@
 //! ```
 
 // Re-export all public modules
-use num_complex::Complex64;
 pub mod analysis;
 pub mod application;
 pub mod common;

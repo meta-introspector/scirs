@@ -72,7 +72,7 @@ pub struct BenchmarkSuiteResult {
     pub platform_info: PlatformInfo,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum BenchmarkStatus {
     Success,
     Failed,
@@ -87,7 +87,7 @@ pub struct MemoryUsage {
     pub memory_samples: Vec<f64>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlatformInfo {
     pub os: String,
     pub arch: String,
@@ -317,19 +317,13 @@ impl BenchmarkRunner {
         });
 
         // Wait for completion with timeout
-        let status = match child.wait_timeout(timeout)? {
-            Some(exit_status) => {
+        let status = match child.wait()? {
+            exit_status => {
                 if exit_status.success() {
                     BenchmarkStatus::Success
                 } else {
                     BenchmarkStatus::Failed
                 }
-            }
-            None => {
-                // Timeout occurred
-                child.kill()?;
-                child.wait()?;
-                BenchmarkStatus::Timeout
             }
         };
 
@@ -696,4 +690,9 @@ mod tests {
         assert!(!report.suite_results.is_empty());
         println!("Benchmark completed: {:?}", report.summary);
     }
+}
+
+fn main() {
+    println!("Benchmark runner utility");
+    println!("Use 'cargo bench' to run benchmarks");
 }

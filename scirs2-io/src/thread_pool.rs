@@ -397,7 +397,7 @@ impl ThreadPool {
             }
         }
 
-        println!("Worker {} ({:?}) shutting down", id, worker_type);
+        println!("Worker {id} ({worker_type:?}) shutting down");
     }
 }
 

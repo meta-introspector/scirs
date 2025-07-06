@@ -812,7 +812,6 @@ impl DeviceManager {
         // Return device utilization map directly
         self.device_utilization.clone()
     }
-
 }
 
 impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {

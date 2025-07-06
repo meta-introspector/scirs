@@ -304,7 +304,7 @@ where
 mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
-    use ndarray::{arr2, Array2};
+    use ndarray::Array2;
 
     #[test]
     fn test_uniform_filter_chunked() {

@@ -1309,7 +1309,7 @@ where
 mod tests {
     use super::*;
     use approx::assert_abs_diff_eq;
-    use ndarray::{arr1, arr2, Array1, Array2};
+    use ndarray::{arr1, Array1, Array2};
 
     #[test]
     fn test_fourier_gaussian_1d() {

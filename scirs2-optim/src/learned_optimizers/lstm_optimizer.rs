@@ -12,6 +12,7 @@ use super::{LearnedOptimizerConfig, MetaOptimizationStrategy};
 use crate::error::{OptimError, Result};
 
 /// LSTM-based neural optimizer with meta-learning capabilities
+#[derive(Debug)]
 pub struct LSTMOptimizer<T: Float> {
     /// Configuration for the LSTM optimizer
     config: LearnedOptimizerConfig,
@@ -107,14 +108,14 @@ impl<T: Float + Default + Clone> OutputProjection<T> {
     ) -> Result<Self> {
         let weights = Array2::zeros((output_size, input_size));
         let bias = Array1::zeros(output_size);
-        
+
         Ok(Self {
             weights,
             bias,
             output_transform,
         })
     }
-    
+
     /// Forward pass through output projection
     pub fn forward(&self, input: &Array1<T>) -> Result<Array1<T>> {
         // Simplified implementation - just return the input for now
@@ -172,7 +173,7 @@ impl<T: Float + Default + Clone> AttentionMechanism<T> {
         let hidden_size = config.hidden_size;
         let num_heads = config.attention_heads;
         let head_size = hidden_size / num_heads;
-        
+
         Ok(Self {
             query_proj: Array2::zeros((hidden_size, hidden_size)),
             key_proj: Array2::zeros((hidden_size, hidden_size)),
@@ -183,7 +184,7 @@ impl<T: Float + Default + Clone> AttentionMechanism<T> {
             attention_weights: None,
         })
     }
-    
+
     /// Forward pass through attention mechanism
     pub fn forward(&mut self, input: &Array1<T>) -> Result<Array1<T>> {
         // Simplified implementation - just return the input for now
@@ -213,7 +214,7 @@ impl<T: Float + Default + Clone> LayerNormalization<T> {
             epsilon: T::from(1e-5).unwrap(),
         })
     }
-    
+
     /// Forward pass through layer normalization
     pub fn forward(&self, input: &Array1<T>) -> Result<Array1<T>> {
         // Simplified implementation - just return the input for now
@@ -891,7 +892,18 @@ pub struct AttentionStats {
     pub temporal_patterns: Vec<f64>,
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T> + ndarray::ScalarOperand + std::fmt::Debug> LSTMOptimizer<T> {
+impl<
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + std::iter::Sum
+            + for<'a> std::iter::Sum<&'a T>
+            + ndarray::ScalarOperand
+            + std::fmt::Debug,
+    > LSTMOptimizer<T>
+{
     /// Create a new LSTM optimizer
     pub fn new(config: LearnedOptimizerConfig) -> Result<Self> {
         // Validate configuration

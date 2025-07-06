@@ -47,7 +47,7 @@ pub struct NeuralArchitectureSearch<T: Float> {
 }
 
 /// NAS configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct NASConfig {
     /// Search strategy type
     pub search_strategy: SearchStrategyType,
@@ -96,9 +96,10 @@ pub struct NASConfig {
 }
 
 /// Types of search strategies
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub enum SearchStrategyType {
     /// Random search
+    #[default]
     Random,
 
     /// Evolutionary algorithm
@@ -270,7 +271,7 @@ pub enum SkipConnectionType {
 }
 
 /// Search constraints
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct SearchConstraints {
     /// Maximum parameters
     pub max_parameters: usize,
@@ -1206,7 +1207,15 @@ pub struct MultiObjectiveState<T: Float> {
 }
 
 impl<
-        T: Float + Default + Clone + Send + Sync + std::iter::Sum<T> + for<'a> std::iter::Sum<&'a T> + ndarray::ScalarOperand + std::fmt::Debug,
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + std::iter::Sum<T>
+            + for<'a> std::iter::Sum<&'a T>
+            + ndarray::ScalarOperand
+            + std::fmt::Debug,
     > NeuralArchitectureSearch<T>
 {
     /// Create a new NAS instance
@@ -2500,7 +2509,7 @@ impl<
             ProgressiveStage::Large => (AttentionType::MultiHeadAttention, 8),
         };
 
-        let memory_type = match stage {
+        let _memory_type = match stage {
             ProgressiveStage::Minimal => MemoryType::None,
             ProgressiveStage::Small => MemoryType::ShortTerm,
             ProgressiveStage::Medium => MemoryType::LongTerm,
@@ -4285,7 +4294,7 @@ impl<T: Float + Default + Clone> SearchStrategy<T> {
 
         Ok(Self {
             strategy_type,
-            rng: Box::new(rand::rngs::SmallRng::from_entropy()),
+            rng: Box::new(rand::rngs::SmallRng::seed_from_u64(42)),
             state,
             optimization_history: Vec::new(),
             best_architectures: Vec::new(),

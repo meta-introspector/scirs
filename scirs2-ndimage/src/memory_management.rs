@@ -292,7 +292,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{arr2, Array2};
+    use ndarray::arr2;
 
     #[test]
     fn test_buffer_pool() {

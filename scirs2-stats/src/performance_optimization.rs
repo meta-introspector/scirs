@@ -200,7 +200,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         classes.dedup();
         let unique_classes = Array1::from_vec(classes);
         let _n_classes = unique_classes.len();
-        let (_n_samples, _n_features) = x.dim();
+        let (_n_samples, n_features) = x.dim();
 
         // SIMD-optimized class means computation
         let class_means = self.compute_class_means_simd(x, y, &unique_classes)?;
@@ -218,7 +218,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
     /// Parallel-optimized LDA fitting
     fn fit_parallel(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<LDAResult> {
-        let (_n_samples, _n_features) = x.dim();
+        let (_n_samples, n_features) = x.dim();
 
         // Get unique classes
         let mut classes = y.to_vec();
@@ -245,7 +245,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         y: ArrayView1<i32>,
         classes: &Array1<i32>,
     ) -> Result<Array2<f64>> {
-        let (_n_samples, _n_features) = x.dim();
+        let (_n_samples, n_features) = x.dim();
         let n_classes = classes.len();
         let mut class_means = Array2::zeros((n_classes, n_features));
 
@@ -301,7 +301,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         y: ArrayView1<i32>,
         classes: &Array1<i32>,
     ) -> Result<Array2<f64>> {
-        let (_n_samples, _n_features) = x.dim();
+        let (_n_samples, n_features) = x.dim();
         let n_classes = classes.len();
 
         // Parallel computation of class means
@@ -344,7 +344,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         classes: &Array1<i32>,
         class_means: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array2<f64>)> {
-        let (_n_samples, _n_features) = x.dim();
+        let (_n_samples, n_features) = x.dim();
         let overall_mean = x.mean_axis(Axis(0)).unwrap();
 
         let mut sw = Array2::zeros((n_features, n_features));
@@ -404,7 +404,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         classes: &Array1<i32>,
         class_means: &Array2<f64>,
     ) -> Result<(Array2<f64>, Array2<f64>)> {
-        let (_n_samples, _n_features) = x.dim();
+        let (_n_samples, n_features) = x.dim();
         let overall_mean = x.mean_axis(Axis(0)).unwrap();
 
         // Parallel computation of within-class scatter contributions
@@ -472,7 +472,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
     /// SIMD-optimized transformation
     fn transform_simd(&self, x: ArrayView2<f64>, result: &LDAResult) -> Result<Array2<f64>> {
-        let (_n_samples, _n_features) = x.dim();
+        let (n_samples, n_features) = x.dim();
         let n_components = result.scalings.ncols();
 
         if n_features >= self.config.simd_threshold {

@@ -15,11 +15,10 @@
 //!
 //! Run with: cargo run --example physics_applications_interactive_lab
 
-use ndarray::{s, Array1, Array2, ArrayView1};
-use num_complex::Complex64;
+use ndarray::{Array1, Array2};
 use scirs2_special::*;
 use std::collections::HashMap;
-use std::f64::consts::{E, PI, TAU};
+use std::f64::consts::{PI, TAU};
 use std::io::{self, Write};
 use std::time::Instant;
 
@@ -1012,7 +1011,7 @@ fn run_experiment(
     let experiment = &lab.experiments[experiment_index].clone();
 
     println!("\n🧪 Experiment: {}", experiment.title);
-    println!("=".repeat(experiment.title.len() + 13));
+    println!("{}", "=".repeat(experiment.title.len() + 13));
     println!();
 
     // Display physics background
@@ -1078,7 +1077,7 @@ fn display_current_parameters(parameters: &HashMap<String, ExperimentParameter>)
 #[allow(dead_code)]
 fn display_detailed_theory(experiment: &PhysicsExperiment) {
     println!("\n📚 **Detailed Mathematical Theory**");
-    println!("=".repeat(35));
+    println!("{}", "=".repeat(35));
     println!();
 
     println!("🎯 **Special Functions Used:**");
@@ -1385,7 +1384,7 @@ fn run_signal_processing_simulation() -> Result<(), Box<dyn std::error::Error>> 
 
     // Fresnel diffraction intensity at a straight edge
     let mut intensity = Array1::zeros(t_range.len());
-    for (i, t) in t_range.iter().enumerate() {
+    for (i, _t) in t_range.iter().enumerate() {
         let c_val = fresnel_c[i] + 0.5;
         let s_val = fresnel_s[i] + 0.5;
         intensity[i] = 0.25 * (c_val * c_val + s_val * s_val);
@@ -1428,7 +1427,7 @@ fn run_scattering_simulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Refractive index: {}", refractive_index);
 
     // Classify scattering regime
-    if size_parameter << 1.0 {
+    if size_parameter < 1.0 {
         println!("📏 Rayleigh scattering regime (x << 1)");
         let rayleigh_cross_section = 8.0 * PI / 3.0
             * size_parameter.powi(4)
@@ -1440,7 +1439,7 @@ fn run_scattering_simulation() -> Result<(), Box<dyn std::error::Error>> {
             "   Normalized cross-section: {:.2e}",
             rayleigh_cross_section
         );
-    } else if size_parameter >> 1.0 {
+    } else if size_parameter > 1.0 {
         println!("💿 Geometric optics regime (x >> 1)");
         println!("   Cross-section approaches geometric limit πa²");
     } else {
@@ -1464,8 +1463,8 @@ fn run_scattering_simulation() -> Result<(), Box<dyn std::error::Error>> {
             let a_n = psi_n_x / (psi_n_x + chi_n_x);
             let b_n = psi_n_x / (psi_n_x + chi_n_x);
 
-            q_ext += (2.0 * n as f64 + 1.0) * (a_n + b_n).real();
-            q_sca += (2.0 * n as f64 + 1.0) * (a_n.norm_sqr() + b_n.norm_sqr());
+            q_ext += (2.0 * n as f64 + 1.0) * (a_n + b_n);
+            q_sca += (2.0 * n as f64 + 1.0) * (a_n * a_n + b_n * b_n);
         }
 
         q_ext *= 2.0 / (size_parameter * size_parameter);

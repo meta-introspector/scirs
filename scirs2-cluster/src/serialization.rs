@@ -179,7 +179,9 @@ impl PlatformInfo {
         Self {
             os: std::env::consts::OS.to_string(),
             arch: std::env::consts::ARCH.to_string(),
-            rust_version: env!("RUSTC_VERSION").to_string(),
+            rust_version: option_env!("CARGO_PKG_RUST_VERSION")
+                .unwrap_or("unknown")
+                .to_string(),
             cpu_features: Self::detect_cpu_features(),
         }
     }
@@ -1509,7 +1511,7 @@ pub struct ModelMetadata {
     /// Performance metrics
     pub performance_metrics: Option<PerformanceMetrics>,
     /// Training data characteristics
-    pub data_characteristics: Option<DataCharacteristics>,
+    pub data_characteristics: Option<ModelDataCharacteristics>,
 }
 
 /// Algorithm configuration metadata
@@ -1548,9 +1550,9 @@ pub struct PerformanceMetrics {
     pub custom_metrics: Option<HashMap<String, f64>>,
 }
 
-/// Data characteristics metadata
+/// Model data characteristics metadata
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct DataCharacteristics {
+pub struct ModelDataCharacteristics {
     /// Number of samples in training data
     pub n_samples: usize,
     /// Number of features

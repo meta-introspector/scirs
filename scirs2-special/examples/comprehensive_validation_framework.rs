@@ -13,11 +13,10 @@
 //!
 //! Run with: cargo run --example comprehensive_validation_framework
 
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
-use std::f64::consts::{E, PI};
-use std::io::{self, Write};
+use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -74,7 +73,7 @@ fn validate_gamma_functions() -> Result<(), Box<dyn std::error::Error>> {
     // Test reflection formula
     println!("Testing Gamma Reflection Formula: Γ(z)Γ(1-z) = π/sin(πz)");
     let reflection_test_values = vec![0.1, 0.3, 0.5, 0.7, 0.9, 1.3, 1.7];
-    let mut max_error = 0.0;
+    let mut max_error: f64 = 0.0;
 
     for &z in &reflection_test_values {
         let left_side = gamma(z) * gamma(1.0 - z);
@@ -94,7 +93,7 @@ fn validate_gamma_functions() -> Result<(), Box<dyn std::error::Error>> {
     // Test duplication formula
     println!("Testing Legendre Duplication Formula:");
     let duplication_test_values = vec![0.5, 1.0, 1.5, 2.0, 2.5, 5.0, 10.0];
-    max_error = 0.0;
+    max_error = 0.0_f64;
 
     for &z in &duplication_test_values {
         let left_side = gamma(z) * gamma(z + 0.5);
@@ -222,7 +221,7 @@ fn validate_bessel_functions() -> Result<(), Box<dyn std::error::Error>> {
         let k0_val = k0(x);
         let wronskian = i0_val * k0(x) + iv(1.0, x) * k0_val; // Should be 1/x
         let expected_wronskian = 1.0 / x;
-        let error = (wronskian - expected_wronskian).abs();
+        let error = (wronskian - expected_wronskian).abs() as f64;
 
         println!(
             "x = {:.1}: I₀K₁ + I₁K₀ = {:.6} (expected {:.6}), error = {:.2e}",
@@ -242,11 +241,11 @@ fn validate_error_functions() -> Result<(), Box<dyn std::error::Error>> {
     // Test complementary property
     println!("Testing erf(x) + erfc(x) = 1:");
     let test_values = vec![-3.0, -1.0, 0.0, 1.0, 3.0, 5.0];
-    let mut max_error = 0.0;
+    let mut max_error: f64 = 0.0;
 
     for &x in &test_values {
         let sum = erf(x) + erfc(x);
-        let error = (sum - 1.0).abs();
+        let error = (sum - 1.0).abs() as f64;
         max_error = max_error.max(error);
 
         if error > 1e-14 {
@@ -264,7 +263,7 @@ fn validate_error_functions() -> Result<(), Box<dyn std::error::Error>> {
         if x != 0.0 {
             let erf_pos = erf(x);
             let erf_neg = erf(-x);
-            let symmetry_error = (erf_pos + erf_neg).abs();
+            let symmetry_error = (erf_pos + erf_neg).abs() as f64;
 
             if symmetry_error > 1e-14 {
                 println!("⚠️  Symmetry error at x = {}: {:.2e}", x, symmetry_error);
@@ -280,7 +279,7 @@ fn validate_error_functions() -> Result<(), Box<dyn std::error::Error>> {
     for &p in &probability_values {
         let x = erfinv(2.0 * p - 1.0);
         let recovered_p = 0.5 * (1.0 + erf(x));
-        let error = (recovered_p - p).abs();
+        let error = (recovered_p - p).abs() as f64;
 
         println!(
             "p = {:.2}: erfinv -> erf gives {:.8}, error = {:.2e}",
@@ -370,7 +369,7 @@ fn validate_orthogonal_polynomials() -> Result<(), Box<dyn std::error::Error>> {
 
     for &x in &chebyshev_x_values {
         for n in 0..6 {
-            let t_n = chebyshev(n, x);
+            let t_n: f64 = chebyshev(n, x, true);
             let expected_bound = 1.0; // |T_n(x)| ≤ 1 for |x| ≤ 1
 
             if t_n.abs() > expected_bound + 1e-12 {
@@ -393,7 +392,7 @@ fn validate_elliptic_functions() -> Result<(), Box<dyn std::error::Error>> {
     let k_values = vec![0.1, 0.3, 0.5, 0.7, 0.9];
 
     for &k in &k_values {
-        let k_prime = (1.0 - k * k).sqrt();
+        let k_prime = (1.0 - k * k).sqrt() as f64;
 
         let k_k = elliptic_k(k).unwrap_or(0.0);
         let e_k = elliptic_e(k).unwrap_or(0.0);
@@ -420,10 +419,10 @@ fn validate_elliptic_functions() -> Result<(), Box<dyn std::error::Error>> {
             let dn = jacobi_dn(u, m);
 
             // Test fundamental identity: sn²(u) + cn²(u) = 1
-            let identity1_error = (sn * sn + cn * cn - 1.0).abs();
+            let identity1_error = (sn * sn + cn * cn - 1.0).abs() as f64;
 
             // Test: dn²(u) + m·sn²(u) = 1
-            let identity2_error = (dn * dn + m * sn * sn - 1.0).abs();
+            let identity2_error = (dn * dn + m * sn * sn - 1.0).abs() as f64;
 
             if identity1_error > 1e-12 || identity2_error > 1e-12 {
                 println!(
@@ -500,7 +499,7 @@ fn validate_zeta_functions() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for &(s, expected) in &special_cases {
-        let computed = zeta(s);
+        let computed = zeta(s).unwrap_or(0.0);
         let error = (computed - expected).abs();
         let relative_error = error / expected;
 
@@ -518,8 +517,8 @@ fn validate_zeta_functions() -> Result<(), Box<dyn std::error::Error>> {
     for &s in &s_values {
         if s != 1.0 {
             // Avoid pole
-            let zeta_s = zeta(s);
-            let zeta_1_minus_s = zeta(1.0 - s);
+            let zeta_s = zeta(s).unwrap_or(0.0);
+            let zeta_1_minus_s = zeta(1.0 - s).unwrap_or(0.0);
 
             let functional_right = 2.0_f64.powf(s)
                 * PI.powf(s - 1.0)
@@ -544,8 +543,8 @@ fn validate_zeta_functions() -> Result<(), Box<dyn std::error::Error>> {
 
     for &a in &a_values {
         if a > 0.0 {
-            let hurwitz_2 = hurwitz_zeta(2.0, a);
-            let hurwitz_4 = hurwitz_zeta(4.0, a);
+            let hurwitz_2 = hurwitz_zeta(2.0, a).unwrap_or(0.0);
+            let hurwitz_4 = hurwitz_zeta(4.0, a).unwrap_or(0.0);
 
             // Basic sanity checks
             if hurwitz_2.is_finite() && hurwitz_4.is_finite() {
@@ -595,7 +594,7 @@ fn validate_information_theory_functions() -> Result<(), Box<dyn std::error::Err
     println!("Testing KL Divergence Properties:");
     let p1 = vec![0.5, 0.3, 0.2];
     let p2 = vec![0.4, 0.4, 0.2];
-    let p3 = vec![1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0];
+    let _p3 = vec![1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0];
 
     let kl_p1_p2 = kl_divergence(&p1, &p2)?;
     let kl_p2_p1 = kl_divergence(&p2, &p1)?;
@@ -813,9 +812,9 @@ fn extreme_parameter_validation() -> Result<(), Box<dyn std::error::Error>> {
     let large_values = vec![100.0, 500.0, 1000.0];
 
     for &x in &large_values {
-        let gamma_result = gamma(x);
-        let bessel_result = j0(x);
-        let erf_result = erf(x);
+        let gamma_result: f64 = gamma(x);
+        let bessel_result: f64 = j0(x);
+        let erf_result: f64 = erf(x);
 
         println!(
             "x = {:6.0}: Γ(x) = {:.2e}, J₀(x) = {:.2e}, erf(x) = {:.6}",
@@ -837,9 +836,9 @@ fn extreme_parameter_validation() -> Result<(), Box<dyn std::error::Error>> {
     let small_values = vec![1e-10, 1e-15, 1e-20];
 
     for &x in &small_values {
-        let gamma_result = gamma(x);
-        let j0_result = j0(x);
-        let erf_result = erf(x);
+        let gamma_result: f64 = gamma(x);
+        let j0_result: f64 = j0(x);
+        let erf_result: f64 = erf(x);
 
         println!(
             "x = {:.0e}: Γ(x) = {:.2e}, J₀(x) = {:.6}, erf(x) = {:.2e}",
@@ -1070,17 +1069,17 @@ fn compute_bessel_orthogonality_integral(nu: i32, alpha1: f64, alpha2: f64) -> f
 
     for i in 1..n_points {
         let x = i as f64 * dx;
-        let j1 = match nu {
+        let j1_val = match nu {
             0 => j0(alpha1 * x),
             1 => j1(alpha1 * x),
             _ => jv(nu as f64, alpha1 * x),
         };
-        let j2 = match nu {
+        let j2_val = match nu {
             0 => j0(alpha2 * x),
             1 => j1(alpha2 * x),
             _ => jv(nu as f64, alpha2 * x),
         };
-        sum += x * j1 * j2 * dx;
+        sum += x * j1_val * j2_val * dx;
     }
 
     sum
@@ -1095,8 +1094,8 @@ fn legendre_orthogonality_integral(m: usize, n: usize) -> f64 {
 
     for i in 0..n_points {
         let x = -1.0 + i as f64 * dx;
-        let p_m = legendre(m as i32, x);
-        let p_n = legendre(n as i32, x);
+        let p_m = legendre(m, x);
+        let p_n = legendre(n, x);
         sum += p_m * p_n * dx;
     }
 

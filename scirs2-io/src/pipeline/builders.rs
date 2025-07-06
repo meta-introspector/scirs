@@ -153,7 +153,7 @@ where
     {
         let name_owned = name.to_string();
         let stage = function_stage(name, move |input: T| {
-            println!("[{}] {:?}", name_owned, input);
+            println!("[{name_owned}] {input:?}");
             Ok(input)
         });
         self.stages.push(stage);

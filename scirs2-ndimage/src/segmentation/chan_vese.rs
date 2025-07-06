@@ -532,7 +532,6 @@ pub fn checkerboard_level_set(shape: (usize, usize), square_size: usize) -> Arra
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr2;
 
     #[test]
     fn test_heaviside_dirac() {

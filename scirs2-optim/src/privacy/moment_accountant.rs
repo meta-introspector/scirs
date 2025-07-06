@@ -625,7 +625,6 @@ impl MomentsAccountant {
         })
     }
 
-
     /// Compute optimal epsilon with custom delta
     fn compute_optimal_epsilon_with_delta(
         &self,

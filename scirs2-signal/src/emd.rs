@@ -8,8 +8,8 @@
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2};
 use num_traits::{Float, NumCast};
+use rand::{rng, Rng};
 use std::cmp::max;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Configuration parameters for Empirical Mode Decomposition
@@ -754,13 +754,14 @@ where
     let mut max_imf_count = 0;
 
     // Run EMD on ensemble of signals with added noise
+    let mut rng = rng();
     for _ in 0..ensemble_size {
         // Add white noise
         let noisy_signal: Vec<f64> = if noise_std > 0.0 {
             // Direct use of random without creating an unused rng variable
             signal_f64
                 .iter()
-                .map(|&x| x + noise_std * (rand::random::<f64>() * 2.0 - 1.0))
+                .map(|&x| x + noise_std * (rng.gen::<f64>() * 2.0 - 1.0))
                 .collect()
         } else {
             signal_f64.clone()

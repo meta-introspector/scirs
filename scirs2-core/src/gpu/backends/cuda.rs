@@ -12,6 +12,8 @@ use crate::gpu::{GpuBufferImpl, GpuCompilerImpl, GpuContextImpl, GpuError, GpuKe
 use cudarc::driver::sys::{CUcontext, CUdevice, CUdeviceptr};
 #[cfg(feature = "cuda")]
 use cudarc::driver::{CudaDevice, DevicePtr};
+#[cfg(feature = "cuda")]
+use cudarc::nvrtc::Ptx;
 
 // CUDA API types - use real CUDA when available, fallback types otherwise
 #[cfg(feature = "cuda")]
@@ -27,6 +29,8 @@ type CUcontext = *mut c_void;
 type CUmodule = *mut c_void;
 #[cfg(not(feature = "cuda"))]
 type CUfunction = *mut c_void;
+#[cfg(not(feature = "cuda"))]
+type Ptx = String;
 #[cfg(not(feature = "cuda"))]
 type CUdeviceptr = u64;
 #[cfg(not(feature = "cuda"))]
@@ -302,26 +306,25 @@ impl CudaContext {
     }
 
     /// Compile CUDA source to PTX using nvrtc
-    fn compile_to_ptx(source: &str, name: &str) -> Result<String, GpuError> {
+    fn compile_to_ptx(source: &str, name: &str) -> Result<Ptx, GpuError> {
         #[cfg(feature = "cuda")]
         {
             // Real NVRTC implementation
             use cudarc::nvrtc::compile_ptx;
 
             compile_ptx(source)
-                .map(|ptx| format!("{:?}", ptx))
                 .map_err(|e| GpuError::Other(format!("NVRTC compilation failed for {name}: {e}")))
         }
         #[cfg(not(feature = "cuda"))]
         {
             // Fallback implementation - return mock PTX
-            let ptx = format!(
+            let ptx_str = format!(
                 ".version 8.0\n.target sm_50\n.address_size 64\n\n// Compiled from {}\n// {}",
                 name,
                 source.lines().take(5).collect::<Vec<_>>().join("\n// ")
             );
 
-            Ok(ptx)
+            Ok(ptx_str)
         }
     }
 
@@ -329,17 +332,18 @@ impl CudaContext {
     #[cfg(feature = "cuda")]
     fn load_ptx_module(
         device: &CudaDevice,
-        ptx: &str,
+        ptx: Ptx,
+        function_names: &[&'static str],
     ) -> Result<Arc<impl std::any::Any>, GpuError> {
         device
-            .load_ptx(ptx.as_bytes(), "neural_kernels")
+            .load_ptx(ptx, "neural_kernels", function_names)
             .map_err(|e| GpuError::Other(format!("Failed to load PTX module: {e}")))
             .map(Arc::new)
     }
 
     /// Load PTX module into CUDA context (fallback)
     #[cfg(not(feature = "cuda"))]
-    fn load_ptx_module(_ptx: &str) -> Result<CUmodule, GpuError> {
+    fn load_ptx_module(_ptx: Ptx, _function_names: &[&'static str]) -> Result<CUmodule, GpuError> {
         // Fallback implementation: return non-null pointer
         Ok(0x2 as *mut c_void)
     }

@@ -16,6 +16,8 @@
 //! - **Advanced-Predictive Analytics**: Prediction of unpredictable events
 //! - **Autonomous Discovery**: AI that discovers new mathematical relationships
 
+#![allow(missing_docs)]
+
 use ndarray::Array1;
 use num_complex::Complex;
 use num_traits::{Float, FromPrimitive};
@@ -6194,11 +6196,8 @@ impl<F: Float + Debug + Clone + FromPrimitive> ArchitectureEvolutionManager<F> {
 
         // Fill remaining slots if needed
         while selected.len() < selection_count && !indexed_population.is_empty() {
-            selected.push(
-                (*indexed_population[selected.len() % indexed_population.len()]
-                    .1)
-                    .clone(),
-            );
+            selected
+                .push((*indexed_population[selected.len() % indexed_population.len()].1).clone());
         }
 
         Ok(selected)

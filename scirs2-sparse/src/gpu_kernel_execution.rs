@@ -62,7 +62,7 @@ pub fn execute_spmv_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
     y_buffer: &GpuBuffer<T>,
-    _config: &GpuKernelConfig,
+    config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -151,7 +151,7 @@ pub fn execute_symmetric_spmv_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
     y_buffer: &GpuBuffer<T>,
-    _config: &GpuKernelConfig,
+    config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -289,7 +289,7 @@ fn execute_cuda_spmv<T>(
     y_buffer: &GpuBuffer<T>,
     global_size: &[usize],
     local_size: &[usize],
-    _config: &GpuKernelConfig,
+    config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -354,7 +354,7 @@ fn execute_opencl_spmv<T>(
     y_buffer: &GpuBuffer<T>,
     global_size: &[usize],
     local_size: &[usize],
-    _config: &GpuKernelConfig,
+    config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -419,7 +419,7 @@ fn execute_metal_spmv<T>(
     y_buffer: &GpuBuffer<T>,
     global_size: &[usize],
     local_size: &[usize],
-    _config: &GpuKernelConfig,
+    config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -526,7 +526,7 @@ fn execute_cuda_symmetric_spmv<T>(
     y_buffer: &GpuBuffer<T>,
     global_size: &[usize],
     local_size: &[usize],
-    _config: &GpuKernelConfig,
+    config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -564,7 +564,7 @@ fn execute_opencl_symmetric_spmv<T>(
     y_buffer: &GpuBuffer<T>,
     global_size: &[usize],
     local_size: &[usize],
-    _config: &GpuKernelConfig,
+    config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -601,7 +601,7 @@ fn execute_metal_symmetric_spmv<T>(
     y_buffer: &GpuBuffer<T>,
     global_size: &[usize],
     local_size: &[usize],
-    _config: &GpuKernelConfig,
+    config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -683,7 +683,7 @@ pub fn execute_triangular_solve_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     b_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
-    _config: &GpuKernelConfig,
+    config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -1339,7 +1339,7 @@ pub fn execute_spmv_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
     y_buffer: &GpuBuffer<T>,
-    _config: &GpuKernelConfig,
+    config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -1367,7 +1367,7 @@ pub fn execute_symmetric_spmv_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
     y_buffer: &GpuBuffer<T>,
-    _config: &GpuKernelConfig,
+    config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -1395,7 +1395,7 @@ pub fn execute_triangular_solve_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     b_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
-    _config: &GpuKernelConfig,
+    config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,

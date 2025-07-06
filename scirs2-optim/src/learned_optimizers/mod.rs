@@ -155,6 +155,8 @@ pub enum NeuralOptimizerType {
 pub enum MetaOptimizationStrategy {
     /// Model-Agnostic Meta-Learning
     MAML,
+    /// Prototypical MAML
+    ProtoMAML,
     /// Reptile meta-learning
     Reptile,
     /// Learning to Learn by Gradient Descent

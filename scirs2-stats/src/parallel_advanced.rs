@@ -748,7 +748,7 @@ where
     {
         // Use SIMD-optimized operations from advanced_simd_comprehensive
         let _simd_processor =
-            crate::ultra_simd_comprehensive::AdvancedComprehensiveSimdProcessor::<F>::new();
+            crate::simd_comprehensive::AdvancedComprehensiveSimdProcessor::<F>::new();
 
         // For now, delegate to standard processing
         // In practice, would use SIMD-optimized variants

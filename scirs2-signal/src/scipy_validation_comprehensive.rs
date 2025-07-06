@@ -753,7 +753,7 @@ fn validate_wavelet_implementations() -> SignalResult<WaveletValidationResult> {
 /// Validate DWT implementation
 #[allow(dead_code)]
 fn validate_dwt_implementation(signal: &[f64]) -> SignalResult<DwtValidation> {
-    let wavelet = Wavelet::Daubechies(4);
+    let wavelet = Wavelet::DB(4);
 
     // Test perfect reconstruction
     let (coeffs_a, coeffs_d) = dwt_decompose(signal, &wavelet, "symmetric")?;

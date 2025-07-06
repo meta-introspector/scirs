@@ -85,7 +85,7 @@ pub fn joint_bss(
     let (_eigvals, eigvecs) = match eigh(&joint_cov.view(), None) {
         Ok((vals, vecs)) => (vals, vecs),
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to compute eigendecomposition of joint covariance".to_string(),
             ));
         }
@@ -114,7 +114,7 @@ pub fn joint_bss(
         let (u, s, vt) = match svd(&unmixing.view(), false, None) {
             Ok((u, s, vt)) => (u, s, vt),
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to compute SVD of unmixing matrix".to_string(),
                 ));
             }
@@ -263,7 +263,7 @@ pub fn joint_diagonalization(
     let (u, s, vt) = match svd(&w.view(), false, None) {
         Ok((u, s, vt)) => (u, s, vt),
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to compute SVD of unmixing matrix".to_string(),
             ));
         }

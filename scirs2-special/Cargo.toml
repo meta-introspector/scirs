@@ -74,3 +74,4 @@ criterion = { workspace = true }
 tokio = { version = "1.0", features = ["full"] }
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
+chrono = "0.4"

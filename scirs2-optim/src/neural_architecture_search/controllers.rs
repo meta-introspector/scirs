@@ -5,6 +5,7 @@
 
 use ndarray::{s, Array1, Array2};
 use num_traits::Float;
+use rand::{rng, Rng};
 use std::collections::{HashMap, VecDeque};
 
 use super::{
@@ -504,7 +505,17 @@ pub struct ControllerGenome<T: Float> {
     performance_history: Vec<T>,
 }
 
-impl<T: Float + Default + Clone + Send + Sync + 'static + std::iter::Sum + for<'a> std::iter::Sum<&'a T>> RNNController<T> {
+impl<
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + 'static
+            + std::iter::Sum
+            + for<'a> std::iter::Sum<&'a T>,
+    > RNNController<T>
+{
     /// Create new RNN controller
     pub fn new(hidden_size: usize, num_layers: usize, vocab_size: usize) -> Result<Self> {
         let config = RNNControllerConfig {
@@ -644,7 +655,8 @@ impl<T: Float + Default + Clone + Send + Sync + 'static + std::iter::Sum + for<'
         let probs = exp_logits / sum_exp;
 
         // Sample from categorical distribution
-        let rand_val = rand::random::<f64>();
+        let mut rng = rng();
+        let rand_val = rng.random::<f64>();
         let mut cumulative = 0.0;
 
         for (i, &prob) in probs.iter().enumerate() {
@@ -690,8 +702,16 @@ impl<T: Float + Default + Clone + Send + Sync + 'static + std::iter::Sum + for<'
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + 'static + std::iter::Sum + for<'a> std::iter::Sum<&'a T>> ArchitectureController<T>
-    for RNNController<T>
+impl<
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + 'static
+            + std::iter::Sum
+            + for<'a> std::iter::Sum<&'a T>,
+    > ArchitectureController<T> for RNNController<T>
 {
     fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<()> {
         self.search_space = Some(search_space.clone());
@@ -955,39 +975,40 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T> for Ran
         use super::architecture_space::{ComponentType, OptimizerComponent};
 
         // Random selection of component type
+        let mut rng = rng();
         let component_type =
-            self.component_types[rand::random::<usize>() % self.component_types.len()];
+            self.component_types[rng.random::<usize>() % self.component_types.len()];
 
         let mut hyperparameters = HashMap::new();
         match component_type {
             ComponentType::Adam => {
                 hyperparameters.insert(
                     "learning_rate".to_string(),
-                    T::from(rand::random::<f64>() * 0.01).unwrap(),
+                    T::from(rng.random::<f64>() * 0.01).unwrap(),
                 );
                 hyperparameters.insert(
                     "beta1".to_string(),
-                    T::from(0.8 + rand::random::<f64>() * 0.19).unwrap(),
+                    T::from(0.8 + rng.random::<f64>() * 0.19).unwrap(),
                 );
                 hyperparameters.insert(
                     "beta2".to_string(),
-                    T::from(0.9 + rand::random::<f64>() * 0.099).unwrap(),
+                    T::from(0.9 + rng.random::<f64>() * 0.099).unwrap(),
                 );
             }
             ComponentType::SGD => {
                 hyperparameters.insert(
                     "learning_rate".to_string(),
-                    T::from(rand::random::<f64>() * 0.1).unwrap(),
+                    T::from(rng.random::<f64>() * 0.1).unwrap(),
                 );
                 hyperparameters.insert(
                     "momentum".to_string(),
-                    T::from(rand::random::<f64>() * 0.99).unwrap(),
+                    T::from(rng.random::<f64>() * 0.99).unwrap(),
                 );
             }
             _ => {
                 hyperparameters.insert(
                     "learning_rate".to_string(),
-                    T::from(rand::random::<f64>() * 0.01).unwrap(),
+                    T::from(rng.random::<f64>() * 0.01).unwrap(),
                 );
             }
         }

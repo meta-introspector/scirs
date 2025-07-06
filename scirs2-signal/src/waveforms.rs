@@ -963,7 +963,7 @@ pub fn perfect_binary_sequence(length: usize) -> SignalResult<Vec<f64>> {
 }
 
 // Helper functions for random number generation
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{rng, rngs::StdRng, Rng, SeedableRng};
 
 #[allow(dead_code)]
 fn _create_rng_from_seed(seed: u64) -> StdRng {
@@ -972,7 +972,8 @@ fn _create_rng_from_seed(seed: u64) -> StdRng {
 
 #[allow(dead_code)]
 fn _create_default_rng() -> StdRng {
-    StdRng::seed_from_u64(rand::random())
+    let mut rng = rng();
+    StdRng::seed_from_u64(rng.gen::<u64>())
 }
 
 #[cfg(test)]

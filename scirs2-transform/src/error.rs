@@ -21,6 +21,10 @@ pub enum TransformError {
     #[error("Linear algebra error: {0}")]
     LinalgError(#[from] scirs2_linalg::error::LinalgError),
 
+    /// FFT error
+    #[error("FFT error: {0}")]
+    FFTError(#[from] scirs2_fft::error::FFTError),
+
     /// IO error
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
@@ -179,7 +183,9 @@ impl TransformError {
             | TransformError::FeatureNotEnabled(_)
             | TransformError::Other(_) => ErrorKind::Internal,
 
-            TransformError::CoreError(_) | TransformError::LinalgError(_) => ErrorKind::External,
+            TransformError::CoreError(_)
+            | TransformError::LinalgError(_)
+            | TransformError::FFTError(_) => ErrorKind::External,
 
             TransformError::ParallelError(_)
             | TransformError::CrossValidationError(_)

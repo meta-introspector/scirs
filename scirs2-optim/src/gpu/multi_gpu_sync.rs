@@ -14,8 +14,8 @@ use num_traits::Float;
 
 use crate::error::{OptimError, Result};
 
-#[cfg(feature = "gpu")]
-use scirs2_core::gpu::{CudaContext, CudaStream};
+#[cfg(all(feature = "gpu", feature = "cuda"))]
+use scirs2_core::gpu::backends::{CudaContext, CudaStream};
 
 /// Multi-GPU communication backend for parameter synchronization
 pub struct MultiGpuCommunicator {
@@ -54,15 +54,15 @@ pub struct DeviceContext {
     pub device_id: i32,
 
     /// CUDA context
-    #[cfg(feature = "gpu")]
+    #[cfg(all(feature = "gpu", feature = "cuda"))]
     pub context: CudaContext,
 
     /// Computation stream
-    #[cfg(feature = "gpu")]
+    #[cfg(all(feature = "gpu", feature = "cuda"))]
     pub compute_stream: CudaStream,
 
     /// Communication stream
-    #[cfg(feature = "gpu")]
+    #[cfg(all(feature = "gpu", feature = "cuda"))]
     pub comm_stream: CudaStream,
 
     /// Device memory allocation statistics
@@ -134,7 +134,7 @@ pub struct CommStream {
     pub stream_id: usize,
 
     /// CUDA stream handle
-    #[cfg(feature = "gpu")]
+    #[cfg(all(feature = "gpu", feature = "cuda"))]
     pub stream: CudaStream,
 
     /// Currently active operations
@@ -494,7 +494,7 @@ impl MultiGpuCommunicator {
         let mut devices = Vec::new();
 
         for device_id in 0..config.world_size {
-            #[cfg(feature = "gpu")]
+            #[cfg(all(feature = "gpu", feature = "cuda"))]
             {
                 let context = CudaContext::new(device_id as i32)?;
                 let compute_stream = CudaStream::new(&context)?;
@@ -505,8 +505,11 @@ impl MultiGpuCommunicator {
 
                 devices.push(DeviceContext {
                     device_id: device_id as i32,
+                    #[cfg(all(feature = "gpu", feature = "cuda"))]
                     context,
+                    #[cfg(all(feature = "gpu", feature = "cuda"))]
                     compute_stream,
+                    #[cfg(all(feature = "gpu", feature = "cuda"))]
                     comm_stream,
                     memory_stats,
                     capabilities,

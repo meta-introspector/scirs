@@ -677,9 +677,7 @@ impl CloudDeploymentOrchestrator {
         let avg_cpu = self.get_average_cpu_utilization();
         let current_instances = self.deployment_state.active_instances.len();
 
-        println!(
-            "📊 Auto-scaling check: {current_instances} instances, {avg_cpu:.1}% avg CPU"
-        );
+        println!("📊 Auto-scaling check: {current_instances} instances, {avg_cpu:.1}% avg CPU");
 
         // Scale up if CPU utilization is high
         if avg_cpu > 80.0 && current_instances < self.config.resources.max_instances {

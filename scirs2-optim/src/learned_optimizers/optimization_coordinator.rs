@@ -12,7 +12,7 @@ use std::time::{Duration, Instant, SystemTime};
 use super::{
     adaptive_transformer_enhancement::{AdaptiveConfig, AdaptiveTransformerEnhancement},
     few_shot_learning_enhancement::{DistributionModel, FewShotConfig, FewShotLearningEnhancement},
-    neural_architecture_search::{NASConfig, NeuralArchitectureSearch},
+    neural_architecture_search::{ArchitectureSearchSpace, NASConfig, NeuralArchitectureSearch},
     LSTMOptimizer, LearnedOptimizerConfig,
 };
 
@@ -117,7 +117,7 @@ pub struct OptimizerEnsemble<T: Float> {
 }
 
 /// Advanced optimizer trait
-pub trait AdvancedOptimizer<T: Float>: Send + Sync {
+pub trait AdvancedOptimizer<T: Float>: Send + Sync + std::fmt::Debug {
     /// Perform optimization step with context
     fn optimize_step_with_context(
         &mut self,
@@ -335,7 +335,7 @@ pub enum OptimizerSelectionAlgorithm {
 }
 
 /// Meta-learning strategy trait
-pub trait MetaLearningStrategy<T: Float>: Send + Sync {
+pub trait MetaLearningStrategy<T: Float>: Send + Sync + std::fmt::Debug {
     /// Execute meta-learning step
     fn meta_step(
         &mut self,
@@ -431,7 +431,7 @@ pub struct PredictionModel<T: Float> {
 }
 
 /// Feature extractor trait
-pub trait FeatureExtractor<T: Float>: Send + Sync {
+pub trait FeatureExtractor<T: Float>: Send + Sync + std::fmt::Debug {
     /// Extract features from optimization context
     fn extract_features(&self, context: &OptimizationContext<T>) -> Result<Array1<T>>;
 
@@ -527,7 +527,7 @@ pub struct LoadBalancer<T: Float> {
 }
 
 /// Adaptation strategy trait
-pub trait AdaptationStrategy<T: Float>: Send + Sync {
+pub trait AdaptationStrategy<T: Float>: Send + Sync + std::fmt::Debug {
     /// Execute adaptation
     fn adapt(
         &mut self,
@@ -543,7 +543,7 @@ pub trait AdaptationStrategy<T: Float>: Send + Sync {
 }
 
 /// Adaptation trigger trait
-pub trait AdaptationTrigger<T: Float>: Send + Sync {
+pub trait AdaptationTrigger<T: Float>: Send + Sync + std::fmt::Debug {
     /// Check if trigger is activated
     fn is_triggered(&self, context: &OptimizationContext<T>) -> bool;
 
@@ -1020,13 +1020,27 @@ impl<T: Float> Default for AdvancedConfig<T> {
     }
 }
 
-impl<T: Float + 'static + std::iter::Sum + for<'a> std::iter::Sum<&'a T>> AdvancedCoordinator<T> {
+impl<
+        T: Float
+            + 'static
+            + std::iter::Sum
+            + for<'a> std::iter::Sum<&'a T>
+            + Send
+            + Sync
+            + Default
+            + ndarray::ScalarOperand
+            + std::fmt::Debug,
+    > AdvancedCoordinator<T>
+{
     /// Create new Advanced coordinator
     pub fn new(config: AdvancedConfig<T>) -> Result<Self> {
         let mut coordinator = Self {
             optimizer_ensemble: OptimizerEnsemble::new()?,
             nas_engine: if config.enable_nas {
-                Some(NeuralArchitectureSearch::new(NASConfig::default())?)
+                Some(NeuralArchitectureSearch::new(
+                    NASConfig::default(),
+                    ArchitectureSearchSpace::default(),
+                )?)
             } else {
                 None
             },
@@ -3000,8 +3014,6 @@ impl<T: Float + Send + Sync> MetaLearningOrchestrator<T> {
     }
 }
 
-
-
 impl<T: Float + Send + Sync> AdaptationController<T> {
     fn add_trigger(&mut self, trigger: Box<dyn AdaptationTrigger<T>>) -> Result<()> {
         self.triggers.push(trigger);
@@ -3255,7 +3267,6 @@ impl<T: Float + Send + Sync> OptimizationKnowledgeBase<T> {
     }
 }
 
-
 impl Default for ResourcePool {
     fn default() -> Self {
         Self {
@@ -3269,6 +3280,7 @@ impl Default for ResourcePool {
 }
 
 // Advanced LSTM wrapper to implement AdvancedOptimizer trait
+#[derive(Debug)]
 pub struct AdvancedLSTMWrapper<T: Float> {
     lstm_optimizer: LSTMOptimizer<T, ndarray::Ix1>,
     capabilities: OptimizerCapabilities,
@@ -3312,7 +3324,7 @@ impl<T: Float + Send + Sync> AdvancedLSTMWrapper<T> {
     }
 }
 
-impl<T: Float + Send + Sync> AdvancedOptimizer<T> for AdvancedLSTMWrapper<T> {
+impl<T: Float + Send + Sync + std::fmt::Debug> AdvancedOptimizer<T> for AdvancedLSTMWrapper<T> {
     fn optimize_step_with_context(
         &mut self,
         parameters: &Array1<T>,
@@ -3344,6 +3356,7 @@ impl<T: Float + Send + Sync> AdvancedOptimizer<T> for AdvancedLSTMWrapper<T> {
 }
 
 // More implementation stubs for strategy classes
+#[derive(Debug)]
 pub struct MAMLStrategy<T: Float> {
     name: String,
     performance: T,
@@ -3358,7 +3371,7 @@ impl<T: Float + Send + Sync> MAMLStrategy<T> {
     }
 }
 
-impl<T: Float + Send + Sync> MetaLearningStrategy<T> for MAMLStrategy<T> {
+impl<T: Float + Send + Sync + std::fmt::Debug> MetaLearningStrategy<T> for MAMLStrategy<T> {
     fn meta_step(
         &mut self,
         _meta_task: &MetaTask<T>,
@@ -3381,6 +3394,7 @@ impl<T: Float + Send + Sync> MetaLearningStrategy<T> for MAMLStrategy<T> {
     }
 }
 
+#[derive(Debug)]
 pub struct ReptileStrategy<T: Float> {
     name: String,
     performance: T,
@@ -3395,7 +3409,7 @@ impl<T: Float + Send + Sync> ReptileStrategy<T> {
     }
 }
 
-impl<T: Float + Send + Sync> MetaLearningStrategy<T> for ReptileStrategy<T> {
+impl<T: Float + Send + Sync + std::fmt::Debug> MetaLearningStrategy<T> for ReptileStrategy<T> {
     fn meta_step(
         &mut self,
         _meta_task: &MetaTask<T>,
@@ -3419,6 +3433,7 @@ impl<T: Float + Send + Sync> MetaLearningStrategy<T> for ReptileStrategy<T> {
 }
 
 // Trigger implementations
+#[derive(Debug)]
 pub struct PerformanceDegradationTrigger<T: Float> {
     threshold: T,
 }
@@ -3449,6 +3464,7 @@ impl<T: Float + Send + Sync> AdaptationTrigger<T> for PerformanceDegradationTrig
     }
 }
 
+#[derive(Debug)]
 pub struct ResourceConstraintTrigger<T: Float> {
     _phantom: std::marker::PhantomData<T>,
 }
@@ -3883,7 +3899,7 @@ pub struct MetaLearningPerformance<T: Float> {
 
 // Additional supporting structures and traits
 
-pub trait LearningAlgorithm<T: Float>: Send + Sync {
+pub trait LearningAlgorithm<T: Float>: Send + Sync + std::fmt::Debug {
     fn learn(&mut self, data: &Array2<T>) -> Result<()>;
     fn predict(&self, input: &Array1<T>) -> Result<Array1<T>>;
     fn get_confidence(&self, input: &Array1<T>) -> Result<T>;
@@ -4062,7 +4078,6 @@ pub struct AdaptationResult<T: Float> {
 }
 
 // Stub implementations for missing constructors
-
 
 impl<T: Float + Send + Sync> PerformancePredictor<T> {
     fn new() -> Result<Self> {

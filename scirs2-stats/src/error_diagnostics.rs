@@ -248,7 +248,7 @@ impl ErrorMonitor {
 
         // Find most frequent errors
         let mut frequent_errors: Vec<_> = error_distribution.clone().into_iter().collect();
-        frequent_errors.sort_by(|a, b| b.1.cmp(a.1));
+        frequent_errors.sort_by(|a, b| b.1.cmp(&a.1));
         let top_errors: Vec<_> = frequent_errors.into_iter().take(5).collect();
 
         // Calculate recent error rate (last hour)

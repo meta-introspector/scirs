@@ -726,10 +726,7 @@ mod tests {
 
         // Test normal cost function
         let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::Normal).unwrap();
-        assert!(
-            cost.is_finite(),
-            "Normal cost should be finite, got {cost}"
-        );
+        assert!(cost.is_finite(), "Normal cost should be finite, got {cost}");
 
         // Test Poisson cost function
         let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::Poisson).unwrap();

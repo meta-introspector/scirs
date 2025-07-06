@@ -12,7 +12,7 @@ use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 
 #[cfg(feature = "crypto")]
-use rsa::{PaddingScheme, PublicKey, RsaPublicKey};
+use rsa::{traits::PaddingScheme, RsaPublicKey};
 #[cfg(feature = "crypto")]
 use sha2::{Digest, Sha256};
 #[cfg(feature = "crypto")]

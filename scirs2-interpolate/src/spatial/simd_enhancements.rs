@@ -3,11 +3,8 @@
 //! This module provides enhanced SIMD operations that complement the existing
 //! optimized_search.rs functionality with more specialized optimizations.
 
-use crate::error::InterpolateResult;
-use std::fmt::Debug;
-
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, FromPrimitive, Zero};
+use num_traits::{Float, Zero};
 
 #[cfg(feature = "simd")]
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -61,6 +58,41 @@ impl AdvancedSimdOps {
                         .fold(F::zero(), |acc, x| acc + x);
                     distance_matrix[[q_idx, p_idx]] = distance;
                 }
+            }
+        }
+
+        distance_matrix
+    }
+
+    /// Non-SIMD fallback for vectorized distance computation
+    #[cfg(not(feature = "simd"))]
+    pub fn vectorized_distance_matrix<F>(
+        queries: &ArrayView2<F>,
+        points: &ArrayView2<F>,
+    ) -> Array2<F>
+    where
+        F: Float + Zero + Send + Sync + std::fmt::Debug,
+    {
+        let n_queries = queries.nrows();
+        let n_points = points.nrows();
+        let dim = queries.ncols();
+
+        assert_eq!(points.ncols(), dim, "Query and point dimensions must match");
+
+        let mut distance_matrix = Array2::zeros((n_queries, n_points));
+
+        // Scalar fallback for all dimensions
+        for (q_idx, query) in queries.axis_iter(Axis(0)).enumerate() {
+            for (p_idx, point) in points.axis_iter(Axis(0)).enumerate() {
+                let distance = query
+                    .iter()
+                    .zip(point.iter())
+                    .map(|(&q, &p)| {
+                        let diff = q - p;
+                        diff * diff
+                    })
+                    .fold(F::zero(), |acc, x| acc + x);
+                distance_matrix[[q_idx, p_idx]] = distance;
             }
         }
 

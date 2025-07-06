@@ -617,10 +617,11 @@ where
         let mut max_discrepancy = 0.0;
         let num_test_points = 50.min(n);
 
+        let mut rng = rng();
         for _ in 0..num_test_points {
             let mut test_point = Array1::zeros(d);
             for j in 0..d {
-                test_point[j] = F::from(rand::random::<f64>()).unwrap();
+                test_point[j] = F::from(rng.random::<f64>()).unwrap();
             }
 
             let mut count = 0;

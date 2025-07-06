@@ -5,7 +5,7 @@
 
 use ndarray::{array, Array1, ArrayView1};
 use scirs2_integrate::{
-    advanced_mode_coordinator::{AdvancedModeConfig, AdvancedModeCoordinator},
+    mode_coordinator::{AdvancedModeConfig, AdvancedModeCoordinator},
     IntegrateResult,
 };
 

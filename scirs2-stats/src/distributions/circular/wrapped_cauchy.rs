@@ -7,7 +7,7 @@ use crate::error::{StatsError, StatsResult};
 use crate::traits::{CircularDistribution, Distribution};
 use ndarray::Array1;
 use num_traits::Float;
-use rand::rng;
+use rand::{rng, Rng};
 use rand_distr::uniform::SampleUniform;
 use std::f64::consts::PI;
 use std::fmt::Debug;

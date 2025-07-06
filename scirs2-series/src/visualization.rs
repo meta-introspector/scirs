@@ -728,7 +728,10 @@ impl SpecializedPlots {
         plot.add_series("Trend", time, trend, trend_style)?;
 
         // Seasonal component
-        let seasonal_style = PlotStyle { color: "#2ca02c".to_string(), ..Default::default() };
+        let seasonal_style = PlotStyle {
+            color: "#2ca02c".to_string(),
+            ..Default::default()
+        };
         plot.add_series("Seasonal", time, seasonal, seasonal_style)?;
 
         // Residual component

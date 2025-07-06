@@ -714,7 +714,10 @@ pub struct PassManager<T: Float> {
 impl<T: Float> std::fmt::Debug for PassManager<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PassManager")
-            .field("registered_passes", &format!("[{} passes]", self.registered_passes.len()))
+            .field(
+                "registered_passes",
+                &format!("[{} passes]", self.registered_passes.len()),
+            )
             .field("execution_order", &self.execution_order)
             .field("scheduling_strategy", &self.scheduling_strategy)
             .field("max_iterations", &self.max_iterations)
@@ -748,7 +751,10 @@ impl<T: Float> std::fmt::Debug for AnalysisManager<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("AnalysisManager")
             .field("analyses", &format!("[{} analyses]", self.analyses.len()))
-            .field("analysis_cache", &format!("[{} cached results]", self.analysis_cache.len()))
+            .field(
+                "analysis_cache",
+                &format!("[{} cached results]", self.analysis_cache.len()),
+            )
             .field("dependencies", &self.dependencies)
             .finish()
     }
@@ -1178,7 +1184,7 @@ pub struct InstructionScheduler<T: Float> {
 
     /// Scheduling constraints
     constraints: Vec<SchedulingConstraint>,
-    
+
     /// Phantom data for type parameter
     _phantom: PhantomData<T>,
 }
@@ -1337,7 +1343,7 @@ pub struct SpillHandler<T: Float> {
 
     /// Spill cost model
     cost_model: SpillCostModel,
-    
+
     /// Phantom data for type parameter
     _phantom: PhantomData<T>,
 }
@@ -1393,7 +1399,7 @@ pub struct MemoryLayoutOptimizer<T: Float> {
 
     /// Alignment constraints
     alignment_constraints: Vec<AlignmentConstraint>,
-    
+
     /// Phantom data for type parameter
     _phantom: PhantomData<T>,
 }
@@ -1492,7 +1498,7 @@ pub struct PrefetchBenefitAnalyzer<T: Float> {
 
     /// Cost models
     cost_models: Vec<CostModel>,
-    
+
     /// Phantom data for type parameter
     _phantom: PhantomData<T>,
 }
@@ -1632,7 +1638,7 @@ pub struct PerformanceModel<T: Float> {
 
     /// Accuracy metrics
     pub accuracy: ModelAccuracy,
-    
+
     /// Phantom data for type parameter
     _phantom: PhantomData<T>,
 }

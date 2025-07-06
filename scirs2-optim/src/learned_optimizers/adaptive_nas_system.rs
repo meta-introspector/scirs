@@ -2162,7 +2162,18 @@ impl<T: Float> Default for AdaptiveNASConfig<T> {
     }
 }
 
-impl<T: Float + Send + Sync + std::ops::MulAssign + std::fmt::Debug + 'static + std::iter::Sum + std::cmp::Eq + std::hash::Hash> AdaptiveNASSystem<T> {
+impl<
+        T: Float
+            + Send
+            + Sync
+            + std::ops::MulAssign
+            + std::fmt::Debug
+            + 'static
+            + std::iter::Sum
+            + std::cmp::Eq
+            + std::hash::Hash,
+    > AdaptiveNASSystem<T>
+{
     /// Create new adaptive NAS system
     pub fn new(config: AdaptiveNASConfig<T>) -> Result<Self> {
         Ok(Self {
@@ -2247,9 +2258,15 @@ impl<T: Float + Send + Sync + std::ops::MulAssign + std::fmt::Debug + 'static + 
     /// Get system performance metrics
     pub fn get_system_metrics(&self) -> SystemPerformanceMetrics<T> {
         SystemPerformanceMetrics {
-            search_efficiency: self.performance_searcher.get_efficiency_metrics().success_rate,
+            search_efficiency: self
+                .performance_searcher
+                .get_efficiency_metrics()
+                .success_rate,
             prediction_accuracy: self.predictor_ensemble.get_accuracy_metrics().correlation,
-            adaptation_performance: self.adaptation_engine.get_performance_metrics().improvement_from_adaptation,
+            adaptation_performance: self
+                .adaptation_engine
+                .get_performance_metrics()
+                .improvement_from_adaptation,
             throughput: T::from(0.0).unwrap(),
             latency: Duration::from_secs(0),
             success_rate: T::from(1.0).unwrap(),
@@ -2679,13 +2696,16 @@ impl<T: Float + Send + Sync> SearchStrategySelector<T> {
         }
     }
 
-    fn select_strategy(&self, _search_history: &SearchHistory<T>) -> Result<&dyn SearchStrategy<T>> {
+    fn select_strategy(
+        &self,
+        _search_history: &SearchHistory<T>,
+    ) -> Result<&dyn SearchStrategy<T>> {
         // Return the first strategy if available, otherwise error
         if let Some(strategy) = self.strategies.first() {
             Ok(strategy.as_ref())
         } else {
             Err(crate::error::OptimError::InvalidState(
-                "No search strategies available".to_string()
+                "No search strategies available".to_string(),
             ))
         }
     }
@@ -3698,14 +3718,16 @@ impl<T: Float + Send + Sync + std::fmt::Debug> PerformanceFeedbackProcessor<T> {
         }
 
         // Simplify aggregation - just take the first feedback or create default
-        let _aggregated_feedback = batch_feedback.into_iter().next().unwrap_or_else(|| {
-            ArchitectureFeedback {
-                score: T::from(0.0).unwrap(),
-                confidence: T::from(1.0).unwrap(),
-                metadata: HashMap::new(),
-                timestamp: std::time::Instant::now(),
-            }
-        });
+        let _aggregated_feedback =
+            batch_feedback
+                .into_iter()
+                .next()
+                .unwrap_or_else(|| ArchitectureFeedback {
+                    score: T::from(0.0).unwrap(),
+                    confidence: T::from(1.0).unwrap(),
+                    metadata: HashMap::new(),
+                    timestamp: std::time::Instant::now(),
+                });
 
         // Simplified pattern extraction - return empty patterns
         let _patterns: Vec<ArchitecturePattern> = Vec::new();
@@ -3760,8 +3782,14 @@ impl<T: Float + Send + Sync + std::fmt::Debug> PerformanceFeedbackProcessor<T> {
             metadata: {
                 let mut meta = HashMap::new();
                 meta.insert("candidate_id".to_string(), candidate.id.clone());
-                meta.insert("complexity_score".to_string(), format!("{:?}", complexity_score));
-                meta.insert("efficiency_score".to_string(), format!("{:?}", efficiency_score));
+                meta.insert(
+                    "complexity_score".to_string(),
+                    format!("{:?}", complexity_score),
+                );
+                meta.insert(
+                    "efficiency_score".to_string(),
+                    format!("{:?}", efficiency_score),
+                );
                 meta.insert("novelty_score".to_string(), format!("{:?}", novelty_score));
                 meta
             },
@@ -3811,8 +3839,11 @@ impl<T: Float + Send + Sync + std::fmt::Debug> PerformanceFeedbackProcessor<T> {
 
         for historical_feedback in &self.feedback_history {
             // Generate candidate ID from timestamp for historical feedback
-            let historical_id = format!("perf_feedback_{}", historical_feedback.timestamp.elapsed().as_millis());
-            
+            let historical_id = format!(
+                "perf_feedback_{}",
+                historical_feedback.timestamp.elapsed().as_millis()
+            );
+
             // Find historical candidate with matching ID pattern
             if let Some(distance) =
                 self.calculate_architectural_distance(candidate, &historical_id)?
@@ -3876,11 +3907,14 @@ impl<T: Float + Send + Sync + std::fmt::Debug> PerformanceFeedbackProcessor<T> {
         feedback: &PerformanceFeedback<T>,
     ) -> Result<ArchitectureFeedback<T>> {
         let mut metadata = HashMap::new();
-        metadata.insert("candidate_id".to_string(), format!("perf_feedback_{}", feedback.timestamp.elapsed().as_millis()));
+        metadata.insert(
+            "candidate_id".to_string(),
+            format!("perf_feedback_{}", feedback.timestamp.elapsed().as_millis()),
+        );
         metadata.insert("complexity_score".to_string(), "0.5".to_string());
         metadata.insert("efficiency_score".to_string(), "0.7".to_string());
         metadata.insert("novelty_score".to_string(), "0.3".to_string());
-        
+
         Ok(ArchitectureFeedback {
             score: feedback.actual_performance,
             confidence: T::from(0.9).unwrap(),
@@ -3962,7 +3996,9 @@ impl<T: Float + Send + Sync> DynamicSearchSpaceManager<T> {
     }
 }
 
-impl<T: Float + 'static + Send + Sync + std::iter::Sum + std::cmp::Eq + std::hash::Hash> PerformancePredictorEnsemble<T> {
+impl<T: Float + 'static + Send + Sync + std::iter::Sum + std::cmp::Eq + std::hash::Hash>
+    PerformancePredictorEnsemble<T>
+{
     fn new(config: &AdaptiveNASConfig<T>) -> Result<Self> {
         let mut predictors: Vec<Box<dyn ArchitecturePerformancePredictor<T>>> = Vec::new();
 
@@ -4136,7 +4172,9 @@ impl<T: Float + Send + Sync> ContinuousAdaptationEngine<T> {
     }
 }
 
-impl<T: Float + Send + Sync + std::cmp::Eq + std::hash::Hash + std::iter::Sum> ArchitectureQualityAssessor<T> {
+impl<T: Float + Send + Sync + std::cmp::Eq + std::hash::Hash + std::iter::Sum>
+    ArchitectureQualityAssessor<T>
+{
     fn new(config: &AdaptiveNASConfig<T>) -> Result<Self> {
         let mut quality_metrics = Vec::new();
         quality_metrics.push(QualityMetric::Performance);
@@ -4370,7 +4408,6 @@ impl<T: Float + Send + Sync> GeneratedArchitectureFilter<T> {
     }
 }
 
-
 impl<T: Float + Send + Sync> ParetoFrontManager<T> {
     fn new() -> Self {
         Self {
@@ -4555,8 +4592,11 @@ pub struct ComplexityLimits {
 
 impl Default for ArchitectureSearchSpace {
     fn default() -> Self {
-        use crate::learned_optimizers::neural_architecture_search::{LayerType, ActivationType, ConnectionPattern, AttentionType, NormalizationType, OptimizerComponent, MemoryType, SkipConnectionType};
-        
+        use crate::learned_optimizers::neural_architecture_search::{
+            ActivationType, AttentionType, ConnectionPattern, LayerType, MemoryType,
+            NormalizationType, OptimizerComponent, SkipConnectionType,
+        };
+
         Self {
             layer_types: vec![LayerType::Linear, LayerType::LSTM, LayerType::GRU],
             hidden_sizes: vec![128, 256, 512],
@@ -4565,7 +4605,10 @@ impl Default for ArchitectureSearchSpace {
             connection_patterns: vec![ConnectionPattern::Sequential, ConnectionPattern::Residual],
             attention_mechanisms: vec![AttentionType::SelfAttention],
             normalization_options: vec![NormalizationType::LayerNorm],
-            optimizer_components: vec![OptimizerComponent::MomentumTracker, OptimizerComponent::AdaptiveLearningRate],
+            optimizer_components: vec![
+                OptimizerComponent::MomentumTracker,
+                OptimizerComponent::AdaptiveLearningRate,
+            ],
             memory_mechanisms: vec![MemoryType::None],
             skip_connections: vec![SkipConnectionType::Residual],
         }
@@ -4635,7 +4678,7 @@ impl<T: Float + Send + Sync> SearchSpaceOptimizer<T> {
             // if space.layer_constraints.max_layers < 15 {
             //     space.layer_constraints.max_layers += 1;
             // }
-            
+
             // For now, expand the search space by adding more layer options
             // TODO: Fix LayerType import conflict
             // if !space.layer_types.contains(&LayerType::Transformer) {
@@ -4652,7 +4695,7 @@ impl<T: Float + Send + Sync> SearchSpaceOptimizer<T> {
                 // TODO: Fix field access - space.complexity_limits doesn't exist
                 // space.complexity_limits.max_depth =
                 //     (space.complexity_limits.max_depth as f64 * 1.05) as usize;
-                
+
                 // For now, expand the num_layers range
                 let (min, max) = space.num_layers_range;
                 space.num_layers_range = (min, (max as f64 * 1.05) as usize);
@@ -4660,7 +4703,7 @@ impl<T: Float + Send + Sync> SearchSpaceOptimizer<T> {
             SpaceOptimizationMethod::RegionRefinement => {
                 // TODO: Fix field access - space.connection_constraints doesn't exist
                 // space.connection_constraints.density_limits.1 *= 0.95;
-                
+
                 // For now, just add more hidden sizes
                 if !space.hidden_sizes.contains(&1024) {
                     space.hidden_sizes.push(1024);
@@ -4702,7 +4745,9 @@ impl<T: Float + Send + Sync> SimpleLinearPredictor<T> {
     }
 }
 
-impl<T: Float + Send + Sync + std::iter::Sum> ArchitecturePerformancePredictor<T> for SimpleLinearPredictor<T> {
+impl<T: Float + Send + Sync + std::iter::Sum> ArchitecturePerformancePredictor<T>
+    for SimpleLinearPredictor<T>
+{
     fn predict(&self, architecture: &ArchitectureSpecification) -> Result<T> {
         // Simple linear prediction based on architecture features
         let features = self.extract_features(architecture);

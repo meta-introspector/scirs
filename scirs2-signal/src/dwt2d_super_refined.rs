@@ -252,7 +252,7 @@ impl Default for AdvancedRefinedConfig {
 /// });
 ///
 /// let config = AdvancedRefinedConfig::default();
-/// let result = advanced_refined_wavelet_packet_2d(&image, &Wavelet::Daubechies4, &config).unwrap();
+/// let result = advanced_refined_wavelet_packet_2d(&image, &Wavelet::DB(4), &config).unwrap();
 ///
 /// assert!(result.quality_metrics.perceptual_quality > 0.0);
 /// assert!(result.memory_stats.memory_efficiency > 0.5);
@@ -2116,7 +2116,7 @@ mod tests {
         });
 
         let config = AdvancedRefinedConfig::default();
-        let result = advanced_refined_wavelet_packet_2d(&image, &Wavelet::Daubechies4, &config);
+        let result = advanced_refined_wavelet_packet_2d(&image, &Wavelet::DB(4), &config);
 
         assert!(result.is_ok());
         let packet_result = result.unwrap();

@@ -5,7 +5,7 @@
 
 use ndarray::{s, Array1, Array2, Array3};
 use num_traits::Float;
-use rand::Rng;
+use rand::{rng, Rng};
 use std::collections::{HashMap, VecDeque};
 
 use super::{
@@ -460,8 +460,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
         let mut best_idx = 0;
         let mut best_fitness = T::neg_infinity();
 
+        let mut rng = rng();
         for _ in 0..self.tournament_size {
-            let idx = rand::random::<usize>() % self.population.len();
+            let idx = rng.random::<usize>() % self.population.len();
             if fitness_scores[idx] > best_fitness {
                 best_fitness = fitness_scores[idx];
                 best_idx = idx;

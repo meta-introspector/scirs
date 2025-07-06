@@ -9,7 +9,6 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::Rng;
 use scirs2_core::{
-    parallel_ops::*,
     simd_ops::{PlatformCapabilities, SimdUnifiedOps},
     validation::*,
 };

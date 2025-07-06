@@ -2320,7 +2320,6 @@ impl<A: Float + Default + Clone> AdaptiveBuffer<A> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -78,7 +78,7 @@ pub fn ica(
     ) {
         Ok(inv) => inv,
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to compute ICA mixing matrix".to_string(),
             ));
         }
@@ -91,7 +91,7 @@ pub fn ica(
     ) {
         Ok(inv) => inv,
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to invert whitening matrix".to_string(),
             ));
         }

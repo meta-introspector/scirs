@@ -3,12 +3,12 @@
 //! This module demonstrates how to use the multi-GPU synchronization primitives
 //! with existing optimizers for distributed training scenarios.
 
-use crate::adam::Adam;
 #[allow(unused_imports)]
 use crate::error::Result;
 use crate::gpu::multi_gpu_sync::{
     create_multi_gpu_communicator, MultiGpuCommunicator, SyncFrequency,
 };
+use crate::optimizers::adam::Adam;
 
 use ndarray::{Array1, Array2};
 use num_traits::Float;
@@ -63,7 +63,7 @@ pub struct ParameterInfo {
 
 /// Configuration for distributed optimization
 #[derive(Debug, Clone)]
-pub struct DistributedConfig {
+pub struct DistributedConfig<T: Float> {
     /// Synchronization frequency
     pub sync_frequency: SyncFrequency,
 
@@ -394,15 +394,14 @@ pub fn distributed_training_example() -> Result<()> {
     let param_size = 1000;
 
     // Create local Adam optimizer
-    let adam_config = crate::adam::AdamConfig {
-        learning_rate: 0.001,
-        beta1: 0.9,
-        beta2: 0.999,
-        eps: 1e-8,
-        weight_decay: 0.0,
-        amsgrad: false,
-    };
-    let local_optimizer = Adam::new(adam_config);
+    let adam_optimizer = Adam::new_with_config(
+        0.001f32, // learning_rate
+        0.9f32,   // beta1
+        0.999f32, // beta2
+        1e-8f32,  // epsilon
+        0.0f32,   // weight_decay
+    );
+    let local_optimizer = adam_optimizer;
 
     // Create distributed optimizer
     let dist_config = DistributedConfig {
@@ -527,8 +526,7 @@ mod tests {
 
     #[test]
     fn test_distributed_optimizer_creation() {
-        let adam_config = crate::adam::AdamConfig::default();
-        let local_optimizer = Adam::new(adam_config);
+        let local_optimizer = Adam::new(0.001f32);
         let dist_config = DistributedConfig::default();
 
         let distributed_optimizer = DistributedOptimizer::new(
@@ -543,8 +541,7 @@ mod tests {
 
     #[test]
     fn test_parameter_registration() {
-        let adam_config = crate::adam::AdamConfig::default();
-        let local_optimizer = Adam::new(adam_config);
+        let local_optimizer = Adam::new(0.001f32);
         let dist_config = DistributedConfig::default();
 
         let mut distributed_optimizer = DistributedOptimizer::new(
@@ -572,8 +569,7 @@ mod tests {
 
     #[test]
     fn test_sync_frequency_logic() {
-        let adam_config = crate::adam::AdamConfig::default();
-        let local_optimizer = Adam::new(adam_config);
+        let local_optimizer = Adam::new(0.001f32);
 
         // Test EveryStep
         let dist_config = DistributedConfig {

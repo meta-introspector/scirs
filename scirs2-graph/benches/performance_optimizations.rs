@@ -8,6 +8,8 @@ use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criteri
 use rand::prelude::*;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
+use scirs2_core::simd_ops::PlatformCapabilities;
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_graph::{
     generators,
     memory::{BitPackedGraph, CSRGraph, CompressedAdjacencyList, HybridGraph, MemmapGraph},
@@ -36,7 +38,7 @@ fn bench_simd_operations(c: &mut Criterion) {
             &(a.clone(), b.clone()),
             |bench, (x, y)| {
                 bench.iter(|| {
-                    let result = simd_vector_add_f32(x, y);
+                    let result = f32::simd_add(x, y);
                     black_box(result)
                 });
             },
@@ -60,7 +62,7 @@ fn bench_simd_operations(c: &mut Criterion) {
             &(a.clone(), b.clone()),
             |bench, (x, y)| {
                 bench.iter(|| {
-                    let result = simd_dot_product_f32(x, y);
+                    let result = f32::simd_dot(x, y);
                     black_box(result)
                 });
             },
@@ -84,7 +86,7 @@ fn bench_simd_operations(c: &mut Criterion) {
             &a,
             |bench, x| {
                 bench.iter(|| {
-                    let result = simd_normalize_f32(x);
+                    let result = f32::simd_normalize(x);
                     black_box(result)
                 });
             },
@@ -96,7 +98,7 @@ fn bench_simd_operations(c: &mut Criterion) {
             &(a.clone(), b.clone()),
             |bench, (x, y)| {
                 bench.iter(|| {
-                    let result = simd_cosine_similarity_f32(x, y);
+                    let result = f32::simd_cosine_similarity(x, y);
                     black_box(result)
                 });
             },
@@ -108,7 +110,7 @@ fn bench_simd_operations(c: &mut Criterion) {
             &(a.clone(), b.clone()),
             |bench, (x, y)| {
                 bench.iter(|| {
-                    let result = simd_euclidean_distance_f32(x, y);
+                    let result = f32::simd_euclidean_distance(x, y);
                     black_box(result)
                 });
             },
@@ -418,7 +420,7 @@ fn bench_large_graph_iterators(c: &mut Criterion) {
                 b.iter(|| {
                     let mut count = 0;
                     for node in 0..g.node_count() {
-                        for neighbor in g.neighbors(node) {
+                        for neighbor in g.neighbors(&node).unwrap_or_default() {
                             count += 1;
                             if count >= 100_000 {
                                 break;
@@ -472,7 +474,7 @@ fn bench_large_graph_iterators(c: &mut Criterion) {
                         let chunk_end = (chunk_start + chunk_size).min(g.node_count());
 
                         for node in chunk_start..chunk_end {
-                            let degree = g.degree(node);
+                            let degree = g.degree(&node);
                             sum += degree as u64;
                             max_degree = max_degree.max(degree);
                         }
@@ -506,11 +508,10 @@ fn bench_platform_optimizations(c: &mut Criterion) {
     // Benchmark with platform-specific optimizations
     group.bench_function("optimized_for_platform", |bench| {
         bench.iter(|| {
-            let result = if capabilities.has_avx2 {
-                simd_vector_add_f32(&a, &b)
-            } else if capabilities.has_sse2 {
-                simd_vector_add_f32(&a, &b) // Would use SSE2 fallback
+            let result = if capabilities.simd_available {
+                f32::simd_add(&a, &b)
             } else {
+                // Scalar fallback
                 a.iter().zip(b.iter()).map(|(x, y)| x + y).collect()
             };
             black_box(result)

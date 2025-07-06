@@ -524,7 +524,6 @@ pub use tuning::{
     AutoTuner,
     BayesianState,
     CVStrategy,
-    ClusteringAlgorithm,
     ConvergenceInfo,
     CrossValidationConfig,
     EarlyStoppingConfig,
@@ -555,8 +554,7 @@ pub use visualization::{
 
 // Re-export animation features
 pub use visualization::animation::{
-    AnimationFrame, ConvergenceInfo, IterativeAnimationConfig, IterativeAnimationRecorder,
-    StreamingConfig, StreamingVisualizer,
+    AnimationFrame, IterativeAnimationConfig, IterativeAnimationRecorder, StreamingVisualizer,
 };
 
 // Re-export interactive visualization features
@@ -567,7 +565,7 @@ pub use visualization::interactive::{
 // Re-export export capabilities
 pub use visualization::export::{
     export_scatter_2d_to_html, export_scatter_2d_to_json, export_scatter_3d_to_html,
-    export_scatter_3d_to_json, save_visualization_to_file, ExportFormat,
+    export_scatter_3d_to_json, save_visualization_to_file,
 };
 
 // Re-export native plotting capabilities (when plotting features are enabled)

@@ -507,9 +507,7 @@ where
             let times_2d =
                 Array2::from_shape_vec((self.train_times.len(), 1), self.train_times.to_vec())
                     .map_err(|e| {
-                        InterpolateError::ComputationError(format!(
-                            "Failed to reshape times: {e}"
-                        ))
+                        InterpolateError::ComputationError(format!("Failed to reshape times: {e}"))
                     })?;
 
             let seasonal_rbf = RBFInterpolator::new(
@@ -532,9 +530,7 @@ where
             let times_2d =
                 Array2::from_shape_vec((self.train_times.len(), 1), self.train_times.to_vec())
                     .map_err(|e| {
-                        InterpolateError::ComputationError(format!(
-                            "Failed to reshape times: {e}"
-                        ))
+                        InterpolateError::ComputationError(format!("Failed to reshape times: {e}"))
                     })?;
 
             let seasonal_rbf = RBFInterpolator::new(

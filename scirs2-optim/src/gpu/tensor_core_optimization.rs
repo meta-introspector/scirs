@@ -15,8 +15,9 @@ use ndarray::{Array, Array2, Dimension};
 use num_traits::Float;
 use std::sync::Arc;
 
-#[cfg(feature = "gpu")]
-use scirs2_core::gpu::{CudaStream, GpuContext, GpuKernel};
+#[cfg(all(feature = "gpu", feature = "cuda"))]
+use scirs2_core::gpu::backends::CudaStream;
+use scirs2_core::gpu::{GpuContext, GpuKernel};
 
 use crate::gpu::{GpuOptimError, GpuOptimizerConfig};
 
@@ -1258,14 +1259,14 @@ impl MixedPrecisionTrainer {
     /// Select optimal precision for current operation
     pub fn select_optimal_precision(
         &self,
-        operation_type: TensorCoreOperation,
+        operation_type: TensorCoreOperationType,
     ) -> TensorCorePrecision {
         if !self.auto_precision {
             return TensorCorePrecision::FP16; // Default fallback
         }
 
         match operation_type {
-            TensorCoreOperation::GEMM => {
+            TensorCoreOperationType::GEMM => {
                 if self.tensor_core_info.supports_bf16 {
                     TensorCorePrecision::BF16 // Better numerical stability
                 } else if self.tensor_core_info.supports_fp16 {
@@ -1274,14 +1275,14 @@ impl MixedPrecisionTrainer {
                     TensorCorePrecision::TF32
                 }
             }
-            TensorCoreOperation::Convolution => {
+            TensorCoreOperationType::Convolution => {
                 if self.tensor_core_info.supports_tf32 {
                     TensorCorePrecision::TF32 // Better for conv operations
                 } else {
                     TensorCorePrecision::FP16
                 }
             }
-            TensorCoreOperation::Attention => {
+            TensorCoreOperationType::Attention => {
                 if self.tensor_core_info.supports_fp8 {
                     TensorCorePrecision::FP8 // Advanced-high throughput for attention
                 } else if self.tensor_core_info.supports_bf16 {
@@ -1502,7 +1503,7 @@ pub struct MixedPrecisionStats {
 
 /// Types of tensor core operations for precision selection
 #[derive(Debug, Clone, Copy)]
-pub enum TensorCoreOperation {
+pub enum TensorCoreOperationType {
     GEMM,
     Convolution,
     Attention,
@@ -2106,9 +2107,9 @@ mod tests {
         let optimizer = TensorCoreOptimizer::new(config).unwrap();
         let trainer = optimizer.create_mixed_precision_trainer().unwrap();
 
-        let gemm_precision = trainer.select_optimal_precision(TensorCoreOperation::GEMM);
-        let conv_precision = trainer.select_optimal_precision(TensorCoreOperation::Convolution);
-        let attn_precision = trainer.select_optimal_precision(TensorCoreOperation::Attention);
+        let gemm_precision = trainer.select_optimal_precision(TensorCoreOperationType::GEMM);
+        let conv_precision = trainer.select_optimal_precision(TensorCoreOperationType::Convolution);
+        let attn_precision = trainer.select_optimal_precision(TensorCoreOperationType::Attention);
 
         // All should return valid precisions
         assert!(matches!(

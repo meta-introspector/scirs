@@ -405,7 +405,9 @@ pub enum CheckpointPolicy {
     None,
 }
 
-impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOperand> MetaGradientEngine<T> {
+impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOperand>
+    MetaGradientEngine<T>
+{
     /// Create a new meta-gradient engine
     pub fn new(
         algorithm: MetaLearningAlgorithm,
@@ -854,7 +856,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         let composite_fn = move |theta: &Array1<T>| -> T {
             // Simplified inner loop adaptation without capturing self
             let mut adapted_params = theta.clone();
-            
+
             for _ in 0..inner_steps {
                 // Simplified gradient computation (this is a placeholder)
                 // In a real implementation, you'd need to compute gradients properly
@@ -862,7 +864,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
                 if grad_norm < T::from(1e-6).unwrap() {
                     break;
                 }
-                
+
                 // Simple gradient descent step (simplified)
                 for param in adapted_params.iter_mut() {
                     *param = *param - inner_lr * (*param) * T::from(0.01).unwrap();
@@ -897,18 +899,18 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
             &|theta: &Array1<T>| -> T {
                 // Simplified inner adaptation without capturing self
                 let mut adapted_params = theta.clone();
-                
+
                 for _ in 0..inner_steps {
                     let grad_norm = adapted_params.iter().map(|&x| x * x).sum::<T>().sqrt();
                     if grad_norm < T::from(1e-6).unwrap() {
                         break;
                     }
-                    
+
                     for param in adapted_params.iter_mut() {
                         *param = *param - inner_lr * (*param) * T::from(0.01).unwrap();
                     }
                 }
-                
+
                 objective_fn(&adapted_params, theta, &task_query_set_2)
             },
             meta_params,
@@ -929,24 +931,24 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
         let inner_lr = T::from(self.inner_loop_config.learning_rate).unwrap();
         let inner_steps = self.inner_loop_config.num_steps;
         let task_query_set = task.query_set.clone();
-        
+
         // Compute gradient direction
         let gradient_direction = self.gradient_at_point(
             &|theta: &Array1<T>| -> T {
                 // Simplified inner adaptation without capturing self
                 let mut adapted_params = theta.clone();
-                
+
                 for _ in 0..inner_steps {
                     let grad_norm = adapted_params.iter().map(|&x| x * x).sum::<T>().sqrt();
                     if grad_norm < T::from(1e-6).unwrap() {
                         break;
                     }
-                    
+
                     for param in adapted_params.iter_mut() {
                         *param = *param - inner_lr * (*param) * T::from(0.01).unwrap();
                     }
                 }
-                
+
                 objective_fn(&adapted_params, theta, &task_query_set)
             },
             meta_params,
@@ -1321,7 +1323,8 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
             similarities.push(similarity);
         }
 
-        let avg_similarity = similarities.iter().copied().sum::<T>() / T::from(similarities.len()).unwrap();
+        let avg_similarity =
+            similarities.iter().copied().sum::<T>() / T::from(similarities.len()).unwrap();
         Ok(avg_similarity)
     }
 

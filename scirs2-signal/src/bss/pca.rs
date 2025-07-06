@@ -40,7 +40,7 @@ pub fn pca(signals: &Array2<f64>, config: &BssConfig) -> SignalResult<(Array2<f6
     let (eigvals, eigvecs) = match eigh(&cov.view(), None) {
         Ok((vals, vecs)) => (vals, vecs),
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to compute eigendecomposition".to_string(),
             ));
         }

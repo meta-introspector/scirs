@@ -4,7 +4,7 @@
 //! multiple reference implementations like SciPy, GSL, and MPFR.
 
 use scirs2_special::{
-    bessel::{j0, j1, y0},
+    bessel::{j0, y0},
     beta,
     cross_validation::{CrossValidator, PythonValidator},
     digamma, erf, erfc, gamma,

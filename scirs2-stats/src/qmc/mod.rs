@@ -6,7 +6,7 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{rng, rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::validation::*;
 
 /// Generate Sobol sequence
@@ -487,10 +487,11 @@ pub fn star_discrepancy(samples: &ArrayView1<Array1<f64>>) -> StatsResult<f64> {
     let mut max_discrepancy: f64 = 0.0;
     let num_test_points = 100; // Reduced for efficiency
 
+    let mut rng = rng();
     for _ in 0..num_test_points {
         let mut test_point = Array1::zeros(d);
         for j in 0..d {
-            test_point[j] = (rand::random::<f64>() * 0.9) + 0.05; // Avoid exact boundaries
+            test_point[j] = (rng.random::<f64>() * 0.9) + 0.05; // Avoid exact boundaries
         }
 
         // Count points in box [0, test_point]

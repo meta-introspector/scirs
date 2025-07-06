@@ -17,7 +17,8 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2};
 use num_traits::{Float, FromPrimitive, One, Zero};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use rand::{rng, Rng};
+use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
 
 /// Gaussian Mixture Model with EM algorithm
@@ -271,7 +272,7 @@ where
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&GMMParameters<F>> {
         check_array_finite(data, "data")?;
 
-        let (n_samples, _n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
         if n_samples < self.n_components {
             return Err(StatsError::InvalidArgument(format!(
@@ -366,16 +367,17 @@ where
 
     /// Initialize means using chosen method
     fn initialize_means(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        let (n_samples, _n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
         let mut means = Array2::zeros((self.n_components, n_features));
 
         match self.config.init_method {
             InitializationMethod::Random => {
                 // Random selection from data points
                 use scirs2_core::random::Random;
+                let mut init_rng = rng();
                 let mut rng = match self.config.seed {
                     Some(seed) => Random::with_seed(seed),
-                    None => Random::with_seed(rand::random()),
+                    None => Random::with_seed(init_rng.random()),
                 };
 
                 for i in 0..self.n_components {
@@ -431,12 +433,13 @@ where
     /// K-means++ initialization
     fn kmeans_plus_plus_init(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
         use scirs2_core::random::Random;
+        let mut init_rng = rng();
         let mut rng = match self.config.seed {
             Some(seed) => Random::with_seed(seed),
-            None => Random::with_seed(rand::random()),
+            None => Random::with_seed(init_rng.random()),
         };
 
-        let (n_samples, _n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
         let mut means = Array2::zeros((self.n_components, n_features));
 
         // Choose first center randomly
@@ -597,7 +600,7 @@ where
         responsibilities: &Array2<F>,
         means: &Array2<F>,
     ) -> StatsResult<Vec<Array2<F>>> {
-        let (n_samples, _n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
         let mut covariances = Vec::with_capacity(self.n_components);
 
         for k in 0..self.n_components {
@@ -1791,13 +1794,14 @@ where
 
     /// Initialize means for variational GMM
     fn initialize_means(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        let (n_samples, _n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
         let mut means = Array2::zeros((self.max_components, n_features));
 
         use scirs2_core::random::Random;
+        let mut init_rng = rng();
         let mut rng = match self.config.seed {
             Some(seed) => Random::with_seed(seed),
-            None => Random::with_seed(rand::random()),
+            None => Random::with_seed(init_rng.random()),
         };
 
         for i in 0..self.max_components {
@@ -1851,7 +1855,7 @@ where
         data: &ArrayView2<F>,
         responsibilities: &Array2<F>,
     ) -> StatsResult<(Array1<F>, Array1<F>, Array2<F>, Array1<F>, Array3<F>)> {
-        let (n_samples, _n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
         // Update weight concentration
         let mut weight_concentration =

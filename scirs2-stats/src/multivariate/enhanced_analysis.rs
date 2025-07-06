@@ -143,7 +143,7 @@ where
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&PCAResult<F>> {
         check_array_finite(data, "data")?;
 
-        let (n_samples, _n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
         if n_samples == 0 || n_features == 0 {
             return Err(StatsError::InvalidArgument(
@@ -263,7 +263,7 @@ where
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
-        let (n_samples, _n_features) = data.dim();
+        let (n_samples, n_features) = data.dim();
 
         // Convert to f64 for numerical stability
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());

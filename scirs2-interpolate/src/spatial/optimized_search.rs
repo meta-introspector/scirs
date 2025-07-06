@@ -12,13 +12,12 @@
 
 use crate::error::InterpolateResult;
 use crate::spatial::{BallTree, KdTree};
-use ndarray::{Array1, ArrayView2, Axis};
+use ndarray::{ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 
 #[cfg(feature = "simd")]
 use scirs2_core::simd_ops::SimdUnifiedOps;
-
 
 /// Enhanced spatial search interface with multiple optimization strategies
 pub trait OptimizedSpatialSearch<F: Float> {

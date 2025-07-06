@@ -1004,25 +1004,25 @@ mod tests {
 
 /// Tree node representation for Newick export
 #[derive(Debug, Clone)]
-enum TreeNode {
+enum NewickTreeNode {
     Leaf {
         id: usize,
         label: String,
     },
     Internal {
         id: usize,
-        left: Box<TreeNode>,
-        right: Box<TreeNode>,
+        left: Box<NewickTreeNode>,
+        right: Box<NewickTreeNode>,
         distance: f64,
     },
 }
 
-impl TreeNode {
+impl NewickTreeNode {
     /// Convert tree node to Newick format string
     fn to_newick(&self) -> String {
         match self {
-            TreeNode::Leaf { label, .. } => label.clone(),
-            TreeNode::Internal {
+            NewickTreeNode::Leaf { label, .. } => label.clone(),
+            NewickTreeNode::Internal {
                 left,
                 right,
                 distance,

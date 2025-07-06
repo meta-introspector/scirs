@@ -850,11 +850,11 @@ mod tests {
                 let rms_error = spline.rms_error();
                 assert!(rms_error < 1.0); // Relaxed tolerance for noisy data
             }
-            Err(InterpolateError::invalid_input(msg)) if msg.contains("singular") => {
+            Err(InterpolateError::InvalidInput { message }) if message.contains("singular") => {
                 // Accept numerical issues as this can happen with error-based strategies
                 println!(
                     "Error-based strategy encountered numerical issues (expected): {}",
-                    msg
+                    message
                 );
             }
             Err(e) => panic!("Unexpected error: {:?}", e),

@@ -128,8 +128,7 @@ fn parse_attribute(line: &str) -> Result<(String, AttributeType)> {
         AttributeType::Nominal(values)
     } else {
         return Err(IoError::FormatError(format!(
-            "Unknown attribute type: {}",
-            type_str
+            "Unknown attribute type: {type_str}"
         )));
     };
 
@@ -167,9 +166,9 @@ fn parse_data_line(line: &str, attributes: &[(String, AttributeType)]) -> Result
         let attr_type = &attributes[i].1;
         let value = match attr_type {
             AttributeType::Numeric => {
-                let num = part.parse::<f64>().map_err(|_| {
-                    IoError::FormatError(format!("Invalid numeric value: {}", part))
-                })?;
+                let num = part
+                    .parse::<f64>()
+                    .map_err(|_| IoError::FormatError(format!("Invalid numeric value: {part}")))?;
                 ArffValue::Numeric(num)
             }
             AttributeType::String => {
@@ -201,8 +200,7 @@ fn parse_data_line(line: &str, attributes: &[(String, AttributeType)]) -> Result
                 // Check if value is in allowed values
                 if !allowed_values.contains(&s) {
                     return Err(IoError::FormatError(format!(
-                        "Invalid nominal value: {}, expected one of {:?}",
-                        s, allowed_values
+                        "Invalid nominal value: {s}, expected one of {allowed_values:?}"
                     )));
                 }
 
@@ -249,9 +247,8 @@ pub fn read_arff<P: AsRef<Path>>(path: P) -> Result<ArffData> {
 
     // Parse ARFF file
     for (line_num, line_result) in reader.lines().enumerate() {
-        let line = line_result.map_err(|e| {
-            IoError::FileError(format!("Error reading line {}: {}", line_num + 1, e))
-        })?;
+        let line = line_result
+            .map_err(|e| IoError::FileError(format!("Error reading line {}: {e}", line_num + 1)))?;
 
         let line = line.trim();
         if line.is_empty() || line.starts_with('%') {
@@ -286,8 +283,7 @@ pub fn read_arff<P: AsRef<Path>>(path: P) -> Result<ArffData> {
                 in_data_section = true;
             } else {
                 return Err(IoError::FormatError(format!(
-                    "Unexpected line in header section: {}",
-                    line
+                    "Unexpected line in header section: {line}"
                 )));
             }
         }
@@ -304,9 +300,8 @@ pub fn read_arff<P: AsRef<Path>>(path: P) -> Result<ArffData> {
     // Parse data lines
     let mut data_values = Vec::new();
     for (i, line) in data_lines.iter().enumerate() {
-        let values = parse_data_line(line, &attributes).map_err(|e| {
-            IoError::FormatError(format!("Error parsing data line {}: {}", i + 1, e))
-        })?;
+        let values = parse_data_line(line, &attributes)
+            .map_err(|e| IoError::FormatError(format!("Error parsing data line {}: {e}", i + 1)))?;
 
         data_values.push(values);
     }
@@ -382,8 +377,7 @@ pub fn get_numeric_matrix(
                     }
                     _ => {
                         return Err(IoError::FormatError(format!(
-                            "Attribute '{}' is not numeric",
-                            name
+                            "Attribute '{name}' is not numeric"
                         )));
                     }
                 }
@@ -392,8 +386,7 @@ pub fn get_numeric_matrix(
 
         if !found {
             return Err(IoError::FormatError(format!(
-                "Attribute '{}' not found",
-                attr_name
+                "Attribute '{attr_name}' not found"
             )));
         }
     }
@@ -469,10 +462,10 @@ pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
         "@relation {}",
         format_arff_string(&arff_data.relation)
     )
-    .map_err(|e| IoError::FileError(format!("Failed to write relation: {}", e)))?;
+    .map_err(|e| IoError::FileError(format!("Failed to write relation: {e}")))?;
 
     // Add an empty line
-    writeln!(writer).map_err(|e| IoError::FileError(format!("Failed to write newline: {}", e)))?;
+    writeln!(writer).map_err(|e| IoError::FileError(format!("Failed to write newline: {e}")))?;
 
     // Write attributes
     for (name, attr_type) in &arff_data.attributes {
@@ -499,12 +492,12 @@ pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
             format_arff_string(name),
             type_str
         )
-        .map_err(|e| IoError::FileError(format!("Failed to write attribute: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write attribute: {e}")))?;
     }
 
     // Write data section header
     writeln!(writer, "\n@data")
-        .map_err(|e| IoError::FileError(format!("Failed to write data header: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write data header: {e}")))?;
 
     // Write data lines
     let shape = arff_data.data.shape();
@@ -532,8 +525,8 @@ pub fn write_arff<P: AsRef<Path>>(path: P, arff_data: &ArffData) -> Result<()> {
             line.push_str(&value_str);
         }
 
-        writeln!(writer, "{}", line)
-            .map_err(|e| IoError::FileError(format!("Failed to write data line: {}", e)))?;
+        writeln!(writer, "{line}")
+            .map_err(|e| IoError::FileError(format!("Failed to write data line: {e}")))?;
     }
 
     Ok(())

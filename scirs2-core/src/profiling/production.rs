@@ -59,7 +59,7 @@
 //! ```
 
 use crate::error::{CoreError, CoreResult};
-use rand::{rngs::SmallRng, SeedableRng};
+use rand::{rng, rngs::SmallRng, Rng, SeedableRng};
 // Define types for this module
 pub type ProfilerResult<T> = Result<T, Box<dyn std::error::Error>>;
 
@@ -505,12 +505,14 @@ impl ResourceUsageTracker {
     // Simplified estimation methods - in production would use proper system APIs
     fn estimate_cpu_usage(&self) -> f64 {
         // In real implementation, would read from /proc/stat or use platform-specific APIs
-        rand::random::<f64>() * 100.0 // Placeholder
+        let mut rng = rng();
+        rng.random::<f64>() * 100.0 // Placeholder
     }
 
     fn estimate_memory_usage(&self) -> usize {
         // In real implementation, would read from /proc/meminfo or use platform-specific APIs
-        1024 * 1024 * (100 + (rand::random::<u32>() % 900) as usize) // Placeholder: 100-1000 MB
+        let mut rng = rng();
+        1024 * 1024 * (100 + (rng.random::<u32>() % 900) as usize) // Placeholder: 100-1000 MB
     }
 
     fn estimate_thread_count(&self) -> usize {

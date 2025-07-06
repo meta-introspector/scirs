@@ -8,7 +8,6 @@
 use ndarray::{s, Array, Array1, Array2, Array3, ArrayBase, Data, Dimension};
 use num_traits::Float;
 use rand::{Rng, SeedableRng};
-use rand_chacha::ChaCha20Rng;
 use std::collections::{HashMap, VecDeque};
 
 use super::{LearnedOptimizerConfig, MetaOptimizationStrategy};
@@ -41,7 +40,7 @@ pub struct TransformerOptimizer<T: Float> {
     step_count: usize,
 
     /// Random number generator
-    rng: ChaCha20Rng,
+    rng: rand::rngs::SmallRng,
 }
 
 /// Configuration specific to Transformer optimizer
@@ -1006,6 +1005,16 @@ pub struct SupportSetManager<T: Float> {
     augmentation_methods: Vec<AugmentationMethod>,
 }
 
+impl<T: Float + Default + Clone> SupportSetManager<T> {
+    fn new() -> Result<Self> {
+        Ok(Self {
+            support_sets: HashMap::new(),
+            selection_strategies: Vec::new(),
+            augmentation_methods: Vec::new(),
+        })
+    }
+}
+
 /// Support set
 #[derive(Debug, Clone)]
 pub struct SupportSet<T: Float> {
@@ -1145,6 +1154,16 @@ pub struct FewShotMetaComponents<T: Float> {
 
     /// Evaluation protocol
     evaluation_protocol: EvaluationProtocol<T>,
+}
+
+impl<T: Float + Default + Clone> FewShotMetaComponents<T> {
+    fn new() -> Result<Self> {
+        Ok(Self {
+            meta_learner: FewShotMetaLearner::new()?,
+            task_generator: TaskGenerator::new()?,
+            evaluation_protocol: EvaluationProtocol::new()?,
+        })
+    }
 }
 
 /// Few-shot meta-learner
@@ -1503,6 +1522,17 @@ pub struct ContinualMemory<T: Float> {
 
     /// Memory management
     memory_management: MemoryManagement<T>,
+}
+
+impl<T: Float + Default + Clone> ContinualMemory<T> {
+    fn new() -> Result<Self> {
+        Ok(Self {
+            episodic_memory: EpisodicMemory::new()?,
+            semantic_memory: SemanticMemory::new()?,
+            working_memory: WorkingMemory::new()?,
+            memory_management: MemoryManagement::new()?,
+        })
+    }
 }
 
 /// Episodic memory
@@ -2520,7 +2550,9 @@ pub struct ContinualLearningMetrics {
 
 // Implementation begins here
 
-impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>> TransformerOptimizer<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::iter::Sum<&'a T>>
+    TransformerOptimizer<T>
+{
     /// Create a new Transformer optimizer
     pub fn new(config: TransformerOptimizerConfig) -> Result<Self> {
         // Validate configuration
@@ -2545,7 +2577,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
         let metrics = TransformerOptimizerMetrics::new();
 
         // Initialize RNG
-        let rng = ChaCha20Rng::from_entropy();
+        let rng = rand::rngs::SmallRng::seed_from_u64(42);
 
         Ok(Self {
             config,
@@ -2685,7 +2717,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
 
         // Loss information
         if let Some(&l) = loss {
-            features.push(*l);
+            features.push(l);
         } else {
             features.push(T::zero());
         }
@@ -3106,7 +3138,7 @@ impl<T: Float + Default + Clone> SequenceBuffer<T> {
     }
 }
 
-impl<T: Float + Default + Clone> TransformerMetaLearner<T> {
+impl<T: Float + Default + Clone + std::iter::Sum> TransformerMetaLearner<T> {
     fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
         // Initialize meta-transformer (optional for higher-level meta-learning)
         let meta_transformer = if config.model_dim >= 256 {
@@ -3489,19 +3521,42 @@ impl<T: Float + Default + Clone> DomainAdapter<T> {
         Ok(Self {
             adapters: HashMap::new(),
             similarity_estimator: DomainSimilarityEstimator {
-                similarity_function: SimilarityFunction {
+                similarity_function: LearnedSimilarityFunction {
+                    parameters: Array2::zeros((1, 1)),
                     function_type: SimilarityFunctionType::Cosine,
-                    parameters: Array1::zeros(1),
-                    learned_components: None,
+                    training_history: Vec::new(),
                 },
                 domain_embeddings: HashMap::new(),
-                similarity_cache: HashMap::new(),
+                similarity_metrics: SimilarityMetrics {
+                    task_similarity: T::zero(),
+                    data_similarity: T::zero(),
+                    objective_similarity: T::zero(),
+                    architecture_similarity: T::zero(),
+                },
             },
             adaptation_strategies: vec![AdaptationStrategy::FineTuning],
             transfer_tracker: TransferEfficiencyTracker {
-                transfer_history: VecDeque::new(),
-                efficiency_metrics: HashMap::new(),
-                baseline_performance: HashMap::new(),
+                transfer_events: Vec::new(),
+                efficiency_metrics: TransferEfficiencyMetrics {
+                    avg_efficiency: T::zero(),
+                    success_rate: T::zero(),
+                    resource_efficiency: T::zero(),
+                    adaptation_speed: T::zero(),
+                },
+                success_predictor: TransferSuccessPredictor {
+                    network: PredictorNetwork {
+                        layers: Vec::new(),
+                        activations: vec![ActivationFunction::ReLU],
+                        training_state: PredictorTrainingState {
+                            training_loss: T::zero(),
+                            validation_accuracy: T::zero(),
+                            training_steps: 0,
+                            learning_rate: T::from(0.001).unwrap(),
+                        },
+                    },
+                    feature_extractors: HashMap::new(),
+                    accuracy: T::zero(),
+                },
             },
         })
     }
@@ -3510,11 +3565,10 @@ impl<T: Float + Default + Clone> DomainAdapter<T> {
 impl<T: Float + Default + Clone> FewShotLearner<T> {
     fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
         Ok(Self {
-            learner_type: FewShotLearnerType::MAML,
-            support_set_encoder: SupportSetEncoder::new()?,
-            prototype_computer: PrototypeComputer::new()?,
-            adaptation_network: AdaptationNetwork::new()?,
-            memory_augmentation: MemoryAugmentation::new()?,
+            strategies: vec![FewShotStrategy::MAML],
+            support_set_manager: SupportSetManager::new()?,
+            prototype_networks: HashMap::new(),
+            meta_components: FewShotMetaComponents::new()?,
         })
     }
 
@@ -3537,9 +3591,10 @@ impl<T: Float + Default + Clone> FewShotLearner<T> {
 impl<T: Float + Default + Clone> ContinualLearningState<T> {
     fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
         Ok(Self {
-            learning_strategy: ContinualLearningStrategy::EWC,
-            memory_buffer: ContinualMemoryBuffer::new()?,
+            strategy: ContinualLearningStrategy::EWC,
+            memory: ContinualMemory::new()?,
             forgetting_prevention: ForgettingPrevention::new()?,
+            task_sequence: Vec::new(),
             performance_tracking: ContinualPerformanceTracking::new()?,
         })
     }
@@ -4635,7 +4690,7 @@ impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
     }
 }
 
-impl<T: Float + Default + Clone> LayerNorm<T> {
+impl<T: Float + Default + Clone + std::iter::Sum> LayerNorm<T> {
     fn new(dim: usize) -> Self {
         Self {
             gamma: Array1::ones(dim),

@@ -13,6 +13,7 @@
 //! - **Multi-objective optimization**: Balance performance, memory, and energy efficiency
 //! - **Context-Aware Optimization**: Environment and workload-specific adaptations
 
+use rand::{rng, Rng};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Cache locality hint for prefetch operations
@@ -3176,11 +3177,12 @@ pub mod advanced_optimization {
     impl NeuralLayer {
         pub fn new(input_size: usize, output_size: usize, activation: ActivationFunction) -> Self {
             // Initialize with random weights
+            let mut rng = rng();
             let mut weights = Vec::new();
             for _ in 0..output_size {
                 let mut row = Vec::new();
                 for _ in 0..input_size {
-                    row.push((rand::random::<f64>() - 0.5) * 0.1); // Small random values
+                    row.push((rng.random::<f64>() - 0.5) * 0.1); // Small random values
                 }
                 weights.push(row);
             }

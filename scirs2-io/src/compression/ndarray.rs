@@ -87,7 +87,7 @@ where
         shape: array.shape().to_vec(),
         dtype: std::any::type_name::<A>().to_string(),
         element_size: std::mem::size_of::<A>(),
-        algorithm: format!("{:?}", algorithm),
+        algorithm: format!("{algorithm:?}"),
         original_size: flat_data.len(),
         compressed_size: compressed_data.len(),
         compression_ratio: flat_data.len() as f64 / compressed_data.len() as f64,
@@ -106,9 +106,9 @@ where
         .map_err(|e| IoError::SerializationError(e.to_string()))?;
 
     File::create(path)
-        .map_err(|e| IoError::FileError(format!("Failed to create output file: {}", e)))?
+        .map_err(|e| IoError::FileError(format!("Failed to create output file: {e}")))?
         .write_all(&serialized)
-        .map_err(|e| IoError::FileError(format!("Failed to write to output file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write to output file: {e}")))?;
 
     Ok(())
 }
@@ -131,11 +131,11 @@ where
 {
     // Read the compressed file
     let mut file = File::open(path)
-        .map_err(|e| IoError::FileError(format!("Failed to open input file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?;
 
     let mut serialized = Vec::new();
     file.read_to_end(&mut serialized)
-        .map_err(|e| IoError::FileError(format!("Failed to read input file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read input file: {e}")))?;
 
     // Deserialize the compressed array structure
     let compressed_array: CompressedArray = bincode::deserialize(&serialized)
@@ -233,7 +233,7 @@ where
         shape: array.shape().to_vec(),
         dtype: std::any::type_name::<A>().to_string(),
         element_size: std::mem::size_of::<A>(),
-        algorithm: format!("{:?}", algorithm),
+        algorithm: format!("{algorithm:?}"),
         original_size: total_original_size,
         compressed_size: total_compressed_size,
         compression_ratio: total_original_size as f64 / total_compressed_size as f64,
@@ -252,7 +252,7 @@ where
 
     // Combine all chunks and metadata
     let mut file = File::create(path)
-        .map_err(|e| IoError::FileError(format!("Failed to create output file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to create output file: {e}")))?;
 
     // Write metadata size and metadata first
     let serialized_metadata =
@@ -260,24 +260,24 @@ where
 
     let metadata_size = serialized_metadata.len() as u64;
     file.write_all(&metadata_size.to_le_bytes())
-        .map_err(|e| IoError::FileError(format!("Failed to write metadata size: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write metadata size: {e}")))?;
 
     file.write_all(&serialized_metadata)
-        .map_err(|e| IoError::FileError(format!("Failed to write metadata: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write metadata: {e}")))?;
 
     // Write number of chunks
     let num_chunks = compressed_chunks.len() as u64;
     file.write_all(&num_chunks.to_le_bytes())
-        .map_err(|e| IoError::FileError(format!("Failed to write chunk count: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write chunk count: {e}")))?;
 
     // Write each chunk with its size prefix
     for chunk in compressed_chunks {
         let chunk_size = chunk.len() as u64;
         file.write_all(&chunk_size.to_le_bytes())
-            .map_err(|e| IoError::FileError(format!("Failed to write chunk size: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write chunk size: {e}")))?;
 
         file.write_all(&chunk)
-            .map_err(|e| IoError::FileError(format!("Failed to write chunk data: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write chunk data: {e}")))?;
     }
 
     Ok(())
@@ -301,19 +301,19 @@ where
     A: for<'de> Deserialize<'de> + Clone,
 {
     let mut file = File::open(path)
-        .map_err(|e| IoError::FileError(format!("Failed to open input file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to open input file: {e}")))?;
 
     // Read metadata size
     let mut metadata_size_bytes = [0u8; 8];
     file.read_exact(&mut metadata_size_bytes)
-        .map_err(|e| IoError::FileError(format!("Failed to read metadata size: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read metadata size: {e}")))?;
 
     let metadata_size = u64::from_le_bytes(metadata_size_bytes) as usize;
 
     // Read metadata
     let mut metadata_bytes = vec![0u8; metadata_size];
     file.read_exact(&mut metadata_bytes)
-        .map_err(|e| IoError::FileError(format!("Failed to read metadata: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read metadata: {e}")))?;
 
     let metadata: CompressedArrayMetadata = bincode::deserialize(&metadata_bytes)
         .map_err(|e| IoError::DeserializationError(e.to_string()))?;
@@ -335,7 +335,7 @@ where
     // Read number of chunks
     let mut num_chunks_bytes = [0u8; 8];
     file.read_exact(&mut num_chunks_bytes)
-        .map_err(|e| IoError::FileError(format!("Failed to read chunk count: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read chunk count: {e}")))?;
 
     let num_chunks = u64::from_le_bytes(num_chunks_bytes) as usize;
 
@@ -348,14 +348,14 @@ where
         // Read chunk size
         let mut chunk_size_bytes = [0u8; 8];
         file.read_exact(&mut chunk_size_bytes)
-            .map_err(|e| IoError::FileError(format!("Failed to read chunk size: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to read chunk size: {e}")))?;
 
         let chunk_size = u64::from_le_bytes(chunk_size_bytes) as usize;
 
         // Read chunk data
         let mut chunk_bytes = vec![0u8; chunk_size];
         file.read_exact(&mut chunk_bytes)
-            .map_err(|e| IoError::FileError(format!("Failed to read chunk data: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to read chunk data: {e}")))?;
 
         // Decompress chunk
         let decompressed_chunk = decompress_data(&chunk_bytes, algorithm)?;
@@ -535,7 +535,7 @@ where
             shape: array.shape().to_vec(),
             dtype: std::any::type_name::<A>().to_string(),
             element_size: std::mem::size_of::<A>(),
-            algorithm: format!("{:?}", algorithm),
+            algorithm: format!("{algorithm:?}"),
             original_size: total_original_size,
             compressed_size: combined_data.len(),
             compression_ratio: total_original_size as f64 / combined_data.len() as f64,

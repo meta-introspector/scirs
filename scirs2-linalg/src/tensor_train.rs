@@ -344,7 +344,7 @@ where
                     .into_shape_with_order((r_left_prev * n_prev, r_right_prev))
                     .map_err(|e| LinalgError::ShapeError(e.to_string()))?;
 
-                let updated_left = left_mat.dot(&s_vt);
+                let updated_left = left_mat.dot(&s_vt.t());
                 new_cores[k - 1] = updated_left
                     .into_shape_with_order((r_left_prev, n_prev, trunc_rank))
                     .map_err(|e| LinalgError::ShapeError(e.to_string()))?;
@@ -432,12 +432,12 @@ where
 
     // Start with the full tensor data
     let mut current_data = tensor.iter().cloned().collect::<Vec<_>>();
-    let mut current_shape = shape.to_vec();
+    let mut _current_shape = shape.to_vec();
 
     // Left-to-right decomposition
     for k in 0..d - 1 {
-        let n_k = current_shape[0];
-        let remaining_size: usize = current_shape[1..].iter().product();
+        let n_k = shape[k]; // Use original tensor shape for mode size
+        let remaining_size: usize = shape[k + 1..].iter().product();
 
         // Reshape to matrix: r_{k-1} * n_k × remaining
         let matrix_rows = ranks[k] * n_k;
@@ -491,9 +491,9 @@ where
         ranks.push(r_k);
         let s_vt = Array2::from_diag(&s_trunc).dot(&vt_trunc);
         current_data = s_vt.into_iter().collect();
-        current_shape = vec![r_k]
+        _current_shape = vec![r_k]
             .into_iter()
-            .chain(current_shape[1..].iter().cloned())
+            .chain(shape[k + 1..].iter().cloned())
             .collect();
     }
 

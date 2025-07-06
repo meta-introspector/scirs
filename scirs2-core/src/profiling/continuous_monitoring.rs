@@ -6,6 +6,7 @@
 use crate::error::{CoreError, CoreResult};
 use crate::profiling::hardware_counters::{CounterType, CounterValue, HardwareCounterManager};
 use crate::profiling::system_monitor::{SystemMetrics, SystemMonitor, SystemMonitorError};
+use rand::{rng, Rng};
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -571,6 +572,7 @@ impl ContinuousPerformanceMonitor {
         active_alerts: &Arc<RwLock<HashMap<String, PerformanceAlert>>>,
         cooldown_map: &mut HashMap<String, Instant>,
     ) {
+        let mut rng = rng();
         let now = Instant::now();
 
         // Check system metrics alerts
@@ -588,7 +590,7 @@ impl ContinuousPerformanceMonitor {
                         id: format!(
                             "cpu_{elapsed}_{random}",
                             elapsed = now.elapsed().as_secs(),
-                            random = rand::random::<u32>()
+                            random = rng.random::<u32>()
                         ),
                         alert_type: AlertType::HighCpuUsage,
                         severity: if sys_metrics.cpu_usage > alert_config.cpu_threshold * 1.2 {
@@ -625,11 +627,7 @@ impl ContinuousPerformanceMonitor {
                         now,
                     ) {
                         let alert = PerformanceAlert {
-                            id: format!(
-                                "mem_{}_{}",
-                                now.elapsed().as_secs(),
-                                rand::random::<u32>()
-                            ),
+                            id: format!("mem_{}_{}", now.elapsed().as_secs(), rng.random::<u32>()),
                             alert_type: AlertType::HighMemoryUsage,
                             severity: if memory_usage_percent > alert_config.memory_threshold * 1.1
                             {
@@ -669,7 +667,7 @@ impl ContinuousPerformanceMonitor {
                     id: format!(
                         "resp_{elapsed}_{random}",
                         elapsed = now.elapsed().as_secs(),
-                        random = rand::random::<u32>()
+                        random = rng.random::<u32>()
                     ),
                     alert_type: AlertType::HighResponseTime,
                     severity: AlertSeverity::Warning,
