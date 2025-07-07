@@ -208,7 +208,6 @@ fn test_stochastic_workflow() {
     impl StochasticGradientFunction for NoisyQuadratic {
         fn compute_gradient(&mut self, x: &ArrayView1<f64>, _batch_data: &[f64]) -> Array1<f64> {
             // Add small noise to simulate stochastic gradients
-            use rand::Rng;
             let mut rng = rand::rng();
             x.mapv(|xi| 2.0 * xi + rng.random_range(-0.01..0.01))
         }

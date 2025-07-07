@@ -49,7 +49,16 @@ pub fn minimum_filter<T, D>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + PartialOrd
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     D: Dimension + 'static,
 {
     extrema_filter(input, size, mode, origin, FilterType::Min)
@@ -92,7 +101,16 @@ pub fn maximum_filter<T, D>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + PartialOrd
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     D: Dimension + 'static,
 {
     extrema_filter(input, size, mode, origin, FilterType::Max)
@@ -115,7 +133,16 @@ fn extrema_filter<T, D>(
     filter_type: FilterType,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + PartialOrd
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     D: Dimension + 'static,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
@@ -342,7 +369,16 @@ fn extrema_filter_nd<T, D>(
     filter_type: FilterType,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + PartialOrd
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     D: Dimension + 'static,
 {
     // Calculate padding required for each dimension
@@ -488,7 +524,16 @@ fn extrema_filter_nd_general<T, D>(
     pad_width: &[(usize, usize)],
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + PartialOrd
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     D: Dimension + 'static,
 {
     // Pad input for border handling
@@ -542,7 +587,7 @@ fn extrema_filter_nd_sequential<T, D>(
 ) -> NdimageResult<Array<T, D>>
 where
     T: Float + FromPrimitive + Debug + PartialOrd + Clone,
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let ndim = input.ndim();
 
@@ -625,13 +670,22 @@ fn extrema_filter_nd_parallel<T, D>(
     input_shape: &[usize],
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + PartialOrd
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     D: Dimension + 'static,
 {
     use scirs2_core::parallel_ops::*;
 
     let ndim = input.ndim();
-    let total_elements = input.len();
+    let _total_elements = input.len();
 
     // Helper function to convert linear index to n-dimensional coordinates
     fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {

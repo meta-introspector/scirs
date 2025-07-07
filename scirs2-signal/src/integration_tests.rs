@@ -5,7 +5,7 @@
 //! serve as both validation and documentation of the library's capabilities.
 
 use crate::denoise_adaptive_advanced::{adaptive_denoise_advanced, AdaptiveDenoisingConfig};
-use crate::dwt2d_enhanced::Dwt2dConfig;
+use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
 use crate::error::{SignalError, SignalResult};
 use crate::filter::{butter, filtfilt, FilterType};
 use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig};
@@ -550,7 +550,7 @@ fn test_image_processing_pipeline() -> SignalResult<()> {
     println!("🔧 Step 2: Adaptive denoising in wavelet domain...");
 
     // Apply different thresholds to different subbands
-    let mut denoised_approx = wavelet_result.approx.clone();
+    let _denoised_approx = wavelet_result.approx.clone();
     let mut denoised_detail_h = wavelet_result.detail_h.clone();
     let mut denoised_detail_v = wavelet_result.detail_v.clone();
     let mut denoised_detail_d = wavelet_result.detail_d.clone();

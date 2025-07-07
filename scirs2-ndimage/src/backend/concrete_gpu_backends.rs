@@ -13,6 +13,7 @@ use ndarray::{Array, ArrayView2, Ix2};
 use num_traits::{Float, FromPrimitive};
 
 #[cfg(any(feature = "cuda", feature = "opencl"))]
+#[allow(unused_imports)]
 use crate::backend::gpu_acceleration_framework::{
     CompiledKernel, GpuBuffer, GpuBufferHandle, KernelHandle,
 };

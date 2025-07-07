@@ -8,7 +8,6 @@ use crate::error::{StatsError, StatsResult};
 use crate::error_recovery_system::{
     EnhancedStatsError, RecoveryAction, RecoverySuggestion, SuggestionType,
 };
-use num_traits::Float;
 use rand::{rng, Rng};
 use std::collections::HashMap;
 

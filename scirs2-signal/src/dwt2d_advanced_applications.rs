@@ -164,7 +164,7 @@ where
     // Validate input
     check_finite(&image_f64, "image")?;
     if image_f64.nrows() < 4 || image_f64.ncols() < 4 {
-        return Err(SignalError::DimensionError(
+        return Err(SignalError::DimensionMismatch(
             "Image must be at least 4x4".to_string(),
         ));
     }

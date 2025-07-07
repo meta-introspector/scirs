@@ -12,7 +12,6 @@ use crate::unified_processor::{
     OptimizationMode, AdvancedProcessorConfig, AdvancedUnifiedProcessor,
 };
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use num_traits::Float;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 

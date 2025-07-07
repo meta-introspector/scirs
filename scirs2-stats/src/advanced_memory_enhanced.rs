@@ -8,7 +8,6 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array2, ArrayBase, Data, Ix1};
 use num_traits::{Float, NumCast};
-use scirs2_core::parallel_ops::*;
 use std::alloc::{alloc, dealloc, Layout};
 use std::collections::{HashMap, VecDeque};
 use std::ptr::NonNull;

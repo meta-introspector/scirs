@@ -57,18 +57,69 @@ pub const EARTH_FLATTENING: f64 = 1.0 / 298.257223563;
 pub const EARTH_ECCENTRICITY_SQ: f64 = 2.0 * EARTH_FLATTENING - EARTH_FLATTENING * EARTH_FLATTENING;
 
 /// Convert degrees to radians
+///
+/// # Arguments
+///
+/// * `degrees` - Angle in degrees
+///
+/// # Returns
+///
+/// * Angle in radians
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_spatial::geospatial::deg_to_rad;
+///
+/// let radians = deg_to_rad(180.0);
+/// assert!((radians - std::f64::consts::PI).abs() < 1e-10);
+/// ```
 #[allow(dead_code)]
 pub fn deg_to_rad(degrees: f64) -> f64 {
     degrees * PI / 180.0
 }
 
 /// Convert radians to degrees
+///
+/// # Arguments
+///
+/// * `radians` - Angle in radians
+///
+/// # Returns
+///
+/// * Angle in degrees
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_spatial::geospatial::rad_to_deg;
+///
+/// let degrees = rad_to_deg(std::f64::consts::PI);
+/// assert!((degrees - 180.0).abs() < 1e-10);
+/// ```
 #[allow(dead_code)]
 pub fn rad_to_deg(radians: f64) -> f64 {
     radians * 180.0 / PI
 }
 
 /// Normalize angle to [0, 2π) range
+///
+/// # Arguments
+///
+/// * `angle` - Angle in radians
+///
+/// # Returns
+///
+/// * Normalized angle in the range [0, 2π)
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_spatial::geospatial::normalize_angle;
+///
+/// let normalized = normalize_angle(3.0 * std::f64::consts::PI);
+/// assert!((normalized - std::f64::consts::PI).abs() < 1e-10);
+/// ```
 #[allow(dead_code)]
 pub fn normalize_angle(angle: f64) -> f64 {
     let normalized = angle % (2.0 * PI);
@@ -80,6 +131,23 @@ pub fn normalize_angle(angle: f64) -> f64 {
 }
 
 /// Normalize bearing to [0°, 360°) range
+///
+/// # Arguments
+///
+/// * `bearing_deg` - Bearing in degrees
+///
+/// # Returns
+///
+/// * Normalized bearing in the range [0°, 360°)
+///
+/// # Examples
+///
+/// ```
+/// use scirs2_spatial::geospatial::normalize_bearing;
+///
+/// let normalized = normalize_bearing(450.0);
+/// assert!((normalized - 90.0).abs() < 1e-10);
+/// ```
 #[allow(dead_code)]
 pub fn normalize_bearing(bearing_deg: f64) -> f64 {
     let normalized = bearing_deg % 360.0;

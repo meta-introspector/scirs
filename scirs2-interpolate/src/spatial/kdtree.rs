@@ -1053,7 +1053,7 @@ mod tests {
         // Just print what we got for debugging
         println!("Points within radius:");
         for (idx, dist) in &results {
-            println!("Point index: {}, distance: {}", idx, dist);
+            println!("Point index: {idx}, distance: {dist}");
         }
     }
 }

@@ -211,8 +211,7 @@ where
             Ok(Array1::from(result))
         }
         _ => Err(TimeSeriesError::InvalidInput(format!(
-            "Unknown transformation method: {}",
-            method
+            "Unknown transformation method: {method}"
         ))),
     }
 }
@@ -591,8 +590,7 @@ where
             }
         }
         _ => Err(TimeSeriesError::InvalidInput(format!(
-            "Invalid detrend type: {}. Must be 'constant' or 'linear'",
-            detrend_type
+            "Invalid detrend type: {detrend_type}. Must be 'constant' or 'linear'"
         ))),
     }
 }
@@ -811,8 +809,7 @@ where
         }
         _ => {
             return Err(TimeSeriesError::InvalidInput(format!(
-                "Invalid filter type: {}. Must be 'iir' or 'fir'",
-                filter_type
+                "Invalid filter type: {filter_type}. Must be 'iir' or 'fir'"
             )))
         }
     };
@@ -845,11 +842,7 @@ where
     let mut filtered = x.to_owned();
 
     for i in 0..x.len() {
-        let start = if i >= window_size / 2 {
-            i - window_size / 2
-        } else {
-            0
-        };
+        let start = i.saturating_sub(window_size / 2);
         let end = if i + window_size / 2 < x.len() {
             i + window_size / 2 + 1
         } else {
@@ -966,8 +959,7 @@ where
         let parts: Vec<&str> = date_str.split('-').collect();
         if parts.len() != 3 {
             return Err(TimeSeriesError::InvalidInput(format!(
-                "Invalid date format: {}, expected YYYY-MM-DD",
-                date_str
+                "Invalid date format: {date_str}, expected YYYY-MM-DD"
             )));
         }
 
@@ -985,15 +977,13 @@ where
 
         if !(1..=12).contains(&month) {
             return Err(TimeSeriesError::InvalidInput(format!(
-                "Month must be between 1 and 12, got {}",
-                month
+                "Month must be between 1 and 12, got {month}"
             )));
         }
 
         if !(1..=31).contains(&day) {
             return Err(TimeSeriesError::InvalidInput(format!(
-                "Day must be between 1 and 31, got {}",
-                day
+                "Day must be between 1 and 31, got {day}"
             )));
         }
 
@@ -1028,7 +1018,7 @@ where
         let mut day = start.2;
 
         for _ in 0..n_days {
-            dates.push(format!("{:04}-{:02}-{:02}", year, month, day));
+            dates.push(format!("{year:04}-{month:02}-{day:02}"));
 
             // Increment date
             day += 1;
@@ -1051,8 +1041,7 @@ where
     let days = days_between(start, end);
     if days < 1 {
         return Err(TimeSeriesError::InvalidInput(format!(
-            "End date ({}) must be after start date ({})",
-            end_date, start_date
+            "End date ({end_date}) must be after start date ({start_date})"
         )));
     }
 

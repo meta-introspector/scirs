@@ -102,8 +102,8 @@ pub fn sum_labels<T, D>(
     index: Option<&[usize]>,
 ) -> NdimageResult<Array1<T>>
 where
-    T: Float + FromPrimitive + Debug + NumAssign,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -313,8 +313,8 @@ pub fn mean_labels<T, D>(
     index: Option<&[usize]>,
 ) -> NdimageResult<Array1<T>>
 where
-    T: Float + FromPrimitive + Debug + NumAssign,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -402,8 +402,8 @@ pub fn variance_labels<T, D>(
     index: Option<&[usize]>,
 ) -> NdimageResult<Array1<T>>
 where
-    T: Float + FromPrimitive + Debug + NumAssign,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -949,8 +949,8 @@ pub fn histogram<T, D>(
     _index: Option<&[usize]>,
 ) -> NdimageResult<(Array1<usize>, Array1<T>)>
 where
-    T: Float + FromPrimitive + Debug + NumAssign,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {

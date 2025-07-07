@@ -5,14 +5,10 @@
 //! entirely in memory, or where memory usage needs to be carefully controlled.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayViewMut1, Axis};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::{check_finite, check_positive};
 use std::f64::consts::PI;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
-use std::path::Path;
-use std::sync::{Arc, Mutex};
 
 /// Configuration for memory-optimized operations
 #[derive(Debug, Clone)]
@@ -715,7 +711,7 @@ pub fn memory_optimized_spectrogram(
     output_file: &str,
     window_size: usize,
     hop_size: usize,
-    config: &MemoryConfig,
+    _config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<f64>> {
     use rustfft::{num_complex::Complex, FftPlanner};
     use std::time::Instant;

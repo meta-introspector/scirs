@@ -116,6 +116,7 @@ impl Default for GpuOptimizerConfig {
 }
 
 /// GPU memory manager for optimizer states
+#[allow(dead_code)]
 pub struct GpuOptimizerMemory<A: Float> {
     /// GPU context
     context: Arc<GpuContext>,
@@ -165,6 +166,7 @@ impl<A: Float> GpuOptimizerMemory<A> {
     }
 
     /// Copy parameters to GPU
+    #[allow(clippy::too_many_arguments)]
     pub fn copy_params_to_gpu<S, D>(
         &mut self,
         params: &ArrayBase<S, D>,
@@ -185,6 +187,7 @@ impl<A: Float> GpuOptimizerMemory<A> {
     }
 
     /// Copy parameters from GPU
+    #[allow(clippy::too_many_arguments)]
     pub fn copy_params_from_gpu<S, D>(
         &self,
         params: &mut ArrayBase<S, D>,
@@ -335,6 +338,7 @@ impl GpuPerformanceMetrics {
 
 /// GPU device information
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct GpuDeviceInfo {
     /// Device name
     pub name: String,
@@ -374,6 +378,7 @@ pub struct GpuDeviceInfo {
 }
 
 /// Advanced GPU optimizer with performance monitoring
+#[allow(dead_code)]
 pub struct AdvancedGpuOptimizer<A: Float, D: Dimension> {
     /// GPU memory manager
     memory: GpuOptimizerMemory<A>,
@@ -496,6 +501,7 @@ impl<A: Float, D: Dimension> AdvancedGpuOptimizer<A, D> {
     }
 
     /// Execute operation with error recovery
+    #[allow(clippy::too_many_arguments)]
     pub fn execute_with_recovery<F, R>(&mut self, operation: F) -> Result<R, GpuOptimError>
     where
         F: Fn() -> Result<R, GpuOptimError>,
@@ -571,6 +577,7 @@ pub mod utils {
     use super::*;
 
     /// Check if GPU acceleration is available for the given backend
+    #[allow(dead_code)]
     pub fn is_gpu_available(backend: GpuBackend) -> bool {
         match GpuContext::new(backend) {
             Ok(_) => true,
@@ -579,6 +586,7 @@ pub mod utils {
     }
 
     /// Get the optimal GPU backend for the current system
+    #[allow(dead_code)]
     pub fn get_optimal_backend() -> GpuBackend {
         // Try backends in order of preference
         let backends = [
@@ -598,6 +606,7 @@ pub mod utils {
     }
 
     /// Calculate optimal block size for GPU kernels
+    #[allow(dead_code)]
     pub fn calculate_block_size(n: usize, max_threads: usize) -> (usize, usize) {
         let block_size = 256.min(max_threads);
         let grid_size = (n + block_size - 1) / block_size;
@@ -605,6 +614,8 @@ pub mod utils {
     }
 
     /// Calculate optimal block size for 2D operations
+    #[allow(dead_code)]
+    #[allow(clippy::too_many_arguments)]
     pub fn calculate_block_size_2d(
         width: usize,
         height: usize,
@@ -637,6 +648,8 @@ pub mod utils {
     }
 
     /// Calculate occupancy for GPU kernels
+    #[allow(dead_code)]
+    #[allow(clippy::too_many_arguments)]
     pub fn calculate_occupancy(
         threads_per_block: usize,
         shared_memory_per_block: usize,
@@ -677,6 +690,8 @@ pub mod utils {
     }
 
     /// Choose optimal data type for mixed precision
+    #[allow(dead_code)]
+    #[allow(clippy::too_many_arguments)]
     pub fn choose_optimal_dtype(
         supports_fp16: bool,
         supports_bf16: bool,

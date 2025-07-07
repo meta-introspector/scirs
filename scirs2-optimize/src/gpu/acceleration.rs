@@ -11,7 +11,7 @@
 
 use crate::error::ScirsResult;
 use ndarray::{Array1, Array2};
-use rand::Rng;
+use rand::{rng, Rng};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -82,7 +82,7 @@ pub enum SimdLevel {
     None,
     Basic,
     Advanced,
-    Ultra,
+    Maximum,
 }
 
 impl Default for AdvancedSwarmConfig {

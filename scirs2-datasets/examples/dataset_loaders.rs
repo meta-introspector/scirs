@@ -17,12 +17,12 @@ fn main() {
 
     // Verify the file exists
     if !Path::new(file_path).exists() {
-        println!("Error: File '{}' does not exist", file_path);
+        println!("Error: File '{file_path}' does not exist");
         return;
     }
 
     // Load CSV file
-    println!("Loading CSV file: {}", file_path);
+    println!("Loading CSV file: {file_path}");
     let csv_config = loaders::CsvConfig {
         has_header: true,
         target_column: None,
@@ -41,9 +41,9 @@ fn main() {
 
                     // Save as JSON for demonstration
                     let json_path = format!("{}.json", file_path);
-                    println!("\nSaving training dataset to JSON: {}", json_path);
+                    println!("\nSaving training dataset to JSON: {json_path}");
                     if let Err(e) = loaders::save_json(&train, &json_path) {
-                        println!("Error saving JSON: {}", e);
+                        println!("Error saving JSON: {e}");
                     } else {
                         println!("Successfully saved JSON file");
 
@@ -53,14 +53,14 @@ fn main() {
                             Ok(loaded) => {
                                 print_dataset_info(&loaded, "Loaded JSON");
                             }
-                            Err(e) => println!("Error loading JSON: {}", e),
+                            Err(e) => println!("Error loading JSON: {e}"),
                         }
                     }
                 }
-                Err(e) => println!("Error splitting dataset: {}", e),
+                Err(e) => println!("Error splitting dataset: {e}"),
             }
         }
-        Err(e) => println!("Error loading CSV: {}", e),
+        Err(e) => println!("Error loading CSV: {e}"),
     }
 }
 
@@ -89,6 +89,6 @@ fn print_dataset_info(dataset: &Dataset, name: &str) {
     }
 
     for (key, value) in &dataset.metadata {
-        println!("Metadata - {}: {}", key, value);
+        println!("Metadata - {key}: {value}");
     }
 }

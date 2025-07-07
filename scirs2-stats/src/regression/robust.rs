@@ -525,7 +525,9 @@ where
         Random::with_seed(seed)
     } else {
         // Use a random seed
-        Random::default()
+        use rand::Rng;
+        let mut temp_rng = rand::rng();
+        Random::with_seed(temp_rng.random())
     };
 
     // Keep track of best model

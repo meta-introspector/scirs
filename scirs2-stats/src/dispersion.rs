@@ -70,7 +70,11 @@ where
     // Calculate sum of absolute deviations using SIMD when beneficial
     let sum_abs_dev = if optimizer.should_use_simd(n) {
         // Use SIMD operations for better performance
-        F::simd_sum_abs_diff(&x.view(), center_val)
+        // Create a constant array for center_val and compute abs differences
+        let center_array = Array1::from_elem(x.len(), center_val);
+        let diff = F::simd_sub(&x.view(), &center_array.view());
+        let abs_diff = diff.mapv(|v| v.abs());
+        F::simd_sum(&abs_diff.view())
     } else {
         // Fallback to scalar operations for small arrays
         x.iter().map(|&v| (v - center_val).abs()).sum::<F>()

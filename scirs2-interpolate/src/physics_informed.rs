@@ -969,10 +969,7 @@ mod tests {
         // Allow up to 100% relative error as this is a challenging constraint
         assert!(
             relative_error < 1.0,
-            "Mass conservation failed: calculated {:.6}, target {:.6}, relative error {:.3}",
-            calculated_mass,
-            total_mass,
-            relative_error
+            "Mass conservation failed: calculated {calculated_mass:.6}, target {total_mass:.6}, relative error {relative_error:.3}"
         );
 
         // Verify that the result contains reasonable values
@@ -996,7 +993,7 @@ mod tests {
 
         // Check that all values are positive
         for &value in result.values.iter() {
-            assert!(value > 0.0, "Value {} should be positive", value);
+            assert!(value > 0.0, "Value {value} should be positive");
         }
     }
 
@@ -1022,8 +1019,7 @@ mod tests {
         // Allow some small violations due to numerical precision
         assert!(
             violations < 5,
-            "Too many monotonicity violations: {}",
-            violations
+            "Too many monotonicity violations: {violations}"
         );
     }
 
@@ -1080,8 +1076,7 @@ mod tests {
         let energy_error = result.conservation_errors["conservation_0"];
         assert!(
             energy_error < 10.0,
-            "Energy conservation error too large: {}",
-            energy_error
+            "Energy conservation error too large: {energy_error}"
         );
     }
 
@@ -1121,13 +1116,11 @@ mod tests {
 
         assert!(
             total_violations < 1.0,
-            "Total constraint violations too large: {}",
-            total_violations
+            "Total constraint violations too large: {total_violations}"
         );
         assert!(
             total_errors < 1.0,
-            "Total conservation errors too large: {}",
-            total_errors
+            "Total conservation errors too large: {total_errors}"
         );
     }
 }

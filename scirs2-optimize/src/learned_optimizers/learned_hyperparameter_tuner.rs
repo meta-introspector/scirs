@@ -10,7 +10,7 @@ use super::{
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
-use rand::Rng;
+use rand::{rng, Rng};
 use std::collections::{HashMap, VecDeque};
 
 /// Learned hyperparameter tuner with adaptive configuration

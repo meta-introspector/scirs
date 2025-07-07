@@ -7,7 +7,7 @@
 use crate::error::StatsResult;
 use crate::error_standardization::ErrorMessages;
 use ndarray::{s, Array1, ArrayBase, Data, Ix1};
-use num_traits::{Float, NumCast, Zero};
+use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
 
 /// Enhanced SIMD-optimized mean calculation with adaptive algorithms

@@ -5,12 +5,10 @@
 //! and enhanced numerical stability assessments.
 
 use crate::error::SignalResult;
-use crate::lombscargle::{lombscargle, AutoFreqMethod};
-use ndarray::{Array1, Array2};
+use crate::lombscargle::lombscargle;
+use ndarray::Array1;
 use rand::prelude::*;
 use scirs2_core::random::Rng;
-use scirs2_core::validation::{check_finite, check_positive};
-use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::Instant;
 

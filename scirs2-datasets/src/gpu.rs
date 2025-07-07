@@ -420,7 +420,7 @@ impl GpuContext {
     fn query_cuda_device_info(device_id: u32) -> Result<GpuDeviceInfo> {
         // Simulate CUDA device query
         Ok(GpuDeviceInfo {
-            name: format!("NVIDIA GPU {}", device_id),
+            name: format!("NVIDIA GPU {device_id}"),
             total_memory_mb: 8192,
             available_memory_mb: 7168,
             compute_units: 80,
@@ -573,7 +573,7 @@ impl GpuContext {
     fn query_opencl_device_info(platform_id: u32, device_id: u32) -> Result<GpuDeviceInfo> {
         // Simulate OpenCL device query
         Ok(GpuDeviceInfo {
-            name: format!("OpenCL Device P{}.D{}", platform_id, device_id),
+            name: format!("OpenCL Device P{platform_id}.D{device_id}"),
             total_memory_mb: 4096,
             available_memory_mb: 3584,
             compute_units: 40,
@@ -830,16 +830,14 @@ impl GpuBenchmarkResults {
             "{:<12} {:<20} {:<15} {:<15}",
             "Size", "Operation", "Time (ms)", "Throughput"
         );
-        println!("{}", "-".repeat(70));
+        let separator = "-".repeat(70);
+        println!("{separator}");
 
         for (size, operation, duration) in &self.results {
             let time_ms = duration.as_millis();
             let throughput = *size as f64 / duration.as_secs_f64();
 
-            println!(
-                "{:<12} {:<20} {:<15} {:<15.1}",
-                size, operation, time_ms, throughput
-            );
+            println!("{size:<12} {operation:<20} {time_ms:<15} {throughput:<15.1}");
         }
     }
 
@@ -854,7 +852,7 @@ impl GpuBenchmarkResults {
                 .find(|(s, op, _)| s == size && op == operation)
             {
                 let speedup = cpu_duration.as_secs_f64() / gpu_duration.as_secs_f64();
-                speedups.push((format!("{} ({})", operation, size), speedup));
+                speedups.push((format!("{operation} ({size})"), speedup));
             }
         }
 

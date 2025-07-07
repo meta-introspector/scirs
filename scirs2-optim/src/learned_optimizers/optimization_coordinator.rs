@@ -775,7 +775,7 @@ pub struct CoordinatorMetrics<T: Float> {
     pub ensemble_diversity: T,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ResourceUtilization<T: Float> {
     pub cpu_utilization: T,
     pub memory_utilization: T,
@@ -1135,11 +1135,11 @@ impl<
 
         // 10. Construct result
         let result = AdvancedResult {
-            optimized_parameters: optimization_results.updated_parameters,
+            optimized_parameters: optimization_results.updated_parameters.clone(),
             performance_score: optimization_results.performance_score,
-            ensemble_results: optimization_results.individual_results,
+            ensemble_results: optimization_results.individual_results.clone(),
             landscape_analysis: landscape_features,
-            adaptation_events: optimization_results.adaptation_events,
+            adaptation_events: optimization_results.adaptation_events.clone(),
             resource_usage: optimization_results.resource_usage.clone(),
             execution_time: start_time.elapsed(),
             recommendations: self.generate_recommendations(&optimization_results)?,
@@ -1175,8 +1175,10 @@ impl<
     fn register_default_optimizers(&mut self) -> Result<()> {
         // Create advanced optimizer wrappers for existing optimizers
         let lstm_config = LearnedOptimizerConfig::default();
-        let lstm_optimizer =
-            LSTMOptimizer::new(lstm_config, Box::new(crate::optimizers::SGD::new(0.001)))?;
+        let lstm_optimizer: LSTMOptimizer<T, ndarray::Ix1> = LSTMOptimizer::new(
+            lstm_config,
+            Box::new(crate::optimizers::SGD::new(T::from(0.001).unwrap())),
+        )?;
 
         // Register as advanced optimizer
         self.optimizer_ensemble.register_optimizer(
@@ -1312,11 +1314,10 @@ impl<
         let grad_norm = gradients.iter().map(|&g| g * g).sum::<T>().sqrt();
 
         // Compute gradient variance using historical data
-        let gradient_variance = if context.historical_performance.len() > 1 {
+        let gradient_variance = if context.performance_history.len() > 1 {
             let mut variances = Vec::new();
-            for i in 1..std::cmp::min(context.historical_performance.len(), 10) {
-                let diff =
-                    context.historical_performance[i] - context.historical_performance[i - 1];
+            for i in 1..std::cmp::min(context.performance_history.len(), 10) {
+                let diff = context.performance_history[i] - context.performance_history[i - 1];
                 variances.push(diff * diff);
             }
 
@@ -1359,21 +1360,21 @@ impl<
         };
 
         // Estimate directional derivative using gradient projection
-        let directional_derivative = if context.historical_performance.len() > 1 {
+        let directional_derivative = if context.performance_history.len() > 1 {
             let recent_perf = context
-                .historical_performance
-                .last()
+                .performance_history
+                .back()
                 .copied()
                 .unwrap_or(T::zero());
             let prev_perf = context
-                .historical_performance
-                .get(context.historical_performance.len().saturating_sub(2))
+                .performance_history
+                .get(context.performance_history.len().saturating_sub(2))
                 .copied()
                 .unwrap_or(T::zero());
 
             // Approximate directional derivative
             let perf_diff = recent_perf - prev_perf;
-            let step_size = context.optimization_state.step_size;
+            let step_size = context.state.step_size;
 
             if step_size > T::zero() {
                 perf_diff / step_size
@@ -1601,8 +1602,9 @@ impl<
         }
 
         // Consider historical performance
-        if !context.historical_performance.is_empty() {
-            let recent_trend = self.compute_performance_trend(&context.historical_performance);
+        if !context.performance_history.is_empty() {
+            let scores: Vec<T> = context.performance_history.iter().cloned().collect();
+            let recent_trend = self.compute_performance_trend(&scores);
             if recent_trend > T::zero() {
                 score = score + T::from(0.05).unwrap();
             }
@@ -1773,8 +1775,9 @@ impl<
         }
 
         // Consider historical performance for adaptation
-        if !context.historical_performance.is_empty() {
-            let trend = self.compute_performance_trend(&context.historical_performance);
+        if !context.performance_history.is_empty() {
+            let scores: Vec<T> = context.performance_history.iter().cloned().collect();
+            let trend = self.compute_performance_trend(&scores);
             if trend < T::zero() {
                 score = score + T::from(0.1).unwrap(); // Meta-learners adapt to declining performance
             }
@@ -1813,7 +1816,7 @@ impl<
         predictions: &HashMap<String, T>,
         context: &OptimizationContext<T>,
     ) -> Result<Vec<String>> {
-        let mut candidate_optimizers: Vec<_> = predictions.iter().collect();
+        let candidate_optimizers: Vec<_> = predictions.iter().collect();
 
         // Multi-objective scoring considering performance, diversity, and resource efficiency
         let mut scored_optimizers = Vec::new();
@@ -1850,7 +1853,11 @@ impl<
                 + convergence_reliability * convergence_weight
                 + self.compute_robustness_score(optimizer_name, context)? * robustness_weight;
 
-            scored_optimizers.push((optimizer_name.clone(), composite_score, *predicted_score));
+            scored_optimizers.push((
+                (*optimizer_name).clone(),
+                composite_score,
+                **predicted_score,
+            ));
         }
 
         // Sort by composite score
@@ -2223,14 +2230,14 @@ impl<
         results: &EnsembleOptimizationResults<T>,
     ) -> Result<MetaLearningPerformance<T>> {
         // Compute learning efficiency
-        let learning_efficiency = if !context.historical_performance.is_empty()
-            && context.historical_performance.len() > 1
-        {
-            let improvement_rate = self.compute_performance_trend(&context.historical_performance);
-            improvement_rate.max(T::zero())
-        } else {
-            T::from(0.5).unwrap()
-        };
+        let learning_efficiency =
+            if !context.performance_history.is_empty() && context.performance_history.len() > 1 {
+                let scores: Vec<T> = context.performance_history.iter().cloned().collect();
+                let improvement_rate = self.compute_performance_trend(&scores);
+                improvement_rate.max(T::zero())
+            } else {
+                T::from(0.5).unwrap()
+            };
 
         // Compute adaptation speed
         let adaptation_speed = if results.adaptation_events.is_empty() {
@@ -2551,7 +2558,7 @@ impl<
 
     fn select_best_strategy_for_task(&self, meta_task: &MetaTask<T>) -> Result<usize> {
         if self.meta_learning_orchestrator.strategies.is_empty() {
-            return Err(OptimError::InvalidParameters(
+            return Err(OptimError::InvalidParameter(
                 "No meta-learning strategies available".to_string(),
             ));
         }
@@ -2723,8 +2730,9 @@ impl<
         results: &EnsembleOptimizationResults<T>,
     ) -> Result<PatternType> {
         // Analyze convergence behavior
-        if !context.historical_performance.is_empty() {
-            let convergence_rate = self.compute_performance_trend(&context.historical_performance);
+        if !context.performance_history.is_empty() {
+            let scores: Vec<T> = context.performance_history.iter().cloned().collect();
+            let convergence_rate = self.compute_performance_trend(&scores);
 
             if convergence_rate > T::from(0.05).unwrap() {
                 return Ok(PatternType::ConvergencePattern);
@@ -2856,12 +2864,11 @@ impl<
         features.push(context.problem_characteristics.convexity);
 
         // Optimization state features
-        features
-            .push(T::from(context.optimization_state.current_iteration as f64 / 1000.0).unwrap());
-        features.push(context.optimization_state.current_loss);
-        features.push(context.optimization_state.gradient_norm);
-        features.push(context.optimization_state.step_size);
-        features.push(context.optimization_state.convergence_measure);
+        features.push(T::from(context.state.current_iteration as f64 / 1000.0).unwrap());
+        features.push(context.state.current_loss);
+        features.push(context.state.gradient_norm);
+        features.push(context.state.step_size);
+        features.push(context.state.convergence_measure);
 
         // Resource utilization features
         features.push(results.resource_usage.cpu_utilization);
@@ -2873,8 +2880,9 @@ impl<
         features.push(results.performance_score);
 
         // Historical trend
-        if !context.historical_performance.is_empty() {
-            let trend = self.compute_performance_trend(&context.historical_performance);
+        if !context.performance_history.is_empty() {
+            let scores: Vec<T> = context.performance_history.iter().cloned().collect();
+            let trend = self.compute_performance_trend(&scores);
             features.push(trend);
         } else {
             features.push(T::zero());
@@ -2972,7 +2980,7 @@ impl<T: Float + Send + Sync> OptimizerEnsemble<T> {
             performance_scores: HashMap::new(),
             ensemble_weights: HashMap::new(),
             ensemble_strategy: EnsembleStrategy::WeightedAverage,
-            selection_algorithm: OptimizerSelectionAlgorithm::PerformanceBased,
+            selection_algorithm: OptimizerSelectionAlgorithm::BestPerforming,
         })
     }
 
@@ -3281,13 +3289,38 @@ impl Default for ResourcePool {
 
 // Advanced LSTM wrapper to implement AdvancedOptimizer trait
 #[derive(Debug)]
-pub struct AdvancedLSTMWrapper<T: Float> {
+pub struct AdvancedLSTMWrapper<
+    T: Float
+        + Default
+        + Clone
+        + Send
+        + Sync
+        + std::fmt::Debug
+        + 'static
+        + ndarray::ScalarOperand
+        + std::iter::Sum
+        + std::iter::Sum<T>
+        + for<'a> std::iter::Sum<&'a T>,
+> {
     lstm_optimizer: LSTMOptimizer<T, ndarray::Ix1>,
     capabilities: OptimizerCapabilities,
     performance_score: T,
 }
 
-impl<T: Float + Send + Sync> AdvancedLSTMWrapper<T> {
+impl<
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + std::fmt::Debug
+            + 'static
+            + ndarray::ScalarOperand
+            + std::iter::Sum
+            + std::iter::Sum<T>
+            + for<'a> std::iter::Sum<&'a T>,
+    > AdvancedLSTMWrapper<T>
+{
     fn new(lstm_optimizer: LSTMOptimizer<T, ndarray::Ix1>) -> Self {
         let capabilities = OptimizerCapabilities {
             supported_problems: vec![ProblemType::NonConvex, ProblemType::Stochastic],
@@ -3324,16 +3357,28 @@ impl<T: Float + Send + Sync> AdvancedLSTMWrapper<T> {
     }
 }
 
-impl<T: Float + Send + Sync + std::fmt::Debug> AdvancedOptimizer<T> for AdvancedLSTMWrapper<T> {
+impl<
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + std::fmt::Debug
+            + 'static
+            + ndarray::ScalarOperand
+            + std::iter::Sum
+            + std::iter::Sum<T>
+            + for<'a> std::iter::Sum<&'a T>,
+    > AdvancedOptimizer<T> for AdvancedLSTMWrapper<T>
+{
     fn optimize_step_with_context(
         &mut self,
         parameters: &Array1<T>,
         gradients: &Array1<T>,
         _context: &OptimizationContext<T>,
     ) -> Result<Array1<T>> {
-        // Use the LSTM optimizer's learned_step method
-        self.lstm_optimizer
-            .learned_step(parameters, gradients, None)
+        // Use the LSTM optimizer's lstm_step method
+        self.lstm_optimizer.lstm_step(parameters, gradients, None)
     }
 
     fn adapt_to_landscape(&mut self, _landscape_features: &LandscapeFeatures<T>) -> Result<()> {
@@ -3444,11 +3489,13 @@ impl<T: Float + Send + Sync> PerformanceDegradationTrigger<T> {
     }
 }
 
-impl<T: Float + Send + Sync> AdaptationTrigger<T> for PerformanceDegradationTrigger<T> {
+impl<T: Float + Send + Sync + std::fmt::Debug> AdaptationTrigger<T>
+    for PerformanceDegradationTrigger<T>
+{
     fn is_triggered(&self, context: &OptimizationContext<T>) -> bool {
-        if context.historical_performance.len() >= 2 {
-            let recent = context.historical_performance[context.historical_performance.len() - 1];
-            let previous = context.historical_performance[context.historical_performance.len() - 2];
+        if context.performance_history.len() >= 2 {
+            let recent = context.performance_history[context.performance_history.len() - 1];
+            let previous = context.performance_history[context.performance_history.len() - 2];
             previous - recent > self.threshold
         } else {
             false
@@ -3477,7 +3524,9 @@ impl<T: Float + Send + Sync> ResourceConstraintTrigger<T> {
     }
 }
 
-impl<T: Float + Send + Sync> AdaptationTrigger<T> for ResourceConstraintTrigger<T> {
+impl<T: Float + Send + Sync + std::fmt::Debug> AdaptationTrigger<T>
+    for ResourceConstraintTrigger<T>
+{
     fn is_triggered(&self, context: &OptimizationContext<T>) -> bool {
         // Check if resource constraints are being violated
         context.resource_constraints.max_memory > T::from(8192.0).unwrap() // Simplified check
@@ -3527,8 +3576,10 @@ impl<T: Float + Send + Sync> TaskDistributionAnalyzer<T> {
         // Update distribution models
         let model_key = "general_distribution".to_string();
         if !self.distribution_models.contains_key(&model_key) {
-            self.distribution_models
-                .insert(model_key.clone(), DistributionModel::default());
+            self.distribution_models.insert(
+                model_key.clone(),
+                DistributionModel::Gaussian(T::zero(), T::one()),
+            );
         }
 
         // Update clustering if needed
@@ -3771,6 +3822,12 @@ impl<T: Float> Default for UtilizationMetrics<T> {
             peak_utilization: T::from(0.8).unwrap(),
             efficiency_score: T::from(0.75).unwrap(),
         }
+    }
+}
+
+impl<T: Float> UtilizationMetrics<T> {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -4086,11 +4143,18 @@ impl<T: Float + Send + Sync> PerformancePredictor<T> {
             feature_extractors: Vec::new(),
             prediction_cache: PredictionCache {
                 cache: HashMap::new(),
-                max_size: 1000,
+                stats: CacheStatistics {
+                    hit_rate: 0.0,
+                    miss_rate: 0.0,
+                    eviction_count: 0,
+                    total_requests: 0,
+                },
+                eviction_policy: CacheEvictionPolicy::LRU,
             },
             uncertainty_estimator: UncertaintyEstimator {
-                estimation_method: "bootstrap".to_string(),
-                confidence_threshold: T::from(0.95).unwrap(),
+                models: Vec::new(),
+                method: UncertaintyEstimationMethod::Ensemble,
+                calibration_data: CalibrationData::default(),
             },
         })
     }
@@ -4101,19 +4165,25 @@ impl<T: Float + Send + Sync> ResourceManager<T> {
         Ok(Self {
             available_resources: ResourcePool {
                 cpu_cores: 8,
-                memory_gb: 16,
-                gpu_count: 1,
+                memory_mb: 16384, // 16 GB in MB
+                gpu_devices: 1,
+                storage_gb: 100,
+                network_bandwidth: 1000.0,
             },
             allocation_tracker: ResourceAllocationTracker {
-                allocations: HashMap::new(),
+                current_allocations: HashMap::new(),
+                allocation_history: VecDeque::new(),
+                utilization_metrics: UtilizationMetrics::new(),
             },
             optimization_engine: ResourceOptimizationEngine {
-                optimization_strategy: "balanced".to_string(),
-                efficiency_target: T::from(0.8).unwrap(),
+                algorithm: ResourceOptimizationAlgorithm::GreedyAllocation,
+                parameters: HashMap::new(),
+                performance_predictor: ResourcePerformancePredictor::new(),
             },
             load_balancer: LoadBalancer {
-                balancing_strategy: "round_robin".to_string(),
-                load_threshold: T::from(0.9).unwrap(),
+                strategy: LoadBalancingStrategy::RoundRobin,
+                current_loads: HashMap::new(),
+                load_history: VecDeque::new(),
             },
         })
     }
@@ -4126,8 +4196,10 @@ impl<T: Float + Send + Sync> AdaptationController<T> {
             triggers: Vec::new(),
             adaptation_history: VecDeque::new(),
             current_state: AdaptationState {
-                current_adaptations: HashMap::new(),
-                adaptation_count: 0,
+                adaptation_level: T::zero(),
+                last_adaptation: SystemTime::now(),
+                adaptation_frequency: T::zero(),
+                effectiveness: T::zero(),
             },
         })
     }
@@ -4138,17 +4210,24 @@ impl<T: Float + Send + Sync> OptimizationKnowledgeBase<T> {
         Ok(Self {
             optimization_patterns: HashMap::new(),
             best_practices: BestPracticesDatabase {
-                practices: HashMap::new(),
+                practices_by_domain: HashMap::new(),
+                evidence_quality: HashMap::new(),
+                last_updated: SystemTime::now(),
             },
             failure_analysis: FailureAnalysisDatabase {
                 failure_patterns: HashMap::new(),
+                root_causes: HashMap::new(),
+                mitigation_strategies: HashMap::new(),
             },
             research_insights: ResearchInsightsDatabase {
-                insights: HashMap::new(),
+                insights_by_category: HashMap::new(),
+                citation_network: CitationNetwork::new(),
+                emerging_trends: Vec::new(),
             },
             learning_system: DynamicLearningSystem {
-                learning_rate: T::from(0.01).unwrap(),
-                adaptation_threshold: T::from(0.1).unwrap(),
+                learning_algorithms: Vec::new(),
+                integration_engine: KnowledgeIntegrationEngine::new(),
+                validation_system: KnowledgeValidationSystem::new(),
             },
         })
     }
@@ -4166,13 +4245,16 @@ impl<T: Float + Send + Sync> CoordinatorState<T> {
             active_optimizers: 0,
             current_metrics: CoordinatorMetrics {
                 overall_performance: T::from(0.0).unwrap(),
-                efficiency_score: T::from(0.0).unwrap(),
+                convergence_rate: T::from(0.0).unwrap(),
+                resource_efficiency: T::from(0.0).unwrap(),
                 adaptation_success_rate: T::from(0.0).unwrap(),
+                ensemble_diversity: T::from(0.0).unwrap(),
             },
             resource_utilization: ResourceUtilization {
-                cpu_usage: T::from(0.0).unwrap(),
-                memory_usage: T::from(0.0).unwrap(),
-                gpu_usage: T::from(0.0).unwrap(),
+                cpu_utilization: T::from(0.0).unwrap(),
+                memory_utilization: T::from(0.0).unwrap(),
+                gpu_utilization: T::from(0.0).unwrap(),
+                network_utilization: T::from(0.0).unwrap(),
             },
             state_history: VecDeque::new(),
         }

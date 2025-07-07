@@ -174,6 +174,7 @@ where
     }
 
     /// Internal method to fit a constrained spline
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn fit_internal(
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,

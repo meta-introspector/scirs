@@ -8,8 +8,8 @@ use num_traits::{Float, NumCast};
 
 use crate::error::{Result, TransformError};
 
-// Define a small value to use for comparison with zero
-const EPSILON: f64 = 1e-10;
+/// Small value to use for comparison with zero and numerical stability
+pub const EPSILON: f64 = 1e-10;
 
 /// Method of normalization to apply
 #[derive(Debug, Clone, Copy, PartialEq)]

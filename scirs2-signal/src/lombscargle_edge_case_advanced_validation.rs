@@ -9,15 +9,11 @@
 //! - Numerical precision limits
 //! - Multi-scale signals
 
-use crate::error::{SignalError, SignalResult};
-use crate::lombscargle::{lombscargle, AutoFreqMethod};
-use crate::lombscargle_simd::{simd_lombscargle, SimdLombScargleResult};
-use ndarray::{Array1, ArrayView1};
+use crate::error::SignalResult;
+use crate::lombscargle::lombscargle;
+use ndarray::Array1;
 use num_traits::Float;
 use rand::prelude::*;
-use rand::seq::SliceRandom;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -192,9 +188,7 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
         // Generate signal with true frequency
         let signal: Vec<f64> = times
             .iter()
-            .map(|&t| {
-                amplitude * (2.0 * PI * true_freq * t).sin() + 0.1 * rng.random_range(-1.0..1.0)
-            })
+            .map(|&t| amplitude * (2.0 * PI * true_freq * t).sin() + 0.1 * rng.random_range(-1.0..1.0))
             .collect();
 
         // Run Lomb-Scargle analysis
@@ -424,9 +418,7 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
     let n_false_positive_tests = 50;
 
     for _ in 0..n_false_positive_tests {
-        let pure_noise: Vec<f64> = (0..n_samples)
-            .map(|_| rng.random_range(-1.0..1.0))
-            .collect();
+        let pure_noise: Vec<f64> = (0..n_samples).map(|_| rng.random_range(-1.0..1.0)).collect();
 
         let frequencies = Array1::linspace(0.05, 0.5, 100);
         if let Ok(power) = lombscargle(&times.to_vec(), &pure_noise, &frequencies, None) {

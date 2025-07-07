@@ -150,17 +150,17 @@ where
     F: Float + FromPrimitive + Debug + Send + Sync + SimdUnifiedOps + std::iter::Sum,
 {
     let n_samples = data.shape()[0];
-    let n_features = data.shape()[1];
+    let _n_features = data.shape()[1];
     let k = init_centroids.shape()[0];
 
     let mut centroids = init_centroids.to_owned();
     let mut labels = Array1::zeros(n_samples);
     let mut prev_inertia = F::infinity();
-    let mut converged = false;
+    let mut _converged = false;
 
     for iteration in 0..opts.max_iter {
         // Assign samples to nearest centroid using SIMD
-        let (new_labels, distances) = vq_simd(data, centroids.view(), Some(simd_config))?;
+        let (new_labels, _distances) = vq_simd(data, centroids.view(), Some(simd_config))?;
         labels = new_labels;
 
         // Compute new centroids using SIMD
@@ -178,13 +178,13 @@ where
 
         // Check for convergence
         if centroid_shift <= opts.tol {
-            converged = true;
+            _converged = true;
             break;
         }
 
         // Additional convergence check: if inertia doesn't improve
         if iteration > 0 && (inertia >= prev_inertia || (prev_inertia - inertia) < opts.tol) {
-            converged = true;
+            _converged = true;
             break;
         }
 
@@ -313,7 +313,7 @@ where
     let mut centroids = kmeans_init(data, k, Some(opts.init_method), opts.random_seed)?;
     let mut counts = Array1::<usize>::zeros(k);
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for iteration in 0..opts.max_iter {
         // Sample a mini-batch
@@ -420,7 +420,7 @@ where
         )));
     }
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut centroids = Array2::zeros((k, n_features));
 
     // Choose the first centroid randomly

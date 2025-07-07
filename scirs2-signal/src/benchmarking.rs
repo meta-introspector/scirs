@@ -849,7 +849,7 @@ fn benchmark_communications_workflow(
         let peaks: Vec<f64> = correlation
             .iter()
             .enumerate()
-            .filter_map(|(i, &val)| if val > threshold { Some(val) } else { None })
+            .filter_map(|(_i, &val)| if val > threshold { Some(val) } else { None })
             .collect();
 
         peaks
@@ -902,7 +902,7 @@ fn create_benchmark_result(
     name: String,
     size: usize,
     execution_times: Vec<u64>,
-    config: &BenchmarkConfig,
+    _config: &BenchmarkConfig,
 ) -> BenchmarkResult {
     let mean_time = execution_times.iter().sum::<u64>() as f64 / execution_times.len() as f64;
     let variance = execution_times

@@ -111,7 +111,7 @@ pub fn cubic_spline_interpolate(
     let second_derivatives = match solve(&matrix.view(), &rhs.view(), None) {
         Ok(solution) => solution,
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to solve spline equation system".to_string(),
             ));
         }

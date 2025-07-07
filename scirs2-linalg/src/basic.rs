@@ -37,9 +37,10 @@ where
     parallel::configure_workers(workers);
 
     if a.nrows() != a.ncols() {
+        let rows = a.nrows();
+        let cols = a.ncols();
         return Err(LinalgError::ShapeError(format!(
-            "Determinant computation failed: Matrix must be square\nMatrix shape: {}×{}\nExpected: Square matrix (n×n)",
-            a.nrows(), a.ncols()
+            "Determinant computation failed: Matrix must be square\nMatrix shape: {rows}×{cols}\nExpected: Square matrix (n×n)"
         )));
     }
 
@@ -126,9 +127,10 @@ where
     parallel::configure_workers(workers);
 
     if a.nrows() != a.ncols() {
+        let rows = a.nrows();
+        let cols = a.ncols();
         return Err(LinalgError::ShapeError(format!(
-            "Matrix inverse computation failed: Matrix must be square\nMatrix shape: {}×{}\nExpected: Square matrix (n×n)",
-            a.nrows(), a.ncols()
+            "Matrix inverse computation failed: Matrix must be square\nMatrix shape: {rows}×{cols}\nExpected: Square matrix (n×n)"
         )));
     }
 
@@ -225,9 +227,10 @@ where
     parallel::configure_workers(workers);
 
     if a.nrows() != a.ncols() {
+        let rows = a.nrows();
+        let cols = a.ncols();
         return Err(LinalgError::ShapeError(format!(
-            "Matrix power computation failed: Matrix must be square\nMatrix shape: {}×{}\nExpected: Square matrix (n×n)",
-            a.nrows(), a.ncols()
+            "Matrix power computation failed: Matrix must be square\nMatrix shape: {rows}×{cols}\nExpected: Square matrix (n×n)"
         )));
     }
 
@@ -296,9 +299,10 @@ where
     F: Float + NumAssign + Sum + Send + Sync + ScalarOperand + 'static,
 {
     if a.nrows() != a.ncols() {
+        let rows = a.nrows();
+        let cols = a.ncols();
         return Err(LinalgError::ShapeError(format!(
-            "Matrix trace computation failed: Matrix must be square\nMatrix shape: {}×{}\nExpected: Square matrix (n×n)",
-            a.nrows(), a.ncols()
+            "Matrix trace computation failed: Matrix must be square\nMatrix shape: {rows}×{cols}\nExpected: Square matrix (n×n)"
         )));
     }
 

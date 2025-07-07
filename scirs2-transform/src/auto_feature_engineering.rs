@@ -9,6 +9,9 @@ use scirs2_core::validation::check_not_empty;
 use std::collections::HashMap;
 
 #[cfg(feature = "auto-feature-engineering")]
+use std::collections::VecDeque;
+
+#[cfg(feature = "auto-feature-engineering")]
 use tch::{nn, Device, Tensor};
 
 /// Meta-features extracted from datasets for transformation selection
@@ -931,7 +934,7 @@ impl AdvancedMetaLearningSystem {
                 Default::default(),
             ))
             .add_fn(|xs| xs.relu())
-            .add(nn::dropout(&root / "dropout1", 0.3))
+            .add_fn(|xs| xs.dropout(0.3, false))
             .add(nn::linear(
                 &root / "deep_layer2",
                 128,
@@ -947,7 +950,7 @@ impl AdvancedMetaLearningSystem {
                 Default::default(),
             ))
             .add_fn(|xs| xs.relu())
-            .add(nn::dropout(&root / "dropout2", 0.3))
+            .add_fn(|xs| xs.dropout(0.3, false))
             .add(nn::linear(
                 &root / "deep_layer4",
                 128,
@@ -1053,7 +1056,7 @@ impl AdvancedMetaLearningSystem {
         let base_features = auto_engineer.extract_meta_features(x)?;
 
         // Extract additional advanced meta-features
-        let (n_samples, _n_features) = x.dim();
+        let (_n_samples, _n_features) = x.dim();
 
         // Topological features
         let manifold_dimension = self.estimate_intrinsic_dimension(x)?;
@@ -1843,7 +1846,7 @@ impl AdvancedMetaLearningSystem {
             ));
         }
 
-        Ok(Tensor::of_slice(&feature_vec)
+        Ok(Tensor::f_from_slice(&feature_vec)?
             .reshape(&[1, 20])
             .to_device(self.device))
     }

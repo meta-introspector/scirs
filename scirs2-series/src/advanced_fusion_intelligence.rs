@@ -4396,7 +4396,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumProcessingUnit<F> {
         // Create superposition states for parallel computation
         for i in 0..n {
             let mut superposition_sum = F::zero();
-            let weights = vec![
+            let weights = [
                 F::from(0.5).unwrap(),
                 F::from(0.3).unwrap(),
                 F::from(0.2).unwrap(),

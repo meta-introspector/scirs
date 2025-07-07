@@ -8,7 +8,7 @@
 mod tests {
     use super::super::*;
     use approx::assert_abs_diff_eq;
-    use ndarray::{array, Array2, Array3, Ix2, IxDyn};
+    use ndarray::{array, Array1, Array2, Array3, Ix2, IxDyn};
 
     #[test]
     fn test_filters_preserve_shape() {

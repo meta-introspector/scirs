@@ -43,8 +43,8 @@ fn safe_usize_to_float<T: Float + FromPrimitive>(value: usize) -> NdimageResult<
 #[allow(dead_code)]
 pub fn threshold_binary<T, D>(image: &Array<T, D>, threshold: T) -> NdimageResult<Array<T, D>>
 where
-    T: Float + NumAssign + std::fmt::Debug,
-    D: Dimension,
+    T: Float + NumAssign + std::fmt::Debug + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Apply threshold by mapping over the input array
     let result = image.mapv(|val| if val > threshold { T::one() } else { T::zero() });
@@ -84,8 +84,8 @@ where
 #[allow(dead_code)]
 pub fn otsu_threshold<T, D>(image: &Array<T, D>, bins: usize) -> NdimageResult<(Array<T, D>, T)>
 where
-    T: Float + NumAssign + std::fmt::Debug,
-    D: Dimension,
+    T: Float + NumAssign + std::fmt::Debug + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     let nbins = bins;
 

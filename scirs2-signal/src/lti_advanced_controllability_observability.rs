@@ -10,18 +10,15 @@
 //! - Multi-scale temporal controllability analysis
 
 use crate::error::{SignalError, SignalResult};
-use crate::lti::analysis::{ControllabilityAnalysis, KalmanDecomposition, ObservabilityAnalysis};
+use crate::lti::analysis::KalmanDecomposition;
 use crate::lti::robust_analysis::{
     EnhancedControllabilityAnalysis, EnhancedObservabilityAnalysis, RobustAnalysisConfig,
-    RobustControlObservabilityAnalysis,
 };
 use crate::lti::systems::StateSpace;
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, NumCast};
+use ndarray::{Array1, Array2, Array3};
+use num_traits::Float;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
-use std::collections::HashMap;
+use scirs2_core::validation::check_finite;
 
 /// Advanced-enhanced controllability and observability analysis result
 #[derive(Debug, Clone)]

@@ -123,7 +123,7 @@ pub fn gaussian_process_interpolate(
     let l = match cholesky(&k_xx.view(), None) {
         Ok(l) => l,
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to compute Cholesky decomposition of covariance matrix".to_string(),
             ));
         }
@@ -134,7 +134,7 @@ pub fn gaussian_process_interpolate(
     let alpha = match solve_triangular(&l.view(), &y.view(), true, false) {
         Ok(a) => a,
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to solve triangular system in Gaussian process".to_string(),
             ));
         }
@@ -261,7 +261,7 @@ where
         let weights = match solve(&gamma.view(), &rhs.view(), None) {
             Ok(w) => w,
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to solve Kriging system".to_string(),
                 ));
             }
@@ -367,7 +367,7 @@ where
     let weights = match solve(&phi.view(), &y.view(), None) {
         Ok(w) => w,
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to solve RBF system".to_string(),
             ));
         }
@@ -494,7 +494,7 @@ pub fn minimum_energy_interpolate(
     let y_unknown = match solve(&a_reg.view(), &b.view(), None) {
         Ok(solution) => -solution, // Negative because of how we set up the system
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to solve minimum energy interpolation system".to_string(),
             ));
         }

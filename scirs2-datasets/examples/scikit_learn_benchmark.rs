@@ -9,10 +9,9 @@
 //! Note: This requires scikit-learn to be installed for Python comparison benchmarks
 
 use scirs2_datasets::{
-    benchmarks::{BenchmarkRunner, BenchmarkSuite, PerformanceComparison},
-    load_boston, load_breast_cancer, load_diabetes, load_digits, load_iris, load_wine, make_blobs,
-    make_classification, make_regression,
-    utils::{stratified_kfold_split, train_test_split},
+    benchmarks::{BenchmarkRunner, BenchmarkSuite},
+    load_boston, load_breast_cancer, load_digits, load_iris, load_wine, make_classification,
+    make_regression,
 };
 use std::collections::HashMap;
 use std::process::Command;
@@ -31,9 +30,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Run comprehensive SciRS2 benchmarks
     let scirs2_suites = runner.run_comprehensive_benchmarks();
 
-    println!("\n" + "=".repeat(60).as_str());
+    println!("{}", "\n".to_owned() + &"=".repeat(60));
     println!("DETAILED ANALYSIS");
-    println!("=".repeat(60));
+    println!("{}", "=".repeat(60));
 
     // Analyze toy dataset performance
     analyze_toy_dataset_performance(&scirs2_suites);
@@ -57,7 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn analyze_toy_dataset_performance(suites: &[BenchmarkSuite]) {
     if let Some(toy_suite) = suites.iter().find(|s| s.name == "Toy Datasets") {
         println!("\n📊 TOY DATASET LOADING ANALYSIS");
-        println!("-".repeat(40));
+        println!("{}", "-".repeat(40));
 
         let mut total_loading_time = Duration::ZERO;
         let mut total_samples = 0;
@@ -111,7 +110,7 @@ fn analyze_toy_dataset_performance(suites: &[BenchmarkSuite]) {
 fn analyze_data_generation_performance(suites: &[BenchmarkSuite]) {
     if let Some(gen_suite) = suites.iter().find(|s| s.name == "Data Generation") {
         println!("\n🔬 DATA GENERATION ANALYSIS");
-        println!("-".repeat(40));
+        println!("{}", "-".repeat(40));
 
         let mut classification_results = Vec::new();
         let mut regression_results = Vec::new();
@@ -166,12 +165,12 @@ fn analyze_generation_type(
     if let (Some(best), Some(worst)) = (best, worst) {
         println!(
             "    Best: {} ({:.1} samples/s)",
-            best.operation.split('_').last().unwrap_or("unknown"),
+            best.operation.split('_').next_back().unwrap_or("unknown"),
             best.throughput
         );
         println!(
             "    Worst: {} ({:.1} samples/s)",
-            worst.operation.split('_').last().unwrap_or("unknown"),
+            worst.operation.split('_').next_back().unwrap_or("unknown"),
             worst.throughput
         );
     }
@@ -243,7 +242,7 @@ fn analyze_scaling_performance(suite: &BenchmarkSuite) {
 #[allow(dead_code)]
 fn run_python_comparison_benchmarks() {
     println!("\n🐍 PYTHON SCIKIT-LEARN COMPARISON");
-    println!("-".repeat(40));
+    println!("{}", "-".repeat(40));
 
     // Check if Python and scikit-learn are available
     let python_check = Command::new("python3")
@@ -297,7 +296,7 @@ fn run_sklearn_toy_dataset_comparison() {
 
     for (name, python_code) in datasets {
         // Time Python execution
-        let start = Instant::now();
+        let _start = Instant::now();
         let python_result = Command::new("python3")
             .arg("-c")
             .arg(&format!(
@@ -319,7 +318,7 @@ fn run_sklearn_toy_dataset_comparison() {
                     "iris" => load_iris().map(|_| ()),
                     "boston" => load_boston().map(|_| ()),
                     "digits" => load_digits().map(|_| ()),
-                    "wine" => load_wine().map(|_| ()),
+                    "wine" => load_wine(false).map(|_| ()),
                     "breast_cancer" => load_breast_cancer().map(|_| ()),
                     _ => Ok(()),
                 };
@@ -428,7 +427,7 @@ fn run_sklearn_generation_comparison() {
 #[allow(dead_code)]
 fn generate_performance_report(suites: &[BenchmarkSuite]) {
     println!("\n📋 PERFORMANCE SUMMARY REPORT");
-    println!("=".repeat(60));
+    println!("{}", "=".repeat(60));
 
     let mut total_operations = 0;
     let mut total_samples = 0;

@@ -117,8 +117,6 @@
 //! - [`design`] - System creation and interconnection functions
 
 // Re-export all public modules
-use num_complex::Complex64;
-use std::f64::consts::PI;
 pub mod analysis;
 pub mod design;
 pub mod robust_analysis;
@@ -180,6 +178,7 @@ pub mod system {
 mod tests {
     use super::*;
     use approx::assert_relative_eq;
+    use num_complex::Complex64;
 
     #[test]
     fn test_module_api_compatibility() {

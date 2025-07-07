@@ -558,7 +558,7 @@ where
             evaluation_history,
             convergence_info,
             exploration_stats,
-            total_time,
+            total_time: total_time.as_secs_f64(),
         })
     }
 
@@ -660,7 +660,7 @@ where
             evaluation_history,
             convergence_info,
             exploration_stats,
-            total_time,
+            total_time: total_time.as_secs_f64(),
         })
     }
 
@@ -715,7 +715,7 @@ where
             evaluation_history,
             convergence_info: HashMap::new(),
             exploration_stats: HashMap::new(),
-            total_time,
+            total_time: total_time.as_secs_f64(),
         })
     }
 
@@ -782,7 +782,7 @@ where
             evaluation_history,
             convergence_info: HashMap::new(),
             exploration_stats: HashMap::new(),
-            total_time,
+            total_time: total_time.as_secs_f64(),
         })
     }
 
@@ -842,7 +842,7 @@ where
             evaluation_history,
             convergence_info: HashMap::new(),
             exploration_stats: HashMap::new(),
-            total_time,
+            total_time: total_time.as_secs_f64(),
         })
     }
 
@@ -893,7 +893,7 @@ where
             evaluation_history,
             convergence_info: HashMap::new(),
             exploration_stats: HashMap::new(),
-            total_time,
+            total_time: total_time.as_secs_f64(),
         })
     }
 
@@ -952,7 +952,7 @@ where
             evaluation_history,
             convergence_info: HashMap::new(),
             exploration_stats: HashMap::new(),
-            total_time,
+            total_time: total_time.as_secs_f64(),
         })
     }
 
@@ -1920,8 +1920,7 @@ where
             }
             AcquisitionFunction::ThompsonSampling => {
                 // Sample from posterior
-                use rand::Rng;
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
                 let sample: f64 = rng.random_range(0.0..1.0);
                 mean + std_dev * self.inverse_normal_cdf(sample)
             }
@@ -2308,13 +2307,13 @@ where
                 HyperParameter::Float { min, max } => {
                     // Add some exploration around high-variance regions
                     use rand::Rng;
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rng();
                     let noise = rng.random_range(-variance.sqrt()..variance.sqrt());
                     (mean + noise).clamp(*min, *max)
                 }
                 HyperParameter::Integer { min, max } => {
                     use rand::Rng;
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rng();
                     rng.random_range(*min..=*max) as f64
                 }
                 _ => mean, // Simplified for other parameter types
@@ -2386,7 +2385,7 @@ where
                 }
                 HyperParameter::Integer { min, max } => {
                     use rand::Rng;
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rng();
                     rng.random_range(*min..=*max) as f64
                 }
                 _ => {
@@ -2914,7 +2913,7 @@ where
         search_space: &SearchSpace,
         n_points: usize,
     ) -> Result<Vec<HashMap<String, f64>>> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rng();
         let mut combinations = Vec::new();
 
         let param_names: Vec<String> = search_space.parameters.keys().cloned().collect();
@@ -3127,7 +3126,7 @@ where
         n_candidates: usize,
     ) -> Result<Vec<HashMap<String, f64>>> {
         let mut candidates = Vec::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rng();
 
         // Find top performing regions from observations (placeholder)
         let n_centers = std::cmp::min(5, n_candidates / 10);
@@ -3211,7 +3210,7 @@ where
             }
             AcquisitionFunction::ThompsonSampling => {
                 // Thompson sampling: sample from posterior
-                let mut rng = rand::thread_rng();
+                let mut rng = rng();
                 mean + std_dev * rng.random_range(-1.0..1.0)
             }
         }
@@ -3856,15 +3855,15 @@ impl StandardSearchSpaces {
         let mut parameters = HashMap::new();
         parameters.insert(
             "n_clusters".to_string(),
-            ParameterSpace::Integer { min: 2, max: 50 },
+            HyperParameter::Integer { min: 2, max: 50 },
         );
         parameters.insert(
             "max_iter".to_string(),
-            ParameterSpace::Integer { min: 50, max: 500 },
+            HyperParameter::Integer { min: 50, max: 500 },
         );
         parameters.insert(
             "tolerance".to_string(),
-            ParameterSpace::Real {
+            HyperParameter::Float {
                 min: 1e-6,
                 max: 1e-2,
             },
@@ -3902,11 +3901,11 @@ impl StandardSearchSpaces {
         let mut parameters = HashMap::new();
         parameters.insert(
             "eps".to_string(),
-            ParameterSpace::Real { min: 0.1, max: 2.0 },
+            HyperParameter::Float { min: 0.1, max: 2.0 },
         );
         parameters.insert(
             "min_samples".to_string(),
-            ParameterSpace::Integer { min: 2, max: 20 },
+            HyperParameter::Integer { min: 2, max: 20 },
         );
 
         let search_space = SearchSpace {
@@ -3947,11 +3946,11 @@ impl StandardSearchSpaces {
         let mut parameters = HashMap::new();
         parameters.insert(
             "n_estimators".to_string(),
-            ParameterSpace::Integer { min: 3, max: 20 },
+            HyperParameter::Integer { min: 3, max: 20 },
         );
         parameters.insert(
             "diversity_threshold".to_string(),
-            ParameterSpace::Real { min: 0.1, max: 0.9 },
+            HyperParameter::Float { min: 0.1, max: 0.9 },
         );
 
         let search_space = SearchSpace {
@@ -4284,8 +4283,8 @@ pub mod advanced_optimization {
             search_space: &SearchSpace,
             evaluation_fn: &dyn Fn(&HashMap<String, f64>) -> Result<f64>,
         ) -> Result<TuningResult> {
-            if let Some(ref transfer_config) = self.config.transfer_learning {
-                self.transfer_learning_optimization(search_space, evaluation_fn, transfer_config)
+            if let Some(transfer_config) = self.config.transfer_learning.clone() {
+                self.transfer_learning_optimization(search_space, evaluation_fn, &transfer_config)
             } else {
                 Err(ClusteringError::InvalidInput(
                     "Transfer learning config not provided".to_string(),
@@ -4299,8 +4298,8 @@ pub mod advanced_optimization {
             search_space: &SearchSpace,
             evaluation_fn: &dyn Fn(&HashMap<String, f64>) -> Result<Vec<f64>>,
         ) -> Result<MultiObjectiveResult> {
-            if let Some(ref mo_config) = self.config.multi_objective {
-                self.multi_objective_optimization(search_space, evaluation_fn, mo_config)
+            if let Some(mo_config) = self.config.multi_objective.clone() {
+                self.multi_objective_optimization(search_space, evaluation_fn, &mo_config)
             } else {
                 Err(ClusteringError::InvalidInput(
                     "Multi-objective config not provided".to_string(),
@@ -4314,8 +4313,8 @@ pub mod advanced_optimization {
             search_space: &SearchSpace,
             evaluation_fn: &dyn Fn(&[HashMap<String, f64>]) -> Result<Vec<f64>>,
         ) -> Result<TuningResult> {
-            if let Some(ref batch_config) = self.config.advanced_acquisition.batch_acquisition {
-                self.batch_optimization(search_space, evaluation_fn, batch_config)
+            if let Some(batch_config) = self.config.advanced_acquisition.batch_acquisition.clone() {
+                self.batch_optimization(search_space, evaluation_fn, &batch_config)
             } else {
                 Err(ClusteringError::InvalidInput(
                     "Batch acquisition config not provided".to_string(),
@@ -4584,7 +4583,7 @@ pub mod advanced_optimization {
             &self,
             search_space: &SearchSpace,
         ) -> Result<HashMap<String, f64>> {
-            let mut rng = rand::thread_rng();
+            let mut rng = rng();
             let mut params = HashMap::new();
 
             for (name, param) in &search_space.parameters {
@@ -4782,9 +4781,9 @@ pub mod advanced_optimization {
         /// Expected Hypervolume Improvement
         pub fn expected_hypervolume_improvement(
             &self,
-            candidate: &HashMap<String, f64>,
+            _candidate: &HashMap<String, f64>,
             pareto_front: &[(HashMap<String, f64>, Vec<f64>)],
-            reference_point: &[f64],
+            _reference_point: &[f64],
         ) -> f64 {
             // Stub implementation
             0.5
@@ -4794,7 +4793,7 @@ pub mod advanced_optimization {
         pub fn multi_point_expected_improvement(
             &self,
             candidates: &[HashMap<String, f64>],
-            observations: &[(HashMap<String, f64>, f64)],
+            _observations: &[(HashMap<String, f64>, f64)],
         ) -> f64 {
             // Stub implementation
             candidates.len() as f64 * 0.1
@@ -4803,8 +4802,8 @@ pub mod advanced_optimization {
         /// Entropy Search acquisition function
         pub fn entropy_search(
             &self,
-            candidate: &HashMap<String, f64>,
-            observations: &[(HashMap<String, f64>, f64)],
+            _candidate: &HashMap<String, f64>,
+            _observations: &[(HashMap<String, f64>, f64)],
         ) -> f64 {
             // Stub implementation - would compute information gain
             0.3
@@ -4813,8 +4812,8 @@ pub mod advanced_optimization {
         /// Knowledge Gradient acquisition function
         pub fn knowledge_gradient(
             &self,
-            candidate: &HashMap<String, f64>,
-            observations: &[(HashMap<String, f64>, f64)],
+            _candidate: &HashMap<String, f64>,
+            _observations: &[(HashMap<String, f64>, f64)],
         ) -> f64 {
             // Stub implementation - would compute expected value of information
             0.4
@@ -4827,7 +4826,7 @@ pub mod advanced_optimization {
 
         /// Evaluate constraint violations
         pub fn evaluate_constraints(
-            parameters: &HashMap<String, f64>,
+            _parameters: &HashMap<String, f64>,
             constraints: &[String], // Constraint expressions
         ) -> Vec<f64> {
             // Stub implementation
@@ -4871,7 +4870,7 @@ pub mod advanced_optimization {
 /// Neural Architecture Search for clustering algorithms
 pub mod neural_architecture_search {
     use super::*;
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
     use std::sync::{Arc, Mutex};
 
     /// Neural Architecture Search (NAS) for clustering algorithms
@@ -4905,7 +4904,7 @@ pub mod neural_architecture_search {
 
         /// Initialize controller network
         pub fn initialize_controller(&mut self, input_dim: usize, hidden_dim: usize) {
-            let mut rng = rand::thread_rng();
+            let mut rng = rng();
 
             // Simple 2-layer network for hyperparameter generation
             let w1 = Array2::from_shape_fn((input_dim, hidden_dim), |_| {
@@ -5078,12 +5077,12 @@ pub mod neural_architecture_search {
                     n_iterations: n_trials,
                     final_improvement: F::zero(),
                 }),
-                exploration_stats: Some(ExplorationStats {
+                exploration_stats: ExplorationStats {
                     total_evaluations: n_trials,
                     unique_configurations: all_results.len(),
                     exploration_efficiency: self.exploration_rate,
                     convergence_rate: 1.0 / n_trials as f64,
-                }),
+                },
             })
         }
 
@@ -5140,7 +5139,7 @@ pub mod neural_architecture_search {
 
         /// Initialize arms with random configurations
         pub fn initialize_arms(&mut self, n_arms: usize) -> Result<()> {
-            let mut rng = rand::thread_rng();
+            let mut rng = rng();
 
             for _ in 0..n_arms {
                 let mut config = HashMap::new();
@@ -5181,7 +5180,7 @@ pub mod neural_architecture_search {
 
             match &self.algorithm {
                 BanditAlgorithm::EpsilonGreedy { epsilon } => {
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rng();
                     if rng.gen::<f64>() < *epsilon {
                         // Explore: choose random arm
                         Ok(rng.random_range(0..self.arms.len()))
@@ -5232,7 +5231,7 @@ pub mod neural_architecture_search {
                 }
                 _ => {
                     // Default to random selection for other algorithms
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rng();
                     Ok(rng.random_range(0..self.arms.len()))
                 }
             }
@@ -5308,12 +5307,12 @@ pub mod neural_architecture_search {
                     n_iterations: n_trials,
                     final_improvement: F::zero(),
                 }),
-                exploration_stats: Some(ExplorationStats {
+                exploration_stats: ExplorationStats {
                     total_evaluations: n_trials,
                     unique_configurations: self.arms.len(),
                     exploration_efficiency: 0.5, // Placeholder
                     convergence_rate: 1.0 / n_trials as f64,
-                }),
+                },
             })
         }
 
@@ -5394,7 +5393,7 @@ pub mod neural_architecture_search {
 
         /// Initialize random population
         pub fn initialize_population(&mut self) -> Result<()> {
-            let mut rng = rand::thread_rng();
+            let mut rng = rng();
 
             for _ in 0..self.population_size {
                 let mut config = HashMap::new();
@@ -5456,7 +5455,7 @@ pub mod neural_architecture_search {
 
             // Reproduction: create new individuals
             let mut new_population = survivors.clone();
-            let mut rng = rand::thread_rng();
+            let mut rng = rng();
 
             while new_population.len() < self.population_size {
                 // Select two parents (tournament selection)
@@ -5496,7 +5495,7 @@ pub mod neural_architecture_search {
 
         /// Mutate a configuration
         fn mutate_config(&self, config: &mut HashMap<String, F>) -> Result<()> {
-            let mut rng = rand::thread_rng();
+            let mut rng = rng();
 
             // Select random parameter to mutate
             let param_names: Vec<_> = config.keys().cloned().collect();
@@ -5815,7 +5814,7 @@ impl<F: Float + FromPrimitive + Send + Sync + Debug> AutoClusteringSelector<F> {
             best_parameters,
             best_score,
             algorithm_results,
-            total_time,
+            total_time: total_time.as_secs_f64(),
             recommendations,
         })
     }

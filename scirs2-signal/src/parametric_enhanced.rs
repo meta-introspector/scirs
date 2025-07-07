@@ -444,8 +444,8 @@ fn sequential_model_selection(
 fn robust_parametric_estimation(
     signal: &Array1<f64>,
     max_ar: usize,
-    max_ma: usize,
-    config: &ParametricConfig,
+    _max_ma: usize,
+    _config: &ParametricConfig,
 ) -> SignalResult<OptimalModelResult> {
     // Identify and handle outliers using Median Absolute Deviation
     let signal_clean = robust_outlier_removal(signal)?;
@@ -533,7 +533,7 @@ struct RobustArResult {
 /// Robust AR estimation using iteratively reweighted least squares
 #[allow(dead_code)]
 fn robust_ar_estimation(signal: &Array1<f64>, max_order: usize) -> SignalResult<RobustArResult> {
-    let n = signal.len();
+    let _n = signal.len();
     let mut best_result = None;
     let mut best_aic = f64::INFINITY;
 
@@ -867,7 +867,7 @@ fn time_varying_parametric_estimation(
     signal: &Array1<f64>,
     config: &ParametricConfig,
 ) -> SignalResult<OptimalModelResult> {
-    let n = signal.len();
+    let _n = signal.len();
     let ar_order = (config.max_ar_order / 2).max(1).min(10);
 
     // Try Kalman filter approach first, fall back to windowed if needed
@@ -1248,7 +1248,7 @@ fn compute_parametric_spectrum(
     let mut psd = Vec::with_capacity(n_frequencies);
 
     match result.model_type {
-        ModelType::AR(p) => {
+        ModelType::AR(_p) => {
             if let Some(ref ar_coeffs) = result.ar_coeffs {
                 for &freq in &frequencies {
                     let z = Complex64::new(0.0, freq);
@@ -1263,7 +1263,7 @@ fn compute_parametric_spectrum(
                 }
             }
         }
-        ModelType::ARMA(p, q) => {
+        ModelType::ARMA(_p, _q) => {
             if let (Some(ref ar_coeffs), Some(ref ma_coeffs)) =
                 (&result.ar_coeffs, &result.ma_coeffs)
             {

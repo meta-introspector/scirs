@@ -170,8 +170,7 @@ pub fn stock_market(returns: bool) -> Result<Dataset> {
         Ok(path) => path,
         Err(e) => {
             return Err(DatasetsError::LoadingError(format!(
-                "Failed to fetch stock market data: {}",
-                e
+                "Failed to fetch stock market data: {e}"
             )))
         }
     };
@@ -181,8 +180,7 @@ pub fn stock_market(returns: bool) -> Result<Dataset> {
         Ok(content) => content,
         Err(e) => {
             return Err(DatasetsError::LoadingError(format!(
-                "Failed to read stock market data: {}",
-                e
+                "Failed to read stock market data: {e}"
             )))
         }
     };
@@ -317,8 +315,7 @@ pub fn weather(feature: Option<&str>) -> Result<Dataset> {
     if let Some(f) = feature {
         if !valid_features.contains(&f) {
             return Err(DatasetsError::InvalidFormat(format!(
-                "Invalid feature: {}. Valid features are: {:?}",
-                f, valid_features
+                "Invalid feature: {f}. Valid features are: {valid_features:?}"
             )));
         }
     }

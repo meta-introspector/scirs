@@ -144,7 +144,7 @@ pub fn denoise_dictionary_learning(
 
     // Extract overlapping patches
     let patches = extract_patches(signal, config.patch_size, config.overlap)?;
-    let num_patches = patches.nrows();
+    let _num_patches = patches.nrows();
 
     // Learn dictionary using K-SVD
     let dict_result = ksvd_dictionary_learning(&patches, config)?;
@@ -308,7 +308,7 @@ fn ksvd_dictionary_learning(
     let mut sparse_codes = Array2::zeros((config.dict_size, num_patches));
     let mut reconstruction_error = f64::INFINITY;
 
-    for iteration in 0..config.ksvd_iterations {
+    for _iteration in 0..config.ksvd_iterations {
         // Sparse coding step - encode all patches
         for patch_idx in 0..num_patches {
             let patch = patches.row(patch_idx);

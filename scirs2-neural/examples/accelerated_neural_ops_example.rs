@@ -18,10 +18,10 @@ fn main() -> Result<()> {
     println!("\n1. Basic Matrix Multiplication (using ndarray):");
     let a = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
     let b = array![[7.0, 8.0], [9.0, 10.0], [11.0, 12.0]];
-    println!("Matrix A (2x3):\n{:?}", a);
-    println!("Matrix B (3x2):\n{:?}", b);
+    println!("Matrix A (2x3):\n{a:?}");
+    println!("Matrix B (3x2):\n{b:?}");
     let result = a.dot(&b);
-    println!("Result A * B (2x2):\n{:?}\n", result);
+    println!("Result A * B (2x2):\n{result:?}\n");
 
     println!("To enable GPU acceleration, add the appropriate features to Cargo.toml:");
     println!("scirs2-neural = {{ features = [\"gpu\"] }}");

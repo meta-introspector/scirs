@@ -814,7 +814,7 @@ impl DeviceManager {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> TPUBackend<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> TPUBackend<T> {
     /// Create a new TPU backend
     pub fn new(config: TPUBackendConfig) -> Result<Self> {
         let device_manager = DeviceManager::new(&config)?;

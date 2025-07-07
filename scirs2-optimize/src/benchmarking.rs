@@ -180,8 +180,8 @@ impl TestProblem {
 
     /// Generate random starting points for the problem
     pub fn generate_starting_points(&self, count: usize) -> ScirsResult<Vec<Array1<f64>>> {
-        use rand::Rng;
-        let mut rng = rand::rng();
+        use rand::{rng, Rng};
+        let mut rng = rng();
         let mut points = Vec::with_capacity(count);
 
         for _ in 0..count {

@@ -202,7 +202,7 @@ where
     }
 
     if signal.len() != signal_plus_noise.len() {
-        return Err(SignalError::DimensionError(format!(
+        return Err(SignalError::DimensionMismatch(format!(
             "Signal lengths do not match: {} vs {}",
             signal.len(),
             signal_plus_noise.len()

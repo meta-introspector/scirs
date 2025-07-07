@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demonstrate_adversarial_examples() -> Result<(), Box<dyn std::error::Error>> {
     println!("🛡️ ADVERSARIAL EXAMPLES GENERATION");
-    println!("-".repeat(45));
+    println!("{}", "-".repeat(45));
 
     // Create a base classification dataset
     let base_dataset = make_classification(1000, 20, 5, 2, 15, Some(42))?;
@@ -124,7 +124,7 @@ fn demonstrate_adversarial_examples() -> Result<(), Box<dyn std::error::Error>> 
 #[allow(dead_code)]
 fn demonstrate_anomaly_detection() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔍 ANOMALY DETECTION DATASETS");
-    println!("-".repeat(35));
+    println!("{}", "-".repeat(35));
 
     let anomaly_scenarios = vec![
         ("Point Anomalies", AnomalyType::Point, 0.05, 3.0),
@@ -137,7 +137,7 @@ fn demonstrate_anomaly_detection() -> Result<(), Box<dyn std::error::Error>> {
 
         let config = AnomalyConfig {
             anomaly_fraction: fraction,
-            anomaly_type,
+            anomaly_type: anomaly_type.clone(),
             severity,
             mixed_anomalies: false,
             clustering_factor: 1.0,
@@ -215,7 +215,7 @@ fn demonstrate_anomaly_detection() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demonstrate_multitask_learning() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 MULTI-TASK LEARNING DATASETS");
-    println!("-".repeat(35));
+    println!("{}", "-".repeat(35));
 
     // Basic multi-task scenario
     println!("Multi-task scenario: Healthcare prediction");
@@ -291,7 +291,7 @@ fn demonstrate_multitask_learning() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demonstrate_domain_adaptation() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌐 DOMAIN ADAPTATION DATASETS");
-    println!("-".repeat(35));
+    println!("{}", "-".repeat(35));
 
     println!("Domain adaptation scenario: Cross-domain sentiment analysis");
 
@@ -343,7 +343,7 @@ fn demonstrate_domain_adaptation() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demonstrate_few_shot_learning() -> Result<(), Box<dyn std::error::Error>> {
     println!("🎯 FEW-SHOT LEARNING DATASETS");
-    println!("-".repeat(35));
+    println!("{}", "-".repeat(35));
 
     let few_shot_scenarios = vec![
         ("5-way 1-shot", 5, 1, 15),
@@ -388,7 +388,7 @@ fn demonstrate_few_shot_learning() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demonstrate_continual_learning() -> Result<(), Box<dyn std::error::Error>> {
     println!("📚 CONTINUAL LEARNING DATASETS");
-    println!("-".repeat(35));
+    println!("{}", "-".repeat(35));
 
     let drift_strengths = vec![
         ("Mild drift", 0.2),
@@ -429,7 +429,7 @@ fn demonstrate_continual_learning() -> Result<(), Box<dyn std::error::Error>> {
 #[allow(dead_code)]
 fn demonstrate_advanced_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 ADVANCED APPLICATIONS");
-    println!("-".repeat(25));
+    println!("{}", "-".repeat(25));
 
     // Meta-learning scenario
     println!("Meta-learning scenario:");

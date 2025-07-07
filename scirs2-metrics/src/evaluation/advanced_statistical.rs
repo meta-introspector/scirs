@@ -469,13 +469,13 @@ impl<F: Float + num_traits::FromPrimitive + std::iter::Sum> AdvancedStatisticalA
     pub fn interpret_effect_size(&self, cohens_d: F) -> EffectSizeMagnitude {
         let abs_d = cohens_d.abs();
 
-        if abs_d < F::from(0.01).unwrap() {
+        if abs_d < F::from(0.2).unwrap() {
             EffectSizeMagnitude::Negligible
-        } else if abs_d < F::from(0.2).unwrap() {
-            EffectSizeMagnitude::Small
         } else if abs_d < F::from(0.5).unwrap() {
-            EffectSizeMagnitude::Medium
+            EffectSizeMagnitude::Small
         } else if abs_d < F::from(0.8).unwrap() {
+            EffectSizeMagnitude::Medium
+        } else if abs_d < F::from(0.9).unwrap() {
             EffectSizeMagnitude::Large
         } else {
             EffectSizeMagnitude::VeryLarge
@@ -642,7 +642,8 @@ mod tests {
         let group_b = array![2.0, 3.0, 4.0, 5.0, 6.0];
 
         let effect_size = analyzer.cohens_d(group_a.view(), group_b.view()).unwrap();
-        assert!((effect_size - (-1.0)).abs() < 1e-10);
+        // The expected value should be approximately -0.632, not -1.0
+        assert!((effect_size - (-0.6324555320336759)).abs() < 1e-10);
     }
 
     #[test]

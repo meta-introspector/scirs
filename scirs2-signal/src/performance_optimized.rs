@@ -439,7 +439,7 @@ pub fn optimized_convolve_2d(
         }
 
         // Process tiles in parallel and collect results
-        let tile_results: Vec<Array2<f64>> = tile_coords
+        let _tile_results: Vec<Array2<f64>> = tile_coords
             .into_par_iter()
             .map(|(row_start, row_end, col_start, col_end)| {
                 let mut tile_output = Array2::zeros((row_end - row_start, col_end - col_start));
@@ -509,8 +509,6 @@ fn process_tile_simd_independent(
             let global_row = global_row_start + local_row;
             let global_col = global_col_start + local_col;
 
-            let mut sum = 0.0;
-
             // Flatten kernel and image patch for SIMD
             let mut patch = Vec::with_capacity(ker_rows * ker_cols);
             let mut kernel_flat = Vec::with_capacity(ker_rows * ker_cols);
@@ -525,7 +523,7 @@ fn process_tile_simd_independent(
             // SIMD dot product
             let patch_view = ArrayView1::from(&patch);
             let kernel_view = ArrayView1::from(&kernel_flat);
-            sum = f64::simd_dot(&patch_view, &kernel_view);
+            let sum = f64::simd_dot(&patch_view, &kernel_view);
 
             output[[local_row, local_col]] = sum;
         }
@@ -548,8 +546,6 @@ fn process_tile_simd(
 
     for out_row in row_start..row_end {
         for out_col in col_start..col_end {
-            let mut sum = 0.0;
-
             // Flatten kernel and image patch for SIMD
             let mut patch = Vec::with_capacity(ker_rows * ker_cols);
             let mut kernel_flat = Vec::with_capacity(ker_rows * ker_cols);
@@ -564,7 +560,7 @@ fn process_tile_simd(
             // SIMD dot product
             let patch_view = ArrayView1::from(&patch);
             let kernel_view = ArrayView1::from(&kernel_flat);
-            sum = f64::simd_dot(&patch_view, &kernel_view);
+            let sum = f64::simd_dot(&patch_view, &kernel_view);
 
             output[[out_row, out_col]] = sum;
         }

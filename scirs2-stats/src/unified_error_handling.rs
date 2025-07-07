@@ -17,6 +17,7 @@ use std::time::Instant;
 
 /// Unified error handling facade providing comprehensive error management
 pub struct UnifiedErrorHandler {
+    #[allow(dead_code)]
     monitor: &'static ErrorMonitor,
     start_time: Instant,
 }

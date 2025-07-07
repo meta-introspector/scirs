@@ -1967,7 +1967,7 @@ fn compute_spectrum_confidence_bands(
     variance: f64,
     freqs: &Array1<f64>,
     fs: f64,
-    opts: &SpectrumOptions,
+    _opts: &SpectrumOptions,
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     let spectrum = compute_arma_spectrum_basic(ar_coeffs, ma_coeffs, variance, freqs, fs)?;
     let factor = 1.96; // 95% confidence
@@ -2028,7 +2028,7 @@ fn validate_varma_parameters(
     signals: &Array2<f64>,
     ar_order: usize,
     ma_order: usize,
-    opts: &VARMAOptions,
+    _opts: &VARMAOptions,
 ) -> SignalResult<()> {
     if signals.ncols() < (ar_order + ma_order) * signals.nrows() + 10 {
         return Err(SignalError::ValueError(
@@ -2042,7 +2042,7 @@ fn validate_varma_parameters(
 fn estimate_var_for_varma(
     signals: &Array2<f64>,
     ar_order: usize,
-    opts: &VARMAOptions,
+    _opts: &VARMAOptions,
 ) -> SignalResult<VARMAResult> {
     let n_series = signals.nrows();
     Ok(VARMAResult {
@@ -2060,7 +2060,7 @@ fn extend_var_to_varma(
     signals: &Array2<f64>,
     var_result: VARMAResult,
     ma_order: usize,
-    opts: &VARMAOptions,
+    _opts: &VARMAOptions,
 ) -> SignalResult<VARMAResult> {
     let mut result = var_result;
     result.ma_coeffs = Array2::zeros((signals.nrows(), ma_order));
@@ -2069,10 +2069,10 @@ fn extend_var_to_varma(
 
 #[allow(dead_code)]
 fn compute_order_criterion(
-    signal: &Array1<f64>,
+    _signal: &Array1<f64>,
     result: &EnhancedARMAResult,
     criterion: &OrderSelectionCriterion,
-    opts: &OrderSelectionOptions,
+    _opts: &OrderSelectionOptions,
 ) -> SignalResult<f64> {
     match criterion {
         OrderSelectionCriterion::AIC => Ok(result.aic),
@@ -2083,17 +2083,17 @@ fn compute_order_criterion(
 
 #[allow(dead_code)]
 fn compute_cross_validation_score(
-    signal: &Array1<f64>,
+    _signal: &Array1<f64>,
     ar_order: usize,
     ma_order: usize,
-    opts: &OrderSelectionOptions,
+    _opts: &OrderSelectionOptions,
 ) -> SignalResult<f64> {
     // Simplified CV score
     Ok(1.0 / (ar_order + ma_order + 1) as f64)
 }
 
 #[allow(dead_code)]
-fn analyze_model_stability(result: &EnhancedARMAResult) -> SignalResult<StabilityAnalysis> {
+fn analyze_model_stability(_result: &EnhancedARMAResult) -> SignalResult<StabilityAnalysis> {
     Ok(StabilityAnalysis {
         is_stable: true,
         stability_margin: 0.5,
@@ -2105,7 +2105,7 @@ fn analyze_model_stability(result: &EnhancedARMAResult) -> SignalResult<Stabilit
 fn select_best_models(
     candidates: Vec<OrderSelectionCandidate>,
     criteria: &[OrderSelectionCriterion],
-    opts: &OrderSelectionOptions,
+    _opts: &OrderSelectionOptions,
 ) -> SignalResult<std::collections::HashMap<OrderSelectionCriterion, OrderSelectionCandidate>> {
     let mut best = std::collections::HashMap::new();
 
@@ -2125,7 +2125,7 @@ fn select_best_models(
 #[allow(dead_code)]
 fn generate_order_recommendations(
     best_models: &std::collections::HashMap<OrderSelectionCriterion, OrderSelectionCandidate>,
-    opts: &OrderSelectionOptions,
+    _opts: &OrderSelectionOptions,
 ) -> SignalResult<OrderRecommendations> {
     // Simple recommendation based on AIC if available
     if let Some(aic_model) = best_models.get(&OrderSelectionCriterion::AIC) {
@@ -2153,7 +2153,7 @@ fn validate_arma_parameters(
     signal: &Array1<f64>,
     ar_order: usize,
     ma_order: usize,
-    opts: &ARMAOptions,
+    _opts: &ARMAOptions,
 ) -> SignalResult<()> {
     if signal.len() < (ar_order + ma_order) * 5 {
         return Err(SignalError::ValueError(
@@ -2165,10 +2165,10 @@ fn validate_arma_parameters(
 
 #[allow(dead_code)]
 fn initialize_arma_parameters(
-    signal: &Array1<f64>,
+    _signal: &Array1<f64>,
     ar_order: usize,
     ma_order: usize,
-    opts: &ARMAOptions,
+    _opts: &ARMAOptions,
 ) -> SignalResult<ARMAParameters> {
     // Placeholder implementation
     Ok(ARMAParameters {
@@ -2435,7 +2435,7 @@ fn compute_stability_margin(params: &ARMAParameters) -> f64 {
 /// Compute log-likelihood for ARMA model
 #[allow(dead_code)]
 fn compute_log_likelihood(signal: &Array1<f64>, params: &ARMAParameters) -> SignalResult<f64> {
-    let n = signal.len();
+    let _n = signal.len();
     let residuals = compute_residuals(signal, params)?;
 
     let mut log_likelihood = 0.0;
@@ -2637,7 +2637,7 @@ fn compute_arch_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<ARCHT
 
     // Regression of squared residuals on lagged squared residuals
     // This is a simplified implementation - full ARCH test would use proper regression
-    let mut sum_sq = 0.0;
+    let mut _sum_sq = 0.0;
     let mut sum_lagged = 0.0;
     let mut sum_cross = 0.0;
     let valid_obs = n - lags;
@@ -2650,7 +2650,7 @@ fn compute_arch_test(residuals: &Array1<f64>, lags: usize) -> SignalResult<ARCHT
         }
         lagged_sum /= lags as f64;
 
-        sum_sq += current.powi(2);
+        _sum_sq += current.powi(2);
         sum_lagged += lagged_sum.powi(2);
         sum_cross += current * lagged_sum;
     }
@@ -2711,8 +2711,8 @@ fn chi_squared_cdf(x: f64, df: f64) -> f64 {
 #[allow(dead_code)]
 fn validate_arma_model(
     signal: &Array1<f64>,
-    params: &ARMAParameters,
-    opts: &ARMAOptions,
+    _params: &ARMAParameters,
+    _opts: &ARMAOptions,
 ) -> SignalResult<ARMAValidation> {
     // Placeholder implementation
     Ok(ARMAValidation {

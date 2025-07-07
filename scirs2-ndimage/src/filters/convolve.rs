@@ -25,8 +25,8 @@ pub fn uniform_filter<T, D>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     let _border_mode = mode.unwrap_or(BorderMode::Reflect);
 
@@ -77,9 +77,9 @@ pub fn convolve<T, D, E>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
-    D: Dimension,
-    E: Dimension,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Clone + 'static,
+    D: Dimension + 'static,
+    E: Dimension + 'static,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
 
@@ -194,7 +194,7 @@ fn convolve_2d<T>(
     mode: &BorderMode,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Clone + 'static,
 {
     // Get dimensions
     let (input_rows, input_cols) = input.dim();
@@ -265,9 +265,17 @@ pub fn convolve_fast<T, D, E>(
     use_optimization: bool,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone + Send + Sync,
-    D: Dimension,
-    E: Dimension,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + Clone
+        + Send
+        + Sync
+        + 'static,
+    D: Dimension + 'static,
+    E: Dimension + 'static,
 {
     if use_optimization {
         // Use the optimized implementation
@@ -288,8 +296,8 @@ pub fn correlate1d<T, D>(
     cval: Option<T>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + Clone,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     use ndarray::IxDyn;
 
@@ -355,7 +363,7 @@ fn convolve_1d<T>(
     mode: &BorderMode,
 ) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Clone + 'static,
 {
     let input_len = input.len();
     let weights_len = weights.len();
@@ -428,7 +436,7 @@ fn convolve_3d<T>(
     mode: &BorderMode,
 ) -> NdimageResult<Array<T, ndarray::Ix3>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Clone + 'static,
 {
     let (input_d, input_h, input_w) = input.dim();
     let (weights_d, weights_h, weights_w) = weights.dim();
@@ -481,7 +489,7 @@ fn get_padded_value_3d<T>(
     mode: &BorderMode,
 ) -> T
 where
-    T: Float + Clone,
+    T: Float + Clone + 'static,
 {
     let (depth, height, width) = input.dim();
 
@@ -551,9 +559,9 @@ fn convolve_nd<T, D, E>(
     mode: &BorderMode,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
-    D: Dimension,
-    E: Dimension,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Clone + 'static,
+    D: Dimension + 'static,
+    E: Dimension + 'static,
 {
     let input_shape = input.shape();
     let weights_shape = weights.shape();
@@ -608,8 +616,8 @@ where
 #[allow(dead_code)]
 fn get_padded_value_nd<T, D>(input: &Array<T, D>, coords: &[isize], mode: &BorderMode) -> T
 where
-    T: Float + Clone,
-    D: Dimension,
+    T: Float + Clone + 'static,
+    D: Dimension + 'static,
 {
     let shape = input.shape();
     let ndim = input.ndim();

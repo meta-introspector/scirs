@@ -23,7 +23,7 @@
 //!
 //! Run with: cargo run --example comprehensive_learning_center
 
-use rand;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::io::{self, Write};
@@ -1101,7 +1101,7 @@ fn explore_resources(learning_center: &LearningCenter) -> Result<(), Box<dyn std
     println!("{}", "=".repeat(30));
 
     println!("\n🖥️  Interactive Examples:");
-    for (id, resource) in &learning_center.resource_catalog.examples {
+    for (_id, resource) in &learning_center.resource_catalog.examples {
         println!("  • {} - {}", resource.title, resource.description);
         println!(
             "    Topics: {} | Runtime: {:.0}min",
@@ -1111,7 +1111,7 @@ fn explore_resources(learning_center: &LearningCenter) -> Result<(), Box<dyn std
     }
 
     println!("\n📖 Documentation:");
-    for (id, doc) in &learning_center.resource_catalog.documentation {
+    for (_id, doc) in &learning_center.resource_catalog.documentation {
         println!("  • {} ({})", doc.title, doc.section);
         println!(
             "    Topics: {} | Depth: {:?}",
@@ -1121,7 +1121,7 @@ fn explore_resources(learning_center: &LearningCenter) -> Result<(), Box<dyn std
     }
 
     println!("\n🌐 External Resources:");
-    for (id, ext) in &learning_center.resource_catalog.external_links {
+    for (_id, ext) in &learning_center.resource_catalog.external_links {
         println!("  • {} - {}", ext.title, ext.description);
         println!(
             "    URL: {} | Reliability: {:.0}%",

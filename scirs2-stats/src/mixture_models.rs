@@ -272,7 +272,7 @@ where
     pub fn fit(&mut self, data: &ArrayView2<F>) -> StatsResult<&GMMParameters<F>> {
         check_array_finite(data, "data")?;
 
-        let (n_samples, n_features) = data.dim();
+        let (n_samples, _n_features) = data.dim();
 
         if n_samples < self.n_components {
             return Err(StatsError::InvalidArgument(format!(
@@ -1317,8 +1317,7 @@ where
         }
 
         // Update model parameters
-        if let Some(ref params_mut) = &mut self.gmm.parameters {
-            let params_mut = unsafe { &mut *(params_mut as *const _ as *mut GMMParameters<F>) };
+        if let Some(params_mut) = &mut self.gmm.parameters {
             params_mut.weights = self.running_weights.as_ref().unwrap().clone();
             params_mut.means = self.running_means.as_ref().unwrap().clone();
         }

@@ -261,8 +261,7 @@ pub mod input_validation {
                 if !val.is_finite() {
                     return Err(InterpolateError::InvalidInput {
                         message: format!(
-                            "Non-finite value found in {} points at position ({}, {}): {}",
-                            context, i, j, val
+                            "Non-finite value found in {context} points at position ({i}, {j}): {val}"
                         ),
                     });
                 }
@@ -274,8 +273,7 @@ pub mod input_validation {
             if !val.is_finite() {
                 return Err(InterpolateError::InvalidInput {
                     message: format!(
-                        "Non-finite value found in {} values at position {}: {}",
-                        context, i, val
+                        "Non-finite value found in {context} values at position {i}: {val}"
                     ),
                 });
             }
@@ -312,7 +310,7 @@ pub mod input_validation {
             return Err(InterpolateError::dimension_mismatch(
                 expected_dim,
                 query_points.ncols(),
-                &format!("{} query points", context),
+                &format!("{context} query points"),
             ));
         }
 
@@ -322,8 +320,7 @@ pub mod input_validation {
                 if !val.is_finite() {
                     return Err(InterpolateError::InvalidInput {
                         message: format!(
-                            "Non-finite value found in {} query points at position ({}, {}): {}",
-                            context, i, j, val
+                            "Non-finite value found in {context} query points at position ({i}, {j}): {val}"
                         ),
                     });
                 }
@@ -378,7 +375,7 @@ pub mod input_validation {
         if value < min || value > max {
             return Err(InterpolateError::invalid_parameter(
                 param_name,
-                &format!("value between {} and {}", min, max),
+                format!("value between {min} and {max}"),
                 value,
                 context,
             ));

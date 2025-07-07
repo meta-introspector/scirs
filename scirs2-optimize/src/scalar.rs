@@ -4,7 +4,6 @@
 //! It is similar to `scipy.optimize.minimize_scalar`.
 
 use crate::error::OptimizeError;
-use num_traits::Float;
 use std::fmt;
 
 /// Methods for scalar optimization

@@ -7,7 +7,6 @@ use crate::error::{IntegrateError, IntegrateResult as Result};
 use ndarray::{s, Array1, Array2, Array3, ArrayView2, ArrayViewMut2};
 use num_complex::Complex64;
 use rand::prelude::*;
-use rand::rng;
 use rand_distr::{Normal, StandardNormal, Uniform};
 use scirs2_core::constants::PI;
 use scirs2_core::simd_ops::SimdUnifiedOps;
@@ -787,6 +786,7 @@ impl StochasticPDESolver {
 
     /// Bates model finite difference solver (Heston + volatility jumps)
     #[allow(dead_code)]
+    #[allow(clippy::too_many_arguments)]
     fn bates_finite_difference(
         &self,
         option: &FinancialOption,
@@ -857,7 +857,7 @@ impl StochasticPDESolver {
         n_paths: usize,
         antithetic: bool,
     ) -> Result<f64> {
-        let mut rng = rng();
+        let mut rng = rand::rng();
         let _normal = StandardNormal;
 
         let dt = option.maturity / 100.0; // 100 time steps
@@ -3126,7 +3126,7 @@ pub mod advanced_exotic_derivatives {
         ) -> Result<ExoticPricingResult> {
             let dt = option.maturity / 252.0; // Daily steps
             let mut payoffs = Vec::with_capacity(self.n_simulations);
-            let mut rng = rng();
+            let mut rng = rand::rng();
 
             let sigma = 0.2; // Default volatility
 
@@ -3198,7 +3198,7 @@ pub mod advanced_exotic_derivatives {
             observation_times: &[f64],
         ) -> Result<ExoticPricingResult> {
             let mut payoffs = Vec::with_capacity(self.n_simulations);
-            let mut rng = rng();
+            let mut rng = rand::rng();
             let sigma = 0.2; // Default volatility
 
             for _sim in 0..self.n_simulations {
@@ -3269,7 +3269,7 @@ pub mod advanced_exotic_derivatives {
         ) -> Result<ExoticPricingResult> {
             let dt = option.maturity / 252.0; // Daily steps
             let mut payoffs = Vec::with_capacity(self.n_simulations);
-            let mut rng = rng();
+            let mut rng = rand::rng();
             let sigma = 0.2; // Default volatility
 
             for _sim in 0..self.n_simulations {
@@ -3345,7 +3345,7 @@ pub mod advanced_exotic_derivatives {
             cash_amount: f64,
         ) -> Result<ExoticPricingResult> {
             let mut payoffs = Vec::with_capacity(self.n_simulations);
-            let mut rng = rng();
+            let mut rng = rand::rng();
             let sigma = 0.2;
             let dt = option.maturity;
 
@@ -4269,7 +4269,7 @@ pub mod advanced_solvers {
             training_samples: usize,
             learning_rate: f64,
         ) -> Result<()> {
-            let mut rng = rng();
+            let mut rng = rand::rng();
 
             for _ in 0..training_samples {
                 // Generate random option parameters
@@ -7074,7 +7074,7 @@ pub mod exotic_options {
                 rebate,
             } = &option.option_type
             {
-                let mut rng = rng();
+                let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(self.n_simulations);
 
                 let dt = option.maturity / self.n_time_steps as f64;
@@ -7162,7 +7162,7 @@ pub mod exotic_options {
                 current_average,
             } = &option.option_type
             {
-                let mut rng = rng();
+                let mut rng = rand::rng();
                 let mut asian_payoffs = Vec::with_capacity(self.n_simulations);
                 let mut control_payoffs = Vec::with_capacity(self.n_simulations);
 
@@ -7294,7 +7294,7 @@ pub mod exotic_options {
                 extremum_so_far,
             } = &option.option_type
             {
-                let mut rng = rng();
+                let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(self.n_simulations);
 
                 let dt = option.maturity / self.n_time_steps as f64;
@@ -7363,7 +7363,7 @@ pub mod exotic_options {
                 weights,
             } = &option.option_type
             {
-                let mut rng = rng();
+                let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(self.n_simulations);
 
                 let dt = option.maturity / self.n_time_steps as f64;
@@ -7468,7 +7468,7 @@ pub mod exotic_options {
                 is_cash_or_nothing,
             } = &option.option_type
             {
-                let mut rng = rng();
+                let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(self.n_simulations);
 
                 let dt = option.maturity / self.n_time_steps as f64;
@@ -8030,7 +8030,7 @@ pub mod advanced_performance_extensions {
     impl NeuralVolatilityForecaster {
         /// Create new neural volatility forecaster
         pub fn new(input_dim: usize, hidden_layers: Vec<usize>, output_dim: usize) -> Self {
-            let mut rng = rng();
+            let mut rng = rand::rng();
             let mut weights = Vec::new();
             let mut biases = Vec::new();
 
@@ -8372,7 +8372,7 @@ pub mod advanced_performance_extensions {
         /// QAOA optimization
         fn optimize_qaoa(&mut self, max_iterations: usize) -> Result<PortfolioOptimizationResult> {
             let mut parameters = Array1::zeros(max_iterations * 2); // gamma and beta parameters
-            let mut rng = rng();
+            let mut rng = rand::rng();
 
             // Initialize random parameters
             for i in 0..parameters.len() {
@@ -8547,7 +8547,7 @@ pub mod advanced_performance_extensions {
             }
 
             // Add quantum fluctuations
-            let mut rng = rng();
+            let mut rng = rand::rng();
             for i in 0..n_states {
                 let noise =
                     Complex64::new(rng.random_range(-0.01..0.01), rng.random_range(-0.01..0.01));
@@ -8570,7 +8570,7 @@ pub mod advanced_performance_extensions {
 
         /// Measure portfolio weights from quantum state
         fn measure_portfolio_weights(&self) -> Result<Array1<f64>> {
-            let mut rng = rng();
+            let mut rng = rand::rng();
 
             // Quantum measurement simulation
             let probabilities: Vec<f64> = self.quantum_state.iter().map(|c| c.norm_sqr()).collect();
@@ -8728,7 +8728,7 @@ pub mod advanced_performance_extensions {
         impl CliquetOption {
             /// Price cliquet option using Monte Carlo
             pub fn price_monte_carlo(&self, n_simulations: usize) -> Result<f64> {
-                let mut rng = rng();
+                let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(n_simulations);
 
                 let n_periods = self.observation_dates.len();
@@ -8789,7 +8789,7 @@ pub mod advanced_performance_extensions {
         impl AutocallableBond {
             /// Price autocallable bond using Monte Carlo
             pub fn price_monte_carlo(&self, n_simulations: usize) -> Result<f64> {
-                let mut rng = rng();
+                let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(n_simulations);
 
                 let n_observations = self.autocall_dates.len();
@@ -8852,7 +8852,7 @@ pub mod advanced_performance_extensions {
 
             /// Calculate probability of autocall at each observation date
             pub fn autocall_probabilities(&self, n_simulations: usize) -> Result<Vec<f64>> {
-                let mut rng = rng();
+                let mut rng = rand::rng();
                 let mut call_counts = vec![0; self.autocall_dates.len()];
 
                 let dt = if self.autocall_dates.len() > 1 {
@@ -8925,7 +8925,7 @@ pub mod advanced_performance_extensions {
                 heston_params: &HestonParameters,
                 n_simulations: usize,
             ) -> Result<f64> {
-                let mut rng = rng();
+                let mut rng = rand::rng();
                 let mut payoffs = Vec::with_capacity(n_simulations);
 
                 let dt = self.maturity / self.n_observations as f64;

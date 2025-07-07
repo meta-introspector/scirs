@@ -14,7 +14,7 @@
 use crate::error::{IoError, Result};
 use crate::pipeline::{PipelineData, PipelineStage};
 use chrono::{DateTime, Utc};
-use rand::rng;
+use rand::{rng, Rng};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use serde::{Deserialize, Serialize};
 use std::any::Any;

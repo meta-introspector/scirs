@@ -90,7 +90,7 @@ where
         }
 
         // Create GPU buffers
-        let ctx_alloc = ctx as &dyn crate::gpu::GpuContextAlloc;
+        let ctx_alloc = &ctx as &dyn crate::gpu::GpuContextAlloc;
         let mut a_buffer = ctx_alloc.allocate_buffer::<T>(m * n)?;
         let mut x_buffer = ctx_alloc.allocate_buffer::<T>(n)?;
         let mut y_buffer = ctx_alloc.allocate_buffer::<T>(m)?;
@@ -142,7 +142,7 @@ where
         }
 
         // Create GPU buffers
-        let ctx_alloc = ctx as &dyn crate::gpu::GpuContextAlloc;
+        let ctx_alloc = &ctx as &dyn crate::gpu::GpuContextAlloc;
         let mut a_buffer = ctx_alloc.allocate_buffer::<T>(m * k)?;
         let mut b_buffer = ctx_alloc.allocate_buffer::<T>(k * n)?;
         let mut c_buffer = ctx_alloc.allocate_buffer::<T>(m * n)?;
@@ -1705,7 +1705,7 @@ where
             for i in batch_start..batch_end {
                 let result = self
                     .dispatcher
-                    .auto_matmul(&matrices_a[i], &matrices_b[i])?;
+                    .auto_matmul(&matrices_a[i], &matrices_b[i], None)?;
                 results.push(result);
             }
 

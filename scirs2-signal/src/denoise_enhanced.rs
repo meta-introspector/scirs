@@ -1386,7 +1386,7 @@ fn compute_effective_df(coeffs: &crate::dwt::DecompositionResult) -> f64 {
 #[allow(dead_code)]
 fn compute_effective_df_ti(denoised: &Array1<f64>, original: &Array1<f64>) -> f64 {
     // Estimate using divergence formula
-    let n = denoised.len() as f64;
+    let _n = denoised.len() as f64;
     let mut div = 0.0;
     let h = 1e-6;
 
@@ -2049,7 +2049,7 @@ fn simd_hard_threshold(coeffs: &Array1<f64>, threshold: f64) -> SignalResult<(Ar
 /// Compute SNR improvement in dB
 #[allow(dead_code)]
 fn compute_snr_improvement(
-    original: &Array1<f64>,
+    _original: &Array1<f64>,
     denoised: &Array1<f64>,
     noise_sigma: f64,
 ) -> f64 {
@@ -2208,8 +2208,8 @@ mod tests {
         // Add noise
         let mut rng = rand::rng();
         let noise_level = 0.1;
-        let noisy_signal = &clean_signal
-            + &Array1::from_shape_fn(n, |_| noise_level * rng.random_range(-1.0..1.0));
+        let noisy_signal =
+            &clean_signal + &Array1::from_shape_fn(n, |_| noise_level * rng.random_range(-1.0..1.0));
 
         let config = DenoiseConfig::default();
         let result = denoise_wavelet_1d(&noisy_signal, &config).unwrap();

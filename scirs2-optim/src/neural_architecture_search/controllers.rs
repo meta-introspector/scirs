@@ -126,7 +126,17 @@ pub struct ControllerStatistics<T: Float> {
 }
 
 /// RNN-based architecture controller
-pub struct RNNController<T: Float> {
+pub struct RNNController<
+    T: Float
+        + Default
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + std::iter::Sum
+        + for<'a> std::iter::Sum<&'a T>
+        + ndarray::ScalarOperand,
+> {
     /// Controller configuration
     config: RNNControllerConfig,
 
@@ -513,7 +523,8 @@ impl<
             + Sync
             + 'static
             + std::iter::Sum
-            + for<'a> std::iter::Sum<&'a T>,
+            + for<'a> std::iter::Sum<&'a T>
+            + ndarray::ScalarOperand,
     > RNNController<T>
 {
     /// Create new RNN controller
@@ -710,7 +721,8 @@ impl<
             + Sync
             + 'static
             + std::iter::Sum
-            + for<'a> std::iter::Sum<&'a T>,
+            + for<'a> std::iter::Sum<&'a T>
+            + ndarray::ScalarOperand,
     > ArchitectureController<T> for RNNController<T>
 {
     fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<()> {
@@ -819,7 +831,18 @@ impl<
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
+impl<
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + 'static
+            + std::iter::Sum
+            + for<'a> std::iter::Sum<&'a T>
+            + ndarray::ScalarOperand,
+    > RNNController<T>
+{
     fn architecture_to_sequence(
         &self,
         architecture: &OptimizerArchitecture<T>,
@@ -843,7 +866,9 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> RNNController<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + 'static> TransformerController<T> {
+impl<T: Float + Default + Clone + Send + Sync + 'static + ndarray::ScalarOperand>
+    TransformerController<T>
+{
     /// Create new Transformer controller
     pub fn new(model_dim: usize, num_heads: usize, num_layers: usize) -> Result<Self> {
         let config = TransformerConfig {
@@ -881,7 +906,7 @@ impl<T: Float + Default + Clone + Send + Sync + 'static> TransformerController<T
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T>
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureController<T>
     for TransformerController<T>
 {
     fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<()> {
@@ -939,7 +964,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T>
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> RandomController<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> RandomController<T> {
     /// Create new random controller
     pub fn new(_vocab_size: usize) -> Result<Self> {
         Ok(Self {
@@ -956,7 +981,7 @@ impl<T: Float + Default + Clone + Send + Sync> RandomController<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T> for RandomController<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureController<T> for RandomController<T> {
     fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<()> {
         self.search_space = Some(search_space.clone());
         self.component_types = search_space
@@ -977,7 +1002,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T> for Ran
         // Random selection of component type
         let mut rng = rng();
         let component_type =
-            self.component_types[rng.random::<usize>() % self.component_types.len()];
+            self.component_types[rng.random_range(0..self.component_types.len())].clone();
 
         let mut hyperparameters = HashMap::new();
         match component_type {
@@ -1049,7 +1074,7 @@ impl<T: Float + Default + Clone + Send + Sync> ArchitectureController<T> for Ran
 }
 
 // Implementation helpers for layers
-impl<T: Float + Default + Clone + 'static> RNNLayer<T> {
+impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> RNNLayer<T> {
     fn new(layer_type: RNNType, input_size: usize, hidden_size: usize) -> Result<Self> {
         let gate_size = match layer_type {
             RNNType::LSTM => hidden_size * 4,
@@ -1133,7 +1158,8 @@ impl<T: Float + Default + Clone + 'static> RNNLayer<T> {
                 + &reset_gate * &gh.slice(s![2 * hidden_size..3 * hidden_size]).to_owned()),
         );
 
-        let new_hidden = &update_gate * hidden + &(T::one() - &update_gate) * &new_gate;
+        let one_minus_update = update_gate.mapv(|x| T::one() - x);
+        let new_hidden = &update_gate * hidden + &one_minus_update * &new_gate;
 
         Ok((new_hidden.clone(), new_hidden))
     }
@@ -1155,7 +1181,7 @@ impl<T: Float + Default + Clone + 'static> RNNLayer<T> {
     }
 }
 
-impl<T: Float + Default + Clone + 'static> OutputLayer<T> {
+impl<T: Float + Default + Clone + 'static + ndarray::ScalarOperand> OutputLayer<T> {
     fn new(input_size: usize, output_size: usize, activation: ActivationType) -> Result<Self> {
         Ok(Self {
             weight: Array2::zeros((output_size, input_size)),

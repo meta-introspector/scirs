@@ -12,6 +12,7 @@ fn main() {
     // Create confusion matrix with controlled error patterns
     let mut matrix = vec![vec![0; num_classes]; num_classes];
     // Set diagonal elements (correct classifications) with high values
+    #[allow(clippy::needless_range_loop)]
     for i in 0..num_classes {
         matrix[i][i] = 70 + rng.random_range(0..15); // 70-85 correct per class
     }
@@ -27,6 +28,7 @@ fn main() {
     matrix[4][2] = 10;
     matrix[4][3] = 12;
     // - Some minor errors scattered about
+    #[allow(clippy::needless_range_loop)]
     for i in 0..num_classes {
         for j in 0..num_classes {
             if i != j && matrix[i][j] == 0 {
@@ -51,7 +53,7 @@ fn main() {
     // Example 1: Standard confusion matrix
     println!("Example 1: Standard Confusion Matrix\n");
     let regular_output = cm.to_ascii(Some("Classification Results"), false);
-    println!("{}", regular_output);
+    println!("{regular_output}");
     // Example 2: Normal heatmap
     println!("\n\nExample 2: Standard Heatmap Visualization\n");
     let color_options = ColorOptions {
@@ -64,9 +66,9 @@ fn main() {
         true, // normalized
         &color_options,
     );
-    println!("{}", heatmap_output);
+    println!("{heatmap_output}");
     // Example 3: Error pattern heatmap
     println!("\n\nExample 3: Error Pattern Heatmap (highlighting misclassifications)\n");
     let error_heatmap = cm.error_heatmap(Some("Misclassification Analysis"));
-    println!("{}", error_heatmap);
+    println!("{error_heatmap}");
 }

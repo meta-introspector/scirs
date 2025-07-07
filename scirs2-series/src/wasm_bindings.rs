@@ -208,6 +208,13 @@ pub struct WasmAnomalyDetector {
 }
 
 #[cfg(feature = "wasm")]
+impl Default for WasmAnomalyDetector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 impl WasmAnomalyDetector {
     /// Create a new anomaly detector

@@ -7,8 +7,7 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2};
-use num_traits::Float;
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
+use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -260,6 +259,7 @@ pub struct OptimizationRecommendation {
 pub struct BenchmarkSuite {
     config: BenchmarkConfig,
     memory_tracker: Option<Arc<Mutex<MemoryTracker>>>,
+    #[allow(dead_code)]
     baseline_cache: HashMap<String, f64>,
 }
 

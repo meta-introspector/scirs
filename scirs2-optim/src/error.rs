@@ -126,5 +126,23 @@ impl From<std::time::SystemTimeError> for OptimError {
     }
 }
 
+impl From<ndarray::ShapeError> for OptimError {
+    fn from(error: ndarray::ShapeError) -> Self {
+        OptimError::DimensionMismatch(format!("Shape error: {error}"))
+    }
+}
+
+impl From<serde_json::Error> for OptimError {
+    fn from(error: serde_json::Error) -> Self {
+        OptimError::Other(format!("Serde JSON error: {error}"))
+    }
+}
+
+impl From<std::io::Error> for OptimError {
+    fn from(error: std::io::Error) -> Self {
+        OptimError::Other(format!("IO error: {error}"))
+    }
+}
+
 /// Result type for ML optimization operations
 pub type Result<T> = std::result::Result<T, OptimError>;

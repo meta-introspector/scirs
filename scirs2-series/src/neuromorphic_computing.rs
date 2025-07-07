@@ -23,35 +23,55 @@ use crate::error::{Result, TimeSeriesError};
 pub enum NeuronModel {
     /// Leaky Integrate-and-Fire neuron
     LeakyIntegrateFire {
-        tau_m: f64,       // Membrane time constant
-        v_rest: f64,      // Resting potential
-        v_threshold: f64, // Spike threshold
-        v_reset: f64,     // Reset potential
+        /// Membrane time constant
+        tau_m: f64,
+        /// Resting potential
+        v_rest: f64,
+        /// Spike threshold
+        v_threshold: f64,
+        /// Reset potential
+        v_reset: f64,
     },
     /// Adaptive Exponential Integrate-and-Fire
     AdaptiveExpIF {
+        /// Membrane time constant
         tau_m: f64,
-        tau_w: f64,   // Adaptation time constant
-        delta_t: f64, // Slope factor
+        /// Adaptation time constant
+        tau_w: f64,
+        /// Slope factor
+        delta_t: f64,
+        /// Spike threshold
         v_threshold: f64,
-        a: f64, // Subthreshold adaptation
-        b: f64, // Spike-triggered adaptation
+        /// Subthreshold adaptation
+        a: f64,
+        /// Spike-triggered adaptation
+        b: f64,
     },
     /// Izhikevich neuron model
     Izhikevich {
-        a: f64, // Recovery variable time scale
-        b: f64, // Sensitivity of recovery variable
-        c: f64, // After-spike reset value of membrane potential
-        d: f64, // After-spike reset increment for recovery variable
+        /// Recovery variable time scale
+        a: f64,
+        /// Sensitivity of recovery variable
+        b: f64,
+        /// After-spike reset value of membrane potential
+        c: f64,
+        /// After-spike reset increment for recovery variable
+        d: f64,
     },
     /// Hodgkin-Huxley simplified
     HodgkinHuxley {
-        g_na: f64, // Sodium conductance
-        g_k: f64,  // Potassium conductance
-        g_l: f64,  // Leak conductance
-        e_na: f64, // Sodium reversal potential
-        e_k: f64,  // Potassium reversal potential
-        e_l: f64,  // Leak reversal potential
+        /// Sodium conductance
+        g_na: f64,
+        /// Potassium conductance
+        g_k: f64,
+        /// Leak conductance
+        g_l: f64,
+        /// Sodium reversal potential
+        e_na: f64,
+        /// Potassium reversal potential
+        e_k: f64,
+        /// Leak reversal potential
+        e_l: f64,
     },
 }
 
@@ -60,28 +80,47 @@ pub enum NeuronModel {
 pub enum PlasticityRule {
     /// Spike-Timing Dependent Plasticity
     STDP {
-        tau_plus: f64,  // LTP time constant
-        tau_minus: f64, // LTD time constant
-        a_plus: f64,    // LTP amplitude
-        a_minus: f64,   // LTD amplitude
+        /// LTP time constant
+        tau_plus: f64,
+        /// LTD time constant
+        tau_minus: f64,
+        /// LTP amplitude
+        a_plus: f64,
+        /// LTD amplitude
+        a_minus: f64,
     },
     /// Rate-based Hebbian learning
-    Hebbian { learning_rate: f64, decay_rate: f64 },
+    Hebbian {
+        /// Learning rate parameter
+        learning_rate: f64,
+        /// Decay rate parameter
+        decay_rate: f64,
+    },
     /// Homeostatic plasticity
     Homeostatic {
+        /// Target firing rate
         target_rate: f64,
-        tau_h: f64, // Homeostatic time constant
-        alpha: f64, // Scaling factor
+        /// Homeostatic time constant
+        tau_h: f64,
+        /// Scaling factor
+        alpha: f64,
     },
     /// Triplet STDP for complex temporal patterns
     TripletSTDP {
+        /// Positive time constant
         tau_plus: f64,
+        /// Negative time constant
         tau_minus: f64,
-        tau_x: f64,    // Triplet time constant
-        a2_plus: f64,  // Pair LTP
-        a2_minus: f64, // Pair LTD
-        a3_plus: f64,  // Triplet LTP
-        a3_minus: f64, // Triplet LTD
+        /// Triplet time constant
+        tau_x: f64,
+        /// Pair LTP amplitude
+        a2_plus: f64,
+        /// Pair LTD amplitude
+        a2_minus: f64,
+        /// Triplet LTP amplitude
+        a3_plus: f64,
+        /// Triplet LTD amplitude
+        a3_minus: f64,
     },
 }
 
@@ -989,11 +1028,20 @@ pub enum NetworkTopology {
     /// Fully connected crossbar
     FullyConnected,
     /// Sparse random connections
-    Sparse { connectivity: f64 },
+    Sparse {
+        /// Connectivity probability
+        connectivity: f64,
+    },
     /// Small-world network
-    SmallWorld { rewiring_prob: f64 },
+    SmallWorld {
+        /// Rewiring probability
+        rewiring_prob: f64,
+    },
     /// Scale-free network
-    ScaleFree { gamma: f64 },
+    ScaleFree {
+        /// Power law exponent
+        gamma: f64,
+    },
 }
 
 /// Learning parameters for memristive networks
@@ -2212,6 +2260,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> NeuromorphicCore<F> {
                 self.dendrite_accumulators[spike.dst_compartment] + F::from(spike.weight).unwrap();
         }
         Ok(())
+    }
+}
+
+impl Default for SpikeRouter {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

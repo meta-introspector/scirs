@@ -120,12 +120,40 @@ impl<T: Float> Rectangle<T> {
         Rectangle { mins, maxes }
     }
 
-    /// Get the minimum coordinates
+    /// Get the minimum coordinates of the rectangle
+    ///
+    /// # Returns
+    ///
+    /// * A slice containing the minimum coordinate values for each dimension
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use scirs2_spatial::kdtree::Rectangle;
+    ///
+    /// let rect = Rectangle::new(vec![0.0, 0.0], vec![1.0, 1.0]);
+    /// let mins = rect.mins();
+    /// assert_eq!(mins, &[0.0, 0.0]);
+    /// ```
     pub fn mins(&self) -> &[T] {
         &self.mins
     }
 
-    /// Get the maximum coordinates
+    /// Get the maximum coordinates of the rectangle
+    ///
+    /// # Returns
+    ///
+    /// * A slice containing the maximum coordinate values for each dimension
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use scirs2_spatial::kdtree::Rectangle;
+    ///
+    /// let rect = Rectangle::new(vec![0.0, 0.0], vec![1.0, 1.0]);
+    /// let maxes = rect.maxes();
+    /// assert_eq!(maxes, &[1.0, 1.0]);
+    /// ```
     pub fn maxes(&self) -> &[T] {
         &self.maxes
     }

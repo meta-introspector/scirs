@@ -44,7 +44,7 @@ where
 {
     let config = config.unwrap_or_default();
     let n_samples = data.shape()[0];
-    let n_features = data.shape()[1];
+    let _n_features = data.shape()[1];
     let n_distances = n_samples * (n_samples - 1) / 2;
     let mut distances = Array1::zeros(n_distances);
 

@@ -514,6 +514,7 @@ mod tests {
 
     #[test]
     fn test_denoise_wavelet() {
+        use std::f64::consts::PI;
         // Create a simple test signal: sine wave
         let n = 1024;
         let time: Vec<f64> = (0..n).map(|i| i as f64 / 128.0).collect();

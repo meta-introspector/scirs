@@ -662,8 +662,14 @@ where
     {
         // Check GPU availability
         #[cfg(feature = "gpu")]
-        if let Some(gpu_backend) = crate::backend::detect_gpu_backend().unwrap_or(None) {
-            return self.process_gpu_chunks(input, op, gpu_backend);
+        if let Ok(device_manager) = crate::backend::device_detection::get_device_manager() {
+            if let Ok(dm) = device_manager.lock() {
+                if let Some((backend, _device_id)) =
+                    dm.get_best_device(input.len() * std::mem::size_of::<T>())
+                {
+                    return self.process_gpu_chunks(input, op, backend);
+                }
+            }
         }
 
         // Fallback to CPU processing
@@ -778,7 +784,7 @@ where
         &mut self,
         input: &ArrayView<T, D>,
         op: Op,
-        gpu_backend: crate::backend::GpuBackend,
+        gpu_backend: crate::backend::Backend,
     ) -> NdimageResult<Array<T, D>>
     where
         D: Dimension,

@@ -3,7 +3,7 @@
 //! This module provides functions for applying uniform filters (also known as box filters)
 //! to n-dimensional arrays.
 
-use ndarray::{s, Array, Array1, Array2, Dimension};
+use ndarray::{Array, Array1, Array2, Dimension};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::validation::{check_1d, check_2d, check_positive};
 use std::fmt::Debug;
@@ -58,7 +58,14 @@ pub fn uniform_filter<T, D>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + Send
+        + Sync
+        + 'static,
     D: Dimension + 'static,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
@@ -502,7 +509,14 @@ fn uniform_filter_nd<T, D>(
     origin: &[isize],
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + Send
+        + Sync
+        + 'static,
     D: Dimension + 'static,
 {
     // Calculate padding required for each dimension
@@ -614,7 +628,14 @@ fn uniform_filter_nd_general<T, D>(
     norm_factor: T,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + Send
+        + Sync
+        + 'static,
     D: Dimension + 'static,
 {
     // Pad input for border handling
@@ -627,13 +648,11 @@ where
     let input_shape = input.shape();
 
     // Generate all possible coordinate combinations for the input
-    let total_elements = input.len();
+    let _total_elements = input.len();
 
     // Use parallel iteration if the array is large enough
     #[cfg(feature = "parallel")]
     {
-        use scirs2_core::parallel_ops::*;
-
         if total_elements > 10000 {
             return uniform_filter_nd_parallel(
                 input,
@@ -743,7 +762,7 @@ where
     use scirs2_core::parallel_ops::*;
 
     let ndim = input.ndim();
-    let total_elements = input.len();
+    let _total_elements = input.len();
 
     // Helper function to convert linear index to n-dimensional coordinates
     fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {
@@ -829,7 +848,14 @@ pub fn uniform_filter_separable<T, D>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + Send
+        + Sync
+        + 'static,
     D: Dimension + 'static,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
@@ -878,7 +904,14 @@ fn uniform_filter_along_axis<T, D>(
     origin: isize,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Send + Sync,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + Send
+        + Sync
+        + 'static,
     D: Dimension + 'static,
 {
     // Check if axis is valid

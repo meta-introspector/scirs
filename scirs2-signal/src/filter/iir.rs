@@ -313,7 +313,7 @@ where
             (Vec::<Complex64>::new(), hp_poles, 1.0)
         }
         FilterType::Bandpass | FilterType::Bandstop => {
-            return Err(SignalError::NotImplementedError(
+            return Err(SignalError::NotImplemented(
                 "Bandpass and bandstop Chebyshev I filters should use cheby1_bandpass_bandstop function".to_string(),
             ));
         }
@@ -524,7 +524,7 @@ where
 
     // For now, only support lowpass and highpass
     if !matches!(filter_type, FilterType::Lowpass | FilterType::Highpass) {
-        return Err(SignalError::NotImplementedError(
+        return Err(SignalError::NotImplemented(
             "Bandpass and bandstop Chebyshev II filters not yet implemented".to_string(),
         ));
     }
@@ -656,7 +656,7 @@ where
 
     // For now, only support lowpass and highpass
     if !matches!(filter_type, FilterType::Lowpass | FilterType::Highpass) {
-        return Err(SignalError::NotImplementedError(
+        return Err(SignalError::NotImplemented(
             "Bandpass and bandstop elliptic filters not yet implemented".to_string(),
         ));
     }
@@ -784,7 +784,7 @@ where
 
     // For now, only support lowpass and highpass
     if !matches!(filter_type, FilterType::Lowpass | FilterType::Highpass) {
-        return Err(SignalError::NotImplementedError(
+        return Err(SignalError::NotImplemented(
             "Bandpass and bandstop Bessel filters not yet implemented".to_string(),
         ));
     }

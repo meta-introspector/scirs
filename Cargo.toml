@@ -193,14 +193,15 @@ num-rational = "0.4.2"
 rug = { version = "1.26.0", features = ["integer", "float", "rational", "complex"], default-features = false }
 gmp-mpfr-sys = { version = "1.6.5", default-features = false }
 
-# Arrow dependencies for consistent versioning
-arrow = "52.0.0"
-arrow-array = "52.0.0"
-arrow-buffer = "52.0.0"
-arrow-cast = "52.0.0"
-arrow-data = "52.0.0"
-arrow-schema = "52.0.0"
-arrow-select = "52.0.0"
+# Arrow dependencies commented out due to compatibility issues with chrono
+# arrow = "54.0.0"
+# arrow-array = "54.0.0"
+# arrow-buffer = "54.0.0"
+# arrow-cast = "54.0.0"
+# arrow-data = "54.0.0"
+# arrow-schema = "54.0.0"
+# arrow-select = "54.0.0"
+# arrow-arith = "54.0.0"
 
 # Async dependencies
 tokio = { version = "1.45.1", features = ["full"] }

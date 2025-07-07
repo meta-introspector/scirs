@@ -317,7 +317,7 @@ enum ProcessingMode {
 #[allow(dead_code)]
 fn analyze_signal_characteristics(
     signal: &Array1<f64>,
-    config: &AdaptiveDenoisingConfig,
+    _config: &AdaptiveDenoisingConfig,
 ) -> SignalResult<SignalAnalysis> {
     let n = signal.len();
 
@@ -782,7 +782,7 @@ fn apply_wiener_denoising(
     signal: &Array1<f64>,
     strategy: &DenoisingStrategy,
 ) -> SignalResult<Array1<f64>> {
-    if let Some((noise_var, signal_var)) = strategy.adaptive_parameters.wiener_params {
+    if let Some((noise_var, _signal_var)) = strategy.adaptive_parameters.wiener_params {
         match wiener_filter(signal, Some(noise_var), None) {
             Ok(denoised) => Ok(Array1::from(denoised)),
             Err(_) => apply_simple_smoothing(signal),
@@ -873,7 +873,7 @@ fn compute_quality_metrics(
     denoised: &Array1<f64>,
     noise_variance: f64,
 ) -> SignalResult<QualityMetrics> {
-    let n = original.len() as f64;
+    let _n = original.len() as f64;
 
     // Signal preservation (based on correlation)
     let signal_preservation = calculate_correlation(original, denoised) * 100.0;
@@ -909,7 +909,7 @@ fn compute_quality_metrics(
 /// Calculate correlation between two signals
 #[allow(dead_code)]
 fn calculate_correlation(x: &Array1<f64>, y: &Array1<f64>) -> f64 {
-    let n = x.len() as f64;
+    let _n = x.len() as f64;
     let mean_x = x.mean().unwrap_or(0.0);
     let mean_y = y.mean().unwrap_or(0.0);
 

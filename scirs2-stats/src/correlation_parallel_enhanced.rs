@@ -8,7 +8,6 @@ use crate::{kendall_tau, pearson_r, spearman_r};
 use ndarray::{s, Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix1, Ix2};
 use num_traits::{Float, NumCast, One, Zero};
 use scirs2_core::{
-    parallel_ops::*,
     simd_ops::{AutoOptimizer, SimdUnifiedOps},
     validation::*,
 };
@@ -220,7 +219,7 @@ where
 pub fn pearson_r_simd_enhanced<F, D>(x: &ArrayBase<D, Ix1>, y: &ArrayBase<D, Ix1>) -> StatsResult<F>
 where
     F: Float + NumCast + SimdUnifiedOps + Zero + One + Copy + std::iter::Sum<F>,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     // Check dimensions
     if x.len() != y.len() {
@@ -503,7 +502,7 @@ where
 fn check_array_finite_2d<F, D>(arr: &ArrayBase<D, Ix2>, name: &str) -> StatsResult<()>
 where
     F: Float,
-    D: Data<Elem = F> + std::fmt::Display,
+    D: Data<Elem = F>,
 {
     for &val in arr.iter() {
         if !val.is_finite() {

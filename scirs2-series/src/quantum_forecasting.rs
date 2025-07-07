@@ -459,6 +459,7 @@ pub struct QuantumKernel<F: Float + Debug> {
 }
 
 #[derive(Debug, Clone)]
+/// Quantum kernel types for quantum machine learning
 pub enum QuantumKernelType {
     /// Quantum feature map kernel
     FeatureMap,
@@ -1720,8 +1721,12 @@ impl<F: Float + Debug + Clone + FromPrimitive> QuantumErrorCorrection<F> {
         let mut error_probability = F::zero();
 
         // Simplified syndrome measurement
-        for i in 0..self.physical_qubits.min(quantum_state.amplitudes.len()) {
-            let amplitude = quantum_state.amplitudes[i];
+        for (i, &amplitude) in quantum_state
+            .amplitudes
+            .iter()
+            .enumerate()
+            .take(self.physical_qubits.min(quantum_state.amplitudes.len()))
+        {
             let probability = amplitude.norm_sqr();
 
             // Check if probability deviates from expected values

@@ -49,7 +49,7 @@ fn get_initial_causal_coefficient<T: Float + FromPrimitive>(
 ) -> T {
     let mut sum = T::zero();
     let mut z_power = T::one();
-    let abs_pole = pole.abs();
+    let _abs_pole = pole.abs();
 
     for &coeff in coeffs {
         sum = sum + coeff * z_power;
@@ -116,8 +116,8 @@ fn apply_anti_causal_filter<T: Float + FromPrimitive>(coeffs: &mut [T], pole: T,
 #[allow(dead_code)]
 pub fn spline_filter<T, D>(input: &Array<T, D>, order: Option<usize>) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -169,8 +169,8 @@ pub fn spline_filter1d<T, D>(
     axis: Option<usize>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -344,7 +344,7 @@ fn evaluate_bspline_basis<T: Float + FromPrimitive>(x: T, order: usize, derivati
             let abs_x = x.abs();
             if derivative == 0 {
                 if abs_x < T::from_f64(0.5).unwrap() {
-                    let half = T::from_f64(0.5).unwrap();
+                    let _half = T::from_f64(0.5).unwrap();
                     let three_quarters = T::from_f64(0.75).unwrap();
                     three_quarters - x * x
                 } else if abs_x < T::from_f64(1.5).unwrap() {

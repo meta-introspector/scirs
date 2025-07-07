@@ -70,6 +70,7 @@ pub struct AdvancedVolatilityParams<F: Float> {
     pub d: Option<F>,
     /// Long-term component parameters (for CGARCH)
     pub rho: Option<F>,
+    /// Persistence parameter
     pub phi: Option<F>,
 }
 
@@ -104,13 +105,19 @@ pub enum OptionPricingModel {
     Bates {
         /// Heston parameters
         kappa: f64,
+        /// Long-term variance mean
         theta: f64,
+        /// Volatility of volatility
         sigma: f64,
+        /// Correlation coefficient
         rho: f64,
+        /// Initial variance
         v0: f64,
         /// Jump parameters
         lambda: f64,
+        /// Jump mean
         mu_j: f64,
+        /// Jump standard deviation
         sigma_j: f64,
     },
 }
@@ -157,17 +164,25 @@ pub enum OptionType {
     },
 }
 
+/// Barrier option types
 #[derive(Debug, Clone)]
 pub enum BarrierType {
+    /// Up-and-out barrier
     UpAndOut,
+    /// Up-and-in barrier
     UpAndIn,
+    /// Down-and-out barrier
     DownAndOut,
+    /// Down-and-in barrier
     DownAndIn,
 }
 
+/// Averaging types for Asian options
 #[derive(Debug, Clone)]
 pub enum AveragingType {
+    /// Arithmetic averaging
     Arithmetic,
+    /// Geometric averaging
     Geometric,
 }
 

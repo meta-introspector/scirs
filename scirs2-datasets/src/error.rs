@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn test_error_debug_format() {
         let error = DatasetsError::InvalidFormat("debug test".to_string());
-        let debug_str = format!("{:?}", error);
+        let debug_str = format!("{error:?}");
         assert!(debug_str.contains("InvalidFormat"));
         assert!(debug_str.contains("debug test"));
     }
@@ -137,7 +137,7 @@ mod tests {
     fn test_result_type() {
         // Test Ok case
         let ok_result: Result<i32> = Ok(42);
-        assert_eq!(ok_result.unwrap(), 42);
+        assert_eq!(ok_result, Ok(42));
 
         // Test Err case
         let err_result: Result<i32> = Err(DatasetsError::Other("test".to_string()));

@@ -758,7 +758,7 @@ impl<T: StreamingObjective + Clone> AdvancedAdvancedDistributedOnlineGD<T> {
         self.process_consensus_messages()?;
 
         // Check for consensus
-        if let Some((winning_id, consensus_params)) =
+        if let Some((_winning_id, consensus_params)) =
             self.consensus_node.voting_state.check_consensus()
         {
             self.distributed_stats.consensus_success_rate =

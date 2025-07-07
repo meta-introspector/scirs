@@ -102,10 +102,7 @@ impl RealWorldDatasets {
             "credit_card_fraud" => self.load_credit_card_fraud(),
             "loan_default" => self.load_loan_default(),
 
-            _ => Err(DatasetsError::NotFound(format!(
-                "Unknown dataset: {}",
-                name
-            ))),
+            _ => Err(DatasetsError::NotFound(format!("Unknown dataset: {name}"))),
         }
     }
 
@@ -534,10 +531,10 @@ impl RealWorldDatasets {
 
         // Generate feature names for spambase (57 features + 1 target)
         for i in 0..48 {
-            columns.push(format!("word_freq_{}", i));
+            columns.push(format!("word_freq_{i}"));
         }
         for i in 0..6 {
-            columns.push(format!("char_freq_{}", i));
+            columns.push(format!("char_freq_{i}"));
         }
         columns.push("capital_run_length_average".to_string());
         columns.push("capital_run_length_longest".to_string());
@@ -1016,7 +1013,6 @@ impl RealWorldDatasets {
                     feature_names: Some(feature_names),
                     url: Some(url.to_string()),
                     checksum: None,
-                    ..Default::default()
                 };
 
                 Ok(Dataset::from_metadata(data, Some(target), metadata))
@@ -1034,8 +1030,8 @@ impl RealWorldDatasets {
                     .collect();
 
                 let metadata = crate::registry::DatasetMetadata {
-                    name: format!("Synthetic {}", name),
-                    description: format!("Synthetic version of {} dataset", name),
+                    name: format!("Synthetic {name}"),
+                    description: format!("Synthetic version of {name} dataset"),
                     n_samples: 1000,
                     n_features,
                     task_type: if target_col.is_some() {
@@ -1048,7 +1044,6 @@ impl RealWorldDatasets {
                     feature_names: Some(feature_names),
                     url: Some(url.to_string()),
                     checksum: None,
-                    ..Default::default()
                 };
 
                 Ok(Dataset::from_metadata(data, target, metadata))
@@ -1195,7 +1190,6 @@ impl RealWorldDatasets {
             feature_names: Some(feature_names),
             url: Some(url.to_string()),
             checksum: None,
-            ..Default::default()
         };
 
         Ok(Dataset::from_metadata(data, target, metadata))
@@ -1207,7 +1201,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1230,7 +1224,7 @@ impl RealWorldDatasets {
     #[allow(dead_code)]
     fn create_synthetic_credit_approval_data(&self) -> Result<Dataset> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let n_samples = 690; // Based on the actual UCI credit approval dataset size
         let n_features = 15;
@@ -1320,7 +1314,6 @@ impl RealWorldDatasets {
             feature_names: Some(feature_names),
             url: None,
             checksum: None,
-            ..Default::default()
         };
 
         Ok(Dataset::from_metadata(data, Some(target), metadata))
@@ -1329,7 +1322,7 @@ impl RealWorldDatasets {
     #[allow(dead_code)]
     fn create_synthetic_mushroom_data(&self) -> Result<Dataset> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let n_samples = 8124; // Based on the actual UCI mushroom dataset size
         let n_features = 22;
@@ -1453,7 +1446,6 @@ impl RealWorldDatasets {
             feature_names: Some(feature_names),
             url: None,
             checksum: None,
-            ..Default::default()
         };
 
         Ok(Dataset::from_metadata(data, Some(target), metadata))
@@ -1462,7 +1454,7 @@ impl RealWorldDatasets {
     #[allow(dead_code)]
     fn create_synthetic_spam_data(&self) -> Result<Dataset> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let n_samples = 4601; // Based on the actual spam dataset size
         let n_features = 57; // 54 word frequency features + 3 character frequency features
@@ -1536,7 +1528,7 @@ impl RealWorldDatasets {
 
         for (i, word) in spam_words.iter().enumerate() {
             if i < n_features {
-                feature_names.push(format!("word_freq_{}", word));
+                feature_names.push(format!("word_freq_{word}"));
             }
         }
 
@@ -1592,7 +1584,6 @@ impl RealWorldDatasets {
             feature_names: Some(feature_names),
             url: None,
             checksum: None,
-            ..Default::default()
         };
 
         Ok(Dataset::from_metadata(data, Some(target), metadata))
@@ -1604,7 +1595,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1642,7 +1633,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1665,7 +1656,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1705,7 +1696,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1731,7 +1722,7 @@ impl RealWorldDatasets {
                         data[[i, 2]] * 2.0 + // citric acid
                         rng.random_range(-0.5..0.5); // noise
 
-            target[i] = quality.max(3.0).min(8.0);
+            target[i] = quality.clamp(3.0, 8.0);
         }
 
         Ok((data, target))
@@ -1743,7 +1734,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1766,14 +1757,14 @@ impl RealWorldDatasets {
         n_timesteps: usize,
     ) -> Result<(Array2<f64>, Option<Array1<f64>>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut data = Array2::zeros((n_timesteps, 1));
 
         for i in 0..n_timesteps {
             let t = i as f64;
             let trend = 100.0 + t * 2.0;
             let seasonal = 20.0 * (2.0 * std::f64::consts::PI * t / 12.0).sin();
-            let noise = rng.gen::<f64>() * 10.0 - 5.0;
+            let noise = rng.random::<f64>() * 10.0 - 5.0;
 
             data[[i, 0]] = trend + seasonal + noise;
         }
@@ -1786,7 +1777,7 @@ impl RealWorldDatasets {
         n_timesteps: usize,
     ) -> Result<(Array2<f64>, Option<Array1<f64>>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_timesteps, 6));
         let mut price = 30000.0; // Starting price
@@ -1817,7 +1808,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1857,7 +1848,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1881,7 +1872,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1906,7 +1897,7 @@ impl RealWorldDatasets {
             let mpg: f64 = 45.0 - (data[[i, 3]] / 5140.0) * 20.0 - (data[[i, 1]] / 455.0) * 15.0
                 + (data[[i, 4]] / 24.8) * 10.0
                 + rng.random_range(-3.0..3.0);
-            target[i] = mpg.max(9.0).min(46.6);
+            target[i] = mpg.clamp(9.0, 46.6);
         }
 
         Ok((data, target))
@@ -1918,7 +1909,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1945,10 +1936,10 @@ impl RealWorldDatasets {
             let strength: f64 = (data[[i, 0]] / 540.0) * 30.0 + // cement contribution
                           (data[[i, 1]] / 359.4) * 15.0 + // slag contribution
                           (data[[i, 3]] / 247.0) * (-20.0) + // water (negative)
-                          ((data[[i, 7]] / 365.0) as f64).ln() * 10.0 + // age (logarithmic)
+                          (data[[i, 7]] / 365.0_f64).ln() * 10.0 + // age (logarithmic)
                           rng.random_range(-5.0..5.0); // noise
 
-            target[i] = strength.max(2.33).min(82.6);
+            target[i] = strength.clamp(2.33, 82.6);
         }
 
         Ok((data, target))
@@ -1960,7 +1951,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -1999,7 +1990,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -2036,7 +2027,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -2069,7 +2060,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -2113,7 +2104,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -2182,7 +2173,7 @@ impl RealWorldDatasets {
         has_categorical: bool,
     ) -> Result<(Array2<f64>, Option<Array1<f64>>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
 
@@ -2215,7 +2206,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -2242,7 +2233,7 @@ impl RealWorldDatasets {
 
                 // Add noise and variation
                 data[[i, j]] = base_intensity + rng.random_range(-0.3f64..0.3f64);
-                data[[i, j]] = data[[i, j]].max(0.0f64).min(1.0f64); // Clamp to [0, 1]
+                data[[i, j]] = data[[i, j]].clamp(0.0f64, 1.0f64); // Clamp to [0, 1]
             }
         }
 
@@ -2255,7 +2246,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -2283,7 +2274,7 @@ impl RealWorldDatasets {
                 // Add texture and noise
                 let texture_noise = rng.random_range(-0.2f64..0.2f64);
                 data[[i, j]] = base_intensity + texture_noise;
-                data[[i, j]] = data[[i, j]].max(0.0f64).min(1.0f64); // Clamp to [0, 1]
+                data[[i, j]] = data[[i, j]].clamp(0.0f64, 1.0f64); // Clamp to [0, 1]
             }
         }
 
@@ -2296,7 +2287,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);
@@ -2341,7 +2332,7 @@ impl RealWorldDatasets {
         n_features: usize,
     ) -> Result<(Array2<f64>, Array1<f64>)> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let mut data = Array2::zeros((n_samples, n_features));
         let mut target = Array1::zeros(n_samples);

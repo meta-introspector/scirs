@@ -108,8 +108,17 @@ pub fn median_filter<T, D>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
-    D: Dimension,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + PartialOrd
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
+    D: Dimension + 'static,
 {
     // Validate that size array has same dimensions as input
     if size.len() != input.ndim() {
@@ -175,8 +184,17 @@ pub fn median_filter_optimized<T, D>(
     optimization_hint: Option<&str>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
-    D: Dimension,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + PartialOrd
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
+    D: Dimension + 'static,
 {
     match optimization_hint {
         Some("small_kernel") => {
@@ -220,8 +238,17 @@ fn histogram_based_median_filter<T, D>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
-    D: Dimension,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + PartialOrd
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
+    D: Dimension + 'static,
 {
     // For floating-point data, histogram-based approach is complex due to
     // continuous values. We'll fall back to the standard approach but with
@@ -247,8 +274,17 @@ fn chunked_median_filter<T, D>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + PartialOrd + Clone + Send + Sync + 'static,
-    D: Dimension,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + PartialOrd
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
+    D: Dimension + 'static,
 {
     // For very large arrays, we could process in chunks with overlap
     // to ensure correct boundary handling between chunks.

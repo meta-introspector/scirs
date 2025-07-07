@@ -1099,7 +1099,7 @@ fn estimate_homography(src_points: &[[f32; 2]], dst_points: &[[f32; 2]]) -> Resu
 
     // Reshape to 3x3 matrix
     let mut h_norm = Array2::from_shape_vec((3, 3), h_vec)
-        .map_err(|e| VisionError::OperationFailed(format!("Failed to reshape homography: {e}")))?;
+        .map_err(|e| VisionError::OperationError(format!("Failed to reshape homography: {e}")))?;
 
     // Denormalize: H = T_dst^(-1) * H_norm * T_src
     let dst_inv = matrix_inverse_3x3(&dst_transform)?;
@@ -1434,7 +1434,7 @@ fn matrix_inverse_3x3(matrix: &Array2<f32>) -> Result<Array2<f32>> {
         + m[[0, 2]] * (m[[1, 0]] * m[[2, 1]] - m[[1, 1]] * m[[2, 0]]);
 
     if det.abs() < 1e-10 {
-        return Err(VisionError::OperationFailed(
+        return Err(VisionError::OperationError(
             "Matrix is singular".to_string(),
         ));
     }
@@ -1523,7 +1523,7 @@ fn solve_linear_system(a: &Array2<f32>, b: &[f32]) -> Result<Vec<f32>> {
 
         // Check for singular matrix
         if a_copy[[i, i]].abs() < 1e-10 {
-            return Err(VisionError::OperationFailed("Singular matrix".to_string()));
+            return Err(VisionError::OperationError("Singular matrix".to_string()));
         }
 
         // Eliminate column
@@ -1590,7 +1590,7 @@ fn estimate_fundamental_matrix(
 
     // Reshape to 3x3 matrix
     let mut f_norm = Array2::from_shape_vec((3, 3), f_vec).map_err(|e| {
-        VisionError::OperationFailed(format!("Failed to reshape fundamental matrix: {e}"))
+        VisionError::OperationError(format!("Failed to reshape fundamental matrix: {e}"))
     })?;
 
     // Enforce rank-2 constraint by setting smallest singular value to 0

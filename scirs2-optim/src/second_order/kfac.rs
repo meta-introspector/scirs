@@ -196,7 +196,7 @@ pub struct KFACStats<T: Float> {
     pub memory_usage: usize,
 }
 
-impl<T: Float + Default + Clone + Send + Sync> KFAC<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> KFAC<T> {
     /// Create a new K-FAC optimizer
     pub fn new(config: KFACConfig<T>) -> Self {
         Self {
@@ -2901,13 +2901,14 @@ pub mod advanced_kfac {
     }
 
     /// Basic implementations for missing components
-    impl<T: Float + Send + Sync> DistributedKFAC<T> {
+    impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> DistributedKFAC<T> {
         pub fn new(base_config: KFACConfig<T>, dist_config: DistributedKFACConfig) -> Result<Self> {
             let base_kfac = KFACOptimizer::new(base_config);
-            let comm_backend = Some(Arc::new(LocalCommunicationBackend::new(
+            let local_backend = LocalCommunicationBackend::new(
                 dist_config.num_workers,
                 dist_config.worker_rank,
-            )));
+            );
+            let comm_backend: Option<Arc<dyn CommunicationBackend>> = Some(Arc::new(local_backend) as Arc<dyn CommunicationBackend>);
 
             Ok(Self {
                 base_kfac,
@@ -2924,7 +2925,7 @@ pub mod advanced_kfac {
             &mut self,
             layer_name: &str,
             local_gradients: &Array2<T>,
-            local_activations: &Array2<T>,
+            _local_activations: &Array2<T>,
         ) -> Result<Array2<T>> {
             // 1. Compute local K-FAC updates
             let local_update = self.base_kfac.apply_update(layer_name, local_gradients)?;
@@ -3003,7 +3004,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float + Send + Sync> AdvancedConditioning<T> {
+    impl<T: Float + Send + Sync + std::iter::Sum + ndarray::ScalarOperand> AdvancedConditioning<T> {
         pub fn new() -> Self {
             Self {
                 eigenvalue_trackers: HashMap::new(),
@@ -3038,7 +3039,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float + Send + Sync> EigenvalueTracker<T> {
+    impl<T: Float + Send + Sync + std::iter::Sum + ndarray::ScalarOperand> EigenvalueTracker<T> {
         pub fn new(size: usize) -> Self {
             Self {
                 eigenvalue_history: VecDeque::with_capacity(100),
@@ -3078,7 +3079,7 @@ pub mod advanced_kfac {
         }
     }
 
-    impl<T: Float + Send + Sync> PowerIterationState<T> {
+    impl<T: Float + Send + Sync + std::iter::Sum + ndarray::ScalarOperand> PowerIterationState<T> {
         pub fn new(size: usize) -> Self {
             Self {
                 vector: Array1::ones(size),
@@ -3431,7 +3432,7 @@ pub mod advanced_kfac {
     }
 
     /// Integrate natural gradients with K-FAC
-    impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> KFAC<T> {
+    impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::ScalarOperand> KFAC<T> {
         /// Compute natural gradient update using K-FAC approximation
         pub fn natural_gradient_step(
             &mut self,

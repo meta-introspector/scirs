@@ -337,6 +337,7 @@ pub struct ErrorRecoverySystem {
     /// Error history
     error_history: Vec<EnhancedStatsError>,
     /// Recovery success rates
+    #[allow(dead_code)]
     recovery_success_rates: HashMap<String, f64>,
     /// System configuration
     config: ErrorRecoveryConfig,

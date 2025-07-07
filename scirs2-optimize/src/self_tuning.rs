@@ -1181,8 +1181,8 @@ impl BayesianParameterOptimizer {
             for (name, value) in current_params {
                 if name.contains("step_size") || name.contains("learning_rate") {
                     // Add small random perturbation for exploration
-                    use rand::Rng;
-                    let mut rng = rand::rng();
+                    use rand::{rng, Rng};
+                    let mut rng = rng();
                     let perturbation_factor = 1.0 + (rng.random_range(-0.1..=0.1));
 
                     let perturbed_value = match value {

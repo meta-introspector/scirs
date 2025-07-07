@@ -6,12 +6,10 @@
 use ndarray::{s, Array, ArrayView2, ArrayViewMut1, Axis, Ix2};
 use num_traits::{Float, FromPrimitive};
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::cmp;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::utils::safe_f64_to_float;
-use crate::BoundaryMode;
 
 /// Helper function for safe float to usize conversion
 #[allow(dead_code)]

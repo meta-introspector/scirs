@@ -68,27 +68,27 @@ fn demonstrate_dataset_catalog() {
 
     println!("Classification Datasets ({}):", classification.len());
     for dataset in classification {
-        println!("  • {}", dataset);
+        println!("  • {dataset}");
     }
 
     println!("\nRegression Datasets ({}):", regression.len());
     for dataset in regression {
-        println!("  • {}", dataset);
+        println!("  • {dataset}");
     }
 
     println!("\nTime Series Datasets ({}):", time_series.len());
     for dataset in time_series {
-        println!("  • {}", dataset);
+        println!("  • {dataset}");
     }
 
     println!("\nHealthcare Datasets ({}):", healthcare.len());
     for dataset in healthcare {
-        println!("  • {}", dataset);
+        println!("  • {dataset}");
     }
 
     println!("\nFinancial Datasets ({}):", financial.len());
     for dataset in financial {
-        println!("  • {}", dataset);
+        println!("  • {dataset}");
     }
 
     println!(
@@ -167,7 +167,7 @@ fn demonstrate_classification_datasets() -> Result<(), Box<dyn std::error::Error
             println!("  Task: Predict income >$50K based on census data");
         }
         Err(e) => {
-            println!("  Note: Adult dataset requires download: {}", e);
+            println!("  Note: Adult dataset requires download: {e}");
             println!("  This is expected for the demonstration");
         }
     }
@@ -364,7 +364,7 @@ fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>
     let titanic_result =
         runner.run_benchmark("load_titanic", titanic_params, || match load_titanic() {
             Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-            Err(e) => Err(format!("Failed to load Titanic: {}", e)),
+            Err(e) => Err(format!("Failed to load Titanic: {e}")),
         });
 
     // California Housing loading benchmark
@@ -372,7 +372,7 @@ fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>
     let housing_result = runner.run_benchmark("load_california_housing", housing_params, || {
         match load_california_housing() {
             Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-            Err(e) => Err(format!("Failed to load California Housing: {}", e)),
+            Err(e) => Err(format!("Failed to load California Housing: {e}")),
         }
     });
 
@@ -384,7 +384,7 @@ fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>
             heart_params,
             || match load_heart_disease() {
                 Ok(dataset) => Ok((dataset.n_samples(), dataset.n_features())),
-                Err(e) => Err(format!("Failed to load Heart Disease: {}", e)),
+                Err(e) => Err(format!("Failed to load Heart Disease: {e}")),
             },
         );
 
@@ -469,7 +469,7 @@ fn show_dataset_info(name: &str, dataset: &scirs2_datasets::utils::Dataset) {
     );
 
     if let Some(source) = dataset.metadata.get("source") {
-        println!("  Source: {}", source);
+        println!("  Source: {source}");
     }
 
     if dataset.target.is_some() {

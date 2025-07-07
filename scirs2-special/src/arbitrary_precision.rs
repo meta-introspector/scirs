@@ -146,15 +146,15 @@ pub mod gamma {
 
         // Add correction terms
         let mut correction = ctx.float(1.0);
-        let x2 = x.clone() * x;
-        let x3 = &x2 * x;
-        let x4 = &x2 * &x2;
+        let x2 = Float::with_val(ctx.precision, x.clone() * x);
+        let x3 = Float::with_val(ctx.precision, &x2 * x);
+        let x4 = Float::with_val(ctx.precision, &x2 * &x2);
 
         correction += ctx.float(1.0) / (ctx.float(12.0) * x);
         correction += ctx.float(1.0) / (ctx.float(288.0) * &x2);
-        let denom1 = ctx.float(51840.0) * &x3;
+        let denom1 = Float::with_val(ctx.precision, ctx.float(51840.0) * &x3);
         correction -= ctx.float(139.0) / denom1;
-        let denom2 = ctx.float(2488320.0) * &x4;
+        let denom2 = Float::with_val(ctx.precision, ctx.float(2488320.0) * &x4);
         correction -= ctx.float(571.0) / denom2;
 
         Ok(term1 * term2 * correction)
@@ -238,13 +238,13 @@ pub mod gamma {
         let mut result = (x.clone() - 0.5) * x.clone().ln() - x.clone() + ln_2pi / 2.0;
 
         // Add correction terms
-        let x2 = x.clone() * x;
-        let x3 = &x2 * x;
-        let x5 = x3.clone() * &x2;
-        let x7 = x5.clone() * &x2;
+        let x2 = Float::with_val(ctx.precision, x.clone() * x);
+        let x3 = Float::with_val(ctx.precision, &x2 * x);
+        let x5 = Float::with_val(ctx.precision, &x3 * &x2);
+        let x7 = Float::with_val(ctx.precision, &x5 * &x2);
 
         result += ctx.float(1.0) / (ctx.float(12.0) * x);
-        let denom3 = ctx.float(360.0) * &x3;
+        let denom3 = Float::with_val(ctx.precision, ctx.float(360.0) * &x3);
         result -= ctx.float(1.0) / denom3;
         let denom4 = ctx.float(1260.0) * &x5;
         result += ctx.float(1.0) / denom4;
@@ -287,8 +287,8 @@ pub mod bessel {
     /// Power series for Bessel J_n(x)
     fn bessel_j_series(n: i32, x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
         let mut sum = ctx.float(0.0);
-        let x_half = x.clone() / 2.0;
-        let x2_quarter = x_half.clone() * &x_half;
+        let x_half = Float::with_val(ctx.precision(), x.clone() / 2.0);
+        let x2_quarter = Float::with_val(ctx.precision(), &x_half * &x_half);
 
         let mut term = x_half.pow(n) / factorial_mp(n.abs() as u32, ctx);
         let sign = if n < 0 && n % 2 != 0 { -1.0 } else { 1.0 };

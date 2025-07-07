@@ -451,18 +451,29 @@ impl ApiCompatibilityTester {
         let input: Array2<f64> = Array2::zeros((10, 10));
 
         // Test zoom with scalar factor
-        let scalar_zoom_test =
-            scipy_compat_layer::zoom(&input, vec![2.0f64, 2.0f64], None, None, None, None).is_ok();
+        let scalar_zoom_test = scipy_compat_layer::scipy_ndimage::zoom(
+            input.view(),
+            vec![2.0f64, 2.0f64],
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
+        .is_ok();
         if !scalar_zoom_test {
             incompatible_params.push("zoom_factor".to_string());
             error_messages.push("Zoom factor parameter handling differs".to_string());
         }
 
         // Test zoom with interpolation order
-        let order_test = scipy_compat_layer::zoom(
-            &input,
+        let order_test = scipy_compat_layer::scipy_ndimage::zoom(
+            input.view(),
             vec![2.0f64, 2.0f64],
-            Some(InterpolationOrder::Linear),
+            None,
+            Some(1), // Linear interpolation order
+            None,
             None,
             None,
             None,

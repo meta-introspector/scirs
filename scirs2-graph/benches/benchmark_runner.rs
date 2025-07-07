@@ -171,7 +171,7 @@ impl BenchmarkRunner {
         let mut peak_memory = 0.0f64;
 
         for suite in &self.config.suites {
-            println!("📊 Running benchmark suite: {}", suite);
+            println!("📊 Running benchmark suite: {suite}");
 
             let result = self.run_benchmark_suite(suite, &platform_info)?;
 
@@ -205,10 +205,7 @@ impl BenchmarkRunner {
         // Generate reports
         self.save_reports(&report)?;
 
-        println!(
-            "✅ Benchmark run completed in {:.2} seconds",
-            total_duration
-        );
+        println!("✅ Benchmark run completed in {total_duration:.2} seconds");
 
         Ok(report)
     }
@@ -241,7 +238,7 @@ impl BenchmarkRunner {
             if feature == "native" {
                 rustflags.push_str("-C target-cpu=native ");
             } else {
-                rustflags.push_str(&format!("-C target-feature=+{} ", feature));
+                rustflags.push_str(&format!("-C target-feature=+{feature} "));
             }
         }
         if !rustflags.is_empty() {
@@ -251,7 +248,7 @@ impl BenchmarkRunner {
         // Setup timeout
         let timeout = Duration::from_secs(self.config.timeout_seconds);
 
-        println!("  Running: {:?}", cmd);
+        println!("  Running: {cmd:?}");
 
         // Execute benchmark with timeout and memory monitoring
         let (status, memory_usage, results_file) = if self.config.memory_profiling {
@@ -274,10 +271,11 @@ impl BenchmarkRunner {
         })
     }
 
+    #[allow(clippy::type_complexity)]
     fn run_with_memory_monitoring(
         &self,
         mut cmd: Command,
-        timeout: Duration,
+        _timeout: Duration,
         suite_name: &str,
     ) -> Result<(BenchmarkStatus, Option<MemoryUsage>, Option<String>), Box<dyn std::error::Error>>
     {
@@ -298,8 +296,8 @@ impl BenchmarkRunner {
         let memory_samples_clone = memory_samples.clone();
 
         let memory_thread = thread::spawn(move || {
-            while let Ok(_) = std::fs::read_to_string(format!("/proc/{}/stat", pid)) {
-                if let Ok(status) = std::fs::read_to_string(format!("/proc/{}/status", pid)) {
+            while std::fs::read_to_string(format!("/proc/{pid}/stat")).is_ok() {
+                if let Ok(status) = std::fs::read_to_string(format!("/proc/{pid}/status")) {
                     for line in status.lines() {
                         if line.starts_with("VmRSS:") {
                             if let Some(kb_str) = line.split_whitespace().nth(1) {
@@ -317,14 +315,11 @@ impl BenchmarkRunner {
         });
 
         // Wait for completion with timeout
-        let status = match child.wait()? {
-            exit_status => {
-                if exit_status.success() {
-                    BenchmarkStatus::Success
-                } else {
-                    BenchmarkStatus::Failed
-                }
-            }
+        let exit_status = child.wait()?;
+        let status = if exit_status.success() {
+            BenchmarkStatus::Success
+        } else {
+            BenchmarkStatus::Failed
         };
 
         // Collect memory usage data
@@ -350,6 +345,7 @@ impl BenchmarkRunner {
         Ok((status, memory_usage, results_file))
     }
 
+    #[allow(clippy::type_complexity)]
     fn run_basic_benchmark(
         &self,
         mut cmd: Command,
@@ -459,7 +455,7 @@ impl BenchmarkRunner {
 
         let mut warnings = Vec::new();
         if failed_suites > 0 {
-            warnings.push(format!("{} benchmark suites failed", failed_suites));
+            warnings.push(format!("{failed_suites} benchmark suites failed"));
         }
         if peak_memory > 8192.0 {
             // 8GB threshold
@@ -633,16 +629,16 @@ impl BenchmarkRunner {
         );
 
         if let Some(fastest) = &report.summary.fastest_suite {
-            println!("🚀 Fastest Suite: {}", fastest);
+            println!("🚀 Fastest Suite: {fastest}");
         }
         if let Some(slowest) = &report.summary.slowest_suite {
-            println!("🐌 Slowest Suite: {}", slowest);
+            println!("🐌 Slowest Suite: {slowest}");
         }
 
         if !report.summary.warnings.is_empty() {
             println!("\n⚠️  WARNINGS:");
             for warning in &report.summary.warnings {
-                println!("   • {}", warning);
+                println!("   • {warning}");
             }
         }
 
@@ -664,6 +660,7 @@ impl CommandExt for Command {
 }
 
 #[cfg(test)]
+#[allow(clippy::items_after_test_module)]
 mod tests {
     use super::*;
 

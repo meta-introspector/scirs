@@ -181,13 +181,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             let elapsed = start_time.elapsed();
-            println!("{} training completed in {:.2?}", name, elapsed);
+            println!("{name} training completed in {elapsed:.2?}");
             // Final evaluation
             let train_accuracy = compute_accuracy(model, &x_train, &y_train);
             let test_accuracy = compute_accuracy(model, &x_test, &y_test);
-            println!("Final metrics for {}:", name);
-            println!("  Train accuracy: {:.2}%", train_accuracy * 100.0);
-            println!("  Test accuracy:  {:.2}%", test_accuracy * 100.0);
+            println!("Final metrics for {name}:");
+            let train_pct = train_accuracy * 100.0;
+            println!("  Train accuracy: {train_pct:.2}%");
+            let test_pct = test_accuracy * 100.0;
+            println!("  Test accuracy:  {test_pct:.2}%");
             train_losses
         };
     // Train models with different optimizers
@@ -204,11 +206,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Epochs: {}", epochs);
     println!();
     println!("Final Loss Values:");
-    println!("  SGD:     {:.6}", sgd_losses.last().unwrap());
-    println!("  Adam:    {:.6}", adam_losses.last().unwrap());
-    println!("  AdamW:   {:.6}", adamw_losses.last().unwrap());
-    println!("  RAdam:   {:.6}", radam_losses.last().unwrap());
-    println!("  RMSprop: {:.6}", rmsprop_losses.last().unwrap());
+    let sgd_final = sgd_losses.last().unwrap();
+    println!("  SGD:     {sgd_final:.6}");
+    let adam_final = adam_losses.last().unwrap();
+    println!("  Adam:    {adam_final:.6}");
+    let adamw_final = adamw_losses.last().unwrap();
+    println!("  AdamW:   {adamw_final:.6}");
+    let radam_final = radam_losses.last().unwrap();
+    println!("  RAdam:   {radam_final:.6}");
+    let rmsprop_final = rmsprop_losses.last().unwrap();
+    println!("  RMSprop: {rmsprop_final:.6}");
     println!("\nLoss progression (first value, middle value, last value):");
     println!(
         "  SGD:     {:.6}, {:.6}, {:.6}",

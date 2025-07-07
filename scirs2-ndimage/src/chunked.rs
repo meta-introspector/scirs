@@ -118,7 +118,7 @@ where
                     let result = processor.process_chunk(chunk.view(), &position)?;
                     Ok((result, position))
                 })
-                .collect::<Result<Vec<_>>>()?
+                .collect::<Result<Vec<_>, NdimageError>>()?
         }
         #[cfg(not(feature = "parallel"))]
         {
@@ -129,7 +129,7 @@ where
                     let result = processor.process_chunk(chunk.view(), &position)?;
                     Ok((result, position))
                 })
-                .collect::<Result<Vec<_>>>()?
+                .collect::<Result<Vec<_>, NdimageError>>()?
         }
     } else {
         chunks
@@ -139,7 +139,7 @@ where
                 let result = processor.process_chunk(chunk.view(), &position)?;
                 Ok((result, position))
             })
-            .collect::<Result<Vec<_>>>()?
+            .collect::<Result<Vec<_>, NdimageError>>()?
     };
 
     // Combine results
@@ -411,7 +411,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::{arr2, Array2};
+    use ndarray::Array2;
 
     #[test]
     fn test_calculate_chunk_sizes() {

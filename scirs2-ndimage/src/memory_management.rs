@@ -6,7 +6,7 @@
 //! - Memory footprint optimization
 //! - Buffer reuse strategies
 
-use ndarray::{Array, ArrayBase, ArrayView, ArrayViewMut, Data, Dimension};
+use ndarray::{Array, Array2, ArrayBase, ArrayView, ArrayViewMut, Data, Dimension};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -103,8 +103,8 @@ impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> BufferPool<T, D> {
 /// Trait for operations that can be performed in-place
 pub trait InPlaceOp<T, D>
 where
-    T: Float + FromPrimitive + Debug + Clone,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     /// Check if this operation can be performed in-place
     fn can_operate_inplace(&self) -> bool;
@@ -122,7 +122,11 @@ pub struct MemoryEfficientOp<T, D> {
     _phantom: PhantomData<(T, D)>,
 }
 
-impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> MemoryEfficientOp<T, D> {
+impl<
+        T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
+        D: Dimension + 'static,
+    > MemoryEfficientOp<T, D>
+{
     pub fn new(config: MemoryConfig) -> Self {
         Self {
             config,
@@ -168,8 +172,8 @@ impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> MemoryEfficientOp<T
 #[allow(dead_code)]
 pub fn estimate_memory_usage<T, D>(shape: &[usize]) -> usize
 where
-    T: Float,
-    D: Dimension,
+    T: Float + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     let elements: usize = shape.iter().product();
     elements * std::mem::size_of::<T>()
@@ -179,8 +183,8 @@ where
 #[allow(dead_code)]
 pub fn check_memory_limit<T, D>(shape: &[usize], limit: Option<usize>) -> NdimageResult<()>
 where
-    T: Float,
-    D: Dimension,
+    T: Float + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     if let Some(max_bytes) = limit {
         let required = estimate_memory_usage::<T, D>(shape);
@@ -201,8 +205,8 @@ pub fn create_output_array<T, D, S>(
     config: &MemoryConfig,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + Clone,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
     S: Data<Elem = T>,
 {
     let shape = input.shape();
@@ -222,7 +226,11 @@ where
 /// Example in-place operation: element-wise square
 pub struct SquareOp;
 
-impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> InPlaceOp<T, D> for SquareOp {
+impl<
+        T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
+        D: Dimension + 'static,
+    > InPlaceOp<T, D> for SquareOp
+{
     fn can_operate_inplace(&self) -> bool {
         true
     }
@@ -243,13 +251,20 @@ pub struct ThresholdOp<T> {
     value: T,
 }
 
-impl<T: Float + FromPrimitive + Debug + Clone> ThresholdOp<T> {
+impl<
+        T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    > ThresholdOp<T>
+{
     pub fn new(threshold: T, value: T) -> Self {
         Self { threshold, value }
     }
 }
 
-impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> InPlaceOp<T, D> for ThresholdOp<T> {
+impl<
+        T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
+        D: Dimension + 'static,
+    > InPlaceOp<T, D> for ThresholdOp<T>
+{
     fn can_operate_inplace(&self) -> bool {
         true
     }
@@ -268,11 +283,11 @@ impl<T: Float + FromPrimitive + Debug + Clone, D: Dimension> InPlaceOp<T, D> for
 #[allow(dead_code)]
 pub fn slice_efficiently<'a, T, D, S>(
     array: &'a ArrayBase<S, D>,
-    slice_info: &[std::ops::Range<usize>],
+    _slice_info: &[std::ops::Range<usize>],
 ) -> ArrayView<'a, T, D>
 where
-    T: Float,
-    D: Dimension,
+    T: Float + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
     S: Data<Elem = T>,
 {
     // This is a simplified version - in practice would use ndarray's slicing

@@ -7,11 +7,9 @@
 //! - Cross-validation with reference implementations
 //! - Statistical significance testing
 
-use crate::error::{SignalError, SignalResult};
+use crate::error::SignalResult;
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
-use ndarray::{Array1, Array2};
 use rand::prelude::*;
-use scirs2_core::validation::{check_finite, check_positive};
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -652,8 +650,8 @@ fn generate_lombscargle_test_signal(
     let mut times = Vec::with_capacity(config.n);
     for i in 0..config.n {
         let regular_time = (i as f64 / (config.n - 1) as f64) * config.time_span;
-        let noise = (rng.random_range(-1.0..1.0) * config.irregularity * config.time_span
-            / config.n as f64);
+        let noise =
+            rng.random_range(-1.0..1.0) * config.irregularity * config.time_span / config.n as f64;
         times.push(regular_time + noise);
     }
     times.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -1330,8 +1328,8 @@ fn enhance_with_real_world_signal_validation(
 
                 // Variable star with 2.3-day period plus noise
                 let period = 2.3;
-                let magnitude = 12.0 - 0.5 * (2.0 * PI * time / period).sin()
-                    + 0.1 * rng.random_range(-1.0..1.0);
+                let magnitude =
+                    12.0 - 0.5 * (2.0 * PI * time / period).sin() + 0.1 * rng.random_range(-1.0..1.0);
                 star_magnitudes.push(magnitude);
             }
         }

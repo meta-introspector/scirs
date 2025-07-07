@@ -9,7 +9,7 @@
 
 use crate::error::{IoError, Result};
 use ndarray::{Array1, Array2};
-use rand::rng;
+use rand::{rng, Rng};
 use std::collections::{HashMap, VecDeque};
 use std::time::Instant;
 

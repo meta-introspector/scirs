@@ -40,12 +40,19 @@ pub fn grey_erosion_2d_optimized<T>(
     origin: Option<&[isize; 2]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     T: SimdUnifiedOps,
 {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
-    let border_val = border_value.unwrap_or_else(|| T::from_f64(0.0).unwrap());
+    let _border_val = border_value.unwrap_or_else(|| T::from_f64(0.0).unwrap());
 
     // Create default structure if none is provided (3x3 box)
     let default_structure = Array2::from_elem((3, 3), true);
@@ -113,7 +120,14 @@ fn erosion_iteration_simd<T>(
     height: usize,
     width: usize,
 ) where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     T: SimdUnifiedOps,
 {
     // Process rows with potential for SIMD optimization
@@ -155,7 +169,14 @@ fn erosion_iteration_parallel<T>(
     height: usize,
     width: usize,
 ) where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     use parallel_ops::*;
 
@@ -222,12 +243,19 @@ pub fn grey_dilation_2d_optimized<T>(
     origin: Option<&[isize; 2]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     T: SimdUnifiedOps,
 {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
-    let border_val = border_value.unwrap_or_else(|| T::from_f64(0.0).unwrap());
+    let _border_val = border_value.unwrap_or_else(|| T::from_f64(0.0).unwrap());
 
     // Create default structure if none is provided (3x3 box)
     let default_structure = Array2::from_elem((3, 3), true);
@@ -296,7 +324,14 @@ fn dilation_iteration_simd<T>(
     height: usize,
     width: usize,
 ) where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     T: SimdUnifiedOps,
 {
     // Process rows with potential for SIMD optimization
@@ -337,7 +372,14 @@ fn dilation_iteration_parallel<T>(
     height: usize,
     width: usize,
 ) where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     use parallel_ops::*;
 
@@ -765,7 +807,6 @@ mod tests {
 /// - Multi-scale morphological operations  
 /// - Texture analysis operators
 /// - Granulometry operations
-
 /// Configuration for multi-scale morphological operations
 #[derive(Debug, Clone)]
 pub struct MultiScaleMorphConfig {

@@ -47,7 +47,14 @@ pub fn euclidean_distance_transform_separable<T>(
     sampling: Option<&[T]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     let (height, width) = input.dim();
 
@@ -158,7 +165,7 @@ where
     z[1] = inf;
 
     for q in 1..n {
-        let q_t = safe_usize_to_float(q).unwrap_or_else(|_| T::zero());
+        let _q_t = safe_usize_to_float(q).unwrap_or_else(|_| T::zero());
         let mut s = compute_intersection_safe(f, v[k], q, spacing).unwrap_or_else(|_| T::zero());
 
         while s <= z[k] {
@@ -217,7 +224,14 @@ pub fn euclidean_distance_transform<T>(
     sampling: Option<&[T]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     let squared_dt = euclidean_distance_transform_separable(input, sampling)?;
     Ok(squared_dt.mapv(|x| x.sqrt()))
@@ -232,7 +246,14 @@ pub fn distance_transform_edt_full<T>(
     sampling: Option<&[T]>,
 ) -> NdimageResult<(Array2<T>, Array<i32, IxDyn>)>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     let (height, width) = input.dim();
     let distances = euclidean_distance_transform(input, sampling)?;
@@ -312,7 +333,14 @@ pub fn cityblock_distance_transform<T>(
     sampling: Option<&[T]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     let (height, width) = input.dim();
     let inf = T::from_f64(1e30).unwrap_or(T::infinity());
@@ -383,7 +411,14 @@ where
 #[allow(dead_code)]
 pub fn chessboard_distance_transform<T>(input: &Array2<bool>) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     let (height, width) = input.dim();
     let inf = T::from_f64(1e30).unwrap_or(T::infinity());

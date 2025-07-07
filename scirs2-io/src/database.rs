@@ -257,15 +257,15 @@ impl QueryBuilder {
                 }
 
                 if let Some(order) = &self.order_by {
-                    sql.push_str(&format!(" ORDER BY {}", order));
+                    sql.push_str(&format!(" ORDER BY {order}"));
                 }
 
                 if let Some(limit) = self.limit {
-                    sql.push_str(&format!(" LIMIT {}", limit));
+                    sql.push_str(&format!(" LIMIT {limit}"));
                 }
 
                 if let Some(offset) = self.offset {
-                    sql.push_str(&format!(" OFFSET {}", offset));
+                    sql.push_str(&format!(" OFFSET {offset}"));
                 }
 
                 sql
@@ -371,7 +371,7 @@ impl ResultSet {
             .columns
             .iter()
             .position(|c| c == name)
-            .ok_or_else(|| IoError::Other(format!("Column '{}' not found", name)))?;
+            .ok_or_else(|| IoError::Other(format!("Column '{name}' not found")))?;
 
         let mut data = Vec::new();
         for row in &self.rows {
@@ -2232,7 +2232,7 @@ pub struct Transaction {
 impl Transaction {
     pub fn new(connection: Box<dyn DatabaseConnection>) -> Result<Self> {
         let savepoint = format!("sp_{}", uuid::Uuid::new_v4());
-        connection.execute_sql(&format!("SAVEPOINT {}", savepoint), &[])?;
+        connection.execute_sql(&format!("SAVEPOINT {savepoint}"), &[])?;
 
         Ok(Self {
             connection,
@@ -2559,7 +2559,7 @@ pub mod cdc {
         pub fn publish(&self, event: ChangeEvent) -> Result<()> {
             self.sender
                 .send(event)
-                .map_err(|e| IoError::Other(format!("Failed to publish CDC event: {}", e)))
+                .map_err(|e| IoError::Other(format!("Failed to publish CDC event: {e}")))
         }
     }
 }

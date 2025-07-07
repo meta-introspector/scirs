@@ -34,8 +34,11 @@ pub use norms::{
 #[cfg(feature = "simd")]
 pub use transpose::{simd_transpose_f32, simd_transpose_f64};
 
-use crate::error::{LinalgError, LinalgResult};
+#[cfg(feature = "simd")]
+use crate::{LinalgError, LinalgResult};
+#[cfg(feature = "simd")]
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
+#[cfg(feature = "simd")]
 use scirs2_core::simd_ops::{AutoOptimizer, PlatformCapabilities, SimdUnifiedOps};
 
 /// Compute matrix-vector product using SIMD instructions for f32 values
@@ -57,10 +60,9 @@ pub fn simd_matvec_f32(
     let (nrows, ncols) = matrix.dim();
 
     if ncols != vector.len() {
+        let vector_len = vector.len();
         return Err(LinalgError::ShapeError(format!(
-            "Matrix columns ({}) must match vector length ({})",
-            ncols,
-            vector.len()
+            "Matrix columns ({ncols}) must match vector length ({vector_len})"
         )));
     }
 
@@ -91,10 +93,9 @@ pub fn simd_matvec_f64(
     let (nrows, ncols) = matrix.dim();
 
     if ncols != vector.len() {
+        let vector_len = vector.len();
         return Err(LinalgError::ShapeError(format!(
-            "Matrix columns ({}) must match vector length ({})",
-            ncols,
-            vector.len()
+            "Matrix columns ({ncols}) must match vector length ({vector_len})"
         )));
     }
 

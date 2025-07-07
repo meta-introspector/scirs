@@ -8,9 +8,8 @@ use crate::error::OptimizeError;
 use crate::unconstrained::{minimize, Bounds, Method, OptimizeResult, Options};
 use ndarray::{Array1, ArrayView1};
 use rand::distr::Uniform;
-use rand::prelude::*;
 use rand::rngs::StdRng;
-use rand::Rng;
+use rand::{rng, Rng};
 
 /// Enforce bounds using reflection method for better exploration
 #[allow(dead_code)]

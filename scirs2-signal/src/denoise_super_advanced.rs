@@ -508,7 +508,7 @@ pub fn advanced_advanced_denoise_batch(
     let start_time = std::time::Instant::now();
 
     // Initialize batch processing
-    let batch_processor = BatchProcessor::new(config, signals.len());
+    let _batch_processor = BatchProcessor::new(config, signals.len());
     let mut results = Vec::with_capacity(signals.len());
 
     // Process signals with optimal parallelization
@@ -564,7 +564,7 @@ fn adaptive_neural_net_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
     simd_optimizer: &SimdOptimizer,
-    config: &AdvancedAdvancedDenoisingConfig,
+    _config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     let n = signal.len();
 
@@ -621,7 +621,7 @@ fn variational_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
     simd_optimizer: &SimdOptimizer,
-    config: &AdvancedAdvancedDenoisingConfig,
+    _config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Implement variational energy minimization
     // Simplified implementation for demonstration
@@ -648,7 +648,7 @@ fn attention_based_denoise(
     signal: &Array1<f64>,
     noise_analysis: &MultiScaleNoiseAnalysis,
     simd_optimizer: &SimdOptimizer,
-    config: &AdvancedAdvancedDenoisingConfig,
+    _config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Implement attention mechanisms for signal denoising
     let denoised = apply_attention_mechanism(signal, noise_analysis, simd_optimizer)?;
@@ -673,9 +673,9 @@ fn attention_based_denoise(
 #[allow(dead_code)]
 fn residual_learning_denoise(
     signal: &Array1<f64>,
-    noise_analysis: &MultiScaleNoiseAnalysis,
-    simd_optimizer: &SimdOptimizer,
-    config: &AdvancedAdvancedDenoisingConfig,
+    _noise_analysis: &MultiScaleNoiseAnalysis,
+    _simd_optimizer: &SimdOptimizer,
+    _config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Residual learning approach
     let denoised = signal.clone(); // Placeholder
@@ -693,9 +693,9 @@ fn residual_learning_denoise(
 #[allow(dead_code)]
 fn multiscale_dictionary_denoise(
     signal: &Array1<f64>,
-    noise_analysis: &MultiScaleNoiseAnalysis,
-    simd_optimizer: &SimdOptimizer,
-    config: &AdvancedAdvancedDenoisingConfig,
+    _noise_analysis: &MultiScaleNoiseAnalysis,
+    _simd_optimizer: &SimdOptimizer,
+    _config: &AdvancedAdvancedDenoisingConfig,
 ) -> SignalResult<CoreDenoisingResult> {
     // Multi-scale dictionary learning
     let denoised = signal.clone(); // Placeholder
@@ -1144,9 +1144,11 @@ impl RealTimeDenoisingContext {
     }
 }
 
+#[cfg(test)]
 mod tests {
     #[allow(unused_imports)]
     use super::*;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_advanced_advanced_denoise_basic() {
@@ -1158,8 +1160,7 @@ mod tests {
         // Add noise
         use rand::prelude::*;
         let mut rng = rand::rng();
-        let noisy_signal: Array1<f64> =
-            clean_signal.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
+        let noisy_signal: Array1<f64> = clean_signal.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
 
         let config = AdvancedAdvancedDenoisingConfig::default();
         let result = advanced_advanced_denoise(&noisy_signal, &config);

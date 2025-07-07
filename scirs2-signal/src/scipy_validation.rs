@@ -311,7 +311,7 @@ fn test_single_cheby1_filter(
     order: usize,
     filter_type: FilterType,
     ripple: f64,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<(f64, f64, f64)> {
     use crate::filter::{cheby1, lfilter};
     use crate::waveforms::chirp;
@@ -428,10 +428,10 @@ fn test_single_butter_filter(
 #[allow(dead_code)]
 fn reference_butter_filter(
     signal: &[f64],
-    order: usize,
-    critical_freq: &[f64],
-    btype: &str,
-    fs: f64,
+    _order: usize,
+    _critical_freq: &[f64],
+    _btype: &str,
+    _fs: f64,
 ) -> SignalResult<Vec<f64>> {
     // This is a placeholder - in a real implementation, you would:
     // 1. Call SciPy via Python binding (pyo3)
@@ -447,8 +447,8 @@ fn reference_butter_filter(
 #[allow(dead_code)]
 fn reference_cheby1_filter(
     signal: &[f64],
-    order: usize,
-    ripple: f64,
+    _order: usize,
+    _ripple: f64,
     critical_freq: &[f64],
     btype: &str,
     fs: f64,
@@ -476,8 +476,8 @@ fn reference_cheby1_filter(
 #[allow(dead_code)]
 fn reference_cheby2_filter(
     signal: &[f64],
-    order: usize,
-    attenuation: f64,
+    _order: usize,
+    _attenuation: f64,
     critical_freq: &[f64],
     btype: &str,
     fs: f64,
@@ -673,7 +673,7 @@ fn validate_chebyshev_filter(
 #[allow(dead_code)]
 fn validate_elliptic_filter(
     results: &mut HashMap<String, ValidationTestResult>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<()> {
     // Implementation similar to other filter validations
 
@@ -696,7 +696,7 @@ fn validate_elliptic_filter(
 #[allow(dead_code)]
 fn validate_bessel_filter(
     results: &mut HashMap<String, ValidationTestResult>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<()> {
     // Implementation similar to other filter validations
 
@@ -719,7 +719,7 @@ fn validate_bessel_filter(
 #[allow(dead_code)]
 fn validate_filtfilt(
     results: &mut HashMap<String, ValidationTestResult>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<()> {
     // Implementation would test filtfilt against SciPy's filtfilt
 
@@ -769,7 +769,7 @@ fn validate_spectral_analysis(
 #[allow(dead_code)]
 fn validate_periodogram(
     results: &mut HashMap<String, ValidationTestResult>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "periodogram".to_string(),
@@ -790,7 +790,7 @@ fn validate_periodogram(
 #[allow(dead_code)]
 fn validate_welch(
     results: &mut HashMap<String, ValidationTestResult>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "welch".to_string(),
@@ -811,7 +811,7 @@ fn validate_welch(
 #[allow(dead_code)]
 fn validate_stft(
     results: &mut HashMap<String, ValidationTestResult>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "stft".to_string(),
@@ -1033,7 +1033,7 @@ fn validate_dwt(
 #[allow(dead_code)]
 fn validate_cwt(
     results: &mut HashMap<String, ValidationTestResult>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "cwt".to_string(),
@@ -1054,7 +1054,7 @@ fn validate_cwt(
 #[allow(dead_code)]
 fn validate_wavelet_families(
     results: &mut HashMap<String, ValidationTestResult>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "wavelet_families".to_string(),
@@ -1167,7 +1167,7 @@ fn validate_windows(
 #[allow(dead_code)]
 fn validate_signal_generation(
     results: &mut HashMap<String, ValidationTestResult>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "signal_generation".to_string(),
@@ -1188,7 +1188,7 @@ fn validate_signal_generation(
 #[allow(dead_code)]
 fn validate_convolution_correlation(
     results: &mut HashMap<String, ValidationTestResult>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "convolution_correlation".to_string(),
@@ -1209,7 +1209,7 @@ fn validate_convolution_correlation(
 #[allow(dead_code)]
 fn validate_resampling(
     results: &mut HashMap<String, ValidationTestResult>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "resampling".to_string(),
@@ -1230,7 +1230,7 @@ fn validate_resampling(
 #[allow(dead_code)]
 fn validate_peak_detection(
     results: &mut HashMap<String, ValidationTestResult>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<()> {
     let test_result = ValidationTestResult {
         test_name: "peak_detection".to_string(),
@@ -1254,7 +1254,7 @@ fn test_single_multitaper(
     fs: f64,
     nw: f64,
     k: Option<usize>,
-    config: &ValidationConfig,
+    _config: &ValidationConfig,
 ) -> SignalResult<(f64, f64, f64)> {
     use crate::multitaper::enhanced::{enhanced_pmtm, MultitaperConfig};
     use crate::waveforms::chirp;
@@ -1274,7 +1274,7 @@ fn test_single_multitaper(
     };
 
     // Our implementation
-    let result = multitaper_psd(&test_signal, fs, &mt_config)?;
+    let result = enhanced_pmtm(&test_signal, &mt_config)?;
     let our_psd = result.psd;
 
     // Reference implementation (simplified - would use actual SciPy results)
@@ -1577,7 +1577,7 @@ fn test_single_ar_estimation(
 /// In a production implementation, this would load reference data that was
 /// computed offline using SciPy and stored in files or embedded in the binary.
 #[allow(dead_code)]
-pub fn load_reference_data(test_name: &str, parameters: &str) -> SignalResult<Vec<f64>> {
+pub fn load_reference_data(test_name: &str, _parameters: &str) -> SignalResult<Vec<f64>> {
     // This is a placeholder implementation
     // In practice, you would:
     // 1. Load from embedded data files
@@ -1645,8 +1645,8 @@ fn test_single_window(
 fn reference_multitaper_psd(
     signal: &[f64],
     fs: f64,
-    nw: f64,
-    k: Option<usize>,
+    _nw: f64,
+    _k: Option<usize>,
 ) -> SignalResult<Vec<f64>> {
     // Simplified reference - in practice would use actual SciPy output
     // This should be replaced with either:
@@ -1716,7 +1716,7 @@ fn reference_ar_spectrum(
     // Simplified reference implementation
     // In practice, this would use scipy.signal.welch or similar
 
-    let n = signal.len();
+    let _n = signal.len();
     let mut spectrum = vec![0.0; freqs.len()];
 
     // Generate a reasonable AR-like spectrum
@@ -1734,7 +1734,7 @@ fn reference_ar_spectrum(
 fn reference_dwt_reconstruction(
     signal: &[f64],
     wavelet: Wavelet,
-    level: usize,
+    _level: usize,
 ) -> SignalResult<Vec<f64>> {
     // Simplified reference implementation for DWT perfect reconstruction
     // In practice, this would use pywt.wavedec + pywt.waverec
@@ -1853,7 +1853,7 @@ pub fn validate_quick() -> SignalResult<ValidationResults> {
 #[allow(dead_code)]
 fn reference_signal_generation(
     t: &[f64],
-    fs: f64,
+    _fs: f64,
     signal_type: &str,
     freq: f64,
 ) -> SignalResult<Vec<f64>> {

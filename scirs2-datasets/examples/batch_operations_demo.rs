@@ -67,9 +67,9 @@ fn setup_sample_cache_data(batch_ops: &BatchOperations) {
 
     for (name, data) in sample_datasets {
         if let Err(e) = batch_ops.write_cached(name, &data) {
-            println!("  Warning: Failed to cache {}: {}", name, e);
+            println!("  Warning: Failed to cache {name}: {e}");
         } else {
-            println!("  ✓ Cached {} ({} bytes)", name, data.len());
+            println!("  ✓ Cached {name} ({} bytes)", data.len());
         }
     }
 }
@@ -90,11 +90,11 @@ fn demonstrate_cache_statistics(batch_ops: &BatchOperations) {
             if result.failure_count > 0 {
                 println!("  - Failed files: {}", result.failure_count);
                 for (file, error) in &result.failures {
-                    println!("    • {}: {}", file, error);
+                    println!("    • {file}: {error}");
                 }
             }
         }
-        Err(e) => println!("Failed to get cache statistics: {}", e),
+        Err(e) => println!("Failed to get cache statistics: {e}"),
     }
 }
 
@@ -116,7 +116,7 @@ fn demonstrate_batch_processing(batch_ops: &BatchOperations) {
     println!("\n1. File Size Validation:");
     let result = batch_ops.batch_process(&cached_files, |name, data| {
         if data.len() < 10 {
-            Err(format!("File {} too small ({} bytes)", name, data.len()))
+            Err(format!("File {name} too small ({} bytes)", data.len()))
         } else {
             Ok(data.len())
         }
@@ -125,7 +125,7 @@ fn demonstrate_batch_processing(batch_ops: &BatchOperations) {
     println!("   {}", result.summary());
     if result.failure_count > 0 {
         for (file, error) in &result.failures {
-            println!("   ⚠ {}: {}", file, error);
+            println!("   ⚠ {file}: {error}");
         }
     }
 
@@ -133,7 +133,7 @@ fn demonstrate_batch_processing(batch_ops: &BatchOperations) {
     println!("\n2. Content Type Detection:");
     let result = batch_ops.batch_process(&cached_files, |name, data| {
         let content_type = detect_content_type(name, data);
-        println!("   {} -> {}", name, content_type);
+        println!("   {name} -> {content_type}");
         Ok::<String, String>(content_type)
     });
 
@@ -148,7 +148,7 @@ fn demonstrate_batch_processing(batch_ops: &BatchOperations) {
             Err("Suspicious: large file with all zeros".to_string())
         } else {
             let checksum = data.iter().map(|&b| b as u32).sum::<u32>();
-            println!("   {} checksum: {}", name, checksum);
+            println!("   {name} checksum: {checksum}");
             Ok(checksum)
         }
     });
@@ -177,7 +177,7 @@ fn demonstrate_selective_cleanup(batch_ops: &BatchOperations) {
                 println!("   Removed {} temporary files", result.success_count);
             }
         }
-        Err(e) => println!("   Failed: {}", e),
+        Err(e) => println!("   Failed: {e}"),
     }
 
     // Example 2: Clean up old files (demo with 0 days to show functionality)
@@ -187,7 +187,7 @@ fn demonstrate_selective_cleanup(batch_ops: &BatchOperations) {
             println!("   {}", result.summary());
             println!("   (Note: Using 0 days for demonstration - all files are 'old')");
         }
-        Err(e) => println!("   Failed: {}", e),
+        Err(e) => println!("   Failed: {e}"),
     }
 
     // Show final cache state
@@ -217,17 +217,17 @@ fn show_final_cache_state(batch_ops: &BatchOperations) {
             } else {
                 for file in files {
                     if let Ok(data) = batch_ops.read_cached(&file) {
-                        println!("  {} ({} bytes)", file, data.len());
+                        println!("  {file} ({} bytes)", data.len());
                     }
                 }
             }
         }
-        Err(e) => println!("  Failed to list files: {}", e),
+        Err(e) => println!("  Failed to list files: {e}"),
     }
 
     // Print detailed cache report
     if let Err(e) = batch_ops.print_cache_report() {
-        println!("Failed to generate cache report: {}", e);
+        println!("Failed to generate cache report: {e}");
     }
 }
 
@@ -314,7 +314,7 @@ fn detect_content_type(name: &str, data: &[u8]) -> String {
 fn format_bytes(bytes: u64) -> String {
     let size = bytes as f64;
     if size < 1024.0 {
-        format!("{} B", size)
+        format!("{size} B")
     } else if size < 1024.0 * 1024.0 {
         format!("{:.1} KB", size / 1024.0)
     } else if size < 1024.0 * 1024.0 * 1024.0 {

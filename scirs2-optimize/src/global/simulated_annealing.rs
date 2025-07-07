@@ -7,8 +7,8 @@
 use crate::error::OptimizeError;
 use crate::unconstrained::OptimizeResult;
 use ndarray::{Array1, ArrayView1};
-use rand::prelude::*;
 use rand::rngs::StdRng;
+use rand::{rng, Rng};
 
 /// Options for Simulated Annealing
 #[derive(Debug, Clone)]
@@ -84,7 +84,7 @@ where
         options: SimulatedAnnealingOptions,
     ) -> Self {
         let ndim = x0.len();
-        let seed = options.seed.unwrap_or_else(|| rand::rng().random());
+        let seed = options.seed.unwrap_or_else(|| rng().gen());
         let rng = StdRng::seed_from_u64(seed);
 
         // Evaluate initial point

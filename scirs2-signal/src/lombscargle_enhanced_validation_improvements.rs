@@ -12,8 +12,7 @@
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::lombscargle;
 use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig};
-use ndarray::Array1;
-use num_traits::{Float, NumCast};
+use num_traits::Float;
 use rand::Rng;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::f64::consts::PI;
@@ -1025,7 +1024,6 @@ fn validate_simd_scalar_consistency(signal: &[f64], time: &[f64]) -> SignalResul
 
 mod tests {
     use super::*;
-
     use std::f64::consts::PI;
 
     #[test]

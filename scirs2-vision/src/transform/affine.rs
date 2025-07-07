@@ -84,7 +84,7 @@ impl AffineTransform {
         let det = a * e - b * d;
 
         if det.abs() < 1e-10 {
-            return Err(crate::error::VisionError::OperationFailed(
+            return Err(crate::error::VisionError::OperationError(
                 "Affine transformation is singular, cannot compute inverse".to_string(),
             ));
         }
@@ -398,7 +398,7 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> Result<Array1<f64>> 
         }
 
         if max_val < 1e-10 {
-            return Err(crate::error::VisionError::OperationFailed(
+            return Err(crate::error::VisionError::OperationError(
                 "Matrix is singular or nearly singular".to_string(),
             ));
         }

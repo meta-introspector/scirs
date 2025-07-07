@@ -384,6 +384,11 @@ path = "examples/array_protocol_distributed_training.rs"
 required-features = ["array_protocol_distributed"]
 
 [[example]]
+name = "distributed_training_example"
+path = "examples/distributed_training_example.rs"
+required-features = ["array_protocol_distributed", "serialization"]
+
+[[example]]
 name = "array_protocol_gpu"
 path = "examples/array_protocol_gpu.rs"
 required-features = ["array_protocol_cuda"]

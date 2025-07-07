@@ -20,7 +20,7 @@
 #![warn(missing_docs)]
 
 // Re-export image crate with the expected name
-extern crate image as image;
+// (using standard import instead of deprecated extern crate)
 
 pub mod color;
 pub mod error;

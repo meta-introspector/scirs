@@ -93,7 +93,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut rng = rand::rng();
     for i in 0..n_samples {
         let t = i as f64 / fs;
-        let noise = rand::Rng::random_range(&mut rng, -0.5..0.5);
+        let noise = rng.random_range(-0.5..0.5);
         let value = a1 * (2.0 * PI * f1 * t).sin() + a2 * (2.0 * PI * f2 * t).sin() + noise;
         signal2.push(value);
     }
@@ -123,7 +123,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut noisy_signal = Vec::with_capacity(n_samples);
         for i in 0..n_samples {
             let t = i as f64 / fs;
-            let noise = rand::Rng::random_range(&mut rng, -noise_level..noise_level);
+            let noise = rng.random_range(-noise_level..noise_level);
             let value = a1 * (2.0 * PI * f1 * t).sin() + a2 * (2.0 * PI * f2 * t).sin() + noise;
             noisy_signal.push(value);
         }

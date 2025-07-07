@@ -351,6 +351,11 @@ impl StreamingVisualizer {
     pub fn add_data_point(&mut self, point: Array1<f64>, label: i32) {
         let now = Instant::now();
 
+        // Update bounds if adaptive (before moving point)
+        if self.config.adaptive_bounds {
+            self.update_bounds(&point);
+        }
+
         // Add to buffer
         self.data_buffer.push_back((point, label, now));
 
@@ -366,11 +371,6 @@ impl StreamingVisualizer {
             .cluster_counts
             .entry(label)
             .or_insert(0) += 1;
-
-        // Update bounds if adaptive
-        if self.config.adaptive_bounds {
-            self.update_bounds(&point);
-        }
 
         // Clean up old points
         self.cleanup_old_points(now);
@@ -563,7 +563,7 @@ fn interpolate_frames(
     frame1: &AnimationFrame,
     frame2: &AnimationFrame,
     t: f64,
-    config: &IterativeAnimationConfig,
+    _config: &IterativeAnimationConfig,
 ) -> Result<AnimationFrame> {
     let t = apply_easing(t, EasingFunction::EaseInOut);
 

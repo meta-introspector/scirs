@@ -5,13 +5,11 @@
 //! and intelligent load balancing for optimal performance.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayViewMut1, Axis};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive};
+use scirs2_core::simd_ops::PlatformCapabilities;
+use scirs2_core::validation::check_positive;
 use std::fmt::Debug;
-use std::sync::{Arc, Mutex};
 use std::thread;
 
 /// Enhanced parallel filtering configuration
@@ -262,7 +260,7 @@ fn apply_iir_filter_simd(
     let b_norm: Vec<f64> = b.iter().map(|&bi| bi / a0).collect();
     let a_norm: Vec<f64> = a[1..].iter().map(|&ai| ai / a0).collect();
 
-    if use_simd && PlatformCapabilities::detect().supports_simd() {
+    if use_simd && PlatformCapabilities::detect().simd_available {
         apply_iir_filter_simd_optimized(&mut y, x, &b_norm, &a_norm)?;
     } else {
         apply_iir_filter_scalar(&mut y, x, &b_norm, &a_norm);
@@ -466,10 +464,9 @@ fn calculate_memory_optimal_chunk_size(
     max_chunk_samples.min(signal_len).max(1000) // Minimum chunk size for efficiency
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::Array1;
-
     use std::f64::consts::PI;
 
     #[test]

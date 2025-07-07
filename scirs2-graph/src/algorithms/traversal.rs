@@ -26,7 +26,7 @@ use crate::error::{GraphError, Result};
 #[allow(dead_code)]
 pub fn breadth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -86,7 +86,7 @@ pub fn breadth_first_search_digraph<N, E, Ix>(
     source: &N,
 ) -> Result<Vec<N>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -147,7 +147,7 @@ where
 #[allow(dead_code)]
 pub fn depth_first_search<N, E, Ix>(graph: &Graph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -200,7 +200,7 @@ where
 #[allow(dead_code)]
 pub fn depth_first_search_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>, source: &N) -> Result<Vec<N>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -297,7 +297,7 @@ pub fn priority_first_search<N, E, Ix, P, F>(
     priority_fn: F,
 ) -> Result<Vec<N>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug + Clone,
+    N: Node + std::fmt::Debug + Clone,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
     P: PartialOrd + Clone + Copy,
@@ -373,7 +373,7 @@ pub fn priority_first_search_digraph<N, E, Ix, P, F>(
     priority_fn: F,
 ) -> Result<Vec<N>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug + Clone,
+    N: Node + std::fmt::Debug + Clone,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
     P: PartialOrd + Clone + Copy,
@@ -449,7 +449,7 @@ pub fn bidirectional_search<N, E, Ix>(
     goal: &N,
 ) -> Result<Option<Vec<N>>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug + Clone + std::hash::Hash + Eq,
+    N: Node + std::fmt::Debug + Clone + std::hash::Hash + Eq,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {
@@ -556,7 +556,7 @@ pub fn bidirectional_search_digraph<N, E, Ix>(
     goal: &N,
 ) -> Result<Option<Vec<N>>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug + Clone + std::hash::Hash + Eq,
+    N: Node + std::fmt::Debug + Clone + std::hash::Hash + Eq,
     E: EdgeWeight,
     Ix: petgraph::graph::IndexType,
 {

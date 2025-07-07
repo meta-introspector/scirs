@@ -686,7 +686,7 @@ pub mod polynomial {
 
         match solve(&at_a.view(), &at_b.view(), None) {
             Ok(coeffs) => Ok(coeffs.to_vec()),
-            Err(_) => Err(SignalError::Compute(
+            Err(_) => Err(SignalError::ComputationError(
                 "Failed to solve polynomial fitting system".to_string(),
             )),
         }

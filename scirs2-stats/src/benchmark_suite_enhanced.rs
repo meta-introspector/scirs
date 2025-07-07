@@ -15,6 +15,7 @@ use std::time::Duration;
 
 /// Enhanced benchmark configuration with AI-driven analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct EnhancedBenchmarkConfig {
     /// Base benchmark configuration
     pub base_config: BenchmarkConfig,
@@ -58,6 +59,7 @@ impl Default for EnhancedBenchmarkConfig {
 
 /// Machine learning model configuration for performance analysis
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct MLModelConfig {
     /// Model type for performance prediction
     pub model_type: MLModelType,
@@ -85,6 +87,7 @@ impl Default for MLModelConfig {
 
 /// Machine learning model types
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub enum MLModelType {
     LinearRegression,
     RandomForest,
@@ -95,6 +98,7 @@ pub enum MLModelType {
 
 /// Feature selection strategies
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub enum FeatureSelectionStrategy {
     All,                  // Use all available features
     ManualSelection,      // Manually selected features
@@ -105,6 +109,7 @@ pub enum FeatureSelectionStrategy {
 
 /// Model retraining frequency
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub enum RetrainingFrequency {
     Daily,
     Weekly,
@@ -115,6 +120,7 @@ pub enum RetrainingFrequency {
 
 /// Platform target specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct PlatformTarget {
     /// Target architecture
     pub arch: String,
@@ -162,6 +168,7 @@ impl PlatformTarget {
 
 /// Memory hierarchy characteristics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct MemoryHierarchy {
     /// L1 data cache size in bytes
     pub l1_cache_size: usize,
@@ -199,6 +206,7 @@ impl MemoryHierarchy {
 
 /// SIMD capabilities specification
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct SimdCapabilities {
     /// Vector width in bits
     pub vector_width: usize,
@@ -237,6 +245,7 @@ impl SimdCapabilities {
 
 /// Enhanced benchmark report with AI-driven insights
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct EnhancedBenchmarkReport {
     /// Standard benchmark report data
     pub base_report: crate::benchmark_suite::BenchmarkReport,
@@ -254,6 +263,7 @@ pub struct EnhancedBenchmarkReport {
 
 /// AI-driven performance analysis results
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct AIPerformanceAnalysis {
     /// Overall performance score (0-100)
     pub performance_score: f64,
@@ -271,6 +281,7 @@ pub struct AIPerformanceAnalysis {
 
 /// Performance bottleneck identification
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct PerformanceBottleneck {
     /// Bottleneck type
     pub bottleneck_type: BottleneckType,
@@ -286,6 +297,7 @@ pub struct PerformanceBottleneck {
 
 /// Types of performance bottlenecks
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub enum BottleneckType {
     MemoryBandwidth,
     CacheMisses,
@@ -299,6 +311,7 @@ pub enum BottleneckType {
 
 /// Performance cluster analysis
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct PerformanceCluster {
     /// Cluster identifier
     pub cluster_id: String,
@@ -312,6 +325,7 @@ pub struct PerformanceCluster {
 
 /// Performance anomaly detection
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct PerformanceAnomaly {
     /// Anomaly type
     pub anomaly_type: AnomalyType,
@@ -329,6 +343,7 @@ pub struct PerformanceAnomaly {
 
 /// Types of performance anomalies
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub enum AnomalyType {
     UnexpectedSlowdown,
     UnexpectedSpeedup,
@@ -340,6 +355,7 @@ pub enum AnomalyType {
 
 /// Cross-platform analysis results
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct CrossPlatformAnalysis {
     /// Performance comparison across platforms
     pub platform_comparison: HashMap<String, PlatformPerformance>,
@@ -353,6 +369,7 @@ pub struct CrossPlatformAnalysis {
 
 /// Platform-specific performance metrics
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct PlatformPerformance {
     /// Overall performance score relative to reference platform
     pub relative_performance: f64,
@@ -370,6 +387,7 @@ pub struct PlatformPerformance {
 
 /// Portability issues identified
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct PortabilityIssue {
     /// Issue type
     pub issue_type: PortabilityIssueType,
@@ -385,6 +403,7 @@ pub struct PortabilityIssue {
 
 /// Types of portability issues
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub enum PortabilityIssueType {
     PlatformSpecificCode,
     EndiannessDependency,
@@ -396,6 +415,7 @@ pub enum PortabilityIssueType {
 
 /// Regression analysis results
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct RegressionAnalysis {
     /// Overall regression status
     pub regression_detected: bool,
@@ -409,6 +429,7 @@ pub struct RegressionAnalysis {
 
 /// Per-operation regression analysis
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct OperationRegression {
     /// Percentage change from baseline
     pub percentage_change: f64,
@@ -422,6 +443,7 @@ pub struct OperationRegression {
 
 /// Performance trend over time
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct PerformanceTrend {
     /// Trend direction
     pub trend_direction: TrendDirection,
@@ -435,6 +457,7 @@ pub struct PerformanceTrend {
 
 /// Trend direction classification
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub enum TrendDirection {
     Improving,
     Stable,
@@ -444,6 +467,7 @@ pub enum TrendDirection {
 
 /// Performance forecast
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct PerformanceForecast {
     /// Predicted performance in next period
     pub predicted_performance: f64,
@@ -455,6 +479,7 @@ pub struct PerformanceForecast {
 
 /// Regression severity assessment
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub enum RegressionSeverity {
     None,
     Minor,    // < 5% regression
@@ -465,6 +490,7 @@ pub enum RegressionSeverity {
 
 /// Intelligent optimization recommendation
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct IntelligentRecommendation {
     /// Recommendation category
     pub category: RecommendationCategory,
@@ -484,6 +510,7 @@ pub struct IntelligentRecommendation {
 
 /// Recommendation categories
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub enum RecommendationCategory {
     AlgorithmOptimization,
     SIMDUtilization,
@@ -497,6 +524,7 @@ pub enum RecommendationCategory {
 
 /// Recommendation priority levels
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub enum RecommendationPriority {
     Critical, // Immediate attention required
     High,     // Should be addressed soon
@@ -506,6 +534,7 @@ pub enum RecommendationPriority {
 
 /// Implementation effort estimation
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub enum ImplementationEffort {
     Trivial, // < 1 hour
     Low,     // 1-4 hours
@@ -516,6 +545,7 @@ pub enum ImplementationEffort {
 
 /// Performance prediction for future workloads
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct PerformancePrediction {
     /// Target workload characteristics
     pub workload_characteristics: WorkloadCharacteristics,
@@ -531,6 +561,7 @@ pub struct PerformancePrediction {
 
 /// Workload characteristics for prediction
 #[derive(Debug, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct WorkloadCharacteristics {
     /// Data size
     pub data_size: usize,
@@ -547,7 +578,9 @@ pub struct WorkloadCharacteristics {
 /// Enhanced benchmark suite implementation
 pub struct EnhancedBenchmarkSuite {
     config: EnhancedBenchmarkConfig,
+    #[allow(dead_code)]
     performance_database: Arc<Mutex<PerformanceDatabase>>,
+    #[allow(dead_code)]
     ml_model: Arc<Mutex<Option<PerformanceMLModel>>>,
 }
 
@@ -828,6 +861,7 @@ impl EnhancedBenchmarkSuite {
 }
 
 /// Performance database for storing historical benchmarks
+#[allow(dead_code)]
 struct PerformanceDatabase {
     historical_data: BTreeMap<String, Vec<BenchmarkMetrics>>,
 }
@@ -841,6 +875,7 @@ impl PerformanceDatabase {
 }
 
 /// Machine learning model for performance prediction
+#[allow(dead_code)]
 struct PerformanceMLModel {
     model_type: MLModelType,
     trained: bool,

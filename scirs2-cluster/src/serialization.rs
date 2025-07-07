@@ -5,7 +5,6 @@
 
 use crate::error::{ClusteringError, Result};
 use crate::leader::{LeaderNode, LeaderTree};
-use base64::{engine::general_purpose, Engine as _};
 use flate2::read::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
@@ -1964,20 +1963,25 @@ pub mod compatibility {
         let label_data: Vec<i32> = labels.iter().cloned().collect();
         df_data.insert("cluster".to_string(), json!(label_data));
 
+        // Create columns list
+        let mut cols: Vec<String> = (0..n_features)
+            .map(|i| {
+                if let Some(names) = feature_names {
+                    names
+                        .get(i)
+                        .cloned()
+                        .unwrap_or_else(|| format!("feature_{}", i))
+                } else {
+                    format!("feature_{}", i)
+                }
+            })
+            .collect();
+        cols.push("cluster".to_string());
+
         Ok(json!({
             "data": df_data,
             "index": (0..n_samples).collect::<Vec<_>>(),
-            "columns": {
-                let mut cols: Vec<String> = (0..n_features).map(|i| {
-                    if let Some(names) = feature_names {
-                        names.get(i).cloned().unwrap_or_else(|| format!("feature_{}", i))
-                    } else {
-                        format!("feature_{}", i)
-                    }
-                }).collect();
-                cols.push("cluster".to_string());
-                cols
-            }
+            "columns": cols
         }))
     }
 

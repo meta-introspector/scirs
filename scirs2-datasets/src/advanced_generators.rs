@@ -7,6 +7,7 @@
 use crate::error::Result;
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2, Axis};
+use rand::Rng;
 
 /// Configuration for adversarial example generation
 #[derive(Debug, Clone)]

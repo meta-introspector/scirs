@@ -109,7 +109,7 @@ pub fn whiten_signals(signals: &Array2<f64>) -> SignalResult<(Array2<f64>, Array
     let (eigvals, eigvecs) = match eigh(&cov.view(), None) {
         Ok((vals, vecs)) => (vals, vecs),
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to compute eigendecomposition".to_string(),
             ));
         }
@@ -323,7 +323,7 @@ pub fn estimate_source_count(signals: &Array2<f64>, threshold: f64) -> SignalRes
     let eigvals = match eigh(&cov.view(), None) {
         Ok((vals, _)) => vals,
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to compute eigendecomposition".to_string(),
             ));
         }

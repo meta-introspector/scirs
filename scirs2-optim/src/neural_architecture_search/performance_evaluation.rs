@@ -1345,7 +1345,9 @@ pub struct ResourceSummary<T: Float> {
 
 // Implementation starts here
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> PerformanceEvaluator<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum>
+    PerformanceEvaluator<T>
+{
     /// Create new performance evaluator
     pub fn new(config: EvaluationConfig<T>) -> Result<Self> {
         Ok(Self {
@@ -1677,7 +1679,7 @@ impl<T: Float + Default> EvaluationCache<T> {
     }
 }
 
-impl<T: Float + Default> StatisticalAnalyzer<T> {
+impl<T: Float + Default + std::iter::Sum> StatisticalAnalyzer<T> {
     fn new() -> Self {
         Self {
             statistical_tests: Vec::new(),

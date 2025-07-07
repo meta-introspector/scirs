@@ -146,7 +146,7 @@ impl PerspectiveTransform {
         // Normalize so that h[2,2] = 1
         let norm_factor = h_matrix[[2, 2]];
         if norm_factor.abs() < 1e-10 {
-            return Err(VisionError::OperationFailed(
+            return Err(VisionError::OperationError(
                 "Failed to compute homography - degenerate case".to_string(),
             ));
         }
@@ -213,7 +213,7 @@ impl PerspectiveTransform {
         // Compute the determinant to check invertibility
         let det = self.compute_determinant();
         if det.abs() < 1e-10 {
-            return Err(VisionError::OperationFailed(
+            return Err(VisionError::OperationError(
                 "Matrix is singular, cannot compute inverse".to_string(),
             ));
         }
@@ -551,14 +551,14 @@ impl PerspectiveTransform {
         }
 
         if best_score < params.min_inliers {
-            return Err(VisionError::OperationFailed(format!(
+            return Err(VisionError::OperationError(format!(
                 "RANSAC failed: only {} inliers found (minimum {})",
                 best_score, params.min_inliers
             )));
         }
 
         let best_transform = best_transform.ok_or_else(|| {
-            VisionError::OperationFailed("RANSAC failed to find a valid transformation".to_string())
+            VisionError::OperationError("RANSAC failed to find a valid transformation".to_string())
         })?;
 
         // Refine the transformation using all inliers

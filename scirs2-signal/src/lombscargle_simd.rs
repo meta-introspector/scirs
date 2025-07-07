@@ -6,11 +6,10 @@
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle_enhanced::{LombScargleConfig, WindowType};
 use crate::window::{blackman, hamming, hann};
-use ndarray::{Array1, ArrayView1};
+use ndarray::ArrayView1;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::Arc;

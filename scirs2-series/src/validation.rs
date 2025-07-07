@@ -14,7 +14,7 @@ pub fn check_positive<F: Float + Display>(value: F, name: &str) -> Result<()> {
     if value <= F::zero() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
-            message: format!("Must be positive, got {}", value),
+            message: format!("Must be positive, got {value}"),
         });
     }
     Ok(())
@@ -26,7 +26,7 @@ pub fn check_non_negative<F: Float + Display>(value: F, name: &str) -> Result<()
     if value < F::zero() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
-            message: format!("Must be non-negative, got {}", value),
+            message: format!("Must be non-negative, got {value}"),
         });
     }
     Ok(())
@@ -38,7 +38,7 @@ pub fn check_probability<F: Float + Display>(value: F, name: &str) -> Result<()>
     if value < F::zero() || value > F::one() {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
-            message: format!("Must be in [0, 1], got {}", value),
+            message: format!("Must be in [0, 1], got {value}"),
         });
     }
     Ok(())
@@ -50,7 +50,7 @@ pub fn check_in_range<F: Float + Display>(value: F, min: F, max: F, name: &str) 
     if value < min || value > max {
         return Err(TimeSeriesError::InvalidParameter {
             name: name.to_string(),
-            message: format!("Must be in [{}, {}], got {}", min, max, value),
+            message: format!("Must be in [{min}, {max}], got {value}"),
         });
     }
     Ok(())
@@ -69,7 +69,7 @@ where
 {
     if data.len() < min_length {
         return Err(TimeSeriesError::InsufficientData {
-            message: format!("for {}", operation),
+            message: format!("for {operation}"),
             required: min_length,
             actual: data.len(),
         });
@@ -105,19 +105,19 @@ pub fn validate_arima_orders(p: usize, d: usize, q: usize) -> Result<()> {
     if p > 10 {
         return Err(TimeSeriesError::InvalidParameter {
             name: "p".to_string(),
-            message: format!("AR order too large: {}", p),
+            message: format!("AR order too large: {p}"),
         });
     }
     if d > 3 {
         return Err(TimeSeriesError::InvalidParameter {
             name: "d".to_string(),
-            message: format!("Differencing order too large: {}", d),
+            message: format!("Differencing order too large: {d}"),
         });
     }
     if q > 10 {
         return Err(TimeSeriesError::InvalidParameter {
             name: "q".to_string(),
-            message: format!("MA order too large: {}", q),
+            message: format!("MA order too large: {q}"),
         });
     }
     Ok(())
@@ -139,31 +139,31 @@ pub fn validate_seasonal_arima_orders(
     if p_seasonal > 5 {
         return Err(TimeSeriesError::InvalidParameter {
             name: "p_seasonal".to_string(),
-            message: format!("Seasonal AR order too large: {}", p_seasonal),
+            message: format!("Seasonal AR order too large: {p_seasonal}"),
         });
     }
     if d_seasonal > 2 {
         return Err(TimeSeriesError::InvalidParameter {
             name: "d_seasonal".to_string(),
-            message: format!("Seasonal differencing order too large: {}", d_seasonal),
+            message: format!("Seasonal differencing order too large: {d_seasonal}"),
         });
     }
     if q_seasonal > 5 {
         return Err(TimeSeriesError::InvalidParameter {
             name: "q_seasonal".to_string(),
-            message: format!("Seasonal MA order too large: {}", q_seasonal),
+            message: format!("Seasonal MA order too large: {q_seasonal}"),
         });
     }
     if period < 2 {
         return Err(TimeSeriesError::InvalidParameter {
             name: "period".to_string(),
-            message: format!("Period must be at least 2, got {}", period),
+            message: format!("Period must be at least 2, got {period}"),
         });
     }
     if period > 365 {
         return Err(TimeSeriesError::InvalidParameter {
             name: "period".to_string(),
-            message: format!("Period too large: {}", period),
+            message: format!("Period too large: {period}"),
         });
     }
 
@@ -184,7 +184,7 @@ pub fn validate_forecast_horizon(steps: usize, max_reasonable: Option<usize>) ->
     if steps > max {
         return Err(TimeSeriesError::InvalidParameter {
             name: "steps".to_string(),
-            message: format!("Forecast horizon too large: {}", steps),
+            message: format!("Forecast horizon too large: {steps}"),
         });
     }
 
@@ -204,7 +204,7 @@ pub fn validate_window_size(window: usize, data_length: usize) -> Result<()> {
     if window > data_length {
         return Err(TimeSeriesError::InvalidParameter {
             name: "window".to_string(),
-            message: format!("Window size {} exceeds data length {}", window, data_length),
+            message: format!("Window size {window} exceeds data length {data_length}"),
         });
     }
 
@@ -217,7 +217,7 @@ pub fn validate_lag(lag: usize, data_length: usize) -> Result<()> {
     if lag >= data_length {
         return Err(TimeSeriesError::InvalidParameter {
             name: "lag".to_string(),
-            message: format!("Lag {} must be less than data length {}", lag, data_length),
+            message: format!("Lag {lag} must be less than data length {data_length}"),
         });
     }
     Ok(())
@@ -233,8 +233,7 @@ where
     for (i, &x) in data.iter().enumerate() {
         if x.is_nan() || x.is_infinite() {
             return Err(TimeSeriesError::InvalidInput(format!(
-                "Non-finite value at index {}",
-                i
+                "Non-finite value at index {i}"
             )));
         }
     }

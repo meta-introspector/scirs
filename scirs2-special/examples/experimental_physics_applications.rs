@@ -16,10 +16,10 @@
 //!
 //! Run with: cargo run --example experimental_physics_applications
 
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
-use std::f64::consts::{E, PI};
+use std::f64::consts::PI;
 use std::io::{self, Write};
 
 #[allow(dead_code)]
@@ -162,7 +162,7 @@ fn quantum_optics_photon_statistics() -> Result<(), Box<dyn std::error::Error>> 
     println!("Where r is the squeezing parameter.");
     println!();
 
-    let squeezing_r = 0.5;
+    let squeezing_r = 0.5_f64;
     let squeezed_mean = 3.0;
     println!(
         "SQUEEZED LIGHT: r = {}, ⟨n⟩ = {}",
@@ -190,7 +190,7 @@ fn quantum_optics_photon_statistics() -> Result<(), Box<dyn std::error::Error>> 
     println!();
 
     // Demonstrate antibunching measurement
-    let decay_rate = 1.0; // in units of 1/τ
+    let decay_rate = 1.0_f64; // in units of 1/τ
     let time_points = Array1::linspace(0.0, 5.0, 50);
 
     println!("ANTIBUNCHING MEASUREMENT (γ = {} 1/τ):", decay_rate);
@@ -468,7 +468,7 @@ fn condensed_matter_phase_transitions() -> Result<(), Box<dyn std::error::Error>
     println!();
 
     let tuning_parameter = Array1::linspace(-0.2, 0.2, 21);
-    let quantum_critical_point = 0.0;
+    let _quantum_critical_point = 0.0;
 
     println!("QUANTUM CRITICAL SCALING:");
     println!("(g-g_c)/g_c   Susceptibility   Correlation   Scaling Function");
@@ -916,7 +916,7 @@ fn atomic_spectroscopy() -> Result<(), Box<dyn std::error::Error>> {
     println!("Line   Transition     Wavelength (nm)   Splitting (meV)");
     println!("----   ----------     ---------------   ---------------");
 
-    for &(line, n, l_lower, j_lower, j_upper) in &sodium_d_lines {
+    for &(line, n, l_lower, _j_lower, _j_upper) in &sodium_d_lines {
         let wavelength = sodium_d_line_wavelength(line);
         let splitting = fine_structure_splitting(n, l_lower);
 
@@ -971,10 +971,10 @@ fn atomic_spectroscopy() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let line_broadening_mechanisms = vec![
-        ("Doppler", 300.0, 0.1),   // thermal motion at 300K
-        ("Natural", 0.0, 1.0),     // spontaneous emission
-        ("Pressure", 1000.0, 5.0), // collisional at 1 atm
-        ("Stark", 0.0, 10.0),      // electric field
+        ("Doppler", 300.0_f64, 0.1_f64, 10.0_f64), // thermal motion at 300K
+        ("Natural", 0.0_f64, 1.0_f64, 16.0_f64),   // spontaneous emission
+        ("Pressure", 1000.0_f64, 5.0_f64, 3.2_f64), // collisional at 1 atm
+        ("Stark", 0.0_f64, 10.0_f64, 1.6_f64),     // electric field
     ];
 
     println!("LINE BROADENING ANALYSIS (λ = 589 nm):");
@@ -1125,7 +1125,7 @@ fn statistical_mechanics_mesoscopic() -> Result<(), Box<dyn std::error::Error>> 
     println!("Current fluctuations in mesoscopic conductors involve");
     println!("cumulant generating functions and special functions:");
     println!();
-    println!("⟨⟨I^n⟩⟩ = ∂ⁿ ln⟨e^λI⟩/∂λⁿ|_{λ=0}");
+    println!("⟨⟨I^n⟩⟩ = ∂ⁿ ln⟨e^λI⟩/∂λⁿ|_{{λ=0}}");
     println!();
     println!("For tunnel junctions: ⟨⟨I²⟩⟩ = eI (shot noise)");
     println!();
@@ -1321,8 +1321,8 @@ fn nonlinear_optics_solitons() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let input_powers = vec![0.1, 0.5, 1.0, 2.0, 5.0]; // W
-    let gamma = 0.001; // W^-1 m^-1
-    let beta2 = -20e-27; // s^2/m
+    let gamma: f64 = 0.001; // W^-1 m^-1
+    let beta2: f64 = -20e-27; // s^2/m
 
     println!("MODULATION INSTABILITY:");
     println!("P₀ (W)   Ω_c (THz)   Max Gain (m⁻¹)   Bandwidth (nm)");
@@ -1469,8 +1469,8 @@ fn cosmic_ray_physics() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let primary_energies = vec![1e12, 1e14, 1e16, 1e18]; // eV
-    let critical_energy = 81e6; // eV (for air)
-    let radiation_length = 37.15; // g/cm² for air
+    let critical_energy: f64 = 81e6; // eV (for air)
+    let radiation_length: f64 = 37.15; // g/cm² for air
 
     println!("ELECTROMAGNETIC SHOWER DEVELOPMENT:");
     println!("E₀ (eV)     t_max   N_max       X_max (g/cm²)   Depth (km)");
@@ -1546,7 +1546,7 @@ fn cosmic_ray_physics() -> Result<(), Box<dyn std::error::Error>> {
     println!("-------------   ---------   --------   ----   ------   ------");
 
     for &(detector, rate, time_period) in &detector_rates {
-        let expected_counts = rate * time_period;
+        let expected_counts: f64 = rate * time_period;
         let prob_zero = (-expected_counts).exp();
         let prob_one_or_more = 1.0 - prob_zero;
 
@@ -1577,7 +1577,7 @@ fn cosmic_ray_physics() -> Result<(), Box<dyn std::error::Error>> {
     println!("--------------   -------------   -----------------   -----------");
 
     for &distance in &distances_mpc {
-        let survival_prob = (-distance / 50.0).exp(); // λ ≈ 50 Mpc
+        let survival_prob = (-distance / 50.0_f64).exp(); // λ ≈ 50 Mpc
         let final_energy = gzk_energy * survival_prob;
         let attenuation_db = -10.0 * (survival_prob).log10();
 
@@ -1688,7 +1688,7 @@ fn quantum_information_experiments() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let physical_error_rates = vec![1e-2, 1e-3, 1e-4, 1e-5, 1e-6];
-    let threshold = 1e-4;
+    let threshold: f64 = 1e-4;
     let code_distances = vec![3, 5, 7, 9];
 
     println!("QUANTUM ERROR CORRECTION:");
@@ -1934,8 +1934,8 @@ fn quantum_scaling_function(g: f64) -> f64 {
 fn chirp_time(mass_solar: f64, f0_hz: f64) -> f64 {
     // Simplified formula for binary inspiral time
     let total_mass_kg = mass_solar * 1.989e30;
-    let g = 6.674e-11;
-    let c = 2.998e8;
+    let g: f64 = 6.674e-11;
+    let c: f64 = 2.998e8;
 
     5.0 * c.powi(5) / (256.0 * PI) * (total_mass_kg * g / c.powi(3)).powf(-5.0 / 3.0)
         / f0_hz.powf(8.0 / 3.0)
@@ -1973,13 +1973,13 @@ fn gaussian_significance(snr: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn parameter_uncertainty_mass(m1: f64, m2: f64, distance: f64) -> f64 {
+fn parameter_uncertainty_mass(_m1: f64, _m2: f64, distance: f64) -> f64 {
     // Simplified Fisher matrix estimate
     0.1 / (distance / 100.0).sqrt()
 }
 
 #[allow(dead_code)]
-fn parameter_uncertainty_distance(m1: f64, m2: f64, distance: f64) -> f64 {
+fn parameter_uncertainty_distance(_m1: f64, _m2: f64, distance: f64) -> f64 {
     // Simplified distance uncertainty
     0.5 * (distance / 100.0).sqrt()
 }
@@ -2016,7 +2016,7 @@ fn gamow_peak_energy(temp_kev: f64, z1: f64, z2: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn fusion_power_density(temp_kev: f64, rate: f64, q_value: f64) -> f64 {
+fn fusion_power_density(_temp_kev: f64, rate: f64, q_value: f64) -> f64 {
     // Power density in MW/m³
     let density = 1e20; // particles/m³
     rate * 1e-6 * density * density * q_value * 1.602e-13 * 1e-6
@@ -2067,7 +2067,7 @@ fn sodium_d_line_wavelength(line: &str) -> f64 {
 }
 
 #[allow(dead_code)]
-fn fine_structure_splitting(n: i32, l: i32) -> f64 {
+fn fine_structure_splitting(n: i32, _l: i32) -> f64 {
     // Simplified fine structure splitting in meV
     let alpha = 1.0 / 137.0;
     let rydberg_ev = 13.6;
@@ -2231,9 +2231,4 @@ fn shor_classical_complexity(n: f64) -> f64 {
 fn shor_quantum_complexity(n: f64) -> f64 {
     // Quantum factoring complexity ~ n³
     n.powi(3)
-}
-
-#[allow(dead_code)]
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    main()
 }

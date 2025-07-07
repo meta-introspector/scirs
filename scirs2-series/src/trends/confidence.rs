@@ -314,8 +314,7 @@ where
 fn normal_quantile(p: f64) -> Result<f64> {
     if p <= 0.0 || p >= 1.0 {
         return Err(TimeSeriesError::InvalidInput(format!(
-            "Probability must be between 0 and 1, got {}",
-            p
+            "Probability must be between 0 and 1, got {p}"
         )));
     }
 

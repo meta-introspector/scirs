@@ -630,7 +630,7 @@ fn heat_conduction_demo() {
         }
 
         let mut temp_ratio = 0.0;
-        for (n, &zero) in zeros.iter().enumerate() {
+        for (_n, &zero) in zeros.iter().enumerate() {
             let coeff = 2.0 / (zero * j1(zero));
             let exponential = (-zero.powi(2) * kappa * t / radius.powi(2)).exp();
             temp_ratio += coeff * exponential;

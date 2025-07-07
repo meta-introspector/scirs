@@ -8,7 +8,6 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2};
 use num_traits::{Float, NumCast};
-use scirs2_core::parallel_ops::*;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};

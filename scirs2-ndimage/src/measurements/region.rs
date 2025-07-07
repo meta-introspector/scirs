@@ -246,8 +246,8 @@ pub fn region_properties<T, D>(
     _properties: Option<Vec<&str>>,
 ) -> NdimageResult<Vec<RegionProperties<T>>>
 where
-    T: Float + FromPrimitive + Debug + NumAssign,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {

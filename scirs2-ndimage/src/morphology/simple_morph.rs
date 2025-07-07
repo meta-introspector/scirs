@@ -72,7 +72,7 @@ pub fn grey_erosion_2d<T>(
     origin: Option<&[isize; 2]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + 'static,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
@@ -185,7 +185,7 @@ pub fn grey_dilation_2d<T>(
     origin: Option<&[isize; 2]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + 'static,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     // Default parameter values
     let iters = iterations.unwrap_or(1);
@@ -299,7 +299,7 @@ pub fn grey_opening_2d<T>(
     origin: Option<&[isize; 2]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + 'static,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     // Apply erosion first
     let eroded = grey_erosion_2d(input, structure, iterations, border_value, origin)?;
@@ -334,7 +334,7 @@ pub fn grey_closing_2d<T>(
     origin: Option<&[isize; 2]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + 'static,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     // Apply dilation first
     let dilated = grey_dilation_2d(input, structure, iterations, border_value, origin)?;
@@ -369,7 +369,7 @@ pub fn morphological_gradient_2d<T>(
     origin: Option<&[isize; 2]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + 'static,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     // Apply dilation and erosion
     let dilated = grey_dilation_2d(input, structure, iterations, border_value, origin)?;
@@ -426,7 +426,7 @@ pub fn white_tophat_2d<T>(
     origin: Option<&[isize; 2]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + 'static,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     // Apply opening
     let opened = grey_opening_2d(input, structure, iterations, border_value, origin)?;
@@ -472,7 +472,7 @@ pub fn black_tophat_2d<T>(
     origin: Option<&[isize; 2]>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + 'static,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     // Apply closing
     let closed = grey_closing_2d(input, structure, iterations, border_value, origin)?;

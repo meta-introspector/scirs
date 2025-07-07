@@ -712,7 +712,8 @@ fn evaluate_model(model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test: 
         }
     }
     let accuracy = correct as f32 / y_test.len() as f32;
-    println!("Test Accuracy: {:.2}%", accuracy * 100.0);
+    let accuracy_pct = accuracy * 100.0;
+    println!("Test Accuracy: {accuracy_pct:.2}%");
     // Print confusion matrix
     let num_classes = 3; // Negative, Neutral, Positive
     let mut confusion_matrix = Array2::<usize>::zeros((num_classes, num_classes));
@@ -779,10 +780,7 @@ fn evaluate_model(model: &mut BiLSTMClassifier, x_test: &Array2<usize>, y_test: 
             2 => "Positive",
             _ => "Unknown ",
         };
-        println!(
-            "{} | {:.4}    {:.4}  {:.4}",
-            class_name, precision, recall, f1
-        );
+        println!("{class_name} | {precision:.4}    {recall:.4}  {f1:.4}");
     }
 }
 // Example predictions
@@ -817,8 +815,8 @@ fn example_predictions(model: &mut BiLSTMClassifier, word_to_idx: &HashMap<Strin
             2 => "Positive",
             _ => "Unknown",
         };
-        println!("Text: \"{}\"", example);
-        println!("Predicted sentiment: {}\n", sentiment);
+        println!("Text: \"{example}\"");
+        println!("Predicted sentiment: {sentiment}\n");
     }
 }
 #[allow(dead_code)]
@@ -830,7 +828,7 @@ fn main() {
     // Create vocabulary
     let (word_to_idx, _idx_to_word) = create_vocabulary(&texts);
     let vocab_size = word_to_idx.len();
-    println!("Vocabulary size: {}", vocab_size);
+    println!("Vocabulary size: {vocab_size}");
     // Split dataset
     let (train_texts, test_texts, train_labels, test_labels) =
         train_test_split(&texts, &labels, 0.2);
@@ -856,10 +854,7 @@ fn main() {
         use_attention,
     );
     // Train model
-    println!(
-        "\nTraining BiLSTM classifier with attention: {}",
-        use_attention
-    );
+    println!("\nTraining BiLSTM classifier with attention: {use_attention}");
     train_model(&mut model, &x_train, &y_train_onehot, 20, 0.01);
     // Evaluate model
     println!("\nEvaluating model on test set:");

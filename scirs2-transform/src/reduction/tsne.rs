@@ -188,6 +188,7 @@ impl SpatialTree {
     }
 
     /// Compute forces on a point using Barnes-Hut approximation
+    #[allow(clippy::too_many_arguments)]
     fn compute_forces(
         &self,
         point: &Array1<f64>,
@@ -346,6 +347,7 @@ impl QuadTreeNode {
     }
 
     /// Compute forces using Barnes-Hut approximation for quadtree
+    #[allow(clippy::too_many_arguments)]
     fn compute_forces_quad(
         &self,
         point: &Array1<f64>,
@@ -369,6 +371,7 @@ impl QuadTreeNode {
     }
 
     /// Recursive force computation for quadtree
+    #[allow(clippy::too_many_arguments)]
     fn compute_forces_recursive_quad(
         &self,
         point: &Array1<f64>,
@@ -648,6 +651,7 @@ impl OctTreeNode {
     }
 
     /// Compute forces using Barnes-Hut approximation for octree
+    #[allow(clippy::too_many_arguments)]
     fn compute_forces_oct(
         &self,
         point: &Array1<f64>,
@@ -671,6 +675,7 @@ impl OctTreeNode {
     }
 
     /// Recursive force computation for octree
+    #[allow(clippy::too_many_arguments)]
     fn compute_forces_recursive_oct(
         &self,
         point: &Array1<f64>,
@@ -1364,6 +1369,7 @@ impl TSNE {
     }
 
     /// Main t-SNE optimization loop using gradient descent
+    #[allow(clippy::too_many_arguments)]
     fn tsne_optimization(
         &self,
         p: Array2<f64>,
@@ -1508,6 +1514,7 @@ impl TSNE {
     }
 
     /// Compute gradient and error for exact t-SNE with optional multicore support
+    #[allow(clippy::too_many_arguments)]
     fn compute_gradient_exact(
         &self,
         embedding: &Array2<f64>,
@@ -1662,6 +1669,7 @@ impl TSNE {
     }
 
     /// Compute gradient and error using Barnes-Hut approximation
+    #[allow(clippy::too_many_arguments)]
     fn compute_gradient_barnes_hut(
         &self,
         embedding: &Array2<f64>,
@@ -1754,6 +1762,7 @@ impl TSNE {
     }
 
     /// Update embedding using gradient descent with momentum and adaptive gains
+    #[allow(clippy::too_many_arguments)]
     fn gradient_update(
         &self,
         embedding: &mut Array2<f64>,
@@ -1820,6 +1829,7 @@ impl TSNE {
 /// # Returns
 /// * `Result<f64>` - Trustworthiness score between 0.0 and 1.0
 #[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 pub fn trustworthiness<S1, S2>(
     x: &ArrayBase<S1, Ix2>,
     x_embedded: &ArrayBase<S2, Ix2>,

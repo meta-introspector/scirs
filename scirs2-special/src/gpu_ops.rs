@@ -468,7 +468,7 @@ mod tests {
         use crate::gamma::gamma;
         for i in 0..10 {
             let expected = gamma(input[i]);
-            assert!((output[i] - expected).abs() < 1e-10_f64);
+            assert!((output[i] - expected).abs() < 1e-10_f64 as f64);
         }
     }
 
@@ -484,7 +484,7 @@ mod tests {
         use crate::bessel::j0;
         for i in 0..10 {
             let expected = j0(input[i]);
-            assert!((output[i] - expected).abs() < 1e-10_f64);
+            assert!((output[i] - expected).abs() < 1e-10_f64 as f64);
         }
     }
 }

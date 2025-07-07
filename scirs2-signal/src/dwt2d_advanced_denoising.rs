@@ -195,7 +195,7 @@ pub fn advanced_wavelet_denoise_2d(
 
     // Validate input
     if image.nrows() < 8 || image.ncols() < 8 {
-        return Err(SignalError::DimensionError(
+        return Err(SignalError::DimensionMismatch(
             "Image must be at least 8x8".to_string(),
         ));
     }

@@ -111,7 +111,7 @@ pub fn shortest_path<N, E, Ix>(
     target: &N,
 ) -> Result<Option<Path<N, E>>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight
         + num_traits::Zero
         + num_traits::One
@@ -242,7 +242,7 @@ pub fn dijkstra_path<N, E, Ix>(
     target: &N,
 ) -> Result<Option<Path<N, E>>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight
         + num_traits::Zero
         + num_traits::One
@@ -274,7 +274,7 @@ pub fn shortest_path_digraph<N, E, Ix>(
     target: &N,
 ) -> Result<Option<Path<N, E>>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight
         + num_traits::Zero
         + num_traits::One
@@ -392,7 +392,7 @@ pub fn dijkstra_path_digraph<N, E, Ix>(
     target: &N,
 ) -> Result<Option<Path<N, E>>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight
         + num_traits::Zero
         + num_traits::One
@@ -432,7 +432,7 @@ where
 #[allow(dead_code)]
 pub fn floyd_warshall<N, E, Ix>(graph: &Graph<N, E, Ix>) -> Result<ndarray::Array2<f64>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -480,7 +480,7 @@ where
 #[allow(dead_code)]
 pub fn floyd_warshall_digraph<N, E, Ix>(graph: &DiGraph<N, E, Ix>) -> Result<ndarray::Array2<f64>>
 where
-    N: Node + std::fmt::Debug + std::fmt::Debug,
+    N: Node + std::fmt::Debug,
     E: EdgeWeight + Into<f64> + num_traits::Zero + Copy,
     Ix: petgraph::graph::IndexType,
 {
@@ -709,7 +709,7 @@ pub fn k_shortest_paths<N, E, Ix>(
     k: usize,
 ) -> Result<Vec<(f64, Vec<N>)>>
 where
-    N: Node + std::fmt::Debug + Clone + Hash + Eq + Ord + std::fmt::Debug,
+    N: Node + std::fmt::Debug + Clone + Hash + Eq + Ord,
     E: EdgeWeight
         + Into<f64>
         + Clone

@@ -14,7 +14,6 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::Array1;
-use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::fs;
@@ -486,7 +485,7 @@ impl CrossPlatformRegressionDetector {
             baseline.last_updated = timestamp;
             // Calculate statistics after measurements are updated
             let measurements = baseline.measurements.clone();
-            drop(baseline); // Release the mutable borrow
+            let _ = baseline; // Release the mutable borrow
             let stats = self.calculate_statistics(&measurements)?;
             // Re-acquire mutable borrow to update statistics
             if let Some(baseline) = self.baselines.get_mut(&baseline_key) {

@@ -19,9 +19,15 @@ pub enum EnsembleStrategy {
     /// Weighted average based on historical performance
     WeightedAverage,
     /// Dynamic weight adjustment based on recent performance
-    DynamicWeighting { window_size: usize },
+    DynamicWeighting {
+        /// Window size for weight calculation
+        window_size: usize,
+    },
     /// Stacking with meta-learner
-    Stacking { meta_learner: MetaLearner },
+    Stacking {
+        /// Meta-learner type for stacking
+        meta_learner: MetaLearner,
+    },
     /// Bayesian Model Averaging
     BayesianModelAveraging,
     /// Median ensemble
@@ -36,38 +42,67 @@ pub enum MetaLearner {
     /// Linear regression meta-learner
     LinearRegression,
     /// Ridge regression with regularization
-    RidgeRegression { alpha: f64 },
+    RidgeRegression {
+        /// Regularization parameter
+        alpha: f64,
+    },
     /// Random forest meta-learner
-    RandomForest { n_trees: usize },
+    RandomForest {
+        /// Number of trees in the forest
+        n_trees: usize,
+    },
     /// Neural network meta-learner
-    NeuralNetwork { hidden_units: Vec<usize> },
+    NeuralNetwork {
+        /// Number of hidden units in each layer
+        hidden_units: Vec<usize>,
+    },
 }
 
 /// Base forecasting model type
 #[derive(Debug, Clone)]
 pub enum BaseModel {
     /// ARIMA model with orders
-    ARIMA { p: usize, d: usize, q: usize },
+    ARIMA {
+        /// Autoregressive order
+        p: usize,
+        /// Differencing order
+        d: usize,
+        /// Moving average order
+        q: usize,
+    },
     /// Exponential smoothing
     ExponentialSmoothing {
+        /// Level smoothing parameter
         alpha: f64,
+        /// Trend smoothing parameter
         beta: Option<f64>,
+        /// Seasonal smoothing parameter
         gamma: Option<f64>,
     },
     /// Linear trend model
     LinearTrend,
     /// Seasonal naive
-    SeasonalNaive { period: usize },
+    SeasonalNaive {
+        /// Seasonal period
+        period: usize,
+    },
     /// Moving average
-    MovingAverage { window: usize },
+    MovingAverage {
+        /// Window size for moving average
+        window: usize,
+    },
     /// LSTM neural network
     LSTM {
+        /// Number of hidden units
         hidden_units: usize,
+        /// Number of layers
         num_layers: usize,
     },
     /// Prophet-like model
     Prophet {
+        /// Seasonality prior scale
         seasonality_prior_scale: f64,
+        /// Changepoint prior scale
         changepoint_prior_scale: f64,
     },
 }
@@ -1331,11 +1366,15 @@ pub struct AutoMLForecaster<F: Float + Debug + Clone + FromPrimitive + std::iter
 pub struct HyperparameterSpace {
     /// ARIMA order ranges
     pub arima_p_range: (usize, usize),
+    /// ARIMA differencing order range
     pub arima_d_range: (usize, usize),
+    /// ARIMA moving average order range
     pub arima_q_range: (usize, usize),
     /// Exponential smoothing parameters
     pub alpha_range: (f64, f64),
+    /// Trend smoothing parameter range
     pub beta_range: Option<(f64, f64)>,
+    /// Seasonal smoothing parameter range
     pub gamma_range: Option<(f64, f64)>,
     /// Moving average window sizes
     pub ma_windows: Vec<usize>,
@@ -1343,6 +1382,7 @@ pub struct HyperparameterSpace {
     pub seasonal_periods: Vec<usize>,
     /// Neural network architectures
     pub lstm_hidden_units: Vec<usize>,
+    /// LSTM number of layers options
     pub lstm_num_layers: Vec<usize>,
 }
 
@@ -1390,13 +1430,21 @@ impl Default for CrossValidationConfig {
 /// Evaluation metrics for model selection
 #[derive(Debug, Clone)]
 pub enum EvaluationMetric {
+    /// Mean Absolute Error
     MAE,
+    /// Mean Squared Error
     MSE,
+    /// Root Mean Squared Error
     RMSE,
+    /// Mean Absolute Percentage Error
     MAPE,
+    /// Symmetric Mean Absolute Percentage Error
     SMAPE,
+    /// Mean Absolute Scaled Error
     MASE,
+    /// Akaike Information Criterion
     AIC,
+    /// Bayesian Information Criterion
     BIC,
 }
 
@@ -1406,12 +1454,20 @@ pub enum SearchAlgorithm {
     /// Grid search over all combinations
     GridSearch,
     /// Random search with specified iterations
-    RandomSearch { n_iterations: usize },
+    RandomSearch {
+        /// Number of iterations
+        n_iterations: usize,
+    },
     /// Bayesian optimization
-    BayesianOptimization { n_iterations: usize },
+    BayesianOptimization {
+        /// Number of iterations
+        n_iterations: usize,
+    },
     /// Genetic algorithm
     GeneticAlgorithm {
+        /// Population size
         population_size: usize,
+        /// Number of generations
         generations: usize,
     },
 }

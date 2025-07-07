@@ -53,8 +53,8 @@ pub fn sobel<T, D>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug + std::ops::AddAssign + Clone,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + Clone + 'static,
+    D: Dimension + 'static,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
 

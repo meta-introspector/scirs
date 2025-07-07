@@ -269,7 +269,7 @@ impl GeoTiff {
                 };
 
                 Array2::from_shape_vec((self.height as usize, self.width as usize), data)
-                    .map_err(|e| IoError::ParseError(format!("Failed to create array: {}", e)))
+                    .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
             }
             Err(_) => {
                 // Fallback to pattern data if file reading fails
@@ -280,7 +280,7 @@ impl GeoTiff {
                     })
                     .collect();
                 Array2::from_shape_vec((self.height as usize, self.width as usize), data)
-                    .map_err(|e| IoError::ParseError(format!("Failed to create array: {}", e)))
+                    .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
             }
         }
     }

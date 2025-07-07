@@ -55,7 +55,8 @@ fn generate_test_signal(n_samples: usize, missing_rate: f64) -> Array1<f64> {
 /// Export signal data to CSV for visualization
 #[allow(dead_code)]
 fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
-    let mut file = File::create(file_name).map_err(|e| SignalError::Compute(e.to_string()))?;
+    let mut file =
+        File::create(file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     // Write header
     let header = signals
@@ -63,7 +64,7 @@ fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
         .map(|(name, _)| name.to_string())
         .collect::<Vec<String>>()
         .join(",");
-    writeln!(file, "{}", header).map_err(|e| SignalError::Compute(e.to_string()))?;
+    writeln!(file, "{}", header).map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     // Find common signal length
     let min_len = signals.iter().map(|(_, data)| data.len()).min().unwrap();
@@ -81,7 +82,7 @@ fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
             })
             .collect::<Vec<String>>()
             .join(",");
-        writeln!(file, "{}", line).map_err(|e| SignalError::Compute(e.to_string()))?;
+        writeln!(file, "{}", line).map_err(|e| SignalError::ComputationError(e.to_string()))?;
     }
 
     println!("Data exported to {}", file_name);
@@ -91,7 +92,8 @@ fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
 /// Export 2D data to CSV for visualization
 #[allow(dead_code)]
 fn export_2d_to_csv(file_name: &str, data: &Array2<f64>) -> SignalResult<()> {
-    let mut file = File::create(file_name).map_err(|e| SignalError::Compute(e.to_string()))?;
+    let mut file =
+        File::create(file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
     let (n_rows, n_cols) = data.dim();
 
     for i in 0..n_rows {
@@ -105,7 +107,7 @@ fn export_2d_to_csv(file_name: &str, data: &Array2<f64>) -> SignalResult<()> {
             })
             .collect::<Vec<String>>()
             .join(",");
-        writeln!(file, "{}", line).map_err(|e| SignalError::Compute(e.to_string()))?;
+        writeln!(file, "{}", line).map_err(|e| SignalError::ComputationError(e.to_string()))?;
     }
 
     println!("2D data exported to {}", file_name);
@@ -305,12 +307,13 @@ fn compare_interpolation_methods() -> SignalResult<()> {
     export_to_csv("interpolation_comparison.csv", &export_data)?;
 
     // Export MSE values
-    let mut mse_file =
-        File::create("interpolation_mse.csv").map_err(|e| SignalError::Compute(e.to_string()))?;
-    writeln!(mse_file, "Method,MSE").map_err(|e| SignalError::Compute(e.to_string()))?;
+    let mut mse_file = File::create("interpolation_mse.csv")
+        .map_err(|e| SignalError::ComputationError(e.to_string()))?;
+    writeln!(mse_file, "Method,MSE").map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     for &(name, mse) in &mse_values {
-        writeln!(mse_file, "{},{}", name, mse).map_err(|e| SignalError::Compute(e.to_string()))?;
+        writeln!(mse_file, "{},{}", name, mse)
+            .map_err(|e| SignalError::ComputationError(e.to_string()))?;
     }
 
     println!("MSE values exported to interpolation_mse.csv");
@@ -337,7 +340,7 @@ fn interpolate_bandlimited_signal() -> SignalResult<()> {
 
     for i in 1..cutoff {
         let amplitude: f64 = normal.sample(&mut rng).abs();
-        let phase = rand::random::<f64>() * 2.0 * PI;
+        let phase = rng.random::<f64>() * 2.0 * PI;
 
         // Symmetric for real signal
         spectrum[i] = Complex64::new(amplitude * phase.cos(), amplitude * phase.sin());
@@ -604,7 +607,7 @@ fn auto_interpolation_example() -> SignalResult<()> {
     let mut signal1 = reference.clone();
     let _rng = rng();
     for i in 0..n_samples {
-        if rand::random::<f64>() < 0.2 {
+        if _rng.random::<f64>() < 0.2 {
             signal1[i] = f64::NAN;
         }
     }

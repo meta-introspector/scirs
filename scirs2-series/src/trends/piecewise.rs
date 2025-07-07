@@ -620,10 +620,7 @@ where
 
     if n <= degree {
         return Err(TimeSeriesError::InsufficientData {
-            message: format!(
-                "Segment length must be greater than polynomial degree ({})",
-                degree
-            ),
+            message: format!("Segment length must be greater than polynomial degree ({degree})"),
             required: degree + 1,
             actual: n,
         });

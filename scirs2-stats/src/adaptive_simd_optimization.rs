@@ -8,7 +8,7 @@
 use crate::error::StatsResult;
 use ndarray::{ArrayView1, ArrayView2};
 use num_traits::{Float, NumCast};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -810,7 +810,7 @@ impl AdaptiveSimdOptimizer {
     /// Try fallback strategy on failure
     fn try_fallback_strategy<F, T>(
         &self,
-        operation_name: &str,
+        _operation_name: &str,
         data: ArrayView1<F>,
         operation: impl Fn(&ArrayView1<F>, &SimdStrategy) -> StatsResult<T> + Send + Sync,
         failed_strategy: &SimdStrategy,
@@ -861,7 +861,7 @@ impl AdaptiveSimdOptimizer {
     /// Try matrix fallback strategy
     fn try_matrix_fallback_strategy<F, T>(
         &self,
-        operation_name: &str,
+        _operation_name: &str,
         data: ArrayView2<F>,
         operation: impl Fn(&ArrayView2<F>, &SimdStrategy) -> StatsResult<T> + Send + Sync,
         failed_strategy: &SimdStrategy,

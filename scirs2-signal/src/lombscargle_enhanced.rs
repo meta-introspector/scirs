@@ -7,11 +7,9 @@
 //! - Numerical stability improvements
 
 use crate::error::{SignalError, SignalResult};
-use crate::window::{blackman, hamming, hann};
-use ndarray::{Array1, ArrayView1};
 use num_traits::{Float, NumCast};
 use rand::prelude::*;
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use scirs2_core::validation::{check_finite, check_positive};
 use std::f64::consts::PI;
 use std::fmt::Debug;
 

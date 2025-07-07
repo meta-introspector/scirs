@@ -884,7 +884,9 @@ impl PerformanceMonitor {
 #[derive(Debug)]
 struct ExecutionMetrics {
     duration: Duration,
+    #[allow(dead_code)]
     operation_count: usize,
+    #[allow(dead_code)]
     timestamp: Instant,
 }
 

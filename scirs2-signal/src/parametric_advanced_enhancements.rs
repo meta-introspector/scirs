@@ -372,7 +372,7 @@ fn estimate_arma_robust(
     }
 
     // Use a robust initialization
-    let mut model = estimate_arma(signal, p, q, ArmaMethod::HannanRissanen)?;
+    let model = estimate_arma(signal, p, q, ArmaMethod::HannanRissanen)?;
 
     // Iterative reweighting (simplified version)
     for _iter in 0..config.max_robust_iterations {
@@ -435,7 +435,7 @@ fn estimate_ar_weighted(
     signal: &Array1<f64>,
     order: usize,
     method: ARMethod,
-    weights: &Array1<f64>,
+    _weights: &Array1<f64>,
 ) -> SignalResult<(Array1<f64>, Option<Array1<f64>>, f64)> {
     // For simplicity, use standard estimation
     // A full implementation would incorporate weights into the estimation
@@ -449,7 +449,7 @@ fn compute_model_criteria(
     ar_result: &(Array1<f64>, Option<Array1<f64>>, f64),
     model_type: ModelType,
 ) -> SignalResult<ModelCriteriaValues> {
-    let (ar_coeffs, _, variance) = ar_result;
+    let (_ar_coeffs, _, variance) = ar_result;
     let n = signal.len() as f64;
     let k = match model_type {
         ModelType::AR(p) => p as f64,
@@ -624,7 +624,7 @@ fn perform_cross_validation(
                 fold_errors.push(pred_error);
             }
             ModelType::ARMA(p, q) => {
-                let arma_model = estimate_arma(&train_array, p, q, ArmaMethod::HannanRissanen)?;
+                let _arma_model = estimate_arma(&train_array, p, q, ArmaMethod::HannanRissanen)?;
                 // Would implement ARMA prediction error computation
                 fold_errors.push(0.0); // Placeholder
             }
@@ -691,7 +691,7 @@ fn ljung_box_test(acf: &Array1<f64>, n: usize, fitted_params: usize) -> SignalRe
     lb_statistic *= n as f64 * (n + 2) as f64;
 
     // Degrees of freedom
-    let dof = h - fitted_params;
+    let _dof = h - fitted_params;
 
     // For simplicity, return statistic and approximate p-value
     // In practice, would use chi-squared distribution
@@ -781,8 +781,7 @@ mod tests {
 
         // AR(2): x[t] = 0.7*x[t-1] - 0.2*x[t-2] + e[t]
         for t in 2..n {
-            signal[t] =
-                0.7 * signal[t - 1] - 0.2 * signal[t - 2] + 0.1 * rng.random_range(-1.0..1.0);
+            signal[t] = 0.7 * signal[t - 1] - 0.2 * signal[t - 2] + 0.1 * rng.random_range(-1.0..1.0);
         }
 
         let config = AdvancedModelSelection::default();

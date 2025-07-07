@@ -183,6 +183,12 @@ pub struct DataSplit {
     pub y_test: Array1<f64>,
 }
 
+impl Default for MLPipeline {
+    fn default() -> Self {
+        Self::new(MLPipelineConfig::default())
+    }
+}
+
 impl MLPipeline {
     /// Create a new ML pipeline
     pub fn new(config: MLPipelineConfig) -> Self {
@@ -190,11 +196,6 @@ impl MLPipeline {
             config,
             fitted_scalers: None,
         }
-    }
-
-    /// Create with default configuration
-    pub fn default() -> Self {
-        Self::new(MLPipelineConfig::default())
     }
 
     /// Prepare dataset for ML training
@@ -282,7 +283,7 @@ impl MLPipeline {
         let mut transformed_data = dataset.data.clone();
 
         for (col_idx, mut column) in transformed_data.columns_mut().into_iter().enumerate() {
-            let default_name = format!("feature_{}", col_idx);
+            let default_name = format!("feature_{col_idx}");
             let feature_name = dataset
                 .feature_names
                 .as_ref()
@@ -462,10 +463,7 @@ impl MLPipeline {
         for (idx, &label) in target.iter().enumerate() {
             let class = label as i32;
             *class_counts.entry(class).or_insert(0) += 1;
-            class_indices
-                .entry(class)
-                .or_insert_with(Vec::new)
-                .push(idx);
+            class_indices.entry(class).or_default().push(idx);
         }
 
         // Find the majority class size (the maximum count)
@@ -539,7 +537,7 @@ impl MLPipeline {
                 .as_ref()
                 .and_then(|names| names.get(col_idx))
                 .cloned()
-                .unwrap_or_else(|| format!("feature_{}", col_idx));
+                .unwrap_or_else(|| format!("feature_{col_idx}"));
 
             let column_view = column.view();
             let scaler_params = Self::fit_scaler(&column_view, method)?;
@@ -750,10 +748,7 @@ impl MLPipeline {
 
         for &idx in indices.iter() {
             let class = target[idx] as i32;
-            class_indices
-                .entry(class)
-                .or_insert_with(Vec::new)
-                .push(idx);
+            class_indices.entry(class).or_default().push(idx);
         }
 
         // Shuffle each class group separately
@@ -803,7 +798,7 @@ impl MLPipeline {
             let mut class_counts: HashMap<String, usize> = HashMap::new();
             for &value in target.iter() {
                 if !value.is_nan() {
-                    let class_name = format!("{:.0}", value);
+                    let class_name = format!("{value:.0}");
                     *class_counts.entry(class_name).or_insert(0) += 1;
                 }
             }

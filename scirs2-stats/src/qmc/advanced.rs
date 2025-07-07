@@ -7,7 +7,6 @@ use crate::error::{StatsError, StatsResult as Result};
 use crate::error_handling_v2::ErrorCode;
 use crate::unified_error_handling::global_error_handler;
 use ndarray::{Array1, Array2};
-use num_traits::Float;
 use rand::{rng, rngs::StdRng, Rng, SeedableRng};
 use scirs2_core::validation::*;
 use std::collections::HashMap;
@@ -96,6 +95,7 @@ enum QMCGeneratorState {
 #[derive(Debug)]
 struct SobolState {
     direction_numbers: Vec<Vec<u64>>,
+    #[allow(dead_code)]
     scramble_matrices: Option<Vec<Array2<u32>>>,
 }
 
@@ -132,31 +132,37 @@ impl SobolState {
 #[derive(Debug)]
 struct HaltonState {
     bases: Vec<u32>,
+    #[allow(dead_code)]
     permutations: Option<Vec<Vec<u32>>>,
 }
 
 #[derive(Debug)]
 struct NiederreiterState {
     generating_matrices: Vec<Array2<u32>>,
+    #[allow(dead_code)]
     polynomial_coefficients: Vec<Vec<u32>>,
 }
 
 #[derive(Debug)]
 struct FaureState {
     base: u32,
+    #[allow(dead_code)]
     permutation_matrices: Vec<Array2<u32>>,
 }
 
 #[derive(Debug)]
 struct GeneralizedHaltonState {
     bases: Vec<u32>,
+    #[allow(dead_code)]
     leap_values: Vec<usize>,
+    #[allow(dead_code)]
     generalized_permutations: Vec<Vec<u32>>,
 }
 
 #[derive(Debug)]
 struct OptimalLHSState {
     rng: StdRng,
+    #[allow(dead_code)]
     correlation_matrix: Option<Array2<f64>>,
 }
 
@@ -976,6 +982,7 @@ impl AdvancedQMCGenerator {
 pub struct StratifiedSampler {
     config: StratifiedSamplingConfig,
     dimension: usize,
+    #[allow(dead_code)]
     strata_counts: HashMap<Vec<usize>, usize>,
 }
 

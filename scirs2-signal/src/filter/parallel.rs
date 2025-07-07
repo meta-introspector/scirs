@@ -4,7 +4,7 @@
 //! for improved performance on multi-core systems.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, ArrayView1, Axis};
+use ndarray::{s, Array1, Array2};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
@@ -2172,7 +2172,7 @@ fn parallel_find_polynomial_roots(
 
     // For demonstration, create synthetic roots
     for i in 1..coeffs.len() {
-        let angle = 2.0 * std::f64::consts::PI * (i as f64) / (coeffs.len() as f64);
+        let angle = 2.0 * PI * (i as f64) / (coeffs.len() as f64);
         let magnitude = 0.9; // Inside unit circle
         roots.push(Complex64::new(
             magnitude * angle.cos(),
@@ -2294,7 +2294,7 @@ mod tests {
 
     #[test]
     fn test_parallel_median_filter() {
-        let mut signal = vec![1.0, 2.0, 3.0, 100.0, 5.0, 6.0, 7.0]; // Contains impulse noise
+        let signal = vec![1.0, 2.0, 3.0, 100.0, 5.0, 6.0, 7.0]; // Contains impulse noise
         let result = parallel_median_filter(&signal, 3, None).unwrap();
 
         assert_eq!(result.len(), signal.len());

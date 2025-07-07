@@ -377,12 +377,7 @@ pub mod surface_plots {
             .y_label_area_size(40)
             .build_cartesian_3d(-5.0..5.0, -5.0..5.0, -2.0..2.0)?;
 
-        chart
-            .configure_axes()
-            .x_desc("x")
-            .y_desc("y")
-            .z_desc("f(x,y)")
-            .draw()?;
+        chart.configure_axes().draw()?;
 
         // Generate surface data
         let n = 50;
@@ -405,7 +400,8 @@ pub mod surface_plots {
         let y_range: Vec<f64> = (0..51).map(|i| -5.0 + i as f64 * 0.2).collect();
 
         chart.draw_series(
-            SurfaceSeries::xoz(x_range, y_range, |x, y| f(x, y)).style(&BLUE.mix(0.5)),
+            SurfaceSeries::xoz(x_range.into_iter(), y_range.into_iter(), |x, y| f(x, y))
+                .style(&BLUE.mix(0.5)),
         )?;
 
         root.present()?;
@@ -416,6 +412,7 @@ pub mod surface_plots {
 /// Interactive visualization support
 #[cfg(feature = "interactive")]
 pub mod interactive {
+    #[allow(unused_imports)]
     use super::*;
 
     /// Configuration for interactive plots
@@ -1071,52 +1068,8 @@ pub mod export {
                 Ok(latex.into_bytes())
             }
             ExportFormat::PDF => {
-                // Generate PDF using plotters
-                let mut pdf_data = Vec::new();
-                {
-                    let backend = plotters::backend::SVGBackend::new(&mut pdf_data, (800, 600))
-                        .map_err(|e| format!("Failed to create PDF backend: {}", e))?;
-                    let root = backend.into_drawing_area();
-                    root.fill(&plotters::style::colors::WHITE)
-                        .map_err(|e| format!("Failed to fill background: {}", e))?;
-
-                    let mut chart = plotters::chart::ChartBuilder::on(&root)
-                        .caption("Special Function Plot", ("sans-serif", 30))
-                        .margin(10)
-                        .x_label_area_size(30)
-                        .y_label_area_size(40)
-                        .build_cartesian_2d(x_range.0..x_range.1, -2f64..2f64)
-                        .map_err(|e| format!("Failed to build chart: {}", e))?;
-
-                    chart
-                        .configure_mesh()
-                        .x_desc("x")
-                        .y_desc("f(x)")
-                        .draw()
-                        .map_err(|e| format!("Failed to draw mesh: {}", e))?;
-
-                    // Generate data points
-                    let data: Vec<(f64, f64)> = (0..=n_points)
-                        .map(|i| {
-                            let x =
-                                x_range.0 + i as f64 * (x_range.1 - x_range.0) / n_points as f64;
-                            let y = f(x);
-                            (x, y)
-                        })
-                        .filter(|(_, y)| y.is_finite())
-                        .collect();
-
-                    chart
-                        .draw_series(plotters::series::LineSeries::new(
-                            data,
-                            &plotters::style::colors::BLUE,
-                        ))
-                        .map_err(|e| format!("Failed to draw series: {}", e))?;
-
-                    root.present()
-                        .map_err(|e| format!("Failed to present plot: {}", e))?;
-                }
-                Ok(pdf_data)
+                // PDF export is not yet implemented
+                Err("PDF export is not yet implemented".to_string())
             }
             ExportFormat::PNG => {
                 // Generate PNG using plotters

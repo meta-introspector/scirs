@@ -256,7 +256,7 @@ impl NeuralNetwork {
             losses.push(loss);
             // Print progress
             if epoch % 1000 == 0 || epoch == epochs - 1 {
-                println!("Epoch {}/{}: loss = {:.6}", epoch + 1, epochs, loss);
+                println!("Epoch {}/{}: loss = {loss:.6}", epoch + 1, epochs);
             }
             // Backward pass
             self.backward(x, y, learning_rate);
@@ -295,7 +295,7 @@ impl NeuralNetwork {
                 shape[0] * shape[1] + shape[1]
             })
             .sum();
-        println!("Total parameters: {}", total_params);
+        println!("Total parameters: {total_params}");
     }
 }
 
@@ -306,8 +306,8 @@ fn train_xor_network() -> Result<()> {
     let x = Array2::from_shape_vec((4, 2), vec![0.0f32, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0])?;
     let y = Array2::from_shape_vec((4, 1), vec![0.0f32, 1.0, 1.0, 0.0])?;
     println!("XOR problem dataset:");
-    println!("Inputs:\n{:?}", x);
-    println!("Targets:\n{:?}", y);
+    println!("Inputs:\n{x:?}");
+    println!("Targets:\n{y:?}");
     // Create network: 2 inputs -> 4 hidden (ReLU) -> 1 output (Sigmoid)
     let mut network = NeuralNetwork::new(
         &[2, 4, 1],
@@ -325,7 +325,7 @@ fn train_xor_network() -> Result<()> {
     // Evaluate on training data
     let predictions = network.predict(&x);
     println!("\nEvaluation:");
-    println!("Predictions:\n{:.3?}", predictions);
+    println!("Predictions:\n{predictions:.3?}");
     // Test with individual inputs
     println!("\nTesting with specific inputs:");
     let test_cases = vec![
@@ -409,7 +409,7 @@ fn train_regression_network() -> Result<()> {
     let x = Array2::from_shape_fn((n_samples, 1), |(i, _)| x_data[i]);
     let y = Array2::from_shape_fn((n_samples, 1), |(i, _)| y_data[i]);
     println!("\nRegression Problem: y = sin(x)");
-    println!("Number of samples: {}", n_samples);
+    println!("Number of samples: {n_samples}");
     // Create a network with 3 hidden layers
     let mut network = NeuralNetwork::new(
         &[1, 10, 10, 5, 1],
@@ -470,7 +470,7 @@ fn print_loss_curve(losses: &[f32], width: usize) {
         };
         let bar_len = (normalized * 40.0) as usize;
         print!("{:5}: ", idx + start_idx);
-        print!("{:.6} ", loss);
+        print!("{loss:.6} ");
         println!("{}", "#".repeat(bar_len));
     }
 }

@@ -12,14 +12,13 @@
 //! - Advanced condition assessment and uncertainty quantification
 //! - Multi-scale Gramian analysis for different time horizons
 
-use super::analysis::{ControllabilityAnalysis, KalmanDecomposition, ObservabilityAnalysis};
+use super::analysis::{ControllabilityAnalysis, ObservabilityAnalysis};
 use super::systems::StateSpace;
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, NumCast};
+use ndarray::{Array1, Array2};
+use num_traits::Float;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use scirs2_core::validation::check_finite;
 use std::collections::HashMap;
 
 /// Robust controllability and observability analysis result

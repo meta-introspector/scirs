@@ -257,7 +257,7 @@ pub fn wiener_filter_time(
         );
 
         if end <= start {
-            return Err(SignalError::DimensionError(
+            return Err(SignalError::DimensionMismatch(
                 "Invalid window bounds in Wiener filter".to_string(),
             ));
         }

@@ -3,7 +3,6 @@
 //! This example demonstrates the advanced-sophisticated enhancements added to scirs2-datasets,
 //! including advanced analytics, GPU optimization, and adaptive streaming processing.
 
-use ndarray::Array2;
 use scirs2_datasets::{
     // Adaptive streaming
     create_adaptive_engine_with_config,
@@ -24,7 +23,7 @@ use scirs2_datasets::{
     TrendDirection,
     TrendIndicators,
 };
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -204,13 +203,7 @@ fn demonstrate_adaptive_streaming(dataset: &Dataset) -> Result<(), Box<dyn std::
     println!("===================================");
 
     // Configure streaming engine
-    let config = AdaptiveStreamConfig {
-        max_buffer_size: 10 * 1024 * 1024, // 10MB
-        batch_size: 100,
-        adaptive_threshold: 0.8,
-        ml_optimization: true,
-        quality_check_interval: Duration::from_secs(5),
-    };
+    let config = AdaptiveStreamConfig::default();
 
     println!("🔧 Initializing adaptive streaming engine...");
     let mut engine = create_adaptive_engine_with_config(config);

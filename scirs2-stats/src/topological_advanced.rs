@@ -30,7 +30,6 @@ pub struct AdvancedTopologicalAnalyzer<F> {
 }
 
 /// Configuration for topological data analysis
-#[derive(Debug, Clone)]
 pub struct TopologicalConfig<F> {
     /// Maximum homology dimension to compute
     pub max_dimension: usize,
@@ -46,6 +45,40 @@ pub struct TopologicalConfig<F> {
     pub inference_config: TopologicalInferenceConfig<F>,
     /// Parallel processing configuration
     pub parallel_config: ParallelConfig,
+}
+
+impl<F> std::fmt::Debug for TopologicalConfig<F>
+where
+    F: std::fmt::Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TopologicalConfig")
+            .field("max_dimension", &self.max_dimension)
+            .field("filtration_config", &self.filtration_config)
+            .field("persistence_config", &self.persistence_config)
+            .field("mapper_config", &self.mapper_config)
+            .field("multiscale_config", &self.multiscale_config)
+            .field("inference_config", &self.inference_config)
+            .field("parallel_config", &"<ParallelConfig>")
+            .finish()
+    }
+}
+
+impl<F> Clone for TopologicalConfig<F>
+where
+    F: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            max_dimension: self.max_dimension,
+            filtration_config: self.filtration_config.clone(),
+            persistence_config: self.persistence_config.clone(),
+            mapper_config: self.mapper_config.clone(),
+            multiscale_config: self.multiscale_config.clone(),
+            inference_config: self.inference_config.clone(),
+            parallel_config: ParallelConfig::default(), // Default since we can't clone
+        }
+    }
 }
 
 /// Filtration configuration for building simplicial complexes
@@ -1124,63 +1157,6 @@ where
         })
     }
 
-    /// Advanced-advanced topological machine learning with persistent features
-    pub fn topological_machine_learning(
-        &mut self,
-        data: &ArrayView2<F>,
-        _labels: Option<&ArrayView1<F>>,
-    ) -> StatsResult<TopologicalMLResult<F>> {
-        // Extract topological features for machine learning
-        let topological_features = self.extract_topological_features(data)?;
-
-        // Create simplified feature matrix from topological features
-        let feature_matrix = Array2::zeros((data.nrows(), 10)); // Simplified feature representation
-
-        // Compute distance matrix for ML
-        let analyzer = AdvancedTopologicalAnalyzer::new(self.config.clone());
-        let kernel_matrix = analyzer.compute_distance_matrix(&feature_matrix.view())?;
-
-        // Simplified ML results for now
-        let prediction_result = None; // Placeholder for future implementation
-
-        // Create proper clustering result
-        let clustering_result = TopologicalClusteringResult {
-            cluster_labels: Array1::zeros(data.nrows()),
-            cluster_centers: Array2::zeros((3, data.ncols())), // Assume 3 clusters
-            silhouette_score: F::from(0.5).unwrap(),
-            inertia: F::from(1.0).unwrap(),
-        };
-
-        let feature_importance = Array1::ones(feature_matrix.ncols()); // Placeholder importance
-
-        // Create topological signatures from the features
-        let signatures = TopologicalSignatures {
-            image_signature: topological_features
-                .persistence_images
-                .iter()
-                .cloned()
-                .collect(),
-            landscape_signature: topological_features
-                .persistence_landscapes
-                .iter()
-                .cloned()
-                .collect(),
-            betti_statistics: topological_features.betti_curves.iter().cloned().collect(),
-            euler_statistics: topological_features.euler_curves.iter().cloned().collect(),
-            entropy_vector: vec![topological_features.entropy_features.persistent_entropy],
-        };
-
-        Ok(TopologicalMLResult {
-            topological_features: feature_matrix,
-            kernel_matrix,
-            signatures,
-            prediction_result,
-            clustering_result,
-            feature_importance,
-            stability_score: F::from(0.95).unwrap(), // Placeholder stability score
-        })
-    }
-
     /// Extract comprehensive topological features
     fn extract_topological_features(
         &self,
@@ -1387,13 +1363,13 @@ where
         _labels: Option<&ArrayView1<F>>,
     ) -> StatsResult<TopologicalMLResult<F>> {
         // Extract topological features for machine learning
-        let topological_features = self.extract_topological_features(data)?;
+        let topological_features = (&*self).extract_topological_features(data)?;
 
         // Create simplified feature matrix from topological features
         let feature_matrix = Array2::zeros((data.nrows(), 10)); // Simplified feature representation
 
         // Compute distance matrix for ML
-        let analyzer = AdvancedTopologicalAnalyzer::new(self.config.clone());
+        let analyzer = AdvancedTopologicalAnalyzer::new(self.clone());
         let kernel_matrix = analyzer.compute_distance_matrix(&feature_matrix.view())?;
 
         // Simplified ML results for now
@@ -1492,7 +1468,7 @@ where
             let epsilon = self.filtration_config.max_epsilon * scale;
 
             // Build complex at this scale
-            let analyzer = AdvancedTopologicalAnalyzer::new(self.config.clone());
+            let analyzer = AdvancedTopologicalAnalyzer::new(self.clone());
             let distance_matrix = analyzer.compute_distance_matrix(data)?;
             let complex =
                 self.build_vietoris_rips_complex_with_epsilon(&distance_matrix, epsilon)?;
@@ -1502,14 +1478,16 @@ where
 
             // Extract features from diagrams
             for (dim, diagram) in diagrams {
-                for point in diagram.points {
+                for i in 0..diagram.points.nrows() {
+                    let birth = diagram.points[[i, 0]];
+                    let death = diagram.points[[i, 1]];
                     features.push(PersistenceFeature {
-                        birth: point.birth,
-                        death: point.death,
-                        persistence: point.death - point.birth,
+                        birth,
+                        death,
+                        persistence: death - birth,
                         dimension: dim,
                         scale: epsilon,
-                        midlife: (point.birth + point.death) / F::from(2.0).unwrap(),
+                        midlife: (birth + death) / F::from(2.0).unwrap(),
                     });
                 }
             }
@@ -1550,7 +1528,8 @@ where
         // Add higher-dimensional simplices
         for dim in 2..=self.max_dimension {
             if dim - 1 < simplices_by_dim.len() && !simplices_by_dim[dim - 1].is_empty() {
-                simplices_by_dim[dim] = self.generate_higher_simplices(
+                let analyzer = AdvancedTopologicalAnalyzer::new(self.clone());
+                simplices_by_dim[dim] = analyzer.generate_higher_simplices(
                     &simplices_by_dim[dim - 1],
                     distance_matrix,
                     epsilon,

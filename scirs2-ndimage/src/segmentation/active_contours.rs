@@ -52,7 +52,7 @@ fn gradient_vector_flow<T>(
     iterations: usize,
 ) -> NdimageResult<(Array2<f64>, Array2<f64>)>
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let (height, width) = edge_map.dim();
 
@@ -95,7 +95,7 @@ where
 #[allow(dead_code)]
 fn compute_gradient<T>(image: &ArrayView2<T>) -> NdimageResult<(Array2<f64>, Array2<f64>)>
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let (height, width) = image.dim();
     let mut gx = Array2::zeros((height, width));
@@ -133,7 +133,14 @@ pub fn active_contour<T>(
     params: Option<ActiveContourParams>,
 ) -> NdimageResult<Array2<f64>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     let params = params.unwrap_or_default();
 

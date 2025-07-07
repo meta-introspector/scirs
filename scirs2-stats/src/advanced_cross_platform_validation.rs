@@ -11,7 +11,6 @@ use crate::unified_processor::{
     create_advanced_processor, OptimizationMode, AdvancedProcessorConfig,
 };
 use ndarray::{Array1, ArrayView1};
-use num_traits::Float;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

@@ -7,7 +7,6 @@
 use crate::error::{StatsError, StatsResult};
 use crate::traits::{CircularDistribution, Distribution};
 use ndarray::Array1;
-use num_traits::Float;
 use rand::rng;
 use rand_distr::{Distribution as RandDistribution, VonMises};
 use rand_distr::uniform::SampleUniform;

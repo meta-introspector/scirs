@@ -27,7 +27,7 @@ pub struct ProgressiveNAS<T: Float> {
 }
 
 /// Search phases in progressive NAS
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SearchPhase {
     /// Initial simple architectures
     Initial,
@@ -122,7 +122,7 @@ pub struct ProgressionRecord<T: Float> {
     pub timestamp: std::time::Instant,
 }
 
-impl<T: Float + Send + Sync> ProgressiveNAS<T> {
+impl<T: Float + Send + Sync + std::iter::Sum> ProgressiveNAS<T> {
     /// Create new progressive NAS
     pub fn new(config: &NASConfig<T>) -> Result<Self> {
         let progression_strategy = match config.search_budget {
@@ -179,13 +179,12 @@ impl<T: Float + Send + Sync> ProgressiveNAS<T> {
                 if let Some(latest_performance) =
                     self.architecture_progression.performance_trends.last()
                 {
-                    if *latest_performance > threshold && self.current_phase != SearchPhase::Final {
+                    if *latest_performance > T::from(threshold).unwrap()
+                        && self.current_phase != SearchPhase::Final
+                    {
                         self.advance_phase();
                     }
                 }
-            }
-            _ => {
-                // Other strategies can be implemented as needed
             }
         }
 

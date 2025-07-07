@@ -799,7 +799,7 @@ where
         };
 
         new_experiences.push(Experience {
-            encoding: final_encoding,
+            encoding: final_encoding.clone(),
             label: label.clone(),
             timestamp: memory_system.get_current_time(),
             importance: calculate_experience_importance(&final_encoding, memory_system),
@@ -1083,8 +1083,8 @@ impl HierarchicalConceptLibrary {
         }
     }
 
-    pub fn get_concepts_at_level(&self, level: usize) -> &HashMap<String, Hypervector> {
-        self.levels.get(&level).unwrap_or(&HashMap::new())
+    pub fn get_concepts_at_level(&self, level: usize) -> Option<&HashMap<String, Hypervector>> {
+        self.levels.get(&level)
     }
 
     pub fn get_concept(&self, name: &str) -> Option<&Hypervector> {
@@ -1377,7 +1377,7 @@ impl OnlineLearningSystem {
 
     pub fn unsupervised_update(&mut self, encoding: &Hypervector) -> NdimageResult<UpdateResult> {
         // Find most similar existing pattern and potentially update
-        if let Some((similar_label, similarity)) = self.memory.retrieve(encoding) {
+        if let Some((_similar_label, similarity)) = self.memory.retrieve(encoding) {
             if similarity < 0.9 {
                 // If not too similar, create new pattern
                 let new_label = format!("auto_{}", self.memory.patterns.len());

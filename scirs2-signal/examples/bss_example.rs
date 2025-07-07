@@ -184,7 +184,8 @@ fn calculate_recovery_quality(original: &Array2<f64>, recovered: &Array2<f64>) -
 /// Export signals to CSV for visualization
 #[allow(dead_code)]
 fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
-    let mut file = File::create(file_name).map_err(|e| SignalError::Compute(e.to_string()))?;
+    let mut file =
+        File::create(file_name).map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     // Write header
     let header = signals
@@ -192,7 +193,7 @@ fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
         .map(|(name, _)| name.to_string())
         .collect::<Vec<String>>()
         .join(",");
-    writeln!(file, "{}", header).map_err(|e| SignalError::Compute(e.to_string()))?;
+    writeln!(file, "{}", header).map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     // Find common signal length
     let min_len = signals.iter().map(|(_, data)| data.len()).min().unwrap();
@@ -204,7 +205,7 @@ fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
             .map(|(_, data)| data[i].to_string())
             .collect::<Vec<String>>()
             .join(",");
-        writeln!(file, "{}", line).map_err(|e| SignalError::Compute(e.to_string()))?;
+        writeln!(file, "{}", line).map_err(|e| SignalError::ComputationError(e.to_string()))?;
     }
 
     println!("Data exported to {}", file_name);
@@ -759,16 +760,19 @@ fn compare_bss_methods() -> SignalResult<()> {
     println!("Joint Diag:      {:.4}", jd_quality);
 
     // Export comparison results
-    let mut file =
-        File::create("bss_comparison.csv").map_err(|e| SignalError::Compute(e.to_string()))?;
-    writeln!(file, "Method,Quality").map_err(|e| SignalError::Compute(e.to_string()))?;
-    writeln!(file, "PCA,{}", pca_quality).map_err(|e| SignalError::Compute(e.to_string()))?;
+    let mut file = File::create("bss_comparison.csv")
+        .map_err(|e| SignalError::ComputationError(e.to_string()))?;
+    writeln!(file, "Method,Quality").map_err(|e| SignalError::ComputationError(e.to_string()))?;
+    writeln!(file, "PCA,{}", pca_quality)
+        .map_err(|e| SignalError::ComputationError(e.to_string()))?;
     writeln!(file, "FastICA,{}", fastica_quality)
-        .map_err(|e| SignalError::Compute(e.to_string()))?;
+        .map_err(|e| SignalError::ComputationError(e.to_string()))?;
     writeln!(file, "InfomaxICA,{}", infomax_quality)
-        .map_err(|e| SignalError::Compute(e.to_string()))?;
-    writeln!(file, "JADEICA,{}", jade_quality).map_err(|e| SignalError::Compute(e.to_string()))?;
-    writeln!(file, "JointDiag,{}", jd_quality).map_err(|e| SignalError::Compute(e.to_string()))?;
+        .map_err(|e| SignalError::ComputationError(e.to_string()))?;
+    writeln!(file, "JADEICA,{}", jade_quality)
+        .map_err(|e| SignalError::ComputationError(e.to_string()))?;
+    writeln!(file, "JointDiag,{}", jd_quality)
+        .map_err(|e| SignalError::ComputationError(e.to_string()))?;
 
     println!("Comparison data exported to bss_comparison.csv");
 

@@ -618,9 +618,7 @@ mod tests {
 
         assert!(
             lag7 > 0.5 || lag14 > 0.5,
-            "Neither lag 7 nor lag 14 has high autocorrelation: lag7={}, lag14={}",
-            lag7,
-            lag14
+            "Neither lag 7 nor lag 14 has high autocorrelation: lag7={lag7}, lag14={lag14}"
         );
     }
 
@@ -675,8 +673,7 @@ mod tests {
                 || 4 % detected_period == 0
                 || detected_period == 2
                 || detected_period == 8, // Allow harmonics
-            "Detected period {} is not related to expected period 4",
-            detected_period
+            "Detected period {detected_period} is not related to expected period 4"
         );
     }
 

@@ -356,7 +356,7 @@ pub fn least_squares_design(
     }
 
     let coefficients = solve(&ata_reg.view(), &atb.view(), None).map_err(|e| {
-        SignalError::Compute(format!("Failed to solve least squares problem: {}", e))
+        SignalError::ComputationError(format!("Failed to solve least squares problem: {}", e))
     })?;
 
     // Compute design error
@@ -456,7 +456,7 @@ pub fn constrained_least_squares_design(
     }
 
     let coefficients = solve(&ata_reg.view(), &atb.view(), None).map_err(|e| {
-        SignalError::Compute(format!("Failed to solve constrained least squares: {}", e))
+        SignalError::ComputationError(format!("Failed to solve constrained least squares: {}", e))
     })?;
 
     // Compute error on magnitude response only
@@ -709,7 +709,7 @@ fn solve_interpolation_problem(
     // Solve the system
     use scirs2_linalg::solve;
     let solution = solve(&interpolation_matrix.view(), &rhs.view(), None).map_err(|e| {
-        SignalError::Compute(format!("Failed to solve interpolation system: {}", e))
+        SignalError::ComputationError(format!("Failed to solve interpolation system: {}", e))
     })?;
 
     // Extract filter coefficients (excluding error term)

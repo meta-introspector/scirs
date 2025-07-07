@@ -10,8 +10,7 @@ use crate::benchmark_suite::{BenchmarkConfig, BenchmarkMetrics};
 use crate::error::StatsResult;
 // use crate::advanced_error_enhancements_v2::CompatibilityImpact; // Commented out temporarily
 use ndarray::Array1;
-use num_traits::Float;
-use scirs2_core::{parallel_ops::*, rng};
+use scirs2_core::rng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -1214,7 +1213,6 @@ let result = f64::simd_mean(&data.view());
             code_example: Some(
                 r#"
 // Enable parallel processing for large arrays
-use scirs2_core::parallel_ops::*;
 if data.len() > 10_000 {
     let result = parallel_mean(&data.view());
 }

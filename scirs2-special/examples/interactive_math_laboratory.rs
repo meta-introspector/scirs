@@ -11,7 +11,7 @@
 //!
 //! Run with: cargo run --example interactive_math_laboratory
 
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
 use std::collections::{HashMap, VecDeque};
@@ -194,11 +194,11 @@ struct LaboratorySession {
 
 #[derive(Debug, Clone)]
 enum ExplorationMode {
-    Guided,          // Step-by-step with hints
-    Exploratory,     // Free-form exploration
-    Problem_Solving, // Focused on specific problems
-    Research,        // Advanced mathematical research
-    Teaching,        // Preparing explanations for others
+    Guided,         // Step-by-step with hints
+    Exploratory,    // Free-form exploration
+    ProblemSolving, // Focused on specific problems
+    Research,       // Advanced mathematical research
+    Teaching,       // Preparing explanations for others
 }
 
 impl MathLaboratory {
@@ -415,10 +415,10 @@ impl MathLaboratory {
         let math_expr = MathExpression {
             expression: expr.to_string(),
             variables: self.workspace_variables.clone(),
-            result: result.ok(),
+            result: result.as_ref().ok().copied(),
             complex_result: None,
             evaluation_time: Some(evaluation_time),
-            error: result.err(),
+            error: result.as_ref().err().map(|e| e.clone()),
         };
 
         self.expression_history.push_back(math_expr);
@@ -901,7 +901,7 @@ fn setup_laboratory_session(lab: &mut MathLaboratory) -> Result<(), Box<dyn std:
     lab.current_session.exploration_mode = match mode_choice.as_str() {
         "1" => ExplorationMode::Guided,
         "2" => ExplorationMode::Exploratory,
-        "3" => ExplorationMode::Problem_Solving,
+        "3" => ExplorationMode::ProblemSolving,
         "4" => ExplorationMode::Research,
         "5" => ExplorationMode::Teaching,
         _ => ExplorationMode::Guided,
@@ -1111,7 +1111,7 @@ fn explore_theorems_interactively(
 #[allow(dead_code)]
 fn explore_specific_theorem(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📚 Theorem: {}", theorem.theorem_name);
-    println!("=".repeat(theorem.theorem_name.len() + 10));
+    println!("{}", "=".repeat(theorem.theorem_name.len() + 10));
     println!();
 
     println!("📝 Statement: {}", theorem.statement);
@@ -1159,12 +1159,12 @@ fn explore_specific_theorem(theorem: &TheoremExplorer) -> Result<(), Box<dyn std
 #[allow(dead_code)]
 fn step_through_proof(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::error::Error>> {
     println!("\n📖 Proof of: {}", theorem.theorem_name);
-    println!("=".repeat(theorem.theorem_name.len() + 12));
+    println!("{}", "=".repeat(theorem.theorem_name.len() + 12));
     println!();
 
     for (i, step) in theorem.proof_steps.iter().enumerate() {
         println!("📝 Step {}: {}", step.step_number, step.description);
-        println!("─".repeat(50));
+        println!("{}", "─".repeat(50));
         println!("{}", step.mathematical_content);
 
         if !step.justification.is_empty() {
@@ -1215,7 +1215,7 @@ fn step_through_proof(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::erro
         }
 
         if i < theorem.proof_steps.len() - 1 {
-            println!("\n" + "─".repeat(70) + "\n");
+            println!("{}", "\n".to_string() + &"─".repeat(70) + "\n");
         }
     }
 
@@ -1261,7 +1261,7 @@ fn work_with_examples(theorem: &TheoremExplorer) -> Result<(), Box<dyn std::erro
 
     for (i, example) in theorem.examples.iter().enumerate() {
         println!("📚 Example {}: {}", i + 1, example.description);
-        println!("─".repeat(40));
+        println!("{}", "─".repeat(40));
 
         // Show input values
         println!("Input values:");
@@ -1451,7 +1451,7 @@ fn create_function_plots(lab: &mut MathLaboratory) -> Result<(), Box<dyn std::er
 #[allow(dead_code)]
 fn display_function_analysis(analysis: &FunctionAnalysis) {
     println!("\n🔍 Function Analysis: {}", analysis.function_expr);
-    println!("=".repeat(30));
+    println!("{}", "=".repeat(30));
 
     if !analysis.zeros.is_empty() {
         println!("🎯 Zeros found:");
@@ -1542,7 +1542,7 @@ fn animate_bessel_family() -> Result<(), Box<dyn std::error::Error>> {
         print!("\x1B[2J\x1B[H"); // Clear screen
 
         println!("Bessel Function J_{}(x)", n);
-        println!("=".repeat(25));
+        println!("{}", "=".repeat(25));
         println!();
 
         // Create ASCII plot for current order
@@ -1595,7 +1595,7 @@ fn animate_error_convergence() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Showing convergence of erf(x) series expansion...\n");
 
-    let x = 1.0;
+    let x = 1.0_f64;
     let exact = erf(x);
 
     println!("Computing erf({}) = {:.12}", x, exact);
@@ -2061,7 +2061,7 @@ fn investigate_numerical_properties() -> Result<(), Box<dyn std::error::Error>> 
     for &x in &[0.001, 0.01, 0.1, 0.2, 0.3] {
         let j0_val = j0(x);
         let approx = 1.0 - x * x / 4.0; // First two terms of series
-        let error = (j0_val - approx).abs();
+        let error = (j0_val - approx as f64).abs();
 
         println!(
             "{:8.3}  {:12.8}  {:12.8}  {:9.2e}",
@@ -2119,7 +2119,7 @@ fn explore_function_relationships() -> Result<(), Box<dyn std::error::Error>> {
         let erf_val = erf(x);
         let related_gamma = gammainc(0.5, x * x); // γ(1/2, x²)
         let gamma_half = gamma(0.5);
-        let computed_erf = related_gamma / gamma_half;
+        let computed_erf = related_gamma.unwrap_or(0.0) / gamma_half;
 
         println!(
             "x = {:.1}: erf(x) = {:.8}, from γ(1/2,x²)/Γ(1/2) = {:.8}",
@@ -2226,6 +2226,7 @@ fn study_convergence_rates() -> Result<(), Box<dyn std::error::Error>> {
     let x_values = vec![0.5, 1.0, 2.0, 3.0];
 
     for &x in &x_values {
+        let x = x as f64;
         println!("Convergence analysis for x = {}:", x);
         println!("n    Partial Sum      Error        Reduction Ratio");
         println!("──────────────────────────────────────────────────");
@@ -2236,8 +2237,8 @@ fn study_convergence_rates() -> Result<(), Box<dyn std::error::Error>> {
         let mut prev_error = f64::INFINITY;
 
         for n in 0..15 {
-            let term =
-                (-1.0_f64).powi(n) * x.powi(2 * n + 1) / (factorial(n as u32) * (2 * n + 1) as f64);
+            let term = (-1.0_f64).powi(n) * x.powi(2 * n + 1)
+                / (factorial(n as u32) as f64 * (2 * n + 1) as f64);
             sum += coeff * term;
 
             let error = (sum - exact).abs();
@@ -2431,7 +2432,7 @@ fn analyze_precision_requirements() -> Result<(), Box<dyn std::error::Error>> {
     for &x in &test_inputs {
         // Simulate 32-bit precision (roughly 7 decimal digits)
         let gamma_64 = gamma(x);
-        let gamma_32 = (gamma_64 * 1e7).round() / 1e7; // Truncate to ~7 digits
+        let gamma_32 = (gamma_64 * 1e7_f64).round() / 1e7_f64; // Truncate to ~7 digits
         let rel_error = ((gamma_64 - gamma_32) / gamma_64).abs();
 
         println!(

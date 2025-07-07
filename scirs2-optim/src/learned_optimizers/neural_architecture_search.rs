@@ -293,7 +293,7 @@ pub struct SearchConstraints {
 }
 
 /// Architecture complexity constraints
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ComplexityConstraints {
     /// Maximum depth
     pub max_depth: usize,
@@ -309,7 +309,7 @@ pub struct ComplexityConstraints {
 }
 
 /// Hardware-specific constraints
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct HardwareConstraints {
     /// Target hardware type
     pub target_hardware: TargetHardware,
@@ -325,8 +325,9 @@ pub struct HardwareConstraints {
 }
 
 /// Target hardware types
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub enum TargetHardware {
+    #[default]
     CPU,
     GPU,
     TPU,
@@ -336,7 +337,7 @@ pub enum TargetHardware {
 }
 
 /// Compute capability requirements
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ComputeCapability {
     /// FLOPS requirement
     pub flops: u64,
@@ -349,8 +350,9 @@ pub struct ComputeCapability {
 }
 
 /// Specialized computing units
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub enum SpecializedUnit {
+    #[default]
     MatrixMultiplication,
     TensorCores,
     VectorProcessing,

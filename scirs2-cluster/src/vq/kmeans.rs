@@ -88,7 +88,7 @@ where
     let k = k_or_guess; // For now, just treat as number of clusters
     let max_iter = iter.unwrap_or(20);
     let tol = thresh.unwrap_or(F::from(1e-5).unwrap());
-    let check_finite_flag = check_finite.unwrap_or(true);
+    let _check_finite_flag = check_finite.unwrap_or(true);
 
     // Basic validation
     if obs.is_empty() {
@@ -408,7 +408,7 @@ where
         )));
     }
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     let mut centroids = Array2::zeros((k, n_features));
     let mut selected_indices = Vec::with_capacity(k);
 
@@ -460,7 +460,7 @@ where
         )));
     }
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     let mut centroids = Array2::zeros((k, n_features));
 
@@ -567,7 +567,7 @@ where
         )));
     }
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     // Hyperparameters for K-means||
     let l = F::from(5.0).unwrap(); // Multiplication factor for oversampling

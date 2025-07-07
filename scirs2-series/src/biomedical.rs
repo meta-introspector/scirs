@@ -72,7 +72,7 @@ impl ECGAnalysis {
         if window_size >= squared.len() {
             // Signal too short for windowing, return empty peaks
             self.r_peaks = Some(Array1::zeros(0));
-            return Ok(&self.r_peaks.as_ref().unwrap());
+            return Ok(self.r_peaks.as_ref().unwrap());
         }
 
         let mut integrated = Array1::zeros(squared.len() - window_size + 1);
@@ -827,7 +827,7 @@ mod tests {
             assert!(hrv.contains_key("SDNN"));
         } else {
             // If not enough peaks detected, at least verify we got some result
-            assert!(peaks.len() >= 0);
+            // Note: peaks.len() is always >= 0 as usize, so this assertion is redundant
         }
     }
 

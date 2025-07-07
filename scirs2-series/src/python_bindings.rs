@@ -203,11 +203,11 @@ impl PyARIMA {
     /// Fit the ARIMA model
     fn fit(&mut self, data: &PyTimeSeries) -> PyResult<()> {
         let mut model = ArimaModel::new(self.config.p, self.config.d, self.config.q)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("{}", e)))?;
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("{e}")))?;
 
         model
             .fit(&data.values)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}")))?;
 
         self.model = Some(model);
         self.data = Some(data.values.clone());
@@ -219,7 +219,7 @@ impl PyARIMA {
         match (&self.model, &self.data) {
             (Some(model), Some(data)) => {
                 let forecasts = model.forecast(steps, data).map_err(|e| {
-                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e))
+                    PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}"))
                 })?;
                 Ok(forecasts.into_pyarray(py))
             }
@@ -262,7 +262,7 @@ impl PyARIMA {
                 summary.push_str("=====================================\n");
 
                 for (param, value) in params {
-                    summary.push_str(&format!("{:20}: {:10.6}\n", param, value));
+                    summary.push_str(&format!("{param:20}: {value:10.6}\n"));
                 }
 
                 Ok(summary)

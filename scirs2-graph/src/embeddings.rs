@@ -9,7 +9,6 @@ use crate::base::{DiGraph, EdgeWeight, Graph, Node};
 use crate::error::{GraphError, Result};
 use rand::prelude::*;
 use rand::Rng;
-// use scirs2_core::parallel_ops::*; // Currently unused
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::fs::File;

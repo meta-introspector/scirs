@@ -122,8 +122,8 @@ use crate::utils::safe_usize_to_float;
 #[allow(dead_code)]
 pub fn center_of_mass<T, D>(input: &Array<T, D>) -> NdimageResult<Vec<T>>
 where
-    T: Float + FromPrimitive + Debug + NumAssign,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -192,8 +192,8 @@ where
 #[allow(dead_code)]
 pub fn moments_inertia_tensor<T, D>(input: &Array<T, D>) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + NumAssign,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -220,8 +220,8 @@ where
 #[allow(dead_code)]
 pub fn moments<T, D>(input: &Array<T, D>, order: usize) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
-    T: Float + FromPrimitive + Debug + NumAssign,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -317,8 +317,8 @@ pub fn central_moments<T, D>(
     center: Option<&[T]>,
 ) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
-    T: Float + FromPrimitive + Debug + NumAssign,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -405,7 +405,7 @@ where
 
         // Second central moments (variances/covariances)
         if order >= 2 {
-            let total_mass = input.sum();
+            let _total_mass = input.sum();
             let input_dyn = input.clone().into_dyn();
 
             for dim1 in 0..ndim {
@@ -459,8 +459,8 @@ pub fn normalized_moments<T, D>(
     order: usize,
 ) -> NdimageResult<Array<T, ndarray::Ix1>>
 where
-    T: Float + FromPrimitive + Debug + NumAssign,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + NumAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {

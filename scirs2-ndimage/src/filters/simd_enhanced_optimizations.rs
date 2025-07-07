@@ -9,7 +9,6 @@ use ndarray::{
 };
 use num_traits::{Float, FromPrimitive, Zero};
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::cmp;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};

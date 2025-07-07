@@ -5,9 +5,9 @@
 //! Updated to remove ndarray-linalg dependency.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1, Axis};
+use ndarray::{Array1, Array2};
 use rustfft::{num_complex::Complex, FftPlanner};
-use scirs2_core::validation::{check_finite, check_positive};
+use scirs2_core::validation::check_positive;
 use std::f64::consts::PI;
 
 /// Enhanced DPSS computation with proper SciPy-compatible implementation
@@ -298,8 +298,8 @@ fn compute_concentration_ratios(
     let mut ratios = Array1::zeros(k);
 
     // Frequency range for concentration
-    let f_low = -w;
-    let f_high = w;
+    let _f_low = -w;
+    let _f_high = w;
 
     // Use FFT-based autocorrelation for efficiency
     let mut planner = FftPlanner::new();

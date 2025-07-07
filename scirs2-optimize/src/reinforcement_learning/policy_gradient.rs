@@ -16,7 +16,7 @@ use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, Array3, ArrayView1};
 // use scirs2_core::error::CoreResult; // Unused import
 // use scirs2_core::simd_ops::SimdUnifiedOps; // Unused import
-use rand::Rng;
+use rand::{rng, Rng};
 use std::collections::{HashMap, VecDeque};
 
 /// Advanced Neural Network with Meta-Learning Capabilities
@@ -65,9 +65,9 @@ impl MetaPolicyNetwork {
             for i in 0..fan_out {
                 for j in 0..fan_in {
                     policy_weights[[layer, i, j]] =
-                        rand::rng().random_range(-0.5..0.5) * 2.0 * xavier_std;
+                        rng().random_range(-0.5..0.5) * 2.0 * xavier_std;
                     meta_weights[[layer, i, j]] =
-                        rand::rng().random_range(-0.5..0.5) * 2.0 * xavier_std * 0.1;
+                        rng().random_range(-0.5..0.5) * 2.0 * xavier_std * 0.1;
                 }
             }
         }
@@ -186,8 +186,7 @@ impl MetaPolicyNetwork {
         if let Some(embedding) = self.problem_embeddings.get(problem_class) {
             embedding.clone()
         } else {
-            let embedding =
-                Array1::from_shape_fn(input_size, |_| rand::rng().random_range(-0.05..0.05));
+            let embedding = Array1::from_shape_fn(input_size, |_| rng().random_range(-0.05..0.05));
             self.problem_embeddings
                 .insert(problem_class.to_string(), embedding.clone());
             embedding
@@ -424,7 +423,7 @@ impl MetaExperienceBuffer {
 
         for _ in 0..batch_size.min(self.trajectories.len()) {
             // Weighted sampling based on problem class performance
-            let idx = rand::rng().random_range(0..self.trajectories.len());
+            let idx = rng().random_range(0..self.trajectories.len());
             if let Some(trajectory) = self.trajectories.get(idx) {
                 batch.push(trajectory.clone());
             }

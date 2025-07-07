@@ -1253,7 +1253,7 @@ fn solve_linear_system_small(matrix: &[Vec<f64>], rhs: &[f64]) -> SignalResult<V
 
         // Check for singular matrix
         if aug_matrix[i][i].abs() < 1e-12 {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Matrix is singular or near-singular".to_string(),
             ));
         }

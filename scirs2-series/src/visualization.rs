@@ -70,29 +70,43 @@ impl Default for PlotStyle {
 /// Line style options
 #[derive(Debug, Clone, Copy)]
 pub enum LineStyle {
+    /// Solid line
     Solid,
+    /// Dashed line
     Dashed,
+    /// Dotted line
     Dotted,
+    /// Dash-dot line
     DashDot,
 }
 
 /// Marker style options
 #[derive(Debug, Clone, Copy)]
 pub enum MarkerStyle {
+    /// No marker
     None,
+    /// Circle marker
     Circle,
+    /// Square marker
     Square,
+    /// Triangle marker
     Triangle,
+    /// Cross marker
     Cross,
+    /// Plus marker
     Plus,
 }
 
 /// Export format options
 #[derive(Debug, Clone, Copy)]
 pub enum ExportFormat {
+    /// PNG image format
     PNG,
+    /// SVG vector format
     SVG,
+    /// HTML format
     HTML,
+    /// PDF document format
     PDF,
 }
 
@@ -196,10 +210,15 @@ impl Default for PlotConfig {
 /// Legend position options
 #[derive(Debug, Clone, Copy)]
 pub enum LegendPosition {
+    /// Top left position
     TopLeft,
+    /// Top right position
     TopRight,
+    /// Bottom left position
     BottomLeft,
+    /// Bottom right position
     BottomRight,
+    /// Outside the plot area
     Outside,
 }
 
@@ -221,19 +240,41 @@ pub struct Annotation {
 /// Types of annotations
 #[derive(Debug, Clone)]
 pub enum AnnotationType {
+    /// Text annotation
     Text,
-    Arrow { target_x: f64, target_y: f64 },
-    Rectangle { width: f64, height: f64 },
-    Circle { radius: f64 },
+    /// Arrow annotation pointing to a target
+    Arrow {
+        /// X coordinate of arrow target
+        target_x: f64,
+        /// Y coordinate of arrow target
+        target_y: f64,
+    },
+    /// Rectangle annotation with specified dimensions
+    Rectangle {
+        /// Width of rectangle
+        width: f64,
+        /// Height of rectangle
+        height: f64,
+    },
+    /// Circle annotation with specified radius
+    Circle {
+        /// Radius of circle
+        radius: f64,
+    },
+    /// Vertical line annotation
     VerticalLine,
+    /// Horizontal line annotation
     HorizontalLine,
 }
 
 /// Annotation styling
 #[derive(Debug, Clone)]
 pub struct AnnotationStyle {
+    /// Color of the annotation
     pub color: String,
+    /// Font size for text annotations
     pub font_size: f64,
+    /// Opacity/transparency level
     pub opacity: f64,
 }
 
@@ -277,8 +318,7 @@ impl TimeSeriesPlot {
         if time.len() != values.len() {
             return Err(TimeSeriesError::InvalidInput(
                 "Time and value arrays must have the same length".to_string(),
-            )
-            .into());
+            ));
         }
 
         let data: Vec<TimePoint> = time
@@ -315,8 +355,7 @@ impl TimeSeriesPlot {
         if time.len() != values.len() || values.len() != lower.len() || lower.len() != upper.len() {
             return Err(TimeSeriesError::InvalidInput(
                 "All arrays must have the same length".to_string(),
-            )
-            .into());
+            ));
         }
 
         // Add main series
@@ -356,7 +395,7 @@ impl TimeSeriesPlot {
         confidence_data.extend(lower_data);
 
         let confidence_series = TimeSeries {
-            name: format!("{}_confidence", name),
+            name: format!("{name}_confidence"),
             data: confidence_data,
             style: confidence_style,
             series_type: SeriesType::Area,
@@ -539,22 +578,20 @@ Plotly.newPlot('plot', data, layout, config);
             ExportFormat::HTML => {
                 let html_content = self.to_html();
                 std::fs::write(path, html_content).map_err(|e| {
-                    TimeSeriesError::IOError(format!("Failed to save HTML plot: {}", e))
+                    TimeSeriesError::IOError(format!("Failed to save HTML plot: {e}"))
                 })?;
             }
             ExportFormat::SVG => {
                 // Generate SVG output
                 let svg_content = self.to_svg();
                 std::fs::write(path, svg_content).map_err(|e| {
-                    TimeSeriesError::IOError(format!("Failed to save SVG plot: {}", e))
+                    TimeSeriesError::IOError(format!("Failed to save SVG plot: {e}"))
                 })?;
             }
             _ => {
                 return Err(TimeSeriesError::NotImplemented(format!(
-                    "Export format {:?} not yet implemented",
-                    format
-                ))
-                .into());
+                    "Export format {format:?} not yet implemented"
+                )));
             }
         }
 
@@ -637,9 +674,9 @@ Plotly.newPlot('plot', data, layout, config);
                     - (point.value - min_y) / (max_y - min_y) * plot_height as f64;
 
                 if i == 0 {
-                    path_data.push_str(&format!(" {:.2} {:.2}", x, y));
+                    path_data.push_str(&format!(" {x:.2} {y:.2}"));
                 } else {
-                    path_data.push_str(&format!(" L {:.2} {:.2}", x, y));
+                    path_data.push_str(&format!(" L {x:.2} {y:.2}"));
                 }
             }
 
@@ -678,19 +715,19 @@ Plotly.newPlot('plot', data, layout, config);
         std::process::Command::new("cmd")
             .args(["/c", "start", "", &temp_path.to_string_lossy()])
             .spawn()
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open plot: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open plot: {e}")))?;
 
         #[cfg(target_os = "macos")]
         std::process::Command::new("open")
             .arg(&temp_path)
             .spawn()
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open plot: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open plot: {e}")))?;
 
         #[cfg(target_os = "linux")]
         std::process::Command::new("xdg-open")
             .arg(&temp_path)
             .spawn()
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open plot: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open plot: {e}")))?;
 
         Ok(())
     }
@@ -735,9 +772,11 @@ impl SpecializedPlots {
         plot.add_series("Seasonal", time, seasonal, seasonal_style)?;
 
         // Residual component
-        let mut residual_style = PlotStyle::default();
-        residual_style.color = "#d62728".to_string(); // Red
-        residual_style.opacity = 0.7;
+        let residual_style = PlotStyle {
+            color: "#d62728".to_string(), // Red
+            opacity: 0.7,
+            ..Default::default()
+        };
         plot.add_series("Residual", time, residual, residual_style)?;
 
         Ok(plot)
@@ -757,12 +796,15 @@ impl SpecializedPlots {
         plot.set_labels("Time", "Value");
 
         // Historical data
-        let mut hist_style = PlotStyle::default();
-        hist_style.color = "#1f77b4".to_string(); // Blue
-        hist_style.line_width = 2.0;
+        let hist_style = PlotStyle {
+            color: "#1f77b4".to_string(), // Blue
+            line_width: 2.0,
+            ..Default::default()
+        };
         plot.add_series("Historical", historical_time, historical_data, hist_style)?;
 
         // Forecast with confidence intervals
+        #[allow(clippy::field_reassign_with_default)]
         let mut forecast_style = PlotStyle::default();
         forecast_style.color = "#ff7f0e".to_string(); // Orange
         forecast_style.line_width = 2.5;
@@ -809,9 +851,10 @@ impl SpecializedPlots {
         for i in 0..num_periods.min(10) {
             // Limit to 10 periods for clarity
             let period_values = seasonal_data.column(i).to_owned();
+            #[allow(clippy::field_reassign_with_default)]
             let mut style = PlotStyle::default();
             style.opacity = 0.6;
-            style.color = format!("#1f77b4"); // Use same color with varying opacity
+            style.color = "#1f77b4".to_string(); // Use same color with varying opacity
             plot.add_series(
                 &format!("Period {}", i + 1),
                 &period_time,
@@ -822,6 +865,7 @@ impl SpecializedPlots {
 
         // Add mean seasonal pattern
         let mean_seasonal: Array1<f64> = seasonal_data.mean_axis(ndarray::Axis(1)).unwrap();
+        #[allow(clippy::field_reassign_with_default)]
         let mut mean_style = PlotStyle::default();
         mean_style.color = "#d62728".to_string(); // Red
         mean_style.line_width = 3.0;
@@ -946,11 +990,10 @@ impl Dashboard {
             html.push_str(&format!(
                 r#"
         <div class="plot-section">
-            <div class="plot-title">{}</div>
-            <div id="plot_{}" class="plot-container"></div>
+            <div class="plot-title">{section_title}</div>
+            <div id="plot_{i}" class="plot-container"></div>
         </div>
-"#,
-                section_title, i
+"#
             ));
         }
 
@@ -961,8 +1004,8 @@ impl Dashboard {
 
         for (i, (_, plot)) in self.plots.iter().enumerate() {
             // Generate plot data for each plot
-            html.push_str(&format!("        // Plot {}\n", i));
-            html.push_str(&format!("        var data_{} = [\n", i));
+            html.push_str(&format!("        // Plot {i}\n"));
+            html.push_str(&format!("        var data_{i} = [\n"));
 
             for (j, series) in plot.series.iter().enumerate() {
                 if j > 0 {
@@ -986,7 +1029,7 @@ impl Dashboard {
                 ));
             }
 
-            html.push_str(&format!("\n        ];\n"));
+            html.push_str("\n        ];\n");
             html.push_str(&format!(
                 r#"
         var layout_{} = {{
@@ -1011,7 +1054,7 @@ impl Dashboard {
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let html_content = self.to_html();
         std::fs::write(path, html_content)
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to save dashboard: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to save dashboard: {e}")))?;
         Ok(())
     }
 
@@ -1025,19 +1068,19 @@ impl Dashboard {
         std::process::Command::new("cmd")
             .args(["/c", "start", "", &temp_path.to_string_lossy()])
             .spawn()
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open dashboard: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open dashboard: {e}")))?;
 
         #[cfg(target_os = "macos")]
         std::process::Command::new("open")
             .arg(&temp_path)
             .spawn()
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open dashboard: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open dashboard: {e}")))?;
 
         #[cfg(target_os = "linux")]
         std::process::Command::new("xdg-open")
             .arg(&temp_path)
             .spawn()
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open dashboard: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open dashboard: {e}")))?;
 
         Ok(())
     }
@@ -1057,6 +1100,7 @@ pub mod quick_plots {
     /// Quick scatter plot
     pub fn scatter_plot(x: &Array1<f64>, y: &Array1<f64>, title: &str) -> Result<TimeSeriesPlot> {
         let mut plot = TimeSeriesPlot::new(title);
+        #[allow(clippy::field_reassign_with_default)]
         let mut style = PlotStyle::default();
         style.marker = MarkerStyle::Circle;
         plot.add_series("data", x, y, style)?;
@@ -1075,6 +1119,7 @@ pub mod quick_plots {
         ];
 
         for (i, (name, x, y)) in series_data.iter().enumerate() {
+            #[allow(clippy::field_reassign_with_default)]
             let mut style = PlotStyle::default();
             style.color = colors[i % colors.len()].to_string();
             plot.add_series(name, x, y, style)?;

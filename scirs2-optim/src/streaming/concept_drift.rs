@@ -5,6 +5,7 @@
 
 use num_traits::Float;
 use std::collections::VecDeque;
+use std::iter::Sum;
 use std::time::{Duration, Instant};
 
 #[allow(unused_imports)]
@@ -12,6 +13,7 @@ use crate::error::Result;
 
 /// Types of concept drift detection algorithms
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[allow(dead_code)]
 pub enum DriftDetectionMethod {
     /// Page-Hinkley test for change detection
     PageHinkley,
@@ -29,6 +31,7 @@ pub enum DriftDetectionMethod {
 
 /// Concept drift detector configuration
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct DriftDetectorConfig {
     /// Detection method to use
     pub method: DriftDetectionMethod,
@@ -85,7 +88,7 @@ pub struct DriftEvent<A: Float> {
 }
 
 /// Types of concept drift
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DriftType {
     /// Sudden/abrupt drift
     Sudden,
@@ -194,7 +197,7 @@ pub struct AdwinDetector<A: Float> {
     min_window_size: usize,
 }
 
-impl<A: Float> AdwinDetector<A> {
+impl<A: Float + Sum> AdwinDetector<A> {
     /// Create a new ADWIN detector
     pub fn new(delta: A, max_window_size: usize) -> Self {
         Self {
@@ -379,7 +382,7 @@ pub struct ConceptDriftDetector<A: Float> {
     performance_tracker: PerformanceDriftTracker<A>,
 }
 
-impl<A: Float + std::fmt::Debug> ConceptDriftDetector<A> {
+impl<A: Float + std::fmt::Debug + Sum> ConceptDriftDetector<A> {
     /// Create a new concept drift detector
     pub fn new(config: DriftDetectorConfig) -> Self {
         let threshold = A::from(config.threshold).unwrap();
@@ -481,13 +484,13 @@ impl<A: Float + std::fmt::Debug> ConceptDriftDetector<A> {
     fn generate_adaptation_recommendation(&self) -> AdaptationRecommendation {
         let recent_performance = self.performance_tracker.get_recent_performance_change();
 
-        if recent_performance > 0.5 {
+        if recent_performance > A::from(0.5).unwrap() {
             // Significant performance degradation
             AdaptationRecommendation::Reset
-        } else if recent_performance > 0.2 {
+        } else if recent_performance > A::from(0.2).unwrap() {
             // Moderate degradation
             AdaptationRecommendation::IncreaseLearningRate { factor: 1.5 }
-        } else if recent_performance < -0.1 {
+        } else if recent_performance < A::from(-0.1).unwrap() {
             // Performance improved (suspicious)
             AdaptationRecommendation::DecreaseLearningRate { factor: 0.8 }
         } else {
@@ -554,7 +557,7 @@ struct PerformanceDriftTracker<A: Float> {
     window_size: usize,
 }
 
-impl<A: Float> PerformanceDriftTracker<A> {
+impl<A: Float + std::iter::Sum> PerformanceDriftTracker<A> {
     fn new() -> Self {
         Self {
             performance_history: VecDeque::new(),
@@ -573,9 +576,9 @@ impl<A: Float> PerformanceDriftTracker<A> {
     }
 
     /// Get recent performance change (positive = degradation, negative = improvement)
-    fn get_recent_performance_change(&self) -> f64 {
+    fn get_recent_performance_change(&self) -> A {
         if self.performance_history.len() < 10 {
-            return 0.0;
+            return A::zero();
         }
 
         let recent: Vec<_> = self.performance_history.iter().rev().take(10).collect();
@@ -588,14 +591,14 @@ impl<A: Float> PerformanceDriftTracker<A> {
             .collect();
 
         if older.is_empty() {
-            return 0.0;
+            return A::zero();
         }
 
         let recent_avg =
             recent.iter().map(|(p, _, _)| *p).sum::<A>() / A::from(recent.len()).unwrap();
         let older_avg = older.iter().map(|(p, _, _)| *p).sum::<A>() / A::from(older.len()).unwrap();
 
-        (recent_avg - older_avg).to_f64().unwrap_or(0.0)
+        recent_avg - older_avg
     }
 }
 
@@ -645,7 +648,7 @@ pub mod advanced_drift_analysis {
     }
 
     /// Trait for all drift detectors
-    pub trait DriftDetectorTrait<A: Float> {
+    pub trait DriftDetectorTrait<A: Float>: std::fmt::Debug {
         fn update(&mut self, value: A) -> DriftStatus;
         fn reset(&mut self);
         fn get_confidence(&self) -> A;
@@ -719,7 +722,7 @@ pub mod advanced_drift_analysis {
     }
 
     /// Feature extractor trait
-    pub trait FeatureExtractor<A: Float> {
+    pub trait FeatureExtractor<A: Float>: std::fmt::Debug {
         fn extract(&self, data: &[A]) -> A;
         fn name(&self) -> &str;
     }
@@ -987,7 +990,7 @@ pub mod advanced_drift_analysis {
         Mahalanobis,
     }
 
-    impl<A: Float + Default + Clone + std::fmt::Debug> AdvancedDriftDetector<A> {
+    impl<A: Float + Default + Clone + std::fmt::Debug + std::iter::Sum> AdvancedDriftDetector<A> {
         /// Create new advanced drift detector
         pub fn new(_config: DriftDetectorConfig) -> Self {
             let base_detectors: Vec<Box<dyn DriftDetectorTrait<A>>> = vec![
@@ -1154,7 +1157,7 @@ pub mod advanced_drift_analysis {
 
     // Implementation stubs for complex components
 
-    impl<A: Float> DriftPatternAnalyzer<A> {
+    impl<A: Float + std::iter::Sum> DriftPatternAnalyzer<A> {
         fn new() -> Self {
             Self {
                 pattern_buffer: VecDeque::new(),
@@ -1214,7 +1217,7 @@ pub mod advanced_drift_analysis {
             }
         }
 
-        fn update_thresholds(&mut self, results: &[DriftStatus], features: &PatternFeatures<A>) {
+        fn update_thresholds(&mut self, results: &[DriftStatus], _features: &PatternFeatures<A>) {
             // Simplified threshold adaptation
             for (i, result) in results.iter().enumerate() {
                 let detector_name = format!("detector_{}", i);
@@ -1225,7 +1228,7 @@ pub mod advanced_drift_analysis {
                     .unwrap_or(A::from(1.0).unwrap());
 
                 // Adjust threshold based on recent performance
-                let adjustment = if result == DriftStatus::Drift {
+                let adjustment = if *result == DriftStatus::Drift {
                     -self.learning_rate // Lower threshold if drift detected
                 } else {
                     self.learning_rate * A::from(0.1).unwrap() // Slightly raise threshold

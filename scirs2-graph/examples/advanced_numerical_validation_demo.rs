@@ -5,7 +5,6 @@
 
 #![allow(dead_code)]
 
-use scirs2_graph::generators::{barabasi_albert_graph, erdos_renyi_graph};
 use scirs2_graph::numerical_accuracy_validation::{
     create_comprehensive_validation_suite, run_quick_validation, AdvancedNumericalValidator,
     GraphGenerator, ValidationAlgorithm, ValidationConfig, ValidationTestCase,
@@ -20,7 +19,7 @@ fn basic_validation_example() -> Result<(), Box<dyn std::error::Error>> {
     println!("==============================================");
 
     // Create a simple validator with default configuration
-    let mut validator = advancedNumericalValidator::new(ValidationConfig::default());
+    let mut validator = AdvancedNumericalValidator::new(ValidationConfig::default());
 
     // Add a basic test case
     validator.add_test_case(ValidationTestCase {
@@ -183,7 +182,7 @@ fn custom_validation_example() -> Result<(), Box<dyn std::error::Error>> {
         random_seed: Some(12345),
     };
 
-    let mut validator = advancedNumericalValidator::new(config);
+    let mut validator = AdvancedNumericalValidator::new(config);
 
     // Custom tolerances for stricter validation
     let strict_tolerances = ValidationTolerances {
@@ -511,7 +510,7 @@ mod tests {
         // Just verify it was created without panicking
         assert_eq!(
             std::mem::size_of_val(&validator),
-            std::mem::size_of::<advancedNumericalValidator>()
+            std::mem::size_of::<AdvancedNumericalValidator>()
         );
     }
 }

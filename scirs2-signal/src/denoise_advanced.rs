@@ -12,7 +12,6 @@ use crate::dwt::{wavedec, waverec, DecompositionResult, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use scirs2_core::parallel_ops::*;
 
-// use std::f64::consts::PI;
 use std::sync::Arc;
 
 /// Advanced denoising configuration
@@ -496,9 +495,11 @@ pub fn wavelet_packet_denoise(
     reconstruct_from_nodes(&denoised_tree, &leaf_nodes)
 }
 
+#[cfg(test)]
 mod tests {
     #[allow(unused_imports)]
     use super::*;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_advanced_denoise_basic() {

@@ -54,8 +54,17 @@ pub fn bilateral_filter<T, D>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + Debug + Clone + Send + Sync + Display + FromPrimitive,
-    D: Dimension,
+    T: Float
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + Display
+        + FromPrimitive
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
+    D: Dimension + 'static,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
 

@@ -5,7 +5,7 @@
 
 use ndarray::{s, Array1, Array2, Array3};
 use num_traits::Float;
-use rand::{rng, Rng};
+use rand::{Rng, SeedableRng};
 use std::collections::{HashMap, VecDeque};
 
 use super::{
@@ -48,7 +48,7 @@ pub struct SearchStrategyStatistics<T: Float> {
 }
 
 /// Random search baseline strategy
-pub struct RandomSearch<T: Float> {
+pub struct RandomSearch<T: Float + std::iter::Sum> {
     rng: rand::rngs::SmallRng,
     statistics: SearchStrategyStatistics<T>,
     search_space: Option<SearchSpaceConfig>,
@@ -285,13 +285,12 @@ pub struct BaselineOptimizer<T: Float> {
     velocity: Vec<Array2<T>>,
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> RandomSearch<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum> RandomSearch<T> {
     pub fn new(seed: Option<u64>) -> Self {
-        use rand::SeedableRng;
         let rng = if let Some(seed) = seed {
             rand::rngs::SmallRng::seed_from_u64(seed)
         } else {
-            rand::rngs::SmallRng::from_entropy()
+            rand::rngs::SmallRng::from_rng(&mut rand::rng())
         };
 
         Self {
@@ -302,7 +301,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> RandomSearch<T>
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum> SearchStrategy<T>
     for RandomSearch<T>
 {
     fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<()> {
@@ -315,7 +314,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         search_space: &SearchSpaceConfig,
         _history: &VecDeque<SearchResult<T>>,
     ) -> Result<OptimizerArchitecture<T>> {
-        use super::OptimizerComponent;
+        use crate::neural_architecture_search::OptimizerComponent;
 
         // Randomly select number of components
         let num_components = self.rng.random_range(1..=5);
@@ -418,7 +417,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySearch<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum>
+    EvolutionarySearch<T>
+{
     pub fn new(
         population_size: usize,
         mutation_rate: f64,
@@ -460,9 +461,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
         let mut best_idx = 0;
         let mut best_fitness = T::neg_infinity();
 
-        let mut rng = rng();
+        let mut rng = rand::rng();
         for _ in 0..self.tournament_size {
-            let idx = rng.random::<usize>() % self.population.len();
+            let idx = rng.random_range(0..self.population.len());
             if fitness_scores[idx] > best_fitness {
                 best_fitness = fitness_scores[idx];
                 best_idx = idx;
@@ -547,7 +548,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> EvolutionarySea
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum> SearchStrategy<T>
     for EvolutionarySearch<T>
 {
     fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<()> {
@@ -610,7 +611,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
         }
 
         // Fallback to random generation
-        let idx = rand::random::<usize>() % self.population.len();
+        let idx = rand::rng().random_range(0..self.population.len());
         self.statistics.total_architectures_generated += 1;
         Ok(self.population[idx].clone())
     }
@@ -663,7 +664,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
     }
 }
 
-impl<T: Float + Send + Sync> EvolutionarySearch<T> {
+impl<T: Float + Send + Sync + std::iter::Sum> EvolutionarySearch<T> {
     fn calculate_recent_improvement(&self, performances: &[T]) -> T {
         if performances.len() < 10 {
             return T::zero();
@@ -708,7 +709,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static>
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> SearchStrategy<T>
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static + std::iter::Sum> SearchStrategy<T>
     for ReinforcementLearningSearch<T>
 {
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<()> {
@@ -810,7 +811,7 @@ impl<T: Float + Default + Clone> ReinforcementLearningSearch<T> {
         _actions: &Array1<T>,
         search_space: &SearchSpaceConfig,
     ) -> Result<OptimizerArchitecture<T>> {
-        use super::OptimizerComponent;
+        use crate::neural_architecture_search::OptimizerComponent;
 
         // Simplified decoding - randomly select for now
         let component_config = &search_space.optimizer_components[0];
@@ -975,7 +976,7 @@ impl<T: Float + Default> BaselineOptimizer<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> DifferentiableSearch<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::ScalarOperand> DifferentiableSearch<T> {
     pub fn new(
         num_operations: usize,
         num_edges: usize,
@@ -1019,7 +1020,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> DifferentiableS
     }
 
     fn discretize_architecture(&self, weights: &Array3<T>) -> OptimizerArchitecture<T> {
-        use super::OptimizerComponent;
+        use crate::neural_architecture_search::OptimizerComponent;
 
         let mut components = Vec::new();
 
@@ -1038,13 +1039,15 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> DifferentiableS
                     let rand_val = rand::random::<f64>();
                     let mut cumsum = 0.0;
 
+                    let mut selected_idx = 0;
                     for (idx, prob) in probs.iter().enumerate() {
                         cumsum += prob.to_f64().unwrap_or(0.0);
                         if cumsum >= rand_val {
-                            return idx;
+                            selected_idx = idx;
+                            break;
                         }
                     }
-                    0
+                    selected_idx
                 }
                 DiscretizationStrategy::Threshold => {
                     let threshold = T::from(0.5).unwrap();
@@ -1096,7 +1099,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> DifferentiableS
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum> SearchStrategy<T>
     for DifferentiableSearch<T>
 {
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<()> {
@@ -1190,7 +1193,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> BayesianOptimization<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum> BayesianOptimization<T> {
     pub fn new(
         kernel_type: KernelType,
         acquisition_type: AcquisitionType,
@@ -1288,7 +1291,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> BayesianOptimiz
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug> SearchStrategy<T>
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum> SearchStrategy<T>
     for BayesianOptimization<T>
 {
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<()> {

@@ -5,13 +5,10 @@
 //! algorithms, chunked processing, and advanced memory management.
 
 use crate::error::{SignalError, SignalResult};
-use crate::filter::lfilter;
-use crate::spectral::{stft, welch};
-use ndarray::{Array1, Array2, ArrayView1};
+use ndarray::Array1;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::VecDeque;
-use std::f64::consts::PI;
 
 /// Memory optimization configuration
 #[derive(Debug, Clone)]

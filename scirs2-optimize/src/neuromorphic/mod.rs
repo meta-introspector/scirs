@@ -451,8 +451,8 @@ impl NeuromorphicOptimizer for BasicNeuromorphicOptimizer {
 
         for iteration in 0..max_nit {
             // Encode current parameters into network
-            self.network
-                .encode_parameters(&self.network.parameters.view());
+            let params_view = self.network.parameters.view();
+            self.network.encode_parameters(&params_view);
 
             // Evaluate objective
             let current_objective = objective(&self.network.parameters.view());

@@ -12,15 +12,12 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
-use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
-use ndarray::{Array1, ArrayView1};
-use num_traits::{Float, NumCast};
+use ndarray::Array1;
+use num_traits::Float;
 use rand::prelude::*;
 use scirs2_core::random::Rng;
-use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
 use std::f64::consts::PI;
-use std::time::Instant;
 
 /// Comprehensive SciPy validation configuration
 #[derive(Debug, Clone)]

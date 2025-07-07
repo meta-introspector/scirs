@@ -22,6 +22,7 @@ pub use energy_efficient::{EnergyEfficientOptimizer, EnergyOptimizationStrategy,
 
 /// Neuromorphic computing platform types
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum NeuromorphicPlatform {
     /// Intel Loihi neuromorphic chip
     IntelLoihi,
@@ -43,6 +44,7 @@ pub enum NeuromorphicPlatform {
 
 /// Neuromorphic optimization configuration
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct NeuromorphicConfig<T: Float> {
     /// Target neuromorphic platform
     pub platform: NeuromorphicPlatform,
@@ -139,6 +141,7 @@ pub struct MembraneDynamicsConfig<T: Float> {
 
 /// Synaptic plasticity models
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum PlasticityModel {
     /// Hebbian plasticity
     Hebbian,
@@ -190,6 +193,7 @@ pub struct PopulationConfig {
 
 /// Population coding strategies
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum PopulationCodingStrategy {
     /// Distributed coding
     Distributed,
@@ -208,6 +212,7 @@ pub enum PopulationCodingStrategy {
 
 /// Synchronization mechanisms
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum SynchronizationMechanism {
     /// No synchronization
     None,
@@ -226,6 +231,7 @@ pub enum SynchronizationMechanism {
 
 /// Energy optimization configuration
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct EnergyOptimizationConfig<T: Float> {
     /// Energy budget (nJ per operation)
     pub energy_budget: T,
@@ -253,6 +259,7 @@ pub struct EnergyOptimizationConfig<T: Float> {
 
 /// Sleep mode configuration for energy efficiency
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct SleepModeConfig<T: Float> {
     /// Enable sleep mode
     pub enable_sleep_mode: bool,
@@ -271,6 +278,7 @@ pub struct SleepModeConfig<T: Float> {
 
 /// Thermal management configuration
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ThermalManagementConfig<T: Float> {
     /// Enable thermal management
     pub enable_thermal_management: bool,
@@ -289,6 +297,7 @@ pub struct ThermalManagementConfig<T: Float> {
 
 /// Thermal throttling strategies
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum ThermalThrottlingStrategy {
     /// Frequency scaling
     FrequencyScaling,
@@ -307,6 +316,7 @@ pub enum ThermalThrottlingStrategy {
 
 /// Spike representation for neuromorphic optimization
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct Spike<T: Float> {
     /// Neuron ID
     pub neuron_id: usize,
@@ -424,6 +434,7 @@ impl<T: Float + Send + Sync> SpikeTrain<T> {
 
 /// Event-driven update representation
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct NeuromorphicEvent<T: Float> {
     /// Event type
     pub event_type: EventType,
@@ -448,6 +459,7 @@ pub struct NeuromorphicEvent<T: Float> {
 
 /// Event priority levels for neuromorphic processing
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[allow(dead_code)]
 pub enum EventPriority {
     Low,
     Normal,

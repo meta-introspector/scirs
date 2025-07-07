@@ -36,7 +36,7 @@ pub fn map_coordinates<T, D>(
     prefilter: Option<bool>,
 ) -> NdimageResult<Array<T, IxDyn>>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: ndarray::Dimension,
 {
     // Validate inputs
@@ -143,7 +143,7 @@ fn interpolate_at_coordinates<T>(
     cval: T,
 ) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     if coordinates.len() != input.ndim() {
         return Err(NdimageError::DimensionError(format!(
@@ -169,7 +169,7 @@ fn interpolate_nearest<T>(
     cval: T,
 ) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let indices: Vec<isize> = coordinates
         .iter()
@@ -188,7 +188,7 @@ fn interpolate_linear<T>(
     cval: T,
 ) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     if coordinates.is_empty() {
         return Ok(cval);
@@ -229,12 +229,12 @@ where
 fn interpolate_spline<T>(
     input: &Array<T, IxDyn>,
     coordinates: &[T],
-    order: usize,
+    _order: usize,
     mode: &BoundaryMode,
     cval: T,
 ) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     // For now, fall back to linear interpolation for spline orders
     // A full spline interpolation would require implementing B-spline evaluation
@@ -251,7 +251,7 @@ fn get_value_at_indices<T>(
     cval: T,
 ) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive + Debug + Clone,
+    T: Float + FromPrimitive + Debug + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let shape = input.shape();
     let mut adjusted_indices = Vec::with_capacity(indices.len());

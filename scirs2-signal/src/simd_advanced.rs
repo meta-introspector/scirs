@@ -568,7 +568,7 @@ unsafe fn avx2_cross_correlation(
     signal1: &[f64],
     signal2: &[f64],
     result: &mut [f64],
-    mode: &str,
+    _mode: &str,
 ) -> SignalResult<()> {
     // Simplified AVX2 implementation for demonstration
     let n1 = signal1.len();
@@ -2038,21 +2038,20 @@ pub mod advanced_simd_realtime {
             self.delay_line[self.position] = input;
 
             // Compute filter output using SIMD when possible
-            let mut output = 0.0;
             let filter_len = self.coefficients.len();
 
-            if filter_len >= self.config.simd_threshold && !self.config.force_scalar {
+            let output = if filter_len >= self.config.simd_threshold && !self.config.force_scalar {
                 // SIMD-accelerated convolution
                 let caps = PlatformCapabilities::detect();
 
                 if caps.avx2_available {
-                    output = unsafe { self.avx2_process_sample() };
+                    unsafe { self.avx2_process_sample() }
                 } else {
-                    output = self.scalar_process_sample();
+                    self.scalar_process_sample()
                 }
             } else {
-                output = self.scalar_process_sample();
-            }
+                self.scalar_process_sample()
+            };
 
             // Update position (circular buffer)
             self.position = (self.position + 1) % filter_len;
@@ -2237,12 +2236,12 @@ pub fn comprehensive_simd_validation(
 
     // Test autocorrelation
     let autocorr_start = std::time::Instant::now();
-    let autocorr = simd_autocorrelation(&test_signal, 10, config)?;
+    let _autocorr = simd_autocorrelation(&test_signal, 10, config)?;
     validation_result.autocorrelation_time_ns = autocorr_start.elapsed().as_nanos() as u64;
 
     // Test cross-correlation
     let xcorr_start = std::time::Instant::now();
-    let xcorr = simd_cross_correlation(&test_signal, &test_signal, "full", config)?;
+    let _xcorr = simd_cross_correlation(&test_signal, &test_signal, "full", config)?;
     validation_result.cross_correlation_time_ns = xcorr_start.elapsed().as_nanos() as u64;
 
     // 2. Test matrix operations
@@ -2671,7 +2670,7 @@ fn scalar_weighted_average_spectra(
     result: &mut [f64],
 ) -> SignalResult<()> {
     let n_freqs = result.len();
-    let n_tapers = spectra.len();
+    let _n_tapers = spectra.len();
 
     // Initialize result
     result.fill(0.0);
@@ -2774,7 +2773,7 @@ unsafe fn avx2_weighted_average_spectra(
     result: &mut [f64],
 ) -> SignalResult<()> {
     let n_freqs = result.len();
-    let n_tapers = spectra.len();
+    let _n_tapers = spectra.len();
     let simd_width = 4;
     let simd_chunks = n_freqs / simd_width;
 

@@ -13,6 +13,7 @@ use crate::optimizers::{Optimizer, SGD};
 use scirs2_core::gpu::GpuKernelHandle;
 
 /// GPU-accelerated SGD optimizer
+#[allow(dead_code)]
 pub struct SGDGpu<A: Float + ScalarOperand + Debug> {
     /// CPU SGD optimizer for fallback
     cpu_optimizer: SGD<A>,
@@ -59,6 +60,7 @@ impl<A: Float + ScalarOperand + Debug> SGDGpu<A> {
     }
 
     /// Initialize GPU resources
+    #[allow(clippy::too_many_arguments)]
     pub fn initialize_gpu(
         &mut self,
         size: usize,

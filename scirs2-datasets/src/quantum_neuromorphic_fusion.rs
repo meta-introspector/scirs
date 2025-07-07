@@ -165,7 +165,7 @@ impl QuantumNeuromorphicFusion {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut rand::thread_rng()),
         };
 
         // Initialize quantum-biological hybrid network
@@ -291,7 +291,7 @@ impl QuantumNeuromorphicFusion {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut rand::thread_rng()),
         };
 
         // Initialize quantum-biological network for transformation

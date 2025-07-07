@@ -833,7 +833,8 @@ impl DatasetExplorer {
             "{:<15} {:>8} {:>10} {:>10} {:>10} {:>10} {:>8}",
             "Feature", "Type", "Mean", "Std", "Min", "Max", "Missing"
         );
-        println!("{}", "-".repeat(80));
+        let separator = "-".repeat(80);
+        println!("{separator}");
 
         for feature in &statistics.features {
             let type_str = match feature.data_type {

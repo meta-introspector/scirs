@@ -11,11 +11,20 @@ use ndarray::Array1;
 use std::collections::HashMap;
 
 /// Sparse count vectorizer using CSR matrix representation
-#[derive(Clone)]
 pub struct SparseCountVectorizer {
     tokenizer: Box<dyn Tokenizer + Send + Sync>,
     vocabulary: Vocabulary,
     binary: bool,
+}
+
+impl Clone for SparseCountVectorizer {
+    fn clone(&self) -> Self {
+        Self {
+            tokenizer: self.tokenizer.clone_box(),
+            vocabulary: self.vocabulary.clone(),
+            binary: self.binary,
+        }
+    }
 }
 
 impl SparseCountVectorizer {

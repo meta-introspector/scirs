@@ -154,7 +154,14 @@ pub fn chan_vese<T>(
     params: Option<ChanVeseParams>,
 ) -> NdimageResult<Array2<bool>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     let params = params.unwrap_or_default();
     let (height, width) = image.dim();
@@ -262,7 +269,14 @@ pub fn chan_vese_multiphase<T>(
     params: Option<ChanVeseParams>,
 ) -> NdimageResult<Array2<usize>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     let params = params.unwrap_or_default();
     let (height, width) = image.dim();

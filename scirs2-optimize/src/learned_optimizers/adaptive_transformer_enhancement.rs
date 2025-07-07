@@ -11,7 +11,7 @@ use super::{
 use crate::error::{OptimizeError, OptimizeResult};
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use rand::Rng;
+use rand::{rng, Rng};
 use std::collections::{HashMap, VecDeque};
 
 /// Adaptive Transformer-Enhanced Optimizer

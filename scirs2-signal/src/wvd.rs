@@ -130,7 +130,7 @@ pub fn cross_wigner_ville(
 ) -> SignalResult<Array2<Complex64>> {
     // Check that signals have the same length
     if signal1.len() != signal2.len() {
-        return Err(SignalError::DimensionError(
+        return Err(SignalError::DimensionMismatch(
             "Signals must have the same length for cross-WVD".to_string(),
         ));
     }

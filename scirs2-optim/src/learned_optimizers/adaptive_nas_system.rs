@@ -2981,7 +2981,7 @@ impl<T: Float + Send + Sync + std::ops::MulAssign> PerformanceGuidedSearch<T> {
 
         // Create mutated candidate
         Ok(ArchitectureCandidate {
-            id: format!("perf_guided_{}", rand::random::<u32>()),
+            id: format!("perf_guided_{}", rand::rng().random::<u32>()),
             specification: self.mutate_architecture_spec(base_config)?,
             generation_method: GenerationMethod::Learned,
             estimated_quality: Some(T::from(0.8).unwrap()),
@@ -2994,7 +2994,7 @@ impl<T: Float + Send + Sync + std::ops::MulAssign> PerformanceGuidedSearch<T> {
     ) -> Result<ArchitectureCandidate<T>> {
         // Generate diverse, exploratory candidate
         Ok(ArchitectureCandidate {
-            id: format!("exploration_{}", rand::random::<u32>()),
+            id: format!("exploration_{}", rand::rng().random::<u32>()),
             specification: self.generate_diverse_architecture(task_context)?,
             generation_method: GenerationMethod::Random,
             estimated_quality: None,
@@ -3010,7 +3010,7 @@ impl<T: Float + Send + Sync + std::ops::MulAssign> PerformanceGuidedSearch<T> {
         let best_patterns = self.extract_successful_patterns(history);
 
         Ok(ArchitectureCandidate {
-            id: format!("exploitation_{}", rand::random::<u32>()),
+            id: format!("exploitation_{}", rand::rng().random::<u32>()),
             specification: self.combine_successful_patterns(&best_patterns, task_context)?,
             generation_method: GenerationMethod::Evolutionary,
             estimated_quality: Some(T::from(0.9).unwrap()),
@@ -3028,7 +3028,7 @@ impl<T: Float + Send + Sync + std::ops::MulAssign> PerformanceGuidedSearch<T> {
             .to_f64()
             .unwrap_or(0.3);
 
-        if rand::random::<f64>() < explore_factor {
+        if rand::rng().random::<f64>() < explore_factor {
             self.generate_exploration_candidate(task_context)
         } else {
             self.generate_exploitation_candidate(task_context, history)
@@ -3040,7 +3040,7 @@ impl<T: Float + Send + Sync + std::ops::MulAssign> PerformanceGuidedSearch<T> {
         _task_context: &OptimizationTask,
     ) -> Result<ArchitectureCandidate<T>> {
         Ok(ArchitectureCandidate {
-            id: format!("default_{}", rand::random::<u32>()),
+            id: format!("default_{}", rand::rng().random::<u32>()),
             specification: ArchitectureSpecification::default(),
             generation_method: GenerationMethod::Random,
             estimated_quality: Some(T::from(0.5).unwrap()),
@@ -3290,7 +3290,7 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
         let (param_count, flops, memory_req) = self.estimate_architecture_cost(&layers);
 
         Ok(ArchitectureCandidate {
-            id: format!("random_{}", rand::random::<u32>()),
+            id: format!("random_{}", rand::rng().random::<u32>()),
             specification: ArchitectureSpecification {
                 layers,
                 connections,

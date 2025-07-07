@@ -54,7 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // 2. Advanced-Enhanced SIMD Optimizations
-    println!("2. ULTRA-ENHANCED SIMD OPTIMIZATIONS");
+    println!("2. ENHANCED SIMD OPTIMIZATIONS");
     println!("=====================================");
 
     let large_image = Array2::<f32>::zeros((2048, 2048));

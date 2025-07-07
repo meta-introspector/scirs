@@ -8,8 +8,8 @@
 use crate::error::OptimizeError;
 use crate::unconstrained::OptimizeResult;
 use ndarray::{Array1, ArrayView1};
-use rand::prelude::*;
 use rand::rngs::StdRng;
+use rand::{rng, Rng};
 
 /// Options for Particle Swarm Optimization
 #[derive(Debug, Clone)]
@@ -94,7 +94,7 @@ where
     /// Create new Particle Swarm Optimization solver
     pub fn new(func: F, bounds: Bounds, options: ParticleSwarmOptions) -> Self {
         let ndim = bounds.len();
-        let seed = options.seed.unwrap_or_else(|| rand::rng().random());
+        let seed = options.seed.unwrap_or_else(|| rng().gen());
         let mut rng = StdRng::seed_from_u64(seed);
 
         // Initialize particles

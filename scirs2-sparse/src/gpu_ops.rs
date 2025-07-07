@@ -14,7 +14,8 @@ use std::fmt::Debug;
 // GPU operations don't currently use parallel_ops directly
 
 // Import GPU kernel execution functions
-use crate::gpu_kernel_execution::{execute_symmetric_spmv_kernel, GpuKernelConfig, MemoryStrategy};
+#[cfg(feature = "gpu")]
+use crate::gpu_kernel_execution::{GpuKernelConfig, MemoryStrategy};
 
 // Import and re-export GPU capabilities from scirs2-core (only when GPU feature is enabled)
 #[cfg(feature = "gpu")]
@@ -54,6 +55,14 @@ impl GpuError {
     pub fn invalid_parameter(msg: String) -> Self {
         Self(msg)
     }
+
+    pub fn kernel_compilation_error(msg: String) -> Self {
+        Self(msg)
+    }
+
+    pub fn other(msg: String) -> Self {
+        Self(msg)
+    }
 }
 
 #[cfg(not(feature = "gpu"))]
@@ -72,7 +81,7 @@ pub struct GpuBuffer<T> {
 }
 
 #[cfg(not(feature = "gpu"))]
-impl<T: Clone> GpuBuffer<T> {
+impl<T: Clone + Copy> GpuBuffer<T> {
     pub fn as_slice(&self) -> &[T] {
         &self.data
     }
@@ -93,7 +102,9 @@ impl<T: Clone> GpuBuffer<T> {
         if range.end <= self.data.len() {
             Ok(self.data[range].to_vec())
         } else {
-            Err(GpuError::new("Range out of bounds"))
+            Err(GpuError::invalid_parameter(
+                "Range out of bounds".to_string(),
+            ))
         }
     }
 
@@ -103,6 +114,16 @@ impl<T: Clone> GpuBuffer<T> {
 
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
+    }
+
+    pub fn copy_from_host(&mut self, host_data: &[T]) -> Result<(), GpuError> {
+        if host_data.len() != self.data.len() {
+            return Err(GpuError::invalid_parameter(
+                "Host data length does not match buffer length".to_string(),
+            ));
+        }
+        self.data.copy_from_slice(host_data);
+        Ok(())
     }
 }
 
@@ -215,7 +236,7 @@ impl GpuDevice {
 
     pub fn commit_and_wait(&self) -> Result<(), GpuError> {
         // Command buffer commit and wait implementation
-        Ok()
+        Ok(())
     }
 
     pub fn clear_buffer<T: GpuDataType>(&self, _buffer: &GpuBuffer<T>) -> Result<(), GpuError> {
@@ -402,12 +423,13 @@ impl<T: GpuDataType> GpuBufferExt<T> for GpuBuffer<T> {
         if range.end <= full_data.len() {
             Ok(full_data[range].to_vec())
         } else {
-            Err(GpuError::new("Range out of bounds"))
+            Err(GpuError::invalid_parameter(
+                "Range out of bounds".to_string(),
+            ))
         }
     }
 }
 
-#[derive(Debug)]
 pub struct SpMVKernel {
     kernel_handle: Option<GpuKernelHandle>,
     backend: GpuBackend,
@@ -480,7 +502,9 @@ impl SpMVKernel {
                 let kernel_handle = device
                     .compile_kernel(cuda_kernel_source, "spmv_csr_vectorized_kernel")
                     .map_err(|e| {
-                        GpuError::new(&format!("Failed to compile CUDA SpMV kernel: {e}"))
+                        GpuError::kernel_compilation_error(format!(
+                            "Failed to compile CUDA SpMV kernel: {e}"
+                        ))
                     })?;
 
                 // Verify kernel compilation succeeded and store handle
@@ -551,7 +575,9 @@ impl SpMVKernel {
                 let kernel_handle = device
                     .compile_kernel(opencl_kernel_source, "spmv_csr_local_kernel")
                     .map_err(|e| {
-                        GpuError::new(&format!("Failed to compile OpenCL SpMV kernel: {e}"))
+                        GpuError::kernel_compilation_error(format!(
+                            "Failed to compile OpenCL SpMV kernel: {e}"
+                        ))
                     })?;
 
                 // Verify kernel compilation succeeded and store handle
@@ -619,7 +645,9 @@ impl SpMVKernel {
                 let kernel_handle = device
                     .compile_kernel(metal_kernel_source, "spmv_csr_simdgroup_kernel")
                     .map_err(|e| {
-                        GpuError::new(&format!("Failed to compile Metal SpMV kernel: {e}"))
+                        GpuError::kernel_compilation_error(format!(
+                            "Failed to compile Metal SpMV kernel: {e}"
+                        ))
                     })?;
 
                 // Verify kernel compilation succeeded and store handle
@@ -844,11 +872,17 @@ impl SpMVKernel {
         T: Float + Debug + Copy + 'static + Default + GpuDataType,
     {
         // Enhanced CPU implementation with parallel processing
-        let indptr_slice = indptr.as_slice();
-        let indices_slice = indices.as_slice();
-        let data_slice = data.as_slice();
-        let x_slice = x.as_slice();
-        let y_slice = y.as_mut_slice();
+        let indptr_vec = indptr.to_vec();
+        let indices_vec = indices.to_vec();
+        let data_vec = data.to_vec();
+        let x_vec = x.to_vec();
+        let mut y_vec = y.to_vec();
+
+        let indptr_slice = indptr_vec.as_slice();
+        let indices_slice = indices_vec.as_slice();
+        let data_slice = data_vec.as_slice();
+        let x_slice = x_vec.as_slice();
+        let y_slice = y_vec.as_mut_slice();
 
         // Use parallel processing when beneficial (for larger matrices)
         if rows > 1000 {
@@ -886,6 +920,9 @@ impl SpMVKernel {
                 y_slice[row] = sum;
             }
         }
+
+        // Copy results back to GPU buffer
+        y.copy_from_host(&y_vec)?;
 
         Ok(())
     }
@@ -1519,11 +1556,17 @@ impl SpMSKernel {
         T: Float + Debug + Copy + 'static + Default + GpuDataType,
     {
         // CPU implementation as fallback for symmetric matrix-vector multiplication
-        let indptr_slice = indptr.as_slice();
-        let indices_slice = indices.as_slice();
-        let data_slice = data.as_slice();
-        let x_slice = x.as_slice();
-        let y_slice = y.as_mut_slice();
+        let indptr_vec = indptr.to_vec();
+        let indices_vec = indices.to_vec();
+        let data_vec = data.to_vec();
+        let x_vec = x.to_vec();
+        let mut y_vec = y.to_vec();
+
+        let indptr_slice = indptr_vec.as_slice();
+        let indices_slice = indices_vec.as_slice();
+        let data_slice = data_vec.as_slice();
+        let x_slice = x_vec.as_slice();
+        let y_slice = y_vec.as_mut_slice();
 
         // Initialize output
         y_slice[..rows].fill(T::zero());
@@ -1545,6 +1588,9 @@ impl SpMSKernel {
                 }
             }
         }
+
+        // Copy results back to GPU buffer
+        y.copy_from_host(&y_vec)?;
 
         Ok(())
     }
@@ -1569,16 +1615,25 @@ impl SpMSKernel {
         T: Float + Debug + Copy + 'static + Default + GpuDataType,
     {
         // CPU implementation as fallback for sparse matrix-matrix multiplication
-        let a_indptr_slice = a_indptr.as_slice();
-        let a_indices_slice = a_indices.as_slice();
-        let a_data_slice = a_data.as_slice();
-        let b_indptr_slice = b_indptr.as_slice();
-        let b_indices_slice = b_indices.as_slice();
-        let b_data_slice = b_data.as_slice();
+        let a_indptr_vec = a_indptr.to_vec();
+        let a_indices_vec = a_indices.to_vec();
+        let a_data_vec = a_data.to_vec();
+        let b_indptr_vec = b_indptr.to_vec();
+        let b_indices_vec = b_indices.to_vec();
+        let b_data_vec = b_data.to_vec();
+        let mut c_indptr_vec = c_indptr.to_vec();
+        let mut c_indices_vec = c_indices.to_vec();
+        let mut c_data_vec = c_data.to_vec();
 
-        let c_indptr_slice = c_indptr.as_mut_slice();
-        let c_indices_slice = c_indices.as_mut_slice();
-        let c_data_slice = c_data.as_mut_slice();
+        let a_indptr_slice = a_indptr_vec.as_slice();
+        let a_indices_slice = a_indices_vec.as_slice();
+        let a_data_slice = a_data_vec.as_slice();
+        let b_indptr_slice = b_indptr_vec.as_slice();
+        let b_indices_slice = b_indices_vec.as_slice();
+        let b_data_slice = b_data_vec.as_slice();
+        let c_indptr_slice = c_indptr_vec.as_mut_slice();
+        let c_indices_slice = c_indices_vec.as_mut_slice();
+        let c_data_slice = c_data_vec.as_mut_slice();
 
         let mut nnz_count = 0;
         c_indptr_slice[0] = 0;
@@ -1614,6 +1669,11 @@ impl SpMSKernel {
             c_indptr_slice[row + 1] = nnz_count;
         }
 
+        // Copy results back to GPU buffers
+        c_indptr.copy_from_host(&c_indptr_vec)?;
+        c_indices.copy_from_host(&c_indices_vec)?;
+        c_data.copy_from_host(&c_data_vec)?;
+
         Ok(nnz_count)
     }
 
@@ -1631,11 +1691,17 @@ impl SpMSKernel {
         T: Float + Debug + Copy + 'static + Default + GpuDataType,
     {
         // CPU implementation as fallback for triangular solve
-        let indptr_slice = indptr.as_slice();
-        let indices_slice = indices.as_slice();
-        let data_slice = data.as_slice();
-        let b_slice = b.as_slice();
-        let x_slice = x.as_mut_slice();
+        let indptr_vec = indptr.to_vec();
+        let indices_vec = indices.to_vec();
+        let data_vec = data.to_vec();
+        let b_vec = b.to_vec();
+        let mut x_vec = x.to_vec();
+
+        let indptr_slice = indptr_vec.as_slice();
+        let indices_slice = indices_vec.as_slice();
+        let data_slice = data_vec.as_slice();
+        let b_slice = b_vec.as_slice();
+        let x_slice = x_vec.as_mut_slice();
 
         // Forward substitution for lower triangular matrix
         for i in 0..n {
@@ -1663,6 +1729,9 @@ impl SpMSKernel {
                 x_slice[i] = T::zero();
             }
         }
+
+        // Copy results back to GPU buffer
+        x.copy_from_host(&x_vec)?;
 
         Ok(())
     }
@@ -1833,7 +1902,7 @@ impl SpMSKernel {
         )?;
 
         // Return the number of non-zeros in result (would need to be computed from c_indptr)
-        Ok(c_data.as_slice().len())
+        Ok(c_data.len())
     }
 
     /// GPU-accelerated OpenCL execution for SpMM
@@ -1890,7 +1959,7 @@ impl SpMSKernel {
             ],
         )?;
 
-        Ok(c_data.as_slice().len())
+        Ok(c_data.len())
     }
 
     /// GPU-accelerated Metal execution for SpMM
@@ -1947,7 +2016,7 @@ impl SpMSKernel {
             ],
         )?;
 
-        Ok(c_data.as_slice().len())
+        Ok(c_data.len())
     }
 
     /// GPU-accelerated CUDA execution for triangular solve
@@ -2438,7 +2507,7 @@ where
         &data_buffer,
         &x_buffer,
         &y_buffer,
-        &config,
+        config.workgroup_size,
     )
     .map_err(|e| format!("GPU kernel execution failed: {e}"))?;
 
@@ -2505,7 +2574,7 @@ impl GpuMemoryManager {
             self.allocated_buffers[buffer_id] = 0;
             Ok(())
         } else {
-            Err(GpuError::new("Invalid buffer ID"))
+            Err(GpuError::invalid_parameter("Invalid buffer ID".to_string()))
         }
     }
 
@@ -2659,7 +2728,7 @@ impl AdvancedGpuOps {
             Array1::from_vec(c_indptr),
             (a_rows, b_cols),
         )
-        .map_err(|e| GpuError::new(&e.to_string()))
+        .map_err(|e| GpuError::other(e.to_string()))
     }
 
     /// CPU fallback for sparse matrix multiplication
@@ -3789,7 +3858,7 @@ fn execute_spmv_kernel(
     _y_buffer: &GpuBuffer<f32>,
     _workgroup_size: [u32; 3],
 ) -> Result<(), GpuError> {
-    Err(GpuError::new("GPU feature not enabled"))
+    Err(GpuError::other("GPU feature not enabled".to_string()))
 }
 
 #[cfg(not(feature = "gpu"))]
@@ -3805,5 +3874,5 @@ fn execute_symmetric_spmv_kernel(
     _y_buffer: &GpuBuffer<f32>,
     _workgroup_size: [u32; 3],
 ) -> Result<(), GpuError> {
-    Err(GpuError::new("GPU feature not enabled"))
+    Err(GpuError::other("GPU feature not enabled".to_string()))
 }

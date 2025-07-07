@@ -549,8 +549,7 @@ impl<F: Float + Debug> MultiSeriesAnalyzer<F> {
             analyzer.add_observation(value)
         } else {
             Err(TimeSeriesError::InvalidInput(format!(
-                "Series '{}' not found",
-                series_id
+                "Series '{series_id}' not found"
             )))
         }
     }
@@ -578,11 +577,11 @@ impl<F: Float + Debug> MultiSeriesAnalyzer<F> {
     /// Get cross-series correlation (simplified)
     pub fn get_correlation(&self, series1: &str, series2: &str) -> Result<F> {
         let analyzer1 = self.analyzers.get(series1).ok_or_else(|| {
-            TimeSeriesError::InvalidInput(format!("Series '{}' not found", series1))
+            TimeSeriesError::InvalidInput(format!("Series '{series1}' not found"))
         })?;
 
         let analyzer2 = self.analyzers.get(series2).ok_or_else(|| {
-            TimeSeriesError::InvalidInput(format!("Series '{}' not found", series2))
+            TimeSeriesError::InvalidInput(format!("Series '{series2}' not found"))
         })?;
 
         let buffer1 = analyzer1.get_buffer();
@@ -769,48 +768,74 @@ pub mod feature_engineering {
     }
 
     #[derive(Debug, Clone)]
+    /// Configuration for feature extraction
     pub struct FeatureConfig {
+        /// Feature name
         pub name: String,
+        /// Type of feature
         pub feature_type: FeatureType,
+        /// Window size for feature calculation
         pub window_size: usize,
+        /// How often to update the feature (in number of samples)
         pub update_frequency: usize,
+        /// Whether this feature is enabled for extraction
         pub enabled: bool,
     }
 
     #[derive(Debug, Clone)]
+    /// Types of features that can be extracted from time series data
     pub enum FeatureType {
         /// Basic statistical features
         Mean,
+        /// Variance of the time series
         Variance,
+        /// Skewness of the time series
         Skewness,
+        /// Kurtosis of the time series
         Kurtosis,
+        /// Minimum value in the time series
         Min,
+        /// Maximum value in the time series
         Max,
+        /// Range (max - min) of the time series
         Range,
         /// Advanced statistical features
         Quantile(f64),
+        /// Interquartile range (Q3 - Q1)
         InterquartileRange,
+        /// Coefficient of variation (std/mean)
         CoefficientOfVariation,
         /// Temporal features
         LinearTrend,
+        /// Strength of seasonal component
         SeasonalStrength,
+        /// Strength of trend component
         TrendStrength,
         /// Frequency domain features
         SpectralCentroid,
+        /// Spectral rolloff point
         SpectralRolloff,
+        /// Spectral flatness measure
         SpectralFlatness,
         /// Complexity features
         SampleEntropy,
+        /// Lempel-Ziv complexity measure
         LempelZivComplexity,
+        /// Fractal dimension of the time series
         FractalDimension,
         /// Technical indicators
         RelativeStrengthIndex,
+        /// Moving Average Convergence Divergence (MACD)
         MovingAverageConvergenceDivergence,
+        /// Bollinger Bands indicator
         BollingerBands,
+        /// Stochastic oscillator indicator
         StochasticOscillator,
         /// Pattern-based features
         PatternRecognition,
+        /// Frequency of recurring motifs
         MotifFrequency,
+        /// Distance to learned shapelet patterns
         ShapeletDistance,
     }
 
@@ -1540,7 +1565,7 @@ pub mod feature_engineering {
                 // Discretize motif (simple bucketing)
                 let discretized: Vec<u8> = motif
                     .iter()
-                    .map(|&x| ((x.to_f64().unwrap_or(0.0) * 10.0) as i32).max(0).min(9) as u8)
+                    .map(|&x| ((x.to_f64().unwrap_or(0.0) * 10.0) as i32).clamp(0, 9) as u8)
                     .collect();
 
                 *motif_counts.entry(discretized).or_insert(0) += 1;
@@ -2309,10 +2334,15 @@ pub mod advanced {
     /// Model state summary
     #[derive(Debug, Clone)]
     pub struct ModelState<F: Float> {
+        /// Current level component
         pub level: Option<F>,
+        /// Current trend component
         pub trend: Option<F>,
+        /// Seasonal components vector
         pub seasonal_components: Vec<F>,
+        /// Number of observations processed
         pub observation_count: usize,
+        /// Size of the internal buffer
         pub buffer_size: usize,
     }
 
@@ -2573,7 +2603,7 @@ pub mod advanced {
             let mut den_a = F::zero();
             let mut den_b = F::zero();
 
-            for (_i, (&val_a, &val_b)) in a.iter().zip(b.iter()).enumerate() {
+            for (&val_a, &val_b) in a.iter().zip(b.iter()) {
                 let diff_a = val_a - mean_a;
                 let diff_b = val_b - mean_b;
 
@@ -2594,9 +2624,13 @@ pub mod advanced {
     /// Pattern match result
     #[derive(Debug, Clone)]
     pub struct PatternMatch {
+        /// Name of the matched pattern
         pub pattern_name: String,
+        /// Correlation coefficient with the pattern
         pub correlation: f64,
+        /// Starting index in the time series
         pub start_index: usize,
+        /// Length of the matched pattern
         pub pattern_length: usize,
     }
 

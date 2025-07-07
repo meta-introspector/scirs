@@ -1235,8 +1235,8 @@ fn run_wave_propagation_simulation() -> Result<(), Box<dyn std::error::Error>> {
 fn run_heat_diffusion_simulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("🔥 Simulating heat diffusion using error functions...");
 
-    let alpha = 1e-5; // thermal diffusivity m²/s
-    let time = 100.0; // seconds
+    let alpha = 1e-5_f64; // thermal diffusivity m²/s
+    let time = 100.0_f64; // seconds
     let surface_temp = 100.0; // °C
     let initial_temp = 20.0; // °C
 
@@ -1416,7 +1416,7 @@ fn run_scattering_simulation() -> Result<(), Box<dyn std::error::Error>> {
 
     let radius = 0.001; // m (1 mm sphere)
     let wavelength = 500e-9; // m (green light)
-    let refractive_index = 1.5; // glass
+    let refractive_index = 1.5_f64; // glass
 
     let size_parameter = 2.0 * PI * radius / wavelength;
 
@@ -1482,12 +1482,12 @@ fn run_scattering_simulation() -> Result<(), Box<dyn std::error::Error>> {
 fn run_tunneling_simulation() -> Result<(), Box<dyn std::error::Error>> {
     println!("🌊 Simulating quantum tunneling with Airy functions...");
 
-    let barrier_height = 5.0; // eV
-    let particle_energy = 3.0; // eV
-    let barrier_width = 1e-9; // m
-    let mass = 9.109e-31; // electron mass kg
-    let hbar = 1.055e-34; // J·s
-    let eV_to_J = 1.602e-19;
+    let barrier_height = 5.0_f64; // eV
+    let particle_energy = 3.0_f64; // eV
+    let barrier_width = 1e-9_f64; // m
+    let mass = 9.109e-31_f64; // electron mass kg
+    let hbar = 1.055e-34_f64; // J·s
+    let eV_to_J = 1.602e-19_f64;
 
     println!("⚡ Tunneling parameters:");
     println!("   Particle energy: {:.1} eV", particle_energy);

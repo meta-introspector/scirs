@@ -364,16 +364,19 @@ fn test_biomedical_signal_processing() {
     // Analyze ECG
     let ecg_analysis = ECGAnalysis::new(ecg_signal.clone(), fs).unwrap();
     let r_peaks = ecg_analysis.detect_r_peaks().unwrap();
-    let hrv = ecg_analysis.heart_rate_variability().unwrap();
+    let hrv = ecg_analysis
+        .heart_rate_variability(scirs2_series::biomedical::HRVMethod::TimeDomain)
+        .unwrap();
 
     // Should detect reasonable number of R-peaks
     let expected_beats = (duration * heart_rate / 60.0) as usize;
     assert!(r_peaks.len() >= expected_beats - 5 && r_peaks.len() <= expected_beats + 5);
 
     // HRV analysis should return reasonable values
-    assert!(hrv.sdnn > 0.0);
-    assert!(hrv.rmssd >= 0.0);
-    assert!(hrv.pnn50 >= 0.0 && hrv.pnn50 <= 100.0);
+    assert!(hrv.get("sdnn").unwrap_or(&0.0) > &0.0);
+    assert!(hrv.get("rmssd").unwrap_or(&0.0) >= &0.0);
+    let pnn50 = hrv.get("pnn50").unwrap_or(&0.0);
+    assert!(pnn50 >= &0.0 && pnn50 <= &100.0);
 }
 
 #[test]
@@ -482,7 +485,7 @@ fn test_cross_validation_workflow() {
         if arima.fit(&train_data.to_owned()).is_ok() {
             // Generate forecasts
             let horizon = test_data.len();
-            if let Ok(forecast) = arima.forecast(horizon) {
+            if let Ok(forecast) = arima.forecast(horizon, &data) {
                 // Calculate MSE
                 let mse = test_data
                     .iter()
@@ -566,10 +569,18 @@ fn test_trend_analysis_integration() {
     assert_eq!(trend.len(), data.len());
 
     // Trend should be smoother than original data
-    let data_diff_var =
-        data.windows(2).map(|w| (w[1] - w[0]).powi(2)).sum::<f64>() / (data.len() - 1) as f64;
-    let trend_diff_var =
-        trend.windows(2).map(|w| (w[1] - w[0]).powi(2)).sum::<f64>() / (trend.len() - 1) as f64;
+    let data_diff_var = data
+        .windows(2)
+        .into_iter()
+        .map(|w| (w[1] - w[0]).powi(2))
+        .sum::<f64>()
+        / (data.len() - 1) as f64;
+    let trend_diff_var = trend
+        .windows(2)
+        .into_iter()
+        .map(|w| (w[1] - w[0]).powi(2))
+        .sum::<f64>()
+        / (trend.len() - 1) as f64;
 
     assert!(trend_diff_var < data_diff_var); // Trend should be smoother
 }
@@ -584,7 +595,7 @@ fn test_comprehensive_workflow() {
 
     // 2. Detect and handle outliers
     let anomaly_detector = AnomalyDetector::new()
-        .with_method(scirs2_series::anomaly::AnomalyMethod::IQR { factor: 1.5 });
+        .with_method(scirs2_series::anomaly::AnomalyMethod::InterquartileRange);
     let anomalies = anomaly_detector.detect(&base_data).unwrap();
 
     // Create cleaned data by replacing outliers with interpolated values
@@ -629,7 +640,7 @@ fn test_comprehensive_workflow() {
     // 6. Fit forecasting models and generate predictions
     let mut arima = ArimaModel::new(2, 1, 2).unwrap();
     arima.fit(&cleaned_data).unwrap();
-    let arima_forecast = arima.forecast(50).unwrap();
+    let arima_forecast = arima.forecast(50, &data).unwrap();
 
     // 7. Validate results
     assert!(segments.len() > 0);

@@ -52,6 +52,8 @@ impl Default for AdvancedComprehensiveSimdConfig {
             (1, 1, 8) // Scalar fallback
         };
 
+        let enable_fma = capabilities.simd_available;
+
         Self {
             capabilities,
             f64_lanes,
@@ -65,7 +67,7 @@ impl Default for AdvancedComprehensiveSimdConfig {
             enable_unrolling: true,
             enable_prefetching: true,
             enable_cache_blocking: true,
-            enable_fma: capabilities.fma,
+            enable_fma,
         }
     }
 }
@@ -451,7 +453,10 @@ where
         let mut deviations = Array1::zeros(data.len());
 
         // Compute absolute deviations using SIMD
-        F::simd_abs_diff(data, &median, &mut deviations.view_mut());
+        let median_array = Array1::from_elem(data.len(), median);
+        let diffs = F::simd_sub(data, &median_array.view());
+        let abs_diffs = F::simd_abs(&diffs.view());
+        deviations.assign(&abs_diffs);
 
         // Find median of deviations
         let sorted_deviations = self.simd_sort_array(&deviations.view())?;
@@ -471,7 +476,8 @@ where
         }
 
         // Compute log sum using SIMD
-        let log_sum = F::simd_log_sum(data);
+        let log_data = data.mapv(|x| x.ln());
+        let log_sum = F::simd_sum(&log_data.view());
         let n = F::from(data.len()).unwrap();
         Ok((log_sum / n).exp())
     }
@@ -488,7 +494,8 @@ where
         }
 
         // Compute reciprocal sum using SIMD
-        let reciprocal_sum = F::simd_reciprocal_sum(data);
+        let reciprocal_data = data.mapv(|x| F::one() / x);
+        let reciprocal_sum = F::simd_sum(&reciprocal_data.view());
         let n = F::from(data.len()).unwrap();
         Ok(n / reciprocal_sum)
     }
@@ -703,7 +710,12 @@ where
 
         for i in 0..n_rows {
             let row = data.row(i);
-            row_stds[i] = F::simd_std_with_mean(&row, row_means[i]);
+            // Compute standard deviation using SIMD
+            let mean_array = Array1::from_elem(row.len(), row_means[i]);
+            let diffs = F::simd_sub(&row, &mean_array.view());
+            let squared_diffs = F::simd_mul(&diffs.view(), &diffs.view());
+            let variance = F::simd_mean(&squared_diffs.view());
+            row_stds[i] = variance.sqrt();
         }
 
         Ok(row_stds)
@@ -720,7 +732,12 @@ where
 
         for j in 0..n_cols {
             let col = data.column(j);
-            col_stds[j] = F::simd_std_with_mean(&col, col_means[j]);
+            // Compute standard deviation using SIMD
+            let mean_array = Array1::from_elem(col.len(), col_means[j]);
+            let diffs = F::simd_sub(&col, &mean_array.view());
+            let squared_diffs = F::simd_mul(&diffs.view(), &diffs.view());
+            let variance = F::simd_mean(&squared_diffs.view());
+            col_stds[j] = variance.sqrt();
         }
 
         Ok(col_stds)
@@ -728,12 +745,77 @@ where
 
     /// SIMD-optimized correlation matrix
     fn simd_correlation_matrix(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        F::simd_correlation_matrix(data)
+        let (n_samples, n_features) = data.dim();
+        let mut correlation_matrix = Array2::eye(n_features);
+
+        // Compute means
+        let mut means = Array1::zeros(n_features);
+        for j in 0..n_features {
+            let col = data.column(j);
+            means[j] = F::simd_mean(&col);
+        }
+
+        // Compute correlation coefficients
+        for i in 0..n_features {
+            for j in i + 1..n_features {
+                let col_i = data.column(i);
+                let col_j = data.column(j);
+
+                // Compute correlation coefficient
+                let mean_i_array = Array1::from_elem(n_samples, means[i]);
+                let mean_j_array = Array1::from_elem(n_samples, means[j]);
+
+                let diff_i = F::simd_sub(&col_i, &mean_i_array.view());
+                let diff_j = F::simd_sub(&col_j, &mean_j_array.view());
+
+                let numerator = F::simd_dot(&diff_i.view(), &diff_j.view());
+                let norm_i = F::simd_norm(&diff_i.view());
+                let norm_j = F::simd_norm(&diff_j.view());
+
+                let correlation = numerator / (norm_i * norm_j);
+                correlation_matrix[[i, j]] = correlation;
+                correlation_matrix[[j, i]] = correlation;
+            }
+        }
+
+        Ok(correlation_matrix)
     }
 
     /// SIMD-optimized covariance matrix
     fn simd_covariance_matrix(&self, data: &ArrayView2<F>) -> StatsResult<Array2<F>> {
-        F::simd_covariance_matrix(data)
+        let (n_samples, n_features) = data.dim();
+        let mut covariance_matrix = Array2::zeros((n_features, n_features));
+
+        // Compute means
+        let mut means = Array1::zeros(n_features);
+        for j in 0..n_features {
+            let col = data.column(j);
+            means[j] = F::simd_mean(&col);
+        }
+
+        // Compute covariance coefficients
+        for i in 0..n_features {
+            for j in i..n_features {
+                let col_i = data.column(i);
+                let col_j = data.column(j);
+
+                // Compute covariance coefficient
+                let mean_i_array = Array1::from_elem(n_samples, means[i]);
+                let mean_j_array = Array1::from_elem(n_samples, means[j]);
+
+                let diff_i = F::simd_sub(&col_i, &mean_i_array.view());
+                let diff_j = F::simd_sub(&col_j, &mean_j_array.view());
+
+                let covariance =
+                    F::simd_dot(&diff_i.view(), &diff_j.view()) / F::from(n_samples - 1).unwrap();
+                covariance_matrix[[i, j]] = covariance;
+                if i != j {
+                    covariance_matrix[[j, i]] = covariance;
+                }
+            }
+        }
+
+        Ok(covariance_matrix)
     }
 
     /// SIMD-optimized eigenvalues computation using power iteration
@@ -839,8 +921,8 @@ where
             return Ok(F::one());
         }
 
-        let max_eigenval = F::simd_max_element(eigenvalues);
-        let min_eigenval = F::simd_min_element(eigenvalues);
+        let max_eigenval = F::simd_max_element(&eigenvalues.view());
+        let min_eigenval = F::simd_min_element(&eigenvalues.view());
 
         if min_eigenval == F::zero() {
             Ok(F::infinity())
@@ -900,7 +982,7 @@ where
         if eigenvalues.is_empty() {
             Ok(F::zero())
         } else {
-            Ok(F::simd_max_element(eigenvalues))
+            Ok(F::simd_max_element(&eigenvalues.view()))
         }
     }
 

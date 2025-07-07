@@ -341,7 +341,7 @@ fn detect_cuda_devices() -> NdimageResult<Vec<DeviceCapability>> {
             max_grid_dims: Some([65535, 65535, 65535]),
             shared_memory_per_block: Some(49152),
             multiprocessor_count: Some(68),
-            clock_rate: Some(1800_000),    // 1.8 GHz
+            clock_rate: Some(1_800_000),   // 1.8 GHz
             memory_bandwidth: Some(448.0), // GB/s
         });
     }
@@ -357,22 +357,22 @@ fn estimate_gpu_capabilities(name: &str) -> (Option<(u32, u32)>, Option<usize>, 
     // Common GPU architectures and their capabilities
     if name_lower.contains("rtx 40") || name_lower.contains("ada lovelace") {
         // RTX 4000 series (Ada Lovelace)
-        (Some((8, 9)), Some(128), Some(2500_000))
+        (Some((8, 9)), Some(128), Some(2_500_000))
     } else if name_lower.contains("rtx 30") || name_lower.contains("ampere") {
         // RTX 3000 series (Ampere)
-        (Some((8, 6)), Some(104), Some(1700_000))
+        (Some((8, 6)), Some(104), Some(1_700_000))
     } else if name_lower.contains("rtx 20") || name_lower.contains("turing") {
         // RTX 2000 series (Turing)
-        (Some((7, 5)), Some(72), Some(1500_000))
+        (Some((7, 5)), Some(72), Some(1_500_000))
     } else if name_lower.contains("gtx 16") || name_lower.contains("gtx 10") {
         // GTX 1000/1600 series (Pascal/Turing)
-        (Some((6, 1)), Some(20), Some(1400_000))
+        (Some((6, 1)), Some(20), Some(1_400_000))
     } else if name_lower.contains("tesla") || name_lower.contains("quadro") {
         // Professional cards
-        (Some((7, 0)), Some(80), Some(1300_000))
+        (Some((7, 0)), Some(80), Some(1_300_000))
     } else {
         // Default/unknown
-        (Some((6, 0)), Some(32), Some(1000_000))
+        (Some((6, 0)), Some(32), Some(1_000_000))
     }
 }
 
@@ -472,7 +472,7 @@ fn detect_opencl_devices() -> NdimageResult<Vec<DeviceCapability>> {
                 max_grid_dims: None,
                 shared_memory_per_block: Some(32768),
                 multiprocessor_count: Some(24),
-                clock_rate: Some(1000_000),   // 1GHz
+                clock_rate: Some(1_000_000),  // 1GHz
                 memory_bandwidth: Some(25.6), // GB/s
             });
         }
@@ -489,7 +489,7 @@ fn detect_opencl_devices() -> NdimageResult<Vec<DeviceCapability>> {
                 max_grid_dims: None,
                 shared_memory_per_block: Some(65536), // 64KB
                 multiprocessor_count: Some(64),
-                clock_rate: Some(1500_000),    // 1.5GHz
+                clock_rate: Some(1_500_000),   // 1.5GHz
                 memory_bandwidth: Some(448.0), // GB/s
             });
         }
@@ -506,7 +506,7 @@ fn estimate_opencl_capabilities(name: &str) -> (usize, usize, usize) {
     if name_lower.contains("intel") {
         // Intel integrated graphics
         if name_lower.contains("iris") || name_lower.contains("xe") {
-            (4_294_967_296, 96, 1300_000) // 4GB, 96 EUs, 1.3GHz
+            (4_294_967_296, 96, 1_300_000) // 4GB, 96 EUs, 1.3GHz
         } else {
             (2_147_483_648, 24, 1000_000) // 2GB, 24 EUs, 1GHz
         }

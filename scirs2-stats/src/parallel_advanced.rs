@@ -383,41 +383,44 @@ impl AdvancedParallelConfig {
                 }
             }
 
-            return CacheSizes {
+            CacheSizes {
                 l1_data,
                 l1_instruction,
                 l2_unified,
                 l3_shared,
-            };
+            }
         }
 
-        // Fallback: Use reasonable defaults based on CPU generation heuristics
-        let num_cores = num_threads();
+        #[cfg(not(target_os = "linux"))]
+        {
+            // Fallback: Use reasonable defaults based on CPU generation heuristics
+            let num_cores = num_threads();
 
-        // Modern CPUs typically have larger caches
-        if num_cores >= 16 {
-            // High-end server/workstation CPU
-            CacheSizes {
-                l1_data: 48 * 1024,          // 48KB
-                l1_instruction: 32 * 1024,   // 32KB
-                l2_unified: 512 * 1024,      // 512KB
-                l3_shared: 32 * 1024 * 1024, // 32MB
-            }
-        } else if num_cores >= 8 {
-            // Mid-range desktop CPU
-            CacheSizes {
-                l1_data: 32 * 1024,          // 32KB
-                l1_instruction: 32 * 1024,   // 32KB
-                l2_unified: 256 * 1024,      // 256KB
-                l3_shared: 16 * 1024 * 1024, // 16MB
-            }
-        } else {
-            // Entry-level CPU
-            CacheSizes {
-                l1_data: 32 * 1024,         // 32KB
-                l1_instruction: 32 * 1024,  // 32KB
-                l2_unified: 256 * 1024,     // 256KB
-                l3_shared: 6 * 1024 * 1024, // 6MB
+            // Modern CPUs typically have larger caches
+            if num_cores >= 16 {
+                // High-end server/workstation CPU
+                CacheSizes {
+                    l1_data: 48 * 1024,          // 48KB
+                    l1_instruction: 32 * 1024,   // 32KB
+                    l2_unified: 512 * 1024,      // 512KB
+                    l3_shared: 32 * 1024 * 1024, // 32MB
+                }
+            } else if num_cores >= 8 {
+                // Mid-range desktop CPU
+                CacheSizes {
+                    l1_data: 32 * 1024,          // 32KB
+                    l1_instruction: 32 * 1024,   // 32KB
+                    l2_unified: 256 * 1024,      // 256KB
+                    l3_shared: 16 * 1024 * 1024, // 16MB
+                }
+            } else {
+                // Entry-level CPU
+                CacheSizes {
+                    l1_data: 32 * 1024,         // 32KB
+                    l1_instruction: 32 * 1024,  // 32KB
+                    l2_unified: 256 * 1024,     // 256KB
+                    l3_shared: 6 * 1024 * 1024, // 6MB
+                }
             }
         }
     }

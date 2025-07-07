@@ -616,7 +616,7 @@ impl AdvancedSTDPNetwork {
             // For first layer, use parameter values to determine spike probability
             for i in 0..layer.size.min(params.len()) {
                 let spike_prob = ((params[i] + 1.0) / 2.0).max(0.0).min(1.0);
-                layer_spikes[i] = rand::rng().random::<f64>() < spike_prob * 0.1;
+                layer_spikes[i] = rand::rng().gen::<f64>() < spike_prob * 0.1;
             }
 
             spike_patterns.push(layer_spikes);
@@ -690,7 +690,7 @@ impl AdvancedSTDPNetwork {
             for (connection_idx, rule) in self.advanced_stdp_rules[layer_idx].iter_mut().enumerate()
             {
                 // Calculate neuron and input indices from connection index
-                let layer_size = self.layers[layer_idx + 1].size;
+                let _layer_size = self.layers[layer_idx + 1].size;
                 let prev_layer_size = self.layers[layer_idx].size;
                 let neuron_idx = connection_idx / prev_layer_size;
                 let input_idx = connection_idx % prev_layer_size;
@@ -740,7 +740,7 @@ impl AdvancedSTDPNetwork {
         base_step * improvement_factor * decay_factor
     }
 
-    fn update_network_statistics(&mut self, current_time: f64) {
+    fn update_network_statistics(&mut self, _current_time: f64) {
         // Compute average plasticity
         let mut total_plasticity = 0.0;
         let mut count = 0;
@@ -803,8 +803,8 @@ where
 
         // More sophisticated spike-based encoding
         for (i, rule) in stdp_rules.iter_mut().enumerate() {
-            let pre_spike = rand::rng().random::<f64>() < (params[i].abs() * 0.1).min(0.5);
-            let post_spike = improvement > 0.0 && rand::rng().random::<f64>() < 0.2;
+            let pre_spike = rand::rng().gen::<f64>() < (params[i].abs() * 0.1).min(0.5);
+            let post_spike = improvement > 0.0 && rand::rng().gen::<f64>() < 0.2;
 
             params[i] = rule.update_weight(params[i], pre_spike, post_spike, 0.001);
         }

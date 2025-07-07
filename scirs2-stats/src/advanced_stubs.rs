@@ -5,7 +5,6 @@
 
 use crate::error::StatsResult;
 use ndarray::{Array1, Array2};
-use num_traits::Float;
 use std::collections::HashMap;
 use std::time::Duration;
 

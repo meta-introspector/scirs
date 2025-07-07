@@ -5,7 +5,6 @@ use crate::gpu::{GpuContext, GpuDeviceInfo};
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
-use rand::rng;
 use rand::rngs::StdRng;
 use rand_distr::Distribution;
 // Use local GPU implementation instead of core to avoid feature flag issues
@@ -47,8 +46,7 @@ pub fn make_classification(
 
     if n_features < n_informative {
         return Err(DatasetsError::InvalidFormat(format!(
-            "n_features ({}) must be >= n_informative ({})",
-            n_features, n_informative
+            "n_features ({n_features}) must be >= n_informative ({n_informative})"
         )));
     }
 
@@ -67,7 +65,7 @@ pub fn make_classification(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -182,8 +180,7 @@ pub fn make_regression(
 
     if n_features < n_informative {
         return Err(DatasetsError::InvalidFormat(format!(
-            "n_features ({}) must be >= n_informative ({})",
-            n_features, n_informative
+            "n_features ({n_features}) must be >= n_informative ({n_informative})"
         )));
     }
 
@@ -196,7 +193,7 @@ pub fn make_regression(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -244,11 +241,10 @@ pub fn make_regression(
     dataset = dataset
         .with_feature_names(feature_names)
         .with_description(format!(
-            "Synthetic regression dataset with {} features ({} informative)",
-            n_features, n_informative
+            "Synthetic regression dataset with {n_features} features ({n_informative} informative)"
         ))
         .with_metadata("noise", &noise.to_string())
-        .with_metadata("coefficients", &format!("{:?}", coef));
+        .with_metadata("coefficients", &format!("{coef:?}"));
 
     Ok(dataset)
 }
@@ -285,7 +281,7 @@ pub fn make_time_series(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -346,8 +342,7 @@ pub fn make_time_series(
     dataset = dataset
         .with_feature_names(feature_names)
         .with_description(format!(
-            "Synthetic time series dataset with {} features",
-            n_features
+            "Synthetic time series dataset with {n_features} features"
         ))
         .with_metadata("trend", &trend.to_string())
         .with_metadata("seasonality", &seasonality.to_string())
@@ -393,7 +388,7 @@ pub fn make_blobs(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -446,8 +441,7 @@ pub fn make_blobs(
     dataset = dataset
         .with_feature_names(feature_names)
         .with_description(format!(
-            "Synthetic clustering dataset with {} clusters and {} features",
-            centers, n_features
+            "Synthetic clustering dataset with {centers} clusters and {n_features} features"
         ))
         .with_metadata("centers", &centers.to_string())
         .with_metadata("cluster_std", &cluster_std.to_string());
@@ -485,7 +479,7 @@ pub fn make_spirals(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -562,7 +556,7 @@ pub fn make_moons(n_samples: usize, noise: f64, random_seed: Option<u64>) -> Res
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -659,7 +653,7 @@ pub fn make_circles(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -746,7 +740,7 @@ pub fn make_swiss_roll(n_samples: usize, noise: f64, random_seed: Option<u64>) -
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -840,7 +834,7 @@ pub fn make_anisotropic_blobs(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -917,8 +911,7 @@ pub fn make_anisotropic_blobs(
     dataset = dataset
         .with_feature_names(feature_names)
         .with_description(format!(
-            "Anisotropic clustering dataset with {} elongated clusters and {} features",
-            centers, n_features
+            "Anisotropic clustering dataset with {centers} elongated clusters and {n_features} features"
         ))
         .with_metadata("centers", &centers.to_string())
         .with_metadata("cluster_std", &cluster_std.to_string())
@@ -979,7 +972,7 @@ pub fn make_hierarchical_clusters(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1049,14 +1042,15 @@ pub fn make_hierarchical_clusters(
     dataset = dataset
         .with_feature_names(feature_names)
         .with_description(format!(
-            "Hierarchical clustering dataset with {} main clusters, {} sub-clusters each",
-            n_main_clusters, n_sub_clusters
+            "Hierarchical clustering dataset with {n_main_clusters} main clusters, {n_sub_clusters} sub-clusters each"
         ))
         .with_metadata("n_main_clusters", &n_main_clusters.to_string())
         .with_metadata("n_sub_clusters", &n_sub_clusters.to_string())
         .with_metadata("main_cluster_std", &main_cluster_std.to_string())
-        .with_metadata("sub_cluster_std", &sub_cluster_std.to_string())
-        .with_metadata("sub_cluster_labels", &format!("{:?}", sub_target.to_vec()));
+        .with_metadata("sub_cluster_std", &sub_cluster_std.to_string());
+
+    let sub_target_vec = sub_target.to_vec();
+    dataset = dataset.with_metadata("sub_cluster_labels", &format!("{sub_target_vec:?}"));
 
     Ok(dataset)
 }
@@ -1103,7 +1097,7 @@ pub fn inject_missing_data(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1201,7 +1195,7 @@ pub fn inject_outliers(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1316,7 +1310,7 @@ pub fn add_time_series_noise(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -1392,8 +1386,7 @@ pub fn add_time_series_noise(
             }
             _ => {
                 return Err(DatasetsError::InvalidFormat(format!(
-                    "Unknown noise type: {}. Supported types: gaussian, spikes, drift, seasonal, autocorrelated, heteroscedastic",
-                    noise_type
+                    "Unknown noise type: {noise_type}. Supported types: gaussian, spikes, drift, seasonal, autocorrelated, heteroscedastic"
                 )));
             }
         }
@@ -1467,9 +1460,9 @@ pub fn make_corrupted_dataset(
                 .unwrap_or("Unknown dataset")
         ))
         .with_metadata("missing_rate", &missing_rate.to_string())
-        .with_metadata("missing_pattern", &format!("{:?}", missing_pattern))
+        .with_metadata("missing_pattern", &format!("{missing_pattern:?}"))
         .with_metadata("outlier_rate", &outlier_rate.to_string())
-        .with_metadata("outlier_type", &format!("{:?}", outlier_type))
+        .with_metadata("outlier_type", &format!("{outlier_type:?}"))
         .with_metadata("outlier_strength", &outlier_strength.to_string())
         .with_metadata(
             "missing_count",
@@ -1594,8 +1587,7 @@ fn make_classification_gpu_impl(
 
     if n_features < n_informative {
         return Err(DatasetsError::InvalidFormat(format!(
-            "n_features ({}) must be >= n_informative ({})",
-            n_features, n_informative
+            "n_features ({n_features}) must be >= n_informative ({n_informative})"
         )));
     }
 
@@ -1620,7 +1612,7 @@ fn make_classification_gpu_impl(
 
     // Generate data in chunks to avoid memory issues
     let chunk_size = std::cmp::min(gpu_config.chunk_size, n_samples);
-    let num_chunks = (n_samples + chunk_size - 1) / chunk_size;
+    let num_chunks = n_samples.div_ceil(chunk_size);
 
     let mut all_data = Vec::new();
     let mut all_targets = Vec::new();
@@ -1663,8 +1655,7 @@ fn make_classification_gpu_impl(
         .with_feature_names(feature_names)
         .with_target_names(class_names)
         .with_description(format!(
-            "GPU-accelerated synthetic classification dataset with {} classes and {} features",
-            n_classes, n_features
+            "GPU-accelerated synthetic classification dataset with {n_classes} classes and {n_features} features"
         ));
 
     Ok(dataset)
@@ -1882,8 +1873,7 @@ fn make_regression_gpu_impl(
 
     if n_features < n_informative {
         return Err(DatasetsError::InvalidFormat(format!(
-            "n_features ({}) must be >= n_informative ({})",
-            n_features, n_informative
+            "n_features ({n_features}) must be >= n_informative ({n_informative})"
         )));
     }
 
@@ -1905,13 +1895,13 @@ fn make_regression_gpu_impl(
 
     // Generate coefficient matrix on GPU
     let mut coefficients = vec![0.0; n_informative];
-    for i in 0..n_informative {
-        coefficients[i] = rng.random_range(-2.0f64..2.0f64);
+    for coeff in coefficients.iter_mut().take(n_informative) {
+        *coeff = rng.random_range(-2.0f64..2.0f64);
     }
 
     // Generate data matrix in chunks
     let chunk_size = std::cmp::min(gpu_config.chunk_size, n_samples);
-    let num_chunks = (n_samples + chunk_size - 1) / chunk_size;
+    let num_chunks = n_samples.div_ceil(chunk_size);
 
     let mut all_data = Vec::new();
     let mut all_targets = Vec::new();
@@ -1951,8 +1941,7 @@ fn make_regression_gpu_impl(
     dataset = dataset
         .with_feature_names(feature_names)
         .with_description(format!(
-            "GPU-accelerated synthetic regression dataset with {} features",
-            n_features
+            "GPU-accelerated synthetic regression dataset with {n_features} features"
         ));
 
     Ok(dataset)
@@ -2196,8 +2185,7 @@ fn make_blobs_gpu_impl(
         .with_feature_names(feature_names)
         .with_target_names(center_names)
         .with_description(format!(
-            "GPU-accelerated synthetic blob dataset with {} centers and {} features",
-            n_centers, n_features
+            "GPU-accelerated synthetic blob dataset with {n_centers} centers and {n_features} features"
         ));
 
     Ok(dataset)
@@ -2236,7 +2224,7 @@ fn generate_blobs_center_gpu(
         result.push(sample);
     }
 
-    return Ok(result);
+    Ok(result)
 
     // TODO: GPU implementation placeholder - using CPU fallback above
     /*
@@ -2358,10 +2346,7 @@ fn generate_blobs_center_gpu(
 #[allow(dead_code)]
 pub fn gpu_is_available() -> bool {
     // Try to create a GPU context to check availability
-    match GpuContext::new(crate::gpu::GpuConfig::default()) {
-        Ok(_) => true,
-        Err(_) => false,
-    }
+    GpuContext::new(crate::gpu::GpuConfig::default()).is_ok()
 }
 
 /// Get GPU device information
@@ -2426,7 +2411,7 @@ pub fn make_s_curve(n_samples: usize, noise: f64, random_seed: Option<u64>) -> R
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2480,7 +2465,7 @@ pub fn make_swiss_roll_advanced(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2550,7 +2535,7 @@ pub fn make_severed_sphere(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2609,7 +2594,7 @@ pub fn make_twin_peaks(n_samples: usize, noise: f64, random_seed: Option<u64>) -
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2681,7 +2666,7 @@ pub fn make_helix(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2734,7 +2719,7 @@ pub fn make_intersecting_manifolds(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2821,7 +2806,7 @@ pub fn make_torus(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -2851,8 +2836,7 @@ pub fn make_torus(
     dataset = dataset
         .with_feature_names(vec!["X".to_string(), "Y".to_string(), "Z".to_string()])
         .with_description(format!(
-            "Torus manifold with major radius {} and minor radius {}",
-            major_radius, minor_radius
+            "Torus manifold with major radius {major_radius} and minor radius {minor_radius}"
         ));
 
     Ok(dataset)

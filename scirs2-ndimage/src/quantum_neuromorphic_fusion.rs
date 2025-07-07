@@ -2178,7 +2178,6 @@ where
 /// This system represents the next evolution in quantum-classical integration,
 /// implementing sophisticated algorithms that seamlessly blend quantum and
 /// classical processing paradigms for enhanced image processing capabilities.
-
 /// Advanced Quantum-Classical Hybrid Processor
 #[derive(Debug, Clone)]
 pub struct QuantumClassicalHybridProcessor {
@@ -3132,7 +3131,6 @@ impl Default for ResourceConstraints {
 }
 
 /// Supporting result structures and helper functions
-
 /// Input Analysis Result
 #[derive(Debug, Clone)]
 pub struct InputAnalysisResult {

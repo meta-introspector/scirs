@@ -8,7 +8,7 @@
 use crate::error::StatsResult;
 use crate::property_based_validation::ValidationReport;
 use ndarray::{Array1, ArrayBase, ArrayView1, Data, Ix1};
-use num_traits::{Float, NumCast, One, Zero};
+use num_traits::{Float, NumCast};
 use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;

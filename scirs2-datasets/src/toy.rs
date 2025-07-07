@@ -7,7 +7,6 @@ use crate::error::Result;
 use crate::utils::Dataset;
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
-use rand::rng;
 use rand::rngs::StdRng;
 
 /// Generate the classic Iris dataset
@@ -250,7 +249,7 @@ pub fn load_digits() -> Result<Dataset> {
     ];
 
     // Create 5 samples per digit with small random variations
-    let mut rng = rng();
+    let mut rng = rand::rng();
     let noise_level = 0.1;
 
     for (digit, &pattern) in digit_patterns.iter().enumerate() {

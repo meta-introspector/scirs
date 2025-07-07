@@ -6,6 +6,8 @@
 
 use ndarray::{Array, Array2, Array4, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
+use rand::rngs::SmallRng;
+use rand::Rng;
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};
@@ -38,6 +40,8 @@ pub struct SpectralNorm<A: Float> {
     u: Option<Array<A, ndarray::Ix1>>,
     /// Cached right singular vector  
     v: Option<Array<A, ndarray::Ix1>>,
+    /// Random number generator
+    rng: SmallRng,
 }
 
 impl<A: Float + Debug + ScalarOperand + FromPrimitive> SpectralNorm<A> {
@@ -52,6 +56,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> SpectralNorm<A> {
             eps: A::from_f64(1e-12).unwrap(),
             u: None,
             v: None,
+            rng: SmallRng::from_entropy(),
         }
     }
 
@@ -62,14 +67,14 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> SpectralNorm<A> {
         // Initialize u and v if not already done
         if self.u.is_none() || self.u.as_ref().unwrap().len() != m {
             self.u = Some(Array::from_shape_fn((m,), |_| {
-                let val: f64 = rand::random();
+                let val: f64 = self.rng.random_range(0.0..1.0);
                 A::from_f64(val).unwrap()
             }));
         }
 
         if self.v.is_none() || self.v.as_ref().unwrap().len() != n {
             self.v = Some(Array::from_shape_fn((n,), |_| {
-                let val: f64 = rand::random();
+                let val: f64 = self.rng.random_range(0.0..1.0);
                 A::from_f64(val).unwrap()
             }));
         }

@@ -162,7 +162,7 @@ impl DatasetRegistry {
                 url: None,
                 checksum: None,
             }),
-            _ => Err(DatasetsError::Other(format!("Unknown dataset: {}", name))),
+            _ => Err(DatasetsError::Other(format!("Unknown dataset: {name}"))),
         }
     }
 

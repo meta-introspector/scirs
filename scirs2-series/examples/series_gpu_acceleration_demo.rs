@@ -578,8 +578,8 @@ fn advanced_ml_demo() {
                         match lstm_forecaster.predict_with_uncertainty(5, 0.95) {
                             Ok(uncertainty_result) => {
                                 println!("    Uncertainty quantification successful");
-                                if let (Some(lower), Some(upper)) =
-                                    (&uncertainty_result.lower_ci, &uncertainty_result.upper_ci)
+                                let (lower, upper) =
+                                    (&uncertainty_result.lower_ci, &uncertainty_result.upper_ci);
                                 {
                                     println!(
                                         "    Confidence intervals available: {} points",

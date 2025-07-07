@@ -205,9 +205,11 @@ impl SciPyValidationSuite {
         // The outlier at (1,1) should be replaced by neighborhood median
         // Neighborhood: [1,2,3,6,100,8,11,12,13] -> sorted: [1,2,3,6,8,11,12,13,100] -> median = 8
         let filtered_outlier = result[[1, 1]];
-        let expected_median = 8.0;
+        let expected_median = 8.0f64;
 
-        let passed = (filtered_outlier - expected_median).abs() < self.config.tolerance;
+        let filtered_outlier_f64 = filtered_outlier.to_f64().unwrap_or(0.0);
+        let abs_diff = (filtered_outlier_f64 - expected_median).abs();
+        let passed = abs_diff < self.config.tolerance;
 
         let validation = ValidationResult {
             test_name: "median_filter_outlier_removal".to_string(),
@@ -217,13 +219,13 @@ impl SciPyValidationSuite {
                 .cloned()
                 .collect(),
             passed,
-            max_abs_diff: (filtered_outlier - expected_median).abs(),
-            mean_abs_diff: (filtered_outlier - expected_median).abs(),
-            rmse: (filtered_outlier - expected_median).abs(),
-            relative_error: (filtered_outlier - expected_median).abs() / expected_median,
+            max_abs_diff: abs_diff,
+            mean_abs_diff: abs_diff,
+            rmse: abs_diff,
+            relative_error: abs_diff / expected_median,
             reference_source: "Manual calculation of neighborhood median".to_string(),
             reference_sample: vec![expected_median],
-            computed_sample: vec![filtered_outlier],
+            computed_sample: vec![filtered_outlier_f64],
             tolerance: self.config.tolerance,
             notes: vec!["Median filter should remove outliers effectively".to_string()],
         };

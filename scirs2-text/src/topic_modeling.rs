@@ -155,7 +155,7 @@
 use crate::error::{Result, TextError};
 use ndarray::{Array1, Array2, Axis};
 use rand::prelude::*;
-use rand::rng;
+use rand::{rng, rngs::StdRng, SeedableRng};
 use std::collections::HashMap;
 
 /// Learning method for LDA
@@ -511,7 +511,7 @@ impl LatentDirichletAllocation {
             let mut rng = if let Some(seed) = self.config.random_seed {
                 StdRng::seed_from_u64(seed)
             } else {
-                StdRng::from_rng(&mut rng())
+                StdRng::from_rng(&mut rand::rng())
             };
 
             let mut components = Array2::<f64>::zeros((self.config.n_topics, n_features));

@@ -61,6 +61,7 @@ impl ThinPlateSpline {
     /// # Returns
     ///
     /// * Result containing the thin-plate spline transformation
+    #[allow(dead_code)]
     pub fn new(
         source_points: &[(f64, f64)],
         target_points: &[(f64, f64)],

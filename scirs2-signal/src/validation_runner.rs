@@ -394,7 +394,6 @@ fn validate_lombscargle_module(
 ) -> SignalResult<Option<crate::lombscargle_scipy_validation::ScipyValidationResult>> {
     let scipy_config = ScipyValidationConfig {
         tolerance: config.tolerance,
-        extensive: config.extensive,
         ..Default::default()
     };
 
@@ -463,7 +462,7 @@ fn validate_parametric_module(
     for &n in &[256, 512] {
         let signal = Array1::from_iter((0..n).map(|i| (2.0 * PI * i as f64 / 100.0).sin()));
 
-        match estimate_arma(&signal, 2, 1, ARMethod::Yulewalker) {
+        match estimate_arma(&signal, 2, 1, ARMethod::YuleWalker) {
             Ok(_model) => {
                 // Basic validation - just check that estimation completes
                 quality_scores.push(90.0);

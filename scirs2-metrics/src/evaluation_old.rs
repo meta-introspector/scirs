@@ -100,8 +100,8 @@ where
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
             // In rand 0.9.0, from_rng returns the RNG directly, not a Result
-            let mut r = rand::rng();
-            StdRng::from_rng(&mut r)
+            let r = rand::rng();
+            StdRng::from_rng(r)?
         }
     };
 
@@ -219,8 +219,8 @@ pub fn k_fold_cross_validation(
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
-                let mut r = rand::rng();
-                StdRng::from_rng(&mut r)
+                let r = rand::rng();
+                StdRng::from_rng(r)?
             }
         };
 
@@ -388,8 +388,8 @@ where
     let mut rng = match random_seed {
         Some(seed) => Some(StdRng::seed_from_u64(seed)),
         None if shuffle => {
-            let mut r = rand::rng();
-            Some(StdRng::from_rng(&mut r))
+            let r = rand::rng();
+            Some(StdRng::from_rng(r)?)
         }
         None => None,
     };

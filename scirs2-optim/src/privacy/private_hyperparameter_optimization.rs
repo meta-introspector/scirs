@@ -1290,7 +1290,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                         .unwrap_or(100);
                     ParameterValue::Integer(self.rng.random_range(min..=max))
                 }
-                ParameterType::Boolean => ParameterValue::Boolean(self.rng.random()),
+                ParameterType::Boolean => ParameterValue::Boolean(self.rng.random_range(0..2) == 1),
                 ParameterType::Categorical(categories) => {
                     let idx = self.rng.random_range(0..categories.len());
                     ParameterValue::Categorical(categories[idx].clone())

@@ -132,7 +132,10 @@ where
         let chunk_size = self.config.get_optimal_chunk_size(n);
 
         // Parallel reduction for statistics
-        let results: Vec<(F, F, F, F, usize)> = par_chunks(data.as_slice().unwrap(), chunk_size)
+        let results: Vec<(F, F, F, F, usize)> = data
+            .as_slice()
+            .unwrap()
+            .par_chunks(chunk_size)
             .map(|chunk| {
                 let len = chunk.len();
                 let sum = chunk.iter().fold(F::zero(), |acc, &x| acc + x);

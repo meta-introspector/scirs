@@ -2583,7 +2583,7 @@ mod tests {
         assert_eq!(result.len(), 6);
         // RSI should be between 0 and 100
         for &value in result.iter() {
-            assert!(value >= 0.0 && value <= 100.0);
+            assert!((0.0..=100.0).contains(&value));
         }
     }
 
@@ -2631,18 +2631,20 @@ mod tests {
 
         // Stochastic values should be between 0 and 100
         for &value in k.iter() {
-            assert!(value >= 0.0 && value <= 100.0);
+            assert!((0.0..=100.0).contains(&value));
         }
         for &value in d.iter() {
-            assert!(value >= 0.0 && value <= 100.0);
+            assert!((0.0..=100.0).contains(&value));
         }
     }
 
     #[test]
     fn test_garch_mle_fit() {
         // Test GARCH(1,1) with MLE
-        let mut config = GarchConfig::default();
-        config.use_numerical_derivatives = true; // Force MLE
+        let config = GarchConfig {
+            use_numerical_derivatives: true, // Force MLE
+            ..Default::default()
+        };
         let mut model = GarchModel::<f64>::new(config);
 
         // Generate synthetic GARCH data
@@ -2858,7 +2860,7 @@ mod tests {
         let (adx_values, plus_di, minus_di) = result.unwrap();
         assert!(!adx_values.is_empty(), "ADX should produce values");
         assert!(
-            adx_values.iter().all(|&x| x >= 0.0 && x <= 100.0),
+            adx_values.iter().all(|&x| (0.0..=100.0).contains(&x)),
             "ADX should be between 0 and 100"
         );
         assert!(!plus_di.is_empty(), "+DI should produce values");
@@ -3809,8 +3811,11 @@ pub mod advanced_technical_indicators {
     /// Moving average types
     #[derive(Debug, Clone)]
     pub enum MovingAverageType {
+        /// Simple moving average
         Simple,
+        /// Exponential moving average
         Exponential,
+        /// Weighted moving average
         Weighted,
     }
 
@@ -4575,12 +4580,19 @@ pub mod advanced_technical_indicators {
     /// Fibonacci retracement levels structure
     #[derive(Debug, Clone)]
     pub struct FibonacciLevels<F: Float> {
+        /// 100% Fibonacci level
         pub level_100: F,
+        /// 78.6% Fibonacci level
         pub level_78_6: F,
+        /// 61.8% Fibonacci level
         pub level_61_8: F,
+        /// 50.0% Fibonacci level
         pub level_50_0: F,
+        /// 38.2% Fibonacci level
         pub level_38_2: F,
+        /// 23.6% Fibonacci level
         pub level_23_6: F,
+        /// 0% Fibonacci level
         pub level_0: F,
     }
 

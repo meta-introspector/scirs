@@ -4,7 +4,7 @@
 //! scanning, vulnerability detection, supply chain security analysis, and automated
 //! security monitoring for the optimization library and its plugins.
 
-use crate::error::{OptimError, Result};
+use crate::error::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -1807,18 +1807,6 @@ impl SecurityReportGenerator {
             }
             _ => Ok("Report generation not yet implemented for this format".to_string()),
         }
-    }
-}
-
-impl From<std::io::Error> for OptimError {
-    fn from(err: std::io::Error) -> Self {
-        OptimError::Other(err.to_string())
-    }
-}
-
-impl From<serde_json::Error> for OptimError {
-    fn from(err: serde_json::Error) -> Self {
-        OptimError::Other(err.to_string())
     }
 }
 

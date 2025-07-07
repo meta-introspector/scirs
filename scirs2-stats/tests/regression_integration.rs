@@ -89,17 +89,19 @@ fn test_ransac_advanced() {
     let mut y = Vec::new();
 
     // Create inliers following y = 3x + 2 with some noise
+    use rand::Rng;
+    let mut rng = rand::rng();
     for i in 0..20 {
         let x_val = i as f64;
-        let y_val = 3.0 * x_val + 2.0 + (rand::random::<f64>() - 0.5);
+        let y_val = 3.0 * x_val + 2.0 + (rng.random::<f64>() - 0.5);
         x.push(x_val);
         y.push(y_val);
     }
 
     // Add outliers that don't follow the pattern
     for _ in 0..8 {
-        let x_val = rand::random::<f64>() * 20.0;
-        let y_val = rand::random::<f64>() * 50.0; // Completely random y values
+        let x_val = rng.random::<f64>() * 20.0;
+        let y_val = rng.random::<f64>() * 50.0; // Completely random y values
         x.push(x_val);
         y.push(y_val);
     }
@@ -236,16 +238,19 @@ fn test_huber_regression_advanced() {
     // y = 1 + 2*x₁ + 3*x₂ + noise + some outliers
     let mut y = Vec::with_capacity(20);
 
+    // Add a temporary RNG for generating outliers
+    use rand::Rng;
+    let mut temp_rng = rand::rng();
     for i in 0..20 {
         let noise = if i < 17 {
             // Regular noise for most observations
-            (rand::random::<f64>() - 0.5) * 0.5
+            (temp_rng.random::<f64>() - 0.5) * 0.5
         } else {
             // Large outliers for last 3 observations
-            if rand::random::<bool>() {
-                10.0 + rand::random::<f64>() * 5.0 // Large positive outlier
+            if temp_rng.random::<bool>() {
+                10.0 + temp_rng.random::<f64>() * 5.0 // Large positive outlier
             } else {
-                -10.0 - rand::random::<f64>() * 5.0 // Large negative outlier
+                -10.0 - temp_rng.random::<f64>() * 5.0 // Large negative outlier
             }
         };
 

@@ -824,10 +824,10 @@ impl AdvancedGpuOptimizer {
         cols: usize,
         distribution: &str,
     ) -> Result<Array2<f64>> {
-        use rand::{rng, Rng};
+        use rand::Rng;
         use rand_distr::{Distribution, Normal, Uniform};
 
-        let _rng = rng();
+        let _rng = rand::thread_rng();
         let total_elements = rows * cols;
 
         // Generate data in parallel chunks
@@ -837,7 +837,7 @@ impl AdvancedGpuOptimizer {
             .into_par_iter()
             .chunks(chunk_size)
             .flat_map(|chunk| {
-                let mut local_rng = rand::rng();
+                let mut local_rng = rand::thread_rng();
                 chunk
                     .into_iter()
                     .map(|_| match distribution {
@@ -849,7 +849,7 @@ impl AdvancedGpuOptimizer {
                             let uniform = Uniform::new(0.0, 1.0).unwrap();
                             uniform.sample(&mut local_rng)
                         }
-                        _ => local_rng.gen::<f64>(),
+                        _ => local_rng.random::<f64>(),
                     })
                     .collect::<Vec<_>>()
             })

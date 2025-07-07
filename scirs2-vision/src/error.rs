@@ -18,10 +18,6 @@ pub enum VisionError {
     #[error("Operation failed: {0}")]
     OperationError(String),
 
-    /// Operation failure
-    #[error("Operation failed: {0}")]
-    OperationFailed(String),
-
     /// Underlying ndimage error (temporarily simplified for publishing)
     #[error("ndimage error: {0}")]
     NdimageError(String),
@@ -65,7 +61,6 @@ impl Clone for VisionError {
             VisionError::ImageLoadError(s) => VisionError::ImageLoadError(s.clone()),
             VisionError::InvalidParameter(s) => VisionError::InvalidParameter(s.clone()),
             VisionError::OperationError(s) => VisionError::OperationError(s.clone()),
-            VisionError::OperationFailed(s) => VisionError::OperationFailed(s.clone()),
             VisionError::NdimageError(s) => VisionError::NdimageError(s.clone()),
             VisionError::IoError(e) => VisionError::Other(format!("I/O error: {e}")),
             VisionError::TypeConversionError(s) => VisionError::TypeConversionError(s.clone()),
@@ -402,7 +397,7 @@ impl ErrorRecoveryManager {
         let mut strategies = Vec::new();
 
         match error {
-            VisionError::OperationError(_) | VisionError::OperationFailed(_) => {
+            VisionError::OperationError(_) => {
                 // Check if this is a resource-related error
                 if system_state.available_memory < self.config.memory_threshold {
                     strategies.push(RecoveryStrategy::ReduceQuality);

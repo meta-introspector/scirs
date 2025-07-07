@@ -140,7 +140,7 @@ fn compute_interpolation_coefficients<T>(
     offset: T,
 ) -> NdimageResult<Vec<T>>
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     match order {
         InterpolationOrder::Nearest => Ok(vec![T::one()]),
@@ -175,7 +175,7 @@ where
 #[allow(dead_code)]
 fn compute_bspline_coefficients<T>(order: usize, offset: T) -> NdimageResult<Vec<T>>
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let mut coeffs = vec![T::zero(); order + 1];
 
@@ -232,7 +232,7 @@ impl<T: Float + FromPrimitive + Debug + Clone> Interpolator1D<T> {
         mode: BoundaryMode,
         cval: T,
     ) -> NdimageResult<T> {
-        let n = data.len();
+        let _n = data.len();
         let idx = position.floor();
         let offset = position - idx;
 
@@ -259,7 +259,7 @@ impl<T: Float + FromPrimitive + Debug + Clone> Interpolator1D<T> {
 #[allow(dead_code)]
 fn get_boundary_value_1d<T>(data: &ArrayView1<T>, idx: isize, mode: BoundaryMode, cval: T) -> T
 where
-    T: Float + FromPrimitive + Clone,
+    T: Float + FromPrimitive + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let n = data.len() as isize;
 
@@ -362,7 +362,7 @@ impl<T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static> Interpola
         mode: BoundaryMode,
         cval: T,
     ) -> NdimageResult<T> {
-        let (h, w) = data.dim();
+        let (_h, _w) = data.dim();
 
         // Get integer and fractional parts
         let yi = y.floor();
@@ -412,7 +412,7 @@ fn get_boundary_value_2d<T>(
     cval: T,
 ) -> T
 where
-    T: Float + FromPrimitive + Clone,
+    T: Float + FromPrimitive + Clone + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let (h, w) = data.dim();
     let h = h as isize;

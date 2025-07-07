@@ -294,10 +294,10 @@ impl DistributedCoordinator {
         })?;
 
         // Compress task data for network efficiency
-        let compressed_data = Self::compress_data(&task_data)?;
+        let _compressed_data = Self::compress_data(&task_data)?;
 
         // Construct endpoint URL with validation
-        let url = format!("http://{}:{}/api/execute", node.address, node.port);
+        let _url = format!("http://{}:{}/api/execute", node.address, node.port);
 
         // For now, execute locally with simulated network delay
         // In a real implementation, this would use an HTTP client like reqwest
@@ -602,7 +602,7 @@ impl DistributedPCA {
 
     /// Fit PCA using distributed computation
     pub async fn fit(&mut self, x: &ArrayView2<'_, f64>) -> Result<()> {
-        let (n_samples, n_features) = x.dim();
+        let (_n_samples, n_features) = x.dim();
 
         // Partition data across nodes
         let partitions = self.partition_data(x).await?;
@@ -700,7 +700,7 @@ impl DistributedPCA {
 
     /// Partition data for distributed processing using intelligent strategies
     async fn partition_data(&self, x: &ArrayView2<'_, f64>) -> Result<Vec<Vec<Vec<f64>>>> {
-        let (n_samples, n_features) = x.dim();
+        let (_n_samples, _n_features) = x.dim();
         let nodes = self.coordinator.nodes.read().await;
 
         match &self.coordinator.config.partitioning_strategy {
@@ -768,7 +768,7 @@ impl DistributedPCA {
         x: &ArrayView2<'_, f64>,
         nodes: &HashMap<NodeId, NodeInfo>,
     ) -> Result<Vec<Vec<Vec<f64>>>> {
-        let (n_samples, n_features) = x.dim();
+        let (_n_samples, n_features) = x.dim();
         let n_nodes = nodes.len();
 
         if n_nodes == 0 {
@@ -867,7 +867,7 @@ impl DistributedPCA {
         let (n_samples, n_features) = x.dim();
 
         // Analyze data characteristics
-        let data_density = self.calculate_data_density(x)?;
+        let _data_density = self.calculate_data_density(x)?;
         let feature_correlation = self.estimate_feature_correlation(x)?;
         let data_size_gb = (n_samples * n_features * std::mem::size_of::<f64>()) as f64
             / (1024.0 * 1024.0 * 1024.0);
@@ -1549,26 +1549,22 @@ impl EnhancedDistributedCoordinator {
 
     /// Try to submit task with circuit breaker protection
     async fn try_submit_with_circuit_breaker(&self, task: DistributedTask) -> Result<()> {
-        let breakers_guard = self.circuit_breakers.read().await;
+        let mut breakers_guard = self.circuit_breakers.write().await;
 
         // Find a node with an open circuit breaker
-        for (node_id, breaker) in breakers_guard.iter() {
+        for (node_id, breaker) in breakers_guard.iter_mut() {
             if breaker.can_execute() {
                 // Try to submit to this node
                 let result = self.base_coordinator.submit_task(task.clone()).await;
-                drop(breakers_guard);
 
-                let mut breakers_guard = self.circuit_breakers.write().await;
-                if let Some(breaker) = breakers_guard.get_mut(node_id) {
-                    match result {
-                        Ok(_) => {
-                            breaker.record_success();
-                            return Ok(());
-                        }
-                        Err(_e) => {
-                            breaker.record_failure();
-                            continue;
-                        }
+                match result {
+                    Ok(_) => {
+                        breaker.record_success();
+                        return Ok(());
+                    }
+                    Err(_e) => {
+                        breaker.record_failure();
+                        continue;
                     }
                 }
             }

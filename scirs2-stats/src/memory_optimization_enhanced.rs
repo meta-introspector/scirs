@@ -113,6 +113,7 @@ pub enum MemoryPressure {
 }
 
 /// Real-time memory monitoring and profiling
+#[allow(dead_code)]
 struct MemoryMonitor {
     /// Current memory usage tracking
     current_usage: AtomicUsize,
@@ -138,6 +139,7 @@ struct AllocationEvent {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 enum AllocationType {
     Allocate,
     Deallocate,
@@ -155,6 +157,7 @@ struct MemorySnapshot {
 
 /// Performance metrics for memory operations
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct PerformanceMetrics {
     /// Average allocation time in nanoseconds
     avg_allocation_time: f64,
@@ -330,7 +333,7 @@ enum AccessPattern {
 
 /// Performance score under specific conditions
 #[derive(Debug, Clone)]
-struct PerformanceScore {
+pub struct PerformanceScore {
     /// Execution time score (0-100, higher is better)
     time_score: f64,
     /// Memory efficiency score (0-100, higher is better)

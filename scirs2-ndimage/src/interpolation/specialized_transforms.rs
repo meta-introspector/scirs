@@ -56,7 +56,14 @@ pub fn perspective_transform<T>(
     cval: Option<T>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     // Validate inputs
     if matrix.shape() != [3, 3] {
@@ -208,7 +215,14 @@ pub fn thin_plate_spline_transform<T>(
     regularization: Option<T>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     // Validate inputs
     if source_points.shape() != target_points.shape() {
@@ -289,7 +303,7 @@ fn compute_tps_coefficients<T>(
     lambda: T,
 ) -> NdimageResult<(Array2<T>, T, T)>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let n = source_points.shape()[0];
 
@@ -347,7 +361,7 @@ where
 fn apply_tps_mapping<T>(
     x: T,
     y: T,
-    control_points: &Array2<T>,
+    _control_points: &Array2<T>,
     _weights: &Array2<T>,
     _a_x: &T,
     _a_y: &T,
@@ -388,7 +402,14 @@ pub fn pyramid_transform<T, F>(
     cval: Option<T>,
 ) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
     F: FnMut(&Array2<T>, usize) -> NdimageResult<Array2<T>>,
 {
     let num_levels = levels.unwrap_or(3);
@@ -463,7 +484,7 @@ where
 #[allow(dead_code)]
 fn upsample_array<T>(input: &Array2<T>, target_shape: (usize, usize)) -> NdimageResult<Array2<T>>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let (src_h, src_w) = input.dim();
     let (dst_h, dst_w) = target_shape;

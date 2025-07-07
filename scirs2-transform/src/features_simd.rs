@@ -3,7 +3,7 @@
 //! This module provides SIMD-optimized implementations of feature engineering operations
 //! using the unified SIMD operations from scirs2-core.
 
-use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Axis, Data, Ix2};
+use ndarray::{Array1, Array2, ArrayBase, ArrayView1, Data, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_not_empty, check_positive};

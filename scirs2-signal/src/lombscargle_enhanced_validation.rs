@@ -16,12 +16,10 @@ use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig};
 use crate::lombscargle_validation::{
     validate_analytical_cases, validate_lombscargle_enhanced, ValidationResult,
 };
-use ndarray::{Array1, Array2};
 use num_traits::Float;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -3615,8 +3613,6 @@ fn test_frequency_domain_analysis_extended(
     implementation: &str,
     tolerance: f64,
 ) -> SignalResult<FrequencyDomainAnalysisResults> {
-    use std::collections::HashMap;
-
     let mut result = FrequencyDomainAnalysisResults {
         spectral_leakage: 0.0,
         dynamic_range_db: 0.0,
@@ -3920,8 +3916,7 @@ fn test_cross_validation_extended(
     let mut freq_estimates = Vec::new();
 
     for _ in 0..n_realizations {
-        let realization_noise: Vec<f64> =
-            (0..n).map(|_| 0.1 * rng.random_range(-1.0..1.0)).collect();
+        let realization_noise: Vec<f64> = (0..n).map(|_| 0.1 * rng.random_range(-1.0..1.0)).collect();
 
         let realization_y: Vec<f64> = clean_signal
             .iter()
@@ -4623,8 +4618,7 @@ pub fn validate_statistical_significance(
                 .iter()
                 .enumerate()
                 .map(|(i, &t)| {
-                    (2.0 * std::f64::consts::PI * f_true * t).sin()
-                        + 0.1 * rng.random_range(-1.0..1.0)
+                    (2.0 * std::f64::consts::PI * f_true * t).sin() + 0.1 * rng.random_range(-1.0..1.0)
                 })
                 .collect();
 
@@ -4938,9 +4932,9 @@ fn test_frequency_resolution_single(fs: f64, n: usize) -> SignalResult<f64> {
     let peaks = find_peak_indices(&power, 0.1)?;
 
     if peaks.len() >= 2 {
-        fs / (n as f64) // Return theoretical resolution
+        Ok(fs / (n as f64)) // Return theoretical resolution
     } else {
-        2.0 * fs / (n as f64) // Need higher resolution
+        Ok(2.0 * fs / (n as f64)) // Need higher resolution
     }
 }
 
@@ -5005,7 +4999,7 @@ fn test_spectral_leakage(fs: f64, n: usize) -> SignalResult<f64> {
     let peak_power = power[max_idx];
     let total_power: f64 = power.iter().sum();
 
-    1.0 - peak_power / total_power // Leakage factor
+    Ok(1.0 - peak_power / total_power) // Leakage factor
 }
 
 #[allow(dead_code)]

@@ -1,6 +1,5 @@
 //! Comprehensive example demonstrating scirs2-graph capabilities
 
-use rand::rng;
 use scirs2_graph::algorithms::*;
 use scirs2_graph::generators::*;
 use scirs2_graph::Hypergraph;
@@ -39,7 +38,7 @@ fn main() {
 
     // 3. Shortest path algorithms
     println!("\n3. Shortest Path Algorithms");
-    match shortest_path(&graph, &"Alice", &"Charlie") {
+    match dijkstra_path(&graph, &"Alice", &"Charlie") {
         Ok(Some(path)) => {
             println!("   Shortest path from Alice to Charlie:");
             println!("   Path: {:?}", path.nodes);
@@ -60,7 +59,7 @@ fn main() {
 
     // 5. Community detection
     println!("\n5. Community Detection");
-    let communities = louvain_communities(&graph);
+    let communities = louvain_communities_result(&graph);
     println!("   Modularity: {:.4}", communities.modularity);
     println!("   Community assignments:");
     for (node, community) in &communities.node_communities {

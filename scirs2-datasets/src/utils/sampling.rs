@@ -8,7 +8,6 @@
 use crate::error::{DatasetsError, Result};
 use ndarray::Array1;
 use rand::prelude::*;
-use rand::rng;
 use rand::rngs::StdRng;
 use std::collections::HashMap;
 
@@ -70,7 +69,7 @@ pub fn random_sample(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -161,7 +160,7 @@ pub fn stratified_sample(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -292,7 +291,7 @@ pub fn importance_sample(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -421,7 +420,7 @@ pub fn multiple_bootstrap_samples(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rng();
+            let mut r = rand::thread_rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

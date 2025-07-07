@@ -600,12 +600,12 @@ fn regularization_parameter_selection() -> SignalResult<()> {
     )?;
 
     // Save parameter sweep results
-    let mut file =
-        File::create("parameter_sweep.csv").map_err(|e| SignalError::Compute(e.to_string()))?;
-    writeln!(file, "Parameter,MSE").map_err(|e| SignalError::Compute(e.to_string()))?;
+    let mut file = File::create("parameter_sweep.csv")
+        .map_err(|e| SignalError::ComputationError(e.to_string()))?;
+    writeln!(file, "Parameter,MSE").map_err(|e| SignalError::ComputationError(e.to_string()))?;
     for i in 0..param_values.len() {
         writeln!(file, "{},{}", param_values[i], mse_values[i])
-            .map_err(|e| SignalError::Compute(e.to_string()))?;
+            .map_err(|e| SignalError::ComputationError(e.to_string()))?;
     }
 
     println!();
@@ -627,7 +627,7 @@ fn calculate_mse(estimate: &Array1<f64>, true_signal: &Array1<f64>) -> f64 {
 #[allow(dead_code)]
 fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalResult<()> {
     let mut file = File::create(file_name).map_err(|e| {
-        scirs2_signal::error::SignalError::Compute(format!("Failed to create file: {}", e))
+        scirs2_signal::error::SignalError::ComputationError(format!("Failed to create file: {}", e))
     })?;
 
     // Write header
@@ -637,7 +637,10 @@ fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
         .collect::<Vec<_>>()
         .join(",");
     writeln!(file, "Index,{}", header).map_err(|e| {
-        scirs2_signal::error::SignalError::Compute(format!("Failed to write header: {}", e))
+        scirs2_signal::error::SignalError::ComputationError(format!(
+            "Failed to write header: {}",
+            e
+        ))
     })?;
 
     // Write data
@@ -648,7 +651,10 @@ fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
             line.push_str(&format!(",{}", signal[i]));
         }
         writeln!(file, "{}", line).map_err(|e| {
-            scirs2_signal::error::SignalError::Compute(format!("Failed to write data: {}", e))
+            scirs2_signal::error::SignalError::ComputationError(format!(
+                "Failed to write data: {}",
+                e
+            ))
         })?;
     }
 
@@ -659,7 +665,7 @@ fn export_to_csv(file_name: &str, signals: &[(&str, &Array1<f64>)]) -> SignalRes
 #[allow(dead_code)]
 fn save_image_as_csv(file_name: &str, image: &Array2<f64>) -> SignalResult<()> {
     let mut file = File::create(file_name).map_err(|e| {
-        scirs2_signal::error::SignalError::Compute(format!("Failed to create file: {}", e))
+        scirs2_signal::error::SignalError::ComputationError(format!("Failed to create file: {}", e))
     })?;
 
     for row in image.rows() {
@@ -669,7 +675,10 @@ fn save_image_as_csv(file_name: &str, image: &Array2<f64>) -> SignalResult<()> {
             .collect::<Vec<_>>()
             .join(",");
         writeln!(file, "{}", line).map_err(|e| {
-            scirs2_signal::error::SignalError::Compute(format!("Failed to write data: {}", e))
+            scirs2_signal::error::SignalError::ComputationError(format!(
+                "Failed to write data: {}",
+                e
+            ))
         })?;
     }
 

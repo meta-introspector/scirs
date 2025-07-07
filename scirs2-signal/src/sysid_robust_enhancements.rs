@@ -545,7 +545,7 @@ pub fn analyze_model_stability(model: &SystemModel) -> SignalResult<StabilityAna
         SystemModel::OE { f, .. } | SystemModel::BJ { f, .. } => analyze_polynomial_stability(f),
         SystemModel::TransferFunction(tf) => {
             // Extract denominator and analyze
-            let denom = Array1::from_vec(tf.denominator().clone());
+            let denom = Array1::from_vec(tf.den.clone());
             analyze_polynomial_stability(&denom)
         }
         SystemModel::StateSpace(ss) => {

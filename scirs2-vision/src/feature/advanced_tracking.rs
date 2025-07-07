@@ -243,7 +243,7 @@ impl KalmanFilter {
         let det = self.compute_determinant_4x4(innovation_cov);
 
         if det.abs() < 1e-6 {
-            return Err(VisionError::OperationFailed(
+            return Err(VisionError::OperationError(
                 "Innovation covariance matrix is singular".to_string(),
             ));
         }

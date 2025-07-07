@@ -14,12 +14,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let targets = Array::from_vec(vec![1.5, 1.8, 2.5]).into_dyn();
     // Calculate loss
     let loss = mse.forward(&predictions, &targets)?;
-    println!("Predictions: {:?}", predictions);
-    println!("Targets: {:?}", targets);
-    println!("MSE Loss: {:.4}", loss);
+    println!("Predictions: {predictions:?}");
+    println!("Targets: {targets:?}");
+    println!("MSE Loss: {loss:.4}");
     // Calculate gradients
     let gradients = mse.backward(&predictions, &targets)?;
-    println!("MSE Gradients: {:?}", gradients);
+    println!("MSE Gradients: {gradients:?}");
     // Cross-Entropy Loss example
     println!("\n--- Cross-Entropy Loss Example ---");
     let ce = CrossEntropyLoss::new(1e-10);
@@ -28,19 +28,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let targets = Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0])?;
     let loss = ce.forward(&predictions, &targets)?;
     println!("Predictions (probabilities):");
-    println!("{:?}", predictions);
+    println!("{predictions:?}");
     println!("Targets (one-hot):");
-    println!("{:?}", targets);
-    println!("Cross-Entropy Loss: {:.4}", loss);
+    println!("{targets:?}");
+    println!("Cross-Entropy Loss: {loss:.4}");
     let gradients = ce.backward(&predictions, &targets)?;
     println!("Cross-Entropy Gradients:");
-    println!("{:?}", gradients);
+    println!("{gradients:?}");
     // Focal Loss example
     println!("\n--- Focal Loss Example ---");
     let focal = FocalLoss::new(2.0, Some(0.25), 1e-10);
     // Create sample data for imbalanced classification
     let loss = focal.forward(&predictions, &targets)?;
-    println!("Focal Loss (gamma=2.0, alpha=0.25): {:.4}", loss);
+    println!("Focal Loss (gamma=2.0, alpha=0.25): {loss:.4}");
     let _gradients = focal.backward(&predictions, &targets)?;
     println!("Focal Loss Gradients:");
     // Contrastive Loss example
@@ -61,13 +61,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let labels = Array::from_shape_vec(IxDyn(&[2, 1]), vec![1.0, 0.0])?;
     let loss = contrastive.forward(&embeddings, &labels)?;
     println!("Embeddings (batch_size x 2 x embedding_dim):");
-    println!("{:?}", embeddings);
+    println!("{embeddings:?}");
     println!("Labels (1 for similar, 0 for dissimilar):");
-    println!("{:?}", labels);
-    println!("Contrastive Loss (margin=1.0): {:.4}", loss);
+    println!("{labels:?}");
+    println!("Contrastive Loss (margin=1.0): {loss:.4}");
     let gradients = contrastive.backward(&embeddings, &labels)?;
     println!("Contrastive Loss Gradients (first few):");
-    println!("{:?}", gradients.slice(ndarray::s![0, .., 0]));
+    let gradient_slice = gradients.slice(ndarray::s![0, .., 0]);
+    println!("{gradient_slice:?}");
     // Triplet Loss example
     println!("\n--- Triplet Loss Example ---");
     let triplet = TripletLoss::new(0.5);
@@ -92,7 +93,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  - First dimension: batch size");
     println!("  - Second dimension: [anchor, positive, negative]");
     println!("  - Third dimension: embedding components");
-    println!("Triplet Loss (margin=0.5): {:.4}", loss);
+    println!("Triplet Loss (margin=0.5): {loss:.4}");
     let _gradients = triplet.backward(&triplet_embeddings, &dummy_labels)?;
     println!("Triplet Loss Gradients (first few):");
     Ok(())

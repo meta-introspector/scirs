@@ -145,9 +145,8 @@ impl ExternalClient {
         progress: Option<ProgressCallback>,
     ) -> Result<Dataset> {
         // Use tokio runtime to block on the async version
-        let rt = tokio::runtime::Runtime::new().map_err(|e| {
-            DatasetsError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e))
-        })?;
+        let rt = tokio::runtime::Runtime::new()
+            .map_err(|e| DatasetsError::IoError(std::io::Error::other(e)))?;
         rt.block_on(self.download_dataset(url, progress))
     }
 
@@ -182,9 +181,9 @@ impl ExternalClient {
             request = request.set(key, value);
         }
 
-        let response = request.call().map_err(|e| {
-            DatasetsError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e))
-        })?;
+        let response = request
+            .call()
+            .map_err(|e| DatasetsError::IoError(std::io::Error::other(e)))?;
 
         let total_size = response
             .header("content-length")
@@ -197,9 +196,7 @@ impl ExternalClient {
         let mut downloaded = 0u64;
 
         loop {
-            let bytes_read = reader
-                .read(&mut chunk)
-                .map_err(|e| DatasetsError::IoError(e))?;
+            let bytes_read = reader.read(&mut chunk).map_err(DatasetsError::IoError)?;
 
             if bytes_read == 0 {
                 break;
@@ -304,11 +301,9 @@ impl ExternalClient {
                     .map_err(|e| DatasetsError::FormatError(format!("Invalid UTF-8: {e}")))?;
 
                 // Write to temporary file for CSV parsing
-                let temp_file =
-                    tempfile::NamedTempFile::new().map_err(|e| DatasetsError::IoError(e))?;
+                let temp_file = tempfile::NamedTempFile::new().map_err(DatasetsError::IoError)?;
 
-                std::fs::write(temp_file.path(), &csv_data)
-                    .map_err(|e| DatasetsError::IoError(e))?;
+                std::fs::write(temp_file.path(), &csv_data).map_err(DatasetsError::IoError)?;
 
                 load_csv(temp_file.path(), CsvConfig::default())
             }
@@ -414,7 +409,7 @@ impl ExternalClient {
         let data = Array2::from_shape_vec((n_samples, data_cols), data_vec)
             .map_err(|e| DatasetsError::FormatError(e.to_string()))?;
 
-        let target = target_vec.map(|vec| Array1::from_vec(vec));
+        let target = target_vec.map(Array1::from_vec);
 
         Ok(Dataset {
             data,
@@ -492,8 +487,7 @@ pub mod repositories {
                 }
                 _ => {
                     return Err(DatasetsError::NotFound(format!(
-                        "UCI dataset '{}' not found",
-                        name
+                        "UCI dataset '{name}' not found"
                     )))
                 }
             };
@@ -514,8 +508,7 @@ pub mod repositories {
                 }
                 _ => {
                     return Err(DatasetsError::NotFound(format!(
-                        "UCI dataset '{}' not found",
-                        name
+                        "UCI dataset '{name}' not found"
                     )))
                 }
             };
@@ -545,7 +538,7 @@ pub mod repositories {
             if let Some(ref key) = api_key {
                 config
                     .headers
-                    .insert("Authorization".to_string(), format!("Bearer {}", key));
+                    .insert("Authorization".to_string(), format!("Bearer {key}"));
             }
 
             Ok(Self {
@@ -601,20 +594,14 @@ pub mod repositories {
         /// A `Dataset` containing the loaded data
         #[cfg(feature = "download")]
         pub async fn load_from_repo(&self, user: &str, repo: &str, path: &str) -> Result<Dataset> {
-            let url = format!(
-                "https://raw.githubusercontent.com/{}/{}/main/{}",
-                user, repo, path
-            );
+            let url = format!("https://raw.githubusercontent.com/{user}/{repo}/main/{path}");
             self.client.download_dataset(&url, None).await
         }
 
         #[cfg(not(feature = "download"))]
         /// Load a dataset from GitHub repository synchronously
         pub fn load_from_repo_sync(&self, user: &str, repo: &str, path: &str) -> Result<Dataset> {
-            let url = format!(
-                "https://raw.githubusercontent.com/{}/{}/main/{}",
-                user, repo, path
-            );
+            let url = format!("https://raw.githubusercontent.com/{user}/{repo}/main/{path}");
             self.client.download_dataset_sync(&url, None)
         }
     }
@@ -639,9 +626,9 @@ pub mod convenience {
                 Some(Box::new(|downloaded, total| {
                     if total > 0 {
                         let percent = (downloaded * 100) / total;
-                        eprintln!("Downloaded: {:.1}% ({}/{})", percent, downloaded, total);
+                        eprintln!("Downloaded: {percent:.1}% ({downloaded}/{total})");
                     } else {
-                        eprintln!("Downloaded: {} bytes", downloaded);
+                        eprintln!("Downloaded: {downloaded} bytes");
                     }
                 })),
             )
@@ -660,9 +647,9 @@ pub mod convenience {
             Some(Box::new(|downloaded, total| {
                 if total > 0 {
                     let percent = (downloaded * 100) / total;
-                    eprintln!("Downloaded: {:.1}% ({}/{})", percent, downloaded, total);
+                    eprintln!("Downloaded: {percent:.1}% ({downloaded}/{total})");
                 } else {
-                    eprintln!("Downloaded: {} bytes", downloaded);
+                    eprintln!("Downloaded: {downloaded} bytes");
                 }
             })),
         )

@@ -144,7 +144,7 @@ impl FastaReader {
                 if self
                     .reader
                     .read_line(&mut self.line_buffer)
-                    .map_err(|e| IoError::ParseError(format!("Failed to read line: {}", e)))?
+                    .map_err(|e| IoError::ParseError(format!("Failed to read line: {e}")))?
                     == 0
                 {
                     return Ok(None); // EOF
@@ -174,7 +174,7 @@ impl FastaReader {
             let bytes_read = self
                 .reader
                 .read_line(&mut self.line_buffer)
-                .map_err(|e| IoError::ParseError(format!("Failed to read line: {}", e)))?;
+                .map_err(|e| IoError::ParseError(format!("Failed to read line: {e}")))?;
 
             if bytes_read == 0 || self.line_buffer.starts_with('>') {
                 // Reached next record or EOF
@@ -226,7 +226,7 @@ impl FastaWriter {
     /// Create a new FASTA file for writing
     pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::create(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         Ok(Self {
             writer: BufWriter::new(file),
             line_width: 80, // Standard FASTA line width
@@ -242,18 +242,18 @@ impl FastaWriter {
     pub fn write_record(&mut self, record: &FastaRecord) -> Result<()> {
         // Write header
         write!(self.writer, ">{}", record.header())
-            .map_err(|e| IoError::FileError(format!("Failed to write header: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write header: {e}")))?;
         writeln!(self.writer)
-            .map_err(|e| IoError::FileError(format!("Failed to write newline: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write newline: {e}")))?;
 
         // Write sequence with line wrapping
         let sequence = record.sequence();
         for chunk in sequence.as_bytes().chunks(self.line_width) {
             self.writer
                 .write_all(chunk)
-                .map_err(|e| IoError::FileError(format!("Failed to write sequence: {}", e)))?;
+                .map_err(|e| IoError::FileError(format!("Failed to write sequence: {e}")))?;
             writeln!(self.writer)
-                .map_err(|e| IoError::FileError(format!("Failed to write newline: {}", e)))?;
+                .map_err(|e| IoError::FileError(format!("Failed to write newline: {e}")))?;
         }
 
         Ok(())
@@ -263,7 +263,7 @@ impl FastaWriter {
     pub fn flush(&mut self) -> Result<()> {
         self.writer
             .flush()
-            .map_err(|e| IoError::FileError(format!("Failed to flush: {}", e)))
+            .map_err(|e| IoError::FileError(format!("Failed to flush: {e}")))
     }
 }
 
@@ -427,7 +427,7 @@ impl FastqReader {
         if self
             .reader
             .read_line(&mut self.line_buffer)
-            .map_err(|e| IoError::ParseError(format!("Failed to read header: {}", e)))?
+            .map_err(|e| IoError::ParseError(format!("Failed to read header: {e}")))?
             == 0
         {
             return Ok(None); // EOF
@@ -453,14 +453,14 @@ impl FastqReader {
         self.line_buffer.clear();
         self.reader
             .read_line(&mut self.line_buffer)
-            .map_err(|e| IoError::ParseError(format!("Failed to read sequence: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Failed to read sequence: {e}")))?;
         let sequence = self.line_buffer.trim().to_string();
 
         // Read separator line
         self.line_buffer.clear();
         self.reader
             .read_line(&mut self.line_buffer)
-            .map_err(|e| IoError::ParseError(format!("Failed to read separator: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Failed to read separator: {e}")))?;
         if !self.line_buffer.starts_with('+') {
             return Err(IoError::ParseError(format!(
                 "Expected '+' separator, found: {}",
@@ -472,7 +472,7 @@ impl FastqReader {
         self.line_buffer.clear();
         self.reader
             .read_line(&mut self.line_buffer)
-            .map_err(|e| IoError::ParseError(format!("Failed to read quality: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Failed to read quality: {e}")))?;
         let quality = self.line_buffer.trim().to_string();
 
         FastqRecord::new(id.clone(), sequence.clone(), quality.clone())
@@ -515,7 +515,7 @@ impl FastqWriter {
     /// Create a new FASTQ file for writing
     pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::create(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         Ok(Self {
             writer: BufWriter::new(file),
             encoding: QualityEncoding::default(),
@@ -528,7 +528,7 @@ impl FastqWriter {
         encoding: QualityEncoding,
     ) -> Result<Self> {
         let file = File::create(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         Ok(Self {
             writer: BufWriter::new(file),
             encoding,
@@ -539,19 +539,19 @@ impl FastqWriter {
     pub fn write_record(&mut self, record: &FastqRecord) -> Result<()> {
         // Write header
         writeln!(self.writer, "@{}", record.header())
-            .map_err(|e| IoError::FileError(format!("Failed to write header: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write header: {e}")))?;
 
         // Write sequence
         writeln!(self.writer, "{}", record.sequence())
-            .map_err(|e| IoError::FileError(format!("Failed to write sequence: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write sequence: {e}")))?;
 
         // Write separator
         writeln!(self.writer, "+")
-            .map_err(|e| IoError::FileError(format!("Failed to write separator: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write separator: {e}")))?;
 
         // Write quality
         writeln!(self.writer, "{}", record.quality())
-            .map_err(|e| IoError::FileError(format!("Failed to write quality: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write quality: {e}")))?;
 
         Ok(())
     }
@@ -589,7 +589,7 @@ impl FastqWriter {
     pub fn flush(&mut self) -> Result<()> {
         self.writer
             .flush()
-            .map_err(|e| IoError::FileError(format!("Failed to flush: {}", e)))
+            .map_err(|e| IoError::FileError(format!("Failed to flush: {e}")))
     }
 }
 
@@ -619,8 +619,7 @@ pub fn count_fastq_sequences<P: AsRef<Path>>(path: P) -> Result<usize> {
     let line_count = reader.lines().count();
     if line_count % 4 != 0 {
         return Err(IoError::ParseError(format!(
-            "Invalid FASTQ file: line count {} is not divisible by 4",
-            line_count
+            "Invalid FASTQ file: line count {line_count} is not divisible by 4"
         )));
     }
 

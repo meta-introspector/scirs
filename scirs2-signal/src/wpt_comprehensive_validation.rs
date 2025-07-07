@@ -502,7 +502,7 @@ fn run_basic_validation_suite(
 /// Validate frame properties
 #[allow(dead_code)]
 fn validate_frame_properties(
-    config: &ComprehensiveWptValidationConfig,
+    _config: &ComprehensiveWptValidationConfig,
 ) -> SignalResult<FrameValidationMetrics> {
     // Use a representative test case
     let signal_length = 256;
@@ -644,7 +644,7 @@ fn run_statistical_validation(
 
     // Collect samples for statistical analysis
     for _ in 0..n_samples {
-        let signal = generate_test_signal(TestSignalType::WhiteNoise, 256, rand::random())?;
+        let signal = generate_test_signal(TestSignalType::WhiteNoise, 256, rand::rng().random())?;
         let (energy_ratio, reconstruction_error) = test_wpt_round_trip(&signal, Wavelet::DB(4), 3)?;
 
         reconstruction_errors.push(reconstruction_error);
@@ -1538,10 +1538,8 @@ fn test_wavelet_consistency(config: &ComprehensiveWptValidationConfig) -> Signal
         let original_energy: f64 = signal.iter().map(|&x| x * x).sum();
         let mut reconstructed_energy = 0.0;
 
-        for level_nodes in tree.nodes.values() {
-            for node in level_nodes.values() {
-                reconstructed_energy += node.data.iter().map(|&x| x * x).sum::<f64>();
-            }
+        for node in tree.nodes.values() {
+            reconstructed_energy += node.data.iter().map(|&x| x * x).sum::<f64>();
         }
 
         let energy_ratio = reconstructed_energy / original_energy;
@@ -1684,13 +1682,11 @@ fn test_signal_type_consistency(config: &ComprehensiveWptValidationConfig) -> Si
         let mut significant_coeffs = 0;
         let threshold = 0.01 * (signal.iter().map(|&x| x.abs()).fold(0.0, f64::max));
 
-        for level_nodes in tree.nodes.values() {
-            for node in level_nodes.values() {
-                for &coeff in &node.data {
-                    total_coeffs += 1;
-                    if coeff.abs() > threshold {
-                        significant_coeffs += 1;
-                    }
+        for node in tree.nodes.values() {
+            for &coeff in &node.data {
+                total_coeffs += 1;
+                if coeff.abs() > threshold {
+                    significant_coeffs += 1;
                 }
             }
         }

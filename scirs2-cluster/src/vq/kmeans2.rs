@@ -349,7 +349,7 @@ where
     let mut rng: Box<dyn RngCore> = if let Some(seed) = random_seed {
         Box::new(StdRng::from_seed([seed as u8; 32]))
     } else {
-        Box::new(rand::thread_rng())
+        Box::new(rand::rng())
     };
 
     for i in 0..k {
@@ -383,7 +383,7 @@ where
     let mut rng: Box<dyn RngCore> = if let Some(seed) = random_seed {
         Box::new(StdRng::from_seed([seed as u8; 32]))
     } else {
-        Box::new(rand::thread_rng())
+        Box::new(rand::rng())
     };
 
     // Choose k random indices without replacement
@@ -419,7 +419,7 @@ where
     let mut rng: Box<dyn RngCore> = if let Some(seed) = random_seed {
         Box::new(StdRng::from_seed([seed as u8; 32]))
     } else {
-        Box::new(rand::thread_rng())
+        Box::new(rand::rng())
     };
 
     let mut centroids = Array2::zeros((k, n_features));

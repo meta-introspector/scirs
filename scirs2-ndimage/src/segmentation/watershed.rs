@@ -92,7 +92,7 @@ pub fn watershed<T>(
     markers: &Array<i32, Ix2>,
 ) -> NdimageResult<Array<i32, Ix2>>
 where
-    T: Float + NumAssign + std::fmt::Debug,
+    T: Float + NumAssign + std::fmt::Debug + std::ops::DivAssign + 'static,
 {
     // Check shapes match
     if image.shape() != markers.shape() {
@@ -189,7 +189,7 @@ where
 #[allow(dead_code)]
 fn get_neighbors_2d<T>(array: &Array<T, Ix2>, row: usize, col: usize) -> Vec<PriorityPoint<T>>
 where
-    T: Float + std::fmt::Debug + Copy,
+    T: Float + std::fmt::Debug + Copy + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let mut neighbors = Vec::new();
     let shape = array.shape();
@@ -232,7 +232,7 @@ where
 #[allow(dead_code)]
 fn get_face_neighbors_2d<T>(array: &Array<T, Ix2>, row: usize, col: usize) -> Vec<PriorityPoint<T>>
 where
-    T: Float + std::fmt::Debug + Copy,
+    T: Float + std::fmt::Debug + Copy + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let mut neighbors = Vec::new();
     let shape = array.shape();
@@ -305,7 +305,7 @@ pub fn marker_watershed<T>(
     connectivity: usize,
 ) -> NdimageResult<Array<i32, Ix2>>
 where
-    T: Float + NumAssign + std::fmt::Debug + Copy,
+    T: Float + NumAssign + std::fmt::Debug + Copy + 'static,
 {
     // Check shapes match
     if image.shape() != markers.shape() {

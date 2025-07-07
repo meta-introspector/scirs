@@ -814,22 +814,31 @@ pub struct MemoryPool {
     available_chunks: Mutex<VecDeque<*mut u8>>,
     allocated_chunks: AtomicUsize,
     total_chunks: AtomicUsize,
+    #[allow(dead_code)]
     allocation_strategy: AllocationStrategy,
+    #[allow(dead_code)]
     numa_node: Option<usize>,
 }
 
 /// Cache management system
 pub struct CacheManager {
+    #[allow(dead_code)]
     cache_hierarchy: CacheHierarchy,
+    #[allow(dead_code)]
     layout_optimizer: LayoutOptimizer,
+    #[allow(dead_code)]
     prefetch_engine: PrefetchEngine,
+    #[allow(dead_code)]
     access_tracker: AccessTracker,
 }
 
 /// Data layout optimizer
 pub struct LayoutOptimizer {
+    #[allow(dead_code)]
     current_strategy: RwLock<DataLayoutStrategy>,
+    #[allow(dead_code)]
     performance_history: RwLock<VecDeque<LayoutPerformance>>,
+    #[allow(dead_code)]
     adaptive_threshold: f64,
 }
 
@@ -845,15 +854,21 @@ pub struct LayoutPerformance {
 
 /// Prefetch engine for predictive loading
 pub struct PrefetchEngine {
+    #[allow(dead_code)]
     prefetch_config: PrefetchConfig,
+    #[allow(dead_code)]
     pattern_predictor: PatternPredictor,
+    #[allow(dead_code)]
     hardware_prefetcher: HardwarePrefetcher,
 }
 
 /// Memory access pattern predictor
 pub struct PatternPredictor {
+    #[allow(dead_code)]
     access_history: RwLock<VecDeque<MemoryAccess>>,
+    #[allow(dead_code)]
     pattern_models: RwLock<HashMap<AccessPatternType, PredictionModel>>,
+    #[allow(dead_code)]
     confidence_tracker: ConfidenceTracker,
 }
 
@@ -904,7 +919,9 @@ pub struct ConfidenceTracker {
 
 /// Hardware prefetcher interface
 pub struct HardwarePrefetcher {
+    #[allow(dead_code)]
     capabilities: PlatformCapabilities,
+    #[allow(dead_code)]
     prefetch_instructions: Vec<PrefetchInstruction>,
 }
 
@@ -936,8 +953,11 @@ pub enum Locality {
 
 /// Access tracker for cache optimization
 pub struct AccessTracker {
+    #[allow(dead_code)]
     access_patterns: RwLock<HashMap<usize, AccessPattern>>,
+    #[allow(dead_code)]
     hot_spots: RwLock<BTreeMap<usize, HotSpot>>,
+    #[allow(dead_code)]
     cold_regions: RwLock<Vec<ColdRegion>>,
 }
 
@@ -974,9 +994,13 @@ pub struct ColdRegion {
 
 /// NUMA management system
 pub struct NumaManager {
+    #[allow(dead_code)]
     topology: NumaTopology,
+    #[allow(dead_code)]
     binding_strategy: NumaBindingStrategy,
+    #[allow(dead_code)]
     migration_engine: MigrationEngine,
+    #[allow(dead_code)]
     affinity_manager: AffinityManager,
 }
 

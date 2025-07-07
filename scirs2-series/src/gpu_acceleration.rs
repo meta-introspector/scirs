@@ -2722,6 +2722,7 @@ pub mod algorithms {
     }
 
     impl<F: Float + Debug + Clone + std::iter::Sum> GpuFeatureExtractor<F> {
+        /// Create new GPU acceleration instance
         pub fn new(config: GpuConfig, feature_config: FeatureConfig) -> Result<Self> {
             let processor = GpuTimeSeriesProcessor::new(config)?;
             Ok(Self {

@@ -195,6 +195,7 @@ pub mod error;
 pub use error::{OptimizeError, OptimizeResult};
 
 // Module structure
+pub mod advanced_coordinator;
 #[cfg(feature = "async")]
 pub mod async_parallel;
 pub mod automatic_differentiation;
@@ -223,7 +224,6 @@ pub mod simd_ops;
 pub mod sparse_numdiff; // Refactored into a module with submodules
 pub mod stochastic;
 pub mod streaming;
-// pub mod advanced_coordinator; // Missing file
 pub mod unconstrained;
 pub mod unified_pipeline;
 pub mod visualization;
@@ -233,6 +233,10 @@ pub mod result;
 pub use result::OptimizeResults;
 
 // Convenience re-exports for common functions
+pub use advanced_coordinator::{
+    advanced_optimize, AdvancedConfig, AdvancedCoordinator, AdvancedStats, AdvancedStrategy,
+    StrategyPerformance,
+};
 #[cfg(feature = "async")]
 pub use async_parallel::{
     AsyncDifferentialEvolution, AsyncOptimizationConfig, AsyncOptimizationStats,
@@ -328,10 +332,6 @@ pub use streaming::{
     StreamingConfig, StreamingDataPoint, StreamingObjective, StreamingOptimizer, StreamingStats,
     StreamingTrustRegion,
 };
-// pub use advanced_coordinator::{
-//     advanced_optimize, StrategyPerformance, AdvancedConfig, AdvancedCoordinator,
-//     AdvancedStats, advancedStrategy,
-// }; // Missing module
 pub use unconstrained::{minimize, Bounds};
 pub use unified_pipeline::{
     presets as unified_presets, UnifiedOptimizationConfig, UnifiedOptimizationResults,
@@ -344,6 +344,10 @@ pub use visualization::{
 
 // Prelude module for convenient imports
 pub mod prelude {
+    pub use crate::advanced_coordinator::{
+        advanced_optimize, AdvancedConfig, AdvancedCoordinator, AdvancedStats, AdvancedStrategy,
+        StrategyPerformance,
+    };
     #[cfg(feature = "async")]
     pub use crate::async_parallel::{
         AsyncDifferentialEvolution, AsyncOptimizationConfig, AsyncOptimizationStats,
@@ -452,10 +456,6 @@ pub mod prelude {
         StreamingConfig, StreamingDataPoint, StreamingObjective, StreamingOptimizer,
         StreamingStats, StreamingTrustRegion,
     };
-    // pub use crate::advanced_coordinator::{
-    //     advanced_optimize, StrategyPerformance, AdvancedConfig, AdvancedCoordinator,
-    //     AdvancedStats, advancedStrategy,
-    // }; // Missing module
     pub use crate::unconstrained::{minimize, Bounds, Method as UnconstrainedMethod, Options};
     pub use crate::unified_pipeline::{
         presets as unified_presets, UnifiedOptimizationConfig, UnifiedOptimizationResults,

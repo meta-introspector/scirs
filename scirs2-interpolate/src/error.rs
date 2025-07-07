@@ -183,27 +183,25 @@ impl InterpolateError {
     /// Create a standard dimension mismatch error
     pub fn dimension_mismatch(expected: usize, actual: usize, context: &str) -> Self {
         Self::DimensionMismatch(format!(
-            "Dimension mismatch in {}: expected {}, got {}",
-            context, expected, actual
+            "Dimension mismatch in {context}: expected {expected}, got {actual}"
         ))
     }
 
     /// Create a standard empty data error
     pub fn empty_data(context: &str) -> Self {
-        Self::InsufficientData(format!("Empty input data provided to {}", context))
+        Self::InsufficientData(format!("Empty input data provided to {context}"))
     }
 
     /// Create a standard convergence failure error
     pub fn convergence_failure(method: &str, iterations: usize) -> Self {
         Self::ComputationError(format!(
-            "{} failed to converge after {} iterations",
-            method, iterations
+            "{method} failed to converge after {iterations} iterations"
         ))
     }
 
     /// Create a numerical stability error
     pub fn numerical_instability(context: &str, details: &str) -> Self {
-        Self::NumericalError(format!("Numerical instability in {}: {}", context, details))
+        Self::NumericalError(format!("Numerical instability in {context}: {details}"))
     }
 
     /// Create a numerical error
@@ -214,8 +212,7 @@ impl InterpolateError {
     /// Create an insufficient data points error
     pub fn insufficient_points(required: usize, provided: usize, method: &str) -> Self {
         Self::InsufficientData(format!(
-            "{} requires at least {} points, but only {} provided",
-            method, required, provided
+            "{method} requires at least {required} points, but only {provided} provided"
         ))
     }
 
@@ -248,23 +245,21 @@ impl InterpolateError {
             point: point.to_string(),
             min: min.to_string(),
             max: max.to_string(),
-            context: format!("{} - Suggestion: {}", context_str, suggestion_str),
+            context: format!("{context_str} - Suggestion: {suggestion_str}"),
         }
     }
 
     /// Create a numerical stability error with actionable advice
     pub fn numerical_instability_with_advice(context: &str, details: &str, advice: &str) -> Self {
         Self::NumericalError(format!(
-            "Numerical instability in {}: {} - ADVICE: {}",
-            context, details, advice
+            "Numerical instability in {context}: {details} - ADVICE: {advice}"
         ))
     }
 
     /// Create a convergence failure with actionable recommendations
     pub fn convergence_failure_with_advice(method: &str, iterations: usize, advice: &str) -> Self {
         Self::ComputationError(format!(
-            "{} failed to converge after {} iterations - RECOMMENDATION: {}",
-            method, iterations, advice
+            "{method} failed to converge after {iterations} iterations - RECOMMENDATION: {advice}"
         ))
     }
 
@@ -276,25 +271,21 @@ impl InterpolateError {
     ) -> Self {
         let advice = if let Some(reg) = recommended_regularization {
             format!(
-                "Matrix is ill-conditioned (condition number: {:.2e}). Try regularization parameter ≥ {:.2e}",
-                condition_number, reg
+                "Matrix is ill-conditioned (condition number: {condition_number:.2e}). Try regularization parameter ≥ {reg:.2e}"
             )
         } else {
             format!(
-                "Matrix is ill-conditioned (condition number: {:.2e}). Consider data preprocessing or regularization",
-                condition_number
+                "Matrix is ill-conditioned (condition number: {condition_number:.2e}). Consider data preprocessing or regularization"
             )
         };
 
         Self::LinalgError(format!(
-            "{}: {} - SOLUTION: {}",
-            context,
+            "{context}: {} - SOLUTION: {advice}",
             if condition_number > 1e16 {
                 "Severe numerical instability"
             } else {
                 "Poor numerical conditioning"
-            },
-            advice
+            }
         ))
     }
 
@@ -302,8 +293,7 @@ impl InterpolateError {
     pub fn data_quality_error(issue: &str, context: &str, preprocessing_advice: &str) -> Self {
         Self::InvalidInput {
             message: format!(
-                "{} detected in {}: {} - DATA PREPROCESSING: {}",
-                issue, context, "Data may be unsuitable for interpolation", preprocessing_advice
+                "{issue} detected in {context}: Data may be unsuitable for interpolation - DATA PREPROCESSING: {preprocessing_advice}"
             ),
         }
     }
@@ -316,11 +306,7 @@ impl InterpolateError {
     ) -> Self {
         let alternatives = recommended_alternatives.join(", ");
         Self::UnsupportedOperation(format!(
-            "{} is not suitable for data with {}: {} - ALTERNATIVES: Try {}",
-            attempted_method,
-            data_characteristics,
-            "Consider using a different interpolation method",
-            alternatives
+            "{attempted_method} is not suitable for data with {data_characteristics}: Consider using a different interpolation method - ALTERNATIVES: Try {alternatives}"
         ))
     }
 
@@ -331,8 +317,7 @@ impl InterpolateError {
         optimization_advice: &str,
     ) -> Self {
         Self::ComputationError(format!(
-            "{} may be slow for {} data points - OPTIMIZATION: {}",
-            operation, data_size, optimization_advice
+            "{operation} may be slow for {data_size} data points - OPTIMIZATION: {optimization_advice}"
         ))
     }
 }

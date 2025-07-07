@@ -5,9 +5,9 @@
 //! numerical stability tests in Advanced mode.
 
 use crate::error::{SignalError, SignalResult};
-use crate::multitaper::{enhanced_pmtm, EnhancedMultitaperResult, MultitaperConfig};
+use crate::multitaper::{enhanced_pmtm, MultitaperConfig};
 use crate::waveforms::{brown_noise, chirp};
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use rand::prelude::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;

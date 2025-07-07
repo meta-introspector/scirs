@@ -8,7 +8,6 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, NumCast, One, Zero};
-use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::collections::{HashMap, VecDeque};
@@ -17,6 +16,7 @@ use std::sync::{Arc, Mutex, RwLock};
 
 /// Memory optimization configuration for statistical operations
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct MemoryOptimizationConfig {
     /// Maximum memory usage in bytes before triggering optimization strategies
     pub memory_limit: usize,
@@ -56,6 +56,7 @@ impl Default for MemoryOptimizationConfig {
 
 /// Memory usage statistics and profiling information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct MemoryProfile {
     /// Current memory usage in bytes
     pub current_usage: usize,
@@ -77,6 +78,7 @@ pub struct MemoryProfile {
 
 /// Statistics for individual memory pools
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct MemoryPoolStats {
     /// Pool identifier
     pub pool_id: String,
@@ -119,6 +121,7 @@ pub struct CacheOptimizedMatrix<F> {
 
 /// Memory layout optimization strategies
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 pub enum MatrixLayout {
     RowMajor,
     ColumnMajor,
@@ -136,6 +139,7 @@ pub struct AdaptiveStatsAllocator {
 }
 
 /// Memory pool optimized for statistical data types
+#[allow(dead_code)]
 struct MemoryPool {
     pool_id: String,
     base_ptr: *mut u8,
@@ -148,6 +152,7 @@ struct MemoryPool {
 
 /// Memory block descriptor
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct MemoryBlock {
     offset: usize,
     size: usize,
@@ -156,6 +161,7 @@ struct MemoryBlock {
 }
 
 /// Allocation pattern analyzer for optimizing future allocations
+#[allow(dead_code)]
 struct AllocationPatternAnalyzer {
     allocation_history: VecDeque<AllocationEvent>,
     pattern_cache: HashMap<String, AllocationPattern>,
@@ -164,6 +170,7 @@ struct AllocationPatternAnalyzer {
 
 /// Allocation event for pattern analysis
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct AllocationEvent {
     size: usize,
     alignment: usize,
@@ -174,6 +181,7 @@ struct AllocationEvent {
 
 /// Identified allocation pattern
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct AllocationPattern {
     typical_size: usize,
     typical_alignment: usize,
@@ -190,6 +198,7 @@ pub struct MemoryMappedStatsProcessor {
 }
 
 /// Memory-mapped file wrapper
+#[allow(dead_code)]
 struct MemoryMappedFile {
     file_path: String,
     file_size: usize,
@@ -215,6 +224,7 @@ struct MemoryRegion {
 }
 
 /// Cache manager for optimizing memory access patterns
+#[allow(dead_code)]
 struct CacheManager {
     cache_size: usize,
     cache_entries: HashMap<u64, CacheEntry>,
@@ -224,6 +234,7 @@ struct CacheManager {
 }
 
 /// Cache entry with metadata
+#[allow(dead_code)]
 struct CacheEntry {
     data: Vec<u8>,
     access_count: usize,
@@ -351,6 +362,7 @@ where
 
 /// Result structure for streaming statistics
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct StreamingStatistics<F> {
     pub count: usize,
     pub mean: F,
@@ -598,9 +610,9 @@ impl AdaptiveStatsAllocator {
         };
 
         // Initialize default memory pools
-        allocator.create_memory_pool("float_arrays", config.memory_pool_size / 4);
-        allocator.create_memory_pool("matrix_operations", config.memory_pool_size / 2);
-        allocator.create_memory_pool("temporary_buffers", config.memory_pool_size / 4);
+        let _ = allocator.create_memory_pool("float_arrays", config.memory_pool_size / 4);
+        let _ = allocator.create_memory_pool("matrix_operations", config.memory_pool_size / 2);
+        let _ = allocator.create_memory_pool("temporary_buffers", config.memory_pool_size / 4);
 
         allocator
     }
@@ -1138,6 +1150,7 @@ impl CacheManager {
 
 /// Memory optimization report
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct MemoryOptimizationReport {
     pub config: MemoryOptimizationConfig,
     pub memory_profile: MemoryProfile,
@@ -1147,6 +1160,7 @@ pub struct MemoryOptimizationReport {
 
 /// Cache statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct CacheStatistics {
     pub hit_ratio: f64,
     pub total_entries: usize,
@@ -1156,6 +1170,7 @@ pub struct CacheStatistics {
 
 /// Memory optimization recommendation
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct MemoryOptimizationRecommendation {
     pub priority: u8,
     pub category: String,

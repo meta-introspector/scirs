@@ -8,9 +8,8 @@
 use crate::error::OptimizeError;
 use crate::unconstrained::{line_search::backtracking_line_search, OptimizeResult};
 use ndarray::{Array1, ArrayView1};
-use rand::prelude::*;
-use rand::Rng;
 use rand::SeedableRng;
+use rand::{rng, Rng};
 use std::collections::VecDeque;
 
 /// Options for subspace optimization methods

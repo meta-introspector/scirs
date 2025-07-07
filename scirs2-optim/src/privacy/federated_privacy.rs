@@ -2101,7 +2101,7 @@ pub struct ClientComposition {
     pub contribution_weight: f64,
 }
 
-impl<T: Float + Default + Clone + Send + Sync> FederatedPrivacyCoordinator<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> FederatedPrivacyCoordinator<T> {
     /// Create a new federated privacy coordinator
     pub fn new(config: FederatedPrivacyConfig) -> Result<Self> {
         let global_accountant = MomentsAccountant::new(
@@ -3527,7 +3527,7 @@ pub struct PersonalizationEffectivenessMetrics {
 
 // Placeholder implementations for advanced components
 
-impl<T: Float + Default + Clone + Send + Sync> ByzantineRobustAggregator<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ByzantineRobustAggregator<T> {
     #[allow(dead_code)]
     pub fn new() -> Result<Self> {
         Ok(Self {
@@ -3579,7 +3579,7 @@ impl<T: Float + Default + Clone + Send + Sync> ByzantineRobustAggregator<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> PersonalizationManager<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> PersonalizationManager<T> {
     #[allow(dead_code)]
     pub fn new() -> Result<Self> {
         Ok(Self {
@@ -3678,7 +3678,7 @@ impl<T: Float + std::fmt::Debug> AdaptiveBudgetManager<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> CommunicationOptimizer<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> CommunicationOptimizer<T> {
     #[allow(dead_code)]
     pub fn new() -> Result<Self> {
         Ok(Self {
@@ -3717,7 +3717,7 @@ impl<T: Float + Default + Clone + Send + Sync> CommunicationOptimizer<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> ContinualLearningCoordinator<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ContinualLearningCoordinator<T> {
     #[allow(dead_code)]
     pub fn new() -> Result<Self> {
         Ok(Self {
@@ -4058,7 +4058,7 @@ pub mod secure_aggregation_protocols {
         pub successful_reconstructions: usize,
     }
 
-    impl<T: Float + Default + Clone + Send + Sync> AdvancedSecureAggregator<T> {
+    impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> AdvancedSecureAggregator<T> {
         /// Create a new advanced secure aggregator
         pub fn new(config: AdvancedSecureAggregationConfig) -> Result<Self> {
             let key_manager = SecureKeyManager::new()?;
@@ -4475,7 +4475,7 @@ pub mod secure_aggregation_protocols {
 }
 
 /// Implementation of missing key structures for federated privacy
-impl<T: Float + Default + Clone + Send + Sync> StatisticalAnalyzer<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> StatisticalAnalyzer<T> {
     /// Create new statistical analyzer
     pub fn new(window_size: usize, significance_level: f64) -> Self {
         Self {
@@ -4576,7 +4576,7 @@ impl<T: Float + Default + Clone + Send + Sync> StatisticalAnalyzer<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> RobustEstimators<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> RobustEstimators<T> {
     /// Create new robust estimators
     pub fn new() -> Self {
         Self {
@@ -4790,7 +4790,7 @@ impl UtilityEstimator {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> CompressionEngine<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> CompressionEngine<T> {
     /// Create new compression engine
     pub fn new(strategy: CompressionStrategy) -> Self {
         Self {

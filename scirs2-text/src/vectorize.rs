@@ -29,16 +29,19 @@ pub trait Vectorizer: Clone {
 }
 
 /// Count vectorizer that uses a bag-of-words representation
-#[derive(Clone)]
 pub struct CountVectorizer {
     tokenizer: Box<dyn Tokenizer + Send + Sync>,
     vocabulary: Vocabulary,
     binary: bool, // If true, all non-zero counts are set to 1
 }
 
-impl Clone for Box<dyn Tokenizer + Send + Sync> {
+impl Clone for CountVectorizer {
     fn clone(&self) -> Self {
-        self.clone_box()
+        Self {
+            tokenizer: self.tokenizer.clone_box(),
+            vocabulary: self.vocabulary.clone(),
+            binary: self.binary,
+        }
     }
 }
 

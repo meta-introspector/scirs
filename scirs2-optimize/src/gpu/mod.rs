@@ -6,7 +6,7 @@
 
 use crate::error::{ScirsError, ScirsResult};
 use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuContext, GpuDevice};
+use scirs2_core::gpu::{GpuBackend, GpuBuffer, GpuContext};
 use std::sync::Arc;
 
 // Note: Error conversion handled through scirs2_core::error system
@@ -92,7 +92,7 @@ pub struct GpuOptimizationContext {
 impl GpuOptimizationContext {
     /// Create a new GPU optimization context
     pub fn new(config: GpuOptimizationConfig) -> ScirsResult<Self> {
-        let context = Arc::new(config.device.clone());
+        let context = Arc::new(config.context.clone());
         let memory_pool = memory_management::GpuMemoryPool::new_stub();
 
         Ok(Self {
@@ -354,13 +354,13 @@ pub mod algorithms {
                 success: true,
                 message: "GPU differential evolution completed".to_string(),
                 nit: self.max_nit,
-                function_evaluations,
+                nfev: function_evaluations,
                 ..OptimizeResults::default()
             })
         }
 
         fn initialize_population_gpu(&self, bounds: &[(f64, f64)]) -> ScirsResult<Array2<f64>> {
-            use rand::Rng;
+            use rand::{rng, Rng};
             let mut rng = rand::rng();
 
             let dims = bounds.len();
@@ -393,7 +393,7 @@ pub mod algorithms {
         ) -> ScirsResult<Array2<f64>> {
             // For now, implement on CPU and transfer to GPU
             // In a full implementation, this would use GPU kernels
-            use rand::Rng;
+            use rand::{rng, Rng};
             let mut rng = rand::rng();
 
             let (pop_size, dims) = population.dim();
@@ -558,13 +558,13 @@ pub mod algorithms {
                 success: true,
                 message: "GPU particle swarm optimization completed".to_string(),
                 nit: self.max_nit,
-                function_evaluations,
+                nfev: function_evaluations,
                 ..OptimizeResults::default()
             })
         }
 
         fn initialize_positions_gpu(&self, bounds: &[(f64, f64)]) -> ScirsResult<Array2<f64>> {
-            use rand::Rng;
+            use rand::{rng, Rng};
             let mut rng = rand::rng();
 
             let dims = bounds.len();
@@ -599,7 +599,7 @@ pub mod algorithms {
             global_best: &Array1<f64>,
             bounds: &[(f64, f64)],
         ) -> ScirsResult<()> {
-            use rand::Rng;
+            use rand::{rng, Rng};
             let mut rng = rand::rng();
 
             let (swarm_size, dims) = positions.dim();
@@ -675,8 +675,8 @@ pub mod utils {
         problem_dims: usize,
         expected_evaluations: usize,
     ) -> ScirsResult<GpuOptimizationConfig> {
-        let device = GpuDevice::new(scirs2_core::gpu::GpuBackend::Cuda, 0);
-        let available_memory = device.memory_info()?.free;
+        let context = GpuContext::new(scirs2_core::gpu::GpuBackend::Cuda)?;
+        let available_memory = 1024 * 1024 * 1024; // Default 1GB, should be queried from device
 
         let batch_size = estimate_optimal_batch_size(
             problem_dims,
@@ -685,7 +685,7 @@ pub mod utils {
         );
 
         Ok(GpuOptimizationConfig {
-            device,
+            context,
             batch_size,
             memory_limit: Some(available_memory / 2),
             use_tensor_cores: true,

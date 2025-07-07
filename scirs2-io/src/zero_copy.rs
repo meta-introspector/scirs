@@ -1123,7 +1123,7 @@ mod tests {
         let advice = MemoryAdvice::Sequential;
         match advice {
             MemoryAdvice::Sequential => {} // Expected case
-            _ => panic!("Unexpected memory advice"),
+            _ => assert!(false, "Unexpected memory advice"),
         }
     }
 
@@ -1133,7 +1133,7 @@ mod tests {
         let policy = NumaMemoryPolicy::Local;
         match policy {
             NumaMemoryPolicy::Local => {} // Expected case
-            _ => panic!("Unexpected NUMA policy"),
+            _ => assert!(false, "Unexpected NUMA policy"),
         }
 
         let bind_policy = NumaMemoryPolicy::Bind(0);

@@ -13,7 +13,6 @@
 
 use crate::error::StatsResult;
 use ndarray::{Array1, ArrayView1};
-use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -308,7 +307,7 @@ impl NumericalStabilityAnalyzer {
         data: &ArrayView1<f64>,
     ) -> StatsResult<ConditionNumberAnalysis> {
         // For 1D data, we estimate conditioning based on data characteristics
-        let data_range = data.iter().fold(0.0, |acc, &x| acc.max(x.abs()));
+        let data_range = data.iter().fold(0.0f64, |acc, &x| acc.max(x.abs()));
         let data_min = data.iter().fold(f64::INFINITY, |acc, &x| acc.min(x.abs()));
 
         // Estimate condition number as ratio of max to min (simplified)
@@ -373,8 +372,8 @@ impl NumericalStabilityAnalyzer {
             }
         }
 
-        let forward_error_bound = forward_errors.iter().fold(0.0, |acc, &x| acc.max(x));
-        let backward_error_bound = backward_errors.iter().fold(0.0, |acc, &x| acc.max(x));
+        let forward_error_bound = forward_errors.iter().fold(0.0f64, |acc, &x| acc.max(x));
+        let backward_error_bound = backward_errors.iter().fold(0.0f64, |acc, &x| acc.max(x));
 
         // Error amplification factor
         let error_amplification = if backward_error_bound > 0.0 {
@@ -504,7 +503,7 @@ impl NumericalStabilityAnalyzer {
         }
 
         // Assess overflow/underflow risk
-        let max_val = data.iter().fold(0.0, |acc, &x| acc.max(x.abs()));
+        let max_val = data.iter().fold(0.0f64, |acc, &x| acc.max(x.abs()));
         let overflow_underflow_risk = if max_val > 1e100 {
             OverflowRisk::High
         } else if max_val > 1e50 {

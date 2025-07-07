@@ -56,6 +56,22 @@ pub enum SimdMetric {
 
 impl SimdMetric {
     /// Get the string name of the metric
+    ///
+    /// # Returns
+    ///
+    /// * A string slice containing the name of the metric
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use scirs2_spatial::simd_distance::SimdMetric;
+    ///
+    /// let metric = SimdMetric::Euclidean;
+    /// assert_eq!(metric.name(), "euclidean");
+    ///
+    /// let metric = SimdMetric::Manhattan;
+    /// assert_eq!(metric.name(), "manhattan");
+    /// ```
     pub fn name(&self) -> &'static str {
         match self {
             SimdMetric::Euclidean => "euclidean",

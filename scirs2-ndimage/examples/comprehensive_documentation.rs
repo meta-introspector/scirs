@@ -55,7 +55,7 @@ fn main() -> NdimageResult<()> {
     // 8. Advanced SIMD Extensions
     #[cfg(feature = "simd")]
     {
-        println!("\n--- 8. ULTRA-ADVANCED SIMD EXTENSIONS ---\n");
+        println!("\n--- 8. ADVANCED SIMD EXTENSIONS ---\n");
         demonstrate_advanced_simd(&test_image_2d)?;
     }
 

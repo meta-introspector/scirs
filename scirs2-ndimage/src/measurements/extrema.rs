@@ -102,8 +102,8 @@ fn generate_offsets(offsets: &mut Vec<Vec<isize>>, sizes: &[usize], current: &[i
 #[allow(dead_code)]
 pub fn extrema<T, D>(input: &Array<T, D>) -> NdimageResult<(T, T, Vec<usize>, Vec<usize>)>
 where
-    T: Float + FromPrimitive + Debug + NumAssign + PartialOrd,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + NumAssign + PartialOrd + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -254,8 +254,8 @@ pub fn local_extrema<T, D>(
     mode: Option<&str>,
 ) -> NdimageResult<(Array<bool, D>, Array<bool, D>)>
 where
-    T: Float + FromPrimitive + Debug + NumAssign + PartialOrd,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + NumAssign + PartialOrd + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {

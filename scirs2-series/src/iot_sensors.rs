@@ -714,14 +714,14 @@ impl IoTAnalysis {
                 let distance = motion.distance_traveled()?;
                 report.insert(
                     "Distance_Traveled".to_string(),
-                    format!("{:.2} meters", distance),
+                    format!("{distance:.2} meters"),
                 );
             }
         }
 
         // Overall data quality
         let mut quality_issues = 0;
-        for (_sensor, quality) in &self.quality_assessments {
+        for quality in self.quality_assessments.values() {
             if quality.missing_percentage > 10.0
                 || quality.outlier_percentage > 5.0
                 || quality.snr < 10.0
@@ -733,7 +733,7 @@ impl IoTAnalysis {
         let quality_status = if quality_issues == 0 {
             "All sensors showing good data quality".to_string()
         } else {
-            format!("{} sensors showing data quality issues", quality_issues)
+            format!("{quality_issues} sensors showing data quality issues")
         };
         report.insert("Data_Quality_Status".to_string(), quality_status);
 
@@ -748,22 +748,19 @@ impl IoTAnalysis {
         for (sensor_name, quality) in &self.quality_assessments {
             if quality.missing_percentage > 20.0 {
                 maintenance_alerts.push(format!(
-                    "Sensor '{}' may need replacement - high missing data rate",
-                    sensor_name
+                    "Sensor '{sensor_name}' may need replacement - high missing data rate"
                 ));
             }
 
             if quality.outlier_percentage > 15.0 {
                 maintenance_alerts.push(format!(
-                    "Sensor '{}' may need calibration - high outlier rate",
-                    sensor_name
+                    "Sensor '{sensor_name}' may need calibration - high outlier rate"
                 ));
             }
 
             if quality.snr < 5.0 {
                 maintenance_alerts.push(format!(
-                    "Sensor '{}' may have connectivity issues - low signal quality",
-                    sensor_name
+                    "Sensor '{sensor_name}' may have connectivity issues - low signal quality"
                 ));
             }
         }
@@ -775,8 +772,7 @@ impl IoTAnalysis {
             for (sensor_type, issues) in malfunctions {
                 if issues.len() > 100 {
                     maintenance_alerts.push(format!(
-                        "{} sensor requires immediate attention - multiple malfunctions detected",
-                        sensor_type
+                        "{sensor_type} sensor requires immediate attention - multiple malfunctions detected"
                     ));
                 }
             }
@@ -806,7 +802,7 @@ mod tests {
 
         let comfort = analysis.comfort_index().unwrap();
         assert_eq!(comfort.len(), 5);
-        assert!(comfort.iter().all(|&x| x >= 0.0 && x <= 100.0));
+        assert!(comfort.iter().all(|&x| (0.0..=100.0).contains(&x)));
 
         let malfunctions = analysis.detect_sensor_malfunctions().unwrap();
         assert!(malfunctions.contains_key("Temperature"));

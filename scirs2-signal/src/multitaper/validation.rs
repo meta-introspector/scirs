@@ -593,7 +593,7 @@ fn benchmark_performance(test_signals: &TestSignalConfig) -> SignalResult<Perfor
 #[allow(dead_code)]
 fn cross_validate_with_reference(
     test_signals: &TestSignalConfig,
-    tolerance: f64,
+    _tolerance: f64,
 ) -> SignalResult<CrossValidationMetrics> {
     // Generate test signal
     let t: Vec<f64> = (0..test_signals.n)
@@ -605,7 +605,7 @@ fn cross_validate_with_reference(
         .collect();
 
     // Standard implementation (as reference)
-    let (ref_freqs, ref_psd, _, _) = pmtm(
+    let (_ref_freqs, ref_psd, _, _) = pmtm(
         &signal,
         Some(test_signals.fs),
         Some(test_signals.nw),
@@ -628,7 +628,7 @@ fn cross_validate_with_reference(
 
     // Compare PSDs
     let mut relative_errors = Vec::new();
-    for (i, (&ref_val, &enh_val)) in ref_psd.iter().zip(enhanced_result.psd.iter()).enumerate() {
+    for (_i, (&ref_val, &enh_val)) in ref_psd.iter().zip(enhanced_result.psd.iter()).enumerate() {
         if ref_val > 1e-10 {
             let rel_error = (ref_val - enh_val).abs() / ref_val;
             relative_errors.push(rel_error);
@@ -679,7 +679,7 @@ fn estimate_frequency_resolution(frequencies: &[f64], psd: &[f64], peak_idx: usi
 
 #[allow(dead_code)]
 fn estimate_spectral_leakage(psd: &[f64], peak_idx: usize) -> f64 {
-    let peak_power = psd[peak_idx];
+    let _peak_power = psd[peak_idx];
     let total_power: f64 = psd.iter().sum();
 
     // Estimate power in main lobe (±10 bins around peak)
@@ -1139,7 +1139,7 @@ fn calculate_general_metrics(psd_estimates: &[Vec<f64>]) -> SignalResult<Spectra
 #[allow(dead_code)]
 fn cross_validate_with_multiple_references(
     test_signals: &TestSignalConfig,
-    tolerance: f64,
+    _tolerance: f64,
 ) -> SignalResult<CrossValidationMetrics> {
     let mut all_errors = Vec::new();
     let mut all_correlations = Vec::new();
@@ -1149,7 +1149,7 @@ fn cross_validate_with_multiple_references(
         let signal = generate_test_signal(test_signals, *signal_type, false)?;
 
         // Standard implementation (reference)
-        let (ref_freqs, ref_psd, _, _) = pmtm(
+        let (_ref_freqs, ref_psd, _, _) = pmtm(
             &signal,
             Some(test_signals.fs),
             Some(test_signals.nw),
@@ -1395,7 +1395,7 @@ pub struct ConvergenceMetrics {
 
 /// Validate extreme parameter cases
 #[allow(dead_code)]
-fn validate_extreme_case(config: &TestSignalConfig, tolerance: f64) -> SignalResult<f64> {
+fn validate_extreme_case(config: &TestSignalConfig, _tolerance: f64) -> SignalResult<f64> {
     // Generate a simple test signal
     let signal: Vec<f64> = (0..config.n)
         .map(|i| (2.0 * PI * 10.0 * i as f64 / config.fs).sin())
@@ -1527,7 +1527,7 @@ fn validate_memory_scaling(config: &TestSignalConfig) -> SignalResult<f64> {
 /// Analyze performance scaling characteristics
 #[allow(dead_code)]
 fn analyze_performance_scaling(
-    config: &TestSignalConfig,
+    _config: &TestSignalConfig,
 ) -> SignalResult<PerformanceScalingMetrics> {
     // This would normally involve detailed timing analysis
     // For now, return reasonable default values
@@ -1647,7 +1647,7 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
     let signal_view = ndarray::ArrayView1::from(&signal);
     let window_view = ndarray::ArrayView1::from(&dummy_window);
     let mut result = vec![0.0; signal.len()];
-    let result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut result)
+    let _result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD shape error: {}", e)))?;
 
     // Test SIMD multiplication
@@ -1673,7 +1673,7 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
 
     // Test 2: SIMD addition operations
     let mut add_result = vec![0.0; signal.len()];
-    let add_result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut add_result)
+    let _add_result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut add_result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD add shape error: {}", e)))?;
 
     let add_simd_result = f64::simd_add(&signal_view, &window_view);
@@ -1697,7 +1697,7 @@ pub fn validate_simd_operations(test_signals: &TestSignalConfig) -> SignalResult
 
     // Test 3: SIMD subtraction operations
     let mut sub_result = vec![0.0; signal.len()];
-    let sub_result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut sub_result)
+    let _sub_result_view = ndarray::ArrayView1::from_shape(signal.len(), &mut sub_result)
         .map_err(|e| SignalError::ComputationError(format!("SIMD sub shape error: {}", e)))?;
 
     let sub_simd_result = f64::simd_sub(&signal_view, &window_view);

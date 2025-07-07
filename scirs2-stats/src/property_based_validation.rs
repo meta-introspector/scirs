@@ -13,8 +13,6 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::Array1;
-use num_traits::Float;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;

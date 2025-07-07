@@ -13,17 +13,29 @@ use std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub enum ClimateAnomalyMethod {
     /// Z-score based on long-term climatology
-    Climatological { threshold: f64 },
+    Climatological {
+        /// Z-score threshold for anomaly detection
+        threshold: f64,
+    },
     /// Percentile-based anomalies
-    Percentile { lower: f64, upper: f64 },
+    Percentile {
+        /// Lower percentile threshold
+        lower: f64,
+        /// Upper percentile threshold
+        upper: f64,
+    },
     /// Temperature-specific extreme event detection
     TemperatureExtreme {
+        /// Heat wave threshold temperature
         heat_threshold: f64,
+        /// Cold wave threshold temperature
         cold_threshold: f64,
     },
     /// Precipitation anomaly detection
     PrecipitationAnomaly {
+        /// Drought threshold for precipitation
         drought_threshold: f64,
+        /// Flood threshold for precipitation
         flood_threshold: f64,
     },
 }
@@ -415,7 +427,7 @@ impl AtmosphericAnalysis {
         })?;
 
         let bin_size = 360.0 / direction_bins as f64;
-        let speed_bins = vec![0.0, 5.0, 10.0, 15.0, 20.0, f64::INFINITY];
+        let speed_bins = [0.0, 5.0, 10.0, 15.0, 20.0, f64::INFINITY];
 
         let mut rose_data = Array2::zeros((direction_bins, speed_bins.len() - 1));
 

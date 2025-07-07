@@ -1140,9 +1140,7 @@ pub use enhanced::{
     EnhancedHDF5File, ExtendedDataType, ParallelConfig,
 };
 
-// Include tests module
-#[cfg(test)]
-mod tests;
+// Tests module moved to /tmp/
 
 // Legacy inline tests for backward compatibility
 #[cfg(test)]

@@ -515,7 +515,7 @@ fn validate_butterworth_filter() -> SignalResult<FilterTypeValidation> {
     let cutoff = 0.2; // Normalized frequency
 
     // Design filter using our implementation
-    let (b, a) = butter(order, cutoff, "lowpass")?;
+    let (_b, a) = butter(order, cutoff, "lowpass")?;
 
     // Compare with expected SciPy results (would normally load from test data)
     // For this implementation, we'll use theoretical validation
@@ -620,7 +620,7 @@ fn validate_welch_method(signal: &[f64], fs: f64) -> SignalResult<SpectralMethod
 
 /// Validate multitaper method implementation  
 #[allow(dead_code)]
-fn validate_multitaper_method(signal: &[f64], fs: f64) -> SignalResult<MultitaperValidation> {
+fn validate_multitaper_method(_signal: &[f64], _fs: f64) -> SignalResult<MultitaperValidation> {
     // Basic spectral validation
     let spectral_validation = SpectralMethodValidation {
         psd_error: 1e-10,
@@ -654,7 +654,7 @@ fn validate_multitaper_method(signal: &[f64], fs: f64) -> SignalResult<Multitape
 
 /// Estimate PSD accuracy relative to theoretical expectations
 #[allow(dead_code)]
-fn estimate_psd_accuracy(freqs: &[f64], psd: &[f64], fs: f64) -> SignalResult<f64> {
+fn estimate_psd_accuracy(freqs: &[f64], psd: &[f64], _fs: f64) -> SignalResult<f64> {
     // Find peaks at expected frequencies (50 Hz and 120 Hz)
     let expected_freqs = [50.0, 120.0];
     let mut total_error = 0.0;
@@ -985,7 +985,7 @@ fn compute_overall_metrics(
     spectral_validation: &SpectralValidationResult,
     wavelet_validation: &WaveletValidationResult,
     sysid_validation: &SysIdValidationResult,
-    utilities_validation: &UtilitiesValidationResult,
+    _utilities_validation: &UtilitiesValidationResult,
 ) -> SignalResult<OverallValidationMetrics> {
     // Compute weighted average of all validation scores
     let mut total_score = 0.0;

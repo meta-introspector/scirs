@@ -449,7 +449,7 @@ mod tests {
     #[test]
     fn test_config_validation() {
         let mut validator = ComprehensiveValidator::new();
-        let mut config = crate::fusion_core::AdvancedConfig::default();
+        let mut config = crate::advanced_fusion_algorithms::AdvancedConfig::default();
 
         // Valid configuration should pass
         assert!(validator.validate_config(&config).is_ok());

@@ -476,8 +476,8 @@ impl PatternDetector {
     }
 
     fn generate_sample_points(&mut self, n_vars: usize) -> Result<(), OptimizeError> {
-        use rand::prelude::*;
-        let mut rng = rand::rng();
+        use rand::{prelude::*, rng};
+        let mut rng = rng();
 
         // Generate various types of sample points
         let n_samples = (20 + n_vars).min(100); // Adaptive sampling

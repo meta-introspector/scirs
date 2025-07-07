@@ -221,7 +221,7 @@ impl DistributedReader {
         let mut buffer = vec![0u8; 8192];
         let bytes_read = file
             .read(&mut buffer)
-            .map_err(|e| IoError::ParseError(format!("Failed to read sample: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Failed to read sample: {e}")))?;
 
         let newlines = buffer[..bytes_read].iter().filter(|&&b| b == b'\n').count();
         if newlines == 0 {
@@ -249,8 +249,7 @@ impl DistributedReader {
         let optimal_workers = std::cmp::min(available_workers, cpu_count * 2); // Don't over-subscribe
 
         println!(
-            "Processing {} partitions with {} workers (CPU cores: {})",
-            num_partitions, optimal_workers, cpu_count
+            "Processing {num_partitions} partitions with {optimal_workers} workers (CPU cores: {cpu_count})"
         );
 
         // Create worker info tracking
@@ -297,11 +296,11 @@ impl DistributedReader {
                         })?;
 
                         file.seek(SeekFrom::Start(offset as u64))
-                            .map_err(|e| IoError::ParseError(format!("Failed to seek: {}", e)))?;
+                            .map_err(|e| IoError::ParseError(format!("Failed to seek: {e}")))?;
 
                         let mut buffer = vec![0u8; size];
                         file.read_exact(&mut buffer).map_err(|e| {
-                            IoError::ParseError(format!("Failed to read partition: {}", e))
+                            IoError::ParseError(format!("Failed to read partition: {e}"))
                         })?;
 
                         processor(buffer)
@@ -400,7 +399,7 @@ impl DistributedWriter {
         Self {
             output_dir: output_dir.as_ref().to_path_buf(),
             num_partitions: num_cpus::get(),
-            partition_naming: Arc::new(|idx| format!("partition_{:04}.dat", idx)),
+            partition_naming: Arc::new(|idx| format!("partition_{idx:04}.dat")),
             merge_strategy: MergeStrategy::None,
         }
     }
@@ -434,7 +433,7 @@ impl DistributedWriter {
     {
         // Create output directory
         std::fs::create_dir_all(&self.output_dir)
-            .map_err(|e| IoError::FileError(format!("Failed to create output directory: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create output directory: {e}")))?;
 
         // Partition data
         let chunk_size = (data.len() + self.num_partitions - 1) / self.num_partitions;
@@ -463,7 +462,7 @@ impl DistributedWriter {
                     let filepath = output_dir.join(&filename);
 
                     let mut file = File::create(&filepath).map_err(|e| {
-                        IoError::FileError(format!("Failed to create partition file: {}", e))
+                        IoError::FileError(format!("Failed to create partition file: {e}"))
                     })?;
 
                     for item in chunk {
@@ -471,7 +470,7 @@ impl DistributedWriter {
                     }
 
                     file.sync_all()
-                        .map_err(|e| IoError::FileError(format!("Failed to sync file: {}", e)))?;
+                        .map_err(|e| IoError::FileError(format!("Failed to sync file: {e}")))?;
 
                     Ok(filepath)
                 })
@@ -505,19 +504,19 @@ impl DistributedWriter {
     /// Merge partition files
     fn merge_files(&self, partitions: &[PathBuf], output: &Path) -> Result<()> {
         let mut output_file = File::create(output)
-            .map_err(|e| IoError::FileError(format!("Failed to create merge output: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create merge output: {e}")))?;
 
         for partition in partitions {
             let mut input = File::open(partition)
                 .map_err(|_| IoError::FileNotFound(partition.to_string_lossy().to_string()))?;
 
             std::io::copy(&mut input, &mut output_file)
-                .map_err(|e| IoError::FileError(format!("Failed to copy partition: {}", e)))?;
+                .map_err(|e| IoError::FileError(format!("Failed to copy partition: {e}")))?;
         }
 
         output_file
             .sync_all()
-            .map_err(|e| IoError::FileError(format!("Failed to sync merged file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to sync merged file: {e}")))?;
 
         // Optionally delete partition files
         for partition in partitions {
@@ -686,18 +685,18 @@ impl DistributedFileSystem for LocalFileSystem {
 
     fn create_write(&self, path: &Path) -> Result<Box<dyn Write + Send>> {
         let file = File::create(path)
-            .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         Ok(Box::new(file))
     }
 
     fn list_dir(&self, path: &Path) -> Result<Vec<PathBuf>> {
         let entries = std::fs::read_dir(path)
-            .map_err(|e| IoError::ParseError(format!("Failed to read directory: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Failed to read directory: {e}")))?;
 
         let mut paths = Vec::new();
         for entry in entries {
             let entry =
-                entry.map_err(|e| IoError::ParseError(format!("Failed to read entry: {}", e)))?;
+                entry.map_err(|e| IoError::ParseError(format!("Failed to read entry: {e}")))?;
             paths.push(entry.path());
         }
 
@@ -712,7 +711,7 @@ impl DistributedFileSystem for LocalFileSystem {
             size: meta.len(),
             modified: meta
                 .modified()
-                .map_err(|e| IoError::ParseError(format!("Failed to get modified time: {}", e)))?,
+                .map_err(|e| IoError::ParseError(format!("Failed to get modified time: {e}")))?,
             is_dir: meta.is_dir(),
         })
     }

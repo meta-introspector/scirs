@@ -66,8 +66,8 @@ pub enum StrictnessLevel {
     Standard,
     /// Strict analysis for stable releases
     Strict,
-    /// Ultra-strict analysis for LTS releases
-    UltraStrict,
+    /// Extra-strict analysis for LTS releases
+    ExtraStrict,
 }
 
 /// Complete inventory of the public API

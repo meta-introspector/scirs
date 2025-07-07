@@ -166,7 +166,7 @@ impl StreamingIterator {
             )
         });
 
-        let total_chunks = (total_samples + config.chunk_size - 1) / config.chunk_size;
+        let total_chunks = total_samples.div_ceil(config.chunk_size);
 
         Ok(Self {
             config,
@@ -357,7 +357,7 @@ impl StreamingIterator {
 
             // Create data matrix
             let data = Array2::from_shape_vec((samples_read, n_features), float_data)
-                .map_err(|e| DatasetsError::Other(format!("Shape error: {}", e)))?;
+                .map_err(|e| DatasetsError::Other(format!("Shape error: {e}")))?;
             let sample_indices: Vec<usize> =
                 (global_sample_index..global_sample_index + samples_read).collect();
 
@@ -575,12 +575,12 @@ where
                                 Ok(result) => {
                                     // Send result back with chunk ID to maintain order
                                     if result_tx_clone.send((chunk_id, Ok(result))).is_err() {
-                                        eprintln!("Worker {} failed to send result", worker_id);
+                                        eprintln!("Worker {worker_id} failed to send result");
                                         break;
                                     }
                                 }
                                 Err(e) => {
-                                    eprintln!("Worker {} processing error: {}", worker_id, e);
+                                    eprintln!("Worker {worker_id} processing error: {e}");
                                     // Send error result
                                     if result_tx_clone.send((chunk_id, Err(e))).is_err() {
                                         break;
@@ -602,7 +602,7 @@ where
         while let Some(chunk) = iterator.next_chunk()? {
             work_tx
                 .send(Some((chunk_count, chunk)))
-                .map_err(|e| DatasetsError::Other(format!("Work send error: {}", e)))?;
+                .map_err(|e| DatasetsError::Other(format!("Work send error: {e}")))?;
             chunk_count += 1;
         }
 
@@ -610,7 +610,7 @@ where
         for _ in 0..self.config.num_workers {
             work_tx
                 .send(None)
-                .map_err(|e| DatasetsError::Other(format!("End signal send error: {}", e)))?;
+                .map_err(|e| DatasetsError::Other(format!("End signal send error: {e}")))?;
         }
 
         // Drop the work sender to signal no more work
@@ -648,7 +648,7 @@ where
         // Wait for all workers to finish
         for handle in worker_handles {
             if let Err(e) = handle.join() {
-                eprintln!("Worker thread panicked: {:?}", e);
+                eprintln!("Worker thread panicked: {e:?}");
             }
         }
 
@@ -667,6 +667,7 @@ where
 
 /// Memory-efficient data transformer for streaming
 pub struct StreamTransformer {
+    #[allow(clippy::type_complexity)]
     transformations: Vec<Box<dyn Fn(&mut DataChunk) -> Result<()> + Send + Sync>>,
 }
 

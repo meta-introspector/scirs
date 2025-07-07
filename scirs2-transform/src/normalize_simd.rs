@@ -9,7 +9,7 @@
 //! - Cache-optimal memory access patterns
 //! - Advanced prefetching strategies for large datasets
 
-use ndarray::{Array1, Array2, ArrayBase, Axis, Data, Ix1, Ix2};
+use ndarray::{Array1, Array2, ArrayBase, Data, Ix2};
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 

@@ -441,8 +441,8 @@ pub extern "C" fn scirs_get_arima_params(
         let _arima_model = &*(model_ref.handle as *const ArimaModel<f64>);
 
         // Extract basic model information since get_params doesn't exist
-        let param_names_list = vec!["p", "d", "q"];
-        let param_values_list = vec![model_ref.p as f64, model_ref.d as f64, model_ref.q as f64];
+        let param_names_list = ["p", "d", "q"];
+        let param_values_list = [model_ref.p as f64, model_ref.d as f64, model_ref.q as f64];
 
         let param_count = std::cmp::min(param_names_list.len(), max_params as usize);
         let names_slice = slice::from_raw_parts_mut(param_names, param_count);

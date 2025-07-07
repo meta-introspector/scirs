@@ -11,7 +11,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayView2, Axis, ScalarOperand};
 use num_traits::{Float, FromPrimitive, One, Zero};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps, validation::*};
+use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 use std::marker::PhantomData;
 
 /// Enhanced Principal Component Analysis with multiple algorithms
@@ -263,7 +263,7 @@ where
         mean: Array1<F>,
         scale: Option<Array1<F>>,
     ) -> StatsResult<PCAResult<F>> {
-        let (n_samples, n_features) = data.dim();
+        let (n_samples, _n_features) = data.dim();
 
         // Convert to f64 for numerical stability
         let data_f64 = data.mapv(|x| x.to_f64().unwrap());

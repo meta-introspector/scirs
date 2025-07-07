@@ -10,7 +10,7 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::ArrayView1;
-use num_traits::{Float, NumCast, One, Zero};
+use num_traits::{Float, NumCast};
 use scirs2_core::{simd_ops::SimdUnifiedOps, validation::*};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -427,40 +427,35 @@ where
     fn mean_avx512(&self, data: &ArrayView1<F>) -> StatsResult<F> {
         // In a real implementation, this would use AVX-512 intrinsics
         // For now, delegate to the core SIMD operations
-        F::simd_mean(data)
-            .ok_or_else(|| StatsError::InvalidArgument("SIMD mean failed".to_string()))
+        Ok(F::simd_mean(data))
     }
 
     /// AVX2 optimized mean calculation  
     #[allow(dead_code)]
     fn mean_avx2(&self, data: &ArrayView1<F>) -> StatsResult<F> {
         // In a real implementation, this would use AVX2 intrinsics
-        F::simd_mean(data)
-            .ok_or_else(|| StatsError::InvalidArgument("SIMD mean failed".to_string()))
+        Ok(F::simd_mean(data))
     }
 
     /// AVX optimized mean calculation
     #[allow(dead_code)]
     fn mean_avx(&self, data: &ArrayView1<F>) -> StatsResult<F> {
         // In a real implementation, this would use AVX intrinsics
-        F::simd_mean(data)
-            .ok_or_else(|| StatsError::InvalidArgument("SIMD mean failed".to_string()))
+        Ok(F::simd_mean(data))
     }
 
     /// SSE2 optimized mean calculation
     #[allow(dead_code)]
     fn mean_sse2(&self, data: &ArrayView1<F>) -> StatsResult<F> {
         // In a real implementation, this would use SSE2 intrinsics
-        F::simd_mean(data)
-            .ok_or_else(|| StatsError::InvalidArgument("SIMD mean failed".to_string()))
+        Ok(F::simd_mean(data))
     }
 
     /// NEON optimized mean calculation (ARM)
     #[allow(dead_code)]
     fn mean_neon(&self, data: &ArrayView1<F>) -> StatsResult<F> {
         // In a real implementation, this would use NEON intrinsics
-        F::simd_mean(data)
-            .ok_or_else(|| StatsError::InvalidArgument("SIMD mean failed".to_string()))
+        Ok(F::simd_mean(data))
     }
 
     /// Scalar fallback mean calculation
@@ -613,20 +608,20 @@ where
     let config = match target_platform {
         TargetPlatform::IntelAvx512 => AdvancedSimdConfig {
             vectorization_level: VectorizationLevel::Maximum,
-            cache_optimization: CacheOptimizationStrategy::L3Optimized,
-            prefetch_strategy: PrefetchStrategy::Aggressive,
+            cache_optimization: CacheOptimizationStrategy::Adaptive,
+            prefetch_strategy: PrefetchStrategy::Hardware,
             loop_unrolling: true,
             ..AdvancedSimdConfig::default()
         },
         TargetPlatform::AmdZen => AdvancedSimdConfig {
             vectorization_level: VectorizationLevel::Balanced,
-            cache_optimization: CacheOptimizationStrategy::L2Optimized,
-            prefetch_strategy: PrefetchStrategy::Conservative,
+            cache_optimization: CacheOptimizationStrategy::TemporalLocality,
+            prefetch_strategy: PrefetchStrategy::Software,
             ..AdvancedSimdConfig::default()
         },
         TargetPlatform::ArmNeon => AdvancedSimdConfig {
             vectorization_level: VectorizationLevel::Conservative,
-            cache_optimization: CacheOptimizationStrategy::PowerEfficient,
+            cache_optimization: CacheOptimizationStrategy::SpatialLocality,
             mixed_precision: true,
             ..AdvancedSimdConfig::default()
         },
@@ -698,7 +693,15 @@ pub type F64AdvancedSimdProcessor = AdvancedEnhancedSimdProcessor<f64>;
 /// Machine learning-based algorithm selection for SIMD operations
 impl<F> AdvancedEnhancedSimdProcessor<F>
 where
-    F: Float + NumCast + Copy + Send + Sync + 'static + std::fmt::Display + std::iter::Sum<F>,
+    F: Float
+        + NumCast
+        + Copy
+        + Send
+        + Sync
+        + 'static
+        + std::fmt::Display
+        + std::iter::Sum<F>
+        + SimdUnifiedOps,
 {
     /// Predict optimal algorithm based on data characteristics
     pub fn predict_optimal_algorithm(
@@ -708,18 +711,53 @@ where
     ) -> OptimalAlgorithm {
         // Simple ML-inspired decision tree for algorithm selection
         if data_size < 100 {
-            OptimalAlgorithm::Scalar
+            OptimalAlgorithm {
+                name: "Scalar".to_string(),
+                instruction_set: InstructionSet::SSE2,
+                performance_score: 1.0,
+                memory_requirements: data_size * std::mem::size_of::<F>(),
+                accuracy_score: 1.0,
+                last_used: std::time::Instant::now(),
+            }
         } else if data_size < 1000 {
             if data_variance < F::from(1.0).unwrap() {
-                OptimalAlgorithm::SimdBasic
+                OptimalAlgorithm {
+                    name: "SimdBasic".to_string(),
+                    instruction_set: InstructionSet::AVX,
+                    performance_score: 2.0,
+                    memory_requirements: data_size * std::mem::size_of::<F>(),
+                    accuracy_score: 0.95,
+                    last_used: std::time::Instant::now(),
+                }
             } else {
-                OptimalAlgorithm::SimdStable
+                OptimalAlgorithm {
+                    name: "SimdStable".to_string(),
+                    instruction_set: InstructionSet::AVX2,
+                    performance_score: 1.8,
+                    memory_requirements: data_size * std::mem::size_of::<F>(),
+                    accuracy_score: 1.0,
+                    last_used: std::time::Instant::now(),
+                }
             }
         } else if data_size < 10000 {
-            OptimalAlgorithm::SimdOptimized
+            OptimalAlgorithm {
+                name: "SimdOptimized".to_string(),
+                instruction_set: InstructionSet::AVX512F,
+                performance_score: 3.0,
+                memory_requirements: data_size * std::mem::size_of::<F>(),
+                accuracy_score: 0.98,
+                last_used: std::time::Instant::now(),
+            }
         } else {
             // For very large datasets, use parallel SIMD
-            OptimalAlgorithm::ParallelSimd
+            OptimalAlgorithm {
+                name: "ParallelSimd".to_string(),
+                instruction_set: InstructionSet::AVX512F,
+                performance_score: 4.0,
+                memory_requirements: data_size * std::mem::size_of::<F>(),
+                accuracy_score: 0.95,
+                last_used: std::time::Instant::now(),
+            }
         }
     }
 
@@ -736,7 +774,7 @@ where
             let mut sum = F::zero();
             let mut count = 0;
 
-            for chunk in data.chunks(elements_per_line) {
+            for chunk in data.exact_chunks(elements_per_line) {
                 // Process each cache line worth of data
                 sum = sum + chunk.iter().copied().sum::<F>();
                 count += chunk.len();
@@ -782,7 +820,7 @@ where
 
     /// Auto-tuning for SIMD parameters based on runtime characteristics
     pub fn auto_tune_parameters(&mut self, sample_data: &ArrayView1<F>) -> StatsResult<()> {
-        let data_size = sample_data.len();
+        let _data_size = sample_data.len();
 
         // Benchmark different vectorization levels
         let start = std::time::Instant::now();
@@ -797,7 +835,7 @@ where
         } else {
             // Need more performance
             self.config.vectorization_level = VectorizationLevel::Aggressive;
-            self.config.prefetch_strategy = PrefetchStrategy::Aggressive;
+            self.config.prefetch_strategy = PrefetchStrategy::Hardware;
         }
 
         // Update performance statistics

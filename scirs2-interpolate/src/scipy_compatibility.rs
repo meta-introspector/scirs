@@ -677,7 +677,7 @@ mod tests {
     #[test]
     fn test_quick_compatibility_check() {
         let score = quick_compatibility_check().unwrap();
-        assert!(score >= 0.0 && score <= 1.0);
+        assert!((0.0..=1.0).contains(&score));
         assert!(score > 0.7); // Should have reasonable compatibility
     }
 

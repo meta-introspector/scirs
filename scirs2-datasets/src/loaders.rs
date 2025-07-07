@@ -29,7 +29,7 @@ pub fn load_json<P: AsRef<Path>>(path: P) -> Result<Dataset> {
     let reader = BufReader::new(file);
 
     let dataset: Dataset = serde_json::from_reader(reader)
-        .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to parse JSON: {}", e)))?;
+        .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to parse JSON: {e}")))?;
 
     Ok(dataset)
 }
@@ -40,7 +40,7 @@ pub fn save_json<P: AsRef<Path>>(dataset: &Dataset, path: P) -> Result<()> {
     let file = File::create(path).map_err(DatasetsError::IoError)?;
 
     serde_json::to_writer_pretty(file, dataset)
-        .map_err(|e| DatasetsError::SerdeError(format!("Failed to write JSON: {}", e)))?;
+        .map_err(|e| DatasetsError::SerdeError(format!("Failed to write JSON: {e}")))?;
 
     Ok(())
 }
@@ -211,7 +211,7 @@ impl DatasetChunkIterator {
         // Read header if present
         let feature_names = if csv_config.has_header {
             let headers = reader.headers().map_err(|e| {
-                DatasetsError::InvalidFormat(format!("Failed to read CSV headers: {}", e))
+                DatasetsError::InvalidFormat(format!("Failed to read CSV headers: {e}"))
             })?;
             Some(
                 headers
@@ -279,8 +279,7 @@ impl Iterator for DatasetChunkIterator {
                         Ok(vals) => vals,
                         Err(e) => {
                             return Some(Err(DatasetsError::InvalidFormat(format!(
-                                "Failed to parse value: {}",
-                                e
+                                "Failed to parse value: {e}"
                             ))))
                         }
                     };
@@ -299,8 +298,7 @@ impl Iterator for DatasetChunkIterator {
                 }
                 Some(Err(e)) => {
                     return Some(Err(DatasetsError::InvalidFormat(format!(
-                        "Failed to read CSV record: {}",
-                        e
+                        "Failed to read CSV record: {e}"
                     ))))
                 }
                 None => {
@@ -321,8 +319,7 @@ impl Iterator for DatasetChunkIterator {
         let (data, target) = if let Some(idx) = self.target_column {
             if idx >= n_cols {
                 return Some(Err(DatasetsError::InvalidFormat(format!(
-                    "Target column index {} is out of bounds (max: {})",
-                    idx,
+                    "Target column index {idx} is out of bounds (max: {})",
                     n_cols - 1
                 ))));
             }
@@ -407,7 +404,7 @@ pub fn load_csv_parallel<P: AsRef<Path>>(
 
     let feature_names = if csv_config.has_header {
         let headers = reader.headers().map_err(|e| {
-            DatasetsError::InvalidFormat(format!("Failed to read CSV headers: {}", e))
+            DatasetsError::InvalidFormat(format!("Failed to read CSV headers: {e}"))
         })?;
         Some(
             headers
@@ -424,9 +421,8 @@ pub fn load_csv_parallel<P: AsRef<Path>>(
     let mut col_count = 0;
 
     for result in reader.records() {
-        let record = result.map_err(|e| {
-            DatasetsError::InvalidFormat(format!("Failed to read CSV record: {}", e))
-        })?;
+        let record = result
+            .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to read CSV record: {e}")))?;
 
         if col_count == 0 {
             col_count = record.len();
@@ -523,7 +519,7 @@ fn load_csv_parallel_chunks<P: AsRef<Path>>(
     total_rows: usize,
 ) -> Result<()> {
     let chunk_size = streaming_config.chunk_size;
-    let num_chunks = (total_rows + chunk_size - 1) / chunk_size;
+    let num_chunks = total_rows.div_ceil(chunk_size);
 
     // Process chunks sequentially (parallel processing disabled for now)
     for chunk_idx in 0..num_chunks {
@@ -538,7 +534,7 @@ fn load_csv_parallel_chunks<P: AsRef<Path>>(
             data.clone(),
             target.clone(),
         ) {
-            eprintln!("Error processing chunk {}: {}", chunk_idx, e);
+            eprintln!("Error processing chunk {chunk_idx}: {e}");
         }
     }
 
@@ -563,30 +559,27 @@ fn process_csv_chunk<P: AsRef<Path>>(
         .from_reader(file);
 
     // Skip to start row
-    let mut current_row = 0;
     if csv_config.has_header {
         reader
             .headers()
-            .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to read headers: {}", e)))?;
+            .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to read headers: {e}")))?;
     }
 
-    for result in reader.records() {
+    for (current_row, result) in reader.records().enumerate() {
         if current_row >= end_row {
             break;
         }
 
         if current_row >= start_row {
             let record = result.map_err(|e| {
-                DatasetsError::InvalidFormat(format!("Failed to read CSV record: {}", e))
+                DatasetsError::InvalidFormat(format!("Failed to read CSV record: {e}"))
             })?;
 
             let values: Vec<f64> = record
                 .iter()
                 .map(|s| s.parse::<f64>())
                 .collect::<std::result::Result<Vec<f64>, _>>()
-                .map_err(|e| {
-                    DatasetsError::InvalidFormat(format!("Failed to parse value: {}", e))
-                })?;
+                .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to parse value: {e}")))?;
 
             // Write to shared arrays
             {
@@ -611,7 +604,6 @@ fn process_csv_chunk<P: AsRef<Path>>(
                 }
             }
         }
-        current_row += 1;
     }
 
     Ok(())
@@ -634,20 +626,18 @@ fn load_csv_sequential<P: AsRef<Path>>(
     if csv_config.has_header {
         reader
             .headers()
-            .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to read headers: {}", e)))?;
+            .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to read headers: {e}")))?;
     }
 
-    let mut row_idx = 0;
-    for result in reader.records() {
-        let record = result.map_err(|e| {
-            DatasetsError::InvalidFormat(format!("Failed to read CSV record: {}", e))
-        })?;
+    for (row_idx, result) in reader.records().enumerate() {
+        let record = result
+            .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to read CSV record: {e}")))?;
 
         let values: Vec<f64> = record
             .iter()
             .map(|s| s.parse::<f64>())
             .collect::<std::result::Result<Vec<f64>, _>>()
-            .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to parse value: {}", e)))?;
+            .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to parse value: {e}")))?;
 
         {
             let mut data_lock = data.lock().unwrap();
@@ -670,7 +660,6 @@ fn load_csv_sequential<P: AsRef<Path>>(
                 }
             }
         }
-        row_idx += 1;
     }
 
     Ok(())
@@ -694,22 +683,21 @@ pub fn load_csv<P: AsRef<Path>>(path: P, config: CsvConfig) -> Result<Dataset> {
     // Read header if needed
     if config.has_header {
         let headers = reader.headers().map_err(|e| {
-            DatasetsError::InvalidFormat(format!("Failed to read CSV headers: {}", e))
+            DatasetsError::InvalidFormat(format!("Failed to read CSV headers: {e}"))
         })?;
         header = Some(headers.iter().map(|s| s.to_string()).collect());
     }
 
     // Read rows
     for result in reader.records() {
-        let record = result.map_err(|e| {
-            DatasetsError::InvalidFormat(format!("Failed to read CSV record: {}", e))
-        })?;
+        let record = result
+            .map_err(|e| DatasetsError::InvalidFormat(format!("Failed to read CSV record: {e}")))?;
 
         let values: Vec<f64> = record
             .iter()
             .map(|s| {
                 s.parse::<f64>().map_err(|_| {
-                    DatasetsError::InvalidFormat(format!("Failed to parse value: {}", s))
+                    DatasetsError::InvalidFormat(format!("Failed to parse value: {s}"))
                 })
             })
             .collect::<Result<Vec<f64>>>()?;
@@ -732,8 +720,7 @@ pub fn load_csv<P: AsRef<Path>>(path: P, config: CsvConfig) -> Result<Dataset> {
     let (data, target, feature_names, _target_name) = if let Some(idx) = config.target_column {
         if idx >= n_cols {
             return Err(DatasetsError::InvalidFormat(format!(
-                "Target column index {} is out of bounds (max: {})",
-                idx,
+                "Target column index {idx} is out of bounds (max: {})",
                 n_cols - 1
             )));
         }

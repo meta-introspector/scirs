@@ -499,7 +499,6 @@ pub mod algorithms {
             local_size: usize,
             bounds: &[(f64, f64)],
         ) -> ScirsResult<Array2<f64>> {
-            use rand::Rng;
             let mut rng = rand::rng();
 
             let dims = bounds.len();
@@ -560,7 +559,6 @@ pub mod algorithms {
         }
 
         fn generate_trial_population(&self, population: &Array2<f64>) -> ScirsResult<Array2<f64>> {
-            use rand::Rng;
             let mut rng = rand::rng();
 
             let (pop_size, dims) = population.dim();
@@ -765,7 +763,6 @@ pub mod algorithms {
             local_size: usize,
             bounds: &[(f64, f64)],
         ) -> ScirsResult<Array2<f64>> {
-            use rand::Rng;
             let mut rng = rand::rng();
 
             let dims = bounds.len();
@@ -828,7 +825,6 @@ pub mod algorithms {
             global_best: &Array1<f64>,
             bounds: &[(f64, f64)],
         ) -> ScirsResult<()> {
-            use rand::Rng;
             let mut rng = rand::rng();
 
             let (swarm_size, dims) = positions.dim();

@@ -100,7 +100,7 @@ pub fn music(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSp
 
     // Eigendecomposition - use eigh since correlation matrix is Hermitian
     let eig_result = complex_eigh(&correlation_matrix.view())
-        .map_err(|e| SignalError::Compute(format!("Eigendecomposition failed: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Eigendecomposition failed: {}", e)))?;
     let eigenvalues = eig_result.eigenvalues;
     let eigenvectors = eig_result.eigenvectors;
 
@@ -125,7 +125,7 @@ pub fn music(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrSp
             .flat_map(|(_, vec)| vec.iter().cloned())
             .collect(),
     )
-    .map_err(|_| SignalError::Compute("Failed to construct noise subspace".to_string()))?;
+    .map_err(|_| SignalError::ComputationError("Failed to construct noise subspace".to_string()))?;
 
     // Compute MUSIC pseudospectrum
     let frequencies = create_frequency_grid(config);
@@ -171,7 +171,7 @@ pub fn esprit(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrS
 
     // Eigendecomposition - use eigh since correlation matrix is Hermitian
     let eig_result = complex_eigh(&correlation_matrix.view())
-        .map_err(|e| SignalError::Compute(format!("Eigendecomposition failed: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Eigendecomposition failed: {}", e)))?;
     let eigenvalues = eig_result.eigenvalues;
     let eigenvectors = eig_result.eigenvectors;
 
@@ -202,7 +202,9 @@ pub fn esprit(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrS
             .flat_map(|(_, vec)| vec.iter().cloned())
             .collect(),
     )
-    .map_err(|_| SignalError::Compute("Failed to construct signal subspace".to_string()))?;
+    .map_err(|_| {
+        SignalError::ComputationError("Failed to construct signal subspace".to_string())
+    })?;
 
     // Create subarray matrices for ESPRIT
     let s1 = signal_eigenvectors
@@ -215,7 +217,7 @@ pub fn esprit(data: &Array2<f64>, config: &HrSpectralConfig) -> SignalResult<HrS
 
     // Extract frequencies from eigenvalues of Phi
     let eig_result = complex_eig(&phi_matrix.view())
-        .map_err(|e| SignalError::Compute(format!("Eigendecomposition failed: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Eigendecomposition failed: {}", e)))?;
     let phi_eigenvalues = eig_result.eigenvalues;
     let mut source_freqs: Vec<f64> = phi_eigenvalues
         .iter()
@@ -275,8 +277,9 @@ pub fn minimum_variance(
     }
 
     // Invert correlation matrix
-    let inv_correlation = complex_inverse(&regularized_matrix.view())
-        .map_err(|_| SignalError::Compute("Failed to invert correlation matrix".to_string()))?;
+    let inv_correlation = complex_inverse(&regularized_matrix.view()).map_err(|_| {
+        SignalError::ComputationError("Failed to invert correlation matrix".to_string())
+    })?;
 
     // Compute MVDR spectrum
     let frequencies = create_frequency_grid(config);
@@ -284,7 +287,7 @@ pub fn minimum_variance(
 
     // Get eigenvalues for diagnostic purposes
     let eig_result = complex_eigh(&correlation_matrix.view())
-        .map_err(|e| SignalError::Compute(format!("Eigendecomposition failed: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Eigendecomposition failed: {}", e)))?;
     let eigenvalues = eig_result.eigenvalues;
     let eigenvals: Array1<f64> = eigenvalues.iter().map(|&val| val.norm()).collect();
 
@@ -327,7 +330,7 @@ pub fn pisarenko(
 
     // Eigendecomposition
     let eig_result = complex_eigh(&autocorr_matrix.view())
-        .map_err(|e| SignalError::Compute(format!("Eigendecomposition failed: {}", e)))?;
+        .map_err(|e| SignalError::ComputationError(format!("Eigendecomposition failed: {}", e)))?;
     let eigenvalues = eig_result.eigenvalues;
     let eigenvectors = eig_result.eigenvectors;
 
@@ -599,8 +602,9 @@ fn solve_esprit_equation(
     let s1h_s1 = s1_hermitian.dot(s1);
     let s1h_s2 = s1_hermitian.dot(s2);
 
-    let inv_s1h_s1 = complex_inverse(&s1h_s1.view())
-        .map_err(|_| SignalError::Compute("Failed to invert matrix in ESPRIT".to_string()))?;
+    let inv_s1h_s1 = complex_inverse(&s1h_s1.view()).map_err(|_| {
+        SignalError::ComputationError("Failed to invert matrix in ESPRIT".to_string())
+    })?;
 
     Ok(inv_s1h_s1.dot(&s1h_s2))
 }
@@ -731,8 +735,9 @@ fn find_polynomial_roots(coeffs: &[Complex64]) -> SignalResult<Vec<Complex64>> {
     }
 
     // Find eigenvalues of companion matrix
-    let eig_result = complex_eig(&companion.view())
-        .map_err(|_| SignalError::Compute("Failed to find polynomial roots".to_string()))?;
+    let eig_result = complex_eig(&companion.view()).map_err(|_| {
+        SignalError::ComputationError("Failed to find polynomial roots".to_string())
+    })?;
     let eigenvalues = eig_result.eigenvalues;
 
     Ok(eigenvalues.to_vec())
@@ -743,7 +748,7 @@ fn find_polynomial_roots(coeffs: &[Complex64]) -> SignalResult<Vec<Complex64>> {
 fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<f64>> {
     // Use scirs2_linalg solve
     compute_solve(&a.view(), &b.view(), None)
-        .map_err(|_| SignalError::Compute("Failed to solve linear system".to_string()))
+        .map_err(|_| SignalError::ComputationError("Failed to solve linear system".to_string()))
 }
 
 #[cfg(test)]

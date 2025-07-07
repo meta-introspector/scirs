@@ -62,7 +62,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut rand::thread_rng()),
         };
 
         // Initialize quantum state vectors for each sample
@@ -111,7 +111,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut rand::thread_rng()),
         };
 
         let mut data = Array2::zeros((n_samples, n_features));
@@ -134,7 +134,7 @@ impl QuantumDatasetGenerator {
             let noisy_target = if quantum_noise {
                 target + self.generate_quantum_noise(noise_amplitude, &mut rng)?
             } else {
-                target + noise_amplitude * rng.gen::<f64>()
+                target + noise_amplitude * rng.random::<f64>()
             };
 
             // Store in dataset
@@ -165,7 +165,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::rng()),
+            None => StdRng::from_rng(&mut rand::thread_rng()),
         };
 
         let mut data = Array2::zeros((n_samples, n_features));
@@ -186,7 +186,7 @@ impl QuantumDatasetGenerator {
             let center = &quantum_centers[cluster_id];
             for feature_idx in 0..n_features {
                 let base_value = center[feature_idx];
-                let gaussian_noise = rng.gen::<f64>() * cluster_std;
+                let gaussian_noise = rng.random::<f64>() * cluster_std;
                 let quantum_interference_noise =
                     self.generate_quantum_interference(interference_weight, &mut rng)?;
 
@@ -211,7 +211,7 @@ impl QuantumDatasetGenerator {
         // Add entanglement correlations
         for i in 0..n_features {
             for j in (i + 1)..n_features {
-                let entanglement = strength * (rng.gen::<f64>() - 0.5);
+                let entanglement = strength * (rng.random::<f64>() - 0.5);
                 matrix[[i, j]] = entanglement;
                 matrix[[j, i]] = entanglement; // Symmetric entanglement
             }
@@ -222,7 +222,7 @@ impl QuantumDatasetGenerator {
 
     fn quantum_class_assignment(&self, n_classes: usize, rng: &mut StdRng) -> usize {
         // Simulate quantum measurement collapse
-        let quantum_probability = rng.gen::<f64>();
+        let quantum_probability = rng.random::<f64>();
         let normalized_prob = (quantum_probability * self.gate_fidelity).abs();
         (normalized_prob * n_classes as f64) as usize % n_classes
     }
@@ -240,7 +240,7 @@ impl QuantumDatasetGenerator {
 
         for i in 0..n_features {
             // Generate quantum amplitude with phase
-            let amplitude = rng.gen::<f64>().sqrt();
+            let amplitude = rng.random::<f64>().sqrt();
             let phase = phase_offset + (i as f64 * PI / n_features as f64);
             state[i] = amplitude * (phase.cos() + phase.sin());
         }
@@ -267,8 +267,8 @@ impl QuantumDatasetGenerator {
 
         for i in 0..n_features {
             // Generate coefficients using quantum random walk
-            let quantum_step = if rng.gen::<f64>() > 0.5 { 1.0 } else { -1.0 };
-            let amplitude = rng.gen::<f64>() * self.gate_fidelity;
+            let quantum_step = if rng.random::<f64>() > 0.5 { 1.0 } else { -1.0 };
+            let amplitude = rng.random::<f64>() * self.gate_fidelity;
             coefficients[i] = quantum_step * amplitude;
         }
 
@@ -284,8 +284,8 @@ impl QuantumDatasetGenerator {
 
         for i in 0..n_features {
             // Quantum feature generation using Bloch sphere parameterization
-            let theta = rng.gen::<f64>() * PI;
-            let phi = rng.gen::<f64>() * 2.0 * PI;
+            let theta = rng.random::<f64>() * PI;
+            let phi = rng.random::<f64>() * 2.0 * PI;
             features[i] = theta.sin() * phi.cos() + theta.cos();
         }
 
@@ -301,7 +301,7 @@ impl QuantumDatasetGenerator {
 
         for i in 0..features.len() {
             // Apply quantum rotation gates (Rx, Ry, Rz)
-            let rotation_angle = rng.gen::<f64>() * 2.0 * PI;
+            let rotation_angle = rng.random::<f64>() * 2.0 * PI;
             let cos_theta = rotation_angle.cos();
             let sin_theta = rotation_angle.sin();
 
@@ -330,7 +330,7 @@ impl QuantumDatasetGenerator {
 
     fn generate_quantum_noise(&self, amplitude: f64, rng: &mut StdRng) -> Result<f64> {
         // Generate quantum noise using quantum fluctuations
-        let quantum_fluctuation = rng.gen::<f64>() - 0.5;
+        let quantum_fluctuation = rng.random::<f64>() - 0.5;
         let decoherence_factor = (-1.0 / self.coherence_time).exp();
         Ok(amplitude * quantum_fluctuation * decoherence_factor)
     }
@@ -350,7 +350,7 @@ impl QuantumDatasetGenerator {
             let center_phase = (center_idx as f64 * 2.0 * PI) / n_centers as f64;
 
             for feature_idx in 0..n_features {
-                let quantum_amplitude = rng.gen::<f64>() * 5.0; // Scale for visibility
+                let quantum_amplitude = rng.random::<f64>() * 5.0; // Scale for visibility
                 let feature_phase = center_phase + (feature_idx as f64 * PI / n_features as f64);
                 center[feature_idx] = quantum_amplitude * feature_phase.cos();
             }
@@ -368,7 +368,7 @@ impl QuantumDatasetGenerator {
         rng: &mut StdRng,
     ) -> Result<(usize, f64)> {
         // Quantum measurement with interference effects
-        let quantum_state = rng.gen::<f64>();
+        let quantum_state = rng.random::<f64>();
         let interference_weight = interference * (quantum_state * 2.0 * PI).sin();
 
         // Collapse to classical cluster assignment
@@ -379,7 +379,7 @@ impl QuantumDatasetGenerator {
 
     fn generate_quantum_interference(&self, weight: f64, rng: &mut StdRng) -> Result<f64> {
         // Generate quantum interference noise
-        let phase = rng.gen::<f64>() * 2.0 * PI;
+        let phase = rng.random::<f64>() * 2.0 * PI;
         let amplitude = weight * self.gate_fidelity;
         Ok(amplitude * phase.sin())
     }

@@ -8,8 +8,8 @@ use crate::unconstrained::{
     minimize, Bounds as UnconstrainedBounds, Method as UnconstrainedMethod, OptimizeResult, Options,
 };
 use ndarray::{Array1, ArrayView1};
-use rand::prelude::*;
 use rand::rngs::StdRng;
+use rand::{rng, Rng};
 use scirs2_core::parallel_ops::*;
 
 /// Options for multi-start optimization

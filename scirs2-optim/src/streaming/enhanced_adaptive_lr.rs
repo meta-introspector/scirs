@@ -1188,7 +1188,7 @@ impl<A: Float + Default> Default for TransferLearner<A> {
         Self {
             source_task_data: vec![],
             similarity_metrics: vec![],
-            transfer_weights: Array1::default(vec![].into()),
+            transfer_weights: Array1::from_vec(vec![]),
             transfer_confidence: A::default(),
         }
     }

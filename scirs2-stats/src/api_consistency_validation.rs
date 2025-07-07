@@ -12,8 +12,6 @@
 //! - SciPy compatibility verification
 
 use crate::error::StatsResult;
-use num_traits::Float;
-use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::{HashMap, HashSet};

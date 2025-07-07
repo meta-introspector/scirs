@@ -180,7 +180,7 @@ pub fn graph_cuts<T>(
     params: Option<GraphCutsParams>,
 ) -> NdimageResult<Array2<bool>>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let params = params.unwrap_or_default();
     let (height, width) = image.dim();

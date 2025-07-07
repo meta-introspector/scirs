@@ -12,7 +12,7 @@ use crate::error::OptimizeError;
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
-use rand::Rng;
+use rand::{rng, Rng};
 use std::collections::HashMap;
 
 type Result<T> = std::result::Result<T, OptimizeError>;
@@ -304,7 +304,7 @@ impl OptimizationNetwork {
         let mut prev_size = input_size;
         for &hidden_size in &hidden_sizes {
             let weights = Array2::from_shape_fn((hidden_size, prev_size), |_| {
-                rand::rng().random_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
+                rng().random_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
             });
             hidden_layers.push(weights);
 
@@ -320,18 +320,18 @@ impl OptimizationNetwork {
 
         // Input embedding
         let input_embedding = Array2::from_shape_fn((hidden_sizes[0], input_size), |_| {
-            rand::rng().random_range(-0.5..0.5) * (2.0 / input_size as f64).sqrt()
+            rng().random_range(-0.5..0.5) * (2.0 / input_size as f64).sqrt()
         });
 
         // Output layer
         let output_layer = Array2::from_shape_fn((output_size, prev_size), |_| {
-            rand::rng().random_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
+            rng().random_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
         });
 
         // Attention weights (simplified)
         let attention_weights = if use_attention {
             Some(vec![Array2::from_shape_fn((prev_size, prev_size), |_| {
-                rand::rng().random_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
+                rng().random_range(-0.5..0.5) * (2.0 / prev_size as f64).sqrt()
             })])
         } else {
             None
@@ -439,13 +439,13 @@ impl ProblemEncoder {
 
         Self {
             dim_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
-                rand::rng().random_range(-0.5..0.5) * 0.1
+                rng().random_range(-0.5..0.5) * 0.1
             }),
             gradient_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
-                rand::rng().random_range(-0.5..0.5) * 0.1
+                rng().random_range(-0.5..0.5) * 0.1
             }),
             hessian_encoder: Array2::from_shape_fn((embedding_size, dim), |_| {
-                rand::rng().random_range(-0.5..0.5) * 0.1
+                rng().random_range(-0.5..0.5) * 0.1
             }),
             embedding_size,
         }

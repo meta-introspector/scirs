@@ -5,15 +5,11 @@
 //! sparse filtering, and advanced-high-performance parallel spectral processing.
 
 use crate::error::{SignalError, SignalResult};
-use crate::filter::parallel::{ParallelFilterConfig, ParallelFilterType};
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayViewMut1, Axis};
+use crate::filter::parallel::ParallelFilterConfig;
 use num_complex::Complex64;
-use num_traits::{Float, NumCast};
+use num_traits::Float;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
 use std::collections::{HashMap, VecDeque};
-use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex, RwLock};
 use std::thread;
@@ -601,7 +597,7 @@ fn parallel_convolve_decimated(
     signal: &[f64],
     filter: &[f64],
     decimation_factor: usize,
-    config: &ParallelFilterConfig,
+    _config: &ParallelFilterConfig,
 ) -> SignalResult<Vec<f64>> {
     if decimation_factor == 0 {
         return Err(SignalError::ValueError(
@@ -800,6 +796,7 @@ pub fn validate_parallel_filtering_accuracy(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_parallel_multirate_filter_bank() {

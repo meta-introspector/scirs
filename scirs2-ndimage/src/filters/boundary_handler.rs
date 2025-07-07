@@ -309,7 +309,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ndarray::arr1;
+    use ndarray::arr2;
 
     #[test]
     fn test_virtual_boundary_handler_constant() {

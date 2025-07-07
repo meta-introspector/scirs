@@ -178,7 +178,7 @@ where
 
         let result = match strategy {
             ExecutionStrategy::Cpu => self.dispatcher.cpu_matvec(a, x),
-            ExecutionStrategy::Gpu { context, .. } => {
+            ExecutionStrategy::Gpu { ref context, .. } => {
                 self.dispatcher.gpu_matvec(context.as_ref(), a, x)
             }
             ExecutionStrategy::MultiGpu {
@@ -214,7 +214,7 @@ where
 
         let result = match strategy {
             ExecutionStrategy::Cpu => self.dispatcher.cpu_matmul(a, b),
-            ExecutionStrategy::Gpu { context, .. } => {
+            ExecutionStrategy::Gpu { ref context, .. } => {
                 self.dispatcher.gpu_matmul(context.as_ref(), a, b)
             }
             ExecutionStrategy::MultiGpu {
@@ -845,7 +845,7 @@ where
     /// Process very large matrix multiplication using out-of-core techniques
     pub fn out_of_core_matmul(
         &mut self,
-        _context: &dyn super::GpuContext,
+        context: &dyn super::GpuContext,
         a_shape: (usize, usize),
         b_shape: (usize, usize),
         load_a: impl Fn(usize, usize, usize, usize) -> LinalgResult<Array2<T>>,
@@ -1209,7 +1209,7 @@ impl<T> MockGpuBuffer<T> {
 
 impl<T> super::GpuBuffer<T> for MockGpuBuffer<T>
 where
-    T: Clone + Send + Sync,
+    T: Clone + Send + Sync + std::fmt::Debug,
 {
     fn len(&self) -> usize {
         self.size

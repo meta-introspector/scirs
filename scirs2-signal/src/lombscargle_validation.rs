@@ -5,12 +5,10 @@
 //! reference implementations, and edge case handling.
 
 use crate::error::{SignalError, SignalResult};
-use crate::lombscargle::{lombscargle, AutoFreqMethod};
+use crate::lombscargle::lombscargle;
 use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
-use ndarray::{Array1, ArrayView1};
-use num_traits::{Float, NumCast};
+use num_traits::Float;
 use rand::prelude::*;
-use scirs2_core::validation::{check_finite, check_positive};
 use std::f64::consts::PI;
 
 /// Validation result structure
@@ -1735,9 +1733,7 @@ fn test_white_noise_statistics() -> SignalResult<f64> {
     for _ in 0..n_trials {
         // Generate white noise
         let t: Vec<f64> = (0..n_samples).map(|i| i as f64 / fs).collect();
-        let signal: Vec<f64> = (0..n_samples)
-            .map(|_| rng.random_range(-1.0..1.0))
-            .collect();
+        let signal: Vec<f64> = (0..n_samples).map(|_| rng.random_range(-1.0..1.0)).collect();
 
         // Compute periodogram
         let (_, power) = lombscargle(
@@ -1794,9 +1790,7 @@ fn test_false_alarm_rates() -> SignalResult<f64> {
     for _ in 0..n_trials {
         // Generate pure noise
         let t: Vec<f64> = (0..n_samples).map(|i| i as f64 / fs).collect();
-        let signal: Vec<f64> = (0..n_samples)
-            .map(|_| rng.random_range(-1.0..1.0))
-            .collect();
+        let signal: Vec<f64> = (0..n_samples).map(|_| rng.random_range(-1.0..1.0)).collect();
 
         // Compute periodogram
         let (_, power) = lombscargle(
@@ -2766,9 +2760,7 @@ fn test_nonparametric_properties(tolerance: f64) -> SignalResult<f64> {
     for _ in 0..n_trials {
         // Generate white noise
         let t: Vec<f64> = (0..n_samples).map(|i| i as f64 * 0.01).collect();
-        let signal: Vec<f64> = (0..n_samples)
-            .map(|_| rng.random_range(-1.0..1.0))
-            .collect();
+        let signal: Vec<f64> = (0..n_samples).map(|_| rng.random_range(-1.0..1.0)).collect();
 
         match lombscargle(
             &t,

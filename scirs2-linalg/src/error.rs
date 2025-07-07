@@ -72,7 +72,9 @@ impl LinalgError {
         condition_number: Option<f64>,
     ) -> Self {
         let base_msg = format!("Matrix is singular during {operation} operation");
-        let shape_info = format!("Matrix shape: {}×{}", matrix_shape.0, matrix_shape.1);
+        let rows = matrix_shape.0;
+        let cols = matrix_shape.1;
+        let shape_info = format!("Matrix shape: {rows}×{cols}");
 
         let mut suggestions = vec![
             "Consider the following regularization approaches:".to_string(),
@@ -99,7 +101,8 @@ impl LinalgError {
             "7. Use iterative refinement for improved accuracy".to_string(),
         ]);
 
-        let full_msg = format!("{}\n{}\n{}", base_msg, shape_info, suggestions.join("\n"));
+        let suggestions_str = suggestions.join("\n");
+        let full_msg = format!("{base_msg}\n{shape_info}\n{suggestions_str}");
         LinalgError::SingularMatrixError(full_msg)
     }
 
@@ -110,7 +113,9 @@ impl LinalgError {
         negative_eigenvalues: Option<usize>,
     ) -> Self {
         let base_msg = format!("Matrix is not positive definite during {operation} operation");
-        let shape_info = format!("Matrix shape: {}×{}", matrix_shape.0, matrix_shape.1);
+        let rows = matrix_shape.0;
+        let cols = matrix_shape.1;
+        let shape_info = format!("Matrix shape: {rows}×{cols}");
 
         let mut suggestions = vec![
             "Consider the following regularization approaches:".to_string(),
@@ -133,7 +138,8 @@ impl LinalgError {
             "8. Consider using QR or LU decomposition for non-symmetric matrices".to_string(),
         ]);
 
-        let full_msg = format!("{}\n{}\n{}", base_msg, shape_info, suggestions.join("\n"));
+        let suggestions_str = suggestions.join("\n");
+        let full_msg = format!("{base_msg}\n{shape_info}\n{suggestions_str}");
         LinalgError::NonPositiveDefiniteError(full_msg)
     }
 
@@ -175,12 +181,8 @@ impl LinalgError {
             "9. Consider switching to direct methods for smaller problems".to_string(),
         ]);
 
-        let full_msg = format!(
-            "{}\n{}\n{}",
-            base_msg,
-            tolerance_info,
-            suggestions.join("\n")
-        );
+        let suggestions_str = suggestions.join("\n");
+        let full_msg = format!("{base_msg}\n{tolerance_info}\n{suggestions_str}");
         LinalgError::ConvergenceError(full_msg)
     }
 }

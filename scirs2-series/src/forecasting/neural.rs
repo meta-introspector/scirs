@@ -1270,8 +1270,11 @@ pub mod advanced {
     /// Stack types for N-BEATS
     #[derive(Debug, Clone)]
     pub enum StackType {
+        /// Trend stack for trend patterns
         Trend,
+        /// Seasonality stack for seasonal patterns
         Seasonality,
+        /// Generic stack for general patterns
         Generic,
     }
 
@@ -1292,13 +1295,20 @@ pub mod advanced {
         trained: bool,
     }
 
+    /// Multi-scale forecasting configuration
     #[derive(Debug, Clone)]
     pub struct MultiScaleConfig {
+        /// Short-term forecasting window size
         pub short_term_window: usize,
+        /// Medium-term forecasting window size
         pub medium_term_window: usize,
+        /// Long-term forecasting window size
         pub long_term_window: usize,
+        /// Forecast horizon length
         pub forecast_horizon: usize,
+        /// Learning rate for training
         pub learning_rate: f64,
+        /// Number of meta-learning epochs
         pub meta_epochs: usize,
     }
 
@@ -1318,6 +1328,7 @@ pub mod advanced {
     impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand>
         MultiScaleNeuralForecaster<F>
     {
+        /// Create new multi-scale neural forecaster
         pub fn new(config: MultiScaleConfig) -> Self {
             // Configure individual models for different time scales
             let short_term_config = LSTMConfig {
@@ -1374,6 +1385,7 @@ pub mod advanced {
             }
         }
 
+        /// Create multi-scale forecaster with default configuration
         pub fn with_default_config() -> Self {
             Self::new(MultiScaleConfig::default())
         }
@@ -1598,12 +1610,18 @@ pub mod advanced {
         config: OnlineConfig,
     }
 
+    /// Online learning configuration
     #[derive(Debug, Clone)]
     pub struct OnlineConfig {
+        /// Buffer size for streaming data
         pub buffer_size: usize,
+        /// Initial training window size
         pub initial_window: usize,
+        /// Model update frequency
         pub update_frequency: usize,
+        /// Learning rate for incremental updates
         pub incremental_learning_rate: f64,
+        /// Forecast horizon length
         pub forecast_horizon: usize,
     }
 
@@ -1620,6 +1638,7 @@ pub mod advanced {
     }
 
     impl<F: Float + Debug + Clone + FromPrimitive> OnlineNeuralForecaster<F> {
+        /// Create new online neural forecaster
         pub fn new(config: OnlineConfig) -> Self {
             let lstm_config = LSTMConfig {
                 base: NeuralConfig {
@@ -1722,6 +1741,7 @@ pub mod advanced {
     }
 
     impl<F: Float + Debug + Clone + FromPrimitive + ndarray::ScalarOperand> AttentionForecaster<F> {
+        /// Create new attention-based forecaster
         pub fn new(config: NeuralConfig) -> Self {
             Self {
                 input_dim: config.lookback_window,
@@ -2340,9 +2360,26 @@ pub mod advanced {
     /// Parameter range for hyperparameter search
     #[derive(Debug, Clone)]
     pub enum ParameterRange<F: Float> {
-        FloatRange { min: F, max: F },
-        IntRange { min: usize, max: usize },
-        Categorical { options: Vec<String> },
+        /// Float parameter range
+        FloatRange {
+            /// Minimum value
+            min: F,
+            /// Maximum value
+            max: F,
+        },
+        /// Integer parameter range
+        IntRange {
+            /// Minimum value
+            min: usize,
+            /// Maximum value
+            max: usize,
+        },
+        /// Categorical parameter options
+        Categorical {
+            /// Available options
+            options: Vec<String>,
+        },
+        /// Boolean parameter
         Boolean,
     }
 
@@ -2371,9 +2408,13 @@ pub mod advanced {
     /// Parameter value types
     #[derive(Debug, Clone)]
     pub enum ParameterValue<F: Float> {
+        /// Float parameter value
         Float(F),
+        /// Integer parameter value
         Int(usize),
+        /// String parameter value
         String(String),
+        /// Boolean parameter value
         Bool(bool),
     }
 
@@ -2489,7 +2530,7 @@ pub mod advanced {
             }
 
             // Randomly select model type
-            let model_types = vec!["LSTM", "Transformer", "NBeats"];
+            let model_types = ["LSTM", "Transformer", "NBeats"];
             let model_idx = self.evaluations % model_types.len();
             let model_type = model_types[model_idx].to_string();
 

@@ -160,7 +160,7 @@ pub fn omp(
         ) {
             Ok(coef) => coef,
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to solve least squares in OMP".to_string(),
                 ));
             }
@@ -171,7 +171,7 @@ pub fn omp(
 
         // Check convergence
         let res_norm = vector_norm(&residual.view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         if res_norm < config.convergence_threshold || res_norm < config.eps {
             break;
         }
@@ -192,7 +192,7 @@ pub fn omp(
     ) {
         Ok(coef) => coef,
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to solve final least squares in OMP".to_string(),
             ));
         }
@@ -250,7 +250,7 @@ pub fn mp(
     for j in 0..n {
         let mut col = normalized_phi.slice_mut(s![.., j]);
         let norm = vector_norm(&col.view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         if norm > config.eps {
             col.mapv_inplace(|val| val / norm);
         }
@@ -301,7 +301,7 @@ pub fn mp(
 
         // Check convergence
         let res_norm = vector_norm(&residual.view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         if res_norm < config.convergence_threshold || res_norm < config.eps {
             break;
         }
@@ -383,9 +383,9 @@ pub fn ista(
 
         // Check convergence
         let x_diff_norm = vector_norm(&(&x - &x_prev).view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         let x_norm = vector_norm(&x.view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         let diff = x_diff_norm / x_norm.max(config.eps);
         if diff < config.convergence_threshold {
             break;
@@ -468,9 +468,9 @@ pub fn fista(
 
         // Check convergence
         let x_diff_norm = vector_norm(&(&x - &x_prev).view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         let x_norm = vector_norm(&x.view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         let diff = x_diff_norm / x_norm.max(config.eps);
         if diff < config.convergence_threshold {
             break;
@@ -570,7 +570,7 @@ pub fn cosamp(
         ) {
             Ok(coef) => coef,
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to solve least squares in CoSaMP".to_string(),
                 ));
             }
@@ -606,9 +606,9 @@ pub fn cosamp(
 
         // Check convergence
         let x_diff_norm = vector_norm(&(&x - &x_prev).view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         let x_norm = vector_norm(&x.view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         let diff = x_diff_norm / x_norm.max(config.eps);
         if diff < config.convergence_threshold {
             break;
@@ -616,7 +616,7 @@ pub fn cosamp(
 
         // Check residual
         let res_norm = vector_norm(&residual.view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         if res_norm < config.convergence_threshold || res_norm < config.eps {
             break;
         }
@@ -718,9 +718,9 @@ pub fn iht(
 
         // Check convergence
         let x_diff_norm = vector_norm(&(&x - &x_prev).view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         let x_norm = vector_norm(&x.view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         let diff = x_diff_norm / x_norm.max(config.eps);
         if diff < config.convergence_threshold {
             break;
@@ -730,7 +730,7 @@ pub fn iht(
         if let Some(target) = config.target_error {
             let err_vec = phi.dot(&x) - y;
             let err = vector_norm(&err_vec.view(), 2)
-                .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+                .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
             if err <= target {
                 break;
             }
@@ -807,7 +807,7 @@ pub fn subspace_pursuit(
         ) {
             Ok(proxy) => proxy,
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to solve least squares in Subspace Pursuit".to_string(),
                 ));
             }
@@ -853,7 +853,7 @@ pub fn subspace_pursuit(
         ) {
             Ok(proxy) => proxy,
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to solve least squares on merged support in Subspace Pursuit"
                         .to_string(),
                 ));
@@ -885,7 +885,7 @@ pub fn subspace_pursuit(
         // Check if target error is achieved
         if let Some(target) = config.target_error {
             let res_norm = vector_norm(&residual.view(), 2)
-                .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+                .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
             if res_norm <= target {
                 break;
             }
@@ -906,7 +906,7 @@ pub fn subspace_pursuit(
     ) {
         Ok(coef) => coef,
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to solve final least squares in Subspace Pursuit".to_string(),
             ));
         }
@@ -952,7 +952,7 @@ pub fn smooth_l0(
     let x = match solve(&gram.view(), &y.view(), None) {
         Ok(solution) => phi_t.dot(&solution),
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to compute initial solution in SL0".to_string(),
             ));
         }
@@ -991,7 +991,7 @@ pub fn smooth_l0(
             let correction = match solve(&gram.view(), &residual.view(), None) {
                 Ok(corr) => corr,
                 Err(_) => {
-                    return Err(SignalError::Compute(
+                    return Err(SignalError::ComputationError(
                         "Failed to compute projection in SL0".to_string(),
                     ));
                 }
@@ -1403,12 +1403,12 @@ pub fn matrix_coherence(phi: &Array2<f64>) -> SignalResult<f64> {
     for i in 0..n {
         let col_i = phi.slice(s![.., i]);
         let norm_i = vector_norm(&col_i.view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
 
         for j in i + 1..n {
             let col_j = phi.slice(s![.., j]);
             let norm_j = vector_norm(&col_j.view(), 2)
-                .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+                .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
 
             let inner_product = col_i.dot(&col_j);
             let coherence = (inner_product / (norm_i * norm_j)).abs();
@@ -1467,7 +1467,7 @@ pub fn estimate_rip_constant(phi: &Array2<f64>, s: usize) -> SignalResult<f64> {
 
         // Normalize x
         let x_norm = vector_norm(&x.view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         x.mapv_inplace(|val| val / x_norm);
 
         // Compute Phi * x
@@ -1476,7 +1476,7 @@ pub fn estimate_rip_constant(phi: &Array2<f64>, s: usize) -> SignalResult<f64> {
         // Compute the ratio ||Phi * x||^2 / ||x||^2
         // Since x is normalized, ||x||^2 = 1
         let y_norm = vector_norm(&y.view(), 2)
-            .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+            .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
         let ratio = y_norm.powi(2);
 
         min_ratio = f64::min(min_ratio, ratio);
@@ -1509,11 +1509,11 @@ pub fn measure_sparsity(x: &Array1<f64>, threshold: f64) -> SignalResult<f64> {
 
     // L1 norm
     let l1_norm = vector_norm(&x.view(), 1)
-        .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+        .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
 
     // L2 norm
     let l2_norm_val = vector_norm(&x.view(), 2)
-        .map_err(|_| SignalError::Compute("Failed to compute norm".to_string()))?;
+        .map_err(|_| SignalError::ComputationError("Failed to compute norm".to_string()))?;
 
     // Compute normalized sparsity measure: 1 - (L1/L2)/sqrt(n)
     // This will be close to 1 for sparse signals and close to 0 for dense signals

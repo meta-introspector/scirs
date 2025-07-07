@@ -14,7 +14,7 @@ use std::fmt::Debug;
 
 use crate::error::{ClusteringError, Result};
 use ndarray::Array2;
-use rayon::prelude::*;
+use scirs2_core::parallel_ops::*;
 
 /// Calculate mutual information between two label assignments
 ///
@@ -992,7 +992,7 @@ mod tests {
 pub mod advanced_validation {
     use super::*;
     use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-    use rayon::prelude::*;
+    use scirs2_core::parallel_ops::*;
     use std::collections::HashMap;
 
     /// Stability-based clustering validation using bootstrap resampling

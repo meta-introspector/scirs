@@ -5,6 +5,8 @@
 
 use ndarray::Array1;
 use num_traits::Float;
+use rand::rngs::SmallRng;
+use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -213,6 +215,9 @@ pub struct NSGA2<T: Float> {
 
     /// Mutation probability
     mutation_prob: f64,
+
+    /// Random number generator
+    rng: SmallRng,
 }
 
 /// Individual in the population
@@ -557,7 +562,9 @@ pub enum PenaltyFunctionType {
 }
 
 /// Implementation of NSGA-II
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NSGA2<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + std::iter::Sum>
+    NSGA2<T>
+{
     /// Create new NSGA-II optimizer
     pub fn new(population_size: usize, crossover_prob: f64, mutation_prob: f64) -> Self {
         Self {
@@ -569,6 +576,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NS
             population_size,
             crossover_prob,
             mutation_prob,
+            rng: SmallRng::from_rng(&mut rand::rng()),
         }
     }
 
@@ -1006,7 +1014,7 @@ enum DominanceRelation {
     NonDominated,
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd>
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + std::iter::Sum>
     MultiObjectiveOptimizer<T> for NSGA2<T>
 {
     fn initialize(&mut self, config: &MultiObjectiveConfig<T>) -> Result<()> {
@@ -1071,14 +1079,14 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd>
             let parent2 = self.tournament_selection(2)?;
 
             // Crossover
-            let mut offspring = if rand::random::<f64>() < self.crossover_prob {
+            let mut offspring = if self.rng.random_range(0.0..1.0) < self.crossover_prob {
                 self.crossover(&parent1, &parent2)?
             } else {
                 parent1.clone()
             };
 
             // Mutation
-            if rand::random::<f64>() < self.mutation_prob {
+            if self.rng.random_range(0.0..1.0) < self.mutation_prob {
                 self.mutate(&mut offspring)?;
             }
 
@@ -1098,16 +1106,18 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd>
 }
 
 // Implementation of helper methods for NSGA2
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NSGA2<T> {
-    fn tournament_selection(&self, tournament_size: usize) -> Result<Individual<T>> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + std::iter::Sum>
+    NSGA2<T>
+{
+    fn tournament_selection(&mut self, tournament_size: usize) -> Result<Individual<T>> {
         if self.population.is_empty() {
             return Err(OptimError::InvalidConfig("Empty population".to_string()));
         }
 
-        let mut best_idx = rand::random::<usize>() % self.population.len();
+        let mut best_idx = self.rng.random_range(0..self.population.len());
 
         for _ in 1..tournament_size {
-            let idx = rand::random::<usize>() % self.population.len();
+            let idx = self.rng.random_range(0..self.population.len());
 
             // Compare based on rank and crowding distance
             if self.population[idx].rank < self.population[best_idx].rank
@@ -1122,17 +1132,21 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NS
         Ok(self.population[best_idx].clone())
     }
 
-    fn crossover(&self, parent1: &Individual<T>, parent2: &Individual<T>) -> Result<Individual<T>> {
+    fn crossover(
+        &mut self,
+        parent1: &Individual<T>,
+        parent2: &Individual<T>,
+    ) -> Result<Individual<T>> {
         // Simplified crossover - in practice would be more sophisticated
         let mut offspring = parent1.clone();
-        offspring.id = format!("offspring_{}", rand::random::<u32>());
+        offspring.id = format!("offspring_{}", self.rng.random_range(0..u32::MAX));
 
         // Randomly mix hyperparameters
         if !parent1.architecture.components.is_empty()
             && !parent2.architecture.components.is_empty()
         {
             for (key, _value) in &parent1.architecture.components[0].hyperparameters {
-                if rand::random::<bool>() {
+                if self.rng.random_range(0.0..1.0) < 0.5 {
                     if let Some(parent2_value) =
                         parent2.architecture.components[0].hyperparameters.get(key)
                     {
@@ -1147,16 +1161,16 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd> NS
         Ok(offspring)
     }
 
-    fn mutate(&self, individual: &mut Individual<T>) -> Result<()> {
+    fn mutate(&mut self, individual: &mut Individual<T>) -> Result<()> {
         // Simplified mutation - in practice would be more sophisticated
         if !individual.architecture.components.is_empty() {
             for (_key, value) in individual.architecture.components[0]
                 .hyperparameters
                 .iter_mut()
             {
-                if rand::random::<f64>() < 0.1 {
+                if self.rng.random_range(0.0..1.0) < 0.1 {
                     // 10% mutation rate per parameter
-                    let noise = T::from(rand::random::<f64>() * 0.1 - 0.05).unwrap(); // ±5% noise
+                    let noise = T::from(self.rng.random_range(-0.05..0.05)).unwrap(); // ±5% noise
                     *value = *value + noise;
                 }
             }

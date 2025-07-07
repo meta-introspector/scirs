@@ -937,7 +937,7 @@ impl Sequential {
             losses.push(epoch_loss);
             // Print progress
             if epoch % 10 == 0 || epoch == epochs - 1 {
-                println!("Epoch {}/{}: loss = {:.6}", epoch + 1, epochs, epoch_loss);
+                println!("Epoch {}/{}: loss = {epoch_loss:.6}", epoch + 1, epochs);
             }
         }
         losses
@@ -972,7 +972,7 @@ impl Sequential {
                 params
             );
         }
-        println!("Total parameters: {}", total_params);
+        println!("Total parameters: {total_params}");
         println!();
     }
 }
@@ -991,13 +991,17 @@ fn create_synthetic_dataset(
     // Create synthetic patterns for each class
     let mut class_patterns = Vec::with_capacity(num_classes);
     for _ in 0..num_classes {
-        let pattern = Array2::from_shape_fn(image_size, |_| {
-            if rng.random::<f32>() > 0.7 {
-                1.0
-            } else {
-                0.0
-            }
-        });
+        let pattern =
+            Array2::from_shape_fn(
+                image_size,
+                |_| {
+                    if rng.random::<f32>() > 0.7 {
+                        1.0
+                    } else {
+                        0.0
+                    }
+                },
+            );
         class_patterns.push(pattern);
     }
     // Generate samples with noise
@@ -1051,8 +1055,8 @@ fn train_cnn_example() -> Result<()> {
     let train_labels = labels.slice(s![0..train_size, ..]).to_owned();
     let test_images = images.slice(s![train_size.., .., .., ..]).to_owned();
     let test_labels = labels.slice(s![train_size.., ..]).to_owned();
-    println!("Training set: {} samples", train_size);
-    println!("Test set: {} samples", test_size);
+    println!("Training set: {train_size} samples");
+    println!("Test set: {test_size} samples");
     // Create a CNN model
     let mut model = Sequential::new(LossFunction::CategoricalCrossEntropy);
     // Add layers

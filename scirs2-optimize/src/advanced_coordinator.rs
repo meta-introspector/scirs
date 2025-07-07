@@ -16,24 +16,23 @@
 use crate::error::OptimizeError;
 use crate::error::OptimizeResult as Result;
 use crate::learned_optimizers::{
-    LearnedOptimizationConfig, LearnedOptimizer, MetaLearningOptimizer, OptimizationProblem,
+    LearnedOptimizationConfig,
+    LearnedOptimizer,
+    MetaLearningOptimizer,
+    OptimizationProblem,
     // Unused import: TrainingTask,
 };
-use crate::neuromorphic::{
-    BasicNeuromorphicOptimizer, NeuromorphicConfig, NeuromorphicNetwork, NeuromorphicOptimizer,
-};
-use crate::quantum_inspired::{
-    quantum_optimize, QuantumInspiredOptimizer, QuantumOptimizationStats,
-};
+use crate::neuromorphic::{BasicNeuromorphicOptimizer, NeuromorphicConfig, NeuromorphicOptimizer};
+use crate::quantum_inspired::{QuantumInspiredOptimizer, QuantumOptimizationStats};
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
-use rand::Rng;
+use rand::{rng, Rng};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
 /// Advanced coordination strategy for Advanced mode
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum advancedStrategy {
+pub enum AdvancedStrategy {
     /// Quantum-Neural Fusion: Combines quantum superposition with neural adaptation
     QuantumNeuralFusion,
     /// Neuromorphic-Quantum Hybrid: Spiking networks with quantum tunneling
@@ -43,14 +42,14 @@ pub enum advancedStrategy {
     /// Adaptive Strategy Selection: Dynamic strategy switching based on performance
     AdaptiveSelection,
     /// Full Advanced: All strategies working in parallel with intelligent coordination
-    Fulladvanced,
+    FullAdvanced,
 }
 
 /// Configuration for Advanced Mode
 #[derive(Debug, Clone)]
 pub struct AdvancedConfig {
     /// Primary coordination strategy
-    pub strategy: advancedStrategy,
+    pub strategy: AdvancedStrategy,
     /// Maximum optimization iterations
     pub max_nit: usize,
     /// Function evaluation budget
@@ -80,7 +79,7 @@ pub struct AdvancedConfig {
 impl Default for AdvancedConfig {
     fn default() -> Self {
         Self {
-            strategy: advancedStrategy::Fulladvanced,
+            strategy: AdvancedStrategy::FullAdvanced,
             max_nit: 10000,
             max_evaluations: 100000,
             tolerance: 1e-12,
@@ -138,7 +137,7 @@ impl Default for StrategyPerformance {
 
 /// Advanced optimization state
 #[derive(Debug, Clone)]
-pub struct advancedState {
+pub struct AdvancedState {
     /// Current best solution across all strategies
     pub global_best_solution: Array1<f64>,
     /// Current best objective value
@@ -163,7 +162,7 @@ pub struct advancedState {
     pub start_time: Instant,
 }
 
-impl advancedState {
+impl AdvancedState {
     fn new(num_params: usize, num_strategies: usize) -> Self {
         Self {
             global_best_solution: Array1::zeros(num_params),
@@ -187,7 +186,7 @@ pub struct AdvancedCoordinator {
     /// Configuration
     pub config: AdvancedConfig,
     /// Current optimization state
-    pub state: advancedState,
+    pub state: AdvancedState,
     /// Quantum optimizer instance
     pub quantum_optimizer: Option<QuantumInspiredOptimizer>,
     /// Neuromorphic optimizer instance
@@ -207,7 +206,7 @@ impl AdvancedCoordinator {
     pub fn new(config: AdvancedConfig, initial_params: &ArrayView1<f64>) -> Self {
         let num_params = initial_params.len();
         let num_strategies = 3; // quantum, neuromorphic, meta-learning
-        let state = advancedState::new(num_params, num_strategies);
+        let state = AdvancedState::new(num_params, num_strategies);
 
         // Initialize optimizers based on configuration
         let quantum_optimizer = if config.enable_quantum {
@@ -256,7 +255,7 @@ impl AdvancedCoordinator {
     }
 
     /// Execute Advanced optimization
-    pub fn optimize<F>(&mut self, objective: F) -> OptimizeResult<OptimizeResults<f64>>
+    pub fn optimize<F>(&mut self, objective: F) -> Result<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + Clone,
     {
@@ -281,19 +280,19 @@ impl AdvancedCoordinator {
 
             // Execute current strategy
             let iteration_result = match self.config.strategy {
-                advancedStrategy::QuantumNeuralFusion => {
+                AdvancedStrategy::QuantumNeuralFusion => {
                     self.execute_quantum_neural_fusion(&objective)?
                 }
-                advancedStrategy::NeuromorphicQuantumHybrid => {
+                AdvancedStrategy::NeuromorphicQuantumHybrid => {
                     self.execute_neuromorphic_quantum_hybrid(&objective)?
                 }
-                advancedStrategy::MetaLearningQuantum => {
+                AdvancedStrategy::MetaLearningQuantum => {
                     self.execute_meta_learning_quantum(&objective)?
                 }
-                advancedStrategy::AdaptiveSelection => {
+                AdvancedStrategy::AdaptiveSelection => {
                     self.execute_adaptive_selection(&objective)?
                 }
-                advancedStrategy::Fulladvanced => self.execute_full_advanced(&objective)?,
+                AdvancedStrategy::FullAdvanced => self.execute_full_advanced(&objective)?,
             };
 
             // Update global best
@@ -346,7 +345,7 @@ impl AdvancedCoordinator {
     }
 
     /// Execute Quantum-Neural Fusion strategy
-    fn execute_quantum_neural_fusion<F>(&mut self, objective: &F) -> OptimizeResult<OptimizeResults<f64>>
+    fn execute_quantum_neural_fusion<F>(&mut self, objective: &F) -> Result<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -399,7 +398,10 @@ impl AdvancedCoordinator {
     }
 
     /// Execute Neuromorphic-Quantum Hybrid strategy
-    fn execute_neuromorphic_quantum_hybrid<F>(&mut self, objective: &F) -> OptimizeResult<OptimizeResults<f64>>
+    fn execute_neuromorphic_quantum_hybrid<F>(
+        &mut self,
+        objective: &F,
+    ) -> Result<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -455,7 +457,7 @@ impl AdvancedCoordinator {
     }
 
     /// Execute Meta-Learning Quantum strategy
-    fn execute_meta_learning_quantum<F>(&mut self, objective: &F) -> OptimizeResult<OptimizeResults<f64>>
+    fn execute_meta_learning_quantum<F>(&mut self, objective: &F) -> Result<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -491,7 +493,7 @@ impl AdvancedCoordinator {
     }
 
     /// Execute Adaptive Selection strategy
-    fn execute_adaptive_selection<F>(&mut self, objective: &F) -> OptimizeResult<OptimizeResults<f64>>
+    fn execute_adaptive_selection<F>(&mut self, objective: &F) -> Result<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -541,7 +543,7 @@ impl AdvancedCoordinator {
     }
 
     /// Execute Full Advanced strategy (all optimizers in parallel coordination)
-    fn execute_full_advanced<F>(&mut self, objective: &F) -> OptimizeResult<OptimizeResults<f64>>
+    fn execute_full_advanced<F>(&mut self, objective: &F) -> Result<OptimizeResults<f64>>
     where
         F: Fn(&ArrayView1<f64>) -> f64,
     {
@@ -644,7 +646,7 @@ impl AdvancedCoordinator {
     }
 
     /// Update performance tracking for strategy adaptation
-    fn update_performance_tracking(&mut self, current_objective: f64) -> OptimizeResult<()> {
+    fn update_performance_tracking(&mut self, current_objective: f64) -> Result<()> {
         self.state.performance_history.push_back(current_objective);
         if self.state.performance_history.len() > self.config.performance_memory_size {
             self.state.performance_history.pop_front();
@@ -657,7 +659,7 @@ impl AdvancedCoordinator {
     }
 
     /// Update strategy confidence scores
-    fn update_strategy_confidences(&mut self) -> OptimizeResult<()> {
+    fn update_strategy_confidences(&mut self) -> Result<()> {
         if self.state.performance_history.len() > 10 {
             let recent_improvement = self.compute_recent_improvement_rate();
 
@@ -700,22 +702,22 @@ impl AdvancedCoordinator {
     }
 
     /// Adapt strategy based on performance
-    fn adapt_strategy(&mut self) -> OptimizeResult<()> {
+    fn adapt_strategy(&mut self) -> Result<()> {
         // Simple strategy adaptation logic
         let improvement_rate = self.compute_recent_improvement_rate();
 
         if improvement_rate < 0.001 {
             // Switch to more exploratory strategy
             self.config.strategy = match self.config.strategy {
-                advancedStrategy::AdaptiveSelection => advancedStrategy::QuantumNeuralFusion,
-                advancedStrategy::QuantumNeuralFusion => {
-                    advancedStrategy::NeuromorphicQuantumHybrid
+                AdvancedStrategy::AdaptiveSelection => AdvancedStrategy::QuantumNeuralFusion,
+                AdvancedStrategy::QuantumNeuralFusion => {
+                    AdvancedStrategy::NeuromorphicQuantumHybrid
                 }
-                advancedStrategy::NeuromorphicQuantumHybrid => {
-                    advancedStrategy::MetaLearningQuantum
+                AdvancedStrategy::NeuromorphicQuantumHybrid => {
+                    AdvancedStrategy::MetaLearningQuantum
                 }
-                advancedStrategy::MetaLearningQuantum => advancedStrategy::Fulladvanced,
-                advancedStrategy::Fulladvanced => advancedStrategy::AdaptiveSelection,
+                AdvancedStrategy::MetaLearningQuantum => AdvancedStrategy::FullAdvanced,
+                AdvancedStrategy::FullAdvanced => AdvancedStrategy::AdaptiveSelection,
             };
         }
 
@@ -723,7 +725,7 @@ impl AdvancedCoordinator {
     }
 
     /// Perform knowledge transfer between optimization strategies
-    fn perform_knowledge_transfer(&mut self) -> OptimizeResult<()> {
+    fn perform_knowledge_transfer(&mut self) -> Result<()> {
         // Transfer best solutions between optimizers
         let best_solution = &self.state.global_best_solution;
 
@@ -734,7 +736,7 @@ impl AdvancedCoordinator {
                     .len()
                     .min(quantum_opt.quantum_state.basis_states.ncols())
                 {
-                    let noise = (rand::rng().random::<f64>() - 0.5) * 0.1;
+                    let noise = (rng().random::<f64>() - 0.5) * 0.1;
                     quantum_opt.quantum_state.basis_states[[i, j]] = best_solution[j] + noise;
                 }
             }
@@ -751,7 +753,7 @@ impl AdvancedCoordinator {
     }
 
     /// Update problem characteristics based on optimization results
-    fn update_problem_characteristics(&mut self, result: &OptimizeResults) -> OptimizeResult<()> {
+    fn update_problem_characteristics(&mut self, result: &OptimizeResults) -> Result<()> {
         // Simple characteristic learning
         let dimensionality = result.x.len() as f64;
         let convergence_rate = if result.nit > 0 {
@@ -819,7 +821,7 @@ impl CrossModalFusionEngine {
         solution1: &ArrayView1<f64>,
         solution2: &ArrayView1<f64>,
         fusion_strength: f64,
-    ) -> OptimizeResult<Array1<f64>> {
+    ) -> Result<Array1<f64>> {
         let mut fused = Array1::zeros(self.num_params);
 
         for i in 0..self.num_params {
@@ -831,7 +833,7 @@ impl CrossModalFusionEngine {
         Ok(fused)
     }
 
-    fn fuse_multiple_solutions(&self, results: &[OptimizeResults]) -> OptimizeResult<Array1<f64>> {
+    fn fuse_multiple_solutions(&self, results: &[OptimizeResults]) -> Result<Array1<f64>> {
         if results.is_empty() {
             return Ok(Array1::zeros(self.num_params));
         }
@@ -883,7 +885,7 @@ impl AdaptiveStrategySelector {
         Self {}
     }
 
-    fn select_strategy(&self, state: &advancedState) -> OptimizeResult<String> {
+    fn select_strategy(&self, state: &AdvancedState) -> Result<String> {
         // Simple strategy selection based on performance history
         if state.performance_history.len() < 10 {
             return Ok("quantum".to_string());
@@ -918,7 +920,7 @@ pub struct AdvancedStats {
     pub total_evaluations: usize,
     pub current_iteration: usize,
     pub best_objective: f64,
-    pub active_strategy: advancedStrategy,
+    pub active_strategy: AdvancedStrategy,
     pub elapsed_time: Duration,
     pub strategy_confidences: HashMap<String, f64>,
     pub problem_characteristics: HashMap<String, f64>,
@@ -931,7 +933,7 @@ pub fn advanced_optimize<F>(
     objective: F,
     initial_params: &ArrayView1<f64>,
     config: Option<AdvancedConfig>,
-) -> OptimizeResult<OptimizeResults<f64>>
+) -> Result<OptimizeResults<f64>>
 where
     F: Fn(&ArrayView1<f64>) -> f64 + Send + Sync + Clone,
 {
@@ -947,7 +949,7 @@ mod tests {
     #[test]
     fn test_advanced_config_default() {
         let config = AdvancedConfig::default();
-        assert_eq!(config.strategy, advancedStrategy::Fulladvanced);
+        assert_eq!(config.strategy, AdvancedStrategy::FullAdvanced);
         assert!(config.enable_quantum);
         assert!(config.enable_neuromorphic);
         assert!(config.enable_meta_learning);
@@ -983,7 +985,7 @@ mod tests {
     fn test_advanced_optimization() {
         let config = AdvancedConfig {
             max_nit: 50,
-            strategy: advancedStrategy::AdaptiveSelection,
+            strategy: AdvancedStrategy::AdaptiveSelection,
             ..Default::default()
         };
 

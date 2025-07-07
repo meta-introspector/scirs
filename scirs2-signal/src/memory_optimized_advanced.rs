@@ -12,13 +12,11 @@
 //! - Zero-copy operations where possible
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayViewMut1, Axis};
+use ndarray::{Array1, Array2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive};
+use scirs2_core::validation::check_positive;
 use std::collections::VecDeque;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 
@@ -308,7 +306,7 @@ impl StreamingProcessor {
             let filter_order = a_norm.len().max(b_norm.len());
             let mut state = vec![0.0; filter_order];
 
-            for (i, &input_val) in chunk.iter().enumerate() {
+            for (i, &_input_val) in chunk.iter().enumerate() {
                 let mut output_val = 0.0;
 
                 // FIR part

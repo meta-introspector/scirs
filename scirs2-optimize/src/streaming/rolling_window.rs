@@ -110,23 +110,28 @@ impl<T: StreamingObjective> RollingWindowOptimizer<T> {
             WindowOptimizerType::GradientDescent {
                 gradient_accumulator,
                 learning_rate,
-            } => self.optimize_gradient_descent(gradient_accumulator, *learning_rate),
+            } => {
+                let lr = *learning_rate;
+                self.optimize_gradient_descent(gradient_accumulator, lr)
+            }
             WindowOptimizerType::LeastSquares {
                 xtx,
                 xty,
                 regularization,
-            } => self.optimize_least_squares(xtx, xty, *regularization),
+            } => {
+                let reg = *regularization;
+                self.optimize_least_squares(xtx, xty, reg)
+            }
             WindowOptimizerType::WeightedLeastSquares {
                 weighted_xtx,
                 weighted_xty,
                 regularization,
                 decay_factor,
-            } => self.optimize_weighted_least_squares(
-                weighted_xtx,
-                weighted_xty,
-                *regularization,
-                *decay_factor,
-            ),
+            } => {
+                let reg = *regularization;
+                let decay = *decay_factor;
+                self.optimize_weighted_least_squares(weighted_xtx, weighted_xty, reg, decay)
+            }
         }
     }
 

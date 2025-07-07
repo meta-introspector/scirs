@@ -96,7 +96,7 @@ pub fn grey_erosion<T, D>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Only handles 2D arrays for simplicity - convert to 2D for handling
@@ -298,7 +298,7 @@ pub fn grey_dilation<T, D>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Only handles 2D arrays for simplicity - convert to 2D for handling
@@ -497,7 +497,7 @@ pub fn grey_opening<T, D>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Apply erosion first
@@ -552,7 +552,7 @@ pub fn grey_closing<T, D>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Apply dilation first
@@ -607,7 +607,7 @@ pub fn morphological_gradient<T, D>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Default border mode to Reflect for better edge detection
@@ -700,7 +700,7 @@ pub fn morphological_laplace<T, D>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Default border mode to Reflect for better edge detection
@@ -806,7 +806,7 @@ pub fn white_tophat<T, D>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Apply opening
@@ -897,7 +897,7 @@ pub fn black_tophat<T, D>(
     origin: Option<&[isize]>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
     D: Dimension + 'static,
 {
     // Default border mode to Reflect for better handling at edges

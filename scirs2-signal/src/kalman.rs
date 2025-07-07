@@ -182,7 +182,7 @@ pub fn kalman_filter(
         let k = match inv(&innovation_cov.view(), None) {
             Ok(inn_cov_inv) => p_pred.dot(&h.t()).dot(&inn_cov_inv),
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to invert innovation covariance matrix".to_string(),
                 ));
             }
@@ -352,7 +352,7 @@ where
         let k = match inv(&innovation_cov.view(), None) {
             Ok(inn_cov_inv) => p_pred.dot(&h_jac.t()).dot(&inn_cov_inv),
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to invert innovation covariance matrix".to_string(),
                 ));
             }
@@ -538,7 +538,7 @@ where
         let k = match inv(&s.view(), None) {
             Ok(s_inv) => c.dot(&s_inv),
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to invert innovation covariance matrix".to_string(),
                 ));
             }
@@ -585,7 +585,7 @@ fn generate_sigma_points(
     let sqrt_p = match cholesky(&p.view(), None) {
         Ok(l) => l,
         Err(_) => {
-            return Err(SignalError::Compute(
+            return Err(SignalError::ComputationError(
                 "Failed to compute Cholesky decomposition of covariance matrix".to_string(),
             ));
         }
@@ -666,7 +666,7 @@ where
         let sqrt_p = match cholesky(&initial_p.view(), None) {
             Ok(l) => l,
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to compute Cholesky decomposition of initial covariance".to_string(),
                 ));
             }
@@ -755,7 +755,7 @@ where
         let k = match inv(&pzz.view(), None) {
             Ok(pzz_inv) => pxz.dot(&pzz_inv),
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to invert innovation covariance matrix".to_string(),
                 ));
             }
@@ -1109,7 +1109,7 @@ fn kalman_filter_vector_measurement(
         let k = match inv(&innovation_cov.view(), None) {
             Ok(inn_cov_inv) => p_pred.dot(&h.t()).dot(&inn_cov_inv),
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to invert innovation covariance matrix".to_string(),
                 ));
             }
@@ -1257,7 +1257,7 @@ pub fn kalman_smooth(
         let k = match inv(&innovation_cov.view(), None) {
             Ok(inn_cov_inv) => p_pred.dot(&h.t()).dot(&inn_cov_inv),
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to invert innovation covariance matrix".to_string(),
                 ));
             }
@@ -1277,7 +1277,7 @@ pub fn kalman_smooth(
         let g = match inv(&p_pred.view(), None) {
             Ok(p_pred_inv) => filtered_covs[i].dot(&f.t()).dot(&p_pred_inv),
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to invert predicted covariance matrix".to_string(),
                 ));
             }
@@ -1383,7 +1383,7 @@ pub fn robust_kalman_filter(
         let s_inv = match inv(&innovation_cov.view(), None) {
             Ok(inv) => inv,
             Err(_) => {
-                return Err(SignalError::Compute(
+                return Err(SignalError::ComputationError(
                     "Failed to invert innovation covariance matrix".to_string(),
                 ));
             }

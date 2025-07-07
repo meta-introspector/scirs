@@ -16,7 +16,7 @@ use ndarray::{Array1, Array2, ArrayView1};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive};
+use scirs2_core::validation::check_positive;
 use std::fmt::Debug;
 use std::sync::Arc;
 
@@ -102,7 +102,6 @@ use num_complex::Complex64;
 /// ```
 /// use scirs2_signal::multitaper::enhanced::{enhanced_pmtm, MultitaperConfig};
 ///
-use std::f64::consts::PI;
 ///
 /// // Generate test signal
 /// let n = 1024;
@@ -564,7 +563,7 @@ fn try_basic_simd_tapering(
     tapered: &mut [f64],
 ) -> SignalResult<()> {
     let signal_view = ArrayView1::from(signal);
-    let tapered_view = ArrayView1::from_shape(signal.len(), tapered)
+    let _tapered_view = ArrayView1::from_shape(signal.len(), tapered)
         .map_err(|e| SignalError::ComputationError(format!("Shape error: {}", e)))?;
 
     let result = f64::simd_mul(&signal_view, taper);
@@ -583,7 +582,7 @@ fn try_chunked_simd_tapering(
 ) -> SignalResult<()> {
     let chunk_size = 256; // Optimal chunk size for most SIMD implementations
 
-    for (chunk_idx, chunk_data) in signal
+    for (_chunk_idx, chunk_data) in signal
         .chunks(chunk_size)
         .zip(taper.as_slice().unwrap().chunks(chunk_size))
         .zip(tapered.chunks_mut(chunk_size))
@@ -1133,7 +1132,7 @@ fn compute_confidence_intervals(
 ) -> SignalResult<(Vec<f64>, Vec<f64>)> {
     use statrs::distribution::{ChiSquared, ContinuousCDF};
 
-    let k = spectra.nrows() as f64;
+    let _k = spectra.nrows() as f64;
     // Enhanced DOF calculation using effective number of tapers
     let effective_k = compute_effective_dof(eigenvalues) / 2.0;
     let dof = 2.0 * effective_k; // More accurate degrees of freedom
@@ -1623,6 +1622,7 @@ pub struct SpectrogramConfig {
 
 mod tests {
     use super::*;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_enhanced_pmtm_basic() {

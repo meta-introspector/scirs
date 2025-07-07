@@ -286,7 +286,16 @@ impl SciPyBenchmarkSuite {
         array_size: (usize, usize),
     ) -> NdimageResult<OperationBenchmarkResult>
     where
-        T: Float + FromPrimitive + Clone + Default + std::fmt::Debug + Send + Sync,
+        T: Float
+            + FromPrimitive
+            + Clone
+            + Default
+            + std::fmt::Debug
+            + Send
+            + Sync
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + 'static,
     {
         let (_height, _width) = array_size;
 
@@ -341,7 +350,16 @@ impl SciPyBenchmarkSuite {
         input_data: &Array2<T>,
     ) -> NdimageResult<PerformanceMetrics>
     where
-        T: Float + FromPrimitive + Clone + Default + std::fmt::Debug + Send + Sync,
+        T: Float
+            + FromPrimitive
+            + Clone
+            + Default
+            + std::fmt::Debug
+            + Send
+            + Sync
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + 'static,
     {
         let mut timings = Vec::new();
         let mut memory_usages = Vec::new();
@@ -374,7 +392,16 @@ impl SciPyBenchmarkSuite {
         input_data: &Array2<T>,
     ) -> NdimageResult<Array2<T>>
     where
-        T: Float + FromPrimitive + Clone + Default + std::fmt::Debug + Send + Sync,
+        T: Float
+            + FromPrimitive
+            + Clone
+            + Default
+            + std::fmt::Debug
+            + Send
+            + Sync
+            + std::ops::AddAssign
+            + std::ops::DivAssign
+            + 'static,
     {
         match operation {
             BenchmarkOperation::GaussianFilter => crate::filters::gaussian_filter_chunked(
@@ -388,7 +415,7 @@ impl SciPyBenchmarkSuite {
                 median_filter(&input_data, &[3, 3], Some(BorderMode::Reflect))
             }
             BenchmarkOperation::UniformFilter => {
-                uniform_filter(&input_data, &[3, 3], Some(BorderMode::Reflect))
+                uniform_filter(&input_data, &[3, 3], Some(BorderMode::Reflect), None)
             }
             _ => {
                 // For other operations, return a dummy result

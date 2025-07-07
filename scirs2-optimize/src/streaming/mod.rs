@@ -30,19 +30,19 @@ type Result<T> = std::result::Result<T, OptimizeError>;
 // Unused import
 // use scirs2_core::error::CoreResult;
 
+pub mod advanced_adaptive_streaming;
 pub mod incremental_newton;
 pub mod online_gradient_descent;
 pub mod real_time_estimation;
 pub mod rolling_window;
 pub mod streaming_trust_region;
-pub mod ultra_adaptive_streaming;
 
+pub use advanced_adaptive_streaming::*;
 pub use incremental_newton::*;
 pub use online_gradient_descent::*;
 pub use real_time_estimation::*;
 pub use rolling_window::*;
 pub use streaming_trust_region::*;
-pub use ultra_adaptive_streaming::*;
 
 /// Configuration for streaming optimization algorithms
 #[derive(Debug, Clone)]

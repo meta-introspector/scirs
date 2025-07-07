@@ -278,6 +278,7 @@ fn calculate_optimal_dimensions(
 /// Execute CUDA-specific SpMV kernel with optimizations
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
+#[allow(unused_variables)]
 fn execute_cuda_spmv<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -343,6 +344,7 @@ where
 /// Execute OpenCL-specific SpMV kernel
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
+#[allow(unused_variables)]
 fn execute_opencl_spmv<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -408,6 +410,7 @@ where
 /// Execute Metal-specific SpMV kernel
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
+#[allow(unused_variables)]
 fn execute_metal_spmv<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -477,6 +480,7 @@ where
 
 /// CPU fallback implementation for SpMV
 #[allow(dead_code)]
+#[allow(unused_variables)]
 fn execute_cpu_spmv_fallback<T>(
     rows: usize,
     indptr_buffer: &GpuBuffer<u32>,
@@ -515,6 +519,7 @@ where
 /// Symmetric SpMV implementations
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
+#[allow(unused_variables)]
 fn execute_cuda_symmetric_spmv<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -553,6 +558,7 @@ where
 
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
+#[allow(unused_variables)]
 fn execute_opencl_symmetric_spmv<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -590,6 +596,7 @@ where
 
 #[cfg(feature = "gpu")]
 #[allow(dead_code)]
+#[allow(unused_variables)]
 fn execute_metal_symmetric_spmv<T>(
     device: &GpuDevice,
     kernel: &GpuKernelHandle,
@@ -626,6 +633,7 @@ where
 }
 
 #[allow(dead_code)]
+#[allow(unused_variables)]
 fn execute_cpu_symmetric_spmv_fallback<T>(
     rows: usize,
     indptr_buffer: &GpuBuffer<u32>,
@@ -744,6 +752,7 @@ where
 
 /// CPU fallback for triangular solve
 #[allow(dead_code)]
+#[allow(unused_variables)]
 fn execute_cpu_triangular_solve_fallback<T>(
     n: usize,
     indptr_buffer: &GpuBuffer<u32>,
@@ -1329,6 +1338,7 @@ pub fn calculate_adaptive_workgroup_size(
 /// Fallback implementations when GPU feature is not enabled
 #[cfg(not(feature = "gpu"))]
 #[allow(dead_code)]
+#[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
 pub fn execute_spmv_kernel<T>(
     _device: &GpuDevice,
@@ -1339,7 +1349,7 @@ pub fn execute_spmv_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
     y_buffer: &GpuBuffer<T>,
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -1357,6 +1367,7 @@ where
 
 #[cfg(not(feature = "gpu"))]
 #[allow(dead_code)]
+#[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
 pub fn execute_symmetric_spmv_kernel<T>(
     _device: &GpuDevice,
@@ -1367,7 +1378,7 @@ pub fn execute_symmetric_spmv_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
     y_buffer: &GpuBuffer<T>,
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -1385,6 +1396,7 @@ where
 
 #[cfg(not(feature = "gpu"))]
 #[allow(dead_code)]
+#[allow(unused_variables)]
 #[allow(clippy::too_many_arguments)]
 pub fn execute_triangular_solve_kernel<T>(
     _device: &GpuDevice,
@@ -1395,7 +1407,7 @@ pub fn execute_triangular_solve_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     b_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,

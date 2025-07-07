@@ -3,7 +3,8 @@
 //! This example shows how to use the Infomap algorithm to detect community structure
 //! in graphs using information-theoretic principles.
 
-use scirs2_graph::{generators::create_graph, infomap_communities, louvain_communities_result};
+use scirs2_graph::algorithms::louvain_communities_result;
+use scirs2_graph::{generators::create_graph, infomap_communities};
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -59,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Compare with Louvain method
-    let louvain_result = louvain_communities(&graph);
+    let louvain_result = louvain_communities_result(&graph);
 
     println!("Louvain Method (for comparison):");
     println!("================================");
@@ -72,7 +73,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .collect::<std::collections::HashSet<_>>()
             .len()
     );
-    println!("Modularity: {:.6}", louvain_result.modularity);
+    println!(
+        "Modularity: {:.6}",
+        louvain_result.quality_score.unwrap_or(0.0)
+    );
     println!();
 
     println!("Node assignments:");

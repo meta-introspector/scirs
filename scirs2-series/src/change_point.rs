@@ -746,8 +746,7 @@ mod tests {
         let cost = calculate_segment_cost(&segment, 0, 5, CostFunction::NonParametric).unwrap();
         assert!(
             cost >= 0.0,
-            "Non-parametric cost should be non-negative, got {}",
-            cost
+            "Non-parametric cost should be non-negative, got {cost}"
         );
     }
 

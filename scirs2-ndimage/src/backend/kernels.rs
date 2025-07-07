@@ -836,7 +836,7 @@ pub fn gpu_gaussian_filter_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync + 'static,
 {
     let (h, w) = input.dim();
 
@@ -849,8 +849,8 @@ where
     let params = vec![
         sigma[0],
         sigma[1],
-        safe_usize_to_float(h)?,
-        safe_usize_to_float(w)?,
+        safe_usize_to_float::<T>(h)?,
+        safe_usize_to_float::<T>(w)?,
     ];
 
     // Get kernel from registry
@@ -883,7 +883,7 @@ pub fn gpu_convolve_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync + 'static,
 {
     let (ih, iw) = input.dim();
     let (kh, kw) = kernel.dim();
@@ -895,10 +895,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize_to_float(ih)?,
-        safe_usize_to_float(iw)?,
-        safe_usize_to_float(kh)?,
-        safe_usize_to_float(kw)?,
+        safe_usize_to_float::<T>(ih)?,
+        safe_usize_to_float::<T>(iw)?,
+        safe_usize_to_float::<T>(kh)?,
+        safe_usize_to_float::<T>(kw)?,
     ];
 
     // Get kernel from registry
@@ -931,7 +931,7 @@ pub fn gpu_median_filter_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync + 'static,
 {
     let (h, w) = input.dim();
 
@@ -941,10 +941,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize_to_float(h)?,
-        safe_usize_to_float(w)?,
-        safe_usize_to_float(size[0])?,
-        safe_usize_to_float(size[1])?,
+        safe_usize_to_float::<T>(h)?,
+        safe_usize_to_float::<T>(w)?,
+        safe_usize_to_float::<T>(size[0])?,
+        safe_usize_to_float::<T>(size[1])?,
     ];
 
     // Get kernel from registry
@@ -977,7 +977,7 @@ pub fn gpu_erosion_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync + 'static,
 {
     let (h, w) = input.dim();
     let (sh, sw) = structure.dim();
@@ -995,10 +995,10 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize_to_float(h)?,
-        safe_usize_to_float(w)?,
-        safe_usize_to_float(sh)?,
-        safe_usize_to_float(sw)?,
+        safe_usize_to_float::<T>(h)?,
+        safe_usize_to_float::<T>(w)?,
+        safe_usize_to_float::<T>(sh)?,
+        safe_usize_to_float::<T>(sw)?,
     ];
 
     // Get kernel from registry
@@ -1031,7 +1031,7 @@ pub fn gpu_separable_gaussian_filter_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync + 'static,
 {
     let (h, w) = input.dim();
 
@@ -1053,7 +1053,7 @@ where
     // Gaussian weights for horizontal pass
     let weights_x: Result<Vec<T>, NdimageError> = (0..weights_size)
         .map(|i| -> NdimageResult<T> {
-            let offset = safe_usize_to_float(i)? - safe_usize_to_float(max_radius)?;
+            let offset = safe_usize_to_float::<T>(i)? - safe_usize_to_float::<T>(max_radius)?;
             let exp_arg = -safe_f64_to_float::<T>(0.5)? * offset * offset / (sigma[0] * sigma[0]);
             Ok(exp_arg.exp())
         })
@@ -1063,7 +1063,7 @@ where
     // Gaussian weights for vertical pass
     let weights_y: Result<Vec<T>, NdimageError> = (0..weights_size)
         .map(|i| -> NdimageResult<T> {
-            let offset = safe_usize_to_float(i)? - safe_usize_to_float(max_radius)?;
+            let offset = safe_usize_to_float::<T>(i)? - safe_usize_to_float::<T>(max_radius)?;
             let exp_arg = -safe_f64_to_float::<T>(0.5)? * offset * offset / (sigma[1] * sigma[1]);
             Ok(exp_arg.exp())
         })
@@ -1084,11 +1084,11 @@ where
 
     // Horizontal pass (direction = 0)
     let params_h = vec![
-        safe_usize_to_float(h * w)?,
-        safe_usize_to_float(radius_x)?,
+        safe_usize_to_float::<T>(h * w)?,
+        safe_usize_to_float::<T>(radius_x)?,
         T::zero(), // direction = 0 for horizontal
-        safe_usize_to_float(w)?,
-        safe_usize_to_float(h)?,
+        safe_usize_to_float::<T>(w)?,
+        safe_usize_to_float::<T>(h)?,
     ];
 
     executor.execute_kernel(
@@ -1101,11 +1101,11 @@ where
 
     // Vertical pass (direction = 1)
     let params_v = vec![
-        safe_usize_to_float(h * w)?,
-        safe_usize_to_float(radius_y)?,
+        safe_usize_to_float::<T>(h * w)?,
+        safe_usize_to_float::<T>(radius_y)?,
         T::one(), // direction = 1 for vertical
-        safe_usize_to_float(w)?,
-        safe_usize_to_float(h)?,
+        safe_usize_to_float::<T>(w)?,
+        safe_usize_to_float::<T>(h)?,
     ];
 
     executor.execute_kernel(
@@ -1133,7 +1133,7 @@ pub fn gpu_bilateral_filter_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync + 'static,
 {
     let (h, w) = input.dim();
 
@@ -1145,9 +1145,9 @@ where
     let params = vec![
         sigma_spatial,
         sigma_intensity,
-        safe_usize_to_float(radius)?,
-        safe_usize_to_float(w)?,
-        safe_usize_to_float(h)?,
+        safe_usize_to_float::<T>(radius)?,
+        safe_usize_to_float::<T>(w)?,
+        safe_usize_to_float::<T>(h)?,
     ];
 
     // Get kernel from registry
@@ -1183,7 +1183,7 @@ pub fn gpu_sobel_filter_2d<T>(
     Array<T, ndarray::Ix2>,
 )>
 where
-    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync + 'static,
 {
     let (h, w) = input.dim();
 
@@ -1194,7 +1194,7 @@ where
     let mut magnitude_buffer = allocate_gpu_buffer_empty::<T>(h * w)?;
 
     // Prepare kernel parameters
-    let params = vec![safe_usize_to_float(w)?, safe_usize_to_float(h)?];
+    let params = vec![safe_usize_to_float::<T>(w)?, safe_usize_to_float::<T>(h)?];
 
     // Get kernel from registry
     let registry = KernelRegistry::new();
@@ -1239,7 +1239,7 @@ pub fn gpu_laplacian_filter_2d<T>(
     executor: &dyn GpuKernelExecutor<T>,
 ) -> NdimageResult<Array<T, ndarray::Ix2>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync,
+    T: Float + FromPrimitive + Debug + Clone + Default + Send + Sync + 'static,
 {
     let (h, w) = input.dim();
 
@@ -1249,9 +1249,9 @@ where
 
     // Prepare kernel parameters
     let params = vec![
-        safe_usize_to_float(w)?,
-        safe_usize_to_float(h)?,
-        safe_usize_to_float(connectivity)?,
+        safe_usize_to_float::<T>(w)?,
+        safe_usize_to_float::<T>(h)?,
+        safe_usize_to_float::<T>(connectivity)?,
     ];
 
     // Get kernel from registry
@@ -1281,7 +1281,7 @@ where
 #[allow(dead_code)]
 fn allocate_gpu_buffer<T>(data: &[T]) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
-    T: Clone + Send + Sync + 'static,
+    T: Clone + Default + Send + Sync + Copy + 'static,
 {
     #[cfg(feature = "cuda")]
     {
@@ -1298,7 +1298,7 @@ where
 #[allow(dead_code)]
 fn allocate_gpu_buffer_empty<T>(size: usize) -> NdimageResult<Box<dyn GpuBuffer<T>>>
 where
-    T: Clone + Default + Send + Sync + 'static,
+    T: Clone + Default + Send + Sync + Copy + 'static,
 {
     #[cfg(feature = "cuda")]
     {

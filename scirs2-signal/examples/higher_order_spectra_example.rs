@@ -166,8 +166,7 @@ fn generate_phase_coupled_signal() -> Array1<f64> {
     let noise_level = 0.1;
     let mut rng = rand::rng();
     let noise = Array1::from_iter(
-        (0..n_samples)
-            .map(|_| noise_level * (2.0 * rand::Rng::random_range(&mut rng, 0.0..1.0) - 1.0)),
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.random_range(0.0..1.0) - 1.0)),
     );
 
     signal + noise
@@ -188,7 +187,7 @@ fn generate_uncoupled_signal() -> Array1<f64> {
 
     // Generate signal without phase coupling by adding random phase to f3
     let mut rng = rand::rng();
-    let random_phase = rand::Rng::random_range(&mut rng, 0.0..2.0 * PI);
+    let random_phase = rng.random_range(0.0..2.0 * PI);
 
     let signal = t.mapv(|ti| {
         (2.0 * PI * f1 * ti).sin()
@@ -199,8 +198,7 @@ fn generate_uncoupled_signal() -> Array1<f64> {
     // Add some noise
     let noise_level = 0.1;
     let noise = Array1::from_iter(
-        (0..n_samples)
-            .map(|_| noise_level * (2.0 * rand::Rng::random_range(&mut rng, 0.0..1.0) - 1.0)),
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.random_range(0.0..1.0) - 1.0)),
     );
 
     signal + noise
@@ -230,8 +228,7 @@ fn generate_phase_coupled_signal_with_angle(angle: f64) -> Array1<f64> {
     let noise_level = 0.1;
     let mut rng = rand::rng();
     let noise = Array1::from_iter(
-        (0..n_samples)
-            .map(|_| noise_level * (2.0 * rand::Rng::random_range(&mut rng, 0.0..1.0) - 1.0)),
+        (0..n_samples).map(|_| noise_level * (2.0 * rng.random_range(0.0..1.0) - 1.0)),
     );
 
     signal + noise

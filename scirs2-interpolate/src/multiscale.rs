@@ -90,6 +90,7 @@ impl<
     /// # Returns
     ///
     /// A `MultiscaleBSpline` object initialized with a coarse approximation.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         x: &ArrayView1<T>,
         y: &ArrayView1<T>,

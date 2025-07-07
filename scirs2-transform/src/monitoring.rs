@@ -5,15 +5,13 @@
 //! performance monitoring, and automated alerting.
 
 use crate::error::{Result, TransformError};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use scirs2_core::validation::{check_not_empty, check_positive};
+use ndarray::{Array2, ArrayView1, ArrayView2};
+use scirs2_core::validation::check_not_empty;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 #[cfg(feature = "monitoring")]
-use prometheus::{Counter, Gauge, Histogram, Registry};
-#[cfg(feature = "monitoring")]
-use serde_json::Value;
+use prometheus::{Counter, Gauge, Histogram, HistogramOpts, Registry};
 
 /// Drift detection methods
 #[derive(Debug, Clone, PartialEq)]
@@ -154,10 +152,10 @@ impl TransformationMonitor {
             .map_err(|e| {
                 TransformError::ComputationError(format!("Failed to create counter: {}", e))
             })?,
-            processing_time: Histogram::new(
+            processing_time: Histogram::with_opts(HistogramOpts::new(
                 "transform_processing_time_seconds",
                 "Processing time in seconds",
-            )
+            ))
             .map_err(|e| {
                 TransformError::ComputationError(format!("Failed to create histogram: {}", e))
             })?,
@@ -334,7 +332,7 @@ impl TransformationMonitor {
             let drift_count = results.iter().filter(|r| r.is_drift_detected).count();
             self.prometheus_metrics
                 .drift_detections
-                .inc_by(drift_count as u64);
+                .inc_by(drift_count as f64);
         }
 
         Ok(results)
@@ -532,7 +530,7 @@ impl TransformationMonitor {
 
         let mut cdf1 = 0.0;
         let mut cdf2 = 0.0;
-        let mut max_diff = 0.0;
+        let mut max_diff: f64 = 0.0;
 
         for (_, sample_id) in combined {
             if sample_id == 1 {
@@ -716,7 +714,7 @@ impl TransformationMonitor {
         }
 
         // Remove duplicate bin edges
-        bins.dedup_by(|a, b| (a - b).abs() < f64::EPSILON);
+        bins.dedup_by(|a, b| (*a - *b).abs() < f64::EPSILON);
 
         if bins.len() < 2 {
             return Ok((0.0, 1.0));
@@ -1112,7 +1110,7 @@ impl EnsembleAnomalyDetector {
     pub fn detect_ensemble_anomalies(
         &self,
         _metrics: &HashMap<String, f64>,
-        timestamp: u64,
+        _timestamp: u64,
     ) -> Result<Vec<AnomalyRecord>> {
         // Placeholder ensemble detection logic
         // In a full implementation, this would combine results from multiple detectors
@@ -1760,7 +1758,7 @@ impl TimeSeriesAnomalyDetector {
     }
 
     /// Simple change point detection
-    fn detect_change_point(&self, current_value: f64) -> Result<f64> {
+    fn detect_change_point(&self, _current_value: f64) -> Result<f64> {
         let window_size = self
             .change_point_config
             .window_size

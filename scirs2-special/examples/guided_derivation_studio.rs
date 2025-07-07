@@ -10,11 +10,6 @@
 //!
 //! Run with: cargo run --example guided_derivation_studio
 
-use ndarray::Array1;
-use num_complex::Complex64;
-use scirs2_special::*;
-use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::io::{self, Write};
 
 #[derive(Debug, Clone)]
@@ -24,6 +19,7 @@ struct DerivationStep {
     hints: Vec<String>,
     alternative_approaches: Vec<String>,
     validation_questions: Vec<ValidationQuestion>,
+    #[allow(dead_code)]
     difficulty_level: u32,
 }
 

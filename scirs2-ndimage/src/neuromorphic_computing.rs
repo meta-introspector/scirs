@@ -133,7 +133,7 @@ impl Default for PlasticSynapse {
 pub fn spiking_neural_network_filter<T>(
     image: ArrayView2<T>,
     network_layers: &[usize],
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
     time_steps: usize,
 ) -> NdimageResult<Array2<T>>
 where
@@ -178,7 +178,7 @@ where
 pub fn event_driven_processing<T>(
     current_frame: ArrayView2<T>,
     previous_frame: Option<ArrayView2<T>>,
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
 ) -> NdimageResult<(Array2<T>, Vec<Event>)>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
@@ -226,7 +226,7 @@ where
 pub fn liquid_state_machine<T>(
     image_sequence: &[ArrayView2<T>],
     reservoir_size: usize,
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
 ) -> NdimageResult<Array2<T>>
 where
     T: Float + FromPrimitive + Copy + Send + Sync,
@@ -270,7 +270,7 @@ where
 #[allow(dead_code)]
 pub fn homeostatic_adaptive_filter<T>(
     image: ArrayView2<T>,
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
     adaptation_steps: usize,
 ) -> NdimageResult<Array2<T>>
 where
@@ -346,7 +346,7 @@ where
 pub fn temporal_coding_feature_extraction<T>(
     image: ArrayView2<T>,
     feature_detectors: &[Array2<f64>],
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
     time_window: usize,
 ) -> NdimageResult<Array3<T>>
 where
@@ -407,7 +407,7 @@ where
 pub fn stdp_unsupervised_learning<T>(
     training_images: &[ArrayView2<T>],
     filter_size: (usize, usize),
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
     epochs: usize,
 ) -> NdimageResult<Array2<f64>>
 where
@@ -521,7 +521,7 @@ fn initialize_snn(
 fn image_to_spike_trains<T>(
     image: &ArrayView2<T>,
     time_steps: usize,
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
 ) -> NdimageResult<Array3<f64>>
 where
     T: Float + FromPrimitive + Copy,
@@ -537,7 +537,7 @@ where
             let spike_rate = intensity.max(0.0).min(1.0); // Normalized rate
 
             for t in 0..time_steps {
-                if rng.random_range::<f64>(0.0..1.0) < spike_rate * _config.learning_rate {
+                if rng.random_range::<f64>(0.0..1.0) < spike_rate * config.learning_rate {
                     spike_trains[(t, y, x)] = 1.0;
                 }
             }
@@ -551,7 +551,7 @@ where
 fn forward_propagate_snn(
     network: &mut [Array2<SpikingNeuron>],
     input_spikes: &ndarray::ArrayView2<f64>,
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
     current_time: usize,
 ) -> NdimageResult<Array2<f64>> {
     let (height, width) = input_spikes.dim();
@@ -603,7 +603,7 @@ fn forward_propagate_snn(
 #[allow(dead_code)]
 fn apply_stdp_learning(
     network: &mut [Array2<SpikingNeuron>],
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
     current_time: usize,
 ) -> NdimageResult<()> {
     // Simplified STDP implementation for demonstration
@@ -669,7 +669,7 @@ where
 fn generate_events<T>(
     current: &ArrayView2<T>,
     previous: &ArrayView2<T>,
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
 ) -> NdimageResult<Vec<Event>>
 where
     T: Float + FromPrimitive + Copy,
@@ -701,7 +701,7 @@ where
 #[allow(dead_code)]
 fn generate_initial_events<T>(
     image: &ArrayView2<T>,
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
 ) -> NdimageResult<Vec<Event>>
 where
     T: Float + FromPrimitive + Copy,
@@ -732,7 +732,7 @@ where
 fn apply_event_kernel(
     accumulator: &mut Array2<f64>,
     event: &Event,
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
 ) -> NdimageResult<()> {
     let (height, width) = accumulator.dim();
     let kernel_size = 3;
@@ -773,7 +773,7 @@ fn initialize_reservoir(
     reservoir_size: usize,
     _height: usize,
     _width: usize,
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
 ) -> NdimageResult<Array1<SpikingNeuron>> {
     let mut reservoir = Array1::from_elem(reservoir_size, SpikingNeuron::default());
     let mut rng = rand::rng();
@@ -808,7 +808,7 @@ where
 fn update_reservoir_dynamics(
     reservoir: &mut Array1<SpikingNeuron>,
     input_currents: &Array2<f64>,
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
 ) -> NdimageResult<()> {
     let (height, width) = input_currents.dim();
 
@@ -887,7 +887,7 @@ fn update_homeostatic_weights(
     weights: &mut Array3<f64>,
     pos: (usize, usize),
     neuron: &SpikingNeuron,
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
     step: usize,
 ) -> NdimageResult<()> {
     let (y, x) = pos;
@@ -917,7 +917,7 @@ fn update_homeostatic_weights(
 fn create_temporal_patterns<T>(
     image: &ArrayView2<T>,
     time_window: usize,
-    _config: &NeuromorphicConfig,
+    config: &NeuromorphicConfig,
 ) -> NdimageResult<Array3<f64>>
 where
     T: Float + FromPrimitive + Copy,

@@ -3,7 +3,7 @@
 //! This example shows how to analyze the numerical stability of special functions
 //! across extreme parameter ranges and identify potential issues.
 
-use scirs2_special::stability_analysis::{generate_stability_report, run_stability_tests};
+use scirs2_special::stability_analysis::run_stability_tests;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -69,8 +69,8 @@ fn demonstrate_edge_cases() {
     println!("\n5. Catastrophic cancellation in erf(x) - 1:");
     for x in [2.0, 3.0, 4.0, 5.0] {
         let erf_x = erf(x);
-        let diff_bad = erf_x - 1.0;
-        let diff_good = -erfc(x);
+        let diff_bad: f64 = erf_x - 1.0;
+        let diff_good: f64 = -erfc(x);
         let rel_error = (diff_bad - diff_good).abs() / diff_good.abs();
         println!(
             "   x={}: bad={:e}, good={:e}, rel_error={:e}",

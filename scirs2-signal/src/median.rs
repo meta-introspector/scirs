@@ -155,7 +155,7 @@ fn standard_median_filter_1d(
 
         // Ensure window is within bounds
         if window_start >= padded_signal.len() || window_end > padded_signal.len() {
-            return Err(SignalError::DimensionError(
+            return Err(SignalError::DimensionMismatch(
                 "Window extends beyond padded signal bounds".to_string(),
             ));
         }
@@ -190,7 +190,7 @@ fn center_weighted_median_filter_1d(
 
         // Ensure window is within bounds
         if window_start >= padded_signal.len() || window_end > padded_signal.len() {
-            return Err(SignalError::DimensionError(
+            return Err(SignalError::DimensionMismatch(
                 "Window extends beyond padded signal bounds".to_string(),
             ));
         }
@@ -381,7 +381,7 @@ fn standard_median_filter_2d(
 
             // Ensure window is within bounds
             if window_i_end > padded_image.dim().0 || window_j_end > padded_image.dim().1 {
-                return Err(SignalError::DimensionError(
+                return Err(SignalError::DimensionMismatch(
                     "Window extends beyond padded image bounds".to_string(),
                 ));
             }
@@ -431,7 +431,7 @@ fn center_weighted_median_filter_2d(
 
             // Ensure window is within bounds
             if window_i_end > padded_image.dim().0 || window_j_end > padded_image.dim().1 {
-                return Err(SignalError::DimensionError(
+                return Err(SignalError::DimensionMismatch(
                     "Window extends beyond padded image bounds".to_string(),
                 ));
             }
@@ -664,7 +664,7 @@ fn vector_median_filter(
             if window_i_end > padded_channels[0].dim().0
                 || window_j_end > padded_channels[0].dim().1
             {
-                return Err(SignalError::DimensionError(
+                return Err(SignalError::DimensionMismatch(
                     "Window extends beyond padded image bounds".to_string(),
                 ));
             }
@@ -810,7 +810,7 @@ pub fn rank_filter_1d(
 
         // Ensure window is within bounds
         if window_start >= padded_signal.len() || window_end > padded_signal.len() {
-            return Err(SignalError::DimensionError(
+            return Err(SignalError::DimensionMismatch(
                 "Window extends beyond padded signal bounds".to_string(),
             ));
         }
@@ -880,7 +880,7 @@ pub fn hybrid_median_filter_2d(
 
             // Ensure window is within bounds
             if window_i_end > padded_image.dim().0 || window_j_end > padded_image.dim().1 {
-                return Err(SignalError::DimensionError(
+                return Err(SignalError::DimensionMismatch(
                     "Window extends beyond padded image bounds".to_string(),
                 ));
             }

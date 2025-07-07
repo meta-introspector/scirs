@@ -244,7 +244,8 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
 
                 if params_changed {
                     // Update algorithm parameters based on self-tuning results
-                    self.apply_tuned_parameters(tuner.get_parameters())?;
+                    let tuning_params = tuner.get_parameters();
+                    self.apply_tuned_parameters(tuning_params)?;
                 }
             }
 
@@ -257,7 +258,14 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
 
             // Distributed evaluation for line search if enabled
             let step_size = if let Some(ref mut dist_ctx) = self.distributed_context {
-                self.distributed_line_search(dist_ctx, &function, &current_x, &search_direction)?
+                let current_x_copy = current_x.clone();
+                let search_direction_copy = search_direction.clone();
+                self.distributed_line_search(
+                    dist_ctx,
+                    &function,
+                    &current_x_copy,
+                    &search_direction_copy,
+                )?
             } else {
                 self.standard_line_search(&function, &current_x, &search_direction)?
             };
@@ -404,7 +412,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
     /// Perform distributed line search
     fn distributed_line_search<F>(
         &mut self,
-        dist_ctx: &mut DistributedOptimizationContext<M>,
+        _dist_ctx: &mut DistributedOptimizationContext<M>,
         function: &F,
         x: &Array1<f64>,
         direction: &Array1<f64>,
@@ -413,7 +421,7 @@ impl<M: MPIInterface> UnifiedOptimizer<M> {
         F: Fn(&ArrayView1<f64>) -> f64 + Clone + Send + Sync,
     {
         // Distribute line search evaluation across processes
-        let step_sizes = Array1::from(vec![0.001, 0.01, 0.1, 1.0, 10.0]);
+        let _step_sizes = Array1::from(vec![0.001, 0.01, 0.1, 1.0, 10.0]);
 
         // For simplicity, return a basic step size
         // In a full implementation, this would distribute evaluations

@@ -131,6 +131,7 @@ pub use parallel_advanced_enhanced::{
 #[cfg(test)]
 mod tests {
     use super::*;
+    use num_complex::Complex64;
 
     #[test]
     fn test_butter_filter_basic() {

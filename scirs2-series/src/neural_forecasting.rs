@@ -82,8 +82,7 @@ impl ActivationFunction {
             }
             ActivationFunction::GELU => {
                 // Simplified derivative approximation
-                let sigmoid = F::one() / (F::one() + (-x).exp());
-                sigmoid
+                F::one() / (F::one() + (-x).exp())
             }
             ActivationFunction::Swish => {
                 let sigmoid = F::one() / (F::one() + (-x).exp());
@@ -2023,6 +2022,7 @@ pub struct TemporalFusionTransformer<F: Float + Debug> {
 }
 
 #[derive(Debug)]
+/// Variable selection network for feature selection
 pub struct VariableSelectionNetwork<F: Float + Debug> {
     #[allow(dead_code)]
     grn: GatedResidualNetwork<F>,
@@ -2035,6 +2035,7 @@ pub struct VariableSelectionNetwork<F: Float + Debug> {
 }
 
 #[derive(Debug)]
+/// Gated residual network for temporal modeling
 pub struct GatedResidualNetwork<F: Float + Debug> {
     #[allow(dead_code)]
     fc1: Array2<F>,
@@ -2055,6 +2056,7 @@ pub struct GatedResidualNetwork<F: Float + Debug> {
 }
 
 #[derive(Debug)]
+/// Layer normalization for neural networks
 pub struct LayerNorm<F: Float + Debug> {
     weight: Array1<F>,
     bias: Array1<F>,
@@ -2064,6 +2066,7 @@ pub struct LayerNorm<F: Float + Debug> {
 }
 
 impl<F: Float + Debug + Clone + FromPrimitive> LayerNorm<F> {
+    /// Create new layer normalization
     pub fn new(dim: usize) -> Self {
         Self {
             weight: Array1::ones(dim),
@@ -2073,6 +2076,7 @@ impl<F: Float + Debug + Clone + FromPrimitive> LayerNorm<F> {
         }
     }
 
+    /// Forward pass through layer normalization
     pub fn forward(&self, input: &Array2<F>) -> Array2<F> {
         let (seq_len, dim) = input.dim();
         let mut output = Array2::zeros((seq_len, dim));
@@ -2736,6 +2740,7 @@ pub struct EnhancedTransformerBlock<F: Float + Debug> {
 }
 
 #[derive(Debug)]
+/// Attention mechanism types for neural forecasting
 pub enum AttentionType<F: Float + Debug> {
     /// Standard Multi-Head Attention
     MultiHead(MultiHeadAttention<F>),

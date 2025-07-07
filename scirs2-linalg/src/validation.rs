@@ -73,9 +73,10 @@ where
     F: Float,
 {
     if matrix.nrows() != matrix.ncols() {
+        let rows = matrix.nrows();
+        let cols = matrix.ncols();
         return Err(LinalgError::ShapeError(format!(
-            "{} failed: Matrix must be square\\nMatrix shape: {}×{}\\nExpected: Square matrix (n×n)",
-            operation, matrix.nrows(), matrix.ncols()
+            "{operation} failed: Matrix must be square\\nMatrix shape: {rows}×{cols}\\nExpected: Square matrix (n×n)"
         )));
     }
     Ok(())
@@ -103,9 +104,11 @@ where
     F: Float,
 {
     if matrix.nrows() != vector.len() {
+        let matrix_rows = matrix.nrows();
+        let matrix_cols = matrix.ncols();
+        let vector_len = vector.len();
         return Err(LinalgError::ShapeError(format!(
-            "{} failed: Matrix and vector dimensions must match\\nMatrix shape: {}×{}\\nVector shape: {}\\nExpected: Vector length = {}",
-            operation, matrix.nrows(), matrix.ncols(), vector.len(), matrix.nrows()
+            "{operation} failed: Matrix and vector dimensions must match\\nMatrix shape: {matrix_rows}×{matrix_cols}\\nVector shape: {vector_len}\\nExpected: Vector length = {matrix_rows}"
         )));
     }
     Ok(())
@@ -135,9 +138,12 @@ where
     F: Float,
 {
     if require_same_rows && matrix_a.nrows() != matrix_b.nrows() {
+        let a_rows = matrix_a.nrows();
+        let a_cols = matrix_a.ncols();
+        let b_rows = matrix_b.nrows();
+        let b_cols = matrix_b.ncols();
         return Err(LinalgError::ShapeError(format!(
-            "{} failed: Matrix rows must match\\nFirst matrix shape: {}×{}\\nSecond matrix shape: {}×{}\\nExpected: Same number of rows",
-            operation, matrix_a.nrows(), matrix_a.ncols(), matrix_b.nrows(), matrix_b.ncols()
+            "{operation} failed: Matrix rows must match\\nFirst matrix shape: {a_rows}×{a_cols}\\nSecond matrix shape: {b_rows}×{b_cols}\\nExpected: Same number of rows"
         )));
     }
     Ok(())

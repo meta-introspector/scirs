@@ -19,7 +19,7 @@ use crate::error::Result;
 use crate::streaming::FrameMetadata;
 use crate::streaming::{Frame, ProcessingStage};
 use ndarray::{Array1, Array2};
-use rand::seq::IteratorRandom;
+use rand::prelude::*;
 use rand::Rng;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
@@ -537,10 +537,11 @@ impl QuantumAnnealingStage {
         let mut neighbor_params = self.parameters.clone();
         let mut rng = rand::rng();
 
-        if let Some((_param_name, param_value)) = neighbor_params.iter_mut().choose(&mut rng) {
+        let mut param_entries: Vec<_> = neighbor_params.iter_mut().collect();
+        if let Some((_param_name, param_value)) = param_entries.choose_mut(&mut rng) {
             let perturbation = rng.random_range(-0.1..0.1) * self.temperature / 100.0;
-            *param_value += perturbation;
-            *param_value = param_value.clamp(0.0, 1.0); // Keep in valid range
+            **param_value += perturbation;
+            **param_value = param_value.clamp(0.0, 1.0); // Keep in valid range
         }
 
         let neighbor_cost = cost_function(&neighbor_params);

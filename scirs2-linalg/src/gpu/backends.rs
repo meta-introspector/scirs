@@ -520,6 +520,7 @@ pub mod cuda {
     }
 
     /// CUDA buffer with advanced memory management
+    #[derive(Debug)]
     struct CudaBuffer<T> {
         device_ptr: *mut std::ffi::c_void,
         size: usize,
@@ -1125,6 +1126,7 @@ pub mod opencl {
     }
 
     /// OpenCL context with clBLAS integration and kernel caching
+    #[derive(Debug)]
     pub struct OpenClContext {
         context_data: Arc<OpenClContextData>,
         device_index: usize,
@@ -1642,7 +1644,7 @@ impl<T: Clone + Send + Sync> CpuBuffer<T> {
     }
 }
 
-impl<T: Clone + Send + Sync + Copy> GpuBuffer<T> for CpuBuffer<T> {
+impl<T: Clone + Send + Sync + Copy + std::fmt::Debug> GpuBuffer<T> for CpuBuffer<T> {
     fn len(&self) -> usize {
         self.data.len()
     }

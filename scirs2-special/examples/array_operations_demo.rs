@@ -6,8 +6,10 @@
 
 use ndarray::{arr1, arr2, Array1};
 use num_complex::Complex64;
-use scirs2_special::array_ops::*;
-use scirs2_special::*;
+use scirs2_special::array_ops::{
+    broadcasting, complex, convenience, memory_efficient, ArrayConfig,
+};
+use scirs2_special::gamma;
 use std::time::Instant;
 
 #[tokio::main]

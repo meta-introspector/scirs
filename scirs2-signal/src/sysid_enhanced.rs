@@ -345,14 +345,14 @@ pub fn enhanced_system_identification(
     }
 
     // Enhanced method selection based on data characteristics
-    let optimal_method = if config.method == IdentificationMethod::PEM {
+    let _optimal_method = if config.method == IdentificationMethod::PEM {
         select_optimal_method(&processed_input, &processed_output, config)?
     } else {
         config.method
     };
 
     // Adaptive order selection with improved criteria
-    let optimal_orders = if config.order_selection {
+    let _optimal_orders = if config.order_selection {
         enhanced_order_selection(&processed_input, &processed_output, config)?
     } else {
         ModelOrders {
@@ -1505,8 +1505,8 @@ fn apply_nonlinear_function(input: f64, func: &NonlinearFunction) -> SignalResul
 /// Convert transfer function to state space representation
 #[allow(dead_code)]
 fn transfer_function_to_state_space(tf: &TransferFunction) -> SignalResult<StateSpace> {
-    let num = &tf.numerator;
-    let den = &tf.denominator;
+    let num = &tf.num;
+    let den = &tf.den;
 
     if den.is_empty() || den[0] == 0.0 {
         return Err(SignalError::ValueError(
@@ -1519,10 +1519,14 @@ fn transfer_function_to_state_space(tf: &TransferFunction) -> SignalResult<State
         // Static gain case
         let gain = if num.is_empty() { 0.0 } else { num[0] / den[0] };
         return Ok(StateSpace {
-            a: Array2::zeros((0, 0)),
-            b: Array2::zeros((0, 1)),
-            c: Array2::zeros((1, 0)),
-            d: Array2::from_elem((1, 1), gain),
+            a: vec![],
+            b: vec![],
+            c: vec![],
+            d: vec![gain],
+            n_states: 0,
+            n_inputs: 1,
+            n_outputs: 1,
+            dt: tf.dt,
         });
     }
 
@@ -1567,7 +1571,16 @@ fn transfer_function_to_state_space(tf: &TransferFunction) -> SignalResult<State
         }
     }
 
-    Ok(StateSpace { a, b, c, d })
+    Ok(StateSpace {
+        a: a.iter().copied().collect(),
+        b: b.iter().copied().collect(),
+        c: c.iter().copied().collect(),
+        d: d.iter().copied().collect(),
+        n_states: n,
+        n_inputs: 1,
+        n_outputs: 1,
+        dt: tf.dt,
+    })
 }
 
 /// Simulate state space system
@@ -1624,7 +1637,7 @@ fn get_model_parameters(model: &SystemModel) -> usize {
         SystemModel::OE { b, f, .. } => b.len() + f.len(),
         SystemModel::BJ { b, c, d, f, .. } => b.len() + c.len() + d.len() + f.len(),
         SystemModel::HammersteinWiener { linear, .. } => get_model_parameters(linear),
-        SystemModel::TransferFunction(tf) => tf.numerator.len() + tf.denominator.len(),
+        SystemModel::TransferFunction(tf) => tf.num.len() + tf.den.len(),
         SystemModel::StateSpace(ss) => ss.a.len() + ss.b.len() + ss.c.len() + ss.d.len(),
     }
 }

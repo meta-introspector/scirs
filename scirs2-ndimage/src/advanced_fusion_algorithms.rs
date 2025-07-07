@@ -3251,7 +3251,6 @@ fn calculate_memory_importance(content: &Array2<f64>) -> NdimageResult<f64> {
 
 /// Additional helper functions would be implemented here...
 /// (For brevity, I'm showing the structure but not implementing all helpers)
-
 #[allow(dead_code)]
 fn consolidate_to_long_term_memory(
     _trace: &MemoryTrace,
@@ -4278,7 +4277,6 @@ pub struct CircuitOptimization {
 }
 
 /// Helper functions for quantum scheduling (simplified implementations)
-
 #[allow(dead_code)]
 fn analyze_quantum_resource_state(
     _advanced_state: &AdvancedState,
@@ -4396,7 +4394,6 @@ fn calculate_coherence_preservation(_graph: &ResourceEntanglementGraph) -> Ndima
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_abs_diff_eq;
     use ndarray::Array2;
 
     #[test]

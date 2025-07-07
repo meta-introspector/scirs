@@ -65,8 +65,11 @@ pub enum ChunkStrategy {
 pub struct AdvancedParallelProcessor<F: Float + std::fmt::Display> {
     config: AdvancedParallelConfig,
     capabilities: PlatformCapabilities,
+    #[allow(dead_code)]
     thread_pool: Option<ThreadPool>,
+    #[allow(dead_code)]
     work_queue: Arc<Mutex<VecDeque<ParallelTask<F>>>>,
+    #[allow(dead_code)]
     active_workers: Arc<AtomicUsize>,
 }
 
@@ -419,6 +422,7 @@ where
         Self::mean_cache_oblivious_static(x, 0, x.len())
     }
 
+    #[allow(dead_code)]
     fn mean_cache_oblivious<D>(
         &self,
         x: &ArrayBase<D, Ix1>,
@@ -827,6 +831,7 @@ impl ThreadPool {
         Ok(ThreadPool { workers, sender })
     }
 
+    #[allow(dead_code)]
     fn execute<F>(&self, f: F)
     where
         F: FnOnce() + Send + 'static,

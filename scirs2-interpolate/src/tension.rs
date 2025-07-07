@@ -1149,7 +1149,7 @@ mod tests {
                 assert!(amp_10.is_finite());
 
                 // Print the values for debugging
-                println!("Amplitudes at point {}: {} {} {}", i, amp_0, amp_1, amp_10);
+                println!("Amplitudes at point {i}: {amp_0} {amp_1} {amp_10}");
             }
         }
     }

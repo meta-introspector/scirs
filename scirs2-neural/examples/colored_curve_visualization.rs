@@ -15,7 +15,7 @@ fn main() {
     let n_samples = 200;
     // Generate true labels: 0 or 1
     let y_true: Vec<usize> = (0..n_samples)
-        .map(|_| if rng.random::<f64>() > 0.5 { 1 } else { 0 })
+        .map(|_| if rng.gen::<f64>() > 0.5 { 1 } else { 0 })
         .collect();
     // Generate scores with some separability
     let y_score: Vec<f64> = y_true
@@ -46,7 +46,7 @@ fn main() {
         20,
         &color_options,
     );
-    println!("{}", roc_plot);
+    println!("{roc_plot}");
     // Example 2: Learning Curve with color
     println!("\nExample 2: Learning Curve Visualization (with color)\n");
     // Simulate learning curves for different training set sizes
@@ -76,5 +76,5 @@ fn main() {
         &color_options,
     );
 
-    println!("{}", learning_plot);
+    println!("{learning_plot}");
 }

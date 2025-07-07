@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 2. Shortest Path Algorithm (from shortest_path module)
     println!("\n2. Shortest Path:");
-    if let Ok(Some(path)) = shortest_path(&graph, &1, &4) {
+    if let Ok(Some(path)) = dijkstra_path(&graph, &1, &4) {
         println!(
             "   Path from 1 to 4: {:?} (weight: {})",
             path.nodes, path.total_weight

@@ -656,7 +656,7 @@ mod tests {
     #[test]
     fn test_simd_config_detection() {
         let config = SimdConfig::detect();
-        println!("SIMD Config: {:?}", config);
+        println!("SIMD Config: {config:?}");
 
         // Basic validation
         assert!(config.f32_width >= 1);
@@ -768,7 +768,7 @@ mod tests {
     #[test]
     fn test_simd_availability() {
         let available = is_simd_available();
-        println!("SIMD available: {}", available);
+        println!("SIMD available: {available}");
 
         // Test should always pass regardless of SIMD availability
         // (just checking that the SIMD detection function doesn't panic)

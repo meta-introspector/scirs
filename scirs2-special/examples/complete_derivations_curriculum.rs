@@ -1607,7 +1607,7 @@ impl DerivationCurriculum {
 
         // Functional equation verification
         println!("Verification: Γ(z+1) = z·Γ(z) for z = 2.5");
-        let z = 2.5;
+        let z = 2.5_f64;
         let gamma_z_plus_1 = gamma(z + 1.0);
         let z_times_gamma_z = z * gamma(z);
         let func_eq_diff: f64 = (gamma_z_plus_1 - z_times_gamma_z).abs();

@@ -503,7 +503,7 @@ impl BayesianOptimizer {
     /// Create a new Bayesian optimizer
     pub fn new(space: Space, options: Option<BayesianOptimizationOptions>) -> Self {
         let options = options.unwrap_or_default();
-        let seed = options.seed.unwrap_or_else(|| rand::rng().random());
+        let seed = options.seed.unwrap_or_else(|| rand::rng().gen());
         let rng = StdRng::seed_from_u64(seed);
 
         Self {

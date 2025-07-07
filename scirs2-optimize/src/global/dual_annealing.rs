@@ -7,9 +7,8 @@
 use crate::error::OptimizeError;
 use crate::unconstrained::{minimize, Bounds, Method, OptimizeResult, Options};
 use ndarray::{Array1, ArrayView1};
-use rand::prelude::*;
 use rand::rngs::StdRng;
-use rand::Rng;
+use rand::{rng, Rng};
 #[allow(unused_imports)]
 use rand_distr::{Cauchy, Distribution as RandDistribution};
 

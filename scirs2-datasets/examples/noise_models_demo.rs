@@ -65,7 +65,7 @@ fn demonstrate_missing_data_patterns() {
         let total_elements = test_data.len();
         let missing_percentage = (missing_count as f64 / total_elements as f64) * 100.0;
 
-        println!("{}:", description);
+        println!("{description}:");
         println!(
             "  Missing elements: {} / {} ({:.1}%)",
             missing_count, total_elements, missing_percentage
@@ -118,7 +118,7 @@ fn demonstrate_outlier_injection() {
 
         let outlier_count = outlier_mask.iter().filter(|&&x| x).count();
 
-        println!("{}:", description);
+        println!("{description}:");
         println!(
             "  Outliers injected: {} / {} samples",
             outlier_count,
@@ -182,7 +182,7 @@ fn demonstrate_time_series_noise() {
         add_time_series_noise(&mut noisy_data, config, Some(42)).unwrap();
         let noisy_stats = calculate_basic_stats(&noisy_data);
 
-        println!("{}:", name);
+        println!("{name}:");
         println!("  Mean: {:.3} -> {:.3}", original_stats.0, noisy_stats.0);
         println!("  Std: {:.3} -> {:.3}", original_stats.1, noisy_stats.1);
         println!(
@@ -236,17 +236,17 @@ fn demonstrate_comprehensive_corruption() {
         let usable_percentage =
             ((total_elements - missing_elements) as f64 / total_elements as f64) * 100.0;
 
-        println!("{}:", description);
+        println!("{description}:");
         println!("  Missing data: {:.1}%", missing_rate * 100.0);
         println!("  Outliers: {:.1}%", outlier_rate * 100.0);
         println!("  Usable data: {:.1}%", usable_percentage);
 
         // Show metadata
         if let Some(missing_count) = corrupted.metadata.get("missing_count") {
-            println!("  Actual missing: {} elements", missing_count);
+            println!("  Actual missing: {missing_count} elements");
         }
         if let Some(outlier_count) = corrupted.metadata.get("outlier_count") {
-            println!("  Actual outliers: {} samples", outlier_count);
+            println!("  Actual outliers: {outlier_count} samples");
         }
     }
 }

@@ -604,7 +604,7 @@ mod tests {
 
     #[test]
     fn test_nmf_regularization() {
-        let x = Array::eye(10) + 0.1; // Add small value to ensure positivity
+        let x = Array::<f64, _>::eye(10) + 0.1; // Add small value to ensure positivity
 
         let mut nmf = NMF::new(3).with_regularization(0.1, 0.5).with_max_iter(50);
 
@@ -679,7 +679,7 @@ mod tests {
 
     #[test]
     fn test_nmf_invalid_solver() {
-        let x = Array::eye(3) + 0.1;
+        let x = Array::<f64, _>::eye(3) + 0.1;
         let mut nmf = NMF::new(2).with_solver("invalid");
 
         let result = nmf.fit(&x);

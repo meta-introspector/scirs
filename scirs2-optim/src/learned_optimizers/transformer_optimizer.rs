@@ -1005,16 +1005,6 @@ pub struct SupportSetManager<T: Float> {
     augmentation_methods: Vec<AugmentationMethod>,
 }
 
-impl<T: Float + Default + Clone> SupportSetManager<T> {
-    fn new() -> Result<Self> {
-        Ok(Self {
-            support_sets: HashMap::new(),
-            selection_strategies: Vec::new(),
-            augmentation_methods: Vec::new(),
-        })
-    }
-}
-
 /// Support set
 #[derive(Debug, Clone)]
 pub struct SupportSet<T: Float> {
@@ -1183,6 +1173,18 @@ pub struct FewShotMetaLearner<T: Float> {
     outer_lr: T,
 }
 
+impl<T: Float> FewShotMetaLearner<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            meta_parameters: HashMap::new(),
+            inner_optimizer: InnerLoopOptimizer::new()?,
+            outer_optimizer: OuterLoopOptimizer::new()?,
+            inner_lr: T::from(0.01).unwrap(),
+            outer_lr: T::from(0.001).unwrap(),
+        })
+    }
+}
+
 /// Inner loop optimizer
 #[derive(Debug, Clone)]
 pub struct InnerLoopOptimizer<T: Float> {
@@ -1194,6 +1196,16 @@ pub struct InnerLoopOptimizer<T: Float> {
 
     /// State
     state: HashMap<String, Array1<T>>,
+}
+
+impl<T: Float> InnerLoopOptimizer<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            optimizer_type: InnerOptimizerType::SGD,
+            parameters: HashMap::new(),
+            state: HashMap::new(),
+        })
+    }
 }
 
 /// Inner optimizer types
@@ -1225,6 +1237,16 @@ pub struct OuterLoopOptimizer<T: Float> {
     state: HashMap<String, Array1<T>>,
 }
 
+impl<T: Float> OuterLoopOptimizer<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            optimizer_type: OuterOptimizerType::Adam,
+            parameters: HashMap::new(),
+            state: HashMap::new(),
+        })
+    }
+}
+
 /// Outer optimizer types
 #[derive(Debug, Clone, Copy)]
 pub enum OuterOptimizerType {
@@ -1251,6 +1273,16 @@ pub struct TaskGenerator<T: Float> {
     curriculum: Option<CurriculumLearning<T>>,
 }
 
+impl<T: Float> TaskGenerator<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            task_distribution: TaskDistribution::new()?,
+            generation_strategies: vec![TaskGenerationStrategy::Random],
+            curriculum: None,
+        })
+    }
+}
+
 /// Task distribution
 #[derive(Debug, Clone)]
 pub struct TaskDistribution<T: Float> {
@@ -1262,6 +1294,16 @@ pub struct TaskDistribution<T: Float> {
 
     /// Sampling weights
     sampling_weights: Array1<T>,
+}
+
+impl<T: Float> TaskDistribution<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            parameters: HashMap::new(),
+            distribution_type: DistributionType::Uniform,
+            sampling_weights: Array1::zeros(1),
+        })
+    }
 }
 
 /// Distribution types
@@ -1401,6 +1443,18 @@ pub struct EvaluationProtocol<T: Float> {
 
     /// Statistical tests
     statistical_tests: Vec<StatisticalTest>,
+}
+
+impl<T: Float> EvaluationProtocol<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            strategy: EvaluationStrategy::CrossValidation,
+            metrics: vec![EvaluationMetric::Accuracy],
+            cross_validation: None,
+            _phantom: std::marker::PhantomData,
+            statistical_tests: vec![],
+        })
+    }
 }
 
 /// Evaluation strategies
@@ -1551,6 +1605,17 @@ pub struct EpisodicMemory<T: Float> {
     retrieval_mechanism: RetrievalMechanism<T>,
 }
 
+impl<T: Float + Default> EpisodicMemory<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            buffer: VecDeque::new(),
+            capacity: 1000,
+            selection_strategy: MemorySelectionStrategy::Random,
+            retrieval_mechanism: RetrievalMechanism::new()?,
+        })
+    }
+}
+
 /// Episode in memory
 #[derive(Debug, Clone)]
 pub struct Episode<T: Float> {
@@ -1616,6 +1681,9 @@ pub enum RetrievalStrategy {
 
     /// K-nearest neighbors
     KNearestNeighbors,
+
+    /// Cosine similarity
+    Cosine,
 
     /// Attention-based retrieval
     AttentionBased,
@@ -3029,7 +3097,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
 // Placeholder implementations for complex components
 // In a production system, these would be fully implemented
 
-impl<T: Float + Default + Clone> TransformerNetwork<T> {
+impl<T: Float + Default + Clone + std::iter::Sum> TransformerNetwork<T> {
     fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
         let mut rng = rand::rng();
 
@@ -3180,25 +3248,22 @@ impl<T: Float + Default + Clone + std::iter::Sum> TransformerMetaLearner<T> {
             return Ok(T::zero());
         }
 
-        let mut total_meta_loss = T::zero();
         let mut meta_gradients = self.initialize_meta_gradients(network)?;
 
         // Perform meta-learning based on strategy
-        match self.strategy {
+        let total_meta_loss = match self.strategy {
             MetaOptimizationStrategy::MAML => {
-                total_meta_loss = self.maml_update(tasks, network, &mut meta_gradients)?;
+                self.maml_update(tasks, network, &mut meta_gradients)?
             }
-            MetaOptimizationStrategy::Reptile => {
-                total_meta_loss = self.reptile_update(tasks, network)?;
-            }
+            MetaOptimizationStrategy::Reptile => self.reptile_update(tasks, network)?,
             MetaOptimizationStrategy::ProtoMAML => {
-                total_meta_loss = self.proto_maml_update(tasks, network, &mut meta_gradients)?;
+                self.proto_maml_update(tasks, network, &mut meta_gradients)?
             }
             _ => {
                 // Default to simplified meta-learning
-                total_meta_loss = self.simple_meta_update(tasks, network)?;
+                self.simple_meta_update(tasks, network)?
             }
-        }
+        };
 
         // Update task embeddings
         self.update_task_embeddings(tasks)?;
@@ -3702,49 +3767,6 @@ impl<T: Float + Default + Clone> ContinualMemoryBuffer<T> {
     }
 }
 
-impl<T: Float + Default + Clone> ForgettingPrevention<T> {
-    fn new() -> Result<Self> {
-        Ok(Self {
-            strategy: ForgettingPreventionStrategy::EWC,
-            importance_weights: HashMap::new(),
-            consolidation_mechanisms: Vec::new(),
-            rehearsal_strategies: Vec::new(),
-        })
-    }
-}
-
-impl<T: Float + Default + Clone> ContinualPerformanceTracking<T> {
-    fn new() -> Result<Self> {
-        Ok(Self {
-            task_performance: HashMap::new(),
-            overall_metrics: OverallPerformanceMetrics {
-                average_performance: T::zero(),
-                performance_variance: T::zero(),
-                stability: T::zero(),
-                plasticity: T::zero(),
-                efficiency: T::zero(),
-            },
-            forgetting_measures: ForgettingMeasures {
-                backward_transfer: T::zero(),
-                catastrophic_forgetting: T::zero(),
-                retention_rate: T::zero(),
-                forgetting_curve: ForgettingCurve {
-                    parameters: Array1::zeros(3),
-                    curve_type: ForgettingCurveType::Exponential,
-                    fitted_curve: None,
-                },
-            },
-            transfer_measures: TransferMeasures {
-                forward_transfer: T::zero(),
-                backward_transfer: T::zero(),
-                zero_shot_transfer: T::zero(),
-                few_shot_transfer: T::zero(),
-                transfer_efficiency: T::zero(),
-            },
-        })
-    }
-}
-
 impl<T: Float + Default + Clone> PositionalEncoder<T> {
     fn new(_config: &TransformerOptimizerConfig) -> Result<Self> {
         // Placeholder implementation for external interface
@@ -4231,7 +4253,7 @@ impl<T: Float + Default + Clone> InputEmbedding<T> {
     }
 }
 
-impl<T: Float + Default + Clone> TransformerLayer<T> {
+impl<T: Float + Default + Clone + std::iter::Sum> TransformerLayer<T> {
     fn new(config: &TransformerOptimizerConfig, rng: &mut impl Rng) -> Result<Self> {
         let self_attention = MultiHeadAttention::new(config, rng)?;
         let cross_attention = if config.cross_attention {
@@ -4981,6 +5003,166 @@ impl PartialEq for AttentionOptimization {
                     AttentionOptimization::Adaptive
                 )
         )
+    }
+}
+
+impl<T: Float + Default> MemoryManagement<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            allocation_strategy: AllocationStrategy::Dynamic,
+            compression_methods: vec![CompressionMethod::PCA],
+            eviction_policy: EvictionPolicy::LRU,
+            usage_tracking: MemoryUsageTracking::new()?,
+        })
+    }
+}
+
+impl<T: Float + Default> MemoryUsageTracking<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            current_usage: T::default(),
+            peak_usage: T::default(),
+            average_usage: T::default(),
+            usage_history: VecDeque::new(),
+        })
+    }
+}
+
+impl<T: Float + Default> RelationNetworks<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            relation_embeddings: HashMap::new(),
+            networks: HashMap::new(),
+            composition_rules: Vec::new(),
+        })
+    }
+}
+
+impl<T: Float + Default> AbstractRepresentations<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            prototypes: HashMap::new(),
+            hierarchies: Vec::new(),
+            generalization_functions: Vec::new(),
+        })
+    }
+}
+
+impl<T: Float + Default> SemanticMemory<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            knowledge_base: KnowledgeBase::new()?,
+            concept_embeddings: HashMap::new(),
+            relation_networks: RelationNetworks::new()?,
+            abstract_representations: AbstractRepresentations::new()?,
+        })
+    }
+}
+
+impl<T: Float + Default> WorkingMemory<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            current_context: Array1::zeros(0),
+            active_representations: HashMap::new(),
+            attention_weights: Array1::zeros(0),
+            capacity: 100,
+            update_mechanism: WorkingMemoryUpdate::new()?,
+        })
+    }
+}
+
+impl<T: Float + Default> RetrievalMechanism<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            strategy: RetrievalStrategy::Cosine,
+            similarity_function: SimilarityFunction::new()?,
+            threshold: T::from(0.5).unwrap(),
+            max_retrievals: 10,
+        })
+    }
+}
+
+impl<T: Float + Default> SimilarityFunction<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            function_type: SimilarityFunctionType::Cosine,
+            parameters: Array1::zeros(1),
+            learned_components: None,
+        })
+    }
+}
+
+impl<T: Float + Default> KnowledgeBase<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            facts: vec![],
+            rules: vec![],
+            concepts: HashMap::new(),
+            hierarchies: vec![],
+        })
+    }
+}
+
+impl<T: Float + Default> WorkingMemoryUpdate<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            update_rule: UpdateRule::Additive,
+            learning_rate: T::from(0.01).unwrap(),
+            decay_factor: T::from(0.95).unwrap(),
+        })
+    }
+}
+
+impl<T: Float + Default> SupportSetManager<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            support_sets: HashMap::new(),
+            selection_strategies: Vec::new(),
+            augmentation_methods: Vec::new(),
+        })
+    }
+}
+
+impl<T: Float + Default> ForgettingPrevention<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            strategy: ForgettingPreventionStrategy::EWC,
+            importance_weights: HashMap::new(),
+            consolidation_mechanisms: Vec::new(),
+            rehearsal_strategies: Vec::new(),
+        })
+    }
+}
+
+impl<T: Float + Default> ContinualPerformanceTracking<T> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            task_performance: HashMap::new(),
+            overall_metrics: OverallPerformanceMetrics {
+                average_performance: T::zero(),
+                performance_variance: T::zero(),
+                stability: T::zero(),
+                plasticity: T::zero(),
+                efficiency: T::zero(),
+            },
+            forgetting_measures: ForgettingMeasures {
+                backward_transfer: T::zero(),
+                catastrophic_forgetting: T::zero(),
+                retention_rate: T::zero(),
+                forgetting_curve: ForgettingCurve {
+                    parameters: Array1::zeros(3),
+                    curve_type: ForgettingCurveType::Exponential,
+                    fitted_curve: None,
+                },
+            },
+            transfer_measures: TransferMeasures {
+                forward_transfer: T::zero(),
+                backward_transfer: T::zero(),
+                zero_shot_transfer: T::zero(),
+                few_shot_transfer: T::zero(),
+                transfer_efficiency: T::zero(),
+            },
+        })
     }
 }
 

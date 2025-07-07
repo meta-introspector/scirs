@@ -1137,7 +1137,7 @@ fn solve_engineering_problems(profile: &mut UserProfile) -> Result<(), Box<dyn s
     let T_base = 100.0; // °C
     let T_inf = 20.0; // °C
 
-    let m = (h / (k * delta)).sqrt();
+    let m: f64 = (h / (k * delta)).sqrt();
     println!("\n🔢 Parameters:");
     println!("m = √(h/kδ) = {:.2} m⁻¹", m);
 
@@ -1345,7 +1345,7 @@ fn explore_bessel_visual(profile: &mut UserProfile) -> Result<(), Box<dyn std::e
     // Show zeros
     println!("\n🎯 Zeros of Bessel functions:");
     let j0_zeros_vec = j0_zeros::<f64>(5);
-    let j1_zeros_vec = j1_zeros(5);
+    let j1_zeros_vec = j1_zeros::<f64>(5);
 
     println!("First 5 zeros of J₀(x):");
     for (i, &zero) in j0_zeros_vec.iter().enumerate() {
@@ -1663,7 +1663,7 @@ fn climate_science_lab(profile: &mut UserProfile) -> Result<(), Box<dyn std::err
     let optical_depths = vec![0.0, 0.1, 0.5, 1.0, 2.0];
 
     for &tau in &optical_depths {
-        let intensity: f64 = I_0 * (-tau).exp();
+        let intensity: f64 = I_0 * ((-tau) as f64).exp();
         let attenuation = (1.0 - intensity / I_0) * 100.0;
         println!(
             "τ = {}: I = {:.1} W/m² ({:.1}% attenuated)",

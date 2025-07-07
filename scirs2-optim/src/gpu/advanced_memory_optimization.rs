@@ -2039,7 +2039,7 @@ pub enum FeatureExtractor {
     Custom(String),
 }
 
-impl<T: Float + Default + Clone + Send + Sync> AdvancedMemoryOptimizer<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> AdvancedMemoryOptimizer<T> {
     /// Create a new advanced memory optimizer
     pub fn new(config: AdvancedMemoryConfig) -> Self {
         Self {

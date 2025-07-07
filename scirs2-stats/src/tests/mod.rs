@@ -261,7 +261,8 @@ where
         + std::marker::Send
         + std::marker::Sync
         + std::fmt::Display
-        + 'static,
+        + 'static
+        + scirs2_core::simd_ops::SimdUnifiedOps,
 {
     // Check if the input arrays are empty
     if x.is_empty() || y.is_empty() {

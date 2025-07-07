@@ -8,6 +8,7 @@ use ndarray::{Array1, ScalarOperand};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
+use std::iter::Sum;
 use std::time::{Duration, Instant};
 
 use super::{StreamingConfig, StreamingDataPoint};
@@ -17,7 +18,7 @@ use crate::optimizers::Optimizer;
 /// Adaptive streaming optimizer with automatic parameter tuning
 pub struct AdaptiveStreamingOptimizer<O, A, D>
 where
-    A: Float + ScalarOperand + Debug,
+    A: Float + ScalarOperand + Debug + std::iter::Sum + std::iter::Sum<A> + Clone,
     D: ndarray::Dimension,
     O: Optimizer<A, D>,
 {
@@ -54,6 +55,7 @@ where
 
 /// Adaptive learning rate controller
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct AdaptiveLearningRateController<A: Float> {
     /// Current learning rate
     current_lr: A,
@@ -108,6 +110,7 @@ enum LearningRateAdaptationStrategy {
 
 /// Enhanced concept drift detector
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct EnhancedDriftDetector<A: Float> {
     /// Multiple detection methods
     detection_methods: Vec<DriftDetectionMethod<A>>,
@@ -219,7 +222,7 @@ enum DriftSeverity {
 }
 
 /// Current drift state
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum DriftState {
     Stable,
     Warning,
@@ -229,6 +232,7 @@ enum DriftState {
 
 /// Performance tracking for adaptation
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct PerformanceTracker<A: Float> {
     /// Recent performance metrics
     recent_metrics: VecDeque<PerformanceSnapshot<A>>,
@@ -328,6 +332,7 @@ struct ResourceUsage {
 
 /// Resource manager for adaptive optimization
 #[derive(Debug)]
+#[allow(dead_code)]
 struct ResourceManager {
     /// Available resources
     available_resources: ResourceBudget,
@@ -379,6 +384,7 @@ enum ResourceAllocationStrategy {
 
 /// Adaptive buffer for streaming data
 #[derive(Debug)]
+#[allow(dead_code)]
 struct AdaptiveBuffer<A: Float> {
     /// Data buffer
     buffer: VecDeque<StreamingDataPoint<A>>,
@@ -436,6 +442,7 @@ struct BufferQualityMetrics<A: Float> {
 
 /// Meta-learner for hyperparameter adaptation
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct MetaLearner<A: Float> {
     /// Meta-model for learning rate adaptation
     lr_meta_model: MetaModel<A>,
@@ -542,7 +549,15 @@ struct MetaAction<A: Float> {
 
 impl<O, A, D> AdaptiveStreamingOptimizer<O, A, D>
 where
-    A: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::fmt::Debug,
+    A: Float
+        + Default
+        + Clone
+        + Send
+        + Sync
+        + ndarray::ScalarOperand
+        + std::fmt::Debug
+        + std::iter::Sum
+        + std::iter::Sum<A>,
     D: ndarray::Dimension,
     O: Optimizer<A, D> + Send + Sync,
 {
@@ -640,6 +655,7 @@ where
     }
 
     /// Compute required adaptations
+    #[allow(clippy::too_many_arguments)]
     fn compute_adaptations(
         &mut self,
         batch: &[StreamingDataPoint<A>],
@@ -706,6 +722,7 @@ where
     }
 
     /// Perform optimization step on batch
+    #[allow(clippy::too_many_arguments)]
     fn perform_optimization_step(
         &mut self,
         batch: &[StreamingDataPoint<A>],
@@ -713,15 +730,25 @@ where
         // Compute gradients from batch
         let gradients = self.compute_batch_gradients(batch)?;
 
+        // Calculate gradient norm before moving gradients
+        let gradient_norm = gradients.iter().map(|g| *g * *g).sum::<A>().sqrt();
+
         // Get current parameters (simplified)
         let current_params = Array1::zeros(gradients.len());
 
         // Apply base optimizer
-        let updated_params = self.base_optimizer.step(&current_params, &gradients)?;
+        let current_params_nd = current_params.into_dimensionality::<D>().unwrap();
+        let gradients_nd = gradients.into_dimensionality::<D>().unwrap();
+        let updated_params_nd = self
+            .base_optimizer
+            .step(&current_params_nd, &gradients_nd)?;
+        let updated_params = updated_params_nd
+            .into_dimensionality::<ndarray::Ix1>()
+            .unwrap();
 
         Ok(OptimizationResult {
             updated_parameters: updated_params,
-            gradient_norm: gradients.iter().map(|&g| g * g).sum::<A>().sqrt(),
+            gradient_norm,
             step_size: self.lr_controller.current_lr,
         })
     }
@@ -763,8 +790,8 @@ where
 
         for data_point in batch {
             // Simplified loss computation
-            let prediction =
-                data_point.features.iter().sum::<A>() / A::from(data_point.features.len()).unwrap();
+            let prediction = data_point.features.iter().map(|f| *f).sum::<A>()
+                / A::from(data_point.features.len()).unwrap();
             if let Some(target) = data_point.target {
                 let loss = (prediction - target) * (prediction - target);
                 total_loss = total_loss + loss;
@@ -822,7 +849,7 @@ where
                 stds[i] = stds[i] + diff * diff;
             }
         }
-        stds.mapv_inplace(|s| (s / batch_size).sqrt());
+        stds.mapv_inplace(|s: A| (s / batch_size).sqrt());
 
         Ok(DataStatistics {
             feature_means: means,
@@ -1147,7 +1174,7 @@ macro_rules! impl_placeholder_struct {
 
 // Actual implementations for streaming optimization components
 
-impl<A: Float + Default + Clone> PerformanceTracker<A> {
+impl<A: Float + Default + Clone + std::iter::Sum> PerformanceTracker<A> {
     fn new(_config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             recent_metrics: VecDeque::with_capacity(1000),
@@ -1180,7 +1207,7 @@ impl<A: Float + Default + Clone> PerformanceTracker<A> {
     }
 }
 
-impl<A: Float + Default + Clone> TrendAnalyzer<A> {
+impl<A: Float + Default + Clone + Sum> TrendAnalyzer<A> {
     fn new() -> Self {
         Self {
             performance_history: VecDeque::with_capacity(500),
@@ -1478,12 +1505,16 @@ impl<A: Float + Default + Clone> PerformancePredictor<A> {
     fn update_ensemble_weights(&mut self) -> Result<()> {
         // Simplified weight update based on prediction errors
         // In practice, this would use more sophisticated model selection
-        self.ensemble_weights = Array1::from_vec(vec![0.4, 0.3, 0.3]);
+        self.ensemble_weights = Array1::from_vec(vec![
+            A::from(0.4).unwrap(),
+            A::from(0.3).unwrap(),
+            A::from(0.3).unwrap(),
+        ]);
         Ok(())
     }
 }
 
-impl<A: Float + Default + Clone> AnomalyDetector<A> {
+impl<A: Float + Default + Clone + Sum> AnomalyDetector<A> {
     fn new() -> Self {
         Self {
             detection_methods: Vec::new(),
@@ -1740,7 +1771,7 @@ impl<A: Float + Default + Clone> MetricAggregator<A> {
     }
 }
 
-impl<A: Float + Default + Clone> MetaLearner<A> {
+impl<A: Float + Default + Clone + Sum> MetaLearner<A> {
     fn new(_config: &StreamingConfig) -> Result<Self> {
         Ok(Self {
             lr_meta_model: MetaModel::new(MetaModelType::LinearRegression),
@@ -1838,7 +1869,7 @@ impl<A: Float + Default + Clone> MetaLearner<A> {
         performance: &PerformanceSnapshot<A>,
     ) -> Result<Option<Adaptation<A>>> {
         // Adjust drift sensitivity based on recent performance stability
-        let performance_value = match performance.primary_metric {
+        let _performance_value = match performance.primary_metric {
             PerformanceMetric::Loss(l) => l,
             PerformanceMetric::Accuracy(a) => a,
             _ => A::zero(),
@@ -2072,6 +2103,7 @@ struct MetricAggregator<A: Float> {
 
 /// Trade-off analyzer for resource allocation decisions
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct TradeoffAnalyzer {
     /// Performance vs resource utilization weights
     performance_weight: f64,
@@ -2082,6 +2114,7 @@ pub struct TradeoffAnalyzer {
 
 /// Resource predictor for forecasting future resource needs
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ResourcePredictor {
     /// Historical resource usage patterns
     usage_history: VecDeque<ResourceUsage>,
@@ -2093,6 +2126,7 @@ pub struct ResourcePredictor {
 
 /// Trade-off decision record
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct TradeoffDecision {
     /// Decision timestamp
     timestamp: Instant,
@@ -2265,9 +2299,9 @@ impl ResourceManager {
         Ok(())
     }
 
-    fn compute_allocation_adaptation(&mut self) -> Result<()> {
+    fn compute_allocation_adaptation<A: Float>(&mut self) -> Result<Option<Adaptation<A>>> {
         // ResourceManager doesn't directly produce adaptations
-        Ok(())
+        Ok(None)
     }
 }
 
@@ -2329,7 +2363,7 @@ mod tests {
     fn test_adaptive_streaming_optimizer_creation() {
         let sgd = SGD::new(0.01);
         let config = StreamingConfig::default();
-        let optimizer = AdaptiveStreamingOptimizer::new(sgd, config);
+        let optimizer = AdaptiveStreamingOptimizer::<SGD<f64>, f64, ndarray::Ix2>::new(sgd, config);
 
         // Note: This test may fail due to placeholder implementations
         // In a real implementation, this would succeed

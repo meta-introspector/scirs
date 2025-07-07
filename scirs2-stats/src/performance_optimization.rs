@@ -5,7 +5,6 @@
 //! methods implemented in scirs2-stats.
 
 use crate::error::StatsResult as Result;
-use crate::mcmc::{ProposalDistribution, TargetDistribution};
 use crate::multivariate::{
     CCAResult, CanonicalCorrelationAnalysis, LDAResult, LinearDiscriminantAnalysis,
 };
@@ -15,7 +14,7 @@ use crate::{
 };
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::time::Instant;
 
 /// Performance optimization configuration
@@ -200,7 +199,7 @@ impl OptimizedLinearDiscriminantAnalysis {
         classes.dedup();
         let unique_classes = Array1::from_vec(classes);
         let _n_classes = unique_classes.len();
-        let (_n_samples, n_features) = x.dim();
+        let (_n_samples, _n_features) = x.dim();
 
         // SIMD-optimized class means computation
         let class_means = self.compute_class_means_simd(x, y, &unique_classes)?;
@@ -218,7 +217,7 @@ impl OptimizedLinearDiscriminantAnalysis {
 
     /// Parallel-optimized LDA fitting
     fn fit_parallel(&self, x: ArrayView2<f64>, y: ArrayView1<i32>) -> Result<LDAResult> {
-        let (_n_samples, n_features) = x.dim();
+        let (_n_samples, _n_features) = x.dim();
 
         // Get unique classes
         let mut classes = y.to_vec();

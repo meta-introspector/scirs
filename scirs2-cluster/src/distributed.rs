@@ -1838,7 +1838,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
 
         // Shuffle indices for random assignment
         use rand::seq::SliceRandom;
-        indices.shuffle(&mut rand::thread_rng());
+        indices.shuffle(&mut rand::rng());
 
         let mut start_idx = 0;
         for (worker_id, &size) in partition_sizes.iter().enumerate() {
@@ -2090,7 +2090,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
 
         // Initialize centroids randomly
         use rand::seq::SliceRandom;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut point_indices: Vec<usize> = (0..n_samples).collect();
         point_indices.shuffle(&mut rng);
 
@@ -3152,7 +3152,7 @@ pub mod utils {
             let mut new_assignments = current_assignments.clone();
 
             // ε-greedy exploration strategy
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             for (&worker_id, &current_assignment) in current_assignments {
                 if rng.random::<f64>() < exploration_rate {
@@ -3222,7 +3222,7 @@ pub mod utils {
             data_size: usize,
             worker_ids: &[usize],
         ) -> HashMap<usize, usize> {
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             let mut assignment = HashMap::new();
             let mut remaining = data_size;
 
@@ -3601,7 +3601,7 @@ pub mod utils {
         n_clusters: usize,
     ) -> Array2<f64> {
         use rand::Rng;
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut data = Array2::zeros((n_samples, n_features));
 
         let cluster_size = n_samples / n_clusters;
@@ -3638,7 +3638,7 @@ pub mod utils {
         noise_level: f64,
         outlier_fraction: f64,
     ) -> Array2<f64> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let mut data = Array2::zeros((n_samples, n_features));
 
         let n_outliers = (n_samples as f64 * outlier_fraction) as usize;
@@ -6387,7 +6387,7 @@ pub mod edge_computing {
                 let n_samples = data.nrows();
                 let n_features = data.ncols();
                 let mut centroids = Array2::zeros((k, n_features));
-                let mut rng = rand::thread_rng();
+                let mut rng = rand::rng();
 
                 // Choose first centroid randomly
                 let first_idx = rng.random_range(0..n_samples);

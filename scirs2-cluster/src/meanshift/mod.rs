@@ -138,7 +138,7 @@ pub fn estimate_bandwidth<T: Float + Display + FromPrimitive + Send + Sync + 'st
             data.to_owned()
         } else {
             // Sample n_samples points randomly
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             use rand::seq::SliceRandom;
             let mut indices: Vec<usize> = (0..data.nrows()).collect();

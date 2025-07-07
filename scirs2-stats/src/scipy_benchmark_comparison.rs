@@ -6,7 +6,6 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2};
-use num_traits::Float;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -1087,7 +1086,7 @@ print(json.dumps(output))
 
         let avg_abs_diff = abs_diffs.iter().sum::<f64>() / abs_diffs.len() as f64;
         let avg_rel_diff = rel_diffs.iter().sum::<f64>() / rel_diffs.len() as f64;
-        let max_element_diff = abs_diffs.iter().fold(0.0, |acc, &x| acc.max(x));
+        let max_element_diff = abs_diffs.iter().fold(0.0f64, |acc, &x| acc.max(x));
 
         let assessment = if within_tolerance == scirs2_result.len() {
             if avg_rel_diff < 1e-14 {
@@ -1302,7 +1301,7 @@ print(json.dumps(output))
 
         let average_relative_diff =
             relative_diffs.iter().sum::<f64>() / relative_diffs.len() as f64;
-        let max_relative_diff = relative_diffs.iter().fold(0.0, |acc, &x| acc.max(x));
+        let max_relative_diff = relative_diffs.iter().fold(0.0f64, |acc, &x| acc.max(x));
 
         let problematic_functions: Vec<(String, f64)> = comparisons
             .iter()
@@ -1422,6 +1421,7 @@ print(json.dumps(output))
 struct TestData {
     primary: Array1<f64>,
     secondary: Array1<f64>,
+    #[allow(dead_code)]
     matrix: Array2<f64>,
 }
 

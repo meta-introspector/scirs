@@ -191,7 +191,7 @@ pub fn fast_ica(
             let (eigvals, eigvecs) = match eigh(&ww_t.view(), None) {
                 Ok((vals, vecs)) => (vals, vecs),
                 Err(_) => {
-                    return Err(crate::error::SignalError::Compute(
+                    return Err(crate::error::SignalError::ComputationError(
                         "Failed to compute eigendecomposition in FastICA".to_string(),
                     ));
                 }

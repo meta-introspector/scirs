@@ -6,7 +6,7 @@
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2, ArrayBase, ArrayView1, ArrayView2, Data, Ix2};
 use num_traits::{Float, NumCast, One, Zero};
-use scirs2_core::{parallel_ops::*, simd_ops::SimdUnifiedOps};
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
@@ -45,7 +45,7 @@ pub struct AdaptiveMemoryManager {
 }
 
 #[derive(Debug, Clone)]
-struct OperationMetrics {
+pub struct OperationMetrics {
     operation_type: String,
     memory_used: usize,
     processing_time: std::time::Duration,

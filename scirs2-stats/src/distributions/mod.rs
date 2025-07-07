@@ -4,6 +4,7 @@
 //! following SciPy's `stats.distributions` module.
 
 use crate::error::StatsResult;
+use num_traits::Float;
 
 // Export distributions
 pub mod bernoulli;

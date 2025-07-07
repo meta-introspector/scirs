@@ -148,8 +148,7 @@ where
     if n < 2 * period {
         return Err(TimeSeriesError::InsufficientData {
             message: format!(
-                "Time series too short for seasonal decomposition with period={}",
-                period
+                "Time series too short for seasonal decomposition with period={period}"
             ),
             required: 2 * period,
             actual: n,
@@ -747,8 +746,7 @@ where
     if n < window_size {
         return Err(TimeSeriesError::InsufficientData {
             message: format!(
-                "Time series too short for LOESS smoothing with window size {}",
-                window_size
+                "Time series too short for LOESS smoothing with window size {window_size}"
             ),
             required: window_size,
             actual: n,
@@ -851,8 +849,7 @@ where
     if n < window_size {
         return Err(TimeSeriesError::InsufficientData {
             message: format!(
-                "Time series too short for weighted LOESS smoothing with window size {}",
-                window_size
+                "Time series too short for weighted LOESS smoothing with window size {window_size}"
             ),
             required: window_size,
             actual: n,
@@ -916,10 +913,7 @@ where
 
     if n <= degree {
         return Err(TimeSeriesError::InsufficientData {
-            message: format!(
-                "Not enough data points for polynomial fit of degree {}",
-                degree
-            ),
+            message: format!("Not enough data points for polynomial fit of degree {degree}"),
             required: degree + 1,
             actual: n,
         });
@@ -971,8 +965,7 @@ where
     // This is left as a placeholder
 
     Err(TimeSeriesError::NotImplemented(format!(
-        "Polynomial fit of degree {} not implemented",
-        degree
+        "Polynomial fit of degree {degree} not implemented"
     )))
 }
 

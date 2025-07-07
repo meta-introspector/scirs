@@ -136,9 +136,9 @@ pub fn issue_deprecation_warning(info: &DeprecationInfo) {
         let warning_msg = format_deprecation_warning(info);
 
         if config.warnings_as_errors {
-            panic!("Deprecation error: {}", warning_msg);
+            panic!("Deprecation error: {warning_msg}");
         } else {
-            eprintln!("Deprecation warning: {}", warning_msg);
+            eprintln!("Deprecation warning: {warning_msg}");
         }
     }
 }
@@ -152,17 +152,17 @@ fn format_deprecation_warning(info: &DeprecationInfo) -> String {
     );
 
     if let Some(remove_version) = &info.remove_in {
-        msg.push_str(&format!(" and will be removed in v{}", remove_version));
+        msg.push_str(&format!(" and will be removed in v{remove_version}"));
     }
 
     msg.push_str(&format!(": {}", info.reason));
 
     if let Some(alternative) = &info.alternative {
-        msg.push_str(&format!(" Use '{}' instead.", alternative));
+        msg.push_str(&format!(" Use '{alternative}' instead."));
     }
 
     if let Some(notes) = &info.migration_notes {
-        msg.push_str(&format!(" Migration notes: {}", notes));
+        msg.push_str(&format!(" Migration notes: {notes}"));
     }
 
     msg
@@ -331,9 +331,8 @@ pub mod convenience {
     pub fn warn_matrix_conditioning(condition_number: f64, context: &str) {
         if condition_number > 1e14 {
             eprintln!(
-                "NUMERICAL WARNING: Poor matrix conditioning (condition number: {:.2e}) in {}. \
-                Consider regularization or data preprocessing.",
-                condition_number, context
+                "NUMERICAL WARNING: Poor matrix conditioning (condition number: {condition_number:.2e}) in {context}. \
+                Consider regularization or data preprocessing."
             );
         }
     }
@@ -342,9 +341,8 @@ pub mod convenience {
     pub fn warn_performance_large_dataset(operation: &str, size: usize, threshold: usize) {
         if size > threshold {
             eprintln!(
-                "PERFORMANCE WARNING: {} with {} data points may be slow. \
-                Consider using fast variants or GPU acceleration if available.",
-                operation, size
+                "PERFORMANCE WARNING: {operation} with {size} data points may be slow. \
+                Consider using fast variants or GPU acceleration if available."
             );
         }
     }

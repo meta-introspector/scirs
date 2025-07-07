@@ -74,6 +74,7 @@ pub struct MOLParabolicSolver2D {
 
 impl MOLParabolicSolver2D {
     /// Create a new Method of Lines solver for 2D parabolic PDEs
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         domain: Domain,
         time_range: [f64; 2],

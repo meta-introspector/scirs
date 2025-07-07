@@ -37,7 +37,7 @@ fn safe_float_to_usize<T: Float>(value: T) -> NdimageResult<usize> {
 #[allow(dead_code)]
 pub fn handle_boundary<T>(coord: T, size: usize, mode: BoundaryMode) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     // Convert size to T for calculations
     let size_t = safe_usize_to_float(size)?;
@@ -94,7 +94,7 @@ where
 #[allow(dead_code)]
 pub fn linear_weights<T>(x: T) -> (usize, usize, T)
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let x_floor = x.floor();
     let x_int = safe_float_to_usize(x_floor).unwrap_or(0); // Use 0 as fallback for interpolation
@@ -115,7 +115,7 @@ where
 #[allow(dead_code)]
 pub fn cubic_weights<T>(x: T) -> (usize, [T; 4])
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let x_floor = x.floor();
     let x_int = safe_float_to_usize(x_floor).unwrap_or(0); // Use 0 as fallback for interpolation
@@ -196,7 +196,7 @@ pub fn interpolate_nearest<T>(
     const_val: T,
 ) -> T
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     // Round coordinates to nearest integers
     let int_coords: Vec<isize> = coords
@@ -238,7 +238,7 @@ pub fn interpolate_linear<T>(
     const_val: T,
 ) -> T
 where
-    T: Float + FromPrimitive + Debug,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let ndim = coords.len();
     if ndim == 0 {

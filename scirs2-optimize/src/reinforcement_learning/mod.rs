@@ -24,7 +24,7 @@
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, ArrayView1};
-use rand::Rng;
+use rand::{rng, Rng};
 
 pub mod actor_critic;
 pub mod bandit_optimization;
@@ -275,7 +275,7 @@ impl ExperienceBuffer {
     pub fn sample_batch(&self, batch_size: usize) -> Vec<Experience> {
         let mut batch = Vec::with_capacity(batch_size);
         for _ in 0..batch_size.min(self.buffer.len()) {
-            let idx = rand::rng().random_range(0..self.buffer.len());
+            let idx = rng().random_range(0..self.buffer.len());
             batch.push(self.buffer[idx].clone());
         }
         batch
@@ -365,7 +365,7 @@ pub mod utils {
 
                 // Random direction as proxy for gradient
                 for i in 0..new_params.len() {
-                    let step = (rand::rng().random::<f64>() - 0.5) * learning_rate;
+                    let step = (rng().gen::<f64>() - 0.5) * learning_rate;
                     new_params[i] += step;
                 }
 
@@ -374,7 +374,7 @@ pub mod utils {
             OptimizationAction::RandomPerturbation { magnitude } => {
                 let mut new_params = state.parameters.clone();
                 for i in 0..new_params.len() {
-                    let perturbation = (rand::rng().random::<f64>() - 0.5) * 2.0 * magnitude;
+                    let perturbation = (rng().gen::<f64>() - 0.5) * 2.0 * magnitude;
                     new_params[i] += perturbation;
                 }
                 new_params
@@ -384,7 +384,7 @@ pub mod utils {
             } => {
                 // Update momentum (simplified)
                 for i in 0..momentum.len().min(state.parameters.len()) {
-                    let gradient_estimate = (rand::rng().random::<f64>() - 0.5) * 0.1;
+                    let gradient_estimate = (rng().gen::<f64>() - 0.5) * 0.1;
                     momentum[i] =
                         momentum_coeff * momentum[i] + (1.0 - momentum_coeff) * gradient_estimate;
                 }

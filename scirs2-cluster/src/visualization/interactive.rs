@@ -353,7 +353,7 @@ impl InteractiveVisualizer {
     }
 
     /// Select points within a 3D region
-    pub fn select_points_in_region(&mut self, region: BoundingBox3D) -> Vec<usize> {
+    pub fn select_points_in_region(&mut self, _region: BoundingBox3D) -> Vec<usize> {
         // This would be implemented with actual 3D point-in-box testing
         // For now, return empty selection
         let selected = Vec::new();
@@ -362,7 +362,7 @@ impl InteractiveVisualizer {
     }
 
     /// Highlight points at screen coordinates
-    pub fn highlight_points_at(&mut self, screen_pos: (f64, f64)) -> Vec<usize> {
+    pub fn highlight_points_at(&mut self, _screen_pos: (f64, f64)) -> Vec<usize> {
         // This would implement 3D picking/ray casting
         // For now, return empty highlights
         let highlighted = Vec::new();
@@ -731,7 +731,7 @@ impl InteractiveVisualizer {
     }
 
     /// Update gesture recognition state
-    fn update_gesture_state(&mut self, prev_touch_count: usize, current_touch_count: usize) {
+    fn update_gesture_state(&mut self, _prev_touch_count: usize, current_touch_count: usize) {
         // Detect pinch gesture
         if current_touch_count == 2 {
             let touch1 = &self.state.input_state.touch_points[0];

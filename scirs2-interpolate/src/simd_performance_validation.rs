@@ -1214,7 +1214,7 @@ mod tests {
     #[test]
     fn test_simd_config_detection() {
         let config = get_simd_config();
-        println!("SIMD Config: {:?}", config);
+        println!("SIMD Config: {config:?}");
         assert!(!config.instruction_set.is_empty());
     }
 }

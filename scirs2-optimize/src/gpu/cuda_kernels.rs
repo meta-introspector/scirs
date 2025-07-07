@@ -6,7 +6,7 @@
 use super::GpuContext;
 use crate::error::OptimizeError;
 use scirs2_core::gpu::async_execution::GpuStream;
-use scirs2_core::gpu::{GpuBuffer, GpuKernel};
+use scirs2_core::gpu::{GpuBuffer, GpuKernelHandle};
 use std::sync::Arc;
 
 type ScirsResult<T> = Result<T, OptimizeError>;
@@ -14,7 +14,7 @@ type ScirsResult<T> = Result<T, OptimizeError>;
 /// CUDA kernel for parallel function evaluation
 pub struct FunctionEvaluationKernel {
     context: Arc<GpuContext>,
-    kernel: GpuKernel,
+    kernel: GpuKernelHandle,
 }
 
 impl FunctionEvaluationKernel {
@@ -41,7 +41,7 @@ impl FunctionEvaluationKernel {
             }
         "#;
 
-        let kernel = context.compile_kernel(kernel_source, "evaluate_batch")?;
+        let kernel = context.compile(kernel_source)?;
 
         Ok(Self { context, kernel })
     }
@@ -67,7 +67,7 @@ impl FunctionEvaluationKernel {
 /// CUDA kernel for gradient computation using finite differences
 pub struct GradientKernel {
     context: Arc<GpuContext>,
-    kernel: GpuKernel,
+    kernel: GpuKernelHandle,
 }
 
 impl GradientKernel {
@@ -93,7 +93,7 @@ impl GradientKernel {
             }
         "#;
 
-        let kernel = context.compile_kernel(kernel_source, "compute_gradient_finite_diff")?;
+        let kernel = context.compile(kernel_source)?;
 
         Ok(Self { context, kernel })
     }
@@ -121,7 +121,7 @@ impl GradientKernel {
 /// CUDA kernel for particle swarm optimization updates
 pub struct ParticleSwarmKernel {
     context: Arc<GpuContext>,
-    kernel: GpuKernel,
+    kernel: GpuKernelHandle,
 }
 
 impl ParticleSwarmKernel {
@@ -150,7 +150,7 @@ impl ParticleSwarmKernel {
             }
         "#;
 
-        let kernel = context.compile_kernel(kernel_source, "update_particles")?;
+        let kernel = context.compile(kernel_source)?;
 
         Ok(Self { context, kernel })
     }
@@ -177,7 +177,7 @@ impl ParticleSwarmKernel {
 /// CUDA kernel for differential evolution mutations
 pub struct DifferentialEvolutionKernel {
     context: Arc<GpuContext>,
-    kernel: GpuKernel,
+    kernel: GpuKernelHandle,
 }
 
 impl DifferentialEvolutionKernel {
@@ -202,7 +202,7 @@ impl DifferentialEvolutionKernel {
             }
         "#;
 
-        let kernel = context.compile_kernel(kernel_source, "mutate_population")?;
+        let kernel = context.compile(kernel_source)?;
 
         Ok(Self { context, kernel })
     }

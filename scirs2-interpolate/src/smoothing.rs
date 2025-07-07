@@ -852,12 +852,9 @@ mod tests {
             }
             Err(InterpolateError::InvalidInput { message }) if message.contains("singular") => {
                 // Accept numerical issues as this can happen with error-based strategies
-                println!(
-                    "Error-based strategy encountered numerical issues (expected): {}",
-                    message
-                );
+                println!("Error-based strategy encountered numerical issues (expected): {message}");
             }
-            Err(e) => panic!("Unexpected error: {:?}", e),
+            Err(e) => panic!("Unexpected error: {e:?}"),
         }
     }
 

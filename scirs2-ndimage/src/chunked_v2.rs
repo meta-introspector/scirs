@@ -83,8 +83,19 @@ where
     // Convert to dynamic dimension for chunk_wise_op
     let input_dyn = input.view().into_dyn();
 
+    // Create a wrapper closure that unwraps the Result
+    let wrapper_op = |chunk: &ArrayView<T, IxDyn>| -> Array<T, IxDyn> {
+        match op(chunk) {
+            Ok(result) => result,
+            Err(e) => {
+                // For now, we'll panic on error since chunk_wise_op doesn't support fallible operations
+                panic!("Chunk processing failed: {}", e);
+            }
+        }
+    };
+
     // Use scirs2-core's chunk_wise_op
-    let result_dyn = chunk_wise_op(&input_dyn, &*op, config.strategy.clone())
+    let result_dyn = chunk_wise_op(&input_dyn, wrapper_op, config.strategy.clone())
         .map_err(|e| NdimageError::ProcessingError(format!("Chunk processing failed: {}", e)))?;
 
     // Convert back to original dimension
@@ -125,8 +136,19 @@ where
 
     let input_dyn = input_view.view().into_dyn();
 
+    // Create a wrapper closure that unwraps the Result
+    let wrapper_op = |chunk: &ArrayView<T, IxDyn>| -> Array<T, IxDyn> {
+        match op(chunk) {
+            Ok(result) => result,
+            Err(e) => {
+                // For now, we'll panic on error since chunk_wise_op doesn't support fallible operations
+                panic!("Chunk processing failed: {}", e);
+            }
+        }
+    };
+
     // Use chunk_wise_op on the memory-mapped array
-    let result_dyn = chunk_wise_op(&input_dyn, op, config.strategy.clone())
+    let result_dyn = chunk_wise_op(&input_dyn, wrapper_op, config.strategy.clone())
         .map_err(|e| NdimageError::ProcessingError(format!("Chunk processing failed: {}", e)))?;
 
     // Convert to owned array and correct dimension
@@ -233,7 +255,16 @@ pub fn convolve_chunked_v2<T, D>(
     config: Option<ChunkConfigV2>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + NumCast
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
     D: Dimension + 'static,
 {
     let config = config.unwrap_or_default();
@@ -263,7 +294,16 @@ where
 
 impl<T, D> ChunkProcessorV2<T, D> for ConvolveProcessorV2<T, D>
 where
-    T: Float + FromPrimitive + NumCast + Debug + Clone + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + NumCast
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
     D: Dimension + 'static,
 {
     fn create_processor(
@@ -277,17 +317,13 @@ where
                 let chunk_owned = chunk.to_owned();
 
                 // Apply convolution to the chunk
-                let result = crate::filters::convolve(
-                    &chunk_owned,
-                    &kernel_clone.view().into_dyn(),
-                    Some(border_mode_clone),
-                    None,
-                )
-                .map_err(|e| {
-                    scirs2_core::error::CoreError::ComputationError(
-                        scirs2_core::error::ErrorContext::new(e.to_string()),
-                    )
-                })?;
+                let result =
+                    crate::filters::convolve(&chunk_owned, &kernel_clone, Some(border_mode_clone))
+                        .map_err(|e| {
+                            scirs2_core::error::CoreError::ComputationError(
+                                scirs2_core::error::ErrorContext::new(e.to_string()),
+                            )
+                        })?;
 
                 Ok(result)
             },
@@ -318,8 +354,17 @@ where
     let array1_dyn = array1.view().into_dyn();
     let array2_dyn = array2.view().into_dyn();
 
+    // Create a wrapper closure that applies element-wise operation
+    let wrapper_op = |a1: &ArrayView<T, IxDyn>, a2: &ArrayView<T, IxDyn>| -> Array<T, IxDyn> {
+        let mut result = Array::zeros(a1.raw_dim());
+        for ((r, &v1), &v2) in result.iter_mut().zip(a1.iter()).zip(a2.iter()) {
+            *r = op(v1, v2);
+        }
+        result
+    };
+
     // Use chunk_wise_binary_op from core
-    let result_dyn = chunk_wise_binary_op(&array1_dyn, &array2_dyn, op, config.strategy)
+    let result_dyn = chunk_wise_binary_op(&array1_dyn, &array2_dyn, wrapper_op, config.strategy)
         .map_err(|e| NdimageError::ProcessingError(format!("Binary operation failed: {}", e)))?;
 
     // Convert back to original dimension

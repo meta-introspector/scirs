@@ -595,7 +595,7 @@ where
             vec![F::one(), F::one(), F::zero(), F::one()],
         )
         .map_err(|e| {
-            TimeSeriesError::InvalidInput(format!("Failed to create transition matrix: {}", e))
+            TimeSeriesError::InvalidInput(format!("Failed to create transition matrix: {e}"))
         })?;
 
         let process_noise = Array2::from_shape_vec(
@@ -608,7 +608,7 @@ where
             ],
         )
         .map_err(|e| {
-            TimeSeriesError::InvalidInput(format!("Failed to create process noise matrix: {}", e))
+            TimeSeriesError::InvalidInput(format!("Failed to create process noise matrix: {e}"))
         })?;
 
         let transition = StateTransition {
@@ -620,8 +620,7 @@ where
             observation_matrix: Array2::from_shape_vec((1, 2), vec![F::one(), F::zero()]).map_err(
                 |e| {
                     TimeSeriesError::InvalidInput(format!(
-                        "Failed to create observation matrix: {}",
-                        e
+                        "Failed to create observation matrix: {e}"
                     ))
                 },
             )?,
@@ -672,10 +671,7 @@ where
             log_likelihood_history.push(new_log_likelihood);
 
             if em_params.verbose {
-                println!(
-                    "EM Iteration {}: Log-likelihood = {:.6}",
-                    iteration, new_log_likelihood
-                );
+                println!("EM Iteration {iteration}: Log-likelihood = {new_log_likelihood:.6}");
             }
 
             // Check convergence
@@ -684,16 +680,13 @@ where
                 if improvement.abs() < em_params.tolerance {
                     converged = true;
                     if em_params.verbose {
-                        println!("EM converged after {} iterations", iteration);
+                        println!("EM converged after {iteration} iterations");
                     }
                     break;
                 }
 
                 if improvement < F::zero() && em_params.verbose {
-                    println!(
-                        "Warning: Log-likelihood decreased in EM iteration {}",
-                        iteration
-                    );
+                    println!("Warning: Log-likelihood decreased in EM iteration {iteration}");
                 }
             }
 
@@ -1017,10 +1010,7 @@ where
             log_likelihood_history.push(new_log_likelihood);
 
             if em_params.verbose {
-                println!(
-                    "DLM EM Iteration {}: Log-likelihood = {:.6}",
-                    iteration, new_log_likelihood
-                );
+                println!("DLM EM Iteration {iteration}: Log-likelihood = {new_log_likelihood:.6}");
             }
 
             // Check convergence
@@ -1029,16 +1019,13 @@ where
                 if improvement.abs() < em_params.tolerance {
                     converged = true;
                     if em_params.verbose {
-                        println!("DLM EM converged after {} iterations", iteration);
+                        println!("DLM EM converged after {iteration} iterations");
                     }
                     break;
                 }
 
                 if improvement < F::zero() && em_params.verbose {
-                    println!(
-                        "Warning: Log-likelihood decreased in DLM EM iteration {}",
-                        iteration
-                    );
+                    println!("Warning: Log-likelihood decreased in DLM EM iteration {iteration}");
                 }
             }
 

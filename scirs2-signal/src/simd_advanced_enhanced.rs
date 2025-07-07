@@ -410,7 +410,7 @@ pub fn advanced_simd_dwt(
     let caps = PlatformCapabilities::detect();
 
     // Multi-level decomposition with SIMD
-    for level in 0..levels {
+    for _level in 0..levels {
         if current_signal.len() < 4 {
             break; // Signal too short for further decomposition
         }
@@ -546,7 +546,7 @@ fn simd_fft_mixed_radix(
     let n = input.len();
 
     // Factor n into prime factors
-    let factors = prime_factorization(n);
+    let _factors = prime_factorization(n);
 
     // Use Bluestein's algorithm for efficient mixed-radix FFT
     let padded_size = next_power_of_2(2 * n - 1);
@@ -713,9 +713,9 @@ fn process_stft_frames_sequential(
 #[allow(dead_code)]
 fn simd_dwt_lifting(
     signal: &Array1<f64>,
-    h0: &Array1<f64>,
-    h1: &Array1<f64>,
-    caps: &PlatformCapabilities,
+    _h0: &Array1<f64>,
+    _h1: &Array1<f64>,
+    _caps: &PlatformCapabilities,
 ) -> SignalResult<(Array1<f64>, Array1<f64>)> {
     let n = signal.len();
     let half_n = n / 2;

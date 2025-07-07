@@ -1298,7 +1298,7 @@ impl<T: Float> Clone for OptimizationStep<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync> OptimizationStep<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> OptimizationStep<T> {
     pub async fn execute(
         &self,
         partition: BatchPartition<T>,
@@ -1989,7 +1989,7 @@ impl SynchronizationManager {
 
     pub async fn global_barrier(&mut self) -> Result<()> {
         // Simplified barrier implementation
-        let barrier_id = BarrierId(rng().random());
+        let barrier_id = BarrierId(rng().random_range(0..u64::MAX));
         let barrier_state = BarrierState {
             participants: HashSet::new(),
             arrived: HashSet::new(),
@@ -2086,7 +2086,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
     }
 
     pub async fn create_batch(&mut self, batch_data: BatchData<T>) -> Result<BatchId> {
-        let batch_id = BatchId(rng().random());
+        let batch_id = BatchId(rng().random_range(0..u64::MAX));
         let batch_execution = BatchExecution {
             id: batch_id,
             data: batch_data,

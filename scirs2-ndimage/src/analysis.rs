@@ -93,7 +93,8 @@ where
         + Sync
         + 'static
         + SimdUnifiedOps
-        + std::ops::AddAssign,
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
 {
     if reference.dim() != test_image.dim() {
         return Err(NdimageError::DimensionError(
@@ -133,7 +134,7 @@ pub fn peak_signal_to_noise_ratio<T>(
     test_image: &ArrayView2<T>,
 ) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let mse = mean_squared_error(reference, test_image);
 
@@ -166,7 +167,15 @@ pub fn structural_similarity_index<T>(
     test_image: &ArrayView2<T>,
 ) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     // SSIM constants
     let k1: T = safe_f64_to_float::<T>(0.01)?;
@@ -209,7 +218,7 @@ where
 #[allow(dead_code)]
 pub fn mean_squared_error<T>(reference: &ArrayView2<T>, test_image: &ArrayView2<T>) -> T
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let diff_sq: T = Zip::from(reference)
         .and(test_image)
@@ -225,7 +234,7 @@ where
 #[allow(dead_code)]
 pub fn mean_absolute_error<T>(reference: &ArrayView2<T>, test_image: &ArrayView2<T>) -> T
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let abs_diff: T = Zip::from(reference)
         .and(test_image)
@@ -238,7 +247,7 @@ where
 #[allow(dead_code)]
 pub fn signal_to_noise_ratio<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let mean_val = image.mean().unwrap_or(T::zero());
     let variance = image
@@ -262,7 +271,7 @@ where
 #[allow(dead_code)]
 pub fn contrast_to_noise_ratio<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let mean_val = image.mean().unwrap_or(T::zero());
     let max_val = image.iter().cloned().fold(T::neg_infinity(), T::max);
@@ -286,7 +295,7 @@ where
 #[allow(dead_code)]
 pub fn image_entropy<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     const BINS: usize = 256;
 
@@ -327,7 +336,15 @@ where
 #[allow(dead_code)]
 pub fn image_sharpness<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static + std::ops::AddAssign,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
 {
     // Apply Laplacian filter to detect edges
     let laplacian_kernel = Array2::from_shape_vec(
@@ -364,7 +381,7 @@ where
 #[allow(dead_code)]
 pub fn compute_local_variance<T>(image: &ArrayView2<T>, window_size: usize) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let (height, width) = image.dim();
     let half_window = window_size / 2;
@@ -423,7 +440,8 @@ where
         + Sync
         + 'static
         + SimdUnifiedOps
-        + std::ops::AddAssign,
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
 {
     let window = window_size.unwrap_or(7);
 
@@ -459,7 +477,7 @@ fn compute_glcm_features<T>(
     _window_size: usize,
 ) -> NdimageResult<(T, T, T, T, T)>
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     // Simplified GLCM computation for demonstration
     // In a full implementation, this would compute the actual GLCM matrix
@@ -508,7 +526,7 @@ where
 #[allow(dead_code)]
 fn compute_lbp_uniformity<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive,
+    T: Float + FromPrimitive + std::ops::AddAssign + std::ops::DivAssign + 'static,
 {
     let (height, width) = image.dim();
     let mut uniform_patterns = 0usize;
@@ -565,7 +583,8 @@ where
         + Sync
         + 'static
         + SimdUnifiedOps
-        + std::ops::AddAssign,
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
 {
     // Apply multiple Gabor filters at different orientations
     let orientations = [
@@ -612,7 +631,15 @@ where
 #[allow(dead_code)]
 pub fn estimate_fractal_dimension<T>(image: &ArrayView2<T>) -> NdimageResult<T>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static + std::ops::AddAssign,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + 'static
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
 {
     // Convert to binary edge image for fractal analysis
     let edges = sobel(&image.to_owned(), 0, None)?;
@@ -688,8 +715,6 @@ pub fn image_quality_assessment_simd_f32(
     reference: &ArrayView2<f32>,
     test_image: &ArrayView2<f32>,
 ) -> NdimageResult<ImageQualityMetrics<f32>> {
-    use scirs2_core::simd_ops::SimdUnifiedOps;
-
     if reference.dim() != test_image.dim() {
         return Err(NdimageError::DimensionError(
             "Reference and test images must have the same dimensions".into(),
@@ -956,7 +981,8 @@ where
         + Sync
         + 'static
         + SimdUnifiedOps
-        + std::ops::AddAssign,
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
 {
     if reference_images.len() != test_images.len() {
         return Err(NdimageError::InvalidInput(
@@ -997,7 +1023,15 @@ pub fn local_feature_analysis<T>(
     stride: usize,
 ) -> NdimageResult<HashMap<String, Array2<T>>>
 where
-    T: Float + FromPrimitive + Debug + Clone + Send + Sync + 'static,
+    T: Float
+        + FromPrimitive
+        + Debug
+        + Clone
+        + Send
+        + Sync
+        + std::ops::AddAssign
+        + std::ops::DivAssign
+        + 'static,
 {
     let (height, width) = image.dim();
 
@@ -1109,7 +1143,8 @@ where
         + Sync
         + 'static
         + SimdUnifiedOps
-        + std::ops::AddAssign,
+        + std::ops::AddAssign
+        + std::ops::DivAssign,
 {
     let mut results = Vec::with_capacity(config.num_scales);
     let mut current_image = image.to_owned();
@@ -1155,7 +1190,6 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use approx::assert_abs_diff_eq;
     use ndarray::array;
 
     #[test]

@@ -11,8 +11,8 @@ use crate::unconstrained::{
 };
 use ndarray::{Array1, ArrayView1};
 use rand::distr::Uniform;
-use rand::prelude::*;
 use rand::rngs::StdRng;
+use rand::{rng, Rng};
 
 /// Simplified Sobol sequence generator
 /// For production use, a full Sobol implementation with proper generating matrices would be preferred
@@ -202,7 +202,7 @@ where
             options.popsize
         };
 
-        let seed = options.seed.unwrap_or_else(|| rand::rng().random());
+        let seed = options.seed.unwrap_or_else(|| rand::rng().gen());
         let rng = StdRng::seed_from_u64(seed);
 
         let strategy_enum = Strategy::from_str(strategy).unwrap_or(Strategy::Best1Bin);

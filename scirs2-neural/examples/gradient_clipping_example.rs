@@ -16,14 +16,14 @@ fn main() -> Result<()> {
     let mut gradients = create_sample_gradients();
     // Compute the global norm
     let global_norm = compute_global_norm(&gradients);
-    println!("Original global norm: {:.4}", global_norm);
+    println!("Original global norm: {global_norm:.4}");
     // Set maximum norm
     let max_norm = 1.0;
-    println!("Maximum allowed norm: {:.4}", max_norm);
+    println!("Maximum allowed norm: {max_norm:.4}");
     // Clip if necessary
     if global_norm > max_norm {
         let scale = max_norm / global_norm;
-        println!("Applying clipping with scale factor: {:.4}", scale);
+        println!("Applying clipping with scale factor: {scale:.4}");
         // Scale all gradients
         for grad in &mut gradients {
             // Convert to f32 to match the gradient type
@@ -32,14 +32,14 @@ fn main() -> Result<()> {
         }
         // Compute new global norm
         let new_norm = compute_global_norm(&gradients);
-        println!("New global norm after clipping: {:.4}", new_norm);
+        println!("New global norm after clipping: {new_norm:.4}");
     } else {
         println!("No clipping needed, norm is below threshold");
     }
     println!("\nGradient Clipping by Value:");
     // Set maximum value
     let max_value = 0.5;
-    println!("Maximum allowed value: {:.4}", max_value);
+    println!("Maximum allowed value: {max_value:.4}");
     // Find maximum absolute value in gradients
     let mut max_abs = 0.0;
     for grad in &gradients {
@@ -50,7 +50,7 @@ fn main() -> Result<()> {
             }
         }
     }
-    println!("Maximum absolute value before clipping: {:.4}", max_abs);
+    println!("Maximum absolute value before clipping: {max_abs:.4}");
     if max_abs > max_value as f64 {
         println!("Applying value clipping");
         // Clip all gradients
@@ -73,7 +73,7 @@ fn main() -> Result<()> {
                 }
             }
         }
-        println!("Maximum absolute value after clipping: {:.4}", new_max_abs);
+        println!("Maximum absolute value after clipping: {new_max_abs:.4}");
     } else {
         println!("No clipping needed, all values are below threshold");
     }

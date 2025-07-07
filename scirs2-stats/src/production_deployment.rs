@@ -6,8 +6,6 @@
 
 use crate::error::{StatsError, StatsResult};
 use ndarray::{Array1, Array2};
-use num_traits::Float;
-use scirs2_core::parallel_ops::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
@@ -189,7 +187,9 @@ pub struct MemoryLimits {
 pub struct ProductionDeploymentValidator {
     config: ProductionConfig,
     validation_results: Arc<RwLock<ValidationResults>>,
+    #[allow(dead_code)]
     performance_monitor: Arc<Mutex<PerformanceMonitor>>,
+    #[allow(dead_code)]
     health_checker: Arc<Mutex<HealthChecker>>,
 }
 
@@ -302,7 +302,7 @@ impl ProductionDeploymentValidator {
 
     /// Validate production readiness
     pub fn validate_production_readiness(&self) -> StatsResult<ValidationResults> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
         let mut results = ValidationResults::default();
 
         // Run comprehensive validation checks
@@ -336,7 +336,7 @@ impl ProductionDeploymentValidator {
         &self,
         results: &mut ValidationResults,
     ) -> StatsResult<()> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check CPU features
         let cpu_check = self.validate_cpu_features()?;
@@ -465,7 +465,7 @@ impl ProductionDeploymentValidator {
         &self,
         results: &mut ValidationResults,
     ) -> StatsResult<()> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Test latency requirements with actual operations
         let latency_check = self.validate_latency_requirements()?;
@@ -495,7 +495,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_resource_requirements(&self, results: &mut ValidationResults) -> StatsResult<()> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check disk space requirements
         let disk_check = self.validate_disk_requirements()?;
@@ -525,7 +525,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_security_compliance(&self, results: &mut ValidationResults) -> StatsResult<()> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check encryption requirements
         let encryption_check = self.validate_encryption_compliance()?;
@@ -555,7 +555,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_reliability_features(&self, results: &mut ValidationResults) -> StatsResult<()> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check error handling mechanisms
         let error_check = self.validate_error_handling()?;
@@ -585,7 +585,7 @@ impl ProductionDeploymentValidator {
     }
 
     fn validate_monitoring_setup(&self, results: &mut ValidationResults) -> StatsResult<()> {
-        let start_time = Instant::now();
+        let _start_time = Instant::now();
 
         // Check metrics collection
         let metrics_check = self.validate_metrics_collection()?;

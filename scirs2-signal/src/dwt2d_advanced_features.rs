@@ -905,8 +905,14 @@ fn compute_texture_features(
     })
 }
 
+#[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        advanced_wavelet_denoising, apply_threshold_2d, AdvancedWaveletConfig, ThresholdMethod,
+    };
+    use crate::dwt::Wavelet;
+    use ndarray::Array2;
+    use std::f64::consts::PI;
 
     #[test]
     fn test_advanced_wavelet_denoising() {

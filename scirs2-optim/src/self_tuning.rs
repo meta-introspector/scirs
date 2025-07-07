@@ -333,7 +333,9 @@ pub trait OptimizerTrait<A: Float + ScalarOperand + Debug, D: Dimension>: Send +
     fn clone_optimizer(&self) -> Box<dyn OptimizerTrait<A, D>>;
 }
 
-impl<A: Float + 'static, D: Dimension + 'static> SelfTuningOptimizer<A, D> {
+impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 'static>
+    SelfTuningOptimizer<A, D>
+{
     /// Create new self-tuning optimizer
     pub fn new(config: SelfTuningConfig) -> Result<Self> {
         let mut optimizer_candidates = Vec::new();
@@ -852,7 +854,10 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 's
     }
 
     fn set_learning_rate(&mut self, lr: A) {
-        self.inner.set_learning_rate(lr);
+        <crate::optimizers::Adam<A> as crate::optimizers::Optimizer<A, D>>::set_learning_rate(
+            &mut self.inner,
+            lr,
+        );
     }
 
     fn get_state(&self) -> HashMap<String, Vec<u8>> {
@@ -915,7 +920,10 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 's
     }
 
     fn set_learning_rate(&mut self, lr: A) {
-        self.inner.set_learning_rate(lr);
+        <crate::optimizers::SGD<A> as crate::optimizers::Optimizer<A, D>>::set_learning_rate(
+            &mut self.inner,
+            lr,
+        );
     }
 
     fn get_state(&self) -> HashMap<String, Vec<u8>> {
@@ -980,7 +988,10 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 's
     }
 
     fn set_learning_rate(&mut self, lr: A) {
-        self.inner.set_learning_rate(lr);
+        <crate::optimizers::AdamW<A> as crate::optimizers::Optimizer<A, D>>::set_learning_rate(
+            &mut self.inner,
+            lr,
+        );
     }
 
     fn get_state(&self) -> HashMap<String, Vec<u8>> {

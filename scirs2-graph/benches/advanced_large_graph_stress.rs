@@ -4,7 +4,7 @@
 //! (>1M nodes) using Advanced mode for optimization.
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use rand::{rng, Rng};
+use rand::Rng;
 use scirs2_graph::advanced::{
     create_enhanced_advanced_processor, create_large_graph_advanced_processor,
     create_realtime_advanced_processor, execute_with_enhanced_advanced, AdvancedConfig,
@@ -34,7 +34,7 @@ fn generate_large_random_graph(num_nodes: usize, edge_probability: f64) -> Graph
     for batch_start in (0..num_nodes).step_by(NODE_BATCH_SIZE) {
         let batch_end = (batch_start + NODE_BATCH_SIZE).min(num_nodes);
         for i in batch_start..batch_end {
-            graph.add_node(i).expect("Failed to add node");
+            graph.add_node(i);
         }
         if batch_start % (NODE_BATCH_SIZE * 10) == 0 {
             println!("    Added {} nodes...", batch_start);
@@ -151,7 +151,7 @@ fn generate_memory_efficient_graph(num_nodes: usize) -> Graph<usize, f64> {
 
         // Add nodes in current batch
         for i in batch_start..batch_end {
-            graph.add_node(i).expect("Failed to add node");
+            graph.add_node(i);
         }
 
         // Add edges within and between batches with locality
@@ -311,10 +311,10 @@ fn stress_test_algorithms(
     processor: &mut AdvancedProcessor,
     test_name: &str,
 ) -> HashMap<String, Duration> {
-    use scirs2_graph::algorithms::community::louvain_communities;
+    use scirs2_graph::algorithms::community::louvain_communities_result;
     use scirs2_graph::algorithms::connectivity::connected_components;
-    use scirs2_graph::algorithms::paths::shortest_path_dijkstra;
-    use scirs2_graph::measures::pagerank;
+    use scirs2_graph::algorithms::dijkstra_path;
+    use scirs2_graph::algorithms::pagerank;
 
     let mut results = HashMap::new();
     println!(
@@ -360,7 +360,7 @@ fn stress_test_algorithms(
     let start = Instant::now();
     let result =
         execute_with_enhanced_advanced(processor, graph, "stress_community_detection", |g| {
-            louvain_communities(g, None)
+            louvain_communities_result(g)
         });
     let elapsed = start.elapsed();
     results.insert(format!("{}_community_detection", test_name), elapsed);
@@ -380,7 +380,7 @@ fn stress_test_algorithms(
         let source_node = graph.nodes().next().unwrap_or(0);
         let result =
             execute_with_enhanced_advanced(processor, graph, "stress_shortest_paths", |g| {
-                shortest_path_dijkstra(g, source_node)
+                dijkstra_path(g, &source_node, &(g.node_count() / 2))
             });
         let elapsed = start.elapsed();
         results.insert(format!("{}_shortest_paths", test_name), elapsed);
@@ -490,7 +490,7 @@ fn extreme_stress_test(
         println!("  📈 Testing streaming PageRank...");
         let start = Instant::now();
         let result = execute_with_enhanced_advanced(processor, graph, "extreme_pagerank", |g| {
-            use scirs2_graph::measures::pagerank;
+            use scirs2_graph::algorithms::pagerank;
             match pagerank(g, 0.85, Some(20), Some(1e-3)) {
                 // Reduced precision for speed
                 Ok(scores) => Ok(format!("Computed PageRank for {} nodes", scores.len())),
@@ -575,7 +575,7 @@ fn extreme_stress_test(
     let final_memory = get_memory_usage();
     println!(
         "  📊 Final memory usage: {:.1} MB (delta: {:.1} MB)",
-        final_memory / 1_000_000.0,
+        final_memory as f64 / 1_000_000.0,
         (final_memory - initial_memory) as f64 / 1_000_000.0
     );
 
@@ -725,7 +725,7 @@ fn concurrent_processor_stress_test(
                 &format!("concurrent_cc_{}", i),
                 |g| {
                     use scirs2_graph::algorithms::connectivity::connected_components;
-                    connected_components(g)
+                    Ok(connected_components(g))
                 },
             );
 
@@ -735,7 +735,7 @@ fn concurrent_processor_stress_test(
                     &graph_clone,
                     &format!("concurrent_pr_{}", i),
                     |g| {
-                        use scirs2_graph::measures::pagerank;
+                        use scirs2_graph::algorithms::pagerank;
                         pagerank(g, 0.85, Some(15), Some(1e-3))
                     },
                 )
@@ -883,8 +883,8 @@ fn bench_memory_usage(c: &mut Criterion) {
                 let _results =
                     execute_with_enhanced_advanced(&mut processor, &graph, "memory_test", |g| {
                         // Force memory allocation
-                        let nodes: Vec<_> = g.nodes().collect();
-                        let _edges: Vec<_> = g.edges().collect();
+                        let nodes: Vec<_> = g.nodes().into_iter().collect();
+                        let _edges: Vec<_> = g.edges().into_iter().collect();
                         Ok(nodes.len())
                     });
 
@@ -1024,7 +1024,7 @@ fn bench_configuration_comparison(c: &mut Criterion) {
                     &test_graph,
                     "config_test",
                     |g| {
-                        let nodes: Vec<_> = g.nodes().collect();
+                        let nodes: Vec<_> = g.nodes().into_iter().collect();
                         Ok(nodes.len())
                     },
                 );
@@ -1110,7 +1110,7 @@ fn bench_memory_usage_analysis(c: &mut Criterion) {
 
                             // Sequential access
                             for node in g.nodes() {
-                                memory_data.push(node as f64);
+                                memory_data.push(*node as f64);
                             }
 
                             // Random access simulation
@@ -1155,7 +1155,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
                     let result =
                         execute_with_enhanced_advanced(&mut processor, &graph, "scaling_cc", |g| {
                             use scirs2_graph::algorithms::connectivity::connected_components;
-                            connected_components(g)
+                            Ok(connected_components(g))
                         });
                     black_box(result);
                 }
@@ -1169,7 +1169,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
                 for _ in 0..iters {
                     let result =
                         execute_with_enhanced_advanced(&mut processor, &graph, "scaling_pr", |g| {
-                            use scirs2_graph::measures::pagerank;
+                            use scirs2_graph::algorithms::pagerank;
                             pagerank(g, 0.85, Some(30), Some(1e-4)) // Reduced iterations for scaling test
                         });
                     black_box(result);
@@ -1185,7 +1185,7 @@ fn bench_scaling_analysis(c: &mut Criterion) {
 /// Advanced-comprehensive stress test runner for extreme large graphs
 #[allow(dead_code)]
 pub fn run_advanced_comprehensive_stress_tests() {
-    println!("🎯 Starting ULTRA-COMPREHENSIVE large graph stress tests...");
+    println!("🎯 Starting COMPREHENSIVE large graph stress tests...");
     println!("==========================================================");
     println!("⚠️  WARNING: This test suite may take 30+ minutes and use >16GB RAM");
     println!("==========================================================");
@@ -1252,7 +1252,7 @@ pub fn run_advanced_comprehensive_stress_tests() {
             extreme_stress_test(graph, &mut large_processor, &format!("extreme_{}", size));
 
         println!("    🔧 Testing enhanced processor:");
-        let enhanced_results = stress_test_algorithms(
+        let _enhanced_results = stress_test_algorithms(
             graph,
             &mut enhanced_processor,
             &format!("enhanced_{}", size),
@@ -1332,7 +1332,7 @@ pub fn run_advanced_comprehensive_stress_tests() {
     );
 
     // Summary statistics
-    println!("\n✅ ULTRA-COMPREHENSIVE STRESS TESTS COMPLETED!");
+    println!("\n✅ COMPREHENSIVE STRESS TESTS COMPLETED!");
     println!("==============================================");
     println!(
         "  Largest graph tested: {} nodes",

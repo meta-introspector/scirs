@@ -5,10 +5,9 @@
 
 use crate::error::{StatsError, StatsResult as Result};
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use num_traits::Float;
 use rand::rngs::StdRng;
 use rand::SeedableRng;
-use scirs2_core::{parallel_ops::*, validation::*};
+use scirs2_core::validation::*;
 use scirs2_core::{rng, Rng};
 
 /// Trait for defining log probability density functions

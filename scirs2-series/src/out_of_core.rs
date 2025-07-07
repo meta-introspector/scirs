@@ -433,7 +433,7 @@ impl CsvTimeSeriesReader {
                 }
 
                 let value: f64 = fields[self.column_index].trim().parse().map_err(|e| {
-                    TimeSeriesError::InvalidInput(format!("Failed to parse value: {}", e))
+                    TimeSeriesError::InvalidInput(format!("Failed to parse value: {e}"))
                 })?;
 
                 data.push(value);
@@ -516,8 +516,7 @@ impl ChunkedProcessor {
     {
         self.start_time = Instant::now();
         self.progress.total_points = total_points as u64;
-        self.progress.total_chunks =
-            (total_points + self.config.chunk_size - 1) / self.config.chunk_size;
+        self.progress.total_chunks = total_points.div_ceil(self.config.chunk_size);
 
         let reader = Arc::new(reader);
 
@@ -608,12 +607,12 @@ impl ChunkedProcessor {
                                 local_stats.update(value);
                             }
 
-                            if let Err(_) = tx.send((chunk_idx, Ok(local_stats))) {
+                            if tx.send((chunk_idx, Ok(local_stats))).is_err() {
                                 break; // Receiver dropped
                             }
                         }
                         Err(e) => {
-                            if let Err(_) = tx.send((chunk_idx, Err(e))) {
+                            if tx.send((chunk_idx, Err(e))).is_err() {
                                 break; // Receiver dropped
                             }
                         }
@@ -843,6 +842,7 @@ impl OutOfCoreQuantileEstimator {
         ];
 
         // Adjust heights of markers 1-3 if necessary
+        #[allow(clippy::needless_range_loop)]
         for i in 1..4 {
             let d = desired_positions[i] - self.positions[i];
 
@@ -896,7 +896,7 @@ pub mod utils {
         data_type_size: usize,
     ) -> Result<(usize, usize, f64)> {
         let metadata = std::fs::metadata(file_path)
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to get file metadata: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to get file metadata: {e}")))?;
 
         let file_size_bytes = metadata.len() as usize;
         let estimated_points = file_size_bytes / data_type_size;
@@ -916,10 +916,7 @@ pub mod utils {
             (available_memory_bytes as f64 * safety_factor) as usize / element_size;
 
         // Ensure chunk size is reasonable (between 1K and 10M points)
-        max_chunk_points
-            .max(1_000)
-            .min(10_000_000)
-            .min(total_points)
+        max_chunk_points.clamp(1_000, 10_000_000).min(total_points)
     }
 
     /// Convert CSV file to binary format for faster processing
@@ -930,16 +927,14 @@ pub mod utils {
         has_header: bool,
     ) -> Result<usize> {
         let input_file = File::open(csv_path)
-            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open CSV file: {}", e)))?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to open CSV file: {e}")))?;
 
         let output_file = OpenOptions::new()
             .create(true)
             .write(true)
             .truncate(true)
             .open(binary_path)
-            .map_err(|e| {
-                TimeSeriesError::IOError(format!("Failed to create binary file: {}", e))
-            })?;
+            .map_err(|e| TimeSeriesError::IOError(format!("Failed to create binary file: {e}")))?;
 
         let reader = BufReader::new(input_file);
         let mut writer = BufWriter::new(output_file);
@@ -967,13 +962,13 @@ pub mod utils {
             }
 
             let value: f64 = fields[column_index].trim().parse().map_err(|e| {
-                TimeSeriesError::InvalidInput(format!("Failed to parse value: {}", e))
+                TimeSeriesError::InvalidInput(format!("Failed to parse value: {e}"))
             })?;
 
             // Write as binary f64
             let bytes = value.to_le_bytes();
             writer.write_all(&bytes).map_err(|e| {
-                TimeSeriesError::IOError(format!("Failed to write binary data: {}", e))
+                TimeSeriesError::IOError(format!("Failed to write binary data: {e}"))
             })?;
 
             count += 1;

@@ -12,17 +12,15 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::parametric::{
-    compute_parameter_change, detect_spectral_peaks, update_robust_weights, ARMethod,
-    OrderSelection,
+    compute_parameter_change, detect_spectral_peaks, update_robust_weights, OrderSelection,
 };
 use crate::parametric_advanced::compute_eigendecomposition;
 use crate::sysid::{detect_outliers, estimate_robust_scale};
-use ndarray::{s, Array1, Array2, Axis};
+use ndarray::{s, Array1, Array2};
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
-use std::collections::HashMap;
 
 /// Advanced-enhanced ARMA estimation result with comprehensive diagnostics
 #[derive(Debug, Clone)]
@@ -144,8 +142,6 @@ use num_complex::Complex64;
 /// use scirs2_signal::parametric_advanced_enhanced::{advanced_enhanced_arma, AdvancedEnhancedConfig};
 /// use ndarray::Array1;
 ///
-use std::f64::consts::PI;
-///
 /// // Generate test signal with two sinusoids plus noise
 /// let n = 1024;
 /// let fs = 100.0;
@@ -223,7 +219,7 @@ where
 
     // Step 1: Initial AR parameter estimation using enhanced Burg method
     let simd_start = std::time::Instant::now();
-    let (initial_ar_coeffs, reflection_coeffs, ar_variance) = if use_advanced_simd {
+    let (initial_ar_coeffs, _reflection_coeffs, ar_variance) = if use_advanced_simd {
         enhanced_burg_method_simd(&signal_f64, ar_order, config)?
     } else {
         enhanced_burg_method_standard(&signal_f64, ar_order, config)?
@@ -1039,7 +1035,7 @@ fn enhanced_arma_estimation_sequential(
     ma_order: usize,
     config: &AdvancedEnhancedConfig,
 ) -> SignalResult<(Array1<f64>, Array1<f64>, f64, Array1<f64>, ConvergenceInfo)> {
-    let n = signal.len();
+    let _n = signal.len();
 
     // Initialize MA coefficients
     let mut ma_coeffs = Array1::zeros(ma_order + 1);
@@ -1124,9 +1120,9 @@ fn estimate_ma_given_ar(
 #[allow(dead_code)]
 fn estimate_ar_given_ma(
     signal: &Array1<f64>,
-    ma_coeffs: &Array1<f64>,
+    _ma_coeffs: &Array1<f64>,
     ar_order: usize,
-    config: &AdvancedEnhancedConfig,
+    _config: &AdvancedEnhancedConfig,
 ) -> SignalResult<Array1<f64>> {
     // For simplicity, use least squares method
     // In practice, this would involve more sophisticated estimation
@@ -1138,7 +1134,7 @@ fn estimate_ar_given_ma(
 fn estimate_ma_from_residuals(
     residuals: &Array1<f64>,
     ma_order: usize,
-    config: &AdvancedEnhancedConfig,
+    _config: &AdvancedEnhancedConfig,
 ) -> SignalResult<Array1<f64>> {
     // Use method of moments approach based on residual autocorrelations
     let mut ma_coeffs = Array1::zeros(ma_order + 1);
@@ -1494,8 +1490,8 @@ fn advanced_enhanced_arma_spectrum_simd(
     fs: f64,
 ) -> SignalResult<Array1<f64>> {
     let n_freqs = frequencies.len();
-    let p = ar_coeffs.len() - 1;
-    let q = ma_coeffs.len() - 1;
+    let _p = ar_coeffs.len() - 1;
+    let _q = ma_coeffs.len() - 1;
 
     // Precompute normalized angular frequencies
     let omega = frequencies.mapv(|f| 2.0 * std::f64::consts::PI * f / fs);
@@ -1508,7 +1504,7 @@ fn advanced_enhanced_arma_spectrum_simd(
 
     for chunk_start in (0..n_freqs).step_by(CHUNK_SIZE) {
         let chunk_end = (chunk_start + CHUNK_SIZE).min(n_freqs);
-        let chunk_size = chunk_end - chunk_start;
+        let _chunk_size = chunk_end - chunk_start;
 
         // Extract frequency chunk
         let omega_chunk = omega.slice(s![chunk_start..chunk_end]);
@@ -1646,12 +1642,12 @@ pub fn comprehensive_parametric_validation(
     if !stability_result.is_stable {
         issues.push("Model is unstable (has roots outside unit circle)".to_string());
     }
-    validation_result.stability_analysis = Some(stability_result);
+    validation_result.stability_analysis = Some(stability_result.clone());
 
     // 4. Performance Benchmarking
     let performance_result =
         benchmark_parametric_performance(signal, optimal_orders.0, optimal_orders.1)?;
-    validation_result.performance_analysis = Some(performance_result);
+    validation_result.performance_analysis = Some(performance_result.clone());
 
     // 5. SIMD Utilization Analysis
     let simd_analysis = analyze_simd_utilization(&arma_result.performance_stats)?;
@@ -1661,7 +1657,7 @@ pub fn comprehensive_parametric_validation(
             simd_analysis.simd_efficiency * 100.0
         ));
     }
-    validation_result.simd_analysis = Some(simd_analysis);
+    validation_result.simd_analysis = Some(simd_analysis.clone());
 
     // Calculate overall validation score
     let score_components = vec![
@@ -1940,7 +1936,6 @@ fn analyze_simd_utilization(
 mod tests {
     use super::*;
     use ndarray::Array1;
-    use num_complex::Complex64;
 
     use std::f64::consts::PI;
 

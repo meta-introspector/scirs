@@ -9,14 +9,11 @@
 //! - Cross-spectral density estimation for multi-channel signals
 
 use crate::error::{SignalError, SignalResult};
-use crate::parametric::{estimate_ar, ARMethod};
-use crate::parametric_arma::{estimate_arma, ArmaMethod};
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, Axis};
+use ndarray::{s, Array1, Array2, Axis};
 use num_complex::Complex64;
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use scirs2_core::validation::{check_finite, check_shape};
 use std::f64::consts::PI;
 
 /// Vector Autoregressive (VAR) model
@@ -209,7 +206,7 @@ fn estimate_var_coefficients(
     reg_method: RegularizationMethod,
     lambda: f64,
 ) -> SignalResult<Array2<f64>> {
-    let (n_vars, n_obs) = y.dim();
+    let (_n_vars, _n_obs) = y.dim();
     let (n_regressors, _) = x.dim();
 
     match reg_method {
@@ -712,12 +709,13 @@ fn esprit_estimation(signal: &Array1<f64>, n_signals: usize) -> SignalResult<Hig
         }
     }
 
+    let n_signals = frequencies.len();
     Ok(HighResolutionResult {
         frequencies,
         powers,
         method: HighResolutionMethod::ESPRIT,
         model_order,
-        n_signals: frequencies.len(),
+        n_signals,
     })
 }
 

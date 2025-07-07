@@ -187,8 +187,8 @@ pub fn affine_transform<T, D>(
     prefilter: Option<bool>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
 {
     // Validate inputs
     if input.ndim() == 0 {
@@ -342,8 +342,8 @@ pub fn geometric_transform<T, D, F>(
     prefilter: Option<bool>,
 ) -> NdimageResult<Array<T, D>>
 where
-    T: Float + FromPrimitive + Debug,
-    D: Dimension,
+    T: Float + FromPrimitive + Debug + std::ops::AddAssign + std::ops::DivAssign + 'static,
+    D: Dimension + 'static,
     F: Fn(&[usize]) -> Vec<T>,
 {
     // Validate inputs

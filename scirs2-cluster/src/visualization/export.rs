@@ -212,6 +212,7 @@ pub fn export_animation_to_file<P: AsRef<Path>>(
 
 /// Export 2D scatter plot to JSON format
 #[allow(dead_code)]
+#[allow(unused_variables)]
 pub fn export_scatter_2d_to_json<P: AsRef<Path>>(
     plot: &ScatterPlot2D,
     output_path: P,
@@ -246,6 +247,7 @@ pub fn export_scatter_2d_to_json<P: AsRef<Path>>(
 
 /// Export 3D scatter plot to JSON format
 #[allow(dead_code)]
+#[allow(unused_variables)]
 pub fn export_scatter_3d_to_json<P: AsRef<Path>>(
     plot: &ScatterPlot3D,
     output_path: P,
@@ -862,6 +864,7 @@ fn export_animation_to_html<P: AsRef<Path>>(
 }
 
 #[allow(dead_code)]
+#[allow(unused_variables)]
 fn export_animation_to_json<P: AsRef<Path>>(
     frames: &[AnimationFrame],
     output_path: P,

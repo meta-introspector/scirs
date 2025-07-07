@@ -178,7 +178,7 @@ pub fn run_ransac<M: RansacModel>(
 
     // No model found with enough inliers
     if best_model.is_none() {
-        return Err(crate::error::VisionError::OperationFailed(
+        return Err(crate::error::VisionError::OperationError(
             "RANSAC failed to find a model with enough inliers".to_string(),
         ));
     }
@@ -298,7 +298,7 @@ impl Homography {
             + matrix[[0, 2]] * (matrix[[1, 0]] * matrix[[2, 1]] - matrix[[1, 1]] * matrix[[2, 0]]);
 
         if det.abs() < 1e-10 {
-            return Err(crate::error::VisionError::OperationFailed(
+            return Err(crate::error::VisionError::OperationError(
                 "Matrix is singular, cannot compute inverse".to_string(),
             ));
         }

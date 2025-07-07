@@ -7,10 +7,10 @@
 //! - Spectral analysis for ARMA models
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, ArrayView1};
+use ndarray::{s, Array1, Array2};
 use num_complex::Complex64;
 use num_traits::Float;
-use scirs2_core::validation::{check_finite, check_positive};
+use scirs2_core::validation::check_finite;
 use std::f64::consts::PI;
 
 /// ARMA model parameters
@@ -103,7 +103,7 @@ fn hannan_rissanen(signal: &Array1<f64>, p: usize, q: usize) -> SignalResult<Arm
     let ar_order = ((n as f64).sqrt() as usize).max(p + q);
 
     // Use Yule-Walker for AR estimation
-    let (ar_coeffs_high, _, var) = yule_walker_ar(signal, ar_order)?;
+    let (ar_coeffs_high, _, _var) = yule_walker_ar(signal, ar_order)?;
 
     // Compute residuals (innovations)
     let mut innovations = Array1::zeros(n);

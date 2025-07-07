@@ -177,7 +177,7 @@ pub use utils::{
 
 // GPU acceleration exports
 #[cfg(feature = "gpu")]
-pub use gpu::{AdvancedGpuPCA, GpuMatrixOps, GpuMemoryPool, GpuPCA, GpuTSNE, MultiGpuCoordinator};
+pub use gpu::{GpuMatrixOps, GpuPCA, GpuTSNE};
 
 // Distributed processing exports
 #[cfg(feature = "distributed")]

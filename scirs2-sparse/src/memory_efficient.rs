@@ -617,18 +617,26 @@ impl ChunkedOperations {
             // Add elements from matrix A
             for (k, (&row, &col)) in a_rows_idx.iter().zip(a_cols_idx.iter()).enumerate() {
                 if row >= chunk_start && row < chunk_end {
-                    *chunk_result
-                        .entry((row - chunk_start, col))
-                        .or_insert(T::zero()) += a_values[k];
+                    let local_row = row - chunk_start;
+                    let key = (local_row, col);
+                    if let Some(existing_val) = chunk_result.get_mut(&key) {
+                        *existing_val += a_values[k];
+                    } else {
+                        chunk_result.insert(key, a_values[k]);
+                    }
                 }
             }
 
             // Add elements from matrix B
             for (k, (&row, &col)) in b_rows_idx.iter().zip(b_cols_idx.iter()).enumerate() {
                 if row >= chunk_start && row < chunk_end {
-                    *chunk_result
-                        .entry((row - chunk_start, col))
-                        .or_insert(T::zero()) += b_values[k];
+                    let local_row = row - chunk_start;
+                    let key = (local_row, col);
+                    if let Some(existing_val) = chunk_result.get_mut(&key) {
+                        *existing_val += b_values[k];
+                    } else {
+                        chunk_result.insert(key, b_values[k]);
+                    }
                 }
             }
 
