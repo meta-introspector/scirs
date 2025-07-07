@@ -359,7 +359,7 @@ where
             *self
                 .stats
                 .kernel_usage
-                .entry(format!("{:?}", kernel_type))
+                .entry(format!("{kernel_type:?}"))
                 .or_insert(0) += 1;
             self.stats.kernels_evaluated += 1;
         }
@@ -844,8 +844,7 @@ where
             }
             _ => {
                 return Err(InterpolateError::InvalidValue(format!(
-                    "Kernel type {:?} not implemented",
-                    kernel_type
+                    "Kernel type {kernel_type:?} not implemented"
                 )));
             }
         };

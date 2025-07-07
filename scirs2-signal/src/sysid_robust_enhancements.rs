@@ -14,8 +14,6 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
 
-use std::f64::consts::PI;
-
 /// Enhanced numerical robustness for system identification
 #[derive(Debug, Clone)]
 pub struct RobustSysIdConfig {
@@ -965,7 +963,6 @@ fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Array1<Complex64>> 
 }
 
 mod tests {
-    use super::*;
     use num_complex::Complex64;
 
     use std::f64::consts::PI;

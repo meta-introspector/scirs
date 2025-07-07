@@ -10,7 +10,6 @@ use ndarray::ArrayView1;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use std::f64::consts::PI;
 use std::fmt::Debug;
 use std::sync::Arc;
 
@@ -629,7 +628,6 @@ fn compute_false_alarm_probability(power: &[f64], n_data: usize) -> SignalResult
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_simd_lombscargle_basic() {

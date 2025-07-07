@@ -143,7 +143,6 @@ pub fn calculate_std(signal: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_extract_statistical_features() {

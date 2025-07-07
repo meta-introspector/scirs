@@ -5,7 +5,6 @@
 
 use crate::error::SignalResult;
 use scirs2_special::i0;
-use std::f64::consts::PI;
 
 /// Kaiser window.
 ///
@@ -157,7 +156,6 @@ pub fn kaiser_bessel_derived(m: usize, beta: f64, sym: bool) -> SignalResult<Vec
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

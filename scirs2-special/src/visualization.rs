@@ -1069,7 +1069,7 @@ pub mod export {
             }
             ExportFormat::PDF => {
                 // PDF export is not yet implemented
-                Err("PDF export is not yet implemented".to_string())
+                Err("PDF export is not yet implemented".to_string().into())
             }
             ExportFormat::PNG => {
                 // Generate PNG using plotters

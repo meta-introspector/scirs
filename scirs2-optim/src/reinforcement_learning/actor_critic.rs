@@ -374,7 +374,7 @@ impl<T: Float + Send + Sync> ExperienceReplayBuffer<T> {
 
         let mut samples = Vec::new();
         for _ in 0..sample_size {
-            let idx = rng().random_range(0..available_size);
+            let idx = rng().random_range(0, available_size);
             samples.push(self.buffer[idx].clone());
         }
 

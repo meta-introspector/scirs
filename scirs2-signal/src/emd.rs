@@ -955,7 +955,6 @@ pub fn hilbert_huang_spectrum(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
     use std::f64::consts::PI;
 

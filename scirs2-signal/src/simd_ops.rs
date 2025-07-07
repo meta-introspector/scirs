@@ -7,7 +7,6 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, ArrayView1, ArrayViewMut1};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use std::f64::consts::PI;
 use std::sync::Once;
 
 // Global SIMD capability detection
@@ -1481,7 +1480,6 @@ pub fn simd_cepstral_analysis_f64(log_spectrum: &[f64], n_coeffs: usize) -> Sign
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_simd_spectral_centroid() {

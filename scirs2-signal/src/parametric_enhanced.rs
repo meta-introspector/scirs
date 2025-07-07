@@ -11,7 +11,6 @@ use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
-use std::f64::consts::PI;
 use std::sync::Arc;
 
 /// Enhanced parametric estimation result
@@ -1479,7 +1478,6 @@ fn estimate_condition_number(result: &OptimalModelResult) -> SignalResult<f64> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_enhanced_parametric_estimation() {

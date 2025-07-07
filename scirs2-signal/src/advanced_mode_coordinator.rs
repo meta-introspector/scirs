@@ -165,7 +165,7 @@ impl AdvancedCoordinator {
 
     /// Validate basic functionality across all modules
     fn validate_basic_functionality(&self) -> SignalResult<f64> {
-        let mut score = 100.0;
+        let mut score: f64 = 100.0;
 
         // Test basic signal generation
         let test_signal = self.generate_test_signal(1024, 100.0, &[10.0, 25.0])?;
@@ -193,7 +193,7 @@ impl AdvancedCoordinator {
 
     /// Validate performance optimizations
     fn validate_performance_optimizations(&self) -> SignalResult<f64> {
-        let mut score = 100.0;
+        let mut score: f64 = 100.0;
 
         // Test SIMD operations if enabled
         if self.config.enable_simd {
@@ -221,7 +221,7 @@ impl AdvancedCoordinator {
 
     /// Validate numerical stability
     fn validate_numerical_stability(&self) -> SignalResult<f64> {
-        let mut score = 100.0;
+        let mut score: f64 = 100.0;
 
         // Test with small signals
         let small_signal = vec![1e-10; 64];
@@ -247,7 +247,7 @@ impl AdvancedCoordinator {
 
     /// Validate memory efficiency
     fn validate_memory_efficiency(&self) -> SignalResult<f64> {
-        let mut score = 100.0;
+        let mut score: f64 = 100.0;
 
         // Test with increasingly large signals
         for size in [1024, 4096, 16384, 65536] {
@@ -492,7 +492,6 @@ pub fn run_advanced_validation_with_config(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_advanced_coordinator_creation() {

@@ -286,8 +286,9 @@ impl Dropout {
         }
         // Create binary mask (1 = keep, 0 = drop)
         let mut mask = Array2::<f32>::ones(x.raw_dim());
+        let mut rng = SmallRng::seed_from_u64(42);
         for val in mask.iter_mut() {
-            if rand::random::<f32>() < self.p {
+            if rng.random::<f32>() < self.p {
                 *val = 0.0;
             }
         }

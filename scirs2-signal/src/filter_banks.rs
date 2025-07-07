@@ -50,7 +50,6 @@ use crate::error::{SignalError, SignalResult};
 use crate::filter::{butter, FilterType};
 use ndarray::{Array1, Array2};
 use num_complex::Complex64;
-use std::f64::consts::PI;
 
 /// Types of filter banks
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1070,7 +1069,6 @@ pub enum StabilizationMethod {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_qmf_bank_creation() {

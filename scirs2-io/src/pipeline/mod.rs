@@ -589,12 +589,12 @@ impl DataLineage {
 
         let mut prev = "source".to_string();
         for (i, transform) in self.transformations.iter().enumerate() {
-            let node_id = format!("t{}", i);
+            let node_id = format!("t{i}");
             dot.push_str(&format!(
                 "  {} [label=\"{}\"];\n",
                 node_id, transform.stage_name
             ));
-            dot.push_str(&format!("  {} -> {};\n", prev, node_id));
+            dot.push_str(&format!("  {prev} -> {node_id};\n"));
             prev = node_id;
         }
 

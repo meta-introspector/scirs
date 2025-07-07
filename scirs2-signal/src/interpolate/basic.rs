@@ -5,7 +5,6 @@
 
 use super::core::find_nearest_valid_index;
 use crate::error::{SignalError, SignalResult};
-use ndarray::Array1;
 
 /// Applies linear interpolation to fill missing values in a signal
 ///
@@ -186,7 +185,6 @@ pub fn nearest_neighbor_interpolate(signal: &Array1<f64>) -> SignalResult<Array1
 /// Unit tests for basic interpolation methods
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::Array1;
 
     #[test]

@@ -5,7 +5,7 @@
 
 use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::Float;
-use rand::Rng;
+use scirs2_core::random;
 use std::collections::{HashMap, VecDeque};
 
 pub mod adaptive_nas_system;
@@ -1787,7 +1787,7 @@ impl<A: Float + Default + Clone> LSTMParameters<A> {
     fn random_array_2d(rows: usize, cols: usize, scale: f64) -> Array2<A> {
         // Simplified random initialization
         Array2::zeros((rows, cols))
-            .mapv(|_: A| A::from(scale * (rand::rng().random_range(-0.5f64..0.5f64))).unwrap())
+            .mapv(|_: A| A::from(scale * (random::rng().random_range(-0.5f64, 0.5f64))).unwrap())
     }
 }
 

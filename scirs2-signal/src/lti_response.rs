@@ -257,7 +257,6 @@ pub fn lsim<T: LtiSystem>(system: &T, u: &[f64], t: &[f64]) -> SignalResult<Vec<
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::lti::TransferFunction;
 
     #[test]

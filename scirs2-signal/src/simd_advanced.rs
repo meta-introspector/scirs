@@ -20,8 +20,6 @@ use scirs2_core::validation::check_finite;
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
 
-use std::f64::consts::PI;
-
 /// Configuration for SIMD operations
 #[derive(Debug, Clone)]
 pub struct SimdConfig {
@@ -1662,7 +1660,6 @@ unsafe fn avx512_enhanced_convolution(
 /// - High-performance autocorrelation matrix calculation
 /// - Real-time signal filtering with multiple channels
 pub mod advanced_simd_matrix {
-    use super::*;
 
     /// SIMD-accelerated matrix-vector multiplication for signal processing
     ///
@@ -2009,7 +2006,6 @@ pub mod advanced_simd_matrix {
 
 /// Advanced-high-performance real-time signal processing operations
 pub mod advanced_simd_realtime {
-    use super::*;
 
     /// Real-time SIMD FIR filter state
     #[derive(Debug, Clone)]
@@ -2306,7 +2302,6 @@ pub struct SimdValidationResult {
 }
 
 mod tests {
-    use super::*;
 
     #[test]
     fn test_simd_fir_filter() {

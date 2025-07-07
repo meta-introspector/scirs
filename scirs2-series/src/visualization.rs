@@ -804,11 +804,12 @@ impl SpecializedPlots {
         plot.add_series("Historical", historical_time, historical_data, hist_style)?;
 
         // Forecast with confidence intervals
-        #[allow(clippy::field_reassign_with_default)]
-        let mut forecast_style = PlotStyle::default();
-        forecast_style.color = "#ff7f0e".to_string(); // Orange
-        forecast_style.line_width = 2.5;
-        forecast_style.line_style = LineStyle::Dashed;
+        let forecast_style = PlotStyle {
+            color: "#ff7f0e".to_string(), // Orange
+            line_width: 2.5,
+            line_style: LineStyle::Dashed,
+            ..Default::default()
+        };
         plot.add_series_with_confidence(
             "Forecast",
             forecast_time,
@@ -851,10 +852,11 @@ impl SpecializedPlots {
         for i in 0..num_periods.min(10) {
             // Limit to 10 periods for clarity
             let period_values = seasonal_data.column(i).to_owned();
-            #[allow(clippy::field_reassign_with_default)]
-            let mut style = PlotStyle::default();
-            style.opacity = 0.6;
-            style.color = "#1f77b4".to_string(); // Use same color with varying opacity
+            let style = PlotStyle {
+                opacity: 0.6,
+                color: "#1f77b4".to_string(), // Use same color with varying opacity
+                ..Default::default()
+            };
             plot.add_series(
                 &format!("Period {}", i + 1),
                 &period_time,
@@ -865,10 +867,11 @@ impl SpecializedPlots {
 
         // Add mean seasonal pattern
         let mean_seasonal: Array1<f64> = seasonal_data.mean_axis(ndarray::Axis(1)).unwrap();
-        #[allow(clippy::field_reassign_with_default)]
-        let mut mean_style = PlotStyle::default();
-        mean_style.color = "#d62728".to_string(); // Red
-        mean_style.line_width = 3.0;
+        let mean_style = PlotStyle {
+            color: "#d62728".to_string(), // Red
+            line_width: 3.0,
+            ..Default::default()
+        };
         plot.add_series("Mean Pattern", &period_time, &mean_seasonal, mean_style)?;
 
         Ok(plot)
@@ -1100,9 +1103,10 @@ pub mod quick_plots {
     /// Quick scatter plot
     pub fn scatter_plot(x: &Array1<f64>, y: &Array1<f64>, title: &str) -> Result<TimeSeriesPlot> {
         let mut plot = TimeSeriesPlot::new(title);
-        #[allow(clippy::field_reassign_with_default)]
-        let mut style = PlotStyle::default();
-        style.marker = MarkerStyle::Circle;
+        let style = PlotStyle {
+            marker: MarkerStyle::Circle,
+            ..Default::default()
+        };
         plot.add_series("data", x, y, style)?;
         Ok(plot)
     }
@@ -1119,9 +1123,10 @@ pub mod quick_plots {
         ];
 
         for (i, (name, x, y)) in series_data.iter().enumerate() {
-            #[allow(clippy::field_reassign_with_default)]
-            let mut style = PlotStyle::default();
-            style.color = colors[i % colors.len()].to_string();
+            let style = PlotStyle {
+                color: colors[i % colors.len()].to_string(),
+                ..Default::default()
+            };
             plot.add_series(name, x, y, style)?;
         }
 

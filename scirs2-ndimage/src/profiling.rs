@@ -5,9 +5,12 @@
 //! comparison, and automatic optimization recommendations.
 
 use num_traits::Float;
+use std::cmp;
 use std::collections::HashMap;
 use std::fmt::{self, Debug, Display};
+use std::sync::atomic::Ordering;
 use std::sync::{Arc, Mutex};
+use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::backend::Backend;

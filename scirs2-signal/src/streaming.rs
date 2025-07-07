@@ -54,8 +54,6 @@ use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::VecDeque;
 
-use std::f64::consts::PI;
-
 /// Configuration for streaming signal processor
 #[derive(Debug, Clone)]
 pub struct StreamingConfig {
@@ -978,7 +976,6 @@ fn mel_to_hz(mel: f64) -> f64 {
 }
 
 mod tests {
-    use super::*;
     use num_complex::Complex64;
 
     use std::f64::consts::PI;

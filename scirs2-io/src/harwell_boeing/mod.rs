@@ -71,7 +71,7 @@ impl FromStr for HBMatrixType {
             ('C', 'H', 'A') => Ok(HBMatrixType::ComplexHermitian),
             ('C', 'S', 'S') => Ok(HBMatrixType::ComplexSkewSymmetric),
             ('P', _, _) => Ok(HBMatrixType::Pattern),
-            _ => Err(IoError::FormatError(format!("Unknown matrix type: {}", s))),
+            _ => Err(IoError::FormatError(format!("Unknown matrix type: {s}"))),
         }
     }
 }

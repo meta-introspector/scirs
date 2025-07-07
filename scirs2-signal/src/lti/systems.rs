@@ -922,7 +922,6 @@ impl LtiSystem for StateSpace {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

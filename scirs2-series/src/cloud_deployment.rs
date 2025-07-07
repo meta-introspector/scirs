@@ -251,12 +251,19 @@ pub struct CloudTimeSeriesJob {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum TimeSeriesJobType {
+    /// Time series forecasting job
     Forecasting,
+    /// Anomaly detection job
     AnomalyDetection,
+    /// Time series decomposition job
     Decomposition,
+    /// Feature extraction job
     FeatureExtraction,
+    /// Clustering analysis job
     Clustering,
+    /// Change point detection job
     ChangePointDetection,
+    /// Neural network training job
     NeuralTraining,
 }
 
@@ -264,9 +271,13 @@ pub enum TimeSeriesJobType {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum JobPriority {
+    /// Low priority job
     Low,
+    /// Normal priority job
     Normal,
+    /// High priority job
     High,
+    /// Critical priority job
     Critical,
 }
 
@@ -274,10 +285,15 @@ pub enum JobPriority {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ResourceRequirements {
+    /// Number of CPU cores required
     pub cpu_cores: usize,
+    /// Memory requirements in GB
     pub memory_gb: f64,
+    /// Whether GPU is required
     pub gpu_required: bool,
+    /// Storage requirements in GB
     pub storage_gb: f64,
+    /// Network bandwidth requirements in Mbps
     pub network_bandwidth_mbps: f64,
 }
 

@@ -7,6 +7,7 @@
 use ndarray::{Array, Array2};
 use num_traits::Float;
 use rand::{rng, Rng};
+use scirs2_core::random;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::Arc;
 use std::thread;
@@ -1032,7 +1033,9 @@ impl OptimError {
 
 const RESOURCE_UNAVAILABLE: &str = "Resources unavailable";
 
-impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand> TPUPodCoordinator<T> {
+impl<T: Float + Default + Clone + Send + Sync + ndarray::ScalarOperand + std::iter::Sum>
+    TPUPodCoordinator<T>
+{
     /// Create a new TPU pod coordinator
     pub fn new(config: PodCoordinationConfig) -> Result<Self> {
         let topology_manager = TopologyManager::new(&config)?;
@@ -1298,7 +1301,9 @@ impl<T: Float> Clone for OptimizationStep<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> OptimizationStep<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::ScalarOperand>
+    OptimizationStep<T>
+{
     pub async fn execute(
         &self,
         partition: BatchPartition<T>,
@@ -1989,7 +1994,7 @@ impl SynchronizationManager {
 
     pub async fn global_barrier(&mut self) -> Result<()> {
         // Simplified barrier implementation
-        let barrier_id = BarrierId(rng().random_range(0..u64::MAX));
+        let barrier_id = BarrierId(random::rng().random_range(0, u64::MAX));
         let barrier_state = BarrierState {
             participants: HashSet::new(),
             arrived: HashSet::new(),
@@ -2086,7 +2091,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
     }
 
     pub async fn create_batch(&mut self, batch_data: BatchData<T>) -> Result<BatchId> {
-        let batch_id = BatchId(rng().random_range(0..u64::MAX));
+        let batch_id = BatchId(random::rng().random_range(0, u64::MAX));
         let batch_execution = BatchExecution {
             id: batch_id,
             data: batch_data,

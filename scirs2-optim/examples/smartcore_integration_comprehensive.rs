@@ -11,6 +11,7 @@
 use ndarray::{s, Array1, Array2, Axis};
 use rand::{Rng, SeedableRng};
 use rand_xoshiro::Xoshiro256Plus;
+use scirs2_core::random;
 use scirs2_optim::{
     error::Result,
     optimizers::{
@@ -82,7 +83,7 @@ impl MLDataset {
         // Create random indices
         let mut indices: Vec<usize> = (0..n_samples).collect();
         for i in 0..n_samples {
-            let j = rng.random_range(0..n_samples);
+            let j = rng.random_range(0, n_samples);
             indices.swap(i, j);
         }
 
@@ -117,7 +118,7 @@ impl MLDataset {
 
         let mut indices: Vec<usize> = (0..n_samples).collect();
         for i in 0..n_samples {
-            let j = rng.random_range(0..n_samples);
+            let j = rng.random_range(0, n_samples);
             indices.swap(i, j);
         }
 
@@ -476,7 +477,7 @@ impl OptimizedNeuralNetwork {
             let limit = (6.0 / (input_size + output_size) as f64).sqrt();
 
             let weights_data = Array1::from_shape_fn(input_size * output_size, |_| {
-                rng.random_range(-limit..limit)
+                rng.random_range(-limit, limit)
             });
             let biases_data = Array1::zeros(output_size);
 
@@ -685,10 +686,10 @@ impl OptimizedNeuralNetwork {
 
             // Random gradients for demonstration (normally computed via backprop)
             let weight_gradients =
-                Array2::from_shape_fn(weight_shape, |_| rand::rng().random_range(-0.01..0.01));
+                Array2::from_shape_fn(weight_shape, |_| random::rng().random_range(-0.01, 0.01));
 
             let bias_gradients = Array1::from_shape_fn(layer.biases.data.len(), |_| {
-                rand::rng().random_range(-0.01..0.01)
+                random::rng().random_range(-0.01, 0.01)
             });
 
             gradients.push(LayerGradients {
@@ -992,16 +993,16 @@ fn create_regression_dataset(n_samples: usize, n_features: usize, noise: f64) ->
     let mut rng = Xoshiro256Plus::seed_from_u64(42);
 
     // Generate features
-    let features = Array2::from_shape_fn((n_samples, n_features), |_| rng.random_range(-2.0..2.0));
+    let features = Array2::from_shape_fn((n_samples, n_features), |_| rng.random_range(-2.0, 2.0));
 
     // Generate true coefficients
-    let true_coefficients = Array1::from_shape_fn(n_features, |_| rng.random_range(-1.0..1.0));
+    let true_coefficients = Array1::from_shape_fn(n_features, |_| rng.random_range(-1.0, 1.0));
 
     // Generate targets with non-linear transformation
     let linear_combination = features.dot(&true_coefficients);
     let targets = linear_combination.mapv(|x| {
         let nonlinear = x + 0.5 * x.powi(2) + 0.1 * x.powi(3);
-        nonlinear + rng.random_range(-noise..noise)
+        nonlinear + rng.random_range(-noise, noise)
     });
 
     MLDataset::new(features, targets)

@@ -498,7 +498,6 @@ pub fn wavelet_packet_denoise(
 #[cfg(test)]
 mod tests {
     #[allow(unused_imports)]
-    use super::*;
     use std::f64::consts::PI;
 
     #[test]

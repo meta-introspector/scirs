@@ -1,6 +1,5 @@
 use plotly::common::Mode;
 use plotly::{Plot, Scatter};
-use rand::Rng;
 use scirs2_signal::dwt::Wavelet;
 use scirs2_signal::swt::{iswt, swt};
 use scirs2_signal::waveforms::chirp;

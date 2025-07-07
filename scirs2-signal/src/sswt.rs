@@ -10,8 +10,6 @@
 use ndarray::{s, Array1, Array2};
 use num_traits::Float;
 
-use std::f64::consts::PI;
-
 use crate::error::{SignalError, SignalResult};
 use crate::wavelets;
 use num_complex::Complex64;
@@ -525,7 +523,6 @@ pub fn reconstruct_from_ridge(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

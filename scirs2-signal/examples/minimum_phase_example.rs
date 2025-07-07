@@ -5,7 +5,6 @@
 
 use num_traits::Zero;
 use scirs2_signal::filter::{group_delay, minimum_phase};
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

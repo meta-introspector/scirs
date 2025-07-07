@@ -11,7 +11,6 @@ use crate::stft::{ShortTimeFft, StftConfig};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rustfft;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Phase vocoder configuration options
@@ -689,7 +688,6 @@ fn compute_ifft(signal: &[Complex64]) -> SignalResult<Vec<f64>> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

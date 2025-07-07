@@ -71,7 +71,7 @@ pub fn train_test_split(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rand::thread_rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -168,7 +168,7 @@ pub fn k_fold_split(
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
-                let mut r = rand::thread_rng();
+                let mut r = rand::rng();
                 StdRng::seed_from_u64(r.next_u64())
             }
         };
@@ -259,7 +259,7 @@ pub fn stratified_k_fold_split(
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
             None => {
-                let mut r = rand::thread_rng();
+                let mut r = rand::rng();
                 StdRng::seed_from_u64(r.next_u64())
             }
         };

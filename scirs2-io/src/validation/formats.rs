@@ -253,13 +253,13 @@ pub fn validate_format<P: AsRef<Path>>(path: P, format: DataFormat) -> Result<bo
 
     // Open file
     let file =
-        File::open(path).map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
+        File::open(path).map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
     // Read first 8192 bytes for format detection
     let mut buffer = Vec::with_capacity(8192);
     file.take(8192)
         .read_to_end(&mut buffer)
-        .map_err(|e| IoError::FileError(format!("Failed to read file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read file: {e}")))?;
 
     // Get validators
     let registry = get_scientific_format_validators();
@@ -348,13 +348,13 @@ fn validate_csv_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
 
     // Open file
     let file =
-        File::open(path).map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
+        File::open(path).map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
     let mut reader = BufReader::new(file);
     let mut content = Vec::new();
     reader
         .read_to_end(&mut content)
-        .map_err(|e| IoError::FileError(format!("Failed to read file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read file: {e}")))?;
 
     if content.is_empty() {
         return Ok(FormatValidationResult {
@@ -478,7 +478,7 @@ fn validate_json_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResul
 
     // Open and attempt to parse as JSON
     let file =
-        File::open(path).map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
+        File::open(path).map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
     let reader = BufReader::new(file);
 
@@ -505,13 +505,13 @@ fn validate_arff_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResul
 
     // Open file
     let file =
-        File::open(path).map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
+        File::open(path).map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
     let mut reader = BufReader::new(file);
     let mut content = String::new();
     reader
         .read_to_string(&mut content)
-        .map_err(|e| IoError::FileError(format!("Failed to read file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read file: {e}")))?;
 
     // Check for required sections
     let has_relation = content.to_uppercase().contains("@RELATION");
@@ -566,7 +566,7 @@ fn validate_wav_format<P: AsRef<Path>>(path: P) -> Result<FormatValidationResult
 
     // Open file
     let file =
-        File::open(path).map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
+        File::open(path).map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
     let mut reader = BufReader::new(file);
     let mut header = [0u8; 44]; // Standard WAV header size

@@ -9,8 +9,6 @@
 
 use crate::error::SignalResult;
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
-use rand::prelude::*;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Comprehensive validation result for Lomb-Scargle methods
@@ -1328,8 +1326,8 @@ fn enhance_with_real_world_signal_validation(
 
                 // Variable star with 2.3-day period plus noise
                 let period = 2.3;
-                let magnitude =
-                    12.0 - 0.5 * (2.0 * PI * time / period).sin() + 0.1 * rng.random_range(-1.0..1.0);
+                let magnitude = 12.0 - 0.5 * (2.0 * PI * time / period).sin()
+                    + 0.1 * rng.random_range(-1.0..1.0);
                 star_magnitudes.push(magnitude);
             }
         }

@@ -416,7 +416,6 @@ pub fn find_nearest_valid_index(idx: usize, valid_indices: &[usize]) -> usize {
 /// Unit tests for core interpolation functionality
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_interpolation_config_default() {

@@ -15,7 +15,6 @@ use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
 use crate::wpt_validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
 use ndarray::{s, Array1, Array2, Array3, ArrayView1, Axis};
 use num_traits::{Float, NumCast};
-use rand::prelude::*;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
@@ -2353,7 +2352,6 @@ fn generate_test_signal(config: &TestSignalConfig) -> SignalResult<Array1<f64>> 
 }
 
 mod tests {
-    use super::*;
 
     #[test]
     fn test_advanced_wpt_validation_config_default() {

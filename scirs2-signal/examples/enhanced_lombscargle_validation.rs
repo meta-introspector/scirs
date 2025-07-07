@@ -3,8 +3,6 @@
 //! This example demonstrates the enhanced Lomb-Scargle validation capabilities
 //! including SciPy comparison, noise robustness, and SIMD consistency testing.
 
-use std::f64::consts::PI;
-
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Enhanced Lomb-Scargle Periodogram Validation");

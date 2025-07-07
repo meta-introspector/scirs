@@ -1336,6 +1336,7 @@ impl SecurityManager {
                     threat_type: ThreatType::UnauthorizedPlugin,
                     description: "Plugin not in approved allowlist".to_string(),
                     severity: ScanSeverity::Critical,
+                    location: Some(path.to_string_lossy().to_string()),
                 });
             }
         }
@@ -1358,6 +1359,7 @@ impl SecurityManager {
                         threat_type: ThreatType::InvalidSignature,
                         description: "Plugin signature verification failed".to_string(),
                         severity: ScanSeverity::Critical,
+                        location: Some(path.to_string_lossy().to_string()),
                     });
                 }
                 None => {
@@ -1366,6 +1368,7 @@ impl SecurityManager {
                         description: "Plugin is unsigned but policy requires signatures"
                             .to_string(),
                         severity: ScanSeverity::Critical,
+                        location: Some(path.to_string_lossy().to_string()),
                     });
                 }
                 _ => {}

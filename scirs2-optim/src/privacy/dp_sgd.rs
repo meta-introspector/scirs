@@ -7,6 +7,7 @@
 use ndarray::{Array, ArrayBase, Data, DataMut, Dimension};
 use ndarray_rand::rand_distr::{Distribution, Normal};
 use num_traits::Float;
+use scirs2_core::random;
 use std::collections::{HashMap, VecDeque};
 
 use super::moment_accountant::MomentsAccountant;
@@ -223,7 +224,7 @@ where
             config.dataset_size,
         );
 
-        let rng = rand::rng();
+        let rng = random::rng();
 
         let adaptive_clipping = if config.adaptive_clipping {
             Some(AdaptiveClippingState::new(

@@ -11,12 +11,9 @@ use super::psd::pmtm;
 use super::{enhanced_pmtm, EnhancedMultitaperResult, MultitaperConfig};
 use crate::error::{SignalError, SignalResult};
 // Note: Array1, Array2 imports removed as unused
-use rand::prelude::*;
-use rand::Rng;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 // Note: validation imports removed as unused
 use num_complex::Complex64;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Comprehensive validation result for multitaper methods

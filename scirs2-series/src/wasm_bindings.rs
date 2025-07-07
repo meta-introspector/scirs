@@ -304,11 +304,15 @@ pub struct WasmSTLDecomposition {
     options: STLOptions,
 }
 
+/// Result of STL decomposition containing trend, seasonal, and residual components
 #[cfg(feature = "wasm")]
 #[derive(Serialize, Deserialize)]
 pub struct DecompositionResult {
+    /// Trend component of the decomposition
     pub trend: Vec<f64>,
+    /// Seasonal component of the decomposition
     pub seasonal: Vec<f64>,
+    /// Residual component of the decomposition
     pub residual: Vec<f64>,
 }
 
@@ -469,7 +473,8 @@ macro_rules! console_log {
     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
 }
 
-// Auto-ARIMA functionality for WASM
+/// Auto-ARIMA functionality for WASM
+/// Automatically selects the best ARIMA model parameters
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub struct WasmAutoARIMA;
@@ -530,6 +535,8 @@ impl WasmAutoARIMA {
 }
 
 // Export main functions for easier access
+
+/// Creates a new time series data structure from values
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 #[allow(dead_code)]
@@ -537,6 +544,7 @@ pub fn create_time_series(values: &[f64]) -> TimeSeriesData {
     TimeSeriesData::new(values)
 }
 
+/// Creates a new ARIMA model with specified parameters
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 #[allow(dead_code)]
@@ -544,6 +552,7 @@ pub fn create_arima_model(p: usize, d: usize, q: usize) -> WasmARIMA {
     WasmARIMA::new(p, d, q)
 }
 
+/// Creates a new anomaly detector
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 #[allow(dead_code)]
@@ -551,6 +560,7 @@ pub fn create_anomaly_detector() -> WasmAnomalyDetector {
     WasmAnomalyDetector::new()
 }
 
+/// Creates a new STL decomposition with specified period
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 #[allow(dead_code)]
@@ -558,6 +568,7 @@ pub fn create_stl_decomposition(period: usize) -> WasmSTLDecomposition {
     WasmSTLDecomposition::new(period)
 }
 
+/// Creates a new neural forecaster with specified architecture
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
 #[allow(dead_code)]

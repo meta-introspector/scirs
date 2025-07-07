@@ -13,8 +13,6 @@ use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_shape};
 use scirs2_linalg::solve;
 
-use std::f64::consts::PI;
-
 /// ARMAX model identification using iterative prediction error method
 ///
 /// ARMAX: A(q)y(t) = B(q)u(t) + C(q)e(t)
@@ -1210,7 +1208,6 @@ fn simulate_noise_contribution(
 }
 
 mod tests {
-    use super::*;
 
     #[test]
     fn test_armax_identification() {

@@ -14,7 +14,6 @@ use num_complex::Complex64;
 use num_traits::Float;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, check_shape};
-use std::f64::consts::PI;
 
 /// Vector Autoregressive (VAR) model
 #[derive(Debug, Clone)]
@@ -832,7 +831,6 @@ fn compute_matrix_inverse(matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
 }
 
 mod tests {
-    use super::*;
 
     #[test]
     fn test_var_model_estimation() {

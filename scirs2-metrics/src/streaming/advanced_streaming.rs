@@ -2824,7 +2824,7 @@ impl<F: Float + std::fmt::Debug> Clone for AdaptiveControlAgent<F> {
     fn clone(&self) -> Self {
         // Note: Cannot clone the reward function trait object
         // This is a limitation of the current design
-        panic!("AdaptiveControlAgent cannot be cloned due to trait object")
+        unimplemented!("AdaptiveControlAgent cannot be cloned due to trait object")
     }
 }
 
@@ -3144,7 +3144,7 @@ impl<F: Float + std::fmt::Debug + Send + Sync + 'static + std::iter::Sum> Clone
     fn clone(&self) -> Self {
         // Note: Cannot clone the trait objects
         // This is a limitation of the current design
-        panic!("OnlineLearningSystem cannot be cloned due to trait objects")
+        unimplemented!("OnlineLearningSystem cannot be cloned due to trait objects")
     }
 }
 

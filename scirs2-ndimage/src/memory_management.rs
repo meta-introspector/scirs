@@ -10,6 +10,7 @@ use ndarray::{Array, Array2, ArrayBase, ArrayView, ArrayViewMut, Data, Dimension
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 use std::marker::PhantomData;
+use std::mem;
 
 use crate::error::{NdimageError, NdimageResult};
 

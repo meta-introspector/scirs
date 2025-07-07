@@ -176,7 +176,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
 
         // Create file
         let mut file = File::create(&file_path)
-            .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
 
         // Write metadata header
         Self::write_metadata(&mut file, &metadata)?;
@@ -185,7 +185,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         if config.compression.is_none() {
             let total_size = shape.iter().product::<usize>() * std::mem::size_of::<T>();
             file.set_len((Self::metadata_size() + total_size) as u64)
-                .map_err(|e| IoError::FileError(format!("Failed to set file size: {}", e)))?;
+                .map_err(|e| IoError::FileError(format!("Failed to set file size: {e}")))?;
         }
 
         // Create cache
@@ -226,7 +226,7 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         let mmap = unsafe {
             MmapOptions::new()
                 .map(&file)
-                .map_err(|e| IoError::ParseError(format!("Failed to create memory map: {}", e)))?
+                .map_err(|e| IoError::ParseError(format!("Failed to create memory map: {e}")))?
         };
 
         // Create cache
@@ -325,14 +325,14 @@ impl<T: ScientificNumber + Clone> OutOfCoreArray<T> {
         buffer[cursor] = compression_id;
 
         file.write_all(&buffer)
-            .map_err(|e| IoError::FileError(format!("Failed to write metadata: {}", e)))
+            .map_err(|e| IoError::FileError(format!("Failed to write metadata: {e}")))
     }
 
     /// Read metadata from file
     fn read_metadata(file: &mut File) -> Result<ArrayMetadata> {
         let mut buffer = vec![0u8; Self::metadata_size()];
         file.read_exact(&mut buffer)
-            .map_err(|e| IoError::ParseError(format!("Failed to read metadata: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Failed to read metadata: {e}")))?;
 
         let mut cursor = 0;
 

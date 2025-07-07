@@ -183,7 +183,7 @@ impl NeuromorphicProcessor {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::thread_rng()),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         // Initialize neuromorphic network
@@ -235,7 +235,7 @@ impl NeuromorphicProcessor {
     ) -> Result<Dataset> {
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::thread_rng()),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         // Initialize adaptive neural network
@@ -284,7 +284,7 @@ impl NeuromorphicProcessor {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::thread_rng()),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut network = self.initialize_network(&mut rng)?;
@@ -441,7 +441,7 @@ impl NeuromorphicProcessor {
             if feature_idx < self.network_config.input_neurons {
                 // Rate encoding: higher values = higher spike probability
                 let spike_probability = (feature_value.abs().tanh() + 1.0) / 2.0;
-                let spike_current = if rand::thread_rng().random::<f64>() < spike_probability {
+                let spike_current = if rand::rng().random::<f64>() < spike_probability {
                     0.5 * feature_value.signum()
                 } else {
                     0.0

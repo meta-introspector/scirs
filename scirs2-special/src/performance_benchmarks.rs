@@ -525,8 +525,9 @@ impl GammaBenchmarks {
     #[cfg(feature = "gpu")]
     fn compute_gpu_gamma(data: &Array1<f64>) -> SpecialResult<Array1<f64>> {
         // Try to use GPU gamma computation
-        match crate::gpu_ops::gamma_gpu(&data.view()) {
-            Ok(result) => Ok(result),
+        let mut result = Array1::zeros(data.len());
+        match crate::gpu_ops::gamma_gpu(&data.view(), &mut result.view_mut()) {
+            Ok(()) => Ok(result),
             Err(e) => Err(crate::error::SpecialError::ComputationError(format!(
                 "GPU gamma computation failed: {e}"
             ))),

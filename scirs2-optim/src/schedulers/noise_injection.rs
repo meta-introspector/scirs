@@ -6,9 +6,9 @@
 use ndarray::ScalarOperand;
 use ndarray_rand::rand::distributions::Distribution;
 use ndarray_rand::rand::rngs::ThreadRng;
+use ndarray_rand::rand::thread_rng;
 use ndarray_rand::rand_distr::{Normal, Uniform};
 use num_traits::{Float, NumCast};
-use rand::rng;
 use std::fmt::Debug;
 
 use super::LearningRateScheduler;
@@ -105,7 +105,7 @@ where
             base_scheduler,
             noise_dist,
             step_count: 0,
-            rng: rng(),
+            rng: thread_rng(),
             min_lr,
         }
     }
@@ -161,7 +161,7 @@ where
         let base_lr = self.base_scheduler.get_learning_rate();
 
         // Use fresh thread RNG to sample noise since get_learning_rate takes &self
-        let mut rand_rng = rng();
+        let mut rand_rng = thread_rng();
         let noise = match self.noise_dist {
             NoiseDistribution::Uniform { min, max } => {
                 let dist = Uniform::new(min.to_f64().unwrap(), max.to_f64().unwrap());
@@ -237,7 +237,7 @@ where
             base_scheduler: self.base_scheduler.clone(),
             noise_dist: self.noise_dist,
             step_count: self.step_count,
-            rng: rng(),
+            rng: thread_rng(),
             min_lr: self.min_lr,
         }
     }

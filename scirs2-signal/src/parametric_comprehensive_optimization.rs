@@ -20,7 +20,6 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Comprehensive optimization result for parametric methods

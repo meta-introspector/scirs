@@ -616,7 +616,6 @@ pub fn iswt2d(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::Array2;
 
     #[test]

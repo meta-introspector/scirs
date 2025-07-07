@@ -535,7 +535,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_alpha_trimmed_filter() {

@@ -1443,6 +1443,7 @@ pub fn estimate_rip_constant(phi: &Array2<f64>, s: usize) -> SignalResult<f64> {
     // For exact computation, we would need to check all (n choose s) submatrices,
     // which is computationally infeasible for large n and s.
     // Instead, we use a Monte Carlo approach with random sparse vectors.
+    use rand::Rng;
 
     const NUM_TRIALS: usize = 1000;
     let mut rng = rand::rng();

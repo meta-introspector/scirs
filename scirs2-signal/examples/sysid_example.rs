@@ -4,7 +4,6 @@
 //! available in the scirs2-signal crate for estimating mathematical
 //! models of dynamic systems from input-output data.
 
-use ndarray::Array1;
 use scirs2_signal::parametric::{ARMethod, OrderSelection};
 use scirs2_signal::sysid::{
     estimate_frequency_response, estimate_transfer_function, identify_ar_model,

@@ -647,7 +647,6 @@ pub mod rbf_functions {
 /// Unit tests for advanced interpolation methods
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::interpolate::core::InterpolationConfig;
     use ndarray::Array1;
 

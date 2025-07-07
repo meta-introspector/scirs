@@ -468,7 +468,7 @@ mod tests {
         use crate::gamma::gamma;
         for i in 0..10 {
             let expected = gamma(input[i]);
-            assert!((output[i] - expected).abs() < 1e-10_f64 as f64);
+            assert!((output[i] - expected).abs() < 1e-10f64);
         }
     }
 
@@ -484,7 +484,7 @@ mod tests {
         use crate::bessel::j0;
         for i in 0..10 {
             let expected = j0(input[i]);
-            assert!((output[i] - expected).abs() < 1e-10_f64 as f64);
+            assert!((output[i] - expected).abs() < 1e-10f64);
         }
     }
 }
@@ -931,20 +931,22 @@ fn read_gpu_buffer_to_array<T>(
     output: &mut [T],
 ) -> SpecialResult<()>
 where
-    T: Copy,
+    T: Copy + num_traits::FromPrimitive + num_traits::Zero,
 {
     let data = ctx
         .read_buffer(buffer)
         .map_err(|e| SpecialError::ComputationError(format!("Failed to read GPU buffer: {}", e)))?;
 
-    let typed_data = cast_bytes_to_slice::<T>(&data);
+    let typed_data = &data;
     if typed_data.len() != output.len() {
         return Err(SpecialError::ComputationError(
             "GPU buffer size mismatch".to_string(),
         ));
     }
 
-    output.copy_from_slice(typed_data);
+    for (i, &val) in typed_data.iter().enumerate() {
+        output[i] = T::from_f64(val).unwrap_or_else(|| T::zero());
+    }
     Ok(())
 }
 
@@ -957,13 +959,13 @@ fn read_gpu_buffer_to_array_typed<T>(
     output: &mut [T],
 ) -> SpecialResult<()>
 where
-    T: num_traits::Float + std::fmt::Debug,
+    T: num_traits::Float + std::fmt::Debug + num_traits::FromPrimitive + num_traits::Zero,
 {
     let data = ctx.read_buffer(buffer).map_err(|e| {
         SpecialError::ComputationError(format!("Failed to read typed GPU buffer: {}", e))
     })?;
 
-    let typed_data = cast_bytes_to_slice::<T>(&data);
+    let typed_data = &data;
     if typed_data.len() != output.len() {
         return Err(SpecialError::ComputationError(format!(
             "GPU buffer size mismatch: expected {}, got {}",
@@ -975,7 +977,9 @@ where
     #[cfg(feature = "gpu")]
     log::debug!("Reading {} elements from GPU buffer", output.len());
 
-    output.copy_from_slice(typed_data);
+    for (i, &val) in typed_data.iter().enumerate() {
+        output[i] = T::from_f64(val).unwrap_or_else(|| T::zero());
+    }
     Ok(())
 }
 
@@ -1251,7 +1255,7 @@ fn read_gpu_buffer_with_validation<T>(
     output: &mut [T],
 ) -> SpecialResult<()>
 where
-    T: num_traits::Float + std::fmt::Debug,
+    T: num_traits::Float + std::fmt::Debug + num_traits::FromPrimitive + num_traits::Zero,
 {
     let read_start = Instant::now();
 
@@ -1259,7 +1263,7 @@ where
         .read_buffer(buffer)
         .map_err(|e| SpecialError::ComputationError(format!("Failed to read GPU buffer: {}", e)))?;
 
-    let typed_data = cast_bytes_to_slice::<T>(&data);
+    let typed_data = &data;
     if typed_data.len() != output.len() {
         return Err(SpecialError::ComputationError(format!(
             "GPU buffer size mismatch: expected {}, got {}",
@@ -1268,7 +1272,7 @@ where
         )));
     }
 
-    // Validate data integrity during transfer
+    // Validate data integrity during transfer and convert types
     for (i, &val) in typed_data.iter().enumerate() {
         if !val.is_finite() {
             #[cfg(feature = "gpu")]
@@ -1278,9 +1282,12 @@ where
                 val
             );
         }
+        output[i] = T::from_f64(val).unwrap_or_else(|| {
+            #[cfg(feature = "gpu")]
+            log::warn!("Failed to convert f64 value {} to target type", val);
+            T::zero()
+        });
     }
-
-    output.copy_from_slice(typed_data);
 
     let read_time = read_start.elapsed();
     #[cfg(feature = "gpu")]

@@ -354,10 +354,10 @@ impl NSGAII {
     /// Tournament selection
     fn tournament_selection(&self, rng: &mut impl Rng) -> &MultiObjectiveSolution {
         let tournament_size = 2;
-        let mut best_idx = rng.random_range(0..self.population.len());
+        let mut best_idx = rng.gen_range(0..self.population.len());
 
         for _ in 1..tournament_size {
-            let idx = rng.random_range(0..self.population.len());
+            let idx = rng.gen_range(0..self.population.len());
             if self.dominates_or_better(&self.population[idx], &self.population[best_idx]) {
                 best_idx = idx;
             }
@@ -1298,7 +1298,7 @@ impl NSGAIII {
             // Randomly select one reference point from candidates
             let mut rng = rng();
             let selected_ref_point =
-                candidate_ref_points[rng.random_range(0..candidate_ref_points.len())];
+                candidate_ref_points[rng.gen_range(0..candidate_ref_points.len())];
 
             // Select the best solution associated with this reference point
             let associated_indices: Vec<usize> = associations[selected_ref_point]
@@ -1318,7 +1318,7 @@ impl NSGAIII {
                     )
                 } else {
                     // If niche already has solutions, randomly select
-                    associated_indices[rng.random_range(0..associated_indices.len())]
+                    associated_indices[rng.gen_range(0..associated_indices.len())]
                 };
 
                 // Add selected solution to result
@@ -1462,10 +1462,10 @@ impl NSGAIII {
     /// Tournament selection (reuse logic from NSGA-II)
     fn tournament_selection(&self, rng: &mut impl Rng) -> &MultiObjectiveSolution {
         let tournament_size = 2;
-        let mut best_idx = rng.random_range(0..self.population.len());
+        let mut best_idx = rng.gen_range(0..self.population.len());
 
         for _ in 1..tournament_size {
-            let idx = rng.random_range(0..self.population.len());
+            let idx = rng.gen_range(0..self.population.len());
             if self.dominates_or_better(&self.population[idx], &self.population[best_idx]) {
                 best_idx = idx;
             }

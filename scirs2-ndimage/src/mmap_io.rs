@@ -5,6 +5,7 @@
 
 use ndarray::{Array, ArrayView, Dimension, Ix1, Ix2, IxDyn};
 use num_traits::{Float, FromPrimitive, NumCast};
+use std::fs;
 use std::path::Path;
 
 use scirs2_core::memory_efficient::{

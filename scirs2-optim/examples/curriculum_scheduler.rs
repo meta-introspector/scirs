@@ -5,6 +5,7 @@
 
 use ndarray::{Array1, Array2};
 use rand::prelude::*;
+use scirs2_core::random;
 use scirs2_optim::{
     optimizers::{Optimizer, SGD},
     schedulers::{CurriculumScheduler, CurriculumStage, LearningRateScheduler, TransitionStrategy},
@@ -21,13 +22,13 @@ fn generate_dataset(
     n_samples: usize,
     n_features: usize,
 ) -> (Array2<f64>, Array1<f64>) {
-    let mut rng = rand::rng();
+    let mut rng = random::rng();
 
     // Create features matrix (X)
     let mut x = Array2::<f64>::zeros((n_samples, n_features));
     for i in 0..n_samples {
         for j in 0..n_features {
-            x[[i, j]] = rng.random_range(-1.0..1.0);
+            x[[i, j]] = rng.random_range(-1.0, 1.0);
         }
     }
 
@@ -36,7 +37,7 @@ fn generate_dataset(
     for j in 0..n_features {
         // Higher difficulty = more non-zero weights = more complex model
         if j < difficulty {
-            true_weights[j] = rng.random_range(-1.0..1.0);
+            true_weights[j] = rng.random_range(-1.0, 1.0);
         }
     }
 
@@ -48,7 +49,7 @@ fn generate_dataset(
         }
         // Add noise (more noise for harder problems)
         let noise_scale = 0.01 * (1.0 + (difficulty as f64) / 5.0);
-        y[i] += rng.random_range(-noise_scale..noise_scale);
+        y[i] += rng.random_range(-noise_scale, noise_scale);
     }
 
     (x, y)
@@ -68,7 +69,7 @@ fn train_with_curriculum(
     curriculum_scheduler: &mut CurriculumScheduler<f64>,
     epochs_per_stage: usize,
 ) -> Result<TrainingLog, Box<dyn Error>> {
-    let mut rng = rand::rng();
+    let mut rng = random::rng();
     let mut training_log = Vec::new();
 
     // Initialize optimizer with initial learning rate
@@ -101,7 +102,7 @@ fn train_with_curriculum(
         // Initialize weights to random values
         let mut weights = Array1::<f64>::zeros(n_features);
         for j in 0..n_features {
-            weights[j] = rng.random_range(-0.1..0.1);
+            weights[j] = rng.random_range(-0.1, 0.1);
         }
 
         // Train for this stage

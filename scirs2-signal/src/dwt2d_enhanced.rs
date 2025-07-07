@@ -2963,7 +2963,6 @@ fn validate_energy_conservation(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::Array2;
 
     #[test]

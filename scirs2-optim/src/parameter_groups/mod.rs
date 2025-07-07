@@ -564,7 +564,11 @@ pub mod checkpointing {
     }
 
     /// Trait for optimizers that support checkpointing
-    pub trait Checkpointable<A: Float, D: Dimension> {
+    pub trait Checkpointable<
+        A: Float + ToString + std::fmt::Display + std::str::FromStr,
+        D: Dimension,
+    >
+    {
         /// Create a checkpoint of the current optimizer state
         fn create_checkpoint(&self) -> Result<OptimizerCheckpoint<A, D>>;
 
@@ -780,7 +784,6 @@ pub mod checkpointing {
         fn load_checkpoint<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
             use std::fs::File;
             use std::io::{BufRead, BufReader};
-            use std::str::FromStr;
 
             let path = path.as_ref();
             let file = File::open(path).map_err(|e| {
@@ -978,8 +981,8 @@ pub mod checkpointing {
                         })
                         .collect::<Result<Vec<_>>>()?;
 
-                    // Create array from shape and data
-                    let array = Array::from_shape_vec(shape, data).map_err(|e| {
+                    // Create array from shape and data with dynamic dimensions
+                    let array: Array<A, ndarray::IxDyn> = Array::from_shape_vec(shape, data).map_err(|e| {
                         OptimError::InvalidConfig(format!("Failed to create array: {e}"))
                     })?;
                     params.push(array);
@@ -1066,8 +1069,8 @@ pub mod checkpointing {
                             })
                             .collect::<Result<Vec<_>>>()?;
 
-                        // Create array
-                        let array = Array::from_shape_vec(shape, data).map_err(|e| {
+                        // Create array with dynamic dimensions
+                        let array: Array<A, ndarray::IxDyn> = Array::from_shape_vec(shape, data).map_err(|e| {
                             OptimError::InvalidConfig(format!("Failed to create state array: {e}"))
                         })?;
                         state_arrays.push(array);

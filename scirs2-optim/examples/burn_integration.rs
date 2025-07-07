@@ -454,9 +454,9 @@ fn generate_synthetic_data(
     (0..samples)
         .map(|_| {
             let input: Vec<f32> = (0..input_dim)
-                .map(|_| rng.random_range(-1.0..1.0))
+                .map(|_| rng.random_range(-1.0, 1.0))
                 .collect();
-            let target = rng.random_range(0..num_classes);
+            let target = rng.random_range(0, num_classes);
             (input, target)
         })
         .collect()

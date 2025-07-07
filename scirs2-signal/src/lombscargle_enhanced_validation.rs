@@ -20,7 +20,6 @@ use num_traits::Float;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use scirs2_core::parallel_ops::*;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Enhanced validation configuration
@@ -3550,7 +3549,6 @@ impl AdvancedStabilityResult {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_enhanced_validation() {
@@ -3916,7 +3914,8 @@ fn test_cross_validation_extended(
     let mut freq_estimates = Vec::new();
 
     for _ in 0..n_realizations {
-        let realization_noise: Vec<f64> = (0..n).map(|_| 0.1 * rng.random_range(-1.0..1.0)).collect();
+        let realization_noise: Vec<f64> =
+            (0..n).map(|_| 0.1 * rng.random_range(-1.0..1.0)).collect();
 
         let realization_y: Vec<f64> = clean_signal
             .iter()
@@ -4618,7 +4617,8 @@ pub fn validate_statistical_significance(
                 .iter()
                 .enumerate()
                 .map(|(i, &t)| {
-                    (2.0 * std::f64::consts::PI * f_true * t).sin() + 0.1 * rng.random_range(-1.0..1.0)
+                    (2.0 * std::f64::consts::PI * f_true * t).sin()
+                        + 0.1 * rng.random_range(-1.0..1.0)
                 })
                 .collect();
 

@@ -9,6 +9,9 @@ use std::fmt::{Debug, Display};
 use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, Sub};
 
+/// Type alias for basis function closure to reduce type complexity
+type BasisFunctionClosure<F> = Box<dyn Fn(&ArrayView1<F>) -> Vec<F>>;
+
 /// Enhanced prediction result with additional Bayesian information
 #[derive(Debug, Clone)]
 pub struct BayesianPredictionResult<F: Float> {
@@ -555,7 +558,7 @@ where
         let n_points = points.shape()[0];
         let n_dims = points.shape()[1];
 
-        let (n_basis, basis_fn): (usize, Box<dyn Fn(&ArrayView1<F>) -> Vec<F>>) = match trend_fn {
+        let (n_basis, basis_fn): (usize, BasisFunctionClosure<F>) = match trend_fn {
             TrendFunction::Constant => (1, Box::new(|_x: &ArrayView1<F>| vec![F::one()])),
             TrendFunction::Linear => (
                 1 + n_dims,
@@ -654,7 +657,7 @@ where
                 let mut value = F::one();
                 for (i, &power) in indices.iter().enumerate() {
                     for _ in 0..power {
-                        value = value * x[i];
+                        value *= x[i];
                     }
                 }
                 basis.push(value);
@@ -687,7 +690,7 @@ where
         // Add regularization to diagonal for numerical stability
         let regularization = F::from_f64(1e-8).unwrap();
         for i in 0..n {
-            augmented[[i, i]] = augmented[[i, i]] + regularization;
+            augmented[[i, i]] += regularization;
         }
 
         // Perform Cholesky decomposition
@@ -713,7 +716,7 @@ where
                     // Diagonal element
                     let mut sum = F::zero();
                     for k in 0..j {
-                        sum = sum + cholesky[[j, k]] * cholesky[[j, k]];
+                        sum += cholesky[[j, k]] * cholesky[[j, k]];
                     }
                     let val = matrix[[j, j]] - sum;
                     if val <= F::zero() {
@@ -727,7 +730,7 @@ where
                     // Off-diagonal element
                     let mut sum = F::zero();
                     for k in 0..j {
-                        sum = sum + cholesky[[i, k]] * cholesky[[j, k]];
+                        sum += cholesky[[i, k]] * cholesky[[j, k]];
                     }
                     cholesky[[i, j]] = (matrix[[i, j]] - sum) / cholesky[[j, j]];
                 }
@@ -745,7 +748,7 @@ where
         for i in 0..n {
             let mut sum = F::zero();
             for j in 0..i {
-                sum = sum + lower[[i, j]] * solution[j];
+                sum += lower[[i, j]] * solution[j];
             }
             solution[i] = (rhs[i] - sum) / lower[[i, i]];
         }
@@ -761,7 +764,7 @@ where
         for i in (0..n).rev() {
             let mut sum = F::zero();
             for j in (i + 1)..n {
-                sum = sum + lower[[j, i]] * solution[j]; // Use transpose of lower triangular
+                sum += lower[[j, i]] * solution[j]; // Use transpose of lower triangular
             }
             solution[i] = (rhs[i] - sum) / lower[[i, i]];
         }
@@ -784,7 +787,7 @@ where
                 F::one()
             };
             let scaled_diff = diff / length_scale;
-            sum_sq = sum_sq + scaled_diff * scaled_diff;
+            sum_sq += scaled_diff * scaled_diff;
         }
         sum_sq.sqrt()
     }
@@ -1023,15 +1026,15 @@ where
         // Compute y^T K^-1 y
         let mut quadratic_form = F::zero();
         for i in 0..n_points {
-            quadratic_form = quadratic_form + values[i] * log_likelihood_alpha[i];
+            quadratic_form += values[i] * log_likelihood_alpha[i];
         }
 
         // Compute log|K| = 2 * sum(log(diag(L)))
         let mut log_det = F::zero();
         for i in 0..n_points {
-            log_det = log_det + cholesky[[i, i]].ln();
+            log_det += cholesky[[i, i]].ln();
         }
-        log_det = log_det * F::from_f64(2.0).unwrap();
+        log_det *= F::from_f64(2.0).unwrap();
 
         // Compute log marginal likelihood
         let n_f64 = F::from_usize(n_points).unwrap();
@@ -1203,7 +1206,7 @@ where
             // Kriging prediction: μ* = k*^T α + f*^T β
             let mut prediction = F::zero();
             for j in 0..n_points {
-                prediction = prediction + k_star[j] * self.weights[j];
+                prediction += k_star[j] * self.weights[j];
             }
 
             // Add trend contribution if we have trend coefficients
@@ -1214,7 +1217,7 @@ where
                 let trend_basis = Self::evaluate_trend_basis(&query_point, self._trend_fn)?;
                 for (k, &basis_val) in trend_basis.iter().enumerate() {
                     if k < trend_coeffs.len() {
-                        prediction = prediction + basis_val * trend_coeffs[k];
+                        prediction += basis_val * trend_coeffs[k];
                     }
                 }
             }
@@ -1231,13 +1234,13 @@ where
                 if let Ok(z) = EnhancedKrigingBuilder::forward_substitution(cholesky, &k_star) {
                     // Compute z^T z = k*^T K^-1 k*
                     for &z_val in z.iter() {
-                        variance_reduction = variance_reduction + z_val * z_val;
+                        variance_reduction += z_val * z_val;
                     }
                 }
             } else {
                 // Fallback: simple approximation
                 for j in 0..n_points {
-                    variance_reduction = variance_reduction + k_star[j] * self.weights[j];
+                    variance_reduction += k_star[j] * self.weights[j];
                 }
             }
 

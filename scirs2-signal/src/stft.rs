@@ -103,7 +103,6 @@ use num_complex::Complex64;
 /// use scirs2_signal::window;
 /// use ndarray::Array1;
 ///
-use std::f64::consts::PI;
 ///
 /// // Create a signal with varying frequency
 /// let fs = 1000.0; // 1 kHz sampling rate
@@ -1359,7 +1358,6 @@ pub fn create_cola_window(m: usize, hop: usize) -> SignalResult<Vec<f64>> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     #[allow(unused_imports)]
     use approx::assert_relative_eq;
     use num_complex::Complex64;
@@ -1942,7 +1940,6 @@ pub struct MemoryInfo {
 }
 
 mod memory_efficient_tests {
-    use super::*;
     use num_complex::Complex64;
 
     use std::f64::consts::PI;

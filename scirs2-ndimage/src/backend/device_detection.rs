@@ -508,14 +508,14 @@ fn estimate_opencl_capabilities(name: &str) -> (usize, usize, usize) {
         if name_lower.contains("iris") || name_lower.contains("xe") {
             (4_294_967_296, 96, 1_300_000) // 4GB, 96 EUs, 1.3GHz
         } else {
-            (2_147_483_648, 24, 1000_000) // 2GB, 24 EUs, 1GHz
+            (2_147_483_648, 24, 1_000_000) // 2GB, 24 EUs, 1GHz
         }
     } else if name_lower.contains("amd") || name_lower.contains("radeon") {
         // AMD discrete graphics
         if name_lower.contains("rx 7") || name_lower.contains("rx 6") {
-            (16_106_127_360, 80, 2000_000) // 15GB, 80 CUs, 2GHz
+            (16_106_127_360, 80, 2_000_000) // 15GB, 80 CUs, 2GHz
         } else if name_lower.contains("rx 5") {
-            (8_589_934_592, 64, 1800_000) // 8GB, 64 CUs, 1.8GHz
+            (8_589_934_592, 64, 1_800_000) // 8GB, 64 CUs, 1.8GHz
         } else {
             (4_294_967_296, 36, 1500_000) // 4GB, 36 CUs, 1.5GHz
         }

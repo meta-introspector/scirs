@@ -453,7 +453,7 @@ pub fn denoise_total_variation_1d(
 
         // Update with step size
         let step_size = config.step_size;
-        let mut max_change = 0.0;
+        let mut max_change = 0.0f64;
 
         for i in 0..n {
             let old_val = denoised[i];
@@ -2195,9 +2195,9 @@ fn compute_tree_energy(tree: &crate::wpt::WaveletPacketTree) -> SignalResult<f64
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::Array1;
     use rand::prelude::*;
+    use rand::Rng;
 
     #[test]
     fn test_denoise_1d_basic() {
@@ -2208,8 +2208,8 @@ mod tests {
         // Add noise
         let mut rng = rand::rng();
         let noise_level = 0.1;
-        let noisy_signal =
-            &clean_signal + &Array1::from_shape_fn(n, |_| noise_level * rng.random_range(-1.0..1.0));
+        let noisy_signal = &clean_signal
+            + &Array1::from_shape_fn(n, |_| noise_level * rng.random_range(-1.0..1.0));
 
         let config = DenoiseConfig::default();
         let result = denoise_wavelet_1d(&noisy_signal, &config).unwrap();

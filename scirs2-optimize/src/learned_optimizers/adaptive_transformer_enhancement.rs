@@ -11,7 +11,7 @@ use super::{
 use crate::error::{OptimizeError, OptimizeResult};
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1, ArrayView2};
-use rand::{rng, Rng};
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
 /// Adaptive Transformer-Enhanced Optimizer
@@ -1380,7 +1380,7 @@ impl LearnedOptimizer for AdaptiveTransformerOptimizer {
                 }
                 super::ParameterDistribution::Custom { samples } => {
                     if !samples.is_empty() {
-                        samples[rand::rng().random_range(0..samples.len())].clone()
+                        samples[rand::rng().gen_range(0..samples.len())].clone()
                     } else {
                         Array1::zeros(task.problem.dimension)
                     }

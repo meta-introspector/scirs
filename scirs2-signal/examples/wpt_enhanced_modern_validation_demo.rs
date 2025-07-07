@@ -7,13 +7,11 @@
 //! - Analyze and interpret validation results
 //! - Generate detailed validation reports
 
-use ndarray::Array1;
 use scirs2_signal::dwt::Wavelet;
 use scirs2_signal::wpt_enhanced_modern_validation::{
     generate_enhanced_modern_validation_report, run_enhanced_modern_validation,
     EnhancedModernValidationConfig,
 };
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

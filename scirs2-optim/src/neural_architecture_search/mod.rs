@@ -19,7 +19,8 @@ pub mod search_strategies;
 
 // Re-export key types
 pub use architecture_space::{
-    ComponentType, ConnectionPattern, OptimizerArchitecture, OptimizerComponent, SearchSpace,
+    ComponentType, ConnectionPattern, ConnectionType, OptimizerArchitecture, OptimizerComponent,
+    SearchSpace,
 };
 pub use automated_hyperparameter_optimization::{
     BayesianOptimizationStrategy, HyperOptStrategy, HyperparameterConfig, HyperparameterOptimizer,
@@ -1247,7 +1248,18 @@ impl<T: Float> Default for NASConfig<T> {
     }
 }
 
-impl<T: Float + Send + Sync> NeuralArchitectureSearch<T> {
+impl<
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + std::fmt::Debug
+            + std::iter::Sum
+            + for<'a> std::iter::Sum<&'a T>
+            + ndarray::ScalarOperand,
+    > NeuralArchitectureSearch<T>
+{
     /// Create a new Neural Architecture Search engine
     pub fn new(config: NASConfig<T>) -> Result<Self> {
         // Initialize search strategy
@@ -1280,7 +1292,7 @@ impl<T: Float + Send + Sync> NeuralArchitectureSearch<T> {
 
         // Initialize performance predictor if enabled
         let performance_predictor = if config.enable_performance_prediction {
-            Some(PerformancePredictor::new(&config)?)
+            Some(PerformancePredictor::new(&config.evaluation_config)?)
         } else {
             None
         };
@@ -1416,13 +1428,14 @@ impl<T: Float + Send + Sync> NeuralArchitectureSearch<T> {
             let resource_usage = self.calculate_resource_usage(&architecture, eval_time)?;
 
             // Create search result
+            let encoding = self.encode_architecture(&architecture)?;
             let search_result = SearchResult {
                 architecture,
                 evaluation_results: evaluation_result,
                 generation: self.current_generation,
                 search_time: eval_time.as_secs_f64(),
                 resource_usage,
-                encoding: self.encode_architecture(&architecture)?,
+                encoding,
             };
 
             results.push(search_result);
@@ -1460,7 +1473,11 @@ impl<T: Float + Send + Sync> NeuralArchitectureSearch<T> {
 
         // Update performance predictor
         if let Some(ref mut predictor) = self.performance_predictor {
-            predictor.update_with_results(&results)?;
+            let evaluation_results: Vec<EvaluationResults<T>> = results
+                .iter()
+                .map(|r| r.evaluation_results.clone())
+                .collect();
+            predictor.update_with_results(&evaluation_results)?;
         }
 
         Ok(())
@@ -1698,8 +1715,7 @@ impl<T: Float + Send + Sync> NeuralArchitectureSearch<T> {
                 0.1, // mutation probability
             ))),
             MultiObjectiveAlgorithm::MOEAD => Ok(Box::new(multi_objective::MOEADOptimizer::new(
-                config.pareto_front_size,
-                config.objectives.len(),
+                config.clone(),
             )?)),
             MultiObjectiveAlgorithm::WeightedSum => Ok(Box::new(
                 multi_objective::WeightedSum::new(&config.objectives)?,
@@ -1814,6 +1830,60 @@ impl<T: Float + Send + Sync> NeuralArchitectureSearch<T> {
         })
     }
 
+    fn component_type_to_u8(&self, component_type: &ComponentType) -> u8 {
+        match component_type {
+            ComponentType::SGD => 0,
+            ComponentType::Adam => 1,
+            ComponentType::AdaGrad => 2,
+            ComponentType::RMSprop => 3,
+            ComponentType::AdamW => 4,
+            ComponentType::LAMB => 5,
+            ComponentType::LARS => 6,
+            ComponentType::Lion => 7,
+            ComponentType::RAdam => 8,
+            ComponentType::Lookahead => 9,
+            ComponentType::SAM => 10,
+            ComponentType::LBFGS => 11,
+            ComponentType::SparseAdam => 12,
+            ComponentType::GroupedAdam => 13,
+            ComponentType::MAML => 14,
+            ComponentType::Reptile => 15,
+            ComponentType::MetaSGD => 16,
+            ComponentType::ConstantLR => 17,
+            ComponentType::ExponentialLR => 18,
+            ComponentType::StepLR => 19,
+            ComponentType::CosineAnnealingLR => 20,
+            ComponentType::OneCycleLR => 21,
+            ComponentType::CyclicLR => 22,
+            ComponentType::L1Regularizer => 23,
+            ComponentType::L2Regularizer => 24,
+            ComponentType::ElasticNetRegularizer => 25,
+            ComponentType::DropoutRegularizer => 26,
+            ComponentType::GradientClipping => 27,
+            ComponentType::WeightDecay => 28,
+            ComponentType::AdaptiveLR => 29,
+            ComponentType::AdaptiveMomentum => 30,
+            ComponentType::AdaptiveRegularization => 31,
+            ComponentType::LSTMOptimizer => 32,
+            ComponentType::TransformerOptimizer => 33,
+            ComponentType::AttentionOptimizer => 34,
+            _ => 255, // Default for unknown types
+        }
+    }
+
+    fn connection_type_to_u8(&self, connection_type: &ConnectionType) -> u8 {
+        match connection_type {
+            ConnectionType::Sequential => 0,
+            ConnectionType::Parallel => 1,
+            ConnectionType::Skip => 2,
+            ConnectionType::Residual => 3,
+            ConnectionType::Attention => 4,
+            ConnectionType::Gating => 5,
+            ConnectionType::Feedback => 6,
+            ConnectionType::Custom(_) => 7,
+        }
+    }
+
     fn encode_architecture(
         &self,
         architecture: &OptimizerArchitecture<T>,
@@ -1828,8 +1898,8 @@ impl<T: Float + Send + Sync> NeuralArchitectureSearch<T> {
             ArchitectureEncodingStrategy::Direct => {
                 // Direct encoding: serialize component types and hyperparameters
                 for component in &architecture.components {
-                    encoded_data.push(component.component_type as u8);
-                    for (param_name, param_value) in &component.hyperparameters {
+                    encoded_data.push(self.component_type_to_u8(&component.component_type));
+                    for (_param_name, param_value) in &component.hyperparameters {
                         let bytes = param_value.to_f64().unwrap_or(0.0).to_le_bytes();
                         encoded_data.extend_from_slice(&bytes);
                     }
@@ -1840,12 +1910,12 @@ impl<T: Float + Send + Sync> NeuralArchitectureSearch<T> {
                 // Graph-based encoding: encode connectivity structure
                 encoded_data.push(architecture.components.len() as u8);
                 for component in &architecture.components {
-                    encoded_data.push(component.component_type as u8);
+                    encoded_data.push(self.component_type_to_u8(&component.component_type));
                 }
                 for connection in &architecture.connections {
                     encoded_data.push(connection.from as u8);
                     encoded_data.push(connection.to as u8);
-                    encoded_data.push(connection.connection_type as u8);
+                    encoded_data.push(self.connection_type_to_u8(&connection.connection_type));
                 }
                 metadata.insert("encoding_method".to_string(), "graph".to_string());
             }
@@ -1858,7 +1928,7 @@ impl<T: Float + Send + Sync> NeuralArchitectureSearch<T> {
             _ => {
                 // Default to direct encoding
                 for component in &architecture.components {
-                    encoded_data.push(component.component_type as u8);
+                    encoded_data.push(self.component_type_to_u8(&component.component_type));
                 }
                 metadata.insert("encoding_method".to_string(), "simple".to_string());
             }

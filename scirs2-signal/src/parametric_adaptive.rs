@@ -12,7 +12,6 @@ use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
-use std::f64::consts::PI;
 
 /// Adaptive AR model with time-varying parameters
 #[derive(Debug, Clone)]
@@ -453,7 +452,6 @@ impl SpectralPeakTracker {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_adaptive_ar_initialization() {

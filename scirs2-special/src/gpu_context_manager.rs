@@ -71,7 +71,6 @@ impl Default for GpuProductionConfig {
 }
 
 /// GPU context pool for managing multiple contexts
-#[derive(Debug)]
 pub struct GpuContextPool {
     contexts: RwLock<HashMap<GpuBackend, Arc<GpuContext>>>,
     device_info: RwLock<HashMap<GpuBackend, GpuDeviceInfo>>,
@@ -415,7 +414,92 @@ impl GpuContextPool {
         *self.fallback_threshold.lock().unwrap() = threshold;
     }
 
-    /// Query OpenCL device information with detailed properties\n    fn query_opencl_device_info(&self, _context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {\n        #[cfg(feature = \"gpu\")]\n        log::debug!(\"Querying OpenCL device properties...\");\n        \n        let estimated_memory = self.estimate_gpu_memory_opencl();\n        let estimated_compute_units = self.estimate_compute_units_opencl();\n        \n        Ok(GpuDeviceInfo {\n            device_id: 0,\n            device_name: format!(\"OpenCL GPU Device ({})\", self.detect_gpu_vendor()),\n            memory_size: estimated_memory,\n            compute_units: estimated_compute_units,\n            max_workgroup_size: 256,\n            backend_type: GpuBackend::OpenCL,\n            is_available: true,\n        })\n    }\n    \n    /// Query CUDA device information with detailed properties\n    fn query_cuda_device_info(&self, _context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {\n        #[cfg(feature = \"gpu\")]\n        log::debug!(\"Querying CUDA device properties...\");\n        \n        let estimated_memory = self.estimate_gpu_memory_cuda();\n        let estimated_compute_units = self.estimate_compute_units_cuda();\n        \n        Ok(GpuDeviceInfo {\n            device_id: 0,\n            device_name: format!(\"NVIDIA CUDA Device ({})\", self.detect_nvidia_architecture()),\n            memory_size: estimated_memory,\n            compute_units: estimated_compute_units,\n            max_workgroup_size: 1024,\n            backend_type: GpuBackend::Cuda,\n            is_available: true,\n        })\n    }\n    \n    /// Helper functions for device estimation\n    fn estimate_gpu_memory_opencl(&self) -> u64 { 2 * 1024 * 1024 * 1024 }\n    fn estimate_gpu_memory_cuda(&self) -> u64 { 4 * 1024 * 1024 * 1024 }\n    fn estimate_compute_units_opencl(&self) -> u32 { 32 }\n    fn estimate_compute_units_cuda(&self) -> u32 { 64 }\n    fn detect_gpu_vendor(&self) -> String { \"Unknown Vendor\".to_string() }\n    fn detect_nvidia_architecture(&self) -> String { \"Unknown Architecture\".to_string() }\n    fn get_system_memory_size(&self) -> u64 { 8 * 1024 * 1024 * 1024 }\n    fn is_likely_integrated_gpu(&self) -> bool { false }\n    \n    /// Advanced performance monitoring with trend analysis\n    pub fn get_performance_trends(&self) -> HashMap<GpuBackend, String> {\n        let stats = self.performance_stats.read().unwrap();\n        let mut trends = HashMap::new();\n        \n        for (&backend_type, stat) in stats.iter() {\n            let trend_analysis = if stat.total_operations > 10 {\n                let success_rate = stat.successful_operations as f64 / stat.total_operations as f64;\n                let avg_throughput = if stat.average_execution_time.as_millis() > 0 {\n                    1000.0 / stat.average_execution_time.as_millis() as f64\n                } else { 0.0 };\n                \n                format!(\"Success: {:.1}%, Throughput: {:.1} ops/sec, Data: {} MB\",\n                       success_rate * 100.0, avg_throughput, stat.total_data_transferred / 1024 / 1024)\n            } else {\n                \"Insufficient data for trend analysis\".to_string()\n            };\n            trends.insert(backend_type, trend_analysis);\n        }\n        trends\n    }\n    \n    /// Clear performance statistics\n    pub fn reset_performance_stats(&self) {\n        let mut stats = self.performance_stats.write().unwrap();\n        for stat in stats.values_mut() {\n            *stat = GpuPerformanceStats::default();\n        }\n        #[cfg(feature = \"gpu\")]\n        log::info!(\"GPU performance statistics reset\");\n    }\n\n    /// Get comprehensive system report"
+    /// Query OpenCL device information with detailed properties
+    fn query_opencl_device_info(&self, _context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {
+        #[cfg(feature = "gpu")]
+        log::debug!("Querying OpenCL device properties...");
+        
+        let estimated_memory = self.estimate_gpu_memory_opencl();
+        let estimated_compute_units = self.estimate_compute_units_opencl();
+        
+        Ok(GpuDeviceInfo {
+            device_id: 0,
+            device_name: format!("OpenCL GPU Device ({})", self.detect_gpu_vendor()),
+            memory_size: estimated_memory,
+            compute_units: estimated_compute_units,
+            max_workgroup_size: 256,
+            backend_type: GpuBackend::OpenCL,
+            is_available: true,
+        })
+    }
+    
+    /// Query CUDA device information with detailed properties
+    fn query_cuda_device_info(&self, _context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {
+        #[cfg(feature = "gpu")]
+        log::debug!("Querying CUDA device properties...");
+        
+        let estimated_memory = self.estimate_gpu_memory_cuda();
+        let estimated_compute_units = self.estimate_compute_units_cuda();
+        
+        Ok(GpuDeviceInfo {
+            device_id: 0,
+            device_name: format!("NVIDIA CUDA Device ({})", self.detect_nvidia_architecture()),
+            memory_size: estimated_memory,
+            compute_units: estimated_compute_units,
+            max_workgroup_size: 1024,
+            backend_type: GpuBackend::Cuda,
+            is_available: true,
+        })
+    }
+    
+    /// Helper functions for device estimation
+    fn estimate_gpu_memory_opencl(&self) -> u64 { 2 * 1024 * 1024 * 1024 }
+    fn estimate_gpu_memory_cuda(&self) -> u64 { 4 * 1024 * 1024 * 1024 }
+    fn estimate_compute_units_opencl(&self) -> u32 { 32 }
+    fn estimate_compute_units_cuda(&self) -> u32 { 64 }
+    fn detect_gpu_vendor(&self) -> String { "Unknown Vendor".to_string() }
+    fn detect_nvidia_architecture(&self) -> String { "Unknown Architecture".to_string() }
+    fn get_system_memory_size(&self) -> u64 { 8 * 1024 * 1024 * 1024 }
+    fn is_likely_integrated_gpu(&self) -> bool { false }
+    
+    /// Advanced performance monitoring with trend analysis
+    pub fn get_performance_trends(&self) -> HashMap<GpuBackend, String> {
+        let stats = self.performance_stats.read().unwrap();
+        let mut trends = HashMap::new();
+        
+        for (&backend_type, stat) in stats.iter() {
+            let trend_analysis = if stat.total_operations > 10 {
+                let success_rate = stat.successful_operations as f64 / stat.total_operations as f64;
+                let avg_throughput = if stat.average_execution_time.as_millis() > 0 {
+                    1000.0 / stat.average_execution_time.as_millis() as f64
+                } else { 0.0 };
+                
+                format!("Success: {:.1}%, Throughput: {:.1} ops/sec, Data: {} MB",
+                       success_rate * 100.0, avg_throughput, stat.total_data_transferred / 1024 / 1024)
+            } else {
+                "Insufficient data for trend analysis".to_string()
+            };
+            trends.insert(backend_type, trend_analysis);
+        }
+        trends
+    }
+    
+    /// Clear performance statistics
+    pub fn reset_performance_stats(&self) {
+        let mut stats = self.performance_stats.write().unwrap();
+        for stat in stats.values_mut() {
+            *stat = GpuPerformanceStats::default();
+        }
+        #[cfg(feature = "gpu")]
+        log::info!("GPU performance statistics reset");
+    }
+    
+    /// Get all performance statistics
+    pub fn get_performance_stats_all(&self) -> HashMap<GpuBackend, GpuPerformanceStats> {
+        self.performance_stats.read().unwrap().clone()
+    }
+
+    /// Get comprehensive system report"
     pub fn get_system_report(&self) -> String {
         let device_info = self.device_info.read().unwrap();
         let stats = self.performance_stats.read().unwrap();

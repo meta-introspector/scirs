@@ -1,5 +1,3 @@
-use ndarray::Array1;
-use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
 

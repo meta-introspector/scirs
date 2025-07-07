@@ -45,7 +45,7 @@
 //! // Record frames during algorithm iterations
 //! ```
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::fmt::Debug;

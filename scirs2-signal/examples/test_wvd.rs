@@ -1,4 +1,3 @@
-use ndarray::Array1;
 use scirs2_signal::wvd::{wigner_ville, WvdConfig};
 
 #[allow(dead_code)]

@@ -8,7 +8,6 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2};
 use rustfft::{num_complex::Complex, FftPlanner};
 use scirs2_core::validation::check_positive;
-use std::f64::consts::PI;
 
 /// Enhanced DPSS computation with proper SciPy-compatible implementation
 ///
@@ -451,7 +450,6 @@ pub fn generate_reference_values() -> SignalResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_abs_diff_eq;
 
     #[test]

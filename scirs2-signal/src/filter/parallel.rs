@@ -9,7 +9,6 @@ use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::check_finite;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 // Temporary replacement for par_iter_with_setup
@@ -2222,7 +2221,6 @@ fn compute_matched_filter_chunk(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_parallel_fir_filter_bank() {

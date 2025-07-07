@@ -406,27 +406,37 @@ impl<T: GpuDataType> GpuBuffer<T> {
     }
 
     /// Copy data from the host to the device
-    pub fn copy_from_host(&self, data: &[T]) {
-        assert!(data.len() <= self.size, "Data size exceeds buffer size");
+    pub fn copy_from_host(&self, data: &[T]) -> Result<(), GpuError> {
+        if data.len() > self.size {
+            return Err(GpuError::InvalidParameter(
+                "Data size exceeds buffer size".to_string(),
+            ));
+        }
         unsafe {
             self.inner
                 .copy_from_host(data.as_ptr() as *const u8, std::mem::size_of_val(data));
         }
+        Ok(())
     }
 
     /// Copy data from the device to the host
-    pub fn copy_to_host(&self, data: &mut [T]) {
-        assert!(data.len() <= self.size, "Data size exceeds buffer size");
+    pub fn copy_to_host(&self, data: &mut [T]) -> Result<(), GpuError> {
+        if data.len() > self.size {
+            return Err(GpuError::InvalidParameter(
+                "Data size exceeds buffer size".to_string(),
+            ));
+        }
         unsafe {
             self.inner
                 .copy_to_host(data.as_mut_ptr() as *mut u8, std::mem::size_of_val(data));
         }
+        Ok(())
     }
 
     /// Convert the buffer contents to a vector
     pub fn to_vec(&self) -> Vec<T> {
         let mut result = vec![unsafe { std::mem::zeroed() }; self.size];
-        self.copy_to_host(&mut result);
+        let _ = self.copy_to_host(&mut result);
         result
     }
 }
@@ -644,7 +654,7 @@ impl GpuContext {
     /// Create a buffer from a slice
     pub fn create_buffer_from_slice<T: GpuDataType>(&self, data: &[T]) -> GpuBuffer<T> {
         let buffer = self.create_buffer::<T>(data.len());
-        buffer.copy_from_host(data);
+        let _ = buffer.copy_from_host(data);
         buffer
     }
 

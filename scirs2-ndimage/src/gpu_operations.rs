@@ -6,6 +6,7 @@
 //! acceleration is not available.
 
 use std::collections::HashMap;
+use std::mem;
 use std::sync::Arc;
 
 use ndarray::{Array, ArrayView, ArrayView2, Dimension, Ix2};

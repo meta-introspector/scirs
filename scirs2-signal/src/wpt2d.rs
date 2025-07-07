@@ -835,7 +835,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::Array2;
 
     // Helper function to create a test image

@@ -749,7 +749,7 @@ mod tests {
         assert!(gpu_result.is_ok(), "GPU SpMV should succeed");
 
         if let Ok(result) = gpu_result {
-            let expected = vec![7.0, 9.0, 14.0]; // Same as regular dot product
+            let expected = [7.0, 9.0, 14.0]; // Same as regular dot product
             assert_eq!(result.len(), expected.len());
             for (a, b) in result.iter().zip(expected.iter()) {
                 assert_relative_eq!(a, b, epsilon = 1e-10);
@@ -816,7 +816,7 @@ mod tests {
         assert!(gpu_result.is_ok(), "Generic GPU SpMV should succeed");
 
         if let Ok(result) = gpu_result {
-            let expected = vec![7.0f32, 9.0, 14.0];
+            let expected = [7.0f32, 9.0, 14.0];
             assert_eq!(result.len(), expected.len());
             for (a, b) in result.iter().zip(expected.iter()) {
                 assert_relative_eq!(a, b, epsilon = 1e-6);

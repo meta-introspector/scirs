@@ -303,7 +303,7 @@ where
     // Calculate optimal grid size for CUDA
     let _warp_size = 32; // Standard CUDA warp size
     let block_size = local_size[0].min(1024); // Max threads per block
-    let grid_size = (rows + block_size - 1) / block_size;
+    let grid_size = rows.div_ceil(block_size);
 
     // Calculate shared memory size based on block size and data type
     let shared_memory_size = match config.memory_strategy {
@@ -314,12 +314,10 @@ where
     // Enhanced kernel arguments with CUDA-specific optimizations
     let cuda_args = &[
         Box::new(rows as u32) as Box<dyn std::any::Any>,
-        Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
-            as Box<dyn std::any::Any>,
-        Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
-            as Box<dyn std::any::Any>,
-        Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
-        Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
+        Box::new(&raw const *indptr_buffer) as Box<dyn std::any::Any>,
+        Box::new(&raw const *indices_buffer) as Box<dyn std::any::Any>,
+        Box::new(&raw const *data_buffer) as Box<dyn std::any::Any>,
+        Box::new(&raw const *x_buffer) as Box<dyn std::any::Any>,
         Box::new(std::ptr::addr_of!(*y_buffer) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
         Box::new(block_size as u32) as Box<dyn std::any::Any>,
         Box::new(shared_memory_size as u32) as Box<dyn std::any::Any>,
@@ -371,8 +369,7 @@ where
     let optimal_local_size = local_size[0].min(max_work_group_size);
 
     // Calculate global work size (must be multiple of local work size in OpenCL)
-    let aligned_global_size =
-        ((rows + optimal_local_size - 1) / optimal_local_size) * optimal_local_size;
+    let aligned_global_size = rows.div_ceil(optimal_local_size) * optimal_local_size;
 
     // Calculate local memory size for work-group sharing
     let local_memory_size = match config.memory_strategy {
@@ -383,12 +380,10 @@ where
     // Enhanced OpenCL kernel arguments
     let opencl_args = &[
         Box::new(rows as u32) as Box<dyn std::any::Any>,
-        Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
-            as Box<dyn std::any::Any>,
-        Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
-            as Box<dyn std::any::Any>,
-        Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
-        Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
+        Box::new(&raw const *indptr_buffer) as Box<dyn std::any::Any>,
+        Box::new(&raw const *indices_buffer) as Box<dyn std::any::Any>,
+        Box::new(&raw const *data_buffer) as Box<dyn std::any::Any>,
+        Box::new(&raw const *x_buffer) as Box<dyn std::any::Any>,
         Box::new(std::ptr::addr_of!(*y_buffer) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
         Box::new(local_memory_size as u32) as Box<dyn std::any::Any>,
         Box::new(config.vectorization as u32) as Box<dyn std::any::Any>,
@@ -453,12 +448,10 @@ where
     // Enhanced Metal kernel arguments
     let metal_args = &[
         Box::new(rows as u32) as Box<dyn std::any::Any>,
-        Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
-            as Box<dyn std::any::Any>,
-        Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
-            as Box<dyn std::any::Any>,
-        Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
-        Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>) as Box<dyn std::any::Any>,
+        Box::new(&raw const *indptr_buffer) as Box<dyn std::any::Any>,
+        Box::new(&raw const *indices_buffer) as Box<dyn std::any::Any>,
+        Box::new(&raw const *data_buffer) as Box<dyn std::any::Any>,
+        Box::new(&raw const *x_buffer) as Box<dyn std::any::Any>,
         Box::new(std::ptr::addr_of!(*y_buffer) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
         Box::new(aligned_threadgroup_size as u32) as Box<dyn std::any::Any>,
         Box::new(threadgroup_memory_size as u32) as Box<dyn std::any::Any>,
@@ -543,14 +536,10 @@ where
         local_size,
         &[
             Box::new(rows as u32) as Box<dyn std::any::Any>,
-            Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
-                as Box<dyn std::any::Any>,
-            Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
-                as Box<dyn std::any::Any>,
-            Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>)
-                as Box<dyn std::any::Any>,
-            Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>)
-                as Box<dyn std::any::Any>,
+            Box::new(&raw const *indptr_buffer) as Box<dyn std::any::Any>,
+            Box::new(&raw const *indices_buffer) as Box<dyn std::any::Any>,
+            Box::new(&raw const *data_buffer) as Box<dyn std::any::Any>,
+            Box::new(&raw const *x_buffer) as Box<dyn std::any::Any>,
             Box::new(std::ptr::addr_of!(*y_buffer) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
         ],
     )
@@ -581,14 +570,10 @@ where
         local_size,
         &[
             Box::new(rows as u32) as Box<dyn std::any::Any>,
-            Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
-                as Box<dyn std::any::Any>,
-            Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
-                as Box<dyn std::any::Any>,
-            Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>)
-                as Box<dyn std::any::Any>,
-            Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>)
-                as Box<dyn std::any::Any>,
+            Box::new(&raw const *indptr_buffer) as Box<dyn std::any::Any>,
+            Box::new(&raw const *indices_buffer) as Box<dyn std::any::Any>,
+            Box::new(&raw const *data_buffer) as Box<dyn std::any::Any>,
+            Box::new(&raw const *x_buffer) as Box<dyn std::any::Any>,
             Box::new(std::ptr::addr_of!(*y_buffer) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
         ],
     )
@@ -619,14 +604,10 @@ where
         local_size,
         &[
             Box::new(rows as u32) as Box<dyn std::any::Any>,
-            Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
-                as Box<dyn std::any::Any>,
-            Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
-                as Box<dyn std::any::Any>,
-            Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>)
-                as Box<dyn std::any::Any>,
-            Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>)
-                as Box<dyn std::any::Any>,
+            Box::new(&raw const *indptr_buffer) as Box<dyn std::any::Any>,
+            Box::new(&raw const *indices_buffer) as Box<dyn std::any::Any>,
+            Box::new(&raw const *data_buffer) as Box<dyn std::any::Any>,
+            Box::new(&raw const *x_buffer) as Box<dyn std::any::Any>,
             Box::new(std::ptr::addr_of!(*y_buffer) as *mut GpuBuffer<T>) as Box<dyn std::any::Any>,
         ],
     )
@@ -691,7 +672,7 @@ pub fn execute_triangular_solve_kernel<T>(
     data_buffer: &GpuBuffer<T>,
     b_buffer: &GpuBuffer<T>,
     x_buffer: &GpuBuffer<T>,
-    config: &GpuKernelConfig,
+    _config: &GpuKernelConfig,
 ) -> Result<(), GpuError>
 where
     T: Float + Debug + Copy + 'static + GpuDataType,
@@ -735,16 +716,11 @@ where
             &local_size,
             &[
                 Box::new(n as u32) as Box<dyn std::any::Any>,
-                Box::new(std::ptr::addr_of!(*indptr_buffer) as *const GpuBuffer<u32>)
-                    as Box<dyn std::any::Any>,
-                Box::new(std::ptr::addr_of!(*indices_buffer) as *const GpuBuffer<u32>)
-                    as Box<dyn std::any::Any>,
-                Box::new(std::ptr::addr_of!(*data_buffer) as *const GpuBuffer<T>)
-                    as Box<dyn std::any::Any>,
-                Box::new(std::ptr::addr_of!(*b_buffer) as *const GpuBuffer<T>)
-                    as Box<dyn std::any::Any>,
-                Box::new(std::ptr::addr_of!(*x_buffer) as *const GpuBuffer<T>)
-                    as Box<dyn std::any::Any>,
+                Box::new(&raw const *indptr_buffer) as Box<dyn std::any::Any>,
+                Box::new(&raw const *indices_buffer) as Box<dyn std::any::Any>,
+                Box::new(&raw const *data_buffer) as Box<dyn std::any::Any>,
+                Box::new(&raw const *b_buffer) as Box<dyn std::any::Any>,
+                Box::new(&raw const *x_buffer) as Box<dyn std::any::Any>,
             ],
         ),
     }

@@ -11,6 +11,7 @@
 //! - Model serving and inference optimization
 
 use ndarray::{Array1, Array2, ArrayView1, ArrayViewMut1, Axis};
+use scirs2_core::random;
 use scirs2_optim::{
     benchmarking::memory_leak_detector::{MemoryDetectionConfig, MemoryLeakDetector},
     benchmarking::performance_regression_detector::{
@@ -509,8 +510,7 @@ impl ProductionMLTrainer {
         // 1. Compute gradients using the framework's autodiff
         // 2. Return the gradient norm
         // For simulation, we return a random gradient norm
-        use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
         rng.random_range(0.1, 2.0)
     }
 

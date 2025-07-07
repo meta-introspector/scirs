@@ -5,7 +5,6 @@
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Resample a signal using polyphase filtering.
@@ -391,7 +390,6 @@ fn rational_approximation(x: f64) -> (usize, usize) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

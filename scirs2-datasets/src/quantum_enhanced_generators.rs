@@ -62,7 +62,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::thread_rng()),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         // Initialize quantum state vectors for each sample
@@ -111,7 +111,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::thread_rng()),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut data = Array2::zeros((n_samples, n_features));
@@ -165,7 +165,7 @@ impl QuantumDatasetGenerator {
 
         let mut rng = match random_seed {
             Some(seed) => StdRng::seed_from_u64(seed),
-            None => StdRng::from_rng(&mut rand::thread_rng()),
+            None => StdRng::from_rng(&mut rand::rng()),
         };
 
         let mut data = Array2::zeros((n_samples, n_features));

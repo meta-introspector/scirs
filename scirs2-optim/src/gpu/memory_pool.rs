@@ -1260,6 +1260,119 @@ mod tests {
         assert!(display.contains("Utilization: 50.0%"));
         assert!(display.contains("Cache Hit Rate: 80.0%"));
     }
+
+    #[test]
+    fn test_memory_stats_display() {
+        let mut stats = MemoryStats::default();
+        stats.total_allocated = 1024 * 1024 * 100;
+        stats.current_used = 1024 * 1024 * 50;
+        stats.cache_hits = 80;
+        stats.cache_misses = 20;
+
+        let display = format!("{}", stats);
+        assert!(display.contains("100 MB"));
+        assert!(display.contains("50 MB"));
+        assert!(display.contains("80.00%"));
+    }
+
+    #[test]
+    fn test_thread_safe_pool() {
+        let pool = ThreadSafeMemoryPool::new(1024 * 1024);
+        let stats = pool.get_stats();
+        assert_eq!(stats.total_allocated, 0);
+    }
+
+    #[test]
+    fn test_memory_pool_config() {
+        let config = MemoryPoolConfig::default()
+            .max_size(2 * 1024 * 1024 * 1024)
+            .min_block_size(512)
+            .enable_defrag(false)
+            .allocation_strategy(AllocationStrategy::BestFit);
+
+        let pool = config.build();
+        assert_eq!(pool.max_pool_size, 2 * 1024 * 1024 * 1024);
+        assert_eq!(pool.min_block_size, 512);
+        assert!(!pool.enable_defrag);
+        assert_eq!(pool.allocation_strategy, AllocationStrategy::BestFit);
+    }
+
+    #[test]
+    fn test_batch_buffer() {
+        let ptr = std::ptr::null_mut();
+        let mut buffer = BatchBuffer::new(ptr, 1024, BatchBufferType::General);
+
+        assert_eq!(buffer.size, 1024);
+        assert!(!buffer.in_use);
+        assert_eq!(buffer.usage_count, 0);
+        assert_eq!(buffer.buffer_type, BatchBufferType::General);
+
+        buffer.mark_used();
+        assert!(buffer.in_use);
+        assert_eq!(buffer.usage_count, 1);
+
+        buffer.mark_free();
+        assert!(!buffer.in_use);
+    }
+
+    #[test]
+    fn test_allocation_analytics() {
+        let analytics = AllocationAnalytics::default();
+        assert_eq!(analytics.total_allocations, 0);
+        assert_eq!(analytics.cache_hit_rate, 0.0);
+        assert_eq!(analytics.average_latency_us, 0.0);
+        assert_eq!(analytics.average_allocation_size, 0);
+        assert_eq!(analytics.memory_efficiency, 0.0);
+        assert_eq!(analytics.fragmentation_ratio, 0.0);
+    }
+
+    #[test]
+    fn test_buffer_types() {
+        let types = [
+            BatchBufferType::General,
+            BatchBufferType::GradientAccumulation,
+            BatchBufferType::ParameterUpdate,
+            BatchBufferType::Communication,
+            BatchBufferType::Temporary,
+        ];
+
+        for buffer_type in &types {
+            let buffer = BatchBuffer::new(std::ptr::null_mut(), 1024, *buffer_type);
+            assert_eq!(buffer.buffer_type, *buffer_type);
+        }
+    }
+
+    #[test]
+    fn test_memory_pool_with_large_batch() {
+        let config = LargeBatchConfig {
+            min_batch_size: 1024,
+            max_batch_buffers: 4,
+            growth_factor: 1.5,
+            enable_coalescing: true,
+            preallocation_threshold: 0.8,
+            buffer_lifetime: 300,
+        };
+
+        let pool = CudaMemoryPool::with_large_batch_config(1024 * 1024, config);
+        assert_eq!(pool.large_batch_config.min_batch_size, 1024);
+        assert_eq!(pool.large_batch_config.max_batch_buffers, 4);
+        assert_eq!(pool.large_batch_config.growth_factor, 1.5);
+        assert!(pool.large_batch_config.enable_coalescing);
+    }
+
+    #[test]
+    fn test_pressure_reading() {
+        let reading = PressureReading {
+            timestamp: std::time::Instant::now(),
+            pressure: 0.75,
+            available_memory: 256 * 1024 * 1024,
+            allocated_memory: 768 * 1024 * 1024,
+        };
+
+        assert_eq!(reading.pressure, 0.75);
+        assert_eq!(reading.available_memory, 256 * 1024 * 1024);
+        assert_eq!(reading.allocated_memory, 768 * 1024 * 1024);
+    }
 }
 
 /// Advanced GPU memory pool with hierarchical allocation and adaptive optimization
@@ -4647,203 +4760,3 @@ impl fmt::Display for MemoryStats {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_memory_pool_creation() {
-        let pool = CudaMemoryPool::new(1024 * 1024 * 1024);
-        assert_eq!(pool.stats.total_allocated, 0);
-        assert_eq!(pool.stats.current_used, 0);
-    }
-
-    #[test]
-    fn test_memory_stats_display() {
-        let mut stats = MemoryStats::default();
-        stats.total_allocated = 1024 * 1024 * 100;
-        stats.current_used = 1024 * 1024 * 50;
-        stats.cache_hits = 80;
-        stats.cache_misses = 20;
-
-        let display = format!("{}", stats);
-        assert!(display.contains("100 MB"));
-        assert!(display.contains("50 MB"));
-        assert!(display.contains("80.00%"));
-    }
-
-    #[test]
-    fn test_thread_safe_pool() {
-        let pool = ThreadSafeMemoryPool::new(1024 * 1024);
-        let stats = pool.get_stats();
-        assert_eq!(stats.total_allocated, 0);
-    }
-
-    #[test]
-    fn test_memory_pool_config() {
-        let config = MemoryPoolConfig::default()
-            .max_size(2 * 1024 * 1024 * 1024)
-            .min_block_size(512)
-            .enable_defrag(false)
-            .allocation_strategy(AllocationStrategy::BestFit);
-
-        let pool = config.build();
-        assert_eq!(pool.max_pool_size, 2 * 1024 * 1024 * 1024);
-        assert_eq!(pool.min_block_size, 512);
-        assert!(!pool.enable_defrag);
-        assert_eq!(pool.allocation_strategy, AllocationStrategy::BestFit);
-    }
-
-    #[test]
-    fn test_large_batch_config() {
-        let config = LargeBatchConfig {
-            min_batch_size: 2 * 1024 * 1024,
-            max_batch_buffers: 8,
-            growth_factor: 2.0,
-            enable_coalescing: false,
-            preallocation_threshold: 0.9,
-            buffer_lifetime: 600,
-        };
-
-        assert_eq!(config.min_batch_size, 2 * 1024 * 1024);
-        assert_eq!(config.max_batch_buffers, 8);
-        assert_eq!(config.growth_factor, 2.0);
-        assert!(!config.enable_coalescing);
-        assert_eq!(config.preallocation_threshold, 0.9);
-        assert_eq!(config.buffer_lifetime, 600);
-    }
-
-    #[test]
-    fn test_batch_buffer() {
-        let ptr = std::ptr::null_mut();
-        let mut buffer = BatchBuffer::new(ptr, 1024, BatchBufferType::General);
-
-        assert_eq!(buffer.size, 1024);
-        assert!(!buffer.in_use);
-        assert_eq!(buffer.usage_count, 0);
-        assert_eq!(buffer.buffer_type, BatchBufferType::General);
-
-        buffer.mark_used();
-        assert!(buffer.in_use);
-        assert_eq!(buffer.usage_count, 1);
-
-        buffer.mark_free();
-        assert!(!buffer.in_use);
-    }
-
-    #[test]
-    fn test_allocation_strategies() {
-        let strategies = [
-            AllocationStrategy::FirstFit,
-            AllocationStrategy::BestFit,
-            AllocationStrategy::WorstFit,
-            AllocationStrategy::BuddySystem,
-            AllocationStrategy::SegregatedList,
-            AllocationStrategy::Adaptive,
-        ];
-
-        for strategy in &strategies {
-            let mut pool = CudaMemoryPool::new(1024 * 1024);
-            pool.allocation_strategy = *strategy;
-            assert_eq!(pool.allocation_strategy, *strategy);
-        }
-    }
-
-    #[test]
-    fn test_memory_pressure_monitor() {
-        let mut monitor = MemoryPressureMonitor::default();
-        assert!(monitor.enable_monitoring);
-        assert_eq!(monitor.pressure_threshold, 0.9);
-        assert_eq!(monitor.current_pressure, 0.0);
-        assert!(monitor.pressure_history.is_empty());
-    }
-
-    #[test]
-    fn test_adaptive_sizing() {
-        let mut sizing = AdaptiveSizing::default();
-        assert!(sizing.enable_adaptive_resize);
-        assert_eq!(sizing.resize_threshold, 0.85);
-        assert!(sizing.allocation_history.is_empty());
-
-        let event = AllocationEvent {
-            size: 1024,
-            timestamp: std::time::Instant::now(),
-            cache_hit: true,
-            latency_us: 50,
-        };
-
-        sizing.allocation_history.push_back(event);
-        assert_eq!(sizing.allocation_history.len(), 1);
-    }
-
-    #[test]
-    fn test_allocation_analytics() {
-        let analytics = AllocationAnalytics::default();
-        assert_eq!(analytics.total_allocations, 0);
-        assert_eq!(analytics.cache_hit_rate, 0.0);
-        assert_eq!(analytics.average_latency_us, 0.0);
-        assert_eq!(analytics.average_allocation_size, 0);
-        assert_eq!(analytics.memory_efficiency, 0.0);
-        assert_eq!(analytics.fragmentation_ratio, 0.0);
-    }
-
-    #[test]
-    fn test_buffer_types() {
-        let types = [
-            BatchBufferType::General,
-            BatchBufferType::GradientAccumulation,
-            BatchBufferType::ParameterUpdate,
-            BatchBufferType::Communication,
-            BatchBufferType::Temporary,
-        ];
-
-        for buffer_type in &types {
-            let buffer = BatchBuffer::new(std::ptr::null_mut(), 1024, *buffer_type);
-            assert_eq!(buffer.buffer_type, *buffer_type);
-        }
-    }
-
-    #[test]
-    fn test_size_class_calculation() {
-        let pool = CudaMemoryPool::new(1024 * 1024);
-
-        assert_eq!(pool.get_size_class(100), 256);
-        assert_eq!(pool.get_size_class(300), 512);
-        assert_eq!(pool.get_size_class(1000), 1024);
-        assert_eq!(pool.get_size_class(2000), 2048);
-        assert_eq!(pool.get_size_class(1_000_000), 1048576);
-        assert_eq!(pool.get_size_class(2_000_000), 2097152); // Next MB boundary
-    }
-
-    #[test]
-    fn test_memory_pool_with_large_batch() {
-        let config = LargeBatchConfig {
-            min_batch_size: 1024,
-            max_batch_buffers: 4,
-            growth_factor: 1.5,
-            enable_coalescing: true,
-            preallocation_threshold: 0.8,
-            buffer_lifetime: 300,
-        };
-
-        let pool = CudaMemoryPool::with_large_batch_config(1024 * 1024, config);
-        assert_eq!(pool.large_batch_config.min_batch_size, 1024);
-        assert_eq!(pool.large_batch_config.max_batch_buffers, 4);
-        assert_eq!(pool.large_batch_config.growth_factor, 1.5);
-        assert!(pool.large_batch_config.enable_coalescing);
-    }
-
-    #[test]
-    fn test_pressure_reading() {
-        let reading = PressureReading {
-            timestamp: std::time::Instant::now(),
-            pressure: 0.75,
-            available_memory: 256 * 1024 * 1024,
-            allocated_memory: 768 * 1024 * 1024,
-        };
-
-        assert_eq!(reading.pressure, 0.75);
-        assert_eq!(reading.available_memory, 256 * 1024 * 1024);
-        assert_eq!(reading.allocated_memory, 768 * 1024 * 1024);
-    }
-}

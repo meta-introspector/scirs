@@ -74,8 +74,6 @@ use crate::window::get_window;
 use ndarray::{s, Array1, Array2, Axis};
 use num_complex::Complex64;
 
-use std::f64::consts::PI;
-
 /// Methods for transfer function estimation
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TfEstimationMethod {
@@ -1736,7 +1734,6 @@ fn calculate_median(data: &Array1<f64>) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

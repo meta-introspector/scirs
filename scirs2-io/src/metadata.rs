@@ -444,7 +444,7 @@ impl MetadataSchema {
             MetadataConstraint::Pattern(field, pattern) => {
                 if let Some(val) = metadata.get_string(field) {
                     let re = regex::Regex::new(pattern).map_err(|e| {
-                        IoError::ValidationError(format!("Invalid regex pattern: {}", e))
+                        IoError::ValidationError(format!("Invalid regex pattern: {e}"))
                     })?;
                     if !re.is_match(val) {
                         return Err(IoError::ValidationError(format!(
@@ -685,7 +685,7 @@ impl MetadataIndex {
                 // Tokenize and index text
                 for token in s.to_lowercase().split_whitespace() {
                     self.text_index
-                        .entry(format!("{}:{}", key, token))
+                        .entry(format!("{key}:{token}"))
                         .or_default()
                         .insert(id.to_string());
                 }
@@ -710,12 +710,12 @@ impl MetadataIndex {
             }
             MetadataValue::Array(arr) => {
                 for (i, item) in arr.iter().enumerate() {
-                    self.index_value(id, &format!("{}[{}]", key, i), item);
+                    self.index_value(id, &format!("{key}[{i}]"), item);
                 }
             }
             MetadataValue::Object(obj) => {
                 for (sub_key, sub_value) in obj {
-                    self.index_value(id, &format!("{}.{}", key, sub_key), sub_value);
+                    self.index_value(id, &format!("{key}.{sub_key}"), sub_value);
                 }
             }
             _ => {}
@@ -724,7 +724,7 @@ impl MetadataIndex {
 
     /// Search for metadata by text query
     pub fn search_text(&self, field: &str, query: &str) -> HashSet<String> {
-        let key = format!("{}:{}", field, query.to_lowercase());
+        let key = format!("{field}:{}", query.to_lowercase());
         self.text_index.get(&key).cloned().unwrap_or_default()
     }
 
@@ -861,11 +861,11 @@ impl MetadataVersionControl {
     pub fn rollback(&self, version_id: &str) -> Result<()> {
         let version = self
             .get_version(version_id)
-            .ok_or_else(|| IoError::NotFound(format!("Version {} not found", version_id)))?;
+            .ok_or_else(|| IoError::NotFound(format!("Version {version_id} not found")))?;
 
         self.commit(
             version.metadata.clone(),
-            format!("Rollback to {}", version_id),
+            format!("Rollback to {version_id}"),
         )?;
         Ok(())
     }
@@ -1248,7 +1248,7 @@ impl MetadataRepository {
         }
 
         // Fetch from repository
-        let url = format!("{}/metadata/{}", self.url, id);
+        let url = format!("{}/metadata/{id}", self.url);
         let response = self
             .client
             .get(&url)
@@ -1277,7 +1277,7 @@ impl MetadataRepository {
 
     /// Push metadata to repository
     pub fn push(&self, id: &str, metadata: &Metadata) -> Result<()> {
-        let url = format!("{}/metadata/{}", self.url, id);
+        let url = format!("{}/metadata/{id}", self.url);
         let response = self
             .client
             .put(&url)

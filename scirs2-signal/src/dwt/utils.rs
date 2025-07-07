@@ -6,7 +6,6 @@
 
 use super::filters::WaveletFilters;
 use crate::error::SignalResult;
-use std::f64::consts::PI;
 
 /// Calculate the squared norm (energy) of a filter
 ///

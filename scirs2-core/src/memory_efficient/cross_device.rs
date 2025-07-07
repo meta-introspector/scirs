@@ -464,7 +464,7 @@ impl DeviceMemoryManager {
                 let mut data = vec![unsafe { std::mem::zeroed() }; size];
 
                 // Copy data from GPU to host
-                gpu_buffer.copy_to_host(&mut data);
+                let _ = gpu_buffer.copy_to_host(&mut data);
 
                 // Reshape the data to match the original array shape
                 return Array::from_shape_vec(device_array.shape.clone(), data).map_err(|e| {

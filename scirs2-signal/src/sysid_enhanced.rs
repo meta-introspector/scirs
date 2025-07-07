@@ -19,8 +19,6 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_shape};
 
-use std::f64::consts::PI;
-
 /// Enhanced system identification result
 #[derive(Debug, Clone)]
 pub struct EnhancedSysIdResult {
@@ -1294,6 +1292,7 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
 
             // Generate white noise for simulation (in practice, this would be estimated)
             use rand::prelude::*;
+            use rand::Rng;
             let mut rng = rand::rng();
             for i in 0..n {
                 noise[i] = rng.random_range(-1.0..1.0) * 0.1; // Small noise
@@ -1357,6 +1356,7 @@ fn simulate_model(model: &SystemModel, input: &Array1<f64>) -> SignalResult<Arra
 
             // Generate white noise for simulation
             use rand::prelude::*;
+            use rand::Rng;
             let mut rng = rand::rng();
             for i in 0..n {
                 noise[i] = rng.random_range(-1.0..1.0) * 0.1;
@@ -1979,7 +1979,6 @@ fn compute_condition_number(params: &ParameterEstimate) -> f64 {
 }
 
 mod tests {
-    use super::*;
 
     #[test]
     fn test_recursive_sysid() {

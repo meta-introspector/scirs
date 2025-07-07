@@ -639,7 +639,6 @@ pub fn benchmark_simd_memory_operations(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::Array1;
 
     #[test]

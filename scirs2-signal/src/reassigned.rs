@@ -14,8 +14,6 @@
 
 use ndarray::{s, Array1, Array2};
 
-use std::f64::consts::PI;
-
 use crate::error::SignalResult;
 use crate::spectral;
 use crate::window;
@@ -505,7 +503,6 @@ pub fn extract_ridges(
 }
 
 mod tests {
-    use super::*;
 
     #[test]
     fn test_next_power_of_two() {

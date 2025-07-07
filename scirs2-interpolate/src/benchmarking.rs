@@ -654,8 +654,7 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> InterpolationBen
 
         for (size, (method, throughput)) in size_to_best_method {
             recommendations.push(format!(
-                "For size {}: Use {} ({:.0} ops/sec)",
-                size, method, throughput
+                "For size {size}: Use {method} ({throughput:.0} ops/sec)"
             ));
         }
 
@@ -1114,8 +1113,7 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
                 spline.evaluate_array(&x_new.view())
             }
             _ => Err(crate::InterpolateError::NotImplemented(format!(
-                "SciPy reference for {}",
-                method
+                "SciPy reference for {method}"
             ))),
         }
     }
@@ -1139,8 +1137,7 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
                 rbf.interpolate(&x_new.view())
             }
             _ => Err(crate::InterpolateError::NotImplemented(format!(
-                "SciPy 2D reference for {}",
-                method
+                "SciPy 2D reference for {method}"
             ))),
         }
     }
@@ -1159,8 +1156,8 @@ impl<T: crate::traits::InterpolationFloat + std::fmt::LowerExp> EnhancedBenchmar
         for i in 0..n {
             let error = (result[i] - reference[i]).abs();
             max_abs_error = max_abs_error.max(error);
-            sum_abs_error = sum_abs_error + error;
-            sum_sq_error = sum_sq_error + error * error;
+            sum_abs_error += error;
+            sum_sq_error += error * error;
 
             if error < T::from_f64(self.config.correctness_tolerance).unwrap() {
                 points_within_tolerance += 1;
@@ -1215,6 +1212,12 @@ impl MemoryTracker {
 
     pub fn get_current_usage(&self) -> u64 {
         self.current_usage
+    }
+}
+
+impl Default for MemoryTracker {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -1449,7 +1452,7 @@ impl<
             });
 
             self.results.push(StressTestResult {
-                test_name: format!("memory_pressure_n_{}", size),
+                test_name: format!("memory_pressure_n_{size}"),
                 passed: result.is_ok(),
                 error_message: if result.is_err() {
                     Some("Memory pressure failure".to_string())

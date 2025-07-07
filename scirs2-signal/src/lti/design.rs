@@ -697,7 +697,6 @@ pub fn polynomial_derivative(coeffs: &[f64]) -> Vec<f64> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

@@ -4,9 +4,7 @@
 //! processing for continuous data streams, showing various configurations
 //! and use cases for low-latency spectral analysis.
 
-use ndarray::Array1;
 use scirs2_signal::streaming_stft::{RealTimeStft, StreamingStft, StreamingStftConfig};
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

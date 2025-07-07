@@ -280,7 +280,7 @@ impl PyARIMA {
 #[allow(dead_code)]
 fn calculate_statistics(data: &PyTimeSeries) -> PyResult<HashMap<String, f64>> {
     let stats = calculate_basic_stats(&data.values)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}")))?;
     Ok(stats)
 }
 
@@ -289,7 +289,7 @@ fn calculate_statistics(data: &PyTimeSeries) -> PyResult<HashMap<String, f64>> {
 #[allow(dead_code)]
 fn check_stationarity(data: &PyTimeSeries) -> PyResult<bool> {
     let (_test_stat, p_value) = is_stationary(&data.values, None)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}")))?;
     // Consider stationary if p-value < 0.05 (5% significance level)
     Ok(p_value < 0.05)
 }
@@ -303,7 +303,7 @@ fn apply_differencing<'py>(
     periods: usize,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
     let differenced = difference_series(&data.values, periods)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}")))?;
     Ok(differenced.into_pyarray(py))
 }
 
@@ -316,7 +316,7 @@ fn apply_seasonal_differencing<'py>(
     periods: usize,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
     let differenced = seasonal_difference_series(&data.values, periods)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}")))?;
     Ok(differenced.into_pyarray(py))
 }
 
@@ -353,7 +353,7 @@ fn auto_arima(
     };
 
     let (_model, params) = crate::arima_models::auto_arima(&data.values, &options)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))?;
+        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{e}")))?;
 
     let config = ArimaConfig {
         p: params.pdq.0,
@@ -390,6 +390,15 @@ fn scirs2_series(m: &Bound<'_, PyModule>) -> PyResult<()> {
 }
 
 // Helper functions for pandas integration
+
+/// Creates a pandas DataFrame from a HashMap of Array1<f64> data
+///
+/// # Arguments
+/// * `py` - Python interpreter instance
+/// * `data` - HashMap where keys are column names and values are Array1<f64> data
+///
+/// # Returns
+/// A PyResult containing the pandas DataFrame object
 #[cfg(feature = "python")]
 #[allow(dead_code)]
 pub fn create_pandas_dataframe(
@@ -407,6 +416,15 @@ pub fn create_pandas_dataframe(
     Ok(df.into())
 }
 
+/// Creates a pandas Series from a Rust Array1<f64>
+///
+/// # Arguments
+/// * `py` - Python interpreter instance
+/// * `data` - Array1<f64> containing the data
+/// * `name` - Optional name for the series
+///
+/// # Returns
+/// A PyResult containing the pandas Series object
 #[cfg(feature = "python")]
 #[allow(dead_code)]
 pub fn create_pandas_series(

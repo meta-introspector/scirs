@@ -7,6 +7,7 @@
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use rand::{Rng, SeedableRng};
+use scirs2_core::random;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -1409,7 +1410,7 @@ impl<
 
         // Crossover
         for i in 0..generation_size {
-            if rand::rng().random::<f64>() < self.config.crossover_rate {
+            if random::rng().random::<f64>() < self.config.crossover_rate {
                 let parent1 = &parents[i * 2];
                 let parent2 = &parents[i * 2 + 1];
 
@@ -1438,7 +1439,7 @@ impl<
 
         // Mutation
         for architecture in &mut new_architectures {
-            if rand::rng().random::<f64>() < self.config.mutation_rate {
+            if random::rng().random::<f64>() < self.config.mutation_rate {
                 let mutation_record = self
                     .architecture_generator
                     .mutate(&mut architecture.architecture)?;
@@ -2308,7 +2309,7 @@ impl<
             ProgressiveStage::Large => (4, 8, 256),
         };
 
-        let num_layers = rand::rng().random_range(min_layers..=max_layers);
+        let num_layers = random::rng().random_range(min_layers, max_layers + 1);
         let mut layers = Vec::new();
 
         // Generate layers with progressive complexity
@@ -2365,13 +2366,13 @@ impl<
         let layer_type = if complexity < 0.3 {
             LayerType::Linear
         } else if complexity < 0.6 {
-            if rand::rng().random::<f64>() < 0.7 {
+            if random::rng().random::<f64>() < 0.7 {
                 LayerType::Linear
             } else {
                 LayerType::LSTM
             }
         } else if complexity < 0.8 {
-            if rand::rng().random::<f64>() < 0.5 {
+            if random::rng().random::<f64>() < 0.5 {
                 LayerType::LSTM
             } else {
                 LayerType::Transformer
@@ -2383,7 +2384,7 @@ impl<
                 LayerType::Attention,
                 LayerType::LSTM,
             ];
-            layer_types[rand::rng().random_range(0..layer_types.len())]
+            layer_types[random::rng().random_range(0, layer_types.len())]
         };
 
         // Adjust dimensions based on complexity
@@ -2460,7 +2461,7 @@ impl<
             ProgressiveStage::Small => {
                 // Add some short skip connections
                 for i in 0..num_layers.saturating_sub(2) {
-                    if rand::rng().random::<f64>() < 0.3 {
+                    if random::rng().random::<f64>() < 0.3 {
                         connections[[i, i + 2]] = true;
                     }
                 }
@@ -2469,7 +2470,7 @@ impl<
                 // Add medium-range skip connections
                 for i in 0..num_layers {
                     for j in (i + 2)..(i + 4).min(num_layers) {
-                        if rand::rng().random::<f64>() < 0.4 {
+                        if random::rng().random::<f64>() < 0.4 {
                             connections[[i, j]] = true;
                         }
                     }
@@ -2487,7 +2488,7 @@ impl<
                             _ => 0.2,     // Long skip connections
                         };
 
-                        if rand::rng().random::<f64>() < connection_prob {
+                        if random::rng().random::<f64>() < connection_prob {
                             connections[[i, j]] = true;
                         }
                     }
@@ -2823,13 +2824,13 @@ impl<
             // Apply gradient to weights (simplified update)
             rl_state.controller.weights[layer_idx] =
                 rl_state.controller.weights[layer_idx].mapv(|w| {
-                    w + gradient_scale * T::from(rand::rng().random_range(-0.1..0.1)).unwrap()
+                    w + gradient_scale * T::from(random::rng().random_range(-0.1, 0.1)).unwrap()
                 });
 
             // Update biases
             rl_state.controller.biases[layer_idx] =
                 rl_state.controller.biases[layer_idx].mapv(|b| {
-                    b + gradient_scale * T::from(rand::rng().random_range(-0.1..0.1)).unwrap()
+                    b + gradient_scale * T::from(random::rng().random_range(-0.1, 0.1)).unwrap()
                 });
         }
 
@@ -3004,7 +3005,7 @@ impl<
             .to_f64()
             .unwrap_or(0.1);
 
-        if rand::rng().random::<f64>() < exploration_rate {
+        if random::rng().random::<f64>() < exploration_rate {
             // Exploration: random action
             self.sample_random_action()
         } else {
@@ -3014,7 +3015,7 @@ impl<
     }
 
     fn sample_random_action(&self) -> Result<ArchitectureAction> {
-        let action_type = rand::rng().random_range(0..4);
+        let action_type = random::rng().random_range(0, 4);
 
         match action_type {
             0 => Ok(ArchitectureAction::SelectLayerType(
@@ -3042,7 +3043,7 @@ impl<
             cumulative.push(sum.to_f64().unwrap_or(0.0));
         }
 
-        let random_val = rand::rng().random::<f64>();
+        let random_val = random::rng().random::<f64>();
         let selected_index = cumulative
             .iter()
             .position(|&x| x >= random_val)
@@ -3068,22 +3069,22 @@ impl<
 
     fn sample_random_layer_type(&self) -> LayerType {
         let layer_types = &self.search_space.layer_types;
-        layer_types[rand::rng().random_range(0..layer_types.len())]
+        layer_types[random::rng().random_range(0, layer_types.len())]
     }
 
     fn sample_random_hidden_size(&self) -> usize {
         let hidden_sizes = &self.search_space.hidden_sizes;
-        hidden_sizes[rand::rng().random_range(0..hidden_sizes.len())]
+        hidden_sizes[random::rng().random_range(0, hidden_sizes.len())]
     }
 
     fn sample_random_activation(&self) -> ActivationType {
         let activations = &self.search_space.activation_functions;
-        activations[rand::rng().random_range(0..activations.len())]
+        activations[random::rng().random_range(0, activations.len())]
     }
 
     fn sample_random_connection(&self) -> ConnectionPattern {
         let connections = &self.search_space.connection_patterns;
-        connections[rand::rng().random_range(0..connections.len())]
+        connections[random::rng().random_range(0, connections.len())]
     }
 
     fn action_to_layer_spec(
@@ -3267,7 +3268,7 @@ impl<
     ) -> Result<ArchitectureSpec> {
         // Use Gumbel softmax to sample discrete architectures from continuous space
         let mut layers: Vec<LayerSpec> = Vec::new();
-        let num_layers = 3 + rand::rng().random_range(0..5); // 3-7 layers
+        let num_layers = 3 + random::rng().random_range(0, 5); // 3-7 layers
 
         for i in 0..num_layers {
             // Sample layer type using continuous relaxation
@@ -3277,7 +3278,7 @@ impl<
                 .or_insert_with(|| {
                     let mut weights = Vec::new();
                     for _ in 0..LayerType::Custom as usize + 1 {
-                        weights.push(T::from(rand::rng().random::<f64>()).unwrap());
+                        weights.push(T::from(random::rng().random::<f64>()).unwrap());
                     }
                     weights.into()
                 });
@@ -3291,7 +3292,7 @@ impl<
             } else {
                 layers[i - 1].dimensions.output_dim
             };
-            let output_dim = 64 + rand::rng().random_range(0..192); // 64-256
+            let output_dim = 64 + random::rng().random_range(0, 192); // 64-256
 
             let layer_spec = LayerSpec {
                 layer_type: self.index_to_layer_type(layer_type),
@@ -3333,8 +3334,8 @@ impl<
 
         for &logit in logits {
             // Add Gumbel noise: -log(-log(uniform))
-            let uniform1 = T::from(rand::rng().random::<f64>().max(1e-10)).unwrap();
-            let _uniform2 = T::from(rand::rng().random::<f64>().max(1e-10)).unwrap();
+            let uniform1 = T::from(random::rng().random::<f64>().max(1e-10)).unwrap();
+            let _uniform2 = T::from(random::rng().random::<f64>().max(1e-10)).unwrap();
             let gumbel_noise = -(-uniform1.ln()).ln();
 
             gumbel_logits.push((logit + gumbel_noise) / temperature);
@@ -3384,11 +3385,11 @@ impl<
 
         // Select from Pareto front
         let mut parents = Vec::new();
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
 
         for _ in 0..2 {
             if !mo_state.pareto_front.is_empty() {
-                let idx = rng.random_range(0..mo_state.pareto_front.len());
+                let idx = rng.random_range(0, mo_state.pareto_front.len());
                 parents.push(mo_state.pareto_front[idx].clone());
             }
         }
@@ -3750,7 +3751,7 @@ impl<T: Float + Default + Clone> PopulationManager<T> {
         }
 
         let mut parents = Vec::new();
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
 
         // Tournament selection
         let tournament_size = 3;
@@ -3761,7 +3762,7 @@ impl<T: Float + Default + Clone> PopulationManager<T> {
 
             // Select tournament participants
             for _ in 0..tournament_size.min(self.population.len()) {
-                let candidate_idx = rng.random_range(0..self.population.len());
+                let candidate_idx = rng.random_range(0, self.population.len());
                 let candidate = &self.population[candidate_idx];
 
                 if candidate.performance.optimization_performance > best_performance {

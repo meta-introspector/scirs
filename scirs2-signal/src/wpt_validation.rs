@@ -11,7 +11,7 @@ use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
-use std::f64::consts::PI;
+use std::time::Instant;
 
 /// Validation result for WPT
 #[derive(Debug, Clone)]
@@ -88,6 +88,15 @@ pub struct CompressionEfficiency {
     pub energy_compaction: f64,
     /// Rate-distortion score
     pub rate_distortion: f64,
+}
+
+/// Get all node coordinates at a specific level
+fn get_level_nodes(tree: &WaveletPacketTree, level: usize) -> Vec<(usize, usize)> {
+    tree.nodes
+        .keys()
+        .filter(|(l, _)| *l == level)
+        .copied()
+        .collect()
 }
 
 /// Validate WPT decomposition and reconstruction
@@ -190,7 +199,7 @@ where
     let mut issues = Vec::new();
 
     // Perform decomposition with enhanced error handling
-    let tree = wpt_decompose(&signal_f64, wavelet, max_level, None)
+    let tree = wp_decompose(&signal_f64, wavelet, max_level, None)
         .map_err(|e| SignalError::ComputationError(format!("WPT decomposition failed: {}", e)))?;
 
     // Validate tree structure
@@ -209,7 +218,8 @@ where
     }
 
     // Test 2: Enhanced perfect reconstruction validation
-    let reconstructed = wpt_reconstruct(&tree)
+    let nodes = get_level_nodes(&tree, max_level);
+    let reconstructed = reconstruct_from_nodes(&tree, &nodes)
         .map_err(|e| SignalError::ComputationError(format!("WPT reconstruction failed: {}", e)))?;
 
     // Check reconstructed signal properties
@@ -330,7 +340,7 @@ where
     let signal_f64: Vec<f64> = signal.iter().map(|&x| NumCast::from(x).unwrap()).collect();
 
     // Perform decomposition for advanced analysis
-    let tree = wpt_decompose(&signal_f64, wavelet, max_level, None)?;
+    let tree = wp_decompose(&signal_f64, wavelet, max_level, None)?;
 
     if include_advanced {
         // Advanced orthogonality analysis
@@ -446,11 +456,13 @@ fn test_numerical_stability(
 
     // Test 1: Zero signal
     let zero_signal = vec![0.0; signal.len()];
-    match wpt_decompose(&zero_signal, wavelet, max_level, None) {
+    match wp_decompose(&zero_signal, wavelet, max_level, None) {
         Ok(tree) => {
-            let reconstructed = wpt_reconstruct(&tree)?;
-            if reconstructed.iter().all(|&x| x.abs() < 1e-10) {
-                passed_tests += 1;
+            let nodes = get_level_nodes(&tree, max_level);
+            if let Ok(reconstructed) = reconstruct_from_nodes(&tree, &nodes) {
+                if reconstructed.iter().all(|&x| x.abs() < 1e-10) {
+                    passed_tests += 1;
+                }
             }
         }
         Err(_) => {}
@@ -458,12 +470,14 @@ fn test_numerical_stability(
 
     // Test 2: Constant signal
     let const_signal = vec![1.0; signal.len()];
-    match wpt_decompose(&const_signal, wavelet, max_level, None) {
+    match wp_decompose(&const_signal, wavelet, max_level, None) {
         Ok(tree) => {
-            let reconstructed = wpt_reconstruct(&tree)?;
-            let mean = reconstructed.iter().sum::<f64>() / reconstructed.len() as f64;
-            if (mean - 1.0).abs() < 1e-10 {
-                passed_tests += 1;
+            let nodes = get_level_nodes(&tree, max_level);
+            if let Ok(reconstructed) = reconstruct_from_nodes(&tree, &nodes) {
+                let mean = reconstructed.iter().sum::<f64>() / reconstructed.len() as f64;
+                if (mean - 1.0).abs() < 1e-10 {
+                    passed_tests += 1;
+                }
             }
         }
         Err(_) => {}
@@ -472,12 +486,14 @@ fn test_numerical_stability(
     // Test 3: Impulse signal
     let mut impulse = vec![0.0; signal.len()];
     impulse[signal.len() / 2] = 1.0;
-    match wpt_decompose(&impulse, wavelet, max_level, None) {
+    match wp_decompose(&impulse, wavelet, max_level, None) {
         Ok(tree) => {
-            let reconstructed = wpt_reconstruct(&tree)?;
-            let energy_preserved = compute_energy(&reconstructed).abs() - 1.0;
-            if energy_preserved.abs() < 1e-10 {
-                passed_tests += 1;
+            let nodes = get_level_nodes(&tree, max_level);
+            if let Ok(reconstructed) = reconstruct_from_nodes(&tree, &nodes) {
+                let energy_preserved = compute_energy(&reconstructed).abs() - 1.0;
+                if energy_preserved.abs() < 1e-10 {
+                    passed_tests += 1;
+                }
             }
         }
         Err(_) => {}
@@ -485,7 +501,7 @@ fn test_numerical_stability(
 
     // Test 4: Very small values
     let small_signal: Vec<f64> = signal.iter().map(|&x| x * 1e-10).collect();
-    match wpt_decompose(&small_signal, wavelet, max_level, None) {
+    match wp_decompose(&small_signal, wavelet, max_level, None) {
         Ok(tree) => {
             if tree
                 .nodes
@@ -500,7 +516,7 @@ fn test_numerical_stability(
 
     // Test 5: Large values
     let large_signal: Vec<f64> = signal.iter().map(|&x| x * 1e10).collect();
-    match wpt_decompose(&large_signal, wavelet, max_level, None) {
+    match wp_decompose(&large_signal, wavelet, max_level, None) {
         Ok(tree) => {
             if tree
                 .nodes
@@ -568,7 +584,7 @@ pub fn compare_with_dwt(signal: &[f64], wavelet: Wavelet, level: usize) -> Signa
     use crate::dwt::wavedec;
 
     // Perform WPT decomposition
-    let wpt_tree = wpt_decompose(signal, wavelet, level, None)?;
+    let wpt_tree = wp_decompose(signal, wavelet, level, None)?;
 
     // Perform DWT decomposition
     let dwt_coeffs = wavedec(signal, wavelet, level, None)?;
@@ -715,12 +731,13 @@ fn analyze_performance(
 
     // Measure decomposition time
     let start = Instant::now();
-    let tree = wpt_decompose(signal, wavelet, max_level, None)?;
+    let tree = wp_decompose(signal, wavelet, max_level, None)?;
     let decomposition_time_ms = start.elapsed().as_micros() as f64 / 1000.0;
 
     // Measure reconstruction time
     let start = Instant::now();
-    let _ = wpt_reconstruct(&tree)?;
+    let nodes = get_level_nodes(&tree, max_level);
+    let _ = reconstruct_from_nodes(&tree, &nodes)?;
     let reconstruction_time_ms = start.elapsed().as_micros() as f64 / 1000.0;
 
     // Estimate memory usage
@@ -751,6 +768,7 @@ fn analyze_best_basis_stability(
     signal: &[f64],
 ) -> SignalResult<BestBasisStability> {
     use rand::prelude::*;
+    use rand::Rng;
 
     let cost_functions = ["shannon", "norm", "threshold"];
 
@@ -782,7 +800,7 @@ fn analyze_best_basis_stability(
             .collect();
 
         // Decompose noisy signal
-        if let Ok(noisy_tree) = wpt_decompose(&noisy_signal, tree.wavelet, tree.max_level, None) {
+        if let Ok(noisy_tree) = wp_decompose(&noisy_signal, tree.wavelet, tree.max_level, None) {
             if let (Ok(original_basis), Ok(noisy_basis)) = (
                 tree.get_best_basis("shannon"),
                 noisy_tree.get_best_basis("shannon"),
@@ -1616,7 +1634,6 @@ struct SpectralInfo {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::dwt::Wavelet;
 
     #[test]

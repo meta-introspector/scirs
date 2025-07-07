@@ -25,7 +25,6 @@
 use crate::error::{SignalError, SignalResult};
 use ndarray::{Array1, Array2, Array3};
 use num_complex::Complex64;
-use std::f64::consts::PI;
 
 /// Configuration for perfect reconstruction filter banks
 #[derive(Debug, Clone)]
@@ -1031,7 +1030,6 @@ impl MultirateConverter {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_pr_filter_bank_creation() {

@@ -10,7 +10,9 @@ use crate::filters::*;
 use crate::interpolation::*;
 use crate::measurements::*;
 use crate::morphology::*;
+use crate::scipy_compat::zoom;
 use ndarray::{Array2, ArrayView2};
+use num_traits::ToPrimitive;
 use std::collections::HashMap;
 
 /// Numerical validation result for a single test case
@@ -365,7 +367,7 @@ impl SciPyValidationSuite {
         self.add_result(validation);
 
         // Test 2: Zoom by factor 1.0 should preserve array
-        let zoom_result = zoom(&input, &[1.0, 1.0], None, None, None, None)?;
+        let zoom_result = zoom(&input, &[1.0f64, 1.0f64], None, None, None, None)?;
         let zoom_passed = self.arrays_approximately_equal(&input.view(), &zoom_result.view(), 1e-6);
 
         let validation = ValidationResult {
@@ -408,7 +410,8 @@ impl SciPyValidationSuite {
         let centroid = center_of_mass(&symmetric)?;
         let expected_center = vec![5.0, 5.0];
 
-        let centroid_error = (centroid[0] - 5.0).abs() + (centroid[1] - 5.0).abs();
+        let centroid_error = (centroid[0].to_f64().unwrap_or(0.0) - 5.0).abs()
+            + (centroid[1].to_f64().unwrap_or(0.0) - 5.0).abs();
         let centroid_passed = centroid_error < 0.1;
 
         let validation = ValidationResult {
@@ -440,7 +443,8 @@ impl SciPyValidationSuite {
 
         // For single pixel at (2,3), centroid should be exactly (2,3)
         let single_centroid = center_of_mass(&single_pixel)?;
-        let single_error = (single_centroid[0] - 2.0).abs() + (single_centroid[1] - 3.0).abs();
+        let single_error = (single_centroid[0].to_f64().unwrap_or(0.0) - 2.0).abs()
+            + (single_centroid[1].to_f64().unwrap_or(0.0) - 3.0).abs();
         let single_passed = single_error < 1e-10;
 
         let validation = ValidationResult {
@@ -488,15 +492,15 @@ impl SciPyValidationSuite {
         parameters: HashMap<String, String>,
         reference_source: String,
     ) -> ValidationResult {
-        let mut max_abs_diff = 0.0;
-        let mut sum_abs_diff = 0.0;
-        let mut sum_squared_diff = 0.0;
-        let mut sum_relative_error = 0.0;
+        let mut max_abs_diff: f64 = 0.0;
+        let mut sum_abs_diff: f64 = 0.0;
+        let mut sum_squared_diff: f64 = 0.0;
+        let mut sum_relative_error: f64 = 0.0;
         let mut count = 0;
         let mut count_nonzero = 0;
 
         for (r, c) in reference.iter().zip(computed.iter()) {
-            let abs_diff = (r - c).abs();
+            let abs_diff = (*r - *c).abs();
             max_abs_diff = max_abs_diff.max(abs_diff);
             sum_abs_diff += abs_diff;
             sum_squared_diff += abs_diff * abs_diff;

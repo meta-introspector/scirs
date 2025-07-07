@@ -537,7 +537,6 @@ fn upsample_filters(dec_lo: &[f64], dec_hi: &[f64], level: usize) -> (Vec<f64>, 
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_upsample_filter() {

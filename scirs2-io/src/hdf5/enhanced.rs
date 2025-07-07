@@ -276,7 +276,7 @@ impl EnhancedHDF5File {
 
         // Create the dataset
         let _dataset = dataset_builder.create(dataset_name.as_str()).map_err(|e| {
-            IoError::FormatError(format!("Failed to create dataset {}: {}", dataset_name, e))
+            IoError::FormatError(format!("Failed to create dataset {dataset_name}: {e}"))
         })?;
 
         // Write data based on type with proper type handling
@@ -441,7 +441,7 @@ impl EnhancedHDF5File {
                 };
 
                 parent_group.create_group(part).map_err(|e| {
-                    IoError::FormatError(format!("Failed to create group {}: {}", part, e))
+                    IoError::FormatError(format!("Failed to create group {part}: {e}"))
                 })?;
             }
         }
@@ -527,12 +527,12 @@ impl EnhancedHDF5File {
             file.dataset(&dataset_name)
         } else {
             let group = file.group(&group_path).map_err(|e| {
-                IoError::FormatError(format!("Failed to access group {}: {}", group_path, e))
+                IoError::FormatError(format!("Failed to access group {group_path}: {e}"))
             })?;
             group.dataset(&dataset_name)
         }
         .map_err(|e| {
-            IoError::FormatError(format!("Failed to access dataset {}: {}", dataset_name, e))
+            IoError::FormatError(format!("Failed to access dataset {dataset_name}: {e}"))
         })?;
 
         let shape = dataset.shape();
@@ -542,7 +542,7 @@ impl EnhancedHDF5File {
         if total_elements < parallel_config.chunk_size * 2 {
             let data: Vec<f64> = dataset
                 .read_raw()
-                .map_err(|e| IoError::FormatError(format!("Failed to read dataset: {}", e)))?;
+                .map_err(|e| IoError::FormatError(format!("Failed to read dataset: {e}")))?;
             let ndarray_shape = IxDyn(&shape);
             return ArrayD::from_shape_vec(ndarray_shape, data)
                 .map_err(|e| IoError::FormatError(e.to_string()));
@@ -586,7 +586,7 @@ impl EnhancedHDF5File {
                         data.copy_from_slice(&full_data[start_element..slice_end]);
                     }
                     Err(e) => {
-                        return Err(IoError::FormatError(format!("Failed to read slice: {}", e)));
+                        return Err(IoError::FormatError(format!("Failed to read slice: {e}")));
                     }
                 }
 

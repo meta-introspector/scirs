@@ -7,6 +7,7 @@
 use ndarray::{Array, ArrayView, Dimension, IxDyn};
 use num_traits::{Float, FromPrimitive, NumCast, Zero};
 use std::fmt::Debug;
+use std::mem;
 
 use crate::error::{NdimageError, NdimageResult};
 use crate::filters::BorderMode;

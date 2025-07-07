@@ -11,7 +11,6 @@ use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
-use std::f64::consts::PI;
 
 /// Validation result for parametric methods
 #[derive(Debug, Clone)]
@@ -389,7 +388,7 @@ fn check_method_consistency(config: &ValidationConfig) -> SignalResult<Consisten
 
 /// Test numerical stability
 #[allow(dead_code)]
-fn test_numerical_stability(config: &ValidationConfig) -> SignalResult<StabilityMetrics> {
+fn test_numerical_stability(_config: &ValidationConfig) -> SignalResult<StabilityMetrics> {
     let mut condition_numbers = Vec::new();
     let mut noise_sensitivities = Vec::new();
     let mut outlier_robustness_scores = Vec::new();
@@ -438,8 +437,8 @@ fn test_numerical_stability(config: &ValidationConfig) -> SignalResult<Stability
 
     for _ in 0..n_outliers {
         let idx = rng.random_range(0..n);
-        contaminated[idx] +=
-            rng.random_range(-10.0..10.0) * contaminated.iter().map(|x| x.abs()).fold(0.0, f64::max);
+        contaminated[idx] += rng.random_range(-10.0..10.0)
+            * contaminated.iter().map(|x| x.abs()).fold(0.0, f64::max);
     }
 
     let (ar_robust, _, _) = estimate_ar(&contaminated, 3, ARMethod::Burg)?;

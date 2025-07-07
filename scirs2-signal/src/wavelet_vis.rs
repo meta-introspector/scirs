@@ -937,7 +937,6 @@ pub mod colormaps {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::dwt::Wavelet;
     use crate::dwt2d::{dwt2d_decompose, wavedec2};
     use crate::swt2d::swt2d_decompose;

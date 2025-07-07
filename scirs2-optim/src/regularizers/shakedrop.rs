@@ -1,7 +1,6 @@
 use ndarray::{Array, ArrayBase, Data, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
-use rand::rngs::ThreadRng;
-use rand::Rng;
+use scirs2_core::random;
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};
@@ -34,7 +33,7 @@ pub struct ShakeDrop<A: Float + FromPrimitive + Debug> {
     /// Range for the beta parameter
     pub beta_range: (A, A),
     /// Random number generator
-    rng: ThreadRng,
+    rng: random::Random,
 }
 
 impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
@@ -58,7 +57,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             p,
             alpha_range: (neg_one, one),
             beta_range: (zero, one),
-            rng: rand::rng(),
+            rng: random::rng(),
         }
     }
 
@@ -78,7 +77,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             p,
             alpha_range,
             beta_range,
-            rng: rand::rng(),
+            rng: random::rng(),
         }
     }
 
@@ -93,7 +92,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             return min;
         }
 
-        let random_val = self.rng.random_range(min_f..max_f);
+        let random_val = self.rng.random_range(min_f, max_f);
         A::from_f64(random_val).unwrap()
     }
 
@@ -110,7 +109,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
         let one = A::one();
 
         // Determine if the gate is active
-        let u: f64 = self.rng.random_range(0.0..1.0);
+        let u: f64 = self.rng.random_range(0.0, 1.0);
         let b = if u < self.p.to_f64().unwrap() {
             one
         } else {

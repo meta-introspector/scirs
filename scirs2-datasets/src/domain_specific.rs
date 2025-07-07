@@ -117,7 +117,7 @@ pub mod astronomy {
         fn load_synthetic_stellar_data(&self, catalog: &str, n_stars: usize) -> Result<Dataset> {
             use rand_distr::{Distribution, Normal};
 
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             // Generate synthetic stellar parameters
             let mut data = Vec::with_capacity(n_stars * 8);
@@ -211,7 +211,7 @@ pub mod astronomy {
         fn load_synthetic_exoplanet_data(&self, n_planets: usize) -> Result<Dataset> {
             use rand_distr::{Distribution, LogNormal, Normal};
 
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             // Generate synthetic exoplanet parameters
             let mut data = Vec::with_capacity(n_planets * 6);
@@ -292,7 +292,7 @@ pub mod astronomy {
         fn load_synthetic_supernova_data(&self, n_supernovae: usize) -> Result<Dataset> {
             use rand_distr::{Distribution, Normal};
 
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             // Generate synthetic supernova light curve features
             let mut data = Vec::with_capacity(n_supernovae * 10);
@@ -418,7 +418,7 @@ pub mod genomics {
         pub fn load_gene_expression(&self, n_samples: usize, n_genes: usize) -> Result<Dataset> {
             use rand_distr::{Distribution, LogNormal, Normal};
 
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             // Generate synthetic gene expression matrix
             let mut data = Vec::with_capacity(n_samples * n_genes);
@@ -491,8 +491,7 @@ pub mod genomics {
             n_sequences: usize,
             sequence_length: usize,
         ) -> Result<Dataset> {
-
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             let nucleotides = ['A', 'T', 'G', 'C'];
 
             let mut sequences = Vec::new();
@@ -673,7 +672,7 @@ pub mod climate {
         ) -> Result<Dataset> {
             use rand_distr::{Distribution, Normal};
 
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             let days_per_year = 365;
             let total_days = n_years * days_per_year;
 
@@ -802,7 +801,7 @@ pub mod climate {
         pub fn load_atmospheric_chemistry(&self, n_measurements: usize) -> Result<Dataset> {
             use rand_distr::{Distribution, LogNormal, Normal};
 
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
 
             let mut data = Vec::with_capacity(n_measurements * 12);
             let mut air_quality_index = Vec::with_capacity(n_measurements);

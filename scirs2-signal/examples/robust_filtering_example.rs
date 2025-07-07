@@ -3,7 +3,6 @@
 //! This example shows how to use various robust filtering methods
 //! to handle outliers and non-Gaussian noise in signals.
 
-use ndarray::Array1;
 use scirs2_signal::robust::{
     alpha_trimmed_filter, hampel_filter, huber_filter, robust_filter_2d, winsorize_filter,
 };

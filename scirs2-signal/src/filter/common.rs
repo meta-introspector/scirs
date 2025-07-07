@@ -137,7 +137,6 @@ pub enum FilterStability {
 
 /// Common validation functions for filter parameters
 pub mod validation {
-    use super::*;
 
     /// Validate filter order
     pub fn validate_order(order: usize) -> SignalResult<()> {
@@ -188,7 +187,6 @@ pub mod validation {
 
 /// Common mathematical operations for filter design
 pub mod math {
-    use super::*;
     use std::f64::consts::PI;
 
     /// Pre-warp frequency for bilinear transform

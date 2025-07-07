@@ -2106,7 +2106,6 @@ fn compute_coefficient_statistics(coefficients: &Array3<f64>) -> CoefficientStat
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::dwt::Wavelet;
 
     #[test]

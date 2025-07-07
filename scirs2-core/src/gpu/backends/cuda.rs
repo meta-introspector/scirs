@@ -283,7 +283,7 @@ impl CudaContext {
         {
             // Real CUDA implementation
             let ptx = Self::compile_to_ptx(source, name)?;
-            let module = Self::load_ptx_module(&self.device, &ptx)?;
+            let module = Self::load_ptx_module(&self.device, ptx, &[name])?;
 
             Ok(CudaKernel {
                 module,
@@ -294,7 +294,7 @@ impl CudaContext {
         {
             // Fallback implementation
             let ptx = Self::compile_to_ptx(source, name)?;
-            let module = Self::load_ptx_module(&ptx)?;
+            let module = Self::load_ptx_module(&0, ptx, &[name])?;
             let function = Self::get_kernel_function(module, name)?;
 
             Ok(CudaKernel {
@@ -335,15 +335,19 @@ impl CudaContext {
         ptx: Ptx,
         function_names: &[&'static str],
     ) -> Result<Arc<impl std::any::Any>, GpuError> {
-        device
-            .load_ptx(ptx, "neural_kernels", function_names)
-            .map_err(|e| GpuError::Other(format!("Failed to load PTX module: {e}")))
-            .map(Arc::new)
+        let module = device
+            .load_ptx_module(ptx)
+            .map_err(|e| GpuError::Other(format!("Failed to load PTX module: {e}")))?;
+        Ok(Arc::new(module))
     }
 
     /// Load PTX module into CUDA context (fallback)
     #[cfg(not(feature = "cuda"))]
-    fn load_ptx_module(_ptx: Ptx, _function_names: &[&'static str]) -> Result<CUmodule, GpuError> {
+    fn load_ptx_module(
+        _device: &i32,
+        _ptx: Ptx,
+        _function_names: &[&'static str],
+    ) -> Result<CUmodule, GpuError> {
         // Fallback implementation: return non-null pointer
         Ok(0x2 as *mut c_void)
     }

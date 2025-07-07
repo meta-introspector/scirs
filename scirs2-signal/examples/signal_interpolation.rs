@@ -4,7 +4,6 @@ use num_complex::Complex64;
 use rand::{rng, Rng};
 use rand_distr::{Distribution, Normal};
 use scirs2_signal::{interpolate, SignalError, SignalResult};
-use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
 

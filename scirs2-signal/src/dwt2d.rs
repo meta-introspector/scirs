@@ -2793,7 +2793,6 @@ pub fn calculate_ssim(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::Array2;
     // use approx::assert_relative_eq;  // Not needed for shape checks
 

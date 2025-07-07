@@ -5,7 +5,7 @@
 //!
 //! Run with: cargo run --example educational_applications
 
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use num_complex::Complex64;
 use scirs2_special::*;
 use std::f64::consts::PI;
@@ -49,7 +49,7 @@ fn physics_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let a0 = 1.0; // Bohr radius (atomic units)
-    let r_values = Array1::linspace(0.1, 20.0, 100);
+    let _r_values = Array1::linspace(0.1, 20.0, 100);
 
     // Calculate radial wavefunctions for different quantum numbers
     println!("Hydrogen atom radial probability densities:");
@@ -58,9 +58,9 @@ fn physics_applications() -> Result<(), Box<dyn std::error::Error>> {
 
     for n in 1..=3 {
         for l in 0..(n as usize) {
-            let prob_a0 = hydrogen_radial_probability(n, l, a0);
-            let prob_2a0 = hydrogen_radial_probability(n, l, 2.0 * a0);
-            let prob_5a0 = hydrogen_radial_probability(n, l, 5.0 * a0);
+            let prob_a0 = hydrogen_radial_probability(n, l, a0)?;
+            let prob_2a0 = hydrogen_radial_probability(n, l, 2.0 * a0)?;
+            let prob_5a0 = hydrogen_radial_probability(n, l, 5.0 * a0)?;
 
             println!(
                 "{}  {}  {:10.6}   {:10.6}   {:10.6}",
@@ -79,7 +79,7 @@ fn physics_applications() -> Result<(), Box<dyn std::error::Error>> {
     let theta_vals = vec![0.0, PI / 4.0, PI / 2.0, 3.0 * PI / 4.0, PI];
     println!("Quadrupole field strength vs angle (θ):");
     for &theta in &theta_vals {
-        let field_strength = quadrupole_field_strength(theta, 0.0, 1.0, 2.0);
+        let field_strength = quadrupole_field_strength(theta, 0.0, 1.0, 2.0)?;
         println!(
             "θ = {:5.2} rad ({:3.0}°): E = {:.6}",
             theta,
@@ -124,8 +124,8 @@ fn physics_applications() -> Result<(), Box<dyn std::error::Error>> {
 
     for i in 0..=10 {
         let t = i as f64 * 0.5;
-        let (c_val, s_val) = fresnel(t);
-        let intensity = (0.5 + c_val).powi(2) + (0.5 + s_val).powi(2);
+        let (c_val, s_val) = fresnel(t)?;
+        let intensity = (0.5_f64 + c_val).powi(2) + (0.5_f64 + s_val).powi(2);
         println!("{:4.1}  {:8.5}  {:8.5}  {:8.5}", t, c_val, s_val, intensity);
     }
 
@@ -135,8 +135,8 @@ fn physics_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("T(x,t) = T₀ erfc(x / 2√(αt))");
     println!();
 
-    let T0 = 100.0; // Initial temperature
-    let alpha = 1e-6; // Thermal diffusivity (m²/s)
+    let t0 = 100.0; // Initial temperature
+    let alpha: f64 = 1e-6; // Thermal diffusivity (m²/s)
     let times = vec![60.0, 300.0, 900.0, 3600.0]; // seconds
 
     println!("Temperature distribution:");
@@ -148,7 +148,7 @@ fn physics_applications() -> Result<(), Box<dyn std::error::Error>> {
         print!("{:8.1}    ", x_cm);
 
         for &t in &times {
-            let temp = T0 * erfc(x / (2.0 * (alpha * t).sqrt()));
+            let temp = t0 * erfc(x / (2.0_f64 * (alpha * t).sqrt()));
             print!("{:7.1}  ", temp);
         }
         println!();
@@ -177,29 +177,18 @@ fn engineering_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("------------------------------------------");
 
     // Calculate first few zeros of J0 and J1
-    let j0_zeros = j0_zeros(3)?;
-    let j1_zeros = j1_zeros(3)?;
-
-    for (n, &zero) in j0_zeros.iter().enumerate() {
+    for n in 1..=3 {
+        let zero: f64 = j0_zeros(n)?;
         let frequency = zero * wave_speed / (2.0 * PI * radius);
         let wavelength = wave_speed / frequency;
-        println!(
-            "(0,{})      {:8.1}        {:8.4}",
-            n + 1,
-            frequency,
-            wavelength
-        );
+        println!("(0,{})      {:8.1}        {:8.4}", n, frequency, wavelength);
     }
 
-    for (n, &zero) in j1_zeros.iter().enumerate() {
+    for n in 1..=3 {
+        let zero: f64 = j1_zeros(n)?;
         let frequency = zero * wave_speed / (2.0 * PI * radius);
         let wavelength = wave_speed / frequency;
-        println!(
-            "(1,{})      {:8.1}        {:8.4}",
-            n + 1,
-            frequency,
-            wavelength
-        );
+        println!("(1,{})      {:8.1}        {:8.4}", n, frequency, wavelength);
     }
 
     // Control Systems: Step Response
@@ -232,7 +221,7 @@ fn engineering_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     let n_points = 64;
-    let n = Array1::linspace(0.0, (n_points - 1) as f64, n_points);
+    let _n = Array1::linspace(0.0, (n_points - 1) as f64, n_points);
 
     // Calculate different window functions
     println!("Window function comparison (N={}):", n_points);
@@ -324,7 +313,7 @@ fn engineering_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("y/δ     u/U∞    Dimensionless y");
     println!("-----------------------------");
 
-    let reynolds_x = free_stream_velocity * distance / kinematic_viscosity;
+    let reynolds_x: f64 = free_stream_velocity * distance / kinematic_viscosity;
     let delta = 5.0 * distance / reynolds_x.sqrt(); // Boundary layer thickness
 
     for y_over_delta in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2] {
@@ -384,7 +373,7 @@ fn statistics_applications() -> Result<(), Box<dyn std::error::Error>> {
     for &x in &x_values {
         print!("{:4.1}  ", x);
         for &df in &degrees_freedom {
-            let prob = chi_square_cdf(x, df as f64);
+            let prob = chi_square_cdf(x, df as f64)?;
             print!("{:6.3}  ", prob);
         }
         println!();
@@ -406,7 +395,7 @@ fn statistics_applications() -> Result<(), Box<dyn std::error::Error>> {
         print!("{:2}  ", df);
         for &conf_level in &confidence_levels {
             let alpha = 1.0 - conf_level;
-            let t_critical = t_inverse_cdf(1.0 - alpha / 2.0, df as f64);
+            let t_critical = t_inverse_cdf(1.0 - alpha / 2.0, df as f64)?;
             print!("{:8.3}  ", t_critical);
         }
         println!();
@@ -438,8 +427,8 @@ fn statistics_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("----------------------------------------");
 
     for &x in &x_vals {
-        let prior_density = beta_density(x, prior_alpha, prior_beta);
-        let posterior_density = beta_density(x, posterior_alpha, posterior_beta);
+        let prior_density = beta_density(x, prior_alpha, prior_beta)?;
+        let posterior_density = beta_density(x, posterior_alpha, posterior_beta)?;
         let evidence_ratio = posterior_density / prior_density;
         println!(
             "{:.1}   {:7.4}    {:7.4}     {:8.2}",
@@ -565,7 +554,7 @@ fn signal_processing_applications() -> Result<(), Box<dyn std::error::Error>> {
         print!("{:6.1}    ", snr_db);
 
         for &pfa in &false_alarm_rates {
-            let pd = radar_detection_probability(snr_linear, pfa);
+            let pd = radar_detection_probability(snr_linear, pfa)?;
             print!("{:8.4}   ", pd);
         }
         println!();
@@ -671,11 +660,11 @@ fn computer_graphics_applications() -> Result<(), Box<dyn std::error::Error>> {
     println!("---------------------------------------------------------------");
 
     for (i, &(theta, phi)) in light_directions.iter().enumerate() {
-        let y00 = sph_harm(0, 0, theta, phi);
-        let y1m1 = sph_harm(1, -1, theta, phi);
-        let y10 = sph_harm(1, 0, theta, phi);
-        let y11 = sph_harm(1, 1, theta, phi);
-        let y20 = sph_harm(2, 0, theta, phi);
+        let y00 = sph_harm(0, 0, theta, phi)?;
+        let y1m1 = sph_harm(1, -1, theta, phi)?;
+        let y10 = sph_harm(1, 0, theta, phi)?;
+        let y11 = sph_harm(1, 1, theta, phi)?;
+        let y20 = sph_harm(2, 0, theta, phi)?;
 
         let direction_name = match i {
             0 => "Overhead     ",
@@ -688,7 +677,7 @@ fn computer_graphics_applications() -> Result<(), Box<dyn std::error::Error>> {
 
         println!(
             "{}  {:7.4}  {:7.4}  {:7.4}  {:7.4}  {:7.4}",
-            direction_name, y00.re, y1m1.re, y10.re, y11.re, y20.re
+            direction_name, y00, y1m1, y10, y11, y20
         );
     }
 
@@ -829,7 +818,7 @@ fn computer_graphics_applications() -> Result<(), Box<dyn std::error::Error>> {
         (sphere_radius, 0.0, 0.0),
     ];
 
-    for (i, &(x, y, z)) in test_points.iter().enumerate() {
+    for (i, &(_x, _y, _z)) in test_points.iter().enumerate() {
         let gaussian_curvature = analytical_curvature;
         let mean_curvature = 1.0 / sphere_radius;
         let k1 = 1.0 / sphere_radius;
@@ -878,7 +867,7 @@ fn financial_applications() -> Result<(), Box<dyn std::error::Error>> {
             risk_free_rate,
             volatility,
             time_to_expiry,
-        );
+        )?;
 
         println!(
             "{:6.0}    {:8.2}     {:8.2}     {:8.4}     {:8.4}",
@@ -904,8 +893,8 @@ fn financial_applications() -> Result<(), Box<dyn std::error::Error>> {
         print!("{:8.1}%  ", vol * 100.0);
 
         for &conf in &confidence_levels {
-            let z_score = ndtri(conf); // Inverse normal CDF
-            let var = portfolio_value * vol * (time_horizon / 365.0).sqrt() * z_score;
+            let z_score = ndtri(conf)?; // Inverse normal CDF
+            let var = portfolio_value * vol * (time_horizon / 365.0_f64).sqrt() * z_score;
             print!("{:8.0}   ", var);
         }
         println!();
@@ -935,7 +924,7 @@ fn financial_applications() -> Result<(), Box<dyn std::error::Error>> {
             risk_free_rate,
             asset_volatility,
             time_horizon,
-        );
+        )?;
 
         println!(
             "{:10.0}      {:8.4}        {:11.2}",
@@ -1050,7 +1039,11 @@ fn financial_applications() -> Result<(), Box<dyn std::error::Error>> {
 
 // Helper functions for the applications
 #[allow(dead_code)]
-fn hydrogen_radial_probability(n: usize, l: usize, r: f64) -> f64 {
+fn hydrogen_radial_probability(
+    n: usize,
+    l: usize,
+    r: f64,
+) -> Result<f64, Box<dyn std::error::Error>> {
     // Simplified hydrogen radial wavefunction probability density
     // This is a basic approximation for demonstration
     let alpha = 2.0 / (n as f64);
@@ -1060,19 +1053,24 @@ fn hydrogen_radial_probability(n: usize, l: usize, r: f64) -> f64 {
         // s orbital approximation
         let laguerre_val = laguerre(n - 1, rho);
         let radial = rho.powf(l as f64) * (-rho / 2.0).exp() * laguerre_val;
-        radial * radial * r * r
+        Ok(radial * radial * r * r)
     } else {
         // Simplified for other orbitals
         let radial = rho.powf(l as f64) * (-rho / 2.0).exp();
-        radial * radial * r * r
+        Ok(radial * radial * r * r)
     }
 }
 
 #[allow(dead_code)]
-fn quadrupole_field_strength(theta: f64, phi: f64, moment: f64, distance: f64) -> f64 {
+fn quadrupole_field_strength(
+    theta: f64,
+    phi: f64,
+    moment: f64,
+    distance: f64,
+) -> Result<f64, Box<dyn std::error::Error>> {
     // Electric field from quadrupole moment
-    let y_20 = sph_harm(2, 0, theta, phi).re;
-    moment * y_20 / (distance.powi(4))
+    let y_20 = sph_harm(2, 0, theta, phi)?;
+    Ok(moment * y_20 / (distance.powi(4)))
 }
 
 #[allow(dead_code)]
@@ -1135,38 +1133,38 @@ fn blasius_velocity_profile(eta: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn chi_square_cdf(x: f64, df: f64) -> f64 {
+fn chi_square_cdf(x: f64, df: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // Chi-square cumulative distribution function
     if x <= 0.0 {
-        0.0
+        Ok(0.0)
     } else {
-        gammainc(df / 2.0, x / 2.0) / gamma(df / 2.0)
+        Ok(gammainc(df / 2.0, x / 2.0)? / gamma(df / 2.0))
     }
 }
 
 #[allow(dead_code)]
-fn t_inverse_cdf(p: f64, df: f64) -> f64 {
+fn t_inverse_cdf(p: f64, df: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // Student's t-distribution inverse CDF (approximation)
     // This is a simplified version; real implementation would be more complex
-    let z = ndtri(p); // Normal inverse
+    let z = ndtri(p)?; // Normal inverse
     if df > 30.0 {
-        z // Approximates normal for large df
+        Ok(z) // Approximates normal for large df
     } else {
         // Cornish-Fisher expansion approximation
         let c1 = z.powi(3) + z;
         let correction = c1 / (4.0 * df);
-        z + correction
+        Ok(z + correction)
     }
 }
 
 #[allow(dead_code)]
-fn beta_density(x: f64, alpha: f64, beta_param: f64) -> f64 {
+fn beta_density(x: f64, alpha: f64, beta_param: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // Beta distribution probability density function
     if x <= 0.0 || x >= 1.0 {
-        0.0
+        Ok(0.0)
     } else {
         let beta_function = beta(alpha, beta_param);
-        x.powf(alpha - 1.0) * (1.0 - x).powf(beta_param - 1.0) / beta_function
+        Ok(x.powf(alpha - 1.0) * (1.0 - x).powf(beta_param - 1.0) / beta_function)
     }
 }
 
@@ -1185,11 +1183,11 @@ fn weibull_hazard_rate(t: f64, k: f64, lambda: f64) -> f64 {
 #[allow(dead_code)]
 fn bessel_filter_response(freq: f64, fc: f64, order: usize) -> (f64, f64, f64) {
     // Bessel filter frequency response (simplified)
-    let s = Complex64::new(0.0, 2.0 * PI * freq / fc);
+    let _s = Complex64::new(0.0, 2.0 * PI * freq / fc);
 
     // Bessel polynomial evaluation would go here
     // This is a simplified approximation
-    let magnitude = 1.0 / (1.0 + (freq / fc).powi(2 * order)).sqrt();
+    let magnitude = 1.0 / (1.0 + (freq / fc).powi(2 * order as i32)).sqrt();
     let magnitude_db = 20.0 * magnitude.log10();
     let phase_deg = -(order as f64) * (freq / fc).atan() * 180.0 / PI;
     let group_delay = (order as f64) / (2.0 * PI * fc);
@@ -1198,11 +1196,11 @@ fn bessel_filter_response(freq: f64, fc: f64, order: usize) -> (f64, f64, f64) {
 }
 
 #[allow(dead_code)]
-fn radar_detection_probability(snr: f64, pfa: f64) -> f64 {
+fn radar_detection_probability(snr: f64, pfa: f64) -> Result<f64, Box<dyn std::error::Error>> {
     // Radar detection probability for Swerling I target
-    let threshold = ndtri(1.0 - pfa); // Detection threshold
+    let threshold = ndtri(1.0 - pfa)?; // Detection threshold
     let pd = 0.5 * (1.0 + erf((snr - threshold) / (2.0_f64.sqrt())));
-    pd.max(0.0).min(1.0)
+    Ok(pd.max(0.0).min(1.0))
 }
 
 #[allow(dead_code)]
@@ -1365,13 +1363,20 @@ fn bounce_easing(t: f64) -> f64 {
 }
 
 #[allow(dead_code)]
-fn black_scholes_option(s: f64, k: f64, r: f64, sigma: f64, t: f64) -> (f64, f64, f64, f64) {
+fn black_scholes_option(
+    s: f64,
+    k: f64,
+    r: f64,
+    sigma: f64,
+    t: f64,
+) -> Result<(f64, f64, f64, f64), Box<dyn std::error::Error>> {
     // Black-Scholes option pricing
     let d1 = ((s / k).ln() + (r + 0.5 * sigma * sigma) * t) / (sigma * t.sqrt());
     let d2 = d1 - sigma * t.sqrt();
 
     let nd1 = 0.5 * (1.0 + erf(d1 / 2.0_f64.sqrt()));
     let nd2 = 0.5 * (1.0 + erf(d2 / 2.0_f64.sqrt()));
+
     let nmd1 = 1.0 - nd1;
     let nmd2 = 1.0 - nd2;
 
@@ -1381,15 +1386,21 @@ fn black_scholes_option(s: f64, k: f64, r: f64, sigma: f64, t: f64) -> (f64, f64
     let call_delta = nd1;
     let put_delta = nd1 - 1.0;
 
-    (call_price, put_price, call_delta, put_delta)
+    Ok((call_price, put_price, call_delta, put_delta))
 }
 
 #[allow(dead_code)]
-fn merton_default_probability(v: f64, d: f64, r: f64, sigma: f64, t: f64) -> (f64, f64) {
+fn merton_default_probability(
+    v: f64,
+    d: f64,
+    r: f64,
+    sigma: f64,
+    t: f64,
+) -> Result<(f64, f64), Box<dyn std::error::Error>> {
     // Merton model default probability
     let distance_to_default = ((v / d).ln() + (r - 0.5 * sigma * sigma) * t) / (sigma * t.sqrt());
     let default_prob = 0.5 * (1.0 - erf(distance_to_default / 2.0_f64.sqrt()));
-    (default_prob, distance_to_default)
+    Ok((default_prob, distance_to_default))
 }
 
 #[allow(dead_code)]

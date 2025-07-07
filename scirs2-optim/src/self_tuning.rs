@@ -9,6 +9,8 @@ use crate::optimizers::*;
 use crate::schedulers::*;
 use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;
+use scirs2_core::random;
+use scirs2_core::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
@@ -333,7 +335,7 @@ pub trait OptimizerTrait<A: Float + ScalarOperand + Debug, D: Dimension>: Send +
     fn clone_optimizer(&self) -> Box<dyn OptimizerTrait<A, D>>;
 }
 
-impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 'static>
+impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static + num_traits::FromPrimitive, D: Dimension + 'static>
     SelfTuningOptimizer<A, D>
 {
     /// Create new self-tuning optimizer
@@ -613,12 +615,11 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 's
 
     /// Epsilon-greedy optimizer selection
     fn select_epsilon_greedy(&self) -> usize {
-        use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
 
-        if rng.random::<f64>() < self.config.exploration_rate {
+        if rng.random::<A>() < A::from(self.config.exploration_rate).unwrap() {
             // Explore: random selection
-            rng.random_range(0..self.optimizer_candidates.len())
+            rng.random_range(0, self.optimizer_candidates.len())
         } else {
             // Exploit: best performing optimizer
             self.bandit_state
@@ -634,8 +635,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 's
     /// Thompson sampling optimizer selection
     fn select_thompson_sampling(&self) -> usize {
         // Simplified Thompson sampling - in practice would use Beta distributions
-        use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
 
         let mut best_sample = f64::NEG_INFINITY;
         let mut best_idx = 0;
@@ -643,7 +643,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static, D: Dimension + 's
         for (i, _) in self.optimizer_candidates.iter().enumerate() {
             let mean = self.bandit_state.reward_estimates[i];
             let std = self.bandit_state.confidence_bounds[i];
-            let sample = rng.random_range((mean - std)..(mean + std));
+            let sample = rng.random_range(mean - std, mean + std);
 
             if sample > best_sample {
                 best_sample = sample;

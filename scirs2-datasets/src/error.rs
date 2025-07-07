@@ -59,6 +59,32 @@ pub enum DatasetsError {
     Other(String),
 }
 
+impl PartialEq for DatasetsError {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (DatasetsError::InvalidFormat(a), DatasetsError::InvalidFormat(b)) => a == b,
+            (DatasetsError::LoadingError(a), DatasetsError::LoadingError(b)) => a == b,
+            (DatasetsError::FormatError(a), DatasetsError::FormatError(b)) => a == b,
+            (DatasetsError::NotFound(a), DatasetsError::NotFound(b)) => a == b,
+            (DatasetsError::AuthenticationError(a), DatasetsError::AuthenticationError(b)) => {
+                a == b
+            }
+            (DatasetsError::DownloadError(a), DatasetsError::DownloadError(b)) => a == b,
+            (DatasetsError::CacheError(a), DatasetsError::CacheError(b)) => a == b,
+            (DatasetsError::IoError(a), DatasetsError::IoError(b)) => {
+                // Compare io::Error by kind and message
+                a.kind() == b.kind() && a.to_string() == b.to_string()
+            }
+            (DatasetsError::SerdeError(a), DatasetsError::SerdeError(b)) => a == b,
+            (DatasetsError::GpuError(a), DatasetsError::GpuError(b)) => a == b,
+            (DatasetsError::ComputationError(a), DatasetsError::ComputationError(b)) => a == b,
+            (DatasetsError::ValidationError(a), DatasetsError::ValidationError(b)) => a == b,
+            (DatasetsError::Other(a), DatasetsError::Other(b)) => a == b,
+            _ => false,
+        }
+    }
+}
+
 /// Result type for datasets operations
 pub type Result<T> = std::result::Result<T, DatasetsError>;
 

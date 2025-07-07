@@ -5,7 +5,6 @@
 //! and advanced spectral processing techniques for signal characterization.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
@@ -1525,7 +1524,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

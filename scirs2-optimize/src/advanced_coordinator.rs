@@ -753,7 +753,7 @@ impl AdvancedCoordinator {
     }
 
     /// Update problem characteristics based on optimization results
-    fn update_problem_characteristics(&mut self, result: &OptimizeResults) -> Result<()> {
+    fn update_problem_characteristics(&mut self, result: &OptimizeResults<f64>) -> Result<()> {
         // Simple characteristic learning
         let dimensionality = result.x.len() as f64;
         let convergence_rate = if result.nit > 0 {
@@ -833,7 +833,7 @@ impl CrossModalFusionEngine {
         Ok(fused)
     }
 
-    fn fuse_multiple_solutions(&self, results: &[OptimizeResults]) -> Result<Array1<f64>> {
+    fn fuse_multiple_solutions(&self, results: &[OptimizeResults<f64>]) -> Result<Array1<f64>> {
         if results.is_empty() {
             return Ok(Array1::zeros(self.num_params));
         }

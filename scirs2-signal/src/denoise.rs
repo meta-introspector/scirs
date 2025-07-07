@@ -477,7 +477,6 @@ fn scalar_median_abs_deviation(data: &[f64]) -> f64 {
 
 mod tests {
     #[allow(unused_imports)]
-    use super::*;
     #[allow(unused_imports)]
     use crate::dwt::Wavelet;
     #[allow(unused_imports)]

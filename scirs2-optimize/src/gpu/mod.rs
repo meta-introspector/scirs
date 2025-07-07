@@ -360,7 +360,7 @@ pub mod algorithms {
         }
 
         fn initialize_population_gpu(&self, bounds: &[(f64, f64)]) -> ScirsResult<Array2<f64>> {
-            use rand::{rng, Rng};
+            use rand::Rng;
             let mut rng = rand::rng();
 
             let dims = bounds.len();
@@ -369,7 +369,7 @@ pub mod algorithms {
             for i in 0..self.population_size {
                 for j in 0..dims {
                     let (low, high) = bounds[j];
-                    population[[i, j]] = rng.random_range(low..=high);
+                    population[[i, j]] = rng.gen_range(low..=high);
                 }
             }
 
@@ -393,7 +393,7 @@ pub mod algorithms {
         ) -> ScirsResult<Array2<f64>> {
             // For now, implement on CPU and transfer to GPU
             // In a full implementation, this would use GPU kernels
-            use rand::{rng, Rng};
+            use rand::Rng;
             let mut rng = rand::rng();
 
             let (pop_size, dims) = population.dim();
@@ -403,7 +403,7 @@ pub mod algorithms {
                 // Select three random individuals different from current
                 let mut indices = Vec::new();
                 while indices.len() < 3 {
-                    let idx = rng.random_range(0..pop_size);
+                    let idx = rng.gen_range(0..pop_size);
                     if idx != i && !indices.contains(&idx) {
                         indices.push(idx);
                     }
@@ -412,9 +412,9 @@ pub mod algorithms {
                 let [a, b, c] = [indices[0], indices[1], indices[2]];
 
                 // Mutation and crossover
-                let j_rand = rng.random_range(0..dims);
+                let j_rand = rng.gen_range(0..dims);
                 for j in 0..dims {
-                    if rng.random_range(0.0..1.0) < self.crossover_rate || j == j_rand {
+                    if rng.gen_range(0.0..1.0) < self.crossover_rate || j == j_rand {
                         trial_population[[i, j]] = population[[a, j]]
                             + self.f_scale * (population[[b, j]] - population[[c, j]]);
                     } else {
@@ -564,7 +564,7 @@ pub mod algorithms {
         }
 
         fn initialize_positions_gpu(&self, bounds: &[(f64, f64)]) -> ScirsResult<Array2<f64>> {
-            use rand::{rng, Rng};
+            use rand::Rng;
             let mut rng = rand::rng();
 
             let dims = bounds.len();
@@ -573,7 +573,7 @@ pub mod algorithms {
             for i in 0..self.swarm_size {
                 for j in 0..dims {
                     let (low, high) = bounds[j];
-                    positions[[i, j]] = rng.random_range(low..=high);
+                    positions[[i, j]] = rng.gen_range(low..=high);
                 }
             }
 
@@ -599,15 +599,15 @@ pub mod algorithms {
             global_best: &Array1<f64>,
             bounds: &[(f64, f64)],
         ) -> ScirsResult<()> {
-            use rand::{rng, Rng};
+            use rand::Rng;
             let mut rng = rand::rng();
 
             let (swarm_size, dims) = positions.dim();
 
             for i in 0..swarm_size {
                 for j in 0..dims {
-                    let r1: f64 = rng.random_range(0.0..1.0);
-                    let r2: f64 = rng.random_range(0.0..1.0);
+                    let r1: f64 = rng.gen_range(0.0..1.0);
+                    let r2: f64 = rng.gen_range(0.0..1.0);
 
                     // Update velocity
                     velocities[[i, j]] = self.w * velocities[[i, j]]

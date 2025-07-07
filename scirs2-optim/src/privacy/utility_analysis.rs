@@ -8,6 +8,7 @@ use crate::error::Result;
 use crate::privacy::{DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
 use ndarray::{ArrayBase, Data, Dimension};
 use num_traits::Float;
+use scirs2_core::random;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -1896,10 +1897,9 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
                 }
             }
             SamplingStrategy::Random => {
-                use rand::Rng;
-                let mut rng = rand::rng();
+                let mut rng = random::rng();
                 for _ in 0..range.num_samples {
-                    let value = rng.random_range(range.min..=range.max);
+                    let value = rng.random_range(range.min, range.max);
                     values.push(T::from(value).unwrap());
                 }
             }

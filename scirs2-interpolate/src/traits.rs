@@ -8,6 +8,9 @@ use num_traits::{Float, FromPrimitive};
 use std::fmt::{Debug, Display, LowerExp};
 use std::ops::{AddAssign, DivAssign, MulAssign, RemAssign, SubAssign};
 
+/// Type alias for confidence intervals result
+pub type ConfidenceIntervals<T> = Vec<(T, Vec<(T, T)>)>;
+
 /// Standard floating-point type for interpolation operations
 ///
 /// This trait combines all the common bounds needed for interpolation algorithms,
@@ -134,7 +137,7 @@ pub trait UncertaintyInterpolator<T: InterpolationFloat>: Interpolator<T> {
         &self,
         query_points: &ArrayView2<T>,
         confidence_levels: &[T],
-    ) -> crate::InterpolateResult<Vec<(T, Vec<(T, T)>)>>;
+    ) -> crate::InterpolateResult<ConfidenceIntervals<T>>;
 }
 
 /// Adaptive interpolator interface for methods that can refine their approximation
@@ -385,9 +388,7 @@ pub mod validation {
         let mut out_of_bounds = Vec::new();
 
         for (row_idx, point) in query_points.outer_iter().enumerate() {
-            for (_dim_idx, (&coord, &(min_bound, max_bound))) in
-                point.iter().zip(bounds.iter()).enumerate()
-            {
+            for (&coord, &(min_bound, max_bound)) in point.iter().zip(bounds.iter()) {
                 if coord < min_bound || coord > max_bound {
                     out_of_bounds.push(row_idx);
                     break;

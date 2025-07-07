@@ -5,7 +5,8 @@
 
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use rand::Rng;
+use scirs2_core::random;
+use scirs2_core::Rng;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -2981,7 +2982,7 @@ impl<T: Float + Send + Sync + std::ops::MulAssign> PerformanceGuidedSearch<T> {
 
         // Create mutated candidate
         Ok(ArchitectureCandidate {
-            id: format!("perf_guided_{}", rand::rng().random::<u32>()),
+            id: format!("perf_guided_{}", random::rng().random::<u32>()),
             specification: self.mutate_architecture_spec(base_config)?,
             generation_method: GenerationMethod::Learned,
             estimated_quality: Some(T::from(0.8).unwrap()),
@@ -2994,7 +2995,7 @@ impl<T: Float + Send + Sync + std::ops::MulAssign> PerformanceGuidedSearch<T> {
     ) -> Result<ArchitectureCandidate<T>> {
         // Generate diverse, exploratory candidate
         Ok(ArchitectureCandidate {
-            id: format!("exploration_{}", rand::rng().random::<u32>()),
+            id: format!("exploration_{}", random::rng().random::<u32>()),
             specification: self.generate_diverse_architecture(task_context)?,
             generation_method: GenerationMethod::Random,
             estimated_quality: None,
@@ -3010,7 +3011,7 @@ impl<T: Float + Send + Sync + std::ops::MulAssign> PerformanceGuidedSearch<T> {
         let best_patterns = self.extract_successful_patterns(history);
 
         Ok(ArchitectureCandidate {
-            id: format!("exploitation_{}", rand::rng().random::<u32>()),
+            id: format!("exploitation_{}", random::rng().random::<u32>()),
             specification: self.combine_successful_patterns(&best_patterns, task_context)?,
             generation_method: GenerationMethod::Evolutionary,
             estimated_quality: Some(T::from(0.9).unwrap()),
@@ -3028,7 +3029,7 @@ impl<T: Float + Send + Sync + std::ops::MulAssign> PerformanceGuidedSearch<T> {
             .to_f64()
             .unwrap_or(0.3);
 
-        if rand::rng().random::<f64>() < explore_factor {
+        if random::rng().random::<f64>() < explore_factor {
             self.generate_exploration_candidate(task_context)
         } else {
             self.generate_exploitation_candidate(task_context, history)
@@ -3040,7 +3041,7 @@ impl<T: Float + Send + Sync + std::ops::MulAssign> PerformanceGuidedSearch<T> {
         _task_context: &OptimizationTask,
     ) -> Result<ArchitectureCandidate<T>> {
         Ok(ArchitectureCandidate {
-            id: format!("default_{}", rand::rng().random::<u32>()),
+            id: format!("default_{}", random::rng().random::<u32>()),
             specification: ArchitectureSpecification::default(),
             generation_method: GenerationMethod::Random,
             estimated_quality: Some(T::from(0.5).unwrap()),
@@ -3261,7 +3262,7 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
         &self,
         context: &OptimizationTask,
     ) -> Result<ArchitectureCandidate<T>> {
-        let num_layers = rand::rng().random_range(1..=8);
+        let num_layers = random::rng().random_range(1, 8);
         let mut layers = Vec::with_capacity(num_layers);
 
         for i in 0..num_layers {
@@ -3274,7 +3275,7 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
                     } else {
                         {
                             let options = [LayerType::LSTM, LayerType::GRU, LayerType::Transformer];
-                            let index = rand::rng().random_range(0..options.len());
+                            let index = random::rng().random_range(0, options.len());
                             options[index]
                         }
                     }
@@ -3290,7 +3291,7 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
         let (param_count, flops, memory_req) = self.estimate_architecture_cost(&layers);
 
         Ok(ArchitectureCandidate {
-            id: format!("random_{}", rand::rng().random::<u32>()),
+            id: format!("random_{}", random::rng().random::<u32>()),
             specification: ArchitectureSpecification {
                 layers,
                 connections,
@@ -3353,43 +3354,43 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
             LayerType::LSTM | LayerType::GRU => {
                 parameters.insert(
                     "hidden_size".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(64..=512)),
+                    LayerParameter::Integer(random::rng().random_range(64, 512)),
                 );
                 parameters.insert(
                     "num_layers".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(1..=3)),
+                    LayerParameter::Integer(random::rng().random_range(1, 3)),
                 );
                 parameters.insert(
                     "dropout".to_string(),
-                    LayerParameter::Float(rand::rng().random_range(0.0..=0.5)),
+                    LayerParameter::Float(random::rng().random_range(0.0, 0.5)),
                 );
             }
             LayerType::Transformer => {
                 parameters.insert(
                     "num_heads".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(4..=16)),
+                    LayerParameter::Integer(random::rng().random_range(4, 16)),
                 );
                 parameters.insert(
                     "ff_dim".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(512..=2048)),
+                    LayerParameter::Integer(random::rng().random_range(512, 2048)),
                 );
                 parameters.insert(
                     "dropout".to_string(),
-                    LayerParameter::Float(rand::rng().random_range(0.0..=0.3)),
+                    LayerParameter::Float(random::rng().random_range(0.0, 0.3)),
                 );
             }
             LayerType::Convolution1D => {
                 parameters.insert(
                     "kernel_size".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(3..=15)),
+                    LayerParameter::Integer(random::rng().random_range(3, 15)),
                 );
                 parameters.insert(
                     "stride".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(1..=3)),
+                    LayerParameter::Integer(random::rng().random_range(1, 3)),
                 );
                 parameters.insert(
                     "padding".to_string(),
-                    LayerParameter::Integer(rand::rng().random_range(0..=5)),
+                    LayerParameter::Integer(random::rng().random_range(0, 5)),
                 );
             }
             _ => {} // Other layer types get default parameters
@@ -3526,10 +3527,10 @@ impl<T: Float + Send + Sync> ArchitectureCandidateGenerator<T> {
             for (_, param) in &mut layer.parameters {
                 match param {
                     LayerParameter::Float(ref mut value) => {
-                        *value *= rand::rng().random_range(0.8..=1.2);
+                        *value *= random::rng().random_range(0.8, 1.2);
                     }
                     LayerParameter::Integer(ref mut value) => {
-                        *value = (*value as f64 * rand::rng().random_range(0.9..=1.1)) as i64;
+                        *value = (*value as f64 * random::rng().random_range(0.9, 1.1)) as i64;
                     }
                     _ => {}
                 }

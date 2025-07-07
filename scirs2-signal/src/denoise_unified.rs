@@ -13,7 +13,6 @@ use crate::denoise_enhanced::{
 use crate::denoise_super_advanced::{advanced_advanced_denoise, AdvancedAdvancedDenoisingConfig};
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use ndarray::Array1;
 use serde::{Deserialize, Serialize};
 // use std::f64::consts::PI;
 
@@ -875,7 +874,6 @@ fn calculate_patch_distance(signal: &Array1<f64>, i: usize, j: usize, patch_size
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::PI;
 
     #[test]

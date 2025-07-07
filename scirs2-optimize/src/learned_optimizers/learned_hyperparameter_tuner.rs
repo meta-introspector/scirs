@@ -10,7 +10,7 @@ use super::{
 use crate::error::OptimizeResult;
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
-use rand::{rng, Rng};
+use rand::Rng;
 use std::collections::{HashMap, VecDeque};
 
 /// Learned hyperparameter tuner with adaptive configuration
@@ -625,14 +625,14 @@ impl LearnedHyperparameterTuner {
 
         // Sample discrete parameters
         for param in &self.hyperparameter_space.discrete_params {
-            let idx = rand::rng().random_range(0..param.values.len());
+            let idx = rand::rng().gen_range(0..param.values.len());
             let value = param.values[idx];
             parameters.insert(param.name.clone(), ParameterValue::Discrete(value));
         }
 
         // Sample categorical parameters
         for param in &self.hyperparameter_space.categorical_params {
-            let idx = rand::rng().random_range(0..param.categories.len());
+            let idx = rand::rng().gen_range(0..param.categories.len());
             let value = param.categories[idx].clone();
             parameters.insert(param.name.clone(), ParameterValue::Categorical(value));
         }

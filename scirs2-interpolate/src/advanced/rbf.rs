@@ -274,7 +274,7 @@ impl<
             .collect();
 
         let a_matrix = Array2::from_shape_vec((n_points, n_points), matrix_data).map_err(|e| {
-            InterpolateError::ComputationError(format!("Failed to construct RBF matrix: {}", e))
+            InterpolateError::ComputationError(format!("Failed to construct RBF matrix: {e}"))
         })?;
 
         Self::finalize_construction(points, values, &a_matrix, kernel, epsilon)

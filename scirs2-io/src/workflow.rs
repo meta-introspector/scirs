@@ -493,7 +493,7 @@ impl WorkflowExecutor {
                         .tasks
                         .iter()
                         .find(|t| &t.id == task_id)
-                        .ok_or_else(|| IoError::Other(format!("Task not found: {}", task_id)))?;
+                        .ok_or_else(|| IoError::Other(format!("Task not found: {task_id}")))?;
 
                     self.execute_single_task(task, execution_id)?;
                     executed_tasks.insert(task_id.clone());
@@ -552,7 +552,7 @@ impl WorkflowExecutor {
                                     task_state.error = Some(e.to_string());
                                     return Err(e);
                                 } else {
-                                    task_state.error = Some(format!("Attempt {}: {}", attempt, e));
+                                    task_state.error = Some(format!("Attempt {attempt}: {e}"));
                                     // Will retry
                                 }
                             }
@@ -657,8 +657,7 @@ impl WorkflowExecutor {
             Ok(())
         } else {
             Err(IoError::Other(format!(
-                "Execution {} not found",
-                execution_id
+                "Execution {execution_id} not found"
             )))
         }
     }
@@ -945,7 +944,7 @@ pub mod scheduling {
             match schedule {
                 WorkflowSchedule::Cron(cron_expr) => {
                     let schedule = CronSchedule::from_str(cron_expr)
-                        .map_err(|e| IoError::Other(format!("Invalid cron expression: {}", e)))?;
+                        .map_err(|e| IoError::Other(format!("Invalid cron expression: {e}")))?;
 
                     let after = last_run.unwrap_or_else(Utc::now);
                     Ok(schedule.after(&after).next())
@@ -1093,7 +1092,7 @@ pub mod engines {
             // Set up dependencies
             for (task_id, deps) in &workflow.dependencies {
                 for dep in deps {
-                    dag_code.push_str(&format!("{} >> {}\n", dep, task_id));
+                    dag_code.push_str(&format!("{dep} >> {task_id}\n"));
                 }
             }
 
@@ -1173,7 +1172,7 @@ pub mod engines {
                         deps.is_none_or(|d| d.iter().all(|dep| executed.contains(dep)));
 
                     if can_execute {
-                        flow_code.push_str(&format!("    {}()\n", task_id));
+                        flow_code.push_str(&format!("    {task_id}()\n"));
                         executed.insert((*task_id).clone());
                         progress = true;
                         false
@@ -1348,7 +1347,7 @@ pub mod dynamic {
             params: HashMap<String, serde_json::Value>,
         ) -> Result<Workflow> {
             let template = self.templates.get(template_name).ok_or_else(|| {
-                IoError::NotFound(format!("Template '{}' not found", template_name))
+                IoError::NotFound(format!("Template '{template_name}' not found"))
             })?;
 
             // Validate parameters
@@ -1651,7 +1650,7 @@ pub mod versioning {
             let versions = self.versions.entry(workflow_id.clone()).or_default();
 
             let version_number = versions.len() + 1;
-            let version = format!("v{}.0.0", version_number);
+            let version = format!("v{version_number}.0.0");
 
             let parent_version = versions.last().map(|v| v.version.clone());
 
@@ -1956,7 +1955,7 @@ pub mod visualization {
             // Add edges
             for (task_id, deps) in &workflow.dependencies {
                 for dep in deps {
-                    dot.push_str(&format!("  {} -> {};\n", dep, task_id));
+                    dot.push_str(&format!("  {dep} -> {task_id};\n"));
                 }
             }
 
@@ -1997,7 +1996,7 @@ pub mod visualization {
             // Add edges
             for (task_id, deps) in &workflow.dependencies {
                 for dep in deps {
-                    mermaid.push_str(&format!("    {} --> {}\n", dep, task_id));
+                    mermaid.push_str(&format!("    {dep} --> {task_id}\n"));
                 }
             }
 

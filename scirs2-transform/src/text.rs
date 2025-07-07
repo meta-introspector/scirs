@@ -50,30 +50,35 @@ impl CountVectorizer {
     }
 
     /// Set maximum number of features
+    #[allow(dead_code)]
     pub fn with_max_features(mut self, max_features: usize) -> Self {
         self.max_features = Some(max_features);
         self
     }
 
     /// Set minimum document frequency
+    #[allow(dead_code)]
     pub fn with_min_df(mut self, min_df: f64) -> Self {
         self.min_df = min_df;
         self
     }
 
     /// Set maximum document frequency
+    #[allow(dead_code)]
     pub fn with_max_df(mut self, max_df: f64) -> Self {
         self.max_df = max_df;
         self
     }
 
     /// Set whether to convert to lowercase
+    #[allow(dead_code)]
     pub fn with_lowercase(mut self, lowercase: bool) -> Self {
         self.lowercase = lowercase;
         self
     }
 
     /// Set custom token pattern
+    #[allow(dead_code)]
     pub fn with_token_pattern(mut self, pattern: &str) -> Result<Self> {
         self.token_pattern = Regex::new(pattern)
             .map_err(|e| TransformError::InvalidInput(format!("Invalid regex pattern: {e}")))?;
@@ -81,6 +86,7 @@ impl CountVectorizer {
     }
 
     /// Set stop words
+    #[allow(dead_code)]
     pub fn with_stop_words(mut self, stop_words: Vec<String>) -> Self {
         self.stop_words = stop_words.into_iter().collect();
         self
@@ -190,6 +196,7 @@ impl CountVectorizer {
     }
 
     /// Get feature names
+    #[allow(dead_code)]
     pub fn get_feature_names(&self) -> &[String] {
         &self.feature_names
     }
@@ -231,30 +238,35 @@ impl TfidfVectorizer {
     }
 
     /// Set whether to use IDF weighting
+    #[allow(dead_code)]
     pub fn with_use_idf(mut self, use_idf: bool) -> Self {
         self.use_idf = use_idf;
         self
     }
 
     /// Set whether to apply L2 normalization
+    #[allow(dead_code)]
     pub fn with_norm(mut self, norm: bool) -> Self {
         self.norm = norm;
         self
     }
 
     /// Set whether to smooth IDF weights
+    #[allow(dead_code)]
     pub fn with_smooth_idf(mut self, smooth_idf: bool) -> Self {
         self.smooth_idf = smooth_idf;
         self
     }
 
     /// Set whether to use sublinear term frequency
+    #[allow(dead_code)]
     pub fn with_sublinear_tf(mut self, sublinear_tf: bool) -> Self {
         self.sublinear_tf = sublinear_tf;
         self
     }
 
     /// Configure the underlying count vectorizer
+    #[allow(dead_code)]
     pub fn configure_count_vectorizer<F>(mut self, f: F) -> Self
     where
         F: FnOnce(CountVectorizer) -> CountVectorizer,
@@ -336,6 +348,7 @@ impl TfidfVectorizer {
     }
 
     /// Get feature names
+    #[allow(dead_code)]
     pub fn get_feature_names(&self) -> &[String] {
         self.count_vectorizer.get_feature_names()
     }
@@ -374,18 +387,21 @@ impl HashingVectorizer {
     }
 
     /// Set whether to use binary occurrence
+    #[allow(dead_code)]
     pub fn with_binary(mut self, binary: bool) -> Self {
         self.binary = binary;
         self
     }
 
     /// Set normalization method
+    #[allow(dead_code)]
     pub fn with_norm(mut self, norm: Option<String>) -> Self {
         self.norm = norm;
         self
     }
 
     /// Set whether to convert to lowercase
+    #[allow(dead_code)]
     pub fn with_lowercase(mut self, lowercase: bool) -> Self {
         self.lowercase = lowercase;
         self
@@ -483,6 +499,7 @@ impl StreamingCountVectorizer {
     }
 
     /// Set maximum vocabulary size
+    #[allow(dead_code)]
     pub fn with_max_features(mut self, max_features: usize) -> Self {
         self.max_features = Some(max_features);
         self

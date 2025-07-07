@@ -7,7 +7,7 @@
 use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
 use ndarray_rand::rand_distr::{Distribution, Normal};
 use num_traits::Float;
-use rand::Rng;
+use scirs2_core::random;
 use std::marker::PhantomData;
 
 use crate::error::{OptimError, Result};
@@ -160,7 +160,7 @@ where
     /// Create a new Gaussian mechanism
     pub fn new() -> Self {
         Self {
-            rng: rand::rng(),
+            rng: random::rng(),
             _phantom: PhantomData,
         }
     }
@@ -273,7 +273,7 @@ where
     /// Create a new Laplace mechanism
     pub fn new() -> Self {
         Self {
-            rng: rand::rng(),
+            rng: random::rng(),
             _phantom: PhantomData,
         }
     }
@@ -386,7 +386,7 @@ where
     /// Create a new exponential mechanism
     pub fn new(quality_function: Box<dyn Fn(&T) -> T + Send + Sync>) -> Self {
         Self {
-            rng: rand::rng(),
+            rng: random::rng(),
             quality_function,
             _phantom: PhantomData,
         }
@@ -420,7 +420,7 @@ where
         // Sample according to weights
         let total_weight: f64 = weights.iter().sum();
         let mut cumulative = 0.0;
-        let random_val: f64 = self.rng.random_range(0.0..total_weight);
+        let random_val: f64 = self.rng.random_range(0.0, total_weight);
 
         for (i, &weight) in weights.iter().enumerate() {
             cumulative += weight;

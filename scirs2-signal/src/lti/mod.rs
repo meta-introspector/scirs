@@ -176,7 +176,6 @@ pub mod system {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
     use num_complex::Complex64;
 

@@ -298,12 +298,13 @@ pub mod bessel {
 
         // Add terms until convergence
         for k in 1..200 {
-            term *= -&x2_quarter / (k as f64 * (k as f64 + n.abs() as f64));
+            let divisor = Float::with_val(ctx.precision(), k as f64 * (k as f64 + n.abs() as f64));
+            term *= -&x2_quarter / divisor;
             sum += &term;
 
             if term.clone().abs()
                 < sum.clone().abs()
-                    * Float::with_val(ctx.precision(), 10.0).pow(-ctx.precision() as i32 / 10)
+                    * Float::with_val(ctx.precision(), 10.0).pow(-(ctx.precision() as i32) / 10)
             {
                 break;
             }
@@ -315,9 +316,11 @@ pub mod bessel {
     /// Asymptotic expansion for Bessel J_n(x)
     fn bessel_j_asymptotic(n: i32, x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
         let pi = ctx.pi();
-        let sqrt_2_pi_x = (ctx.float(2.0) / (&pi * x)).sqrt();
+        let pi_x = Float::with_val(ctx.precision(), &pi * x);
+        let sqrt_2_pi_x = (ctx.float(2.0) / pi_x).sqrt();
 
-        let phase = x.clone() - (n as f64 + 0.5) * &pi / 2.0;
+        let phase_offset = Float::with_val(ctx.precision(), (n as f64 + 0.5) * &pi / 2.0);
+        let phase = x.clone() - phase_offset;
         let cos_phase = phase.cos();
 
         // Add asymptotic correction terms
@@ -374,9 +377,11 @@ pub mod bessel {
     /// Asymptotic expansion for Bessel Y_n(x)
     fn bessel_y_asymptotic(n: i32, x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
         let pi = ctx.pi();
-        let sqrt_2_pi_x = (ctx.float(2.0) / (&pi * x)).sqrt();
+        let pi_x = Float::with_val(ctx.precision(), &pi * x);
+        let sqrt_2_pi_x = (ctx.float(2.0) / pi_x).sqrt();
 
-        let phase = x.clone() - (n as f64 + 0.5) * &pi / 2.0;
+        let phase_offset = Float::with_val(ctx.precision(), (n as f64 + 0.5) * &pi / 2.0);
+        let phase = x.clone() - phase_offset;
         let sin_phase = phase.sin();
 
         // Add asymptotic correction terms
@@ -438,7 +443,7 @@ pub mod error_function {
 
             if new_term.clone().abs()
                 < sum.clone().abs()
-                    * Float::with_val(ctx.precision(), 10.0).pow(-ctx.precision() as i32 / 10)
+                    * Float::with_val(ctx.precision(), 10.0).pow(-(ctx.precision() as i32) / 10)
             {
                 break;
             }
@@ -462,7 +467,7 @@ pub mod error_function {
 
             if term.clone().abs()
                 < sum.clone().abs()
-                    * Float::with_val(ctx.precision(), 10.0).pow(-ctx.precision() as i32 / 10)
+                    * Float::with_val(ctx.precision(), 10.0).pow(-(ctx.precision() as i32) / 10)
             {
                 break;
             }

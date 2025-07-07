@@ -7,12 +7,9 @@
 use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
 use crate::lombscargle_simd::simd_lombscargle;
-use ndarray::Array1;
 use num_traits::Float;
-use rand::prelude::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
 /// Complete Advanced validation result with all implementations
@@ -409,7 +406,8 @@ fn generate_comprehensive_test_signals(
         t[i] += 0.001 * rng.random_range(-1.0..1.0);
     }
     let f0 = 10.0;
-    let y1: Array1<f64> = t.mapv(|ti| (2.0 * PI * f0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
+    let y1: Array1<f64> =
+        t.mapv(|ti| (2.0 * PI * f0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
     signals.insert(
         "single_tone".to_string(),
         (t.clone(), y1, vec![f0], vec![1.0]),
@@ -763,7 +761,8 @@ fn validate_simd_implementation_complete() -> SignalResult<CompleteSimdValidatio
     let mut rng = rand::rng();
     let t: Array1<f64> =
         Array1::from_shape_fn(n, |i| i as f64 * 0.01 + 0.001 * rng.random_range(-1.0..1.0));
-    let y: Array1<f64> = t.mapv(|ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
+    let y: Array1<f64> =
+        t.mapv(|ti| (2.0 * PI * 10.0 * ti).sin() + 0.1 * rng.random_range(-1.0..1.0));
 
     // Compute with scalar implementation
     let start_scalar = Instant::now();

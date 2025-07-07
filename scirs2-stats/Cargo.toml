@@ -42,6 +42,7 @@ plotters = { workspace = true }
 quickcheck = "1.0"
 quickcheck_macros = "1.0"
 rand = { workspace = true }
+approx = "0.5"
 
 [features]
 default = []

@@ -669,7 +669,6 @@ impl RealtimeProcessor for ZeroLatencyLimiter {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_circular_buffer() {

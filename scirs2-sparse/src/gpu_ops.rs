@@ -514,6 +514,15 @@ impl SpMVKernel {
                 })
             }
 
+            #[cfg(feature = "gpu")]
+            GpuBackend::Cuda => {
+                // GPU-enabled CUDA implementation
+                Ok(Self {
+                    kernel_handle: None,
+                    backend: device.backend(),
+                })
+            }
+
             GpuBackend::OpenCL => {
                 // Compile OpenCL SpMV kernel
                 let opencl_kernel_source = r#"
@@ -928,7 +937,6 @@ impl SpMVKernel {
     }
 }
 
-#[derive(Debug)]
 pub struct SpMSKernel {
     kernel_handle: Option<GpuKernelHandle>,
     backend: GpuBackend,
@@ -2934,6 +2942,8 @@ impl GpuKernelScheduler {
         let (available_memory, compute_units, warp_size) = match backend {
             #[cfg(not(feature = "gpu"))]
             GpuBackend::Cuda => (8_000_000_000, 108, 32), // Example RTX 3080 specs
+            #[cfg(feature = "gpu")]
+            GpuBackend::Cuda => (8_000_000_000, 108, 32), // Example RTX 3080 specs
             #[cfg(not(feature = "gpu"))]
             GpuBackend::OpenCL => (4_000_000_000, 36, 64), // Example values
             #[cfg(not(feature = "gpu"))]
@@ -2955,6 +2965,17 @@ impl GpuKernelScheduler {
 
         match self.backend {
             #[cfg(not(feature = "gpu"))]
+            GpuBackend::Cuda => {
+                // For CUDA, optimize for tensor cores when possible
+                if _rows >= 256 && _cols >= 256 {
+                    [32, 32, 1] // Tensor core friendly
+                } else if _nnz > 100_000 {
+                    [base_size, 16, 1] // High parallelism
+                } else {
+                    [base_size, 8, 1] // Balanced approach
+                }
+            }
+            #[cfg(feature = "gpu")]
             GpuBackend::Cuda => {
                 // For CUDA, optimize for tensor cores when possible
                 if _rows >= 256 && _cols >= 256 {

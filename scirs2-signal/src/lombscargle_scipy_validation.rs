@@ -14,8 +14,7 @@ use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
 use ndarray::Array1;
 use num_traits::Float;
-use rand::prelude::*;
-use scirs2_core::random::Rng;
+use rand::Rng;
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
@@ -2188,7 +2187,6 @@ fn characterize_spectral_window(rng: &mut impl Rng) -> SignalResult<f64> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_basic_validation() {

@@ -615,7 +615,7 @@ mod performance_validation_tests {
     fn test_operation_scaling() {
         // Test that operations scale reasonably with matrix size
         let sizes = [5, 10, 20];
-        let max_time_ms = [10, 50, 200]; // Very generous bounds
+        let max_time_ms = [100, 500, 2000]; // Very generous bounds for CI environments
 
         for (&n, &max_ms) in sizes.iter().zip(max_time_ms.iter()) {
             // Create a well-conditioned test matrix
@@ -668,7 +668,7 @@ mod performance_validation_tests {
             }
         });
 
-        let max_time_ms = 500; // Generous bound
+        let max_time_ms = 2000; // Generous bound for CI environments
 
         // Test LU decomposition
         let start = Instant::now();

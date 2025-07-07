@@ -1032,7 +1032,7 @@ fn create_candle_network<D: Device>(
         // He initialization for ReLU networks
         let std_dev = (2.0 / input_size as f32).sqrt();
         let weight_data = Array2::from_shape_fn((input_size, output_size), |_| {
-            rng.random_range(-std_dev..std_dev)
+            rng.random_range(-std_dev, std_dev)
         });
 
         let bias_data = Array2::zeros((1, output_size));
@@ -1063,13 +1063,13 @@ fn create_candle_dataset<D: Device>(
     let mut rng = Xoshiro256Plus::seed_from_u64(42);
 
     // Generate random inputs
-    let inputs = Array2::from_shape_fn((n_samples, input_dim), |_| rng.random_range(-1.0..1.0));
+    let inputs = Array2::from_shape_fn((n_samples, input_dim), |_| rng.random_range(-1.0, 1.0));
 
     // Generate targets with nonlinear function
     let targets = Array2::from_shape_fn((n_samples, output_dim), |(i, j)| {
         let x = inputs.row(i).mapv(|v| v * v).sum().sqrt();
         let base_value = (x * 3.14159).sin() * 0.5 + (x * 2.0).cos() * 0.3;
-        base_value + rng.random_range(-noise_level..noise_level)
+        base_value + rng.random_range(-noise_level, noise_level)
     });
 
     CandleDataset::new(inputs, targets, device)

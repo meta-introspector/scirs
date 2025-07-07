@@ -1,6 +1,6 @@
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use rand::Rng;
+use scirs2_core::random;
 use scirs2_optim::optimizers::SGD;
 use scirs2_optim::schedulers::{DecayStrategy, LearningRateScheduler, LinearWarmupDecay};
 use scirs2_optim::Optimizer;
@@ -8,19 +8,19 @@ use scirs2_optim::Optimizer;
 /// Generate synthetic data for linear regression
 #[allow(dead_code)]
 fn generate_data<A: Float>(n_samples: usize, n_features: usize) -> (Array2<A>, Array1<A>) {
-    let mut rng = rand::rng();
+    let mut rng = random::rng();
     let mut x = Array2::<A>::zeros((n_samples, n_features));
     let mut y = Array1::<A>::zeros(n_samples);
 
     // Generate random weights
     let true_weights: Vec<A> = (0..n_features)
-        .map(|_| A::from(rng.random_range(-1.0..1.0)).unwrap())
+        .map(|_| A::from(rng.random_range(-1.0, 1.0)).unwrap())
         .collect();
 
     // Generate random features and compute targets
     for i in 0..n_samples {
         for j in 0..n_features {
-            let x_val = A::from(rng.random_range(-5.0..5.0)).unwrap();
+            let x_val = A::from(rng.random_range(-5.0, 5.0)).unwrap();
             x[[i, j]] = x_val;
         }
 
@@ -30,7 +30,7 @@ fn generate_data<A: Float>(n_samples: usize, n_features: usize) -> (Array2<A>, A
             target = target + x[[i, j]] * true_weights[j];
         }
         // Add some noise
-        target = target + A::from(rng.random_range(-0.1..0.1)).unwrap();
+        target = target + A::from(rng.random_range(-0.1, 0.1)).unwrap();
         y[i] = target;
     }
 
@@ -124,9 +124,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // Shuffle data - just using a basic shuffling approach since we had rand version issues
         let mut indices: Vec<usize> = (0..n_samples).collect();
         // Simple Fisher-Yates shuffle
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
         for i in (1..indices.len()).rev() {
-            let j = rng.random_range(0..=i);
+            let j = rng.random_range(0, i);
             indices.swap(i, j);
         }
 

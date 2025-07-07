@@ -37,7 +37,6 @@
 
 use ndarray::{s, Array1, Array2, Array3, Axis};
 use std::cmp;
-use std::f64::consts::PI;
 
 use crate::error::{SignalError, SignalResult};
 

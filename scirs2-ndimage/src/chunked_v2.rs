@@ -7,6 +7,7 @@
 use ndarray::{Array, ArrayView, Dimension, IxDyn};
 use num_traits::{Float, FromPrimitive, NumCast};
 use std::fmt::Debug;
+use std::mem;
 
 use scirs2_core::error::CoreResult;
 use scirs2_core::memory_efficient::{

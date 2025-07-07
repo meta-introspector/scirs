@@ -11,7 +11,6 @@ use scirs2_linalg::{eig, eigh, inv, matrix_norm, solve, svd};
 // Enhanced with robust controllability/observability analysis
 use num_complex::Complex64;
 use scirs2_core::validation::{check_finite, check_shape};
-use std::f64::consts::PI;
 
 /// Helper function to convert Vec<f64> to Array2<f64> for matrix operations
 fn vec_to_array2(vec: &[f64], rows: usize, cols: usize) -> SignalResult<Array2<f64>> {
@@ -1642,6 +1641,7 @@ fn analyze_controllability_uncertainty(
     config: &RobustAnalysisConfig,
 ) -> SignalResult<UncertaintyBounds> {
     use rand::prelude::*;
+    use rand::Rng;
 
     let mut measures = Vec::new();
     let mut rng = rand::rng();
@@ -1727,7 +1727,6 @@ fn analyze_observability_uncertainty(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::array;
 
     #[test]

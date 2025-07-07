@@ -359,7 +359,6 @@ impl InterpolationMethods {
 /// Unit tests for the unified interpolation API
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::Array1;
 
     #[test]

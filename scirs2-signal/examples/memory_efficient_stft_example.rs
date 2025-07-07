@@ -5,7 +5,6 @@
 
 use scirs2_signal::stft::{MemoryEfficientStft, MemoryEfficientStftConfig, StftConfig};
 use scirs2_signal::window;
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

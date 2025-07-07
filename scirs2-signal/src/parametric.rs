@@ -36,7 +36,6 @@
 //! ```
 
 use ndarray::{s, Array1, Array2};
-use std::f64::consts::PI;
 
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;

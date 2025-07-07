@@ -6,6 +6,8 @@
 use crate::error::{OptimError, Result};
 use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
+use scirs2_core::random;
+use scirs2_core::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 
@@ -177,18 +179,17 @@ pub struct SelectionNetwork<A: Float> {
     hidden_size: usize,
 }
 
-impl<A: Float + ScalarOperand + Debug> SelectionNetwork<A> {
+impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> SelectionNetwork<A> {
     /// Create a new selection network
     pub fn new(input_size: usize, hidden_size: usize, num_optimizers: usize) -> Self {
-        use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
 
         let input_weights = Array2::from_shape_fn((hidden_size, input_size), |_| {
-            A::from(rng.random::<f64>() * 0.1 - 0.05).unwrap()
+            A::from(rng.random::<f64>()).unwrap() * A::from(0.1).unwrap() - A::from(0.05).unwrap()
         });
 
         let output_weights = Array2::from_shape_fn((num_optimizers, hidden_size), |_| {
-            A::from(rng.random::<f64>() * 0.1 - 0.05).unwrap()
+            A::from(rng.random::<f64>()).unwrap() * A::from(0.1).unwrap() - A::from(0.05).unwrap()
         });
 
         let input_bias = Array1::zeros(hidden_size);
@@ -271,7 +272,7 @@ impl<A: Float + ScalarOperand + Debug> SelectionNetwork<A> {
     }
 }
 
-impl<A: Float + ScalarOperand + Debug> AdaptiveOptimizerSelector<A> {
+impl<A: Float + ScalarOperand + Debug + num_traits::FromPrimitive> AdaptiveOptimizerSelector<A> {
     /// Create a new adaptive optimizer selector
     pub fn new(strategy: SelectionStrategy) -> Self {
         let available_optimizers = vec![
@@ -428,13 +429,12 @@ impl<A: Float + ScalarOperand + Debug> AdaptiveOptimizerSelector<A> {
         epsilon: f64,
         confidence: f64,
     ) -> Result<OptimizerType> {
-        use rand::Rng;
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
 
         // Epsilon-greedy exploration
         if rng.random::<f64>() < epsilon {
             // Explore: random selection
-            let idx = rng.random_range(0..self.available_optimizers.len());
+            let idx = rng.random_range(0, self.available_optimizers.len());
             return Ok(self.available_optimizers[idx]);
         }
 

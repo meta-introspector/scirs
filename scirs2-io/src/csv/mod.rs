@@ -153,10 +153,10 @@ pub fn read_csv<P: AsRef<Path>>(
     for (i, row) in rows.iter().enumerate() {
         if row.len() != num_cols {
             return Err(IoError::FormatError(format!(
-                "Inconsistent number of columns: row {} has {} columns, expected {}",
-                i + 1,
-                row.len(),
-                num_cols
+                "Inconsistent number of columns: row {row_num} has {actual_cols} columns, expected {expected_cols}",
+                row_num = i + 1,
+                actual_cols = row.len(),
+                expected_cols = num_cols
             )));
         }
     }
@@ -253,10 +253,10 @@ pub fn read_csv_numeric<P: AsRef<Path>>(
         for j in 0..shape[1] {
             let value = string_data[[i, j]].parse::<f64>().map_err(|_| {
                 IoError::FormatError(format!(
-                    "Could not convert value '{}' at position [{}, {}] to number",
-                    string_data[[i, j]],
-                    i,
-                    j
+                    "Could not convert value '{value}' at position [{row}, {col}] to number",
+                    value = string_data[[i, j]],
+                    row = i,
+                    col = j
                 ))
             })?;
             numeric_data[[i, j]] = value;
@@ -1416,10 +1416,10 @@ impl<R: BufRead> StreamingCsvReader<R> {
         for (i, row) in parsed_rows.iter().enumerate() {
             if row.len() != num_cols {
                 return Err(IoError::FormatError(format!(
-                    "Inconsistent columns at line {}: got {}, expected {}",
-                    self.current_line - self.buffer.len() + i,
-                    row.len(),
-                    num_cols
+                    "Inconsistent columns at line {line}: got {actual}, expected {expected}",
+                    line = self.current_line - self.buffer.len() + i,
+                    actual = row.len(),
+                    expected = num_cols
                 )));
             }
         }
@@ -1620,10 +1620,10 @@ pub fn read_csv_numeric_streaming<P: AsRef<Path>>(
             for j in 0..shape[1] {
                 let value = chunk[[i, j]].parse::<f64>().map_err(|_| {
                     IoError::FormatError(format!(
-                        "Could not convert '{}' to number at [{}, {}]",
-                        chunk[[i, j]],
-                        i,
-                        j
+                        "Could not convert '{value}' to number at [{row}, {col}]",
+                        value = chunk[[i, j]],
+                        row = i,
+                        col = j
                     ))
                 })?;
                 numeric_chunk[[i, j]] = value;

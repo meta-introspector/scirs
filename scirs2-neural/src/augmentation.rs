@@ -330,14 +330,14 @@ impl<F: Float + Debug + 'static + ndarray::ScalarOperand + num_traits::FromPrimi
         // In practice, this would involve proper image rotation algorithms
         let result = images.clone();
         for _i in 0..batch_size {
-            let _angle = rng().random_range(min_angle..=max_angle);
+            let _angle = rng().gen_range(min_angle..=max_angle);
             // Apply rotation (simplified - just return original for now)
             // Real implementation would use affine transformations
     fn random_scale(
         _preserve_aspect_ratio: bool,
         // Simplified scaling implementation
         // In practice, this would involve proper image scaling algorithms
-            let _scale = rng().random_range(min_scale..=max_scale);
+            let _scale = rng().gen_range(min_scale..=max_scale);
             // Apply scaling (simplified - just return original for now)
             // Real implementation would use interpolation
     fn random_crop(

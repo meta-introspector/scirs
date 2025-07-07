@@ -15,7 +15,6 @@ use scirs2_signal::{
         SimdMemoryConfig,
     },
 };
-use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
 

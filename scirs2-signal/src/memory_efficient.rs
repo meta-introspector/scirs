@@ -5,7 +5,6 @@
 //! algorithms, chunked processing, and advanced memory management.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::Array1;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::VecDeque;
@@ -166,7 +165,7 @@ where
         ));
     }
 
-    let mut processor = StreamingProcessor::new(config.clone());
+    let processor = StreamingProcessor::new(config.clone());
     let mut fft_results = Vec::new();
     let mut buffer = Vec::with_capacity(chunk_size);
 
@@ -270,7 +269,7 @@ where
     let chunk_size = config.chunk_size;
     let overlap = filter_order * 2; // Ensure sufficient overlap for filter
 
-    let mut processor = StreamingProcessor::new(config.clone());
+    let processor = StreamingProcessor::new(config.clone());
     let mut filtered_chunks = Vec::new();
     let mut buffer = VecDeque::with_capacity(chunk_size + overlap);
     let mut filter_state = vec![0.0; filter_order];
@@ -414,7 +413,7 @@ where
     check_positive(window_size, "window_size")?;
     check_positive(hop_size, "hop_size")?;
 
-    let mut processor = StreamingProcessor::new(config.clone());
+    let processor = StreamingProcessor::new(config.clone());
     let mut spectrogram_frames = Vec::new();
     let mut buffer = VecDeque::with_capacity(window_size * 2);
 
@@ -656,7 +655,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_streaming_processor() {

@@ -6,9 +6,6 @@
 
 use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
-use ndarray::Array1;
-use rand::prelude::*;
-use scirs2_core::random::Rng;
 use std::f64::consts::PI;
 use std::time::Instant;
 

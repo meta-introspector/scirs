@@ -1398,7 +1398,7 @@ let result = linear_interpolate(&x.view(), &y.view(), &x_new.view())?;
             .count();
 
         if missing_examples > 0 {
-            recommendations.push(format!("Add examples to {} items", missing_examples));
+            recommendations.push(format!("Add examples to {missing_examples} items"));
         }
 
         let missing_error_docs = self
@@ -1410,8 +1410,7 @@ let result = linear_interpolate(&x.view(), &y.view(), &x_new.view())?;
 
         if missing_error_docs > 0 {
             recommendations.push(format!(
-                "Document error conditions for {} items",
-                missing_error_docs
+                "Document error conditions for {missing_error_docs} items"
             ));
         }
 
@@ -1422,7 +1421,7 @@ let result = linear_interpolate(&x.view(), &y.view(), &x_new.view())?;
             .count();
 
         if broken_examples > 0 {
-            recommendations.push(format!("Fix {} broken examples", broken_examples));
+            recommendations.push(format!("Fix {broken_examples} broken examples"));
         }
 
         recommendations
@@ -1501,7 +1500,7 @@ impl fmt::Display for DocumentationReport {
 
         writeln!(f, "Recommendations:")?;
         for rec in &self.recommendations {
-            writeln!(f, "  - {}", rec)?;
+            writeln!(f, "  - {rec}")?;
         }
 
         Ok(())

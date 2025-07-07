@@ -7,7 +7,7 @@
 use crate::error::OptimizeError;
 use crate::unconstrained::OptimizeResult;
 use ndarray::{Array1, Array2};
-use rand::{rng, Rng};
+use rand::Rng;
 use std::future::Future;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -582,7 +582,7 @@ impl AsyncDifferentialEvolution {
             // Select three random individuals (different from current)
             let mut indices = Vec::new();
             while indices.len() < 3 {
-                let idx = rng.random_range(0..self.population_size);
+                let idx = rng.gen_range(0..self.population_size);
                 if idx != i && !indices.contains(&idx) {
                     indices.push(idx);
                 }
@@ -606,7 +606,7 @@ impl AsyncDifferentialEvolution {
 
             // Crossover
             let mut trial = current_population.row(i).to_owned();
-            let r = rng.random_range(0..self.dimensions);
+            let r = rng.gen_range(0..self.dimensions);
 
             for j in 0..self.dimensions {
                 if j == r || rng.random::<f64>() < self.crossover_probability {
@@ -670,7 +670,7 @@ mod tests {
         // Function with varying evaluation times
         let objective = |x: Array1<f64>| async move {
             // Simulate varying computation times (10ms to 100ms)
-            let delay = rand::rng().random_range(10..=100);
+            let delay = rand::rng().gen_range(10..=100);
             sleep(Duration::from_millis(delay)).await;
 
             // Rosenbrock function (2D)

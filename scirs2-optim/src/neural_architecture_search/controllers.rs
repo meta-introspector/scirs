@@ -981,7 +981,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> RandomController
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureController<T> for RandomController<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureController<T>
+    for RandomController<T>
+{
     fn initialize(&mut self, search_space: &SearchSpaceConfig) -> Result<()> {
         self.search_space = Some(search_space.clone());
         self.component_types = search_space
@@ -1002,7 +1004,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureCont
         // Random selection of component type
         let mut rng = rng();
         let component_type =
-            self.component_types[rng.random_range(0..self.component_types.len())].clone();
+            self.component_types[rng.random_range(0, self.component_types.len())].clone();
 
         let mut hyperparameters = HashMap::new();
         match component_type {

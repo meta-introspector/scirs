@@ -245,7 +245,9 @@ pub fn gpu_convolve_2d(
 
             // Copy result back to host
             let mut result_flat = vec![0.0f32; out_height * out_width];
-            output_buffer.copy_to_host(&mut result_flat);
+            output_buffer
+                .copy_to_host(&mut result_flat)
+                .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
             // Reshape to 2D array
             Ok(Array2::from_shape_vec((out_height, out_width), result_flat)
@@ -383,7 +385,8 @@ fn conv2d_vision(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 kernel_handle.dispatch([work_groups_x as u32, work_groups_y as u32, 1]);
 
                 let mut result_flat = vec![0.0f32; height * width];
-                output_buffer.copy_to_host(&mut result_flat);
+                output_buffer.copy_to_host(&mut result_flat)
+                    .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
                 Array2::from_shape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
@@ -550,7 +553,8 @@ fn gradient_magnitude(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 kernel_handle.dispatch([work_groups as u32, 1, 1]);
 
                 let mut result_flat = vec![0.0f32; height * width];
-                output_buffer.copy_to_host(&mut result_flat);
+                output_buffer.copy_to_host(&mut result_flat)
+                    .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
                 Array2::from_shape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
@@ -813,7 +817,8 @@ fn separable_conv_1d(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 kernel_handle.dispatch([work_groups as u32, 1, 1]);
 
                 let mut result = vec![0.0f32; height * width];
-                output_buffer.copy_to_host(&mut result);
+                output_buffer.copy_to_host(&mut result)
+                    .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
                 Ok(result)
             }
             Err(compile_error) => {
@@ -937,7 +942,8 @@ fn element_wise_multiply(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 kernel_handle.dispatch([work_groups as u32, 1, 1]);
 
                 let mut result_flat = vec![0.0f32; height * width];
-                output_buffer.copy_to_host(&mut result_flat);
+                output_buffer.copy_to_host(&mut result_flat)
+                    .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
                 Array2::from_shape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
@@ -1066,7 +1072,8 @@ fn harris_response(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 kernel_handle.dispatch([work_groups as u32, 1, 1]);
 
                 let mut result_flat = vec![0.0f32; height * width];
-                output_buffer.copy_to_host(&mut result_flat);
+                output_buffer.copy_to_host(&mut result_flat)
+                    .map_err(|e| VisionError::Other(format!("Failed to copy result from GPU: {e}")))?;
 
                 Array2::from_shape_vec((height, width), result_flat)
                     .map_err(|e| VisionError::Other(format!("Failed to reshape output: {e}")))
@@ -1407,7 +1414,9 @@ fn batch_conv2d(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 ]);
 
                 let mut result_flat = vec![0.0f32; total_size];
-                output_buffer.copy_to_host(&mut result_flat);
+                output_buffer.copy_to_host(&mut result_flat).map_err(|e| {
+                    VisionError::Other(format!("Failed to copy result from GPU: {e}"))
+                })?;
 
                 // Unpack results into separate arrays
                 let mut results = Vec::with_capacity(batch_size);

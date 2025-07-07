@@ -11,7 +11,6 @@ use crate::dwt2d_enhanced::{
 };
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array2};
-use rand::prelude::*;
 use std::f64;
 
 /// 2D DWT validation result
@@ -671,7 +670,6 @@ pub fn run_comprehensive_validation(wavelet: Wavelet) -> SignalResult<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::dwt::Wavelet;
 
     #[test]

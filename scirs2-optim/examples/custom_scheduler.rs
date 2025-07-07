@@ -1,5 +1,6 @@
 //! Example demonstrating the custom scheduler framework
 use ndarray::Array1;
+use scirs2_core::random;
 use scirs2_optim::{
     optimizers::{Optimizer, SGD},
     schedulers::{CombinedScheduler, CustomScheduler, LearningRateScheduler, SchedulerBuilder},
@@ -145,13 +146,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
 
     // 5. Create a noisy scheduler
-    let mut rng = rand::rng();
+    let mut rng = random::rng();
     let noisy_scheduler = CustomScheduler::new(0.1, move |step| {
-        use rand::Rng;
 
         // Exponential decay with noise
         let base_lr = 0.1 * 0.95f64.powi((step / 10) as i32);
-        let noise = rng.random_range(-0.01..0.01); // Add noise in range [-0.01, 0.01]
+        let noise = rng.random_range(-0.01, 0.01); // Add noise in range [-0.01, 0.01]
         (base_lr + noise).max(0.001) // Ensure LR doesn't go below 0.001
     });
 

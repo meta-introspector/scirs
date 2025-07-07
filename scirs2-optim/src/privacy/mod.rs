@@ -6,6 +6,7 @@
 use crate::error::{OptimError, Result};
 use ndarray::{Array, ArrayBase, Data, DataMut, Dimension, ScalarOperand};
 use num_traits::Float;
+use scirs2_core::random;
 use std::collections::VecDeque;
 use std::fmt::Debug;
 
@@ -232,7 +233,7 @@ where
             config.dataset_size,
         );
 
-        let rng = rand::rng();
+        let rng = random::rng();
 
         let adaptive_clip_state = if config.adaptive_clipping {
             Some(AdaptiveClippingState {

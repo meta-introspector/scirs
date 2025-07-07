@@ -18,11 +18,10 @@ use crate::sysid::{estimate_transfer_function, TfEstimationMethod};
 use crate::window::get_window;
 
 use ndarray::{Array1, Array2};
-use rand::prelude::*;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
-
 use std::f64::consts::PI;
+
 use std::time::Instant;
 
 /// Comprehensive validation configuration
@@ -737,7 +736,6 @@ pub fn validate_production_readiness(config: &ValidationConfig) -> SignalResult<
 }
 
 mod tests {
-    use super::*;
 
     #[test]
     fn test_validation_runner_basic() {

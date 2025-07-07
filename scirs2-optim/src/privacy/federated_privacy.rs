@@ -15,6 +15,7 @@ use ndarray::{Array1, Array2};
 use num_traits::Float;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
+use scirs2_core::random;
 use std::collections::{HashMap, VecDeque};
 
 // Additional imports for advanced federated learning
@@ -2512,7 +2513,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> FederatedPrivacy
 
     /// Sample clients for federated round
     fn sample_clients(&self, available_clients: &[String]) -> Result<Vec<String>> {
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
         let target_count = self.config.clients_per_round.min(available_clients.len());
 
         match self.config.sampling_strategy {
@@ -2578,7 +2579,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> FederatedPrivacy
 
         // Sample proportionally from each group
         let mut selected = Vec::new();
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
 
         for (_, clients) in device_groups {
             if clients.is_empty() {
@@ -2628,7 +2629,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> FederatedPrivacy
         // Sample based on weights
         let total_weight: f64 = client_weights.iter().map(|(_, w)| w).sum();
         let mut selected = Vec::new();
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
 
         for _ in 0..target_count {
             if client_weights.is_empty() {
@@ -2661,7 +2662,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> FederatedPrivacy
         // Ensure representation from different clusters/groups
         let mut selected = Vec::new();
         let mut remaining_clients = available_clients.to_vec();
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
 
         // First, ensure at least one client from each major cluster
         let clusters = self.get_client_clusters(&remaining_clients);
@@ -3071,7 +3072,7 @@ impl<T: Float + Send + Sync> SecureAggregator<T> {
             let mask_size = self.config.masking_dimension;
 
             let mask = Array1::from_iter(
-                (0..mask_size).map(|_| T::from(client_rng.random_range(-1.0..1.0)).unwrap()),
+                (0..mask_size).map(|_| T::from(client_rng.random_range(-1.0, 1.0)).unwrap()),
             );
 
             self.client_masks.insert(client_id.clone(), mask);
@@ -4373,7 +4374,7 @@ pub mod secure_aggregation_protocols {
     impl SecureKeyManager {
         fn new() -> Result<Self> {
             let mut master_key = [0u8; 32];
-            rand::rng().fill(&mut master_key);
+            random::rng().fill(&mut master_key);
 
             Ok(Self {
                 master_key,
@@ -4900,7 +4901,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> CompressionEngin
         gradients: &Array1<T>,
         sparsity_ratio: f64,
     ) -> Result<(Array1<T>, f64)> {
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
         let keep_probability = 1.0 - sparsity_ratio;
 
         let sparse_gradients = gradients.mapv(|x| {

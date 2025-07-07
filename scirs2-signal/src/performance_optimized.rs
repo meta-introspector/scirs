@@ -693,7 +693,6 @@ fn next_power_of_two(n: usize) -> usize {
 
 /// Performance benchmarking utilities
 pub mod benchmark {
-    use super::*;
     use std::time::Instant;
 
     /// Benchmark result
@@ -746,7 +745,6 @@ pub mod benchmark {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use ndarray::Array1;
 
     #[test]

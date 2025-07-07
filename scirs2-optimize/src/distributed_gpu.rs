@@ -259,7 +259,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         pop_size: usize,
         bounds: &[(f64, f64)],
     ) -> ScirsResult<Array2<f64>> {
-        use rand::{rng, Rng};
+        use rand::Rng;
         let mut rng = rand::rng();
 
         let dims = bounds.len();
@@ -268,7 +268,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
         for i in 0..pop_size {
             for j in 0..dims {
                 let (low, high) = bounds[j];
-                population[[i, j]] = rng.random_range(low..=high);
+                population[[i, j]] = rng.gen_range(low..=high);
             }
         }
 
@@ -323,14 +323,14 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
         // For now, implement CPU-based mutation and crossover
         // TODO: Use actual GPU kernels when properly implemented
-        use rand::{rng, Rng};
+        use rand::Rng;
         let mut rng = rand::rng();
 
         for i in 0..pop_size {
             // Select three random individuals different from current
             let mut indices = Vec::new();
             while indices.len() < 3 {
-                let idx = rng.random_range(0..pop_size);
+                let idx = rng.gen_range(0..pop_size);
                 if idx != i && !indices.contains(&idx) {
                     indices.push(idx);
                 }
@@ -339,9 +339,9 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
             let [a, b, c] = [indices[0], indices[1], indices[2]];
 
             // Mutation and crossover
-            let j_rand = rng.random_range(0..dims);
+            let j_rand = rng.gen_range(0..dims);
             for j in 0..dims {
-                if rng.random_range(0.0..1.0) < crossover_rate || j == j_rand {
+                if rng.gen_range(0.0..1.0) < crossover_rate || j == j_rand {
                     trial_population[[i, j]] =
                         population[[a, j]] + f_scale * (population[[b, j]] - population[[c, j]]);
                 } else {
@@ -495,7 +495,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Generate random indices for differential evolution mutation
     fn generate_random_indices(&self, pop_size: usize) -> ScirsResult<Array2<i32>> {
-        use rand::{rng, Rng};
+        use rand::Rng;
         let mut rng = rand::rng();
         let mut indices = Array2::zeros((pop_size, 3));
 
@@ -505,7 +505,7 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
             for j in 0..3 {
                 loop {
-                    let idx = rng.random_range(0..pop_size);
+                    let idx = rng.gen_range(0..pop_size);
                     if !selected.contains(&idx) {
                         indices[[i, j]] = idx as i32;
                         selected.insert(idx);
@@ -520,12 +520,12 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Generate random values for crossover
     fn generate_random_values(&self, count: usize) -> ScirsResult<Array1<f64>> {
-        use rand::{rng, Rng};
+        use rand::Rng;
         let mut rng = rand::rng();
         let mut values = Array1::zeros(count);
 
         for i in 0..count {
-            values[i] = rng.random_range(0.0..1.0);
+            values[i] = rng.gen_range(0.0..1.0);
         }
 
         Ok(values)
@@ -533,12 +533,12 @@ impl<M: MPIInterface> DistributedGpuOptimizer<M> {
 
     /// Generate j_rand values for crossover
     fn generate_j_rand(&self, pop_size: usize, dims: usize) -> ScirsResult<Array1<i32>> {
-        use rand::{rng, Rng};
+        use rand::Rng;
         let mut rng = rand::rng();
         let mut j_rand = Array1::zeros(pop_size);
 
         for i in 0..pop_size {
-            j_rand[i] = rng.random_range(0..dims) as i32;
+            j_rand[i] = rng.gen_range(0..dims) as i32;
         }
 
         Ok(j_rand)

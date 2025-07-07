@@ -2,7 +2,6 @@
 // for classification, segmentation, and analysis
 
 use ndarray::Array2;
-use rand::Rng;
 use scirs2_signal::image_features::{extract_image_features, ImageFeatureOptions};
 use std::collections::HashMap;
 

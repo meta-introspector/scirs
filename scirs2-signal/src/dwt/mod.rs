@@ -26,8 +26,6 @@ pub use transform::{dwt_decompose, dwt_reconstruct};
 // Re-export boundary extension for advanced users
 pub use boundary::extend_signal;
 
-use ndarray::Array1;
-
 /// Result of multi-level wavelet decomposition
 #[derive(Debug, Clone)]
 pub struct DecompositionResult {

@@ -13,7 +13,6 @@ use num_traits::Zero;
 use scirs2_linalg::complex::complex_inverse;
 use scirs2_linalg::complex::decompositions::{complex_eig, complex_eigh};
 use scirs2_linalg::solve as compute_solve;
-use std::f64::consts::PI;
 
 /// Configuration for high-resolution spectral estimation
 #[derive(Debug, Clone)]
@@ -753,7 +752,6 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Array1<
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

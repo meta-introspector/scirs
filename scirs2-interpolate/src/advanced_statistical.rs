@@ -20,6 +20,9 @@ use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, ScalarOperand};
 use num_traits::Float;
 use std::fmt::Debug;
 
+/// Type alias for basis function vectors to reduce complexity
+type BasisFunctionVec<T> = Vec<Box<dyn Fn(T) -> T>>;
+
 /// Configuration for functional data analysis interpolation
 #[derive(Debug, Clone)]
 pub struct FDAConfig {
@@ -156,7 +159,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
             for curve_idx in 0..n_curves {
                 let mut y_val = T::zero();
                 for (j, basis_fn) in self.basis_functions.iter().enumerate() {
-                    y_val = y_val + coeffs[[j, curve_idx]] * basis_fn(x_val);
+                    y_val += coeffs[[j, curve_idx]] * basis_fn(x_val);
                 }
                 predictions[[i, curve_idx]] = y_val;
             }
@@ -292,7 +295,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
         // Add regularization for numerical stability
         let reg = T::from_f64(1e-12).unwrap();
         for i in 0..lhs.nrows() {
-            lhs[[i, i]] = lhs[[i, i]] + reg;
+            lhs[[i, i]] += reg;
         }
 
         // Solve using simple Gaussian elimination (would use proper solver in production)
@@ -342,7 +345,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
             for i in (k + 1)..n {
                 let factor = aug[[i, k]] / aug[[k, k]];
                 for j in k..=n {
-                    aug[[i, j]] = aug[[i, j]] - factor * aug[[k, j]];
+                    aug[[i, j]] -= factor * aug[[k, j]];
                 }
             }
         }
@@ -352,9 +355,9 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
         for i in (0..n).rev() {
             x[i] = aug[[i, n]];
             for j in (i + 1)..n {
-                x[i] = x[i] - aug[[i, j]] * x[j];
+                x[i] -= aug[[i, j]] * x[j];
             }
-            x[i] = x[i] / aug[[i, i]];
+            x[i] /= aug[[i, i]];
         }
 
         Ok(x)
@@ -373,7 +376,7 @@ pub struct MultiOutputInterpolator<T: Float + ScalarOperand> {
     /// Fitted parameters
     parameters: Option<Array3<T>>, // [output_dim, input_dim + 1, basis_functions]
     /// Basis functions for each input dimension
-    basis_functions: Vec<Vec<Box<dyn Fn(T) -> T>>>,
+    basis_functions: Vec<BasisFunctionVec<T>>,
     /// Cross-output correlation matrix
     correlation_matrix: Option<Array2<T>>,
     fitted: bool,
@@ -461,7 +464,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
             for output_idx in 0..self.output_dim {
                 let mut pred = T::zero();
                 for (feat_idx, &feat_val) in features.iter().enumerate() {
-                    pred = pred + feat_val * parameters[[output_idx, feat_idx, 0]];
+                    pred += feat_val * parameters[[output_idx, feat_idx, 0]];
                 }
                 predictions[[sample_idx, output_idx]] = pred;
             }
@@ -536,6 +539,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
     }
 
     /// Recursive helper for tensor product computation
+    #[allow(clippy::only_used_in_recursion)]
     fn compute_tensor_product_recursive(
         &self,
         all_basis_values: &[Vec<T>],
@@ -571,7 +575,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
 
         let mut lhs = xtx;
         for i in 0..lhs.nrows() {
-            lhs[[i, i]] = lhs[[i, i]] + lambda;
+            lhs[[i, i]] += lambda;
         }
 
         // Solve linear system (simplified)
@@ -594,13 +598,13 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
                 if i == j {
                     let mut sum = T::zero();
                     for k in 0..j {
-                        sum = sum + l[[j, k]] * l[[j, k]];
+                        sum += l[[j, k]] * l[[j, k]];
                     }
                     l[[i, j]] = (a[[i, i]] - sum).sqrt();
                 } else {
                     let mut sum = T::zero();
                     for k in 0..j {
-                        sum = sum + l[[i, k]] * l[[j, k]];
+                        sum += l[[i, k]] * l[[j, k]];
                     }
                     l[[i, j]] = (a[[i, j]] - sum) / l[[j, j]];
                 }
@@ -612,9 +616,9 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
         for i in 0..n {
             y[i] = b[i];
             for j in 0..i {
-                y[i] = y[i] - l[[i, j]] * y[j];
+                y[i] -= l[[i, j]] * y[j];
             }
-            y[i] = y[i] / l[[i, i]];
+            y[i] /= l[[i, i]];
         }
 
         // Back substitution: L^T x = y
@@ -622,9 +626,9 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
         for i in (0..n).rev() {
             x[i] = y[i];
             for j in (i + 1)..n {
-                x[i] = x[i] - l[[j, i]] * x[j];
+                x[i] -= l[[j, i]] * x[j];
             }
-            x[i] = x[i] / l[[i, i]];
+            x[i] /= l[[i, i]];
         }
 
         Ok(x)
@@ -645,7 +649,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
             for output_idx in 0..self.output_dim {
                 let mut pred = T::zero();
                 for (feat_idx, &feat_val) in features.iter().enumerate() {
-                    pred = pred + feat_val * parameters[[output_idx, feat_idx, 0]];
+                    pred += feat_val * parameters[[output_idx, feat_idx, 0]];
                 }
                 residuals[[sample_idx, output_idx]] = y[[sample_idx, output_idx]] - pred;
             }
@@ -671,9 +675,9 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
                     let res_i = residuals[[sample_idx, i]];
                     let res_j = residuals[[sample_idx, j]];
 
-                    numerator = numerator + res_i * res_j;
-                    sum_i_sq = sum_i_sq + res_i * res_i;
-                    sum_j_sq = sum_j_sq + res_j * res_j;
+                    numerator += res_i * res_j;
+                    sum_i_sq += res_i * res_i;
+                    sum_j_sq += res_j * res_j;
                 }
 
                 let denominator = (sum_i_sq * sum_j_sq).sqrt();
@@ -780,7 +784,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
             // Evaluate polynomial
             let mut pred = T::zero();
             for (degree, &coeff) in segment_coeffs.iter().enumerate() {
-                pred = pred + coeff * x_val.powi(degree as i32);
+                pred += coeff * x_val.powi(degree as i32);
             }
             predictions[i] = pred;
         }
@@ -873,11 +877,11 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
             let coeffs = self.fit_polynomial_segment(&x_segment, &y_segment)?;
             let mse = self.compute_mse(&x_segment, &y_segment, &coeffs)?;
 
-            total_mse = total_mse + mse * T::from_usize(end_idx - start_idx).unwrap();
+            total_mse += mse * T::from_usize(end_idx - start_idx).unwrap();
             total_params += coeffs.len();
         }
 
-        total_mse = total_mse / T::from_usize(n).unwrap();
+        total_mse /= T::from_usize(n).unwrap();
 
         // Add penalties
         let param_penalty = T::from_usize(total_params).unwrap() * T::from_f64(2.0).unwrap();
@@ -937,7 +941,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
         let mut lhs = vt_v;
         let reg = T::from_f64(1e-12).unwrap();
         for i in 0..lhs.nrows() {
-            lhs[[i, i]] = lhs[[i, i]] + reg;
+            lhs[[i, i]] += reg;
         }
 
         self.solve_linear_system_poly(&lhs, &vt_y)
@@ -952,14 +956,14 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
     ) -> InterpolateResult<T> {
         let mut mse = T::zero();
 
-        for (_i, (&x_val, &y_val)) in x.iter().zip(y.iter()).enumerate() {
+        for (&x_val, &y_val) in x.iter().zip(y.iter()) {
             let mut pred = T::zero();
             for (degree, &coeff) in coeffs.iter().enumerate() {
-                pred = pred + coeff * x_val.powi(degree as i32);
+                pred += coeff * x_val.powi(degree as i32);
             }
 
             let residual = y_val - pred;
-            mse = mse + residual * residual;
+            mse += residual * residual;
         }
 
         Ok(mse / T::from_usize(x.len()).unwrap())
@@ -1040,7 +1044,7 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
             for i in (k + 1)..n {
                 let factor = aug[[i, k]] / aug[[k, k]];
                 for j in k..=n {
-                    aug[[i, j]] = aug[[i, j]] - factor * aug[[k, j]];
+                    aug[[i, j]] -= factor * aug[[k, j]];
                 }
             }
         }
@@ -1050,9 +1054,9 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
         for i in (0..n).rev() {
             x[i] = aug[[i, n]];
             for j in (i + 1)..n {
-                x[i] = x[i] - aug[[i, j]] * x[j];
+                x[i] -= aug[[i, j]] * x[j];
             }
-            x[i] = x[i] / aug[[i, i]];
+            x[i] /= aug[[i, i]];
         }
 
         Ok(x)

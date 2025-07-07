@@ -4,7 +4,6 @@
 //! and pitch shifting operations using the phase vocoder.
 
 use scirs2_signal::phase_vocoder::{phase_vocoder, PhaseVocoderConfig};
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

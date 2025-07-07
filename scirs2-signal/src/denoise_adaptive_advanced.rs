@@ -1056,7 +1056,6 @@ fn estimate_effective_bandwidth(signal: &Array1<f64>) -> SignalResult<f64> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::PI;
 
     #[test]
@@ -1068,6 +1067,7 @@ mod tests {
 
         // Add noise
         use rand::prelude::*;
+        use rand::Rng;
         let mut rng = rand::rng();
         let noisy_signal: Vec<f64> = clean_signal
             .iter()

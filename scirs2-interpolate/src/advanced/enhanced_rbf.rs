@@ -1344,10 +1344,10 @@ where
                 "Adaptive Gaussian".to_string()
             }
             KernelType::Enhanced(EnhancedRBFKernel::Polyharmonic(k)) => {
-                format!("Polyharmonic (k={})", k)
+                format!("Polyharmonic (k={k})")
             }
             KernelType::Enhanced(EnhancedRBFKernel::BeckertWendland(a)) => {
-                format!("Beckert-Wendland (α={})", a)
+                format!("Beckert-Wendland (α={a})")
             }
             KernelType::Custom(_, _) => "Custom".to_string(),
         };

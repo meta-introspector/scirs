@@ -3,9 +3,6 @@
 //! This example demonstrates the enhanced parametric spectral estimation capabilities
 //! including AR, MA, and ARMA model estimation with validation.
 
-use ndarray::Array1;
-use std::f64::consts::PI;
-
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Enhanced Parametric Spectral Estimation Validation");

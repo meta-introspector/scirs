@@ -1859,11 +1859,10 @@ mod tests {
     fn test_hdc_sequence_processing() {
         let config = HDCConfig::default();
 
-        let sequence = vec![
-            Array2::zeros((5, 5)).view(),
-            Array2::ones((5, 5)).view(),
-            Array2::from_elem((5, 5), 0.5).view(),
-        ];
+        let zeros = Array2::zeros((5, 5));
+        let ones = Array2::ones((5, 5));
+        let half = Array2::from_elem((5, 5), 0.5);
+        let sequence = vec![zeros.view(), ones.view(), half.view()];
 
         let sequence_hv = hdc_sequence_processing(&sequence, 3, &config).unwrap();
 
@@ -1939,7 +1938,9 @@ mod tests {
 
         let visual_data =
             Array2::from_shape_vec((4, 4), (0..16).map(|x| x as f64 / 16.0).collect()).unwrap();
-        let temporal_sequence = vec![Array2::zeros((4, 4)).view(), Array2::ones((4, 4)).view()];
+        let temporal_zeros = Array2::zeros((4, 4));
+        let temporal_ones = Array2::ones((4, 4));
+        let temporal_sequence = vec![temporal_zeros.view(), temporal_ones.view()];
         let semantic_concepts = vec!["object".to_string(), "motion".to_string()];
 
         let result = advanced_multimodal_hdc_fusion(

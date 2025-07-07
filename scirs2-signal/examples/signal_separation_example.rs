@@ -3,11 +3,9 @@
 //! This example shows how to use multi-band and harmonic/percussive
 //! separation methods for signal analysis and processing.
 
-use ndarray::Array1;
 use scirs2_signal::separation::{
     harmonic_percussive_separation, multiband_separation, HarmonicPercussiveConfig, MultibandConfig,
 };
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

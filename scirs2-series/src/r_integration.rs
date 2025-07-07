@@ -24,12 +24,16 @@ use ndarray::Array1;
 /// Error codes for R integration
 #[cfg(feature = "r")]
 pub const R_SUCCESS: c_int = 0;
+/// Error code for invalid parameters
 #[cfg(feature = "r")]
 pub const R_ERROR_INVALID_PARAMS: c_int = -1;
+/// Error code for memory allocation failures
 #[cfg(feature = "r")]
 pub const R_ERROR_MEMORY: c_int = -2;
+/// Error code for computation failures
 #[cfg(feature = "r")]
 pub const R_ERROR_COMPUTATION: c_int = -3;
+/// Error code for operations on unfitted models
 #[cfg(feature = "r")]
 pub const R_ERROR_NOT_FITTED: c_int = -4;
 
@@ -37,9 +41,13 @@ pub const R_ERROR_NOT_FITTED: c_int = -4;
 #[cfg(feature = "r")]
 #[repr(C)]
 pub struct RTimeSeries {
+    /// Pointer to the time series values
     pub values: *mut c_double,
+    /// Length of the time series
     pub length: c_int,
+    /// Frequency of the time series (observations per unit time)
     pub frequency: c_double,
+    /// Starting time of the time series
     pub start_time: c_double,
 }
 
@@ -47,13 +55,21 @@ pub struct RTimeSeries {
 #[cfg(feature = "r")]
 #[repr(C)]
 pub struct RARIMAModel {
+    /// Opaque handle to the underlying ARIMA model
     pub handle: *mut c_void,
+    /// Order of the autoregressive part
     pub p: c_int,
+    /// Degree of first differencing
     pub d: c_int,
+    /// Order of the moving average part
     pub q: c_int,
+    /// Order of the seasonal autoregressive part
     pub seasonal_p: c_int,
+    /// Degree of seasonal differencing
     pub seasonal_d: c_int,
+    /// Order of the seasonal moving average part
     pub seasonal_q: c_int,
+    /// Number of periods in each season
     pub seasonal_period: c_int,
 }
 
@@ -61,6 +77,7 @@ pub struct RARIMAModel {
 #[cfg(feature = "r")]
 #[repr(C)]
 pub struct RAnomalyDetector {
+    /// Opaque handle to the underlying anomaly detector
     pub handle: *mut c_void,
 }
 
@@ -68,7 +85,9 @@ pub struct RAnomalyDetector {
 #[cfg(feature = "r")]
 #[repr(C)]
 pub struct RSTLDecomposition {
+    /// Opaque handle to the underlying STL decomposition
     pub handle: *mut c_void,
+    /// Period of the seasonal component
     pub period: c_int,
 }
 
@@ -76,9 +95,13 @@ pub struct RSTLDecomposition {
 #[cfg(feature = "r")]
 #[repr(C)]
 pub struct RDecompositionResult {
+    /// Pointer to the trend component
     pub trend: *mut c_double,
+    /// Pointer to the seasonal component
     pub seasonal: *mut c_double,
+    /// Pointer to the residual component
     pub residual: *mut c_double,
+    /// Length of each component array
     pub length: c_int,
 }
 
@@ -86,9 +109,13 @@ pub struct RDecompositionResult {
 #[cfg(feature = "r")]
 #[repr(C)]
 pub struct RForecastResult {
+    /// Pointer to the forecast values
     pub forecasts: *mut c_double,
+    /// Length of the forecast array
     pub length: c_int,
+    /// Pointer to the lower confidence interval values
     pub confidence_lower: *mut c_double,
+    /// Pointer to the upper confidence interval values
     pub confidence_upper: *mut c_double,
 }
 
@@ -123,9 +150,15 @@ pub struct RStatistics {
 // ================================
 
 /// Create a new time series from R vector
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `values` is a valid pointer to an array of `length` elements
+/// - `length` is greater than 0
+/// - The memory pointed to by `values` is valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_create_timeseries(
+pub unsafe extern "C" fn scirs_create_timeseries(
     values: *const c_double,
     length: c_int,
     frequency: c_double,
@@ -156,9 +189,15 @@ pub extern "C" fn scirs_create_timeseries(
 }
 
 /// Free time series memory
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `ts` is a valid pointer to an RTimeSeries structure
+/// - The pointer was previously returned by `scirs_create_timeseries`
+/// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_free_timeseries(ts: *mut RTimeSeries) {
+pub unsafe extern "C" fn scirs_free_timeseries(ts: *mut RTimeSeries) {
     if !ts.is_null() {
         unsafe {
             let ts_box = Box::from_raw(ts);
@@ -174,9 +213,15 @@ pub extern "C" fn scirs_free_timeseries(ts: *mut RTimeSeries) {
 }
 
 /// Get time series values as R vector
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `ts` is a valid pointer to an RTimeSeries structure
+/// - `output` is a valid pointer to an array of at least `max_length` elements
+/// - `max_length` is greater than 0
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_get_timeseries_values(
+pub unsafe extern "C" fn scirs_get_timeseries_values(
     ts: *const RTimeSeries,
     output: *mut c_double,
     max_length: c_int,
@@ -203,7 +248,7 @@ pub extern "C" fn scirs_get_timeseries_values(
 /// Calculate basic statistics for time series
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_calculate_statistics(
+pub unsafe extern "C" fn scirs_calculate_statistics(
     ts: *const RTimeSeries,
     stats: *mut RStatistics,
 ) -> c_int {
@@ -243,7 +288,7 @@ pub extern "C" fn scirs_calculate_statistics(
 /// Check if time series is stationary
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_is_stationary(ts: *const RTimeSeries) -> c_int {
+pub unsafe extern "C" fn scirs_is_stationary(ts: *const RTimeSeries) -> c_int {
     if ts.is_null() {
         return R_ERROR_INVALID_PARAMS;
     }
@@ -273,7 +318,7 @@ pub extern "C" fn scirs_is_stationary(ts: *const RTimeSeries) -> c_int {
 /// Apply differencing to time series
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_difference_series(
+pub unsafe extern "C" fn scirs_difference_series(
     ts: *const RTimeSeries,
     periods: c_int,
     output: *mut c_double,
@@ -355,7 +400,7 @@ pub extern "C" fn scirs_create_arima(
 /// Fit ARIMA model to time series
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_fit_arima(model: *mut RARIMAModel, ts: *const RTimeSeries) -> c_int {
+pub unsafe extern "C" fn scirs_fit_arima(model: *mut RARIMAModel, ts: *const RTimeSeries) -> c_int {
     if model.is_null() || ts.is_null() {
         return R_ERROR_INVALID_PARAMS;
     }
@@ -382,7 +427,7 @@ pub extern "C" fn scirs_fit_arima(model: *mut RARIMAModel, ts: *const RTimeSerie
 /// Generate ARIMA forecasts
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_forecast_arima(
+pub unsafe extern "C" fn scirs_forecast_arima(
     model: *const RARIMAModel,
     steps: c_int,
     output: *mut c_double,
@@ -422,7 +467,7 @@ pub extern "C" fn scirs_forecast_arima(
 /// Get ARIMA model parameters
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_get_arima_params(
+pub unsafe extern "C" fn scirs_get_arima_params(
     model: *const RARIMAModel,
     param_names: *mut *mut c_char,
     param_values: *mut c_double,
@@ -466,7 +511,7 @@ pub extern "C" fn scirs_get_arima_params(
 /// Free ARIMA model
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_free_arima(model: *mut RARIMAModel) {
+pub unsafe extern "C" fn scirs_free_arima(model: *mut RARIMAModel) {
     if !model.is_null() {
         unsafe {
             let model_box = Box::from_raw(model);
@@ -495,7 +540,7 @@ pub extern "C" fn scirs_create_anomaly_detector() -> *mut RAnomalyDetector {
 /// Detect anomalies using IQR method
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_detect_anomalies_iqr(
+pub unsafe extern "C" fn scirs_detect_anomalies_iqr(
     detector: *const RAnomalyDetector,
     ts: *const RTimeSeries,
     multiplier: c_double,
@@ -548,7 +593,7 @@ pub extern "C" fn scirs_detect_anomalies_iqr(
 /// Detect anomalies using Z-score method
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_detect_anomalies_zscore(
+pub unsafe extern "C" fn scirs_detect_anomalies_zscore(
     detector: *const RAnomalyDetector,
     ts: *const RTimeSeries,
     threshold: c_double,
@@ -601,7 +646,7 @@ pub extern "C" fn scirs_detect_anomalies_zscore(
 /// Free anomaly detector
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_free_anomaly_detector(detector: *mut RAnomalyDetector) {
+pub unsafe extern "C" fn scirs_free_anomaly_detector(detector: *mut RAnomalyDetector) {
     if !detector.is_null() {
         unsafe {
             let _detector_box = Box::from_raw(detector);
@@ -636,7 +681,7 @@ pub extern "C" fn scirs_create_stl_decomposition(period: c_int) -> *mut RSTLDeco
 /// Perform STL decomposition
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_decompose_stl(
+pub unsafe extern "C" fn scirs_decompose_stl(
     decomposition: *const RSTLDecomposition,
     ts: *const RTimeSeries,
     result: *mut RDecompositionResult,
@@ -691,7 +736,7 @@ pub extern "C" fn scirs_decompose_stl(
 /// Free STL decomposition
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_free_stl_decomposition(decomposition: *mut RSTLDecomposition) {
+pub unsafe extern "C" fn scirs_free_stl_decomposition(decomposition: *mut RSTLDecomposition) {
     if !decomposition.is_null() {
         unsafe {
             let decomp_box = Box::from_raw(decomposition);
@@ -706,7 +751,7 @@ pub extern "C" fn scirs_free_stl_decomposition(decomposition: *mut RSTLDecomposi
 /// Free decomposition result
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_free_decomposition_result(result: *mut RDecompositionResult) {
+pub unsafe extern "C" fn scirs_free_decomposition_result(result: *mut RDecompositionResult) {
     if !result.is_null() {
         unsafe {
             let result_ref = &*result;
@@ -742,7 +787,7 @@ pub extern "C" fn scirs_free_decomposition_result(result: *mut RDecompositionRes
 /// Automatically select best ARIMA model
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_auto_arima(
+pub unsafe extern "C" fn scirs_auto_arima(
     ts: *const RTimeSeries,
     max_p: c_int,
     max_d: c_int,
@@ -859,7 +904,7 @@ pub extern "C" fn scirs_create_neural_forecaster(
 /// Train neural forecaster
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_train_neural_forecaster(
+pub unsafe extern "C" fn scirs_train_neural_forecaster(
     forecaster: *mut RNeuralForecaster,
     ts: *const RTimeSeries,
     epochs: c_int,
@@ -891,7 +936,7 @@ pub extern "C" fn scirs_train_neural_forecaster(
 /// Generate neural forecasts
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_forecast_neural(
+pub unsafe extern "C" fn scirs_forecast_neural(
     forecaster: *const RNeuralForecaster,
     input: *const c_double,
     input_length: c_int,
@@ -933,7 +978,7 @@ pub extern "C" fn scirs_forecast_neural(
 /// Free neural forecaster
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_free_neural_forecaster(forecaster: *mut RNeuralForecaster) {
+pub unsafe extern "C" fn scirs_free_neural_forecaster(forecaster: *mut RNeuralForecaster) {
     if !forecaster.is_null() {
         unsafe {
             let forecaster_box = Box::from_raw(forecaster);
@@ -975,7 +1020,7 @@ pub extern "C" fn scirs_cleanup() -> c_int {
 /// Free a C string allocated by the library
 #[cfg(feature = "r")]
 #[no_mangle]
-pub extern "C" fn scirs_free_string(s: *mut c_char) {
+pub unsafe extern "C" fn scirs_free_string(s: *mut c_char) {
     if !s.is_null() {
         unsafe {
             let _ = CString::from_raw(s);

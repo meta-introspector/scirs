@@ -10,7 +10,6 @@ use scirs2_signal::{
     advanced_simd_dwt, advanced_simd_fft, advanced_simd_resample, advanced_simd_rfft,
     advanced_simd_stft, generate_simd_performance_report, AdvancedSimdConfig,
 };
-use std::f64::consts::PI;
 use std::time::Instant;
 
 #[allow(dead_code)]

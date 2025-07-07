@@ -1833,7 +1833,8 @@ mod tests {
         let config = ProductionConfig::default();
         assert_eq!(config.performance_requirements.max_latency_ms, 1000.0);
         assert!(config.monitoring.metrics_enabled);
-        assert!(config.security.is_some());
+        // SecurityConfig is not an Option, just check it exists
+        assert!(!config.security.tls_version.is_empty());
     }
 
     #[test]

@@ -4,12 +4,10 @@
 //! available in scirs2-signal, including QMF banks, wavelet filter banks,
 //! cosine modulated filter banks, and IIR filter stabilization.
 
-use ndarray::Array1;
 use scirs2_signal::filter_banks::{
     CosineModulatedFilterBank, FilterBankType, FilterBankWindow, IirStabilizer, QmfBank,
     StabilizationMethod, WaveletFilterBank,
 };
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() -> Result<(), Box<dyn std::error::Error>> {

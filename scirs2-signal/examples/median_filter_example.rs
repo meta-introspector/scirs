@@ -1,5 +1,4 @@
 use ndarray::{Array1, Array2, Array3};
-use rand::Rng;
 use std::fs::File;
 use std::io::Write;
 

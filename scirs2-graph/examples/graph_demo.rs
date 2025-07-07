@@ -60,7 +60,10 @@ fn main() {
     // 5. Community detection
     println!("\n5. Community Detection");
     let communities = louvain_communities_result(&graph);
-    println!("   Modularity: {:.4}", communities.modularity);
+    println!(
+        "   Quality Score: {:.4}",
+        communities.quality_score.unwrap_or(0.0)
+    );
     println!("   Community assignments:");
     for (node, community) in &communities.node_communities {
         println!("     {} belongs to community {}", node, community);

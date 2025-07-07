@@ -1,6 +1,5 @@
 use ndarray::{Array1, Array2, Array3};
 // use std::f64::consts::PI;
-use rand::Rng;
 use std::fs::File;
 use std::io::Write;
 

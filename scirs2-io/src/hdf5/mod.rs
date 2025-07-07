@@ -389,7 +389,7 @@ impl HDF5File {
         #[cfg(feature = "hdf5")]
         {
             let native_file = File::create(&path_str)
-                .map_err(|e| IoError::FormatError(format!("Failed to create HDF5 file: {}", e)))?;
+                .map_err(|e| IoError::FormatError(format!("Failed to create HDF5 file: {e}")))?;
 
             Ok(Self {
                 path: path_str,
@@ -416,17 +416,15 @@ impl HDF5File {
         #[cfg(feature = "hdf5")]
         {
             let native_file = match mode {
-                FileMode::ReadOnly => File::open(&path_str).map_err(|e| {
-                    IoError::FormatError(format!("Failed to open HDF5 file: {}", e))
-                })?,
-                FileMode::ReadWrite => File::open_rw(&path_str).map_err(|e| {
-                    IoError::FormatError(format!("Failed to open HDF5 file: {}", e))
-                })?,
+                FileMode::ReadOnly => File::open(&path_str)
+                    .map_err(|e| IoError::FormatError(format!("Failed to open HDF5 file: {e}")))?,
+                FileMode::ReadWrite => File::open_rw(&path_str)
+                    .map_err(|e| IoError::FormatError(format!("Failed to open HDF5 file: {e}")))?,
                 FileMode::Create => File::create(&path_str).map_err(|e| {
-                    IoError::FormatError(format!("Failed to create HDF5 file: {}", e))
+                    IoError::FormatError(format!("Failed to create HDF5 file: {e}"))
                 })?,
                 FileMode::Truncate => File::create(&path_str).map_err(|e| {
-                    IoError::FormatError(format!("Failed to create HDF5 file: {}", e))
+                    IoError::FormatError(format!("Failed to create HDF5 file: {e}"))
                 })?,
             };
 
@@ -476,14 +474,14 @@ impl HDF5File {
         // Load all datasets in the current group
         let dataset_names = file
             .dataset_names()
-            .map_err(|e| IoError::FormatError(format!("Failed to get dataset names: {}", e)))?;
+            .map_err(|e| IoError::FormatError(format!("Failed to get dataset names: {e}")))?;
 
         for dataset_name in dataset_names {
             if let Ok(h5_dataset) = file.dataset(&dataset_name) {
                 // Get dataset metadata
                 let shape: Vec<usize> = h5_dataset.shape().to_vec();
                 let dtype = h5_dataset.dtype().map_err(|e| {
-                    IoError::FormatError(format!("Failed to get dataset dtype: {}", e))
+                    IoError::FormatError(format!("Failed to get dataset dtype: {e}"))
                 })?;
 
                 // Convert HDF5 datatype to our internal representation
@@ -521,7 +519,7 @@ impl HDF5File {
         // Load all subgroups recursively
         let group_names = file
             .group_names()
-            .map_err(|e| IoError::FormatError(format!("Failed to get group names: {}", e)))?;
+            .map_err(|e| IoError::FormatError(format!("Failed to get group names: {e}")))?;
 
         for group_name in group_names {
             if let Ok(h5_subgroup) = file.group(&group_name) {
@@ -612,13 +610,13 @@ impl HDF5File {
         match dtype.to_descriptor() {
             Ok(TypeDescriptor::Integer(_)) => {
                 let data: Vec<i64> = dataset.read_raw().map_err(|e| {
-                    IoError::FormatError(format!("Failed to read integer dataset: {}", e))
+                    IoError::FormatError(format!("Failed to read integer dataset: {e}"))
                 })?;
                 Ok(DataArray::Integer(data))
             }
             Ok(TypeDescriptor::Float(_)) => {
                 let data: Vec<f64> = dataset.read_raw().map_err(|e| {
-                    IoError::FormatError(format!("Failed to read float dataset: {}", e))
+                    IoError::FormatError(format!("Failed to read float dataset: {e}"))
                 })?;
                 Ok(DataArray::Float(data))
             }
@@ -627,14 +625,14 @@ impl HDF5File {
             | Ok(TypeDescriptor::VarLenUnicode)
             | Ok(TypeDescriptor::VarLenAscii) => {
                 let data: Vec<String> = dataset.read_raw().map_err(|e| {
-                    IoError::FormatError(format!("Failed to read string dataset: {}", e))
+                    IoError::FormatError(format!("Failed to read string dataset: {e}"))
                 })?;
                 Ok(DataArray::String(data))
             }
             _ => {
                 // For unsupported types, read as binary data
                 let data: Vec<u8> = dataset.read_raw().map_err(|e| {
-                    IoError::FormatError(format!("Failed to read binary dataset: {}", e))
+                    IoError::FormatError(format!("Failed to read binary dataset: {e}"))
                 })?;
                 Ok(DataArray::Binary(data))
             }
@@ -648,13 +646,13 @@ impl HDF5File {
 
         let dtype = attr
             .dtype()
-            .map_err(|e| IoError::FormatError(format!("Failed to get attribute dtype: {}", e)))?;
+            .map_err(|e| IoError::FormatError(format!("Failed to get attribute dtype: {e}")))?;
 
         match dtype.to_descriptor() {
             Ok(TypeDescriptor::Integer(_)) => {
                 if attr.shape().iter().product::<usize>() == 1 {
                     let value: i64 = attr.read_scalar().map_err(|e| {
-                        IoError::FormatError(format!("Failed to read integer attribute: {}", e))
+                        IoError::FormatError(format!("Failed to read integer attribute: {e}"))
                     })?;
                     Ok(AttributeValue::Integer(value))
                 } else {
@@ -670,12 +668,12 @@ impl HDF5File {
             Ok(TypeDescriptor::Float(_)) => {
                 if attr.shape().iter().product::<usize>() == 1 {
                     let value: f64 = attr.read_scalar().map_err(|e| {
-                        IoError::FormatError(format!("Failed to read float attribute: {}", e))
+                        IoError::FormatError(format!("Failed to read float attribute: {e}"))
                     })?;
                     Ok(AttributeValue::Float(value))
                 } else {
                     let value: Vec<f64> = attr.read_raw().map_err(|e| {
-                        IoError::FormatError(format!("Failed to read float array attribute: {}", e))
+                        IoError::FormatError(format!("Failed to read float array attribute: {e}"))
                     })?;
                     Ok(AttributeValue::FloatArray(value))
                 }
@@ -686,7 +684,7 @@ impl HDF5File {
             | Ok(TypeDescriptor::VarLenAscii) => {
                 if attr.shape().iter().product::<usize>() == 1 {
                     let value: String = attr.read_scalar().map_err(|e| {
-                        IoError::FormatError(format!("Failed to read string attribute: {}", e))
+                        IoError::FormatError(format!("Failed to read string attribute: {e}"))
                     })?;
                     Ok(AttributeValue::String(value))
                 } else {
@@ -792,13 +790,13 @@ impl HDF5File {
                 // Write data with proper reshaping
                 if shape.len() == 1 {
                     h5_dataset.write(&flat_data).map_err(|e| {
-                        IoError::FormatError(format!("Failed to write HDF5 dataset: {}", e))
+                        IoError::FormatError(format!("Failed to write HDF5 dataset: {e}"))
                     })?;
                 } else {
                     // For multidimensional arrays, we need to reshape the data
                     let array_data =
                         ndarray::Array::from_shape_vec(ndarray::IxDyn(&shape), flat_data).map_err(
-                            |e| IoError::FormatError(format!("Failed to reshape data: {}", e)),
+                            |e| IoError::FormatError(format!("Failed to reshape data: {e}")),
                         )?;
 
                     h5_dataset.write(&array_data).map_err(|e| {
@@ -828,14 +826,14 @@ impl HDF5File {
         for &group_name in &parts[..parts.len() - 1] {
             current_group = current_group
                 .get_group(group_name)
-                .ok_or_else(|| IoError::FormatError(format!("Group '{}' not found", group_name)))?;
+                .ok_or_else(|| IoError::FormatError(format!("Group '{group_name}' not found")))?;
         }
 
         // Get the dataset
         let dataset = current_group
             .datasets
             .get(*dataset_name)
-            .ok_or_else(|| IoError::FormatError(format!("Dataset '{}' not found", dataset_name)))?;
+            .ok_or_else(|| IoError::FormatError(format!("Dataset '{dataset_name}' not found")))?;
 
         // Try to read from native HDF5 file first if available
         #[cfg(feature = "hdf5")]
@@ -857,7 +855,7 @@ impl HDF5File {
                 // Read the dataset from the correct group
                 if let Ok(h5_dataset) = current_group.dataset(dataset_name) {
                     let data: Vec<f64> = h5_dataset.read_raw().map_err(|e| {
-                        IoError::FormatError(format!("Failed to read HDF5 dataset: {}", e))
+                        IoError::FormatError(format!("Failed to read HDF5 dataset: {e}"))
                     })?;
 
                     let shape = IxDyn(&dataset.shape);
@@ -893,9 +891,9 @@ impl HDF5File {
             if let Some(ref _file) = self.native_file {
                 // For HDF5, writing happens automatically when datasets are created
                 // So we just need to flush any pending operations
-                _file.flush().map_err(|e| {
-                    IoError::FormatError(format!("Failed to flush HDF5 file: {}", e))
-                })?;
+                _file
+                    .flush()
+                    .map_err(|e| IoError::FormatError(format!("Failed to flush HDF5 file: {e}")))?;
             }
         }
 
@@ -922,13 +920,13 @@ impl HDF5File {
         for &group_name in &parts[..parts.len() - 1] {
             current_group = current_group
                 .get_group(group_name)
-                .ok_or_else(|| IoError::FormatError(format!("Group '{}' not found", group_name)))?;
+                .ok_or_else(|| IoError::FormatError(format!("Group '{group_name}' not found")))?;
         }
 
         // Get the dataset
         current_group
             .get_dataset(dataset_name)
-            .ok_or_else(|| IoError::FormatError(format!("Dataset '{}' not found", dataset_name)))
+            .ok_or_else(|| IoError::FormatError(format!("Dataset '{dataset_name}' not found")))
     }
 
     /// Get a group by path (e.g., "/group1/group2")
@@ -943,7 +941,7 @@ impl HDF5File {
         for &group_name in &parts {
             current_group = current_group
                 .get_group(group_name)
-                .ok_or_else(|| IoError::FormatError(format!("Group '{}' not found", group_name)))?;
+                .ok_or_else(|| IoError::FormatError(format!("Group '{group_name}' not found")))?;
         }
 
         Ok(current_group)
@@ -970,7 +968,7 @@ impl HDF5File {
             let full_path = if prefix.is_empty() {
                 dataset_name.to_string()
             } else {
-                format!("{}/{}", prefix, dataset_name)
+                format!("{prefix}/{dataset_name}")
             };
             datasets.push(full_path);
         }
@@ -979,7 +977,7 @@ impl HDF5File {
             let new_prefix = if prefix.is_empty() {
                 group_name.clone()
             } else {
-                format!("{}/{}", prefix, group_name)
+                format!("{prefix}/{group_name}")
             };
             self.collect_datasets(subgroup, new_prefix, datasets);
         }
@@ -992,7 +990,7 @@ impl HDF5File {
             let full_path = if prefix.is_empty() {
                 group_name.clone()
             } else {
-                format!("{}/{}", prefix, group_name)
+                format!("{prefix}/{group_name}")
             };
             groups.push(full_path.clone());
             self.collect_groups(subgroup, full_path, groups);

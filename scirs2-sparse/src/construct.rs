@@ -374,7 +374,7 @@ where
         rand::rngs::StdRng::seed_from_u64(seed_value)
     } else {
         // For a random seed, use rng
-        let seed = rand::Rng::random::<u64>(&mut rand::rng());
+        let seed = rand::random::<u64>();
         rand::rngs::StdRng::seed_from_u64(seed)
     };
 
@@ -739,13 +739,11 @@ mod tests {
         // Allow for some random variation, but should be close to expected density
         assert!(
             (nnz as f64) > expected_nnz * 0.7,
-            "Too few non-zeros: {}",
-            nnz
+            "Too few non-zeros: {nnz}"
         );
         assert!(
             (nnz as f64) < expected_nnz * 1.3,
-            "Too many non-zeros: {}",
-            nnz
+            "Too many non-zeros: {nnz}"
         );
 
         // Test with custom RNG seed
@@ -759,13 +757,11 @@ mod tests {
         let expected_nnz_lil = 25.0 * 0.5;
         assert!(
             (nnz_lil as f64) > expected_nnz_lil * 0.7,
-            "Too few non-zeros in LIL: {}",
-            nnz_lil
+            "Too few non-zeros in LIL: {nnz_lil}"
         );
         assert!(
             (nnz_lil as f64) < expected_nnz_lil * 1.3,
-            "Too many non-zeros in LIL: {}",
-            nnz_lil
+            "Too many non-zeros in LIL: {nnz_lil}"
         );
     }
 }

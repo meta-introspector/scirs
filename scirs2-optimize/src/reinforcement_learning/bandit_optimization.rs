@@ -34,7 +34,7 @@ impl BanditOptimizer {
     pub fn select_arm(&self) -> usize {
         let total_counts: usize = self.arm_counts.sum();
         if total_counts == 0 {
-            return rng().random_range(0..self.num_arms);
+            return rng().gen_range(0..self.num_arms);
         }
 
         let mut best_arm = 0;

@@ -6,7 +6,6 @@ use crate::filter::filtfilt;
 use ndarray::Array2;
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Compute multitaper spectral coherence between two signals.

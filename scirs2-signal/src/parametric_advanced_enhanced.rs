@@ -1934,7 +1934,6 @@ fn analyze_simd_utilization(
 }
 
 mod tests {
-    use super::*;
     use ndarray::Array1;
 
     use std::f64::consts::PI;

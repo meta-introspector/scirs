@@ -478,7 +478,7 @@ impl MLPipeline {
         // Create RNG
         let mut rng: Box<dyn RngCore> = match random_state {
             Some(seed) => Box::new(StdRng::seed_from_u64(seed)),
-            None => Box::new(rand::thread_rng()),
+            None => Box::new(rand::rng()),
         };
 
         // Collect all indices for the oversampled dataset
@@ -732,7 +732,7 @@ impl MLPipeline {
                     indices.shuffle(&mut rng);
                 }
                 None => {
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rand::rng();
                     indices.shuffle(&mut rng);
                 }
             }
@@ -759,7 +759,7 @@ impl MLPipeline {
                     class_group.shuffle(&mut rng);
                 }
                 None => {
-                    let mut rng = rand::thread_rng();
+                    let mut rng = rand::rng();
                     class_group.shuffle(&mut rng);
                 }
             }

@@ -6,6 +6,7 @@
 use ndarray::{s, Array1, Array2, Array3};
 use num_traits::Float;
 use rand::{Rng, SeedableRng};
+use scirs2_core::random;
 use std::collections::{HashMap, VecDeque};
 
 use super::{
@@ -290,7 +291,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
         let rng = if let Some(seed) = seed {
             rand::rngs::SmallRng::seed_from_u64(seed)
         } else {
-            rand::rngs::SmallRng::from_rng(&mut rand::rng())
+            rand::rngs::SmallRng::from_rng(&mut random::rng())
         };
 
         Self {
@@ -317,14 +318,14 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
         use crate::neural_architecture_search::OptimizerComponent;
 
         // Randomly select number of components
-        let num_components = self.rng.random_range(1..=5);
+        let num_components = self.rng.random_range(1, 5);
         let mut components = Vec::new();
 
         for _ in 0..num_components {
             // Randomly select component type
             let component_config = &search_space.optimizer_components[self
                 .rng
-                .random_range(0..search_space.optimizer_components.len())];
+                .random_range(0, search_space.optimizer_components.len())];
 
             let mut hyperparameters = HashMap::new();
 
@@ -332,17 +333,17 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
             for (param_name, param_range) in &component_config.hyperparameter_ranges {
                 let value = match param_range {
                     super::ParameterRange::Continuous(min, max) => {
-                        let val = self.rng.random_range(*min..=*max);
+                        let val = self.rng.random_range(*min, *max);
                         T::from(val).unwrap()
                     }
                     super::ParameterRange::LogUniform(min, max) => {
                         let log_min = min.ln();
                         let log_max = max.ln();
-                        let log_val = self.rng.random_range(log_min..=log_max);
+                        let log_val = self.rng.random_range(log_min, log_max);
                         T::from(log_val.exp()).unwrap()
                     }
                     super::ParameterRange::Integer(min, max) => {
-                        let val = self.rng.random_range(*min..=*max) as f64;
+                        let val = self.rng.random_range(*min, *max) as f64;
                         T::from(val).unwrap()
                     }
                     super::ParameterRange::Boolean => {
@@ -354,7 +355,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
                         T::from(val).unwrap()
                     }
                     super::ParameterRange::Discrete(values) => {
-                        let idx = self.rng.random_range(0..values.len());
+                        let idx = self.rng.random_range(0, values.len());
                         T::from(values[idx]).unwrap()
                     }
                     super::ParameterRange::Categorical(_values) => {
@@ -461,9 +462,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
         let mut best_idx = 0;
         let mut best_fitness = T::neg_infinity();
 
-        let mut rng = rand::rng();
+        let mut rng = random::rng();
         for _ in 0..self.tournament_size {
-            let idx = rng.random_range(0..self.population.len());
+            let idx = rng.random_range(0, self.population.len());
             if fitness_scores[idx] > best_fitness {
                 best_fitness = fitness_scores[idx];
                 best_idx = idx;
@@ -611,7 +612,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
         }
 
         // Fallback to random generation
-        let idx = rand::rng().random_range(0..self.population.len());
+        let idx = random::rng().random_range(0, self.population.len());
         self.statistics.total_architectures_generated += 1;
         Ok(self.population[idx].clone())
     }
@@ -709,8 +710,8 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static>
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static + std::iter::Sum> SearchStrategy<T>
-    for ReinforcementLearningSearch<T>
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static + std::iter::Sum>
+    SearchStrategy<T> for ReinforcementLearningSearch<T>
 {
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<()> {
         // Initialize controller network
@@ -976,7 +977,17 @@ impl<T: Float + Default> BaselineOptimizer<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::ScalarOperand> DifferentiableSearch<T> {
+impl<
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + std::fmt::Debug
+            + ndarray::ScalarOperand
+            + std::iter::Sum,
+    > DifferentiableSearch<T>
+{
     pub fn new(
         num_operations: usize,
         num_edges: usize,
@@ -1099,8 +1110,16 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::Scala
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum> SearchStrategy<T>
-    for DifferentiableSearch<T>
+impl<
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + std::fmt::Debug
+            + std::iter::Sum
+            + ndarray::ScalarOperand,
+    > SearchStrategy<T> for DifferentiableSearch<T>
 {
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<()> {
         // Initialize architecture weights with small random values
@@ -1193,7 +1212,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum> BayesianOptimization<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum>
+    BayesianOptimization<T>
+{
     pub fn new(
         kernel_type: KernelType,
         acquisition_type: AcquisitionType,
@@ -1219,7 +1240,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
 
         for component in &architecture.components {
             // Encode component type as one-hot
-            encoding.push(T::from(component.component_type as u8).unwrap());
+            encoding.push(T::from(component_type_to_u8(&component.component_type)).unwrap());
 
             // Encode hyperparameters
             for (_, &value) in &component.hyperparameters {
@@ -1445,7 +1466,7 @@ impl<T: Float + Default> GPKernel<T> {
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static>
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static + std::iter::Sum>
     NeuralPredictorSearch<T>
 {
     pub fn new(
@@ -1487,7 +1508,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static>
         }
 
         // Encode all architectures
-        let encoded_archs: Result<Vec<_>, _> = architectures
+        let encoded_archs: std::result::Result<Vec<_>, _> = architectures
             .iter()
             .map(|arch| self.architecture_encoder.encode(arch))
             .collect();
@@ -1549,8 +1570,8 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static>
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> SearchStrategy<T>
-    for NeuralPredictorSearch<T>
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static + std::iter::Sum>
+    SearchStrategy<T> for NeuralPredictorSearch<T>
 {
     fn initialize(&mut self, _search_space: &SearchSpaceConfig) -> Result<()> {
         // Initialize predictor network with random weights
@@ -1647,7 +1668,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + 'static> Searc
 }
 
 // Implementation for supporting components
-impl<T: Float + Default + Clone + 'static> PredictorNetwork<T> {
+impl<T: Float + Default + Clone + 'static + std::iter::Sum> PredictorNetwork<T> {
     fn new(architecture: Vec<usize>) -> Self {
         let mut layers = Vec::new();
         for i in 0..architecture.len() - 1 {
@@ -1775,7 +1796,7 @@ impl<T: Float + Default + Clone> ArchitectureEncoder<T> {
             }
 
             // Encode component type
-            encoding.push(T::from(component.component_type as u8).unwrap());
+            encoding.push(T::from(component_type_to_u8(&component.component_type)).unwrap());
 
             // Encode hyperparameters (take first few)
             for (_, &value) in component.hyperparameters.iter().take(3) {
@@ -1802,6 +1823,48 @@ impl<T: Float + Default + Clone> SearchOptimizer<T> {
     fn update_parameters(&mut self, _gradients: &HashMap<String, Array1<T>>) -> Result<()> {
         // Simplified parameter update
         Ok(())
+    }
+}
+
+/// Convert ComponentType to u8 for encoding
+fn component_type_to_u8(component_type: &ComponentType) -> u8 {
+    match component_type {
+        ComponentType::SGD => 0,
+        ComponentType::Adam => 1,
+        ComponentType::AdaGrad => 2,
+        ComponentType::RMSprop => 3,
+        ComponentType::AdamW => 4,
+        ComponentType::LAMB => 5,
+        ComponentType::LARS => 6,
+        ComponentType::Lion => 7,
+        ComponentType::RAdam => 8,
+        ComponentType::Lookahead => 9,
+        ComponentType::SAM => 10,
+        ComponentType::LBFGS => 11,
+        ComponentType::SparseAdam => 12,
+        ComponentType::GroupedAdam => 13,
+        ComponentType::MAML => 14,
+        ComponentType::Reptile => 15,
+        ComponentType::MetaSGD => 16,
+        ComponentType::ConstantLR => 17,
+        ComponentType::ExponentialLR => 18,
+        ComponentType::StepLR => 19,
+        ComponentType::CosineAnnealingLR => 20,
+        ComponentType::OneCycleLR => 21,
+        ComponentType::CyclicLR => 22,
+        ComponentType::L1Regularizer => 23,
+        ComponentType::L2Regularizer => 24,
+        ComponentType::ElasticNetRegularizer => 25,
+        ComponentType::DropoutRegularizer => 26,
+        ComponentType::GradientClipping => 27,
+        ComponentType::WeightDecay => 28,
+        ComponentType::AdaptiveLR => 29,
+        ComponentType::AdaptiveMomentum => 30,
+        ComponentType::AdaptiveRegularization => 31,
+        ComponentType::LSTMOptimizer => 32,
+        ComponentType::TransformerOptimizer => 33,
+        ComponentType::AttentionOptimizer => 34,
+        ComponentType::Custom(_) => 255, // Use highest value for custom types
     }
 }
 

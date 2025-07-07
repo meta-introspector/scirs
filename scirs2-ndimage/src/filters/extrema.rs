@@ -546,7 +546,7 @@ where
     let input_shape = input.shape();
 
     // Generate all possible coordinate combinations for the input
-    let _total_elements = input.len();
+    let total_elements = input.len();
 
     // Use parallel iteration if the array is large enough
     #[cfg(feature = "parallel")]
@@ -685,7 +685,7 @@ where
     use scirs2_core::parallel_ops::*;
 
     let ndim = input.ndim();
-    let _total_elements = input.len();
+    let total_elements = input.len();
 
     // Helper function to convert linear index to n-dimensional coordinates
     fn index_to_coords(mut index: usize, shape: &[usize]) -> Vec<usize> {

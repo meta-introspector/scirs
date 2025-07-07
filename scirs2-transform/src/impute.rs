@@ -59,6 +59,7 @@ impl SimpleImputer {
     ///
     /// # Returns
     /// * A new SimpleImputer instance
+    #[allow(dead_code)]
     pub fn with_strategy(strategy: ImputeStrategy) -> Self {
         Self::new(strategy, f64::NAN)
     }
@@ -209,6 +210,7 @@ impl SimpleImputer {
     ///
     /// # Returns
     /// * `Option<&Array1<f64>>` - The statistics for each feature
+    #[allow(dead_code)]
     pub fn statistics(&self) -> Option<&Array1<f64>> {
         self.statistics_.as_ref()
     }

@@ -81,7 +81,7 @@ pub fn random_oversample(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rand::thread_rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -169,7 +169,7 @@ pub fn random_undersample(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rand::thread_rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -275,7 +275,7 @@ pub fn generate_synthetic_samples(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rand::thread_rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

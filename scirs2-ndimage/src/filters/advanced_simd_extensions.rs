@@ -807,7 +807,7 @@ mod tests {
     #[test]
     fn test_advanced_simd_advanced_edge_detection() {
         let input =
-            Array2::from_shape_fn((64, 64), |(i, j)| if i > 30 && i < 34 { 1.0 } else { 0.0 });
+            Array2::from_shape_fn((64, 64), |(i, _j)| if i > 30 && i < 34 { 1.0 } else { 0.0 });
 
         let result = advanced_simd_advanced_edge_detection(input.view(), 1.0, 0.1, 0.3).unwrap();
 

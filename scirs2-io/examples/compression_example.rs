@@ -155,7 +155,8 @@ fn array_compression_example() -> Result<(), Box<dyn std::error::Error>> {
         CompressionAlgorithm::Bzip2,
     ] {
         // Define output path
-        let output_path = format!("array_compressed.{}", algorithm.extension());
+        let extension = algorithm.extension();
+        let output_path = format!("array_compressed.{extension}");
 
         // Compress the array
         compress_array(&output_path, &array, *algorithm, Some(6), None)?;

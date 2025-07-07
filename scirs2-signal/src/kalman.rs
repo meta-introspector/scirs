@@ -6,7 +6,6 @@
 
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2, Array3};
-use rand::Rng;
 use scirs2_linalg::{cholesky, inv};
 
 /// Configuration for Kalman filter

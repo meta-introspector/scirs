@@ -6,7 +6,6 @@
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Generate a chirp signal, a sine wave that increases/decreases in frequency.
@@ -351,7 +350,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]
@@ -978,7 +976,6 @@ fn _create_default_rng() -> StdRng {
 
 #[cfg(test)]
 mod special_signal_tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

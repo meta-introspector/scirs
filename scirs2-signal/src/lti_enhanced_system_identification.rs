@@ -1409,7 +1409,6 @@ fn compute_fft_padded(signal: &Array1<f64>, nfft: usize) -> Vec<Complex64> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]

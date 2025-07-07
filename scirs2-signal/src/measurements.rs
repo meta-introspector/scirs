@@ -175,7 +175,7 @@ where
 ///
 /// ```
 /// use scirs2_signal::measurements::snr;
-/// use rand::Rng;  // Import the Rng trait to access random_range
+/// use rand::Rng;  // Import the Rng trait to access gen_range
 ///
 /// // Create a clean signal
 /// let clean = (0..100).map(|i| (i as f64 * 0.1).sin()).collect::<Vec<_>>();
@@ -400,7 +400,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     use std::f64::consts::PI;

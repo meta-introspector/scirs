@@ -236,17 +236,17 @@ pub fn generate_file_integrity_metadata<P: AsRef<Path>>(
 
     // Get file metadata
     let file_metadata = std::fs::metadata(path)
-        .map_err(|e| IoError::FileError(format!("Failed to read file metadata: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read file metadata: {e}")))?;
 
     let size = file_metadata.len();
     let modified = file_metadata
         .modified()
-        .map_err(|e| IoError::FileError(format!("Failed to get modification time: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to get modification time: {e}")))?;
 
     // Convert to timestamp
     let timestamp = modified
         .duration_since(std::time::SystemTime::UNIX_EPOCH)
-        .map_err(|e| IoError::FileError(format!("Failed to convert time: {}", e)))?
+        .map_err(|e| IoError::FileError(format!("Failed to convert time: {e}")))?
         .as_secs();
 
     // Calculate checksum
@@ -377,7 +377,7 @@ pub fn generate_validation_report<P: AsRef<Path>>(
 
     // Get file metadata
     let file_metadata = std::fs::metadata(file_path)
-        .map_err(|e| IoError::FileError(format!("Failed to read file metadata: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read file metadata: {e}")))?;
 
     let actual_size = file_metadata.len();
     let size_valid = actual_size == metadata.size;
@@ -704,10 +704,10 @@ where
 
     // Write checksum file
     let mut file = File::create(&output_path)
-        .map_err(|e| IoError::FileError(format!("Failed to create checksum file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to create checksum file: {e}")))?;
 
     file.write_all(content.as_bytes())
-        .map_err(|e| IoError::FileError(format!("Failed to write checksum file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write checksum file: {e}")))?;
 
     Ok(output_path.to_string_lossy().to_string())
 }
@@ -732,12 +732,12 @@ where
 
     // Read checksum file
     let mut checksum_file = File::open(checksum_path)
-        .map_err(|e| IoError::FileError(format!("Failed to open checksum file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to open checksum file: {e}")))?;
 
     let mut content = String::new();
     checksum_file
         .read_to_string(&mut content)
-        .map_err(|e| IoError::FileError(format!("Failed to read checksum file: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to read checksum file: {e}")))?;
 
     // Parse checksum file (format: "<checksum> *<filename>")
     let parts: Vec<&str> = content.split_whitespace().collect();
@@ -828,7 +828,7 @@ pub fn verify_array_integrity<T: Serialize>(
         .ok_or_else(|| IoError::ValidationError("Missing algorithm in metadata".to_string()))?;
 
     let algorithm = ChecksumAlgorithm::from_str(algorithm_str).ok_or_else(|| {
-        IoError::ValidationError(format!("Unknown algorithm in metadata: {}", algorithm_str))
+        IoError::ValidationError(format!("Unknown algorithm in metadata: {algorithm_str}"))
     })?;
 
     let expected_checksum = metadata
@@ -915,7 +915,7 @@ where
 #[allow(dead_code)]
 fn collect_files(dir: &Path, files: &mut Vec<std::path::PathBuf>, recursive: bool) -> Result<()> {
     for entry in std::fs::read_dir(dir)
-        .map_err(|e| IoError::FileError(format!("Failed to read directory: {}", e)))?
+        .map_err(|e| IoError::FileError(format!("Failed to read directory: {e}")))?
     {
         let entry = entry.map_err(|e| IoError::FileError(e.to_string()))?;
         let path = entry.path();

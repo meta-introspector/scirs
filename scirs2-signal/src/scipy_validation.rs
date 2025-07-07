@@ -42,10 +42,7 @@ use crate::filter::FilterType;
 use crate::parametric::ARMethod;
 
 use ndarray::{Array1, Array2};
-use rand::Rng;
 use std::collections::HashMap;
-
-use std::f64::consts::PI;
 
 /// Configuration for SciPy validation
 #[derive(Debug, Clone)]
@@ -1987,7 +1984,6 @@ pub fn generate_validation_report(results: &ValidationResults) -> String {
 }
 
 mod tests {
-    use super::*;
 
     #[test]
     fn test_validation_config_default() {

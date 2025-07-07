@@ -540,7 +540,6 @@ pub struct WaveletEnergy {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::dwt::Wavelet;
     use ndarray::Array2;
 

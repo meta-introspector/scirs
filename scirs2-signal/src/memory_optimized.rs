@@ -6,7 +6,6 @@
 
 use crate::error::{SignalError, SignalResult};
 use scirs2_core::parallel_ops::*;
-use std::f64::consts::PI;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 
@@ -296,7 +295,7 @@ pub fn memory_optimized_fft(
     use num_complex::Complex;
     use std::time::Instant;
 
-    let start_time = Instant::now();
+    let _start_time = Instant::now();
 
     // Open input file and validate size
     let input_file_handle = File::open(input_file)
@@ -338,7 +337,7 @@ fn memory_fft_in_core(
     input_file: &str,
     output_file: &str,
     n: usize,
-    config: &MemoryConfig,
+    _config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
     use rustfft::{num_complex::Complex, FftPlanner};
     use std::time::Instant;
@@ -475,7 +474,7 @@ fn memory_fft_out_of_core(
 
     // Perform out-of-core stages first (if any)
     for stage in 0..disk_stages {
-        let stage_start = Instant::now();
+        let _stage_start = Instant::now();
 
         // Process this stage with disk I/O
         let stage_result =
@@ -692,8 +691,8 @@ fn process_fft_stages_memory(
     input_file: &str,
     output_file: &str,
     n: usize,
-    start_stage: usize,
-    num_stages: usize,
+    _start_stage: usize,
+    _num_stages: usize,
     config: &MemoryConfig,
 ) -> SignalResult<MemoryOptimizedResult<num_complex::Complex<f64>>> {
     // For simplicity, delegate to in-core implementation
@@ -859,7 +858,6 @@ pub fn memory_optimized_spectrogram(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::fs;
     use std::io::Write;
 

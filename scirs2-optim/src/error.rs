@@ -47,6 +47,12 @@ pub enum OptimError {
     ThreadError(String),
     /// Computation error
     ComputationError(String),
+    /// Plugin still in use error
+    PluginStillInUse(String),
+    /// Missing dependency error
+    MissingDependency(String),
+    /// Plugin not found error
+    PluginNotFound(String),
     /// Other error
     Other(String),
 }
@@ -111,6 +117,15 @@ impl fmt::Display for OptimError {
             }
             OptimError::ComputationError(msg) => {
                 write!(f, "Computation error: {msg}")
+            }
+            OptimError::PluginStillInUse(msg) => {
+                write!(f, "Plugin still in use: {msg}")
+            }
+            OptimError::MissingDependency(msg) => {
+                write!(f, "Missing dependency: {msg}")
+            }
+            OptimError::PluginNotFound(msg) => {
+                write!(f, "Plugin not found: {msg}")
             }
             OptimError::Other(msg) => write!(f, "Error: {msg}"),
         }

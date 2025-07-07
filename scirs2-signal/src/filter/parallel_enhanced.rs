@@ -466,7 +466,6 @@ fn calculate_memory_optimal_chunk_size(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::PI;
 
     #[test]

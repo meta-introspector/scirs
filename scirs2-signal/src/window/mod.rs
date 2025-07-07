@@ -5,7 +5,6 @@
 //! reducing spectral leakage in Fourier transforms and filter design.
 
 use crate::error::{SignalError, SignalResult};
-use std::f64::consts::PI;
 
 // Import specialized window implementations
 pub mod kaiser;
@@ -994,7 +993,6 @@ fn solve_tridiagonal_eigenproblem(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]
@@ -1256,7 +1254,6 @@ pub fn lanczos(length: usize, a: i32, sym: bool) -> SignalResult<Vec<f64>> {
 
 #[cfg(test)]
 mod lanczos_tests {
-    use super::*;
     use approx::assert_relative_eq;
 
     #[test]
@@ -1339,7 +1336,6 @@ mod lanczos_tests {
 
 /// Window analysis and design utilities
 pub mod analysis {
-    use super::*;
     use crate::error::{SignalError, SignalResult};
 
     use std::f64::consts::PI;

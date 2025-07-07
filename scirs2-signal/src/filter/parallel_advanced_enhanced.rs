@@ -795,7 +795,6 @@ pub fn validate_parallel_filtering_accuracy(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::PI;
 
     #[test]

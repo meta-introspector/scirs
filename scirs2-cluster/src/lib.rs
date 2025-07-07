@@ -467,15 +467,16 @@ pub use serialization::{
 // Re-export compatibility utilities for scikit-learn and SciPy integration
 pub use serialization::compatibility::{
     create_sklearn_param_grid,
-    export_to_scipy_json,
-    export_to_sklearn_json,
+    // TODO: Fix these function imports (they may be methods, not functions)
+    // export_to_scipy_json,
+    // export_to_sklearn_json,
     from_joblib_format,
     from_numpy_format,
     from_sklearn_format,
     generate_sklearn_model_summary,
-    import_scipy_hierarchy,
+    // import_scipy_hierarchy,
     // Import functions for external model formats
-    import_sklearn_kmeans,
+    // import_sklearn_kmeans,
     to_arrow_schema,
     to_huggingface_card,
     to_joblib_format,
@@ -608,7 +609,8 @@ pub mod accelerated {
     pub use crate::gpu::accelerated::*;
 }
 
-// Always available GPU acceleration interface (with CPU fallback)
+// GPU acceleration interface (when GPU feature is enabled)
+#[cfg(feature = "gpu")]
 /// GPU-accelerated clustering with automatic CPU fallback
 ///
 /// This module provides high-level clustering algorithms that automatically

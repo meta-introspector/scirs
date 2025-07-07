@@ -13,6 +13,7 @@
 use ndarray::{Array1, Array2, Array3, Array4, Array5, ArrayView2};
 use num_complex::Complex;
 use num_traits::{Float, FromPrimitive, Zero};
+use std::cmp;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::f64::consts::PI;
 use std::sync::{Arc, RwLock};
@@ -104,6 +105,8 @@ pub struct AdvancedState {
     pub resource_allocation: ResourceState,
     /// Processing efficiency metrics
     pub efficiency_metrics: EfficiencyMetrics,
+    /// Number of processing cycles
+    pub processing_cycles: u64,
 }
 
 /// Self-Organizing Network Topology
@@ -733,6 +736,7 @@ fn initialize_or_update_state(
             quality_efficiency: 0.0,
             temporal_efficiency: 0.0,
         },
+        processing_cycles: 0,
     })
 }
 

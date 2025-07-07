@@ -5,7 +5,6 @@
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Type alias for periodogram result containing frequencies and power spectral density values
@@ -740,7 +739,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
     use rand::Rng;
 

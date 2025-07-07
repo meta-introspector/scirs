@@ -3,8 +3,6 @@
 use super::*;
 use approx::assert_relative_eq;
 
-use std::f64::consts::PI;
-
 #[test]
 #[allow(dead_code)]
 fn test_morlet_wavelet() {

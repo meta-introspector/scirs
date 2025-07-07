@@ -20,9 +20,6 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::filter::{butter, lfilter, FilterType};
-use ndarray::Array1;
-
-use std::f64::consts::PI;
 
 /// Configuration for multi-band separation
 #[derive(Debug, Clone)]
@@ -241,7 +238,6 @@ pub fn harmonic_percussive_separation(
 }
 
 mod tests {
-    use super::*;
 
     #[test]
     fn test_multiband_separation() {

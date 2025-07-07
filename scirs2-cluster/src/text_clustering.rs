@@ -4,7 +4,7 @@
 //! semantic similarity measures rather than traditional distance metrics. It includes
 //! algorithms optimized for document clustering, sentence clustering, and topic modeling.
 
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive, Zero};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};

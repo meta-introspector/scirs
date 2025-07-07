@@ -127,7 +127,7 @@ impl ChunkedReader {
     /// Create a new chunked reader for the specified file
     pub fn new<P: AsRef<Path>>(path: P, config: StreamingConfig) -> Result<Self> {
         let file = File::open(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
         let reader = BufReader::with_capacity(config.buffer_size, file);
 
@@ -160,7 +160,7 @@ impl ChunkedReader {
         let skipped = self
             .reader
             .seek(SeekFrom::Current(bytes as i64))
-            .map_err(|e| IoError::FileError(format!("Failed to skip bytes: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to skip bytes: {e}")))?;
         self.total_bytes_read += bytes;
         Ok(skipped)
     }
@@ -169,7 +169,7 @@ impl ChunkedReader {
     pub fn position(&mut self) -> Result<u64> {
         self.reader
             .stream_position()
-            .map_err(|e| IoError::FileError(format!("Failed to get position: {}", e)))
+            .map_err(|e| IoError::FileError(format!("Failed to get position: {e}")))
     }
 }
 
@@ -236,7 +236,7 @@ impl LineChunkedReader {
     /// Create a new line-based chunked reader
     pub fn new<P: AsRef<Path>>(path: P, config: StreamingConfig) -> Result<Self> {
         let file = File::open(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to open file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to open file: {e}")))?;
 
         let reader = BufReader::with_capacity(config.buffer_size, file);
 
@@ -589,7 +589,7 @@ mod tests {
         let file_path = temp_dir.path().join("test_lines.txt");
 
         // Create test data with lines
-        let lines: Vec<String> = (0..50).map(|i| format!("Line {}", i)).collect();
+        let lines: Vec<String> = (0..50).map(|i| format!("Line {i}")).collect();
         std::fs::write(&file_path, lines.join("\n")).unwrap();
 
         let config = StreamingConfig::new().chunk_size(10); // 10 lines per chunk

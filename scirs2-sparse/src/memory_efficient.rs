@@ -589,6 +589,10 @@ impl ChunkedOperations {
 
         let element_size = std::mem::size_of::<T>();
 
+        // Extract elements from both matrices once
+        let (a_rows_idx, a_cols_idx, a_values) = a.find();
+        let (b_rows_idx, b_cols_idx, b_values) = b.find();
+
         // Process matrices in row chunks
         for chunk_start in (0..a_rows).step_by(chunk_size) {
             let chunk_end = std::cmp::min(chunk_start + chunk_size, a_rows);
@@ -605,10 +609,6 @@ impl ChunkedOperations {
                 }
                 tracker.allocate(chunk_memory)?;
             }
-
-            // Extract elements from both matrices in the current chunk
-            let (a_rows_idx, a_cols_idx, a_values) = a.find();
-            let (b_rows_idx, b_cols_idx, b_values) = b.find();
 
             // Use HashMap to efficiently combine elements
             let mut chunk_result: std::collections::HashMap<(usize, usize), T> =
@@ -659,7 +659,7 @@ impl ChunkedOperations {
             &result_cols,
             &result_values,
             (a_rows, a_cols),
-            true,
+            false,
         )
     }
 

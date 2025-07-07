@@ -3,17 +3,14 @@
 //! This example shows how to use Advanced mode optimizations
 //! for graph processing algorithms.
 
-use rand::{rng, Rng};
+use rand::rng;
 use scirs2_graph::advanced::{
     create_advanced_processor, execute_with_advanced, AdvancedConfig, AdvancedProcessor,
 };
 use scirs2_graph::algorithms::community::louvain_communities_result;
 use scirs2_graph::algorithms::connectivity::connected_components;
-use scirs2_graph::algorithms::dijkstra_path;
-use scirs2_graph::base::Graph;
 use scirs2_graph::generators::erdos_renyi_graph;
 use scirs2_graph::measures::pagerank_centrality;
-use std::collections::HashMap;
 use std::time::Instant;
 
 #[allow(dead_code)]
@@ -119,10 +116,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let components = if let Some(config) = config_opt {
             let mut processor = AdvancedProcessor::new(config);
             execute_with_advanced(&mut processor, &graph, "connected_components", |g| {
-                connected_components(g)
+                Ok(connected_components(g))
             })?
         } else {
-            connected_components(&graph)?
+            connected_components(&graph)
         };
 
         let elapsed = start.elapsed();
@@ -144,13 +141,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Standard Louvain
     let start = Instant::now();
-    let standard_communities = louvain_communities_result(&graph, None, None)?;
+    let standard_communities = louvain_communities_result(&graph);
     let standard_time = start.elapsed();
 
     println!(
         "📊 Standard Louvain: {:?} ({} communities)",
-        standard_time,
-        standard_communities.len()
+        standard_time, standard_communities.num_communities
     );
 
     // Advanced Louvain
@@ -158,14 +154,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let start = Instant::now();
     let advanced_communities =
         execute_with_advanced(&mut processor, &graph, "louvain_communities", |g| {
-            louvain_communities_result(g, None, None)
+            Ok(louvain_communities_result(g))
         })?;
     let advanced_time = start.elapsed();
 
     println!(
         "🚀 Advanced Louvain: {:?} ({} communities)",
-        advanced_time,
-        advanced_communities.len()
+        advanced_time, advanced_communities.num_communities
     );
 
     let community_speedup = standard_time.as_secs_f64() / advanced_time.as_secs_f64();
@@ -197,7 +192,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         match alg_name {
             "connected_components" => {
                 let _ = execute_with_advanced(&mut adaptive_processor, &graph, alg_name, |g| {
-                    connected_components(g)
+                    Ok(connected_components(g))
                 })?;
             }
             "pagerank" => {
@@ -207,7 +202,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             "louvain_communities" => {
                 let _ = execute_with_advanced(&mut adaptive_processor, &graph, alg_name, |g| {
-                    louvain_communities_result(g, None, None)
+                    Ok(louvain_communities_result(g))
                 })?;
             }
             _ => unreachable!(),
@@ -290,7 +285,7 @@ mod tests {
         // Test that advanced processing works
         let result =
             execute_with_advanced(&mut processor, &graph, "test_connected_components", |g| {
-                connected_components(g)
+                Ok(connected_components(g))
             });
 
         assert!(result.is_ok());

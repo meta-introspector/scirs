@@ -10,11 +10,9 @@
 
 use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
-use ndarray::Array1;
 use num_traits::Float;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Advanced-comprehensive validation result
@@ -775,7 +773,6 @@ fn calculate_throughput(execution_times: &HashMap<usize, f64>) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_advanced_validation_basic() {

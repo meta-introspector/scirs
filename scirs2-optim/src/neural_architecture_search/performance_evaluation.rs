@@ -1633,7 +1633,7 @@ impl<T: Float + Default> BenchmarkSuite<T> {
 }
 
 impl<T: Float + Default> PerformancePredictor<T> {
-    fn new(_config: &EvaluationConfig<T>) -> Result<Self> {
+    pub fn new(_config: &EvaluationConfig<T>) -> Result<Self> {
         Ok(Self {
             predictor_model: PredictorModel::new()?,
             feature_extractor: FeatureExtractor::new()?,
@@ -1641,6 +1641,26 @@ impl<T: Float + Default> PerformancePredictor<T> {
             prediction_cache: PredictionCache::new(),
             uncertainty_estimator: UncertaintyEstimator::new()?,
         })
+    }
+
+    pub fn predict_performance(
+        &self,
+        _architecture: &OptimizerArchitecture<T>,
+    ) -> Result<EvaluationResults<T>> {
+        // Simple placeholder implementation
+        Ok(EvaluationResults {
+            metric_scores: std::collections::HashMap::new(),
+            overall_score: T::from(0.5).unwrap(),
+            confidence_intervals: std::collections::HashMap::new(),
+            evaluation_time: std::time::Duration::from_millis(100),
+            success: true,
+            error_message: None,
+        })
+    }
+
+    pub fn update_with_results(&mut self, _results: &Vec<EvaluationResults<T>>) -> Result<()> {
+        // Simple placeholder implementation
+        Ok(())
     }
 }
 

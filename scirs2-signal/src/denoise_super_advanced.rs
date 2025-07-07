@@ -1147,7 +1147,6 @@ impl RealTimeDenoisingContext {
 #[cfg(test)]
 mod tests {
     #[allow(unused_imports)]
-    use super::*;
     use std::f64::consts::PI;
 
     #[test]
@@ -1159,8 +1158,10 @@ mod tests {
 
         // Add noise
         use rand::prelude::*;
+        use rand::Rng;
         let mut rng = rand::rng();
-        let noisy_signal: Array1<f64> = clean_signal.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
+        let noisy_signal: Array1<f64> =
+            clean_signal.mapv(|x| x + 0.1 * rng.random_range(-1.0..1.0));
 
         let config = AdvancedAdvancedDenoisingConfig::default();
         let result = advanced_advanced_denoise(&noisy_signal, &config);

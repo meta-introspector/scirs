@@ -15,7 +15,24 @@ use num_traits::Float;
 use crate::error::{OptimError, Result};
 
 #[cfg(all(feature = "gpu", feature = "cuda"))]
-use scirs2_core::gpu::backends::{CudaContext, CudaStream};
+use scirs2_core::gpu::backends::{CudaContext, CudaStream as CoreCudaStream};
+
+// Type alias for conditional compilation
+#[cfg(all(feature = "gpu", feature = "cuda"))]
+type CudaStream = CoreCudaStream;
+
+#[cfg(not(all(feature = "gpu", feature = "cuda")))]
+struct CudaStream;
+
+#[cfg(not(all(feature = "gpu", feature = "cuda")))]
+struct CudaContext;
+
+#[cfg(not(all(feature = "gpu", feature = "cuda")))]
+impl CudaStream {
+    pub fn new(_context: &CudaContext) -> Result<Self> {
+        Ok(Self)
+    }
+}
 
 /// Multi-GPU communication backend for parameter synchronization
 pub struct MultiGpuCommunicator {
@@ -395,6 +412,19 @@ pub enum CompressionAlgorithm {
     PowerSGD { rank: usize },
     /// Sketched SGD
     SketchedSGD { sketch_size: usize },
+}
+
+/// Synchronization strategy for multi-GPU communication
+#[derive(Debug, Clone, PartialEq)]
+pub enum SyncStrategy {
+    /// All-reduce using tree topology
+    AllReduceTree,
+    /// All-reduce using ring topology
+    AllReduceRing,
+    /// Hierarchical synchronization
+    Hierarchical,
+    /// Asynchronous bounded synchronization
+    AsyncBounded { max_staleness: usize },
 }
 
 /// Device memory statistics

@@ -196,7 +196,18 @@ pub struct KFACStats<T: Float> {
     pub memory_usage: usize,
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> KFAC<T> {
+impl<
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + std::iter::Sum
+            + ndarray::ScalarOperand
+            + 'static
+            + num_traits::FromPrimitive,
+    > KFAC<T>
+{
     /// Create a new K-FAC optimizer
     pub fn new(config: KFACConfig<T>) -> Self {
         Self {
@@ -375,8 +386,23 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> KFAC<T> {
         if config.use_tikhonov {
             // Use adaptive damping or fixed damping
             let damping_a = if config.auto_damping {
-                // Simplified adaptive damping without self methods
-                let condition_estimate = Self::estimate_condition_simple(&a_reg);
+                // Simplified adaptive damping - estimate condition number directly
+                let mut max_diag = T::zero();
+                let mut min_diag = T::infinity();
+                for i in 0..a_reg.nrows() {
+                    let diag = a_reg[[i, i]];
+                    if diag > max_diag {
+                        max_diag = diag;
+                    }
+                    if diag < min_diag {
+                        min_diag = diag;
+                    }
+                }
+                let condition_estimate = if min_diag > T::zero() {
+                    max_diag / min_diag
+                } else {
+                    T::from(1e6).unwrap()
+                };
                 let adaptive_damping =
                     config.damping * (T::one() + condition_estimate * T::from(0.1).unwrap());
                 adaptive_damping
@@ -387,7 +413,23 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> KFAC<T> {
             };
 
             let damping_g = if config.auto_damping {
-                let condition_estimate = Self::estimate_condition_simple(&g_reg);
+                // Simplified adaptive damping - estimate condition number directly
+                let mut max_diag = T::zero();
+                let mut min_diag = T::infinity();
+                for i in 0..g_reg.nrows() {
+                    let diag = g_reg[[i, i]];
+                    if diag > max_diag {
+                        max_diag = diag;
+                    }
+                    if diag < min_diag {
+                        min_diag = diag;
+                    }
+                }
+                let condition_estimate = if min_diag > T::zero() {
+                    max_diag / min_diag
+                } else {
+                    T::from(1e6).unwrap()
+                };
                 let adaptive_damping =
                     config.damping * (T::one() + condition_estimate * T::from(0.1).unwrap());
                 adaptive_damping
@@ -410,8 +452,8 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> KFAC<T> {
         }
 
         // Compute inverses using simplified safe inversion
-        state.a_cov_inv = Some(Self::safe_matrix_inverse_static(&a_reg)?);
-        state.g_cov_inv = Some(Self::safe_matrix_inverse_static(&g_reg)?);
+        state.a_cov_inv = Some(natural_gradients::safe_matrix_inverse_static(&a_reg)?);
+        state.g_cov_inv = Some(natural_gradients::safe_matrix_inverse_static(&g_reg)?);
 
         Ok(())
     }
@@ -662,9 +704,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> KFAC<T> {
         let base_damping = self.config.damping;
 
         if condition_estimate > target_condition {
-            base_damping * (condition_estimate / target_condition).sqrt()
+            Ok(base_damping * (condition_estimate / target_condition).sqrt())
         } else {
-            base_damping
+            Ok(base_damping)
         }
     }
 
@@ -981,10 +1023,10 @@ pub mod kfac_utils {
     }
 
     /// Compute statistics for batch normalization layers
-    pub fn batchnorm_statistics<T: Float>(
+    pub fn batchnorm_statistics<T: Float + num_traits::FromPrimitive>(
         inputs: &Array2<T>,
-        gamma: &Array1<T>,
-        beta: &Array1<T>,
+        _gamma: &Array1<T>,
+        _beta: &Array1<T>,
     ) -> Result<(Array1<T>, Array1<T>)> {
         let mean = inputs.mean_axis(Axis(0)).unwrap();
         let var = inputs.var_axis(Axis(0), T::zero());
@@ -1115,9 +1157,9 @@ pub mod natural_gradients {
     }
 
     /// Simplified static matrix inverse using basic inverse
-    fn safe_matrix_inverse_static<T>(matrix: &Array2<T>) -> Result<Array2<T>>
+    pub fn safe_matrix_inverse_static<T>(matrix: &Array2<T>) -> Result<Array2<T>>
     where
-        T: Float,
+        T: Float + 'static,
     {
         // Simplified inverse using pseudo-inverse approach
         // Add small regularization to diagonal for numerical stability
@@ -1129,10 +1171,10 @@ pub mod natural_gradients {
 
         // Use simple Gauss-Jordan elimination for small matrices
         if matrix.nrows() <= 3 {
-            Self::gauss_jordan_inverse(&regularized)
+            gauss_jordan_inverse(&regularized)
         } else {
             // For larger matrices, use iterative approach
-            Self::iterative_inverse_simple(&regularized)
+            iterative_inverse_simple(&regularized)
         }
     }
 
@@ -2336,7 +2378,17 @@ pub mod advanced_kfac {
         pub fisher_memory_bytes: usize,
     }
 
-    impl<T: Float + Default + Clone + Send + Sync + 'static> NaturalGradientOptimizer<T> {
+    impl<
+            T: Float
+                + Default
+                + Clone
+                + Send
+                + Sync
+                + 'static
+                + std::iter::Sum
+                + ndarray::ScalarOperand,
+        > NaturalGradientOptimizer<T>
+    {
         /// Create a new natural gradient optimizer
         pub fn new(config: natural_gradients::NaturalGradientConfig<T>) -> Self {
             let damping_state = AdaptiveDampingState {
@@ -2587,7 +2639,7 @@ pub mod advanced_kfac {
             let mut p = r.clone();
             let mut rsold = r.dot(&r);
 
-            for _iter in 0..self.config.cg_max_iterations {
+            for _iter in 0..self.config.max_cg_iterations {
                 let ap = fisher.dot(&p);
                 let alpha = rsold / p.dot(&ap);
 
@@ -2901,20 +2953,30 @@ pub mod advanced_kfac {
     }
 
     /// Basic implementations for missing components
-    impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> DistributedKFAC<T> {
+    impl<
+            T: Float
+                + Default
+                + Clone
+                + Send
+                + Sync
+                + std::iter::Sum
+                + ndarray::ScalarOperand
+                + num_traits::FromPrimitive,
+        > DistributedKFAC<T>
+    {
         pub fn new(base_config: KFACConfig<T>, dist_config: DistributedKFACConfig) -> Result<Self> {
-            let base_kfac = KFACOptimizer::new(base_config);
-            let local_backend = LocalCommunicationBackend::new(
-                dist_config.num_workers,
-                dist_config.worker_rank,
-            );
-            let comm_backend: Option<Arc<dyn CommunicationBackend>> = Some(Arc::new(local_backend) as Arc<dyn CommunicationBackend>);
+            let base_kfac = KFAC::new(base_config);
+            let local_backend =
+                LocalCommunicationBackend::new(dist_config.num_workers, dist_config.worker_rank);
+            let comm_backend: Option<Arc<dyn CommunicationBackend>> =
+                Some(Arc::new(local_backend) as Arc<dyn CommunicationBackend>);
 
+            let block_size = dist_config.block_size;
             Ok(Self {
                 base_kfac,
                 dist_config,
                 comm_backend,
-                block_decomposition: BlockDecomposition::new(dist_config.block_size),
+                block_decomposition: BlockDecomposition::new(block_size),
                 gpu_acceleration: None,
                 conditioning: AdvancedConditioning::new(),
                 momentum_state: SecondOrderMomentum::new(MomentumConfig::default()),
@@ -3432,7 +3494,18 @@ pub mod advanced_kfac {
     }
 
     /// Integrate natural gradients with K-FAC
-    impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + ndarray::ScalarOperand> KFAC<T> {
+    impl<
+            T: Float
+                + Default
+                + Clone
+                + Send
+                + Sync
+                + std::fmt::Debug
+                + ndarray::ScalarOperand
+                + std::iter::Sum
+                + num_traits::FromPrimitive,
+        > KFAC<T>
+    {
         /// Compute natural gradient update using K-FAC approximation
         pub fn natural_gradient_step(
             &mut self,

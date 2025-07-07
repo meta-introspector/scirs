@@ -1,5 +1,4 @@
 use ndarray::{Array1, Array2};
-use std::f64::consts::PI;
 use std::fs::File;
 use std::io::Write;
 

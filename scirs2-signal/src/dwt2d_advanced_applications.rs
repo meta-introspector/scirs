@@ -918,7 +918,6 @@ fn estimate_reconstruction_quality(
 
 #[allow(unused_imports)]
 mod tests {
-    use super::*;
     use crate::dwt::Wavelet;
     use crate::dwt2d_enhanced::BoundaryMode;
 

@@ -761,7 +761,7 @@ impl Dataset {
 
         let mut indices: Vec<usize> = (0..n_samples).collect();
         for i in 0..n_samples {
-            let j = rng.random_range(0..n_samples);
+            let j = rng.random_range(0, n_samples);
             indices.swap(i, j);
         }
 
@@ -804,7 +804,7 @@ fn create_neural_network(
         // Initialize weights with Xavier initialization
         let weight_data = Array1::from_shape_fn(input_size * output_size, |_| {
             let limit = (6.0 / (input_size + output_size) as f32).sqrt();
-            rng.random_range(-limit..limit)
+            rng.random_range(-limit, limit)
         });
 
         let bias_data = Array1::zeros(output_size);
@@ -842,13 +842,13 @@ fn create_synthetic_dataset(
     let mut rng = Xoshiro256Plus::seed_from_u64(42);
 
     // Generate random inputs
-    let inputs = Array2::from_shape_fn((n_samples, input_dim), |_| rng.random_range(-1.0..1.0));
+    let inputs = Array2::from_shape_fn((n_samples, input_dim), |_| rng.random_range(-1.0, 1.0));
 
     // Generate targets with some complex function
     let targets = Array2::from_shape_fn((n_samples, output_dim), |(i, j)| {
         let x = inputs[[i, 0]];
         let base_value = (x * 2.0).sin() + (x * 3.0).cos() * 0.5;
-        base_value + rng.random_range(-noise_level..noise_level)
+        base_value + rng.random_range(-noise_level, noise_level)
     });
 
     Dataset::new(inputs, targets)

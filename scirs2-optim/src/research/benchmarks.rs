@@ -896,7 +896,7 @@ impl BenchmarkRunner {
         use rand_chacha::ChaCha8Rng;
         
         let mut rng = ChaCha8Rng::seed_from_u64(seed);
-        rng.random_range(1e-8..1e-4) // Simulate good convergence for quadratic
+        rng.random_range(1e-8, 1e-4) // Simulate good convergence for quadratic
     }
     
     fn simulate_rosenbrock_optimization(&self, seed: u64) -> f64 {
@@ -904,7 +904,7 @@ impl BenchmarkRunner {
         use rand_chacha::ChaCha8Rng;
         
         let mut rng = ChaCha8Rng::seed_from_u64(seed);
-        rng.random_range(1e-6..1e-2) // Simulate moderate convergence for Rosenbrock
+        rng.random_range(1e-6, 1e-2) // Simulate moderate convergence for Rosenbrock
     }
     
     fn simulate_generic_optimization(&self, seed: u64) -> f64 {
@@ -912,7 +912,7 @@ impl BenchmarkRunner {
         use rand_chacha::ChaCha8Rng;
         
         let mut rng = ChaCha8Rng::seed_from_u64(seed);
-        rng.random_range(1e-5..1e-1) // Generic optimization results
+        rng.random_range(1e-5, 1e-1) // Generic optimization results
     }
     
     fn generate_synthetic_trajectory(&self, final_value: f64, iterations: usize) -> Vec<f64> {

@@ -9,7 +9,6 @@ use num_traits::Float;
 use std::collections::{HashMap, VecDeque, BTreeMap};
 use std::time::{Duration, Instant};
 use std::sync::{Arc, Mutex, RwLock};
-use rand::Rng;
 
 #[allow(unused_imports)]
 use crate::error::Result;

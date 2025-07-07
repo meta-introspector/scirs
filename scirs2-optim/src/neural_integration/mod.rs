@@ -434,7 +434,11 @@ pub mod forward_backward {
         accumulation_count: usize,
     }
 
-    impl<A: Float + ScalarOperand + Debug + 'static, D: Dimension + 'static> NeuralIntegration<A, D> {
+    impl<
+            A: Float + ScalarOperand + Debug + 'static + num_traits::FromPrimitive,
+            D: Dimension + 'static,
+        > NeuralIntegration<A, D>
+    {
         /// Create a new neural integration manager
         pub fn new(config: OptimizationConfig<A>) -> Self {
             Self {

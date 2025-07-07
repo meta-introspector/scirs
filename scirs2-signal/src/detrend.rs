@@ -445,7 +445,6 @@ fn solve_linear_system(a: &Array2<f64>, b: &Array1<f64>) -> SignalResult<Vec<f64
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
     use ndarray::Array2;
 

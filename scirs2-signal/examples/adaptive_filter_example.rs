@@ -7,7 +7,6 @@
 //! - Equalization
 
 use scirs2_signal::adaptive::{LmsFilter, NlmsFilter, RlsFilter};
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

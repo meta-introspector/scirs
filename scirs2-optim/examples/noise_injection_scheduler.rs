@@ -5,6 +5,7 @@
 
 use ndarray::Array1;
 use rand::prelude::*;
+use scirs2_core::random;
 use scirs2_optim::{
     optimizers::{Optimizer, SGD},
     schedulers::{
@@ -86,12 +87,12 @@ fn main() -> Result<(), Box<dyn Error>> {
     let iterations = 100;
 
     // Create multiple initial points to test different optimizers
-    let mut rng = rand::rng();
+    let mut rng = random::rng();
     let initial_points: Vec<Array1<f64>> = (0..5)
         .map(|_| {
             Array1::from_vec(vec![
-                rng.random_range(-2.0..2.0),
-                rng.random_range(-2.0..2.0),
+                rng.random_range(-2.0, 2.0),
+                rng.random_range(-2.0, 2.0),
             ])
         })
         .collect();

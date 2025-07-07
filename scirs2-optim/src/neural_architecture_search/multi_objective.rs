@@ -7,6 +7,7 @@ use ndarray::Array1;
 use num_traits::Float;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
+use scirs2_core::random;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -293,6 +294,69 @@ pub struct MOEADOptimizer<T: Float> {
     statistics: MultiObjectiveStatistics<T>,
 }
 
+impl<T: Float + Default + Clone> MOEADOptimizer<T> {
+    pub fn new(config: MultiObjectiveConfig<T>) -> Result<Self> {
+        let _population_size = 100; // Default population size
+        let neighborhood_size = 20; // Default neighborhood size
+
+        Ok(Self {
+            config,
+            weight_vectors: Vec::new(),
+            population: Vec::new(),
+            neighbors: Vec::new(),
+            pareto_front: ParetoFront::default(),
+            ideal_point: Vec::new(),
+            decomposition: DecompositionMethod::WeightedSum,
+            neighborhood_size,
+            generation: 0,
+            statistics: MultiObjectiveStatistics {
+                generation: 0,
+                total_evaluations: 0,
+                pareto_front_size: 0,
+                best_hypervolume: T::zero(),
+                convergence_history: Vec::new(),
+                diversity_history: Vec::new(),
+                algorithm_metrics: HashMap::new(),
+            },
+        })
+    }
+}
+
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + std::iter::Sum>
+    MultiObjectiveOptimizer<T> for MOEADOptimizer<T>
+{
+    fn initialize(&mut self, _config: &MultiObjectiveConfig<T>) -> Result<()> {
+        Ok(())
+    }
+
+    fn update_pareto_front(
+        &mut self,
+        _new_solutions: &[SearchResult<T>],
+    ) -> Result<ParetoFront<T>> {
+        Ok(self.pareto_front.clone())
+    }
+
+    fn get_pareto_front(&self) -> &ParetoFront<T> {
+        &self.pareto_front
+    }
+
+    fn select_candidates(
+        &mut self,
+        _population: &[OptimizerArchitecture<T>],
+        _objectives: &[T],
+    ) -> Result<Vec<OptimizerArchitecture<T>>> {
+        Ok(Vec::new())
+    }
+
+    fn name(&self) -> &str {
+        "MOEA/D"
+    }
+
+    fn get_statistics(&self) -> MultiObjectiveStatistics<T> {
+        self.statistics.clone()
+    }
+}
+
 /// Decomposition methods for MOEA/D
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DecompositionMethod {
@@ -319,6 +383,58 @@ pub struct WeightedSum<T: Float> {
 
     /// Statistics
     statistics: MultiObjectiveStatistics<T>,
+
+    /// Placeholder pareto front
+    pareto_front: ParetoFront<T>,
+}
+
+impl<T: Float + Default + Clone> WeightedSum<T> {
+    pub fn new(objectives: &[ObjectiveConfig<T>]) -> Result<Self> {
+        let weights = objectives.iter().map(|obj| obj.weight).collect();
+        Ok(Self {
+            weights,
+            best_solution: None,
+            statistics: MultiObjectiveStatistics::default(),
+            pareto_front: ParetoFront::default(),
+        })
+    }
+}
+
+impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + std::iter::Sum>
+    MultiObjectiveOptimizer<T> for WeightedSum<T>
+{
+    fn initialize(&mut self, _config: &MultiObjectiveConfig<T>) -> Result<()> {
+        Ok(())
+    }
+
+    fn update_pareto_front(
+        &mut self,
+        _new_solutions: &[SearchResult<T>],
+    ) -> Result<ParetoFront<T>> {
+        // Simple placeholder implementation
+        Ok(ParetoFront::default())
+    }
+
+    fn get_pareto_front(&self) -> &ParetoFront<T> {
+        &self.pareto_front
+    }
+
+    fn select_candidates(
+        &mut self,
+        _population: &[OptimizerArchitecture<T>],
+        _objectives: &[T],
+    ) -> Result<Vec<OptimizerArchitecture<T>>> {
+        // Simple placeholder implementation
+        Ok(Vec::new())
+    }
+
+    fn name(&self) -> &str {
+        "WeightedSum"
+    }
+
+    fn get_statistics(&self) -> MultiObjectiveStatistics<T> {
+        self.statistics.clone()
+    }
 }
 
 /// SMS-EMOA implementation
@@ -495,7 +611,7 @@ pub struct ConstraintFunction<T: Float> {
     /// Constraint bound
     bound: T,
 
-    /// Constraint direction (<=, >=, =)
+    /// Constraint direction (<=, >=, )
     direction: ConstraintDirection,
 }
 
@@ -576,7 +692,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
             population_size,
             crossover_prob,
             mutation_prob,
-            rng: SmallRng::from_rng(&mut rand::rng()),
+            rng: SmallRng::from_rng(&mut random::rng()),
         }
     }
 
@@ -1079,14 +1195,14 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
             let parent2 = self.tournament_selection(2)?;
 
             // Crossover
-            let mut offspring = if self.rng.random_range(0.0..1.0) < self.crossover_prob {
+            let mut offspring = if self.rng.random_range(0.0, 1.0) < self.crossover_prob {
                 self.crossover(&parent1, &parent2)?
             } else {
                 parent1.clone()
             };
 
             // Mutation
-            if self.rng.random_range(0.0..1.0) < self.mutation_prob {
+            if self.rng.random_range(0.0, 1.0) < self.mutation_prob {
                 self.mutate(&mut offspring)?;
             }
 
@@ -1114,10 +1230,10 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
             return Err(OptimError::InvalidConfig("Empty population".to_string()));
         }
 
-        let mut best_idx = self.rng.random_range(0..self.population.len());
+        let mut best_idx = self.rng.random_range(0, self.population.len());
 
         for _ in 1..tournament_size {
-            let idx = self.rng.random_range(0..self.population.len());
+            let idx = self.rng.random_range(0, self.population.len());
 
             // Compare based on rank and crowding distance
             if self.population[idx].rank < self.population[best_idx].rank
@@ -1139,14 +1255,14 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
     ) -> Result<Individual<T>> {
         // Simplified crossover - in practice would be more sophisticated
         let mut offspring = parent1.clone();
-        offspring.id = format!("offspring_{}", self.rng.random_range(0..u32::MAX));
+        offspring.id = format!("offspring_{}", self.rng.random_range(0, u32::MAX));
 
         // Randomly mix hyperparameters
         if !parent1.architecture.components.is_empty()
             && !parent2.architecture.components.is_empty()
         {
             for (key, _value) in &parent1.architecture.components[0].hyperparameters {
-                if self.rng.random_range(0.0..1.0) < 0.5 {
+                if self.rng.random_range(0.0, 1.0) < 0.5 {
                     if let Some(parent2_value) =
                         parent2.architecture.components[0].hyperparameters.get(key)
                     {
@@ -1168,9 +1284,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
                 .hyperparameters
                 .iter_mut()
             {
-                if self.rng.random_range(0.0..1.0) < 0.1 {
+                if self.rng.random_range(0.0, 1.0) < 0.1 {
                     // 10% mutation rate per parameter
-                    let noise = T::from(self.rng.random_range(-0.05..0.05)).unwrap(); // ±5% noise
+                    let noise = T::from(self.rng.random_range(-0.05, 0.05)).unwrap(); // ±5% noise
                     *value = *value + noise;
                 }
             }

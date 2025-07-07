@@ -482,7 +482,7 @@ where
             let k = params.get("n_clusters").map(|&x| x as usize).unwrap_or(3);
             let max_iter = params.get("max_iter").map(|&x| x as usize);
             let tol = params.get("tolerance").copied();
-            let seed = rng.gen::<u64>();
+            let seed = rng.random_range(0..u64::MAX);
 
             // Perform cross-validation
             let cv_scores = self.cross_validate_kmeans(data, k, max_iter, tol, Some(seed))?;
@@ -1611,7 +1611,7 @@ where
                         rng.random_range(0..choices.len()) as f64
                     }
                     HyperParameter::Boolean => {
-                        if rng.gen_bool(0.5) {
+                        if rng.random_range(0.0..1.0) < 0.5 {
                             1.0
                         } else {
                             0.0
@@ -2434,17 +2434,17 @@ where
                 let parent2 = self.tournament_selection(&population, &mut rng)?;
 
                 // Crossover
-                let (mut child1, mut child2) = if rng.gen::<f64>() < crossover_rate {
+                let (mut child1, mut child2) = if rng.random_range(0.0..1.0) < crossover_rate {
                     self.crossover(&parent1, &parent2, search_space, &mut rng)?
                 } else {
                     (parent1.clone(), parent2.clone())
                 };
 
                 // Mutation
-                if rng.gen::<f64>() < mutation_rate {
+                if rng.random_range(0.0..1.0) < mutation_rate {
                     self.mutate(&mut child1, search_space, &mut rng)?;
                 }
-                if rng.gen::<f64>() < mutation_rate {
+                if rng.random_range(0.0..1.0) < mutation_rate {
                     self.mutate(&mut child2, search_space, &mut rng)?;
                 }
 
@@ -2511,14 +2511,14 @@ where
                 HyperParameter::Float { min, max } => {
                     // Blend crossover for continuous parameters
                     let alpha = 0.5;
-                    let beta = rng.gen::<f64>() * (1.0 + 2.0 * alpha) - alpha;
+                    let beta = rng.random_range(0.0..1.0) * (1.0 + 2.0 * alpha) - alpha;
                     let v1 = (1.0 - beta) * val1 + beta * val2;
                     let v2 = beta * val1 + (1.0 - beta) * val2;
                     (v1.clamp(*min, *max), v2.clamp(*min, *max))
                 }
                 HyperParameter::Integer { min, max } => {
                     // Single-point crossover for discrete parameters
-                    if rng.gen_bool(0.5) {
+                    if rng.random_range(0.0..1.0) < 0.5 {
                         (
                             val1.clamp(*min as f64, *max as f64),
                             val2.clamp(*min as f64, *max as f64),
@@ -2532,7 +2532,7 @@ where
                 }
                 _ => {
                     // For other types, just swap randomly
-                    if rng.gen_bool(0.5) {
+                    if rng.random_range(0.0..1.0) < 0.5 {
                         (val1, val2)
                     } else {
                         (val2, val1)
@@ -2555,7 +2555,7 @@ where
         rng: &mut rand::rngs::StdRng,
     ) -> Result<()> {
         for (param_name, param_spec) in &search_space.parameters {
-            if rng.gen::<f64>() < 0.1 {
+            if rng.random_range(0.0..1.0) < 0.1 {
                 // 10% chance to mutate each parameter
                 let current_val = individual.get(param_name).copied().unwrap_or(0.0);
 
@@ -2578,7 +2578,7 @@ where
                         rng.random_range(0..choices.len()) as f64
                     }
                     HyperParameter::Boolean => {
-                        if rng.gen_bool(0.5) {
+                        if rng.random_range(0.0..1.0) < 0.5 {
                             1.0
                         } else {
                             0.0
@@ -2677,17 +2677,17 @@ where
 
                 // Apply small random mutations
                 for (param_name, param_spec) in &search_space.parameters {
-                    if rng.gen::<f64>() < 0.1 {
+                    if rng.random_range(0.0..1.0) < 0.1 {
                         // 10% mutation rate
                         let current_val = mutated.get(param_name).copied().unwrap_or(0.0);
                         let new_val = match param_spec {
                             HyperParameter::Float { min, max } => {
                                 let range = max - min;
-                                let delta = (rng.gen::<f64>() - 0.5) * range * 0.1;
+                                let delta = (rng.random_range(0.0..1.0) - 0.5) * range * 0.1;
                                 (current_val + delta).clamp(*min, *max)
                             }
                             HyperParameter::Integer { min, max } => {
-                                rng.gen::<f64>() * (*max - *min) as f64 + *min as f64
+                                rng.random_range(0.0..1.0) * (*max - *min) as f64 + *min as f64
                             }
                             _ => current_val,
                         };
@@ -2902,7 +2902,7 @@ where
             _ => {
                 // For other acquisition functions, return random value
                 let mut rng = rng();
-                rng.gen::<f64>()
+                rng.random_range(0.0..1.0)
             }
         }
     }
@@ -2929,7 +2929,7 @@ where
                 // LHS sampling: divide parameter space into n_points intervals
                 let interval_size = 1.0 / n_points as f64;
                 let base_point = i as f64 * interval_size;
-                let random_offset = rng.gen::<f64>() * interval_size;
+                let random_offset = rng.random_range(0.0..1.0) * interval_size;
                 let normalized_value = base_point + random_offset;
 
                 let value = match param_spec {
@@ -4268,8 +4268,12 @@ pub mod advanced_optimization {
             search_space: &SearchSpace,
             evaluation_fn: &dyn Fn(&HashMap<String, f64>, f64) -> Result<f64>,
         ) -> Result<TuningResult> {
-            if let Some(ref multi_fidelity_config) = self.config.multi_fidelity {
-                self.multi_fidelity_optimization(search_space, evaluation_fn, multi_fidelity_config)
+            if let Some(multi_fidelity_config) = self.config.multi_fidelity.clone() {
+                self.multi_fidelity_optimization(
+                    search_space,
+                    evaluation_fn,
+                    &multi_fidelity_config,
+                )
             } else {
                 Err(ClusteringError::InvalidInput(
                     "Multi-fidelity config not provided".to_string(),
@@ -5181,7 +5185,7 @@ pub mod neural_architecture_search {
             match &self.algorithm {
                 BanditAlgorithm::EpsilonGreedy { epsilon } => {
                     let mut rng = rng();
-                    if rng.gen::<f64>() < *epsilon {
+                    if rng.random_range(0.0..1.0) < *epsilon {
                         // Explore: choose random arm
                         Ok(rng.random_range(0..self.arms.len()))
                     } else {
@@ -5467,7 +5471,7 @@ pub mod neural_architecture_search {
                 // Crossover
                 let mut child_config = HashMap::new();
                 for (param_name, _) in &self.search_space {
-                    let value = if rng.gen::<f64>() < 0.5 {
+                    let value = if rng.random_range(0.0..1.0) < 0.5 {
                         parent1.config[param_name]
                     } else {
                         parent2.config[param_name]
@@ -5476,7 +5480,7 @@ pub mod neural_architecture_search {
                 }
 
                 // Mutation
-                if rng.gen::<f64>() < self.mutation_rate {
+                if rng.random_range(0.0..1.0) < self.mutation_rate {
                     self.mutate_config(&mut child_config)?;
                 }
 

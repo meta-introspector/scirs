@@ -112,7 +112,7 @@ pub struct AdaptiveLRState<T: Float> {
     pub failure_count: usize,
 }
 
-impl<T: Float, P: PolicyNetwork<T>> TrustRegionOptimizer<T, P> {
+impl<T: Float + std::iter::Sum, P: PolicyNetwork<T>> TrustRegionOptimizer<T, P> {
     /// Create a new trust region optimizer
     pub fn new(config: TrustRegionConfig<T>, policy: P) -> Self {
         Self {

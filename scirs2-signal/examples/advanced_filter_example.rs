@@ -12,7 +12,6 @@ use scirs2_signal::filter::{
     allpass_filter, bessel, butter, cheby1, cheby2, comb_filter, ellip, group_delay, lfilter,
     notch_filter, peak_filter,
 };
-use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn main() {

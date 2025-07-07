@@ -9,7 +9,6 @@ use crate::privacy::moment_accountant::MomentsAccountant;
 use crate::privacy::{DifferentialPrivacyConfig, PrivacyBudget};
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use rand::Rng;
 use rand_chacha::ChaCha20Rng;
 use std::collections::HashMap;
 
@@ -1288,15 +1287,15 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                         .unwrap_or(T::from(100).unwrap())
                         .to_i64()
                         .unwrap_or(100);
-                    ParameterValue::Integer(self.rng.random_range(min..=max))
+                    ParameterValue::Integer(self.rng.random_range(min, max))
                 }
-                ParameterType::Boolean => ParameterValue::Boolean(self.rng.random_range(0..2) == 1),
+                ParameterType::Boolean => ParameterValue::Boolean(self.rng.random_range(0, 2) == 1),
                 ParameterType::Categorical(categories) => {
-                    let idx = self.rng.random_range(0..categories.len());
+                    let idx = self.rng.random_range(0, categories.len());
                     ParameterValue::Categorical(categories[idx].clone())
                 }
                 ParameterType::Ordinal(values) => {
-                    let idx = self.rng.random_range(0..values.len());
+                    let idx = self.rng.random_range(0, values.len());
                     ParameterValue::Ordinal(idx)
                 }
             };

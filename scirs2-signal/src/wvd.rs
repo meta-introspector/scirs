@@ -482,7 +482,6 @@ pub fn extract_ridges(
 }
 
 mod tests {
-    use super::*;
     use ndarray::Array;
 
     use std::f64::consts::PI;

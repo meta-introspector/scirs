@@ -1045,7 +1045,6 @@ fn vector_norm(vec: &[f64]) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::lti::systems::{StateSpace, TransferFunction};
     use approx::assert_relative_eq;
 

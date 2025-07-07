@@ -6,7 +6,6 @@
 
 use crate::error::SignalResult;
 use ndarray::Array2;
-use rand::prelude::*;
 // use scirs2_core::simd_ops::SimdUnifiedOps;
 // use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
@@ -520,7 +519,7 @@ fn validate_perfect_reconstruction(
     config: &Dwt2dadvancedConfig,
     rng: &mut rand_chacha::ChaCha8Rng,
 ) -> SignalResult<ReconstructionValidationResult> {
-    let mut max_error = 0.0;
+    let mut max_error = 0.0f64;
     let mut errors = Vec::new();
     let mut error_by_wavelet = HashMap::new();
     let mut error_by_level = HashMap::new();

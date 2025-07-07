@@ -757,7 +757,6 @@ pub fn denoise_adaptive_dictionary(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::f64::consts::PI;
 
     #[test]

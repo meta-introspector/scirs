@@ -69,7 +69,7 @@ pub fn random_sample(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rand::thread_rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -160,7 +160,7 @@ pub fn stratified_sample(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rand::thread_rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -291,7 +291,7 @@ pub fn importance_sample(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rand::thread_rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };
@@ -420,7 +420,7 @@ pub fn multiple_bootstrap_samples(
     let mut rng = match random_seed {
         Some(seed) => StdRng::seed_from_u64(seed),
         None => {
-            let mut r = rand::thread_rng();
+            let mut r = rand::rng();
             StdRng::seed_from_u64(r.next_u64())
         }
     };

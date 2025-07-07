@@ -361,7 +361,6 @@ pub fn cubic_hermite_interpolate(
 /// Unit tests for spline interpolation methods
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::interpolate::core::InterpolationConfig;
     use ndarray::Array1;
 
