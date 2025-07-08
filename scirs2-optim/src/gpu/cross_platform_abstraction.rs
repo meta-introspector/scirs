@@ -1052,7 +1052,7 @@ impl<T: Float + Send + Sync> CrossPlatformOptimizer<T> {
     }
 
     /// Find a better backend than current
-    fn find_better_backend(&self, current_score: f64) -> Option<GpuBackend> {
+    fn find_better_backend(&self, _current_score: f64) -> Option<GpuBackend> {
         // This would involve benchmarking other backends
         // For now, just return the fastest available backend if it's different
         let fastest = self.select_fastest_backend();

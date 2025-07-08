@@ -3,6 +3,7 @@
 use super::utils::factorial;
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
+use std::f64::consts::PI;
 
 /// Generate a Morlet wavelet
 ///

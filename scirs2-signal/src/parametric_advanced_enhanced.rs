@@ -117,6 +117,7 @@ impl Default for AdvancedEnhancedConfig {
 }
 
 use num_complex::Complex64;
+use std::f64::consts::PI;
 /// Advanced-enhanced ARMA estimation with SIMD acceleration and advanced numerics
 ///
 /// This function provides state-of-the-art ARMA parameter estimation using:
@@ -628,7 +629,8 @@ pub fn multitaper_parametric_estimation(
     }
 
     // Combine spectral estimates using appropriate weights
-    let combined_psd = combine_multitaper_spectra(&spectral_estimates, config.combination_method)?;
+    let combined_psd =
+        combine_multitaper_spectra(&spectral_estimates, config.combination_method.clone())?;
     let freqs = generate_frequency_grid(config.n_freqs, config.fs);
 
     // Compute confidence intervals
@@ -2317,7 +2319,7 @@ fn normal_inverse_cdf(p: f64) -> f64 {
 ///
 /// * Vector of eigenvalues
 #[allow(dead_code)]
-fn extract_taper_eigenvalues(tapers: &Array2<f64>, nw: f64) -> SignalResult<Vec<f64>> {
+fn extract_taper_eigenvalues(tapers: &Array2<f64>, nw: f64) -> SignalResult<Array1<f64>> {
     let k = tapers.nrows();
 
     // For DPSS tapers, eigenvalues are approximately given by
@@ -2339,5 +2341,221 @@ fn extract_taper_eigenvalues(tapers: &Array2<f64>, nw: f64) -> SignalResult<Vec<
     // Sort in descending order (highest concentration first)
     eigenvalues.sort_by(|a, b| b.partial_cmp(a).unwrap());
 
-    Ok(eigenvalues)
+    Ok(Array1::from_vec(eigenvalues))
+}
+
+// ================================================================================================
+// MISSING FUNCTION STUB IMPLEMENTATIONS
+// These functions are called but not implemented. They need proper implementation for production.
+// ================================================================================================
+
+/// TODO: Implement advanced enhanced ARMA estimation function
+#[allow(dead_code)]
+fn advanced_enhanced_arma_estimation(
+    signal: &[f64],
+    ar_order: usize,
+    ma_order: usize,
+    config: &AdvancedEnhancedConfig,
+) -> SignalResult<AdvancedEnhancedARMAResult> {
+    let signal_array = Array1::from_vec(signal.to_vec());
+    advanced_enhanced_arma(&signal_array, ar_order, ma_order, config)
+}
+
+/// TODO: Implement minimum variance spectrum estimation
+#[allow(dead_code)]
+fn minimum_variance_spectrum(
+    covariance_matrix: &Array2<f64>,
+    n_freqs: usize,
+    fs: f64,
+) -> SignalResult<SpectralEstimate> {
+    // Stub implementation
+    let frequencies = generate_frequency_grid(n_freqs, fs);
+    let psd = vec![1.0; n_freqs]; // Placeholder flat spectrum
+
+    Ok(SpectralEstimate { psd, frequencies })
+}
+
+/// TODO: Implement CAPON spectrum estimation
+#[allow(dead_code)]
+fn capon_spectrum_estimation(
+    covariance_matrix: &Array2<f64>,
+    n_freqs: usize,
+    fs: f64,
+) -> SignalResult<SpectralEstimate> {
+    // Stub implementation
+    let frequencies = generate_frequency_grid(n_freqs, fs);
+    let psd = vec![1.0; n_freqs]; // Placeholder flat spectrum
+
+    Ok(SpectralEstimate { psd, frequencies })
+}
+
+/// TODO: Implement DPSS taper generation
+#[allow(dead_code)]
+fn generate_dpss_tapers(n: usize, nw: f64, k: usize) -> SignalResult<Array2<f64>> {
+    // Stub implementation - generates simple tapers
+    let mut tapers = Array2::zeros((k, n));
+
+    for i in 0..k {
+        for j in 0..n {
+            // Simple window approximation (not true DPSS)
+            let t = j as f64 / n as f64;
+            let taper_val = (std::f64::consts::PI * (i + 1) as f64 * t).sin();
+            tapers[[i, j]] = taper_val;
+        }
+    }
+
+    Ok(tapers)
+}
+
+/// TODO: Implement MUSIC spectrum estimation
+#[allow(dead_code)]
+fn music_spectrum_estimation(
+    eigen_result: &EigenDecompositionResult,
+    num_signals: usize,
+    n_freqs: usize,
+    fs: f64,
+) -> SignalResult<SpectralEstimate> {
+    // Stub implementation
+    let frequencies = generate_frequency_grid(n_freqs, fs);
+    let psd = vec![1.0; n_freqs]; // Placeholder
+
+    Ok(SpectralEstimate { psd, frequencies })
+}
+
+/// TODO: Implement ESPRIT frequency estimation
+#[allow(dead_code)]
+fn esprit_frequency_estimation(
+    eigen_result: &EigenDecompositionResult,
+    num_signals: usize,
+    subspace_dimension: usize,
+) -> SignalResult<SpectralEstimate> {
+    // Stub implementation
+    let frequencies = vec![0.0; num_signals];
+    let psd = vec![1.0; num_signals]; // Placeholder
+
+    Ok(SpectralEstimate { psd, frequencies })
+}
+
+/// TODO: Implement Hankel matrix creation
+#[allow(dead_code)]
+fn create_hankel_matrix(signal: &[f64], subspace_dimension: usize) -> SignalResult<Array2<f64>> {
+    let n = signal.len();
+    if n < subspace_dimension {
+        return Err(SignalError::ValueError(
+            "Signal too short for Hankel matrix".to_string(),
+        ));
+    }
+
+    // Stub implementation - creates a simple matrix
+    let rows = n - subspace_dimension + 1;
+    let mut hankel = Array2::zeros((rows, subspace_dimension));
+
+    for i in 0..rows {
+        for j in 0..subspace_dimension {
+            if i + j < n {
+                hankel[[i, j]] = signal[i + j];
+            }
+        }
+    }
+
+    Ok(hankel)
+}
+
+/// TODO: Implement sample covariance computation
+#[allow(dead_code)]
+fn compute_sample_covariance(data_matrix: &Array2<f64>) -> SignalResult<Array2<f64>> {
+    let (rows, cols) = data_matrix.dim();
+    let mut covariance = Array2::zeros((cols, cols));
+
+    // Simple covariance estimation
+    for i in 0..cols {
+        for j in 0..cols {
+            let mut sum = 0.0;
+            for k in 0..rows {
+                sum += data_matrix[[k, i]] * data_matrix[[k, j]];
+            }
+            covariance[[i, j]] = sum / rows as f64;
+        }
+    }
+
+    Ok(covariance)
+}
+
+/// TODO: Implement signal number estimation
+#[allow(dead_code)]
+fn estimate_number_of_signals(
+    eigenvalues: &Array1<f64>,
+    config: &HighResolutionConfig,
+) -> SignalResult<usize> {
+    // Stub implementation - simple threshold-based detection
+    let threshold = eigenvalues.iter().sum::<f64>() / eigenvalues.len() as f64 * 0.1;
+    let num_signals = eigenvalues.iter().filter(|&&x| x > threshold).count();
+    Ok(num_signals.max(1))
+}
+
+/// TODO: Implement adaptive order selection
+#[allow(dead_code)]
+fn select_optimal_order_adaptive(signal: &[f64], config: &AdaptiveARConfig) -> SignalResult<usize> {
+    // Stub implementation - returns default order
+    Ok(config.max_order.min(10))
+}
+
+/// TODO: Implement AR estimation with forgetting factor
+#[allow(dead_code)]
+fn estimate_ar_with_forgetting(
+    signal: &[f64],
+    order: usize,
+    forgetting_factor: f64,
+    config: &AdaptiveARConfig,
+) -> SignalResult<AdaptiveARResult> {
+    // Stub implementation
+    let coeffs = Array1::ones(order + 1);
+    let noise_variance = 1.0;
+
+    Ok(AdaptiveARResult {
+        time_centers: vec![0.5],
+        ar_coefficients: vec![coeffs],
+        orders: vec![order],
+        spectral_estimates: vec![vec![1.0; config.n_freqs]],
+        window_size: signal.len(),
+        hop_size: signal.len() / 4,
+        total_windows: 1,
+    })
+}
+
+/// TODO: Implement weighted ARMA estimation
+#[allow(dead_code)]
+fn weighted_arma_estimation(
+    signal: &[f64],
+    weights: &Array1<f64>,
+    ar_order: usize,
+    ma_order: usize,
+    config: &RobustParametricConfig,
+) -> SignalResult<WeightedARMAResult> {
+    // Stub implementation
+    let ar_coeffs = Array1::ones(ar_order + 1);
+    let ma_coeffs = Array1::ones(ma_order + 1);
+
+    Ok(WeightedARMAResult {
+        ar_coeffs,
+        ma_coeffs,
+        weighted_residuals: Array1::zeros(signal.len()),
+        effective_sample_size: signal.len() as f64,
+    })
+}
+
+/// Eigenvalue decomposition result structure
+#[derive(Debug, Clone)]
+pub struct EigenDecompositionResult {
+    pub eigenvalues: Array1<f64>,
+    pub eigenvectors: Array2<f64>,
+}
+
+/// Weighted ARMA result structure
+#[derive(Debug, Clone)]
+pub struct WeightedARMAResult {
+    pub ar_coeffs: Array1<f64>,
+    pub ma_coeffs: Array1<f64>,
+    pub weighted_residuals: Array1<f64>,
+    pub effective_sample_size: f64,
 }

@@ -6,10 +6,10 @@ use std::hash::{Hash, Hasher};
 use std::marker::{Send, Sync};
 
 use crate::error::ClusteringError;
-// use scirs2_core::validation::{
-//     check_array_finite, check_positive, clustering::validate_clustering_data,
-//     parameters::check_unit_interval,
-// };
+use scirs2_core::validation::{
+    check_array_finite, check_positive, clustering::validate_clustering_data,
+    parameters::check_unit_interval,
+};
 use scirs2_spatial::distance::EuclideanDistance;
 use scirs2_spatial::kdtree::KDTree;
 

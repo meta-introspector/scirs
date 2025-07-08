@@ -8,6 +8,7 @@ use crate::error::{SignalError, SignalResult};
 use crate::lombscargle::lombscargle;
 use crate::lombscargle_enhanced::{lombscargle_enhanced, LombScargleConfig, WindowType};
 use num_traits::Float;
+use std::f64::consts::PI;
 
 /// Validation result structure
 #[derive(Debug, Clone)]

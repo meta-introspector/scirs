@@ -5,7 +5,7 @@
 //! the same interface as the standard K-means implementation but with optimized
 //! distance calculations, centroid updates, and distortion computations.
 
-use ndarray::{Array1, Array2, ArrayView2};
+use ndarray::{s, Array1, Array2, ArrayView2};
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 

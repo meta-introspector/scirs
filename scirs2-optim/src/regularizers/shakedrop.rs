@@ -1,6 +1,5 @@
 use ndarray::{Array, ArrayBase, Data, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
-use scirs2_core::random;
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};
@@ -33,7 +32,7 @@ pub struct ShakeDrop<A: Float + FromPrimitive + Debug> {
     /// Range for the beta parameter
     pub beta_range: (A, A),
     /// Random number generator
-    rng: random::Random,
+    rng: scirs2_core::random::Random<rand::rngs::StdRng>,
 }
 
 impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
@@ -57,7 +56,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             p,
             alpha_range: (neg_one, one),
             beta_range: (zero, one),
-            rng: random::rng(),
+            rng: scirs2_core::random::Random::with_seed(42),
         }
     }
 
@@ -77,7 +76,7 @@ impl<A: Float + FromPrimitive + Debug> ShakeDrop<A> {
             p,
             alpha_range,
             beta_range,
-            rng: random::rng(),
+            rng: scirs2_core::random::Random::with_seed(42),
         }
     }
 

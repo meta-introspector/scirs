@@ -1081,7 +1081,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> FaultTolerantCoordinator<F>
     }
 
     /// Replace failed worker with a new worker
-    fn replace_failed_worker(&mut self, failed_worker_id: usize) -> Result<()> {
+    fn replace_failed_worker(&mut self, _failed_worker_id: usize) -> Result<()> {
         if !self.fault_config.auto_replace_workers {
             return Err(ClusteringError::InvalidInput(
                 "Worker replacement is disabled".to_string(),
@@ -1289,7 +1289,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> FaultTolerantCoordinator<F>
                 ))
             })?;
 
-        let primary_checksum = primary_partition.checksum;
+        let _primary_checksum = primary_partition.checksum;
 
         // Find replica partitions and verify checksums
         if let Some(replica_workers) = self.data_replicas.get(&partition_id) {
@@ -1314,7 +1314,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> FaultTolerantCoordinator<F>
     pub fn update_replicas(
         &mut self,
         partition_id: usize,
-        updated_partition: &DataPartition<F>,
+        _updated_partition: &DataPartition<F>,
     ) -> Result<()> {
         if !self.fault_config.enable_replication {
             return Ok(());
@@ -1532,7 +1532,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
     /// Partition data across workers using specified strategy
     pub fn partition_data(&mut self, data: ArrayView2<F>) -> Result<()> {
         let n_samples = data.nrows();
-        let n_features = data.ncols();
+        let _n_features = data.ncols();
 
         if n_samples == 0 {
             return Err(ClusteringError::InvalidInput("Empty dataset".to_string()));
@@ -1591,7 +1591,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
             self.centroids = Some(new_centroids);
             self.convergence_history.push(convergence.clone());
 
-            let sync_time = start_time.elapsed().as_millis() as u64;
+            let _sync_time = start_time.elapsed().as_millis() as u64;
 
             // Log round completion
             if round % 10 == 0 {
@@ -2018,7 +2018,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync + 'static> DistributedKMeans
         // Step 3: Distribute strata points proportionally to workers
         let mut worker_assignments: Vec<Vec<usize>> = vec![Vec::new(); self.config.n_workers];
 
-        for (stratum_id, stratum_points) in strata_groups.iter().enumerate() {
+        for (_stratum_id, stratum_points) in strata_groups.iter().enumerate() {
             if stratum_points.is_empty() {
                 continue;
             }
@@ -2814,7 +2814,7 @@ impl<F: Float + FromPrimitive + Debug + Send + Sync> DistributedHierarchical<F> 
                 // Compute combined centroid
                 let n1 = cluster1.len() as f64;
                 let n2 = cluster2.len() as f64;
-                let combined_centroid: Vec<f64> = centroid1
+                let _combined_centroid: Vec<f64> = centroid1
                     .iter()
                     .zip(centroid2.iter())
                     .map(|(&c1, &c2)| (n1 * c1 + n2 * c2) / (n1 + n2))
@@ -2977,7 +2977,7 @@ pub mod utils {
         fn predictive_balancing(
             &self,
             data_size: usize,
-            current_assignments: &HashMap<usize, usize>,
+            _current_assignments: &HashMap<usize, usize>,
             model_type: &PredictionModel,
             look_ahead_steps: usize,
         ) -> Result<HashMap<usize, usize>> {
@@ -3043,7 +3043,7 @@ pub mod utils {
             // Iterate to find Nash equilibrium
             for iteration in 0..max_iterations {
                 let mut converged = true;
-                let old_assignments = assignments.clone();
+                let _old_assignments = assignments.clone();
 
                 // Each worker adjusts their load based on others' decisions
                 for &worker_id in &worker_ids {
@@ -3087,7 +3087,7 @@ pub mod utils {
             current_assignments: &HashMap<usize, usize>,
             total_data: usize,
         ) -> usize {
-            let profile = self.worker_profiles.get(&worker_id).unwrap();
+            let _profile = self.worker_profiles.get(&worker_id).unwrap();
 
             // Utility function considers throughput, reliability, and coordination cost
             let mut best_assignment = current_assignments[&worker_id];
@@ -3193,7 +3193,7 @@ pub mod utils {
             weights: &[f64],
         ) -> Result<HashMap<usize, usize>> {
             let worker_ids: Vec<usize> = self.worker_profiles.keys().copied().collect();
-            let n_workers = worker_ids.len();
+            let _n_workers = worker_ids.len();
 
             // Generate Pareto-optimal solutions using weighted sum approach
             let mut best_assignment = HashMap::new();
@@ -3442,7 +3442,7 @@ pub mod utils {
         }
 
         /// Simplified ARIMA prediction
-        fn arima_predict(&self, data: &[f64], p: usize, d: usize, q: usize, steps: usize) -> f64 {
+        fn arima_predict(&self, data: &[f64], p: usize, d: usize, q: usize, _steps: usize) -> f64 {
             if data.len() < p.max(q) + d {
                 return data.last().copied().unwrap_or(0.5);
             }
@@ -3468,8 +3468,8 @@ pub mod utils {
         fn neural_network_predict(
             &self,
             data: &[f64],
-            hidden_layers: &[usize],
-            steps: usize,
+            _hidden_layers: &[usize],
+            _steps: usize,
         ) -> f64 {
             // Simplified feedforward network simulation
             if data.len() < 3 {
@@ -5421,9 +5421,9 @@ pub mod edge_computing {
 
             // Initialize centroids randomly
             use rand::prelude::*;
-            let mut rng = rng();
+            let mut rng = rand::thread_rng();
             for i in 0..k {
-                let random_idx = rng.random_range(0..data.nrows());
+                let random_idx = rng.gen_range(0..data.nrows());
                 centroids.row_mut(i).assign(&data.row(random_idx));
             }
 
@@ -6337,7 +6337,7 @@ pub mod edge_computing {
                     return Ok(());
                 }
 
-                let n_features = self.stream_buffer[0].len();
+                let _n_features = self.stream_buffer[0].len();
                 let k = (self.stream_buffer.len() / 10).max(2).min(10); // Adaptive k
 
                 // Simple k-means initialization
@@ -6519,10 +6519,10 @@ pub mod edge_computing {
             fn synchronize_with_peers(&mut self) -> Result<()> {
                 if let Some(ref model) = self.current_model {
                     // Create incremental update
-                    let update = self.create_incremental_update(model)?;
+                    let _update = self.create_incremental_update(model)?;
 
                     // Send to all peers (implementation would use message passing)
-                    for &peer_id in self.peers.keys() {
+                    for &_peer_id in self.peers.keys() {
                         // Send update to peer
                         // (Implementation would use the message passing system)
                     }

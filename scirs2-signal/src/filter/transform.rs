@@ -9,6 +9,7 @@ use num_traits::Zero;
 
 use super::common::FilterCoefficients;
 use num_complex::Complex64;
+use std::f64::consts::PI;
 
 /// Apply bilinear transform to convert analog filter to digital
 ///

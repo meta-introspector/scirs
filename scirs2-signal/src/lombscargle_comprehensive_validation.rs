@@ -9,6 +9,7 @@
 
 use crate::error::SignalResult;
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
+use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Comprehensive validation result for Lomb-Scargle methods

@@ -26,7 +26,8 @@ use crate::neuromorphic::{BasicNeuromorphicOptimizer, NeuromorphicConfig, Neurom
 use crate::quantum_inspired::{QuantumInspiredOptimizer, QuantumOptimizationStats};
 use crate::result::OptimizeResults;
 use ndarray::{Array1, Array2, ArrayView1};
-use rand::{rng, Rng};
+use rand::rng;
+use scirs2_core::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant};
 
@@ -736,7 +737,7 @@ impl AdvancedCoordinator {
                     .len()
                     .min(quantum_opt.quantum_state.basis_states.ncols())
                 {
-                    let noise = (rng().random::<f64>() - 0.5) * 0.1;
+                    let noise = (rng().random_f64() - 0.5) * 0.1;
                     quantum_opt.quantum_state.basis_states[[i, j]] = best_solution[j] + noise;
                 }
             }

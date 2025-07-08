@@ -1,6 +1,7 @@
 //! Real-valued wavelets (e.g., Ricker)
 
 use crate::error::{SignalError, SignalResult};
+use std::f64::consts::PI;
 
 /// Generate a Ricker (Mexican hat) wavelet
 ///

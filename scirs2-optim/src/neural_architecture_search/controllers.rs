@@ -5,7 +5,7 @@
 
 use ndarray::{s, Array1, Array2};
 use num_traits::Float;
-use rand::{rng, Rng};
+use scirs2_core::random::Rng;
 use std::collections::{HashMap, VecDeque};
 
 use super::{
@@ -666,7 +666,7 @@ impl<
         let probs = exp_logits / sum_exp;
 
         // Sample from categorical distribution
-        let mut rng = rng();
+        let mut rng = scirs2_core::random::rng();
         let rand_val = rng.random::<f64>();
         let mut cumulative = 0.0;
 
@@ -1002,7 +1002,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> ArchitectureCont
         use super::architecture_space::{ComponentType, OptimizerComponent};
 
         // Random selection of component type
-        let mut rng = rng();
+        let mut rng = scirs2_core::random::rng();
         let component_type =
             self.component_types[rng.random_range(0, self.component_types.len())].clone();
 

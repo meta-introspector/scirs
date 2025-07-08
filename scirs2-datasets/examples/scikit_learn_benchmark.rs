@@ -88,7 +88,7 @@ fn analyze_toy_dataset_performance(suites: &[BenchmarkSuite]) {
             "    Total loading time: {:.2}s",
             total_loading_time.as_secs_f64()
         );
-        println!("    Total samples loaded: {}", total_samples);
+        println!("    Total samples loaded: {total_samples}");
         println!(
             "    Average throughput: {:.1} samples/s",
             total_samples as f64 / total_loading_time.as_secs_f64()
@@ -144,15 +144,15 @@ fn analyze_generation_type(
         return;
     }
 
-    println!("\n  {} Generation:", gen_type);
+    println!("\n  {gen_type} Generation:");
 
     let total_samples: usize = results.iter().map(|r| r.samples).sum();
     let total_duration: Duration = results.iter().map(|r| r.duration).sum();
     let avg_throughput = total_samples as f64 / total_duration.as_secs_f64();
 
     println!("    Configurations tested: {}", results.len());
-    println!("    Total samples generated: {}", total_samples);
-    println!("    Average throughput: {:.1} samples/s", avg_throughput);
+    println!("    Total samples generated: {total_samples}");
+    println!("    Average throughput: {avg_throughput:.1} samples/s");
 
     // Find best and worst performance
     let best = results
@@ -200,10 +200,7 @@ fn analyze_scaling_performance(suite: &BenchmarkSuite) {
                 .sum::<f64>()
                 / results.len() as f64;
 
-            println!(
-                "    {} samples: {:.1} samples/s (avg {:.2}s)",
-                size, avg_throughput, avg_duration
-            );
+            println!("    {size} samples: {avg_throughput:.1} samples/s (avg {avg_duration:.2}s)");
         }
     }
 
@@ -224,8 +221,7 @@ fn analyze_scaling_performance(suite: &BenchmarkSuite) {
             let size_ratio = *large_size as f64 / *small_size as f64;
 
             println!(
-                "    Scaling efficiency: {:.2}x (size increased {:.1}x)",
-                efficiency, size_ratio
+                "    Scaling efficiency: {efficiency:.2}x (size increased {size_ratio:.1}x)"
             );
 
             if efficiency > 0.8 {
@@ -299,9 +295,8 @@ fn run_sklearn_toy_dataset_comparison() {
         let _start = Instant::now();
         let python_result = Command::new("python3")
             .arg("-c")
-            .arg(&format!(
-                "import time; start=time.time(); {}; print(f'{{:.4f}}', time.time()-start)",
-                python_code
+            .arg(format!(
+                "import time; start=time.time(); {python_code}; print(f'{{:.4f}}', time.time()-start)"
             ))
             .output();
 
@@ -343,7 +338,7 @@ fn run_sklearn_toy_dataset_comparison() {
                 );
             }
             _ => {
-                println!("    {}: Failed to benchmark Python version", name);
+                println!("    {name}: Failed to benchmark Python version");
             }
         }
     }
@@ -363,11 +358,11 @@ fn run_sklearn_generation_comparison() {
     for (n_samples, n_features, gen_type) in configs {
         let (python_code, scirs2_fn): (&str, Box<dyn Fn() -> Result<_, _>>) = match gen_type {
             "classification" => (
-                &format!("from sklearn.datasets import make_classification; make_classification(n_samples={}, n_features={}, random_state=42)", n_samples, n_features),
+                &format!("from sklearn.datasets import make_classification; make_classification(n_samples={n_samples}, n_features={n_features}, random_state=42)"),
                 Box::new(move || make_classification(n_samples, n_features, 3, 2, 4, Some(42)))
             ),
             "regression" => (
-                &format!("from sklearn.datasets import make_regression; make_regression(n_samples={}, n_features={}, random_state=42)", n_samples, n_features),
+                &format!("from sklearn.datasets import make_regression; make_regression(n_samples={n_samples}, n_features={n_features}, random_state=42)"),
                 Box::new(move || make_regression(n_samples, n_features, 3, 0.1, Some(42)))
             ),
             _ => continue,
@@ -376,9 +371,8 @@ fn run_sklearn_generation_comparison() {
         // Time Python execution
         let python_result = Command::new("python3")
             .arg("-c")
-            .arg(&format!(
-                "import time; start=time.time(); {}; print(f'{{:.4f}}', time.time()-start)",
-                python_code
+            .arg(format!(
+                "import time; start=time.time(); {python_code}; print(f'{{:.4f}}', time.time()-start)"
             ))
             .output();
 
@@ -416,8 +410,7 @@ fn run_sklearn_generation_comparison() {
             }
             _ => {
                 println!(
-                    "    {} {}x{}: Failed to benchmark Python version",
-                    gen_type, n_samples, n_features
+                    "    {gen_type} {n_samples}x{n_features}: Failed to benchmark Python version"
                 );
             }
         }
@@ -439,8 +432,8 @@ fn generate_performance_report(suites: &[BenchmarkSuite]) {
         total_duration += suite.total_duration;
     }
 
-    println!("  Total operations benchmarked: {}", total_operations);
-    println!("  Total samples processed: {}", total_samples);
+    println!("  Total operations benchmarked: {total_operations}");
+    println!("  Total samples processed: {total_samples}");
     println!(
         "  Total benchmark time: {:.2}s",
         total_duration.as_secs_f64()
@@ -478,7 +471,7 @@ fn generate_performance_report(suites: &[BenchmarkSuite]) {
             );
         }
 
-        if successful.len() > 0 {
+        if !successful.is_empty() {
             let avg_gen_throughput =
                 successful.iter().map(|r| r.throughput).sum::<f64>() / successful.len() as f64;
             if avg_gen_throughput < 1000.0 {

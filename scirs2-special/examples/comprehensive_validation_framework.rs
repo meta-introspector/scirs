@@ -543,8 +543,8 @@ fn validate_zeta_functions() -> Result<(), Box<dyn std::error::Error>> {
 
     for &a in &a_values {
         if a > 0.0 {
-            let hurwitz_2 = hurwitz_zeta(2.0, a).unwrap_or(0.0);
-            let hurwitz_4 = hurwitz_zeta(4.0, a).unwrap_or(0.0);
+            let hurwitz_2: f64 = hurwitz_zeta(2.0, a).unwrap_or(0.0);
+            let hurwitz_4: f64 = hurwitz_zeta(4.0, a).unwrap_or(0.0);
 
             // Basic sanity checks
             if hurwitz_2.is_finite() && hurwitz_4.is_finite() {

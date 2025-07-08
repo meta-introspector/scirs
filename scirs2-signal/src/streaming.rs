@@ -53,6 +53,7 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::VecDeque;
+use std::f64::consts::PI;
 
 /// Configuration for streaming signal processor
 #[derive(Debug, Clone)]

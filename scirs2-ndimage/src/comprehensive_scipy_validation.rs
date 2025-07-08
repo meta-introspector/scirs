@@ -10,7 +10,7 @@ use crate::filters::*;
 use crate::interpolation::*;
 use crate::measurements::*;
 use crate::morphology::*;
-use crate::scipy_compat::zoom;
+use crate::interpolation::zoom;
 use ndarray::{Array2, ArrayView2};
 use num_traits::ToPrimitive;
 use std::collections::HashMap;

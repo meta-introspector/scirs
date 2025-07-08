@@ -6,6 +6,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use scirs2_core::parallel_ops::*;
+use std::f64::consts::PI;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Seek, SeekFrom, Write};
 

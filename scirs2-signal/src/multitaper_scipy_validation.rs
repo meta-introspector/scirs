@@ -7,8 +7,10 @@
 use crate::error::{SignalError, SignalResult};
 use crate::multitaper::{enhanced_pmtm, MultitaperConfig};
 use crate::waveforms::{brown_noise, chirp};
+use ndarray::Array1;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::collections::HashMap;
+use std::f64::consts::PI;
 use std::time::Instant;
 
 /// SciPy validation result for multitaper methods

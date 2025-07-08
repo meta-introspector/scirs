@@ -69,16 +69,13 @@ fn demonstrate_gpu_detection() {
     println!("\nOptimal Configuration:");
     match optimal_config.backend {
         GpuBackend::Cuda { device_id } => {
-            println!("  🚀 CUDA backend (device {})", device_id);
+            println!("  🚀 CUDA backend (device {device_id})");
         }
         GpuBackend::OpenCl {
             platform_id,
             device_id,
         } => {
-            println!(
-                "  🚀 OpenCL backend (platform {}, device {})",
-                platform_id, device_id
-            );
+            println!("  🚀 OpenCL backend (platform {platform_id}, device {device_id})");
         }
         GpuBackend::Cpu => {
             println!("  💻 CPU fallback (no GPU available)");
@@ -109,7 +106,7 @@ fn demonstrate_device_listing() -> Result<(), Box<dyn std::error::Error>> {
         println!("Found {} device(s):", devices.len());
 
         for (i, device) in devices.iter().enumerate() {
-            println!("\nDevice {}:", i);
+            println!("\nDevice {i}:");
             println!("  Name: {}", device.name);
             println!("  Total Memory: {} MB", device.total_memory_mb);
             println!("  Available Memory: {} MB", device.available_memory_mb);
@@ -129,7 +126,7 @@ fn demonstrate_device_listing() -> Result<(), Box<dyn std::error::Error>> {
             let utilization = (device.total_memory_mb - device.available_memory_mb) as f64
                 / device.total_memory_mb as f64
                 * 100.0;
-            println!("  Memory Utilization: {:.1}%", utilization);
+            println!("  Memory Utilization: {utilization:.1}%");
         }
     }
 
@@ -145,10 +142,7 @@ fn demonstrate_backend_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let test_size = 50_000;
     let features = 20;
 
-    println!(
-        "Comparing backends for {} samples with {} features:",
-        test_size, features
-    );
+    println!("Comparing backends for {test_size} samples with {features} features:");
 
     // Test different backends
     let backends = vec![
@@ -166,7 +160,7 @@ fn demonstrate_backend_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut results: HashMap<String, std::time::Duration> = HashMap::new();
 
     for (name, backend) in backends {
-        println!("\nTesting {}:", name);
+        println!("\nTesting {name}:");
 
         let config = GpuConfig {
             backend: backend.clone(),
@@ -200,7 +194,7 @@ fn demonstrate_backend_comparison() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             Err(e) => {
-                println!("  ❌ Error: {}", e);
+                println!("  ❌ Error: {e}");
             }
         }
     }
@@ -211,7 +205,7 @@ fn demonstrate_backend_comparison() -> Result<(), Box<dyn std::error::Error>> {
         for (backend, gpu_time) in &results {
             if backend != "CPU Fallback" {
                 let speedup = cpu_time.as_secs_f64() / gpu_time.as_secs_f64();
-                println!("  {}: {:.1}x faster than CPU", backend, speedup);
+                println!("  {backend}: {speedup:.1}x faster than CPU");
             }
         }
     }
@@ -341,7 +335,7 @@ fn demonstrate_memory_management() -> Result<(), Box<dyn std::error::Error>> {
                 );
             }
             Err(e) => {
-                println!("  {} samples: Failed - {}", size, e);
+                println!("  {size} samples: Failed - {e}");
             }
         }
     }

@@ -5,10 +5,8 @@
 //! and adjusts the labels proportionally.
 
 use ndarray::{Array, Array2, Array4, Dimension, ScalarOperand};
-use ndarray_rand::rand;
-use ndarray_rand::rand::seq::SliceRandom;
-use ndarray_rand::rand::SeedableRng;
 use num_traits::{Float, FromPrimitive};
+use scirs2_core::ScientificNumber;
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};
@@ -69,8 +67,8 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> MixUp<A> {
     /// # Returns
     ///
     /// Mixing factor lambda ~ Beta(alpha, alpha)
-    fn get_mixing_factor(&self, seed: u64) -> A {
-        let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+    fn get_mixing_factor(&self, _seed: u64) -> A {
+        let mut rng = scirs2_core::random::Random::default();
 
         // Use simple uniform distribution to approximate Beta for simplicity
         // For actual Beta distribution, we'd need more complex sampling
@@ -108,12 +106,15 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> MixUp<A> {
             ));
         }
 
-        let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+        let mut rng = scirs2_core::random::Random::default();
         let lambda = self.get_mixing_factor(seed);
 
-        // Create permutation for mixing
+        // Create permutation for mixing using Fisher-Yates shuffle
         let mut indices: Vec<usize> = (0..batch_size).collect();
-        indices.shuffle(&mut rng);
+        for i in (1..indices.len()).rev() {
+            let j = rng.random_range(0, i + 1);
+            indices.swap(i, j);
+        }
 
         // Create mixed inputs and labels
         let mut mixed_inputs = inputs.clone();
@@ -204,7 +205,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> CutMix<A> {
         height: usize,
         width: usize,
         lambda: A,
-        rng: &mut rand::rngs::StdRng,
+        rng: &mut scirs2_core::random::Random,
     ) -> (usize, usize, usize, usize) {
         let cut_ratio = A::sqrt(A::one() - lambda);
 
@@ -219,8 +220,8 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> CutMix<A> {
         let cut_w = cut_w.max(1).min(width);
 
         // Get random center point
-        let cy = rng.random_range(0, height);
-        let cx = rng.random_range(0, width);
+        let cy = rng.random_range(0, height - 1);
+        let cx = rng.random_range(0, width - 1);
 
         // Calculate boundaries safely to avoid overflow
         let half_h = cut_h / 2;
@@ -243,8 +244,8 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> CutMix<A> {
     /// # Returns
     ///
     /// Mixing factor lambda ~ Beta(alpha, alpha)
-    fn get_mixing_factor(&self, seed: u64) -> A {
-        let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+    fn get_mixing_factor(&self, _seed: u64) -> A {
+        let mut rng = scirs2_core::random::Random::default();
 
         // For simplicity, we use a uniform distribution between 0 and 1
         // A proper Beta distribution would be used in a production implementation
@@ -282,12 +283,15 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> CutMix<A> {
             ));
         }
 
-        let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+        let mut rng = scirs2_core::random::Random::default();
         let lambda = self.get_mixing_factor(seed);
 
-        // Create permutation for mixing
+        // Create permutation for mixing using Fisher-Yates shuffle
         let mut indices: Vec<usize> = (0..batch_size).collect();
-        indices.shuffle(&mut rng);
+        for i in (1..indices.len()).rev() {
+            let j = rng.random_range(0, i + 1);
+            indices.swap(i, j);
+        }
 
         // Create mixed images and labels
         let mut mixed_images = images.clone();

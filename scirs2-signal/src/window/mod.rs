@@ -5,6 +5,7 @@
 //! reducing spectral leakage in Fourier transforms and filter design.
 
 use crate::error::{SignalError, SignalResult};
+use std::f64::consts::PI;
 
 // Import specialized window implementations
 pub mod kaiser;

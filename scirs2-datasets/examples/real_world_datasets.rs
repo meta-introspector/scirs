@@ -118,11 +118,11 @@ fn demonstrate_classification_datasets() -> Result<(), Box<dyn std::error::Error
     println!("  Features: {}", titanic.n_features());
 
     if let Some(feature_names) = titanic.feature_names() {
-        println!("  Features: {:?}", feature_names);
+        println!("  Features: {feature_names:?}");
     }
 
     if let Some(target_names) = titanic.target_names() {
-        println!("  Classes: {:?}", target_names);
+        println!("  Classes: {target_names:?}");
     }
 
     // Analyze class distribution
@@ -131,7 +131,7 @@ fn demonstrate_classification_datasets() -> Result<(), Box<dyn std::error::Error
         for &class in target.iter() {
             *class_counts.entry(class as i32).or_insert(0) += 1;
         }
-        println!("  Class distribution: {:?}", class_counts);
+        println!("  Class distribution: {class_counts:?}");
 
         // Calculate survival rate
         let survived = class_counts.get(&1).unwrap_or(&0);
@@ -197,7 +197,7 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Features: {}", housing.n_features());
 
     if let Some(feature_names) = housing.feature_names() {
-        println!("  Features: {:?}", feature_names);
+        println!("  Features: {feature_names:?}");
     }
 
     // Analyze target distribution
@@ -208,9 +208,9 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
         let max = target.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
 
         println!("  Target (house value) statistics:");
-        println!("    Mean: {:.2} (hundreds of thousands)", mean);
-        println!("    Std:  {:.2}", std);
-        println!("    Range: [{:.2}, {:.2}]", min, max);
+        println!("    Mean: {mean:.2} (hundreds of thousands)");
+        println!("    Std:  {std:.2}");
+        println!("    Range: [{min:.2}, {max:.2}]");
     }
 
     // Red Wine Quality dataset
@@ -229,7 +229,7 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
 
     if let Some(target) = &wine.target {
         let mean_quality = target.mean().unwrap();
-        println!("  Average wine quality: {:.1}/10", mean_quality);
+        println!("  Average wine quality: {mean_quality:.1}/10");
 
         // Quality distribution
         let mut quality_counts = HashMap::new();
@@ -237,7 +237,7 @@ fn demonstrate_regression_datasets() -> Result<(), Box<dyn std::error::Error>> {
             let q = quality.round() as i32;
             *quality_counts.entry(q).or_insert(0) += 1;
         }
-        println!("  Quality distribution: {:?}", quality_counts);
+        println!("  Quality distribution: {quality_counts:?}");
     }
 
     println!();
@@ -291,7 +291,7 @@ fn demonstrate_healthcare_datasets() -> Result<(), Box<dyn std::error::Error>> {
     let age_col = heart.data.column(0);
     let age_mean = age_col.mean().unwrap();
     let age_std = age_col.std(0.0);
-    println!("    Age: {:.1} ± {:.1} years", age_mean, age_std);
+    println!("    Age: {age_mean:.1} ± {age_std:.1} years");
 
     println!();
     Ok(())
@@ -425,9 +425,9 @@ fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>
     let estimated_memory_mb = (total_samples * total_features * 8) as f64 / (1024.0 * 1024.0);
 
     println!("\nMemory usage estimate:");
-    println!("  Total samples: {}", total_samples);
-    println!("  Total features: {}", total_features);
-    println!("  Estimated memory: {:.1} MB", estimated_memory_mb);
+    println!("  Total samples: {total_samples}");
+    println!("  Total features: {total_features}");
+    println!("  Estimated memory: {estimated_memory_mb:.1} MB");
 
     // Performance recommendations
     println!("\nPerformance recommendations:");
@@ -457,7 +457,7 @@ fn format_number(n: usize) -> String {
 /// Demonstrate dataset information display
 #[allow(dead_code)]
 fn show_dataset_info(name: &str, dataset: &scirs2_datasets::utils::Dataset) {
-    println!("{}:", name);
+    println!("{name}:");
     println!("  Samples: {}", format_number(dataset.n_samples()));
     println!("  Features: {}", dataset.n_features());
     println!(

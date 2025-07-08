@@ -137,6 +137,11 @@ pub enum FilterStability {
 
 /// Common validation functions for filter parameters
 pub mod validation {
+    use crate::error::{SignalError, SignalResult};
+    use crate::filter::{FilterType, FilterTypeParam};
+    use num_complex::Complex64;
+    use num_traits::{Float, NumCast};
+    use std::fmt::Debug;
 
     /// Validate filter order
     pub fn validate_order(order: usize) -> SignalResult<()> {
@@ -187,6 +192,8 @@ pub mod validation {
 
 /// Common mathematical operations for filter design
 pub mod math {
+    use super::FilterType;
+    use num_complex::Complex64;
     use std::f64::consts::PI;
 
     /// Pre-warp frequency for bilinear transform

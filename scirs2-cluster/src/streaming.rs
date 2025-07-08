@@ -832,7 +832,7 @@ pub mod advanced_streaming {
         }
 
         /// Get heavy hitters (items with frequency above threshold)
-        pub fn heavy_hitters(&self, threshold: u64) -> Vec<u64> {
+        pub fn heavy_hitters(&self, _threshold: u64) -> Vec<u64> {
             // This is a simplified implementation
             // In practice, you'd need to track candidates more carefully
             Vec::new()
@@ -1146,7 +1146,7 @@ pub mod intelligent_loading {
                 }
                 MissingValueStrategy::FillMean => {
                     if let Some(ref mean) = self.running_mean {
-                        for (i, mut row) in data.rows_mut().into_iter().enumerate() {
+                        for (_i, mut row) in data.rows_mut().into_iter().enumerate() {
                             for (j, elem) in row.iter_mut().enumerate() {
                                 if !elem.is_finite() && j < mean.len() {
                                     *elem = mean[j];
@@ -1164,7 +1164,7 @@ pub mod intelligent_loading {
         fn apply_normalization(&self, data: &mut Array2<F>) -> Result<()> {
             if let (Some(ref mean), Some(ref var)) = (&self.running_mean, &self.running_var) {
                 if self.sample_count > 1 {
-                    for (i, mut row) in data.rows_mut().into_iter().enumerate() {
+                    for (_i, mut row) in data.rows_mut().into_iter().enumerate() {
                         for (j, elem) in row.iter_mut().enumerate() {
                             if j < mean.len() && var[j] > F::zero() {
                                 let std_dev =

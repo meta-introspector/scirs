@@ -53,6 +53,14 @@ pub enum OptimError {
     MissingDependency(String),
     /// Plugin not found error
     PluginNotFound(String),
+    /// Plugin disabled error
+    PluginDisabled(String),
+    /// Plugin load error
+    PluginLoadError(String),
+    /// Plugin in maintenance error
+    PluginInMaintenance(String),
+    /// Unsupported data type error
+    UnsupportedDataType(String),
     /// Other error
     Other(String),
 }
@@ -126,6 +134,18 @@ impl fmt::Display for OptimError {
             }
             OptimError::PluginNotFound(msg) => {
                 write!(f, "Plugin not found: {msg}")
+            }
+            OptimError::PluginDisabled(msg) => {
+                write!(f, "Plugin disabled: {msg}")
+            }
+            OptimError::PluginLoadError(msg) => {
+                write!(f, "Plugin load error: {msg}")
+            }
+            OptimError::PluginInMaintenance(msg) => {
+                write!(f, "Plugin in maintenance: {msg}")
+            }
+            OptimError::UnsupportedDataType(msg) => {
+                write!(f, "Unsupported data type: {msg}")
             }
             OptimError::Other(msg) => write!(f, "Error: {msg}"),
         }

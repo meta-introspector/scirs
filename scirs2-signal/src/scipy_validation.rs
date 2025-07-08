@@ -40,6 +40,7 @@ use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use crate::filter::FilterType;
 use crate::parametric::ARMethod;
+use std::f64::consts::PI;
 
 use ndarray::{Array1, Array2};
 use std::collections::HashMap;

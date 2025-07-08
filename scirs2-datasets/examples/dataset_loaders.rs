@@ -40,7 +40,7 @@ fn main() {
                     println!("Test set: {} samples", test.n_samples());
 
                     // Save as JSON for demonstration
-                    let json_path = format!("{}.json", file_path);
+                    let json_path = format!("{file_path}.json");
                     println!("\nSaving training dataset to JSON: {json_path}");
                     if let Err(e) = loaders::save_json(&train, &json_path) {
                         println!("Error saving JSON: {e}");
@@ -66,7 +66,7 @@ fn main() {
 
 #[allow(dead_code)]
 fn print_dataset_info(dataset: &Dataset, name: &str) {
-    println!("=== {} Dataset ===", name);
+    println!("=== {name} Dataset ===");
     println!("Number of samples: {}", dataset.n_samples());
     println!("Number of features: {}", dataset.n_features());
 
@@ -84,7 +84,7 @@ fn print_dataset_info(dataset: &Dataset, name: &str) {
         println!("Target shape: {}", target.len());
 
         if let Some(target_names) = &dataset.target_names {
-            println!("Target classes: {:?}", target_names);
+            println!("Target classes: {target_names:?}");
         }
     }
 

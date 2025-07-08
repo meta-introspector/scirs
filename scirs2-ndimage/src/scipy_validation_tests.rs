@@ -229,7 +229,7 @@ mod tests {
         let input = Array2::from_shape_fn((10, 10), |(i, j)| i as f64 + j as f64);
 
         // Zoom by factor of 2 with linear interpolation
-        let zoomed = zoom(&input, &[2.0, 2.0], None, None, None, None)
+        let zoomed = zoom(&input, 2.0, None, None, None, None)
             .expect("zoom should succeed for interpolation accuracy test");
 
         // Result should be larger

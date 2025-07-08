@@ -262,8 +262,7 @@ impl RegressionDetector {
         // Ensure results directory exists
         fs::create_dir_all(&self.config.results_directory).map_err(|e| {
             CoreError::IoError(ErrorContext::new(format!(
-                "Failed to create results directory: {}",
-                e
+                "Failed to create results directory: {e}"
             )))
         })?;
 
@@ -285,15 +284,13 @@ impl RegressionDetector {
         let file_path = self.get_results_file_path(&result.name);
         let serialized = serde_json::to_string_pretty(&historical_results).map_err(|e| {
             CoreError::IoError(ErrorContext::new(format!(
-                "Failed to serialize results: {}",
-                e
+                "Failed to serialize results: {e}"
             )))
         })?;
 
         fs::write(&file_path, serialized).map_err(|e| {
             CoreError::IoError(ErrorContext::new(format!(
-                "Failed to write results file: {}",
-                e
+                "Failed to write results file: {e}"
             )))
         })?;
 
@@ -310,15 +307,13 @@ impl RegressionDetector {
 
         let content = fs::read_to_string(&file_path).map_err(|e| {
             CoreError::IoError(ErrorContext::new(format!(
-                "Failed to read results file: {}",
-                e
+                "Failed to read results file: {e}"
             )))
         })?;
 
         let results: Vec<HistoricalResult> = serde_json::from_str(&content).map_err(|e| {
             CoreError::IoError(ErrorContext::new(format!(
-                "Failed to parse results file: {}",
-                e
+                "Failed to parse results file: {e}"
             )))
         })?;
 
@@ -459,7 +454,7 @@ impl RegressionDetector {
         let safe_name = benchmark_name.replace(|c: char| !c.is_alphanumeric(), "_");
         self.config
             .results_directory
-            .join(format!("{}.json", safe_name))
+            .join(format!("{safe_name}.json"))
     }
 }
 
@@ -540,9 +535,9 @@ impl RegressionTestUtils {
             .filter(|a| a.trend == PerformanceTrend::Degrading)
             .count();
 
-        report.push_str(&format!("- Improving trends: {}\n", improving));
-        report.push_str(&format!("- Stable trends: {}\n", stable));
-        report.push_str(&format!("- Degrading trends: {}\n", degrading));
+        report.push_str(&format!("- Improving trends: {improving}\n"));
+        report.push_str(&format!("- Stable trends: {stable}\n"));
+        report.push_str(&format!("- Degrading trends: {degrading}\n"));
 
         report
     }

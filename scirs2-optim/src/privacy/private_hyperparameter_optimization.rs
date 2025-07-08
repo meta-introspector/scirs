@@ -9,7 +9,7 @@ use crate::privacy::moment_accountant::MomentsAccountant;
 use crate::privacy::{DifferentialPrivacyConfig, PrivacyBudget};
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use rand_chacha::ChaCha20Rng;
+use scirs2_core::random;
 use std::collections::HashMap;
 
 /// Privacy-preserving hyperparameter optimizer
@@ -237,7 +237,7 @@ pub trait NoisyOptimizer<T: Float>: Send + Sync {
         &mut self,
         parameter_space: &ParameterSpace<T>,
         evaluation_history: &[HPOEvaluation<T>],
-        privacy_budget: &PrivacyBudget,
+        _privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>>;
 
     /// Update optimizer with new evaluation result
@@ -245,7 +245,7 @@ pub trait NoisyOptimizer<T: Float>: Send + Sync {
         &mut self,
         config: &ParameterConfiguration<T>,
         result: &HPOResult<T>,
-        privacy_budget: &PrivacyBudget,
+        _privacy_budget: &PrivacyBudget,
     ) -> Result<()>;
 
     /// Get optimizer name
@@ -439,7 +439,7 @@ pub struct ObjectiveNoiseMechanism<T: Float> {
     noise_params: NoiseParameters<T>,
 
     /// Random number generator
-    rng: ChaCha20Rng,
+    rng: scirs2_core::random::Random<rand::rngs::StdRng>,
 }
 
 /// Noise parameters
@@ -946,7 +946,7 @@ pub enum EvaluationStatus {
     InProgress,
 }
 
-impl<T: Float + 'static> PrivateHyperparameterOptimizer<T> {
+impl<T: Float + 'static + Send + Sync> PrivateHyperparameterOptimizer<T> {
     /// Create new private hyperparameter optimizer
     pub fn new(config: PrivateHPOConfig<T>, parameter_space: ParameterSpace<T>) -> Result<Self> {
         let budget_manager = HPOBudgetManager::new(
@@ -1136,6 +1136,7 @@ impl<T: Float + 'static> PrivateHyperparameterOptimizer<T> {
             total_optimization_time: 0.0,
             convergence_iteration: None,
             budget_efficiency: 0.0,
+            _phantom: std::marker::PhantomData,
         })
     }
 }
@@ -1241,7 +1242,7 @@ pub struct PrivateRandomSearch<T: Float> {
     config: PrivateHPOConfig<T>,
 
     /// Random number generator
-    rng: ChaCha20Rng,
+    rng: scirs2_core::random::Random<rand::rngs::StdRng>,
 
     /// Evaluation history
     history: Vec<HPOEvaluation<T>>,
@@ -1251,7 +1252,7 @@ impl<T: Float + Send + Sync> PrivateRandomSearch<T> {
     pub fn new(config: PrivateHPOConfig<T>) -> Result<Self> {
         Ok(Self {
             config,
-            rng: ChaCha20Rng::from_entropy(),
+            rng: random::Random::with_seed(42),
             history: Vec::new(),
         })
     }
@@ -1271,7 +1272,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                 ParameterType::Continuous => {
                     let min = param_def.bounds.min.unwrap_or(T::zero());
                     let max = param_def.bounds.max.unwrap_or(T::one());
-                    let random_val = T::from(self.rng.random::<f64>()).unwrap();
+                    let random_val = T::from(self.rng.random_range(0.0, 1.0)).unwrap();
                     ParameterValue::Continuous(min + random_val * (max - min))
                 }
                 ParameterType::Integer => {
@@ -1287,7 +1288,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateRandomSearch<T> {
                         .unwrap_or(T::from(100).unwrap())
                         .to_i64()
                         .unwrap_or(100);
-                    ParameterValue::Integer(self.rng.random_range(min, max))
+                    ParameterValue::Integer(self.rng.random_range(min, max + 1))
                 }
                 ParameterType::Boolean => ParameterValue::Boolean(self.rng.random_range(0, 2) == 1),
                 ParameterType::Categorical(categories) => {
@@ -1356,11 +1357,11 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T
         &mut self,
         parameter_space: &ParameterSpace<T>,
         evaluation_history: &[HPOEvaluation<T>],
-        privacy_budget: &PrivacyBudget,
+        _privacy_budget: &PrivacyBudget,
     ) -> Result<ParameterConfiguration<T>> {
         if evaluation_history.is_empty() {
             // First evaluation - use random sampling
-            let mut rng = ChaCha20Rng::from_entropy();
+            let mut rng = random::Random::with_seed(42);
             let mut values = HashMap::new();
 
             for (param_name, param_def) in &parameter_space.parameters {
@@ -1368,7 +1369,7 @@ impl<T: Float + Send + Sync> NoisyOptimizer<T> for PrivateBayesianOptimization<T
                     ParameterType::Continuous => {
                         let min = param_def.bounds.min.unwrap_or(T::zero());
                         let max = param_def.bounds.max.unwrap_or(T::one());
-                        let random_val = T::from(rng.random::<f64>()).unwrap();
+                        let random_val = T::from(rng.random_range(0.0, 1.0)).unwrap();
                         ParameterValue::Continuous(min + random_val * (max - min))
                     }
                     _ => {
@@ -1620,7 +1621,7 @@ impl<T: Float + Send + Sync> ObjectiveNoiseMechanism<T> {
                 epsilon: 1.0,
                 delta: Some(1e-5),
             },
-            rng: ChaCha20Rng::from_entropy(),
+            rng: random::Random::with_seed(42),
         }
     }
 
@@ -1658,6 +1659,7 @@ impl<T: Float + Send + Sync> SampleBasedSensitivityEstimator<T> {
             sampling_strategy: SamplingStrategy::Uniform,
             confidence_level: 0.95,
             bootstrap_estimator: BootstrapEstimator::new(),
+            _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1668,6 +1670,7 @@ impl<T: Float + Send + Sync> BootstrapEstimator<T> {
             num_bootstrap: 1000,
             confidence_interval: (0.025, 0.975),
             bias_correction: true,
+            _phantom: std::marker::PhantomData,
         }
     }
 }
@@ -1704,6 +1707,7 @@ impl<T: Float + Send + Sync> ConfidenceEstimation<T> {
             confidence_level: 0.95,
             estimation_method: ConfidenceEstimationMethod::Normal,
             bootstrap_params: None,
+            _phantom: std::marker::PhantomData,
         }
     }
 }

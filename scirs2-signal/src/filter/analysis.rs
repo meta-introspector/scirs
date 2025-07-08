@@ -8,6 +8,7 @@ use crate::error::{SignalError, SignalResult};
 
 use super::application::{evaluate_transfer_function, find_polynomial_roots, group_delay};
 use num_complex::Complex64;
+use std::f64::consts::PI;
 
 /// Comprehensive filter analysis results
 ///

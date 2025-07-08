@@ -150,7 +150,7 @@ fn main() {
         minmax_outlier
             .column(0)
             .iter()
-            .map(|&x| format!("{:.3}", x))
+            .map(|&x| format!("{x:.3}"))
             .collect::<Vec<_>>()
     );
 
@@ -161,7 +161,7 @@ fn main() {
         robust_outlier
             .column(0)
             .iter()
-            .map(|&x| format!("{:.3}", x))
+            .map(|&x| format!("{x:.3}"))
             .collect::<Vec<_>>()
     );
 
@@ -190,8 +190,7 @@ fn print_data_summary(data: &Array2<f64>, title: &str) {
         let max_val = col.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let mean = col.iter().sum::<f64>() / col.len() as f64;
         println!(
-            "  Feature {}: min={:.3}, max={:.3}, mean={:.3}",
-            j, min_val, max_val, mean
+            "  Feature {j}: min={min_val:.3}, max={max_val:.3}, mean={mean:.3}"
         );
     }
 }
@@ -202,13 +201,13 @@ fn print_data_matrix(data: &Array2<f64>, feature_names: &[&str]) {
     // Print header
     print!("     ");
     for name in feature_names {
-        print!("{:>8}", name);
+        print!("{name:>8}");
     }
     println!();
 
     // Print data
     for i in 0..data.nrows() {
-        print!("  {}: ", i);
+        print!("  {i}: ");
         for j in 0..data.ncols() {
             print!("{:8.3}", data[[i, j]]);
         }

@@ -18,6 +18,7 @@ use crate::memory_optimized::{memory_optimized_fir_filter, MemoryConfig};
 use crate::simd_memory_optimization::{simd_optimized_convolution, SimdMemoryConfig};
 use crate::spectral::{periodogram, spectrogram, welch};
 use crate::wavelets::{cwt, morlet};
+use ndarray::Array1;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::fs::File;

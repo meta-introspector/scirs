@@ -13,6 +13,7 @@ use num_complex::{Complex, Complex64};
 use num_traits::{Float, Zero};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+use std::f64::consts::PI;
 
 /// Advanced SIMD configuration with enhanced features
 #[derive(Debug, Clone)]

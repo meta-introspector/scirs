@@ -7,6 +7,7 @@ use crate::error::{OptimError, Result};
 use ndarray::{Array, ArrayBase, Data, DataMut, Dimension, ScalarOperand};
 use num_traits::Float;
 use scirs2_core::random;
+use scirs2_core::ScientificNumber;
 use std::collections::VecDeque;
 use std::fmt::Debug;
 
@@ -157,7 +158,7 @@ where
     accountant: MomentsAccountant,
 
     /// Random number generator for noise
-    rng: rand::rngs::ThreadRng,
+    rng: scirs2_core::random::Random,
 
     /// Adaptive clipping state
     adaptive_clip_state: Option<AdaptiveClippingState>,
@@ -260,14 +261,11 @@ where
     }
 
     /// Perform a differentially private step
-    pub fn dp_step<S, DIM>(
+    pub fn dp_step(
         &mut self,
-        params: &ArrayBase<S, DIM>,
-        gradients: &mut ArrayBase<S, DIM>,
-    ) -> Result<Array<A, DIM>>
-    where
-        S: Data<Elem = A> + DataMut<Elem = A>,
-        DIM: Dimension,
+        params: &Array<A, D>,
+        gradients: &mut Array<A, D>,
+    ) -> Result<Array<A, D>>
     {
         self.step_count += 1;
 
@@ -324,7 +322,11 @@ where
         // Update adaptive clipping if enabled
         if let Some(ref mut state) = self.adaptive_clip_state {
             if self.step_count - state.last_update_step >= state.update_frequency {
-                self.update_adaptive_clipping(state, pre_clip_norm);
+                state.last_update_step = self.step_count;
+                // Update threshold based on recent gradient norms
+                let target_ratio = 0.8; // Target 80% of gradients to be clipped
+                let new_threshold = pre_clip_norm * target_ratio;
+                state.current_threshold = new_threshold;
             }
         }
 
@@ -406,37 +408,43 @@ where
         S: DataMut<Elem = A>,
         DIM: Dimension,
     {
-        use ndarray_rand::rand_distr::{Distribution, Normal};
 
         let noise_scale = self.config.noise_multiplier * clip_threshold;
 
         match self.config.noise_mechanism {
             NoiseMechanism::Gaussian => {
-                let normal = Normal::new(0.0, noise_scale)
-                    .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
-
+                let sigma_f64 = noise_scale.to_f64().unwrap_or(1.0);
                 gradients.mapv_inplace(|g| {
-                    let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
+                    // Use Box-Muller transformation for Gaussian noise
+                    let u1: f64 = self.rng.random_range(0.0, 1.0);
+                    let u2: f64 = self.rng.random_range(0.0, 1.0);
+                    let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
+                    let noise = A::from(z0 * sigma_f64).unwrap();
                     g + noise
                 });
             }
             NoiseMechanism::Laplace => {
-                // Simplified Laplace noise using Normal distribution approximation
-                let normal = Normal::new(0.0, noise_scale * 1.414)
-                    .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
-
+                // Implement Laplace distribution using transformation method
+                let scale_f64 = noise_scale.to_f64().unwrap_or(1.0);
                 gradients.mapv_inplace(|g| {
-                    let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
+                    let u: f64 = self.rng.random_range(0.0, 1.0);
+                    let laplace_sample = if u < 0.5 {
+                        scale_f64 * (2.0 * u).ln()
+                    } else {
+                        -scale_f64 * (2.0 * (1.0 - u)).ln()
+                    };
+                    let noise = A::from(laplace_sample).unwrap();
                     g + noise
                 });
             }
             _ => {
                 // Use Gaussian as fallback
-                let normal = Normal::new(0.0, noise_scale)
-                    .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
-
+                let sigma_f64 = noise_scale.to_f64().unwrap_or(1.0);
                 gradients.mapv_inplace(|g| {
-                    let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
+                    let u1: f64 = self.rng.random_range(0.0, 1.0);
+                    let u2: f64 = self.rng.random_range(0.0, 1.0);
+                    let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
+                    let noise = A::from(z0 * sigma_f64).unwrap();
                     g + noise
                 });
             }

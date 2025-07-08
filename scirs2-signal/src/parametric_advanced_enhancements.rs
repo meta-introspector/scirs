@@ -12,6 +12,7 @@ use ndarray::{s, Array1, Array2, ArrayView1, Axis};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use std::f64::consts::PI;
 
 /// Advanced model selection configuration
 #[derive(Debug, Clone)]

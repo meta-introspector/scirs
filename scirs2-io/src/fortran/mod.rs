@@ -185,7 +185,7 @@ impl FortranFile<BufWriter<File>> {
     /// Create a new Fortran unformatted file for writing
     pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::create(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         let writer = BufWriter::new(file);
         Ok(Self {
             reader: writer,
@@ -197,7 +197,7 @@ impl FortranFile<BufWriter<File>> {
     /// Create a new Fortran unformatted file with custom configuration
     pub fn create_with_config<P: AsRef<Path>>(path: P, config: FortranConfig) -> Result<Self> {
         let file = File::create(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         let writer = BufWriter::new(file);
         Ok(Self {
             reader: writer,
@@ -217,14 +217,14 @@ impl<R: Read + Seek> FortranFile<R> {
                     .read_u32::<LittleEndian>()
                     .map(|v| v as usize)
                     .map_err(|e| {
-                        IoError::ParseError(format!("Failed to read record marker: {}", e))
+                        IoError::ParseError(format!("Failed to read record marker: {e}"))
                     }),
                 _ => self
                     .reader
                     .read_u32::<BigEndian>()
                     .map(|v| v as usize)
                     .map_err(|e| {
-                        IoError::ParseError(format!("Failed to read record marker: {}", e))
+                        IoError::ParseError(format!("Failed to read record marker: {e}"))
                     }),
             },
             RecordMarkerSize::EightByte => match self.config.endian {
@@ -233,14 +233,14 @@ impl<R: Read + Seek> FortranFile<R> {
                     .read_u64::<LittleEndian>()
                     .map(|v| v as usize)
                     .map_err(|e| {
-                        IoError::ParseError(format!("Failed to read record marker: {}", e))
+                        IoError::ParseError(format!("Failed to read record marker: {e}"))
                     }),
                 _ => self
                     .reader
                     .read_u64::<BigEndian>()
                     .map(|v| v as usize)
                     .map_err(|e| {
-                        IoError::ParseError(format!("Failed to read record marker: {}", e))
+                        IoError::ParseError(format!("Failed to read record marker: {e}"))
                     }),
             },
         }
@@ -256,7 +256,7 @@ impl<R: Read + Seek> FortranFile<R> {
                 // Read data
                 let mut data = vec![0u8; start_marker];
                 self.reader.read_exact(&mut data).map_err(|e| {
-                    IoError::ParseError(format!("Failed to read record data: {}", e))
+                    IoError::ParseError(format!("Failed to read record data: {e}"))
                 })?;
 
                 // Read end marker
@@ -265,8 +265,7 @@ impl<R: Read + Seek> FortranFile<R> {
                 // Validate markers if enabled
                 if self.config.validate_markers && start_marker != end_marker {
                     return Err(IoError::ParseError(format!(
-                        "Record marker mismatch: start={}, end={}",
-                        start_marker, end_marker
+                        "Record marker mismatch: start={start_marker}, end={end_marker}"
                     )));
                 }
 
@@ -276,7 +275,7 @@ impl<R: Read + Seek> FortranFile<R> {
                 // Read fixed-length record
                 let mut data = vec![0u8; record_length];
                 self.reader.read_exact(&mut data).map_err(|e| {
-                    IoError::ParseError(format!("Failed to read direct access record: {}", e))
+                    IoError::ParseError(format!("Failed to read direct access record: {e}"))
                 })?;
                 Ok(data)
             }
@@ -317,8 +316,7 @@ impl<R: Read + Seek> FortranFile<R> {
         let expected_size = n * std::mem::size_of::<T>();
         if data.len() != expected_size {
             return Err(IoError::ParseError(format!(
-                "Expected {} bytes for array, got {}",
-                expected_size,
+                "Expected {expected_size} bytes for array, got {}",
                 data.len()
             )));
         }
@@ -351,8 +349,7 @@ impl<R: Read + Seek> FortranFile<R> {
         let expected_size = rows * cols * std::mem::size_of::<T>();
         if data.len() != expected_size {
             return Err(IoError::ParseError(format!(
-                "Expected {} bytes for array, got {}",
-                expected_size,
+                "Expected {expected_size} bytes for array, got {}",
                 data.len()
             )));
         }
@@ -374,7 +371,7 @@ impl<R: Read + Seek> FortranFile<R> {
 
         // Convert from Fortran column-major to row-major
         Array2::from_shape_vec((rows, cols).f(), values)
-            .map_err(|e| IoError::ParseError(format!("Failed to create array: {}", e)))
+            .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
     }
 
     /// Read a 3D array (Fortran column-major order)
@@ -388,8 +385,7 @@ impl<R: Read + Seek> FortranFile<R> {
         let expected_size = dim1 * dim2 * dim3 * std::mem::size_of::<T>();
         if data.len() != expected_size {
             return Err(IoError::ParseError(format!(
-                "Expected {} bytes for array, got {}",
-                expected_size,
+                "Expected {expected_size} bytes for array, got {}",
                 data.len()
             )));
         }
@@ -411,7 +407,7 @@ impl<R: Read + Seek> FortranFile<R> {
 
         // Convert from Fortran column-major to row-major
         Array3::from_shape_vec((dim1, dim2, dim3).f(), values)
-            .map_err(|e| IoError::ParseError(format!("Failed to create array: {}", e)))
+            .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
     }
 
     /// Read a character string
@@ -446,14 +442,14 @@ impl<R: Read + Seek> FortranFile<R> {
 
                 self.reader
                     .seek(SeekFrom::Current(skip_size as i64))
-                    .map_err(|e| IoError::ParseError(format!("Failed to skip record: {}", e)))?;
+                    .map_err(|e| IoError::ParseError(format!("Failed to skip record: {e}")))?;
 
                 Ok(())
             }
             AccessMode::Direct { record_length } => {
                 self.reader
                     .seek(SeekFrom::Current(record_length as i64))
-                    .map_err(|e| IoError::ParseError(format!("Failed to skip record: {}", e)))?;
+                    .map_err(|e| IoError::ParseError(format!("Failed to skip record: {e}")))?;
                 Ok(())
             }
             AccessMode::Stream => Err(IoError::ParseError(
@@ -472,11 +468,11 @@ impl<W: Write> FortranFile<W> {
                 match self.config.endian {
                     EndianMode::Little | EndianMode::Native if cfg!(target_endian = "little") => {
                         self.reader.write_u32::<LittleEndian>(marker).map_err(|e| {
-                            IoError::FileError(format!("Failed to write record marker: {}", e))
+                            IoError::FileError(format!("Failed to write record marker: {e}"))
                         })
                     }
                     _ => self.reader.write_u32::<BigEndian>(marker).map_err(|e| {
-                        IoError::FileError(format!("Failed to write record marker: {}", e))
+                        IoError::FileError(format!("Failed to write record marker: {e}"))
                     }),
                 }
             }
@@ -485,11 +481,11 @@ impl<W: Write> FortranFile<W> {
                 match self.config.endian {
                     EndianMode::Little | EndianMode::Native if cfg!(target_endian = "little") => {
                         self.reader.write_u64::<LittleEndian>(marker).map_err(|e| {
-                            IoError::FileError(format!("Failed to write record marker: {}", e))
+                            IoError::FileError(format!("Failed to write record marker: {e}"))
                         })
                     }
                     _ => self.reader.write_u64::<BigEndian>(marker).map_err(|e| {
-                        IoError::FileError(format!("Failed to write record marker: {}", e))
+                        IoError::FileError(format!("Failed to write record marker: {e}"))
                     }),
                 }
             }
@@ -505,7 +501,7 @@ impl<W: Write> FortranFile<W> {
 
                 // Write data
                 self.reader.write_all(data).map_err(|e| {
-                    IoError::FileError(format!("Failed to write record data: {}", e))
+                    IoError::FileError(format!("Failed to write record data: {e}"))
                 })?;
 
                 // Write end marker
@@ -516,22 +512,21 @@ impl<W: Write> FortranFile<W> {
             AccessMode::Direct { record_length } => {
                 if data.len() > record_length {
                     return Err(IoError::FileError(format!(
-                        "Data size {} exceeds record length {}",
-                        data.len(),
-                        record_length
+                        "Data size {} exceeds record length {record_length}",
+                        data.len()
                     )));
                 }
 
                 // Write data
                 self.reader.write_all(data).map_err(|e| {
-                    IoError::FileError(format!("Failed to write record data: {}", e))
+                    IoError::FileError(format!("Failed to write record data: {e}"))
                 })?;
 
                 // Pad to record length
                 if data.len() < record_length {
                     let padding = vec![0u8; record_length - data.len()];
                     self.reader.write_all(&padding).map_err(|e| {
-                        IoError::FileError(format!("Failed to write padding: {}", e))
+                        IoError::FileError(format!("Failed to write padding: {e}"))
                     })?;
                 }
 
@@ -541,7 +536,7 @@ impl<W: Write> FortranFile<W> {
                 // Direct write for stream access
                 self.reader
                     .write_all(data)
-                    .map_err(|e| IoError::FileError(format!("Failed to write stream data: {}", e)))
+                    .map_err(|e| IoError::FileError(format!("Failed to write stream data: {e}")))
             }
         }
     }
@@ -661,7 +656,7 @@ impl<W: Write> FortranFile<W> {
     pub fn flush(&mut self) -> Result<()> {
         self.reader
             .flush()
-            .map_err(|e| IoError::FileError(format!("Failed to flush: {}", e)))
+            .map_err(|e| IoError::FileError(format!("Failed to flush: {e}")))
     }
 }
 
@@ -691,7 +686,7 @@ pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, Rec
     // Read first 8 bytes
     let mut buffer = [0u8; 8];
     file.read_exact(&mut buffer)
-        .map_err(|e| IoError::ParseError(format!("Failed to read file header: {}", e)))?;
+        .map_err(|e| IoError::ParseError(format!("Failed to read file header: {e}")))?;
 
     // Try different interpretations
     let little_4 = LittleEndian::read_u32(&buffer[0..4]) as usize;
@@ -702,7 +697,7 @@ pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, Rec
     // Get file size
     let file_size = file
         .metadata()
-        .map_err(|e| IoError::ParseError(format!("Failed to get file metadata: {}", e)))?
+        .map_err(|e| IoError::ParseError(format!("Failed to get file metadata: {e}")))?
         .len() as usize;
 
     // Check which interpretation makes sense
@@ -710,7 +705,7 @@ pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, Rec
     if little_4 > 0 && file_size > 8 && little_4 <= file_size - 8 {
         // Try to read the end marker
         file.seek(SeekFrom::Start((4 + little_4) as u64))
-            .map_err(|e| IoError::ParseError(format!("Failed to seek: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Failed to seek: {e}")))?;
         let mut end_marker = [0u8; 4];
         if file.read_exact(&mut end_marker).is_ok() {
             let end_value = LittleEndian::read_u32(&end_marker) as usize;
@@ -722,7 +717,7 @@ pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, Rec
 
     if big_4 > 0 && file_size > 8 && big_4 <= file_size - 8 {
         file.seek(SeekFrom::Start((4 + big_4) as u64))
-            .map_err(|e| IoError::ParseError(format!("Failed to seek: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Failed to seek: {e}")))?;
         let mut end_marker = [0u8; 4];
         if file.read_exact(&mut end_marker).is_ok() {
             let end_value = BigEndian::read_u32(&end_marker) as usize;
@@ -735,7 +730,7 @@ pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, Rec
     // Try 8-byte markers
     if little_8 > 0 && file_size > 16 && little_8 <= file_size - 16 {
         file.seek(SeekFrom::Start((8 + little_8) as u64))
-            .map_err(|e| IoError::ParseError(format!("Failed to seek: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Failed to seek: {e}")))?;
         let mut end_marker = [0u8; 8];
         if file.read_exact(&mut end_marker).is_ok() {
             let end_value = LittleEndian::read_u64(&end_marker) as usize;
@@ -747,7 +742,7 @@ pub fn detect_fortran_format<P: AsRef<Path>>(path: P) -> Result<(EndianMode, Rec
 
     if big_8 > 0 && file_size > 16 && big_8 <= file_size - 16 {
         file.seek(SeekFrom::Start((8 + big_8) as u64))
-            .map_err(|e| IoError::ParseError(format!("Failed to seek: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Failed to seek: {e}")))?;
         let mut end_marker = [0u8; 8];
         if file.read_exact(&mut end_marker).is_ok() {
             let end_value = BigEndian::read_u64(&end_marker) as usize;
@@ -825,7 +820,7 @@ mod tests {
         let path = temp_file.path();
 
         let array = Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
-            .map_err(|e| IoError::ParseError(format!("Shape error: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Shape error: {e}")))?;
 
         // Write array
         {

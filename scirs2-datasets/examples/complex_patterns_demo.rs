@@ -87,7 +87,7 @@ fn main() {
     println!("\n2. Factor Effect on Concentric Circles:");
     for factor in [0.2, 0.4, 0.6, 0.8] {
         let _circle_data = make_circles(100, factor, 0.05, Some(42)).unwrap();
-        println!("   Factor {:.1}: Inner/Outer ratio = {:.1}", factor, factor);
+        println!("   Factor {factor:.1}: Inner/Outer ratio = {factor:.1}");
     }
 
     // Cluster complexity in hierarchical patterns
@@ -191,7 +191,7 @@ fn print_dataset_summary(dataset: &scirs2_datasets::Dataset, name: &str) {
     };
 
     let class_info = if n_classes > 0 {
-        format!(", {} classes", n_classes)
+        format!(", {n_classes} classes")
     } else {
         " (unsupervised)".to_string()
     };

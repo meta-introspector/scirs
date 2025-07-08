@@ -776,8 +776,8 @@ mod tests {
 
         let files = writer
             .write_parallel(data, |&value, file| {
-                writeln!(file, "{}", value)
-                    .map_err(|e| IoError::FileError(format!("Failed to write: {}", e)))
+                writeln!(file, "{value}")
+                    .map_err(|e| IoError::FileError(format!("Failed to write: {e}")))
             })
             .unwrap();
 

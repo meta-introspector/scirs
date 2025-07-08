@@ -18,6 +18,7 @@ use crate::error::SignalResult;
 use crate::spectral;
 use crate::window;
 use num_complex::Complex64;
+use std::f64::consts::PI;
 
 /// Configuration parameters for reassigned spectrogram computation
 #[derive(Debug, Clone)]

@@ -9,7 +9,7 @@ use super::{
     TrajectoryBatch, ValueNetwork,
 };
 use crate::error::{OptimError, Result};
-use ndarray::{Array1, Array2};
+use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
 use std::collections::HashMap;
 
@@ -116,7 +116,7 @@ pub struct TRPOConfig<T: Float> {
     pub use_natural_gradients: bool,
 }
 
-impl<T: Float> Default for PolicyGradientConfig<T> {
+impl<T: Float + Send + Sync + num_traits::FromPrimitive> Default for PolicyGradientConfig<T> {
     fn default() -> Self {
         Self {
             base_config: RLOptimizerConfig::default(),
@@ -138,7 +138,7 @@ impl<T: Float> Default for PolicyGradientConfig<T> {
     }
 }
 
-impl<T: Float> Default for PPOConfig<T> {
+impl<T: Float + Send + Sync + num_traits::FromPrimitive> Default for PPOConfig<T> {
     fn default() -> Self {
         Self {
             clip_epsilon: T::from(0.2).unwrap(),
@@ -153,7 +153,7 @@ impl<T: Float> Default for PPOConfig<T> {
     }
 }
 
-impl<T: Float> Default for TRPOConfig<T> {
+impl<T: Float + Send + Sync + num_traits::FromPrimitive> Default for TRPOConfig<T> {
     fn default() -> Self {
         Self {
             max_kl: T::from(0.01).unwrap(),
@@ -198,7 +198,7 @@ pub struct PolicyGradientOptimizer<T: Float, P: PolicyNetwork<T>, V: ValueNetwor
     max_buffer_size: usize,
 }
 
-impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<T, P, V> {
+impl<T: Float + Send + Sync + ScalarOperand + std::ops::AddAssign + std::iter::Sum + num_traits::FromPrimitive, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<T, P, V> {
     /// Create a new policy gradient optimizer
     pub fn new(
         config: PolicyGradientConfig<T>,

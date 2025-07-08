@@ -136,14 +136,10 @@ impl FitsHeader {
             Some(card) => match &card.value {
                 CardValue::Boolean(b) => Ok(*b),
                 _ => Err(IoError::ParseError(format!(
-                    "Keyword {} is not a boolean",
-                    keyword
+                    "Keyword {keyword} is not a boolean"
                 ))),
             },
-            None => Err(IoError::ParseError(format!(
-                "Keyword {} not found",
-                keyword
-            ))),
+            None => Err(IoError::ParseError(format!("Keyword {keyword} not found"))),
         }
     }
 
@@ -153,14 +149,10 @@ impl FitsHeader {
             Some(card) => match &card.value {
                 CardValue::Integer(i) => Ok(*i),
                 _ => Err(IoError::ParseError(format!(
-                    "Keyword {} is not an integer",
-                    keyword
+                    "Keyword {keyword} is not an integer"
                 ))),
             },
-            None => Err(IoError::ParseError(format!(
-                "Keyword {} not found",
-                keyword
-            ))),
+            None => Err(IoError::ParseError(format!("Keyword {keyword} not found"))),
         }
     }
 
@@ -171,14 +163,10 @@ impl FitsHeader {
                 CardValue::Float(f) => Ok(*f),
                 CardValue::Integer(i) => Ok(*i as f64),
                 _ => Err(IoError::ParseError(format!(
-                    "Keyword {} is not a number",
-                    keyword
+                    "Keyword {keyword} is not a number"
                 ))),
             },
-            None => Err(IoError::ParseError(format!(
-                "Keyword {} not found",
-                keyword
-            ))),
+            None => Err(IoError::ParseError(format!("Keyword {keyword} not found"))),
         }
     }
 
@@ -188,14 +176,10 @@ impl FitsHeader {
             Some(card) => match &card.value {
                 CardValue::String(s) => Ok(s.clone()),
                 _ => Err(IoError::ParseError(format!(
-                    "Keyword {} is not a string",
-                    keyword
+                    "Keyword {keyword} is not a string"
                 ))),
             },
-            None => Err(IoError::ParseError(format!(
-                "Keyword {} not found",
-                keyword
-            ))),
+            None => Err(IoError::ParseError(format!("Keyword {keyword} not found"))),
         }
     }
 
@@ -268,8 +252,7 @@ impl FitsDataType {
             -32 => Ok(FitsDataType::Float32),
             -64 => Ok(FitsDataType::Float64),
             _ => Err(IoError::ParseError(format!(
-                "Invalid BITPIX value: {}",
-                bitpix
+                "Invalid BITPIX value: {bitpix}"
             ))),
         }
     }
@@ -288,7 +271,7 @@ impl FitsFile {
         // Read all HDUs
         loop {
             file.seek(SeekFrom::Start(offset))
-                .map_err(|e| IoError::ParseError(format!("Failed to seek: {}", e)))?;
+                .map_err(|e| IoError::ParseError(format!("Failed to seek: {e}")))?;
 
             // Read header
             let header = Self::read_header(&mut file)?;
@@ -359,7 +342,7 @@ impl FitsFile {
         loop {
             reader
                 .read_exact(&mut card_buf)
-                .map_err(|e| IoError::ParseError(format!("Failed to read header card: {}", e)))?;
+                .map_err(|e| IoError::ParseError(format!("Failed to read header card: {e}")))?;
 
             let card_str = String::from_utf8_lossy(&card_buf);
 
@@ -468,7 +451,7 @@ impl FitsFile {
             let naxis = header.get_i64("NAXIS").unwrap_or(0) as usize;
 
             for i in 1..=naxis {
-                let axis_key = format!("NAXIS{}", i);
+                let axis_key = format!("NAXIS{i}");
                 if let Ok(axis_size) = header.get_i64(&axis_key) {
                     size *= axis_size as usize;
                 }
@@ -501,7 +484,7 @@ impl FitsFile {
     pub fn get_hdu(&self, index: usize) -> Result<&HDU> {
         self.hdus
             .get(index)
-            .ok_or_else(|| IoError::ParseError(format!("HDU index {} out of range", index)))
+            .ok_or_else(|| IoError::ParseError(format!("HDU index {index} out of range")))
     }
 
     /// Read primary image as 2D array
@@ -515,8 +498,7 @@ impl FitsFile {
 
         if hdu.hdu_type != HDUType::Primary && hdu.hdu_type != HDUType::Image {
             return Err(IoError::ParseError(format!(
-                "HDU {} is not an image",
-                hdu_index
+                "HDU {hdu_index} is not an image"
             )));
         }
 
@@ -525,8 +507,7 @@ impl FitsFile {
 
         if naxis != 2 {
             return Err(IoError::ParseError(format!(
-                "Expected 2D image, got {}D",
-                naxis
+                "Expected 2D image, got {naxis}D"
             )));
         }
 
@@ -537,7 +518,7 @@ impl FitsFile {
             .map_err(|_e| IoError::FileNotFound(self.file_path.clone()))?;
 
         file.seek(SeekFrom::Start(hdu.data_offset))
-            .map_err(|e| IoError::ParseError(format!("Failed to seek to data: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Failed to seek to data: {e}")))?;
 
         // Read data based on BITPIX
         let data_type = FitsDataType::from_bitpix(bitpix as i32)?;
@@ -551,7 +532,7 @@ impl FitsFile {
 
         // Reshape from FITS order to ndarray order
         let array = Array2::from_shape_vec((naxis2, naxis1), values)
-            .map_err(|e| IoError::ParseError(format!("Failed to create array: {}", e)))?;
+            .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))?;
 
         Ok(array.t().to_owned())
     }
@@ -563,7 +544,7 @@ impl FitsFile {
 
         let mut dims = Vec::with_capacity(naxis);
         for i in 1..=naxis {
-            let axis_key = format!("NAXIS{}", i);
+            let axis_key = format!("NAXIS{i}");
             let size = hdu.header.get_i64(&axis_key)? as usize;
             dims.push(size);
         }
@@ -583,22 +564,21 @@ impl FitsNumeric for f32 {
         match data_type {
             FitsDataType::Float32 => reader
                 .read_f32::<BigEndian>()
-                .map_err(|e| IoError::ParseError(format!("Failed to read f32: {}", e))),
+                .map_err(|e| IoError::ParseError(format!("Failed to read f32: {e}"))),
             FitsDataType::Float64 => reader
                 .read_f64::<BigEndian>()
                 .map(|v| v as f32)
-                .map_err(|e| IoError::ParseError(format!("Failed to read f64: {}", e))),
+                .map_err(|e| IoError::ParseError(format!("Failed to read f64: {e}"))),
             FitsDataType::Int16 => reader
                 .read_i16::<BigEndian>()
                 .map(|v| v as f32)
-                .map_err(|e| IoError::ParseError(format!("Failed to read i16: {}", e))),
+                .map_err(|e| IoError::ParseError(format!("Failed to read i16: {e}"))),
             FitsDataType::Int32 => reader
                 .read_i32::<BigEndian>()
                 .map(|v| v as f32)
-                .map_err(|e| IoError::ParseError(format!("Failed to read i32: {}", e))),
+                .map_err(|e| IoError::ParseError(format!("Failed to read i32: {e}"))),
             _ => Err(IoError::ParseError(format!(
-                "Unsupported conversion from {:?} to f32",
-                data_type
+                "Unsupported conversion from {data_type:?} to f32"
             ))),
         }
     }
@@ -607,10 +587,9 @@ impl FitsNumeric for f32 {
         match data_type {
             FitsDataType::Float32 => writer
                 .write_f32::<BigEndian>(*self)
-                .map_err(|e| IoError::FileError(format!("Failed to write f32: {}", e))),
+                .map_err(|e| IoError::FileError(format!("Failed to write f32: {e}"))),
             _ => Err(IoError::FileError(format!(
-                "Unsupported conversion from f32 to {:?}",
-                data_type
+                "Unsupported conversion from f32 to {data_type:?}"
             ))),
         }
     }
@@ -621,18 +600,17 @@ impl FitsNumeric for f64 {
         match data_type {
             FitsDataType::Float64 => reader
                 .read_f64::<BigEndian>()
-                .map_err(|e| IoError::ParseError(format!("Failed to read f64: {}", e))),
+                .map_err(|e| IoError::ParseError(format!("Failed to read f64: {e}"))),
             FitsDataType::Float32 => reader
                 .read_f32::<BigEndian>()
                 .map(|v| v as f64)
-                .map_err(|e| IoError::ParseError(format!("Failed to read f32: {}", e))),
+                .map_err(|e| IoError::ParseError(format!("Failed to read f32: {e}"))),
             FitsDataType::Int32 => reader
                 .read_i32::<BigEndian>()
                 .map(|v| v as f64)
-                .map_err(|e| IoError::ParseError(format!("Failed to read i32: {}", e))),
+                .map_err(|e| IoError::ParseError(format!("Failed to read i32: {e}"))),
             _ => Err(IoError::ParseError(format!(
-                "Unsupported conversion from {:?} to f64",
-                data_type
+                "Unsupported conversion from {data_type:?} to f64"
             ))),
         }
     }
@@ -641,10 +619,9 @@ impl FitsNumeric for f64 {
         match data_type {
             FitsDataType::Float64 => writer
                 .write_f64::<BigEndian>(*self)
-                .map_err(|e| IoError::FileError(format!("Failed to write f64: {}", e))),
+                .map_err(|e| IoError::FileError(format!("Failed to write f64: {e}"))),
             _ => Err(IoError::FileError(format!(
-                "Unsupported conversion from f64 to {:?}",
-                data_type
+                "Unsupported conversion from f64 to {data_type:?}"
             ))),
         }
     }
@@ -660,7 +637,7 @@ impl FitsWriter {
     /// Create a new FITS file
     pub fn create<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::create(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
 
         Ok(Self {
             writer: BufWriter::new(file),
@@ -725,7 +702,7 @@ impl FitsWriter {
             let pad_bytes = vec![0u8; padding];
             self.writer
                 .write_all(&pad_bytes)
-                .map_err(|e| IoError::FileError(format!("Failed to write padding: {}", e)))?;
+                .map_err(|e| IoError::FileError(format!("Failed to write padding: {e}")))?;
         }
 
         self.current_hdu += 1;
@@ -755,9 +732,9 @@ impl FitsWriter {
         if remaining < cards_per_block {
             let blank_card = vec![b' '; 80];
             for _ in 0..remaining {
-                self.writer.write_all(&blank_card).map_err(|e| {
-                    IoError::FileError(format!("Failed to write blank card: {}", e))
-                })?;
+                self.writer
+                    .write_all(&blank_card)
+                    .map_err(|e| IoError::FileError(format!("Failed to write blank card: {e}")))?;
             }
         }
 
@@ -777,13 +754,13 @@ impl FitsWriter {
                 card_str.push_str(&format!("= {:>20}", if *b { "T" } else { "F" }));
             }
             CardValue::Integer(i) => {
-                card_str.push_str(&format!("= {:>20}", i));
+                card_str.push_str(&format!("= {i:>20}"));
             }
             CardValue::Float(f) => {
-                card_str.push_str(&format!("= {:>20.10E}", f));
+                card_str.push_str(&format!("= {f:>20.10E}"));
             }
             CardValue::String(s) => {
-                card_str.push_str(&format!("= '{:<18}'", s));
+                card_str.push_str(&format!("= '{s:<18}'"));
             }
             CardValue::None => {
                 // No equals sign for comment cards
@@ -809,14 +786,14 @@ impl FitsWriter {
 
         self.writer
             .write_all(card_str.as_bytes())
-            .map_err(|e| IoError::FileError(format!("Failed to write header card: {}", e)))
+            .map_err(|e| IoError::FileError(format!("Failed to write header card: {e}")))
     }
 
     /// Flush the writer
     pub fn flush(&mut self) -> Result<()> {
         self.writer
             .flush()
-            .map_err(|e| IoError::FileError(format!("Failed to flush: {}", e)))
+            .map_err(|e| IoError::FileError(format!("Failed to flush: {e}")))
     }
 
     /// Close the file
@@ -908,8 +885,7 @@ impl VOTable {
     pub fn get_column_data(&self, column_index: usize) -> Result<Vec<&VOTableValue>> {
         if column_index >= self.columns.len() {
             return Err(IoError::ParseError(format!(
-                "Column index {} out of range",
-                column_index
+                "Column index {column_index} out of range"
             )));
         }
 
@@ -926,23 +902,23 @@ impl VOTable {
     /// Write VOTable to XML file (simplified)
     pub fn write<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let file = File::create(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
         let mut writer = BufWriter::new(file);
 
         // Write XML header
         writeln!(writer, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
-            .map_err(|e| IoError::FileError(format!("Failed to write XML header: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write XML header: {e}")))?;
         writeln!(
             writer,
             "<VOTABLE version=\"1.4\" xmlns=\"http://www.ivoa.net/xml/VOTable/v1.3\">"
         )
-        .map_err(|e| IoError::FileError(format!("Failed to write VOTABLE tag: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write VOTABLE tag: {e}")))?;
 
         // Write resource
         writeln!(writer, "  <RESOURCE>")
-            .map_err(|e| IoError::FileError(format!("Failed to write RESOURCE tag: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write RESOURCE tag: {e}")))?;
         writeln!(writer, "    <TABLE>")
-            .map_err(|e| IoError::FileError(format!("Failed to write TABLE tag: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write TABLE tag: {e}")))?;
 
         // Write fields
         for column in &self.columns {
@@ -951,33 +927,33 @@ impl VOTable {
                 "      <FIELD name=\"{}\" datatype=\"{}\"",
                 column.name, column.datatype
             )
-            .map_err(|e| IoError::FileError(format!("Failed to write FIELD: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write FIELD: {e}")))?;
 
             if let Some(unit) = &column.unit {
-                write!(writer, " unit=\"{}\"", unit)
-                    .map_err(|e| IoError::FileError(format!("Failed to write unit: {}", e)))?;
+                write!(writer, " unit=\"{unit}\"")
+                    .map_err(|e| IoError::FileError(format!("Failed to write unit: {e}")))?;
             }
 
             writeln!(writer, "/>")
-                .map_err(|e| IoError::FileError(format!("Failed to write FIELD close: {}", e)))?;
+                .map_err(|e| IoError::FileError(format!("Failed to write FIELD close: {e}")))?;
         }
 
         // Write data
         writeln!(writer, "      <DATA>")
-            .map_err(|e| IoError::FileError(format!("Failed to write DATA tag: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write DATA tag: {e}")))?;
         writeln!(writer, "        <TABLEDATA>")
-            .map_err(|e| IoError::FileError(format!("Failed to write TABLEDATA tag: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write TABLEDATA tag: {e}")))?;
 
         for row in &self.data {
             write!(writer, "          <TR>")
-                .map_err(|e| IoError::FileError(format!("Failed to write TR: {}", e)))?;
+                .map_err(|e| IoError::FileError(format!("Failed to write TR: {e}")))?;
 
             for value in row {
                 match value {
-                    VOTableValue::String(s) => write!(writer, "<TD>{}</TD>", s),
-                    VOTableValue::Integer(i) => write!(writer, "<TD>{}</TD>", i),
+                    VOTableValue::String(s) => write!(writer, "<TD>{s}</TD>"),
+                    VOTableValue::Integer(i) => write!(writer, "<TD>{i}</TD>"),
                     VOTableValue::Float(f) | VOTableValue::Double(f) => {
-                        write!(writer, "<TD>{}</TD>", f)
+                        write!(writer, "<TD>{f}</TD>")
                     }
                     VOTableValue::Boolean(b) => {
                         write!(writer, "<TD>{}</TD>", if *b { "true" } else { "false" })
@@ -985,27 +961,27 @@ impl VOTable {
                     VOTableValue::Null => write!(writer, "<TD/>"),
                     VOTableValue::Array(_) => write!(writer, "<TD>[]</TD>"), // Simplified
                 }
-                .map_err(|e| IoError::FileError(format!("Failed to write TD: {}", e)))?;
+                .map_err(|e| IoError::FileError(format!("Failed to write TD: {e}")))?;
             }
 
             writeln!(writer, "</TR>")
-                .map_err(|e| IoError::FileError(format!("Failed to write TR close: {}", e)))?;
+                .map_err(|e| IoError::FileError(format!("Failed to write TR close: {e}")))?;
         }
 
         writeln!(writer, "        </TABLEDATA>")
-            .map_err(|e| IoError::FileError(format!("Failed to close TABLEDATA: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to close TABLEDATA: {e}")))?;
         writeln!(writer, "      </DATA>")
-            .map_err(|e| IoError::FileError(format!("Failed to close DATA: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to close DATA: {e}")))?;
         writeln!(writer, "    </TABLE>")
-            .map_err(|e| IoError::FileError(format!("Failed to close TABLE: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to close TABLE: {e}")))?;
         writeln!(writer, "  </RESOURCE>")
-            .map_err(|e| IoError::FileError(format!("Failed to close RESOURCE: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to close RESOURCE: {e}")))?;
         writeln!(writer, "</VOTABLE>")
-            .map_err(|e| IoError::FileError(format!("Failed to close VOTABLE: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to close VOTABLE: {e}")))?;
 
         writer
             .flush()
-            .map_err(|e| IoError::FileError(format!("Failed to flush: {}", e)))
+            .map_err(|e| IoError::FileError(format!("Failed to flush: {e}")))
     }
 }
 
@@ -1169,8 +1145,7 @@ impl FitsTableReader {
             }
             _ => {
                 return Err(IoError::ParseError(format!(
-                    "Column '{}' not found",
-                    column_name
+                    "Column '{column_name}' not found"
                 )));
             }
         }

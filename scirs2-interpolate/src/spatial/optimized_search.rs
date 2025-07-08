@@ -13,6 +13,9 @@
 use crate::error::InterpolateResult;
 use crate::spatial::{BallTree, KdTree};
 use ndarray::{ArrayView2, Axis};
+
+#[cfg(feature = "simd")]
+use ndarray::Array1;
 use num_traits::{Float, FromPrimitive};
 use std::fmt::Debug;
 

@@ -683,7 +683,7 @@ fn write_integer_data<W: Write>(writer: &mut W, data: &[usize], field_width: usi
             if i > 0 {
                 write!(writer, " ").map_err(|e| IoError::FileError(e.to_string()))?;
             }
-            write!(writer, "{:width$}", value, width = field_width)
+            write!(writer, "{value:field_width$}")
                 .map_err(|e| IoError::FileError(e.to_string()))?;
         }
         writeln!(writer).map_err(|e| IoError::FileError(e.to_string()))?;
@@ -701,7 +701,7 @@ fn write_real_data<W: Write>(writer: &mut W, data: &[f64], field_width: usize) -
             if i > 0 {
                 write!(writer, " ").map_err(|e| IoError::FileError(e.to_string()))?;
             }
-            write!(writer, "{:width$.6E}", value, width = field_width)
+            write!(writer, "{value:field_width$.6E}")
                 .map_err(|e| IoError::FileError(e.to_string()))?;
         }
         writeln!(writer).map_err(|e| IoError::FileError(e.to_string()))?;

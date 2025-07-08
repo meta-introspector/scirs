@@ -9,6 +9,7 @@
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
 use scirs2_core::validation::{check_finite, check_positive};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Window function types for Lomb-Scargle analysis

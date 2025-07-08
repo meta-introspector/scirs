@@ -621,7 +621,7 @@ pub mod utils {
         height: usize,
         max_threads: usize,
     ) -> ((usize, usize), (usize, usize)) {
-        let total_threads = width * height;
+        let _total_threads = width * height;
         let block_dim_x = 16.min((max_threads as f64).sqrt() as usize);
         let block_dim_y = (max_threads / block_dim_x).min(16);
 

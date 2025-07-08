@@ -16,6 +16,7 @@ use ndarray::{Array2, Array3};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::validation::{check_finite, check_positive};
+use std::f64::consts::PI;
 
 /// Advanced 2D DWT decomposition result with multiple representations
 #[derive(Debug, Clone)]

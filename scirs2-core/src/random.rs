@@ -70,6 +70,14 @@ impl Default for Random {
     }
 }
 
+impl<R: Rng + Clone> Clone for Random<R> {
+    fn clone(&self) -> Self {
+        Self {
+            rng: self.rng.clone(),
+        }
+    }
+}
+
 impl<R: Rng> Random<R> {
     /// Sample a value from a distribution
     pub fn sample<D, T>(&mut self, distribution: D) -> T

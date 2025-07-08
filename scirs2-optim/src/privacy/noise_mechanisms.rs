@@ -5,7 +5,7 @@
 //! tree aggregation and truncated noise.
 
 use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
-use ndarray_rand::rand_distr::{Distribution, Normal};
+use ndarray_rand::rand_distr::Distribution;
 use num_traits::Float;
 use scirs2_core::random;
 use std::marker::PhantomData;
@@ -65,19 +65,19 @@ pub struct NoiseParameters<T: Float> {
 
 /// Gaussian noise mechanism for (ε, δ)-differential privacy
 pub struct GaussianMechanism<T: Float> {
-    rng: rand::rngs::ThreadRng,
+    rng: scirs2_core::random::Random<rand::rngs::StdRng>,
     _phantom: PhantomData<T>,
 }
 
 /// Laplace noise mechanism for ε-differential privacy
 pub struct LaplaceMechanism<T: Float> {
-    rng: rand::rngs::ThreadRng,
+    rng: scirs2_core::random::Random<rand::rngs::StdRng>,
     _phantom: PhantomData<T>,
 }
 
 /// Exponential mechanism for discrete optimization
 pub struct ExponentialMechanism<T: Float> {
-    rng: rand::rngs::ThreadRng,
+    rng: scirs2_core::random::Random<rand::rngs::StdRng>,
     quality_function: Box<dyn Fn(&T) -> T + Send + Sync>,
     _phantom: PhantomData<T>,
 }
@@ -160,7 +160,7 @@ where
     /// Create a new Gaussian mechanism
     pub fn new() -> Self {
         Self {
-            rng: random::rng(),
+            rng: random::Random::with_seed(42), // Use seeded RNG for thread safety
             _phantom: PhantomData,
         }
     }
@@ -199,11 +199,13 @@ where
         let sigma = Self::compute_noise_scale(sensitivity, epsilon, delta)?;
         let sigma_f64 = sigma.to_f64().unwrap_or(1.0);
 
-        let normal = Normal::new(0.0, sigma_f64)
-            .map_err(|_| OptimError::InvalidConfig("Invalid noise parameters".to_string()))?;
-
         data.mapv_inplace(|x| {
-            let noise = T::from(normal.sample(&mut self.rng)).unwrap();
+            // Use Box-Muller transformation to generate normal random numbers
+            // since direct sampling with scirs2_core::Random has trait issues
+            let u1: f64 = self.rng.random_range(0.0, 1.0);
+            let u2: f64 = self.rng.random_range(0.0, 1.0);
+            let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
+            let noise = T::from(z0 * sigma_f64).unwrap();
             x + noise
         });
 
@@ -273,7 +275,7 @@ where
     /// Create a new Laplace mechanism
     pub fn new() -> Self {
         Self {
-            rng: random::rng(),
+            rng: random::Random::with_seed(43), // Use seeded RNG for thread safety
             _phantom: PhantomData,
         }
     }
@@ -307,10 +309,9 @@ where
 
         // Implement Laplace distribution using transformation method
         // If U is uniform on [0,1], then Laplace(μ, b) = μ - b*sgn(U-0.5)*ln(1-2|U-0.5|)
-        let uniform = ndarray_rand::rand_distr::Uniform::new(0.0, 1.0);
 
         data.mapv_inplace(|x| {
-            let u: f64 = uniform.sample(&mut self.rng);
+            let u: f64 = self.rng.random_range(0.0, 1.0);
             let laplace_sample = if u < 0.5 {
                 scale_f64 * (2.0 * u).ln()
             } else {
@@ -386,7 +387,7 @@ where
     /// Create a new exponential mechanism
     pub fn new(quality_function: Box<dyn Fn(&T) -> T + Send + Sync>) -> Self {
         Self {
-            rng: random::rng(),
+            rng: random::Random::with_seed(44), // Use seeded RNG for thread safety
             quality_function,
             _phantom: PhantomData,
         }
@@ -520,7 +521,7 @@ where
 
 impl<T> TreeAggregationMechanism<T>
 where
-    T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
+    T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform + std::iter::Sum,
 {
     /// Create a new tree aggregation mechanism
     pub fn new(tree_height: usize, base_mechanism: Box<dyn NoiseMechanism<T> + Send>) -> Self {
@@ -558,7 +559,7 @@ where
             for chunk in current_level.chunks(2) {
                 let mut sum = Array1::from_vec(vec![chunk.iter().cloned().sum()]);
                 self.base_mechanism
-                    .add_noise(&mut sum, sensitivity, level_epsilon, delta)?;
+                    .add_noise_1d(&mut sum, sensitivity, level_epsilon, delta)?;
                 next_level.push(sum[0]);
             }
 
@@ -605,7 +606,7 @@ where
         // Add noise to threshold
         let threshold_epsilon = epsilon * self.budget_fraction;
         let mut noisy_threshold = Array1::from_vec(vec![self.threshold]);
-        self.base_mechanism.add_noise(
+        self.base_mechanism.add_noise_1d(
             &mut noisy_threshold,
             sensitivity,
             threshold_epsilon,
@@ -619,7 +620,7 @@ where
             let result_epsilon = epsilon * (T::one() - self.budget_fraction);
             let mut noisy_result = Array1::from_vec(vec![query_result]);
             self.base_mechanism
-                .add_noise(&mut noisy_result, sensitivity, result_epsilon, delta)?;
+                .add_noise_1d(&mut noisy_result, sensitivity, result_epsilon, delta)?;
 
             self.queries_answered += 1;
             Ok(Some(noisy_result[0]))
@@ -631,7 +632,7 @@ where
 
 impl<T> NoiseCalibrator<T>
 where
-    T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform,
+    T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform + std::iter::Sum + 'static,
 {
     /// Create a new noise calibrator
     pub fn new(
@@ -706,12 +707,31 @@ where
         let mut mechanism = self.select_mechanism();
 
         let start_time = std::time::Instant::now();
-        mechanism.add_noise(
-            data,
-            adjusted_sensitivity,
-            self.target_epsilon,
-            self.target_delta,
-        )?;
+        
+        // Dispatch to appropriate dimension-specific method
+        match data.ndim() {
+            1 => {
+                // Cast to 1D array
+                let data_1d: &mut Array<T, ndarray::Ix1> = unsafe { std::mem::transmute(data) };
+                mechanism.add_noise_1d(data_1d, adjusted_sensitivity, self.target_epsilon, self.target_delta)?;
+            },
+            2 => {
+                // Cast to 2D array
+                let data_2d: &mut Array<T, ndarray::Ix2> = unsafe { std::mem::transmute(data) };
+                mechanism.add_noise_2d(data_2d, adjusted_sensitivity, self.target_epsilon, self.target_delta)?;
+            },
+            3 => {
+                // Cast to 3D array
+                let data_3d: &mut Array<T, ndarray::Ix3> = unsafe { std::mem::transmute(data) };
+                mechanism.add_noise_3d(data_3d, adjusted_sensitivity, self.target_epsilon, self.target_delta)?;
+            },
+            _ => {
+                return Err(OptimError::InvalidConfig(
+                    "Unsupported array dimension for noise calibration".to_string(),
+                ));
+            }
+        }
+        
         let calibration_time = start_time.elapsed();
 
         Ok(NoiseCalibrationResult {
@@ -763,10 +783,10 @@ pub fn generate_correlated_gaussian_noise<T>(
     shape: (usize, usize),
     correlation_matrix: &Array2<T>,
     scale: T,
-    rng: &mut dyn rand::RngCore,
+    rng: &mut scirs2_core::random::Random,
 ) -> Result<Array2<T>>
 where
-    T: Float + Default + Clone + rand_distr::uniform::SampleUniform,
+    T: Float + Default + Clone + rand_distr::uniform::SampleUniform + 'static,
 {
     let (rows, cols) = shape;
 
@@ -778,13 +798,15 @@ where
 
     let mut noise = Array2::zeros((rows, cols));
     let scale_f64 = scale.to_f64().unwrap_or(1.0);
-    let normal = Normal::new(0.0, scale_f64)
-        .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
 
-    // Generate independent noise
+    // Generate independent noise using Box-Muller transformation
     for i in 0..rows {
         for j in 0..cols {
-            noise[[i, j]] = T::from(normal.sample(rng)).unwrap();
+            let u1: f64 = rng.random_range(0.0, 1.0);
+            let u2: f64 = rng.random_range(0.0, 1.0);
+            let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
+            let gaussian_sample = z0 * scale_f64;
+            noise[[i, j]] = T::from(gaussian_sample).unwrap();
         }
     }
 

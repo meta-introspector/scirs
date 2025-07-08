@@ -5,7 +5,7 @@
 //! formal privacy guarantees.
 
 use ndarray::{Array, ArrayBase, Data, DataMut, Dimension};
-use ndarray_rand::rand_distr::{Distribution, Normal};
+use rand_distr::{Distribution, Normal};
 use num_traits::Float;
 use scirs2_core::random;
 use std::collections::{HashMap, VecDeque};
@@ -32,7 +32,7 @@ where
     accountant: MomentsAccountant,
 
     /// Random number generator for noise
-    rng: rand::rngs::ThreadRng,
+    rng: scirs2_core::random::Random,
 
     /// Adaptive clipping state
     adaptive_clipping: Option<AdaptiveClippingState>,
@@ -211,7 +211,8 @@ where
         + Sync
         + ndarray_rand::rand_distr::uniform::SampleUniform
         + ndarray::ScalarOperand
-        + std::fmt::Debug,
+        + std::fmt::Debug
+        + std::iter::Sum,
     D: ndarray::Dimension,
     O: Optimizer<A, D> + Send + Sync,
 {
@@ -256,15 +257,12 @@ where
     }
 
     /// Perform a DP-SGD step
-    pub fn dp_step<S, DIM>(
+    pub fn dp_step(
         &mut self,
-        params: &ArrayBase<S, DIM>,
-        gradients: &mut ArrayBase<S, DIM>,
+        params: &Array<A, D>,
+        gradients: &mut Array<A, D>,
         batch_size: usize,
-    ) -> Result<Array<A, DIM>>
-    where
-        S: Data<Elem = A> + DataMut<Elem = A>,
-        DIM: Dimension + Clone,
+    ) -> Result<Array<A, D>>
     {
         self.step_count += 1;
         self.current_batch_size = batch_size;
@@ -311,8 +309,9 @@ where
         );
 
         // Update adaptive clipping if enabled
+        let should_update = self.should_update_clipping_threshold();
         if let Some(ref mut adaptive_state) = self.adaptive_clipping {
-            if self.should_update_clipping_threshold() {
+            if should_update {
                 adaptive_state.update_threshold(pre_clip_norm.to_f64().unwrap_or(0.0));
             }
         }
@@ -470,9 +469,10 @@ where
             NoiseMechanism::Gaussian => {
                 let normal = Normal::new(0.0, noise_scale)
                     .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
-
                 gradients.mapv_inplace(|g| {
-                    let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
+                    // Use scirs2_core random for Gaussian noise
+                    let noise_f64 = self.rng.sample(normal);
+                    let noise = A::from(noise_f64).unwrap();
                     g + noise
                 });
             }
@@ -480,9 +480,10 @@ where
                 // Simplified Laplace noise using Normal distribution approximation
                 let normal = Normal::new(0.0, noise_scale * 1.414)
                     .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
-
                 gradients.mapv_inplace(|g| {
-                    let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
+                    // Use scirs2_core random for Laplace-approximated noise
+                    let noise_f64 = self.rng.sample(normal);
+                    let noise = A::from(noise_f64).unwrap();
                     g + noise
                 });
             }
@@ -490,9 +491,10 @@ where
                 // Default to Gaussian
                 let normal = Normal::new(0.0, noise_scale)
                     .map_err(|_| OptimError::InvalidConfig("Invalid noise scale".to_string()))?;
-
                 gradients.mapv_inplace(|g| {
-                    let noise = A::from(normal.sample(&mut *self.rng)).unwrap();
+                    // Use scirs2_core random for Gaussian noise
+                    let noise_f64 = self.rng.sample(normal);
+                    let noise = A::from(noise_f64).unwrap();
                     g + noise
                 });
             }
@@ -543,7 +545,16 @@ where
                     .map(|(k, v)| (k.clone(), v.to_f64().unwrap_or(0.0)))
                     .collect(),
             },
-            noise_calibration_history: self.noise_calibrator.calibration_history.clone(),
+            noise_calibration_history: self.noise_calibrator.calibration_history
+                .iter()
+                .map(|entry| NoiseCalibration {
+                    step: entry.step,
+                    noise_scale: entry.noise_scale.to_f64().unwrap_or(0.0),
+                    gradient_norm: entry.gradient_norm.to_f64().unwrap_or(0.0),
+                    clipping_threshold: entry.clipping_threshold.to_f64().unwrap_or(0.0),
+                    privacy_cost: entry.privacy_cost.to_f64().unwrap_or(0.0),
+                })
+                .collect(),
         }
     }
 
@@ -761,7 +772,7 @@ impl PrivacyBudgetTracker {
     }
 }
 
-impl<A: Float + Default + Clone> GradientStatistics<A> {
+impl<A: Float + Default + Clone + std::iter::Sum> GradientStatistics<A> {
     fn new() -> Self {
         Self {
             norm_history: VecDeque::with_capacity(1000),

@@ -4003,33 +4003,23 @@ mod tests {
             min_duration: Duration::from_millis(1),
             max_duration: Duration::from_secs(1),
             sample_sizes: vec![10, 100],
-            strategies: {
-                let mut strategies = std::collections::HashSet::new();
-                strategies.insert(OptimizationStrategy::Scalar);
-                strategies.insert(OptimizationStrategy::Simd);
-                strategies
-            },
+            strategies: vec![OptimizationStrategy::Scalar, OptimizationStrategy::Simd],
         };
 
         let runner = benchmarking::BenchmarkRunner::new(config);
 
         // Test a simple operation
         let results = runner.benchmark_operation("test_add", |data, _strategy| {
-            let result: Vec<f64> = data.iter().map(|x| *x as f64 + 1.0).collect();
-            Ok((Duration::from_millis(1), result))
+            let result: Vec<f64> = data.iter().map(|x| *x + 1.0).collect();
+            (Duration::from_millis(1), result)
         });
 
-        assert!(!results.unwrap().is_empty());
+        assert!(!results.measurements.is_empty());
     }
 
     #[test]
     fn test_strategy_performance() {
         let performance = benchmarking::StrategyPerformance {
-            strategy: OptimizationStrategy::Scalar,
-            throughput: 150_000.0,
-            latency: Duration::from_millis(1),
-            memory_efficiency: 0.85,
-            cache_hit_rate: 0.95,
             avg_throughput: 150_000.0,
             throughput_stddev: 5_000.0,
             avg_memory_usage: 8000.0,
@@ -4050,9 +4040,6 @@ mod tests {
         parallel_efficiency.insert(10000, 0.9);
 
         let memory_scaling = benchmarking::MemoryScaling {
-            linear_factor: 8.0,
-            logarithmic_factor: 0.0,
-            constant_overhead: 1024,
             linear_coefficient: 8.0,
             constant_coefficient: 1024.0,
             r_squared: 0.95,
@@ -4060,9 +4047,6 @@ mod tests {
 
         let bottleneck = benchmarking::PerformanceBottleneck {
             bottleneck_type: benchmarking::BottleneckType::MemoryBandwidth,
-            severity: 0.3,
-            description: "Memory bandwidth bottleneck detected".to_string(),
-            mitigation_strategy: OptimizationStrategy::CacheOptimized,
             size_range: (10000, 10000),
             impact: 0.3,
             mitigation: "Use memory prefetching".to_string(),
@@ -4086,9 +4070,6 @@ mod tests {
     #[test]
     fn test_memory_scaling() {
         let scaling = benchmarking::MemoryScaling {
-            linear_factor: 8.0,
-            logarithmic_factor: 0.0,
-            constant_overhead: 512,
             linear_coefficient: 8.0,
             constant_coefficient: 512.0,
             r_squared: 0.99,
@@ -4103,9 +4084,6 @@ mod tests {
     fn test_performance_bottleneck() {
         let bottleneck = benchmarking::PerformanceBottleneck {
             bottleneck_type: benchmarking::BottleneckType::SynchronizationOverhead,
-            severity: 0.6,
-            description: "Synchronization overhead detected".to_string(),
-            mitigation_strategy: OptimizationStrategy::Parallel,
             size_range: (1000, 5000),
             impact: 0.6,
             mitigation: "Reduce thread contention".to_string(),
@@ -4148,25 +4126,18 @@ mod tests {
     #[test]
     fn test_benchmark_results() {
         let measurement = benchmarking::BenchmarkMeasurement {
-            execution_time: Duration::from_millis(10),
-            duration: Duration::from_millis(10),
             strategy: OptimizationStrategy::Parallel,
             input_size: 1000,
+            duration: Duration::from_millis(10),
             throughput: 100_000.0,
             memory_usage: 8000,
             custom_metrics: std::collections::HashMap::new(),
-            timestamp: std::time::SystemTime::now(),
         };
 
         let mut strategy_summary = std::collections::HashMap::new();
         strategy_summary.insert(
             OptimizationStrategy::Parallel,
             benchmarking::StrategyPerformance {
-                strategy: OptimizationStrategy::Parallel,
-                throughput: 100_000.0,
-                latency: Duration::from_millis(1),
-                memory_efficiency: 0.9,
-                cache_hit_rate: 0.95,
                 avg_throughput: 100_000.0,
                 throughput_stddev: 1_000.0,
                 avg_memory_usage: 8000.0,
@@ -4178,9 +4149,6 @@ mod tests {
         let scalability_analysis = benchmarking::ScalabilityAnalysis {
             parallel_efficiency: std::collections::HashMap::new(),
             memory_scaling: benchmarking::MemoryScaling {
-                linear_factor: 8.0,
-                logarithmic_factor: 0.0,
-                constant_overhead: 0,
                 linear_coefficient: 8.0,
                 constant_coefficient: 0.0,
                 r_squared: 1.0,

@@ -377,7 +377,7 @@ pub fn bilateral_filter_simd_f32<D>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<f32, D>>
 where
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
 
@@ -412,7 +412,7 @@ pub fn bilateral_filter_simd_f64<D>(
     mode: Option<BorderMode>,
 ) -> NdimageResult<Array<f64, D>>
 where
-    D: Dimension,
+    D: Dimension + 'static,
 {
     let border_mode = mode.unwrap_or(BorderMode::Reflect);
 

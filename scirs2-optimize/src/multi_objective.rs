@@ -246,10 +246,10 @@ impl NSGAII {
         for _ in 0..self.config.population_size {
             let variables = if let Some((ref lower, ref upper)) = self.config.bounds {
                 Array1::from_shape_fn(self.n_variables, |i| {
-                    lower[i] + rng.random::<f64>() * (upper[i] - lower[i])
+                    lower[i] + rng.random_f64() * (upper[i] - lower[i])
                 })
             } else {
-                Array1::from_shape_fn(self.n_variables, |_| rng.random::<f64>() * 2.0 - 1.0)
+                Array1::from_shape_fn(self.n_variables, |_| rng.random_f64() * 2.0 - 1.0)
             };
 
             let objectives = objective_fn(&variables.view());
@@ -298,7 +298,7 @@ impl NSGAII {
             let parent2 = self.tournament_selection(&mut rng);
 
             // Crossover
-            let (mut child1_vars, mut child2_vars) = if rng.random::<f64>()
+            let (mut child1_vars, mut child2_vars) = if rng.random_f64()
                 < self.config.crossover_probability
             {
                 self.simulated_binary_crossover(&parent1.variables, &parent2.variables, &mut rng)
@@ -307,10 +307,10 @@ impl NSGAII {
             };
 
             // Mutation
-            if rng.random::<f64>() < self.config.mutation_probability {
+            if rng.random_f64() < self.config.mutation_probability {
                 self.polynomial_mutation(&mut child1_vars, &mut rng);
             }
-            if rng.random::<f64>() < self.config.mutation_probability {
+            if rng.random_f64() < self.config.mutation_probability {
                 self.polynomial_mutation(&mut child2_vars, &mut rng);
             }
 
@@ -354,10 +354,10 @@ impl NSGAII {
     /// Tournament selection
     fn tournament_selection(&self, rng: &mut impl Rng) -> &MultiObjectiveSolution {
         let tournament_size = 2;
-        let mut best_idx = rng.gen_range(0..self.population.len());
+        let mut best_idx = rng.random_range(0..self.population.len());
 
         for _ in 1..tournament_size {
-            let idx = rng.gen_range(0..self.population.len());
+            let idx = rng.random_range(0..self.population.len());
             if self.dominates_or_better(&self.population[idx], &self.population[best_idx]) {
                 best_idx = idx;
             }
@@ -395,12 +395,12 @@ impl NSGAII {
         let eta = self.config.crossover_eta;
 
         for i in 0..self.n_variables {
-            if rng.random::<f64>() <= 0.5 {
+            if rng.random_f64() <= 0.5 {
                 let y1 = parent1[i].min(parent2[i]);
                 let y2 = parent1[i].max(parent2[i]);
 
                 if (y2 - y1).abs() > 1e-14 {
-                    let u = rng.random::<f64>();
+                    let u = rng.random_f64();
                     let beta = if u <= 0.5 {
                         (2.0 * u).powf(1.0 / (eta + 1.0))
                     } else {
@@ -421,8 +421,8 @@ impl NSGAII {
         let eta = self.config.mutation_eta;
 
         for i in 0..self.n_variables {
-            if rng.random::<f64>() <= 1.0 / self.n_variables as f64 {
-                let u = rng.random::<f64>();
+            if rng.random_f64() <= 1.0 / self.n_variables as f64 {
+                let u = rng.random_f64();
                 let delta = if u < 0.5 {
                     (2.0 * u).powf(1.0 / (eta + 1.0)) - 1.0
                 } else {
@@ -683,7 +683,7 @@ impl NSGAII {
             let mut point = Array1::zeros(self.n_objectives);
             for i in 0..self.n_objectives {
                 point[i] =
-                    min_bounds[i] + rng.random::<f64>() * (reference_point[i] - min_bounds[i]);
+                    min_bounds[i] + rng.random_f64() * (reference_point[i] - min_bounds[i]);
             }
 
             // Check if point is dominated by any solution in Pareto front
@@ -942,10 +942,10 @@ impl NSGAIII {
         for _ in 0..self.config.population_size {
             let variables = if let Some((ref lower, ref upper)) = self.config.bounds {
                 Array1::from_shape_fn(self.n_variables, |i| {
-                    lower[i] + rng.random::<f64>() * (upper[i] - lower[i])
+                    lower[i] + rng.random_f64() * (upper[i] - lower[i])
                 })
             } else {
-                Array1::from_shape_fn(self.n_variables, |_| rng.random::<f64>() * 2.0 - 1.0)
+                Array1::from_shape_fn(self.n_variables, |_| rng.random_f64() * 2.0 - 1.0)
             };
 
             let objectives = objective_fn(&variables.view());
@@ -991,7 +991,7 @@ impl NSGAIII {
             let parent2 = self.tournament_selection(&mut rng);
 
             // Crossover
-            let (mut child1_vars, mut child2_vars) = if rng.random::<f64>()
+            let (mut child1_vars, mut child2_vars) = if rng.random_f64()
                 < self.config.crossover_probability
             {
                 self.simulated_binary_crossover(&parent1.variables, &parent2.variables, &mut rng)
@@ -1000,10 +1000,10 @@ impl NSGAIII {
             };
 
             // Mutation
-            if rng.random::<f64>() < self.config.mutation_probability {
+            if rng.random_f64() < self.config.mutation_probability {
                 self.polynomial_mutation(&mut child1_vars, &mut rng);
             }
-            if rng.random::<f64>() < self.config.mutation_probability {
+            if rng.random_f64() < self.config.mutation_probability {
                 self.polynomial_mutation(&mut child2_vars, &mut rng);
             }
 
@@ -1298,7 +1298,7 @@ impl NSGAIII {
             // Randomly select one reference point from candidates
             let mut rng = rng();
             let selected_ref_point =
-                candidate_ref_points[rng.gen_range(0..candidate_ref_points.len())];
+                candidate_ref_points[rng.random_range(0..candidate_ref_points.len())];
 
             // Select the best solution associated with this reference point
             let associated_indices: Vec<usize> = associations[selected_ref_point]
@@ -1318,7 +1318,7 @@ impl NSGAIII {
                     )
                 } else {
                     // If niche already has solutions, randomly select
-                    associated_indices[rng.gen_range(0..associated_indices.len())]
+                    associated_indices[rng.random_range(0..associated_indices.len())]
                 };
 
                 // Add selected solution to result
@@ -1462,10 +1462,10 @@ impl NSGAIII {
     /// Tournament selection (reuse logic from NSGA-II)
     fn tournament_selection(&self, rng: &mut impl Rng) -> &MultiObjectiveSolution {
         let tournament_size = 2;
-        let mut best_idx = rng.gen_range(0..self.population.len());
+        let mut best_idx = rng.random_range(0..self.population.len());
 
         for _ in 1..tournament_size {
-            let idx = rng.gen_range(0..self.population.len());
+            let idx = rng.random_range(0..self.population.len());
             if self.dominates_or_better(&self.population[idx], &self.population[best_idx]) {
                 best_idx = idx;
             }
@@ -1503,12 +1503,12 @@ impl NSGAIII {
         let eta = self.config.crossover_eta;
 
         for i in 0..self.n_variables {
-            if rng.random::<f64>() <= 0.5 {
+            if rng.random_f64() <= 0.5 {
                 let y1 = parent1[i].min(parent2[i]);
                 let y2 = parent1[i].max(parent2[i]);
 
                 if (y2 - y1).abs() > 1e-14 {
-                    let u = rng.random::<f64>();
+                    let u = rng.random_f64();
                     let beta = if u <= 0.5 {
                         (2.0 * u).powf(1.0 / (eta + 1.0))
                     } else {
@@ -1529,8 +1529,8 @@ impl NSGAIII {
         let eta = self.config.mutation_eta;
 
         for i in 0..self.n_variables {
-            if rng.random::<f64>() <= 1.0 / self.n_variables as f64 {
-                let u = rng.random::<f64>();
+            if rng.random_f64() <= 1.0 / self.n_variables as f64 {
+                let u = rng.random_f64();
                 let delta = if u < 0.5 {
                     (2.0 * u).powf(1.0 / (eta + 1.0)) - 1.0
                 } else {
@@ -1599,7 +1599,7 @@ impl NSGAIII {
             let mut point = Array1::zeros(self.n_objectives);
             for i in 0..self.n_objectives {
                 point[i] =
-                    min_bounds[i] + rng.random::<f64>() * (reference_point[i] - min_bounds[i]);
+                    min_bounds[i] + rng.random_f64() * (reference_point[i] - min_bounds[i]);
             }
 
             // Check if point is dominated by any solution in Pareto front

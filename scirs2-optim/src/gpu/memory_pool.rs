@@ -4641,13 +4641,13 @@ unsafe impl Send for PooledMemory {}
 unsafe impl Sync for PooledMemory {}
 
 #[allow(dead_code)]
-struct CudaKernel;
+pub struct CudaKernel;
 
 #[cfg(all(feature = "gpu", feature = "cuda"))]
-type CudaStream = scirs2_core::gpu::backends::CudaStream;
+pub type CudaStream = scirs2_core::gpu::backends::CudaStream;
 
 #[cfg(not(all(feature = "gpu", feature = "cuda")))]
-struct CudaStream;
+pub struct CudaStream;
 
 /// Allocation analytics for performance monitoring
 #[derive(Debug, Clone, Default)]
@@ -4759,4 +4759,3 @@ impl fmt::Display for MemoryStats {
         write!(f, "}}")
     }
 }
-

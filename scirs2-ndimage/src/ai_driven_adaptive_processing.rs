@@ -13,9 +13,7 @@
 use ndarray::{Array1, Array2, Array3, ArrayView2};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::Rng;
-use std::cmp;
 use std::collections::{HashMap, VecDeque};
-use std::mem;
 
 use crate::advanced_fusion_algorithms::AdvancedConfig;
 use crate::error::{NdimageError, NdimageResult};

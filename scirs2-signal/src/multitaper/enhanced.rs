@@ -83,6 +83,7 @@ impl Default for MultitaperConfig {
 }
 
 use num_complex::Complex64;
+use std::f64::consts::PI;
 /// Enhanced multitaper power spectral density estimation with SIMD and parallel processing
 ///
 /// This function provides a high-performance implementation of the multitaper method

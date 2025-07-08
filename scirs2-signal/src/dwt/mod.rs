@@ -10,6 +10,8 @@
 //! - `boundary`: Signal extension methods for handling boundary conditions
 //! - `multiscale`: Multi-level transform functions for decomposition and reconstruction
 
+use ndarray::Array1;
+
 // Declare submodules
 mod boundary;
 mod filters;

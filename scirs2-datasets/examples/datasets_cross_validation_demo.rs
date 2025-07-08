@@ -41,7 +41,7 @@ fn main() {
             "  Train indices: {:?}",
             &train_indices[..5.min(train_indices.len())]
         );
-        println!("  Val indices: {:?}", val_indices);
+        println!("  Val indices: {val_indices:?}");
     }
     println!();
 
@@ -62,8 +62,7 @@ fn main() {
             val_indices.len()
         );
         println!(
-            "  Class distribution in validation: Class 0: {}, Class 1: {}",
-            class_0_count, class_1_count
+            "  Class distribution in validation: Class 0: {class_0_count}, Class 1: {class_1_count}"
         );
     }
     println!();

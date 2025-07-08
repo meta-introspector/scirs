@@ -19,6 +19,7 @@ use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
+use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Comprehensive WPT validation result
@@ -558,7 +559,7 @@ fn validate_multiscale_properties(
     let mut coefficients_per_scale = Vec::new();
 
     for level in 1..=max_level {
-        let tree = wpt_decompose(&signal, wavelet, level)?;
+        let tree = wp_decompose(&signal, wavelet, level)?;
         let coeffs = extract_all_coefficients(&tree);
         let energy = coeffs.iter().map(|&c| c * c).sum::<f64>();
 
@@ -783,10 +784,10 @@ fn test_wpt_round_trip(
     level: usize,
 ) -> SignalResult<(f64, f64)> {
     // Decompose
-    let tree = wpt_decompose(signal, wavelet, level)?;
+    let tree = wp_decompose(signal, wavelet, level)?;
 
     // Reconstruct
-    let reconstructed = wpt_reconstruct(&tree)?;
+    let reconstructed = reconstruct_from_nodes(&tree)?;
 
     // Compute metrics
     let original_energy = signal.iter().map(|&x| x * x).sum::<f64>();
@@ -835,7 +836,7 @@ fn construct_frame_matrix(
         }
 
         // Decompose to get basis function
-        match wpt_decompose(&test_signal, wavelet, level) {
+        match wp_decompose(&test_signal, wavelet, level) {
             Ok(tree) => {
                 let coeffs = extract_packet_coefficients(&tree, packet_idx, level);
 

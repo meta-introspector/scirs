@@ -115,14 +115,14 @@ fn demonstrate_basic_streaming() -> Result<(), Box<dyn std::error::Error>> {
     let duration = start_time.elapsed();
 
     println!("\nStreaming Results:");
-    println!("  Total chunks processed: {}", chunk_count);
-    println!("  Total samples: {}", total_samples);
+    println!("  Total chunks processed: {chunk_count}");
+    println!("  Total samples: {total_samples}");
     println!("  Processing time: {:.2}s", duration.as_secs_f64());
     println!(
         "  Throughput: {:.1} samples/s",
         total_samples as f64 / duration.as_secs_f64()
     );
-    println!("  Class distribution: {:?}", class_distribution);
+    println!("  Class distribution: {class_distribution:?}");
 
     println!();
     Ok(())
@@ -138,8 +138,7 @@ fn demonstrate_memory_efficient_processing() -> Result<(), Box<dyn std::error::E
     let n_features = 50;
 
     println!(
-        "Comparing memory usage for {} samples with {} features",
-        dataset_size, n_features
+        "Comparing memory usage for {dataset_size} samples with {n_features} features"
     );
 
     // In-memory approach (for comparison)
@@ -154,7 +153,7 @@ fn demonstrate_memory_efficient_processing() -> Result<(), Box<dyn std::error::E
     let in_memory_mem = get_memory_usage() - start_mem;
 
     println!("  Time: {:.2}s", in_memory_time.as_secs_f64());
-    println!("  Memory usage: ~{:.1} MB", in_memory_mem);
+    println!("  Memory usage: ~{in_memory_mem:.1} MB");
     println!("  Train samples: {}", train.n_samples());
     println!("  Test samples: {}", test.n_samples());
 
@@ -198,10 +197,10 @@ fn demonstrate_memory_efficient_processing() -> Result<(), Box<dyn std::error::E
     let stream_mem = get_memory_usage() - stream_start_mem;
 
     println!("  Time: {:.2}s", stream_time.as_secs_f64());
-    println!("  Memory usage: ~{:.1} MB", stream_mem);
-    println!("  Train samples: {}", train_samples);
-    println!("  Test samples: {}", test_samples);
-    println!("  Total processed: {}", total_processed);
+    println!("  Memory usage: ~{stream_mem:.1} MB");
+    println!("  Train samples: {train_samples}");
+    println!("  Test samples: {test_samples}");
+    println!("  Total processed: {total_processed}");
 
     // Comparison
     println!("\n3. Comparison:");
@@ -277,7 +276,7 @@ fn demonstrate_stream_transformations() -> Result<(), Box<dyn std::error::Error>
     }
 
     println!("\nTransformation Summary:");
-    println!("  Chunks processed: {}", transformed_chunks);
+    println!("  Chunks processed: {transformed_chunks}");
     println!("  Each chunk was transformed independently");
     println!("  Memory-efficient: only one chunk in memory at a time");
 
@@ -345,7 +344,7 @@ fn demonstrate_parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
 
         // Process chunk
         let stats = compute_stats(chunk).map_err(|e| -> Box<dyn std::error::Error> {
-            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e))
+            Box::new(std::io::Error::other(e))
         })?;
         let chunk_time = chunk_start.elapsed();
 
@@ -379,7 +378,7 @@ fn demonstrate_parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
         .map(|stats| stats.get("n_samples").unwrap_or(&0.0))
         .sum();
 
-    println!("  Total samples processed: {}", total_samples);
+    println!("  Total samples processed: {total_samples}");
     println!(
         "  Throughput: {:.1} samples/s",
         total_samples / total_time.as_secs_f64()
@@ -401,7 +400,7 @@ fn demonstrate_performance_comparison() -> Result<(), Box<dyn std::error::Error>
     println!();
 
     for &dataset_size in &dataset_sizes {
-        println!("Dataset size: {} samples", dataset_size);
+        println!("Dataset size: {dataset_size} samples");
 
         for &chunk_size in &chunk_sizes {
             let config = StreamConfig {
@@ -506,8 +505,7 @@ fn simulate_training_scenario() -> Result<(), Box<dyn std::error::Error>> {
 
         if total_batches % 3 == 0 {
             println!(
-                "    Processed {} batches ({} samples)",
-                total_batches, total_samples
+                "    Processed {total_batches} batches ({total_samples} samples)"
             );
         }
 
@@ -566,8 +564,7 @@ fn simulate_preprocessing_pipeline() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!(
-        "  ✅ Preprocessing pipeline: {} chunks processed",
-        processed_chunks
+        "  ✅ Preprocessing pipeline: {processed_chunks} chunks processed"
     );
 
     Ok(())

@@ -48,7 +48,7 @@ fn example_out_of_core_processing() -> Result<(), Box<dyn std::error::Error>> {
     println!("Created sample CSV with 10,000 rows and 50 columns");
 
     // Create out-of-core normalizer
-    let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::ZScore, 0);
+    let mut normalizer = OutOfCoreNormalizer::new(NormalizationMethod::ZScore);
 
     // Fit on chunks
     println!("Fitting normalizer on data chunks...");
@@ -58,7 +58,7 @@ fn example_out_of_core_processing() -> Result<(), Box<dyn std::error::Error>> {
     // Transform data in chunks
     println!("Transforming data in chunks...");
     let chunks = csv_chunks(csv_path, 1000, false)?;
-    let mut writer = normalizer.transform_chunks(chunks)?;
+    let writer = normalizer.transform_chunks(chunks)?;
 
     let output_path = writer.finalize()?;
     println!("Transformed data saved to: {}", output_path);

@@ -24,6 +24,7 @@ use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::PlatformCapabilities;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
+use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Comprehensive validation result against SciPy

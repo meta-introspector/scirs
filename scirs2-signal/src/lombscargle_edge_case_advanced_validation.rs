@@ -11,7 +11,9 @@
 
 use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
+use ndarray::Array1;
 use num_traits::Float;
+use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Advanced edge case validation result

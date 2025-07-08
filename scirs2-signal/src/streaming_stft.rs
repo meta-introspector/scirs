@@ -51,6 +51,7 @@ use crate::error::{SignalError, SignalResult};
 use crate::window::get_window;
 use num_complex::Complex64;
 use std::collections::VecDeque;
+use std::f64::consts::PI;
 
 /// Configuration for streaming STFT
 #[derive(Debug, Clone)]

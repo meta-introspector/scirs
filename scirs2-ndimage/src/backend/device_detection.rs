@@ -517,7 +517,7 @@ fn estimate_opencl_capabilities(name: &str) -> (usize, usize, usize) {
         } else if name_lower.contains("rx 5") {
             (8_589_934_592, 64, 1_800_000) // 8GB, 64 CUs, 1.8GHz
         } else {
-            (4_294_967_296, 36, 1500_000) // 4GB, 36 CUs, 1.5GHz
+            (4_294_967_296, 36, 1_500_000) // 4GB, 36 CUs, 1.5GHz
         }
     } else if name_lower.contains("nvidia")
         || name_lower.contains("geforce")
@@ -525,13 +525,13 @@ fn estimate_opencl_capabilities(name: &str) -> (usize, usize, usize) {
     {
         // NVIDIA cards via OpenCL
         if name_lower.contains("rtx") {
-            (12_884_901_888, 84, 1700_000) // 12GB, 84 SMs, 1.7GHz
+            (12_884_901_888, 84, 1_700_000) // 12GB, 84 SMs, 1.7GHz
         } else {
-            (8_589_934_592, 56, 1500_000) // 8GB, 56 SMs, 1.5GHz
+            (8_589_934_592, 56, 1_500_000) // 8GB, 56 SMs, 1.5GHz
         }
     } else {
         // Generic/unknown device
-        (2_147_483_648, 16, 1000_000) // 2GB, 16 units, 1GHz
+        (2_147_483_648, 16, 1_000_000) // 2GB, 16 units, 1GHz
     }
 }
 
@@ -617,7 +617,7 @@ fn detect_macos_integrated_gpu() -> NdimageResult<DeviceCapability> {
         capability.total_memory = 1_073_741_824; // 1GB shared memory estimate
         capability.available_memory = 805_306_368; // 75% available
         capability.multiprocessor_count = Some(16); // Estimate for Intel integrated
-        capability.clock_rate = Some(1000_000); // 1GHz estimate
+        capability.clock_rate = Some(1_000_000); // 1GHz estimate
         capability.max_threads_per_block = Some(1024);
         capability.max_block_dims = Some([1024, 1024, 64]);
         capability.shared_memory_per_block = Some(32768); // 32KB estimate
@@ -687,7 +687,7 @@ fn detect_macos_discrete_gpus() -> NdimageResult<Vec<DeviceCapability>> {
             capability.total_memory = 4_294_967_296; // 4GB fallback
             capability.available_memory = 3_758_096_384; // 87% available
             capability.multiprocessor_count = Some(32);
-            capability.clock_rate = Some(1500_000); // 1.5GHz fallback
+            capability.clock_rate = Some(1_500_000); // 1.5GHz fallback
         }
 
         capability.max_threads_per_block = Some(1024);

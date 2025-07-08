@@ -871,7 +871,7 @@ pub mod checkpointing {
                 let mut weight_decay = None;
                 let mut momentum = None;
                 let mut custom_params = HashMap::new();
-                let mut custom_params_count = 0;
+                let mut _custom_params_count = 0;
 
                 while let Some(Ok(line)) = lines.next() {
                     if line.starts_with("learning_rate=") {
@@ -896,7 +896,7 @@ pub mod checkpointing {
                             })?);
                         }
                     } else if line.starts_with("custom_params_count=") {
-                        custom_params_count = line
+                        _custom_params_count = line
                             .trim_start_matches("custom_params_count=")
                             .parse()
                             .map_err(|_| {
@@ -982,9 +982,10 @@ pub mod checkpointing {
                         .collect::<Result<Vec<_>>>()?;
 
                     // Create array from shape and data with dynamic dimensions
-                    let array: Array<A, ndarray::IxDyn> = Array::from_shape_vec(shape, data).map_err(|e| {
-                        OptimError::InvalidConfig(format!("Failed to create array: {e}"))
-                    })?;
+                    let array: Array<A, ndarray::IxDyn> = Array::from_shape_vec(shape, data)
+                        .map_err(|e| {
+                            OptimError::InvalidConfig(format!("Failed to create array: {e}"))
+                        })?;
                     params.push(array);
                 }
 
@@ -1070,7 +1071,7 @@ pub mod checkpointing {
                             .collect::<Result<Vec<_>>>()?;
 
                         // Create array with dynamic dimensions
-                        let array: Array<A, ndarray::IxDyn> = Array::from_shape_vec(shape, data).map_err(|e| {
+                        let array = Array::from_shape_vec(shape, data).map_err(|e| {
                             OptimError::InvalidConfig(format!("Failed to create state array: {e}"))
                         })?;
                         state_arrays.push(array);
@@ -1093,16 +1094,20 @@ pub mod checkpointing {
             metadata.timestamp = timestamp;
             metadata.custom = custom_metadata;
 
-            // Create the checkpoint
-            let checkpoint = OptimizerCheckpoint {
+            // Create the checkpoint with dynamic dimensions
+            let _dyn_checkpoint = OptimizerCheckpoint::<A, ndarray::IxDyn> {
                 step,
                 groups,
                 global_state,
                 metadata,
             };
 
-            // Restore the checkpoint
-            self.restore_checkpoint(&checkpoint)
+            // For now, we'll need to implement conversion from IxDyn to D
+            // This is a limitation of the current design
+            // TODO: Implement proper dimension conversion
+            Err(OptimError::InvalidConfig(
+                "Checkpoint loading with dimension conversion not yet implemented".to_string(),
+            ))
         }
     }
 

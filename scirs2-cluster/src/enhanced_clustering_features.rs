@@ -222,8 +222,8 @@ impl TransformerClusterEmbedder {
 
     /// Embed features using transformer architecture
     pub fn embed_features(&mut self, data: &ArrayView2<f64>) -> Result<Array2<f64>> {
-        let (n_samples, n_features) = data.dim();
-        let embed_dim = self.embedding_dim;
+        let (_n_samples, _n_features) = data.dim();
+        let _embed_dim = self.embedding_dim;
 
         // Input projection to embedding dimension
         let mut embeddings = self.project_to_embedding_space(data)?;
@@ -334,7 +334,7 @@ impl TransformerClusterEmbedder {
     fn single_head_attention(
         &self,
         embeddings: &Array2<f64>,
-        layer_idx: usize,
+        _layer_idx: usize,
         head: usize,
         head_dim: usize,
     ) -> Result<Array2<f64>> {
@@ -550,7 +550,7 @@ impl GraphNeuralNetworkProcessor {
         let graph = self.build_knn_graph(data, 5)?;
 
         // Apply graph convolutions
-        let graph_embeddings = self.apply_graph_convolutions(&graph, embeddings)?;
+        let _graph_embeddings = self.apply_graph_convolutions(&graph, embeddings)?;
 
         // Extract structural insights
         Ok(GraphStructureInsights {
@@ -946,7 +946,7 @@ impl DeepEnsembleCoordinator {
         &mut self,
         data: &ArrayView2<f64>,
         embeddings: &Array2<f64>,
-        base_result: &AdvancedClusteringResult,
+        _base_result: &AdvancedClusteringResult,
     ) -> Result<EnsembleConsensus> {
         // Create ensemble predictions
         let mut ensemble_predictions = Vec::new();
@@ -1003,7 +1003,7 @@ impl DeepEnsembleCoordinator {
     fn generate_ensemble_prediction(
         &self,
         data: &ArrayView2<f64>,
-        embeddings: &Array2<f64>,
+        _embeddings: &Array2<f64>,
         seed: usize,
     ) -> Result<Array1<usize>> {
         let n_samples = data.nrows();

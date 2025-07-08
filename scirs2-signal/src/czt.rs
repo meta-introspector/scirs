@@ -10,6 +10,7 @@
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Calculate the points at which the chirp z-transform is computed

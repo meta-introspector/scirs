@@ -310,7 +310,7 @@ impl GeoTiff {
         // Simplified implementation
         let data = vec![T::zero(); (width * height) as usize];
         Array2::from_shape_vec((height as usize, width as usize), data)
-            .map_err(|e| IoError::ParseError(format!("Failed to create array: {}", e)))
+            .map_err(|e| IoError::ParseError(format!("Failed to create array: {e}")))
     }
 
     /// Get metadata
@@ -589,9 +589,9 @@ impl Shapefile {
             .ok_or_else(|| IoError::FormatError("Invalid directory path".to_string()))?;
 
         // Check for required shapefile components
-        let shp_path = dir.join(format!("{}.shp", stem));
-        let shx_path = dir.join(format!("{}.shx", stem));
-        let dbf_path = dir.join(format!("{}.dbf", stem));
+        let shp_path = dir.join(format!("{stem}.shp"));
+        let shx_path = dir.join(format!("{stem}.shx"));
+        let dbf_path = dir.join(format!("{stem}.dbf"));
 
         // Validate that required files exist
         if !shp_path.exists() {
@@ -722,7 +722,7 @@ impl GeoJson {
     /// Write GeoJSON to file
     pub fn write<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let _file = File::create(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to create file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create file: {e}")))?;
 
         // Simplified - would use serde_json to serialize
         Ok(())
@@ -842,7 +842,7 @@ impl KMLDocument {
         use std::io::Write;
 
         let mut file = File::create(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to create KML file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to create KML file: {e}")))?;
 
         // Write KML header
         writeln!(file, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
@@ -887,7 +887,7 @@ impl KMLDocument {
 
         let indent_str = "  ".repeat(indent);
 
-        writeln!(file, "{}  <Placemark>", indent_str)
+        writeln!(file, "{indent_str}  <Placemark>")
             .map_err(|e| IoError::FileError(e.to_string()))?;
 
         if let Some(name) = &feature.name {
@@ -908,7 +908,7 @@ impl KMLDocument {
         // Write geometry
         self.write_geometry(file, &feature.geometry, indent + 2)?;
 
-        writeln!(file, "{}  </Placemark>", indent_str)
+        writeln!(file, "{indent_str}  </Placemark>")
             .map_err(|e| IoError::FileError(e.to_string()))?;
 
         Ok(())
@@ -919,8 +919,7 @@ impl KMLDocument {
 
         let indent_str = "  ".repeat(indent);
 
-        writeln!(file, "{}  <Folder>", indent_str)
-            .map_err(|e| IoError::FileError(e.to_string()))?;
+        writeln!(file, "{indent_str}  <Folder>").map_err(|e| IoError::FileError(e.to_string()))?;
 
         writeln!(
             file,
@@ -950,8 +949,7 @@ impl KMLDocument {
             self.write_folder(file, subfolder, indent + 2)?;
         }
 
-        writeln!(file, "{}  </Folder>", indent_str)
-            .map_err(|e| IoError::FileError(e.to_string()))?;
+        writeln!(file, "{indent_str}  </Folder>").map_err(|e| IoError::FileError(e.to_string()))?;
 
         Ok(())
     }
@@ -963,56 +961,52 @@ impl KMLDocument {
 
         match geometry {
             Geometry::Point { x, y } => {
-                writeln!(file, "{}  <Point>", indent_str)
+                writeln!(file, "{indent_str}  <Point>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
-                writeln!(
-                    file,
-                    "{}    <coordinates>{},{}</coordinates>",
-                    indent_str, x, y
-                )
-                .map_err(|e| IoError::FileError(e.to_string()))?;
-                writeln!(file, "{}  </Point>", indent_str)
+                writeln!(file, "{indent_str}    <coordinates>{x},{y}</coordinates>")
+                    .map_err(|e| IoError::FileError(e.to_string()))?;
+                writeln!(file, "{indent_str}  </Point>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
             }
             Geometry::LineString { points } => {
-                writeln!(file, "{}  <LineString>", indent_str)
+                writeln!(file, "{indent_str}  <LineString>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
-                writeln!(file, "{}    <coordinates>", indent_str)
+                writeln!(file, "{indent_str}    <coordinates>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
                 for (x, y) in points {
-                    writeln!(file, "{}      {},{}", indent_str, x, y)
+                    writeln!(file, "{indent_str}      {x},{y}")
                         .map_err(|e| IoError::FileError(e.to_string()))?;
                 }
-                writeln!(file, "{}    </coordinates>", indent_str)
+                writeln!(file, "{indent_str}    </coordinates>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
-                writeln!(file, "{}  </LineString>", indent_str)
+                writeln!(file, "{indent_str}  </LineString>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
             }
             Geometry::Polygon { exterior, holes: _ } => {
-                writeln!(file, "{}  <Polygon>", indent_str)
+                writeln!(file, "{indent_str}  <Polygon>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
-                writeln!(file, "{}    <outerBoundaryIs>", indent_str)
+                writeln!(file, "{indent_str}    <outerBoundaryIs>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
-                writeln!(file, "{}      <LinearRing>", indent_str)
+                writeln!(file, "{indent_str}      <LinearRing>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
-                writeln!(file, "{}        <coordinates>", indent_str)
+                writeln!(file, "{indent_str}        <coordinates>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
                 for (x, y) in exterior {
-                    writeln!(file, "{}          {},{}", indent_str, x, y)
+                    writeln!(file, "{indent_str}          {x},{y}")
                         .map_err(|e| IoError::FileError(e.to_string()))?;
                 }
-                writeln!(file, "{}        </coordinates>", indent_str)
+                writeln!(file, "{indent_str}        </coordinates>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
-                writeln!(file, "{}      </LinearRing>", indent_str)
+                writeln!(file, "{indent_str}      </LinearRing>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
-                writeln!(file, "{}    </outerBoundaryIs>", indent_str)
+                writeln!(file, "{indent_str}    </outerBoundaryIs>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
-                writeln!(file, "{}  </Polygon>", indent_str)
+                writeln!(file, "{indent_str}  </Polygon>")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
             }
             _ => {
                 // Simplified handling for other geometry types
-                writeln!(file, "{}  <!-- Unsupported geometry type -->", indent_str)
+                writeln!(file, "{indent_str}  <!-- Unsupported geometry type -->")
                     .map_err(|e| IoError::FileError(e.to_string()))?;
             }
         }
@@ -1024,7 +1018,7 @@ impl KMLDocument {
     pub fn read_kml<P: AsRef<Path>>(path: P) -> Result<Self> {
         // Simplified KML reading - in a real implementation, would use proper XML parser
         let _content = std::fs::read_to_string(path.as_ref())
-            .map_err(|e| IoError::FileError(format!("Failed to read KML file: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to read KML file: {e}")))?;
 
         // For now, return a basic document structure
         // In a real implementation, would parse the XML content

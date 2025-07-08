@@ -345,7 +345,8 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
             for i in (k + 1)..n {
                 let factor = aug[[i, k]] / aug[[k, k]];
                 for j in k..=n {
-                    aug[[i, j]] -= factor * aug[[k, j]];
+                    let temp = aug[[k, j]];
+                    aug[[i, j]] -= factor * temp;
                 }
             }
         }
@@ -355,7 +356,8 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand> FunctionalDataInterpo
         for i in (0..n).rev() {
             x[i] = aug[[i, n]];
             for j in (i + 1)..n {
-                x[i] -= aug[[i, j]] * x[j];
+                let temp = x[j];
+                x[i] -= aug[[i, j]] * temp;
             }
             x[i] /= aug[[i, i]];
         }
@@ -616,7 +618,8 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
         for i in 0..n {
             y[i] = b[i];
             for j in 0..i {
-                y[i] -= l[[i, j]] * y[j];
+                let temp = y[j];
+                y[i] -= l[[i, j]] * temp;
             }
             y[i] /= l[[i, i]];
         }
@@ -626,7 +629,8 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static> MultiOutput
         for i in (0..n).rev() {
             x[i] = y[i];
             for j in (i + 1)..n {
-                x[i] -= l[[j, i]] * x[j];
+                let temp = x[j];
+                x[i] -= l[[j, i]] * temp;
             }
             x[i] /= l[[i, i]];
         }
@@ -1044,7 +1048,8 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
             for i in (k + 1)..n {
                 let factor = aug[[i, k]] / aug[[k, k]];
                 for j in k..=n {
-                    aug[[i, j]] -= factor * aug[[k, j]];
+                    let temp = aug[[k, j]];
+                    aug[[i, j]] -= factor * temp;
                 }
             }
         }
@@ -1054,7 +1059,8 @@ impl<T: crate::traits::InterpolationFloat + ScalarOperand + 'static>
         for i in (0..n).rev() {
             x[i] = aug[[i, n]];
             for j in (i + 1)..n {
-                x[i] -= aug[[i, j]] * x[j];
+                let temp = x[j];
+                x[i] -= aug[[i, j]] * temp;
             }
             x[i] /= aug[[i, i]];
         }

@@ -137,7 +137,7 @@ pub struct CachedPlugin {
 }
 
 /// Cache statistics
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct CacheStats {
     /// Total cache hits
     pub hits: usize,
@@ -529,13 +529,13 @@ impl PluginRegistry {
         }
 
         if let Some(ref min) = requirement.min_version {
-            if version < min {
+            if version < min.as_str() {
                 return false;
             }
         }
 
         if let Some(ref max) = requirement.max_version {
-            if version >= max {
+            if version >= max.as_str() {
                 return false;
             }
         }

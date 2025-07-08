@@ -4,6 +4,7 @@
 //! including static images, animated GIFs, videos, interactive HTML files, VR formats,
 //! and various data formats for integration with other visualization tools.
 
+use chrono::{DateTime, Utc};
 use ndarray::{Array1, Array2};
 use std::collections::HashMap;
 use std::path::Path;

@@ -2365,7 +2365,7 @@ pub mod compatibility {
         let mut icoord = Vec::new();
         let mut dcoord = Vec::new();
 
-        for (i, row) in linkage_matrix.rows().into_iter().enumerate() {
+        for (_i, row) in linkage_matrix.rows().into_iter().enumerate() {
             let left = row[0] as usize;
             let right = row[1] as usize;
             let distance = row[2];
@@ -2381,7 +2381,7 @@ pub mod compatibility {
             } else {
                 (right - n_obs) as f64 * 10.0 + 5.0
             };
-            let x_center = (x_left + x_right) / 2.0;
+            let _x_center = (x_left + x_right) / 2.0;
 
             icoord.push(vec![x_left, x_left, x_right, x_right]);
             dcoord.push(vec![0.0, distance, distance, 0.0]);
@@ -2888,7 +2888,7 @@ pub mod persistence {
             &self,
             input_dir: &Path,
             from_format: ExportFormat,
-            to_format: ExportFormat,
+            _to_format: ExportFormat,
         ) -> Result<usize> {
             let mut converted_count = 0;
 
@@ -2904,7 +2904,7 @@ pub mod persistence {
                     if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
                         if extension == format_extension(from_format) {
                             // Read and convert
-                            let content = std::fs::read(&path).map_err(|e| {
+                            let _content = std::fs::read(&path).map_err(|e| {
                                 ClusteringError::InvalidInput(format!("Failed to read file: {}", e))
                             })?;
 

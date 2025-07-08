@@ -204,7 +204,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
 
     /// Setup the cost and mixer Hamiltonians for the clustering problem
     fn setup_hamiltonian(&mut self, data: ArrayView2<F>) -> Result<()> {
-        let n_samples = data.nrows();
+        let _n_samples = data.nrows();
         let n_vars = self.n_qubits;
 
         // Initialize Hamiltonians
@@ -600,7 +600,7 @@ impl<F: Float + FromPrimitive + Debug> QAOAClustering<F> {
     }
 
     /// Predict cluster assignments for new data
-    pub fn predict(&self, data: ArrayView2<F>) -> Result<Array1<usize>> {
+    pub fn predict(&self, _data: ArrayView2<F>) -> Result<Array1<usize>> {
         if !self.fitted {
             return Err(ClusteringError::InvalidInput(
                 "Model must be fitted before prediction".to_string(),
@@ -896,8 +896,8 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
         state: &mut Array1<f64>,
         qubit: usize,
         rx: f64,
-        ry: f64,
-        rz: f64,
+        _ry: f64,
+        _rz: f64,
     ) -> Result<()> {
         // Simplified rotation application (would be more complex in practice)
         let n_states = state.len();
@@ -994,7 +994,7 @@ impl<F: Float + FromPrimitive + Debug> VQEClustering<F> {
     }
 
     /// Adam optimizer update (simplified)
-    fn adam_update(&mut self, iteration: usize) -> Result<()> {
+    fn adam_update(&mut self, _iteration: usize) -> Result<()> {
         // Simplified Adam - would need momentum tracking in practice
         self.gradient_descent_update()
     }

@@ -21,7 +21,9 @@ fn bench_memory_usage(c: &mut Criterion) {
         // Standard Graph representation
         group.bench_with_input(BenchmarkId::new("standard_graph", size), &size, |b, &n| {
             b.iter(|| {
-                let graph = generators::erdos_renyi_graph(n, edge_probability, None).unwrap();
+                let graph =
+                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::thread_rng())
+                        .unwrap();
                 let stats = MemoryProfiler::profile_graph(&graph);
                 black_box(stats.total_bytes)
             });
@@ -30,9 +32,17 @@ fn bench_memory_usage(c: &mut Criterion) {
         // CSR representation
         group.bench_with_input(BenchmarkId::new("csr_graph", size), &size, |b, &n| {
             b.iter(|| {
-                let graph = generators::erdos_renyi_graph(n, edge_probability, None).unwrap();
+                let graph =
+                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::thread_rng())
+                        .unwrap();
                 let edges: Vec<_> = (0..graph.node_count())
-                    .flat_map(|u| graph.neighbors(u).map(move |v| (u, v, 1.0)))
+                    .flat_map(|u| {
+                        graph
+                            .neighbors(&u)
+                            .unwrap()
+                            .into_iter()
+                            .map(move |v| (u, v, 1.0))
+                    })
                     .collect();
                 let csr = CSRGraph::from_edges(n, edges).unwrap();
                 black_box(csr.memory_usage())
@@ -43,10 +53,12 @@ fn bench_memory_usage(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("bitpacked_graph", size), &size, |b, &n| {
             b.iter(|| {
                 let mut bitpacked = BitPackedGraph::new(n, false);
-                let graph = generators::erdos_renyi_graph(n, edge_probability, None).unwrap();
+                let graph =
+                    generators::erdos_renyi_graph(n, edge_probability, &mut rand::thread_rng())
+                        .unwrap();
 
                 for u in 0..graph.node_count() {
-                    for v in graph.neighbors(u) {
+                    for v in graph.neighbors(&u).unwrap() {
                         if u <= v {
                             // Avoid duplicates for undirected
                             bitpacked.add_edge(u, v).unwrap();
@@ -74,7 +86,7 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
 
     // Create different representations
     let edges: Vec<_> = (0..graph.node_count())
-        .flat_map(|u| graph.neighbors(u).map(move |v| (u, v, 1.0)))
+        .flat_map(|u| graph.neighbors(&u).unwrap().map(move |v| (u, v, 1.0)))
         .collect();
 
     let csr = CSRGraph::from_edges(n, edges.clone()).unwrap();
@@ -86,7 +98,9 @@ fn bench_neighbor_iteration(c: &mut Criterion) {
         }
     }
 
-    let adj_lists: Vec<Vec<_>> = (0..n).map(|u| graph.neighbors(u).collect()).collect();
+    let adj_lists: Vec<Vec<_>> = (0..n)
+        .map(|u| graph.neighbors(&u).unwrap().collect())
+        .collect();
     let compressed = CompressedAdjacencyList::from_adjacency(adj_lists);
 
     // Benchmark standard graph
@@ -153,12 +167,13 @@ fn bench_edge_queries(c: &mut Criterion) {
     let edge_probability = 0.02;
 
     // Generate test graph
-    let graph = generators::erdos_renyi_graph(n, edge_probability, None).unwrap();
+    let graph =
+        generators::erdos_renyi_graph(n, edge_probability, &mut rand::thread_rng()).unwrap();
 
     // Create bit-packed representation
     let mut bitpacked = BitPackedGraph::new(n, false);
     for u in 0..graph.node_count() {
-        for v in graph.neighbors(u) {
+        for v in graph.neighbors(&u).unwrap() {
             if u <= v {
                 bitpacked.add_edge(u, v).unwrap();
             }
@@ -167,9 +182,9 @@ fn bench_edge_queries(c: &mut Criterion) {
 
     // Generate random query pairs
     use rand::prelude::*;
-    let mut rng = rng();
+    let mut rng = rand::thread_rng();
     let query_pairs: Vec<(usize, usize)> = (0..1000)
-        .map(|_| (rng.random_range(0..n), rng.random_range(0..n)))
+        .map(|_| (rng.gen_range(0..n), rng.gen_range(0..n)))
         .collect();
 
     // Benchmark standard graph
@@ -209,11 +224,13 @@ fn bench_construction_time(c: &mut Criterion) {
     let sizes = vec![1_000, 5_000, 10_000];
 
     for size in sizes {
-        let edges: Vec<(usize, usize, f64)> = generators::barabasi_albert_graph(size, 3, None)
-            .unwrap()
-            .edges()
-            .map(|&(u, v, w)| (u, v, w))
-            .collect();
+        let edges: Vec<(usize, usize, f64)> =
+            generators::barabasi_albert_graph(size, 3, &mut rand::thread_rng())
+                .unwrap()
+                .edges()
+                .into_iter()
+                .map(|edge| (edge.source, edge.target, edge.weight))
+                .collect();
 
         // Standard graph construction
         group.bench_with_input(
@@ -234,21 +251,30 @@ fn bench_construction_time(c: &mut Criterion) {
         );
 
         // CSR construction
-        group.bench_with_input(BenchmarkId::new("csr_graph", size), &edges, |b, edges| {
-            b.iter(|| {
-                let csr = CSRGraph::from_edges(size, edges.clone()).unwrap();
-                black_box(csr)
-            });
-        });
+        group.bench_with_input(
+            BenchmarkId::new("csr_graph", size),
+            &edges,
+            |b, edges: &Vec<(usize, usize, f64)>| {
+                b.iter(|| {
+                    let csr = CSRGraph::from_edges(size, edges.clone()).unwrap();
+                    black_box(csr)
+                });
+            },
+        );
 
         // Hybrid auto-selection
-        group.bench_with_input(BenchmarkId::new("hybrid_auto", size), &edges, |b, edges| {
-            b.iter(|| {
-                let edges_opt: Vec<_> = edges.iter().map(|&(u, v, w)| (u, v, Some(w))).collect();
-                let hybrid = HybridGraph::auto_select(size, edges_opt, false).unwrap();
-                black_box(hybrid)
-            });
-        });
+        group.bench_with_input(
+            BenchmarkId::new("hybrid_auto", size),
+            &edges,
+            |b, edges: &Vec<(usize, usize, f64)>| {
+                b.iter(|| {
+                    let edges_opt: Vec<_> =
+                        edges.iter().map(|&(u, v, w)| (u, v, Some(w))).collect();
+                    let hybrid = HybridGraph::auto_select(size, edges_opt, false).unwrap();
+                    black_box(hybrid)
+                });
+            },
+        );
     }
 
     group.finish();
@@ -266,7 +292,8 @@ fn bench_fragmentation_analysis(c: &mut Criterion) {
             BenchmarkId::new("analyze_fragmentation", size),
             &size,
             |b, &n| {
-                let graph = generators::barabasi_albert_graph(n, 5, None).unwrap();
+                let graph =
+                    generators::barabasi_albert_graph(n, 5, &mut rand::thread_rng()).unwrap();
                 b.iter(|| {
                     let report = MemoryProfiler::analyze_fragmentation(&graph);
                     black_box(report.fragmentation_ratio)

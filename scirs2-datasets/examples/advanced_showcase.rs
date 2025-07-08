@@ -77,7 +77,7 @@ fn demonstrate_advanced_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::
     // Quick quality assessment
     println!("📈 Running quick quality assessment...");
     let quick_quality = quick_quality_assessment(dataset)?;
-    println!("   Quality Score: {:.3}", quick_quality);
+    println!("   Quality Score: {quick_quality:.3}");
 
     // Comprehensive advanced-analysis
     println!("🔬 Running comprehensive advanced-analysis...");
@@ -91,7 +91,7 @@ fn demonstrate_advanced_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::
     let metrics = analyzer.analyze_dataset_quality(dataset)?;
     let analysis_time = start_time.elapsed();
 
-    println!("   Analysis completed in: {:?}", analysis_time);
+    println!("   Analysis completed in: {analysis_time:?}");
     println!("   Complexity Score: {:.3}", metrics.complexity_score);
     println!("   Entropy: {:.3}", metrics.entropy);
     println!("   Outlier Score: {:.3}", metrics.outlier_score);
@@ -121,7 +121,7 @@ fn demonstrate_advanced_analytics(dataset: &Dataset) -> Result<(), Box<dyn std::
             .feature_importance
             .iter()
             .take(3)
-            .map(|&x| format!("{:.3}", x))
+            .map(|&x| format!("{x:.3}"))
             .collect::<Vec<_>>()
     );
 
@@ -228,7 +228,7 @@ fn demonstrate_adaptive_streaming(dataset: &Dataset) -> Result<(), Box<dyn std::
             data: chunk_data,
             timestamp: Instant::now(),
             metadata: ChunkMetadata {
-                source_id: format!("demo_source_{}", i),
+                source_id: format!("demo_source_{i}"),
                 sequence_number: i as u64,
                 characteristics: DataCharacteristics {
                     moments: StatisticalMoments {
@@ -265,8 +265,8 @@ fn demonstrate_adaptive_streaming(dataset: &Dataset) -> Result<(), Box<dyn std::
 
     let streaming_time = start_time.elapsed();
 
-    println!("   Streaming completed in: {:?}", streaming_time);
-    println!("   Total datasets processed: {}", total_processed);
+    println!("   Streaming completed in: {streaming_time:?}");
+    println!("   Total datasets processed: {total_processed}");
 
     // Get performance metrics
     println!("📈 Getting performance metrics...");

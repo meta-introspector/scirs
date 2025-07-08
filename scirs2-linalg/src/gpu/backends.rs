@@ -457,7 +457,7 @@ pub mod cuda {
     }
 
     impl GpuContextAlloc for CudaContext {
-        fn allocate_buffer<T: Clone + Send + Sync + Copy + 'static>(
+        fn allocate_buffer<T: Clone + Send + Sync + Copy + 'static + std::fmt::Debug>(
             &self,
             size: usize,
         ) -> LinalgResult<Box<dyn GpuBuffer<T>>> {
@@ -467,6 +467,7 @@ pub mod cuda {
     }
 
     /// Advanced CUDA memory pool for efficient allocation
+    #[derive(Debug)]
     struct CudaMemoryPool {
         device_id: i32,
         total_allocated: usize,
@@ -570,7 +571,7 @@ pub mod cuda {
         }
     }
 
-    impl<T: Clone + Send + Sync + Copy> GpuBuffer<T> for CudaBuffer<T> {
+    impl<T: Clone + Send + Sync + Copy + std::fmt::Debug> GpuBuffer<T> for CudaBuffer<T> {
         fn len(&self) -> usize {
             self.size
         }
@@ -862,6 +863,7 @@ pub mod opencl {
         platform_id: ClPlatformId,
     }
 
+    #[derive(Debug)]
     struct OpenClContextData {
         context: ClContext,
         device_id: ClDeviceId,
@@ -1162,12 +1164,12 @@ pub mod opencl {
         /// Compile and cache a kernel
         pub fn compile_kernel(
             &mut self,
-            kernel_name: &str,
-            source: &str,
+            _kernel_name: &str,
+            _source: &str,
         ) -> LinalgResult<ClKernel> {
             // In a real implementation, this would compile OpenCL kernel source
             // For now, return a null pointer as mock
-            Ok(ptr::null_mut())
+            Ok(SafeClPtr(ptr::null_mut()))
         }
 
         /// Get performance statistics
@@ -1231,7 +1233,7 @@ pub mod opencl {
     }
 
     impl GpuContextAlloc for OpenClContext {
-        fn allocate_buffer<T: Clone + Send + Sync + Copy + 'static>(
+        fn allocate_buffer<T: Clone + Send + Sync + Copy + 'static + std::fmt::Debug>(
             &self,
             size: usize,
         ) -> LinalgResult<Box<dyn GpuBuffer<T>>> {
@@ -1245,6 +1247,7 @@ pub mod opencl {
     }
 
     /// OpenCL memory pool for efficient buffer management
+    #[derive(Debug)]
     struct OpenClMemoryPool {
         context: ClContext,
         total_allocated: usize,
@@ -1294,6 +1297,7 @@ pub mod opencl {
     }
 
     /// OpenCL buffer implementation
+    #[derive(Debug)]
     struct OpenClBuffer<T> {
         buffer: ClMem,
         size: usize,
@@ -1333,7 +1337,7 @@ pub mod opencl {
         }
     }
 
-    impl<T: Clone + Send + Sync + Copy> GpuBuffer<T> for OpenClBuffer<T> {
+    impl<T: Clone + Send + Sync + Copy + std::fmt::Debug> GpuBuffer<T> for OpenClBuffer<T> {
         fn len(&self) -> usize {
             self.size
         }
@@ -1403,7 +1407,7 @@ pub mod opencl {
 
     impl<T> Drop for OpenClBuffer<T> {
         fn drop(&mut self) {
-            if !self.buffer.is_null() {
+            if !self.buffer.0.is_null() {
                 let _ = cl_release_mem_object(self.buffer);
             }
         }
@@ -1622,7 +1626,7 @@ impl GpuContext for CpuFallbackContext {
 }
 
 impl GpuContextAlloc for CpuFallbackContext {
-    fn allocate_buffer<T: Clone + Send + Sync + Copy + 'static>(
+    fn allocate_buffer<T: Clone + Send + Sync + Copy + 'static + std::fmt::Debug>(
         &self,
         size: usize,
     ) -> LinalgResult<Box<dyn GpuBuffer<T>>> {

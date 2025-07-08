@@ -662,6 +662,31 @@ where
     )
 }
 
+/// Binary erosion for boolean arrays (global function matching SciPy API)
+#[allow(dead_code)]
+pub fn binary_erosion_bool(
+    input: ArrayView2<bool>,
+    structure: Option<ArrayView2<bool>>,
+    iterations: Option<usize>,
+    mask: Option<ArrayView2<bool>>,
+    border_value: Option<bool>,
+    origin: Option<OriginParam>,
+    brute_force: Option<bool>,
+) -> NdimageResult<Array<bool, Ix2>>
+{
+    // Convert boolean array to f64 for compatibility with existing implementation
+    let input_f64 = input.map(|&x| if x { 1.0f64 } else { 0.0f64 });
+    get_scipy_compat().binary_erosion(
+        input_f64.view(),
+        structure,
+        iterations,
+        mask,
+        border_value,
+        origin,
+        brute_force,
+    )
+}
+
 /// Distance transform EDT (global function matching SciPy API)
 #[allow(dead_code)]
 pub fn distance_transform_edt<T>(
@@ -779,7 +804,7 @@ mod tests {
             [true, false, true]
         ];
 
-        let result = binary_erosion(input.view(), None, None, None, None, None, None);
+        let result = binary_erosion_bool(input.view(), None, None, None, None, None, None);
 
         assert!(result.is_ok());
     }

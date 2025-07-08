@@ -13,7 +13,6 @@
 use ndarray::{Array1, Array2, Array3, Array4, Array5, ArrayView2};
 use num_complex::Complex;
 use num_traits::{Float, FromPrimitive, Zero};
-use std::cmp;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::f64::consts::PI;
 use std::sync::{Arc, RwLock};
@@ -4421,7 +4420,7 @@ mod tests {
         let result = fusion_processing(image.view(), &config, None);
 
         assert!(result.is_ok());
-        let (output, state) = result.unwrap();
+        let (output, _state) = result.unwrap();
         assert_eq!(output.dim(), (4, 4));
         assert!(output.iter().all(|&x| x.is_finite()));
     }

@@ -1027,17 +1027,17 @@ pub struct AdvancedNeuromorphicProcessor {
 #[derive(Debug, Clone)]
 pub struct AdvancedNeuromorphicMetrics {
     /// Processing throughput (samples per second)
-    throughput: f64,
+    pub throughput: f64,
     /// Memory efficiency ratio
-    memory_efficiency: f64,
+    pub memory_efficiency: f64,
     /// Network utilization percentage
-    network_utilization: f64,
+    pub network_utilization: f64,
     /// Adaptation success rate
-    adaptation_success_rate: f64,
+    pub adaptation_success_rate: f64,
     /// Energy efficiency score
-    energy_efficiency: f64,
+    pub energy_efficiency: f64,
     /// Real-time constraint satisfaction
-    real_time_satisfaction: f64,
+    pub real_time_satisfaction: f64,
 }
 
 impl AdvancedNeuromorphicProcessor {

@@ -242,7 +242,19 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
 
         let mut result = Array1::zeros(n);
 
-        // Use AVX-512 FMA if available
+        // For small vectors, use simple scalar implementation
+        if n < 32 {
+            Zip::from(&mut result)
+                .and(a)
+                .and(b)
+                .and(c)
+                .for_each(|r, &a_val, &b_val, &c_val| {
+                    *r = a_val + b_val + scale * c_val;
+                });
+            return Ok(result);
+        }
+
+        // Use AVX-512 FMA if available for larger vectors
         if self.simd_capabilities.avx512_support.foundation && self.simd_capabilities.fma_support {
             self.avx512_vector_fma(&mut result, a, b, c, scale)?;
         } else if F::simd_available() {
@@ -302,7 +314,16 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
             ));
         }
 
-        // Use multiple accumulators to reduce dependency chains
+        // For small vectors, use simple scalar implementation
+        if n < 32 {
+            let mut sum = F::zero();
+            for i in 0..n {
+                sum += a[i] * b[i];
+            }
+            return Ok(sum);
+        }
+
+        // Use multiple accumulators to reduce dependency chains for larger vectors
         if self.simd_capabilities.avx512_support.foundation || F::simd_available() {
             self.simd_dot_product_multi_accumulator(a, b)
         } else {
@@ -987,8 +1008,8 @@ impl<F: IntegrateFloat + SimdUnifiedOps> AdvancedSimdAccelerator<F> {
                 self.double_precision_computation(data, operation)
             }
             PrecisionLevel::Mixed => {
-                // Use mixed precision within the same computation
-                self.adaptive_mixed_precision_computation(data, operation)
+                // Use double precision for mixed precision scenarios to avoid recursion
+                self.double_precision_computation(data, operation)
             }
         }
     }

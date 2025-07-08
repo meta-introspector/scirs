@@ -7,8 +7,7 @@
 
 use ndarray::{s, Array, Array1, Array2, Array3, ArrayBase, Data, Dimension};
 use num_traits::Float;
-use rand::{Rng, SeedableRng};
-use scirs2_core::random;
+use scirs2_core::random::{Random, Rng};
 use std::collections::{HashMap, VecDeque};
 
 use super::{LearnedOptimizerConfig, MetaOptimizationStrategy};
@@ -41,7 +40,7 @@ pub struct TransformerOptimizer<T: Float> {
     step_count: usize,
 
     /// Random number generator
-    rng: rand::rngs::SmallRng,
+    rng: Random,
 }
 
 /// Configuration specific to Transformer optimizer
@@ -2646,7 +2645,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
         let metrics = TransformerOptimizerMetrics::new();
 
         // Initialize RNG
-        let rng = rand::rngs::SmallRng::seed_from_u64(42);
+        let rng = Random::default();
 
         Ok(Self {
             config,
@@ -2826,9 +2825,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
             }
             OptimizationStrategy::Stochastic => {
                 // Add controlled randomness
-                let mut rng = random::rng();
+                let mut rng = scirs2_core::random::rng();
                 last_output.mapv(|x| {
-                    let noise = T::from(rng.random_range(-0.1, 0.1)).unwrap();
+                    let noise = T::from((rng.random_f64() - 0.5) * 0.2).unwrap();
                     x + noise
                 })
             }
@@ -3100,7 +3099,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + for<'a> std::it
 
 impl<T: Float + Default + Clone + std::iter::Sum> TransformerNetwork<T> {
     fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
-        let mut rng = random::rng();
+        let mut rng = scirs2_core::random::rng();
 
         // Initialize input embedding
         let input_embedding = InputEmbedding::new(config.model_dim, config.model_dim);
@@ -3813,13 +3812,13 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
             }
             PositionalEncodingType::Learned => {
                 // Initialize learnable position embeddings
-                let mut rng = random::rng();
+                let mut rng = scirs2_core::random::rng();
                 let mut embeddings = Array2::zeros((max_seq_len, model_dim));
 
                 // Xavier initialization
                 let bound = (6.0 / (max_seq_len + model_dim) as f64).sqrt();
                 for elem in embeddings.iter_mut() {
-                    *elem = T::from(rng.random_range(-bound, bound)).unwrap();
+                    *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
                 }
                 position_embeddings = Some(embeddings);
             }
@@ -3921,7 +3920,7 @@ impl<T: Float + Default + Clone> PositionalEncoder<T> {
 impl<T: Float + Default + Clone> StrategyPredictor<T> {
     #[allow(dead_code)]
     fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
-        let mut rng = random::rng();
+        let _rng = scirs2_core::random::rng();
 
         // Initialize strategy prediction network
         let prediction_network = StrategyNetwork::new(config)?;
@@ -4012,7 +4011,7 @@ impl<T: Float + Default + Clone> StrategyPredictor<T> {
         strategy_scores: &Array1<T>,
     ) -> Result<usize> {
         // Apply epsilon-greedy exploration
-        let mut rng = random::rng();
+        let mut rng = scirs2_core::random::rng();
         let epsilon = 0.1; // 10% exploration
 
         if rng.random::<f64>() < epsilon {
@@ -4077,28 +4076,28 @@ impl<T: Float + Default + Clone> StrategyNetwork<T> {
         let input_dim = config.model_dim;
         let hidden_dim = config.model_dim / 2;
         let num_strategies = 7; // Number of optimization strategies
-        
-        let mut rng = random::rng();
+
+        let mut rng = scirs2_core::random::rng();
 
         // Initialize input layer
         let bound_input = (6.0 / (input_dim + hidden_dim) as f64).sqrt();
         let mut input_layer = Array2::zeros((input_dim, hidden_dim));
         for elem in input_layer.iter_mut() {
-            *elem = T::from(rng.random_range(-bound_input, bound_input)).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound_input).unwrap();
         }
 
         // Initialize hidden layers (single hidden layer for simplicity)
         let bound_hidden = (6.0 / (hidden_dim + hidden_dim) as f64).sqrt();
         let mut hidden_layer = Array2::zeros((hidden_dim, hidden_dim));
         for elem in hidden_layer.iter_mut() {
-            *elem = T::from(rng.random_range(-bound_hidden, bound_hidden)).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound_hidden).unwrap();
         }
 
         // Initialize output layer
         let bound_output = (6.0 / (hidden_dim + num_strategies) as f64).sqrt();
         let mut output_layer = Array2::zeros((hidden_dim, num_strategies));
         for elem in output_layer.iter_mut() {
-            *elem = T::from(rng.random_range(-bound_output, bound_output)).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound_output).unwrap();
         }
 
         // Initialize strategy embeddings
@@ -4106,7 +4105,7 @@ impl<T: Float + Default + Clone> StrategyNetwork<T> {
         let mut strategy_embeddings = Array2::zeros((num_strategies, embedding_dim));
         let bound_embed = (6.0 / (num_strategies + embedding_dim) as f64).sqrt();
         for elem in strategy_embeddings.iter_mut() {
-            *elem = T::from(rng.random_range(-bound_embed, bound_embed)).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound_embed).unwrap();
         }
 
         Ok(Self {
@@ -4215,12 +4214,12 @@ pub struct StrategyPerformanceUpdate<T: Float> {
 impl<T: Float + Default + Clone> InputEmbedding<T> {
     fn new(input_dim: usize, model_dim: usize) -> Self {
         let mut weights = Array2::zeros((input_dim, model_dim));
-        let mut rng = random::rng();
+        let mut rng = scirs2_core::random::rng();
 
         // Xavier initialization
         let bound = (6.0 / (input_dim + model_dim) as f64).sqrt();
         for elem in weights.iter_mut() {
-            *elem = T::from(rng.random_range(-bound, bound)).unwrap();
+            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
         }
 
         Self {
@@ -4258,7 +4257,7 @@ impl<T: Float + Default + Clone> InputEmbedding<T> {
 }
 
 impl<T: Float + Default + Clone + std::iter::Sum> TransformerLayer<T> {
-    fn new(config: &TransformerOptimizerConfig, rng: &mut impl Rng) -> Result<Self> {
+    fn new(config: &TransformerOptimizerConfig, _rng: &mut impl Rng) -> Result<Self> {
         let self_attention = MultiHeadAttention::new(config)?;
         let cross_attention = if config.cross_attention {
             Some(MultiHeadAttention::new(config)?)
@@ -4367,8 +4366,8 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
                 "Model dimension must be divisible by number of heads".to_string(),
             ));
         }
-        
-        let mut rng = random::rng();
+
+        let mut rng = scirs2_core::random::rng();
 
         // Initialize projection weights
         let bound = (6.0 / (2 * model_dim) as f64).sqrt();
@@ -4379,16 +4378,16 @@ impl<T: Float + Default + Clone> MultiHeadAttention<T> {
         let mut wo = Array2::zeros((model_dim, model_dim));
 
         for elem in wq.iter_mut() {
-            *elem = T::from(rng.random_range(-bound, bound)).unwrap();
+            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
         }
         for elem in wk.iter_mut() {
-            *elem = T::from(rng.random_range(-bound, bound)).unwrap();
+            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
         }
         for elem in wv.iter_mut() {
-            *elem = T::from(rng.random_range(-bound, bound)).unwrap();
+            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
         }
         for elem in wo.iter_mut() {
-            *elem = T::from(rng.random_range(-bound, bound)).unwrap();
+            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
         }
 
         let relative_bias = if config.relative_position_bias {
@@ -4607,7 +4606,7 @@ impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
     fn new(config: &TransformerOptimizerConfig) -> Result<Self> {
         let model_dim = config.model_dim;
         let ff_dim = config.ff_dim;
-        let mut rng = random::rng();
+        let mut rng = scirs2_core::random::rng();
 
         // Initialize weights with Xavier initialization
         let bound1 = (6.0 / (model_dim + ff_dim) as f64).sqrt();
@@ -4617,10 +4616,10 @@ impl<T: Float + Default + Clone> FeedForwardNetwork<T> {
         let mut linear2 = Array2::zeros((ff_dim, model_dim));
 
         for elem in linear1.iter_mut() {
-            *elem = T::from(rng.random_range(-bound1, bound1)).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound1).unwrap();
         }
         for elem in linear2.iter_mut() {
-            *elem = T::from(rng.random_range(-bound2, bound2)).unwrap();
+            *elem = T::from((rng.random_f64() - 0.5) * 2.0 * bound2).unwrap();
         }
 
         let bias1 = Array1::zeros(ff_dim);
@@ -4776,7 +4775,7 @@ impl<T: Float + Default + Clone> OutputProjectionLayer<T> {
         // Xavier initialization
         let bound = (6.0 / (input_dim + output_dim) as f64).sqrt();
         for elem in weights.iter_mut() {
-            *elem = T::from(rng.random_range(-bound, bound)).unwrap();
+            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
         }
 
         let bias = Array1::zeros(output_dim);
@@ -4855,11 +4854,11 @@ impl<T: Float + Default + Clone> RelativePositionBias<T> {
     fn new(max_distance: usize, num_heads: usize) -> Result<Self> {
         let bias_table_size = 2 * max_distance - 1;
         let mut bias_table = Array2::zeros((bias_table_size, num_heads));
-        let mut rng = random::rng();
+        let mut rng = scirs2_core::random::rng();
 
         let bound = 0.1;
         for elem in bias_table.iter_mut() {
-            *elem = T::from(rng.random_range(-bound, bound)).unwrap();
+            *elem = T::from((rng.random::<f64>() - 0.5) * 2.0 * bound).unwrap();
         }
 
         Ok(Self {

@@ -11,6 +11,7 @@ use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
 use num_traits::{Float, NumCast};
 use rustfft;
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Compute the Hilbert transform of a real-valued signal.

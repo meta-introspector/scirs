@@ -13,6 +13,7 @@ use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use std::f64::consts::PI;
 
 /// Enhanced numerical robustness for system identification
 #[derive(Debug, Clone)]

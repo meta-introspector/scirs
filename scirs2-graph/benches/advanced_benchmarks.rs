@@ -12,19 +12,20 @@ use criterion::{
 use scirs2_graph::advanced::{
     create_advanced_processor, execute_with_advanced, AdvancedConfig, AdvancedProcessor,
 };
-use scirs2_graph::algorithms::community::louvain_communities;
+use scirs2_graph::algorithms::betweenness_centrality;
+use scirs2_graph::algorithms::community::louvain_communities_result;
 use scirs2_graph::algorithms::connectivity::connected_components;
-use scirs2_graph::algorithms::properties::betweenness_centrality;
 use scirs2_graph::algorithms::shortest_path::dijkstra_path;
 use scirs2_graph::base::Graph;
-use scirs2_graph::generators::random_graph;
+use scirs2_graph::generators::{barabasi_albert_graph, erdos_renyi_graph};
 use scirs2_graph::measures::pagerank_centrality;
+use scirs2_graph::pagerank;
 use std::collections::HashMap;
 use std::time::Instant;
 
 /// Benchmark configuration for Advanced tests
 #[derive(Debug, Clone)]
-pub struct advancedBenchmarkConfig {
+pub struct AdvancedBenchmarkConfig {
     /// Graph sizes to test
     pub graph_sizes: Vec<usize>,
     /// Density values for random graphs
@@ -39,7 +40,7 @@ pub struct advancedBenchmarkConfig {
     pub enable_neuromorphic: bool,
 }
 
-impl Default for advancedBenchmarkConfig {
+impl Default for AdvancedBenchmarkConfig {
     fn default() -> Self {
         Self {
             graph_sizes: vec![100, 500, 1000, 5000, 10000],
@@ -110,27 +111,39 @@ impl BenchmarkResults {
 /// Generate test graphs for benchmarking
 #[allow(dead_code)]
 fn generate_test_graph(size: usize, density: f64) -> Graph<i32, f64> {
-    let num_edges = ((size * (size - 1)) as f64 * density / 2.0) as usize;
-    random_graph(size, num_edges, false).unwrap()
+    let mut rng = rand::thread_rng();
+    let graph = erdos_renyi_graph(size, density, &mut rng).unwrap();
+
+    // Convert Graph<usize, f64> to Graph<i32, f64>
+    let mut result = Graph::new();
+    for node in graph.nodes() {
+        result.add_node(node as i32);
+    }
+    for edge in graph.edges() {
+        result
+            .add_edge(edge.source as i32, edge.target as i32, edge.weight)
+            .unwrap();
+    }
+    result
 }
 
 /// Benchmark connected components with and without Advanced
 #[allow(dead_code)]
 fn benchmark_connected_components(c: &mut Criterion) {
-    let config = advancedBenchmarkConfig::default();
+    let config = AdvancedBenchmarkConfig::default();
     let mut group = c.benchmark_group("connected_components");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 
     for &size in &config.graph_sizes {
         for &density in &config.densities {
             let graph = generate_test_graph(size, density);
-            let graph_clone = graph.clone();
+            let graph_clone = generate_test_graph(size, density);
 
             // Benchmark standard algorithm
             group.bench_with_input(
                 BenchmarkId::new("standard", format!("{}_{}", size, density)),
                 &graph,
-                |b, g| b.iter(|| black_box(connected_components(g).unwrap())),
+                |b, g| b.iter(|| black_box(connected_components(g))),
             );
 
             // Benchmark advanced optimized algorithm
@@ -145,7 +158,7 @@ fn benchmark_connected_components(c: &mut Criterion) {
                                 &mut processor,
                                 g,
                                 "connected_components",
-                                |graph| connected_components(graph),
+                                |graph| Ok(connected_components(graph)),
                             )
                             .unwrap(),
                         )
@@ -160,23 +173,21 @@ fn benchmark_connected_components(c: &mut Criterion) {
 /// Benchmark shortest path algorithms with and without advanced
 #[allow(dead_code)]
 fn benchmark_shortest_paths(c: &mut Criterion) {
-    let config = advancedBenchmarkConfig::default();
+    let config = AdvancedBenchmarkConfig::default();
     let mut group = c.benchmark_group("shortest_paths");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 
     for &size in &config.graph_sizes {
         for &density in &config.densities {
             let graph = generate_test_graph(size, density);
-            let graph_clone = graph.clone();
+            let graph_clone = generate_test_graph(size, density);
 
             if let Some(start_node) = graph.nodes().into_iter().next() {
                 // Benchmark standard Dijkstra
                 group.bench_with_input(
                     BenchmarkId::new("dijkstra_standard", format!("{}_{}", size, density)),
                     &(&graph, start_node),
-                    |b, (g, start)| {
-                        b.iter(|| black_box(shortest_path_dijkstra(g, *start).unwrap()))
-                    },
+                    |b, (g, start)| b.iter(|| black_box(dijkstra_path(g, *start).unwrap())),
                 );
 
                 // Benchmark advanced optimized Dijkstra
@@ -190,8 +201,8 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
                                 execute_with_advanced(
                                     &mut processor,
                                     g,
-                                    "shortest_path_dijkstra",
-                                    |graph| shortest_path_dijkstra(graph, *start),
+                                    "dijkstra_path",
+                                    |graph| dijkstra_path(graph, *start),
                                 )
                                 .unwrap(),
                             )
@@ -207,20 +218,20 @@ fn benchmark_shortest_paths(c: &mut Criterion) {
 /// Benchmark PageRank with and without advanced
 #[allow(dead_code)]
 fn benchmark_pagerank(c: &mut Criterion) {
-    let config = advancedBenchmarkConfig::default();
+    let config = AdvancedBenchmarkConfig::default();
     let mut group = c.benchmark_group("pagerank");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 
     for &size in &config.graph_sizes {
         for &density in &config.densities {
             let graph = generate_test_graph(size, density);
-            let graph_clone = graph.clone();
+            let graph_clone = generate_test_graph(size, density);
 
             // Benchmark standard PageRank
             group.bench_with_input(
                 BenchmarkId::new("pagerank_standard", format!("{}_{}", size, density)),
                 &graph,
-                |b, g| b.iter(|| black_box(pagerank(g, 0.85, Some(100), Some(1e-6)).unwrap())),
+                |b, g| b.iter(|| black_box(pagerank_centrality(g, 0.85, 1e-6).unwrap())),
             );
 
             // Benchmark advanced optimized PageRank
@@ -232,7 +243,7 @@ fn benchmark_pagerank(c: &mut Criterion) {
                     b.iter(|| {
                         black_box(
                             execute_with_advanced(&mut processor, g, "pagerank", |graph| {
-                                pagerank(graph, 0.85, Some(100), Some(1e-6))
+                                pagerank_centrality(graph, 0.85, 1e-6)
                             })
                             .unwrap(),
                         )
@@ -247,20 +258,20 @@ fn benchmark_pagerank(c: &mut Criterion) {
 /// Benchmark community detection with and without advanced
 #[allow(dead_code)]
 fn benchmark_community_detection(c: &mut Criterion) {
-    let config = advancedBenchmarkConfig::default();
+    let config = AdvancedBenchmarkConfig::default();
     let mut group = c.benchmark_group("community_detection");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 
     for &size in &config.graph_sizes {
         for &density in &config.densities {
             let graph = generate_test_graph(size, density);
-            let graph_clone = graph.clone();
+            let graph_clone = generate_test_graph(size, density);
 
             // Benchmark standard Louvain
             group.bench_with_input(
                 BenchmarkId::new("louvain_standard", format!("{}_{}", size, density)),
                 &graph,
-                |b, g| b.iter(|| black_box(louvain_communities(g, None).unwrap())),
+                |b, g| b.iter(|| black_box(louvain_communities_result(g).unwrap())),
             );
 
             // Benchmark advanced optimized Louvain
@@ -275,7 +286,7 @@ fn benchmark_community_detection(c: &mut Criterion) {
                                 &mut processor,
                                 g,
                                 "louvain_communities",
-                                |graph| louvain_communities(graph, None),
+                                |graph| louvain_communities_result(graph),
                             )
                             .unwrap(),
                         )
@@ -290,7 +301,7 @@ fn benchmark_community_detection(c: &mut Criterion) {
 /// Benchmark centrality measures with and without advanced
 #[allow(dead_code)]
 fn benchmark_centrality(c: &mut Criterion) {
-    let config = advancedBenchmarkConfig::default();
+    let config = AdvancedBenchmarkConfig::default();
     let mut group = c.benchmark_group("centrality");
     group.plot_config(PlotConfiguration::default().summary_scale(AxisScale::Logarithmic));
 
@@ -298,13 +309,13 @@ fn benchmark_centrality(c: &mut Criterion) {
         // Smaller sizes for expensive centrality calculations
         for &density in &[0.01, 0.05, 0.1] {
             let graph = generate_test_graph(size, density);
-            let graph_clone = graph.clone();
+            let graph_clone = generate_test_graph(size, density);
 
             // Benchmark standard betweenness centrality
             group.bench_with_input(
                 BenchmarkId::new("betweenness_standard", format!("{}_{}", size, density)),
                 &graph,
-                |b, g| b.iter(|| black_box(betweenness_centrality(g).unwrap())),
+                |b, g| b.iter(|| black_box(betweenness_centrality(g, false))),
             );
 
             // Benchmark advanced optimized betweenness centrality
@@ -319,7 +330,7 @@ fn benchmark_centrality(c: &mut Criterion) {
                                 &mut processor,
                                 g,
                                 "betweenness_centrality",
-                                |graph| betweenness_centrality(graph),
+                                |graph| Ok(betweenness_centrality(graph, false)),
                             )
                             .unwrap(),
                         )
@@ -381,14 +392,14 @@ fn benchmark_advanced_comprehensive(c: &mut Criterion) {
             BenchmarkId::new("advanced_config", config_name),
             &(&graph, &config),
             |b, (g, cfg)| {
-                let mut processor = AdvancedProcessor::new(cfg.clone());
+                let mut processor = AdvancedProcessor::new(cfg.clone().clone());
                 b.iter(|| {
                     black_box(
                         execute_with_advanced(&mut processor, g, "comprehensive_test", |graph| {
                             // Run multiple algorithms in sequence
-                            let _components = connected_components(graph)?;
-                            let _pagerank = pagerank(graph, 0.85, Some(50), Some(1e-6))?;
-                            let _communities = louvain_communities(graph, None)?;
+                            let _components = connected_components(graph);
+                            let _pagerank = pagerank_centrality(graph, 0.85, 1e-6)?;
+                            let _communities = louvain_communities_result(graph)?;
                             Ok(())
                         })
                         .unwrap(),
@@ -408,14 +419,14 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
 
     for &size in &[1000, 5000, 10000] {
         let graph = generate_test_graph(size, 0.05);
-        let graph_clone = graph.clone();
+        let graph_clone = generate_test_graph(size, 0.05);
 
         // Standard memory usage
         group.bench_with_input(BenchmarkId::new("memory_standard", size), &graph, |b, g| {
             b.iter_custom(|iters| {
                 let start = Instant::now();
                 for _ in 0..iters {
-                    let _result = pagerank(g, 0.85, Some(100), Some(1e-6));
+                    let _result = pagerank_centrality(g, 0.85, 1e-6);
                     black_box(_result);
                 }
                 start.elapsed()
@@ -435,7 +446,7 @@ fn benchmark_memory_efficiency(c: &mut Criterion) {
                             &mut processor,
                             g,
                             "pagerank_memory_test",
-                            |graph| pagerank(graph, 0.85, Some(100), Some(1e-6)),
+                            |graph| pagerank_centrality(graph, 0.85, 1e-6),
                         );
                         black_box(_result);
                     }
@@ -463,7 +474,10 @@ pub fn generate_performance_report(
     writeln!(
         file,
         "Generated at: {}\n",
-        chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC")
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
     )?;
 
     writeln!(file, "## Executive Summary\n")?;

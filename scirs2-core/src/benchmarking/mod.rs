@@ -604,7 +604,7 @@ impl BenchmarkRunner {
         let mut results = Vec::new();
 
         for param in parameters {
-            let param_name = format!("{}({:?})", name, param);
+            let param_name = format!("{name}({param:?})");
             let param_clone = param.clone();
 
             let result = self.run(&param_name, || benchmark_fn(&param_clone))?;
@@ -631,11 +631,11 @@ impl BenchmarkRunner {
 
         for strategy in &self.config.strategies {
             let start = std::time::Instant::now();
-            let _ = operation(&data, strategy.clone())?;
+            let _ = operation(&data, *strategy)?;
             let duration = start.elapsed();
 
             let measurement = BenchmarkMeasurement::new(duration)
-                .with_strategy(strategy.clone())
+                .with_strategy(*strategy)
                 .with_input_size(data.len())
                 .with_throughput(data.len() as f64 / duration.as_secs_f64());
 
@@ -652,8 +652,7 @@ impl BenchmarkRunner {
             use std::fs;
             let status = fs::read_to_string("/proc/self/status").map_err(|e| {
                 CoreError::IoError(ErrorContext::new(format!(
-                    "Failed to read memory status: {}",
-                    e
+                    "Failed to read memory status: {e}"
                 )))
             })?;
 
@@ -663,8 +662,7 @@ impl BenchmarkRunner {
                     if parts.len() >= 2 {
                         let kb: usize = parts[1].parse().map_err(|e| {
                             CoreError::ValidationError(crate::error::ErrorContext::new(format!(
-                                "Failed to parse memory: {}",
-                                e
+                                "Failed to parse memory: {e}"
                             )))
                         })?;
                         return Ok(kb * 1024);
@@ -727,7 +725,7 @@ impl BenchmarkSuite {
                     results.push(result);
                 }
                 Err(e) => {
-                    println!("  Benchmark failed: {:?}", e);
+                    println!("  Benchmark failed: {e:?}");
                     return Err(e);
                 }
             }
@@ -759,7 +757,7 @@ impl BenchmarkSuite {
             );
 
             for warning in &result.warnings {
-                println!("    Warning: {}", warning);
+                println!("    Warning: {warning}");
             }
         }
 
@@ -815,6 +813,12 @@ pub struct MemoryScaling {
     pub linear_coefficient: f64,
     pub constant_coefficient: f64,
     pub r_squared: f64,
+}
+
+impl Default for MemoryScaling {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl MemoryScaling {
@@ -879,6 +883,12 @@ pub struct ScalabilityAnalysis {
     pub parallel_efficiency: HashMap<usize, f64>,
     pub memory_scaling: MemoryScaling,
     pub bottlenecks: Vec<PerformanceBottleneck>,
+}
+
+impl Default for ScalabilityAnalysis {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ScalabilityAnalysis {

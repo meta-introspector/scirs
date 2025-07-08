@@ -616,13 +616,17 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "NMF requires non-negative input data")]
     fn test_nmf_negative_input() {
         let x = Array::from_shape_vec((3, 3), vec![1.0, 2.0, 3.0, -1.0, 5.0, 6.0, 7.0, 8.0, 9.0])
             .unwrap();
 
         let mut nmf = NMF::new(2);
-        let _ = nmf.fit(&x);
+        let result = nmf.fit(&x);
+        
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert!(e.to_string().contains("NMF requires non-negative input data"));
+        }
     }
 
     #[test]

@@ -1214,7 +1214,7 @@ where
         let col_start = chunk_col * _chunk_size;
         let col_end = std::cmp::min(col_start + _chunk_size, cols);
 
-        let output_slice = output.slice_mut(s![row_start..row_end, col_start..col_end]);
+        let mut output_slice = output.slice_mut(s![row_start..row_end, col_start..col_end]);
         output_slice.assign(&chunk_result);
     }
 

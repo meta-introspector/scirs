@@ -1720,7 +1720,7 @@ impl LearnedOptimizer for NeuralAdaptiveOptimizer {
 impl NeuralAdaptiveOptimizer {
     fn create_trajectory_from_task(
         &self,
-        task: &TrainingTask,
+        _task: &TrainingTask,
     ) -> OptimizeResult<OptimizationTrajectory> {
         // Simplified trajectory creation
         let num_steps = 10;

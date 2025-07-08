@@ -287,7 +287,7 @@ impl SemanticKMeans {
 
     /// Reduce dimensionality using PCA (simplified)
     fn reduce_dimensions(&self, matrix: Array2<f64>, target_dim: usize) -> Result<Array2<f64>> {
-        let (n_samples, n_features) = matrix.dim();
+        let (_n_samples, n_features) = matrix.dim();
 
         if target_dim >= n_features {
             return Ok(matrix);
@@ -979,7 +979,7 @@ impl TopicBasedClustering {
     }
 
     /// Get cluster assignments based on dominant topics
-    pub fn predict(&self, text_repr: &TextRepresentation) -> Result<Array1<usize>> {
+    pub fn predict(&self, _text_repr: &TextRepresentation) -> Result<Array1<usize>> {
         if let Some(ref doc_topics) = self.document_topic_distributions {
             let mut labels = Array1::zeros(doc_topics.nrows());
 

@@ -1125,7 +1125,7 @@ pub mod interactive {
         /// Generate tooltip information for each node
         fn generate_tooltips(
             linkage_matrix: &ArrayView2<F>,
-            plot: &DendrogramPlot<F>,
+            _plot: &DendrogramPlot<F>,
         ) -> Result<Vec<TooltipInfo>> {
             let mut tooltips = Vec::new();
             let n_samples = linkage_matrix.shape()[0] + 1;
@@ -1176,7 +1176,7 @@ pub mod interactive {
         }
 
         /// Get clusters at a specific cut height
-        pub fn get_clusters_at_height(&self, height: F) -> Result<Vec<Vec<usize>>> {
+        pub fn get_clusters_at_height(&self, _height: F) -> Result<Vec<Vec<usize>>> {
             // Simplified cluster extraction - in a full implementation,
             // this would traverse the dendrogram tree
             Ok(vec![vec![0, 1], vec![2, 3]]) // Placeholder

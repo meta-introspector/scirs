@@ -1723,7 +1723,7 @@ where
         &self,
         search_space: &SearchSpace,
         n_initial_points: usize,
-        acquisition_function: &AcquisitionFunction,
+        _acquisition_function: &AcquisitionFunction,
     ) -> Result<Vec<HashMap<String, f64>>> {
         let mut combinations = Vec::new();
         // Extract parameter names for consistent ordering
@@ -1831,7 +1831,7 @@ where
 
         // Convert parameter combinations to feature matrix
         let n_samples = combinations.len();
-        let n_features = bayesian_state.parameter_names.len();
+        let _n_features = bayesian_state.parameter_names.len();
 
         if n_samples < 2 {
             return;
@@ -1865,8 +1865,8 @@ where
     fn optimize_acquisition_function(
         &self,
         search_space: &SearchSpace,
-        bayesian_state: &BayesianState,
-        acquisition_function: &AcquisitionFunction,
+        _bayesian_state: &BayesianState,
+        _acquisition_function: &AcquisitionFunction,
     ) -> Result<HashMap<String, f64>> {
         let mut best_acquisition = f64::NEG_INFINITY;
         let mut best_point = HashMap::new();
@@ -1894,9 +1894,9 @@ where
     /// Evaluate acquisition function at a point
     fn evaluate_acquisition_function(
         &self,
-        point: &HashMap<String, f64>,
-        bayesian_state: &BayesianState,
-        acquisition_function: &AcquisitionFunction,
+        _point: &HashMap<String, f64>,
+        _bayesian_state: &BayesianState,
+        _acquisition_function: &AcquisitionFunction,
     ) -> f64 {
         let x = self.extract_feature_vector(point, &bayesian_state.parameter_names);
         let (mean, variance) = self.predict_gp(&x, bayesian_state);
@@ -2171,7 +2171,7 @@ where
     fn generate_multi_objective_combinations(
         &self,
         search_space: &SearchSpace,
-        objectives: &[EvaluationMetric],
+        _objectives: &[EvaluationMetric],
         base_strategy: &SearchStrategy,
     ) -> Result<Vec<HashMap<String, f64>>> {
         // For multi-objective optimization, we need to maintain a Pareto frontier
@@ -2211,7 +2211,7 @@ where
         &self,
         search_space: &SearchSpace,
         surrogate_model: &SurrogateModel,
-        acquisition_function: &AcquisitionFunction,
+        _acquisition_function: &AcquisitionFunction,
     ) -> Result<Vec<HashMap<String, f64>>> {
         // SMBO is similar to Bayesian optimization but with different surrogate models
 
@@ -2225,7 +2225,7 @@ where
         // Sequential optimization based on surrogate model
         let remaining_points = self.config.max_evaluations.saturating_sub(n_initial_points);
 
-        for iteration in 0..remaining_points {
+        for _iteration in 0..remaining_points {
             let next_point = match surrogate_model {
                 SurrogateModel::GaussianProcess { .. } => {
                     // Use Gaussian Process (similar to Bayesian optimization)
@@ -2419,7 +2419,7 @@ where
         let mut all_combinations = population.clone();
 
         // Evolution loop
-        for generation in 0..n_generations {
+        for _generation in 0..n_generations {
             let mut new_population = Vec::new();
 
             // Elitism: keep best individual from previous generation
@@ -2607,7 +2607,7 @@ where
         &self,
         search_space: &SearchSpace,
         surrogate_model: &SurrogateModel,
-        acquisition_function: &AcquisitionFunction,
+        _acquisition_function: &AcquisitionFunction,
     ) -> Result<Vec<HashMap<String, f64>>> {
         let mut combinations = Vec::new();
         let n_initial_points = 5; // Start with 5 random points
@@ -2619,7 +2619,7 @@ where
         // Sequential optimization
         let remaining_points = self.config.max_evaluations.saturating_sub(n_initial_points);
 
-        for iteration in 0..remaining_points {
+        for _iteration in 0..remaining_points {
             // Build surrogate model from current observations
             let next_point = match surrogate_model {
                 SurrogateModel::GaussianProcess { .. } => {
@@ -2646,8 +2646,8 @@ where
     fn generate_multi_objective_combinations(
         &self,
         search_space: &SearchSpace,
-        objectives: &[EvaluationMetric],
-        strategy: &SearchStrategy,
+        _objectives: &[EvaluationMetric],
+        _strategy: &SearchStrategy,
     ) -> Result<Vec<HashMap<String, f64>>> {
         // For multi-objective optimization, we use NSGA-II style approach
         let population_size = 50;
@@ -2658,7 +2658,7 @@ where
         let mut all_combinations = population.clone();
 
         // Multi-objective evolution
-        for generation in 0..n_generations {
+        for _generation in 0..n_generations {
             // In a full implementation, we would:
             // 1. Evaluate population on all objectives
             // 2. Perform non-dominated sorting
@@ -2715,7 +2715,7 @@ where
         &self,
         search_space: &SearchSpace,
         _observations: &[HashMap<String, f64>],
-        acquisition_function: &AcquisitionFunction,
+        _acquisition_function: &AcquisitionFunction,
     ) -> Result<HashMap<String, f64>> {
         // Simplified GP-based acquisition optimization
         // In practice, this would:
@@ -2835,8 +2835,8 @@ where
     fn optimize_acquisition_function(
         &self,
         search_space: &SearchSpace,
-        bayesian_state: &BayesianState,
-        acquisition_function: &AcquisitionFunction,
+        _bayesian_state: &BayesianState,
+        _acquisition_function: &AcquisitionFunction,
     ) -> Result<HashMap<String, f64>> {
         // Enhanced acquisition function optimization
         let n_candidates = 1000;
@@ -2861,9 +2861,9 @@ where
     /// Evaluate acquisition function at a point
     fn evaluate_acquisition_function(
         &self,
-        point: &HashMap<String, f64>,
-        bayesian_state: &BayesianState,
-        acquisition_function: &AcquisitionFunction,
+        _point: &HashMap<String, f64>,
+        _bayesian_state: &BayesianState,
+        _acquisition_function: &AcquisitionFunction,
     ) -> f64 {
         // Simplified acquisition function evaluation
         // In practice, this would compute EI, UCB, PI, etc. based on GP predictions
@@ -2917,13 +2917,13 @@ where
         let mut combinations = Vec::new();
 
         let param_names: Vec<String> = search_space.parameters.keys().cloned().collect();
-        let n_params = param_names.len();
+        let _n_params = param_names.len();
 
         // Generate LHS samples
         for i in 0..n_points {
             let mut params = HashMap::new();
 
-            for (j, param_name) in param_names.iter().enumerate() {
+            for (_j, param_name) in param_names.iter().enumerate() {
                 let param_spec = &search_space.parameters[param_name];
 
                 // LHS sampling: divide parameter space into n_points intervals
@@ -3066,8 +3066,8 @@ where
     fn optimize_acquisition_function_enhanced(
         &self,
         search_space: &SearchSpace,
-        bayesian_state: &BayesianState,
-        acquisition_function: &AcquisitionFunction,
+        _bayesian_state: &BayesianState,
+        _acquisition_function: &AcquisitionFunction,
         iteration: usize,
     ) -> Result<HashMap<String, f64>> {
         let n_candidates = std::cmp::max(1000, 100 * search_space.parameters.len());
@@ -3122,7 +3122,7 @@ where
     fn generate_local_optimization_candidates(
         &self,
         search_space: &SearchSpace,
-        bayesian_state: &BayesianState,
+        _bayesian_state: &BayesianState,
         n_candidates: usize,
     ) -> Result<Vec<HashMap<String, f64>>> {
         let mut candidates = Vec::new();
@@ -3169,9 +3169,9 @@ where
     /// Enhanced acquisition function evaluation with proper GP predictions
     fn evaluate_acquisition_function_enhanced(
         &self,
-        point: &HashMap<String, f64>,
-        bayesian_state: &BayesianState,
-        acquisition_function: &AcquisitionFunction,
+        _point: &HashMap<String, f64>,
+        _bayesian_state: &BayesianState,
+        _acquisition_function: &AcquisitionFunction,
     ) -> f64 {
         // Get GP predictions at the point (simplified)
         let (mean, variance) = self.predict_gp(point, bayesian_state);
@@ -3219,8 +3219,8 @@ where
     /// Predict GP mean and variance at a point
     fn predict_gp(
         &self,
-        point: &HashMap<String, f64>,
-        bayesian_state: &BayesianState,
+        _point: &HashMap<String, f64>,
+        _bayesian_state: &BayesianState,
     ) -> (f64, f64) {
         if bayesian_state.observations.is_empty() || bayesian_state.gp_covariance.is_none() {
             // No observations or GP not trained, return prior
@@ -4786,7 +4786,7 @@ pub mod advanced_optimization {
         pub fn expected_hypervolume_improvement(
             &self,
             _candidate: &HashMap<String, f64>,
-            pareto_front: &[(HashMap<String, f64>, Vec<f64>)],
+            _pareto_front: &[(HashMap<String, f64>, Vec<f64>)],
             _reference_point: &[f64],
         ) -> f64 {
             // Stub implementation

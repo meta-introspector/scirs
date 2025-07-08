@@ -39,6 +39,7 @@ use ndarray::{s, Array1, Array2, Array3, Axis};
 use std::cmp;
 
 use crate::error::{SignalError, SignalResult};
+use std::f64::consts::PI;
 
 /// Configuration for Non-Local Means denoising
 #[derive(Debug, Clone)]

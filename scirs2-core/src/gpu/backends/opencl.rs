@@ -2,6 +2,7 @@
 //!
 //! This module provides OpenCL-specific implementations for GPU operations.
 
+use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -42,6 +43,7 @@ type CLKernel = *mut std::ffi::c_void;
 type CLMem = *mut std::ffi::c_void;
 
 // OpenCL kernel source templates
+#[allow(dead_code)]
 const ADAM_KERNEL_OPENCL: &str = r#"
 __kernel void adam_update_f32(
     __global float* params,
@@ -83,6 +85,7 @@ __kernel void adam_update_f32(
 }
 "#;
 
+#[allow(dead_code)]
 const GEMM_KERNEL_OPENCL: &str = r#"
 __kernel void gemm_f32(
     __global const float* A,
@@ -300,6 +303,9 @@ impl GpuContextImpl for OpenCLContext {
         if let Ok(mut pool) = self.memory_pool.lock() {
             if let Some(device_buffer) = pool.allocate(size) {
                 return Arc::new(OpenCLBuffer {
+                    #[cfg(feature = "opencl")]
+                    device_buffer: UnsafeCell::new(device_buffer),
+                    #[cfg(not(feature = "opencl"))]
                     device_buffer,
                     #[cfg(feature = "opencl")]
                     queue: Arc::clone(&self.queue),
@@ -338,6 +344,9 @@ impl GpuContextImpl for OpenCLContext {
         };
 
         Arc::new(OpenCLBuffer {
+            #[cfg(feature = "opencl")]
+            device_buffer: UnsafeCell::new(device_buffer),
+            #[cfg(not(feature = "opencl"))]
             device_buffer,
             #[cfg(feature = "opencl")]
             queue: Arc::clone(&self.queue),
@@ -382,6 +391,7 @@ struct OpenCLKernel {
     kernel: CLKernel,
     #[cfg(not(feature = "opencl"))]
     queue: CLCommandQueue,
+    #[allow(dead_code)]
     name: String,
 }
 
@@ -511,7 +521,7 @@ impl GpuKernelImpl for OpenCLKernelHandle {
 /// OpenCL buffer implementation
 struct OpenCLBuffer {
     #[cfg(feature = "opencl")]
-    device_buffer: Buffer<u8>,
+    device_buffer: UnsafeCell<Buffer<u8>>,
     #[cfg(feature = "opencl")]
     queue: Arc<CommandQueue>,
     #[cfg(not(feature = "opencl"))]
@@ -521,6 +531,11 @@ struct OpenCLBuffer {
     size: usize,
     memory_pool: Arc<Mutex<OpenCLMemoryPool>>,
 }
+
+// Safety: OpenCLBuffer is safe to send/sync because OpenCL handles are thread-safe
+// and we use UnsafeCell only for valid OpenCL operations
+unsafe impl Send for OpenCLBuffer {}
+unsafe impl Sync for OpenCLBuffer {}
 
 impl GpuBufferImpl for OpenCLBuffer {
     fn size(&self) -> usize {
@@ -539,11 +554,9 @@ impl GpuBufferImpl for OpenCLBuffer {
             let data_slice = std::slice::from_raw_parts(data, size);
 
             // Real OpenCL implementation - write data to buffer
-            // Note: In real implementation, we would need mutable access to the buffer
-            // For now, we'll use unsafe to demonstrate the pattern
-            let device_buffer_ptr = &self.device_buffer as *const Buffer<u8> as *mut Buffer<u8>;
+            // Use UnsafeCell for proper interior mutability
             if let Err(_) = self.queue.enqueue_write_buffer(
-                unsafe { &mut *device_buffer_ptr },
+                unsafe { &mut *self.device_buffer.get() },
                 CL_BLOCKING,
                 0,
                 data_slice,
@@ -571,10 +584,14 @@ impl GpuBufferImpl for OpenCLBuffer {
             let data_slice = std::slice::from_raw_parts_mut(data, size);
 
             // Real OpenCL implementation - read data from buffer
-            if let Err(_) =
-                self.queue
-                    .enqueue_read_buffer(&self.device_buffer, CL_BLOCKING, 0, data_slice, &[])
-            {
+            // Use UnsafeCell for proper interior mutability
+            if let Err(_) = self.queue.enqueue_read_buffer(
+                unsafe { &*self.device_buffer.get() },
+                CL_BLOCKING,
+                0,
+                data_slice,
+                &[],
+            ) {
                 // Error handling would normally be here, but trait doesn't return Result
             }
         }
@@ -613,6 +630,7 @@ impl Drop for OpenCLBuffer {
 struct OpenCLCpuFallbackBuffer {
     data: Vec<u8>,
     size: usize,
+    #[allow(dead_code)]
     memory_pool: Arc<Mutex<OpenCLMemoryPool>>,
 }
 
@@ -697,10 +715,11 @@ struct OpenCLMemoryPool {
 
 /// Statistics for tracking allocation patterns
 #[derive(Debug, Clone)]
-struct AllocationStats {
+pub struct AllocationStats {
     total_allocations: u64,
     total_deallocations: u64,
     total_bytes_allocated: u64,
+    #[allow(dead_code)]
     average_lifetime: Duration,
     peak_concurrent_allocations: u64,
     current_allocations: u64,
@@ -848,6 +867,7 @@ impl OpenCLMemoryPool {
     }
 
     /// Get memory pool statistics for monitoring
+    #[allow(dead_code)]
     fn get_pool_statistics(&self) -> PoolStatistics {
         PoolStatistics {
             total_size: self.total_size,
@@ -901,6 +921,7 @@ impl OpenCLMemoryPool {
     }
 
     #[cfg(feature = "opencl")]
+    #[allow(dead_code)]
     fn deallocate(&mut self, buffer: Buffer<u8>) {
         // Return buffer to pool
         let size = buffer.size().unwrap_or(0);
@@ -912,6 +933,7 @@ impl OpenCLMemoryPool {
     }
 
     #[cfg(not(feature = "opencl"))]
+    #[allow(dead_code)]
     fn deallocate(&mut self, buffer: CLMem) {
         // Fallback implementation - track the buffer
         let size = 1024; // Placeholder size
@@ -922,6 +944,7 @@ impl OpenCLMemoryPool {
         self.used_size = self.used_size.saturating_sub(size);
     }
 
+    #[allow(dead_code)]
     fn get_memory_usage(&self) -> (usize, usize) {
         (self.used_size, self.total_size)
     }

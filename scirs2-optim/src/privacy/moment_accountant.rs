@@ -605,7 +605,7 @@ impl MomentsAccountant {
             total_compositions += mechanism.applications;
 
             for order in 2..=self.max_order {
-                let single_log_moment = self.compute_mechanism_log_moment(mechanism, order)?;
+                let single_log_moment = self.compute_mechanism_log_moment(order, mechanism)?;
                 let total_for_mechanism = single_log_moment * mechanism.applications as f64;
 
                 *total_log_moments.entry(order).or_insert(0.0) += total_for_mechanism;

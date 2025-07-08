@@ -12,8 +12,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 
 /// Base optimizer plugin implementation with common functionality
-#[derive(Debug)]
-pub struct BaseOptimizerPlugin<A: Float> {
+pub struct BaseOptimizerPlugin<A: Float + std::fmt::Debug> {
     /// Plugin information
     info: PluginInfo,
     /// Plugin capabilities
@@ -30,9 +29,26 @@ pub struct BaseOptimizerPlugin<A: Float> {
     event_handlers: Vec<Box<dyn PluginEventHandler>>,
 }
 
+impl<A: Float + std::fmt::Debug> std::fmt::Debug for BaseOptimizerPlugin<A> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BaseOptimizerPlugin")
+            .field("info", &self.info)
+            .field("capabilities", &self.capabilities)
+            .field("config", &self.config)
+            .field("state", &self.state)
+            .field("metrics", &self.metrics)
+            .field("memory_usage", &self.memory_usage)
+            .field(
+                "event_handlers",
+                &format!("{} handlers", self.event_handlers.len()),
+            )
+            .finish()
+    }
+}
+
 /// Base optimizer state
 #[derive(Debug, Clone)]
-pub struct BaseOptimizerState<A: Float> {
+pub struct BaseOptimizerState<A: Float + std::fmt::Debug> {
     /// Step count
     pub step_count: usize,
     /// Parameter count
@@ -771,7 +787,7 @@ impl<A: Float + Debug + Send + Sync + 'static> BaseOptimizerPlugin<A> {
     }
 }
 
-impl<A: Float> BaseOptimizerState<A> {
+impl<A: Float + std::fmt::Debug> BaseOptimizerState<A> {
     fn new() -> Self {
         Self {
             step_count: 0,

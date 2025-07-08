@@ -6,8 +6,6 @@
 
 use ndarray::{Array, Array2};
 use num_traits::Float;
-use rand::{rng, Rng};
-use scirs2_core::random;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::Arc;
 use std::thread;
@@ -1994,7 +1992,7 @@ impl SynchronizationManager {
 
     pub async fn global_barrier(&mut self) -> Result<()> {
         // Simplified barrier implementation
-        let barrier_id = BarrierId(random::rng().random_range(0, u64::MAX));
+        let barrier_id = BarrierId(scirs2_core::random::rng().random_range(0, u64::MAX));
         let barrier_state = BarrierState {
             participants: HashSet::new(),
             arrived: HashSet::new(),
@@ -2091,7 +2089,7 @@ impl<T: Float + Default + Clone> BatchCoordinator<T> {
     }
 
     pub async fn create_batch(&mut self, batch_data: BatchData<T>) -> Result<BatchId> {
-        let batch_id = BatchId(random::rng().random_range(0, u64::MAX));
+        let batch_id = BatchId(scirs2_core::random::rng().random_range(0, u64::MAX));
         let batch_execution = BatchExecution {
             id: batch_id,
             data: batch_data,

@@ -353,7 +353,7 @@ impl ImageHDCEncoder {
     /// Create new image encoder
     pub fn new(image_height: usize, image_width: usize, config: HDCConfig) -> Self {
         let mut pixel_encoders = HashMap::new();
-        let mut position_encoders = Array2::from_shape_fn((image_height, image_width), |_| {
+        let position_encoders = Array2::from_shape_fn((image_height, image_width), |_| {
             Hypervector::random(config.hypervector_dim, config.sparsity)
         });
 

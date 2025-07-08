@@ -892,26 +892,23 @@ impl BenchmarkRunner {
     }
     
     fn simulate_quadratic_optimization(&self, seed: u64) -> f64 {
-        use rand::{Rng, SeedableRng};
-        use rand_chacha::ChaCha8Rng;
+        use scirs2_core::random::{Random, Rng};
         
-        let mut rng = ChaCha8Rng::seed_from_u64(seed);
+        let mut rng = Random::default();
         rng.random_range(1e-8, 1e-4) // Simulate good convergence for quadratic
     }
     
     fn simulate_rosenbrock_optimization(&self, seed: u64) -> f64 {
-        use rand::{Rng, SeedableRng};
-        use rand_chacha::ChaCha8Rng;
+        use scirs2_core::random::{Random, Rng};
         
-        let mut rng = ChaCha8Rng::seed_from_u64(seed);
+        let mut rng = Random::default();
         rng.random_range(1e-6, 1e-2) // Simulate moderate convergence for Rosenbrock
     }
     
     fn simulate_generic_optimization(&self, seed: u64) -> f64 {
-        use rand::{Rng, SeedableRng};
-        use rand_chacha::ChaCha8Rng;
+        use scirs2_core::random::{Random, Rng};
         
-        let mut rng = ChaCha8Rng::seed_from_u64(seed);
+        let mut rng = Random::default();
         rng.random_range(1e-5, 1e-1) // Generic optimization results
     }
     

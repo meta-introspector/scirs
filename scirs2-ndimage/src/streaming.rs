@@ -1070,13 +1070,13 @@ impl GpuContext {
         self.device_id
     }
 
-    pub fn allocate_memory(&mut self, size: usize) -> NdimageResult<*mut u8> {
+    pub fn allocate_memory(&mut self, _size: usize) -> NdimageResult<*mut u8> {
         // GPU memory allocation
         // This is a placeholder - would use actual GPU allocation APIs
         Ok(std::ptr::null_mut())
     }
 
-    pub fn free_memory(&mut self, ptr: *mut u8) -> NdimageResult<()> {
+    pub fn free_memory(&mut self, _ptr: *mut u8) -> NdimageResult<()> {
         // GPU memory deallocation
         // This is a placeholder - would use actual GPU deallocation APIs
         Ok(())

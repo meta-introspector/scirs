@@ -15,12 +15,12 @@ fn main() {
     let n_samples = iris.n_samples();
 
     println!("Original Iris dataset:");
-    println!("- Samples: {}", n_samples);
+    println!("- Samples: {n_samples}");
     println!("- Features: {}", iris.n_features());
 
     if let Some(target) = &iris.target {
         let class_counts = count_classes(target);
-        println!("- Class distribution: {:?}\n", class_counts);
+        println!("- Class distribution: {class_counts:?}\n");
     }
 
     // Demonstrate random sampling without replacement
@@ -29,8 +29,7 @@ fn main() {
     let random_indices = random_sample(n_samples, sample_size, false, Some(42)).unwrap();
 
     println!(
-        "Sampled {} indices from {} total samples",
-        sample_size, n_samples
+        "Sampled {sample_size} indices from {n_samples} total samples"
     );
     println!(
         "Sample indices: {:?}",
@@ -54,7 +53,7 @@ fn main() {
 
     if let Some(target) = &sample_dataset.target {
         let sample_class_counts = count_classes(target);
-        println!("Sample class distribution: {:?}\n", sample_class_counts);
+        println!("Sample class distribution: {sample_class_counts:?}\n");
     }
 
     // Demonstrate bootstrap sampling (with replacement)
@@ -63,8 +62,7 @@ fn main() {
     let bootstrap_indices = random_sample(n_samples, bootstrap_size, true, Some(42)).unwrap();
 
     println!(
-        "Bootstrap sampled {} indices from {} total samples",
-        bootstrap_size, n_samples
+        "Bootstrap sampled {bootstrap_size} indices from {n_samples} total samples"
     );
     println!(
         "Bootstrap may have duplicates - first 10 indices: {:?}",
@@ -80,10 +78,9 @@ fn main() {
     let zero_count = index_counts.iter().filter(|&&count| count == 0).count();
 
     println!("Bootstrap statistics:");
-    println!("- Maximum frequency of any sample: {}", max_count);
+    println!("- Maximum frequency of any sample: {max_count}");
     println!(
-        "- Number of original samples not selected: {}\n",
-        zero_count
+        "- Number of original samples not selected: {zero_count}\n"
     );
 
     // Demonstrate stratified sampling
@@ -93,8 +90,7 @@ fn main() {
         let stratified_indices = stratified_sample(target, stratified_size, Some(42)).unwrap();
 
         println!(
-            "Stratified sampled {} indices maintaining class proportions",
-            stratified_size
+            "Stratified sampled {stratified_size} indices maintaining class proportions"
         );
 
         // Create stratified subset
@@ -111,8 +107,7 @@ fn main() {
 
         let stratified_class_counts = count_classes(&stratified_dataset.target.unwrap());
         println!(
-            "Stratified sample class distribution: {:?}",
-            stratified_class_counts
+            "Stratified sample class distribution: {stratified_class_counts:?}"
         );
 
         // Verify proportions are maintained

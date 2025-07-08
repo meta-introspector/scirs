@@ -393,8 +393,8 @@ where
     // Process in parallel chunks
     let chunks: Vec<_> = (0..signal_len).step_by(chunk_size).collect();
 
-    // Use parallel processing for chunks
-    parallel_for(chunks.into_iter(), |chunk_start| {
+    // Use parallel processing for chunks - collect results but don't use them for now
+    let _results: Vec<()> = parallel_map(chunks.into_iter(), |chunk_start| {
         let chunk_end = (chunk_start + chunk_size).min(signal_len);
         let signal_chunk = signal.slice(ndarray::s![chunk_start..chunk_end]);
 
@@ -414,6 +414,8 @@ where
                 }
             }
         }
+        // Return unit type for parallel_map
+        ()
     });
 
     Ok(())

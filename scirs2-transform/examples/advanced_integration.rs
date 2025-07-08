@@ -104,7 +104,7 @@ fn demonstrate_real_time_adaptation() -> Result<(), Box<dyn std::error::Error>> 
     println!("==================================================");
     println!("Simulating continuous data streams with concept drift");
 
-    let mut neuromorphic_processor = AdvancedNeuromorphicProcessor::new(50, 100, 20);
+    let neuromorphic_processor = AdvancedNeuromorphicProcessor::new(50, 100, 20);
     let mut adaptation_history = Vec::new();
 
     // Simulate 10 time windows of streaming data
@@ -403,6 +403,7 @@ fn demonstrate_performance_benchmark() -> Result<(), Box<dyn std::error::Error>>
 // Helper structures and functions
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct AdaptationRecord {
     window: usize,
     drift_factor: f64,
@@ -610,7 +611,7 @@ fn advanced_optimization(
 ) -> Result<Vec<TransformationConfig>, Box<dyn std::error::Error>> {
     // Use actual Advanced optimization
     let mut quantum_optimizer = QuantumTransformationOptimizer::new()?;
-    quantum_optimizer.optimize_pipeline(data, 0.8)
+    Ok(quantum_optimizer.optimize_pipeline(data, 0.8)?)
 }
 
 #[allow(dead_code)]

@@ -12,16 +12,22 @@ use thiserror::Error;
 /// Cloud deployment specific errors
 #[derive(Error, Debug)]
 pub enum CloudError {
+    /// Authentication failed with cloud provider
     #[error("Authentication failed: {0}")]
     Authentication(String),
+    /// Resource allocation failed during deployment
     #[error("Resource allocation failed: {0}")]
     ResourceAllocation(String),
+    /// Network configuration error
     #[error("Network configuration error: {0}")]
     Network(String),
+    /// Storage configuration or operation error
     #[error("Storage error: {0}")]
     Storage(String),
+    /// Auto-scaling operation failed
     #[error("Scaling operation failed: {0}")]
     Scaling(String),
+    /// Monitoring setup or operation failed
     #[error("Monitoring setup failed: {0}")]
     Monitoring(String),
 }
@@ -30,8 +36,11 @@ pub enum CloudError {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum CloudPlatform {
+    /// Amazon Web Services
     AWS,
+    /// Google Cloud Platform
     GCP,
+    /// Microsoft Azure
     Azure,
 }
 
@@ -39,14 +48,23 @@ pub enum CloudPlatform {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CloudResourceConfig {
+    /// Target cloud platform
     pub platform: CloudPlatform,
+    /// Cloud region to deploy to
     pub region: String,
+    /// Instance type to use for compute resources
     pub instance_type: String,
+    /// Minimum number of instances to maintain
     pub min_instances: usize,
+    /// Maximum number of instances for auto-scaling
     pub max_instances: usize,
+    /// Storage type (e.g., gp3, ssd)
     pub storage_type: String,
+    /// Storage size in gigabytes
     pub storage_size_gb: usize,
+    /// Whether auto-scaling is enabled
     pub auto_scaling_enabled: bool,
+    /// Whether cost optimization is enabled
     pub cost_optimization_enabled: bool,
 }
 
@@ -70,11 +88,17 @@ impl Default for CloudResourceConfig {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DeploymentConfig {
+    /// Environment name (e.g., "development", "production")
     pub environment: String,
+    /// Cloud resource configuration
     pub resources: CloudResourceConfig,
+    /// Network configuration
     pub network_config: NetworkConfig,
+    /// Security configuration
     pub security_config: SecurityConfig,
+    /// Monitoring configuration
     pub monitoring_config: MonitoringConfig,
+    /// Backup configuration
     pub backup_config: BackupConfig,
 }
 
@@ -82,10 +106,15 @@ pub struct DeploymentConfig {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct NetworkConfig {
+    /// VPC CIDR block
     pub vpc_cidr: String,
+    /// Subnet CIDR blocks
     pub subnet_cidrs: Vec<String>,
+    /// Whether load balancer is enabled
     pub load_balancer_enabled: bool,
+    /// Whether SSL/TLS is enabled
     pub ssl_enabled: bool,
+    /// Firewall rules configuration
     pub firewall_rules: Vec<FirewallRule>,
 }
 
@@ -93,10 +122,15 @@ pub struct NetworkConfig {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct SecurityConfig {
+    /// Whether encryption at rest is enabled
     pub encryption_at_rest: bool,
+    /// Whether encryption in transit is enabled
     pub encryption_in_transit: bool,
+    /// Whether access control is enabled
     pub access_control_enabled: bool,
+    /// Whether audit logging is enabled
     pub audit_logging_enabled: bool,
+    /// Key management service identifier
     pub key_management_service: String,
 }
 
@@ -104,10 +138,15 @@ pub struct SecurityConfig {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MonitoringConfig {
+    /// Whether metrics collection is enabled
     pub metrics_enabled: bool,
+    /// Whether logging is enabled
     pub logging_enabled: bool,
+    /// Whether alerting is enabled
     pub alerting_enabled: bool,
+    /// Whether dashboard is enabled
     pub dashboard_enabled: bool,
+    /// Data retention period in days
     pub retention_days: usize,
 }
 
@@ -115,10 +154,15 @@ pub struct MonitoringConfig {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BackupConfig {
+    /// Whether backup is enabled
     pub backup_enabled: bool,
+    /// Backup frequency (e.g., "daily", "hourly")
     pub backup_frequency: String,
+    /// Backup retention policy
     pub retention_policy: String,
+    /// Whether cross-region replication is enabled
     pub cross_region_replication: bool,
+    /// Whether point-in-time recovery is enabled
     pub point_in_time_recovery: bool,
 }
 
@@ -126,10 +170,15 @@ pub struct BackupConfig {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FirewallRule {
+    /// Traffic direction ("inbound" or "outbound")
     pub direction: String,
+    /// Protocol (e.g., "tcp", "udp")
     pub protocol: String,
+    /// Port range (e.g., "80", "443", "8000-8080")
     pub port_range: String,
+    /// Source CIDR blocks
     pub source_cidrs: Vec<String>,
+    /// Action to take ("allow" or "deny")
     pub action: String,
 }
 
@@ -146,11 +195,16 @@ pub struct CloudDeploymentOrchestrator {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DeploymentState {
+    /// Current deployment status
     pub status: DeploymentStatus,
+    /// List of active instances
     pub active_instances: Vec<InstanceInfo>,
+    /// Timestamp of the last scaling event
     #[cfg_attr(feature = "serde", serde(skip))]
     pub last_scaling_event: Option<Instant>,
+    /// Total number of processed jobs
     pub total_processed_jobs: usize,
+    /// Number of errors encountered
     pub error_count: usize,
 }
 
@@ -171,33 +225,50 @@ pub enum DeploymentStatus {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct InstanceInfo {
+    /// Unique instance identifier
     pub instance_id: String,
+    /// Instance type (e.g., "c5.large")
     pub instance_type: String,
+    /// Current instance status
     pub status: String,
+    /// CPU utilization percentage
     pub cpu_utilization: f64,
+    /// Memory utilization percentage
     pub memory_utilization: f64,
+    /// Network throughput in Mbps
     pub network_throughput: f64,
+    /// Instance start time
     #[serde(skip, default = "Instant::now")]
     pub start_time: Instant,
+    /// Cost per hour in USD
     pub cost_per_hour: f64,
 }
 
 /// Cost tracking and optimization
 #[derive(Debug)]
 pub struct CostTracker {
+    /// Total accumulated cost
     pub total_cost: f64,
+    /// Cost breakdown by service
     pub cost_by_service: HashMap<String, f64>,
+    /// Cost optimization suggestions
     pub cost_optimization_suggestions: Vec<String>,
+    /// Budget limit for cost monitoring
     pub budget_limit: Option<f64>,
+    /// Whether cost alerts are enabled
     pub cost_alerts_enabled: bool,
 }
 
 /// Health monitoring and alerting
 #[derive(Debug)]
 pub struct HealthMonitor {
+    /// Current system metrics
     pub metrics: HashMap<String, f64>,
+    /// Active alerts
     pub alerts: Vec<Alert>,
+    /// Configured health checks
     pub health_checks: Vec<HealthCheck>,
+    /// Service level agreement targets
     pub sla_targets: HashMap<String, f64>,
 }
 
@@ -205,11 +276,16 @@ pub struct HealthMonitor {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Alert {
+    /// Unique alert identifier
     pub alert_id: String,
+    /// Alert severity level
     pub severity: AlertSeverity,
+    /// Alert message description
     pub message: String,
+    /// Alert timestamp
     #[cfg_attr(feature = "serde", serde(skip, default = "Instant::now"))]
     pub timestamp: Instant,
+    /// Whether alert has been resolved
     pub resolved: bool,
 }
 
@@ -217,8 +293,11 @@ pub struct Alert {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum AlertSeverity {
+    /// Informational alert
     Info,
+    /// Warning alert
     Warning,
+    /// Critical alert requiring immediate attention
     Critical,
 }
 
@@ -226,11 +305,17 @@ pub enum AlertSeverity {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct HealthCheck {
+    /// Unique health check identifier
     pub check_id: String,
+    /// Health check endpoint URL
     pub endpoint: String,
+    /// Check interval duration
     pub interval: Duration,
+    /// Check timeout duration
     pub timeout: Duration,
+    /// Number of successful checks to consider healthy
     pub healthy_threshold: usize,
+    /// Number of failed checks to consider unhealthy
     pub unhealthy_threshold: usize,
 }
 
@@ -238,12 +323,19 @@ pub struct HealthCheck {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct CloudTimeSeriesJob {
+    /// Unique job identifier
     pub job_id: String,
+    /// Type of time series analysis to perform
     pub job_type: TimeSeriesJobType,
+    /// Input time series data
     pub input_data: Vec<f64>,
+    /// Job-specific parameters
     pub parameters: HashMap<String, serde_json::Value>,
+    /// Job priority level
     pub priority: JobPriority,
+    /// Estimated job duration
     pub estimated_duration: Duration,
+    /// Required computing resources
     pub resource_requirements: ResourceRequirements,
 }
 

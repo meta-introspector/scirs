@@ -7,9 +7,11 @@
 use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
 use crate::lombscargle_simd::simd_lombscargle;
+use ndarray::Array1;
 use num_traits::Float;
 use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::HashMap;
+use std::f64::consts::PI;
 use std::time::{Duration, Instant};
 
 /// Complete Advanced validation result with all implementations

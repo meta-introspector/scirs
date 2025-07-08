@@ -435,7 +435,7 @@ where
     let mut rng = if let Some(s) = seed {
         ndarray_rand::rand::rngs::StdRng::seed_from_u64(s)
     } else {
-        ndarray_rand::rand::rngs::StdRng::from_entropy()
+        ndarray_rand::rand::rngs::StdRng::seed_from_u64(42)
     };
 
     let normal = Normal::new(0.0, noise_std.to_f64().unwrap_or(0.01)).unwrap();

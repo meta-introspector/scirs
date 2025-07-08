@@ -63,7 +63,7 @@ impl Initializer {
             Initializer::Uniform { min, max } => {
                 let values: Vec<F> = (0..size)
                     .map(|_| {
-                        let val = rng.gen_range(*min..*max);
+                        let val = rng.random_range(*min..*max);
                         F::from(val).ok_or_else(|| {
                             NeuralError::InvalidArchitecture(
                                 "Failed to convert random value".to_string(),

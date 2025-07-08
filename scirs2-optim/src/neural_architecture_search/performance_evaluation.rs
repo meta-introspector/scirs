@@ -5,7 +5,7 @@
 
 use ndarray::{Array1, Array2};
 use num_traits::Float;
-use rand::{rng, Rng};
+use scirs2_core::random::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::time::{Duration, Instant, SystemTime};
@@ -1595,7 +1595,7 @@ impl<T: Float + Default> BenchmarkSuite<T> {
         let start_time = Instant::now();
 
         // Simplified benchmark execution
-        let mut rng = rng();
+        let mut rng = scirs2_core::random::rng();
         let score = match benchmark.test_function.function_type {
             TestFunctionType::Rosenbrock => {
                 // Simulate Rosenbrock function optimization

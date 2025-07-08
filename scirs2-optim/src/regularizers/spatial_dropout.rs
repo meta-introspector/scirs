@@ -5,9 +5,7 @@
 //! - Feature Dropout: drops specific features across all spatial locations
 
 use ndarray::{Array, Axis, Dimension, ScalarOperand};
-use ndarray_rand::rand_distr::{Bernoulli, Distribution};
 use num_traits::Float;
-use rand::rng;
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};
@@ -80,9 +78,11 @@ impl<A: Float + Debug + ScalarOperand> SpatialDropout<A> {
         let feature_size = features.shape()[self.feature_dim.0];
 
         // Create a mask for each feature map
-        let dist = Bernoulli::new(keep_prob.to_f64().unwrap()).unwrap();
-        let mut rng = rng();
-        let feature_mask: Vec<bool> = (0..feature_size).map(|_| dist.sample(&mut rng)).collect();
+        let keep_prob_f64 = keep_prob.to_f64().unwrap();
+        let mut rng = scirs2_core::random::rng();
+        let feature_mask: Vec<bool> = (0..feature_size)
+            .map(|_| rng.random_bool_with_chance(keep_prob_f64))
+            .collect();
 
         // Apply mask to each feature map
         let mut result = features.clone();
@@ -169,9 +169,11 @@ impl<A: Float + Debug + ScalarOperand> FeatureDropout<A> {
         let feature_size = features.shape()[self.feature_dim.0];
 
         // Create a consistent mask for each feature
-        let dist = Bernoulli::new(keep_prob.to_f64().unwrap()).unwrap();
-        let mut rng = rng();
-        let feature_mask: Vec<bool> = (0..feature_size).map(|_| dist.sample(&mut rng)).collect();
+        let keep_prob_f64 = keep_prob.to_f64().unwrap();
+        let mut rng = scirs2_core::random::rng();
+        let feature_mask: Vec<bool> = (0..feature_size)
+            .map(|_| rng.random_bool_with_chance(keep_prob_f64))
+            .collect();
 
         // Apply the same mask across all spatial/temporal locations
         let mut result = features.clone();

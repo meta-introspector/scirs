@@ -7,6 +7,7 @@
 use crate::error::{SignalError, SignalResult};
 use crate::window;
 use ndarray::Array2;
+use std::f64::consts::PI;
 
 type SpectrogramResult = (Vec<f64>, Vec<f64>, Array2<f64>);
 type TimeFrequencyCoherenceResult = (Vec<f64>, Vec<f64>, Array2<f64>);

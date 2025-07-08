@@ -9,7 +9,6 @@ use crate::privacy::{DifferentialPrivacyConfig, NoiseMechanism, PrivacyBudget};
 use ndarray::{ArrayBase, Data, Dimension};
 use num_traits::Float;
 use scirs2_core::random;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Comprehensive privacy-utility tradeoff analyzer
@@ -46,7 +45,7 @@ pub struct PrivacyUtilityAnalyzer<T: Float> {
 }
 
 /// Configuration for privacy-utility analysis
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct AnalysisConfig {
     /// Privacy parameters to analyze
     pub privacy_parameters: PrivacyParameterSpace,
@@ -80,7 +79,7 @@ pub struct AnalysisConfig {
 }
 
 /// Privacy parameter space definition
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct PrivacyParameterSpace {
     /// Epsilon values to analyze
     pub epsilon_range: ParameterRange,
@@ -108,7 +107,7 @@ pub struct PrivacyParameterSpace {
 }
 
 /// Parameter range specification
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct ParameterRange {
     /// Minimum value
     pub min: f64,
@@ -124,7 +123,7 @@ pub struct ParameterRange {
 }
 
 /// Sampling strategies for parameter space exploration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum SamplingStrategy {
     /// Linear sampling
     Linear,
@@ -146,7 +145,7 @@ pub enum SamplingStrategy {
 }
 
 /// Utility metrics for evaluation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum UtilityMetric {
     /// Model accuracy
     Accuracy,
@@ -195,7 +194,7 @@ pub enum UtilityMetric {
 }
 
 /// Analysis granularity levels
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum AnalysisGranularity {
     /// Coarse-grained analysis
     Coarse,
@@ -214,7 +213,7 @@ pub enum AnalysisGranularity {
 }
 
 /// Budget optimization methods
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum BudgetOptimizationMethod {
     /// Grid search optimization
     GridSearch,
@@ -242,7 +241,7 @@ pub enum BudgetOptimizationMethod {
 }
 
 /// Privacy-utility analysis results
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct PrivacyUtilityResults<T: Float> {
     /// Pareto frontier points
     pub pareto_frontier: Vec<ParetoPoint<T>>,
@@ -273,7 +272,7 @@ pub struct PrivacyUtilityResults<T: Float> {
 }
 
 /// Point on Pareto frontier
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct ParetoPoint<T: Float> {
     /// Privacy guarantee (epsilon)
     pub privacy_guarantee: T,
@@ -301,7 +300,7 @@ pub struct ParetoPoint<T: Float> {
 }
 
 /// Optimal configuration recommendation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct OptimalConfiguration<T: Float> {
     /// Privacy parameters
     pub privacy_config: DifferentialPrivacyConfig,
@@ -323,7 +322,7 @@ pub struct OptimalConfiguration<T: Float> {
 }
 
 /// Privacy configuration parameters
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct PrivacyConfiguration<T: Float> {
     /// Epsilon value
     pub epsilon: T,
@@ -354,7 +353,7 @@ pub struct PrivacyConfiguration<T: Float> {
 }
 
 /// Optimization objectives
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum OptimizationObjective {
     /// Maximize utility for given privacy budget
     MaximizeUtility,
@@ -376,7 +375,7 @@ pub enum OptimizationObjective {
 }
 
 /// Sensitivity analysis results
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct SensitivityResults<T: Float> {
     /// Base utility for comparison
     pub base_utility: T,
@@ -413,7 +412,7 @@ pub struct SensitivityResults<T: Float> {
 }
 
 /// Local sensitivity analysis
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct LocalSensitivity<T: Float> {
     /// Parameter name
     pub parameter: String,
@@ -432,7 +431,7 @@ pub struct LocalSensitivity<T: Float> {
 }
 
 /// Robustness evaluation results
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct RobustnessResults<T: Float> {
     /// Robustness score
     pub robustness_score: T,
@@ -454,7 +453,7 @@ pub struct RobustnessResults<T: Float> {
 }
 
 /// Stability analysis results
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct StabilityAnalysis<T: Float> {
     /// Lyapunov exponent
     pub lyapunov_exponent: T,
@@ -470,7 +469,7 @@ pub struct StabilityAnalysis<T: Float> {
 }
 
 /// Convergence properties
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct ConvergenceProperties<T: Float> {
     /// Convergence rate
     pub convergence_rate: T,
@@ -486,7 +485,7 @@ pub struct ConvergenceProperties<T: Float> {
 }
 
 /// Asymptotic behavior types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum AsymptoticBehavior {
     /// Exponential convergence
     Exponential,
@@ -505,7 +504,7 @@ pub enum AsymptoticBehavior {
 }
 
 /// Perturbation analysis
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct PerturbationAnalysis<T: Float> {
     /// Perturbation sensitivity
     pub perturbation_sensitivity: T,
@@ -521,7 +520,7 @@ pub struct PerturbationAnalysis<T: Float> {
 }
 
 /// Perturbation effect
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct PerturbationEffect<T: Float> {
     /// Perturbation type
     pub perturbation_type: PerturbationType,
@@ -537,7 +536,7 @@ pub struct PerturbationEffect<T: Float> {
 }
 
 /// Types of perturbations
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum PerturbationType {
     /// Parameter perturbation
     Parameter,
@@ -556,7 +555,7 @@ pub enum PerturbationType {
 }
 
 /// Failure mode analysis
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct FailureMode<T: Float> {
     /// Failure type
     pub failure_type: FailureType,
@@ -575,7 +574,7 @@ pub struct FailureMode<T: Float> {
 }
 
 /// Types of failures
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum FailureType {
     /// Privacy breach
     PrivacyBreach,
@@ -594,7 +593,7 @@ pub enum FailureType {
 }
 
 /// Budget allocation recommendations
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct BudgetRecommendations<T: Float> {
     /// Optimal budget allocation
     pub optimal_allocation: BudgetAllocation<T>,
@@ -610,7 +609,7 @@ pub struct BudgetRecommendations<T: Float> {
 }
 
 /// Budget allocation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct BudgetAllocation<T: Float> {
     /// Total privacy budget
     pub total_budget: PrivacyBudget,
@@ -629,7 +628,7 @@ pub struct BudgetAllocation<T: Float> {
 }
 
 /// Budget allocation strategies
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum AllocationStrategy {
     /// Uniform allocation
     Uniform,
@@ -651,7 +650,7 @@ pub enum AllocationStrategy {
 }
 
 /// Budget efficiency metrics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct BudgetEfficiencyMetrics<T: Float> {
     /// Utility per epsilon
     pub utility_per_epsilon: T,
@@ -670,7 +669,7 @@ pub struct BudgetEfficiencyMetrics<T: Float> {
 }
 
 /// Adaptive budget strategy
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct AdaptiveBudgetStrategy<T: Float> {
     /// Strategy name
     pub name: String,
@@ -686,7 +685,7 @@ pub struct AdaptiveBudgetStrategy<T: Float> {
 }
 
 /// Adaptation triggers
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum AdaptationTrigger {
     /// Utility threshold
     UtilityThreshold,
@@ -705,7 +704,7 @@ pub enum AdaptationTrigger {
 }
 
 /// Budget adjustment rules
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct BudgetAdjustmentRule<T: Float> {
     /// Adjustment type
     pub adjustment_type: AdjustmentType,
@@ -721,7 +720,7 @@ pub struct BudgetAdjustmentRule<T: Float> {
 }
 
 /// Adjustment types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum AdjustmentType {
     /// Multiplicative adjustment
     Multiplicative,
@@ -737,7 +736,7 @@ pub enum AdjustmentType {
 }
 
 /// Adjustment frequency
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum AdjustmentFrequency {
     /// Every iteration
     EveryIteration,
@@ -753,7 +752,7 @@ pub enum AdjustmentFrequency {
 }
 
 /// Adjustment constraints
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct AdjustmentConstraints<T: Float> {
     /// Minimum budget
     pub min_budget: T,
@@ -769,7 +768,7 @@ pub struct AdjustmentConstraints<T: Float> {
 }
 
 /// Strategy performance metrics
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct StrategyPerformanceMetrics<T: Float> {
     /// Average utility achieved
     pub average_utility: T,
@@ -788,7 +787,7 @@ pub struct StrategyPerformanceMetrics<T: Float> {
 }
 
 /// Utility degradation prediction
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct DegradationPrediction<T: Float> {
     /// Privacy parameter
     pub privacy_parameter: T,
@@ -807,7 +806,7 @@ pub struct DegradationPrediction<T: Float> {
 }
 
 /// Prediction models
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum PredictionModel {
     /// Linear regression
     LinearRegression,
@@ -829,7 +828,7 @@ pub enum PredictionModel {
 }
 
 /// Privacy risk assessment
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct PrivacyRiskAssessment<T: Float> {
     /// Overall risk score
     pub overall_risk_score: T,
@@ -848,7 +847,7 @@ pub struct PrivacyRiskAssessment<T: Float> {
 }
 
 /// Risk categories
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RiskCategory {
     /// Membership inference risk
     MembershipInference,
@@ -870,7 +869,7 @@ pub enum RiskCategory {
 }
 
 /// Compliance status
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum ComplianceStatus {
     /// Fully compliant
     Compliant,
@@ -886,7 +885,7 @@ pub enum ComplianceStatus {
 }
 
 /// Risk evolution over time
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct RiskEvolution<T: Float> {
     /// Time point
     pub time_point: usize,
@@ -902,7 +901,7 @@ pub struct RiskEvolution<T: Float> {
 }
 
 /// Risk trends
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum RiskTrend {
     /// Risk increasing
     Increasing,
@@ -918,7 +917,7 @@ pub enum RiskTrend {
 }
 
 /// Statistical test results
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct StatisticalTestResults<T: Float> {
     /// Hypothesis test results
     pub hypothesis_tests: Vec<HypothesisTestResult<T>>,
@@ -937,7 +936,7 @@ pub struct StatisticalTestResults<T: Float> {
 }
 
 /// Hypothesis test result
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct HypothesisTestResult<T: Float> {
     /// Test name
     pub test_name: String,
@@ -959,7 +958,7 @@ pub struct HypothesisTestResult<T: Float> {
 }
 
 /// Power analysis
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct PowerAnalysis<T: Float> {
     /// Statistical power
     pub statistical_power: T,
@@ -975,7 +974,7 @@ pub struct PowerAnalysis<T: Float> {
 }
 
 /// Multiple comparison correction
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct MultipleComparisonCorrection<T: Float> {
     /// Correction method
     pub correction_method: CorrectionMethod,
@@ -991,7 +990,7 @@ pub struct MultipleComparisonCorrection<T: Float> {
 }
 
 /// Multiple comparison correction methods
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub enum CorrectionMethod {
     /// Bonferroni correction
     Bonferroni,
@@ -1010,7 +1009,7 @@ pub enum CorrectionMethod {
 }
 
 /// Analysis metadata
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct AnalysisMetadata {
     /// Analysis timestamp
     pub timestamp: String,
@@ -1032,7 +1031,7 @@ pub struct AnalysisMetadata {
 }
 
 /// Computational resources used
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct ComputationalResources {
     /// CPU time used
     pub cpu_time: std::time::Duration,
@@ -1048,7 +1047,7 @@ pub struct ComputationalResources {
 }
 
 /// GPU usage information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct GpuUsage {
     /// GPU time used
     pub gpu_time: std::time::Duration,
@@ -1061,7 +1060,7 @@ pub struct GpuUsage {
 }
 
 /// Reproducibility information
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct ReproducibilityInfo {
     /// Random seed used
     pub random_seed: u64,
@@ -1180,23 +1179,30 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
         }) {
             optimal_configurations.push(OptimalConfiguration {
                 privacy_config: DifferentialPrivacyConfig {
-                    epsilon: max_utility_point
+                    target_epsilon: max_utility_point
                         .configuration
                         .epsilon
                         .to_f64()
                         .unwrap_or(1.0),
-                    delta: max_utility_point
+                    target_delta: max_utility_point
                         .configuration
                         .delta
                         .to_f64()
                         .unwrap_or(1e-5),
-                    noise_mechanism: max_utility_point.configuration.noise_mechanism.clone(),
-                    clipping_threshold: max_utility_point
+                    noise_multiplier: 1.1,
+                    l2_norm_clip: max_utility_point
                         .configuration
                         .clipping_threshold
                         .to_f64()
                         .unwrap_or(1.0),
-                    batch_size: max_utility_point.configuration.batch_size,
+                    batch_size: 256,
+                    dataset_size: 50000,
+                    max_steps: 1000,
+                    noise_mechanism: max_utility_point.configuration.noise_mechanism.clone(),
+                    secure_aggregation: false,
+                    adaptive_clipping: false,
+                    adaptive_clip_init: 1.0,
+                    adaptive_clip_lr: 0.2,
                 },
                 expected_utility: max_utility_point.utility_value,
                 privacy_guarantee: max_utility_point.privacy_guarantee,
@@ -1215,23 +1221,30 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
         }) {
             optimal_configurations.push(OptimalConfiguration {
                 privacy_config: DifferentialPrivacyConfig {
-                    epsilon: max_privacy_point
+                    target_epsilon: max_privacy_point
                         .configuration
                         .epsilon
                         .to_f64()
                         .unwrap_or(0.1),
-                    delta: max_privacy_point
+                    target_delta: max_privacy_point
                         .configuration
                         .delta
                         .to_f64()
                         .unwrap_or(1e-6),
-                    noise_mechanism: max_privacy_point.configuration.noise_mechanism.clone(),
-                    clipping_threshold: max_privacy_point
+                    noise_multiplier: 1.1,
+                    l2_norm_clip: max_privacy_point
                         .configuration
                         .clipping_threshold
                         .to_f64()
                         .unwrap_or(1.0),
                     batch_size: max_privacy_point.configuration.batch_size,
+                    dataset_size: 50000,
+                    max_steps: 1000,
+                    noise_mechanism: max_privacy_point.configuration.noise_mechanism.clone(),
+                    secure_aggregation: false,
+                    adaptive_clipping: false,
+                    adaptive_clip_init: 1.0,
+                    adaptive_clip_lr: 0.2,
                 },
                 expected_utility: max_privacy_point.utility_value,
                 privacy_guarantee: max_privacy_point.privacy_guarantee,
@@ -1266,7 +1279,7 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
         // 4. Evaluate robustness if enabled
         let robustness_results =
             if self.config.enable_robustness_evaluation && !pareto_frontier.is_empty() {
-                let config = &pareto_frontier[0].configuration;
+                let _config = &pareto_frontier[0].configuration;
                 RobustnessResults {
                     robustness_score: T::from(0.8).unwrap(), // Placeholder
                     worst_case_degradation: T::from(0.1).unwrap(),
@@ -1320,8 +1333,13 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
         let budget_recommendations = BudgetRecommendations {
             optimal_allocation: BudgetAllocation {
                 total_budget: PrivacyBudget {
-                    epsilon: 1.0,
-                    delta: 1e-5,
+                    epsilon_consumed: 0.0,
+                    delta_consumed: 0.0,
+                    epsilon_remaining: 1.0,
+                    delta_remaining: 1e-5,
+                    steps_taken: 0,
+                    accounting_method: crate::privacy::AccountingMethod::MomentsAccountant,
+                    estimated_steps_remaining: 1000,
                 },
                 per_iteration_allocation: vec![T::from(0.1).unwrap(); 10],
                 allocation_strategy: AllocationStrategy::Adaptive,
@@ -1476,10 +1494,10 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
                     let j_better_privacy =
                         evaluated_points[j].privacy_cost <= evaluated_points[i].privacy_cost;
                     let j_better_utility =
-                        evaluated_points[j].utility >= evaluated_points[i].utility;
+                        evaluated_points[j].utility_value >= evaluated_points[i].utility_value;
                     let j_strictly_better = evaluated_points[j].privacy_cost
                         < evaluated_points[i].privacy_cost
-                        || evaluated_points[j].utility > evaluated_points[i].utility;
+                        || evaluated_points[j].utility_value > evaluated_points[i].utility_value;
 
                     if j_better_privacy && j_better_utility && j_strictly_better {
                         is_dominated = true;
@@ -1509,12 +1527,12 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
                 .fold(T::infinity(), |a, b| a.min(b));
             let max_utility = pareto_points
                 .iter()
-                .map(|p| p.utility)
+                .map(|p| p.utility_value)
                 .fold(T::neg_infinity(), |a, b| a.max(b));
 
             for point in &mut pareto_points {
                 let privacy_dist = point.privacy_cost - min_privacy;
-                let utility_dist = max_utility - point.utility;
+                let utility_dist = max_utility - point.utility_value;
                 point.distance_to_ideal =
                     (privacy_dist * privacy_dist + utility_dist * utility_dist).sqrt();
             }
@@ -1548,6 +1566,9 @@ impl<T: Float + Send + Sync> PrivacyUtilityAnalyzer<T> {
             parameter_sensitivities: HashMap::new(),
             gradient_magnitudes: HashMap::new(),
             interaction_effects: HashMap::new(),
+            local_sensitivities: Vec::new(),
+            global_sensitivity_bounds: (T::zero(), T::zero()),
+            sensitivity_rankings: Vec::new(),
             robustness_score: T::zero(),
             most_sensitive_parameter: "epsilon".to_string(),
             least_sensitive_parameter: "delta".to_string(),

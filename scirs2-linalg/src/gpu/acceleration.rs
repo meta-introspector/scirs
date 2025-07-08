@@ -1040,7 +1040,7 @@ impl<T> StreamHandle<T> {
     }
 }
 
-impl<T> GpuMemoryPool<T> {
+impl<T: Clone + Send + Sync + std::fmt::Debug + 'static> GpuMemoryPool<T> {
     fn new(_max_size: usize) -> Self {
         Self {
             free_buffers: HashMap::new(),
@@ -1193,13 +1193,13 @@ impl<T> CompressionEngine<T> {
 
 /// Mock GPU buffer implementation for testing
 #[derive(Debug)]
-struct MockGpuBuffer<T> {
+pub struct MockGpuBuffer<T> {
     size: usize,
     _phantom: std::marker::PhantomData<T>,
 }
 
 impl<T> MockGpuBuffer<T> {
-    fn new(size: usize) -> Self {
+    pub fn new(size: usize) -> Self {
         Self {
             size,
             _phantom: std::marker::PhantomData,

@@ -359,7 +359,9 @@ pub fn is_real(x: &[num_complex::Complex64], tol: f64) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use approx::assert_relative_eq;
+    use num_complex::Complex64;
 
     #[test]
     fn test_zero_pad_constant() {

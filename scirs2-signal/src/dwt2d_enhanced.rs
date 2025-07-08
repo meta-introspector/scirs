@@ -22,6 +22,7 @@ use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array2, ArrayView1, ArrayView2};
 use scirs2_core::validation::{check_array_finite, check_positive};
+use std::f64::consts::PI;
 use std::sync::Arc;
 
 /// Enhanced 2D DWT decomposition result

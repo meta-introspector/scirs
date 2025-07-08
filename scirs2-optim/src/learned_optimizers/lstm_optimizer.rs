@@ -40,7 +40,7 @@ pub struct LSTMOptimizer<T: Float> {
     step_count: usize,
 
     /// Random number generator for noise and initialization
-    rng: rand::prelude::ThreadRng,
+    rng: scirs2_core::random::Random<rand::rngs::StdRng>,
 }
 
 /// LSTM network architecture for optimization
@@ -929,8 +929,7 @@ impl<
         let metrics = LSTMOptimizerMetrics::new();
 
         // Initialize RNG
-        use rand::rng;
-        let rng = rng();
+        let rng = scirs2_core::random::Random::with_seed(42);
 
         Ok(Self {
             config,

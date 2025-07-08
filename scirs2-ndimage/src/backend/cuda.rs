@@ -13,8 +13,8 @@ pub trait GpuContext: Send + Sync {
     fn current_device(&self) -> usize;
     fn memory_info(&self) -> (usize, usize); // (used, total)
 }
-use ndarray::{Array, ArrayView, ArrayView2, Dimension};
-use num_traits::{Float, FromPrimitive, Zero};
+use ndarray::{Array, ArrayView2, Dimension};
+use num_traits::{Float, FromPrimitive};
 use std::collections::HashMap;
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::fmt::Debug;
@@ -508,7 +508,7 @@ unsafe impl Sync for CudaKernel {}
 unsafe impl Send for CudaExecutor {}
 unsafe impl Sync for CudaExecutor {}
 
-/// Kernel cache to avoid recompilation
+// Kernel cache to avoid recompilation
 lazy_static::lazy_static! {
     static ref KERNEL_CACHE: Arc<Mutex<HashMap<String, CudaKernel>>> = Arc::new(Mutex::new(HashMap::new()));
 }

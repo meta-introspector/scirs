@@ -16,6 +16,7 @@ use crate::lombscargle::lombscargle;
 
 use num_traits::Float;
 use std::collections::HashMap;
+use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Comprehensive edge case validation result

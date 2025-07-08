@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Get a slice of the data and display basic statistics
     let ecg_slice = ecg.data.slice(s![0..10, 0]);
-    println!("  First 10 data points: {:?}", ecg_slice);
+    println!("  First 10 data points: {ecg_slice:?}");
 
     // Calculate some basic statistics
     let ecg_data = ecg.data.column(0);
@@ -34,9 +34,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let max = ecg_data.fold(f64::NEG_INFINITY, |a, &b| a.max(b));
     let mean = ecg_data.sum() / ecg_data.len() as f64;
 
-    println!("  Min: {:.3} mV", min);
-    println!("  Max: {:.3} mV", max);
-    println!("  Mean: {:.3} mV", mean);
+    println!("  Min: {min:.3} mV");
+    println!("  Max: {max:.3} mV");
+    println!("  Mean: {mean:.3} mV");
 
     // Note: Stock market and weather datasets are commented out because their source data
     // is not yet available.

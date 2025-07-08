@@ -13,6 +13,7 @@ use num_traits::Float;
 use crate::error::{SignalError, SignalResult};
 use crate::wavelets;
 use num_complex::Complex64;
+use std::f64::consts::PI;
 
 /// Configuration parameters for the synchrosqueezed wavelet transform
 #[derive(Debug, Clone)]

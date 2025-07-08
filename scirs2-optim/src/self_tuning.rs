@@ -10,7 +10,6 @@ use crate::schedulers::*;
 use ndarray::{Array, Dimension, ScalarOperand};
 use num_traits::Float;
 use scirs2_core::random;
-use scirs2_core::Rng;
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Debug;
 use std::time::{Duration, Instant};
@@ -335,8 +334,10 @@ pub trait OptimizerTrait<A: Float + ScalarOperand + Debug, D: Dimension>: Send +
     fn clone_optimizer(&self) -> Box<dyn OptimizerTrait<A, D>>;
 }
 
-impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static + num_traits::FromPrimitive, D: Dimension + 'static>
-    SelfTuningOptimizer<A, D>
+impl<
+        A: Float + ScalarOperand + Debug + Send + Sync + 'static + num_traits::FromPrimitive,
+        D: Dimension + 'static,
+    > SelfTuningOptimizer<A, D>
 {
     /// Create new self-tuning optimizer
     pub fn new(config: SelfTuningConfig) -> Result<Self> {
@@ -617,7 +618,7 @@ impl<A: Float + ScalarOperand + Debug + Send + Sync + 'static + num_traits::From
     fn select_epsilon_greedy(&self) -> usize {
         let mut rng = random::rng();
 
-        if rng.random::<A>() < A::from(self.config.exploration_rate).unwrap() {
+        if A::from(rng.random_f64()).unwrap() < A::from(self.config.exploration_rate).unwrap() {
             // Explore: random selection
             rng.random_range(0, self.optimizer_candidates.len())
         } else {

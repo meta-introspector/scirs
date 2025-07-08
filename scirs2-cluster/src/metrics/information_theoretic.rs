@@ -400,7 +400,7 @@ where
         let p_y = F::from(n_y).unwrap() / n_samples_f;
         let mut h_x_given_y = F::zero();
 
-        for (&(x, y_val), &n_xy) in &contingency {
+        for (&(_x, y_val), &n_xy) in &contingency {
             if y_val == y && n_xy > 0 {
                 let p_x_given_y = F::from(n_xy).unwrap() / F::from(n_y).unwrap();
                 h_x_given_y = h_x_given_y - p_x_given_y * p_x_given_y.ln();
@@ -1247,7 +1247,7 @@ pub mod advanced_validation {
             let mut transfer_entropy = F::zero();
 
             // Calculate H(Y_t+1 | Y_t) - H(Y_t+1 | Y_t, X_t)
-            for (&(source_past, target_past, target_future), &count) in &triplet_counts {
+            for (&(_source_past, target_past, target_future), &count) in &triplet_counts {
                 let p_xyz = F::from(count).unwrap() / n_samples_f;
                 let p_z = F::from(*target_future_counts.get(&target_future).unwrap()).unwrap()
                     / n_samples_f;
@@ -2212,7 +2212,7 @@ pub mod advanced_metrics {
             let mut h_y_given_x = F::zero();
             let x_count_f = F::from(x_count).unwrap();
 
-            for (&(x_joint, y_val), &joint_count) in &joint_counts {
+            for (&(x_joint, _y_val), &joint_count) in &joint_counts {
                 if x_joint == x_val {
                     let p_y_given_x = F::from(joint_count).unwrap() / x_count_f;
                     if p_y_given_x > F::zero() {

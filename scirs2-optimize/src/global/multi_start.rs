@@ -9,7 +9,8 @@ use crate::unconstrained::{
 };
 use ndarray::{Array1, ArrayView1};
 use rand::rngs::StdRng;
-use rand::Rng;
+use rand::prelude::SliceRandom;
+use rand::{Rng, SeedableRng};
 use scirs2_core::parallel_ops::*;
 
 /// Options for multi-start optimization
@@ -78,7 +79,7 @@ where
         let ndim = bounds.len();
         let seed = options
             .seed
-            .unwrap_or_else(|| rand::rng().gen_range(0..u64::MAX));
+            .unwrap_or_else(|| rand::rng().random_range(0..u64::MAX));
         let rng = StdRng::seed_from_u64(seed);
 
         Self {
@@ -109,7 +110,7 @@ where
             let mut point = Array1::zeros(self.ndim);
             for j in 0..self.ndim {
                 let (lb, ub) = self.bounds[j];
-                point[j] = self.rng.gen_range(lb..ub);
+                point[j] = self.rng.random_range(lb..ub);
             }
             points.push(point);
         }
@@ -131,7 +132,7 @@ where
                 let segment_size = (ub - lb) / n as f64;
 
                 // Random offset within segment
-                let offset = self.rng.gen_range(0.0..1.0);
+                let offset = self.rng.random_range(0.0..1.0);
                 point[j] = lb + (i as f64 + offset) * segment_size;
             }
 

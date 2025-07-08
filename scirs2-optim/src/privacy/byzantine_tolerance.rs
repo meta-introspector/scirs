@@ -269,7 +269,7 @@ pub struct VerificationRule<T: Float> {
     pub weight: f64,
 }
 
-impl<T: Float + Send + Sync> ByzantineTolerantAggregator<T> {
+impl<T: Float + Send + Sync + ndarray::ScalarOperand> ByzantineTolerantAggregator<T> {
     /// Create new Byzantine tolerant aggregator
     pub fn new(config: ByzantineConfig) -> Self {
         let anomaly_threshold = config.anomaly_threshold;
@@ -1128,7 +1128,7 @@ impl ReputationScore {
     }
 }
 
-impl<T: Float + Send + Sync> AnomalyDetector<T> {
+impl<T: Float + Send + Sync + ndarray::ScalarOperand> AnomalyDetector<T> {
     /// Create new anomaly detector
     pub fn new(threshold: f64) -> Self {
         Self {
@@ -1206,7 +1206,7 @@ impl<T: Float + Send + Sync> AnomalyDetector<T> {
     }
 }
 
-impl<T: Float + Send + Sync> GradientStatistics<T> {
+impl<T: Float + Send + Sync + ndarray::ScalarOperand> GradientStatistics<T> {
     /// Create new gradient statistics
     pub fn new() -> Self {
         Self {

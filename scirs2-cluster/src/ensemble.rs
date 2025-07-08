@@ -4,7 +4,7 @@
 //! clustering algorithms or multiple runs of the same algorithm to achieve
 //! more robust and stable clustering results.
 
-use ndarray::{Array1, Array2, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, FromPrimitive};
 use rand::{Rng, SeedableRng};
 use serde::{Deserialize, Serialize};
@@ -1886,7 +1886,7 @@ pub mod advanced_ensemble {
             let mut weak_learners = Vec::new();
             let mut learner_weights = Vec::new();
 
-            for round in 0..self.config.boosting_config.n_rounds {
+            for _round in 0..self.config.boosting_config.n_rounds {
                 // Sample data based on current weights
                 let weighted_data = self.weighted_sample(data, &sample_weights)?;
 

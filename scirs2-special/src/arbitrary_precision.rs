@@ -7,11 +7,7 @@
 #![allow(dead_code)]
 
 use crate::error::{SpecialError, SpecialResult};
-use rug::{
-    float::{Constant, FreeCache},
-    ops::Pow,
-    Complex, Float,
-};
+use rug::{float::Constant, ops::Pow, Complex, Float};
 
 /// Default precision in bits for arbitrary precision computations
 pub const DEFAULT_PRECISION: u32 = 256;
@@ -299,7 +295,8 @@ pub mod bessel {
         // Add terms until convergence
         for k in 1..200 {
             let divisor = Float::with_val(ctx.precision(), k as f64 * (k as f64 + n.abs() as f64));
-            term *= -&x2_quarter / divisor;
+            let neg_x2_quarter = Float::with_val(ctx.precision(), -&x2_quarter);
+            term *= neg_x2_quarter / divisor;
             sum += &term;
 
             if term.clone().abs()
@@ -319,7 +316,9 @@ pub mod bessel {
         let pi_x = Float::with_val(ctx.precision(), &pi * x);
         let sqrt_2_pi_x = (ctx.float(2.0) / pi_x).sqrt();
 
-        let phase_offset = Float::with_val(ctx.precision(), (n as f64 + 0.5) * &pi / 2.0);
+        let phase_coefficient = Float::with_val(ctx.precision(), n as f64 + 0.5);
+        let phase_pi_mult = Float::with_val(ctx.precision(), &phase_coefficient * &pi);
+        let phase_offset = Float::with_val(ctx.precision(), phase_pi_mult / 2.0);
         let phase = x.clone() - phase_offset;
         let cos_phase = phase.cos();
 
@@ -328,8 +327,10 @@ pub mod bessel {
         let n2 = (n * n) as f64;
         let x2 = x.clone() * x;
 
-        correction -= (4.0 * n2 - 1.0) / (8.0 * x);
-        correction += (4.0 * n2 - 1.0) * (4.0 * n2 - 9.0) / (128.0 * &x2);
+        let x_mult = Float::with_val(ctx.precision(), 8.0 * x);
+        correction -= (4.0 * n2 - 1.0) / x_mult;
+        let x2_mult = Float::with_val(ctx.precision(), 128.0 * &x2);
+        correction += (4.0 * n2 - 1.0) * (4.0 * n2 - 9.0) / x2_mult;
 
         Ok(sqrt_2_pi_x * cos_phase * correction)
     }
@@ -366,7 +367,8 @@ pub mod bessel {
             let jn_neg = bessel_j_mp(-n, x, ctx)?;
             let cos_n_pi = if n % 2 == 0 { 1.0 } else { -1.0 };
 
-            Ok((jn * cos_n_pi - jn_neg) / (n as f64 * &pi).sin())
+            let n_pi = Float::with_val(ctx.precision(), n as f64) * &pi;
+            Ok((jn * cos_n_pi - jn_neg) / n_pi.sin())
         } else {
             // Y_{-n}(x) = (-1)^n Y_n(x)
             let yn_pos = bessel_y_mp(-n, x, ctx)?;
@@ -380,7 +382,9 @@ pub mod bessel {
         let pi_x = Float::with_val(ctx.precision(), &pi * x);
         let sqrt_2_pi_x = (ctx.float(2.0) / pi_x).sqrt();
 
-        let phase_offset = Float::with_val(ctx.precision(), (n as f64 + 0.5) * &pi / 2.0);
+        let phase_coefficient = Float::with_val(ctx.precision(), n as f64 + 0.5);
+        let phase_pi_mult = Float::with_val(ctx.precision(), &phase_coefficient * &pi);
+        let phase_offset = Float::with_val(ctx.precision(), phase_pi_mult / 2.0);
         let phase = x.clone() - phase_offset;
         let sin_phase = phase.sin();
 
@@ -389,8 +393,10 @@ pub mod bessel {
         let n2 = (n * n) as f64;
         let x2 = x.clone() * x;
 
-        correction -= (4.0 * n2 - 1.0) / (8.0 * x);
-        correction += (4.0 * n2 - 1.0) * (4.0 * n2 - 9.0) / (128.0 * &x2);
+        let x_mult = Float::with_val(ctx.precision(), 8.0 * x);
+        correction -= (4.0 * n2 - 1.0) / x_mult;
+        let x2_mult = Float::with_val(ctx.precision(), 128.0 * &x2);
+        correction += (4.0 * n2 - 1.0) * (4.0 * n2 - 9.0) / x2_mult;
 
         Ok(sqrt_2_pi_x * sin_phase * correction)
     }
@@ -437,11 +443,12 @@ pub mod error_function {
         let mut term = x.clone();
 
         for n in 1..200 {
-            term *= -&x2 / n as f64;
-            let new_term = &term / (2 * n + 1) as f64;
+            let neg_x2 = Float::with_val(ctx.precision(), -&x2);
+            term *= neg_x2 / (n as f64);
+            let new_term = Float::with_val(ctx.precision(), &term / (2 * n + 1) as f64);
             sum += &new_term;
 
-            if new_term.clone().abs()
+            if new_term.abs()
                 < sum.clone().abs()
                     * Float::with_val(ctx.precision(), 10.0).pow(-(ctx.precision() as i32) / 10)
             {
@@ -456,13 +463,15 @@ pub mod error_function {
     fn erfc_asymptotic(x: &Float, ctx: &PrecisionContext) -> SpecialResult<Float> {
         let sqrt_pi = ctx.pi().sqrt();
         let x2 = x.clone() * x;
-        let exp_neg_x2 = (-&x2).exp();
+        let neg_x2 = Float::with_val(ctx.precision(), -&x2);
+        let exp_neg_x2 = neg_x2.exp();
 
         let mut sum = ctx.float(1.0);
         let mut term = ctx.float(1.0);
 
         for n in 1..50 {
-            term *= -(2 * n - 1) as f64 / (2.0 * &x2);
+            let x2_mult = Float::with_val(ctx.precision(), 2.0 * &x2);
+            term *= -(2 * n - 1) as f64 / x2_mult;
             sum += &term;
 
             if term.clone().abs()
@@ -575,7 +584,7 @@ pub fn to_complex64(z: &Complex) -> num_complex::Complex64 {
 /// Clean up MPFR cache
 #[allow(dead_code)]
 pub fn cleanup_cache() {
-    FreeCache::all();
+    rug::float::free_cache(rug::float::FreeCache::All);
 }
 
 #[cfg(test)]

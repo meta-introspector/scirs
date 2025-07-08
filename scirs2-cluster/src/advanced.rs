@@ -8,7 +8,7 @@ use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis, Zip};
 use num_traits::{Float, FromPrimitive, One, Zero};
 use rand::{Rng, SeedableRng};
 use rand_distr::{Distribution, Uniform};
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::Debug;
 
 #[cfg(feature = "serde")]
@@ -930,7 +930,7 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
         let mut best_assignments = vec![0; n_samples];
 
         // Training episodes
-        for episode in 0..self.config.n_episodes {
+        for _episode in 0..self.config.n_episodes {
             let mut current_assignments = vec![0; n_samples];
 
             // Initialize random assignment
@@ -952,7 +952,7 @@ impl<F: Float + FromPrimitive + Debug> RLClustering<F> {
                 };
 
                 // Apply action
-                let old_assignment = current_assignments[step];
+                let _old_assignment = current_assignments[step];
                 current_assignments[step] = action;
 
                 // Calculate reward
@@ -1349,7 +1349,7 @@ impl<F: Float + FromPrimitive + Debug> TransferLearningClustering<F> {
         target_data: ArrayView2<F>,
     ) -> Result<()> {
         let (target_clusters, target_features) = target_centroids.dim();
-        let (source_clusters, source_features) = source_centroids.dim();
+        let (_source_clusters, source_features) = source_centroids.dim();
 
         // Compute feature alignment if needed
         let transfer_matrix = match self.config.alignment_method {
@@ -2747,7 +2747,7 @@ impl<F: Float + FromPrimitive + Debug + 'static> VQEClustering<F> {
         let n_samples = data.nrows();
 
         // For demonstration, use spectral clustering approach on the Hamiltonian
-        if let Some(ref hamiltonian) = &self.hamiltonian_matrix {
+        if let Some(ref _hamiltonian) = &self.hamiltonian_matrix {
             // Simplified eigenvalue decomposition (would use proper linear algebra library)
             let mut assignments = Array1::zeros(n_samples);
 

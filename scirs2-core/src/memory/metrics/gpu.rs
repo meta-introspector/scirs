@@ -56,12 +56,12 @@ impl<T: GpuDataType> TrackedGpuBuffer<T> {
 
     /// Copy data from the host to the device
     pub fn copy_from_host(&self, data: &[T]) {
-        self.inner.copy_from_host(data);
+        let _ = self.inner.copy_from_host(data);
     }
 
     /// Copy data from the device to the host
     pub fn copy_to_host(&self, data: &mut [T]) {
-        self.inner.copy_to_host(data);
+        let _ = self.inner.copy_to_host(data);
     }
 
     /// Convert the buffer contents to a vector

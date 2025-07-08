@@ -70,6 +70,7 @@ pub use error::{SpecialError, SpecialResult};
 mod airy;
 #[cfg(feature = "high-precision")]
 pub mod arbitrary_precision;
+#[cfg(feature = "gpu")]
 pub mod array_ops;
 pub mod bessel;
 mod bessel_zeros;

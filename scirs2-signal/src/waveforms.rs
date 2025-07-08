@@ -962,6 +962,7 @@ pub fn perfect_binary_sequence(length: usize) -> SignalResult<Vec<f64>> {
 
 // Helper functions for random number generation
 use rand::{rng, rngs::StdRng, Rng, SeedableRng};
+use std::f64::consts::PI;
 
 #[allow(dead_code)]
 fn _create_rng_from_seed(seed: u64) -> StdRng {

@@ -5,7 +5,7 @@
 
 use super::{PolicyNetwork, RLOptimizationMetrics};
 use crate::error::Result;
-use ndarray::{Array1, Array2};
+use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
 
 /// Trust region methods
@@ -112,7 +112,7 @@ pub struct AdaptiveLRState<T: Float> {
     pub failure_count: usize,
 }
 
-impl<T: Float + std::iter::Sum, P: PolicyNetwork<T>> TrustRegionOptimizer<T, P> {
+impl<T: Float + std::iter::Sum + ScalarOperand, P: PolicyNetwork<T>> TrustRegionOptimizer<T, P> {
     /// Create a new trust region optimizer
     pub fn new(config: TrustRegionConfig<T>, policy: P) -> Self {
         Self {

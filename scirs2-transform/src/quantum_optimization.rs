@@ -692,35 +692,35 @@ pub struct AdvancedQuantumOptimizer {
 #[derive(Debug, Clone)]
 pub struct AdvancedQuantumParams {
     /// Quantum collapse probability (adaptive)
-    collapse_probability: f64,
+    pub collapse_probability: f64,
     /// Entanglement strength (adaptive)
-    entanglement_strength: f64,
+    pub entanglement_strength: f64,
     /// Superposition decay rate (adaptive)
-    decay_rate: f64,
+    pub decay_rate: f64,
     /// Phase evolution speed (adaptive)
-    phase_speed: f64,
+    pub phase_speed: f64,
     /// Quantum coherence time
     #[allow(dead_code)]
-    coherence_time: f64,
+    pub coherence_time: f64,
     /// Tunneling probability
-    tunneling_probability: f64,
+    pub tunneling_probability: f64,
 }
 
 /// ✅ Advanced MODE: Performance metrics for quantum optimization
 #[derive(Debug, Clone)]
 pub struct AdvancedQuantumMetrics {
     /// Convergence rate (iterations per second)
-    convergence_rate: f64,
+    pub convergence_rate: f64,
     /// Quantum efficiency score
-    quantum_efficiency: f64,
+    pub quantum_efficiency: f64,
     /// Exploration vs exploitation balance
-    exploration_ratio: f64,
+    pub exploration_ratio: f64,
     /// Energy consumption (computational)
-    energy_consumption: f64,
+    pub energy_consumption: f64,
     /// Solution quality improvement rate
-    quality_improvement_rate: f64,
+    pub quality_improvement_rate: f64,
     /// Parallel speedup factor
-    parallel_speedup: f64,
+    pub parallel_speedup: f64,
 }
 
 impl AdvancedQuantumOptimizer {

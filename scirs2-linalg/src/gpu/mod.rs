@@ -222,7 +222,7 @@ pub trait GpuContext: Send + Sync + std::fmt::Debug {
 /// GPU context with generic operations (separate trait for dyn compatibility)
 pub trait GpuContextAlloc: GpuContext {
     /// Allocate buffer on GPU
-    fn allocate_buffer<T: Clone + Send + Sync + Copy + 'static>(
+    fn allocate_buffer<T: Clone + Send + Sync + Copy + 'static + std::fmt::Debug>(
         &self,
         size: usize,
     ) -> LinalgResult<Box<dyn GpuBuffer<T>>>;

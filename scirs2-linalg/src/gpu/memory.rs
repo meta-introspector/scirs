@@ -23,7 +23,7 @@ pub struct MemoryPool<T> {
     total_allocated: usize,
 }
 
-impl<T: Clone + Send + Sync + Copy + 'static> MemoryPool<T> {
+impl<T: Clone + Send + Sync + Copy + 'static + std::fmt::Debug> MemoryPool<T> {
     /// Create a new memory pool
     pub fn new(max_pool_size: usize) -> Self {
         Self {
@@ -127,7 +127,7 @@ impl MemoryBandwidthProfiler {
         transfer_size: usize,
     ) -> LinalgResult<f64>
     where
-        T: Clone + Send + Sync + Default + Copy + 'static,
+        T: Clone + Send + Sync + Default + Copy + 'static + std::fmt::Debug,
     {
         let _start_time = std::time::Instant::now();
 

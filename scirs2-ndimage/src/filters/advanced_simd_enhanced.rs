@@ -5,11 +5,11 @@
 //! use advanced vectorization techniques and platform-specific optimizations.
 
 use ndarray::{
-    s, Array, ArrayView, ArrayView1, ArrayView2, ArrayViewMut2, Axis, Dimension, Ix2, Zip,
+    Array, ArrayView1, ArrayView2, Dimension, Ix2,
 };
-use num_traits::{Float, FromPrimitive, One, Zero};
+use num_traits::{Float, FromPrimitive, Zero};
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use std::cmp;
+use std::cmp::Ordering;
 use std::fmt::Debug;
 
 use crate::error::{NdimageError, NdimageResult};
@@ -750,13 +750,13 @@ where
     // This uses minimal comparisons to find the median without full sorting
 
     // Sort in groups of 3
-    sort_3(&mut values[0], &mut values[1], &mut values[2]);
-    sort_3(&mut values[3], &mut values[4], &mut values[5]);
-    sort_3(&mut values[6], &mut values[7], &mut values[8]);
+    values[0..3].sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    values[3..6].sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    values[6..9].sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     // Find median of medians
     let mut medians = [values[1].clone(), values[4].clone(), values[7].clone()];
-    sort_3(&mut medians[0], &mut medians[1], &mut medians[2]);
+    medians.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     medians[1].clone()
 }

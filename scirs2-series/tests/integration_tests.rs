@@ -38,7 +38,6 @@ use scirs2_series::{
     var_models::VectorAutoregression,
     visualization::TimeSeriesPlot,
 };
-use std::collections::HashMap;
 
 /// Generate synthetic time series with known properties for testing
 #[allow(dead_code)]
@@ -143,7 +142,8 @@ fn test_anomaly_detection_and_change_point_integration() {
 
     // 1. Detect anomalies
     let anomaly_detector = AnomalyDetector::new()
-        .with_method(scirs2_series::anomaly::AnomalyMethod::ZScore { threshold: 3.0 });
+        .with_method(scirs2_series::anomaly::AnomalyMethod::ZScore)
+        .with_threshold(3.0);
     let anomalies = anomaly_detector.detect(&data).unwrap();
 
     // Should detect the outliers we inserted
@@ -181,11 +181,11 @@ fn test_feature_extraction_and_classification_pipeline() {
     assert!((features1[1] - features3[1]).abs() > 0.1); // Different std devs
 
     // 2. Perform clustering
-    let clusterer = TimeSeriesClusterer::new(
-        scirs2_series::clustering::ClusteringMethod::KMeans { k: 3 },
-        scirs2_series::clustering::DistanceMetric::Euclidean,
-    );
-    let cluster_assignments = clusterer.cluster(&data_matrix).unwrap();
+    let clusterer = TimeSeriesClusterer::new();
+    let cluster_assignments = clusterer
+        .with_method(scirs2_series::clustering::ClusteringMethod::KMeans { k: 3 })
+        .with_distance_metric(scirs2_series::clustering::DistanceMetric::Euclidean)
+        .fit_predict(&data_matrix).unwrap();
 
     // Should assign different clusters to different series
     assert_eq!(cluster_assignments.len(), 3);
@@ -265,8 +265,12 @@ fn test_distributed_processing_workflow() {
 fn test_streaming_analysis_pipeline() {
     let data = generate_test_series(1000, 0.005, 10, 1.0);
 
-    // Initialize streaming analyzer
-    let mut streaming_analyzer = StreamingAnalyzer::new(50); // Window size 50
+    // Initialize streaming analyzer  
+    let config = scirs2_series::streaming::StreamConfig {
+        window_size: 50,
+        ..Default::default()
+    };
+    let mut streaming_analyzer = StreamingAnalyzer::new(config).unwrap();
 
     let mut anomaly_count = 0;
     let mut trend_changes = 0;
@@ -274,7 +278,7 @@ fn test_streaming_analysis_pipeline() {
 
     // Process data in streaming fashion
     for (i, &value) in data.iter().enumerate() {
-        let stats = streaming_analyzer.update(value).unwrap();
+        let stats = streaming_analyzer.process_sample(value).unwrap();
 
         if i >= 50 {
             // Wait for window to be full
@@ -362,7 +366,7 @@ fn test_biomedical_signal_processing() {
     }
 
     // Analyze ECG
-    let ecg_analysis = ECGAnalysis::new(ecg_signal.clone(), fs).unwrap();
+    let mut ecg_analysis = ECGAnalysis::new(ecg_signal.clone(), fs).unwrap();
     let r_peaks = ecg_analysis.detect_r_peaks().unwrap();
     let hrv = ecg_analysis
         .heart_rate_variability(scirs2_series::biomedical::HRVMethod::TimeDomain)
@@ -428,7 +432,7 @@ fn test_out_of_core_processing_integration() {
         .with_overlap(100)
         .with_parallel_processing(false); // Disable for test simplicity
 
-    let mut processor = ChunkedProcessor::new(config);
+    let _processor = ChunkedProcessor::new(config);
 
     // Generate large dataset (simulated)
     let large_data = generate_test_series(10000, 0.01, 50, 1.0);
@@ -640,7 +644,7 @@ fn test_comprehensive_workflow() {
     // 6. Fit forecasting models and generate predictions
     let mut arima = ArimaModel::new(2, 1, 2).unwrap();
     arima.fit(&cleaned_data).unwrap();
-    let arima_forecast = arima.forecast(50, &data).unwrap();
+    let arima_forecast = arima.forecast(50, &cleaned_data).unwrap();
 
     // 7. Validate results
     assert!(segments.len() > 0);

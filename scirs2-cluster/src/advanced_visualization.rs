@@ -228,7 +228,7 @@ impl AdvancedVisualizer {
         data: &ArrayView2<f64>,
         result: &AdvancedClusteringResult,
     ) -> Result<ClusterPlot> {
-        let n_samples = data.nrows();
+        let _n_samples = data.nrows();
         let n_features = data.ncols();
 
         // For high-dimensional data, apply dimensionality reduction

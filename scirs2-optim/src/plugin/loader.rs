@@ -1687,7 +1687,7 @@ impl Default for SignatureVerificationConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            required_algorithm: SignatureAlgorithm::RSA2048_SHA256,
+            required_algorithm: SignatureAlgorithm::Rsa2048Sha256,
             min_key_size: 2048,
             allow_self_signed: false,
             max_chain_depth: 5,

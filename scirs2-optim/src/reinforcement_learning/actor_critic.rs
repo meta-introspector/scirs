@@ -8,9 +8,8 @@ use super::{
     RLScheduler, TrajectoryBatch, ValueNetwork,
 };
 use crate::error::{OptimError, Result};
-use ndarray::{Array1, Array2};
+use ndarray::{Array1, Array2, ScalarOperand};
 use num_traits::Float;
-use rand::{rng, Rng};
 use std::collections::HashMap;
 
 /// Actor-Critic optimization methods
@@ -374,7 +373,7 @@ impl<T: Float + Send + Sync> ExperienceReplayBuffer<T> {
 
         let mut samples = Vec::new();
         for _ in 0..sample_size {
-            let idx = rng().random_range(0, available_size);
+            let idx = scirs2_core::random::rng().random_range(0, available_size);
             samples.push(self.buffer[idx].clone());
         }
 
@@ -396,7 +395,12 @@ impl<T: Float + Send + Sync> ExperienceReplayBuffer<T> {
     }
 }
 
-impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, P, V> {
+impl<
+        T: Float + num_traits::FromPrimitive + std::iter::Sum + Send + Sync + ScalarOperand,
+        P: PolicyNetwork<T>,
+        V: ValueNetwork<T>,
+    > ActorCriticOptimizer<T, P, V>
+{
     /// Create a new Actor-Critic optimizer
     pub fn new(config: ActorCriticConfig<T>, actor: P, critics: Vec<V>) -> Result<Self> {
         if critics.is_empty() {
@@ -539,7 +543,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
 
                 // Add target policy smoothing noise (TD3 feature)
                 for action in target_actions.iter_mut() {
-                    let noise = T::from(rng().random::<f64>() - 0.5).unwrap()
+                    let noise = T::from(scirs2_core::random::rng().random_f64() - 0.5).unwrap()
                         * T::from(2.0).unwrap()
                         * self.config.td3_config.policy_noise;
                     let clipped_noise = noise
@@ -720,7 +724,8 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
 
             // OU noise update: dx = theta * (0 - x) * dt + sigma * dW
             for noise in ou_state.iter_mut() {
-                let dx = -theta * *noise + sigma * T::from(rng().random::<f64>() - 0.5).unwrap();
+                let dx = -theta * *noise
+                    + sigma * T::from(scirs2_core::random::rng().random_f64() - 0.5).unwrap();
                 *noise = *noise + dx;
             }
         }
@@ -955,8 +960,8 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
 
                     // Add Gaussian noise: action = mean + std * noise
                     for ((action, &m), &s) in actions.iter_mut().zip(mean.iter()).zip(std.iter()) {
-                        let noise =
-                            T::from(rng().random::<f64>() - 0.5).unwrap() * T::from(2.0).unwrap(); // Simplified noise
+                        let noise = T::from(scirs2_core::random::rng().random_f64() - 0.5).unwrap()
+                            * T::from(2.0).unwrap(); // Simplified noise
                         *action = m + s * noise;
                     }
 
@@ -1096,7 +1101,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
                 // Soft update: target = tau * online + (1 - tau) * target
                 for (param_name, online_param) in online_params {
                     if let Some(target_param) = target_params.get_mut(&param_name) {
-                        *target_param = &(*target_param * one_minus_tau) + &(online_param * tau);
+                        *target_param = &(target_param.clone() * one_minus_tau) + &(online_param * tau);
                     }
                 }
 
@@ -1111,7 +1116,7 @@ impl<T: Float, P: PolicyNetwork<T>, V: ValueNetwork<T>> ActorCriticOptimizer<T, 
 
             for (param_name, online_param) in online_params {
                 if let Some(target_param) = target_params.get_mut(&param_name) {
-                    *target_param = &(*target_param * one_minus_tau) + &(online_param * tau);
+                    *target_param = &(target_param.clone() * one_minus_tau) + &(online_param * tau);
                 }
             }
 

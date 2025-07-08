@@ -30,7 +30,7 @@ pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
     // Write "MATLAB" magic string
     writer
         .write_all(b"MATLAB")
-        .map_err(|e| IoError::FileError(format!("Failed to write header: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write header: {e}")))?;
 
     // Write descriptive text - MATLAB header is exactly 128 bytes total
     let description = b" 5.0 MAT-file, Created by: scirs2-io library";
@@ -39,7 +39,7 @@ pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
     // Write the description
     writer
         .write_all(description)
-        .map_err(|e| IoError::FileError(format!("Failed to write description: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write description: {e}")))?;
 
     // Calculate padding needed to reach position 124 (subsystem data offset at 124-128)
     let header_text_target = 124;
@@ -51,16 +51,16 @@ pub fn write_mat_header<W: Write>(writer: &mut W) -> Result<()> {
         let padding = vec![0u8; padding_needed];
         writer
             .write_all(&padding)
-            .map_err(|e| IoError::FileError(format!("Failed to write padding: {}", e)))?;
+            .map_err(|e| IoError::FileError(format!("Failed to write padding: {e}")))?;
     }
 
     // Write subsystem data offset (4 bytes: version + endianness at positions 124-128)
     writer
         .write_u16::<LittleEndian>(0x0100) // Version
-        .map_err(|e| IoError::FileError(format!("Failed to write version: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write version: {e}")))?;
     writer
         .write_u16::<LittleEndian>(0x4D49) // Endianness indicator "MI"
-        .map_err(|e| IoError::FileError(format!("Failed to write endianness: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write endianness: {e}")))?;
 
     Ok(())
 }
@@ -75,19 +75,19 @@ pub fn write_variable<W: Write + Seek>(
     // Write matrix element header (MI_MATRIX)
     writer
         .write_i32::<LittleEndian>(MI_MATRIX)
-        .map_err(|e| IoError::FileError(format!("Failed to write matrix type: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write matrix type: {e}")))?;
 
     // Placeholder for size - we'll calculate and update this at the end
     let size_pos = writer
         .stream_position()
-        .map_err(|e| IoError::FileError(format!("Failed to get size position: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to get size position: {e}")))?;
     writer
         .write_i32::<LittleEndian>(0)
-        .map_err(|e| IoError::FileError(format!("Failed to write size placeholder: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write size placeholder: {e}")))?;
 
     let data_start = writer
         .stream_position()
-        .map_err(|e| IoError::FileError(format!("Failed to get data start: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to get data start: {e}")))?;
 
     match mat_type {
         MatType::Double(array) => {
@@ -120,22 +120,22 @@ pub fn write_variable<W: Write + Seek>(
     // Calculate and write the actual matrix size
     let data_end = writer
         .stream_position()
-        .map_err(|e| IoError::FileError(format!("Failed to get data end: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to get data end: {e}")))?;
     let total_size = (data_end - data_start) as i32;
 
     // Go back and write the actual size
     let current_pos = data_end;
     writer
         .seek(std::io::SeekFrom::Start(size_pos))
-        .map_err(|e| IoError::FileError(format!("Failed to seek to size: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to seek to size: {e}")))?;
     writer
         .write_i32::<LittleEndian>(total_size)
-        .map_err(|e| IoError::FileError(format!("Failed to write actual size: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to write actual size: {e}")))?;
 
     // Return to end of data
     writer
         .seek(std::io::SeekFrom::Start(current_pos))
-        .map_err(|e| IoError::FileError(format!("Failed to seek back: {}", e)))?;
+        .map_err(|e| IoError::FileError(format!("Failed to seek back: {e}")))?;
 
     Ok(())
 }

@@ -6,9 +6,9 @@
 //! - Automated feature engineering
 //! - Production monitoring
 
-use ndarray::{Array1, Array2};
+use ndarray::{Array2};
 use scirs2_transform::{
-    auto_feature_engineering::{AutoFeatureEngineer, TransformationType},
+    auto_feature_engineering::{AutoFeatureEngineer},
     Result,
 };
 

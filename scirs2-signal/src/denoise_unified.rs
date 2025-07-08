@@ -13,6 +13,7 @@ use crate::denoise_enhanced::{
 use crate::denoise_super_advanced::{advanced_advanced_denoise, AdvancedAdvancedDenoisingConfig};
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
+use ndarray::Array1;
 use serde::{Deserialize, Serialize};
 // use std::f64::consts::PI;
 

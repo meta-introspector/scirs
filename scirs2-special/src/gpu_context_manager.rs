@@ -418,10 +418,10 @@ impl GpuContextPool {
     fn query_opencl_device_info(&self, _context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {
         #[cfg(feature = "gpu")]
         log::debug!("Querying OpenCL device properties...");
-        
+
         let estimated_memory = self.estimate_gpu_memory_opencl();
         let estimated_compute_units = self.estimate_compute_units_opencl();
-        
+
         Ok(GpuDeviceInfo {
             device_id: 0,
             device_name: format!("OpenCL GPU Device ({})", self.detect_gpu_vendor()),
@@ -432,15 +432,15 @@ impl GpuContextPool {
             is_available: true,
         })
     }
-    
+
     /// Query CUDA device information with detailed properties
     fn query_cuda_device_info(&self, _context: &Arc<GpuContext>) -> SpecialResult<GpuDeviceInfo> {
         #[cfg(feature = "gpu")]
         log::debug!("Querying CUDA device properties...");
-        
+
         let estimated_memory = self.estimate_gpu_memory_cuda();
         let estimated_compute_units = self.estimate_compute_units_cuda();
-        
+
         Ok(GpuDeviceInfo {
             device_id: 0,
             device_name: format!("NVIDIA CUDA Device ({})", self.detect_nvidia_architecture()),
@@ -451,31 +451,53 @@ impl GpuContextPool {
             is_available: true,
         })
     }
-    
+
     /// Helper functions for device estimation
-    fn estimate_gpu_memory_opencl(&self) -> u64 { 2 * 1024 * 1024 * 1024 }
-    fn estimate_gpu_memory_cuda(&self) -> u64 { 4 * 1024 * 1024 * 1024 }
-    fn estimate_compute_units_opencl(&self) -> u32 { 32 }
-    fn estimate_compute_units_cuda(&self) -> u32 { 64 }
-    fn detect_gpu_vendor(&self) -> String { "Unknown Vendor".to_string() }
-    fn detect_nvidia_architecture(&self) -> String { "Unknown Architecture".to_string() }
-    fn get_system_memory_size(&self) -> u64 { 8 * 1024 * 1024 * 1024 }
-    fn is_likely_integrated_gpu(&self) -> bool { false }
-    
+    fn estimate_gpu_memory_opencl(&self) -> u64 {
+        2 * 1024 * 1024 * 1024
+    }
+    fn estimate_gpu_memory_cuda(&self) -> u64 {
+        4 * 1024 * 1024 * 1024
+    }
+    fn estimate_compute_units_opencl(&self) -> u32 {
+        32
+    }
+    fn estimate_compute_units_cuda(&self) -> u32 {
+        64
+    }
+    fn detect_gpu_vendor(&self) -> String {
+        "Unknown Vendor".to_string()
+    }
+    fn detect_nvidia_architecture(&self) -> String {
+        "Unknown Architecture".to_string()
+    }
+    fn get_system_memory_size(&self) -> u64 {
+        8 * 1024 * 1024 * 1024
+    }
+    fn is_likely_integrated_gpu(&self) -> bool {
+        false
+    }
+
     /// Advanced performance monitoring with trend analysis
     pub fn get_performance_trends(&self) -> HashMap<GpuBackend, String> {
         let stats = self.performance_stats.read().unwrap();
         let mut trends = HashMap::new();
-        
+
         for (&backend_type, stat) in stats.iter() {
             let trend_analysis = if stat.total_operations > 10 {
                 let success_rate = stat.successful_operations as f64 / stat.total_operations as f64;
                 let avg_throughput = if stat.average_execution_time.as_millis() > 0 {
                     1000.0 / stat.average_execution_time.as_millis() as f64
-                } else { 0.0 };
-                
-                format!("Success: {:.1}%, Throughput: {:.1} ops/sec, Data: {} MB",
-                       success_rate * 100.0, avg_throughput, stat.total_data_transferred / 1024 / 1024)
+                } else {
+                    0.0
+                };
+
+                format!(
+                    "Success: {:.1}%, Throughput: {:.1} ops/sec, Data: {} MB",
+                    success_rate * 100.0,
+                    avg_throughput,
+                    stat.total_data_transferred / 1024 / 1024
+                )
             } else {
                 "Insufficient data for trend analysis".to_string()
             };
@@ -483,7 +505,7 @@ impl GpuContextPool {
         }
         trends
     }
-    
+
     /// Clear performance statistics
     pub fn reset_performance_stats(&self) {
         let mut stats = self.performance_stats.write().unwrap();
@@ -493,7 +515,7 @@ impl GpuContextPool {
         #[cfg(feature = "gpu")]
         log::info!("GPU performance statistics reset");
     }
-    
+
     /// Get all performance statistics
     pub fn get_performance_stats_all(&self) -> HashMap<GpuBackend, GpuPerformanceStats> {
         self.performance_stats.read().unwrap().clone()

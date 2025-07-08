@@ -7,7 +7,7 @@
 use crate::error::{OptimError, Result};
 use ndarray::Array1;
 use num_traits::Float;
-use rand_chacha::ChaCha20Rng;
+use scirs2_core::random;
 use std::collections::HashMap;
 
 /// Secure Multi-Party Computation coordinator
@@ -200,14 +200,14 @@ impl<T: Float + Send + Sync> ShamirSecretSharing<T> {
     }
 
     /// Share a secret value
-    pub fn share_secret(&mut self, secret: T) -> Result<Vec<T>> {
+    pub fn share_secret(&mut self, secret: T) -> Result<Vec<(usize, T)>> {
         // Generate random polynomial coefficients
-        let mut rng = ChaCha20Rng::from_entropy();
+        let mut rng = random::Random::with_seed(42);
         self.coefficients.clear();
         self.coefficients.push(secret); // a0 = secret
 
         for _ in 1..self.threshold {
-            let coeff = T::from(rng.random::<f64>()).unwrap();
+            let coeff = T::from(rng.random_range(0.0, 1.0)).unwrap();
             self.coefficients.push(coeff);
         }
 
@@ -279,7 +279,7 @@ pub struct CryptographicAggregator<T: Float> {
     aggregation_proofs: Vec<AggregationProof<T>>,
 }
 
-impl<T: Float + Send + Sync> CryptographicAggregator<T> {
+impl<T: Float + Send + Sync + ndarray::ScalarOperand> CryptographicAggregator<T> {
     /// Create new cryptographic aggregator
     pub fn new(config: SMPCConfig) -> Self {
         Self {
@@ -408,6 +408,7 @@ impl<T: Float + Send + Sync> CryptographicAggregator<T> {
                 .verification_params
                 .generate_verification_data(aggregate)?,
             timestamp: std::time::SystemTime::now(),
+            _phantom: std::marker::PhantomData,
         };
 
         self.aggregation_proofs.push(proof.clone());
@@ -452,7 +453,7 @@ pub struct CommitmentScheme<T: Float> {
 impl<T: Float + Send + Sync> CommitmentScheme<T> {
     /// Create new commitment scheme
     pub fn new() -> Self {
-        let mut rng = ChaCha20Rng::from_entropy();
+        let mut rng = random::Random::with_seed(42);
         let commitment_key: Vec<u8> = (0..32).map(|_| rng.random_range(0, 255)).collect();
 
         Self {
@@ -490,7 +491,7 @@ pub struct VerificationParameters<T: Float> {
 impl<T: Float + Send + Sync> VerificationParameters<T> {
     /// Create new verification parameters
     pub fn new() -> Self {
-        let mut rng = ChaCha20Rng::from_entropy();
+        let mut rng = random::Random::with_seed(42);
         let verification_key: Vec<u8> = (0..64).map(|_| rng.random_range(0, 255)).collect();
 
         Self {
@@ -527,9 +528,9 @@ pub struct ProofParameters<T: Float> {
 impl<T: Float + Send + Sync> ProofParameters<T> {
     /// Create new proof parameters
     pub fn new() -> Self {
-        let mut rng = ChaCha20Rng::from_entropy();
+        let mut rng = random::Random::with_seed(42);
         let generators: Vec<T> = (0..16)
-            .map(|_| T::from(rng.random::<f64>()).unwrap())
+            .map(|_| T::from(rng.random_range(0.0, 1.0)).unwrap())
             .collect();
         let system_params: Vec<u8> = (0..128).map(|_| rng.random_range(0, 255)).collect();
 
@@ -555,7 +556,7 @@ pub struct HomomorphicEngine<T: Float> {
 impl<T: Float + Send + Sync> HomomorphicEngine<T> {
     /// Create new homomorphic encryption engine
     pub fn new() -> Self {
-        let mut rng = ChaCha20Rng::from_entropy();
+        let mut rng = random::Random::with_seed(42);
         let public_key: Vec<u8> = (0..256).map(|_| rng.random_range(0, 255)).collect();
         let private_key: Vec<u8> = (0..256).map(|_| rng.random_range(0, 255)).collect();
 
@@ -669,9 +670,9 @@ pub struct HomomorphicParameters<T: Float> {
 impl<T: Float + Send + Sync> HomomorphicParameters<T> {
     /// Create new homomorphic parameters
     pub fn new() -> Self {
-        let mut rng = ChaCha20Rng::from_entropy();
+        let mut rng = random::Random::with_seed(42);
         let noise_params: Vec<T> = (0..8)
-            .map(|_| T::from(rng.random::<f64>()).unwrap())
+            .map(|_| T::from(rng.random_range(0.0, 1.0)).unwrap())
             .collect();
 
         Self {
@@ -704,7 +705,7 @@ pub struct ZKProofSystem<T: Float> {
 impl<T: Float + Send + Sync> ZKProofSystem<T> {
     /// Create new zero-knowledge proof system
     pub fn new() -> Self {
-        let mut rng = ChaCha20Rng::from_entropy();
+        let mut rng = random::Random::with_seed(42);
         let crs: Vec<u8> = (0..512).map(|_| rng.random_range(0, 255)).collect();
 
         Self {
@@ -726,6 +727,7 @@ impl<T: Float + Send + Sync> ZKProofSystem<T> {
             witness: self.generate_witness(input, output)?,
             proof_data: self.generate_proof_data(input, output)?,
             verification_key: self.crs.clone(),
+            _phantom: std::marker::PhantomData,
         };
 
         Ok(proof)
@@ -784,9 +786,9 @@ pub struct ZKProofParameters<T: Float> {
 impl<T: Float + Send + Sync> ZKProofParameters<T> {
     /// Create new ZK proof parameters
     pub fn new() -> Self {
-        let mut rng = ChaCha20Rng::from_entropy();
+        let mut rng = random::Random::with_seed(42);
         let circuit_params: Vec<T> = (0..16)
-            .map(|_| T::from(rng.random::<f64>()).unwrap())
+            .map(|_| T::from(rng.random_range(0.0, 1.0)).unwrap())
             .collect();
 
         Self {
@@ -864,7 +866,7 @@ pub struct SecureAggregationResult<T: Float> {
     pub security_level: CommunicationSecurity,
 }
 
-impl<T: Float + Send + Sync> SMPCCoordinator<T> {
+impl<T: Float + Send + Sync + ndarray::ScalarOperand> SMPCCoordinator<T> {
     /// Create new SMPC coordinator
     pub fn new(config: SMPCConfig) -> Result<Self> {
         let secret_sharing = ShamirSecretSharing::new(config.threshold, config.num_participants);

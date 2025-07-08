@@ -6,6 +6,18 @@
 use ndarray::{Array2, ArrayView1, ArrayView2, Axis};
 use num_traits::{Float, Zero};
 
+#[cfg(all(feature = "simd", test))]
+use ndarray::Array1;
+
+#[cfg(feature = "simd")]
+use num_traits::FromPrimitive;
+
+#[cfg(feature = "simd")]
+use std::fmt::Debug;
+
+#[cfg(feature = "simd")]
+use crate::error::InterpolateResult;
+
 #[cfg(feature = "simd")]
 use scirs2_core::simd_ops::SimdUnifiedOps;
 
@@ -424,7 +436,7 @@ impl SimdBenchmark {
         queries: &ArrayView2<F>,
     ) -> (std::time::Duration, std::time::Duration)
     where
-        F: Float + FromPrimitive + SimdUnifiedOps + Zero + Debug + PartialOrd,
+        F: Float + FromPrimitive + SimdUnifiedOps + Zero + Send + Sync + Debug + PartialOrd,
     {
         use std::time::Instant;
 

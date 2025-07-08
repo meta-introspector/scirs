@@ -19,6 +19,7 @@ use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::check_finite;
 #[cfg(target_arch = "x86_64")]
 use std::arch::x86_64::*;
+use std::f64::consts::PI;
 
 /// Configuration for SIMD operations
 #[derive(Debug, Clone)]
@@ -1660,6 +1661,14 @@ unsafe fn avx512_enhanced_convolution(
 /// - High-performance autocorrelation matrix calculation
 /// - Real-time signal filtering with multiple channels
 pub mod advanced_simd_matrix {
+    use super::{simd_enhanced_convolution, SimdConfig};
+    use crate::error::{SignalError, SignalResult};
+    use ndarray::s;
+    use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayViewMut1, Axis};
+    use num_complex::Complex64;
+    use scirs2_core::parallel_ops::*;
+    use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+    use scirs2_core::validation::check_finite;
 
     /// SIMD-accelerated matrix-vector multiplication for signal processing
     ///

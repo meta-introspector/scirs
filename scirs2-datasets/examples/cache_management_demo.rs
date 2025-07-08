@@ -18,7 +18,7 @@ fn main() {
             println!("Platform: {}", std::env::consts::OS);
         }
         Err(e) => {
-            println!("Error getting cache directory: {}", e);
+            println!("Error getting cache directory: {e}");
         }
     }
     println!();
@@ -28,13 +28,13 @@ fn main() {
     println!("Set SCIRS2_CACHE_DIR to override default cache location");
     println!("Set SCIRS2_OFFLINE=true to enable offline mode");
     if let Ok(cache_env) = std::env::var("SCIRS2_CACHE_DIR") {
-        println!("Custom cache directory: {}", cache_env);
+        println!("Custom cache directory: {cache_env}");
     } else {
         println!("Using default cache directory");
     }
 
     if let Ok(offline_env) = std::env::var("SCIRS2_OFFLINE") {
-        println!("Offline mode: {}", offline_env);
+        println!("Offline mode: {offline_env}");
     } else {
         println!("Offline mode: Not set (defaults to false)");
     }
@@ -114,7 +114,7 @@ fn main() {
             }
         }
         Err(e) => {
-            println!("Error getting detailed stats: {}", e);
+            println!("Error getting detailed stats: {e}");
         }
     }
     println!();
@@ -125,7 +125,7 @@ fn main() {
     println!("1. List cached files");
     let cached_files = cache_manager.list_cached_files().unwrap();
     for file in &cached_files {
-        println!("   - {}", file);
+        println!("   - {file}");
     }
 
     println!("2. Check if specific files are cached");

@@ -246,6 +246,12 @@ pub unsafe extern "C" fn scirs_get_timeseries_values(
 }
 
 /// Calculate basic statistics for time series
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `ts` is a valid pointer to an RTimeSeries structure
+/// - `stats` is a valid pointer to an RStatistics structure
+/// - Both structures remain valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_calculate_statistics(
@@ -286,6 +292,11 @@ pub unsafe extern "C" fn scirs_calculate_statistics(
 }
 
 /// Check if time series is stationary
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `ts` is a valid pointer to an RTimeSeries structure
+/// - The structure remains valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_is_stationary(ts: *const RTimeSeries) -> c_int {
@@ -316,6 +327,13 @@ pub unsafe extern "C" fn scirs_is_stationary(ts: *const RTimeSeries) -> c_int {
 }
 
 /// Apply differencing to time series
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `ts` is a valid pointer to an RTimeSeries structure
+/// - `output` is a valid pointer to an array of at least `max_length` elements
+/// - `max_length` is greater than 0
+/// - All pointers remain valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_difference_series(
@@ -398,6 +416,12 @@ pub extern "C" fn scirs_create_arima(
 }
 
 /// Fit ARIMA model to time series
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `model` is a valid pointer to an RARIMAModel structure
+/// - `ts` is a valid pointer to an RTimeSeries structure
+/// - Both structures remain valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_fit_arima(model: *mut RARIMAModel, ts: *const RTimeSeries) -> c_int {
@@ -425,6 +449,13 @@ pub unsafe extern "C" fn scirs_fit_arima(model: *mut RARIMAModel, ts: *const RTi
 }
 
 /// Generate ARIMA forecasts
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `model` is a valid pointer to an RARIMAModel structure
+/// - `output` is a valid pointer to an array of at least `max_length` elements
+/// - `max_length` is greater than 0
+/// - All pointers remain valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_forecast_arima(
@@ -465,6 +496,14 @@ pub unsafe extern "C" fn scirs_forecast_arima(
 }
 
 /// Get ARIMA model parameters
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `model` is a valid pointer to an RARIMAModel structure
+/// - `param_names` is a valid pointer to an array of at least `max_params` char pointers
+/// - `param_values` is a valid pointer to an array of at least `max_params` doubles
+/// - `max_params` is greater than 0
+/// - All pointers remain valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_get_arima_params(
@@ -509,6 +548,12 @@ pub unsafe extern "C" fn scirs_get_arima_params(
 }
 
 /// Free ARIMA model
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `model` is a valid pointer to an RARIMAModel structure
+/// - The pointer was previously returned by `scirs_create_arima` or `scirs_auto_arima`
+/// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_free_arima(model: *mut RARIMAModel) {
@@ -538,6 +583,14 @@ pub extern "C" fn scirs_create_anomaly_detector() -> *mut RAnomalyDetector {
 }
 
 /// Detect anomalies using IQR method
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `detector` is a valid pointer to an RAnomalyDetector structure
+/// - `ts` is a valid pointer to an RTimeSeries structure
+/// - `anomaly_indices` is a valid pointer to an array of at least `max_anomalies` elements
+/// - `max_anomalies` is greater than 0
+/// - All pointers remain valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_detect_anomalies_iqr(
@@ -591,6 +644,14 @@ pub unsafe extern "C" fn scirs_detect_anomalies_iqr(
 }
 
 /// Detect anomalies using Z-score method
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `detector` is a valid pointer to an RAnomalyDetector structure
+/// - `ts` is a valid pointer to an RTimeSeries structure
+/// - `anomaly_indices` is a valid pointer to an array of at least `max_anomalies` elements
+/// - `max_anomalies` is greater than 0
+/// - All pointers remain valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_detect_anomalies_zscore(
@@ -644,6 +705,12 @@ pub unsafe extern "C" fn scirs_detect_anomalies_zscore(
 }
 
 /// Free anomaly detector
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `detector` is a valid pointer to an RAnomalyDetector structure
+/// - The pointer was previously returned by `scirs_create_anomaly_detector`
+/// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_free_anomaly_detector(detector: *mut RAnomalyDetector) {
@@ -679,6 +746,13 @@ pub extern "C" fn scirs_create_stl_decomposition(period: c_int) -> *mut RSTLDeco
 }
 
 /// Perform STL decomposition
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `decomposition` is a valid pointer to an RSTLDecomposition structure
+/// - `ts` is a valid pointer to an RTimeSeries structure
+/// - `result` is a valid pointer to an RDecompositionResult structure
+/// - All pointers remain valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_decompose_stl(
@@ -734,6 +808,12 @@ pub unsafe extern "C" fn scirs_decompose_stl(
 }
 
 /// Free STL decomposition
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `decomposition` is a valid pointer to an RSTLDecomposition structure
+/// - The pointer was previously returned by `scirs_create_stl_decomposition`
+/// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_free_stl_decomposition(decomposition: *mut RSTLDecomposition) {
@@ -749,6 +829,12 @@ pub unsafe extern "C" fn scirs_free_stl_decomposition(decomposition: *mut RSTLDe
 }
 
 /// Free decomposition result
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `result` is a valid pointer to an RDecompositionResult structure
+/// - The pointer was previously returned by `scirs_decompose_stl`
+/// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_free_decomposition_result(result: *mut RDecompositionResult) {
@@ -785,6 +871,11 @@ pub unsafe extern "C" fn scirs_free_decomposition_result(result: *mut RDecomposi
 // ================================
 
 /// Automatically select best ARIMA model
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `ts` is a valid pointer to an RTimeSeries structure
+/// - The structure remains valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_auto_arima(
@@ -902,6 +993,12 @@ pub extern "C" fn scirs_create_neural_forecaster(
 }
 
 /// Train neural forecaster
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `forecaster` is a valid pointer to an RNeuralForecaster structure
+/// - `ts` is a valid pointer to an RTimeSeries structure
+/// - Both structures remain valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_train_neural_forecaster(
@@ -934,6 +1031,14 @@ pub unsafe extern "C" fn scirs_train_neural_forecaster(
 }
 
 /// Generate neural forecasts
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `forecaster` is a valid pointer to an RNeuralForecaster structure
+/// - `input` is a valid pointer to an array of at least `input_length` elements
+/// - `output` is a valid pointer to an array of at least `max_length` elements
+/// - `input_length` and `max_length` are greater than 0
+/// - All pointers remain valid for the duration of the call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_forecast_neural(
@@ -976,6 +1081,12 @@ pub unsafe extern "C" fn scirs_forecast_neural(
 }
 
 /// Free neural forecaster
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `forecaster` is a valid pointer to an RNeuralForecaster structure
+/// - The pointer was previously returned by `scirs_create_neural_forecaster`
+/// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_free_neural_forecaster(forecaster: *mut RNeuralForecaster) {
@@ -1018,6 +1129,12 @@ pub extern "C" fn scirs_cleanup() -> c_int {
 }
 
 /// Free a C string allocated by the library
+///
+/// # Safety
+/// The caller must ensure that:
+/// - `s` is a valid pointer to a C string
+/// - The pointer was previously returned by a library function
+/// - The pointer is not used after this call
 #[cfg(feature = "r")]
 #[no_mangle]
 pub unsafe extern "C" fn scirs_free_string(s: *mut c_char) {

@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         (max_val as usize) + 1
     });
 
-    println!("  Clusters: {}", num_clusters);
+    println!("  Clusters: {num_clusters}");
 
     // Generate time series data
     let time_series = make_time_series(

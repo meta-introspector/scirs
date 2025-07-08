@@ -7,6 +7,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
+use std::f64::consts::PI;
 
 // Helper enum for handling either single values or slices
 #[derive(Debug, Clone)]

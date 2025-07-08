@@ -29,6 +29,7 @@ type WgpuBuffer = *mut std::ffi::c_void;
 type WgpuComputePipeline = *mut std::ffi::c_void;
 
 // WebGPU shader source templates
+#[allow(dead_code)]
 const ADAM_SHADER_WGSL: &str = r#"
 @group(0) @binding(0) var<storage, read_write> params: array<f32>;
 @group(0) @binding(1) var<storage, read> grads: array<f32>;
@@ -79,6 +80,7 @@ fn adam_update(@builtin(global_invocation_id) global_id: vec3<u32>) {
 }
 "#;
 
+#[allow(dead_code)]
 const GEMM_SHADER_WGSL: &str = r#"
 @group(0) @binding(0) var<storage, read> matrix_a: array<f32>;
 @group(0) @binding(1) var<storage, read> matrix_b: array<f32>;
@@ -503,9 +505,12 @@ struct WebGPUShader {
     #[cfg(not(feature = "wgpu_backend"))]
     pipeline: WgpuComputePipeline,
     #[cfg(feature = "wgpu_backend")]
+    #[allow(dead_code)]
     bind_group_layout: BindGroupLayout,
     #[cfg(not(feature = "wgpu_backend"))]
+    #[allow(dead_code)]
     bind_group_layout: *mut std::ffi::c_void,
+    #[allow(dead_code)]
     name: String,
 }
 
@@ -574,10 +579,15 @@ struct WebGPUKernelHandle {
 }
 
 enum KernelParam {
+    #[allow(dead_code)]
     Buffer(Arc<dyn GpuBufferImpl>),
+    #[allow(dead_code)]
     U32(u32),
+    #[allow(dead_code)]
     I32(i32),
+    #[allow(dead_code)]
     F32(f32),
+    #[allow(dead_code)]
     F64(f64),
 }
 
@@ -815,6 +825,7 @@ impl Drop for WebGPUBuffer {
 struct WebGPUCpuFallbackBuffer {
     data: Vec<u8>,
     size: usize,
+    #[allow(dead_code)]
     memory_pool: Arc<Mutex<WebGPUMemoryPool>>,
 }
 
@@ -875,6 +886,7 @@ struct WebGPUMemoryPool {
     available_buffers: HashMap<usize, Vec<Buffer>>,
     #[cfg(not(feature = "wgpu_backend"))]
     available_buffers: HashMap<usize, Vec<WgpuBuffer>>,
+    #[allow(dead_code)]
     total_size: usize,
     used_size: usize,
 }
@@ -934,6 +946,7 @@ impl WebGPUMemoryPool {
         self.used_size = self.used_size.saturating_sub(size);
     }
 
+    #[allow(dead_code)]
     fn get_memory_usage(&self) -> (usize, usize) {
         (self.used_size, self.total_size)
     }

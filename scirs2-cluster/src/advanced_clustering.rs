@@ -49,7 +49,7 @@
 use crate::error::{ClusteringError, Result};
 use crate::quantum_clustering::{QAOAConfig, VQEConfig};
 use crate::vq::euclidean_distance;
-use ndarray::{Array1, Array2, ArrayView2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, Axis};
 use num_complex::Complex64;
 use std::collections::{HashMap, VecDeque};
 use std::f64::consts::PI;

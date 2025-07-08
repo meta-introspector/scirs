@@ -207,7 +207,7 @@ fn print_class_distribution(targets: &Array1<f64>) {
         if i > 0 {
             print!(", ");
         }
-        print!("Class {} ({} samples)", class, count);
+        print!("Class {class} ({count} samples)");
     }
     println!();
 }

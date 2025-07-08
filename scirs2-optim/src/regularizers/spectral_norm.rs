@@ -6,7 +6,7 @@
 
 use ndarray::{Array, Array2, Array4, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
-use rand::rngs::SmallRng;
+use scirs2_core::random::Random;
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};
@@ -40,7 +40,7 @@ pub struct SpectralNorm<A: Float> {
     /// Cached right singular vector  
     v: Option<Array<A, ndarray::Ix1>>,
     /// Random number generator
-    rng: SmallRng,
+    rng: Random<rand::rngs::StdRng>,
 }
 
 impl<A: Float + Debug + ScalarOperand + FromPrimitive> SpectralNorm<A> {
@@ -55,7 +55,7 @@ impl<A: Float + Debug + ScalarOperand + FromPrimitive> SpectralNorm<A> {
             eps: A::from_f64(1e-12).unwrap(),
             u: None,
             v: None,
-            rng: SmallRng::from_entropy(),
+            rng: Random::with_seed(42),
         }
     }
 

@@ -5,9 +5,7 @@
 
 use ndarray::Array1;
 use num_traits::Float;
-use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
-use scirs2_core::random;
+use scirs2_core::random::Random;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -218,7 +216,7 @@ pub struct NSGA2<T: Float> {
     mutation_prob: f64,
 
     /// Random number generator
-    rng: SmallRng,
+    rng: Random<rand::rngs::StdRng>,
 }
 
 /// Individual in the population
@@ -692,7 +690,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + PartialOrd + s
             population_size,
             crossover_prob,
             mutation_prob,
-            rng: SmallRng::from_rng(&mut random::rng()),
+            rng: Random::with_seed(42),
         }
     }
 

@@ -6,6 +6,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use rustfft::{num_complex::Complex, FftPlanner};
+use std::f64::consts::PI;
 
 use super::basic::linear_interpolate;
 use super::core::{find_nearest_valid_index, InterpolationConfig, InterpolationMethod};
@@ -895,7 +896,7 @@ mod tests {
 
     #[test]
     fn test_polynomial_lagrange() {
-        use polynomial::lagrange_interpolate;
+        use super::polynomial::lagrange_interpolate;
 
         let x_known = [0.0, 1.0, 2.0];
         let y_known = [1.0, 2.0, 5.0]; // y = x^2 + 1
@@ -910,7 +911,7 @@ mod tests {
 
     #[test]
     fn test_polynomial_fit() {
-        use polynomial::{polynomial_eval, polynomial_fit};
+        use super::polynomial::{polynomial_eval, polynomial_fit};
 
         let x = [0.0, 1.0, 2.0, 3.0];
         let y = [1.0, 2.0, 5.0, 10.0]; // Roughly y = x^2 + 1

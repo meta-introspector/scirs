@@ -15,11 +15,9 @@ use ndarray::{Array, Array2, Dimension};
 use num_traits::Float;
 use std::sync::Arc;
 
-#[cfg(all(feature = "gpu", feature = "cuda"))]
-use scirs2_core::gpu::backends::CudaStream;
-use scirs2_core::gpu::{GpuContext, GpuKernel};
-
+use crate::gpu::memory_pool::{CudaKernel, CudaStream};
 use crate::gpu::{GpuOptimError, GpuOptimizerConfig};
+use scirs2_core::gpu::{GpuContext, GpuKernel};
 
 /// Tensor core matrix multiplication configuration
 #[derive(Debug, Clone)]
@@ -250,10 +248,10 @@ impl TensorCoreOptimizer {
             2.0
         };
         let tensor_core_factor = match self.compute_capability {
-            (major, minor) if major >= 9 => 8.0,               // Hopper
-            (major, minor) if major >= 8 => 6.0,               // Ampere
+            (major, _minor) if major >= 9 => 8.0,              // Hopper
+            (major, _minor) if major >= 8 => 6.0,              // Ampere
             (major, minor) if major >= 7 && minor >= 5 => 4.0, // Turing
-            (major, minor) if major >= 7 => 3.0,               // Volta
+            (major, _minor) if major >= 7 => 3.0,              // Volta
             _ => 1.5, // Pre-tensor core with some optimization
         };
 
@@ -792,11 +790,12 @@ impl TensorCoreOptimizer {
             optimized_data = padded;
         }
 
+        let strides = (1, optimized_data.ncols());
         Ok(OptimizedMatrix {
             data: optimized_data,
             layout,
             padding: (padding_rows, padding_cols),
-            strides: (1, optimized_data.ncols()),
+            strides,
             alignment,
         })
     }
@@ -883,7 +882,7 @@ impl TensorCoreOptimizer {
         };
         let mut current_stream = 0;
 
-        for (idx, &op_idx) in sorted_indices.iter().enumerate() {
+        for (_idx, &op_idx) in sorted_indices.iter().enumerate() {
             operation_order.push(op_idx);
             stream_assignments.push(current_stream);
             current_stream = (current_stream + 1) % num_streams;
@@ -1111,7 +1110,7 @@ impl TensorCoreOptimizer {
         m: usize,
         n: usize,
         k: usize,
-        precision: TensorCorePrecision,
+        _precision: TensorCorePrecision,
     ) -> f64 {
         let tile_m = self.config.wmma_tile_m;
         let tile_n = self.config.wmma_tile_n;
@@ -1129,20 +1128,20 @@ impl TensorCoreOptimizer {
 
     fn estimate_max_tensor_cores(&self) -> usize {
         match self.compute_capability {
-            (major, minor) if major >= 9 => 528,               // Hopper H100
-            (major, minor) if major >= 8 => 432,               // Ampere A100
+            (major, _minor) if major >= 9 => 528, // Hopper H100
+            (major, _minor) if major >= 8 => 432, // Ampere A100
             (major, minor) if major >= 7 && minor >= 5 => 272, // Turing RTX 2080
-            (major, minor) if major >= 7 => 640,               // Volta V100
+            (major, _minor) if major >= 7 => 640, // Volta V100
             _ => 1,
         }
     }
 
     fn estimate_tensor_ops_throughput(&self) -> f64 {
         match self.compute_capability {
-            (major, minor) if major >= 9 => 1000e12, // Hopper: ~1000 TOPS
-            (major, minor) if major >= 8 => 312e12,  // Ampere: ~312 TOPS
+            (major, _minor) if major >= 9 => 1000e12, // Hopper: ~1000 TOPS
+            (major, _minor) if major >= 8 => 312e12,  // Ampere: ~312 TOPS
             (major, minor) if major >= 7 && minor >= 5 => 130e12, // Turing: ~130 TOPS
-            (major, minor) if major >= 7 => 125e12,  // Volta: ~125 TOPS
+            (major, _minor) if major >= 7 => 125e12,  // Volta: ~125 TOPS
             _ => 0.0,
         }
     }
@@ -2176,7 +2175,8 @@ mod tests {
         // This will only succeed with GPU feature enabled
         #[cfg(feature = "gpu")]
         {
-            let result = optimizer.multi_batch_tensor_core_ops(&batches, TensorCorePrecision::FP16);
+            let _result =
+                optimizer.multi_batch_tensor_core_ops(&batches, TensorCorePrecision::FP16);
             // Don't assert success since it depends on GPU availability
         }
 

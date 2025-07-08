@@ -229,8 +229,7 @@ impl IdlReader {
             19 => RecordType::CompressedData,
             _ => {
                 return Err(IoError::FormatError(format!(
-                    "Unknown record type: {}",
-                    rec_type
+                    "Unknown record type: {rec_type}",
                 )))
             }
         };
@@ -274,8 +273,7 @@ impl IdlReader {
             14 => self.read_long64_array(),
             15 => self.read_ulong64_array(),
             _ => Err(IoError::FormatError(format!(
-                "Unknown type code: {}",
-                type_code
+                "Unknown type code: {type_code}",
             ))),
         }
     }

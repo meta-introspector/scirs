@@ -15,6 +15,7 @@ use crate::sysid::{estimate_transfer_function, TfEstimationMethod};
 use crate::validation_runner::{validate_signal_processing_library, ValidationConfig};
 
 use ndarray::{Array1, Array2};
+use std::f64::consts::PI;
 
 /// Comprehensive signal processing pipeline for biomedical signal analysis
 ///

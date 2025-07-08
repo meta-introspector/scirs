@@ -259,7 +259,7 @@ where
     let mut medoids: Array1<usize> = Array1::from_iter(0..k);
     let mut assignments = Array1::zeros(n_series);
 
-    for iteration in 0..max_iterations {
+    for _iteration in 0..max_iterations {
         let mut changed = false;
 
         // Assign each time series to nearest medoid
@@ -766,7 +766,7 @@ where
         TimeSeriesAlgorithm::DTWHierarchical => {
             // For hierarchical clustering, we need to cut the dendrogram
             // This is a simplified version that returns the first n_clusters
-            let linkage = dtw_hierarchical_clustering(time_series, config.dtw_window)?;
+            let _linkage = dtw_hierarchical_clustering(time_series, config.dtw_window)?;
 
             // Simple flat clustering: assign based on first few merges
             // In practice, you'd want to implement proper dendrogram cutting

@@ -5,8 +5,7 @@
 
 use ndarray::{s, Array1, Array2, Array3};
 use num_traits::Float;
-use rand::{Rng, SeedableRng};
-use scirs2_core::random;
+use scirs2_core::random::{Random, Rng};
 use std::collections::{HashMap, VecDeque};
 
 use super::{
@@ -50,7 +49,7 @@ pub struct SearchStrategyStatistics<T: Float> {
 
 /// Random search baseline strategy
 pub struct RandomSearch<T: Float + std::iter::Sum> {
-    rng: rand::rngs::SmallRng,
+    rng: Random<rand::rngs::StdRng>,
     statistics: SearchStrategyStatistics<T>,
     search_space: Option<SearchSpaceConfig>,
 }
@@ -289,9 +288,9 @@ pub struct BaselineOptimizer<T: Float> {
 impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum> RandomSearch<T> {
     pub fn new(seed: Option<u64>) -> Self {
         let rng = if let Some(seed) = seed {
-            rand::rngs::SmallRng::seed_from_u64(seed)
+            Random::with_seed(seed)
         } else {
-            rand::rngs::SmallRng::from_rng(&mut random::rng())
+            Random::with_seed(42)
         };
 
         Self {
@@ -462,7 +461,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
         let mut best_idx = 0;
         let mut best_fitness = T::neg_infinity();
 
-        let mut rng = random::rng();
+        let mut rng = scirs2_core::random::rng();
         for _ in 0..self.tournament_size {
             let idx = rng.random_range(0, self.population.len());
             if fitness_scores[idx] > best_fitness {
@@ -612,7 +611,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::fmt::Debug + std::iter::Sum
         }
 
         // Fallback to random generation
-        let idx = random::rng().random_range(0, self.population.len());
+        let idx = scirs2_core::random::rng().random_range(0, self.population.len());
         self.statistics.total_architectures_generated += 1;
         Ok(self.population[idx].clone())
     }

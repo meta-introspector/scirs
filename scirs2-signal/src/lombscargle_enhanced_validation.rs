@@ -20,6 +20,7 @@ use num_traits::Float;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 use scirs2_core::parallel_ops::*;
+use std::f64::consts::PI;
 use std::time::Instant;
 
 /// Enhanced validation configuration

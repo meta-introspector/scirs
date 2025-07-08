@@ -67,7 +67,7 @@ fn demonstrate_adversarial_examples() -> Result<(), Box<dyn std::error::Error>> 
     ];
 
     for (name, method, epsilon) in attack_methods {
-        println!("\nGenerating {} adversarial examples:", name);
+        println!("\nGenerating {name} adversarial examples:");
 
         let config = AdversarialConfig {
             epsilon,
@@ -87,8 +87,8 @@ fn demonstrate_adversarial_examples() -> Result<(), Box<dyn std::error::Error>> 
             "  ✅ Generated {} adversarial examples",
             adversarial_dataset.n_samples()
         );
-        println!("  📊 Perturbation strength: {:.4}", perturbation_norm);
-        println!("  🎯 Attack budget (ε): {:.2}", epsilon);
+        println!("  📊 Perturbation strength: {perturbation_norm:.4}");
+        println!("  🎯 Attack budget (ε): {epsilon:.2}");
         println!(
             "  📈 Expected robustness impact: {:.1}%",
             (1.0 - perturbation_norm) * 100.0
@@ -133,7 +133,7 @@ fn demonstrate_anomaly_detection() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (name, anomaly_type, fraction, severity) in anomaly_scenarios {
-        println!("\nGenerating {} dataset:", name);
+        println!("\nGenerating {name} dataset:");
 
         let config = AnomalyConfig {
             anomaly_fraction: fraction,
@@ -176,7 +176,7 @@ fn demonstrate_anomaly_detection() -> Result<(), Box<dyn std::error::Error>> {
                     "Hard"
                 }
             );
-            println!("    Separation score: {:.2}", separation);
+            println!("    Separation score: {separation:.2}");
             println!(
                 "    Recommended algorithms: {}",
                 get_recommended_anomaly_algorithms(&anomaly_type)
@@ -265,15 +265,15 @@ fn demonstrate_multitask_learning() -> Result<(), Box<dyn std::error::Error>> {
             {
                 "classification" => {
                     let n_classes = analyze_classification_target(target);
-                    println!("      Classes: {}", n_classes);
+                    println!("      Classes: {n_classes}");
                 }
                 "regression" => {
                     let (mean, std) = analyze_regression_target(target);
-                    println!("      Target range: {:.2} ± {:.2}", mean, std);
+                    println!("      Target range: {mean:.2} ± {std:.2}");
                 }
                 "ordinal_regression" => {
                     let levels = analyze_ordinal_target(target);
-                    println!("      Ordinal levels: {}", levels);
+                    println!("      Ordinal levels: {levels}");
                 }
                 _ => {}
             }
@@ -321,7 +321,7 @@ fn demonstrate_domain_adaptation() -> Result<(), Box<dyn std::error::Error>> {
         // Analyze domain characteristics
         if let Some(target) = &dataset.target {
             let class_distribution = analyze_class_distribution(target);
-            println!("      Class distribution: {:?}", class_distribution);
+            println!("      Class distribution: {class_distribution:?}");
         }
 
         // Calculate domain statistics
@@ -352,7 +352,7 @@ fn demonstrate_few_shot_learning() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (name, n_way, k_shot, n_query) in few_shot_scenarios {
-        println!("\nGenerating {} dataset:", name);
+        println!("\nGenerating {name} dataset:");
 
         let dataset = make_few_shot_dataset(n_way, k_shot, n_query, 5, 20)?;
 
@@ -374,7 +374,7 @@ fn demonstrate_few_shot_learning() -> Result<(), Box<dyn std::error::Error>> {
             // Calculate class balance in support set
             if let Some(support_target) = &episode.support_set.target {
                 let balance = calculate_class_balance(support_target, n_way);
-                println!("      Support balance: {:.2}", balance);
+                println!("      Support balance: {balance:.2}");
             }
         }
 
@@ -397,7 +397,7 @@ fn demonstrate_continual_learning() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     for (name, drift_strength) in drift_strengths {
-        println!("\nGenerating {} scenario:", name);
+        println!("\nGenerating {name} scenario:");
 
         let dataset = make_continual_learning_dataset(5, 500, 15, 4, drift_strength)?;
 
@@ -582,8 +582,8 @@ fn analyze_domain_shifts(domain_dataset: &scirs2_datasets::DomainAdaptationDatas
         let mean_shift = (target_stats.0 - source_stats.0).abs();
         let std_shift = (target_stats.1 - source_stats.1).abs();
 
-        println!("    Mean shift magnitude: {:.3}", mean_shift);
-        println!("    Std shift magnitude: {:.3}", std_shift);
+        println!("    Mean shift magnitude: {mean_shift:.3}");
+        println!("    Std shift magnitude: {std_shift:.3}");
 
         if mean_shift > 0.5 || std_shift > 0.3 {
             println!("    💡 Significant domain shift detected - adaptation needed");

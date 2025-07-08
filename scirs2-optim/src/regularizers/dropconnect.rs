@@ -4,9 +4,7 @@
 //! during training. Unlike Dropout which drops units, DropConnect drops individual weights.
 
 use ndarray::{Array, Dimension, ScalarOperand};
-use ndarray_rand::rand_distr::{Bernoulli, Distribution};
 use num_traits::Float;
-use rand::rng;
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};
@@ -75,13 +73,15 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
             return weights.clone();
         }
 
-        // Create Bernoulli distribution for sampling
+        // Create keep probability for sampling
         let keep_prob = A::one() - self.drop_prob;
-        let dist = Bernoulli::new(keep_prob.to_f64().unwrap()).unwrap();
+        let keep_prob_f64 = keep_prob.to_f64().unwrap();
 
         // Sample mask
-        let mut rng = rng();
-        let mask = Array::from_shape_fn(weights.raw_dim(), |_| dist.sample(&mut rng));
+        let mut rng = scirs2_core::random::rng();
+        let mask = Array::from_shape_fn(weights.raw_dim(), |_| {
+            rng.random_bool_with_chance(keep_prob_f64)
+        });
 
         // Apply mask and scale by keep probability
         let mut result = weights.clone();
@@ -113,11 +113,13 @@ impl<A: Float + Debug + ScalarOperand> DropConnect<A> {
 
         // Use the same mask for gradients
         let keep_prob = A::one() - self.drop_prob;
-        let dist = Bernoulli::new(keep_prob.to_f64().unwrap()).unwrap();
+        let keep_prob_f64 = keep_prob.to_f64().unwrap();
 
         // Create mask with same shape as weights
-        let mut rng = rng();
-        let mask = Array::from_shape_fn(weights_shape, |_| dist.sample(&mut rng));
+        let mut rng = scirs2_core::random::rng();
+        let mask = Array::from_shape_fn(weights_shape, |_| {
+            rng.random_bool_with_chance(keep_prob_f64)
+        });
 
         // Apply mask to gradients
         let mut result = gradients.clone();

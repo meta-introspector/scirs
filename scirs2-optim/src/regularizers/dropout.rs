@@ -2,8 +2,7 @@
 
 use ndarray::{Array, Dimension, ScalarOperand, Zip};
 use num_traits::Float;
-use rand::rngs::SmallRng;
-use rand::{Rng, SeedableRng};
+use scirs2_core::random::{Random, Rng};
 use std::fmt::Debug;
 
 use crate::error::Result;
@@ -43,7 +42,7 @@ pub struct Dropout<A: Float + Debug> {
     /// Dropout rate (fraction of units that are dropped)
     rate: A,
     /// Random number generator
-    rng: SmallRng,
+    rng: Random<rand::rngs::StdRng>,
     /// Boolean indicating whether in training mode
     training: bool,
     /// Cached dropout mask
@@ -65,7 +64,7 @@ impl<A: Float + Debug> Dropout<A> {
         let mut seed_bytes = [0u8; 8];
         rng.fill_bytes(&mut seed_bytes);
         let seed = u64::from_ne_bytes(seed_bytes);
-        let rng = SmallRng::seed_from_u64(seed);
+        let rng = Random::with_seed(seed);
 
         Self {
             rate,

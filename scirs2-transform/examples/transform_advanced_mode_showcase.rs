@@ -3,7 +3,7 @@
 //! This example showcases the Advanced MODE implementations in scirs2-transform,
 //! including neuromorphic adaptation and quantum-inspired optimization.
 
-use ndarray::{Array1, Array2};
+use ndarray::{Array1};
 use scirs2_transform::{
     auto_feature_engineering::DatasetMetaFeatures, error::Result, AdvancedNeuromorphicProcessor,
     AdvancedQuantumOptimizer,
@@ -53,6 +53,7 @@ fn demonstrate_neuromorphic_adaptation() -> Result<()> {
             missing_ratio: 0.05,
             variance_ratio: 0.85,
             outlier_ratio: 0.03,
+            has_missing: true,
         },
         DatasetMetaFeatures {
             n_samples: 5000,
@@ -65,6 +66,7 @@ fn demonstrate_neuromorphic_adaptation() -> Result<()> {
             missing_ratio: 0.15,
             variance_ratio: 0.65,
             outlier_ratio: 0.08,
+            has_missing: true,
         },
         DatasetMetaFeatures {
             n_samples: 10000,
@@ -77,6 +79,7 @@ fn demonstrate_neuromorphic_adaptation() -> Result<()> {
             missing_ratio: 0.02,
             variance_ratio: 0.95,
             outlier_ratio: 0.01,
+            has_missing: true,
         },
     ];
 
@@ -178,7 +181,7 @@ fn demonstrate_quantum_optimization() -> Result<()> {
     let start_time = std::time::Instant::now();
 
     let (optimal_params, best_fitness) =
-        optimizer.optimize_advancedfast(objective_function, 100)?;
+        optimizer.optimize_advanced(objective_function, 100)?;
 
     let optimization_time = start_time.elapsed();
     println!(
@@ -237,8 +240,3 @@ fn demonstrate_quantum_optimization() -> Result<()> {
     Ok(())
 }
 
-#[cfg(not(feature = "std"))]
-#[allow(dead_code)]
-fn main() {
-    println!("This example requires std feature to be enabled.");
-}

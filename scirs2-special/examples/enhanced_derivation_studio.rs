@@ -1592,10 +1592,12 @@ impl DerivationStudio {
         );
         println!("Left side: J₀({}) + J₂({}) = {:.12}", x, x, recurrence_left);
         println!("Right side: (2/{})J₁({}) = {:.12}", x, x, recurrence_right);
-        println!("Error: {:.2e}", (recurrence_left - recurrence_right).abs());
+        let error: f64 = recurrence_left - recurrence_right;
+        println!("Error: {:.2e}", error.abs());
         println!(
             "✅ Verification: {}",
-            if (recurrence_left - recurrence_right).abs() < 1e-10 {
+            let error: f64 = recurrence_left - recurrence_right;
+            if error.abs() < 1e-10 {
                 "PASS"
             } else {
                 "FAIL"
