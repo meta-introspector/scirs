@@ -481,9 +481,9 @@ pub fn extract_ridges(
     ridges
 }
 
+#[cfg(test)]
 mod tests {
-    use ndarray::Array;
-
+    use ndarray::Array1;
     use std::f64::consts::PI;
 
     #[test]

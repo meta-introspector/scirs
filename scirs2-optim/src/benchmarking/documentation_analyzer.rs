@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 
 /// Documentation analyzer for API completeness and quality
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct DocumentationAnalyzer {
     /// Configuration for documentation analysis
     config: AnalyzerConfig,

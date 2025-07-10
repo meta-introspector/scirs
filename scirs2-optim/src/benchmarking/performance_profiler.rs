@@ -101,6 +101,7 @@ pub struct StepTiming {
 
 /// Memory usage tracking
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct MemoryTracker {
     /// Peak memory usage (bytes)
     peak_memory_bytes: usize,
@@ -174,6 +175,7 @@ pub struct MemoryLeakIndicators {
 
 /// Computational efficiency analyzer
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct EfficiencyAnalyzer<A: Float> {
     /// FLOPS (Floating Point Operations Per Second) history
     flops_history: VecDeque<f64>,
@@ -396,6 +398,7 @@ pub struct ConvergencePattern<A: Float> {
 
 /// Hardware utilization monitor
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct HardwareMonitor {
     /// CPU utilization history
     cpu_utilization: VecDeque<f64>,

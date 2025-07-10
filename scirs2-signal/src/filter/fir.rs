@@ -6,7 +6,6 @@
 
 use crate::error::{SignalError, SignalResult};
 use num_traits::{Float, NumCast};
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 use super::common::validation::validate_cutoff_frequency;

@@ -4,6 +4,8 @@
 //! for automatically discovering optimal optimization algorithms and strategies.
 //! Instead of designing neural networks, this NAS framework designs optimizers.
 
+#![allow(dead_code)]
+
 use crate::error::{OptimError, Result};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};

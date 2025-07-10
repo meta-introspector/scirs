@@ -13,16 +13,12 @@
 use crate::dwt::{dwt_decompose, dwt_reconstruct, Wavelet};
 use crate::error::{SignalError, SignalResult};
 use crate::filter::butter;
-use crate::lombscargle::lombscargle;
-use crate::multitaper::pmtm;
 use crate::parametric::{estimate_ar, ARMethod};
 use crate::spectral::welch;
-use crate::wpt::wp_decompose;
 
-use ndarray::{Array1, Array2, ArrayView1};
-use num_traits::{Float, NumCast};
+use ndarray::Array1;
+use num_traits::Float;
 use scirs2_core::simd_ops::PlatformCapabilities;
-use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::Instant;

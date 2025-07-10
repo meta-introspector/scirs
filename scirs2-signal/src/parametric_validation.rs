@@ -3,14 +3,11 @@
 //! This module provides comprehensive validation for AR, MA, and ARMA models,
 //! including accuracy tests, stability analysis, and performance benchmarks.
 
-use crate::error::{SignalError, SignalResult};
+use crate::error::SignalResult;
 use crate::parametric::{ar_spectrum, estimate_ar, ARMethod};
 use crate::parametric_arma::{estimate_arma, ArmaMethod, ArmaModel};
-use crate::parametric_enhanced::{EnhancedParametricResult, ModelSelectionResult};
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use num_complex::Complex64;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive};
 use std::f64::consts::PI;
 
 /// Validation result for parametric methods

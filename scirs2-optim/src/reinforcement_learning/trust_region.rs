@@ -3,6 +3,8 @@
 //! This module implements trust region methods including TRPO (Trust Region Policy Optimization)
 //! and other constrained optimization techniques for policy learning.
 
+#![allow(dead_code)]
+
 use super::{PolicyNetwork, RLOptimizationMetrics};
 use crate::error::Result;
 use ndarray::{Array1, Array2, ScalarOperand};

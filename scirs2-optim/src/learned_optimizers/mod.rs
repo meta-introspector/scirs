@@ -181,6 +181,7 @@ pub enum MetaOptimizationStrategy {
 }
 
 /// LSTM-based neural optimizer
+#[allow(dead_code)]
 pub struct LSTMOptimizer<
     A: Float
         + std::fmt::Debug
@@ -295,7 +296,8 @@ impl<
 
 /// LSTM state for neural optimizer
 #[derive(Debug, Clone)]
-struct LSTMState<A: Float> {
+#[allow(dead_code)]
+pub struct LSTMState<A: Float> {
     /// Hidden states for each layer
     hidden_states: Vec<Array1<A>>,
 
@@ -311,7 +313,7 @@ struct LSTMState<A: Float> {
 
 /// LSTM parameters (weights and biases)
 #[derive(Debug, Clone)]
-struct LSTMParameters<A: Float> {
+pub struct LSTMParameters<A: Float> {
     /// Input-to-hidden weights
     weight_ih: Vec<Array2<A>>,
 
@@ -339,6 +341,7 @@ struct LSTMParameters<A: Float> {
 
 /// Attention mechanism parameters
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct AttentionParameters<A: Float> {
     /// Query projection weights
     query_weights: Array2<A>,
@@ -358,6 +361,7 @@ struct AttentionParameters<A: Float> {
 
 /// Learned learning rate parameters
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct LearningRateParameters<A: Float> {
     /// Base learning rate
     base_lr: A,
@@ -374,7 +378,8 @@ struct LearningRateParameters<A: Float> {
 
 /// Meta-training state
 #[derive(Debug, Clone)]
-struct MetaTrainingState<A: Float> {
+#[allow(dead_code)]
+pub struct MetaTrainingState<A: Float> {
     /// Meta-training step count
     meta_step: usize,
 
@@ -396,6 +401,7 @@ struct MetaTrainingState<A: Float> {
 
 /// Task performance tracking
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct TaskPerformance<A: Float> {
     /// Task identifier
     task_id: String,
@@ -418,7 +424,8 @@ struct TaskPerformance<A: Float> {
 
 /// Meta-learning task
 #[derive(Debug, Clone)]
-struct MetaTask<A: Float> {
+#[allow(dead_code)]
+pub struct MetaTask<A: Float> {
     /// Task identifier
     id: String,
 
@@ -437,6 +444,7 @@ struct MetaTask<A: Float> {
 
 /// Meta-validation metrics
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct MetaValidationMetrics<A: Float> {
     /// Average task performance
     avg_task_performance: A,
@@ -456,7 +464,8 @@ struct MetaValidationMetrics<A: Float> {
 
 /// Transfer learning state
 #[derive(Debug, Clone)]
-struct TransferLearningState<A: Float> {
+#[allow(dead_code)]
+pub struct TransferLearningState<A: Float> {
     /// Source domain performance
     source_performance: A,
 

@@ -5,12 +5,11 @@
 //! state-space, and nonlinear ARX models.
 
 use crate::error::{SignalError, SignalResult};
-use crate::lti::{LtiSystem, StateSpace, TransferFunction};
+use crate::lti::StateSpace;
 use crate::sysid_enhanced::{NonlinearFunction, ParameterEstimate, SystemModel};
-use ndarray::{s, Array1, Array2, ArrayView1, Axis};
+use ndarray::{s, Array1, Array2, Axis};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_shape};
+use scirs2_core::validation::check_shape;
 use scirs2_linalg::solve;
 
 /// ARMAX model identification using iterative prediction error method

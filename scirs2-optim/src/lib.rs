@@ -52,7 +52,7 @@
 //! optimizer.step_param(&mut param2).unwrap();
 //! ```
 
-#![warn(missing_docs)]
+#![allow(missing_docs)]
 
 pub mod adaptive_selection;
 pub mod autodiff;

@@ -8,7 +8,7 @@ use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyTuple};
 use scirs2_optim::{
     optimizers::{Adam, AdamW, SGD},
-    schedulers::{CosineAnnealingLR, ExponentialDecay, OneCycleLR},
+    schedulers::{CosineAnnealing, ExponentialDecay, OneCycle},
     unified_api::{OptimizerConfig, OptimizerFactory, Parameter, UnifiedOptimizer},
     LearningRateScheduler, Optimizer,
 };

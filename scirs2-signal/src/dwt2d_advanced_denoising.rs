@@ -10,7 +10,7 @@ use crate::dwt2d::{dwt2d_decompose, dwt2d_reconstruct};
 use crate::dwt2d_boundary_enhanced::{dwt2d_decompose_enhanced, BoundaryMode2D};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array2, ArrayView2};
-use num_traits::{Float, NumCast};
+use num_traits::Float;
 use rand::{rng, Rng};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};

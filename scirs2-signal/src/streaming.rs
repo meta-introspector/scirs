@@ -46,12 +46,10 @@ use crate::error::{SignalError, SignalResult};
 // TODO: sosfilt_zi function not implemented yet
 // use crate::filter::sosfilt_zi;
 use crate::streaming_stft::{StreamingStft, StreamingStftConfig};
-use crate::window::get_window;
-use ndarray::{Array1, Array2, ArrayView1, Axis};
+use ndarray::{Array1, Array2};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive};
+use scirs2_core::validation::check_positive;
 use std::collections::VecDeque;
 use std::f64::consts::PI;
 
@@ -977,10 +975,6 @@ fn mel_to_hz(mel: f64) -> f64 {
 }
 
 mod tests {
-    use num_complex::Complex64;
-
-    use std::f64::consts::PI;
-
     #[test]
     fn test_streaming_processor_creation() {
         let config = StreamingConfig::default();

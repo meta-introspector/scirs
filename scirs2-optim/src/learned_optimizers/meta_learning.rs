@@ -4,6 +4,8 @@
 //! learned optimizers, including MAML, Reptile, Meta-SGD, and other advanced
 //! techniques for few-shot optimization and rapid adaptation.
 
+#![allow(dead_code)]
+
 use ndarray::{Array1, Array2, Dimension};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};

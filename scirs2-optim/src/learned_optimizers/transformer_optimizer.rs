@@ -5,6 +5,8 @@
 //! self-attention mechanisms to capture long-range dependencies in optimization
 //! trajectories and learn sophisticated optimization strategies.
 
+#![allow(dead_code)]
+
 use ndarray::{s, Array, Array1, Array2, Array3, ArrayBase, Data, Dimension};
 use num_traits::Float;
 use scirs2_core::random::{Random, Rng};

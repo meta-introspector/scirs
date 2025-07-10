@@ -11,16 +11,15 @@
 //! - Distributed identification for large-scale networked systems
 
 use crate::error::{SignalError, SignalResult};
-use crate::lti::{LtiSystem, StateSpace, TransferFunction};
 use crate::sysid_enhanced::{
     ComputationalDiagnostics, EnhancedSysIdResult, IdentificationMethod, ModelValidationMetrics,
     ParameterEstimate, SystemModel,
 };
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayView2, Axis};
-use num_traits::{Float, NumCast};
+use ndarray::{Array1, Array2, Array3};
+use num_traits::Float;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use scirs2_core::simd_ops::PlatformCapabilities;
+use scirs2_core::validation::check_finite;
 use std::collections::HashMap;
 
 /// Advanced-enhanced system identification result with comprehensive analysis
@@ -1458,6 +1457,7 @@ fn select_best_base_model(models: &[WeightedModel]) -> SignalResult<EnhancedSysI
     })
 }
 
+#[cfg(test)]
 mod tests {
 
     use std::f64::consts::PI;

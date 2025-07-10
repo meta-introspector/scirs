@@ -12,6 +12,7 @@ use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
 /// Advanced memory leak detector with real-time monitoring
+#[allow(dead_code)]
 pub struct AdvancedMemoryLeakDetector {
     /// Configuration for memory leak detection
     config: MemoryLeakConfig,
@@ -262,6 +263,7 @@ pub struct SessionStatistics {
 
 /// Leak analysis engine
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct LeakAnalysisEngine {
     /// Analysis configuration
     config: AnalysisConfig,
@@ -465,6 +467,7 @@ pub enum LeakType {
 }
 
 /// Memory alert system
+#[allow(dead_code)]
 pub struct MemoryAlertSystem {
     /// Alert configuration
     config: AlertConfig,
@@ -576,6 +579,7 @@ pub struct EfficiencyMetrics {
 
 // Statistical analyzer for memory data
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct StatisticalAnalyzer {
     config: StatisticalConfig,
 }
@@ -589,6 +593,7 @@ pub struct StatisticalConfig {
 
 // Pattern detector for memory usage patterns
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PatternDetector {
     config: PatternConfig,
 }
@@ -602,6 +607,7 @@ pub struct PatternConfig {
 
 // Anomaly detector for unusual memory behavior
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct AnomalyDetector {
     config: AnomalyConfig,
 }
@@ -1303,7 +1309,7 @@ mod tests {
     #[test]
     fn test_memory_leak_detector_creation() {
         let config = MemoryLeakConfig::default();
-        let detector = AdvancedMemoryLeakDetector::new(config).unwrap();
+        let _detector = AdvancedMemoryLeakDetector::new(config).unwrap();
         // Test basic functionality
     }
 

@@ -83,7 +83,6 @@ impl Default for MultitaperConfig {
 }
 
 use num_complex::Complex64;
-use std::f64::consts::PI;
 /// Enhanced multitaper power spectral density estimation with SIMD and parallel processing
 ///
 /// This function provides a high-performance implementation of the multitaper method
@@ -1628,7 +1627,7 @@ mod tests {
         // Generate test signal
         let n = 512;
         let signal: Vec<f64> = (0..n)
-            .map(|i| (2.0 * std::f64::consts::PI * 10.0 * i as f64 / 100.0).sin())
+            .map(|i| (2.0 * PI * 10.0 * i as f64 / 100.0).sin())
             .collect();
 
         let config = MultitaperConfig::default();

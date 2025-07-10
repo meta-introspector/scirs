@@ -3,6 +3,8 @@
 //! This module implements natural policy gradient methods that use the Fisher information
 //! matrix to precondition policy gradients for more efficient optimization.
 
+#![allow(dead_code)]
+
 use super::{PolicyNetwork, RLOptimizationMetrics, RLOptimizerConfig, TrajectoryBatch};
 use crate::error::Result;
 use ndarray::{Array1, Array2, ScalarOperand};

@@ -150,6 +150,7 @@ pub struct RetentionConfig {
 
 /// System profiler for integration with OS-level tools
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct SystemProfiler {
     /// Profiler configuration
     config: SystemProfilerConfig,
@@ -215,6 +216,7 @@ pub struct ProfilingSession {
 
 /// Machine learning-based anomaly detector
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct MachineLearningDetector {
     /// Model configuration
     config: MLConfig,
@@ -362,6 +364,7 @@ impl<K: Ord + Clone, V> LruCache<K, V> {
 
 /// Advanced alert system
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct AdvancedAlertSystem {
     /// Alert configuration
     config: AlertConfig,
@@ -446,6 +449,7 @@ pub struct AlertTemplate {
 
 /// Rate limiter for alerts
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct RateLimiter {
     /// Alert counts by hour
     alert_counts: VecDeque<(u64, usize)>, // (hour_timestamp, count)
@@ -457,6 +461,7 @@ pub struct RateLimiter {
 
 /// Performance metrics collector
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PerformanceMetricsCollector {
     /// Configuration
     config: PerformanceConfig,
@@ -532,6 +537,7 @@ pub struct GcMetrics {
 
 /// Statistical analyzer for memory patterns
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct StatisticalAnalyzer {
     /// Configuration
     config: StatisticalConfig,
@@ -610,6 +616,7 @@ pub struct Outlier {
 
 /// Memory pressure detector
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct MemoryPressureDetector {
     /// Current pressure level
     pressure_level: Arc<RwLock<PressureLevel>>,

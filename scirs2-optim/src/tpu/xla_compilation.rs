@@ -4,6 +4,8 @@
 //! optimization algorithms. It provides high-level abstractions for building, optimizing,
 //! and executing XLA computations on TPU hardware.
 
+#![allow(dead_code)]
+
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};

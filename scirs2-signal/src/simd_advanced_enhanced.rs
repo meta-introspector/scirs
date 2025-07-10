@@ -8,11 +8,11 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::simd_advanced::SimdConfig;
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayViewMut1, Axis};
-use num_complex::{Complex, Complex64};
+use ndarray::{s, Array1, Array2, Axis};
+use num_complex::Complex64;
 use num_traits::{Float, Zero};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+use scirs2_core::simd_ops::PlatformCapabilities;
 use std::f64::consts::PI;
 
 /// Advanced SIMD configuration with enhanced features

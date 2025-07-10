@@ -3,6 +3,8 @@
 //! This module provides advanced few-shot learning capabilities for learned optimizers,
 //! enabling rapid adaptation to new optimization tasks with minimal data.
 
+#![allow(dead_code)]
+
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};

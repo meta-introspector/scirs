@@ -4,6 +4,8 @@
 //! including adaptive sequence processing, memory-efficient attention mechanisms,
 //! and dynamic architecture adaptation for complex optimization landscapes.
 
+#![allow(dead_code)]
+
 use ndarray::{Array1, Array2, Array3};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};

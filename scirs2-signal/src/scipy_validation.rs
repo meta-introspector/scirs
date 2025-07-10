@@ -42,7 +42,7 @@ use crate::filter::FilterType;
 use crate::parametric::ARMethod;
 use std::f64::consts::PI;
 
-use ndarray::{Array1, Array2};
+use ndarray::Array1;
 use std::collections::HashMap;
 
 /// Configuration for SciPy validation
@@ -224,7 +224,7 @@ fn validate_butterworth_filter(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-    use crate::filter::{butter, FilterType};
+    use crate::filter::FilterType;
 
     let start_time = std::time::Instant::now();
     let test_name = "butterworth_filter".to_string();
@@ -548,7 +548,7 @@ fn validate_chebyshev_filter(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-    use crate::filter::{cheby1, cheby2, FilterType};
+    use crate::filter::FilterType;
 
     let start_time = std::time::Instant::now();
     let test_name = "chebyshev_filter".to_string();
@@ -832,8 +832,6 @@ fn validate_multitaper_scipy(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-    use crate::multitaper::enhanced::{enhanced_pmtm, MultitaperConfig};
-    use crate::waveforms::chirp;
 
     let start_time = std::time::Instant::now();
     let test_name = "multitaper".to_string();
@@ -937,7 +935,7 @@ fn validate_dwt(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-    use crate::dwt::{wavedec, waverec, Wavelet};
+    use crate::dwt::Wavelet;
 
     let start_time = std::time::Instant::now();
     let test_name = "dwt".to_string();
@@ -1075,8 +1073,6 @@ fn validate_windows(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-    use crate::window::kaiser::kaiser;
-    use crate::window::{blackman, hamming, hann, tukey};
 
     let start_time = std::time::Instant::now();
     let test_name = "windows".to_string();
@@ -1408,8 +1404,7 @@ fn validate_parametric_spectral(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-    use crate::parametric::{estimate_ar, ARMethod};
-    use crate::parametric_advanced_enhanced::comprehensive_parametric_validation;
+    use crate::parametric::ARMethod;
 
     let start_time = std::time::Instant::now();
     let test_name = "parametric_spectral".to_string();

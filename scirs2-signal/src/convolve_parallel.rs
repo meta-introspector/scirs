@@ -176,7 +176,7 @@ fn parallel_overlap_save_conv(a: &[f64], v: &[f64], n_full: usize) -> Vec<f64> {
             Ok(())
         },
     )
-    .unwrap_or_else(|_| vec![]);
+    .unwrap_or_else(|_: SignalError| vec![]);
 
     // Combine chunk results
     let mut result = vec![0.0; n_full];
@@ -351,7 +351,7 @@ pub fn parallel_convolve2d_ndarray(
 
             Ok(row)
         },
-        |results, row| {
+        |results, row: Result<Vec<f64>, SignalError>| {
             results.push(row?);
             Ok(())
         },
@@ -396,7 +396,7 @@ pub fn parallel_separable_convolve2d(
     let row_convolved: Vec<Vec<f64>> = par_iter_with_setup(
         0..img_rows,
         || {},
-        |_, &i| {
+        |_, i| {
             let row = image.row(i);
             let row_vec: Vec<f64> = row.to_vec();
             parallel_convolve_impl(&row_vec, row_kernel, mode)
@@ -422,7 +422,7 @@ pub fn parallel_separable_convolve2d(
     let col_convolved: Vec<Vec<f64>> = par_iter_with_setup(
         0..inter_cols,
         || {},
-        |_, &j| {
+        |_, j| {
             let col = intermediate.column(j);
             let col_vec: Vec<f64> = col.to_vec();
             parallel_convolve_impl(&col_vec, col_kernel, mode)

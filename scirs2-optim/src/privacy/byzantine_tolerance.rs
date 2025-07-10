@@ -3,6 +3,8 @@
 //! This module implements Byzantine-robust aggregation algorithms that can
 //! tolerate malicious participants in federated learning scenarios.
 
+#![allow(dead_code)]
+
 use crate::error::{OptimError, Result};
 use ndarray::{Array1, Array2};
 use num_traits::Float;

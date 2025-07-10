@@ -170,8 +170,8 @@ fn main() {
             MetricType::Throughput,
             MetricType::ConvergenceRate,
         ],
-        statistical_test,
-        sensitivity,
+        statistical_test: statistical_test.clone(),
+        sensitivity: sensitivity.clone(),
         baseline_strategy: BaselineStrategy::RollingWindow(10),
         alert_thresholds: AlertThresholds::default(),
         ci_cd_config: CiCdConfig {
@@ -197,8 +197,8 @@ fn main() {
             "  Degradation Threshold: {:.1}%",
             degradation_threshold * 100.0
         );
-        println!("  Sensitivity: {sensitivity:?}");
-        println!("  Statistical Test: {statistical_test:?}");
+        println!("  Sensitivity: {:?}", sensitivity);
+        println!("  Statistical Test: {:?}", statistical_test);
         println!("  Features: {features}");
         println!("  Min Samples: {min_samples}");
         println!();
@@ -262,8 +262,8 @@ fn run_regression_detection(
             println!("📋 Loading baseline data from: {}", baseline_path.display());
         }
         // Load baseline from file (simplified implementation)
-        let baseline_content = fs::read_to_string(&baseline_path)
-            .map_err(|e| OptimError::IoError(format!("Failed to read baseline: {e}")))?;
+        let _baseline_content = fs::read_to_string(&baseline_path)
+            .map_err(|e| OptimError::ResourceError(format!("Failed to read baseline: {e}")))?;
         // For now, we'll skip the baseline loading and use current data as baseline
     } else {
         if verbose {
@@ -294,15 +294,16 @@ fn run_regression_detection(
     let report = detector.export_for_ci_cd()?;
 
     // Save report
-    let output_dir = PathBuf::from(output_report).parent().unwrap();
+    let output_path = PathBuf::from(output_report);
+    let output_dir = output_path.parent().unwrap();
     fs::create_dir_all(output_dir)
-        .map_err(|e| OptimError::IoError(format!("Failed to create output directory: {e}")))?;
+        .map_err(|e| OptimError::ResourceError(format!("Failed to create output directory: {e}")))?;
 
     let report_json = serde_json::to_string_pretty(&report)
-        .map_err(|e| OptimError::SerializationError(format!("Failed to serialize report: {e}")))?;
+        .map_err(|e| OptimError::OptimizationError(format!("Failed to serialize report: {e}")))?;
 
     fs::write(output_report, report_json)
-        .map_err(|e| OptimError::IoError(format!("Failed to write report: {e}")))?;
+        .map_err(|e| OptimError::ResourceError(format!("Failed to write report: {e}")))?;
 
     // Check if regressions were detected
     let has_regressions = !regression_results.is_empty();
@@ -342,10 +343,10 @@ fn run_regression_detection(
 #[allow(dead_code)]
 fn load_benchmark_results(path: &str) -> Result<serde_json::Value> {
     let content = fs::read_to_string(path)
-        .map_err(|e| OptimError::IoError(format!("Failed to read benchmark results: {e}")))?;
+        .map_err(|e| OptimError::ResourceError(format!("Failed to read benchmark results: {e}")))?;
 
     let data: serde_json::Value = serde_json::from_str(&content).map_err(|e| {
-        OptimError::SerializationError(format!("Failed to parse benchmark results: {e}"))
+        OptimError::OptimizationError(format!("Failed to parse benchmark results: {e}"))
     })?;
 
     Ok(data)
@@ -354,7 +355,7 @@ fn load_benchmark_results(path: &str) -> Result<serde_json::Value> {
 #[allow(dead_code)]
 fn convert_benchmark_data_to_measurements(
     data: &serde_json::Value,
-    features: &str,
+    _features: &str,
 ) -> Result<Vec<PerformanceMeasurement>> {
     use std::collections::HashMap;
     use std::time::SystemTime;

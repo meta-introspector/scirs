@@ -13,11 +13,10 @@ use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
 use crate::wpt_validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, Axis};
-use num_traits::{Float, NumCast};
+use ndarray::{Array1, Array2};
+use num_traits::Float;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive};
+use scirs2_core::simd_ops::PlatformCapabilities;
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -2549,7 +2548,7 @@ fn analyze_frequency_band_errors(
 
 #[allow(dead_code)]
 fn calculate_frame_bounds(
-    _tree: &crate::wpt::WptTree,
+    _tree: &crate::wpt::WaveletPacketTree,
     _signal: &Array1<f64>,
 ) -> SignalResult<(f64, f64)> {
     // TODO: Implement frame bounds calculation for tight frame validation
@@ -2558,7 +2557,7 @@ fn calculate_frame_bounds(
 
 #[allow(dead_code)]
 fn verify_parseval_relation(
-    _tree: &crate::wpt::WptTree,
+    _tree: &crate::wpt::WaveletPacketTree,
     _signal: &Array1<f64>,
 ) -> SignalResult<f64> {
     // TODO: Implement Parseval's relation verification (energy conservation)
@@ -2566,7 +2565,7 @@ fn verify_parseval_relation(
 }
 
 #[allow(dead_code)]
-fn extract_coefficient_vectors(_tree: &crate::wpt::WptTree) -> SignalResult<Vec<Array1<f64>>> {
+fn extract_coefficient_vectors(_tree: &crate::wpt::WaveletPacketTree) -> SignalResult<Vec<Array1<f64>>> {
     // TODO: Implement coefficient vector extraction from WPT tree
     Ok(vec![Array1::zeros(1)])
 }
@@ -2590,7 +2589,7 @@ fn is_orthogonal_wavelet(_wavelet: crate::dwt::Wavelet) -> bool {
 
 #[allow(dead_code)]
 fn verify_biorthogonality(
-    _tree: &crate::wpt::WptTree,
+    _tree: &crate::wpt::WaveletPacketTree,
     _wavelet: crate::dwt::Wavelet,
 ) -> SignalResult<bool> {
     // TODO: Implement biorthogonality verification for non-orthogonal wavelets
@@ -2614,7 +2613,7 @@ fn wp_decompose_scalar(
     signal: &Array1<f64>,
     wavelet: crate::dwt::Wavelet,
     max_level: usize,
-) -> SignalResult<crate::wpt::WptTree> {
+) -> SignalResult<crate::wpt::WaveletPacketTree> {
     // TODO: Implement scalar (non-SIMD) version of wavelet packet decomposition
     // For now, use the regular wp_decompose function
     crate::wpt::wp_decompose(signal, wavelet, max_level)
@@ -2622,8 +2621,8 @@ fn wp_decompose_scalar(
 
 #[allow(dead_code)]
 fn compare_wpt_coefficients(
-    _simd_tree: &crate::wpt::WptTree,
-    _scalar_tree: &crate::wpt::WptTree,
+    _simd_tree: &crate::wpt::WaveletPacketTree,
+    _scalar_tree: &crate::wpt::WaveletPacketTree,
 ) -> SignalResult<f64> {
     // TODO: Implement coefficient comparison between different WPT trees
     Ok(0.0)

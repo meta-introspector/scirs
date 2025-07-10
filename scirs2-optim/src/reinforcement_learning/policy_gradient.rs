@@ -4,6 +4,8 @@
 //! PPO (Proximal Policy Optimization), TRPO (Trust Region Policy Optimization),
 //! and other modern policy gradient algorithms.
 
+#![allow(dead_code)]
+
 use super::{
     PolicyNetwork, RLOptimizationMetrics, RLOptimizerConfig, RLScheduler, ScheduleType,
     TrajectoryBatch, ValueNetwork,
@@ -266,14 +268,14 @@ impl<T: Float + Send + Sync + ScalarOperand + std::ops::AddAssign + std::iter::S
         )?;
 
         // Store old policy evaluation
-        let old_policy_eval = self
+        let _old_policy_eval = self
             .policy_network
             .evaluate_actions(&trajectory.observations, &trajectory.actions)?;
 
         let n_epochs = self.config.base_config.n_epochs;
         let mini_batch_size = self.config.base_config.mini_batch_size;
 
-        for epoch in 0..n_epochs {
+        for _epoch in 0..n_epochs {
             let mini_batches = trajectory.get_mini_batches(mini_batch_size);
 
             for mini_batch in mini_batches {

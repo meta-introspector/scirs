@@ -22,6 +22,7 @@ use std::time::{Duration, Instant};
 /// Detects memory leaks by analyzing reference count patterns and identifying
 /// potential circular references or unreleased references.
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ReferenceCountingDetector {
     /// Configuration for reference counting analysis
     config: ReferenceCountingConfig,
@@ -587,6 +588,7 @@ impl ReferenceCountingDetector {
 
 /// Cycle detector for identifying circular references
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct CycleDetector {
     /// Maximum detection depth
     max_depth: usize,
@@ -714,6 +716,7 @@ impl Default for CycleDetector {
 ///
 /// Provides continuous monitoring of memory usage patterns and leak detection
 /// in real-time with configurable sampling rates and alert thresholds.
+#[allow(dead_code)]
 pub struct RealTimeMemoryMonitor {
     /// Monitor configuration
     config: RealTimeMonitorConfig,

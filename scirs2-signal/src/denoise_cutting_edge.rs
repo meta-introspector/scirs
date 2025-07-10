@@ -14,7 +14,7 @@ use scirs2_core::parallel_ops::*;
 // use std::f64::consts::PI;
 
 /// Dictionary learning denoising configuration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct DictionaryDenoiseConfig {
     /// Dictionary size (number of atoms)
     pub dict_size: usize,
@@ -179,7 +179,7 @@ pub fn denoise_nlsc(signal: &Array1<f64>, config: &NLSCConfig) -> SignalResult<A
     }
 
     let mut denoised_signal = Array1::zeros(n);
-    let mut weights = Array1::zeros(n);
+    let mut weights: Array1<f64> = Array1::zeros(n);
 
     // Process each position in the signal
     for i in 0..(n - config.patch_size + 1) {
@@ -508,11 +508,11 @@ fn update_dictionary_atom(
     let patch_size = dictionary.nrows();
 
     // Compute error matrix without current atom
-    let mut error_matrix = Array2::zeros((patch_size, used_patches.len()));
+    let mut error_matrix: Array2<f64> = Array2::zeros((patch_size, used_patches.len()));
 
     for (col_idx, &patch_idx) in used_patches.iter().enumerate() {
         let patch = patches.row(patch_idx);
-        let mut reconstruction = Array1::zeros(patch_size);
+        let mut reconstruction: Array1<f64> = Array1::zeros(patch_size);
 
         // Reconstruct without current atom
         for dict_idx in 0..dictionary.ncols() {

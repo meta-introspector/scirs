@@ -4,8 +4,10 @@
 //! and privacy budget tracking for training machine learning models with
 //! formal privacy guarantees.
 
+#![allow(dead_code)]
+
 use ndarray::{Array, ArrayBase, Data, DataMut, Dimension};
-use rand_distr::{Distribution, Normal};
+use rand_distr::Normal;
 use num_traits::Float;
 use scirs2_core::random;
 use std::collections::{HashMap, VecDeque};
@@ -143,7 +145,7 @@ struct PrivacyBudgetTracker {
 
 /// Privacy consumption record
 #[derive(Debug, Clone)]
-struct PrivacyConsumption {
+pub struct PrivacyConsumption {
     step: usize,
     epsilon_spent: f64,
     delta_spent: f64,
@@ -194,7 +196,7 @@ struct NoiseCalibrator<A: Float> {
 
 /// Noise calibration record
 #[derive(Debug, Clone)]
-struct NoiseCalibration<A: Float> {
+pub struct NoiseCalibration<A: Float> {
     step: usize,
     noise_scale: A,
     gradient_norm: A,
@@ -293,7 +295,7 @@ where
         }
 
         // Compute post-clipping norm
-        let post_clip_norm = self.compute_gradient_norm(gradients);
+        let _post_clip_norm = self.compute_gradient_norm(gradients);
 
         // Add calibrated noise
         self.add_noise(gradients, clipping_threshold)?;
@@ -892,7 +894,7 @@ mod tests {
     fn test_dp_sgd_creation() {
         let sgd = SGD::new(0.01);
         let config = DifferentialPrivacyConfig::default();
-        let dp_sgd = DPSGDOptimizer::new(sgd, config);
+        let dp_sgd = DPSGDOptimizer::<_, f64, ndarray::Ix1>::new(sgd, config);
         assert!(dp_sgd.is_ok());
     }
 

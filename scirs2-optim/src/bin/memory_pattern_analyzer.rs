@@ -7,7 +7,7 @@ use clap::{Arg, Command};
 use scirs2_optim::benchmarking::memory_leak_detector::{
     AllocationType, MemoryAnomaly, MemoryPattern, MemoryUsageSnapshot,
 };
-use scirs2_optim::error::{OptimError, Result};
+use scirs2_optim::error::Result;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::collections::HashMap;
@@ -212,7 +212,7 @@ fn main() -> Result<()> {
     display_analysis_summary(&analysis_result);
 
     // Generate output
-    match output_format {
+    match output_format.as_str() {
         "json" => {
             let json_output = serde_json::to_string_pretty(&analysis_result)?;
             fs::write(output_file, json_output)?;
@@ -319,7 +319,7 @@ fn load_analysis_input(input_dir: &str) -> Result<AnalysisInput> {
 }
 
 #[allow(dead_code)]
-fn analyze_memory_patterns(input: &AnalysisInput, detailed: bool) -> Result<PatternAnalysisResult> {
+fn analyze_memory_patterns(input: &AnalysisInput, _detailed: bool) -> Result<PatternAnalysisResult> {
     println!("  📈 Analyzing allocation statistics...");
     let allocation_statistics =
         analyze_allocation_statistics(&input.allocation_events, &input.metadata);
@@ -374,7 +374,7 @@ fn analyze_allocation_statistics(
         .filter(|e| matches!(e.operation, AllocationOperation::Deallocate))
         .count();
 
-    let mut active_allocations = 0;
+    let mut active_allocations: usize = 0;
     let mut peak_active_allocations = 0;
     let mut allocation_sizes = Vec::new();
     let mut allocation_type_counts = HashMap::new();

@@ -191,6 +191,7 @@ pub struct EmailConfig {
 
 /// Performance database for historical data storage
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PerformanceDatabase {
     /// Historical performance measurements
     measurements: VecDeque<PerformanceMeasurement>,
@@ -373,6 +374,7 @@ pub struct StatisticalConfig {
 
 /// Regression analysis engine
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct RegressionAnalyzer {
     /// Current analysis results
     current_results: Vec<RegressionResult>,

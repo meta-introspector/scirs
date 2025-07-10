@@ -5,7 +5,6 @@
 
 use crate::error::{SignalError, SignalResult};
 use num_complex::Complex64;
-use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 
 /// Filter type for digital filter design
@@ -139,7 +138,6 @@ pub enum FilterStability {
 pub mod validation {
     use crate::error::{SignalError, SignalResult};
     use crate::filter::{FilterType, FilterTypeParam};
-    use num_complex::Complex64;
     use num_traits::{Float, NumCast};
     use std::fmt::Debug;
 

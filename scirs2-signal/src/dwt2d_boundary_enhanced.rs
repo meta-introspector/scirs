@@ -28,7 +28,6 @@ use ndarray::{s, Array2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::validation::check_shape;
 use std::collections::HashMap;
-use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Enhanced boundary extension modes for 2D wavelets

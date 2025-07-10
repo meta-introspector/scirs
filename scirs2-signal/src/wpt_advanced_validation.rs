@@ -5,8 +5,6 @@
 //! reconstruction fidelity, best basis selection, and compression performance.
 
 use crate::error::SignalResult;
-use ndarray::{Array1, Array2, ArrayView1};
-use scirs2_core::validation::check_finite;
 use std::collections::HashMap;
 use std::time::Instant;
 

@@ -8,16 +8,15 @@
 //! - MIMO system identification
 
 use crate::error::{SignalError, SignalResult};
-use crate::lti::{LtiSystem, StateSpace, TransferFunction};
+use crate::lti::{StateSpace, TransferFunction};
 use crate::sysid_advanced::{
     identify_armax_complete, identify_bj_complete, identify_narx_complete, identify_oe_complete,
     identify_state_space_complete,
 };
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2, Axis};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_shape};
+use scirs2_core::validation::check_shape;
 
 /// Enhanced system identification result
 #[derive(Debug, Clone)]

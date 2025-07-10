@@ -17,7 +17,7 @@ use scirs2_core::random::{Random, Rng};
 use std::collections::{HashMap, VecDeque};
 
 // Additional imports for advanced federated learning
-use scirs2_core::parallel_ops::*;
+// Removed unused import parallel_ops
 use std::sync::Arc;
 #[allow(unused_imports)]
 use std::thread;
@@ -237,7 +237,7 @@ pub struct CommunicationPrivacyConfig {
     pub threat_modeling: AdvancedThreatModelingConfig,
 
     /// Cross-silo federated learning configuration
-    pub cross_silo_config: CrossSiloFederatedConfig,
+    pub cross_silo_config: Option<CrossSiloFederatedConfig>,
 }
 
 /// Advanced threat modeling configuration for comprehensive security analysis
@@ -2643,7 +2643,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
         aggregated_update: &mut Array1<T>,
         round_plan: &FederatedRoundPlan,
     ) -> Result<()> {
-        let noise_scale = self.compute_federated_noise_scale(round_plan)?;
+        let _noise_scale = self.compute_federated_noise_scale(round_plan)?;
 
         // Select noise mechanism
         let mut noise_mechanism: Box<dyn NoiseMechanismTrait<T> + Send> =
@@ -2890,7 +2890,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
     }
 
     /// Compute selection diversity metrics
-    fn compute_selection_diversity(&self, selected_clients: &[String]) -> Result<DiversityMetrics> {
+    fn compute_selection_diversity(&self, _selected_clients: &[String]) -> Result<DiversityMetrics> {
         Ok(DiversityMetrics {
             geographic_diversity: 0.8, // Placeholder
             device_type_diversity: 0.7,
@@ -2936,7 +2936,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
     pub fn enhanced_client_sampling(
         &mut self,
         available_clients: &[String],
-        round_plan: &FederatedRoundPlan,
+        _round_plan: &FederatedRoundPlan,
     ) -> Result<EnhancedSamplingResult> {
         // Get client reputation scores
         let reputation_scores = self
@@ -4664,13 +4664,6 @@ impl Default for AdvancedThreatModelingConfig {
     }
 }
 
-impl Default for CrossSiloFederatedConfig {
-    fn default() -> Self {
-        // Simplified default implementation to get compilation working
-        // This would need proper implementation based on actual field requirements
-        unsafe { std::mem::zeroed() }
-    }
-}
 
 /// Default configurations
 impl Default for FederatedPrivacyConfig {
@@ -4691,7 +4684,7 @@ impl Default for FederatedPrivacyConfig {
                 communication_noise: false,
                 traffic_analysis_protection: false,
                 threat_modeling: AdvancedThreatModelingConfig::default(),
-                cross_silo_config: CrossSiloFederatedConfig::default(),
+                cross_silo_config: None,
             },
         }
     }
@@ -5639,12 +5632,12 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum> CompressionEngin
     pub fn compress(
         &mut self,
         gradients: &Array1<T>,
-        round: usize,
+        _round: usize,
     ) -> Result<CompressionResult<T>> {
         let original_size = gradients.len() * std::mem::size_of::<T>();
         let start_time = std::time::Instant::now();
 
-        let (compressed_data, compression_ratio) = match self.strategy {
+        let (_compressed_data, compression_ratio) = match self.strategy {
             CompressionStrategy::None => (gradients.clone(), 1.0),
             CompressionStrategy::Quantization { bits } => {
                 self.quantize_gradients(gradients, bits)?
@@ -5761,7 +5754,7 @@ impl BandwidthMonitor {
         &mut self,
         bytes_transmitted: u64,
         transmission_time_ms: u64,
-        round: usize,
+        _round: usize,
     ) -> BandwidthMeasurement {
         let bandwidth_bps = if transmission_time_ms > 0 {
             (bytes_transmitted * 8 * 1000) / transmission_time_ms

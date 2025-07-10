@@ -3,6 +3,8 @@
 //! This module provides comprehensive validation and testing capabilities for optimizer plugins,
 //! including functionality tests, performance tests, convergence validation, and compliance checks.
 
+#![allow(dead_code)]
+
 use super::core::*;
 use super::sdk::*;
 use ndarray::Array1;

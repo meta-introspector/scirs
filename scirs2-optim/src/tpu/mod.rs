@@ -3,6 +3,8 @@
 //! This module provides TPU acceleration for optimizers using XLA (Accelerated Linear Algebra)
 //! compilation for maximum performance on Google Cloud TPUs and other XLA-compatible hardware.
 
+#![allow(dead_code)]
+
 use ndarray::{Array, ArrayBase, Data, Dimension};
 use num_traits::Float;
 use std::collections::HashMap;
@@ -219,7 +221,7 @@ struct XLAOperand {
 
 /// XLA tensor shape
 #[derive(Debug, Clone, Copy)]
-struct XLAShape {
+pub struct XLAShape {
     dimensions: [usize; 4], // Max 4D for simplicity
     rank: usize,
     element_type: XLAElementType,
@@ -514,7 +516,7 @@ struct MemorySnapshot {
 
 /// XLA compilation metrics
 #[derive(Debug, Clone)]
-struct CompilationMetrics {
+pub struct CompilationMetrics {
     /// Compilation time (milliseconds)
     compilation_time_ms: u64,
 
@@ -530,7 +532,7 @@ struct CompilationMetrics {
 
 /// TPU utilization metrics
 #[derive(Debug, Clone)]
-struct UtilizationMetrics {
+pub struct UtilizationMetrics {
     /// Compute utilization (0.0 to 1.0)
     compute_utilization: f64,
 

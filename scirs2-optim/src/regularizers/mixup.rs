@@ -6,7 +6,7 @@
 
 use ndarray::{Array, Array2, Array4, Dimension, ScalarOperand};
 use num_traits::{Float, FromPrimitive};
-use scirs2_core::ScientificNumber;
+// Removed unused import ScientificNumber
 use std::fmt::Debug;
 
 use crate::error::{OptimError, Result};

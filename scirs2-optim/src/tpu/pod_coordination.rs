@@ -4,6 +4,8 @@
 //! enabling efficient batch parallelization and distributed optimization
 //! across multiple TPU devices and nodes.
 
+#![allow(dead_code)]
+
 use ndarray::{Array, Array2};
 use num_traits::Float;
 use std::collections::{HashMap, HashSet, VecDeque};

@@ -82,6 +82,7 @@ impl Default for MemoryOptimizerConfig {
 
 /// Advanced memory tracker with detailed analytics
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct AdvancedMemoryTracker {
     /// Current memory usage
     current_usage: MemoryUsage,
@@ -182,6 +183,7 @@ pub struct DeallocationEvent {
 
 /// Allocation tracking and analytics
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct AllocationTracker {
     /// Total allocations
     total_allocations: usize,
@@ -242,6 +244,7 @@ pub enum AllocationPatternType {
 
 /// Memory pool analysis
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct MemoryPoolAnalyzer {
     /// Detected pool opportunities
     pool_opportunities: Vec<PoolOpportunity>,
@@ -347,6 +350,7 @@ pub struct PerformanceImpact {
 
 /// Memory leak detection engine
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct MemoryLeakDetector {
     /// Leak detection algorithms
     detectors: Vec<Box<dyn LeakDetectionAlgorithm>>,
@@ -405,6 +409,7 @@ pub enum LeakSeverity {
 
 /// False positive filtering
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct FalsePositiveFilter {
     /// Known patterns that aren't leaks
     known_patterns: Vec<Pattern>,
@@ -425,6 +430,7 @@ pub struct Pattern {
 
 /// Pattern learning for false positive reduction
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PatternLearner {
     /// Training data
     training_data: Vec<TrainingExample>,
@@ -445,6 +451,7 @@ pub struct TrainingExample {
 
 /// Leak correlation analysis
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct LeakCorrelationAnalyzer {
     /// Correlation matrix between different leak indicators
     correlation_matrix: Vec<Vec<f64>>,
@@ -479,6 +486,7 @@ pub trait LeakDetectionAlgorithm: Debug {
 
 /// Optimization recommendations engine
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct OptimizationEngine {
     /// Available optimization strategies
     strategies: Vec<Box<dyn OptimizationStrategy>>,
@@ -624,6 +632,7 @@ pub trait OptimizationStrategy: Debug {
 
 /// Cost-benefit analyzer for optimizations
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct CostBenefitAnalyzer {
     /// Cost models
     cost_models: Vec<CostModel>,
@@ -675,6 +684,7 @@ pub struct BenefitFactor {
 
 /// ROI calculator
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ROICalculator {
     /// Time horizon for ROI calculation
     time_horizon: Duration,
@@ -684,6 +694,7 @@ pub struct ROICalculator {
 
 /// Memory pattern analyzer
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct MemoryPatternAnalyzer {
     /// Detected patterns
     detected_patterns: Vec<MemoryPattern>,
@@ -766,6 +777,7 @@ pub struct PatternTransition {
 
 /// Pattern prediction model
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PatternPredictionModel {
     /// Model type
     model_type: ModelType,

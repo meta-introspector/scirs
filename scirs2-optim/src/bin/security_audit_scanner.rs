@@ -5,11 +5,11 @@
 
 use clap::{Arg, ArgMatches, Command};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime};
 
 /// Main entry point for the security audit scanner
 #[allow(dead_code)]
@@ -42,7 +42,7 @@ fn main() {
                 .value_name("FORMAT")
                 .help("Output format: json, yaml, html, markdown")
                 .default_value("markdown")
-                .possible_values(&["json", "yaml", "html", "markdown"]),
+                .value_parser(["json", "yaml", "html", "markdown"]),
         )
         .arg(
             Arg::new("severity")
@@ -51,7 +51,7 @@ fn main() {
                 .value_name("LEVEL")
                 .help("Minimum severity level to report")
                 .default_value("low")
-                .possible_values(&["info", "low", "medium", "high", "critical"]),
+                .value_parser(["info", "low", "medium", "high", "critical"]),
         )
         .arg(
             Arg::new("scan-deps")
@@ -205,6 +205,7 @@ struct AuditConfig {
     scan_secrets: bool,
     scan_code: bool,
     check_licenses: bool,
+    #[allow(dead_code)]
     min_severity: Severity,
     excluded_patterns: Vec<String>,
     verbose: bool,

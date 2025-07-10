@@ -3,6 +3,8 @@
 //! This module provides differential privacy mechanisms for machine learning
 //! optimization, including DP-SGD with moment accountant for privacy budget tracking.
 
+#![allow(dead_code)]
+
 use crate::error::{OptimError, Result};
 use ndarray::{Array, ArrayBase, Data, DataMut, Dimension, ScalarOperand};
 use num_traits::Float;
@@ -196,7 +198,7 @@ struct GradientNorms {
 
 /// Privacy event for audit trail
 #[derive(Debug, Clone)]
-struct PrivacyEvent {
+pub struct PrivacyEvent {
     step: usize,
     event_type: PrivacyEventType,
     epsilon_spent: f64,
@@ -726,7 +728,7 @@ mod tests {
         let sgd = SGD::new(0.01);
         let dp_config = DifferentialPrivacyConfig::default();
 
-        let dp_optimizer = DifferentiallyPrivateOptimizer::new(sgd, dp_config);
+        let dp_optimizer = DifferentiallyPrivateOptimizer::<_, f64, ndarray::Ix1>::new(sgd, dp_config);
         assert!(dp_optimizer.is_ok());
     }
 
@@ -739,7 +741,7 @@ mod tests {
             ..Default::default()
         };
 
-        let dp_optimizer = DifferentiallyPrivateOptimizer::new(sgd, dp_config).unwrap();
+        let dp_optimizer: DifferentiallyPrivateOptimizer<_, _, ndarray::Ix1> = DifferentiallyPrivateOptimizer::new(sgd, dp_config).unwrap();
         let budget = dp_optimizer.get_privacy_budget();
 
         assert_eq!(budget.epsilon_consumed, 0.0);

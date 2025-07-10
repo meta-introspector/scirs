@@ -184,6 +184,7 @@ impl Default for CrossPlatformConfig {
 
 /// Platform detection and information gathering
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PlatformDetector {
     /// Current platform information
     current_platform: PlatformInfo,
@@ -428,6 +429,7 @@ pub struct GpuInfo {
 
 /// Test registry for organizing tests
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct TestRegistry {
     /// Registered test suites
     test_suites: HashMap<TestCategory, Vec<Box<dyn CrossPlatformTest>>>,

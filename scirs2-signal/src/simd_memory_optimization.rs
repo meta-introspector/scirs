@@ -5,10 +5,10 @@
 //! vectorized operations, and memory-efficient data structures.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1, ArrayViewMut2, Axis};
+use ndarray::{Array1, Array2, ArrayView1, ArrayView2, ArrayViewMut1, ArrayViewMut2};
 use num_traits::{Float, NumCast, Zero};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+use scirs2_core::simd_ops::PlatformCapabilities;
 use std::time::Instant;
 
 /// SIMD memory optimization configuration

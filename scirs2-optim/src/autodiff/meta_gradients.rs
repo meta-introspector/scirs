@@ -14,6 +14,7 @@ use super::reverse_mode::ReverseModeEngine;
 use crate::error::Result;
 
 /// Meta-gradient computation engine
+#[allow(dead_code)]
 pub struct MetaGradientEngine<T: Float> {
     /// Forward-mode engine for directional derivatives
     forward_engine: ForwardModeEngine<T>,

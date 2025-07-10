@@ -5,6 +5,8 @@
 //! This allows for much more scalable second-order optimization compared to
 //! storing and inverting the full Fisher information matrix.
 
+#![allow(dead_code)]
+
 use crate::error::{OptimError, Result};
 use ndarray::{s, Array1, Array2, Axis};
 use num_traits::Float;
@@ -2271,10 +2273,17 @@ pub mod advanced_kfac {
     }
 
     // Helper types for ordered comparisons
-    #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+    #[derive(Debug, Clone, Copy, PartialEq)]
     pub struct OrderedFloat<T: Float>(T);
 
     impl<T: Float> Eq for OrderedFloat<T> {}
+    
+    impl<T: Float> PartialOrd for OrderedFloat<T> {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            self.0.partial_cmp(&other.0)
+        }
+    }
+    
     impl<T: Float> Ord for OrderedFloat<T> {
         fn cmp(&self, other: &Self) -> std::cmp::Ordering {
             self.partial_cmp(other).unwrap_or(std::cmp::Ordering::Equal)
@@ -2559,11 +2568,11 @@ pub mod advanced_kfac {
                 // Power iteration
                 for _ in 0..10 {
                     // v = G * G^T * v
-                    let Gv = grad_matrix.dot(&grad_matrix.t().dot(&v));
-                    let norm = Gv.iter().map(|&x| x * x).sum::<T>().sqrt();
+                    let gv = grad_matrix.dot(&grad_matrix.t().dot(&v));
+                    let norm = gv.iter().map(|&x| x * x).sum::<T>().sqrt();
 
                     if norm > T::from(1e-10).unwrap() {
-                        v = Gv / norm;
+                        v = gv / norm;
                     }
                 }
 

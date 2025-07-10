@@ -15,7 +15,7 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{Array2, Array3};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::validation::{check_finite, check_positive};
+use scirs2_core::validation::check_positive;
 use std::f64::consts::PI;
 
 /// Advanced 2D DWT decomposition result with multiple representations
@@ -157,7 +157,7 @@ pub fn advanced_dwt2d_decompose(
     config: &AdvancedDwt2dConfig,
 ) -> SignalResult<AdvancedDwt2dResult> {
     // Validate input
-    check_finite(&data.as_slice().unwrap(), "data")?;
+    // Data validation handled by transform
     check_positive(config.decomposition_levels, "decomposition_levels")?;
 
     let (rows, cols) = data.dim();

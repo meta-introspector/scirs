@@ -240,7 +240,13 @@ pub fn denoise_unified(
             (denoised, noise_level)
         }
         DenoisingMethod::TotalVariation { lambda, iterations } => {
-            let denoised = denoise_total_variation_1d(&preprocessed, *lambda, *iterations)?;
+            let tv_config = crate::denoise_enhanced::TotalVariationConfig {
+                lambda: *lambda,
+                max_iterations: *iterations,
+                step_size: 0.1,
+                tolerance: 1e-6,
+            };
+            let denoised = denoise_total_variation_1d(&preprocessed, &tv_config)?;
             let noise_level = config
                 .noise_level
                 .unwrap_or_else(|| estimate_noise_level(&preprocessed));

@@ -167,6 +167,7 @@ struct ComputationContext {
 
 /// Hessian approximation state
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct HessianApproximationState<T: Float> {
     /// Approximation method
     method: HessianApproximation,
@@ -189,6 +190,7 @@ struct HessianApproximationState<T: Float> {
 
 /// L-BFGS memory structure
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct LBFGSMemory<T: Float> {
     /// Gradient differences (y_k = g_{k+1} - g_k)
     y_history: Vec<Array1<T>>,
@@ -208,6 +210,7 @@ struct LBFGSMemory<T: Float> {
 
 /// Computation checkpoint for gradient checkpointing
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct ComputationCheckpoint<T: Float> {
     /// Saved node values
     values: Vec<T>,

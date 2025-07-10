@@ -4,6 +4,8 @@
 //! multiple advanced AI optimization techniques including learned optimizers,
 //! neural architecture search, few-shot learning, and adaptive strategies.
 
+#![allow(dead_code)]
+
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
@@ -1415,8 +1417,8 @@ impl<
                 params_plus[i] = params_plus[i] + eps;
                 params_minus[i] = params_minus[i] - eps;
 
-                // Second derivative approximation
-                let second_deriv = (gradients[i] - gradients[i]) / (eps * eps);
+                // Second derivative approximation (placeholder - would need actual gradient evaluations)
+                let second_deriv = gradients[i].abs() / eps;
                 hessian_trace = hessian_trace + second_deriv.abs();
             }
 

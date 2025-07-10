@@ -318,6 +318,7 @@ pub enum GateSeverity {
 
 /// Performance test suite
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct PerformanceTestSuite {
     /// Available test cases
     test_cases: Vec<PerformanceTestCase>,
@@ -380,6 +381,7 @@ pub struct TestSuiteConfig {
 
 /// Report generator
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ReportGenerator {
     /// Template engine
     template_engine: TemplateEngine,
@@ -389,6 +391,7 @@ pub struct ReportGenerator {
 
 /// Template engine for report generation
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct TemplateEngine {
     /// Available templates
     templates: HashMap<String, String>,
@@ -396,6 +399,7 @@ pub struct TemplateEngine {
 
 /// Artifact manager for storing test results
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ArtifactManager {
     /// Storage provider
     storage_provider: Box<dyn ArtifactStorage>,

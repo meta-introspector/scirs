@@ -10,16 +10,14 @@
 //! - Performance optimization for large datasets
 
 use crate::error::{SignalError, SignalResult};
-use crate::parametric::{ARMethod, OrderSelection};
+use crate::parametric::ARMethod;
 use crate::parametric_enhanced::{
     enhanced_parametric_estimation, EstimationMethod, ParametricConfig,
 };
-use ndarray::{s, Array1, Array2, ArrayView1, Axis};
-use num_traits::{Float, NumCast, Zero};
+use ndarray::{s, Array1};
+use num_traits::Float;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use scirs2_core::validation::{check_finite, check_positive};
-use std::collections::HashMap;
 use std::f64::consts::PI;
 use std::time::Instant;
 

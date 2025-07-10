@@ -142,7 +142,7 @@ pub struct ConvergenceInfo {
 }
 
 /// Configuration for advanced denoising
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct AdvancedAdvancedDenoisingConfig {
     /// Primary denoising method
     pub method: AdvancedAdvancedMethod,
@@ -161,7 +161,7 @@ pub struct AdvancedAdvancedDenoisingConfig {
 }
 
 /// Advanced-advanced denoising methods
-#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum AdvancedAdvancedMethod {
     /// Adaptive neural network-inspired denoising
     AdaptiveNeuralNet,
@@ -184,7 +184,7 @@ pub enum AdvancedAdvancedMethod {
 }
 
 /// Multi-scale processing configuration
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct MultiScaleConfig {
     pub num_scales: usize,
     pub scale_factor: f64,
@@ -193,7 +193,7 @@ pub struct MultiScaleConfig {
 }
 
 /// Boundary handling for multi-scale processing
-#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum BoundaryHandling {
     Zero,
     Reflect,
@@ -203,7 +203,7 @@ pub enum BoundaryHandling {
 }
 
 /// Scale weighting strategies
-#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum ScaleWeighting {
     Uniform,
     FrequencyAdaptive,
@@ -213,7 +213,7 @@ pub enum ScaleWeighting {
 }
 
 /// SIMD optimization configuration
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct SimdOptimizationConfig {
     pub enable_simd: bool,
     pub vectorization_width: Option<usize>,
@@ -222,7 +222,7 @@ pub struct SimdOptimizationConfig {
 }
 
 /// Real-time processing configuration
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct RealTimeConfig {
     pub max_latency_ms: f64,
     pub buffer_size: usize,
@@ -231,7 +231,7 @@ pub struct RealTimeConfig {
 }
 
 /// Quality optimization configuration
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct QualityOptimizationConfig {
     pub perceptual_weighting: bool,
     pub preserve_transients: bool,
@@ -240,7 +240,7 @@ pub struct QualityOptimizationConfig {
 }
 
 /// Memory usage configuration
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct MemoryConfig {
     pub max_memory_mb: f64,
     pub use_streaming: bool,
@@ -249,7 +249,7 @@ pub struct MemoryConfig {
 }
 
 /// Memory optimization levels
-#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum MemoryOptimizationLevel {
     None,
     Basic,

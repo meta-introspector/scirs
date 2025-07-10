@@ -3,6 +3,8 @@
 //! This module implements various actor-critic algorithms including A2C, A3C,
 //! SAC (Soft Actor-Critic), and other modern actor-critic methods.
 
+#![allow(dead_code)]
+
 use super::{
     ActionDistribution, DistributionType, PolicyNetwork, RLOptimizationMetrics, RLOptimizerConfig,
     RLScheduler, TrajectoryBatch, ValueNetwork,

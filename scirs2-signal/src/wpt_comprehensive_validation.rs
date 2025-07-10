@@ -11,16 +11,12 @@
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
+use rand::rngs::StdRng;
 use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
-use crate::wpt_validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
-use ndarray::{Array1, Array2, ArrayView1};
-use num_traits::{Float, NumCast};
+use crate::wpt_validation::WptValidationResult;
+use ndarray::{Array1, Array2};
+use num_traits::Float;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive};
-use std::collections::HashMap;
-use std::f64::consts::PI;
-use std::time::Instant;
 
 /// Comprehensive WPT validation result
 #[derive(Debug, Clone)]

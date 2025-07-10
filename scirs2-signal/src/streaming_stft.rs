@@ -51,7 +51,7 @@ use crate::error::{SignalError, SignalResult};
 use crate::window::get_window;
 use num_complex::Complex64;
 use std::collections::VecDeque;
-use std::f64::consts::PI;
+use ndarray::Array1;
 
 /// Configuration for streaming STFT
 #[derive(Debug, Clone)]
@@ -581,6 +581,7 @@ pub struct RealTimeStftStatistics {
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::PI;
 
     #[test]
     fn test_streaming_stft_creation() {

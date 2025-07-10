@@ -4,6 +4,8 @@
 //! that automatically adjust to changing data characteristics, concept drift,
 //! and varying computational constraints.
 
+#![allow(dead_code)]
+
 use ndarray::{Array1, ScalarOperand};
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
@@ -223,7 +225,7 @@ enum DriftSeverity {
 
 /// Current drift state
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum DriftState {
+pub enum DriftState {
     Stable,
     Warning,
     Drift,
@@ -316,7 +318,7 @@ struct DataStatistics<A: Float> {
 
 /// Resource usage tracking
 #[derive(Debug, Clone)]
-struct ResourceUsage {
+pub struct ResourceUsage {
     /// CPU utilization
     cpu_percent: f64,
 

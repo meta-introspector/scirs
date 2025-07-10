@@ -4,6 +4,8 @@
 //! optimal neural network architectures for learned optimizers, enabling
 //! automatic design of meta-learning optimization algorithms.
 
+#![allow(dead_code)]
+
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use scirs2_core::random::Random;

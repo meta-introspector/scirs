@@ -64,6 +64,7 @@ impl Default for MemoryDetectionConfig {
 
 /// Memory allocation tracker
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct AllocationTracker {
     /// Total allocations count
     total_allocations: Arc<AtomicUsize>,

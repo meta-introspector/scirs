@@ -367,7 +367,6 @@ fn validate_uneven_sampling(
     let mut issues = Vec::new();
     let mut errors = Vec::new();
     use rand::prelude::*;
-    use rand::Rng;
 
     let n_nominal = 1000;
     let fs_nominal = 100.0;
@@ -1070,7 +1069,6 @@ fn validate_sparse_sampling(
     let f_signal = 10.0;
 
     use rand::prelude::*;
-    use rand::Rng;
     let mut rng = rand::rng();
     let mut indices: Vec<usize> = (0..n_total).collect();
     indices.shuffle(&mut rng);
@@ -1340,7 +1338,6 @@ fn validate_correlated_noise(
 
     // Generate AR(1) correlated noise
     use rand::prelude::*;
-    use rand::Rng;
     let mut rng = rand::rng();
     let mut corr_noise = vec![0.0; n];
     let alpha = 0.7; // AR(1) coefficient
@@ -1725,7 +1722,6 @@ fn validate_statistical_properties(tolerance: f64) -> SignalResult<StatisticalVa
 #[allow(dead_code)]
 fn test_white_noise_statistics() -> SignalResult<f64> {
     use rand::prelude::*;
-    use rand::Rng;
     let mut rng = rand::rng();
 
     let n_trials = 100;
@@ -1783,7 +1779,6 @@ fn test_white_noise_statistics() -> SignalResult<f64> {
 #[allow(dead_code)]
 fn test_false_alarm_rates() -> SignalResult<f64> {
     use rand::prelude::*;
-    use rand::Rng;
     let mut rng = rand::rng();
 
     let n_trials = 1000;
@@ -2498,7 +2493,6 @@ fn test_astronomical_scenarios(tolerance: f64) -> SignalResult<f64> {
 
     // Simulate variable star with irregular sampling
     use rand::prelude::*;
-    use rand::Rng;
     let mut rng = rand::rng();
 
     let n_obs = 500;
@@ -2567,7 +2561,6 @@ fn test_physiological_scenarios(tolerance: f64) -> SignalResult<f64> {
 
     // Simulate heart rate variability data
     use rand::prelude::*;
-    use rand::Rng;
     let mut rng = rand::rng();
 
     let n = 1000;
@@ -2643,7 +2636,6 @@ fn test_environmental_scenarios(tolerance: f64) -> SignalResult<f64> {
 
     // Simulate temperature measurements with seasonal variation and gaps
     use rand::prelude::*;
-    use rand::Rng;
     let mut rng = rand::rng();
 
     let days_per_year = 365.25;
@@ -2762,7 +2754,6 @@ fn test_nonparametric_properties(tolerance: f64) -> SignalResult<f64> {
 
     // Test Kolmogorov-Smirnov test for power distribution
     use rand::prelude::*;
-    use rand::Rng;
     let mut rng = rand::rng();
 
     let n_trials = 100;
@@ -2835,7 +2826,6 @@ fn test_bayesian_validation(tolerance: f64) -> SignalResult<f64> {
     let t: Vec<f64> = (0..n).map(|i| i as f64 / fs).collect();
 
     use rand::prelude::*;
-    use rand::Rng;
     let mut rng = rand::rng();
 
     // Signal with known frequency plus noise
@@ -2895,7 +2885,6 @@ fn test_information_theory_metrics(tolerance: f64) -> SignalResult<f64> {
 
     // Test entropy and mutual information properties
     use rand::prelude::*;
-    use rand::Rng;
     let mut rng = rand::rng();
 
     let n = 500;

@@ -6,13 +6,12 @@
 use crate::error::{SignalError, SignalResult};
 use crate::lti::StateSpace;
 use crate::sysid_enhanced::{
-    EnhancedSysIdConfig, ModelValidationMetrics, ParameterEstimate, SystemModel,
+    EnhancedSysIdConfig, ModelValidationMetrics, SystemModel,
 };
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayView2, Axis};
+use ndarray::{s, Array1, Array2};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use scirs2_core::validation::{check_finite, check_shape};
 use std::f64::consts::PI;
 
 /// Enhanced numerical robustness for system identification
@@ -964,10 +963,6 @@ fn compute_eigenvalues(matrix: &Array2<f64>) -> SignalResult<Array1<Complex64>> 
 }
 
 mod tests {
-    use num_complex::Complex64;
-
-    use std::f64::consts::PI;
-
     #[test]
     fn test_snr_estimation() {
         let n = 100;

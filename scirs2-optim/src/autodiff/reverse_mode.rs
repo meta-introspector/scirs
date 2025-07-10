@@ -32,6 +32,7 @@ pub struct ReverseModeEngine<T: Float> {
 
 /// Reverse-mode operation on the tape
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct ReverseOperation<T: Float> {
     /// Operation type
     op_type: ReverseOpType,
@@ -51,6 +52,7 @@ struct ReverseOperation<T: Float> {
 
 /// Reverse operation types
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 enum ReverseOpType {
     Variable,
     Constant,
@@ -83,6 +85,7 @@ enum ReverseOpType {
 
 /// Backward function for computing gradients
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 enum BackwardFunction<T: Float> {
     /// Identity (for variables and constants)
     Identity,
@@ -136,6 +139,7 @@ enum BackwardFunction<T: Float> {
 
 /// Trigonometric functions
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 enum TrigFunction {
     Sin,
     Cos,
@@ -153,6 +157,7 @@ enum ActivationFunction {
 
 /// Reduction types
 #[derive(Debug, Clone, Copy)]
+#[allow(dead_code)]
 enum ReductionType {
     Sum,
     Mean,
@@ -163,6 +168,7 @@ enum ReductionType {
 
 /// Saved values for backward computation
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 enum SavedValues<T: Float> {
     None,
 

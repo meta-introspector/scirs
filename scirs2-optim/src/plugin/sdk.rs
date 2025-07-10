@@ -3,6 +3,8 @@
 //! This module provides a comprehensive SDK for developing custom optimizer plugins,
 //! including base classes, utilities, testing frameworks, and development tools.
 
+#![allow(dead_code)]
+
 use super::core::*;
 use crate::benchmarking::cross_platform_tester::{PerformanceBaseline, PlatformTarget};
 use crate::error::{OptimError, Result};

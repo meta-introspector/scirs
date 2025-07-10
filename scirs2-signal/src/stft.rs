@@ -13,6 +13,7 @@ use crate::error::{SignalError, SignalResult};
 use crate::window;
 use ndarray::{s, Array1, Array2};
 use num_traits::{Float, NumCast};
+use std::f64::consts::PI;
 use std::fmt::Debug;
 
 /// Configuration options for STFT
@@ -984,7 +985,7 @@ impl ShortTimeFft {
                 for k in 1..(n / 2 + 1) {
                     let mut sum = Complex64::new(0.0, 0.0);
                     for (j, &frame_val) in complex_frame.iter().enumerate().take(n) {
-                        let angle = -2.0 * std::f64::consts::PI * (j * k) as f64 / n as f64;
+                        let angle = -2.0 * PI * (j * k) as f64 / n as f64;
                         let c = Complex64::new(angle.cos(), angle.sin());
                         sum += frame_val * c;
                     }
@@ -1001,7 +1002,7 @@ impl ShortTimeFft {
                 for k in 0..n {
                     let mut sum = Complex64::new(0.0, 0.0);
                     for (j, &frame_val) in complex_frame.iter().enumerate().take(n) {
-                        let angle = -2.0 * std::f64::consts::PI * (j * k) as f64 / n as f64;
+                        let angle = -2.0 * PI * (j * k) as f64 / n as f64;
                         let c = Complex64::new(angle.cos(), angle.sin());
                         sum += frame_val * c;
                     }
@@ -1018,7 +1019,7 @@ impl ShortTimeFft {
                 for k in 0..n {
                     let mut sum = Complex64::new(0.0, 0.0);
                     for (j, &frame_val) in complex_frame.iter().enumerate().take(n) {
-                        let angle = -2.0 * std::f64::consts::PI * (j * k) as f64 / n as f64;
+                        let angle = -2.0 * PI * (j * k) as f64 / n as f64;
                         let c = Complex64::new(angle.cos(), angle.sin());
                         sum += frame_val * c;
                     }
@@ -1046,7 +1047,7 @@ impl ShortTimeFft {
             let phase_factor = phase_shift as f64 / self.mfft as f64;
 
             for (i, val) in result.iter_mut().enumerate() {
-                let angle = 2.0 * std::f64::consts::PI * i as f64 * phase_factor;
+                let angle = 2.0 * PI * i as f64 * phase_factor;
                 let phase = Complex64::new(angle.cos(), angle.sin());
                 *val *= phase;
             }
@@ -1082,7 +1083,7 @@ impl ShortTimeFft {
 
                     // Positive frequencies
                     for k in 1..(n / 2 + 1).min(spectrum.len()) {
-                        let angle = 2.0 * std::f64::consts::PI * (i * k) as f64 / n as f64;
+                        let angle = 2.0 * PI * (i * k) as f64 / n as f64;
                         let c = Complex64::new(angle.cos(), angle.sin());
                         sum += spectrum[k] * c;
                     }
@@ -1105,7 +1106,7 @@ impl ShortTimeFft {
                     let mut sum = Complex64::new(0.0, 0.0);
 
                     for (k, &spec_k) in spectrum.iter().enumerate().take(n.min(spectrum.len())) {
-                        let angle = 2.0 * std::f64::consts::PI * (i * k) as f64 / n as f64;
+                        let angle = 2.0 * PI * (i * k) as f64 / n as f64;
                         let c = Complex64::new(angle.cos(), angle.sin());
                         sum += spec_k * c;
                     }
@@ -1141,7 +1142,7 @@ impl ShortTimeFft {
                     let mut sum = Complex64::new(0.0, 0.0);
 
                     for (k, &unshifted_k) in unshifted.iter().enumerate().take(n) {
-                        let angle = 2.0 * std::f64::consts::PI * (i * k) as f64 / n as f64;
+                        let angle = 2.0 * PI * (i * k) as f64 / n as f64;
                         let c = Complex64::new(angle.cos(), angle.sin());
                         sum += unshifted_k * c;
                     }
@@ -1362,7 +1363,6 @@ mod tests {
     use approx::assert_relative_eq;
     use num_complex::Complex64;
 
-    use std::f64::consts::PI;
 
     #[test]
     fn test_stft_creation() {
@@ -1940,10 +1940,6 @@ pub struct MemoryInfo {
 }
 
 mod memory_efficient_tests {
-    use num_complex::Complex64;
-
-    use std::f64::consts::PI;
-
     #[test]
     fn test_memory_efficient_stft() {
         // Create a longer signal

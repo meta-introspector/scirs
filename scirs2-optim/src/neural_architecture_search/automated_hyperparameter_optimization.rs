@@ -4,6 +4,8 @@
 //! for neural architecture search and optimizer design, including Bayesian optimization,
 //! population-based training, and multi-fidelity optimization.
 
+#![allow(dead_code)]
+
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use serde::{Deserialize, Serialize};

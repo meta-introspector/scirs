@@ -20,7 +20,8 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::filter::{butter, lfilter, FilterType};
-use std::f64::consts::PI;
+// use std::f64::consts::PI; // Unused import removed
+use ndarray::Array1;
 
 /// Configuration for multi-band separation
 #[derive(Debug, Clone)]

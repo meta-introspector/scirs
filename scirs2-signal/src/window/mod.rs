@@ -1338,6 +1338,7 @@ mod lanczos_tests {
 /// Window analysis and design utilities
 pub mod analysis {
     use crate::error::{SignalError, SignalResult};
+    use super::{hann, hamming, blackman};
 
     use std::f64::consts::PI;
 
@@ -1573,8 +1574,9 @@ pub mod analysis {
         Ok(bandwidth_bins)
     }
 
+    #[cfg(test)]
     mod analysis_tests {
-        use super::*;
+        use super::{hann, hamming, analyze_window, compare_windows};
 
         #[test]
         fn test_window_analysis() {

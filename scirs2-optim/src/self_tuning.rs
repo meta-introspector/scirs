@@ -4,6 +4,8 @@
 //! tune hyperparameters, select optimizers, and adjust configurations based
 //! on training dynamics and problem characteristics.
 
+#![allow(dead_code)]
+
 use crate::error::Result;
 use crate::optimizers::*;
 use crate::schedulers::*;

@@ -1398,7 +1398,7 @@ fn compute_fft_padded(signal: &Array1<f64>, nfft: usize) -> Vec<Complex64> {
     for k in 0..nfft {
         let mut sum = Complex64::new(0.0, 0.0);
         for n_idx in 0..signal.len().min(nfft) {
-            let phase = -2.0 * std::f64::consts::PI * (k as f64) * (n_idx as f64) / n;
+            let phase = -2.0 * PI * (k as f64) * (n_idx as f64) / n;
             let twiddle = Complex64::new(phase.cos(), phase.sin());
             sum += Complex64::new(signal[n_idx], 0.0) * twiddle;
         }

@@ -228,7 +228,7 @@ fn compute_fft_chunk(data: &[f64], _chunk_size: usize) -> SignalResult<Vec<f64>>
         let mut imag = 0.0;
 
         for j in 0..n {
-            let angle = -2.0 * std::f64::consts::PI * (k * j) as f64 / n as f64;
+            let angle = -2.0 * PI * (k * j) as f64 / n as f64;
             real += signal[j] * angle.cos();
             imag += signal[j] * angle.sin();
         }
@@ -422,7 +422,7 @@ where
     // Apply window function (Hann window)
     let window: Vec<f64> = (0..window_size)
         .map(|i| {
-            0.5 * (1.0 - (2.0 * std::f64::consts::PI * i as f64 / (window_size - 1) as f64).cos())
+            0.5 * (1.0 - (2.0 * PI * i as f64 / (window_size - 1) as f64).cos())
         })
         .collect();
 
@@ -699,7 +699,7 @@ mod tests {
     #[test]
     fn test_memory_efficient_spectrogram() {
         let signal: Vec<f64> = (0..100)
-            .map(|i| (2.0 * std::f64::consts::PI * i as f64 / 10.0).sin())
+            .map(|i| (2.0 * PI * i as f64 / 10.0).sin())
             .collect();
 
         let config = MemoryConfig::default();

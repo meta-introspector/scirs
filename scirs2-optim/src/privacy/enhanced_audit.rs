@@ -3,6 +3,8 @@
 //! This module provides comprehensive audit trails, compliance monitoring,
 //! and formal verification components for privacy-preserving machine learning.
 
+#![allow(dead_code)]
+
 use crate::error::{OptimError, Result};
 use ndarray::Array1;
 use num_traits::Float;

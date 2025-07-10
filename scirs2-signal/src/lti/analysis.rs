@@ -76,7 +76,7 @@ pub fn bode<T: LtiSystem>(
         mag.push(mag_db);
 
         // Phase in degrees: arg(H(jw)) * 180/pi
-        let phase_deg = val.arg() * 180.0 / std::f64::consts::PI;
+        let phase_deg = val.arg() * 180.0 / PI;
         phase.push(phase_deg);
     }
 

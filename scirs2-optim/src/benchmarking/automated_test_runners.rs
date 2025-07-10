@@ -190,6 +190,7 @@ pub struct ResourceUsage {
 
 /// Resource manager for test execution
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct ResourceManager {
     /// Available CPU cores
     available_cores: usize,

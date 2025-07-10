@@ -3,6 +3,8 @@
 //! This module provides comprehensive visualization capabilities for tracking
 //! optimization progress, comparing optimizers, and analyzing training dynamics.
 
+#![allow(dead_code)]
+
 use crate::error::{OptimError, Result};
 use std::collections::{HashMap, VecDeque};
 use std::fmt::Write as FmtWrite;

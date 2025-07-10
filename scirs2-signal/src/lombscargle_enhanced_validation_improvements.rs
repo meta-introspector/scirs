@@ -1022,7 +1022,6 @@ fn validate_simd_scalar_consistency(signal: &[f64], time: &[f64]) -> SignalResul
 }
 
 mod tests {
-    use std::f64::consts::PI;
 
     #[test]
     fn test_bootstrap_validation() {

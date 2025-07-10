@@ -4,6 +4,8 @@
 //! update optimization parameters. The LSTM learns optimization strategies through
 //! meta-learning, enabling automatic discovery of effective optimization patterns.
 
+#![allow(dead_code)]
+
 use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, Dimension};
 use num_traits::Float;
 use scirs2_core::random;

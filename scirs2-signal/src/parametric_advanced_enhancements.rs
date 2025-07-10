@@ -7,11 +7,10 @@
 use crate::error::{SignalError, SignalResult};
 use crate::parametric::{estimate_ar, ARMethod};
 use crate::parametric_arma::{estimate_arma, ArmaMethod, ArmaModel};
-use crate::parametric_enhanced::{EnhancedParametricResult, ModelType, ParametricConfig};
-use ndarray::{s, Array1, Array2, ArrayView1, Axis};
+use crate::parametric_enhanced::ModelType;
+use ndarray::{s, Array1};
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive, check_shape};
+use scirs2_core::validation::check_finite;
 use std::f64::consts::PI;
 
 /// Advanced model selection configuration

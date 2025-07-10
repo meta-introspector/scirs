@@ -3,7 +3,7 @@
 //! This binary analyzes results from extended stability and endurance tests,
 //! providing insights into long-term system behavior and reliability.
 
-use clap::{Arg, ArgMatches, Command};
+use clap::{Arg, Command};
 use scirs2_optim::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -596,7 +596,7 @@ fn main() -> Result<()> {
     )?;
 
     // Generate output in requested format
-    let output_content = match format {
+    let output_content = match format.as_str() {
         "json" => generate_json_report(&analysis_report)?,
         "markdown" => generate_markdown_report(&analysis_report)?,
         "github-actions" => generate_github_actions_report(&analysis_report)?,
@@ -636,35 +636,50 @@ struct LongRunTestData {
     cpu_timeline: Vec<(u64, f64)>,
     error_timeline: Vec<(u64, usize)>,
     failure_events: Vec<FailureEvent>,
+    #[allow(dead_code)]
     resource_events: Vec<ResourceUtilizationEvent>,
+    #[allow(dead_code)]
     system_events: Vec<SystemEvent>,
 }
 
 #[derive(Debug, Deserialize)]
 struct FailureEvent {
+    #[allow(dead_code)]
     timestamp: u64,
     failure_type: String,
     severity: String,
     downtime_seconds: f64,
+    #[allow(dead_code)]
     recovery_method: String,
+    #[allow(dead_code)]
     root_cause: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 struct ResourceUtilizationEvent {
+    #[allow(dead_code)]
     timestamp: u64,
+    #[allow(dead_code)]
     resource_type: String,
+    #[allow(dead_code)]
     utilization_percent: f64,
+    #[allow(dead_code)]
     threshold_exceeded: bool,
+    #[allow(dead_code)]
     duration_seconds: f64,
 }
 
 #[derive(Debug, Deserialize)]
 struct SystemEvent {
+    #[allow(dead_code)]
     timestamp: u64,
+    #[allow(dead_code)]
     event_type: String,
+    #[allow(dead_code)]
     severity: String,
+    #[allow(dead_code)]
     description: String,
+    #[allow(dead_code)]
     impact_level: f64,
 }
 
@@ -1507,7 +1522,7 @@ fn determine_test_status(
 
 #[allow(dead_code)]
 fn generate_json_report(report: &LongRunAnalysisReport) -> Result<String> {
-    serde_json::to_string_pretty(report).map_err(|e| OptimError::SerializationError(e.to_string()))
+    serde_json::to_string_pretty(report).map_err(|e| OptimError::OptimizationError(e.to_string()))
 }
 
 #[allow(dead_code)]

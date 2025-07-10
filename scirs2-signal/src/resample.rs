@@ -108,24 +108,24 @@ where
         let sinc = if t == 0.0 {
             1.0
         } else {
-            (std::f64::consts::PI * t).sin() / (std::f64::consts::PI * t)
+            (PI * t).sin() / (PI * t)
         };
 
         // Apply window function
         let window_val = match window_type {
             "hamming" => {
                 0.54 - 0.46
-                    * (2.0 * std::f64::consts::PI * i as f64 / (filter_length - 1) as f64).cos()
+                    * (2.0 * PI * i as f64 / (filter_length - 1) as f64).cos()
             }
             "hanning" => {
                 0.5 * (1.0
-                    - (2.0 * std::f64::consts::PI * i as f64 / (filter_length - 1) as f64).cos())
+                    - (2.0 * PI * i as f64 / (filter_length - 1) as f64).cos())
             }
             "blackman" => {
                 let a0 = 0.42;
                 let a1 = 0.5;
                 let a2 = 0.08;
-                let w = 2.0 * std::f64::consts::PI * i as f64 / (filter_length - 1) as f64;
+                let w = 2.0 * PI * i as f64 / (filter_length - 1) as f64;
                 a0 - a1 * w.cos() + a2 * (2.0 * w).cos()
             }
             _ => 1.0, // Rectangular window (no window)
@@ -450,9 +450,9 @@ mod tests {
     #[test]
     fn test_rational_approximation() {
         // Test rational approximation of π
-        let (num, denom) = rational_approximation(std::f64::consts::PI);
+        let (num, denom) = rational_approximation(PI);
         let approx = num as f64 / denom as f64;
-        assert!((approx - std::f64::consts::PI).abs() < 0.001);
+        assert!((approx - PI).abs() < 0.001);
 
         // Common fractions should be exact
         assert_eq!(rational_approximation(0.5), (1, 2));

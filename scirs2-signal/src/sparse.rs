@@ -7,7 +7,7 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array1, Array2};
 use num_complex::Complex64;
 use rand::seq::SliceRandom;
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{rngs::StdRng, SeedableRng};
 use rand_distr::Distribution;
 use rustfft::{num_complex::Complex, FftPlanner};
 use scirs2_linalg::{solve, vector_norm};

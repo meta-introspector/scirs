@@ -9,12 +9,10 @@
 
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
-use crate::filter::FilterType;
-use ndarray::{s, Array1, Array2, ArrayView1, ArrayViewMut1, Axis, Zip};
+use ndarray::{s, Array1, Array2, ArrayView1, Zip};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::SimdUnifiedOps;
-use scirs2_core::validation::{check_finite, check_positive};
 
 /// Configuration for performance optimization
 #[derive(Debug, Clone)]
@@ -694,6 +692,9 @@ fn next_power_of_two(n: usize) -> usize {
 /// Performance benchmarking utilities
 pub mod benchmark {
     use std::time::Instant;
+    use crate::error::SignalResult;
+    use ndarray::Array1;
+    use super::simd_convolve_1d;
 
     /// Benchmark result
     #[derive(Debug)]

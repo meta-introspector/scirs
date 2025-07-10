@@ -8,7 +8,7 @@ use ndarray::Array1;
 use scirs2_optim::{
     adam::{Adam, AdamConfig},
     benchmarking::{
-        cross_framework::*, documentation_analyzer::*, performance_profiler::*, OptimizerBenchmark,
+        cross_framework::*, documentation_analyzer::*, performance_profiler::*,
     },
     error::Result,
     optimizers::Optimizer,

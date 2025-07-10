@@ -4,8 +4,7 @@
 //! to help escape local minima and improve exploration during training.
 
 use ndarray::ScalarOperand;
-use ndarray_rand::rand::distributions::Distribution;
-use ndarray_rand::rand_distr::{Normal, Uniform};
+// Removed unused imports Distribution, Normal, Uniform
 use num_traits::{Float, NumCast};
 use std::fmt::Debug;
 

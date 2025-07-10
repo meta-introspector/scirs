@@ -13,6 +13,7 @@ use super::reverse_mode::ReverseModeEngine;
 use crate::error::{OptimError, Result};
 
 /// Higher-order differentiation engine
+#[allow(dead_code)]
 pub struct HigherOrderEngine<T: Float> {
     /// Forward-mode engine for directional derivatives
     forward_engine: ForwardModeEngine<T>,
@@ -58,6 +59,7 @@ struct DerivativeKey {
 
 /// Cached derivative value
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 enum DerivativeValue<T: Float> {
     Scalar(T),
     Vector(Array1<T>),
@@ -134,7 +136,8 @@ pub struct ThirdOrderTensor<T: Float> {
 
 /// Sparse third-order tensor
 #[derive(Debug, Clone)]
-struct SparseTensor3<T: Float> {
+#[allow(dead_code)]
+pub struct SparseTensor3<T: Float> {
     indices: Vec<(usize, usize, usize)>,
     values: Vec<T>,
     shape: (usize, usize, usize),
@@ -946,11 +949,13 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     }
 
     /// Decide whether to use parallel computation
+    #[allow(dead_code)]
     fn should_use_parallel(&self, problem_size: usize) -> bool {
         self.parallel_computation && problem_size >= 50
     }
 
     /// Decide whether to use sparse computations
+    #[allow(dead_code)]
     fn should_use_sparse(&self, problem_size: usize, config: &HessianConfig) -> bool {
         self.adaptive_sparsity && config.sparse && problem_size >= 100
     }
@@ -969,6 +974,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
     }
 
     /// Apply adaptive sparsity to dense matrix
+    #[allow(dead_code)]
     fn apply_adaptive_sparsity(&self, mut matrix: Array2<T>, threshold: f64) -> Result<Array2<T>> {
         let sparsity_threshold = T::from(threshold).unwrap();
 
@@ -1338,6 +1344,7 @@ pub enum HvpMode {
 
 /// Computation profiler for performance optimization
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ComputationProfiler<T: Float> {
     hessian_timings: Vec<ComputationTiming>,
     hvp_timings: Vec<ComputationTiming>,
@@ -1347,6 +1354,7 @@ pub struct ComputationProfiler<T: Float> {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct ComputationTiming {
     problem_size: usize,
     duration_us: u64,
@@ -1376,6 +1384,7 @@ impl<T: Float + Default + Clone> ComputationProfiler<T> {
         }
     }
 
+    #[allow(dead_code)]
     fn record_hessian_computation(
         &mut self,
         size: usize,

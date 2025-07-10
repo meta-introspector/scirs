@@ -12,15 +12,12 @@
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
 use crate::wpt_validation::{OrthogonalityMetrics, PerformanceMetrics, WptValidationResult};
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, Axis};
-use num_traits::{Float, NumCast, Zero};
+use num_traits::Float;
 use scirs2_core::parallel_ops::*;
-use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
-use scirs2_core::validation::{check_finite, check_positive};
+use scirs2_core::validation::check_positive;
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 /// Enhanced modern validation result for WPT
 #[derive(Debug, Clone)]

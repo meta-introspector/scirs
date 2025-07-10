@@ -24,7 +24,7 @@ cargo nextest run -p scirs2-{module}  # Test specific module
 1. Format code: `cargo fmt`
 2. Lint: `cargo clippy` (MUST have zero warnings)
 3. Build: `cargo build`
-4. Test: `cargo nextest run`
+4. Test: `cargo test | tail`
 5. Fix any issues and return to step 1
 6. Only proceed when ALL steps pass cleanly
 7. Commit & Push only when everything passes

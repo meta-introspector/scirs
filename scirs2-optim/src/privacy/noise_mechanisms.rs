@@ -5,7 +5,7 @@
 //! tree aggregation and truncated noise.
 
 use ndarray::{s, Array, Array1, Array2, ArrayBase, Data, DataMut, Dimension};
-use ndarray_rand::rand_distr::Distribution;
+// Removed unused import Distribution
 use num_traits::Float;
 use scirs2_core::random;
 use std::marker::PhantomData;
@@ -851,7 +851,7 @@ mod tests {
         let mut mechanism = GaussianMechanism::<f64>::new();
         let mut data = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        let result = mechanism.add_noise(&mut data, 1.0, 1.0, Some(1e-5));
+        let result = mechanism.add_noise_1d(&mut data, 1.0, 1.0, Some(1e-5));
         assert!(result.is_ok());
         assert_eq!(mechanism.name(), "Gaussian");
         assert!(mechanism.supports_delta());
@@ -862,7 +862,7 @@ mod tests {
         let mut mechanism = LaplaceMechanism::<f64>::new();
         let mut data = Array1::from_vec(vec![1.0, 2.0, 3.0]);
 
-        let result = mechanism.add_noise(&mut data, 1.0, 1.0, None);
+        let result = mechanism.add_noise_1d(&mut data, 1.0, 1.0, None);
         assert!(result.is_ok());
         assert_eq!(mechanism.name(), "Laplace");
         assert!(!mechanism.supports_delta());
@@ -885,7 +885,7 @@ mod tests {
         let mut truncated = TruncatedNoiseMechanism::new(base, 5.0);
         let mut data = Array1::from_vec(vec![100.0]); // Large value
 
-        let result = truncated.add_noise(&mut data, 1.0, 0.1, None);
+        let result = truncated.add_noise_1d(&mut data, 1.0, 0.1, None);
         assert!(result.is_ok());
         assert!(data[0].abs() <= 5.0); // Should be truncated
     }

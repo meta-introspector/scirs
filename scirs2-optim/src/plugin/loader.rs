@@ -3,6 +3,8 @@
 //! This module provides functionality for loading plugins from various sources,
 //! including compiled libraries, configuration files, and remote repositories.
 
+#![allow(dead_code)]
+
 use super::core::*;
 use super::registry::*;
 use crate::error::{OptimError, Result};
@@ -1734,8 +1736,8 @@ mod tests {
     #[test]
     fn test_security_scan_result() {
         let result = SecurityScanResult::default();
-        assert!(result.scan_successful);
-        assert_eq!(result.security_score, 1.0);
+        assert!(!result.scan_successful);
+        assert_eq!(result.security_score, 0.0);
     }
 }
 

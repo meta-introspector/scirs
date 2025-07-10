@@ -86,6 +86,7 @@ enum ForwardOpType {
 
 /// Operation metadata for forward mode
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct ForwardOpMetadata<T: Float> {
     /// Partial derivatives with respect to inputs
     partials: Vec<T>,
@@ -99,6 +100,7 @@ struct ForwardOpMetadata<T: Float> {
 
 /// Operation-specific data
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 enum ForwardOpData<T: Float> {
     None,
     ConstantValue(T),

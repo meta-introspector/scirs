@@ -12,7 +12,7 @@
 //! - Performance monitoring and adaptive thresholds
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, Array2, Array3, ArrayView1, ArrayViewMut1, Axis};
+use ndarray::{Array2, ArrayView1, ArrayViewMut1};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
@@ -1664,10 +1664,9 @@ pub mod advanced_simd_matrix {
     use super::{simd_enhanced_convolution, SimdConfig};
     use crate::error::{SignalError, SignalResult};
     use ndarray::s;
-    use ndarray::{Array1, Array2, Array3, ArrayView1, ArrayViewMut1, Axis};
-    use num_complex::Complex64;
+    use ndarray::{Array2, Array3, ArrayView1};
     use scirs2_core::parallel_ops::*;
-    use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
+    use scirs2_core::simd_ops::SimdUnifiedOps;
     use scirs2_core::validation::check_finite;
 
     /// SIMD-accelerated matrix-vector multiplication for signal processing
@@ -2015,6 +2014,12 @@ pub mod advanced_simd_matrix {
 
 /// Advanced-high-performance real-time signal processing operations
 pub mod advanced_simd_realtime {
+    use crate::error::{SignalError, SignalResult};
+    use ndarray::Array2;
+    use scirs2_core::simd_ops::PlatformCapabilities;
+    use super::SimdConfig;
+    #[cfg(target_arch = "x86_64")]
+    use std::arch::x86_64::*;
 
     /// Real-time SIMD FIR filter state
     #[derive(Debug, Clone)]

@@ -21,7 +21,7 @@ struct BaselineMetrics {
     statistical_summary: StatisticalSummary,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct MetricValue {
     mean: f64,
     std_dev: f64,
@@ -44,7 +44,7 @@ struct BaselineMetadata {
     platform_info: PlatformInfo,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct PlatformInfo {
     os: String,
     arch: String,
@@ -272,7 +272,7 @@ fn handle_create_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
 
     // Create baseline directory if it doesn't exist
     fs::create_dir_all(baseline_dir)
-        .map_err(|e| OptimError::IoError(format!("Failed to create baseline directory: {}", e)))?;
+        .map_err(|e| OptimError::ResourceError(format!("Failed to create baseline directory: {}", e)))?;
 
     // Generate baseline metrics
     let baseline = create_baseline_from_results(&results, features, commit_hash, branch)?;
@@ -569,29 +569,29 @@ fn handle_show_baseline_info(matches: &ArgMatches, verbose: bool) -> Result<()> 
 #[allow(dead_code)]
 fn load_performance_results(path: &str) -> Result<serde_json::Value> {
     let content = fs::read_to_string(path)
-        .map_err(|e| OptimError::IoError(format!("Failed to read results file: {}", e)))?;
+        .map_err(|e| OptimError::ResourceError(format!("Failed to read results file: {}", e)))?;
 
     serde_json::from_str(&content)
-        .map_err(|e| OptimError::SerializationError(format!("Failed to parse results: {}", e)))
+        .map_err(|e| OptimError::OptimizationError(format!("Failed to parse results: {}", e)))
 }
 
 #[allow(dead_code)]
 fn load_baseline(path: &PathBuf) -> Result<BaselineMetrics> {
     let content = fs::read_to_string(path)
-        .map_err(|e| OptimError::IoError(format!("Failed to read baseline file: {}", e)))?;
+        .map_err(|e| OptimError::ResourceError(format!("Failed to read baseline file: {}", e)))?;
 
     serde_json::from_str(&content)
-        .map_err(|e| OptimError::SerializationError(format!("Failed to parse baseline: {}", e)))
+        .map_err(|e| OptimError::OptimizationError(format!("Failed to parse baseline: {}", e)))
 }
 
 #[allow(dead_code)]
 fn save_baseline(baseline: &BaselineMetrics, path: &PathBuf) -> Result<()> {
     let content = serde_json::to_string_pretty(baseline).map_err(|e| {
-        OptimError::SerializationError(format!("Failed to serialize baseline: {}", e))
+        OptimError::OptimizationError(format!("Failed to serialize baseline: {}", e))
     })?;
 
     fs::write(path, content)
-        .map_err(|e| OptimError::IoError(format!("Failed to write baseline file: {}", e)))
+        .map_err(|e| OptimError::ResourceError(format!("Failed to write baseline file: {}", e)))
 }
 
 #[allow(dead_code)]
@@ -843,10 +843,10 @@ fn find_baseline_files(baseline_dir: &str) -> Result<Vec<PathBuf>> {
     let mut baseline_files = Vec::new();
 
     for entry in fs::read_dir(&dir_path)
-        .map_err(|e| OptimError::IoError(format!("Failed to read directory: {}", e)))?
+        .map_err(|e| OptimError::ResourceError(format!("Failed to read directory: {}", e)))?
     {
         let entry = entry
-            .map_err(|e| OptimError::IoError(format!("Failed to read directory entry: {}", e)))?;
+            .map_err(|e| OptimError::ResourceError(format!("Failed to read directory entry: {}", e)))?;
 
         let path = entry.path();
 
@@ -870,6 +870,6 @@ fn get_platform_info() -> PlatformInfo {
         os: std::env::consts::OS.to_string(),
         arch: std::env::consts::ARCH.to_string(),
         cpu_cores: num_cpus::get(),
-        rust_version: env!("RUSTC_VERSION").to_string(),
+        rust_version: "stable".to_string(), // Simplified since RUSTC_VERSION env var not available
     }
 }

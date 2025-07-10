@@ -131,6 +131,7 @@ pub struct SecurityAuditResult {
 
 /// Dependency scanner for vulnerability detection
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct DependencyScanner {
     /// Scanner configuration
     config: DependencyScanConfig,
@@ -303,6 +304,7 @@ pub enum SecurityIssueType {
 
 /// Vulnerability database for tracking known security issues
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct VulnerabilityDatabase {
     /// Database configuration
     config: VulnerabilityDatabaseConfig,
@@ -363,6 +365,7 @@ pub struct ExternalVulnerabilitySource {
 
 /// Security policy enforcer
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct SecurityPolicyEnforcer {
     /// Active policies
     policies: Vec<SecurityPolicy>,

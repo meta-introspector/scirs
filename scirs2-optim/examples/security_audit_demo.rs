@@ -5,12 +5,10 @@
 
 use ndarray::Array1;
 use scirs2_optim::{
-    adam::{Adam, AdamConfig},
     benchmarking::security_auditor::*,
     error::Result,
-    optimizers::Optimizer,
+    optimizers::{Adam, Optimizer, SGD},
     privacy::{DifferentialPrivacyConfig, DifferentiallyPrivateOptimizer},
-    sgd::{SGDConfig, SGD},
 };
 
 #[allow(dead_code)]
@@ -148,7 +146,7 @@ fn run_input_validation_demo() -> Result<()> {
 fn test_nan_injection_attack() -> Result<()> {
     println!("  Testing NaN injection resistance...");
 
-    let mut adam = Adam::new(AdamConfig::default());
+    let mut adam = Adam::new(0.001f64);
 
     // Create parameters with NaN values (malicious input)
     let malicious_params = Array1::from_vec(vec![1.0, f64::NAN, 3.0]);
@@ -172,7 +170,7 @@ fn test_nan_injection_attack() -> Result<()> {
 fn test_infinity_injection_attack() -> Result<()> {
     println!("  Testing infinity injection resistance...");
 
-    let mut sgd = SGD::new(SGDConfig::default());
+    let mut sgd = SGD::new(0.01f64);
 
     // Create parameters with infinity values
     let malicious_params = Array1::from_vec(vec![1.0, f64::INFINITY, 3.0]);
@@ -197,7 +195,7 @@ fn test_infinity_injection_attack() -> Result<()> {
 fn test_dimension_mismatch_attack() -> Result<()> {
     println!("  Testing dimension mismatch attack resistance...");
 
-    let mut adam = Adam::new(AdamConfig::default());
+    let mut adam = Adam::new(0.001f64);
 
     // Create mismatched dimensions (potential buffer overflow attack)
     let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
@@ -220,7 +218,7 @@ fn test_dimension_mismatch_attack() -> Result<()> {
 fn test_extreme_value_attack() -> Result<()> {
     println!("  Testing extreme value attack resistance...");
 
-    let mut adam = Adam::new(AdamConfig::default());
+    let mut adam = Adam::new(0.001f64);
 
     // Create extremely large values (potential overflow attack)
     let extreme_params = Array1::from_vec(vec![1e100, 2e100, 3e100]);
@@ -288,7 +286,7 @@ fn run_privacy_security_demo() -> Result<()> {
 fn test_privacy_budget_exhaustion() -> Result<()> {
     println!("  Testing privacy budget exhaustion attack resistance...");
 
-    let sgd = SGD::new(SGDConfig::default());
+    let sgd = SGD::new(0.01f64);
     let dp_config = DifferentialPrivacyConfig {
         target_epsilon: 1.0, // Small budget
         target_delta: 1e-5,
@@ -296,7 +294,7 @@ fn test_privacy_budget_exhaustion() -> Result<()> {
         ..Default::default()
     };
 
-    let mut dp_optimizer = DifferentiallyPrivateOptimizer::new(sgd, dp_config)?;
+    let mut dp_optimizer = DifferentiallyPrivateOptimizer::<SGD<f64>, f64, ndarray::Dim<[usize; 1]>>::new(sgd, dp_config)?;
 
     let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
     let mut gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
@@ -356,9 +354,9 @@ fn test_privacy_parameter_manipulation() -> Result<()> {
     ];
 
     for (i, config) in invalid_configs.iter().enumerate() {
-        let sgd = SGD::new(SGDConfig::default());
+        let sgd = SGD::new(0.01f64);
 
-        match DifferentiallyPrivateOptimizer::new(sgd, config.clone()) {
+        match DifferentiallyPrivateOptimizer::<SGD<f64>, f64, ndarray::Dim<[usize; 1]>>::new(sgd, config.clone()) {
             Ok(_) => {
                 println!(
                     "    ⚠️  VULNERABILITY {}: Invalid privacy config accepted",
@@ -389,8 +387,8 @@ fn test_noise_generation_security() -> Result<()> {
     println!("    Testing noise entropy and randomness quality...");
 
     // Simulate noise quality assessment
-    let entropy_estimate = 7.8; // Should be close to 8.0 for good entropy
-    let autocorrelation = 0.02; // Should be close to 0
+    let entropy_estimate = 7.8f64; // Should be close to 8.0 for good entropy
+    let autocorrelation = 0.02f64; // Should be close to 0
 
     if entropy_estimate >= 7.5 {
         println!(
@@ -559,8 +557,8 @@ fn test_precision_loss() -> Result<()> {
     println!("  Testing precision loss detection...");
 
     // Test operations that might lose precision
-    let small_value = 1e-100;
-    let large_value = 1e100;
+    let small_value = 1e-100f64;
+    let large_value = 1e100f64;
 
     let sum = small_value + large_value;
     let expected = large_value; // small_value should be lost in precision

@@ -3,6 +3,8 @@
 //! Implements various controllers for generating and managing optimizer architectures
 //! during the search process.
 
+#![allow(dead_code)]
+
 use ndarray::{s, Array1, Array2};
 use num_traits::Float;
 use scirs2_core::random::Rng;

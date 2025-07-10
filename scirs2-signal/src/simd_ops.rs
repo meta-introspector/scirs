@@ -4,7 +4,7 @@
 //! processing operations using scirs2-core's unified SIMD abstractions.
 
 use crate::error::{SignalError, SignalResult};
-use ndarray::{s, Array1, ArrayView1, ArrayViewMut1};
+use ndarray::{s, Array1, ArrayView1};
 use scirs2_core::parallel_ops::*;
 use scirs2_core::simd_ops::{PlatformCapabilities, SimdUnifiedOps};
 use std::f64::consts::PI;

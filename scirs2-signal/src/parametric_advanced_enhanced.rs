@@ -1280,7 +1280,7 @@ fn compute_comprehensive_diagnostics(
     let q = ma_coeffs.len() - 1;
     let k = p + q; // Number of parameters
 
-    let log_likelihood = -0.5 * n * (noise_variance.ln() + 1.0 + 2.0 * std::f64::consts::PI.ln());
+    let log_likelihood = -0.5 * n * (noise_variance.ln() + 1.0 + 2.0 * PI.ln());
     let aic = -2.0 * log_likelihood + 2.0 * k as f64;
     let bic = -2.0 * log_likelihood + (k as f64) * n.ln();
 
@@ -1496,7 +1496,7 @@ fn advanced_enhanced_arma_spectrum_simd(
     let _q = ma_coeffs.len() - 1;
 
     // Precompute normalized angular frequencies
-    let omega = frequencies.mapv(|f| 2.0 * std::f64::consts::PI * f / fs);
+    let omega = frequencies.mapv(|f| 2.0 * PI * f / fs);
 
     // Allocate result array
     let mut psd = Array1::zeros(n_freqs);
@@ -1936,9 +1936,6 @@ fn analyze_simd_utilization(
 }
 
 mod tests {
-    use ndarray::Array1;
-
-    use std::f64::consts::PI;
 
     #[test]
     fn test_advanced_enhanced_arma_basic() {
@@ -2026,7 +2023,7 @@ fn compute_ar_psd(
 
     for &freq in frequencies {
         // Compute H(e^{j2πf/fs}) where H(z) = 1 / (1 + a1*z^-1 + a2*z^-2 + ...)
-        let omega = 2.0 * std::f64::consts::PI * freq / fs;
+        let omega = 2.0 * PI * freq / fs;
 
         // Compute |H(e^{jω})|² = 1 / |1 + Σ a_k e^{-jkω}|²
         let mut real_part = ar_coeffs[0]; // Should be 1.0
@@ -2080,7 +2077,7 @@ fn compute_arma_psd(
     };
 
     for &freq in frequencies {
-        let omega = 2.0 * std::f64::consts::PI * freq / fs;
+        let omega = 2.0 * PI * freq / fs;
 
         // Compute AR part: A(e^{jω}) = 1 + Σ a_k e^{-jkω}
         let mut ar_real = ar_coeffs[0]; // Should be 1.0
@@ -2332,7 +2329,7 @@ fn extract_taper_eigenvalues(tapers: &Array2<f64>, nw: f64) -> SignalResult<Arra
             1.0 - 1e-10
         } else {
             // Approximate eigenvalue formula
-            let arg = std::f64::consts::PI * (i + 1) as f64 / (2.0 * nw + 1.0);
+            let arg = PI * (i + 1) as f64 / (2.0 * nw + 1.0);
             (1.0 + arg.cos()) / 2.0
         };
         eigenvalues.push(lambda.max(1e-15)); // Ensure positive
@@ -2399,7 +2396,7 @@ fn generate_dpss_tapers(n: usize, nw: f64, k: usize) -> SignalResult<Array2<f64>
         for j in 0..n {
             // Simple window approximation (not true DPSS)
             let t = j as f64 / n as f64;
-            let taper_val = (std::f64::consts::PI * (i + 1) as f64 * t).sin();
+            let taper_val = (PI * (i + 1) as f64 * t).sin();
             tapers[[i, j]] = taper_val;
         }
     }

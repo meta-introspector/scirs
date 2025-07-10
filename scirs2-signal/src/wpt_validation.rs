@@ -6,13 +6,11 @@
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
 use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
-use ndarray::{Array1, ArrayView1};
+use ndarray::ArrayView1;
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
-use std::f64::consts::PI;
-use std::time::Instant;
 
 /// Validation result for WPT
 #[derive(Debug, Clone)]

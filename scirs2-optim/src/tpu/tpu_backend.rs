@@ -3,6 +3,8 @@
 //! This module provides the core TPU backend implementation for executing
 //! optimized computations on Google Cloud TPUs and compatible hardware.
 
+#![allow(dead_code)]
+
 use num_traits::Float;
 use std::collections::{HashMap, VecDeque};
 use std::sync::{Arc, RwLock};

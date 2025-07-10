@@ -1378,9 +1378,6 @@ impl ParallelSpectralProcessor {
 }
 
 mod tests {
-    use rand::Rng;
-
-    use std::f64::consts::PI;
 
     #[test]
     fn test_parallel_periodogram() {

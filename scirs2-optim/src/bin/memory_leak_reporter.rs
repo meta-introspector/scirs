@@ -3,8 +3,8 @@
 //! This binary analyzes memory profiling results and generates comprehensive
 //! memory leak reports for continuous integration pipelines.
 
-use clap::{Arg, ArgMatches, Command};
-use scirs2_optim::benchmarking::memory_leak_detector::{MemoryLeakConfig, MemoryLeakDetector};
+use clap::{Arg, Command};
+// use scirs2_optim::benchmarking::advanced_memory_leak_detector::MemoryLeakConfig;
 use scirs2_optim::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -188,7 +188,7 @@ fn main() -> Result<()> {
     let report = create_memory_leak_report(leaks, analysis, recommendations)?;
 
     // Generate output in requested format
-    let output_content = match format {
+    let output_content = match format.as_str() {
         "json" => generate_json_report(&report)?,
         "markdown" => generate_markdown_report(&report)?,
         "github-actions" => generate_github_actions_report(&report)?,
@@ -223,7 +223,9 @@ struct MemoryAnalysisResults {
 
 #[derive(Debug)]
 struct ValgrindResults {
+    #[allow(dead_code)]
     total_leaks: usize,
+    #[allow(dead_code)]
     leaked_bytes: usize,
     leak_records: Vec<ValgrindLeak>,
 }
@@ -231,6 +233,7 @@ struct ValgrindResults {
 #[derive(Debug)]
 struct ValgrindLeak {
     bytes_leaked: usize,
+    #[allow(dead_code)]
     blocks_leaked: usize,
     call_stack: Vec<String>,
     leak_kind: String,
@@ -240,13 +243,17 @@ struct ValgrindLeak {
 struct MassifResults {
     peak_memory: usize,
     memory_timeline: Vec<(u64, usize)>,
+    #[allow(dead_code)]
     allocation_tree: Vec<AllocationNode>,
 }
 
 #[derive(Debug)]
 struct AllocationNode {
+    #[allow(dead_code)]
     bytes: usize,
+    #[allow(dead_code)]
     function: String,
+    #[allow(dead_code)]
     children: Vec<AllocationNode>,
 }
 
@@ -267,21 +274,28 @@ struct LeakedAllocation {
 #[derive(Debug)]
 struct CustomProfilerResults {
     memory_timeline: Vec<(u64, usize)>,
+    #[allow(dead_code)]
     allocation_patterns: Vec<AllocationPattern>,
     fragmentation_data: Vec<(u64, f64)>,
 }
 
 #[derive(Debug)]
 struct AllocationPattern {
+    #[allow(dead_code)]
     pattern_type: String,
+    #[allow(dead_code)]
     frequency: f64,
+    #[allow(dead_code)]
     size_distribution: HashMap<usize, usize>,
 }
 
 #[derive(Debug)]
 struct MacosLeaksResults {
+    #[allow(dead_code)]
     leak_count: usize,
+    #[allow(dead_code)]
     leaked_bytes: usize,
+    #[allow(dead_code)]
     leak_summaries: Vec<String>,
 }
 
@@ -446,7 +460,7 @@ fn parse_custom_profiler_results(path: &Path) -> Result<CustomProfilerResults> {
     // Parse JSON from custom profiler
     let content = fs::read_to_string(path)?;
     let _json_data: serde_json::Value = serde_json::from_str(&content)
-        .map_err(|e| OptimError::SerializationError(e.to_string()))?;
+        .map_err(|e| OptimError::OptimizationError(e.to_string()))?;
 
     Ok(CustomProfilerResults {
         memory_timeline: vec![
@@ -602,7 +616,7 @@ fn detect_memory_leaks(
                         "Implement explicit memory management in hot paths".to_string(),
                     ],
                 });
-                leak_id_counter += 1;
+                // leak_id_counter += 1;
             }
         }
     }
@@ -898,7 +912,7 @@ fn create_memory_leak_report(
 
 #[allow(dead_code)]
 fn generate_json_report(report: &MemoryLeakReport) -> Result<String> {
-    serde_json::to_string_pretty(report).map_err(|e| OptimError::SerializationError(e.to_string()))
+    serde_json::to_string_pretty(report).map_err(|e| OptimError::OptimizationError(e.to_string()))
 }
 
 #[allow(dead_code)]
@@ -995,7 +1009,7 @@ fn generate_markdown_report(report: &MemoryLeakReport) -> Result<String> {
     // Recommendations
     if !report.recommendations.is_empty() {
         md.push_str("## Optimization Recommendations\n\n");
-        for (i, rec) in report.recommendations.iter().enumerate() {
+        for (_i, rec) in report.recommendations.iter().enumerate() {
             md.push_str(&format!(
                 "### {} (Priority: {})\n\n",
                 rec.recommendation_type, rec.priority

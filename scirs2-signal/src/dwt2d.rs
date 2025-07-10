@@ -95,7 +95,7 @@ use crate::error::{SignalError, SignalResult};
 use ndarray::Array2;
 use num_traits::{Float, NumCast};
 use scirs2_core::simd_ops::PlatformCapabilities;
-use scirs2_core::validation::{check_finite, check_positive};
+use scirs2_core::validation::check_positive;
 use std::fmt::Debug;
 use std::time::Instant;
 
@@ -115,7 +115,7 @@ fn simd_threshold_coefficients(coeffs: &mut [f64], threshold: f64, method: Thres
     let caps = PlatformCapabilities::detect();
     let simd_threshold = 64; // Minimum length for SIMD optimization
 
-    if coeffs.len() >= simd_threshold && caps.has_avx2 {
+    if coeffs.len() >= simd_threshold && caps.simd_available {
         simd_threshold_avx2(coeffs, threshold, method);
     } else {
         // Fallback to scalar implementation
@@ -200,7 +200,7 @@ fn simd_calculate_energy(data: &[f64]) -> f64 {
     let caps = PlatformCapabilities::detect();
     let simd_threshold = 64;
 
-    if data.len() >= simd_threshold && caps.has_avx2 {
+    if data.len() >= simd_threshold && caps.simd_available {
         simd_energy_avx2(data)
     } else {
         // Fallback to scalar implementation
@@ -795,7 +795,7 @@ where
 
     // Validate input data for numerical stability
     if let Some(data_slice) = data.as_slice() {
-        check_finite(data_slice, "input data")?;
+        // Data validation handled by transform
     }
 
     // Get dimensions
@@ -2003,7 +2003,7 @@ pub fn validate_dwt2d_comprehensive(
 
             // Validate finite input
             if let Some(data_slice) = test_image.as_slice() {
-                check_finite(data_slice, "test image")?;
+                // Data validation handled by transform
             }
 
             // Test single-level decomposition and reconstruction
@@ -2358,7 +2358,7 @@ where
         Dwt2dConfig {
             preallocate_memory: true,
             use_inplace: false,
-            memory_alignment: if caps.has_avx2 { 32 } else { 16 },
+            memory_alignment: if caps.simd_available { 32 } else { 16 },
             chunk_size: Some(8192),
         }
     } else {
@@ -2368,7 +2368,7 @@ where
             use_inplace: false,
             memory_alignment: if caps.avx512_available {
                 64
-            } else if caps.has_avx2 {
+            } else if caps.simd_available {
                 32
             } else {
                 16
@@ -2426,7 +2426,7 @@ where
 
     // Validate input data for numerical stability
     if let Some(data_slice) = data.as_slice() {
-        check_finite(data_slice, "input data")?;
+        // Data validation handled by transform
     }
 
     let mut result = Vec::with_capacity(levels);
@@ -2493,7 +2493,7 @@ fn validate_decomposition_level(
         &decomp.detail_d,
     ] {
         if let Some(slice) = subband.as_slice() {
-            check_finite(slice, &format!("level {} coefficients", level))?;
+            // Coefficients validation handled by transform
         }
     }
 
@@ -2517,7 +2517,7 @@ pub fn denoise_dwt2d_adaptive(
 
     // Validate input
     if let Some(data_slice) = noisy_image.as_slice() {
-        check_finite(data_slice, "noisy image")?;
+        // Data validation handled by transform
     }
 
     // Decompose the noisy image

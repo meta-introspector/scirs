@@ -7,18 +7,16 @@
 
 use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
 use crate::error::SignalResult;
+use rand::rngs::StdRng;
 use crate::filter::{butter, FilterType};
 use crate::lombscargle_scipy_validation::{
-    run_comprehensive_validation, validate_lombscargle_against_scipy, ScipyValidationConfig,
+    validate_lombscargle_against_scipy, ScipyValidationConfig,
 };
 use crate::multitaper::{validate_multitaper_comprehensive, TestSignalConfig};
 use crate::parametric::{estimate_arma, ARMethod};
-use crate::spectral::welch;
 use crate::sysid::{estimate_transfer_function, TfEstimationMethod};
-use crate::window::get_window;
 
 use ndarray::{Array1, Array2};
-use scirs2_core::validation::{check_finite, check_positive};
 use std::collections::HashMap;
 use std::f64::consts::PI;
 

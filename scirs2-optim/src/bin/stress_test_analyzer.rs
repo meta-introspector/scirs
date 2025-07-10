@@ -3,7 +3,7 @@
 //! This binary analyzes stress test results and generates comprehensive
 //! reports for memory and performance stress testing validation.
 
-use clap::{Arg, ArgMatches, Command};
+use clap::{Arg, Command};
 use scirs2_optim::error::{OptimError, Result};
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -497,7 +497,7 @@ fn main() -> Result<()> {
     )?;
 
     // Generate output in requested format
-    let output_content = match format {
+    let output_content = match format.as_str() {
         "json" => generate_json_report(&analysis_report)?,
         "markdown" => generate_markdown_report(&analysis_report)?,
         "github-actions" => generate_github_actions_report(&analysis_report)?,
@@ -531,6 +531,7 @@ fn main() -> Result<()> {
 struct StressTestData {
     duration_seconds: f64,
     concurrent_optimizers: usize,
+    #[allow(dead_code)]
     max_memory_gb: f64,
     performance_timeline: Vec<(u64, f64)>,
     memory_timeline: Vec<(u64, f64)>,
@@ -544,7 +545,9 @@ struct StressTestData {
 struct ErrorEvent {
     timestamp: u64,
     error_type: String,
+    #[allow(dead_code)]
     severity: String,
+    #[allow(dead_code)]
     description: String,
 }
 
@@ -562,6 +565,7 @@ struct ResourceEvent {
     timestamp: u64,
     resource_type: String,
     utilization_percent: f64,
+    #[allow(dead_code)]
     event_type: String,
 }
 
@@ -856,7 +860,7 @@ fn create_utilization_timeline(timeline: &[(u64, f64)]) -> UtilizationTimeline {
         initial_utilization: initial,
         peak_utilization: peak,
         average_utilization: average,
-        utilization_timeline: timeline.clone(),
+        utilization_timeline: timeline.to_vec(),
         efficiency_score: efficiency,
     }
 }
@@ -873,7 +877,7 @@ fn analyze_memory_stress(data: &StressTestData) -> MemoryStressAnalysis {
     let final_memory = memory_timeline.last().map(|(_, mem)| *mem).unwrap_or(0.0);
 
     let growth_rate = if data.duration_seconds > 0.0 {
-        ((final_memory - initial_memory) / (data.duration_seconds / 3600.0))
+        (final_memory - initial_memory) / (data.duration_seconds / 3600.0)
     } else {
         0.0
     };
@@ -1258,7 +1262,7 @@ fn calculate_performance_degradation(performance: &PerformanceStressAnalysis) ->
 
 #[allow(dead_code)]
 fn generate_json_report(report: &StressTestAnalysisReport) -> Result<String> {
-    serde_json::to_string_pretty(report).map_err(|e| OptimError::SerializationError(e.to_string()))
+    serde_json::to_string_pretty(report).map_err(|e| OptimError::OptimizationError(e.to_string()))
 }
 
 #[allow(dead_code)]
