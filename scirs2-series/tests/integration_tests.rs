@@ -185,7 +185,8 @@ fn test_feature_extraction_and_classification_pipeline() {
     let cluster_assignments = clusterer
         .with_method(scirs2_series::clustering::ClusteringMethod::KMeans { k: 3 })
         .with_distance_metric(scirs2_series::clustering::DistanceMetric::Euclidean)
-        .fit_predict(&data_matrix).unwrap();
+        .fit_predict(&data_matrix)
+        .unwrap();
 
     // Should assign different clusters to different series
     assert_eq!(cluster_assignments.len(), 3);
@@ -265,7 +266,7 @@ fn test_distributed_processing_workflow() {
 fn test_streaming_analysis_pipeline() {
     let data = generate_test_series(1000, 0.005, 10, 1.0);
 
-    // Initialize streaming analyzer  
+    // Initialize streaming analyzer
     let config = scirs2_series::streaming::StreamConfig {
         window_size: 50,
         ..Default::default()

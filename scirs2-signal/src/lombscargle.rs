@@ -4,10 +4,10 @@
 //! using the Lomb-Scargle periodogram technique.
 
 use crate::error::{SignalError, SignalResult};
+use ndarray::Array1;
 use num_traits::{Float, NumCast};
 use std::f64::consts::PI;
 use std::fmt::Debug;
-use ndarray::Array1;
 
 /// Compute normalized Lomb-Scargle periodogram for unevenly sampled data.
 ///

@@ -9,6 +9,7 @@
 
 use crate::error::SignalResult;
 use crate::lombscargle::{lombscargle, AutoFreqMethod};
+use rand::Rng;
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -1102,7 +1103,7 @@ fn enhance_with_advanced_sampling_tests(
     ) {
         Ok((freqs, power)) => {
             // Check for reasonable frequency detection
-            let max_power = power.iter().fold(0.0, |a, &b| a.max(b));
+            let max_power = power.iter().fold(0.0f64, |a, &b| a.max(b));
             if max_power < 0.05 {
                 advanced_sampling_score -= 15.0;
                 result
@@ -1269,7 +1270,7 @@ fn enhance_with_simd_performance_validation(
 
             // Validate that results are numerically consistent
             // This would involve comparing SIMD vs scalar results
-            let max_power = power.iter().fold(0.0, |a, &b| a.max(b));
+            let max_power = power.iter().fold(0.0f64, |a, &b| a.max(b));
             if max_power > 0.1 {
                 // Reasonable power level indicates correct computation
                 simd_score += 10.0;
@@ -1564,11 +1565,11 @@ fn enhance_with_statistical_robustness_tests(
             let signal = (2.0 * PI * 0.08 * t).sin();
             // Laplacian noise (exponential distribution - uniform)
             let u1 = rng.random_range(0.0..1.0);
-            let u2 = rng.random_range(0.0..1.0);
+            let u2: f64 = rng.random_range(0.0..1.0);
             let laplacian_noise = if u1 < 0.5 {
-                -(-2.0 * u2.ln()).sqrt()
+                -(-2.0f64 * u2.ln()).sqrt()
             } else {
-                (-2.0 * u2.ln()).sqrt()
+                ((-2.0f64) * u2.ln()).sqrt()
             } * 0.2;
             signal + laplacian_noise
         })
@@ -1585,7 +1586,7 @@ fn enhance_with_statistical_robustness_tests(
         Some(AutoFreqMethod::Fft),
     ) {
         Ok((freqs, power)) => {
-            let max_power = power.iter().fold(0.0, |a, &b| a.max(b));
+            let max_power = power.iter().fold(0.0f64, |a, &b| a.max(b));
             if max_power < 0.05 {
                 stats_score -= 15.0;
                 result

@@ -1206,8 +1206,41 @@ impl<A: Float + Debug> CrossFrameworkBenchmark<A> {
 impl PythonScriptTemplates {
     fn new() -> Self {
         Self {
-            pytorch_template: "# PyTorch benchmark template - placeholder\n".to_string(),
-            tensorflow_template: "# TensorFlow benchmark template - placeholder\n".to_string(),
+            pytorch_template: r#"# PyTorch benchmark template
+import torch
+import torch.optim as optim
+
+# Configuration
+FUNCTION_NAME = "{{FUNCTION_NAME}}"
+PROBLEM_DIM = {{PROBLEM_DIM}}
+BATCH_SIZE = {{BATCH_SIZE}}
+MAX_ITERATIONS = {{MAX_ITERATIONS}}
+TOLERANCE = {{TOLERANCE}}
+NUM_RUNS = {{NUM_RUNS}}
+RANDOM_SEED = {{RANDOM_SEED}}
+
+print(f"Running PyTorch benchmark for {FUNCTION_NAME}")
+print(f"Problem dimension: {PROBLEM_DIM}")
+print(f"Batch size: {BATCH_SIZE}")
+"#
+            .to_string(),
+            tensorflow_template: r#"# TensorFlow benchmark template
+import tensorflow as tf
+
+# Configuration
+FUNCTION_NAME = "{{FUNCTION_NAME}}"
+PROBLEM_DIM = {{PROBLEM_DIM}}
+BATCH_SIZE = {{BATCH_SIZE}}
+MAX_ITERATIONS = {{MAX_ITERATIONS}}
+TOLERANCE = {{TOLERANCE}}
+NUM_RUNS = {{NUM_RUNS}}
+RANDOM_SEED = {{RANDOM_SEED}}
+
+print(f"Running TensorFlow benchmark for {FUNCTION_NAME}")
+print(f"Problem dimension: {PROBLEM_DIM}")
+print(f"Batch size: {BATCH_SIZE}")
+"#
+            .to_string(),
         }
     }
 

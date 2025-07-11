@@ -691,10 +691,10 @@ fn next_power_of_two(n: usize) -> usize {
 
 /// Performance benchmarking utilities
 pub mod benchmark {
-    use std::time::Instant;
+    use super::simd_convolve_1d;
     use crate::error::SignalResult;
     use ndarray::Array1;
-    use super::simd_convolve_1d;
+    use std::time::Instant;
 
     /// Benchmark result
     #[derive(Debug)]

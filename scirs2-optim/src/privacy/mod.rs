@@ -267,8 +267,7 @@ where
         &mut self,
         params: &Array<A, D>,
         gradients: &mut Array<A, D>,
-    ) -> Result<Array<A, D>>
-    {
+    ) -> Result<Array<A, D>> {
         self.step_count += 1;
 
         // Check privacy budget
@@ -410,7 +409,6 @@ where
         S: DataMut<Elem = A>,
         DIM: Dimension,
     {
-
         let noise_scale = self.config.noise_multiplier * clip_threshold;
 
         match self.config.noise_mechanism {
@@ -728,7 +726,8 @@ mod tests {
         let sgd = SGD::new(0.01);
         let dp_config = DifferentialPrivacyConfig::default();
 
-        let dp_optimizer = DifferentiallyPrivateOptimizer::<_, f64, ndarray::Ix1>::new(sgd, dp_config);
+        let dp_optimizer =
+            DifferentiallyPrivateOptimizer::<_, f64, ndarray::Ix1>::new(sgd, dp_config);
         assert!(dp_optimizer.is_ok());
     }
 
@@ -741,7 +740,8 @@ mod tests {
             ..Default::default()
         };
 
-        let dp_optimizer: DifferentiallyPrivateOptimizer<_, _, ndarray::Ix1> = DifferentiallyPrivateOptimizer::new(sgd, dp_config).unwrap();
+        let dp_optimizer: DifferentiallyPrivateOptimizer<_, _, ndarray::Ix1> =
+            DifferentiallyPrivateOptimizer::new(sgd, dp_config).unwrap();
         let budget = dp_optimizer.get_privacy_budget();
 
         assert_eq!(budget.epsilon_consumed, 0.0);

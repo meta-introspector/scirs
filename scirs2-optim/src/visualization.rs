@@ -972,9 +972,10 @@ mod tests {
         metric.add_value(1.0, 0);
         metric.add_value(0.8, 1);
         metric.add_value(0.6, 2);
+        metric.add_value(0.4, 3); // Add 4th value to meet window_size * 2 requirement
 
-        assert_eq!(metric.values.len(), 3);
-        assert_eq!(metric.steps.len(), 3);
+        assert_eq!(metric.values.len(), 4);
+        assert_eq!(metric.steps.len(), 4);
 
         let improvement = metric.get_recent_improvement(2);
         assert!(improvement.is_some());

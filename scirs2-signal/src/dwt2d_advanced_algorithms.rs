@@ -220,7 +220,7 @@ fn compute_undecimated_dwt2d(
     let mut coefficients = Vec::new();
     let mut scales = Vec::new();
 
-    let filters = WaveletFilters::new(wavelet);
+    let filters = wavelet.filters()?;
     let mut current_data = data.clone();
 
     for level in 0..levels {
@@ -260,8 +260,8 @@ fn undecimated_dwt2d_single_level(
     let mut result = Array3::zeros((4, rows, cols)); // LL, LH, HL, HH
 
     // Create dilated filters for the current scale
-    let dilated_lo = dilate_filter(&filters.lo_d, scale);
-    let dilated_hi = dilate_filter(&filters.hi_d, scale);
+    let dilated_lo = dilate_filter(&filters.dec_lo, scale);
+    let dilated_hi = dilate_filter(&filters.dec_hi, scale);
 
     // Apply separable filtering without downsampling
     for i in 0..rows {
@@ -421,7 +421,12 @@ fn compute_edge_preservation_metrics(
     config: &AdvancedDwt2dConfig,
 ) -> SignalResult<EdgePreservationMetrics> {
     // Reconstruct the image
-    let reconstructed = crate::dwt2d_enhanced::enhanced_dwt2d_reconstruct(decomposition)?;
+    let default_config = Dwt2dConfig::default();
+    let reconstructed = crate::dwt2d_enhanced::enhanced_dwt2d_reconstruct(
+        decomposition,
+        Wavelet::DB(4),
+        &default_config,
+    )?;
 
     // Compute edge maps
     let original_edges = compute_edge_map(original)?;
@@ -464,7 +469,7 @@ fn compute_multiscale_analysis(
     let (rows, cols) = data.dim();
     let mut local_frequency_map = Array2::zeros((rows, cols));
 
-    let filters = WaveletFilters::new(wavelet);
+    let filters = wavelet.filters()?;
     let mut current_data = data.clone();
 
     for level in 0..config.multiscale_depth {
@@ -474,7 +479,7 @@ fn compute_multiscale_analysis(
         scale_energy.push(level_energy);
 
         // Find scale-space extrema
-        let extrema = find_scale_space_extrema(&level_coeffs, level)?;
+        let extrema = find_scale_space_extrema(&level_coeffs, level);
         extrema_locations.extend(extrema);
 
         // Update local frequency map
@@ -573,7 +578,7 @@ fn extract_approximation_undecimated(
     let (rows, cols) = data.dim();
     let mut result = Array2::zeros((rows, cols));
 
-    let dilated_lo = dilate_filter(&filters.lo_d, scale);
+    let dilated_lo = dilate_filter(&filters.dec_lo, scale);
 
     for i in 0..rows {
         for j in 0..cols {
@@ -591,7 +596,7 @@ fn create_directional_filter_bank(
     n_directions: usize,
 ) -> SignalResult<Vec<Array2<f64>>> {
     let mut filter_bank = Vec::new();
-    let base_filters = WaveletFilters::new(wavelet);
+    let base_filters = wavelet.filters()?;
 
     for dir in 0..n_directions {
         let angle = (dir as f64 * PI) / n_directions as f64;
@@ -666,8 +671,8 @@ fn downsample_2d(data: &Array2<f64>) -> Array2<f64> {
 #[allow(dead_code)]
 fn create_dual_tree_filters(wavelet: Wavelet) -> SignalResult<(WaveletFilters, WaveletFilters)> {
     // Stub - would create orthogonal filter pairs
-    let filters = WaveletFilters::new(wavelet);
-    Ok((filters.clone(), filters))
+    let filters = wavelet.filters()?;
+    Ok((filters.clone(), filters.clone()))
 }
 
 #[allow(dead_code)]

@@ -7,8 +7,8 @@
 use crate::error::OptimizeError;
 use crate::unconstrained::OptimizeResult;
 use ndarray::{Array1, ArrayView1};
-use rand::rngs::StdRng;
 use rand::prelude::SliceRandom;
+use rand::rngs::StdRng;
 use rand::{rng, Rng, SeedableRng};
 
 /// Options for Simulated Annealing

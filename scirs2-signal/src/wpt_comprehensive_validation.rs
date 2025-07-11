@@ -11,11 +11,11 @@
 
 use crate::dwt::Wavelet;
 use crate::error::{SignalError, SignalResult};
-use rand::rngs::StdRng;
 use crate::wpt::{reconstruct_from_nodes, wp_decompose, WaveletPacketTree};
 use crate::wpt_validation::WptValidationResult;
 use ndarray::{Array1, Array2};
 use num_traits::Float;
+use rand::rngs::StdRng;
 use scirs2_core::parallel_ops::*;
 
 /// Comprehensive WPT validation result

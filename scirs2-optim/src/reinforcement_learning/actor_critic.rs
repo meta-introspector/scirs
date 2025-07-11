@@ -1103,7 +1103,8 @@ impl<
                 // Soft update: target = tau * online + (1 - tau) * target
                 for (param_name, online_param) in online_params {
                     if let Some(target_param) = target_params.get_mut(&param_name) {
-                        *target_param = &(target_param.clone() * one_minus_tau) + &(online_param * tau);
+                        *target_param =
+                            &(target_param.clone() * one_minus_tau) + &(online_param * tau);
                     }
                 }
 

@@ -4,6 +4,7 @@
 //! suite, providing a unified interface for high-performance, validated implementations.
 
 use crate::error::{SignalError, SignalResult};
+use num_traits::Float;
 use std::collections::HashMap;
 use std::time::Instant;
 

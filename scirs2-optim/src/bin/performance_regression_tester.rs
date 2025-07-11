@@ -93,9 +93,9 @@ fn main() -> Result<()> {
     if matches.get_flag("verbose") {
         println!("Running comprehensive optimizer regression tests...");
     }
-    
+
     let mut regression_results = Vec::new();
-    
+
     // Test different optimizers
     let optimizers = vec![
         ("SGD", create_sgd_step_function()),
@@ -111,37 +111,34 @@ fn main() -> Result<()> {
         }
 
         // Run regression test for this optimizer
-        let test_result = tester.run_regression_test(
-            "comprehensive_benchmark",
-            name,
-            || {
-                let mut benchmark = OptimizerBenchmark::new();
-                benchmark.add_standard_test_functions();
-                let results = benchmark.run_benchmark(
-                    name.to_string(),
-                    &mut step_fn,
-                    1000, // max iterations
-                    1e-6, // tolerance
-                )?;
-                Ok(results.into_iter().next().unwrap_or_else(|| {
-                    BenchmarkResult {
-                        optimizer_name: name.to_string(),
-                        function_name: "comprehensive_benchmark".to_string(),
-                        converged: false,
-                        convergence_step: None,
-                        final_function_value: f64::INFINITY,
-                        final_gradient_norm: f64::INFINITY,
-                        final_error: f64::INFINITY,
-                        iterations_taken: 0,
-                        elapsed_time: std::time::Duration::from_secs(0),
-                        function_evaluations: 0,
-                        function_value_history: Vec::new(),
-                        gradient_norm_history: Vec::new(),
-                    }
+        let test_result = tester.run_regression_test("comprehensive_benchmark", name, || {
+            let mut benchmark = OptimizerBenchmark::new();
+            benchmark.add_standard_test_functions();
+            let results = benchmark.run_benchmark(
+                name.to_string(),
+                &mut step_fn,
+                1000, // max iterations
+                1e-6, // tolerance
+            )?;
+            Ok(results
+                .into_iter()
+                .next()
+                .unwrap_or_else(|| BenchmarkResult {
+                    optimizer_name: name.to_string(),
+                    function_name: "comprehensive_benchmark".to_string(),
+                    converged: false,
+                    convergence_step: None,
+                    final_function_value: f64::INFINITY,
+                    final_gradient_norm: f64::INFINITY,
+                    final_error: f64::INFINITY,
+                    iterations_taken: 0,
+                    elapsed_time: std::time::Duration::from_secs(0),
+                    function_evaluations: 0,
+                    function_value_history: Vec::new(),
+                    gradient_norm_history: Vec::new(),
                 }))
-            },
-        )?;
-        
+        })?;
+
         regression_results.push(test_result);
     }
 
@@ -149,10 +146,7 @@ fn main() -> Result<()> {
     let output_path = PathBuf::from(matches.get_one::<String>("output").unwrap());
 
     if matches.get_flag("verbose") {
-        println!(
-            "Generating report to: {}",
-            output_path.display()
-        );
+        println!("Generating report to: {}", output_path.display());
     }
 
     let ci_report = tester.generate_ci_report(&regression_results)?;
@@ -160,7 +154,7 @@ fn main() -> Result<()> {
 
     // Check for critical regressions
     let has_regressions = regression_results.iter().any(|r| r.has_regressions());
-    
+
     if has_regressions {
         eprintln!("Performance regressions detected!");
         std::process::exit(1);
@@ -369,6 +363,3 @@ fn create_lamb_step_function() -> Box<dyn FnMut(&Array1<f64>, &Array1<f64>) -> A
 }
 
 // Custom structs removed - using RegressionTester's built-in types and CI report generation
-
-
-

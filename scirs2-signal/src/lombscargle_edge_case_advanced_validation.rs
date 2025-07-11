@@ -13,6 +13,7 @@ use crate::error::SignalResult;
 use crate::lombscargle::lombscargle;
 use ndarray::Array1;
 use num_traits::Float;
+use rand::Rng;
 use std::f64::consts::PI;
 use std::time::Instant;
 
@@ -194,10 +195,11 @@ fn validate_sparse_sampling() -> SignalResult<SparseSamplingResult> {
 
         // Run Lomb-Scargle analysis
         let frequencies = Array1::linspace(0.01, 0.5, 100);
-        match lombscargle(&times, &signal, &frequencies, None) {
+        match lombscargle(&times, &signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None) {
             Ok(power) => {
                 // Find peak frequency
-                let peak_idx = power
+                let (_freqs, power_vals) = power;
+                let peak_idx = power_vals
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -260,7 +262,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
         .collect();
 
     let frequencies = Array1::linspace(0.05, 0.5, 100);
-    let (_freqs, power) = lombscargle(&times, &signal, &frequencies, None)?;
+    let (_freqs, power) = lombscargle(&times, &signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None)?;
 
     let peak_idx = power
         .iter()
@@ -290,7 +292,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
         gapped_signal.push(amplitude * (2.0 * PI * true_freq * t).sin());
     }
 
-    let power_gapped = lombscargle(&gapped_times, &gapped_signal, &frequencies, None)?;
+    let (_freqs, power_gapped) = lombscargle(&gapped_times, &gapped_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None)?;
     let peak_idx_gapped = power_gapped
         .iter()
         .enumerate()
@@ -317,7 +319,7 @@ fn validate_non_uniform_grids() -> SignalResult<NonUniformGridResult> {
         .map(|&t| amplitude * (2.0 * PI * true_freq * t).sin())
         .collect();
 
-    let power_irregular = lombscargle(&irregular_times, &irregular_signal, &frequencies, None)?;
+    let (_freqs, power_irregular) = lombscargle(&irregular_times, &irregular_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None)?;
     let peak_idx_irregular = power_irregular
         .iter()
         .enumerate()
@@ -358,19 +360,19 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
 
     for &noise_level in &noise_levels {
         // Test different noise types
-        let noise_types = vec![
-            ("white", || rng.random_range(-1.0..1.0)),
-            ("impulsive", || {
+        let noise_types: Vec<(&str, Box<dyn Fn() -> f64>)> = vec![
+            ("white", Box::new(|| rng.random_range(-1.0..1.0))),
+            ("impulsive", Box::new(|| {
                 if rng.random::<f64>() < 0.1 {
                     rng.random_range(-10.0..10.0)
                 } else {
                     rng.random_range(-0.1..0.1)
                 }
-            }),
-            ("colored", || {
+            })),
+            ("colored", Box::new(|| {
                 // Simple colored noise approximation
                 rng.random_range(-1.0..1.0) / (1.0 + rng.random_range(0.0..1.0))
-            }),
+            })),
         ];
 
         for (noise_type, noise_gen) in noise_types {
@@ -380,9 +382,10 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
                 .collect();
 
             let frequencies = Array1::linspace(0.05, 0.5, 100);
-            match lombscargle(&times.to_vec(), &noisy_signal, &frequencies, None) {
+            match lombscargle(&times.to_vec(), &noisy_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None) {
                 Ok(power) => {
-                    let peak_idx = power
+                    let (_freqs, power_vals) = power;
+                    let peak_idx = power_vals
                         .iter()
                         .enumerate()
                         .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -424,8 +427,9 @@ fn validate_noise_tolerance() -> SignalResult<NoiseToleranceResult> {
             .collect();
 
         let frequencies = Array1::linspace(0.05, 0.5, 100);
-        if let Ok(power) = lombscargle(&times.to_vec(), &pure_noise, &frequencies, None) {
-            let max_power = power.iter().fold(0.0f64, |a, &b| a.max(b));
+        if let Ok(power) = lombscargle(&times.to_vec(), &pure_noise, Some(frequencies.as_slice().unwrap()), None, None, None, None, None) {
+            let (_freqs, power_vals) = power;
+            let max_power = power_vals.iter().fold(0.0f64, |a, &b| a.max(b));
             // If maximum power is significantly above noise floor, it's a false positive
             if max_power > 10.0 {
                 // Arbitrary threshold
@@ -474,7 +478,7 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
         .collect();
 
     let frequencies = Array1::linspace(0.01, 1.0, 200); // Include frequencies above Nyquist
-    let power_nyquist = lombscargle(&times.to_vec(), &nyquist_signal, &frequencies, None)?;
+    let power_nyquist = lombscargle(&times.to_vec(), &nyquist_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None)?;
 
     // Check if algorithm correctly handles Nyquist frequency
     let nyquist_idx = frequencies
@@ -489,8 +493,9 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
         .map(|(i, _)| i)
         .unwrap();
 
-    let nyquist_power = power_nyquist[nyquist_idx];
-    let max_power = power_nyquist.iter().fold(0.0f64, |a, &b| a.max(b));
+    let (_freqs, power_vals) = power_nyquist;
+    let nyquist_power = power_vals[nyquist_idx];
+    let max_power = power_vals.iter().fold(0.0f64, |a, &b| a.max(b));
     let nyquist_frequency_handling = nyquist_power / max_power;
 
     // Test 2: Aliasing artifacts detection
@@ -500,7 +505,7 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
         .map(|&t| (2.0 * PI * high_freq * t).sin())
         .collect();
 
-    let power_aliased = lombscargle(&times.to_vec(), &aliased_signal, &frequencies, None)?;
+    let power_aliased = lombscargle(&times.to_vec(), &aliased_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None)?;
 
     // Look for power at the aliased frequency (high_freq - sampling_rate = 0.8 - 1.0 = -0.2 -> 0.2)
     let expected_alias_freq = (high_freq - sampling_rate).abs();
@@ -516,8 +521,9 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
         .map(|(i, _)| i)
         .unwrap();
 
-    let alias_power = power_aliased[alias_idx];
-    let max_alias_power = power_aliased.iter().fold(0.0f64, |a, &b| a.max(b));
+    let (_freqs, power_vals) = power_aliased;
+    let alias_power = power_vals[alias_idx];
+    let max_alias_power = power_vals.iter().fold(0.0f64, |a, &b| a.max(b));
 
     // If there's significant power at the alias frequency, aliasing was detected
     let aliasing_artifacts_detected = alias_power / max_alias_power > 0.5;
@@ -532,9 +538,10 @@ fn validate_aliasing_detection() -> SignalResult<AliasingDetectionResult> {
             .map(|&t| (2.0 * PI * test_freq * t).sin())
             .collect();
 
-        if let Ok(power_folding) = lombscargle(&times.to_vec(), &folding_signal, &frequencies, None)
+        if let Ok(power_folding) = lombscargle(&times.to_vec(), &folding_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None)
         {
-            let peak_idx = power_folding
+            let (_freqs, power_vals) = power_folding;
+            let peak_idx = power_vals
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -592,9 +599,10 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionResult> {
             .collect();
 
         let frequencies = Array1::linspace(0.05, 0.5, 100);
-        match lombscargle(&times.to_vec(), &tiny_signal, &frequencies, None) {
+        match lombscargle(&times.to_vec(), &tiny_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None) {
             Ok(power) => {
-                let peak_idx = power
+                let (_freqs, power_vals) = power;
+                let peak_idx = power_vals
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -625,10 +633,11 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionResult> {
             .collect();
 
         let frequencies = Array1::linspace(0.05, 0.5, 100);
-        match lombscargle(&times.to_vec(), &extreme_signal, &frequencies, None) {
+        match lombscargle(&times.to_vec(), &extreme_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None) {
             Ok(power) => {
                 // Check for NaN or infinite values
-                let has_invalid = power.iter().any(|&x| !x.is_finite());
+                let (_freqs, power_vals) = power;
+                let has_invalid = power_vals.iter().any(|&x| !x.is_finite());
                 stability_scores.push(if has_invalid { 0.0 } else { 1.0 });
             }
             Err(_) => {
@@ -658,9 +667,10 @@ fn validate_numerical_precision() -> SignalResult<NumericalPrecisionResult> {
             .collect();
 
         let frequencies = Array1::linspace(0.05, 0.5, 100);
-        match lombscargle(&rounded_times, &rounded_signal, &frequencies, None) {
+        match lombscargle(&rounded_times, &rounded_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None) {
             Ok(power) => {
-                let peak_idx = power
+                let (_freqs, power_vals) = power;
+                let peak_idx = power_vals
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -715,7 +725,7 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
         .collect();
 
     let frequencies = Array1::linspace(0.01, 0.5, 200);
-    let (_freqs, power) = lombscargle(&times.to_vec(), &multi_scale_signal, &frequencies, None)?;
+    let (_freqs, power) = lombscargle(&times.to_vec(), &multi_scale_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None)?;
 
     // Find peaks corresponding to each frequency
     let mut detected_freqs = Vec::new();
@@ -756,18 +766,19 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
         .map(|&t| (2.0 * PI * freq1 * t).sin() + 0.8 * (2.0 * PI * freq2 * t).sin())
         .collect();
 
-    let power_interfering = lombscargle(&times.to_vec(), &interfering_signal, &frequencies, None)?;
+    let power_interfering = lombscargle(&times.to_vec(), &interfering_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None)?;
 
     // Check if both frequencies can be resolved despite interference
     let mut interference_detected_freqs = Vec::new();
+    let (_freqs, power_vals) = power_interfering;
     let interference_mean_power =
-        power_interfering.iter().sum::<f64>() / power_interfering.len() as f64;
+        power_vals.iter().sum::<f64>() / power_vals.len() as f64;
     let interference_threshold = interference_mean_power * 3.0;
 
-    for (i, &p) in power_interfering.iter().enumerate() {
+    for (i, &p) in power_vals.iter().enumerate() {
         if p > interference_threshold {
-            let is_local_max = (i == 0 || power_interfering[i - 1] < p)
-                && (i == power_interfering.len() - 1 || power_interfering[i + 1] < p);
+            let is_local_max = (i == 0 || power_vals[i - 1] < p)
+                && (i == power_vals.len() - 1 || power_vals[i + 1] < p);
             if is_local_max {
                 interference_detected_freqs.push(frequencies[i]);
             }
@@ -804,7 +815,7 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
         })
         .collect();
 
-    let power_bandwidth = lombscargle(&times.to_vec(), &bandwidth_signal, &frequencies, None)?;
+    let power_bandwidth = lombscargle(&times.to_vec(), &bandwidth_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None)?;
 
     // Check if both narrow and broad components are detected appropriately
     let narrow_idx = frequencies
@@ -843,11 +854,12 @@ fn validate_multi_scale_signals() -> SignalResult<MultiScaleSignalResult> {
         .map(|(i, _)| i)
         .unwrap();
 
-    let narrow_power = power_bandwidth[narrow_idx];
-    let broad_power: f64 = power_bandwidth[broad_start_idx..=broad_end_idx]
+    let (_freqs, power_vals) = power_bandwidth;
+    let narrow_power = power_vals[narrow_idx];
+    let broad_power: f64 = power_vals[broad_start_idx..=broad_end_idx]
         .iter()
         .sum();
-    let total_power: f64 = power_bandwidth.iter().sum();
+    let total_power: f64 = power_vals.iter().sum();
 
     let bandwidth_adaptation = ((narrow_power + broad_power) / total_power).min(1.0);
 
@@ -882,7 +894,7 @@ fn validate_stress_performance() -> SignalResult<StressPerformanceResult> {
 
         // Measure computation time
         let start_time = Instant::now();
-        let _power = lombscargle(&times, &signal, &frequencies, None)?;
+        let _power = lombscargle(&times, &signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None)?;
         let computation_time = start_time.elapsed().as_secs_f64();
 
         // Estimate memory usage (simplified)
@@ -922,7 +934,7 @@ fn validate_stress_performance() -> SignalResult<StressPerformanceResult> {
         .collect();
 
     let frequencies = Array1::linspace(0.01, 0.5, 50); // Reduced resolution for large dataset
-    if lombscargle(&large_times, &large_signal, &frequencies, None).is_ok() {
+    if lombscargle(&large_times, &large_signal, Some(frequencies.as_slice().unwrap()), None, None, None, None, None).is_ok() {
         degradation_tests_passed += 1;
     }
 
@@ -934,7 +946,7 @@ fn validate_stress_performance() -> SignalResult<StressPerformanceResult> {
         .collect();
 
     let dense_frequencies = Array1::linspace(0.1, 500.0, 1000); // Many frequency bins
-    if lombscargle(&times, &signal, &dense_frequencies, None).is_ok() {
+    if lombscargle(&times, &signal, Some(dense_frequencies.as_slice().unwrap()), None, None, None, None, None).is_ok() {
         degradation_tests_passed += 1;
     }
 
@@ -943,7 +955,7 @@ fn validate_stress_performance() -> SignalResult<StressPerformanceResult> {
     let constant_times: Vec<f64> = (0..100).map(|i| i as f64).collect();
     let test_frequencies = Array1::linspace(0.01, 0.5, 50);
 
-    if lombscargle(&constant_times, &constant_signal, &test_frequencies, None).is_ok() {
+    if lombscargle(&constant_times, &constant_signal, Some(test_frequencies.as_slice().unwrap()), None, None, None, None, None).is_ok() {
         degradation_tests_passed += 1;
     }
 

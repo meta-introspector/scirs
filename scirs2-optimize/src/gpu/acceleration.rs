@@ -514,7 +514,8 @@ impl AdvancedParallelSwarmOptimizer {
             for j in 0..problem_dim {
                 let (lower, upper) = bounds[j];
                 let velocity_range = (upper - lower) * 0.1;
-                swarm.velocities[[i, j]] = rand::rng().random_range(-velocity_range..velocity_range);
+                swarm.velocities[[i, j]] =
+                    rand::rng().random_range(-velocity_range..velocity_range);
             }
         }
 
@@ -593,8 +594,9 @@ impl AdvancedParallelSwarmOptimizer {
         }
 
         let trial_counters = Array1::zeros(self.config.swarm_size);
-        let nectar_amounts =
-            Array1::from_shape_fn(self.config.swarm_size, |_| rand::rng().random_range(0.0..1.0));
+        let nectar_amounts = Array1::from_shape_fn(self.config.swarm_size, |_| {
+            rand::rng().random_range(0.0..1.0)
+        });
 
         swarm.algorithm_state = AlgorithmSpecificState::ArtificialBee {
             employed_bees,
@@ -622,8 +624,9 @@ impl AdvancedParallelSwarmOptimizer {
                 rand::rng().random_range(0.0..1.0)
             });
 
-        let randomization_factors =
-            Array1::from_shape_fn(self.config.swarm_size, |_| rand::rng().random_range(0.2..0.8));
+        let randomization_factors = Array1::from_shape_fn(self.config.swarm_size, |_| {
+            rand::rng().random_range(0.2..0.8)
+        });
 
         swarm.algorithm_state = AlgorithmSpecificState::Firefly {
             brightness_matrix,
@@ -986,7 +989,8 @@ impl AdvancedParallelSwarmOptimizer {
                                 - swarm.positions[[partner, dimension]]);
 
                     // Evaluate new position (simplified)
-                    let new_fitness = swarm.current_fitness[i] + rand::rng().random_range(-0.05..0.05);
+                    let new_fitness =
+                        swarm.current_fitness[i] + rand::rng().random_range(-0.05..0.05);
 
                     // Greedy selection
                     if new_fitness < swarm.current_fitness[i] {
@@ -1085,8 +1089,9 @@ impl AdvancedParallelSwarmOptimizer {
 
                         // Move firefly i towards j
                         for k in 0..problem_dim {
-                            let randomization =
-                                alpha * rand::rng().random_range(-0.5..0.5) * randomization_factors[i];
+                            let randomization = alpha
+                                * rand::rng().random_range(-0.5..0.5)
+                                * randomization_factors[i];
                             swarm.positions[[i, k]] += attraction
                                 * (swarm.positions[[j, k]] - swarm.positions[[i, k]])
                                 + randomization;

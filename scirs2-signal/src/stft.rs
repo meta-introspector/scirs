@@ -1363,7 +1363,6 @@ mod tests {
     use approx::assert_relative_eq;
     use num_complex::Complex64;
 
-
     #[test]
     fn test_stft_creation() {
         // Create a Hann window

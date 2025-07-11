@@ -7,10 +7,10 @@
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 use crate::filters::*;
+use crate::interpolation::zoom;
 use crate::interpolation::*;
 use crate::measurements::*;
 use crate::morphology::*;
-use crate::interpolation::zoom;
 use ndarray::{Array2, ArrayView2};
 use num_traits::ToPrimitive;
 use std::collections::HashMap;

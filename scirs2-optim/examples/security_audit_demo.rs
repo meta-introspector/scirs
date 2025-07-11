@@ -294,7 +294,10 @@ fn test_privacy_budget_exhaustion() -> Result<()> {
         ..Default::default()
     };
 
-    let mut dp_optimizer = DifferentiallyPrivateOptimizer::<SGD<f64>, f64, ndarray::Dim<[usize; 1]>>::new(sgd, dp_config)?;
+    let mut dp_optimizer =
+        DifferentiallyPrivateOptimizer::<SGD<f64>, f64, ndarray::Dim<[usize; 1]>>::new(
+            sgd, dp_config,
+        )?;
 
     let params = Array1::from_vec(vec![1.0, 2.0, 3.0]);
     let mut gradients = Array1::from_vec(vec![0.1, 0.2, 0.3]);
@@ -356,7 +359,10 @@ fn test_privacy_parameter_manipulation() -> Result<()> {
     for (i, config) in invalid_configs.iter().enumerate() {
         let sgd = SGD::new(0.01f64);
 
-        match DifferentiallyPrivateOptimizer::<SGD<f64>, f64, ndarray::Dim<[usize; 1]>>::new(sgd, config.clone()) {
+        match DifferentiallyPrivateOptimizer::<SGD<f64>, f64, ndarray::Dim<[usize; 1]>>::new(
+            sgd,
+            config.clone(),
+        ) {
             Ok(_) => {
                 println!(
                     "    ⚠️  VULNERABILITY {}: Invalid privacy config accepted",

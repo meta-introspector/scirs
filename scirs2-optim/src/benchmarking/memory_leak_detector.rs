@@ -1269,7 +1269,7 @@ mod tests {
     fn test_memory_leak_detector_creation() {
         let config = MemoryDetectionConfig::default();
         let detector = MemoryLeakDetector::new(config);
-        assert_eq!(detector.detectors.len(), 3);
+        assert_eq!(detector.detectors.len(), 4); // 3 basic + 1 real-time monitoring detector
     }
 
     #[test]

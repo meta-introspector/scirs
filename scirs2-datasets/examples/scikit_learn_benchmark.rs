@@ -220,9 +220,7 @@ fn analyze_scaling_performance(suite: &BenchmarkSuite) {
             let efficiency = large_avg / small_avg;
             let size_ratio = *large_size as f64 / *small_size as f64;
 
-            println!(
-                "    Scaling efficiency: {efficiency:.2}x (size increased {size_ratio:.1}x)"
-            );
+            println!("    Scaling efficiency: {efficiency:.2}x (size increased {size_ratio:.1}x)");
 
             if efficiency > 0.8 {
                 println!("    ✅ Good scaling performance");

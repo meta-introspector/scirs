@@ -11,6 +11,7 @@ use crate::dwt2d_enhanced::{
 };
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array2};
+use scirs2_core::Rng;
 use std::f64;
 
 /// 2D DWT validation result
@@ -180,8 +181,8 @@ fn test_perfect_reconstruction(
     tolerance: f64,
 ) -> SignalResult<ReconstructionMetrics> {
     // Standard decomposition and reconstruction
-    let (approx, detail_h, detail_v, detail_d) = dwt2d_decompose(image, wavelet)?;
-    let reconstructed = dwt2d_reconstruct(&approx, &detail_h, &detail_v, &detail_d, wavelet)?;
+    let decomposition = dwt2d_decompose(image, wavelet, None)?;
+    let reconstructed = dwt2d_reconstruct(&decomposition, wavelet, None)?;
 
     // Compute errors
     let (rows, cols) = image.dim();
@@ -233,13 +234,13 @@ fn test_energy_conservation(image: &Array2<f64>, wavelet: Wavelet) -> SignalResu
     let input_energy = compute_energy(image);
 
     // Decompose
-    let (approx, detail_h, detail_v, detail_d) = dwt2d_decompose(image, wavelet)?;
+    let decomposition = dwt2d_decompose(image, wavelet, None)?;
 
     // Subband energies
-    let approx_energy = compute_energy(&approx);
-    let h_energy = compute_energy(&detail_h);
-    let v_energy = compute_energy(&detail_v);
-    let d_energy = compute_energy(&detail_d);
+    let approx_energy = compute_energy(&decomposition.approx);
+    let h_energy = compute_energy(&decomposition.detail_h);
+    let v_energy = compute_energy(&decomposition.detail_v);
+    let d_energy = compute_energy(&decomposition.detail_d);
 
     let output_energy = approx_energy + h_energy + v_energy + d_energy;
     let energy_ratio = output_energy / input_energy;
@@ -303,13 +304,13 @@ fn test_boundary_handling(
         }
 
         // Check if reconstruction is valid
-        let reconstructed = dwt2d_reconstruct(
-            &result.approx,
-            &result.detail_h,
-            &result.detail_v,
-            &result.detail_d,
-            wavelet,
-        )?;
+        let dwt_result = crate::dwt2d::Dwt2dResult {
+            approx: result.approx.clone(),
+            detail_h: result.detail_h.clone(),
+            detail_v: result.detail_v.clone(),
+            detail_d: result.detail_d.clone(),
+        };
+        let reconstructed = dwt2d_reconstruct(&dwt_result, wavelet, Some("symmetric"))?;
 
         if !is_valid_reconstruction(&reconstructed) {
             all_valid = false;
@@ -346,7 +347,7 @@ fn compare_performance(
     // Time standard implementation
     let start = Instant::now();
     for _ in 0..n_runs {
-        let _ = dwt2d_decompose(image, wavelet)?;
+        let _ = dwt2d_decompose(image, wavelet, None)?;
     }
     let standard_time = start.elapsed().as_micros() as f64 / (n_runs as f64 * 1000.0);
 

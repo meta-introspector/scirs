@@ -761,7 +761,7 @@ where
             // Direct use of random without creating an unused rng variable
             signal_f64
                 .iter()
-                .map(|&x| x + noise_std * (rng.gen::<f64>() * 2.0 - 1.0))
+                .map(|&x| x + noise_std * (rng.random::<f64>() * 2.0 - 1.0))
                 .collect()
         } else {
             signal_f64.clone()

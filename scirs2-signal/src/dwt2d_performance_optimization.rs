@@ -415,7 +415,7 @@ fn simd_row_transform(
     _config: &PerformanceConfig,
 ) -> SignalResult<Array2<f64>> {
     let (height, width) = image.dim();
-    let filters = wavelet.get_filters()?;
+    let filters = wavelet.filters()?;
 
     // For now, use basic SIMD operations - could be enhanced with custom kernels
     let mut result = Array2::zeros((height, width));
@@ -446,7 +446,7 @@ fn simd_column_transform(
     let mut hl = Array2::zeros((half_height, half_width));
     let mut hh = Array2::zeros((half_height, half_width));
 
-    let filters = wavelet.get_filters()?;
+    let filters = wavelet.filters()?;
 
     // Process columns with SIMD
     for j in 0..width {
@@ -483,8 +483,8 @@ fn simd_1d_transform(
     let mut result = Array1::zeros(n);
 
     // Use SIMD operations for convolution
-    let low_pass = &filters.low_pass_decomp;
-    let high_pass = &filters.high_pass_decomp;
+    let low_pass = &filters.dec_lo;
+    let high_pass = &filters.dec_hi;
 
     // Simplified SIMD convolution - could be optimized further
     for i in 0..n / 2 {
@@ -522,26 +522,16 @@ fn parallel_optimized_decomposition(
 
     for _level in 0..levels {
         // Use rayon for parallel row processing
-        let decomp_result = dwt2d_decompose(&current_image, wavelet, 1)?;
+        let decomp_result = dwt2d_decompose(&current_image, *wavelet, None)?;
 
         // Extract subbands
-        if let Some(ll) = decomp_result.coefficients.get(0) {
-            subbands.push(ll.clone());
-        }
-        if let Some(lh) = decomp_result.coefficients.get(1) {
-            subbands.push(lh.clone());
-        }
-        if let Some(hl) = decomp_result.coefficients.get(2) {
-            subbands.push(hl.clone());
-        }
-        if let Some(hh) = decomp_result.coefficients.get(3) {
-            subbands.push(hh.clone());
-        }
+        subbands.push(decomp_result.approx.clone());
+        subbands.push(decomp_result.detail_h.clone());
+        subbands.push(decomp_result.detail_v.clone());
+        subbands.push(decomp_result.detail_d.clone());
 
         // Update current image for next level
-        if let Some(ll) = decomp_result.coefficients.get(0) {
-            current_image = ll.clone();
-        }
+        current_image = decomp_result.approx.clone();
     }
 
     Ok(subbands)
@@ -609,8 +599,13 @@ fn fallback_decomposition(
     wavelet: &Wavelet,
     levels: usize,
 ) -> SignalResult<Vec<Array2<f64>>> {
-    let result = dwt2d_decompose(image, wavelet, levels)?;
-    Ok(result.coefficients)
+    let result = dwt2d_decompose(image, *wavelet, None)?;
+    Ok(vec![
+        result.approx,
+        result.detail_h,
+        result.detail_v,
+        result.detail_d,
+    ])
 }
 
 /// Performance tracking utility

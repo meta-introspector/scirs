@@ -216,32 +216,24 @@ impl<R: Read + Seek> FortranFile<R> {
                     .reader
                     .read_u32::<LittleEndian>()
                     .map(|v| v as usize)
-                    .map_err(|e| {
-                        IoError::ParseError(format!("Failed to read record marker: {e}"))
-                    }),
+                    .map_err(|e| IoError::ParseError(format!("Failed to read record marker: {e}"))),
                 _ => self
                     .reader
                     .read_u32::<BigEndian>()
                     .map(|v| v as usize)
-                    .map_err(|e| {
-                        IoError::ParseError(format!("Failed to read record marker: {e}"))
-                    }),
+                    .map_err(|e| IoError::ParseError(format!("Failed to read record marker: {e}"))),
             },
             RecordMarkerSize::EightByte => match self.config.endian {
                 EndianMode::Little | EndianMode::Native if cfg!(target_endian = "little") => self
                     .reader
                     .read_u64::<LittleEndian>()
                     .map(|v| v as usize)
-                    .map_err(|e| {
-                        IoError::ParseError(format!("Failed to read record marker: {e}"))
-                    }),
+                    .map_err(|e| IoError::ParseError(format!("Failed to read record marker: {e}"))),
                 _ => self
                     .reader
                     .read_u64::<BigEndian>()
                     .map(|v| v as usize)
-                    .map_err(|e| {
-                        IoError::ParseError(format!("Failed to read record marker: {e}"))
-                    }),
+                    .map_err(|e| IoError::ParseError(format!("Failed to read record marker: {e}"))),
             },
         }
     }
@@ -255,9 +247,9 @@ impl<R: Read + Seek> FortranFile<R> {
 
                 // Read data
                 let mut data = vec![0u8; start_marker];
-                self.reader.read_exact(&mut data).map_err(|e| {
-                    IoError::ParseError(format!("Failed to read record data: {e}"))
-                })?;
+                self.reader
+                    .read_exact(&mut data)
+                    .map_err(|e| IoError::ParseError(format!("Failed to read record data: {e}")))?;
 
                 // Read end marker
                 let end_marker = self.read_record_marker()?;
@@ -500,9 +492,9 @@ impl<W: Write> FortranFile<W> {
                 self.write_record_marker(data.len())?;
 
                 // Write data
-                self.reader.write_all(data).map_err(|e| {
-                    IoError::FileError(format!("Failed to write record data: {e}"))
-                })?;
+                self.reader
+                    .write_all(data)
+                    .map_err(|e| IoError::FileError(format!("Failed to write record data: {e}")))?;
 
                 // Write end marker
                 self.write_record_marker(data.len())?;
@@ -518,16 +510,16 @@ impl<W: Write> FortranFile<W> {
                 }
 
                 // Write data
-                self.reader.write_all(data).map_err(|e| {
-                    IoError::FileError(format!("Failed to write record data: {e}"))
-                })?;
+                self.reader
+                    .write_all(data)
+                    .map_err(|e| IoError::FileError(format!("Failed to write record data: {e}")))?;
 
                 // Pad to record length
                 if data.len() < record_length {
                     let padding = vec![0u8; record_length - data.len()];
-                    self.reader.write_all(&padding).map_err(|e| {
-                        IoError::FileError(format!("Failed to write padding: {e}"))
-                    })?;
+                    self.reader
+                        .write_all(&padding)
+                        .map_err(|e| IoError::FileError(format!("Failed to write padding: {e}")))?;
                 }
 
                 Ok(())

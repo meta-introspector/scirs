@@ -6,6 +6,7 @@
 use crate::error::{SignalError, SignalResult};
 
 /// Represents a wavelet filter pair (decomposition and reconstruction filters)
+#[derive(Clone)]
 pub struct WaveletFilters {
     /// Decomposition low-pass filter
     pub dec_lo: Vec<f64>,

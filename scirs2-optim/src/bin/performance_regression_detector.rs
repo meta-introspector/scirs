@@ -296,8 +296,9 @@ fn run_regression_detection(
     // Save report
     let output_path = PathBuf::from(output_report);
     let output_dir = output_path.parent().unwrap();
-    fs::create_dir_all(output_dir)
-        .map_err(|e| OptimError::ResourceError(format!("Failed to create output directory: {e}")))?;
+    fs::create_dir_all(output_dir).map_err(|e| {
+        OptimError::ResourceError(format!("Failed to create output directory: {e}"))
+    })?;
 
     let report_json = serde_json::to_string_pretty(&report)
         .map_err(|e| OptimError::OptimizationError(format!("Failed to serialize report: {e}")))?;

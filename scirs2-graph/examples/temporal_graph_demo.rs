@@ -176,9 +176,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             0.0
         };
-        println!(
-            "     t={time}: {node_count} nodes, {edge_count} edges, density: {density:.3}"
-        );
+        println!("     t={time}: {node_count} nodes, {edge_count} edges, density: {density:.3}");
     }
 
     println!("\n12. Temporal edge overlap analysis:");

@@ -137,9 +137,7 @@ fn demonstrate_memory_efficient_processing() -> Result<(), Box<dyn std::error::E
     let dataset_size = 50_000;
     let n_features = 50;
 
-    println!(
-        "Comparing memory usage for {dataset_size} samples with {n_features} features"
-    );
+    println!("Comparing memory usage for {dataset_size} samples with {n_features} features");
 
     // In-memory approach (for comparison)
     println!("\n1. In-memory approach:");
@@ -343,9 +341,8 @@ fn demonstrate_parallel_processing() -> Result<(), Box<dyn std::error::Error>> {
         let chunk_samples = chunk.n_samples();
 
         // Process chunk
-        let stats = compute_stats(chunk).map_err(|e| -> Box<dyn std::error::Error> {
-            Box::new(std::io::Error::other(e))
-        })?;
+        let stats = compute_stats(chunk)
+            .map_err(|e| -> Box<dyn std::error::Error> { Box::new(std::io::Error::other(e)) })?;
         let chunk_time = chunk_start.elapsed();
 
         println!(
@@ -504,9 +501,7 @@ fn simulate_training_scenario() -> Result<(), Box<dyn std::error::Error>> {
         total_samples += batch_size;
 
         if total_batches % 3 == 0 {
-            println!(
-                "    Processed {total_batches} batches ({total_samples} samples)"
-            );
+            println!("    Processed {total_batches} batches ({total_samples} samples)");
         }
 
         if chunk.is_last {
@@ -563,9 +558,7 @@ fn simulate_preprocessing_pipeline() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!(
-        "  ✅ Preprocessing pipeline: {processed_chunks} chunks processed"
-    );
+    println!("  ✅ Preprocessing pipeline: {processed_chunks} chunks processed");
 
     Ok(())
 }

@@ -398,11 +398,11 @@ fn validate_simd_operations_comprehensive(
 ) -> SignalResult<SimdValidationResult> {
     // Detect SIMD capabilities
     let caps = PlatformCapabilities::detect();
-    let simd_available = caps.avx2_available || caps.avx512_available || caps.sse4_1_available;
+    let simd_available = caps.avx2_available || caps.avx512_available || caps.simd_available;
 
     let detected_capabilities = format!(
-        "SSE4.1: {}, AVX2: {}, AVX512: {}",
-        caps.sse4_1_available, caps.avx2_available, caps.avx512_available
+        "SIMD: {}, AVX2: {}, AVX512: {}",
+        caps.simd_available, caps.avx2_available, caps.avx512_available
     );
 
     if !simd_available {
@@ -594,7 +594,16 @@ fn validate_pure_sinusoid_accuracy(
 
     // Compute Lomb-Scargle
     let frequencies = Array1::linspace(0.1, 50.0, 500);
-    let (_freqs, power) = lombscargle(&times, &signal, &frequencies)?;
+    let (_freqs, power) = lombscargle(
+        times.as_slice().unwrap(),
+        signal.as_slice().unwrap(),
+        Some(frequencies.as_slice().unwrap()),
+        None,
+        None,
+        None,
+        None,
+        None,
+    )?;
 
     // Find peak
     let peak_idx = power
@@ -608,7 +617,7 @@ fn validate_pure_sinusoid_accuracy(
 
     // Calculate errors
     let max_power = power.iter().cloned().fold(0.0, f64::max);
-    let normalized_power = power.mapv(|p| p / max_power);
+    let normalized_power: Vec<f64> = power.iter().map(|&p| p / max_power).collect();
 
     // Theoretical power should be 1.0 at peak frequency, 0.0 elsewhere (approximately)
     let mut errors = Vec::new();
@@ -665,7 +674,7 @@ fn benchmark_signal_size(size: usize, iterations: usize) -> SignalResult<Benchma
 
     let start = Instant::now();
     for _ in 0..iterations {
-        let _ = lombscargle(&t, &signal, &frequencies)?;
+        let _ = lombscargle(t.as_slice().unwrap(), signal.as_slice().unwrap(), Some(frequencies.as_slice().unwrap()), None, None, None, None, None)?;
     }
     let avg_time = start.elapsed().as_secs_f64() * 1000.0 / iterations as f64;
 

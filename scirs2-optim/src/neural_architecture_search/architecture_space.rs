@@ -516,8 +516,8 @@ impl ArchitectureFactory {
         hyperparameters.insert("learning_rate".to_string(), T::from(0.001).unwrap());
         hyperparameters.insert("beta1".to_string(), T::from(0.9).unwrap());
         hyperparameters.insert("beta2".to_string(), T::from(0.999).unwrap());
-        hyperparameters.insert("epsilon".to_string(), T::from(1e-8).unwrap());
-        hyperparameters.insert("weight_decay".to_string(), T::from(0.0).unwrap());
+        hyperparameters.insert("epsilon".to_string(), T::from(1e-7).unwrap()); // Within (1e-10, 1e-6) range
+        hyperparameters.insert("weight_decay".to_string(), T::from(1e-5).unwrap()); // Within (1e-8, 1e-2) range
 
         OptimizerArchitecture {
             components: vec![OptimizerComponent {

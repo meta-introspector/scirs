@@ -1252,7 +1252,7 @@ fn validate_tree_structure(
     original_length: usize,
 ) -> SignalResult<()> {
     // Check that tree has been properly constructed
-    if tree.is_empty() {
+    if tree.root.data.is_empty() {
         return Err(SignalError::ComputationError(
             "WPT tree is empty after decomposition".to_string(),
         ));

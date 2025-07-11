@@ -176,7 +176,7 @@ impl ParallelMultiRateFilterBank {
                     self.decimation_factors[band],
                     &config.base_config,
                 )?;
-                Ok(filtered)
+                Ok::<Vec<f64>, SignalError>(filtered)
             })
             .collect();
 
@@ -301,7 +301,7 @@ impl SparseParallelFilter {
                     }
                 }
 
-                Ok(chunk_result)
+                Ok::<Vec<f64>, SignalError>(chunk_result)
             })
             .collect();
 

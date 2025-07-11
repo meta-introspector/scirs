@@ -49,9 +49,9 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::window::get_window;
+use ndarray::Array1;
 use num_complex::Complex64;
 use std::collections::VecDeque;
-use ndarray::Array1;
 
 /// Configuration for streaming STFT
 #[derive(Debug, Clone)]

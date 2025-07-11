@@ -622,10 +622,12 @@ mod tests {
 
         let mut nmf = NMF::new(2);
         let result = nmf.fit(&x);
-        
+
         assert!(result.is_err());
         if let Err(e) = result {
-            assert!(e.to_string().contains("NMF requires non-negative input data"));
+            assert!(e
+                .to_string()
+                .contains("NMF requires non-negative input data"));
         }
     }
 

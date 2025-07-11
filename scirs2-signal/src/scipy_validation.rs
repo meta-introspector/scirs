@@ -519,8 +519,8 @@ fn calculate_errors(signal1: &[f64], signal2: &[f64]) -> SignalResult<(f64, f64,
     }
 
     let n = signal1.len();
-    let mut max_abs_error = 0.0;
-    let mut max_rel_error = 0.0;
+    let mut max_abs_error: f64 = 0.0;
+    let mut max_rel_error: f64 = 0.0;
     let mut mse = 0.0;
 
     for i in 0..n {
@@ -552,8 +552,8 @@ fn validate_chebyshev_filter(
 
     let start_time = std::time::Instant::now();
     let test_name = "chebyshev_filter".to_string();
-    let mut max_abs_error = 0.0;
-    let mut max_rel_error = 0.0;
+    let mut max_abs_error: f64 = 0.0;
+    let mut max_rel_error: f64 = 0.0;
     let mut rmse_sum = 0.0;
     let mut num_cases = 0;
     let mut passed = true;
@@ -832,11 +832,10 @@ fn validate_multitaper_scipy(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-
     let start_time = std::time::Instant::now();
     let test_name = "multitaper".to_string();
-    let mut max_abs_error = 0.0;
-    let mut max_rel_error = 0.0;
+    let mut max_abs_error: f64 = 0.0;
+    let mut max_rel_error: f64 = 0.0;
     let mut rmse_sum = 0.0;
     let mut num_cases = 0;
     let mut passed = true;
@@ -939,8 +938,8 @@ fn validate_dwt(
 
     let start_time = std::time::Instant::now();
     let test_name = "dwt".to_string();
-    let mut max_abs_error = 0.0;
-    let mut max_rel_error = 0.0;
+    let mut max_abs_error: f64 = 0.0;
+    let mut max_rel_error: f64 = 0.0;
     let mut rmse_sum = 0.0;
     let mut num_cases = 0;
     let mut passed = true;
@@ -1073,7 +1072,6 @@ fn validate_windows(
     results: &mut HashMap<String, ValidationTestResult>,
     config: &ValidationConfig,
 ) -> SignalResult<()> {
-
     let start_time = std::time::Instant::now();
     let test_name = "windows".to_string();
     let mut max_abs_error = 0.0;

@@ -345,7 +345,11 @@ fn standard_denoise(
         thresholds.push(threshold);
 
         // Apply thresholding
-        let thresholded = threshold_coefficients(detail.as_slice().unwrap(), threshold, config.threshold_method);
+        let thresholded = threshold_coefficients(
+            detail.as_slice().unwrap(),
+            threshold,
+            config.threshold_method,
+        );
         denoised_coeffs.details[level_idx] = Array1::from_vec(thresholded);
     }
 

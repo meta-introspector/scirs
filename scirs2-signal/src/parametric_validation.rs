@@ -654,7 +654,7 @@ fn compute_spectral_error(true_ar: &Array1<f64>, est_ar: &Array1<f64>) -> Signal
     let (freqs, psd_true) = ar_spectrum(true_ar, 1.0, 256)?;
     let (_, psd_est) = ar_spectrum(est_ar, 1.0, 256)?;
 
-    let mut error = 0.0;
+    let mut error: f64 = 0.0;
     for i in 0..psd_true.len() {
         error += ((psd_true[i] - psd_est[i]) / psd_true[i]).powi(2);
     }

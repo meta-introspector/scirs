@@ -230,6 +230,7 @@ pub fn memory_optimized_fir_filter(
 
         // Write output chunk
         for &sample in &output_buffer[..effective_length] {
+            let sample: f64 = sample;
             let bytes = sample.to_le_bytes();
             output_writer
                 .write_all(&bytes)

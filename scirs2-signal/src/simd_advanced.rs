@@ -2014,10 +2014,10 @@ pub mod advanced_simd_matrix {
 
 /// Advanced-high-performance real-time signal processing operations
 pub mod advanced_simd_realtime {
+    use super::SimdConfig;
     use crate::error::{SignalError, SignalResult};
     use ndarray::Array2;
     use scirs2_core::simd_ops::PlatformCapabilities;
-    use super::SimdConfig;
     #[cfg(target_arch = "x86_64")]
     use std::arch::x86_64::*;
 

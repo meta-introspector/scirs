@@ -170,7 +170,9 @@ pub struct NaturalGradientState<T: Float> {
     pub kl_history: Vec<T>,
 }
 
-impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyNetwork<T>> NaturalPolicyGradient<T, P> {
+impl<T: Float + ScalarOperand + std::ops::AddAssign + std::iter::Sum, P: PolicyNetwork<T>>
+    NaturalPolicyGradient<T, P>
+{
     /// Create a new natural policy gradient optimizer
     pub fn new(config: NaturalGradientConfig<T>, policy: P, param_dim: usize) -> Self {
         let fisher_accumulator = FisherAccumulator {

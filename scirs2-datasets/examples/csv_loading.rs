@@ -19,9 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for i in 0..3 {
         let features = dataset.data.row(i);
         let target = dataset.target.as_ref().map(|t| t[i]);
-        println!(
-            "  Sample {i}: Features = {features:?}, Target = {target:?}"
-        );
+        println!("  Sample {i}: Features = {features:?}, Target = {target:?}");
     }
 
     Ok(())

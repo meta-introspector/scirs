@@ -28,9 +28,7 @@ fn main() {
     let sample_size = 30;
     let random_indices = random_sample(n_samples, sample_size, false, Some(42)).unwrap();
 
-    println!(
-        "Sampled {sample_size} indices from {n_samples} total samples"
-    );
+    println!("Sampled {sample_size} indices from {n_samples} total samples");
     println!(
         "Sample indices: {:?}",
         &random_indices[..10.min(random_indices.len())]
@@ -61,9 +59,7 @@ fn main() {
     let bootstrap_size = 200; // More than original dataset size
     let bootstrap_indices = random_sample(n_samples, bootstrap_size, true, Some(42)).unwrap();
 
-    println!(
-        "Bootstrap sampled {bootstrap_size} indices from {n_samples} total samples"
-    );
+    println!("Bootstrap sampled {bootstrap_size} indices from {n_samples} total samples");
     println!(
         "Bootstrap may have duplicates - first 10 indices: {:?}",
         &bootstrap_indices[..10]
@@ -79,9 +75,7 @@ fn main() {
 
     println!("Bootstrap statistics:");
     println!("- Maximum frequency of any sample: {max_count}");
-    println!(
-        "- Number of original samples not selected: {zero_count}\n"
-    );
+    println!("- Number of original samples not selected: {zero_count}\n");
 
     // Demonstrate stratified sampling
     println!("=== Stratified Sampling ===");
@@ -89,9 +83,7 @@ fn main() {
         let stratified_size = 30;
         let stratified_indices = stratified_sample(target, stratified_size, Some(42)).unwrap();
 
-        println!(
-            "Stratified sampled {stratified_size} indices maintaining class proportions"
-        );
+        println!("Stratified sampled {stratified_size} indices maintaining class proportions");
 
         // Create stratified subset
         let stratified_data = iris.data.select(ndarray::Axis(0), &stratified_indices);
@@ -106,9 +98,7 @@ fn main() {
         );
 
         let stratified_class_counts = count_classes(&stratified_dataset.target.unwrap());
-        println!(
-            "Stratified sample class distribution: {stratified_class_counts:?}"
-        );
+        println!("Stratified sample class distribution: {stratified_class_counts:?}");
 
         // Verify proportions are maintained
         let original_proportions = calculate_proportions(&count_classes(target));

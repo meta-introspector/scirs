@@ -616,8 +616,8 @@ mod tests {
         }
 
         // Check that smoothing reduces total variation (smoother result)
-        let mut wvd_variation = 0.0;
-        let mut spwvd_variation = 0.0;
+        let mut wvd_variation: f64 = 0.0;
+        let mut spwvd_variation: f64 = 0.0;
 
         // Calculate variation along time axis
         for i in 0..wvd.shape()[0] {

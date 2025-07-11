@@ -496,7 +496,7 @@ fn validate_dpss_implementation_enhanced() -> SignalResult<TestResult> {
         .ok_or_else(|| SignalError::ComputationError("Eigenvalues not returned".to_string()))?;
 
     // Test orthogonality
-    let mut max_orthogonality_error = 0.0;
+    let mut max_orthogonality_error: f64 = 0.0;
     for i in 0..k {
         for j in 0..k {
             let dot_product: f64 = tapers.row(i).dot(&tapers.row(j));
@@ -842,7 +842,7 @@ pub fn generate_multitaper_validation_report(result: &MultitaperScipyValidationR
 fn validate_enhanced_sinusoid_estimation() -> SignalResult<TestResult> {
     let test_frequencies = vec![10.0, 50.0, 100.0, 150.0, 200.0];
     let mut total_error = 0.0;
-    let mut max_error = 0.0;
+    let mut max_error: f64 = 0.0;
 
     for freq in test_frequencies {
         let config = EnhancedTestSignalConfig {
@@ -928,7 +928,7 @@ fn validate_convergence_properties() -> SignalResult<TestResult> {
     let mut convergence_failures = 0;
 
     for &nw in &[2.0, 3.0, 4.0, 5.0] {
-        let k = ((2.0 * nw).floor() - 1.0) as usize;
+        let k = ((2.0f64 * nw).floor() - 1.0f64) as usize;
         let signal: Vec<f64> = (0..1024)
             .map(|i| {
                 let t = i as f64 / 100.0;

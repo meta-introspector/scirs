@@ -821,7 +821,8 @@ impl PerformanceRegressionDetector {
 
         let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
 
-        if slope.abs() < 0.01 {
+        if slope.abs() <= 0.015 {
+            // Slightly more tolerant threshold for stability
             TrendDirection::Stable
         } else if slope > 0.0 {
             TrendDirection::Degrading

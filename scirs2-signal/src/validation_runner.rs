@@ -7,7 +7,6 @@
 
 use crate::dwt2d_enhanced::{enhanced_dwt2d_decompose, BoundaryMode, Dwt2dConfig};
 use crate::error::SignalResult;
-use rand::rngs::StdRng;
 use crate::filter::{butter, FilterType};
 use crate::lombscargle_scipy_validation::{
     validate_lombscargle_against_scipy, ScipyValidationConfig,
@@ -15,6 +14,7 @@ use crate::lombscargle_scipy_validation::{
 use crate::multitaper::{validate_multitaper_comprehensive, TestSignalConfig};
 use crate::parametric::{estimate_arma, ARMethod};
 use crate::sysid::{estimate_transfer_function, TfEstimationMethod};
+use rand::rngs::StdRng;
 
 use ndarray::{Array1, Array2};
 use std::collections::HashMap;

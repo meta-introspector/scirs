@@ -21,6 +21,8 @@
 use crate::dwt::{Wavelet, WaveletFilters};
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array2, ArrayView1, ArrayView2};
+use scirs2_core::parallel_ops::*;
+use scirs2_core::simd_ops::SimdUnifiedOps;
 use scirs2_core::validation::{check_array_finite, check_positive};
 use std::sync::Arc;
 
@@ -1889,8 +1891,8 @@ fn resize_to_match(source: &Array2<f64>, target_dim: (usize, usize)) -> SignalRe
 /// Compute correlation between edge maps
 #[allow(dead_code)]
 fn compute_edge_correlation(edges1: &Array2<f64>, edges2: &Array2<f64>) -> SignalResult<f64> {
-    let edges1_flat = edges1.view().into_shape(edges1.len()).unwrap();
-    let edges2_flat = edges2.view().into_shape(edges2.len()).unwrap();
+    let edges1_flat = edges1.view().into_shape_with_order(edges1.len()).unwrap();
+    let edges2_flat = edges2.view().into_shape_with_order(edges2.len()).unwrap();
 
     // Compute means
     let mean1 = edges1_flat.sum() / edges1_flat.len() as f64;

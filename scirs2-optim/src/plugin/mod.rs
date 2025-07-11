@@ -16,23 +16,49 @@
 //!
 //! ## Creating a Custom Optimizer Plugin
 //!
-//! ```rust
-//! use scirs2_optim::plugin::{OptimizerPlugin, PluginInfo, PluginCapabilities};
+//! ```no_run
+//! use scirs2_optim::plugin::{OptimizerPlugin, PluginCapabilities};
+//! use scirs2_optim::plugin::core::{PluginInfo, OptimizerConfig, OptimizerState};
+//! use scirs2_optim::error::{OptimError, Result};
 //! use ndarray::Array1;
 //!
+//! #[derive(Debug, Clone)]
 //! struct MyCustomOptimizer {
 //!     learning_rate: f64,
 //! }
 //!
 //! impl OptimizerPlugin<f64> for MyCustomOptimizer {
-//!     fn step(&mut self, params: &Array1<f64>, gradients: &Array1<f64>) -> Array1<f64> {
+//!     fn step(&mut self, params: &Array1<f64>, gradients: &Array1<f64>) -> Result<Array1<f64>> {
 //!         // Custom optimization logic
-//!         params - &(gradients * self.learning_rate)
+//!         Ok(params - &(gradients * self.learning_rate))
 //!     }
 //!     
 //!     fn name(&self) -> &str { "MyCustomOptimizer" }
 //!     fn version(&self) -> &str { "1.0.0" }
-//!     // ... other required methods
+//!     
+//!     fn plugin_info(&self) -> PluginInfo {
+//!         PluginInfo {
+//!             name: self.name().to_string(),
+//!             version: self.version().to_string(),
+//!             description: "A simple custom optimizer".to_string(),
+//!             author: "Example Author".to_string(),
+//!             ..PluginInfo::default()
+//!         }
+//!     }
+//!     
+//!     fn capabilities(&self) -> PluginCapabilities {
+//!         PluginCapabilities::default()
+//!     }
+//!     
+//!     fn initialize(&mut self, _param_shapes: &[usize]) -> Result<()> { Ok(()) }
+//!     fn reset(&mut self) -> Result<()> { Ok(()) }
+//!     fn get_config(&self) -> OptimizerConfig { OptimizerConfig::default() }
+//!     fn set_config(&mut self, _config: OptimizerConfig) -> Result<()> { Ok(()) }
+//!     fn get_state(&self) -> Result<OptimizerState> { Ok(OptimizerState::default()) }
+//!     fn set_state(&mut self, _state: OptimizerState) -> Result<()> { Ok(()) }
+//!     fn clone_plugin(&self) -> Box<dyn OptimizerPlugin<f64>> {
+//!         Box::new(self.clone())
+//!     }
 //! }
 //! ```
 

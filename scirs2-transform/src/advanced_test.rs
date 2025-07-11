@@ -10,7 +10,7 @@ mod tests {
         AdvancedNeuromorphicProcessor, AdvancedQuantumOptimizer, NeuromorphicTransformationSystem,
         QuantumTransformationOptimizer, TransformationType,
     };
-    use ndarray::{Array2};
+    use ndarray::Array2;
 
     #[test]
     fn test_advanced_neuromorphic_creation() {
@@ -136,7 +136,7 @@ mod tests {
 
             // Test that metrics can be retrieved without panicking
             // Note: Specific field values cannot be tested as they are private
-            
+
             println!("✅ Quantum optimizer metrics validated");
         }
     }

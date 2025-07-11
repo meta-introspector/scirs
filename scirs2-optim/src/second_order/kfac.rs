@@ -260,7 +260,9 @@ impl<
             let state = self.layer_states.get(layer_name).ok_or_else(|| {
                 OptimError::InvalidConfig(format!("Layer {} not found", layer_name))
             })?;
-            self.step_count - state.last_cov_update >= self.config.cov_update_freq
+            // Allow initial update when step_count is 0 and last_cov_update is 0
+            self.step_count == 0 && state.last_cov_update == 0
+                || self.step_count - state.last_cov_update >= self.config.cov_update_freq
         };
 
         if should_update {
@@ -705,8 +707,11 @@ impl<
         let target_condition = T::from(1e6).unwrap();
         let base_damping = self.config.damping;
 
-        if condition_estimate > target_condition {
-            Ok(base_damping * (condition_estimate / target_condition).sqrt())
+        if condition_estimate >= target_condition {
+            // Ensure damping increases by at least a factor when condition number is high
+            let scale_factor =
+                ((condition_estimate / target_condition).sqrt()).max(T::from(1.1).unwrap());
+            Ok(base_damping * scale_factor)
         } else {
             Ok(base_damping)
         }
@@ -1041,15 +1046,18 @@ pub mod kfac_utils {
         input_patches: &Array2<T>,
         output_grads: &Array2<T>,
     ) -> Result<Vec<Array2<T>>> {
-        let group_size = input_patches.ncols() / groups;
+        let input_group_size = input_patches.ncols() / groups;
+        let output_group_size = output_grads.ncols() / groups;
         let mut updates = Vec::new();
 
         for g in 0..groups {
-            let start_idx = g * group_size;
-            let end_idx = (g + 1) * group_size;
+            let input_start_idx = g * input_group_size;
+            let input_end_idx = (g + 1) * input_group_size;
+            let output_start_idx = g * output_group_size;
+            let output_end_idx = (g + 1) * output_group_size;
 
-            let group_input = input_patches.slice(s![.., start_idx..end_idx]);
-            let _group_output = output_grads.slice(s![.., start_idx..end_idx]);
+            let group_input = input_patches.slice(s![.., input_start_idx..input_end_idx]);
+            let _group_output = output_grads.slice(s![.., output_start_idx..output_end_idx]);
 
             // Apply K-FAC to each group independently
             updates.push(group_input.to_owned());
@@ -2277,13 +2285,13 @@ pub mod advanced_kfac {
     pub struct OrderedFloat<T: Float>(T);
 
     impl<T: Float> Eq for OrderedFloat<T> {}
-    
+
     impl<T: Float> PartialOrd for OrderedFloat<T> {
         fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
             self.0.partial_cmp(&other.0)
         }
     }
-    
+
     impl<T: Float> Ord for OrderedFloat<T> {
         fn cmp(&self, other: &Self) -> std::cmp::Ordering {
             self.partial_cmp(other).unwrap_or(std::cmp::Ordering::Equal)

@@ -1504,11 +1504,11 @@ mod tests {
     fn test_advanced_mode_integration() {
         // Create a lightweight config for faster testing
         let config = AdvancedModeConfig {
-            enable_gpu: false,  // Disable GPU for faster testing
-            enable_memory_optimization: false,  // Disable for faster testing
-            enable_simd: false,  // Disable for faster testing
-            enable_adaptive_optimization: false,  // Disable for faster testing
-            enable_neural_rl: false,  // Disable for faster testing
+            enable_gpu: false,                   // Disable GPU for faster testing
+            enable_memory_optimization: false,   // Disable for faster testing
+            enable_simd: false,                  // Disable for faster testing
+            enable_adaptive_optimization: false, // Disable for faster testing
+            enable_neural_rl: false,             // Disable for faster testing
             performance_targets: PerformanceTargets::default(),
         };
         let coordinator = AdvancedModeCoordinator::<f64>::new(config).unwrap();
@@ -1551,11 +1551,11 @@ mod tests {
     fn test_neural_rl_integration() {
         // Create a lightweight config for faster testing
         let config = AdvancedModeConfig {
-            enable_gpu: false,  // Disable GPU for faster testing
-            enable_memory_optimization: false,  // Disable for faster testing
-            enable_simd: false,  // Disable for faster testing
-            enable_adaptive_optimization: false,  // Disable for faster testing
-            enable_neural_rl: true,  // Only enable neural RL for this specific test
+            enable_gpu: false,                   // Disable GPU for faster testing
+            enable_memory_optimization: false,   // Disable for faster testing
+            enable_simd: false,                  // Disable for faster testing
+            enable_adaptive_optimization: false, // Disable for faster testing
+            enable_neural_rl: true,              // Only enable neural RL for this specific test
             performance_targets: PerformanceTargets::default(),
         };
         let coordinator = AdvancedModeCoordinator::<f64>::new(config).unwrap();
@@ -1566,9 +1566,9 @@ mod tests {
 
         let y = array![1.0, 0.5];
         let t = 0.0;
-        let h = 0.1;  // Use larger step size for faster testing
-        let rtol = 1e-3;  // Use looser tolerance for faster testing
-        let atol = 1e-5;  // Use looser tolerance for faster testing
+        let h = 0.1; // Use larger step size for faster testing
+        let rtol = 1e-3; // Use looser tolerance for faster testing
+        let atol = 1e-5; // Use looser tolerance for faster testing
 
         let result =
             coordinator.neural_rl_adaptive_integration(t, &y.view(), h, rtol, atol, ode_func);

@@ -231,7 +231,7 @@ fn adaptive_parallel_filter(
         .into_par_iter()
         .map(|(chunk_data, chunk_start, _)| {
             let chunk_result = apply_iir_filter_simd(&chunk_data, b, a, config.use_simd)?;
-            Ok((chunk_result, chunk_start))
+            Ok::<(Vec<f64>, usize), SignalError>((chunk_result, chunk_start))
         })
         .collect();
 

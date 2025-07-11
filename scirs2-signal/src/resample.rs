@@ -113,14 +113,8 @@ where
 
         // Apply window function
         let window_val = match window_type {
-            "hamming" => {
-                0.54 - 0.46
-                    * (2.0 * PI * i as f64 / (filter_length - 1) as f64).cos()
-            }
-            "hanning" => {
-                0.5 * (1.0
-                    - (2.0 * PI * i as f64 / (filter_length - 1) as f64).cos())
-            }
+            "hamming" => 0.54 - 0.46 * (2.0 * PI * i as f64 / (filter_length - 1) as f64).cos(),
+            "hanning" => 0.5 * (1.0 - (2.0 * PI * i as f64 / (filter_length - 1) as f64).cos()),
             "blackman" => {
                 let a0 = 0.42;
                 let a1 = 0.5;

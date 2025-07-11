@@ -5,9 +5,7 @@
 
 use crate::error::{SignalError, SignalResult};
 use crate::lti::StateSpace;
-use crate::sysid_enhanced::{
-    EnhancedSysIdConfig, ModelValidationMetrics, SystemModel,
-};
+use crate::sysid_enhanced::{EnhancedSysIdConfig, ModelValidationMetrics, SystemModel};
 use ndarray::{s, Array1, Array2};
 use num_complex::Complex64;
 use scirs2_core::parallel_ops::*;

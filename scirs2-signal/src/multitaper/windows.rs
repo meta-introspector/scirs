@@ -82,8 +82,7 @@ pub fn dpss(
     for i in 0..n_points {
         let i_float = i as f64;
         let n_float = n_points as f64;
-        let val =
-            ((n_float - 1.0) / 2.0 - i_float).powi(2) * (2.0 * PI * w).powi(2);
+        let val = ((n_float - 1.0) / 2.0 - i_float).powi(2) * (2.0 * PI * w).powi(2);
         diag.push(val);
     }
 

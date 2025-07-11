@@ -1678,11 +1678,19 @@ impl DocumentationAnalyzer {
         // pub struct StructName<T>
         if let Some(start) = line.find("struct ") {
             let after_struct = &line[start + 7..];
-            let end = after_struct
-                .find(' ')
-                .or_else(|| after_struct.find('<'))
-                .or_else(|| after_struct.find('{'))
-                .unwrap_or(after_struct.len());
+
+            // Find the minimum position among all possible delimiters
+            let mut end = after_struct.len();
+            if let Some(pos) = after_struct.find(' ') {
+                end = end.min(pos);
+            }
+            if let Some(pos) = after_struct.find('<') {
+                end = end.min(pos);
+            }
+            if let Some(pos) = after_struct.find('{') {
+                end = end.min(pos);
+            }
+
             Some(after_struct[..end].trim().to_string())
         } else {
             None

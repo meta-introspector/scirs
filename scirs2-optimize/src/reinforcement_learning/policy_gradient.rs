@@ -64,7 +64,8 @@ impl MetaPolicyNetwork {
 
             for i in 0..fan_out {
                 for j in 0..fan_in {
-                    policy_weights[[layer, i, j]] = rng().random_range(-0.5..0.5) * 2.0 * xavier_std;
+                    policy_weights[[layer, i, j]] =
+                        rng().random_range(-0.5..0.5) * 2.0 * xavier_std;
                     meta_weights[[layer, i, j]] =
                         rng().random_range(-0.5..0.5) * 2.0 * xavier_std * 0.1;
                 }

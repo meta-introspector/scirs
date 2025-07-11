@@ -500,9 +500,11 @@ impl<T: Float + Send + Sync + ndarray::ScalarOperand> ByzantineTolerantAggregato
             let mut coord_values: Vec<T> = values.iter().map(|g| g[i]).collect();
             coord_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
-            // Remove top and bottom 10% (trim parameter)
-            let trim_count = (coord_values.len() as f64 * 0.1) as usize;
-            let trimmed_values = &coord_values[trim_count..coord_values.len() - trim_count];
+            // Remove top and bottom 10% (trim parameter), but ensure at least 1 element is trimmed if we have outliers
+            let trim_count = std::cmp::max(1, (coord_values.len() as f64 * 0.1) as usize);
+            let start_idx = std::cmp::min(trim_count, coord_values.len() / 2);
+            let end_idx = std::cmp::max(coord_values.len() - trim_count, coord_values.len() / 2);
+            let trimmed_values = &coord_values[start_idx..end_idx];
 
             if !trimmed_values.is_empty() {
                 let sum: T = trimmed_values

@@ -117,8 +117,9 @@ impl QuantumState {
         }
 
         // Initialize random basis states
-        let basis_states =
-            Array2::from_shape_fn((actual_states, num_params), |_| rng().random_range(-5.0..5.0));
+        let basis_states = Array2::from_shape_fn((actual_states, num_params), |_| {
+            rng().random_range(-5.0..5.0)
+        });
 
         // Initialize entanglement matrix
         let entanglement_matrix = Array2::from_shape_fn((num_params, num_params), |(i, j)| {

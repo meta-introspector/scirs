@@ -1963,7 +1963,11 @@ impl FairnessMonitor {
         let mut weights = HashMap::new();
         for client_id in client_ids {
             // Use existing fairness score or default to 1.0
-            let weight = self.client_fairness_scores.get(client_id).copied().unwrap_or(1.0);
+            let weight = self
+                .client_fairness_scores
+                .get(client_id)
+                .copied()
+                .unwrap_or(1.0);
             weights.insert(client_id.clone(), weight);
         }
         weights
@@ -1982,7 +1986,10 @@ impl<T: Float + Default + Clone + ndarray::ScalarOperand> FederatedMetaLearner<T
     }
 
     /// Compute meta-gradients for federated meta-learning
-    pub fn compute_meta_gradients(&mut self, cluster_aggregates: &HashMap<usize, Array1<T>>) -> Result<Array1<T>> {
+    pub fn compute_meta_gradients(
+        &mut self,
+        cluster_aggregates: &HashMap<usize, Array1<T>>,
+    ) -> Result<Array1<T>> {
         if cluster_aggregates.is_empty() {
             return Ok(Array1::zeros(self.meta_parameters.len()));
         }
@@ -2515,8 +2522,17 @@ pub struct ClientComposition {
     pub contribution_weight: f64,
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::ScalarOperand + std::fmt::Debug + rand_distr::uniform::SampleUniform>
-    FederatedPrivacyCoordinator<T>
+impl<
+        T: Float
+            + Default
+            + Clone
+            + Send
+            + Sync
+            + std::iter::Sum
+            + ndarray::ScalarOperand
+            + std::fmt::Debug
+            + rand_distr::uniform::SampleUniform,
+    > FederatedPrivacyCoordinator<T>
 {
     /// Create a new federated privacy coordinator
     pub fn new(config: FederatedPrivacyConfig) -> Result<Self> {
@@ -2655,7 +2671,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
 
         // Apply noise with federated-specific sensitivity
         let sensitivity = self.compute_federated_sensitivity(round_plan)?;
-        let epsilon = T::from(self.config.base_config.target_epsilon / round_plan.amplification_factor).unwrap();
+        let epsilon =
+            T::from(self.config.base_config.target_epsilon / round_plan.amplification_factor)
+                .unwrap();
         let delta = Some(T::from(self.config.base_config.target_delta).unwrap());
 
         noise_mechanism.add_noise_1d(aggregated_update, sensitivity, epsilon, delta)?;
@@ -2740,7 +2758,11 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
             communication_efficiency: self.communication_optimizer.get_efficiency_stats(),
             continual_learning_status: self.continual_learning_coordinator.get_status(),
             privacy_guarantees: self.compute_advanced_privacy_guarantees(round_plan)?,
-            fairness_metrics: self.adaptive_budget_manager.fairness_monitor.get_metrics().clone(),
+            fairness_metrics: self
+                .adaptive_budget_manager
+                .fairness_monitor
+                .get_metrics()
+                .clone(),
         })
     }
 
@@ -2793,8 +2815,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
     ) -> Result<()> {
         // Apply user-level noise mechanism
         let user_epsilon = self.compute_global_epsilon(allocations)? * T::from(0.1).unwrap();
-        let user_sensitivity = self.compute_global_sensitivity(allocations)? * T::from(0.5).unwrap();
-        
+        let user_sensitivity =
+            self.compute_global_sensitivity(allocations)? * T::from(0.5).unwrap();
+
         let mut user_noise_mechanism = GaussianMechanism::new();
         user_noise_mechanism.add_noise_1d(
             aggregated_update,
@@ -2802,7 +2825,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
             user_epsilon,
             Some(T::from(self.config.base_config.target_delta).unwrap()),
         )?;
-        
+
         Ok(())
     }
 
@@ -2815,7 +2838,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
         // Apply hierarchical noise based on federation structure
         let hierarchy_epsilon = T::from(round_plan.amplification_factor * 0.01).unwrap();
         let hierarchy_sensitivity = T::from(1.0).unwrap();
-        
+
         let mut hierarchy_noise_mechanism = LaplaceMechanism::new();
         hierarchy_noise_mechanism.add_noise_1d(
             aggregated_update,
@@ -2823,7 +2846,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
             hierarchy_epsilon,
             None, // Laplace doesn't use delta
         )?;
-        
+
         Ok(())
     }
 
@@ -2837,7 +2860,7 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
         let context_factor = T::from(round_plan.amplification_factor * 0.1).unwrap();
         let context_epsilon = T::from(0.01).unwrap() * context_factor;
         let context_sensitivity = T::from(0.1).unwrap();
-        
+
         let mut context_noise_mechanism = GaussianMechanism::new();
         context_noise_mechanism.add_noise_1d(
             aggregated_update,
@@ -2845,20 +2868,24 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
             context_epsilon,
             Some(T::from(self.config.base_config.target_delta).unwrap()),
         )?;
-        
+
         Ok(())
     }
 
     /// Compute global epsilon for privacy protection
-    fn compute_global_epsilon(&self, allocations: &HashMap<String, AdaptivePrivacyAllocation>) -> Result<T> {
-        let total_epsilon: f64 = allocations.values()
-            .map(|alloc| alloc.epsilon)
-            .sum();
+    fn compute_global_epsilon(
+        &self,
+        allocations: &HashMap<String, AdaptivePrivacyAllocation>,
+    ) -> Result<T> {
+        let total_epsilon: f64 = allocations.values().map(|alloc| alloc.epsilon).sum();
         Ok(T::from(total_epsilon).unwrap_or_else(|| T::from(1.0).unwrap()))
     }
 
     /// Compute global sensitivity for privacy protection
-    fn compute_global_sensitivity(&self, allocations: &HashMap<String, AdaptivePrivacyAllocation>) -> Result<T> {
+    fn compute_global_sensitivity(
+        &self,
+        allocations: &HashMap<String, AdaptivePrivacyAllocation>,
+    ) -> Result<T> {
         let max_sensitivity: f64 = allocations.values()
             .map(|alloc| alloc.epsilon * 0.1) // Compute sensitivity based on epsilon
             .fold(0.0, f64::max);
@@ -2890,7 +2917,10 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
     }
 
     /// Compute selection diversity metrics
-    fn compute_selection_diversity(&self, _selected_clients: &[String]) -> Result<DiversityMetrics> {
+    fn compute_selection_diversity(
+        &self,
+        _selected_clients: &[String],
+    ) -> Result<DiversityMetrics> {
         Ok(DiversityMetrics {
             geographic_diversity: 0.8, // Placeholder
             device_type_diversity: 0.7,
@@ -4071,7 +4101,9 @@ pub struct PersonalizationEffectivenessMetrics {
 
 // Placeholder implementations for advanced components
 
-impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::ScalarOperand> ByzantineRobustAggregator<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::ScalarOperand>
+    ByzantineRobustAggregator<T>
+{
     #[allow(dead_code)]
     pub fn new() -> Result<Self> {
         Ok(Self {
@@ -4123,7 +4155,9 @@ impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::Scalar
     }
 }
 
-impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::ScalarOperand> PersonalizationManager<T> {
+impl<T: Float + Default + Clone + Send + Sync + std::iter::Sum + ndarray::ScalarOperand>
+    PersonalizationManager<T>
+{
     #[allow(dead_code)]
     pub fn new() -> Result<Self> {
         Ok(Self {
@@ -4663,7 +4697,6 @@ impl Default for AdvancedThreatModelingConfig {
         }
     }
 }
-
 
 /// Default configurations
 impl Default for FederatedPrivacyConfig {
@@ -5594,8 +5627,7 @@ impl UtilityEstimator {
         let recent = &self.utility_history[self.utility_history.len() - 1];
         let baseline = &self.utility_history[0];
 
-        let accuracy_degradation =
-            (baseline.accuracy - recent.accuracy) / baseline.accuracy;
+        let accuracy_degradation = (baseline.accuracy - recent.accuracy) / baseline.accuracy;
         accuracy_degradation > 0.1 // hardcoded threshold since degradation_threshold field doesn't exist
     }
 
@@ -5606,13 +5638,15 @@ impl UtilityEstimator {
         }
 
         let len = self.utility_history.len();
-        let recent_window: Vec<&UtilityMeasurement> = self.utility_history.range((len-5)..).collect();
-        let earlier_window: Vec<&UtilityMeasurement> = self.utility_history.range((len-10)..(len-5)).collect();
+        let recent_window: Vec<&UtilityMeasurement> =
+            self.utility_history.range((len - 5)..).collect();
+        let earlier_window: Vec<&UtilityMeasurement> =
+            self.utility_history.range((len - 10)..(len - 5)).collect();
 
-        let recent_avg: f64 = recent_window.iter().map(|m| m.accuracy).sum::<f64>()
-            / recent_window.len() as f64;
-        let earlier_avg: f64 = earlier_window.iter().map(|m| m.accuracy).sum::<f64>()
-            / earlier_window.len() as f64;
+        let recent_avg: f64 =
+            recent_window.iter().map(|m| m.accuracy).sum::<f64>() / recent_window.len() as f64;
+        let earlier_avg: f64 =
+            earlier_window.iter().map(|m| m.accuracy).sum::<f64>() / earlier_window.len() as f64;
 
         (recent_avg - earlier_avg) / earlier_avg
     }
@@ -5887,8 +5921,16 @@ impl BandwidthMonitor {
             return None;
         }
 
-        let bandwidths: Vec<u64> = self.bandwidth_history.iter().map(|m| m.upload_bandwidth as u64).collect();
-        let latencies: Vec<u64> = self.bandwidth_history.iter().map(|m| m.latency as u64).collect();
+        let bandwidths: Vec<u64> = self
+            .bandwidth_history
+            .iter()
+            .map(|m| m.upload_bandwidth as u64)
+            .collect();
+        let latencies: Vec<u64> = self
+            .bandwidth_history
+            .iter()
+            .map(|m| m.latency as u64)
+            .collect();
 
         let avg_bandwidth = bandwidths.iter().sum::<u64>() as f64 / bandwidths.len() as f64;
         let avg_latency = latencies.iter().sum::<u64>() as f64 / latencies.len() as f64;

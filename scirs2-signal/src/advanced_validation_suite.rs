@@ -20,6 +20,7 @@ use crate::error::SignalResult;
 // use ndarray::{Array1, Array2, ArrayView1};
 // use scirs2_core::simd_ops::SimdUnifiedOps;
 // use scirs2_core::validation::{check_finite, check_positive};
+use rand::SeedableRng;
 use std::collections::HashMap;
 // use std::f64::consts::PI;
 use std::time::Instant;

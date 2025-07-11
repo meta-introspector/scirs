@@ -7,8 +7,8 @@
 #![allow(dead_code)]
 
 use ndarray::{Array, ArrayBase, Data, DataMut, Dimension};
-use rand_distr::Normal;
 use num_traits::Float;
+use rand_distr::Normal;
 use scirs2_core::random;
 use std::collections::{HashMap, VecDeque};
 
@@ -264,8 +264,7 @@ where
         params: &Array<A, D>,
         gradients: &mut Array<A, D>,
         batch_size: usize,
-    ) -> Result<Array<A, D>>
-    {
+    ) -> Result<Array<A, D>> {
         self.step_count += 1;
         self.current_batch_size = batch_size;
 
@@ -547,7 +546,9 @@ where
                     .map(|(k, v)| (k.clone(), v.to_f64().unwrap_or(0.0)))
                     .collect(),
             },
-            noise_calibration_history: self.noise_calibrator.calibration_history
+            noise_calibration_history: self
+                .noise_calibrator
+                .calibration_history
                 .iter()
                 .map(|entry| NoiseCalibration {
                     step: entry.step,

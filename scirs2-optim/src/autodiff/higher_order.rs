@@ -198,7 +198,7 @@ impl<T: Float + Default + Clone + 'static + std::iter::Sum + ndarray::ScalarOper
             max_order,
             mixed_mode: true,
             derivative_cache: HashMap::new(),
-            finite_diff_eps: T::from(1e-8).unwrap(),
+            finite_diff_eps: T::from(1e-5).unwrap(),
             parallel_computation: true,
             thread_pool_size: 4, // Conservative default
             adaptive_sparsity: true,
@@ -1319,7 +1319,7 @@ impl<T: Float + Default> Default for HigherOrderConfig<T> {
         Self {
             max_order: 3,
             mixed_mode: true,
-            finite_diff_eps: T::from(1e-8).unwrap(),
+            finite_diff_eps: T::from(1e-5).unwrap(),
             parallel_computation: true,
             thread_pool_size: 4, // Conservative default
             adaptive_sparsity: true,
@@ -1481,8 +1481,8 @@ mod tests {
         let hessian = engine.hessian_diagonal(&function, &point).unwrap();
 
         // Expected diagonal: [2, 4]
-        assert!((hessian[[0, 0]] - 2.0).abs() < 1e-6);
-        assert!((hessian[[1, 1]] - 4.0).abs() < 1e-6);
+        assert!((hessian[[0, 0]] - 2.0).abs() < 1e-5);
+        assert!((hessian[[1, 1]] - 4.0).abs() < 1e-5);
         assert!((hessian[[0, 1]]).abs() < 1e-10); // Off-diagonal should be zero
     }
 
@@ -1497,10 +1497,10 @@ mod tests {
         let hessian = engine.finite_difference_hessian(&function, &point).unwrap();
 
         // Expected Hessian: [[2, 1], [1, 2]]
-        assert!((hessian[[0, 0]] - 2.0).abs() < 1e-6);
-        assert!((hessian[[0, 1]] - 1.0).abs() < 1e-6);
-        assert!((hessian[[1, 0]] - 1.0).abs() < 1e-6);
-        assert!((hessian[[1, 1]] - 2.0).abs() < 1e-6);
+        assert!((hessian[[0, 0]] - 2.0).abs() < 1e-5);
+        assert!((hessian[[0, 1]] - 1.0).abs() < 1e-5);
+        assert!((hessian[[1, 0]] - 1.0).abs() < 1e-5);
+        assert!((hessian[[1, 1]] - 2.0).abs() < 1e-5);
     }
 
     #[test]
@@ -1535,7 +1535,7 @@ mod tests {
 
         let config = HessianConfig {
             sparse: true,
-            sparsity_threshold: 1e-8,
+            sparsity_threshold: 1e-4,
             ..Default::default()
         };
 

@@ -271,8 +271,9 @@ fn handle_create_baseline(matches: &ArgMatches, verbose: bool) -> Result<()> {
     let results = load_performance_results(results_file)?;
 
     // Create baseline directory if it doesn't exist
-    fs::create_dir_all(baseline_dir)
-        .map_err(|e| OptimError::ResourceError(format!("Failed to create baseline directory: {}", e)))?;
+    fs::create_dir_all(baseline_dir).map_err(|e| {
+        OptimError::ResourceError(format!("Failed to create baseline directory: {}", e))
+    })?;
 
     // Generate baseline metrics
     let baseline = create_baseline_from_results(&results, features, commit_hash, branch)?;
@@ -845,8 +846,9 @@ fn find_baseline_files(baseline_dir: &str) -> Result<Vec<PathBuf>> {
     for entry in fs::read_dir(&dir_path)
         .map_err(|e| OptimError::ResourceError(format!("Failed to read directory: {}", e)))?
     {
-        let entry = entry
-            .map_err(|e| OptimError::ResourceError(format!("Failed to read directory entry: {}", e)))?;
+        let entry = entry.map_err(|e| {
+            OptimError::ResourceError(format!("Failed to read directory entry: {}", e))
+        })?;
 
         let path = entry.path();
 

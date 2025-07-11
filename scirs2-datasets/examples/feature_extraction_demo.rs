@@ -189,9 +189,7 @@ fn print_data_summary(data: &Array2<f64>, title: &str) {
         let min_val = col.iter().fold(f64::INFINITY, |a, &b| a.min(b));
         let max_val = col.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
         let mean = col.iter().sum::<f64>() / col.len() as f64;
-        println!(
-            "  Feature {j}: min={min_val:.3}, max={max_val:.3}, mean={mean:.3}"
-        );
+        println!("  Feature {j}: min={min_val:.3}, max={max_val:.3}, mean={mean:.3}");
     }
 }
 

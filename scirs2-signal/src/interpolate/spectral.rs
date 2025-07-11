@@ -5,9 +5,9 @@
 //! and comprehensive resampling utilities.
 
 use crate::error::{SignalError, SignalResult};
+use ndarray::Array1;
 use rustfft::{num_complex::Complex, FftPlanner};
 use std::f64::consts::PI;
-use ndarray::Array1;
 
 use super::basic::linear_interpolate;
 use super::core::{find_nearest_valid_index, InterpolationConfig, InterpolationMethod};

@@ -600,7 +600,7 @@ fn test_advanced_mode_comprehensive() {
     memory_optimization_tests::test_advanced_memory_optimizer_creation();
     simd_acceleration_tests::test_advanced_simd_accelerator_creation();
     performance_adaptation_tests::test_real_time_adaptive_optimizer_creation();
-    
+
     // Skip the full integration test in comprehensive mode to avoid long runtime
     // integration_tests::test_full_advanced_mode_integration();
 

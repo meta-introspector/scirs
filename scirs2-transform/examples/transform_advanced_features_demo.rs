@@ -6,11 +6,8 @@
 //! - Automated feature engineering
 //! - Production monitoring
 
-use ndarray::{Array2};
-use scirs2_transform::{
-    auto_feature_engineering::{AutoFeatureEngineer},
-    Result,
-};
+use ndarray::Array2;
+use scirs2_transform::{auto_feature_engineering::AutoFeatureEngineer, Result};
 
 #[cfg(feature = "gpu")]
 use scirs2_transform::gpu::GpuPCA;

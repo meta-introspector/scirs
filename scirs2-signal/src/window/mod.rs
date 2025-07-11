@@ -1337,8 +1337,8 @@ mod lanczos_tests {
 
 /// Window analysis and design utilities
 pub mod analysis {
+    use super::{blackman, hamming, hann};
     use crate::error::{SignalError, SignalResult};
-    use super::{hann, hamming, blackman};
 
     use std::f64::consts::PI;
 
@@ -1576,7 +1576,7 @@ pub mod analysis {
 
     #[cfg(test)]
     mod analysis_tests {
-        use super::{hann, hamming, analyze_window, compare_windows};
+        use super::{analyze_window, compare_windows, hamming, hann};
 
         #[test]
         fn test_window_analysis() {

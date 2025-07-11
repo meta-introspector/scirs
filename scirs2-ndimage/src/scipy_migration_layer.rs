@@ -672,8 +672,7 @@ pub fn binary_erosion_bool(
     border_value: Option<bool>,
     origin: Option<OriginParam>,
     brute_force: Option<bool>,
-) -> NdimageResult<Array<bool, Ix2>>
-{
+) -> NdimageResult<Array<bool, Ix2>> {
     // Convert boolean array to f64 for compatibility with existing implementation
     let input_f64 = input.map(|&x| if x { 1.0f64 } else { 0.0f64 });
     get_scipy_compat().binary_erosion(

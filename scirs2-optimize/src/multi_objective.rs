@@ -682,8 +682,7 @@ impl NSGAII {
             // Generate random point
             let mut point = Array1::zeros(self.n_objectives);
             for i in 0..self.n_objectives {
-                point[i] =
-                    min_bounds[i] + rng.random_f64() * (reference_point[i] - min_bounds[i]);
+                point[i] = min_bounds[i] + rng.random_f64() * (reference_point[i] - min_bounds[i]);
             }
 
             // Check if point is dominated by any solution in Pareto front
@@ -1598,8 +1597,7 @@ impl NSGAIII {
             // Generate random point
             let mut point = Array1::zeros(self.n_objectives);
             for i in 0..self.n_objectives {
-                point[i] =
-                    min_bounds[i] + rng.random_f64() * (reference_point[i] - min_bounds[i]);
+                point[i] = min_bounds[i] + rng.random_f64() * (reference_point[i] - min_bounds[i]);
             }
 
             // Check if point is dominated by any solution in Pareto front

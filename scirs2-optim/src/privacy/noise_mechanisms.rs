@@ -619,8 +619,12 @@ where
             // Add noise to actual result
             let result_epsilon = epsilon * (T::one() - self.budget_fraction);
             let mut noisy_result = Array1::from_vec(vec![query_result]);
-            self.base_mechanism
-                .add_noise_1d(&mut noisy_result, sensitivity, result_epsilon, delta)?;
+            self.base_mechanism.add_noise_1d(
+                &mut noisy_result,
+                sensitivity,
+                result_epsilon,
+                delta,
+            )?;
 
             self.queries_answered += 1;
             Ok(Some(noisy_result[0]))
@@ -632,7 +636,14 @@ where
 
 impl<T> NoiseCalibrator<T>
 where
-    T: Float + Default + Clone + Send + Sync + rand_distr::uniform::SampleUniform + std::iter::Sum + 'static,
+    T: Float
+        + Default
+        + Clone
+        + Send
+        + Sync
+        + rand_distr::uniform::SampleUniform
+        + std::iter::Sum
+        + 'static,
 {
     /// Create a new noise calibrator
     pub fn new(
@@ -707,31 +718,46 @@ where
         let mut mechanism = self.select_mechanism();
 
         let start_time = std::time::Instant::now();
-        
+
         // Dispatch to appropriate dimension-specific method
         match data.ndim() {
             1 => {
                 // Cast to 1D array
                 let data_1d: &mut Array<T, ndarray::Ix1> = unsafe { std::mem::transmute(data) };
-                mechanism.add_noise_1d(data_1d, adjusted_sensitivity, self.target_epsilon, self.target_delta)?;
-            },
+                mechanism.add_noise_1d(
+                    data_1d,
+                    adjusted_sensitivity,
+                    self.target_epsilon,
+                    self.target_delta,
+                )?;
+            }
             2 => {
                 // Cast to 2D array
                 let data_2d: &mut Array<T, ndarray::Ix2> = unsafe { std::mem::transmute(data) };
-                mechanism.add_noise_2d(data_2d, adjusted_sensitivity, self.target_epsilon, self.target_delta)?;
-            },
+                mechanism.add_noise_2d(
+                    data_2d,
+                    adjusted_sensitivity,
+                    self.target_epsilon,
+                    self.target_delta,
+                )?;
+            }
             3 => {
                 // Cast to 3D array
                 let data_3d: &mut Array<T, ndarray::Ix3> = unsafe { std::mem::transmute(data) };
-                mechanism.add_noise_3d(data_3d, adjusted_sensitivity, self.target_epsilon, self.target_delta)?;
-            },
+                mechanism.add_noise_3d(
+                    data_3d,
+                    adjusted_sensitivity,
+                    self.target_epsilon,
+                    self.target_delta,
+                )?;
+            }
             _ => {
                 return Err(OptimError::InvalidConfig(
                     "Unsupported array dimension for noise calibration".to_string(),
                 ));
             }
         }
-        
+
         let calibration_time = start_time.elapsed();
 
         Ok(NoiseCalibrationResult {

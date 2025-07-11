@@ -2080,17 +2080,17 @@ mod tests {
 
         let dbscan = GenericDBSCAN::new(1.0f64, 1);
         let _euclidean = EuclideanMetric;
-        
+
         // Just test that it doesn't panic on creation
         assert_eq!(dbscan.eps, 1.0f64);
         assert_eq!(dbscan.min_samples, 1);
-        
+
         // Skip the complex fitting algorithm for faster testing
         let result = DBSCANResult {
             labels: vec![-1],
             n_clusters: 0,
         };
-        
+
         assert_eq!(result.n_clusters, 0);
         assert_eq!(result.labels.len(), 1);
     }

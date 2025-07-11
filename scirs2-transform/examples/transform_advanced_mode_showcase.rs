@@ -3,7 +3,7 @@
 //! This example showcases the Advanced MODE implementations in scirs2-transform,
 //! including neuromorphic adaptation and quantum-inspired optimization.
 
-use ndarray::{Array1};
+use ndarray::Array1;
 use scirs2_transform::{
     auto_feature_engineering::DatasetMetaFeatures, error::Result, AdvancedNeuromorphicProcessor,
     AdvancedQuantumOptimizer,
@@ -180,8 +180,7 @@ fn demonstrate_quantum_optimization() -> Result<()> {
     println!("Optimizing transformation parameters with quantum-inspired algorithm...");
     let start_time = std::time::Instant::now();
 
-    let (optimal_params, best_fitness) =
-        optimizer.optimize_advanced(objective_function, 100)?;
+    let (optimal_params, best_fitness) = optimizer.optimize_advanced(objective_function, 100)?;
 
     let optimization_time = start_time.elapsed();
     println!(
@@ -239,4 +238,3 @@ fn demonstrate_quantum_optimization() -> Result<()> {
 
     Ok(())
 }
-

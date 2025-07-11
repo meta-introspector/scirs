@@ -4,9 +4,7 @@
 //! performance for the most compute-intensive ndimage operations. These implementations
 //! use advanced vectorization techniques and platform-specific optimizations.
 
-use ndarray::{
-    Array, ArrayView1, ArrayView2, Dimension, Ix2,
-};
+use ndarray::{Array, ArrayView1, ArrayView2, Dimension, Ix2};
 use num_traits::{Float, FromPrimitive, Zero};
 use scirs2_core::simd_ops::SimdUnifiedOps;
 use std::cmp::Ordering;

@@ -421,9 +421,7 @@ where
 
     // Apply window function (Hann window)
     let window: Vec<f64> = (0..window_size)
-        .map(|i| {
-            0.5 * (1.0 - (2.0 * PI * i as f64 / (window_size - 1) as f64).cos())
-        })
+        .map(|i| 0.5 * (1.0 - (2.0 * PI * i as f64 / (window_size - 1) as f64).cos()))
         .collect();
 
     // Process signal frame by frame

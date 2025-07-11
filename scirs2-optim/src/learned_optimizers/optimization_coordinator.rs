@@ -4272,8 +4272,8 @@ mod tests {
         let config = AdvancedConfig::<f64>::default();
         let coordinator = AdvancedCoordinator::new(config);
 
-        // For now, we expect this to fail since we haven't implemented all dependencies
-        assert!(coordinator.is_err());
+        // Advanced coordinator should now be successfully created with all dependencies implemented
+        assert!(coordinator.is_ok());
     }
 
     #[test]

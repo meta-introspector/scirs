@@ -200,7 +200,18 @@ pub struct PolicyGradientOptimizer<T: Float, P: PolicyNetwork<T>, V: ValueNetwor
     max_buffer_size: usize,
 }
 
-impl<T: Float + Send + Sync + ScalarOperand + std::ops::AddAssign + std::iter::Sum + num_traits::FromPrimitive, P: PolicyNetwork<T>, V: ValueNetwork<T>> PolicyGradientOptimizer<T, P, V> {
+impl<
+        T: Float
+            + Send
+            + Sync
+            + ScalarOperand
+            + std::ops::AddAssign
+            + std::iter::Sum
+            + num_traits::FromPrimitive,
+        P: PolicyNetwork<T>,
+        V: ValueNetwork<T>,
+    > PolicyGradientOptimizer<T, P, V>
+{
     /// Create a new policy gradient optimizer
     pub fn new(
         config: PolicyGradientConfig<T>,

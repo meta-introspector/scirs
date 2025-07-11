@@ -26,7 +26,6 @@ pub struct DWT2DDecomposition {
 use crate::error::{SignalError, SignalResult};
 use ndarray::{s, Array2};
 use num_traits::{Float, NumCast, Zero};
-use scirs2_core::validation::check_shape;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
@@ -226,7 +225,11 @@ where
     T: Float + NumCast + Debug + Zero + Send + Sync,
 {
     // Validate input
-    check_shape(data, (Some(2), None), "data")?;
+    if data.ndim() != 2 {
+        return Err(SignalError::DimensionMismatch(
+            "Data must be 2D".to_string(),
+        ));
+    }
     let (rows, cols) = data.dim();
 
     if rows < 4 || cols < 4 {
@@ -263,10 +266,17 @@ where
     let boundary_info = create_boundary_info(data, &extended_data, config)?;
 
     // Compute quality metrics
-    let quality_metrics = compute_boundary_quality(&decomposition, &boundary_info)?;
+    // Convert Dwt2dResult to DWT2DDecomposition for compatibility
+    let dwt_decomp = DWT2DDecomposition {
+        ll: decomposition.approx.clone(),
+        lh: decomposition.detail_h.clone(),
+        hl: decomposition.detail_v.clone(),
+        hh: decomposition.detail_d.clone(),
+    };
+    let quality_metrics = compute_boundary_quality::<f64>(&dwt_decomp, &boundary_info)?;
 
     Ok(EnhancedDWT2DDecomposition {
-        decomposition,
+        decomposition: dwt_decomp,
         boundary_info,
         config: config.clone(),
         quality_metrics,
@@ -275,13 +285,10 @@ where
 
 /// Reconstruct from enhanced 2D DWT decomposition with boundary correction
 #[allow(dead_code)]
-pub fn dwt2d_reconstruct_enhanced<T>(
+pub fn dwt2d_reconstruct_enhanced(
     enhanced_decomp: &EnhancedDWT2DDecomposition,
     wavelet: Wavelet,
-) -> SignalResult<Array2<T>>
-where
-    T: Float + NumCast + Debug + Zero + Send + Sync,
-{
+) -> SignalResult<Array2<f64>> {
     // Reconstruct extended image
     let boundary_mode_str = match enhanced_decomp.config.mode {
         BoundaryMode2D::Symmetric => "symmetric",
@@ -291,11 +298,13 @@ where
         _ => "symmetric",
     };
 
-    let extended_reconstruction = dwt2d_reconstruct(
-        &enhanced_decomp.decomposition,
-        wavelet,
-        Some(boundary_mode_str),
-    )?;
+    let dwt_result = crate::dwt2d::Dwt2dResult {
+        approx: enhanced_decomp.decomposition.ll.clone(),
+        detail_h: enhanced_decomp.decomposition.lh.clone(),
+        detail_v: enhanced_decomp.decomposition.hl.clone(),
+        detail_d: enhanced_decomp.decomposition.hh.clone(),
+    };
+    let extended_reconstruction = dwt2d_reconstruct(&dwt_result, wavelet, Some(boundary_mode_str))?;
 
     // Extract original region with boundary correction
     let original_shape = enhanced_decomp.boundary_info.original_shape;
@@ -311,15 +320,12 @@ where
 
 /// Multi-level enhanced 2D DWT decomposition
 #[allow(dead_code)]
-pub fn wavedec2_enhanced<T>(
-    data: &Array2<T>,
+pub fn wavedec2_enhanced(
+    data: &Array2<f64>,
     wavelet: Wavelet,
     levels: usize,
     config: &BoundaryConfig2D,
-) -> SignalResult<Vec<EnhancedDWT2DDecomposition>>
-where
-    T: Float + NumCast + Debug + Zero + Send + Sync,
-{
+) -> SignalResult<Vec<EnhancedDWT2DDecomposition>> {
     let mut decompositions = Vec::new();
     let mut current_data = data.clone();
 
@@ -336,7 +342,7 @@ where
         }
 
         let enhanced_decomp = dwt2d_decompose_enhanced(&current_data, wavelet, &level_config)?;
-        current_data = enhanced_decomp.decomposition.approx.clone();
+        current_data = enhanced_decomp.decomposition.ll.clone();
         decompositions.push(enhanced_decomp);
     }
 
@@ -345,13 +351,10 @@ where
 
 /// Multi-level enhanced 2D DWT reconstruction
 #[allow(dead_code)]
-pub fn waverec2_enhanced<T>(
+pub fn waverec2_enhanced(
     decompositions: &[EnhancedDWT2DDecomposition],
     wavelet: Wavelet,
-) -> SignalResult<Array2<T>>
-where
-    T: Float + NumCast + Debug + Zero + Send + Sync,
-{
+) -> SignalResult<Array2<f64>> {
     if decompositions.is_empty() {
         return Err(SignalError::ValueError(
             "No decompositions provided".to_string(),
@@ -359,7 +362,7 @@ where
     }
 
     // Start from the deepest level
-    let mut current_data = decompositions.last().unwrap().decomposition.approx.clone();
+    let mut current_data = decompositions.last().unwrap().decomposition.ll.clone();
 
     // Reconstruct level by level
     for enhanced_decomp in decompositions.iter().rev() {
@@ -1237,7 +1240,7 @@ fn example_enhanced_boundary_usage() -> SignalResult<()> {
     println!("{}", report);
 
     // Compute reconstruction error
-    let mut error = 0.0;
+    let mut error: f64 = 0.0;
     for i in 0..32 {
         for j in 0..32 {
             error += (data[[i, j]] - reconstructed[[i, j]]).abs();

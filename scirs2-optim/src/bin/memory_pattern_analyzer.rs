@@ -319,7 +319,10 @@ fn load_analysis_input(input_dir: &str) -> Result<AnalysisInput> {
 }
 
 #[allow(dead_code)]
-fn analyze_memory_patterns(input: &AnalysisInput, _detailed: bool) -> Result<PatternAnalysisResult> {
+fn analyze_memory_patterns(
+    input: &AnalysisInput,
+    _detailed: bool,
+) -> Result<PatternAnalysisResult> {
     println!("  📈 Analyzing allocation statistics...");
     let allocation_statistics =
         analyze_allocation_statistics(&input.allocation_events, &input.metadata);

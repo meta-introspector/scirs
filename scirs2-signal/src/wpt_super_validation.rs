@@ -2565,7 +2565,9 @@ fn verify_parseval_relation(
 }
 
 #[allow(dead_code)]
-fn extract_coefficient_vectors(_tree: &crate::wpt::WaveletPacketTree) -> SignalResult<Vec<Array1<f64>>> {
+fn extract_coefficient_vectors(
+    _tree: &crate::wpt::WaveletPacketTree,
+) -> SignalResult<Vec<Array1<f64>>> {
     // TODO: Implement coefficient vector extraction from WPT tree
     Ok(vec![Array1::zeros(1)])
 }
